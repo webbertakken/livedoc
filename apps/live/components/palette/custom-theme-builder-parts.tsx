@@ -20,9 +20,7 @@ export function FieldLabel({
   className?: string;
 }) {
   return (
-    <span
-      className={`text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 ${className}`}
-    >
+    <span className={`text-supporting text-slate-500 dark:text-slate-400 ${className}`}>
       {children}
     </span>
   );
@@ -46,9 +44,9 @@ export function ColorTile({
   const pasting = painter.copied !== null;
   const { open, toggle, setTrigger, popover } = useColourWell({ label, value, onChange });
   return (
-    <div className="flex flex-col gap-1 rounded-lg border border-slate-200 bg-white p-1 transition hover:border-brand-300 dark:border-slate-700 dark:bg-slate-800 dark:hover:border-brand-500/60">
+    <div className="flex flex-col gap-1 rounded-menu border border-slate-200 bg-white p-1 transition hover:border-brand-300 dark:border-slate-700 dark:bg-slate-800 dark:hover:border-brand-500/60">
       <span
-        className="relative block h-7 w-full overflow-hidden rounded border border-black/5 dark:border-white/10"
+        className="relative block h-row w-full overflow-hidden rounded-control border border-black/5 dark:border-white/10"
         style={{ backgroundColor: value }}
       >
         <button
@@ -66,7 +64,7 @@ export function ColorTile({
             type="button"
             onClick={() => painter.copy(value)}
             aria-label={`Copy ${label} colour`}
-            className="absolute right-0.5 top-0.5 flex h-4 w-4 items-center justify-center rounded bg-white/85 text-slate-600 shadow-sm transition hover:text-brand-700 dark:bg-slate-900/80 dark:text-slate-200"
+            className="absolute right-0.5 top-0.5 flex size-icon-row items-center justify-center rounded-control bg-white/85 text-slate-600 shadow-sm transition hover:text-brand-700 dark:bg-slate-900/80 dark:text-slate-200"
           >
             <CopyIcon size={9} />
           </button>
@@ -86,7 +84,7 @@ export function ColorTile({
           </button>
         )}
       </span>
-      <span className="w-full truncate text-center text-[10px] font-medium text-slate-600 dark:text-slate-300">
+      <span className="w-full truncate text-center text-supporting text-slate-600 dark:text-slate-300">
         {label}
       </span>
       {popover}
@@ -112,7 +110,7 @@ export function ColorDot({
   const { open, toggle, setTrigger, popover } = useColourWell({ label, value, onChange });
   return (
     <span
-      className="relative h-6 w-6 shrink-0 overflow-hidden rounded border border-slate-300 dark:border-slate-600"
+      className="relative size-chip shrink-0 overflow-hidden rounded-control border border-slate-300 dark:border-slate-600"
       style={{ backgroundColor: value }}
     >
       <button
@@ -171,24 +169,24 @@ export function ExpandRow({
   children: React.ReactNode;
 }) {
   return (
-    <div className="rounded-lg border border-slate-100 dark:border-slate-800">
+    <div className="rounded-menu border border-slate-100 dark:border-slate-800">
       <button
         type="button"
         onClick={onToggle}
         aria-expanded={open}
-        className="flex w-full items-center justify-between px-2.5 py-2 text-xs font-medium text-slate-700 transition hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800/60"
+        className="flex w-full items-center justify-between px-3 py-2 text-body text-slate-700 transition hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800/60"
       >
         <span className="flex items-center gap-2">
           {label}
           {badge ? (
-            <span className="rounded-full bg-brand-100 px-1.5 py-0.5 text-[10px] font-semibold text-brand-700 dark:bg-brand-500/20 dark:text-brand-200">
+            <span className="rounded-full bg-brand-100 px-2 py-0.5 text-supporting text-brand-700 dark:bg-brand-500/20 dark:text-brand-200">
               {badge}
             </span>
           ) : null}
         </span>
         <ChevronDownIcon size={12} className={open ? 'rotate-180 transition' : 'transition'} />
       </button>
-      {open ? <div className="px-2.5 pb-2.5 pt-1">{children}</div> : null}
+      {open ? <div className="px-3 pb-2.5 pt-1">{children}</div> : null}
     </div>
   );
 }

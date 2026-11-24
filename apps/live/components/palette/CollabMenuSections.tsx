@@ -61,10 +61,10 @@ import { MENU_ADD_ROW_BUTTON, MENU_CELL_INPUT } from './menu-editor-classes';
 // can never be closed.
 
 const fieldClass =
-  'w-full rounded-md border border-slate-200 bg-white px-2 py-1 text-[11px] text-slate-700 outline-none placeholder:text-slate-400 focus:border-brand-400 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200';
-const labelClass = 'text-[10px] font-medium text-slate-500 dark:text-slate-400';
+  'w-full rounded-control border border-slate-200 bg-white px-2 py-1 text-body text-slate-700 outline-none placeholder:text-slate-400 focus:border-brand-400 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200';
+const labelClass = 'text-supporting text-slate-500 dark:text-slate-400';
 const removeButtonClass =
-  'flex h-5 w-5 shrink-0 items-center justify-center rounded text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800';
+  'flex size-icon-title shrink-0 items-center justify-center rounded-control text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800';
 
 // --- Estimate card (docs/specs/012-collaboration/estimate-card.md) ---------------------------------------------
 
@@ -87,23 +87,23 @@ export function EstimateMenuSection({
             type="button"
             onClick={() => onSetScale(scale)}
             aria-pressed={current === scale}
-            className={`flex cursor-pointer flex-col items-start rounded-md border px-2 py-1 text-left transition ${
+            className={`flex cursor-pointer flex-col items-start rounded-control border px-2 py-1 text-left transition ${
               current === scale
                 ? 'border-brand-400 bg-brand-50 dark:border-brand-500/60 dark:bg-brand-500/15'
                 : 'border-slate-200 bg-white hover:border-brand-300 dark:border-slate-700 dark:bg-slate-800'
             }`}
           >
-            <span className="text-[11px] font-medium text-slate-700 dark:text-slate-200">
+            <span className="text-body text-slate-700 dark:text-slate-200">
               {ESTIMATE_SCALE_LABELS[scale]}
             </span>
             {/* The values themselves, because the name of a scale is not the
                 thing being chosen between — "1 2 3 5 8" is. */}
-            <span className="text-[10px] tabular-nums text-slate-500 dark:text-slate-400">
-              {ESTIMATE_SCALE_VALUES[scale].join('  ')}
+            <span className="text-supporting tabular-nums text-slate-500 dark:text-slate-400">
+              {ESTIMATE_SCALE_VALUES[scale].join(' ')}
             </span>
           </button>
         ))}
-        <p className="mt-0.5 text-[10px] leading-snug text-slate-500 dark:text-slate-400">
+        <p className="mt-0.5 text-supporting text-slate-500 dark:text-slate-400">
           Changing the scale keeps answers already cast, so clear the card first if the round has
           started.
         </p>
@@ -250,7 +250,7 @@ export function DecisionMenuSection({
                 type="button"
                 onClick={() => onSetStatus(s)}
                 aria-pressed={status === s}
-                className={`inline-flex items-center cursor-pointer rounded-md border px-1.5 py-1 text-[10px] font-semibold transition ${
+                className={`inline-flex items-center cursor-pointer rounded-control border px-2 py-1 text-supporting transition ${
                   status === s
                     ? 'border-transparent'
                     : 'border-slate-200 bg-white text-slate-600 hover:border-brand-300 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300'
@@ -266,9 +266,7 @@ export function DecisionMenuSection({
                     : undefined
                 }
               >
-                <span className="text-optical-line text-optical-caps [--optical-tracking:0.04em]">
-                  {DECISION_STATUS_LABELS[s]}
-                </span>
+                <span className="text-optical-line">{DECISION_STATUS_LABELS[s]}</span>
               </button>
             ))}
           </div>
@@ -360,7 +358,7 @@ export function ChairMenuSection({
           <MenuTile
             key={f}
             icon={
-              <span aria-hidden className="text-[15px] leading-none">
+              <span aria-hidden className="text-panel-title leading-none">
                 {FACING_ARROW[f]}
               </span>
             }
@@ -370,7 +368,7 @@ export function ChairMenuSection({
           />
         ))}
       </MenuTileGrid>
-      <p className="px-2 pb-1.5 pt-1 text-[10px] leading-snug text-slate-500 dark:text-slate-400">
+      <p className="px-2 pb-1.5 pt-1 text-supporting text-slate-500 dark:text-slate-400">
         Which way somebody sitting here faces. Walk an Avatar-mode character into the{' '}
         {noun.toLowerCase()} to sit down.
       </p>
@@ -399,7 +397,7 @@ export function RoomMenuSection({
           <MenuTile
             key={d}
             icon={
-              <span aria-hidden className="text-[13px] leading-none">
+              <span aria-hidden className="text-body leading-none">
                 {DOOR_GLYPH[d]}
               </span>
             }
@@ -409,7 +407,7 @@ export function RoomMenuSection({
           />
         ))}
       </MenuTileGrid>
-      <p className="px-2 pb-1.5 pt-1 text-[10px] leading-snug text-slate-500 dark:text-slate-400">
+      <p className="px-2 pb-1.5 pt-1 text-supporting text-slate-500 dark:text-slate-400">
         Which wall the doorway is in. Avatar-mode characters walk through the doorway and nowhere
         else; with None, only a portal gets you in.
       </p>

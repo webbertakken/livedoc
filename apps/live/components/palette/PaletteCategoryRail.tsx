@@ -65,7 +65,7 @@ export function PaletteCategoryRail<T>({
       <div className="flex h-[min(360px,calc(100dvh-20rem))] min-h-[220px]">
         <nav
           aria-label={`${things} groups`}
-          className="flex w-[188px] shrink-0 flex-col gap-0.5 overflow-y-auto border-r border-slate-100 bg-slate-50/60 p-1.5 [scrollbar-width:thin] dark:border-slate-800 dark:bg-slate-950/30"
+          className="flex w-[188px] shrink-0 flex-col gap-0.5 overflow-y-auto border-r border-slate-100 bg-slate-50/60 p-2 [scrollbar-width:thin] dark:border-slate-800 dark:bg-slate-950/30"
         >
           {categories.map((c) => {
             const current = !matches && open?.id === c.id;
@@ -75,9 +75,9 @@ export function PaletteCategoryRail<T>({
                 type="button"
                 aria-current={current || undefined}
                 onClick={() => choose(c.id)}
-                className={`group relative flex h-9 w-full shrink-0 items-center gap-2 rounded-lg pl-2 pr-1.5 text-left transition ${
+                className={`group relative flex h-row w-full shrink-0 items-center gap-2 rounded-control pl-2 pr-2 text-left transition ${
                   current
-                    ? 'bg-white text-brand-700 shadow-sm ring-1 ring-slate-200 dark:bg-slate-800 dark:text-brand-200 dark:ring-slate-700'
+                    ? 'bg-white font-medium text-brand-700 shadow-sm ring-1 ring-slate-200 dark:bg-slate-800 dark:text-brand-200 dark:ring-slate-700'
                     : 'text-slate-600 hover:bg-white/80 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800/60 dark:hover:text-white'
                 }`}
               >
@@ -88,11 +88,11 @@ export function PaletteCategoryRail<T>({
                 />
                 <span
                   aria-hidden
-                  className="flex h-5 w-5 shrink-0 items-center justify-center [&>svg]:max-h-[18px] [&>svg]:max-w-[18px]"
+                  className="flex size-icon-row shrink-0 items-center justify-center [&>svg]:max-h-full [&>svg]:max-w-full"
                 >
                   {c.icon}
                 </span>
-                <span className="min-w-0 flex-1 truncate text-[12.5px] font-medium">{c.label}</span>
+                <span className="min-w-0 flex-1 truncate text-body">{c.label}</span>
                 <CountBadge count={c.items.length} className="shrink-0" />
               </button>
             );
@@ -100,7 +100,7 @@ export function PaletteCategoryRail<T>({
         </nav>
         <div ref={paneRef} className="min-w-0 flex-1 overflow-y-auto [scrollbar-width:thin]">
           <div className="sticky top-0 z-[1] flex items-center gap-2 bg-white/95 px-3 pb-1.5 pt-2.5 backdrop-blur dark:bg-slate-900/95">
-            <span className="truncate text-[12.5px] font-semibold text-slate-800 dark:text-slate-100">
+            <span className="truncate text-body text-slate-800 dark:text-slate-100">
               {matches ? `Results for “${query.trim()}”` : (open?.label ?? '')}
             </span>
             <CountBadge count={matches ? matches.length : (open?.items.length ?? 0)} />
@@ -108,7 +108,7 @@ export function PaletteCategoryRail<T>({
           {/* Keyed on what it shows, so a switch fades the new entries in. */}
           <div key={matches ? `?${query}` : (open?.id ?? '')} className="animate-fade-in px-2 pb-3">
             {loading ? (
-              <p className="px-1 py-6 text-center text-[11.5px] text-slate-500 dark:text-slate-400">
+              <p className="px-1 py-6 text-center text-supporting text-slate-500 dark:text-slate-400">
                 {loadingMessage}
               </p>
             ) : matches ? (

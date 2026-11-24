@@ -56,7 +56,7 @@ export function RecognitionChip({ chip, zoom, onFlip }: RecognitionChipProps) {
         }}
         onContextMenu={(e) => e.preventDefault()}
         style={{ right: RECOGNITION_CHIP_GAP_PX, bottom: RECOGNITION_CHIP_GAP_PX }}
-        className="pointer-events-auto absolute flex h-11 min-w-11 touch-none select-none items-center whitespace-nowrap rounded-full bg-slate-900 px-4 text-sm font-medium text-white shadow-lg ring-1 ring-white/20 dark:bg-slate-100 dark:text-slate-900 dark:ring-slate-900/20"
+        className="pointer-events-auto absolute flex h-11 min-w-11 touch-none select-none items-center whitespace-nowrap rounded-full bg-slate-900 px-4 text-body text-white shadow-lg ring-1 ring-white/20 dark:bg-slate-100 dark:text-slate-900 dark:ring-slate-900/20"
       >
         <span className="text-optical-centre">{label}</span>
       </button>

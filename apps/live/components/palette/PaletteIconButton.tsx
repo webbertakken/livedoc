@@ -265,9 +265,7 @@ export function IconButton({
           aria-hidden
           className="pointer-events-none absolute right-0.5 top-0.5 flex h-icon-row min-w-icon-row items-center justify-center rounded-control border border-slate-300 bg-white px-0.5 text-glyph leading-none text-slate-700 shadow-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200"
         >
-          <span className="text-optical-line text-optical-caps [--optical-tracking:0em]">
-            {shortcut}
-          </span>
+          <span className="text-optical-line">{shortcut}</span>
         </kbd>
       ) : null}
       {showCornerLetter ? (

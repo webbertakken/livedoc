@@ -71,7 +71,7 @@ export function ElementContentSections({
           {...sectionProps('text')}
         >
           {target.type === 'table' ? (
-            <p className="px-3 pt-1.5 text-[10px] font-medium text-slate-500 dark:text-slate-400">
+            <p className="px-3 pt-1.5 text-supporting text-slate-500 dark:text-slate-400">
               Applies to every cell.
             </p>
           ) : null}

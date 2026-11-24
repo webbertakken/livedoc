@@ -34,13 +34,13 @@ export function LibraryShapeTile({
         );
         e.dataTransfer.effectAllowed = 'copy';
       }}
-      className="flex w-full flex-col items-center gap-1 rounded-md p-1 text-slate-600 transition hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 dark:text-slate-100 dark:hover:bg-slate-800 dark:hover:text-white"
+      className="flex w-full flex-col items-center gap-1 rounded-control p-1 text-slate-600 transition hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 dark:text-slate-100 dark:hover:bg-slate-800 dark:hover:text-white"
     >
       <LibraryItemThumbnail
         item={item}
-        className="h-12 w-full rounded bg-white ring-1 ring-slate-200 dark:ring-slate-700"
+        className="h-12 w-full rounded-control bg-white ring-1 ring-slate-200 dark:ring-slate-700"
       />
-      <span className="w-full truncate text-center text-[10px] leading-none">{title}</span>
+      <span className="w-full truncate text-center text-supporting leading-none">{title}</span>
     </button>
   );
 }

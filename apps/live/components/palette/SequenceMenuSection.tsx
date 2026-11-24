@@ -30,7 +30,7 @@ export function SequenceMenuSection({
   return (
     <MenuAccordionSection title="Sequence" icon={<DataMenuGlyph />} {...sectionProps('sequence')}>
       <div className="px-2 py-1.5">
-        <p className="text-[11px] text-slate-600 dark:text-slate-300">
+        <p className="text-supporting text-slate-600 dark:text-slate-300">
           {plural(people, 'participant')} · {plural(messages, 'message')}
         </p>
         {onEdit ? (

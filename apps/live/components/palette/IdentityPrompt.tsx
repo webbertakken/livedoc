@@ -46,10 +46,8 @@ export function IdentityPrompt({
     <CanvasModalCard label="Confirm your name" width="sm:w-[26rem]">
       <div className="flex items-start justify-between gap-3 border-b border-slate-100 px-6 pb-5 pt-6 dark:border-slate-800">
         <div>
-          <h2 className="text-xl font-semibold tracking-tight text-slate-900 dark:text-slate-50">
-            {title}
-          </h2>
-          <p className="mt-1 text-sm text-slate-500 dark:text-slate-300">
+          <h2 className="text-dialog-title text-slate-900 dark:text-slate-50">{title}</h2>
+          <p className="mt-1 text-body text-slate-500 dark:text-slate-300">
             {nameLocked
               ? 'This is the name from your account; others will see it on this document.'
               : 'Pick the name people will see while you collaborate on this document.'}
@@ -59,7 +57,7 @@ export function IdentityPrompt({
           type="button"
           onClick={onCancel}
           aria-label="Close"
-          className="-mr-2 -mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+          className="-mr-2 -mt-1 flex size-field shrink-0 items-center justify-center rounded-menu text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
         >
           <CloseIcon />
         </button>
@@ -77,13 +75,13 @@ export function IdentityPrompt({
         />
       </div>
       <DialogFooter>
-        <p className="mr-auto text-[11px] text-slate-500 dark:text-slate-400">
+        <p className="mr-auto text-supporting text-slate-500 dark:text-slate-400">
           Other participants will see this name on your cursor and comments.
         </p>
         <Button variant="secondary" size="xs" onClick={onCancel}>
           Cancel
         </Button>
-        <Button size="xs" onClick={() => onJoin(effectiveName)} className="gap-1.5 px-4 shadow-sm">
+        <Button size="xs" onClick={() => onJoin(effectiveName)} className="gap-2 px-4 shadow-sm">
           <SparkleIcon />
           Join
         </Button>

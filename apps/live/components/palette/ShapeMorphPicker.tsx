@@ -32,7 +32,7 @@ export function ShapeMorphPicker({
   const searching = query.trim().length > 0;
   const results = searching ? searchMorphTargets(query).slice(0, SHAPE_MORPH_RESULT_LIMIT) : [];
   return (
-    <div className="flex flex-col gap-1.5 px-2 py-1.5">
+    <div className="flex flex-col gap-2 px-2 py-1.5">
       <TextInput
         type="search"
         aria-label="Search shapes"
@@ -60,7 +60,7 @@ export function ShapeMorphPicker({
                   onClick={() => onPick(t.kind)}
                   onPointerEnter={onMouseHover(() => onPreview(t.kind))}
                   onPointerLeave={onMouseHover(onPreviewEnd)}
-                  className="flex w-full items-center gap-2 rounded-md px-1.5 py-1 text-left text-xs text-slate-700 hover:bg-slate-100 aria-pressed:bg-brand-100 aria-pressed:text-brand-700 dark:text-slate-200 dark:hover:bg-slate-800 dark:aria-pressed:bg-brand-500/20 dark:aria-pressed:text-brand-200"
+                  className="flex w-full items-center gap-2 rounded-control px-2 py-1 text-left text-supporting text-slate-700 hover:bg-slate-100 aria-pressed:bg-brand-100 aria-pressed:text-brand-700 dark:text-slate-200 dark:hover:bg-slate-800 dark:aria-pressed:bg-brand-500/20 dark:aria-pressed:text-brand-200"
                 >
                   <ShapeIcon kind={t.kind} />
                   {t.label}
@@ -69,7 +69,7 @@ export function ShapeMorphPicker({
             ))}
           </ul>
         ) : (
-          <p role="status" className="px-1.5 py-1 text-xs text-slate-500 dark:text-slate-400">
+          <p role="status" className="px-2 py-1 text-supporting text-slate-500 dark:text-slate-400">
             No shapes match
           </p>
         )

@@ -20,21 +20,21 @@ export function IdentityNameRow({
   onChangeName: (next: string) => void;
 }) {
   return (
-    <div className="flex items-center gap-3 rounded-lg border border-slate-200 bg-slate-50/50 p-3 dark:border-slate-700 dark:bg-slate-800/50">
+    <div className="flex items-center gap-3 rounded-menu border border-slate-200 bg-slate-50/50 p-3 dark:border-slate-700 dark:bg-slate-800/50">
       <GlyphDisc
         size={40}
         as="div"
         role="img"
         aria-label={`Your avatar colour: ${participant.color}`}
         style={identityVars(participant.color)}
-        className={`text-sm font-semibold text-white ${IDENTITY_FILL}`}
+        className={`text-body text-white ${IDENTITY_FILL}`}
       >
         {initialsOf(effectiveName)}
       </GlyphDisc>
       <div className="flex-1">
         <label
           htmlFor="welcome-name"
-          className="block text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400"
+          className="block text-supporting text-slate-500 dark:text-slate-400"
         >
           Your name
         </label>
@@ -51,8 +51,8 @@ export function IdentityNameRow({
           // present so the name is still visible.
           className={
             nameLocked
-              ? 'mt-0.5 w-full cursor-default bg-transparent text-sm text-slate-500 outline-none dark:text-slate-400'
-              : 'mt-0.5 w-full bg-transparent text-sm text-slate-800 outline-none placeholder:text-slate-400 dark:text-slate-100 dark:placeholder:text-slate-400'
+              ? 'mt-0.5 w-full cursor-default bg-transparent text-body text-slate-500 outline-none dark:text-slate-400'
+              : 'mt-0.5 w-full bg-transparent text-body text-slate-800 outline-none placeholder:text-slate-400 dark:text-slate-100 dark:placeholder:text-slate-400'
           }
         />
       </div>
@@ -62,7 +62,7 @@ export function IdentityNameRow({
             type="button"
             onClick={() => onChangeName(randomName())}
             aria-label="Generate a different name"
-            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+            className="flex size-field shrink-0 items-center justify-center rounded-control text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
           >
             <RefreshIcon />
           </button>

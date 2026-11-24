@@ -158,18 +158,16 @@ export function CustomThemeBuilder({
           with the chosen pattern rendered edge to edge. */}
       <div className="relative">
         <ThemeSwatch theme={previewTheme} heightClass="h-24" realPattern />
-        <span className="inline-flex items-center pointer-events-none absolute right-2 top-2 rounded-md bg-slate-900/70 px-2 py-0.5 text-[10px] font-semibold text-white shadow-sm">
-          <span className="text-optical-line text-optical-caps [--optical-tracking:0.025em]">
-            Illustration
-          </span>
+        <span className="inline-flex items-center pointer-events-none absolute right-2 top-2 rounded-control bg-slate-900/70 px-2 py-0.5 text-supporting text-white shadow-sm">
+          <span className="text-optical-line">Illustration</span>
         </span>
       </div>
 
       {/* Format-painter hint: visible while a colour is on the clipboard. */}
       {copied ? (
-        <div className="flex items-center gap-2 rounded-lg border border-brand-200 bg-brand-50 px-3 py-2 text-xs text-brand-800 dark:border-brand-500/40 dark:bg-brand-500/15 dark:text-brand-100">
+        <div className="flex items-center gap-2 rounded-menu border border-brand-200 bg-brand-50 px-3 py-2 text-supporting text-brand-800 dark:border-brand-500/40 dark:bg-brand-500/15 dark:text-brand-100">
           <span
-            className="h-4 w-4 shrink-0 rounded border border-black/10 dark:border-white/20"
+            className="size-icon-row shrink-0 rounded-control border border-black/10 dark:border-white/20"
             style={{ backgroundColor: copied }}
           />
           <span className="flex-1">Copied colour: click any box to paste it.</span>
@@ -189,7 +187,7 @@ export function CustomThemeBuilder({
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="My theme"
-          className="rounded-md border border-slate-200 bg-white px-2.5 py-1.5 text-sm text-slate-800 outline-none transition focus:border-brand-400 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+          className="rounded-control border border-slate-200 bg-white px-3 py-1.5 text-body text-slate-800 outline-none transition focus:border-brand-400 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
         />
       </label>
 
@@ -198,7 +196,7 @@ export function CustomThemeBuilder({
           them until touched, and burying a derived value behind an expander
           hides the one place you would go to correct it. Larger tiles so the
           colour (the whole point) reads at a glance. */}
-      <div className="flex flex-col gap-1.5">
+      <div className="flex flex-col gap-2">
         <FieldLabel>Base colours</FieldLabel>
         <div className="grid grid-cols-4 gap-2">
           <ColorTile
@@ -232,7 +230,7 @@ export function CustomThemeBuilder({
       </div>
 
       <ExpandRow label="Pattern" open={patternOpen} onToggle={() => setPatternOpen((o) => !o)}>
-        <p className="mb-2 text-[11px] leading-snug text-slate-500 dark:text-slate-300">
+        <p className="mb-2 text-supporting text-slate-500 dark:text-slate-300">
           The pattern tints automatically from your background colour.
         </p>
         <FieldLabel className="mb-1">Style</FieldLabel>
@@ -267,7 +265,7 @@ export function CustomThemeBuilder({
         <div className="mt-3 flex flex-col gap-1 border-t border-slate-100 pt-3 dark:border-slate-800">
           <div className="flex items-center justify-between">
             <FieldLabel>Opacity</FieldLabel>
-            <span className="text-[10px] font-medium text-slate-500 dark:text-slate-300">
+            <span className="text-supporting text-slate-500 dark:text-slate-300">
               {Math.round((def.backgroundOpacity ?? 1) * 100)}%
             </span>
           </div>
@@ -295,7 +293,7 @@ export function CustomThemeBuilder({
       />
 
       {error ? (
-        <p className="rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-medium text-rose-700 dark:border-rose-500/40 dark:bg-rose-500/15 dark:text-rose-200">
+        <p className="rounded-control border border-rose-200 bg-rose-50 px-3 py-2 text-supporting text-rose-700 dark:border-rose-500/40 dark:bg-rose-500/15 dark:text-rose-200">
           {error}
         </p>
       ) : null}
@@ -304,7 +302,7 @@ export function CustomThemeBuilder({
         <button
           type="button"
           onClick={onCancel}
-          className="rounded-md px-3 py-1.5 text-xs font-medium text-slate-600 transition hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
+          className="rounded-control px-3 py-1.5 text-body text-slate-600 transition hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
         >
           Cancel
         </button>

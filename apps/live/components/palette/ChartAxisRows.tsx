@@ -32,9 +32,7 @@ export function ChartAxisRows({
       />
       {series && series.length > 1 ? (
         <>
-          <p className="px-3 pt-1 text-[10px] font-medium text-slate-500 dark:text-slate-400">
-            Right Axis
-          </p>
+          <p className="px-3 pt-1 text-supporting text-slate-500 dark:text-slate-400">Right Axis</p>
           <div className="grid grid-cols-3 gap-1 px-2 py-1.5">
             <SizeButton active={right < 0} onClick={() => onSetRightAxis(null)}>
               <TileLabel glyph={<Dot color="transparent" />} label="None" />
@@ -62,7 +60,7 @@ export function ChartAxisRows({
 function Dot({ color }: { color: string }) {
   return (
     <span
-      className="inline-block h-2.5 w-2.5 rounded-[2px] border border-slate-300 dark:border-slate-600"
+      className="inline-block size-icon-chevron rounded-none border border-slate-300 dark:border-slate-600"
       style={{ backgroundColor: color }}
     />
   );

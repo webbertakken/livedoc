@@ -21,7 +21,7 @@ export function PalettePlanCardsTab(props: GridProps) {
         <PaletteTileGrid {...props} tiles={types.map(planCardTile)} />
       ) : (
         // A document starts with no card types (docs/specs/026-plan/item-types.md "The type catalogue").
-        <p className="px-1 py-2 text-[12px] text-slate-500 dark:text-slate-400">
+        <p className="px-1 py-2 text-supporting text-slate-500 dark:text-slate-400">
           {plan?.canEdit
             ? 'No card types yet. Add one, or the default types, with Edit Cards.'
             : 'This document has no card types yet.'}
@@ -33,7 +33,7 @@ export function PalettePlanCardsTab(props: GridProps) {
         <div className="mt-3 border-t border-slate-100 pt-3 dark:border-slate-800">
           <button
             type="button"
-            className="w-full rounded-md border border-slate-200 px-3 py-1.5 text-[12px] font-medium text-slate-700 transition hover:bg-slate-50 hover:text-slate-900 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800 dark:hover:text-white"
+            className="w-full rounded-control border border-slate-200 px-3 py-1.5 text-body text-slate-700 transition hover:bg-slate-50 hover:text-slate-900 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800 dark:hover:text-white"
             onClick={() => {
               track('Plan', 'Opened', 'EditCards');
               openCardTypes();

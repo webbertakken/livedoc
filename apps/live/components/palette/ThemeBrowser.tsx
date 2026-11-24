@@ -24,8 +24,7 @@ type Item =
   | { kind: 'custom'; theme: CustomTheme }
   | { kind: 'new' };
 
-const headingClass =
-  'text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400';
+const headingClass = 'text-supporting text-slate-500 dark:text-slate-400';
 
 export function ThemeBrowser({
   themeId,

@@ -29,22 +29,20 @@ export function ToolbarSearchAccordion({
         aria-expanded={open}
         aria-controls={bodyId}
         onClick={onToggle}
-        className={`flex w-full items-center gap-2 rounded-lg border px-2 py-1.5 text-left transition ${
+        className={`flex w-full items-center gap-2 rounded-menu border px-2 py-1.5 text-left transition ${
           open
             ? 'border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-800/60'
             : 'border-transparent hover:border-slate-200 hover:bg-slate-50 dark:hover:border-slate-700 dark:hover:bg-slate-800/60'
         }`}
       >
         <span className="min-w-0 flex-1">
-          <span className="flex min-w-0 items-center gap-1.5">
-            <span className="truncate text-[11px] font-semibold text-slate-700 dark:text-slate-200">
-              {title}
-            </span>
-            <span className="inline-flex h-[12.6px] shrink-0 items-center rounded-full bg-slate-100 px-1.5 text-[9px] font-semibold text-slate-600 dark:bg-slate-800 dark:text-slate-400">
+          <span className="flex min-w-0 items-center gap-2">
+            <span className="truncate text-body text-slate-700 dark:text-slate-200">{title}</span>
+            <span className="inline-flex h-icon-row shrink-0 items-center rounded-full bg-slate-100 px-2 text-glyph text-slate-600 dark:bg-slate-800 dark:text-slate-400">
               <span className="text-optical-centre">{count}</span>
             </span>
           </span>
-          <span className="line-clamp-2 text-[10px] leading-snug text-slate-500 dark:text-slate-400">
+          <span className="line-clamp-2 text-supporting text-slate-500 dark:text-slate-400">
             {description}
           </span>
         </span>

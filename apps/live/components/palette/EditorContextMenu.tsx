@@ -238,7 +238,7 @@ export function EditorContextMenu(props: EditorContextMenuProps) {
                         icon={
                           <span
                             aria-hidden
-                            className="block h-3 w-3 rounded-[2px] border border-black/10"
+                            className="block size-icon-chevron rounded-none border border-black/10"
                             style={{ backgroundColor: n.fill }}
                           />
                         }
@@ -371,7 +371,7 @@ export function EditorContextMenu(props: EditorContextMenuProps) {
                 >
                   <span className="flex flex-col items-center gap-0.5">
                     <RotationGlyph deg={deg} />
-                    <span className="text-[9px] leading-none tabular-nums">{deg}°</span>
+                    <span className="text-glyph tabular-nums">{deg}°</span>
                   </span>
                 </SizeButton>
               ))}

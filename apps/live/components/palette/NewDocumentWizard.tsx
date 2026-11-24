@@ -58,17 +58,15 @@ export function NewDocumentWizard({
     <CanvasModalCard label="Start a new document" width="sm:w-[44rem]">
       <div className="flex items-start justify-between gap-3 border-b border-slate-100 px-6 pb-5 pt-6 dark:border-slate-800">
         <div>
-          <h2 className="text-xl font-semibold tracking-tight text-slate-900 dark:text-slate-50">
-            New Document
-          </h2>
-          <p className="mt-1 text-sm text-slate-500 dark:text-slate-300">
+          <h2 className="text-dialog-title text-slate-900 dark:text-slate-50">New Document</h2>
+          <p className="mt-1 text-body text-slate-500 dark:text-slate-300">
             What are you making today?
           </p>
         </div>
         <div className="-mr-2 -mt-1 flex shrink-0 items-center gap-0.5">
           <HelpArticleLink
             article="templates"
-            className="!h-8 !w-8 !rounded-lg !border-0 !text-sm !text-slate-500 hover:!bg-slate-100 hover:!text-slate-700 dark:!text-slate-400 dark:hover:!bg-slate-800 dark:hover:!text-slate-200"
+            className="!size-field !rounded-control !border-0 !text-body !text-slate-500 hover:!bg-slate-100 hover:!text-slate-700 dark:!text-slate-400 dark:hover:!bg-slate-800 dark:hover:!text-slate-200"
           />
           <button
             type="button"
@@ -77,7 +75,7 @@ export function NewDocumentWizard({
               if (!busy) onBackOut();
             }}
             aria-label="Close"
-            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+            className="flex size-field shrink-0 items-center justify-center rounded-menu text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
           >
             <CloseIcon />
           </button>
@@ -91,7 +89,7 @@ export function NewDocumentWizard({
           <button
             type="button"
             onClick={onOpenExisting}
-            className="mr-auto inline-flex items-center gap-1.5 rounded-lg px-2.5 py-2 text-xs font-medium text-slate-500 transition hover:bg-slate-100 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100"
+            className="mr-auto inline-flex items-center gap-2 rounded-menu px-3 py-2 text-body text-slate-500 transition hover:bg-slate-100 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100"
           >
             <FolderOpenIcon />
             Open Existing Document
@@ -104,7 +102,7 @@ export function NewDocumentWizard({
           size="xs"
           onClick={onSkip}
           disabled={busy}
-          className="rounded-lg py-2"
+          className="rounded-menu py-2"
         >
           Skip
         </Button>
@@ -112,7 +110,7 @@ export function NewDocumentWizard({
           size="xs"
           onClick={() => create(mode)}
           disabled={busy}
-          className="gap-1.5 rounded-lg px-4 py-2 shadow-sm"
+          className="gap-2 rounded-menu px-4 py-2 shadow-sm"
         >
           {busy ? <Spinner /> : <SparkleIcon />}
           {busy ? 'Creating…' : 'Create'}

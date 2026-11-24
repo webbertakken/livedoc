@@ -33,7 +33,6 @@ function ShareStateChip({
   return (
     <Chip
       height={STATE_CHIP_HEIGHT_PX}
-      caps
       icon={<StateDot state={state} className={m.dot} />}
       className={`${m.badge} ${className}`}
       {...rest}

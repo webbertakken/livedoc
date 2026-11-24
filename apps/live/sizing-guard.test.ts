@@ -77,18 +77,6 @@ const SIZED_PATHS = [
   'components/chrome/editor-mode',
   'components/chrome/phone-toolbar-items.ts',
   'components/tour/TourOfferButton.tsx',
-  'components/palette/ToolbarSearch.tsx',
-  'components/palette/EditCardsStripButton.tsx',
-  'components/palette/PaletteIconButton.tsx',
-  'components/palette/ToolbarPalette.tsx',
-  'components/palette/catalogue-strip-groups.tsx',
-  'components/palette/EsDrawContextButton.tsx',
-  'components/palette/EsPhotoStripButton.tsx',
-  'components/palette/CategoryBar.tsx',
-  'components/palette/ToolbarStripRail.tsx',
-  'components/palette/strip-rail-items.tsx',
-  'components/palette/BoardCardsStrip.tsx',
-  'components/palette/ArticleDockSlot.tsx',
   'components/canvas/whiteboard/DockToolbar.tsx',
   'components/canvas/whiteboard/WhiteboardDock.tsx',
   'components/canvas/whiteboard/SlotGhost.tsx',
@@ -122,10 +110,18 @@ const SIZED_PATHS = [
   'components/canvas/LayersThemeStrip.tsx',
   'components/canvas/CollaborateClusterButton.tsx',
   'components/canvas/cluster-strip.ts',
+  'components/palette',
+  'components/canvas/whiteboard',
 ];
 
 // Inside a moved folder, what stays off the scale: drawn art, and a part that moves with a later slice.
 const SIZING_EXCEPTIONS = [
+  // Drawn art: the animation previews, the palette's own glyphs and the Sankey menu's pictures.
+  'components/palette/animation-set-previews.tsx',
+  'components/palette/animation-previews-existing.tsx',
+  'components/palette/AnimationPreviewTile.tsx',
+  'components/palette/palette-icons.tsx',
+  'components/palette/sankey-menu-glyphs.tsx',
   // Pictures: the board picker's boards, a sheet's and a layout's, Add to Slot's cards and slots (drawn art).
   'components/plan/board-previews.tsx',
   'components/plan/dashboard/card-previews.tsx',

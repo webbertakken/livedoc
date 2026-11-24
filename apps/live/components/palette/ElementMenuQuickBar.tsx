@@ -66,7 +66,7 @@ export function quickBarItems(
 }
 
 const BUTTON =
-  'relative flex h-8 w-8 cursor-pointer items-center justify-center rounded-md transition focus-visible:outline-2 focus-visible:outline-brand-600';
+  'relative flex size-field cursor-pointer items-center justify-center rounded-control transition focus-visible:outline-2 focus-visible:outline-brand-600';
 const REST =
   'text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white';
 const ON =
@@ -94,7 +94,7 @@ export function ElementMenuQuickBar({
       role="toolbar"
       aria-label="Quick actions"
       data-element-quick-bar=""
-      className="flex items-center gap-0.5 border-b border-slate-100 px-1.5 py-1 dark:border-slate-800"
+      className="flex items-center gap-0.5 border-b border-slate-100 px-2 py-1 dark:border-slate-800"
     >
       {items.map((item) => (
         <Tooltip key={item.key} label={item.label}>

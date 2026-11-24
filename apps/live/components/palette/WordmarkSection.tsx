@@ -86,7 +86,7 @@ export function WordmarkSection({
             key={c.label}
             active={(element.textCase ?? null) === c.value}
             label={c.label}
-            icon={<span className="text-sm font-semibold">{c.sample}</span>}
+            icon={<span className="text-body">{c.sample}</span>}
             {...hover({ textCase: c.value })}
             onClick={() => onSet({ textCase: c.value })}
           />
@@ -114,11 +114,7 @@ export function WordmarkSection({
 }
 
 function Caption({ children }: { children: ReactNode }) {
-  return (
-    <p className="px-3 pt-2 text-[10px] font-medium text-slate-500 dark:text-slate-400">
-      {children}
-    </p>
-  );
+  return <p className="px-3 pt-2 text-supporting text-slate-500 dark:text-slate-400">{children}</p>;
 }
 
 // Spaced letters over a gentle arc: tracking and bend, the section's two sliders.

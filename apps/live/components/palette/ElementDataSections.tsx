@@ -549,7 +549,7 @@ export function ElementDataSections({
               />
               {/* Its own palette (docs/specs/009-elements/pie-chart.md "Legend"): re-colours every uncoloured row,
                   so a legend set to a chart's palette stays in step with it. */}
-              <p className="px-3 pt-2 text-[10px] font-medium text-slate-500 dark:text-slate-400">
+              <p className="px-3 pt-2 text-supporting text-slate-500 dark:text-slate-400">
                 Palette
               </p>
               <ChartPalettePresets
@@ -608,7 +608,7 @@ export function ElementDataSections({
               icon={<ToolsMenuGlyph />}
               {...sectionProps('button-mode')}
             >
-              <p className="px-3 pt-1 text-[10px] font-medium text-slate-500 dark:text-slate-400">
+              <p className="px-3 pt-1 text-supporting text-slate-500 dark:text-slate-400">
                 Switches the presser to
               </p>
               <MenuTileGrid cols={3}>
@@ -678,9 +678,7 @@ export function ElementDataSections({
               icon={<ChartMenuGlyph />}
               {...sectionProps('chart')}
             >
-              <p className="px-3 pt-1 text-[10px] font-medium text-slate-500 dark:text-slate-400">
-                Legend
-              </p>
+              <p className="px-3 pt-1 text-supporting text-slate-500 dark:text-slate-400">Legend</p>
               <LegendPositionTiles
                 position={shapeTarget?.chartLegendPosition ?? 'bottom'}
                 show={shapeTarget?.chartLegend !== false}

@@ -44,8 +44,7 @@ export const TOOLBAR_TRIGGER_TONE =
 
 // Normalises whatever <svg> an option carries to a consistent 14px box so
 // the 13px tool glyphs and the 18px category glyphs render at one size.
-const ICON_WRAP =
-  'flex h-[14px] w-[14px] shrink-0 items-center justify-center [&>svg]:h-[14px] [&>svg]:w-[14px]';
+const ICON_WRAP = 'flex size-icon-row shrink-0 items-center justify-center [&>svg]:size-icon-row';
 
 // A compact select-style dropdown for the palette: a bordered trigger that
 // shows the current option (icon + label + chevron) and a listbox popover
@@ -276,11 +275,11 @@ export function PaletteDropdown({
   // hit target at the top of the panel.
   const shape =
     variant === 'flush'
-      ? 'rounded-none border-0 px-3.5 py-3'
+      ? 'rounded-none border-0 px-4 py-3'
       : variant === 'toolbar'
         ? // A phone's strip tucks the caret in a little closer.
-          'h-field rounded-md border-0 px-2 phone:gap-1'
-        : 'h-[26px] rounded-md border px-2';
+          'h-field rounded-control border-0 px-2 phone:gap-1'
+        : 'h-row rounded-control border px-2';
   const trigger = (
     <button
       type="button"
@@ -292,7 +291,7 @@ export function PaletteDropdown({
       aria-expanded={open}
       aria-label={ariaLabel}
       data-tour-id={dataTourId}
-      className={`flex min-w-0 items-center gap-1.5 ${shape} ${variant === 'bordered' ? 'text-[11px]' : 'text-xs'} font-medium transition ${
+      className={`flex min-w-0 items-center gap-2 ${shape} text-body transition ${
         accent
           ? 'border-brand-300 bg-brand-50 text-brand-700 dark:border-brand-500/50 dark:bg-brand-500/15 dark:text-brand-200'
           : variant === 'toolbar'
@@ -338,7 +337,7 @@ export function PaletteDropdown({
             className={`fixed z-[var(--z-overlay)] w-max border border-slate-200 bg-white py-1 shadow-lg dark:border-slate-700 dark:bg-slate-900 ${
               // The grid needs its own columns + a floor width; the list keeps
               // hugging its content as before.
-              grid ? 'grid min-w-[13rem] grid-cols-3 gap-1 px-1.5 pb-1.5 pt-1.5' : ''
+              grid ? 'grid min-w-[13rem] grid-cols-3 gap-1 px-2 pb-1.5 pt-1.5' : ''
             } ${
               // The menu grows out of the CORNER its trigger sits at, so
               // opening the canvas-tool picker (top-left of the palette)
@@ -359,9 +358,9 @@ export function PaletteDropdown({
               // rounded + hug their content via menuClassName.
               connected
                 ? coords?.flipUp
-                  ? 'rounded-t-md'
-                  : 'rounded-b-md'
-                : `rounded-md ${menuClassName}`
+                  ? 'rounded-t-control'
+                  : 'rounded-b-control'
+                : `rounded-control ${menuClassName}`
             }`}
             style={{
               left: coords?.left,
@@ -415,7 +414,7 @@ export function PaletteDropdown({
                           // A tour can ring one band: its heading through its last tile (the
                           // Workshop tour's Collaborate step).
                           data-tour-id={`band-${heading.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`}
-                          className={`col-span-full px-1.5 pb-0.5 text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 ${bandTint(opt.group)} ${
+                          className={`col-span-full px-2 pb-0.5 text-supporting text-slate-500 dark:text-slate-400 ${bandTint(opt.group)} ${
                             i === 0
                               ? 'pt-0.5'
                               : 'mt-1 border-t border-slate-200 pt-1.5 dark:border-slate-700'
@@ -436,13 +435,13 @@ export function PaletteDropdown({
                           onChange(opt.id);
                           setOpen(false);
                         }}
-                        className={`relative flex cursor-pointer items-center rounded-md text-[11px] font-medium leading-tight transition ${
+                        className={`relative flex cursor-pointer items-center rounded-control text-supporting transition ${
                           // A full-width tile reads as a banner, not a tall
                           // one-column card stretched sideways, so it lays its
                           // glyph BESIDE the label rather than above it.
                           opt.fullWidth
                             ? 'col-span-full justify-center gap-2 px-2 py-1.5 text-left'
-                            : 'flex-col justify-start gap-1.5 px-1.5 py-2 text-center'
+                            : 'flex-col justify-start gap-2 px-2 py-2 text-center'
                         } ${
                           // The band tint is DROPPED on the selected tile.
                           // Both set a background, and which one wins is
@@ -454,7 +453,7 @@ export function PaletteDropdown({
                           opt.disabled
                             ? 'cursor-not-allowed text-slate-700 opacity-40 dark:text-slate-200'
                             : opt.id === value
-                              ? 'rounded-md bg-brand-100 text-brand-700 dark:bg-brand-500/20 dark:text-brand-100'
+                              ? 'rounded-control bg-brand-100 text-brand-700 dark:bg-brand-500/20 dark:text-brand-100'
                               : 'text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800'
                         }`}
                       >
@@ -480,10 +479,8 @@ export function PaletteDropdown({
                               worth discovering and worth nothing at the cost of
                               the label's line. */}
                         {opt.shortcut ? (
-                          <kbd className="inline-flex items-center absolute right-0.5 top-0.5 rounded-[3px] px-0.5 text-[8px] font-semibold leading-[1.4] text-slate-400 pointer-coarse:hidden dark:text-slate-400">
-                            <span className="text-optical-line text-optical-caps [--optical-tracking:0em]">
-                              {opt.shortcut}
-                            </span>
+                          <kbd className="inline-flex items-center absolute right-0.5 top-0.5 rounded-control px-0.5 text-glyph text-slate-400 pointer-coarse:hidden dark:text-slate-400">
+                            <span className="text-optical-line">{opt.shortcut}</span>
                           </kbd>
                         ) : null}
                       </button>
@@ -528,16 +525,14 @@ export function PaletteDropdown({
                           // same control AND are the same height as the selected
                           // item (`py-3`), which is an easier tap target on touch.
                           // Flush pickers are roomier than the compact filter pills.
-                          connected ? 'px-3.5 py-3 text-xs' : 'px-2.5 py-1.5 text-[11px]'
+                          connected ? 'px-4 py-3 text-supporting' : 'px-3 py-1.5 text-body'
                         }`}
                       >
                         {opt.icon ? <span className={ICON_WRAP}>{opt.icon}</span> : null}
                         <span className="flex-1 truncate">{opt.label}</span>
                         {opt.shortcut ? (
-                          <kbd className="inline-flex items-center rounded-[3px] border border-slate-300 bg-white px-1 text-[8px] font-semibold leading-[1.4] text-slate-500 pointer-coarse:hidden dark:border-slate-600 dark:bg-slate-900 dark:text-slate-400">
-                            <span className="text-optical-line text-optical-caps [--optical-tracking:0em]">
-                              {opt.shortcut}
-                            </span>
+                          <kbd className="inline-flex items-center rounded-control border border-slate-300 bg-white px-1 text-glyph text-slate-500 pointer-coarse:hidden dark:border-slate-600 dark:bg-slate-900 dark:text-slate-400">
+                            <span className="text-optical-line">{opt.shortcut}</span>
                           </kbd>
                         ) : null}
                       </button>

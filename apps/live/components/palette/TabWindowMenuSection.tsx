@@ -37,7 +37,7 @@ export function TabWindowMenuSection({
     <MenuAccordionSection title="Tab Window" icon={<WindowIcon />} {...sectionProps('tab-window')}>
       {mayChoose ? (
         <div className="px-1 pb-1">
-          <p className="px-2 pb-0.5 pt-1 text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+          <p className="px-2 pb-0.5 pt-1 text-supporting text-slate-500 dark:text-slate-400">
             Shows
           </p>
           <TabWindowTabList

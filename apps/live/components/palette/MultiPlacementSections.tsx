@@ -135,7 +135,7 @@ export function MultiPlacementSections({
               type="button"
               onClick={props.onToggleAspectLock}
               aria-pressed={!!boxedSel[0]!.aspectLocked}
-              className="flex w-full cursor-pointer items-center justify-between px-3 py-1.5 text-xs font-medium text-slate-700 transition hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
+              className="flex w-full cursor-pointer items-center justify-between px-3 py-1.5 text-body text-slate-700 transition hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
             >
               <span className="flex items-center gap-2">
                 <span className="text-slate-400 dark:text-slate-400">
@@ -186,7 +186,7 @@ export function MultiPlacementSections({
               >
                 <span className="flex flex-col items-center gap-0.5">
                   <RotationGlyph deg={deg} />
-                  <span className="text-[9px] leading-none tabular-nums">{deg}°</span>
+                  <span className="text-glyph tabular-nums">{deg}°</span>
                 </span>
               </SizeButton>
             ))}

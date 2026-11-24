@@ -8,7 +8,7 @@ const LINK = 'font-medium text-brand-700 underline-offset-2 hover:underline dark
 
 export function ImageCreditRow({ credit }: { credit: ImageCredit }) {
   return (
-    <div className="px-3 py-2 text-xs">
+    <div className="px-3 py-2 text-supporting">
       <p className="font-medium text-slate-700 dark:text-slate-200">Credit</p>
       <p className="mt-0.5 break-words text-slate-600 dark:text-slate-300">{credit.text}</p>
       <p className="mt-1 flex gap-3">

@@ -54,7 +54,7 @@ export function PaletteMyShapesTab({ onInsert }: { onInsert: (item: ShapeLibrary
               <section key={library.id} aria-labelledby={headingId}>
                 <h3
                   id={headingId}
-                  className="mb-1 truncate px-1 text-[11px] font-semibold text-slate-700 dark:text-slate-200"
+                  className="mb-1 truncate px-1 text-supporting text-slate-700 dark:text-slate-200"
                 >
                   {library.name}
                 </h3>

@@ -174,7 +174,7 @@ export function ShapesFlyout({
             closeMenu();
           }}
           onBlur={() => setMenuFor(null)}
-          className="absolute inset-x-0 bottom-0 flex h-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-sm text-slate-700 shadow-md hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-brand-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+          className="absolute inset-x-0 bottom-0 flex h-prominent items-center justify-center rounded-menu border border-slate-200 bg-white text-body text-slate-700 shadow-md hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-brand-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
         >
           Pin to dock
         </button>
@@ -239,7 +239,7 @@ function ShapeEntry({
           e.stopPropagation();
           onMenu();
         }}
-        className={`relative flex h-10 w-10 cursor-pointer touch-none items-center justify-center rounded-lg transition hover:bg-slate-100 dark:hover:bg-slate-800 ${
+        className={`relative flex h-10 w-10 cursor-pointer touch-none items-center justify-center rounded-menu transition hover:bg-slate-100 dark:hover:bg-slate-800 ${
           selected ? 'bg-brand-50 ring-2 ring-brand-500 dark:bg-brand-500/15' : ''
         } ${dragged ? 'opacity-40' : ''}`}
       >
@@ -247,7 +247,7 @@ function ShapeEntry({
         {key ? (
           <span
             aria-hidden
-            className="pointer-events-none absolute bottom-0.5 right-1 text-[8px] font-medium uppercase leading-none text-slate-500 pointer-coarse:hidden dark:text-slate-400"
+            className="pointer-events-none absolute bottom-0 right-0.5 text-glyph leading-none text-slate-500 pointer-coarse:hidden dark:text-slate-400"
           >
             {key}
           </span>

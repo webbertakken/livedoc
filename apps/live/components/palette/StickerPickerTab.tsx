@@ -36,7 +36,7 @@ function StickerTile({ sticker, onAdd }: { sticker: StickerDef; onAdd: (id: stri
           e.dataTransfer.setData(STICKER_DND_MIME, sticker.id);
           e.dataTransfer.effectAllowed = 'copy';
         }}
-        className={`flex items-center justify-center rounded-lg p-0.5 transition hover:bg-slate-100 dark:hover:bg-slate-800 ${
+        className={`flex items-center justify-center rounded-menu p-0.5 transition hover:bg-slate-100 dark:hover:bg-slate-800 ${
           wide ? 'h-11 w-full' : 'h-11 w-11'
         }`}
       >
@@ -57,9 +57,7 @@ export function stickerBrowseGroups(): BrowserCategory<StickerDef>[] {
     return {
       id: cat.id,
       label: cat.label,
-      icon: first ? (
-        <StickerArt def={first} className="h-[22px] w-[22px] overflow-visible" />
-      ) : null,
+      icon: first ? <StickerArt def={first} className="size-icon-title overflow-visible" /> : null,
       items,
     };
   });

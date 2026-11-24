@@ -52,6 +52,8 @@ describe('judgeClass', () => {
 
   it('refuses tracked capitals', () => {
     expect(judgeClass('uppercase')).toMatch(/no tracked capitals/);
+    // The optical-alignment utility for capitals sets uppercase with its tracking (theme.css).
+    expect(judgeClass('text-optical-caps')).toMatch(/no tracked capitals/);
     expect(judgeClass('tracking-wide')).toMatch(/no tracked capitals/);
     expect(judgeClass('tracking-[0.08em]')).toMatch(/no tracked capitals/);
     expect(judgeClass('tracking-tight')).toBeNull();

@@ -85,9 +85,9 @@ export function EraserFlyoutBody({ model }: { model: WhiteboardDockModel }) {
           selected={model.prefs.eraserMode === m.id}
           onPick={() => model.setEraserMode(m.id)}
         >
-          <span className="flex w-full flex-col items-start text-left leading-tight">
+          <span className="flex w-full flex-col items-start text-left">
             <span className="font-medium">{m.label}</span>
-            <span className="text-xs text-slate-500 dark:text-slate-400">{m.hint}</span>
+            <span className="text-supporting text-slate-500 dark:text-slate-400">{m.hint}</span>
           </span>
         </FlyoutOption>
       ))}
@@ -197,7 +197,7 @@ function FlyoutRow({
       {!label ? null : heading ? (
         <FlyoutHeading className="mb-1.5">{label}</FlyoutHeading>
       ) : (
-        <p className="mb-1 text-xs font-medium text-slate-600 dark:text-slate-300">{label}</p>
+        <p className="mb-1 text-supporting text-slate-600 dark:text-slate-300">{label}</p>
       )}
       <div className="flex flex-wrap gap-1">{children}</div>
     </div>

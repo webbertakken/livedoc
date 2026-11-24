@@ -308,7 +308,7 @@ export function ElementAppearanceSections({
             {/* A card, callout, header or boundary places its own icon, so it offers no position. */}
             {positionsInlineIcon(target) ? (
               <>
-                <p className="px-3 pb-1 text-[10px] font-medium text-slate-500 dark:text-slate-400">
+                <p className="px-3 pb-1 text-supporting text-slate-500 dark:text-slate-400">
                   Icon position
                 </p>
                 <IconPositionGrid

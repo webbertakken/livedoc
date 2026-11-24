@@ -98,7 +98,7 @@ export function CategoryFlyoutSide({
           ? { top: side.top - lift }
           : { ...uiUnscaleStyle(scale), top: side.top - lift, right: side.right }
       }
-      className={`absolute ${isMobile ? 'inset-x-3' : 'w-[19rem]'} max-h-[calc(100dvh-10rem)] origin-top-left animate-dropdown-down transition-opacity duration-short ${seeThrough ? 'opacity-30' : ''} overflow-y-auto overflow-x-hidden rounded-xl border border-slate-200 bg-white shadow-xl shadow-slate-900/15 dark:border-slate-700 dark:bg-slate-900 dark:shadow-slate-950/50`}
+      className={`absolute ${isMobile ? 'inset-x-3' : 'w-[19rem]'} max-h-[calc(100dvh-10rem)] origin-top-left animate-dropdown-down transition-opacity duration-short ${seeThrough ? 'opacity-30' : ''} overflow-y-auto overflow-x-hidden rounded-surface border border-slate-200 bg-white shadow-xl shadow-slate-900/15 dark:border-slate-700 dark:bg-slate-900 dark:shadow-slate-950/50`}
     >
       <FlyoutHeader
         icon={def.icon}

@@ -77,26 +77,26 @@ export function PerShapeColoursSection({
       open={open}
       onToggle={onToggle}
     >
-      <p className="mb-2 text-[11px] leading-snug text-slate-500 dark:text-slate-300">
+      <p className="mb-2 text-supporting text-slate-500 dark:text-slate-300">
         Give a shape kind its own colours (like UML). Leave a kind unset to use the base colours.
       </p>
       {/* Compact two-column rows: a shape preview + name, then its
             three colour dots (fill / outline / text, hover-carded). Dense
             and scannable rather than a wall of big swatch blocks. */}
-      <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
         {PER_SHAPE_KINDS.map((kind) => {
           const o = def.shapeColors?.[kind];
           const r = resolved(def, kind);
           return (
             <div
               key={kind}
-              className="group flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-2 py-1.5 dark:border-slate-700 dark:bg-slate-800"
+              className="group flex items-center gap-2 rounded-menu border border-slate-200 bg-white px-2 py-1.5 dark:border-slate-700 dark:bg-slate-800"
             >
               {/* Preview the shape on the THEME background; only the
                     shape's interior takes the fill (stroke = currentColor).
                     The CSS var overrides the icon paths' fill="none". */}
               <span
-                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-slate-200 dark:border-slate-700 [&_svg]:h-5 [&_svg]:w-5 [&_svg_*]:[fill:var(--shape-fill)]"
+                className="flex size-field shrink-0 items-center justify-center rounded-control border border-slate-200 dark:border-slate-700 [&_svg]:size-icon-title [&_svg_*]:[fill:var(--shape-fill)]"
                 style={
                   {
                     backgroundColor: def.backgroundColor,
@@ -107,7 +107,7 @@ export function PerShapeColoursSection({
               >
                 <ShapeIcon kind={kind} />
               </span>
-              <span className="min-w-0 flex-1 truncate text-xs font-medium text-slate-700 dark:text-slate-200">
+              <span className="min-w-0 flex-1 truncate text-body text-slate-700 dark:text-slate-200">
                 {elementKindLabel({ type: 'shape', shape: kind } as Parameters<
                   typeof elementKindLabel
                 >[0])}
@@ -143,7 +143,7 @@ export function PerShapeColoursSection({
                     onClick={() => clearShape(kind)}
                     disabled={!o}
                     aria-label={`Reset ${kind} colours`}
-                    className="flex h-5 w-5 items-center justify-center rounded text-slate-400 opacity-0 transition hover:text-slate-600 group-hover:opacity-100 disabled:!opacity-0 [@media(hover:none)]:opacity-100 dark:hover:text-slate-300"
+                    className="flex size-icon-title items-center justify-center rounded-control text-slate-400 opacity-0 transition hover:text-slate-600 group-hover:opacity-100 disabled:!opacity-0 [@media(hover:none)]:opacity-100 dark:hover:text-slate-300"
                   >
                     <ResetGlyph />
                   </button>

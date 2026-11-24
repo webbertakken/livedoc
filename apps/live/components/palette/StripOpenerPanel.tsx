@@ -26,12 +26,10 @@ export function StripOpenerPanel({
   pendingDraw: PendingDraw | null;
 }) {
   return (
-    <div className="flex flex-col gap-2.5">
-      <div className="px-1.5 pt-0.5">
-        <h3 className="text-[13px] font-semibold text-slate-900 dark:text-slate-50">{label}</h3>
-        <p className="text-[11.5px] leading-snug text-slate-500 dark:text-slate-400">
-          {description}
-        </p>
+    <div className="flex flex-col gap-3">
+      <div className="px-2 pt-0.5">
+        <h3 className="text-body text-slate-900 dark:text-slate-50">{label}</h3>
+        <p className="text-supporting text-slate-500 dark:text-slate-400">{description}</p>
       </div>
       <ul className="grid grid-cols-2 gap-1">
         {visibleTiles([...tiles], actions.hasImage).map((def) => (
@@ -64,19 +62,17 @@ function OpenerCard({
       onDragStart={drag}
       // The drag's canvas preview goes with the drag, dropped or not, as a tile's does (PaletteIconButton).
       onDragEnd={() => setPaletteDragPreview(null)}
-      className="group flex w-full items-start gap-2.5 rounded-xl p-2 text-left ring-1 ring-transparent transition hover:bg-slate-50 hover:ring-slate-200 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-brand-500 dark:hover:bg-slate-800/70 dark:hover:ring-slate-700"
+      className="group flex w-full items-start gap-3 rounded-surface p-2 text-left ring-1 ring-transparent transition hover:bg-slate-50 hover:ring-slate-200 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-brand-500 dark:hover:bg-slate-800/70 dark:hover:ring-slate-700"
     >
       <span
         aria-hidden
-        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-brand-50 text-brand-700 ring-1 ring-brand-100 transition group-hover:bg-brand-100 dark:bg-brand-500/15 dark:text-brand-200 dark:ring-brand-500/25 dark:group-hover:bg-brand-500/25 [&_svg]:h-5 [&_svg]:w-5"
+        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-menu bg-brand-50 text-brand-700 ring-1 ring-brand-100 transition group-hover:bg-brand-100 dark:bg-brand-500/15 dark:text-brand-200 dark:ring-brand-500/25 dark:group-hover:bg-brand-500/25 [&_svg]:size-icon-title"
       >
         {def.icon}
       </span>
       <span className="flex min-w-0 flex-col gap-0.5 pt-0.5">
-        <span className="text-[13px] font-semibold leading-tight text-slate-800 dark:text-slate-100">
-          {name}
-        </span>
-        <span className="text-[11.5px] leading-snug text-slate-500 dark:text-slate-400">
+        <span className="text-body text-slate-800 dark:text-slate-100">{name}</span>
+        <span className="text-supporting text-slate-500 dark:text-slate-400">
           <PointerWords text={def.blurb ?? def.description} />
         </span>
       </span>

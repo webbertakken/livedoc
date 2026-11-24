@@ -161,6 +161,8 @@ A surface names the token, never the number, so the scale changes in one place.
   group.
 - Its controls take the drawing tool's 32 px (`h-field`), so the line reads as one height (D242, default).
 - Draw's dock holds drawing tools wherever it sits, so its controls are 32 px at the bottom too.
+- The palette's menus are chrome on the scale; their pictures are drawn art: animation previews, the palette's own
+  glyphs and the Sankey menu's pictures.
 - The bottom line and every other toolbar group keep the 28 px control.
 - A toolbar control's label reads `text-body`, regular; medium marks it only while it is pressed or chosen.
 - A tool's key hint is a glyph (`text-glyph`) in the tile's corner; a toolbar icon is `size-icon-toolbar`.
@@ -172,6 +174,8 @@ A surface names the token, never the number, so the scale changes in one place.
   or file that has moved to it; each app's own `sizing-guard.test.ts` runs it over that app's moved paths.
 - It refuses a type size, a weight, tracked capitals, a height, an icon size, a gap, a side padding or a radius that
   is not a step above, and names the token to use instead.
+- Tracked capitals are `uppercase`, a `tracking-` wider than normal, and `text-optical-caps`, the capitals of
+  [Optical alignment](optical-alignment.md) (D42), which sets uppercase with its tracking.
 - A type size, a height, an icon size or a radius is named by its token, even when its number is on the scale.
 - A gap or a side padding is named by its number (`gap-2`, `px-3`), which must be a step.
 - A box under 12 px or over 36 px (a hairline, a dot, an avatar, a panel) is layout, not the scale, and passes.

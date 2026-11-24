@@ -35,9 +35,7 @@ export function MoveToLayerRow({
   if (layers.length <= 1) return null;
   return (
     <div className="px-2 py-1.5">
-      <p className="px-1 pb-1 text-[10px] font-medium text-slate-500 dark:text-slate-400">
-        Move to layer
-      </p>
+      <p className="px-1 pb-1 text-supporting text-slate-500 dark:text-slate-400">Move to layer</p>
       <MenuTileGrid cols={2}>
         {[...layers].reverse().map((layer) => (
           <MenuTile
@@ -50,7 +48,7 @@ export function MoveToLayerRow({
               // The glyph fallback only remains for a fully empty tab,
               // where there's no viewBox to draw against.
               thumbViewBox ? (
-                <span className="flex h-7 w-11 items-center justify-center overflow-hidden rounded border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-950">
+                <span className="flex h-row w-11 items-center justify-center overflow-hidden rounded-control border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-950">
                   {thumbMarkup.get(layer.id) ? (
                     <svg
                       viewBox={thumbViewBox}
