@@ -229,6 +229,7 @@ packages/
   office-packages/ # the layer under every office file: zip, XML, the ODF package, the OOXML container, metadata, units (DOM-free)
   text-documents/ # the text document: its model, its live state (Yjs), its ODF and OOXML files, conversion (DOM-free)
   pdf-documents/  # the PDF document: its live changes (Yjs), marks and limits, and the engine that reads, draws and bakes a PDF
+  live-updates/   # Yjs updates as a live tab kind's room reads them: the roots an update touches (pure)
   document-views/ # read-only text views of a tab (outline, graph, layout, ...) for agents and scripts
   api-schema/     # wire-format DTOs the api worker emits + the live editor consumes
   api-client/     # the api client the MCP server and the CLI share (fetch, timeouts, ApiError)

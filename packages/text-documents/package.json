@@ -20,6 +20,7 @@
   },
   "dependencies": {
     "@livedoc/document": "workspace:*",
+    "@livedoc/live-updates": "workspace:*",
     "@livedoc/office-packages": "workspace:*",
     "yjs": "^13.6.33"
   },

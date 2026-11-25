@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import {
   Body,
+  LiveThreads,
   TextDocumentState,
   TEXT_DOCUMENT_CHUNK_BYTES,
   TEXT_DOCUMENT_FRAME_CHARS,
@@ -68,7 +69,11 @@ describe('RoomLiveTabs, for a text document', () => {
     const { room, sequence, sendTo } = await roomWith(db);
     const op = frame('t1', 'Typed');
     expect(
-      await room.accept({ ws, presenceId: 'p1', documentId: 'D', level: 'edit' as const }, op, 4),
+      await room.accept(
+        { ws, presenceId: 'p1', documentId: 'D', level: 'edit' as const, adderKey: null },
+        op,
+        4,
+      ),
     ).toBe(true);
     expect(await storedUpdates(db.env, 't1')).toHaveLength(1);
     expect(sequence).toHaveBeenCalledWith('p1', op, ws);
@@ -78,7 +83,13 @@ describe('RoomLiveTabs, for a text document', () => {
   it('refuses a frame that is malformed, does not decode, or is not for a text document', async () => {
     const db = sqliteD1();
     const { room, sequence } = await roomWith(db);
-    const sender = { ws, presenceId: 'p1', documentId: 'D', level: 'edit' as const };
+    const sender = {
+      ws,
+      presenceId: 'p1',
+      documentId: 'D',
+      level: 'edit' as const,
+      adderKey: null,
+    };
     expect(await room.accept(sender, { kind: 'text-document', tabId: 't1' })).toBe(false);
     expect(
       await room.accept(sender, {
@@ -96,7 +107,13 @@ describe('RoomLiveTabs, for a text document', () => {
   it('compacts the log once it passes its size', async () => {
     const db = sqliteD1();
     const { room } = await roomWith(db, ROOMY);
-    const sender = { ws, presenceId: 'p1', documentId: 'D', level: 'edit' as const };
+    const sender = {
+      ws,
+      presenceId: 'p1',
+      documentId: 'D',
+      level: 'edit' as const,
+      adderKey: null,
+    };
     // Text that does not compress in an update: one big paragraph past the log's size.
     const big = Array.from({ length: TEXT_DOCUMENT_LOG_BYTES / 6 }, (_, i) =>
       (i * 7919).toString(36).padStart(6, '0'),
@@ -181,7 +198,13 @@ describe('RoomLiveTabs, for a text document', () => {
   it('compacts the log once it holds its count of updates', async () => {
     const db = sqliteD1();
     const { room } = await roomWith(db);
-    const sender = { ws, presenceId: 'p1', documentId: 'D', level: 'edit' as const };
+    const sender = {
+      ws,
+      presenceId: 'p1',
+      documentId: 'D',
+      level: 'edit' as const,
+      adderKey: null,
+    };
     const doc = TextDocumentState.load();
     const updates: Uint8Array[] = [];
     doc.on('update', (u: Uint8Array) => updates.push(u));
@@ -210,7 +233,13 @@ describe('RoomLiveTabs, for a text document', () => {
          VALUES ('t1', ?, 0, 1, 1, 0, 1)`,
       )
       .run(TEXT_DOCUMENT_MAX_CHARS);
-    const sender = { ws, presenceId: 'p1', documentId: 'D', level: 'edit' as const };
+    const sender = {
+      ws,
+      presenceId: 'p1',
+      documentId: 'D',
+      level: 'edit' as const,
+      adderKey: null,
+    };
     expect(await room.accept(sender, frame('t1', 'x'))).toBe(false);
     expect(await storedUpdates(db.env, 't1')).toEqual([]);
     expect(sequence).not.toHaveBeenCalled();
@@ -268,7 +297,7 @@ describe('a text document frame from a level too low', () => {
     async (level) => {
       const db = sqliteD1();
       const { room, sequence, sendTo } = await roomWith(db);
-      const sender = { ws, presenceId: 'p1', documentId: 'D', level };
+      const sender = { ws, presenceId: 'p1', documentId: 'D', level, adderKey: 'k-ada' };
       expect(await room.accept(sender, frame('t1', 'x'))).toBe(false);
       expect(await storedUpdates(db.env, 't1')).toEqual([]);
       expect(sequence).not.toHaveBeenCalled();
@@ -282,6 +311,72 @@ describe('a text document frame from a level too low', () => {
       ).toBe('level');
     },
   );
+});
+
+// review.md "How a comment is kept": a Participant's update touching only its own comments is relayed; one in another's
+// name, or from a session with no key, is refused whole.
+describe("a Participant's comment on a text document", () => {
+  const commentFrame = (key: string) => {
+    const doc = TextDocumentState.load();
+    LiveThreads.begin(
+      doc,
+      {
+        id: 'th',
+        tab: 't.0',
+        ...LiveThreads.anchorFor(TextDocumentState.body(doc), 0, 1),
+        quote: '',
+        comment: {
+          id: 'c1',
+          text: 'A thought',
+          at: 1,
+          author: { key, name: 'Ada', colour: '#000' },
+        },
+      },
+      'me',
+    );
+    return {
+      kind: 'text-document',
+      tabId: 't1',
+      update: base64OfBytes(TextDocumentState.encode(doc)),
+    };
+  };
+
+  it("stores and relays a comment in the sender's own name", async () => {
+    const db = sqliteD1();
+    const { room, sequence } = await roomWith(db);
+    const sender = {
+      ws,
+      presenceId: 'p1',
+      documentId: 'D',
+      level: 'participate' as const,
+      adderKey: 'k-ada',
+    };
+    expect(await room.accept(sender, commentFrame('k-ada'))).toBe(true);
+    expect(await storedUpdates(db.env, 't1')).toHaveLength(1);
+    expect(sequence).toHaveBeenCalled();
+  });
+
+  it.each<[string, string | null, string]>([
+    ["in another's name", 'k-ada', 'k-ben'],
+    ['from a session with no key', null, 'k-ada'],
+  ])('refuses a comment %s whole', async (_case, adderKey, author) => {
+    const db = sqliteD1();
+    const { room, sendTo } = await roomWith(db);
+    const sender = {
+      ws,
+      presenceId: 'p1',
+      documentId: 'D',
+      level: 'participate' as const,
+      adderKey,
+    };
+    expect(await room.accept(sender, commentFrame(author))).toBe(false);
+    expect(await storedUpdates(db.env, 't1')).toEqual([]);
+    expect(sendTo).toHaveBeenCalledWith(ws, {
+      kind: 'op',
+      from: 'system',
+      op: { kind: 'text-document-refused', tabId: 't1', name: 'level_too_low' },
+    });
+  });
 });
 
 describe('the role gate on text document edits', () => {

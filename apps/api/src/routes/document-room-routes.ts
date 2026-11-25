@@ -61,10 +61,11 @@ export async function handleDocumentRoomRoutes(ctx: RouteContext): Promise<Respo
     const workbench = ctx.workbench ?? null;
     const personId = ctx.sessionAccountId ?? workbench?.ownerId ?? null;
     const role = workbench ? capWorkbenchRole(grant.role, workbench.level) : grant.role;
-    // A Participant's adder key (docs/specs/013-workspace/share-roles.md "Integrity"): what the room stamps on the
-    // stickies and text it adds. Only a Participant needs one; no identity, no key (it may then edit, never add).
+    // The adder key (docs/specs/013-workspace/share-roles.md "Integrity"): what the room stamps on the stickies and
+    // text a Participant adds, and the author of a text document's comments, so an Editor holds one too. A Viewer needs
+    // none; no identity, no key (a Participant may then edit, never add).
     const caller = ctx.resolveOwner();
-    const adderKey = role === 'participate' && caller ? await adderKeyFor(id, caller) : null;
+    const adderKey = role !== 'view' && caller ? await adderKeyFor(id, caller) : null;
     const ticket = await createWsTicket(env, id, {
       role,
       tabScope: grant.tabScope,

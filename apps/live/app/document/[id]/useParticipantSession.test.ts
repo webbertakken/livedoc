@@ -34,9 +34,9 @@ describe('useParticipantSession', () => {
     expect(notify).toHaveBeenCalledWith(HELD_BACK_NOTICE);
   });
 
-  // An Editor previewing as a Participant (docs/specs/007-editor/live-app.md#role-pill): no key from the room, so the
-  // preview's own; a room key, once held, wins.
-  it('takes the preview key while the room gives none', () => {
+  // An Editor previewing as a Participant (docs/specs/007-editor/live-app.md#role-pill): the preview's own key, even once
+  // the room hands the Editor its own (share-roles.md "Integrity"), so no real key matches what the preview adds.
+  it("takes the preview key while previewing, over the room's", () => {
     const { result } = renderHook(() =>
       useParticipantSession('participate', undefined, 'preview-p1'),
     );
@@ -47,6 +47,6 @@ describe('useParticipantSession', () => {
       addedBy: 'preview-p1',
     });
     act(() => result.current.setAdderKey('a'.repeat(32)));
-    expect(result.current.adderKey).toBe('a'.repeat(32));
+    expect(result.current.adderKey).toBe('preview-p1');
   });
 });

@@ -2,7 +2,8 @@
 // live-editing-and-storage.md "The room's op kinds"): the room judges a Participant's update by what it touches,
 // never by what its sender says. Read by applying the update to the stored state and asking Yjs which roots it
 // landed in; `removed` and `stored` are judged by what they hold, before against after.
-import * as Y from 'yjs';
+import type * as Y from 'yjs';
+import { touchedRoots } from '@livedoc/live-updates';
 import { canonical } from './canonical';
 import { PdfLiveChanges, type PdfRoot } from './live-changes';
 
@@ -19,27 +20,6 @@ export const PDF_REVIEWING_ROOTS = [
 ] as const satisfies readonly PdfRoot[];
 
 type Held = Record<string, unknown>;
-
-/** A shared type as a transaction names the ones it changed. */
-type SharedType = Y.Transaction['changed'] extends Map<infer Type, unknown> ? Type : never;
-
-const rootOf = (type: SharedType): SharedType => {
-  let node = type;
-  while (node._item !== null) node = node._item.parent as SharedType;
-  return node;
-};
-
-/** Whether the document holds every item and deletion the update carries: none stands on something missing. */
-function holdsAll(doc: Y.Doc, update: Uint8Array): boolean {
-  const { structs, ds } = Y.decodeUpdate(update);
-  const held = Y.decodeStateVector(Y.encodeStateVector(doc));
-  const within = (client: number, end: number) => end <= (held.get(client) ?? 0);
-  if (!structs.every((struct) => within(struct.id.client, struct.id.clock + struct.length)))
-    return false;
-  for (const [client, deleted] of ds.clients)
-    if (!deleted.every((range) => within(client, range.clock + range.len))) return false;
-  return true;
-}
 
 const kindOf = (entry: unknown): unknown =>
   typeof entry === 'object' && entry !== null && 'kind' in entry ? entry.kind : undefined;
@@ -76,19 +56,10 @@ export function pdfLevelAsked(
   const removedRoot = doc.getMap<unknown>('removed');
   const storedBefore: Held = storedRoot.toJSON();
   const removedBefore: Held = removedRoot.toJSON();
-  const touched = new Set<SharedType>();
-  doc.on('afterTransaction', (transaction: Y.Transaction) => {
-    for (const type of transaction.changed.keys()) touched.add(rootOf(type));
-  });
-  try {
-    Y.applyUpdate(doc, update);
-    if (!holdsAll(doc, update)) return 'unreadable';
-  } catch {
-    return 'unreadable';
-  }
+  const touched = touchedRoots(doc, update);
+  if (touched === 'unreadable') return 'unreadable';
   const reviewing: readonly string[] = PDF_REVIEWING_ROOTS;
-  for (const [name, type] of doc.share) {
-    if (!touched.has(type)) continue;
+  for (const name of touched) {
     if (name !== 'stored' && !reviewing.includes(name)) return 'edit';
   }
   if (removedAsksEdit(removedBefore, removedRoot.toJSON())) return 'edit';

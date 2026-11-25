@@ -150,6 +150,10 @@ Deleting a document's last tab deletes the document, so it is theirs too: an Edi
 - **A held-back gesture says so.** When the editor holds back a change a Participant may not make (deleting
   someone else's sticky, resizing a shape), it shows one short notice for the burst rather than failing silently.
 - A guest who signs in becomes a different adder: stickies added as a guest can no longer be deleted by them.
+- **A text document's comment carries its author's adder key**
+  ([Review](../034-text-documents/review.md#how-a-comment-is-kept)), so the ticket carries one for an Editor as for a
+  Participant: an Editor's comments are theirs to edit too. The canvas still stamps `addedBy` on a Participant's
+  additions only.
 
 ## Moving to three levels
 

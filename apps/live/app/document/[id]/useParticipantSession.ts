@@ -16,11 +16,11 @@ export const HELD_BACK_NOTICE =
 export function useParticipantSession(
   level: AccessLevel,
   notify?: (message: string) => void,
-  // An Editor previewing as a Participant has no key from the room: its preview's own (useViewPreview).
+  // An Editor previewing as a Participant stamps its preview's own key (useViewPreview), never the room's: null otherwise.
   previewKey: string | null = null,
 ) {
   const [roomAdderKey, setAdderKey] = useState<string | null>(null);
-  const adderKey = roomAdderKey ?? previewKey;
+  const adderKey = previewKey ?? roomAdderKey;
   const can = useMemo(() => resolveEditorCapabilities({ level, adderKey }), [level, adderKey]);
   const participating = level === 'participate';
   const lastNoticeRef = useRef(0);

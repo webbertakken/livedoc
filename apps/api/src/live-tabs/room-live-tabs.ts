@@ -38,6 +38,9 @@ export type LiveTabSender = {
   documentId: string | null;
   // The sender's server-verified level, never what a frame claims.
   level: AccessLevel;
+  // The adder key its ticket carries (share-roles.md "Integrity"), none without an identity: what a kind's judge reads
+  // as the sender's own.
+  adderKey: string | null;
 };
 
 type LiveTabFrame = { kind: string; tabId: string; update: string; on?: string };
@@ -98,18 +101,25 @@ export class RoomLiveTabs {
   private async standingRefusal(
     env: DocumentEnv,
     where: { documentId: string; tabId: string; tab: Record<string, unknown> },
-    sent: { update: Uint8Array; on: string | undefined; level: AccessLevel },
+    sent: {
+      update: Uint8Array;
+      on: string | undefined;
+      level: AccessLevel;
+      adderKey: string | null;
+    },
   ): Promise<StandingRefusal | null> {
     const { kind } = this;
     const { documentId, tabId, tab } = where;
-    const { update, level } = sent;
+    const { update, level, adderKey } = sent;
     if (kind.standsOn && sent.on !== (kind.standsOn(tab) ?? undefined)) {
       this.refused(documentId, tabId, 'stands-elsewhere');
       return 'stands-elsewhere';
     }
     if (level === 'edit') return null;
     const reads = level === 'participate' ? kind.state.asks : undefined;
-    const asks = reads ? reads(await storedUpdates(env, kind, tabId), update, tab) : 'edit';
+    const asks = reads
+      ? reads(await storedUpdates(env, kind, tabId), update, tab, { adderKey })
+      : 'edit';
     if (asks === 'participate') return null;
     if (asks === 'unreadable') {
       this.refused(documentId, tabId, 'unreadable');
@@ -227,7 +237,7 @@ export class RoomLiveTabs {
         return false;
       }
       const where = { documentId, tabId: frame.tabId, tab };
-      const sent = { update, on: frame.on, level: sender.level };
+      const sent = { update, on: frame.on, level: sender.level, adderKey: sender.adderKey };
       const standing = await this.standingRefusal(env, where, sent);
       if (standing) {
         // Refused whole, and told to the sender alone by name; an update that cannot be read follows one the
@@ -280,8 +290,13 @@ export class RoomLiveTabs {
     tabId: string,
     update: Uint8Array,
     // An Editor's unless the route says otherwise: every route gates an edit of the tab before it posts. `on`:
-    // what the update was made on, where the kind's state stands on something.
-    { level = 'edit', on }: { level?: AccessLevel; on?: string } = {},
+    // what the update was made on, where the kind's state stands on something. `adderKey`: the sender's, where the route
+    // knows it.
+    {
+      level = 'edit',
+      on,
+      adderKey = null,
+    }: { level?: AccessLevel; on?: string; adderKey?: string | null } = {},
   ): Promise<PostedOutcome> {
     const { kind } = this;
     if (!kind.state.decodes(update)) {
@@ -299,7 +314,7 @@ export class RoomLiveTabs {
         this.refused(documentId, tabId, 'wrong-kind');
         return 'wrong-kind';
       }
-      const sent = { update, on, level };
+      const sent = { update, on, level, adderKey };
       const refusal = await this.standingRefusal(env, { documentId, tabId, tab }, sent);
       if (refusal) return refusal;
       const limit = await liveTabLimitOf(env, kind, tabId, update, this.hooks.caps);

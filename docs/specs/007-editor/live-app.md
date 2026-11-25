@@ -92,8 +92,8 @@ The **role pill** says whether you are editing, participating in or viewing this
   visitor sees it, then back to Editing. The preview is local to this tab and this visit: it changes no one's role on
   the server, nothing other participants see of you, and a reload returns to Editing. Participating works as a
   Participant does: the Participate palette and its limits, adding stickies and text, and moving, rewriting and
-  deleting only what you added while previewing. An Editor has no adder key from the room, so the preview stamps
-  what it adds with its own (`preview-<participant id>`); what you add stays in the document, and no real
+  deleting only what you added while previewing. The preview stamps what it adds with its own key
+  (`preview-<participant id>`), never the adder key the room gives an Editor; what you add stays in the document, and no real
   Participant's key matches it. The pill's accessible description says what a click does ("Switch to participating
   (as a Participant sees it)" / "Switch to viewing (read-only)" / "Switch to editing").
 - **Not a toggle when your role is view.** A view-link visitor's pill is static text, focusable so its Tooltip

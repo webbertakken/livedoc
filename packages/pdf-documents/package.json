@@ -51,6 +51,7 @@
     "@fontsource/noto-sans-thai": "5.3.0",
     "@libpdf/core": "^0.5.3",
     "@livedoc/document": "workspace:*",
+    "@livedoc/live-updates": "workspace:*",
     "asn1js": "^4.0.0",
     "bidi-js": "1.1.0",
     "harfbuzzjs": "1.6.4",

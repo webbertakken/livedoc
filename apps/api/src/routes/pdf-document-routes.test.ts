@@ -394,7 +394,13 @@ describe('a frame from an Editor’s socket', () => {
   it('is stored before it is relayed, and refused for a tab of another kind', async () => {
     const { room, relayed } = withRoom();
     const ws = {} as WebSocket;
-    const sender = { ws, presenceId: 'p1', documentId: 'D', level: 'edit' as const };
+    const sender = {
+      ws,
+      presenceId: 'p1',
+      documentId: 'D',
+      level: 'edit' as const,
+      adderKey: null,
+    };
     const frame = (tabId: string) => ({
       kind: 'pdf',
       tabId,
@@ -427,7 +433,13 @@ describe('a frame from a Participant’s or a Viewer’s socket', () => {
 
   it('stores and relays a Participant’s mark as an Editor’s', async () => {
     const { room, relayed, told } = withRoom();
-    const sender = { ws, presenceId: 'p1', documentId: 'D', level: 'participate' as const };
+    const sender = {
+      ws,
+      presenceId: 'p1',
+      documentId: 'D',
+      level: 'participate' as const,
+      adderKey: null,
+    };
     expect(await room.accept(sender, frame(highlightUpdate('m1')), 3)).toBe(true);
     expect(relayed).toHaveLength(1);
     expect(told).toEqual([{ kind: 'cursor', epoch: 'e', seq: 1, ref: 3 }]);
@@ -436,7 +448,13 @@ describe('a frame from a Participant’s or a Viewer’s socket', () => {
 
   it('refuses a Participant’s change to a page whole, telling the sender alone', async () => {
     const { room, relayed, told } = withRoom();
-    const sender = { ws, presenceId: 'p1', documentId: 'D', level: 'participate' as const };
+    const sender = {
+      ws,
+      presenceId: 'p1',
+      documentId: 'D',
+      level: 'participate' as const,
+      adderKey: null,
+    };
     expect(await room.accept(sender, frame(turnUpdate()))).toBe(false);
     expect(relayed).toEqual([]);
     expect(told).toEqual([refusedLevel]);
@@ -453,7 +471,13 @@ describe('a frame from a Participant’s or a Viewer’s socket', () => {
     doc.on('update', (update: Uint8Array) => sent.push(update));
     doc.getMap('marks').set('a', 1);
     doc.getMap('marks').set('b', 2);
-    const sender = { ws, presenceId: 'p1', documentId: 'D', level: 'participate' as const };
+    const sender = {
+      ws,
+      presenceId: 'p1',
+      documentId: 'D',
+      level: 'participate' as const,
+      adderKey: null,
+    };
     expect(await room.accept(sender, frame(sent[1]!))).toBe(false);
     expect(relayed).toEqual([]);
     expect(told).toEqual([]);
@@ -465,7 +489,13 @@ describe('a frame from a Participant’s or a Viewer’s socket', () => {
   it('refuses a Viewer’s change without reading it', async () => {
     const { room, relayed, told } = withRoom();
     const asks = vi.spyOn(PDF_LIVE_TAB.state, 'asks');
-    const sender = { ws, presenceId: 'p1', documentId: 'D', level: 'view' as const };
+    const sender = {
+      ws,
+      presenceId: 'p1',
+      documentId: 'D',
+      level: 'view' as const,
+      adderKey: null,
+    };
     expect(await room.accept(sender, frame(highlightUpdate('m1')))).toBe(false);
     expect(relayed).toEqual([]);
     expect(told).toEqual([refusedLevel]);
@@ -478,7 +508,13 @@ describe('a frame from a Participant’s or a Viewer’s socket', () => {
   it('never reads what an Editor’s change touches', async () => {
     const { room } = withRoom();
     const asks = vi.spyOn(PDF_LIVE_TAB.state, 'asks');
-    const sender = { ws, presenceId: 'p1', documentId: 'D', level: 'edit' as const };
+    const sender = {
+      ws,
+      presenceId: 'p1',
+      documentId: 'D',
+      level: 'edit' as const,
+      adderKey: null,
+    };
     expect(await room.accept(sender, frame(turnUpdate()))).toBe(true);
     expect(asks).not.toHaveBeenCalled();
   });
@@ -486,16 +522,27 @@ describe('a frame from a Participant’s or a Viewer’s socket', () => {
   it('lets no Participant name a stored file for a tab that names none', () => {
     const named = PdfLiveChanges.load();
     PdfLiveChanges.setStored(named, { blob: key, pages: 2 });
-    expect(PDF_LIVE_TAB.state.asks!([], PdfLiveChanges.encode(named), { kind: 'pdf' })).toBe(
-      'edit',
-    );
+    expect(
+      PDF_LIVE_TAB.state.asks!(
+        [],
+        PdfLiveChanges.encode(named),
+        { kind: 'pdf' },
+        { adderKey: null },
+      ),
+    ).toBe('edit');
   });
 
   it('holds a Participant to the stored file the tab names', async () => {
     const { room } = withRoom();
     const other = PdfLiveChanges.load();
     PdfLiveChanges.setStored(other, { blob: 'e'.repeat(64) as BlobKey, pages: 2 });
-    const sender = { ws, presenceId: 'p1', documentId: 'D', level: 'participate' as const };
+    const sender = {
+      ws,
+      presenceId: 'p1',
+      documentId: 'D',
+      level: 'participate' as const,
+      adderKey: null,
+    };
     expect(await room.accept(sender, frame(PdfLiveChanges.encode(other)))).toBe(false);
   });
 });

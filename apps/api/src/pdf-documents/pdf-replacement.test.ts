@@ -60,7 +60,7 @@ function room(kind = PDF_LIVE_TAB) {
   return { tabs, told, everyone };
 }
 
-const editor = { ws, presenceId: 'p1', documentId: 'D', level: 'edit' as const };
+const editor = { ws, presenceId: 'p1', documentId: 'D', level: 'edit' as const, adderKey: null };
 
 /** One person's highlight on the stored file `on`, as the update their browser sends. */
 function highlightUpdate(id: string, on: BlobKey): Uint8Array {

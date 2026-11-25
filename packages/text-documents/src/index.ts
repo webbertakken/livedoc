@@ -317,6 +317,19 @@ export {
 export { TAB_FRAGMENT_PREFIX, tabFragment, tabFragmentName } from './live/live-root';
 export { TABS_MAP } from './live/live-names';
 export {
+  LiveThreads,
+  TEXT_DOCUMENT_COMMENT_TEXT_MAX,
+  TEXT_DOCUMENT_THREAD_COMMENTS_MAX,
+  TEXT_DOCUMENT_THREADS_MAX,
+  THREADS_MAP,
+  type TextDocumentComment,
+  type TextDocumentCommentAuthor,
+  type TextDocumentThread,
+  type TextDocumentThreadAnchor,
+  type TextDocumentThreadStart,
+} from './live/live-threads';
+export { textDocumentLevelAsked, type TextDocumentLevelAsked } from './level-asked';
+export {
   addLiveTab,
   copyLiveTabBody,
   liveTabIds,
