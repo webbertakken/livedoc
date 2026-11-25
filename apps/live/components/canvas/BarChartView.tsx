@@ -13,6 +13,7 @@ import {
   chartTypeOf,
   chartValueFontPx,
   legendFontPx,
+  chartValue,
   type ShapeElement,
 } from '@livedoc/document';
 import { ChartValues } from '@/components/primitives/ChartValues';
@@ -44,6 +45,9 @@ export function BarChartView({
   const { baseline, bars, origin } = marks;
   const valuePx = chartValueFontPx(element.textSize);
   const group = useChartAnim(element, `${origin.x}px ${origin.y}px`);
+  // Only a drawn bar is hovered: no value draws none (pie-chart.md "No value is a gap").
+  const hovered = hover === null ? null : bars[hover];
+  const hoveredValue = hover === null ? null : chartValue(data[hover]?.value);
 
   return (
     <ChartSurface
@@ -56,12 +60,12 @@ export function BarChartView({
       fontFamily={fontFamily}
       fontPx={legendFontPx(element.textSize)}
       readout={
-        hover !== null && data[hover] && bars[hover] ? (
+        hover !== null && hovered && hoveredValue !== null ? (
           <ChartReadout
-            leftPct={(bars[hover].tip.x / w) * 100}
-            topPct={(bars[hover].tip.y / h) * 100}
-            label={data[hover].label}
-            value={data[hover].value}
+            leftPct={(hovered.tip.x / w) * 100}
+            topPct={(hovered.tip.y / h) * 100}
+            label={data[hover]!.label}
+            value={hoveredValue}
           />
         ) : null
       }
@@ -82,18 +86,20 @@ export function BarChartView({
         strokeWidth={1}
       />
       <g className={group.className} style={group.style}>
-        {bars.map((bar, i) => (
-          <rect
-            key={i}
-            x={bar.x}
-            y={bar.y}
-            width={bar.w}
-            height={bar.h}
-            rx={bar.rx}
-            fill={colorAt(i, data[i]!)}
-            {...markProps(i)}
-          />
-        ))}
+        {bars.map((bar, i) =>
+          bar ? (
+            <rect
+              key={i}
+              x={bar.x}
+              y={bar.y}
+              width={bar.w}
+              height={bar.h}
+              rx={bar.rx}
+              fill={colorAt(i, data[i]!)}
+              {...markProps(i)}
+            />
+          ) : null,
+        )}
       </g>
       {element.chartValues ? (
         <ChartValues

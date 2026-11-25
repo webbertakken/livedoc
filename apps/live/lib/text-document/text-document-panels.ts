@@ -1,7 +1,8 @@
 // The text document's side panels (docs/specs/034-text-documents/editing-surface.md "Layout, top to bottom"): the
 // outline on the left (links-and-navigation.md "The outline"); on the right Line numbers (page-layout.md "Line
 // numbers"), Watermark (page-layout.md "Watermark"), Table properties (tables.md) and Image options (objects.md
-// "Working with a picture") and Table of contents (links-and-navigation.md), an Editor's all. Comments and version history join with review.
+// "Working with a picture") and Table of contents (links-and-navigation.md), an Editor's all; and Comments
+// (review.md), everyone's. Version history joins with review.
 import type { OfficePanelSpec } from '@/lib/office/office-panels';
 
 export const OUTLINE_PANEL: OfficePanelSpec = {
@@ -47,6 +48,15 @@ export const IMAGE_OPTIONS_PANEL: OfficePanelSpec = {
   editorsOnly: true,
 };
 
+// The comments panel, comment history (review.md "The comments panel"): every session's, a Viewer reading it. Its item is
+// the shortcut row's id, so ⌘⌥⇧A opens it, and the title row's Comment history runs it.
+export const COMMENTS_PANEL: OfficePanelSpec = {
+  id: 'comments',
+  title: 'Comments',
+  side: 'right',
+  item: 'open-comment-history',
+};
+
 // The selected table of contents' options (links-and-navigation.md "Table of contents"): from its bar.
 export const TABLE_OF_CONTENTS_PANEL: OfficePanelSpec = {
   id: 'table-of-contents',
@@ -63,4 +73,5 @@ export const TEXT_DOCUMENT_PANELS: readonly OfficePanelSpec[] = [
   TABLE_PROPERTIES_PANEL,
   IMAGE_OPTIONS_PANEL,
   TABLE_OF_CONTENTS_PANEL,
+  COMMENTS_PANEL,
 ];

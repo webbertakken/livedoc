@@ -11,7 +11,7 @@ import { anchorPrimarySide } from './anchors';
 import { asText } from './as-text';
 import { orthogonalBends } from './arrow-orthogonal';
 import { LOOK_MD_MAX_NODES } from './look-size';
-import { CODE_LANGUAGES } from './data-shapes';
+import { chartValue, CODE_LANGUAGES, readChartValue } from './data-shapes';
 import { isCodeThemeId } from './code-themes';
 import { variantFitsKind } from './chart-types';
 import { entityHeight } from './entity-geometry';
@@ -40,11 +40,11 @@ import { CONCEPT_ROWS, isConceptShape, type ConceptShape } from './concept';
 
 type Raw = Record<string, unknown>;
 
-const num = (v: unknown) => {
-  const n = typeof v === 'number' ? v : Number(v);
-  return Number.isFinite(n) ? n : 0;
-};
 const str = asText;
+// A chart value as an agent writes it (pie-chart.md "No value on the way in"): a number, or text that reads as one
+// ("3"); anything else, an empty field among them, is no value, never 0.
+const chartNum = (v: unknown): number | null =>
+  typeof v === 'string' ? readChartValue(v) : chartValue(v);
 
 function normaliseTable(el: Raw): Raw {
   const cells = el.cells;
@@ -79,21 +79,26 @@ function normaliseChart(el: Raw): Raw {
   if (out.chartVariant !== undefined && !variantFitsKind(String(el.shape), out.chartVariant))
     delete out.chartVariant;
   if (Array.isArray(el.pieSlices))
-    out.pieSlices = el.pieSlices.filter(isRecord).map((s) => ({
-      ...s,
-      label: str(s.label),
-      value: Math.max(0, num(s.value)),
-    }));
+    out.pieSlices = el.pieSlices.filter(isRecord).map((s) => {
+      const value = chartNum(s.value);
+      return { ...s, label: str(s.label), value: value === null ? null : Math.max(0, value) };
+    });
   if (Array.isArray(el.lineCategories)) out.lineCategories = el.lineCategories.map(str);
   if (Array.isArray(el.lineSeries)) {
     const count = Array.isArray(out.lineCategories) ? out.lineCategories.length : undefined;
     out.lineSeries = el.lineSeries.filter(isRecord).map((s) => {
-      const values = Array.isArray(s.values) ? s.values.map(num) : [];
+      const values = Array.isArray(s.values) ? s.values.map(chartNum) : [];
       const fitted =
-        count === undefined ? values : Array.from({ length: count }, (_, i) => values[i] ?? 0);
-      // A second axis is `right` or nothing.
-      const { axis, ...rest } = s;
-      return { ...rest, name: str(s.name), values: fitted, ...(axis === 'right' ? { axis } : {}) };
+        count === undefined ? values : Array.from({ length: count }, (_, i) => values[i] ?? null);
+      // A second axis is `right` or nothing; a scatter series drawn as a line is `true` or nothing.
+      const { axis, line, ...rest } = s;
+      return {
+        ...rest,
+        name: str(s.name),
+        values: fitted,
+        ...(axis === 'right' ? { axis } : {}),
+        ...(line === true ? { line } : {}),
+      };
     });
   }
   return out;

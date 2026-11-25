@@ -12,7 +12,7 @@ import {
 } from './chart-axis';
 import type { ChartRect } from './chart-frame';
 import { chartAxisLabel } from './chart-frame';
-import type { LineSeries, PieSlice } from './data-shapes';
+import { chartValue, type ChartKeyItem, type LineSeries, type PieSlice } from './data-shapes';
 
 export type ChartPoint = { x: number; y: number };
 
@@ -40,7 +40,9 @@ export function pieMarks(
   ox = 0,
   oy = 0,
 ): PieMarks {
-  const total = data.reduce((sum, s) => sum + Math.max(0, s.value), 0) || 1;
+  // No value draws no wedge (pie-chart.md "No value is a gap"): the others share the whole.
+  const share = (s: PieSlice) => Math.max(0, chartValue(s.value) ?? 0);
+  const total = data.reduce((sum, s) => sum + share(s), 0) || 1;
   const rad = Math.max(10, (Math.min(area.w, area.h) * 0.86) / 2);
   const hole = doughnut ? rad * DOUGHNUT_HOLE : 0;
   const cx = ox + area.x + area.w / 2;
@@ -50,7 +52,7 @@ export function pieMarks(
   const tipR = doughnut ? (rad + hole) / 2 : rad * 0.55;
   let angle = -Math.PI / 2;
   const wedges = data.map((s): PieWedge => {
-    const frac = Math.max(0, s.value) / total;
+    const frac = share(s) / total;
     const a0 = angle;
     const a1 = angle + frac * Math.PI * 2;
     angle = a1;
@@ -80,7 +82,8 @@ export type BarRect = { x: number; y: number; w: number; h: number; rx: number; 
 export type BarMarks = {
   // The zero line the bars grow from: up the plot when a value is below zero, else at its foot (or left edge).
   baseline: { x1: number; y1: number; x2: number; y2: number };
-  bars: BarRect[];
+  // One per datum, in its slot; null where the datum has no value (pie-chart.md "No value is a gap").
+  bars: (BarRect | null)[];
   // Where the bars grow from (the animation's origin), on the baseline.
   origin: ChartPoint;
   // The plot's far edge below zero: a column chart's foot (its names go under it), a bar chart's left edge. The
@@ -107,8 +110,10 @@ export function barMarks(
   let lo = 0;
   let hi = 0;
   for (const d of data) {
-    if (d.value < lo) lo = d.value;
-    if (d.value > hi) hi = d.value;
+    const v = chartValue(d.value);
+    if (v === null) continue;
+    if (v < lo) lo = v;
+    if (v > hi) hi = v;
   }
   if (hi === lo) hi = lo + 1;
   // With Show Axis the bars run to round ticks at both ends.
@@ -134,7 +139,9 @@ export function barMarks(
     return {
       baseline: { x1: zeroX, y1: y0, x2: zeroX, y2: y0 + innerH },
       bars: data.map((d, i) => {
-        const end = xOf(d.value);
+        const v = chartValue(d.value);
+        if (v === null) return null;
+        const end = xOf(v);
         const cy = y0 + slot * (i + 0.5);
         return {
           x: Math.min(zeroX, end),
@@ -168,7 +175,9 @@ export function barMarks(
   return {
     baseline: { x1: x0, y1: zeroY, x2: x0 + innerW, y2: zeroY },
     bars: data.map((d, i) => {
-      const end = yOf(d.value);
+      const v = chartValue(d.value);
+      if (v === null) return null;
+      const end = yOf(v);
       const cx = x0 + slot * (i + 0.5);
       return {
         x: cx - thick / 2,
@@ -192,9 +201,10 @@ type LineVariant = 'line' | 'area' | 'scatter';
 
 export type LineMarks = {
   plot: { x: number; y: number; w: number; h: number };
-  // Per series, a point per category.
-  points: ChartPoint[][];
-  // Per series, its line as an SVG `points` list (empty for scatter), and its filled area's outline (area only).
+  // Per series, a point per category; null where it has no value, or (scatter) its category no x.
+  points: (ChartPoint | null)[][];
+  // Per series, its line as SVG path data, a stretch per run of points, broken at each gap (empty for scatter, and
+  // for a series with no two points side by side), and its filled area's outline, a shape per run (area only).
   lines: string[];
   areas: string[];
   // The x-axis labels.
@@ -241,18 +251,28 @@ export function lineMarks(
   const n = categories.length;
   // A series on the second axis, when another is on the first (chart-axis.ts).
   const onRight = rightAxisSeries(series);
-  // Zero is always in range so the baseline reads naturally; an all-equal range widens so the line is not flat
-  // against the top edge. With Show Axis the range runs to round ticks.
+  // Zero is in range so the baseline reads naturally; an all-equal range widens so the line is not flat against the
+  // top edge. With Show Axis the range runs to round ticks. A scatter's range fits its values instead, to round values
+  // either side, so points far from zero spread over the plot (pie-chart.md "Scatter's value range").
+  const holdsZero = variant !== 'scatter';
   const range = (right: boolean): { min: number; max: number; scale: AxisScale | null } => {
-    let minV = 0;
-    let maxV = 0;
+    let minV = holdsZero ? 0 : Infinity;
+    let maxV = holdsZero ? 0 : -Infinity;
     series.forEach((s, i) => {
       if (onRight[i] !== right) return;
-      for (const v of s.values) {
+      for (const raw of s.values) {
+        const v = chartValue(raw);
+        if (v === null) continue;
         if (v < minV) minV = v;
         if (v > maxV) maxV = v;
       }
     });
+    if (!holdsZero) {
+      // No value at all: the plain 0 to 1 a line chart with none draws.
+      if (minV > maxV) [minV, maxV] = [0, 1];
+      const fitted = axisScale(minV, maxV, false);
+      return { min: fitted.min, max: fitted.max, scale: showAxis ? fitted : null };
+    }
     if (maxV === minV) maxV = minV + 1;
     if (!showAxis) return { min: minV, max: maxV, scale: null };
     const scale = axisScale(minV, maxV);
@@ -274,21 +294,30 @@ export function lineMarks(
   const yRight = right ? yOn(right) : yAt;
   const evenX = (i: number) => (n <= 1 ? plotX0 + plotW / 2 : plotX0 + (i / (n - 1)) * plotW);
 
-  // Scatter places each point at its category's number when every category is one.
-  let xAt = evenX;
+  // Scatter places each point at its category's number when every category is one; a category left empty has no x,
+  // so draws no point, and does not stop the others reading as numbers.
+  let xAt: (i: number) => number | null = evenX;
   let labels: { x: number; text: string }[];
   const xs = variant === 'scatter' ? categories.map(scatterX) : [];
-  if (variant === 'scatter' && n > 0 && xs.every((x) => x !== null)) {
+  const numericX =
+    variant === 'scatter' &&
+    xs.some((x) => x !== null) &&
+    xs.every((x, i) => x !== null || categories[i]!.trim() === '');
+  if (numericX) {
     let lo = Infinity;
     let hi = -Infinity;
     for (const x of xs) {
+      if (x === null) continue;
       if (x < lo) lo = x;
       if (x > hi) hi = x;
     }
     if (hi === lo) hi = lo + 1;
     const span = hi - lo;
     const scale = (x: number) => plotX0 + ((x - lo) / span) * plotW;
-    xAt = (i: number) => scale(xs[i] as number);
+    xAt = (i: number) => {
+      const x = xs[i];
+      return x === null || x === undefined ? null : scale(x);
+    };
     labels = Array.from({ length: SCATTER_TICKS }, (_, k) => {
       const v = lo + (span * k) / (SCATTER_TICKS - 1);
       return { x: scale(v), text: tickText(v) };
@@ -298,19 +327,41 @@ export function lineMarks(
   }
 
   const points = series.map((s, si) =>
-    categories.map((_, i) => ({ x: xAt(i), y: (onRight[si] ? yRight : yAt)(s.values[i] ?? 0) })),
+    categories.map((_, i): ChartPoint | null => {
+      const v = chartValue(s.values[i]);
+      const x = v === null ? null : xAt(i);
+      return x === null || v === null ? null : { x, y: (onRight[si] ? yRight : yAt)(v) };
+    }),
   );
-  const lines = points.map((pts) =>
-    variant === 'scatter' ? '' : pts.map((p) => `${q(p.x)},${q(p.y)}`).join(' '),
-  );
+  // Each series' runs of points side by side: the line breaks at a gap (pie-chart.md "No value is a gap"). A point
+  // with no neighbour is no stretch of line; it is drawn as its marker alone.
+  const runs = points.map((pts) => runsOf(pts).filter((run) => run.length > 1));
+  const pathOf = (rs: readonly ChartPoint[][]) =>
+    rs
+      .map((run) => run.map((p, k) => `${k === 0 ? 'M' : 'L'} ${q(p.x)} ${q(p.y)}`).join(' '))
+      .join(' ');
+  // A scatter draws points only, but for a series drawn as a line: its present points joined in order of x, no
+  // value breaking nothing (pie-chart.md "A scatter series drawn as a line"); the sort is stable, so equal x keep
+  // their rows' order.
+  const lines = series.map((s, si) => {
+    if (variant !== 'scatter') return pathOf(runs[si]!);
+    if (s.line !== true) return '';
+    const present = points[si]!.filter((p): p is ChartPoint => p !== null).sort(
+      (a, b) => a.x - b.x,
+    );
+    return present.length > 1 ? pathOf([present]) : '';
+  });
   const areas =
     variant === 'area'
-      ? points.map((pts, si) => {
-          // Down to its own axis's zero.
-          const zeroY = (onRight[si] ? yRight : yAt)(0);
-          return pts.length === 0
-            ? ''
-            : `M ${q(pts[0]!.x)} ${q(zeroY)} ${pts.map((p) => `L ${q(p.x)} ${q(p.y)}`).join(' ')} L ${q(pts[pts.length - 1]!.x)} ${q(zeroY)} Z`;
+      ? runs.map((rs, si) => {
+          // Down to its own axis's zero, a shape per run.
+          const zeroY = q((onRight[si] ? yRight : yAt)(0));
+          return rs
+            .map(
+              (run) =>
+                `M ${q(run[0]!.x)} ${zeroY} ${run.map((p) => `L ${q(p.x)} ${q(p.y)}`).join(' ')} L ${q(run[run.length - 1]!.x)} ${zeroY} Z`,
+            )
+            .join(' ');
         })
       : [];
   return {
@@ -325,6 +376,31 @@ export function lineMarks(
       right: right?.scale?.ticks.map((t) => ({ y: yRight(t.value), text: t.text })) ?? [],
     },
   };
+}
+
+// A line chart's key: a row per series, a scatter series drawn as a line keyed by a line (pie-chart.md "A scatter
+// series drawn as a line").
+export function lineKeyItems(series: readonly LineSeries[], variant: LineVariant): ChartKeyItem[] {
+  return series.map((s) => ({
+    label: s.name,
+    ...(s.color ? { color: s.color } : {}),
+    ...(variant === 'scatter' && s.line === true ? { line: true } : {}),
+  }));
+}
+
+// A series' points split at each gap into runs of points side by side.
+function runsOf(points: readonly (ChartPoint | null)[]): ChartPoint[][] {
+  const runs: ChartPoint[][] = [];
+  let run: ChartPoint[] = [];
+  for (const p of points) {
+    if (p) run.push(p);
+    else if (run.length) {
+      runs.push(run);
+      run = [];
+    }
+  }
+  if (run.length) runs.push(run);
+  return runs;
 }
 
 // The fill opacity of an area chart's areas: overlapping, so each series stays readable through the others.

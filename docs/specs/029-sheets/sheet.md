@@ -816,7 +816,10 @@ then, what ships:
   column of text or dates labels the categories (numbered 1, 2, … without one); every other column is a series
   ("Column B" when unnamed). A pie, doughnut, column or bar chart shows the first series (a pie or doughnut never
   below zero); a line, area or scatter chart shows them all. A scatter chart whose first column holds numbers takes
-  that column as its x. Rows a filter hides are left out. At most 500 categories and 12 series are read.
+  that column as its x. A cell that is empty or holds no number (text, an error) is no value, never 0: a line or area
+  chart breaks there, a scatter chart draws no point, and a column, bar or pie draws no mark for it
+  ([No value is a gap](../009-elements/pie-chart.md#chart-types)); a cell holding 0 draws 0. Rows a filter hides are
+  left out. At most 500 categories and 12 series are read.
 - The chart is an ordinary chart element whose `chartSource` names the sheet and the range by stable row and
   column ids, and, when only some of its columns were picked, those columns (`cols`), so it grows with rows inserted
   inside the range and follows moves. Its data is read live: change

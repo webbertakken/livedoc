@@ -266,3 +266,56 @@ describe('writeFieldsOnto', () => {
     expect(nextOf(write(stroke, { points: [{ x: 0, y: 0 }] })).points).toEqual([{ x: 0, y: 0 }]);
   });
 });
+
+// pie-chart.md "Lines set by an agent": `lines` names a line chart's series drawn as lines on a scatter chart.
+describe('the lines alias', () => {
+  const chart = {
+    id: 'c1',
+    type: 'shape',
+    shape: 'line-chart',
+    x: 0,
+    y: 0,
+    width: 300,
+    height: 200,
+    chartVariant: 'scatter',
+    lineCategories: ['1', '2'],
+    lineSeries: [
+      { name: 'Models', values: [1, null], color: '#ff0000' },
+      { name: 'Pareto', values: [null, 2], line: true },
+      { name: 'Ranks', values: [3, 4], axis: 'right' },
+    ],
+  } as unknown as Element;
+  const marked = (out: FieldsWrite) =>
+    (nextOf(out).lineSeries as { name: string; line?: true }[]).map((s) => s.line === true);
+
+  it('is an alias of a line chart only', () => {
+    expect(aliasesOf(chart)).toContain('lines');
+    expect(aliasesOf(square)).not.toContain('lines');
+  });
+
+  it('marks the series it names, any case, and unmarks the rest, changing nothing else', () => {
+    const out = write(chart, { lines: ['models', 'RANKS'] });
+    expect(marked(out)).toEqual([true, false, true]);
+    expect(nextOf(out).lineSeries).toEqual([
+      { name: 'Models', values: [1, null], color: '#ff0000', line: true },
+      { name: 'Pareto', values: [null, 2] },
+      { name: 'Ranks', values: [3, 4], axis: 'right', line: true },
+    ]);
+    expect(out.written).toEqual(['lines']);
+  });
+
+  it('takes one name as text, and an empty list or null unmarks every one', () => {
+    expect(marked(write(chart, { lines: 'Models' }))).toEqual([true, false, false]);
+    expect(marked(write(chart, { lines: [] }))).toEqual([false, false, false]);
+    expect(marked(write(chart, { lines: null }))).toEqual([false, false, false]);
+  });
+
+  it('refuses a name that is no series, naming those it has', () => {
+    expect(refusal(chart, { lines: ['Frontier'] }).details).toEqual([
+      'lines=["Frontier"]: series names of this chart: Models, Pareto, Ranks',
+    ]);
+    expect(refusal(chart, { lines: 3 }).details).toEqual([
+      'lines=3: series names of this chart: Models, Pareto, Ranks',
+    ]);
+  });
+});

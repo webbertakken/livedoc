@@ -247,7 +247,8 @@ describe('the export draws charts as the canvas does', () => {
       const at = tag.indexOf(`${attr}="`);
       return tag.slice(at + attr.length + 2, at + attr.length + 9);
     };
-    const stroke = attrOf(svg.indexOf('<polyline'), 'stroke');
+    // The series' line: the one path drawn with round joins.
+    const stroke = attrOf(svg.lastIndexOf('<path', svg.indexOf('stroke-linejoin')), 'stroke');
     expect(contrastRatio(stroke, DARK)).toBeGreaterThanOrEqual(CHART_MARK_CONTRAST);
     const label = attrOf(svg.lastIndexOf('<text', svg.indexOf('>Jan<')), 'fill');
     expect(contrastRatio(label, DARK)).toBeGreaterThanOrEqual(CHART_TEXT_CONTRAST);

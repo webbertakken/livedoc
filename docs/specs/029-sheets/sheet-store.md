@@ -320,7 +320,7 @@ Sheets follow the document's access ([Auth and guest access](../014-identity/aut
   its text by itself, so an agent that wraps cells sizes no rows: [Row height](sheet.md#row-height)),
   merges and unmerges cells, draws borders (`border`: all, outer, inner, horizontal, vertical, a side, or none;
   solid, dashed, dotted or double), turns the filter on over a range or off, and adds a chart over the sheet's cells
-  (`chart`: a type, an A1 range, the columns to chart by header, and the cell its top-left sits on, by default beside the range, in its table's accent family) and takes them off
+  (`chart`: a type, an A1 range, the columns to chart by header, and the cell its top-left sits on, by default beside the range, in its table's accent family, and on a scatter chart the series drawn as lines by header name, [Lines set by an agent](../009-elements/pie-chart.md#lines-set-by-an-agent)) and takes them off
   (`clear_charts`: every one of the sheet's, or those reading a range). Rows an agent inserts take the formats of the
   row above them, as a spreadsheet's do, so a table keeps its banding and number formats; columns take the look of the
   column left of them but not its number format. A chart sits at a px anchor, so when an agent's change inserts,

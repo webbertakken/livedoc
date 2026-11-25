@@ -64,7 +64,7 @@ import {
   INDENT_ITEMS,
   LINE_SPACING_ENTRIES,
 } from './text-document-paragraph-actions';
-import { TEXT_DOCUMENT_PANELS } from './text-document-panels';
+import { COMMENTS_PANEL, TEXT_DOCUMENT_PANELS } from './text-document-panels';
 import { textDocumentSchema } from './text-document-schema';
 import { TEXT_DOCUMENT_SHORTCUTS } from './text-document-shortcuts';
 import {
@@ -76,6 +76,7 @@ import {
 import { TEXT_WIDTH_ITEMS } from './useTextDocumentTextWidth';
 import { FOOTNOTE_ITEM } from './text-document-footnotes-edit';
 import { FOOTNOTE_KEY_ACTIONS } from '@/components/text-document/useTextDocumentNoteEditing';
+import { COMMENT_KEY_ACTIONS } from '@/components/text-document/useTextDocumentThreadKeys';
 import { textDocumentUndoPlugins } from './text-document-undo';
 import { LINK_ITEM, OPEN_LINK } from './text-document-links';
 import { BOOKMARK_ITEM } from './text-document-bookmarks';
@@ -228,6 +229,9 @@ describe('the text document menus', () => {
       OPEN_LINK,
       // Stepping between document tabs (the surface's keymap, text-document-tabs).
       ...Object.keys(TAB_STEP_KEYS),
+      // Between comment threads (useTextDocumentThreadKeys), and the comments panel (useOfficePanels).
+      ...COMMENT_KEY_ACTIONS,
+      COMMENTS_PANEL.item,
     ];
     expect(builtRows.sort()).toEqual(
       [...new Set([...builtItems, ...shellRows, ...keyRows])].sort(),

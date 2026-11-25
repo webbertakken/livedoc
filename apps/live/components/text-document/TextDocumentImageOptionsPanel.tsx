@@ -5,6 +5,7 @@
 // (dimmed while that is not known), Lock aspect ratio (on at first), Rotate (Angle and a quarter turn either way);
 // Recolour and Adjustments (TextDocumentImageColours), dimmed for a drawing; then Reset. Each field applies on Enter or when left. Without a
 // selected picture it says to select one.
+import { OFFICE_PANEL_CONTROL } from '@/components/office/OfficePanel';
 import { useId, useState } from 'react';
 import { Tooltip, lucideGlyph } from '@livedoc/ui';
 import { lucideRotateCcwSquare, lucideRotateCwSquare } from '@livedoc/icons/lucide';
@@ -22,7 +23,6 @@ import {
 import {
   PANEL_CHECK,
   PANEL_CHECK_ROW,
-  PANEL_CONTROL,
   PANEL_LABEL,
   PanelAngleField,
   PanelLengthField,
@@ -201,7 +201,7 @@ export function TextDocumentImageOptionsPanel({
           type="button"
           disabled={!own}
           onClick={onReset}
-          className={`${PANEL_CONTROL} cursor-pointer hover:bg-(--office-hover)`}
+          className={`${OFFICE_PANEL_CONTROL} cursor-pointer hover:bg-(--office-hover)`}
         >
           Reset
         </button>

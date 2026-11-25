@@ -12,7 +12,7 @@
 // quotes, and CR/LF line endings. Non-numeric value cells fall back to 0.
 // Returns null when there's nothing usable (no header + at least one data row).
 
-import type { LineSeries } from '@livedoc/document';
+import { readChartValue, type LineSeries } from '@livedoc/document';
 
 // Soft caps so a pasted spreadsheet can't mint a pathologically huge chart.
 const MAX_SERIES = 12;
@@ -34,8 +34,8 @@ export function parseCsvLineData(
     if (row.every((c) => c.trim() === '')) continue; // skip blank lines
     categories.push((row[0] ?? '').trim() || `#${categories.length + 1}`);
     for (let s = 0; s < seriesNames.length; s++) {
-      const n = Number((row[s + 1] ?? '').trim());
-      series[s]!.values.push(Number.isFinite(n) ? n : 0);
+      // An empty or non-numeric field is no value, never 0 (pie-chart.md "No value is a gap").
+      series[s]!.values.push(readChartValue(row[s + 1] ?? ''));
     }
   }
   if (categories.length === 0) return null;

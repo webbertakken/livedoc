@@ -20,8 +20,10 @@ import {
   stackCards,
   stretchToComment,
   threadAt,
+  threadBeside,
   threadHighlightKey,
   threadHighlightPlugin,
+  threadStretch,
   threadStretches,
 } from './text-document-threads';
 
@@ -210,5 +212,60 @@ describe('threadHighlightPlugin', () => {
     expect(onSelect).not.toHaveBeenCalled();
     click(23);
     expect(onSelect).toHaveBeenLastCalledWith(null);
+  });
+});
+
+// review.md "The comments panel": a press goes to a thread, resolved ones too.
+describe('threadStretch', () => {
+  it('finds a resolved thread’s stretch', async () => {
+    const { doc, view } = await writing(['quarterly results are in']);
+    begin(view, doc, 11, 18);
+    LiveThreads.resolve(doc, 't1', true, null);
+    const [thread] = LiveThreads.read(doc);
+    expect(textOf(view, threadStretch(view.state, thread!)!)).toBe('results');
+  });
+
+  it('finds nothing before the binding has mapped the writing', () => {
+    const state = EditorState.create({ schema: textDocumentSchema });
+    const doc = TextDocumentState.load();
+    expect(
+      threadStretch(state, {
+        id: 'x',
+        tab: 't.0',
+        start: new Uint8Array(),
+        end: new Uint8Array(),
+        quote: '',
+        resolved: false,
+        comments: [],
+      }),
+    ).toBeNull();
+    doc.destroy();
+  });
+});
+
+// review.md "Keys on a selected comment": next and previous, never wrapping.
+describe('threadBeside', () => {
+  const s = (id: string, from: number) => ({ id, from, to: from + 2, deleted: false });
+  const stretches = [s('a', 2), s('b', 10), s('c', 20)];
+
+  it('steps from the selected thread', () => {
+    expect(threadBeside(stretches, 'b', 0, true)).toBe('c');
+    expect(threadBeside(stretches, 'b', 0, false)).toBe('a');
+  });
+
+  it('stops at the ends', () => {
+    expect(threadBeside(stretches, 'c', 0, true)).toBeNull();
+    expect(threadBeside(stretches, 'a', 0, false)).toBeNull();
+  });
+
+  it('steps from the caret when none is selected', () => {
+    expect(threadBeside(stretches, null, 5, true)).toBe('b');
+    expect(threadBeside(stretches, null, 15, false)).toBe('b');
+    expect(threadBeside(stretches, null, 25, true)).toBeNull();
+    expect(threadBeside(stretches, null, 1, false)).toBeNull();
+  });
+
+  it('steps from the caret when the selected thread is not shown', () => {
+    expect(threadBeside(stretches, 'gone', 5, true)).toBe('b');
   });
 });

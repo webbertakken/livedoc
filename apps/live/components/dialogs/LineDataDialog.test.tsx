@@ -13,6 +13,28 @@ afterEach(() => {
 const series = [{ name: 'Sales', values: [10, 20] }];
 
 describe('LineDataDialog', () => {
+  // pie-chart.md "No value is a gap": an emptied field is no value, shown empty; a 0 stays 0.
+  it('shows no value as an empty field and commits an emptied field as no value', () => {
+    const onCommit = vi.fn();
+    render(
+      <LineDataDialog
+        categories={['Jan', 'Feb', 'Mar']}
+        series={[{ name: 'Sales', values: [10, null] }]}
+        onCommit={onCommit}
+        onClose={vi.fn()}
+      />,
+    );
+    expect(screen.getByLabelText<HTMLInputElement>('Sales Feb').value).toBe('');
+    expect(screen.getByLabelText<HTMLInputElement>('Sales Mar').value).toBe('');
+    fireEvent.change(screen.getByLabelText('Sales Jan'), { target: { value: '' } });
+    fireEvent.change(screen.getByLabelText('Sales Mar'), { target: { value: '0' } });
+    fireEvent.blur(screen.getByLabelText('Sales Mar'));
+    expect(onCommit).toHaveBeenLastCalledWith(
+      ['Jan', 'Feb', 'Mar'],
+      [{ name: 'Sales', values: [null, null, 0] }],
+    );
+  });
+
   it('commits a typed value when Escape closes the dialog mid-edit', () => {
     const onCommit = vi.fn();
     const onClose = vi.fn();

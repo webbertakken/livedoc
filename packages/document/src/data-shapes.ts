@@ -44,7 +44,7 @@ export function isRatingShape(kind: ShapeKind): boolean {
 // 'grow' sweeps them in, 'pop' scales them in, 'spin' rotates the whole pie,
 // 'pulse' breathes their opacity. Undefined = static. Mapped to `lvd-pie-*`
 // by PieChartView. The first of the chart family, so the anim set is its own.
-export type PieSlice = { label: string; value: number; color?: string };
+export type PieSlice = { label: string; value: number | null; color?: string };
 export type PieAnim = 'grow' | 'pop' | 'spin' | 'pulse';
 export const PIE_ANIMS: readonly PieAnim[] = ['grow', 'pop', 'spin', 'pulse'];
 // 'grow' / 'pop' play once; 'spin' / 'pulse' loop (see animLoops).
@@ -71,8 +71,32 @@ export const PIE_DEFAULT_SLICES: readonly PieSlice[] = [
 // `lineSeries`, each a named line with a value per category (+ an optional
 // colour override). Editable as a grid and importable from CSV. Reuses the
 // shared `pieAnim` / `chartLegend` fields. The legend lists series names.
-// `axis: 'right'` draws the series against a scale of its own, the chart's second axis (pie-chart.md "A second axis").
-export type LineSeries = { name: string; color?: string; values: number[]; axis?: 'right' };
+// `axis: 'right'` draws the series against a scale of its own, the chart's second axis (pie-chart.md "A second axis");
+// `line: true` joins a scatter series' points in order of x (pie-chart.md "A scatter series drawn as a line").
+export type LineSeries = {
+  name: string;
+  color?: string;
+  values: (number | null)[];
+  axis?: 'right';
+  line?: true;
+};
+
+// A row of a chart's key: its name, its colour, and `line` when its swatch is a line through a dot (a scatter series
+// drawn as a line) rather than a square.
+export type ChartKeyItem = { label: string; color?: string; line?: boolean };
+// A datum's value, or null for no value (pie-chart.md "No value is a gap"): only a finite number is one. Stored data is
+// read through this, so a null, an absent value or text a row was saved with draws as no value, never as 0.
+export function chartValue(v: unknown): number | null {
+  return typeof v === 'number' && Number.isFinite(v) ? v : null;
+}
+
+// A chart value typed or imported as text (an editor's field, a CSV field, an agent's "3"): the number it reads as, or
+// no value when it is empty or reads as none (pie-chart.md "No value is a gap").
+export function readChartValue(text: string): number | null {
+  const t = text.trim();
+  return t === '' ? null : chartValue(Number(t));
+}
+
 export const LINE_DEFAULT_CATEGORIES: readonly string[] = ['Jan', 'Feb', 'Mar', 'Apr'];
 export const LINE_DEFAULT_SERIES: readonly LineSeries[] = [
   { name: 'Series 1', values: [10, 25, 18, 32] },

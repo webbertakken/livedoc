@@ -84,7 +84,8 @@ const CONTENT_KINDS =
   'its box belong to it, lanes are placed one under another, and they paint behind everything. ' +
   'shape "bar-chart" / "pie-chart": "pieSlices" is [{ "label", "value" }]; categories show in ' +
   'the legend. shape "line-chart": "lineCategories" is the x labels, "lineSeries" is ' +
-  '[{ "name", "values" }] with one value per category. "chartVariant" picks the chart type: ' +
+  '[{ "name", "values" }] with one value per category. A null value, in a slice or a series, is no value: ' +
+  'a gap (no point, the line broken there, no column or wedge); 0 draws 0. "chartVariant" picks the chart type: ' +
   'on "bar-chart" "horizontal" draws a Bar chart (absent: upright columns); on "line-chart" "area" ' +
   'fills each series down to zero and "scatter" draws points only, at x = each category read as a ' +
   'number; on "pie-chart" "doughnut" opens the middle. "chartValues": true prints each mark\'s ' +
@@ -92,6 +93,8 @@ const CONTENT_KINDS =
   'names each column under it, so "chartLegend": false can drop the key). "chartAxis": true draws the value axis, ' +
   'round tick values and gridlines (not on a pie). A "lineSeries" entry with "axis": "right" is drawn against a ' +
   'scale of its own, labelled on the right, so a series in the thousands and one in the tens both read. ' +
+  'On a "scatter" chart, a "lineSeries" entry with "line": true joins its points in order of x (a frontier), ' +
+  'the others staying points; set it on an existing chart with update { "lines": ["<series name>"] }. ' +
   'A chart draws no title (a caption is a ' +
   'separate "text" element) and draws sample data when its data is empty. ' +
   'shape "sankey": a Sankey diagram, bands as wide as the amount they carry, laid out in columns ' +

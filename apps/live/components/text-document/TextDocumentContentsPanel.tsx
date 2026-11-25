@@ -3,6 +3,7 @@
 // The Table of contents side panel's body (docs/specs/034-text-documents/links-and-navigation.md "Table of contents"):
 // the selected table of contents' look, three choices each with its picture, and the heading levels it lists, 1 to 6.
 // A choice rebuilds it at once; with none selected the panel says how to choose one.
+import { OFFICE_PANEL_SELECT } from '@/components/office/OfficePanel';
 import { useId } from 'react';
 import { CONTENTS_LEVELS_MAX, type ContentsLook } from '@livedoc/text-documents';
 import {
@@ -14,8 +15,6 @@ import { ContentsLookPicture } from './ContentsLookPicture';
 const CHOICE = 'size-icon-row shrink-0 accent-(--office-primary)';
 const HEADING = 'mb-2 text-panel-title';
 const ROW = 'flex cursor-pointer items-center gap-3 text-body';
-const SELECT =
-  'h-field w-full cursor-pointer rounded-control border border-(--office-line) bg-transparent px-3 text-body text-(--office-ink) outline-none focus-visible:ring-2 focus-visible:ring-(--office-focus) [&>option]:bg-(--office-menu)';
 
 const LOOKS: readonly ContentsLook[] = ['plain', 'dotted', 'links'];
 const LEVELS = Array.from({ length: CONTENTS_LEVELS_MAX }, (_, i) => i + 1);
@@ -65,7 +64,7 @@ export function TextDocumentContentsPanel({
           id={ids.levels}
           value={selected.levels}
           onChange={(e) => onChange({ levels: Number(e.target.value) })}
-          className={SELECT}
+          className={OFFICE_PANEL_SELECT}
         >
           {LEVELS.map((level) => (
             <option key={level} value={level}>

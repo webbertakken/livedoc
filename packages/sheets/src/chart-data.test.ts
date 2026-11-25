@@ -39,9 +39,29 @@ describe('a chart from a range', () => {
       categories: ['Jan', 'Feb'],
       series: [
         { name: 'Sales', values: [10, 20] },
-        { name: 'Costs', values: [4, 0] },
+        { name: 'Costs', values: [4, null] },
       ],
     });
+  });
+
+  // pie-chart.md "No value is a gap": an empty cell, text or an error is no value; a 0 is a value.
+  it('reads an empty cell, text or an error as no value, and a 0 as 0', () => {
+    const { b, link } = setup({
+      A1: 'x',
+      B1: 'A',
+      C1: 'B',
+      A2: '1',
+      B2: '70',
+      A3: '2',
+      C3: '0',
+      A4: '3',
+      B4: 'n/a',
+      C4: '=1/0',
+    });
+    expect(sheetChartTable(b.wb, link(0, 0, 3, 2), 'en-GB')!.series).toEqual([
+      { name: 'A', values: [70, null, null] },
+      { name: 'B', values: [null, 0, null] },
+    ]);
   });
 
   it('numbers the categories and names series by column without labels or a header', () => {

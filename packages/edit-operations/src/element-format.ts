@@ -77,6 +77,8 @@ function aliasValue(el: Element, alias: ReturnType<typeof aliasesOf>[number]): s
       return `${TEXT_SIZES.join('|')}|${TEXT_PX_MIN}-${TEXT_PX_MAX}`;
     case 'line':
       return ARROW_STYLES.join('|');
+    case 'lines':
+      return '["<series name>", ...]';
   }
 }
 

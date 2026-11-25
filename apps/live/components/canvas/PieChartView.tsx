@@ -14,6 +14,7 @@ import {
   legendFontPx,
   pieMarks,
   pieValueLabels,
+  chartValue,
   type ShapeElement,
 } from '@livedoc/document';
 import { ChartValues } from '@/components/primitives/ChartValues';
@@ -48,6 +49,8 @@ export function PieChartView({
   const valuePx = chartValueFontPx(element.textSize);
 
   const group = useChartAnim(element, `${cx}px ${cy}px`);
+  // Only a drawn wedge is hovered: no value draws none (pie-chart.md "No value is a gap").
+  const hoveredValue = hover === null ? null : chartValue(slices[hover]?.value);
 
   return (
     <ChartSurface
@@ -60,12 +63,12 @@ export function PieChartView({
       fontFamily={fontFamily}
       fontPx={legendFontPx(element.textSize)}
       readout={
-        hover !== null && wedges[hover] ? (
+        hover !== null && wedges[hover] && hoveredValue !== null ? (
           <ChartReadout
             leftPct={(wedges[hover].tip.x / w) * 100}
             topPct={(wedges[hover].tip.y / h) * 100}
             label={slices[hover]!.label}
-            value={slices[hover]!.value}
+            value={hoveredValue}
           />
         ) : null
       }

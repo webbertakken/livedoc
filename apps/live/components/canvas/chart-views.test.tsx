@@ -100,7 +100,7 @@ describe('chart views', () => {
       <LineChartView element={el('line-chart', { chartVariant: 'area' })} textColor="#000" />,
     ).container;
     expect(area.querySelectorAll('path[fill-opacity]').length).toBe(2);
-    expect(area.querySelectorAll('polyline').length).toBe(2);
+    expect(area.querySelectorAll('path[stroke-linejoin]').length).toBe(2);
     const scatter = render(
       <LineChartView
         element={el('line-chart', {
@@ -111,7 +111,7 @@ describe('chart views', () => {
         textColor="#000"
       />,
     ).container;
-    expect(scatter.querySelectorAll('polyline').length).toBe(0);
+    expect(scatter.querySelectorAll('path[stroke-linejoin]').length).toBe(0);
     const dots = scatter.querySelectorAll('circle');
     expect(dots.length).toBe(3);
     // Numeric x: five ticks across the axis.
@@ -121,5 +121,86 @@ describe('chart views', () => {
     fireEvent.pointerEnter(dots[1]!);
     fireEvent.pointerMove(dots[1]!);
     expect(scatter.textContent).toContain('5 · Y');
+  });
+
+  // pie-chart.md "A scatter series drawn as a line": its points joined in order of x, a line in its key.
+  it('joins a scatter series drawn as a line, and keys it with a line', () => {
+    const scatter = render(
+      <LineChartView
+        element={el('line-chart', {
+          chartVariant: 'scatter',
+          lineCategories: ['3', '1', '2'],
+          lineSeries: [
+            { name: 'Pareto', values: [1, null, 3], line: true },
+            { name: 'Models', values: [2, 2, 2] },
+          ],
+        })}
+        textColor="#000"
+      />,
+    ).container;
+    expect(scatter.querySelectorAll('path[stroke-linejoin]').length).toBe(1);
+    // The plot's points (the key's line swatch carries a dot of its own).
+    expect(scatter.querySelector('svg')!.querySelectorAll('circle').length).toBe(5);
+    expect(scatter.querySelectorAll('[data-key-swatch="line"]').length).toBe(1);
+    expect(scatter.querySelectorAll('[data-key-swatch="square"]').length).toBe(1);
+  });
+
+  // pie-chart.md "No value is a gap": no mark, no value label; a 0 still draws.
+  it('breaks a line at no value and draws no point there', () => {
+    const line = render(
+      <LineChartView
+        element={el('line-chart', {
+          chartValues: true,
+          lineCategories: ['a', 'b', 'c', 'd'],
+          lineSeries: [{ name: 'Y', values: [1, 0, null, 4] }],
+        })}
+        textColor="#000"
+      />,
+    ).container;
+    expect(line.querySelectorAll('circle').length).toBe(3);
+    // One stretch (a, b); d stands alone, as its point.
+    expect(
+      line.querySelector('path[stroke-linejoin]')!.getAttribute('d')!.match(/M /g),
+    ).toHaveLength(1);
+    const texts = [...line.querySelectorAll('text')].map((t) => t.textContent);
+    expect(texts).toEqual(expect.arrayContaining(['1', '0', '4']));
+  });
+
+  it('draws a scatter’s points only where a series has a value', () => {
+    const scatter = render(
+      <LineChartView
+        element={el('line-chart', {
+          chartVariant: 'scatter',
+          lineCategories: ['1', '2', '3'],
+          lineSeries: [
+            { name: 'A', values: [5, null, null] },
+            { name: 'B', values: [null, 6, null] },
+            { name: 'C', values: [null, null, 7] },
+          ],
+        })}
+        textColor="#000"
+      />,
+    ).container;
+    expect(scatter.querySelectorAll('circle').length).toBe(3);
+  });
+
+  it('draws no column and no value for no value, keeping its name', () => {
+    const bars = render(
+      <BarChartView
+        element={el('bar-chart', {
+          chartValues: true,
+          chartLegend: false,
+          pieSlices: [
+            { label: 'A', value: 3 },
+            { label: 'B', value: null },
+          ],
+        })}
+        textColor="#000"
+      />,
+    ).container;
+    expect(bars.querySelectorAll('rect').length).toBe(1);
+    const texts = [...bars.querySelectorAll('text')].map((t) => t.textContent);
+    expect(texts).toEqual(expect.arrayContaining(['3', 'A', 'B']));
+    expect(texts).not.toContain('0');
   });
 });

@@ -26,19 +26,46 @@ export function threadStretches(
   state: EditorState,
   threads: readonly TextDocumentThread[],
 ): ThreadStretch[] {
-  const y = bindingOf(state);
-  if (!y || y.binding!.mapping.size === 0) return [];
-  const size = state.doc.content.size;
   const out: ThreadStretch[] = [];
   for (const thread of threads) {
-    if (thread.resolved) continue;
-    const from = resolveBytes(thread.start, y, size);
-    const to = resolveBytes(thread.end, y, size);
-    if (from === null || to === null) continue;
-    const deleted = LiveThreads.anchor(y.doc, thread)?.deleted ?? false;
-    out.push({ id: thread.id, from, to: deleted ? from : Math.max(from, to), deleted });
+    const stretch = thread.resolved ? null : threadStretch(state, thread);
+    if (stretch) out.push(stretch);
   }
   return out.sort((a, b) => a.from - b.from || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
+}
+
+/** One thread's stretch in the writing shown, open or resolved; null where it is not in this writing. */
+export function threadStretch(
+  state: EditorState,
+  thread: TextDocumentThread,
+): ThreadStretch | null {
+  const y = bindingOf(state);
+  if (!y || y.binding!.mapping.size === 0) return null;
+  const size = state.doc.content.size;
+  const from = resolveBytes(thread.start, y, size);
+  const to = resolveBytes(thread.end, y, size);
+  if (from === null || to === null) return null;
+  const deleted = LiveThreads.anchor(y.doc, thread)?.deleted ?? false;
+  return { id: thread.id, from, to: deleted ? from : Math.max(from, to), deleted };
+}
+
+/**
+ * The thread next to the selected one in the writing's order (`forward` the next), or, with none selected among
+ * them, the first after the caret or the last before it; null past the ends, never wrapping (review.md "Keys on a
+ * selected comment").
+ */
+export function threadBeside(
+  stretches: readonly ThreadStretch[],
+  selected: string | null,
+  caret: number,
+  forward: boolean,
+): string | null {
+  const at = selected === null ? -1 : stretches.findIndex((s) => s.id === selected);
+  if (at >= 0) return stretches[at + (forward ? 1 : -1)]?.id ?? null;
+  const found = forward
+    ? stretches.find((s) => s.from > caret)
+    : stretches.findLast((s) => s.from < caret);
+  return found?.id ?? null;
 }
 
 const WORD = /[\p{L}\p{N}_'’]/u;

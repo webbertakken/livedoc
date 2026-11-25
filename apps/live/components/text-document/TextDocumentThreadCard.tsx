@@ -5,8 +5,8 @@
 // quote once the text is gone, Resolve for whoever may comment, Edit on one's own comments, Delete on one's own (an
 // Editor's on any), and Reply while the thread is selected. Deleting the first comment asks first: it takes the thread.
 import { useEffect, useRef, useState, type KeyboardEvent } from 'react';
-import type { Comment } from '@livedoc/document';
-import type { TextDocumentComment, TextDocumentThread } from '@livedoc/text-documents';
+import type { TextDocumentThread } from '@livedoc/text-documents';
+import { commentNoteOf, sharedComment } from '@/lib/text-document/text-document-comment-rows';
 import {
   CommentComposer,
   CommentResolveToggle,
@@ -15,21 +15,6 @@ import {
 import { ConfirmDialog } from '@/components/dialogs/ConfirmDialog';
 import { Button } from '@livedoc/ui';
 import type { TextDocumentCommenter } from '@/lib/text-document/text-document-commenter';
-
-/** A text document's comment as the shared thread parts draw one. */
-export const sharedComment = (c: TextDocumentComment): Comment & { fromFile?: true } => ({
-  id: c.id,
-  text: c.text,
-  createdAt: c.at,
-  authorName: c.author.name,
-  authorColor: c.author.colour,
-  ...(c.author.key ? { authorId: c.author.key } : {}),
-  ...(c.author.fromFile ? { fromFile: true as const } : {}),
-});
-
-const FROM_THE_FILE = 'From the file';
-const noteOf = (c: Comment): string | null =>
-  (c as { fromFile?: true }).fromFile ? FROM_THE_FILE : null;
 
 /** How a card names itself to a screen reader: its first author and the start of its quote. */
 export function cardLabel(thread: TextDocumentThread): string {
@@ -51,6 +36,8 @@ export function TextDocumentThreadCard({
   onEdit,
   onRemove,
   onResolve,
+  onStep,
+  onExit,
 }: {
   thread: TextDocumentThread;
   deleted: boolean;
@@ -61,8 +48,42 @@ export function TextDocumentThreadCard({
   onEdit: (commentId: string, text: string) => void;
   onRemove: (commentId: string) => void;
   onResolve: (resolved: boolean) => void;
+  /** J and K: the next or the previous thread. */
+  onStep: (forward: boolean) => void;
+  /** U and Escape: let the thread go, the writing taking the keyboard. */
+  onExit: () => void;
 }) {
   const [confirming, setConfirming] = useState(false);
+  const replyField = useRef<HTMLTextAreaElement>(null);
+  // The keys on a selected comment, heard on the card itself, never in its fields (review.md "Keys on a selected
+  // comment"); R and E only for whoever may comment.
+  const onKeyDown = (event: KeyboardEvent) => {
+    if (event.target !== event.currentTarget) return;
+    if (event.metaKey || event.ctrlKey || event.altKey) return;
+    const key = event.key.toLowerCase();
+    const run =
+      key === 'j' || key === 'k'
+        ? () => onStep(key === 'j')
+        : key === 'u' || key === 'escape'
+          ? onExit
+          : key === 'e' && commenter
+            ? () => {
+                onResolve(true);
+                onExit();
+              }
+            : key === 'r' && commenter
+              ? () => {
+                  if (selected) return replyField.current?.focus();
+                  // Reply shows once the thread is selected, a frame on.
+                  onSelect();
+                  requestAnimationFrame(() => replyField.current?.focus());
+                }
+              : null;
+    if (!run) return;
+    event.preventDefault();
+    event.stopPropagation();
+    run();
+  };
   const first = thread.comments[0]?.id;
   const remove = (commentId: string) =>
     commentId === first ? setConfirming(true) : onRemove(commentId);
@@ -72,9 +93,12 @@ export function TextDocumentThreadCard({
       role="group"
       aria-label={cardLabel(thread)}
       aria-current={selected ? 'true' : undefined}
+      aria-keyshortcuts={commenter ? 'R J K E U' : 'J K U'}
+      tabIndex={-1}
       data-thread-card={thread.id}
       onClick={() => !selected && onSelect()}
-      className={`${CARD} ${selected ? 'shadow-lg ring-1 ring-brand-400/40' : 'cursor-pointer'}`}
+      onKeyDown={onKeyDown}
+      className={`${CARD} outline-none focus-visible:ring-2 focus-visible:ring-(--office-focus) ${selected ? 'shadow-lg ring-1 ring-brand-400/40' : 'cursor-pointer'}`}
     >
       {deleted ? (
         <div className="border-b border-slate-100 px-3 pt-2 pb-1.5 dark:border-slate-800">
@@ -102,10 +126,12 @@ export function TextDocumentThreadCard({
         canComment={commenter !== null}
         onDeleteComment={remove}
         onEditComment={commenter ? onEdit : undefined}
-        noteOf={noteOf}
+        noteOf={commentNoteOf}
         className="max-h-96 overflow-y-auto px-3 py-1"
       />
-      {selected && commenter ? <CommentComposer onAddComment={(text) => onReply(text)} /> : null}
+      {selected && commenter ? (
+        <CommentComposer fieldRef={replyField} onAddComment={(text) => onReply(text)} />
+      ) : null}
       <ConfirmDialog
         open={confirming}
         title="Delete this comment thread?"
@@ -123,21 +149,26 @@ export function TextDocumentThreadCard({
 /** A comment not yet sent: its field focused, Comment sends it, Cancel or Escape drops it. */
 export function TextDocumentDraftCard({
   commenter,
+  placed,
   onSend,
   onCancel,
 }: {
   commenter: TextDocumentCommenter;
+  /** The margin has placed it: hidden until then, it can take no focus. */
+  placed: boolean;
   onSend: (text: string) => void;
   onCancel: () => void;
 }) {
   const field = useRef<HTMLTextAreaElement>(null);
-  // Focused once the menu or button that opened it has closed and handed the focus back, two frames on.
+  // Focused once the margin has placed it and the menu or button that opened it has handed the focus back, two frames
+  // on.
   useEffect(() => {
+    if (!placed) return;
     let frame = requestAnimationFrame(() => {
       frame = requestAnimationFrame(() => field.current?.focus());
     });
     return () => cancelAnimationFrame(frame);
-  }, []);
+  }, [placed]);
   const onKeyDown = (event: KeyboardEvent) => {
     if (event.key !== 'Escape') return;
     event.preventDefault();

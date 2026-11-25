@@ -6,7 +6,7 @@
 // resolves each datum's swatch colour (explicit slice colour, else the
 // palette), matching how the chart body colours its slices / bars.
 
-import type { ChartLegendPosition, PieSlice } from '@livedoc/document';
+import type { ChartKeyItem, ChartLegendPosition } from '@livedoc/document';
 
 type LegendRect = {
   show: boolean;
@@ -25,8 +25,8 @@ export function ChartLegend({
   fontFamily,
   fontPx,
 }: {
-  items: readonly PieSlice[];
-  colorAt: (index: number, item: PieSlice) => string;
+  items: readonly ChartKeyItem[];
+  colorAt: (index: number, item: ChartKeyItem) => string;
   legend: LegendRect;
   textColor: string;
   fontFamily?: string;
@@ -57,10 +57,25 @@ export function ChartLegend({
     >
       {items.map((item, i) => (
         <div key={i} className="flex items-center gap-1 leading-tight">
-          <span
-            className="inline-block shrink-0 rounded-none"
-            style={{ width: swatch, height: swatch, backgroundColor: colorAt(i, item) }}
-          />
+          {item.line ? (
+            // A scatter series drawn as a line (pie-chart.md "A scatter series drawn as a line"): a line through a dot.
+            <svg
+              data-key-swatch="line"
+              className="shrink-0"
+              width={swatch}
+              height={swatch}
+              viewBox="0 0 12 12"
+            >
+              <line x1="0" y1="6" x2="12" y2="6" stroke={colorAt(i, item)} strokeWidth="2" />
+              <circle cx="6" cy="6" r="3" fill={colorAt(i, item)} />
+            </svg>
+          ) : (
+            <span
+              data-key-swatch="square"
+              className="inline-block shrink-0 rounded-none"
+              style={{ width: swatch, height: swatch, backgroundColor: colorAt(i, item) }}
+            />
+          )}
           <span className="truncate" style={{ fontSize: fontPx }}>
             {item.label || '—'}
           </span>

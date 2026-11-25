@@ -11,12 +11,14 @@ import { LineChartAxis } from './ChartAxis';
 import {
   AREA_FILL_OPACITY,
   chartValueFontPx,
+  lineKeyItems,
   lineMarks,
   lineValueLabels,
   lineVariantOf,
   LINE_DEFAULT_CATEGORIES,
   LINE_DEFAULT_SERIES,
   legendFontPx,
+  chartValue,
   type ShapeElement,
 } from '@livedoc/document';
 import { useChartAnim, chartFrame } from '@/lib/chart';
@@ -65,11 +67,12 @@ export function LineChartView({
     series.findIndex((s) => s.axis === 'right'),
   );
   const { x: plotX0, y: plotY0, w: plotW, h: plotH } = m.plot;
-  const pointAt = (s: number, i: number) => m.points[s]?.[i] ?? { x: 0, y: 0 };
-  const valAt = (s: number, i: number) => series[s]?.values[i] ?? 0;
+  // Only a drawn point is hovered: no value draws none (pie-chart.md "No value is a gap").
+  const hovered = hover ? m.points[hover.s]?.[hover.i] : null;
+  const hoveredValue = hover ? chartValue(series[hover.s]?.values[hover.i]) : null;
 
   const group = useChartAnim(element, `${plotX0 + plotW / 2}px ${plotY0 + plotH / 2}px`);
-  const legendItems = series.map((s) => ({ label: s.name, value: 0, color: s.color }));
+  const legendItems = lineKeyItems(series, lineVariantOf(element));
 
   return (
     <ChartSurface
@@ -82,12 +85,12 @@ export function LineChartView({
       fontFamily={fontFamily}
       fontPx={legendFontPx(element.textSize)}
       readout={
-        hover ? (
+        hover && hovered && hoveredValue !== null ? (
           <ChartReadout
-            leftPct={(pointAt(hover.s, hover.i).x / w) * 100}
-            topPct={(pointAt(hover.s, hover.i).y / h) * 100}
+            leftPct={(hovered.x / w) * 100}
+            topPct={(hovered.y / h) * 100}
             label={`${categories[hover.i] ?? ''} · ${series[hover.s]?.name ?? ''}`}
-            value={valAt(hover.s, hover.i)}
+            value={hoveredValue}
           />
         ) : null
       }
@@ -124,8 +127,8 @@ export function LineChartView({
                 <path d={m.areas[si]} fill={color} fillOpacity={AREA_FILL_OPACITY} />
               ) : null}
               {m.lines[si] ? (
-                <polyline
-                  points={m.lines[si]}
+                <path
+                  d={m.lines[si]}
                   fill="none"
                   stroke={color}
                   strokeWidth={2}
@@ -133,16 +136,18 @@ export function LineChartView({
                   strokeLinecap="round"
                 />
               ) : null}
-              {m.points[si]!.map((p, i) => (
-                <circle
-                  key={i}
-                  cx={p.x}
-                  cy={p.y}
-                  r={m.dot}
-                  fill={color}
-                  {...markProps({ s: si, i })}
-                />
-              ))}
+              {m.points[si]!.map((p, i) =>
+                p ? (
+                  <circle
+                    key={i}
+                    cx={p.x}
+                    cy={p.y}
+                    r={m.dot}
+                    fill={color}
+                    {...markProps({ s: si, i })}
+                  />
+                ) : null,
+              )}
             </g>
           );
         })}

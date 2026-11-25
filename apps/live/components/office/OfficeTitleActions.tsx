@@ -1,13 +1,16 @@
 'use client';
 
-// The right of the office title row (docs/specs/034-text-documents/editing-surface.md "The title row"): Settings,
-// Share or Make a copy, the people here, and the account at the far right, as Google places its account picture. On a
-// phone Share and Make a copy keep their glyph alone, and the rest moves into More (office-shell.md "Phone and tablet").
+// The right of the office title row (docs/specs/034-text-documents/editing-surface.md "The title row"): Comment
+// history where the kind has comments, Settings, Share or Make a copy, the people here, and the account at the far
+// right, as Google places its account picture. On a phone Share and Make a copy keep their glyph alone, and the rest
+// moves into More (office-shell.md "Phone and tablet").
 import type { ReactNode } from 'react';
 import { HoverCard } from '@livedoc/ui';
 import { AuthControls } from '@/components/chrome/AuthControls';
 import type { OfficeChrome, OfficePerson } from './office-chrome';
+import type { OfficeActions } from '@/lib/office/office-catalogue';
 import {
+  OfficeCommentHistoryIcon,
   OfficeCopyIcon,
   OfficeLockIcon,
   OfficeSettingsIcon,
@@ -56,14 +59,26 @@ export function OfficeTitleActions({
   chrome,
   onFollow,
   mode = null,
+  comments = null,
 }: {
   chrome: OfficeChrome;
   onFollow: (person: OfficePerson) => void;
   // The person's editing mode, between Settings and Share.
   mode?: OfficeModeChoice | null;
+  // Comment history: opens and closes the comments panel, first in the row (editing-surface.md "The title row").
+  comments?: OfficeActions[string] | null;
 }) {
   return (
     <div className="flex shrink-0 items-center gap-2 phone:gap-1">
+      {comments ? (
+        <OfficeIconButton
+          label="Open comment history"
+          pressed={comments.checked ?? false}
+          onClick={() => comments.run()}
+        >
+          <OfficeCommentHistoryIcon />
+        </OfficeIconButton>
+      ) : null}
       <OfficeIconButton className="phone:hidden" label="Settings" onClick={chrome.onOpenSettings}>
         <OfficeSettingsIcon />
       </OfficeIconButton>

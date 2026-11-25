@@ -4,6 +4,7 @@
 // Alignment, Colour and Cell, each a section that folds; each field shows what the cells it changes share, blank where
 // they differ. A list or a colour applies at once; a length on Enter or when its field is left. Outside a table it says
 // where to put the cursor.
+import { OFFICE_PANEL_CONTROL } from '@/components/office/OfficePanel';
 import type { CellVerticalAlign } from '@livedoc/text-documents';
 import {
   OFFICE_NO_COLOUR,
@@ -19,7 +20,6 @@ import {
 import {
   PANEL_CHECK,
   PANEL_CHECK_ROW,
-  PANEL_CONTROL,
   PANEL_LABEL,
   PanelLengthField,
   PanelListField,
@@ -123,7 +123,7 @@ export function TextDocumentTablePropertiesPanel({
             <OfficeDialogColourField
               label="Table border colour"
               value={p.borderColor}
-              className={PANEL_CONTROL}
+              className={OFFICE_PANEL_CONTROL}
               onPick={(value) => onChange({ field: 'borderColor', value })}
             />
           </div>
@@ -142,7 +142,7 @@ export function TextDocumentTablePropertiesPanel({
             label="Cell background colour"
             value={p.background === null ? null : p.background || OFFICE_NO_COLOUR}
             leading="None"
-            className={PANEL_CONTROL}
+            className={OFFICE_PANEL_CONTROL}
             onPick={(value) =>
               onChange({ field: 'background', value: value === OFFICE_NO_COLOUR ? null : value })
             }

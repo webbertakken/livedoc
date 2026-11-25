@@ -86,6 +86,7 @@ export function OfficeTitleRow({
   mode = null,
   contextMenu = null,
   bare = null,
+  commentHistoryItem,
 }: {
   name: string;
   // The format's pill (".ODT") and what it is called ("OpenDocument format").
@@ -127,6 +128,9 @@ export function OfficeTitleRow({
   mode?: OfficeModeChoice | null;
   // The document's context menu (office-shell.md "Context menus"); none: the browser's own.
   contextMenu?: OfficeContextMenuSource | null;
+  // The item that opens and closes the comments panel (review-surfaces.md): Comment history runs it, pressed while it
+  // is checked; not drawn while nothing binds it.
+  commentHistoryItem?: string;
   // The title row drawn bare (office-shell.md "Title row"): the name line and one button to leave; keys still heard.
   bare?: OfficeBareTitleRow | null;
 }) {
@@ -352,7 +356,12 @@ export function OfficeTitleRow({
         </div>
         {chrome ? (
           <div className="self-center">
-            <OfficeTitleActions chrome={chrome} onFollow={follow} mode={mode} />
+            <OfficeTitleActions
+              chrome={chrome}
+              onFollow={follow}
+              mode={mode}
+              comments={commentHistoryItem ? (allActions[commentHistoryItem] ?? null) : null}
+            />
           </div>
         ) : mode ? (
           <div className="self-center">

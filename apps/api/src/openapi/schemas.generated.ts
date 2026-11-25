@@ -10234,12 +10234,19 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
       "color": {
         "type": "string"
       },
+      "line": {
+        "const": true,
+        "type": "boolean"
+      },
       "name": {
         "type": "string"
       },
       "values": {
         "items": {
-          "type": "number"
+          "type": [
+            "number",
+            "null"
+          ]
         },
         "type": "array"
       }
@@ -12249,7 +12256,10 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
         "type": "string"
       },
       "value": {
-        "type": "number"
+        "type": [
+          "number",
+          "null"
+        ]
       }
     },
     "required": [
