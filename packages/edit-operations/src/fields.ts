@@ -328,7 +328,7 @@ function writeAlias(
       patch.arrowStyle = value;
       return null;
     case 'lines': {
-      const write = seriesWithLines(el.type === 'shape' ? el.lineSeries : undefined, value);
+      const write = seriesWithLines(el, value);
       if ('rule' in write) return text(write.rule);
       patch.lineSeries = write.series;
       return null;
