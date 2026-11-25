@@ -207,5 +207,12 @@ describe('a scatter chart’s lines', () => {
     expect(message({ type: 'line', range: 'A3:C6', lines: ['Pareto'] })).toBe(
       'lines draw on a scatter chart; a line chart draws every series as a line already.',
     );
+    expect(message({ type: 'column', range: 'A3:C6', lines: ['Pareto'] })).toBe(
+      'lines draw on a scatter chart; a column chart draws no lines.',
+    );
+    // Only the picked columns' series are named.
+    expect(
+      message({ type: 'scatter', range: 'A3:C6', columns: ['A', 'B'], lines: ['Pareto'] }),
+    ).toBe('"Pareto" is no series of the chart. Its series: Models.');
   });
 });

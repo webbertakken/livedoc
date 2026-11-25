@@ -127,29 +127,7 @@ export function chartFieldsFromTable(
   el: ChartFields,
   t: ChartTable,
 ): { pieSlices: PieSlice[] } | { lineCategories: string[]; lineSeries: LineSeries[] } {
-  if (el.shape === 'line-chart') {
-    const xFromFirst =
-      chartTypeOf(el) === 'scatter' && t.series.length >= 2 && numbered(t.categories);
-    // An empty x cell is an empty category: no x, so its points are not drawn.
-    const categories = xFromFirst
-      ? t.series[0]!.values.map((x) => (x === null ? '' : String(x)))
-      : t.categories;
-    const series = xFromFirst ? t.series.slice(1) : t.series;
-    return {
-      lineCategories: categories,
-      // What a series carries beyond its data stays with its place: its colour, Right Axis and Lines.
-      lineSeries: series.map((s, i) => {
-        const was = el.lineSeries?.[i];
-        return {
-          name: s.name,
-          values: s.values,
-          ...(was?.color ? { color: was.color } : {}),
-          ...(was?.axis === 'right' ? { axis: 'right' as const } : {}),
-          ...(was?.line === true ? { line: true as const } : {}),
-        };
-      }),
-    };
-  }
+  if (el.shape === 'line-chart') return lineFieldsFromTable(el, t);
   const first = t.series[0]?.values ?? [];
   return {
     pieSlices: t.categories.map((label, i) => {
@@ -159,6 +137,35 @@ export function chartFieldsFromTable(
         label,
         value: v !== null && el.shape === 'pie-chart' ? Math.max(0, v) : v,
         ...(color ? { color } : {}),
+      };
+    }),
+  };
+}
+
+// A line, area or scatter chart's fields from a table (chartFieldsFromTable's line half): every series, a scatter's
+// numbered first column as its x.
+export function lineFieldsFromTable(
+  el: ChartFields,
+  t: ChartTable,
+): { lineCategories: string[]; lineSeries: LineSeries[] } {
+  const xFromFirst =
+    chartTypeOf(el) === 'scatter' && t.series.length >= 2 && numbered(t.categories);
+  // An empty x cell is an empty category: no x, so its points are not drawn.
+  const categories = xFromFirst
+    ? t.series[0]!.values.map((x) => (x === null ? '' : String(x)))
+    : t.categories;
+  const series = xFromFirst ? t.series.slice(1) : t.series;
+  return {
+    lineCategories: categories,
+    // What a series carries beyond its data stays with its place: its colour, Right Axis and Lines.
+    lineSeries: series.map((s, i) => {
+      const was = el.lineSeries?.[i];
+      return {
+        name: s.name,
+        values: s.values,
+        ...(was?.color ? { color: was.color } : {}),
+        ...(was?.axis === 'right' ? { axis: 'right' as const } : {}),
+        ...(was?.line === true ? { line: true as const } : {}),
       };
     }),
   };

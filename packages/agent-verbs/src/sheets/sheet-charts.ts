@@ -8,6 +8,7 @@ import {
   SHEET_ANCHOR_MAX,
   chartFieldsFromTable,
   chartShapeOf,
+  lineFieldsFromTable,
   createShape,
   type ChartPaletteId,
   type ChartType,
@@ -262,14 +263,16 @@ function linesOf(
       'write_invalid',
       `lines draw on a scatter chart; ${withArticle(change.type)} chart draws ${change.type === 'line' || change.type === 'area' ? 'every series as a line already' : 'no lines'}.`,
     );
+  // The range was just checked against this workbook, so it reads.
   const table = sheetChartTable(
     wb,
     { sheetId, range: read.range, ...(read.cols.length ? { cols: [...read.cols] } : {}) },
     wb.locale,
-  );
-  const fields =
-    table && chartFieldsFromTable({ shape: 'line-chart', chartVariant: 'scatter' }, table);
-  const names = fields && 'lineSeries' in fields ? fields.lineSeries.map((s) => s.name) : [];
+  )!;
+  const names = lineFieldsFromTable(
+    { shape: 'line-chart', chartVariant: 'scatter' },
+    table,
+  ).lineSeries.map((s) => s.name);
   const unknown = change.lines.find((l) => !names.some((n) => sameName(n, l)));
   if (unknown !== undefined)
     return refuse(
