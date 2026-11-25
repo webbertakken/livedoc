@@ -153,7 +153,8 @@ Cards and emails stop when the automations are disabled or the secret is deleted
 
 Bots probing for `.env`, `.git`, WordPress and the like are blocked at the edge, so they never invoke a worker
 ([Vulnerability scans](../specs/016-platform/vulnerability-scans.md)). Webber added the rule by hand on 24 November
-2026, 18:21 UTC: the operator's API token cannot read or write custom rules, and is not widened for it.
+2026, 18:21 UTC, and widened it on 25 November: the operator's API token cannot read or write custom rules, and is not
+widened for it.
 
 In the dashboard, zone `docs.nu`, Security, WAF, **Custom rules**, **Create rule**:
 
@@ -162,23 +163,25 @@ In the dashboard, zone `docs.nu`, Security, WAF, **Custom rules**, **Create rule
 - **Expression** (Edit expression):
 
 ```text
-(http.request.uri.path contains "/.env") or (http.request.uri.path contains "/.git") or (http.request.uri.path contains "/wp-") or (http.request.uri.path contains "phpinfo") or (http.request.uri.path contains "xmlrpc.php") or (http.request.uri.path contains "/actuator") or (http.request.uri.path contains "/_profiler") or (http.request.uri.path contains "/debug/") or (http.request.uri.path contains ".php")
+(http.request.uri.path contains "/." and not (http.request.uri.path contains "/.well-known/")) or (http.request.uri.path contains "/wp-") or (http.request.uri.path contains "phpinfo") or (http.request.uri.path contains ".php") or (http.request.uri.path contains "/actuator") or (http.request.uri.path contains "/_profiler") or (http.request.uri.path contains "/debug/") or (http.request.uri.path contains "/_ignition") or (http.request.uri.path contains "/telescope") or (lower(http.request.uri.path) contains "credentials") or (http.request.uri.path contains "secrets.") or (http.request.uri.path contains "secret_token") or (http.request.uri.path contains "private-key") or (ends_with(http.request.uri.path, ".env")) or (ends_with(http.request.uri.path, ".sql")) or (ends_with(http.request.uri.path, ".log")) or (ends_with(http.request.uri.path, ".inc")) or (ends_with(http.request.uri.path, ".axd")) or (ends_with(http.request.uri.path, "web.config"))
 ```
 
 Check it after any change:
 
 - Probes answer Cloudflare's `403`: `/.env`, `/api/.env`, `/.git/HEAD`, `/wp-login.php`, `/phpinfo.php`,
-  `/actuator/env`, `/_profiler/phpinfo`, `/debug/vars`, `/xmlrpc.php`.
+  `/actuator/env`, `/_profiler/phpinfo`, `/debug/vars`, `/xmlrpc.php`, `/.svn/entries`, `/.aws/credentials`,
+  `/credentials.json`, `/config/secrets.yml`, `/backup.sql`, `/storage/logs/laravel.log`.
 - The site answers as before: `/`, `/explorer/home`, `/help/`, `/telemetry/`, `/document/<id>`, `/icon.svg`,
-  `GET /api/telemetry/summary` and `POST /api/guest-id`.
+  `GET /api/telemetry/summary` and `POST /api/guest-id`; `/.well-known/security.txt` reaches the router, not a `403`.
 - The production `security` issues in Workers Issues stop counting for the blocked paths.
 
 Security occurrences per day, from each production `security` issue's count in the Issues API:
 
-| Window                             | Occurrences a day |
-| ---------------------------------- | ----------------- |
-| 22 to 24 Nov 2026, before the rule | 4,950             |
-| The day after the rule             | Measured 25 Nov   |
+| Window                                  | Occurrences a day |
+| --------------------------------------- | ----------------- |
+| 22 to 24 Nov 2026, before the rule      | 4,950             |
+| The first 19 hours after the first rule | About 100         |
+| The day after the widened rule          | Measured 26 Nov   |
 
 ## Deploy
 
