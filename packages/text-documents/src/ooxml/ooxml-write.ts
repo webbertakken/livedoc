@@ -36,6 +36,13 @@ import { byId } from './ooxml-read';
 import { PPR_ORDER, RPR_ORDER, WRITTEN_W_NS, XML_HEAD, declarations } from './ooxml-names';
 import { ooxmlFieldXml } from './ooxml-fields';
 import { footnoteIds, footnotesPartXml } from './ooxml-notes';
+import {
+  keptCommentIds,
+  COMMENT_RELATIONSHIPS,
+  ooxmlCommentIds,
+  ooxmlCommentMarkXml,
+  ooxmlCommentsXml,
+} from './ooxml-comments';
 import { ooxmlTableXml } from './ooxml-tables';
 import { Blocks, type Table } from '../model/tables';
 import { DocumentTabs, type DocumentTab, type DocumentTabFlow } from '../model/document-tabs';
@@ -101,6 +108,8 @@ class OoxmlWriter {
   readonly headerParts: HeaderPartsWriter;
   /** Each of the body's notes with its footnote's id (page-layout.md "Footnotes"). */
   readonly noteIds: Map<Note, string>;
+  /** Each thread's comments' `w:id`s, by the thread (review.md "How a comment is kept"). */
+  readonly commentIds: Map<string, number[]>;
   /** The media the pictures written hold, by the part each is written at (objects.md "In the formats"). */
   readonly mediaParts = new Map<string, HeldPictureMedia>();
   /** The last `wp:docPr` id given: numbered after those kept content holds. */
@@ -122,8 +131,13 @@ class OoxmlWriter {
     this.stylesPart = source?.stylesPart ?? 'word/styles.xml';
     this.numberingPart = source?.numberingPart ?? 'word/numbering.xml';
     // Header and footer relationships stay listed so a part written back keeps its id; unused ones are taken away.
+    // Comments parts a document read before threads were held keeps as they came, unless threads are written fresh.
+    const fresh = (doc.comments?.length ?? 0) > 0;
     const keptRels = (source?.relationships.get(this.mainPart) ?? []).filter(
-      (r) => r.type !== RELATIONSHIP_TYPES.styles && r.type !== RELATIONSHIP_TYPES.numbering,
+      (r) =>
+        r.type !== RELATIONSHIP_TYPES.styles &&
+        r.type !== RELATIONSHIP_TYPES.numbering &&
+        !(fresh && COMMENT_RELATIONSHIPS.has(r.type)),
     );
     const original = source?.relationships.get(this.mainPart) ?? [];
     // The styles and numbering relationships keep their ids when the file had them.
@@ -147,6 +161,7 @@ class OoxmlWriter {
     sections.forEach((s, i) => this.#sectionAt.set(s, i));
     this.headerParts = new HeaderPartsWriter(this, sections);
     this.noteIds = footnoteIds(Notes.all(doc.body), source?.footnotes);
+    this.commentIds = ooxmlCommentIds(doc.comments ?? [], keptCommentIds(keptXmlTexts(doc)));
     this.assignNumIds();
   }
 
@@ -337,7 +352,9 @@ class OoxmlWriter {
                   ? this.equationXml(i)
                   : i.type === 'bookmark'
                     ? this.bookmarkXml(i)
-                    : this.kept(i.xml),
+                    : i.type === 'comment'
+                      ? ooxmlCommentMarkXml(i.edge, this.commentIds.get(i.id) ?? [])
+                      : this.kept(i.xml),
     }));
     // A paragraph of only equations is a display equation, as Word writes one (objects.md "Equations in the formats").
     const display =
@@ -553,6 +570,8 @@ class OoxmlWriter {
   }
 }
 
+const COMMENTS_PART = 'word/comments.xml';
+const COMMENTS_EXTENDED_PART = 'word/commentsExtended.xml';
 /** The text document as a `.docx` package. */
 export function writeOoxml(document: TextDocument, generator: string): Uint8Array<ArrayBuffer> {
   const w = new OoxmlWriter(document);
@@ -639,6 +658,28 @@ export function writeOoxml(document: TextDocument, generator: string): Uint8Arra
       w.rels.list.length,
       ...w.rels.list.filter((r) => r.type !== RELATIONSHIP_TYPES.footnotes),
     );
+  // The comments parts, written fresh from the threads (review.md "How a comment is kept").
+  const threads = (document.comments ?? []).filter((t) => w.commentIds.has(t.id));
+  if (threads.length > 0) {
+    const xml = ooxmlCommentsXml(threads, w.commentIds);
+    parts.push(
+      {
+        name: COMMENTS_PART,
+        contentType: OOXML_CONTENT_TYPES.comments,
+        data: encode(xml.comments),
+      },
+      {
+        name: COMMENTS_EXTENDED_PART,
+        contentType: OOXML_CONTENT_TYPES.commentsExtended,
+        data: encode(xml.extended),
+      },
+    );
+    w.rels.id(RELATIONSHIP_TYPES.comments, relativeTarget(w.mainPart, COMMENTS_PART));
+    w.rels.id(
+      RELATIONSHIP_TYPES.commentsExtended,
+      relativeTarget(w.mainPart, COMMENTS_EXTENDED_PART),
+    );
+  }
   // A new file's settings, or an arriving file's that held none, written whole; an arriving file's own kept as they
   // came unless pageless changed (standard-mapping.md "Extensions").
   const sourceSettings = source?.parts.find((p) => p.mediaType === OOXML_CONTENT_TYPES.settings);

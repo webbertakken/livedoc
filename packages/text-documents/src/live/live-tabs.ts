@@ -63,7 +63,7 @@ export function readLiveTabs(
 export function writeLiveTabs(
   doc: Y.Doc,
   tabs: readonly DocumentTab[] | undefined,
-  nodesOf: (blocks: readonly Block[]) => Y.XmlElement[],
+  nodesOf: (blocks: readonly Block[], tab: string) => Y.XmlElement[],
 ): void {
   const map = doc.getMap<unknown>(TABS_MAP);
   const held = new Set((tabs ?? []).map((t) => t.id));
@@ -76,7 +76,7 @@ export function writeLiveTabs(
   (tabs ?? []).forEach((tab, order) => {
     const fragment = tabFragment(doc, tab.id);
     fragment.delete(0, fragment.length);
-    fragment.insert(0, nodesOf(tab.body));
+    fragment.insert(0, nodesOf(tab.body, tab.id));
     const value: LiveTab = {
       name: tab.name,
       ...(tab.emoji === undefined ? {} : { emoji: tab.emoji }),

@@ -16,7 +16,9 @@ export type DroppedReason =
   | 'column-width'
   | 'header-footer'
   | 'table-content'
-  | 'table-repaired';
+  | 'table-repaired'
+  | 'comment-unpaired'
+  | 'comment-in-story';
 
 export type ReportItem = { readonly name: string; readonly count: number };
 

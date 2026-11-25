@@ -47,6 +47,7 @@ export const OOXML_SCHEMAS: readonly (readonly [RegExp, string])[] = [
   [/^word\/header\d+\.xml$/, 'ooxml/WordprocessingML_Header.rnc'],
   [/^word\/footer\d+\.xml$/, 'ooxml/WordprocessingML_Footer.rnc'],
   [/^word\/footnotes\.xml$/, 'ooxml/WordprocessingML_Footnotes.rnc'],
+  [/^word\/comments\.xml$/, 'ooxml/WordprocessingML_Comments.rnc'],
   [/^xl\/workbook\.xml$/, 'ooxml/SpreadsheetML_Workbook.rnc'],
   [/^xl\/worksheets\/sheet\d+\.xml$/, 'ooxml/SpreadsheetML_Worksheet.rnc'],
   [/^xl\/styles\.xml$/, 'ooxml/SpreadsheetML_Styles.rnc'],

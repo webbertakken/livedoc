@@ -1,5 +1,7 @@
 // Reading an ODF text document (standard-mapping.md): the parts of a package or a flat file into the model, with
 // everything the model does not map kept where it stood, and every drop reported.
+import { Comments } from '../model/comments';
+import { OdfCommentsReader } from './odf-comments';
 import {
   attributeOf,
   childElement,
@@ -152,12 +154,15 @@ class OdfReader {
   readonly report: ReportBuilder;
   /** The media the pictures read hold. */
   readonly taken: MediaTaken;
+  /** The writing's comments (review.md "How a comment is kept"). */
+  readonly comments: OdfCommentsReader;
   /** Whether the file counts tab positions from the indent (standard-mapping.md "The model", tab stops). */
   readonly tabsFromIndent: boolean;
 
   constructor(parts: OdfParts, report: ReportBuilder) {
     this.parts = parts;
     this.report = report;
+    this.comments = new OdfCommentsReader(report);
     this.taken = new MediaTaken(parts.maxObjects ?? TEXT_DOCUMENT_MAX_OBJECTS);
     this.part = { parsed: parts.content, auto: this.auto };
     this.tabsFromIndent = tabsFromIndentIn(
@@ -480,7 +485,7 @@ export function readOdfParts(parts: OdfParts, report: ReportBuilder): TextDocume
       masterStyles,
     ]),
   };
-  return DocumentTabs.split(
+  const read = DocumentTabs.split(
     {
       format: 'odf',
       metadata: parts.meta ? readOdfMeta(parts.meta) : {},
@@ -495,6 +500,7 @@ export function readOdfParts(parts: OdfParts, report: ReportBuilder): TextDocume
     },
     body.tabStarts,
   );
+  return Comments.settle({ ...read, comments: reader.comments.threads() }, report);
 }
 
 /** Bindings sorted by prefix, without `xml` and those every written part declares anyway, so the same declarations read as the same value. */
@@ -893,6 +899,22 @@ class InlineReader {
         }
       }
       this.text(chars, ctx);
+      return;
+    }
+    // A comment's edges show nothing, so white space collapses across them (review.md "How a comment is kept").
+    if (
+      node.uri === NS.office &&
+      (node.local === 'annotation' || node.local === 'annotation-end')
+    ) {
+      const at = {
+        props: ctx.props,
+        ...compact({ style: ctx.style, link: ctx.link, kept: ctx.kept }),
+      };
+      const mark =
+        node.local === 'annotation'
+          ? this.r.comments.annotation(node, this.notes, at)
+          : this.r.comments.end(node, this.notes, at);
+      if (mark) this.out.push(mark);
       return;
     }
     if (node.uri === NS.text) {

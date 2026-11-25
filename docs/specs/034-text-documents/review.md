@@ -51,7 +51,12 @@ office kinds; this spec says what a text document puts in them.
   (a Yjs relative position each), the start kept before text typed at it and the end before text typed after it, so
   typing at either edge of a commented stretch never stretches it, as Google's does not. Threads overlap freely.
 - **Original content deleted**: when every character of the stretch is gone the anchor reads as empty and the thread
-  is kept, marked so; undoing the delete brings the anchor back with its text.
+  is kept, marked so; undoing the delete brings the anchor back with its text. Only a thread whose quote has text is
+  ever deleted.
+- **A point comment**: a file's comment on no text (ODF's annotation without an end, Word's reference with no range)
+  is kept as a thread on the empty stretch at its point, its quote empty, and never reads as deleted.
+- **A comment's text is plain**: a file's comment paragraphs are joined by line breaks and their formatting dropped,
+  as Google's comments are plain (default); each line is written back as a paragraph of its own.
 - **A thread**: its id, its document tab, its anchor, its quoted text (the stretch as it read when the thread began,
   shown once its text is gone), resolved or open, and its comments in the order they were made.
 - **A comment**: its id, text, time, author, mentions, assignee and reactions; edited comments keep their first time
@@ -63,6 +68,11 @@ office kinds; this spec says what a text document puts in them.
 - **A comment from a file** is never credited to a LiveDoc person: it has the file's name for its author, no key, a
   neutral avatar and the line "From the file", never anyone's picture or colour, and it never reaches an Inbox as
   anyone's ([Comments](../035-pdf-documents/comments.md#authors) on a PDF document holds the same rule).
+- **In the files**: a thread is written as the standard's comment at its anchor, its replies and resolved state as
+  each format keeps them ([Standard mapping](standard-mapping.md)); a comment's author leaves as its name and comes
+  back "From the file". A comment in a header, footer or note is not kept (default; Google places none there) and the
+  conversion report counts it, as it counts a comment marker without its pair. Reactions and assignees join the files
+  with mentions and assigned actions.
 - **The room judges a Participant's update** (fork D7) by what it touches: only `threads`, and in it only comments
   carrying the sender's own key added, edited or deleted, threads begun with one, resolved or reopened, and the
   sender's own key added to or taken from a reaction; anything else asks for Editing and is refused whole

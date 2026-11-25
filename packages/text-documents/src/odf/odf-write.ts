@@ -58,6 +58,8 @@ import { odfWatermarkStyles } from './odf-watermark';
 import { odfTableXml, type OdfTableHost } from './odf-tables';
 import { Blocks } from '../model/tables';
 import { DocumentTabs, type DocumentTab } from '../model/document-tabs';
+import type { CommentMark, FileThread } from '../model/comments';
+import { odfAnnotationNames, odfThreadEndXml, odfThreadStartXml } from './odf-comments';
 
 export type OdfWriteOptions = { flat: boolean; generator: string };
 
@@ -133,6 +135,8 @@ class OdfWriter {
   storyXml: (blocks: readonly Block[]) => string = () => '';
   /** Each of the body's notes with its number, its citation (page-layout.md "Footnotes"). */
   readonly noteNumbers: Map<Note, number>;
+  /** Each thread by id with the name its annotation is written with (review.md "How a comment is kept"). */
+  readonly threads: Map<string, { thread: FileThread; name: string }>;
   readonly #masterClaims = new Map<string, string>();
   readonly listNames = new Map<string, string>();
   /** The lists written so far, so a list met again continues it (`text:continue-list`). */
@@ -152,10 +156,26 @@ class OdfWriter {
   readonly tabsFromIndent: boolean;
   readonly tabs: TabContext;
 
+  /** A thread's edge: its annotations at the start, its annotation's end at the end; nothing for a thread not held. */
+  commentXml(mark: CommentMark): string {
+    const held = this.threads.get(mark.id);
+    if (!held) return '';
+    return mark.edge === 'start'
+      ? odfThreadStartXml(held.thread, held.name)
+      : odfThreadEndXml(held.name);
+  }
+
   constructor(document: TextDocument, flat: boolean) {
     this.document = document;
     this.flat = flat;
     this.noteNumbers = Notes.numbers(document.body);
+    const names = odfAnnotationNames(document.comments ?? []);
+    this.threads = new Map(
+      (document.comments ?? []).map((thread) => [
+        thread.id,
+        { thread, name: names.get(thread.id)! },
+      ]),
+    );
     const source = document.source?.format === 'odf' ? document.source : undefined;
     this.source = source;
     this.tabsFromIndent = source !== undefined && source.tabsFromIndent !== false;
@@ -545,7 +565,9 @@ function contentXml(
                 ? w.equationXml(i)
                 : i.type === 'bookmark'
                   ? odfBookmarkXml(i)
-                  : w.kept(i.xml);
+                  : i.type === 'comment'
+                    ? w.commentXml(i)
+                    : w.kept(i.xml);
       return { kind: 'kept', xml, ...compact({ span, link: i.link }) };
     });
     const tag = outline !== undefined && outline >= 1 ? 'text:h' : 'text:p';

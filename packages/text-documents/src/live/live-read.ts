@@ -54,6 +54,8 @@ import { readLiveTabs } from './live-tabs';
 import { DocumentTabs } from '../model/document-tabs';
 import { readSource } from './live-source';
 import { StoryReader, type LiveHeaders } from './live-stories';
+import { readLiveComments, type LiveCommentMarks } from './live-thread-files';
+import type { CommentMark } from '../model/comments';
 
 const PROPERTY_OF_MARK = new Map<string, keyof TextProps>(
   (Object.entries(TEXT_PROPERTY_MARK_OF) as [keyof TextProps, string][]).map(([p, m]) => [m, p]),
@@ -81,12 +83,45 @@ function runOf(text: string, attributes: Attributes): Run {
   });
 }
 
-function inlinesOf(paragraph: Y.XmlElement, stories: StoryReader | undefined): Inline[] {
+/** A run of text's inlines, the comment markers at its offsets put between its characters. */
+function textInlines(
+  text: Y.XmlText,
+  marks: readonly { index: number; mark: CommentMark }[],
+): Inline[] {
   const inlines: Inline[] = [];
-  for (const child of paragraph.toArray()) {
+  let at = 0;
+  let next = 0;
+  for (const op of text.toDelta() as { insert: unknown; attributes?: Attributes }[]) {
+    if (typeof op.insert !== 'string') continue;
+    const chars = op.insert;
+    let from = 0;
+    while (next < marks.length && marks[next]!.index - at < chars.length) {
+      const cut = Math.max(marks[next]!.index - at, from);
+      if (cut > from) inlines.push(runOf(chars.slice(from, cut), op.attributes ?? {}));
+      from = cut;
+      inlines.push(marks[next++]!.mark);
+    }
+    if (from < chars.length) inlines.push(runOf(chars.slice(from), op.attributes ?? {}));
+    at += chars.length;
+  }
+  for (; next < marks.length; next++) inlines.push(marks[next]!.mark);
+  return inlines;
+}
+
+function inlinesOf(
+  paragraph: Y.XmlElement,
+  stories: StoryReader | undefined,
+  marks?: LiveCommentMarks,
+): Inline[] {
+  const inlines: Inline[] = [];
+  const between = marks?.get(paragraph) ?? [];
+  let next = 0;
+  const children = paragraph.toArray();
+  for (const [index, child] of children.entries()) {
+    for (; next < between.length && between[next]!.index <= index; next++)
+      inlines.push(between[next]!.mark);
     if (child instanceof Y.XmlText) {
-      for (const op of child.toDelta() as { insert: unknown; attributes?: Attributes }[])
-        if (typeof op.insert === 'string') inlines.push(runOf(op.insert, op.attributes ?? {}));
+      inlines.push(...textInlines(child, marks?.get(child) ?? []));
       continue;
     }
     if (child instanceof Y.XmlElement && child.nodeName === FIELD) {
@@ -191,10 +226,16 @@ function inlinesOf(paragraph: Y.XmlElement, stories: StoryReader | undefined): I
       );
     }
   }
+  for (; next < between.length; next++) inlines.push(between[next]!.mark);
   return inlines;
 }
 
-function blockOf(node: Y.XmlElement, normal: string, stories?: StoryReader): Block | null {
+function blockOf(
+  node: Y.XmlElement,
+  normal: string,
+  stories?: StoryReader,
+  marks?: LiveCommentMarks,
+): Block | null {
   const a = node.getAttributes() as Attributes;
   switch (node.nodeName) {
     case PARAGRAPH:
@@ -204,7 +245,7 @@ function blockOf(node: Y.XmlElement, normal: string, stories?: StoryReader): Blo
         props: a.props ?? {},
         list: a.list as Paragraph['list'],
         text: a.text as Paragraph['text'],
-        inlines: inlinesOf(node, stories),
+        inlines: inlinesOf(node, stories, marks),
         kept: a.kept as Paragraph['kept'],
       });
     case SECTION_BREAK: {
@@ -218,7 +259,7 @@ function blockOf(node: Y.XmlElement, normal: string, stories?: StoryReader): Blo
       }) as SectionBreak;
     }
     case TABLE:
-      return tableOf(node, (child) => blockOf(child, normal, stories), normal);
+      return tableOf(node, (child) => blockOf(child, normal, stories, marks), normal);
     case CONTENTS: {
       const entries = node
         .toArray()
@@ -322,9 +363,11 @@ export function readLiveDocument(doc: Y.Doc, format: TextDocumentFormat): TextDo
   const styles = stylesOf(doc.getMap<unknown>(STYLES_MAP)) ?? blank.styles;
   const normal = Styles.idOfRole(styles, 'normal') ?? Styles.idOfRole(blank.styles, 'normal')!;
   const stories: StoryReader = new StoryReader(doc, (node) => blockOf(node, normal, stories));
+  const comments = readLiveComments(doc);
   const blocksOf = (fragment: Y.XmlFragment): Block[] =>
     fragment.toArray().flatMap((node) => {
-      const block = node instanceof Y.XmlElement ? blockOf(node, normal, stories) : null;
+      const block =
+        node instanceof Y.XmlElement ? blockOf(node, normal, stories, comments.marks) : null;
       return block ? [block] : [];
     });
   const tabs = readLiveTabs(doc, blocksOf);
@@ -343,6 +386,7 @@ export function readLiveDocument(doc: Y.Doc, format: TextDocumentFormat): TextDo
     watermark: (meta.get('watermark') as TextDocument['watermark'] | undefined) ?? undefined,
     media,
     body,
+    comments: comments.threads.length > 0 ? comments.threads : undefined,
     source,
   });
   return tabs.length > 0 ? DocumentTabs.withAll(read, DocumentTabs.held(tabs)) : read;

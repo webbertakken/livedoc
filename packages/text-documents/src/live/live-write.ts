@@ -2,6 +2,7 @@
 // body as elements and formatted text, and the maps beside it. One transaction.
 import * as Y from 'yjs';
 import type { Block, Inline, KeptInline, Paragraph, Run } from '../model/blocks';
+import type { CommentMark } from '../model/comments';
 import { isEmpty, type TextProps } from '../model/props';
 import { TextDocument, type TextDocumentFormat } from '../model/text-document';
 import type { Style } from '../model/styles';
@@ -35,6 +36,8 @@ import { BODY_FRAGMENT } from './live-root';
 import { writeLiveTabs } from './live-tabs';
 import { DocumentTabs, FIRST_DOCUMENT_TAB_ID } from '../model/document-tabs';
 import { tableElement } from './live-tables';
+import { CommentPlaces } from './live-thread-files';
+import { THREADS_MAP } from './live-names';
 
 /** A value as the state holds it: plain JSON, undefined fields left out. */
 const plain = <T>(value: T): T => JSON.parse(JSON.stringify(value)) as T;
@@ -56,9 +59,16 @@ export function runAttributes(inline: Run | KeptInline): Record<string, unknown>
   return attributes;
 }
 
+/** Where a comment marker sits as the inlines are built: in a run of text, or between the paragraph's children. */
+type MarkAt = (
+  mark: CommentMark,
+  at: { text: Y.XmlText; offset: number } | { child: number },
+) => void;
+
 function inlineNodes(
   inlines: readonly Inline[],
   stories: StoryWriter,
+  markAt?: MarkAt,
 ): (Y.XmlText | Y.XmlElement)[] {
   const nodes: (Y.XmlText | Y.XmlElement)[] = [];
   let text: Y.XmlText | null = null;
@@ -73,6 +83,11 @@ function inlineNodes(
       }
       text.insert(at, inline.text, runAttributes(inline));
       at += inline.text.length;
+      continue;
+    }
+    // A comment's edge is no node: its place is noted, and the run of text goes on across it.
+    if (inline.type === 'comment') {
+      markAt?.(inline, text ? { text, offset: at } : { child: nodes.length });
       continue;
     }
     text = null;
@@ -133,7 +148,11 @@ export function writeLiveMedia(
       });
 }
 
-function paragraphNode(paragraph: Paragraph, stories: StoryWriter): Y.XmlElement {
+function paragraphNode(
+  paragraph: Paragraph,
+  stories: StoryWriter,
+  places?: CommentPlaces,
+): Y.XmlElement {
   const element = new Y.XmlElement(PARAGRAPH);
   setAttributes(element, {
     style: paragraph.style,
@@ -142,15 +161,23 @@ function paragraphNode(paragraph: Paragraph, stories: StoryWriter): Y.XmlElement
     text: paragraph.text,
     kept: paragraph.kept,
   });
-  const children = inlineNodes(paragraph.inlines, stories);
+  const children = inlineNodes(
+    paragraph.inlines,
+    stories,
+    places &&
+      ((mark, at) =>
+        'text' in at
+          ? places.note(mark, at.text, at.offset)
+          : places.note(mark, element, at.child)),
+  );
   if (children.length > 0) element.insert(0, children);
   return element;
 }
 
-function blockNode(block: Block, stories: StoryWriter): Y.XmlElement {
+function blockNode(block: Block, stories: StoryWriter, places?: CommentPlaces): Y.XmlElement {
   switch (block.type) {
     case 'paragraph':
-      return paragraphNode(block, stories);
+      return paragraphNode(block, stories, places);
     case 'section': {
       const element = new Y.XmlElement(SECTION_BREAK);
       const { type: _type, headers, ...section } = block;
@@ -163,7 +190,7 @@ function blockNode(block: Block, stories: StoryWriter): Y.XmlElement {
       return element;
     }
     case 'table':
-      return tableElement(block, (b) => blockNode(b, stories), setAttributes);
+      return tableElement(block, (b) => blockNode(b, stories, places), setAttributes);
     case 'contents': {
       const element = new Y.XmlElement(CONTENTS);
       setAttributes(element, { look: block.look, levels: block.levels });
@@ -184,16 +211,24 @@ export function writeLiveDocument(doc: Y.Doc, document: TextDocument): void {
   const lists = doc.getMap<unknown>(LISTS_MAP);
   const source = doc.getMap<unknown>(SOURCE_MAP);
   const media = doc.getMap<unknown>(MEDIA_MAP);
+  const threads = doc.getMap<unknown>(THREADS_MAP);
   doc.transact(() => {
     const stories: StoryWriter = new StoryWriter(doc, (block) => blockNode(block, stories));
+    // Comment markers are noted in the tabs' bodies alone, never in a header, footer or note.
+    const places = new CommentPlaces();
+    threads.clear();
     // Each document tab's body in its own fragment; one plain tab's in `body` alone (standard-mapping.md "Document tabs").
     const tabs = DocumentTabs.isPlain(document) ? undefined : DocumentTabs.all(document);
-    writeLiveTabs(doc, tabs, (blocks) => blocks.map((block) => blockNode(block, stories)));
+    writeLiveTabs(doc, tabs, (blocks, tab) => {
+      places.tab = tab;
+      return blocks.map((block) => blockNode(block, stories, places));
+    });
     if (!tabs) {
+      places.tab = FIRST_DOCUMENT_TAB_ID;
       body.delete(0, body.length);
       body.insert(
         0,
-        document.body.map((block) => blockNode(block, stories)),
+        document.body.map((block) => blockNode(block, stories, places)),
       );
     } else if (!tabs.some((t) => t.id === FIRST_DOCUMENT_TAB_ID)) body.delete(0, body.length);
     meta.set('metadata', plain(document.metadata));
@@ -211,6 +246,11 @@ export function writeLiveDocument(doc: Y.Doc, document: TextDocument): void {
     writeSource(source, document.source);
     media.clear();
     writeLiveMedia(media, Pictures.heldMedia(document));
+    places.write(
+      doc,
+      document.comments ?? [],
+      new Map(DocumentTabs.all(document).map((t) => [t.id, t.body])),
+    );
   });
 }
 

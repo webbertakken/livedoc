@@ -8,6 +8,7 @@ import type { Table } from './tables';
 import type { Picture } from './pictures';
 import type { Equation } from './equations';
 import type { Bookmark } from './bookmarks';
+import type { CommentMark } from './comments';
 import type { TableOfContents } from './contents';
 
 /** Characters with one formatting: tabs as `\t`, line breaks as `\n`. */
@@ -64,7 +65,7 @@ export type Note = {
   readonly kept?: KeptProperties;
 };
 
-export type Inline = Run | Field | Note | Picture | Equation | Bookmark | KeptInline;
+export type Inline = Run | Field | Note | Picture | Equation | Bookmark | CommentMark | KeptInline;
 
 export type Paragraph = {
   readonly type: 'paragraph';

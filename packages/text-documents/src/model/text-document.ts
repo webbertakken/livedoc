@@ -14,6 +14,7 @@ import { Styles, type Style, type StyleDefaults } from './styles';
 import type { Watermark } from './watermark';
 import type { DocumentMedia } from './pictures';
 import { DocumentTabs } from './document-tabs';
+import type { FileThread } from './comments';
 
 export type TextDocumentFormat = 'odf' | 'ooxml';
 
@@ -92,6 +93,8 @@ export type TextDocument = {
   readonly body: readonly Block[];
   /** The document tabs: absent is one tab, `t.0`, Tab 1, whose body is `body`. */
   readonly tabs?: DocumentTabs;
+  /** Its comment threads, each marked in its tab's writing (review.md "How a comment is kept"); absent is none. */
+  readonly comments?: readonly FileThread[];
   readonly source?: OdfSource | OoxmlSource;
 };
 

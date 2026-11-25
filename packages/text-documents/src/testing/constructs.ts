@@ -696,6 +696,62 @@ export const CONSTRUCTS: Record<string, (format: TextDocumentFormat) => TextDocu
         run('start', {}, { link: '#a1b2c3d4e5f6' }),
       ]),
     ]),
+  // review.md "How a comment is kept": a resolved thread with a reply on a stretch across a format change, a point
+  // comment, and an open thread across two paragraphs, its text two lines.
+  comments: (format) => {
+    const mark = (edge: 'start' | 'end', id: string) => ({
+      type: 'comment' as const,
+      edge,
+      id,
+      props: {},
+    });
+    const author = { name: 'Ada Lovelace', key: 'k-ada', colour: '#0284c7' };
+    return base(
+      format,
+      [
+        paragraph(format, 'normal', [
+          run('The '),
+          mark('start', 't1'),
+          run('quarterly '),
+          run('results', { bold: true }),
+          mark('end', 't1'),
+          run(' are in'),
+          mark('start', 't2'),
+          mark('end', 't2'),
+          run('.'),
+        ]),
+        paragraph(format, 'normal', [mark('start', 't3'), run('Next steps')]),
+        paragraph(format, 'normal', [run('follow.'), mark('end', 't3')]),
+      ],
+      {
+        comments: [
+          {
+            id: 't1',
+            resolved: true,
+            comments: [
+              { id: 'c1', text: 'Is this final?', at: Date.UTC(2026, 10, 18, 10), author },
+              {
+                id: 'c2',
+                text: 'Yes & <done>.',
+                at: Date.UTC(2026, 10, 18, 11),
+                author: { name: 'Bo' },
+              },
+            ],
+          },
+          {
+            id: 't2',
+            resolved: false,
+            comments: [{ id: 'c3', text: 'A point.', author: { name: 'Cy' } }],
+          },
+          {
+            id: 't3',
+            resolved: false,
+            comments: [{ id: 'c4', text: 'Two\nlines', at: Date.UTC(2026, 10, 19), author }],
+          },
+        ],
+      },
+    );
+  },
   // links-and-navigation.md "Table of contents": a Dotted one of two levels, each entry its heading's text and page
   // number linked to the heading's id, then the headings it lists.
   contents: (format) => {
