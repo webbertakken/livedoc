@@ -99,7 +99,6 @@ describe('XLSX kept content', () => {
     expect(related(kept)).toEqual(
       [
         'package@ rId4 /docProps/custom.xml',
-        'workbook@ rId7 /xl/theme/theme1.xml',
         'workbook@ rId9 /xl/pivotCache/pivotCacheDefinition1.xml',
         'sheet@0 rId1 /xl/drawings/drawing1.xml',
         'sheet@0 rId3 https://example.com/ external',
@@ -112,7 +111,6 @@ describe('XLSX kept content', () => {
       'xl/drawings/drawing2.xml application/vnd.openxmlformats-officedocument.drawing+xml 3',
       'xl/media/image1.png image/png 0',
       'xl/pivotCache/pivotCacheDefinition1.xml application/vnd.openxmlformats-officedocument.spreadsheetml.pivotCacheDefinition+xml 0',
-      'xl/theme/theme1.xml application/vnd.openxmlformats-officedocument.theme+xml 0',
     ]);
   });
 

@@ -37,18 +37,21 @@ describe('readCellStyles', () => {
   });
 
   // standard-mapping.md "Cell styles in the file": each style's look, its colours from the file's theme.
-  it('reads each cell style’s look, a theme colour from the theme part', () => {
+  // standard-mapping.md "The theme in the file" (D218): an untinted theme colour reads as that theme colour, a tinted
+  // one as the colour it draws.
+  it('reads each cell style’s look, a theme colour by name or, tinted, from the theme part', () => {
     const xml =
       `<styleSheet xmlns="${SPREADSHEETML_NS}"><fonts><font><sz val="10"/><name val="Arial"/></font>` +
-      '<font><sz val="10"/><color theme="4"/><name val="Arial"/></font></fonts>' +
-      '<cellXfs><xf><alignment vertical="center"/></xf><xf fontId="1"><alignment vertical="center"/><protection locked="0"/></xf></cellXfs></styleSheet>';
+      '<font><sz val="10"/><color theme="4"/><name val="Arial"/></font><font><sz val="10"/><color theme="4" tint="0.5"/><name val="Arial"/></font></fonts>' +
+      '<cellXfs><xf><alignment vertical="center"/></xf><xf fontId="1"><alignment vertical="center"/><protection locked="0"/></xf><xf fontId="2"><alignment vertical="center"/></xf></cellXfs></styleSheet>';
     const theme =
       '<a:theme xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><a:themeElements><a:clrScheme>' +
       '<a:dk1><a:srgbClr val="000000"/></a:dk1><a:lt1><a:srgbClr val="FFFFFF"/></a:lt1><a:dk2><a:srgbClr val="1F497D"/></a:dk2>' +
       '<a:lt2><a:srgbClr val="EEECE1"/></a:lt2><a:accent1><a:srgbClr val="4F81BD"/></a:accent1></a:clrScheme></a:themeElements></a:theme>';
     expect(readCellStyles(xml, 'en-GB', theme)).toEqual([
       { number: { code: null }, lost: false },
-      { number: { code: null }, style: { fc: '#4f81bd' }, lost: true },
+      { number: { code: null }, style: { fc: 'theme:accent1' }, lost: true },
+      { number: { code: null }, style: { fc: '#a7c0de' }, lost: false },
     ]);
   });
 

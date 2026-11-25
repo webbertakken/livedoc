@@ -211,6 +211,22 @@ The table is the contract the readers and writers are tested against, one test p
   a justified, filled or distributed alignment, a pattern or gradient fill, a diagonal border, protection) is left
   out, and the read names each sheet whose cells, rows or columns hold it (`styles_unread`, D104).
 
+## The theme in the file
+
+- A workbook's [theme](formatting.md#themes) is written and read with XLSX's theme part (`xl/theme/theme1.xml`); ODF
+  has no theme, so an ODF file holds the colours a theme colour is and the theme's font as its default.
+- **XLSX, written**: the theme part's `a:clrScheme` holds the theme's colours (`dk1` Text, `lt1` Background, `dk2` and
+  `lt2` the same, `accent1` to `accent6`, `hlink` Link, `folHlink` Link too) and its `a:fontScheme` the theme's font as
+  the major and minor `a:latin`; `a:fmtScheme` is LibreOffice's plain one. The default font (`fonts` 0) is the theme's
+  font. A cell's theme colour is a `color@theme` (text) or `fgColor@theme` (fill), by Excel's order: 0 Background,
+  1 Text, 2 and 3 the second pair, 4 to 9 the accents, 10 Link.
+- **XLSX, read**: a file with a theme part opens with its theme: its colours as above and the default font's family as
+  its font, named as the file names it (`a:theme@name`), or the catalogue's theme it matches exactly. A cell's colour
+  by `theme` without a `tint` reads as that theme colour; with a tint, as the colour it draws (default, D218).
+- A file's default font is the theme's font: a cell whose font is it carries no font of its own, where D203 gave
+  every cell the default font; a file without a theme part reads as D203 says (default, D218).
+- **ODF, written**: theme colours as their `#rrggbb`; the default style's font is the theme's (D207).
+
 ## Format rules in the file
 
 - A sheet's [format rules](conditional-formatting.md) are written and read both ways, in list order, each with its
@@ -464,6 +480,9 @@ The code cites each by its id.
 - **D215** Format rules in a file: a comparison with a reference or formula operand, `notBetween`, Date Is and
   Text Is Exactly read as the same test (Custom Formula Is, Is Equal To); rules the model does not hold kept and written
   before LiveDoc's own; LiveDoc draws comparisons on numbers alone, as Google Sheets does (default).
+- **D218** The theme in a file: XLSX's theme part read as the workbook's theme (a catalogue theme it matches, else
+  the file's by its name), its default font the theme's font that cells then carry none of; an untinted theme colour read
+  as that theme colour, a tinted one as the colour it draws (default).
 - **D205** Clip in a file: written as Overflow, which neither format can tell apart (default).
 - **D206** Border widths and styles in a file: thin, medium, thick as widths 1 to 3; double as double; dashes and dots
   by their nearest; ODF 0.74, 1.76 and 2.49 pt written (default).

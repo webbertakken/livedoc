@@ -15,6 +15,7 @@ import { readXlsxStylesheet, xlsxCellStyleOf, XlsxStyleParts } from './xlsx-cell
 import { readThemeColours } from './xlsx-colours';
 import { SPREADSHEETML_NS } from './xlsx-parts';
 import { dxfXml } from './xlsx-format-rules';
+import { xlsxDefaultFont } from './xlsx-theme';
 import type { FormatStyle } from '../sheet';
 
 const STRICT_NS = 'http://purl.oclc.org/ooxml/spreadsheetml/main';
@@ -135,6 +136,13 @@ export function readCellStyles(
   });
 }
 
+/** The default font a styles part's text names (its first `font`'s family); undefined when it names none. */
+export function xlsxStylesDefaultFont(stylesXml: string | undefined): string | undefined {
+  const parsed = stylesXml === undefined ? undefined : parseXml(stylesXml, 'xl/styles.xml');
+  if (!parsed?.ok) return undefined;
+  return xlsxDefaultFont(parsed.root, parsed.root.uri === STRICT_NS ? STRICT_NS : SPREADSHEETML_NS);
+}
+
 /** The cell styles whose number format shows a date. */
 export function dateStyles(styles: readonly XlsxCellStyle[]): Set<number> {
   const out = new Set<number>();
@@ -155,13 +163,17 @@ export class XlsxStyles {
   private readonly xfs = new Map<string, number>();
   private readonly written: WrittenXf[] = [];
   private readonly own = new Map<string, number>();
-  private readonly parts = new XlsxStyleParts();
+  private readonly parts: XlsxStyleParts;
   private readonly dxfs = new Map<string, number>();
   private readonly kept: string;
   private readonly keptDxfs: number;
 
-  /** `kept`: the file's differential formats and table styles (D110), which LiveDoc's own formats follow. */
-  constructor(kept = '') {
+  /**
+   * `kept`: the file's differential formats and table styles (D110), which LiveDoc's own formats follow; `font`: the
+   * theme's, the default (standard-mapping.md "The theme in the file").
+   */
+  constructor(kept = '', font?: string) {
+    this.parts = new XlsxStyleParts(font);
     this.kept = kept.replace(/<((?:[\w.-]+:)?)dxfs\b([^>]*?)\/>/, '<$1dxfs$2></$1dxfs>');
     this.keptDxfs = (this.kept.match(/<(?:[\w.-]+:)?dxf[\s/>]/g) ?? []).length;
   }

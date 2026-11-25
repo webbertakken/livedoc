@@ -28,7 +28,14 @@ import type { FileCell, FileLoss, FileRead, FileSheet, FileValue } from './workb
 import { allRead, WORKBOOK_READ, WORKSHEET_READ, XlsxKeeper } from './xlsx-kept-read';
 import { readXlsxDxfs, readXlsxFormatRules } from './xlsx-format-rules';
 import { readThemeColours } from './xlsx-colours';
-import { dateStyles, readCellStyles, type XlsxCellStyle } from './xlsx-styles';
+import {
+  dateStyles,
+  readCellStyles,
+  xlsxStylesDefaultFont,
+  type XlsxCellStyle,
+} from './xlsx-styles';
+import { readXlsxTheme } from './xlsx-theme';
+import { STANDARD_THEME } from '../themes/spreadsheet-theme';
 import {
   DATE1904_OFFSET,
   fromXstring,
@@ -285,6 +292,8 @@ export async function readXlsx(
   const themeXml = text(pkg, partOf(RELATIONSHIP_TYPES.theme));
   const styles = readCellStyles(stylesXml, locale, themeXml);
   const dxfs = readXlsxDxfs(stylesXml, themeXml);
+  // The workbook's theme, its font the file's default (standard-mapping.md "The theme in the file", D218).
+  const fileTheme = readXlsxTheme(themeXml, xlsxStylesDefaultFont(stylesXml));
   const theme = readThemeColours(themeXml);
   const book: Book = {
     ns,
@@ -340,5 +349,13 @@ export async function readXlsx(
   if (unread > 0) book.losses.push({ k: 'kept_unread', count: unread });
   if (pkg.dropped.length > 0) book.losses.push({ k: 'entries_dropped', entries: [...pkg.dropped] });
   const kept = keeper?.content();
-  return { ok: true, file: kept ? { sheets, kept } : { sheets }, losses: book.losses };
+  return {
+    ok: true,
+    file: {
+      sheets,
+      ...(kept ? { kept } : {}),
+      ...(fileTheme && fileTheme !== STANDARD_THEME ? { theme: fileTheme } : {}),
+    },
+    losses: book.losses,
+  };
 }

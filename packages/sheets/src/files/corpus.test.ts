@@ -46,6 +46,7 @@ async function opened(bytes: Uint8Array<ArrayBuffer>) {
     format: read.format,
     sheets,
     kept: sheetsMade.kept,
+    theme: read.file.theme,
     losses: [...read.losses, ...sheetsMade.losses],
   };
 }
@@ -84,7 +85,7 @@ describe('the corpus', () => {
     '%s round-trips, every loss named and recorded',
     async (path) => {
       const first = await opened(new Uint8Array(readFileSync(join(CORPUS, path))));
-      const record = WorkbookRecord.opened(made, first.format);
+      const record = WorkbookRecord.opened(made, first.format, first.theme);
       const title = path.replace(/^.*\/|\.[^.]+$/g, '');
       const own = writeWorkbook(first.sheets, record, title, first.format, first.kept);
       const second = await opened(own.data);
@@ -92,6 +93,8 @@ describe('the corpus', () => {
       expect(held(second.sheets, record, second.kept)).toEqual(
         held(first.sheets, record, first.kept),
       );
+      // Its theme too (standard-mapping.md "The theme in the file").
+      expect(second.theme).toEqual(first.theme);
       const other: WorkbookFormat = first.format === 'xlsx' ? 'ods' : 'xlsx';
       const conversion = workbookConversion(first.sheets, record, other, first.kept);
       found[path] = {

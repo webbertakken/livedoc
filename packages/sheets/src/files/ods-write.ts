@@ -15,7 +15,8 @@ import {
 import { declarations, OdsKeptWriter } from './ods-kept-write';
 import { OdsStyles } from './ods-styles';
 import { odsFormatRulesXml } from './ods-format-rules';
-import { ODS_DEFAULT_CELL_STYLES } from './ods-cell-style';
+import { odsDefaultCellStyles } from './ods-cell-style';
+import { themedFormat, themeOf, type SpreadsheetTheme } from '../themes/spreadsheet-theme';
 import { OdsAxisOut } from './ods-lines';
 import { toOpenFormula } from './open-formula';
 import type {
@@ -64,12 +65,17 @@ type Out = {
   losses: FileLoss[];
   styles: OdsStyles;
   kept: OdsKeptWriter;
+  // The workbook's theme: a theme colour written as the colour it is (standard-mapping.md "The theme in the file").
+  theme: SpreadsheetTheme;
 };
 
 // A cell's style, its number format's and its look's; a format ODF cannot say is named, the cell written without it.
 function styleAttribute(cell: FileCell, out: Out): string[] {
   if (cell.format === undefined && !cell.style) return [];
-  const { name, unwritten } = out.styles.cellStyle(cell.format, cell.style);
+  const { name, unwritten } = out.styles.cellStyle(
+    cell.format,
+    themedFormat(cell.style, out.theme),
+  );
   if (unwritten) out.losses.push({ k: 'format_unwritten', sheet: out.sheet, r: cell.r, c: cell.c });
   return name ? [`table:style-name="${name}"`] : [];
 }
@@ -256,9 +262,9 @@ const CALCULATION_SETTINGS =
 
 // LiveDoc's common styles: its default cell style (standard-mapping.md "Cell styles in the file", D204), then the
 // named styles kept format rules name and its own rules' conditional styles ("Format rules in the file").
-const commonStyles = (more: readonly string[]) => [
+const commonStyles = (font: string, more: readonly string[]) => [
   '<office:styles>',
-  ...ODS_DEFAULT_CELL_STYLES,
+  ...odsDefaultCellStyles(font),
   ...more,
   '</office:styles>',
 ];
@@ -277,8 +283,11 @@ function bodyXml(
   styles.reserve(
     new Set(keptCommon.flatMap((xml) => /style:display-name="([^"]*)"/.exec(xml)?.[1] ?? [])),
   );
-  const tables = file.sheets.flatMap((sheet, i) => tableXml(sheet, i, { losses, styles, kept }));
-  const commonXml = commonStyles([...keptCommon, ...styles.conditionalStyles()]);
+  const theme = themeOf(file.theme);
+  const tables = file.sheets.flatMap((sheet, i) =>
+    tableXml(sheet, i, { losses, styles, kept, theme }),
+  );
+  const commonXml = commonStyles(theme.font, [...keptCommon, ...styles.conditionalStyles()]);
   const body = [
     ...kept.workbook('scripts'),
     ...(flat ? commonXml : []),

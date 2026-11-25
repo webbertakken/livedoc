@@ -6,17 +6,20 @@ import { isFontId, type Cell, type CellFormat, type FormatPatch } from '@livedoc
 
 export const SPREADSHEET_DEFAULT_FONT = 'Arial';
 
-/** The family the toolbar's Font shows for a cell: its own, an editor font by its name, else Arial. */
-export function cellFamilyOf(f: CellFormat | undefined): string {
+/**
+ * The family the toolbar's Font shows for a cell: its own, an editor font by its name, else the theme's (`base`,
+ * formatting.md "Themes"; Arial for Standard).
+ */
+export function cellFamilyOf(f: CellFormat | undefined, base = SPREADSHEET_DEFAULT_FONT): string {
   const ff = f?.ff;
-  if (!ff) return SPREADSHEET_DEFAULT_FONT;
+  if (!ff) return base;
   if (!isFontId(ff)) return ff;
-  return FONTS.find((font) => font.id === ff)?.label ?? SPREADSHEET_DEFAULT_FONT;
+  return FONTS.find((font) => font.id === ff)?.label ?? base;
 }
 
-/** The format a chosen family sets: Arial, the default, is stored as none. */
-export const cellFontPatch = (family: string): FormatPatch => ({
-  ff: family.toLowerCase() === SPREADSHEET_DEFAULT_FONT.toLowerCase() ? null : family,
+/** The format a chosen family sets: the theme's (`base`), the default, is stored as none. */
+export const cellFontPatch = (family: string, base = SPREADSHEET_DEFAULT_FONT): FormatPatch => ({
+  ff: family.toLowerCase() === base.toLowerCase() ? null : family,
 });
 
 /** The families the cells name, once each in the order first seen, for those LiveDoc does not serve to load. */

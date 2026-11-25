@@ -86,7 +86,7 @@ export async function openSpreadsheetFile(
     const sheetsMade = files.sheetsFromFile(read.file, made.settings.locale);
     sheetsMade.losses.unshift(...read.losses);
     opened = {
-      record: WorkbookRecord.opened(made, read.format),
+      record: WorkbookRecord.opened(made, read.format, read.file.theme),
       imported: read.format,
       sheetsMade,
     };

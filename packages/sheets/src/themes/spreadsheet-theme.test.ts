@@ -107,9 +107,10 @@ describe('in the workbook', () => {
     expect(b.wb.version).toBe(v + 1);
     const cell = renderWindow(b.wb, s.id, { width: 300, height: 100 }, 'en-GB')!.cells[0]!;
     expect([cell.color, cell.fill]).toEqual([ocean.colours.accent1, ocean.colours.background]);
-    expect(workbookFileOf(b.wb, [s], 'en-GB').sheets[0]!.cells[0]!.style).toMatchObject({
-      fc: ocean.colours.accent1,
-    });
+    // A file keeps the theme colour by name, with the theme (standard-mapping.md "The theme in the file").
+    const file = workbookFileOf(b.wb, [s], 'en-GB');
+    expect(file.sheets[0]!.cells[0]!.style).toMatchObject({ fc: 'theme:accent1' });
+    expect(file.theme).toBe(ocean);
     const clip = clipFromRange(b.wb, s.id, { r1: 0, c1: 0, r2: 0, c2: 0 })!;
     expect(clipToHtml(clip, ocean)).toContain(`color:${ocean.colours.accent1}`);
     expect(clipToHtml(clip)).toContain(`color:${STANDARD_THEME.colours.accent1}`);

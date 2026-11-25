@@ -24,18 +24,19 @@ import { pxFromOdfLength } from './line-units';
 
 const { office: OFFICE, style: STYLE, fo: FO, svg: SVG } = ODF_NS;
 
-const DEFAULT_PROPERTIES =
+const defaultProperties = (font: string) =>
   '<style:table-cell-properties style:vertical-align="middle"/>' +
-  `<style:text-properties fo:font-family="${FILE_DEFAULT_FONT}" fo:font-size="${FONT_SIZE_DEFAULT}pt"/>`;
+  `<style:text-properties fo:font-family="${escapeXmlAttribute(font)}" fo:font-size="${FONT_SIZE_DEFAULT}pt"/>`;
 
 /**
- * LiveDoc's default cell style, written in `styles.xml` (D204, D207): Arial 10 pt, in the middle, as the default style
+ * LiveDoc's default cell style, written in `styles.xml` (D204, D207): the theme's font (Arial) 10 pt, in the middle, as the default style
  * and as the "Default" style every written cell style is a child of, which LibreOffice draws its cells by.
  */
-export const ODS_DEFAULT_CELL_STYLES = [
-  `<style:default-style style:family="table-cell">${DEFAULT_PROPERTIES}</style:default-style>`,
-  `<style:style style:name="Default" style:family="table-cell">${DEFAULT_PROPERTIES}</style:style>`,
+export const odsDefaultCellStyles = (font: string = FILE_DEFAULT_FONT): string[] => [
+  `<style:default-style style:family="table-cell">${defaultProperties(font)}</style:default-style>`,
+  `<style:style style:name="Default" style:family="table-cell">${defaultProperties(font)}</style:style>`,
 ];
+export const ODS_DEFAULT_CELL_STYLES = odsDefaultCellStyles();
 
 /** A cell style's look: the cell's style (none for LiveDoc's defaults) and whether it says more than the model holds. */
 export type OdsLook = { style?: CellStyle; lost: boolean };

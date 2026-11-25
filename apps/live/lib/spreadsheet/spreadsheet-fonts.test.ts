@@ -17,6 +17,10 @@ describe('a spreadsheet cell’s font', () => {
     expect(SPREADSHEET_DEFAULT_FONT).toBe('Arial');
     expect(cellFamilyOf(undefined)).toBe('Arial');
     expect(cellFamilyOf({})).toBe('Arial');
+    // formatting.md "Themes": a cell setting none shows the theme's font, and choosing it sets none.
+    expect(cellFamilyOf(undefined, 'Roboto')).toBe('Roboto');
+    expect(cellFontPatch('roboto', 'Roboto')).toEqual({ ff: null });
+    expect(cellFontPatch('Arial', 'Roboto')).toEqual({ ff: 'Arial' });
     expect(cellFamilyOf({ ff: 'Roboto Mono' })).toBe('Roboto Mono');
     expect(cellFamilyOf({ ff: 'space-grotesk' })).toBe('Space Grotesk');
     expect(cellFamilyOf({ ff: 'gone' })).toBe('Arial');

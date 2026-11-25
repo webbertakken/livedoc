@@ -33,6 +33,8 @@ import { ownIds, XlsxKeptWriter } from './xlsx-kept-write';
 import { xlsxTabColor } from './xlsx-tab-look';
 import { XlsxStyles } from './xlsx-styles';
 import { xlsxFormatRulesXml } from './xlsx-format-rules';
+import { xlsxThemeXml } from './xlsx-theme';
+import { themeOf } from '../themes/spreadsheet-theme';
 import type {
   FileCell,
   FileLoss,
@@ -309,7 +311,8 @@ export function writeXlsx(file: WorkbookFile, title: string): FileWritten<Uint8A
     file.sheets.length,
     new Set(file.sheets.flatMap((s, i) => (s.hidden ? [i] : []))),
   );
-  const styles = new XlsxStyles(kept.stylesheet({ '': SPREADSHEETML_NS }));
+  const theme = themeOf(file.theme);
+  const styles = new XlsxStyles(kept.stylesheet({ '': SPREADSHEETML_NS }), theme.font);
   let dynamic = false;
   const sheetParts = file.sheets.map((sheet, i): OoxmlPart => {
     const written = worksheetXml(sheet, i, { strings, styles, kept }, renamed, losses);
@@ -336,6 +339,7 @@ export function writeXlsx(file: WorkbookFile, title: string): FileWritten<Uint8A
     workbookRels.push({ id: workbookId(), type, target });
   more(RELATIONSHIP_TYPES.styles, 'styles.xml');
   more(RELATIONSHIP_TYPES.sharedStrings, 'sharedStrings.xml');
+  more(RELATIONSHIP_TYPES.theme, 'theme/theme1.xml');
   if (dynamic) more(RELATIONSHIP_TYPES.sheetMetadata, 'metadata.xml');
   const xmlPart = (name: string, contentType: string, xml: string): OoxmlPart => ({
     name,
@@ -351,6 +355,8 @@ export function writeXlsx(file: WorkbookFile, title: string): FileWritten<Uint8A
     ...sheetParts,
     xmlPart('xl/styles.xml', OOXML_CONTENT_TYPES.spreadsheetStyles, styles.xml()),
     xmlPart('xl/sharedStrings.xml', OOXML_CONTENT_TYPES.sharedStrings, strings.xml()),
+    // The workbook's theme (standard-mapping.md "The theme in the file").
+    xmlPart('xl/theme/theme1.xml', OOXML_CONTENT_TYPES.theme, xlsxThemeXml(theme)),
     ...(dynamic
       ? [xmlPart('xl/metadata.xml', OOXML_CONTENT_TYPES.sheetMetadata, DYNAMIC_ARRAY_METADATA_XML)]
       : []),

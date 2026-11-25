@@ -1,3 +1,6 @@
+import { mkdtempSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import type { Page } from '@playwright/test';
 import { expect, expectNoPageErrors, test } from '../fixtures';
 import { officeMenuItem } from './office-menus';
@@ -51,7 +54,37 @@ test('a theme colour restyles with the theme, which the workbook keeps', async (
   await expect.poll(() => filled(page, 'rgb(26, 115, 232)')).toBe(1);
   await page.screenshot({ path: test.info().outputPath('themes.png'), animations: 'disabled' });
 
+  // A cell setting no font draws in the theme's (Ocean's Roboto).
+  const font = await page
+    .locator('[data-sheet-text]')
+    .filter({ hasText: /^Total$/ })
+    .evaluate((el) => getComputedStyle(el).fontFamily);
+  expect(font).toContain('Roboto');
+
   await page.reload();
+  await expect(page.locator(READY)).toBeVisible();
+  await expect.poll(() => filled(page, 'rgb(26, 115, 232)')).toBe(1);
+
+  // As XLSX the theme travels in its theme part, and the file opens with it (standard-mapping.md D218).
+  const [download] = await Promise.all([
+    page.waitForEvent('download'),
+    (async () => {
+      await (await officeMenuItem(page, ['File', 'Download', 'Microsoft Excel (.xlsx)'])).click();
+      await page
+        .getByRole('dialog', { name: /Download as/ })
+        .getByRole('button', { name: 'Download' })
+        .click();
+    })(),
+  ]);
+  const saved = join(mkdtempSync(join(tmpdir(), 'themes-')), 'Themed.xlsx');
+  await download.saveAs(saved);
+  const before = page.url();
+  const [chooser] = await Promise.all([
+    page.waitForEvent('filechooser'),
+    (await officeMenuItem(page, ['File', 'Open'])).click(),
+  ]);
+  await chooser.setFiles(saved);
+  await page.waitForURL((url) => url.href !== before);
   await expect(page.locator(READY)).toBeVisible();
   await expect.poll(() => filled(page, 'rgb(26, 115, 232)')).toBe(1);
   expectNoPageErrors(pageErrors);
