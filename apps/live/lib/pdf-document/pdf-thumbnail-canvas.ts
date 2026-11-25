@@ -13,7 +13,7 @@ import {
 } from '@livedoc/pdf-documents';
 import type { PdfThumbnailPicture } from './pdf-thumbnail';
 import { debugLog } from '@/lib/debug-log';
-import { addMarkFaces, facesStackOf } from './pdf-mark-faces';
+import { addMarkFaces, addMarkFont, facesStackOf } from './pdf-mark-faces';
 
 // A path through points of page space, in the picture's points.
 function trace(
@@ -32,7 +32,7 @@ function trace(
 /** A line's font as a canvas names it. */
 const fontOf = (
   line: { bold: boolean; size: number },
-  words: Pick<MarkWords, 'faces' | 'region'>,
+  words: Pick<MarkWords, 'faces' | 'region' | 'font'>,
 ): string => `${line.bold ? 'bold ' : ''}${line.size}px ${facesStackOf(words)}`;
 
 /**
@@ -42,9 +42,10 @@ const fontOf = (
 async function loadMarkFaces(marks: readonly Mark[]): Promise<void> {
   const lines = marks.flatMap((mark) => {
     const words = MarkWords.of(mark);
-    return words?.faces === 'noto' ? words.lines.map((line) => ({ line, words })) : [];
+    return words?.faces === 'embedded' ? words.lines.map((line) => ({ line, words })) : [];
   });
   if (lines.length === 0) return;
+  for (const font of new Set(lines.map(({ words }) => words.font))) if (font) addMarkFont(font);
   await Promise.all(
     [...new Set(lines.map(({ words }) => words.region))].map((region) => addMarkFaces(region)),
   );

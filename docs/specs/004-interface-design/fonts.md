@@ -232,6 +232,9 @@ declarations are built; OOXML's font table and embedding are specified.
 The fonts of the office kinds ([Text document](../034-text-documents/text-document.md), the spreadsheet of plan 0020),
 apart from the canvas's eleven. The research is [Fonts](../../research/docs-open-standard/fonts.md).
 
+A PDF's Text and Callout marks take the served menu families alone, from the same Fontsource packages, embedded in
+the file they are baked into ([Marks](../035-pdf-documents/marks.md#changing-a-mark)).
+
 ### The catalogue
 
 The catalogue is data, one module of `@livedoc/document`: one row per family, its **name** as files write it, its

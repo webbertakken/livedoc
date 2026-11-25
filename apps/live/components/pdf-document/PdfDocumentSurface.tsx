@@ -492,6 +492,7 @@ export function PdfDocumentSurface({
         choices={ready ? { ...viewChrome.choices, ...tools.choices, ...looked?.choices } : null}
         colours={lookColours}
         fontSize={ready && tools.inHand === 'select' ? markRestyle.fontSize : null}
+        fontFamily={ready && tools.inHand === 'select' ? markRestyle.fontFamily : null}
         mode={open.phase === 'ready' ? choice : null}
         contextMenu={ready ? reading.contextMenu : null}
         bare={readMode.on ? { leave: 'Leave read mode', onLeave: readMode.leave } : null}

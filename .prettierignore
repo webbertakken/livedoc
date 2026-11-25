@@ -55,5 +55,6 @@ apps/live/lib/office/emoji.json
 # compares the raw output, so they are kept as written.
 packages/pdf-documents/src/mark-face-data.ts
 packages/pdf-documents/src/mark-face-urls.ts
+packages/pdf-documents/src/mark-font-data.ts
 packages/pdf-documents/src/mark-face-region-data.ts
 packages/pdf-documents/src/mark-face-slices-*.ts

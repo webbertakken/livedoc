@@ -1,4 +1,4 @@
-// Writes src/mark-face-data.ts, src/mark-face-urls.ts, src/mark-face-region-data.ts and src/mark-face-slices-<region>.ts
+// Writes src/mark-face-data.ts, src/mark-font-data.ts, src/mark-face-urls.ts, src/mark-face-region-data.ts and src/mark-face-slices-<region>.ts
 // from the Fontsource packages (docs/specs/035-pdf-documents/marks.md "Laying out", "Loading").
 // Run: pnpm --filter @livedoc/pdf-documents faces:generate
 import { readFileSync, writeFileSync } from 'node:fs';
@@ -9,6 +9,7 @@ import {
   markFaceDataSource,
   markFaceFilesOf,
   markFaceUrlsSource,
+  markFontDataSource,
 } from '../src/engine/mark-face-table.ts';
 import {
   markFaceRegionDataSource,
@@ -25,6 +26,7 @@ function write(name: string, source: string) {
 }
 
 write('mark-face-data.ts', await markFaceDataSource(read));
+write('mark-font-data.ts', await markFontDataSource(read));
 write('mark-face-urls.ts', markFaceUrlsSource(markFaceFilesOf()));
 write('mark-face-region-data.ts', await markFaceRegionDataSource(read));
 for (const { region } of MARK_FACE_REGIONS)

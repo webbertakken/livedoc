@@ -143,6 +143,8 @@ export const TOOL_COLOUR = 'colour-control';
 export const FILL_COLOUR = 'fill-colour-control';
 /** The tool in hand's or the selected marks' line width ("The toolbar"): Format > Line width's steps. */
 export const LINE_WIDTH = 'line-width-control';
+/** The selected Texts' and Callouts' font (marks.md "Changing a mark"): the shell's font menu, a fixed list. */
+export const MARK_FONT = 'mark-font-control';
 /** The selected Texts' and Callouts' size (marks.md "Changing a mark"): the shell's size field, while one is selected. */
 export const MARK_FONT_SIZE = 'mark-font-size-control';
 
@@ -199,6 +201,13 @@ const OWN: Readonly<Record<PdfMode, OfficeToolbar>> = {
         look: { kind: 'colour', icon: lucidePaintBucket },
       },
       { ...list(LINE_WIDTH, 'Line width', 'participate', lucideMinus), status: 'built' },
+      {
+        id: MARK_FONT,
+        label: 'Font',
+        level: 'participate',
+        status: 'built',
+        look: { kind: 'font' },
+      },
       {
         id: MARK_FONT_SIZE,
         label: 'Font size',

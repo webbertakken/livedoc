@@ -26,11 +26,11 @@ const remap = (
 
 /** A Text's or a Callout's box in `box`: at least one character wide, and as high as its words, growing down. */
 function typedBox(
-  mark: Mark & { words: string; size: number },
+  mark: Mark & { words: string; size: number; font?: string },
   [left, bottom, right, top]: Box,
 ): Box {
   const wide = Math.max(right - left, mark.size + 2 * PDF_TEXT_PADDING_PT);
-  const lines = TypedLayout.lines(mark.words, mark.size, wide).length;
+  const lines = TypedLayout.lines(mark.words, mark.size, wide, mark.font).length;
   const high = Math.max(top - bottom, TypedLayout.height(lines, mark.size));
   return [left, top - high, left + wide, top];
 }

@@ -2,13 +2,15 @@
 
 // Restyling the selected marks (docs/specs/035-pdf-documents/marks.md "Changing a mark"): the toolbar's Colour is
 // theirs while Select is in hand, blank where they differ, Reset giving each its kind's first look; its Fill the
-// selected Rectangles' and Ellipses', led by None; its Font size the selected Texts' and Callouts', held within its
-// range, a box that grows past the page's foot moved up onto it; Format > Opacity, Line width, Line style, Line ends
+// selected Rectangles' and Ellipses', led by None; its Font and Font size the selected Texts' and Callouts', the Font a
+// fixed list (Helvetica, then the served menu families), the size held within its range, a box that grows past the
+// page's foot moved up onto it; Format > Opacity, Line width, Line style, Line ends
 // and Align text set a step, checked where every mark it reaches holds it, dimmed while none has what it sets. Each
 // restyle is one step of the person's undo, and gives the pages the keys. Marks are Reviewing's: while `marking` is
 // off nothing is bound.
 import { useMemo, useSyncExternalStore } from 'react';
 import {
+  MARK_FONTS,
   PDF_MAX_COORDINATE,
   PDF_TEXT_SIZE_MAX_PT,
   PDF_TEXT_SIZE_MIN_PT,
@@ -17,6 +19,7 @@ import {
   type MarkChange,
 } from '@livedoc/pdf-documents';
 import type { OfficeColours } from '@/components/office/OfficeColourControl';
+import type { OfficeFontFamily } from '@/components/office/OfficeFontMenu';
 import type { OfficeFontSize } from '@/components/office/OfficeFontSizeField';
 import { debugLog } from '@/lib/debug-log';
 import type { OfficeActions } from '@/lib/office/office-catalogue';
@@ -26,7 +29,10 @@ import {
   alignOf,
   END_ITEMS,
   fillOf,
+  FIRST_FONT,
   firstColour,
+  fontedLook,
+  fontOf,
   lineEndOf,
   lineStyleOf,
   OPACITY_ITEMS,
@@ -44,6 +50,7 @@ import {
   type PdfChangeableByPage,
   type PdfChangeableStore,
 } from './pdf-changeable-marks';
+import { addMarkFont } from './pdf-mark-faces';
 import { FILL_COLOUR, TOOL_COLOUR } from './pdf-toolbar';
 import { pageBoxOf } from './pdf-typed';
 import type { PdfDocumentOpen } from './usePdfDocument';
@@ -69,6 +76,12 @@ const NO_PAGE: Box = [
 /** A size taken, held within the range a Text's words may be. */
 const heldSize = (pt: number): number =>
   Math.min(PDF_TEXT_SIZE_MAX_PT, Math.max(PDF_TEXT_SIZE_MIN_PT, pt));
+
+/** The Font menu's families: Helvetica, a separator, then the served menu families. */
+const FONT_FAMILIES = [FIRST_FONT, ...MARK_FONTS];
+const addFontFaces = () => {
+  for (const font of MARK_FONTS) addMarkFont(font);
+};
 
 /** The fill the shapes selected share: none as undefined, null where they differ. */
 function sharedFill(fills: readonly (string | null)[]): string | null | undefined {
@@ -106,7 +119,7 @@ export function usePdfMarkRestyle({
   );
 
   return useMemo(() => {
-    if (!marking || !ready) return { colours: {}, actions: {}, fontSize: null };
+    if (!marking || !ready) return { colours: {}, actions: {}, fontSize: null, fontFamily: null };
     const restyle = (look: RestyledLook, lookOf: (mark: Mark) => MarkChange) => {
       if (!chosen || !page) return;
       const changed = ready.undo.step({ page: page.name }, () =>
@@ -156,19 +169,27 @@ export function usePdfMarkRestyle({
     const end = sharedOf(selected, lineEndOf);
     const ended = selected.some((mark) => lineEndOf(mark) !== undefined);
     const sized = selected.some((mark) => sizeOf(mark) !== undefined);
-    const fontSize: OfficeFontSize | null =
-      sized && chosen && page
-        ? {
-            read: () => sharedOf(selected, sizeOf),
-            set: (pt) => {
-              // The page's box in page space, as the file has it, so a box that grows stays on it.
-              void ready.engine.pageMatrix(chosen.page, 0).then((matrix) => {
-                const box = matrix ? pageBoxOf(matrix, page) : NO_PAGE;
-                restyle('size', sizedLook(heldSize(pt), box));
-              });
-            },
-          }
-        : null;
+    // The page's box in page space, as the file has it, so a box that grows stays on it.
+    const onPage = (look: RestyledLook, lookIn: (box: Box) => (mark: Mark) => MarkChange) => {
+      if (!chosen || !page) return;
+      void ready.engine.pageMatrix(chosen.page, 0).then((matrix) => {
+        restyle(look, lookIn(matrix ? pageBoxOf(matrix, page) : NO_PAGE));
+      });
+    };
+    const fontSize: OfficeFontSize | null = sized
+      ? {
+          read: () => sharedOf(selected, sizeOf),
+          set: (pt) => onPage('size', (box) => sizedLook(heldSize(pt), box)),
+        }
+      : null;
+    const fontFamily: OfficeFontFamily | null = sized
+      ? {
+          read: () => sharedOf(selected, fontOf),
+          set: (font) => onPage('font', (box) => fontedLook(font, box)),
+          families: FONT_FAMILIES,
+          onOpen: addFontFaces,
+        }
+      : null;
     const align = sharedOf(selected, alignOf);
     const actions: OfficeActions = {
       ...Object.fromEntries(
@@ -222,6 +243,6 @@ export function usePdfMarkRestyle({
         ]),
       ),
     };
-    return { colours, actions, fontSize };
+    return { colours, actions, fontSize, fontFamily };
   }, [ready, chosen, page, selected, marking, focusPages, byPage]);
 }

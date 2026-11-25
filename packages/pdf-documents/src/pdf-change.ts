@@ -43,6 +43,8 @@ export type MarkLook = Partial<
       readonly lineEnd: LineEnd;
       /** A Rectangle's or an Ellipse's fill, `#rrggbb`; null takes it away. */
       readonly fill: string | null;
+      /** A Text's or a Callout's font, a family of the Font menu; null takes it away, Helvetica again. */
+      readonly font: string | null;
     }
 >;
 

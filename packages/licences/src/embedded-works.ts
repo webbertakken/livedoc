@@ -390,7 +390,9 @@ export const EMBEDDED_WORKS: readonly EmbeddedWork[] = [
     texts: text('feather-4.29.2-LICENSE.txt'),
   },
   // The document fonts the editor serves (docs/specs/004-interface-design/fonts.md "Served from LiveDoc"), each a
-  // family's Latin faces from its Fontsource package (apps/live/app/document-fonts.css).
+  // family's Latin faces from its Fontsource package (apps/live/app/document-fonts.css), as WOFF2; and the regular
+  // faces of the menu families a PDF's Text and Callout may take, as the WOFF its PDF engine embeds
+  // (docs/specs/035-pdf-documents/marks.md "Words in every script").
   ...DOCUMENT_FONT_WORKS.map((work): EmbeddedWork => ({
     id: `fontsource-${work.id}`,
     name: work.name,
@@ -399,7 +401,7 @@ export const EMBEDDED_WORKS: readonly EmbeddedWork[] = [
     carrier: 'the editor (font)',
     homepage: `https://fontsource.org/fonts/${work.id}`,
     trigger: {
-      assets: new RegExp(`^${work.id}-latin(-ext)?-[47]00-(normal|italic)\\.[\\w-]+\\.woff2$`),
+      assets: new RegExp(`^${work.id}-latin(-ext)?-[47]00-(normal|italic)\\.[\\w-]+\\.woff2?$`),
     },
     texts: [{ label: 'LICENSE', file: work.file }],
   })),

@@ -6,6 +6,7 @@
 import type { Mark } from '../mark';
 import { MarkFaces, type MarkRun } from '../mark-faces';
 import { MARK_FACE_DATA } from '../mark-face-data';
+import { MARK_FONT_DATA } from '../mark-font-data';
 import type { MarkFaceSlice } from '../mark-face-families';
 import { MarkFaceSlices } from '../mark-face-slices';
 import { MarkWords } from '../mark-words';
@@ -105,8 +106,9 @@ export function markRunsOf(marks: readonly Mark[]): MarkRun[] {
   const runs: MarkRun[] = [];
   for (const mark of marks) {
     const words = MarkWords.of(mark);
-    if (words?.faces !== 'noto') continue;
-    for (const line of words.lines) runs.push(...MarkFaces.runs({ ...line, region: words.region }));
+    if (words?.faces !== 'embedded') continue;
+    for (const line of words.lines)
+      runs.push(...MarkFaces.runs({ ...line, region: words.region, font: words.font }));
   }
   return runs;
 }
@@ -173,7 +175,7 @@ export async function loadTypesetter(
     return region ? splitRun(run, region.index, region.slices) : [run];
   };
   const files = new Map<string, string>();
-  for (const face of MARK_FACE_DATA) files.set(face.id, face.file);
+  for (const face of [...MARK_FACE_DATA, ...MARK_FONT_DATA]) files.set(face.id, face.file);
   for (const { slices } of regions.values())
     for (const slice of slices) files.set(slice.id, slice.file);
   const wanted = [...new Set(all.flatMap((run) => split(run).map((each) => each.face)))];

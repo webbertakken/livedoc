@@ -256,6 +256,15 @@ describe('a Text or a Callout', () => {
     expect(Mark.parse({ ...text({ align: 'middle' }), kind: 'text', modifiedAt: 0 })).toBeNull();
   });
 
+  // marks.md "Changing a mark": the selected Texts' and Callouts' font.
+  it('holds a font of the Font menu, in its own spelling, and none for any other', () => {
+    const mark = Mark.text(text({ font: 'lora' }) as unknown as TextBoxInput)!;
+    expect(mark.font).toBe('Lora');
+    expect(Mark.parse(JSON.parse(JSON.stringify(mark)))).toEqual(mark);
+    for (const font of [null, 'Arial', 7])
+      expect(Mark.text(text({ font }) as unknown as TextBoxInput)).not.toHaveProperty('font');
+  });
+
   it('cuts words past their limit rather than refusing the mark', () => {
     const long = 'w'.repeat(PDF_MARK_TEXT_MAX_CHARS + 5);
     expect(Mark.text(text({ words: long }) as unknown as TextBoxInput)!.words).toHaveLength(

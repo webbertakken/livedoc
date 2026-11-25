@@ -203,7 +203,7 @@ export function appearanceOf(
   const set = words?.lines.filter((line) => line.text !== '') ?? [];
   const fonts: AppearanceFont[] = [];
   const faces: { name: string; face: string; glyphs: ShapedGlyph[] }[] = [];
-  if (set.length > 0 && words?.faces === 'noto') {
+  if (set.length > 0 && words?.faces === 'embedded') {
     if (!setter) throw new NoRunSetter('words in the mark faces need a typesetter');
     const fontOf = (run: ShapedRun): string => {
       let face = faces.find((each) => each.face === run.face);
@@ -216,7 +216,7 @@ export function appearanceOf(
     };
     lines.push('BT', `${colour} rg`);
     for (const line of set)
-      lines.push(...facedLine({ ...line, region: words.region }, setter, fontOf));
+      lines.push(...facedLine({ ...line, region: words.region, font: words.font }, setter, fontOf));
     lines.push('ET');
   } else if (set.length > 0) {
     lines.push('BT');

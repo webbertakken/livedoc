@@ -6,13 +6,13 @@ import type { FileMark, PdfEngine, PdfOpened } from '../engine-contract';
 import { PdfLiveChanges } from '../live-changes';
 import { Mark } from '../mark';
 import { PdfChange, PdfChangeset } from '../pdf-change';
-import { rawPdf, readerWasm, textPdf } from '../testing/fixtures';
+import { markFaceFiles, rawPdf, readerWasm, textPdf } from '../testing/fixtures';
 import { createPdfEngine } from './index';
 
 let engine: PdfEngine;
 
 beforeAll(async () => {
-  engine = await createPdfEngine({ wasm: readerWasm() });
+  engine = await createPdfEngine({ wasm: readerWasm(), faces: markFaceFiles });
 });
 
 const opened = (result: PdfOpened) => {
@@ -155,6 +155,27 @@ describe('a mark saved here, opened again', () => {
         size: 12,
         align: 'justified',
         rect: [300, 100, 420, 150],
+      },
+      {
+        ...base,
+        id: 'tf',
+        kind: 'text',
+        colour: '#202124',
+        words: 'In Lora, justified',
+        size: 12,
+        align: 'justified',
+        font: 'Lora',
+        rect: [100, 300, 220, 350],
+      },
+      {
+        ...base,
+        id: 'tm',
+        kind: 'text',
+        colour: '#202124',
+        words: 'In Merriweather',
+        size: 12,
+        font: 'Merriweather',
+        rect: [300, 300, 420, 350],
       },
       {
         ...base,

@@ -163,6 +163,18 @@ const FILE_ALIGNS = { left: 0, centre: 1, right: 2, justified: 0 } as const sati
 >;
 
 /**
+ * A Text's or a Callout's default style, `DS`: a chosen font's family, and Justified, which `Q` cannot hold; null
+ * where it has neither. `DA` names Helvetica still, the font every reader holds.
+ */
+function defaultStyleOf({ font, align }: TypedMark): string | null {
+  const parts = [
+    ...(font ? [`font-family:'${font}'`] : []),
+    ...(align === 'justified' ? ['text-align:justify'] : []),
+  ];
+  return parts.length > 0 ? parts.join('; ') : null;
+}
+
+/**
  * A Text's or a Callout's `FreeText`, added to its page's list: its words as `Contents`, its font as `DA`, its
  * appearance its words as laid out; a Callout's line as `CL` with an open arrowhead at what is meant, `Rect` the
  * box and the line together, and `RD` the box within it.
@@ -185,7 +197,8 @@ function annotateTyped(
     AP: streamOf(pdf, appearance, writing),
   });
   if (mark.align) dict.set('Q', PdfNumber.of(FILE_ALIGNS[mark.align]));
-  if (mark.align === 'justified') dict.set('DS', PdfString.fromString('text-align:justify'));
+  const style = defaultStyleOf(mark);
+  if (style) dict.set('DS', PdfString.fromString(style));
   if (mark.kind === 'callout') {
     const [left, bottom, right, top] = appearance.box;
     const [boxLeft, boxBottom, boxRight, boxTop] = mark.rect;

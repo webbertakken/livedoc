@@ -3,12 +3,14 @@
 // the very files the engine embeds (the same hashed assets, so one download serves both). Added once, the first time a
 // mark in them is drawn; a browser then downloads a subset only when a line on screen uses its characters. A region of
 // Chinese, Japanese and Korean adds its slices the first time a mark in it is drawn, and a mark in it is drawn in its
-// region's family alone.
+// region's family alone. A mark in a chosen font is drawn in its family first, its faces added the first time a mark
+// in it is drawn or the Font menu opens.
 import {
   MARK_FACE_DATA,
   MARK_FACE_REGIONS,
   MARK_FACE_REGIONS_BEFORE,
   MARK_FACE_URLS,
+  MARK_FONT_DATA,
   MarkFaceSlices,
   type MarkFaceRegion,
   type MarkWords,
@@ -35,9 +37,33 @@ export const markFacesStack = (region: MarkFaceRegion): string =>
     .map((family) => `"${family}"`)
     .join(', ')}, sans-serif`;
 
-/** The faces a mark's words are drawn in on the surface. */
-export const facesStackOf = (words: Pick<MarkWords, 'faces' | 'region'>): string =>
-  words.faces === 'noto' ? markFacesStack(words.region) : TYPED_FACES;
+/** The faces a mark's words are drawn in on the surface: a chosen font's family first. */
+export const facesStackOf = (words: Pick<MarkWords, 'faces' | 'region' | 'font'>): string =>
+  words.faces !== 'embedded'
+    ? TYPED_FACES
+    : words.font
+      ? `"LiveDoc ${words.font}", ${markFacesStack(words.region)}`
+      : markFacesStack(words.region);
+
+const fontsAdded = new WeakMap<FontFaceSet, Set<string>>();
+
+/** Adds a chosen font's faces to a page's fonts, once a page, as `LiveDoc <family>` from the files a bake embeds. */
+export function addMarkFont(font: string, fonts: FontFaceSet = document.fonts): void {
+  const done = fontsAdded.get(fonts) ?? new Set();
+  fontsAdded.set(fonts, done);
+  if (done.has(font)) return;
+  done.add(font);
+  const faces = MARK_FONT_DATA.filter((face) => face.family === font);
+  for (const face of faces)
+    fonts.add(
+      new FontFace(
+        `LiveDoc ${face.family}`,
+        `url("${MARK_FACE_URLS[face.file]!().href}") format("woff")`,
+        { weight: String(face.weight), unicodeRange: face.range, display: 'swap' },
+      ),
+    );
+  debugLog(`[pdf] faces-shown count=${faces.length}`);
+}
 
 const added = new WeakMap<FontFaceSet, Set<MarkFaceRegion | 'subsets'>>();
 

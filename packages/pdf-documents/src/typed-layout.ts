@@ -1,6 +1,6 @@
 // How a Text's or a Callout's words sit in their box (docs/specs/035-pdf-documents/marks.md "Making a mark": The words
 // wrap; Its writing direction; Text's and Callout's first look; A Callout's line): lines broken greedily at the box's
-// width, measured in the faces that set them (Helvetica, or the mark faces: "Words in every script"), each
+// width, measured in the faces that set them (Helvetica, or a chosen font and the mark faces: "Words in every script"), each
 // paragraph set from its own side. Pure, so the surface's overlay, the canvas
 // pictures and the appearance a bake writes set one mark's words the same way.
 import type { PagePoint } from './engine-contract';
@@ -36,27 +36,31 @@ const readsRightToLeft = (paragraph: string): boolean => {
   return first !== undefined && RIGHT_TO_LEFT.test(first);
 };
 
-/** What a mark's words are set in: its faces, and the region of its Chinese, Japanese or Korean. */
-type Setting = { readonly faces: MarkFaceSet; readonly region: MarkFaceRegion };
+/** What a mark's words are set in: its faces, the region of its Chinese, Japanese or Korean, and its chosen font. */
+type Setting = {
+  readonly faces: MarkFaceSet;
+  readonly region: MarkFaceRegion;
+  readonly font: string | undefined;
+};
 
 /** How wide words are set at a size in a mark's faces, in points. */
-const widthOf = (text: string, size: number, { faces, region }: Setting): number =>
+const widthOf = (text: string, size: number, { faces, region, font }: Setting): number =>
   (faces === 'helvetica'
     ? Array.from(text).reduce(
         (sum, character) => sum + Helvetica.width(character.codePointAt(0)!),
         0,
       )
-    : MarkFaces.width({ text, bold: false, region })) *
+    : MarkFaces.width({ text, bold: false, region, font })) *
   (size / 1000);
 
 /** A mark's words as they are set: composed (Unicode NFC), each paragraph apart. */
 const paragraphsOf = (words: string): string[] =>
   words.normalize('NFC').replace(/\r\n?/g, '\n').split('\n');
 
-/** What a mark's words are set in. */
-const settingOf = (paragraphs: readonly string[]): Setting => {
+/** What a mark's words are set in, in its chosen font if any. */
+const settingOf = (paragraphs: readonly string[], font: string | undefined): Setting => {
   const lines = paragraphs.map((text) => ({ text, bold: false }));
-  return { faces: MarkFaces.setOf(lines), region: MarkFaces.regionOf(lines) };
+  return { faces: MarkFaces.setOf(lines, font), region: MarkFaces.regionOf(lines), font };
 };
 
 /** A word wider than `room` broken where it meets the side: each piece as many characters as fit, one at the least. */
@@ -86,15 +90,16 @@ function wrap(paragraph: string, size: number, room: number, setting: Setting): 
   return lines;
 }
 
-/** Each paragraph's lines in a box `width` points wide, at `size` points, and what they are set in. */
+/** Each paragraph's lines in a box `width` points wide, at `size` points, in `font`, and what they are set in. */
 function paragraphLines(
   words: string,
   size: number,
   width: number,
+  font: string | undefined,
 ): { readonly paragraphs: readonly (readonly TypedLine[])[]; readonly setting: Setting } {
   const room = width - 2 * PDF_TEXT_PADDING_PT;
   const texts = paragraphsOf(words);
-  const setting = settingOf(texts);
+  const setting = settingOf(texts, font);
   const paragraphs = texts.map((paragraph) => {
     const rtl = readsRightToLeft(paragraph);
     return wrap(paragraph, size, room, setting).map((text) => ({
@@ -150,9 +155,12 @@ function stretched(
 }
 
 export const TypedLayout = {
-  /** The lines words make in a box `width` points wide, at `size` points, each paragraph's direction its own. */
-  lines: (words: string, size: number, width: number): readonly TypedLine[] =>
-    paragraphLines(words, size, width).paragraphs.flat(),
+  /**
+   * The lines words make in a box `width` points wide, at `size` points, in `font` (Helvetica where none), each
+   * paragraph's direction its own.
+   */
+  lines: (words: string, size: number, width: number, font?: string): readonly TypedLine[] =>
+    paragraphLines(words, size, width, font).paragraphs.flat(),
 
   /** Which way a mark's paragraphs read: every one left to right, every one right to left, or mixed. */
   direction: (words: string): 'ltr' | 'rtl' | 'mixed' => {
@@ -161,11 +169,11 @@ export const TypedLayout = {
     return rtl.some(Boolean) ? 'mixed' : 'ltr';
   },
 
-  /** The faces a mark's words are set in. */
-  faces: (words: string): MarkFaceSet => settingOf(paragraphsOf(words)).faces,
+  /** The faces a mark's words are set in, in its chosen font if any. */
+  faces: (words: string, font?: string): MarkFaceSet => settingOf(paragraphsOf(words), font).faces,
 
   /** The region a mark's Chinese, Japanese or Korean is set in. */
-  region: (words: string): MarkFaceRegion => settingOf(paragraphsOf(words)).region,
+  region: (words: string): MarkFaceRegion => settingOf(paragraphsOf(words), undefined).region,
 
   /** How high a box holds so many lines, in points. */
   height: (lines: number, size: number): number =>
@@ -184,8 +192,9 @@ export const TypedLayout = {
     words,
     size,
     align,
-  }: Pick<TypedMark, 'rect' | 'words' | 'size' | 'align'>): readonly PlacedLine[] => {
-    const { paragraphs, setting } = paragraphLines(words, size, right - left);
+    font,
+  }: Pick<TypedMark, 'rect' | 'words' | 'size' | 'align' | 'font'>): readonly PlacedLine[] => {
+    const { paragraphs, setting } = paragraphLines(words, size, right - left, font);
     let at = -1;
     return paragraphs.flatMap((lines) =>
       lines.flatMap((line, inParagraph): PlacedLine[] => {

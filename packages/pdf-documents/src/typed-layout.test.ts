@@ -189,7 +189,7 @@ describe('TypedLayout', () => {
 describe('TypedLayout in the mark faces', () => {
   it('measures a mark in the mark faces where Helvetica cannot write its words', () => {
     expect(TypedLayout.faces('Hello\nWorld')).toBe('helvetica');
-    expect(TypedLayout.faces('Hello\nΚόσμε')).toBe('noto');
+    expect(TypedLayout.faces('Hello\nΚόσμε')).toBe('embedded');
     const [hello, world] = TypedLayout.lines('Hello\nΚόσμε', 10, 400);
     // Every line of the mark in Noto Sans, the Latin one too: "Hello" is 2,580 thousandths there.
     expect(hello!.width).toBeCloseTo(MarkFaces.width({ text: 'Hello', bold: false }) / 100);
@@ -200,5 +200,29 @@ describe('TypedLayout in the mark faces', () => {
   it('composes the words first, so a letter typed with its accent apart is one Helvetica writes', () => {
     expect(TypedLayout.faces('cafe\u0301')).toBe('helvetica');
     expect(TypedLayout.lines('cafe\u0301', 10, 400)[0]!.text).toBe('café');
+  });
+});
+
+// marks.md "Words in every script": a mark in a chosen font is measured in its family first.
+describe('TypedLayout in a chosen font', () => {
+  it('sets every mark in a chosen font in the embedded faces', () => {
+    expect(TypedLayout.faces('Hello', 'Lora')).toBe('embedded');
+  });
+
+  it('measures and wraps the words in the family', () => {
+    const [line] = TypedLayout.lines('Hello', 10, 400, 'Pacifico');
+    expect(line!.width).toBeCloseTo(
+      MarkFaces.width({ text: 'Hello', bold: false, font: 'Pacifico' }) / 100,
+    );
+    const words = 'iiii iiii iiii iiii';
+    const narrow = TypedLayout.lines(words, 10, 80, 'Roboto Mono').length;
+    const wide = TypedLayout.lines(words, 10, 80, 'Amatic SC').length;
+    expect(narrow).toBeGreaterThan(wide);
+  });
+
+  it('places a mark in its own font', () => {
+    const rect = [0, 0, 400, 100] as const;
+    const [placed] = TypedLayout.place({ rect, words: 'Hello', size: 10, font: 'Lora' });
+    expect(placed!.width).toBeCloseTo(TypedLayout.lines('Hello', 10, 400, 'Lora')[0]!.width);
   });
 });

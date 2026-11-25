@@ -1,6 +1,6 @@
-import { MARK_FACE_DATA, MarkFaceSlices } from '@livedoc/pdf-documents';
+import { MARK_FACE_DATA, MARK_FONT_DATA, MarkFaceSlices } from '@livedoc/pdf-documents';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { addMarkFaces, facesStackOf, markFacesStack } from './pdf-mark-faces';
+import { addMarkFaces, addMarkFont, facesStackOf, markFacesStack } from './pdf-mark-faces';
 import { TYPED_FACES } from './pdf-typed';
 
 /** The FontFace a browser makes, as the test needs it: what it was made with. */
@@ -34,7 +34,7 @@ describe('the mark faces on the surface', () => {
     );
     expect(markFacesStack('jp').split(', ')).toHaveLength(24);
     expect(markFacesStack('kr')).not.toContain('Noto Sans SC');
-    expect(facesStackOf({ faces: 'noto', region: 'sc' })).toBe(markFacesStack('sc'));
+    expect(facesStackOf({ faces: 'embedded', region: 'sc' })).toBe(markFacesStack('sc'));
     expect(facesStackOf({ faces: 'helvetica', region: 'sc' })).toBe(TYPED_FACES);
   });
 
@@ -80,5 +80,31 @@ describe('the mark faces on the surface', () => {
     await addMarkFaces('sc', fonts);
     expect(load).toHaveBeenCalledTimes(2);
     expect(added(add).some((face) => face.family === 'LiveDoc Noto Sans SC')).toBe(true);
+  });
+});
+
+// marks.md "Laying out": a mark in a chosen font is drawn in its family first, from the files the bake embeds.
+describe('a chosen font on the surface', () => {
+  it('draws a mark in its family first, then the mark faces', () => {
+    expect(facesStackOf({ faces: 'embedded', region: 'jp', font: 'Lora' })).toBe(
+      `"LiveDoc Lora", ${markFacesStack('jp')}`,
+    );
+  });
+
+  it('adds the family once a page, each subset with its range, regular, from its file', () => {
+    vi.stubGlobal('FontFace', FakeFontFace);
+    const add = vi.fn();
+    const fonts = { add } as unknown as FontFaceSet;
+    addMarkFont('Lora', fonts);
+    addMarkFont('Lora', fonts);
+    const lora = MARK_FONT_DATA.filter((face) => face.family === 'Lora');
+    expect(add).toHaveBeenCalledTimes(lora.length);
+    expect(added(add)[0]).toMatchObject({
+      family: 'LiveDoc Lora',
+      descriptors: { weight: '400', display: 'swap', unicodeRange: lora[0]!.range },
+    });
+    expect(added(add)[0]!.source).toMatch(/lora-latin-400-normal.*\.woff"\) format\("woff"\)$/);
+    addMarkFont('Caveat', fonts);
+    expect(added(add).at(-1)!.family).toBe('LiveDoc Caveat');
   });
 });
