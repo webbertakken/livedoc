@@ -409,6 +409,27 @@ describe('writing a Text and a Callout', () => {
     // The Callout's line, half way between what is meant and its knee.
     expect(redIn(drawn, [190, 552, 198, 562])).toBeGreaterThan(0);
   });
+
+  // marks.md "In the file": an alignment once chosen as Q, Justified as Q 0 with DS text-align:justify.
+  it('writes an alignment chosen as Q, Justified as its default style, and none until one is', async () => {
+    const pages = opened(await engine.open(stored));
+    const page = pages[0]!.name;
+    const aligns = [undefined, 'left', 'centre', 'right', 'justified'] as const;
+    const marks = aligns.map((align, n) =>
+      Mark.text({
+        ...base(`aligned-${n}`, page),
+        size: 12,
+        rect: [100, 100 + n * 100, 300, 180 + n * 100],
+        ...(align ? { align } : {}),
+      })!,
+    );
+    const result = await bakeWith(marks.map((mark) => PdfChange.addMark(mark)));
+    const added = Buffer.from(result.bytes).subarray(stored.length).toString('latin1');
+    expect(added.match(/\/Q 0/g)).toHaveLength(2);
+    expect(added).toContain('/Q 1');
+    expect(added).toContain('/Q 2');
+    expect(added.match(/\/DS \(text-align:justify\)/g)).toHaveLength(1);
+  });
 });
 
 // marks.md "In the file": a stamp is a Stamp with Name the standard's name for it, Contents its words a line each, and

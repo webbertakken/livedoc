@@ -5,7 +5,7 @@
 import * as Y from 'yjs';
 import type { FieldValue } from './field-value';
 import { PDF_MAX_MARKS } from './limits';
-import type { DrawingMark, LineEnd, LineStyle, Mark, TextMark } from './mark';
+import type { DrawingMark, LineEnd, LineStyle, Mark, TextAlign, TextMark, TypedMark } from './mark';
 import type { MarkPlace } from './mark-place';
 import type { PageName } from './page-name';
 
@@ -33,7 +33,10 @@ export type PdfChangeRefusal = 'pdf_change_target_missing' | 'pdf_too_many_marks
 /** What a mark's maker may change of its look afterwards (marks.md "Changing a mark"). */
 export type MarkLook = Partial<
   Pick<TextMark, 'colour' | 'opacity' | 'quads' | 'text' | 'modifiedAt'> &
-    Pick<DrawingMark, 'strokes' | 'width'> & {
+    Pick<DrawingMark, 'strokes' | 'width'> &
+    Pick<TypedMark, 'size'> & {
+      /** A Text's or a Callout's alignment once chosen. */
+      readonly align: TextAlign;
       /** A line's style; Solid reads as none. */
       readonly lineStyle: LineStyle;
       /** A Line's or an Arrow's second end; its kind's own reads as none. */

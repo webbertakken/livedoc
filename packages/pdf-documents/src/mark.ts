@@ -63,6 +63,10 @@ export const LINE_ENDS = [
 ] as const;
 export type LineEnd = (typeof LINE_ENDS)[number];
 
+/** A Text's or a Callout's alignment once chosen (marks.md "Changing a mark": Format > Align text). */
+export const TEXT_ALIGNS = ['left', 'centre', 'right', 'justified'] as const;
+export type TextAlign = (typeof TEXT_ALIGNS)[number];
+
 /** Each line kind's end until changed: a Line's bare, an Arrow's an open head. */
 const FIRST_ENDS = { line: 'none', arrow: 'open-arrow' } as const satisfies Record<string, LineEnd>;
 
@@ -139,6 +143,8 @@ type TypedBase = MarkBase & {
   readonly words: string;
   /** The words' size in points. */
   readonly size: number;
+  /** How its lines sit in the box; absent until chosen, each paragraph then set from its own side. */
+  readonly align?: TextAlign;
 };
 
 export type TextBoxMark = TypedBase & { readonly kind: 'text' };
@@ -304,11 +310,15 @@ function typedOf(base: MarkBase, v: Record<string, unknown>): TypedMark | null {
   if (!isFour(v.rect) || !isWords(v.words) || !isSize(v.size)) return null;
   const [left, bottom, right, top] = v.rect;
   if (left > right || bottom > top) return null;
+  const { align } = v;
+  const aligned = align !== undefined && align !== null;
+  if (aligned && !TEXT_ALIGNS.includes(align as TextAlign)) return null;
   const typed = {
     ...base,
     rect: [left, bottom, right, top] as const,
     words: v.words.slice(0, PDF_MARK_TEXT_MAX_CHARS),
     size: v.size,
+    ...(aligned ? { align: align as TextAlign } : {}),
   };
   if (v.kind === 'text') return { ...typed, kind: 'text' };
   if (!isSix(v.callout)) return null;

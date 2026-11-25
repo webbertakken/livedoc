@@ -1,8 +1,10 @@
 // Restyling the selected marks (docs/specs/035-pdf-documents/marks.md "Changing a mark"): their colour, from the
-// toolbar's Colour, or each kind's first look on Reset (a stamp its own); their opacity, line width and line style, from
-// the Format menu; a Rectangle's and an Ellipse's fill, from the toolbar's Fill. A width and a style reach only a mark
-// with a line, a fill only a shape. Each restyle is one change under the person's own origin, so
-// it is one step of their undo, made from the marks as the live changes hold them now.
+// toolbar's Colour, or each kind's first look on Reset (a stamp its own); their opacity, line width, line style, line
+// ends and a Text's or a Callout's alignment, from the Format menu; a Rectangle's and an Ellipse's fill, from the
+// toolbar's Fill; a Text's or a Callout's size, from its Font size. A width and a style reach only a mark with a line, a
+// fill only a shape, a size and an alignment only a Text or a Callout, a new size carrying the box it makes. Each
+// restyle is one change under the person's own origin, so it is one step of their undo, made from the marks as the live
+// changes hold them now.
 import type * as Y from 'yjs';
 import {
   Mark as Marks,
@@ -13,16 +15,21 @@ import {
   type LineEnd,
   type LineMark,
   type LineStyle,
+  type Box,
   type Mark,
-  type MarkLook,
+  type MarkChange,
+  MarkReshape,
   type ShapeMark,
+  type TextAlign,
+  TypedLayout,
 } from '@livedoc/pdf-documents';
 import { FIRST_LOOKS } from './pdf-mark-looks';
 import { STAMP_COLOURS } from './pdf-stamp';
 import { PDF_LOCAL_ORIGIN } from './pdf-undo';
 
 /** What a restyle sets, as `[pdf] marks-restyled look=<…>` names it. */
-export type RestyledLook = 'colour' | 'opacity' | 'width' | 'style' | 'fill' | 'end';
+export type RestyledLook =
+  'colour' | 'opacity' | 'width' | 'style' | 'fill' | 'end' | 'size' | 'align';
 
 /** Format > Opacity's steps (reading-surface.md "Format"), by item id. */
 export const OPACITY_ITEMS: Readonly<Record<string, number>> = {
@@ -63,6 +70,14 @@ export const END_ITEMS: Readonly<Record<string, LineEnd>> = {
   'line-ends-bar': 'bar',
 };
 
+/** Format > Align text's alignments, by item id. */
+export const ALIGN_ITEMS: Readonly<Record<string, TextAlign>> = {
+  'align-text-left': 'left',
+  'align-text-centre': 'centre',
+  'align-text-right': 'right',
+  'align-text-justified': 'justified',
+};
+
 /** A mark drawn as a line: a Drawing, a Line, an Arrow, a Rectangle or an Ellipse. */
 type LinedMark = DrawingMark | LineMark | ShapeMark;
 
@@ -85,6 +100,25 @@ export const lineEndOf = (mark: Mark): LineEnd | undefined =>
 export const fillOf = (mark: Mark): string | null | undefined =>
   mark.kind === 'rectangle' || mark.kind === 'ellipse' ? (mark.fill ?? null) : undefined;
 
+/** A Text's or a Callout's size; undefined for any other mark. */
+export const sizeOf = (mark: Mark): number | undefined =>
+  Marks.isTyped(mark) ? mark.size : undefined;
+
+/** The alignment Align text checks for a Text or a Callout: the one chosen, or until then its words' one direction's
+ *  side, null where its paragraphs read both ways; undefined for any other mark. */
+export function alignOf(mark: Mark): TextAlign | null | undefined {
+  if (!Marks.isTyped(mark)) return undefined;
+  if (mark.align) return mark.align;
+  const direction = TypedLayout.direction(mark.words);
+  return direction === 'mixed' ? null : direction === 'rtl' ? 'right' : 'left';
+}
+
+/** The look a new size asks of a mark: the size, and the box and line it makes on `page`; nothing of any other mark. */
+export const sizedLook =
+  (size: number, page: Box) =>
+  (mark: Mark): MarkChange =>
+    Marks.isTyped(mark) ? { size, ...MarkReshape.sized(mark, size, page) } : {};
+
 /** The colour Reset gives a mark: its kind's first look, a stamp its own; a stamp LiveDoc does not draw keeps its. */
 export function firstColour(mark: Mark): string {
   if (mark.kind !== 'stamp') return FIRST_LOOKS[mark.kind].colour;
@@ -104,11 +138,12 @@ export function sharedOf<Value>(
 }
 
 /** What of `look` would change `mark`: a width and a style only where it has a line, a fill only where it takes one,
- *  nothing it holds already. */
-function changeOf(mark: Mark, look: MarkLook): MarkLook {
+ *  a size and an alignment only where it is a Text or a Callout, nothing it holds already; a new size with the
+ *  geometry it carries. */
+function changeOf(mark: Mark, look: MarkChange): MarkChange {
   const fill = fillOf(mark);
   const end = lineEndOf(mark);
-  const asked: MarkLook = {
+  const asked: MarkChange = {
     ...(look.colour === undefined ? {} : { colour: look.colour.toLowerCase() }),
     ...(look.opacity === undefined ? {} : { opacity: look.opacity }),
     ...(look.width === undefined || !isLined(mark) ? {} : { width: look.width }),
@@ -117,6 +152,8 @@ function changeOf(mark: Mark, look: MarkLook): MarkLook {
     ...(look.fill === undefined || fill === undefined
       ? {}
       : { fill: look.fill?.toLowerCase() ?? null }),
+    ...(look.size === undefined || !Marks.isTyped(mark) ? {} : { size: look.size }),
+    ...(look.align === undefined || !Marks.isTyped(mark) ? {} : { align: look.align }),
   };
   const held = {
     ...mark,
@@ -124,9 +161,12 @@ function changeOf(mark: Mark, look: MarkLook): MarkLook {
     ...(fill === undefined ? {} : { fill }),
     ...(end === undefined ? {} : { lineEnd: end }),
   } as Readonly<Record<string, unknown>>;
-  return Object.fromEntries(
+  const change = Object.fromEntries(
     Object.entries(asked).filter(([key, value]) => held[key] !== value),
-  ) as MarkLook;
+  ) as MarkChange;
+  if (change.size === undefined) return change;
+  const placed = Object.entries(look).filter(([key]) => key === 'rect' || key === 'callout');
+  return { ...change, ...Object.fromEntries(placed) };
 }
 
 /** The marks of `ids` given the look `lookOf` asks of each, as one change, `now` their time of change; answers how
@@ -134,7 +174,7 @@ function changeOf(mark: Mark, look: MarkLook): MarkLook {
 export function restyleMarks(
   doc: Y.Doc,
   ids: readonly string[],
-  lookOf: (mark: Mark) => MarkLook,
+  lookOf: (mark: Mark) => MarkChange,
   now: number,
 ): number {
   const changes = ids.flatMap((id) => {

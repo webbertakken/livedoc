@@ -5,7 +5,16 @@
 // "Telemetry and observability": `Mark.Restyled`, `[pdf] marks-restyled`.
 import { act, renderHook } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { Mark, PageName, PdfLiveChanges, type PageInfo, type Quad } from '@livedoc/pdf-documents';
+import {
+  Mark,
+  PageName,
+  PdfLiveChanges,
+  PDF_TEXT_SIZE_MAX_PT,
+  PDF_TEXT_SIZE_MIN_PT,
+  type PageInfo,
+  type PageMatrix,
+  type Quad,
+} from '@livedoc/pdf-documents';
 import { debugLog } from '@/lib/debug-log';
 import { track } from '@/lib/telemetry';
 import { FIRST_LOOKS } from './pdf-mark-looks';
@@ -17,7 +26,11 @@ import { usePdfMarkRestyle } from './usePdfMarkRestyle';
 vi.mock('@/lib/telemetry', () => ({ track: vi.fn() }));
 vi.mock('@/lib/debug-log', () => ({ debugLog: vi.fn() }));
 
-const PAGES = [PageName.ofObject(3), PageName.ofObject(4)].map((name) => ({ name }) as PageInfo);
+const PAGES = [PageName.ofObject(3), PageName.ofObject(4)].map(
+  (name) => ({ name, width: 612, height: 792 }) as PageInfo,
+);
+// The page as the file has it, upright, its foot at y 0.
+const UPRIGHT = [1, 0, 0, -1, 0, 792] as const;
 const T = 1_795_000_000_000;
 const BASE = { page: PAGES[0]!.name, opacity: 1, author: 'Ada', createdAt: T };
 const QUAD: Quad = [100, 716, 200, 716, 100, 700, 200, 700];
@@ -28,7 +41,13 @@ function restyling({
   chosen = BOTH,
   marking = true,
   open = true,
-}: { chosen?: PdfMarksChosen | null; marking?: boolean; open?: boolean } = {}) {
+  matrix = UPRIGHT,
+}: {
+  chosen?: PdfMarksChosen | null;
+  marking?: boolean;
+  open?: boolean;
+  matrix?: PageMatrix | null;
+} = {}) {
   const doc = PdfLiveChanges.load();
   PdfLiveChanges.addMark(
     doc,
@@ -48,10 +67,34 @@ function restyling({
       width: 2,
     })!,
   );
+  PdfLiveChanges.addMark(
+    doc,
+    Mark.text({
+      ...BASE,
+      colour: '#ff0000',
+      id: 't',
+      rect: [300, 2, 360, 32],
+      words: 'Hello there',
+      size: 12,
+    })!,
+  );
+  PdfLiveChanges.addMark(
+    doc,
+    Mark.text({
+      ...BASE,
+      colour: '#ff0000',
+      id: 'u',
+      rect: [300, 300, 360, 330],
+      words: 'Hi',
+      size: 10,
+    })!,
+  );
   const steps: unknown[] = [];
+  const pageMatrix = vi.fn(async () => matrix);
   const focusPages = vi.fn();
   const ready = {
     pages: PAGES,
+    engine: { pageMatrix } as never,
     binding: { doc } as never,
     undo: {
       step: <Made,>(place: unknown, made: () => Made) => {
@@ -72,7 +115,7 @@ function restyling({
       }),
     { initialProps: { held: chosen } },
   );
-  return { hook, doc, steps, focusPages };
+  return { hook, doc, steps, focusPages, pageMatrix };
 }
 
 beforeEach(() => {
@@ -158,8 +201,9 @@ describe('Format > Opacity and Line width', () => {
   });
 
   it('binds nothing outside Reviewing or before the PDF is open', () => {
-    expect(restyling({ marking: false }).hook.result.current).toEqual({ colours: {}, actions: {} });
-    expect(restyling({ open: false }).hook.result.current).toEqual({ colours: {}, actions: {} });
+    const nothing = { colours: {}, actions: {}, fontSize: null };
+    expect(restyling({ marking: false }).hook.result.current).toEqual(nothing);
+    expect(restyling({ open: false }).hook.result.current).toEqual(nothing);
   });
 });
 
@@ -232,5 +276,69 @@ describe('Format > Line ends', () => {
   it('dims every end while no Line or Arrow is selected', () => {
     const actions = restyling({ chosen: { page: 0, ids: ['h', 'r'] } }).hook.result.current.actions;
     expect(actions['line-ends-none']).toMatchObject({ disabled: true, checked: false });
+  });
+});
+
+// marks.md "Changing a mark": the toolbar's Font size is the selected Texts' and Callouts', blank where they differ, held
+// within PDF_TEXT_SIZE_MIN_PT to PDF_TEXT_SIZE_MAX_PT, a box that would pass the page's foot moved up onto it; Format >
+// Align text, checked as they hold it (the words' own side until chosen), dimmed while none is selected.
+describe('the Font size field and Format > Align text', () => {
+  it('is no field while no Text or Callout is selected', () => {
+    expect(restyling().hook.result.current.fontSize).toBeNull();
+  });
+
+  it('reads the size the selected Texts share, blank where they differ', () => {
+    expect(
+      restyling({ chosen: { page: 0, ids: ['t', 'a'] } }).hook.result.current.fontSize!.read(),
+    ).toBe(12);
+    expect(
+      restyling({ chosen: { page: 0, ids: ['t', 'u'] } }).hook.result.current.fontSize!.read(),
+    ).toBeNull();
+  });
+
+  it('gives them the size taken as one step, the box moved up onto the page', async () => {
+    const { hook, doc, steps, focusPages, pageMatrix } = restyling({
+      chosen: { page: 0, ids: ['t', 'a'] },
+    });
+    await act(async () => hook.result.current.fontSize!.set(36));
+    expect(pageMatrix).toHaveBeenCalledWith(0, 0);
+    const grown = PdfLiveChanges.mark(doc, 't') as { size: number; rect: readonly number[] };
+    expect(grown.size).toBe(36);
+    expect(grown.rect[1]).toBe(0);
+    expect(steps).toEqual([{ page: PAGES[0]!.name }]);
+    expect(debugLog).toHaveBeenCalledWith('[pdf] marks-restyled count=1 look=size');
+    expect(track).toHaveBeenCalledWith('Pdf', 'Changed', 'Mark.Restyled');
+    expect(focusPages).toHaveBeenCalled();
+    expect(hook.result.current.fontSize!.read()).toBe(36);
+  });
+
+  it('holds a size within its range', async () => {
+    const { hook, doc } = restyling({ chosen: { page: 0, ids: ['u'] } });
+    await act(async () => hook.result.current.fontSize!.set(400));
+    expect(PdfLiveChanges.mark(doc, 'u')).toMatchObject({ size: PDF_TEXT_SIZE_MAX_PT });
+    await act(async () => hook.result.current.fontSize!.set(1));
+    expect(PdfLiveChanges.mark(doc, 'u')).toMatchObject({ size: PDF_TEXT_SIZE_MIN_PT });
+  });
+
+  it('grows a box where the page cannot be read, held to no page', async () => {
+    const { hook, doc } = restyling({ chosen: { page: 0, ids: ['t'] }, matrix: null });
+    await act(async () => hook.result.current.fontSize!.set(36));
+    const grown = PdfLiveChanges.mark(doc, 't') as { rect: readonly number[] };
+    expect(grown.rect[1]).toBeLessThan(0);
+  });
+
+  it('aligns the selected Texts, checked as they hold it, dimmed while none is selected', () => {
+    const { hook, doc } = restyling({ chosen: { page: 0, ids: ['t', 'a'] } });
+    expect(hook.result.current.actions['align-text-left']).toMatchObject({
+      checked: true,
+      disabled: false,
+    });
+    act(() => hook.result.current.actions['align-text-justified']!.run());
+    expect(PdfLiveChanges.mark(doc, 't')).toMatchObject({ align: 'justified' });
+    expect(debugLog).toHaveBeenCalledWith('[pdf] marks-restyled count=1 look=align');
+    expect(hook.result.current.actions['align-text-justified']!.checked).toBe(true);
+    expect(hook.result.current.actions['align-text-left']!.checked).toBe(false);
+    const lineOnly = restyling({ chosen: { page: 0, ids: ['a'] } }).hook.result.current.actions;
+    expect(lineOnly['align-text-centre']).toMatchObject({ disabled: true, checked: false });
   });
 });

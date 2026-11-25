@@ -7,12 +7,16 @@ import {
   LINE_ENDS,
   LINE_STYLES,
   Mark,
+  MarkReshape,
   PageName,
   PdfLiveChanges,
+  TEXT_ALIGNS,
   type Quad,
 } from '@livedoc/pdf-documents';
 import { FIRST_LOOKS } from './pdf-mark-looks';
 import {
+  ALIGN_ITEMS,
+  alignOf,
   END_ITEMS,
   fillOf,
   firstColour,
@@ -21,6 +25,8 @@ import {
   OPACITY_ITEMS,
   restyleMarks,
   sharedOf,
+  sizedLook,
+  sizeOf,
   STYLE_ITEMS,
   WIDTH_ITEMS,
   widthOf,
@@ -173,5 +179,70 @@ describe('a line end restyled', () => {
     expect(restyleMarks(doc, ['l'], () => ({ lineEnd: 'open-arrow' }), T + 2)).toBe(1);
     expect(PdfLiveChanges.mark(doc, 'l')).not.toHaveProperty('lineEnd');
     expect(restyleMarks(doc, ['l'], () => ({ lineEnd: 'open-arrow' }), T + 3)).toBe(0);
+  });
+});
+
+// marks.md "Changing a mark": the toolbar's Font size and Format > Align text reach the selected Texts and Callouts.
+describe('a Text’s and a Callout’s size and alignment restyled', () => {
+  const PAGE = [0, 0, 612, 792] as const;
+  const text = Mark.text({
+    ...BASE,
+    id: 't',
+    rect: [300, 300, 360, 330],
+    words: 'Hello there',
+    size: 10,
+  })!;
+  const callout = Mark.callout({
+    ...BASE,
+    id: 'k',
+    rect: [300, 400, 400, 430],
+    words: 'Hi',
+    size: 12,
+    callout: [250, 350, 288, 415, 300, 415],
+  })!;
+  const withTyped = () => {
+    const made = withMarks();
+    PdfLiveChanges.addMark(made.doc, text);
+    PdfLiveChanges.addMark(made.doc, callout);
+    return made;
+  };
+
+  it('names an item for each alignment, each one a mark holds', () => {
+    const ids = new Set(catalogueItems(PDF_MENUS).map(({ item }) => item.id));
+    for (const id of Object.keys(ALIGN_ITEMS)) expect(ids.has(id)).toBe(true);
+    expect(Object.values(ALIGN_ITEMS)).toEqual([...TEXT_ALIGNS]);
+  });
+
+  it('reads a size and an alignment of a Text or a Callout alone, the words’ own until one is chosen', () => {
+    expect(sizeOf(text)).toBe(10);
+    expect(sizeOf(line)).toBeUndefined();
+    expect(alignOf(text)).toBe('left');
+    expect(alignOf({ ...text, words: 'שלום' })).toBe('right');
+    expect(alignOf({ ...text, words: 'Hello\nשלום' })).toBeNull();
+    expect(alignOf({ ...text, align: 'justified' })).toBe('justified');
+    expect(alignOf(line)).toBeUndefined();
+  });
+
+  it('gives a size to the Texts and Callouts alone, their boxes and lines with it', () => {
+    const { doc, origins } = withTyped();
+    const before = origins.length;
+    expect(restyleMarks(doc, ['t', 'k', 'l'], sizedLook(24, PAGE), T + 1)).toBe(2);
+    const grown = PdfLiveChanges.mark(doc, 't')!;
+    expect(grown).toMatchObject({ size: 24, ...MarkReshape.sized(text, 24, PAGE) });
+    expect(PdfLiveChanges.mark(doc, 'k')).toMatchObject({
+      size: 24,
+      ...MarkReshape.sized(callout, 24, PAGE),
+    });
+    expect(PdfLiveChanges.mark(doc, 'l')).not.toHaveProperty('size');
+    expect(restyleMarks(doc, ['t'], sizedLook(24, PAGE), T + 2)).toBe(0);
+    expect(origins.slice(before)).toEqual([PDF_LOCAL_ORIGIN]);
+  });
+
+  it('gives an alignment to the Texts and Callouts alone, nothing where it is held', () => {
+    const { doc } = withTyped();
+    expect(restyleMarks(doc, ['t', 'l'], () => ({ align: 'centre' }), T + 1)).toBe(1);
+    expect(PdfLiveChanges.mark(doc, 't')).toMatchObject({ align: 'centre' });
+    expect(PdfLiveChanges.mark(doc, 'l')).not.toHaveProperty('align');
+    expect(restyleMarks(doc, ['t'], () => ({ align: 'centre' }), T + 2)).toBe(0);
   });
 });
