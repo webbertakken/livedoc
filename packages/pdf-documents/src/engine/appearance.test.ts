@@ -98,6 +98,51 @@ describe('appearanceOf', () => {
     );
   });
 
+  // marks.md "Changing a mark": a line style's pattern, each stroke starting it afresh, and a solid stroke after a
+  // dashed one solid again; a fill under the line, in its own colour.
+  it('dashes a stroke by its pattern, and sets a solid one after it solid', () => {
+    const at = (x: number) => ({ x, y: 0 });
+    const drawn = appearanceOf(
+      {
+        fills: [],
+        strokes: [
+          { points: [at(0), at(9)], width: 1, round: false, closed: false, dash: [3, 2] },
+          { points: [at(0), at(9)], width: 1, round: false, closed: false },
+        ],
+      },
+      look,
+    );
+    expect(drawn.content).toContain('1 w 0 J 0 j [3 2] 0 d\n0 0 m 9 0 l S');
+    expect(drawn.content).toContain('1 w 0 J 0 j [] 0 d\n0 0 m 9 0 l S');
+  });
+
+  it('fills a shape inside its line in the fill colour, before the line', () => {
+    const points = [
+      { x: 0, y: 0 },
+      { x: 4, y: 0 },
+      { x: 4, y: 4 },
+    ];
+    const drawn = appearanceOf(
+      {
+        fills: [],
+        strokes: [{ points, width: 1, round: false, closed: true }],
+        fill: { points, colour: '#000000' },
+      },
+      look,
+    );
+    expect(drawn.content).toBe(
+      [
+        'q',
+        '0.002 0.002 0.002 rg',
+        '0 0 m 4 0 l 4 4 l h f',
+        '0.853 0.19 0.147 RG',
+        '1 w 0 J 0 j',
+        '0 0 m 4 0 l 4 4 l h S',
+        'Q',
+      ].join('\n'),
+    );
+  });
+
   // The box holds every line whole: a sharp corner reaches past a point by up to its line's width.
   it('boxes every point, grown by the widest line', () => {
     const drawn = appearanceOf(

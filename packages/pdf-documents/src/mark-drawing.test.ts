@@ -282,3 +282,69 @@ describe('a stamp’s drawing', () => {
     expect(MarkDrawing.of(stamp)).toEqual({ fills: [], strokes: [StampLayout.border(stamp)] });
   });
 });
+
+// marks.md "Changing a mark": a line style's pattern, in lengths of its line's width and never under a point; an
+// Arrow's head solid; a fill inside a Rectangle's or an Ellipse's line.
+describe('a line style and a fill drawn', () => {
+  it('gives each style its pattern in widths, a point at the least, Solid none', () => {
+    expect(MarkDrawing.pattern('solid', 2)).toEqual([]);
+    expect(MarkDrawing.pattern('dashed', 2)).toEqual([6, 4]);
+    expect(MarkDrawing.pattern('dotted', 2)).toEqual([2, 2]);
+    expect(MarkDrawing.pattern('dash-dot', 2)).toEqual([6, 2, 2, 2]);
+    expect(MarkDrawing.pattern('long-dashes', 2)).toEqual([12, 4]);
+    expect(MarkDrawing.pattern('dashed', 0.5)).toEqual([3, 2]);
+  });
+
+  it('dashes a Drawing’s strokes, a Line, and a Rectangle’s and an Ellipse’s outline', () => {
+    const drawing = MarkDrawing.of({
+      kind: 'drawing',
+      strokes: [[0, 0, 10, 10]],
+      width: 2,
+      lineStyle: 'dotted',
+    });
+    expect(drawing.strokes[0]!.dash).toEqual([2, 2]);
+    const box = MarkDrawing.of({
+      kind: 'ellipse',
+      rect: [0, 0, 10, 10],
+      width: 1,
+      lineStyle: 'dashed',
+    });
+    expect(box.strokes[0]!.dash).toEqual([3, 2]);
+  });
+
+  it('keeps an Arrow’s head solid', () => {
+    const arrow = MarkDrawing.of({
+      kind: 'arrow',
+      line: [0, 0, 100, 0],
+      width: 2,
+      lineStyle: 'long-dashes',
+    });
+    expect(arrow.strokes.map((stroke) => stroke.dash)).toEqual([[12, 4], undefined]);
+  });
+
+  it('leaves a solid line with no pattern, as it always drew', () => {
+    const line = MarkDrawing.of({ kind: 'line', line: [0, 0, 100, 0], width: 2 });
+    expect(line.strokes[0]).not.toHaveProperty('dash');
+    expect(line).not.toHaveProperty('fill');
+  });
+
+  it('fills a Rectangle’s box and an Ellipse’s outline in the fill colour', () => {
+    const rectangle = MarkDrawing.of({
+      kind: 'rectangle',
+      rect: [0, 0, 10, 20],
+      width: 1,
+      fill: '#fdf1a9',
+    });
+    expect(rectangle.fill).toEqual({
+      colour: '#fdf1a9',
+      points: rectangle.strokes[0]!.points,
+    });
+    const ellipse = MarkDrawing.of({
+      kind: 'ellipse',
+      rect: [0, 0, 10, 20],
+      width: 1,
+      fill: '#fdf1a9',
+    });
+    expect(ellipse.fill!.points).toBe(ellipse.strokes[0]!.points);
+  });
+});

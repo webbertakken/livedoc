@@ -47,6 +47,10 @@ export const MARK_KINDS = [
 ] as const;
 export type MarkKind = (typeof MARK_KINDS)[number];
 
+/** A line's style (marks.md "Changing a mark": Format > Line style); Solid is held as no style at all. */
+export const LINE_STYLES = ['solid', 'dashed', 'dotted', 'dash-dot', 'long-dashes'] as const;
+export type LineStyle = (typeof LINE_STYLES)[number];
+
 /** The kinds made by selecting text (marks.md "Kinds"): each is the glyphs it covers. */
 export type TextMarkKind = (typeof TEXT_MARK_KINDS)[number];
 /** The kinds made by a drag from one end to the other. */
@@ -55,6 +59,12 @@ export type LineMarkKind = (typeof LINE_MARK_KINDS)[number];
 export type ShapeMarkKind = (typeof SHAPE_MARK_KINDS)[number];
 /** The kinds whose words are typed straight onto the page. */
 export type TypedMarkKind = (typeof TYPED_MARK_KINDS)[number];
+
+/** What a mark drawn as a line holds of its line's look past its width. */
+type Lined = {
+  /** Its line's style; absent for Solid. */
+  readonly lineStyle?: Exclude<LineStyle, 'solid'>;
+};
 
 type MarkBase = {
   readonly id: string;
@@ -78,27 +88,32 @@ export type TextMark = MarkBase & {
   readonly text: string;
 };
 
-export type DrawingMark = MarkBase & {
-  readonly kind: 'drawing';
-  readonly strokes: readonly Stroke[];
-  /** The line's width in points. */
-  readonly width: number;
-};
+export type DrawingMark = MarkBase &
+  Lined & {
+    readonly kind: 'drawing';
+    readonly strokes: readonly Stroke[];
+    /** The line's width in points. */
+    readonly width: number;
+  };
 
-export type LineMark = MarkBase & {
-  readonly kind: LineMarkKind;
-  readonly line: Segment;
-  /** The line's width in points. */
-  readonly width: number;
-};
+export type LineMark = MarkBase &
+  Lined & {
+    readonly kind: LineMarkKind;
+    readonly line: Segment;
+    /** The line's width in points. */
+    readonly width: number;
+  };
 
-export type ShapeMark = MarkBase & {
-  readonly kind: ShapeMarkKind;
-  /** The box the line runs along: its middle, so half the line falls outside it. */
-  readonly rect: Box;
-  /** The line's width in points. */
-  readonly width: number;
-};
+export type ShapeMark = MarkBase &
+  Lined & {
+    readonly kind: ShapeMarkKind;
+    /** What fills it inside its line, `#rrggbb`; absent for no fill. */
+    readonly fill?: string;
+    /** The box the line runs along: its middle, so half the line falls outside it. */
+    readonly rect: Box;
+    /** The line's width in points. */
+    readonly width: number;
+  };
 
 type TypedBase = MarkBase & {
   /** The box the words are set in. */
@@ -167,6 +182,13 @@ const isWidth = (value: unknown): value is number =>
 const isTime = (value: unknown): value is number =>
   typeof value === 'number' && Number.isInteger(value) && value >= 0 && value <= TIME_MAX;
 
+/** A line's style as a mark holds it: Solid (or none) as nothing; undefined where it is no style. */
+function lineStyleOf(v: Record<string, unknown>): Lined | undefined {
+  if (v.lineStyle === undefined || v.lineStyle === null || v.lineStyle === 'solid') return {};
+  if (!LINE_STYLES.includes(v.lineStyle as LineStyle)) return undefined;
+  return { lineStyle: v.lineStyle as Exclude<LineStyle, 'solid'> };
+}
+
 /** The points of a Drawing's strokes, all told. */
 const pointsOf = (strokes: readonly Stroke[]): number =>
   strokes.reduce((sum, stroke) => sum + stroke.length / 2, 0);
@@ -214,30 +236,45 @@ function drawingOf(base: MarkBase, v: Record<string, unknown>): DrawingMark | nu
   if (!Array.isArray(v.strokes) || v.strokes.length === 0 || !v.strokes.every(isStroke))
     return null;
   if (pointsOf(v.strokes) > PDF_DRAWING_MAX_POINTS) return null;
-  if (!isWidth(v.width)) return null;
+  const lined = lineStyleOf(v);
+  if (!isWidth(v.width) || !lined) return null;
   return {
     ...base,
     kind: 'drawing',
     strokes: v.strokes.map((stroke) => [...stroke]),
     width: v.width,
+    ...lined,
   };
 }
 
 function lineOf(base: MarkBase, v: Record<string, unknown>): LineMark | null {
-  if (!isFour(v.line) || !isWidth(v.width)) return null;
+  const lined = lineStyleOf(v);
+  if (!isFour(v.line) || !isWidth(v.width) || !lined) return null;
   const [x1, y1, x2, y2] = v.line;
-  return { ...base, kind: v.kind as LineMarkKind, line: [x1, y1, x2, y2], width: v.width };
+  return {
+    ...base,
+    kind: v.kind as LineMarkKind,
+    line: [x1, y1, x2, y2],
+    width: v.width,
+    ...lined,
+  };
 }
 
 function shapeOf(base: MarkBase, v: Record<string, unknown>): ShapeMark | null {
-  if (!isFour(v.rect) || !isWidth(v.width)) return null;
+  const lined = lineStyleOf(v);
+  if (!isFour(v.rect) || !isWidth(v.width) || !lined) return null;
   const [left, bottom, right, top] = v.rect;
   if (left > right || bottom > top) return null;
+  const { fill } = v;
+  if (fill !== undefined && fill !== null && (typeof fill !== 'string' || !COLOUR.test(fill)))
+    return null;
   return {
     ...base,
     kind: v.kind as ShapeMarkKind,
     rect: [left, bottom, right, top],
     width: v.width,
+    ...lined,
+    ...(typeof fill === 'string' ? { fill } : {}),
   };
 }
 

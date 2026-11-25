@@ -1,8 +1,8 @@
 // Which mark a press lands on (docs/specs/035-pdf-documents/marks.md "Changing a mark": what a press reaches): a text
-// mark by the glyphs it covers; a Drawing, a Line, an Arrow, a Rectangle and an Ellipse by their line, within a
-// reach and half the line's width, so a box drawn round a paragraph leaves its text to select; a Text, a Callout and
-// a stamp anywhere in their box, and a Callout's line as a line. Where marks overlap, the one drawn last. Pure
-// geometry in page space, read from the same drawing the page shows.
+// mark by the glyphs it covers; a Drawing, a Line, an Arrow, a Rectangle and an Ellipse by their line, within a reach
+// and half the line's width, so a box drawn round a paragraph leaves its text to select; a Text, a Callout and a stamp
+// anywhere in their box, and a Callout's line as a line; a filled Rectangle or Ellipse anywhere inside it. Where marks
+// overlap, the one drawn last. Pure geometry in page space, read from the same drawing the page shows.
 import type { PagePoint } from './engine-contract';
 import { Mark, type Box, type Quad } from './mark';
 import { MarkDrawing, type MarkStroke } from './mark-drawing';
@@ -25,6 +25,17 @@ function nearStroke(p: PagePoint, stroke: MarkStroke, reach: number): boolean {
   return ends.slice(1).some((end, at) => distanceToSegment(p, ends[at]!, end) <= near);
 }
 
+/** Whether a point lies within a closed outline (even-odd: a ray's crossings of its sides). */
+function inOutline(p: PagePoint, points: readonly PagePoint[]): boolean {
+  let inside = false;
+  points.forEach((a, at) => {
+    const b = points[(at + 1) % points.length]!;
+    if (a.y > p.y !== b.y > p.y && p.x < ((b.x - a.x) * (p.y - a.y)) / (b.y - a.y) + a.x)
+      inside = !inside;
+  });
+  return inside;
+}
+
 /** Whether a point lies within a quad, its corners around its edge (upper left, upper right, lower right, lower left). */
 function inQuad(p: PagePoint, quad: Quad): boolean {
   const corners = [0, 2, 6, 4].map((at) => ({ x: quad[at]!, y: quad[at + 1]! }));
@@ -43,7 +54,9 @@ function reaches(mark: Mark, p: PagePoint, reach: number): boolean {
   if (Mark.isText(mark)) return mark.quads.some((quad) => inQuad(p, quad));
   if ((Mark.isTyped(mark) || mark.kind === 'stamp') && inBox(p, mark.rect)) return true;
   if (mark.kind === 'text' || mark.kind === 'stamp') return false;
-  return MarkDrawing.of(mark).strokes.some((stroke) => nearStroke(p, stroke, reach));
+  const drawing = MarkDrawing.of(mark);
+  if (drawing.fill && inOutline(p, drawing.fill.points)) return true;
+  return drawing.strokes.some((stroke) => nearStroke(p, stroke, reach));
 }
 
 export const MarkHit = {

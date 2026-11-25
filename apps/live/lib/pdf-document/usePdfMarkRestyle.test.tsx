@@ -10,7 +10,7 @@ import { debugLog } from '@/lib/debug-log';
 import { track } from '@/lib/telemetry';
 import { FIRST_LOOKS } from './pdf-mark-looks';
 import { pdfMarksStore } from './pdf-marks-store';
-import { TOOL_COLOUR } from './pdf-toolbar';
+import { FILL_COLOUR, TOOL_COLOUR } from './pdf-toolbar';
 import type { PdfMarksChosen } from './usePdfMarkSelection';
 import { usePdfMarkRestyle } from './usePdfMarkRestyle';
 
@@ -37,6 +37,16 @@ function restyling({
   PdfLiveChanges.addMark(
     doc,
     Mark.highlight({ ...BASE, colour: '#ff0000', id: 'h', quads: [QUAD], text: 'x' })!,
+  );
+  PdfLiveChanges.addMark(
+    doc,
+    Mark.shape('rectangle', {
+      ...BASE,
+      colour: '#ff0000',
+      id: 'r',
+      rect: [10, 10, 50, 60],
+      width: 2,
+    })!,
   );
   const steps: unknown[] = [];
   const focusPages = vi.fn();
@@ -150,5 +160,57 @@ describe('Format > Opacity and Line width', () => {
   it('binds nothing outside Reviewing or before the PDF is open', () => {
     expect(restyling({ marking: false }).hook.result.current).toEqual({ colours: {}, actions: {} });
     expect(restyling({ open: false }).hook.result.current).toEqual({ colours: {}, actions: {} });
+  });
+});
+
+// marks.md "Changing a mark": Format > Line style; the toolbar's Fill, the selected Rectangles' and Ellipses', led by
+// None.
+describe('Format > Line style and the Fill control', () => {
+  it('gives the marks with a line a style, checked as they hold it, dimmed while none has a line', () => {
+    const { hook, doc } = restyling();
+    expect(hook.result.current.actions['line-style-solid']).toMatchObject({
+      checked: true,
+      disabled: false,
+    });
+    act(() => hook.result.current.actions['line-style-dotted']!.run());
+    expect(PdfLiveChanges.mark(doc, 'a')).toMatchObject({ lineStyle: 'dotted' });
+    expect(debugLog).toHaveBeenCalledWith('[pdf] marks-restyled count=1 look=style');
+    expect(hook.result.current.actions['line-style-dotted']!.checked).toBe(true);
+    const highlightOnly = restyling({ chosen: { page: 0, ids: ['h'] } }).hook.result.current;
+    expect(highlightOnly.actions['line-style-dashed']!.disabled).toBe(true);
+  });
+
+  it('offers Fill only while a Rectangle or an Ellipse is selected, None where it has none', () => {
+    expect(restyling().hook.result.current.colours[FILL_COLOUR]).toBeUndefined();
+    const { hook, doc } = restyling({ chosen: { page: 0, ids: ['r', 'a'] } });
+    const fill = hook.result.current.colours[FILL_COLOUR]!;
+    expect(fill.leading).toBe('None');
+    expect(fill.read()).toBeUndefined();
+    act(() => fill.set('#1a73e8'));
+    expect(PdfLiveChanges.mark(doc, 'r')).toMatchObject({ fill: '#1a73e8' });
+    expect(debugLog).toHaveBeenCalledWith('[pdf] marks-restyled count=1 look=fill');
+    expect(hook.result.current.colours[FILL_COLOUR]!.read()).toBe('#1a73e8');
+    act(() => hook.result.current.colours[FILL_COLOUR]!.set(null));
+    expect(PdfLiveChanges.mark(doc, 'r')).not.toHaveProperty('fill');
+  });
+
+  it('reads Fill blank where the shapes selected differ', () => {
+    const { hook, doc } = restyling({ chosen: { page: 0, ids: ['r', 'e'] } });
+    act(() => {
+      PdfLiveChanges.addMark(
+        doc,
+        Mark.parse({
+          ...BASE,
+          kind: 'ellipse',
+          colour: '#ff0000',
+          id: 'e',
+          rect: [10, 10, 50, 60],
+          width: 2,
+          fill: '#1a73e8',
+          modifiedAt: T,
+        })!,
+      );
+    });
+    expect(hook.result.current.colours[FILL_COLOUR]!.read()).toBeNull();
   });
 });

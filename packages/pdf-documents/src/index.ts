@@ -5,6 +5,7 @@ export { isPdfBytes } from './sniff';
 export { PageName } from './page-name';
 export {
   LINE_MARK_KINDS,
+  LINE_STYLES,
   MARK_KINDS,
   Mark,
   SHAPE_MARK_KINDS,
@@ -20,6 +21,7 @@ export {
   type LineInput,
   type LineMark,
   type LineMarkKind,
+  type LineStyle,
   type MarkKind,
   type Quad,
   type Segment,

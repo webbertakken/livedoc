@@ -277,6 +277,48 @@ describe('writing lines and shapes', () => {
   });
 });
 
+// marks.md "In the file": a line style other than Solid as `BS` `S` `D` with `D` its pattern, a Drawing's too; a fill as
+// `IC`, painted inside the line by the appearance.
+describe('writing a line style and a fill', () => {
+  it('writes a dashed, filled Rectangle and a dotted Drawing, drawn as the page shows them', async () => {
+    const pages = opened(await engine.open(stored));
+    const page = pages[0]!.name;
+    const look = { page, colour: '#d93025', opacity: 1, author: 'Ada', createdAt: at };
+    const marks = [
+      Mark.parse({
+        ...look,
+        id: 'a-box',
+        kind: 'rectangle',
+        rect: [300, 300, 400, 380],
+        width: 2,
+        lineStyle: 'dashed',
+        fill: '#1a73e8',
+        modifiedAt: at,
+      })!,
+      Mark.parse({
+        ...look,
+        id: 'a-sketch',
+        kind: 'drawing',
+        strokes: [[100, 500, 200, 500]],
+        width: 2,
+        lineStyle: 'dotted',
+        modifiedAt: at,
+      })!,
+    ];
+    const result = await bakeWith(marks.map((mark) => PdfChange.addMark(mark)));
+    const added = Buffer.from(result.bytes).subarray(stored.length).toString('latin1');
+    expect(added).toMatch(/\/S \/D/);
+    expect(added).toContain('/D [6 4]');
+    expect(added).toContain('/D [2 2]');
+    expect(added).toMatch(/\/IC \[0\.1\d* 0\.45\d* 0\.91\d*\]/);
+    opened(await engine.open(result.bytes));
+    const drawn = (await engine.drawPage(0, 1))!;
+    const at350 = ((drawn.height - 340) * drawn.width + 350) * 4;
+    const [r, g, b] = drawn.rgba.slice(at350, at350 + 3);
+    expect([r! < 60, g! > 90 && g! < 140, b! > 200]).toEqual([true, true, true]);
+  });
+});
+
 // marks.md "In the file": a Text is a FreeText with its words as Contents and an appearance of LiveDoc's own; a Callout
 // adds IT FreeTextCallout, CL, LE OpenArrow and RD. The engine draws no FreeText without an appearance.
 describe('writing a Text and a Callout', () => {

@@ -203,13 +203,33 @@ test('the selected marks are restyled from the Colour control and the Format men
     'true',
   );
   await page.keyboard.press('Escape');
+
+  // Format > Line style dashes both lines; the Fill control, offered for the Rectangle, fills it inside its line.
+  await (await officeMenuItem(page, ['Format', 'Line style', 'Dashed'])).click();
+  await expect(kind('arrow').locator('polyline').first()).toHaveAttribute(
+    'stroke-dasharray',
+    '24 16',
+  );
+  const fill = toolbar.getByRole('button', { name: 'Fill', exact: true });
+  await fill.click();
+  await page
+    .getByRole('group', { name: 'Fill' })
+    .getByRole('group', { name: 'Light' })
+    .getByRole('button', { name: 'Blue' })
+    .click();
+  const inside = kind('rectangle').locator('polygon').first();
+  await expect(inside).toHaveAttribute('stroke', 'none');
+  await expect(inside).toHaveAttribute('fill', /^#[0-9a-f]{6}$/);
+  await expect(kind('rectangle').locator('polygon').nth(1)).toHaveAttribute(
+    'stroke-dasharray',
+    '24 16',
+  );
   await page.screenshot({ path: test.info().outputPath('pdf-mark-restyle.png') });
 
-  // Undo takes back the width, then the opacity, then the colour.
+  // Undo takes back the fill, the style, the width, the opacity, then the colour.
   await page.locator('[data-pdf-pages]').focus();
-  await page.keyboard.press('ControlOrMeta+z');
-  await page.keyboard.press('ControlOrMeta+z');
-  await page.keyboard.press('ControlOrMeta+z');
+  for (let step = 0; step < 5; step += 1) await page.keyboard.press('ControlOrMeta+z');
+  await expect(kind('rectangle').locator('polygon')).toHaveCount(1);
   await expect(kind('rectangle')).toHaveAttribute('stroke', red);
   await expect(kind('rectangle')).toHaveAttribute('opacity', '1');
   expectNoPageErrors(pageErrors);

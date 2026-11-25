@@ -101,10 +101,17 @@ export async function encodePdfThumbnail(
   context.scale(bitmap.width / size.width, bitmap.height / size.height);
   context.globalCompositeOperation = 'multiply';
   for (const mark of marks) {
-    const { fills, strokes } = MarkDrawing.of(mark);
+    const { fills, strokes, fill } = MarkDrawing.of(mark);
+    context.globalAlpha = mark.opacity;
+    // A shape's fill in its own colour, under its line.
+    if (fill) {
+      context.fillStyle = fill.colour;
+      trace(context, bitmap.toView, fill.points);
+      context.closePath();
+      context.fill();
+    }
     context.fillStyle = mark.colour;
     context.strokeStyle = mark.colour;
-    context.globalAlpha = mark.opacity;
     for (const points of fills) {
       trace(context, bitmap.toView, points);
       context.closePath();
@@ -116,6 +123,7 @@ export async function encodePdfThumbnail(
       context.lineWidth = stroke.width;
       context.lineCap = stroke.round ? 'round' : 'butt';
       context.lineJoin = stroke.round ? 'round' : 'miter';
+      context.setLineDash(stroke.dash ?? []);
       context.stroke();
     }
     setWords(context, bitmap.toView, mark);
