@@ -27,11 +27,14 @@ export function usePdfLayerView(
   fileDrawer: PdfPageDrawer | null,
   // Dark pages (dark-pages.md): the look the pages are drawn in, the file's own unless the person has it on.
   look: PageLook = 'paper',
+  // The file's own marks the engine draws the pages without (usePdfFileMarksHidden), as a key: another is another
+  // drawer, so the pages are drawn again.
+  marksHidden = '',
 ): PdfLayerView {
   const [hidden, setHidden] = useState<readonly string[] | null>(null);
   const drawer = useMemo(
     () =>
-      (hidden === null && look === 'paper') || !engine
+      (hidden === null && look === 'paper' && marksHidden === '') || !engine
         ? fileDrawer
         : pdfPageDrawer({
             drawPage: (index, scale, turns) =>
@@ -39,7 +42,7 @@ export function usePdfLayerView(
             drawTile: (index, scale, turns, rect) =>
               engine.drawTile(index, scale, turns, rect, hidden ?? undefined, look),
           }),
-    [hidden, look, engine, fileDrawer],
+    [hidden, look, engine, fileDrawer, marksHidden],
   );
   const setLayer = useCallback(
     async (id: string, shown: boolean, before: readonly string[]) => {

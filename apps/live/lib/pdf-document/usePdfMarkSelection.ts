@@ -5,12 +5,22 @@
 // and text selected lets the marks go. The selection moved, by a drag or an arrow key, and deleted, by Delete or
 // Edit > Delete, and a mark resized by a handle or ⌥ with an arrow key, each one step of the person's undo. Marks are Reviewing's: while `marking` is off nothing is chosen.
 import { useCallback, useMemo, useState, useSyncExternalStore } from 'react';
-import type { MarkPlace, PagePoint } from '@livedoc/pdf-documents';
+import type { Mark, MarkPlace, PagePoint } from '@livedoc/pdf-documents';
 import { debugLog } from '@/lib/debug-log';
 import type { OfficeActions } from '@/lib/office/office-catalogue';
 import { track } from '@/lib/telemetry';
-import { deleteMarks, MARK_KIND_NAMES, moveMarks, reshapeMark } from './pdf-mark-change';
-import { marksOnPage, type PdfMarksByPage, type PdfMarksStore } from './pdf-marks-store';
+import {
+  deleteMarks,
+  MARK_KIND_NAMES,
+  moveMarks,
+  NO_FILE_MARKS,
+  reshapeMark,
+} from './pdf-mark-change';
+import {
+  changeableOnPage,
+  type PdfChangeableByPage,
+  type PdfChangeableStore,
+} from './pdf-changeable-marks';
 import { DELETE_MARKS } from './pdf-menus';
 import type { PdfDocumentOpen } from './usePdfDocument';
 import type { PdfTextSelected } from './usePdfTextSelection';
@@ -36,22 +46,34 @@ export type PdfPageChoosing = {
   readonly remove: () => void;
 };
 
-const NO_MARKS: PdfMarksByPage = new Map();
+const NO_MARKS: PdfChangeableByPage = new Map();
 const neverChanges = () => () => {};
 const noMarks = () => NO_MARKS;
 
 /** What of `chosen` is still there to change: a mark someone deleted, or an undo took, is not. */
 function present(
   chosen: PdfMarksChosen | null,
-  byPage: PdfMarksByPage,
+  byPage: PdfChangeableByPage,
   pages: Ready['pages'],
 ): PdfMarksChosen | null {
   const page = chosen ? pages[chosen.page] : undefined;
   if (!chosen || !page) return null;
-  const there = new Set(marksOnPage(byPage, page.name).map((mark) => mark.id));
+  const there = new Set(changeableOnPage(byPage, page.name).marks.map((mark) => mark.id));
   const ids = chosen.ids.filter((id) => there.has(id));
   if (ids.length === chosen.ids.length) return chosen;
   return ids.length > 0 ? { page: chosen.page, ids } : null;
+}
+
+/** The file's own marks of a page a person may change, by id; none before the page is read. */
+export function fileOwnOf(
+  byPage: PdfChangeableByPage,
+  page: Ready['pages'][number]['name'] | undefined,
+): ReadonlyMap<string, Mark> {
+  if (!page) return NO_FILE_MARKS;
+  const { marks, fileOwn } = changeableOnPage(byPage, page);
+  return fileOwn.size === 0
+    ? NO_FILE_MARKS
+    : new Map(marks.filter((mark) => fileOwn.has(mark.id)).map((mark) => [mark.id, mark]));
 }
 
 export function usePdfMarkSelection({
@@ -62,9 +84,9 @@ export function usePdfMarkSelection({
   clearText,
   focusPages,
 }: {
-  // The open PDF and its marks by page; null before it is.
+  // The open PDF and the marks a person may change, by page; null before it is.
   ready: Ready | null;
-  marks: PdfMarksStore | null;
+  marks: PdfChangeableStore | null;
   // Whether marks may be changed now: Reviewing, for a session that reviews.
   marking: boolean;
   // The text selected on the pages, which a mark selected lets go.
@@ -83,6 +105,11 @@ export function usePdfMarkSelection({
   const read = marks?.get ?? noMarks;
   const byPage = useSyncExternalStore(marks?.subscribe ?? neverChanges, read, read);
   const chosen = marking && ready ? present(held, byPage, ready.pages) : null;
+  // The file's own marks of a page, by id: changed, each is taken as LiveDoc's (marks.md "Changing a mark").
+  const fileOwnOn = useCallback(
+    (index: number) => fileOwnOf(byPage, ready?.pages[index]?.name),
+    [byPage, ready],
+  );
 
   const choose = useCallback(
     (index: number, id: string, shift: boolean) => {
@@ -108,13 +135,13 @@ export function usePdfMarkSelection({
       const page = ready?.pages[index];
       if (!ready || !page || !chosen || chosen.page !== index) return;
       const moved = ready.undo.step({ page: page.name }, () =>
-        moveMarks(ready.binding.doc, chosen.ids, by, Date.now()),
+        moveMarks(ready.binding.doc, chosen.ids, by, Date.now(), fileOwnOn(index)),
       );
       if (moved === 0) return;
       debugLog(`[pdf] marks-moved count=${moved}`);
       track('Pdf', 'Changed', 'Mark.Moved');
     },
-    [ready, chosen],
+    [ready, chosen, fileOwnOn],
   );
 
   const reshape = useCallback(
@@ -122,26 +149,26 @@ export function usePdfMarkSelection({
       const page = ready?.pages[index];
       if (!ready || !page) return;
       const kind = ready.undo.step({ page: page.name }, () =>
-        reshapeMark(ready.binding.doc, id, place, Date.now()),
+        reshapeMark(ready.binding.doc, id, place, Date.now(), fileOwnOn(index)),
       );
       if (!kind) return;
       debugLog(`[pdf] mark-resized kind=${kind}`);
       track('Pdf', 'Changed', 'Mark.Resized');
     },
-    [ready],
+    [ready, fileOwnOn],
   );
 
   const remove = useCallback(() => {
     const page = chosen ? ready?.pages[chosen.page] : undefined;
     if (!ready || !chosen || !page) return;
     const kinds = ready.undo.step({ page: page.name }, () =>
-      deleteMarks(ready.binding.doc, chosen.ids),
+      deleteMarks(ready.binding.doc, chosen.ids, fileOwnOn(chosen.page)),
     );
     debugLog(`[pdf] marks-deleted count=${kinds.length}`);
     for (const kind of kinds) track('Pdf', 'Deleted', `Mark.${MARK_KIND_NAMES[kind]}`);
     setHeld(null);
     focusPages();
-  }, [ready, chosen, focusPages]);
+  }, [ready, chosen, focusPages, fileOwnOn]);
 
   const changing = marking && ready !== null;
   const choosing = useMemo<PdfPageChoosing | null>(

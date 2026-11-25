@@ -55,6 +55,8 @@ export class ReaderFile {
   readonly photographs = new Map<number, readonly PageBox[]>();
   /** Dark pages: what the last step took, for the engine to log; taken once. */
   darkStep: DarkStep | null = null;
+  /** The file's own marks its pages are drawn without, by id (marks.md "Changing a mark"). */
+  marksHidden: ReadonlySet<string> = new Set();
 
   constructor(pdfium: Pdfium) {
     this.p = pdfium;
@@ -193,6 +195,7 @@ export class ReaderFile {
   /** Lets go of the file without a word to the reader: after a trap it answers nothing more. */
   forget(): void {
     this.photographs.clear();
+    this.marksHidden = new Set();
     this.doc = 0;
     this.memory = 0;
     this.count = 0;

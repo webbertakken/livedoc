@@ -10,6 +10,7 @@ import {
   PageName,
   type PageBitmap,
   type PageInfo,
+  type FileMark,
   type PageLink,
   type Quad,
   type TextSelection,
@@ -52,6 +53,10 @@ const drawer: PdfPageDrawer = {
 
 type Choosing = {
   marks?: readonly Mark[];
+  // Which of `marks` are the file's own, drawn by the picture.
+  fileOwn?: readonly string[];
+  // What the engine reads of the file's own marks.
+  fileMarks?: readonly FileMark[];
   chosen?: readonly string[];
   choosing?: PdfPageChoosing | null;
 };
@@ -66,8 +71,9 @@ async function page(
   shaping: PdfPageShaping | null = null,
   typing: PdfPageTyping | null = null,
   stamping: PdfPageStamping | null = null,
-  { marks = [], chosen = [], choosing = null }: Choosing = {},
+  { marks = [], fileOwn = [], fileMarks = [], chosen = [], choosing = null }: Choosing = {},
 ) {
+  const onFileMarks = vi.fn();
   const onText = vi.fn();
   const onMark = vi.fn();
   const onFollow = vi.fn();
@@ -86,11 +92,12 @@ async function page(
       held
       engine={{
         selectText: async () => marked,
-        fileMarks: async () => [],
+        fileMarks: async () => fileMarks,
         links: async () => links,
       }}
       drawer={drawer}
-      marks={marks}
+      marks={{ marks, fileOwn: new Set(fileOwn) }}
+      onFileMarks={onFileMarks}
       tool={tool}
       onMark={onMark}
       ink={ink}
@@ -116,7 +123,7 @@ async function page(
   await act(async () => {
     await new Promise((resolve) => setTimeout(resolve, 0));
   });
-  return { box, onText, onMark, onFollow, onDoubleTap, view };
+  return { box, onText, onMark, onFollow, onDoubleTap, onFileMarks, view };
 }
 
 describe('selecting text on a page', () => {
@@ -523,6 +530,41 @@ describe('changing a mark on a page', () => {
     });
     expect(chose.letGo).toHaveBeenCalled();
     expect(onText).toHaveBeenCalledWith(1, expect.objectContaining({ kind: 'press' }));
+  });
+
+  // marks.md "Changing a mark": marks the file arrived with behave the same; the picture draws them.
+  it('selects and drags a mark the file arrived with, drawn by the picture until dragged', async () => {
+    const chose = choosing();
+    const theirs = Mark.line('arrow', { ...arrow, id: 'o:9' })!;
+    const read = { id: 'o:9', subtype: 'line', mark: theirs } as unknown as FileMark;
+    const unread = { id: 'o:10', subtype: 'caret', mark: null } as unknown as FileMark;
+    const { box, view, onFileMarks } = await page(
+      'select',
+      [],
+      [],
+      false,
+      null,
+      null,
+      null,
+      null,
+      null,
+      { marks: [theirs], fileOwn: ['o:9'], fileMarks: [read, unread], choosing: chose },
+    );
+    expect(onFileMarks).toHaveBeenCalledWith(PageName.ofObject(3), [theirs]);
+    expect(view.container.querySelector('[data-pdf-mark="o:9"]')).toBeNull();
+    expect(view.getByRole('button', { name: 'Arrow by Ada' })).toBeTruthy();
+    fireEvent.pointerDown(box, {
+      button: 0,
+      pointerType: 'mouse',
+      pointerId: 1,
+      clientX: 150,
+      clientY: 92,
+    });
+    expect(chose.choose).toHaveBeenCalledWith(1, 'o:9', false);
+    fireEvent.pointerMove(box, { pointerId: 1, clientX: 160, clientY: 82 });
+    expect(view.container.querySelector('[data-pdf-mark="o:9"]')).not.toBeNull();
+    fireEvent.pointerUp(box, { pointerId: 1, clientX: 160, clientY: 82 });
+    expect(chose.move).toHaveBeenCalledWith(1, { x: 10, y: 10 });
   });
 
   it('hands a drag that began on a text mark to the text', async () => {

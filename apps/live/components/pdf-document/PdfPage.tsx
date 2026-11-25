@@ -21,12 +21,14 @@ import {
   type PageInfo,
   type PageLink,
   type PageMatrix,
+  type PageName,
   type PagePoint,
   type PageTurns,
   type PdfEngine,
   type Quad,
   type TextSelection,
 } from '@livedoc/pdf-documents';
+import type { PdfChangeableMarks } from '@/lib/pdf-document/pdf-changeable-marks';
 import { pictureScale, type PdfPageDrawer } from '@/lib/pdf-document/pdf-page-drawer';
 import { PdfMarkHandles } from './PdfMarkHandles';
 import { PdfMarksOverlay, type PdfMarkReshaping } from './PdfMarksOverlay';
@@ -79,7 +81,8 @@ export const PdfPage = memo(function PdfPage({
   held,
   engine,
   drawer,
-  marks,
+  marks: changeable,
+  onFileMarks,
   tool,
   onMark,
   ink,
@@ -115,7 +118,11 @@ export const PdfPage = memo(function PdfPage({
   held: boolean;
   engine: Pick<PdfEngine, 'selectText' | 'fileMarks' | 'links'>;
   drawer: PdfPageDrawer;
-  marks: readonly Mark[];
+  // The marks a person may change on the page: LiveDoc's, and the file's own its picture draws (marks.md "Changing a
+  // mark").
+  marks: PdfChangeableMarks;
+  // The file's own marks of the page as LiveDoc reads them, each time the page is drawn.
+  onFileMarks: (page: PageName, marks: readonly Mark[]) => void;
   tool: PdfPageTool;
   // A drag across the page's text with a text tool in hand: the text it covered, to mark.
   onMark: (index: number, selection: TextSelection) => void;
@@ -148,6 +155,7 @@ export const PdfPage = memo(function PdfPage({
   // Hands the page's box to whoever watches which pages are near view.
   register: (index: number, element: HTMLElement | null) => void;
 }) {
+  const marks = changeable.marks;
   const canvas = useRef<HTMLCanvasElement | null>(null);
   // The page's box: where a finger's points are read against.
   const [box, setBox] = useState<HTMLElement | null>(null);
@@ -207,6 +215,10 @@ export const PdfPage = memo(function PdfPage({
           paintPicture(canvas.current, bitmap);
           setFailed(false);
           const marks = fileMarks.map((mark) => mark.id);
+          onFileMarks(
+            page.name,
+            fileMarks.flatMap((mark) => (mark.mark ? [mark.mark] : [])),
+          );
           setDrawn({ toView: bitmap.toView, scale, turns, fileMarks: marks, by: drawer });
         });
       },
@@ -217,7 +229,7 @@ export const PdfPage = memo(function PdfPage({
       cancelled = true;
       clearTimeout(timer);
     };
-  }, [wanted, held, cssPerPoint, page, turns, index, drawer, engine, drawn]);
+  }, [wanted, held, cssPerPoint, page, turns, index, drawer, engine, drawn, onFileMarks]);
 
   // The page as it shows: on its side for an odd turn. The matrix's view space is this size, in points.
   const shown = PdfView.sizeTurned(page, turns);
@@ -407,6 +419,7 @@ export const PdfPage = memo(function PdfPage({
           width={shown.width}
           height={shown.height}
           marks={marks}
+          fileOwn={changeable.fileOwn}
           preview={textMark.preview}
           draft={inking.draft}
           selected={selected}

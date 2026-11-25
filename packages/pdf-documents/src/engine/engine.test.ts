@@ -770,4 +770,3 @@ describe('baking', () => {
     expect(() => execFileSync('qpdf', ['--check', file], { stdio: 'pipe' })).not.toThrow();
   });
 });
-

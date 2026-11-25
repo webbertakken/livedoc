@@ -122,3 +122,61 @@ describe('deleteMarks', () => {
     expect(origins).toEqual([]);
   });
 });
+
+// marks.md "Changing a mark": marks the file arrived with behave the same; changing one takes it as LiveDoc's, in one
+// step, under its own id, and names the file's own gone; deleting one names it gone.
+describe('a mark the file arrived with', () => {
+  const theirs = Mark.shape('rectangle', {
+    ...BASE,
+    id: 'o:12',
+    rect: [100, 100, 200, 160],
+    width: 2,
+  })!;
+  const fileOwn = new Map([[theirs.id, theirs]]);
+  const gone = (doc: Y.Doc) => [...PdfLiveChanges.removed(doc)];
+
+  it('is moved as LiveDoc’s own, under its own id, the file’s own named gone, in one step', () => {
+    const { doc, origins } = withMarks();
+    origins.length = 0;
+    expect(moveMarks(doc, ['o:12', 'l'], { x: 10, y: 5 }, T + 1, fileOwn)).toBe(2);
+    expect(PdfLiveChanges.mark(doc, 'o:12')).toEqual({
+      ...theirs,
+      rect: [110, 105, 210, 165],
+      modifiedAt: T + 1,
+    });
+    expect(gone(doc)).toEqual([['o:12', 'mark']]);
+    expect(origins).toEqual([PDF_LOCAL_ORIGIN]);
+  });
+
+  it('is resized as LiveDoc’s own once, and changed again as LiveDoc’s from then on', () => {
+    const { doc } = withMarks();
+    expect(reshapeMark(doc, 'o:12', { rect: [100, 100, 300, 160] }, T + 1, fileOwn)).toBe(
+      'rectangle',
+    );
+    expect(moveMarks(doc, ['o:12'], { x: 0, y: 10 }, T + 2, fileOwn)).toBe(1);
+    expect(PdfLiveChanges.mark(doc, 'o:12')).toMatchObject({ rect: [100, 110, 300, 170] });
+    expect(gone(doc)).toEqual([['o:12', 'mark']]);
+  });
+
+  it('is deleted by naming it gone, and a mark taken as LiveDoc’s by deleting it, the file’s own still gone', () => {
+    const { doc } = withMarks();
+    expect(deleteMarks(doc, ['o:12', 'h'], fileOwn)).toEqual(['rectangle', 'highlight']);
+    expect(gone(doc)).toEqual([['o:12', 'mark']]);
+    expect(PdfLiveChanges.mark(doc, 'o:12')).toBeNull();
+
+    const other = withMarks().doc;
+    moveMarks(other, ['o:12'], { x: 1, y: 1 }, T + 1, fileOwn);
+    expect(deleteMarks(other, ['o:12'], fileOwn)).toEqual(['rectangle']);
+    expect(PdfLiveChanges.mark(other, 'o:12')).toBeNull();
+    expect(gone(other)).toEqual([['o:12', 'mark']]);
+  });
+
+  it('is left the file’s own where nothing changes it', () => {
+    const { doc } = withMarks();
+    expect(moveMarks(doc, ['o:12'], { x: 0, y: 0 }, T + 1, fileOwn)).toBe(0);
+    expect(moveMarks(doc, ['o:99'], { x: 4, y: 0 }, T + 1, fileOwn)).toBe(0);
+    expect(reshapeMark(doc, 'o:99', { rect: [1, 1, 2, 2] }, T + 1, fileOwn)).toBeNull();
+    expect(gone(doc)).toEqual([]);
+    expect(PdfLiveChanges.mark(doc, 'o:12')).toBeNull();
+  });
+});

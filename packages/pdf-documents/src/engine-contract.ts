@@ -278,6 +278,12 @@ export type PdfEngine = {
    */
   layerView(hidden: readonly string[]): Promise<boolean>;
   /**
+   * The file's own marks every page, tile and thumbnail is drawn without from now on, by id: each one changed or
+   * deleted here (marks.md "Changing a mark"). None until asked, and none again for a file opened after. The file is
+   * never changed: a bake still reads every mark it holds.
+   */
+  hideMarks(ids: readonly string[]): Promise<void>;
+  /**
    * Whether the open file can take an addition; a file opened only by rebuilding it cannot, and its changes are
    * written as a rewritten file (opening.md "Damaged files"). Asking reads the whole file a second time.
    */

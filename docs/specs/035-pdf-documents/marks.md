@@ -10,9 +10,10 @@ others as it is drawn, words shown to others as they are typed, a face for every
 snapping, every other kind made here, custom stamps and Manage stamps, and the room's own-marks check are not built.
 Of changing a mark, selecting, moving, resizing and deleting a mark made here, and restyling its colour, opacity, line
 width, line style, fill and line end, and a Text's and a Callout's size and alignment, Format > Colour and Fill
-colour, the toolbar's Line width and a tool's remembered width, style and fill are built; a Text's and a Callout's
-font, a tool's remembered opacity, line ends, font and size, rotating, arranging, grouping, locking, copying,
-Properties, Erase and the file's own marks are not.
+colour, the toolbar's Line width and a tool's remembered width, style and fill are built, and so are they for the
+file's own marks of the kinds LiveDoc makes; a Text's and a Callout's font, a tool's remembered opacity, line ends,
+font and size, rotating, arranging, grouping, locking, copying, Properties, Erase and the file's own marks of other
+kinds are not.
 
 A **mark** is something placed on top of a PDF page that leaves the page's own content alone: a highlight, a note, a
 piece of text, a drawing, a shape, a stamp. Marks are Reviewing's ([Editing modes](editing-modes.md)); a mark with

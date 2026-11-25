@@ -18,6 +18,7 @@ import {
 import { debugLog } from '@/lib/debug-log';
 import { track } from '@/lib/telemetry';
 import { FIRST_LOOKS } from './pdf-mark-looks';
+import { pdfChangeableStore } from './pdf-changeable-marks';
 import { pdfMarksStore } from './pdf-marks-store';
 import { FILL_COLOUR, TOOL_COLOUR } from './pdf-toolbar';
 import type { PdfMarksChosen } from './usePdfMarkSelection';
@@ -103,7 +104,7 @@ function restyling({
       },
     } as never,
   };
-  const marks = pdfMarksStore(doc);
+  const marks = pdfChangeableStore(doc, pdfMarksStore(doc));
   const hook = renderHook(
     ({ held }: { held: PdfMarksChosen | null }) =>
       usePdfMarkRestyle({

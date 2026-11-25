@@ -101,7 +101,7 @@ function markOf(file: ReaderFile, annotation: number, subtype: string): Omit<Fil
 }
 
 /** What sits on a page by its own name, or by its object where the file gives it none. */
-function idOf(file: ReaderFile, annotation: number): string {
+export function idOf(file: ReaderFile, annotation: number): string {
   const { p } = file;
   const name = file.written(PDF_NAME_MAX_CHARS, (buffer, size) =>
     p.FPDFAnnot_GetStringValue(annotation, 'NM', buffer, size),
