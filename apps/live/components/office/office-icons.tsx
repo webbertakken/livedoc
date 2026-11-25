@@ -10,6 +10,7 @@ import {
   lucideFolderInput,
   lucideItalic,
   lucideLock,
+  lucideMessageSquareText,
   lucideSettings,
   lucideStar,
   lucideUsers,
@@ -19,6 +20,8 @@ import { lucideGlyph } from '@livedoc/ui';
 export const OfficeStarIcon = lucideGlyph(lucideStar, 18);
 export const OfficeMoveIcon = lucideGlyph(lucideFolderInput, 18);
 export const OfficeSettingsIcon = lucideGlyph(lucideSettings, 20);
+// Comment history (editing-surface.md "The title row"): a speech bubble with lines.
+export const OfficeCommentHistoryIcon = lucideGlyph(lucideMessageSquareText, 20);
 export const OfficeLockIcon = lucideGlyph(lucideLock, 16);
 export const OfficeCopyIcon = lucideGlyph(lucideCopy, 16);
 export const OfficeSharedIcon = lucideGlyph(lucideUsers, 16);

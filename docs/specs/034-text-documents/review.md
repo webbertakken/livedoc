@@ -1,8 +1,8 @@
 # Review
 
 **Status: being built.** Comment threads are kept beside the writing, travel in both formats' files, and the room
-judges a Participant's; they are drawn and added in the margin. The comments panel, mentions, assigning, reactions,
-suggestions, versions and notifications are still to come.
+judges a Participant's; they are drawn and added in the margin, listed in the comments panel and reached from the
+keyboard. Mentions, assigning, reactions, suggestions, versions and notifications are still to come.
 
 Comments, suggestions, version history, comparing documents and notifications in a [text document](text-document.md).
 The panels and threads are the shared [review surfaces](../012-collaboration/review-surfaces.md), built once for the
@@ -35,9 +35,9 @@ office kinds; this spec says what a text document puts in them.
 - **Reactions**: emoji on a comment, as Google's.
 - **Highlight**: the commented text is tinted; the selected thread's text darker.
 - **The comments panel** (comment history, ⌘⌥⇧A): every thread, with filters **All**, **For you**, **Open**,
-  **Resolved**, and by document tab; a press scrolls to the text.
-- **Keys on a selected comment**: R reply, J next, K previous, E resolve, U exit; ⌘⌥ N then C / P then C between
-  comments.
+  **Resolved**, and by document tab; a press goes to the text ([The comments panel](#the-comments-panel)).
+- **Keys on a selected comment**: R reply, J next, K previous, E resolve, U exit; Ctrl+⌘ (Ctrl+Alt) N then C / P then C
+  between comments ([Keys on a selected comment](#keys-on-a-selected-comment)).
 - **Deleting the text** a comment is on keeps the thread, marked "Original content deleted", as Google does.
 
 ### Threads in the margin
@@ -68,6 +68,46 @@ office kinds; this spec says what a text document puts in them.
 - **Phone**: no margin; a thread opens over the page's bottom as a sheet (default), from its highlighted text.
 - In the file: comments, replies, resolved state, assignees and reactions as
   [Standard mapping](standard-mapping.md#what-the-model-holds) and its extensions say.
+
+### The comments panel
+
+- **Opening**: the title row's Comment history (a speech bubble with lines, "Open comment history") or ⌘⌥⇧A
+  (Ctrl+Alt+Shift+A elsewhere) opens the comments panel on the right, the shell's side panel, as Google's comment
+  history; either again closes it. Every session opens it: a Viewer reads it.
+- **Its head**: the title **Comments**, then two lists side by side: **All comments** or **For you**, and **All**,
+  **Open** or **Resolved** (default: All comments, All; the panel's choices are kept while the document is open).
+  A document with more than one document tab adds a third, **All tabs** or each tab by its name (default: All tabs).
+- **For you** (default, until mentions and assigning are built): the threads where someone else replied after a
+  comment of yours; once they are, also those that mention you or are assigned to you, as Google's.
+- **Its list**: every thread the choices let through, by document tab in the outline's order, and within a tab in the
+  order the threads were begun (default), each a row: its quote (or "Original content deleted" and the quote, or
+  nothing for a point comment), the first comment's author disc, name, time and text (three lines at most), "From
+  the file" under a file's author, "1 reply" or "n replies", and for a resolved thread the line **Resolved** with
+  **Reopen** for whoever may comment.
+  The count of what is listed is said to a screen reader as the choices change ("3 comments").
+- **Empty**: "No comments yet" (with "Select some text and press ⌘⌥M to comment." for whoever may comment) when the
+  document holds none; "No comments match" when the choices let none through (default copy).
+- **A press on a row** goes to its thread: its tab is shown where it is another and its text scrolled into the middle of
+  the view; an open thread is selected in the margin, its card focused; a resolved thread's text is selected in the
+  writing (default). A thread whose text no longer resolves goes nowhere and says "This comment's text is gone".
+- **Reopen** opens a resolved thread again (it returns to the margin); it is the resolve toggle's other half, for an
+  Editor or a Participant, never a Viewer.
+- **Keys in the panel**: Up and Down move between rows, Home and End to the first and last, Enter goes, as any list.
+
+### Keys on a selected comment
+
+- A thread's card takes the keyboard once it is selected from the keyboard (Move to next or previous comment, Enter
+  current comment) or pressed; with the focus on the card itself (never in its fields) the keys are **R** reply (the
+  reply field takes the focus), **J** the next thread, **K** the previous one, **E** resolve (then as U),
+  **U** exit (the thread let go, the caret back in the writing where it was). Escape lets go too.
+- **Move to next comment** (Ctrl+⌘+N then C on a Mac, Ctrl+Alt+N then C elsewhere) and **Move to previous
+  comment** (P then C) select the next or previous open thread of the tab shown, after or before the selected thread
+  or else the caret, scroll its text into view and focus its card; past the last or before the first nothing moves
+  (default).
+- **Enter current comment** (Ctrl+⌘+E then C; Ctrl+Alt+E then C elsewhere) selects the open thread whose text holds
+  the caret (the shortest where several do) and focuses its card; with none, nothing moves.
+- J and K go between the open threads of the tab shown in the writing's order, never wrapping; a session that may not
+  comment has J, K, U and Escape, never R or E.
 
 ### How a comment is kept
 
@@ -165,7 +205,7 @@ setting is not shown and the Inbox carries them. Nothing is sent to someone who 
 
 ## Telemetry
 
-`Comment · Added · TextDocument`, `Comment · Resolved · TextDocument`, `Element · Added · TextDocumentSuggestion`,
-`Element · Changed · TextDocumentSuggestion<Accepted|Rejected|AcceptedAll|RejectedAll>`,
+`Comment · Added · TextDocument`, `Comment · Resolved · TextDocument`, `UI · Opened · TextDocumentPanelComments`,
+`Element · Added · TextDocumentSuggestion`, `Element · Changed · TextDocumentSuggestion<Accepted|Rejected|AcceptedAll|RejectedAll>`,
 `UI · Changed · TextDocumentEditingMode<Mode>`, `Document · Opened · TextDocumentVersionHistory`,
 `Document · Changed · TextDocumentVersion<Named|Restored>`, `Document · Created · TextDocumentCompare`. Never text.

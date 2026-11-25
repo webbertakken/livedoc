@@ -33,6 +33,7 @@ import type { OfficeColours } from '@/components/office/OfficeColourControl';
 import type { OfficeChoices } from '@/components/office/OfficeChoiceMenu';
 import type { OfficeModeChoice } from '@/components/office/OfficeModeSwitch';
 import { openTextDocumentFile } from '@/lib/text-document/open-text-document-file';
+import { COMMENTS_PANEL } from '@/lib/text-document/text-document-panels';
 
 // What the title row says of each format, and the files it downloads as itself.
 const FORMATS = {
@@ -191,6 +192,7 @@ export function TextDocumentTitleRow({
       refresh={refresh}
       mode={mode}
       contextMenu={contextMenu}
+      commentHistoryItem={COMMENTS_PANEL.item}
     />
   );
 }

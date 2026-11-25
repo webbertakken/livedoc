@@ -47,6 +47,8 @@ function card(
     onEdit: vi.fn(),
     onRemove: vi.fn(),
     onResolve: vi.fn(),
+    onStep: vi.fn(),
+    onExit: vi.fn(),
     ...extra,
   };
   render(<TextDocumentThreadCard {...props} />);
@@ -143,11 +145,62 @@ describe('TextDocumentThreadCard', () => {
   });
 });
 
+// review.md "Keys on a selected comment": R, J, K, E and U on the card itself, never in its fields.
+describe('TextDocumentThreadCard keys', () => {
+  const cardEl = () => screen.getByRole('group', { name: cardLabel(thread) });
+
+  it('replies, steps, resolves and exits from the keyboard', () => {
+    const props = card(as(ADA), { selected: true });
+    const el = cardEl();
+    el.focus();
+    fireEvent.keyDown(el, { key: 'j' });
+    fireEvent.keyDown(el, { key: 'k' });
+    expect(vi.mocked(props.onStep).mock.calls).toEqual([[true], [false]]);
+    fireEvent.keyDown(el, { key: 'r' });
+    expect(document.activeElement?.tagName).toBe('TEXTAREA');
+    fireEvent.keyDown(el, { key: 'u' });
+    expect(props.onExit).toHaveBeenCalledOnce();
+    fireEvent.keyDown(el, { key: 'e' });
+    expect(props.onResolve).toHaveBeenCalledWith(true);
+    expect(props.onExit).toHaveBeenCalledTimes(2);
+    fireEvent.keyDown(el, { key: 'Escape' });
+    expect(props.onExit).toHaveBeenCalledTimes(3);
+  });
+
+  it('leaves keys typed in a field, or held with a modifier, alone', () => {
+    const props = card(as(ADA), { selected: true });
+    const field = screen.getByRole('textbox');
+    fireEvent.keyDown(field, { key: 'j' });
+    fireEvent.keyDown(cardEl(), { key: 'j', metaKey: true });
+    expect(props.onStep).not.toHaveBeenCalled();
+  });
+
+  it('gives a reader J, K and U, never R or E', () => {
+    const props = card(null, { selected: true });
+    const el = cardEl();
+    fireEvent.keyDown(el, { key: 'e' });
+    fireEvent.keyDown(el, { key: 'r' });
+    expect(props.onResolve).not.toHaveBeenCalled();
+    fireEvent.keyDown(el, { key: 'j' });
+    fireEvent.keyDown(el, { key: 'u' });
+    expect(props.onStep).toHaveBeenCalledWith(true);
+    expect(props.onExit).toHaveBeenCalledOnce();
+  });
+
+  it('can take the focus and says its keys', () => {
+    card(as(ADA));
+    expect(cardEl().getAttribute('tabindex')).toBe('-1');
+    expect(cardEl().getAttribute('aria-keyshortcuts')).toBe('R J K E U');
+  });
+});
+
 describe('TextDocumentDraftCard', () => {
   it('focuses its field, sends with Comment, and drops with Cancel or Escape', async () => {
     const onSend = vi.fn();
     const onCancel = vi.fn();
-    render(<TextDocumentDraftCard commenter={as(ADA)} onSend={onSend} onCancel={onCancel} />);
+    render(
+      <TextDocumentDraftCard commenter={as(ADA)} placed onSend={onSend} onCancel={onCancel} />,
+    );
     const field = screen.getByRole('textbox', { name: 'Add a comment' });
     await waitFor(() => expect(document.activeElement).toBe(field));
     fireEvent.change(field, { target: { value: 'Check this' } });
@@ -156,5 +209,15 @@ describe('TextDocumentDraftCard', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
     fireEvent.keyDown(field, { key: 'Escape' });
     expect(onCancel).toHaveBeenCalledTimes(2);
+  });
+
+  it('waits to take the focus until the margin has placed it (a hidden field takes none)', async () => {
+    const props = { commenter: as(ADA), onSend: vi.fn(), onCancel: vi.fn() };
+    const { rerender } = render(<TextDocumentDraftCard {...props} placed={false} />);
+    const field = screen.getByRole('textbox', { name: 'Add a comment' });
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(document.activeElement).not.toBe(field);
+    rerender(<TextDocumentDraftCard {...props} placed />);
+    await waitFor(() => expect(document.activeElement).toBe(field));
   });
 });

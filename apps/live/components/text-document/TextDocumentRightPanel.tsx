@@ -3,11 +3,16 @@
 // The text document's right side panel (docs/specs/004-interface-design/office-shell.md "Side panels"): the one open, in
 // the shell's resizable frame; Line numbers (page-layout.md "Line numbers"), Watermark (page-layout.md "Watermark"),
 // Table properties (tables.md "Table properties"), Image options (objects.md "Working with a picture") or Table of
-// contents (links-and-navigation.md "Table of contents").
+// contents (links-and-navigation.md "Table of contents"), or Comments (review.md "The comments panel").
 import type { ContentsLook, Watermark } from '@livedoc/text-documents';
 import { OfficePanel } from '@/components/office/OfficePanel';
+import { currentOfficePlatform } from '@/lib/office/office-platform';
 import type { OfficePanelsState } from '@/lib/office/useOfficePanels';
+import { OfficeCommentsPanel } from '@/components/office/review/OfficeCommentsPanel';
+import { commentNoteOf } from '@/lib/text-document/text-document-comment-rows';
+import type { TextDocumentCommentsPanel } from './useTextDocumentCommentsPanel';
 import {
+  COMMENTS_PANEL,
   IMAGE_OPTIONS_PANEL,
   LINE_NUMBERS_PANEL,
   TABLE_OF_CONTENTS_PANEL,
@@ -35,6 +40,10 @@ import { TextDocumentLineNumbersPanel } from './TextDocumentLineNumbersPanel';
 import { TextDocumentWatermarkPanel } from './TextDocumentWatermarkPanel';
 import type { LineNumbersState } from './useTextDocumentLineNumbers';
 
+// How a comment is added, said in the comments panel when there are none (review.md, default copy).
+const addHint = (): string =>
+  `Select some text and press ${currentOfficePlatform().platform === 'mac' ? '⌘⌥M' : 'Ctrl+Alt+M'} to comment.`;
+
 export function TextDocumentRightPanel({
   panels,
   lineNumbers,
@@ -42,6 +51,7 @@ export function TextDocumentRightPanel({
   tableProperties,
   imageOptions,
   contents,
+  comments,
 }: {
   panels: OfficePanelsState;
   lineNumbers: {
@@ -67,6 +77,12 @@ export function TextDocumentRightPanel({
     selected: { look: ContentsLook; levels: number } | null;
     change: (change: ContentsChange) => void;
   };
+  comments: TextDocumentCommentsPanel & {
+    selfKey: string;
+    canComment: boolean;
+    go: (id: string) => void;
+    reopen: (id: string) => void;
+  };
 }) {
   const spec = [
     LINE_NUMBERS_PANEL,
@@ -74,6 +90,7 @@ export function TextDocumentRightPanel({
     TABLE_PROPERTIES_PANEL,
     IMAGE_OPTIONS_PANEL,
     TABLE_OF_CONTENTS_PANEL,
+    COMMENTS_PANEL,
   ].find((p) => p.id === panels.open.right);
   if (!spec) return null;
   return (
@@ -85,7 +102,20 @@ export function TextDocumentRightPanel({
       onClose={() => panels.close('right')}
       focusNonce={panels.focusNonce}
     >
-      {spec === TABLE_OF_CONTENTS_PANEL ? (
+      {spec === COMMENTS_PANEL ? (
+        <OfficeCommentsPanel
+          rows={comments.rows}
+          groups={comments.groups}
+          selfKey={comments.selfKey}
+          canComment={comments.canComment}
+          filters={comments.filters}
+          onFilters={comments.setFilters}
+          onGo={comments.go}
+          onReopen={comments.reopen}
+          addHint={addHint()}
+          noteOf={commentNoteOf}
+        />
+      ) : spec === TABLE_OF_CONTENTS_PANEL ? (
         <TextDocumentContentsPanel selected={contents.selected} onChange={contents.change} />
       ) : spec === IMAGE_OPTIONS_PANEL ? (
         <TextDocumentImageOptionsPanel

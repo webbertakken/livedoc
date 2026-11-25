@@ -13,6 +13,7 @@ import { stackCards, type CardWanted } from '@/lib/text-document/text-document-t
 import { TextDocumentDraftCard, TextDocumentThreadCard } from './TextDocumentThreadCard';
 import type { TextDocumentCommenter } from '@/lib/text-document/text-document-commenter';
 import type { TextDocumentThreads } from './useTextDocumentThreads';
+import type { TextDocumentThreadKeys } from './useTextDocumentThreadKeys';
 
 /** The column's width and its gap from the page, in px (review.md, (default)). */
 export const MARGIN_WIDTH_PX = 280;
@@ -48,6 +49,7 @@ const NO_LAYOUT: Layout = {
 export function TextDocumentMargin({
   view,
   threads,
+  keys,
   commenter,
   subscribe,
   subscribeCaret,
@@ -55,6 +57,8 @@ export function TextDocumentMargin({
 }: {
   view: EditorView | null;
   threads: TextDocumentThreads;
+  /** Going between threads from the keyboard: the card asked for the focus, J and K, U. */
+  keys: Pick<TextDocumentThreadKeys, 'focusRequest' | 'step' | 'exit'>;
   commenter: TextDocumentCommenter | null;
   subscribe: (listener: () => void) => () => void;
   subscribeCaret: (listener: () => void) => () => void;
@@ -142,11 +146,26 @@ export function TextDocumentMargin({
     };
   }, [subscribe, subscribeCaret, stretches, draft, selected, cards]);
 
+  // A card asked for the focus takes it once it is placed (it is hidden until then), once per ask.
+  const served = useRef(0);
+  const request = keys.focusRequest;
+  useEffect(() => {
+    if (!request || served.current === request.n || !layout.tops.has(request.id)) return;
+    const frame = requestAnimationFrame(() => {
+      served.current = request.n;
+      wrapper.current
+        ?.querySelector<HTMLElement>(`[data-thread-card="${CSS.escape(request.id)}"]`)
+        ?.focus({ preventScroll: true });
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [request, layout]);
+
   const card = (id: string) => {
     if (id === 'draft')
       return draft && commenter ? (
         <TextDocumentDraftCard
           commenter={commenter}
+          placed={layout.tops.has('draft')}
           onSend={threads.send}
           onCancel={threads.cancel}
         />
@@ -165,6 +184,8 @@ export function TextDocumentMargin({
         onEdit={(commentId, text) => threads.edit(id, commentId, text)}
         onRemove={(commentId) => threads.remove(id, commentId)}
         onResolve={(resolved) => threads.resolve(id, resolved)}
+        onStep={keys.step}
+        onExit={keys.exit}
       />
     );
   };
@@ -183,7 +204,7 @@ export function TextDocumentMargin({
       {layout.sheet ? (
         sheetId ? (
           <aside
-            aria-label="Comments"
+            aria-label="Comment threads"
             className="fixed inset-x-0 bottom-0 z-20 max-h-[60vh] overflow-y-auto p-2"
           >
             {card(sheetId)}
@@ -192,7 +213,7 @@ export function TextDocumentMargin({
       ) : (
         <aside
           ref={column}
-          aria-label="Comments"
+          aria-label="Comment threads"
           className="absolute top-0"
           style={{ left: layout.left, width: MARGIN_WIDTH_PX }}
         >

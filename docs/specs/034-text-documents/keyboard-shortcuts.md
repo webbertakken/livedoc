@@ -24,7 +24,8 @@ the [dialog](../004-interface-design/office-shell.md#keyboard-shortcuts-dialog) 
 - Where Google gives one key two rows (Ctrl+Alt+K resizes a picture and moves to the next edit), the row whose
   context holds runs (a picture selected, version history open); otherwise the first row in this table.
 
-Statuses: `specified`, `built (<test>)`, `the browser's` (the key is left to the browser, as Google leaves it),
+Statuses: `specified`, `built (<test>)`, `on a comment (<test>)` (built, heard by a selected comment's card itself, never
+by the writing, [Review](review.md#keys-on-a-selected-comment)), `the browser's` (the key is left to the browser, as Google leaves it),
 `left out (C3)` (its function is a Google service, [Tools](tools.md#google-only-services)).
 
 ## Common actions
@@ -112,25 +113,25 @@ Statuses: `specified`, `built (<test>)`, `the browser's` (the key is left to the
 
 ## Comments and footnotes
 
-| Action                                           | PC                 | Mac                | ChromeOS           | Status    |
-| ------------------------------------------------ | ------------------ | ------------------ | ------------------ | --------- |
-| Insert comment                                   | `Ctrl+Alt+M`       | `⌘+Option+M`       | `Ctrl+Alt+M`       | built     |
-| Open comment history                             | `Ctrl+Alt+Shift+A` | `⌘+Option+Shift+A` | `Ctrl+Alt+Shift+A` | specified |
-| Enter current comment                            | `Ctrl+Alt+E, C`    | `Ctrl+⌘+E, C`      | `Ctrl+Alt+E, C`    | specified |
-| Insert footnote                                  | `Ctrl+Alt+F`       | `⌘+Option+F`       | `Ctrl+Alt+F`       | built     |
-| Move to current footnote                         | `Ctrl+Alt+E, F`    | `Ctrl+⌘+E, F`      | `Ctrl+Alt+E, F`    | built     |
-| Move to next footnote                            | `Ctrl+Alt+N, F`    | `Ctrl+⌘+N, F`      | `Ctrl+Alt+N, F`    | built     |
-| Move to previous footnote                        | `Ctrl+Alt+P, F`    | `Ctrl+⌘+P, F`      | `Ctrl+Alt+P, F`    | built     |
-| Move to next suggestion                          | `Ctrl+Alt+N, U`    | `Ctrl+⌘+N, U`      | `Ctrl+Alt+N, U`    | specified |
-| Move to previous suggestion                      | `Ctrl+Alt+P, U`    | `Ctrl+⌘+P, U`      | `Ctrl+Alt+P, U`    | specified |
-| Review suggested edits                           | `Ctrl+Alt+O, U`    | `Ctrl+⌘+O, U`      | `Ctrl+Alt+O, U`    | specified |
-| Move to next comment                             | `Ctrl+Alt+N, C`    | `Ctrl+⌘+N, C`      | `Ctrl+Alt+N, C`    | specified |
-| Move to previous comment                         | `Ctrl+Alt+P, C`    | `Ctrl+⌘+P, C`      | `Ctrl+Alt+P, C`    | specified |
-| Reply to current comment                         | `R`                | `R`                | `R`                | specified |
-| Move to next comment (on a selected comment)     | `J`                | `J`                | `J`                | specified |
-| Move to previous comment (on a selected comment) | `K`                | `K`                | `K`                | specified |
-| Resolve current comment                          | `E`                | `E`                | `E`                | specified |
-| Exit current comment                             | `U`                | `U`                | `U`                | specified |
+| Action                                           | PC                 | Mac                | ChromeOS           | Status                            |
+| ------------------------------------------------ | ------------------ | ------------------ | ------------------ | --------------------------------- |
+| Insert comment                                   | `Ctrl+Alt+M`       | `⌘+Option+M`       | `Ctrl+Alt+M`       | built                             |
+| Open comment history                             | `Ctrl+Alt+Shift+A` | `⌘+Option+Shift+A` | `Ctrl+Alt+Shift+A` | built (`comments.spec.ts`)        |
+| Enter current comment                            | `Ctrl+Alt+E, C`    | `Ctrl+⌘+E, C`      | `Ctrl+Alt+E, C`    | built (`comments.spec.ts`)        |
+| Insert footnote                                  | `Ctrl+Alt+F`       | `⌘+Option+F`       | `Ctrl+Alt+F`       | built                             |
+| Move to current footnote                         | `Ctrl+Alt+E, F`    | `Ctrl+⌘+E, F`      | `Ctrl+Alt+E, F`    | built                             |
+| Move to next footnote                            | `Ctrl+Alt+N, F`    | `Ctrl+⌘+N, F`      | `Ctrl+Alt+N, F`    | built                             |
+| Move to previous footnote                        | `Ctrl+Alt+P, F`    | `Ctrl+⌘+P, F`      | `Ctrl+Alt+P, F`    | built                             |
+| Move to next suggestion                          | `Ctrl+Alt+N, U`    | `Ctrl+⌘+N, U`      | `Ctrl+Alt+N, U`    | specified                         |
+| Move to previous suggestion                      | `Ctrl+Alt+P, U`    | `Ctrl+⌘+P, U`      | `Ctrl+Alt+P, U`    | specified                         |
+| Review suggested edits                           | `Ctrl+Alt+O, U`    | `Ctrl+⌘+O, U`      | `Ctrl+Alt+O, U`    | specified                         |
+| Move to next comment                             | `Ctrl+Alt+N, C`    | `Ctrl+⌘+N, C`      | `Ctrl+Alt+N, C`    | built (`comments.spec.ts`)        |
+| Move to previous comment                         | `Ctrl+Alt+P, C`    | `Ctrl+⌘+P, C`      | `Ctrl+Alt+P, C`    | built (`comments.spec.ts`)        |
+| Reply to current comment                         | `R`                | `R`                | `R`                | on a comment (`comments.spec.ts`) |
+| Move to next comment (on a selected comment)     | `J`                | `J`                | `J`                | on a comment (`comments.spec.ts`) |
+| Move to previous comment (on a selected comment) | `K`                | `K`                | `K`                | on a comment (`comments.spec.ts`) |
+| Resolve current comment                          | `E`                | `E`                | `E`                | on a comment (`comments.spec.ts`) |
+| Exit current comment                             | `U`                | `U`                | `U`                | on a comment (`comments.spec.ts`) |
 
 Google lists Open discussion thread on the same keys as Open comment history; both open the comments panel, so one
 row stands for both.

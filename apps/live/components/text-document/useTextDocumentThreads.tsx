@@ -234,6 +234,7 @@ export function useTextDocumentThreads({
     resolve,
     actions,
     status,
+    say,
   };
 }
 

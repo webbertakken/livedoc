@@ -4,7 +4,11 @@
 // a section that folds, a number typed and applied on Enter or when its field is left (never while typed), a length in
 // the person's unit, a percent, and a list applied at once. Table properties and Image options share them.
 import { useId, useState, type ReactNode } from 'react';
-import { OFFICE_PANEL_START } from '@/components/office/OfficePanel';
+import {
+  OFFICE_PANEL_CONTROL,
+  OFFICE_PANEL_SELECT,
+  OFFICE_PANEL_START,
+} from '@/components/office/OfficePanel';
 import {
   INDENT_FIELD_MAX,
   ptOf,
@@ -13,9 +17,6 @@ import {
   type IndentUnit,
 } from '@/lib/text-document/indent-units';
 
-export const PANEL_CONTROL =
-  'h-field rounded-control border border-(--office-line) bg-transparent px-3 text-body text-(--office-ink) outline-none focus-visible:ring-2 focus-visible:ring-(--office-focus) disabled:cursor-default disabled:opacity-40';
-const SELECT = `${PANEL_CONTROL} w-full cursor-pointer [&>option]:bg-(--office-menu)`;
 export const PANEL_LABEL = 'mb-1 text-body';
 export const PANEL_CHECK_ROW = 'flex min-h-row cursor-pointer items-center gap-3 text-body';
 export const PANEL_CHECK =
@@ -94,7 +95,7 @@ function PanelNumberField({
               commit();
             }
           }}
-          className={`${PANEL_CONTROL} w-28 tabular-nums aria-[invalid=true]:border-red-600 dark:aria-[invalid=true]:border-red-400`}
+          className={`${OFFICE_PANEL_CONTROL} w-28 tabular-nums aria-[invalid=true]:border-red-600 dark:aria-[invalid=true]:border-red-400`}
         />
         <span aria-hidden="true" className="text-body text-(--office-muted)">
           {suffix}
@@ -222,7 +223,7 @@ export function PanelListField<T extends string>({
         onChange={(e) => {
           if (e.target.value !== MIXED) onChoose(e.target.value as T);
         }}
-        className={SELECT}
+        className={OFFICE_PANEL_SELECT}
       >
         {value === null ? <option value={MIXED} /> : null}
         {options.map(([option, words]) => (

@@ -29,7 +29,7 @@ test('a comment is added, replied to by a Participant, and resolved', async ({
   for (let i = 0; i < 17; i += 1) await page.keyboard.press('Shift+ArrowRight');
 
   // The margin's Add comment beside the selection; Insert > Comment does the same.
-  const margin = page.getByRole('complementary', { name: 'Comments' });
+  const margin = page.getByRole('complementary', { name: 'Comment threads' });
   await expect(margin.getByRole('button', { name: 'Add comment' })).toBeVisible();
   await (await officeMenuItem(page, ['Insert', 'Comment'])).click();
   const draft = page.getByRole('group', { name: 'New comment' });
@@ -92,5 +92,91 @@ test('a comment is added, replied to by a Participant, and resolved', async ({
   await expect(tint).toHaveCount(0);
 
   await ctx.close();
+  expectNoPageErrors(pageErrors);
+});
+
+// The comments panel and the keys on a comment (review.md "The comments panel", "Keys on a selected comment"): two
+// threads; Move to previous comment from the caret focuses the last card, K the one before it, E resolves it; the
+// panel (⌘⌥⇧A) lists both, Resolved alone narrows it, Reopen brings the thread back, and a press on a row goes to it.
+test('the comments panel lists, narrows, reopens and goes; the keys move between threads', async ({
+  page,
+  pageErrors,
+}) => {
+  test.setTimeout(120_000);
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto('/new?kind=text-document');
+  await expect(page.locator(READY)).toBeVisible();
+  const body = page.locator(BODY);
+  await body.click();
+  await page.keyboard.type('alpha beta gamma');
+  const card = (text: string) =>
+    page.locator('[data-thread-card]:not([data-thread-card="draft"])').filter({ hasText: text });
+  const comment = async (text: string) => {
+    await page.keyboard.press('Control+Alt+KeyM');
+    const draft = page.getByRole('group', { name: 'New comment' });
+    await expect(draft.getByRole('textbox', { name: 'Add a comment' })).toBeFocused();
+    await page.keyboard.type(text);
+    await draft.getByRole('button', { name: 'Comment' }).click();
+    await expect(card(text)).toHaveCount(1);
+  };
+  // Ctrl+Alt held, a key then C (keyboard-shortcuts.md "Notation", a sequence).
+  const chord = async (first: string) => {
+    await page.keyboard.down('Control');
+    await page.keyboard.down('Alt');
+    await page.keyboard.press(first);
+    await page.keyboard.press('KeyC');
+    await page.keyboard.up('Alt');
+    await page.keyboard.up('Control');
+  };
+  // "gamma", the word at the caret; then "alpha", selected.
+  await comment('Second');
+  await body.click();
+  await page.keyboard.press('Home');
+  for (let i = 0; i < 5; i += 1) await page.keyboard.press('Shift+ArrowRight');
+  await comment('First');
+
+  // With the caret in "gamma", Enter current comment focuses its card; K the one before; E resolves it.
+  await body.click();
+  await page.keyboard.press('End');
+  await page.keyboard.press('ArrowLeft');
+  await chord('KeyE');
+  await expect(card('Second')).toBeFocused();
+  await page.keyboard.press('k');
+  await expect(card('First')).toBeFocused();
+  await page.keyboard.press('e');
+  await expect(card('First')).toHaveCount(0);
+  await expect(body).toBeFocused();
+
+  // The panel lists both; Resolved narrows it; Reopen returns the thread to the margin.
+  await page.keyboard.press('Control+Alt+Shift+KeyA');
+  const panel = page.getByRole('complementary', { name: 'Comments' });
+  await expect(page.getByRole('button', { name: 'Open comment history' })).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  );
+  const rows = panel.getByRole('button', { name: /^Go to comment/ });
+  await expect(rows).toHaveCount(2);
+  await panel.getByLabel('Which comments').selectOption('resolved');
+  await expect(rows).toHaveCount(1);
+  await expect(panel.getByRole('status')).toHaveText('1 comment');
+  await page.waitForTimeout(300);
+  await page.screenshot({ path: test.info().outputPath('comments-panel.png') });
+  await panel.getByRole('button', { name: /^Reopen comment by / }).click();
+  await expect(card('First')).toHaveCount(1);
+  await panel.getByLabel('Which comments').selectOption('all');
+
+  // A press on a row goes to its thread: selected in the margin, its card focused.
+  await panel.getByRole('button', { name: /on “gamma”/ }).click();
+  await expect(card('Second')).toBeFocused();
+  await expect(card('Second')).toHaveAttribute('aria-current', 'true');
+  await page.keyboard.press('u');
+  await expect(body).toBeFocused();
+  await expect(card('Second')).not.toHaveAttribute('aria-current', 'true');
+
+  // From the caret, none selected, Move to previous comment focuses the thread before it.
+  await page.keyboard.press('End');
+  await chord('KeyP');
+  await expect(card('Second')).toBeFocused();
+
   expectNoPageErrors(pageErrors);
 });
