@@ -334,7 +334,7 @@ export function PdfDocumentSurface({
     clearText: textSelection.clear,
     focusPages: focusPagesElement,
   });
-  // "Changing a mark": the selected marks' colour, opacity and line width.
+  // "Changing a mark": the selected marks' colour, fill, size and Format menu looks.
   const markRestyle = usePdfMarkRestyle({
     ready,
     marks,
@@ -460,6 +460,7 @@ export function PdfDocumentSurface({
         toolbar={pdfToolbar(mode)}
         choices={ready ? { ...viewChrome.choices, ...tools.choices } : null}
         colours={ready ? (tools.inHand === 'select' ? markRestyle.colours : tools.colours) : null}
+        fontSize={ready && tools.inHand === 'select' ? markRestyle.fontSize : null}
         mode={open.phase === 'ready' ? choice : null}
         contextMenu={ready ? reading.contextMenu : null}
         bare={readMode.on ? { leave: 'Leave read mode', onLeave: readMode.leave } : null}

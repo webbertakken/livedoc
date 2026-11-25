@@ -238,3 +238,62 @@ test('the selected marks are restyled from the Colour control and the Format men
   await expect(kind('rectangle')).toHaveAttribute('opacity', '1');
   expectNoPageErrors(pageErrors);
 });
+
+// marks.md "Changing a mark": the toolbar's Font size is the selected Text's, its words wrapping again at the box's
+// width as the box grows down; Format > Align text sets its lines, Justified a piece a word; each one step of undo.
+test('a selected Text is given a size and an alignment', async ({ page, pageErrors }) => {
+  test.setTimeout(120_000);
+  await page.setViewportSize({ width: 1280, height: 860 });
+  await page.goto('/explorer/all');
+  await expect(page.getByRole('heading', { name: 'My Documents' }).first()).toBeVisible();
+  await dropPdf(page, 'Words.pdf', await textPdf(2));
+  await page.waitForURL(/\/document\//, { timeout: 30_000 });
+  const first = await pageOneDrawn(page);
+  const text = page.locator(`${PAGE_ONE} [data-pdf-mark-kind="text"]`);
+  const toolbar = page.getByRole('toolbar', { name: 'Toolbar' });
+  const size = toolbar.getByRole('combobox', { name: 'Font size' });
+
+  // A Text dragged 30% of the page wide, its words on two lines and more.
+  await (await officeMenuItem(page, ['Insert', 'Text'])).click();
+  await drag(page, first, [0.1, 0.1], [0.4, 0.14]);
+  await page.keyboard.type('Check the totals in this table before Friday');
+  await page.keyboard.press('Escape');
+  await expect(text).toHaveCount(1);
+  await page.locator('[data-pdf-pages]').focus();
+  await page.keyboard.press('v');
+  await expect(size).toHaveCount(0);
+
+  // Selected: Font size is its own; 24 grows it down, its words wrapping again.
+  const box = (await text.boundingBox())!;
+  await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
+  await expect(size).toHaveValue('12');
+  const lines = await text.locator('text').count();
+  await size.fill('24');
+  await size.press('Enter');
+  await expect(text.locator('text').first()).toHaveAttribute('font-size', '24');
+  expect(await text.locator('text').count()).toBeGreaterThan(lines);
+  expect((await text.boundingBox())!.height).toBeGreaterThan(box.height);
+  await expect(size).toHaveValue('24');
+
+  // Format > Align text: Justified sets each line but the last a piece a word, and reads checked.
+  const wrapped = await text.locator('text').count();
+  await (await officeMenuItem(page, ['Format', 'Align text', 'Justified'])).click();
+  expect(await text.locator('text').count()).toBeGreaterThan(wrapped);
+  await expect(await officeMenuItem(page, ['Format', 'Align text', 'Justified'])).toHaveAttribute(
+    'aria-checked',
+    'true',
+  );
+  // Escape closes Align text, then Format.
+  await page.keyboard.press('Escape');
+  await page.keyboard.press('Escape');
+  await expect(page.getByRole('menuitem', { name: 'Align text' })).toBeHidden();
+  await page.screenshot({ path: test.info().outputPath('pdf-mark-size-align.png') });
+
+  // Undo takes back the alignment, then the size.
+  await page.locator('[data-pdf-pages]').focus();
+  await page.keyboard.press('ControlOrMeta+z');
+  await expect(text.locator('text')).toHaveCount(wrapped);
+  await page.keyboard.press('ControlOrMeta+z');
+  await expect(text.locator('text').first()).toHaveAttribute('font-size', '12');
+  expectNoPageErrors(pageErrors);
+});

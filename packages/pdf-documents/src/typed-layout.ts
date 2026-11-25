@@ -8,7 +8,7 @@ import { Helvetica } from './helvetica';
 import type { MarkFaceRegion } from './mark-face-families';
 import { MarkFaces, type MarkFaceSet } from './mark-faces';
 import { PDF_CALLOUT_KNEE_PT, PDF_TEXT_PADDING_PT } from './limits';
-import type { Box, CalloutLine, TypedMark } from './mark';
+import type { Box, CalloutLine, TextAlign, TypedMark } from './mark';
 
 /** (default) Lines are this many times the size apart (marks.md "Text's and Callout's first look"). */
 export const TYPED_LINE_HEIGHT = 1.2;
@@ -86,20 +86,79 @@ function wrap(paragraph: string, size: number, room: number, setting: Setting): 
   return lines;
 }
 
+/** Each paragraph's lines in a box `width` points wide, at `size` points, and what they are set in. */
+function paragraphLines(
+  words: string,
+  size: number,
+  width: number,
+): { readonly paragraphs: readonly (readonly TypedLine[])[]; readonly setting: Setting } {
+  const room = width - 2 * PDF_TEXT_PADDING_PT;
+  const texts = paragraphsOf(words);
+  const setting = settingOf(texts);
+  const paragraphs = texts.map((paragraph) => {
+    const rtl = readsRightToLeft(paragraph);
+    return wrap(paragraph, size, room, setting).map((text) => ({
+      text,
+      width: widthOf(text, size, setting),
+      rtl,
+    }));
+  });
+  return { paragraphs, setting };
+}
+
+/** Where a line starts across its box, as its alignment sets it; absent, from its own side. */
+function startOf(
+  line: TypedLine,
+  left: number,
+  right: number,
+  align: TextAlign | undefined,
+): number {
+  const side = align === 'left' || align === 'right' ? align : line.rtl ? 'right' : 'left';
+  if (align === 'centre') return (left + right - line.width) / 2;
+  return side === 'left' ? left + PDF_TEXT_PADDING_PT : right - PDF_TEXT_PADDING_PT - line.width;
+}
+
+/** A line stretched to the padding on both sides: a piece a word, the room left shared between them, its first word
+ *  at the side it reads from; null for a line of one word. */
+function stretched(
+  line: TypedLine,
+  left: number,
+  right: number,
+  size: number,
+  setting: Setting,
+): Omit<PlacedLine, 'y'>[] | null {
+  const words = line.text.split(' ').filter((word) => word !== '');
+  if (words.length < 2) return null;
+  const pieces = words.map((text) => ({
+    text,
+    width: widthOf(text, size, setting),
+    rtl: line.rtl,
+  }));
+  const room = right - left - 2 * PDF_TEXT_PADDING_PT;
+  const gap = (room - pieces.reduce((sum, piece) => sum + piece.width, 0)) / (pieces.length - 1);
+  let across = 0;
+  return pieces.map((piece) => {
+    const from = across;
+    across += piece.width + gap;
+    return {
+      ...piece,
+      x: line.rtl
+        ? right - PDF_TEXT_PADDING_PT - from - piece.width
+        : left + PDF_TEXT_PADDING_PT + from,
+    };
+  });
+}
+
 export const TypedLayout = {
   /** The lines words make in a box `width` points wide, at `size` points, each paragraph's direction its own. */
-  lines: (words: string, size: number, width: number): readonly TypedLine[] => {
-    const room = width - 2 * PDF_TEXT_PADDING_PT;
-    const paragraphs = paragraphsOf(words);
-    const setting = settingOf(paragraphs);
-    return paragraphs.flatMap((paragraph) => {
-      const rtl = readsRightToLeft(paragraph);
-      return wrap(paragraph, size, room, setting).map((text) => ({
-        text,
-        width: widthOf(text, size, setting),
-        rtl,
-      }));
-    });
+  lines: (words: string, size: number, width: number): readonly TypedLine[] =>
+    paragraphLines(words, size, width).paragraphs.flat(),
+
+  /** Which way a mark's paragraphs read: every one left to right, every one right to left, or mixed. */
+  direction: (words: string): 'ltr' | 'rtl' | 'mixed' => {
+    const rtl = paragraphsOf(words).map(readsRightToLeft);
+    if (rtl.every(Boolean)) return 'rtl';
+    return rtl.some(Boolean) ? 'mixed' : 'ltr';
   },
 
   /** The faces a mark's words are set in. */
@@ -116,17 +175,31 @@ export const TypedLayout = {
   width: (lines: readonly TypedLine[]): number =>
     2 * PDF_TEXT_PADDING_PT + Math.max(0, ...lines.map((line) => line.width)),
 
-  /** A mark's lines on the page, from the top of its box down, each against its own side. */
+  /**
+   * A mark's lines on the page, from the top of its box down, each set as its alignment says: against its own side
+   * until one is chosen; a justified line but a paragraph's last as a piece a word.
+   */
   place: ({
     rect: [left, , right, top],
     words,
     size,
-  }: Pick<TypedMark, 'rect' | 'words' | 'size'>) =>
-    TypedLayout.lines(words, size, right - left).map((line, at): PlacedLine => ({
-      ...line,
-      x: line.rtl ? right - PDF_TEXT_PADDING_PT - line.width : left + PDF_TEXT_PADDING_PT,
-      y: top - PDF_TEXT_PADDING_PT - (at * TYPED_LINE_HEIGHT + BASELINE) * size,
-    })),
+    align,
+  }: Pick<TypedMark, 'rect' | 'words' | 'size' | 'align'>): readonly PlacedLine[] => {
+    const { paragraphs, setting } = paragraphLines(words, size, right - left);
+    let at = -1;
+    return paragraphs.flatMap((lines) =>
+      lines.flatMap((line, inParagraph): PlacedLine[] => {
+        at += 1;
+        const y = top - PDF_TEXT_PADDING_PT - (at * TYPED_LINE_HEIGHT + BASELINE) * size;
+        const last = inParagraph === lines.length - 1;
+        const pieces =
+          align === 'justified' && !last && stretched(line, left, right, size, setting);
+        if (pieces) return pieces.map((piece) => ({ ...piece, y }));
+        const own = align === 'justified' ? undefined : align;
+        return [{ ...line, x: startOf(line, left, right, own), y }];
+      }),
+    );
+  },
 
   /** A Callout's line from what is meant to the middle of the box's side facing it, through a knee out from that side. */
   calloutLine: (tip: PagePoint, [left, bottom, right, top]: Box): CalloutLine => {

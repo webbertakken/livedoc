@@ -5,6 +5,7 @@ import { describe, expect, it } from 'vitest';
 import { Helvetica, HELVETICA_STAND_IN } from './helvetica';
 import { PDF_CALLOUT_KNEE_PT, PDF_TEXT_PADDING_PT } from './limits';
 import { MarkFaces } from './mark-faces';
+import type { TextAlign } from './mark';
 import { TYPED_LINE_HEIGHT, TypedLayout } from './typed-layout';
 
 // "Hello" in Helvetica: H 722, e 556, l 222, l 222, o 556 thousandths.
@@ -89,6 +90,78 @@ describe('TypedLayout', () => {
     expect(placed[0]!.y).toBeCloseTo(600 - PDF_TEXT_PADDING_PT - 8.555, 6);
     expect(placed[1]!.x).toBeCloseTo(300 - PDF_TEXT_PADDING_PT - placed[1]!.width, 6);
     expect(placed[0]!.y - placed[1]!.y).toBeCloseTo(TYPED_LINE_HEIGHT * 10, 6);
+  });
+
+  // marks.md "Changing a mark": Format > Align text.
+  describe('aligned', () => {
+    const rect = [100, 500, 300, 600] as const;
+    const place = (words: string, align: TextAlign) =>
+      TypedLayout.place({ rect, words, size: 10, align });
+
+    it('sets every line against the side chosen, whichever way it reads', () => {
+      const [left, hebrew] = place('Hello\nשלום', 'left');
+      expect(left!.x).toBe(100 + PDF_TEXT_PADDING_PT);
+      expect(hebrew!.x).toBe(100 + PDF_TEXT_PADDING_PT);
+      const [right] = place('Hello', 'right');
+      expect(right!.x).toBeCloseTo(300 - PDF_TEXT_PADDING_PT - HELLO_AT_10, 6);
+    });
+
+    it('centres every line midway between the sides', () => {
+      const [line] = place('Hello', 'centre');
+      expect(line!.x).toBeCloseTo(200 - HELLO_AT_10 / 2, 6);
+    });
+
+    it('stretches each line but a paragraph’s last to the padding on both sides, a piece a word', () => {
+      // "Hello" five times at 10 points wraps as four and one in a box 120 wide.
+      const placed = TypedLayout.place({
+        rect: [0, 0, 120, 100],
+        words: 'Hello Hello Hello Hello Hello\nHello',
+        size: 10,
+        align: 'justified',
+      });
+      const first = placed.filter((line) => line.y === placed[0]!.y);
+      expect(first.map((piece) => piece.text)).toEqual(['Hello', 'Hello', 'Hello', 'Hello']);
+      expect(first[0]!.x).toBe(PDF_TEXT_PADDING_PT);
+      expect(first[3]!.x + first[3]!.width).toBeCloseTo(120 - PDF_TEXT_PADDING_PT, 6);
+      const gaps = first.slice(1).map((piece, at) => piece.x - first[at]!.x - first[at]!.width);
+      expect(gaps.every((gap) => Math.abs(gap - gaps[0]!) < 1e-9)).toBe(true);
+      // A paragraph's last line, and the last line of all, are set from their own side.
+      expect(placed.filter((line) => line.y !== placed[0]!.y).map((line) => line.x)).toEqual([
+        PDF_TEXT_PADDING_PT,
+        PDF_TEXT_PADDING_PT,
+      ]);
+    });
+
+    it('stretches a right-to-left line from its right, its first word there', () => {
+      const words = 'שלום שלום שלום שלום שלום שלום שלום שלום שלום שלום\nx';
+      const placed = TypedLayout.place({
+        rect: [0, 0, 120, 200],
+        words,
+        size: 10,
+        align: 'justified',
+      });
+      const first = placed.filter((line) => line.y === placed[0]!.y);
+      expect(first.length).toBeGreaterThan(1);
+      expect(first.every((piece) => piece.rtl)).toBe(true);
+      expect(first[0]!.x + first[0]!.width).toBeCloseTo(120 - PDF_TEXT_PADDING_PT, 6);
+      expect(first.at(-1)!.x).toBeCloseTo(PDF_TEXT_PADDING_PT, 6);
+    });
+
+    it('sets a line of one word from its own side, unstretched', () => {
+      const placed = TypedLayout.place({
+        rect: [0, 0, 30, 100],
+        words: 'Hello Hello',
+        size: 10,
+        align: 'justified',
+      });
+      expect(placed.map((line) => line.x)).toEqual([PDF_TEXT_PADDING_PT, PDF_TEXT_PADDING_PT]);
+    });
+  });
+
+  it('reads which way a mark’s paragraphs read: all one way, or mixed', () => {
+    expect(TypedLayout.direction('Hello\n\n12')).toBe('ltr');
+    expect(TypedLayout.direction('שלום\nمرحبا')).toBe('rtl');
+    expect(TypedLayout.direction('Hello\nשלום')).toBe('mixed');
   });
 
   it('runs a Callout’s line to the side of its box facing what is meant, through a knee', () => {

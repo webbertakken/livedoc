@@ -9,9 +9,9 @@ and remembered; and the engine reads every mark a file holds, of any kind, as th
 others as it is drawn, words shown to others as they are typed, a face for every script, a tool's other looks,
 snapping, every other kind made here, custom stamps and Manage stamps, and the room's own-marks check are not built.
 Of changing a mark, selecting, moving, resizing and deleting a mark made here, and restyling its colour, opacity, line
-width, line style, fill and line end, are built; its font, size and alignment, Format > Colour and Fill colour, a
-tool's remembered width, style and fill, rotating, arranging, grouping, locking, copying, Properties, Erase and the
-file's own marks are not.
+width, line style, fill and line end, and a Text's and a Callout's size and alignment, are built; their font, Format >
+Colour and Fill colour, the toolbar's Line width, a tool's remembered width, style and fill, rotating, arranging,
+grouping, locking, copying, Properties, Erase and the file's own marks are not.
 
 A **mark** is something placed on top of a PDF page that leaves the page's own content alone: a highlight, a note, a
 piece of text, a drawing, a shape, a stamp. Marks are Reviewing's ([Editing modes](editing-modes.md)); a mark with
@@ -189,6 +189,19 @@ written into the file as a standard annotation, so any reader shows it. The rese
   `PDF_ARROW_HEAD_MIN_PT` at the least), in the line's colour and width, solid: Open arrow its two lines; Arrow the
   same closed and filled; Circle a ring that size across and Square and Diamond its outline, each centred on the end;
   Bar a line that long square across it.
+- **The selected Texts' and Callouts' size** `(default)`: with Select in hand and a Text or a Callout selected, the
+  toolbar's Font size is theirs, blank where they differ; a size taken gives every selected Text and Callout that
+  size, held within `PDF_TEXT_SIZE_MIN_PT` to `PDF_TEXT_SIZE_MAX_PT`, and the pages have the keys.
+- **What a new size does** `(default)`: the words wrap again at the box's width, the box keeping its top, left and
+  width, never narrower than one character nor lower than its words, growing down to hold them; a box that would grow
+  past the page's foot is moved up onto it; a Callout's line runs again to the middle of the side facing its tip.
+- **Format > Align text** gives every selected Text and Callout the alignment chosen: Left and Right set every line
+  `PDF_TEXT_PADDING_PT` in from that side, Centre midway between the two, and Justified stretches each line but a
+  paragraph's last to that padding on both sides by the spaces between its words, alike in either direction
+  `(default)`.
+- **A Text's and a Callout's alignment until one is chosen** is its words' own: each paragraph set from its own side.
+  Align text's Left is checked for it where every paragraph reads left to right, Right where every one reads right to
+  left, and none where they differ `(default)`.
 - Each restyle is one step of undo, and leaves the tool's remembered look as it was `(default)`.
 - **Rotate**: stamps, Text and shapes turn by a handle, snapping at 15°.
 - **Arrange**: bring forward, send backward, to front, to back, among the marks of its page.
@@ -343,9 +356,10 @@ question mark. The research is [Every script in a mark's words](../../research/p
   **an Ellipse** with `Rect` the box grown by half the line's width, so the line falls where it was drawn. Their
   appearance streams are drawn from what the page shows of them, line for line. A line style other than Solid is
   written as `BS` `S` `D` with `D` its pattern, a Drawing's too, and a fill as `IC`.
-- **A Text** is written as a `FreeText` with `Contents` its words, `DA` its font, size and colour, and `Rect` its
-  box; **a Callout** as a `FreeText` with `IT` `FreeTextCallout`, `CL` its line's three points, `LE` `OpenArrow`,
-  `Rect` the box and the line together and `RD` the box within it. Their appearance streams set the words as the page
+- **A Text** is written as a `FreeText` with `Contents` its words, `DA` its font, size and colour, `Rect` its
+  box, and its alignment once chosen as `Q` (0 Left, 1 Centre, 2 Right), Justified as `Q` 0 with `DS`
+  `text-align:justify`; **a Callout** as a `FreeText` with `IT` `FreeTextCallout`, `CL` its line's three points,
+  `LE` `OpenArrow`, `Rect` the box and the line together and `RD` the box within it. Their appearance streams set the words as the page
   shows them, line for line, in Helvetica, the standard's own face every reader holds, or in the mark faces
   ([Words in every script](#words-in-every-script)).
 - **A stamp** is written as a `Stamp` with `Name` the standard's name for it (`Approved`, `NotApproved`, `Draft`,
@@ -443,7 +457,7 @@ a mark another person made is refused with `not_your_mark`.
   pick or a choice, `Mark.Restyled`; a deletion once a mark, `Mark.<Kind>` of its kind.
 - Fingerprints: `[pdf] mark-added kind=<kind>`, `[pdf] mark-refused name=<name>`,
   `[pdf] marks-moved count=<n>` (a drag or a key press), `[pdf] mark-resized kind=<kind>`,
-  `[pdf] marks-restyled count=<n> look=<colour|opacity|width|style|fill|end>` (a pick or a choice),
+  `[pdf] marks-restyled count=<n> look=<colour|opacity|width|style|fill|end|size|align>` (a pick or a choice),
   `[pdf] marks-deleted count=<n>`,
   `[pdf] marks-read count=<n> unknown=<n>` (per open), `[pdf] drawing-joined strokes=<n>` (a stroke joined to a
   Drawing), `[pdf] typing-dropped kind=<kind>` (a Note, Text or Callout ended with nothing typed).

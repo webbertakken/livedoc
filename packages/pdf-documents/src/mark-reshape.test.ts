@@ -89,6 +89,61 @@ describe('MarkReshape', () => {
     });
   });
 
+  // marks.md "Changing a mark": what a new size does.
+  describe('sized', () => {
+    const PAGE = [0, 0, 612, 792] as const;
+
+    it('wraps the words again at the box’s width, growing down and never shrinking', () => {
+      const long = Mark.text({
+        ...BASE,
+        id: 'w',
+        rect: [300, 300, 360, 330],
+        words: 'Hello there',
+        size: 10,
+      })!;
+      const larger = MarkReshape.sized(long, 24, PAGE) as { rect: readonly number[] };
+      const lines = TypedLayout.lines('Hello there', 24, 60).length;
+      expect(larger.rect[0]).toBe(300);
+      expect(larger.rect[2]).toBe(360);
+      expect(larger.rect[3]).toBe(330);
+      expect(larger.rect[3]! - larger.rect[1]!).toBeCloseTo(TypedLayout.height(lines, 24), 9);
+      expect(MarkReshape.sized(long, 4, PAGE)).toEqual({ rect: [300, 300, 360, 330] });
+    });
+
+    it('widens a box to one character at the least', () => {
+      const thin = Mark.text({
+        ...BASE,
+        id: 'n',
+        rect: [300, 300, 310, 330],
+        words: 'H',
+        size: 4,
+      })!;
+      const sized = MarkReshape.sized(thin, 40, PAGE) as { rect: readonly number[] };
+      expect(sized.rect[2]! - sized.rect[0]!).toBe(40 + 2 * PDF_TEXT_PADDING_PT);
+    });
+
+    it('moves a box that would grow past the page’s foot up onto it', () => {
+      const low = Mark.text({
+        ...BASE,
+        id: 'f',
+        rect: [300, 2, 400, 32],
+        words: 'Hello there you',
+        size: 12,
+      })!;
+      const sized = MarkReshape.sized(low, 48, PAGE) as { rect: readonly number[] };
+      expect(sized.rect[1]).toBe(0);
+      expect(sized.rect[3]! - sized.rect[1]!).toBeGreaterThan(30);
+    });
+
+    it('runs a Callout’s line again to the side facing its tip', () => {
+      const sized = MarkReshape.sized(callout, 30, PAGE) as {
+        rect: readonly [number, number, number, number];
+        callout: readonly number[];
+      };
+      expect(sized.callout).toEqual(TypedLayout.calloutLine({ x: 250, y: 250 }, sized.rect));
+    });
+  });
+
   // A line's end, a Callout's tip and knee.
   it('places and moves a point handle', () => {
     expect(MarkReshape.at(arrow, 'start')).toEqual({ x: 10, y: 10 });

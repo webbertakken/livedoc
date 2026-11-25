@@ -411,6 +411,7 @@ export const PDF_MENUS: OfficeCatalogue = [
     SEPARATOR,
     choices('align-text', 'Align text', 'participate', ['Left', 'Centre', 'Right', 'Justified'], {
       ...ONE_OF,
+      ...BUILT,
       keywords: ['center'],
     }),
     choices('arrange', 'Arrange', 'participate', [

@@ -4,7 +4,7 @@
 // page space; which way a handle points on screen is the surface's.
 import type { PagePoint } from './engine-contract';
 import { PDF_TEXT_PADDING_PT } from './limits';
-import { Mark, type Box, type CalloutLine, type Stroke } from './mark';
+import { Mark, type Box, type CalloutLine, type Stroke, type TypedMark } from './mark';
 import type { MarkPlace } from './mark-place';
 import { TypedLayout } from './typed-layout';
 
@@ -70,6 +70,20 @@ export const MarkReshape = {
       return { rect, callout: TypedLayout.calloutLine({ x, y }, rect) };
     }
     return { rect: box };
+  },
+
+  /**
+   * A Text's or a Callout's geometry at a new size (marks.md "Changing a mark": what a new size does): its words wrapped
+   * again in its box, which keeps its top, left and width, grows down to hold them and moves up onto `page` where it
+   * would pass its foot; a Callout's line run again to the side facing its tip.
+   */
+  sized: (mark: TypedMark, size: number, page: Box): MarkPlace => {
+    const [left, bottom, right, top] = typedBox({ ...mark, size }, mark.rect);
+    const up = Math.max(0, page[1] - bottom);
+    const rect: Box = [left, bottom + up, right, top + up];
+    if (mark.kind === 'text') return { rect };
+    const [x, y] = mark.callout;
+    return { rect, callout: TypedLayout.calloutLine({ x, y }, rect) };
   },
 
   /** Where a point handle sits in page space; null for a box handle or a handle the mark has not. */

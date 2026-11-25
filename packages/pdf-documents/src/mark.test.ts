@@ -12,6 +12,7 @@ import {
 import {
   LINE_ENDS,
   LINE_STYLES,
+  TEXT_ALIGNS,
   Mark,
   type DrawingInput,
   type HighlightInput,
@@ -233,6 +234,17 @@ describe('a Text or a Callout', () => {
     expect(mark.callout).toEqual(CALLOUT);
     expect(Mark.parse(JSON.parse(JSON.stringify(mark)))).toEqual(mark);
     expect(Mark.bounds(mark)).toEqual([40, 500, 200, 650]);
+  });
+
+  // marks.md "Changing a mark": Format > Align text; until one is chosen, the words' own.
+  it('holds an alignment once chosen, and none until then', () => {
+    for (const align of TEXT_ALIGNS) {
+      const mark = Mark.text(text({ align }) as unknown as TextBoxInput)!;
+      expect(mark.align).toBe(align);
+      expect(Mark.parse(JSON.parse(JSON.stringify(mark)))).toEqual(mark);
+    }
+    expect(Mark.text(text({ align: null }) as unknown as TextBoxInput)).not.toHaveProperty('align');
+    expect(Mark.parse({ ...text({ align: 'middle' }), kind: 'text', modifiedAt: 0 })).toBeNull();
   });
 
   it('cuts words past their limit rather than refusing the mark', () => {
