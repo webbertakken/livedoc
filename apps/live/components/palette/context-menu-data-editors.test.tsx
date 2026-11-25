@@ -88,3 +88,27 @@ describe('a chart drawn from a sheet', () => {
     expect(onUnlink).toHaveBeenCalledOnce();
   });
 });
+
+// pie-chart.md "No value is a gap": a slice's value field shows no value as empty, and an emptied field is no value.
+describe('PieDataEditor values', () => {
+  it('shows no value as an empty field and commits an emptied field as no value', () => {
+    const onChange = vi.fn();
+    render(
+      <PieDataEditor
+        slices={[
+          { label: 'Cats', value: null },
+          { label: 'Dogs', value: 3 },
+        ]}
+        onChange={onChange}
+      />,
+    );
+    const [cats, dogs] = screen.getAllByLabelText<HTMLInputElement>('Value');
+    expect(cats!.value).toBe('');
+    fireEvent.change(dogs!, { target: { value: '' } });
+    fireEvent.blur(dogs!);
+    expect(onChange).toHaveBeenLastCalledWith([
+      { label: 'Cats', value: null },
+      { label: 'Dogs', value: null },
+    ]);
+  });
+});

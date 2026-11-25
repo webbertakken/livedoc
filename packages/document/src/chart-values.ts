@@ -2,7 +2,7 @@
 // for both renderers, as chart-marks.ts lays out the marks. Pure.
 
 import type { BarMarks, LineMarks, PieMarks } from './chart-marks';
-import type { LineSeries, PieSlice } from './data-shapes';
+import { chartValue, type LineSeries, type PieSlice } from './data-shapes';
 import type { ShapeElement } from './element-types';
 import { glyphWidth } from './graph-authoring';
 import { legendFontPx } from './label-font';
@@ -58,39 +58,46 @@ export function barValueLabels(
   fontPx: number,
 ): ChartValueLabel[] {
   const out: ChartValueLabel[] = [];
-  // Each column's share of the baseline, less a little air between neighbours' names.
-  const slot =
-    (marks.baseline.x2 - marks.baseline.x1) / Math.max(1, marks.bars.length) - CATEGORY_AIR;
+  // Each column's share of the baseline; its name takes it, less a little air between neighbours' names.
+  const share = (marks.baseline.x2 - marks.baseline.x1) / Math.max(1, marks.bars.length);
+  const slot = share - CATEGORY_AIR;
   // A column's name sits a row under the plot; when a column hangs to the foot, its value takes that row and the
   // names go one row lower.
-  const nameY = marks.floor + GAP + fontPx + (data.some((d) => d.value < 0) ? GAP + fontPx : 0);
+  const nameY =
+    marks.floor +
+    GAP +
+    fontPx +
+    (data.some((d) => (chartValue(d.value) ?? 0) < 0) ? GAP + fontPx : 0);
   marks.bars.forEach((bar, i) => {
     const d = data[i];
     if (!d) return;
+    const value = chartValue(d.value);
     // A value below zero reads past its column's foot (left of its bar), as a positive one reads past its end
     // (docs/specs/009-elements/pie-chart.md "Below zero on a column or bar chart").
-    const below = d.value < 0;
-    out.push(
-      horizontal
-        ? {
-            x: below ? bar.tip.x - GAP : bar.tip.x + GAP,
-            y: bar.tip.y + fontPx * 0.35,
-            text: shortNumber(d.value),
-            anchor: below ? 'end' : 'start',
-          }
-        : {
-            x: bar.tip.x,
-            y: below ? bar.tip.y + GAP + fontPx : bar.tip.y - GAP,
-            text: shortNumber(d.value),
-            anchor: 'middle',
-          },
-    );
+    const below = value !== null && value < 0;
+    if (bar && value !== null)
+      out.push(
+        horizontal
+          ? {
+              x: below ? bar.tip.x - GAP : bar.tip.x + GAP,
+              y: bar.tip.y + fontPx * 0.35,
+              text: shortNumber(value),
+              anchor: below ? 'end' : 'start',
+            }
+          : {
+              x: bar.tip.x,
+              y: below ? bar.tip.y + GAP + fontPx : bar.tip.y - GAP,
+              text: shortNumber(value),
+              anchor: 'middle',
+            },
+      );
     // A column names itself under the plot, so the legend can go; cut to its slot. Under the plot's foot, not the
     // zero line, so a hanging column never runs through its name.
     const name = horizontal ? null : fitCategory(d.label, slot, fontPx);
     if (name !== null)
       out.push({
-        x: bar.tip.x,
+        // Centred in its slot, which keeps its name when it holds no column (no value).
+        x: marks.baseline.x1 + share * (i + 0.5),
         y: nameY,
         text: name,
         anchor: 'middle',
@@ -105,16 +112,16 @@ export function pieValueLabels(
   data: readonly PieSlice[],
   fontPx: number,
 ): ChartValueLabel[] {
-  const total = data.reduce((s, d) => s + Math.max(0, d.value), 0);
+  const total = data.reduce((s, d) => s + Math.max(0, chartValue(d.value) ?? 0), 0);
   const percent = Math.abs(total - 100) < 0.5;
   return marks.wedges.flatMap((w, i) => {
-    const d = data[i];
-    if (!d || d.value <= 0) return [];
+    const value = chartValue(data[i]?.value);
+    if (value === null || value <= 0) return [];
     return [
       {
         x: w.tip.x,
         y: w.tip.y + fontPx * 0.35,
-        text: percent ? `${Number(d.value.toFixed(1))}%` : shortNumber(d.value),
+        text: percent ? `${Number(value.toFixed(1))}%` : shortNumber(value),
         anchor: 'middle' as const,
         onMark: i,
       },
@@ -128,8 +135,8 @@ export function lineValueLabels(
 ): ChartValueLabel[] {
   return marks.points.flatMap((pts, s) =>
     pts.flatMap((p, i) => {
-      const v = series[s]?.values[i];
-      return typeof v === 'number' && Number.isFinite(v)
+      const v = chartValue(series[s]?.values[i]);
+      return p && v !== null
         ? [{ x: p.x, y: p.y - marks.dot - GAP, text: shortNumber(v), anchor: 'middle' as const }]
         : [];
     }),

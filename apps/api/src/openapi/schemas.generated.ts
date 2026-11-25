@@ -10239,7 +10239,10 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
       },
       "values": {
         "items": {
-          "type": "number"
+          "type": [
+            "number",
+            "null"
+          ]
         },
         "type": "array"
       }
@@ -12249,7 +12252,10 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
         "type": "string"
       },
       "value": {
-        "type": "number"
+        "type": [
+          "number",
+          "null"
+        ]
       }
     },
     "required": [

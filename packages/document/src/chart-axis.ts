@@ -1,5 +1,5 @@
 // A chart's value axis (docs/specs/009-elements/pie-chart.md "Show Axis", "A second axis"): round tick values over a
-// range that always holds zero, widened to the next round value past the data, so a reader can read a mark against
+// range that holds zero (but a scatter chart's, "Scatter's value range"), widened to the next round value past the data, so a reader can read a mark against
 // the gridlines. Pure and shared, as the marks are (chart-marks.ts): the canvas views and the exporter lay the same
 // axis out.
 
@@ -23,11 +23,18 @@ function niceStep(raw: number): number {
   return (unit <= 1 ? 1 : unit <= 2 ? 2 : unit <= 5 ? 5 : 10) * power;
 }
 
-// The axis over `lo`..`hi`: zero always in range, both ends widened to a round step, a tick at each step.
-export function axisScale(lo: number, hi: number): AxisScale {
-  let min = Math.min(0, lo);
-  let max = Math.max(0, hi);
-  if (max === min) max = min + 1;
+// The axis over `lo`..`hi`: zero in range (unless `holdsZero` is false, when it fits the values and all-equal values
+// widen by half a unit either way), both ends widened to a round step, a tick at each step.
+export function axisScale(lo: number, hi: number, holdsZero = true): AxisScale {
+  let min = holdsZero ? Math.min(0, lo) : lo;
+  let max = holdsZero ? Math.max(0, hi) : hi;
+  if (max === min) {
+    if (holdsZero) max = min + 1;
+    else {
+      min -= 0.5;
+      max += 0.5;
+    }
+  }
   const step = niceStep((max - min) / (AXIS_TARGET_TICKS - 1));
   min = Math.floor(min / step + 1e-9) * step;
   max = Math.ceil(max / step - 1e-9) * step;

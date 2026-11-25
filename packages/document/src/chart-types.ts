@@ -1,7 +1,7 @@
 // Chart types (docs/specs/009-elements/pie-chart.md "Chart types"): how a chart draws its data, named as Google
 // Sheets names it. Each is a chart kind (the stored `shape`) and, for all but the first of its kind, a
 // `chartVariant`, so every chart made before chart types keeps drawing as it did.
-import type { LineSeries, PieSlice } from './data-shapes';
+import { chartValue, type LineSeries, type PieSlice } from './data-shapes';
 
 export const CHART_TYPES = ['column', 'bar', 'line', 'area', 'scatter', 'pie', 'doughnut'] as const;
 export type ChartType = (typeof CHART_TYPES)[number];
@@ -103,8 +103,9 @@ export function chartTypeChange(el: ChartData, type: ChartType): ChartTypePatch 
     const first = el.lineSeries?.[0]?.values;
     if (el.lineCategories?.length && first) {
       patch.pieSlices = el.lineCategories.map((label, i) => {
-        const v = first[i] ?? 0;
-        return { label, value: to.shape === 'pie-chart' ? Math.max(0, v) : v };
+        // No value stays no value (pie-chart.md "No value is a gap").
+        const v = chartValue(first[i]);
+        return { label, value: v !== null && to.shape === 'pie-chart' ? Math.max(0, v) : v };
       });
     }
     patch.lineCategories = undefined;
@@ -112,8 +113,11 @@ export function chartTypeChange(el: ChartData, type: ChartType): ChartTypePatch 
     return patch;
   }
   // Pie and bar share their slices; a pie never draws below zero.
-  if (to.shape === 'pie-chart' && el.pieSlices?.some((s) => s.value < 0))
-    patch.pieSlices = el.pieSlices.map((s) => ({ ...s, value: Math.max(0, s.value) }));
+  if (to.shape === 'pie-chart' && el.pieSlices?.some((s) => (chartValue(s.value) ?? 0) < 0))
+    patch.pieSlices = el.pieSlices.map((s) => {
+      const v = chartValue(s.value);
+      return { ...s, value: v === null ? null : Math.max(0, v) };
+    });
   return patch;
 }
 

@@ -112,7 +112,8 @@ describe('chart types (docs/specs/009-elements/pie-chart.md "Chart types")', () 
         pieSlices: [
           { label: 'Jan', value: 3 },
           { label: 'Feb', value: 0 },
-          { label: 'Mar', value: 0 },
+          // S1 has no value for March: no value, never 0 (pie-chart.md "No value is a gap").
+          { label: 'Mar', value: null },
         ],
         lineCategories: undefined,
         lineSeries: undefined,

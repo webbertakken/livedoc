@@ -59,7 +59,7 @@ the same 1-D data model, while the line chart carries a 2-D dataset (see Model).
 - Under Show Values, **Show Axis** (`chartAxis`, off by default, so a chart made before it draws as it did) draws the
   value axis on a column, bar, line, area or scatter chart (a pie has none): tick labels at round values (1, 2 or 5
   times a power of ten, four or five of them, the range widened to the next round value past the largest and
-  smallest, zero always in it) and a faint gridline across the plot at each, the plot drawn in from the side the
+  smallest, zero always in it but on a scatter chart, below) and a faint gridline across the plot at each, the plot drawn in from the side the
   labels take. A column or line chart labels its left side; a bar chart its bottom. Numbers read as Show Values'
   do (120k, 1.5M). The toggle fires `Element·Changed·ChartAxis`; the gating is Show Values'.
 - **A second axis**: a line, area or scatter series marked `axis: "right"` is drawn against a scale of its own,
@@ -128,6 +128,10 @@ Chart" and a screen reader hears "Column chart", as the palette's tile says, nev
   spaced values; otherwise the categories are evenly spaced, as Line's are, and labelled as Line's. A category left
   empty has no x: its points are not drawn, and it does not stop the others reading as numbers. Its readout reads
   `x · series: y`.
+- **Scatter's value range** fits its values, as Google Sheets' does: from a round value under the least to one over the
+  greatest, with zero in it only when the values cross it, so points far from zero spread over the plot rather than
+  sit squeezed at its top over an empty band. Values all equal widen by half a unit either way. Line, Area, Column
+  and Bar keep zero in range: a line's rise and an area or bar's size read against it.
 - **The Chart Type section** opens first in the chart's Tools flyout, closed until opened (as every section is): a
   grid of seven tiles, each the type's glyph over its name, the chart's own type pressed. Hovering a tile previews
   nothing; picking one changes the chart, one undo step, `Element · Changed · ChartType`.
@@ -160,7 +164,7 @@ groups all three (they're all in `isSelfDrawingShape` too).
   that is not an object is dropped; a label, name or category that is not text reads as its number or flag written out, else as empty, and a series' values that are not a list as none, so categories keep their places.
 - **No value on the way in**: a value is a finite number or no value. Validation takes any value in a series' list or
   a slice, so data stored before stays valid; every renderer reads one that is not a finite number (`null`, absent,
-  text) as no value (`chartValue`, `packages/document/src/chart-values.ts`). An agent's write is tidied first
+  text) as no value (`chartValue`, `packages/document/src/data-shapes.ts`). An agent's write is tidied first
   (`normaliseElements`): a value written as text that reads as a number (`"3"`) is that number, anything else
   `null`, and a series shorter than its categories is padded with `null`.
 - All three share `pieAnim?` / `pieAnimSpeed?` / `pieAnimRepeat?` / `chartLegend?` / `chartLegendPosition?` and

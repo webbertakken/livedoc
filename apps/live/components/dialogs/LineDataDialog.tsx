@@ -1,6 +1,6 @@
 import { useLayoutEffect, useRef, useState } from 'react';
 import { Button, CloseIcon, DialogHeader } from '@livedoc/ui';
-import type { LineSeries } from '@livedoc/document';
+import { chartValue, readChartValue, type LineSeries } from '@livedoc/document';
 import { Dialog } from '@/components/dialogs/Dialog';
 import { HelpArticleLink } from '@/components/primitives/HelpArticleLink';
 import { useLatest } from '@/hooks/ui/useLatest';
@@ -182,18 +182,19 @@ export function LineDataDialog({
                     <input
                       className={`${cell} w-full text-right tabular-nums`}
                       type="number"
-                      value={s.values[i] ?? 0}
+                      // No value shows as an empty field, and an emptied field is no value
+                      // (pie-chart.md "No value is a gap").
+                      value={chartValue(s.values[i]) ?? ''}
                       aria-label={`${s.name} ${c}`}
                       onChange={(e) => {
-                        const n = Number(e.target.value);
+                        const n = readChartValue(e.target.value);
                         setRows((r) =>
                           r.map((x, j) =>
                             j === si
                               ? {
                                   ...x,
-                                  values: x.values.map((v, k) =>
-                                    k === i ? (Number.isFinite(n) ? n : 0) : v,
-                                  ),
+                                  // Every category's place, so a series shorter than its categories takes a value too.
+                                  values: cats.map((_, k) => (k === i ? n : (x.values[k] ?? null))),
                                 }
                               : x,
                           ),

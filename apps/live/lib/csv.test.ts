@@ -25,10 +25,10 @@ describe('parseCsvLineData (docs/specs/009-elements/pie-chart.md)', () => {
     expect(out!.series[0]!.values).toEqual([3, 2]);
   });
 
-  it('coerces non-numeric / missing values to 0 and names blank series', () => {
-    const out = parseCsvLineData('x,\nJan,nope\nFeb,');
+  it('reads non-numeric / missing values as no value, a 0 as 0, and names blank series', () => {
+    const out = parseCsvLineData('x,\nJan,nope\nFeb,\nMar, 0 ');
     expect(out!.series[0]!.name).toBe('Series 1');
-    expect(out!.series[0]!.values).toEqual([0, 0]);
+    expect(out!.series[0]!.values).toEqual([null, null, 0]);
   });
 
   it('returns null when there is no usable data', () => {

@@ -124,7 +124,9 @@ describe('chart marks (docs/specs/009-elements/pie-chart.md "Chart types")', () 
   it('spaces a scatter of text categories evenly, as a line', () => {
     const m = lineMarks(area, ['a', 'b'], [{ name: 'Y', values: [1, 2] }], 'scatter');
     const line = lineMarks(area, ['a', 'b'], [{ name: 'Y', values: [1, 2] }], 'line');
-    expect(m.points).toEqual(line.points);
+    // Along x; up y a scatter fits its values where a line holds zero (pie-chart.md "Scatter's value range").
+    const xs = (pts: typeof m.points) => pts.map((s) => s.map((p) => p?.x));
+    expect(xs(m.points)).toEqual(xs(line.points));
     expect(m.labels).toEqual(line.labels);
   });
 
@@ -215,9 +217,9 @@ describe('chart types in the export', () => {
   it('fills an area chart and draws a scatter without lines', () => {
     const area = svgLineChart(shape('line-chart', { chartVariant: 'area' }), '#000');
     expect(area).toContain('fill-opacity="0.25"');
-    expect(area).toContain('<polyline');
+    expect(area).toContain('stroke-linejoin');
     const scatter = svgLineChart(shape('line-chart', { chartVariant: 'scatter' }), '#000');
-    expect(scatter).not.toContain('<polyline');
+    expect(scatter).not.toContain('stroke-linejoin');
     expect(scatter).toContain('r="4"');
   });
 });

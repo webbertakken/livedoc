@@ -64,7 +64,8 @@ describe('content kinds', () => {
     expect(lane).toMatchObject({ textAlignX: 'right', padding: 'lg' });
   });
 
-  it('coerces chart data and fits each series to the categories', () => {
+  // pie-chart.md "No value on the way in": text that is no number, and a missing value, are no value.
+  it('coerces chart data and fits each series to the categories, with no value where it has none', () => {
     const [pie, line] = normaliseElements([
       {
         id: 'p',
@@ -93,7 +94,7 @@ describe('content kinds', () => {
     });
     expect(line).toMatchObject({
       lineSeries: [
-        { name: 'Rev', values: [1, 0, 0] },
+        { name: 'Rev', values: [1, null, null] },
         { name: 'Cost', values: [1, 2, 3] },
       ],
     });

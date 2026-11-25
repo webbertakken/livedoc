@@ -1,8 +1,10 @@
 import { Button } from '@livedoc/ui';
 import {
+  chartValue,
   CHECKLIST_MAX_ITEMS,
   CHECKLIST_MAX_TEXT,
   PIE_PALETTE,
+  readChartValue,
   type ChecklistItem,
   type LegendItem,
   type LineSeries,
@@ -95,9 +97,13 @@ export function PieDataEditor({
               className={`${MENU_CELL_INPUT} w-12 text-right tabular-nums`}
               type="number"
               min={0}
-              value={s.value}
+              // No value shows as an empty field, and an emptied field is no value (pie-chart.md "No value is a gap").
+              value={chartValue(s.value) ?? ''}
               aria-label="Value"
-              onChange={(e) => patch(i, { value: Math.max(0, Number(e.target.value) || 0) })}
+              onChange={(e) => {
+                const value = readChartValue(e.target.value);
+                patch(i, { value: value === null ? null : Math.max(0, value) });
+              }}
               onBlur={() => onChange(rows)}
             />
             <button
