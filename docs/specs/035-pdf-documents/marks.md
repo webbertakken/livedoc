@@ -10,9 +10,10 @@ others as it is drawn, words shown to others as they are typed, a face for every
 snapping, every other kind made here, custom stamps and Manage stamps, and the room's own-marks check are not built.
 Of changing a mark, selecting, moving, resizing and deleting a mark made here, and restyling its colour, opacity, line
 width, line style, fill and line end, and a Text's and a Callout's size and alignment, Format > Colour and Fill
-colour, the toolbar's Line width and a tool's remembered width, style and fill are built; a Text's and a Callout's
-font, a tool's remembered opacity, line ends, font and size, rotating, arranging, grouping, locking, copying,
-Properties, Erase and the file's own marks are not.
+colour, the toolbar's Line width and a tool's remembered width, style and fill are built, and so are they for the
+file's own marks of the kinds LiveDoc makes; a Text's and a Callout's font, a tool's remembered opacity, line ends,
+font and size, rotating, arranging, grouping, locking, copying, Properties, Erase and the file's own marks of other
+kinds are not.
 
 A **mark** is something placed on top of a PDF page that leaves the page's own content alone: a highlight, a note, a
 piece of text, a drawing, a shape, a stamp. Marks are Reviewing's ([Editing modes](editing-modes.md)); a mark with
@@ -223,7 +224,20 @@ written into the file as a standard annotation, so any reader shows it. The rese
 - **Delete** removes the mark; a mark with a thread asks nothing and takes its thread to "on deleted content" in the
   comments panel ([Comments](comments.md#when-the-mark-goes)).
 - **Marks the file arrived with behave the same** as marks made here: selected, moved, restyled, answered, deleted.
-  Changing one is a live change naming it; the stored file is untouched until a bake.
+  Changing one is a live change naming it; the stored file is untouched until a bake. A mark saved here and opened
+  again is one of them.
+- **A file's mark as LiveDoc reads it** `(default)`: a mark of a kind LiveDoc makes is read from the standard's own
+  entries: a text mark from `QuadPoints` and the text under it; a Drawing from `InkList`; a Line from `L` and `LE`, an
+  Arrow where `IT` is `LineArrow`; a Rectangle and an Ellipse from `Rect` less half the line, and `IC`; a Text and a
+  Callout from `Contents`, `DA`, `Q`, `DS`, `CL` and `RD`; a stamp of a name LiveDoc draws from `Name` and `Contents`;
+  each with its colour (black where the file names none), opacity, line width and style, author and dates, every
+  value held within a mark's own bounds.
+- **A file's mark LiveDoc cannot read so** (a kind it does not make yet, a stamp it does not draw, an id of characters
+  or a length an id never holds, words that are only spaces) is drawn as the file says, never selected `(default)`.
+- **Changing a file's mark** takes it as LiveDoc's, in one step: the mark as LiveDoc reads it, changed, under the
+  file's own id, and the file's own named gone; the page then draws it as LiveDoc draws its kind, and a bake writes it
+  in place of the file's own `(default)`. **Deleting** one names it gone: the page draws without it, and a bake
+  removes it.
 - **Properties** (the side panel, for one selected mark): its kind, author, **subject** (a short label of the
   maker's own, the kind's name until changed), when made and changed, its look, its words, Locked, its **history**
   (each state its thread was given, by whom and when), and "Make this look the default" for its kind.
@@ -362,7 +376,7 @@ question mark. The research is [Every script in a mark's words](../../research/p
   stored file's bytes still hold the original, as an incremental update does. Removing it from the bytes for good is
   [removing hidden information](redaction-and-protection.md#removing-hidden-information).
 - **A Line** is written with its two ends as `L` and its second end's look as `LE`: `None`, `ClosedArrow`,
-  `OpenArrow`, `Circle`, `Square`, `Diamond` or `Butt`; **a Rectangle** and
+  `OpenArrow`, `Circle`, `Square`, `Diamond` or `Butt`, **an Arrow** the same with `IT` `LineArrow`; **a Rectangle** and
   **an Ellipse** with `Rect` the box grown by half the line's width, so the line falls where it was drawn. Their
   appearance streams are drawn from what the page shows of them, line for line. A line style other than Solid is
   written as `BS` `S` `D` with `D` its pattern, a Drawing's too, and a fill as `IC`.
@@ -471,7 +485,9 @@ a mark another person made is refused with `not_your_mark`.
   `[pdf] marks-restyled count=<n> look=<colour|opacity|width|style|fill|end|size|align>` (a pick or a choice),
   `[pdf] marks-deleted count=<n>`, `[pdf] tool-look kind=<kind> look=<width|style|fill>` (a tool's line chosen),
   `[pdf] marks-read count=<n> unknown=<n>` (per open), `[pdf] drawing-joined strokes=<n>` (a stroke joined to a
-  Drawing), `[pdf] typing-dropped kind=<kind>` (a Note, Text or Callout ended with nothing typed).
+  Drawing), `[pdf] typing-dropped kind=<kind>` (a Note, Text or Callout ended with nothing typed),
+  `[pdf] marks-hidden count=<n>` (the file's own marks the pages are drawn without, each time they change),
+  `[pdf] marks-hidden-failed reason=<reason>` (the engine was not told).
 
 ## Errors
 

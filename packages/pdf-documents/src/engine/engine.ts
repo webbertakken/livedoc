@@ -54,6 +54,8 @@ export function pdfEngineOver(
   // read by a reader of its own, made when asked and kept while the same layers are asked. The stored file and the
   // writer's copy of it are never touched: the copy is written from a writer of its own.
   let view: { key: string; reader: PdfReader | null } | null = null;
+  // The file's own marks the pages are drawn without (marks.md "Changing a mark"), for every reader that draws them.
+  let marksHidden: readonly string[] = [];
   const dropView = () => {
     view?.reader?.close();
     view = null;
@@ -67,6 +69,7 @@ export function pdfEngineOver(
       const copy = bytes ? new PdfReader(pdfium) : null;
       const read = copy?.open(bytes!, password ?? '');
       if (copy && read?.ok) {
+        copy.hideMarks(marksHidden);
         view = { key, reader: copy };
         log(`[pdf] layer-view hidden=${new Set(hidden).size}`);
       } else {
@@ -85,6 +88,9 @@ export function pdfEngineOver(
     waiting = !opened.ok && opened.needsPassword ? bytes : null;
     written = null;
     dropView();
+    // Another file hides none of its marks until asked.
+    marksHidden = [];
+    reader.hideMarks(marksHidden);
     pages = opened.ok ? opened.pages : [];
     // security.md "Scripts": counted and never run.
     if (opened.ok && opened.document.scripts > 0)
@@ -196,6 +202,12 @@ export function pdfEngineOver(
       return layers;
     },
     layerView: async (hidden) => (await drawerFor(hidden)) !== reader,
+    hideMarks: async (ids) => {
+      marksHidden = [...new Set(ids)];
+      reader.hideMarks(marksHidden);
+      view?.reader?.hideMarks(marksHidden);
+      log(`[pdf] marks-hidden count=${marksHidden.length}`);
+    },
     canAppend: async () => (await writer())?.canSaveIncrementally() === null,
     repaired: async () => (await writer())?.recoveredViaBruteForce ?? false,
     bake,

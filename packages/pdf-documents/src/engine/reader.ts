@@ -93,6 +93,11 @@ export class PdfReader {
     }
   }
 
+  /** The file's own marks its pages are drawn without from now on, by id; none again once another file opens. */
+  hideMarks(ids: readonly string[]): void {
+    this.file.marksHidden = new Set(ids);
+  }
+
   drawPage(
     index: number,
     scale: number,

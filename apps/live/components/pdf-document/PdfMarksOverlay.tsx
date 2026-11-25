@@ -133,6 +133,13 @@ export function MarkShapes({
 export type PdfMarkReshaping = { readonly id: string; readonly place: MarkPlace };
 
 /** A mark where a drag has it: moved by the drag's offset while among the marks dragged, or resized by a handle. */
+/** No mark of the file's own. */
+const NO_IDS: ReadonlySet<string> = new Set();
+
+/** Whether a mark is being dragged or resized now. */
+const inHand = (id: string, moving: PdfMarksMoving | null, reshaping: PdfMarkReshaping | null) =>
+  reshaping?.id === id || moving?.ids.includes(id) === true;
+
 function placed(
   mark: Mark,
   moving: PdfMarksMoving | null,
@@ -172,6 +179,7 @@ export function PdfMarksOverlay({
   width,
   height,
   marks,
+  fileOwn = NO_IDS,
   preview = [],
   draft = null,
   selected = [],
@@ -187,6 +195,9 @@ export function PdfMarksOverlay({
   width: number;
   height: number;
   marks: readonly Mark[];
+  // The marks of the file's own among them: the picture draws them, so they are drawn here only while dragged, and
+  // outlined while selected (marks.md "Changing a mark").
+  fileOwn?: ReadonlySet<string>;
   // The text a drag would mark, drawn while the drag lasts.
   preview?: readonly Quad[];
   // The mark being drawn or dragged (a Drawing's stroke, a line, a shape), in its tool's look.
@@ -213,22 +224,24 @@ export function PdfMarksOverlay({
       preserveAspectRatio="none"
       className={`pointer-events-none absolute inset-0 h-full w-full ${dark ? 'mix-blend-lighten' : 'mix-blend-multiply'}`}
     >
-      {shown.map((mark) => {
-        const colour = dark ? DarkPages.hex(mark.colour) : mark.colour;
-        return (
-          <g
-            key={mark.id}
-            data-pdf-mark={mark.id}
-            data-pdf-mark-kind={mark.kind}
-            fill={colour}
-            stroke={colour}
-            opacity={mark.opacity}
-          >
-            <MarkShapes matrix={matrix} shape={mark} dark={dark} />
-            <PdfMarkWords matrix={matrix} mark={mark} />
-          </g>
-        );
-      })}
+      {shown
+        .filter((mark) => !fileOwn.has(mark.id) || inHand(mark.id, moving, reshaping))
+        .map((mark) => {
+          const colour = dark ? DarkPages.hex(mark.colour) : mark.colour;
+          return (
+            <g
+              key={mark.id}
+              data-pdf-mark={mark.id}
+              data-pdf-mark-kind={mark.kind}
+              fill={colour}
+              stroke={colour}
+              opacity={mark.opacity}
+            >
+              <MarkShapes matrix={matrix} shape={mark} dark={dark} />
+              <PdfMarkWords matrix={matrix} mark={mark} />
+            </g>
+          );
+        })}
       {found && found.found.length > 0 ? (
         <g data-pdf-found="true" className="fill-(--pdf-found)" opacity={0.6}>
           {found.found.map((quad, at) => (

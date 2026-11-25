@@ -33,7 +33,7 @@ import {
 } from '../testing/fixtures';
 import { bakeChanges } from './bake';
 import { pdfEngineOver } from './engine';
-import { createPdfEngine, pdfDate } from './index';
+import { createPdfEngine } from './index';
 import { PdfReader, startReader } from './reader';
 
 let engine: PdfEngine;
@@ -768,11 +768,5 @@ describe('baking', () => {
     const file = join(mkdtempSync(join(tmpdir(), 'pdf-bake-')), 'baked.pdf');
     writeFileSync(file, result.bytes);
     expect(() => execFileSync('qpdf', ['--check', file], { stdio: 'pipe' })).not.toThrow();
-  });
-});
-
-describe('pdfDate', () => {
-  it('writes a time as the file holds a date, in UTC', () => {
-    expect(pdfDate(Date.UTC(2026, 0, 2, 3, 4, 5))).toBe('D:20260102030405Z');
   });
 });

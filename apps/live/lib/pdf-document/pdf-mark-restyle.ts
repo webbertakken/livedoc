@@ -9,7 +9,6 @@ import type * as Y from 'yjs';
 import {
   Mark as Marks,
   PdfChange,
-  PdfLiveChanges,
   Stamps,
   type DrawingMark,
   type LineEnd,
@@ -23,9 +22,9 @@ import {
   type TextAlign,
   TypedLayout,
 } from '@livedoc/pdf-documents';
+import { adopting, changeAsOne, markIn, NO_FILE_MARKS } from './pdf-mark-change';
 import { FIRST_LOOKS } from './pdf-mark-looks';
 import { STAMP_COLOURS } from './pdf-stamp';
-import { PDF_LOCAL_ORIGIN } from './pdf-undo';
 
 /** What a restyle sets, as `[pdf] marks-restyled look=<…>` names it. */
 export type RestyledLook =
@@ -169,24 +168,24 @@ function changeOf(mark: Mark, look: MarkChange): MarkChange {
   return { ...change, ...Object.fromEntries(placed) };
 }
 
-/** The marks of `ids` given the look `lookOf` asks of each, as one change, `now` their time of change; answers how
- *  many changed. */
+/**
+ * The marks of `ids` given the look `lookOf` asks of each, as one change, `now` their time of change; a mark of the
+ * file's own (`fileOwn`) that the look changes is taken as LiveDoc's in the same change. Answers how many changed.
+ */
 export function restyleMarks(
   doc: Y.Doc,
   ids: readonly string[],
   lookOf: (mark: Mark) => MarkChange,
   now: number,
+  fileOwn: ReadonlyMap<string, Mark> = NO_FILE_MARKS,
 ): number {
+  let changed = 0;
   const changes = ids.flatMap((id) => {
-    const mark = PdfLiveChanges.mark(doc, id);
+    const mark = markIn(doc, id, fileOwn);
     const change = mark ? changeOf(mark, lookOf(mark)) : {};
-    return Object.keys(change).length > 0
-      ? [PdfChange.changeMark(id, { ...change, modifiedAt: now })]
-      : [];
+    if (!mark || Object.keys(change).length === 0) return [];
+    changed += 1;
+    return [...adopting(doc, mark), PdfChange.changeMark(id, { ...change, modifiedAt: now })];
   });
-  if (changes.length > 0)
-    doc.transact(() => {
-      for (const change of changes) PdfChange.apply(doc, change, PDF_LOCAL_ORIGIN);
-    }, PDF_LOCAL_ORIGIN);
-  return changes.length;
+  return changeAsOne(doc, changes) ? changed : 0;
 }

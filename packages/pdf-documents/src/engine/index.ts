@@ -5,8 +5,6 @@ import { pdfEngineOver } from './engine';
 import { startReader } from './reader';
 import type { MarkFaceSource } from './typesetter';
 
-export { pdfDate } from './bake';
-
 /**
  * Starts the engine from the reader's WebAssembly binary; `log` takes what it decides, and is no one by default;
  * `faces` answers the mark faces' files (marks.md "Loading").

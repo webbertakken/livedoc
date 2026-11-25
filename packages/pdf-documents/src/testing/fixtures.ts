@@ -310,6 +310,22 @@ export function marksPdf(longWords = 0, listApart = false): Uint8Array<ArrayBuff
 }
 
 /**
+ * One page with two marks another program made, each drawn by the file (marks.md "Changing a mark": marks the file
+ * arrived with): a blue Rectangle by Grace named `their-box`, 150 by 100 points at 100 in and 600 up; and a red
+ * Drawing of one stroke from 100 to 300 at 550 up, which the file names by its object only.
+ */
+export function fileMarksPdf(): Uint8Array<ArrayBuffer> {
+  return rawPdf([
+    '<< /Type /Catalog /Pages 2 0 R >>',
+    '<< /Type /Pages /Kids [3 0 R] /Count 1 >>',
+    '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << >> /Annots [4 0 R 5 0 R] >>',
+    '<< /Type /Annot /Subtype /Square /NM (their-box) /Rect [100 600 250 700] /C [0 0 1] /BS << /W 4 >> /T (Grace) /F 4 /AP << /N 6 0 R >> >>',
+    '<< /Type /Annot /Subtype /Ink /Rect [96 546 304 564] /InkList [[100 550 200 560 300 550]] /C [1 0 0] /BS << /W 4 >> /T (Grace) /F 4 >>',
+    stream('/Type /XObject /Subtype /Form /BBox [0 0 150 100]', '0 0 1 RG 4 w 2 2 146 96 re S'),
+  ]);
+}
+
+/**
  * One page with a form as files hold them: a text field "applicant.city" (inside "applicant") valued "Delft" and
  * labelled; a multi-line read-only required one; a password field holding a value; a tick box that is on; a radio
  * group "colour" of two buttons, the second on; a dropdown that takes a value of one's own and a list that takes several, of three options each; a push button; an empty

@@ -15,6 +15,7 @@ import {
 import type { FieldValue } from '../field-value';
 import type { Mark } from '../mark';
 import { PageName } from '../page-name';
+import { PdfDate } from '../pdf-date';
 import type { RemovedKind } from '../pdf-change';
 import { annotate, type MarkFaceWriting } from './annotate';
 import { embeddedFaces } from './embedded-faces';
@@ -40,14 +41,6 @@ export type Written =
       readonly glyphsMissing: number;
     }
   | { readonly ok: false; readonly refusal: 'cannot-append' | 'unreadable' };
-
-const two = (n: number): string => String(n).padStart(2, '0');
-
-/** A time as the file writes a date: `D:YYYYMMDDHHmmSSZ`, always in UTC. */
-export function pdfDate(ms: number): string {
-  const d = new Date(ms);
-  return `D:${d.getUTCFullYear()}${two(d.getUTCMonth() + 1)}${two(d.getUTCDate())}${two(d.getUTCHours())}${two(d.getUTCMinutes())}${two(d.getUTCSeconds())}Z`;
-}
 
 const startsWith = (bytes: Uint8Array, prefix: Uint8Array): boolean =>
   bytes.length >= prefix.length && prefix.every((byte, at) => bytes[at] === byte);
@@ -113,8 +106,8 @@ function addMarks(
     holdList(pdf, page);
     const annotation = annotate(pdf, page, mark, writing);
     annotation.set('NM', PdfString.fromString(mark.id));
-    annotation.set('M', PdfString.fromString(pdfDate(mark.modifiedAt)));
-    annotation.set('CreationDate', PdfString.fromString(pdfDate(mark.createdAt)));
+    annotation.set('M', PdfString.fromString(PdfDate.write(mark.modifiedAt)));
+    annotation.set('CreationDate', PdfString.fromString(PdfDate.write(mark.createdAt)));
   }
   return lost;
 }
@@ -205,9 +198,10 @@ export async function bakeChanges(
           },
         }
       : null;
+  // The file's own removed first: a mark of the file changed here is written under its own id, in its place.
+  removeMarks(pdf, pages, changes.removed);
   anchorsLost += addMarks(pdf, pages, changes.marks, writing);
   const glyphsMissing = faces?.finish().missing ?? 0;
-  removeMarks(pdf, pages, changes.removed);
   const fieldsLost = changes.fieldValues.filter((value) => !fillField(pdf, value)).length;
   const bytes = (await pdf.save({ incremental: true })) as Uint8Array<ArrayBuffer>;
   if (!startsWith(bytes, base)) return { ok: false, refusal: 'cannot-append' };

@@ -8,12 +8,15 @@ import {
   type TileRect,
 } from '../engine-contract';
 import { PDF_MAX_PAGE_PIXELS } from '../limits';
+import { idOf } from './read-marks';
 import { clampSide, type ReaderFile } from './reader-file';
 
 // FPDFBitmap_BGRA; FPDF_ANNOT draws the file's own marks, FPDF_REVERSE_BYTE_ORDER answers RGBA.
 const BITMAP_BGRA = 4;
 const RENDER_FLAGS = 0x01 | 0x10;
 const WHITE = 0xffffffff;
+// The annotation flag that keeps a mark from being drawn.
+const HIDDEN = 2;
 // The scale FPDF_PageToDevice is asked at, so its whole-number answers keep a thousandth of a point.
 const MATRIX_PRECISION = 1000;
 const MATRIX_PROBE = 1000;
@@ -78,6 +81,35 @@ export function drawnSize(
 
 // The widest a whole page is reckoned at for a tile: the reader takes its size as a 32-bit whole number.
 const MAX_WHOLE_PX = 2 ** 30;
+
+/**
+ * Draws with the file's own marks the file names hidden (marks.md "Changing a mark": one changed or deleted here) kept
+ * from the picture: each is flagged hidden for the draw alone, and its own flags given back after it.
+ */
+function withMarksHidden<T>(file: ReaderFile, page: number, draw: () => T): T {
+  const { p, marksHidden } = file;
+  if (marksHidden.size === 0) return draw();
+  const held: { annotation: number; flags: number }[] = [];
+  for (let n = 0, count = p.FPDFPage_GetAnnotCount(page); n < count; n += 1) {
+    const annotation = p.FPDFPage_GetAnnot(page, n);
+    if (!annotation) continue;
+    if (!marksHidden.has(idOf(file, annotation))) {
+      p.FPDFPage_CloseAnnot(annotation);
+      continue;
+    }
+    const flags = p.FPDFAnnot_GetFlags(annotation);
+    p.FPDFAnnot_SetFlags(annotation, flags | HIDDEN);
+    held.push({ annotation, flags });
+  }
+  try {
+    return draw();
+  } finally {
+    for (const { annotation, flags } of held) {
+      p.FPDFAnnot_SetFlags(annotation, flags);
+      p.FPDFPage_CloseAnnot(annotation);
+    }
+  }
+}
 
 /** A page's size as drawn turned: on its side for an odd turn. */
 function turnedView(pageWidth: number, pageHeight: number, turns: PageTurns): Turned {
@@ -149,9 +181,11 @@ export function drawPage(
     const bitmap = p.FPDFBitmap_CreateEx(width, height, BITMAP_BGRA, 0, 0);
     if (!bitmap) return null;
     p.FPDFBitmap_FillRect(bitmap, 0, 0, width, height, WHITE);
-    p.FPDF_RenderPageBitmap(bitmap, page, 0, 0, width, height, turns, RENDER_FLAGS);
-    // The reader leaves a file's fields to its form: without this a filled form shows empty boxes.
-    if (form) p.FPDF_FFLDraw(form, bitmap, page, 0, 0, width, height, turns, RENDER_FLAGS);
+    withMarksHidden(file, page, () => {
+      p.FPDF_RenderPageBitmap(bitmap, page, 0, 0, width, height, turns, RENDER_FLAGS);
+      // The reader leaves a file's fields to its form: without this a filled form shows empty boxes.
+      if (form) p.FPDF_FFLDraw(form, bitmap, page, 0, 0, width, height, turns, RENDER_FLAGS);
+    });
     const rgba = pictureOf(file, bitmap, width, height);
     return { width, height, rgba, toView: matrixOf(file, page, view) };
   });
@@ -190,9 +224,11 @@ export function drawTile(
     const bitmap = p.FPDFBitmap_CreateEx(width, height, BITMAP_BGRA, 0, 0);
     if (!bitmap) return null;
     p.FPDFBitmap_FillRect(bitmap, 0, 0, width, height, WHITE);
-    p.FPDF_RenderPageBitmap(bitmap, page, -x, -y, whole.width, whole.height, turns, RENDER_FLAGS);
-    if (form)
-      p.FPDF_FFLDraw(form, bitmap, page, -x, -y, whole.width, whole.height, turns, RENDER_FLAGS);
+    withMarksHidden(file, page, () => {
+      p.FPDF_RenderPageBitmap(bitmap, page, -x, -y, whole.width, whole.height, turns, RENDER_FLAGS);
+      if (form)
+        p.FPDF_FFLDraw(form, bitmap, page, -x, -y, whole.width, whole.height, turns, RENDER_FLAGS);
+    });
     const rgba = pictureOf(file, bitmap, width, height);
     return { width, height, rgba, toView: matrixOf(file, page, view) };
   });

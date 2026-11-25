@@ -151,6 +151,32 @@ function facedLine(
 const path = (points: MarkDrawing['fills'][number]): string =>
   points.map(({ x, y }, at) => `${num(x)} ${num(y)} ${at === 0 ? 'm' : 'l'}`).join(' ');
 
+/**
+ * The box an appearance is drawn in: everything it draws and the box its words are set in, grown by its widest line.
+ * Read back too, to find a mark's own box within the `Rect` a bake wrote (marks.md "Changing a mark").
+ */
+export function appearanceBox(
+  { fills, strokes }: Pick<MarkDrawing, 'fills' | 'strokes'>,
+  wordsBox: Box | null,
+): Box {
+  const box = wordsBox
+    ? [
+        { x: wordsBox[0], y: wordsBox[1] },
+        { x: wordsBox[2], y: wordsBox[3] },
+      ]
+    : [];
+  const all = [...fills.flat(), ...strokes.flatMap((stroke) => stroke.points), ...box];
+  const grow = Math.max(0, ...strokes.map((stroke) => stroke.width));
+  const xs = all.map((point) => point.x);
+  const ys = all.map((point) => point.y);
+  return [
+    Math.min(...xs) - grow,
+    Math.min(...ys) - grow,
+    Math.max(...xs) + grow,
+    Math.max(...ys) + grow,
+  ];
+}
+
 export function appearanceOf(
   { fills, strokes, fill }: MarkDrawing,
   look: { readonly colour: string; readonly opacity: number },
@@ -207,24 +233,9 @@ export function appearanceOf(
     lines.push('ET');
   }
   lines.push('Q');
-  const box = words
-    ? [
-        { x: words.box[0], y: words.box[1] },
-        { x: words.box[2], y: words.box[3] },
-      ]
-    : [];
-  const all = [...fills.flat(), ...strokes.flatMap((stroke) => stroke.points), ...box];
-  const grow = Math.max(0, ...strokes.map((stroke) => stroke.width));
-  const xs = all.map((point) => point.x);
-  const ys = all.map((point) => point.y);
   return {
     content: lines.join('\n'),
-    box: [
-      Math.min(...xs) - grow,
-      Math.min(...ys) - grow,
-      Math.max(...xs) + grow,
-      Math.max(...ys) + grow,
-    ],
+    box: appearanceBox({ fills, strokes }, words?.box ?? null),
     opacity,
     fonts,
     faces,

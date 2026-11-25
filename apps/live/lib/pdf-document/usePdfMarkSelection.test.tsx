@@ -8,6 +8,7 @@ import type { BlobKey } from '@livedoc/document';
 import { Mark, PageName, PdfLiveChanges, type PageInfo } from '@livedoc/pdf-documents';
 import { debugLog } from '@/lib/debug-log';
 import { track } from '@/lib/telemetry';
+import { pdfChangeableStore } from './pdf-changeable-marks';
 import { pdfMarksStore } from './pdf-marks-store';
 import { DELETE_MARKS } from './pdf-menus';
 import type { PdfTextSelected } from './usePdfTextSelection';
@@ -41,7 +42,7 @@ function selecting({ marking = true, open = true } = {}) {
       },
     } as never,
   };
-  const marks = pdfMarksStore(doc);
+  const marks = pdfChangeableStore(doc, pdfMarksStore(doc));
   const hook = renderHook(
     ({ text }: { text: PdfTextSelected | null }) =>
       usePdfMarkSelection({

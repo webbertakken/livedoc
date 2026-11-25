@@ -34,7 +34,9 @@ import { pdfReadsOf, type PdfHome } from '@/lib/pdf-document/pdf-home';
 import type { BindPdfLiveChanges } from '@/lib/pdf-document/pdf-live-binding';
 import { pdfLocalBinding } from '@/lib/pdf-document/pdf-local-binding';
 import { lookControls } from '@/lib/pdf-document/pdf-look-controls';
+import { pdfChangeableStore } from '@/lib/pdf-document/pdf-changeable-marks';
 import { marksOnPage, pdfMarksStore } from '@/lib/pdf-document/pdf-marks-store';
+import { usePdfFileMarksHidden } from '@/lib/pdf-document/usePdfFileMarksHidden';
 import { droppedChangeCopy, lostChangesCopy } from '@/lib/pdf-document/pdf-surface-copy';
 import { usePdfDownload } from '@/lib/pdf-document/usePdfDownload';
 import { usePdfDarkPages } from '@/lib/pdf-document/usePdfDarkPages';
@@ -154,9 +156,20 @@ export function PdfDocumentSurface({
   // Marks are Reviewing's: in Viewing a tool that marks is neither offered nor in hand (editing-modes.md).
   const marking = canReview && mode !== 'viewing' && ready !== null;
   const marks = useMemo(() => (ready ? pdfMarksStore(ready.binding.doc) : null), [ready]);
+  // "Changing a mark": the marks a person may change, the file's own among them, and those the pages are drawn without.
+  const changeable = useMemo(
+    () => (ready && marks ? pdfChangeableStore(ready.binding.doc, marks) : null),
+    [ready, marks],
+  );
+  const marksHidden = usePdfFileMarksHidden(ready?.engine ?? null, ready?.binding.doc ?? null);
   // "Dark pages": this person's look; "Layers": theirs too, and the drawer their pages are drawn with.
   const darkPages = usePdfDarkPages({ ownerId: scope.ownerId, onProblem: setProblem });
-  const layerView = usePdfLayerView(ready?.engine ?? null, ready?.drawer ?? null, darkPages.look);
+  const layerView = usePdfLayerView(
+    ready?.engine ?? null,
+    ready?.drawer ?? null,
+    darkPages.look,
+    marksHidden,
+  );
 
   // "Replacing the stored file": an Editor's idle surface replaces it for the budget. The room's alone: in This
   // Browser the stored file is not replaced.
@@ -329,7 +342,7 @@ export function PdfDocumentSurface({
   // "Changing a mark": the marks this person selected, moved and deleted.
   const markSelection = usePdfMarkSelection({
     ready,
-    marks,
+    marks: changeable,
     marking,
     textSelected: textSelection.selected,
     clearText: textSelection.clear,
@@ -338,7 +351,7 @@ export function PdfDocumentSurface({
   // "Changing a mark": the selected marks' colour, fill, size and Format menu looks.
   const markRestyle = usePdfMarkRestyle({
     ready,
-    marks,
+    marks: changeable,
     marking,
     chosen: markSelection.chosen,
     focusPages: focusPagesElement,
@@ -492,7 +505,7 @@ export function PdfDocumentSurface({
         />
       ) : null}
       {open.phase === 'opening' ? <PdfOpeningPage /> : null}
-      {ready && marks ? (
+      {ready && marks && changeable ? (
         <PdfLookContext.Provider value={darkPages.look}>
           <OfficePanelLayout
             left={
@@ -533,7 +546,7 @@ export function PdfDocumentSurface({
                 pages={ready.pages}
                 engine={ready.engine}
                 drawer={layerView.drawer ?? ready.drawer}
-                marks={marks}
+                marks={changeable}
                 tool={tools.inHand}
                 onMark={tools.make}
                 ink={tools.ink}

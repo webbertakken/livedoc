@@ -5,7 +5,7 @@ import type { EmbeddedFiles } from './embedded-file';
 import type { PageField } from './file-field';
 import type { FileSignature } from './file-signature';
 import type { LinkTarget } from './link-target';
-import type { Quad } from './mark';
+import type { Mark, Quad } from './mark';
 import type { PageName } from './page-name';
 import type { PageText } from './page-text';
 import type { PageTags } from './page-tags';
@@ -152,6 +152,11 @@ export type FileMark = {
   readonly answers: { readonly mark: string; readonly grouped: boolean } | null;
   /** A state reply's state (`Review`, `Accepted`); null for every other mark. */
   readonly state: { readonly model: string; readonly state: string } | null;
+  /**
+   * The mark as LiveDoc reads it, so it is changed as a mark made here is; null where LiveDoc cannot read it as one
+   * (marks.md "Changing a mark": a file's mark as LiveDoc reads it).
+   */
+  readonly mark: Mark | null;
 };
 
 /** An embedded file read out of the PDF to be saved or opened (reading-surface.md "Embedded files"). */
@@ -272,6 +277,12 @@ export type PdfEngine = {
    * drawn so; false leaves them drawn as the file sets them (reading-surface.md "Layers").
    */
   layerView(hidden: readonly string[]): Promise<boolean>;
+  /**
+   * The file's own marks every page, tile and thumbnail is drawn without from now on, by id: each one changed or
+   * deleted here (marks.md "Changing a mark"). None until asked, and none again for a file opened after. The file is
+   * never changed: a bake still reads every mark it holds.
+   */
+  hideMarks(ids: readonly string[]): Promise<void>;
   /**
    * Whether the open file can take an addition; a file opened only by rebuilding it cannot, and its changes are
    * written as a rewritten file (opening.md "Damaged files"). Asking reads the whole file a second time.

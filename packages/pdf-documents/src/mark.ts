@@ -167,7 +167,8 @@ export type StampMark = MarkBase & {
 
 export type Mark = TextMark | DrawingMark | LineMark | ShapeMark | TypedMark | StampMark;
 
-const ID = /^[A-Za-z0-9_-]{1,64}$/;
+// A LiveDoc id, or a file mark's own: its `NM` as files name marks (a GUID in braces, dotted names) or `o:<object>`.
+const ID = /^[A-Za-z0-9_.:{}-]{1,64}$/;
 const STAMP_ID = /^[a-z0-9-]{1,64}$/;
 /** A stamp's lines: its name, and a dynamic stamp's second. */
 const STAMP_MAX_LINES = 2;

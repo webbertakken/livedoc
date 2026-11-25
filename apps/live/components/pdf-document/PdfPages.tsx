@@ -15,7 +15,7 @@ import type {
 } from '@livedoc/pdf-documents';
 import { pdfLinkName } from '@/lib/pdf-document/pdf-link';
 import { CSS_PER_POINT, type PdfPageLayout } from '@/lib/pdf-document/pdf-page-layout';
-import { marksOnPage, type PdfMarksStore } from '@/lib/pdf-document/pdf-marks-store';
+import { changeableOnPage, type PdfChangeableStore } from '@/lib/pdf-document/pdf-changeable-marks';
 import type { PdfPageDrawer } from '@/lib/pdf-document/pdf-page-drawer';
 import { PdfDevice } from '@/lib/pdf-document/pdf-device';
 import { pdfTileCache } from '@/lib/pdf-document/pdf-tile-cache';
@@ -79,7 +79,8 @@ export function PdfPages({
   pages: readonly PageInfo[];
   engine: Pick<PdfEngine, 'selectText' | 'fileMarks' | 'links'>;
   drawer: PdfPageDrawer;
-  marks: PdfMarksStore;
+  // The marks a person may change, by page: LiveDoc's and the file's own read as each page is drawn.
+  marks: PdfChangeableStore;
   tool: PdfPageTool;
   onMark: (index: number, selection: TextSelection) => void;
   ink: PdfPageInk | null;
@@ -167,7 +168,8 @@ export function PdfPages({
                   held={held.within.has(box.index)}
                   engine={engine}
                   drawer={drawer}
-                  marks={marksOnPage(byPage, page.name)}
+                  marks={changeableOnPage(byPage, page.name)}
+                  onFileMarks={marks.putFileMarks}
                   tool={tool}
                   onMark={onMark}
                   ink={ink}

@@ -39,18 +39,22 @@ import {
   widthOf,
   type RestyledLook,
 } from './pdf-mark-restyle';
-import { marksOnPage, type PdfMarksByPage, type PdfMarksStore } from './pdf-marks-store';
+import {
+  changeableOnPage,
+  type PdfChangeableByPage,
+  type PdfChangeableStore,
+} from './pdf-changeable-marks';
 import { FILL_COLOUR, TOOL_COLOUR } from './pdf-toolbar';
 import { pageBoxOf } from './pdf-typed';
 import type { PdfDocumentOpen } from './usePdfDocument';
-import type { PdfMarksChosen } from './usePdfMarkSelection';
+import { fileOwnOf, type PdfMarksChosen } from './usePdfMarkSelection';
 
 type Ready = Pick<
   Extract<PdfDocumentOpen, { phase: 'ready' }>,
   'pages' | 'engine' | 'binding' | 'undo'
 >;
 
-const NO_MARKS: PdfMarksByPage = new Map();
+const NO_MARKS: PdfChangeableByPage = new Map();
 const NONE: readonly Mark[] = [];
 const neverChanges = () => () => {};
 const noMarks = () => NO_MARKS;
@@ -80,9 +84,9 @@ export function usePdfMarkRestyle({
   chosen,
   focusPages,
 }: {
-  // The open PDF and its marks by page; null before it is.
+  // The open PDF and the marks a person may change, by page; null before it is.
   ready: Ready | null;
-  marks: PdfMarksStore | null;
+  marks: PdfChangeableStore | null;
   // Whether marks may be changed now: Reviewing, for a session that reviews.
   marking: boolean;
   // The marks selected; null while none is.
@@ -96,7 +100,7 @@ export function usePdfMarkRestyle({
   const selected = useMemo(
     () =>
       chosen && page
-        ? marksOnPage(byPage, page.name).filter((mark) => chosen.ids.includes(mark.id))
+        ? changeableOnPage(byPage, page.name).marks.filter((mark) => chosen.ids.includes(mark.id))
         : NONE,
     [byPage, chosen, page],
   );
@@ -106,7 +110,13 @@ export function usePdfMarkRestyle({
     const restyle = (look: RestyledLook, lookOf: (mark: Mark) => MarkChange) => {
       if (!chosen || !page) return;
       const changed = ready.undo.step({ page: page.name }, () =>
-        restyleMarks(ready.binding.doc, chosen.ids, lookOf, Date.now()),
+        restyleMarks(
+          ready.binding.doc,
+          chosen.ids,
+          lookOf,
+          Date.now(),
+          fileOwnOf(byPage, page.name),
+        ),
       );
       if (changed > 0) {
         debugLog(`[pdf] marks-restyled count=${changed} look=${look}`);
@@ -213,5 +223,5 @@ export function usePdfMarkRestyle({
       ),
     };
     return { colours, actions, fontSize };
-  }, [ready, chosen, page, selected, marking, focusPages]);
+  }, [ready, chosen, page, selected, marking, focusPages, byPage]);
 }

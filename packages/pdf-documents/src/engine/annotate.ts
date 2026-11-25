@@ -250,6 +250,8 @@ function annotateDragged(
   color: ReturnType<typeof rgb>,
 ): PdfDict {
   const annotation = subtypeOf(page, mark, color).dict;
+  // An Arrow is a Line with the standard's intent for one, so it reads back as an Arrow whatever its end.
+  if (mark.kind === 'arrow') annotation.set('IT', PdfName.of('LineArrow'));
   drawAppearance(pdf, annotation, mark);
   styleOf(annotation, mark);
   return annotation;

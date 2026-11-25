@@ -109,6 +109,17 @@ describe('restyleMarks', () => {
     expect(origins).toEqual([PDF_LOCAL_ORIGIN]);
   });
 
+  it('takes a mark the file arrived with as LiveDoc’s when the look changes it, and leaves it the file’s otherwise', () => {
+    const { doc } = withMarks();
+    const theirs = { ...line, id: 'o:7' };
+    const fileOwn = new Map([[theirs.id, theirs]]);
+    expect(restyleMarks(doc, ['o:7'], () => ({ colour: '#ff0000' }), T + 1, fileOwn)).toBe(0);
+    expect([...PdfLiveChanges.removed(doc)]).toEqual([]);
+    expect(restyleMarks(doc, ['o:7'], () => ({ width: 6 }), T + 1, fileOwn)).toBe(1);
+    expect(PdfLiveChanges.mark(doc, 'o:7')).toEqual({ ...theirs, width: 6, modifiedAt: T + 1 });
+    expect([...PdfLiveChanges.removed(doc)]).toEqual([['o:7', 'mark']]);
+  });
+
   it('takes each mark’s own look where it is asked for: Reset', () => {
     const { doc } = withMarks();
     expect(restyleMarks(doc, ['l', 's'], (mark) => ({ colour: firstColour(mark) }), T + 1)).toBe(2);
