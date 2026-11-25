@@ -96,7 +96,7 @@ Every `wrangler` invocation in the reusable workflow ends in `${WRANGLER_ENV:+--
 
 Jobs:
 
-1. **build** — installs deps, runs `pnpm build`, uploads `apps/marketing/out`, `apps/live/out`, `apps/telemetry/out` and `apps/help/out` as workflow artifacts.
+1. **build** — installs deps, runs `pnpm build`, uploads `apps/marketing/out`, `apps/live/out`, `apps/telemetry/out` and `apps/help/out` as workflow artifacts, hidden files included (see [Build artifacts keep hidden files](#build-artifacts-keep-hidden-files)).
 2. **deploy-marketing** — downloads `marketing-out`, runs `pnpm exec wrangler deploy` from `apps/marketing/`.
 3. **deploy-live** — downloads `live-out`, runs `pnpm exec wrangler deploy` from `apps/live/`.
 4. **deploy-api** — runs:
@@ -111,6 +111,16 @@ Jobs:
 `deploy-marketing`, `deploy-api`, `deploy-telemetry` and `deploy-help` run in parallel off `build`, and `deploy-live` follows `deploy-api`; `deploy-mcp` runs once `deploy-api` is up (parallel to the rest); `deploy-router` waits for the five it binds (not mcp, which is a separate host).
 
 All seven deploy jobs use raw `pnpm exec wrangler` rather than `cloudflare/wrangler-action` — wrangler 4 ships sensible defaults and the explicit invocation makes the workflow log read 1:1 against a local run.
+
+### Build artifacts keep hidden files
+
+A site's `out/` crosses from the build job to its deploy job as a workflow artifact, and must arrive whole.
+
+- `actions/upload-artifact` leaves out hidden files (a name starting with a dot) unless `include-hidden-files: true`.
+- Without it the marketing site lost `out/.well-known/security.txt`: built, never deployed, `/.well-known/security.txt`
+  a `404` ([Vulnerability disclosure](../002-project-scope/vulnerability-disclosure.md)).
+- So every site's build upload sets `include-hidden-files: true`; `apps/help/lib/ci-artifacts.test.ts` holds them to it.
+- **deploy-marketing** checks `out/.well-known/security.txt` is there before it deploys, and fails by name when not.
 
 ### Renaming migrations
 
