@@ -90,9 +90,15 @@ function normaliseChart(el: Raw): Raw {
       const values = Array.isArray(s.values) ? s.values.map(chartNum) : [];
       const fitted =
         count === undefined ? values : Array.from({ length: count }, (_, i) => values[i] ?? null);
-      // A second axis is `right` or nothing.
-      const { axis, ...rest } = s;
-      return { ...rest, name: str(s.name), values: fitted, ...(axis === 'right' ? { axis } : {}) };
+      // A second axis is `right` or nothing; a scatter series drawn as a line is `true` or nothing.
+      const { axis, line, ...rest } = s;
+      return {
+        ...rest,
+        name: str(s.name),
+        values: fitted,
+        ...(axis === 'right' ? { axis } : {}),
+        ...(line === true ? { line } : {}),
+      };
     });
   }
   return out;

@@ -341,3 +341,36 @@ describe('targets that match nothing', () => {
     expect(last.details?.[0]).toBe('"other" matches nothing');
   });
 });
+
+// pie-chart.md "Lines set by an agent": an operation line marks a scatter chart's series as lines by name, and the
+// mark survives finalising (normalise) on the way into the tab.
+describe('lines on a chart', () => {
+  it('sets a scatter series drawn as a line from an operation line', () => {
+    const chart = {
+      id: 'c1',
+      type: 'shape',
+      shape: 'line-chart',
+      x: 600,
+      y: 0,
+      width: 300,
+      height: 200,
+      chartVariant: 'scatter',
+      lineCategories: ['1', '2', '3'],
+      lineSeries: [
+        { name: 'Models', values: [1, null, 3] },
+        { name: 'Pareto', values: [null, 2, 4] },
+      ],
+    } as unknown as Element;
+    const tab = { ...checkoutFlow(), elements: [...checkoutFlow().elements, chart] };
+    const parsed = parseEditOperations('set c1 lines=["Pareto"]');
+    if ('errors' in parsed) throw new Error('parse');
+    const out = applied(applyEditOperations(tab, parsed.operations));
+    const next = out.tab.elements.find((e) => e.id === 'c1') as unknown as {
+      lineSeries: { name: string; values: (number | null)[]; line?: true }[];
+    };
+    expect(next.lineSeries).toEqual([
+      { name: 'Models', values: [1, null, 3] },
+      { name: 'Pareto', values: [null, 2, 4], line: true },
+    ]);
+  });
+});

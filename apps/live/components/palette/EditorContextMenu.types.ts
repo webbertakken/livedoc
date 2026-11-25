@@ -208,6 +208,8 @@ export type EditorContextMenuProps = {
   // Show Axis and Right Axis (docs/specs/009-elements/pie-chart.md): the value axis, and the series on a second.
   onSetChartAxis: (value: boolean) => void;
   onSetChartRightAxis: (index: number | null) => void;
+  // Lines (pie-chart.md "A scatter series drawn as a line"): one series of a scatter chart marked as a line, or not.
+  onSetChartLine: (index: number, on: boolean) => void;
   onSetChartLegendPosition: (position: ChartLegendPosition) => void;
   // Chart type (docs/specs/009-elements/pie-chart.md "Chart types"): Column, Bar, Line, Area, Scatter, Pie, Doughnut.
   onSetChartType: (type: ChartType) => void;

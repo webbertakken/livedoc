@@ -12,7 +12,7 @@ import {
 } from './chart-axis';
 import type { ChartRect } from './chart-frame';
 import { chartAxisLabel } from './chart-frame';
-import { chartValue, type LineSeries, type PieSlice } from './data-shapes';
+import { chartValue, type ChartKeyItem, type LineSeries, type PieSlice } from './data-shapes';
 
 export type ChartPoint = { x: number; y: number };
 
@@ -336,13 +336,21 @@ export function lineMarks(
   // Each series' runs of points side by side: the line breaks at a gap (pie-chart.md "No value is a gap"). A point
   // with no neighbour is no stretch of line; it is drawn as its marker alone.
   const runs = points.map((pts) => runsOf(pts).filter((run) => run.length > 1));
-  const lines = runs.map((rs) =>
-    variant === 'scatter'
-      ? ''
-      : rs
-          .map((run) => run.map((p, k) => `${k === 0 ? 'M' : 'L'} ${q(p.x)} ${q(p.y)}`).join(' '))
-          .join(' '),
-  );
+  const pathOf = (rs: readonly ChartPoint[][]) =>
+    rs
+      .map((run) => run.map((p, k) => `${k === 0 ? 'M' : 'L'} ${q(p.x)} ${q(p.y)}`).join(' '))
+      .join(' ');
+  // A scatter draws points only, but for a series drawn as a line: its present points joined in order of x, no
+  // value breaking nothing (pie-chart.md "A scatter series drawn as a line"); the sort is stable, so equal x keep
+  // their rows' order.
+  const lines = series.map((s, si) => {
+    if (variant !== 'scatter') return pathOf(runs[si]!);
+    if (s.line !== true) return '';
+    const present = points[si]!.filter((p): p is ChartPoint => p !== null).sort(
+      (a, b) => a.x - b.x,
+    );
+    return present.length > 1 ? pathOf([present]) : '';
+  });
   const areas =
     variant === 'area'
       ? runs.map((rs, si) => {
@@ -368,6 +376,16 @@ export function lineMarks(
       right: right?.scale?.ticks.map((t) => ({ y: yRight(t.value), text: t.text })) ?? [],
     },
   };
+}
+
+// A line chart's key: a row per series, a scatter series drawn as a line keyed by a line (pie-chart.md "A scatter
+// series drawn as a line").
+export function lineKeyItems(series: readonly LineSeries[], variant: LineVariant): ChartKeyItem[] {
+  return series.map((s) => ({
+    label: s.name,
+    ...(s.color ? { color: s.color } : {}),
+    ...(variant === 'scatter' && s.line === true ? { line: true } : {}),
+  }));
 }
 
 // A series' points split at each gap into runs of points side by side.

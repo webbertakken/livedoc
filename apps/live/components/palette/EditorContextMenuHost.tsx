@@ -138,6 +138,7 @@ export function EditorContextMenuHost() {
     setChartValuesSelected,
     setChartAxisSelected,
     setChartRightAxisSelected,
+    setChartLineSelected,
     setChartLegendPositionSelected,
     setChartTypeSelected,
     unlinkChartSelected,
@@ -482,6 +483,7 @@ export function EditorContextMenuHost() {
       onSetChartValues={setChartValuesSelected}
       onSetChartAxis={setChartAxisSelected}
       onSetChartRightAxis={setChartRightAxisSelected}
+      onSetChartLine={setChartLineSelected}
       onSetChartLegendPosition={setChartLegendPositionSelected}
       onSetChartType={setChartTypeSelected}
       onUnlinkChart={unlinkChartSelected}

@@ -71,13 +71,19 @@ export const PIE_DEFAULT_SLICES: readonly PieSlice[] = [
 // `lineSeries`, each a named line with a value per category (+ an optional
 // colour override). Editable as a grid and importable from CSV. Reuses the
 // shared `pieAnim` / `chartLegend` fields. The legend lists series names.
-// `axis: 'right'` draws the series against a scale of its own, the chart's second axis (pie-chart.md "A second axis").
+// `axis: 'right'` draws the series against a scale of its own, the chart's second axis (pie-chart.md "A second axis");
+// `line: true` joins a scatter series' points in order of x (pie-chart.md "A scatter series drawn as a line").
 export type LineSeries = {
   name: string;
   color?: string;
   values: (number | null)[];
   axis?: 'right';
+  line?: true;
 };
+
+// A row of a chart's key: its name, its colour, and `line` when its swatch is a line through a dot (a scatter series
+// drawn as a line) rather than a square.
+export type ChartKeyItem = { label: string; color?: string; line?: boolean };
 // A datum's value, or null for no value (pie-chart.md "No value is a gap"): only a finite number is one. Stored data is
 // read through this, so a null, an absent value or text a row was saved with draws as no value, never as 0.
 export function chartValue(v: unknown): number | null {

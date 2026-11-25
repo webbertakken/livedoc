@@ -137,9 +137,16 @@ export function chartFieldsFromTable(
     const series = xFromFirst ? t.series.slice(1) : t.series;
     return {
       lineCategories: categories,
+      // What a series carries beyond its data stays with its place: its colour, Right Axis and Lines.
       lineSeries: series.map((s, i) => {
-        const color = el.lineSeries?.[i]?.color;
-        return { name: s.name, values: s.values, ...(color ? { color } : {}) };
+        const was = el.lineSeries?.[i];
+        return {
+          name: s.name,
+          values: s.values,
+          ...(was?.color ? { color: was.color } : {}),
+          ...(was?.axis === 'right' ? { axis: 'right' as const } : {}),
+          ...(was?.line === true ? { line: true as const } : {}),
+        };
       }),
     };
   }

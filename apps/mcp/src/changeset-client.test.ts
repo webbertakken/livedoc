@@ -393,3 +393,41 @@ describe('mcpResultText', () => {
     );
   });
 });
+
+// pie-chart.md "Lines set by an agent": update_document's `update` sets `lines` on an existing scatter chart, by
+// series name, through the `set` alias.
+describe('lines through update_document', () => {
+  it('marks the named series of a chart as a line', async () => {
+    const { applyEditOperations, validateEditOperations } =
+      await import('@livedoc/edit-operations');
+    const chart = {
+      id: 'c1',
+      type: 'shape',
+      shape: 'line-chart',
+      x: 0,
+      y: 0,
+      width: 300,
+      height: 200,
+      chartVariant: 'scatter',
+      lineCategories: ['1', '2'],
+      lineSeries: [
+        { name: 'Models', values: [1, null] },
+        { name: 'Pareto', values: [null, 2] },
+      ],
+    } as unknown as Element;
+    const current = { ...tab, elements: [chart] };
+    const ops = mcpOpsToEditOperations(
+      [{ op: 'update', elementId: 'c1', element: { lines: ['Pareto'] } }],
+      current,
+    );
+    expect(ops).toEqual([{ op: 'set', target: 'id:"c1"', fields: { lines: ['Pareto'] } }]);
+    if (typeof ops === 'string') throw new Error(ops);
+    const parsed = validateEditOperations(ops);
+    if ('errors' in parsed) throw new Error(JSON.stringify(parsed.errors));
+    const out = applyEditOperations(current, parsed.operations);
+    if ('errors' in out) throw new Error(JSON.stringify(out.errors));
+    expect(
+      (out.tab.elements[0] as { lineSeries: { line?: true }[] }).lineSeries.map((s) => s.line),
+    ).toEqual([undefined, true]);
+  });
+});

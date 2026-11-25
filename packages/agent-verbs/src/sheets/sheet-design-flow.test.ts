@@ -2,6 +2,8 @@
 // "A design"): the cells written through the api, the design tinted for its tab's canvas, the charts added to the tab
 // over the Sheet in one changeset with their first read, and a new Sheet made as large as what it holds.
 import { describe, expect, it } from 'vitest';
+import { z } from 'zod';
+import { changeSheetShape } from '../mcp/sheet-schema';
 import type { ApiClient } from '@livedoc/api-client';
 import type { SheetJson } from '@livedoc/sheets';
 import { DOC_A, fakeApi, tabsOfA } from '../testing/fake-api';
@@ -422,5 +424,42 @@ describe('a design through add_sheet', () => {
         'mcp',
       ),
     ).toMatchObject({ ok: false, code: 'formula_invalid' });
+  });
+});
+
+// pie-chart.md "Lines set by an agent": the MCP shape Runa sends, parsed by change_sheet's own schema, places a
+// scatter chart whose named series is drawn as a line.
+describe('a scatter chart with a line through change_sheet', () => {
+  it('parses `lines` and marks that series on the chart it places', async () => {
+    const input = {
+      documentId: DOC_A,
+      sheet: 'Sheet 1',
+      changes: [
+        {
+          op: 'set',
+          at: 'A1',
+          rows: [
+            ['Cost', 'Models', 'Pareto'],
+            [0.5, 70, 70],
+            [1.5, 60, ''],
+            [4, 90, 90],
+          ],
+        },
+        { op: 'chart', type: 'scatter', range: 'A1:C4', lines: ['Pareto'] },
+      ],
+    };
+    const parsed = z.object(changeSheetShape).parse(input);
+    const { api, sent } = setup();
+    const result = await changeSheet(api, DOC_A, parsed, 'mcp');
+    expect(result.refusal).toBeUndefined();
+    const chart = sent.at(-1)!.operations[0]!.element as {
+      chartVariant: string;
+      lineSeries: { name: string; values: (number | null)[]; line?: true }[];
+    };
+    expect(chart.chartVariant).toBe('scatter');
+    expect(chart.lineSeries).toEqual([
+      { name: 'Models', values: [70, 60, 90] },
+      { name: 'Pareto', values: [70, null, 90], line: true },
+    ]);
   });
 });

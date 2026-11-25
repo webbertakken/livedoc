@@ -77,6 +77,7 @@ import {
 
 import { LegendPositionTiles } from '@/components/palette/context-menu-tiles';
 import { ChartAxisRows } from '@/components/palette/ChartAxisRows';
+import { ChartLinesRows } from '@/components/palette/ChartLinesRows';
 import { MenuToggleRow } from '@/components/palette/context-menu-input-rows';
 
 import { ChartTypeTiles } from '@/components/palette/ChartTypeTiles';
@@ -707,6 +708,14 @@ export function ElementDataSections({
                   palette={chartFallbackPalette}
                   onSetAxis={props.onSetChartAxis}
                   onSetRightAxis={props.onSetChartRightAxis}
+                />
+              ) : null}
+              {/* A scatter chart's series joined as lines (pie-chart.md "A scatter series drawn as a line"). */}
+              {isLine && shapeTarget && chartTypeOf(shapeTarget) === 'scatter' ? (
+                <ChartLinesRows
+                  series={shapeTarget.lineSeries ?? LINE_DEFAULT_SERIES}
+                  palette={chartFallbackPalette}
+                  onSetLine={props.onSetChartLine}
                 />
               ) : null}
             </MenuAccordionSection>

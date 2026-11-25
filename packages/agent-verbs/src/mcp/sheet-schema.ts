@@ -489,6 +489,12 @@ const sheetChange = z.discriminatedUnion('op', [
     width: z.number().optional().describe(`px, default ${SHEET_CHART_SIZE.width}.`),
     height: z.number().optional().describe(`px, default ${SHEET_CHART_SIZE.height}.`),
     palette: chartPalette,
+    lines: z
+      .array(z.string())
+      .optional()
+      .describe(
+        'A scatter chart only: the series drawn as lines, by header name (["Pareto"]), their points joined in order of x; the others stay points.',
+      ),
   }),
   z.object({
     op: z

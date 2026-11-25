@@ -147,3 +147,65 @@ describe('chart elements', () => {
     expect(el!.chartPalette).toBeUndefined();
   });
 });
+
+// pie-chart.md "Lines set by an agent": `lines` names the series of a scatter chart drawn as lines, by header.
+describe('a scatter chart’s lines', () => {
+  function frontier() {
+    const { wb, sheet } = book();
+    const { rows, cols } = sheet.layout;
+    const put = (r: number, c: number, input: { s: string } | { n: number }) =>
+      sheet.cells.set(cellKey(rows[r]!, cols[c]!), { input });
+    // Below the fixture's hidden row 2.
+    put(2, 0, { s: 'Cost' });
+    put(2, 1, { s: 'Models' });
+    put(2, 2, { s: 'Pareto' });
+    [
+      [0.5, 70, 70],
+      [1.5, 60, Number.NaN],
+      [4, 90, 90],
+    ].forEach(([x, m, p], i) => {
+      put(i + 3, 0, { n: x! });
+      put(i + 3, 1, { n: m! });
+      if (!Number.isNaN(p)) put(i + 3, 2, { n: p! });
+    });
+    wb.updateSheet({ ...sheet });
+    return { wb, sheet };
+  }
+
+  it('marks the named series as a line, any case, the others points', () => {
+    const { wb, sheet } = frontier();
+    const built = buildChartChange(wb, sheet.id, {
+      op: 'chart',
+      type: 'scatter',
+      range: 'A3:C6',
+      lines: ['pareto'],
+    });
+    if (!built.ok) throw new Error(built.message);
+    const [el] = sheetChartElements(
+      wb,
+      { x: 0, y: 0, width: 960, height: 560 },
+      sheet.id,
+      built.charts,
+    );
+    expect(el!.lineSeries!.map((s) => [s.name, s.line === true])).toEqual([
+      ['Models', false],
+      ['Pareto', true],
+    ]);
+    // The empty cell is no value; the line joins the present points.
+    expect(el!.lineSeries![1]!.values).toEqual([70, null, 90]);
+  });
+
+  it('is refused for a name that is no series, or on another chart type, writing nothing', () => {
+    const { wb, sheet } = frontier();
+    const message = (change: Omit<SheetChartChange, 'op'>) => {
+      const built = buildChartChange(wb, sheet.id, { op: 'chart', ...change });
+      return built.ok ? null : built.message;
+    };
+    expect(message({ type: 'scatter', range: 'A3:C6', lines: ['Frontier'] })).toBe(
+      '"Frontier" is no series of the chart. Its series: Models, Pareto.',
+    );
+    expect(message({ type: 'line', range: 'A3:C6', lines: ['Pareto'] })).toBe(
+      'lines draw on a scatter chart; a line chart draws every series as a line already.',
+    );
+  });
+});

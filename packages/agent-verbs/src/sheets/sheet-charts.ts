@@ -47,6 +47,8 @@ export type SheetChartOut = {
   width: number;
   height: number;
   palette?: ChartPaletteId;
+  // A scatter chart's series drawn as lines, by name (pie-chart.md "Lines set by an agent").
+  lines?: string[];
 };
 
 export type SheetChartChange = {
@@ -58,6 +60,7 @@ export type SheetChartChange = {
   width?: number;
   height?: number;
   palette?: ChartPaletteId;
+  lines?: string[];
 };
 
 // The chart types that draw one series, the first (sheet.md "Charts"); line, area and scatter draw them all.
@@ -210,6 +213,8 @@ export function buildChartChange(
     if (!p) return refuse('range_invalid', `"${change.at}" is not a cell in A1 form ("H4").`);
     at = [p.r, p.c];
   }
+  const lines = linesOf(wb, sheetId, change, { range: ids, cols: picked });
+  if (!Array.isArray(lines)) return lines;
   const sheet = wb.sheet(sheetId)!;
   const cols = change.columns?.length
     ? change.columns.map((l) => columnIndex(l.trim()))
@@ -235,9 +240,43 @@ export function buildChartChange(
         width: sized(change.width, SHEET_CHART_SIZE.width, CHART_MIN.width),
         height: sized(change.height, SHEET_CHART_SIZE.height, CHART_MIN.height),
         ...(palette ? { palette } : {}),
+        ...(lines.length ? { lines } : {}),
       },
     ],
   };
+}
+
+const sameName = (a: string, b: string) => a.trim().toLowerCase() === b.trim().toLowerCase();
+
+// The series `lines` names, checked against those the chart reads (a scatter's numbered first column is its x, no
+// series), or the refusal.
+function linesOf(
+  wb: Workbook,
+  sheetId: string,
+  change: SheetChartChange,
+  read: { range: IdRange; cols: readonly string[] },
+): string[] | SheetRefusal {
+  if (!change.lines?.length) return [];
+  if (change.type !== 'scatter')
+    return refuse(
+      'write_invalid',
+      `lines draw on a scatter chart; ${withArticle(change.type)} chart draws ${change.type === 'line' || change.type === 'area' ? 'every series as a line already' : 'no lines'}.`,
+    );
+  const table = sheetChartTable(
+    wb,
+    { sheetId, range: read.range, ...(read.cols.length ? { cols: [...read.cols] } : {}) },
+    wb.locale,
+  );
+  const fields =
+    table && chartFieldsFromTable({ shape: 'line-chart', chartVariant: 'scatter' }, table);
+  const names = fields && 'lineSeries' in fields ? fields.lineSeries.map((s) => s.name) : [];
+  const unknown = change.lines.find((l) => !names.some((n) => sameName(n, l)));
+  if (unknown !== undefined)
+    return refuse(
+      'write_invalid',
+      `"${unknown}" is no series of the chart. Its series: ${names.join(', ')}.`,
+    );
+  return change.lines;
 }
 
 // The chart elements, linked to their Sheet's sheet and anchored in it, each with its first read from `wb`, their
@@ -262,9 +301,19 @@ export function sheetChartElements(
     };
     // Its range was just read from this workbook, so it reads.
     const table = sheetChartTable(wb, source, wb.locale)!;
+    const fields = chartFieldsFromTable(base, table);
+    const lines = ch.lines ?? [];
     return {
       ...base,
-      ...chartFieldsFromTable(base, table),
+      ...fields,
+      // The series drawn as lines, marked by name (pie-chart.md "Lines set by an agent").
+      ...('lineSeries' in fields && lines.length
+        ? {
+            lineSeries: fields.lineSeries.map((s) =>
+              lines.some((l) => sameName(l, s.name)) ? { ...s, line: true as const } : s,
+            ),
+          }
+        : {}),
       x: Math.max(sheetEl.x, sheetEl.x + sheetEl.width - CANVAS_INSET_PX - ch.width),
       y: sheetEl.y + Math.min(CANVAS_TOP_PX, Math.max(0, sheetEl.height - ch.height)),
     };

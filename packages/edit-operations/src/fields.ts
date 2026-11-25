@@ -29,6 +29,7 @@ import { invalidValue, unknownField } from './rejections';
 import type { FieldValue, Fields } from './types';
 import { PROTOTYPE_KEYS } from './vocabulary';
 import { iconsLike, isIconId } from '@livedoc/icons/search';
+import { seriesWithLines } from './chart-lines';
 
 // The spec's names, then the style keys the views print (`STYLE_KEYS`), so a printed `key=value` writes back
 // unchanged; `font` is a stored field name already.
@@ -42,6 +43,7 @@ const FIELD_ALIASES = [
   'border',
   'text',
   'line',
+  'lines',
 ] as const;
 type Alias = (typeof FIELD_ALIASES)[number];
 
@@ -83,6 +85,8 @@ export function aliasesOf(el: Element): Alias[] {
         return hasField(el, 'textSize');
       case 'line':
         return el.type === 'arrow';
+      case 'lines':
+        return el.type === 'shape' && el.shape === 'line-chart';
     }
   });
 }
@@ -96,6 +100,7 @@ export const ALIAS_FIELDS: Readonly<Record<string, readonly string[]>> = {
   border: ['strokeStyle'],
   text: ['textSize'],
   line: ['arrowStyle'],
+  lines: ['lineSeries'],
 };
 
 // What an element holds under a field name, an alias read as it is written.
@@ -322,5 +327,11 @@ function writeAlias(
         return text(`one of ${ARROW_STYLES.join(' ')}`);
       patch.arrowStyle = value;
       return null;
+    case 'lines': {
+      const write = seriesWithLines(el.type === 'shape' ? el.lineSeries : undefined, value);
+      if ('rule' in write) return text(write.rule);
+      patch.lineSeries = write.series;
+      return null;
+    }
   }
 }

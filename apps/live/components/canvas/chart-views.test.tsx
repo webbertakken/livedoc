@@ -123,6 +123,28 @@ describe('chart views', () => {
     expect(scatter.textContent).toContain('5 · Y');
   });
 
+  // pie-chart.md "A scatter series drawn as a line": its points joined in order of x, a line in its key.
+  it('joins a scatter series drawn as a line, and keys it with a line', () => {
+    const scatter = render(
+      <LineChartView
+        element={el('line-chart', {
+          chartVariant: 'scatter',
+          lineCategories: ['3', '1', '2'],
+          lineSeries: [
+            { name: 'Pareto', values: [1, null, 3], line: true },
+            { name: 'Models', values: [2, 2, 2] },
+          ],
+        })}
+        textColor="#000"
+      />,
+    ).container;
+    expect(scatter.querySelectorAll('path[stroke-linejoin]').length).toBe(1);
+    // The plot's points (the key's line swatch carries a dot of its own).
+    expect(scatter.querySelector('svg')!.querySelectorAll('circle').length).toBe(5);
+    expect(scatter.querySelectorAll('[data-key-swatch="line"]').length).toBe(1);
+    expect(scatter.querySelectorAll('[data-key-swatch="square"]').length).toBe(1);
+  });
+
   // pie-chart.md "No value is a gap": no mark, no value label; a 0 still draws.
   it('breaks a line at no value and draws no point there', () => {
     const line = render(

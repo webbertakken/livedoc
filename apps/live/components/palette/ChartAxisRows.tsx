@@ -2,6 +2,7 @@ import type { LineSeries } from '@livedoc/document';
 import { MenuToggleRow } from '@/components/palette/context-menu-input-rows';
 import { TileLabel } from '@/components/palette/context-menu-tiles';
 import { SizeButton } from '@/components/palette/palette-controls';
+import { SeriesDot, seriesTileName } from './chart-series-tile';
 
 // Show Axis and Right Axis (docs/specs/009-elements/pie-chart.md "Show Axis", "A second axis"), under Show Values in
 // the Chart category: the value axis on a column, bar, line, area or scatter chart, and on a line chart of two or
@@ -35,7 +36,7 @@ export function ChartAxisRows({
           <p className="px-3 pt-1 text-supporting text-slate-500 dark:text-slate-400">Right Axis</p>
           <div className="grid grid-cols-3 gap-1 px-2 py-1.5">
             <SizeButton active={right < 0} onClick={() => onSetRightAxis(null)}>
-              <TileLabel glyph={<Dot color="transparent" />} label="None" />
+              <TileLabel glyph={<SeriesDot color="transparent" />} label="None" />
             </SizeButton>
             {series.map((s, i) => (
               <SizeButton
@@ -45,8 +46,8 @@ export function ChartAxisRows({
                 onClick={() => onSetRightAxis(i)}
               >
                 <TileLabel
-                  glyph={<Dot color={s.color ?? palette[i % palette.length]!} />}
-                  label={truncate(s.name || `Series ${i + 1}`)}
+                  glyph={<SeriesDot color={s.color ?? palette[i % palette.length]!} />}
+                  label={seriesTileName(s.name || `Series ${i + 1}`)}
                 />
               </SizeButton>
             ))}
@@ -56,15 +57,3 @@ export function ChartAxisRows({
     </>
   );
 }
-
-function Dot({ color }: { color: string }) {
-  return (
-    <span
-      className="inline-block size-icon-chevron rounded-none border border-slate-300 dark:border-slate-600"
-      style={{ backgroundColor: color }}
-    />
-  );
-}
-
-// A tile holds about ten characters at its caption size.
-const truncate = (name: string) => (name.length > 10 ? `${name.slice(0, 9)}…` : name);
