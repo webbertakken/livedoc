@@ -1397,8 +1397,8 @@ export const PDF_MARKS_CHANGED = chart(
   'Pdf',
   'Changed',
   'PDF Marks Changed',
-  'Marks on a PDF page changed after they were made: moved, or resized by a handle or the keys.',
-  { types: ['Mark.Moved', 'Mark.Resized'], rising: 'neutral' },
+  'Marks on a PDF page changed after they were made: moved, resized by a handle or the keys, or restyled.',
+  { types: ['Mark.Moved', 'Mark.Resized', 'Mark.Restyled'], rising: 'neutral' },
 );
 
 export const PDF_MARKS_DELETED = chart(

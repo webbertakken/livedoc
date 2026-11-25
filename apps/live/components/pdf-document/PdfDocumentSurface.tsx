@@ -37,6 +37,7 @@ import { marksOnPage, pdfMarksStore } from '@/lib/pdf-document/pdf-marks-store';
 import { droppedChangeCopy, lostChangesCopy } from '@/lib/pdf-document/pdf-surface-copy';
 import { usePdfDownload } from '@/lib/pdf-document/usePdfDownload';
 import { usePdfDarkPages } from '@/lib/pdf-document/usePdfDarkPages';
+import { usePdfMarkRestyle } from '@/lib/pdf-document/usePdfMarkRestyle';
 import { usePdfMarkSelection } from '@/lib/pdf-document/usePdfMarkSelection';
 import { usePdfMarkTools } from '@/lib/pdf-document/usePdfMarkTools';
 import { usePdfFullScreen } from '@/lib/pdf-document/usePdfFullScreen';
@@ -333,6 +334,14 @@ export function PdfDocumentSurface({
     clearText: textSelection.clear,
     focusPages: focusPagesElement,
   });
+  // "Changing a mark": the selected marks' colour, opacity and line width.
+  const markRestyle = usePdfMarkRestyle({
+    ready,
+    marks,
+    marking,
+    chosen: markSelection.chosen,
+    focusPages: focusPagesElement,
+  });
   const zoomToColumn = usePdfColumnZoom(viewer, textSelection.texts);
   // "Read mode", "Full screen": one person's room for the pages.
   const readMode = usePdfReadMode();
@@ -360,6 +369,7 @@ export function PdfDocumentSurface({
             ...fullScreen.actions,
             ...tools.actions,
             ...markSelection.actions,
+            ...markRestyle.actions,
             [GO_TO_PAGE]: { run: focusPageField },
           }
         : {}),
@@ -403,6 +413,7 @@ export function PdfDocumentSurface({
       steps,
       tools.actions,
       markSelection.actions,
+      markRestyle.actions,
     ],
   );
 
@@ -448,7 +459,7 @@ export function PdfDocumentSurface({
         saveStatus={ready?.binding.saveStatus ?? null}
         toolbar={pdfToolbar(mode)}
         choices={ready ? { ...viewChrome.choices, ...tools.choices } : null}
-        colours={ready ? tools.colours : null}
+        colours={ready ? (tools.inHand === 'select' ? markRestyle.colours : tools.colours) : null}
         mode={open.phase === 'ready' ? choice : null}
         contextMenu={ready ? reading.contextMenu : null}
         bare={readMode.on ? { leave: 'Leave read mode', onLeave: readMode.leave } : null}
