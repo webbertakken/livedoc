@@ -31,7 +31,7 @@ describe('resolveEditorCapabilities', () => {
       if (key === 'level') continue;
       if (typeof value === 'function') {
         for (const el of els) expect(value(el), key).toBe(false);
-      } else expect(value, key).toBe(false);
+      } else expect(value, key).toBe(key === 'commentKey' ? null : false);
     }
   });
 
@@ -84,6 +84,14 @@ describe('resolveEditorCapabilities', () => {
     expect([can('edit').pdfReviews, can('edit').pdfEdits]).toEqual([true, true]);
     expect([can('participate').pdfReviews, can('participate').pdfEdits]).toEqual([true, false]);
     expect([can('view').pdfReviews, can('view').pdfEdits]).toEqual([false, false]);
+  });
+
+  // docs/specs/034-text-documents/review.md "Threads in the margin", Who: an Editor or a Participant comments with its key.
+  it('signs comments with the adder key for an Editor and a Participant, never for a Viewer', () => {
+    const key = (level: 'edit' | 'participate' | 'view', adderKey: string | null = ME) =>
+      resolveEditorCapabilities({ level, adderKey }).commentKey;
+    expect([key('edit'), key('participate'), key('view')]).toEqual([ME, ME, null]);
+    expect([key('edit', null), key('participate', null)]).toEqual([null, null]);
   });
 
   it('adds nothing before the room has handed over its adder key', () => {

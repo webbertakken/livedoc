@@ -5,12 +5,13 @@
 // ProseMirror's binding load only when a text document tab is open. `readOnly`: the other pane of a split shows the
 // tab live without editing it ("Side by side").
 import dynamic from 'next/dynamic';
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 import { useEditorDrawingTabs } from './useEditorDrawingTabs';
 import { textDocumentFormatOf, type Tab } from '@livedoc/document';
 import { useEditorContext } from '@/app/document/[id]/EditorContext';
 import { useEditorLines } from '@/components/chrome/lines/editor-lines-context';
 import { useIsOfflineDocument } from '@/hooks/persistence/useIsOfflineDocument';
+import { commenterOf } from './useTextDocumentThreads';
 
 const TextDocumentSurface = dynamic(
   () => import('./TextDocumentSurface').then((m) => m.TextDocumentSurface),
@@ -33,6 +34,18 @@ export function TextDocumentHost({ tab, readOnly = false }: { tab: Tab; readOnly
   // A drawing's picture opens its drawing tab, for anyone who sees the text document and is shared the tab (objects.md
   // "Opening it again").
   const drawingTabs = useEditorDrawingTabs();
+  // Who comments here (review.md "Threads in the margin"): one value while the person and their key stay.
+  const commenter = useMemo(
+    () =>
+      commenterOf({
+        commentKey: can.commentKey,
+        level: can.level,
+        self: selfParticipant,
+        local,
+        readOnly,
+      }),
+    [can.commentKey, can.level, selfParticipant, local, readOnly],
+  );
   if (!documentId) return null;
   return (
     <TextDocumentSurface
@@ -53,6 +66,7 @@ export function TextDocumentHost({ tab, readOnly = false }: { tab: Tab; readOnly
       documents={ctx.documentList}
       createDrawing={mayDraw ? createDrawing : null}
       drawingTabs={drawingTabs}
+      commenter={commenter}
     />
   );
 }

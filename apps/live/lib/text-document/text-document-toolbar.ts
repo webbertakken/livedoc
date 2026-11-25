@@ -165,6 +165,7 @@ export const TEXT_DOCUMENT_TOOLBAR: OfficeToolbar = [
       }),
       icon('comment', 'Add comment', 'participate', lucideMessageSquarePlus, {
         shortcut: 'insert-comment',
+        built: true,
       }),
       icon('insert-image', 'Insert image', 'edit', lucideImage, { menu: true }),
     ],

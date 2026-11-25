@@ -79,6 +79,7 @@ import { FOOTNOTE_KEY_ACTIONS } from '@/components/text-document/useTextDocument
 import { textDocumentUndoPlugins } from './text-document-undo';
 import { LINK_ITEM, OPEN_LINK } from './text-document-links';
 import { BOOKMARK_ITEM } from './text-document-bookmarks';
+import { COMMENT_ITEM } from '@/components/text-document/useTextDocumentThreads';
 import { CONTENTS_LOOK_ITEMS } from './text-document-contents-build';
 
 vi.mock('@/lib/telemetry', () => ({ track: vi.fn() }));
@@ -184,6 +185,8 @@ describe('the text document menus', () => {
         LINK_ITEM,
         // Insert > Bookmark (useTextDocumentBookmarks), bound by the surface.
         BOOKMARK_ITEM,
+        // Insert > Comment (useTextDocumentThreads), bound by the surface for whoever comments.
+        COMMENT_ITEM,
         // Insert > Table of contents (useTextDocumentContents), bound by the surface.
         ...Object.keys(CONTENTS_LOOK_ITEMS),
       ];
