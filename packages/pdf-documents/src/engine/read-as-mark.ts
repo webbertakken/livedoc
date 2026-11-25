@@ -26,6 +26,7 @@ import {
 import { Stamps } from '../stamps';
 import { appearanceBox } from './appearance';
 import type { ReaderFile } from './reader-file';
+import { MarkFonts } from '../mark-fonts';
 
 /** The colour a mark takes where the file names none (default). */
 const NO_COLOUR = '#000000';
@@ -194,13 +195,23 @@ function typedLook(
   };
 }
 
+/** A typed mark's default style, `DS`, as the file writes it; '' where it has none. */
+const defaultStyleOf = (file: ReaderFile, annotation: number): string =>
+  file.written(PDF_MARK_TEXT_MAX_CHARS, (buffer, size) =>
+    file.p.FPDFAnnot_GetStringValue(annotation, 'DS', buffer, size),
+  );
+
+/** A typed mark's font: its default style's `font-family` where that names a family of the Font menu, else none. */
+function fontOf(style: string): { font?: string } {
+  const family = /font-family\s*:\s*(?:'([^']*)'|"([^"]*)"|([^;,]*))/i.exec(style);
+  const font = family ? MarkFonts.of(family[1] ?? family[2] ?? family[3]) : null;
+  return font ? { font } : {};
+}
+
 /** A typed mark's alignment: none until the file names one, Justified where its default style says so. */
-function alignOf(file: ReaderFile, annotation: number): { align?: TextAlign } {
+function alignOf(file: ReaderFile, annotation: number, style: string): { align?: TextAlign } {
   const { p } = file;
   if (!p.FPDFAnnot_HasKey(annotation, 'Q')) return {};
-  const style = file.written(PDF_MARK_TEXT_MAX_CHARS, (buffer, size) =>
-    p.FPDFAnnot_GetStringValue(annotation, 'DS', buffer, size),
-  );
   if (/text-align\s*:\s*justify/i.test(style)) return { align: 'justified' };
   const align = ALIGNS[p.EPDFAnnot_GetTextAlignment(annotation)];
   return align ? { align } : {};
@@ -346,11 +357,13 @@ function valueOf(
     const callout = pointsRead(file, p.EPDFAnnot_GetCalloutLineCount(annotation), (out, size) =>
       p.EPDFAnnot_GetCalloutLine(annotation, out, size),
     );
+    const style = defaultStyleOf(file, annotation);
     const typed = {
       ...baseOf(mark, name, look.colour ?? mark.colour),
       words: mark.words,
       size: look.size ?? TEXT_SIZE_UNSAID_PT,
-      ...alignOf(file, annotation),
+      ...alignOf(file, annotation, style),
+      ...fontOf(style),
     };
     if (callout.length < 4)
       return { ...typed, kind: 'text', rect: innerBox(file, annotation, rect) };

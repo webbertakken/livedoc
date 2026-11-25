@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { MARK_FACE_DATA } from './mark-face-data';
+import { MARK_FONT_DATA } from './mark-font-data';
 import { MarkFaces } from './mark-faces';
 
 const regular = (text: string) => ({ text, bold: false });
@@ -14,8 +15,8 @@ describe('the faces a mark is set in', () => {
   });
 
   it('is the mark faces where any line holds a character Helvetica cannot write', () => {
-    expect(MarkFaces.setOf([regular('Approved'), regular('by Ελένη')])).toBe('noto');
-    expect(MarkFaces.setOf([regular('Łódź')])).toBe('noto');
+    expect(MarkFaces.setOf([regular('Approved'), regular('by Ελένη')])).toBe('embedded');
+    expect(MarkFaces.setOf([regular('Łódź')])).toBe('embedded');
   });
 
   it('sets each character in the first face that has it, a run a face', () => {
@@ -183,5 +184,43 @@ describe('the faces a mark is set in', () => {
     const hangul = MarkFaces.width({ text: '한', bold: false, region: 'kr' });
     expect(hangul).toBeGreaterThan(800);
     expect(hangul).toBeLessThan(1000);
+  });
+});
+
+// marks.md "Words in every script": a mark in a chosen font.
+describe('the faces a mark in a chosen font is set in', () => {
+  const lora = (text: string) => ({ text, bold: false, font: 'Lora' });
+
+  it('are never Helvetica, whatever its words', () => {
+    expect(MarkFaces.setOf([regular('Plain words')], 'Lora')).toBe('embedded');
+    expect(MarkFaces.setOf([regular('Plain words')], undefined)).toBe('helvetica');
+  });
+
+  it('sets each character in the family where it has it, every other in the mark faces', () => {
+    expect(MarkFaces.runs(lora('Łódź Αθήνα'))).toEqual([
+      { face: 'lora-latin-ext-400', text: 'Ł' },
+      { face: 'lora-latin-400', text: 'ód' },
+      { face: 'lora-latin-ext-400', text: 'ź' },
+      { face: 'lora-latin-400', text: ' ' },
+      { face: 'noto-sans-greek-400', text: 'Αθήνα' },
+    ]);
+  });
+
+  it('sets a character no face has as Noto Sans sets it, never the family', () => {
+    expect(MarkFaces.runs(lora('a\u{10FFFD}'))).toEqual([
+      { face: 'lora-latin-400', text: 'a' },
+      { face: 'noto-sans-latin-400', text: '\u{10FFFD}' },
+    ]);
+  });
+
+  it('measures the words in the family', () => {
+    const plain = MarkFaces.width(regular('Wide words'));
+    const inPacifico = MarkFaces.width({ text: 'Wide words', bold: false, font: 'Pacifico' });
+    expect(inPacifico).not.toBe(plain);
+    const latin = MARK_FONT_DATA.find((face) => face.id === 'lora-latin-400')!;
+    const run = latin.runs.find(([first]) => first === 0x20)!;
+    // Lora's space and "a", as its table holds them.
+    const advance = (code: number) => run[1 + code - 0x20]!;
+    expect(MarkFaces.width(lora(' a'))).toBe(advance(0x20) + advance(0x61));
   });
 });

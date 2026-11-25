@@ -1,44 +1,51 @@
 // The faces a mark's words are set in (docs/specs/035-pdf-documents/marks.md "Words in every script"): Helvetica where
-// it writes every character of them, else the mark faces, each character in the first that has it; Chinese, Japanese
-// and Korean in the one region the mark's words show. How wide each is set comes from the generated tables, so the
+// no font is chosen and it writes every character of them, else the embedded faces, each character in the first that
+// has it: a chosen font's family first, then the mark faces; Chinese, Japanese and Korean in the one region the mark's
+// words show. How wide each is set comes from the generated tables, so the
 // surface and the bake measure alike with no font loaded. Pure.
 import { Helvetica } from './helvetica';
 import { MARK_FACE_DATA } from './mark-face-data';
 import { MARK_FACE_REGIONS_BEFORE, type MarkFaceRegion } from './mark-face-families';
 import { MARK_FACE_REGION_DATA } from './mark-face-region-data';
+import { MARK_FONT_DATA } from './mark-font-data';
 
-/** The faces a mark is set in: the standard's Helvetica, or the mark faces. */
-export type MarkFaceSet = 'helvetica' | 'noto';
+/** The faces a mark is set in: the standard's Helvetica, or the faces embedded in the file (a font's, the mark faces). */
+export type MarkFaceSet = 'helvetica' | 'embedded';
 
 /** A stretch of a line set in one mark face. */
 export type MarkRun = { readonly face: string; readonly text: string };
 
 /**
- * A line of a mark's words, as far as its faces go: its text, whether it is bold, and the region its mark's Chinese,
- * Japanese or Korean is set in (Simplified Chinese where none is given).
+ * A line of a mark's words, as far as its faces go: its text, whether it is bold, the region its mark's Chinese,
+ * Japanese or Korean is set in (Simplified Chinese where none is given), and its mark's chosen font, if any.
  */
 export type FacedLine = {
   readonly text: string;
   readonly bold: boolean;
   readonly region?: MarkFaceRegion;
+  readonly font?: string;
 };
 
 type Weight = 400 | 700;
-/** A region's order: each weight's faces in the order a character is looked for, and the first that has each. */
+/**
+ * A region's and font's order: each weight's faces in the order a character is looked for, the first that has each,
+ * and the face a character none has is set in.
+ */
 type Order = {
   readonly faces: Readonly<Record<Weight, readonly string[]>>;
   readonly first: Readonly<Record<Weight, ReadonlyMap<number, string>>>;
+  readonly missing: string;
 };
 
 /** Each face's advances by code point, and its missing glyph's advance: a region's added when it is first set. */
 const advances = new Map<string, ReadonlyMap<number, number>>();
 const missing = new Map<string, number>();
-const orders = new Map<MarkFaceRegion, Order>();
+const orders = new Map<string, Order>();
 
-/** The subset faces read into maps, once, the first time a mark needs them. */
+/** The subset faces and the fonts' faces read into maps, once, the first time a mark needs them. */
 function subsetFaces(): void {
   if (advances.size > 0) return;
-  for (const face of MARK_FACE_DATA) {
+  for (const face of [...MARK_FACE_DATA, ...MARK_FONT_DATA]) {
     const own = new Map<number, number>();
     for (const [start, ...run] of face.runs)
       run.forEach((advance, at) => own.set(start! + at, advance));
@@ -66,13 +73,15 @@ function regionFace(region: MarkFaceRegion): string {
   return face.id;
 }
 
-/** The order of a region: the subset faces, its region's face just before the symbols. */
-function orderOf(region: MarkFaceRegion): Order {
-  const known = orders.get(region);
+/** The order of a region and a font: the font's faces, then the subset faces, its region's just before the symbols. */
+function orderOf(region: MarkFaceRegion, font: string | undefined): Order {
+  const key = `${region} ${font ?? ''}`;
+  const known = orders.get(key);
   if (known) return known;
   subsetFaces();
   const cjk = regionFace(region);
   const faces: Record<Weight, string[]> = { 400: [], 700: [] };
+  for (const face of MARK_FONT_DATA) if (face.family === font) faces[face.weight].push(face.id);
   for (const face of MARK_FACE_DATA) {
     if (face.family === MARK_FACE_REGIONS_BEFORE && !faces[400].includes(cjk)) faces[400].push(cjk);
     faces[face.weight].push(face.id);
@@ -82,17 +91,17 @@ function orderOf(region: MarkFaceRegion): Order {
     for (const face of faces[weight])
       for (const code of advances.get(face)!.keys())
         if (!first[weight].has(code)) first[weight].set(code, face);
-  const order = { faces, first };
-  orders.set(region, order);
+  const order = { faces, first, missing: MARK_FACE_DATA[0]!.id };
+  orders.set(key, order);
   return order;
 }
 
 /** A character of no script of its own: a space, punctuation, a digit, a combining mark. */
 const SHARED = /[\p{Script=Common}\p{Script=Inherited}]/u;
 
-/** The face a character is set in: bold where a bold face has it, else regular; none has it, the first regular. */
-function faceOf({ first, faces }: Order, code: number, bold: boolean): string {
-  return (bold ? first[700].get(code) : undefined) ?? first[400].get(code) ?? faces[400][0]!;
+/** The face a character is set in: bold where a bold face has it, else regular; none has it, Noto Sans's. */
+function faceOf({ first, missing }: Order, code: number, bold: boolean): string {
+  return (bold ? first[700].get(code) : undefined) ?? first[400].get(code) ?? missing;
 }
 
 /** Whether a face has every character of a cluster. */
@@ -119,13 +128,17 @@ const clustersOf = (text: string): string[] =>
   Array.from(segmenter.segment(text), ({ segment }) => segment);
 
 export const MarkFaces = {
-  /** The faces a mark's lines are set in: Helvetica where it writes every character of each, else the mark faces. */
-  setOf: (lines: readonly FacedLine[]): MarkFaceSet =>
+  /**
+   * The faces a mark's lines are set in: Helvetica where no font is chosen and it writes every character of each,
+   * else the embedded faces.
+   */
+  setOf: (lines: readonly FacedLine[], font?: string): MarkFaceSet =>
+    font === undefined &&
     lines.every(({ text }) =>
       Array.from(text).every((character) => Helvetica.writes(character.codePointAt(0)!)),
     )
       ? 'helvetica'
-      : 'noto',
+      : 'embedded',
 
   /** The region a mark's Chinese, Japanese or Korean is set in: kana Japanese, else Hangul Korean, else Chinese. */
   regionOf: (lines: readonly Pick<FacedLine, 'text'>[]): MarkFaceRegion =>
@@ -141,8 +154,8 @@ export const MarkFaces = {
    * digit) stays in the face before it where that face has it, so a space does not change the font. A cluster no
    * face has whole is set character by character.
    */
-  runs: ({ text, bold, region = 'sc' }: FacedLine): readonly MarkRun[] => {
-    const order = orderOf(region);
+  runs: ({ text, bold, region = 'sc', font }: FacedLine): readonly MarkRun[] => {
+    const order = orderOf(region, font);
     const runs: { face: string; text: string }[] = [];
     const put = (face: string, part: string) => {
       const before = runs.at(-1);

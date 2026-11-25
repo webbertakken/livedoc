@@ -206,6 +206,14 @@ written into the file as a standard annotation, so any reader shows it. The rese
 - **What a new size does** `(default)`: the words wrap again at the box's width, the box keeping its top, left and
   width, never narrower than one character nor lower than its words, growing down to hold them; a box that would grow
   past the page's foot is moved up onto it; a Callout's line runs again to the middle of the side facing its tip.
+- **The selected Texts' and Callouts' font** `(default)`: with Select in hand and a Text or a Callout selected, the
+  toolbar's Font is theirs, blank where they differ. Its menu is **Helvetica**, a separator, then the served families
+  of the document fonts' menu ([Document fonts](../004-interface-design/fonts.md#document-fonts)) in alphabetical
+  order, each drawn in its own face; it offers no More fonts and no recent families. A family taken gives every
+  selected Text and Callout that font, Helvetica taking a chosen font away, and the pages have the keys.
+- **What a new font does** is what a new size does: the words wrap again at the box's width, the box keeping its top,
+  left and width and growing down to hold them, moved up onto the page where it would leave its foot, and a Callout's
+  line runs again to the middle of the side facing its tip `(default)`.
 - **Format > Align text** gives every selected Text and Callout the alignment chosen: Left and Right set every line
   `PDF_TEXT_PADDING_PT` in from that side, Centre midway between the two, and Justified stretches each line but a
   paragraph's last to that padding on both sides by the spaces between its words, alike in either direction
@@ -229,7 +237,8 @@ written into the file as a standard annotation, so any reader shows it. The rese
 - **A file's mark as LiveDoc reads it** `(default)`: a mark of a kind LiveDoc makes is read from the standard's own
   entries: a text mark from `QuadPoints` and the text under it; a Drawing from `InkList`; a Line from `L` and `LE`, an
   Arrow where `IT` is `LineArrow`; a Rectangle and an Ellipse from `Rect` less half the line, and `IC`; a Text and a
-  Callout from `Contents`, `DA`, `Q`, `DS`, `CL` and `RD`; a stamp of a name LiveDoc draws from `Name` and `Contents`;
+  Callout from `Contents`, `DA`, `Q`, `DS`, `CL` and `RD`, its font from `DS`'s `font-family` where that names a
+  family the Font menu holds, else none `(default)`; a stamp of a name LiveDoc draws from `Name` and `Contents`;
   each with its colour (black where the file names none), opacity, line width and style, author and dates, every
   value held within a mark's own bounds.
 - **A file's mark LiveDoc cannot read so** (a kind it does not make yet, a stamp it does not draw, an id of characters
@@ -282,8 +291,12 @@ written into the file as a standard annotation, so any reader shows it. The rese
 A Text's, a Callout's and a stamp's words are written into the file in every script a person types, never as a
 question mark. The research is [Every script in a mark's words](../../research/pdf-documents/scripts-in-marks.md).
 
-- **A mark is set in Helvetica** where Helvetica writes every character of its words: the file names the standard's
-  own face and holds no font, as a mark always was.
+- **A mark is set in Helvetica** where no font is chosen for it and Helvetica writes every character of its words: the
+  file names the standard's own face and holds no font, as a mark always was.
+- **A mark in a chosen font** ([Changing a mark](#changing-a-mark)) is set in that family first: each character in
+  the family's regular face, its Latin and Latin Extended subsets as LiveDoc serves them
+  ([Document fonts](../004-interface-design/fonts.md#served-from-livedoc)), where it has it; every other character in
+  the mark faces, in their order below. Never in Helvetica.
 - **Otherwise the whole mark is set in the mark faces**, so one mark never mixes Helvetica with another face
   `(default)`; a stamp's name in their bold.
 - **The mark faces** are Noto's, under the SIL Open Font Licence 1.1, as Fontsource serves them: each family split
@@ -312,6 +325,7 @@ question mark. The research is [Every script in a mark's words](../../research/p
 
 - **A mark's words are measured in the faces that set them**, on the surface and in the bake alike: each face's
   advance for each character it has is a generated table, so lines break the same everywhere, with no font loaded.
+- The chosen fonts' families are measured the same, from tables of their own generated alongside.
 - The table is generated from the very files LiveDoc serves: `pnpm --filter @livedoc/pdf-documents faces:generate`;
   a test fails while it and the Fontsource packages differ.
 - **Chinese, Japanese and Korean are measured as one face a region** `(default)`: the characters its slices hold,
@@ -329,7 +343,9 @@ question mark. The research is [Every script in a mark's words](../../research/p
 - **A line shaped wider than it was measured is narrowed to its measured width**, so it never leaves its box; one
   shaped narrower is set as shaped, from its own side.
 - **The surface draws the mark faces too**, as `LiveDoc Noto Sans` and its siblings, from the same files, so it
-  shapes as the bake does; a face not yet arrived draws in the browser's own until it lands.
+  shapes as the bake does; a face not yet arrived draws in the browser's own until it lands. A mark in a chosen font
+  is drawn in `LiveDoc <family>` first, from the same files the bake embeds, added the first time a mark in it is
+  drawn or the Font menu opens.
 - A bold line in a family with no bold is drawn regular on the surface as in the bake, never made bold by the
   browser.
 - **A mark in Chinese, Japanese or Korean is drawn in its region's family alone** (`LiveDoc Noto Sans JP` for a
@@ -338,7 +354,7 @@ question mark. The research is [Every script in a mark's words](../../research/p
 
 ### In the file
 
-- **Each face a bake uses is embedded once** as a subset of only the glyphs its marks use, glyph ids kept: a
+- **Each face a bake uses is embedded once**, a chosen font's as a mark face's, as a subset of only the glyphs its marks use, glyph ids kept: a
   `Type0` font, `Identity-H`, over a `CIDFontType2` with its `FontFile2`, its `W` the glyphs' advances, and its
   `BaseFont` the face's name behind a six-letter tag made from the face and the glyphs it holds.
 - **Its `ToUnicode` maps each glyph back to the characters it was shaped from**, a ligature to all of them, so
@@ -382,7 +398,8 @@ question mark. The research is [Every script in a mark's words](../../research/p
   written as `BS` `S` `D` with `D` its pattern, a Drawing's too, and a fill as `IC`.
 - **A Text** is written as a `FreeText` with `Contents` its words, `DA` its font, size and colour, `Rect` its
   box, and its alignment once chosen as `Q` (0 Left, 1 Centre, 2 Right), Justified as `Q` 0 with `DS`
-  `text-align:justify`; **a Callout** as a `FreeText` with `IT` `FreeTextCallout`, `CL` its line's three points,
+  `text-align:justify`; a chosen font as `DS` `font-family:'<family>'`, `DA` naming Helvetica still, the font every
+  reader holds `(default)`; **a Callout** as a `FreeText` with `IT` `FreeTextCallout`, `CL` its line's three points,
   `LE` `OpenArrow`, `Rect` the box and the line together and `RD` the box within it. Their appearance streams set the words as the page
   shows them, line for line, in Helvetica, the standard's own face every reader holds, or in the mark faces
   ([Words in every script](#words-in-every-script)).
@@ -482,7 +499,7 @@ a mark another person made is refused with `not_your_mark`.
   pick or a choice, `Mark.Restyled`; a deletion once a mark, `Mark.<Kind>` of its kind.
 - Fingerprints: `[pdf] mark-added kind=<kind>`, `[pdf] mark-refused name=<name>`,
   `[pdf] marks-moved count=<n>` (a drag or a key press), `[pdf] mark-resized kind=<kind>`,
-  `[pdf] marks-restyled count=<n> look=<colour|opacity|width|style|fill|end|size|align>` (a pick or a choice),
+  `[pdf] marks-restyled count=<n> look=<colour|opacity|width|style|fill|end|size|align|font>` (a pick or a choice),
   `[pdf] marks-deleted count=<n>`, `[pdf] tool-look kind=<kind> look=<width|style|fill>` (a tool's line chosen),
   `[pdf] marks-read count=<n> unknown=<n>` (per open), `[pdf] drawing-joined strokes=<n>` (a stroke joined to a
   Drawing), `[pdf] typing-dropped kind=<kind>` (a Note, Text or Callout ended with nothing typed),

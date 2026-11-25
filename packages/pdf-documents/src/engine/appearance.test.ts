@@ -272,7 +272,7 @@ describe('appearanceOf, words in the mark faces', () => {
   const faced = (lines: (typeof line)[]) => ({
     lines,
     box: [100, 550, 300, 600] as const,
-    faces: 'noto' as const,
+    faces: 'embedded' as const,
     region: 'sc' as const,
   });
 

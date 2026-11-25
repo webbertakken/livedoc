@@ -16,6 +16,7 @@ import {
   PDF_TEXT_SIZE_MIN_PT,
 } from './limits';
 import { PageName } from './page-name';
+import { MarkFonts } from './mark-fonts';
 
 /** One quadrilateral in page space, as the standard's QuadPoints order them: upper left, upper right, lower left,
  *  lower right, each an x and a y. */
@@ -145,6 +146,8 @@ type TypedBase = MarkBase & {
   readonly size: number;
   /** How its lines sit in the box; absent until chosen, each paragraph then set from its own side. */
   readonly align?: TextAlign;
+  /** The font its words are set in, a family of the Font menu (`MARK_FONTS`); absent, Helvetica. */
+  readonly font?: string;
 };
 
 export type TextBoxMark = TypedBase & { readonly kind: 'text' };
@@ -307,6 +310,12 @@ function shapeOf(base: MarkBase, v: Record<string, unknown>): ShapeMark | null {
   };
 }
 
+/** A Text's or a Callout's font: a family of the Font menu in its own spelling; anything else is none. */
+function fontOf(font: unknown): { font?: string } {
+  const known = MarkFonts.of(font);
+  return known ? { font: known } : {};
+}
+
 function typedOf(base: MarkBase, v: Record<string, unknown>): TypedMark | null {
   if (!isFour(v.rect) || !isWords(v.words) || !isSize(v.size)) return null;
   const [left, bottom, right, top] = v.rect;
@@ -320,6 +329,7 @@ function typedOf(base: MarkBase, v: Record<string, unknown>): TypedMark | null {
     words: v.words.slice(0, PDF_MARK_TEXT_MAX_CHARS),
     size: v.size,
     ...(aligned ? { align: align as TextAlign } : {}),
+    ...fontOf(v.font),
   };
   if (v.kind === 'text') return { ...typed, kind: 'text' };
   if (!isSix(v.callout)) return null;

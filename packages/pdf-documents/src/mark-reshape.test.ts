@@ -135,6 +135,22 @@ describe('MarkReshape', () => {
       expect(sized.rect[3]! - sized.rect[1]!).toBeGreaterThan(30);
     });
 
+    // marks.md "Changing a mark": what a new font does is what a new size does.
+    it('wraps the words in the mark’s own font', () => {
+      const mono = Mark.text({
+        ...BASE,
+        id: 'm',
+        rect: [300, 300, 380, 310],
+        words: 'iiii iiii iiii iiii',
+        size: 10,
+        font: 'Roboto Mono',
+      })!;
+      const lines = TypedLayout.lines(mono.words, 10, 80, 'Roboto Mono').length;
+      expect(lines).toBeGreaterThan(TypedLayout.lines(mono.words, 10, 80).length);
+      const sized = MarkReshape.sized(mono, 10, PAGE) as { rect: readonly number[] };
+      expect(sized.rect[3]! - sized.rect[1]!).toBeCloseTo(TypedLayout.height(lines, 10), 9);
+    });
+
     it('runs a Callout’s line again to the side facing its tip', () => {
       const sized = MarkReshape.sized(callout, 30, PAGE) as {
         rect: readonly [number, number, number, number];

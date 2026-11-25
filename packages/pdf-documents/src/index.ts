@@ -69,6 +69,8 @@ export { TYPED_LINE_HEIGHT, TypedLayout, type PlacedLine, type TypedLine } from 
 export { Helvetica, HELVETICA_STAND_IN } from './helvetica';
 export { MarkFaces, type FacedLine, type MarkFaceSet, type MarkRun } from './mark-faces';
 export { MARK_FACE_DATA, type MarkFaceData } from './mark-face-data';
+export { MARK_FONT_DATA } from './mark-font-data';
+export { MARK_FONT_FAMILIES, MARK_FONTS, MarkFonts } from './mark-fonts';
 export { MARK_FACE_URLS } from './mark-face-urls';
 export {
   MARK_FACE_REGIONS,

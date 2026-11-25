@@ -18,6 +18,8 @@ export type MarkWords = {
   readonly faces: MarkFaceSet;
   /** The region its Chinese, Japanese or Korean is set in, for every line alike. */
   readonly region: MarkFaceRegion;
+  /** A Text's or a Callout's chosen font, set before the mark faces. */
+  readonly font?: string;
 };
 
 export const MarkWords = {
@@ -34,8 +36,9 @@ export const MarkWords = {
     return {
       lines: TypedLayout.place(mark).map((line) => ({ ...line, size: mark.size, bold: false })),
       box: mark.rect,
-      faces: TypedLayout.faces(mark.words),
+      faces: TypedLayout.faces(mark.words, mark.font),
       region: TypedLayout.region(mark.words),
+      ...(mark.font ? { font: mark.font } : {}),
     };
   },
 } as const;

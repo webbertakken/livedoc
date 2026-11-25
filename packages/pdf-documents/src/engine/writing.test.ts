@@ -15,6 +15,7 @@ import {
   formPdf,
   labelledPdf,
   layersPdf,
+  markFaceFiles,
   marksPdf,
   outlinePdf,
   privateDataPdf,
@@ -31,7 +32,7 @@ let engine: PdfEngine;
 let stored: Uint8Array<ArrayBuffer>;
 
 beforeAll(async () => {
-  engine = await createPdfEngine({ wasm: readerWasm() });
+  engine = await createPdfEngine({ wasm: readerWasm(), faces: markFaceFiles });
   stored = await textPdf(2);
 });
 
@@ -429,6 +430,28 @@ describe('writing a Text and a Callout', () => {
     expect(added).toContain('/Q 1');
     expect(added).toContain('/Q 2');
     expect(added.match(/\/DS \(text-align:justify\)/g)).toHaveLength(1);
+  });
+
+  // marks.md "In the file": a chosen font as DS font-family, DA naming Helvetica still; its family embedded.
+  it('writes a chosen font as its default style, and embeds its family', async () => {
+    const pages = opened(await engine.open(stored));
+    const page = pages[0]!.name;
+    const marks = [
+      Mark.text({ ...base('in-lora', page), size: 12, rect: [100, 100, 300, 180], font: 'Lora' })!,
+      Mark.text({
+        ...base('in-lora-justified', page),
+        size: 12,
+        rect: [100, 300, 300, 380],
+        font: 'Lora',
+        align: 'justified',
+      })!,
+    ];
+    const result = await bakeWith(marks.map((mark) => PdfChange.addMark(mark)));
+    const added = Buffer.from(result.bytes).subarray(stored.length).toString('latin1');
+    expect(added).toContain("/DS (font-family:'Lora')");
+    expect(added).toContain("/DS (font-family:'Lora'; text-align:justify)");
+    expect(added.match(/\/DA \(\/Helv 12 Tf/g)).toHaveLength(2);
+    expect(added).toMatch(/\/BaseFont \/[A-Z]{6}\+Lora-Regular/);
   });
 });
 

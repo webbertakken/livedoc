@@ -105,7 +105,7 @@ describe('StampLayout.border', () => {
 describe('StampLayout in the mark faces', () => {
   it('measures the name in the bold mark faces and the second line in the regular', () => {
     const lines = ['APPROVED', 'by Ελένη'];
-    expect(StampLayout.faces({ lines })).toBe('noto');
+    expect(StampLayout.faces({ lines })).toBe('embedded');
     const name = (MarkFaces.width({ text: 'APPROVED', bold: true }) * STAMP_NAME_PT) / 1000;
     const second = (MarkFaces.width({ text: 'by Ελένη', bold: false }) * STAMP_DETAIL_PT) / 1000;
     expect(StampLayout.natural(lines).width).toBeCloseTo(
