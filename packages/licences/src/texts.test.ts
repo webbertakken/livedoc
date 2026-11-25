@@ -92,6 +92,10 @@ describe('EMBEDDED_WORKS', () => {
     ['dd4dd8881e2df4e64203b5c0ae65e1648ab55207-index_bg.wasm', ['resvg', 'tiny-skia']],
     ['7237d9cf55f177702066a28a4dde1e4c7e8ab576-Inter-Regular.ttf', ['inter']],
     ['0f3a9c2e5d71b8a4c6e2f0d9b3a7c5e1f8d2b6a4-Inter-Bold.otf', ['inter']],
+    ['lora-latin-400-normal.1ab2c3d4e5f6g.woff2', ['fontsource-lora']],
+    // A PDF mark's chosen font, the WOFF its engine embeds (marks.md "Words in every script").
+    ['amatic-sc-latin-400-normal.0v0ku83b7uvjf.woff', ['fontsource-amatic-sc']],
+    ['playfair-display-latin-ext-400-normal.0abc.woff', ['fontsource-playfair-display']],
   ])('covers %s', (asset, ids) => {
     const hits = EMBEDDED_WORKS.filter(
       (w) => 'assets' in w.trigger && w.trigger.assets.test(asset),
