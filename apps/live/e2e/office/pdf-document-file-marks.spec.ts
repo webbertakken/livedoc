@@ -15,15 +15,18 @@ async function onScreen(first: Locator, x: number, y: number): Promise<[number, 
 
 /** Whether page one's picture is inked, not paper, at a point of page space. */
 async function pictureInked(page: Page, x: number, y: number): Promise<boolean> {
-  return page.locator(`${PAGE_ONE} canvas`).first().evaluate(
-    (canvas: HTMLCanvasElement, [px, py]) => {
-      const at = canvas
-        .getContext('2d')!
-        .getImageData(Math.round(px * canvas.width), Math.round(py * canvas.height), 1, 1).data;
-      return at[0]! + at[1]! + at[2]! < 600;
-    },
-    [x / 612, 1 - y / 792] as const,
-  );
+  return page
+    .locator(`${PAGE_ONE} canvas`)
+    .first()
+    .evaluate(
+      (canvas: HTMLCanvasElement, [px, py]) => {
+        const at = canvas
+          .getContext('2d')!
+          .getImageData(Math.round(px * canvas.width), Math.round(py * canvas.height), 1, 1).data;
+        return at[0]! + at[1]! + at[2]! < 600;
+      },
+      [x / 612, 1 - y / 792] as const,
+    );
 }
 
 test('a mark the file arrived with is selected, moved, given back by undo and deleted', async ({
