@@ -141,6 +141,8 @@ export const STAMP_TOOLS = 'stamp-tools';
 export const TOOL_COLOUR = 'colour-control';
 /** The selected Rectangles' and Ellipses' fill (marks.md "Changing a mark"): the one colour picker, led by None. */
 export const FILL_COLOUR = 'fill-colour-control';
+/** The tool in hand's or the selected marks' line width ("The toolbar"): Format > Line width's steps. */
+export const LINE_WIDTH = 'line-width-control';
 /** The selected Texts' and Callouts' size (marks.md "Changing a mark"): the shell's size field, while one is selected. */
 export const MARK_FONT_SIZE = 'mark-font-size-control';
 
@@ -196,7 +198,7 @@ const OWN: Readonly<Record<PdfMode, OfficeToolbar>> = {
         status: 'built',
         look: { kind: 'colour', icon: lucidePaintBucket },
       },
-      list('line-width-control', 'Line width', 'participate', lucideMinus),
+      { ...list(LINE_WIDTH, 'Line width', 'participate', lucideMinus), status: 'built' },
       {
         id: MARK_FONT_SIZE,
         label: 'Font size',

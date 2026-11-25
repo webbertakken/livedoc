@@ -4,7 +4,7 @@
 // mark"): from where the press lands to where the pointer is, held to the page and, with ⇧, square for a box; shown
 // as it is dragged and handed over once let go. A second pointer, or a cancel, lets it go unmade.
 import { useRef, useState, type PointerEvent } from 'react';
-import type { BoxShape, LineShape, PagePoint } from '@livedoc/pdf-documents';
+import type { BoxShape, LineShape, LineStyle, PagePoint } from '@livedoc/pdf-documents';
 import { dragShape, shapeOf, type ScreenBox } from './pdf-shape';
 import type { ShapeToolKind } from './pdf-shape-pick';
 
@@ -14,6 +14,9 @@ export type PdfPageShaping = {
   readonly colour: string;
   readonly opacity: number;
   readonly width: number;
+  readonly lineStyle?: Exclude<LineStyle, 'solid'>;
+  // A Rectangle's or an Ellipse's fill; none where absent.
+  readonly fill?: string;
   // `shape` null for a press: nothing to make.
   readonly onShape: (index: number, shape: LineShape | BoxShape | null) => void;
 };

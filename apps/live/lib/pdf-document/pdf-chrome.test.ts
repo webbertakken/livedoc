@@ -10,6 +10,8 @@ import {
   DARK_PAGES,
   DELETE_MARKS,
   DOWNLOAD_PDF,
+  FORMAT_COLOUR,
+  FORMAT_FILL_COLOUR,
   FIND,
   GO_TO_FIRST_PAGE,
   GO_TO_LAST_PAGE,
@@ -127,6 +129,9 @@ describe("a PDF document's menus and toolbar", () => {
     ...Object.keys(WIDTH_ITEMS),
     ...Object.keys(STYLE_ITEMS),
     ...Object.keys(END_ITEMS),
+    // pdf-look-controls.ts: Format > Colour and Fill colour open the toolbar's.
+    FORMAT_COLOUR,
+    FORMAT_FILL_COLOUR,
     // usePdfMarkTools.ts: the text tools (marks.md "Making a mark").
     TOOL_HIGHLIGHT,
     TOOL_UNDERLINE,

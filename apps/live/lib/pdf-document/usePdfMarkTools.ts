@@ -11,6 +11,7 @@ import type { IconPrim } from '@livedoc/icons';
 import { lucideHighlighter, lucideStrikethrough, lucideUnderline } from '@livedoc/icons/lucide';
 import {
   TEXT_MARK_KINDS,
+  type LineStyle,
   type MarkKind,
   type Stroke,
   type TextMarkKind,
@@ -55,6 +56,7 @@ import type { PdfDocumentOpen } from './usePdfDocument';
 import { usePdfDrawing } from './usePdfDrawing';
 import type { PdfPageShaping } from './usePdfPageShape';
 import { usePdfShapes } from './usePdfShapes';
+import { usePdfToolLine } from './usePdfToolLine';
 import { usePdfStampTool } from './usePdfStampTool';
 import { usePdfToolControl } from './usePdfToolControl';
 import { usePdfTyping } from './usePdfTyping';
@@ -68,6 +70,7 @@ export type PdfPageInk = {
   readonly colour: string;
   readonly opacity: number;
   readonly width: number;
+  readonly lineStyle?: Exclude<LineStyle, 'solid'>;
   // `begunAt`: when the stroke began, which decides whether it joins the Drawing before it.
   readonly onDraw: (index: number, stroke: Stroke, begunAt: number) => void;
 };
@@ -216,7 +219,9 @@ export function usePdfMarkTools({
   const draw = usePdfDrawing({ ready, author, look: looks.drawing, onProblem });
   const ink = useMemo<PdfPageInk | null>(
     () =>
-      inHand === 'drawing' ? { ...looks.drawing, width: DRAWING_WIDTH_PT, onDraw: draw } : null,
+      inHand === 'drawing'
+        ? { ...looks.drawing, width: looks.drawing.width ?? DRAWING_WIDTH_PT, onDraw: draw }
+        : null,
     [inHand, looks, draw],
   );
 
@@ -224,7 +229,7 @@ export function usePdfMarkTools({
   const shaping = useMemo<PdfPageShaping | null>(
     () =>
       isShapeTool(inHand)
-        ? { kind: inHand, ...looks[inHand], width: SHAPE_WIDTH_PT, onShape }
+        ? { kind: inHand, ...looks[inHand], width: looks[inHand].width ?? SHAPE_WIDTH_PT, onShape }
         : null,
     [inHand, looks, onShape],
   );
@@ -314,11 +319,13 @@ export function usePdfMarkTools({
 
   // "A tool's colour": the one colour picker, for the mark tool in hand; with Select in hand there is none, nor with
   // the Stamp tool: a stamp's colour is its own (marks.md "Stamps").
+  const line = usePdfToolLine({ inHand, looks, focusPages });
   const colours = useMemo<OfficeColours>(
     (): OfficeColours =>
       inHand === 'select' || inHand === 'stamp'
         ? {}
         : {
+            ...line.colours,
             [TOOL_COLOUR]: {
               read: () => looks[inHand].colour,
               set: (colour) => {
@@ -329,7 +336,7 @@ export function usePdfMarkTools({
               leading: 'Reset',
             },
           },
-    [inHand, looks, focusPages],
+    [inHand, looks, focusPages, line.colours],
   );
 
   /** The tools' own keys, outside a field: U, ⇧U, D, ⇧D, X, ⇧X, K, V and Escape; true where one was taken. */
@@ -360,6 +367,8 @@ export function usePdfMarkTools({
     typing: typed.typing,
     stamping: stampTool.stamping,
     actions,
+    // The tool in hand's line (marks.md "A tool's line"), over the selected marks' restyle of the same items.
+    lineActions: line.actions,
     choices,
     colours,
     onKey,

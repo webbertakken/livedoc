@@ -7,6 +7,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import {
   resetMarkLooks,
   setMarkColour,
+  setMarkLine,
   markLooks,
   FIRST_LOOKS,
   useMarkLooks,
@@ -74,5 +75,80 @@ describe('the text tools’ looks', () => {
       return <span>{useMarkLooks().strikeout.colour}</span>;
     }
     expect(renderToString(<Shown />)).toBe(`<span>${FIRST_LOOKS.strikeout.colour}</span>`);
+  });
+});
+
+// marks.md "Making a mark": A tool's line, kept for the kind as its colour is.
+describe('a tool’s line', () => {
+  const LINES = 'livedoc:v2:pdf-mark-lines';
+
+  it('starts at the kind’s first width, solid and unfilled', () => {
+    expect(markLooks().rectangle).toEqual({ ...FIRST_LOOKS.rectangle, width: 2 });
+    expect(markLooks().drawing.width).toBe(2);
+    expect(markLooks().highlight).not.toHaveProperty('width');
+  });
+
+  it('keeps a width, a line style and a fill chosen for one kind, in this browser', () => {
+    expect(setMarkLine('rectangle', { width: 8 })).toBe(true);
+    expect(setMarkLine('rectangle', { lineStyle: 'dotted' })).toBe(true);
+    expect(setMarkLine('rectangle', { fill: '#FDE68A' })).toBe(true);
+    expect(markLooks().rectangle).toEqual({
+      ...FIRST_LOOKS.rectangle,
+      width: 8,
+      lineStyle: 'dotted',
+      fill: '#fde68a',
+    });
+    expect(markLooks().ellipse).toEqual(FIRST_LOOKS.ellipse);
+    resetMarkLooks();
+    expect(markLooks().rectangle.fill).toBe('#fde68a');
+  });
+
+  it('holds Solid and no fill as nothing kept, and lets the kind go once nothing is', () => {
+    setMarkLine('ellipse', { lineStyle: 'dashed' });
+    setMarkLine('ellipse', { fill: '#000000' });
+    setMarkLine('ellipse', { lineStyle: 'solid' });
+    setMarkLine('ellipse', { fill: null });
+    expect(markLooks().ellipse).toEqual(FIRST_LOOKS.ellipse);
+    expect(JSON.parse(localStorage.getItem(LINES)!)).toEqual({});
+  });
+
+  it('takes no width outside a mark’s range, no style that is none, and no fill for a kind without an inside', () => {
+    expect(setMarkLine('line', { width: 0.25 })).toBe(false);
+    expect(setMarkLine('line', { width: 13 })).toBe(false);
+    expect(setMarkLine('line', { lineStyle: 'wavy' as never })).toBe(false);
+    expect(setMarkLine('line', { fill: '#ff0000' })).toBe(false);
+    expect(setMarkLine('rectangle', { fill: 'red' })).toBe(false);
+    expect(markLooks().line).toEqual(FIRST_LOOKS.line);
+    expect(localStorage.getItem(LINES)).toBeNull();
+  });
+
+  it('passes over each part kept that is not one, and any kind with no line', () => {
+    localStorage.setItem(
+      LINES,
+      JSON.stringify({
+        arrow: { width: 4, lineStyle: 'solid', fill: '#ff0000' },
+        rectangle: { width: 99, lineStyle: 'long-dashes', fill: '#00ff00' },
+        highlight: { width: 4 },
+        ellipse: 'wide',
+      }),
+    );
+    setMarkColour('arrow', '#123456');
+    expect(markLooks().arrow).toEqual({ ...FIRST_LOOKS.arrow, colour: '#123456', width: 4 });
+    expect(markLooks().rectangle).toEqual({
+      ...FIRST_LOOKS.rectangle,
+      lineStyle: 'long-dashes',
+      fill: '#00ff00',
+    });
+    expect(markLooks().highlight).toEqual(FIRST_LOOKS.highlight);
+    expect(markLooks().ellipse).toEqual(FIRST_LOOKS.ellipse);
+    resetMarkLooks();
+    localStorage.setItem(LINES, 'not json');
+    expect(markLooks().line).toEqual(FIRST_LOOKS.line);
+  });
+
+  it('tells its readers when a line changes', () => {
+    const { result } = renderHook(() => useMarkLooks());
+    act(() => void setMarkLine('drawing', { width: 12 }));
+    expect(result.current.drawing.width).toBe(12);
   });
 });

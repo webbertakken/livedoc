@@ -17,6 +17,7 @@ import {
 import { DRAWING_LOOK, DRAWING_WIDTH_PT } from './pdf-drawing';
 import type { ShapeToolKind } from './pdf-shape-pick';
 import type { TextMarkLook } from './pdf-text-mark';
+import type { ToolLook } from './pdf-tool-look';
 import { PDF_LOCAL_ORIGIN } from './pdf-undo';
 
 /** (default) A line's and a shape's first look: the Drawing's, strong Red for light paper, opaque. */
@@ -113,7 +114,7 @@ export function addShape(
   doc: Y.Doc,
   where: { page: PageName; stored: { blob: BlobKey; pages: number } },
   shape: LineShape | BoxShape | null,
-  by: { author: string; now: number; id: string; look: TextMarkLook },
+  by: { author: string; now: number; id: string; look: ToolLook },
 ): ShapeMade {
   const base = { id: by.id, page: where.page, ...by.look, author: by.author, createdAt: by.now };
   const mark = !shape

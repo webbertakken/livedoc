@@ -42,7 +42,14 @@ import { resetMarkLooks } from './pdf-mark-looks';
 import { SHAPE_LOOK, SHAPE_WIDTH_PT } from './pdf-shape';
 import { resetShapePick, shapePick } from './pdf-shape-pick';
 import { resetStampPick } from './pdf-stamp-pick';
-import { SHAPE_TOOLS, STAMP_TOOLS, TEXT_MARK_TOOLS, TOOL_COLOUR, TYPED_TOOLS } from './pdf-toolbar';
+import {
+  FILL_COLOUR,
+  SHAPE_TOOLS,
+  STAMP_TOOLS,
+  TEXT_MARK_TOOLS,
+  TOOL_COLOUR,
+  TYPED_TOOLS,
+} from './pdf-toolbar';
 import { TYPED_LOOK, TYPED_SIZE_PT } from './pdf-typed';
 import { resetTypedPick } from './pdf-typed-pick';
 import { usePdfMarkTools } from './usePdfMarkTools';
@@ -420,6 +427,33 @@ describe('the shape tools', () => {
       expect.objectContaining({ kind: 'rectangle', colour: '#1a73e8', page: PAGES[1]!.name }),
     ]);
     expect(track).toHaveBeenLastCalledWith('Pdf', 'Added', 'Mark.Rectangle');
+  });
+
+  // marks.md "Making a mark": A tool’s line, which the next mark of the kind takes.
+  it('draws and makes a shape in its tool’s remembered width, line style and fill', () => {
+    const { hook, run, doc } = tools();
+    run(TOOL_ELLIPSE);
+    act(() => hook.result.current.lineActions['line-width-8-pt']!.run());
+    act(() => hook.result.current.lineActions['line-style-dotted']!.run());
+    act(() => hook.result.current.colours[FILL_COLOUR]!.set('#fde68a'));
+    expect(hook.result.current.shaping).toMatchObject({
+      kind: 'ellipse',
+      width: 8,
+      lineStyle: 'dotted',
+      fill: '#fde68a',
+    });
+    act(() =>
+      hook.result.current.shaping!.onShape(0, { kind: 'ellipse', rect: [1, 1, 50, 50], width: 8 }),
+    );
+    expect(PdfLiveChanges.marks(doc)).toEqual([
+      expect.objectContaining({ kind: 'ellipse', width: 8, lineStyle: 'dotted', fill: '#fde68a' }),
+    ]);
+    run(TOOL_DRAWING);
+    act(() => hook.result.current.lineActions['line-width-12-pt']!.run());
+    expect(hook.result.current.ink).toMatchObject({ width: 12 });
+    expect(hook.result.current.colours[FILL_COLOUR]).toBeUndefined();
+    run(TOOL_SELECT);
+    expect(hook.result.current.lineActions).toEqual({});
   });
 
   it('shows the last shape taken on the Shape control, which puts it down when pressed again', () => {

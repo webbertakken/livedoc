@@ -4,13 +4,22 @@
 // "Making a mark"): the Drawing's strokes and the shape tools' lines and shapes, each shown as it is drawn, in its
 // tool's look, and handed over once let go; and the Stamp tool's press ("Stamps").
 import type { PointerEvent } from 'react';
-import type { Box, MarkShape, PagePoint } from '@livedoc/pdf-documents';
+import type { Box, BoxShape, LineShape, MarkShape, PagePoint } from '@livedoc/pdf-documents';
 import type { PdfPageInk } from './usePdfMarkTools';
 import { screenBoxOf } from './pdf-shape';
 import { usePdfPageInk } from './usePdfPageInk';
 import { usePdfPageShape, type PdfPageShaping } from './usePdfPageShape';
 import { usePdfPageStamp } from './usePdfPageStamp';
 import type { PdfPageStamping } from './usePdfStampTool';
+
+/** A shape drawn so far, in its tool's line style, and a Rectangle's or an Ellipse's fill (marks.md "A tool's line"). */
+export function draftLook(shape: LineShape | BoxShape, shaping: PdfPageShaping): MarkShape {
+  return {
+    ...shape,
+    ...(shaping.lineStyle ? { lineStyle: shaping.lineStyle } : {}),
+    ...('rect' in shape && shaping.fill ? { fill: shaping.fill } : {}),
+  };
+}
 
 /** The mark being drawn, in its tool's look. */
 export type PdfPageDraft = { shape: MarkShape; colour: string; opacity: number };
@@ -49,12 +58,21 @@ export function usePdfPageDraft({
   const draft: PdfPageDraft | null =
     ink && inking.stroke.length > 0
       ? {
-          shape: { kind: 'drawing', strokes: [inking.stroke], width: ink.width },
+          shape: {
+            kind: 'drawing',
+            strokes: [inking.stroke],
+            width: ink.width,
+            ...(ink.lineStyle ? { lineStyle: ink.lineStyle } : {}),
+          },
           colour: ink.colour,
           opacity: ink.opacity,
         }
       : shaping && shape.draft
-        ? { shape: shape.draft, colour: shaping.colour, opacity: shaping.opacity }
+        ? {
+            shape: draftLook(shape.draft, shaping),
+            colour: shaping.colour,
+            opacity: shaping.opacity,
+          }
         : null;
   return {
     draft,

@@ -33,6 +33,7 @@ import { startPdfEngineWorker } from '@/lib/pdf-document/pdf-engine-client';
 import { pdfReadsOf, type PdfHome } from '@/lib/pdf-document/pdf-home';
 import type { BindPdfLiveChanges } from '@/lib/pdf-document/pdf-live-binding';
 import { pdfLocalBinding } from '@/lib/pdf-document/pdf-local-binding';
+import { lookControls } from '@/lib/pdf-document/pdf-look-controls';
 import { marksOnPage, pdfMarksStore } from '@/lib/pdf-document/pdf-marks-store';
 import { droppedChangeCopy, lostChangesCopy } from '@/lib/pdf-document/pdf-surface-copy';
 import { usePdfDownload } from '@/lib/pdf-document/usePdfDownload';
@@ -370,6 +371,7 @@ export function PdfDocumentSurface({
             ...tools.actions,
             ...markSelection.actions,
             ...markRestyle.actions,
+            ...tools.lineActions,
             [GO_TO_PAGE]: { run: focusPageField },
           }
         : {}),
@@ -414,7 +416,23 @@ export function PdfDocumentSurface({
       tools.actions,
       markSelection.actions,
       markRestyle.actions,
+      tools.lineActions,
     ],
+  );
+
+  // The colours the toolbar offers now: the tool in hand's, or the selected marks' with Select in hand; and the look
+  // controls Format opens or repeats (marks.md "Changing a mark").
+  const lookColours = useMemo(
+    () => (ready ? (tools.inHand === 'select' ? markRestyle.colours : tools.colours) : null),
+    [ready, tools.inHand, markRestyle.colours, tools.colours],
+  );
+  const looked = useMemo(
+    () => (ready && marking ? lookControls(actions, lookColours ?? {}) : null),
+    [ready, marking, actions, lookColours],
+  );
+  const titleActions = useMemo(
+    () => (looked ? { ...actions, ...looked.actions } : actions),
+    [actions, looked],
   );
 
   // The tools' own keys, heard anywhere on the surface but a text field (keyboard-shortcuts.md "Tools").
@@ -450,7 +468,7 @@ export function PdfDocumentSurface({
         problem={problem}
         catalogue={PDF_MENUS}
         level={levelInMode(PDF_MODES, drawnLevel, mode)}
-        actions={actions}
+        actions={titleActions}
         shortcuts={PDF_SHORTCUTS}
         keyScope={root}
         chrome={chrome}
@@ -458,8 +476,8 @@ export function PdfDocumentSurface({
         onFollow={goToPerson}
         saveStatus={ready?.binding.saveStatus ?? null}
         toolbar={pdfToolbar(mode)}
-        choices={ready ? { ...viewChrome.choices, ...tools.choices } : null}
-        colours={ready ? (tools.inHand === 'select' ? markRestyle.colours : tools.colours) : null}
+        choices={ready ? { ...viewChrome.choices, ...tools.choices, ...looked?.choices } : null}
+        colours={lookColours}
         fontSize={ready && tools.inHand === 'select' ? markRestyle.fontSize : null}
         mode={open.phase === 'ready' ? choice : null}
         contextMenu={ready ? reading.contextMenu : null}

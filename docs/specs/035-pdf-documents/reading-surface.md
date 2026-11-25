@@ -258,8 +258,8 @@ rest are the mode's own. A control past the width goes into the shell's overflow
   `(default)`.
 - **Stamp** holds the stamps behind its chevron, in grids by category, each drawn as it looks; Approved until another
   is taken ([Marks](marks.md#stamps)).
-- **Colour** is the tool in hand's, or the selected marks' with Select in hand; **Line width** the tool in hand's;
-  **Fill** the selected Rectangles' and Ellipses' ([Marks](marks.md#changing-a-mark)); **Font size** the selected
+- **Colour** is the tool in hand's, or the selected marks' with Select in hand; **Line width** the same, of a tool
+  or marks with a line; **Fill** the Rectangle's or Ellipse's tool in hand, or the selected Rectangles' and Ellipses' ([Marks](marks.md#changing-a-mark)); **Font size** the selected
   Texts' and Callouts', shown while one is selected `(default)`; Editing's **Text** group shows while a text box holds
   the caret. **Dark pages** is offered in the dark scheme only.
 - **Select** selects text and whatever the mode may change; **Hand** drags the view. Holding Space is the hand for as

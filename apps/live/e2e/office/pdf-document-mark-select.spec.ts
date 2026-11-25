@@ -239,6 +239,60 @@ test('the selected marks are restyled from the Colour control and the Format men
   expectNoPageErrors(pageErrors);
 });
 
+// marks.md "Making a mark": A tool's line: with the Rectangle in hand the toolbar's Line width and Fill, and Format >
+// Line style, set the tool's, which the next Rectangle takes, kept across a reload; "Changing a mark": Format > Colour
+// opens the toolbar's Colour.
+test('a tool keeps the line width, line style and fill chosen for it', async ({
+  page,
+  pageErrors,
+}) => {
+  test.setTimeout(120_000);
+  await page.setViewportSize({ width: 1280, height: 860 });
+  await page.goto('/explorer/all');
+  await expect(page.getByRole('heading', { name: 'My Documents' }).first()).toBeVisible();
+  await dropPdf(page, 'Tool looks.pdf', await textPdf(2));
+  await page.waitForURL(/\/document\//, { timeout: 30_000 });
+  const first = await pageOneDrawn(page);
+  const rectangles = page.locator(`${PAGE_ONE} [data-pdf-mark-kind="rectangle"]`);
+  const toolbar = page.getByRole('toolbar', { name: 'Toolbar' });
+  const lineWidth = toolbar.getByRole('button', { name: /^Line width/ });
+
+  // With Select in hand and nothing selected, Line width is dimmed.
+  await expect(lineWidth).toHaveAttribute('aria-disabled', 'true');
+  await (await officeMenuItem(page, ['Insert', 'Shape', 'Rectangle'])).click();
+  await lineWidth.click();
+  await page.getByRole('menuitemradio', { name: '8 pt' }).click();
+  await (await officeMenuItem(page, ['Format', 'Line style', 'Dotted'])).click();
+  await toolbar.getByRole('button', { name: 'Fill', exact: true }).click();
+  await page
+    .getByRole('group', { name: 'Fill' })
+    .getByRole('group', { name: 'Light' })
+    .getByRole('button', { name: 'Yellow' })
+    .click();
+  await drag(page, first, [0.5, 0.15], [0.75, 0.25]);
+  const made = rectangles.first();
+  await expect(made.locator('polygon').first()).toHaveAttribute('stroke', 'none');
+  await expect(made.locator('polygon').nth(1)).toHaveAttribute('stroke-width', '8');
+  await expect(made.locator('polygon').nth(1)).toHaveAttribute('stroke-dasharray', '8 8');
+
+  // Format > Colour opens the toolbar's Colour.
+  await (await officeMenuItem(page, ['Format', 'Colour'])).click();
+  await expect(page.getByRole('group', { name: 'Colour' }).first()).toBeVisible();
+  await page.keyboard.press('Escape');
+  await page.screenshot({ path: test.info().outputPath('pdf-tool-line.png') });
+
+  // Kept in this browser: after a reload the Rectangle tool draws the same again.
+  await page.reload();
+  const again = await pageOneDrawn(page);
+  await expect(rectangles).toHaveCount(1);
+  await (await officeMenuItem(page, ['Insert', 'Shape', 'Rectangle'])).click();
+  await drag(page, again, [0.5, 0.3], [0.75, 0.4]);
+  await expect(rectangles).toHaveCount(2);
+  await expect(rectangles.nth(1).locator('polygon').nth(1)).toHaveAttribute('stroke-width', '8');
+  await expect(rectangles.nth(1).locator('polygon').first()).toHaveAttribute('stroke', 'none');
+  expectNoPageErrors(pageErrors);
+});
+
 // marks.md "Changing a mark": the toolbar's Font size is the selected Text's, its words wrapping again at the box's
 // width as the box grows down; Format > Align text sets its lines, Justified a piece a word; each one step of undo.
 test('a selected Text is given a size and an alignment', async ({ page, pageErrors }) => {
