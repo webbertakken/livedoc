@@ -6,7 +6,8 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import * as Y from 'yjs';
 import { EditorState, TextSelection } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
-import { ySyncPlugin } from 'y-prosemirror';
+import { undo, ySyncPlugin } from 'y-prosemirror';
+import { textDocumentUndoPlugins } from './text-document-undo';
 import {
   LiveThreads,
   TextDocumentState,
@@ -138,6 +139,32 @@ describe('stackCards', () => {
 });
 
 describe('threadHighlightPlugin', () => {
+  // live-editing-and-storage.md "Undo": typing within TEXT_DOCUMENT_UNDO_GROUP_MS is one step, though the highlight is
+  // set between keys.
+  it('keeps a run of typing one undo step while the highlight is set between keys', async () => {
+    const doc = TextDocumentState.load();
+    TextDocumentState.replaceBody(doc, [{ text: 'x' }]);
+    const view = new EditorView(document.createElement('div'), {
+      state: EditorState.create({
+        schema: textDocumentSchema,
+        plugins: [
+          ySyncPlugin(TextDocumentState.body(doc)),
+          ...textDocumentUndoPlugins(),
+          threadHighlightPlugin({ onSelect: vi.fn() }),
+        ],
+      }),
+    });
+    views.push(view);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    for (const letter of 'Written') {
+      view.dispatch(view.state.tr.insertText(letter, view.state.doc.content.size - 1));
+      setThreadHighlight(view, { stretches: [], selected: null, draft: null });
+    }
+    expect(view.state.doc.textContent).toBe('xWritten');
+    undo(view.state);
+    expect(view.state.doc.textContent).toBe('x');
+  });
+
   it('tints each stretch, the selected one and a draft darker, and moves them with the writing', async () => {
     const { view } = await writing(['quarterly results are in']);
     setThreadHighlight(view, {

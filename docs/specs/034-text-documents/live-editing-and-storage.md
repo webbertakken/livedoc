@@ -90,6 +90,10 @@ the caret put back; typing within `TEXT_DOCUMENT_UNDO_GROUP_MS` (500 ms) is one 
 the document's styles (update to match, use or reset styles) is on the same timeline, one step with the paragraphs it
 changes ([Text and paragraphs](text-and-paragraphs.md#update-to-match)).
 
+- A step of the editor that changes no writing (a highlight, a decoration, a selection) never ends the undo step being
+  gathered, though it is kept out of undo: `patches/y-prosemirror@1.3.7.patch` ends it only for a change to the
+  writing, so typing stays one step while comments, pages and peers redraw between keys.
+
 ## Storage
 
 - The **room** holds the text document's CRDT and is the **one writer** of its storage: it applies every edit (a

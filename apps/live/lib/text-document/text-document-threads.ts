@@ -131,12 +131,13 @@ export const threadHighlightKey = new PluginKey<ThreadHighlight>('text-document-
 
 const EMPTY: ThreadHighlight = { stretches: [], selected: null, draft: null };
 
-/** Sets what the highlight shows. */
+/**
+ * Sets what the highlight shows. The step changes no writing, so it carries no `addToHistory`: y-prosemirror ends the
+ * undo step being gathered on any update marked so, which would split a run of typing into steps.
+ */
 export function setThreadHighlight(view: EditorView, highlight: ThreadHighlight): void {
   if (view.isDestroyed) return;
-  view.dispatch(
-    view.state.tr.setMeta(threadHighlightKey, highlight).setMeta('addToHistory', false),
-  );
+  view.dispatch(view.state.tr.setMeta(threadHighlightKey, highlight));
 }
 
 /** The innermost stretch holding `pos`: the shortest, for threads that overlap. */
