@@ -11,6 +11,7 @@ import { LineChartAxis } from './ChartAxis';
 import {
   AREA_FILL_OPACITY,
   chartValueFontPx,
+  lineKeyItems,
   lineMarks,
   lineValueLabels,
   lineVariantOf,
@@ -71,7 +72,7 @@ export function LineChartView({
   const hoveredValue = hover ? chartValue(series[hover.s]?.values[hover.i]) : null;
 
   const group = useChartAnim(element, `${plotX0 + plotW / 2}px ${plotY0 + plotH / 2}px`);
-  const legendItems = series.map((s) => ({ label: s.name, value: 0, color: s.color }));
+  const legendItems = lineKeyItems(series, lineVariantOf(element));
 
   return (
     <ChartSurface

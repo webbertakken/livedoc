@@ -108,3 +108,44 @@ describe('setChartRightAxisSelected', () => {
     expect(commits).toEqual([]);
   });
 });
+
+// Lines (docs/specs/009-elements/pie-chart.md "A scatter series drawn as a line"): one series of each selected line
+// chart marked or unmarked as a line, the rest left as they are.
+describe('setChartLineSelected', () => {
+  it('marks and unmarks one series as a line, one commit each', () => {
+    trackMock.mockClear();
+    const commits: Element[][] = [];
+    const els: Element[] = [
+      {
+        ...createShape('line-chart', 0, 0),
+        id: 'l1',
+        chartVariant: 'scatter',
+        lineSeries: [
+          { name: 'A', values: [1], line: true },
+          { name: 'B', values: [2], axis: 'right' },
+        ],
+      },
+      { ...createShape('bar-chart', 0, 0), id: 'b1' },
+    ];
+    const { result } = renderHook(() =>
+      useChartSetters({
+        currentSelectionIds: () => new Set(['l1', 'b1']),
+        commit: (fn) => commits.push(fn(els)),
+      }),
+    );
+    result.current.setChartLineSelected(1, true);
+    const series = (out: Element[]) =>
+      (out.find((e) => e.id === 'l1') as { lineSeries: unknown[] }).lineSeries;
+    expect(series(commits[0]!)).toEqual([
+      { name: 'A', values: [1], line: true },
+      { name: 'B', values: [2], axis: 'right', line: true },
+    ]);
+    result.current.setChartLineSelected(0, false);
+    expect(series(commits[1]!)).toEqual([
+      { name: 'A', values: [1] },
+      { name: 'B', values: [2], axis: 'right' },
+    ]);
+    expect(commits[1]!.find((e) => e.id === 'b1')).toBe(els[1]);
+    expect(trackMock).toHaveBeenCalledWith('Element', 'Changed', 'ChartLines');
+  });
+});

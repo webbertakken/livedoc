@@ -10234,6 +10234,10 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
       "color": {
         "type": "string"
       },
+      "line": {
+        "const": true,
+        "type": "boolean"
+      },
       "name": {
         "type": "string"
       },

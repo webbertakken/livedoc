@@ -884,7 +884,7 @@ document's Plan cards when a formula reads them.
 scale, first? }` and `clear_conditional_formats` `{ range? }` ([Data validation](../029-sheets/data-validation.md#agents),
   [Conditional formatting](../029-sheets/conditional-formatting.md#agents)); `resize` `{ cols | rows, px | fit }`,
   `merge` `{ range, across? }`, `unmerge` `{ range }`, `border` `{ range, sides, color, width, style }`, `filter`
-  `{ range | null }`, `chart` `{ type, range, columns?, at?, width?, height?, palette? }`, `clear_charts`
+  `{ range | null }`, `chart` `{ type, range, columns?, at?, width?, height?, palette?, lines? }` (`lines`: series drawn as lines, by header name, scatter only; [pie-chart.md](../009-elements/pie-chart.md#lines-set-by-an-agent)), `clear_charts`
   `{ range? }` and `design` `{ design }`
   ([Shaping a sheet, A design](../029-sheets/sheet-store.md#agents); `sheet-shape-change.ts`, `sheet-design.ts`,
   `sheet-charts.ts`, `sheet-chart-follow.ts`). Inserted rows take their neighbour's formats, columns its look. After the

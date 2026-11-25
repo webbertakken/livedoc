@@ -14,7 +14,7 @@
 import { AXIS_TICK_FONT_PX, AXIS_TICK_GAP } from './chart-axis';
 import { chartFrame, type ChartLegendRect } from './chart-frame';
 import { chartTextInk } from './chart-ink';
-import { AREA_FILL_OPACITY, barMarks, lineMarks, pieMarks } from './chart-marks';
+import { AREA_FILL_OPACITY, barMarks, lineKeyItems, lineMarks, pieMarks } from './chart-marks';
 import {
   barValueLabels,
   chartValueFontPx,
@@ -24,7 +24,7 @@ import {
 } from './chart-values';
 import { labelOn } from './readable-colour';
 import { chartTypeOf, lineVariantOf } from './chart-types';
-import { LINE_DEFAULT_CATEGORIES, LINE_DEFAULT_SERIES, type PieSlice } from './data-shapes';
+import { LINE_DEFAULT_CATEGORIES, LINE_DEFAULT_SERIES, type ChartKeyItem } from './data-shapes';
 import type { BoxedElement } from './index';
 import { legendFontPx } from './label-font';
 import { textAdvanceEm } from './text-advance';
@@ -36,12 +36,27 @@ type Chart = BoxedElement & { type: 'shape' };
 const AXIS = '#cbd5e1';
 const AXIS_FAINT = '#e2e8f0';
 
+// A key row's swatch at (x, y-centre): a square, or (a scatter series drawn as a line) a line through a dot.
+function svgSwatch(
+  x: number,
+  y: number,
+  size: number,
+  color: string,
+  line: boolean | undefined,
+): string {
+  const fill = xmlEscape(color);
+  return line
+    ? `<line x1="${r2(x)}" y1="${r2(y)}" x2="${r2(x + size)}" y2="${r2(y)}" stroke="${fill}" stroke-width="2"/>` +
+        `<circle cx="${r2(x + size / 2)}" cy="${r2(y)}" r="${r2(size / 4)}" fill="${fill}"/>`
+    : `<rect x="${r2(x)}" y="${r2(y - size / 2)}" width="${size}" height="${size}" rx="2" fill="${fill}"/>`;
+}
+
 // The key: a swatch and a name per series, laid out in the strip chartFrame
 // left for it. Mirrors ChartLegend's own gates, so a legend too small to read
 // is omitted here exactly as it is on the canvas.
 function svgChartLegend(
   el: Chart,
-  items: readonly PieSlice[],
+  items: readonly ChartKeyItem[],
   colorAt: (i: number, d: { color?: string }) => string,
   legend: ChartLegendRect,
   textColor: string,
@@ -63,7 +78,7 @@ function svgChartLegend(
       const y = top + i * rowH + rowH / 2;
       const x = el.x + legend.x + 6;
       parts.push(
-        `<rect x="${r2(x)}" y="${r2(y - swatch / 2)}" width="${swatch}" height="${swatch}" rx="2" fill="${xmlEscape(colorAt(i, item))}"/>`,
+        svgSwatch(x, y, swatch, colorAt(i, item), item.line),
         `<text x="${r2(x + swatch + 4)}" y="${r2(y)}"${font} font-size="${fontPx}" fill="${xmlEscape(textColor)}" dominant-baseline="central">${xmlEscape(item.label || '—')}</text>`,
       );
     });
@@ -71,9 +86,9 @@ function svgChartLegend(
   }
   // A row, wrapped and centred: each name's width estimated per character (text-advance.ts), since there is no DOM
   // to ask; a flat average ran short on wide letters and drew one name into the next swatch.
-  const itemW = (item: PieSlice) =>
+  const itemW = (item: ChartKeyItem) =>
     swatch + 4 + Math.max(8, textAdvanceEm(item.label || '—') * fontPx) + 10;
-  const rows: PieSlice[][] = [[]];
+  const rows: ChartKeyItem[][] = [[]];
   let used = 0;
   for (const item of items) {
     const width = itemW(item);
@@ -92,7 +107,7 @@ function svgChartLegend(
     const y = top + ri * rowH + rowH / 2;
     for (const item of row) {
       parts.push(
-        `<rect x="${r2(x)}" y="${r2(y - swatch / 2)}" width="${swatch}" height="${swatch}" rx="2" fill="${xmlEscape(colorAt(index, item))}"/>`,
+        svgSwatch(x, y, swatch, colorAt(index, item), item.line),
         `<text x="${r2(x + swatch + 4)}" y="${r2(y)}"${font} font-size="${fontPx}" fill="${xmlEscape(textColor)}" dominant-baseline="central">${xmlEscape(item.label || '—')}</text>`,
       );
       x += itemW(item);
@@ -289,7 +304,7 @@ export function svgLineChart(
         `<text x="${r2(l.x)}" y="${r2(y + h + 13)}" text-anchor="middle"${font} font-size="9" fill="${xmlEscape(textColor)}">${xmlEscape(l.text)}</text>`,
     )
     .join('');
-  const legendItems = series.map((s) => ({ label: s.name, value: 0, color: s.color }));
+  const legendItems = lineKeyItems(series, lineVariantOf(el));
   const px = chartValueFontPx(el.textSize);
   const values = el.chartValues
     ? svgValueLabels(lineValueLabels(m, series), textColor, () => textColor, px, fontFamily)

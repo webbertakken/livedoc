@@ -55,7 +55,8 @@ editing an existing tab use the same operations; a full rebuild uses `replace`. 
   label over 40 characters keeps the heading and moves the full text into the note, as graph input does; an arrow's
   label is cut; a sticky's or a text's label is its content and is kept whole. Every style key a
   [view](document-views.md) prints (`stroke=`, `text-color=`, `border=`, `font=` beside `fill=`, `text=`, `line=`)
-  writes back unchanged.
+  writes back unchanged. A line chart takes `lines=["Pareto"]`: its series of those names drawn as lines on a
+  scatter chart, the rest unmarked ([Lines set by an agent](../009-elements/pie-chart.md#lines-set-by-an-agent)).
 - **Closed vocabularies.** A stored field with a closed list of values (`textSize`, `textAlignX`, `textAlignY`,
   `iconPosition`, `arrowStyle`, `arrowEnds`, `arrowheadShape`, `strokeStyle`, `borderRadius`, `iconWeight`, `font` (the editor's
   faces: a family name such as "serif" drew in the tab's font in silence), and the diagram-building kinds'

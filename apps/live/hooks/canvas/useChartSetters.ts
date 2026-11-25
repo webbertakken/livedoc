@@ -95,6 +95,25 @@ export function useChartSetters({
     );
     track('Element', 'Changed', 'ChartAxis');
   };
+  // Lines (pie-chart.md "A scatter series drawn as a line"): one series of each selected line chart marked as a line,
+  // or unmarked, the others left as they are; one commit, so one undo step.
+  const setChartLineSelected = (index: number, on: boolean) => {
+    const ids = currentSelectionIds();
+    if (ids.size === 0) return;
+    commit((els) =>
+      els.map((el) => {
+        if (!ids.has(el.id) || el.type !== 'shape' || el.shape !== 'line-chart') return el;
+        const series = el.lineSeries?.length ? el.lineSeries : LINE_DEFAULT_SERIES;
+        return {
+          ...el,
+          lineSeries: series.map(({ line: _line, ...s }, i) =>
+            (i === index ? on : _line === true) ? { ...s, line: true as const } : s,
+          ),
+        };
+      }),
+    );
+    track('Element', 'Changed', 'ChartLines');
+  };
   // Legend placement (docs/specs/009-elements/pie-chart.md): picking a side also turns the legend on, so the
   // position tiles double as "on" while the Off tile uses setChartLegendSelected.
   const setChartLegendPositionSelected = (position: ChartLegendPosition) =>
@@ -136,6 +155,7 @@ export function useChartSetters({
     setChartValuesSelected,
     setChartAxisSelected,
     setChartRightAxisSelected,
+    setChartLineSelected,
     setChartLegendPositionSelected,
     setLineDataSelected,
   };
