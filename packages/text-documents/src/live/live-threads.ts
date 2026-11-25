@@ -18,6 +18,8 @@ export const TEXT_DOCUMENT_THREAD_COMMENTS_MAX = 500;
 export type TextDocumentCommentAuthor = {
   readonly key?: string;
   readonly name: string;
+  /** A file's initials for them, where it had them. */
+  readonly initials?: string;
   readonly colour: string;
   readonly fromFile?: true;
 };
@@ -182,7 +184,11 @@ export const LiveThreads = {
     const start = resolveAt(doc, thread.start);
     const end = resolveAt(doc, thread.end);
     if (!start || !end) return null;
-    return { start, end, deleted: start.type === end.type && start.index >= end.index };
+    return {
+      start,
+      end,
+      deleted: thread.quote !== '' && start.type === end.type && start.index >= end.index,
+    };
   },
 
   /** Begins a thread with its first comment; false when one with its id is there already. */

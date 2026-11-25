@@ -126,6 +126,14 @@ describe('LiveThreads', () => {
     expect(anchored(doc, run, 'th1')).toBe('results');
   });
 
+  it('never reads a point comment (an empty quote) as deleted', () => {
+    const { doc, run } = written();
+    LiveThreads.begin(doc, startOn(run, 10, 10), 'me');
+    const thread = LiveThreads.read(doc)[0]!;
+    expect(thread.quote).toBe('');
+    expect(LiveThreads.anchor(doc, thread)?.deleted).toBe(false);
+  });
+
   it('edits a comment, keeping its first time and noting the edit’s', () => {
     const { doc, run } = written();
     LiveThreads.begin(doc, startOn(run, 0, 9), 'me');

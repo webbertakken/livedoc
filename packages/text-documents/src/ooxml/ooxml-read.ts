@@ -52,6 +52,8 @@ import type { Equation } from '../model/equations';
 import { Bookmarks, type Bookmark } from '../model/bookmarks';
 import { Contents, type TableOfContents } from '../model/contents';
 import { DocumentTabs, type DocumentTabStart } from '../model/document-tabs';
+import { Comments, type CommentMark } from '../model/comments';
+import { COMMENT_RELATIONSHIPS, OoxmlCommentsReader } from './ooxml-comments';
 
 /** What a `w:sectPr` says of the document tab it ends, when it ends one. */
 function tabOf(sectPr: XmlElement): DocumentTabStart['head'] | undefined {
@@ -158,6 +160,8 @@ type Parts = {
   styles?: XmlParsed;
   numbering?: XmlParsed;
   settings?: XmlParsed;
+  comments?: XmlParsed;
+  commentsExtended?: XmlParsed;
 };
 
 export type OoxmlFileRead = { ok: true; document: TextDocument } | PackageRefusal;
@@ -204,6 +208,12 @@ export async function readOoxmlFile(
   const stylesPart = partOf(RELATIONSHIP_TYPES.styles);
   const numberingPart = partOf(RELATIONSHIP_TYPES.numbering);
   const settingsPart = partOf(RELATIONSHIP_TYPES.settings);
+  const commentParts = [
+    RELATIONSHIP_TYPES.comments,
+    RELATIONSHIP_TYPES.commentsExtended,
+    RELATIONSHIP_TYPES.commentsIds,
+    RELATIONSHIP_TYPES.commentsExtensible,
+  ].map(partOf);
   const corePart = (pkg.relationships.get('') ?? []).find(
     (r) => r.type === RELATIONSHIP_TYPES.coreProperties,
   );
@@ -219,14 +229,21 @@ export async function readOoxmlFile(
     parse(coreName),
     parse(appName),
     parse(settingsPart),
+    parse(commentParts[0]),
+    parse(commentParts[1]),
   ];
   const refused = parsed.find((p): p is PackageRefusal => p !== undefined && !p.ok);
   if (refused) return refused;
-  const [document, styles, numbering, core, app, settings] = parsed as (XmlParsed | undefined)[];
+  const [document, styles, numbering, core, app, settings, comments, commentsExtended] = parsed as (
+    XmlParsed | undefined
+  )[];
   const body = document && childElement(document.root, W_NS, 'body');
   if (!document || !body) return refuse('package_damaged', { entry: pkg.mainPart });
   const reader = new OoxmlReader(
-    { document, ...compact({ styles, numbering, settings }) },
+    {
+      document,
+      ...compact({ styles, numbering, settings, comments, commentsExtended }),
+    },
     pkg,
     report,
     parse,
@@ -241,6 +258,7 @@ export async function readOoxmlFile(
       coreName,
       appName,
       metadata: readOoxmlMetadata(core, app),
+      commentParts: commentParts.filter((n): n is string => n !== undefined),
     }),
   };
 }
@@ -286,6 +304,10 @@ class OoxmlReader {
   readonly footnotes = new FootnotesReader(this);
   /** While a note's paragraphs are read. */
   readingNote = false;
+  /** The file's comments (review.md "How a comment is kept"). */
+  readonly comments: OoxmlCommentsReader;
+  /** Range marks between paragraphs, put at the start of the next paragraph read. */
+  readonly pendingMarks: CommentMark[] = [];
   readonly parsePart: (name: string) => XmlParsed | PackageRefusal | undefined;
   /** The styles and defaults read, for the stops each paragraph inherits. */
   tabs: { styles: readonly Style[]; defaults: StyleDefaults } = {
@@ -316,6 +338,24 @@ class OoxmlReader {
     this.rels = pkg.relationships.get(pkg.mainPart) ?? [];
     this.part = { parsed: parts.document, name: pkg.mainPart, rels: this.rels };
     this.parsePart = parsePart;
+    this.comments = new OoxmlCommentsReader(
+      parts.comments?.root,
+      parts.commentsExtended?.root,
+      report,
+    );
+  }
+
+  /** Whether a header, footer or note is being read, where no comment is kept. */
+  get inStory(): boolean {
+    return this.readingNote || this.part.parsed !== this.parts.document;
+  }
+
+  /** A range mark between paragraphs, kept for the next paragraph; true when `e` is one. */
+  betweenParagraphs(e: XmlElement): boolean {
+    if (!isW(e, 'commentRangeStart') && !isW(e, 'commentRangeEnd')) return false;
+    const mark = this.comments.range(e, this.inStory, { props: {} });
+    if (mark) this.pendingMarks.push(mark);
+    return true;
   }
 
   /** The runs of a table of contents' fields' marks (its TOC field's, its PAGEREFs'): read as nothing. */
@@ -491,6 +531,7 @@ class OoxmlReader {
       coreName?: string;
       appName?: string;
       metadata: TextDocument['metadata'];
+      commentParts?: readonly string[];
     },
   ): TextDocument {
     const doc = this.parts.document;
@@ -585,7 +626,7 @@ class OoxmlReader {
           sectionAt += 1;
           if (next) blocks.push({ type: 'section', ...next });
         }
-      } else if (isW(e, 'sectPr')) continue;
+      } else if (isW(e, 'sectPr') || this.betweenParagraphs(e)) continue;
       else if (isW(e, 'tbl')) {
         const table = this.table(e);
         if (table) blocks.push(table);
@@ -630,7 +671,9 @@ class OoxmlReader {
               names.coreName,
               names.appName,
               footnotes?.part,
-            ].includes(name) && !this.headerParts.holds(name),
+            ].includes(name) &&
+            !this.headerParts.holds(name) &&
+            !names.commentParts?.includes(name),
         )
         .map(([name, data]) => ({
           name,
@@ -644,7 +687,13 @@ class OoxmlReader {
           // The package's own relationships LiveDoc writes itself (the main part, core and app properties) are not kept.
           .map(([from, rels]) => [
             from,
-            byId(from === '' ? rels.filter((r) => !PACKAGE_WRITTEN.has(r.type)) : rels),
+            byId(
+              from === ''
+                ? rels.filter((r) => !PACKAGE_WRITTEN.has(r.type))
+                : from === this.pkg.mainPart
+                  ? rels.filter((r) => !COMMENT_RELATIONSHIPS.has(r.type))
+                  : rels,
+            ),
           ]),
       ),
       // Every written package defaults `rels` and `xml`; the rest by extension, sorted.
@@ -666,10 +715,11 @@ class OoxmlReader {
       ...compact({ media: this.taken.held() }),
       source,
     };
-    return adoptOoxmlMedia(
+    const read = adoptOoxmlMedia(
       DocumentTabs.split(document, tabStartsOf(tabEnds, finalSectPr && tabOf(finalSectPr))),
       this.taken,
     );
+    return Comments.settle({ ...read, comments: this.comments.threads() }, this.report);
   }
 
   paragraph(p: XmlElement, endsWith: Section | undefined): Paragraph {
@@ -701,7 +751,7 @@ class OoxmlReader {
     );
     // A column break at the paragraph's start is its column break before (page-layout.md "Breaks").
     const runs = new RunReader(this, p);
-    const inlines = runs.read();
+    const inlines = [...(this.inStory ? [] : this.pendingMarks.splice(0)), ...runs.read()];
     const aligned = runs.displayAlign && !read.align ? { ...read, align: runs.displayAlign } : read;
     const props: ParagraphProps = runs.columnBreak
       ? { ...aligned, columnBreakBefore: true }
@@ -790,7 +840,7 @@ class OoxmlReader {
       else if (isW(e, 'tbl')) {
         const table = this.table(e);
         if (table) blocks.push(table);
-      } else if (isW(e, 'tcPr')) continue;
+      } else if (isW(e, 'tcPr') || this.betweenParagraphs(e)) continue;
       else if (isW(e, 'proofErr')) this.report.drop('layout-hint', e.local);
       else {
         blocks.push({ type: 'kept', name: e.local, xml: this.kept(this.part.parsed, e) });
@@ -1013,6 +1063,15 @@ class RunReader {
     if (e.uri === W_NS) {
       if (e.local === 'pPr') return;
       if (e.local === 'r') return this.run(e, ctx);
+      if (e.local === 'commentRangeStart' || e.local === 'commentRangeEnd') {
+        const mark = this.r.comments.range(
+          e,
+          this.r.inStory,
+          compact({ props: {}, link: ctx.link }),
+        );
+        if (mark) this.out.push(mark);
+        return;
+      }
       if (e.local === 'proofErr') {
         this.r.report.drop('layout-hint', e.local);
         return;
@@ -1106,6 +1165,15 @@ class RunReader {
         case 'lastRenderedPageBreak':
           this.r.report.drop('layout-hint', c.local);
           break;
+        case 'commentReference': {
+          const mark = this.r.comments.reference(
+            c,
+            this.r.inStory,
+            compact({ props: {}, link: ctx.link }),
+          );
+          if (mark) this.out.push(mark);
+          break;
+        }
         case 'footnoteRef':
           // A note's number, drawn from its place; the model holds no text for it.
           if (!this.r.readingNote) this.keepWhole(r, rPr, c, ctx, props, style);

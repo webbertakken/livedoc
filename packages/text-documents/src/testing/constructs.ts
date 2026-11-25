@@ -696,6 +696,71 @@ export const CONSTRUCTS: Record<string, (format: TextDocumentFormat) => TextDocu
         run('start', {}, { link: '#a1b2c3d4e5f6' }),
       ]),
     ]),
+  // review.md "How a comment is kept": a resolved thread with a reply on a stretch across a format change, a point
+  // comment, and an open thread across two paragraphs, its text two lines.
+  comments: (format) => {
+    // Ids as each format's reader makes them, so the file reads back equal: ODF by annotation name, a reply by its
+    // place; Word by each comment's number. A LiveDoc person's key never travels (comments-files.test.ts).
+    const odf = format === 'odf';
+    const ids = {
+      t1: odf ? 'f.t1' : 'f.0',
+      r1: odf ? 'f.t1.1' : 'f.1',
+      t2: odf ? 'f.t2' : 'f.2',
+      t3: odf ? 'f.t3' : 'f.3',
+    };
+    const mark = (edge: 'start' | 'end', id: string) => ({
+      type: 'comment' as const,
+      edge,
+      id,
+      props: {},
+    });
+    const author = { name: 'Ada Lovelace', initials: 'AL' };
+    return base(
+      format,
+      [
+        paragraph(format, 'normal', [
+          run('The '),
+          mark('start', ids.t1),
+          run('quarterly '),
+          run('results', { bold: true }),
+          mark('end', ids.t1),
+          run(' are in'),
+          mark('start', ids.t2),
+          mark('end', ids.t2),
+          run('.'),
+        ]),
+        paragraph(format, 'normal', [mark('start', ids.t3), run('Next steps')]),
+        paragraph(format, 'normal', [run('follow.'), mark('end', ids.t3)]),
+      ],
+      {
+        comments: [
+          {
+            id: ids.t1,
+            resolved: true,
+            comments: [
+              { id: ids.t1, text: 'Is this final?', at: Date.UTC(2026, 10, 18, 10), author },
+              {
+                id: ids.r1,
+                text: 'Yes & <done>.',
+                at: Date.UTC(2026, 10, 18, 11),
+                author: { name: 'Bo' },
+              },
+            ],
+          },
+          {
+            id: ids.t2,
+            resolved: false,
+            comments: [{ id: ids.t2, text: 'A point.', author: { name: 'Cy' } }],
+          },
+          {
+            id: ids.t3,
+            resolved: false,
+            comments: [{ id: ids.t3, text: 'Two\nlines', at: Date.UTC(2026, 10, 19), author }],
+          },
+        ],
+      },
+    );
+  },
   // links-and-navigation.md "Table of contents": a Dotted one of two levels, each entry its heading's text and page
   // number linked to the heading's id, then the headings it lists.
   contents: (format) => {

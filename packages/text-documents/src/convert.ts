@@ -349,6 +349,8 @@ export function convertTextDocument(
       ...(media.length > 0 ? { media: Object.fromEntries(media) } : {}),
       body: document.body,
       ...(document.tabs ? { tabs: document.tabs } : {}),
+      // Comment threads carry over whole; their markers convert with the writing (review.md "How a comment is kept").
+      ...(document.comments ? { comments: document.comments } : {}),
     },
     blocksOf,
   );

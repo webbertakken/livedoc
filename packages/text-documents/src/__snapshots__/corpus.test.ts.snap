@@ -20,18 +20,6 @@ exports[`the corpus > reads google/features-gdocs.docx and writes it back the sa
         "count": 2,
         "name": "br",
       },
-      {
-        "count": 1,
-        "name": "commentRangeStart",
-      },
-      {
-        "count": 1,
-        "name": "commentRangeEnd",
-      },
-      {
-        "count": 1,
-        "name": "commentReference",
-      },
     ],
   },
   "structure": {
@@ -60,7 +48,7 @@ exports[`the corpus > reads google/features-gdocs.docx and writes it back the sa
         "Normal",
         "",
         "A footnote and a comment here.",
-        "note: The note.,commentRangeStart,commentRangeEnd,commentReference",
+        "note: The note.",
       ],
       [
         "Normal",
@@ -180,14 +168,6 @@ exports[`the corpus > reads google/features-gdocs.odt and writes it back the sam
         "count": 1,
         "name": "sequence-decls",
       },
-      {
-        "count": 1,
-        "name": "annotation",
-      },
-      {
-        "count": 1,
-        "name": "annotation-end",
-      },
     ],
   },
   "structure": {
@@ -220,7 +200,7 @@ exports[`the corpus > reads google/features-gdocs.odt and writes it back the sam
         "Standard",
         "",
         "A footnote and a comment here.",
-        "note: The note.,annotation,annotation-end",
+        "note: The note.",
       ],
       [
         "Standard",
@@ -341,18 +321,6 @@ exports[`the corpus > reads libreoffice/features.docx and writes it back the sam
         "count": 2,
         "name": "br",
       },
-      {
-        "count": 1,
-        "name": "commentRangeStart",
-      },
-      {
-        "count": 1,
-        "name": "commentRangeEnd",
-      },
-      {
-        "count": 1,
-        "name": "commentReference",
-      },
     ],
   },
   "structure": {
@@ -381,7 +349,7 @@ exports[`the corpus > reads libreoffice/features.docx and writes it back the sam
         "Normal",
         "",
         "A footnote and a comment here.",
-        "note: The note.,commentRangeStart,commentRangeEnd,commentReference",
+        "note: The note.",
       ],
       [
         "Normal",
@@ -496,14 +464,6 @@ exports[`the corpus > reads libreoffice/features.fodt and writes it back the sam
         "count": 1,
         "name": "sequence-decls",
       },
-      {
-        "count": 1,
-        "name": "annotation",
-      },
-      {
-        "count": 1,
-        "name": "annotation-end",
-      },
     ],
   },
   "structure": {
@@ -541,7 +501,7 @@ exports[`the corpus > reads libreoffice/features.fodt and writes it back the sam
         "Standard",
         "",
         "A footnote and a comment here.",
-        "note: The note.,annotation,annotation-end",
+        "note: The note.",
       ],
       [
         "Standard",
@@ -649,14 +609,6 @@ exports[`the corpus > reads libreoffice/features.odt and writes it back the same
         "count": 1,
         "name": "sequence-decls",
       },
-      {
-        "count": 1,
-        "name": "annotation",
-      },
-      {
-        "count": 1,
-        "name": "annotation-end",
-      },
     ],
   },
   "structure": {
@@ -694,7 +646,7 @@ exports[`the corpus > reads libreoffice/features.odt and writes it back the same
         "Standard",
         "",
         "A footnote and a comment here.",
-        "note: The note.,annotation,annotation-end",
+        "note: The note.",
       ],
       [
         "Standard",

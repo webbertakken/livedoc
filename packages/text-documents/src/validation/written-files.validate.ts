@@ -26,7 +26,10 @@ const OUT = mkdtempSync(join(tmpdir(), 'livedoc-written-'));
 const FOREIGN = new Set([LIVEDOC_NS, NS.loext]);
 fetchOfficeSchemas();
 
-const written: { file: string; texts: string[] }[] = [];
+/** Each written file, its paragraphs' texts and its threads' comments' texts. */
+const written: { file: string; texts: string[]; threads: string[][] }[] = [];
+const threadsOf = (document: TextDocument) =>
+  (document.comments ?? []).map((t) => t.comments.map((c) => c.text));
 
 describe('every written file validates against its format’s schema', () => {
   for (const [name, build] of Object.entries(CONSTRUCTS)) {
@@ -36,7 +39,11 @@ describe('every written file validates against its format’s schema', () => {
         const bytes = (writeTextDocumentFile(document, type) as { bytes: Uint8Array }).bytes;
         const file = join(OUT, `${name}.${type}`);
         writeFileSync(file, bytes);
-        written.push({ file, texts: TextDocument.paragraphTexts(document) });
+        written.push({
+          file,
+          texts: TextDocument.paragraphTexts(document),
+          threads: threadsOf(document),
+        });
         if (type === 'fodt')
           validateFlatOdf(new TextDecoder().decode(bytes), join(OUT, `${name}-fodt`), FOREIGN);
         else await validateOdfPackage(new Uint8Array(bytes), join(OUT, `${name}-odt`), FOREIGN);
@@ -48,9 +55,18 @@ describe('every written file validates against its format’s schema', () => {
       const bytes = (writeTextDocumentFile(document, 'docx') as { bytes: Uint8Array }).bytes;
       const file = join(OUT, `${name}.docx`);
       writeFileSync(file, bytes);
-      written.push({ file, texts: TextDocument.paragraphTexts(document) });
+      written.push({
+        file,
+        texts: TextDocument.paragraphTexts(document),
+        threads: threadsOf(document),
+      });
       expect((await readOoxmlPackage(new Uint8Array(bytes))).ok).toBe(true);
-      await validateOoxmlPackage(new Uint8Array(bytes), join(OUT, `${name}-docx`));
+      // Word's comments extension (MS-DOCX) has no ISO/IEC 29500 schema; comments.xml itself is checked.
+      await validateOoxmlPackage(
+        new Uint8Array(bytes),
+        join(OUT, `${name}-docx`),
+        (part) => part === 'word/commentsExtended.xml',
+      );
     });
   }
 
@@ -85,6 +101,8 @@ describe('every written file validates against its format’s schema', () => {
       const texts = (texts: string[]) => (out.endsWith('.docx') ? texts.filter(Boolean) : texts);
       if (read.ok)
         expect(texts(TextDocument.paragraphTexts(read.document)), out).toEqual(texts(w.texts));
+      // review.md "How a comment is kept": its comment threads, replies included, come back as they were.
+      if (read.ok) expect(threadsOf(read.document), out).toEqual(w.threads);
     }
   }, 400_000);
 });
