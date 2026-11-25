@@ -1,8 +1,8 @@
 'use client';
 
 // Restyling the selected marks (docs/specs/035-pdf-documents/marks.md "Changing a mark"): the toolbar's Colour is
-// theirs while Select is in hand, blank where they differ, Reset giving each its kind's first look; Format > Opacity and
-// Line width set a step, checked where every mark it reaches holds it, dimmed while none has what it sets. Each restyle
+// theirs while Select is in hand, blank where they differ, Reset giving each its kind's first look; its Fill the selected
+// Rectangles' and Ellipses', led by None; Format > Opacity, Line width and Line style set a step, checked where every mark it reaches holds it, dimmed while none has what it sets. Each restyle
 // is one step of the person's undo, and gives the pages the keys. Marks are Reviewing's: while `marking` is off nothing
 // is bound.
 import { useMemo, useSyncExternalStore } from 'react';
@@ -12,16 +12,19 @@ import { debugLog } from '@/lib/debug-log';
 import type { OfficeActions } from '@/lib/office/office-catalogue';
 import { track } from '@/lib/telemetry';
 import {
+  fillOf,
   firstColour,
+  lineStyleOf,
   OPACITY_ITEMS,
   restyleMarks,
   sharedOf,
+  STYLE_ITEMS,
   WIDTH_ITEMS,
   widthOf,
   type RestyledLook,
 } from './pdf-mark-restyle';
 import { marksOnPage, type PdfMarksByPage, type PdfMarksStore } from './pdf-marks-store';
-import { TOOL_COLOUR } from './pdf-toolbar';
+import { FILL_COLOUR, TOOL_COLOUR } from './pdf-toolbar';
 import type { PdfDocumentOpen } from './usePdfDocument';
 import type { PdfMarksChosen } from './usePdfMarkSelection';
 
@@ -31,6 +34,13 @@ const NO_MARKS: PdfMarksByPage = new Map();
 const NONE: readonly Mark[] = [];
 const neverChanges = () => () => {};
 const noMarks = () => NO_MARKS;
+
+/** The fill the shapes selected share: none as undefined, null where they differ. */
+function sharedFill(fills: readonly (string | null)[]): string | null | undefined {
+  const first = fills[0] ?? null;
+  if (fills.some((fill) => fill !== first)) return null;
+  return first ?? undefined;
+}
 
 export function usePdfMarkRestyle({
   ready,
@@ -73,8 +83,12 @@ export function usePdfMarkRestyle({
       }
       focusPages();
     };
-    const colours: OfficeColours =
-      selected.length > 0
+    const fills = selected.flatMap((mark) => {
+      const fill = fillOf(mark);
+      return fill === undefined ? [] : [fill];
+    });
+    const colours: OfficeColours = {
+      ...(selected.length > 0
         ? {
             [TOOL_COLOUR]: {
               read: () => sharedOf(selected, (mark) => mark.colour),
@@ -83,9 +97,21 @@ export function usePdfMarkRestyle({
               leading: 'Reset',
             },
           }
-        : {};
+        : {}),
+      ...(fills.length > 0
+        ? {
+            [FILL_COLOUR]: {
+              read: () => sharedFill(fills),
+              set: (fill) => restyle('fill', () => ({ fill })),
+              leading: 'None',
+            },
+          }
+        : {}),
+    };
     const opacity = sharedOf(selected, (mark) => mark.opacity);
     const width = sharedOf(selected, widthOf);
+    const style = sharedOf(selected, lineStyleOf);
+    const lined = selected.some((mark) => widthOf(mark) !== undefined);
     const actions: OfficeActions = {
       ...Object.fromEntries(
         Object.entries(OPACITY_ITEMS).map(([id, value]) => [
@@ -103,7 +129,17 @@ export function usePdfMarkRestyle({
           {
             run: () => restyle('width', () => ({ width: value })),
             checked: width === value,
-            disabled: !selected.some((mark) => widthOf(mark) !== undefined),
+            disabled: !lined,
+          },
+        ]),
+      ),
+      ...Object.fromEntries(
+        Object.entries(STYLE_ITEMS).map(([id, value]) => [
+          id,
+          {
+            run: () => restyle('style', () => ({ lineStyle: value })),
+            checked: style === value,
+            disabled: !lined,
           },
         ]),
       ),

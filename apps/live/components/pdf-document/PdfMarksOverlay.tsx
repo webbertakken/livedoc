@@ -87,11 +87,27 @@ export function PdfMarkWords({ matrix, mark }: { matrix: PageMatrix; mark: Mark 
   );
 }
 
-/** What a mark draws, as SVG in view space: its fills, then its lines, a closed line a polygon. */
-export function MarkShapes({ matrix, shape }: { matrix: PageMatrix; shape: MarkShape }) {
-  const { fills, strokes } = MarkDrawing.of(shape);
+/** What a mark draws, as SVG in view space: a shape's fill in its own colour (stepped on Dark pages), its fills, then
+ *  its lines, a closed line a polygon, a styled line dashed by its pattern. */
+export function MarkShapes({
+  matrix,
+  shape,
+  dark = false,
+}: {
+  matrix: PageMatrix;
+  shape: MarkShape;
+  dark?: boolean;
+}) {
+  const { fills, strokes, fill } = MarkDrawing.of(shape);
   return (
     <>
+      {fill ? (
+        <polygon
+          stroke="none"
+          fill={dark ? DarkPages.hex(fill.colour) : fill.colour}
+          points={viewPoints(matrix, fill.points)}
+        />
+      ) : null}
       {fills.map((points, at) => (
         <polygon key={`f${at}`} stroke="none" points={viewPoints(matrix, points)} />
       ))}
@@ -101,6 +117,7 @@ export function MarkShapes({ matrix, shape }: { matrix: PageMatrix; shape: MarkS
           strokeWidth: stroke.width,
           strokeLinecap: stroke.round ? ('round' as const) : undefined,
           strokeLinejoin: stroke.round ? ('round' as const) : undefined,
+          strokeDasharray: stroke.dash?.join(' '),
         };
         return stroke.closed ? (
           <polygon key={`s${at}`} fill="none" {...look} />
@@ -207,7 +224,7 @@ export function PdfMarksOverlay({
             stroke={colour}
             opacity={mark.opacity}
           >
-            <MarkShapes matrix={matrix} shape={mark} />
+            <MarkShapes matrix={matrix} shape={mark} dark={dark} />
             <PdfMarkWords matrix={matrix} mark={mark} />
           </g>
         );

@@ -152,7 +152,7 @@ const path = (points: MarkDrawing['fills'][number]): string =>
   points.map(({ x, y }, at) => `${num(x)} ${num(y)} ${at === 0 ? 'm' : 'l'}`).join(' ');
 
 export function appearanceOf(
-  { fills, strokes }: MarkDrawing,
+  { fills, strokes, fill }: MarkDrawing,
   look: { readonly colour: string; readonly opacity: number },
   words: MarkWords | null = null,
   setter: RunSetter | null = null,
@@ -161,11 +161,17 @@ export function appearanceOf(
   const opacity = look.opacity < 1 ? look.opacity : null;
   const lines = ['q'];
   if (opacity !== null) lines.push(`/${APPEARANCE_STATE} gs`);
+  if (fill) lines.push(`${rgbOf(fill.colour)} rg`, `${path(fill.points)} h f`);
   if (fills.length > 0) lines.push(`${colour} rg`, ...fills.map((points) => `${path(points)} h f`));
   if (strokes.length > 0) lines.push(`${colour} RG`);
+  // A line style's pattern where a stroke has one, and solid again for a stroke after it that has none.
+  let dashed = false;
   for (const stroke of strokes) {
     const ends = stroke.round ? 1 : 0;
-    lines.push(`${num(stroke.width)} w ${ends} J ${ends} j`);
+    const dash = stroke.dash ?? [];
+    const pattern = dash.length > 0 || dashed ? ` [${dash.map((n) => num(n)).join(' ')}] 0 d` : '';
+    dashed = dash.length > 0;
+    lines.push(`${num(stroke.width)} w ${ends} J ${ends} j${pattern}`);
     lines.push(`${path(stroke.points)}${stroke.closed ? ' h' : ''} S`);
   }
   const set = words?.lines.filter((line) => line.text !== '') ?? [];

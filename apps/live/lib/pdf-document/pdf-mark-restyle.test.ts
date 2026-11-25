@@ -3,13 +3,16 @@
 // person's own origin.
 import { describe, expect, it } from 'vitest';
 import * as Y from 'yjs';
-import { Mark, PageName, PdfLiveChanges, type Quad } from '@livedoc/pdf-documents';
+import { LINE_STYLES, Mark, PageName, PdfLiveChanges, type Quad } from '@livedoc/pdf-documents';
 import { FIRST_LOOKS } from './pdf-mark-looks';
 import {
+  fillOf,
   firstColour,
+  lineStyleOf,
   OPACITY_ITEMS,
   restyleMarks,
   sharedOf,
+  STYLE_ITEMS,
   WIDTH_ITEMS,
   widthOf,
 } from './pdf-mark-restyle';
@@ -96,5 +99,45 @@ describe('restyleMarks', () => {
     expect(restyleMarks(doc, ['l', 's'], (mark) => ({ colour: firstColour(mark) }), T + 1)).toBe(2);
     expect(PdfLiveChanges.mark(doc, 's')).toMatchObject({ colour: STAMP_COLOURS.green });
     expect(PdfLiveChanges.mark(doc, 'l')).toMatchObject({ colour: FIRST_LOOKS.arrow.colour });
+  });
+});
+
+// marks.md "Changing a mark": Format > Line style reaches every mark drawn as a line; the fill a Rectangle or an Ellipse.
+describe('a line style and a fill restyled', () => {
+  const box = Mark.shape('rectangle', { ...BASE, id: 'r', rect: [10, 10, 50, 60], width: 2 })!;
+
+  it('names an item for each line style, each a style a mark holds', () => {
+    const ids = new Set(catalogueItems(PDF_MENUS).map(({ item }) => item.id));
+    for (const id of Object.keys(STYLE_ITEMS)) expect(ids.has(id)).toBe(true);
+    expect(Object.values(STYLE_ITEMS)).toEqual([...LINE_STYLES]);
+  });
+
+  it('reads a style where a mark has a line, Solid where it has none of its own; a fill where it may have one', () => {
+    expect(lineStyleOf(line)).toBe('solid');
+    expect(lineStyleOf({ ...line, lineStyle: 'dotted' })).toBe('dotted');
+    expect(lineStyleOf(highlight)).toBeUndefined();
+    expect(fillOf(box)).toBeNull();
+    expect(fillOf({ ...box, fill: '#fdf1a9' })).toBe('#fdf1a9');
+    expect(fillOf(line)).toBeUndefined();
+  });
+
+  it('gives a style to the marks with a line alone, and Solid back as none', () => {
+    const { doc } = withMarks();
+    expect(restyleMarks(doc, ['l', 'h'], () => ({ lineStyle: 'dashed' }), T + 1)).toBe(1);
+    expect(PdfLiveChanges.mark(doc, 'l')).toMatchObject({ lineStyle: 'dashed' });
+    expect(restyleMarks(doc, ['l'], () => ({ lineStyle: 'dashed' }), T + 2)).toBe(0);
+    expect(restyleMarks(doc, ['l'], () => ({ lineStyle: 'solid' }), T + 3)).toBe(1);
+    expect(PdfLiveChanges.mark(doc, 'l')).not.toHaveProperty('lineStyle');
+    expect(restyleMarks(doc, ['l'], () => ({ lineStyle: 'solid' }), T + 4)).toBe(0);
+  });
+
+  it('fills a Rectangle alone, and takes a fill away with none', () => {
+    const { doc } = withMarks();
+    PdfLiveChanges.addMark(doc, box);
+    expect(restyleMarks(doc, ['r', 'l'], () => ({ fill: '#FDF1A9' }), T + 1)).toBe(1);
+    expect(PdfLiveChanges.mark(doc, 'r')).toMatchObject({ fill: '#fdf1a9' });
+    expect(restyleMarks(doc, ['r'], () => ({ fill: null }), T + 2)).toBe(1);
+    expect(PdfLiveChanges.mark(doc, 'r')).not.toHaveProperty('fill');
+    expect(restyleMarks(doc, ['r'], () => ({ fill: null }), T + 3)).toBe(0);
   });
 });

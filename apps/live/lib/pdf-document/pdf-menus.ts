@@ -399,7 +399,7 @@ export const PDF_MENUS: OfficeCatalogue = [
       'Line style',
       'participate',
       ['Solid', 'Dashed', 'Dotted', 'Dash dot', 'Long dashes'],
-      ONE_OF,
+      { ...ONE_OF, ...BUILT },
     ),
     choices(
       'line-ends',

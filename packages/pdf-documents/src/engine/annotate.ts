@@ -19,6 +19,7 @@ import {
 import {
   Mark,
   type Box,
+  type DrawingMark,
   type LineMark,
   type ShapeMark,
   type StampMark,
@@ -123,6 +124,26 @@ function streamOf(
   return PdfDict.of({ N: pdf.register(stream) });
 }
 
+/** A line style other than Solid as the standard's dashed border, `BS` `S` `D` with `D` its pattern; a fill as `IC`. */
+function styleOf(annotation: PdfDict, mark: DrawingMark | LineMark | ShapeMark): void {
+  if (mark.lineStyle)
+    annotation.set(
+      'BS',
+      PdfDict.of({
+        W: PdfNumber.of(mark.width),
+        S: PdfName.of('D'),
+        D: new PdfArray(
+          MarkDrawing.pattern(mark.lineStyle, mark.width).map((n) => PdfNumber.of(n)),
+        ),
+      }),
+    );
+  if ('fill' in mark && mark.fill)
+    annotation.set(
+      'IC',
+      new PdfArray([1, 3, 5].map((at) => PdfNumber.of(channelOf(mark.fill!, at)))),
+    );
+}
+
 /** The annotation drawn as the page shows its mark: the appearance stream as its normal look, its box as its `Rect`. */
 function drawAppearance(pdf: PDF, annotation: PdfDict, mark: LineMark | ShapeMark): void {
   const appearance = appearanceOf(MarkDrawing.of(mark), mark);
@@ -190,6 +211,27 @@ function annotateStamp(
   return dict;
 }
 
+/** A Drawing's `Ink`; a styled one drawn as the page shows it, its `Rect` its appearance's box, since a reader draws
+ *  an `Ink` of its own solid. */
+function annotateDrawing(
+  pdf: PDF,
+  page: PDFPage,
+  mark: DrawingMark,
+  color: ReturnType<typeof rgb>,
+): PdfDict {
+  const annotation = page.addInkAnnotation({
+    paths: mark.strokes.map(pathOf),
+    color,
+    width: mark.width,
+  }).dict;
+  if (!mark.lineStyle) return annotation;
+  const appearance = appearanceOf(MarkDrawing.of(mark), mark);
+  annotation.set('AP', streamOf(pdf, appearance));
+  annotation.set('Rect', boxArray(appearance.box));
+  styleOf(annotation, mark);
+  return annotation;
+}
+
 /** A Line's, an Arrow's, a Rectangle's or an Ellipse's annotation, drawn as the page shows it. */
 function annotateDragged(
   pdf: PDF,
@@ -199,6 +241,7 @@ function annotateDragged(
 ): PdfDict {
   const annotation = subtypeOf(page, mark, color).dict;
   drawAppearance(pdf, annotation, mark);
+  styleOf(annotation, mark);
   return annotation;
 }
 
@@ -253,7 +296,7 @@ export function annotate(
     : mark.kind === 'stamp'
       ? annotateStamp(pdf, page, mark, writing)
       : mark.kind === 'drawing'
-        ? page.addInkAnnotation({ paths: mark.strokes.map(pathOf), color, width: mark.width }).dict
+        ? annotateDrawing(pdf, page, mark, color)
         : annotateDragged(pdf, page, mark, color);
   annotation.set('T', PdfString.fromString(mark.author));
   annotation.set('CA', PdfNumber.of(mark.opacity));

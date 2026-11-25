@@ -1,9 +1,10 @@
-// How a mark is drawn (docs/specs/035-pdf-documents/marks.md "Making a mark": How a text mark is drawn; A Drawing),
-// in page space: a text mark each glyph quadrilateral on its own, a fill for a Highlight, a line for the others; a
-// Drawing its strokes, round; a Line from end to end, an Arrow with an open head; a Rectangle round its box and an
-// Ellipse within it, each closed; a Callout its line, its head at what is meant, and its box's border (a Text's words
-// and a Callout's are TypedLayout's); a stamp its rounded border (its words StampLayout's). Pure geometry, so the surface's overlay, the canvas pictures (a thumbnail, a print)
-// and the appearance a bake writes draw one mark the same way.
+// How a mark is drawn (docs/specs/035-pdf-documents/marks.md "Making a mark": How a text mark is drawn; A Drawing), in
+// page space: a text mark each glyph quadrilateral on its own, a fill for a Highlight, a line for the others; a Drawing
+// its strokes, round; a Line from end to end, an Arrow with an open head; a Rectangle round its box and an Ellipse
+// within it, each closed; a Callout its line, its head at what is meant, and its box's border (a Text's words and a
+// Callout's are TypedLayout's); a stamp its rounded border (its words StampLayout's); a line's style its pattern, a
+// fill inside a shape's line (marks.md "Changing a mark"). Pure geometry, so the surface's overlay, the canvas pictures
+// (a thumbnail, a print) and the appearance a bake writes draw one mark the same way.
 import type { PagePoint } from './engine-contract';
 import {
   PDF_ARROW_HEAD_MIN_PT,
@@ -15,6 +16,7 @@ import type {
   CalloutMark,
   DrawingMark,
   LineMark,
+  LineStyle,
   Quad,
   ShapeMark,
   StampMark,
@@ -26,14 +28,14 @@ import type {
 import { StampLayout } from './stamp-layout';
 
 /** What of a mark its drawing reads. */
-export type LineShape = Pick<LineMark, 'kind' | 'line' | 'width'>;
-export type BoxShape = Pick<ShapeMark, 'kind' | 'rect' | 'width'>;
+export type LineShape = Pick<LineMark, 'kind' | 'line' | 'width' | 'lineStyle'>;
+export type BoxShape = Pick<ShapeMark, 'kind' | 'rect' | 'width' | 'lineStyle' | 'fill'>;
 export type TypedShape =
   Pick<TextBoxMark, 'kind' | 'rect'> | Pick<CalloutMark, 'kind' | 'rect' | 'callout'>;
 export type StampShape = Pick<StampMark, 'kind' | 'rect' | 'lines'>;
 export type MarkShape =
   | Pick<TextMark, 'kind' | 'quads'>
-  | Pick<DrawingMark, 'kind' | 'strokes' | 'width'>
+  | Pick<DrawingMark, 'kind' | 'strokes' | 'width' | 'lineStyle'>
   | LineShape
   | BoxShape
   | TypedShape
@@ -46,13 +48,36 @@ export type MarkStroke = {
   readonly width: number;
   readonly round: boolean;
   readonly closed: boolean;
+  /** Its line style's pattern in points, drawn and apart in turn; absent for a solid line. */
+  readonly dash?: readonly number[];
 };
 
 export type MarkDrawing = {
   /** Closed outlines to fill, each a quad's corners around its edge. */
   readonly fills: readonly (readonly PagePoint[])[];
   readonly strokes: readonly MarkStroke[];
+  /** A shape's inside, painted under its line in its own colour; absent where it has no fill. */
+  readonly fill?: { readonly points: readonly PagePoint[]; readonly colour: string };
 };
+
+/** (default) Each line style's pattern, in lengths of its line's width, drawn and apart in turn. */
+const LINE_STYLE_PATTERNS: Readonly<Record<LineStyle, readonly number[]>> = {
+  solid: [],
+  dashed: [3, 2],
+  dotted: [1, 1],
+  'dash-dot': [3, 1, 1, 1],
+  'long-dashes': [6, 2],
+};
+/** (default) The shortest length a pattern's step is, in points, so a thin line's dots still show. */
+const PATTERN_MIN_STEP_PT = 1;
+
+/** A line style's pattern for a line `width` points wide, in points. */
+const patternOf = (style: LineStyle, width: number): number[] =>
+  LINE_STYLE_PATTERNS[style].map((step) => step * Math.max(width, PATTERN_MIN_STEP_PT));
+
+/** A stroke given its mark's line style, where it has one. */
+const styled = (stroke: MarkStroke, style: LineStyle | undefined): MarkStroke =>
+  style && style !== 'solid' ? { ...stroke, dash: patternOf(style, stroke.width) } : stroke;
 
 const corner = (quad: Quad, at: number): PagePoint => ({ x: quad[at]!, y: quad[at + 1]! });
 const middle = (a: PagePoint, b: PagePoint): PagePoint => ({
@@ -128,15 +153,28 @@ function head(from: PagePoint, tip: PagePoint, width: number): PagePoint[] {
   return [wing(-ARROW_HEAD_ANGLE), tip, wing(ARROW_HEAD_ANGLE)];
 }
 
-function lineDrawing({ kind, line: [x1, y1, x2, y2], width }: LineShape): MarkDrawing {
+function lineDrawing({ kind, line: [x1, y1, x2, y2], width, lineStyle }: LineShape): MarkDrawing {
   const from = { x: x1, y: y1 };
   const to = { x: x2, y: y2 };
-  const strokes = [line([from, to], width)];
+  const strokes = [styled(line([from, to], width), lineStyle)];
   if (kind === 'arrow') strokes.push(line(head(from, to, width), width));
   return { fills: [], strokes };
 }
 
-function shapeDrawing({ kind, rect: [left, bottom, right, top], width }: BoxShape): MarkDrawing {
+/** A Rectangle's or an Ellipse's outline, styled, and its fill inside it. */
+function outlined(points: PagePoint[], { width, lineStyle, fill }: BoxShape): MarkDrawing {
+  return {
+    fills: [],
+    strokes: [styled(line(points, width, true), lineStyle)],
+    ...(fill ? { fill: { points, colour: fill } } : {}),
+  };
+}
+
+function shapeDrawing(shape: BoxShape): MarkDrawing {
+  const {
+    kind,
+    rect: [left, bottom, right, top],
+  } = shape;
   if (kind === 'rectangle') {
     const corners = [
       { x: left, y: bottom },
@@ -144,7 +182,7 @@ function shapeDrawing({ kind, rect: [left, bottom, right, top], width }: BoxShap
       { x: right, y: top },
       { x: left, y: top },
     ];
-    return { fills: [], strokes: [line(corners, width, true)] };
+    return outlined(corners, shape);
   }
   const centre = { x: (left + right) / 2, y: (bottom + top) / 2 };
   const outline = Array.from({ length: ELLIPSE_POINTS }, (_, at) => {
@@ -154,7 +192,7 @@ function shapeDrawing({ kind, rect: [left, bottom, right, top], width }: BoxShap
       y: centre.y + ((top - bottom) / 2) * Math.sin(angle),
     };
   });
-  return { fills: [], strokes: [line(outline, width, true)] };
+  return outlined(outline, shape);
 }
 
 /** A Callout's line through its knee, an open head at what is meant, and its box's border; a Text's nothing. */
@@ -181,17 +219,20 @@ function typedDrawing(mark: TypedShape): MarkDrawing {
 }
 
 export const MarkDrawing = {
+  /** A line style's pattern for a line `width` points wide, in points: empty for Solid. */
+  pattern: patternOf,
+
   /** What a mark draws, in page space. */
   of: (mark: MarkShape): MarkDrawing => {
     if (mark.kind === 'drawing')
       return {
         fills: [],
-        strokes: mark.strokes.map((stroke) => ({
-          points: pointsOf(stroke),
-          width: mark.width,
-          round: true,
-          closed: false,
-        })),
+        strokes: mark.strokes.map((stroke) =>
+          styled(
+            { points: pointsOf(stroke), width: mark.width, round: true, closed: false },
+            mark.lineStyle,
+          ),
+        ),
       };
     if ('line' in mark) return lineDrawing(mark);
     if (mark.kind === 'text' || mark.kind === 'callout') return typedDrawing(mark);

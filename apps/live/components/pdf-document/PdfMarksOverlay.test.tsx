@@ -170,6 +170,42 @@ describe('a shape over a page', () => {
   });
 });
 
+// marks.md "Changing a mark": a line's style dashes it; a fill paints a shape inside its line, before it, in its own
+// colour, which Dark pages step as they step the line's.
+describe('a styled shape over a page', () => {
+  const box = Mark.parse({
+    id: 'r2',
+    kind: 'ellipse',
+    page: PageName.ofObject(1),
+    rect: [10, 10, 40, 30],
+    width: 2,
+    lineStyle: 'dashed',
+    fill: '#1a73e8',
+    colour: '#d93025',
+    opacity: 1,
+    author: 'Ada',
+    createdAt: 0,
+    modifiedAt: 0,
+  })!;
+  const drawn = (look: 'paper' | 'dark') =>
+    render(
+      <PdfLookContext.Provider value={look}>
+        <PdfMarksOverlay matrix={[1, 0, 0, -1, 0, 100]} width={100} height={100} marks={[box]} />
+      </PdfLookContext.Provider>,
+    ).container.querySelectorAll('[data-pdf-mark="r2"] polygon');
+
+  it('fills it first in its fill colour, then dashes its line by the pattern', () => {
+    const [inside, outline] = drawn('paper');
+    expect(inside!.getAttribute('fill')).toBe('#1a73e8');
+    expect(inside!.getAttribute('stroke')).toBe('none');
+    expect(outline!.getAttribute('stroke-dasharray')).toBe('6 4');
+  });
+
+  it('steps the fill on Dark pages', () => {
+    expect(drawn('dark')[0]!.getAttribute('fill')).toBe(DarkPages.hex('#1a73e8'));
+  });
+});
+
 // marks.md "Making a mark": a Text's words set line for line in Helvetica's widths, upright on the page as the file has
 // it; a right-to-left paragraph set from its right end; a Callout's line and border with them.
 describe('a Text or a Callout over a page', () => {

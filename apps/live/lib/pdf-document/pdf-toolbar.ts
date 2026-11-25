@@ -18,6 +18,7 @@ import {
   lucideMinus,
   lucideMoon,
   lucideMousePointer2,
+  lucidePaintBucket,
   lucidePalette,
   lucidePencilLine,
   lucidePrinter,
@@ -138,6 +139,8 @@ export const TYPED_TOOLS = 'typed-tools';
 export const STAMP_TOOLS = 'stamp-tools';
 /** The tool in hand's colour ("The toolbar"): the one colour picker's swatch button, while a mark tool is in hand. */
 export const TOOL_COLOUR = 'colour-control';
+/** The selected Rectangles' and Ellipses' fill (marks.md "Changing a mark"): the one colour picker, led by None. */
+export const FILL_COLOUR = 'fill-colour-control';
 
 // The mode's own, each control at the level its mode is drawn for.
 const OWN: Readonly<Record<PdfMode, OfficeToolbar>> = {
@@ -183,6 +186,13 @@ const OWN: Readonly<Record<PdfMode, OfficeToolbar>> = {
         level: 'participate',
         status: 'built',
         look: { kind: 'colour', icon: lucidePalette },
+      },
+      {
+        id: FILL_COLOUR,
+        label: 'Fill',
+        level: 'participate',
+        status: 'built',
+        look: { kind: 'colour', icon: lucidePaintBucket },
       },
       list('line-width-control', 'Line width', 'participate', lucideMinus),
     ]),

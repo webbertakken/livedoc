@@ -10,6 +10,7 @@ import {
   PDF_TEXT_SIZE_MIN_PT,
 } from './limits';
 import {
+  LINE_STYLES,
   Mark,
   type DrawingInput,
   type HighlightInput,
@@ -310,5 +311,59 @@ describe('a stamp', () => {
   it('keeps a line at its limit', () => {
     const line = 'A'.repeat(PDF_STAMP_LINE_MAX_CHARS);
     expect(Mark.stamp(stamp({ lines: [line] }) as unknown as StampInput)!.lines).toEqual([line]);
+  });
+});
+
+// marks.md "Changing a mark": a line's style (Format > Line style) and a Rectangle's or an Ellipse's fill.
+describe('a line style and a fill', () => {
+  const base = {
+    id: 'm1',
+    page: 'p:4',
+    width: 2,
+    colour: '#d93025',
+    opacity: 1,
+    author: 'Ada',
+    createdAt: 1_795_000_000_000,
+    modifiedAt: 1_795_000_000_000,
+  };
+  const marks = {
+    drawing: { ...base, kind: 'drawing', strokes: [[1, 2, 3, 4]] },
+    line: { ...base, kind: 'line', line: [1, 2, 3, 4] },
+    arrow: { ...base, kind: 'arrow', line: [1, 2, 3, 4] },
+    rectangle: { ...base, kind: 'rectangle', rect: [1, 2, 3, 4] },
+    ellipse: { ...base, kind: 'ellipse', rect: [1, 2, 3, 4] },
+  };
+
+  it.each(Object.entries(marks))('reads back a %s’s line style', (_, mark) => {
+    for (const lineStyle of LINE_STYLES.filter((style) => style !== 'solid'))
+      expect(Mark.parse({ ...mark, lineStyle })).toEqual({ ...mark, lineStyle });
+  });
+
+  it('holds Solid as no style at all, so a solid line reads as one always did', () => {
+    expect(Mark.parse({ ...marks.line, lineStyle: 'solid' })).toEqual(marks.line);
+    expect(Mark.parse({ ...marks.line, lineStyle: null })).toEqual(marks.line);
+  });
+
+  it('refuses a style it does not know', () => {
+    expect(Mark.parse({ ...marks.line, lineStyle: 'wavy' })).toBeNull();
+  });
+
+  it.each(['rectangle', 'ellipse'] as const)(
+    'reads back a %s’s fill; none where it is null',
+    (kind) => {
+      expect(Mark.parse({ ...marks[kind], fill: '#fdf1a9' })).toEqual({
+        ...marks[kind],
+        fill: '#fdf1a9',
+      });
+      expect(Mark.parse({ ...marks[kind], fill: null })).toEqual(marks[kind]);
+      expect(Mark.parse({ ...marks[kind], fill: 'yellow' })).toBeNull();
+    },
+  );
+
+  it('keeps no style or fill on a kind that has none', () => {
+    const highlight = { ...base, kind: 'highlight', quads: [QUAD], text: 'x' };
+    delete (highlight as Record<string, unknown>).width;
+    expect(Mark.parse({ ...highlight, lineStyle: 'dashed', fill: '#fdf1a9' })).toEqual(highlight);
+    expect(Mark.parse({ ...marks.line, fill: '#fdf1a9' })).toEqual(marks.line);
   });
 });

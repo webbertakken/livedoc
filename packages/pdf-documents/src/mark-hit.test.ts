@@ -73,6 +73,20 @@ describe('MarkHit', () => {
     expect(at(350, 150)).toBeNull();
   });
 
+  // marks.md "Changing a mark": a filled Rectangle or Ellipse is reached anywhere inside it.
+  it('reaches a filled rectangle and ellipse anywhere inside, not past them', () => {
+    const filled = [
+      { ...rectangle, fill: '#fdf1a9' },
+      { ...ellipse, fill: '#fdf1a9' },
+    ];
+    const inside = (x: number, y: number) => MarkHit.at(filled, { x, y }, REACH)?.id ?? null;
+    expect(inside(150, 150)).toBe('r');
+    expect(inside(350, 150)).toBe('e');
+    // Inside the ellipse's box, outside its outline: a corner.
+    expect(inside(306, 106)).toBeNull();
+    expect(inside(250, 150)).toBeNull();
+  });
+
   // A Text's, a Callout's and a stamp's box; a Callout's line as a line's.
   it('reaches a box anywhere within it, and a callout by its line', () => {
     expect(at(350, 315)).toBe('t');
