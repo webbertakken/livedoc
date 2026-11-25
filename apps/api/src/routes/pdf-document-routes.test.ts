@@ -1,10 +1,7 @@
 // docs/specs/035-pdf-documents/live-editing-and-storage.md "Storage", "The digest"; the room's side is every live tab
 // kind's (docs/specs/006-document/kinds-outside-the-canvas.md "Live state").
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import {
-  PDF_STORED_FILE_HEADER,
-  TEXT_DOCUMENT_STATE_VECTOR_HEADER,
-} from '@livedoc/api-schema';
+import { PDF_STORED_FILE_HEADER, TEXT_DOCUMENT_STATE_VECTOR_HEADER } from '@livedoc/api-schema';
 import { blobKeyOf, type BlobKey } from '@livedoc/document';
 import {
   Mark,
