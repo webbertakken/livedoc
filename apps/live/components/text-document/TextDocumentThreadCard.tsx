@@ -7,6 +7,7 @@
 import { useEffect, useRef, useState, type KeyboardEvent } from 'react';
 import type { TextDocumentThread } from '@livedoc/text-documents';
 import { commentNoteOf, sharedComment } from '@/lib/text-document/text-document-comment-rows';
+import { reactionChips } from '@/lib/office/review/comment-reactions';
 import {
   CommentComposer,
   CommentResolveToggle,
@@ -38,6 +39,8 @@ export function TextDocumentThreadCard({
   onResolve,
   onStep,
   onExit,
+  onReact,
+  names,
 }: {
   thread: TextDocumentThread;
   deleted: boolean;
@@ -52,6 +55,10 @@ export function TextDocumentThreadCard({
   onStep: (forward: boolean) => void;
   /** U and Escape: let the thread go, the writing taking the keyboard. */
   onExit: () => void;
+  /** Adds or takes back this session's reaction on a comment (review.md "Reactions"). */
+  onReact: (commentId: string, emoji: string, on: boolean) => void;
+  /** The document's people by key, naming who reacted. */
+  names: ReadonlyMap<string, string>;
 }) {
   const [confirming, setConfirming] = useState(false);
   const replyField = useRef<HTMLTextAreaElement>(null);
@@ -127,6 +134,14 @@ export function TextDocumentThreadCard({
         onDeleteComment={remove}
         onEditComment={commenter ? onEdit : undefined}
         noteOf={commentNoteOf}
+        reactionsOf={(c) =>
+          reactionChips(
+            thread.comments.find((t) => t.id === c.id)?.reactions,
+            commenter?.key ?? '',
+            names,
+          )
+        }
+        onReact={commenter ? onReact : undefined}
         className="max-h-96 overflow-y-auto px-3 py-1"
       />
       {selected && commenter ? (

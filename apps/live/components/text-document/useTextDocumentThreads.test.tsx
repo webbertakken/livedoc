@@ -157,6 +157,23 @@ describe('useTextDocumentThreads', () => {
     ]);
   });
 
+  it('reacts beside the writing, signed with the commenter’s key, and takes it back', async () => {
+    const at = await editor();
+    at.view.dispatch(at.view.state.tr.setSelection(TextSelection.create(at.view.state.doc, 1, 10)));
+    const { result } = threadsOn(at);
+    act(() => result.current.addComment());
+    act(() => result.current.send('First'));
+    const id = result.current.selected!;
+    const first = LiveThreads.read(at.doc)[0]!.comments[0]!.id;
+    tracked.splice(0);
+    act(() => result.current.react(id, first, '👍', true));
+    expect(LiveThreads.read(at.doc)[0]!.comments[0]!.reactions).toEqual({ '👍': ['k-ada'] });
+    expect(result.current.names.get('k-ada')).toBe('Ada');
+    act(() => result.current.react(id, first, '👍', false));
+    expect(LiveThreads.read(at.doc)[0]!.comments[0]!.reactions).toBeUndefined();
+    expect(tracked).toEqual([['Comment', 'Added', 'TextDocumentReaction']]);
+  });
+
   it('lets a reader change nothing, and offers no Add comment', async () => {
     const at = await editor();
     const { result } = threadsOn(at, null);

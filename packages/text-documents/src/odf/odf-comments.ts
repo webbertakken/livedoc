@@ -12,7 +12,7 @@ import {
 } from '@livedoc/office-packages';
 import { Comments, type CommentMark, type FileComment, type FileThread } from '../model/comments';
 import type { ReportBuilder } from '../report';
-import { NS } from './odf-names';
+import { LIVEDOC_NS, NS } from './odf-names';
 import { initialsOf } from '../ooxml/ooxml-comments';
 
 type MarkAt = Omit<CommentMark, 'type' | 'edge' | 'id'>;
@@ -96,6 +96,7 @@ export class OdfCommentsReader {
         name: textOf(childElements(e).find((c) => c.uri === NS.dc && c.local === 'creator')) ?? '',
         ...(initials ? { initials } : {}),
       },
+      ...Comments.reactionsFrom(attributeOf(e, LIVEDOC_NS, 'reactions')),
     };
     const parent = attributeOf(e, NS.loext, 'parent-name');
     const joins = parent === undefined ? undefined : this.#threadOfName.get(parent);
@@ -165,7 +166,11 @@ function annotationXml(comment: FileComment, attributes: string): string {
   const paragraphs = Comments.lines(comment.text)
     .map((line) => `<text:p>${escapeXmlText(line)}</text:p>`)
     .join('');
-  return `<office:annotation${attributes}><dc:creator>${escapeXmlText(comment.author.name)}</dc:creator>${date}${initials ? `<meta:creator-initials>${escapeXmlText(initials)}</meta:creator-initials>` : ''}${paragraphs}</office:annotation>`;
+  const reactions = Comments.reactionsText(comment.reactions);
+  const reacted = reactions
+    ? ` xmlns:livedoc="${LIVEDOC_NS}" livedoc:reactions="${escapeXmlAttribute(reactions)}"`
+    : '';
+  return `<office:annotation${attributes}${reacted}><dc:creator>${escapeXmlText(comment.author.name)}</dc:creator>${date}${initials ? `<meta:creator-initials>${escapeXmlText(initials)}</meta:creator-initials>` : ''}${paragraphs}</office:annotation>`;
 }
 
 /** A thread's start: its first comment's annotation, named `name`, then each reply's, naming it as its parent. */

@@ -49,6 +49,8 @@ function card(
     onResolve: vi.fn(),
     onStep: vi.fn(),
     onExit: vi.fn(),
+    onReact: vi.fn(),
+    names: new Map([['k-ben', 'Ben']]),
     ...extra,
   };
   render(<TextDocumentThreadCard {...props} />);
@@ -142,6 +144,26 @@ describe('TextDocumentThreadCard', () => {
     );
     expect(cardLabel({ ...thread, quote: '' })).toBe('Comment by Ada');
     expect(cardLabel({ ...thread, quote: '', comments: [] })).toBe('Comment by someone');
+  });
+});
+
+// review.md "Reactions": each comment's chips, named by the document's people; toggled by whoever comments.
+describe('TextDocumentThreadCard reactions', () => {
+  const reacted: TextDocumentThread = {
+    ...thread,
+    comments: [{ ...thread.comments[0]!, reactions: { '👍': ['k-ada', 'k-ben'] } }],
+  };
+
+  it('draws a comment’s reactions and toggles one’s own', () => {
+    const props = card(as(ADA), { thread: reacted });
+    fireEvent.click(screen.getByRole('button', { name: 'You and Ben reacted with 👍' }));
+    expect(props.onReact).toHaveBeenCalledWith('c1', '👍', false);
+  });
+
+  it('shows a reader the reactions as text', () => {
+    card(null, { thread: reacted });
+    expect(screen.getByRole('img', { name: 'Someone and Ben reacted with 👍' })).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'Add emoji reaction' })).toBeNull();
   });
 });
 

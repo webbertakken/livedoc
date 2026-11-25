@@ -13,6 +13,13 @@ export const TEXT_DOCUMENT_COMMENT_TEXT_MAX = 2000;
 export const TEXT_DOCUMENT_THREADS_MAX = 2000;
 /** The most comments one thread holds (review.md, (default)). */
 export const TEXT_DOCUMENT_THREAD_COMMENTS_MAX = 500;
+// The reactions' limits are the model's, so a file read holds to them too (review.md "Reactions").
+export { REACTION_EMOJI_MAX, TEXT_DOCUMENT_REACTIONS_MAX } from '../model/comments';
+import { REACTION_EMOJI_MAX, TEXT_DOCUMENT_REACTIONS_MAX } from '../model/comments';
+
+// A reaction's entry in a comment's `reactions`: its emoji and its reactor's key, one entry each, so two people
+// reacting at once never replace each other's map.
+const reactionEntry = (emoji: string, key: string) => `${emoji}\n${key}`;
 
 /** Who wrote a comment: their adder key on the document, or a file's name for them with no key. */
 export type TextDocumentCommentAuthor = {
@@ -89,6 +96,10 @@ function commentMap(comment: TextDocumentComment): Y.Map<unknown> {
   map.set('author', { ...comment.author });
   if (comment.mentions?.length) map.set('mentions', [...comment.mentions]);
   if (comment.assignee !== undefined) map.set('assignee', comment.assignee);
+  const reactions = new Y.Map<boolean>();
+  for (const [emoji, keys] of Object.entries(comment.reactions ?? {}))
+    for (const key of keys) reactions.set(reactionEntry(emoji, key), true);
+  map.set('reactions', reactions);
   return map;
 }
 
@@ -96,10 +107,12 @@ function readReactions(map: Y.Map<unknown>): TextDocumentComment['reactions'] {
   const reactions = map.get('reactions');
   if (!(reactions instanceof Y.Map)) return undefined;
   const out: Record<string, string[]> = {};
-  for (const [emoji, keys] of (reactions as Y.Map<unknown>).entries()) {
-    if (!(keys instanceof Y.Map) || keys.size === 0) continue;
-    out[emoji] = [...(keys as Y.Map<unknown>).keys()].sort();
+  for (const entry of (reactions as Y.Map<unknown>).keys()) {
+    const at = entry.lastIndexOf('\n');
+    if (at <= 0) continue;
+    (out[entry.slice(0, at)] ??= []).push(entry.slice(at + 1));
   }
+  for (const keys of Object.values(out)) keys.sort();
   return Object.keys(out).length ? out : undefined;
 }
 
@@ -259,7 +272,10 @@ export const LiveThreads = {
     return true;
   },
 
-  /** Adds (`on`) or takes back one reactor's emoji on a comment; false when the comment is not there. */
+  /**
+   * Adds (`on`) or takes back one reactor's emoji on a comment; false when the comment is not there, the emoji is
+   * longer than `REACTION_EMOJI_MAX` or empty, or a new emoji would pass `TEXT_DOCUMENT_REACTIONS_MAX`.
+   */
   react: (
     doc: Y.Doc,
     threadId: string,
@@ -268,26 +284,19 @@ export const LiveThreads = {
     origin: unknown,
   ): boolean => {
     const map = commentAt(doc, threadId, commentId);
-    if (!map) return false;
+    if (!map || emoji === '' || emoji.length > REACTION_EMOJI_MAX || emoji.includes('\n'))
+      return false;
+    const held = readReactions(map) ?? {};
+    if (on && !held[emoji] && Object.keys(held).length >= TEXT_DOCUMENT_REACTIONS_MAX) return false;
     doc.transact(() => {
       let reactions = map.get('reactions');
       if (!(reactions instanceof Y.Map)) {
-        if (!on) return;
-        reactions = new Y.Map<unknown>();
+        reactions = new Y.Map<boolean>();
         map.set('reactions', reactions);
       }
-      const all = reactions as Y.Map<Y.Map<boolean>>;
-      let keys = all.get(emoji);
-      if (on) {
-        if (!keys) {
-          keys = new Y.Map<boolean>();
-          all.set(emoji, keys);
-        }
-        keys.set(key, true);
-      } else if (keys) {
-        keys.delete(key);
-        if (keys.size === 0) all.delete(emoji);
-      }
+      const entries = reactions as Y.Map<boolean>;
+      if (on) entries.set(reactionEntry(emoji, key), true);
+      else entries.delete(reactionEntry(emoji, key));
     }, origin);
     return true;
   },

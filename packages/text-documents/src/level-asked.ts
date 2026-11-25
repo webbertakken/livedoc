@@ -6,7 +6,9 @@
 import { touchedRoots } from '@livedoc/live-updates';
 import {
   LiveThreads,
+  REACTION_EMOJI_MAX,
   TEXT_DOCUMENT_COMMENT_TEXT_MAX,
+  TEXT_DOCUMENT_REACTIONS_MAX,
   TEXT_DOCUMENT_THREAD_COMMENTS_MAX,
   TEXT_DOCUMENT_THREADS_MAX,
   THREADS_MAP,
@@ -30,12 +32,22 @@ const ownComment = (comment: TextDocumentComment, key: string): boolean =>
 /** What a comment says, apart from its reactions. */
 const said = ({ reactions: _reactions, ...rest }: TextDocumentComment) => rest;
 
+/** Whether a comment's reactions are within the limits: so many emoji, each so long. */
+const reactionsWithin = (comment: TextDocumentComment): boolean => {
+  const emojis = Object.keys(comment.reactions ?? {});
+  return (
+    emojis.length <= TEXT_DOCUMENT_REACTIONS_MAX &&
+    emojis.every((e) => e.length <= REACTION_EMOJI_MAX)
+  );
+};
+
 /** Whether the reactions changed only by the sender's key. */
 function ownReactions(
   before: TextDocumentComment,
   after: TextDocumentComment,
   key: string,
 ): boolean {
+  if (!reactionsWithin(after)) return false;
   const emojis = new Set([
     ...Object.keys(before.reactions ?? {}),
     ...Object.keys(after.reactions ?? {}),
@@ -68,7 +80,8 @@ function ownChange(before: TextDocumentThread, after: TextDocumentThread, key: s
     }
     if (!ownReactions(comment, now, key)) return false;
   }
-  for (const [id, comment] of is) if (!was.has(id) && !ownComment(comment, key)) return false;
+  for (const [id, comment] of is)
+    if (!was.has(id) && (!ownComment(comment, key) || comment.reactions)) return false;
   return true;
 }
 

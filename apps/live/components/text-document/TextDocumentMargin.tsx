@@ -186,6 +186,8 @@ export function TextDocumentMargin({
         onResolve={(resolved) => threads.resolve(id, resolved)}
         onStep={keys.step}
         onExit={keys.exit}
+        onReact={(commentId, emoji, on) => threads.react(id, commentId, emoji, on)}
+        names={threads.names}
       />
     );
   };

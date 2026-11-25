@@ -180,3 +180,29 @@ test('the comments panel lists, narrows, reopens and goes; the keys move between
 
   expectNoPageErrors(pageErrors);
 });
+
+// Reactions (review.md "Reactions"): 👍 from the quick six on a comment, its chip pressed and counted; pressed again,
+// taken back.
+test('a reaction is added to a comment and taken back', async ({ page, pageErrors }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto('/new?kind=text-document');
+  await expect(page.locator(READY)).toBeVisible();
+  await page.locator(BODY).click();
+  await page.keyboard.type('alpha');
+  await page.keyboard.press('Control+Alt+KeyM');
+  const draft = page.getByRole('group', { name: 'New comment' });
+  await expect(draft.getByRole('textbox', { name: 'Add a comment' })).toBeFocused();
+  await page.keyboard.type('Nice');
+  await draft.getByRole('button', { name: 'Comment' }).click();
+  const card = page.locator('[data-thread-card]:not([data-thread-card="draft"])');
+  await card.getByText('Nice').hover();
+  await card.getByRole('button', { name: 'Add emoji reaction' }).click();
+  await card.getByRole('button', { name: 'React with 👍' }).click();
+  const chip = card.getByRole('button', { name: 'You reacted with 👍' });
+  await expect(chip).toHaveAttribute('aria-pressed', 'true');
+  await expect(chip).toHaveText('👍1');
+  await page.screenshot({ path: test.info().outputPath('comment-reaction.png') });
+  await chip.click();
+  await expect(chip).toHaveCount(0);
+  expectNoPageErrors(pageErrors);
+});

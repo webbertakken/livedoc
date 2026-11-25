@@ -14,6 +14,7 @@ import {
 } from '@livedoc/office-packages';
 import { Comments, type CommentMark, type FileComment, type FileThread } from '../model/comments';
 import type { ReportBuilder } from '../report';
+import { LIVEDOC_NS } from '../odf/odf-names';
 import { MC_NS, W_NS, XML_HEAD } from './ooxml-names';
 
 /** The comments parts' relationships: the parts are written fresh from the threads, so these are never kept. */
@@ -91,6 +92,7 @@ export class OoxmlCommentsReader {
           name: attributeOf(c, W_NS, 'author') ?? '',
           ...(initials ? { initials } : {}),
         },
+        ...Comments.reactionsFrom(attributeOf(c, LIVEDOC_NS, 'reactions')),
       };
       const info = paraId ? ex.get(paraId.toUpperCase()) : undefined;
       const parentThread = info?.parent ? threadOfPara.get(info.parent) : undefined;
@@ -222,8 +224,10 @@ export function ooxmlCommentsXml(
       first ??= last;
       const initials = initialsOf(comment);
       const date = comment.at === undefined ? '' : ` w:date="${dateOf(comment.at)}"`;
+      const reactions = Comments.reactionsText(comment.reactions);
+      const reacted = reactions ? ` livedoc:reactions="${escapeXmlAttribute(reactions)}"` : '';
       comments.push(
-        `<w:comment w:id="${n}" w:author="${escapeXmlAttribute(comment.author.name)}"${date}${initials ? ` w:initials="${escapeXmlAttribute(initials)}"` : ''}>${paras.map((p) => p.xml).join('')}</w:comment>`,
+        `<w:comment w:id="${n}" w:author="${escapeXmlAttribute(comment.author.name)}"${date}${initials ? ` w:initials="${escapeXmlAttribute(initials)}"` : ''}${reacted}>${paras.map((p) => p.xml).join('')}</w:comment>`,
       );
       const parent = i > 0 ? ` w15:paraIdParent="${first}"` : '';
       extended.push(
@@ -232,7 +236,7 @@ export function ooxmlCommentsXml(
     });
   }
   return {
-    comments: `${XML_HEAD}<w:comments xmlns:w="${W_NS}" xmlns:w14="${W14_NS}" xmlns:mc="${MC_NS}" mc:Ignorable="w14">${comments.join('')}</w:comments>\n`,
+    comments: `${XML_HEAD}<w:comments xmlns:w="${W_NS}" xmlns:w14="${W14_NS}" xmlns:mc="${MC_NS}" xmlns:livedoc="${LIVEDOC_NS}" mc:Ignorable="w14 livedoc">${comments.join('')}</w:comments>\n`,
     extended: `${XML_HEAD}<w15:commentsEx xmlns:w15="${W15_NS}">${extended.join('')}</w15:commentsEx>\n`,
   };
 }

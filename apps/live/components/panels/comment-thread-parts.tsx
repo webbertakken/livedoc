@@ -4,7 +4,7 @@
 // "Comments", "On Plan cards"): the list of comments, the composer with @-mentions, and the Resolve / Reopen
 // control. The canvas's comment popover and a Plan card's item panel both compose them; the panel draws them
 // `comfortable` (a feed: larger text, the composer beside your own avatar), the popover `compact`.
-import { useEffect, useRef, useState, type RefObject } from 'react';
+import { useEffect, useRef, useState, type ReactNode, type RefObject } from 'react';
 import { useAutoHeight } from '@/hooks/ui/useAutoHeight';
 import { COMMENT_TEXT_MAX } from '@livedoc/api-schema';
 import {
@@ -24,6 +24,8 @@ import { useMentionScope } from '@/components/canvas/collab/comment/MentionConte
 import { initialsOf } from '@/lib/identity';
 import { AuthorDisc } from '@/components/primitives/AuthorDisc';
 import { formatRelativeTimeCompact, useRelativeNow } from '@/lib/relative-time';
+import type { ReactionChip } from '@/lib/office/review/comment-reactions';
+import { CommentReactions } from './CommentReactions';
 
 type CommentDensity = 'compact' | 'comfortable';
 
@@ -92,6 +94,8 @@ export function CommentThreadList({
   canComment = true,
   onEditComment,
   noteOf,
+  reactionsOf,
+  onReact,
 }: {
   thread: CommentThread | undefined;
   readOnly: boolean;
@@ -106,6 +110,10 @@ export function CommentThreadList({
   onEditComment?: (commentId: string, text: string) => void;
   // A line under a comment's author ("From the file" for a file's comment, review.md "How a comment is kept").
   noteOf?: (comment: Comment) => string | null;
+  // Each comment's reactions as chips (a text document's threads, review.md "Reactions"); none: not drawn.
+  reactionsOf?: (comment: Comment) => readonly ReactionChip[];
+  // Adds or takes back this session's reaction; absent: the chips are text.
+  onReact?: (commentId: string, emoji: string, on: boolean) => void;
 }) {
   const resolved = thread?.resolved ?? false;
   const comments = thread?.comments ?? [];
@@ -136,6 +144,14 @@ export function CommentThreadList({
               : undefined
           }
           note={noteOf?.(c) ?? null}
+          reactions={
+            reactionsOf ? (
+              <CommentReactions
+                chips={reactionsOf(c)}
+                onReact={onReact && !resolved ? (emoji, on) => onReact(c.id, emoji, on) : undefined}
+              />
+            ) : null
+          }
         />
       ))}
     </ul>
@@ -256,6 +272,7 @@ function CommentRow({
   onDelete,
   onEdit,
   note,
+  reactions = null,
 }: {
   comment: Comment;
   resolved: boolean;
@@ -265,6 +282,8 @@ function CommentRow({
   // Undefined when this session may not edit it.
   onEdit?: (text: string) => void;
   note: string | null;
+  // Its reactions, drawn under its text.
+  reactions?: ReactNode;
 }) {
   const now = useRelativeNow();
   const [editing, setEditing] = useState<string | null>(null);
@@ -327,6 +346,7 @@ function CommentRow({
             />
           </p>
         )}
+        {editing === null ? reactions : null}
       </div>
       {!resolved && onEdit && editing === null ? (
         <Tooltip label="Edit comment">
