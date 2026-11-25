@@ -19,6 +19,7 @@ import {
 } from '@livedoc/pdf-documents';
 import { PDF_LOCAL_ORIGIN } from './pdf-undo';
 import type { TextMarkLook } from './pdf-text-mark';
+import type { ToolLook } from './pdf-tool-look';
 
 /** (default) A Drawing's first look: the colour picker's strong Red for light paper, at full opacity. */
 export const DRAWING_LOOK: TextMarkLook = {
@@ -71,7 +72,7 @@ export function addStroke(
     // When the stroke began: within PDF_DRAWING_JOIN_MS of the last one's end, it joins it.
     begunAt: number;
     id: string;
-    look: TextMarkLook;
+    look: ToolLook;
     last: LastDrawing | null;
   },
 ): DrawingMade {

@@ -1385,12 +1385,12 @@ export const PDF_REDOS = chart(
   { rising: 'neutral' },
 );
 
-export const PDF_TOOL_COLOURS = chart(
+export const PDF_TOOL_LOOKS = chart(
   'Pdf',
   'Changed',
-  'PDF Tool Colours Chosen',
-  'A colour chosen, or reset, for the mark tool in hand on a PDF document.',
-  { types: ['ToolColour'], rising: 'neutral' },
+  'PDF Tool Looks Chosen',
+  'A colour chosen or reset, or a line width, line style or fill chosen, for the mark tool in hand on a PDF document.',
+  { types: ['ToolColour', 'ToolLine'], rising: 'neutral' },
 );
 
 export const PDF_MARKS_CHANGED = chart(
@@ -1523,7 +1523,7 @@ export const PDF_DOCUMENTS: MetricStack = {
     PDFS_IMPORTED,
     PDF_MARKS_ADDED,
     PDF_TOOLS_SELECTED,
-    PDF_TOOL_COLOURS,
+    PDF_TOOL_LOOKS,
     PDF_MARKS_CHANGED,
     PDF_MARKS_DELETED,
     PDF_UNDOS,

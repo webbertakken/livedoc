@@ -9,9 +9,10 @@ and remembered; and the engine reads every mark a file holds, of any kind, as th
 others as it is drawn, words shown to others as they are typed, a face for every script, a tool's other looks,
 snapping, every other kind made here, custom stamps and Manage stamps, and the room's own-marks check are not built.
 Of changing a mark, selecting, moving, resizing and deleting a mark made here, and restyling its colour, opacity, line
-width, line style, fill and line end, and a Text's and a Callout's size and alignment, are built; their font, Format >
-Colour and Fill colour, the toolbar's Line width, a tool's remembered width, style and fill, rotating, arranging,
-grouping, locking, copying, Properties, Erase and the file's own marks are not.
+width, line style, fill and line end, and a Text's and a Callout's size and alignment, Format > Colour and Fill
+colour, the toolbar's Line width and a tool's remembered width, style and fill are built; a Text's and a Callout's
+font, a tool's remembered opacity, line ends, font and size, rotating, arranging, grouping, locking, copying,
+Properties, Erase and the file's own marks are not.
 
 A **mark** is something placed on top of a PDF page that leaves the page's own content alone: a highlight, a note, a
 piece of text, a drawing, a shape, a stamp. Marks are Reviewing's ([Editing modes](editing-modes.md)); a mark with
@@ -64,6 +65,11 @@ written into the file as a standard annotation, so any reader shows it. The rese
   rows for light paper, then the person's own colours. **Reset** returns the kind's first look. Colour shows while a
   mark tool is in hand, its bar that tool's colour, and a pick gives the pages the keys again `(default)`; with Select
   in hand it is the selected marks' ([Changing a mark](#changing-a-mark)).
+- **A tool's line** `(default)`: with the Drawing, Line, Arrow, Rectangle or Ellipse tool in hand, the toolbar's
+  Line width and Format > Line width and Line style set that tool's width and style, and with the Rectangle or
+  Ellipse tool in hand the toolbar's Fill, led by **None**, sets its fill; each is kept for the kind as its colour is,
+  the next mark of it takes them, and a mark already made keeps its own. The tool's step is checked, and a pick gives
+  the pages the keys again.
 - **A highlight's first look** is the colour picker's soft Yellow for light paper, at full opacity `(default)`. A
   highlight is drawn multiplied onto the page, so the words under it keep their own colour, here as in the file's
   appearance stream.
@@ -172,6 +178,10 @@ written into the file as a standard annotation, so any reader shows it. The rese
 - **The selected marks' colour** `(default)`: with Select in hand and marks selected, the toolbar's Colour is
   theirs, its bar their colour, blank where they differ; a pick gives every selected mark that colour, and **Reset**
   gives each its kind's first look's colour, a stamp its own; then the pages have the keys.
+- **Format > Colour** and **Format > Fill colour** open the toolbar's Colour and Fill, whatever they are offered for
+  then, and are dimmed while the toolbar offers none `(default)`.
+- **The toolbar's Line width** is the selected marks' with Select in hand, the steps of Format > Line width, as the
+  tool in hand's is with a line tool in hand; it is dimmed while neither has a line `(default)`.
 - **Format > Opacity** gives every selected mark the opacity chosen; **Format > Line width** gives every selected
   Drawing, Line, Arrow, Rectangle and Ellipse the width chosen, the others keeping theirs `(default)`.
 - A step of Opacity or Line width is checked where every selected mark it reaches holds it, and dimmed while no
@@ -450,7 +460,8 @@ a mark another person made is refused with `not_your_mark`.
 
 - `Pdf · Added · Mark.<Kind>`, `Pdf · Changed · Mark.<Moved|Resized|Restyled|Grouped|Locked>`,
   `Pdf · Deleted · Mark.<Kind>`, `Pdf · Added · Stamp.<Standard|Dynamic|Custom>`,
-  `Pdf · Created · CustomStamp`, `Pdf · Changed · ToolColour` (a tool's colour chosen or reset). A stamp placed is
+  `Pdf · Created · CustomStamp`, `Pdf · Changed · ToolColour` (a tool's colour chosen or reset), `Pdf · Changed · ToolLine` (a tool's line
+  width, line style or fill chosen). A stamp placed is
   counted as `Stamp.<…>` alone, never also as `Mark.Stamp`; the tool taken in hand is `Tool.Stamp`. Never a mark's
   words, a stamp's name or a file's name.
 - A move is counted once a drag or a key press, `Mark.Moved`; a resize the same, `Mark.Resized`; a restyle once a
@@ -458,7 +469,7 @@ a mark another person made is refused with `not_your_mark`.
 - Fingerprints: `[pdf] mark-added kind=<kind>`, `[pdf] mark-refused name=<name>`,
   `[pdf] marks-moved count=<n>` (a drag or a key press), `[pdf] mark-resized kind=<kind>`,
   `[pdf] marks-restyled count=<n> look=<colour|opacity|width|style|fill|end|size|align>` (a pick or a choice),
-  `[pdf] marks-deleted count=<n>`,
+  `[pdf] marks-deleted count=<n>`, `[pdf] tool-look kind=<kind> look=<width|style|fill>` (a tool's line chosen),
   `[pdf] marks-read count=<n> unknown=<n>` (per open), `[pdf] drawing-joined strokes=<n>` (a stroke joined to a
   Drawing), `[pdf] typing-dropped kind=<kind>` (a Note, Text or Callout ended with nothing typed).
 

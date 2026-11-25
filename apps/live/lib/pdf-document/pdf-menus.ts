@@ -69,6 +69,8 @@ export const PRINT = 'print';
 export const COPY = 'copy';
 export const SELECT_ALL = 'select-all';
 export const FIND = 'find';
+export const FORMAT_COLOUR = 'format-colour';
+export const FORMAT_FILL_COLOUR = 'format-fill-colour';
 export const TOOL_SELECT = 'tool-select';
 export const TOOL_HAND = 'tool-hand';
 export const TOOL_HIGHLIGHT = 'tool-highlight';
@@ -143,6 +145,15 @@ export const PAGE_DISPLAY_MENU = submenu('page-display', 'Page display', [
   SEPARATOR,
   item(PAGE_DISPLAY_COVER, 'Show cover page', 'view', { ...BUILT, ...CHECK }),
 ]);
+
+/** Format > Line width's steps, which the toolbar's Line width offers too (reading-surface.md "The toolbar"). */
+export const LINE_WIDTH_MENU = choices(
+  'line-width',
+  'Line width',
+  'participate',
+  ['0.5 pt', '1 pt', '2 pt', '4 pt', '8 pt', '12 pt'],
+  { ...ONE_OF, ...BUILT },
+);
 
 export const PDF_MENUS: OfficeCatalogue = [
   menu('file', 'File', [
@@ -379,21 +390,16 @@ export const PDF_MENUS: OfficeCatalogue = [
     item('insert-embedded-file', 'Embedded file', 'edit', { keywords: ['attachment'] }),
   ]),
   menu('format', 'Format', [
-    item('format-colour', 'Colour', 'participate'),
-    item('format-fill-colour', 'Fill colour', 'participate'),
+    // Open the toolbar's Colour and Fill (marks.md "Changing a mark").
+    item(FORMAT_COLOUR, 'Colour', 'participate', BUILT),
+    item(FORMAT_FILL_COLOUR, 'Fill colour', 'participate', BUILT),
     // Of the selected marks (usePdfMarkRestyle.ts).
     choices('opacity', 'Opacity', 'participate', ['100%', '75%', '50%', '25%', '10%'], {
       ...ONE_OF,
       ...BUILT,
     }),
     SEPARATOR,
-    choices(
-      'line-width',
-      'Line width',
-      'participate',
-      ['0.5 pt', '1 pt', '2 pt', '4 pt', '8 pt', '12 pt'],
-      { ...ONE_OF, ...BUILT },
-    ),
+    LINE_WIDTH_MENU,
     choices(
       'line-style',
       'Line style',

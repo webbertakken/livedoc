@@ -958,6 +958,8 @@ export const EXACT: Readonly<Record<string, string>> = {
     'Someone placed a dynamic stamp on a PDF page: its name with who placed it and when.',
   'Pdf|Changed|ToolColour':
     'Someone chose a colour, or reset it, for the mark tool in hand on a PDF document.',
+  'Pdf|Changed|ToolLine':
+    'Someone chose a line width, line style or fill for the mark tool in hand on a PDF document.',
   'Pdf|Changed|Mark.Resized':
     'Someone resized a mark on a PDF page, by a handle or with ⌥ and the arrow keys.',
   'Pdf|Changed|Mark.Restyled':
