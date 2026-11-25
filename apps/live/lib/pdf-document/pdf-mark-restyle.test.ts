@@ -19,7 +19,10 @@ import {
   alignOf,
   END_ITEMS,
   fillOf,
+  FIRST_FONT,
   firstColour,
+  fontedLook,
+  fontOf,
   lineEndOf,
   lineStyleOf,
   OPACITY_ITEMS,
@@ -247,6 +250,32 @@ describe('a Text’s and a Callout’s size and alignment restyled', () => {
     expect(PdfLiveChanges.mark(doc, 'l')).not.toHaveProperty('size');
     expect(restyleMarks(doc, ['t'], sizedLook(24, PAGE), T + 2)).toBe(0);
     expect(origins.slice(before)).toEqual([PDF_LOCAL_ORIGIN]);
+  });
+
+  // marks.md "Changing a mark": the selected Texts' and Callouts' font; what a new font does.
+  it('reads a font of a Text or a Callout alone, Helvetica until one is chosen', () => {
+    expect(fontOf(text)).toBe(FIRST_FONT);
+    expect(FIRST_FONT).toBe('Helvetica');
+    expect(fontOf({ ...text, font: 'Lora' })).toBe('Lora');
+    expect(fontOf(line)).toBeUndefined();
+  });
+
+  it('gives a font to the Texts and Callouts alone, their boxes and lines with it; Helvetica takes it away', () => {
+    const { doc, origins } = withTyped();
+    const before = origins.length;
+    expect(restyleMarks(doc, ['t', 'k', 'l'], fontedLook('Roboto Mono', PAGE), T + 1)).toBe(2);
+    const mono = { ...text, font: 'Roboto Mono' };
+    expect(PdfLiveChanges.mark(doc, 't')).toMatchObject({
+      font: 'Roboto Mono',
+      ...MarkReshape.sized(mono, 10, PAGE),
+    });
+    expect(PdfLiveChanges.mark(doc, 'k')).toMatchObject({ font: 'Roboto Mono' });
+    expect(PdfLiveChanges.mark(doc, 'l')).not.toHaveProperty('font');
+    expect(restyleMarks(doc, ['t'], fontedLook('Roboto Mono', PAGE), T + 2)).toBe(0);
+    expect(origins.slice(before)).toEqual([PDF_LOCAL_ORIGIN]);
+    expect(restyleMarks(doc, ['t'], fontedLook(FIRST_FONT, PAGE), T + 3)).toBe(1);
+    expect(PdfLiveChanges.mark(doc, 't')).not.toHaveProperty('font');
+    expect(restyleMarks(doc, ['t'], fontedLook(FIRST_FONT, PAGE), T + 4)).toBe(0);
   });
 
   it('gives an alignment to the Texts and Callouts alone, nothing where it is held', () => {

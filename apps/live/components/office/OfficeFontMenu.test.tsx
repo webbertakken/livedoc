@@ -62,6 +62,23 @@ function settle(name: string, event: 'load' | 'error') {
   });
 }
 
+// docs/specs/035-pdf-documents/marks.md "Changing a mark": a kind's fixed list.
+describe('OfficeFontMenu with a fixed list', () => {
+  it('lists only the families given, with no More fonts, and tells the kind as it opens', () => {
+    const onOpen = vi.fn();
+    const font = { read: () => 'Lora', set: vi.fn(), families: ['Helvetica', 'Lora'], onOpen };
+    render(<OfficeFontMenu font={font} value="Lora" tabIndex={0} className="" />);
+    fireEvent.click(screen.getByRole('button', { name: 'Font: Lora' }));
+    expect(onOpen).toHaveBeenCalledTimes(1);
+    expect(screen.queryByRole('menuitem', { name: 'More fonts' })).toBeNull();
+    const rows = screen.getAllByRole('menuitemradio').map((row) => row.textContent);
+    expect(rows).toEqual(['Helvetica', 'Lora']);
+    fireEvent.click(screen.getByRole('menuitemradio', { name: 'Helvetica' }));
+    expect(font.set).toHaveBeenCalledWith('Helvetica');
+    expect(readRecentFonts()).toEqual([]);
+  });
+});
+
 describe('OfficeFontMenu', () => {
   it('shows the family at the caret', () => {
     const { button } = setup('Lora');

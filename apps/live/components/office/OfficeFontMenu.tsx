@@ -4,12 +4,18 @@
 // the caret, in the toolbar's own face as Google's (blank over a mixed selection; in italics, with what it is drawn in,
 // for one the menu does not list or that could not load), opening the font menu over the page. Choosing a family
 // remembers it among the recent ones and hands it to the kind; More fonts opens the Fonts dialog, whose OK keeps My
-// fonts. The families of My fonts from Google Fonts load as the menu opens.
+// fonts. The families of My fonts from Google Fonts load as the menu opens. A kind with a fixed list of families (a
+// PDF's Text and Callout) lists those alone, with no More fonts and no recent ones, and is told as the menu opens.
 import { useCallback, useMemo, useState, useSyncExternalStore } from 'react';
 import { track } from '@/lib/telemetry';
 import { loadGoogleFamilies } from '@/lib/document-fonts/google-families';
 import { googleFontLoads } from '@/lib/document-fonts/google-font-loading';
-import { fontMenuActions, fontMenuEntries, fontShownAs } from '@/lib/office/office-font-menu';
+import {
+  fixedFontMenuEntries,
+  fontMenuActions,
+  fontMenuEntries,
+  fontShownAs,
+} from '@/lib/office/office-font-menu';
 import { MyFonts, readMyFonts, writeMyFonts } from '@/lib/office/office-my-fonts';
 import { noteRecentFont, readRecentFonts } from '@/lib/office/office-recent-fonts';
 import { OfficeChoiceMenu } from './OfficeChoiceMenu';
@@ -23,6 +29,10 @@ export type OfficeFontFamily = {
   read: () => string | null;
   set: (family: string) => void;
   telemetryKind?: string;
+  // A fixed list the menu holds alone: its first family, a separator, the rest.
+  families?: readonly string[];
+  // Told as the menu opens, so the kind may load the families' faces.
+  onOpen?: () => void;
 };
 
 export function OfficeFontMenu({
@@ -50,15 +60,18 @@ export function OfficeFontMenu({
     [statuses],
   );
 
+  const fixed = font.families;
   const readMenu = () => {
+    font.onOpen?.();
+    if (fixed) return;
     const fonts = readMyFonts();
     setRecent(readRecentFonts());
     setMyFonts(fonts);
     void loadGoogleFamilies(fonts);
   };
   const entries = useMemo(
-    () => fontMenuEntries(recent, myFonts, statusOf),
-    [recent, myFonts, statusOf],
+    () => (fixed ? fixedFontMenuEntries(fixed) : fontMenuEntries(recent, myFonts, statusOf)),
+    [fixed, recent, myFonts, statusOf],
   );
   const actions = useMemo(
     () =>
@@ -66,7 +79,7 @@ export function OfficeFontMenu({
         entries,
         value,
         (family) => {
-          noteRecentFont(family);
+          if (!fixed) noteRecentFont(family);
           font.set(family);
         },
         () => {
@@ -74,9 +87,9 @@ export function OfficeFontMenu({
           setChoosing(readMyFonts());
         },
       ),
-    [entries, value, font],
+    [entries, value, font, fixed],
   );
-  const shownAs = value === null ? null : fontShownAs(value, myFonts, statusOf);
+  const shownAs = value === null || fixed ? null : fontShownAs(value, myFonts, statusOf);
   return (
     <>
       <OfficeChoiceMenu

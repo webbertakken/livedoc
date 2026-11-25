@@ -1,8 +1,9 @@
 // Restyling the selected marks (docs/specs/035-pdf-documents/marks.md "Changing a mark"): their colour, from the
 // toolbar's Colour, or each kind's first look on Reset (a stamp its own); their opacity, line width, line style, line
 // ends and a Text's or a Callout's alignment, from the Format menu; a Rectangle's and an Ellipse's fill, from the
-// toolbar's Fill; a Text's or a Callout's size, from its Font size. A width and a style reach only a mark with a line, a
-// fill only a shape, a size and an alignment only a Text or a Callout, a new size carrying the box it makes. Each
+// toolbar's Fill; a Text's or a Callout's font and size, from its Font and Font size. A width and a style reach only a
+// mark with a line, a fill only a shape, a font, a size and an alignment only a Text or a Callout, a new font or size
+// carrying the box it makes. Each
 // restyle is one change under the person's own origin, so it is one step of their undo, made from the marks as the live
 // changes hold them now.
 import type * as Y from 'yjs';
@@ -28,7 +29,10 @@ import { STAMP_COLOURS } from './pdf-stamp';
 
 /** What a restyle sets, as `[pdf] marks-restyled look=<…>` names it. */
 export type RestyledLook =
-  'colour' | 'opacity' | 'width' | 'style' | 'fill' | 'end' | 'size' | 'align';
+  'colour' | 'opacity' | 'width' | 'style' | 'fill' | 'end' | 'size' | 'align' | 'font';
+
+/** The font a Text or a Callout is set in until one is chosen, as the Font menu names it (marks.md "Making a mark"). */
+export const FIRST_FONT = 'Helvetica';
 
 /** Format > Opacity's steps (reading-surface.md "Format"), by item id. */
 export const OPACITY_ITEMS: Readonly<Record<string, number>> = {
@@ -103,6 +107,10 @@ export const fillOf = (mark: Mark): string | null | undefined =>
 export const sizeOf = (mark: Mark): number | undefined =>
   Marks.isTyped(mark) ? mark.size : undefined;
 
+/** A Text's or a Callout's font, Helvetica until one is chosen; undefined for any other mark. */
+export const fontOf = (mark: Mark): string | undefined =>
+  Marks.isTyped(mark) ? (mark.font ?? FIRST_FONT) : undefined;
+
 /** The alignment Align text checks for a Text or a Callout: the one chosen, or until then its words' one direction's
  *  side, null where its paragraphs read both ways; undefined for any other mark. */
 export function alignOf(mark: Mark): TextAlign | null | undefined {
@@ -117,6 +125,20 @@ export const sizedLook =
   (size: number, page: Box) =>
   (mark: Mark): MarkChange =>
     Marks.isTyped(mark) ? { size, ...MarkReshape.sized(mark, size, page) } : {};
+
+/**
+ * The look a font taken asks of a mark: the font (none for Helvetica), and the box and line it makes on `page`, wrapped
+ * again in it; nothing of any other mark.
+ */
+export const fontedLook =
+  (font: string, page: Box) =>
+  (mark: Mark): MarkChange => {
+    if (!Marks.isTyped(mark)) return {};
+    const chosen = font === FIRST_FONT ? undefined : font;
+    const { font: _was, ...rest } = mark;
+    const placed = MarkReshape.sized(chosen ? { ...rest, font: chosen } : rest, mark.size, page);
+    return { font: chosen ?? null, ...placed };
+  };
 
 /** The colour Reset gives a mark: its kind's first look, a stamp its own; a stamp LiveDoc does not draw keeps its. */
 export function firstColour(mark: Mark): string {
@@ -137,8 +159,8 @@ export function sharedOf<Value>(
 }
 
 /** What of `look` would change `mark`: a width and a style only where it has a line, a fill only where it takes one,
- *  a size and an alignment only where it is a Text or a Callout, nothing it holds already; a new size with the
- *  geometry it carries. */
+ *  a font, a size and an alignment only where it is a Text or a Callout, nothing it holds already; a new font or size
+ *  with the geometry it carries. */
 function changeOf(mark: Mark, look: MarkChange): MarkChange {
   const fill = fillOf(mark);
   const end = lineEndOf(mark);
@@ -153,17 +175,19 @@ function changeOf(mark: Mark, look: MarkChange): MarkChange {
       : { fill: look.fill?.toLowerCase() ?? null }),
     ...(look.size === undefined || !Marks.isTyped(mark) ? {} : { size: look.size }),
     ...(look.align === undefined || !Marks.isTyped(mark) ? {} : { align: look.align }),
+    ...(look.font === undefined || !Marks.isTyped(mark) ? {} : { font: look.font }),
   };
   const held = {
     ...mark,
     ...(isLined(mark) ? { lineStyle: lineStyleOf(mark) } : {}),
     ...(fill === undefined ? {} : { fill }),
     ...(end === undefined ? {} : { lineEnd: end }),
+    ...(Marks.isTyped(mark) ? { font: mark.font ?? null } : {}),
   } as Readonly<Record<string, unknown>>;
   const change = Object.fromEntries(
     Object.entries(asked).filter(([key, value]) => held[key] !== value),
   ) as MarkChange;
-  if (change.size === undefined) return change;
+  if (change.size === undefined && change.font === undefined) return change;
   const placed = Object.entries(look).filter(([key]) => key === 'rect' || key === 'callout');
   return { ...change, ...Object.fromEntries(placed) };
 }

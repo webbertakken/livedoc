@@ -7,6 +7,7 @@ import { act, renderHook } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   Mark,
+  MARK_FONTS,
   PageName,
   PdfLiveChanges,
   PDF_TEXT_SIZE_MAX_PT,
@@ -18,6 +19,7 @@ import {
 import { debugLog } from '@/lib/debug-log';
 import { track } from '@/lib/telemetry';
 import { FIRST_LOOKS } from './pdf-mark-looks';
+import { addMarkFont } from './pdf-mark-faces';
 import { pdfChangeableStore } from './pdf-changeable-marks';
 import { pdfMarksStore } from './pdf-marks-store';
 import { FILL_COLOUR, TOOL_COLOUR } from './pdf-toolbar';
@@ -26,6 +28,10 @@ import { usePdfMarkRestyle } from './usePdfMarkRestyle';
 
 vi.mock('@/lib/telemetry', () => ({ track: vi.fn() }));
 vi.mock('@/lib/debug-log', () => ({ debugLog: vi.fn() }));
+vi.mock('./pdf-mark-faces', async (actual) => ({
+  ...(await actual<typeof import('./pdf-mark-faces')>()),
+  addMarkFont: vi.fn(),
+}));
 
 const PAGES = [PageName.ofObject(3), PageName.ofObject(4)].map(
   (name) => ({ name, width: 612, height: 792 }) as PageInfo,
@@ -202,7 +208,7 @@ describe('Format > Opacity and Line width', () => {
   });
 
   it('binds nothing outside Reviewing or before the PDF is open', () => {
-    const nothing = { colours: {}, actions: {}, fontSize: null };
+    const nothing = { colours: {}, actions: {}, fontSize: null, fontFamily: null };
     expect(restyling({ marking: false }).hook.result.current).toEqual(nothing);
     expect(restyling({ open: false }).hook.result.current).toEqual(nothing);
   });
@@ -341,5 +347,39 @@ describe('the Font size field and Format > Align text', () => {
     expect(hook.result.current.actions['align-text-left']!.checked).toBe(false);
     const lineOnly = restyling({ chosen: { page: 0, ids: ['a'] } }).hook.result.current.actions;
     expect(lineOnly['align-text-centre']).toMatchObject({ disabled: true, checked: false });
+  });
+});
+
+// marks.md "Changing a mark": the toolbar's Font is the selected Texts' and Callouts', blank where they differ: Helvetica,
+// then the served menu families; a family taken gives them that font as one step, their boxes wrapped again in it.
+describe('the Font menu', () => {
+  it('is no menu while no Text or Callout is selected', () => {
+    expect(restyling().hook.result.current.fontFamily).toBeNull();
+  });
+
+  it('lists Helvetica and the served menu families, and adds their faces as it opens', () => {
+    const font = restyling({ chosen: { page: 0, ids: ['t'] } }).hook.result.current.fontFamily!;
+    expect(font.families).toEqual(['Helvetica', ...MARK_FONTS]);
+    font.onOpen!();
+    expect(vi.mocked(addMarkFont).mock.calls.map(([name]) => name)).toEqual([...MARK_FONTS]);
+  });
+
+  it('reads the font the selected Texts share, Helvetica until one is chosen', () => {
+    expect(
+      restyling({ chosen: { page: 0, ids: ['t', 'a'] } }).hook.result.current.fontFamily!.read(),
+    ).toBe('Helvetica');
+  });
+
+  it('gives them the font taken as one step, and Helvetica takes it away', async () => {
+    const { hook, doc, steps, focusPages } = restyling({ chosen: { page: 0, ids: ['t', 'a'] } });
+    await act(async () => hook.result.current.fontFamily!.set('Lora'));
+    expect(PdfLiveChanges.mark(doc, 't')).toMatchObject({ font: 'Lora' });
+    expect(steps).toEqual([{ page: PAGES[0]!.name }]);
+    expect(debugLog).toHaveBeenCalledWith('[pdf] marks-restyled count=1 look=font');
+    expect(track).toHaveBeenCalledWith('Pdf', 'Changed', 'Mark.Restyled');
+    expect(focusPages).toHaveBeenCalled();
+    expect(hook.result.current.fontFamily!.read()).toBe('Lora');
+    await act(async () => hook.result.current.fontFamily!.set('Helvetica'));
+    expect(PdfLiveChanges.mark(doc, 't')).not.toHaveProperty('font');
   });
 });

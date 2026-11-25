@@ -1,3 +1,5 @@
+import { execFileSync } from 'node:child_process';
+import { readFileSync } from 'node:fs';
 import type { Locator, Page } from '@playwright/test';
 import { textPdf } from '@livedoc/pdf-documents/testing';
 import { expect, expectNoPageErrors, test } from '../fixtures';
@@ -349,5 +351,67 @@ test('a selected Text is given a size and an alignment', async ({ page, pageErro
   await expect(text.locator('text')).toHaveCount(wrapped);
   await page.keyboard.press('ControlOrMeta+z');
   await expect(text.locator('text').first()).toHaveAttribute('font-size', '12');
+  expectNoPageErrors(pageErrors);
+});
+
+// marks.md "Changing a mark": the toolbar's Font is the selected Text's, Helvetica until one is chosen, a fixed list
+// with no More fonts; "Words in every script": a mark in a chosen font is drawn in its family first, from LiveDoc's own
+// origin, and downloaded with that family embedded as a subset.
+test('a selected Text is given a font, drawn and downloaded in it', async ({
+  page,
+  pageErrors,
+}) => {
+  test.setTimeout(120_000);
+  await page.setViewportSize({ width: 1280, height: 860 });
+  await page.goto('/explorer/all');
+  await expect(page.getByRole('heading', { name: 'My Documents' }).first()).toBeVisible();
+  const stored = await textPdf(2);
+  await dropPdf(page, 'Fonts.pdf', stored);
+  await page.waitForURL(/\/document\//, { timeout: 30_000 });
+  const first = await pageOneDrawn(page);
+  const text = page.locator(`${PAGE_ONE} [data-pdf-mark-kind="text"]`);
+  const toolbar = page.getByRole('toolbar', { name: 'Toolbar' });
+
+  await (await officeMenuItem(page, ['Insert', 'Text'])).click();
+  await drag(page, first, [0.1, 0.1], [0.4, 0.14]);
+  await page.keyboard.type('Check the totals in this table before Friday');
+  await page.keyboard.press('Escape');
+  await expect(text).toHaveCount(1);
+  await page.locator('[data-pdf-pages]').focus();
+  await page.keyboard.press('v');
+  await expect(toolbar.getByRole('button', { name: /^Font/ })).toHaveCount(0);
+
+  // Selected: Font is Helvetica; its menu lists Helvetica and the served families, with no More fonts.
+  const box = (await text.boundingBox())!;
+  await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
+  const font = toolbar.getByRole('button', { name: 'Font: Helvetica' });
+  await font.click();
+  await expect(page.getByRole('menuitem', { name: 'More fonts' })).toHaveCount(0);
+  await expect(page.getByRole('menuitemradio')).toHaveCount(18);
+  await page.getByRole('menuitemradio', { name: 'Lora' }).click();
+  await expect(toolbar.getByRole('button', { name: 'Font: Lora' })).toBeVisible();
+  await expect(text.locator('g[font-family]').first()).toHaveAttribute(
+    'font-family',
+    /^"LiveDoc Lora", "LiveDoc Noto Sans"/,
+  );
+  await expect
+    .poll(() => page.evaluate(() => document.fonts.check('16px "LiveDoc Lora"', 'Check')))
+    .toBe(true);
+  await page.screenshot({ path: test.info().outputPath('pdf-mark-font.png') });
+
+  // Downloaded: the family embedded as a subset, its name in the default style.
+  const item = await officeMenuItem(page, ['File', 'Download', 'PDF']);
+  const [download] = await Promise.all([page.waitForEvent('download'), item.click()]);
+  const file = test.info().outputPath('Fonts.pdf');
+  await download.saveAs(file);
+  const added = readFileSync(file).subarray(stored.length).toString('latin1');
+  expect(added).toContain("/DS (font-family:'Lora')");
+  expect(added).toMatch(/\/BaseFont \/[A-Z]{6}\+Lora-Regular/);
+  execFileSync('qpdf', ['--check', file], { stdio: 'pipe' });
+
+  // Undo gives it Helvetica again.
+  await page.locator('[data-pdf-pages]').focus();
+  await page.keyboard.press('ControlOrMeta+z');
+  await expect(toolbar.getByRole('button', { name: 'Font: Helvetica' })).toBeVisible();
   expectNoPageErrors(pageErrors);
 });

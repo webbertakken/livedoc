@@ -18,7 +18,7 @@ import {
   PageView,
 } from '@livedoc/pdf-documents';
 import { PdfLookContext } from '@/lib/pdf-document/pdf-look';
-import { addMarkFaces, facesStackOf } from '@/lib/pdf-document/pdf-mark-faces';
+import { addMarkFaces, addMarkFont, facesStackOf } from '@/lib/pdf-document/pdf-mark-faces';
 import type { PdfFindTints } from '@/lib/pdf-document/usePdfFind';
 import type { PdfMarksMoving } from '@/lib/pdf-document/usePdfPageMarkPress';
 
@@ -44,15 +44,19 @@ const helveticas = (text: string): boolean =>
 /**
  * A mark's words as SVG in view space: each line set from its baseline, along the page's own across and
  * down as the matrix turns them, held to the width the file sets it at where Helvetica writes it; a mark in the mark
- * faces drawn in them as shaped, from its own side.
+ * faces drawn in them as shaped, from its own side; a mark in a chosen font in its family first.
  */
 export function PdfMarkWords({ matrix, mark }: { matrix: PageMatrix; mark: Mark }) {
   const words = MarkWords.of(mark);
-  const region = words?.faces === 'noto' ? words.region : null;
+  const region = words?.faces === 'embedded' ? words.region : null;
   const faced = region !== null;
+  const font = region === null ? undefined : words?.font;
   useEffect(() => {
     if (region) void addMarkFaces(region);
   }, [region]);
+  useEffect(() => {
+    if (font) addMarkFont(font);
+  }, [font]);
   if (!words) return null;
   const [a, b, c, d] = matrix;
   return (

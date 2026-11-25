@@ -48,6 +48,16 @@ export function fontMenuEntries(
   ];
 }
 
+/**
+ * A kind's fixed list of families (a PDF's Text and Callout, docs/specs/035-pdf-documents/marks.md "Changing a
+ * mark"): its first family, a separator, then the rest, each drawn in its own face; no More fonts, no recent ones.
+ */
+export function fixedFontMenuEntries(families: readonly string[]): OfficeEntry[] {
+  const [first, ...rest] = families.map((name) => fontItem(name, 'all', () => 'idle'));
+  if (!first) return [];
+  return rest.length > 0 ? [first, { kind: 'separator' }, ...rest] : [first];
+}
+
 /** Each family's item chooses it, and is checked while it is the family at the caret; More fonts opens the dialog. */
 export function fontMenuActions(
   entries: readonly OfficeEntry[],

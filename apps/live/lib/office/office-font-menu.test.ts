@@ -5,11 +5,28 @@ import {
   fontMenuActions,
   fontMenuEntries,
   fontShownAs,
+  fixedFontMenuEntries,
   MORE_FONTS_ITEM,
   NOT_AVAILABLE_OFFLINE,
 } from './office-font-menu';
 
 const MENU = DocumentFonts.menu();
+
+// docs/specs/035-pdf-documents/marks.md "Changing a mark": a fixed list, with no More fonts and no recent families.
+describe('fixedFontMenuEntries', () => {
+  it('lists its first family, a separator, then the rest, each in its face', () => {
+    const entries = fixedFontMenuEntries(['Helvetica', 'Lora', 'Roboto']);
+    expect(entries).toEqual([
+      expect.objectContaining({ id: 'all-font:Helvetica', checkable: 'radio' }),
+      { kind: 'separator' },
+      expect.objectContaining({ id: 'all-font:Lora', face: DocumentFonts.stack('Lora') }),
+      expect.objectContaining({ id: 'all-font:Roboto' }),
+    ]);
+    expect(entries.some((entry) => entry.kind === 'item' && entry.id === MORE_FONTS_ITEM)).toBe(
+      false,
+    );
+  });
+});
 
 describe('fontMenuEntries', () => {
   it('leads with More fonts, then My fonts, each in its face', () => {
