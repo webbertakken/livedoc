@@ -14,7 +14,7 @@ import {
 } from '@/components/panels/comment-thread-parts';
 import { ConfirmDialog } from '@/components/dialogs/ConfirmDialog';
 import { Button } from '@livedoc/ui';
-import type { TextDocumentCommenter } from './useTextDocumentThreads';
+import type { TextDocumentCommenter } from '@/lib/text-document/text-document-commenter';
 
 /** A text document's comment as the shared thread parts draw one. */
 export const sharedComment = (c: TextDocumentComment): Comment & { fromFile?: true } => ({

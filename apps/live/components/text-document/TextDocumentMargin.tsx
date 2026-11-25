@@ -11,7 +11,8 @@ import { lucideMessageSquarePlus } from '@livedoc/icons/lucide';
 import { Tooltip, lucideGlyph } from '@livedoc/ui';
 import { stackCards, type CardWanted } from '@/lib/text-document/text-document-threads';
 import { TextDocumentDraftCard, TextDocumentThreadCard } from './TextDocumentThreadCard';
-import type { TextDocumentCommenter, TextDocumentThreads } from './useTextDocumentThreads';
+import type { TextDocumentCommenter } from '@/lib/text-document/text-document-commenter';
+import type { TextDocumentThreads } from './useTextDocumentThreads';
 
 /** The column's width and its gap from the page, in px (review.md, (default)). */
 export const MARGIN_WIDTH_PX = 280;

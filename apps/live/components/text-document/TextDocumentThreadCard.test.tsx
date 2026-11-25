@@ -6,7 +6,7 @@ import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-li
 import { describe, expect, it, vi } from 'vitest';
 import type { TextDocumentThread } from '@livedoc/text-documents';
 import { cardLabel, TextDocumentDraftCard, TextDocumentThreadCard } from './TextDocumentThreadCard';
-import type { TextDocumentCommenter } from './useTextDocumentThreads';
+import type { TextDocumentCommenter } from '@/lib/text-document/text-document-commenter';
 
 const ADA = { key: 'k-ada', name: 'Ada', colour: '#0284c7' };
 const BEN = { key: 'k-ben', name: 'Ben', colour: '#16a34a' };
