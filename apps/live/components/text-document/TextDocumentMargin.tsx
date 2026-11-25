@@ -215,7 +215,7 @@ export function TextDocumentMargin({
                 aria-label="Add comment"
                 onMouseDown={(event) => event.preventDefault()}
                 onClick={threads.addComment}
-                className="absolute flex size-9 cursor-pointer items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-sm hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+                className="absolute flex size-prominent cursor-pointer items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-sm hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
                 style={{ top: layout.add, left: 0 }}
               >
                 <AddCommentGlyph />

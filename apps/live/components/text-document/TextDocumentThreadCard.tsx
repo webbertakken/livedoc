@@ -39,7 +39,7 @@ export function cardLabel(thread: TextDocumentThread): string {
 }
 
 const CARD =
-  'rounded-xl border border-slate-200 bg-white text-left shadow-sm transition-shadow motion-reduce:transition-none dark:border-slate-700 dark:bg-slate-900';
+  'rounded-surface border border-slate-200 bg-white text-left shadow-sm transition-shadow motion-reduce:transition-none dark:border-slate-700 dark:bg-slate-900';
 
 export function TextDocumentThreadCard({
   thread,
