@@ -7,7 +7,11 @@ import { useEffect, useId, useRef, useState } from 'react';
 import { DocumentFonts } from '@livedoc/document';
 import { Watermarks, type Watermark, type WatermarkLayout } from '@livedoc/text-documents';
 import { OfficeDialogColourField } from '@/components/office/OfficeDialogColourField';
-import { OFFICE_PANEL_START } from '@/components/office/OfficePanel';
+import {
+  OFFICE_PANEL_CONTROL,
+  OFFICE_PANEL_SELECT,
+  OFFICE_PANEL_START,
+} from '@/components/office/OfficePanel';
 import { OfficeDialogTabs, officeTabPanel } from '@/components/office/OfficeDialogTabs';
 import { OfficeBoldIcon, OfficeItalicIcon } from '@/components/office/office-icons';
 import { WATERMARK_SIZES } from '@/lib/text-document/text-document-watermark';
@@ -15,9 +19,6 @@ import { WATERMARK_SIZES } from '@/lib/text-document/text-document-watermark';
 /** How long typing pauses before the words apply, in milliseconds (default). */
 export const WATERMARK_TYPING_PAUSE_MS = 500;
 
-const CONTROL =
-  'h-field rounded-control border border-(--office-line) bg-transparent px-3 text-body text-(--office-ink) outline-none focus-visible:ring-2 focus-visible:ring-(--office-focus)';
-const SELECT = `${CONTROL} w-full cursor-pointer [&>option]:bg-(--office-menu)`;
 const LABEL = 'mb-1 text-body';
 const PRESS =
   'flex size-field items-center justify-center rounded-control text-(--office-icon) outline-none hover:bg-(--office-hover) focus-visible:ring-2 focus-visible:ring-(--office-focus) aria-pressed:bg-(--office-pressed) aria-pressed:text-(--office-pressed-ink)';
@@ -114,7 +115,7 @@ export function TextDocumentWatermarkPanel({
             onBlur={() => {
               if (typed !== null) commitWords(typed);
             }}
-            className={CONTROL}
+            className={OFFICE_PANEL_CONTROL}
           />
         </div>
         <div className="flex gap-2">
@@ -126,7 +127,7 @@ export function TextDocumentWatermarkPanel({
               id={ids.font}
               value={current.font}
               onChange={(e) => choose({ font: e.target.value })}
-              className={SELECT}
+              className={OFFICE_PANEL_SELECT}
             >
               {fonts.map((font) => (
                 <option key={font} value={font}>
@@ -146,7 +147,7 @@ export function TextDocumentWatermarkPanel({
                 const { size: _, ...rest } = { ...current, text };
                 onApply(e.target.value === AUTO ? rest : { ...rest, size: Number(e.target.value) });
               }}
-              className={SELECT}
+              className={OFFICE_PANEL_SELECT}
             >
               <option value={AUTO}>Auto</option>
               {[
@@ -193,7 +194,7 @@ export function TextDocumentWatermarkPanel({
             <OfficeDialogColourField
               label="Colour"
               value={current.colour}
-              className={CONTROL}
+              className={OFFICE_PANEL_CONTROL}
               onPick={(colour) => {
                 if (/^#[0-9a-f]{6}$/i.test(colour)) choose({ colour: colour.toLowerCase() });
               }}

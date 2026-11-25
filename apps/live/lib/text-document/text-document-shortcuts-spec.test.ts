@@ -32,7 +32,11 @@ function specRows() {
       group,
       action: action!,
       keys: { pc: pc!, mac: mac!, chromeos: chromeos! },
-      status: status!.startsWith('built') ? 'built' : (STATUS[status!] ?? `unknown: ${status}`),
+      status: status!.startsWith('built')
+        ? 'built'
+        : status!.startsWith('on a comment')
+          ? 'surface'
+          : (STATUS[status!] ?? `unknown: ${status}`),
     });
   }
   return rows;

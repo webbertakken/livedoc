@@ -3,6 +3,7 @@
 // The Line numbers side panel's body (docs/specs/034-text-documents/page-layout.md "Line numbers", "The panel"): Show
 // line numbers, the three restarts (dimmed while off) and Apply to (dimmed with one section), for the caret's section.
 // A choice applies at once over the scope Apply to names; choosing Apply to changes nothing until the next choice.
+import { OFFICE_PANEL_SELECT } from '@/components/office/OfficePanel';
 import { useId, useState } from 'react';
 import type { LineNumberRestart } from '@livedoc/text-documents';
 import {
@@ -18,8 +19,6 @@ const CHOICE = 'size-icon-row shrink-0 accent-(--office-primary) disabled:cursor
 const HEADING = 'mb-2 text-panel-title';
 const ROW =
   'flex cursor-pointer items-center gap-3 text-body has-disabled:cursor-default has-disabled:opacity-40';
-const SELECT =
-  'h-field w-full cursor-pointer rounded-control border border-(--office-line) bg-transparent px-3 text-body text-(--office-ink) outline-none focus-visible:ring-2 focus-visible:ring-(--office-focus) disabled:cursor-default disabled:opacity-40 [&>option]:bg-(--office-menu)';
 
 const RESTARTS: readonly LineNumberRestart[] = ['continuous', 'page', 'section'];
 const SCOPES: readonly LineNumbersScope[] = ['document', 'section'];
@@ -75,7 +74,7 @@ export function TextDocumentLineNumbersPanel({
           value={applied}
           disabled={single}
           onChange={(e) => setScope(e.target.value as LineNumbersScope)}
-          className={SELECT}
+          className={OFFICE_PANEL_SELECT}
         >
           {SCOPES.map((choice) => (
             <option key={choice} value={choice}>

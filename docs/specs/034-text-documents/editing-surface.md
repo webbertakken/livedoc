@@ -73,8 +73,8 @@ The document's canvas chrome (palette, mode switch, minimap, zoom controls) is n
 
 - **Last edit**: none in the title row (Google moved it into File > Version history); once version history is built,
   the save status's details show "Last edit was <time> by <name>", which opens it.
-- **Comment history** (a speech bubble glyph, "Open comment history", ⌘⌥⇧A): the comments panel. Not drawn until
-  comments are built ([Review](review.md)), never a dead button.
+- **Comment history** (a speech bubble with lines, "Open comment history", ⌘⌥⇧A): opens and closes the comments
+  panel ([Review](review.md#the-comments-panel)), pressed while it is open; it stands first, before Settings (default).
 - **Editing mode switch**: a pill with the mode's glyph and name, "Editing" (pencil), "Suggesting" (pencil with a
   plus), "Viewing" (eye); its menu lists the three with their one-line descriptions ([Review](review.md#editing-modes)).
   It sits after Settings, before Share. Descriptions: "Edit document directly", "Edits become suggestions",

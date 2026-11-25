@@ -1,6 +1,7 @@
 # Review surfaces
 
-**Status: specified.** Nothing is built.
+**Status: being built.** Comment threads and the comments panel are built for the text document; version history
+and the mode switch are still to come.
 
 The surfaces the office kinds share for review: comment threads anchored to a range, the comments panel, version
 history, and the editing mode switch. Built once for the [text document](../034-text-documents/text-document.md), the
@@ -21,9 +22,14 @@ in its content and what it puts in them ([Review](../034-text-documents/review.m
 
 ## The comments panel
 
-A side panel of the [office shell](../004-interface-design/office-shell.md): filters (All, For you, Open, Resolved, and
-the kind's own, such as by document tab, by sheet, or by page and kind of mark), each thread's anchor label and first comment, a press going to
-it.
+A side panel of the [office shell](../004-interface-design/office-shell.md), titled **Comments**, opened by the title
+row's Comment history and ⌘⌥⇧A: filters (All, For you, Open, Resolved, and the kind's own, such as by document tab,
+by sheet, or by page and kind of mark), each thread's anchor label and first comment, its reply count and resolved
+state with Reopen, a press going to it. Built once (`components/office/review/OfficeCommentsPanel.tsx`, its filters
+pure in `lib/office/review/comment-filters.ts`); a kind hands it its threads as rows (an id, the anchor label, the
+comments, resolved, deleted, the group the kind's own filter reads) and its groups, and does the going.
+"For you" reads a comment's author key: the threads where another replied after one of yours, and those that mention
+you or are assigned to you once mentions are kept.
 
 ## Version history
 

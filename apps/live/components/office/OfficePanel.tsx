@@ -15,6 +15,11 @@ import {
 /** Marks the control a panel's body starts at when the panel opens (a field before a row of tabs). */
 export const OFFICE_PANEL_START = 'data-panel-start';
 
+/** A panel's field and list, drawn alike in every panel. */
+export const OFFICE_PANEL_CONTROL =
+  'h-field rounded-control border border-(--office-line) bg-transparent px-3 text-body text-(--office-ink) outline-none focus-visible:ring-2 focus-visible:ring-(--office-focus) disabled:cursor-default disabled:opacity-40';
+export const OFFICE_PANEL_SELECT = `${OFFICE_PANEL_CONTROL} w-full cursor-pointer [&>option]:bg-(--office-menu)`;
+
 const FOCUSABLE =
   'button:not([disabled]), a[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex="0"]';
 

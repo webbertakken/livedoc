@@ -4,7 +4,7 @@ import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { useRef } from 'react';
 import type { AccessLevel } from '@livedoc/api-schema';
 import type { Participant } from '@/lib/identity';
-import type { OfficeCatalogue } from '@/lib/office/office-catalogue';
+import type { OfficeActions, OfficeCatalogue } from '@/lib/office/office-catalogue';
 import { track } from '@/lib/telemetry';
 import { TEXT_DOCUMENT_SHORTCUTS } from '@/lib/text-document/text-document-shortcuts';
 import type { OfficeChrome } from './office-chrome';
@@ -66,10 +66,14 @@ function Row({
   chrome,
   level = 'edit',
   onFollow,
+  actions = {},
+  commentHistoryItem,
 }: {
   chrome: OfficeChrome | null;
   level?: AccessLevel;
   onFollow?: (id: string) => boolean;
+  actions?: OfficeActions;
+  commentHistoryItem?: string;
 }) {
   const root = useRef<HTMLDivElement | null>(null);
   return (
@@ -81,7 +85,8 @@ function Row({
         problem={null}
         catalogue={CATALOGUE}
         level={level}
-        actions={{}}
+        actions={actions}
+        commentHistoryItem={commentHistoryItem}
         shortcuts={TEXT_DOCUMENT_SHORTCUTS}
         keyScope={root}
         telemetryKind="TextDocument"
@@ -169,6 +174,36 @@ describe('OfficeTitleRow, the document parts', () => {
     expect(
       within(screen.getByRole('menubar')).queryByRole('menuitem', { name: 'File' }),
     ).toBeNull();
+  });
+
+  it('opens and closes the comments panel from Comment history, pressed while it is open', () => {
+    const run = vi.fn();
+    const { rerender } = render(
+      <Row
+        chrome={chromeOf()}
+        commentHistoryItem="open-comment-history"
+        actions={{ 'open-comment-history': { run, checked: false } }}
+      />,
+    );
+    const button = screen.getByRole('button', { name: 'Open comment history' });
+    expect(button.getAttribute('aria-pressed')).toBe('false');
+    fireEvent.click(button);
+    expect(run).toHaveBeenCalledOnce();
+    rerender(
+      <Row
+        chrome={chromeOf()}
+        commentHistoryItem="open-comment-history"
+        actions={{ 'open-comment-history': { run, checked: true } }}
+      />,
+    );
+    expect(
+      screen.getByRole('button', { name: 'Open comment history' }).getAttribute('aria-pressed'),
+    ).toBe('true');
+  });
+
+  it('draws no Comment history where nothing opens the panel', () => {
+    render(<Row chrome={chromeOf()} commentHistoryItem="open-comment-history" />);
+    expect(screen.queryByRole('button', { name: 'Open comment history' })).toBeNull();
   });
 
   it("opens LiveDoc's settings and the account", () => {

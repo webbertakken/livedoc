@@ -74,6 +74,8 @@ import { useTextDocumentCharacterDialogs } from './useTextDocumentCharacterDialo
 import type { TextDocumentCommenter } from '@/lib/text-document/text-document-commenter';
 import { useTextDocumentThreads } from './useTextDocumentThreads';
 import { TextDocumentMargin } from './TextDocumentMargin';
+import { useTextDocumentThreadKeys } from './useTextDocumentThreadKeys';
+import { useTextDocumentCommentsPanel } from './useTextDocumentCommentsPanel';
 import { threadHighlightPlugin } from '@/lib/text-document/text-document-threads';
 import { useTextDocumentLinks } from './useTextDocumentLinks';
 import { useTextDocumentBookmarks } from './useTextDocumentBookmarks';
@@ -127,6 +129,7 @@ import { useTextDocumentLineNumbers } from './useTextDocumentLineNumbers';
 import { useOfficePanels } from '@/lib/office/useOfficePanels';
 import { createTextDocumentChanges } from '@/lib/text-document/text-document-changes';
 import {
+  COMMENTS_PANEL,
   IMAGE_OPTIONS_PANEL,
   OUTLINE_PANEL,
   TABLE_OF_CONTENTS_PANEL,
@@ -910,6 +913,22 @@ export function TextDocumentSurface({
   useEffect(() => {
     selectThreadRef.current = threads.select;
   });
+  // Going to a thread and the keys between them (review.md "The comments panel", "Keys on a selected comment").
+  const threadKeys = useTextDocumentThreadKeys({
+    view: editorView,
+    threads,
+    tab: shownTab ?? FIRST_DOCUMENT_TAB_ID,
+    showTab: tabs.show,
+  });
+  // The comments panel's rows and filters (review.md "The comments panel").
+  const commentsPanel = useTextDocumentCommentsPanel({
+    open: panels.open.right === COMMENTS_PANEL.id,
+    doc: liveDoc,
+    ready: state === 'ready',
+    threads: threads.threads,
+    tabs: tabs.list,
+    subscribe: changes.subscribe,
+  });
   // Insert > Table (tables.md "Inserting"), at the caret's section's column width.
   const tableActions = useTextDocumentTables(
     editorView,
@@ -1053,6 +1072,7 @@ export function TextDocumentSurface({
       ...equationInsert,
       ...characterDialogs.actions,
       ...threads.actions,
+      ...threadKeys.actions,
       ...links.actions,
       ...bookmarks.actions,
       ...headingLinks.actions,
@@ -1073,6 +1093,7 @@ export function TextDocumentSurface({
       equationInsert,
       characterDialogs.actions,
       threads.actions,
+      threadKeys.actions,
       links.actions,
       bookmarks.actions,
       headingLinks.actions,
@@ -1240,6 +1261,13 @@ export function TextDocumentSurface({
               placing: picturePlacing,
             }}
             contents={contents}
+            comments={{
+              ...commentsPanel,
+              selfKey: commenter?.key ?? '',
+              canComment: commenter !== null,
+              go: threadKeys.go,
+              reopen: (id) => threads.resolve(id, false),
+            }}
           />
         }
       >
@@ -1285,6 +1313,7 @@ export function TextDocumentSurface({
           <TextDocumentMargin
             view={editorView}
             threads={threads}
+            keys={threadKeys}
             commenter={commenter}
             subscribe={changes.subscribe}
             subscribeCaret={changes.subscribeCaret}

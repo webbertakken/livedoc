@@ -1,0 +1,57 @@
+// A text document's threads as the shared review surfaces draw them (docs/specs/034-text-documents/review.md "The
+// comments panel", "Threads in the margin"): each comment in the shared shape, with "From the file" under a file's
+// author; and the comments panel's rows, by document tab in the outline's order and within a tab in the order the
+// threads were begun, each grouped by its tab.
+import type * as Y from 'yjs';
+import type { Comment } from '@livedoc/document';
+import {
+  FIRST_DOCUMENT_TAB_ID,
+  LiveThreads,
+  type DocumentTab,
+  type TextDocumentComment,
+  type TextDocumentThread,
+} from '@livedoc/text-documents';
+import type { ReviewThreadRow } from '@/lib/office/review/comment-filters';
+
+/** A text document's comment in the shared shape; its author's key is the shape's author id. */
+export const sharedComment = (c: TextDocumentComment): Comment & { fromFile?: true } => ({
+  id: c.id,
+  text: c.text,
+  createdAt: c.at,
+  authorName: c.author.name,
+  authorColor: c.author.colour,
+  ...(c.author.key ? { authorId: c.author.key } : {}),
+  ...(c.author.fromFile ? { fromFile: true as const } : {}),
+});
+
+export const FROM_THE_FILE = 'From the file';
+
+/** The line under a comment's author: "From the file" for a file's comment, else none. */
+export const commentNoteOf = (c: Comment): string | null =>
+  (c as { fromFile?: true }).fromFile ? FROM_THE_FILE : null;
+
+/** The comments panel's rows: by tab in the outline's order (the first tab first, unknown tabs last), then as read. */
+export function commentRows(
+  doc: Y.Doc,
+  threads: readonly TextDocumentThread[],
+  tabs: readonly DocumentTab[],
+): ReviewThreadRow[] {
+  const order = new Map(tabs.map((tab, index) => [tab.id, index]));
+  if (!order.has(FIRST_DOCUMENT_TAB_ID)) order.set(FIRST_DOCUMENT_TAB_ID, -1);
+  const rank = (tab: string) => order.get(tab) ?? Number.MAX_SAFE_INTEGER;
+  return threads
+    .map((thread, index) => ({ thread, index }))
+    .sort((a, b) => rank(a.thread.tab) - rank(b.thread.tab) || a.index - b.index)
+    .map(({ thread }) => ({
+      id: thread.id,
+      label: thread.quote,
+      deleted: LiveThreads.anchor(doc, thread)?.deleted ?? false,
+      resolved: thread.resolved,
+      group: thread.tab,
+      comments: thread.comments.map(sharedComment),
+    }));
+}
+
+/** The comments panel's third list: each document tab by its name, its emoji before it. */
+export const tabGroups = (tabs: readonly DocumentTab[]): { id: string; label: string }[] =>
+  tabs.map((tab) => ({ id: tab.id, label: tab.emoji ? `${tab.emoji} ${tab.name}` : tab.name }));
