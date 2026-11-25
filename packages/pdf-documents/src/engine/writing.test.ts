@@ -317,6 +317,29 @@ describe('writing a line style and a fill', () => {
     const [r, g, b] = drawn.rgba.slice(at350, at350 + 3);
     expect([r! < 60, g! > 90 && g! < 140, b! > 200]).toEqual([true, true, true]);
   });
+
+  // marks.md "In the file": a Line's second end as `LE`, the standard's names for LiveDoc's ends.
+  it('writes each line end as the standard names it, and no end at all for None', async () => {
+    const pages = opened(await engine.open(stored));
+    const page = pages[0]!.name;
+    const look = { page, colour: '#d93025', opacity: 1, author: 'Ada', createdAt: at, width: 2 };
+    const ends = ['arrow', 'circle', 'square', 'diamond', 'bar', 'none'] as const;
+    const marks = ends.map((lineEnd, n) =>
+      Mark.parse({
+        ...look,
+        id: `end-${n}`,
+        kind: 'arrow',
+        line: [100, 300 + n * 40, 250, 300 + n * 40],
+        lineEnd,
+        modifiedAt: at,
+      })!,
+    );
+    const result = await bakeWith(marks.map((mark) => PdfChange.addMark(mark)));
+    const added = Buffer.from(result.bytes).subarray(stored.length).toString('latin1');
+    for (const name of ['ClosedArrow', 'Circle', 'Square', 'Diamond', 'Butt'])
+      expect(added).toContain(`/LE [/None /${name}]`);
+    expect(added.match(/\/LE /g)).toHaveLength(5);
+  });
 });
 
 // marks.md "In the file": a Text is a FreeText with its words as Contents and an appearance of LiveDoc's own; a Callout

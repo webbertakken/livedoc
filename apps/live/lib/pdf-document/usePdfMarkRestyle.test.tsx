@@ -214,3 +214,23 @@ describe('Format > Line style and the Fill control', () => {
     expect(hook.result.current.colours[FILL_COLOUR]!.read()).toBeNull();
   });
 });
+
+// marks.md "Changing a mark": Format > Line ends, checked as the Lines and Arrows hold it, dimmed while none is selected.
+describe('Format > Line ends', () => {
+  it('gives the Arrow its end, checked as it holds it', () => {
+    const { hook, doc } = restyling();
+    expect(hook.result.current.actions['line-ends-open-arrow']).toMatchObject({
+      checked: true,
+      disabled: false,
+    });
+    act(() => hook.result.current.actions['line-ends-circle']!.run());
+    expect(PdfLiveChanges.mark(doc, 'a')).toMatchObject({ lineEnd: 'circle' });
+    expect(debugLog).toHaveBeenCalledWith('[pdf] marks-restyled count=1 look=end');
+    expect(hook.result.current.actions['line-ends-circle']!.checked).toBe(true);
+  });
+
+  it('dims every end while no Line or Arrow is selected', () => {
+    const actions = restyling({ chosen: { page: 0, ids: ['h', 'r'] } }).hook.result.current.actions;
+    expect(actions['line-ends-none']).toMatchObject({ disabled: true, checked: false });
+  });
+});

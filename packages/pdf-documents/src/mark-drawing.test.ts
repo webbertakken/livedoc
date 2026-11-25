@@ -5,7 +5,7 @@ import {
   PDF_MARK_LINE_PT,
   PDF_SQUIGGLE_STEP_PT,
 } from './limits';
-import type { Quad } from './mark';
+import type { LineEnd, Quad } from './mark';
 import { MarkDrawing } from './mark-drawing';
 import { StampLayout } from './stamp-layout';
 
@@ -346,5 +346,69 @@ describe('a line style and a fill drawn', () => {
       fill: '#fdf1a9',
     });
     expect(ellipse.fill!.points).toBe(ellipse.strokes[0]!.points);
+  });
+});
+
+// marks.md "Changing a mark": how a line end is drawn, at the second end, as big as an Arrow's head, solid.
+describe('a line end drawn', () => {
+  // A line 2 wide along x to (100, 0): a head's side is PDF_ARROW_HEAD_WIDTHS widths.
+  const side = PDF_ARROW_HEAD_WIDTHS * 2;
+  const ended = (lineEnd: LineEnd, kind: 'line' | 'arrow' = 'line') =>
+    MarkDrawing.of({ kind, line: [0, 0, 100, 0], width: 2, lineEnd, lineStyle: 'dashed' });
+  const span = (points: readonly { x: number; y: number }[], axis: 'x' | 'y') =>
+    Math.max(...points.map((p) => p[axis])) - Math.min(...points.map((p) => p[axis]));
+
+  it('draws a Line bare and an Arrow open-headed where they name no end', () => {
+    expect(MarkDrawing.of({ kind: 'line', line: [0, 0, 100, 0], width: 2 }).strokes).toHaveLength(
+      1,
+    );
+    const arrow = MarkDrawing.of({ kind: 'arrow', line: [0, 0, 100, 0], width: 2 });
+    expect(arrow.strokes[1]).toEqual(ended('open-arrow').strokes[1]);
+  });
+
+  it('draws None as nothing, on an Arrow too', () => {
+    expect(ended('none', 'arrow').strokes).toHaveLength(1);
+  });
+
+  it('closes and fills an Arrow, solid', () => {
+    const { fills, strokes } = ended('arrow');
+    expect(fills).toHaveLength(1);
+    expect(fills[0]).toEqual(strokes[1]!.points);
+    expect(strokes[1]).toMatchObject({ closed: true, width: 2 });
+    expect(strokes[1]).not.toHaveProperty('dash');
+  });
+
+  it('centres a Circle, a Square and a Diamond on the end, a head’s side across', () => {
+    for (const end of ['circle', 'square', 'diamond'] as const) {
+      const outline = ended(end).strokes[1]!;
+      expect(outline.closed).toBe(true);
+      expect(span(outline.points, 'x')).toBeCloseTo(side);
+      expect(span(outline.points, 'y')).toBeCloseTo(side);
+      const xs = outline.points.map((p) => p.x);
+      expect((Math.max(...xs) + Math.min(...xs)) / 2).toBeCloseTo(100);
+    }
+    expect(ended('diamond').strokes[1]!.points[0]).toEqual({ x: 100 + side / 2, y: 0 });
+  });
+
+  it('draws a Bar square across the end, a head’s side long', () => {
+    const [from, to] = ended('bar').strokes[1]!.points;
+    expect(from!.x).toBeCloseTo(100);
+    expect(to!.x).toBeCloseTo(100);
+    expect(Math.abs(to!.y - from!.y)).toBeCloseTo(side);
+  });
+
+  it('stands a Bar upright on a line of no length', () => {
+    const still = MarkDrawing.of({ kind: 'line', line: [5, 5, 5, 5], width: 2, lineEnd: 'bar' });
+    const [from, to] = still.strokes[1]!.points;
+    expect(from!.x).toBeCloseTo(5);
+    expect(to!.x).toBeCloseTo(5);
+    expect(Math.abs(to!.y - from!.y)).toBeCloseTo(side);
+  });
+
+  it('turns its end with its line', () => {
+    const turned = MarkDrawing.of({ kind: 'line', line: [0, 0, 0, 100], width: 2, lineEnd: 'bar' });
+    const [from, to] = turned.strokes[1]!.points;
+    expect(from!.y).toBeCloseTo(100);
+    expect(Math.abs(to!.x - from!.x)).toBeCloseTo(side);
   });
 });

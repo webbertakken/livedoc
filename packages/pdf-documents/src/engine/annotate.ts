@@ -20,6 +20,7 @@ import {
   Mark,
   type Box,
   type DrawingMark,
+  type LineEnd,
   type LineMark,
   type ShapeMark,
   type StampMark,
@@ -245,16 +246,28 @@ function annotateDragged(
   return annotation;
 }
 
+/** Each line end as the standard's `LE` names it. */
+const FILE_ENDS = {
+  none: 'None',
+  arrow: 'ClosedArrow',
+  'open-arrow': 'OpenArrow',
+  circle: 'Circle',
+  square: 'Square',
+  diamond: 'Diamond',
+  bar: 'Butt',
+} as const satisfies Readonly<Record<LineEnd, string>>;
+
 /** The annotation as the standard's own subtype for its kind. */
 function subtypeOf(page: PDFPage, mark: LineMark | ShapeMark, color: ReturnType<typeof rgb>) {
   if ('line' in mark) {
     const [x1, y1, x2, y2] = mark.line;
+    const end = mark.lineEnd ?? Mark.firstEnd(mark.kind);
     return page.addLineAnnotation({
       start: { x: x1, y: y1 },
       end: { x: x2, y: y2 },
       color,
       width: mark.width,
-      ...(mark.kind === 'arrow' ? { startStyle: 'None', endStyle: 'OpenArrow' } : {}),
+      ...(end === 'none' ? {} : { startStyle: 'None', endStyle: FILE_ENDS[end] }),
     });
   }
   const half = mark.width / 2;

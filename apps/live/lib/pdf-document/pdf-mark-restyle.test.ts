@@ -3,11 +3,20 @@
 // person's own origin.
 import { describe, expect, it } from 'vitest';
 import * as Y from 'yjs';
-import { LINE_STYLES, Mark, PageName, PdfLiveChanges, type Quad } from '@livedoc/pdf-documents';
+import {
+  LINE_ENDS,
+  LINE_STYLES,
+  Mark,
+  PageName,
+  PdfLiveChanges,
+  type Quad,
+} from '@livedoc/pdf-documents';
 import { FIRST_LOOKS } from './pdf-mark-looks';
 import {
+  END_ITEMS,
   fillOf,
   firstColour,
+  lineEndOf,
   lineStyleOf,
   OPACITY_ITEMS,
   restyleMarks,
@@ -139,5 +148,30 @@ describe('a line style and a fill restyled', () => {
     expect(restyleMarks(doc, ['r'], () => ({ fill: null }), T + 2)).toBe(1);
     expect(PdfLiveChanges.mark(doc, 'r')).not.toHaveProperty('fill');
     expect(restyleMarks(doc, ['r'], () => ({ fill: null }), T + 3)).toBe(0);
+  });
+});
+
+// marks.md "Changing a mark": Format > Line ends reaches a Line's and an Arrow's second end alone.
+describe('a line end restyled', () => {
+  it('names an item for each end, each an end a mark holds', () => {
+    const ids = new Set(catalogueItems(PDF_MENUS).map(({ item }) => item.id));
+    for (const id of Object.keys(END_ITEMS)) expect(ids.has(id)).toBe(true);
+    expect(Object.values(END_ITEMS)).toEqual([...LINE_ENDS]);
+  });
+
+  it('reads an Arrow’s open head and a Line’s bare end where they name none', () => {
+    expect(lineEndOf(line)).toBe('open-arrow');
+    expect(lineEndOf({ ...line, kind: 'line' })).toBe('none');
+    expect(lineEndOf({ ...line, lineEnd: 'bar' })).toBe('bar');
+    expect(lineEndOf(highlight)).toBeUndefined();
+  });
+
+  it('gives an end to a Line or an Arrow alone, and the kind’s own back as none', () => {
+    const { doc } = withMarks();
+    expect(restyleMarks(doc, ['l', 'h'], () => ({ lineEnd: 'diamond' }), T + 1)).toBe(1);
+    expect(PdfLiveChanges.mark(doc, 'l')).toMatchObject({ lineEnd: 'diamond' });
+    expect(restyleMarks(doc, ['l'], () => ({ lineEnd: 'open-arrow' }), T + 2)).toBe(1);
+    expect(PdfLiveChanges.mark(doc, 'l')).not.toHaveProperty('lineEnd');
+    expect(restyleMarks(doc, ['l'], () => ({ lineEnd: 'open-arrow' }), T + 3)).toBe(0);
   });
 });

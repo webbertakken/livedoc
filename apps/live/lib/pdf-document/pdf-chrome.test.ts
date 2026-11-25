@@ -60,7 +60,7 @@ import {
 } from './pdf-menus';
 import { PDF_MODES, type PdfMode } from './pdf-modes';
 import { PDF_SHORTCUTS, PDF_TOOL_KEYS } from './pdf-shortcuts';
-import { OPACITY_ITEMS, STYLE_ITEMS, WIDTH_ITEMS } from './pdf-mark-restyle';
+import { END_ITEMS, OPACITY_ITEMS, STYLE_ITEMS, WIDTH_ITEMS } from './pdf-mark-restyle';
 import {
   PAGE_DISPLAY_CONTROL,
   pdfToolbar,
@@ -115,10 +115,11 @@ describe("a PDF document's menus and toolbar", () => {
     TOOL_SELECT,
     // usePdfMarkSelection.ts: Edit > Delete (marks.md "Changing a mark").
     DELETE_MARKS,
-    // usePdfMarkRestyle.ts: Format > Opacity, Line width and Line style, of the selected marks.
+    // usePdfMarkRestyle.ts: Format > Opacity, Line width, Line style and Line ends, of the selected marks.
     ...Object.keys(OPACITY_ITEMS),
     ...Object.keys(WIDTH_ITEMS),
     ...Object.keys(STYLE_ITEMS),
+    ...Object.keys(END_ITEMS),
     // usePdfMarkTools.ts: the text tools (marks.md "Making a mark").
     TOOL_HIGHLIGHT,
     TOOL_UNDERLINE,
