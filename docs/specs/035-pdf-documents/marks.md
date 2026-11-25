@@ -485,7 +485,9 @@ a mark another person made is refused with `not_your_mark`.
   `[pdf] marks-restyled count=<n> look=<colour|opacity|width|style|fill|end|size|align>` (a pick or a choice),
   `[pdf] marks-deleted count=<n>`, `[pdf] tool-look kind=<kind> look=<width|style|fill>` (a tool's line chosen),
   `[pdf] marks-read count=<n> unknown=<n>` (per open), `[pdf] drawing-joined strokes=<n>` (a stroke joined to a
-  Drawing), `[pdf] typing-dropped kind=<kind>` (a Note, Text or Callout ended with nothing typed).
+  Drawing), `[pdf] typing-dropped kind=<kind>` (a Note, Text or Callout ended with nothing typed),
+  `[pdf] marks-hidden count=<n>` (the file's own marks the pages are drawn without, each time they change),
+  `[pdf] marks-hidden-failed reason=<reason>` (the engine was not told).
 
 ## Errors
 
