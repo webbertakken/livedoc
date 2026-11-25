@@ -24,7 +24,8 @@ the same 1-D data model, while the line chart carries a 2-D dataset (see Model).
   **Edit Data** button opens a **modal** (`LineDataDialog`): a row per category,
   a column per series, add / remove either axis, and an **Import CSV** button
   (header row = series names, first column = category labels). The chart +
-  legend redraw live from the data.
+  legend redraw live from the data. A value cleared to empty, inline or in the modal, is no value (Chart types "No
+  value is a gap"), shown as an empty field.
 - Hovering a mark (slice / bar / line point) shows a readout with its label +
   value, regardless of the legend toggle.
 - A **Chart** context-menu category holds display options: a **Legend**
@@ -110,9 +111,22 @@ Chart" and a screen reader hears "Column chart", as the palette's tile says, nev
   negatives too: its ticks run from a round value under the smallest to one over the largest, zero always a tick.
   A chart with no negative value draws exactly as before (the baseline at the plot's foot). Only a pie reads below
   zero as zero.
+- **No value is a gap.** A datum may have no value: a Sheet cell that is empty or holds no number (text, an error),
+  a value left empty in the data editor, a CSV field that is empty or not a number. A 0 is a value and draws as 0.
+  A chart draws no value as Excel ("Show empty cells as: Gaps") and Google Sheets do by default:
+  - **Line**: the line breaks there; each run of values is its own stretch of line, and a value with no neighbour
+    on either side is its point alone.
+  - **Area**: the area breaks with the line; each run fills down to zero on its own.
+  - **Scatter**: no point for that series at that x.
+  - **Column** and **Bar**: no column (bar) in its slot; the slot and a column's name under the plot stay.
+  - **Pie** and **Doughnut**: no wedge; the others share the whole; the category stays in the legend.
+  - Every type: no value draws no value label (Show Values) and no readout (there is no mark to hover), and
+    takes no part in the value range or Show Axis's ticks. A series with no value at all keeps its place in the
+    legend and draws nothing. Changing type carries no value across as no value.
 - **Scatter's x**: when every category reads as a number (`12`, `-3.5`, `1,200`), each point sits at its number on
   an x-axis running from the least to the greatest (widened by 1 when they are all equal), labelled at five evenly
-  spaced values; otherwise the categories are evenly spaced, as Line's are, and labelled as Line's. Its readout reads
+  spaced values; otherwise the categories are evenly spaced, as Line's are, and labelled as Line's. A category left
+  empty has no x: its points are not drawn, and it does not stop the others reading as numbers. Its readout reads
   `x · series: y`.
 - **The Chart Type section** opens first in the chart's Tools flyout, closed until opened (as every section is): a
   grid of seven tiles, each the type's glyph over its name, the chart's own type pressed. Hovering a tile previews
@@ -131,18 +145,24 @@ Each chart is a `ShapeKind` (`'pie-chart'` / `'bar-chart'` / `'line-chart'`),
 not a new top-level type — so they inherit boxed-element behaviour. `isChartShape`
 groups all three (they're all in `isSelfDrawingShape` too).
 
-- Pie + bar: `ShapeElement.pieSlices?: PieSlice[]` (`{ label, value, color? }`).
+- Pie + bar: `ShapeElement.pieSlices?: PieSlice[]` (`{ label, value, color? }`), `value` a number or `null`
+  (no value, Chart types "No value is a gap").
 - `ShapeElement.chartValues?: boolean`: the numbers on the marks (Show Values); absent means off.
 - `ShapeElement.chartAxis?: boolean`: the value axis, its tick labels and gridlines (Show Axis); absent means off.
   A `LineSeries` may carry `axis?: 'right'`, its own scale (a second axis); any other value reads as absent. The
   axes are laid out with the marks, from `axisScale` and `axisLabelRoom` (`packages/document/src/chart-axis.ts`) for both renderers.
 - Line: `ShapeElement.lineCategories?: string[]` + `lineSeries?: LineSeries[]`
-  (`{ name, color?, values: number[] }`), aligned to the categories — a 2-D
-  dataset. `LINE_DEFAULT_CATEGORIES` / `LINE_DEFAULT_SERIES` seed a fresh chart.
+  (`{ name, color?, values: (number | null)[] }`), aligned to the categories — a 2-D
+  dataset; `null` is no value (Chart types "No value is a gap"). `LINE_DEFAULT_CATEGORIES` / `LINE_DEFAULT_SERIES` seed a fresh chart.
 - **Rows on the way in**: validation refuses a slice that is not `{ label, ... }`, a series that is
   not `{ name, values, ... }` and a category that is not text. A row that arrives malformed anyway
   (stored before, a peer's op, a file) is settled as it enters (`settleChartRows`): a slice or series
   that is not an object is dropped; a label, name or category that is not text reads as its number or flag written out, else as empty, and a series' values that are not a list as none, so categories keep their places.
+- **No value on the way in**: a value is a finite number or no value. Validation takes any value in a series' list or
+  a slice, so data stored before stays valid; every renderer reads one that is not a finite number (`null`, absent,
+  text) as no value (`chartValue`, `packages/document/src/chart-values.ts`). An agent's write is tidied first
+  (`normaliseElements`): a value written as text that reads as a number (`"3"`) is that number, anything else
+  `null`, and a series shorter than its categories is padded with `null`.
 - All three share `pieAnim?` / `pieAnimSpeed?` / `pieAnimRepeat?` / `chartLegend?` / `chartLegendPosition?` and
   `chartVariant?` (`'horizontal' | 'area' | 'scatter' | 'doughnut'`, Chart types above); `chartTypeOf(el)` and
   `chartShapeOf(type)` map between a chart and its type, `chartTypeChange(el, type)` gives the patch that changes it
@@ -161,7 +181,7 @@ groups all three (they're all in `isSelfDrawingShape` too).
   which holds `chartAnim`); the frame, readout and legend are drawn by
   `ChartSurface`; hover wiring in `useChartHover` + `ChartReadout`.
 - CSV import (line): `parseCsvLineData` in `apps/live/lib/csv.ts` (quoted-field
-  aware) turns a pasted/uploaded CSV into categories + series.
+  aware) turns a pasted/uploaded CSV into categories + series; a field that is empty or not a number is no value.
 - Setters in `useChartSetters.ts`, exposed through `useElementStyle.ts`: `setPieDataSelected(slices)` (pie / bar),
   `setLineDataSelected(categories, series)` (line), + `setChartLegendSelected` /
   `setChartLegendPositionSelected` / `setPieAnimSelected`, all gated to chart
