@@ -406,7 +406,7 @@ export const PDF_MENUS: OfficeCatalogue = [
       'Line ends',
       'participate',
       ['None', 'Arrow', 'Open arrow', 'Circle', 'Square', 'Diamond', 'Bar'],
-      ONE_OF,
+      { ...ONE_OF, ...BUILT },
     ),
     SEPARATOR,
     choices('align-text', 'Align text', 'participate', ['Left', 'Centre', 'Right', 'Justified'], {

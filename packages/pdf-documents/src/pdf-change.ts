@@ -5,7 +5,7 @@
 import * as Y from 'yjs';
 import type { FieldValue } from './field-value';
 import { PDF_MAX_MARKS } from './limits';
-import type { DrawingMark, LineStyle, Mark, TextMark } from './mark';
+import type { DrawingMark, LineEnd, LineStyle, Mark, TextMark } from './mark';
 import type { MarkPlace } from './mark-place';
 import type { PageName } from './page-name';
 
@@ -36,6 +36,8 @@ export type MarkLook = Partial<
     Pick<DrawingMark, 'strokes' | 'width'> & {
       /** A line's style; Solid reads as none. */
       readonly lineStyle: LineStyle;
+      /** A Line's or an Arrow's second end; its kind's own reads as none. */
+      readonly lineEnd: LineEnd;
       /** A Rectangle's or an Ellipse's fill, `#rrggbb`; null takes it away. */
       readonly fill: string | null;
     }

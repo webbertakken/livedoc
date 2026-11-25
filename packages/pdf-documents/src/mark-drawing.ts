@@ -15,6 +15,7 @@ import {
 import type {
   CalloutMark,
   DrawingMark,
+  LineEnd,
   LineMark,
   LineStyle,
   Quad,
@@ -25,10 +26,11 @@ import type {
   TextBoxMark,
   TextMarkKind,
 } from './mark';
+import { Mark } from './mark';
 import { StampLayout } from './stamp-layout';
 
 /** What of a mark its drawing reads. */
-export type LineShape = Pick<LineMark, 'kind' | 'line' | 'width' | 'lineStyle'>;
+export type LineShape = Pick<LineMark, 'kind' | 'line' | 'width' | 'lineStyle' | 'lineEnd'>;
 export type BoxShape = Pick<ShapeMark, 'kind' | 'rect' | 'width' | 'lineStyle' | 'fill'>;
 export type TypedShape =
   Pick<TextBoxMark, 'kind' | 'rect'> | Pick<CalloutMark, 'kind' | 'rect' | 'callout'>;
@@ -140,9 +142,16 @@ const line = (points: PagePoint[], width: number, closed = false): MarkStroke =>
   closed,
 });
 
+/** An arrowhead's side, and every line end's size, for a line `width` points wide. */
+const headSide = (width: number): number =>
+  Math.max(PDF_ARROW_HEAD_MIN_PT, PDF_ARROW_HEAD_WIDTHS * width);
+
+/** The points of a line end's Circle: enough that no side of it shows at the sizes a head is drawn. */
+const RING_POINTS = 24;
+
 /** An open arrowhead at `tip`, pointing away from `from`: one side, the tip, the other side. */
 function head(from: PagePoint, tip: PagePoint, width: number): PagePoint[] {
-  const side = Math.max(PDF_ARROW_HEAD_MIN_PT, PDF_ARROW_HEAD_WIDTHS * width);
+  const side = headSide(width);
   const length = Math.hypot(tip.x - from.x, tip.y - from.y);
   if (length === 0) return [tip, tip, tip];
   const back = Math.atan2(from.y - tip.y, from.x - tip.x);
@@ -153,12 +162,56 @@ function head(from: PagePoint, tip: PagePoint, width: number): PagePoint[] {
   return [wing(-ARROW_HEAD_ANGLE), tip, wing(ARROW_HEAD_ANGLE)];
 }
 
-function lineDrawing({ kind, line: [x1, y1, x2, y2], width, lineStyle }: LineShape): MarkDrawing {
+/** A line end at `tip`, its line coming from `from` (marks.md "Changing a mark": how a line end is drawn). */
+function endDrawing(end: LineEnd, from: PagePoint, tip: PagePoint, width: number): MarkDrawing {
+  if (end === 'none') return { fills: [], strokes: [] };
+  if (end === 'open-arrow') return { fills: [], strokes: [line(head(from, tip, width), width)] };
+  if (end === 'arrow') {
+    const wings = head(from, tip, width);
+    return { fills: [wings], strokes: [line(wings, width, true)] };
+  }
+  const half = headSide(width) / 2;
+  const length = Math.hypot(tip.x - from.x, tip.y - from.y);
+  // Along the line towards its tip, and across it; a line of no length stands its end upright.
+  const along =
+    length === 0 ? { x: 1, y: 0 } : { x: (tip.x - from.x) / length, y: (tip.y - from.y) / length };
+  const across = { x: -along.y, y: along.x };
+  const at = (a: number, c: number): PagePoint => ({
+    x: tip.x + along.x * a + across.x * c,
+    y: tip.y + along.y * a + across.y * c,
+  });
+  const outlines: Readonly<Record<'circle' | 'square' | 'diamond' | 'bar', () => MarkStroke>> = {
+    circle: () =>
+      line(
+        Array.from({ length: RING_POINTS }, (_, n) => {
+          const angle = (n / RING_POINTS) * 2 * Math.PI;
+          return at(half * Math.cos(angle), half * Math.sin(angle));
+        }),
+        width,
+        true,
+      ),
+    square: () =>
+      line([at(half, half), at(half, -half), at(-half, -half), at(-half, half)], width, true),
+    diamond: () => line([at(half, 0), at(0, -half), at(-half, 0), at(0, half)], width, true),
+    bar: () => line([at(0, half), at(0, -half)], width),
+  };
+  return { fills: [], strokes: [outlines[end]()] };
+}
+
+function lineDrawing({
+  kind,
+  line: [x1, y1, x2, y2],
+  width,
+  lineStyle,
+  lineEnd,
+}: LineShape): MarkDrawing {
   const from = { x: x1, y: y1 };
   const to = { x: x2, y: y2 };
-  const strokes = [styled(line([from, to], width), lineStyle)];
-  if (kind === 'arrow') strokes.push(line(head(from, to, width), width));
-  return { fills: [], strokes };
+  const end = endDrawing(lineEnd ?? Mark.firstEnd(kind), from, to, width);
+  return {
+    fills: end.fills,
+    strokes: [styled(line([from, to], width), lineStyle), ...end.strokes],
+  };
 }
 
 /** A Rectangle's or an Ellipse's outline, styled, and its fill inside it. */

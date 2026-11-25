@@ -10,6 +10,7 @@ import {
   PDF_TEXT_SIZE_MIN_PT,
 } from './limits';
 import {
+  LINE_ENDS,
   LINE_STYLES,
   Mark,
   type DrawingInput,
@@ -365,5 +366,47 @@ describe('a line style and a fill', () => {
     delete (highlight as Record<string, unknown>).width;
     expect(Mark.parse({ ...highlight, lineStyle: 'dashed', fill: '#fdf1a9' })).toEqual(highlight);
     expect(Mark.parse({ ...marks.line, fill: '#fdf1a9' })).toEqual(marks.line);
+  });
+});
+
+// marks.md "Changing a mark": a Line's and an Arrow's second end (Format > Line ends).
+describe('a line end', () => {
+  const base = {
+    id: 'm1',
+    page: 'p:4',
+    width: 2,
+    colour: '#d93025',
+    opacity: 1,
+    author: 'Ada',
+    createdAt: 1_795_000_000_000,
+    modifiedAt: 1_795_000_000_000,
+    line: [1, 2, 3, 4],
+  };
+
+  it('reads back every end on a Line and an Arrow', () => {
+    for (const kind of ['line', 'arrow'] as const)
+      for (const lineEnd of LINE_ENDS.filter((end) => end !== Mark.firstEnd(kind)))
+        expect(Mark.parse({ ...base, kind, lineEnd })).toEqual({ ...base, kind, lineEnd });
+  });
+
+  it('holds a kind’s own end as none at all, so a Line and an Arrow read as they always did', () => {
+    expect(Mark.firstEnd('line')).toBe('none');
+    expect(Mark.firstEnd('arrow')).toBe('open-arrow');
+    expect(Mark.parse({ ...base, kind: 'line', lineEnd: 'none' })).toEqual({
+      ...base,
+      kind: 'line',
+    });
+    expect(Mark.parse({ ...base, kind: 'arrow', lineEnd: 'open-arrow' })).toEqual({
+      ...base,
+      kind: 'arrow',
+    });
+    expect(Mark.parse({ ...base, kind: 'arrow', lineEnd: null })).toEqual({
+      ...base,
+      kind: 'arrow',
+    });
+  });
+
+  it('refuses an end it does not know', () => {
+    expect(Mark.parse({ ...base, kind: 'line', lineEnd: 'slash' })).toBeNull();
   });
 });

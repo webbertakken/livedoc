@@ -2,7 +2,7 @@
 
 // Restyling the selected marks (docs/specs/035-pdf-documents/marks.md "Changing a mark"): the toolbar's Colour is
 // theirs while Select is in hand, blank where they differ, Reset giving each its kind's first look; its Fill the selected
-// Rectangles' and Ellipses', led by None; Format > Opacity, Line width and Line style set a step, checked where every mark it reaches holds it, dimmed while none has what it sets. Each restyle
+// Rectangles' and Ellipses', led by None; Format > Opacity, Line width, Line style and Line ends set a step, checked where every mark it reaches holds it, dimmed while none has what it sets. Each restyle
 // is one step of the person's undo, and gives the pages the keys. Marks are Reviewing's: while `marking` is off nothing
 // is bound.
 import { useMemo, useSyncExternalStore } from 'react';
@@ -12,8 +12,10 @@ import { debugLog } from '@/lib/debug-log';
 import type { OfficeActions } from '@/lib/office/office-catalogue';
 import { track } from '@/lib/telemetry';
 import {
+  END_ITEMS,
   fillOf,
   firstColour,
+  lineEndOf,
   lineStyleOf,
   OPACITY_ITEMS,
   restyleMarks,
@@ -112,6 +114,8 @@ export function usePdfMarkRestyle({
     const width = sharedOf(selected, widthOf);
     const style = sharedOf(selected, lineStyleOf);
     const lined = selected.some((mark) => widthOf(mark) !== undefined);
+    const end = sharedOf(selected, lineEndOf);
+    const ended = selected.some((mark) => lineEndOf(mark) !== undefined);
     const actions: OfficeActions = {
       ...Object.fromEntries(
         Object.entries(OPACITY_ITEMS).map(([id, value]) => [
@@ -140,6 +144,16 @@ export function usePdfMarkRestyle({
             run: () => restyle('style', () => ({ lineStyle: value })),
             checked: style === value,
             disabled: !lined,
+          },
+        ]),
+      ),
+      ...Object.fromEntries(
+        Object.entries(END_ITEMS).map(([id, value]) => [
+          id,
+          {
+            run: () => restyle('end', () => ({ lineEnd: value })),
+            checked: end === value,
+            disabled: !ended,
           },
         ]),
       ),

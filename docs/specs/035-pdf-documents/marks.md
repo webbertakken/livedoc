@@ -9,7 +9,7 @@ and remembered; and the engine reads every mark a file holds, of any kind, as th
 others as it is drawn, words shown to others as they are typed, a face for every script, a tool's other looks,
 snapping, every other kind made here, custom stamps and Manage stamps, and the room's own-marks check are not built.
 Of changing a mark, selecting, moving, resizing and deleting a mark made here, and restyling its colour, opacity, line
-width, line style and fill, are built; its line ends, font, size and alignment, Format > Colour and Fill colour, a
+width, line style, fill and line end, are built; its font, size and alignment, Format > Colour and Fill colour, a
 tool's remembered width, style and fill, rotating, arranging, grouping, locking, copying, Properties, Erase and the
 file's own marks are not.
 
@@ -183,6 +183,12 @@ written into the file as a standard annotation, so any reader shows it. The rese
 - **The selected marks' fill** `(default)`: with Select in hand and a Rectangle or an Ellipse selected, the toolbar's
   Fill is theirs, the one colour picker led by **None**; a pick fills every selected Rectangle and Ellipse inside its
   line, and None takes the fill away. A filled Rectangle or Ellipse is reached by a press anywhere inside it.
+- **Format > Line ends** gives every selected Line and Arrow the end chosen at its second end, where an Arrow's head
+  is, its first end staying bare; a Line's end is None and an Arrow's Open arrow until changed `(default)`.
+- **How a line end is drawn** `(default)`, at the end, as big as an Arrow's head (`PDF_ARROW_HEAD_WIDTHS` widths,
+  `PDF_ARROW_HEAD_MIN_PT` at the least), in the line's colour and width, solid: Open arrow its two lines; Arrow the
+  same closed and filled; Circle a ring that size across and Square and Diamond its outline, each centred on the end;
+  Bar a line that long square across it.
 - Each restyle is one step of undo, and leaves the tool's remembered look as it was `(default)`.
 - **Rotate**: stamps, Text and shapes turn by a handle, snapping at 15°.
 - **Arrange**: bring forward, send backward, to front, to back, among the marks of its page.
@@ -332,7 +338,8 @@ question mark. The research is [Every script in a mark's words](../../research/p
 - A mark changed or deleted in LiveDoc is written as the changed or removed annotation in the same addition; the
   stored file's bytes still hold the original, as an incremental update does. Removing it from the bytes for good is
   [removing hidden information](redaction-and-protection.md#removing-hidden-information).
-- **A Line** is written with its two ends as `L` and an Arrow's head as `LE` `OpenArrow`; **a Rectangle** and
+- **A Line** is written with its two ends as `L` and its second end's look as `LE`: `None`, `ClosedArrow`,
+  `OpenArrow`, `Circle`, `Square`, `Diamond` or `Butt`; **a Rectangle** and
   **an Ellipse** with `Rect` the box grown by half the line's width, so the line falls where it was drawn. Their
   appearance streams are drawn from what the page shows of them, line for line. A line style other than Solid is
   written as `BS` `S` `D` with `D` its pattern, a Drawing's too, and a fill as `IC`.
@@ -436,7 +443,7 @@ a mark another person made is refused with `not_your_mark`.
   pick or a choice, `Mark.Restyled`; a deletion once a mark, `Mark.<Kind>` of its kind.
 - Fingerprints: `[pdf] mark-added kind=<kind>`, `[pdf] mark-refused name=<name>`,
   `[pdf] marks-moved count=<n>` (a drag or a key press), `[pdf] mark-resized kind=<kind>`,
-  `[pdf] marks-restyled count=<n> look=<colour|opacity|width|style|fill>` (a pick or a choice),
+  `[pdf] marks-restyled count=<n> look=<colour|opacity|width|style|fill|end>` (a pick or a choice),
   `[pdf] marks-deleted count=<n>`,
   `[pdf] marks-read count=<n> unknown=<n>` (per open), `[pdf] drawing-joined strokes=<n>` (a stroke joined to a
   Drawing), `[pdf] typing-dropped kind=<kind>` (a Note, Text or Callout ended with nothing typed).

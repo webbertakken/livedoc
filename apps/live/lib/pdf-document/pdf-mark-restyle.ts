@@ -5,10 +5,12 @@
 // it is one step of their undo, made from the marks as the live changes hold them now.
 import type * as Y from 'yjs';
 import {
+  Mark as Marks,
   PdfChange,
   PdfLiveChanges,
   Stamps,
   type DrawingMark,
+  type LineEnd,
   type LineMark,
   type LineStyle,
   type Mark,
@@ -20,7 +22,7 @@ import { STAMP_COLOURS } from './pdf-stamp';
 import { PDF_LOCAL_ORIGIN } from './pdf-undo';
 
 /** What a restyle sets, as `[pdf] marks-restyled look=<…>` names it. */
-export type RestyledLook = 'colour' | 'opacity' | 'width' | 'style' | 'fill';
+export type RestyledLook = 'colour' | 'opacity' | 'width' | 'style' | 'fill' | 'end';
 
 /** Format > Opacity's steps (reading-surface.md "Format"), by item id. */
 export const OPACITY_ITEMS: Readonly<Record<string, number>> = {
@@ -50,6 +52,17 @@ export const STYLE_ITEMS: Readonly<Record<string, LineStyle>> = {
   'line-style-long-dashes': 'long-dashes',
 };
 
+/** Format > Line ends' ends, by item id. */
+export const END_ITEMS: Readonly<Record<string, LineEnd>> = {
+  'line-ends-none': 'none',
+  'line-ends-arrow': 'arrow',
+  'line-ends-open-arrow': 'open-arrow',
+  'line-ends-circle': 'circle',
+  'line-ends-square': 'square',
+  'line-ends-diamond': 'diamond',
+  'line-ends-bar': 'bar',
+};
+
 /** A mark drawn as a line: a Drawing, a Line, an Arrow, a Rectangle or an Ellipse. */
 type LinedMark = DrawingMark | LineMark | ShapeMark;
 
@@ -61,6 +74,12 @@ export const widthOf = (mark: Mark): number | undefined => (isLined(mark) ? mark
 /** A mark's line style, Solid where it holds none; undefined for a mark with no line. */
 export const lineStyleOf = (mark: Mark): LineStyle | undefined =>
   isLined(mark) ? (mark.lineStyle ?? 'solid') : undefined;
+
+/** A Line's or an Arrow's second end, its kind's own where it names none; undefined for any other mark. */
+export const lineEndOf = (mark: Mark): LineEnd | undefined =>
+  mark.kind === 'line' || mark.kind === 'arrow'
+    ? (mark.lineEnd ?? Marks.firstEnd(mark.kind))
+    : undefined;
 
 /** A Rectangle's or an Ellipse's fill, null for none; undefined for a mark that takes no fill. */
 export const fillOf = (mark: Mark): string | null | undefined =>
@@ -88,11 +107,13 @@ export function sharedOf<Value>(
  *  nothing it holds already. */
 function changeOf(mark: Mark, look: MarkLook): MarkLook {
   const fill = fillOf(mark);
+  const end = lineEndOf(mark);
   const asked: MarkLook = {
     ...(look.colour === undefined ? {} : { colour: look.colour.toLowerCase() }),
     ...(look.opacity === undefined ? {} : { opacity: look.opacity }),
     ...(look.width === undefined || !isLined(mark) ? {} : { width: look.width }),
     ...(look.lineStyle === undefined || !isLined(mark) ? {} : { lineStyle: look.lineStyle }),
+    ...(look.lineEnd === undefined || end === undefined ? {} : { lineEnd: look.lineEnd }),
     ...(look.fill === undefined || fill === undefined
       ? {}
       : { fill: look.fill?.toLowerCase() ?? null }),
@@ -101,6 +122,7 @@ function changeOf(mark: Mark, look: MarkLook): MarkLook {
     ...mark,
     ...(isLined(mark) ? { lineStyle: lineStyleOf(mark) } : {}),
     ...(fill === undefined ? {} : { fill }),
+    ...(end === undefined ? {} : { lineEnd: end }),
   } as Readonly<Record<string, unknown>>;
   return Object.fromEntries(
     Object.entries(asked).filter(([key, value]) => held[key] !== value),

@@ -51,6 +51,21 @@ export type MarkKind = (typeof MARK_KINDS)[number];
 export const LINE_STYLES = ['solid', 'dashed', 'dotted', 'dash-dot', 'long-dashes'] as const;
 export type LineStyle = (typeof LINE_STYLES)[number];
 
+/** A Line's or an Arrow's second end (marks.md "Changing a mark": Format > Line ends). */
+export const LINE_ENDS = [
+  'none',
+  'arrow',
+  'open-arrow',
+  'circle',
+  'square',
+  'diamond',
+  'bar',
+] as const;
+export type LineEnd = (typeof LINE_ENDS)[number];
+
+/** Each line kind's end until changed: a Line's bare, an Arrow's an open head. */
+const FIRST_ENDS = { line: 'none', arrow: 'open-arrow' } as const satisfies Record<string, LineEnd>;
+
 /** The kinds made by selecting text (marks.md "Kinds"): each is the glyphs it covers. */
 export type TextMarkKind = (typeof TEXT_MARK_KINDS)[number];
 /** The kinds made by a drag from one end to the other. */
@@ -99,6 +114,8 @@ export type DrawingMark = MarkBase &
 export type LineMark = MarkBase &
   Lined & {
     readonly kind: LineMarkKind;
+    /** Its second end's look; absent for its kind's own (Mark.firstEnd). */
+    readonly lineEnd?: LineEnd;
     readonly line: Segment;
     /** The line's width in points. */
     readonly width: number;
@@ -250,13 +267,18 @@ function drawingOf(base: MarkBase, v: Record<string, unknown>): DrawingMark | nu
 function lineOf(base: MarkBase, v: Record<string, unknown>): LineMark | null {
   const lined = lineStyleOf(v);
   if (!isFour(v.line) || !isWidth(v.width) || !lined) return null;
+  const kind = v.kind as LineMarkKind;
+  const { lineEnd } = v;
+  const named = lineEnd !== undefined && lineEnd !== null && lineEnd !== FIRST_ENDS[kind];
+  if (named && !LINE_ENDS.includes(lineEnd as LineEnd)) return null;
   const [x1, y1, x2, y2] = v.line;
   return {
     ...base,
-    kind: v.kind as LineMarkKind,
+    kind,
     line: [x1, y1, x2, y2],
     width: v.width,
     ...lined,
+    ...(named ? { lineEnd: lineEnd as LineEnd } : {}),
   };
 }
 
@@ -367,6 +389,9 @@ export const Mark = {
   /** A stamp in a box, or null when what is given is no stamp. */
   stamp: (input: StampInput): StampMark | null =>
     Mark.parse({ ...input, kind: 'stamp', modifiedAt: input.createdAt }) as StampMark | null,
+
+  /** A Line's or an Arrow's second end until changed. */
+  firstEnd: (kind: LineMarkKind): LineEnd => FIRST_ENDS[kind],
 
   /** Whether a mark is a Text or a Callout. */
   isTyped: (mark: Mark): mark is TypedMark =>

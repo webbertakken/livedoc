@@ -224,11 +224,15 @@ test('the selected marks are restyled from the Colour control and the Format men
     'stroke-dasharray',
     '24 16',
   );
+  // Format > Line ends gives the Arrow a closed head: filled, as one polygon, its line no longer two polylines.
+  await (await officeMenuItem(page, ['Format', 'Line ends', 'Arrow'])).click();
+  await expect(kind('arrow').locator('polyline')).toHaveCount(1);
+  await expect(kind('arrow').locator('polygon')).toHaveCount(2);
   await page.screenshot({ path: test.info().outputPath('pdf-mark-restyle.png') });
 
-  // Undo takes back the fill, the style, the width, the opacity, then the colour.
+  // Undo takes back the end, the fill, the style, the width, the opacity, then the colour.
   await page.locator('[data-pdf-pages]').focus();
-  for (let step = 0; step < 5; step += 1) await page.keyboard.press('ControlOrMeta+z');
+  for (let step = 0; step < 6; step += 1) await page.keyboard.press('ControlOrMeta+z');
   await expect(kind('rectangle').locator('polygon')).toHaveCount(1);
   await expect(kind('rectangle')).toHaveAttribute('stroke', red);
   await expect(kind('rectangle')).toHaveAttribute('opacity', '1');

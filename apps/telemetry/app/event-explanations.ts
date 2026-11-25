@@ -961,7 +961,7 @@ export const EXACT: Readonly<Record<string, string>> = {
   'Pdf|Changed|Mark.Resized':
     'Someone resized a mark on a PDF page, by a handle or with ⌥ and the arrow keys.',
   'Pdf|Changed|Mark.Restyled':
-    'Someone gave marks on a PDF page a new colour, opacity, line width, line style or fill.',
+    'Someone gave marks on a PDF page a new colour, opacity, line width, line style, fill or line end.',
   'Pdf|Changed|Mark.Moved':
     'Someone moved marks on a PDF page, by dragging them or with the arrow keys.',
   'Pdf|Deleted|Mark.Highlight': 'Someone deleted a highlight from a PDF page.',
