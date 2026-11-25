@@ -162,6 +162,16 @@ describe('the spreadsheet header menus', () => {
     expect(layout(h).hiddenRows).toHaveLength(1);
   });
 
+  // parity-matrix.md "Context menu: a row header", "a column header": Conditional Formatting, built.
+  it('offers Conditional Formatting on a row number and a column letter', () => {
+    show(h, ROW, { at: 'A2:Z2' });
+    expect(names()).toContain('Conditional Formatting');
+    expect(item('Conditional Formatting').getAttribute('aria-disabled')).toBeNull();
+    act(() => h.ctl().setMenu(COLUMN));
+    expect(names()).toContain('Conditional Formatting');
+    expect(item('Conditional Formatting').getAttribute('aria-disabled')).toBeNull();
+  });
+
   it('opens the Resize dialog over the row, which stays open', () => {
     show(h, ROW, { at: 'A2:Z2' });
     fireEvent.click(item('Resize Row 2'));

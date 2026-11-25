@@ -1,6 +1,8 @@
 # Formatting
 
-**Status: partly built.** Number formats, Font Size, Text Colour and Fill Colour are built.
+**Status: built.** Number formats, fonts, colours, borders, alignment, wrapping, rotation, merges, paint format, clear
+formatting, themes, conditional formatting and alternating colours are built, each row of the [parity
+matrix](parity-matrix.md) naming its test.
 
 How a [spreadsheet](spreadsheet.md)'s cells are drawn: number formats, text, colours, borders, alignment, merges,
 themes, conditional formatting and alternating colours, as Google Sheets does. Its rows of the
