@@ -10,6 +10,9 @@ file formats, drawn by LiveDoc's chart code. Research: [Charts and pivots](../..
 - A chart belongs to a sheet: anchored at a cell's corner with an offset and a size, floating over the cells, or on
   a **chart sheet** of its own (**Move to Own Sheet**). It is never a canvas element.
 - It reads its data ranges live, by row and column ids, as today's charts from a Sheet do ([Sheet](sheet.md#charts)).
+- It inherits their empty cells: a cell that is empty or holds no number is no value, a gap, never 0
+  ([No value is a gap](../009-elements/pie-chart.md#chart-types)). Customise's **Plot Null Values** is the one way
+  to join a line across a gap, as Google's is.
 - It is drawn by the chart drawing code of `@livedoc/document`, made a pure function of a chart's model and its data:
   the shared piece "charts" this plan owns, which plan 0019's documents use too.
 - ODF keeps it as an embedded chart document, XLSX as a DrawingML chart, each read and written by its mapping

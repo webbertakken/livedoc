@@ -3,7 +3,7 @@
 // the sheet wherever it is drawn (the editor, an export, a thumbnail); the element's own data is the last read,
 // kept for anything that cannot read the sheet. Pure, and free of the sheets engine.
 import { PLAN_SHEET_ID_PATTERN } from './element-types';
-import type { LineSeries, PieSlice } from './data-shapes';
+import { chartValue, type LineSeries, type PieSlice } from './data-shapes';
 import { chartTypeOf } from './chart-types';
 
 export type ChartSource = {
@@ -17,10 +17,10 @@ export type ChartSource = {
 export const CHART_SOURCE_COLS_MAX = 13;
 
 // The table a range holds (@livedoc/sheets SheetChartTable, restated): one category per row, one series per
-// value column.
+// value column, null where a cell holds no number (pie-chart.md "No value is a gap").
 type ChartTable = {
   categories: string[];
-  series: { name: string; values: number[] }[];
+  series: { name: string; values: (number | null)[] }[];
 };
 
 // A sheet's row or column id (@livedoc/sheets AXIS_ID_PATTERN, repeated so this package never imports it).
@@ -130,7 +130,10 @@ export function chartFieldsFromTable(
   if (el.shape === 'line-chart') {
     const xFromFirst =
       chartTypeOf(el) === 'scatter' && t.series.length >= 2 && numbered(t.categories);
-    const categories = xFromFirst ? t.series[0]!.values.map(String) : t.categories;
+    // An empty x cell is an empty category: no x, so its points are not drawn.
+    const categories = xFromFirst
+      ? t.series[0]!.values.map((x) => (x === null ? '' : String(x)))
+      : t.categories;
     const series = xFromFirst ? t.series.slice(1) : t.series;
     return {
       lineCategories: categories,
@@ -144,10 +147,10 @@ export function chartFieldsFromTable(
   return {
     pieSlices: t.categories.map((label, i) => {
       const color = el.pieSlices?.[i]?.color;
-      const v = first[i] ?? 0;
+      const v = chartValue(first[i]);
       return {
         label,
-        value: el.shape === 'pie-chart' ? Math.max(0, v) : v,
+        value: v !== null && el.shape === 'pie-chart' ? Math.max(0, v) : v,
         ...(color ? { color } : {}),
       };
     }),

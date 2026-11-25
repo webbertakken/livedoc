@@ -1,7 +1,8 @@
 // A chart's data from a sheet range (docs/specs/029-sheets/sheet.md "Charts"): the range by stable row and column ids,
 // so it grows with rows inserted inside it and follows moves. Read as a spreadsheet does: a first row with no numbers
 // in it names the series, a first column of text (or dates) labels the categories, and every other column is one
-// series. Rows a filter hides are left out. Pure: the editor, exports and the api thumbnail all read it.
+// series. A cell that is empty or holds no number is no value (null), never 0 (docs/specs/009-elements/pie-chart.md
+// "No value is a gap"). Rows a filter hides are left out. Pure: the editor, exports and the api thumbnail all read it.
 import { layoutIndex, posRangeOf } from './layout';
 import { columnLetters } from './address';
 import { cellKey, type IdRange, type NumberFormatKind } from './sheet';
@@ -16,8 +17,8 @@ type SheetChartLink = { sheetId: string; range: IdRange; cols?: readonly string[
 export type SheetChartTable = {
   // The category labels, one per row of data.
   categories: string[];
-  // One per value column, its name from the header row (or its column letter).
-  series: { name: string; values: number[] }[];
+  // One per value column, its name from the header row (or its column letter); null where a cell holds no number.
+  series: { name: string; values: (number | null)[] }[];
 };
 
 // Bounds: a chart past these is unreadable, and they keep a read cheap on a huge range.
@@ -81,7 +82,7 @@ export function sheetChartTable(
       name: (headed ? text(rows[0]!, c) : '') || `Column ${columnLetters(c)}`,
       values: body.map((r) => {
         const v = value(r, c);
-        return isNumber(v) ? v : 0;
+        return isNumber(v) ? v : null;
       }),
     })),
   };

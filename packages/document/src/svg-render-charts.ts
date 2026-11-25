@@ -183,10 +183,12 @@ export function svgBarChart(
     )
     .join('');
   const baseline = `<path d="M ${r2(b.x1)} ${r2(b.y1)} L ${r2(b.x2)} ${r2(b.y2)}" stroke="${AXIS}" stroke-width="1"/>`;
+  // No value draws no bar (pie-chart.md "No value is a gap").
   const rects = bars
-    .map(
-      (bar, i) =>
-        `<rect x="${r2(bar.x)}" y="${r2(bar.y)}" width="${r2(bar.w)}" height="${r2(bar.h)}" rx="${r2(bar.rx)}" fill="${xmlEscape(colorAt(i, data[i]!))}"/>`,
+    .map((bar, i) =>
+      bar
+        ? `<rect x="${r2(bar.x)}" y="${r2(bar.y)}" width="${r2(bar.w)}" height="${r2(bar.h)}" rx="${r2(bar.rx)}" fill="${xmlEscape(colorAt(i, data[i]!))}"/>`
+        : '',
     )
     .join('');
   const px = chartValueFontPx(el.textSize);
@@ -271,10 +273,11 @@ export function svgLineChart(
         ? `<path d="${m.areas[si]}" fill="${color}" fill-opacity="${AREA_FILL_OPACITY}"/>`
         : '';
       const line = m.lines[si]
-        ? `<polyline points="${m.lines[si]}" fill="none" stroke="${color}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`
+        ? `<path d="${m.lines[si]}" fill="none" stroke="${color}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`
         : '';
-      const dots = m.points[si]!.map(
-        (p) => `<circle cx="${r2(p.x)}" cy="${r2(p.y)}" r="${m.dot}" fill="${color}"/>`,
+      // No value draws no point (pie-chart.md "No value is a gap").
+      const dots = m.points[si]!.map((p) =>
+        p ? `<circle cx="${r2(p.x)}" cy="${r2(p.y)}" r="${m.dot}" fill="${color}"/>` : '',
       ).join('');
       return fill + line + dots;
     })

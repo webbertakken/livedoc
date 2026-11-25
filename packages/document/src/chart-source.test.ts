@@ -105,7 +105,8 @@ describe('a chart drawn from a sheet range', () => {
     });
     expect(chartFieldsFromTable({ shape: 'bar-chart' }, { categories: ['a'], series: [] })).toEqual(
       {
-        pieSlices: [{ label: 'a', value: 0 }],
+        // No series is no value for its category (pie-chart.md "No value is a gap").
+        pieSlices: [{ label: 'a', value: null }],
       },
     );
   });
