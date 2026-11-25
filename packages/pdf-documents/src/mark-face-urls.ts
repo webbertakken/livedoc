@@ -3,160 +3,52 @@
 // bundles the engine, fetched from LiveDoc's own origin only when a bake's marks need it.
 
 export const MARK_FACE_URLS: Readonly<Record<string, () => URL>> = {
-  'noto-sans/files/noto-sans-latin-400-normal.woff': () =>
-    new URL('@fontsource/noto-sans/files/noto-sans-latin-400-normal.woff', import.meta.url),
-  'noto-sans/files/noto-sans-latin-ext-400-normal.woff': () =>
-    new URL('@fontsource/noto-sans/files/noto-sans-latin-ext-400-normal.woff', import.meta.url),
-  'noto-sans/files/noto-sans-vietnamese-400-normal.woff': () =>
-    new URL('@fontsource/noto-sans/files/noto-sans-vietnamese-400-normal.woff', import.meta.url),
-  'noto-sans/files/noto-sans-greek-400-normal.woff': () =>
-    new URL('@fontsource/noto-sans/files/noto-sans-greek-400-normal.woff', import.meta.url),
-  'noto-sans/files/noto-sans-greek-ext-400-normal.woff': () =>
-    new URL('@fontsource/noto-sans/files/noto-sans-greek-ext-400-normal.woff', import.meta.url),
-  'noto-sans/files/noto-sans-cyrillic-400-normal.woff': () =>
-    new URL('@fontsource/noto-sans/files/noto-sans-cyrillic-400-normal.woff', import.meta.url),
-  'noto-sans/files/noto-sans-cyrillic-ext-400-normal.woff': () =>
-    new URL('@fontsource/noto-sans/files/noto-sans-cyrillic-ext-400-normal.woff', import.meta.url),
-  'noto-sans/files/noto-sans-devanagari-400-normal.woff': () =>
-    new URL('@fontsource/noto-sans/files/noto-sans-devanagari-400-normal.woff', import.meta.url),
-  'noto-sans/files/noto-sans-latin-700-normal.woff': () =>
-    new URL('@fontsource/noto-sans/files/noto-sans-latin-700-normal.woff', import.meta.url),
-  'noto-sans/files/noto-sans-latin-ext-700-normal.woff': () =>
-    new URL('@fontsource/noto-sans/files/noto-sans-latin-ext-700-normal.woff', import.meta.url),
-  'noto-sans/files/noto-sans-vietnamese-700-normal.woff': () =>
-    new URL('@fontsource/noto-sans/files/noto-sans-vietnamese-700-normal.woff', import.meta.url),
-  'noto-sans/files/noto-sans-greek-700-normal.woff': () =>
-    new URL('@fontsource/noto-sans/files/noto-sans-greek-700-normal.woff', import.meta.url),
-  'noto-sans/files/noto-sans-greek-ext-700-normal.woff': () =>
-    new URL('@fontsource/noto-sans/files/noto-sans-greek-ext-700-normal.woff', import.meta.url),
-  'noto-sans/files/noto-sans-cyrillic-700-normal.woff': () =>
-    new URL('@fontsource/noto-sans/files/noto-sans-cyrillic-700-normal.woff', import.meta.url),
-  'noto-sans/files/noto-sans-cyrillic-ext-700-normal.woff': () =>
-    new URL('@fontsource/noto-sans/files/noto-sans-cyrillic-ext-700-normal.woff', import.meta.url),
-  'noto-sans/files/noto-sans-devanagari-700-normal.woff': () =>
-    new URL('@fontsource/noto-sans/files/noto-sans-devanagari-700-normal.woff', import.meta.url),
-  'noto-sans-hebrew/files/noto-sans-hebrew-hebrew-400-normal.woff': () =>
-    new URL(
-      '@fontsource/noto-sans-hebrew/files/noto-sans-hebrew-hebrew-400-normal.woff',
-      import.meta.url,
-    ),
-  'noto-sans-arabic/files/noto-sans-arabic-arabic-400-normal.woff': () =>
-    new URL(
-      '@fontsource/noto-sans-arabic/files/noto-sans-arabic-arabic-400-normal.woff',
-      import.meta.url,
-    ),
-  'noto-sans-armenian/files/noto-sans-armenian-armenian-400-normal.woff': () =>
-    new URL(
-      '@fontsource/noto-sans-armenian/files/noto-sans-armenian-armenian-400-normal.woff',
-      import.meta.url,
-    ),
-  'noto-sans-georgian/files/noto-sans-georgian-georgian-400-normal.woff': () =>
-    new URL(
-      '@fontsource/noto-sans-georgian/files/noto-sans-georgian-georgian-400-normal.woff',
-      import.meta.url,
-    ),
-  'noto-sans-thai/files/noto-sans-thai-thai-400-normal.woff': () =>
-    new URL(
-      '@fontsource/noto-sans-thai/files/noto-sans-thai-thai-400-normal.woff',
-      import.meta.url,
-    ),
-  'noto-sans-lao/files/noto-sans-lao-lao-400-normal.woff': () =>
-    new URL('@fontsource/noto-sans-lao/files/noto-sans-lao-lao-400-normal.woff', import.meta.url),
-  'noto-sans-khmer/files/noto-sans-khmer-khmer-400-normal.woff': () =>
-    new URL(
-      '@fontsource/noto-sans-khmer/files/noto-sans-khmer-khmer-400-normal.woff',
-      import.meta.url,
-    ),
-  'noto-sans-myanmar/files/noto-sans-myanmar-myanmar-400-normal.woff': () =>
-    new URL(
-      '@fontsource/noto-sans-myanmar/files/noto-sans-myanmar-myanmar-400-normal.woff',
-      import.meta.url,
-    ),
-  'noto-sans-ethiopic/files/noto-sans-ethiopic-ethiopic-400-normal.woff': () =>
-    new URL(
-      '@fontsource/noto-sans-ethiopic/files/noto-sans-ethiopic-ethiopic-400-normal.woff',
-      import.meta.url,
-    ),
-  'noto-sans-sinhala/files/noto-sans-sinhala-sinhala-400-normal.woff': () =>
-    new URL(
-      '@fontsource/noto-sans-sinhala/files/noto-sans-sinhala-sinhala-400-normal.woff',
-      import.meta.url,
-    ),
-  'noto-sans-bengali/files/noto-sans-bengali-bengali-400-normal.woff': () =>
-    new URL(
-      '@fontsource/noto-sans-bengali/files/noto-sans-bengali-bengali-400-normal.woff',
-      import.meta.url,
-    ),
-  'noto-sans-gujarati/files/noto-sans-gujarati-gujarati-400-normal.woff': () =>
-    new URL(
-      '@fontsource/noto-sans-gujarati/files/noto-sans-gujarati-gujarati-400-normal.woff',
-      import.meta.url,
-    ),
-  'noto-sans-gurmukhi/files/noto-sans-gurmukhi-gurmukhi-400-normal.woff': () =>
-    new URL(
-      '@fontsource/noto-sans-gurmukhi/files/noto-sans-gurmukhi-gurmukhi-400-normal.woff',
-      import.meta.url,
-    ),
-  'noto-sans-kannada/files/noto-sans-kannada-kannada-400-normal.woff': () =>
-    new URL(
-      '@fontsource/noto-sans-kannada/files/noto-sans-kannada-kannada-400-normal.woff',
-      import.meta.url,
-    ),
-  'noto-sans-malayalam/files/noto-sans-malayalam-malayalam-400-normal.woff': () =>
-    new URL(
-      '@fontsource/noto-sans-malayalam/files/noto-sans-malayalam-malayalam-400-normal.woff',
-      import.meta.url,
-    ),
-  'noto-sans-oriya/files/noto-sans-oriya-oriya-400-normal.woff': () =>
-    new URL(
-      '@fontsource/noto-sans-oriya/files/noto-sans-oriya-oriya-400-normal.woff',
-      import.meta.url,
-    ),
-  'noto-sans-tamil/files/noto-sans-tamil-tamil-400-normal.woff': () =>
-    new URL(
-      '@fontsource/noto-sans-tamil/files/noto-sans-tamil-tamil-400-normal.woff',
-      import.meta.url,
-    ),
-  'noto-sans-telugu/files/noto-sans-telugu-telugu-400-normal.woff': () =>
-    new URL(
-      '@fontsource/noto-sans-telugu/files/noto-sans-telugu-telugu-400-normal.woff',
-      import.meta.url,
-    ),
-  'noto-sans-symbols/files/noto-sans-symbols-symbols-400-normal.woff': () =>
-    new URL(
-      '@fontsource/noto-sans-symbols/files/noto-sans-symbols-symbols-400-normal.woff',
-      import.meta.url,
-    ),
-  'noto-sans-symbols-2/files/noto-sans-symbols-2-symbols-400-normal.woff': () =>
-    new URL(
-      '@fontsource/noto-sans-symbols-2/files/noto-sans-symbols-2-symbols-400-normal.woff',
-      import.meta.url,
-    ),
-  'noto-sans-symbols-2/files/noto-sans-symbols-2-math-400-normal.woff': () =>
-    new URL(
-      '@fontsource/noto-sans-symbols-2/files/noto-sans-symbols-2-math-400-normal.woff',
-      import.meta.url,
-    ),
-  'noto-emoji/files/noto-emoji-0-400-normal.woff': () =>
-    new URL('@fontsource/noto-emoji/files/noto-emoji-0-400-normal.woff', import.meta.url),
-  'noto-emoji/files/noto-emoji-1-400-normal.woff': () =>
-    new URL('@fontsource/noto-emoji/files/noto-emoji-1-400-normal.woff', import.meta.url),
-  'noto-emoji/files/noto-emoji-2-400-normal.woff': () =>
-    new URL('@fontsource/noto-emoji/files/noto-emoji-2-400-normal.woff', import.meta.url),
-  'noto-emoji/files/noto-emoji-3-400-normal.woff': () =>
-    new URL('@fontsource/noto-emoji/files/noto-emoji-3-400-normal.woff', import.meta.url),
-  'noto-emoji/files/noto-emoji-4-400-normal.woff': () =>
-    new URL('@fontsource/noto-emoji/files/noto-emoji-4-400-normal.woff', import.meta.url),
-  'noto-emoji/files/noto-emoji-5-400-normal.woff': () =>
-    new URL('@fontsource/noto-emoji/files/noto-emoji-5-400-normal.woff', import.meta.url),
-  'noto-emoji/files/noto-emoji-6-400-normal.woff': () =>
-    new URL('@fontsource/noto-emoji/files/noto-emoji-6-400-normal.woff', import.meta.url),
-  'noto-emoji/files/noto-emoji-7-400-normal.woff': () =>
-    new URL('@fontsource/noto-emoji/files/noto-emoji-7-400-normal.woff', import.meta.url),
-  'noto-emoji/files/noto-emoji-8-400-normal.woff': () =>
-    new URL('@fontsource/noto-emoji/files/noto-emoji-8-400-normal.woff', import.meta.url),
-  'noto-emoji/files/noto-emoji-9-400-normal.woff': () =>
-    new URL('@fontsource/noto-emoji/files/noto-emoji-9-400-normal.woff', import.meta.url),
-  'noto-emoji/files/noto-emoji-10-400-normal.woff': () =>
-    new URL('@fontsource/noto-emoji/files/noto-emoji-10-400-normal.woff', import.meta.url),
+  'noto-sans/files/noto-sans-latin-400-normal.woff': () => new URL('@fontsource/noto-sans/files/noto-sans-latin-400-normal.woff', import.meta.url),
+  'noto-sans/files/noto-sans-latin-ext-400-normal.woff': () => new URL('@fontsource/noto-sans/files/noto-sans-latin-ext-400-normal.woff', import.meta.url),
+  'noto-sans/files/noto-sans-vietnamese-400-normal.woff': () => new URL('@fontsource/noto-sans/files/noto-sans-vietnamese-400-normal.woff', import.meta.url),
+  'noto-sans/files/noto-sans-greek-400-normal.woff': () => new URL('@fontsource/noto-sans/files/noto-sans-greek-400-normal.woff', import.meta.url),
+  'noto-sans/files/noto-sans-greek-ext-400-normal.woff': () => new URL('@fontsource/noto-sans/files/noto-sans-greek-ext-400-normal.woff', import.meta.url),
+  'noto-sans/files/noto-sans-cyrillic-400-normal.woff': () => new URL('@fontsource/noto-sans/files/noto-sans-cyrillic-400-normal.woff', import.meta.url),
+  'noto-sans/files/noto-sans-cyrillic-ext-400-normal.woff': () => new URL('@fontsource/noto-sans/files/noto-sans-cyrillic-ext-400-normal.woff', import.meta.url),
+  'noto-sans/files/noto-sans-devanagari-400-normal.woff': () => new URL('@fontsource/noto-sans/files/noto-sans-devanagari-400-normal.woff', import.meta.url),
+  'noto-sans/files/noto-sans-latin-700-normal.woff': () => new URL('@fontsource/noto-sans/files/noto-sans-latin-700-normal.woff', import.meta.url),
+  'noto-sans/files/noto-sans-latin-ext-700-normal.woff': () => new URL('@fontsource/noto-sans/files/noto-sans-latin-ext-700-normal.woff', import.meta.url),
+  'noto-sans/files/noto-sans-vietnamese-700-normal.woff': () => new URL('@fontsource/noto-sans/files/noto-sans-vietnamese-700-normal.woff', import.meta.url),
+  'noto-sans/files/noto-sans-greek-700-normal.woff': () => new URL('@fontsource/noto-sans/files/noto-sans-greek-700-normal.woff', import.meta.url),
+  'noto-sans/files/noto-sans-greek-ext-700-normal.woff': () => new URL('@fontsource/noto-sans/files/noto-sans-greek-ext-700-normal.woff', import.meta.url),
+  'noto-sans/files/noto-sans-cyrillic-700-normal.woff': () => new URL('@fontsource/noto-sans/files/noto-sans-cyrillic-700-normal.woff', import.meta.url),
+  'noto-sans/files/noto-sans-cyrillic-ext-700-normal.woff': () => new URL('@fontsource/noto-sans/files/noto-sans-cyrillic-ext-700-normal.woff', import.meta.url),
+  'noto-sans/files/noto-sans-devanagari-700-normal.woff': () => new URL('@fontsource/noto-sans/files/noto-sans-devanagari-700-normal.woff', import.meta.url),
+  'noto-sans-hebrew/files/noto-sans-hebrew-hebrew-400-normal.woff': () => new URL('@fontsource/noto-sans-hebrew/files/noto-sans-hebrew-hebrew-400-normal.woff', import.meta.url),
+  'noto-sans-arabic/files/noto-sans-arabic-arabic-400-normal.woff': () => new URL('@fontsource/noto-sans-arabic/files/noto-sans-arabic-arabic-400-normal.woff', import.meta.url),
+  'noto-sans-armenian/files/noto-sans-armenian-armenian-400-normal.woff': () => new URL('@fontsource/noto-sans-armenian/files/noto-sans-armenian-armenian-400-normal.woff', import.meta.url),
+  'noto-sans-georgian/files/noto-sans-georgian-georgian-400-normal.woff': () => new URL('@fontsource/noto-sans-georgian/files/noto-sans-georgian-georgian-400-normal.woff', import.meta.url),
+  'noto-sans-thai/files/noto-sans-thai-thai-400-normal.woff': () => new URL('@fontsource/noto-sans-thai/files/noto-sans-thai-thai-400-normal.woff', import.meta.url),
+  'noto-sans-lao/files/noto-sans-lao-lao-400-normal.woff': () => new URL('@fontsource/noto-sans-lao/files/noto-sans-lao-lao-400-normal.woff', import.meta.url),
+  'noto-sans-khmer/files/noto-sans-khmer-khmer-400-normal.woff': () => new URL('@fontsource/noto-sans-khmer/files/noto-sans-khmer-khmer-400-normal.woff', import.meta.url),
+  'noto-sans-myanmar/files/noto-sans-myanmar-myanmar-400-normal.woff': () => new URL('@fontsource/noto-sans-myanmar/files/noto-sans-myanmar-myanmar-400-normal.woff', import.meta.url),
+  'noto-sans-ethiopic/files/noto-sans-ethiopic-ethiopic-400-normal.woff': () => new URL('@fontsource/noto-sans-ethiopic/files/noto-sans-ethiopic-ethiopic-400-normal.woff', import.meta.url),
+  'noto-sans-sinhala/files/noto-sans-sinhala-sinhala-400-normal.woff': () => new URL('@fontsource/noto-sans-sinhala/files/noto-sans-sinhala-sinhala-400-normal.woff', import.meta.url),
+  'noto-sans-bengali/files/noto-sans-bengali-bengali-400-normal.woff': () => new URL('@fontsource/noto-sans-bengali/files/noto-sans-bengali-bengali-400-normal.woff', import.meta.url),
+  'noto-sans-gujarati/files/noto-sans-gujarati-gujarati-400-normal.woff': () => new URL('@fontsource/noto-sans-gujarati/files/noto-sans-gujarati-gujarati-400-normal.woff', import.meta.url),
+  'noto-sans-gurmukhi/files/noto-sans-gurmukhi-gurmukhi-400-normal.woff': () => new URL('@fontsource/noto-sans-gurmukhi/files/noto-sans-gurmukhi-gurmukhi-400-normal.woff', import.meta.url),
+  'noto-sans-kannada/files/noto-sans-kannada-kannada-400-normal.woff': () => new URL('@fontsource/noto-sans-kannada/files/noto-sans-kannada-kannada-400-normal.woff', import.meta.url),
+  'noto-sans-malayalam/files/noto-sans-malayalam-malayalam-400-normal.woff': () => new URL('@fontsource/noto-sans-malayalam/files/noto-sans-malayalam-malayalam-400-normal.woff', import.meta.url),
+  'noto-sans-oriya/files/noto-sans-oriya-oriya-400-normal.woff': () => new URL('@fontsource/noto-sans-oriya/files/noto-sans-oriya-oriya-400-normal.woff', import.meta.url),
+  'noto-sans-tamil/files/noto-sans-tamil-tamil-400-normal.woff': () => new URL('@fontsource/noto-sans-tamil/files/noto-sans-tamil-tamil-400-normal.woff', import.meta.url),
+  'noto-sans-telugu/files/noto-sans-telugu-telugu-400-normal.woff': () => new URL('@fontsource/noto-sans-telugu/files/noto-sans-telugu-telugu-400-normal.woff', import.meta.url),
+  'noto-sans-symbols/files/noto-sans-symbols-symbols-400-normal.woff': () => new URL('@fontsource/noto-sans-symbols/files/noto-sans-symbols-symbols-400-normal.woff', import.meta.url),
+  'noto-sans-symbols-2/files/noto-sans-symbols-2-symbols-400-normal.woff': () => new URL('@fontsource/noto-sans-symbols-2/files/noto-sans-symbols-2-symbols-400-normal.woff', import.meta.url),
+  'noto-sans-symbols-2/files/noto-sans-symbols-2-math-400-normal.woff': () => new URL('@fontsource/noto-sans-symbols-2/files/noto-sans-symbols-2-math-400-normal.woff', import.meta.url),
+  'noto-emoji/files/noto-emoji-0-400-normal.woff': () => new URL('@fontsource/noto-emoji/files/noto-emoji-0-400-normal.woff', import.meta.url),
+  'noto-emoji/files/noto-emoji-1-400-normal.woff': () => new URL('@fontsource/noto-emoji/files/noto-emoji-1-400-normal.woff', import.meta.url),
+  'noto-emoji/files/noto-emoji-2-400-normal.woff': () => new URL('@fontsource/noto-emoji/files/noto-emoji-2-400-normal.woff', import.meta.url),
+  'noto-emoji/files/noto-emoji-3-400-normal.woff': () => new URL('@fontsource/noto-emoji/files/noto-emoji-3-400-normal.woff', import.meta.url),
+  'noto-emoji/files/noto-emoji-4-400-normal.woff': () => new URL('@fontsource/noto-emoji/files/noto-emoji-4-400-normal.woff', import.meta.url),
+  'noto-emoji/files/noto-emoji-5-400-normal.woff': () => new URL('@fontsource/noto-emoji/files/noto-emoji-5-400-normal.woff', import.meta.url),
+  'noto-emoji/files/noto-emoji-6-400-normal.woff': () => new URL('@fontsource/noto-emoji/files/noto-emoji-6-400-normal.woff', import.meta.url),
+  'noto-emoji/files/noto-emoji-7-400-normal.woff': () => new URL('@fontsource/noto-emoji/files/noto-emoji-7-400-normal.woff', import.meta.url),
+  'noto-emoji/files/noto-emoji-8-400-normal.woff': () => new URL('@fontsource/noto-emoji/files/noto-emoji-8-400-normal.woff', import.meta.url),
+  'noto-emoji/files/noto-emoji-9-400-normal.woff': () => new URL('@fontsource/noto-emoji/files/noto-emoji-9-400-normal.woff', import.meta.url),
+  'noto-emoji/files/noto-emoji-10-400-normal.woff': () => new URL('@fontsource/noto-emoji/files/noto-emoji-10-400-normal.woff', import.meta.url),
 };
