@@ -255,7 +255,7 @@ export function textDocumentMenus(format: TextDocumentFormat): OfficeCatalogue {
         ),
       ]),
       SEPARATOR,
-      item('comment', 'Comment', 'participate', { shortcut: 'insert-comment' }),
+      item('comment', 'Comment', 'participate', { shortcut: 'insert-comment', ...BUILT }),
     ]),
     menu('format', 'Format', [
       submenu('text', 'Text', [

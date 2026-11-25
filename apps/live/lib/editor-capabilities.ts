@@ -33,6 +33,9 @@ export type EditorCapabilities = {
   // A text document's writing (docs/specs/034-text-documents/text-document.md "Share roles"): an Editor's; a
   // Participant suggests and comments once Review lands (fork D7).
   textDocumentEdits: boolean;
+  // The key this session signs its text document comments with (docs/specs/034-text-documents/review.md "Threads in
+  // the margin"): its adder key, for an Editor or a Participant; null where it may not comment.
+  commentKey: string | null;
   // A PDF document (docs/specs/035-pdf-documents/editing-modes.md "Share roles"): everything Reviewing changes (marks,
   // comments, field values, signatures) and everything Editing changes (the pages themselves). Reviewing is a
   // Participant's by ruling F7: the room checks what a Participant's update touches (live-editing-and-storage.md
@@ -76,6 +79,7 @@ export function resolveEditorCapabilities(input: {
       planCards: true,
       sheetCells: true,
       textDocumentEdits: true,
+      commentKey: adderKey,
       pdfReviews: true,
       pdfEdits: true,
       suggestions: true,
@@ -96,6 +100,7 @@ export function resolveEditorCapabilities(input: {
       planCards: false,
       sheetCells: false,
       textDocumentEdits: false,
+      commentKey: null,
       pdfReviews: false,
       pdfEdits: false,
       suggestions: false,
@@ -118,6 +123,7 @@ export function resolveEditorCapabilities(input: {
     planCards: true,
     sheetCells: true,
     textDocumentEdits: false,
+    commentKey: adderKey,
     pdfReviews: true,
     pdfEdits: false,
     suggestions: false,

@@ -1,7 +1,8 @@
 # Review
 
-**Status: being built.** Comment threads are kept beside the writing and the room judges a Participant's; nothing
-is drawn yet, and suggestions, versions and notifications are still to come.
+**Status: being built.** Comment threads are kept beside the writing, travel in both formats' files, and the room
+judges a Participant's; they are drawn and added in the margin. The comments panel, mentions, assigning, reactions,
+suggestions, versions and notifications are still to come.
 
 Comments, suggestions, version history, comparing documents and notifications in a [text document](text-document.md).
 The panels and threads are the shared [review surfaces](../012-collaboration/review-surfaces.md), built once for the
@@ -38,6 +39,33 @@ office kinds; this spec says what a text document puts in them.
 - **Keys on a selected comment**: R reply, J next, K previous, E resolve, U exit; ⌘⌥ N then C / P then C between
   comments.
 - **Deleting the text** a comment is on keeps the thread, marked "Original content deleted", as Google does.
+
+### Threads in the margin
+
+- **Where**: open threads stand in a column to the right of the page, 280 px wide and 16 px from the page's edge
+  (default), each level with its stretch's first line, stacked down 8 px apart where they would overlap. While any
+  is shown and the window is wide enough, the page moves left to make room, as Google's does; narrower, the column
+  lies over the page's right edge. Resolved threads are not drawn; they wait in the comments panel. They are drawn
+  at their own size whatever the zoom (default).
+- **Selecting**: pressing a thread, or pressing in its highlighted text, selects it: its text is tinted darker, the
+  card is raised and moves level with its text, and the cards around it make room. Escape, or pressing elsewhere,
+  lets it go.
+- **A card**: each comment's author disc, name and time, its text, and for a comment from a file the line "From the
+  file"; a thread whose text is gone leads with "Original content deleted" and its quote. The first comment carries
+  **Resolve** (a tick) for anyone who may comment. A comment's own author has **Edit** and **Delete** on it; an
+  Editor has Delete on every comment. Deleting the first comment deletes the thread, after "Delete this comment
+  thread?" (default, as Google asks). A selected thread shows **Reply** below its comments.
+- **Adding** (⌘⌥M, Ctrl+Alt+M elsewhere; the toolbar's Add comment; Insert > Comment; the context menu's Comment;
+  the margin's Add comment button beside a selection): on the selected stretch of the body, or the word at the
+  caret when nothing is selected; a draft card opens level with it, its field focused, **Comment** and **Cancel**.
+  The stretch is tinted while the draft is open; Comment begins the thread, Cancel or Escape drops it. With no word
+  at the caret, or the caret in a header, footer or note, nothing opens and the status line says "Select some text
+  to comment on" (default; Google comments on the body alone).
+- **Who**: a session that may comment is an Editor or a Participant holding its adder key; in This Browser, where
+  there is no room, the person's participant key signs their comments (default). Anyone else reads the threads and
+  sees no Add comment, Reply, Resolve, Edit or Delete. Each comment is signed with its author's name and colour as
+  they are when they write it.
+- **Phone**: no margin; a thread opens over the page's bottom as a sheet (default), from its highlighted text.
 - In the file: comments, replies, resolved state, assignees and reactions as
   [Standard mapping](standard-mapping.md#what-the-model-holds) and its extensions say.
 

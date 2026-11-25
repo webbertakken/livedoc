@@ -42,6 +42,8 @@ function Surface({
           ...clipboardActions(null, { canEdit: level === 'edit', onRefused: () => {} }),
           // Clear formatting is built: the surface binds it for a session that writes.
           ...(level === 'edit' ? { 'clear-formatting': { run: () => {} } } : {}),
+          // Comment is built: the surface binds it for a session that may comment (review.md "Threads in the margin").
+          ...(level === 'edit' ? { comment: { run: () => {} } } : {}),
           ...extra,
         }}
         shortcuts={TEXT_DOCUMENT_SHORTCUTS}
@@ -97,7 +99,7 @@ describe('the context menu', () => {
       'PasteCtrl+V',
       'Paste without formattingCtrl+Shift+V',
       'Delete',
-      'Comment',
+      'CommentCtrl+Alt+M',
       'Suggest edits',
       // Insert link shows only while the link actions bind it (links-and-navigation.md "Links"): none here.
       'Format options',
@@ -170,7 +172,7 @@ describe('the context menu', () => {
     rightClick(screen.getByRole('textbox'));
     const item = (name: string) =>
       within(menu()!).getByRole('menuitem', { name: new RegExp(`^${name}`) });
-    expect(item('Comment').getAttribute('aria-disabled')).toBe('true');
+    expect(item('Suggest edits').getAttribute('aria-disabled')).toBe('true');
     expect(item('Cut').getAttribute('aria-disabled')).toBe('true');
     expect(item('Delete').getAttribute('aria-disabled')).toBe('true');
   });

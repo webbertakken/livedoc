@@ -443,7 +443,7 @@ export const TEXT_DOCUMENT_SHORTCUTS: readonly ShortcutRow[] = [
     'Ctrl+Alt+M',
     '⌘+Option+M',
     'Ctrl+Alt+M',
-    'specified',
+    'built',
   ),
   row(
     'open-comment-history',

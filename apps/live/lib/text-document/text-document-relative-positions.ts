@@ -33,7 +33,12 @@ export function encode(pos: number, y: Binding): string {
 
 export function resolve(position: string, y: Binding, size: number): number | null {
   const bytes = bytesOfBase64(position);
-  if (!bytes) return null;
+  return bytes ? resolveBytes(bytes, y, size) : null;
+}
+
+/** Where an encoded relative position is now in the body the binding shows, or null where it does not resolve there. */
+export function resolveBytes(bytes: Uint8Array, y: Binding, size: number): number | null {
+  if (bytes.byteLength === 0) return null;
   try {
     const at = relativePositionToAbsolutePosition(
       y.doc,

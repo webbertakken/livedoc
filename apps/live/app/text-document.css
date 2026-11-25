@@ -440,6 +440,17 @@ div.text-document-kept {
 .text-document-stretch {
   background: light-dark(#bae6fd, #0c4a6e);
 }
+/*
+ * Comment threads' stretches (review.md "Threads in the margin"): tinted amber as Google tints them; the selected one,
+ * and a draft's, darker. The tint sits under the text, which keeps its own colour.
+ */
+.text-document-comment {
+  background: light-dark(rgb(253 230 138 / 0.45), rgb(180 83 9 / 0.35));
+  cursor: pointer;
+}
+.text-document-comment.text-document-comment-selected {
+  background: light-dark(rgb(252 211 77 / 0.8), rgb(217 119 6 / 0.55));
+}
 .text-document-stretch-caret {
   display: inline-block;
   width: 0;

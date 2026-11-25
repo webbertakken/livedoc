@@ -24,6 +24,7 @@ import {
   Columns,
   CONTENTS,
   EQUATION,
+  FIRST_DOCUMENT_TAB_ID,
   liveFirstHeaders,
   liveTabList,
   Styles,
@@ -70,6 +71,10 @@ import { tabStopsPlugin } from '@/lib/text-document/text-document-tab-layout';
 import { subscribeLists } from '@/lib/text-document/text-document-live-lists';
 import { useTextDocumentLists } from './useTextDocumentLists';
 import { useTextDocumentCharacterDialogs } from './useTextDocumentCharacterDialogs';
+import type { TextDocumentCommenter } from '@/lib/text-document/text-document-commenter';
+import { useTextDocumentThreads } from './useTextDocumentThreads';
+import { TextDocumentMargin } from './TextDocumentMargin';
+import { threadHighlightPlugin } from '@/lib/text-document/text-document-threads';
 import { useTextDocumentLinks } from './useTextDocumentLinks';
 import { useTextDocumentBookmarks } from './useTextDocumentBookmarks';
 import { useTextDocumentHeadingLinks } from './useTextDocumentHeadingLinks';
@@ -238,6 +243,8 @@ export type TextDocumentSurfaceProps = {
   createDrawing?: (() => string | null) | null;
   // The editor's drawing tabs (objects.md "Opening it again"); absent outside an editor, where drawings stay their PNGs.
   drawingTabs?: DrawingTabs | null;
+  // Who comments in this session (review.md "Threads in the margin"); null where it reads the threads alone.
+  commenter?: TextDocumentCommenter | null;
 };
 
 type SurfaceState = 'loading' | 'ready' | 'failed';
@@ -257,11 +264,14 @@ export function TextDocumentSurface({
   documents = NO_DOCUMENTS,
   createDrawing = null,
   drawingTabs = null,
+  commenter = null,
 }: TextDocumentSurfaceProps) {
   const root = useRef<HTMLDivElement | null>(null);
   const mount = useRef<HTMLDivElement | null>(null);
   const scroller = useRef<HTMLDivElement | null>(null);
   const editor = useRef<EditorView | null>(null);
+  // Selects a comment thread when its text is pressed (review.md "Threads in the margin"), set once the threads are.
+  const selectThreadRef = useRef<(id: string | null) => void>(() => {});
   // The editor as state too: the menus act on the one there is now.
   const [editorView, setEditorView] = useState<EditorView | null>(null);
   // The document tab the editor shows, and how another is shown (links-and-navigation.md "Document tabs in the outline").
@@ -333,9 +343,9 @@ export function TextDocumentSurface({
     onFocusDocument: () => editor.current?.focus(),
     writes,
   });
-  const live = useRef({ sequence, canEdit, writes, format });
+  const live = useRef({ sequence, canEdit, writes, format, commenter });
   useLayoutEffect(() => {
-    live.current = { sequence, canEdit, writes, format };
+    live.current = { sequence, canEdit, writes, format, commenter };
   });
   // Where the person was in this tab, back when they return to it.
   const { noteViewChanged } = useSurfaceView({
@@ -370,6 +380,10 @@ export function TextDocumentSurface({
       get canEdit() {
         return live.current.canEdit;
       },
+      // What goes to the room: the writing's changes for an Editor, a commenter's threads too (review.md, Who).
+      get sends() {
+        return live.current.canEdit || live.current.commenter !== null;
+      },
     };
     // Load, then bind: the editor never sees an empty state, so it never invents a first paragraph.
     const opening = local
@@ -377,7 +391,7 @@ export function TextDocumentSurface({
           documentId,
           tabId,
           get canEdit() {
-            return gate.canEdit;
+            return gate.sends;
           },
           load: () => offlineTextDocumentState(documentId, tabId),
           save: (update) => offlineSaveTextDocumentState(documentId, tabId, update),
@@ -386,7 +400,7 @@ export function TextDocumentSurface({
           documentId,
           tabId,
           get canEdit() {
-            return gate.canEdit;
+            return gate.sends;
           },
           sequence: (op) => live.current.sequence(op),
           post: (update) => apiPostTextDocumentUpdate(where, update),
@@ -554,6 +568,8 @@ export function TextDocumentSurface({
               },
             }),
           }),
+          // Comment threads' stretches tinted, a press in one selecting it (review.md "Threads in the margin").
+          threadHighlightPlugin({ onSelect: (id) => selectThreadRef.current(id) }),
           textDocumentPeersPlugin({
             canEdit: () => live.current.writes,
             publish: (selection) => setLocalTextDocumentCaret(tabId, selection),
@@ -881,6 +897,19 @@ export function TextDocumentSurface({
   });
   // Insert > Symbols > Special characters and Insert > Emoji (objects.md), in whichever writing has the caret.
   const characterDialogs = useTextDocumentCharacterDialogs(activeView, writes);
+  // Comment threads in the margin, added on the body's writing (review.md "Threads in the margin").
+  const threads = useTextDocumentThreads({
+    view: editorView,
+    activeView,
+    doc: liveDoc,
+    ready: state === 'ready',
+    tab: shownTab ?? FIRST_DOCUMENT_TAB_ID,
+    commenter,
+    subscribe: changes.subscribe,
+  });
+  useEffect(() => {
+    selectThreadRef.current = threads.select;
+  });
   // Insert > Table (tables.md "Inserting"), at the caret's section's column width.
   const tableActions = useTextDocumentTables(
     editorView,
@@ -1023,6 +1052,7 @@ export function TextDocumentSurface({
       ...tabs.actions,
       ...equationInsert,
       ...characterDialogs.actions,
+      ...threads.actions,
       ...links.actions,
       ...bookmarks.actions,
       ...headingLinks.actions,
@@ -1042,6 +1072,7 @@ export function TextDocumentSurface({
       tabs.actions,
       equationInsert,
       characterDialogs.actions,
+      threads.actions,
       links.actions,
       bookmarks.actions,
       headingLinks.actions,
@@ -1157,6 +1188,7 @@ export function TextDocumentSurface({
       {pictureBar}
       {bookmarks.status}
       {headingLinks.status}
+      {threads.status}
       <TextDocumentEmojiColonList view={editorView} list={emojiColonList} />
       {limitReached ? (
         <p
@@ -1250,51 +1282,59 @@ export function TextDocumentSurface({
             </div>
           ) : null}
           {/* The page: a fixed width and a page's height before the state arrives, so nothing shifts as it does. */}
-          <div
-            // CSS zoom scales the page and its layout box alike, so the scroller scrolls the page as drawn. Its width and
-            // margins are its setup's; a phone flows it to the window (editing-surface.md "Phone and tablet").
-            style={{
-              zoom: scale,
-              ...pageBox(drawn),
-              ...(sheets
-                ? { '--pages-width': `${sheets.width}px`, minHeight: `${sheets.height}px` }
-                : { '--pages-width': 'var(--page-width)' }),
-            }}
-            data-page-format={page.pageless ? 'pageless' : 'pages'}
-            data-editing-story={headers.editing?.kind}
-            onDoubleClick={(event) => headers.onDoubleClick(event, scale)}
-            data-pages={paginated ? pageList.length : undefined}
-            data-laid-out={paginated ? 'pages' : 'flow'}
-            className={`relative isolate mx-auto w-(--pages-width) max-w-full text-document-page px-6 py-10 text-[11pt] leading-[1.15] ${page.pageless ? '' : 'mt-6 min-h-(--page-height)'} ${state === 'failed' ? 'hidden' : ''}`}
+          <TextDocumentMargin
+            view={editorView}
+            threads={threads}
+            commenter={commenter}
+            subscribe={changes.subscribe}
+            subscribeCaret={changes.subscribeCaret}
           >
-            <TextDocumentSheets
-              pages={paginated && state === 'ready' ? pageList : null}
-              shadow={!page.pageless}
-              storyHost={headers.storyHost}
-              editing={headers.editing}
-              editingBox={headers.box}
-              editingBar={headers.bar}
-              watermark={watermarkLook(watermark.watermark, page.section.setup)}
-            />
-            {state === 'loading' ? (
-              <p className="text-(--office-muted)" aria-live="polite">
-                Loading the text document…
-              </p>
-            ) : null}
-            <div ref={mount} />
-            <TextDocumentPageNotes
-              pages={paginated && state === 'ready' ? pageList : null}
-              editing={headers.note}
-              box={headers.noteBox}
-              onPress={headers.onNotePress}
-            />
-            <TextDocumentEndNotes
-              notes={endNotes}
-              editing={headers.note}
-              box={headers.noteBox}
-              onPress={headers.onNotePress}
-            />
-          </div>
+            <div
+              // CSS zoom scales the page and its layout box alike, so the scroller scrolls the page as drawn. Its width and
+              // margins are its setup's; a phone flows it to the window (editing-surface.md "Phone and tablet").
+              style={{
+                zoom: scale,
+                ...pageBox(drawn),
+                ...(sheets
+                  ? { '--pages-width': `${sheets.width}px`, minHeight: `${sheets.height}px` }
+                  : { '--pages-width': 'var(--page-width)' }),
+              }}
+              data-page-format={page.pageless ? 'pageless' : 'pages'}
+              data-editing-story={headers.editing?.kind}
+              onDoubleClick={(event) => headers.onDoubleClick(event, scale)}
+              data-pages={paginated ? pageList.length : undefined}
+              data-laid-out={paginated ? 'pages' : 'flow'}
+              className={`relative isolate mx-auto w-(--pages-width) max-w-full text-document-page px-6 py-10 text-[11pt] leading-[1.15] ${page.pageless ? '' : 'mt-6 min-h-(--page-height)'} ${state === 'failed' ? 'hidden' : ''}`}
+            >
+              <TextDocumentSheets
+                pages={paginated && state === 'ready' ? pageList : null}
+                shadow={!page.pageless}
+                storyHost={headers.storyHost}
+                editing={headers.editing}
+                editingBox={headers.box}
+                editingBar={headers.bar}
+                watermark={watermarkLook(watermark.watermark, page.section.setup)}
+              />
+              {state === 'loading' ? (
+                <p className="text-(--office-muted)" aria-live="polite">
+                  Loading the text document…
+                </p>
+              ) : null}
+              <div ref={mount} />
+              <TextDocumentPageNotes
+                pages={paginated && state === 'ready' ? pageList : null}
+                editing={headers.note}
+                box={headers.noteBox}
+                onPress={headers.onNotePress}
+              />
+              <TextDocumentEndNotes
+                notes={endNotes}
+                editing={headers.note}
+                box={headers.noteBox}
+                onPress={headers.onNotePress}
+              />
+            </div>
+          </TextDocumentMargin>
         </div>
       </OfficePanelLayout>
     </div>

@@ -114,7 +114,7 @@ Statuses: `specified`, `built (<test>)`, `the browser's` (the key is left to the
 
 | Action                                           | PC                 | Mac                | ChromeOS           | Status    |
 | ------------------------------------------------ | ------------------ | ------------------ | ------------------ | --------- |
-| Insert comment                                   | `Ctrl+Alt+M`       | `⌘+Option+M`       | `Ctrl+Alt+M`       | specified |
+| Insert comment                                   | `Ctrl+Alt+M`       | `⌘+Option+M`       | `Ctrl+Alt+M`       | built     |
 | Open comment history                             | `Ctrl+Alt+Shift+A` | `⌘+Option+Shift+A` | `Ctrl+Alt+Shift+A` | specified |
 | Enter current comment                            | `Ctrl+Alt+E, C`    | `Ctrl+⌘+E, C`      | `Ctrl+Alt+E, C`    | specified |
 | Insert footnote                                  | `Ctrl+Alt+F`       | `⌘+Option+F`       | `Ctrl+Alt+F`       | built     |

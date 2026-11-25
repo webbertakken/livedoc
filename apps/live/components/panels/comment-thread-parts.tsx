@@ -4,9 +4,18 @@
 // "Comments", "On Plan cards"): the list of comments, the composer with @-mentions, and the Resolve / Reopen
 // control. The canvas's comment popover and a Plan card's item panel both compose them; the panel draws them
 // `comfortable` (a feed: larger text, the composer beside your own avatar), the popover `compact`.
-import { useRef, useState, type RefObject } from 'react';
+import { useEffect, useRef, useState, type RefObject } from 'react';
 import { useAutoHeight } from '@/hooks/ui/useAutoHeight';
-import { Button, CheckIcon, IDENTITY_FILL, TrashIcon, Tooltip, identityVars } from '@livedoc/ui';
+import { COMMENT_TEXT_MAX } from '@livedoc/api-schema';
+import {
+  Button,
+  CheckIcon,
+  IDENTITY_FILL,
+  PencilIcon,
+  TrashIcon,
+  Tooltip,
+  identityVars,
+} from '@livedoc/ui';
 import type { Comment, CommentMention, CommentThread } from '@livedoc/document';
 import { MentionMenu } from '@/components/primitives/MentionMenu';
 import { MentionText } from '@/components/primitives/MentionText';
@@ -81,6 +90,8 @@ export function CommentThreadList({
   density = 'compact',
   className = 'max-h-72 overflow-y-auto px-3 py-1',
   canComment = true,
+  onEditComment,
+  noteOf,
 }: {
   thread: CommentThread | undefined;
   readOnly: boolean;
@@ -91,6 +102,10 @@ export function CommentThreadList({
   onDeleteComment: (commentId: string) => void;
   density?: CommentDensity;
   className?: string;
+  // Edits a comment's text: offered on this session's own comments alone (a text document's threads, review.md).
+  onEditComment?: (commentId: string, text: string) => void;
+  // A line under a comment's author ("From the file" for a file's comment, review.md "How a comment is kept").
+  noteOf?: (comment: Comment) => string | null;
 }) {
   const resolved = thread?.resolved ?? false;
   const comments = thread?.comments ?? [];
@@ -115,6 +130,12 @@ export function CommentThreadList({
               ? () => onDeleteComment(c.id)
               : undefined
           }
+          onEdit={
+            onEditComment && selfId && c.authorId === selfId
+              ? (text) => onEditComment(c.id, text)
+              : undefined
+          }
+          note={noteOf?.(c) ?? null}
         />
       ))}
     </ul>
@@ -233,14 +254,20 @@ function CommentRow({
   resolved,
   density,
   onDelete,
+  onEdit,
+  note,
 }: {
   comment: Comment;
   resolved: boolean;
   density: CommentDensity;
   // Undefined when this session may not delete it, so the row never renders a delete affordance.
   onDelete?: () => void;
+  // Undefined when this session may not edit it.
+  onEdit?: (text: string) => void;
+  note: string | null;
 }) {
   const now = useRelativeNow();
+  const [editing, setEditing] = useState<string | null>(null);
   const comfortable = density === 'comfortable';
   const when = new Date(comment.createdAt).toLocaleString(undefined, {
     dateStyle: 'medium',
@@ -277,28 +304,108 @@ function CommentRow({
             </time>
           </Tooltip>
         </div>
-        <p
-          className={`mt-0.5 whitespace-pre-wrap break-words text-slate-700 dark:text-slate-200 ${'text-body'}`}
-        >
-          <MentionText
-            text={comment.text}
-            mentions={comment.mentions}
-            chipClassName="bg-brand-50 text-brand-700 dark:bg-brand-500/15 dark:text-brand-300"
+        {note ? <p className="text-supporting text-slate-500 dark:text-slate-400">{note}</p> : null}
+        {editing !== null && onEdit ? (
+          <CommentEditField
+            text={editing}
+            onChange={setEditing}
+            onCancel={() => setEditing(null)}
+            onSave={() => {
+              const text = editing.trim();
+              if (text && text !== comment.text) onEdit(text);
+              setEditing(null);
+            }}
           />
-        </p>
+        ) : (
+          <p
+            className={`mt-0.5 whitespace-pre-wrap break-words text-slate-700 dark:text-slate-200 ${'text-body'}`}
+          >
+            <MentionText
+              text={comment.text}
+              mentions={comment.mentions}
+              chipClassName="bg-brand-50 text-brand-700 dark:bg-brand-500/15 dark:text-brand-300"
+            />
+          </p>
+        )}
       </div>
+      {!resolved && onEdit && editing === null ? (
+        <Tooltip label="Edit comment">
+          <button
+            type="button"
+            aria-label="Edit comment"
+            onClick={() => setEditing(comment.text)}
+            className={ROW_ACTION}
+          >
+            <PencilIcon size={12} />
+          </button>
+        </Tooltip>
+      ) : null}
       {!resolved && onDelete ? (
         <Tooltip label="Delete comment">
           <button
             type="button"
             aria-label="Delete comment"
             onClick={onDelete}
-            className="flex size-chip shrink-0 cursor-pointer items-center justify-center self-start rounded-control text-slate-400 opacity-0 transition hover:bg-slate-100 hover:text-slate-900 focus-visible:opacity-100 group-hover:opacity-100 motion-reduce:transition-none dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white [@media(hover:none)]:opacity-100"
+            className={ROW_ACTION}
           >
             <TrashIcon size={12} />
           </button>
         </Tooltip>
       ) : null}
     </li>
+  );
+}
+
+// A row's hover action: quiet until the row is hovered or the button focused; always shown where nothing hovers.
+const ROW_ACTION =
+  'flex size-chip shrink-0 cursor-pointer items-center justify-center self-start rounded-control text-slate-400 opacity-0 transition hover:bg-slate-100 hover:text-slate-900 focus-visible:opacity-100 group-hover:opacity-100 motion-reduce:transition-none dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white [@media(hover:none)]:opacity-100';
+
+// A comment's text being edited: Save (or Cmd/Ctrl+Enter) keeps it, Cancel (or Escape) leaves it as it was.
+function CommentEditField({
+  text,
+  onChange,
+  onSave,
+  onCancel,
+}: {
+  text: string;
+  onChange: (text: string) => void;
+  onSave: () => void;
+  onCancel: () => void;
+}) {
+  const ref = useRef<HTMLTextAreaElement>(null);
+  useAutoHeight(ref, text, COMPOSER_MAX);
+  // The field opens where the person pressed Edit, ready to type.
+  useEffect(() => ref.current?.focus(), []);
+  return (
+    <div className="mt-1">
+      <textarea
+        ref={ref}
+        value={text}
+        maxLength={COMMENT_TEXT_MAX}
+        aria-label="Edit comment"
+        onChange={(e) => onChange(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === 'Escape') {
+            e.preventDefault();
+            e.stopPropagation();
+            onCancel();
+          } else if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+            e.preventDefault();
+            onSave();
+          }
+        }}
+        rows={2}
+        style={{ maxHeight: COMPOSER_MAX_PX }}
+        className="block w-full resize-none rounded-control border border-slate-200 bg-white px-2 py-1.5 text-body text-slate-800 outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-400/30 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+      />
+      <div className="mt-1.5 flex justify-end gap-2">
+        <Button size="xs" variant="secondary" onClick={onCancel}>
+          Cancel
+        </Button>
+        <Button size="xs" onClick={onSave} disabled={!text.trim()}>
+          Save
+        </Button>
+      </div>
+    </div>
   );
 }

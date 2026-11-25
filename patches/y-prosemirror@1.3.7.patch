@@ -1,8 +1,28 @@
 diff --git a/src/plugins/sync-plugin.js b/src/plugins/sync-plugin.js
-index dccfb76918c8c70fe5a5b12372cdabcc9d8c58dd..9c0f13a41ef50fc0f762bdaaecea22c57723e4bf 100644
+index dccfb76918c8c70fe5a5b12372cdabcc9d8c58dd..4a136d60b9e9dac947a37c97d8b72cfc8d47f4e3 100644
 --- a/src/plugins/sync-plugin.js
 +++ b/src/plugins/sync-plugin.js
-@@ -224,10 +224,16 @@ export const ySyncPlugin = (yXmlFragment, {
+@@ -195,7 +195,7 @@ export const ySyncPlugin = (yXmlFragment, {
+       }
+       onFirstRender()
+       return {
+-        update: () => {
++        update: (_view, prevState) => {
+           const pluginState = plugin.getState(view.state)
+           if (
+             pluginState.snapshot == null && pluginState.prevSnapshot == null
+@@ -212,7 +212,9 @@ export const ySyncPlugin = (yXmlFragment, {
+               initialContentChanged = true
+               if (
+                 pluginState.addToHistory === false &&
+-                !pluginState.isChangeOrigin
++                !pluginState.isChangeOrigin &&
++                // A step that changes no writing (a decoration's, a selection's) leaves the undo step being gathered
++                prevState.doc !== view.state.doc
+               ) {
+                 const yUndoPluginState = yUndoPluginKey.getState(view.state)
+                 /**
+@@ -224,10 +226,16 @@ export const ySyncPlugin = (yXmlFragment, {
                  }
                }
                binding.mux(() => {
@@ -23,7 +43,7 @@ index dccfb76918c8c70fe5a5b12372cdabcc9d8c58dd..9c0f13a41ef50fc0f762bdaaecea22c5
                })
              }
            }
-@@ -332,8 +338,14 @@ export class ProsemirrorBinding {
+@@ -332,8 +340,14 @@ export class ProsemirrorBinding {
       * current selection as relative positions in the Yjs model
       */
      this.beforeTransactionSelection = null
@@ -39,7 +59,7 @@ index dccfb76918c8c70fe5a5b12372cdabcc9d8c58dd..9c0f13a41ef50fc0f762bdaaecea22c5
          this.beforeTransactionSelection = getRelativeSelection(
            this,
            this.prosemirrorView.state
-@@ -648,10 +660,12 @@ export class ProsemirrorBinding {
+@@ -648,10 +662,12 @@ export class ProsemirrorBinding {
    _prosemirrorChanged (doc) {
      this.doc.transact(() => {
        updateYFragment(this.doc, this.type, doc, this)
