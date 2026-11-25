@@ -175,6 +175,8 @@ jobs:
           name: marketing-out
           path: apps/marketing/out
           retention-days: 1
+          # The sites' dot folders (.well-known/security.txt) cross too (deployment.md "Build artifacts keep hidden files").
+          include-hidden-files: true
 
       - name: Upload live build
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
@@ -182,6 +184,8 @@ jobs:
           name: live-out
           path: apps/live/out
           retention-days: 1
+          # The sites' dot folders (.well-known/security.txt) cross too (deployment.md "Build artifacts keep hidden files").
+          include-hidden-files: true
 
       - name: Upload telemetry build
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
@@ -189,6 +193,8 @@ jobs:
           name: telemetry-out
           path: apps/telemetry/out
           retention-days: 1
+          # The sites' dot folders (.well-known/security.txt) cross too (deployment.md "Build artifacts keep hidden files").
+          include-hidden-files: true
 
       - name: Upload help build
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
@@ -196,6 +202,8 @@ jobs:
           name: help-out
           path: apps/help/out
           retention-days: 1
+          # The sites' dot folders (.well-known/security.txt) cross too (deployment.md "Build artifacts keep hidden files").
+          include-hidden-files: true
 
   deploy-marketing:
     name: Deploy marketing
@@ -226,6 +234,15 @@ jobs:
         with:
           name: marketing-out
           path: apps/marketing/out
+
+      - name: Check security.txt arrived
+        run: |
+          set -euo pipefail
+          if [ ! -s apps/marketing/out/.well-known/security.txt ]; then
+            echo "::error::apps/marketing/out/.well-known/security.txt is missing from the build artifact (deployment.md \"Build artifacts keep hidden files\")"
+            exit 1
+          fi
+          echo "[deploy] security.txt present"
 
       # The workflow runs from the commit that triggered it; the code it deploys is the newest green
       # commit, often older (deployment.md "The tools a deploy step runs"). Its tools come from its own.
