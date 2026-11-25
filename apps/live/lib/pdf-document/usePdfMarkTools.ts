@@ -134,6 +134,7 @@ export function usePdfMarkTools({
   ready,
   marking,
   author,
+  authorKey,
   selected,
   clearSelection,
   focusPages,
@@ -145,6 +146,8 @@ export function usePdfMarkTools({
   marking: boolean;
   // The display name a mark made here carries.
   author: string;
+  // The author key this session holds (marks.md "Share roles"): what makes a mark made here its own.
+  authorKey: string | null;
   // The text selected on the pages, which a text tool chosen now marks.
   selected: PdfTextSelected | null;
   clearSelection: () => void;
@@ -160,6 +163,7 @@ export function usePdfMarkTools({
   const typed = usePdfTyping({
     ready,
     author,
+    authorKey,
     looks,
     inHand: isTypedTool(inHand) ? inHand : null,
     onProblem,
@@ -177,7 +181,7 @@ export function usePdfMarkTools({
           kind,
           { page: page.name, stored: { blob: ready.storedFile, pages: ready.pages.length } },
           selection,
-          { author, now: Date.now(), id: crypto.randomUUID() },
+          { author, authorKey, now: Date.now(), id: crypto.randomUUID() },
           looks[kind],
         ),
       );
@@ -190,7 +194,7 @@ export function usePdfMarkTools({
         onProblem(TOO_MANY_MARKS_COPY);
       }
     },
-    [ready, author, looks, onProblem],
+    [ready, author, authorKey, looks, onProblem],
   );
 
   const pickTool = useCallback(
@@ -216,7 +220,7 @@ export function usePdfMarkTools({
     [selected, pickTool, mark, clearSelection],
   );
 
-  const draw = usePdfDrawing({ ready, author, look: looks.drawing, onProblem });
+  const draw = usePdfDrawing({ ready, author, authorKey, look: looks.drawing, onProblem });
   const ink = useMemo<PdfPageInk | null>(
     () =>
       inHand === 'drawing'
@@ -225,7 +229,7 @@ export function usePdfMarkTools({
     [inHand, looks, draw],
   );
 
-  const onShape = usePdfShapes({ ready, author, looks, onProblem });
+  const onShape = usePdfShapes({ ready, author, authorKey, looks, onProblem });
   const shaping = useMemo<PdfPageShaping | null>(
     () =>
       isShapeTool(inHand)
@@ -236,7 +240,7 @@ export function usePdfMarkTools({
   const offered = { offered: ready !== null && marking, inHand, pickTool };
   const shapeTools = usePdfToolControl(SHAPE_CONTROL, offered);
   const typedTools = usePdfToolControl(TYPED_CONTROL, offered);
-  const stampTool = usePdfStampTool({ ready, author, ...offered, onProblem });
+  const stampTool = usePdfStampTool({ ready, author, authorKey, ...offered, onProblem });
 
   /** What a drag across a page's text makes with the text tool in hand. */
   const make = useCallback(

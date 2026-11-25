@@ -25,6 +25,9 @@ export function PdfDocumentHost({ tab, readOnly = false }: { tab: Tab; readOnly?
   const local = useIsOfflineDocument(documentId);
   if (!documentId) return null;
   const canReview = !readOnly && can.pdfReviews;
+  // The key a mark made here carries (marks.md "Share roles"): the room ticket's, or in This Browser, where there is
+  // no room, the person's own participant key.
+  const authorKey = local ? (selfParticipant.key ?? null) : can.commentKey;
   return (
     <PdfDocumentSurface
       key={`${tab.id}:${local ? 'this-browser' : 'room'}`}
@@ -40,6 +43,7 @@ export function PdfDocumentHost({ tab, readOnly = false }: { tab: Tab; readOnly?
       level={canReview ? can.level : 'view'}
       canReview={canReview}
       author={selfParticipant.name}
+      authorKey={authorKey}
       chrome={readOnly ? null : office}
       // A person is on one tab: the other pane of a split says nothing of where they are ("Presence").
       present={!readOnly}

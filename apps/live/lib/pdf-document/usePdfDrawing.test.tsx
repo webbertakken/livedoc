@@ -37,7 +37,13 @@ function drawing(doc = PdfLiveChanges.load(), isOpen = true) {
     } as never,
   };
   const hook = renderHook(() =>
-    usePdfDrawing({ ready: isOpen ? ready : null, author: 'Ada', look: DRAWING_LOOK, onProblem }),
+    usePdfDrawing({
+      ready: isOpen ? ready : null,
+      author: 'Ada',
+      authorKey: 'k-ada',
+      look: DRAWING_LOOK,
+      onProblem,
+    }),
   );
   return { draw: hook.result.current, doc, steps, onProblem };
 }
@@ -54,6 +60,7 @@ describe('the Drawing tool’s strokes', () => {
     act(() => draw(0, [30, 30], Date.now()));
     const marks = PdfLiveChanges.marks(doc) as DrawingMark[];
     expect(marks).toHaveLength(1);
+    expect(marks[0]!.authorKey).toBe('k-ada');
     expect(marks[0]!.strokes).toEqual([
       [10, 10, 20, 20],
       [30, 30],

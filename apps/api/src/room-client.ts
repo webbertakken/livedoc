@@ -512,15 +512,21 @@ export async function postLiveTabUpdate(
   tabId: string,
   update: Uint8Array,
   // `level`: the caller's as the route verified it; the room judges a Participant's update by what it changes.
-  // `on`: what the update was made on, for a kind whose state stands on something its tab's row names.
-  { level = 'edit', on }: { level?: AccessLevel; on?: string | null } = {},
-): Promise<{ status: number; limit?: string }> {
+  // `on`: what the update was made on, for a kind whose state stands on something its tab's row names. `adderKey`:
+  // the caller's on the document, for a Participant, what its own work carries.
+  {
+    level = 'edit',
+    on,
+    adderKey,
+  }: { level?: AccessLevel; on?: string | null; adderKey?: string | null } = {},
+): Promise<{ status: number; limit?: string; name?: string }> {
   const query = new URLSearchParams({
     frame: kind.frame,
     document: documentId,
     tab: tabId,
     level,
     ...(typeof on === 'string' ? { on } : {}),
+    ...(typeof adderKey === 'string' ? { adder: adderKey } : {}),
   });
   try {
     const res = await roomFetch(
@@ -530,6 +536,11 @@ export async function postLiveTabUpdate(
       { method: 'POST', body: update.slice().buffer },
       TEXT_DOCUMENT_DOOR_TIMEOUT_MS,
     );
+    if (res.status === 403) {
+      // A refusal other than the level names itself.
+      const body = (await res.json().catch(() => ({}))) as { name?: unknown };
+      return typeof body.name === 'string' ? { status: 403, name: body.name } : { status: 403 };
+    }
     if (res.status !== 413) return { status: res.status };
     const body = (await res.json().catch(() => ({}))) as { limit?: unknown };
     return typeof body.limit === 'string' ? { status: 413, limit: body.limit } : { status: 413 };

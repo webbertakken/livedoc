@@ -51,6 +51,25 @@ describe('Mark', () => {
     expect(Mark.parse(JSON.parse(JSON.stringify(mark)))).toEqual(mark);
   });
 
+  it('carries its author key, read back; a key not of the form reads as none', () => {
+    const key = 'k-ada';
+    const mark = Mark.highlight({ ...input(), ...Mark.keyed(key) })!;
+    expect(mark.authorKey).toBe(key);
+    expect(Mark.parse(JSON.parse(JSON.stringify(mark)))).toEqual(mark);
+    for (const bad of ['', 'a b', 'k'.repeat(65), 7])
+      expect(Mark.parse({ ...mark, authorKey: bad })).not.toHaveProperty('authorKey');
+    expect(Mark.keyed(null)).toEqual({});
+  });
+
+  it('is own to the key it carries alone; no key owns nothing', () => {
+    const mine = Mark.highlight({ ...input(), ...Mark.keyed('k1') })!;
+    const none = Mark.highlight(input())!;
+    expect(Mark.isOwn(mine, 'k1')).toBe(true);
+    expect(Mark.isOwn(mine, 'k2')).toBe(false);
+    expect(Mark.isOwn(mine, null)).toBe(false);
+    expect(Mark.isOwn(none, null)).toBe(false);
+  });
+
   it('measures the rectangle that holds every quad', () => {
     const mark = Mark.highlight(input({ quads: [QUAD, [72, 698, 180, 698, 72, 682, 180, 682]] }))!;
     expect(Mark.bounds(mark)).toEqual([72, 682, 300, 716]);

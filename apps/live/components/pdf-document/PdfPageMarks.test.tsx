@@ -26,6 +26,7 @@ const arrow = Mark.line('arrow', {
 
 function marks(chosen: readonly string[] = [], choose = true) {
   const choosing: PdfPageChoosing = {
+    mayChange: () => true,
     choose: vi.fn(),
     letGo: vi.fn(),
     leave: vi.fn(),
@@ -70,6 +71,28 @@ describe('the marks of a page as controls', () => {
     expect(choosing.choose).toHaveBeenCalledWith(3, 'a1', false);
     fireEvent.focus(screen.getByRole('button', { name: 'Rectangle by Ada Lovelace' }));
     expect(choosing.choose).toHaveBeenCalledTimes(1);
+  });
+
+  it('names a mark the session may not change, but never presses or selects it', () => {
+    const choosing = { mayChange: () => false, choose: vi.fn() } as unknown as PdfPageChoosing;
+    const theirs = { ...arrow, author: 'Someone else' };
+    render(
+      <PdfPageMarks
+        index={3}
+        matrix={[1, 0, 0, -1, 0, 100]}
+        width={100}
+        height={100}
+        marks={[theirs]}
+        chosen={[]}
+        choosing={choosing}
+        onNudge={vi.fn()}
+        onResize={vi.fn()}
+      />,
+    );
+    const control = screen.getByRole('button', { name: 'Arrow by Someone else' });
+    expect(control.hasAttribute('aria-pressed')).toBe(false);
+    fireEvent.focus(control);
+    expect(choosing.choose).not.toHaveBeenCalled();
   });
 
   it('moves the selection by the arrow keys, the way each points on screen, ⇧ farther', () => {

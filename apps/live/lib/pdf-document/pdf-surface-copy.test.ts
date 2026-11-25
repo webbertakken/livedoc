@@ -9,7 +9,10 @@ describe('what the surface says of a change gone wrong', () => {
     expect(lostChangesCopy(3)).toBe('3 changes couldn’t be placed on the new file.');
   });
 
-  it('names why a dropped change was refused: a limit, or the level', () => {
+  it('names why a dropped change was refused: a limit, the level, or another person’s mark', () => {
+    expect(droppedChangeCopy('not_your_mark', 'participate')).toBe(
+      'You can change your own marks.',
+    );
     expect(droppedChangeCopy('state', 'edit')).toBe('This PDF has more unsaved changes than fit.');
     expect(droppedChangeCopy('level_too_low', 'view')).toBe(
       'You can view this PDF, but not change it.',

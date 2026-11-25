@@ -432,9 +432,15 @@ export type ClientMessage =
 export type LiveTabLimitName = 'characters' | 'state';
 /**
  * Why the room refused a live tab's update that passed no limit: its sender's level does not allow what it changes,
- * or it was made on something the tab's row no longer names (a PDF's stored file, replaced since).
+ * it changes a PDF's mark its sender does not own, or it was made on something the tab's row no longer names (a
+ * PDF's stored file, replaced since).
  */
-export type LiveTabRefusalName = 'level_too_low' | 'stored_file_changed';
+export const LIVE_TAB_REFUSAL_NAMES = [
+  'level_too_low',
+  'not_your_mark',
+  'stored_file_changed',
+] as const;
+export type LiveTabRefusalName = (typeof LIVE_TAB_REFUSAL_NAMES)[number];
 
 /** Why a PDF document's stored file is replaced (docs/specs/035-pdf-documents/saving.md "When the stored file is replaced"). */
 export const PDF_STORED_REASONS = ['budget'] as const;

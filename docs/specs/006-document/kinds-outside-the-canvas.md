@@ -117,13 +117,14 @@ kind**. The room stores each one the same way, the kind declaring only what is i
   `persisted`, `compacted`, `update-refused reason=`, `edit-refused limit=`.
 - **The level an update asks**: an Editor's update is stored as it is. Anyone else's is judged by what it changes,
   never by what its sender claims: the kind reads the stored state and the update and answers the least level the
-  update needs (`participate` or `edit`), or that it cannot be read yet, because it stands on changes the room
-  lacks. A kind that declares no such reading (a text document) asks `edit` for every update. A Viewer's update is
+  update needs (`participate` or `edit`), that it changes what is another person's (`not_your_mark`, a PDF's mark), or
+  that it cannot be read yet, because it stands on changes the room lacks. A kind that declares no such reading asks
+  `edit` for every update. A Viewer's update is
   never read.
 - **A refusal reaches its sender alone**, as `<op kind>-refused` naming the tab and why: `limit` (the limit
-  passed) or `name` (`level_too_low`). Nothing of a refused update is stored or relayed. An update that cannot be
+  passed) or `name` (`level_too_low`, `not_your_mark`). Nothing of a refused update is stored or relayed. An update that cannot be
   read yet is refused untold: it follows one the room refused, whose sender has been told already. The door answers
-  a level too low `403 level_too_low`. Logged `level-refused level=<level> asks=<level>`.
+  a level too low `403 level_too_low`, another's mark `403 not_your_mark`. Logged `level-refused level=<level> asks=<level>`.
 - **What a state stands on**: a kind whose state is changes to something its tab's row names (a PDF's stored file)
   says what that is. Every frame then names what it was made on (`on`), and so does a posted update; one made on
   anything else is refused whole, told to its sender as `stored_file_changed` (the door: `409`), since its items

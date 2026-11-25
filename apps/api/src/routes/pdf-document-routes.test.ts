@@ -2,7 +2,6 @@
 // kind's (docs/specs/006-document/kinds-outside-the-canvas.md "Live state").
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
-  parseStoredLevel,
   PDF_STORED_FILE_HEADER,
   TEXT_DOCUMENT_STATE_VECTOR_HEADER,
 } from '@livedoc/api-schema';
@@ -20,6 +19,8 @@ import { testFilesBucket } from '../blob-store/test-files-bucket';
 import { refreshLiveTabDigest } from '../live-tabs/live-tab-digest';
 import { LIVE_TAB_KINDS, liveTabKindOfFrame, liveTabKindOfTab } from '../live-tabs/live-tab-kinds';
 import { storedUpdates } from '../live-tabs/live-tab-store';
+import { adderKeyFor } from '../adder-key';
+import { answerInternal, type InternalRoom } from '../room-internal';
 import { RoomLiveTabs } from '../live-tabs/room-live-tabs';
 import { PDF_LIVE_TAB } from '../pdf-documents/pdf-live-tab';
 import { documentBlobHold, storedPdfTab } from '../pdf-documents/pdf-document-store';
@@ -63,10 +64,18 @@ const STATE = '/api/documents/D/pdf-documents/t1/state';
 const UPDATES = '/api/documents/D/pdf-documents/t1/updates';
 
 /** One person's change: a highlight on page one, as the update their browser sends. */
-function highlightUpdate(id: string, text = 'The quick brown fox'): Uint8Array {
+/** The guest's adder key on the document, which its own marks carry. */
+const GUEST_KEY = await adderKeyFor('D', 'guest');
+
+function highlightUpdate(
+  id: string,
+  text = 'The quick brown fox',
+  authorKey: string | null = GUEST_KEY,
+): Uint8Array {
   const doc = PdfLiveChanges.load();
   PdfLiveChanges.setStored(doc, { blob: key, pages: 2 });
   const mark = Mark.highlight({
+    ...Mark.keyed(authorKey),
     id,
     page: PageName.ofObject(4),
     quads: [QUAD],
@@ -103,33 +112,28 @@ function withRoom(caps?: { characters: number; stateBytes: number }) {
     position: () => ({ epoch: 'e' }),
     ...(caps ? { caps } : {}),
   });
-  const statuses: Record<string, number> = {
-    stored: 204,
-    decode: 400,
-    'wrong-kind': 404,
-    level: 403,
-    unreadable: 409,
-    'stands-elsewhere': 412,
-  };
+  // The room's own internal endpoint, over the live tab alone.
+  const internal = {
+    acceptPostedLiveTab: (
+      frame: string,
+      ...[documentId, tabId, update, sent]: Parameters<RoomLiveTabs['acceptPosted']>
+    ) =>
+      frame === 'pdf'
+        ? room.acceptPosted(documentId, tabId, update, sent)
+        : Promise.resolve('wrong-kind' as const),
+  } as unknown as InternalRoom;
   const binding = {
     idFromName: (name: string) => name,
     get: () => ({
       fetch: async (input: string, init?: RequestInit) => {
         const url = new URL(input);
-        if (url.pathname !== '/live-tab-update' || url.searchParams.get('frame') !== 'pdf')
-          return new Response(null, { status: 500 });
-        const outcome = await room.acceptPosted(
-          url.searchParams.get('document')!,
-          url.searchParams.get('tab')!,
-          new Uint8Array(init!.body as ArrayBuffer),
-          {
-            level: parseStoredLevel(url.searchParams.get('level')),
-            ...(url.searchParams.has('on') ? { on: url.searchParams.get('on')! } : {}),
-          },
+        const request = new Request(url, {
+          method: init?.method ?? 'GET',
+          body: init?.body ?? null,
+        });
+        return (
+          (await answerInternal(internal, request, url)) ?? new Response(null, { status: 500 })
         );
-        if (outcome === 'characters' || outcome === 'state')
-          return Response.json({ limit: outcome }, { status: 413 });
-        return new Response(null, { status: statuses[outcome] ?? 503 });
       },
     }),
   };
@@ -372,6 +376,22 @@ describe('share roles', () => {
     expect(await storedUpdates(db.env, PDF_LIVE_TAB, 't1')).toHaveLength(1);
   });
 
+  it('refuses a Participant’s posted mark that is not their own by name', async () => {
+    const theirs = await call(
+      'POST',
+      UPDATES,
+      'guest',
+      highlightUpdate('m1', 'words', null),
+      'PARTCODE',
+    );
+    expect(theirs.status).toBe(403);
+    expect(await theirs.json()).toEqual({ error: 'not_your_mark' });
+    expect(console.warn).toHaveBeenCalledWith(
+      '[pdf] level-refused document=D tab=t1 level=participate asks=not_your_mark',
+    );
+    expect(await storedUpdates(db.env, PDF_LIVE_TAB, 't1')).toEqual([]);
+  });
+
   // docs/specs/006-document/blob-store.md "Getting bytes in": a tab-scoped link serves its own tab only.
   it('keeps a tab-scoped link to its own tab: neither another tab’s changes nor its file', async () => {
     expect((await call('GET', STATE, 'guest', undefined, 'SCOPED02')).status).toBe(404);
@@ -438,12 +458,33 @@ describe('a frame from a Participant’s or a Viewer’s socket', () => {
       presenceId: 'p1',
       documentId: 'D',
       level: 'participate' as const,
-      adderKey: null,
+      adderKey: GUEST_KEY,
     };
     expect(await room.accept(sender, frame(highlightUpdate('m1')), 3)).toBe(true);
     expect(relayed).toHaveLength(1);
     expect(told).toEqual([{ kind: 'cursor', epoch: 'e', seq: 1, ref: 3 }]);
     expect(await storedUpdates(db.env, PDF_LIVE_TAB, 't1')).toHaveLength(1);
+  });
+
+  it('refuses a Participant’s change to another’s mark whole, telling the sender alone by name', async () => {
+    const { room, relayed, told } = withRoom();
+    const sender = {
+      ws,
+      presenceId: 'p1',
+      documentId: 'D',
+      level: 'participate' as const,
+      adderKey: 'k-bob',
+    };
+    expect(await room.accept(sender, frame(highlightUpdate('m1')))).toBe(false);
+    expect(relayed).toEqual([]);
+    expect(told).toEqual([
+      {
+        kind: 'op',
+        from: 'system',
+        op: { kind: 'pdf-refused', tabId: 't1', name: 'not_your_mark' },
+      },
+    ]);
+    expect(await storedUpdates(db.env, PDF_LIVE_TAB, 't1')).toEqual([]);
   });
 
   it('refuses a Participant’s change to a page whole, telling the sender alone', async () => {
@@ -453,7 +494,7 @@ describe('a frame from a Participant’s or a Viewer’s socket', () => {
       presenceId: 'p1',
       documentId: 'D',
       level: 'participate' as const,
-      adderKey: null,
+      adderKey: GUEST_KEY,
     };
     expect(await room.accept(sender, frame(turnUpdate()))).toBe(false);
     expect(relayed).toEqual([]);
@@ -476,7 +517,7 @@ describe('a frame from a Participant’s or a Viewer’s socket', () => {
       presenceId: 'p1',
       documentId: 'D',
       level: 'participate' as const,
-      adderKey: null,
+      adderKey: GUEST_KEY,
     };
     expect(await room.accept(sender, frame(sent[1]!))).toBe(false);
     expect(relayed).toEqual([]);
@@ -541,7 +582,7 @@ describe('a frame from a Participant’s or a Viewer’s socket', () => {
       presenceId: 'p1',
       documentId: 'D',
       level: 'participate' as const,
-      adderKey: null,
+      adderKey: GUEST_KEY,
     };
     expect(await room.accept(sender, frame(PdfLiveChanges.encode(other)))).toBe(false);
   });

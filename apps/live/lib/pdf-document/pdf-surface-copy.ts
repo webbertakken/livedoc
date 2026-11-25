@@ -8,6 +8,8 @@ export const TOO_MANY_MARKS_COPY =
   'This PDF holds the most marks LiveDoc keeps for one file (20,000).';
 /** Said once a change the room refused for a limit has been dropped. */
 const CHANGES_DO_NOT_FIT_COPY = 'This PDF has more unsaved changes than fit.';
+/** Said once a change to another person's mark has been dropped (marks.md "Errors"). */
+const NOT_YOUR_MARK_COPY = 'You can change your own marks.';
 /** Said once a change refused for the level has been dropped. */
 const VIEW_ONLY_COPY = 'You can view this PDF, but not change it.';
 const REVIEW_ONLY_COPY = 'You can review this PDF, but not edit its pages.';
@@ -20,6 +22,7 @@ export const lostChangesCopy = (count: number): string =>
 
 /** What a person is told once a change the room refused has been dropped. */
 export const droppedChangeCopy = (refusal: PdfDocumentRefusal, level: AccessLevel): string => {
+  if (refusal === 'not_your_mark') return NOT_YOUR_MARK_COPY;
   if (refusal !== 'level_too_low') return CHANGES_DO_NOT_FIT_COPY;
   return level === 'view' ? VIEW_ONLY_COPY : REVIEW_ONLY_COPY;
 };

@@ -34,12 +34,15 @@ export type PdfPageTyping = {
 export function usePdfTyping({
   ready,
   author,
+  authorKey,
   looks,
   inHand,
   onProblem,
 }: {
   ready: Ready | null;
   author: string;
+  // The author key this session holds (marks.md "Share roles"): what makes a mark made here its own.
+  authorKey: string | null;
   // Each kind's look now.
   looks: MarkLooks;
   // The typing tool in hand; null while another is.
@@ -63,7 +66,7 @@ export function usePdfTyping({
           ready.binding.doc,
           { page: page.name, stored: { blob: ready.storedFile, pages: ready.pages.length } },
           typed,
-          { author, now: Date.now(), id: crypto.randomUUID(), look: looks[kind] },
+          { author, authorKey, now: Date.now(), id: crypto.randomUUID(), look: looks[kind] },
         ),
       );
       if (made.ok) {
@@ -75,7 +78,7 @@ export function usePdfTyping({
         onProblem(TOO_MANY_MARKS_COPY);
       } else debugLog(`[pdf] mark-refused name=${made.reason}`);
     },
-    [ready, author, looks, onProblem],
+    [ready, author, authorKey, looks, onProblem],
   );
 
   const typing = useMemo<PdfPageTyping | null>(

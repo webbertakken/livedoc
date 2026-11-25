@@ -54,6 +54,7 @@ function pressing({
   drawn = true,
 }: { chosen?: string[]; choose?: boolean; matrix?: PageMatrix | null; drawn?: boolean } = {}) {
   const choosing: PdfPageChoosing = {
+    mayChange: () => true,
     choose: vi.fn(),
     letGo: vi.fn(),
     leave: vi.fn(),

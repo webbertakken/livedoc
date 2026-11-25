@@ -232,7 +232,10 @@ writes one shape `(default)`:
   roots, never trusting a client's claim ([Editing modes](editing-modes.md#share-roles)).
 - **What an update touches** `(default)`: every root in which it adds, sets or removes anything, however deep. A
   root the layout does not name asks an Editor.
-- **`removed`**: a Participant's update may add or take back only entries that are a `mark`'s, before and after.
+- **`removed`**: a Participant's update may add or take back no entry: one that is a `mark`'s is a file's own mark
+  changed or deleted, refused with `not_your_mark`; any other with `level_too_low`.
+- **`marks`**: a Participant's update may add, change and delete only their own marks, each carrying their key
+  before and after; any other is refused whole with `not_your_mark` ([Marks](marks.md#share-roles)).
 - **`stored`**: a Participant's update may name the stored file once, where the state names none: its `blob` must
   be the tab's own and its `pages` a page count; after that, `stored` must read as it did.
 - **An update that stands on changes the room lacks** (a change sent after one that was refused, before its sender
@@ -241,7 +244,8 @@ writes one shape `(default)`:
   [live tab kind](../006-document/kinds-outside-the-canvas.md#live-state), never relayed as sent; a Viewer's is
   refused with `level_too_low`.
 - **The door** judges a posted update the same way: `403 level_too_low` for a Viewer's, and for a Participant's
-  that asks an Editor; `409 update_unreadable` `(default)` for a Participant's that cannot be judged.
+  that asks an Editor; `403 not_your_mark` for a Participant's that changes a mark not their own; `409
+update_unreadable` `(default)` for a Participant's that cannot be judged.
 
 ### Replacing the stored file
 
@@ -520,8 +524,9 @@ The room's refusal of a frame reaches its sender alone, as `pdf-refused` with th
 name. The surface then drops its live changes and reads them again from the room, in place: the pages stay drawn, and
 what it shows is what everyone holds `(default)`. Nothing of the refused change stays in this browser, so it is
 never sent again; a change made in the moment before the refusal was heard goes with it, as the room would have
-refused it too. It says "This PDF has more unsaved changes than fit." `(default)` for a limit, or the level's line
-of [Editing modes](editing-modes.md#errors), logging `[pdf] change-dropped`. Undo's steps before it end
+refused it too. It says "This PDF has more unsaved changes than fit." `(default)` for a limit, the level's line
+of [Editing modes](editing-modes.md#errors), or "You can change your own marks." for `not_your_mark`
+([Marks](marks.md#errors)), logging `[pdf] change-dropped`. Undo's steps before it end
 ([Undo](#undo)).
 
 ## Share roles

@@ -8,6 +8,7 @@ import {
   memo,
   useCallback,
   useEffect,
+  useMemo,
   useRef,
   useState,
   type MouseEvent,
@@ -273,9 +274,14 @@ export const PdfPage = memo(function PdfPage({
   });
   const textMark = usePdfPageTextMark({ index, engine, onMark });
   // A press on a mark with Select in hand: selected, dragged, or a drag from a text mark handed to the text.
+  // A press reaches only the marks this session may change; one on another's falls to the text beneath.
+  const pressable = useMemo(
+    () => (choosing ? marks.filter(choosing.mayChange) : marks),
+    [marks, choosing],
+  );
   const markPress = usePdfPageMarkPress({
     index,
-    marks,
+    marks: pressable,
     chosen,
     choosing: tool === 'select' && current ? choosing : null,
     cssPerPoint,

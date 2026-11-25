@@ -104,6 +104,7 @@ function tools({
         ready: isOpen ? open.ready : null,
         marking: props.marking,
         author: 'Ada',
+        authorKey: 'k-ada',
         selected: props.selected,
         clearSelection,
         focusPages,
@@ -182,7 +183,7 @@ describe('the text tools', () => {
   });
 
   // marks.md "Making a mark": a drag across a line's text marks it with the tool in hand.
-  it('marks what a drag covered with the tool in hand, one step of undo on its page', () => {
+  it('marks what a drag covered with the tool in hand, carrying the author key, one step of undo on its page', () => {
     const { hook, run, doc, steps, onProblem } = tools();
     act(() => hook.result.current.make(0, { text: 'Lease', quads: [QUAD] }));
     expect(PdfLiveChanges.marks(doc)).toEqual([]);
@@ -193,6 +194,7 @@ describe('the text tools', () => {
         kind: 'strikeout',
         page: PAGES[0]!.name,
         author: 'Ada',
+        authorKey: 'k-ada',
         colour: TEXT_MARK_LOOKS.strikeout.colour,
       }),
     ]);

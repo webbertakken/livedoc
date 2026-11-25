@@ -19,11 +19,14 @@ type Ready = Pick<
 export function usePdfShapes({
   ready,
   author,
+  authorKey,
   looks,
   onProblem,
 }: {
   ready: Ready | null;
   author: string;
+  // The author key this session holds (marks.md "Share roles"): what makes a mark made here its own.
+  authorKey: string | null;
   // Each kind's look now.
   looks: MarkLooks;
   onProblem: (problem: string | null) => void;
@@ -37,7 +40,13 @@ export function usePdfShapes({
           ready.binding.doc,
           { page: page.name, stored: { blob: ready.storedFile, pages: ready.pages.length } },
           shape,
-          { author, now: Date.now(), id: crypto.randomUUID(), look: looks[shape?.kind ?? 'line'] },
+          {
+            author,
+            authorKey,
+            now: Date.now(),
+            id: crypto.randomUUID(),
+            look: looks[shape?.kind ?? 'line'],
+          },
         ),
       );
       if (made.ok) {
@@ -49,6 +58,6 @@ export function usePdfShapes({
         onProblem(TOO_MANY_MARKS_COPY);
       } else debugLog(`[pdf] mark-refused name=${made.reason}`);
     },
-    [ready, author, looks, onProblem],
+    [ready, author, authorKey, looks, onProblem],
   );
 }

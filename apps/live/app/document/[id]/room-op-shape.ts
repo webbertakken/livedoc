@@ -6,7 +6,7 @@
 // patch holds is the stored-element migrations' to settle (room-op-migrate.ts), and a kind this build does not
 // apply passes, as it always has, to be ignored.
 import { isRecord } from '@livedoc/document';
-import type { RoomOp } from '@livedoc/api-schema';
+import { LIVE_TAB_REFUSAL_NAMES, type RoomOp } from '@livedoc/api-schema';
 
 const isText = (v: unknown): v is string => typeof v === 'string';
 const isOptionalList = (v: unknown) => v === undefined || Array.isArray(v);
@@ -61,9 +61,9 @@ export function roomOpIsWellFormed(op: unknown): op is RoomOp {
     case 'pdf-refused':
       if (!isText(op.tabId)) return false;
       if ('limit' in op) return op.limit === 'characters' || op.limit === 'state';
-      // A refused replacement names why in its own words; a refused change in one of two.
+      // A refused replacement names why in its own words; a refused change in one of three.
       if ('replacement' in op) return op.replacement === true && isText(op.name);
-      return op.name === 'level_too_low' || op.name === 'stored_file_changed';
+      return (LIVE_TAB_REFUSAL_NAMES as readonly unknown[]).includes(op.name);
     case 'pdf-stored':
       return isText(op.tabId) && isText(op.from) && isText(op.blob);
     case 'document-meta':
