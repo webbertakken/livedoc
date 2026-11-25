@@ -70,6 +70,16 @@ the same 1-D data model, while the line chart carries a 2-D dataset (see Model).
   scale, as if none were. In the editor, the Chart category of a line chart with two or more series has **Right
   Axis**, a choice of None or one series, which moves that series to the right (one commit, `Element·Changed·
 ChartAxis`); a series on the right shows "(right)" after its name in the Data summary. An Editor changes it.
+- **A scatter series drawn as a line**: a series of a scatter chart marked `line: true` has its points joined by
+  straight segments in order of x, its markers kept, as Excel's "Scatter with Straight Lines and Markers" draws it
+  (a Pareto frontier among points); every other series stays points only. The line joins the series' present points
+  only: no value breaks nothing on it, so a series whose values are mostly empty still draws one unbroken line
+  through those it has. Points of equal x keep their rows' order; a scatter whose categories are not numbers (evenly
+  spaced) joins them in category order. Its key in the legend is a short line through a dot, not a square. Line and
+  Area draw every series as a line already, so the mark changes nothing on them and is kept for a change back to
+  Scatter. In the editor, the Chart category of a scatter chart has **Lines**: a tile per series, pressed while it is
+  drawn as a line, each press one commit (`Element·Changed·ChartLines`). An Editor changes it; a Participant and a
+  Viewer see the lines.
 - The **Animation** category carries the chart-specific animations
   (None / Grow / Pop / Spin / Pulse, with a **Speed** row + **Repeat** toggle)
   in place of the boxed-element animation set — a chart animates its marks, not
@@ -153,7 +163,8 @@ groups all three (they're all in `isSelfDrawingShape` too).
   (no value, Chart types "No value is a gap").
 - `ShapeElement.chartValues?: boolean`: the numbers on the marks (Show Values); absent means off.
 - `ShapeElement.chartAxis?: boolean`: the value axis, its tick labels and gridlines (Show Axis); absent means off.
-  A `LineSeries` may carry `axis?: 'right'`, its own scale (a second axis); any other value reads as absent. The
+  A `LineSeries` may carry `axis?: 'right'`, its own scale (a second axis), and `line?: true`, a scatter series
+  drawn as a line; any other value of either reads as absent (an agent's write drops it). The
   axes are laid out with the marks, from `axisScale` and `axisLabelRoom` (`packages/document/src/chart-axis.ts`) for both renderers.
 - Line: `ShapeElement.lineCategories?: string[]` + `lineSeries?: LineSeries[]`
   (`{ name, color?, values: (number | null)[] }`), aligned to the categories — a 2-D
@@ -204,7 +215,18 @@ A chart may carry `chartSource` (a sheet and a range of it): its data is then re
 the element's own data is the last read ([Sheet charts](../029-sheets/sheet.md#charts)). Its Data menu offers
 **Unlink From Sheet** in place of the data editor. A Scatter chart from a Sheet whose first column holds numbers (so
 the read numbers its categories `1, 2, …` and makes that column a series) takes that column as its x and the other
-columns as its series, as a spreadsheet's scatter chart does.
+columns as its series, as a spreadsheet's scatter chart does. Each read keeps what its series carry beyond their
+data, by position: a colour, `axis: 'right'` and `line: true`, so Right Axis and Lines survive the cells changing.
+
+### Lines set by an agent
+
+- `change_sheet`'s `chart` op takes `lines`: the header names of the series to draw as lines (`["Pareto"]`, any
+  case), on a scatter chart only. A name that is no series of the chart, or `lines` on another type, is refused and
+  writes nothing, naming the series it has.
+- An edit operation sets them on an existing chart: `set <chart> lines=["Pareto"]` (the `lines` alias, on a line
+  chart) marks the series of those names and unmarks the rest; `lines=[]` unmarks every one. A name that is no series
+  of the chart is refused, naming those it has. It changes nothing else of the series, so a chart from a Sheet keeps
+  reading its cells.
 
 ## Chart palettes
 
