@@ -3,6 +3,7 @@
 export * from './limits';
 export { isPdfBytes } from './sniff';
 export { PageName } from './page-name';
+export { PdfDate } from './pdf-date';
 export {
   LINE_ENDS,
   LINE_MARK_KINDS,

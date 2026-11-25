@@ -54,6 +54,8 @@ const unsaid = {
   modified: '',
   answers: null,
   state: null,
+  // A Note, a reply and an insertion are kinds LiveDoc does not make yet: none is read as its own.
+  mark: null,
 };
 
 // marks.md "In the file": what is read of a mark a file holds; comments.md "In the file": replies and states.
@@ -75,6 +77,14 @@ describe("a file's marks", () => {
         modified: 'D:20261121140203Z',
         answers: null,
         state: null,
+        mark: expect.objectContaining({
+          id: 'hl-1',
+          kind: 'highlight',
+          colour: '#ff7f00',
+          opacity: 0.5,
+          createdAt: Date.UTC(2026, 10, 20, 9),
+          modifiedAt: Date.UTC(2026, 10, 21, 14, 2, 3),
+        }),
       },
       {
         ...unsaid,

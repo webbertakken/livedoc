@@ -64,10 +64,19 @@ describe('Mark', () => {
     expect(mark.author).toHaveLength(255);
   });
 
+  it.each(['o:12', 'a1b2c3d4-e5f6.7', '{5F3C9A1E-0B2D-4E8F-9A7C-1D2E3F4A5B6C}'])(
+    'holds a file mark’s own id, %s',
+    (id) => {
+      expect(Mark.parse({ ...Mark.highlight(input()), id })?.id).toBe(id);
+    },
+  );
+
   it.each([
     ['no value', null],
     ['a string', 'highlight'],
     ['an id with a space', { id: 'a b' }],
+    ['an id with a quote', { id: 'a"b' }],
+    ['an id longer than an id holds', { id: 'x'.repeat(65) }],
     ['an unknown kind', { kind: 'laser' }],
     ['a page that is no name', { page: 'page 4' }],
     ['no quads', { quads: [] }],

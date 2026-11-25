@@ -9,6 +9,8 @@ import {
   PDF_NAME_MAX_CHARS,
   PDF_PAGE_MAX_MARKS,
 } from '../limits';
+import { PageName } from '../page-name';
+import { readAsMark } from './read-as-mark';
 import type { ReaderFile } from './reader-file';
 
 // The file's own words for what sits on a page, by the reader's number; a link, a pop-up and a field's widget are
@@ -49,13 +51,17 @@ export function readMarks(
   return (
     file.withPage(index, (page) => {
       const marks: FileMark[] = [];
+      const name = PageName.ofObject(p.EPDFDoc_GetPageObjectNumberByIndex(file.doc, index));
       const count = p.FPDFPage_GetAnnotCount(page);
       let n = 0;
       for (; n < count && marks.length < most; n += 1) {
         const annotation = p.FPDFPage_GetAnnot(page, n);
         if (!annotation) continue;
         const subtype = SUBTYPES[p.FPDFAnnot_GetSubtype(annotation)];
-        if (subtype) marks.push(markOf(file, annotation, subtype));
+        if (subtype) {
+          const read = markOf(file, annotation, subtype);
+          marks.push({ ...read, mark: readAsMark(file, page, annotation, read, name) });
+        }
         p.FPDFPage_CloseAnnot(annotation);
       }
       if (n < count) file.clamped('list');
@@ -64,7 +70,7 @@ export function readMarks(
   );
 }
 
-function markOf(file: ReaderFile, annotation: number, subtype: string): FileMark {
+function markOf(file: ReaderFile, annotation: number, subtype: string): Omit<FileMark, 'mark'> {
   const { p } = file;
   const said = (key: string, most = PDF_NAME_MAX_CHARS): string =>
     file.written(most, (buffer, size) => p.FPDFAnnot_GetStringValue(annotation, key, buffer, size));
