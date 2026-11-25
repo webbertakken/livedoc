@@ -23,7 +23,8 @@ export const RELATIONSHIP_TYPES = {
   comments: `${TRANSITIONAL_RELS}/comments`,
   commentsExtended: 'http://schemas.microsoft.com/office/2011/relationships/commentsExtended',
   commentsIds: 'http://schemas.microsoft.com/office/2016/09/relationships/commentsIds',
-  commentsExtensible: 'http://schemas.microsoft.com/office/2018/08/relationships/commentsExtensible',
+  commentsExtensible:
+    'http://schemas.microsoft.com/office/2018/08/relationships/commentsExtensible',
   image: `${TRANSITIONAL_RELS}/image`,
   oleObject: `${TRANSITIONAL_RELS}/oleObject`,
   package: `${TRANSITIONAL_RELS}/package`,
