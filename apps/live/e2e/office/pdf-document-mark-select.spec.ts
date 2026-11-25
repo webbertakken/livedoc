@@ -283,7 +283,10 @@ test('a selected Text is given a size and an alignment', async ({ page, pageErro
     'aria-checked',
     'true',
   );
+  // Escape closes Align text, then Format.
   await page.keyboard.press('Escape');
+  await page.keyboard.press('Escape');
+  await expect(page.getByRole('menuitem', { name: 'Align text' })).toBeHidden();
   await page.screenshot({ path: test.info().outputPath('pdf-mark-size-align.png') });
 
   // Undo takes back the alignment, then the size.
