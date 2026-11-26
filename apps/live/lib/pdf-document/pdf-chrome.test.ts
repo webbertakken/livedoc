@@ -10,6 +10,8 @@ import {
   DARK_PAGES,
   DELETE_MARKS,
   DOWNLOAD_PDF,
+  GROUP_MARKS,
+  UNGROUP_MARKS,
   FORMAT_COLOUR,
   FORMAT_FILL_COLOUR,
   FIND,
@@ -121,8 +123,10 @@ describe("a PDF document's menus and toolbar", () => {
     UNDO,
     REDO,
     TOOL_SELECT,
-    // usePdfMarkSelection.ts: Edit > Delete (marks.md "Changing a mark").
+    // usePdfMarkSelection.ts: Edit > Delete, Format > Group and Ungroup (marks.md "Changing a mark").
     DELETE_MARKS,
+    GROUP_MARKS,
+    UNGROUP_MARKS,
     // usePdfMarkRestyle.ts: Format > Opacity, Line width, Line style, Line ends and Align text, of the selected marks.
     ...Object.keys(OPACITY_ITEMS),
     ...Object.keys(ALIGN_ITEMS),
