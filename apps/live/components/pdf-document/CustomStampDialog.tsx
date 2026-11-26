@@ -80,7 +80,7 @@ function CustomStampForm({
             <img
               src={form.preview}
               alt="The stamp’s picture as it will be kept"
-              className="max-h-32 max-w-full rounded-[4px] bg-(--pdf-paper) object-contain"
+              className="max-h-32 max-w-full rounded-control bg-(--pdf-paper) object-contain"
             />
           ) : null}
           <span>

@@ -24,6 +24,7 @@ describe('OWNER_SCOPED_SEGMENTS', () => {
       'folders',
       'images',
       'custom-themes',
+      'custom-stamps',
       'participants',
       'preferences',
       'shared',

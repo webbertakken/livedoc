@@ -52,7 +52,7 @@ const ITEM_TAB_QUERY: QueryParam = {
 };
 
 export interface RouteSpec {
-  method: 'GET' | 'POST' | 'PUT' | 'DELETE';
+  method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
   /** Path template under the server base, e.g. `/documents/{id}/tabs/{tabId}`. */
   path: string;
   /** Top-level resource segment, matching index.ts's dispatch switch. Used by
@@ -172,6 +172,34 @@ const wrap = (key: string, name: string): BodySchema => ({
   properties: { [key]: ref(name) },
   required: [key],
 });
+
+/** A custom stamp as kept (custom-stamps.md "API"); no api-schema DTO: the record is the package's. */
+const CUSTOM_STAMP = {
+  type: 'object',
+  properties: {
+    id: { type: 'string' },
+    name: { type: 'string' },
+    category: { type: 'string' },
+    picture: {
+      type: 'object',
+      properties: {
+        key: { type: 'string' },
+        type: { type: 'string', enum: ['png', 'jpeg'] },
+        width: { type: 'integer' },
+        height: { type: 'integer' },
+      },
+      required: ['key', 'type', 'width', 'height'],
+    },
+    natural: {
+      type: 'object',
+      properties: { width: { type: 'number' }, height: { type: 'number' } },
+      required: ['width', 'height'],
+    },
+    createdAt: { type: 'integer' },
+    updatedAt: { type: 'integer' },
+  },
+  required: ['id', 'name', 'category', 'picture', 'natural', 'createdAt', 'updatedAt'],
+} as const;
 
 export const ROUTE_MANIFEST: RouteSpec[] = [
   // ---- Meta ----
@@ -2036,6 +2064,70 @@ export const ROUTE_MANIFEST: RouteSpec[] = [
     auth: 'guest-or-session',
     tokenUsable: true,
     statuses: [204, 401, 403, 404],
+  },
+
+  // ---- Custom stamps (docs/specs/035-pdf-documents/custom-stamps.md "API") ----
+  {
+    method: 'GET',
+    path: '/custom-stamps',
+    segment: 'custom-stamps',
+    tag: 'Custom stamps',
+    summary: "List the caller's custom stamps, newest first.",
+    auth: 'guest-or-session',
+    tokenUsable: true,
+    responseSchema: {
+      type: 'object',
+      properties: { stamps: { type: 'array', items: CUSTOM_STAMP } },
+    },
+    statuses: [200, 401, 503],
+  },
+  {
+    method: 'POST',
+    path: '/custom-stamps',
+    segment: 'custom-stamps',
+    tag: 'Custom stamps',
+    summary: 'Make a custom stamp, its picture a blob the caller already holds.',
+    auth: 'guest-or-session',
+    tokenUsable: true,
+    requestSchema: CUSTOM_STAMP,
+    responseSchema: { type: 'object', properties: { stamp: CUSTOM_STAMP } },
+    statuses: [201, 400, 401, 409, 413, 503],
+  },
+  {
+    method: 'PATCH',
+    path: '/custom-stamps/{id}',
+    segment: 'custom-stamps',
+    tag: 'Custom stamps',
+    summary: 'Rename a custom stamp, or move it to another category.',
+    auth: 'guest-or-session',
+    tokenUsable: true,
+    requestSchema: {
+      type: 'object',
+      properties: { name: { type: 'string' }, category: { type: 'string' } },
+    },
+    responseSchema: { type: 'object', properties: { stamp: CUSTOM_STAMP } },
+    statuses: [200, 400, 401, 404, 503],
+  },
+  {
+    method: 'DELETE',
+    path: '/custom-stamps/{id}',
+    segment: 'custom-stamps',
+    tag: 'Custom stamps',
+    summary: 'Delete a custom stamp.',
+    auth: 'guest-or-session',
+    tokenUsable: true,
+    statuses: [204, 401, 404, 503],
+  },
+  {
+    method: 'GET',
+    path: '/custom-stamps/{id}/picture',
+    segment: 'custom-stamps',
+    tag: 'Custom stamps',
+    summary: "A custom stamp's picture, to its owner: PNG or JPEG bytes.",
+    auth: 'guest-or-session',
+    tokenUsable: true,
+    responseMediaType: 'application/octet-stream',
+    statuses: [200, 401, 404, 503],
   },
 
   // ---- Shape libraries ----

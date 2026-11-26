@@ -335,6 +335,7 @@ const WORKSPACE_ROUTES: readonly RouteShape[] = [
     'images',
     'files',
     'custom-themes',
+    'custom-stamps',
     'shape-libraries',
   ].map((resource) => shape(ALL_METHODS, `${resource}/**`)),
   shape('GET', 'teams'),

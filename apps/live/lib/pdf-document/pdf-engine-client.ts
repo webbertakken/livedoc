@@ -190,7 +190,8 @@ export function pdfEngineClient(
     hideMarks: (ids) => ask<void>({ method: 'hideMarks', args: [ids] }),
     canAppend: () => ask<boolean>({ method: 'canAppend', args: [] }),
     repaired: () => ask<boolean>({ method: 'repaired', args: [] }),
-    bake: (liveChanges) => ask<BakeResult>({ method: 'bake', args: [liveChanges] }),
+    bake: (liveChanges, pictures) =>
+      ask<BakeResult>({ method: 'bake', args: pictures ? [liveChanges, pictures] : [liveChanges] }),
     cutPages: (bytes, indexes) =>
       ask<Uint8Array<ArrayBuffer> | null>({ method: 'cutPages', args: [bytes, indexes] }),
     heldBytes: () => ask<number>({ method: 'heldBytes', args: [] }),
