@@ -4,7 +4,9 @@
 judges a Participant's; they are drawn and added in the margin, listed in the comments panel and reached from the
 keyboard; people react to them, mention one another and assign a comment, a mention or an assignment emailing whom
 it names, and the Inbox lists the threads and assigned comments of those they concern. Suggestions are kept in the
-writing, travel in both formats' files as tracked changes and the room judges a Participant's; suggesting in the editor, versions and notifications are still to come.
+writing, travel in both formats' files as tracked changes and the room judges a Participant's; Editors and
+Participants suggest in Suggesting mode, from the writing, the menus and the toolbar. Suggestion cards, accepting and
+rejecting, versions and notifications are still to come.
 
 Comments, suggestions, version history, comparing documents and notifications in a [text document](text-document.md).
 The panels and threads are the shared [review surfaces](../012-collaboration/review-surfaces.md), built once for the
@@ -19,7 +21,9 @@ office kinds; this spec says what a text document puts in them.
 - The switch sits at the right of the title row ([Editing surface](editing-surface.md#the-title-row)); these are the
   text document's modes on the office shell's switch ([Office shell](../004-interface-design/office-shell.md#modes)).
 - A mode never grants more than the level: Viewing shows the menus and toolbar a Viewer sees, and the writing is read
-  only; a mode the level does not allow is not listed.
+  only; a mode the level does not allow is not listed. Suggesting shows a Participant an Editor's menus and toolbar,
+  its changes being proposals the room judges, with only what can be suggested running
+  ([While suggesting](#while-suggesting)).
 - The mode is kept while the document is open, never stored: each open starts at the level's mode `(default)`.
 - Telemetry: `UI · Changed · TextDocumentMode` when a person changes it.
 
@@ -256,8 +260,13 @@ office kinds; this spec says what a text document puts in them.
 - **Pasting** inserts as typing does; what is pasted from suggested text arrives plain in Editing.
 - **Undo** takes back one's own suggestions step by step, as any edit.
 - The refusal lines show for 5 seconds (`SUGGESTING_NOTICE_MS`, (default)) in the status band.
-- A Participant suggests by typing, deleting, pasting and with the keyboard's formatting shortcuts; the toolbar and
-  menus they see in Suggesting follow (default).
+- **A Participant** sees an Editor's menus, toolbar and context menu in Suggesting, as Google's Commenter does
+  ([Office shell](../004-interface-design/office-shell.md#modes)). What can be suggested runs: Edit's Undo, Redo, Cut,
+  Paste, Paste without formatting and Delete; Insert's Link, Special characters and Emoji; Format's Text, Align &
+  indent, Line & paragraph spacing, Borders and shading and Clear formatting; and the toolbar's Paint format, font,
+  size, text formatting, Align, Line and paragraph spacing, indents and Clear formatting. Everything else is dimmed:
+  what cannot yet be suggested, what is kept beside the writing, and paragraph styles and lists, whose definitions
+  are kept beside the writing too (default).
 - Telemetry: `Element · Added · TextDocumentSuggestion` once per suggestion begun, never per keystroke.
 
 ### How a suggestion is kept

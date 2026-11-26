@@ -109,7 +109,8 @@ The document's canvas chrome (palette, mode switch, minimap, zoom controls) is n
 - Each item names its shortcut on the right, in the platform's notation (⌘ on a Mac, Ctrl elsewhere).
 - A Viewer's menus hold only what a Viewer may do: File (Make a copy, Download, Print, Details), Edit (Copy, Select
   all, Find), View, Tools (Word count, Dictionary), Help. A Participant's add Insert > Comment and, under D7, the
-  Suggesting mode.
+  Suggesting mode, in which a Participant sees an Editor's menus with only what can be suggested running
+  ([While suggesting](review.md#while-suggesting)).
 
 ## The toolbar
 
@@ -133,7 +134,8 @@ Left to right, as Google has it, with a divider between groups:
 - **Overflow**: controls that do not fit move, from the right, into a ⋮ menu that opens a second row of them; the
   order never changes.
 - **The style, font and size** show the value at the caret, blank over a mixed selection.
-- A Viewer sees no toolbar but Zoom and the mode switch; a Participant adds Add comment.
+- A Viewer sees no toolbar but Zoom and the mode switch; a Participant adds Add comment, and in Suggesting sees an
+  Editor's toolbar with only what can be suggested running.
 
 ## The ruler
 

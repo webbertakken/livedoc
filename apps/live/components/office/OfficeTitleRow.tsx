@@ -17,6 +17,8 @@ import {
   type OfficeCatalogue,
 } from '@/lib/office/office-catalogue';
 import { currentOfficePlatform } from '@/lib/office/office-platform';
+import type { OfficeProposals } from '@/lib/office/office-mode';
+import { officeItemLevels, proposalActions, proposalChoices } from '@/lib/office/office-proposals';
 import type { ShortcutRow } from '@/lib/office/shortcut-registry';
 import { shortcutTextOf } from '@/lib/office/shortcut-notation';
 import { track } from '@/lib/telemetry';
@@ -87,6 +89,7 @@ export function OfficeTitleRow({
   contextMenu = null,
   bare = null,
   commentHistoryItem,
+  proposals = null,
 }: {
   name: string;
   // The format's pill (".ODT") and what it is called ("OpenDocument format").
@@ -133,6 +136,8 @@ export function OfficeTitleRow({
   commentHistoryItem?: string;
   // The title row drawn bare (office-shell.md "Title row"): the name line and one button to leave; keys still heard.
   bare?: OfficeBareTitleRow | null;
+  // A mode drawn above the session's level (office-shell.md "Modes"): what runs above it; null when drawn at it.
+  proposals?: OfficeProposals | null;
 }) {
   const [openMenu, setOpenMenu] = useState<OpenMenu>(null);
   // A phone (office-shell.md "Phone and tablet"): the toolbar is one scrolling row, the menus live in More.
@@ -153,26 +158,41 @@ export function OfficeTitleRow({
     };
   }, [move, telemetryKind]);
 
-  // The document's own File items, bound where the session may use them; unbound, they are not drawn.
+  // Each item's least level, for a mode drawn above the session's.
+  const levels = useMemo(
+    () => officeItemLevels(catalogue, toolbar, contextMenu?.entries ?? []),
+    [catalogue, toolbar, contextMenu],
+  );
+  // The document's own File items, bound where the session may use them; unbound, they are not drawn. In a mode drawn
+  // above the session's level, only what a proposal can carry runs above it.
   const allActions: OfficeActions = useMemo(
-    () => ({
-      ...actions,
-      ...(opening ? { open: { run: () => picker?.click() } } : {}),
-      ...(rename ? { rename: { run: () => setRenameNonce((n) => n + 1) } } : {}),
-      ...(openMove ? { move: { run: openMove } } : {}),
-      ...(share ? { 'share-with-others': { run: share.onOpen } } : {}),
-      'search-the-menus': { run: () => setFinding(true) },
-      'keyboard-shortcuts': {
-        run: () => {
-          if (telemetryKind) track('UI', 'Opened', `${telemetryKind}Shortcuts`);
-          setOpenMenu(null);
-          setShowingShortcuts(true);
+    () =>
+      proposalActions(
+        {
+          ...actions,
+          ...(opening ? { open: { run: () => picker?.click() } } : {}),
+          ...(rename ? { rename: { run: () => setRenameNonce((n) => n + 1) } } : {}),
+          ...(openMove ? { move: { run: openMove } } : {}),
+          ...(share ? { 'share-with-others': { run: share.onOpen } } : {}),
+          'search-the-menus': { run: () => setFinding(true) },
+          'keyboard-shortcuts': {
+            run: () => {
+              if (telemetryKind) track('UI', 'Opened', `${telemetryKind}Shortcuts`);
+              setOpenMenu(null);
+              setShowingShortcuts(true);
+            },
+          },
         },
-      },
-    }),
-    [actions, opening, picker, rename, share, openMove, telemetryKind],
+        levels,
+        proposals,
+      ),
+    [actions, opening, picker, rename, share, openMove, telemetryKind, levels, proposals],
   );
 
+  const shownChoices = useMemo(
+    () => proposalChoices(choices, levels, proposals),
+    [choices, levels, proposals],
+  );
   const menus = useMemo(
     () => visibleMenus(catalogue, level, allActions),
     [catalogue, level, allActions],
@@ -386,7 +406,7 @@ export function OfficeTitleRow({
           fontSize={fontSize}
           fontFamily={fontFamily}
           colours={colours}
-          choices={choices}
+          choices={shownChoices}
           refresh={refresh}
           phone={phone}
         />

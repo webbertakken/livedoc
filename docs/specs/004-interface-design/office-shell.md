@@ -313,8 +313,13 @@ of modes is the kind's own; the shell draws it, keeps the person's choice and bi
 
 - A kind declares its modes once, in order, each with an id, its label, a line on what it does, its glyph (from the
   repo's icon set), the least share level that reaches it, the level the menus and toolbar are drawn for in it (never
-  more than the session's), its status (`built` or `comingSoon`) and its menu item, whose catalogue row holds its
-  shortcut.
+  more than the session's, unless its changes are proposals), its status (`built` or `comingSoon`) and its menu item,
+  whose catalogue row holds its shortcut.
+- A mode whose changes are **proposals** that the room judges (a text document's Suggesting) also names the items a
+  proposal can carry. It is drawn at its own level even for a session below that level, as Google draws a Commenter's
+  menus in Suggesting. An item above the session's level runs only when the mode names it; every other one is
+  dimmed, so nothing above the session's level becomes runnable, from a menu, the toolbar, a context menu or a key.
+  The room's judge stays the guard.
 - A text document's modes are Editing, Suggesting and Viewing
   ([Review](../034-text-documents/review.md#editing-modes)); a PDF's are its own.
 - The switch lists the modes the session's level reaches; one not yet built is listed dimmed, "Coming soon" in place

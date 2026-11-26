@@ -122,7 +122,7 @@ import type { OfficeChrome } from '@/components/office/office-chrome';
 import type { SaveFactsSource } from '@/lib/text-document/text-document-save-status';
 import { useTextDocumentSaveStatus } from '@/lib/text-document/useTextDocumentSaveStatus';
 import { useTextDocumentZoom } from '@/lib/text-document/useTextDocumentZoom';
-import { levelInMode } from '@/lib/office/office-mode';
+import { levelInMode, proposalsInMode } from '@/lib/office/office-mode';
 import { useOfficeMode } from '@/lib/office/useOfficeMode';
 import { TEXT_DOCUMENT_MODES } from '@/lib/text-document/text-document-modes';
 import { OfficePanel, OfficePanelLayout } from '@/components/office/OfficePanel';
@@ -365,6 +365,8 @@ export function TextDocumentSurface({
   const textWrites = writes || suggests;
   const listWrites = writes || (suggests && canEdit);
   const suggesting = useTextDocumentSuggesting({ suggests, commenter });
+  // A Participant in Suggesting sees an Editor's menus, with only what can be suggested running (office-shell.md "Modes").
+  const proposals = useMemo(() => proposalsInMode(TEXT_DOCUMENT_MODES, level, mode), [level, mode]);
   // The side panels (office-shell.md "Side panels"); closing one gives the writing the keyboard back. Line numbers is
   // an Editor's (page-layout.md "Line numbers").
   const panels = useOfficePanels({
@@ -1100,7 +1102,8 @@ export function TextDocumentSurface({
   // Edit > Undo, Redo and Select all, run by the menus and the shortcut layer (keyboard-shortcuts.md).
   const editorActions = useMemo(
     () => ({
-      ...textDocumentEditorActions(activeView, { canEdit: writes }),
+      // Undo, Redo and Delete while suggesting too: the undo is the person's own, Delete is rewritten as a suggestion.
+      ...textDocumentEditorActions(activeView, { canEdit: textWrites }),
       ...clipboard.actions,
       ...preferences.actions,
       ...formatting.actions,
@@ -1166,7 +1169,7 @@ export function TextDocumentSurface({
       printLayout.actions,
       page.pageless,
       activeView,
-      writes,
+      textWrites,
       formatting.actions,
       paragraphStyles.actions,
       paragraphs.actions,
@@ -1221,6 +1224,7 @@ export function TextDocumentSurface({
         documentName={documentName}
         format={format}
         level={levelInMode(TEXT_DOCUMENT_MODES, level, mode)}
+        proposals={proposals}
         editorActions={editorActions}
         mode={modeChoice}
         caret={caret}

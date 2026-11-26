@@ -89,6 +89,30 @@ test('an Editor and a Participant suggest, and each sees the other’s suggestio
   await expect(
     body.locator('.text-document-insertion').filter({ hasText: 'Then it rests' }),
   ).toHaveCount(1);
+
+  // The Participant sees an Editor's toolbar and menus in Suggesting: Bold over the Editor's words suggests a format
+  // change the Editor sees; what cannot be suggested, File > Page setup, never runs for them.
+  const peerToolbar = peer.getByRole('toolbar', { name: 'Toolbar' });
+  const bold = peerToolbar.getByRole('button', { name: /^Bold/ });
+  await expect(bold).toBeEnabled();
+  await peerBody.locator('p').first().click();
+  await peer.keyboard.press('Home');
+  for (let i = 0; i < 3; i += 1) await peer.keyboard.press('Shift+ArrowRight');
+  await bold.click();
+  await expect(body.locator('.text-document-format-change')).toHaveText('The', {
+    timeout: 15_000,
+  });
+  await peer
+    .getByRole('menubar', { name: 'Menu bar' })
+    .getByRole('menuitem', { name: 'File' })
+    .click();
+  const pageSetup = peer.getByRole('menuitem', { name: 'Page setup', exact: true });
+  if ((await pageSetup.count()) > 0) await expect(pageSetup).toHaveAttribute('aria-disabled', 'true');
+  await peer.waitForTimeout(300);
+  await peer.screenshot({ path: test.info().outputPath('suggesting-participant-menus.png') });
+  await peer.keyboard.press('Escape');
+  await expect(peer.getByRole('dialog', { name: 'Page setup' })).toHaveCount(0);
+
   await page.waitForTimeout(300);
   await peer.screenshot({ path: test.info().outputPath('suggesting-participant.png') });
 

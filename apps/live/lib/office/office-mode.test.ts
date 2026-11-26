@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { lucideEye, lucidePencil } from '@livedoc/icons/lucide';
-import { levelInMode, modesFor, startingMode, type OfficeModeInfo } from './office-mode';
+import {
+  levelInMode,
+  modesFor,
+  proposalsInMode,
+  startingMode,
+  type OfficeModeInfo,
+} from './office-mode';
 
 // docs/specs/004-interface-design/office-shell.md "Modes": a kind's own set of modes, each reached from a least level,
 // drawn at no more than the session's level; a person starts in the first built mode their level reaches.
@@ -62,5 +68,42 @@ describe("a kind's modes", () => {
     expect(levelInMode(PDF_LIKE, 'edit', 'editing')).toBe('edit');
     expect(levelInMode(PDF_LIKE, 'view', 'reviewing')).toBe('view');
     expect(levelInMode(PDF_LIKE, 'participate', 'viewing')).toBe('view');
+  });
+});
+
+// office-shell.md "Modes": a mode whose changes are proposals the room judges is drawn at its own level even for a
+// session below it, and names the items a proposal can carry.
+const PROPOSING: readonly OfficeModeInfo<'editing' | 'suggesting' | 'viewing'>[] = [
+  { ...PDF_LIKE[0]!, mode: 'editing', status: 'built' },
+  {
+    ...PDF_LIKE[1]!,
+    mode: 'suggesting',
+    drawnAt: 'edit',
+    item: 'mode-suggesting',
+    proposes: ['bold', 'undo'],
+  },
+  { ...PDF_LIKE[2]!, mode: 'viewing' },
+];
+
+describe('a mode whose changes are proposals', () => {
+  it('is drawn at its own level above the session\u2019s', () => {
+    expect(levelInMode(PROPOSING, 'participate', 'suggesting')).toBe('edit');
+    expect(levelInMode(PROPOSING, 'edit', 'suggesting')).toBe('edit');
+  });
+
+  it('is never drawn for a session it does not reach', () => {
+    expect(levelInMode(PROPOSING, 'view', 'suggesting')).toBe('view');
+    expect(proposalsInMode(PROPOSING, 'view', 'suggesting')).toBeNull();
+  });
+
+  it('names what runs above the session only while drawn above it', () => {
+    const proposals = proposalsInMode(PROPOSING, 'participate', 'suggesting');
+    expect(proposals?.below).toBe('participate');
+    expect([...(proposals?.runs ?? [])]).toEqual(['bold', 'undo']);
+    // An Editor is drawn at its own level: nothing to narrow.
+    expect(proposalsInMode(PROPOSING, 'edit', 'suggesting')).toBeNull();
+    // A mode that proposes nothing is never drawn above.
+    expect(proposalsInMode(PROPOSING, 'participate', 'viewing')).toBeNull();
+    expect(proposalsInMode(PDF_LIKE, 'participate', 'reviewing')).toBeNull();
   });
 });

@@ -5,6 +5,60 @@ import type { OfficeModeInfo } from '@/lib/office/office-mode';
 
 export type TextDocumentMode = 'editing' | 'suggesting' | 'viewing';
 
+// What a Participant runs in Suggesting above their level (review.md "While suggesting", "A Participant"): the changes
+// a suggestion can carry, made in the writing and rewritten as suggestions. Lists and paragraph styles keep their
+// definitions beside the writing, so they stay an Editor's; text-document-proposals.test.ts guards the list.
+export const SUGGESTING_PROPOSALS: readonly string[] = [
+  // Edit
+  'undo',
+  'redo',
+  'cut',
+  'paste',
+  'paste-without-formatting',
+  'delete',
+  // Insert
+  'link',
+  'special-characters',
+  'emoji',
+  // Format > Text, Clear formatting and the paint roller
+  'bold',
+  'italic',
+  'underline',
+  'strikethrough',
+  'superscript',
+  'subscript',
+  'small-caps',
+  'size-increase',
+  'size-decrease',
+  'lowercase',
+  'uppercase',
+  'title-case',
+  'clear-formatting',
+  'paint-format',
+  // Format > Align & indent, Line & paragraph spacing, Borders and shading; the toolbar's Align and spacing
+  'align-left',
+  'align-centre',
+  'align-right',
+  'align-justified',
+  'indent-increase',
+  'indent-decrease',
+  'indentation-options',
+  'spacing-single',
+  'spacing-115',
+  'spacing-15',
+  'spacing-double',
+  'space-before',
+  'space-after',
+  'custom-spacing',
+  'keep-with-next',
+  'keep-lines-together',
+  'prevent-single-lines',
+  'add-page-break-before',
+  'borders-and-shading',
+  'align',
+  'line-spacing',
+];
+
 export const TEXT_DOCUMENT_MODES: readonly OfficeModeInfo<TextDocumentMode>[] = [
   {
     mode: 'editing',
@@ -25,6 +79,8 @@ export const TEXT_DOCUMENT_MODES: readonly OfficeModeInfo<TextDocumentMode>[] = 
     drawnAt: 'edit',
     status: 'built',
     item: 'mode-suggesting',
+    // A Participant's suggestions are proposals the room judges: drawn as an Editor's, only these run above them.
+    proposes: SUGGESTING_PROPOSALS,
   },
   {
     mode: 'viewing',

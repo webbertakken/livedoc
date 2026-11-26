@@ -4,6 +4,7 @@
 // the office shell's, filled with the text document's menus and shortcuts. Download writes the file in the format the
 // text document is held in (text-document.md "The format it is in"); the editor's own items come from the surface.
 import { useMemo, useState, type RefObject } from 'react';
+import type { OfficeProposals } from '@/lib/office/office-mode';
 import type * as Y from 'yjs';
 import type { AccessLevel } from '@livedoc/api-schema';
 import type { TextDocumentFormat } from '@livedoc/document';
@@ -76,6 +77,7 @@ export function TextDocumentTitleRow({
   refresh,
   mode = null,
   caret = null,
+  proposals = null,
 }: {
   scope: TextDocumentScope;
   documentName: string;
@@ -104,6 +106,8 @@ export function TextDocumentTitleRow({
   mode?: OfficeModeChoice | null;
   // The caret, for the context menu on text (editing-surface.md "Context menus"); none until the writing is bound.
   caret?: { point: () => Point | null; place: (point: Point) => void } | null;
+  // Suggesting drawn above a Participant's level: what can be suggested runs above it (review.md "While suggesting").
+  proposals?: OfficeProposals | null;
 }) {
   const [problem, setProblem] = useState<string | null>(null);
   const catalogue = useMemo(() => textDocumentMenus(format), [format]);
@@ -193,6 +197,7 @@ export function TextDocumentTitleRow({
       mode={mode}
       contextMenu={contextMenu}
       commentHistoryItem={COMMENTS_PANEL.item}
+      proposals={proposals}
     />
   );
 }

@@ -10,6 +10,7 @@ import { TEXT_DOCUMENT_SHORTCUTS } from '@/lib/text-document/text-document-short
 import type { OfficeChrome } from './office-chrome';
 import type { OfficeSaveStatus } from './office-save-status';
 import { OfficeTitleRow } from './OfficeTitleRow';
+import type { OfficeProposals } from '@/lib/office/office-mode';
 
 vi.mock('@/lib/telemetry', () => ({ track: vi.fn() }));
 vi.mock('@/components/chrome/AuthControls', () => ({
@@ -68,8 +69,10 @@ function Row({
   onFollow,
   actions = {},
   commentHistoryItem,
+  proposals = null,
 }: {
   chrome: OfficeChrome | null;
+  proposals?: OfficeProposals | null;
   level?: AccessLevel;
   onFollow?: (id: string) => boolean;
   actions?: OfficeActions;
@@ -93,6 +96,7 @@ function Row({
         chrome={chrome}
         tabId="t1"
         onFollow={onFollow}
+        proposals={proposals}
       />
     </div>
   );
@@ -458,5 +462,27 @@ describe('OfficeTitleRow, bare', () => {
     render(<Bare onLeave={vi.fn()} bare />);
     fireEvent.keyDown(screen.getByTestId('surface'), { code: 'KeyF', key: 'f', altKey: true });
     expect(screen.queryByRole('menu')).toBeNull();
+  });
+});
+
+// office-shell.md "Modes": a mode drawn above the session's level runs above it only what a proposal can carry.
+describe('OfficeTitleRow, a mode drawn above the session', () => {
+  it('dims what is above the session 19s level and no proposal, and runs a proposal', () => {
+    const move = vi.fn();
+    const share = vi.fn();
+    render(
+      <Row
+        chrome={chromeOf({ move, share: { shareable: false, onOpen: share } })}
+        proposals={{ below: 'participate', runs: new Set(['share-with-others']) }}
+      />,
+    );
+    openFile();
+    const menu = within(screen.getByRole('menu'));
+    const moveItem = menu.getByRole('menuitem', { name: /Move/ });
+    expect(moveItem.getAttribute('aria-disabled')).toBe('true');
+    fireEvent.click(moveItem);
+    expect(move).not.toHaveBeenCalled();
+    fireEvent.click(menu.getByRole('menuitem', { name: /Share with others/ }));
+    expect(share).toHaveBeenCalledOnce();
   });
 });
