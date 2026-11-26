@@ -111,8 +111,49 @@ describe('PdfPeerHolds', () => {
     page.remove();
   });
 
-  it('draws nothing with nobody holding a mark of the page', () => {
+  it('draws nothing with nobody holding anything on the page', () => {
     const { container } = render(holds([]));
     expect(container.innerHTML).toBe('');
+  });
+
+  it('tints a collaborator’s text selection in their colour, named over it', () => {
+    vi.useFakeTimers();
+    const text = {
+      id: 'bo',
+      name: 'Bo',
+      color: '#2563eb',
+      quads: [[10, 20, 50, 20, 10, 10, 50, 10] as Quad, [10, 40, 30, 40, 10, 30, 30, 30] as Quad],
+    };
+    const { container } = render(
+      <PdfPeerHolds
+        holds={[]}
+        texts={[text, { ...text, id: 'cy', name: 'Cy', quads: [] }]}
+        matrix={MATRIX}
+        width={100}
+        height={100}
+        gap={0}
+        target={null}
+        pointAt={pointAt}
+      />,
+    );
+    const tint = container.querySelector('[data-pdf-peer-tint="bo"]')!;
+    expect(tint.getAttribute('fill')).toBe('#2563eb');
+    expect(tint.querySelectorAll('polygon')).toHaveLength(2);
+    const box = container.querySelector<HTMLElement>('[data-pdf-peer-text="bo"]')!;
+    expect([box.style.left, box.style.top, box.style.width, box.style.height]).toEqual([
+      '10%',
+      '60%',
+      '40%',
+      '30%',
+    ]);
+    expect(box.style.border).toBe('');
+    expect(screen.getByText('Bo')).toBeTruthy();
+    // A selection the page’s text cannot draw is not drawn, nor named.
+    expect(container.querySelector('[data-pdf-peer-tint="cy"]')).toBeNull();
+    expect(screen.queryByText('Cy')).toBeNull();
+    act(() => {
+      vi.advanceTimersByTime(PDF_PRESENCE_FRESH_MS);
+    });
+    expect(screen.queryByText('Bo')).toBeNull();
   });
 });

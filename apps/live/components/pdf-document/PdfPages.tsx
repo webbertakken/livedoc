@@ -32,12 +32,18 @@ import type { PdfFindTints } from '@/lib/pdf-document/usePdfFind';
 import type { PdfPageTexts } from '@/lib/pdf-document/pdf-page-texts';
 import type { PdfPageTap } from '@/lib/pdf-document/usePdfColumnZoom';
 import type { PdfMarksChosen, PdfPageChoosing } from '@/lib/pdf-document/usePdfMarkSelection';
-import { peerHoldsOn, type PdfPeerHold } from '@/lib/pdf-document/pdf-presence-held';
+import {
+  peerHoldsOn,
+  peerTextsOn,
+  type PdfPeerHold,
+  type PdfPeerText,
+} from '@/lib/pdf-document/pdf-presence-held';
 import type { PdfPresencePeer } from '@/lib/pdf-document/pdf-presence-store';
 
 const NOTHING_SELECTED: readonly Quad[] = [];
 const NO_MARKS_CHOSEN: readonly string[] = [];
 const NO_HOLDS: readonly PdfPeerHold[] = [];
+const NO_TEXTS: readonly PdfPeerText[] = [];
 
 export function PdfPages({
   attach,
@@ -152,6 +158,14 @@ export function PdfPages({
     }
     return out;
   }, [peers, byPage]);
+  // Their text selections, by page name.
+  const peerTexts = useMemo(() => {
+    const out = new Map<string, readonly PdfPeerText[]>();
+    for (const peer of peers)
+      if (peer.place.held?.what === 'text' && !out.has(peer.place.held.page))
+        out.set(peer.place.held.page, peerTextsOn(peers, peer.place.held.page));
+    return out;
+  }, [peers]);
 
   return (
     <div
@@ -204,6 +218,7 @@ export function PdfPages({
                   onDoubleTap={onDoubleTap}
                   register={register}
                   holds={holds.get(page.name) ?? NO_HOLDS}
+                  peerTexts={peerTexts.get(page.name) ?? NO_TEXTS}
                 />
               );
             })
