@@ -11,6 +11,7 @@ import {
   type RefObject,
 } from 'react';
 import type { Plugin } from 'prosemirror-state';
+import type { SuggestingDispatch } from '@/lib/text-document/text-document-suggesting-dispatch';
 import type { EditorView } from 'prosemirror-view';
 import type * as Y from 'yjs';
 import type { TextDocumentFormat } from '@livedoc/document';
@@ -37,6 +38,15 @@ export function useTextDocumentPageStories(input: {
   /** The footnotes drawn under the writing where there are no pages. */
   readonly endNotes?: readonly PageNote[];
   readonly writes: boolean;
+  /**
+   * Suggesting (review.md "Headers, footers and notes"): a header, footer or note is entered and written in as
+   * suggestions; its settings stay an Editor's in Editing.
+   */
+  readonly suggests?: boolean;
+  /** An Editor: may put a header or footer in, or take an empty one out, while suggesting too. */
+  readonly makes?: boolean;
+  /** How a story's changes are applied around suggesting. */
+  readonly suggesting?: SuggestingDispatch;
   /** Each drawn story's height by its key, read by the layout. */
   readonly heights: RefObject<Map<string, number>>;
   /** The plugin telling the toolbar of the caret's changes. */
@@ -47,6 +57,8 @@ export function useTextDocumentPageStories(input: {
   readonly gallery: GalleryPictures;
 }) {
   const { view, liveDoc, format, pages, writes, heights, caret, caretSection, gallery } = input;
+  const suggests = input.suggests ?? false;
+  const enters = writes || suggests;
   const endNotes = input.endNotes ?? NO_NOTES;
   const leave = useRef(() => {});
   const toolbar = useRef<HTMLDivElement | null>(null);
@@ -72,6 +84,7 @@ export function useTextDocumentPageStories(input: {
     plugins,
     endNotes,
     gallery,
+    ...(input.suggesting ? { suggesting: input.suggesting } : {}),
   });
   const leaveNote = useRef(() => {});
   const editing = useTextDocumentHeaderEditing({
@@ -80,6 +93,9 @@ export function useTextDocumentPageStories(input: {
     format,
     pages,
     writes,
+    suggests,
+    makes: input.makes ?? writes,
+    caretSection,
     stories,
     leaveOthers: () => leaveNote.current(),
   });
@@ -90,7 +106,7 @@ export function useTextDocumentPageStories(input: {
     format,
     pages,
     endNotes,
-    writes,
+    writes: enters,
     stories,
     inStory: editing.editing !== null,
     leaveOthers: editing.leave,
@@ -138,6 +154,7 @@ export function useTextDocumentPageStories(input: {
       onFormat={options.open}
       onPageNumbers={pageNumbers.open}
       onBack={() => edited.view.focus()}
+      settingsOff={!writes}
       toolbar={toolbar}
     />
   ) : null;

@@ -8,6 +8,7 @@
 import { useCallback, useLayoutEffect, useMemo, useRef, type RefObject } from 'react';
 import type { Plugin } from 'prosemirror-state';
 import type { EditorView } from 'prosemirror-view';
+import type { SuggestingDispatch } from '@/lib/text-document/text-document-suggesting-dispatch';
 import type * as Y from 'yjs';
 import type { TextDocumentFormat } from '@livedoc/document';
 import { TextDocumentState, type HeaderFooterKind } from '@livedoc/text-documents';
@@ -77,6 +78,8 @@ export function useTextDocumentStories(input: {
   readonly plugins?: () => Plugin[];
   /** Where its pictures' gallery images are read from. */
   readonly gallery: GalleryPictures;
+  /** How a source's changes are applied around suggesting (review.md "Headers, footers and notes"). */
+  readonly suggesting?: SuggestingDispatch;
 }): TextDocumentStories {
   const { view, liveDoc, format, pages, heights } = input;
   const host = useRef<HTMLDivElement | null>(null);
@@ -86,9 +89,21 @@ export function useTextDocumentStories(input: {
   const wanted = useMemo(() => storiesWanted(pages, endNotes), [pages, endNotes]);
   const drawn = useRef(wanted);
   // What a source is made with, read when one is made: in a layout effect or an event handler.
-  const making = useRef({ view, format, plugins: input.plugins, gallery: input.gallery });
+  const making = useRef({
+    view,
+    format,
+    plugins: input.plugins,
+    gallery: input.gallery,
+    suggesting: input.suggesting,
+  });
   useLayoutEffect(() => {
-    making.current = { view, format, plugins: input.plugins, gallery: input.gallery };
+    making.current = {
+      view,
+      format,
+      plugins: input.plugins,
+      gallery: input.gallery,
+      suggesting: input.suggesting,
+    };
   });
 
   // Each box drawing `key`, painted with its source's writing, or emptied.
@@ -115,7 +130,7 @@ export function useTextDocumentStories(input: {
       if (known) return known;
       const doc = liveDoc.current;
       const container = host.current;
-      const { view: body, format: madeFormat, plugins, gallery } = making.current;
+      const { view: body, format: madeFormat, plugins, gallery, suggesting } = making.current;
       if (!body || !doc || !container) return undefined;
       const source = new StorySource({
         doc,
@@ -133,6 +148,7 @@ export function useTextDocumentStories(input: {
         drawsEmpty: kind === 'footnote',
         gallery,
         plugins: plugins?.() ?? [],
+        ...(suggesting ? { suggesting } : {}),
         onLaid: (laid) => {
           heights.current.set(key, laid.height);
           paint(key);
