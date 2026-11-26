@@ -2949,7 +2949,8 @@ export const BY_ACTION: Readonly<Record<string, string>> = {
   'Spreadsheet|Created':
     'Someone made a spreadsheet (the value says how: blank, a template or a file).',
   'Spreadsheet|Exported': 'Someone downloaded a spreadsheet (the value says which file format).',
-  'Spreadsheet|Added': 'An editor inserted a chart into a spreadsheet (the value says which chart type).',
+  'Spreadsheet|Added':
+    'An editor inserted a chart into a spreadsheet (the value says which chart type).',
   'Spreadsheet|Changed': 'An editor changed a spreadsheet’s look (the value says what).',
   'Spreadsheet|Converted':
     'An editor converted a spreadsheet to the other file format (the value says which format it went to).',
