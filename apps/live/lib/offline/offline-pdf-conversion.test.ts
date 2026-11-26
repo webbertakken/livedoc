@@ -3,7 +3,7 @@
 // and leaves the document where it was.
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { blobKeyOf, type BlobKey } from '@livedoc/document';
-import { PdfLiveChanges } from '@livedoc/pdf-documents';
+import { PageName, PdfLiveChanges } from '@livedoc/pdf-documents';
 import { bytesOfBase64 } from '@livedoc/text-documents/base64';
 
 const api = vi.hoisted(() => ({
@@ -27,6 +27,7 @@ import { __setThisBrowserBlobs } from './offline-blobs';
 import { sendOfflinePdfFiles, takePdfTabsOffline } from './offline-pdf-conversion';
 import { markIdsIn, pdfStateWith, pdfTab } from './offline-pdf-testing';
 import { testTab } from './offline-test-utils';
+import { addCustomStamp } from '../pdf-document/pdf-stamp';
 
 const file = async (text: string) => {
   const bytes = new TextEncoder().encode(text);
@@ -197,5 +198,61 @@ describe('Take Offline of a PDF', () => {
     api.apiReadBlob.mockRejectedValue(new ApiError('file read', 404, 'blob_missing'));
     expect(await codeOf(takePdfTabsOffline([pdfTab('t1')], scope, 1))).toBe('blob_missing');
     expect(place.held.size).toBe(0);
+  });
+});
+
+// custom-stamps.md "Placing one", blob-store.md "Holds and retention": a custom stamp's picture travels with its PDF.
+describe('a custom stamp’s picture between This Browser and LiveDoc', () => {
+  const stampedState = async (storedKey: BlobKey) => {
+    const picture = await file('a stamp picture');
+    const doc = PdfLiveChanges.load();
+    addCustomStamp(
+      doc,
+      { page: PageName.ofObject(1), stored: { blob: storedKey, pages: 1 }, box: [0, 0, 612, 792] },
+      {
+        id: 'custom-0b7c3c2e-5a8f-4f21-9a43-1f2d3e4c5b6a',
+        name: 'Paid',
+        category: 'C',
+        picture: { key: picture.key, type: 'png', width: 8, height: 4 },
+        natural: { width: 6, height: 3 },
+        createdAt: 1,
+        updatedAt: 1,
+      },
+      { x: 100, y: 100 },
+      { author: 'Ada', now: 1, id: 'c1' },
+    );
+    return { picture, state: PdfLiveChanges.encode(doc) };
+  };
+
+  it('sends each picture its marks name with the stored file', async () => {
+    const { blobs } = here();
+    const one = await file('%PDF-1.7 stamped');
+    const { picture, state } = await stampedState(one.key);
+    await blobs.keepForDocument(one.key, one.bytes);
+    await blobs.keepForDocument(picture.key, picture.bytes);
+    await sendOfflinePdfFiles(
+      { tabs: [pdfTab('t1', one.key)], pdfDocuments: [{ tabId: 't1', state, savedAt: 1 }] },
+      'ada',
+    );
+    expect(api.apiStoreBlob).toHaveBeenCalledWith('ada', one.key, one.bytes, undefined);
+    expect(api.apiStoreBlob).toHaveBeenCalledWith('ada', picture.key, picture.bytes, undefined);
+  });
+
+  it('keeps each picture its marks name in this browser when taken offline', async () => {
+    const { blobs } = here();
+    const stored = await file('%PDF-1.7 on LiveDoc, stamped');
+    const { picture, state } = await stampedState(stored.key);
+    api.apiLoadPdfState.mockResolvedValue({
+      update: state,
+      stateVector: PdfLiveChanges.stateVectorOf(state),
+      storedFile: stored.key,
+    });
+    api.apiReadBlob.mockImplementation(async (_scope: unknown, key: BlobKey) =>
+      key === stored.key ? stored.bytes : picture.bytes,
+    );
+    const taken = await takePdfTabsOffline([pdfTab('t1')], scope, 1);
+    expect(taken.tabs.get('t1')).toMatchObject({ size: stored.bytes.byteLength });
+    expect(await blobs.read(picture.key)).toEqual(picture.bytes);
+    expect(api.apiReadBlob).toHaveBeenCalledWith(scope, picture.key);
   });
 });

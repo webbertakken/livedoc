@@ -20,10 +20,13 @@ const FILE_SWEEP_TRIPWIRE_RATIO = 0.5;
 export const blobSweepTripped = (old: number, unheld: number): boolean =>
   unheld > FILE_SWEEP_TRIPWIRE_MIN && unheld / old > FILE_SWEEP_TRIPWIRE_RATIO;
 
-// A hold of the blob's owner that stands at ?1 (now): a tab naming the key, or a previous version before its day.
-const HELD = `EXISTS (SELECT 1 FROM document_blobs h JOIN documents d ON d.id = h.document_id
+// A hold of the blob's owner that stands at ?1 (now): a tab naming the key, a previous version before its day, or a
+// custom stamp of theirs whose picture it is (custom-stamps.md "Where they are kept").
+const HELD = `(EXISTS (SELECT 1 FROM document_blobs h JOIN documents d ON d.id = h.document_id
                 WHERE h.key = blobs.key AND d.owner_id = blobs.owner_id
-                  AND (h.until IS NULL OR h.until > ?1))`;
+                  AND (h.until IS NULL OR h.until > ?1))
+            OR EXISTS (SELECT 1 FROM custom_stamps s
+                WHERE s.owner_id = blobs.owner_id AND s.picture_key = blobs.key))`;
 
 /** Deletes the objects no row names. A row moved to another owner, or given to one, names its object still. */
 export async function deleteUnnamedObjects(

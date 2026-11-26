@@ -8,13 +8,23 @@ import { localBlobStore, type LocalBlobBytes } from '../blob-store/local-blob-st
 import { localBlobs, type LocalBlobs } from '../blob-store/local-blobs';
 import { offlineBackend, type OfflineDocumentRecord } from './offline-store';
 
-/** The keys a record's PDF tabs name. */
-export const blobKeysOfRecord = (rec: Pick<OfflineDocumentRecord, 'tabs'>): BlobKey[] =>
-  rec.tabs.flatMap((tab) => pdfTabOf(tab)?.blob ?? []);
+/**
+ * The keys a record's PDF tabs name: each tab's file, and each picture its marks name (a custom stamp's), read by a
+ * module loaded only for a record holding PDF live changes.
+ */
+export async function blobKeysOfRecord(
+  rec: Pick<OfflineDocumentRecord, 'tabs' | 'pdfDocuments'>,
+): Promise<BlobKey[]> {
+  const states = rec.pdfDocuments ?? [];
+  const pictures =
+    states.length > 0 ? (await import('./offline-pdf-pictures')).pictureKeysOf(states) : [];
+  return [...rec.tabs.flatMap((tab) => pdfTabOf(tab)?.blob ?? []), ...pictures];
+}
 
 /** Every key a This Browser document names, in the local Trash too. */
 export async function offlineNamedBlobKeys(): Promise<Set<BlobKey>> {
-  return new Set((await offlineBackend().all()).flatMap(blobKeysOfRecord));
+  const records = await offlineBackend().all();
+  return new Set((await Promise.all(records.map(blobKeysOfRecord))).flat());
 }
 
 const persist = async (): Promise<boolean> => {

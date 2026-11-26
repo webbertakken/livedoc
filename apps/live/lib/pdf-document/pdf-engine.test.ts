@@ -398,3 +398,15 @@ describe('what the engine logs', () => {
     expect(network).not.toHaveBeenCalled();
   });
 });
+
+// custom-stamps.md "Placing one": a bake is handed each picture its marks name, across the thread too.
+describe('a bake’s pictures over a worker thread', () => {
+  it('hands the engine the pictures with the live changes', async () => {
+    const bake = vi.fn(async () => ({ ok: false as const, refusal: 'unreadable' as const }));
+    const { worker } = joined(async () => ({ bake }) as unknown as PdfEngine);
+    const engine = pdfEngineClient(worker);
+    const pictures = new Map([['k'.repeat(64), Uint8Array.of(1, 2)]]);
+    await engine.bake(Uint8Array.of(0, 0), pictures);
+    expect(bake).toHaveBeenCalledWith(Uint8Array.of(0, 0), pictures);
+  });
+});

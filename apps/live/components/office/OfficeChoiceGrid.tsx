@@ -5,13 +5,15 @@
 // keyboard (useMenu) opens it on the checked cell, closes it on Escape, Tab or a press outside; the grid adds moving by
 // cell (Left, Right) and by row (Up, Down). A choice runs the kind's action, which gives focus back to the writing. A
 // grid may come in sections, each a group under its heading starting a row of its own (the PDF Stamp control's
-// categories), and a cell may be a badge: words in a colour on the page's paper, as a stamp looks.
+// categories), and a cell may be a badge: words in a colour on the page's paper, as a stamp looks; a picture over its
+// name (a custom stamp); or a command, a glyph over its words that runs rather than chooses (Create custom stamp…), a
+// `menuitem` among the radios.
 import type { KeyboardEvent } from 'react';
 import { Glyph, Prims, useMenu } from '@livedoc/ui';
 import type { IconPrim } from '@livedoc/icons';
 import type { OfficeActions } from '@/lib/office/office-catalogue';
 import { GRID_KEYS, gridStep, type GridKey } from '@/lib/office/grid-step';
-import { ChoiceBadge, ChoiceLines } from './OfficeChoicePictures';
+import { ChoiceBadge, ChoiceLines, ChoicePicture } from './OfficeChoicePictures';
 
 /** One line of a cell's preview: a marker at a level, then a bar standing for text, or a word. */
 export type OfficeGridLine = {
@@ -26,11 +28,18 @@ export type OfficeGridLine = {
 /** A badge's look: its words in capitals, a smaller second line, in its colour, as on the page. */
 export type OfficeGridBadge = { text: string; detail: string | null; colour: string };
 
-/** A cell: a preview of lines (a list style), a glyph over its name (a tool), or a badge (a stamp). */
+/** A picture's cell: the picture (its address; null while it is on its way, or failed), its name below. */
+export type OfficeGridPicture = { src: string | null; name: string };
+
+/**
+ * A cell: a preview of lines (a list style), a glyph over its name (a tool, or with `command` an action that chooses
+ * nothing), a badge (a stamp), or a picture (a custom stamp).
+ */
 export type OfficeGridCell =
   | { id: string; label: string; lines: readonly OfficeGridLine[] }
-  | { id: string; label: string; icon: readonly IconPrim[] }
-  | { id: string; label: string; badge: OfficeGridBadge };
+  | { id: string; label: string; icon: readonly IconPrim[]; command?: boolean }
+  | { id: string; label: string; badge: OfficeGridBadge }
+  | { id: string; label: string; picture: OfficeGridPicture };
 
 /** A run of the grid's cells under a heading of its own. */
 export type OfficeGridSection = { label: string; count: number };
@@ -72,7 +81,7 @@ export function OfficeChoiceGrid({
   // Up and Down by a row, Left and Right by a cell, ahead of the menu's own Up and Down.
   const onKeyDownCapture = (e: KeyboardEvent<HTMLDivElement>) => {
     if (!GRID_KEYS.includes(e.key) || e.altKey || e.ctrlKey || e.metaKey) return;
-    const cells = [...e.currentTarget.querySelectorAll<HTMLElement>('[role="menuitemradio"]')];
+    const cells = [...e.currentTarget.querySelectorAll<HTMLElement>('[data-office-grid-cell]')];
     const at = cells.indexOf(document.activeElement as HTMLElement);
     if (at < 0) return;
     // Handled here: neither the menu's keys nor the toolbar's (an ancestor in React's tree, through the portal) see it.
@@ -82,13 +91,14 @@ export function OfficeChoiceGrid({
     cells[gridStep(at, sizes, grid.columns, e.key as GridKey)]?.focus({ preventScroll: true });
   };
   const cell = (cell: OfficeGridCell) => {
-    const checked = cell.id === value;
+    const command = 'icon' in cell && cell.command === true;
+    const checked = !command && cell.id === value;
     return (
       <button
         key={cell.id}
         type="button"
-        role="menuitemradio"
-        aria-checked={checked}
+        role={command ? 'menuitem' : 'menuitemradio'}
+        aria-checked={command ? undefined : checked}
         aria-label={cell.label}
         tabIndex={-1}
         data-office-grid-cell={cell.id}
@@ -97,7 +107,11 @@ export function OfficeChoiceGrid({
           actions[cell.id]?.run();
         }}
         className={`flex rounded-control border outline-none hover:bg-(--office-menu-hover) focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-(--office-focus) ${
-          'badge' in cell ? 'min-h-11 items-stretch p-1' : 'h-14 items-start px-2 py-2'
+          'badge' in cell
+            ? 'min-h-11 items-stretch p-1'
+            : 'picture' in cell
+              ? 'h-20 items-stretch p-1'
+              : 'h-14 items-start px-2 py-2'
         } ${checked ? 'border-(--office-focus) bg-(--office-pressed)' : 'border-(--office-line)'}`}
       >
         {'icon' in cell ? (
@@ -109,6 +123,8 @@ export function OfficeChoiceGrid({
           </span>
         ) : 'badge' in cell ? (
           <ChoiceBadge badge={cell.badge} />
+        ) : 'picture' in cell ? (
+          <ChoicePicture picture={cell.picture} />
         ) : (
           <ChoiceLines lines={cell.lines} />
         )}
@@ -134,7 +150,7 @@ export function OfficeChoiceGrid({
           </div>
         );
         return section.label === '' ? (
-          <div key="cells">{body}</div>
+          <div key={`cells-${at}`}>{body}</div>
         ) : (
           <div
             key={section.label}

@@ -10,6 +10,7 @@ import type { OfficeActions } from '@/lib/office/office-catalogue';
 import { debugLog } from '@/lib/debug-log';
 import { track } from '@/lib/telemetry';
 import { PRINT } from './pdf-menus';
+import type { ReadPicture } from './download-pdf';
 import { makePrint, type PdfPrintChoice } from './pdf-print';
 import { encodePdfThumbnail } from './pdf-thumbnail-canvas';
 import { printInFrame } from './print-frame';
@@ -29,6 +30,8 @@ export type PdfPrintSource = {
   marksOn: (page: PageInfo) => readonly Mark[];
   /** The stored file's bytes, read again from where they are held. */
   readStored: () => Promise<Uint8Array<ArrayBuffer>>;
+  /** A picture a mark names (a custom stamp's), read from where the document holds it. */
+  readPicture?: ReadPicture;
 };
 
 /** Whether this browser draws a PDF it is handed; one that says it does not prints pictures (files-print-and-sync.md). */
@@ -66,6 +69,7 @@ export function usePdfPrint({
         doc: source.doc,
         documentName,
         readStored: source.readStored,
+        ...(source.readPicture ? { readPicture: source.readPicture } : {}),
         pages: source.pages,
         pictures: !source.permissions.printSharp || !printsPdf(),
         marksOn: source.marksOn,

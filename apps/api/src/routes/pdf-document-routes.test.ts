@@ -585,6 +585,66 @@ describe('a frame from a Participant’s or a Viewer’s socket', () => {
   });
 });
 
+// blob-store.md "Getting bytes out": a document holds the pictures its marks name (a custom stamp's), and serves them.
+describe('a custom stamp’s picture', () => {
+  const PICTURE = Uint8Array.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 1, 2, 3]);
+
+  async function placed(pictureKey: BlobKey): Promise<Uint8Array> {
+    const doc = PdfLiveChanges.load();
+    PdfLiveChanges.setStored(doc, { blob: key, pages: 2 });
+    PdfLiveChanges.addMark(
+      doc,
+      Mark.stamp({
+        ...Mark.keyed(GUEST_KEY),
+        id: 'paid',
+        page: PageName.ofObject(4),
+        rect: [100, 300, 200, 350],
+        stamp: 'custom-0b7c3c2e-5a8f-4f21-9a43-1f2d3e4c5b6a',
+        lines: ['Paid'],
+        picture: { key: pictureKey, type: 'png', width: 4, height: 2 },
+        colour: '#000000',
+        opacity: 1,
+        author: 'Ada',
+        createdAt: 1_795_000_000_000,
+      })!,
+    );
+    return PdfLiveChanges.encode(doc);
+  }
+
+  it('is held by the document once a mark names it, and served by its key', async () => {
+    withRoom();
+    const pictureKey = await blobKeyOf(PICTURE);
+    await handleBlobStoreRoutes(
+      makeTestRouteContext('PUT', `/api/files/${pictureKey}?document=D`, {
+        env: db.env,
+        owner: 'ada',
+        rawBody: PICTURE as unknown as string,
+        headers: { 'Content-Length': String(PICTURE.byteLength) },
+      }),
+    );
+    expect(await documentBlobHold(db.env, 'D', pictureKey, null)).toBeNull();
+    expect((await call('POST', UPDATES, 'ada', await placed(pictureKey))).status).toBe(204);
+    expect(await documentBlobHold(db.env, 'D', pictureKey, null)).toEqual({
+      tabId: 't1',
+      size: PICTURE.byteLength,
+    });
+    expect(await documentBlobHold(db.env, 'D', pictureKey, 't2')).toBeNull();
+    const served = await call('GET', `/api/documents/D/files/${pictureKey}`);
+    expect(served.status).toBe(200);
+    expect(new Uint8Array(await served.arrayBuffer())).toEqual(PICTURE);
+    // The digest names it, so the tab holds it for the retention sweep.
+    const digest = await refreshLiveTabDigest(db.env, PDF_LIVE_TAB, 'D', 't1');
+    expect(digest.blobKeys).toEqual([pictureKey]);
+  });
+
+  it('is not held where the document’s owner does not hold its bytes', async () => {
+    withRoom();
+    const pictureKey = await blobKeyOf(PICTURE);
+    expect((await call('POST', UPDATES, 'ada', await placed(pictureKey))).status).toBe(204);
+    expect(await documentBlobHold(db.env, 'D', pictureKey, null)).toBeNull();
+  });
+});
+
 describe('the digest', () => {
   it('counts the stored file’s pages and never reads as empty', async () => {
     withRoom();

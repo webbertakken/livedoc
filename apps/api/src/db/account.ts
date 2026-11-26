@@ -112,6 +112,8 @@ export async function deleteAccount(
   await env.DB.prepare('DELETE FROM user_preferences WHERE owner_id = ?').bind(ownerId).run();
   // custom_themes (docs/specs/011-theme/custom-themes.md): this owner's saved themes go too.
   await env.DB.prepare('DELETE FROM custom_themes WHERE owner_id = ?').bind(ownerId).run();
+  // custom_stamps (docs/specs/035-pdf-documents/custom-stamps.md): this owner's stamps go too.
+  await env.DB.prepare('DELETE FROM custom_stamps WHERE owner_id = ?').bind(ownerId).run();
   // shape_libraries (docs/specs/013-workspace/shape-libraries.md): this owner's libraries go too.
   await env.DB.prepare('DELETE FROM shape_libraries WHERE owner_id = ?').bind(ownerId).run();
   // Workbench rows (docs/specs/013-workspace/workbench-embeds.md), before the tokens they were minted from.
@@ -354,6 +356,13 @@ export async function migrateOwnerId(
     // constraint to collide on), so no OR IGNORE needed.
     themes: move(
       'UPDATE custom_themes SET owner_id = ? WHERE owner_id = ?',
+      toOwnerId,
+      fromOwnerId,
+    ),
+    // custom_stamps (docs/specs/035-pdf-documents/custom-stamps.md): the guest's stamps go to the account, their
+    // pictures with them as the blob rows above.
+    stamps: move(
+      'UPDATE custom_stamps SET owner_id = ? WHERE owner_id = ?',
       toOwnerId,
       fromOwnerId,
     ),

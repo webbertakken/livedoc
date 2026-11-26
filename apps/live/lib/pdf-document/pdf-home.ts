@@ -9,6 +9,7 @@
 //   holds are a file missing from storage.
 import type { BlobKey } from '@livedoc/document';
 import { apiReadBlob } from '@/lib/api/files';
+import { sendBlob } from '@/lib/blob-store/send-blob';
 import { ApiError } from '@/lib/api/core';
 import { apiLoadPdfState, type PdfDocumentScope, type PdfStateRead } from '@/lib/api/pdf-documents';
 import type { LocalBlobs } from '@/lib/blob-store/local-blobs';
@@ -60,3 +61,24 @@ const READS: Record<PdfHome, PdfReads> = {
 };
 
 export const pdfReadsOf = (home: PdfHome): PdfReads => READS[home];
+
+/**
+ * Bytes a change brings, held for the document before the change names them (live-editing-and-storage.md "Storage";
+ * custom-stamps.md "Placing one"): sent to LiveDoc's blob store for a document in the room, asked first so bytes its
+ * owner holds go nowhere; kept in this browser for a This Browser document, named by its record once the change is.
+ */
+export type PdfBlobSend = (
+  scope: PdfDocumentScope,
+  key: BlobKey,
+  bytes: Uint8Array<ArrayBuffer>,
+) => Promise<void>;
+
+const SENDS: Record<PdfHome, PdfBlobSend> = {
+  room: async (scope, key, bytes) => {
+    const document = { documentId: scope.documentId, shareCode: scope.shareCode };
+    await sendBlob(scope.ownerId, key, bytes, { document });
+  },
+  'this-browser': (_scope, key, bytes) => thisBrowserBlobs().keepForDocument(key, bytes),
+};
+
+export const pdfBlobSendOf = (home: PdfHome): PdfBlobSend => SENDS[home];

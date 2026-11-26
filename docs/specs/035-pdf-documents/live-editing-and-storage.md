@@ -440,16 +440,16 @@ The engine is not in the api Worker yet, so the first page a list shows is the o
 - **A PDF that arrives** for someone whose new documents start in This Browser
   ([Opening](files-print-and-sync.md#opening)) is hashed, kept in this browser's store and named by a new offline
   record; no request carries its bytes or its name.
-- **Sync Document** (signing up, the Share gate, the Explorer's menu) sends each stored file to the
-  [blob store](../006-document/blob-store.md#getting-bytes-in) first, then the create with each PDF tab and its
+- **Sync Document** (signing up, the Share gate, the Explorer's menu) sends each stored file, and each picture its marks name (a
+  [custom stamp](custom-stamps.md)'s), to the [blob store](../006-document/blob-store.md#getting-bytes-in) first, then the create with each PDF tab and its
   live changes (`pdfDocuments: [{ tabId, state }]`). Until the create is answered the document stays in This Browser.
   - A stored file this browser no longer holds, a server without file storage, an allowance that would be passed and
     live changes past `PDF_LIVE_CHANGES_MAX_BYTES` each stop the sync by name, with the document kept here
     ([Errors](#errors-in-this-browser)).
   - A change saved during the upload counts as a change, as a tab's does: the sync uploads again.
   - Once synced, the bytes stay in this browser as a cloud document's.
-- **Take Offline** reads each PDF tab's live changes, which name its stored file, and that file's bytes, from this
-  browser when it holds them and from LiveDoc when not; it keeps the bytes here and writes the record, all or
+- **Take Offline** reads each PDF tab's live changes, which name its stored file, and that file's bytes and each picture
+  its marks name, from this browser when it holds them and from LiveDoc when not; it keeps the bytes here and writes the record, all or
   nothing, before the server copy goes.
   - Previous versions and version history stay behind and go with the server copy `(default)`: This Browser keeps one
     stored file a tab.

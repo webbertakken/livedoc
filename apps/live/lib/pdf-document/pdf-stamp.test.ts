@@ -11,9 +11,13 @@ import {
   StampLayout,
   Stamps,
   type Box,
+  type CustomStampRecord,
 } from '@livedoc/pdf-documents';
 import {
+  addCustomStamp,
   addStamp,
+  CUSTOM_STAMP_COLOUR,
+  placeNatural,
   placeStamp,
   STAMP_COLOURS,
   stampKindName,
@@ -191,5 +195,54 @@ describe('addStamp', () => {
       ok: false,
       reason: 'pdf_too_many_marks',
     });
+  });
+});
+
+// custom-stamps.md "Placing one": at its natural size, at most a third of the page's width, its shape kept; the mark
+// names its id, its name as its one line, its picture, and no category.
+describe('addCustomStamp', () => {
+  const custom: CustomStampRecord = {
+    id: 'custom-0b7c3c2e-5a8f-4f21-9a43-1f2d3e4c5b6a',
+    name: 'Paid',
+    category: 'Accounts',
+    picture: { key: 'cd'.repeat(32) as BlobKey, type: 'png', width: 800, height: 400 },
+    natural: { width: 600, height: 300 },
+    createdAt: 1,
+    updatedAt: 1,
+  };
+
+  it('places its picture at most a third of the page wide, centred on the press', () => {
+    const doc = PdfLiveChanges.load();
+    const made = addCustomStamp(
+      doc,
+      { page, stored, box: LETTER },
+      custom,
+      { x: 306, y: 396 },
+      { author: 'Ada', now: NOW, id: 'c1' },
+    );
+    expect(made.ok).toBe(true);
+    expect(PdfLiveChanges.marks(doc)).toEqual([
+      {
+        id: 'c1',
+        kind: 'stamp',
+        page,
+        rect: [204, 345, 408, 447],
+        stamp: custom.id,
+        lines: ['Paid'],
+        picture: custom.picture,
+        colour: CUSTOM_STAMP_COLOUR,
+        opacity: 1,
+        author: 'Ada',
+        createdAt: NOW,
+        modifiedAt: NOW,
+      },
+    ]);
+    expect(PdfLiveChanges.stored(doc)).toEqual(stored);
+  });
+
+  it('keeps a small one at its natural size', () => {
+    expect(placeNatural({ width: 60, height: 30 }, { x: 100, y: 100 }, LETTER)).toEqual([
+      70, 85, 130, 115,
+    ]);
   });
 });

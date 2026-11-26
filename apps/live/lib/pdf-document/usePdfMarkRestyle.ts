@@ -32,6 +32,7 @@ import {
   fillOf,
   FIRST_FONT,
   firstColour,
+  takesColour,
   fontedLook,
   fontOf,
   lineEndOf,
@@ -131,13 +132,17 @@ export function usePdfMarkRestyle({
       const fill = fillOf(mark);
       return fill === undefined ? [] : [fill];
     });
+    // A custom stamp is its picture: Format's colour is not offered for it, nor changes it among others.
+    const coloured = selected.filter(takesColour);
     const colours: OfficeColours = {
-      ...(selected.length > 0
+      ...(coloured.length > 0
         ? {
             [TOOL_COLOUR]: {
-              read: () => sharedOf(selected, (mark) => mark.colour),
+              read: () => sharedOf(coloured, (mark) => mark.colour),
               set: (colour) =>
-                restyle('colour', (mark) => ({ colour: colour ?? firstColour(mark) })),
+                restyle('colour', (mark) =>
+                  takesColour(mark) ? { colour: colour ?? firstColour(mark) } : {},
+                ),
               leading: 'Reset',
             },
           }

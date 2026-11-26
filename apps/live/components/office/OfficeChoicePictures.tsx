@@ -1,7 +1,7 @@
-// The choice grid's pictures (OfficeChoiceGrid): a list style's lines and a stamp's badge, drawn as the page draws
+// The choice grid's pictures (OfficeChoiceGrid): a list style's lines, a stamp's badge and a custom stamp's picture, drawn as the page draws
 // them in small, so they are drawn art, off the chrome's sizing scale
 // (docs/specs/004-interface-design/sizing.md "Shapes").
-import type { OfficeGridBadge, OfficeGridLine } from './OfficeChoiceGrid';
+import type { OfficeGridBadge, OfficeGridLine, OfficeGridPicture } from './OfficeChoiceGrid';
 
 const LEVEL_STEP_PX = 9;
 
@@ -15,6 +15,22 @@ export function ChoiceBadge({ badge }: { badge: OfficeGridBadge }) {
     >
       <span className="text-[10px] font-bold">{badge.text}</span>
       {badge.detail ? <span className="text-[8px]">{badge.detail}</span> : null}
+    </span>
+  );
+}
+
+/** A custom stamp's picture on the page's paper, its name below; the paper alone while the picture is on its way. */
+export function ChoicePicture({ picture }: { picture: OfficeGridPicture }) {
+  return (
+    <span aria-hidden="true" data-office-grid-picture="" className="flex w-full flex-col gap-0.5">
+      <span className="flex min-h-0 flex-1 items-center justify-center rounded-[4px] bg-(--pdf-paper) p-0.5">
+        {picture.src ? (
+          <img src={picture.src} alt="" className="max-h-full max-w-full object-contain" />
+        ) : null}
+      </span>
+      <span className="truncate text-center text-[10px] leading-none text-(--office-ink)">
+        {picture.name}
+      </span>
     </span>
   );
 }

@@ -4,6 +4,9 @@ import { previousVersionHeldUntil } from './pdf-previous';
 import { pdfTabOf, type BlobKey, type PdfTabFile } from '@livedoc/document';
 import { storedLiveTab } from '../live-tabs/live-tab-store';
 import type { DocumentEnv } from '../types';
+import { pdfDigest, PdfLiveChanges } from '@livedoc/pdf-documents';
+import { documentOwnerBlobSize } from '../db/blobs';
+import { storedUpdates } from '../live-tabs/live-tab-store';
 import { PDF_LIVE_TAB } from './pdf-live-tab';
 
 /** The stored file a PDF tab names; null when the document lacks the tab, it is another kind, or it names none. */
@@ -17,7 +20,9 @@ export async function storedPdfTab(
 
 /**
  * Whether the document holds the key (docs/specs/006-document/blob-store.md "Holds and retention", "Getting bytes
- * out"): the tab naming it, or keeping it as a previous version whose day has not come, with its size; or null.
+ * out"): the tab naming it, keeping it as a previous version whose day has not come, or a mark of it naming it as its
+ * picture (a custom stamp's, custom-stamps.md "Placing one") where the document's owner holds its bytes, with its size;
+ * or null.
  * `tabScope` narrows the answer to one tab, for a tab-scoped link.
  */
 export async function documentBlobHold(
@@ -50,5 +55,33 @@ export async function documentBlobHold(
       (tabScope === null || held.id === tabScope) &&
       previousVersionHeldUntil(held.replaced_at) > now,
   );
-  return version ? { tabId: version.id, size: version.size } : null;
+  if (version) return { tabId: version.id, size: version.size };
+  return markedHold(env, documentId, key, tabScope);
+}
+
+/**
+ * The PDF tab whose marks name the key as a picture, read from its live changes as they stand (never a digest that
+ * trails them), with the size of the bytes the document's owner holds; null where no mark names it or the owner
+ * holds no bytes of it. Read only for a key no tab row names: a picture is fetched once and cached for good.
+ */
+async function markedHold(
+  env: DocumentEnv,
+  documentId: string,
+  key: BlobKey,
+  tabScope: string | null,
+): Promise<{ tabId: string; size: number } | null> {
+  const tabs = await env.DOCUMENT_DB.prepare(
+    `SELECT t.id FROM tabs t JOIN document_tabs dt ON dt.tab_id = t.id
+      WHERE dt.document_id = ? AND t.kind = 'pdf' ORDER BY dt.order_index`,
+  )
+    .bind(documentId)
+    .all<{ id: string }>();
+  for (const { id } of tabs.results) {
+    if (tabScope !== null && id !== tabScope) continue;
+    const changes = PdfLiveChanges.load(await storedUpdates(env, PDF_LIVE_TAB, id));
+    if (!pdfDigest(changes).blobKeys.includes(key)) continue;
+    const size = await documentOwnerBlobSize(env, documentId, key);
+    return size === null ? null : { tabId: id, size };
+  }
+  return null;
 }

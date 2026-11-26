@@ -127,6 +127,7 @@ export const API_ROUTE_RESOURCES: ReadonlySet<string> = new Set([
   'documents',
   'folders',
   'custom-themes',
+  'custom-stamps',
   'shape-libraries',
   'teams',
   'tokens',

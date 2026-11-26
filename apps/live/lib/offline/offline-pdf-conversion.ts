@@ -2,20 +2,20 @@
 // "Sync Document", "Take Offline"). Loaded only when a document holds a PDF tab, so nothing of a PDF loads with the
 // conversions of any other document.
 //
-// - **Sync Document** sends each stored file to the blob store first, then answers the live changes the create
+// - **Sync Document** sends each stored file, and each picture its marks name (a custom stamp's), to the blob store first, then answers the live changes the create
 //   carries: until the create is answered the document stays here.
 // - **Take Offline** reads each PDF tab's live changes, which name its stored file, and that file's bytes, from this
-//   browser when it holds them and from LiveDoc when not, and keeps the bytes here: all or nothing, before anything
+//   browser when it holds them and from LiveDoc when not, and the pictures its marks name, and keeps the bytes here: all or nothing, before anything
 //   is written and before the server copy goes.
 import { pdfTabOf, tabKindOf, type BlobKey, type Tab } from '@livedoc/document';
-import { PDF_LIVE_CHANGES_MAX_BYTES } from '@livedoc/pdf-documents';
+import { PDF_LIVE_CHANGES_MAX_BYTES, pdfDigest, PdfLiveChanges } from '@livedoc/pdf-documents';
 import { base64OfBytes } from '@livedoc/text-documents/base64';
 import { ApiError } from '../api/core';
 import { apiReadBlob } from '../api/files';
 import { apiLoadPdfState } from '../api/pdf-documents';
 import { sendBlob } from '../blob-store/send-blob';
 import { debugLog } from '../debug-log';
-import { thisBrowserBlobs } from './offline-blobs';
+import { blobKeysOfRecord, thisBrowserBlobs } from './offline-blobs';
 import type { OfflineDocumentRecord, OfflinePdfDocumentState } from './offline-store';
 
 /** The live changes a create carries, each a Yjs update as base64. */
@@ -49,7 +49,7 @@ export async function sendOfflinePdfFiles(
   const blobs = thisBrowserBlobs();
   let sent = 0;
   let held = 0;
-  for (const key of new Set(files.map((file) => file.key))) {
+  for (const key of new Set(await blobKeysOfRecord({ ...rec, pdfDocuments: states }))) {
     const bytes = await blobs.read(key);
     if (!bytes) throw refusedSync(404, 'blob_missing');
     try {
@@ -90,14 +90,20 @@ export async function takePdfTabsOffline(
       if (tabKindOf(tab) !== 'pdf') continue;
       const read = await apiLoadPdfState({ ...scope, tabId: tab.id });
       const key = read.storedFile;
-      const here = await blobs.readKept(key);
-      const bytes = here ?? (await apiReadBlob(scope, key));
-      if (here) local += 1;
-      // Kept as a document's, whether or not it was here as a cloud document's: full is said, never passed over.
-      if (!kept.has(key)) await blobs.keepForDocument(key, bytes);
-      kept.add(key);
-      bytesKept += bytes.byteLength;
-      tabs.set(tab.id, { ...tab, blob: key, size: bytes.byteLength });
+      const keep = async (named: BlobKey): Promise<number> => {
+        const here = await blobs.readKept(named);
+        const bytes = here ?? (await apiReadBlob(scope, named));
+        if (here) local += 1;
+        // Kept as a document's, whether or not it was here as a cloud document's: full is said, never passed over.
+        if (!kept.has(named)) await blobs.keepForDocument(named, bytes);
+        kept.add(named);
+        bytesKept += bytes.byteLength;
+        return bytes.byteLength;
+      };
+      const size = await keep(key);
+      for (const picture of pdfDigest(PdfLiveChanges.load([read.update])).blobKeys)
+        await keep(picture);
+      tabs.set(tab.id, { ...tab, blob: key, size });
       states.push({ tabId: tab.id, state: read.update, savedAt: now });
     }
   } catch (error) {

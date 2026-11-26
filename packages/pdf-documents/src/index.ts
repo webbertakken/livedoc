@@ -1,6 +1,7 @@
 // A PDF document's pure parts (docs/specs/035-pdf-documents/pdf-document.md): its limits, its live changes, its
 // marks. None of the engine comes with this entry; the engine is `@livedoc/pdf-documents/engine`.
 export * from './limits';
+export * from './custom-stamp';
 export { isPdfBytes } from './sniff';
 export { PageName } from './page-name';
 export { PdfDate } from './pdf-date';

@@ -13,6 +13,7 @@ import {
   type PdfEngine,
 } from '@livedoc/pdf-documents';
 import { debugLog } from '@/lib/debug-log';
+import { bakePictures, type ReadPicture } from './download-pdf';
 
 /** A replacement as this surface asks the room for it. */
 export type PdfStoredAsking = {
@@ -33,6 +34,8 @@ export type PdfBudgetDeps = {
   storedFile: BlobKey;
   pages: number;
   engine: Pick<PdfEngine, 'bake'>;
+  /** A picture a mark names (a custom stamp's), read from where the document holds it. */
+  readPicture?: ReadPicture;
   /** Whether this session may replace the stored file: an Editor's alone. */
   canReplace: () => boolean;
   /** Whether the room holds every change made here. */
@@ -84,7 +87,7 @@ export function watchPdfBudget(deps: PdfBudgetDeps): PdfBudgetWatch {
     const update = PdfLiveChanges.encode(doc);
     if (update.byteLength < atBytes) return skipped('small');
     const started = Date.now();
-    const baked = await deps.engine.bake(update);
+    const baked = await deps.engine.bake(update, await bakePictures(doc, deps.readPicture));
     if (!baked.ok) return skipped('bake');
     // A rewrite renumbers the file's objects, so page names would not carry: left to an Editor's own act.
     if (baked.kind !== 'addition') return skipped('rewrite');

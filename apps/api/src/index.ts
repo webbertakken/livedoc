@@ -56,6 +56,7 @@ import { handleCatalogues } from './routes/catalogues';
 import { handleCapabilities } from './routes/capabilities';
 import { handleOpenapi } from './routes/openapi';
 import { handleCustomThemes } from './routes/custom-themes';
+import { handleCustomStamps } from './routes/custom-stamps';
 import { handleShapeLibraries } from './routes/shape-libraries';
 import { handleUnfurl } from './routes/unfurl';
 import type { RouteContext, WorkbenchContext } from './routes/context';
@@ -445,6 +446,8 @@ async function routeApiRequest(
       return await handleForms(ctx);
     case 'custom-themes':
       return await handleCustomThemes(ctx);
+    case 'custom-stamps':
+      return await handleCustomStamps(ctx);
     case 'shape-libraries':
       return await handleShapeLibraries(ctx);
     case 'teams':

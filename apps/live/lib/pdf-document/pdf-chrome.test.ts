@@ -42,6 +42,7 @@ import {
   ROTATE_VIEW_CLOCKWISE,
   ROTATE_VIEW_COUNTERCLOCKWISE,
   SELECT_ALL,
+  STAMP_CUSTOM,
   STAMP_DYNAMIC,
   STAMP_STANDARD,
   TOOL_ARROW,
@@ -167,6 +168,7 @@ describe("a PDF document's menus and toolbar", () => {
     // usePdfStampTool.ts: Insert > Stamp's categories built (marks.md "Stamps").
     STAMP_STANDARD,
     STAMP_DYNAMIC,
+    STAMP_CUSTOM,
     COPY,
     SELECT_ALL,
     FIND,

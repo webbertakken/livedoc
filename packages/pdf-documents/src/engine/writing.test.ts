@@ -18,6 +18,7 @@ import {
   markFaceFiles,
   marksPdf,
   outlinePdf,
+  pngOf,
   privateDataPdf,
   protectedPdf,
   rawPdf,
@@ -560,6 +561,107 @@ describe('writing a stamp', () => {
     const drawn = (await engine.drawPage(0, 1))!;
     expect(greenIn(drawn, [170, 250, 190, 390])).toBeGreaterThan(50);
     expect(greenIn(drawn, [100, 300, 140, 340])).toBe(0);
+  });
+});
+
+// custom-stamps.md "Placing one": a custom stamp is a `Stamp` named `#` and its id, its picture its appearance.
+describe('writing a custom stamp', () => {
+  const ID = 'custom-0b7c3c2e-5a8f-4f21-9a43-1f2d3e4c5b6a';
+  const KEY = 'd'.repeat(64);
+  const custom = (page: PageName, over: Partial<Parameters<typeof Mark.stamp>[0]> = {}) =>
+    Mark.stamp({
+      page,
+      colour: '#000000',
+      opacity: 1,
+      author: 'Ada',
+      createdAt: at,
+      id: 'paid',
+      rect: [100, 300, 200, 350],
+      stamp: ID,
+      lines: ['Paid'],
+      picture: { key: KEY as never, type: 'png', width: 8, height: 4 },
+      ...over,
+    })!;
+  const bakeCustom = async (mark: Mark, pictures: ReadonlyMap<string, Uint8Array>) => {
+    const doc = PdfLiveChanges.load();
+    PdfChangeset.apply(doc, [PdfChange.addMark(mark)]);
+    return engine.bake(PdfLiveChanges.encode(doc), pictures);
+  };
+  const redIn = (
+    drawn: { width: number; height: number; rgba: Uint8ClampedArray },
+    [left, bottom, right, top]: readonly [number, number, number, number],
+  ) => {
+    let count = 0;
+    for (let y = Math.round(bottom); y < top; y += 1)
+      for (let x = Math.round(left); x < right; x += 1) {
+        const at = ((drawn.height - y) * drawn.width + x) * 4;
+        const [r, g, b] = drawn.rgba.slice(at, at + 3);
+        if (r! > 200 && g! < 60 && b! < 60) count += 1;
+      }
+    return count;
+  };
+
+  it('writes its picture across its box, named # and its id, and draws it there', async ({
+    skip,
+  }) => {
+    const pages = opened(await engine.open(stored));
+    const picture = pngOf(8, 4, [220, 20, 20, 255]);
+    const result = baked(await bakeCustom(custom(pages[0]!.name), new Map([[KEY, picture]])));
+    const added = Buffer.from(result.bytes).subarray(stored.length).toString('latin1');
+    expect(added).toContain('/Subtype /Stamp');
+    expect(added).toContain(`/Name /#23${ID}`);
+    expect(added).toContain('/Subtype /Image');
+    expect(qpdfChecks(result.bytes, skip)).toContain('No syntax or stream encoding errors');
+    opened(await engine.open(result.bytes));
+    const [read] = await engine.fileMarks(0);
+    // A `#` stamp is one LiveDoc does not draw: read as the file's, its words its name.
+    expect(read).toMatchObject({ id: 'paid', subtype: 'stamp', words: 'Paid' });
+    expect(read!.mark).toBeNull();
+    const drawn = (await engine.drawPage(0, 1))!;
+    expect(redIn(drawn, [100, 300, 200, 350])).toBeGreaterThan(4000);
+    expect(redIn(drawn, [100, 360, 200, 400])).toBe(0);
+  });
+
+  it('keeps a PNG’s see-through as a soft mask', async ({ skip }) => {
+    const pages = opened(await engine.open(stored));
+    const picture = pngOf(8, 4, [220, 20, 20, 0]);
+    const result = baked(await bakeCustom(custom(pages[0]!.name), new Map([[KEY, picture]])));
+    const added = Buffer.from(result.bytes).subarray(stored.length).toString('latin1');
+    expect(added).toContain('/SMask');
+    expect(qpdfChecks(result.bytes, skip)).toContain('No syntax or stream encoding errors');
+    opened(await engine.open(result.bytes));
+    expect(redIn((await engine.drawPage(0, 1))!, [100, 300, 200, 350])).toBe(0);
+  });
+
+  it('writes a turned one with Rotate and its appearance turned', async () => {
+    const pages = opened(await engine.open(stored));
+    const picture = pngOf(8, 4, [220, 20, 20, 255]);
+    const result = baked(
+      await bakeCustom(custom(pages[0]!.name, { turn: 90 }), new Map([[KEY, picture]])),
+    );
+    const added = Buffer.from(result.bytes).subarray(stored.length).toString('latin1');
+    expect(added).toContain('/Rotate 90');
+    expect(added).toMatch(/\/Matrix \[0 1 -1 0 /);
+  });
+
+  it('refuses the bake by name where its picture was not handed in', async () => {
+    const pages = opened(await engine.open(stored));
+    expect(await bakeCustom(custom(pages[0]!.name), new Map())).toEqual({
+      ok: false,
+      refusal: 'pictures-unavailable',
+    });
+  });
+
+  it('refuses the bake by name where its picture is not the type it says', async () => {
+    const pages = opened(await engine.open(stored));
+    const notJpeg = pngOf(8, 4, [220, 20, 20, 255]);
+    const jpeg = custom(pages[0]!.name, {
+      picture: { key: KEY as never, type: 'jpeg', width: 8, height: 4 },
+    });
+    expect(await bakeCustom(jpeg, new Map([[KEY, notJpeg]]))).toEqual({
+      ok: false,
+      refusal: 'pictures-unavailable',
+    });
   });
 });
 

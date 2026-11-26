@@ -9,7 +9,7 @@
 // Collaborators' strokes as they are drawn sit under this person's own (live-editing-and-storage.md "A mark as it is
 // made").
 import { useContext, useEffect } from 'react';
-import type { MarkShape, PageMatrix, PagePoint, Quad } from '@livedoc/pdf-documents';
+import type { MarkShape, PageMatrix, PagePoint, Quad, StampMark } from '@livedoc/pdf-documents';
 import {
   DarkPages,
   Helvetica,
@@ -22,6 +22,7 @@ import {
   PageView,
 } from '@livedoc/pdf-documents';
 import { PdfLookContext } from '@/lib/pdf-document/pdf-look';
+import { PdfStampPicture, useMarkPicture } from './PdfStampPicture';
 import { addMarkFaces, addMarkFont, facesStackOf } from '@/lib/pdf-document/pdf-mark-faces';
 import type { PdfFindTints } from '@/lib/pdf-document/usePdfFind';
 import type { PdfMarksMoving } from '@/lib/pdf-document/usePdfPageMarkPress';
@@ -210,6 +211,34 @@ function MarkOutline({ matrix, mark, gap }: { matrix: PageMatrix; mark: Mark; ga
   );
 }
 
+/** A mark as LiveDoc draws it: its shapes, then its words. */
+function MarkDrawn({ matrix, mark, dark }: { matrix: PageMatrix; mark: Mark; dark: boolean }) {
+  return (
+    <>
+      <MarkShapes matrix={matrix} shape={mark} dark={dark} />
+      <PdfMarkWords matrix={matrix} mark={mark} />
+    </>
+  );
+}
+
+/** A custom stamp (custom-stamps.md "Placing one"): its picture once read, else its outlined box with its name. */
+function PictureStampDrawn({
+  matrix,
+  mark,
+  dark,
+}: {
+  matrix: PageMatrix;
+  mark: StampMark;
+  dark: boolean;
+}) {
+  const src = useMarkPicture(mark);
+  return src ? (
+    <PdfStampPicture matrix={matrix} mark={mark} src={src} />
+  ) : (
+    <MarkDrawn matrix={matrix} mark={mark} dark={dark} />
+  );
+}
+
 export function PdfMarksOverlay({
   matrix,
   width,
@@ -282,8 +311,11 @@ export function PdfMarksOverlay({
               stroke={colour}
               opacity={mark.opacity}
             >
-              <MarkShapes matrix={drawnIn(matrix, mark)} shape={mark} dark={dark} />
-              <PdfMarkWords matrix={drawnIn(matrix, mark)} mark={mark} />
+              {mark.kind === 'stamp' && mark.picture ? (
+                <PictureStampDrawn matrix={drawnIn(matrix, mark)} mark={mark} dark={dark} />
+              ) : (
+                <MarkDrawn matrix={drawnIn(matrix, mark)} mark={mark} dark={dark} />
+              )}
             </g>
           );
         })}

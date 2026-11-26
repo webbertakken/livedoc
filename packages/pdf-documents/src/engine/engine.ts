@@ -2,6 +2,8 @@
 // writer behind the one interface. It holds one open stored file.
 import type { PDF } from '@libpdf/core';
 import type { BakeResult, PageInfo, PdfEngine, PdfEngineLog, PdfOpened } from '../engine-contract';
+import { StampPictureBytes } from '../custom-stamp';
+import { pdfDigest } from '../digest';
 import { FileSignature } from '../file-signature';
 import { DARK_PAGES_LOG_EVERY } from '../limits';
 import { PdfLiveChanges } from '../live-changes';
@@ -98,7 +100,10 @@ export function pdfEngineOver(
     return said(opened);
   };
 
-  async function bake(liveChanges: Uint8Array): Promise<BakeResult> {
+  async function bake(
+    liveChanges: Uint8Array,
+    pictures: ReadonlyMap<string, Uint8Array> = new Map(),
+  ): Promise<BakeResult> {
     if (!stored) return { ok: false, refusal: 'unreadable' };
     if (!PdfLiveChanges.decodes(liveChanges)) return { ok: false, refusal: 'unreadable' };
     const changes = PdfLiveChanges.load([liveChanges]);
@@ -107,6 +112,19 @@ export function pdfEngineOver(
       return { ok: true, bytes: stored, kind: 'unchanged', anchorsLost: 0, fieldsLost: 0 };
     const turns = PdfLiveChanges.pageTurns(changes);
     const marks = PdfLiveChanges.marks(changes);
+    // A custom stamp's picture not handed in stops the bake by name, never a stamp written without it.
+    const missing = pdfDigest(changes).blobKeys.filter((key) => !pictures.has(key));
+    const unfit = marks.filter(
+      (mark) =>
+        mark.kind === 'stamp' &&
+        mark.picture &&
+        pictures.has(mark.picture.key) &&
+        !StampPictureBytes.fit(mark.picture.type, pictures.get(mark.picture.key)!),
+    );
+    if (missing.length + unfit.length > 0) {
+      log(`[pdf] pictures-missing count=${missing.length} unfit=${unfit.length}`);
+      return { ok: false, refusal: 'pictures-unavailable' };
+    }
     // The mark faces load only for a bake whose marks need them, and a face that does not load stops it by name,
     // never a silent question mark (marks.md "Loading").
     const needed = markRunsOf(marks);
@@ -132,6 +150,7 @@ export function pdfEngineOver(
         fieldValues: PdfLiveChanges.fieldValues(changes),
         removed: PdfLiveChanges.removed(changes),
         turns,
+        pictures,
       },
       password,
       typesetter,

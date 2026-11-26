@@ -959,6 +959,12 @@ export const EXACT: Readonly<Record<string, string>> = {
     'Someone added a callout to a PDF page: words with a line pointing at what they mean.',
   'Pdf|Added|Stamp.Standard':
     'Someone placed a standard stamp, such as Approved or Draft, on a PDF page.',
+  'Pdf|Added|Stamp.Custom':
+    'Someone placed one of their own custom stamps, a picture they made a stamp, on a PDF page.',
+  'Pdf|Created|CustomStamp':
+    'Someone made a custom stamp of their own from a picture or a page of a PDF.',
+  'UI|Opened|PdfDocumentCustomStampDialog':
+    'Someone opened Create custom stamp on a PDF document, to make a stamp of their own.',
   'Pdf|Added|Stamp.Dynamic':
     'Someone placed a dynamic stamp on a PDF page: its name with who placed it and when.',
   'Pdf|Changed|ToolColour':
@@ -3010,6 +3016,7 @@ export const BY_ACTION: Readonly<Record<string, string>> = {
     'An editor allowed something on a spreadsheet for good (the value says what).',
   'Pdf|Imported':
     'Someone opened a PDF from their computer as a new PDF document (the value says the way it arrived).',
+  'Pdf|Created': 'Someone made something of their own for PDF documents (the value says what).',
   'Pdf|Added': 'Someone made a mark on a PDF page (the value says which kind).',
   'Pdf|Deleted': 'Someone deleted a mark from a PDF page (the value says which kind).',
   'Pdf|Selected': 'Someone took a tool in hand on a PDF document (the value says which).',

@@ -5,7 +5,8 @@ import type { BlobKey } from '@livedoc/document';
 import { PageName, PdfLiveChanges, type Quad } from '@livedoc/pdf-documents';
 import { createPdfEngine } from '@livedoc/pdf-documents/engine';
 import { readerWasm, textPdf } from '@livedoc/pdf-documents/testing';
-import { bakeForDownload } from './download-pdf';
+import { bakeForDownload, bakePictures, bakeProblemOf, PICTURES_FAILED_COPY } from './download-pdf';
+import { addCustomStamp } from './pdf-stamp';
 import { addTextMark } from './pdf-text-mark';
 
 const QUAD: Quad = [72, 730, 300, 730, 72, 716, 300, 716];
@@ -97,5 +98,58 @@ describe('bakeForDownload', () => {
       readStored: vi.fn(),
     });
     expect(download).toEqual({ ok: false, refusal: 'reopen' });
+  });
+});
+
+// custom-stamps.md "Placing one": a bake is handed each picture its marks name; one not read is left out, so the bake
+// refuses `pictures-unavailable` by name, said in "Errors"' words.
+describe('a custom stamp’s picture in a bake', () => {
+  const picture = { key: 'cd'.repeat(32) as BlobKey, type: 'png' as const, width: 8, height: 4 };
+  const withStamp = () => {
+    const doc = PdfLiveChanges.load();
+    addCustomStamp(
+      doc,
+      { page: PageName.ofObject(1), stored, box: [0, 0, 612, 792] },
+      {
+        id: 'custom-0b7c3c2e-5a8f-4f21-9a43-1f2d3e4c5b6a',
+        name: 'Paid',
+        category: 'C',
+        picture,
+        natural: { width: 6, height: 3 },
+        createdAt: 1,
+        updatedAt: 1,
+      },
+      { x: 100, y: 100 },
+      { author: 'Ada', now: 1, id: 'c1' },
+    );
+    return doc;
+  };
+
+  it('hands the bake each picture its marks name, read by its key', async () => {
+    const bytes = new Uint8Array([0x89, 0x50]);
+    const read = vi.fn(async () => bytes);
+    expect(await bakePictures(withStamp(), read)).toEqual(new Map([[picture.key, bytes]]));
+    expect(read).toHaveBeenCalledWith(picture.key);
+    expect(await bakePictures(PdfLiveChanges.load(), read)).toEqual(new Map());
+    expect(read).toHaveBeenCalledOnce();
+  });
+
+  it('leaves out a picture not read, and says the refusal in its words', async () => {
+    const read = vi.fn(async () => {
+      throw new Error('blob_missing');
+    });
+    const engine = {
+      bake: vi.fn(async () => ({ ok: false as const, refusal: 'pictures-unavailable' as const })),
+    };
+    const download = await bakeForDownload({
+      engine,
+      doc: withStamp(),
+      documentName: 'Lease',
+      readStored: async () => new Uint8Array(),
+      readPicture: read,
+    });
+    expect(engine.bake).toHaveBeenCalledWith(expect.any(Uint8Array), new Map());
+    expect(download).toEqual({ ok: false, refusal: 'pictures-unavailable' });
+    expect(bakeProblemOf('pictures-unavailable')).toBe(PICTURES_FAILED_COPY);
   });
 });

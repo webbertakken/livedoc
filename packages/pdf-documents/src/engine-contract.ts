@@ -180,7 +180,8 @@ export type PdfLayer = {
  * Why a bake was not handed out (saving.md "The validators' claim", "Addition or rewrite"; marks.md "Loading": a mark
  * face did not load).
  */
-export type BakeRefusal = 'cannot-append' | 'reopen' | 'unreadable' | 'faces-unavailable';
+export type BakeRefusal =
+  'cannot-append' | 'reopen' | 'unreadable' | 'faces-unavailable' | 'pictures-unavailable';
 
 export type BakeResult =
   | {
@@ -293,8 +294,11 @@ export type PdfEngine = {
    * files"); false where it read it whole, or cannot read it at all. Asking reads the whole file a second time.
    */
   repaired(): Promise<boolean>;
-  /** The open stored file with the live changes (one Yjs update) written in. */
-  bake(liveChanges: Uint8Array): Promise<BakeResult>;
+  /**
+   * The open stored file with the live changes (one Yjs update) written in; `pictures` the bytes of each picture its
+   * marks name, by key (a custom stamp's, custom-stamps.md "Placing one"): one missing refuses the bake by name.
+   */
+  bake(liveChanges: Uint8Array, pictures?: ReadonlyMap<string, Uint8Array>): Promise<BakeResult>;
   /**
    * The pages at `indexes` of `bytes` (the open file, or a bake of it), in that order, as a new PDF; null where it
    * cannot be read or a page is not there (files-print-and-sync.md "Printing").

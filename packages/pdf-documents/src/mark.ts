@@ -4,6 +4,7 @@
 // own word for each (`Highlight`, `Underline`, `StrikeOut`, `Squiggly`); the Drawing (`Ink`); the Line and the Arrow
 // (`Line`); the Rectangle and the Ellipse (`Square`, `Circle`); the Text and the Callout (`FreeText`); the stamp
 // (`Stamp`).
+import { CustomStamp, type StampPicture } from './custom-stamp';
 import {
   PDF_DRAWING_MAX_POINTS,
   PDF_POLYGON_MAX_CORNERS,
@@ -218,8 +219,11 @@ export type StampMark = MarkBase & {
   readonly turn?: StampTurnDegrees;
   /** Which stamp it is: a LiveDoc id (stamps.ts), any such id, so a stamp of a person's own fits too. */
   readonly stamp: string;
-  /** Its words as drawn, fixed when placed: its name in capitals, and a dynamic stamp's who and when. */
+  /** Its words as drawn, fixed when placed: its name in capitals, and a dynamic stamp's who and when; a custom
+   *  stamp's, its name. */
   readonly lines: readonly string[];
+  /** A custom stamp's picture, drawn across its box (custom-stamps.md "Placing one"); a custom stamp's alone. */
+  readonly picture?: StampPicture;
 };
 
 export type Mark = TextMark | DrawingMark | LineMark | ShapeMark | PolyMark | TypedMark | StampMark;
@@ -445,7 +449,14 @@ function stampOf(base: MarkBase, v: Record<string, unknown>): StampMark | null {
     ...(STAMP_TURNS.includes(v.turn as StampTurnDegrees)
       ? { turn: v.turn as StampTurnDegrees }
       : {}),
+    ...pictureOf(v.stamp, v.picture),
   };
+}
+
+/** A custom stamp's picture, where the stamp is one and the picture whole; nothing for any other stamp. */
+function pictureOf(stamp: string, value: unknown): { picture?: StampPicture } {
+  const picture = CustomStamp.isId(stamp) ? CustomStamp.picture(value) : null;
+  return picture ? { picture } : {};
 }
 
 /** How each kind past the base is checked. */

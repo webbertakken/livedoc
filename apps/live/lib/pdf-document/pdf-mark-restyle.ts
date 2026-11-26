@@ -149,6 +149,9 @@ export const fontedLook =
     return { font: chosen ?? null, ...placed };
   };
 
+/** Whether a mark takes a colour: every mark but a custom stamp, which is its picture (custom-stamps.md "Placing one"). */
+export const takesColour = (mark: Mark): boolean => !(mark.kind === 'stamp' && mark.picture);
+
 /** The colour Reset gives a mark: its kind's first look, a stamp its own; a stamp LiveDoc does not draw keeps its. */
 export function firstColour(mark: Mark): string {
   if (mark.kind !== 'stamp') return FIRST_LOOKS[mark.kind].colour;

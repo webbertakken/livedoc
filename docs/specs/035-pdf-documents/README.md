@@ -19,6 +19,7 @@ measured against Acrobat's. The research is in `docs/research/pdf-documents/`.
 - ./keyboard-shortcuts.md - when binding, listing or checking a keyboard shortcut of a PDF document
 - ./accessibility.md - when working on the accessible tree, keyboard-only use, or what a written file keeps of its tags
 - ./marks.md - when working on highlights, notes, text, drawings, shapes and stamps, and their mapping onto the file
+- ./custom-stamps.md - when working on a person's own stamps: where they are kept, making, placing, their api, limits
 - ./comments.md - when working on comment threads on a PDF and how they are written into and read from the file
 - ./fields.md - when working on filling fields: types, formats and calculations, XFA, field data, filling a PDF with no fields
 - ./signing.md - when working on drawn signatures, certificate signatures, the signatures panel, or changes after a signature

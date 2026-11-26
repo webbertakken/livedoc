@@ -203,6 +203,7 @@ describe('pdfDigest', () => {
       hasContent: true,
       searchText: '',
       marks: 0,
+      blobKeys: [],
     });
     PdfLiveChanges.setStored(doc, { blob: BLOB, pages: 14 });
     PdfLiveChanges.addMark(doc, highlight('a', 'trace trees'));
@@ -213,6 +214,29 @@ describe('pdfDigest', () => {
       searchText: 'trace trees\ntype maps',
       marks: 3,
     });
+  });
+
+  // blob-store.md "Holds and retention": a PDF tab holds the pictures its marks name.
+  it('names each picture its marks name once, in order', () => {
+    const doc = PdfLiveChanges.load();
+    const custom = (id: string, key: string) =>
+      Mark.stamp({
+        id,
+        page: 'p:1',
+        rect: [0, 0, 10, 10],
+        stamp: 'custom-0b7c3c2e-5a8f-4f21-9a43-1f2d3e4c5b6a',
+        lines: ['Paid'],
+        picture: { key: key as BlobKey, type: 'png', width: 4, height: 4 },
+        colour: '#000000',
+        opacity: 1,
+        author: 'Ada',
+        createdAt: 1,
+      })!;
+    PdfLiveChanges.addMark(doc, custom('a', 'f'.repeat(64)));
+    PdfLiveChanges.addMark(doc, custom('b', 'c'.repeat(64)));
+    PdfLiveChanges.addMark(doc, custom('c', 'f'.repeat(64)));
+    PdfLiveChanges.addMark(doc, highlight('d', 'words'));
+    expect(pdfDigest(doc).blobKeys).toEqual(['c'.repeat(64), 'f'.repeat(64)]);
   });
 });
 

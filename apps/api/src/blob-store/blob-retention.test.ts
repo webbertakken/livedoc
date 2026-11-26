@@ -89,6 +89,13 @@ describe('what a tab holds', () => {
     expect(tabBlobHolds({ ...pdfTab(), blob: 'not a key' })).toEqual([]);
   });
 
+  it('is each picture its marks name, as the tab’s own', () => {
+    expect(tabBlobHolds(pdfTab(), [], [keyOf(7), key])).toEqual([
+      { key: keyOf(7), until: null },
+      { key, until: null },
+    ]);
+  });
+
   it('is nothing to tell for a tab of a kind that never holds a blob', () => {
     expect(tabBlobHolds({ kind: 'text-document' })).toBeNull();
     expect(tabBlobHolds({})).toBeNull();
@@ -134,6 +141,23 @@ describe('the sweep', () => {
     expect(await heldBlob(db.env, 'ada', keyOf(2))).not.toBeNull();
     expect(bucket.blob('ada', key)).toBeUndefined();
     expect(bucket.objects.size).toBe(1);
+  });
+
+  // custom-stamps.md "Where they are kept": a custom stamp holds its picture while it is kept.
+  it('keeps the picture a custom stamp holds, and sweeps it once the stamp is deleted', async () => {
+    await stored('ada', key, OLD);
+    db.sql
+      .prepare(
+        `INSERT INTO custom_stamps (id, owner_id, name, category, picture_key, picture_type, width, height,
+           natural_width, natural_height, created_at, updated_at)
+         VALUES ('cs', 'ada', 'Paid', 'Custom', ?, 'png', 4, 4, 3, 3, 1, 1)`,
+      )
+      .run(key);
+    expect(await sweep()).toEqual({ blobs: 0, uploads: 0 });
+    expect(await heldBlob(db.env, 'ada', key)).not.toBeNull();
+    db.sql.prepare('DELETE FROM custom_stamps').run();
+    expect(await sweep()).toEqual({ blobs: 1, uploads: 0 });
+    expect(await heldBlob(db.env, 'ada', key)).toBeNull();
   });
 
   it('deletes the blob of a purged document, whose holds went with it', async () => {

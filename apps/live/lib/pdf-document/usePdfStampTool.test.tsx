@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 // docs/specs/035-pdf-documents/marks.md "Stamps" (Placing a stamp, The Stamp control, Insert > Stamp), "Telemetry and
-// observability" (`Stamp.<Standard|Dynamic>` alone); reading-surface.md "The toolbar": Stamp.
+// observability" (`Stamp.<Standard|Dynamic>` alone); reading-surface.md "The toolbar": Stamp; custom-stamps.md
+// "Making one", "Placing one": their stamps in the grid, Create custom stamp…, a press sending the picture first.
 import { act, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { BlobKey } from '@livedoc/document';
@@ -10,11 +11,17 @@ import {
   PdfLiveChanges,
   Stamps,
   type Box,
+  type CustomStampRecord,
   type PageInfo,
 } from '@livedoc/pdf-documents';
+import { resetCustomStamps } from './custom-stamps';
+import { CUSTOM_STAMP_COPY } from './make-custom-stamp';
+import { CUSTOM_STAMP_COLOUR } from './pdf-stamp';
+import { resetStampPictureUrls } from './stamp-picture-urls';
+import { CREATE_CUSTOM_STAMP_CELL, type PdfCustomStampsHome } from './usePdfCustomStamps';
 import { debugLog } from '@/lib/debug-log';
 import { track } from '@/lib/telemetry';
-import { STAMP_DYNAMIC, STAMP_STANDARD } from './pdf-menus';
+import { STAMP_CUSTOM, STAMP_DYNAMIC, STAMP_STANDARD } from './pdf-menus';
 import { STAMP_COLOURS } from './pdf-stamp';
 import { resetStampPick, stampPick } from './pdf-stamp-pick';
 import { TOO_MANY_MARKS_COPY } from './pdf-surface-copy';
@@ -24,6 +31,14 @@ import { stampCell, usePdfStampTool } from './usePdfStampTool';
 
 vi.mock('@/lib/telemetry', () => ({ track: vi.fn() }));
 vi.mock('@/lib/debug-log', () => ({ debugLog: vi.fn() }));
+const api = vi.hoisted(() => ({
+  apiListCustomStamps: vi.fn(async () => [] as CustomStampRecord[]),
+  apiReadCustomStampPicture: vi.fn(),
+  apiCreateCustomStamp: vi.fn(),
+}));
+vi.mock('@/lib/api/custom-stamps', () => api);
+const kept = vi.hoisted(() => ({ readKept: vi.fn(), keepRead: vi.fn() }));
+vi.mock('@/lib/offline/offline-blobs', () => ({ thisBrowserBlobs: () => kept }));
 
 const PAGES = [PageName.ofObject(3), PageName.ofObject(4)].map((name) => ({ name }) as PageInfo);
 const LETTER: Box = [0, 0, 612, 792];
@@ -31,7 +46,8 @@ const LETTER: Box = [0, 0, 612, 792];
 function stampTool({
   offered = true,
   inHand = 'select',
-}: { offered?: boolean; inHand?: PdfPageTool } = {}) {
+  custom = null,
+}: { offered?: boolean; inHand?: PdfPageTool; custom?: PdfCustomStampsHome | null } = {}) {
   const doc = PdfLiveChanges.load();
   const steps: unknown[] = [];
   const ready = {
@@ -57,6 +73,7 @@ function stampTool({
         inHand: props.inHand,
         pickTool,
         onProblem,
+        custom,
       }),
     { initialProps: { inHand } },
   );
@@ -72,6 +89,8 @@ beforeEach(() => {
 afterEach(() => {
   localStorage.clear();
   resetStampPick();
+  resetCustomStamps();
+  resetStampPictureUrls();
 });
 
 describe('the Stamp control', () => {
@@ -213,9 +232,117 @@ describe('placing a stamp', () => {
         inHand: 'stamp',
         pickTool,
         onProblem: vi.fn(),
+        custom: null,
       }),
     );
     act(() => hook.result.current.stamping!.onStamp(0, { x: 1, y: 1 }, LETTER));
     expect(track).not.toHaveBeenCalled();
+  });
+});
+
+describe('custom stamps', () => {
+  const PAID: CustomStampRecord = {
+    id: 'custom-0b7c3c2e-5a8f-4f21-9a43-1f2d3e4c5b6a',
+    name: 'Paid',
+    category: 'Accounts',
+    picture: { key: 'cd'.repeat(32) as BlobKey, type: 'png', width: 80, height: 40 },
+    natural: { width: 60, height: 30 },
+    createdAt: 2,
+    updatedAt: 2,
+  };
+  const BYTES = new Uint8Array([0x89, 0x50, 0x4e, 0x47]);
+  let send: ReturnType<typeof vi.fn<PdfCustomStampsHome['send']>>;
+  beforeEach(() => {
+    send = vi.fn<PdfCustomStampsHome['send']>(async () => {});
+    api.apiListCustomStamps.mockResolvedValue([PAID]);
+    kept.readKept.mockResolvedValue(BYTES);
+    URL.createObjectURL = vi.fn(() => 'blob:paid');
+    URL.revokeObjectURL = vi.fn();
+  });
+  const withCustom = (inHand: PdfPageTool = 'select') =>
+    stampTool({ inHand, custom: { ownerId: 'ada', send } });
+
+  it('offers none, nor Create custom stamp…, without file storage', () => {
+    const { hook } = stampTool();
+    const grid = hook.result.current.choices[STAMP_TOOLS]!.grid!;
+    expect(grid.cells.map((cell) => cell.id)).not.toContain(CREATE_CUSTOM_STAMP_CELL);
+    expect(hook.result.current.actions[STAMP_CUSTOM]).toBeUndefined();
+  });
+
+  it('draws theirs a category each after Standard and Dynamic, then Create custom stamp…', async () => {
+    const { hook } = withCustom();
+    await vi.waitFor(() =>
+      expect(hook.result.current.choices[STAMP_TOOLS]!.grid!.sections!.map((s) => s.label)).toEqual(
+        ['Standard', 'Dynamic', 'Accounts', ''],
+      ),
+    );
+    await vi.waitFor(() =>
+      expect(hook.result.current.choices[STAMP_TOOLS]!.grid!.cells.slice(-2)).toEqual([
+        { id: stampCell(PAID.id), label: 'Paid', picture: { src: 'blob:paid', name: 'Paid' } },
+        expect.objectContaining({ id: CREATE_CUSTOM_STAMP_CELL, command: true }),
+      ]),
+    );
+  });
+
+  it('opens Create custom stamp from the grid and from Insert > Stamp > Custom stamps', async () => {
+    const { hook, run } = withCustom();
+    await vi.waitFor(() => expect(hook.result.current.actions[STAMP_CUSTOM]).toBeDefined());
+    run(STAMP_CUSTOM);
+    expect(hook.result.current.customStampDialog).toMatchObject({ open: true, ownerId: 'ada' });
+    expect(track).toHaveBeenCalledWith('UI', 'Opened', 'PdfDocumentCustomStampDialog');
+    act(() => hook.result.current.customStampDialog.onClose());
+    run(CREATE_CUSTOM_STAMP_CELL);
+    expect(hook.result.current.customStampDialog.open).toBe(true);
+  });
+
+  it('takes one made, the Stamp tool in hand', async () => {
+    const { hook, pickTool } = withCustom();
+    await vi.waitFor(() => expect(hook.result.current.actions[stampCell(PAID.id)]).toBeDefined());
+    act(() => hook.result.current.customStampDialog.onMade(PAID));
+    expect(stampPick()).toBe(PAID.id);
+    expect(pickTool).toHaveBeenCalledWith('stamp');
+    expect(hook.result.current.actions[STAMP_TOOLS]!.label).toBe('Stamp: Paid');
+  });
+
+  it('places one by its picture sent for the document first, counted as Custom', async () => {
+    const { hook, run, doc, onProblem } = withCustom('stamp');
+    await vi.waitFor(() => expect(hook.result.current.actions[stampCell(PAID.id)]).toBeDefined());
+    run(stampCell(PAID.id));
+    act(() => hook.result.current.stamping!.onStamp(0, { x: 100, y: 100 }, LETTER));
+    // A press while the picture is sent places nothing more.
+    act(() => hook.result.current.stamping!.onStamp(0, { x: 300, y: 300 }, LETTER));
+    await vi.waitFor(() => expect(PdfLiveChanges.marks(doc)).toHaveLength(1));
+    expect(send).toHaveBeenCalledOnce();
+    expect(send).toHaveBeenCalledWith(PAID.picture.key, BYTES);
+    expect(PdfLiveChanges.marks(doc)[0]).toMatchObject({
+      stamp: PAID.id,
+      lines: ['Paid'],
+      picture: PAID.picture,
+      colour: CUSTOM_STAMP_COLOUR,
+      rect: [70, 85, 130, 115],
+    });
+    expect(track).toHaveBeenCalledWith('Pdf', 'Added', 'Stamp.Custom');
+    expect(onProblem).toHaveBeenLastCalledWith(null);
+  });
+
+  it('places nothing where its picture cannot be sent, and says so', async () => {
+    send.mockRejectedValue(new TypeError('offline'));
+    const { hook, run, doc, onProblem } = withCustom('stamp');
+    await vi.waitFor(() => expect(hook.result.current.actions[stampCell(PAID.id)]).toBeDefined());
+    run(stampCell(PAID.id));
+    act(() => hook.result.current.stamping!.onStamp(0, { x: 100, y: 100 }, LETTER));
+    await vi.waitFor(() =>
+      expect(onProblem).toHaveBeenLastCalledWith(CUSTOM_STAMP_COPY.not_placed),
+    );
+    expect(PdfLiveChanges.marks(doc)).toEqual([]);
+  });
+
+  it('shows Approved for a custom stamp that is theirs no longer', async () => {
+    localStorage.setItem('livedoc:v2:pdf-stamp', 'custom-1b7c3c2e-5a8f-4f21-9a43-1f2d3e4c5b6a');
+    resetStampPick();
+    const { hook } = withCustom();
+    await vi.waitFor(() => expect(hook.result.current.actions[stampCell(PAID.id)]).toBeDefined());
+    expect(hook.result.current.actions[STAMP_TOOLS]!.label).toBe('Stamp: Approved');
+    expect(hook.result.current.choices[STAMP_TOOLS]!.read()).toBe(stampCell('approved'));
   });
 });

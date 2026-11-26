@@ -2,6 +2,7 @@
 // load it (a browser's worker fetches the same file as an asset).
 import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
+import * as zlib from 'node:zlib';
 import { CryptoKeySigner, PDF } from '@libpdf/core';
 import * as asn1js from 'asn1js';
 import * as pkijs from 'pkijs';
@@ -577,4 +578,40 @@ export async function typesetterOf(ids: readonly string[]) {
   );
   if (!loaded.ok) throw new Error(`${loaded.face} did not load`);
   return loaded.typesetter;
+}
+
+/**
+ * A PNG of `width` by `height` pixels, each `rgba` (red, green, blue, alpha a byte each): a custom stamp's picture
+ * (custom-stamps.md). Written by hand, its rows unfiltered, packed by Node's zlib.
+ */
+export function pngOf(
+  width: number,
+  height: number,
+  rgba: readonly [number, number, number, number],
+): Uint8Array {
+  const chunk = (type: string, data: Uint8Array): Buffer => {
+    const head = Buffer.alloc(8);
+    head.writeUInt32BE(data.length, 0);
+    head.write(type, 4, 'latin1');
+    const crc = Buffer.alloc(4);
+    crc.writeUInt32BE(zlib.crc32(Buffer.concat([head.subarray(4), data])) >>> 0, 0);
+    return Buffer.concat([head, data, crc]);
+  };
+  const header = Buffer.alloc(13);
+  header.writeUInt32BE(width, 0);
+  header.writeUInt32BE(height, 4);
+  header.set([8, 6, 0, 0, 0], 8);
+  const row = Buffer.concat([
+    Buffer.from([0]),
+    Buffer.from(Array.from({ length: width }, () => rgba).flat()),
+  ]);
+  const pixels = zlib.deflateSync(Buffer.concat(Array.from({ length: height }, () => row)));
+  return new Uint8Array(
+    Buffer.concat([
+      Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
+      chunk('IHDR', header),
+      chunk('IDAT', pixels),
+      chunk('IEND', new Uint8Array()),
+    ]),
+  );
 }

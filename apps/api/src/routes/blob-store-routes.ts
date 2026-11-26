@@ -13,16 +13,24 @@ import { blobUsage, claimBlob, getDocumentMeta, heldBlob, markBlobStored } from 
 import { json, notFound } from '../responses';
 import { declaredLength, refusedBlob, short, sizeRefusal, type BlobDoor } from './blob-door';
 import { blobUploadDoorOf, handleBlobUploadRoutes } from './blob-upload-routes';
-import { deniedOnTab, gateEdit, missingDocument, requireOwner, type RouteContext } from './context';
+import {
+  deniedParticipate,
+  gateParticipate,
+  missingDocument,
+  requireOwner,
+  type RouteContext,
+} from './context';
 
 // Whose the bytes are, or the response that refuses the caller: the document's owner when the upload names a
-// document (edit access asked; a tab-scoped link is refused, as on every document-level door), else the caller's own.
+// document (participate access asked, for the bytes a Participant's change brings: a stamp's picture; a Viewer stores
+// nothing; a tab-scoped link is refused, as on every document-level door), else the caller's own.
 async function blobOwnerOf(ctx: RouteContext, caller: string): Promise<string | Response> {
   const documentId = ctx.url.searchParams.get('document');
   if (documentId === null) return caller;
   const meta = await getDocumentMeta(ctx.env, documentId);
   if (!meta) return missingDocument(ctx, documentId);
-  if (!(await gateEdit(ctx, documentId, meta.ownerId, meta.teamId))) return deniedOnTab(ctx, meta);
+  if (!(await gateParticipate(ctx, documentId, meta.ownerId, meta.teamId)))
+    return deniedParticipate(ctx, meta);
   return meta.ownerId;
 }
 

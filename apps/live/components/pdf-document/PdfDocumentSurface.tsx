@@ -4,6 +4,7 @@
 // shell's title row, menus and toolbar filled for a PDF, and under them the pages, or what is said when there are
 // none to show. The pages are the engine's pictures, drawn in a worker; the chrome is the shell's tokens in both
 // schemes, and a page is as its file says.
+import type { BlobKey } from '@livedoc/document';
 import {
   useCallback,
   useEffect,
@@ -30,7 +31,8 @@ import { sendBlob } from '@/lib/blob-store/send-blob';
 import { watchPdfBudget, type PdfStoredAsking } from '@/lib/pdf-document/pdf-budget-replacement';
 import { PdfStoredFiles } from '@/lib/pdf-document/pdf-document-bus';
 import { startPdfEngineWorker } from '@/lib/pdf-document/pdf-engine-client';
-import { pdfReadsOf, type PdfHome } from '@/lib/pdf-document/pdf-home';
+import { pdfBlobSendOf, pdfReadsOf, type PdfHome } from '@/lib/pdf-document/pdf-home';
+import { useCapabilities } from '@/hooks/persistence/useCapabilities';
 import type { BindPdfLiveChanges } from '@/lib/pdf-document/pdf-live-binding';
 import { pdfLocalBinding } from '@/lib/pdf-document/pdf-local-binding';
 import { lookControls } from '@/lib/pdf-document/pdf-look-controls';
@@ -47,6 +49,7 @@ import { usePdfMarkProperties } from '@/lib/pdf-document/usePdfMarkProperties';
 import { usePdfStampTurns } from '@/lib/pdf-document/usePdfStampTurns';
 import { usePdfFullScreen } from '@/lib/pdf-document/usePdfFullScreen';
 import { PdfLookContext } from '@/lib/pdf-document/pdf-look';
+import { PdfStampPicturesContext } from '@/lib/pdf-document/pdf-stamp-pictures';
 import { usePdfReadMode } from '@/lib/pdf-document/usePdfReadMode';
 import { usePdfPrint, type PdfPrintSource } from '@/lib/pdf-document/usePdfPrint';
 import { pdfPresencePeersOf, usePdfPresencePeers } from '@/lib/pdf-document/pdf-presence-store';
@@ -81,6 +84,7 @@ import { PdfViewerPageBar } from './PdfPageBar';
 import { PdfPages } from './PdfPages';
 import { PdfSelectionBar } from './PdfSelectionBar';
 import { PdfLeftPanel } from './PdfLeftPanel';
+import { CustomStampDialog } from './CustomStampDialog';
 import { PdfLinkDialog } from './PdfLinkDialog';
 import { PdfPrintDialog } from './PdfPrintDialog';
 import { PdfFindBar } from './PdfFindBar';
@@ -191,6 +195,7 @@ export function PdfDocumentSurface({
       storedFile: ready.storedFile,
       pages: ready.pages.length,
       engine: ready.engine,
+      readPicture: (key) => deps.readBlob({ ownerId, documentId, tabId, shareCode }, key),
       canReplace: () => live.current.level === 'edit',
       isSaved: ready.binding.isSaved,
       store: (key, bytes) => sendBlob(ownerId, key, bytes, { document }),
@@ -198,7 +203,7 @@ export function PdfDocumentSurface({
       onRefused: (listener) => PdfStoredFiles.onRefused(tabId, listener),
     });
     return watch.stop;
-  }, [ready, home, ownerId, documentId, tabId, shareCode]);
+  }, [ready, home, deps, ownerId, documentId, tabId, shareCode]);
 
   usePdfThumbnail(ready, marks, scope, home, level);
 
@@ -282,11 +287,17 @@ export function PdfDocumentSurface({
         : null,
     [deps, ownerId, documentId, tabId, shareCode, storedFile],
   );
+  // custom-stamps.md "Placing one": a custom stamp's picture read from the document, as its stored file is.
+  const readStampPicture = useCallback(
+    (key: BlobKey) => deps.readBlob({ ownerId, documentId, tabId, shareCode }, key),
+    [deps, ownerId, documentId, tabId, shareCode],
+  );
   const download = usePdfDownload({
     engine: ready?.engine ?? null,
     doc: ready?.binding.doc ?? null,
     documentName,
     readStored,
+    readPicture: readStampPicture,
     onProblem: setProblem,
   });
 
@@ -300,9 +311,10 @@ export function PdfDocumentSurface({
             permissions: ready.permissions,
             marksOn: (page) => marksOnPage(marks.get(), page.name),
             readStored,
+            readPicture: readStampPicture,
           }
         : null,
-    [ready, marks, readStored],
+    [ready, marks, readStored, readStampPicture],
   );
   const printing = usePdfPrint({
     source: printSource,
@@ -327,7 +339,21 @@ export function PdfDocumentSurface({
   // "Making a mark": the tool in hand, and the text marks it makes.
   // "A mark as it is made": this person's Drawing stroke sent as it grows, and the others' drawn.
   const sendStroke = usePdfDraftSend({ tabId, pages });
+  // custom-stamps.md "Where they are kept": a person's own stamps, where the deployment stores files.
+  const { filesEnabled } = useCapabilities();
+  const customStamps = useMemo(
+    () =>
+      filesEnabled
+        ? {
+            ownerId,
+            send: (key: BlobKey, bytes: Uint8Array<ArrayBuffer>) =>
+              pdfBlobSendOf(home)({ ownerId, documentId, tabId, shareCode }, key, bytes),
+          }
+        : null,
+    [filesEnabled, home, ownerId, documentId, tabId, shareCode],
+  );
   const tools = usePdfMarkTools({
+    custom: customStamps,
     ready,
     marking,
     author,
@@ -551,83 +577,87 @@ export function PdfDocumentSurface({
       {open.phase === 'opening' ? <PdfOpeningPage /> : null}
       {ready && marks && changeable ? (
         <PdfLookContext.Provider value={darkPages.look}>
-          <OfficePanelLayout
-            left={
-              readMode.on ? null : (
-                <PdfLeftPanel
-                  panels={panels}
-                  tabId={tabId}
+          <PdfStampPicturesContext.Provider value={readStampPicture}>
+            <OfficePanelLayout
+              left={
+                readMode.on ? null : (
+                  <PdfLeftPanel
+                    panels={panels}
+                    tabId={tabId}
+                    pages={ready.pages}
+                    page={viewer.page}
+                    engine={ready.engine}
+                    drawer={layerView.drawer ?? ready.drawer}
+                    marks={marks}
+                    onGoTo={jump}
+                    onFollow={links.follow}
+                    onOpenPdf={(file) => openEmbeddedPdf(ownerId, home, file)}
+                    layerView={layerView}
+                  />
+                )
+              }
+              right={
+                readMode.on ? null : findListShown ? (
+                  <PdfFindResults find={find} pages={ready.pages} focusNonce={0} />
+                ) : markProperties.open ? (
+                  <PdfMarkPropertiesPanel properties={markProperties} />
+                ) : null
+              }
+            >
+              <div
+                ref={setColumn}
+                className="relative flex min-h-0 min-w-0 flex-1 flex-col bg-(--office-ground)"
+              >
+                <PdfPages
+                  attach={viewer.attach}
+                  layout={viewer.layout}
+                  scale={viewer.scale}
+                  turns={viewer.view.turns}
+                  viewStore={viewer.viewStore}
+                  sized={viewer.viewport.width > 0}
+                  onKeyDown={pagesInput.onKeyDown}
                   pages={ready.pages}
-                  page={viewer.page}
                   engine={ready.engine}
                   drawer={layerView.drawer ?? ready.drawer}
-                  marks={marks}
-                  onGoTo={jump}
+                  marks={changeable}
+                  tool={tools.inHand}
+                  onMark={tools.make}
+                  ink={tools.ink}
+                  shaping={tools.shaping}
+                  stamping={tools.stamping}
+                  erasing={tools.erasing}
+                  typing={tools.typing}
+                  selection={textSelection.selected}
+                  chosen={markSelection.chosen}
+                  choosing={markSelection.choosing}
+                  onText={textSelection.gesture}
+                  texts={textSelection.texts}
                   onFollow={links.follow}
-                  onOpenPdf={(file) => openEmbeddedPdf(ownerId, home, file)}
-                  layerView={layerView}
+                  found={find.tints}
+                  onDoubleTap={zoomToColumn}
+                  peers={peers}
+                  drafts={drafts}
                 />
-              )
-            }
-            right={
-              readMode.on ? null : findListShown ? (
-                <PdfFindResults find={find} pages={ready.pages} focusNonce={0} />
-              ) : markProperties.open ? (
-                <PdfMarkPropertiesPanel properties={markProperties} />
-              ) : null
-            }
-          >
-            <div
-              ref={setColumn}
-              className="relative flex min-h-0 min-w-0 flex-1 flex-col bg-(--office-ground)"
-            >
-              <PdfPages
-                attach={viewer.attach}
-                layout={viewer.layout}
-                scale={viewer.scale}
-                turns={viewer.view.turns}
-                viewStore={viewer.viewStore}
-                sized={viewer.viewport.width > 0}
-                onKeyDown={pagesInput.onKeyDown}
-                pages={ready.pages}
-                engine={ready.engine}
-                drawer={layerView.drawer ?? ready.drawer}
-                marks={changeable}
-                tool={tools.inHand}
-                onMark={tools.make}
-                ink={tools.ink}
-                shaping={tools.shaping}
-                stamping={tools.stamping}
-                erasing={tools.erasing}
-                typing={tools.typing}
-                selection={textSelection.selected}
-                chosen={markSelection.chosen}
-                choosing={markSelection.choosing}
-                onText={textSelection.gesture}
-                texts={textSelection.texts}
-                onFollow={links.follow}
-                found={find.tints}
-                onDoubleTap={zoomToColumn}
-                peers={peers}
-                drafts={drafts}
-              />
-              <PdfSelectionBar
-                selected={textSelection.selected}
-                actions={actions}
-                pages={pagesElement}
-                view={viewer.viewStore}
-              />
-              {find.open ? <PdfFindBar find={find} onClosed={() => pagesElement?.focus()} /> : null}
-              {fullScreen.on ? null : (
-                <PdfViewerPageBar
-                  viewer={viewer}
-                  labels={labels}
-                  onGoTo={jump}
-                  pageField={pageField}
+                <PdfSelectionBar
+                  selected={textSelection.selected}
+                  actions={actions}
+                  pages={pagesElement}
+                  view={viewer.viewStore}
                 />
-              )}
-            </div>
-          </OfficePanelLayout>
+                {find.open ? (
+                  <PdfFindBar find={find} onClosed={() => pagesElement?.focus()} />
+                ) : null}
+                {fullScreen.on ? null : (
+                  <PdfViewerPageBar
+                    viewer={viewer}
+                    labels={labels}
+                    onGoTo={jump}
+                    pageField={pageField}
+                  />
+                )}
+              </div>
+            </OfficePanelLayout>
+          </PdfStampPicturesContext.Provider>
         </PdfLookContext.Provider>
       ) : null}
       <PdfOpenNotices
@@ -636,6 +666,7 @@ export function PdfDocumentSurface({
         onDownload={() => void download()}
       />
       <PdfLinkDialog asked={links.asked} onClose={links.close} />
+      <CustomStampDialog {...tools.customStampDialog} />
       <PdfPrintDialog {...printing.dialog} count={pages?.length ?? 0} current={viewer.page} />
     </div>
   );
