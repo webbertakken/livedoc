@@ -4,7 +4,7 @@
 judges a Participant's; they are drawn and added in the margin, listed in the comments panel and reached from the
 keyboard; people react to them, mention one another and assign a comment, a mention or an assignment emailing whom
 it names, and the Inbox lists the threads and assigned comments of those they concern. Suggestions are kept in the
-writing and the room judges a Participant's; suggesting in the editor, versions and notifications are still to come.
+writing, travel in both formats' files as tracked changes and the room judges a Participant's; suggesting in the editor, versions and notifications are still to come.
 
 Comments, suggestions, version history, comparing documents and notifications in a [text document](text-document.md).
 The panels and threads are the shared [review surfaces](../012-collaboration/review-surfaces.md), built once for the

@@ -9,7 +9,11 @@ import { readTextDocumentFile, writeTextDocumentFile } from './files';
 import type { Inline, Paragraph, Run } from './model/blocks';
 import { UNKNOWN_SUGGESTION_AUTHOR } from './model/suggestions';
 import type { TextDocument } from './model/text-document';
-import { docx, W_P, W_R } from './testing/packages';
+import { docx, fodt, W_P, W_R } from './testing/packages';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { CONSTRUCTS } from './testing/constructs';
+import { convertTextDocument } from './convert';
 import { TextDocumentState } from './text-document-state';
 import { LiveSuggestions } from './live/live-suggestions';
 import { FILE_AUTHOR_COLOUR } from './live/live-thread-files';
@@ -256,5 +260,139 @@ describe('Word’s tracked changes in the live state', () => {
     );
     expect(fox?.props).toEqual({ italic: true });
     expect(fox?.suggested).toBeUndefined();
+  });
+});
+
+const TC = (regions: string, body: string) =>
+  fodt(`<text:tracked-changes text:track-changes="false">${regions}</text:tracked-changes>${body}`);
+const region = (id: string, kind: string, author = 'Ada', inner = '', extra = '') =>
+  `<text:changed-region xmlns:dc="http://purl.org/dc/elements/1.1/" xml:id="${id}" text:id="${id}"${extra}><text:${kind}><office:change-info><dc:creator>${author}</dc:creator><dc:date>2026-11-20T09:30:00</dc:date></office:change-info>${inner}</text:${kind}></text:changed-region>`;
+const start = (id: string) => `<text:change-start text:change-id="${id}"/>`;
+const end = (id: string) => `<text:change-end text:change-id="${id}"/>`;
+
+describe('ODF’s tracked changes, read', () => {
+  it('reads LibreOffice’s ranges: insertions, deletions in place, a format change and a paragraph break', async () => {
+    const bytes = readFileSync(
+      join(import.meta.dirname, '..', 'corpus', 'libreoffice', 'suggestions.fodt'),
+    );
+    const { document, report } = await read(bytes);
+    const [one, two, three, four] = paragraphs(document);
+    expect(shape(one!.inlines)).toBe('The +quick +-slow -*fox*');
+    expect(two!.suggested?.break?.author.name).toBe('Ada Lovelace');
+    expect(shape(three!.inlines)).toBe('Over');
+    expect(four!.suggested?.join?.author.name).toBe('Bo');
+    // LibreOffice writes a paragraph's attributes as its own unknown change: reported, read as nothing.
+    expect(report.dropped).toContainEqual({
+      reason: 'suggestion-unknown',
+      name: 'UnknownChange',
+      count: 1,
+    });
+    expect(report.kept.map((k) => k.name)).toEqual(['sequence-decls']);
+  });
+
+  it('reads the point form’s deletion at its place, a second paragraph as a line break, reported', async () => {
+    const { document, report } = await read(
+      TC(
+        region('c1', 'deletion', 'Bo', '<text:p>gone</text:p><text:p>too</text:p>'),
+        `<text:p>A<text:change text:change-id="c1"/>B</text:p>`,
+      ),
+    );
+    const [p] = paragraphs(document);
+    expect(shape(p!.inlines)).toBe('A-gone\ntoo-B');
+    expect((p!.inlines[1] as Run).suggested?.deletion).toEqual({
+      id: 'f.c1',
+      at: AT,
+      author: { name: 'Bo' },
+    });
+    expect(report.dropped).toContainEqual({
+      reason: 'suggestion-paragraphs',
+      name: 'deletion',
+      count: 1,
+    });
+  });
+
+  it('settles a change in a footnote as it reads: an insertion kept, a deletion left out', async () => {
+    const { document, report } = await read(
+      TC(
+        region('c1', 'insertion') + region('c2', 'deletion'),
+        `<text:p>A<text:note text:note-class="footnote"><text:note-citation>1</text:note-citation><text:note-body><text:p>${start('c1')}in${end('c1')}${start('c2')}out${end('c2')}</text:p></text:note-body></text:note></text:p>`,
+      ),
+    );
+    const note = paragraphs(document)[0]!.inlines.find((i) => i.type === 'note');
+    const text = note?.type === 'note' ? (note.blocks[0] as Paragraph).inlines : [];
+    expect(shape(text)).toBe('in');
+    expect(report.dropped.find((d) => d.reason === 'suggestion-in-story')).toBeDefined();
+  });
+});
+
+describe('ODF’s tracked changes, written', () => {
+  it('writes each suggestion as a range with its region first in the text, and reads it back the same', async () => {
+    for (const type of ['fodt', 'odt'] as const) {
+      const document = CONSTRUCTS.suggestions!('odf');
+      const result = writeTextDocumentFile(document, type);
+      if (!result.ok) throw new Error(result.rejection);
+      const back = (await read(result.bytes)).document;
+      expect(paragraphs(back).map((p) => p.suggested)).toEqual(
+        paragraphs(document).map((p) => p.suggested),
+      );
+      expect(
+        paragraphs(back).map((p) =>
+          p.inlines.map((i) => (i.type === 'comment' ? undefined : i.suggested)),
+        ),
+      ).toEqual(
+        paragraphs(document).map((p) =>
+          p.inlines.map((i) => (i.type === 'comment' ? undefined : i.suggested)),
+        ),
+      );
+    }
+    const result = writeTextDocumentFile(CONSTRUCTS.suggestions!('odf'), 'fodt');
+    const xml = new TextDecoder().decode((result as { bytes: Uint8Array }).bytes);
+    expect(xml).toMatch(
+      /<office:text>\s*<text:tracked-changes text:track-changes="false"><text:changed-region xml:id="ct1"/,
+    );
+    expect(xml).toContain(
+      '<text:change-start text:change-id="ct1"/>quick <text:change-end text:change-id="ct1"/>',
+    );
+    expect(xml).toContain('livedoc:paragraph="true"');
+  });
+
+  it('puts its regions into a tracked-changes list a document read before kept', async () => {
+    const document = CONSTRUCTS.suggestions!('odf');
+    const kept: TextDocument = {
+      ...document,
+      body: [
+        {
+          type: 'kept',
+          name: 'tracked-changes',
+          xml: {
+            xml: '<text:tracked-changes><text:changed-region text:id="old"/></text:tracked-changes>',
+            ns: {},
+          },
+        },
+        ...document.body,
+      ],
+    };
+    const result = writeTextDocumentFile(kept, 'fodt');
+    const xml = new TextDecoder().decode((result as { bytes: Uint8Array }).bytes);
+    expect(xml.match(/<text:tracked-changes/g)).toHaveLength(1);
+    expect(xml).toMatch(/text:id="old"\/><text:changed-region xml:id="ct1"/);
+  });
+});
+
+describe('suggestions converted', () => {
+  it('keeps every suggestion from Word to ODF and back', async () => {
+    const document = CONSTRUCTS.suggestions!('ooxml');
+    const odf = convertTextDocument(document, 'odf').document;
+    const back = convertTextDocument(odf, 'ooxml').document;
+    const kinds = (d: TextDocument) =>
+      paragraphs(d).map((p) => [
+        Object.keys(p.suggested ?? {}),
+        p.inlines.map((i) => (i.type === 'comment' ? [] : Object.keys(i.suggested ?? {}))),
+      ]);
+    expect(kinds(odf)).toEqual(kinds(document));
+    expect(kinds(back)).toEqual(kinds(document));
+    const written = writeTextDocumentFile(odf, 'fodt');
+    if (!written.ok) throw new Error(written.rejection);
+    expect(kinds((await read(written.bytes)).document)).toEqual(kinds(document));
   });
 });

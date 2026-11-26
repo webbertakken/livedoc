@@ -770,7 +770,7 @@ export const CONSTRUCTS: Record<string, (format: TextDocumentFormat) => TextDocu
     );
   },
   // review.md "How a suggestion is kept": an insertion, a deletion and a format change in one paragraph, a paragraph break
-  // before the second, and a paragraph format on the third. Word's ids, so the file reads back equal (ODF in 12d2b).
+  // before the second, and a paragraph format on the third. Word's ids; ODF carries any id as `livedoc:suggestion`.
   suggestions: (format) => {
     const at = Date.UTC(2026, 10, 20, 9, 30);
     const author = { name: 'Ada Lovelace' };

@@ -20,6 +20,11 @@ const HIDDEN = new Set([
   'reference-mark-end',
   'soft-page-break',
   'annotation-end',
+  // Tracked changes a document read before they were suggestions kept (review.md "In the files").
+  'tracked-changes',
+  'change-start',
+  'change-end',
+  'change',
   // OOXML markers.
   'bookmarkStart',
   'bookmarkEnd',

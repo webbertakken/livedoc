@@ -60,6 +60,8 @@ import { Blocks } from '../model/tables';
 import { DocumentTabs, type DocumentTab } from '../model/document-tabs';
 import type { CommentMark, FileThread } from '../model/comments';
 import { odfAnnotationNames, odfThreadEndXml, odfThreadStartXml } from './odf-comments';
+import { Suggestions, type ParagraphSuggested } from '../model/suggestions';
+import { changeEndXml, changeStartXml, inlineChangeKey, OdfChangeRegions } from './odf-suggestions';
 
 export type OdfWriteOptions = { flat: boolean; generator: string };
 
@@ -135,6 +137,11 @@ class OdfWriter {
   storyXml: (blocks: readonly Block[]) => string = () => '';
   /** Each of the body's notes with its number, its citation (page-layout.md "Footnotes"). */
   readonly noteNumbers: Map<Note, number>;
+  /** The writing's tracked changes (review.md "In the files"): their regions, each paragraph carrying the next one's
+   * break or join, and the ranges the next paragraph closes at its start. */
+  readonly changes = new OdfChangeRegions();
+  marksBefore = new Map<Paragraph, ParagraphSuggested>();
+  readonly pendingEnds: string[] = [];
   /** Each thread by id with the name its annotation is written with (review.md "How a comment is kept"). */
   readonly threads: Map<string, { thread: FileThread; name: string }>;
   readonly #masterClaims = new Map<string, string>();
@@ -169,6 +176,7 @@ class OdfWriter {
     this.document = document;
     this.flat = flat;
     this.noteNumbers = Notes.numbers(document.body);
+    this.marksBefore = Suggestions.marksBefore(document.body);
     const names = odfAnnotationNames(document.comments ?? []);
     this.threads = new Map(
       (document.comments ?? []).map((thread) => [
@@ -547,7 +555,22 @@ function contentXml(
     firstInSection = false;
     const style = w.paragraphStyle(p, master, first, start, lines);
     const outline = p.props.outlineLevel ?? Styles.outlineLevel(doc.styles, p.style);
-    const segments: Segment[] = p.inlines.map((i) => {
+    const segments: Segment[] = [];
+    const marker = (xml: string) => segments.push({ kind: 'kept', xml });
+    const tracks = !story;
+    if (tracks) for (const id of w.pendingEnds.splice(0)) marker(changeEndXml(id));
+    const format = tracks ? p.suggested?.format : undefined;
+    const paragraphChange =
+      format && w.changes.add('format', format, { before: format.before, paragraph: true });
+    if (paragraphChange) marker(changeStartXml(paragraphChange));
+    // Each inline's changes as ranges: one closes where its suggestion stops, one opens where another starts.
+    type Open = { key: string; id: string };
+    const open: Record<'insertion' | 'deletion' | 'format', Open | undefined> = {
+      insertion: undefined,
+      deletion: undefined,
+      format: undefined,
+    };
+    const segmentOf = (i: Paragraph['inlines'][number]): Segment => {
       const span = w.textStyle(i);
       if (i.type === 'run')
         return { kind: 'text', text: i.text, ...compact({ span, link: i.link }) };
@@ -569,7 +592,43 @@ function contentXml(
                     ? w.commentXml(i)
                     : w.kept(i.xml);
       return { kind: 'kept', xml, ...compact({ span, link: i.link }) };
-    });
+    };
+    for (const i of p.inlines) {
+      if (tracks && i.type !== 'comment') {
+        const key = inlineChangeKey(i.suggested);
+        for (const kind of ['format', 'deletion', 'insertion'] as const) {
+          if (open[kind] && open[kind].key !== key[kind]) {
+            marker(changeEndXml(open[kind].id));
+            open[kind] = undefined;
+          }
+        }
+        for (const kind of ['insertion', 'deletion', 'format'] as const) {
+          const mark = i.suggested?.[kind];
+          if (!mark || open[kind]) continue;
+          const id = w.changes.add(
+            kind,
+            mark,
+            kind === 'format' ? { before: i.suggested?.format?.before } : {},
+          );
+          marker(changeStartXml(id));
+          open[kind] = { key: mark.id, id };
+        }
+      }
+      segments.push(segmentOf(i));
+    }
+    for (const kind of ['format', 'deletion', 'insertion'] as const)
+      if (open[kind]) marker(changeEndXml(open[kind].id));
+    if (paragraphChange) marker(changeEndXml(paragraphChange));
+    const next = tracks ? w.marksBefore.get(p) : undefined;
+    for (const [kind, mark] of [
+      ['insertion', next?.break],
+      ['deletion', next?.join],
+    ] as const) {
+      if (!mark) continue;
+      const id = w.changes.add(kind, mark);
+      marker(changeStartXml(id));
+      w.pendingEnds.push(id);
+    }
     const tag = outline !== undefined && outline >= 1 ? 'text:h' : 'text:p';
     const level = tag === 'text:h' ? attr('text:outline-level', String(outline)) : '';
     return `<${tag}${attr('text:style-name', style)}${level}>${paragraphContentXml(segments)}</${tag}>`;
@@ -758,6 +817,14 @@ export type OdfWritten = {
   flat: string;
 };
 
+/** The body with its tracked changes' regions first, or put into the regions a document read before kept (review.md). */
+function withTrackedChanges(text: string, changes: OdfChangeRegions): string {
+  if (changes.size === 0) return text;
+  const kept = /<(?:[\w.-]+:)?tracked-changes\b[\s\S]*?<\/(?:[\w.-]+:)?tracked-changes>/.exec(text);
+  if (kept) return text.replace(kept[0], changes.xml(kept[0]));
+  return `${changes.xml()}\n${text}`;
+}
+
 function writeParts(tabbed: TextDocument, generator: string, asFlat: boolean): OdfWritten {
   // Whole-document walks (notes, sections, tables) read every tab's blocks, in the outline's order.
   const tabs = DocumentTabs.isPlain(tabbed) ? undefined : DocumentTabs.all(tabbed);
@@ -800,7 +867,7 @@ function writeParts(tabbed: TextDocument, generator: string, asFlat: boolean): O
     document.pageless,
   );
   const masters = `<office:master-styles>${w.masters.xml()}</office:master-styles>`;
-  const body = `<office:body><office:text>\n${text}\n</office:text></office:body>`;
+  const body = `<office:body><office:text>\n${withTrackedChanges(text, w.changes)}\n</office:text></office:body>`;
   const content = `${XML_DECLARATION}\n<office:document-content${root}>${faces}<office:automatic-styles>${w.contentAutomatic.xml()}</office:automatic-styles>${body}</office:document-content>\n`;
   const styles = `${XML_DECLARATION}\n<office:document-styles${root}>${faces}<office:styles>${named}</office:styles><office:automatic-styles>${w.pageStyles.xml()}</office:automatic-styles>${masters}</office:document-styles>\n`;
   const metaXml = `${XML_DECLARATION}\n<office:document-meta${root}><office:meta>${meta}</office:meta></office:document-meta>\n`;

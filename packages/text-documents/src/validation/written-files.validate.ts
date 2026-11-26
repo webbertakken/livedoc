@@ -115,9 +115,8 @@ describe('every written file validates against its format’s schema', () => {
         expect(texts(TextDocument.paragraphTexts(read.document)), out).toEqual(texts(w.texts));
       // review.md "How a comment is kept": its comment threads, replies included, come back as they were.
       if (read.ok) expect(threadsOf(read.document), out).toEqual(w.threads);
-      // review.md "In the files": Word's tracked changes come back as suggestions of the same kinds (ODF in 12d2b).
-      if (read.ok && out.endsWith('.docx'))
-        expect(suggestionKindsOf(read.document), out).toEqual(w.suggestions);
+      // review.md "In the files": tracked changes come back as suggestions of the same kinds.
+      if (read.ok) expect(suggestionKindsOf(read.document), out).toEqual(w.suggestions);
     }
   }, 400_000);
 });

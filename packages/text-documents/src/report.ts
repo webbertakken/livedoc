@@ -20,7 +20,9 @@ export type DroppedReason =
   | 'comment-unpaired'
   | 'comment-in-story'
   | 'suggestion-in-story'
-  | 'suggestion-last-mark';
+  | 'suggestion-last-mark'
+  | 'suggestion-paragraphs'
+  | 'suggestion-unknown';
 
 export type ReportItem = { readonly name: string; readonly count: number };
 

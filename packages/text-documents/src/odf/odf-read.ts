@@ -80,6 +80,8 @@ import { DocumentTabs, type DocumentTabStart } from '../model/document-tabs';
 /** What a document tab's `text:section` says in the `livedoc:` extension. */
 const said = (e: XmlElement, name: string): string | undefined => attributeOf(e, NS.livedoc, name);
 import { keptShownText } from '../live/kept-presence';
+import { OdfChangeTracker, readOdfChangedRegions, type OdfChange } from './odf-suggestions';
+import { Suggestions, type InlineSuggested } from '../model/suggestions';
 
 export type OdfParts = {
   content: XmlParsed;
@@ -158,10 +160,18 @@ class OdfReader {
   readonly comments: OdfCommentsReader;
   /** Whether the file counts tab positions from the indent (standard-mapping.md "The model", tab stops). */
   readonly tabsFromIndent: boolean;
+  /** The writing's tracked changes, and which are open where it is read (review.md "In the files"). */
+  readonly changes: OdfChangeTracker;
 
   constructor(parts: OdfParts, report: ReportBuilder) {
     this.parts = parts;
     this.report = report;
+    const body = childElement(parts.content.root, NS.office, 'body');
+    this.changes = new OdfChangeTracker(
+      readOdfChangedRegions(body && childElement(body, NS.office, 'text'), (name) =>
+        report.drop('suggestion-unknown', name),
+      ),
+    );
     this.comments = new OdfCommentsReader(report);
     this.taken = new MediaTaken(parts.maxObjects ?? TEXT_DOCUMENT_MAX_OBJECTS);
     this.part = { parsed: parts.content, auto: this.auto };
@@ -652,6 +662,8 @@ class BodyReader {
       else if (is(e, NS.text, 'table-of-content') && !this.story) this.contents(e);
       else if (is(e, NS.text, 'index-title')) this.r.report.drop('layout-hint', e.local);
       else if (is(e, NS.text, 'soft-page-break')) this.r.report.drop('layout-hint', e.local);
+      // Read as suggestions where the writing marks them (review.md "In the files").
+      else if (top && is(e, NS.text, 'tracked-changes')) continue;
       else if (isDde(e)) this.r.report.drop('field', e.local);
       else {
         this.blocks.push({
@@ -833,12 +845,19 @@ class BodyReader {
       ? { xml: auto.kept, read: canonical(values), residue: [], name: styleName }
       : undefined;
     // A header's, a footer's or a note's notes stay kept content (page-layout.md "Footnotes").
-    const inlines = new InlineReader(this.r, this.notes).read(e);
+    const started = this.story ? undefined : this.r.changes.paragraphStart();
+    const inlines = new InlineReader(this.r, this.notes, this.story).read(e);
+    const format = this.r.changes.takeParagraphFormat({ style, props });
+    if (this.story && format) this.r.report.drop('suggestion-in-story', 'paragraph');
+    const suggested =
+      started || (format && !this.story)
+        ? { ...started, ...(format && !this.story ? { format } : {}) }
+        : undefined;
     const paragraph: Paragraph = {
       type: 'paragraph',
       style,
       props,
-      ...compact({ list, text, kept }),
+      ...compact({ list, text, kept, suggested }),
       inlines,
     };
     this.blocks.push(paragraph);
@@ -854,9 +873,37 @@ class InlineReader {
   /** Whether a footnote is read as the model's: in the body, never in a header, footer or note. */
   readonly notes: boolean;
 
-  constructor(r: OdfReader, notes: boolean) {
+  /** A header's, footer's or note's writing: its tracked changes are settled as it is read (review.md). */
+  readonly story: boolean;
+
+  constructor(r: OdfReader, notes: boolean, story = false) {
     this.r = r;
     this.notes = notes;
+    this.story = story;
+  }
+
+  /** A point form deletion's writing being read: it is part of that deletion. */
+  #forced: InlineSuggested | undefined;
+
+  /** What an inline read now is part of; none in a story, where changes are settled. */
+  suggested(run?: { style?: string; props: TextProps }): InlineSuggested | undefined {
+    return this.story ? undefined : Suggestions.merged(this.r.changes.inline(run), this.#forced);
+  }
+
+  /**
+   * The point form's deletion (`text:change`): its region's writing read where the mark stands, as deleted; each
+   * paragraph after its first read on as a line break, reported `suggestion-paragraphs` (default).
+   */
+  pointDeletion(change: OdfChange, ctx: Context): void {
+    const outer = this.#forced;
+    this.#forced = Suggestions.merged(outer, { deletion: change.mark });
+    const paragraphs = change.deleted.filter((e) => is(e, NS.text, 'p') || is(e, NS.text, 'h'));
+    paragraphs.forEach((paragraph, k) => {
+      if (k > 0) this.text('\n', ctx);
+      for (const child of paragraph.children) this.node(child, ctx);
+    });
+    if (paragraphs.length > 1) this.r.report.drop('suggestion-paragraphs', 'deletion');
+    this.#forced = outer;
   }
 
   read(paragraph: XmlElement): Inline[] {
@@ -866,12 +913,15 @@ class InlineReader {
 
   text(chars: string, ctx: Context): void {
     if (!chars) return;
+    if (this.story && this.r.changes.deleting) return;
+    const suggested = this.suggested(ctx);
     const last = this.out.at(-1);
     if (
       last?.type === 'run' &&
       last.style === ctx.style &&
       last.link === ctx.link &&
       last.kept === ctx.kept &&
+      Suggestions.sameInline(last.suggested, suggested) &&
       canonical(last.props) === canonical(ctx.props)
     ) {
       this.out[this.out.length - 1] = { ...last, text: last.text + chars };
@@ -881,7 +931,7 @@ class InlineReader {
       type: 'run',
       text: chars,
       props: ctx.props,
-      ...compact({ style: ctx.style, link: ctx.link, kept: ctx.kept }),
+      ...compact({ style: ctx.style, link: ctx.link, kept: ctx.kept, suggested }),
     };
     this.out.push(run);
   }
@@ -899,6 +949,13 @@ class InlineReader {
         }
       }
       this.text(chars, ctx);
+      return;
+    }
+    // A tracked change's marks show nothing (review.md "In the files").
+    if (OdfChangeTracker.isMark(node)) {
+      if (this.story) this.r.report.drop('suggestion-in-story', node.local);
+      const point = this.r.changes.mark(node);
+      if (point && !this.story) this.pointDeletion(point, ctx);
       return;
     }
     // A comment's edges show nothing, so white space collapses across them (review.md "How a comment is kept").
@@ -945,7 +1002,12 @@ class InlineReader {
           type: 'bookmark',
           name,
           props: ctx.props,
-          ...compact({ style: ctx.style, link: ctx.link, kept: ctx.kept }),
+          ...compact({
+            style: ctx.style,
+            link: ctx.link,
+            kept: ctx.kept,
+            suggested: this.suggested(),
+          }),
         } satisfies Bookmark);
         return;
       }
@@ -965,7 +1027,12 @@ class InlineReader {
         type: 'note',
         blocks: this.r.readStory(noteBody),
         props: ctx.props,
-        ...compact({ style: ctx.style, link: ctx.link, kept: ctx.kept }),
+        ...compact({
+          style: ctx.style,
+          link: ctx.link,
+          kept: ctx.kept,
+          suggested: this.suggested(),
+        }),
       } satisfies Note);
       this.#afterSpace = false;
       return;
@@ -977,7 +1044,12 @@ class InlineReader {
         field,
         text: odfFieldText(node),
         props: ctx.props,
-        ...compact({ style: ctx.style, link: ctx.link, kept: ctx.kept }),
+        ...compact({
+          style: ctx.style,
+          link: ctx.link,
+          kept: ctx.kept,
+          suggested: this.suggested(),
+        }),
       } satisfies Field);
       this.#afterSpace = false;
       return;
@@ -989,7 +1061,12 @@ class InlineReader {
         type: 'equation',
         math: equation.math,
         props: ctx.props,
-        ...compact({ style: ctx.style, link: ctx.link, kept: ctx.kept }),
+        ...compact({
+          style: ctx.style,
+          link: ctx.link,
+          kept: ctx.kept,
+          suggested: this.suggested(),
+        }),
       } satisfies Equation);
       this.#afterSpace = false;
       return;
@@ -1000,7 +1077,12 @@ class InlineReader {
         type: 'picture',
         ...picture,
         props: ctx.props,
-        ...compact({ style: ctx.style, link: ctx.link, kept: ctx.kept }),
+        ...compact({
+          style: ctx.style,
+          link: ctx.link,
+          kept: ctx.kept,
+          suggested: this.suggested(),
+        }),
       } satisfies Picture);
       this.#afterSpace = false;
       return;
@@ -1010,7 +1092,7 @@ class InlineReader {
       name: node.local,
       xml: this.r.kept(this.r.part.parsed, node),
       props: ctx.props,
-      ...compact({ style: ctx.style, link: ctx.link, kept: ctx.kept }),
+      ...compact({ style: ctx.style, link: ctx.link, kept: ctx.kept, suggested: this.suggested() }),
     };
     this.r.report.keep(node.local);
     this.out.push(kept);
