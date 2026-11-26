@@ -32,10 +32,10 @@ describe('the package as it loads', () => {
     const real = globalThis.crypto;
     vi.stubGlobal('crypto', {
       subtle: real.subtle,
-      getRandomValues: <T extends ArrayBufferView>(array: T) => {
+      getRandomValues: ((array) => {
         refuse('a random value drawn');
-        return real.getRandomValues(array as unknown as Uint8Array) as unknown as T;
-      },
+        return real.getRandomValues(array);
+      }) as Crypto['getRandomValues'],
       randomUUID: () => {
         refuse('a random id drawn');
         return real.randomUUID();
