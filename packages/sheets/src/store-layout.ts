@@ -265,7 +265,8 @@ export function applyLayoutChange(layout: SheetLayout, ch: LayoutChange): SheetL
           // A custom formula moves with its range's top-left cell, as a format rule's does.
           const fx = x.fx && reanchorFormula(x.fx, layout, next, x, range);
           const kept = fx ? { ...x, ...range, fx } : { ...x, ...range };
-          if (!x.src) return [kept];
+          // A range on another sheet is that sheet's to shrink (store.ts shrinkRuleSourcesOf).
+          if (!x.src || x.src.s !== undefined || x.src.st !== undefined) return [kept];
           const src = shrinkRange(x.src, layout, goneRows, goneCols);
           return src ? [{ ...kept, src }] : [];
         });

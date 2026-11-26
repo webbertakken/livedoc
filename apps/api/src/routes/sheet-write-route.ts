@@ -11,6 +11,7 @@ import {
   cellKey,
   cellsFromJson,
   shrinkReadersOf,
+  shrinkRuleSourcesOf,
   validateWrite,
   valuesOnly,
   writesFormats,
@@ -87,16 +88,25 @@ export async function shrinkReaders(
       .map(async (h) => {
         const cells = cellsFromJson(await readFormulaCells(ctx.env, documentId, h.id));
         const rewrites = shrinkReadersOf(head.id, head.layout, changes, cells);
-        if (rewrites.length === 0) return;
+        // A Dropdown from a Range reading the sheet shrinks with it (data-validation.md "Rules").
+        const rules = shrinkRuleSourcesOf(head.id, head.layout, changes, h.layout);
+        if (rewrites.length === 0 && rules.length === 0) return;
+        const write: SheetWrite = rules.length
+          ? { kind: 'layout', changes: rules, ...(rewrites.length ? { cells: rewrites } : {}) }
+          : { kind: 'cells', cells: rewrites };
         const res = await storeSheetWrite(
           ctx,
           documentId,
           h.id,
-          { write: { kind: 'cells', cells: rewrites }, unchecked: true },
+          { write, unchecked: true },
           by,
           null,
         );
-        if (res.ok) console.info('[sheets] sheets.readers.shrunk', { cells: rewrites.length });
+        if (res.ok)
+          console.info('[sheets] sheets.readers.shrunk', {
+            cells: rewrites.length,
+            rules: rules.length,
+          });
         else console.warn('[sheets] sheets.readers.shrink_failed', { status: res.status });
       }),
   );

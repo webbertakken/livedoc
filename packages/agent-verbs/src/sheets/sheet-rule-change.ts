@@ -5,6 +5,9 @@ import { withArticle } from '@livedoc/items';
 import {
   CONDITION_OPS,
   compileFormula,
+  sourceFromText,
+  sourceSheetOf,
+  sourceText,
   customValue,
   DROPDOWN_OPTION_MAX,
   formatRange,
@@ -178,7 +181,6 @@ function validationSettings(
   rule: AgentValidation,
   extra: Pick<RuleSettings, 'warn' | 'help'>,
 ): { ok: true; settings: RuleSettings } | SheetRefusal {
-  const layout = wb.sheet(sheetId)!.layout;
   const show = (d?: string): { show?: 'arrow' | 'plain' } =>
     d === 'arrow' || d === 'plain' ? { show: d } : {};
   switch (rule.type) {
@@ -222,8 +224,7 @@ function validationSettings(
       return { ok: true, settings: { is: 'list', opts, ...show(rule.display), ...extra } };
     }
     case 'dropdown_range': {
-      const g = rangeOn(layout, rule.source);
-      const src = g ? idRangeOf(layout, g.r1, g.c1, g.r2, g.c2) : null;
+      const src = sourceFromText(wb.ctxFor(sheetId), rule.source);
       if (!src) return badRange(rule.source);
       return { ok: true, settings: { is: 'range', src, ...show(rule.display), ...extra } };
     }
@@ -452,11 +453,15 @@ export function rulesRead(wb: Workbook, sheetId: string) {
     ...(r.off === undefined ? {} : { unchecked: r.off }),
     ...(r.fx ? { formula: renderFormula(r.fx, wb.ctxFor(sheetId)) } : {}),
     ...(r.opts ? { options: r.opts.map((o) => o.v) } : {}),
-    ...(r.src ? { source: a1(r.src) } : {}),
+    ...(r.src ? { source: sourceText(sourceSheetOf(wb.ctxFor(sheetId), r.src), r.src) } : {}),
     ...(r.op
       ? { condition: back(r.is === 'num' ? NUM_OPS : r.is === 'date' ? DATE_OPS : TEXT_OPS, r.op) }
       : {}),
-    allows: ruleLine(r, { locale: 'en-GB', layout }),
+    allows: ruleLine(r, {
+      locale: 'en-GB',
+      layout,
+      sourceOf: (src) => sourceSheetOf(wb.ctxFor(sheetId), src),
+    }),
     reject: !r.warn,
     ...(r.help ? { help: r.help } : {}),
   }));

@@ -24,7 +24,7 @@ and checked wherever a value is written: in the editor before it is sent, and by
 | Rule                      | Cells hold                                                                                                                       | Interface name          |
 | ------------------------- | -------------------------------------------------------------------------------------------------------------------------------- | ----------------------- |
 | **Dropdown**              | One of the rule's options, typed into the rule (up to 500)                                                                       | Dropdown                |
-| **Dropdown from a Range** | One of the values of a range on the same sheet (`A2:A20`), read as they are shown                                                | Dropdown (From a Range) |
+| **Dropdown from a Range** | One of the values of a range on this sheet or another the sheet's formulas can read (`A2:A20`, `Sheet2!A2:A20`), read as shown   | Dropdown (From a Range) |
 | **Checkbox**              | TRUE or FALSE, or its **custom cell values**; an empty cell is unticked                                                          | Checkbox                |
 | **Number**                | A number: between, not between, greater than, greater than or equal to, less than, less than or equal to, equal to, not equal to | Number                  |
 | **Date**                  | A date: is a valid date, before, on or before, after, on or after, on, between, not between                                      | Date                    |
@@ -40,6 +40,13 @@ Every rule also has:
   it grows with rows and columns inserted inside it, shrinks with ones deleted, and follows its corner cells when they
   move. A rule whose cells are all deleted goes.
 
+A **Dropdown from a Range**'s range is kept the same way, on its own sheet: rows and columns deleted there shrink it
+in the same change (one undo puts it back), as a formula's reference into that sheet shrinks
+([Formulas](formulas.md)); a rule whose range is all deleted goes. A range on a sheet that is deleted offers nothing:
+the rule's line says "Choose one of the listed values" and its cells' values are marked invalid until the rule is
+edited. The range field reads `A2:A20` on the rule's own sheet and `Sheet2!A2:A20` (or `'My Sheet'!A2:A20`) on
+another; a sheet that is not there says "Type the range to take options from, like A2:A20".
+
 A Checkbox may **Use Custom Cell Values**: a **ticked value** (1 to 255 characters) and, optionally, an **unticked
 value** (without it, unticked is the empty cell), as Google Sheets' checkbox does. Its cells then hold those values,
 never TRUE or FALSE; the two differ, case aside. A value that reads as a number (`1`, `-2.5`) is stored as that number,
@@ -54,8 +61,8 @@ or **Plain Text** (the value alone; the arrow shows on the active cell only).
 
 ## In a spreadsheet
 
-**Status: partly built.** The side panel, Insert › Checkbox, Insert › Dropdown, Use Custom Cell Values and Custom
-Formula Is are built; the rest is specified.
+**Status: partly built.** The side panel, Insert › Checkbox, Insert › Dropdown, Use Custom Cell Values, Custom
+Formula Is and a Dropdown from a Range on any sheet are built; the rest is specified.
 The rules above carry into the [spreadsheet](spreadsheet.md), with these changes
 ([Data tools](data-tools.md#data-validation)):
 
@@ -68,7 +75,8 @@ The rules above carry into the [spreadsheet](spreadsheet.md), with these changes
   - **Data › Data Validation** and a context menu's **Data Validation** open it on the rule at the active cell, else
     on the list; **Insert › Dropdown** opens it on a new Dropdown over the selection; **Insert › Checkbox** makes a
     Checkbox rule over the selection at once, without the panel (one change, one undo step).
-- **Dropdown from a Range** may read a range of **any sheet** of the workbook (`Sheet2!A2:A20`).
+- **Dropdown from a Range** may read a range of **any sheet** of the workbook (`Sheet2!A2:A20`) ([Rules](#rules)); a
+  Plan Sheet's, any sheet of its tab.
 - **Checkbox** takes **Use Custom Cell Values** (a ticked and an unticked value), and the rules gain **Custom Formula
   Is** ([Rules](#rules)); both are the Plan Sheet's too, the rule form being one.
 - A dropdown's options take **colours** (the one colour picker), drawn on its chips; **Allow Multiple Selections**
@@ -104,7 +112,7 @@ The rules above carry into the [spreadsheet](spreadsheet.md), with these changes
 | Rule                  | Allows                                                                                         | Line when refused (no Help Text)                                                           |
 | --------------------- | ---------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
 | Dropdown              | Text equal to an option, case aside; a number or true/false equal to an option's text as typed | Choose one of the dropdown's options: To Do, Doing, Done (the first 5, then "and 3 more")  |
-| Dropdown from a Range | A value equal to one of the range's shown values (empty ones aside), case aside                | Choose one of the values in A2:A20                                                         |
+| Dropdown from a Range | A value equal to one of the range's shown values (empty ones aside), case aside                | Choose one of the values in A2:A20 (Sheet2!A2:A20 on another sheet)                        |
 | Checkbox              | TRUE or FALSE                                                                                  | This cell is a checkbox: type TRUE or FALSE                                                |
 | Checkbox, custom      | Its ticked or unticked value, case aside                                                       | This cell is a checkbox: type Yes or No (no unticked value: "type Yes, or leave it empty") |
 | Custom Formula Is     | A value the formula answers TRUE for, worked out with the cell read as that value              | Enter a value that meets the rule's formula                                                |
@@ -215,7 +223,9 @@ The rules above carry into the [spreadsheet](spreadsheet.md), with these changes
 
 ## Copies, sort and the clipboard
 
-- A copied sheet (duplicate, paste into another document, Duplicate Tab) keeps its rules, as it keeps its merges.
+- A copied sheet (duplicate, paste into another document, Duplicate Tab) keeps its rules, as it keeps its merges. A
+  Dropdown from a Range reading another sheet keeps reading that sheet within the workbook; copied into another
+  spreadsheet, it reads the sheet of that name there, if any (as a formula's reference by name does), else nothing.
 - Sort moves values, never rules: a rule stays on its cells' rows by id, so sorting the rows inside a rule's range
   leaves it where it was. (A rule whose corner row is sorted elsewhere follows that corner, as a named range does.)
 - Copy and paste carry inputs and formats, never rules; the fill handle fills values, checked by the rules of the

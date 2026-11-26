@@ -131,6 +131,9 @@ export type SheetFilter = IdRange & { conds: Record<string, FilterCondition> };
 // Validation rules (docs/specs/029-sheets/data-validation.md): what a range of
 // cells may hold.
 export type DropdownOption = { v: string; c?: string };
+// A Dropdown from a Range's cells: on the rule's own sheet, or on another by id (`s`), or by title (`st`) once
+// copied to a spreadsheet that may not hold it.
+export type RuleSource = IdRange & { s?: string; st?: string };
 export type ValidationKind = 'list' | 'range' | 'check' | 'num' | 'date' | 'text' | 'formula';
 export type NumOp = 'between' | 'notBetween' | 'gt' | 'gte' | 'lt' | 'lte' | 'eq' | 'neq';
 export type DateOp =
@@ -139,9 +142,9 @@ export type TextOp = 'contains' | 'notContains' | 'exactly' | 'email' | 'url';
 export type ValidationRule = IdRange & {
   id: string;
   is: ValidationKind;
-  // A Dropdown's options; a Dropdown from a Range's cells (on this sheet).
+  // A Dropdown's options; a Dropdown from a Range's cells.
   opts?: DropdownOption[];
-  src?: IdRange;
+  src?: RuleSource;
   // A dropdown's Display: absent is Chip.
   show?: 'arrow' | 'plain';
   op?: NumOp | DateOp | TextOp;

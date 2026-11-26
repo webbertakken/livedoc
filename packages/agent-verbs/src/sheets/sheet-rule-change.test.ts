@@ -125,6 +125,43 @@ describe('validation rules for agents', () => {
     expect(run({ op: 'clear_validation', range: 'A1:E5' }).ok).toBe(true);
     expect(rulesRead(wb, id).validation.map((r) => r.range)).toEqual(['F1']);
   });
+  it('makes a dropdown from a range on another sheet, and reads it back by that sheet', () => {
+    const { wb, id, run } = book();
+    const other: Sheet = {
+      ...wb.sheet(id)!,
+      id: 'sheet_lists1',
+      title: 'My Lists',
+      cells: new CellMap(),
+    };
+    wb.updateSheet(other);
+    const lists = wb.sheet('sheet_lists1')!;
+    wb.updateSheet(
+      applySheetWrite(
+        lists,
+        {
+          kind: 'cells',
+          cells: [{ r: lists.layout.rows[0]!, c: lists.layout.cols[0]!, i: { s: 'Red' } }],
+        },
+        { now: 1, by: NOBODY },
+      ).sheet,
+    );
+    expect(
+      run({
+        op: 'validate',
+        range: 'A1:A3',
+        rule: { type: 'dropdown_range', source: "'My Lists'!A1:A2" },
+      }).ok,
+    ).toBe(true);
+    expect(rulesRead(wb, id).validation[0]).toMatchObject({ source: "'My Lists'!A1:A2" });
+    expect(run({ op: 'set', at: 'A1', rows: [['Blue']] })).toMatchObject({
+      ok: false,
+      code: 'value_invalid',
+    });
+    expect(run({ op: 'set', at: 'A1', rows: [['red']] }).ok).toBe(true);
+    expect(
+      run({ op: 'validate', range: 'A1', rule: { type: 'dropdown_range', source: 'Nope!A1' } }),
+    ).toMatchObject({ ok: false, code: 'range_invalid' });
+  });
   it('makes custom checkboxes and custom formula rules, checked as the editor checks them', () => {
     const { wb, id, run } = book();
     expect(

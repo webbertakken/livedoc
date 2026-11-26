@@ -13689,6 +13689,36 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
     ],
     "type": "object"
   },
+  "RuleSource": {
+    "additionalProperties": false,
+    "properties": {
+      "c1": {
+        "type": "string"
+      },
+      "c2": {
+        "type": "string"
+      },
+      "r1": {
+        "type": "string"
+      },
+      "r2": {
+        "type": "string"
+      },
+      "s": {
+        "type": "string"
+      },
+      "st": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "c1",
+      "c2",
+      "r1",
+      "r2"
+    ],
+    "type": "object"
+  },
   "RunHeading": {
     "enum": [
       1,
@@ -18478,7 +18508,7 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
         "type": "string"
       },
       "src": {
-        "$ref": "#/components/schemas/IdRange"
+        "$ref": "#/components/schemas/RuleSource"
       },
       "warn": {
         "const": true,

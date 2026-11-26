@@ -13,11 +13,14 @@ import {
   formatRange,
   isoFromSerial,
   parseLocaleNumber,
-  parseRangeText,
   posRangeOf,
   serialFromIso,
   type GridRange,
   type RuleSettings,
+  type RuleSource,
+  sourceFromText,
+  sourceSheetOf,
+  sourceText,
   type StoredFormula,
   type ValidationKind,
   type ValidationRule,
@@ -103,19 +106,19 @@ export type Draft = {
   fx: string;
 };
 
-// What reading a draft needs: the person's locale, a range's ids on the sheet, and a formula compiled for the
-// range's top-left cell (null when it cannot be read).
+// What reading a draft needs: the person's locale, a typed Dropdown from a Range's cells as stored (`A2:A20` or
+// `Sheet2!A2:A20`), and a formula compiled for the range's top-left cell (null when either cannot be read).
 export type DraftEnv = {
   locale: string;
-  rangeIds: (g: GridRange) => ValidationRule['src'] | null;
+  source: (text: string) => RuleSource | null;
   compile: (text: string) => StoredFormula | null;
 };
 
 // The draft env of the open sheet.
-export function draftEnv(c: SheetController, rangeIds: DraftEnv['rangeIds']): DraftEnv {
+export function draftEnv(c: SheetController): DraftEnv {
   return {
     locale: c.locale,
-    rangeIds,
+    source: (text) => sourceFromText(c.workbook.ctxFor(c.sheet.id), text),
     compile: (text) => {
       const made = compileTypedFormula(text, c.locale, c.workbook.ctxFor(c.sheet.id));
       return made.ok ? made.formula : null;
@@ -200,7 +203,9 @@ export function draftOf(
     is: rule.is,
     opts: (rule.opts ?? []).map((o) => ({ key: nextKey(), v: o.v, c: o.c })),
     show: rule.show ?? 'chip',
-    src: rangeText(c, rule.src),
+    src: rule.src
+      ? sourceText(sourceSheetOf(c.workbook.ctxFor(c.sheet.id), rule.src), rule.src)
+      : '',
     op: rule.op ?? '',
     a: asText(rule.a),
     b: asText(rule.b),
@@ -218,7 +223,7 @@ export function settingsOf(
   d: Draft,
   env: DraftEnv,
 ): { ok: true; settings: RuleSettings } | { ok: false; why: string } {
-  const { locale, rangeIds } = env;
+  const { locale } = env;
   const extra = {
     ...(d.warn ? { warn: true as const } : {}),
     ...(d.help.trim() ? { help: d.help.trim().slice(0, VALIDATION_HELP_MAX) } : {}),
@@ -259,8 +264,7 @@ export function settingsOf(
       };
     }
     case 'range': {
-      const g = parseRangeText(d.src);
-      const src = g ? rangeIds(g) : null;
+      const src = env.source(d.src);
       if (!src) return { ok: false, why: 'Type the range to take options from, like A2:A20' };
       return {
         ok: true,

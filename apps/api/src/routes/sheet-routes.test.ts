@@ -567,6 +567,37 @@ describe('writes', () => {
     expect(after.rev).toBe(b.rev + 2);
     expect(JSON.stringify(relayed)).toContain('sheetB00');
   });
+  it('shrinks a dropdown reading the sheet whose rows go, and drops it when they all go', async () => {
+    const s = await sheet();
+    await make({ id: 'sheetB00', title: 'Pick', layout: layout() });
+    const b = (await call<SheetsResponse>({ method: 'GET', path: '/sheets' })).body.sheets.find(
+      (x) => x.id === 'sheetB00',
+    )!;
+    const [r0, r1, r2] = s.layout.rows;
+    const [c0] = s.layout.cols;
+    const src = { s: 'sheetA00', r1: r0!, c1: c0!, r2: r2!, c2: c0! };
+    const rule = {
+      id: 'rule01',
+      r1: b.layout.rows[0]!,
+      c1: b.layout.cols[0]!,
+      r2: b.layout.rows[1]!,
+      c2: b.layout.cols[0]!,
+      is: 'range' as const,
+      src,
+    };
+    expect(
+      (await write('sheetB00', { kind: 'layout', changes: [{ k: 'vrule', id: rule.id, rule }] }))
+        .status,
+    ).toBe(200);
+    await write('sheetA00', { kind: 'layout', changes: [{ k: 'deleteRows', ids: [r0!] }] });
+    const rulesOfB = async () =>
+      (await call<SheetsResponse>({ method: 'GET', path: '/sheets' })).body.sheets.find(
+        (x) => x.id === 'sheetB00',
+      )!.layout.rules;
+    expect(await rulesOfB()).toEqual([{ ...rule, src: { ...src, r1: r1! } }]);
+    await write('sheetA00', { kind: 'layout', changes: [{ k: 'deleteRows', ids: [r1!, r2!] }] });
+    expect(await rulesOfB()).toBeUndefined();
+  });
   it('renames, refusing a taken title', async () => {
     await sheet();
     await make({ id: 'sheetB00', title: 'Costs' });

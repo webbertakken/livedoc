@@ -14,6 +14,7 @@ import {
   type Cell,
   type CellFormat,
   type CellInput,
+  type RuleSource,
   type Sheet,
   type SheetLayout,
   type SheetPerson,
@@ -130,6 +131,48 @@ export function shrinkReadersOf(
   return [...changed].map((key) => {
     const { r, c } = splitCellKey(key);
     return { r, c, i: { f: formulas.get(key)! } };
+  });
+}
+
+/**
+ * The rule changes a reader sheet's layout needs when `changes` land on sheet `targetId`, laid out as `before`: each
+ * Dropdown from a Range reading that sheet shrinks as a formula's range into it does, and goes when its cells all go
+ * (data-validation.md "Rules"). Linear in the reader's rules.
+ */
+export function shrinkRuleSourcesOf(
+  targetId: string,
+  before: SheetLayout,
+  changes: readonly LayoutChange[],
+  reader: SheetLayout,
+): LayoutChange[] {
+  const reading = (reader.rules ?? []).filter((x) => x.src?.s === targetId);
+  if (!reading.length) return [];
+  const now = new Map(reading.map((x) => [x.id, x.src as RuleSource | null]));
+  let layout = before;
+  for (const ch of changes) {
+    const was = layout;
+    layout = applyLayoutChange(layout, ch);
+    if ((ch.k !== 'deleteRows' && ch.k !== 'deleteCols') || layout === was) continue;
+    const had = new Set(ch.k === 'deleteRows' ? was.rows : was.cols);
+    const gone = new Set(ch.ids.filter((id) => had.has(id)));
+    const none = new Set<string>();
+    const [goneRows, goneCols] = ch.k === 'deleteRows' ? [gone, none] : [none, gone];
+    for (const [id, src] of now) {
+      if (!src) continue;
+      const shrunk = shrinkRange(src, was, goneRows, goneCols);
+      const same =
+        shrunk &&
+        shrunk.r1 === src.r1 &&
+        shrunk.r2 === src.r2 &&
+        shrunk.c1 === src.c1 &&
+        shrunk.c2 === src.c2;
+      if (!same) now.set(id, shrunk ? { ...src, ...shrunk } : null);
+    }
+  }
+  return reading.flatMap((x): LayoutChange[] => {
+    const src = now.get(x.id)!;
+    if (src === x.src) return [];
+    return [{ k: 'vrule', id: x.id, rule: src ? { ...x, src } : null }];
   });
 }
 

@@ -795,7 +795,7 @@ describe('validation rules in the store (docs/specs/029-sheets/data-validation.m
     const sent = srv.api.writeSheet.mock.calls.map((c) => c[2] as { unchecked?: boolean });
     expect(sent.map((r) => r.unchecked)).toEqual([true, true]);
   });
-  it('shrinks another sheet’s range into one whose rows go, in the same undo step', async () => {
+  it('shrinks another sheet’s range and dropdown into one whose rows go, in the same undo step', async () => {
     // Two sheets on the tab, each stored by a fake server that applies writes in order.
     const sheets = new Map<string, Sheet>([
       ['sheet0001', sheetFromJson(initial())],
@@ -839,6 +839,18 @@ describe('validation rules in the store (docs/specs/029-sheets/data-validation.m
       kind: 'cells',
       cells: [{ r: b.rows[0]!, c: b.cols[0]!, i: { f: { t: 'SUM(@0)', r: [range] } } }],
     });
+    // A Dropdown from a Range on sheet0002 reading the same cells.
+    const rule = {
+      id: 'rule01',
+      r1: b.rows[1]!,
+      c1: b.cols[0]!,
+      r2: b.rows[2]!,
+      c2: b.cols[0]!,
+      is: 'range' as const,
+      src: range,
+    };
+    two.write('sheet0002', { kind: 'layout', changes: [{ k: 'vrule', id: rule.id, rule }] });
+    const src = () => two.sheet('sheet0002')!.layout.rules?.[0]?.src;
     two.write('sheet0001', {
       kind: 'cells',
       cells: [1, 2, 3].map((n, i) => ({ r: a.rows[i]!, c: a.cols[0]!, i: { n } })),
@@ -849,12 +861,14 @@ describe('validation rules in the store (docs/specs/029-sheets/data-validation.m
     expect(sum()).toBe(6);
     two.write('sheet0001', { kind: 'layout', changes: [{ k: 'deleteRows', ids: [a.rows[0]!] }] });
     expect(sum()).toBe(5);
+    expect(src()).toEqual({ ...range, r1: a.rows[1] });
     expect(steps).toHaveLength(1);
     await two.settle();
     expect(sent.at(-1)?.id).toBe('sheet0002');
     steps[0]!.undo();
     await two.settle();
     expect(sum()).toBe(6);
+    expect(src()).toEqual(range);
   });
   it('words a refusal without a line as the store does', () => {
     expect(writeRefusalMessage({ error: 'rules_full' })).toBe(

@@ -1,7 +1,7 @@
 // Validation rules (docs/specs/029-sheets/data-validation.md): which rule covers a
 // cell, whether a value is one it allows, and the line that says what it allows. Pure; the editor and the api share
 // it, so the two never disagree.
-import { formatRange } from '../address';
+import { sourceSheetOf, sourceText, type SourceSheet } from './rule-source';
 import { layoutIndex, posRangeOf } from '../layout';
 import type { SheetWrite } from '../store';
 import { displayValue } from '../number-format';
@@ -10,6 +10,7 @@ import {
   cellKey,
   type CellInput,
   type DropdownOption,
+  type RuleSource,
   type SheetLayout,
   type ValidationRule,
 } from '../sheet';
@@ -41,6 +42,8 @@ export type FormulaAllows = (
 export type RuleCtx = {
   locale: string;
   layout: SheetLayout;
+  // The sheet a Dropdown from a Range reads, for its line (the editor's; without it, only the own sheet's is named).
+  sourceOf?: (src: RuleSource) => SourceSheet | null;
   rangeValues?: RangeValues;
   formulaAllows?: FormulaAllows;
 };
@@ -295,7 +298,10 @@ const DATE_WORDS: Record<string, string> = {
 };
 
 // The rule's own line: what it allows, said as a request (data-validation.md "What each rule allows").
-export function ruleLine(rule: ValidationRule, ctx: Pick<RuleCtx, 'locale' | 'layout'>): string {
+export function ruleLine(
+  rule: ValidationRule,
+  ctx: Pick<RuleCtx, 'locale' | 'layout' | 'sourceOf'>,
+): string {
   switch (rule.is) {
     case 'list': {
       const opts = (rule.opts ?? []).map((o) => o.v);
@@ -304,10 +310,15 @@ export function ruleLine(rule: ValidationRule, ctx: Pick<RuleCtx, 'locale' | 'la
       return `Choose one of the dropdown's options: ${named}${more > 0 ? `, and ${more} more` : ''}`;
     }
     case 'range': {
-      const p = rule.src ? posRangeOf(ctx.layout, rule.src) : null;
-      return p
-        ? `Choose one of the values in ${formatRange(p)}`
-        : 'Choose one of the listed values';
+      const src = rule.src;
+      const own = src && src.s === undefined && src.st === undefined;
+      const sheet = !src
+        ? null
+        : own
+          ? { id: '', title: null, layout: ctx.layout }
+          : (ctx.sourceOf?.(src) ?? null);
+      const text = src ? sourceText(sheet, src) : '';
+      return text ? `Choose one of the values in ${text}` : 'Choose one of the listed values';
     }
     case 'check': {
       if (rule.on === undefined) return 'This cell is a checkbox: type TRUE or FALSE';
@@ -345,13 +356,23 @@ export function ruleLine(rule: ValidationRule, ctx: Pick<RuleCtx, 'locale' | 'la
 }
 
 // What a refused or invalid value says: the rule's Help Text, else its line.
-export function ruleMessage(rule: ValidationRule, ctx: Pick<RuleCtx, 'locale' | 'layout'>): string {
+export function ruleMessage(
+  rule: ValidationRule,
+  ctx: Pick<RuleCtx, 'locale' | 'layout' | 'sourceOf'>,
+): string {
   return rule.help?.trim() || ruleLine(rule, ctx);
 }
 
 // A Dropdown from a Range's options now: its cells' distinct shown values (empty aside), the first 500.
-export function rangeOptions(wb: Workbook, sheetId: string, rule: ValidationRule): RangeOption[] {
-  const sheet = wb.sheet(sheetId);
+export function rangeOptions(
+  wb: Workbook,
+  ruleSheetId: string,
+  rule: ValidationRule,
+): RangeOption[] {
+  const at =
+    rule.src && wb.sheet(ruleSheetId) ? sourceSheetOf(wb.ctxFor(ruleSheetId), rule.src) : null;
+  const sheet = at ? wb.sheet(at.id) : undefined;
+  const sheetId = at?.id ?? '';
   const p = sheet && rule.src ? posRangeOf(sheet.layout, rule.src) : null;
   if (!sheet || !p) return [];
   const out: RangeOption[] = [];

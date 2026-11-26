@@ -387,7 +387,7 @@ const sheetChange = z.discriminatedUnion('op', [
         z.object({
           type: z.literal('dropdown_range'),
           source: rangeArg.describe(
-            'The cells (on this sheet) whose values are offered, "A2:A20".',
+            'The cells whose values are offered: "A2:A20" on this sheet, "Sheet2!A2:A20" on another.',
           ),
           display: z.enum(['chip', 'arrow', 'plain']).optional(),
         }),

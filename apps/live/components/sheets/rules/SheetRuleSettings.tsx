@@ -10,6 +10,7 @@ import {
   ruleRangeText,
   formulaAsTyped,
   ruleLine,
+  sourceSheetOf,
   type FormatRule,
   type IdRange,
   type ValidationRule,
@@ -35,7 +36,11 @@ export function validationRuleShortLine(rule: ValidationRule, c: SheetController
   if (rule.is === 'formula')
     return `Custom Formula Is ${rule.fx ? formulaAsTyped(rule.fx, c.workbook.ctxFor(c.sheet.id), c.locale) : ''}`.trim();
   if (rule.is === 'list') return `Dropdown: ${(rule.opts ?? []).map((o) => o.v).join(', ')}`;
-  const line = ruleLine(rule, { locale: c.locale, layout: c.sheet.layout });
+  const line = ruleLine(rule, {
+    locale: c.locale,
+    layout: c.sheet.layout,
+    sourceOf: (src) => sourceSheetOf(c.workbook.ctxFor(c.sheet.id), src),
+  });
   // "Enter a number between 1 and 10" → "Number between 1 and 10".
   return rule.is === 'range'
     ? `Dropdown: ${line.replace(/^Choose one of the values in /, 'values in ')}`
