@@ -100,10 +100,11 @@ describe('suggested blocks, written and read back', () => {
     );
   });
 
-  it('writes LibreOffice’s forms: a region per row in every cell paragraph, a joiner, the section named', () => {
+  it('writes LibreOffice’s forms: a region per cell paragraph, a joiner, the section named', () => {
     const xml = text(write(CONSTRUCTS.suggestedBlocks!('odf'), 'fodt'));
     const tableRegions = xml.match(/<text:changed-region [^>]*livedoc:block="table"/g) ?? [];
-    expect(tableRegions).toHaveLength(2);
+    // One region per cell paragraph: LibreOffice honours one start and end per region.
+    expect(tableRegions).toHaveLength(4);
     expect(xml).toMatch(
       /<text:p[^>]*><text:change-start text:change-id="(ct\d+)"\/>A1<text:change-end text:change-id="\1"\/><\/text:p>/,
     );

@@ -130,17 +130,17 @@ it, asked of LibreOffice 24.2 by converting Word's tracked forms to ODF and back
 
 - **A table**: OOXML, each row's `w:trPr` holds a `w:ins` (or `w:del`), each cell's runs sit in a `w:ins` (`w:del`,
   its text as `w:delText`), as Word writes them; read, a table whose every row's `w:trPr` holds one of one kind is
-  that kind's suggestion, and the cells' paragraph marks Word tracks too are part of it. ODF has no tracked row: each row is one changed
-  region, a `text:change-start` and `text:change-end` of its id first and last in every paragraph of its cells, an
-  empty paragraph holding a U+200D zero width joiner between them, and LiveDoc's regions say they are a table's
-  (`livedoc:block="table"`). Read as LibreOffice reads one: a table whose every row holds writing, all of it in
+  that kind's suggestion, and the cells' paragraph marks Word tracks too are part of it. ODF has no tracked row: every paragraph of its cells is whole in a changed region of its own, a
+  `text:change-start` first and a `text:change-end` last, each carrying the table's suggestion (LibreOffice honours one
+  start and end per region), an empty paragraph holding a U+200D zero width joiner between them, and LiveDoc's regions
+  say they are a table's (`livedoc:block="table"`). Read as LibreOffice reads one: a table whose every row holds writing, all of it in
   changes of one kind (empty paragraphs aside), is that kind's suggestion; in a file LiveDoc wrote (its regions carry
   `livedoc:suggestion`), only when those changes say they are a table's, so text suggested into every cell stays text.
   Either way its mark is the first row's; a mark inside it of the same kind whose id is one of the rows', or a file's
   of the same author, is part of it and dropped, as are the joiners; any other suggestion inside it stays its own.
 - **A table of contents**: OOXML, its field's runs and its entries' runs in a `w:ins` (`w:del`) and each entry's
   paragraph mark too; read, one whose field begins inside a `w:ins` (`w:del`) is suggested. ODF, every paragraph of
-  its `text:index-body` whole in one changed region (an empty table of contents one paragraph holding a U+200D), as
+  its `text:index-body` whole in a changed region of its own (an empty table of contents one paragraph holding a U+200D), as
   LibreOffice writes one, the region `livedoc:block="contents"`; read, one whose every entry is so is suggested (in a
   file LiveDoc wrote, only when the region says so). The marks inside it are dropped, as a
   table's.

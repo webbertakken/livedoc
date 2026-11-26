@@ -237,6 +237,16 @@ function runBefore(
 const escape = (value: string): string =>
   value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
+/**
+ * A suggested table's or table of contents' change, each paragraph of it whole in a region of its own carrying the
+ * block's suggestion: LibreOffice honours one start and end per region (standard-mapping.md "Suggested blocks").
+ */
+export type WholeChange = {
+  readonly kind: 'insertion' | 'deletion';
+  readonly mark: FileSuggestionMark;
+  readonly block: 'table' | 'contents';
+};
+
 /** The changed regions a written document lists, each range given its own id; `text:tracked-changes` of them. */
 export class OdfChangeRegions {
   readonly #regions: string[] = [];

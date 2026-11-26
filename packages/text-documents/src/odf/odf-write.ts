@@ -61,7 +61,13 @@ import { DocumentTabs, type DocumentTab } from '../model/document-tabs';
 import type { CommentMark, FileThread } from '../model/comments';
 import { odfAnnotationNames, odfThreadEndXml, odfThreadStartXml } from './odf-comments';
 import { SUGGESTED_EMPTY_JOINER, Suggestions, type ParagraphSuggested } from '../model/suggestions';
-import { changeEndXml, changeStartXml, inlineChangeKey, OdfChangeRegions } from './odf-suggestions';
+import {
+  changeEndXml,
+  changeStartXml,
+  inlineChangeKey,
+  OdfChangeRegions,
+  type WholeChange,
+} from './odf-suggestions';
 
 export type OdfWriteOptions = { flat: boolean; generator: string };
 
@@ -513,8 +519,8 @@ function contentXml(
   blocks: readonly Block[],
   story: boolean,
   later?: { restore: boolean },
-  // A table's cell: its suggestions tracked as its table's are, and a suggested row's region each paragraph is whole in.
-  cell?: { tracks: boolean; region?: string },
+  // A table's cell: its suggestions tracked as its table's are, and a suggested table's change each paragraph is whole in.
+  cell?: { tracks: boolean; whole?: WholeChange },
 ): string {
   const doc = w.document;
   const tracks = cell?.tracks ?? !story;
@@ -542,19 +548,17 @@ function contentXml(
     generated: (prefix, body) => w.generated(prefix, body),
     keptName: (kept) => w.keptName(kept),
     kept: (xml) => w.kept(xml),
-    cellXml: (cellBlocks, region) =>
-      contentXml(w, cellBlocks, true, undefined, { tracks, ...compact({ region }) }),
-    rowRegion: (table) => {
+    cellXml: (cellBlocks, whole) =>
+      contentXml(w, cellBlocks, true, undefined, { tracks, ...compact({ whole }) }),
+    whole: (table) => {
       const suggested = Suggestions.ofBlock(table.suggested);
-      return suggested && tracks
-        ? w.changes.add(suggested.kind, suggested.mark, { block: 'table' })
-        : undefined;
+      return suggested && tracks ? { ...suggested, block: 'table' } : undefined;
     },
     tableName: () => w.tableName(),
   };
 
   let pendingSectionChange: string | undefined;
-  const paragraphXml = (p: Paragraph, whole = cell?.region): string => {
+  const paragraphXml = (p: Paragraph, wholeChange = cell?.whole): string => {
     const sectionChange = pendingSectionChange;
     pendingSectionChange = undefined;
     const first = isFirstParagraph;
@@ -570,7 +574,10 @@ function contentXml(
     const outline = p.props.outlineLevel ?? Styles.outlineLevel(doc.styles, p.style);
     const segments: Segment[] = [];
     const marker = (xml: string) => segments.push({ kind: 'kept', xml });
-    // A suggested row's or table of contents' change holds the whole paragraph, a joiner in an empty one.
+    // A suggested table's or table of contents' change holds the whole paragraph, a joiner in an empty one.
+    const whole =
+      wholeChange &&
+      w.changes.add(wholeChange.kind, wholeChange.mark, { block: wholeChange.block });
     if (whole) marker(changeStartXml(whole));
     if (tracks) for (const id of w.pendingEnds.splice(0)) marker(changeEndXml(id));
     const format = tracks ? p.suggested?.format : undefined;
@@ -664,14 +671,12 @@ function contentXml(
     else if (block.type === 'table') out.push(odfTableXml(tables, block));
     else if (block.type === 'contents') {
       contentsCount += 1;
-      // A suggested one: its entries whole in one changed region, an empty one a joiner (standard-mapping.md).
+      // A suggested one: each entry whole in its change, an empty one a joiner (standard-mapping.md).
       const suggested = Suggestions.ofBlock(block.suggested);
-      const region =
-        suggested && tracks
-          ? w.changes.add(suggested.kind, suggested.mark, { block: 'contents' })
-          : undefined;
+      const whole: WholeChange | undefined =
+        suggested && tracks ? { ...suggested, block: 'contents' } : undefined;
       const entries =
-        region && block.entries.length === 0
+        whole && block.entries.length === 0
           ? [Paragraphs.of('', Styles.idOfRole(doc.styles, 'normal') ?? 'Standard')]
           : block.entries;
       out.push(
@@ -679,7 +684,7 @@ function contentXml(
           block,
           contentsCount,
           doc.styles,
-          entries.map((p) => paragraphXml(p, region)),
+          entries.map((p) => paragraphXml(p, whole)),
         ),
       );
     } else {
