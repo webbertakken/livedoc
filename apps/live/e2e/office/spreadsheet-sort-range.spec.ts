@@ -69,7 +69,7 @@ test('Advanced Range Sorting Options sorts by several keys under a header row', 
     document.getAnimations().every((a) => a.playState !== 'running'),
   );
   await page.screenshot({ path: test.info().outputPath('sort-range.png') });
-  await dialog.getByRole('button', { name: 'Sort' }).click();
+  await dialog.getByRole('button', { name: 'Sort', exact: true }).click();
   await expect(dialog).toBeHidden();
 
   // Red before Blue, each by name; the header stays.
