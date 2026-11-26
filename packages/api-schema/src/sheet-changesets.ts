@@ -38,10 +38,12 @@ export type SheetChangesetResponse = {
   applied: SheetWrite[];
 };
 
-// A sheet changeset's revert: what it wrote, and what it kept because it changed since (D266): cell keys as A1 is not
-// known to the store, `object:<id>`, `vrule:<id>`, `frule:<id>`, `band:<id>`, `row:<id>`, `col:<id>`, `title`.
+// A sheet changeset's revert, shaped as a tab changeset's (RevertResponse): what it wrote, the cells it changed, and what
+// it kept because it changed since (D266), each by its key: a cell's `<rowId>:<colId>`, `object:<id>`, `vrule:<id>`,
+// `frule:<id>`, `band:<id>`, `row:<id>`, `col:<id>` or `title`; no lint, a sheet having none.
 export type SheetRevertResponse = {
   changeset: SheetChangesetWritten | null;
   reverted: number;
-  kept: string[];
+  kept: { id: string; reason: 'changed' }[];
+  lint: null;
 };

@@ -184,7 +184,7 @@ describe('reverting a sheet changeset', () => {
     const res = await revert(agent.changeset!.id);
     expect(res.status).toBe(200);
     const body = await res.json<SheetRevertResponse>();
-    expect(body.kept).toEqual([`${R(1)}:${C(1)}`]);
+    expect(body.kept).toEqual([{ id: `${R(1)}:${C(1)}`, reason: 'changed' }]);
     expect(body.reverted).toBe(1);
     expect(body.changeset?.id).toMatch(/^sc_/);
     const s = await sheet();
@@ -207,7 +207,7 @@ describe('reverting a sheet changeset', () => {
     ).json<SheetChangesetResponse>();
     await kit.write('book1', { kind: 'cells', cells: [{ r: 'newrow2', c: C(0), i: { n: 5 } }] });
     const body = await (await revert(agent.changeset!.id)).json<SheetRevertResponse>();
-    expect(body.kept).toEqual(['row:newrow2']);
+    expect(body.kept).toEqual([{ id: 'row:newrow2', reason: 'changed' }]);
     const rows = (await sheet()).layout.rows;
     expect(rows).toContain('newrow2');
     expect(rows).not.toContain('newrow1');

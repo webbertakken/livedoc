@@ -15569,9 +15569,26 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
       },
       "kept": {
         "items": {
-          "type": "string"
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "reason": {
+              "const": "changed",
+              "type": "string"
+            }
+          },
+          "required": [
+            "id",
+            "reason"
+          ],
+          "type": "object"
         },
         "type": "array"
+      },
+      "lint": {
+        "type": "null"
       },
       "reverted": {
         "type": "number"
@@ -15580,7 +15597,8 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
     "required": [
       "changeset",
       "reverted",
-      "kept"
+      "kept",
+      "lint"
     ],
     "type": "object"
   },

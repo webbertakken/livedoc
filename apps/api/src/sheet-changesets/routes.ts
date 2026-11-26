@@ -26,6 +26,9 @@ import { sheetChangesetLog, storeSheetChangeset, type SheetChangesetResult } fro
 
 const respond = (r: SheetChangesetResult) => json(r.body, { status: r.status });
 
+const keptOf = (keys: readonly string[]): SheetRevertResponse['kept'] =>
+  keys.map((id) => ({ id, reason: 'changed' }));
+
 // A Participant's writes cut to their values (D262): one of rows, columns, layout or a title, or of formats alone,
 // refused; null then.
 function participantWrites(writes: readonly SheetWrite[]): SheetWrite[] | null {
@@ -154,7 +157,12 @@ export async function revertSheetChangeset(
   const where = { documentId: document.id, sheetId: record.sheetId, id: record.id };
   if (plan.writes.length === 0) {
     sheetChangesetLog('nothing', { ...where, kept: plan.kept.length });
-    const body: SheetRevertResponse = { changeset: null, reverted: 0, kept: plan.kept };
+    const body: SheetRevertResponse = {
+      changeset: null,
+      reverted: 0,
+      kept: keptOf(plan.kept),
+      lint: null,
+    };
     return json(body);
   }
   const [by, author] = await Promise.all([writer(ctx, owner), authorOf(ctx, owner)]);
@@ -180,6 +188,11 @@ export async function revertSheetChangeset(
   const reverted = written
     ? written.counts.added + written.counts.changed + written.counts.removed
     : 0;
-  const body: SheetRevertResponse = { changeset: written, reverted, kept: plan.kept };
+  const body: SheetRevertResponse = {
+    changeset: written,
+    reverted,
+    kept: keptOf(plan.kept),
+    lint: null,
+  };
   return json(body);
 }

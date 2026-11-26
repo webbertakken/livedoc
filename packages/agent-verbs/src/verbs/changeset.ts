@@ -77,7 +77,7 @@ export const changesetShow = defineVerb({
   behaviour: 'read',
   input: z.object({
     doc: z.string().describe('A name, id prefix or LiveDoc URL'),
-    changeset: z.string().describe('The changeset id, cs_…'),
+    changeset: z.string().describe('The changeset id, cs_… for a tab, sc_… for a sheet'),
   }),
   output: z.object({ line: z.string(), text: z.string() }),
   run: async (ctx, { doc, changeset }) => {
@@ -104,11 +104,11 @@ export const changesetRevert = defineVerb({
   id: 'changeset.revert',
   summary: 'Undo one changeset as a new changeset',
   description:
-    'Reverts one changeset as a new changeset, leaving alone each element changed since (kept, with the reason).',
+    'Reverts one changeset as a new changeset, leaving alone each element or cell changed since (kept, with the reason).',
   behaviour: 'write',
   input: z.object({
     doc: z.string().describe('A name, id prefix or LiveDoc URL'),
-    changeset: z.string().describe('The changeset id, cs_…'),
+    changeset: z.string().describe('The changeset id, cs_… for a tab, sc_… for a sheet'),
   }),
   output: z.object({
     changeset: z.object({ id: z.string(), rev: z.number(), previousRev: z.number() }).nullable(),
