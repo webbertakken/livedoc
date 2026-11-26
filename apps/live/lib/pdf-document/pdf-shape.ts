@@ -1,6 +1,6 @@
 // Making a Line, an Arrow, a Rectangle or an Ellipse (docs/specs/035-pdf-documents/marks.md "Making a mark"): a drag's
 // end held to the page, and square with ⇧ for a box; the two ends as the mark's geometry in page space, nothing for a
-// press; the mark written in one change. The state names its stored file the first time anything is changed
+// press; the mark written in one change, as a Polygon's, a Cloud's or Connected lines' corners are (pdf-poly.ts). The state names its stored file the first time anything is changed
 // (live-editing-and-storage.md "The layout").
 import type * as Y from 'yjs';
 import type { BlobKey } from '@livedoc/document';
@@ -13,9 +13,10 @@ import {
   type PageName,
   type PagePoint,
   type PdfLimitRefusal,
+  type PolyShape,
 } from '@livedoc/pdf-documents';
 import { DRAWING_LOOK, DRAWING_WIDTH_PT } from './pdf-drawing';
-import type { ShapeToolKind } from './pdf-shape-pick';
+import type { DragShapeKind, ShapeToolKind } from './pdf-shape-pick';
 import type { TextMarkLook } from './pdf-text-mark';
 import type { ToolLook } from './pdf-tool-look';
 import { PDF_LOCAL_ORIGIN } from './pdf-undo';
@@ -31,6 +32,9 @@ export const SHAPE_NAMES = {
   arrow: 'Arrow',
   rectangle: 'Rectangle',
   ellipse: 'Ellipse',
+  polygon: 'Polygon',
+  cloud: 'Cloud',
+  polyline: 'ConnectedLines',
 } as const satisfies Readonly<Record<ShapeToolKind, string>>;
 
 /** The page's box on screen. */
@@ -55,7 +59,7 @@ export function screenBoxOf(element: HTMLElement | null): ScreenBox | null {
 }
 
 /** The shapes a drag spans as a box, which ⇧ keeps square or round. */
-const isBox = (kind: ShapeToolKind): boolean => kind === 'rectangle' || kind === 'ellipse';
+const isBox = (kind: DragShapeKind): boolean => kind === 'rectangle' || kind === 'ellipse';
 
 const within = (n: number, low: number, high: number): number => Math.min(high, Math.max(low, n));
 
@@ -65,7 +69,7 @@ const within = (n: number, low: number, high: number): number => Math.min(high, 
  * leaves room.
  */
 export function dragShape(
-  kind: ShapeToolKind,
+  kind: DragShapeKind,
   from: { x: number; y: number },
   to: { x: number; y: number },
   box: ScreenBox,
@@ -85,7 +89,7 @@ export function dragShape(
 
 /** What a drag from `from` to `to` in page space draws with a tool; null for a press, too small to be a mark. */
 export function shapeOf(
-  kind: ShapeToolKind,
+  kind: DragShapeKind,
   from: PagePoint,
   to: PagePoint,
   width: number,
@@ -109,11 +113,14 @@ export function shapeOf(
 export type ShapeMade =
   { ok: true; mark: Mark } | { ok: false; reason: PdfLimitRefusal | 'no_shape' };
 
+/** A line or shape a tool makes: a drag's or a corner tool's. */
+export type ToolShape = LineShape | BoxShape | PolyShape;
+
 /** A line or shape made on a page, in the look given, as one change. */
 export function addShape(
   doc: Y.Doc,
   where: { page: PageName; stored: { blob: BlobKey; pages: number } },
-  shape: LineShape | BoxShape | null,
+  shape: ToolShape | null,
   by: { author: string; authorKey?: string | null; now: number; id: string; look: ToolLook },
 ): ShapeMade {
   const base = {
@@ -128,7 +135,9 @@ export function addShape(
     ? null
     : 'line' in shape
       ? Mark.line(shape.kind, { ...base, line: shape.line, width: shape.width })
-      : Mark.shape(shape.kind, { ...base, rect: shape.rect, width: shape.width });
+      : 'corners' in shape
+        ? Mark.poly(shape.kind, { ...base, corners: shape.corners, width: shape.width })
+        : Mark.shape(shape.kind, { ...base, rect: shape.rect, width: shape.width });
   if (!mark) return { ok: false, reason: 'no_shape' };
   let refusal: PdfLimitRefusal | null = null;
   doc.transact(() => {

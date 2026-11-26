@@ -9,6 +9,7 @@ import type { PagePoint } from './engine-contract';
 import {
   PDF_ARROW_HEAD_MIN_PT,
   PDF_ARROW_HEAD_WIDTHS,
+  PDF_CLOUD_ARC_PT,
   PDF_MARK_LINE_PT,
   PDF_SQUIGGLE_STEP_PT,
 } from './limits';
@@ -18,6 +19,7 @@ import type {
   LineEnd,
   LineMark,
   LineStyle,
+  PolyMark,
   Quad,
   ShapeMark,
   StampMark,
@@ -35,13 +37,18 @@ export type BoxShape = Pick<ShapeMark, 'kind' | 'rect' | 'width' | 'lineStyle' |
 export type TypedShape =
   Pick<TextBoxMark, 'kind' | 'rect'> | Pick<CalloutMark, 'kind' | 'rect' | 'callout'>;
 export type StampShape = Pick<StampMark, 'kind' | 'rect' | 'lines'>;
+export type PolyShape = Pick<
+  PolyMark,
+  'kind' | 'corners' | 'width' | 'lineStyle' | 'fill' | 'lineEnd'
+>;
 export type MarkShape =
   | Pick<TextMark, 'kind' | 'quads'>
   | Pick<DrawingMark, 'kind' | 'strokes' | 'width' | 'lineStyle'>
   | LineShape
   | BoxShape
   | TypedShape
-  | StampShape;
+  | StampShape
+  | PolyShape;
 
 /** A line through its points, `width` points wide; `round` its ends and corners (a Drawing's); `closed` back to its
  *  first point, its last corner joined as the others are (a Rectangle's, an Ellipse's). */
@@ -214,8 +221,11 @@ function lineDrawing({
   };
 }
 
-/** A Rectangle's or an Ellipse's outline, styled, and its fill inside it. */
-function outlined(points: PagePoint[], { width, lineStyle, fill }: BoxShape): MarkDrawing {
+/** A closed shape's outline, styled, and its fill inside it. */
+function outlined(
+  points: PagePoint[],
+  { width, lineStyle, fill }: Pick<BoxShape, 'width' | 'lineStyle' | 'fill'>,
+): MarkDrawing {
   return {
     fills: [],
     strokes: [styled(line(points, width, true), lineStyle)],
@@ -246,6 +256,52 @@ function shapeDrawing(shape: BoxShape): MarkDrawing {
     };
   });
   return outlined(outline, shape);
+}
+
+/** (default) Points along each of a Cloud's arcs, its first corner included. */
+const ARC_POINTS = 8;
+
+/**
+ * A Cloud's edge round its corners (marks.md "Making a mark"): each side split into whole arcs about
+ * PDF_CLOUD_ARC_PT across, each a half circle bulging away from the inside, whichever way the corners run.
+ */
+function cloudOutline(corners: readonly PagePoint[]): PagePoint[] {
+  const area = corners.reduce((sum, a, at) => {
+    const b = corners[(at + 1) % corners.length]!;
+    return sum + a.x * b.y - b.x * a.y;
+  }, 0);
+  // Anticlockwise, the inside lies left of each side, so out is to its right.
+  const outward = area >= 0 ? 1 : -1;
+  return corners.flatMap((a, at) => {
+    const b = corners[(at + 1) % corners.length]!;
+    const length = Math.hypot(b.x - a.x, b.y - a.y);
+    if (length === 0) return [];
+    const arcs = Math.max(1, Math.round(length / PDF_CLOUD_ARC_PT));
+    const along = { x: (b.x - a.x) / length, y: (b.y - a.y) / length };
+    const out = { x: along.y * outward, y: -along.x * outward };
+    const radius = length / arcs / 2;
+    return Array.from({ length: arcs * ARC_POINTS }, (_, n) => {
+      const arc = Math.floor(n / ARC_POINTS);
+      const angle = Math.PI - ((n % ARC_POINTS) / ARC_POINTS) * Math.PI;
+      const centre = radius * (2 * arc + 1);
+      return {
+        x: a.x + along.x * (centre + radius * Math.cos(angle)) + out.x * radius * Math.sin(angle),
+        y: a.y + along.y * (centre + radius * Math.cos(angle)) + out.y * radius * Math.sin(angle),
+      };
+    });
+  });
+}
+
+/** A Polygon closed through its corners, a Cloud round them in arcs, Connected lines open with their last end. */
+function polyDrawing(shape: PolyShape): MarkDrawing {
+  const corners = pointsOf(shape.corners);
+  if (shape.kind === 'polygon') return outlined(corners, shape);
+  if (shape.kind === 'cloud') return outlined(cloudOutline(corners), shape);
+  const end = endDrawing(shape.lineEnd ?? 'none', corners.at(-2)!, corners.at(-1)!, shape.width);
+  return {
+    fills: end.fills,
+    strokes: [styled(line(corners, shape.width), shape.lineStyle), ...end.strokes],
+  };
 }
 
 /** A Callout's line through its knee, an open head at what is meant, and its box's border; a Text's nothing. */
@@ -288,6 +344,7 @@ export const MarkDrawing = {
         ),
       };
     if ('line' in mark) return lineDrawing(mark);
+    if ('corners' in mark) return polyDrawing(mark);
     if (mark.kind === 'text' || mark.kind === 'callout') return typedDrawing(mark);
     if (mark.kind === 'stamp') return { fills: [], strokes: [StampLayout.border(mark)] };
     if ('rect' in mark) return shapeDrawing(mark);

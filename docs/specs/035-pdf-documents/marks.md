@@ -98,11 +98,24 @@ written into the file as a standard annotation, so any reader shows it. The rese
   within it; ⇧ held keeps it square or round, its side the longer of the drag's two `(default)`.
 - A drag spanning less than `PDF_SHAPE_MIN_PT` both ways, or a Line shorter than it, makes no mark: a press alone
   makes nothing `(default)`. A line or shape shows as it is dragged, in its tool's look.
+- **A Polygon, a Cloud and Connected lines** are made a corner a press, with the tool in hand: the shape so far shows
+  in the tool's look, with a line on from its last corner to the pointer. A double press or Enter ends it, its last
+  press a corner; a press on its first corner closes a Polygon or a Cloud there; Backspace takes the last corner back;
+  each press gives the pages the keys, wherever they were before;
+  Escape, another tool or a press on another page lets it go, making nothing; the tool stays in hand after Escape,
+  and a second Escape takes Select `(default)`.
+- A Polygon or a Cloud of fewer than 3 corners, or Connected lines of fewer than 2, makes no mark; a press within
+  `PDF_SHAPE_MIN_PT` of the last corner adds none; the `PDF_POLYGON_MAX_CORNERS`th corner ends the shape
+  `(default)`. Each is one step of undo, made when it ends.
+- **A Cloud's edge** is a run of arcs bulging outward along each side, each about `PDF_CLOUD_ARC_PT` across, a side
+  holding whole arcs evenly `(default)`; its corners and fill are a Polygon's.
+- **Connected lines** end in their kind's own None at both ends; a line end chosen gives its last end that look, as a
+  Line's second end `(default)`.
 - **The lines' and shapes' first looks** are the Drawing's: strong Red for light paper, 2 points wide, at full
   opacity, with no fill `(default)`; each kind's colour is chosen and remembered on its own.
-- **The shape tools** are Line, Arrow, Rectangle and Ellipse (Insert > Shape); the toolbar's Shape holds them as
+- **The shape tools** are Line, Arrow, Rectangle, Ellipse, Polygon, Cloud and Connected lines (Insert > Shape); the toolbar's Shape holds them as
   Highlight holds the text tools ([Reading surface](reading-surface.md#the-toolbar)); ⇧D takes the next of them in
-  that order, and from any other tool the one the Shape control shows `(default)`.
+  that order, and from any other tool the one the Shape control shows; Q takes the Cloud `(default)`.
 - **A Text** is made with the Text tool in hand: a press opens a box `PDF_TEXT_BOX_WIDTH_PT` wide whose top left is
   the press, narrowed to its longest line once typed; a drag opens a box as wide as the drag and at least as high
   `(default)`. A box opened where the page leaves too little room is moved onto it.
@@ -161,7 +174,8 @@ written into the file as a standard annotation, so any reader shows it. The rese
 - **Arrow keys** move the selected marks `PDF_MARK_NUDGE_PT` the way the arrow points on screen, whatever the page's
   turn, ⇧ `PDF_MARK_NUDGE_FAR_PT`, held on their page; each press one step of undo `(default)`.
 - **Handles**: one selected mark shows them, a text mark none: a box's eight, its corners and sides, round a
-  Rectangle, an Ellipse, a Text, a Callout's box, a stamp and a Drawing; a Line's and an Arrow's two ends; and a
+  Rectangle, an Ellipse, a Text, a Callout's box, a stamp and a Drawing; a Line's and an Arrow's two ends; a Polygon's,
+  a Cloud's and Connected lines' corners; and a
   Callout's tip and knee besides its box's; each a small square in the shell's focus colour `(default)`.
 - **Dragging a box's handle** moves the sides it sits on, as they show on screen; ⇧ with a corner keeps the box's
   proportions; the box stays at least `PDF_SHAPE_MIN_PT` each way and on its page `(default)`.
@@ -169,6 +183,8 @@ written into the file as a standard annotation, so any reader shows it. The rese
   width kept; a Text's and a Callout's words wrap at its new width, and the box is never narrower than one character
   nor lower than its words, growing down to hold them; a stamp's words scale with it, in proportion; a Callout's line
   runs again from its tip, through a knee, to the middle of the side facing it, as when it was made.
+- **Dragging a corner** of a Polygon, a Cloud or Connected lines moves that corner alone, held on the page; ⌥ with
+  the arrow keys resizes the box round its corners, the corners scaled within it `(default)`.
 - **Dragging a line's end** moves that end alone; **a Callout's tip** moves what is meant, its line following; **its
   knee** moves the knee alone; each held on the page `(default)`.
 - **⌥ with the arrow keys** resizes the selected mark from its right or foot as it shows: → and ↓ larger, ← and
@@ -417,6 +433,10 @@ question mark. The research is [Every script in a mark's words](../../research/p
   **an Ellipse** with `Rect` the box grown by half the line's width, so the line falls where it was drawn. Their
   appearance streams are drawn from what the page shows of them, line for line. A line style other than Solid is
   written as `BS` `S` `D` with `D` its pattern, a Drawing's too, and a fill as `IC`.
+- **A Polygon** is written as a `Polygon` with its corners as `Vertices` and its fill as `IC`; **a Cloud** the same
+  with `BE` `S` `C`, `I` 1, its `Rect` grown to hold the arcs; **Connected lines** as a `PolyLine` with `Vertices`
+  and `LE` `[/None <its last end>]`. Their appearance streams are drawn as the page draws them; each is read back from
+  the same entries `(default)`.
 - **A Text** is written as a `FreeText` with `Contents` its words, `DA` its font, size and colour, `Rect` its
   box, and its alignment once chosen as `Q` (0 Left, 1 Centre, 2 Right), Justified as `Q` 0 with `DS`
   `text-align:justify`; a chosen font as `DS` `font-family:'<family>'`, `DA` naming Helvetica still, the font every
@@ -468,6 +488,8 @@ question mark. The research is [Every script in a mark's words](../../research/p
 | `PDF_DRAWING_JOIN_MS`       | 1,000               | `(default)` Strokes made closer in time are one Drawing; safe range 300 to 3,000                |
 | `PDF_DRAWING_STEP_PT`       | 0.5                 | `(default)` A stroke's points closer than this, in points, are one; safe range 0.25 to 2        |
 | `PDF_SHAPE_MIN_PT`          | 2                   | `(default)` A drag spanning less, in points, makes no line or shape; safe range 1 to 6          |
+| `PDF_POLYGON_MAX_CORNERS`   | 1,000               | `(default)` Corners of one Polygon, Cloud or Connected lines; the last press past it ends it    |
+| `PDF_CLOUD_ARC_PT`          | 12                  | `(default)` A Cloud's arc across, in points, as drawn; safe range 6 to 24                       |
 | `PDF_ARROW_HEAD_WIDTHS`     | 4                   | `(default)` An arrowhead's side, in line widths; safe range 3 to 6                              |
 | `PDF_ARROW_HEAD_MIN_PT`     | 6                   | `(default)` An arrowhead's side at the least, in points; safe range 4 to 10                     |
 | `PDF_TEXT_BOX_WIDTH_PT`     | 216                 | `(default)` A Text box opened by a press, in points, before it narrows; safe range 144 to 360   |
@@ -539,7 +561,9 @@ Gated on the session's `can` (`pdfReviews`), and checked by the room.
   `[pdf] marks-read count=<n> unknown=<n>` (per open), `[pdf] drawing-joined strokes=<n>` (a stroke joined to a
   Drawing), `[pdf] typing-dropped kind=<kind>` (a Note, Text or Callout ended with nothing typed),
   `[pdf] marks-hidden count=<n>` (the file's own marks the pages are drawn without, each time they change),
-  `[pdf] marks-hidden-failed reason=<reason>` (the engine was not told).
+  `[pdf] marks-hidden-failed reason=<reason>` (the engine was not told), `[pdf] poly-ended kind=<kind> corners=<n>`
+  (a Polygon, a Cloud or Connected lines ended, before it is made), `[pdf] poly-let-go kind=<kind>` (one let go by
+  Escape).
 
 ## Errors
 

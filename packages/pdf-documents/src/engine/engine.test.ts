@@ -720,6 +720,42 @@ describe('baking', () => {
     ]);
   });
 
+  // marks.md "In the file": a Polygon and a Cloud as `Polygon`, Connected lines as `PolyLine`, read back the same.
+  it('writes a Polygon, a Cloud and Connected lines as the standard’s, and reads them back as made', async () => {
+    opened(await engine.open(stored));
+    const doc = PdfLiveChanges.load([await changesWithHighlight(0)]);
+    const [kept] = PdfLiveChanges.marks(doc);
+    const base = {
+      page: kept!.page,
+      colour: '#d93025',
+      opacity: 1,
+      author: 'Ada',
+      createdAt: kept!.createdAt,
+      width: 2,
+      corners: [100, 500, 200, 500, 150, 580],
+    };
+    const made = [
+      Mark.poly('polygon', { ...base, id: 'poly', fill: '#ffeeaa' })!,
+      Mark.poly('cloud', { ...base, id: 'cloud', lineStyle: 'dashed' })!,
+      Mark.poly('polyline', { ...base, id: 'lines', lineEnd: 'open-arrow' })!,
+    ];
+    for (const mark of made) PdfLiveChanges.addMark(doc, mark);
+    const result = await engine.bake(PdfLiveChanges.encode(doc));
+    if (!result.ok) throw new Error(result.refusal);
+    const written = new Map(
+      (await PDF.load(result.bytes.slice()))
+        .getPages()[0]!
+        .getAnnotations()
+        .map((annotation) => [annotation.name, annotation.dict]),
+    );
+    expect(written.get('poly')!.getName('Subtype')?.value).toBe('Polygon');
+    expect(written.get('cloud')!.getDict('BE')?.getName('S')?.value).toBe('C');
+    expect(written.get('lines')!.getName('Subtype')?.value).toBe('PolyLine');
+    opened(await engine.open(result.bytes));
+    const read = new Map((await engine.fileMarks(0)).map((mark) => [mark.id, mark.mark]));
+    for (const mark of made) expect(read.get(mark.id)).toEqual(mark);
+  });
+
   it('counts a mark whose page the stored file does not hold, and writes the rest', async () => {
     const pages = opened(await engine.open(stored));
     const doc = PdfLiveChanges.load([await changesWithHighlight(0)]);

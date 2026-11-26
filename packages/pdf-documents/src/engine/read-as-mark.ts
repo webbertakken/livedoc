@@ -17,6 +17,7 @@ import type { PageName } from '../page-name';
 import { PdfDate } from '../pdf-date';
 import {
   PDF_DRAWING_MAX_POINTS,
+  PDF_POLYGON_MAX_CORNERS,
   PDF_MARK_TEXT_MAX_CHARS,
   PDF_MARK_WIDTH_MAX_PT,
   PDF_MARK_WIDTH_MIN_PT,
@@ -339,6 +340,27 @@ function valueOf(
       lineEnd: end,
       ...lineOf(file, annotation),
     };
+  }
+  if (subtype === 'polygon' || subtype === 'polyline') {
+    const count = p.FPDFAnnot_GetVertices(annotation, 0, 0);
+    if (count > PDF_POLYGON_MAX_CORNERS) return {};
+    const corners = pointsRead(file, count, (out, size) =>
+      p.FPDFAnnot_GetVertices(annotation, out, size),
+    );
+    const base = { ...baseOf(mark, name, mark.colour), corners, ...lineOf(file, annotation) };
+    if (subtype === 'polyline') {
+      const out = file.alloc(8);
+      const ended = p.EPDFAnnot_GetLineEndings(annotation, out, out + 4);
+      const end = ended ? (ENDS[file.runtime.getValue(out + 4, 'i32')] ?? 'none') : 'none';
+      file.free(out);
+      return { ...base, kind: 'polyline', lineEnd: end };
+    }
+    // A cloudy border (`BE` `S` `C`) is a Cloud.
+    const intensity = file.alloc(4);
+    const cloudy = p.EPDFAnnot_GetBorderEffect(annotation, intensity);
+    file.free(intensity);
+    const fill = insideColour(file, annotation);
+    return { ...base, kind: cloudy ? 'cloud' : 'polygon', ...(fill ? { fill } : {}) };
   }
   if (subtype === 'square' || subtype === 'circle') {
     const lined = lineOf(file, annotation);

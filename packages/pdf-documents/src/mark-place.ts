@@ -8,6 +8,7 @@ import { Mark, type Box, type CalloutLine, type Segment, type Stroke } from './m
 export type MarkPlace =
   | { readonly strokes: readonly Stroke[] }
   | { readonly line: Segment }
+  | { readonly corners: Stroke }
   | { readonly rect: Box }
   | { readonly rect: Box; readonly callout: CalloutLine };
 
@@ -27,6 +28,7 @@ export const MarkPlace = {
     if (Mark.isText(mark)) return null;
     if (mark.kind === 'drawing') return { strokes: mark.strokes.map((s) => shift(s, by)) };
     if ('line' in mark) return { line: shift(mark.line, by) };
+    if ('corners' in mark) return { corners: shift(mark.corners, by) };
     if (mark.kind === 'callout')
       return { rect: shift(mark.rect, by), callout: shift(mark.callout, by) };
     return { rect: shift(mark.rect, by) };

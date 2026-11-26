@@ -386,6 +386,7 @@ export const PdfPage = memo(function PdfPage({
   };
   // Two presses in a row select a word, three a line; a finger's zoom instead.
   const onClick = (event: MouseEvent<HTMLElement>) => {
+    if (inking.presses(event.detail)) return;
     const pressing = tool === 'select' && event.detail >= 2 && !fingers.byFinger();
     const at = pressing ? pagePoint(event) : null;
     if (at) onText(index, { kind: 'presses', at, count: event.detail });

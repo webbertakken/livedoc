@@ -82,3 +82,19 @@ describe('MarkPlace', () => {
     expect(MarkPlace.held([highlight], { x: 999, y: 0 }, PAGE)).toEqual({ x: 999, y: 0 });
   });
 });
+
+describe('MarkPlace, a shape of corners', () => {
+  it('moves its corners by the offset', () => {
+    const polygon = Mark.poly('polygon', {
+      page: PageName.parse('p:1')!,
+      colour: '#ff0000',
+      opacity: 1,
+      author: 'Ada',
+      createdAt: 1,
+      id: 'p',
+      corners: [10, 10, 110, 10, 60, 90],
+      width: 2,
+    })!;
+    expect(MarkPlace.moved(polygon, { x: 5, y: -5 })).toEqual({ corners: [15, 5, 115, 5, 65, 85] });
+  });
+});

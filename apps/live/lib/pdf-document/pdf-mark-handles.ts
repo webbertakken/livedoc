@@ -126,16 +126,40 @@ export function dragHandle(
   ]);
 }
 
-/** ⌥ with an arrow key: the foot-right corner as it shows, or a line's second end, moved `step` in view space. */
+/**
+ * ⌥ with an arrow key: the foot-right corner as it shows, or a line's second end, moved `step` in view space; for a
+ * Polygon, a Cloud or Connected lines, the foot-right corner of the box round its corners, the corners scaled within.
+ */
 export function keyResize(
   mark: Mark,
   matrix: PageMatrix,
   step: PagePoint,
   page: Box,
 ): MarkPlace | null {
+  if ('corners' in mark) return cornersResized(mark, matrix, step, page);
   const places = handlePlaces(mark, matrix);
   const handle = places.find((place) => place.handle === 'end' || place.handle === 'se');
   if (!handle) return null;
   const to = { x: handle.at.x + step.x, y: handle.at.y + step.y };
   return dragHandle(mark, handle.handle, matrix, to, false, page);
+}
+
+/** The box round a Polygon's, a Cloud's or Connected lines' corners, its foot-right corner moved `step` in view space. */
+function cornersResized(
+  mark: Mark,
+  matrix: PageMatrix,
+  step: PagePoint,
+  page: Box,
+): MarkPlace | null {
+  const was = viewBoxOf(matrix, MarkReshape.box(mark)!);
+  const box = dragged(was, 'se', { x: was.right + step.x, y: was.bottom + step.y }, false);
+  const one = onPage(matrix, { x: box.left, y: box.top }, page);
+  const other = onPage(matrix, { x: box.right, y: box.bottom }, page);
+  if (!one || !other) return null;
+  return MarkReshape.reboxed(mark, [
+    Math.min(one.x, other.x),
+    Math.min(one.y, other.y),
+    Math.max(one.x, other.x),
+    Math.max(one.y, other.y),
+  ]);
 }

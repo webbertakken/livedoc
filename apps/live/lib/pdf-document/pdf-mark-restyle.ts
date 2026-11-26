@@ -1,6 +1,7 @@
 // Restyling the selected marks (docs/specs/035-pdf-documents/marks.md "Changing a mark"): their colour, from the
 // toolbar's Colour, or each kind's first look on Reset (a stamp its own); their opacity, line width, line style, line
-// ends and a Text's or a Callout's alignment, from the Format menu; a Rectangle's and an Ellipse's fill, from the
+// ends and a Text's or a Callout's alignment, from the Format menu; a Rectangle's, an Ellipse's, a Polygon's and a
+// Cloud's fill, from the
 // toolbar's Fill; a Text's or a Callout's font and size, from its Font and Font size. A width and a style reach only a
 // mark with a line, a fill only a shape, a font, a size and an alignment only a Text or a Callout, a new font or size
 // carrying the box it makes. Each
@@ -18,6 +19,7 @@ import {
   type Box,
   type Mark,
   type MarkChange,
+  type PolyMark,
   MarkReshape,
   type ShapeMark,
   type TextAlign,
@@ -81,8 +83,8 @@ export const ALIGN_ITEMS: Readonly<Record<string, TextAlign>> = {
   'align-text-justified': 'justified',
 };
 
-/** A mark drawn as a line: a Drawing, a Line, an Arrow, a Rectangle or an Ellipse. */
-type LinedMark = DrawingMark | LineMark | ShapeMark;
+/** A mark drawn as a line: a Drawing, a Line, an Arrow, a Rectangle, an Ellipse, a Polygon, a Cloud or Connected lines. */
+type LinedMark = DrawingMark | LineMark | ShapeMark | PolyMark;
 
 const isLined = (mark: Mark): mark is LinedMark => 'width' in mark;
 
@@ -93,15 +95,22 @@ export const widthOf = (mark: Mark): number | undefined => (isLined(mark) ? mark
 export const lineStyleOf = (mark: Mark): LineStyle | undefined =>
   isLined(mark) ? (mark.lineStyle ?? 'solid') : undefined;
 
-/** A Line's or an Arrow's second end, its kind's own where it names none; undefined for any other mark. */
-export const lineEndOf = (mark: Mark): LineEnd | undefined =>
-  mark.kind === 'line' || mark.kind === 'arrow'
-    ? (mark.lineEnd ?? Marks.firstEnd(mark.kind))
-    : undefined;
+/** A Line's or an Arrow's second end, its kind's own where it names none, or Connected lines' last, None where it
+ *  names none; undefined for any other mark. */
+export function lineEndOf(mark: Mark): LineEnd | undefined {
+  if (mark.kind === 'line' || mark.kind === 'arrow')
+    return mark.lineEnd ?? Marks.firstEnd(mark.kind);
+  return mark.kind === 'polyline' ? (mark.lineEnd ?? 'none') : undefined;
+}
 
-/** A Rectangle's or an Ellipse's fill, null for none; undefined for a mark that takes no fill. */
+/** A Rectangle's, an Ellipse's, a Polygon's or a Cloud's fill, null for none; undefined for a mark that takes none. */
 export const fillOf = (mark: Mark): string | null | undefined =>
-  mark.kind === 'rectangle' || mark.kind === 'ellipse' ? (mark.fill ?? null) : undefined;
+  mark.kind === 'rectangle' ||
+  mark.kind === 'ellipse' ||
+  mark.kind === 'polygon' ||
+  mark.kind === 'cloud'
+    ? (mark.fill ?? null)
+    : undefined;
 
 /** A Text's or a Callout's size; undefined for any other mark. */
 export const sizeOf = (mark: Mark): number | undefined =>

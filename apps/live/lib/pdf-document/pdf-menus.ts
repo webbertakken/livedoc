@@ -91,6 +91,9 @@ export const TOOL_LINE = 'shape-line';
 export const TOOL_ARROW = 'shape-arrow';
 export const TOOL_RECTANGLE = 'shape-rectangle';
 export const TOOL_ELLIPSE = 'shape-ellipse';
+export const TOOL_POLYGON = 'shape-polygon';
+export const TOOL_CLOUD = 'shape-cloud';
+export const TOOL_CONNECTED_LINES = 'shape-connected-lines';
 export const TOOL_TICK = 'tool-tick';
 export const INSERT_COMMENT = 'insert-comment';
 export const INSERT_TEXT_BOX = 'insert-text-box';
@@ -348,9 +351,17 @@ export const PDF_MENUS: OfficeCatalogue = [
         ...BUILT,
         keywords: ['circle', 'oval'],
       }),
-      item('shape-polygon', 'Polygon', 'participate'),
-      item('shape-cloud', 'Cloud', 'participate'),
-      item('shape-connected-lines', 'Connected lines', 'participate'),
+      item(TOOL_POLYGON, 'Polygon', 'participate', { ...ONE_OF, ...BUILT }),
+      item(TOOL_CLOUD, 'Cloud', 'participate', {
+        ...ONE_OF,
+        ...BUILT,
+        keywords: ['revision cloud'],
+      }),
+      item(TOOL_CONNECTED_LINES, 'Connected lines', 'participate', {
+        ...ONE_OF,
+        ...BUILT,
+        keywords: ['polyline'],
+      }),
     ]),
     submenu('stamp', 'Stamp', [
       item(STAMP_STANDARD, 'Standard stamps', 'participate', BUILT),

@@ -54,6 +54,13 @@ const stamp = Mark.stamp({
 })!;
 const custom = { ...stamp, id: 'c', stamp: 'my-own' };
 const highlight = Mark.highlight({ ...BASE, id: 'h', quads: [QUAD], text: 'x' })!;
+const polygon = Mark.poly('polygon', {
+  ...BASE,
+  id: 'g',
+  corners: [0, 0, 40, 0, 20, 30],
+  width: 2,
+})!;
+const polyline = Mark.poly('polyline', { ...BASE, id: 'p', corners: [0, 0, 40, 0], width: 2 })!;
 
 function withMarks() {
   const doc = PdfLiveChanges.load();
@@ -148,6 +155,10 @@ describe('a line style and a fill restyled', () => {
     expect(fillOf(box)).toBeNull();
     expect(fillOf({ ...box, fill: '#fdf1a9' })).toBe('#fdf1a9');
     expect(fillOf(line)).toBeUndefined();
+    expect(fillOf(polygon)).toBeNull();
+    expect(fillOf({ ...polygon, kind: 'cloud', fill: '#fdf1a9' })).toBe('#fdf1a9');
+    expect(fillOf(polyline)).toBeUndefined();
+    expect(lineStyleOf(polyline)).toBe('solid');
   });
 
   it('gives a style to the marks with a line alone, and Solid back as none', () => {
@@ -184,6 +195,17 @@ describe('a line end restyled', () => {
     expect(lineEndOf({ ...line, kind: 'line' })).toBe('none');
     expect(lineEndOf({ ...line, lineEnd: 'bar' })).toBe('bar');
     expect(lineEndOf(highlight)).toBeUndefined();
+    expect(lineEndOf(polyline)).toBe('none');
+    expect(lineEndOf(polygon)).toBeUndefined();
+  });
+
+  it('gives Connected lines their last end, and None back as none', () => {
+    const { doc } = withMarks();
+    PdfLiveChanges.addMark(doc, polyline);
+    expect(restyleMarks(doc, ['p'], () => ({ lineEnd: 'open-arrow' }), T + 1)).toBe(1);
+    expect(PdfLiveChanges.mark(doc, 'p')).toMatchObject({ lineEnd: 'open-arrow' });
+    expect(restyleMarks(doc, ['p'], () => ({ lineEnd: 'none' }), T + 2)).toBe(1);
+    expect(PdfLiveChanges.mark(doc, 'p')).not.toHaveProperty('lineEnd');
   });
 
   it('gives an end to a Line or an Arrow alone, and the kind’s own back as none', () => {

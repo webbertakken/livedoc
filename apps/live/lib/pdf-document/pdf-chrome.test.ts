@@ -46,6 +46,9 @@ import {
   TOOL_CALLOUT,
   TOOL_DRAWING,
   TOOL_ELLIPSE,
+  TOOL_POLYGON,
+  TOOL_CLOUD,
+  TOOL_CONNECTED_LINES,
   TOOL_LINE,
   TOOL_RECTANGLE,
   TOOL_HIGHLIGHT,
@@ -149,6 +152,9 @@ describe("a PDF document's menus and toolbar", () => {
     TOOL_ARROW,
     TOOL_RECTANGLE,
     TOOL_ELLIPSE,
+    TOOL_POLYGON,
+    TOOL_CLOUD,
+    TOOL_CONNECTED_LINES,
     // usePdfStampTool.ts: Insert > Stamp's categories built (marks.md "Stamps").
     STAMP_STANDARD,
     STAMP_DYNAMIC,
@@ -291,7 +297,7 @@ describe("a PDF document's menus and toolbar", () => {
     expect(labels('editing')).not.toContain('Highlight');
   });
 
-  // keyboard-shortcuts.md "Tools": Select V, Highlight U, Drawing D, Text X, Stamp K; the modes' keys are a text document's.
+  // keyboard-shortcuts.md "Tools": Select V, Highlight U, Drawing D, Text X, Stamp K, Cloud Q; the modes' keys are a text document's.
   it('keeps the tools’ own keys and the modes’ shared ones', () => {
     expect(PDF_TOOL_KEYS).toEqual({
       select: 'v',
@@ -299,6 +305,7 @@ describe("a PDF document's menus and toolbar", () => {
       drawing: 'd',
       text: 'x',
       stamp: 'k',
+      cloud: 'q',
     });
     const keys = Object.fromEntries(PDF_SHORTCUTS.map((row) => [row.id, row.keys.pc]));
     expect(keys['switch-to-reviewing']).toBe('Ctrl+Alt+Shift+X');

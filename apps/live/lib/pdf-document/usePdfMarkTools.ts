@@ -49,13 +49,14 @@ import {
 import { DRAWING_WIDTH_PT } from './pdf-drawing';
 import { setMarkColour, useMarkLooks } from './pdf-mark-looks';
 import { SHAPE_NAMES, SHAPE_WIDTH_PT } from './pdf-shape';
-import { isShapeTool, setShapePick, SHAPE_CONTROL } from './pdf-shape-pick';
+import { isPolyTool, isShapeTool, setShapePick, SHAPE_CONTROL } from './pdf-shape-pick';
 import { TYPED_NAMES } from './pdf-typed';
 import { isTypedTool, setTypedPick, TYPED_CONTROL } from './pdf-typed-pick';
 import { TEXT_MARK_TOOLS, TOOL_COLOUR } from './pdf-toolbar';
 import type { PdfDocumentOpen } from './usePdfDocument';
 import { usePdfDrawing } from './usePdfDrawing';
 import type { PdfPageShaping } from './usePdfPageShape';
+import { usePdfPolyTool } from './usePdfPolyTool';
 import { usePdfShapes } from './usePdfShapes';
 import { usePdfToolLine } from './usePdfToolLine';
 import { usePdfStampTool } from './usePdfStampTool';
@@ -175,6 +176,14 @@ export function usePdfMarkTools({
     onProblem,
   });
   const { letGo } = typed;
+  const onShape = usePdfShapes({ ready, author, authorKey, looks, onProblem });
+  const polyKind = isPolyTool(inHand) ? inHand : null;
+  const polyLine = useMemo(() => {
+    const look = looks[polyKind ?? 'polygon'];
+    return { ...look, width: look.width ?? SHAPE_WIDTH_PT };
+  }, [looks, polyKind]);
+  const poly = usePdfPolyTool({ inHand: polyKind, line: polyLine, onShape, focusPages });
+  const letGoPoly = poly.letGo;
 
   /** One mark of a kind over a page's text: one step of the person's undo, made on that page. */
   const mark = useCallback(
@@ -207,12 +216,13 @@ export function usePdfMarkTools({
     (next: PdfPageTool) => {
       setTool(next);
       letGo();
+      letGoPoly();
       track('Pdf', 'Selected', `Tool.${toolName(next)}`);
       if (isShapeTool(next)) setShapePick(next);
       else if (isTypedTool(next)) setTypedPick(next);
       else if (isHeldTextMark(next)) setTextMarkPick(next);
     },
-    [letGo],
+    [letGo, letGoPoly],
   );
 
   /** A text tool chosen: the selection marked at once, the tool in hand left as it was; else the tool taken. */
@@ -246,13 +256,19 @@ export function usePdfMarkTools({
     [inHand, looks, draw, onStroke],
   );
 
-  const onShape = usePdfShapes({ ready, author, authorKey, looks, onProblem });
+  const polyShaping = poly.shaping;
   const shaping = useMemo<PdfPageShaping | null>(
     () =>
       isShapeTool(inHand)
-        ? { kind: inHand, ...looks[inHand], width: looks[inHand].width ?? SHAPE_WIDTH_PT, onShape }
+        ? {
+            kind: inHand,
+            ...looks[inHand],
+            width: looks[inHand].width ?? SHAPE_WIDTH_PT,
+            onShape,
+            ...(polyShaping ? { poly: polyShaping } : {}),
+          }
         : null,
-    [inHand, looks, onShape],
+    [inHand, looks, onShape, polyShaping],
   );
   const offered = { offered: ready !== null && marking, inHand, pickTool };
   const shapeTools = usePdfToolControl(SHAPE_CONTROL, offered);
@@ -360,8 +376,10 @@ export function usePdfMarkTools({
     [inHand, looks, focusPages, line.colours],
   );
 
-  /** The tools' own keys, outside a field: U, ⇧U, D, ⇧D, X, ⇧X, K, V and Escape; true where one was taken. */
+  /** The tools' own keys, outside a field: U, ⇧U, D, ⇧D, Q, X, ⇧X, K, V and Escape, and a corner tool's Enter,
+   *  Backspace and Escape while its shape is in the making; true where one was taken. */
   const onKey = (event: KeyboardEvent<HTMLElement>): boolean => {
+    if (poly.onKey(event)) return true;
     if (event.ctrlKey || event.metaKey || event.altKey) return false;
     const key = event.key.toLowerCase();
     if (key === PDF_TOOL_KEYS.highlight && marking)
@@ -373,6 +391,7 @@ export function usePdfMarkTools({
       if (event.shiftKey) typedTools.cycle();
       else pickTool(typedTools.pick);
     } else if (key === PDF_TOOL_KEYS.stamp && marking && !event.shiftKey) pickTool('stamp');
+    else if (key === PDF_TOOL_KEYS.cloud && marking && !event.shiftKey) pickTool('cloud');
     else if ((key === PDF_TOOL_KEYS.select || key === 'escape') && inHand !== 'select')
       pickTool('select');
     else return false;

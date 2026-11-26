@@ -22,6 +22,7 @@ import {
   type DrawingMark,
   type LineEnd,
   type LineMark,
+  type PolyMark,
   type ShapeMark,
   type StampMark,
   type Stroke,
@@ -127,7 +128,7 @@ function streamOf(
 }
 
 /** A line style other than Solid as the standard's dashed border, `BS` `S` `D` with `D` its pattern; a fill as `IC`. */
-function styleOf(annotation: PdfDict, mark: DrawingMark | LineMark | ShapeMark): void {
+function styleOf(annotation: PdfDict, mark: DrawingMark | LineMark | ShapeMark | PolyMark): void {
   if (mark.lineStyle)
     annotation.set(
       'BS',
@@ -270,6 +271,33 @@ function annotateDragged(
   return annotation;
 }
 
+/**
+ * A Polygon's or a Cloud's `Polygon`, Connected lines' `PolyLine` (marks.md "In the file"): its corners as
+ * `Vertices`, a Cloud's edge as `BE` `S` `C`, Connected lines' last end as `LE`; drawn as the page shows it, its
+ * `Rect` that drawing's box. LibPDF 0.5 has no helper for either, so the dictionary is written here.
+ */
+function annotatePoly(pdf: PDF, page: PDFPage, mark: PolyMark): PdfDict {
+  const appearance = appearanceOf(MarkDrawing.of(mark), mark);
+  const dict = PdfDict.of({
+    Type: PdfName.of('Annot'),
+    Subtype: PdfName.of(mark.kind === 'polyline' ? 'PolyLine' : 'Polygon'),
+    Rect: boxArray(appearance.box),
+    Vertices: new PdfArray(mark.corners.map((n) => PdfNumber.of(n))),
+    C: new PdfArray([1, 3, 5].map((at) => PdfNumber.of(channelOf(mark.colour, at)))),
+    F: PdfNumber.of(PRINT),
+    BS: PdfDict.of({ W: PdfNumber.of(mark.width) }),
+    AP: streamOf(pdf, appearance),
+  });
+  if (mark.kind === 'cloud') dict.set('BE', PdfDict.of({ S: PdfName.of('C'), I: PdfNumber.of(1) }));
+  if (mark.lineEnd)
+    dict.set('LE', new PdfArray([PdfName.of('None'), PdfName.of(FILE_ENDS[mark.lineEnd])]));
+  styleOf(dict, mark);
+  const list = page.dict.getArray('Annots');
+  if (list) list.push(pdf.register(dict));
+  else page.dict.set('Annots', PdfArray.of(pdf.register(dict)));
+  return dict;
+}
+
 /** Each line end as the standard's `LE` names it. */
 const FILE_ENDS = {
   none: 'None',
@@ -334,7 +362,9 @@ export function annotate(
       ? annotateStamp(pdf, page, mark, writing)
       : mark.kind === 'drawing'
         ? annotateDrawing(pdf, page, mark, color)
-        : annotateDragged(pdf, page, mark, color);
+        : Mark.isPoly(mark)
+          ? annotatePoly(pdf, page, mark)
+          : annotateDragged(pdf, page, mark, color);
   annotation.set('T', PdfString.fromString(mark.author));
   annotation.set('CA', PdfNumber.of(mark.opacity));
   return annotation;

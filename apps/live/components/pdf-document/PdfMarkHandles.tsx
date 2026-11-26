@@ -7,6 +7,7 @@
 import { useRef, useState, type PointerEvent } from 'react';
 import type {
   Box,
+  CornerHandle,
   Mark,
   MarkHandle,
   MarkPlace,
@@ -15,8 +16,8 @@ import type {
 } from '@livedoc/pdf-documents';
 import { dragHandle, handlePlaces } from '@/lib/pdf-document/pdf-mark-handles';
 
-/** Each handle's cursor, as the side or corner it sizes shows. */
-const CURSORS: Readonly<Record<MarkHandle, string>> = {
+/** Each handle's cursor, as the side or corner it sizes shows; a Polygon's, a Cloud's or Connected lines' corner moves. */
+const CURSORS: Readonly<Record<Exclude<MarkHandle, CornerHandle>, string>> = {
   nw: 'cursor-nwse-resize',
   se: 'cursor-nwse-resize',
   ne: 'cursor-nesw-resize',
@@ -30,6 +31,11 @@ const CURSORS: Readonly<Record<MarkHandle, string>> = {
   tip: 'cursor-move',
   knee: 'cursor-move',
 };
+
+const cursorOf = (handle: MarkHandle): string =>
+  handle.startsWith('corner-')
+    ? 'cursor-move'
+    : CURSORS[handle as Exclude<MarkHandle, CornerHandle>];
 
 export function PdfMarkHandles({
   mark,
@@ -70,7 +76,7 @@ export function PdfMarkHandles({
       key={handle}
       aria-hidden="true"
       data-pdf-mark-handle={handle}
-      className={`absolute flex size-chip -translate-x-1/2 -translate-y-1/2 touch-none items-center justify-center pointer-coarse:size-11 ${CURSORS[handle]}`}
+      className={`absolute flex size-chip -translate-x-1/2 -translate-y-1/2 touch-none items-center justify-center pointer-coarse:size-11 ${cursorOf(handle)}`}
       style={{ left: `${(at.x / width) * 100}%`, top: `${(at.y / height) * 100}%` }}
       onPointerDown={(event) => {
         event.stopPropagation();

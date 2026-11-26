@@ -6,6 +6,7 @@
 // (`Stamp`).
 import {
   PDF_DRAWING_MAX_POINTS,
+  PDF_POLYGON_MAX_CORNERS,
   PDF_MARK_MAX_QUADS,
   PDF_MARK_TEXT_MAX_CHARS,
   PDF_MARK_WIDTH_MAX_PT,
@@ -37,12 +38,15 @@ export type CalloutLine = readonly [number, number, number, number, number, numb
 export const TEXT_MARK_KINDS = ['highlight', 'underline', 'strikeout', 'squiggly'] as const;
 export const LINE_MARK_KINDS = ['line', 'arrow'] as const;
 export const SHAPE_MARK_KINDS = ['rectangle', 'ellipse'] as const;
+/** The kinds made a corner a press (marks.md "Making a mark"): Polygon, Cloud and Connected lines. */
+export const POLY_MARK_KINDS = ['polygon', 'cloud', 'polyline'] as const;
 export const TYPED_MARK_KINDS = ['text', 'callout'] as const;
 export const MARK_KINDS = [
   ...TEXT_MARK_KINDS,
   'drawing',
   ...LINE_MARK_KINDS,
   ...SHAPE_MARK_KINDS,
+  ...POLY_MARK_KINDS,
   ...TYPED_MARK_KINDS,
   'stamp',
 ] as const;
@@ -77,6 +81,8 @@ export type TextMarkKind = (typeof TEXT_MARK_KINDS)[number];
 export type LineMarkKind = (typeof LINE_MARK_KINDS)[number];
 /** The kinds made by a drag across a box. */
 export type ShapeMarkKind = (typeof SHAPE_MARK_KINDS)[number];
+/** The kinds made a corner a press. */
+export type PolyMarkKind = (typeof POLY_MARK_KINDS)[number];
 /** The kinds whose words are typed straight onto the page. */
 export type TypedMarkKind = (typeof TYPED_MARK_KINDS)[number];
 
@@ -144,6 +150,19 @@ export type ShapeMark = MarkBase &
     readonly width: number;
   };
 
+export type PolyMark = MarkBase &
+  Lined & {
+    readonly kind: PolyMarkKind;
+    /** Its corners in order, flat `x, y` pairs: a Polygon's and a Cloud's closed back to the first. */
+    readonly corners: Stroke;
+    /** The line's width in points. */
+    readonly width: number;
+    /** A Polygon's or a Cloud's fill, `#rrggbb`; absent for no fill, and on Connected lines. */
+    readonly fill?: string;
+    /** Connected lines' last end; absent for None, and on a Polygon or a Cloud. */
+    readonly lineEnd?: LineEnd;
+  };
+
 type TypedBase = MarkBase & {
   /** The box the words are set in. */
   readonly rect: Box;
@@ -175,7 +194,7 @@ export type StampMark = MarkBase & {
   readonly lines: readonly string[];
 };
 
-export type Mark = TextMark | DrawingMark | LineMark | ShapeMark | TypedMark | StampMark;
+export type Mark = TextMark | DrawingMark | LineMark | ShapeMark | PolyMark | TypedMark | StampMark;
 
 // A LiveDoc id, or a file mark's own: its `NM` as files name marks (a GUID in braces, dotted names) or `o:<object>`.
 const ID = /^[A-Za-z0-9_.:{}-]{1,64}$/;
@@ -233,6 +252,7 @@ export type HighlightInput = Omit<TextMark, 'kind' | 'modifiedAt'>;
 export type DrawingInput = Omit<DrawingMark, 'kind' | 'modifiedAt'>;
 export type LineInput = Omit<LineMark, 'kind' | 'modifiedAt'>;
 export type ShapeInput = Omit<ShapeMark, 'kind' | 'modifiedAt'>;
+export type PolyInput = Omit<PolyMark, 'kind' | 'modifiedAt'>;
 export type TextBoxInput = Omit<TextBoxMark, 'kind' | 'modifiedAt'>;
 export type CalloutInput = Omit<CalloutMark, 'kind' | 'modifiedAt'>;
 export type StampInput = Omit<StampMark, 'kind' | 'modifiedAt'>;
@@ -323,6 +343,29 @@ function shapeOf(base: MarkBase, v: Record<string, unknown>): ShapeMark | null {
   };
 }
 
+function polyOf(base: MarkBase, v: Record<string, unknown>): PolyMark | null {
+  const lined = lineStyleOf(v);
+  if (!isStroke(v.corners) || !isWidth(v.width) || !lined) return null;
+  const kind = v.kind as PolyMarkKind;
+  const count = v.corners.length / 2;
+  if (count < (kind === 'polyline' ? 2 : 3) || count > PDF_POLYGON_MAX_CORNERS) return null;
+  const { fill, lineEnd } = v;
+  const filled = fill !== undefined && fill !== null;
+  if (filled && (kind === 'polyline' || typeof fill !== 'string' || !COLOUR.test(fill)))
+    return null;
+  const ended = lineEnd !== undefined && lineEnd !== null && lineEnd !== 'none';
+  if (ended && (kind !== 'polyline' || !LINE_ENDS.includes(lineEnd as LineEnd))) return null;
+  return {
+    ...base,
+    kind,
+    corners: [...v.corners],
+    width: v.width,
+    ...lined,
+    ...(filled ? { fill } : {}),
+    ...(ended ? { lineEnd: lineEnd as LineEnd } : {}),
+  };
+}
+
 /** A Text's or a Callout's font: a family of the Font menu in its own spelling; anything else is none. */
 function fontOf(font: unknown): { font?: string } {
   const known = MarkFonts.of(font);
@@ -379,6 +422,9 @@ const KIND_OF: Readonly<
   arrow: lineOf,
   rectangle: shapeOf,
   ellipse: shapeOf,
+  polygon: polyOf,
+  cloud: polyOf,
+  polyline: polyOf,
   text: typedOf,
   callout: typedOf,
   stamp: stampOf,
@@ -389,6 +435,7 @@ function pointsAll(mark: Mark): readonly number[] {
   if (Mark.isText(mark)) return mark.quads.flat();
   if (mark.kind === 'drawing') return mark.strokes.flat();
   if ('line' in mark) return mark.line;
+  if ('corners' in mark) return mark.corners;
   return mark.kind === 'callout' ? [...mark.rect, ...mark.callout] : mark.rect;
 }
 
@@ -412,6 +459,10 @@ export const Mark = {
   shape: (kind: ShapeMarkKind, input: ShapeInput): ShapeMark | null =>
     Mark.parse({ ...input, kind, modifiedAt: input.createdAt }) as ShapeMark | null,
 
+  /** A Polygon, a Cloud or Connected lines through its corners, or null when what is given is no such mark. */
+  poly: (kind: PolyMarkKind, input: PolyInput): PolyMark | null =>
+    Mark.parse({ ...input, kind, modifiedAt: input.createdAt }) as PolyMark | null,
+
   /** A Text in a box, or null when what is given is no Text. */
   text: (input: TextBoxInput): TextBoxMark | null =>
     Mark.parse({ ...input, kind: 'text', modifiedAt: input.createdAt }) as TextBoxMark | null,
@@ -430,6 +481,10 @@ export const Mark = {
   /** Whether a mark is a Text or a Callout. */
   isTyped: (mark: Mark): mark is TypedMark =>
     (TYPED_MARK_KINDS as readonly MarkKind[]).includes(mark.kind),
+
+  /** Whether a mark is a Polygon, a Cloud or Connected lines. */
+  isPoly: (mark: Mark): mark is PolyMark =>
+    (POLY_MARK_KINDS as readonly MarkKind[]).includes(mark.kind),
 
   /** Whether a mark is one of the kinds made by selecting text. */
   isText: (mark: Mark): mark is TextMark =>
