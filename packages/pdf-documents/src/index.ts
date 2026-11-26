@@ -13,6 +13,7 @@ export {
   Mark,
   POLY_MARK_KINDS,
   SHAPE_MARK_KINDS,
+  STAMP_TURNS,
   TEXT_ALIGNS,
   TEXT_MARK_KINDS,
   TYPED_MARK_KINDS,
@@ -39,6 +40,7 @@ export {
   type ShapeMarkKind,
   type StampInput,
   type StampMark,
+  type StampTurnDegrees,
   type Stroke,
   type TextAlign,
   type TextBoxInput,
@@ -73,6 +75,7 @@ export {
 export { MarkWords, type WordLine } from './mark-words';
 export { STAMPS, Stamps, type Stamp, type StampTone } from './stamps';
 export { StampLayout, type StampLine } from './stamp-layout';
+export { StampTurn, type TurnWay } from './stamp-turn';
 export { HelveticaBold } from './helvetica-bold';
 export { TYPED_LINE_HEIGHT, TypedLayout, type PlacedLine, type TypedLine } from './typed-layout';
 export { Helvetica, HELVETICA_STAND_IN } from './helvetica';

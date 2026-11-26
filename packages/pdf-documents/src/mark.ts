@@ -206,10 +206,16 @@ export type CalloutMark = TypedBase & { readonly kind: 'callout'; readonly callo
 export type TypedMark = TextBoxMark | CalloutMark;
 
 /** A stamp: ready-made words in a box, placed by a press (marks.md "Stamps"). */
+/** A stamp's turn, anticlockwise, in degrees. */
+export const STAMP_TURNS = [90, 180, 270] as const;
+export type StampTurnDegrees = (typeof STAMP_TURNS)[number];
+
 export type StampMark = MarkBase & {
   readonly kind: 'stamp';
-  /** The box it is drawn in. */
+  /** The box it is drawn in, upright: before its turn. */
   readonly rect: Box;
+  /** Its quarter turns anticlockwise about its middle, as a file's `Rotate` (marks.md "Changing a mark"); absent upright. */
+  readonly turn?: StampTurnDegrees;
   /** Which stamp it is: a LiveDoc id (stamps.ts), any such id, so a stamp of a person's own fits too. */
   readonly stamp: string;
   /** Its words as drawn, fixed when placed: its name in capitals, and a dynamic stamp's who and when. */
@@ -436,6 +442,9 @@ function stampOf(base: MarkBase, v: Record<string, unknown>): StampMark | null {
     rect: [left, bottom, right, top],
     stamp: v.stamp,
     lines: [...(lines as string[])],
+    ...(STAMP_TURNS.includes(v.turn as StampTurnDegrees)
+      ? { turn: v.turn as StampTurnDegrees }
+      : {}),
   };
 }
 
@@ -466,7 +475,19 @@ function pointsAll(mark: Mark): readonly number[] {
   if (mark.kind === 'drawing') return mark.strokes.flat();
   if ('line' in mark) return mark.line;
   if ('corners' in mark) return mark.corners;
+  if (mark.kind === 'stamp') return shownBox(mark);
   return mark.kind === 'callout' ? [...mark.rect, ...mark.callout] : mark.rect;
+}
+
+/** A stamp's box as it shows: a quarter or three-quarter turn swaps its sides about its middle. */
+function shownBox({ rect, turn }: StampMark): Box {
+  if (turn !== 90 && turn !== 270) return rect;
+  const [left, bottom, right, top] = rect;
+  const x = (left + right) / 2;
+  const y = (bottom + top) / 2;
+  const halfWide = (top - bottom) / 2;
+  const halfHigh = (right - left) / 2;
+  return [x - halfWide, y - halfHigh, x + halfWide, y + halfHigh];
 }
 
 export const Mark = {
@@ -544,6 +565,9 @@ export const Mark = {
   },
 
   /** The smallest upright rectangle holding all of the mark: `[left, bottom, right, top]` in page space. */
+  /** A stamp's box as it shows, its turn taken (marks.md "Changing a mark"). */
+  shownBox,
+
   bounds: (mark: Mark): readonly [number, number, number, number] => {
     const flat = pointsAll(mark);
     const xs = flat.filter((_, at) => at % 2 === 0);

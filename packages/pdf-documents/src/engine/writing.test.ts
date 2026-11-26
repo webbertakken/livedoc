@@ -524,6 +524,43 @@ describe('writing a stamp', () => {
     expect(greenIn(drawn, [100, 300, 260, 340])).toBeGreaterThan(200);
     expect(greenIn(drawn, [100, 200, 260, 290])).toBe(0);
   });
+
+  // marks.md "A stamp's quarter turns": drawn upright, turned by its appearance's Matrix, `Rotate` its turn, `Rect` the
+  // box as it shows; read back turned, its upright box found again; drawn where it shows.
+  it('writes a turned stamp with Rotate and its appearance turned, and reads it back turned', async ({
+    skip,
+  }) => {
+    const pages = opened(await engine.open(stored));
+    const page = pages[0]!.name;
+    const turned = Mark.stamp({
+      page,
+      colour: green,
+      opacity: 1,
+      author: 'Ada',
+      createdAt: at,
+      id: 'turned',
+      rect: [100, 300, 260, 340],
+      stamp: 'not-approved',
+      lines: ['NOT APPROVED'],
+      turn: 90,
+    })!;
+    const result = await bakeWith([PdfChange.addMark(turned)]);
+    const added = Buffer.from(result.bytes).subarray(stored.length).toString('latin1');
+    expect(added).toContain('/Rotate 90');
+    expect(added).toMatch(/\/Matrix \[0 1 -1 0 /);
+    expect(qpdfChecks(result.bytes, skip)).toContain('No syntax or stream encoding errors');
+    opened(await engine.open(result.bytes));
+    const [read] = await engine.fileMarks(0);
+    // Its Rect is the box as it shows: tall, about the same middle.
+    const [left, bottom, right, top] = read!.rect;
+    expect(top - bottom).toBeGreaterThan(right - left);
+    expect(read!.mark).toMatchObject({ kind: 'stamp', turn: 90 });
+    const rect = (read!.mark as typeof turned).rect;
+    [100, 300, 260, 340].forEach((n, i) => expect(rect[i]).toBeCloseTo(n, 2));
+    const drawn = (await engine.drawPage(0, 1))!;
+    expect(greenIn(drawn, [170, 250, 190, 390])).toBeGreaterThan(50);
+    expect(greenIn(drawn, [100, 300, 140, 340])).toBe(0);
+  });
 });
 
 describe('writing a deletion of the file’s own mark', () => {
