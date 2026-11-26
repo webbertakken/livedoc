@@ -131,7 +131,8 @@ const EVERY_MODE: OfficeToolbar = [
 
 /** Highlight, holding Underline and Strikethrough behind its chevron: the last of them taken in hand ("The toolbar"). */
 export const TEXT_MARK_TOOLS = 'text-mark-tools';
-/** Shape, holding Line, Arrow, Rectangle and Ellipse behind its chevron: the last of them taken in hand. */
+/** Shape, holding Line, Arrow, Rectangle, Ellipse, Polygon, Cloud and Connected lines behind its chevron: the last of
+ *  them taken in hand. */
 export const SHAPE_TOOLS = 'shape-tools';
 /** Text, holding Text and Callout behind its chevron: the last of them taken in hand. */
 export const TYPED_TOOLS = 'typed-tools';

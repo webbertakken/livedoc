@@ -1,13 +1,12 @@
 'use client';
 
 // The lines and shapes of the shape tools made into marks (docs/specs/035-pdf-documents/marks.md "Making a mark"): each
-// drag let go is one step of the person's undo, in its kind's look; a press alone makes nothing.
+// drag let go, and each corner tool's shape ended, is one step of the person's undo, in its kind's look; a press alone makes nothing.
 import { useCallback } from 'react';
-import type { BoxShape, LineShape } from '@livedoc/pdf-documents';
 import { debugLog } from '@/lib/debug-log';
 import { track } from '@/lib/telemetry';
 import type { MarkLooks } from './pdf-mark-looks';
-import { addShape, SHAPE_NAMES } from './pdf-shape';
+import { addShape, SHAPE_NAMES, type ToolShape } from './pdf-shape';
 import { TOO_MANY_MARKS_COPY } from './pdf-surface-copy';
 import type { PdfDocumentOpen } from './usePdfDocument';
 
@@ -32,7 +31,7 @@ export function usePdfShapes({
   onProblem: (problem: string | null) => void;
 }) {
   return useCallback(
-    (index: number, shape: LineShape | BoxShape | null) => {
+    (index: number, shape: ToolShape | null) => {
       const page = ready?.pages[index];
       if (!ready || !page) return;
       const made = ready.undo.step({ page: page.name }, () =>

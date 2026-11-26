@@ -172,6 +172,7 @@ export const PDF_TOOL_KEYS = {
   drawing: 'd',
   text: 'x',
   stamp: 'k',
+  cloud: 'q',
 } as const;
 
 /** The pages' own plain keys (keyboard-shortcuts.md "Reading"), by `KeyboardEvent.key`. */

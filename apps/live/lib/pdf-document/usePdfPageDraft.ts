@@ -1,13 +1,14 @@
 'use client';
 
 // What a page draws by pointer with a mark tool in hand that is not a text tool (docs/specs/035-pdf-documents/marks.md
-// "Making a mark"): the Drawing's strokes and the shape tools' lines and shapes, each shown as it is drawn, in its
+// "Making a mark"): the Drawing's strokes, the shape tools' lines and shapes and the corner tools' corners, each shown as it is drawn, in its
 // tool's look, and handed over once let go; and the Stamp tool's press ("Stamps").
 import type { PointerEvent } from 'react';
 import type { Box, BoxShape, LineShape, MarkShape, PagePoint } from '@livedoc/pdf-documents';
 import type { PdfPageInk } from './usePdfMarkTools';
 import { screenBoxOf } from './pdf-shape';
 import { usePdfPageInk } from './usePdfPageInk';
+import { usePdfPagePoly } from './usePdfPagePoly';
 import { usePdfPageShape, type PdfPageShaping } from './usePdfPageShape';
 import { usePdfPageStamp } from './usePdfPageStamp';
 import type { PdfPageStamping } from './usePdfStampTool';
@@ -54,7 +55,9 @@ export function usePdfPageDraft({
     pointAt,
     screenBox: () => screenBoxOf(box),
   });
+  const poly = usePdfPagePoly({ index, shaping, pointAt });
   const stamp = usePdfPageStamp({ index, stamping, pointAt, pageBox });
+  const drawn = shape.draft ?? poly.draft;
   const draft: PdfPageDraft | null =
     ink && inking.stroke.length > 0
       ? {
@@ -67,22 +70,25 @@ export function usePdfPageDraft({
           colour: ink.colour,
           opacity: ink.opacity,
         }
-      : shaping && shape.draft
+      : shaping && drawn
         ? {
-            shape: draftLook(shape.draft, shaping),
+            shape: 'corners' in drawn ? drawn : draftLook(drawn, shaping),
             colour: shaping.colour,
             opacity: shaping.opacity,
           }
         : null;
   return {
     draft,
-    // Whether a press on the page is the Drawing's, a shape tool's or the Stamp tool's.
-    active: inking.active || shape.active || stamp.active,
+    // Whether a press on the page is the Drawing's, a shape or corner tool's or the Stamp tool's.
+    active: inking.active || shape.active || poly.active || stamp.active,
     // Each true where the pointer was the tool's.
     down: (event: PointerEvent<HTMLElement>) =>
-      inking.down(event) || shape.down(event) || stamp.down(event),
-    move: (event: PointerEvent<HTMLElement>) => inking.move(event) || shape.move(event),
+      inking.down(event) || shape.down(event) || poly.down(event) || stamp.down(event),
+    move: (event: PointerEvent<HTMLElement>) =>
+      inking.move(event) || shape.move(event) || poly.move(event),
     up: (event: PointerEvent<HTMLElement>, made: boolean) =>
-      inking.up(event, made) || shape.up(event, made),
+      inking.up(event, made) || shape.up(event, made) || poly.active,
+    // Presses in a row: a double press ends a corner tool's shape; true where a corner tool is in hand.
+    presses: poly.presses,
   };
 }

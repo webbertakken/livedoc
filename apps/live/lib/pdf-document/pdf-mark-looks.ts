@@ -1,6 +1,6 @@
 // Each mark tool's look (docs/specs/035-pdf-documents/marks.md "Making a mark": The tool's look is remembered, A tool's
 // line), one person's, kept in their browser for every PDF: the colour chosen for a kind, and for a kind with a line
-// its width and line style, and for a Rectangle or an Ellipse its fill, each over the kind's first look. A stored value
+// its width and line style, and for a Rectangle, an Ellipse, a Polygon or a Cloud its fill, each over the kind's first look. A stored value
 // that is none of these, or a kind that has no such part, is passed over as if nothing were kept. A stamp's colour is
 // its own (marks.md "Stamps"), so a stamp has no look here.
 import { useSyncExternalStore } from 'react';
@@ -25,10 +25,19 @@ export type LookedKind = Exclude<MarkKind, 'stamp'>;
 export const LOOKED_KINDS = MARK_KINDS.filter((kind): kind is LookedKind => kind !== 'stamp');
 
 /** The kinds drawn with a line, whose tool keeps a width and a line style. */
-export const LINED_KINDS = ['drawing', 'line', 'arrow', 'rectangle', 'ellipse'] as const;
+export const LINED_KINDS = [
+  'drawing',
+  'line',
+  'arrow',
+  'rectangle',
+  'ellipse',
+  'polygon',
+  'cloud',
+  'polyline',
+] as const;
 export type LinedKind = (typeof LINED_KINDS)[number];
-/** The kinds with an inside, whose tool keeps a fill. */
-export const FILLED_KINDS = ['rectangle', 'ellipse'] as const;
+/** The kinds with an inside, whose tool keeps a fill: a Rectangle, an Ellipse, a Polygon and a Cloud. */
+export const FILLED_KINDS = ['rectangle', 'ellipse', 'polygon', 'cloud'] as const;
 export type FilledKind = (typeof FILLED_KINDS)[number];
 
 export const isLinedKind = (kind: string): kind is LinedKind =>
@@ -46,6 +55,9 @@ export const FIRST_LOOKS: MarkLooks = {
   arrow: { ...SHAPE_LOOK, width: SHAPE_WIDTH_PT },
   rectangle: { ...SHAPE_LOOK, width: SHAPE_WIDTH_PT },
   ellipse: { ...SHAPE_LOOK, width: SHAPE_WIDTH_PT },
+  polygon: { ...SHAPE_LOOK, width: SHAPE_WIDTH_PT },
+  cloud: { ...SHAPE_LOOK, width: SHAPE_WIDTH_PT },
+  polyline: { ...SHAPE_LOOK, width: SHAPE_WIDTH_PT },
   text: TYPED_LOOK,
   callout: TYPED_LOOK,
 };

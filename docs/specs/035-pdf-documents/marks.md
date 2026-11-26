@@ -101,7 +101,8 @@ written into the file as a standard annotation, so any reader shows it. The rese
 - **A Polygon, a Cloud and Connected lines** are made a corner a press, with the tool in hand: the shape so far shows
   in the tool's look, with a line on from its last corner to the pointer. A double press or Enter ends it, its last
   press a corner; a press on its first corner closes a Polygon or a Cloud there; Backspace takes the last corner back;
-  Escape, another tool or a press on another page lets it go, making nothing `(default)`.
+  Escape, another tool or a press on another page lets it go, making nothing; the tool stays in hand after Escape,
+  and a second Escape takes Select `(default)`.
 - A Polygon or a Cloud of fewer than 3 corners, or Connected lines of fewer than 2, makes no mark; a press within
   `PDF_SHAPE_MIN_PT` of the last corner adds none; the `PDF_POLYGON_MAX_CORNERS`th corner ends the shape
   `(default)`. Each is one step of undo, made when it ends.
@@ -559,7 +560,9 @@ Gated on the session's `can` (`pdfReviews`), and checked by the room.
   `[pdf] marks-read count=<n> unknown=<n>` (per open), `[pdf] drawing-joined strokes=<n>` (a stroke joined to a
   Drawing), `[pdf] typing-dropped kind=<kind>` (a Note, Text or Callout ended with nothing typed),
   `[pdf] marks-hidden count=<n>` (the file's own marks the pages are drawn without, each time they change),
-  `[pdf] marks-hidden-failed reason=<reason>` (the engine was not told).
+  `[pdf] marks-hidden-failed reason=<reason>` (the engine was not told), `[pdf] poly-ended kind=<kind> corners=<n>`
+  (a Polygon, a Cloud or Connected lines ended, before it is made), `[pdf] poly-let-go kind=<kind>` (one let go by
+  Escape).
 
 ## Errors
 

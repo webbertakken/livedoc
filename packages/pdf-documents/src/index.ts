@@ -10,6 +10,7 @@ export {
   LINE_STYLES,
   MARK_KINDS,
   Mark,
+  POLY_MARK_KINDS,
   SHAPE_MARK_KINDS,
   TEXT_ALIGNS,
   TEXT_MARK_KINDS,
@@ -27,6 +28,9 @@ export {
   type LineMarkKind,
   type LineStyle,
   type MarkKind,
+  type PolyInput,
+  type PolyMark,
+  type PolyMarkKind,
   type Quad,
   type Segment,
   type ShapeInput,
@@ -49,6 +53,7 @@ export {
   type LineShape,
   type MarkShape,
   type MarkStroke,
+  type PolyShape,
   type StampShape,
   type TypedShape,
 } from './mark-drawing';
@@ -59,6 +64,7 @@ export {
   BOX_HANDLES,
   MarkReshape,
   type BoxHandle,
+  type CornerHandle,
   type MarkHandle,
   type PointHandle,
 } from './mark-reshape';
