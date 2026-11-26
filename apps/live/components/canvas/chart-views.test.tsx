@@ -99,6 +99,34 @@ describe('chart views', () => {
     expect(container.textContent).toContain('Opus · Index: 60');
   });
 
+  it('draws a Combo chart’s columns, then its areas’ and lines’ marks, and reads a hovered column (Combo, D286)', () => {
+    const { container } = render(
+      <LineChartView
+        element={el('line-chart', {
+          chartVariant: 'combo',
+          chartValues: true,
+          lineCategories: ['Q1', 'Q2'],
+          lineSeries: [
+            { name: 'Revenue', values: [40, 50], color: '#aa3300' },
+            { name: 'Visits', values: [10, 20], type: 'area' },
+            { name: 'Margin', values: [12, null], color: '#0033aa' },
+          ],
+        })}
+        textColor="#000"
+      />,
+    );
+    const columns = container.querySelectorAll('rect[fill="#aa3300"]');
+    expect(columns).toHaveLength(2);
+    expect(container.querySelector('path[fill-opacity]')).not.toBeNull();
+    expect(container.querySelector('path[stroke="#0033aa"]')).toBeNull();
+    // Its one point, and its key's line through a dot.
+    expect(container.querySelectorAll('circle[fill="#0033aa"]')).toHaveLength(2);
+    const texts = [...container.querySelectorAll('text')].map((t) => t.textContent);
+    for (const t of ['40', '50', '12']) expect(texts).toContain(t);
+    fireEvent.pointerEnter(columns[1]!);
+    expect(container.textContent).toContain('Q2 · Revenue');
+  });
+
   it('draws a smooth line chart’s lines as curves (Smooth Line, D284)', () => {
     const { container } = render(
       <LineChartView element={el('line-chart', { chartSmooth: true })} textColor="#000" />,

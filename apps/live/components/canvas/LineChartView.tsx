@@ -1,6 +1,6 @@
 'use client';
 
-// Line, Area and Scatter charts (docs/specs/009-elements/pie-chart.md "Chart types"): a 2-D chart — shared x-axis `lineCategories` and one or
+// Line, Area, Scatter and Combo charts (docs/specs/009-elements/pie-chart.md "Chart types"): a 2-D chart — shared x-axis `lineCategories` and one or
 // more named `lineSeries`, each drawn as a polyline with point markers in the
 // theme palette, with an optional legend listing the series. Data is edited as
 // a grid (or imported from CSV) via the Data menu. Reuses the chart-family
@@ -21,6 +21,11 @@ import {
   chartValue,
   chartTypeOf,
   chartStackOf,
+  comboKeyItems,
+  comboMarkAt,
+  comboMarks,
+  comboValueLabels,
+  isComboChart,
   type ShapeElement,
 } from '@livedoc/document';
 import { useChartAnim, chartFrame } from '@/lib/chart';
@@ -53,20 +58,34 @@ export function LineChartView({
       : LINE_DEFAULT_CATEGORIES;
   const series =
     element.lineSeries && element.lineSeries.length > 0 ? element.lineSeries : LINE_DEFAULT_SERIES;
+  // A Combo chart's series each as its own type (pie-chart.md "Combo"), on the line chart's axes.
+  const combo = isComboChart(element)
+    ? comboMarks(
+        area,
+        categories,
+        series,
+        0,
+        0,
+        element.chartAxis === true,
+        element.chartSmooth === true,
+      )
+    : null;
   // Line, Area or Scatter, laid out by the marks the export draws too.
-  const m = lineMarks(
-    area,
-    categories,
-    series,
-    lineVariantOf(element),
-    0,
-    0,
-    element.chartAxis === true,
-    // An area chart's stacking (pie-chart.md "Stacking").
-    chartStackOf({ ...element, lineSeries: series }),
-    // Smooth Line (pie-chart.md "Smooth Line").
-    element.chartSmooth === true,
-  );
+  const m =
+    combo ??
+    lineMarks(
+      area,
+      categories,
+      series,
+      lineVariantOf(element),
+      0,
+      0,
+      element.chartAxis === true,
+      // An area chart's stacking (pie-chart.md "Stacking").
+      chartStackOf({ ...element, lineSeries: series }),
+      // Smooth Line (pie-chart.md "Smooth Line").
+      element.chartSmooth === true,
+    );
   // The second axis's labels in its first series' colour.
   const right = Math.max(
     0,
@@ -74,7 +93,11 @@ export function LineChartView({
   );
   const { x: plotX0, y: plotY0, w: plotW, h: plotH } = m.plot;
   // Only a drawn point is hovered: no value draws none (pie-chart.md "No value is a gap").
-  const hovered = hover ? m.points[hover.s]?.[hover.i] : null;
+  const hovered = hover
+    ? combo
+      ? comboMarkAt(combo, hover.s, hover.i)
+      : m.points[hover.s]?.[hover.i]
+    : null;
   const hoveredValue = hover ? chartValue(series[hover.s]?.values[hover.i]) : null;
   // A named scatter point reads by its name, its value and its x, whatever series it is in (pie-chart.md "Scatter's
   // point names").
@@ -82,7 +105,7 @@ export function LineChartView({
     hover && chartTypeOf(element) === 'scatter' ? element.linePointNames?.[hover.i] : undefined;
 
   const group = useChartAnim(element, `${plotX0 + plotW / 2}px ${plotY0 + plotH / 2}px`);
-  const legendItems = lineKeyItems(series, lineVariantOf(element));
+  const legendItems = combo ? comboKeyItems(series) : lineKeyItems(series, lineVariantOf(element));
 
   return (
     <ChartSurface
@@ -134,11 +157,40 @@ export function LineChartView({
         strokeWidth={1}
       />
       <g className={group.className} style={group.style}>
+        {/* A Combo chart paints its areas, then its columns, then its lines over them. */}
+        {combo
+          ? series.map((s, si) =>
+              m.areas[si] ? (
+                <path
+                  key={`a${si}`}
+                  d={m.areas[si]}
+                  fill={colorAt(si, s)}
+                  fillOpacity={AREA_FILL_OPACITY}
+                />
+              ) : null,
+            )
+          : null}
+        {combo?.bars.map((bars, si) =>
+          bars.map((b, i) =>
+            b ? (
+              <rect
+                key={`b${si}-${i}`}
+                x={b.x}
+                y={b.y}
+                width={b.w}
+                height={b.h}
+                rx={b.rx}
+                fill={colorAt(si, series[si]!)}
+                {...markProps({ s: si, i })}
+              />
+            ) : null,
+          ),
+        )}
         {series.map((s, si) => {
           const color = colorAt(si, s);
           return (
             <g key={si}>
-              {m.areas[si] ? (
+              {m.areas[si] && !combo ? (
                 <path d={m.areas[si]} fill={color} fillOpacity={AREA_FILL_OPACITY} />
               ) : null}
               {m.lines[si] ? (
@@ -184,7 +236,11 @@ export function LineChartView({
       ))}
       {element.chartValues ? (
         <ChartValues
-          labels={lineValueLabels(m, series)}
+          labels={
+            combo
+              ? comboValueLabels(combo, series, chartValueFontPx(element.textSize))
+              : lineValueLabels(m, series)
+          }
           textColor={textColor}
           fillOf={() => textColor}
           fontPx={chartValueFontPx(element.textSize)}

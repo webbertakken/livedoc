@@ -104,11 +104,17 @@ describe('a chart’s colours and series', () => {
     sheet.cells.set(cellKey(rows[3]!, cols[1]!), { input: { s: 'Planned' } });
     sheet.cells.set(cellKey(rows[3]!, cols[2]!), { input: { s: 'Actual' } });
     wb.updateSheet({ ...sheet });
-    const built = buildChartChange(wb, sheet.id, { op: 'chart', type: 'column', range: 'A4:C9' });
+    const built = buildChartChange(wb, sheet.id, { op: 'chart', type: 'pie', range: 'A4:C9' });
     if (!built.ok) throw new Error(built.message);
     expect(built.charts[0]!.palette).toBe('forest');
     expect(built.line).toBe(
-      'charted A4:C9 as a column chart at the cell right of it (a column chart shows one series, Planned; line and area charts show all 2)',
+      'charted A4:C9 as a pie chart at the cell right of it (a pie chart shows one series, Planned; column, bar, line and area charts show all 2)',
+    );
+    // A column chart draws every series (D281), in the vivid default, whose colours tell apart.
+    const columns = buildChartChange(wb, sheet.id, { op: 'chart', type: 'column', range: 'A4:C9' });
+    expect(columns.ok && columns.charts[0]!.palette).toBeUndefined();
+    expect(columns.ok && columns.line).toBe(
+      'charted A4:C9 as a column chart at the cell right of it',
     );
     const given = buildChartChange(wb, sheet.id, {
       op: 'chart',
@@ -145,6 +151,34 @@ describe('chart elements', () => {
     );
     expect(el).toMatchObject({ shape: 'pie-chart', chartSource: { sheetId: sheet.id } });
     expect(el!.chartPalette).toBeUndefined();
+  });
+
+  it('type a combo chart’s series and put one on the right axis, by name (Combo, D286)', () => {
+    const { wb, sheet } = book();
+    const { rows, cols } = sheet.layout;
+    ['Q', 'Visits', 'Rate'].forEach((s, c) =>
+      sheet.cells.set(cellKey(rows[0]!, cols[c]!), { input: { s } }),
+    );
+    wb.updateSheet({ ...sheet });
+    const built = buildChartChange(wb, sheet.id, {
+      op: 'chart',
+      type: 'combo',
+      range: 'A1:C3',
+      seriesTypes: { visits: 'area' },
+      rightAxis: ['RATE'],
+    });
+    if (!built.ok) throw new Error(built.message);
+    const [el] = sheetChartElements(
+      wb,
+      { x: 0, y: 0, width: 960, height: 560 },
+      sheet.id,
+      built.charts,
+    );
+    expect(el).toMatchObject({ shape: 'line-chart', chartVariant: 'combo' });
+    expect(el!.lineSeries!.map((s) => [s.name, s.type, s.axis])).toEqual([
+      ['Visits', 'area', undefined],
+      ['Rate', undefined, 'right'],
+    ]);
   });
 
   // sheet-store.md "Built for agents in a spreadsheet": the title options draw on a Plan chart too.

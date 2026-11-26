@@ -36,7 +36,7 @@ and two changing one chart resolve to the last write. Each change is one undo st
   of text beside two or more columns of numbers names its points, and the next column is its x
   ([Scatter's point names](../009-elements/pie-chart.md#chart-types)). Deleting rows or columns inside
   the range shrinks it; deleting all of it leaves the chart with no data, drawn as "No data".
-- **Type**: one of [Chart types](#chart-types) built: Column, Bar, Line, Area, Scatter, Pie and Doughnut. A Column
+- **Type**: one of [Chart types](#chart-types) built: Column, Bar, Line, Area, Scatter, Pie, Doughnut and Combo. A Column
   or Bar chart draws every series of its range side by side, as Google's does
   ([Several series](../009-elements/pie-chart.md#chart-types), D281).
 - **Stacking**: a Column, Bar or Area chart stacks its series, Standard or 100%, or none (Google's Setup › Stacking),
@@ -44,6 +44,9 @@ and two changing one chart resolve to the last write. Each change is one undo st
   D282). Another type keeps it unused.
 - **Smooth**: a Line chart draws its lines as curves through its points (Smooth Line, Google's Customise › Chart
   Style › Smooth; [Smooth Line](../009-elements/pie-chart.md#chart-types), D284). Another type keeps it unused.
+- **Series types**: a Combo chart draws each series as columns, a line or an area, by its column's id; a series with
+  none set takes Google's default, the first half columns and the rest lines ([Combo](../009-elements/pie-chart.md#chart-types),
+  D286). Another type keeps them unused.
 - **Look**: a palette ([Chart palettes](../009-elements/pie-chart.md#chart-palettes)); per series, by its column's id,
   a colour, a scatter series drawn as a line ([Lines set by an agent](../009-elements/pie-chart.md#lines-set-by-an-agent)),
   and the right-hand axis; the legend's place (top, right, bottom, left) or none; the values printed on the marks;
@@ -83,7 +86,8 @@ A side panel of two tabs:
 Built of the Chart Editor: it opens on a chart inserted, on its Edit Chart button and on a double click; Setup holds
 Chart Type (the built types), Stacking (None, Standard, 100%; on a Column, Bar or Area chart), Data Range (one range in A1, a typo refused "Type a range like A1:D20") and the Series,
 each a scatter's to draw as a line; Customise holds Chart Title, Horizontal and Vertical Axis Title, Legend, Palette,
-Value Axis, Data Labels, Smooth (on a Line chart), each series' colour (the one colour picker) and Alt Text. A control writes the chart at
+Value Axis, Data Labels, Smooth (on a Line or Combo chart), each series' colour (the one colour picker), on a Combo
+chart each series' Type (Column, Line, Area) and Axis (Left, Right), and Alt Text. A control writes the chart at
 once, one undo step; a text when it is left or Enter is pressed, Escape taking it back. A chart whose cells are gone
 shows "No data" there.
 

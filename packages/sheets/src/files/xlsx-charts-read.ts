@@ -23,6 +23,7 @@ import {
   type SheetChartLegend,
   type SheetChartStack,
   type SheetChartType,
+  type SheetComboSeriesType,
 } from '../objects/sheet-objects';
 import {
   fileChartSum,
@@ -103,13 +104,47 @@ const stackOf = (grouping: string | undefined, plain: string) =>
         ? ('percent' as const)
         : undefined;
 
-type Typed = { type: SheetChartType; group: XmlElement; stack?: SheetChartStack };
+// Each chart group of the plot and the type its series draw as (one group, the chart's; a Combo's, its series').
+type Typed = {
+  type: SheetChartType;
+  groups: { group: XmlElement; as: SheetChartType }[];
+  stack?: SheetChartStack;
+};
 
-// The chart group's type and stacking, or null for one not built (a stacked line, smooth, 3-D, combined).
+// The chart's type and stacking, or null for one not built (a stacked line, smooth, 3-D, another mix of groups).
 function typeOf(plot: XmlElement): Typed | null {
   const groups = childElements(plot).filter((e) => e.uri === C_NS && e.local.endsWith('Chart'));
+  if (groups.length > 1) return comboOf(groups);
   if (groups.length !== 1) return null;
-  const group = groups[0]!;
+  const one = groupType(groups[0]!);
+  return (
+    one && {
+      type: one.type,
+      groups: [{ group: groups[0]!, as: one.type }],
+      ...(one.stack ? { stack: one.stack } : {}),
+    }
+  );
+}
+
+// A plot of two or three groups, each a different one of clustered columns, a standard line and a standard area, on one
+// pair of axes, is a Combo chart (D287).
+const COMBO_GROUPS: readonly SheetChartType[] = ['column', 'line', 'area'];
+function comboOf(groups: readonly XmlElement[]): Typed | null {
+  const typed = groups.map((group) => ({ group, read: groupType(group) }));
+  const kinds = typed.map((t) => t.read?.type);
+  const axes = (g: XmlElement) => cs(g, 'axId').map(valOf).join(' ');
+  if (
+    groups.length > 3 ||
+    typed.some((t) => !t.read || t.read.stack || !COMBO_GROUPS.includes(t.read.type)) ||
+    new Set(kinds).size !== kinds.length ||
+    groups.some((g) => axes(g) !== axes(groups[0]!))
+  )
+    return null;
+  return { type: 'combo', groups: typed.map((t) => ({ group: t.group, as: t.read!.type })) };
+}
+
+// One chart group's type and stacking.
+function groupType(group: XmlElement): { type: SheetChartType; stack?: SheetChartStack } | null {
   const grouping = valOf(c(group, 'grouping'));
   switch (group.local) {
     case 'barChart':
@@ -122,19 +157,17 @@ function typeOf(plot: XmlElement): Typed | null {
           : valOf(c(group, 'barDir')) === 'bar'
             ? 'bar'
             : 'column';
-      return { type, group, ...(stack ? { stack } : {}) };
+      return { type, ...(stack ? { stack } : {}) };
     }
     case 'lineChart':
       if (grouping !== undefined && grouping !== 'standard') return null;
-      return { type: 'line', group };
+      return { type: 'line' };
     case 'scatterChart':
-      return /smooth/i.test(valOf(c(group, 'scatterStyle')) ?? '')
-        ? null
-        : { type: 'scatter', group };
+      return /smooth/i.test(valOf(c(group, 'scatterStyle')) ?? '') ? null : { type: 'scatter' };
     case 'pieChart':
-      return { type: 'pie', group };
+      return { type: 'pie' };
     case 'doughnutChart':
-      return { type: 'doughnut', group };
+      return { type: 'doughnut' };
     default:
       return null;
   }
@@ -192,19 +225,25 @@ export function readXlsxChartXml(xml: string, sheetName: string): Read | null {
   const plot = c(chart, 'plotArea');
   const typed = plot && typeOf(plot);
   if (!chart || !plot || !typed) return null;
-  const { type, group, stack } = typed;
+  const { type, groups, stack } = typed;
   const scatter = type === 'scatter';
+  // Every group's series, each with the type it draws as; a Combo's in their order across its groups.
+  const order = (ser: XmlElement) => Number(valOf(c(ser, 'order')) ?? 0);
+  const sers = groups.flatMap(({ group, as }) => cs(group, 'ser').map((ser) => ({ ser, as })));
+  if (type === 'combo') sers.sort((x, y) => order(x.ser) - order(y.ser));
   const own = (ref: string | null): FileRange | null => {
     const read = ref === null ? null : parseXlsxRef(ref);
     return read && read.sheet.toLowerCase() === sheetName.toLowerCase() ? read.range : null;
   };
   const series: FileChartSeries[] = [];
   let labels: FileRange | null | undefined;
-  // A line is smooth when every series says so, straight when none does (D285); any other smoothing is not built.
-  const smoothed = cs(group, 'ser').map((ser) => cs(ser, 'smooth').some(isOn));
-  const smooth = smoothed.some(Boolean);
-  if (smooth && (type !== 'line' || !smoothed.every(Boolean))) return null;
-  for (const ser of cs(group, 'ser')) {
+  // A line is smooth when every series says so, straight when none does (D285); another series smoothing is not built.
+  const smoothed = sers.map(({ ser, as }) => ({ as, on: cs(ser, 'smooth').some(isOn) }));
+  if (smoothed.some((x) => x.on && x.as !== 'line')) return null;
+  const lines = smoothed.filter((x) => x.as === 'line');
+  const smooth = lines.some((x) => x.on);
+  if (smooth && !lines.every((x) => x.on)) return null;
+  for (const { ser, as } of sers) {
     const values = own(refUnder(c(ser, scatter ? 'yVal' : 'val')));
     if (!values || values.c1 !== values.c2) return null;
     const tx = c(ser, 'tx');
@@ -221,7 +260,8 @@ export function readXlsxChartXml(xml: string, sheetName: string): Read | null {
       nameAt: nameRef ? { r: nameRef.r1, c: nameRef.c1 } : null,
       values,
       cached: [],
-      ...lookOf(type, ser),
+      ...lookOf(as, ser),
+      ...(type === 'combo' ? { type: as as SheetComboSeriesType } : {}),
     });
   }
   if (!isOneBlock(series, labels ?? null)) return null;
@@ -233,7 +273,11 @@ export function readXlsxChartXml(xml: string, sheetName: string): Read | null {
     : axes.find((x) => x.local === 'valAx');
   const categoryAxis = axes.find((x) => x !== valueAxis);
   const legend = c(chart, 'legend');
-  const dLbls = c(group, 'dLbls');
+  // Values on the marks when every group shows them.
+  const values = groups.every(({ group }) => {
+    const dLbls = c(group, 'dLbls');
+    return !!dLbls && isOn(c(dLbls, 'showVal'));
+  });
   const title = titleOf(c(c(chart, 'title'), 'tx'));
   const xTitle = titleOf(c(c(categoryAxis, 'title'), 'tx'));
   const yTitle = titleOf(c(c(valueAxis, 'title'), 'tx'));
@@ -246,7 +290,7 @@ export function readXlsxChartXml(xml: string, sheetName: string): Read | null {
     ...(xTitle ? { xTitle } : {}),
     ...(yTitle ? { yTitle } : {}),
     legend: legend ? (LEGENDS[valOf(c(legend, 'legendPos'))!] ?? 'right') : 'none',
-    values: !!dLbls && isOn(c(dLbls, 'showVal')),
+    values,
     axis: !(valueAxis && isOn(c(valueAxis, 'delete'))),
     labels: labels && !scatter ? { range: labels, cached: [] } : null,
     x: labels && scatter ? { range: labels, cached: [] } : null,

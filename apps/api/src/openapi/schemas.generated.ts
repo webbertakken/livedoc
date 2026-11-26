@@ -2861,7 +2861,8 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
       "horizontal",
       "area",
       "scatter",
-      "doughnut"
+      "doughnut",
+      "combo"
     ],
     "type": "string"
   },
@@ -10318,6 +10319,14 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
       "name": {
         "type": "string"
       },
+      "type": {
+        "enum": [
+          "column",
+          "line",
+          "area"
+        ],
+        "type": "string"
+      },
       "values": {
         "items": {
           "type": [
@@ -15206,6 +15215,9 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
       "right": {
         "const": true,
         "type": "boolean"
+      },
+      "type": {
+        "$ref": "#/components/schemas/SheetComboSeriesType"
       }
     },
     "type": "object"
@@ -15225,7 +15237,16 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
       "area",
       "scatter",
       "pie",
-      "doughnut"
+      "doughnut",
+      "combo"
+    ],
+    "type": "string"
+  },
+  "SheetComboSeriesType": {
+    "enum": [
+      "column",
+      "line",
+      "area"
     ],
     "type": "string"
   },

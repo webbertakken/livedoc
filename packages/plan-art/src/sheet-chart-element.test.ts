@@ -1,11 +1,12 @@
 // A spreadsheet's chart as the chart element LiveDoc's chart code draws (docs/specs/029-sheets/charts.md "The model"):
 // its type, look and titles carried over, its data read, each series' look by its column, and no data drawn as none.
 import { describe, expect, it } from 'vitest';
-import { CHART_STACKS, CHART_TYPES, chartTypeOf } from '@livedoc/document';
+import { CHART_STACKS, CHART_TYPES, COMBO_SERIES_TYPES, chartTypeOf } from '@livedoc/document';
 import {
   emptyChartTable,
   SHEET_CHART_STACKS,
   SHEET_CHART_TYPES,
+  SHEET_COMBO_SERIES_TYPES,
   type SheetChart,
   type SheetChartTable,
 } from '@livedoc/sheets';
@@ -40,6 +41,22 @@ describe('a spreadsheet chart as a chart element', () => {
   it('knows every chart type LiveDoc draws, by the same names', () => {
     expect([...SHEET_CHART_TYPES]).toEqual([...CHART_TYPES]);
     expect([...SHEET_CHART_STACKS]).toEqual([...CHART_STACKS]);
+    expect([...SHEET_COMBO_SERIES_TYPES]).toEqual([...COMBO_SERIES_TYPES]);
+  });
+
+  it('draws a Combo chart, each series typed by its column (Combo, D286)', () => {
+    const el = sheetChartElement(
+      chart({ type: 'combo', series: { c0001: { type: 'area' }, c0002: { right: true } } }),
+      's1',
+      { ...table, numbered: false, categories: ['a', 'b', 'c'] },
+      at,
+    );
+    expect(chartTypeOf(el)).toBe('combo');
+    expect(el.lineSeries!.map((s) => [s.name, s.type, s.axis])).toEqual([
+      ['Cost', undefined, undefined],
+      ['Index', 'area', undefined],
+      ['Pareto', undefined, 'right'],
+    ]);
   });
 
   it('draws a scatter of numbers against its first column, a series as a line by its column, gaps kept', () => {

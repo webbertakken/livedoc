@@ -27,6 +27,7 @@ import {
   SHEET_CHART_TEXT_MAX,
   type SheetChartLegend,
   type SheetChartType,
+  type SheetComboSeriesType,
 } from '../objects/sheet-objects';
 import { SheetLimits } from '../sheet-limits';
 import {
@@ -59,6 +60,9 @@ const CLASSES: Readonly<Record<string, SheetChartType>> = {
   circle: 'pie',
   ring: 'doughnut',
 };
+
+// The classes a Combo chart's series take (D287).
+const COMBO_CLASSES: readonly (string | undefined)[] = ['bar', 'line', 'area'];
 
 const LEGENDS: Readonly<Record<string, SheetChartLegend>> = {
   start: 'left',
@@ -211,13 +215,20 @@ export function readOdsChartDocument(root: XmlElement, sheetName: string): Read 
   const kind = chart && classOf(chart);
   if (!chart || !plot || !kind || !CLASSES[kind]) return null;
   const props = propsOf(stylesOf(root));
-  // A bar or area chart's stacking is read; a line chart's is not (D283).
-  const stacks = kind === 'bar' || kind === 'area';
-  // A line chart's cubic spline is its Smooth Line (D285).
-  if (unbuilt(plot, props, stacks, kind === 'line')) return null;
-  const smooth = kind === 'line' && props(plot, 'chart', 'interpolation') === 'cubic-spline';
+  // Each series' class, its own or the chart's: upright bars, lines and areas of two or more classes are a Combo chart
+  // (D287).
+  const classes = kids(plot, CHART, 'series').map((ser) => classOf(ser) ?? kind);
+  const combo =
+    new Set(classes).size > 1 && [kind, ...classes].every((k) => COMBO_CLASSES.includes(k));
+  // A bar or area chart's stacking is read; a line chart's and a Combo's are not (D283).
+  const stacks = !combo && (kind === 'bar' || kind === 'area');
+  // A line or Combo chart's cubic spline is its Smooth Line (D285).
+  const curves = combo || kind === 'line';
+  if (unbuilt(plot, props, stacks, curves)) return null;
+  const smooth = curves && props(plot, 'chart', 'interpolation') === 'cubic-spline';
   const vertical = props(plot, 'chart', 'vertical') === 'true';
-  const type: SheetChartType = kind === 'bar' && vertical ? 'bar' : CLASSES[kind];
+  if (combo && vertical) return null;
+  const type: SheetChartType = combo ? 'combo' : kind === 'bar' && vertical ? 'bar' : CLASSES[kind];
   const stack =
     stacks && props(plot, 'chart', 'percentage') === 'true'
       ? ('percent' as const)
@@ -249,7 +260,9 @@ export function readOdsChartDocument(root: XmlElement, sheetName: string): Read 
   let x: FileRange | null = null;
   for (const [i, ser] of kids(plot, CHART, 'series').entries()) {
     const own_ = classOf(ser);
-    if (own_ !== undefined && own_ !== kind && !(kind === 'ring' && own_ === 'circle')) return null;
+    if (!combo && own_ !== undefined && own_ !== kind && !(kind === 'ring' && own_ === 'circle'))
+      return null;
+    const as = combo ? CLASSES[classes[i]!]! : type;
     const axis = attributeOf(ser, CHART, 'attached-axis');
     if ((axis && axis !== 'primary-y') || unbuilt(ser, props)) return null;
     const values = own(attributeOf(ser, CHART, 'values-cell-range-address'));
@@ -270,7 +283,8 @@ export function readOdsChartDocument(root: XmlElement, sheetName: string): Read 
       nameAt: name ? { r: name.r1, c: name.c1 } : null,
       values,
       cached: [],
-      ...lookOf(type, ser, props),
+      ...lookOf(as, ser, props),
+      ...(combo ? { type: as as SheetComboSeriesType } : {}),
     });
   }
   if (scatter && !x) return null;

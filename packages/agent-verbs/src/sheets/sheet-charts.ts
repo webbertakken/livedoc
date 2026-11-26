@@ -12,6 +12,8 @@ import {
   createShape,
   type ChartPaletteId,
   type ChartType,
+  type ComboSeriesType,
+  type LineSeries,
   type ShapeElement,
 } from '@livedoc/document';
 import {
@@ -54,6 +56,9 @@ export type SheetChartOut = {
   palette?: ChartPaletteId;
   // A scatter chart's series drawn as lines, by name (pie-chart.md "Lines set by an agent").
   lines?: string[];
+  // A Combo chart's series types, and the series on the right-hand axis, by name (pie-chart.md "Combo").
+  seriesTypes?: Record<string, ComboSeriesType>;
+  rightAxis?: string[];
   // The cell it sits on (row, column), and its titles and the rest of its look (charts.md "The model").
   cell: [number, number];
   look?: SheetChartLook;
@@ -138,15 +143,19 @@ export type SheetChartChange = SheetChartLook & {
   height?: number;
   palette?: ChartPaletteId;
   lines?: string[];
+  seriesTypes?: Record<string, ComboSeriesType>;
+  rightAxis?: string[];
 };
 
-// The chart types that draw one series, the first (sheet.md "Charts"); line, area and scatter draw them all.
-const ONE_SERIES_TYPES: readonly ChartType[] = ['column', 'bar', 'pie', 'doughnut'];
+// The chart types that draw one series, the first (sheet.md "Charts"); the others draw them all (D281).
+const ONE_SERIES_TYPES: readonly ChartType[] = ['pie', 'doughnut'];
+// The types a series may sit on the right-hand axis of.
+const RIGHT_AXIS_TYPES: readonly ChartType[] = ['line', 'area', 'combo'];
 
 // What a chart of a one-series type shows of several value columns, said in its answer.
 export function seriesNote(type: ChartType, values: readonly string[]): string {
   if (!ONE_SERIES_TYPES.includes(type) || values.length < 2) return '';
-  return ` (${withArticle(type)} chart shows one series, ${values[0]}; line and area charts show all ${values.length})`;
+  return ` (${withArticle(type)} chart shows one series, ${values[0]}; column, bar, line and area charts show all ${values.length})`;
 }
 
 // The palette in the family of a table's header fill (a design's accent, light or dark canvas), or undefined when the
@@ -293,6 +302,8 @@ export function buildChartChange(
   }
   const lines = linesOf(wb, sheetId, change, { range: ids, cols: picked });
   if (!Array.isArray(lines)) return lines;
+  const typed = seriesLooksOf(wb, sheetId, change, { range: ids, cols: picked });
+  if ('ok' in typed) return typed;
   const look = lookOf(change);
   if (look && 'ok' in look) return look;
   const sheet = wb.sheet(sheetId)!;
@@ -321,6 +332,7 @@ export function buildChartChange(
         height: sized(change.height, SHEET_CHART_SIZE.height, CHART_MIN.height),
         ...(palette ? { palette } : {}),
         ...(lines.length ? { lines } : {}),
+        ...typed,
         cell: at,
         ...(look ? { look } : {}),
       },
@@ -344,23 +356,76 @@ function linesOf(
       'write_invalid',
       `lines draw on a scatter chart; ${withArticle(change.type)} chart draws ${change.type === 'line' || change.type === 'area' ? 'every series as a line already' : 'no lines'}.`,
     );
+  const unknown = unknownSeries(wb, sheetId, change, read, change.lines);
+  return unknown ?? change.lines;
+}
+
+// The refusal for the first of `named` that is no series the chart reads (a scatter's numbered first column is its x,
+// no series), or null.
+function unknownSeries(
+  wb: Workbook,
+  sheetId: string,
+  change: SheetChartChange,
+  read: { range: IdRange; cols: readonly string[] },
+  named: readonly string[],
+): SheetRefusal | null {
   // The range was just checked against this workbook, so it reads.
   const table = sheetChartTable(
     wb,
     { sheetId, range: read.range, ...(read.cols.length ? { cols: [...read.cols] } : {}) },
     wb.locale,
   )!;
-  const names = lineFieldsFromTable(
-    { shape: 'line-chart', chartVariant: 'scatter' },
-    table,
-  ).lineSeries.map((s) => s.name);
-  const unknown = change.lines.find((l) => !names.some((n) => sameName(n, l)));
-  if (unknown !== undefined)
+  const names =
+    change.type === 'scatter'
+      ? lineFieldsFromTable({ shape: 'line-chart', chartVariant: 'scatter' }, table).lineSeries.map(
+          (s) => s.name,
+        )
+      : table.series.map((s) => s.name);
+  const unknown = named.find((l) => !names.some((n) => sameName(n, l)));
+  return unknown === undefined
+    ? null
+    : refuse(
+        'write_invalid',
+        `"${unknown}" is no series of the chart. Its series: ${names.join(', ')}.`,
+      );
+}
+
+// A Combo chart's series types and the series on the right-hand axis (pie-chart.md "Combo"), checked against the chart's
+// type and series, or the refusal.
+function seriesLooksOf(
+  wb: Workbook,
+  sheetId: string,
+  change: SheetChartChange,
+  read: { range: IdRange; cols: readonly string[] },
+): Pick<SheetChartOut, 'seriesTypes' | 'rightAxis'> | SheetRefusal {
+  const types = Object.keys(change.seriesTypes ?? {});
+  const right = change.rightAxis ?? [];
+  if (types.length && change.type !== 'combo')
     return refuse(
       'write_invalid',
-      `"${unknown}" is no series of the chart. Its series: ${names.join(', ')}.`,
+      `seriesTypes type a combo chart's series; ${withArticle(change.type)} chart draws each as its own type.`,
     );
-  return change.lines;
+  if (right.length && !RIGHT_AXIS_TYPES.includes(change.type))
+    return refuse(
+      'write_invalid',
+      `rightAxis puts a line, area or combo chart's series on a second axis; ${withArticle(change.type)} chart has one.`,
+    );
+  const unknown = unknownSeries(wb, sheetId, change, read, [...types, ...right]);
+  if (unknown) return unknown;
+  return {
+    ...(types.length ? { seriesTypes: change.seriesTypes! } : {}),
+    ...(right.length ? { rightAxis: right } : {}),
+  };
+}
+
+// A series' type and axis an agent gave, by its name.
+export function namedLook(
+  out: Pick<SheetChartOut, 'seriesTypes' | 'rightAxis'>,
+  name: string,
+): { type?: ComboSeriesType; right?: true } {
+  const type = Object.entries(out.seriesTypes ?? {}).find(([n]) => sameName(n, name))?.[1];
+  const right = out.rightAxis?.some((n) => sameName(n, name));
+  return { ...(type ? { type } : {}), ...(right ? { right: true as const } : {}) };
 }
 
 // The chart elements, linked to their Sheet's sheet and anchored in it, each with its first read from `wb`, their
@@ -391,12 +456,19 @@ export function sheetChartElements(
     return {
       ...base,
       ...fields,
-      // The series drawn as lines, marked by name (pie-chart.md "Lines set by an agent").
-      ...('lineSeries' in fields && fields.lineSeries && lines.length
+      // The series drawn as lines, a Combo's types and the right-hand axis, marked by name (pie-chart.md "Lines set by
+      // an agent", "Combo").
+      ...('lineSeries' in fields && fields.lineSeries
         ? {
-            lineSeries: fields.lineSeries.map((s) =>
-              lines.some((l) => sameName(l, s.name)) ? { ...s, line: true as const } : s,
-            ),
+            lineSeries: fields.lineSeries.map((s): LineSeries => {
+              const look = namedLook(ch, s.name);
+              return {
+                ...s,
+                ...(lines.some((l) => sameName(l, s.name)) ? { line: true as const } : {}),
+                ...(look.type ? { type: look.type } : {}),
+                ...(look.right ? { axis: 'right' as const } : {}),
+              };
+            }),
           }
         : {}),
       x: Math.max(sheetEl.x, sheetEl.x + sheetEl.width - CANVAS_INSET_PX - ch.width),

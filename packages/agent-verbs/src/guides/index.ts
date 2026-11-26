@@ -344,6 +344,9 @@ A chart is the sheet's own, reading its range live, its top-left on the cell at 
 A scatter's first column of numbers is its x; lines draws those series as lines, by name.
 stack: "stacked" or "percent" stacks a column, bar or area chart's series (100% as shares);
 smooth: true curves a line chart's lines.
+type: "combo" draws each series as columns, a line or an area: seriesTypes {"Margin": "line"}
+(by default the first half columns, the rest lines); rightAxis: ["Margin"] puts series on a
+second scale (line, area and combo charts).
 read_sheet lists the charts with their ids; chart {..., replace: "<id>"} rewrites one in place,
 clear_charts {id: "<id>"} takes one off, clear_charts {} all. add_sheet {title, after} adds a sheet after another.
 

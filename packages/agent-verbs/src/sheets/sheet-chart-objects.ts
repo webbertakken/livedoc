@@ -17,12 +17,14 @@ import {
   type SheetChartSeriesLook,
   type SheetChartStack,
   type SheetChartType,
+  type SheetComboSeriesType,
+  sheetComboSeriesTypes,
   type SheetLayout,
   type SheetWrite,
   type Workbook,
 } from '@livedoc/sheets';
 import { columnLetters } from '@livedoc/sheets';
-import type { SheetChartOut } from './sheet-charts';
+import { namedLook, type SheetChartOut } from './sheet-charts';
 import type { SheetRefusal } from './sheet-state';
 
 const refuse = (code: string, message: string): SheetRefusal => ({ ok: false, code, message });
@@ -76,17 +78,24 @@ export function chartObjectSet(
   id: string,
 ): SheetWrite {
   const { layout } = wb.sheet(sheetId)!;
-  // The series drawn as lines, kept by their columns' ids so they follow a column moved or renamed.
-  const table = out.lines?.length
-    ? sheetChartTable(
-        wb,
-        { sheetId, range: out.range, ...(out.cols ? { cols: out.cols } : {}) },
-        wb.locale,
-      )
-    : null;
+  // The series drawn as lines, a Combo's types and the right-hand axis, kept by their columns' ids so they follow a column
+  // moved or renamed.
+  const table =
+    out.lines?.length || out.seriesTypes || out.rightAxis
+      ? sheetChartTable(
+          wb,
+          { sheetId, range: out.range, ...(out.cols ? { cols: out.cols } : {}) },
+          wb.locale,
+        )
+      : null;
   const series: Record<string, SheetChartSeriesLook> = {};
-  for (const s of table?.series ?? [])
-    if (out.lines!.some((name) => sameName(s.name, name))) series[s.col] = { line: true };
+  for (const s of table?.series ?? []) {
+    const look: SheetChartSeriesLook = {
+      ...(out.lines?.some((name) => sameName(s.name, name)) ? { line: true as const } : {}),
+      ...namedLook(out, s.name),
+    };
+    if (Object.keys(look).length) series[s.col] = look;
+  }
   const look = out.look ?? {};
   const [r, c] = out.cell;
   const object: SheetChart = {
@@ -169,6 +178,8 @@ export type ChartRead = {
   smooth?: true;
   alt?: string;
   lines?: string[];
+  seriesTypes?: Record<string, SheetComboSeriesType>;
+  rightAxis?: string[];
 };
 
 export function chartsRead(wb: Workbook, sheetId: string): ChartRead[] {
@@ -179,15 +190,22 @@ export function chartsRead(wb: Workbook, sheetId: string): ChartRead[] {
     const lineCols = Object.entries(x.series ?? {})
       .filter(([, look]) => look.line)
       .map(([col]) => col);
+    const combo = x.type === 'combo';
+    const right = Object.values(x.series ?? {}).some((look) => look.right);
     const table =
-      lineCols.length && x.range
+      (lineCols.length || combo || right) && x.range
         ? sheetChartTable(
             wb,
             { sheetId, range: x.range, ...(x.cols ? { cols: x.cols } : {}) },
             wb.locale,
           )
         : null;
-    const lines = (table?.series ?? []).filter((s) => lineCols.includes(s.col)).map((s) => s.name);
+    const read = table?.series ?? [];
+    const lines = read.filter((s) => lineCols.includes(s.col)).map((s) => s.name);
+    // A Combo chart's every series' type as it draws (its own, else the default's), and the series on the right.
+    const types = combo ? sheetComboSeriesTypes(read.map((s) => x.series?.[s.col])) : [];
+    const seriesTypes = Object.fromEntries(read.map((s, i) => [s.name, types[i]!]));
+    const rightAxis = read.filter((s) => x.series?.[s.col]?.right).map((s) => s.name);
     const columns = x.cols
       ?.map((id) => ix.colPos.get(id))
       .filter((c): c is number => c !== undefined)
@@ -211,6 +229,8 @@ export function chartsRead(wb: Workbook, sheetId: string): ChartRead[] {
       ...(x.smooth ? { smooth: true as const } : {}),
       ...(x.alt ? { alt: x.alt } : {}),
       ...(lines.length ? { lines } : {}),
+      ...(types.length ? { seriesTypes } : {}),
+      ...(rightAxis.length ? { rightAxis } : {}),
     };
   });
 }

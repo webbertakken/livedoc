@@ -1,7 +1,7 @@
 'use client';
 
 // The Chart Editor's Customise switches (docs/specs/029-sheets/charts.md "Chart Editor"): Value Axis, Data Labels, and
-// Smooth on a Line chart (pie-chart.md "Smooth Line"). Each writes the chart at once, one undo step.
+// Smooth on a Line or Combo chart (pie-chart.md "Smooth Line"). Each writes the chart at once, one undo step.
 import { Switch } from '@livedoc/ui';
 import type { SheetChart } from '@livedoc/sheets';
 
@@ -37,7 +37,7 @@ export function ChartLookSwitches({ chart, set }: { chart: SheetChart; set: Set 
         checked={chart.values === true}
         onChange={(on) => set('values', on ? true : undefined)}
       />
-      {chart.type === 'line' ? (
+      {chart.type === 'line' || chart.type === 'combo' ? (
         <LookSwitch
           label="Smooth"
           checked={chart.smooth === true}

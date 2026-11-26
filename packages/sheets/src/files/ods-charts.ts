@@ -27,7 +27,12 @@ const CHART_CLASS: Record<FileChart['type'], string> = {
   scatter: 'chart:scatter',
   pie: 'chart:circle',
   doughnut: 'chart:ring',
+  // A Combo chart is a bar chart whose series name their own classes (D287).
+  combo: 'chart:bar',
 };
+
+// A Combo series' own class (D287).
+const SERIES_CLASS = { column: 'chart:bar', line: 'chart:line', area: 'chart:area' } as const;
 
 /** A sheet name as an ODF address starts it: always quoted, a quote doubled. */
 const quoted = (name: string) => `'${name.replace(/'/g, "''")}'`;
@@ -81,7 +86,9 @@ const paragraph = (text: string) => `<text:p>${escapeXmlText(text)}</text:p>`;
 function seriesStyle(chart: FileChart, s: FileChartSeries, name: string): string | null {
   const chartProps: string[] = [];
   const graphic: string[] = [];
-  if (chart.type === 'line') chartProps.push('chart:symbol-type="none"');
+  // A Combo series looks as its own type does.
+  const type = chart.type === 'combo' ? (s.type ?? 'column') : chart.type;
+  if (type === 'line') chartProps.push('chart:symbol-type="none"');
   if (chart.type === 'scatter') {
     chartProps.push('chart:symbol-type="automatic"');
     if (!s.line) graphic.push('draw:stroke="none"');
@@ -141,7 +148,9 @@ export function odsChartContent(
     const domain = chart.x
       ? `<chart:domain table:cell-range-address="${escapeXmlAttribute(odfRange(sheet, chart.x.range))}"/>`
       : '';
-    return `<chart:series chart:values-cell-range-address="${escapeXmlAttribute(odfRange(sheet, s.values))}"${label}${own}>${domain}</chart:series>`;
+    const ownClass =
+      chart.type === 'combo' && s.type ? ` chart:class="${SERIES_CLASS[s.type]}"` : '';
+    return `<chart:series${ownClass} chart:values-cell-range-address="${escapeXmlAttribute(odfRange(sheet, s.values))}"${label}${own}>${domain}</chart:series>`;
   });
   const categories = chart.labels
     ? `<chart:categories table:cell-range-address="${escapeXmlAttribute(odfRange(sheet, chart.labels.range))}"/>`

@@ -14,6 +14,7 @@ export const SHEET_CHART_TYPES = [
   'scatter',
   'pie',
   'doughnut',
+  'combo',
 ] as const;
 export type SheetChartType = (typeof SHEET_CHART_TYPES)[number];
 
@@ -28,8 +29,31 @@ export type SheetChartLegend = (typeof SHEET_CHART_LEGENDS)[number];
 // Where an object sits: the cell its top-left corner is in, by row and column ids, and the px into that cell (at 100%).
 export type CellAnchor = { r: string; c: string; dx: number; dy: number };
 
-// A series' own look, by its column's id: its colour, a scatter series drawn as a line, the right-hand axis.
-export type SheetChartSeriesLook = { color?: string; line?: true; right?: true };
+// A Combo chart's series types (charts.md "The model"), as @livedoc/document COMBO_SERIES_TYPES names them (a test
+// keeps them equal).
+export const SHEET_COMBO_SERIES_TYPES = ['column', 'line', 'area'] as const;
+export type SheetComboSeriesType = (typeof SHEET_COMBO_SERIES_TYPES)[number];
+
+// A series' own look, by its column's id: its colour, a scatter series drawn as a line, the right-hand axis, and its
+// type on a Combo chart.
+/**
+ * Each series' type on a Combo chart, from its columns' looks in series order: its own, else the default (pie-chart.md
+ * "Combo", D286), the first half, rounded up, columns and the rest lines. As @livedoc/document comboSeriesTypes (a test
+ * keeps them equal).
+ */
+export function sheetComboSeriesTypes(
+  looks: readonly (SheetChartSeriesLook | undefined)[],
+): SheetComboSeriesType[] {
+  const columns = Math.ceil(looks.length / 2);
+  return looks.map((look, i) => look?.type ?? (i < columns ? 'column' : 'line'));
+}
+
+export type SheetChartSeriesLook = {
+  color?: string;
+  line?: true;
+  right?: true;
+  type?: SheetComboSeriesType;
+};
 
 export type SheetChart = {
   id: string;
@@ -131,10 +155,11 @@ function isIdRange(x: unknown): x is IdRange {
 function isSeriesLook(x: unknown): x is SheetChartSeriesLook {
   return (
     isRecord(x) &&
-    onlyKeys(x, ['color', 'line', 'right']) &&
+    onlyKeys(x, ['color', 'line', 'right', 'type']) &&
     (x.color === undefined || (typeof x.color === 'string' && HEX.test(x.color))) &&
     (x.line === undefined || x.line === true) &&
-    (x.right === undefined || x.right === true)
+    (x.right === undefined || x.right === true) &&
+    (x.type === undefined || (SHEET_COMBO_SERIES_TYPES as readonly unknown[]).includes(x.type))
   );
 }
 

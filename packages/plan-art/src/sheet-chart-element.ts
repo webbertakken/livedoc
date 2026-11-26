@@ -77,6 +77,7 @@ export function sheetChartElement(
       ...(look?.color ? { color: look.color } : {}),
       ...(look?.right ? { axis: 'right' as const } : {}),
       ...(look?.line ? { line: true as const } : {}),
+      ...(look?.type ? { type: look.type } : {}),
     };
   });
   return {

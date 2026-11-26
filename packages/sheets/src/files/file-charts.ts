@@ -11,6 +11,8 @@ import {
   type SheetChartSeriesLook,
   type SheetChartStack,
   type SheetChartType,
+  type SheetComboSeriesType,
+  sheetComboSeriesTypes,
 } from '../objects/sheet-objects';
 import type { Sheet, SheetLayout } from '../sheet';
 
@@ -25,6 +27,8 @@ export type FileChartSeries = {
   cached: (number | null)[];
   color?: string;
   line?: true;
+  // Its type on a Combo chart, resolved (D287); never on another type.
+  type?: SheetComboSeriesType;
 };
 
 export type FileChart = {
@@ -32,7 +36,7 @@ export type FileChart = {
   type: SheetChartType;
   // A column, bar or area chart's stacking (charts.md "The model", D283); never on another type.
   stack?: SheetChartStack;
-  // A line chart's smoothing (D285); never on another type.
+  // A line or Combo chart's smoothing (D285); never on another type.
   smooth?: true;
   title?: string;
   xTitle?: string;
@@ -94,12 +98,15 @@ export function fileChartSum(chart: FileChart): string {
       ]),
       ...(chart.stack ? [chart.stack] : []),
       ...(chart.smooth ? ['smooth'] : []),
+      // A Combo chart's series types, after the rest (D287).
+      ...(chart.type === 'combo' ? [chart.series.map((s) => s.type ?? '')] : []),
     ]),
   );
 }
 
-// The types a file holds a stacking on (D283).
+// The types a file holds a stacking on (D283), and a smoothing on (D285, D287).
 const STACKED_TYPES: readonly SheetChartType[] = ['column', 'bar', 'area'];
+const SMOOTH_TYPES: readonly SheetChartType[] = ['line', 'combo'];
 
 const isColumn = (r: FileRange) => r.c1 === r.c2;
 const sameRows = (x: FileRange, y: FileRange) => x.r1 === y.r1 && x.r2 === y.r2;
@@ -142,6 +149,10 @@ function fileChartOf(engine: Workbook, sheet: Sheet, chart: SheetChart, locale: 
         )
       : null) ?? emptyChartTable();
   const { header, labels, rows, cols } = table.at;
+  const types =
+    chart.type === 'combo'
+      ? sheetComboSeriesTypes(table.series.map((s) => chart.series?.[s.col]))
+      : null;
   const all = table.series.map((s, i): FileChartSeries => {
     const look = chart.series?.[s.col];
     return {
@@ -151,6 +162,7 @@ function fileChartOf(engine: Workbook, sheet: Sheet, chart: SheetChart, locale: 
       cached: s.values,
       ...(look?.color ? { color: look.color } : {}),
       ...(look?.line ? { line: true as const } : {}),
+      ...(types ? { type: types[i]! } : {}),
     };
   });
   // A scatter's x is its label column's numbers, else its first column of numbers (charts.md "The model"); a label
@@ -172,7 +184,7 @@ function fileChartOf(engine: Workbook, sheet: Sheet, chart: SheetChart, locale: 
     id: chart.id,
     type: chart.type,
     ...(chart.stack && STACKED_TYPES.includes(chart.type) ? { stack: chart.stack } : {}),
-    ...(chart.smooth && chart.type === 'line' ? { smooth: true as const } : {}),
+    ...(chart.smooth && SMOOTH_TYPES.includes(chart.type) ? { smooth: true as const } : {}),
     ...(chart.title ? { title: chart.title } : {}),
     ...(chart.xTitle ? { xTitle: chart.xTitle } : {}),
     ...(chart.yTitle ? { yTitle: chart.yTitle } : {}),
@@ -224,13 +236,18 @@ function sheetChartOf(chart: FileChart, layout: SheetLayout, id: string): SheetC
   const [r1, r2, c1, c2] = [row(header ?? first.r1), row(last.r2), col(first.c1), col(last.c1)];
   if (!r1 || !r2 || !c1 || !c2 || ids.some((x) => x === undefined)) return null;
   const contiguous = columns.every((c, i) => c === columns[0]! + i);
+  // A Combo series keeps its type only where it is not the default's (D286).
+  const defaults = sheetComboSeriesTypes(chart.series.map(() => undefined));
   const series: Record<string, SheetChartSeriesLook> = {};
-  for (const s of chart.series)
-    if (s.color || s.line)
+  chart.series.forEach((s, i) => {
+    const type = s.type && s.type !== defaults[i] ? s.type : undefined;
+    if (s.color || s.line || type)
       series[col(s.values.c1)!] = {
         ...(s.color ? { color: s.color } : {}),
         ...(s.line ? { line: true as const } : {}),
+        ...(type ? { type } : {}),
       };
+  });
   return {
     id,
     kind: 'chart',

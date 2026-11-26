@@ -284,9 +284,34 @@ describe('what is not read (D275)', () => {
       'a stacked line',
       `<c:lineChart><c:grouping val="stacked"/>${ser(valRef('Q!$B$2:$B$4'))}</c:lineChart>`,
     ],
+    ['no chart group', ''],
     [
-      'a combined chart',
-      `<c:barChart>${ser(valRef('Q!$B$2:$B$4'))}</c:barChart><c:lineChart>${ser(valRef('Q!$C$2:$C$4'))}</c:lineChart>`,
+      'bars on their side beside a line',
+      `<c:barChart><c:barDir val="bar"/>${ser(valRef('Q!$B$2:$B$4'))}</c:barChart><c:lineChart>${ser(valRef('Q!$C$2:$C$4'))}</c:lineChart>`,
+    ],
+    [
+      'stacked columns beside a line',
+      `<c:barChart><c:grouping val="stacked"/>${ser(valRef('Q!$B$2:$B$4'))}</c:barChart><c:lineChart>${ser(valRef('Q!$C$2:$C$4'))}</c:lineChart>`,
+    ],
+    [
+      'two line groups',
+      `<c:lineChart>${ser(valRef('Q!$B$2:$B$4'))}</c:lineChart><c:lineChart>${ser(valRef('Q!$C$2:$C$4'))}</c:lineChart>`,
+    ],
+    [
+      'columns beside a scatter',
+      `<c:barChart>${ser(valRef('Q!$B$2:$B$4'))}</c:barChart><c:scatterChart>${ser('<c:yVal><c:numRef><c:f>Q!$C$2:$C$4</c:f></c:numRef></c:yVal>')}</c:scatterChart>`,
+    ],
+    [
+      'groups on axes of their own',
+      `<c:barChart>${ser(valRef('Q!$B$2:$B$4'))}<c:axId val="1"/><c:axId val="2"/></c:barChart><c:lineChart>${ser(valRef('Q!$C$2:$C$4'))}<c:axId val="3"/><c:axId val="4"/></c:lineChart>`,
+    ],
+    [
+      'four groups',
+      `<c:barChart>${ser(valRef('Q!$B$2:$B$4'))}</c:barChart><c:lineChart>${ser(valRef('Q!$C$2:$C$4'))}</c:lineChart><c:areaChart>${ser(valRef('Q!$D$2:$D$4'))}</c:areaChart><c:pieChart>${ser(valRef('Q!$E$2:$E$4'))}</c:pieChart>`,
+    ],
+    [
+      'a smooth area in a combo',
+      `<c:barChart>${ser(valRef('Q!$B$2:$B$4'))}</c:barChart><c:areaChart>${ser(`${valRef('Q!$C$2:$C$4')}<c:smooth val="1"/>`)}</c:areaChart>`,
     ],
     ['a 3-D chart', `<c:bar3DChart>${ser(valRef('Q!$B$2:$B$4'))}</c:bar3DChart>`],
     [
@@ -500,6 +525,62 @@ describe('a written chart, read', () => {
     expect(
       readXlsxChartXml(xlsxChartXml('Q', { ...chart, smooth: undefined }), 'Q')!.smooth,
     ).toBeUndefined();
+  });
+
+  it('writes a Combo chart as a group per series type on one pair of axes, and reads it back (D287)', () => {
+    const chart = {
+      ...base,
+      type: 'combo' as const,
+      values: true,
+      smooth: true as const,
+      labels: { range: cell(0), cached: ['a', 'b', 'c', 'd'] },
+      x: null,
+      series: (['column', 'area', 'line', 'column'] as const).map((type, i) => ({
+        name: 'S',
+        nameAt: { r: 0, c: i + 1 },
+        values: cell(i + 1),
+        cached: [],
+        type,
+        ...(i === 2 ? { color: '#aa0000' } : {}),
+      })),
+    };
+    const xml = xlsxChartXml('Q', chart);
+    // Areas, then columns, then lines, each group on the same two axes, the series' order across them.
+    expect(xml.indexOf('<c:areaChart>')).toBeLessThan(xml.indexOf('<c:barChart>'));
+    expect(xml.indexOf('<c:barChart>')).toBeLessThan(xml.indexOf('<c:lineChart>'));
+    // Three groups and the category axis itself.
+    expect(xml.match(/<c:axId val="500000001"\/>/g)).toHaveLength(4);
+    expect(xml).toContain('<c:grouping val="clustered"/>');
+    expect(xml.match(/<c:smooth val="1"\/>/g)).toHaveLength(1);
+    const read = readXlsxChartXml(xml, 'Q')!;
+    expect(read.type).toBe('combo');
+    expect(read.series.map((s) => s.type)).toEqual(['column', 'area', 'line', 'column']);
+    expect(read.series[2]!.color).toBe('#aa0000');
+    expect(read.values).toBe(true);
+    expect(read.smooth).toBe(true);
+    expect(fileChartSum({ ...read, at: chart.at, width: 400, height: 300 })).toBe(
+      fileChartSum(chart),
+    );
+    // A Combo chart's series types join its sum.
+    const swapped = {
+      ...chart,
+      series: chart.series.map((s) => ({ ...s, type: 'line' as const })),
+    };
+    expect(fileChartSum(swapped)).not.toBe(fileChartSum(chart));
+    // Values on one group only are not values on the chart.
+    expect(
+      readXlsxChartXml(xlsxChartXml('Q', chart).replace(/<c:dLbls>.*?<\/c:dLbls>/, ''), 'Q')!
+        .values,
+    ).toBe(false);
+    // A series with no order of its own reads as the first; one with no type sums apart.
+    const bare = readXlsxChartXml(xlsxChartXml('Q', chart).replace('<c:order val="0"/>', ''), 'Q')!;
+    expect(bare.series.map((s) => s.type)).toEqual(['column', 'area', 'line', 'column']);
+    expect(
+      fileChartSum({ ...chart, series: chart.series.map(({ type: _t, ...s }) => s) }),
+    ).not.toBe(fileChartSum(chart));
+    // A column and a line alone write no area group.
+    const two = { ...chart, series: chart.series.filter((s) => s.type !== 'area') };
+    expect(xlsxChartXml('Q', two)).not.toContain('<c:areaChart>');
   });
 
   it('sums a chart with no stacking as before stacking was read', () => {
