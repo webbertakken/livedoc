@@ -4,7 +4,7 @@
 // range, the series, a scatter's series drawn as lines) and Customise (titles, legend, values, the value axis, the
 // palette, each series' colour, alt text) for the chart being edited. Each control writes at once, one undo step; a
 // text writes when it is left or Enter is pressed.
-import { useEffect, useId, useState, type ReactNode } from 'react';
+import { useId, useState, type ReactNode } from 'react';
 import { Button, Select, Switch, TextInput } from '@livedoc/ui';
 import { CHART_PALETTES, CHART_TYPE_LABELS, lineFieldsFromTable } from '@livedoc/document';
 import {
@@ -57,7 +57,12 @@ function CommitText({
   area?: boolean;
 }) {
   const [draft, setDraft] = useState(value);
-  useEffect(() => setDraft(value), [value]);
+  // A stored value that changes (another person, an undo) replaces the draft, during render.
+  const [stored, setStored] = useState(value);
+  if (stored !== value) {
+    setStored(value);
+    setDraft(value);
+  }
   const commit = () => {
     if (draft !== value) onCommit(draft.slice(0, max));
   };
@@ -131,10 +136,12 @@ export function ChartEditorBody({
   const shown = p ? formatRange(p) : '';
   const [range, setRange] = useState(shown);
   const [why, setWhy] = useState<string | null>(null);
-  useEffect(() => {
+  const [shownBefore, setShownBefore] = useState(shown);
+  if (shownBefore !== shown) {
+    setShownBefore(shown);
     setRange(shown);
     setWhy(null);
-  }, [shown]);
+  }
 
   if (!chart)
     return <p className="text-supporting text-slate-500 dark:text-slate-400">{CHART_GONE}</p>;
