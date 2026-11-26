@@ -934,6 +934,8 @@ export const EXACT: Readonly<Record<string, string>> = {
     'An editor allowed a spreadsheet’s IMPORTDATA, IMPORTFEED, IMPORTHTML and IMPORTXML formulas to fetch from the web.',
   'Pdf|Imported|Explorer':
     'Someone dropped a PDF on the Explorer, which opened it as a new PDF document.',
+  'Pdf|Imported|NewDocument':
+    'Someone chose Open a PDF file in New Document, which opened the chosen PDF as a new PDF document.',
   'Pdf|Imported|Tab':
     'Someone chose a PDF from their computer in the + menu, which added it to the document as a PDF tab.',
   'Pdf|Imported|EmbeddedFile':
@@ -2261,6 +2263,7 @@ export const EXACT: Readonly<Record<string, string>> = {
     'Someone landed on the New Document page through a link that skips the wizard and goes straight into a blank document.',
   'UI|Used|NewDocumentBlank':
     "Someone made a blank document from the Explorer's New Document menu or its button, opening empty with no template picker.",
+  'UI|Used|NewDocumentFile': "Someone chose Open a PDF file in the Explorer's New Document menu.",
   'UI|Used|NewDocumentTemplate':
     "Someone made a document from one of the templates in the Explorer's New Document menu.",
   'UI|Used|StartOtherMode':

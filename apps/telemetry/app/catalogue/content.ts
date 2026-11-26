@@ -55,8 +55,8 @@ export const NEW_DOCUMENT_MENU = chart(
   'UI',
   'Used',
   'New Document Menu',
-  "How documents were started from the Explorer's New Document menu: a blank or a template.",
-  { types: ['NewDocumentBlank', 'NewDocumentTemplate'] },
+  "How documents were started from the Explorer's New Document menu: a blank, a template, or a PDF file opened.",
+  { types: ['NewDocumentBlank', 'NewDocumentTemplate', 'NewDocumentFile'] },
 );
 
 export const TAB_TEXT_DEFAULTS = chart(
@@ -1309,7 +1309,7 @@ export const PDFS_IMPORTED = chart(
   'Imported',
   'PDFs Opened From Files',
   'A PDF from the computer, or one carried inside a PDF, opened as a new PDF document or added as a PDF tab, by the way it arrived.',
-  { types: ['Explorer', 'Tab', 'EmbeddedFile'] },
+  { types: ['Explorer', 'Tab', 'EmbeddedFile', 'NewDocument'] },
 );
 
 export const PDF_MARKS_ADDED = chart(
