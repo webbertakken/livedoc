@@ -26,8 +26,8 @@ import { cellAddress, readCellAddress } from './xlsx-parts';
 
 const { calcext: CALCEXT } = ODF_NS;
 
-// Splits `text` at `separators` outside quotes ('…' and "…") and brackets.
-function splitOutside(text: string, separators: RegExp): string[] {
+/** Splits `text` at `separators` outside quotes ('…' and "…") and brackets. */
+export function splitOutside(text: string, separators: RegExp): string[] {
   const out: string[] = [];
   let depth = 0;
   let quote = '';
@@ -85,9 +85,11 @@ function literalOf(text: string): number | string | null {
 
 type Condition = Pick<FileFormatRule, 'op' | 'a' | 'b' | 'formula'>;
 
-// An ODF expression (`[.$A1]>20`) in Google's syntax for the anchor, moved from its base cell; null when it cannot be
-// read or is too long.
-function formulaOf(expression: string, shift: { dr: number; dc: number }): string | null {
+/**
+ * An ODF expression (`[.$A1]>20`) in Google's syntax for the anchor, moved from its base cell; null when it cannot be
+ * read or is too long.
+ */
+export function odfFormulaOf(expression: string, shift: { dr: number; dc: number }): string | null {
   const google = fromOpenFormula(`${OPEN_FORMULA_PREFIX}=${expression}`);
   if (google === null || !parseFormula(google).ok) return null;
   const moved = shiftFormulaText(google, shift.dr, shift.dc);
@@ -122,7 +124,7 @@ export function odfCondition(
     const [, name, inner] = call;
     const args = splitOutside(inner!, /[,;]/);
     if (name === 'formula-is') {
-      const formula = formulaOf(inner!, shift);
+      const formula = odfFormulaOf(inner!, shift);
       if (formula === null) return null;
       const plain = formula.replace(/\s+/g, '').toUpperCase();
       const own = cellAddress(anchor.r, anchor.c);
@@ -142,7 +144,7 @@ export function odfCondition(
       if (typeof a === 'number' && typeof b === 'number')
         return { op: name === 'between' ? 'between' : 'notBetween', a, b };
       const inside = `OR(AND(${at}>=${f1};${at}<=${f2});AND(${at}>=${f2};${at}<=${f1}))`;
-      const formula = formulaOf(name === 'between' ? inside : `NOT(${inside})`, shift);
+      const formula = odfFormulaOf(name === 'between' ? inside : `NOT(${inside})`, shift);
       return formula === null ? null : { op: 'formula', formula };
     }
     return null;
@@ -157,7 +159,7 @@ export function odfCondition(
     String(a).length <= FORMAT_RULE_VALUE_MAX
   )
     return { op, a };
-  const formula = formulaOf(`${at}${sign}${m[2]!.trim()}`, shift);
+  const formula = odfFormulaOf(`${at}${sign}${m[2]!.trim()}`, shift);
   return formula === null ? null : { op: 'formula', formula };
 }
 
@@ -262,8 +264,8 @@ export function unreadStyleNames(table: XmlElement, read: ReadonlySet<XmlElement
   return out;
 }
 
-// A sheet name as an ODF address names it: quoted unless plain.
-const sheetPart = (name: string) =>
+/** A sheet name as an ODF address names it: quoted unless plain. */
+export const sheetPart = (name: string) =>
   /^[A-Za-z_][\w]*$/.test(name) ? name : `'${name.replace(/'/g, "''")}'`;
 const quoted = (text: string) => `"${text.replace(/"/g, '""')}"`;
 const operand = (x: string | number) => (typeof x === 'number' ? String(x) : quoted(x));
@@ -289,8 +291,8 @@ const ENTRY_TYPES: Readonly<Record<ScalePoint['at'], string>> = {
   pctile: 'percentile',
 };
 
-// A Google formula as a `formula-is` expression; Google's syntax kept whole when OpenFormula cannot say it.
-function expressionOf(formula: string): string {
+/** A Google formula as an ODF expression; Google's syntax kept whole when OpenFormula cannot say it. */
+export function odfExpressionOf(formula: string): string {
   const open = toOpenFormula(formula);
   return open === null ? formula.replace(/^=/, '') : open.slice(OPEN_FORMULA_PREFIX.length + 1);
 }
@@ -305,7 +307,7 @@ function conditionValue(rule: FileFormatRule, anchor: string): string {
   if (text) return `${text}(${quoted(String(rule.a))})`;
   if (op === 'empty') return `formula-is(LEN(TRIM([.${anchor}]))=0)`;
   if (op === 'notEmpty') return `formula-is(LEN(TRIM([.${anchor}]))>0)`;
-  return `formula-is(${expressionOf(rule.formula!)})`;
+  return `formula-is(${odfExpressionOf(rule.formula!)})`;
 }
 
 /**

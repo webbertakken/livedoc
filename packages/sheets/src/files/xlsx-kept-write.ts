@@ -105,6 +105,25 @@ function inOrder(
   return ranked.sort((a, b) => a.rank - b.rank || a.at - b.at).map((r) => r.xml);
 }
 
+// The worksheet's children the schema allows once: LiveDoc's own go inside a kept one, after its children.
+const MERGED: ReadonlySet<string> = new Set(['dataValidations', 'extLst']);
+const VALIDATION = /<(?:[\w.-]+:)?dataValidation[\s/>]/g;
+
+// A kept child with LiveDoc's own of the same name inside it, after its children; a `dataValidations`' count made its
+// rules' again.
+export function mergedChild(kept: string, own: string | null): string {
+  const inner = own === null ? '' : own.replace(/^<[^>]*>/, '').replace(/<\/[^>]+>$/, '');
+  const name = /^<([\w.:-]+)/.exec(kept)![1]!;
+  const xml = kept.endsWith('/>')
+    ? `${kept.slice(0, -2)}>${inner}</${name}>`
+    : kept.slice(0, kept.lastIndexOf('</')) + inner + kept.slice(kept.lastIndexOf('</'));
+  if (keptLocalName(xml) !== 'dataValidations') return xml;
+  const count = [...xml.matchAll(VALIDATION)].length;
+  const open = xml.indexOf('>');
+  const head = xml.slice(0, open).replace(/\s+count="[^"]*"/, '');
+  return `${head} count="${count}"${xml.slice(open)}`;
+}
+
 // A sheet's index in a kept workbook view past the last sheet now, or its open sheet hidden, becomes the first shown
 // (D112, D182).
 const SHEET_INDEX_IN_VIEW = /\s(activeTab|firstSheet)="(\d+)"/g;
@@ -235,16 +254,23 @@ export class XlsxKeptWriter {
     sheetPrOwn: ((prefix: string) => string) | null = null,
   ): string[] {
     let placed = sheetPrOwn === null;
+    const merged = new Set<string>();
     const kept = this.of('worksheet', sheet).map((item) => {
       const xml = keptXmlWithin(item, rootNs);
-      if (placed || keptLocalName(xml) !== 'sheetPr') return xml;
+      const local = keptLocalName(xml);
+      if (MERGED.has(local) && !merged.has(local)) {
+        merged.add(local);
+        return mergedChild(xml, own.find((child) => child.name === local)?.xml ?? null);
+      }
+      if (placed || local !== 'sheetPr') return xml;
       placed = true;
       return withSheetPrOwn(xml, sheetPrOwn!);
     });
     const sheetPr = placed
       ? []
       : [{ name: 'sheetPr', xml: `<sheetPr>${sheetPrOwn!('')}</sheetPr>` }];
-    return inOrder(WORKSHEET_ORDER, kept, [...sheetPr, ...own]);
+    const rest = own.filter((child) => !merged.has(child.name));
+    return inOrder(WORKSHEET_ORDER, kept, [...sheetPr, ...rest]);
   }
 
   /** The styles part's kept differential formats and table styles, after its cell styles. */

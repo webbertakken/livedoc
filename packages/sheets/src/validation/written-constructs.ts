@@ -4,6 +4,7 @@ import type { NumberFormatKind } from '../sheet';
 import { formatCodeOf } from '../files/number-format-code';
 import type { FileChart, FileChartSeries } from '../files/file-charts';
 import type { FileCell, FileSheet, WorkbookFile } from '../files/workbook-file';
+import type { FileValidationRule } from '../files/file-validation';
 
 const sheet = (name: string, cells: FileCell[], rows = 10, cols = 6) => ({
   name,
@@ -34,6 +35,28 @@ const CUSTOM_CODES = [
   '"km "0.0',
   '# ?/?',
   '0.0,,',
+];
+
+// Every criterion of a validation rule (standard-mapping.md "Validation in the file"), one a column or cell.
+export const VALIDATIONS: FileValidationRule[] = [
+  {
+    ranges: [{ r1: 1, c1: 0, r2: 5, c2: 0 }],
+    is: 'list',
+    opts: [{ v: 'To Do', c: '#e6f4ea' }, { v: 'Done' }],
+    multi: true,
+    help: 'Pick a status',
+  },
+  { ranges: [{ r1: 1, c1: 1, r2: 5, c2: 1 }], is: 'range', src: "'My Lists'!A1:A2", show: 'arrow' },
+  { ranges: [{ r1: 1, c1: 2, r2: 2, c2: 2 }], is: 'check' },
+  { ranges: [{ r1: 3, c1: 2, r2: 3, c2: 2 }], is: 'check', on: 'Yes', off: 'No' },
+  { ranges: [{ r1: 1, c1: 3, r2: 1, c2: 3 }], is: 'num', op: 'between', a: 1, b: 10 },
+  { ranges: [{ r1: 2, c1: 3, r2: 2, c2: 3 }], is: 'num', op: 'gt', a: 5, warn: true },
+  { ranges: [{ r1: 1, c1: 4, r2: 1, c2: 4 }], is: 'date', op: 'after', a: 46296 },
+  { ranges: [{ r1: 2, c1: 4, r2: 2, c2: 4 }], is: 'date', op: 'valid' },
+  { ranges: [{ r1: 1, c1: 5, r2: 1, c2: 5 }], is: 'text', op: 'exactly', a: 'Yes' },
+  { ranges: [{ r1: 2, c1: 5, r2: 2, c2: 5 }], is: 'text', op: 'contains', a: 'ref' },
+  { ranges: [{ r1: 3, c1: 5, r2: 3, c2: 5 }], is: 'text', op: 'email' },
+  { ranges: [{ r1: 1, c1: 6, r2: 4, c2: 6 }], is: 'formula', fx: '=G2>D2' },
 ];
 
 export const WRITTEN_CONSTRUCTS: Readonly<Record<string, WorkbookFile>> = {
@@ -126,6 +149,18 @@ export const WRITTEN_CONSTRUCTS: Readonly<Record<string, WorkbookFile>> = {
     ],
   },
   charts: { sheets: [chartSheet()] },
+  validation: {
+    sheets: [
+      {
+        ...sheet('Rules', [{ r: 0, c: 0, value: { k: 's', v: 'Status' } }], 10, 10),
+        validations: VALIDATIONS,
+      },
+      sheet('My Lists', [
+        { r: 0, c: 0, value: { k: 's', v: 'Red' } },
+        { r: 1, c: 0, value: { k: 's', v: 'Blue' } },
+      ]),
+    ],
+  },
 };
 
 // A table of costs and an index with a gap, and a chart of every type over it, each with its own look (standard-mapping.md

@@ -95,6 +95,25 @@ describe('the conversion dialog’s words', () => {
     );
   });
 
+  // files-and-print.md "Converting": what other apps lose of validation rules, every feature named.
+  it('lists the validation rules other apps hold more simply', () => {
+    expect(
+      conversionLine(
+        {
+          k: 'validation_simplified',
+          count: 3,
+          features: ['colours', 'chips', 'multi', 'checkboxes'],
+        },
+        'xlsx',
+      ),
+    ).toBe(
+      '3 data validation rules work more simply in Excel: option colours, chips and arrows, multiple selections and checkboxes',
+    );
+    expect(
+      conversionLine({ k: 'validation_simplified', count: 1, features: ['chips'] }, 'ods'),
+    ).toBe('1 data validation rule works more simply in other apps: chips and arrows');
+  });
+
   // files-and-print.md "Converting": the kept content left behind, counted, by kind, the most common first.
   it('lists what was kept from the file and stays behind, by kind', () => {
     expect(

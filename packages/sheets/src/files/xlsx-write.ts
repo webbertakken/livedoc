@@ -34,6 +34,7 @@ import { xlsxChartParts } from './xlsx-chart-parts';
 import { xlsxTabColor } from './xlsx-tab-look';
 import { XlsxStyles } from './xlsx-styles';
 import { xlsxFormatRulesXml } from './xlsx-format-rules';
+import { xlsxValidationsXml } from './xlsx-validation';
 import { xlsxThemeXml } from './xlsx-theme';
 import { themeOf } from '../themes/spreadsheet-theme';
 import type {
@@ -231,6 +232,7 @@ function worksheetXml(
         ordered.reduce((n, c) => Math.max(n, c.c), 0),
       )}`
     : 'A1';
+  const validations = xlsxValidationsXml(sheet.validations, renamed);
   const own = [
     { name: 'dimension', xml: `<dimension ref="${extent}"/>` },
     ...(shape ? [{ name: 'sheetFormatPr', xml: shape.sheetFormatPr }] : []),
@@ -246,8 +248,18 @@ function worksheetXml(
       (style) => styles.dxf(style),
       renamed,
     ),
+    ...(validations.validations.length
+      ? [
+          {
+            name: 'dataValidations',
+            xml: `<dataValidations count="${validations.validations.length}">${validations.validations.join('')}</dataValidations>`,
+          },
+        ]
+      : []),
     // Its charts, through its drawing part (standard-mapping.md "Charts in the file").
     ...(drawingRelId ? [{ name: 'drawing', xml: `<drawing r:id="${drawingRelId}"/>` }] : []),
+    // LiveDoc's exact validation rules (standard-mapping.md "Validation in the file").
+    ...(validations.ext ? [{ name: 'extLst', xml: `<extLst>${validations.ext}</extLst>` }] : []),
   ];
   const rootNs = kept.rootBindings('worksheet', OWN_NS, index);
   const xml = [

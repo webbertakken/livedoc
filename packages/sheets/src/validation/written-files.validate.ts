@@ -28,7 +28,8 @@ import { FILE_LAST_COL } from '../files/a1-text';
 import { excelFileWithKept, odfFlatWithKept } from '../testing/kept-files';
 import { readOds } from '../files/ods-read';
 import { readXlsx } from '../files/xlsx-read';
-import { WRITTEN_CONSTRUCTS } from './written-constructs';
+import { LIVEDOC_SPREADSHEET_NS } from '../files/validation-standard';
+import { VALIDATIONS, WRITTEN_CONSTRUCTS } from './written-constructs';
 
 const OUT = mkdtempSync(join(tmpdir(), 'livedoc-sheets-written-'));
 // LibreOffice's extensions, kept from its files: extended conformance leaves them out of the check.
@@ -36,6 +37,8 @@ const ODF_FOREIGN = new Set([
   'urn:org:documentfoundation:names:experimental:calc:xmlns:calcext:1.0',
   'urn:org:documentfoundation:names:experimental:office:xmlns:loext:1.0',
 ]);
+// LiveDoc's own validation rules beside the standard ones (standard-mapping.md "Validation in the file"): extended.
+const ODF_OWN = new Set([LIVEDOC_SPREADSHEET_NS]);
 fetchOfficeSchemas();
 
 // Within every format's bounds (standard-mapping.md "Excel's grammar in detail"): what both files carry as it is.
@@ -89,8 +92,8 @@ describe('a written spreadsheet with kept content validates against its format�
 describe('every written spreadsheet validates against its format’s schema', () => {
   for (const [name, file] of Object.entries(WRITTEN_CONSTRUCTS)) {
     it(`${name}.ods and ${name}.fods against ODF 1.4`, async () => {
-      await validateOdfPackage(writeOds(file, name).data, join(OUT, `${name}-ods`));
-      validateFlatOdf(writeFlatOds(file, name).data, join(OUT, `${name}-fods`));
+      await validateOdfPackage(writeOds(file, name).data, join(OUT, `${name}-ods`), ODF_OWN);
+      validateFlatOdf(writeFlatOds(file, name).data, join(OUT, `${name}-fods`), ODF_OWN);
     });
 
     it(`${name}.xlsx against ISO/IEC 29500 Transitional`, async () => {
@@ -114,4 +117,38 @@ describe('every written spreadsheet validates against its format’s schema', ()
       }
     }, 120_000);
   }
+});
+
+// standard-mapping.md "Validation in the file": LibreOffice checks the standard rule LiveDoc writes beside its own, and
+// saves it again as its own rule (a checkbox a TRUE, FALSE list; Text Is Exactly a custom formula).
+describe('validation rules other apps check', () => {
+  it('LibreOffice keeps each standard rule of the .fods and .xlsx it opens and saves', async () => {
+    const file = WRITTEN_CONSTRUCTS.validation!;
+    for (const [type, target] of [
+      ['fods', 'ods'],
+      ['xlsx', 'xlsx:Calc MS Excel 2007 XML'],
+    ] as const) {
+      const path = join(OUT, `validation-other.${type}`);
+      writeFileSync(
+        path,
+        type === 'fods' ? writeFlatOds(file, 'v').data : writeXlsx(file, 'v').data,
+      );
+      const read = await readWorkbookFile(new Uint8Array(libreOfficeConvert(path, target)));
+      if (!read.ok) throw new Error(`${type}: ${read.rejection}`);
+      const rules = read.file.sheets[0]!.validations ?? [];
+      const at = (r: number, c: number) =>
+        rules.find((x) => x.ranges.some((g) => g.r1 <= r && r <= g.r2 && g.c1 <= c && c <= g.c2));
+      expect(rules.length, type).toBeGreaterThanOrEqual(VALIDATIONS.length);
+      expect(at(1, 0), type).toMatchObject({ is: 'list', opts: [{ v: 'To Do' }, { v: 'Done' }] });
+      expect(at(1, 1), type).toMatchObject({ is: 'range', src: "'My Lists'!A1:A2" });
+      expect(at(1, 2), type).toMatchObject({ is: 'list', opts: [{ v: 'TRUE' }, { v: 'FALSE' }] });
+      expect(at(3, 2), type).toMatchObject({ is: 'list', opts: [{ v: 'Yes' }, { v: 'No' }] });
+      expect(at(1, 3), type).toMatchObject({ is: 'num', op: 'between', a: 1, b: 10 });
+      expect(at(2, 3), type).toMatchObject({ is: 'num', op: 'gt', a: 5, warn: true });
+      expect(at(1, 4), type).toMatchObject({ is: 'date', op: 'after', a: 46296 });
+      expect(at(1, 5)?.is, type).toBe('formula');
+      expect(at(1, 5)?.fx, type).toMatch(/^=F2="Yes"$/i);
+      expect(at(1, 6), type).toMatchObject({ is: 'formula' });
+    }
+  }, 120_000);
 });

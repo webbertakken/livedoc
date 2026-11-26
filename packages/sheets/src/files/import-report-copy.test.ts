@@ -80,6 +80,14 @@ describe('the import report’s copy', () => {
         '2 conditional formatting rules LiveDoc cannot read are left out: Data!A2 and Data!B2',
       ],
       [
+        { k: 'validation_rule_unread', count: 1, names: ['Data!A2'] },
+        '1 data validation rule LiveDoc cannot read is left out: Data!A2',
+      ],
+      [
+        { k: 'validation_rule_unread', count: 2, names: ['Data!A2', 'Data!B2'] },
+        '2 data validation rules LiveDoc cannot read are left out: Data!A2 and Data!B2',
+      ],
+      [
         { k: 'sizes_cut', count: 1, names: ['Data'] },
         'Row heights and column widths past the most a sheet holds are left out of 1 sheet: Data',
       ],
