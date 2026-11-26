@@ -197,7 +197,7 @@ export function ManageStampsDialog({
                   type="text"
                   aria-label={`Category ${category}`}
                   maxLength={PDF_CUSTOM_STAMP_CATEGORY_MAX_CHARS}
-                  className={`${FIELD}`}
+                  className={FIELD}
                   {...keptField(category, (text) =>
                     said(renameCustomStampCategory(ownerId, category, text)),
                   )}
