@@ -5,6 +5,7 @@ import 'fake-indexeddb/auto';
 import { IDBFactory } from 'fake-indexeddb';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { blobKeyOf } from '@livedoc/document';
+import { Mark, PdfLiveChanges, type PageName } from '@livedoc/pdf-documents';
 import { fakeBlobDirectory } from '../blob-store/local-blob-testing';
 import {
   __setThisBrowserBlobs,
@@ -42,6 +43,33 @@ describe('the keys This Browser documents name', () => {
     );
     await offlinePutRecord(testRecord({ id: 'C' }));
     expect([...(await offlineNamedBlobKeys())].sort()).toEqual([PDF_BLOB, OTHER_PDF_BLOB]);
+  });
+
+  // custom-stamps.md "Placing one": a custom stamp's picture is held as the document's file is.
+  it('are the pictures its PDF tabs’ marks name too', () => {
+    const doc = PdfLiveChanges.load();
+    PdfLiveChanges.addMark(
+      doc,
+      Mark.stamp({
+        id: 'paid',
+        page: 'p:1' as PageName,
+        rect: [0, 0, 10, 10],
+        stamp: 'custom-0b7c3c2e-5a8f-4f21-9a43-1f2d3e4c5b6a',
+        lines: ['Paid'],
+        picture: { key: OTHER_PDF_BLOB, type: 'png', width: 4, height: 4 },
+        colour: '#000000',
+        opacity: 1,
+        author: 'Ada',
+        createdAt: 1,
+      })!,
+    );
+    const state = PdfLiveChanges.encode(doc);
+    const rec = testRecord({
+      id: 'A',
+      tabs: [pdfTab('t1')],
+      pdfDocuments: [{ tabId: 't1', state, savedAt: 1 }],
+    });
+    expect(blobKeysOfRecord(rec)).toEqual([PDF_BLOB, OTHER_PDF_BLOB]);
   });
 });
 

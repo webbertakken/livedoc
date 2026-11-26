@@ -10,7 +10,7 @@ import { PDF_BLOB, pdfStateWith, pdfTab, markIdsIn } from '@/lib/offline/offline
 import { offlineSavePdfState } from '@/lib/offline/offline-pdf-documents';
 import { __setOfflineBackend, offlinePutRecord } from '@/lib/offline/offline-store';
 import { memBackend, testRecord } from '@/lib/offline/offline-test-utils';
-import { keptBlobRead, pdfReadsOf, thisBrowserBlobRead } from './pdf-home';
+import { keptBlobRead, pdfBlobSendOf, pdfReadsOf, thisBrowserBlobRead } from './pdf-home';
 
 const scope = { ownerId: 'ada', documentId: 'D', tabId: 't1', shareCode: null };
 const file = async (text: string) => {
@@ -108,5 +108,30 @@ describe('a This Browser PDF', () => {
     expect(await reads.readBlob(scope, state.storedFile)).toEqual(mine.bytes);
     // The room's reads ask this browser first too.
     expect(await pdfReadsOf('room').readBlob(scope, mine.key)).toEqual(mine.bytes);
+  });
+});
+
+// custom-stamps.md "Placing one": a custom stamp's picture is held for the document before its mark names it.
+describe('bytes a change brings', () => {
+  it('are kept in this browser for a This Browser PDF', async () => {
+    const { blobs } = blobsInMemory();
+    __setThisBrowserBlobs(blobs);
+    const picture = await file('a picture');
+    await pdfBlobSendOf('this-browser')(scope, picture.key, picture.bytes);
+    expect(await blobs.read(picture.key)).toEqual(picture.bytes);
+  });
+
+  it('are sent for the document in the room, asked first', async () => {
+    const picture = await file('a picture');
+    const fetch = vi.fn(async () => new Response(JSON.stringify({ held: true }), { status: 200 }));
+    vi.stubGlobal('fetch', fetch);
+    try {
+      await pdfBlobSendOf('room')({ ...scope, shareCode: 'CODE' }, picture.key, picture.bytes);
+    } finally {
+      vi.unstubAllGlobals();
+    }
+    const [url] = fetch.mock.calls[0] as unknown as [string];
+    expect(url).toContain(`/files/${picture.key}?document=D`);
+    expect(fetch).toHaveBeenCalledTimes(1);
   });
 });

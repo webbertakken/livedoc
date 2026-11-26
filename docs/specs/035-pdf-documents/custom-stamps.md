@@ -47,8 +47,8 @@ are the matrix's "Stamps" ([Parity matrix](parity-matrix.md#stamps)).
     its scripts and anything it would load are never run, as a picture drawn by the browser never runs them;
   - a page of a PDF is drawn by the engine at `PDF_CUSTOM_STAMP_PAGE_SCALE` pixels a point into a PNG, its paper
     white, held to `PDF_CUSTOM_STAMP_MAX_SIDE_PX` `(default)`.
-- **Its natural size**: a page's size in points; a picture's pixels at 96 to the inch, three quarters of a point
-  each `(default)`.
+- **Its natural size**: a page's size in points; the kept picture's pixels at 96 to the inch, three
+  quarters of a point each `(default)`.
 - Then its picture is sent ([Getting bytes in](../006-document/blob-store.md#getting-bytes-in)), asked first so bytes
   already held go nowhere, and the stamp is made: `POST /api/custom-stamps`. It becomes the stamp the Stamp control
   shows, the Stamp tool in hand `(default)`.
