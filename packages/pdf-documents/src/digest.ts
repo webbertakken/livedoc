@@ -2,6 +2,7 @@
 // (docs/specs/035-pdf-documents/live-editing-and-storage.md "The digest"). Pure; built from a loaded state when the
 // outbox drains the tab. The file's own text reaches search from the api Worker, never from the room.
 import type * as Y from 'yjs';
+import type { BlobKey } from '@livedoc/document';
 import { PdfLiveChanges } from './live-changes';
 import { Mark } from './mark';
 
@@ -15,6 +16,9 @@ export type PdfDigest = {
   /** The words under the marks, one line a mark. */
   readonly searchText: string;
   readonly marks: number;
+  /** The pictures its marks name (a custom stamp's), each once, in order: what the tab holds of the blob store
+   *  besides its stored file (blob-store.md "Holds and retention"). */
+  readonly blobKeys: readonly BlobKey[];
 };
 
 export function pdfDigest(doc: Y.Doc): PdfDigest {
@@ -29,5 +33,10 @@ export function pdfDigest(doc: Y.Doc): PdfDigest {
       .filter((text) => text !== '')
       .join('\n'),
     marks: marks.length,
+    blobKeys: [
+      ...new Set(
+        marks.flatMap((mark) => (mark.kind === 'stamp' && mark.picture ? [mark.picture.key] : [])),
+      ),
+    ].sort(),
   };
 }

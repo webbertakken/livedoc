@@ -384,6 +384,26 @@ describe('a stamp', () => {
     expect(Mark.parse({ ...stamp(over), kind: 'stamp', modifiedAt: 0 })).toBeNull();
   });
 
+  // custom-stamps.md "Placing one": a custom stamp's mark names its picture.
+  const CUSTOM = 'custom-0b7c3c2e-5a8f-4f21-9a43-1f2d3e4c5b6a';
+  const picture = { key: 'b'.repeat(64), type: 'png', width: 400, height: 200 };
+
+  it('keeps a custom stamp’s picture, read back unchanged', () => {
+    const mark = Mark.stamp(
+      stamp({ stamp: CUSTOM, lines: ['Paid'], picture }) as unknown as StampInput,
+    )!;
+    expect(mark.picture).toEqual(picture);
+    expect(Mark.parse(JSON.parse(JSON.stringify(mark)))).toEqual(mark);
+  });
+
+  it('reads no picture on a stamp that is not custom, or one not whole', () => {
+    expect(Mark.stamp(stamp({ picture }) as unknown as StampInput)!.picture).toBeUndefined();
+    const broken = { ...picture, type: 'gif' };
+    expect(
+      Mark.stamp(stamp({ stamp: CUSTOM, picture: broken }) as unknown as StampInput)!.picture,
+    ).toBeUndefined();
+  });
+
   it('keeps a line at its limit', () => {
     const line = 'A'.repeat(PDF_STAMP_LINE_MAX_CHARS);
     expect(Mark.stamp(stamp({ lines: [line] }) as unknown as StampInput)!.lines).toEqual([line]);

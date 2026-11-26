@@ -8,7 +8,8 @@ typed onto the page; and the standard and dynamic stamps, placed by a press; eac
 standard annotations under their own ids and read back by them; each tool's colour, chosen from the one colour picker
 and remembered; and the engine reads every mark a file holds, of any kind, as the file says it; a stroke shown to others as it is
 drawn and words as they are typed; a face for every script; and the room's own-marks check. A tool's other looks,
-snapping, every other kind made here, custom stamps and Manage stamps are not built.
+snapping, every other kind made here and Manage stamps are not built; custom stamps are made and placed
+([Custom stamps](custom-stamps.md)).
 Of changing a mark, selecting, moving, resizing and deleting a mark made here, and restyling its colour, opacity, line
 width, line style, fill and line end, and a Text's and a Callout's size and alignment, Format > Colour and Fill
 colour, the toolbar's Line width and a tool's remembered width, style and fill are built, and so are they for the
@@ -330,8 +331,10 @@ written into the file as a standard annotation, so any reader shows it. The rese
   browser's, said to be. **Stamp identity** (Manage stamps) adds a title and an organisation a person may fill in for
   dynamic stamps that show them; they are kept with the account and written only into stamps that person places.
 - **Custom stamps**: made from a picture (PNG, JPEG, SVG drawn as a picture) or a page of a PDF, named, in a
-  category; kept in this browser, or with the account when signed in; renamed, deleted and moved between categories
-  in **Manage stamps**. A custom stamp's picture is a blob named in the mark.
+  category; kept in LiveDoc for their maker, owner-scoped as custom themes are: a guest's under this browser's guest
+  id, taken to the account on sign-up, an account's wherever they sign in; renamed, deleted and moved between
+  categories in **Manage stamps**. A custom stamp's picture is a blob named in the mark
+  ([Custom stamps](custom-stamps.md)).
 - The Stamp control shows the last stamp used; its menu shows categories, each a grid of stamps with names.
 - A stamp is placed at its natural size, at most a third of the page's width, and resized by its handles.
 - **LiveDoc's style** for a standard or dynamic stamp: a box with rounded corners and a 2-point border, the stamp's
@@ -489,8 +492,8 @@ question mark. The research is [Every script in a mark's words](../../research/p
   file writes them, the mark it answers (as a reply, or grouped with it) and a state reply's state. A pop-up, a link
   and a field's place are not marks. Each is bounded on the way out: a name cut to `PDF_NAME_MAX_CHARS`, words to
   `PDF_MARK_TEXT_MAX_CHARS`, a coordinate held within `PDF_MAX_COORDINATE`, at most `PDF_PAGE_MAX_MARKS` a page.
-- **What other readers cannot hold** (a mark's group beyond the standard's own, its lock beyond the standard's flag,
-  a custom stamp's category) rides a private entry of LiveDoc's own in the annotation, which other readers ignore and
+- **What other readers cannot hold** (a mark's group beyond the standard's own, its lock beyond the standard's
+  flag) rides a private entry of LiveDoc's own in the annotation, which other readers ignore and
   keep.
 - A file that claims PDF/UA has each new mark added to its structure tree
   ([Accessibility](accessibility.md#what-a-written-file-keeps)).
@@ -540,7 +543,6 @@ question mark. The research is [Every script in a mark's words](../../research/p
 | `PDF_MARK_NUDGE_FAR_PT`      | 10                  | `(default)` Points ⇧ with an arrow key moves it                                                 |
 | `PDF_SQUIGGLE_STEP_PT`       | 2                   | `(default)` A squiggly underline's tooth, wide and high, in points; safe range 1 to 4           |
 | `PDF_STAMP_LINE_MAX_CHARS`   | 300                 | `(default)` A stamp's line as placed: a display name and a time fit; safe range 100 to 1,000    |
-| `PDF_STAMP_MAX_BYTES`        | 2,097,152           | `(default)` A custom stamp's picture; larger is scaled down before it is kept                   |
 | `PDF_PINNED_FILE_MAX_BYTES`  | 26,214,400 (25 MiB) | `(default)` A pinned file is written into the bake, which must itself fit `FILE_TAB_MAX_BYTES`  |
 
 ## Share roles
@@ -613,4 +615,3 @@ Gated on the session's `can` (`pdfReviews`), and checked by the room.
 | The mark limit is reached                      | "This PDF holds the most marks LiveDoc keeps for one file (20,000)."                             |
 | A Participant changes another person's mark    | The change is dropped: "You can change your own marks."                                          |
 | A certified file forbids marks                 | "The person who certified this PDF doesn't allow marks." ([Signing](signing.md#certified-files)) |
-| A custom stamp's picture cannot be read        | "That picture couldn't be read. Choose a PNG, JPEG or SVG."                                      |

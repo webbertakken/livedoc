@@ -33,6 +33,7 @@ import {
 import { MarkDrawing } from '../mark-drawing';
 import { MarkWords } from '../mark-words';
 import type { PageMatrix } from '../engine-contract';
+import { CustomStamp } from '../custom-stamp';
 import { Stamps } from '../stamps';
 import { StampTurn } from '../stamp-turn';
 import {
@@ -49,6 +50,12 @@ import type { EmbeddedFaces } from './embedded-faces';
 
 /** How a bake writes words in the mark faces: its typesetter, and the faces it embeds (marks.md "In the file"). */
 export type MarkFaceWriting = { readonly setter: RunSetter; readonly faces: EmbeddedFaces };
+
+/** What a bake writes marks with: the mark faces, where marks need them, and each picture the marks name, by key. */
+export type MarkWriting = {
+  readonly writing: MarkFaceWriting | null;
+  readonly pictures: ReadonlyMap<string, Uint8Array>;
+};
 
 /** The annotation flag that prints it (marks.md "In the file": the print flag set). */
 const PRINT = 4;
@@ -245,6 +252,46 @@ function annotateStamp(
   return dict;
 }
 
+/**
+ * A custom stamp's `Stamp` (custom-stamps.md "Placing one"): `Name` `#` and its id, so Acrobat keeps its look when it
+ * turns it; `Contents` its name; its appearance its picture across its box, an image of the picture's own pixels (a
+ * JPEG's bytes as they are, a PNG's colours with its see-through as a soft mask). Turned as every stamp is. The engine
+ * refuses the bake before a picture is missing, so `bytes` is always the picture's.
+ */
+function annotatePictureStamp(
+  pdf: PDF,
+  page: PDFPage,
+  mark: StampMark,
+  bytes: Uint8Array,
+): PdfDict {
+  const image = mark.picture!.type === 'jpeg' ? pdf.embedJpeg(bytes) : pdf.embedPng(bytes);
+  const [left, bottom, right, top] = mark.rect;
+  const dict = page.addStampAnnotation({
+    rect: rectOf(Mark.shownBox(mark)),
+    name: CustomStamp.fileName(mark.stamp),
+    contents: mark.lines.join('\n'),
+  }).dict;
+  const matrix = StampTurn.matrix({ rect: mark.rect, turn: mark.turn });
+  const stream = PdfStream.fromDict(
+    {
+      Type: PdfName.of('XObject'),
+      Subtype: PdfName.of('Form'),
+      BBox: boxArray(mark.rect),
+      Resources: PdfDict.of({ XObject: PdfDict.of({ [PICTURE]: image.ref }) }),
+      ...(matrix ? { Matrix: new PdfArray(matrix.map((n) => PdfNumber.of(n))) } : {}),
+    },
+    new TextEncoder().encode(
+      `q ${right - left} 0 0 ${top - bottom} ${left} ${bottom} cm /${PICTURE} Do Q`,
+    ),
+  );
+  dict.set('AP', PdfDict.of({ N: pdf.register(stream) }));
+  if (mark.turn) dict.set('Rotate', PdfNumber.of(mark.turn));
+  return dict;
+}
+
+/** The name a custom stamp's appearance gives its picture. */
+const PICTURE = 'Im0';
+
 /** A Drawing's `Ink`; a styled one drawn as the page shows it, its `Rect` its appearance's box, since a reader draws
  *  an `Ink` of its own solid. */
 function annotateDrawing(
@@ -352,7 +399,7 @@ export function annotate(
   pdf: PDF,
   page: PDFPage,
   mark: Mark,
-  writing: MarkFaceWriting | null = null,
+  { writing, pictures }: MarkWriting = { writing: null, pictures: new Map() },
 ): PdfDict {
   const color = rgb(
     channelOf(mark.colour, 1),
@@ -369,7 +416,9 @@ export function annotate(
   const annotation = Mark.isTyped(mark)
     ? annotateTyped(pdf, page, mark, writing)
     : mark.kind === 'stamp'
-      ? annotateStamp(pdf, page, mark, writing)
+      ? mark.picture
+        ? annotatePictureStamp(pdf, page, mark, pictures.get(mark.picture.key)!)
+        : annotateStamp(pdf, page, mark, writing)
       : mark.kind === 'drawing'
         ? annotateDrawing(pdf, page, mark, color)
         : Mark.isPoly(mark)

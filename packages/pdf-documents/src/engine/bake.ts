@@ -18,7 +18,7 @@ import type { Mark } from '../mark';
 import { PageName } from '../page-name';
 import { PdfDate } from '../pdf-date';
 import type { RemovedKind } from '../pdf-change';
-import { annotate, type MarkFaceWriting } from './annotate';
+import { annotate, type MarkFaceWriting, type MarkWriting } from './annotate';
 import { embeddedFaces } from './embedded-faces';
 import type { Typesetter } from './typesetter';
 import { openWriter } from './writer';
@@ -29,6 +29,8 @@ export type BakeChanges = {
   readonly fieldValues: readonly FieldValue[];
   readonly removed: ReadonlyMap<string, RemovedKind>;
   readonly turns: ReadonlyMap<PageName, 0 | 90 | 180 | 270>;
+  /** Each picture the marks name, by key: a custom stamp's (custom-stamps.md "Placing one"). */
+  readonly pictures?: ReadonlyMap<string, Uint8Array>;
 };
 
 export type Written =
@@ -91,12 +93,7 @@ function nameOf(pdf: PDF, entry: PdfObject): string | null {
 }
 
 /** Appends each mark to its page as one annotation (marks.md "In the file"); answers how many have no page. */
-function addMarks(
-  pdf: PDF,
-  pages: Pages,
-  marks: readonly Mark[],
-  writing: MarkFaceWriting | null,
-): number {
+function addMarks(pdf: PDF, pages: Pages, marks: readonly Mark[], written: MarkWriting): number {
   let lost = 0;
   for (const mark of marks) {
     const page = pages.get(mark.page);
@@ -105,7 +102,7 @@ function addMarks(
       continue;
     }
     holdList(pdf, page);
-    const annotation = annotate(pdf, page, mark, writing);
+    const annotation = annotate(pdf, page, mark, written);
     annotation.set('NM', PdfString.fromString(mark.id));
     if (mark.subject) annotation.set('Subj', PdfString.fromString(mark.subject));
     annotation.set('M', PdfString.fromString(PdfDate.write(mark.modifiedAt)));
@@ -237,7 +234,10 @@ export async function bakeChanges(
       : null;
   // The file's own removed first: a mark of the file changed here is written under its own id, in its place.
   removeMarks(pdf, pages, changes.removed);
-  anchorsLost += addMarks(pdf, pages, changes.marks, writing);
+  anchorsLost += addMarks(pdf, pages, changes.marks, {
+    writing,
+    pictures: changes.pictures ?? new Map(),
+  });
   groupMarks(pdf, pages, changes.marks);
   const glyphsMissing = faces?.finish().missing ?? 0;
   const fieldsLost = changes.fieldValues.filter((value) => !fillField(pdf, value)).length;

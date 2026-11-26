@@ -106,6 +106,11 @@ and belong to an owner's gallery, never held exactly.
 
 - A blob is **held** while any tab, branch, previous version, named version, live change or trashed document of its
   owner names its key.
+- **A custom stamp holds its picture** for its owner while it is kept
+  ([Custom stamps](../035-pdf-documents/custom-stamps.md#where-they-are-kept)); deleted, its picture is held by
+  nothing of its own, and swept as any blob after the grace.
+- **A PDF tab holds the pictures its marks name** (a custom stamp's), read from its digest, for as long as a mark
+  names them ([Storage](../035-pdf-documents/live-editing-and-storage.md#storage)).
 - **Each document tells what it holds.** Its room pushes, with each changed tab, the keys that tab holds
   (`document_blobs` in D1, through the [outbox](document-storage.md#the-outbox)): the tab's own bytes for as long as
   the tab names them, a previous version until its day. A purged document's holds go with it.

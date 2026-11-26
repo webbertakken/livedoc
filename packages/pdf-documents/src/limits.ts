@@ -98,6 +98,19 @@ export const PDF_CALLOUT_KNEE_PT = 12;
 /** (default) A stamp's line as placed, in characters: a display name and a time fit (marks.md "Limits"). Safe range:
  *  100 to 1,000. */
 export const PDF_STAMP_LINE_MAX_CHARS = 300;
+/** (default) A custom stamp's picture as kept, 2 MiB: larger is drawn smaller first (custom-stamps.md "Limits"). */
+export const PDF_STAMP_MAX_BYTES = 2_097_152;
+/** (default) A custom stamp picture's longer side as kept: a third of an A4 page printed at 600 dpi. Safe range: 600 to
+ *  2,400. */
+export const PDF_CUSTOM_STAMP_MAX_SIDE_PX = 1_200;
+/** (default) Pixels a point a PDF page is drawn at to become a custom stamp (144 dpi). Safe range: 1 to 4. */
+export const PDF_CUSTOM_STAMP_PAGE_SCALE = 2;
+/** (default) Custom stamps one owner keeps: more than a grid is read through; at most 400 MiB of pictures. */
+export const PDF_CUSTOM_STAMPS_MAX = 200;
+/** (default) A custom stamp's name: a cell's label. */
+export const PDF_CUSTOM_STAMP_NAME_MAX_CHARS = 64;
+/** (default) A custom stamp category's name: a section's heading. */
+export const PDF_CUSTOM_STAMP_CATEGORY_MAX_CHARS = 32;
 /** (default) Past it the stored file is replaced (saving.md "Limits"); the room refuses a state beyond it. */
 export const PDF_LIVE_CHANGES_MAX_BYTES = 4_194_304;
 /** (default) Past it an idle Editor's surface replaces the stored file: three quarters of the ceiling, so ordinary use
