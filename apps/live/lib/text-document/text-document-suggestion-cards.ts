@@ -26,7 +26,12 @@ export type SuggestionCard = {
   readonly at: number;
   readonly author: TextDocumentCommentAuthor;
   readonly lines: readonly string[];
+  /** The header's, footer's or note's story it is in, its positions that story's; none in the body. */
+  readonly story?: string;
 };
+
+/** A story's writing as drawn on the tab shown: its id and its editor's document. */
+export type StoryWriting = { readonly story: string; readonly doc: PmNode };
 
 /** One part read off the writing. */
 export type CardPart =
@@ -247,16 +252,45 @@ export function suggestionCards(doc: PmNode): SuggestionCard[] {
     .sort((a, b) => a.from - b.from);
 }
 
-/** The next or previous suggestion: from the selected card, else from the caret; never wrapping. */
+/**
+ * The stories' cards after the body's (review.md "Suggestion cards", Order): each story once, in the order given
+ * (headers and footers, then notes), its cards tagged with it; a suggestion already read (in `read`) is not again.
+ */
+export function storyCards(
+  writings: readonly StoryWriting[],
+  read: ReadonlySet<string>,
+): SuggestionCard[] {
+  const seen = new Set(read);
+  const stories = new Set<string>();
+  const cards: SuggestionCard[] = [];
+  for (const { story, doc } of writings) {
+    if (stories.has(story)) continue;
+    stories.add(story);
+    for (const card of suggestionCards(doc))
+      if (!seen.has(card.id)) {
+        seen.add(card.id);
+        cards.push({ ...card, story });
+      }
+  }
+  return cards;
+}
+
+/**
+ * The next or previous suggestion: from the selected card, else from the caret in the body; never wrapping. The
+ * stories' cards follow the body's, so Next past the body's last goes on to them.
+ */
 export function suggestionBeside(
-  cards: readonly { readonly id: string; readonly from: number }[],
+  cards: readonly { readonly id: string; readonly from: number; readonly story?: string }[],
   selected: string | null,
   caret: number,
   forward: boolean,
 ): string | null {
   const at = selected === null ? -1 : cards.findIndex((c) => c.id === selected);
   if (at >= 0) return cards[at + (forward ? 1 : -1)]?.id ?? null;
-  const found = forward ? cards.find((c) => c.from > caret) : cards.findLast((c) => c.from < caret);
+  const body = cards.filter((c) => c.story === undefined);
+  const found = forward
+    ? (body.find((c) => c.from > caret) ?? cards.find((c) => c.story !== undefined))
+    : body.findLast((c) => c.from < caret);
   return found?.id ?? null;
 }
 

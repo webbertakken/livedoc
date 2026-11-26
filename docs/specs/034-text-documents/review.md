@@ -326,6 +326,13 @@ office kinds; this spec says what a text document puts in them.
 
 - **Where**: each suggestion of the tab shown has a card in the margin beside its first part, stacked with the
   comment threads' cards as they are ([Threads in the margin](#threads-in-the-margin)), and in the sheet on a phone.
+- **In a header, footer or note** (director, 2026-11-26): the card sits beside the story's text as the page draws it.
+  The person editing that header, footer or note sees it beside the page they edit on; everyone else sees it beside
+  the first page showing it, so a header shown on many pages has one card. Without pages (pageless, a phone, print
+  layout off) headers and footers are not drawn and their suggestions have no card, only their rows in the comments
+  panel; a note's card sits beside the note under the writing.
+- **Order**: the tab's suggestions in the body's order, then its headers' and footers' in the pages' order, then its
+  notes', as Accept all settles them.
 - **A card**: the author's disc, name and time (the time of its first part), "From the file" under a file's author,
   and what it does, one line per kind, quoted text cut at 60 characters with an ellipsis (default copy):
   - under a comparison's author, "From the comparison" in place of "From the file" ([Compare documents](#compare-documents));
@@ -348,7 +355,11 @@ office kinds; this spec says what a text document puts in them.
 - **Move to next suggestion** (Ctrl+⌘+N then U on a Mac, Ctrl+Alt+N then U elsewhere) and **Move to previous
   suggestion** (P then U) select the next or previous suggestion of the tab shown, after or before the selected one or
   else the caret, scroll its text into view and focus its card; past the last or before the first nothing moves
-  (default, as comments).
+  (default, as comments). From the caret in the body, Next after the body's last goes on to the headers' and notes'.
+- **Going to a story's suggestion** (a row, Move to next or previous, Previous and Next): whoever may write or suggest
+  there has its header, footer or note opened, on the first page showing it, and its card selected and focused;
+  anyone else has its text scrolled into view and its card selected. A header's or footer's suggestion where no page
+  draws one says "This suggestion is in a header or footer, shown on pages only" (default) in the status line.
 - **Replies**: a selected card shows **Reply** to whoever may comment, as a thread's card does; the first reply
   begins a thread tied to the suggestion, on its stretch, quoting the card's first line, and every reply after joins
   it. The card shows the replies under its lines, with Edit, Delete and reactions as a thread's comments have them.

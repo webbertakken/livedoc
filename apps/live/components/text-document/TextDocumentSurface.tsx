@@ -942,6 +942,21 @@ export function TextDocumentSurface({
   const characterDialogs = useTextDocumentCharacterDialogs(activeView, textWrites);
   // Comment threads, their keys and panel, and the suggestion cards (review.md); an Editor accepts and rejects in a mode
   // that shows suggestions, whoever suggests takes back their own.
+  // The headers', footers' and notes' suggestions' cards (review.md "In a header, footer or note"); none while
+  // previewing, as the body's.
+  const { stories: drawnStories, open: openStory } = headers;
+  const suggestionStories = useMemo(
+    () =>
+      preview.previewing
+        ? null
+        : {
+            writings: drawnStories.writings,
+            subscribe: drawnStories.subscribe,
+            reveal: drawnStories.reveal,
+            open: openStory,
+          },
+    [preview.previewing, drawnStories, openStory],
+  );
   const suggestionRights = useMemo(
     () => ({
       accepts: canEdit && mode !== 'viewing',
@@ -975,6 +990,7 @@ export function TextDocumentSurface({
     onAssigned: mentions?.onAssigned,
     textWidth: Columns.width(page.caret.section.setup),
     preview,
+    stories: suggestionStories,
   });
   useEffect(() => {
     selectThreadRef.current = threads.select;
@@ -1389,6 +1405,7 @@ export function TextDocumentSurface({
               selfUserId={mentions?.selfUserId ?? null}
               keys={threadKeys}
               suggestions={suggestions}
+              storyTop={drawnStories.topOf}
               commenter={commenter}
               subscribe={changes.subscribe}
               subscribeCaret={changes.subscribeCaret}

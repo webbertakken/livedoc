@@ -11,6 +11,7 @@ import {
   SUGGESTION_QUOTE_MAX,
   suggestionBeside,
   suggestionCards,
+  storyCards,
 } from './text-document-suggestion-cards';
 
 const ADA = { key: 'k-ada', name: 'Ada', colour: '#0284c7' };
@@ -211,6 +212,52 @@ describe('suggestionBeside', () => {
     expect(suggestionBeside(cards, null, 10, true)).toBe('c');
     expect(suggestionBeside(cards, null, 10, false)).toBe('a');
     expect(suggestionBeside(cards, null, 1, false)).toBeNull();
+  });
+  it('goes on from the body to its stories, comparing the caret with the body alone', () => {
+    const withStories = [
+      { id: 'a', from: 2 },
+      { id: 'b', from: 10 },
+      { id: 'h', from: 1, story: 'header-1' },
+      { id: 'n', from: 1, story: 'note-1' },
+    ];
+    expect(suggestionBeside(withStories, null, 12, true)).toBe('h');
+    expect(suggestionBeside(withStories, null, 5, true)).toBe('b');
+    expect(suggestionBeside(withStories, null, 5, false)).toBe('a');
+    expect(suggestionBeside(withStories, null, 1, false)).toBeNull();
+    expect(suggestionBeside(withStories, 'h', 0, true)).toBe('n');
+    expect(suggestionBeside(withStories, 'h', 0, false)).toBe('b');
+  });
+});
+
+describe('storyCards', () => {
+  const story = (...blocks: PmNode[]) => docOf(...blocks);
+  it('reads each story in order, tagging its cards, skipping an id already read', () => {
+    const header = story(p([text('Head', ins(mark('h1')))]));
+    const note = story(p([text('Note', ins(mark('n1', BEN)))]), p([text('x', ins(mark('b1')))]));
+    const cards = storyCards(
+      [
+        { story: 'header-1', doc: header },
+        { story: 'note-1', doc: note },
+      ],
+      new Set(['b1']),
+    );
+    expect(cards.map((c) => [c.id, c.story, c.from])).toEqual([
+      ['h1', 'header-1', 1],
+      ['n1', 'note-1', 1],
+    ]);
+    expect(cards[1]!.author).toEqual(BEN);
+  });
+  it('reads a story shown twice once', () => {
+    const header = story(p([text('Head', ins(mark('h1')))]));
+    expect(
+      storyCards(
+        [
+          { story: 'header-1', doc: header },
+          { story: 'header-1', doc: header },
+        ],
+        new Set(),
+      ).map((c) => c.id),
+    ).toEqual(['h1']);
   });
 });
 

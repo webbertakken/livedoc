@@ -19,7 +19,10 @@ import {
   type TextDocumentThreadArrival,
 } from './useTextDocumentThreadArrival';
 import { useTextDocumentCommentsPanel } from './useTextDocumentCommentsPanel';
-import { useTextDocumentSuggestionCards } from './useTextDocumentSuggestionCards';
+import {
+  useTextDocumentSuggestionCards,
+  type SuggestionStories,
+} from './useTextDocumentSuggestionCards';
 import { useTextDocumentReviewPanel } from './useTextDocumentReviewPanel';
 import type { ReviewPreview } from './useTextDocumentReviewPreview';
 import { SUGGESTION_ROW } from '@/lib/text-document/text-document-comment-rows';
@@ -41,6 +44,7 @@ export function useTextDocumentReview({
   onAssigned,
   textWidth,
   preview,
+  stories = null,
 }: {
   /** The body's editor, and the editor with the caret. */
   view: EditorView | null;
@@ -70,6 +74,8 @@ export function useTextDocumentReview({
     readonly setMode: (mode: ReviewPreview) => void;
     readonly previewing: boolean;
   };
+  /** The headers, footers and notes drawn, whose suggestions have cards too; none while previewing. */
+  stories?: SuggestionStories | null;
 }) {
   // Comment threads in the margin, added on the body's writing (review.md "Threads in the margin").
   const threads = useTextDocumentThreads({
@@ -111,6 +117,7 @@ export function useTextDocumentReview({
     onSettled: resolveTied,
     say,
     textWidth,
+    stories,
   });
   const { select: selectSuggestion } = suggestions;
   useEffect(() => {
