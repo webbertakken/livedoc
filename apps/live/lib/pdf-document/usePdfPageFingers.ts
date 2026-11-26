@@ -1,7 +1,7 @@
 'use client';
 
 // One finger on a page with Select in hand (docs/specs/035-pdf-documents/reading-surface.md "Phone and tablet"): a tap
-// clears the selection, as a press does; a double tap hands its point over to zoom to the column; a long press selects
+// selects the mark it lands on, or else clears the selection, as a press does; a double tap hands its point over to zoom to the column; a long press selects
 // the word under it. A finger's presses in a row never select: the page asks `byFinger` before it does.
 import { useRef, type PointerEvent } from 'react';
 import { PageView, type PageMatrix, type PagePoint } from '@livedoc/pdf-documents';
@@ -27,6 +27,7 @@ export function usePdfPageFingers({
   pointAt,
   onText,
   onDoubleTap,
+  onTap,
 }: {
   index: number;
   // The page's box, once it is in the document.
@@ -38,6 +39,8 @@ export function usePdfPageFingers({
   pointAt: (client: Client) => PagePoint | null;
   onText: (index: number, gesture: PdfTextGesture) => void;
   onDoubleTap: (index: number, tap: PdfPageTap) => void;
+  // A tap at a point of the page: true where a mark there took it (marks.md "Changing a mark").
+  onTap: (at: PagePoint) => boolean;
 }) {
   const taps = useRef(PdfDoubleTap.initial());
   // What last pressed: a finger's presses in a row zoom, never select.
@@ -62,7 +65,7 @@ export function usePdfPageFingers({
     const at = toView ? pointAt(client) : null;
     if (!at || !toView) return;
     if (!tapped) {
-      if (state.last) onText(index, { kind: 'press', at, shift: false, alt: false });
+      if (state.last && !onTap(at)) onText(index, { kind: 'press', at, shift: false, alt: false });
       return;
     }
     const rect = event.currentTarget.getBoundingClientRect();

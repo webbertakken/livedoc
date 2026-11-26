@@ -98,7 +98,51 @@ test('a mark made here is selected, moved by a drag and the arrow keys, and dele
   const box = (await first.boundingBox())!;
   await page.mouse.click(box.x + box.width * 0.85, box.y + box.height * 0.38);
   await expect(outlines).toHaveCount(0);
+
+  // A box drawn from empty space (the top margin) selects every mark it touches; ⇧ with one adds to the selection.
+  await drag(page, first, [0.98, 0.01], [0.1, 0.36]);
+  await expect(outlines).toHaveCount(2);
+  await expect(page.locator('[data-pdf-mark-box]')).toHaveCount(0);
+  await page.screenshot({ path: test.info().outputPath('pdf-mark-box.png') });
+  await page.keyboard.press('Escape');
+  await expect(outlines).toHaveCount(0);
+  await page.mouse.click(...(await leftEdge(kind('rectangle'))));
+  await expect(outlines).toHaveCount(1);
+  await page.keyboard.down('Shift');
+  await drag(page, first, [0.02, 0.29], [0.45, 0.35]);
+  await page.keyboard.up('Shift');
+  await expect(outlines).toHaveCount(2);
   expectNoPageErrors(pageErrors);
+});
+
+test.describe('by a finger', () => {
+  test.use({ hasTouch: true });
+
+  test('a finger’s tap selects the mark it lands on, and one on nothing lets it go', async ({
+    page,
+    pageErrors,
+  }) => {
+    test.setTimeout(120_000);
+    await page.setViewportSize({ width: 1280, height: 860 });
+    await page.goto('/explorer/all');
+    await expect(page.getByRole('heading', { name: 'My Documents' }).first()).toBeVisible();
+    await dropPdf(page, 'Marks.pdf', await textPdf(2));
+    await page.waitForURL(/\/document\//, { timeout: 30_000 });
+    const first = await pageOneDrawn(page);
+    await (await officeMenuItem(page, ['Insert', 'Shape', 'Rectangle'])).click();
+    await drag(page, first, [0.5, 0.15], [0.75, 0.25]);
+    const rectangle = page.locator(`${PAGE_ONE} [data-pdf-mark-kind="rectangle"]`);
+    await expect(rectangle).toHaveCount(1);
+    await page.locator('[data-pdf-pages]').focus();
+    await page.keyboard.press('v');
+    const outlines = page.locator(`${PAGE_ONE} [data-pdf-mark-outline]`);
+    await page.touchscreen.tap(...(await leftEdge(rectangle)));
+    await expect(outlines).toHaveCount(1);
+    const box = (await first.boundingBox())!;
+    await page.touchscreen.tap(box.x + box.width * 0.85, box.y + box.height * 0.38);
+    await expect(outlines).toHaveCount(0);
+    expectNoPageErrors(pageErrors);
+  });
 });
 
 test('a selected mark is resized by its handles and by ⌥ with the arrow keys', async ({

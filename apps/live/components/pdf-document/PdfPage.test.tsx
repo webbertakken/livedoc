@@ -21,6 +21,7 @@ import type { PdfPageInk, PdfPageTool } from '@/lib/pdf-document/usePdfMarkTools
 import type { PdfPageShaping } from '@/lib/pdf-document/usePdfPageShape';
 import type { PdfPageStamping } from '@/lib/pdf-document/usePdfStampTool';
 import type { PdfPageTyping } from '@/lib/pdf-document/usePdfTyping';
+import type { PdfPageTexts } from '@/lib/pdf-document/pdf-page-texts';
 import type { PdfPageChoosing } from '@/lib/pdf-document/usePdfMarkSelection';
 import { PdfPage } from './PdfPage';
 
@@ -59,6 +60,8 @@ type Choosing = {
   fileMarks?: readonly FileMark[];
   chosen?: readonly string[];
   choosing?: PdfPageChoosing | null;
+  // The pages' text, where a test reads it.
+  texts?: PdfPageTexts | null;
 };
 
 async function page(
@@ -71,7 +74,14 @@ async function page(
   shaping: PdfPageShaping | null = null,
   typing: PdfPageTyping | null = null,
   stamping: PdfPageStamping | null = null,
-  { marks = [], fileOwn = [], fileMarks = [], chosen = [], choosing = null }: Choosing = {},
+  {
+    marks = [],
+    fileOwn = [],
+    fileMarks = [],
+    chosen = [],
+    choosing = null,
+    texts = null,
+  }: Choosing = {},
 ) {
   const onFileMarks = vi.fn();
   const onText = vi.fn();
@@ -109,7 +119,7 @@ async function page(
       chosen={chosen}
       choosing={choosing}
       onText={onText}
-      texts={null}
+      texts={texts}
       linkName={(target) => `Link to ${target.kind}`}
       onFollow={onFollow}
       found={null}
@@ -435,6 +445,7 @@ describe('changing a mark on a page', () => {
   })!;
   const choosing = (): PdfPageChoosing => ({
     mayChange: () => true,
+    chooseAll: vi.fn(),
     choose: vi.fn(),
     letGo: vi.fn(),
     leave: vi.fn(),
@@ -531,6 +542,56 @@ describe('changing a mark on a page', () => {
     });
     expect(chose.letGo).toHaveBeenCalled();
     expect(onText).toHaveBeenCalledWith(1, expect.objectContaining({ kind: 'press' }));
+  });
+
+  // marks.md "Changing a mark": a drag from empty space draws a box that selects the marks it touches.
+  it('draws a box from empty space and selects the marks it touches, the text left alone', async () => {
+    const chose = choosing();
+    const texts: PdfPageTexts = { read: async () => null, tags: async () => null };
+    const { box, onText, view } = await page(
+      'select',
+      [],
+      [],
+      false,
+      null,
+      null,
+      null,
+      null,
+      null,
+      {
+        marks: [arrow],
+        choosing: chose,
+        texts,
+      },
+    );
+    fireEvent.pointerDown(box, {
+      button: 0,
+      pointerType: 'mouse',
+      pointerId: 1,
+      clientX: 50,
+      clientY: 50,
+    });
+    await act(async () => {});
+    fireEvent.pointerMove(box, { pointerId: 1, clientX: 300, clientY: 120 });
+    expect(view.container.querySelector('[data-pdf-mark-box]')).not.toBeNull();
+    fireEvent.pointerUp(box, { pointerId: 1, clientX: 300, clientY: 120 });
+    expect(chose.chooseAll).toHaveBeenCalledWith(1, ['a1'], false);
+    expect(view.container.querySelector('[data-pdf-mark-box]')).toBeNull();
+    expect(onText).not.toHaveBeenCalledWith(1, expect.objectContaining({ kind: 'drag' }));
+  });
+
+  // marks.md "Changing a mark": a finger's tap selects the mark it lands on.
+  it('selects the mark a finger taps, and leaves the text alone', async () => {
+    const chose = choosing();
+    const { box, onText } = await page('select', [], [], false, null, null, null, null, null, {
+      marks: [arrow],
+      choosing: chose,
+    });
+    const finger = { pointerType: 'touch', pointerId: 7, clientX: 150, clientY: 100 };
+    fireEvent.pointerDown(box, finger);
+    fireEvent.pointerUp(box, finger);
+    expect(chose.choose).toHaveBeenCalledWith(1, 'a1', false);
+    expect(onText).not.toHaveBeenCalled();
   });
 
   // marks.md "Share roles": Select reaches a Participant's own marks alone; a press on another's falls to the text.

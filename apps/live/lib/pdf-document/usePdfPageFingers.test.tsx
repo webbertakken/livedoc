@@ -9,11 +9,12 @@ import { usePdfPageFingers } from './usePdfPageFingers';
 
 const MATRIX: PageMatrix = [1, 0, 0, -1, 0, 792];
 
-function fingers({ selecting = true, onPage = true } = {}) {
+function fingers({ selecting = true, onPage = true, onMark = false } = {}) {
   const box = document.createElement('div');
   box.getBoundingClientRect = () => ({ left: 0, top: 0, width: 612, height: 792 }) as DOMRect;
   const onText = vi.fn();
   const onDoubleTap = vi.fn();
+  const onTap = vi.fn(() => onMark);
   const hook = renderHook(() =>
     usePdfPageFingers({
       index: 0,
@@ -23,9 +24,10 @@ function fingers({ selecting = true, onPage = true } = {}) {
       pointAt: (client) => (onPage ? { x: client.x, y: 792 - client.y } : null),
       onText,
       onDoubleTap,
+      onTap,
     }),
   );
-  return { box, hook, onText, onDoubleTap };
+  return { box, hook, onText, onDoubleTap, onTap };
 }
 
 const pointer = (box: HTMLElement, pointerType = 'touch') =>
@@ -43,6 +45,24 @@ afterEach(() => {
 });
 
 describe('usePdfPageFingers', () => {
+  // marks.md "Changing a mark": a finger's tap selects the mark it lands on; on none it falls to the text.
+  it('asks the marks first for a tap, the text only where it lands on none', () => {
+    const onMark = fingers({ onMark: true });
+    act(() => onMark.hook.result.current.down(pointer(onMark.box)));
+    act(() => onMark.hook.result.current.up(pointer(onMark.box)));
+    expect(onMark.onTap).toHaveBeenCalledWith({ x: 72, y: 700 });
+    expect(onMark.onText).not.toHaveBeenCalled();
+    const onNone = fingers();
+    act(() => onNone.hook.result.current.down(pointer(onNone.box)));
+    act(() => onNone.hook.result.current.up(pointer(onNone.box)));
+    expect(onNone.onText).toHaveBeenCalledWith(0, {
+      kind: 'press',
+      at: { x: 72, y: 700 },
+      shift: false,
+      alt: false,
+    });
+  });
+
   it('does nothing with another tool in hand, off the page, or for a mouse', () => {
     for (const shape of [{ selecting: false }, { onPage: false }]) {
       const { box, hook, onText } = fingers(shape);

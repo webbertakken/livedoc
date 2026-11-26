@@ -102,3 +102,21 @@ describe('MarkHit', () => {
     expect(MarkHit.at([over, stamp], { x: 60, y: 720 }, REACH)?.id).toBe('s');
   });
 });
+
+describe('MarkHit.touching', () => {
+  it('finds every mark whose smallest box meets the box, edges included, in the order drawn', () => {
+    const marks = [underline, drawing, rectangle];
+    expect(MarkHit.touching(marks, [0, 0, 1000, 1000]).map((mark) => mark.id)).toEqual([
+      'u',
+      'd',
+      'r',
+    ]);
+    expect(MarkHit.touching(marks, [150, 150, 400, 750]).map((mark) => mark.id)).toEqual([
+      'u',
+      'r',
+    ]);
+    // The rectangle's corner alone.
+    expect(MarkHit.touching(marks, [200, 200, 210, 210]).map((mark) => mark.id)).toEqual(['r']);
+    expect(MarkHit.touching(marks, [300, 300, 400, 400])).toEqual([]);
+  });
+});
