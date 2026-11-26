@@ -38,7 +38,11 @@ import { DocumentTabs, FIRST_DOCUMENT_TAB_ID } from '../model/document-tabs';
 import { tableElement } from './live-tables';
 import { CommentPlaces } from './live-thread-files';
 import { THREADS_MAP } from './live-names';
-import { inlineSuggestionAttributes, paragraphSuggestionAttributes } from './live-suggestion-files';
+import {
+  blockSuggestionAttributes,
+  inlineSuggestionAttributes,
+  paragraphSuggestionAttributes,
+} from './live-suggestion-files';
 import type { InlineSuggested } from '../model/suggestions';
 
 /** An object's suggestions: inserted or deleted, never a format change (a run's alone). */
@@ -192,8 +196,12 @@ function blockNode(block: Block, stories: StoryWriter, places?: CommentPlaces): 
       return paragraphNode(block, stories, places);
     case 'section': {
       const element = new Y.XmlElement(SECTION_BREAK);
-      const { type: _type, headers, ...section } = block;
-      setAttributes(element, { ...section, headers: stories.headers(headers) });
+      const { type: _type, headers, suggested, ...section } = block;
+      setAttributes(element, {
+        ...section,
+        headers: stories.headers(headers),
+        ...blockSuggestionAttributes(suggested),
+      });
       return element;
     }
     case 'kept': {
@@ -205,7 +213,11 @@ function blockNode(block: Block, stories: StoryWriter, places?: CommentPlaces): 
       return tableElement(block, (b) => blockNode(b, stories, places), setAttributes);
     case 'contents': {
       const element = new Y.XmlElement(CONTENTS);
-      setAttributes(element, { look: block.look, levels: block.levels });
+      setAttributes(element, {
+        look: block.look,
+        levels: block.levels,
+        ...blockSuggestionAttributes(block.suggested),
+      });
       element.insert(
         0,
         block.entries.map((p) => paragraphNode(p, stories)),

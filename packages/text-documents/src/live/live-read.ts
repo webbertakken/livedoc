@@ -43,6 +43,8 @@ import {
   RUN_KEPT_MARK,
   SECTION_BREAK,
   CONTENTS,
+  DELETION_MARK,
+  INSERTION_MARK,
   SOURCE_MAP,
   STYLES_MAP,
   TEXT_PROPERTY_MARK_OF,
@@ -56,7 +58,11 @@ import { readSource } from './live-source';
 import { StoryReader, type LiveHeaders } from './live-stories';
 import { readLiveComments, type LiveCommentMarks } from './live-thread-files';
 import type { CommentMark } from '../model/comments';
-import { readInlineSuggested, readParagraphSuggested } from './live-suggestion-files';
+import {
+  readInlineSuggested,
+  readBlockSuggested,
+  readParagraphSuggested,
+} from './live-suggestion-files';
 
 const PROPERTY_OF_MARK = new Map<string, keyof TextProps>(
   (Object.entries(TEXT_PROPERTY_MARK_OF) as [keyof TextProps, string][]).map(([p, m]) => [m, p]),
@@ -258,13 +264,17 @@ function blockOf(
         suggested: readParagraphSuggested(a, normal),
       });
     case SECTION_BREAK: {
-      const { headers, ...rest } = a as Omit<SectionBreak, 'type' | 'headers'> & {
-        headers?: LiveHeaders;
-      };
+      const {
+        headers,
+        [INSERTION_MARK]: _inserted,
+        [DELETION_MARK]: _deleted,
+        ...rest
+      } = a as Omit<SectionBreak, 'type' | 'headers'> & { headers?: LiveHeaders } & Attributes;
       return defined({
         type: 'section',
         ...rest,
         headers: stories?.headers(headers),
+        suggested: readBlockSuggested(a),
       }) as SectionBreak;
     }
     case TABLE:
@@ -282,6 +292,7 @@ function blockOf(
         look: (a.look as TableOfContents['look'] | undefined) ?? 'plain',
         levels: Contents.levelsOf(a.levels as number | undefined),
         entries,
+        ...defined({ suggested: readBlockSuggested(a) }),
       };
     }
     case KEPT_BLOCK:

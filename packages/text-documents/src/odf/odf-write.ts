@@ -60,8 +60,14 @@ import { Blocks } from '../model/tables';
 import { DocumentTabs, type DocumentTab } from '../model/document-tabs';
 import type { CommentMark, FileThread } from '../model/comments';
 import { odfAnnotationNames, odfThreadEndXml, odfThreadStartXml } from './odf-comments';
-import { Suggestions, type ParagraphSuggested } from '../model/suggestions';
-import { changeEndXml, changeStartXml, inlineChangeKey, OdfChangeRegions } from './odf-suggestions';
+import { SUGGESTED_EMPTY_JOINER, Suggestions, type ParagraphSuggested } from '../model/suggestions';
+import {
+  changeEndXml,
+  changeStartXml,
+  inlineChangeKey,
+  OdfChangeRegions,
+  type WholeChange,
+} from './odf-suggestions';
 
 export type OdfWriteOptions = { flat: boolean; generator: string };
 
@@ -513,8 +519,11 @@ function contentXml(
   blocks: readonly Block[],
   story: boolean,
   later?: { restore: boolean },
+  // A table's cell: its suggestions tracked as its table's are, and a suggested table's change each paragraph is whole in.
+  cell?: { tracks: boolean; whole?: WholeChange },
 ): string {
   const doc = w.document;
+  const tracks = cell?.tracks ?? !story;
   const out: string[] = [];
   const firstMaster = story ? undefined : w.master(doc.section);
   let pendingMaster: string | undefined = later
@@ -539,11 +548,19 @@ function contentXml(
     generated: (prefix, body) => w.generated(prefix, body),
     keptName: (kept) => w.keptName(kept),
     kept: (xml) => w.kept(xml),
-    cellXml: (cellBlocks) => contentXml(w, cellBlocks, true),
+    cellXml: (cellBlocks, whole) =>
+      contentXml(w, cellBlocks, true, undefined, { tracks, ...compact({ whole }) }),
+    whole: (table) => {
+      const suggested = Suggestions.ofBlock(table.suggested);
+      return suggested && tracks ? { ...suggested, block: 'table' } : undefined;
+    },
     tableName: () => w.tableName(),
   };
 
-  const paragraphXml = (p: Paragraph): string => {
+  let pendingSectionChange: string | undefined;
+  const paragraphXml = (p: Paragraph, wholeChange = cell?.whole): string => {
+    const sectionChange = pendingSectionChange;
+    pendingSectionChange = undefined;
     const first = isFirstParagraph;
     const start = pendingStart;
     // A start needs its page: the first paragraph names the document's master page with it, as LibreOffice does.
@@ -557,7 +574,11 @@ function contentXml(
     const outline = p.props.outlineLevel ?? Styles.outlineLevel(doc.styles, p.style);
     const segments: Segment[] = [];
     const marker = (xml: string) => segments.push({ kind: 'kept', xml });
-    const tracks = !story;
+    // A suggested table's or table of contents' change holds the whole paragraph, a joiner in an empty one.
+    const whole =
+      wholeChange &&
+      w.changes.add(wholeChange.kind, wholeChange.mark, { block: wholeChange.block });
+    if (whole) marker(changeStartXml(whole));
     if (tracks) for (const id of w.pendingEnds.splice(0)) marker(changeEndXml(id));
     const format = tracks ? p.suggested?.format : undefined;
     const paragraphChange =
@@ -619,6 +640,9 @@ function contentXml(
     for (const kind of ['format', 'deletion', 'insertion'] as const)
       if (open[kind]) marker(changeEndXml(open[kind].id));
     if (paragraphChange) marker(changeEndXml(paragraphChange));
+    if (whole && !p.inlines.some((i) => i.type !== 'comment' && i.type !== 'bookmark'))
+      segments.push({ kind: 'text', text: SUGGESTED_EMPTY_JOINER });
+    if (whole) marker(changeEndXml(whole));
     const next = tracks ? w.marksBefore.get(p) : undefined;
     for (const [kind, mark] of [
       ['insertion', next?.break],
@@ -631,7 +655,7 @@ function contentXml(
     }
     const tag = outline !== undefined && outline >= 1 ? 'text:h' : 'text:p';
     const level = tag === 'text:h' ? attr('text:outline-level', String(outline)) : '';
-    return `<${tag}${attr('text:style-name', style)}${level}>${paragraphContentXml(segments)}</${tag}>`;
+    return `<${tag}${attr('text:style-name', style)}${level}${attr('livedoc:section-change', sectionChange)}>${paragraphContentXml(segments)}</${tag}>`;
   };
 
   let contentsCount = 0;
@@ -647,10 +671,29 @@ function contentXml(
     else if (block.type === 'table') out.push(odfTableXml(tables, block));
     else if (block.type === 'contents') {
       contentsCount += 1;
-      out.push(odfContentsXml(block, contentsCount, doc.styles, block.entries.map(paragraphXml)));
+      // A suggested one: each entry whole in its change, an empty one a joiner (standard-mapping.md).
+      const suggested = Suggestions.ofBlock(block.suggested);
+      const whole: WholeChange | undefined =
+        suggested && tracks ? { ...suggested, block: 'contents' } : undefined;
+      const entries =
+        whole && block.entries.length === 0
+          ? [Paragraphs.of('', Styles.idOfRole(doc.styles, 'normal') ?? 'Standard')]
+          : block.entries;
+      out.push(
+        odfContentsXml(
+          block,
+          contentsCount,
+          doc.styles,
+          entries.map((p) => paragraphXml(p, whole)),
+        ),
+      );
     } else {
       section = block;
       firstInSection = true;
+      // A suggested section break: a changed region the element starting it names (standard-mapping.md).
+      const suggested = Suggestions.ofBlock(block.suggested);
+      const change = () =>
+        suggested && tracks ? w.changes.add(suggested.kind, suggested.mark) : undefined;
       if (regionOpen) {
         out.push(`</${regionOpen}>`);
         regionOpen = undefined;
@@ -658,12 +701,21 @@ function contentXml(
       if (block.start === 'continuous') {
         const open = sectionOpen(w, block);
         if (open) {
-          out.push(open.xml);
+          const named = change();
+          out.push(
+            named
+              ? open.xml.replace(
+                  /^<[^\s>/]+/,
+                  (tag) => `${tag}${attr('livedoc:section-change', named)}`,
+                )
+              : open.xml,
+          );
           regionOpen = open.close;
         }
       } else {
         pendingMaster = w.master(block);
         pendingStart = block.numberStart;
+        pendingSectionChange = change();
         const next = blocks[i + 1];
         if (!next || next.type !== 'paragraph')
           out.push(

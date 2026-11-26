@@ -797,6 +797,52 @@ export const CONSTRUCTS: Record<string, (format: TextDocumentFormat) => TextDocu
       },
     ]);
   },
+  // standard-mapping.md "Suggested blocks": a table of contents suggested deleted, a table suggested inserted with an
+  // empty cell and another person's insertion inside, and a section break suggested inserted.
+  suggestedBlocks: (format) => {
+    const at = Date.UTC(2026, 10, 26, 10);
+    const mark = (id: string, name: string) => ({ id, at, author: { name } });
+    const p = (inlines: Paragraph['inlines']) => paragraph(format, 'normal', inlines);
+    const cell = (blocks: Block[]): TableCell => ({ blocks, props: {} });
+    return base(format, [
+      {
+        type: 'contents',
+        look: 'links',
+        levels: 1,
+        entries: [p([run('Alpha', {}, { link: '#_alpha0000001' })])],
+        suggested: { deletion: mark('sContents', 'Bo') },
+      },
+      paragraph(format, 'heading1', [
+        { type: 'bookmark', name: '_alpha0000001', props: {} },
+        run('Alpha'),
+      ]),
+      {
+        type: 'table',
+        columns: [144, 144],
+        headerRows: 0,
+        rows: [
+          { cells: [cell([p([run('A1')])]), cell([p([])])] },
+          {
+            cells: [
+              cell([
+                p([run('B1 '), { ...run('mine'), suggested: { insertion: mark('sBo', 'Bo') } }]),
+              ]),
+              cell([p([run('B2')])]),
+            ],
+          },
+        ],
+        suggested: { insertion: mark('sTable', 'Ada Lovelace') },
+      },
+      p([run('Between')]),
+      {
+        type: 'section',
+        start: 'next-page',
+        setup: PageSetup.of('a4', format),
+        suggested: { insertion: mark('sSection', 'Ada Lovelace') },
+      },
+      p([run('After')]),
+    ]);
+  },
   // links-and-navigation.md "Table of contents": a Dotted one of two levels, each entry its heading's text and page
   // number linked to the heading's id, then the headings it lists.
   contents: (format) => {

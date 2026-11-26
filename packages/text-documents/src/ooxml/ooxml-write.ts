@@ -53,11 +53,18 @@ import {
   runPropsChildren,
   sectionXml,
 } from './ooxml-props';
-import { Suggestions, type InlineSuggested, type ParagraphSuggested } from '../model/suggestions';
+import {
+  Suggestions,
+  type BlockSuggestionKind,
+  type FileSuggestionMark,
+  type InlineSuggested,
+  type ParagraphSuggested,
+} from '../model/suggestions';
 import {
   OoxmlRevisionIds,
   paragraphChangeXml,
   paragraphMarkXml,
+  revisionAttributes,
   runChangeXml,
   withParagraphMark,
   wrapRevisions,
@@ -130,6 +137,8 @@ class OoxmlWriter {
   readonly revisionIds: OoxmlRevisionIds;
   /** Each paragraph carrying the next one's break or join on its mark. */
   readonly #markBefore: Map<Paragraph, ParagraphSuggested>;
+  /** The suggested section breaks written in the paragraph before them, its mark theirs, as Word writes one. */
+  readonly #sectionsInParagraph = new Set<SectionBreak>();
 
   constructor(tabbed: TextDocument) {
     // Whole-document walks (sections, notes, lists) read every tab's blocks as one flow.
@@ -178,6 +187,18 @@ class OoxmlWriter {
     this.assignNumIds();
     this.revisionIds = new OoxmlRevisionIds(Suggestions.marks(doc.body));
     this.#markBefore = Suggestions.marksBefore(doc.body);
+    // A suggested section break goes in the paragraph before it, where its mark is free; else in an empty paragraph
+    // of its own (standard-mapping.md "Suggested blocks").
+    doc.body.forEach((block, i) => {
+      const previous = doc.body[i - 1];
+      const suggested = block.type === 'section' ? block.suggested : undefined;
+      if (!suggested || previous?.type !== 'paragraph' || this.#markBefore.has(previous)) return;
+      this.#markBefore.set(
+        previous,
+        suggested.insertion ? { break: suggested.insertion } : { join: suggested.deletion! },
+      );
+      this.#sectionsInParagraph.add(block as SectionBreak);
+    });
   }
 
   kept(xml: KeptXml, ns: Readonly<Record<string, string>> = this.ns): string {
@@ -464,10 +485,23 @@ class OoxmlWriter {
 
   /** A table, its cells' blocks written as the body's. */
   tableXml(table: Table): string {
+    const suggested = Suggestions.ofBlock(table.suggested);
     return ooxmlTableXml(
-      { kept: (xml) => this.kept(xml), blocksXml: (blocks) => this.blocksXml(blocks) },
+      {
+        kept: (xml) => this.kept(xml),
+        blocksXml: (blocks) =>
+          this.blocksXml(
+            suggested ? Suggestions.overlaid(blocks, suggested.kind, suggested.mark) : blocks,
+          ),
+        ...(suggested ? { rowRevision: () => this.markRevision(suggested) } : {}),
+      },
       table,
     );
+  }
+
+  /** A whole block's suggestion as an empty `w:ins` or `w:del`, for a row's or a paragraph mark's properties. */
+  markRevision({ kind, mark }: { kind: BlockSuggestionKind; mark: FileSuggestionMark }): string {
+    return `<w:${kind === 'insertion' ? 'ins' : 'del'} ${revisionAttributes(mark, this.revisionIds)}/>`;
   }
 
   /**
@@ -475,11 +509,27 @@ class OoxmlWriter {
    * Contents gallery holding the entries, the first opening its TOC field, the last closing it.
    */
   contentsXml(block: TableOfContents): string {
-    const entries = block.entries.map((p) => this.paragraphXml(p, undefined));
-    if (entries.length === 0) entries.push('<w:p/>');
+    const suggested = Suggestions.ofBlock(block.suggested);
     const instruction = `TOC \\o "1-${block.levels}" \\h \\z \\u${block.look === 'links' ? ' \\n' : ''}`;
-    const begin = `<w:r><w:fldChar w:fldCharType="begin"/></w:r><w:r><w:instrText xml:space="preserve"> ${escapeXmlAttribute(instruction)} </w:instrText></w:r><w:r><w:fldChar w:fldCharType="separate"/></w:r>`;
-    const end = '<w:r><w:fldChar w:fldCharType="end"/></w:r>';
+    // A suggested table of contents' field is in its change too, as Word writes one (standard-mapping.md).
+    const tracked = (xml: string) =>
+      suggested
+        ? wrapRevisions(
+            [{ xml, suggested: { [suggested.kind]: suggested.mark } }],
+            this.revisionIds,
+          )
+        : xml;
+    const begin = tracked(
+      `<w:r><w:fldChar w:fldCharType="begin"/></w:r><w:r><w:instrText xml:space="preserve"> ${escapeXmlAttribute(instruction)} </w:instrText></w:r><w:r><w:fldChar w:fldCharType="separate"/></w:r>`,
+    );
+    const end = tracked('<w:r><w:fldChar w:fldCharType="end"/></w:r>');
+    // The field first, so its change keeps the file's number for the table of contents' suggestion.
+    const entries = (
+      suggested
+        ? (Suggestions.overlaid(block.entries, suggested.kind, suggested.mark) as Paragraph[])
+        : block.entries
+    ).map((p) => this.paragraphXml(p, undefined));
+    if (entries.length === 0) entries.push('<w:p/>');
     entries[0] = withFieldStart(entries[0]!, begin);
     const last = entries.length - 1;
     entries[last] = entries[last]!.replace(/(<\/w:p>|<w:p\/>)$/, (close) =>
@@ -509,7 +559,11 @@ class OoxmlWriter {
     const blocks: readonly Block[] = this.doc.body;
     blocks.forEach((block, i) => {
       const next = blocks[i + 1];
-      const ends = next?.type === 'section' ? current : undefined;
+      // A suggested section break's properties are in an empty paragraph of its own, its mark tracked (standard-mapping.md).
+      const ends =
+        next?.type === 'section' && (!next.suggested || this.#sectionsInParagraph.has(next))
+          ? current
+          : undefined;
       this.#tabEnding = this.tabEndingAt(block.type === 'section' ? block : next);
       if (block.type === 'paragraph') out.push(this.paragraphXml(block, ends));
       else if (block.type === 'kept' || block.type === 'table' || block.type === 'contents') {
@@ -523,7 +577,14 @@ class OoxmlWriter {
         if (ends) out.push(`<w:p><w:pPr>${this.sectPr(ends)}</w:pPr></w:p>`);
       } else {
         const previous = blocks[i - 1];
-        if (!previous || previous.type === 'section')
+        const suggested = this.#sectionsInParagraph.has(block)
+          ? undefined
+          : Suggestions.ofBlock(block.suggested);
+        if (suggested)
+          out.push(
+            `<w:p><w:pPr><w:rPr>${this.markRevision(suggested)}</w:rPr>${this.sectPr(current)}</w:pPr></w:p>`,
+          );
+        else if (!previous || previous.type === 'section')
           out.push(`<w:p><w:pPr>${this.sectPr(current)}</w:pPr></w:p>`);
         current = block satisfies SectionBreak;
       }

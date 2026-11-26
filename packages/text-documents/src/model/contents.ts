@@ -2,6 +2,7 @@
 // "Tables of contents"): one block of the body, its look, the heading levels it lists (1 up to a level), and its
 // entries, paragraphs as the body's, each linking to its heading.
 import type { Paragraph } from './blocks';
+import type { BlockSuggested } from './suggestions';
 import { Styles, type Style } from './styles';
 
 /** Plain text (page numbers at the margin), Dotted (dots leading to them) or With blue links (no page numbers). */
@@ -13,6 +14,8 @@ export type TableOfContents = {
   /** It lists headings of levels 1 up to this, 1 to CONTENTS_LEVELS_MAX. */
   readonly levels: number;
   readonly entries: readonly Paragraph[];
+  /** Its insertion or deletion, whole (review.md "How a suggestion is kept"). */
+  readonly suggested?: BlockSuggested;
 };
 
 /** The deepest heading level a table of contents lists. */

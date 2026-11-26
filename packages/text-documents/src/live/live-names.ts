@@ -44,14 +44,24 @@ export const SECTION_BREAK_ATTRIBUTES = [
   'lineNumbers',
   'kept',
   'region',
+  // Its insertion or deletion, whole (review.md "How a suggestion is kept").
+  'insertion',
+  'deletion',
 ] as const;
 /**
  * A kept block's name and XML. `table`: a table held whole as the model's value, as documents imported before the
  * editor drew tables hold one; read as that table, never written.
  */
-export const CONTENTS_ATTRIBUTES = ['look', 'levels'] as const;
+export const CONTENTS_ATTRIBUTES = ['look', 'levels', 'insertion', 'deletion'] as const;
 export const KEPT_BLOCK_ATTRIBUTES = ['name', 'xml', 'table'] as const;
-export const TABLE_ATTRIBUTES = ['align', 'indent', 'kept', 'tag'] as const;
+export const TABLE_ATTRIBUTES = [
+  'align',
+  'indent',
+  'kept',
+  'tag',
+  'insertion',
+  'deletion',
+] as const;
 export const TABLE_ROW_ATTRIBUTES = ['height', 'heightRule', 'breaks', 'kept', 'tag'] as const;
 /** A cell's spans, its spanned columns' widths in points, its formatting and what its file kept. */
 export const TABLE_CELL_ATTRIBUTES = [

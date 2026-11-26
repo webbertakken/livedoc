@@ -4,6 +4,7 @@ import type { KeptXml } from '@livedoc/office-packages';
 import type { Block, Paragraph } from './blocks';
 import { Paragraph as Paragraphs } from './blocks';
 import type { BorderLine, KeptProperties } from './props';
+import type { BlockSuggested } from './suggestions';
 
 /** (default) The most rows a table holds (tables.md "Limits"); past it, it stays a kept block. */
 export const TEXT_DOCUMENT_TABLE_MAX_ROWS = 1000;
@@ -72,6 +73,8 @@ export type Table = {
   /** ODF: the table style; OOXML: `w:tblPr`. */
   readonly kept?: KeptProperties;
   readonly tag?: KeptXml;
+  /** Its insertion or deletion, whole (review.md "How a suggestion is kept"). */
+  readonly suggested?: BlockSuggested;
 };
 
 /** A place of the grid: the cell covering it, the row and column the cell starts at, and whether it starts here. */

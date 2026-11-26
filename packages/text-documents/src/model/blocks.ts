@@ -10,7 +10,7 @@ import type { Equation } from './equations';
 import type { Bookmark } from './bookmarks';
 import type { CommentMark } from './comments';
 import type { TableOfContents } from './contents';
-import type { InlineSuggested, ParagraphSuggested } from './suggestions';
+import type { BlockSuggested, InlineSuggested, ParagraphSuggested } from './suggestions';
 
 /** Characters with one formatting: tabs as `\t`, line breaks as `\n`. */
 export type Run = {
@@ -95,6 +95,8 @@ export type SectionBreak = {
   readonly type: 'section';
   /** ODF: a continuous section that came as a `text:section`, its start tag kept. */
   readonly region?: KeptXml;
+  /** Its insertion or deletion, whole (review.md "How a suggestion is kept"). */
+  readonly suggested?: BlockSuggested;
 } & Section;
 
 /** A body-level element the model does not map (a table of contents, a table past the limits). */

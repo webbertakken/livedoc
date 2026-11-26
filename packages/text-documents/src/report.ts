@@ -20,6 +20,7 @@ export type DroppedReason =
   | 'comment-unpaired'
   | 'comment-in-story'
   | 'suggestion-in-story'
+  | 'suggestion-dangling'
   | 'suggestion-last-mark'
   | 'suggestion-paragraphs'
   | 'suggestion-unknown';

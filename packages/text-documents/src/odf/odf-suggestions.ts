@@ -30,6 +30,10 @@ export type OdfChange = {
   readonly kind: Kind;
   readonly mark: FileSuggestionMark;
   readonly paragraph: boolean;
+  /** A whole block's region: a suggested table's row or table of contents (`livedoc:block`). */
+  readonly block?: string;
+  /** Whether LiveDoc wrote it: it carries one of LiveDoc's own attributes. */
+  readonly livedoc: boolean;
   readonly before?: unknown;
   readonly deleted: readonly XmlElement[];
 };
@@ -66,6 +70,10 @@ export function readOdfChangedRegions(
     const own = attributeOf(region, LIVEDOC_NS, 'suggestion');
     const at = Comments.timeOf(said('date'));
     const before = attributeOf(region, LIVEDOC_NS, 'before');
+    const block = attributeOf(region, LIVEDOC_NS, 'block');
+    const livedoc = [own, before, block, attributeOf(region, LIVEDOC_NS, 'paragraph')].some(
+      (a) => a !== undefined,
+    );
     regions.set(id, {
       kind: KIND_OF[change.local]!,
       mark: {
@@ -74,6 +82,8 @@ export function readOdfChangedRegions(
         author: Suggestions.authorOf(said('creator')),
       },
       paragraph: attributeOf(region, LIVEDOC_NS, 'paragraph') === 'true',
+      livedoc,
+      ...(block === undefined ? {} : { block }),
       ...(before === undefined ? {} : { before: parsed(before) }),
       deleted: childElements(change).filter(
         (c) => !(c.uri === NS.office && c.local === 'change-info'),
@@ -98,10 +108,38 @@ const isObject = (value: unknown): value is Record<string, unknown> =>
 export class OdfChangeTracker {
   readonly regions: ReadonlyMap<string, OdfChange>;
   readonly #open = new Map<string, OdfChange>();
+  /** The regions a mark or a section's pointer names; any other is dangling. */
+  readonly #named = new Set<string>();
   #paragraphFormat: OdfChange | undefined;
 
   constructor(regions: ReadonlyMap<string, OdfChange>) {
     this.regions = regions;
+  }
+
+  /**
+   * Which marks may make a whole block of `block`'s kind suggested: in a file LiveDoc wrote, only its block regions'
+   * (so text suggested into every cell stays text); in another suite's, any (standard-mapping.md "Suggested blocks").
+   */
+  blockMarks(block: 'table' | 'contents'): ((mark: FileSuggestionMark) => boolean) | undefined {
+    const regions = [...this.regions.values()];
+    if (!regions.some((r) => r.livedoc)) return undefined;
+    const ids = new Set(regions.filter((r) => r.block === block).map((r) => r.mark.id));
+    return (mark) => ids.has(mark.id);
+  }
+
+  /** A section break's suggestion from the region its start names; none for a region that is not one, which dangles. */
+  sectionChange(
+    id: string,
+  ): { insertion?: FileSuggestionMark; deletion?: FileSuggestionMark } | undefined {
+    const region = this.regions.get(id);
+    if (!region || region.kind === 'format') return undefined;
+    this.#named.add(id);
+    return { [region.kind]: region.mark };
+  }
+
+  /** The regions nothing named: dangling, read as nothing. */
+  unnamed(): string[] {
+    return [...this.regions.keys()].filter((id) => !this.#named.has(id));
   }
 
   /** Whether the element is a change mark: a range's start or end, or the point form's deletion. */
@@ -117,6 +155,7 @@ export class OdfChangeTracker {
     const id = attributeOf(e, NS.text, 'change-id');
     const region = id === undefined ? undefined : this.regions.get(id);
     if (!region || id === undefined) return undefined;
+    this.#named.add(id);
     if (e.local === 'change') return region.kind === 'deletion' ? region : undefined;
     if (e.local === 'change-end') {
       this.#open.delete(id);
@@ -140,10 +179,10 @@ export class OdfChangeTracker {
   /** What an inline read now is part of: a run's format change with its formatting before (its own, when unsaid). */
   inline(run?: { style?: string; props: TextProps }): InlineSuggested | undefined {
     let out: InlineSuggested | undefined;
+    // The latest range opened wins: one person's insertion inside a suggested row's range is their own.
     for (const change of this.#open.values()) {
-      if (change.kind === 'insertion' && !out?.insertion) out = { ...out, insertion: change.mark };
-      else if (change.kind === 'deletion' && !out?.deletion)
-        out = { ...out, deletion: change.mark };
+      if (change.kind === 'insertion') out = { ...out, insertion: change.mark };
+      else if (change.kind === 'deletion') out = { ...out, deletion: change.mark };
       else if (change.kind === 'format' && run && !out?.format)
         out = { ...out, format: { ...change.mark, before: runBefore(change.before, run) } };
     }
@@ -198,6 +237,16 @@ function runBefore(
 const escape = (value: string): string =>
   value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
+/**
+ * A suggested table's or table of contents' change, each paragraph of it whole in a region of its own carrying the
+ * block's suggestion: LibreOffice honours one start and end per region (standard-mapping.md "Suggested blocks").
+ */
+export type WholeChange = {
+  readonly kind: 'insertion' | 'deletion';
+  readonly mark: FileSuggestionMark;
+  readonly block: 'table' | 'contents';
+};
+
 /** The changed regions a written document lists, each range given its own id; `text:tracked-changes` of them. */
 export class OdfChangeRegions {
   readonly #regions: string[] = [];
@@ -206,7 +255,7 @@ export class OdfChangeRegions {
   add(
     kind: Kind,
     mark: FileSuggestionMark,
-    extra: { before?: unknown; paragraph?: boolean } = {},
+    extra: { before?: unknown; paragraph?: boolean; block?: 'table' | 'contents' } = {},
   ): string {
     const id = `ct${this.#regions.length + 1}`;
     const element = kind === 'format' ? 'text:format-change' : `text:${kind}`;
@@ -217,7 +266,9 @@ export class OdfChangeRegions {
     const own = `f.${id}` === mark.id ? '' : ` livedoc:suggestion="${escape(mark.id)}"`;
     const before =
       extra.before === undefined ? '' : ` livedoc:before="${escape(JSON.stringify(extra.before))}"`;
-    const paragraph = extra.paragraph ? ' livedoc:paragraph="true"' : '';
+    const paragraph =
+      (extra.paragraph ? ' livedoc:paragraph="true"' : '') +
+      (extra.block ? ` livedoc:block="${extra.block}"` : '');
     this.#regions.push(
       `<text:changed-region xml:id="${id}" text:id="${id}"${own}${before}${paragraph}><${element}><office:change-info><dc:creator>${escape(mark.author.name)}</dc:creator>${date}</office:change-info></${element}></text:changed-region>`,
     );

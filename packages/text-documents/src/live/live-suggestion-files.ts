@@ -1,8 +1,14 @@
 // The model's suggestions as the live state's marks and back (docs/specs/034-text-documents/review.md "How a suggestion
 // is kept"): a run's insertion, deletion and format change as its text's formatting attributes, an object's insertion
-// and deletion as its attributes, a paragraph's break, join and paragraph format as its own. A file's author has no key
+// and deletion as its attributes, a paragraph's break, join and paragraph format as its own, a whole block's insertion
+// and deletion as its own. A file's author has no key
 // and reads "From the file" in the neutral colour, as a file's comment's.
-import type { FileSuggestionMark, InlineSuggested, ParagraphSuggested } from '../model/suggestions';
+import type {
+  BlockSuggested,
+  FileSuggestionMark,
+  InlineSuggested,
+  ParagraphSuggested,
+} from '../model/suggestions';
 import type { TextProps } from '../model/props';
 import type { Paragraph } from '../model/blocks';
 import {
@@ -153,4 +159,20 @@ export function readParagraphSuggested(
     ...(format ? { format } : {}),
   };
   return Object.keys(out).length > 0 ? out : undefined;
+}
+
+/** A whole block's suggestion as its live attributes: its insertion and its deletion. */
+export function blockSuggestionAttributes(suggested: BlockSuggested | undefined): Attributes {
+  return {
+    [INSERTION_MARK]: suggested?.insertion && liveMarkOf(suggested.insertion),
+    [DELETION_MARK]: suggested?.deletion && liveMarkOf(suggested.deletion),
+  };
+}
+
+/** A whole block's suggestion from its live attributes; undefined for none. */
+export function readBlockSuggested(attributes: Attributes): BlockSuggested | undefined {
+  const insertion = fileMarkOf(attributes[INSERTION_MARK]);
+  const deletion = fileMarkOf(attributes[DELETION_MARK]);
+  if (!insertion && !deletion) return undefined;
+  return { ...(insertion ? { insertion } : {}), ...(deletion ? { deletion } : {}) };
 }
