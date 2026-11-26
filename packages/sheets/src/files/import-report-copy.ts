@@ -110,6 +110,12 @@ export function importReportLine(loss: ReportedLoss): string {
         // Its names are the sheets, not the charts it counts.
         { ...loss, count: loss.names.length },
       );
+    case 'chart_nearest_type':
+      return named(
+        `${counted(count, 'chart of a type the format does not hold is', 'charts of types the format does not hold are')} written as the nearest type it does, and read back by LiveDoc as made`,
+        // Its names are the sheets, not the charts it counts.
+        { ...loss, count: loss.names.length },
+      );
     case 'sheet_renamed':
       return `${counted(count, 'sheet name is', 'sheet names are')} changed to fit: ${renamed(loss.names)}`;
   }

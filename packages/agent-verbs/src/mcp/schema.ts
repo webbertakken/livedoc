@@ -87,8 +87,8 @@ const CONTENT_KINDS =
   '[{ "name", "values" }] with one value per category. A null value, in a slice or a series, is no value: ' +
   'a gap (no point, the line broken there, no column or wedge); 0 draws 0. "chartVariant" picks the chart type: ' +
   'on "bar-chart" "horizontal" draws a Bar chart (absent: upright columns); on "line-chart" "area" ' +
-  'fills each series down to zero and "scatter" draws points only, at x = each category read as a ' +
-  'number; "combo" draws each series as columns, a line or an area, by its "type" ("column", "line" or "area"; ' +
+  'fills each series down to zero, "stepped-area" fills each value as a flat step across its category, and "scatter" draws points only, at x = each category read as a ' +
+  'number; "combo" draws each series as columns, a line, an area or a stepped area, by its "type" ("column", "line", "area" or "stepped-area"; ' +
   'by default the first half of the series columns, the rest lines); on "pie-chart" "doughnut" opens the middle. "chartValues": true prints each mark\'s ' +
   "number on the chart (a pie's as percentages when its values add up to 100; a column chart also " +
   'names each column under it, so "chartLegend": false can drop the key). "chartAxis": true draws the value axis, ' +

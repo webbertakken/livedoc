@@ -112,6 +112,14 @@ describe('the Chart Editor', () => {
     const type = (name: string) =>
       within(types).getByRole<HTMLSelectElement>('combobox', { name: `${name} Type` });
     expect([type('Index').value, type('Pareto').value]).toEqual(['column', 'line']);
+    expect([...type('Index').options].map((o) => o.text)).toEqual([
+      'Column',
+      'Line',
+      'Area',
+      'Stepped Area',
+    ]);
+    fireEvent.change(type('Index'), { target: { value: 'stepped-area' } });
+    expect(chartOf(h)!.series).toEqual({ [cols[1]!]: { type: 'stepped-area' } });
     fireEvent.change(type('Index'), { target: { value: 'area' } });
     expect(chartOf(h)!.series).toEqual({ [cols[1]!]: { type: 'area' } });
     fireEvent.change(within(types).getByRole('combobox', { name: 'Pareto Axis' }), {
@@ -135,7 +143,7 @@ describe('the Chart Editor', () => {
     expect(screen.getByRole('group', { name: 'Series Colours' })).toBeTruthy();
   });
 
-  it('stacks a column, bar or area chart, Standard or 100%, and hides Stacking elsewhere', async () => {
+  it('stacks a column, bar, area or stepped area chart, Standard or 100%, and hides Stacking elsewhere', async () => {
     const { h } = await open();
     // A scatter takes no stacking.
     expect(screen.queryByRole('combobox', { name: 'Stacking' })).toBeNull();
@@ -151,6 +159,13 @@ describe('the Chart Editor', () => {
       target: { value: '' },
     });
     expect(chartOf(h)!.stack).toBeUndefined();
+    fireEvent.change(screen.getByRole('combobox', { name: 'Chart Type' }), {
+      target: { value: 'stepped-area' },
+    });
+    fireEvent.change(screen.getByRole('combobox', { name: 'Stacking' }), {
+      target: { value: 'stacked' },
+    });
+    expect(chartOf(h)!).toMatchObject({ type: 'stepped-area', stack: 'stacked' });
   });
 
   it('sets the titles when left, the legend, palette, axis, labels and alt text, and closes', async () => {

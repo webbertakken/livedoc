@@ -129,7 +129,7 @@ const designFormat = z
 const chartType = z
   .enum(CHART_TYPES)
   .describe(
-    'pie and doughnut draw one series (the first value column); column, bar, line, area and scatter draw every value column; combo draws each as columns, a line or an area (seriesTypes).',
+    'pie and doughnut draw one series (the first value column); column, bar, line, area, stepped-area and scatter draw every value column; stepped-area draws each value as a flat step across its category; combo draws each as columns, a line, an area or a stepped area (seriesTypes).',
   );
 
 const chartPalette = z
@@ -532,7 +532,7 @@ const sheetChange = z.discriminatedUnion('op', [
       .enum(SHEET_CHART_STACKS)
       .optional()
       .describe(
-        'Stacking of a column, bar or area chart of 2+ series: "stacked" (one on another) or "percent" (100%, each category’s shares); none by default.',
+        'Stacking of a column, bar, area or stepped-area chart of 2+ series: "stacked" (one on another) or "percent" (100%, each category’s shares); none by default.',
       ),
     smooth: z
       .boolean()
@@ -542,13 +542,13 @@ const sheetChange = z.discriminatedUnion('op', [
       .record(z.string(), z.enum(COMBO_SERIES_TYPES))
       .optional()
       .describe(
-        'A combo chart only: each series’ type by header name ({"Margin": "line"}): column, line or area. A series left out takes the default, the first half of the series columns and the rest lines.',
+        'A combo chart only: each series’ type by header name ({"Margin": "line"}): column, line, area or stepped-area. A series left out takes the default, the first half of the series columns and the rest lines.',
       ),
     rightAxis: z
       .array(z.string())
       .optional()
       .describe(
-        'A line, area or combo chart: the series drawn on a second scale, labelled on the right, by header name (["Margin"]).',
+        'A line, area, stepped-area or combo chart (area and stepped-area unstacked): the series drawn on a second scale, labelled on the right, by header name (["Margin"]).',
       ),
     alt: z
       .string()

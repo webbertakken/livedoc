@@ -1,13 +1,13 @@
 'use client';
 
 // The Chart Editor's Stacking (docs/specs/029-sheets/charts.md "Chart Editor"; pie-chart.md "Stacking"): None,
-// Standard or 100%, on a Column, Bar or Area chart; another type keeps its stacking unused, so shows none here.
+// Standard or 100%, on a Column, Bar, Area or Stepped Area chart; another type keeps its stacking unused, so shows none here.
 import { Select } from '@livedoc/ui';
 import { SHEET_CHART_STACKS, type SheetChart, type SheetChartStack } from '@livedoc/sheets';
 import { ChartEditorField } from './ChartEditorField';
 
 const STACKING_LABELS: Record<SheetChartStack, string> = { stacked: 'Standard', percent: '100%' };
-const STACKED_TYPES: readonly SheetChart['type'][] = ['column', 'bar', 'area'];
+const STACKED_TYPES: readonly SheetChart['type'][] = ['column', 'bar', 'area', 'stepped-area'];
 
 export function ChartStackingField({
   chart,

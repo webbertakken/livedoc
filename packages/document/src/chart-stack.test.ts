@@ -16,7 +16,15 @@ describe('isChartStack', () => {
 
 describe('chartStackOf (pie-chart.md "Stacking", D282)', () => {
   const two = [s([1]), s([2])];
-  it('stacks a column, bar or area chart of two or more series', () => {
+  it('stacks a column, bar, area or stepped area chart of two or more series', () => {
+    expect(
+      chartStackOf({
+        shape: 'line-chart',
+        chartVariant: 'stepped-area',
+        chartStack: 'stacked',
+        lineSeries: two,
+      }),
+    ).toBe('stacked');
     expect(chartStackOf({ shape: 'bar-chart', chartStack: 'stacked', lineSeries: two })).toBe(
       'stacked',
     );

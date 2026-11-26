@@ -334,7 +334,7 @@ each suite writes its own, so LibreOffice, Excel and Google Sheets open them as 
   `chart:class`, `chart:bar`, `chart:line` or `chart:area`) (default, D287), its title and axis titles, its legend's place or none, values on the marks, the value axis (deleted when
   off), each series' own colour, a scatter series drawn as a line, the right-hand axis (below), and its alt text. Its palette is LiveDoc's: a series
   with no colour of its own takes the reading suite's (default, D260).
-- **The right-hand axis**: a series on the right axis of a Line, unstacked Area or Combo chart, when another series is
+- **The right-hand axis**: a series on the right axis of a Line, unstacked Area, unstacked Stepped Area or Combo chart, when another series is
   on the left (as LiveDoc draws it), is written on a secondary axis. XLSX: the right series in chart groups of their
   own, after the left ones, naming a second pair of axes, a deleted category axis and a value axis at the right
   (`axPos="r"`, crossing at the maximum, no gridlines; deleted with the value axis off). ODF: the series say
@@ -389,6 +389,23 @@ each suite writes its own, so LibreOffice, Excel and Google Sheets open them as 
   object's `content.xml` (a flat file's inline `office:document`, its bindings declared on itself), and a package's
   object its `styles.xml` beside it; kept XML is written only to the ODF form it was read from, so a package's chart
   written to a flat file, or a flat file's to a package, is written from the model and named (default, D278).
+- **Written as the nearest type**: a chart no format holds is written as the nearest one it does, which every suite
+  draws: a Stepped Area chart as an Area chart of the same stacking, and a Combo chart's stepped area series as area
+  series. The file also keeps the **original** for LiveDoc, a record of what the nearest type lost: its type, on a
+  Combo chart each series' type in series order, and the sum the written chart reads back as (as "Kept while
+  unchanged" sums it), as JSON (`{"type":"stepped-area","sum":"0a1b2c3d"}`,
+  `{"type":"combo","series":["column","stepped-area"],"sum":"…"}`). It travels with the chart, in the chart's own
+  document. XLSX: an extension of the chart part, `c:chartSpace`'s `c:extLst` holding a `c:ext` with LiveDoc's uri
+  (`https://docs.nu/ns/chart/1`) and an `ldc:original` element of that namespace holding the JSON, which other suites
+  pass over. ODF: a user-defined property of the chart object's own metadata, `meta:user-defined` named
+  `LiveDoc chart`: in a package the object's `meta.xml` (`Object N/meta.xml`, in the manifest), in a flat file an
+  `office:meta` within the frame's inline `office:document` (default, D290).
+  - Reading: a chart read as a nearest type whose record parses, names a built type (and on a Combo chart a series
+    type for each series) and holds the sum it reads as, is read as the original; a record whose sum differs (the
+    chart was changed in another suite) or that does not parse is passed over, and the chart is read as the type it
+    is (default, D290).
+  - The write lists each such chart (`chart_nearest_type`, its sheet named), so the
+    loss is never silent; a kept chart whose original is restored writes its kept XML as any other (default, D290).
 - Any other chart stays kept content.
 
 ## Unknown content
@@ -574,6 +591,12 @@ The code cites each by its id.
   reading one block of its own sheet and naming no part of its own; else the drawing is kept whole (default).
 - **D276** A read chart unchanged: its read sum (type, titles, legend, values, axis, alt, place, size, cells by
   position) equals the written one's; its kept chart part is then written in its place under a new name (default).
+- **D290** A chart type no format holds: written as the nearest that does (Stepped Area as Area, a stepped area
+  series as an area one), its original kept in the chart's own document (XLSX a `c:ext` of LiveDoc's uri, ODF the
+  object's `meta:user-defined` `LiveDoc chart`) as JSON with the written chart's sum, restored on reading only while
+  the chart still sums so; the write lists it (`chart_nearest_type`). Chosen over one record for the whole workbook
+  in its document properties (XLSX `docProps/custom.xml`, ODF `meta.xml`), which stays behind when a suite renumbers,
+  copies or deletes a chart (default).
 - **D285** A line chart's smoothing in a file: XLSX `c:smooth` on every series, ODF `chart:interpolation="cubic-spline"`;
   read from either, a line whose series differ, or another interpolation, stays kept (default).
 - **D288** The right-hand axis in a file: written only as LiveDoc draws it (a Line, unstacked Area or Combo chart with a

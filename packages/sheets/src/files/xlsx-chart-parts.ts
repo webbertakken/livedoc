@@ -8,6 +8,7 @@ import {
   type OoxmlPart,
   type Relationship,
 } from '@livedoc/office-packages';
+import { nearestFileChart } from './chart-nearest';
 import { fileChartSum, type FileChart } from './file-charts';
 import type { FileLoss, FileSheet } from './workbook-file';
 import { xlsxChartXml, xlsxDrawingXml } from './xlsx-charts';
@@ -69,6 +70,9 @@ export function xlsxChartParts(
     const drawing = `xl/drawings/drawing${nextOf('drawings', 'drawing')}.xml`;
     const chartRels: Relationship[] = charts.map((chart, n) => {
       const part = `chart${nextOf('charts', 'chart')}.xml`;
+      // A type no format holds is written as the nearest, and named (D290).
+      if (nearestFileChart(chart).original)
+        losses.push({ k: 'chart_nearest_type', sheet: sheet.name });
       out.parts.push({
         name: `xl/charts/${part}`,
         contentType: OOXML_CONTENT_TYPES.chart,

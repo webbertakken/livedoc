@@ -9,6 +9,13 @@ import {
   ODF_VERSION,
 } from '@livedoc/office-packages';
 import { columnLetters } from '../address';
+import {
+  chartOriginalText,
+  nearestFileChart,
+  type ChartOriginal,
+  type HeldChartType,
+  type HeldFileChart,
+} from './chart-nearest';
 import { fileChartSum, type FileChart, type FileChartSeries, type FileRange } from './file-charts';
 import type { KeptPart } from './kept-content';
 import type { FileLoss } from './workbook-file';
@@ -19,7 +26,7 @@ const CHART_MEDIA_TYPE = ODF_MEDIA_TYPES.chart;
 const CM_PER_PX = 2.54 / 96;
 const cm = (px: number) => `${(px * CM_PER_PX).toFixed(3)}cm`;
 
-const CHART_CLASS: Record<FileChart['type'], string> = {
+const CHART_CLASS: Record<HeldChartType, string> = {
   column: 'chart:bar',
   bar: 'chart:bar',
   line: 'chart:line',
@@ -83,7 +90,7 @@ function objectXml(object: { href: string } | { inline: string }, notify: string
 
 const paragraph = (text: string) => `<text:p>${escapeXmlText(text)}</text:p>`;
 
-function seriesStyle(chart: FileChart, s: FileChartSeries, name: string): string | null {
+function seriesStyle(chart: HeldFileChart, s: FileChartSeries, name: string): string | null {
   const chartProps: string[] = [];
   const graphic: string[] = [];
   // A Combo series looks as its own type does.
@@ -100,12 +107,31 @@ function seriesStyle(chart: FileChart, s: FileChartSeries, name: string): string
   return `<style:style style:name="${name}" style:family="chart">${chartProps.length ? `<style:chart-properties ${chartProps.join(' ')}/>` : ''}${graphic.length ? `<style:graphic-properties ${graphic.join(' ')}/>` : ''}</style:style>`;
 }
 
-/** One chart's own document (`content.xml` of its object, or inline in a flat file): its series read `sheet`. */
+/** The name of the user-defined property a chart object's metadata keeps its original in (D290). */
+export const ODS_CHART_ORIGINAL = 'LiveDoc chart';
+
+/** A chart object's `office:meta` holding its original (D290). */
+const originalMeta = (original: ChartOriginal) =>
+  `<office:meta><meta:user-defined meta:name="${ODS_CHART_ORIGINAL}" meta:value-type="string">${escapeXmlText(chartOriginalText(original))}</meta:user-defined></office:meta>`;
+
+/** A package's chart object's `meta.xml`, for a chart written as its nearest type; none for another (D290). */
+export function odsChartMeta(chart: FileChart): string | null {
+  const { original } = nearestFileChart(chart);
+  if (!original) return null;
+  const ns = (['office', 'meta'] as const).map((p) => `xmlns:${p}="${ODF_NS[p]}"`).join(' ');
+  return `<office:document-meta ${ns} office:version="${ODF_VERSION}">${originalMeta(original)}</office:document-meta>`;
+}
+
+/**
+ * One chart's own document (`content.xml` of its object, or inline in a flat file): its series read `sheet`; a type no
+ * file holds as the nearest that does, a flat file's inline document keeping the original in its metadata (D290).
+ */
 export function odsChartContent(
   sheet: string,
-  chart: FileChart,
+  own: FileChart,
   root: 'document-content' | 'document',
 ): string {
+  const { chart, original } = nearestFileChart(own);
   const styles: string[] = [];
   const style = (xml: string | null, name: string) => {
     if (!xml) return '';
@@ -181,6 +207,7 @@ export function odsChartContent(
   const declared = root === 'document' ? '' : ` ${ns}`;
   return [
     `<office:${root}${declared}${mimetype} office:version="${ODF_VERSION}">`,
+    original && root === 'document' ? originalMeta(original) : '',
     styles.length ? `<office:automatic-styles>${styles.join('')}</office:automatic-styles>` : '',
     '<office:body><office:chart>',
     `<chart:chart svg:width="${cm(chart.width)}" svg:height="${cm(chart.height)}" chart:class="${CHART_CLASS[chart.type]}">`,
@@ -233,6 +260,8 @@ export class OdsChartObjects {
   frames(sheet: string, charts: readonly FileChart[]): Map<string, string> {
     const objects = charts.map((chart) => {
       const own = this.keptDocument(sheet, chart);
+      // A type no format holds is written as the nearest, and named (D290).
+      if (nearestFileChart(chart).original) this.losses.push({ k: 'chart_nearest_type', sheet });
       if (this.flat)
         return {
           inline: own
@@ -244,6 +273,7 @@ export class OdsChartObjects {
       while (this.taken.has(name));
       const xml = `<?xml version="1.0" encoding="UTF-8"?>\n${odsChartContent(sheet, chart, 'document-content')}\n`;
       const styles = own && this.kept.part(own.part.name.replace(/content\.xml$/, 'styles.xml'));
+      const meta = odsChartMeta(chart);
       this.entries.push(
         { name: `${name}/`, mediaType: CHART_MEDIA_TYPE, data: new Uint8Array() },
         {
@@ -253,6 +283,15 @@ export class OdsChartObjects {
         },
         ...(styles
           ? [{ name: `${name}/styles.xml`, mediaType: 'text/xml', data: styles.data }]
+          : []),
+        ...(meta
+          ? [
+              {
+                name: `${name}/meta.xml`,
+                mediaType: 'text/xml',
+                data: new TextEncoder().encode(`<?xml version="1.0" encoding="UTF-8"?>\n${meta}\n`),
+              },
+            ]
           : []),
       );
       return { href: name };

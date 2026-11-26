@@ -401,7 +401,7 @@ tells them.
     the last shown sheet (`sheet_last_visible`). On a Plan Sheet both are refused (`not_spreadsheet`).
   - `chart` puts the sheet's own chart ([Charts](charts.md#the-model)) at the cell `at` names, with `title`,
     `xAxisTitle`, `yAxisTitle`, `legend` (top, right, bottom, left or none), `values`, `axis` (the value axis, shown
-    unless false), `stack` (`stacked` or `percent`: a column, bar or area chart's Stacking), `smooth` (a line or Combo chart's Smooth Line), `seriesTypes` (a Combo chart's series types by name: column, line or area), `rightAxis` (a line, area or Combo chart's series on a second scale, by name), `alt` and `lines` (a scatter's series drawn as lines, by name, kept by their columns; series types and axes are kept by their columns too); `replace`
+    unless false), `stack` (`stacked` or `percent`: a column, bar, area or stepped area chart's Stacking), `smooth` (a line or Combo chart's Smooth Line), `seriesTypes` (a Combo chart's series types by name: column, line, area or stepped-area), `rightAxis` (a line, area, stepped area or Combo chart's series on a second scale, by name), `alt` and `lines` (a scatter's series drawn as lines, by name, kept by their columns; series types and axes are kept by their columns too); `replace`
     names a chart of the sheet by id to put this one in its place, its id and paint order kept (`chart_not_found`
     when it is none). The title options draw on a Plan chart too.
   - `clear_charts` takes the sheet's charts off: those reading cells of a range, or every one; or, given `id`, the

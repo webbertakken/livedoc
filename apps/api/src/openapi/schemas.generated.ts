@@ -2860,6 +2860,7 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
     "enum": [
       "horizontal",
       "area",
+      "stepped-area",
       "scatter",
       "doughnut",
       "combo"
@@ -10372,7 +10373,8 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
         "enum": [
           "column",
           "line",
-          "area"
+          "area",
+          "stepped-area"
         ],
         "type": "string"
       },
@@ -15284,6 +15286,7 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
       "bar",
       "line",
       "area",
+      "stepped-area",
       "scatter",
       "pie",
       "doughnut",
@@ -15295,7 +15298,8 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
     "enum": [
       "column",
       "line",
-      "area"
+      "area",
+      "stepped-area"
     ],
     "type": "string"
   },

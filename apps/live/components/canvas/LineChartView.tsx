@@ -1,6 +1,6 @@
 'use client';
 
-// Line, Area, Scatter and Combo charts (docs/specs/009-elements/pie-chart.md "Chart types"): a 2-D chart — shared x-axis `lineCategories` and one or
+// Line, Area, Stepped Area, Scatter and Combo charts (docs/specs/009-elements/pie-chart.md "Chart types"): a 2-D chart — shared x-axis `lineCategories` and one or
 // more named `lineSeries`, each drawn as a polyline with point markers in the
 // theme palette, with an optional legend listing the series. Data is edited as
 // a grid (or imported from CSV) via the Data menu. Reuses the chart-family
@@ -26,8 +26,12 @@ import {
   comboMarks,
   comboValueLabels,
   isComboChart,
+  pointsMarked,
   type ShapeElement,
 } from '@livedoc/document';
+
+// How far from a step's middle the pointer reads it.
+const STEP_HOVER_PX = 6;
 import { useChartAnim, chartFrame } from '@/lib/chart';
 import { useChartHover } from '@/hooks/canvas/useChartHover';
 import { ChartReadout } from '@/components/primitives/ChartReadout';
@@ -188,6 +192,8 @@ export function LineChartView({
         )}
         {series.map((s, si) => {
           const color = colorAt(si, s);
+          // A step carries no marker (D289): its point is a clear spot to hover over its middle.
+          const marked = pointsMarked(m, si);
           return (
             <g key={si}>
               {m.areas[si] && !combo ? (
@@ -209,8 +215,8 @@ export function LineChartView({
                     key={i}
                     cx={p.x}
                     cy={p.y}
-                    r={m.dot}
-                    fill={color}
+                    r={marked ? m.dot : STEP_HOVER_PX}
+                    fill={marked ? color : 'transparent'}
                     {...markProps({ s: si, i })}
                   />
                 ) : null,

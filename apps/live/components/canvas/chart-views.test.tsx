@@ -127,6 +127,26 @@ describe('chart views', () => {
     expect(container.textContent).toContain('Q2 · Revenue');
   });
 
+  it('draws a stepped area chart’s steps with no markers, and reads a hovered step (Stepped Area, D289)', () => {
+    const { container } = render(
+      <LineChartView
+        element={el('line-chart', {
+          chartVariant: 'stepped-area',
+          lineCategories: ['Q1', 'Q2'],
+          lineSeries: [{ name: 'Revenue', values: [40, 50], color: '#aa3300' }],
+        })}
+        textColor="#000"
+      />,
+    );
+    const steps = container.querySelector('path[stroke="#aa3300"]')!;
+    expect(steps.getAttribute('d')).toMatch(/^M \S+ \S+ H \S+ V \S+ H \S+$/);
+    expect(container.querySelector('circle[fill="#aa3300"]')).toBeNull();
+    const spots = container.querySelectorAll('circle[fill="transparent"]');
+    expect(spots).toHaveLength(2);
+    fireEvent.pointerEnter(spots[1]!);
+    expect(container.textContent).toContain('Q2 · Revenue: 50');
+  });
+
   it('draws a smooth line chart’s lines as curves (Smooth Line, D284)', () => {
     const { container } = render(
       <LineChartView element={el('line-chart', { chartSmooth: true })} textColor="#000" />,

@@ -8,6 +8,7 @@ export const CHART_TYPES = [
   'bar',
   'line',
   'area',
+  'stepped-area',
   'scatter',
   'pie',
   'doughnut',
@@ -15,7 +16,14 @@ export const CHART_TYPES = [
 ] as const;
 export type ChartType = (typeof CHART_TYPES)[number];
 
-export const CHART_VARIANTS = ['horizontal', 'area', 'scatter', 'doughnut', 'combo'] as const;
+export const CHART_VARIANTS = [
+  'horizontal',
+  'area',
+  'stepped-area',
+  'scatter',
+  'doughnut',
+  'combo',
+] as const;
 export type ChartVariant = (typeof CHART_VARIANTS)[number];
 
 type ChartKind = 'bar-chart' | 'line-chart' | 'pie-chart';
@@ -26,6 +34,7 @@ const SHAPES: Record<ChartType, { shape: ChartKind; chartVariant?: ChartVariant 
   bar: { shape: 'bar-chart', chartVariant: 'horizontal' },
   line: { shape: 'line-chart' },
   area: { shape: 'line-chart', chartVariant: 'area' },
+  'stepped-area': { shape: 'line-chart', chartVariant: 'stepped-area' },
   scatter: { shape: 'line-chart', chartVariant: 'scatter' },
   pie: { shape: 'pie-chart' },
   doughnut: { shape: 'pie-chart', chartVariant: 'doughnut' },
@@ -38,6 +47,7 @@ export const CHART_TYPE_LABELS: Record<ChartType, string> = {
   bar: 'Bar',
   line: 'Line',
   area: 'Area',
+  'stepped-area': 'Stepped Area',
   scatter: 'Scatter',
   pie: 'Pie',
   doughnut: 'Doughnut',
@@ -143,11 +153,12 @@ export function chartTypeChange(el: ChartData, type: ChartType): ChartTypePatch 
   return patch;
 }
 
-// How a line chart draws: as a line, an area or a scatter (its chart type, read for the line kind's renderers).
+// How a line chart draws: as a line, an area, a stepped area or a scatter (its chart type, read for the line kind's
+// renderers).
 export function lineVariantOf(el: {
   shape: string;
   chartVariant?: unknown;
-}): 'line' | 'area' | 'scatter' {
+}): 'line' | 'area' | 'stepped-area' | 'scatter' {
   const type = chartTypeOf(el);
-  return type === 'area' || type === 'scatter' ? type : 'line';
+  return type === 'area' || type === 'stepped-area' || type === 'scatter' ? type : 'line';
 }

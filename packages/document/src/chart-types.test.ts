@@ -42,6 +42,9 @@ describe('chart types (docs/specs/009-elements/pie-chart.md "Chart types")', () 
     expect(lineVariantOf({ shape: 'line-chart' })).toBe('line');
     expect(lineVariantOf({ shape: 'line-chart', chartVariant: 'area' })).toBe('area');
     expect(lineVariantOf({ shape: 'line-chart', chartVariant: 'scatter' })).toBe('scatter');
+    expect(lineVariantOf({ shape: 'line-chart', chartVariant: 'stepped-area' })).toBe(
+      'stepped-area',
+    );
     expect(lineVariantOf({ shape: 'pie-chart', chartVariant: 'doughnut' })).toBe('line');
   });
 

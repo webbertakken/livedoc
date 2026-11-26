@@ -38,6 +38,7 @@ import {
   type ChartValueLabel,
 } from './chart-values';
 import { labelOn } from './readable-colour';
+import { pointsMarked } from './chart-stepped';
 import { chartTypeOf, lineVariantOf } from './chart-types';
 import { chartStackOf } from './chart-stack';
 import { comboKeyItems, comboMarks, comboValueLabels, isComboChart } from './chart-combo';
@@ -380,10 +381,12 @@ export function svgLineChart(
     const line = m.lines[si]
       ? `<path d="${m.lines[si]}" fill="none" stroke="${color}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`
       : '';
-    // No value draws no point (pie-chart.md "No value is a gap").
-    const dots = m.points[si]!.map((p) =>
-      p ? `<circle cx="${r2(p.x)}" cy="${r2(p.y)}" r="${m.dot}" fill="${color}"/>` : '',
-    ).join('');
+    // No value draws no point (pie-chart.md "No value is a gap"); a step draws none (D289).
+    const dots = pointsMarked(m, si)
+      ? m.points[si]!.map((p) =>
+          p ? `<circle cx="${r2(p.x)}" cy="${r2(p.y)}" r="${m.dot}" fill="${color}"/>` : '',
+        ).join('')
+      : '';
     return line + dots;
   });
   // A Combo chart paints its areas, then its columns, then its lines over them; another, series by series.

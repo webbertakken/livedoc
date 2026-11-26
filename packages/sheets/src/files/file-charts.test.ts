@@ -148,6 +148,8 @@ describe('fileChartsOf', () => {
     expect(rightOf({ type: 'combo' })).toEqual([false, true]);
     expect(rightOf({ type: 'area' })).toEqual([false, true]);
     expect(rightOf({ type: 'area', stack: 'stacked' })).toEqual([false, false]);
+    expect(rightOf({ type: 'stepped-area' })).toEqual([false, true]);
+    expect(rightOf({ type: 'stepped-area', stack: 'percent' })).toEqual([false, false]);
     expect(rightOf({ type: 'column' })).toEqual([false, false]);
     // Every series on the right is every series on the one axis.
     expect(
@@ -175,6 +177,16 @@ describe('fileChartsOf', () => {
     expect(chart!.x).toEqual({ range: { r1: 1, c1: 1, r2: 2, c2: 1 }, cached: [15, 3] });
     expect(chart!.series).toEqual([expect.objectContaining({ name: 'Index', line: true })]);
     expect(chart!.legend).toBe('bottom');
+    // A row whose x is no number has none.
+    const [longer] = filed(
+      withCharts(sheet, [
+        chartOver(sheet, {
+          type: 'scatter',
+          range: { r1: rows[0]!, c1: cols[1]!, r2: rows[3]!, c2: cols[2]! },
+        }),
+      ]),
+    );
+    expect(longer!.x?.cached).toEqual([15, 3, null]);
   });
 
   it('writes a chart with no data, or one over empty cells, with no series', () => {
@@ -296,7 +308,9 @@ async function entriesOf(bytes: Uint8Array<ArrayBuffer>): Promise<Map<string, st
 describe('writeXlsx with charts', () => {
   it('adds a drawing part with its chart parts, related from the worksheet', async () => {
     const out = writeXlsx(CHARTS, 'charts');
-    expect(out.losses).toEqual([]);
+    // The Stepped Area chart and the Combo of a stepped area series are written as their nearest types (D290).
+    const nearest = { k: 'chart_nearest_type', sheet: CHARTS.sheets[0]!.name };
+    expect(out.losses).toEqual([nearest, nearest]);
     const entries = await entriesOf(out.data);
     expect(
       [...entries.keys()].filter((n) => /charts\/chart\d+\.xml$|drawings\//.test(n)).sort(),
@@ -309,6 +323,8 @@ describe('writeXlsx with charts', () => {
       'xl/charts/chart14.xml',
       'xl/charts/chart15.xml',
       'xl/charts/chart16.xml',
+      'xl/charts/chart17.xml',
+      'xl/charts/chart18.xml',
       'xl/charts/chart2.xml',
       'xl/charts/chart3.xml',
       'xl/charts/chart4.xml',

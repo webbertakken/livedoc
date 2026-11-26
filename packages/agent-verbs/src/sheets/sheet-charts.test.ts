@@ -181,6 +181,38 @@ describe('chart elements', () => {
     ]);
   });
 
+  it('draw a stepped area chart, and a combo chart’s stepped area series, its right axis too (D289)', () => {
+    const { wb, sheet } = book();
+    const { rows, cols } = sheet.layout;
+    ['Q', 'Visits', 'Rate'].forEach((s, c) =>
+      sheet.cells.set(cellKey(rows[0]!, cols[c]!), { input: { s } }),
+    );
+    wb.updateSheet({ ...sheet });
+    const built = buildChartChange(wb, sheet.id, {
+      op: 'chart',
+      type: 'stepped-area',
+      range: 'A1:C3',
+      rightAxis: ['Rate'],
+    });
+    if (!built.ok) throw new Error(built.message);
+    const combo = buildChartChange(wb, sheet.id, {
+      op: 'chart',
+      type: 'combo',
+      range: 'A1:C3',
+      seriesTypes: { Rate: 'stepped-area' },
+    });
+    if (!combo.ok) throw new Error(combo.message);
+    const [steps, mixed] = sheetChartElements(
+      wb,
+      { x: 0, y: 0, width: 960, height: 560 },
+      sheet.id,
+      [...built.charts, ...combo.charts],
+    );
+    expect(steps).toMatchObject({ shape: 'line-chart', chartVariant: 'stepped-area' });
+    expect(steps!.lineSeries!.map((s) => s.axis)).toEqual([undefined, 'right']);
+    expect(mixed!.lineSeries!.map((s) => s.type)).toEqual([undefined, 'stepped-area']);
+  });
+
   // sheet-store.md "Built for agents in a spreadsheet": the title options draw on a Plan chart too.
   it('carry the titles, the legend, the values, the axis and the stacking an agent gives', () => {
     const { wb, sheet } = book();

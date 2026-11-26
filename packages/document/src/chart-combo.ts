@@ -1,6 +1,7 @@
 // A Combo chart (docs/specs/009-elements/pie-chart.md "Chart types", "Combo", D286): a line chart's data, each series
-// drawn as its own series type, Column, Line or Area, over one row of category slots. Its columns are clustered in each
-// slot as a column chart's several series are; its lines' and areas' points sit at the slots' middles. Laid out once
+// drawn as its own series type, Column, Line, Area or Stepped Area, over one row of category slots. Its columns are
+// clustered in each slot as a column chart's several series are; its lines' and areas' points sit at the slots'
+// middles, and a stepped area's steps span the slots (D289). Laid out once
 // for both renderers, as LineMarks with the columns beside them, so the line chart's axes, labels and values draw it.
 // Pure; `ox` / `oy` shift every point.
 import { axisLabelRoom, axisScale, rightAxisSeries } from './chart-axis';
@@ -9,6 +10,7 @@ import type { ChartRect } from './chart-frame';
 import { chartAxisLabel } from './chart-frame';
 import { runsOf, type BarRect, type ChartPoint, type LineMarks } from './chart-marks';
 import { smoothPath } from './chart-smooth';
+import { STEPPED_AREA, stepAreaPath, stepPath } from './chart-stepped';
 import { chartTypeOf } from './chart-types';
 import { comboSeriesTypes, type ComboSeriesType } from './chart-combo-types';
 import { shortNumber, type ChartValueLabel } from './chart-values';
@@ -102,23 +104,29 @@ export function comboMarks(
     });
   });
 
-  // A line or area series' points at the slots' middles; a column series has none.
+  // A line, area or stepped area series' points at the slots' middles; a column series has none.
   const points = series.map((s, j) =>
     categories.map((_c, i): ChartPoint | null => {
       const v = chartValue(s.values[i]);
       return types[j] === 'column' || v === null ? null : { x: mid(i), y: yOf(j)(v) };
     }),
   );
-  const runs = points.map((pts) => runsOf(pts).filter((run) => run.length > 1));
+  // A step alone is a step; a point alone no stretch of line.
+  const runs = points.map((pts, j) =>
+    runsOf(pts).filter((run) => types[j] === STEPPED_AREA || run.length > 1),
+  );
+  const half = slot / 2;
   const straight = (run: readonly ChartPoint[]) =>
     run.map((p, k) => `${k === 0 ? 'M' : 'L'} ${q(p.x)} ${q(p.y)}`).join(' ');
-  const lines = runs.map((rs, j) =>
-    types[j] === 'column'
-      ? ''
-      : rs.map(types[j] === 'line' && smooth ? smoothPath : straight).join(' '),
-  );
-  // An area series fills each run down to its axis's zero.
+  const lines = runs.map((rs, j) => {
+    if (types[j] === 'column') return '';
+    if (types[j] === STEPPED_AREA) return rs.map((run) => stepPath(run, half)).join(' ');
+    return rs.map(types[j] === 'line' && smooth ? smoothPath : straight).join(' ');
+  });
+  // An area or stepped area series fills each run down to its axis's zero.
   const areas = runs.map((rs, j) => {
+    if (types[j] === STEPPED_AREA)
+      return rs.map((run) => stepAreaPath(run, half, yOf(j)(0))).join(' ');
     if (types[j] !== 'area') return '';
     const zero = q(yOf(j)(0));
     return rs
@@ -174,7 +182,7 @@ export function comboValueLabels(
   );
 }
 
-/** A Combo chart's key: a column or area series by a square, a line series by a line through a dot. */
+/** A Combo chart's key: a column, area or stepped area series by a square, a line series by a line through a dot. */
 export function comboKeyItems(series: readonly LineSeries[]): ChartKeyItem[] {
   const types = comboSeriesTypes(series);
   return series.map((s, j) => ({
@@ -184,7 +192,7 @@ export function comboKeyItems(series: readonly LineSeries[]): ChartKeyItem[] {
   }));
 }
 
-/** The mark a readout sits on: a line or area series' point, else a column's end. */
+/** The mark a readout sits on: a line, area or stepped area series' point, else a column's end. */
 export function comboMarkAt(marks: ComboMarks, j: number, i: number): ChartPoint | null {
   return marks.points[j]?.[i] ?? marks.bars[j]?.[i]?.tip ?? null;
 }

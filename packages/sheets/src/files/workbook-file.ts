@@ -111,6 +111,8 @@ export type FileLoss =
   | { k: 'charts_unwritten'; sheet: string }
   // A chart read from the file, changed since, written from the model in place of its own XML (D276).
   | { k: 'chart_rewritten'; sheet: string }
+  // A chart of a type no format holds, written as the nearest one that does, its original kept for LiveDoc (D290).
+  | { k: 'chart_nearest_type'; sheet: string }
   // Formulas calling a function the spreadsheet's meaning and the format's standard answer differently (D100).
   | { k: 'answers_differ'; count: number; functions: string[] };
 

@@ -1,14 +1,15 @@
 // A Combo chart's series types (docs/specs/009-elements/pie-chart.md "Combo", D286): the names and the default, apart
 // from the marks so what only reads or tidies a series (normalising, a sheet's read) never loads the drawing code.
 
-/** A Combo chart's series types, as Google Sheets offers them (Step Area waits on a file holding it). */
-export const COMBO_SERIES_TYPES = ['column', 'line', 'area'] as const;
+/** A Combo chart's series types, as Google Sheets offers them. */
+export const COMBO_SERIES_TYPES = ['column', 'line', 'area', 'stepped-area'] as const;
 export type ComboSeriesType = (typeof COMBO_SERIES_TYPES)[number];
 
 export const COMBO_SERIES_TYPE_LABELS: Record<ComboSeriesType, string> = {
   column: 'Column',
   line: 'Line',
   area: 'Area',
+  'stepped-area': 'Stepped Area',
 };
 
 export function isComboSeriesType(v: unknown): v is ComboSeriesType {

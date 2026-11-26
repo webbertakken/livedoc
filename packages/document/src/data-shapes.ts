@@ -80,7 +80,7 @@ export type LineSeries = {
   axis?: 'right';
   line?: true;
   // Its series type on a Combo chart (pie-chart.md "Combo"); unused by other types.
-  type?: 'column' | 'line' | 'area';
+  type?: 'column' | 'line' | 'area' | 'stepped-area';
 };
 
 // A row of a chart's key: its name, its colour, and `line` when its swatch is a line through a dot (a scatter series
