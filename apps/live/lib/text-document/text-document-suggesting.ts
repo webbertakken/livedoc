@@ -37,6 +37,7 @@ import {
   isTablePart,
   isWholeBlock,
   ownBlockAround,
+  selectionInBlock,
 } from './text-document-suggesting-blocks';
 
 /** Who suggests: their key, name and colour, the time, and a fresh id for a new suggestion. */
@@ -113,6 +114,8 @@ class Rewriter {
   readonly out: Transaction;
   readonly who: Suggester;
   readonly made = new Set<string>();
+  /** Where the first whole block put in starts, and the steps after which that holds; none put in yet. */
+  placedBlock: { pos: number; after: number } | undefined;
   #base: SuggestionMark | undefined;
 
   constructor(state: EditorState, who: Suggester) {
@@ -234,6 +237,8 @@ class Rewriter {
       if (pos > start) this.out.addMark(start, pos, schema.marks[INSERTION_MARK]!.create(mark));
       start = node ? pos + node.nodeSize : start;
     }
+    if (blocks.length > 0 && !this.placedBlock)
+      this.placedBlock = { pos: blocks[0]!.pos, after: this.out.steps.length };
     const marked: { pos: number; node: PmNode; paragraph: boolean }[] = blocks.map((b) => ({
       ...b,
       paragraph: false,
@@ -463,7 +468,16 @@ export function suggestTransaction(
   }
   const selected = tr.selection instanceof NodeSelection ? tr.selection.node : null;
   const at = placed && out.mapping.slice(placed.after).map(placed.pos, 1);
-  if (selected && at !== undefined && out.doc.nodeAt(at)?.type === selected.type)
+  // A whole block put in: the selection the command chose in it (a table's first cell, the table of contents itself).
+  const inBlock = rewriter.placedBlock && tr.selectionSet ? selectionInBlock(tr) : null;
+  if (inBlock && rewriter.placedBlock) {
+    const start = out.mapping.slice(rewriter.placedBlock.after).map(rewriter.placedBlock.pos, 1);
+    out.setSelection(
+      inBlock.node
+        ? NodeSelection.create(out.doc, start)
+        : TextSelection.create(out.doc, start + inBlock.offset),
+    );
+  } else if (selected && at !== undefined && out.doc.nodeAt(at)?.type === selected.type)
     out.setSelection(NodeSelection.create(out.doc, at));
   else if (caret !== undefined)
     out.setSelection(

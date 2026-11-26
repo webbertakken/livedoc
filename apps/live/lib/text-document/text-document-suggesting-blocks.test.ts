@@ -90,6 +90,8 @@ describe('suggestTransaction on whole blocks', () => {
       ['ab', undefined],
       ['cd', undefined],
     ]);
+    // The caret where the command left it, as in Editing: in the first cell.
+    expect(next.selection.from).toBe(inFirstCell(next));
   });
 
   it('puts a section break in as the person’s insertion', () => {

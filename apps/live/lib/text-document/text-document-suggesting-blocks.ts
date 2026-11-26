@@ -2,6 +2,7 @@
 // table, a section break or a table of contents is suggested whole; inside one's own suggested block every change is
 // plainly part of it; a kept block is never suggested.
 import type { Node as PmNode } from 'prosemirror-model';
+import { NodeSelection, type Transaction } from 'prosemirror-state';
 import { AttrStep, ReplaceAroundStep, ReplaceStep, type Step } from 'prosemirror-transform';
 import { INSERTION_MARK, type SuggestionMark } from '@livedoc/text-documents';
 
@@ -71,4 +72,16 @@ export function insideContents(step: Step, doc: PmNode): boolean {
   for (let depth = $at.depth; depth > 0; depth--)
     if ($at.node(depth).type.name === 'table_of_contents') return true;
   return false;
+}
+
+/** The selection a transaction ends on inside a whole block: the block itself, or how far into it; none elsewhere. */
+export function selectionInBlock(tr: Transaction): { node: boolean; offset: number } | null {
+  const selection = tr.selection;
+  if (selection instanceof NodeSelection && isWholeBlock(selection.node))
+    return { node: true, offset: 0 };
+  const $head = selection.$head;
+  for (let depth = 1; depth <= $head.depth; depth++)
+    if (isWholeBlock($head.node(depth)))
+      return { node: false, offset: selection.head - $head.before(depth) };
+  return null;
 }
