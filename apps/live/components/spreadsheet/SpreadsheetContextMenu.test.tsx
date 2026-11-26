@@ -37,8 +37,11 @@ function Menus({ actions }: { actions: SheetActions }) {
       openCustomAngle: vi.fn(),
       openSortRange: vi.fn(),
     },
-    // The side panel's item, as SpreadsheetSheetParts binds it.
-    { 'conditional-formatting': { run: vi.fn(), checked: false } },
+    // The side panels' items, as SpreadsheetSheetParts binds them.
+    {
+      'conditional-formatting': { run: vi.fn(), checked: false },
+      'data-validation': { run: vi.fn(), checked: false },
+    },
   );
   return <SpreadsheetGridMenus actions={actions} bound={office.actions} />;
 }

@@ -10,9 +10,11 @@ import { SheetFormatRulesBody } from '@/components/sheets/rules/SheetFormatRules
 import type { SheetActions } from '@/components/sheets/useSheetActions';
 import type { OfficePanelsState } from '@/lib/office/useOfficePanels';
 import { SpreadsheetThemesBody } from './SpreadsheetThemesBody';
+import { SpreadsheetValidationRulesBody } from './SpreadsheetValidationRulesBody';
 import {
   ALTERNATING_COLOURS_PANEL,
   CHART_EDITOR_PANEL,
+  DATA_VALIDATION_PANEL,
   SPREADSHEET_PANELS,
   THEMES_PANEL,
 } from '@/lib/spreadsheet/spreadsheet-panels';
@@ -23,11 +25,14 @@ export function SpreadsheetRightPanel({
   panels,
   actions,
   chart,
+  validation = { nonce: 0, startNew: false },
 }: {
   panels: OfficePanelsState;
   actions: SheetActions;
   // The chart the Chart Editor edits, and how a change of it is written.
   chart?: { id: string | null; change: (next: SheetChart) => void };
+  // How Data Validation Rules was last opened: a new Dropdown (Insert › Dropdown) or the active cell's rule.
+  validation?: { nonce: number; startNew: boolean };
 }) {
   const spec = SPREADSHEET_PANELS.find((p) => p.id === panels.open.right);
   if (!spec) return null;
@@ -47,6 +52,12 @@ export function SpreadsheetRightPanel({
             chartId={chart?.id ?? null}
             onChange={(next) => chart?.change(next)}
             onClose={close}
+          />
+        ) : spec.id === DATA_VALIDATION_PANEL.id ? (
+          <SpreadsheetValidationRulesBody
+            key={validation.nonce}
+            actions={actions}
+            startNew={validation.startNew}
           />
         ) : spec.id === THEMES_PANEL.id ? (
           <SpreadsheetThemesBody />

@@ -44,10 +44,19 @@ or **Plain Text** (the value alone; the arrow shows on the active cell only).
 
 ## In a spreadsheet
 
-**Status: specified.** Nothing is built. The rules above carry into the [spreadsheet](spreadsheet.md), with these
-changes ([Data tools](data-tools.md#data-validation)):
+**Status: partly built.** The side panel, Insert › Checkbox and Insert › Dropdown are built; the rest is specified.
+The rules above carry into the [spreadsheet](spreadsheet.md), with these changes
+([Data tools](data-tools.md#data-validation)):
 
-- The Data Validation Rules **side panel** replaces the popover, listing the sheet's rules with **Add Rule**.
+- The Data Validation Rules **side panel** replaces the popover (an Editor's, as every side panel that writes):
+  - It lists the open sheet's rules, each its short line and its range, pressed to edit it in the rule form, with a
+    **Delete Rule** button; "No validation rules on this sheet yet." when there are none; **Add Rule** opens the form
+    on a new rule over the selection (a Dropdown of the values in it, as the popover's).
+  - The form is the popover's, in the panel's frame and under its title; Done, Cancel and Remove Rule return to the
+    list, the panel still open.
+  - **Data › Data Validation** and a context menu's **Data Validation** open it on the rule at the active cell, else
+    on the list; **Insert › Dropdown** opens it on a new Dropdown over the selection; **Insert › Checkbox** makes a
+    Checkbox rule over the selection at once, without the panel (one change, one undo step).
 - **Dropdown from a Range** may read a range of **any sheet** of the workbook (`Sheet2!A2:A20`).
 - **Checkbox** takes **Use Custom Cell Values** (a ticked and an unticked value).
 - **Number**, **Date** and **Text** gain Google's remaining criteria: Text Is Valid Email and URL (kept), Date Is Valid

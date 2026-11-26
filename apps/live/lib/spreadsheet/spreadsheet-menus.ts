@@ -323,8 +323,8 @@ const INSERT_MENU = menu('insert', 'Insert', [
   item('insert-function', 'Function', 'participate', { keywords: ['formula', 'sum'] }),
   item('insert-link', 'Link', 'edit', { shortcut: 'insert-link' }),
   SEPARATOR,
-  item('insert-checkbox', 'Checkbox', 'edit', { keywords: ['tick box'] }),
-  item('insert-dropdown', 'Dropdown', 'edit'),
+  built('insert-checkbox', 'Checkbox', 'edit', { keywords: ['tick box'] }),
+  built('insert-dropdown', 'Dropdown', 'edit'),
   item('insert-emoji', 'Emoji', 'participate'),
   SEPARATOR,
   item('insert-comment', 'Comment', 'participate', {
@@ -447,7 +447,7 @@ const DATA_MENU = menu('data', 'Data', [
   item('randomise-range', 'Randomise Range', 'edit'),
   SEPARATOR,
   item('column-stats', 'Column Stats', 'view'),
-  item('data-validation', 'Data Validation', 'edit'),
+  built('data-validation', 'Data Validation', 'edit'),
   submenu('data-clean-up', 'Data Clean-up', [
     item('clean-up-suggestions', 'Clean-up Suggestions', 'edit'),
     item('remove-duplicates', 'Remove Duplicates', 'edit'),
