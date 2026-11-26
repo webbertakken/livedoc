@@ -1,7 +1,7 @@
 // docs/specs/029-sheets/files-and-print.md "The import report" (D120): the words of each line, counted, naming up to
 // three, and saying when there are more.
 import { describe, expect, it } from 'vitest';
-import type { ReportedLoss } from '@livedoc/sheets/files';
+import type { ReportedLoss } from './import-report';
 import { IMPORT_REPORT_LEAD, importReportLine, importReportTitle } from './import-report-copy';
 
 const line = (loss: ReportedLoss) => importReportLine(loss);
@@ -86,6 +86,10 @@ describe('the import report’s copy', () => {
       [
         { k: 'chart_rewritten', count: 2, names: ['Models'] },
         '2 charts changed since the file was opened are written as LiveDoc draws charts: Models',
+      ],
+      [
+        { k: 'charts_unwritten', count: 2, names: ['Data', 'Costs'] },
+        "Charts are left out of 2 sheets that keep the file's own drawings: Data and Costs",
       ],
       [
         {

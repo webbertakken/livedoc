@@ -8,7 +8,7 @@ import { writeSheet } from '@/lib/api/sheets';
 import { sendKept } from '@/lib/api/workbook-kept';
 import { PACKAGE_MAX_BYTES } from '@livedoc/office-packages';
 import { keepImportReport } from './import-report-handoff';
-import { nameFromFile, openingNotice, openSpreadsheetFile } from './open-spreadsheet-file';
+import { openingNotice, openSpreadsheetFile, spreadsheetNameFor } from './open-spreadsheet-file';
 
 vi.mock('@/lib/api-client', async (real) => ({
   ...(await real<typeof import('@/lib/api-client')>()),
@@ -159,8 +159,8 @@ describe('a file’s kept content', () => {
 
 describe('the words', () => {
   it('names the spreadsheet after the file and says how far it is sent', () => {
-    expect(nameFromFile('Q3 budget.xlsx')).toBe('Q3 budget');
-    expect(nameFromFile('.xlsx')).toBe('Untitled spreadsheet');
+    expect(spreadsheetNameFor('Q3 budget.xlsx')).toBe('Q3 budget');
+    expect(spreadsheetNameFor('.xlsx')).toBe('Untitled spreadsheet');
     expect(openingNotice('Q3', 0.456)).toBe('Opening “Q3”… 45%');
     expect(openingNotice('Q3', 2)).toBe('Opening “Q3”… 100%');
   });
