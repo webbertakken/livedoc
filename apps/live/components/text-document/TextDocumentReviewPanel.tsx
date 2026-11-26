@@ -63,7 +63,7 @@ export function TextDocumentReviewPanel({
       className="absolute top-4 right-4 z-30 flex w-80 max-w-[calc(100%-2rem)] flex-col gap-2 rounded-menu border border-(--office-line) bg-(--office-menu) p-3 text-body text-(--office-ink) shadow-lg outline-none"
     >
       <div className="flex items-center justify-between gap-2">
-        <h2 id={title} className="text-body font-semibold">
+        <h2 id={title} className="text-body font-medium">
           Suggested edits
         </h2>
         <CardButton label="Close" onPress={onClose}>
