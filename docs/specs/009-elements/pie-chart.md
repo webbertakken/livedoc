@@ -194,7 +194,7 @@ Chart" and a screen reader hears "Column chart", as the palette's tile says, nev
     its top edge.
   - Google's colour group column (a text column between the y and the size) is not read: such a column is a series
     of no values. Stacking, Smooth Line, the right-hand axis and a scatter series' line are ignored and kept (default,
-    D297).
+    D320).
 - **Combo** (Google Sheets' Combo chart): a line chart's data (`lineSeries` over `lineCategories`), each series drawn
   as its own **series type**: Column, Line, Area or Stepped Area (`LineSeries.type`). A series with no type of its own takes the
   default: the first half of the series, rounded up, are columns and the rest lines, so two series are a column and a
@@ -420,7 +420,7 @@ The code cites each by its id.
 - **D289** Stepped Area: steps span their category's slot, risers on the shared edges, no markers, filled to zero at
   25%; stacked as Stacked Area; unstacked, the right axis as an area's; a Combo's stepped area series likewise
   (default).
-- **D297** Bubble: the last of two or more series the sizes (Excel's x, y, size; Google's size column last), every
+- **D320** Bubble: the last of two or more series the sizes (Excel's x, y, size; Google's size column last), every
   other series' bubbles sized by it, one series one size at half the largest; area in proportion to size, the largest
   radius a tenth of the plot's shorter side from 6 to 30 px, the plot drawn in by it; no bubble for a size of no
   value or not above zero; fill at 60% with a 1 px edge, largest first; names inside when they fit; Google's group

@@ -35,7 +35,7 @@ and two changing one chart resolve to the last write. Each change is one undo st
   first column of labels (or, on a scatter or bubble chart, of numbers: the x) labels them; on a scatter or bubble
   chart a first column of text beside two or more columns of numbers names its points, and the next column is its x
   ([Scatter's point names](../009-elements/pie-chart.md#chart-types)); on a bubble chart of two or more series the
-  last is the bubbles' sizes ([Bubble](../009-elements/pie-chart.md#chart-types), D297). Deleting rows or columns inside
+  last is the bubbles' sizes ([Bubble](../009-elements/pie-chart.md#chart-types), D320). Deleting rows or columns inside
   the range shrinks it; deleting all of it leaves the chart with no data, drawn as "No data".
 - **Type**: one of [Chart types](#chart-types) built: Column, Bar, Line, Area, Stepped Area, Scatter, Bubble, Pie, Doughnut, Radar and Combo. A Column
   or Bar chart draws every series of its range side by side, as Google's does

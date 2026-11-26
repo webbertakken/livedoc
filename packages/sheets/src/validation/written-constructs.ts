@@ -271,7 +271,7 @@ function chartSheet(): FileSheet {
     },
     // Radar (D292): lines with markers round a web.
     { ...base(types.length + 12, 'radar'), id: 'chart_radar', values: true },
-    // Bubble (D298): x the costs, y the index, sized by the index.
+    // Bubble (D321): x the costs, y the index, sized by the index.
     {
       ...base(types.length + 13, 'bubble'),
       id: 'chart_bubble',

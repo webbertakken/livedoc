@@ -96,7 +96,7 @@ function seriesXml(sheet: string, chart: HeldFileChart, s: FileChartSeries, i: n
       : chart.labels
         ? `<c:xVal>${strRef(refOf(sheet, chart.labels.range), chart.labels.cached)}</c:xVal>`
         : '';
-    // A bubble's size is its chart's size column, shared by every series (D298).
+    // A bubble's size is its chart's size column, shared by every series (D321).
     if (chart.type === 'bubble')
       return `<c:ser>${head}${val('invertIfNegative', 0)}${x}<c:yVal>${values}</c:yVal><c:bubbleSize>${numRef(refOf(sheet, chart.sizes!.range), chart.sizes!.cached)}</c:bubbleSize>${val('bubble3D', 0)}</c:ser>`;
     return `<c:ser>${head}${x}<c:yVal>${values}</c:yVal>${val('smooth', 0)}</c:ser>`;
@@ -179,7 +179,7 @@ function groupXml(
     case 'scatter':
       return `<c:scatterChart>${val('scatterStyle', 'lineMarker')}${val('varyColors', 0)}${series}${labels}${axisIds(ids)}</c:scatterChart>`;
     case 'bubble':
-      // Flat bubbles sized by area at 100%, none for a size below zero (D298).
+      // Flat bubbles sized by area at 100%, none for a size below zero (D321).
       return `<c:bubbleChart>${val('varyColors', 0)}${series}${labels}${val('bubbleScale', 100)}${val('showNegBubbles', 0)}${axisIds(ids)}</c:bubbleChart>`;
     case 'pie':
       return `<c:pieChart>${val('varyColors', 1)}${series}${labels}${val('firstSliceAng', 0)}</c:pieChart>`;

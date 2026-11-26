@@ -1,6 +1,6 @@
 'use client';
 
-// A Bubble chart (docs/specs/009-elements/pie-chart.md "Bubble", D297): a scatter's axes, each point a circle whose
+// A Bubble chart (docs/specs/009-elements/pie-chart.md "Bubble", D320): a scatter's axes, each point a circle whose
 // area is in proportion to its size (the last of two or more series), filled at 60%, largest first, names inside
 // where they fit, from the marks the export draws too (bubbleMarks). A bubble's readout reads `name, y, x, size` when
 // named, else `x · series: y, size`.

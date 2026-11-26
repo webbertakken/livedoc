@@ -53,7 +53,7 @@ export function nearestFileChart(chart: FileChart): {
 } {
   const held: HeldFileChart = {
     ...chart,
-    // A Bubble chart with no sizes is no format's bubble: a scatter (D298).
+    // A Bubble chart with no sizes is no format's bubble: a scatter (D321).
     type: chart.type === 'bubble' && !chart.sizes ? 'scatter' : NEAREST_TYPE[chart.type],
     series: chart.series.map(({ type, ...s }) =>
       type ? { ...s, type: NEAREST_SERIES_TYPE[type] } : s,
