@@ -113,6 +113,17 @@ export const RUN_MARKS = [
   RUN_KEPT_MARK,
 ] as const;
 
+/**
+ * A suggestion's marks (review.md "How a suggestion is kept"): on text, each a formatting attribute excluding itself;
+ * `insertion` and `deletion` also on an object in a line, a paragraph (its break, its join) and a block, and
+ * `formatChange` on a paragraph (its paragraph format).
+ */
+export const INSERTION_MARK = 'insertion';
+export const DELETION_MARK = 'deletion';
+export const FORMAT_CHANGE_MARK = 'format_change';
+export const SUGGESTION_MARKS = [INSERTION_MARK, DELETION_MARK, FORMAT_CHANGE_MARK] as const;
+export const PARAGRAPH_FORMAT_CHANGE = 'formatChange';
+
 /** The root maps beside the body. */
 export const DOCUMENT_MAP = 'document';
 export const STYLES_MAP = 'styles';

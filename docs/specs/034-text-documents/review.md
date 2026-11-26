@@ -3,8 +3,8 @@
 **Status: being built.** Comment threads are kept beside the writing, travel in both formats' files, and the room
 judges a Participant's; they are drawn and added in the margin, listed in the comments panel and reached from the
 keyboard; people react to them, mention one another and assign a comment, a mention or an assignment emailing whom
-it names, and the Inbox lists the threads and assigned comments of those they concern. Suggestions, versions and
-notifications are still to come.
+it names, and the Inbox lists the threads and assigned comments of those they concern. Suggestions are kept in the
+writing and the room judges a Participant's; suggesting in the editor, versions and notifications are still to come.
 
 Comments, suggestions, version history, comparing documents and notifications in a [text document](text-document.md).
 The panels and threads are the shared [review surfaces](../012-collaboration/review-surfaces.md), built once for the
@@ -237,6 +237,37 @@ office kinds; this spec says what a text document puts in them.
 - Suggestions are kept in the file as tracked changes (ODF `text:tracked-changes`, OOXML `w:ins` / `w:del` /
   `w:rPrChange`), so Word and LibreOffice show them as tracked changes and theirs arrive as suggestions.
 - A suggestion on a structural change (a table row, a page break, a picture) is shown with its kind's card.
+
+### How a suggestion is kept
+
+- **In the writing, where it stands**, never beside it ([Live editing and storage](live-editing-and-storage.md#the-live-model)),
+  so it moves, splits and merges with the text as the text does:
+  - an **insertion** is text, or an object in a line, carrying its insertion; it reads as written;
+  - a **deletion** is text still in the writing carrying its deletion; it reads as struck through until accepted;
+  - a **format** suggestion is text already showing its new formatting, carrying the formatting it had before;
+  - a **paragraph break** is a paragraph whose start carries an insertion (Enter while suggesting), a **join** one
+    whose start carries a deletion (the break before it deleted while suggesting), and a **paragraph format**
+    suggestion a paragraph carrying its style, list and paragraph formatting from before;
+  - a whole block (a table, a section break, a table of contents) carries an insertion or a deletion.
+- **What each part holds**: its suggestion's id, its author (their adder key, name and colour, as a comment's author:
+  [How a comment is kept](#how-a-comment-is-kept)) and when it was made. A suggestion is every part with one id,
+  across stretches and paragraphs: one person's adjacent changes share an id, so they read and are accepted as one.
+- **One of each kind on a stretch**: a character carries at most one insertion, one deletion and one format
+  suggestion. Deleting someone else's suggested insertion while suggesting is a deletion over it; formatting text that
+  carries someone else's format suggestion is not offered while suggesting (default).
+- **Accepting** an insertion or a paragraph break keeps it and drops its mark; a deletion removes its text, a join
+  joins its paragraph to the one before, a format drops what was before. **Rejecting** removes an insertion's text,
+  joins a paragraph break's paragraph back, drops a deletion's or a join's mark, and puts a format's before back.
+  Either is one change of the writing, undone with ⌘Z.
+- **Where**: in the body of each document tab. Headers, footers and notes take no suggestions; while suggesting they
+  read as they do in Viewing (default).
+- **The room judges a Participant's update** (fork D7): it is theirs when the writing, read with the sender's own
+  suggestions rejected, is the same before and after, so it adds, changes or withdraws only the sender's own
+  suggestions, never anyone's writing or anyone else's suggestion; anything else asks for Editing and is refused
+  whole. The comments' rules stand beside it. An Editor's update is not judged, as with comments.
+- **Limits**: at most `TEXT_DOCUMENT_SUGGESTIONS_MAX` suggestions (5,000, (default)) in one document; the editor
+  makes none past it and the room refuses a Participant's update past it.
+- **Search** reads a suggested insertion as the writing it is, and a suggested deletion too, until it is accepted.
 
 ## Reviewing suggestions
 
