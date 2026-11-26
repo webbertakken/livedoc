@@ -4,11 +4,12 @@ import { emptyChartTable, sheetChartTable } from '../chart-data';
 import type { Workbook } from '../engine/workbook';
 import { layoutIndex } from '../layout';
 import { makeAxisIds, type Rand } from '../ids';
-import type {
-  SheetChart,
-  SheetChartKept,
-  SheetChartSeriesLook,
-  SheetChartType,
+import {
+  SHEET_CHART_COLS_MAX,
+  type SheetChart,
+  type SheetChartKept,
+  type SheetChartSeriesLook,
+  type SheetChartType,
 } from '../objects/sheet-objects';
 import type { Sheet, SheetLayout } from '../sheet';
 
@@ -59,26 +60,57 @@ function fnv1a(text: string): string {
 /**
  * What a chart is, by position, as a sum (standard-mapping.md "Charts in the file", D276): its type, titles, legend,
  * values, axis, alt, place, size, and the cells it reads with each series' look; never the values it shows, nor names.
+ * A pie's or a doughnut's axes are drawn by no suite, so they sum as shown and untitled.
  */
 export function fileChartSum(chart: FileChart): string {
+  const round = chart.type === 'pie' || chart.type === 'doughnut';
   return fnv1a(
     JSON.stringify([
       chart.type,
       chart.title ?? '',
-      chart.xTitle ?? '',
-      chart.yTitle ?? '',
+      round ? '' : (chart.xTitle ?? ''),
+      round ? '' : (chart.yTitle ?? ''),
       chart.legend,
       chart.values,
-      chart.axis,
+      chart.axis || round,
       chart.alt ?? '',
       chart.at,
       chart.width,
       chart.height,
       chart.labels?.range ?? null,
       chart.x?.range ?? null,
-      chart.series.map((s) => [s.values, s.nameAt, s.color ?? '', s.line === true]),
+      // A series' colour and line as the files draw them: none on a round chart, a line on a scatter alone.
+      chart.series.map((s) => [
+        s.values,
+        s.nameAt,
+        round ? '' : (s.color ?? ''),
+        chart.type === 'scatter' && s.line === true,
+      ]),
     ]),
   );
+}
+
+const isColumn = (r: FileRange) => r.c1 === r.c2;
+const sameRows = (x: FileRange, y: FileRange) => x.r1 === y.r1 && x.r2 === y.r2;
+
+/**
+ * Whether a read chart's series and labels are one block of the model's (standard-mapping.md "Charts in the file",
+ * Reading): one to twelve series, each one column on the same rows, named from the row above in its own column or
+ * none named, in column order after the label column, which is one column on those rows too.
+ */
+export function isOneBlock(series: readonly FileChartSeries[], labels: FileRange | null): boolean {
+  const first = series[0];
+  if (!first || series.length > SHEET_CHART_COLS_MAX - 1) return false;
+  const header = first.nameAt ? first.values.r1 - 1 : null;
+  let last = labels ? labels.c1 : -1;
+  for (const s of series) {
+    if (!isColumn(s.values) || !sameRows(s.values, first.values) || s.values.c1 <= last)
+      return false;
+    if ((s.nameAt === null) !== (header === null)) return false;
+    if (s.nameAt && (s.nameAt.r !== header || s.nameAt.c !== s.values.c1)) return false;
+    last = s.values.c1;
+  }
+  return !labels || (isColumn(labels) && sameRows(labels, first.values));
 }
 
 const columnRange = (rows: readonly number[], c: number): FileRange => ({

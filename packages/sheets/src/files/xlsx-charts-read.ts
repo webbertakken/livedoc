@@ -17,14 +17,19 @@ import { COLUMN_WIDTH_NEW, ROW_HEIGHT_NEW } from '../limits';
 import {
   OBJECT_OFFSET_MAX,
   SHEET_CHART_ALT_MAX,
-  SHEET_CHART_COLS_MAX,
   SHEET_CHART_SIZE_MAX,
   SHEET_CHART_SIZE_MIN,
   SHEET_CHART_TEXT_MAX,
   type SheetChartLegend,
   type SheetChartType,
 } from '../objects/sheet-objects';
-import { fileChartSum, type FileChart, type FileChartSeries, type FileRange } from './file-charts';
+import {
+  fileChartSum,
+  isOneBlock,
+  type FileChart,
+  type FileChartSeries,
+  type FileRange,
+} from './file-charts';
 import { lineStartPx } from './file-lines';
 import type { FileAt, KeptContent, KeptPart } from './kept-content';
 import type { FileSheet } from './workbook-file';
@@ -156,9 +161,6 @@ function lookOf(type: SheetChartType, ser: XmlElement): Pick<FileChartSeries, 'c
 
 type Read = Omit<FileChart, 'at' | 'width' | 'height' | 'alt' | 'kept'>;
 
-const isColumn = (r: FileRange) => r.c1 === r.c2;
-const sameRows = (x: FileRange, y: FileRange) => x.r1 === y.r1 && x.r2 === y.r2;
-
 // One chart part, read as the model holds a chart, or null when it does not qualify (D275).
 export function readXlsxChartXml(xml: string, sheetName: string): Read | null {
   // A chart naming parts of its own (user shapes, embedded data) is never read: its XML would name what is not kept.
@@ -180,7 +182,7 @@ export function readXlsxChartXml(xml: string, sheetName: string): Read | null {
   for (const ser of cs(group, 'ser')) {
     if (cs(ser, 'smooth').some(isOn)) return null;
     const values = own(refUnder(c(ser, scatter ? 'yVal' : 'val')));
-    if (!values || !isColumn(values)) return null;
+    if (!values || values.c1 !== values.c2) return null;
     const tx = c(ser, 'tx');
     const nameRef = tx ? own(refUnder(tx)) : null;
     // A name typed in the chart has no cell the model could read it from.
@@ -198,18 +200,7 @@ export function readXlsxChartXml(xml: string, sheetName: string): Read | null {
       ...lookOf(type, ser),
     });
   }
-  const first = series[0];
-  if (!first || series.length > SHEET_CHART_COLS_MAX - 1) return null;
-  // One block: every series the same rows, named from the row above or none, in column order after the labels.
-  const header = first.nameAt ? first.values.r1 - 1 : null;
-  let last = labels ? labels.c1 : -1;
-  for (const s of series) {
-    if (!sameRows(s.values, first.values) || s.values.c1 <= last) return null;
-    if ((s.nameAt === null) !== (header === null)) return null;
-    if (s.nameAt && (s.nameAt.r !== header || s.nameAt.c !== s.values.c1)) return null;
-    last = s.values.c1;
-  }
-  if (labels && (!isColumn(labels) || !sameRows(labels, first.values))) return null;
+  if (!isOneBlock(series, labels ?? null)) return null;
   const axes = childElements(plot).filter((e) => e.uri === C_NS && e.local.endsWith('Ax'));
   if (axes.some((x) => x.local === 'serAx')) return null;
   const position = (x: XmlElement) => valOf(c(x, 'axPos'));

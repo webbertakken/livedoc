@@ -10,7 +10,9 @@ import {
 } from '@livedoc/office-packages';
 import { columnLetters } from '../address';
 import { COLUMN_WIDTH_NEW, ROW_HEIGHT_NEW } from '../limits';
-import type { FileChart, FileChartSeries, FileRange } from './file-charts';
+import { fileChartSum, type FileChart, type FileChartSeries, type FileRange } from './file-charts';
+import type { KeptPart } from './kept-content';
+import type { FileLoss } from './workbook-file';
 import { lineStartPx, type FileLines } from './file-lines';
 
 const CHART_MEDIA_TYPE = ODF_MEDIA_TYPES.chart;
@@ -102,18 +104,26 @@ export function odsChartContent(
     styles.push(xml);
     return ` chart:style-name="${name}"`;
   };
+  const round = chart.type === 'pie' || chart.type === 'doughnut';
   const plotStyle = style(
     chart.type === 'bar'
       ? '<style:style style:name="plot" style:family="chart"><style:chart-properties chart:vertical="true"/></style:style>'
       : null,
     'plot',
   );
-  const hiddenAxis = style(
-    chart.axis
-      ? null
-      : '<style:style style:name="hidden-axis" style:family="chart"><style:chart-properties chart:display-label="false"/><style:graphic-properties draw:stroke="none"/></style:style>',
-    'hidden-axis',
-  );
+  // A shown axis says so: LibreOffice reads an axis that does not as one without labels (D279).
+  const shownAxis = round
+    ? ''
+    : style(
+        '<style:style style:name="axis" style:family="chart"><style:chart-properties chart:display-label="true"/></style:style>',
+        'axis',
+      );
+  const hiddenAxis = chart.axis
+    ? shownAxis
+    : style(
+        '<style:style style:name="hidden-axis" style:family="chart"><style:chart-properties chart:display-label="false"/><style:graphic-properties draw:stroke="none"/></style:style>',
+        'hidden-axis',
+      );
   const series = chart.series.map((s, i) => {
     const own = style(seriesStyle(chart, s, `series${i + 1}`), `series${i + 1}`);
     const label = s.nameAt
@@ -124,14 +134,15 @@ export function odsChartContent(
       : '';
     return `<chart:series chart:values-cell-range-address="${escapeXmlAttribute(odfRange(sheet, s.values))}"${label}${own}>${domain}</chart:series>`;
   });
-  const round = chart.type === 'pie' || chart.type === 'doughnut';
   const categories = chart.labels
     ? `<chart:categories table:cell-range-address="${escapeXmlAttribute(odfRange(sheet, chart.labels.range))}"/>`
     : '';
+  // A round chart's labels are its x axis's categories, an axis no suite draws.
   const axes = round
-    ? ''
+    ? categories &&
+      `<chart:axis chart:dimension="x" chart:name="primary-x">${categories}</chart:axis>`
     : [
-        `<chart:axis chart:dimension="x" chart:name="primary-x">${chart.xTitle ? `<chart:title>${paragraph(chart.xTitle)}</chart:title>` : ''}${categories}</chart:axis>`,
+        `<chart:axis chart:dimension="x" chart:name="primary-x"${shownAxis}>${chart.xTitle ? `<chart:title>${paragraph(chart.xTitle)}</chart:title>` : ''}${categories}</chart:axis>`,
         `<chart:axis chart:dimension="y" chart:name="primary-y"${hiddenAxis}>${chart.yTitle ? `<chart:title>${paragraph(chart.yTitle)}</chart:title>` : ''}<chart:grid chart:class="major"/></chart:axis>`,
       ].join('');
   const legend =
@@ -159,30 +170,67 @@ export function odsChartContent(
   ].join('');
 }
 
+/** The kept entries a read chart's document is found among (the file's kept content, ODF's alone). */
+export type OdsKeptParts = { part(name: string): KeptPart | undefined };
+
+// A kept document's form: a package's `content.xml` (`office:document-content`), or a flat file's inline one.
+const PACKAGE_DOCUMENT = /^(?:<\?xml[^>]*\?>\s*)?<[\w.-]+:document-content\b/;
+
 /** The chart objects a written file holds: named past the objects the file kept, inline in a flat file. */
 export class OdsChartObjects {
   readonly entries: { name: string; mediaType: string; data: Uint8Array }[] = [];
   private n = 0;
 
   private readonly flat: boolean;
+  // The object folders the file kept (`Object 1`), which no new object is named.
   private readonly taken: ReadonlySet<string>;
+  private readonly kept: OdsKeptParts;
+  private readonly losses: FileLoss[];
 
-  constructor(flat: boolean, taken: ReadonlySet<string>) {
+  constructor(flat: boolean, taken: ReadonlySet<string>, kept: OdsKeptParts, losses: FileLoss[]) {
     this.flat = flat;
-    this.taken = taken;
+    this.taken = new Set([...taken].map((name) => name.split('/')[0]!));
+    this.kept = kept;
+    this.losses = losses;
+  }
+
+  // A read chart's kept document, while it sums as it was read and is written to the form it was read from (D278); a
+  // chart changed since, or written to the other form, is written anew and its sheet named.
+  private keptDocument(sheet: string, chart: FileChart): { xml: string; part: KeptPart } | null {
+    const part = chart.kept && this.kept.part(chart.kept.part);
+    if (!part) return null;
+    const xml = new TextDecoder().decode(part.data);
+    if (fileChartSum(chart) === chart.kept!.sum && PACKAGE_DOCUMENT.test(xml) !== this.flat)
+      return { xml, part };
+    this.losses.push({ k: 'chart_rewritten', sheet });
+    return null;
   }
 
   /** A sheet's `table:shapes` holding its charts. */
   shapes(sheet: string, charts: readonly FileChart[], lines: FileLines | undefined): string {
     const objects = charts.map((chart) => {
-      if (this.flat) return { inline: odsChartContent(sheet, chart, 'document') };
+      const own = this.keptDocument(sheet, chart);
+      if (this.flat)
+        return {
+          inline: own
+            ? own.xml.replace(/^<\?xml[^>]*\?>\s*/, '')
+            : odsChartContent(sheet, chart, 'document'),
+        };
       let name: string;
       do name = `Object ${++this.n}`;
-      while (this.taken.has(`${name}/`));
+      while (this.taken.has(name));
       const xml = `<?xml version="1.0" encoding="UTF-8"?>\n${odsChartContent(sheet, chart, 'document-content')}\n`;
+      const styles = own && this.kept.part(own.part.name.replace(/content\.xml$/, 'styles.xml'));
       this.entries.push(
         { name: `${name}/`, mediaType: CHART_MEDIA_TYPE, data: new Uint8Array() },
-        { name: `${name}/content.xml`, mediaType: 'text/xml', data: new TextEncoder().encode(xml) },
+        {
+          name: `${name}/content.xml`,
+          mediaType: 'text/xml',
+          data: own ? own.part.data : new TextEncoder().encode(xml),
+        },
+        ...(styles
+          ? [{ name: `${name}/styles.xml`, mediaType: 'text/xml', data: styles.data }]
+          : []),
       );
       return { href: name };
     });

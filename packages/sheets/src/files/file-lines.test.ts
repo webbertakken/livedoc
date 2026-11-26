@@ -1,6 +1,6 @@
 // Lines as a file holds them, made into a layout (standard-mapping.md "Rows and columns in the file", D124, D168).
 import { describe, expect, it } from 'vitest';
-import { fileLinesOf, layoutFromLines, type FileAxisLines } from './file-lines';
+import { fileLinesOf, layoutFromLines, lineAtPx, type FileAxisLines } from './file-lines';
 
 const layout = { rows: ['ra01', 'rb01', 'rc01', 'rd01'], cols: ['ca01', 'cb01'] };
 const axis = (over: Partial<FileAxisLines>): FileAxisLines => ({
@@ -73,6 +73,24 @@ describe('layoutFromLines', () => {
       rowCollapsed: [{ at: 'rb01', depth: 1 }],
       controlsAfter: { r: true },
     });
+  });
+});
+
+describe('lineAtPx', () => {
+  it('finds the line a position falls on, past hidden ones, the last line holding what lies beyond', () => {
+    const axis = {
+      lines: new Map([
+        [0, { size: 50 }],
+        [1, { hidden: true as const }],
+      ]),
+      collapsed: [],
+      size: 20,
+    };
+    expect(lineAtPx(axis, 0, 100, 5)).toEqual({ at: 0, offset: 0 });
+    expect(lineAtPx(axis, 55, 100, 5)).toEqual({ at: 2, offset: 5 });
+    expect(lineAtPx(axis, 75, 100, 5)).toEqual({ at: 3, offset: 5 });
+    expect(lineAtPx(axis, 500, 100, 5)).toEqual({ at: 4, offset: 410 });
+    expect(lineAtPx(undefined, -3, 100, 2)).toEqual({ at: 0, offset: 0 });
   });
 });
 

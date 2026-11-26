@@ -41,6 +41,29 @@ export function lineStartPx(axis: FileAxisLines | undefined, at: number, size: n
   return px;
 }
 
+/**
+ * The line a position in px falls on and how far into it, `lineStartPx`'s inverse: a hidden line is never the one;
+ * the axis's end (`count` lines) holds what lies past it.
+ */
+export function lineAtPx(
+  axis: FileAxisLines | undefined,
+  px: number,
+  size: number,
+  count: number,
+): { at: number; offset: number } {
+  let start = 0;
+  let last = { at: 0, offset: Math.max(0, px) };
+  for (let p = 0; p < count; p++) {
+    const line = axis?.lines.get(p);
+    if (line?.hidden) continue;
+    const own = line?.size ?? axis?.size ?? size;
+    last = { at: p, offset: Math.max(0, px - start) };
+    if (px < start + own) return last;
+    start += own;
+  }
+  return last;
+}
+
 /** A group as positions, and whether it is collapsed. */
 export type FileGroup = { depth: number; from: number; to: number; collapsed: boolean };
 

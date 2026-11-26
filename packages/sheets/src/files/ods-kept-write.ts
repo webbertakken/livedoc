@@ -149,6 +149,11 @@ export class OdsKeptWriter {
   }
 
   /** The kept entries still reached: a picture or an object while written kept XML names its path, the rest always. */
+  /** A kept entry by its name (a read chart's document), whether reached or not. */
+  part(name: string): KeptContent['parts'][number] | undefined {
+    return this.parts.find((part) => part.name === name);
+  }
+
   /** Every kept entry's name, reached or not: what a new entry must not be named. */
   partNames(): Set<string> {
     return new Set(this.parts.map((part) => part.name));
