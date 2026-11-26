@@ -59,10 +59,15 @@ allowed when the formula answers TRUE or a number other than 0; any other answer
 A dropdown also has its **Display**: **Chip** (the default), **Arrow** (the value, and an arrow at the cell's right)
 or **Plain Text** (the value alone; the arrow shows on the active cell only).
 
+A dropdown may **Allow Multiple Selections**, as Google Sheets' does: its cells then hold one or more of its options,
+written in one cell as text joined by a comma and a space (`To Do, Done`), in the order picked. A value is allowed when
+every comma-separated part (each trimmed, empty ones aside) is an option; each is saved in the option's own spelling
+(`done,to do` → `Done, To Do`). Formulas read the cell as that text.
+
 ## In a spreadsheet
 
 **Status: partly built.** The side panel, Insert › Checkbox, Insert › Dropdown, Use Custom Cell Values, Custom
-Formula Is and a Dropdown from a Range on any sheet are built; the rest is specified.
+Formula Is, a Dropdown from a Range on any sheet and Allow Multiple Selections are built; the rest is specified.
 The rules above carry into the [spreadsheet](spreadsheet.md), with these changes
 ([Data tools](data-tools.md#data-validation)):
 
@@ -80,7 +85,7 @@ The rules above carry into the [spreadsheet](spreadsheet.md), with these changes
 - **Checkbox** takes **Use Custom Cell Values** (a ticked and an unticked value), and the rules gain **Custom Formula
   Is** ([Rules](#rules)); both are the Plan Sheet's too, the rule form being one.
 - A dropdown's options take **colours** (the one colour picker), drawn on its chips; **Allow Multiple Selections**
-  holds several options in one cell, comma-separated.
+  holds several options in one cell, comma-separated ([Rules](#rules)); the Plan Sheet's too, the rule form being one.
 - Both file formats keep every rule ([Standard mapping](standard-mapping.md)); a criterion a format lacks is kept for
   LiveDoc as unknown content and listed on conversion.
 
@@ -109,16 +114,17 @@ The rules above carry into the [spreadsheet](spreadsheet.md), with these changes
 
 ### What each rule allows, and its line
 
-| Rule                  | Allows                                                                                         | Line when refused (no Help Text)                                                           |
-| --------------------- | ---------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
-| Dropdown              | Text equal to an option, case aside; a number or true/false equal to an option's text as typed | Choose one of the dropdown's options: To Do, Doing, Done (the first 5, then "and 3 more")  |
-| Dropdown from a Range | A value equal to one of the range's shown values (empty ones aside), case aside                | Choose one of the values in A2:A20 (Sheet2!A2:A20 on another sheet)                        |
-| Checkbox              | TRUE or FALSE                                                                                  | This cell is a checkbox: type TRUE or FALSE                                                |
-| Checkbox, custom      | Its ticked or unticked value, case aside                                                       | This cell is a checkbox: type Yes or No (no unticked value: "type Yes, or leave it empty") |
-| Custom Formula Is     | A value the formula answers TRUE for, worked out with the cell read as that value              | Enter a value that meets the rule's formula                                                |
-| Number                | A number meeting the condition                                                                 | Enter a number between 1 and 10 (greater than 5, ...)                                      |
-| Date                  | A date (a number formatted, or read, as a date) meeting the condition                          | Enter a date after 01/10/2026 (in the person's locale)                                     |
-| Text                  | Text meeting the condition (a number is read as it is shown)                                   | Enter text that contains “ref” / Enter an email address / Enter a web address              |
+| Rule                  | Allows                                                                                         | Line when refused (no Help Text)                                                            |
+| --------------------- | ---------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| Dropdown              | Text equal to an option, case aside; a number or true/false equal to an option's text as typed | Choose one of the dropdown's options: To Do, Doing, Done (the first 5, then "and 3 more")   |
+| Multiple selections   | Text whose every comma-separated part is an option (or one of the range's values), case aside  | Choose one or more of the dropdown's options: ... / Choose one or more of the values in ... |
+| Dropdown from a Range | A value equal to one of the range's shown values (empty ones aside), case aside                | Choose one of the values in A2:A20 (Sheet2!A2:A20 on another sheet)                         |
+| Checkbox              | TRUE or FALSE                                                                                  | This cell is a checkbox: type TRUE or FALSE                                                 |
+| Checkbox, custom      | Its ticked or unticked value, case aside                                                       | This cell is a checkbox: type Yes or No (no unticked value: "type Yes, or leave it empty")  |
+| Custom Formula Is     | A value the formula answers TRUE for, worked out with the cell read as that value              | Enter a value that meets the rule's formula                                                 |
+| Number                | A number meeting the condition                                                                 | Enter a number between 1 and 10 (greater than 5, ...)                                       |
+| Date                  | A date (a number formatted, or read, as a date) meeting the condition                          | Enter a date after 01/10/2026 (in the person's locale)                                      |
+| Text                  | Text meeting the condition (a number is read as it is shown)                                   | Enter text that contains “ref” / Enter an email address / Enter a web address               |
 
 - An email is `something@something.something` with no spaces; a web address starts with one of Google's link
   schemes (`http://`, `https://`, `ftp://`, `gopher://`, `telnet://`, `news://`, `mailto:`, `aim:`), or is a domain with
@@ -157,6 +163,12 @@ The rules above carry into the [spreadsheet](spreadsheet.md), with these changes
   holding it), they show under the editor, the first highlighted; **Tab** or **Enter** saves the highlighted one, as
   formula autocomplete does; Escape there closes the list and keeps the typing.
 - A pick writes the cell: one change, one undo step (`Sheet · Changed · Cell`).
+- With **Allow Multiple Selections**, the option list's rows are tick rows, the cell's options ticked: a press ticks
+  an option (added at the end) or unticks it, each press one change and one undo step, and the list stays open until
+  Escape or a press outside. Typing completes the part after the last comma: the options matching it show under the
+  editor, and Tab or Enter saves the text before it with the highlighted option.
+- A Chip display draws each of a cell's options as its own chip, left to right with 4 px between them, cut at the
+  cell's edge; the arrow follows the last.
 
 ## Using a checkbox
 
@@ -193,7 +205,7 @@ The rules above carry into the [spreadsheet](spreadsheet.md), with these changes
     Dropdown's **options**, each a text field with its colour button (the one
     [colour picker](../004-interface-design/colour-picker.md) in its swatch skin, **No Colour** first) and a remove
     button, dragged by a grip to reorder, **Add Another Option** under them (Enter in an option's field adds one after
-    it), and its **Display** (Chip, Arrow, Plain Text); a range's A1 field; a Number, Date or Text rule's condition
+    it), its **Display** (Chip, Arrow, Plain Text) and **Allow Multiple Selections** (a tick box, a range's too); a range's A1 field; a Number, Date or Text rule's condition
     (a select) and its one or two values (a date in the person's locale).
   - **Advanced**, a collapsed section: **If the Value Isn't Allowed** (Reject the Value, Show a Warning) and **Help
     Text**.
@@ -235,7 +247,7 @@ The rules above carry into the [spreadsheet](spreadsheet.md), with these changes
 ## Agents
 
 - `change_sheet` gains `validate` (a range and its rule: `{ type: "dropdown", options: ["To Do", "Doing", "Done"],
-colors?, display? }`, `{ type: "dropdown_range", source: "A2:A20" }`, `{ type: "checkbox", checked?, unchecked? }`,
+colors?, display?, multiple? }`, `{ type: "dropdown_range", source: "A2:A20", multiple? }`, `{ type: "checkbox", checked?, unchecked? }`,
   `{ type: "formula", formula: "=B2>A2" }`, `{ type: "number" | "date" | "text", condition, value?, value2? }`, plus `reject` (default true) and `help`) and `clear_validation` (a
   range). A rule made by an agent replaces what its range covers, as the editor's does.
 - `read_sheet` lists the sheet's rules (range, kind, options or condition) and marks invalid values.

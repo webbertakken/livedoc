@@ -254,6 +254,15 @@ export function SheetValidationForm({
             rows={SHOWS.map((s) => ({ id: s.id, label: s.label }))}
             onPick={(id) => set({ show: id as Draft['show'] })}
           />
+          <label className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              className="size-icon-row accent-brand-600"
+              checked={d.multi}
+              onChange={(e) => set({ multi: e.target.checked })}
+            />
+            <span>Allow Multiple Selections</span>
+          </label>
         </div>
       ) : null}
       {ops && op ? (

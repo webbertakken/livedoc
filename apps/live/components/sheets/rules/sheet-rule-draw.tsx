@@ -11,6 +11,7 @@ import {
   isError,
   optionFor,
   scalarOf,
+  selectionParts,
   valueInvalid,
   type RuleCtx,
   type ValidationRule,
@@ -27,6 +28,8 @@ const CHIP_PAD_Y = 4;
 // The arrow's room, and the pill's padding beside the text (8 left, 4 right, 4 gap) with slack for the rough width.
 const CHIP_ARROW_PX = 16;
 const CHIP_TEXT_ROOM_PX = 24;
+// The gap between a multiple-selection cell's chips.
+const CHIP_GAP_PX = 4;
 // The room an arrow dropdown keeps at its cell's right (as a card table's column does).
 export const RULE_ARROW_PX = 22;
 const INVALID_INK = '#dc2626';
@@ -183,6 +186,12 @@ export function ruleCellDraw(opts: {
     );
     return { hideText: false, padEnd: true, nodes };
   }
+  // Several selections: a chip each, left to right, cut at the cell's edge (data-validation.md "Using a dropdown").
+  const parts = rule.multi && typeof v === 'string' ? selectionParts(v) : [];
+  if (parts.length > 1) {
+    nodes.push(chipRow(opts, parts));
+    return { hideText: true, padEnd: false, nodes };
+  }
   // A chip: the value on a pill in its option's colour, its ink black or white, whichever reads.
   const option =
     rule.is === 'list' && v !== null && !isError(v) && v !== '' ? optionFor(rule, v) : null;
@@ -218,6 +227,63 @@ export function ruleCellDraw(opts: {
   return { hideText: true, padEnd: false, nodes };
 }
 
+// A pill's colours: its option's, its ink black or white, whichever reads; the quiet column tint without one.
+function pillColours(
+  rule: ValidationRule,
+  text: string,
+  palette: PlanPalette,
+  ink: string,
+): { fill: string; ink: string } {
+  const c = rule.is === 'list' ? optionFor(rule, text)?.c : undefined;
+  return c ? { fill: c, ink: bestInk(c, '#1f2937', '#ffffff') } : { fill: palette.column, ink };
+}
+
+// A multiple-selection cell's chips in a row, the arrow on the last.
+function chipRow(opts: Parameters<typeof ruleCellDraw>[0], parts: readonly string[]): ReactNode {
+  const { box, palette, rule, cellKey: key } = opts;
+  const row = chipBox(box, Number.POSITIVE_INFINITY, opts.px);
+  return (
+    <div
+      key={`${key}cr`}
+      aria-hidden
+      className="pointer-events-none absolute flex items-center overflow-hidden"
+      style={{ left: row.x, top: row.y, width: row.w, height: row.h, gap: CHIP_GAP_PX, zIndex: 1 }}
+    >
+      {parts.map((part, i) => {
+        const { fill, ink } = pillColours(rule, part, palette, opts.ink);
+        const last = i === parts.length - 1;
+        return (
+          <span
+            key={i}
+            className="flex h-full shrink-0 items-center gap-1 whitespace-pre rounded-full"
+            style={{
+              paddingLeft: 8,
+              paddingRight: last ? 4 : 8,
+              backgroundColor: fill,
+              color: ink,
+              ...opts.textStyle,
+            }}
+          >
+            {part}
+            {last ? (
+              <span className="flex shrink-0 items-center" style={{ opacity: 0.9 }}>
+                <Chevron colour={ink} />
+              </span>
+            ) : null}
+          </span>
+        );
+      })}
+    </div>
+  );
+}
+
+// The rough width a cell's chips take: one chip's text, or several chips' with each one's padding and gap.
+function chipsTextWidth(rule: ValidationRule | null, shown: string, px: number): number {
+  const parts = rule?.multi ? selectionParts(shown) : [];
+  if (parts.length < 2) return roughTextWidth(shown, px);
+  return parts.reduce((w, p) => w + roughTextWidth(p, px) + 16 + CHIP_GAP_PX, 0);
+}
+
 // What a press at a grid point (inside the cells' area, from their origin) hits on a cell's rule, as drawn.
 export function ruleHitAt(
   opts: {
@@ -235,7 +301,7 @@ export function ruleHitAt(
     opts.box,
     x,
     y,
-    roughTextWidth(opts.shown, opts.px),
+    chipsTextWidth(opts.rule, opts.shown, opts.px),
     opts.px,
     opts.active,
   );

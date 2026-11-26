@@ -5,7 +5,13 @@
 // them; Clear at the foot empties the cell. Escape closes it and hands the keys back to the grid.
 import { useMemo, useState } from 'react';
 import { TextInput } from '@livedoc/ui';
-import { formatA1, optionFor, rangeOptions, type ValidationRule } from '@livedoc/sheets';
+import {
+  formatA1,
+  optionFor,
+  rangeOptions,
+  selectionParts,
+  type ValidationRule,
+} from '@livedoc/sheets';
 import { OptionRows } from '@/components/plan/OptionRows';
 import { AnchoredPopover } from '@/components/primitives/AnchoredPopover';
 import type { SheetController } from '../sheet-controller';
@@ -33,6 +39,7 @@ export function SheetDropdownList({
   anchor,
   current,
   onPick,
+  onToggle,
   onClose,
 }: {
   c: SheetController;
@@ -42,6 +49,8 @@ export function SheetDropdownList({
   // What the cell shows now.
   current: string;
   onPick: (value: string | null) => void;
+  // With Allow Multiple Selections: an option ticked or unticked, the list kept open.
+  onToggle: (option: string) => void;
   onClose: () => void;
 }) {
   const [query, setQuery] = useState('');
@@ -58,6 +67,14 @@ export function SheetDropdownList({
     (rule.is === 'list' ? optionFor(rule, current)?.v : undefined) ??
     options.find((o) => o.v.toLowerCase() === current.toLowerCase())?.v ??
     null;
+  // A multiple-selection cell's options, each in the option's own spelling.
+  const ticked = rule.multi
+    ? selectionParts(current).flatMap((p) => {
+        const o = options.find((x) => x.v.toLowerCase() === p.toLowerCase());
+        return o ? [o.v] : [];
+      })
+    : [];
+  const rows = shown.map((o) => ({ id: o.v, label: o.v, icon: <Dot colour={o.c} /> }));
   return (
     <AnchoredPopover
       anchor={anchor}
@@ -77,19 +94,29 @@ export function SheetDropdownList({
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={(e) => {
-              if (e.key === 'Enter' && shown[0]) onPick(shown[0].v);
+              if (e.key === 'Enter' && shown[0]) (rule.multi ? onToggle : onPick)(shown[0].v);
             }}
           />
         ) : null}
         <div className="min-h-0 overflow-y-auto">
           {shown.length ? (
-            <OptionRows
-              kind="single"
-              label="Options"
-              selected={selected}
-              rows={shown.map((o) => ({ id: o.v, label: o.v, icon: <Dot colour={o.c} /> }))}
-              onPick={(v) => onPick(v)}
-            />
+            rule.multi ? (
+              <OptionRows
+                kind="multiple"
+                label="Options"
+                selected={ticked}
+                rows={rows}
+                onPick={(v) => onToggle(v)}
+              />
+            ) : (
+              <OptionRows
+                kind="single"
+                label="Options"
+                selected={selected}
+                rows={rows}
+                onPick={(v) => onPick(v)}
+              />
+            )
           ) : (
             <p className="px-2 py-1.5 text-supporting text-slate-500 dark:text-slate-400">
               {options.length ? `No options match “${query.trim()}”` : 'No options yet.'}

@@ -8,6 +8,9 @@ import { book, makeSheets } from '../testing/book';
 import type { CellInput, Sheet, ValidationRule } from '../sheet';
 import {
   checkboxValue,
+  joinSelections,
+  toggleSelection,
+  selectionParts,
   checkState,
   customValue,
   type RuleCtx,
@@ -522,5 +525,62 @@ describe('the stored shape of the new criteria', () => {
     expect(ok(rule({ is: 'formula', fx, op: 'gt' }))).toBe(false);
     expect(ok(rule({ is: 'formula', fx, show: 'arrow' }))).toBe(false);
     expect(ok(rule({ is: 'check', fx }))).toBe(false);
+  });
+});
+
+describe('a dropdown allowing multiple selections', () => {
+  const MULTI = { ...LIST, multi: true as const };
+  const s = apply(base(), setRule(MULTI));
+  const x = ctx(s);
+  it('allows text whose every part is an option, case aside, and refuses any other part', () => {
+    expect(selectionParts(' To Do,, done ,')).toEqual(['To Do', 'done']);
+    expect(joinSelections(['To Do', 'Done'])).toBe('To Do, Done');
+    expect(scalarAllowed(MULTI, 'to do, Done', x)).toBe(true);
+    expect(scalarAllowed(MULTI, 'Doing', x)).toBe(true);
+    expect(scalarAllowed(MULTI, 'Doing, Blocked', x)).toBe(false);
+    expect(scalarAllowed(LIST, 'Doing, Done', x)).toBe(false);
+    const range = rule({
+      is: 'range',
+      multi: true,
+      src: { r1: R(0), c1: C(0), r2: R(0), c2: C(0) },
+    });
+    const rangeValues = () => [
+      { value: 'Red', shown: 'Red' },
+      { value: 'Blue', shown: 'Blue' },
+    ];
+    expect(scalarAllowed(range, 'blue, red', { ...x, rangeValues })).toBe(true);
+    expect(scalarAllowed(range, 'blue, green', { ...x, rangeValues })).toBe(false);
+  });
+  it('saves each part in its option spelling, joined, and leaves a value it cannot read', () => {
+    expect(inputForRule(MULTI, { s: 'done,to do' })).toEqual({ s: 'Done, To Do' });
+    expect(inputForRule(MULTI, { s: 'Done, To Do' })).toEqual({ s: 'Done, To Do' });
+    expect(inputForRule(MULTI, { s: 'done, nope' })).toEqual({ s: 'done, nope' });
+  });
+  it('ticks an option at the end and unticks it, case aside', () => {
+    expect(toggleSelection('', 'Done')).toBe('Done');
+    expect(toggleSelection('Done', 'To Do')).toBe('Done, To Do');
+    expect(toggleSelection('Done, To Do', 'done')).toBe('To Do');
+    expect(toggleSelection('To Do', 'To Do')).toBeNull();
+  });
+  it('says one or more in its line', () => {
+    expect(ruleLine(MULTI, x)).toBe(
+      "Choose one or more of the dropdown's options: To Do, Doing, Done",
+    );
+    expect(
+      ruleLine(
+        rule({ is: 'range', multi: true, src: { r1: R(0), c1: C(0), r2: R(1), c2: C(0) } }),
+        x,
+      ),
+    ).toBe('Choose one or more of the values in A1:A2');
+  });
+  it('is stored only as true, and only on a dropdown', () => {
+    const ok = (v: unknown) =>
+      validateWrite(base(), {
+        kind: 'layout',
+        changes: [{ k: 'vrule', id: 'rule01', rule: v as ValidationRule }],
+      }).ok;
+    expect(ok(MULTI)).toBe(true);
+    expect(ok({ ...MULTI, multi: false })).toBe(false);
+    expect(ok(rule({ is: 'check', multi: true }))).toBe(false);
   });
 });

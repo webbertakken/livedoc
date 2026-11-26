@@ -104,6 +104,8 @@ export type Draft = {
   off: string;
   // A Custom Formula Is rule's formula as typed, for the range's top-left cell.
   fx: string;
+  // A dropdown's Allow Multiple Selections.
+  multi: boolean;
 };
 
 // What reading a draft needs: the person's locale, a typed Dropdown from a Range's cells as stored (`A2:A20` or
@@ -190,6 +192,7 @@ export function draftOf(
       on: '',
       off: '',
       fx: '=',
+      multi: false,
     };
   }
   const asText = (v: number | string | undefined) =>
@@ -215,6 +218,7 @@ export function draftOf(
     on: rule.on === undefined ? '' : String(rule.on),
     off: rule.off === undefined ? '' : String(rule.off),
     fx: rule.fx ? formulaAsTyped(rule.fx, c.workbook.ctxFor(c.sheet.id), c.locale) : '=',
+    multi: !!rule.multi,
   };
 }
 
@@ -259,6 +263,7 @@ export function settingsOf(
           is: 'list',
           opts: opts.map((o) => (o.c ? { v: o.v, c: o.c } : { v: o.v })),
           ...(d.show === 'chip' ? {} : { show: d.show }),
+          ...(d.multi ? { multi: true as const } : {}),
           ...extra,
         },
       };
@@ -268,7 +273,13 @@ export function settingsOf(
       if (!src) return { ok: false, why: 'Type the range to take options from, like A2:A20' };
       return {
         ok: true,
-        settings: { is: 'range', src, ...(d.show === 'chip' ? {} : { show: d.show }), ...extra },
+        settings: {
+          is: 'range',
+          src,
+          ...(d.show === 'chip' ? {} : { show: d.show }),
+          ...(d.multi ? { multi: true as const } : {}),
+          ...extra,
+        },
       };
     }
     case 'num':

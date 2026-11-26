@@ -116,6 +116,21 @@ describe('the Data Validation editor', () => {
 });
 
 describe('the new criteria in the editor', () => {
+  it('writes a dropdown allowing multiple selections, and opens it again ticked', async () => {
+    const { h, anchor, actions } = await open({ D2: 'A', D3: 'B' });
+    act(() => h.select('D2:D3'));
+    act(() => actions().openValidation(anchor, { start: 'list' }));
+    let dialog = await screen.findByRole('dialog', { name: 'Data Validation' });
+    fireEvent.click(within(dialog).getByLabelText('Allow Multiple Selections'));
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Done' }));
+    expect(rules(h)[0]).toMatchObject({ is: 'list', multi: true });
+    act(() => h.select('D2'));
+    act(() => actions().openValidation(anchor));
+    dialog = await screen.findByRole('dialog', { name: 'Data Validation' });
+    expect(
+      within(dialog).getByLabelText<HTMLInputElement>('Allow Multiple Selections').checked,
+    ).toBe(true);
+  });
   it('writes a checkbox with custom cell values, and opens it again with them', async () => {
     const { h, anchor, actions } = await open();
     act(() => h.select('C2:C4'));
@@ -176,6 +191,7 @@ describe('a rule draft as settings', () => {
     on: '',
     off: '',
     fx: '=',
+    multi: false,
   };
   const STORED = { t: '=@0>0', r: [{ r1: 'r1', c1: 'c1' }] };
   const compile = (text: string) => (text === '=A1>0' ? STORED : null);
@@ -210,6 +226,16 @@ describe('a rule draft as settings', () => {
     expect(settingsOf({ ...d, is: 'formula', fx: '=' }, env)).toEqual({
       ok: false,
       why: "That formula can't be read",
+    });
+  });
+  it('reads Allow Multiple Selections on both dropdowns', () => {
+    expect(settingsOf({ ...d, opts: [{ key: 1, v: 'A' }], multi: true }, env)).toEqual({
+      ok: true,
+      settings: { is: 'list', opts: [{ v: 'A' }], multi: true },
+    });
+    expect(settingsOf({ ...d, is: 'range', src: 'A1:A3', multi: true }, env)).toMatchObject({
+      ok: true,
+      settings: { is: 'range', multi: true },
     });
   });
   it('reads each kind, and refuses what cannot be one', () => {

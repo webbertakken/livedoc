@@ -18471,6 +18471,10 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
       "is": {
         "$ref": "#/components/schemas/ValidationKind"
       },
+      "multi": {
+        "const": true,
+        "type": "boolean"
+      },
       "off": {
         "type": [
           "string",

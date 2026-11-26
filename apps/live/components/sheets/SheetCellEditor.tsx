@@ -76,9 +76,9 @@ export function FunctionAssist({
           color: c.palette.text,
         }}
       >
-        {input.options.map((value, i) => (
+        {input.options.map(({ label, value }, i) => (
           <li
-            key={value}
+            key={label}
             role="option"
             aria-selected={i === input.pick}
             className="min-h-row cursor-pointer px-3 py-1"
@@ -89,7 +89,7 @@ export function FunctionAssist({
               input.pickOption(value);
             }}
           >
-            {value}
+            {label}
           </li>
         ))}
       </ul>

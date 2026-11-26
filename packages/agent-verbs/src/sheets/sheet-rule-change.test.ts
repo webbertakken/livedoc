@@ -125,6 +125,23 @@ describe('validation rules for agents', () => {
     expect(run({ op: 'clear_validation', range: 'A1:E5' }).ok).toBe(true);
     expect(rulesRead(wb, id).validation.map((r) => r.range)).toEqual(['F1']);
   });
+  it('makes a dropdown allowing multiple selections, saving each option in its own spelling', () => {
+    const { wb, id, run } = book();
+    expect(
+      run({
+        op: 'validate',
+        range: 'B1:B3',
+        rule: { type: 'dropdown', options: ['To Do', 'Done'], multiple: true },
+      }).ok,
+    ).toBe(true);
+    expect(run({ op: 'set', at: 'B1', rows: [['done,to do']] }).ok).toBe(true);
+    expect(wb.value(id, 0, 1)).toBe('Done, To Do');
+    expect(run({ op: 'set', at: 'B2', rows: [['Done, Blocked']] })).toMatchObject({
+      ok: false,
+      code: 'value_invalid',
+    });
+    expect(rulesRead(wb, id).validation[0]).toMatchObject({ multiple: true });
+  });
   it('makes a dropdown from a range on another sheet, and reads it back by that sheet', () => {
     const { wb, id, run } = book();
     const other: Sheet = {
