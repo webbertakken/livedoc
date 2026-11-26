@@ -320,6 +320,7 @@ export function svgLineChart(
     el.y,
     el.chartAxis === true,
     chartStackOf({ ...el, lineSeries: series }),
+    el.chartSmooth === true,
   );
   const { x, y, w, h } = m.plot;
   const tickFont = ` font-family="${xmlEscape(fontFamily ?? EXPORT_DEFAULT_FONT)}" font-size="${AXIS_TICK_FONT_PX}"`;

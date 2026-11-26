@@ -388,6 +388,8 @@ export type ShapeElement = {
   // Stacking (docs/specs/009-elements/pie-chart.md "Stacking"): a column or bar chart of two or more series, or an area
   // chart, drawing its series one on another or as shares; absent = none. Other types keep it unused.
   chartStack?: ChartStack;
+  // Smooth Line (docs/specs/009-elements/pie-chart.md "Smooth Line"): a line chart's lines as curves; absent = straight.
+  chartSmooth?: boolean;
   // Line chart (docs/specs/009-elements/pie-chart.md): the shared x-axis categories + one or more named
   // series (CSV-importable). Only meaningful on the 'line-chart' kind.
   lineCategories?: string[];

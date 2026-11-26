@@ -38,6 +38,7 @@ export function sheetChartElement(
     ...(chart.values ? { chartValues: true } : {}),
     chartAxis: chart.axis !== false,
     ...(chart.stack ? { chartStack: chart.stack } : {}),
+    ...(chart.smooth ? { chartSmooth: true } : {}),
     ...(chart.title ? { chartTitle: chart.title } : {}),
     ...(titles.x || titles.y ? { chartAxisTitles: titles } : {}),
     ...(chart.range

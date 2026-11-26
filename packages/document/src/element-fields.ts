@@ -128,6 +128,7 @@ export const ELEMENT_FIELD_NAMES = {
     'chartAxis',
     'chartVariant',
     'chartStack',
+    'chartSmooth',
     'lineCategories',
     'lineSeries',
     'linePointNames',

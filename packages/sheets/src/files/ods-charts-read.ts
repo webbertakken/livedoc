@@ -190,11 +190,15 @@ function lookOf(
 
 type Read = Omit<FileChart, 'at' | 'width' | 'height' | 'alt' | 'kept'>;
 
-// What a plot or a series says that the model cannot draw: 3-D or smoothed; a stacking where `stacks` is false.
-const unbuilt = (el: XmlElement, props: Props, stacks = false) =>
+// What a plot or a series says that the model cannot draw: 3-D or smoothed; a stacking where `stacks` is false, a
+// cubic spline where `curves` is false (D283, D285).
+const unbuilt = (el: XmlElement, props: Props, stacks = false, curves = false) =>
   [...(stacks ? [] : ['stacked', 'percentage']), 'three-dimensional', 'deep'].some(
     (local) => props(el, 'chart', local) === 'true',
-  ) || !['none', undefined].includes(props(el, 'chart', 'interpolation'));
+  ) ||
+  !['none', undefined, ...(curves ? ['cubic-spline'] : [])].includes(
+    props(el, 'chart', 'interpolation'),
+  );
 
 /** One chart document (its `office:document-content`, or a flat file's inline `office:document`), or null (D277). */
 export function readOdsChartDocument(root: XmlElement, sheetName: string): Read | null {
@@ -209,7 +213,9 @@ export function readOdsChartDocument(root: XmlElement, sheetName: string): Read 
   const props = propsOf(stylesOf(root));
   // A bar or area chart's stacking is read; a line chart's is not (D283).
   const stacks = kind === 'bar' || kind === 'area';
-  if (unbuilt(plot, props, stacks)) return null;
+  // A line chart's cubic spline is its Smooth Line (D285).
+  if (unbuilt(plot, props, stacks, kind === 'line')) return null;
+  const smooth = kind === 'line' && props(plot, 'chart', 'interpolation') === 'cubic-spline';
   const vertical = props(plot, 'chart', 'vertical') === 'true';
   const type: SheetChartType = kind === 'bar' && vertical ? 'bar' : CLASSES[kind];
   const stack =
@@ -288,6 +294,7 @@ export function readOdsChartDocument(root: XmlElement, sheetName: string): Read 
     id: '',
     type,
     ...(stack ? { stack } : {}),
+    ...(smooth ? { smooth: true as const } : {}),
     ...(title ? { title } : {}),
     ...(xTitle ? { xTitle } : {}),
     ...(yTitle ? { yTitle } : {}),

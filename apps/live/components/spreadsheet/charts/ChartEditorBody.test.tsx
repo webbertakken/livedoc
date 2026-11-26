@@ -89,6 +89,21 @@ describe('the Chart Editor', () => {
     expect(screen.queryByRole('switch', { name: /as a Line/ })).toBeNull();
   });
 
+  it('curves a line chart with Smooth, shown on a line chart only (D284)', async () => {
+    const { h } = await open();
+    fireEvent.click(screen.getByRole('tab', { name: 'Customise' }));
+    expect(screen.queryByRole('switch', { name: 'Smooth' })).toBeNull();
+    fireEvent.click(screen.getByRole('tab', { name: 'Setup' }));
+    fireEvent.change(screen.getByRole('combobox', { name: 'Chart Type' }), {
+      target: { value: 'line' },
+    });
+    fireEvent.click(screen.getByRole('tab', { name: 'Customise' }));
+    fireEvent.click(screen.getByRole('switch', { name: 'Smooth' }));
+    expect(chartOf(h)!.smooth).toBe(true);
+    fireEvent.click(screen.getByRole('switch', { name: 'Smooth' }));
+    expect(chartOf(h)!.smooth).toBeUndefined();
+  });
+
   it('stacks a column, bar or area chart, Standard or 100%, and hides Stacking elsewhere', async () => {
     const { h } = await open();
     // A scatter takes no stacking.

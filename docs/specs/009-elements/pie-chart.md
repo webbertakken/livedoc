@@ -150,6 +150,11 @@ Chart" and a screen reader hears "Column chart", as the palette's tile says, nev
     axis stacks on the one axis.
   - A chart of one series draws as it does unstacked; a line, scatter, pie or doughnut chart ignores stacking and
     keeps it, so a change back to a column, bar or area chart stacks again (default, D282).
+- **Smooth Line** (Google Sheets' Customise › Chart Style › Smooth): a line chart may draw each series' stretches as
+  curves through its points (`chartSmooth`). Between two neighbours the curve keeps within their values, rising or
+  falling as they do (a monotone cubic), so it never invents a peak or a dip the data does not hold. A gap still breaks
+  it; points, readouts, values and the range are the line's. An area, scatter, column, bar, pie or doughnut chart
+  ignores it and keeps it for a change back to a line chart (default, D284).
 - **No value is a gap.** A datum may have no value: a Sheet cell that is empty or holds no number (text, an error),
   a value left empty in the data editor, a CSV field that is empty or not a number. A 0 is a value and draws as 0.
   A chart draws no value as Excel ("Show empty cells as: Gaps") and Google Sheets do by default:
@@ -193,6 +198,8 @@ Each chart is a `ShapeKind` (`'pie-chart'` / `'bar-chart'` / `'line-chart'`),
 not a new top-level type — so they inherit boxed-element behaviour. `isChartShape`
 groups all three (they're all in `isSelfDrawingShape` too).
 
+- `ShapeElement.chartSmooth?: boolean`: Smooth Line (Chart types); absent means straight. A spreadsheet's chart sets it;
+  a Plan chart has no control for it yet.
 - `ShapeElement.chartStack?: 'stacked' | 'percent'`: Stacking (Chart types); absent means none. A spreadsheet's chart
   sets it ([Charts](../029-sheets/charts.md#the-model)); a Plan chart has no control for it yet.
 - A bar chart of two or more series also carries `lineCategories` and `lineSeries`, drawn side by side; with
@@ -344,6 +351,8 @@ The code cites each by its id.
 - **D281** Several series on a column or bar chart: side by side in a group taking 80% of its category's share, each
   bar an equal part of it and at most 48 px thick, the category named under (beside) its group; one series draws as
   before (default).
+- **D284** Smooth Line: a monotone cubic through each stretch of a line chart's points (no overshoot past neighbours'
+  values); other types ignore and keep it (default).
 - **D282** Stacking: a column's values above and below zero in stacks of their own, an area's as a running total;
   100% as each value's size over the sum of its category's sizes; no value zero in the stack and no mark; one series
   unstacked; values printed mid-segment when they fit; other types ignore and keep it (default).

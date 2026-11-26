@@ -165,10 +165,15 @@ describe('reading ODF charts', () => {
         ...(i % 3 ? {} : { values: true as const }),
         // Every type stacked: a column, bar or area chart's is written (D283), another's is not.
         stack: i % 2 ? ('stacked' as const) : ('percent' as const),
+        // Every type smooth: a line chart's is written (D285), another's is not.
+        smooth: true,
       };
     });
     const file = fileOf(withCharts(base, charts));
     const want = file.sheets[0]!.charts!.map(fileChartSum);
+    expect(file.sheets[0]!.charts!.map((c) => c.smooth ?? false)).toEqual(
+      TYPES.map((type) => type === 'line'),
+    );
     expect(file.sheets[0]!.charts!.map((c) => c.stack ?? null)).toEqual(
       TYPES.map((type, i) =>
         ['column', 'bar', 'area'].includes(type) ? (i % 2 ? 'stacked' : 'percent') : null,
@@ -404,6 +409,16 @@ describe('a chart document, read', () => {
       chartDoc({ styles: style('p', 'chart:vertical="true" chart:stacked="true"'), plot }),
     ).toMatchObject({ type: 'bar', stack: 'stacked' });
     expect(chartDoc({})!.stack).toBeUndefined();
+  });
+
+  it('reads a line chart’s cubic spline as smooth, another curve or another type’s not at all (D285)', () => {
+    const plot = ' chart:style-name="p"';
+    const curve = (cls: string, how: string) =>
+      chartDoc({ cls, styles: style('p', `chart:interpolation="${how}"`), plot });
+    expect(curve('chart:line', 'cubic-spline')!.smooth).toBe(true);
+    expect(curve('chart:line', 'none')!.smooth).toBeUndefined();
+    expect(curve('chart:line', 'b-spline')).toBeNull();
+    expect(curve('chart:area', 'cubic-spline')).toBeNull();
   });
 
   it('reads none of what the model cannot draw (D277)', () => {

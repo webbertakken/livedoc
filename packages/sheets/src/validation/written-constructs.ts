@@ -195,6 +195,8 @@ function chartSheet(): FileSheet {
     { ...base(types.length + 2, 'column'), id: 'chart_stacked', stack: 'stacked' },
     { ...base(types.length + 3, 'bar'), id: 'chart_percent', stack: 'percent' },
     { ...base(types.length + 4, 'area'), id: 'chart_area_stacked', stack: 'stacked' },
+    // Smooth Line (D285).
+    { ...base(types.length + 5, 'line'), id: 'chart_smooth', smooth: true },
   );
   return { ...sheet("Costs' sheet", cells, 140, 8), charts };
 }

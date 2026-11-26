@@ -32,6 +32,8 @@ export type FileChart = {
   type: SheetChartType;
   // A column, bar or area chart's stacking (charts.md "The model", D283); never on another type.
   stack?: SheetChartStack;
+  // A line chart's smoothing (D285); never on another type.
+  smooth?: true;
   title?: string;
   xTitle?: string;
   yTitle?: string;
@@ -63,8 +65,8 @@ function fnv1a(text: string): string {
 /**
  * What a chart is, by position, as a sum (standard-mapping.md "Charts in the file", D276): its type, titles, legend,
  * values, axis, alt, place, size, and the cells it reads with each series' look; never the values it shows, nor names.
- * A pie's or a doughnut's axes are drawn by no suite, so they sum as shown and untitled. A stacking joins the end only
- * when there is one, so a chart read before stacking was read keeps its sum.
+ * A pie's or a doughnut's axes are drawn by no suite, so they sum as shown and untitled. A stacking and a smoothing join
+ * the end only when there is one, so a chart read before they were read keeps its sum.
  */
 export function fileChartSum(chart: FileChart): string {
   const round = chart.type === 'pie' || chart.type === 'doughnut';
@@ -91,6 +93,7 @@ export function fileChartSum(chart: FileChart): string {
         chart.type === 'scatter' && s.line === true,
       ]),
       ...(chart.stack ? [chart.stack] : []),
+      ...(chart.smooth ? ['smooth'] : []),
     ]),
   );
 }
@@ -169,6 +172,7 @@ function fileChartOf(engine: Workbook, sheet: Sheet, chart: SheetChart, locale: 
     id: chart.id,
     type: chart.type,
     ...(chart.stack && STACKED_TYPES.includes(chart.type) ? { stack: chart.stack } : {}),
+    ...(chart.smooth && chart.type === 'line' ? { smooth: true as const } : {}),
     ...(chart.title ? { title: chart.title } : {}),
     ...(chart.xTitle ? { xTitle: chart.xTitle } : {}),
     ...(chart.yTitle ? { yTitle: chart.yTitle } : {}),
@@ -235,6 +239,7 @@ function sheetChartOf(chart: FileChart, layout: SheetLayout, id: string): SheetC
     height: chart.height,
     type: chart.type,
     ...(chart.stack ? { stack: chart.stack } : {}),
+    ...(chart.smooth ? { smooth: true as const } : {}),
     range: { r1, c1, r2, c2 },
     ...(contiguous ? {} : { cols: ids as string[] }),
     ...(chart.legend !== 'bottom' ? { legend: chart.legend } : {}),

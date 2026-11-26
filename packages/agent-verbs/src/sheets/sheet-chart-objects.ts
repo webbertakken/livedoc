@@ -108,6 +108,7 @@ export function chartObjectSet(
     ...(look.values ? { values: true as const } : {}),
     ...(look.axis === false ? { axis: false as const } : {}),
     ...(look.stack ? { stack: look.stack } : {}),
+    ...(look.smooth ? { smooth: true as const } : {}),
     ...(look.title ? { title: look.title } : {}),
     ...(look.xAxisTitle ? { xTitle: look.xAxisTitle } : {}),
     ...(look.yAxisTitle ? { yTitle: look.yAxisTitle } : {}),
@@ -165,6 +166,7 @@ export type ChartRead = {
   values: boolean;
   axis: boolean;
   stack?: SheetChartStack;
+  smooth?: true;
   alt?: string;
   lines?: string[];
 };
@@ -206,6 +208,7 @@ export function chartsRead(wb: Workbook, sheetId: string): ChartRead[] {
       values: x.values === true,
       axis: x.axis !== false,
       ...(x.stack ? { stack: x.stack } : {}),
+      ...(x.smooth ? { smooth: true as const } : {}),
       ...(x.alt ? { alt: x.alt } : {}),
       ...(lines.length ? { lines } : {}),
     };

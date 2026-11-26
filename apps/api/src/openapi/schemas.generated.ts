@@ -13992,6 +13992,9 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
       "chartPalette": {
         "$ref": "#/components/schemas/ChartPaletteId"
       },
+      "chartSmooth": {
+        "type": "boolean"
+      },
       "chartSource": {
         "$ref": "#/components/schemas/ChartSource"
       },
@@ -15125,6 +15128,10 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
           "$ref": "#/components/schemas/SheetChartSeriesLook"
         },
         "type": "object"
+      },
+      "smooth": {
+        "const": true,
+        "type": "boolean"
       },
       "stack": {
         "$ref": "#/components/schemas/SheetChartStack"

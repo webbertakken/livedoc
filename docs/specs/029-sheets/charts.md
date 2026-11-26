@@ -42,6 +42,8 @@ and two changing one chart resolve to the last write. Each change is one undo st
 - **Stacking**: a Column, Bar or Area chart stacks its series, Standard or 100%, or none (Google's Setup › Stacking),
   drawing Stacked Column, Stacked Bar, Stacked Area and their 100% kinds ([Stacking](../009-elements/pie-chart.md#chart-types),
   D282). Another type keeps it unused.
+- **Smooth**: a Line chart draws its lines as curves through its points (Smooth Line, Google's Customise › Chart
+  Style › Smooth; [Smooth Line](../009-elements/pie-chart.md#chart-types), D284). Another type keeps it unused.
 - **Look**: a palette ([Chart palettes](../009-elements/pie-chart.md#chart-palettes)); per series, by its column's id,
   a colour, a scatter series drawn as a line ([Lines set by an agent](../009-elements/pie-chart.md#lines-set-by-an-agent)),
   and the right-hand axis; the legend's place (top, right, bottom, left) or none; the values printed on the marks;
@@ -81,7 +83,7 @@ A side panel of two tabs:
 Built of the Chart Editor: it opens on a chart inserted, on its Edit Chart button and on a double click; Setup holds
 Chart Type (the built types), Stacking (None, Standard, 100%; on a Column, Bar or Area chart), Data Range (one range in A1, a typo refused "Type a range like A1:D20") and the Series,
 each a scatter's to draw as a line; Customise holds Chart Title, Horizontal and Vertical Axis Title, Legend, Palette,
-Value Axis, Data Labels, each series' colour (the one colour picker) and Alt Text. A control writes the chart at
+Value Axis, Data Labels, Smooth (on a Line chart), each series' colour (the one colour picker) and Alt Text. A control writes the chart at
 once, one undo step; a text when it is left or Enter is pressed, Escape taking it back. A chart whose cells are gone
 shows "No data" there.
 
