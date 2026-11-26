@@ -7,6 +7,7 @@ import { standardColours, type BlobKey } from '@livedoc/document';
 import {
   Mark,
   PdfLiveChanges,
+  StampIdentity,
   StampLayout,
   type Box,
   type CustomStampRecord,
@@ -43,13 +44,19 @@ export function stampWhen(now: number): string {
   return `${day}, ${twoDigits(when.getHours())}:${twoDigits(when.getMinutes())}`;
 }
 
-/** A stamp's words as placed: its name in capitals, and a dynamic stamp's who and when below it. */
-export function stampLines(stamp: Stamp, by: { author: string; now: number }): string[] {
+/** Who places a stamp, and when: the display name, the time, and their stamp identity where they have one. */
+type StampedBy = { author: string; now: number; identity?: StampIdentity };
+
+/** A stamp's words as placed: its name in capitals, and a dynamic stamp's who and when below it, then the stamper's
+ *  title and organisation where either is set, cut to the stamp's width (marks.md "Stamps"). */
+export function stampLines(stamp: Stamp, by: StampedBy): readonly string[] {
   const name = stamp.name.toUpperCase();
   if (!stamp.dynamic) return [name];
   const who = by.author.trim();
   const when = stampWhen(by.now);
-  return [name, who === '' ? when : `by ${who}, ${when}`];
+  const identity = by.identity ? StampIdentity.line(by.identity) : null;
+  const lines = [name, who === '' ? when : `by ${who}, ${when}`];
+  return identity === null ? lines : StampLayout.clip([...lines, identity]);
 }
 
 /** A stamp's category in telemetry (marks.md "Telemetry and observability": `Stamp.<Standard|Dynamic|Custom>`). */
@@ -83,7 +90,7 @@ export type StampMade =
 
 /** Where a placed stamp goes: its page, the stored file the live changes are on, and the page's box. */
 type StampWhere = { page: PageName; stored: { blob: BlobKey; pages: number }; box: Box };
-type StampBy = { author: string; authorKey?: string | null; now: number; id: string };
+type StampBy = StampedBy & { authorKey?: string | null; id: string };
 
 /** A stamp placed by a press on a page, its words fixed now, as one change. */
 export function addStamp(

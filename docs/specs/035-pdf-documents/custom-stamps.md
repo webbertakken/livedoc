@@ -1,7 +1,7 @@
 # Custom stamps
 
-**Status: built: where they are kept, their api, their file form, making one, placing one and managing them.** Stamp
-identity is not built.
+**Status: built: where they are kept, their api, their file form, making one, placing one and managing them, and
+Manage stamps' Identity ([Marks](marks.md#stamps)).**
 
 A **custom stamp** is a person's own stamp: a picture, or a page of a PDF, given a name and a category, kept in
 LiveDoc for them, and placed on any PDF as a standard or dynamic stamp is ([Marks](marks.md#stamps)). The parity rows
@@ -87,9 +87,13 @@ are the matrix's "Stamps" ([Parity matrix](parity-matrix.md#stamps)).
 
 ## Managing them
 
-- **Insert > Stamp > Manage stamps** opens **Manage stamps**, a dialog listing their stamps a category each, in the
-  grid's order: each category's name, then its stamps, each its picture, its name, its category and **Delete**
-  `(default)`.
+- **Insert > Stamp > Manage stamps** opens **Manage stamps**, a dialog; it is offered wherever the Stamp tool is,
+  file storage or none.
+- **Identity** comes first: a line, "Dynamic stamps you place show your title and organisation.", then four fields,
+  **Title**, **Organisation**, **Unit** and **Email**, each the person's stamp identity
+  ([Marks](marks.md#stamps)) `(default)`.
+- **Custom stamps** follows, where the deployment stores files: their stamps a category each, in the grid's order:
+  each category's name, then its stamps, each its picture, its name, its category and **Delete** `(default)`.
 - **Renaming a stamp**: its name is a field; a name changed and left (Enter, Tab, a press elsewhere) is kept, trimmed
   and held to `PDF_CUSTOM_STAMP_NAME_MAX_CHARS`; an empty one goes back to what it was. Its marks already placed keep
   the name they were placed with: a mark's words are fixed when placed.

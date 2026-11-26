@@ -27,6 +27,7 @@ import { resetStampPick, stampPick } from './pdf-stamp-pick';
 import { TOO_MANY_MARKS_COPY } from './pdf-surface-copy';
 import { STAMP_TOOLS } from './pdf-toolbar';
 import type { PdfPageTool } from './usePdfMarkTools';
+import type { PdfStampIdentity } from './usePdfStampIdentity';
 import { stampCell, usePdfStampTool } from './usePdfStampTool';
 
 vi.mock('@/lib/telemetry', () => ({ track: vi.fn() }));
@@ -43,11 +44,19 @@ vi.mock('@/lib/offline/offline-blobs', () => ({ thisBrowserBlobs: () => kept }))
 const PAGES = [PageName.ofObject(3), PageName.ofObject(4)].map((name) => ({ name }) as PageInfo);
 const LETTER: Box = [0, 0, 612, 792];
 
+const NO_IDENTITY: PdfStampIdentity = { identity: {}, keep: () => null };
+
 function stampTool({
   offered = true,
   inHand = 'select',
   custom = null,
-}: { offered?: boolean; inHand?: PdfPageTool; custom?: PdfCustomStampsHome | null } = {}) {
+  identity = NO_IDENTITY,
+}: {
+  offered?: boolean;
+  inHand?: PdfPageTool;
+  custom?: PdfCustomStampsHome | null;
+  identity?: PdfStampIdentity;
+} = {}) {
   const doc = PdfLiveChanges.load();
   const steps: unknown[] = [];
   const ready = {
@@ -74,6 +83,7 @@ function stampTool({
         pickTool,
         onProblem,
         custom,
+        identity,
       }),
     { initialProps: { inHand } },
   );
@@ -200,6 +210,27 @@ describe('placing a stamp', () => {
     expect(track).toHaveBeenLastCalledWith('Pdf', 'Added', 'Stamp.Dynamic');
   });
 
+  // marks.md "Stamps": a dynamic stamp placed is given the stamper's title and organisation, a standard one never.
+  it('gives a dynamic stamp a third line from the person’s stamp identity', () => {
+    const identity = {
+      identity: { title: 'Chief Engineer', organisation: 'Analytical Ltd' },
+      keep: () => null,
+    };
+    const { hook, run, doc } = stampTool({ inHand: 'stamp', identity });
+    act(() => hook.result.current.stamping!.onStamp(0, { x: 300, y: 400 }, LETTER));
+    run(stampCell('approved-by'));
+    act(() => hook.result.current.stamping!.onStamp(0, { x: 300, y: 200 }, LETTER));
+    const lines = PdfLiveChanges.marks(doc).map((mark) =>
+      mark.kind === 'stamp' ? mark.lines : [],
+    );
+    expect(lines).toContainEqual(['APPROVED']);
+    expect(lines).toContainEqual([
+      'APPROVED',
+      expect.stringMatching(/^by Ada Lovelace, /),
+      'Chief Engineer, Analytical Ltd',
+    ]);
+  });
+
   it('places nothing on a page that is not there, or on a page with no room, and says so', () => {
     const { hook, doc, steps } = stampTool({ inHand: 'stamp' });
     act(() => hook.result.current.stamping!.onStamp(5, { x: 1, y: 1 }, LETTER));
@@ -233,10 +264,30 @@ describe('placing a stamp', () => {
         pickTool,
         onProblem: vi.fn(),
         custom: null,
+        identity: NO_IDENTITY,
       }),
     );
     act(() => hook.result.current.stamping!.onStamp(0, { x: 1, y: 1 }, LETTER));
     expect(track).not.toHaveBeenCalled();
+  });
+});
+
+// custom-stamps.md "Managing them": Manage stamps is offered wherever the Stamp tool is, for its Identity.
+describe('Manage stamps without file storage', () => {
+  it('opens with the identity alone, no custom stamps offered', () => {
+    const { hook, run } = stampTool();
+    expect(hook.result.current.actions[STAMP_CUSTOM]).toBeUndefined();
+    run(STAMP_MANAGE);
+    expect(hook.result.current.manageStampsDialog).toMatchObject({
+      open: true,
+      customs: false,
+      identity: NO_IDENTITY,
+    });
+  });
+
+  it('is not offered while stamps may not be placed', () => {
+    const { hook } = stampTool({ offered: false });
+    expect(hook.result.current.actions[STAMP_MANAGE]).toBeUndefined();
   });
 });
 
@@ -300,7 +351,11 @@ describe('custom stamps', () => {
     const { hook, run } = withCustom();
     await vi.waitFor(() => expect(hook.result.current.actions[STAMP_MANAGE]).toBeDefined());
     run(STAMP_MANAGE);
-    expect(hook.result.current.manageStampsDialog).toMatchObject({ open: true, ownerId: 'ada' });
+    expect(hook.result.current.manageStampsDialog).toMatchObject({
+      open: true,
+      customs: true,
+      ownerId: 'ada',
+    });
     expect(hook.result.current.manageStampsDialog.stamps).toEqual([PAID]);
     expect(track).toHaveBeenCalledWith('UI', 'Opened', 'PdfDocumentManageStampsDialog');
     act(() => hook.result.current.manageStampsDialog.onCreate());

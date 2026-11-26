@@ -308,6 +308,9 @@ type UserPreferences = {
   // Dark pages (../035-pdf-documents/dark-pages.md "The setting"): a PDF's pages shown dark in the dark scheme.
   // Missing: on, so the pages follow the dark scheme until the person turns it off.
   pdfDarkPages?: boolean;
+  // Stamp identity (../035-pdf-documents/marks.md "Stamps"): title, organisation, unit and email, each optional, at
+  // most PDF_STAMP_IDENTITY_FIELD_MAX_CHARS; read through StampIdentity.read, which refuses a longer field.
+  pdfStampIdentity?: { title?: string; organisation?: string; unit?: string; email?: string };
   // A text document's default page setup (../034-text-documents/page-layout.md "Page setup"): sides, orientation,
   // margins and colour in points, as Set as default kept them. Validated on read (PageSetup.parse), never trimmed.
   textDocumentPageSetup?: Record<string, unknown>;
@@ -510,6 +513,7 @@ Missing key === undefined === default behaviour. Concretely:
 - `powerUserOfferShown` undefined → the offer may still be made, once its
   thresholds are met.
 - `pdfDarkPages` undefined → on: in the dark scheme a PDF's pages show dark until the person turns it off. Emits `Pdf`/`Toggled`/`DarkPages{On,Off}` when flipped.
+- `pdfStampIdentity` undefined → no identity: a dynamic stamp keeps its two lines. Emits `Pdf`/`Changed`/`StampIdentity.<Field>` when a field is kept.
 
 Empty (or missing entirely) localStorage entry, AND no row in
 `user_preferences` for this owner, is therefore the "everything

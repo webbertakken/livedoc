@@ -34,19 +34,67 @@ const PAID = stamp('a', 'Paid', 'Accounts', 3);
 const DUE = stamp('b', 'Due', 'Accounts', 2);
 const VOID = stamp('c', 'Void', 'Bills', 1);
 
-const drawn = (stamps: CustomStampRecord[] = [PAID, DUE, VOID]) => {
+const drawn = (stamps: CustomStampRecord[] = [PAID, DUE, VOID], customs = true) => {
   const props = { onClose: vi.fn(), onCreate: vi.fn() };
-  render(<ManageStampsDialog open ownerId="ada" stamps={stamps} pictures={new Map()} {...props} />);
-  return props;
+  const identity = {
+    identity: { title: 'Chief Engineer' },
+    keep: vi.fn((): string | null => null),
+  };
+  render(
+    <ManageStampsDialog
+      open
+      customs={customs}
+      identity={identity}
+      ownerId="ada"
+      stamps={stamps}
+      pictures={new Map()}
+      {...props}
+    />,
+  );
+  return { ...props, identity };
 };
 
 beforeEach(() => vi.clearAllMocks());
 
+describe('Manage stamps’ Identity', () => {
+  it('comes first, and keeps a field once left', () => {
+    const { identity } = drawn();
+    expect(screen.getAllByRole('heading').map((h) => h.textContent)).toEqual([
+      'Manage stamps',
+      'Identity',
+      'Custom stamps',
+    ]);
+    const organisation = screen.getByLabelText<HTMLInputElement>('Organisation');
+    fireEvent.change(organisation, { target: { value: 'Analytical Ltd' } });
+    fireEvent.blur(organisation);
+    expect(identity.keep).toHaveBeenCalledWith('organisation', 'Analytical Ltd');
+  });
+
+  it('says a field that could not be kept', () => {
+    const { identity } = drawn();
+    identity.keep.mockReturnValue('Your identity couldn’t be saved.');
+    const unit = screen.getByLabelText<HTMLInputElement>('Unit');
+    fireEvent.change(unit, { target: { value: 'Engines' } });
+    fireEvent.blur(unit);
+    expect(screen.getByRole('alert').textContent).toBe('Your identity couldn’t be saved.');
+  });
+
+  it('is all there is without file storage: no custom stamps, nothing to create', () => {
+    drawn([PAID], false);
+    expect(screen.getByLabelText<HTMLInputElement>('Title').value).toBe('Chief Engineer');
+    expect(screen.queryByText('Custom stamps')).toBeNull();
+    expect(screen.queryByLabelText('Name of Paid')).toBeNull();
+    expect(screen.queryByText('Create custom stamp…')).toBeNull();
+  });
+});
+
 describe('Manage stamps', () => {
   it('lists their stamps a category each, in the grid’s order', () => {
     drawn();
-    const sections = screen.getAllByRole('region').map((s) => s.getAttribute('aria-label'));
-    expect(sections).toEqual(['Accounts', 'Bills']);
+    const sections = screen
+      .getAllByRole('region')
+      .map((s) => s.getAttribute('aria-label') ?? s.querySelector('h3')?.textContent);
+    expect(sections).toEqual(['Identity', 'Accounts', 'Bills']);
     expect(screen.getByLabelText('Name of Paid')).toHaveProperty('value', 'Paid');
   });
 

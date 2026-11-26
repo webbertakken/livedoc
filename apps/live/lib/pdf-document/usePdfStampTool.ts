@@ -29,6 +29,7 @@ import { TOO_MANY_MARKS_COPY } from './pdf-surface-copy';
 import { STAMP_TOOLS } from './pdf-toolbar';
 import type { PdfDocumentOpen } from './usePdfDocument';
 import type { PdfPageTool } from './usePdfMarkTools';
+import type { PdfStampIdentity } from './usePdfStampIdentity';
 import {
   CREATE_CUSTOM_STAMP_CELL,
   usePdfCustomStamps,
@@ -84,6 +85,7 @@ export function usePdfStampTool({
   pickTool,
   onProblem,
   custom,
+  identity,
 }: {
   // The open PDF; null before it is.
   ready: Ready | null;
@@ -99,6 +101,8 @@ export function usePdfStampTool({
   onProblem: (problem: string | null) => void;
   // Where custom stamps come from and go; null where they are not offered (no file storage).
   custom: PdfCustomStampsHome | null;
+  // The person's stamp identity: a dynamic stamp placed here is given it, and Manage stamps fills it in.
+  identity: PdfStampIdentity;
 }) {
   const pick = useStampPick();
 
@@ -109,7 +113,13 @@ export function usePdfStampTool({
     },
     [pickTool],
   );
-  const customs = usePdfCustomStamps({ home: custom, offered, cellOf: stampCell, take });
+  const customs = usePdfCustomStamps({
+    home: custom,
+    offered,
+    identity,
+    cellOf: stampCell,
+    take,
+  });
   // The stamp the control shows: a standard or dynamic one, a custom stamp still theirs, else Approved.
   const mine: CustomStampRecord | null = CustomStamp.isId(pick)
     ? (customs.stamps.find((kept) => kept.id === pick) ?? null)
@@ -133,7 +143,13 @@ export function usePdfStampTool({
           { page: page.name, stored: { blob: ready.storedFile, pages: ready.pages.length }, box },
           stamp,
           at,
-          { author, authorKey, now: Date.now(), id: crypto.randomUUID() },
+          {
+            author,
+            authorKey,
+            now: Date.now(),
+            identity: identity.identity,
+            id: crypto.randomUUID(),
+          },
         ),
       );
       if (made.ok) {
@@ -145,7 +161,7 @@ export function usePdfStampTool({
         onProblem(TOO_MANY_MARKS_COPY);
       } else debugLog(`[pdf] mark-refused name=${made.reason}`);
     },
-    [ready, author, authorKey, stamp, mine, place, onProblem],
+    [ready, author, authorKey, identity.identity, stamp, mine, place, onProblem],
   );
   const stamping = useMemo<PdfPageStamping | null>(
     () => (inHand === 'stamp' ? { onStamp } : null),
@@ -170,12 +186,13 @@ export function usePdfStampTool({
           ),
           [CREATE_CUSTOM_STAMP_CELL]: { run: customs.openDialog },
           [STAMP_CUSTOM]: { run: customs.openDialog },
-          [STAMP_MANAGE]: { run: customs.openManage },
         }
       : {};
     return {
       ...cells,
       ...custom,
+      // Manage stamps holds the person's identity: offered wherever the Stamp tool is, file storage or none.
+      [STAMP_MANAGE]: { run: customs.openManage },
       // Insert > Stamp: the stamp the control shows where it is of the category, else the category's first.
       [STAMP_STANDARD]: {
         run: () => take(mine || stamp.dynamic ? Stamps.standard[0]!.id : stamp.id),

@@ -77,6 +77,41 @@ describe('stampLines', () => {
   });
 });
 
+// marks.md "Stamps": a person's stamp identity, written only into the dynamic stamps they place.
+describe('stampLines with a stamp identity', () => {
+  const identity = { title: 'Chief Engineer', organisation: 'Analytical Ltd', unit: 'Engines' };
+
+  it('adds a dynamic stamp’s third line: the title and the organisation, never the unit', () => {
+    expect(stampLines(approvedBy, { author: 'Ada Lovelace', now: NOW, identity })).toEqual([
+      'APPROVED',
+      'by Ada Lovelace, 21 Nov 2026, 14:02',
+      'Chief Engineer, Analytical Ltd',
+    ]);
+  });
+
+  it('keeps two lines where neither the title nor the organisation is set', () => {
+    const lines = stampLines(approvedBy, {
+      author: 'Ada',
+      now: NOW,
+      identity: { unit: 'Engines', email: 'ada@example.org' },
+    });
+    expect(lines).toHaveLength(2);
+  });
+
+  it('never gives a standard stamp the identity', () => {
+    expect(stampLines(approved, { author: 'Ada', now: NOW, identity })).toEqual(['APPROVED']);
+  });
+
+  it('cuts a third line wider than the stamp with an ellipsis', () => {
+    const long = {
+      organisation: 'The Analytical Society of London for the Advancement of Engines',
+    };
+    const [, , third] = stampLines(approvedBy, { author: 'Ada', now: NOW, identity: long });
+    expect(third).toMatch(/…$/);
+    expect(third!.length).toBeLessThan(long.organisation.length);
+  });
+});
+
 describe('stampKindName', () => {
   it('names a stamp’s category in telemetry', () => {
     expect(stampKindName(approved)).toBe('Standard');

@@ -114,3 +114,61 @@ describe('StampLayout in the mark faces', () => {
     expect(StampLayout.faces({ lines: ['APPROVED'] })).toBe('helvetica');
   });
 });
+
+// marks.md "Stamps": a dynamic stamp's third line, the person's stamp identity, below its second in the same face.
+describe('StampLayout with a third line', () => {
+  const IDENTITY = 'Chief Engineer, Analytical Ltd';
+  const lines = ['APPROVED', DETAIL, IDENTITY];
+  const DETAIL_HIGH = (STAMP_DETAIL_PT * (Helvetica.ascent + Helvetica.descent)) / 1000;
+
+  it('grows the box by a detail line and its gap', () => {
+    const two = StampLayout.natural(['APPROVED', DETAIL]);
+    const three = StampLayout.natural(lines);
+    expect(three.width).toBeCloseTo(two.width, 9);
+    expect(three.height).toBeCloseTo(two.height + STAMP_LINE_GAP_PT + DETAIL_HIGH, 9);
+  });
+
+  it('sets the third line plain, centred, a detail line and its gap below the second', () => {
+    const natural = StampLayout.natural(lines);
+    const rect: Box = [100, 600, 100 + natural.width, 600 + natural.height];
+    const [, detail, identity] = StampLayout.place({ rect, lines });
+    expect(identity).toMatchObject({ text: IDENTITY, bold: false });
+    expect(identity!.size).toBeCloseTo(STAMP_DETAIL_PT, 9);
+    expect(identity!.x + identity!.width / 2).toBeCloseTo((rect[0] + rect[2]) / 2, 9);
+    expect(identity!.y).toBeCloseTo(detail!.y - STAMP_LINE_GAP_PT - DETAIL_HIGH, 9);
+    // The words still fill the box: the last line's descent sits on the inset.
+    const descent = (STAMP_DETAIL_PT * Helvetica.descent) / 1000;
+    expect(identity!.y - descent).toBeCloseTo(rect[1] + INSET, 9);
+  });
+});
+
+describe('StampLayout.clip', () => {
+  it('leaves a stamp of one or two lines, and a third that fits, as they are', () => {
+    expect(StampLayout.clip(['APPROVED'])).toEqual(['APPROVED']);
+    expect(StampLayout.clip(['APPROVED', DETAIL])).toEqual(['APPROVED', DETAIL]);
+    expect(StampLayout.clip(['APPROVED', DETAIL, 'Chief'])).toEqual(['APPROVED', DETAIL, 'Chief']);
+  });
+
+  it('cuts a third line wider than the widest other with an ellipsis, never wider than it', () => {
+    const long = 'Chief Engineer of the Analytical Engine, Analytical Society of London';
+    const [, , third] = StampLayout.clip(['APPROVED', DETAIL, long]);
+    expect(third!.endsWith('…')).toBe(true);
+    expect(long.startsWith(third!.slice(0, -1))).toBe(true);
+    const widest = measure(DETAIL, Helvetica, STAMP_DETAIL_PT);
+    expect(measure(third!, Helvetica, STAMP_DETAIL_PT)).toBeLessThanOrEqual(widest);
+    // One character more would not fit.
+    const more = `${long.slice(0, third!.length)}…`;
+    expect(measure(more, Helvetica, STAMP_DETAIL_PT)).toBeGreaterThan(widest);
+    // The box is the two lines' width: the third never grows it.
+    expect(StampLayout.natural(StampLayout.clip(['APPROVED', DETAIL, long])).width).toBeCloseTo(
+      StampLayout.natural(['APPROVED', DETAIL]).width,
+      9,
+    );
+  });
+
+  it('drops the spaces before the ellipsis', () => {
+    const [, , third] = StampLayout.clip(['OK', 'by Al', 'ab cdefghijklmnop']);
+    expect(third).not.toMatch(/\s…$/);
+    expect(third!.endsWith('…')).toBe(true);
+  });
+});
