@@ -27,6 +27,7 @@ import {
   TEXT_DOCUMENT_SUGGESTIONS_MAX,
 } from './live/live-suggestions';
 import { liveTabIds } from './live/live-tabs';
+import { liveStoryIds, STORY_PREFIX } from './live/live-stories';
 import { liveMediaOf } from './live/live-read';
 import { INSERTION_MARK, MEDIA_MAP, PICTURE } from './live/live-names';
 import { TextDocumentState } from './text-document-state';
@@ -151,6 +152,9 @@ export function textDocumentLevelAsked(
   const bodies = new Set(liveTabIds(doc).map(tabFragmentName)).add(BODY_FRAGMENT);
   const touched = touchedRoots(doc, update);
   if (touched === 'unreadable') return 'unreadable';
+  // A header's, footer's or note's writing is judged as a body's (review.md "How a suggestion is kept"): the stories
+  // the document names once the update is in; a fragment nothing names is no writing of its own.
+  for (const id of liveStoryIds(doc)) bodies.add(`${STORY_PREFIX}${id}`);
   if ([...touched].some((root) => root !== THREADS_MAP && root !== MEDIA_MAP && !bodies.has(root)))
     return 'edit';
   if (adderKey === null) return 'edit';

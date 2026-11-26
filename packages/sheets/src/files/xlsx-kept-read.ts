@@ -77,7 +77,7 @@ const isSheetPr = (element: XmlElement) =>
   element.uri === SPREADSHEETML_NS && element.local === 'sheetPr';
 
 // A worksheet's `sheetPr` without the children LiveDoc writes, a `conditionalFormatting` without the rules it
-// reads; any other element as the file wrote it.
+// reads, a `dataValidations` without the rules it reads and its count; any other element as the file wrote it.
 function without(
   parsed: XmlParsed,
   element: XmlElement,
@@ -87,14 +87,20 @@ function without(
   const own = isSheetPr(element)
     ? childElements(element).filter(sheetPrOwn)
     : childElements(element).filter((child) => read.has(child));
-  if (own.length === 0) return xml;
-  let out = '';
-  let from = element.start;
-  for (const child of own) {
-    out += parsed.source.slice(from, child.start);
-    from = child.end;
+  let out = xml;
+  if (own.length > 0) {
+    out = '';
+    let from = element.start;
+    for (const child of own) {
+      out += parsed.source.slice(from, child.start);
+      from = child.end;
+    }
+    out += parsed.source.slice(from, element.end);
   }
-  return out + parsed.source.slice(from, element.end);
+  // A `dataValidations`' count is the writer's to make again, from the rules it writes in it.
+  return element.uri === SPREADSHEETML_NS && element.local === 'dataValidations'
+    ? out.replace(/^(<[^>]*?)\s+count="[^"]*"/, '$1')
+    : out;
 }
 
 /** Whether every child of an element (a `conditionalFormatting`'s rules) is read, so nothing of it is kept. */

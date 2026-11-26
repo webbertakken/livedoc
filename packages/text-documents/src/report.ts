@@ -19,7 +19,6 @@ export type DroppedReason =
   | 'table-repaired'
   | 'comment-unpaired'
   | 'comment-in-story'
-  | 'suggestion-in-story'
   | 'suggestion-dangling'
   | 'suggestion-last-mark'
   | 'suggestion-paragraphs'

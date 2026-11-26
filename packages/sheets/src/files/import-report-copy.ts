@@ -94,6 +94,11 @@ export function importReportLine(loss: ReportedLoss): string {
         `${counted(count, 'conditional formatting rule', 'conditional formatting rules')} LiveDoc cannot read ${verb(count, 'is', 'are')} left out`,
         loss,
       );
+    case 'validation_rule_unread':
+      return named(
+        `${counted(count, 'data validation rule', 'data validation rules')} LiveDoc cannot read ${verb(count, 'is', 'are')} left out`,
+        loss,
+      );
     case 'sizes_cut':
       return named(
         `Row heights and column widths past the most a sheet holds are left out of ${counted(count, 'sheet', 'sheets')}`,

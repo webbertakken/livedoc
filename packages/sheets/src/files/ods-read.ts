@@ -30,6 +30,7 @@ import { odsTabLooks, type OdsTabLook } from './ods-tab-look';
 import { WORKBOOK_COLS_NEW, WORKBOOK_ROWS_NEW } from '../workbook-record';
 import { odsCellFormats, type OdsCellFormats } from './ods-styles';
 import { readOdsFormatRules, unreadStyleNames } from './ods-format-rules';
+import { OdsValidationCells, readOdsValidations, type OdsValidationsRead } from './ods-validation';
 import { odsCellLooks, type OdsCellLooks } from './ods-cell-style';
 import { fromOpenFormula } from './open-formula';
 import type { FileCell, FileLoss, FileRead, FileSheet, FileValue } from './workbook-file';
@@ -236,6 +237,8 @@ type Book = {
   keeper: OdsKeeper;
   // The named styles of the format rules left unread, kept with them.
   ruleStyles: Set<string>;
+  // The validation rules read, by name (standard-mapping.md "Validation in the file").
+  validations: OdsValidationsRead['byName'];
 };
 
 function readTable(table: XmlElement, index: number, book: Book): FileSheet {
@@ -249,6 +252,7 @@ function readTable(table: XmlElement, index: number, book: Book): FileSheet {
   const extent = { rows: 0, cols: 0 };
   const sheet: Sheet = { name, losses, formats, approximated: new Set(), cut: { formats: false } };
   const columns = columnStyles(table);
+  const ruled = new OdsValidationCells(book.validations);
   const cells: FileCell[] = [];
   let cut = false;
   let cellsCut = false;
@@ -265,7 +269,14 @@ function readTable(table: XmlElement, index: number, book: Book): FileSheet {
       const isCell = is(cell, TABLE, 'table-cell') || is(cell, TABLE, 'covered-table-cell');
       if (!isCell) continue;
       const colRepeat = repeatOf(cell, 'columns');
-      const kept = keeper.cell(cell);
+      const kept = keeper.cell(cell, (rule) => ruled.has(rule));
+      if (r < ROWS_MAX && c < COLS_MAX)
+        ruled.add(attributeOf(cell, TABLE, 'content-validation-name'), {
+          r1: r,
+          c1: c,
+          r2: Math.min(r + rowRepeat, ROWS_MAX) - 1,
+          c2: Math.min(c + colRepeat, COLS_MAX) - 1,
+        });
       if (kept.length > 0) rowKept.push({ items: kept, c, n: colRepeat });
       const formulaText = attributeOf(cell, TABLE, 'formula');
       const value = cellValue(cell);
@@ -332,6 +343,9 @@ function readTable(table: XmlElement, index: number, book: Book): FileSheet {
   const rows = cells.reduce((n, cell) => Math.max(n, cell.r + 1), extent.rows);
   const cols = cells.reduce((n, cell) => Math.max(n, cell.c + 1), extent.cols);
   if (cut) losses.push({ k: 'sheet_cut', sheet: name, rows: ROWS_MAX, cols: COLS_MAX });
+  const validations = ruled.fileRules();
+  for (const at of validations.changed)
+    losses.push({ k: 'validation_rule_changed', sheet: name, ...at });
   if (cellsCut) losses.push({ k: 'cells_cut', sheet: name });
   if (styled) losses.push({ k: 'styles_unread', sheet: name });
   if (keeper.cut > cutBefore)
@@ -351,6 +365,7 @@ function readTable(table: XmlElement, index: number, book: Book): FileSheet {
     ...(lines.r || lines.c ? { lines } : {}),
     ...book.tabLooks(attributeOf(table, TABLE, 'style-name')),
     ...(rules.rules.length ? { formatRules: rules.rules } : {}),
+    ...(validations.rules.length ? { validations: validations.rules } : {}),
   };
 }
 
@@ -376,13 +391,21 @@ function readBody(
   const losses: FileLoss[] = [];
   const budget: Budget = { cells: 0 };
   const ruleStyles = new Set<string>();
+  const validations = readOdsValidations(spreadsheet);
   keeper.root(root);
-  keeper.spreadsheet(spreadsheet);
-  const sheets = tables
-    .slice(0, SHEETS_MAX)
-    .map((t, i) =>
-      readTable(t, i, { losses, budget, formats, looks, lineStyles, tabLooks, keeper, ruleStyles }),
-    );
+  keeper.spreadsheet(spreadsheet, validations.read);
+  const book: Book = {
+    losses,
+    budget,
+    formats,
+    looks,
+    lineStyles,
+    tabLooks,
+    keeper,
+    ruleStyles,
+    validations: validations.byName,
+  };
+  const sheets = tables.slice(0, SHEETS_MAX).map((t, i) => readTable(t, i, book));
   if (tables.length > SHEETS_MAX)
     losses.push({ k: 'sheets_cut', kept: SHEETS_MAX, had: tables.length });
   // The common styles kept format rules name go with them (a flat file's are its own).

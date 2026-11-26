@@ -29,6 +29,7 @@ export const REPORTED_KINDS = [
   'formats_cut',
   'styles_unread',
   'format_rule_unread',
+  'validation_rule_unread',
   'sizes_cut',
   'charts_unwritten',
   'chart_rewritten',
@@ -60,7 +61,11 @@ function entriesOf(loss: FileLoss): Entry[] {
     case 'format_unread':
     case 'format_unwritten':
     case 'format_rule_unread':
+    case 'validation_rule_unread':
       return [[loss.k, 1, cellName(loss.sheet, loss.r, loss.c)]];
+    // The other app's change is read as it left it: logged with the read's losses, never reported (D294).
+    case 'validation_rule_changed':
+      return [];
     case 'sheet_cut':
     case 'cells_cut':
     case 'sheet_unread':

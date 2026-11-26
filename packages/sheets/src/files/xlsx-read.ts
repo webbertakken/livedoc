@@ -28,6 +28,7 @@ import type { FileCell, FileLoss, FileRead, FileSheet, FileValue } from './workb
 import { readXlsxCharts } from './xlsx-charts-read';
 import { allRead, WORKBOOK_READ, WORKSHEET_READ, XlsxKeeper } from './xlsx-kept-read';
 import { readXlsxDxfs, readXlsxFormatRules } from './xlsx-format-rules';
+import { readXlsxValidations } from './xlsx-validation';
 import { readThemeColours } from './xlsx-colours';
 import {
   dateStyles,
@@ -331,17 +332,22 @@ export async function readXlsx(
     if (!worksheet.ok) return worksheet;
     placed.set(at, sheets.length);
     const rules = readXlsxFormatRules(worksheet.root, ns, dxfs, theme);
+    const validations = readXlsxValidations(worksheet.root, ns);
+    for (const { r, c } of validations.changed)
+      book.losses.push({ k: 'validation_rule_changed', sheet: name, r, c });
+    const read = new Set([...rules.read, ...validations.read]);
     keeper?.sheetEntry(sheet, sheets.length);
-    keeper?.worksheet(worksheet, part!, sheets.length, rules.read);
+    keeper?.worksheet(worksheet, part!, sheets.length, read);
     strictUnread += keeper
       ? 0
       : unreadChildren(worksheet.root, WORKSHEET_READ) -
-        childElements(worksheet.root).filter((e) => allRead(e, rules.read)).length;
-    const read = readSheet(name, worksheet.root, book, rules.styled);
+        childElements(worksheet.root).filter((e) => allRead(e, read)).length;
+    const cells = readSheet(name, worksheet.root, book, rules.styled);
     sheets.push({
-      ...read,
+      ...cells,
       ...readXlsxTabLook(sheet, worksheet.root, ns),
       ...(rules.rules.length ? { formatRules: rules.rules } : {}),
+      ...(validations.rules.length ? { validations: validations.rules } : {}),
     });
   }
   keeper?.workbook(parsed, pkg.mainPart, listed, placed);

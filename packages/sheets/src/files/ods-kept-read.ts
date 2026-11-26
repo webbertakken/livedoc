@@ -101,15 +101,33 @@ export class OdsKeeper {
     }
   }
 
-  /** The spreadsheet's children but its tables and calculation settings, before or after the tables. */
-  spreadsheet(spreadsheet: XmlElement): void {
+  /**
+   * The spreadsheet's children but its tables and calculation settings, before or after the tables; its validation
+   * rules but those `read` names (a `table:content-validations` all read is not kept).
+   */
+  spreadsheet(spreadsheet: XmlElement, read: ReadonlySet<XmlElement> = new Set()): void {
     let tables = false;
     for (const child of childElements(spreadsheet)) {
       const isTable = child.uri === TABLE && child.local === 'table';
       tables ||= isTable;
       if (isTable || (child.uri === TABLE && child.local === 'calculation-settings')) continue;
-      this.element(tables ? 'spreadsheet-after' : 'spreadsheet-before', child);
+      const place = tables ? 'spreadsheet-after' : 'spreadsheet-before';
+      if (child.uri === TABLE && child.local === 'content-validations')
+        this.withoutRead(place, child, read);
+      else this.element(place, child);
     }
+  }
+
+  // A holder without the children `read` names; one all read is not kept.
+  private withoutRead(place: KeptPlace, holder: XmlElement, read: ReadonlySet<XmlElement>) {
+    const children = childElements(holder);
+    const gone = children.filter((child) => read.has(child));
+    if (gone.length > 0 && gone.length === children.length) return;
+    const kept = keptXmlOf(this.parsed, holder);
+    let xml = this.parsed.source.slice(holder.start, holder.end);
+    for (const element of [...gone].reverse())
+      xml = xml.slice(0, element.start - holder.start) + xml.slice(element.end - holder.start);
+    this.items.push({ place, xml: gone.length ? xml : kept.xml, ns: kept.ns, at: {} });
   }
 
   /**
@@ -182,9 +200,10 @@ export class OdsKeeper {
 
   /**
    * A cell's kept content, one item each, anchored at no cell yet (the caller places them): its children but its
-   * paragraphs, before or after them, and its attributes but those the reader reads. Empty when it keeps nothing.
+   * paragraphs, before or after them, and its attributes but those the reader reads (a validation rule's name among
+   * them when `ruled` says its rule is read). Empty when it keeps nothing.
    */
-  cell(cell: XmlElement): KeptItem<FileAt>[] {
+  cell(cell: XmlElement, ruled: (name: string) => boolean = () => false): KeptItem<FileAt>[] {
     const out: KeptItem<FileAt>[] = [];
     let text = false;
     for (const child of childElements(cell)) {
@@ -196,6 +215,12 @@ export class OdsKeeper {
     }
     for (const attribute of cell.attributes) {
       if (CELL_READ[attribute.uri]?.has(attribute.local)) continue;
+      if (
+        attribute.uri === TABLE &&
+        attribute.local === 'content-validation-name' &&
+        ruled(attribute.value)
+      )
+        continue;
       out.push({ place: 'cell-attribute', ...keptAttribute(cell, attribute), at: {} });
     }
     return out;

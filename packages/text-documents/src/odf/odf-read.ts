@@ -47,7 +47,12 @@ import {
   unquote,
 } from './odf-props';
 import { keptSettings, pagelessIn } from './odf-settings';
-import { masterStoryElements, unlinked, withHeaderMargins, withoutStories } from './odf-headers';
+import {
+  keptWithoutStories,
+  masterStoryElements,
+  unlinked,
+  withHeaderMargins,
+} from './odf-headers';
 import {
   HeadersAndFooters,
   type HeaderFooter,
@@ -317,7 +322,7 @@ class OdfReader {
     for (const page of master ? childElements(master) : []) {
       const xml = keptXmlOf(styles!, page);
       // A master page's headers and footers are the model's: what is kept is the rest of it.
-      kept.push(is(page, NS.style, 'master-page') ? { ...xml, xml: withoutStories(xml.xml) } : xml);
+      kept.push(is(page, NS.style, 'master-page') ? keptWithoutStories(xml) : xml);
       if (is(page, NS.style, 'master-page')) {
         const name = attributeOf(page, NS.style, 'name') ?? '';
         this.masters.set(name, attributeOf(page, NS.style, 'page-layout-name') ?? '');
@@ -466,6 +471,9 @@ export function readOdfParts(parts: OdfParts, report: ReportBuilder): TextDocume
   const masterStyles: KeptXml[] = [];
   reader.readMasters(parts.styles, masterStyles);
   reader.readStory = (element) => {
+    reader.changes.include(
+      readOdfChangedRegions(element, (name) => reader.report.drop('suggestion-unknown', name)),
+    );
     const story = new BodyReader(reader, styles, defaults, true);
     story.container(element);
     return story.blocks;
@@ -549,26 +557,16 @@ class BodyReader {
   readonly notes: boolean;
   /** A table cell's writing: a region in it is kept as it is. */
   readonly cell: boolean;
-  /**
-   * Whether its tracked changes are read as suggestions: the body's, its tables' cells' and its tables of contents'
-   * entries'; a header's, footer's or note's are settled as it is read (review.md "In the files").
-   */
-  readonly tracks: boolean;
 
   constructor(
     r: OdfReader,
     styles: readonly Style[],
     defaults: StyleDefaults,
     story = false,
-    {
-      notes = !story,
-      cell = false,
-      tracks = !story,
-    }: { notes?: boolean; cell?: boolean; tracks?: boolean } = {},
+    { notes = !story, cell = false }: { notes?: boolean; cell?: boolean } = {},
   ) {
     this.r = r;
     this.story = story;
-    this.tracks = tracks;
     this.notes = notes;
     this.cell = cell;
     this.styles = styles;
@@ -666,6 +664,8 @@ class BodyReader {
 
   container(parent: XmlElement): void {
     const top = !this.story && !this.cell && is(parent, NS.office, 'text');
+    // A header's or footer's own list of its tracked changes, before its paragraphs, as LibreOffice writes one.
+    const masterStory = this.story && !this.cell && parent.uri === NS.style;
     for (const e of childElements(parent)) {
       if (is(e, NS.text, 'p') || is(e, NS.text, 'h')) this.paragraph(e, undefined);
       else if (is(e, NS.text, 'list')) this.list(e, 0, undefined);
@@ -676,7 +676,7 @@ class BodyReader {
       else if (is(e, NS.text, 'index-title')) this.r.report.drop('layout-hint', e.local);
       else if (is(e, NS.text, 'soft-page-break')) this.r.report.drop('layout-hint', e.local);
       // Read as suggestions where the writing marks them (review.md "In the files").
-      else if (top && is(e, NS.text, 'tracked-changes')) continue;
+      else if ((top || masterStory) && is(e, NS.text, 'tracked-changes')) continue;
       else if (isDde(e)) this.r.report.drop('field', e.local);
       else {
         this.blocks.push({
@@ -701,18 +701,13 @@ class BodyReader {
       : undefined;
     const parts = template ? childElements(template) : [];
     const tab = parts.find((c) => is(c, NS.text, 'index-entry-tab-stop'));
-    const reader = new BodyReader(this.r, this.styles, this.defaults, true, {
-      notes: this.notes,
-      tracks: this.tracks,
-    });
+    const reader = new BodyReader(this.r, this.styles, this.defaults, true, { notes: this.notes });
     const body = childElement(e, NS.text, 'index-body');
     if (body) reader.container(body);
     const read = reader.blocks.filter((b): b is Paragraph => b.type === 'paragraph');
     // A suggested one: every entry in changes of one kind (standard-mapping.md "Suggested blocks"); an entry only a
     // joiner held goes.
-    const tracked = this.tracks
-      ? Suggestions.tracked([read], this.r.changes.blockMarks('contents'))
-      : undefined;
+    const tracked = Suggestions.tracked([read], this.r.changes.blockMarks('contents'));
     const entries = tracked
       ? (Suggestions.absorbed(read, tracked.kind, tracked.marks) as Paragraph[]).filter(
           (p, i) => p.inlines.length > 0 || read[i]!.inlines.length === 0,
@@ -747,7 +742,6 @@ class BodyReader {
         const reader = new BodyReader(this.r, this.styles, this.defaults, true, {
           notes: this.notes,
           cell: true,
-          tracks: this.tracks,
         });
         reader.container(cell);
         return reader.blocks;
@@ -755,14 +749,10 @@ class BodyReader {
       kept: (x) => this.r.kept(this.r.part.parsed, x),
       report: this.r.report,
       normal: Styles.idOfRole(this.styles, 'normal') ?? 'Standard',
-      ...(this.tracks
-        ? {
-            tracked: (paragraphs: readonly Paragraph[]) => {
-              const found = Suggestions.tracked([paragraphs]);
-              return found && { kind: found.kind, mark: found.marks[0]! };
-            },
-          }
-        : {}),
+      tracked: (paragraphs: readonly Paragraph[]) => {
+        const found = Suggestions.tracked([paragraphs]);
+        return found && { kind: found.kind, mark: found.marks[0]! };
+      },
     });
     if (block) this.blocks.push(block.type === 'table' ? this.suggestedTable(block) : block);
   }
@@ -773,7 +763,7 @@ class BodyReader {
    * "Suggested blocks").
    */
   suggestedTable(table: Table): Table {
-    return this.tracks ? Suggestions.foldedRows(table) : table;
+    return Suggestions.foldedRows(table);
   }
 
   /**
@@ -782,7 +772,7 @@ class BodyReader {
    */
   sectionSuggested(e: XmlElement): SectionBreak['suggested'] {
     const id = said(e, 'section-change');
-    if (id === undefined || !this.tracks) return undefined;
+    if (id === undefined) return undefined;
     const suggested = this.r.changes.sectionChange(id);
     if (!suggested) this.r.report.drop('suggestion-dangling', id);
     return suggested;
@@ -909,14 +899,10 @@ class BodyReader {
       ? { xml: auto.kept, read: canonical(values), residue: [], name: styleName }
       : undefined;
     // A header's, a footer's or a note's notes stay kept content (page-layout.md "Footnotes").
-    const started = this.tracks ? this.r.changes.paragraphStart() : undefined;
-    const inlines = new InlineReader(this.r, this.notes, !this.tracks).read(e);
+    const started = this.r.changes.paragraphStart();
+    const inlines = new InlineReader(this.r, this.notes).read(e);
     const format = this.r.changes.takeParagraphFormat({ style, props });
-    if (!this.tracks && format) this.r.report.drop('suggestion-in-story', 'paragraph');
-    const suggested =
-      started || (format && this.tracks)
-        ? { ...started, ...(format && this.tracks ? { format } : {}) }
-        : undefined;
+    const suggested = started || format ? { ...started, ...(format ? { format } : {}) } : undefined;
     const paragraph: Paragraph = {
       type: 'paragraph',
       style,
@@ -937,21 +923,17 @@ class InlineReader {
   /** Whether a footnote is read as the model's: in the body, never in a header, footer or note. */
   readonly notes: boolean;
 
-  /** A header's, footer's or note's writing: its tracked changes are settled as it is read (review.md). */
-  readonly story: boolean;
-
-  constructor(r: OdfReader, notes: boolean, story = false) {
+  constructor(r: OdfReader, notes: boolean) {
     this.r = r;
     this.notes = notes;
-    this.story = story;
   }
 
   /** A point form deletion's writing being read: it is part of that deletion. */
   #forced: InlineSuggested | undefined;
 
-  /** What an inline read now is part of; none in a story, where changes are settled. */
+  /** What an inline read now is part of. */
   suggested(run?: { style?: string; props: TextProps }): InlineSuggested | undefined {
-    return this.story ? undefined : Suggestions.merged(this.r.changes.inline(run), this.#forced);
+    return Suggestions.merged(this.r.changes.inline(run), this.#forced);
   }
 
   /**
@@ -977,7 +959,6 @@ class InlineReader {
 
   text(chars: string, ctx: Context): void {
     if (!chars) return;
-    if (this.story && this.r.changes.deleting) return;
     const suggested = this.suggested(ctx);
     const last = this.out.at(-1);
     if (
@@ -1017,9 +998,8 @@ class InlineReader {
     }
     // A tracked change's marks show nothing (review.md "In the files").
     if (OdfChangeTracker.isMark(node)) {
-      if (this.story) this.r.report.drop('suggestion-in-story', node.local);
       const point = this.r.changes.mark(node);
-      if (point && !this.story) this.pointDeletion(point, ctx);
+      if (point) this.pointDeletion(point, ctx);
       return;
     }
     // A comment's edges show nothing, so white space collapses across them (review.md "How a comment is kept").

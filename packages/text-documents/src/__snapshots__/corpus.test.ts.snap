@@ -1163,6 +1163,101 @@ exports[`the corpus > reads libreoffice/rich.odt and writes it back the same 1`]
 }
 `;
 
+exports[`the corpus > reads libreoffice/story-suggestions.fodt and writes it back the same 1`] = `
+{
+  "report": {
+    "dropped": [],
+    "kept": [
+      {
+        "count": 1,
+        "name": "sequence-decls",
+      },
+    ],
+  },
+  "structure": {
+    "format": "odf",
+    "lists": 0,
+    "paragraphs": [
+      [
+        "kept",
+        "sequence-decls",
+      ],
+      [
+        "Standard",
+        "",
+        "First section",
+        "",
+      ],
+      [
+        "section",
+        "next-page",
+        "portrait",
+      ],
+      [
+        "Standard",
+        "",
+        "Second section",
+        "",
+      ],
+    ],
+    "roles": [
+      "normal=Standard",
+      "title=Title",
+      "subtitle=Subtitle",
+      "heading1=Heading_20_1",
+      "heading2=Heading_20_2",
+      "heading3=Heading_20_3",
+      "heading4=Heading_20_4",
+      "heading5=Heading_20_5",
+      "heading6=Heading_20_6",
+    ],
+  },
+}
+`;
+
+exports[`the corpus > reads libreoffice/story-suggestions-source.docx and writes it back the same 1`] = `
+{
+  "report": {
+    "dropped": [],
+    "kept": [],
+  },
+  "structure": {
+    "format": "ooxml",
+    "lists": 0,
+    "paragraphs": [
+      [
+        "Normal",
+        "",
+        "First section",
+        "",
+      ],
+      [
+        "section",
+        "next-page",
+        "portrait",
+      ],
+      [
+        "Normal",
+        "",
+        "Second section",
+        "",
+      ],
+    ],
+    "roles": [
+      "normal=Normal",
+      "title=Title",
+      "subtitle=Subtitle",
+      "heading1=Heading1",
+      "heading2=Heading2",
+      "heading3=Heading3",
+      "heading4=Heading4",
+      "heading5=Heading5",
+      "heading6=Heading6",
+    ],
+  },
+}
+`;
+
 exports[`the corpus > reads libreoffice/suggested-blocks.fodt and writes it back the same 1`] = `
 {
   "report": {

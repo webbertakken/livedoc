@@ -383,9 +383,13 @@ office kinds; this spec says what a text document puts in them.
   no paragraph before it (the first of its container, or after a block), or an accepted join after a block, is removed
   with its paragraph when nothing of the paragraph is left and something follows it; otherwise its mark is dropped.
   Either is one change of the writing, undone with ⌘Z.
-- **Where**: in the body of each document tab. Headers, footers and notes take no suggestions; while suggesting they
-  read as they do in Viewing (default).
-- **The room judges a Participant's update** (fork D7): it is theirs when the writing, read with the sender's own
+- **Where**: in the body of each document tab and in its stories, its headers', footers' and notes' writing, kept
+  there as in the body (director, 2026-11-26). A story's suggestion belongs to the tab that shows it: a header's or
+  footer's, the first tab whose sections name it; a note's, the tab whose body holds its mark. It is read, counted,
+  previewed, accepted and rejected with the tab's, by Accept all and Reject all too, after the tab's body, headers
+  before notes. While suggesting, the header, footer and note editors read as they do in Viewing (default).
+- **The room judges a Participant's update** (fork D7): it is theirs when the writing (each body and each story
+  touched, a story judged as a body is), read with the sender's own
   suggestions rejected, is the same before and after, so it adds, changes or withdraws only the sender's own
   suggestions, never anyone's writing or anyone else's suggestion; anything else asks for Editing and is refused
   whole. A picture's media is theirs to add when each entry is new (none already held is changed), reads as media,
@@ -398,8 +402,8 @@ office kinds; this spec says what a text document puts in them.
   LiveDoc person, as a file's comment's. Each tracked change is its own suggestion; adjacent ones of one author are not
   merged (default). A Word move arrives as a deletion where it left and an insertion where it landed (default). A
   file's own "track changes" setting is kept as the file has it, never read as anyone's mode (default). A tracked
-  change in a header, footer or note is settled as the file is read, an insertion kept and a deletion dropped, and
-  reported `suggestion-in-story`. A suggested table, row, column, section break or table of contents leaves and arrives as each suite writes
+  change in a header, footer or note arrives as a suggestion there, and leaves as the same format's tracked change in
+  that story (director, 2026-11-26). A suggested table, row, column, section break or table of contents leaves and arrives as each suite writes
   one ([Suggested blocks](standard-mapping.md#suggested-blocks)); LibreOffice keeps no tracked section break, so an
   `.odt`'s shows there as a plain break.
 - **Search** reads a suggested insertion as the writing it is, and a suggested deletion too, until it is accepted.

@@ -106,14 +106,19 @@ const isObject = (value: unknown): value is Record<string, unknown> =>
 
 /** The changes open where the writing is read: what each inline and paragraph read now is part of. */
 export class OdfChangeTracker {
-  readonly regions: ReadonlyMap<string, OdfChange>;
+  readonly regions: Map<string, OdfChange>;
   readonly #open = new Map<string, OdfChange>();
   /** The regions a mark or a section's pointer names; any other is dangling. */
   readonly #named = new Set<string>();
   #paragraphFormat: OdfChange | undefined;
 
   constructor(regions: ReadonlyMap<string, OdfChange>) {
-    this.regions = regions;
+    this.regions = new Map(regions);
+  }
+
+  /** A header's or footer's own regions, listed inside it, joined to the body's (review.md "In the files"). */
+  include(regions: ReadonlyMap<string, OdfChange>): void {
+    for (const [id, region] of regions) this.regions.set(id, region);
   }
 
   /**
@@ -251,6 +256,12 @@ export type WholeChange = {
 /** The changed regions a written document lists, each range given its own id; `text:tracked-changes` of them. */
 export class OdfChangeRegions {
   readonly #regions: string[] = [];
+  // What each id starts with: `ct` for the body's, its own for a header's or footer's, so no two ids meet in one file.
+  readonly #prefix: string;
+
+  constructor(prefix = 'ct') {
+    this.#prefix = prefix;
+  }
 
   /** A new region for one range of a suggestion; its id for the range's marks. */
   add(
@@ -258,7 +269,7 @@ export class OdfChangeRegions {
     mark: FileSuggestionMark,
     extra: { before?: unknown; paragraph?: boolean; block?: 'contents' } = {},
   ): string {
-    const id = `ct${this.#regions.length + 1}`;
+    const id = `${this.#prefix}${this.#regions.length + 1}`;
     const element = kind === 'format' ? 'text:format-change' : `text:${kind}`;
     const date =
       mark.at === undefined

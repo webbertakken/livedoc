@@ -1,8 +1,8 @@
 # Data tools
 
 **Status: partly built.** Sort Sheet, Sort Range with its Advanced Range Sorting Options, Create a Filter, Filter by Colour,
-every condition of Filter by Condition, and the Data Validation Rules panel with Insert › Checkbox and
-Insert › Dropdown are built; the rest is specified.
+every condition of Filter by Condition, and data validation (the Data Validation Rules panel, Insert › Checkbox,
+Insert › Dropdown, every criterion, kept in both file formats) are built; the rest is specified.
 
 Sorting, filtering, validation, names, protection, tables and clean-up in a [spreadsheet](spreadsheet.md), as
 Google Sheets' Data menu does. Its rows of the [parity matrix](parity-matrix.md) name this page.

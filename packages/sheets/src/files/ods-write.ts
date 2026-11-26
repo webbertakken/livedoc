@@ -15,6 +15,15 @@ import {
 import { declarations, OdsKeptWriter } from './ods-kept-write';
 import { OdsStyles } from './ods-styles';
 import { odsFormatRulesXml } from './ods-format-rules';
+import {
+  odsValidationsOut,
+  ruleAt,
+  ruledRuns,
+  rowRules,
+  withValidations,
+  type OdsValidationsOut,
+  type RowRules,
+} from './ods-validation';
 import { odsDefaultCellStyles } from './ods-cell-style';
 import { themedFormat, themeOf, type SpreadsheetTheme } from '../themes/spreadsheet-theme';
 import { OdsAxisOut } from './ods-lines';
@@ -72,6 +81,8 @@ type Out = {
   charts: OdsChartObjects;
   // The sheet's chart frames by the cell each is anchored in (`r,c`).
   frames?: ReadonlyMap<string, string>;
+  // Every sheet's validation rules' rectangles and names, by sheet (standard-mapping.md "Validation in the file").
+  validations: OdsValidationsOut['cells'];
 };
 
 // A cell's style, its number format's and its look's; a format ODF cannot say is named, the cell written without it.
@@ -126,7 +137,11 @@ function paragraphs(text: string): string {
     .join('');
 }
 
-function cellXml(cell: FileCell, out: Out): string {
+const VALIDATION_NAME = /\s(?:[\w.-]+:)?content-validation-name="[^"]*"/;
+const ruleAttribute = (name: string | undefined) =>
+  name === undefined ? '' : ` table:content-validation-name="${escapeXmlAttribute(name)}"`;
+
+function cellXml(cell: FileCell, out: Out, rule: string | undefined): string {
   const formula = cell.formula === undefined ? null : toOpenFormula(cell.formula);
   if (cell.formula !== undefined && formula === null)
     out.losses.push({ k: 'formula_unwritten', sheet: out.sheet, r: cell.r, c: cell.c });
@@ -143,7 +158,10 @@ function cellXml(cell: FileCell, out: Out): string {
   // Kept content stays on its cell: its attributes, and its children before and after the paragraphs.
   const kept = out.kept.cell(out.index, cell.r, cell.c);
   const body = cell.value ? paragraphs(shownText(cell.value)) : '';
-  const open = `<table:table-cell${attrs.map((a) => ` ${a}`).join('')}${kept?.attributes ?? ''}>`;
+  // LiveDoc's rule over a cell names it, in place of a kept one's.
+  const keptAttributes = kept?.attributes ?? '';
+  const ruled = rule === undefined ? keptAttributes : keptAttributes.replace(VALIDATION_NAME, '');
+  const open = `<table:table-cell${attrs.map((a) => ` ${a}`).join('')}${ruleAttribute(rule)}${ruled}>`;
   const frames = out.frames?.get(`${cell.r},${cell.c}`) ?? '';
   return `${open}${kept?.before ?? ''}${frames}${body}${kept?.after ?? ''}</table:table-cell>`;
 }
@@ -151,25 +169,34 @@ function cellXml(cell: FileCell, out: Out): string {
 const repeated = (axis: 'columns' | 'rows', n: number) =>
   n > 1 ? ` table:number-${axis}-repeated="${n}"` : '';
 
-function emptyCells(n: number): string {
-  return `<table:table-cell${repeated('columns', n)}/>`;
+// Empty cells from column `from` to `to` (exclusive), split where the validation rules over them change.
+function emptyCells(rules: RowRules, from: number, to: number): string[] {
+  return ruledRuns(rules, from, to).map(
+    ({ n, name }) => `<table:table-cell${repeated('columns', n)}${ruleAttribute(name)}/>`,
+  );
 }
 
-function rowXml(cells: readonly FileCell[], cols: number, out: Out, attrs: string): string[] {
+function rowXml(
+  cells: readonly FileCell[],
+  cols: number,
+  out: Out,
+  attrs: string,
+  rules: RowRules,
+): string[] {
   const lines = [`<table:table-row${attrs}>`];
   let at = 0;
   for (const cell of cells) {
-    if (cell.c > at) lines.push(emptyCells(cell.c - at));
-    lines.push(cellXml(cell, out));
+    if (cell.c > at) lines.push(...emptyCells(rules, at, cell.c));
+    lines.push(cellXml(cell, out, ruleAt(rules, cell.c)));
     at = cell.c + 1;
   }
-  if (cols > at) lines.push(emptyCells(cols - at));
+  if (cols > at) lines.push(...emptyCells(rules, at, cols));
   lines.push('</table:table-row>');
   return lines;
 }
 
-function emptyRows(n: number, cols: number, attrs: string): string {
-  return `<table:table-row${attrs}${repeated('rows', n)}>${emptyCells(cols)}</table:table-row>`;
+function emptyRows(n: number, cols: number, attrs: string, rules: RowRules): string {
+  return `<table:table-row${attrs}${repeated('rows', n)}>${emptyCells(rules, 0, cols).join('')}</table:table-row>`;
 }
 
 // Where runs of lines start: 0, each line with something of its own and the one after it, and the end.
@@ -223,21 +250,26 @@ function tableXml(sheet: FileSheet, index: number, out: Omit<Out, 'sheet' | 'ind
   const rowAxis = new OdsAxisOut(sheet.lines?.r, 'table-row', lineStyle);
   const colAxis = new OdsAxisOut(sheet.lines?.c, 'table-column', lineStyle);
   // A row with cells is a run of its own; rows between are runs of empty rows, split where their attributes change.
+  // Each validation rule's first row and the row after its last start runs too, so a run's rows share their rules.
+  const ruled = out.validations[index] ?? [];
   const starts = runStarts(rowCount, [
     ...rowAxis.breaks(),
     ...[...rows.keys()].flatMap((r) => [r, r + 1]),
+    ...ruled.flatMap((x) => [x.range.r1, x.range.r2 + 1]),
   ]);
   const runs = starts.slice(0, -1).map((from, i) => {
     const { attrs } = rowAxis.at(from);
     const cells = rows.get(from);
+    const rules = rowRules(ruled, from);
     const xml = cells
       ? rowXml(
           cells.sort((a, b) => a.c - b.c),
           cols,
           sheetOut,
           attrs,
+          rules,
         )
-      : [emptyRows(starts[i + 1]! - from, cols, attrs)];
+      : [emptyRows(starts[i + 1]! - from, cols, attrs, rules)];
     return { from, xml };
   });
   return [
@@ -317,8 +349,12 @@ function bodyXml(
   );
   const charts = new OdsChartObjects(flat, kept.partNames(), kept, losses);
   const theme = themeOf(file.theme);
+  const keptAfter = kept.spreadsheetBefore('after');
+  // LiveDoc's rules are named past the kept ones' names.
+  const keptRules = keptAfter.join('');
+  const validations = odsValidationsOut(file, (name) => keptRules.includes(`"${name}"`));
   const tables = file.sheets.flatMap((sheet, i) =>
-    tableXml(sheet, i, { losses, styles, kept, theme, charts }),
+    tableXml(sheet, i, { losses, styles, kept, theme, charts, validations: validations.cells }),
   );
   const commonXml = commonStyles(theme.font, [...keptCommon, ...styles.conditionalStyles()]);
   const body = [
@@ -329,7 +365,7 @@ function bodyXml(
     '<office:spreadsheet>',
     ...kept.spreadsheetBefore('before'),
     CALCULATION_SETTINGS,
-    ...kept.spreadsheetBefore('after'),
+    ...withValidations(keptAfter, validations.elements),
     ...tables,
     ...kept.workbook('spreadsheet-after'),
     '</office:spreadsheet>',

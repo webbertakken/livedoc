@@ -1,4 +1,6 @@
+import { readFileSync } from 'node:fs';
 import type { Page } from '@playwright/test';
+import { readWorkbookFile } from '@livedoc/sheets/files';
 import { expect, expectNoPageErrors, test } from '../fixtures';
 import { officeMenuItem } from './office-menus';
 
@@ -212,5 +214,52 @@ test('a dropdown allowing multiple selections holds several options as chips', a
   ).toBeVisible();
   await page.keyboard.press('Escape');
   expect(await inputOf(page, 'B2')).toBe('To Do, Done');
+  expectNoPageErrors(pageErrors);
+});
+
+// standard-mapping.md "Validation in the file": the other format's file lists what other apps hold more simply, and
+// carries every rule, LiveDoc's exact one beside the standard one.
+test('a download to Excel lists what other apps hold more simply and carries every rule', async ({
+  page,
+  pageErrors,
+}) => {
+  test.setTimeout(120_000);
+  await page.setViewportSize({ width: 1280, height: 860 });
+  await page.goto('/new?kind=spreadsheet');
+  await page.waitForURL(/\/document\//);
+  await expect(page.locator(READY)).toBeVisible();
+
+  await select(page, 'A1:A3');
+  await (await officeMenuItem(page, ['Insert', 'Checkbox'])).click();
+  await select(page, 'B1:B3');
+  await (await officeMenuItem(page, ['Insert', 'Dropdown'])).click();
+  const panel = page.getByRole('complementary', { name: 'Data Validation Rules' });
+  await panel.getByRole('textbox', { name: 'Option 1' }).fill('To Do');
+  await panel.getByRole('textbox', { name: 'Option 2' }).fill('Done');
+  await panel.getByRole('checkbox', { name: 'Allow Multiple Selections' }).check();
+  await panel.getByRole('button', { name: 'Done', exact: true }).click();
+
+  await (await officeMenuItem(page, ['File', 'Download', 'Microsoft Excel (.xlsx)'])).click();
+  const dialog = page.getByRole('dialog', { name: 'Download as Excel?' });
+  await expect(dialog).toContainText(
+    '2 data validation rules work more simply in Excel: chips and arrows, multiple selections and checkboxes',
+  );
+  await page.screenshot({ path: test.info().outputPath('validation-download.png') });
+  const [download] = await Promise.all([
+    page.waitForEvent('download'),
+    dialog.getByRole('button', { name: 'Download' }).click(),
+  ]);
+  const path = test.info().outputPath('rules.xlsx');
+  await download.saveAs(path);
+  const read = await readWorkbookFile(new Uint8Array(readFileSync(path)), 'en-GB');
+  expect(read.ok && read.file.sheets[0]!.validations).toEqual([
+    { ranges: [{ r1: 0, c1: 0, r2: 2, c2: 0 }], is: 'check' },
+    {
+      ranges: [{ r1: 0, c1: 1, r2: 2, c2: 1 }],
+      is: 'list',
+      opts: [{ v: 'To Do' }, { v: 'Done' }],
+      multi: true,
+    },
+  ]);
   expectNoPageErrors(pageErrors);
 });

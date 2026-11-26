@@ -3,6 +3,7 @@
 import type { WorkbookFormat } from '../workbook-record';
 import type { ConversionLoss } from './conversion';
 import type { KeptKind } from './kept-content';
+import type { SimplifiedFeature } from './file-validation';
 
 /** The names a line shows before it counts the rest. */
 export const CONVERSION_NAMES_SHOWN = 3;
@@ -64,6 +65,14 @@ const KEPT_KIND: Record<KeptKind, string> = {
   other: 'other content',
 };
 
+// What a person calls what another app loses of a validation rule.
+const SIMPLIFIED_WORDS: Record<SimplifiedFeature, string> = {
+  colours: 'option colours',
+  chips: 'chips and arrows',
+  multi: 'multiple selections',
+  checkboxes: 'checkboxes',
+};
+
 /** One loss as the dialog lists it. */
 export function conversionLine(loss: ConversionLoss, to: WorkbookFormat): string {
   const one = loss.count === 1;
@@ -92,6 +101,17 @@ export function conversionLine(loss: ConversionLoss, to: WorkbookFormat): string
     case 'answers_differ': {
       const what = one ? '1 formula may answer' : `${loss.count} formulas may answer`;
       return `${what} differently in ${FORMAT_NAME[to]}: ${named(loss.functions, 'and')}`;
+    }
+    case 'validation_simplified': {
+      const what = one
+        ? '1 data validation rule works'
+        : `${loss.count} data validation rules work`;
+      const where = to === 'xlsx' ? 'Excel' : 'other apps';
+      // Every one named: there are at most four.
+      const words = loss.features.map((f) => SIMPLIFIED_WORDS[f]);
+      const list =
+        words.length > 1 ? `${words.slice(0, -1).join(', ')} and ${words.at(-1)!}` : words[0]!;
+      return `${what} more simply in ${where}: ${list}`;
     }
     // The kept content stays with the spreadsheet in its own format, so it is the other format's file's (D109).
     case 'kept': {
