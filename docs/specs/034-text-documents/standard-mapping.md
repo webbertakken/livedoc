@@ -43,7 +43,7 @@ are no others. A text document only changes format when a person converts it ([C
 | Table of contents    | `text:table-of-content`                                                                                                                                                                                                                                        | A `TOC` field in a `w:sdt` with `w:docPartGallery` "Table of Contents"                                                                               | A table of contents with links or page numbers                                                                            |
 | Horizontal line      | A paragraph with a bottom border and no text                                                                                                                                                                                                                   | A paragraph with a `w:pBdr` bottom border and no text                                                                                                | Horizontal line                                                                                                           |
 | Comments             | `office:annotation`, `office:annotation-end`, `office:name`; replies and resolved `loext:parent-name`, `loext:resolved`                                                                                                                                        | `w:commentRangeStart`, `-End`, `w:commentReference` into `comments.xml`; threads and done in `commentsExtended.xml` (`w15:paraIdParent`, `w15:done`) | Comment threads with replies and resolved state ([Review](review.md))                                                     |
-| Suggestions          | `text:tracked-changes`, `text:changed-region` with `text:insertion`, `text:deletion`, `text:format-change`, `office:change-info`; `text:change-start`, `-end`, `text:change`                                                                                   | `w:ins`, `w:del`, `w:rPrChange`, `w:pPrChange` with `w:author`, `w:date`; a row's `w:trPr` `w:ins`, `w:del`                                          | Suggestions, attributed and dated ([Review](review.md))                                                                   |
+| Suggestions          | `text:tracked-changes`, `text:changed-region` with `text:insertion`, `text:deletion`, `text:format-change`, `office:change-info`; `text:change-start`, `-end`, `text:change`; a row's or cell's style `loext:text-changes-only`                                | `w:ins`, `w:del`, `w:rPrChange`, `w:pPrChange` with `w:author`, `w:date`; a row's `w:trPr` `w:ins`, `w:del`; a cell's `w:cellIns`, `w:cellDel`       | Suggestions, attributed and dated ([Review](review.md))                                                                   |
 | Metadata             | `office:meta`: `dc:title`, `dc:description` (the summary), `dc:creator`, dates, `meta:document-statistic`, `dc:language`                                                                                                                                       | `docProps/core.xml` (`dc:title`, `dc:description`, `dc:creator`, dates), `docProps/app.xml` (statistics), `w:lang`                                   | Name, dates, author, language, statistics written on save                                                                 |
 
 ## The model
@@ -98,8 +98,9 @@ The model is plain values in `@livedoc/text-documents`, each a namespace of pure
 - **Suggestions**: every inline but a comment's edge, and every paragraph, carries the suggestions it is part of
   (`suggested`): an inline its insertion, deletion and (a run's) format change with its formatting before; a paragraph
   its break, join and paragraph format with its style, formatting and list before ([Review](review.md#how-a-suggestion-is-kept)).
-  A table, a section break and a table of contents carry an insertion or a deletion whole; what is inside them
-  carries only its own suggestions, never theirs ([Suggested blocks](#suggested-blocks)).
+  A table, a section break and a table of contents carry an insertion or a deletion whole, and so do a table's rows
+  and cells (a column is its cells); what is inside them carries only its own suggestions, never theirs
+  ([Suggested blocks](#suggested-blocks)).
 - Lengths are points, read from either format's units and rounded to three decimals; colours are `#rrggbb`.
 - Text holds tabs as `\t` and line breaks as `\n`.
 
@@ -125,19 +126,25 @@ The model is plain values in `@livedoc/text-documents`, each a namespace of pure
 
 ### Suggested blocks
 
-A table, a section break or a table of contents inserted or deleted while suggesting is written as each suite writes
-it, asked of LibreOffice 24.2 by converting Word's tracked forms to ODF and back:
+A table, a table's row or column, a section break or a table of contents inserted or deleted while suggesting is
+written as each suite writes it, asked of LibreOffice 24.2 by converting Word's tracked forms to ODF and back:
 
-- **A table**: OOXML, each row's `w:trPr` holds a `w:ins` (or `w:del`), each cell's runs sit in a `w:ins` (`w:del`,
-  its text as `w:delText`), as Word writes them; read, a table whose every row's `w:trPr` holds one of one kind is
-  that kind's suggestion, and the cells' paragraph marks Word tracks too are part of it. ODF has no tracked row: every paragraph of its cells is whole in a changed region of its own, a
-  `text:change-start` first and a `text:change-end` last, each carrying the table's suggestion (LibreOffice honours one
-  start and end per region), an empty paragraph holding a U+200D zero width joiner between them, and LiveDoc's regions
-  say they are a table's (`livedoc:block="table"`). Read as LibreOffice reads one: a table whose every row holds writing, all of it in
-  changes of one kind (empty paragraphs aside), is that kind's suggestion; in a file LiveDoc wrote (its regions carry
-  `livedoc:suggestion`), only when those changes say they are a table's, so text suggested into every cell stays text.
-  Either way its mark is the first row's; a mark inside it of the same kind whose id is one of the rows', or a file's
-  of the same author, is part of it and dropped, as are the joiners; any other suggestion inside it stays its own.
+- **A row**: OOXML, its `w:trPr` holds a `w:ins` (or `w:del`) and each of its cells' runs sit in a `w:ins` (`w:del`,
+  its text as `w:delText`), as Word writes them; the cells' paragraph marks Word tracks too are part of it. ODF, as
+  LibreOffice writes one: its row style says `loext:text-changes-only="false"` and every paragraph of its cells is
+  whole in a changed region of its own of that kind, a `text:change-start` first and a `text:change-end` last, each
+  carrying the row's suggestion (LibreOffice honours one start and end per region), an empty paragraph holding a U+200D
+  zero width joiner between them. Read as LibreOffice reads one: a row whose style says so is that kind's suggestion,
+  the kind and mark its writing's first change's; a row whose writing is in changes but whose style does not say so is
+  text suggested into it.
+- **A column**: each of its cells suggested. OOXML, the cell's `w:tcPr` holds a `w:cellIns` (or `w:cellDel`), its runs
+  in a `w:ins` (`w:del`); ODF, the cell's style says `loext:text-changes-only="false"` and its paragraphs are whole in
+  regions as a row's are. Read, either way, a cell so marked is that kind's suggestion.
+- **A table**: every row suggested, of one kind, written as each row is; read, a table whose every row is suggested,
+  of one kind, is that kind's suggestion, its mark the first row's.
+- **What is inside**: in a suggested table, row or cell, a mark of the same kind whose id is the block's or one of its
+  rows' or cells', or a file's of the same author, is part of it and dropped, as are the joiners; any other suggestion
+  inside it stays its own.
 - **A table of contents**: OOXML, its field's runs and its entries' runs in a `w:ins` (`w:del`) and each entry's
   paragraph mark too; read, one whose field begins inside a `w:ins` (`w:del`) is suggested. ODF, every paragraph of
   its `text:index-body` whole in a changed region of its own (an empty table of contents one paragraph holding a U+200D), as
@@ -184,15 +191,15 @@ What Google Docs does and neither standard has an element for is written in Live
 `urn:livedoc:xmlns:text:1.0` (`livedoc:`), which ODF's extended conformance and OOXML's markup compatibility
 (`mc:Ignorable`) let other readers ignore, each with a plain fallback any suite shows:
 
-| Construct                                  | Written as                                                                                                                                                                                                      | Fallback another suite shows                                                  |
-| ------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
-| Reactions, mentions, assignee on a comment | `livedoc:reactions`, `livedoc:mentions`, `livedoc:assignee` on the comment                                                                                                                                      | The comment's text                                                            |
-| Document tabs                              | `livedoc:tab-*` on a top-level ODF `text:section`, or a section break with `livedoc:tab-*` in OOXML ([Document tabs](#document-tabs))                                                                           | The tabs' writing one after another                                           |
-| Pageless                                   | ODF: config item `livedoc:pageless` (boolean) in a `livedoc:settings` set in `settings.xml`; OOXML: `<livedoc:pageless/>` in `w:settings`                                                                       | Pages                                                                         |
-| Drawings                                   | `livedoc:drawing` beside the drawing's picture                                                                                                                                                                  | The picture                                                                   |
-| A suggestion's id and formatting before    | ODF: `livedoc:suggestion`, `livedoc:before` (JSON), `livedoc:paragraph` and `livedoc:block` on `text:changed-region`; OOXML: `livedoc:id` on each tracked change ([Review](review.md#how-a-suggestion-is-kept)) | The tracked changes, one per range; a format change with no formatting before |
-| A suggested section break (ODF)            | `livedoc:section-change` naming its `text:changed-region`, on the element starting the section ([Suggested blocks](#suggested-blocks))                                                                          | A plain section break                                                         |
-| Checklist without strikethrough            | `livedoc:strike-checked="false"` on its list levels (ODF level styles, OOXML `w:lvl`)                                                                                                                           | A checklist struck through or not as that suite draws it                      |
+| Construct                                  | Written as                                                                                                                                                                                                                             | Fallback another suite shows                                                  |
+| ------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| Reactions, mentions, assignee on a comment | `livedoc:reactions`, `livedoc:mentions`, `livedoc:assignee` on the comment                                                                                                                                                             | The comment's text                                                            |
+| Document tabs                              | `livedoc:tab-*` on a top-level ODF `text:section`, or a section break with `livedoc:tab-*` in OOXML ([Document tabs](#document-tabs))                                                                                                  | The tabs' writing one after another                                           |
+| Pageless                                   | ODF: config item `livedoc:pageless` (boolean) in a `livedoc:settings` set in `settings.xml`; OOXML: `<livedoc:pageless/>` in `w:settings`                                                                                              | Pages                                                                         |
+| Drawings                                   | `livedoc:drawing` beside the drawing's picture                                                                                                                                                                                         | The picture                                                                   |
+| A suggestion's id and formatting before    | ODF: `livedoc:suggestion`, `livedoc:before` (JSON), `livedoc:paragraph` and `livedoc:block` (a table of contents') on `text:changed-region`; OOXML: `livedoc:id` on each tracked change ([Review](review.md#how-a-suggestion-is-kept)) | The tracked changes, one per range; a format change with no formatting before |
+| A suggested section break (ODF)            | `livedoc:section-change` naming its `text:changed-region`, on the element starting the section ([Suggested blocks](#suggested-blocks))                                                                                                 | A plain section break                                                         |
+| Checklist without strikethrough            | `livedoc:strike-checked="false"` on its list levels (ODF level styles, OOXML `w:lvl`)                                                                                                                                                  | A checklist struck through or not as that suite draws it                      |
 
 Smart chips are left out (fork C3, ruled): a chip in an arriving file is read as its shown text, and its other data is
 kept ([Kept content](#kept-content)).

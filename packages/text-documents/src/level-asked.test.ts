@@ -530,6 +530,61 @@ describe('textDocumentLevelAsked on suggestions', () => {
     );
   });
 
+  // review.md "How a suggestion is kept": a table's row and cell carry an insertion or a deletion whole, a Participant's
+  // own read away with their suggestions rejected.
+  /** The stored body: a plain table of two rows; `change` given the replica's table. */
+  function askedInPlainTable(change: (table: Y.XmlElement) => void) {
+    const doc = new Y.Doc({ gc: false });
+    const { table } = tableOf();
+    doc.getXmlFragment('body').insert(0, [table]);
+    table.insert(1, [(table.get(0) as Y.XmlElement).clone()]);
+    const stored = [Y.encodeStateAsUpdate(doc)];
+    const replica = new Y.Doc({ gc: false });
+    Y.applyUpdate(replica, stored[0]!);
+    const vector = Y.encodeStateVector(replica);
+    change(replica.getXmlFragment('body').get(0) as Y.XmlElement);
+    return textDocumentLevelAsked(stored, Y.encodeStateAsUpdate(replica, vector), ADA.key);
+  }
+  const rowOf = (table: Y.XmlElement, index: number) => table.get(index) as Y.XmlElement;
+
+  it('lets a Participant suggest a row or a column’s cell in, or a row or cell deleted', () => {
+    expect(
+      askedInPlainTable((table) => {
+        const row = rowOf(table, 0).clone();
+        row.setAttribute('insertion', mark('a1') as never);
+        table.insert(1, [row]);
+      }),
+    ).toBe('participate');
+    expect(
+      askedInPlainTable((table) => {
+        const cell = (rowOf(table, 0).get(0) as Y.XmlElement).clone();
+        cell.setAttribute('insertion', mark('a1') as never);
+        rowOf(table, 0).insert(1, [cell]);
+      }),
+    ).toBe('participate');
+    expect(
+      askedInPlainTable((table) => rowOf(table, 1).setAttribute('deletion', mark('a1') as never)),
+    ).toBe('participate');
+    expect(
+      askedInPlainTable((table) =>
+        (rowOf(table, 1).get(0) as Y.XmlElement).setAttribute('deletion', mark('a1') as never),
+      ),
+    ).toBe('participate');
+  });
+
+  it('asks for Editing to take a row or a cell away, or to add one plainly or as another', () => {
+    expect(askedInPlainTable((table) => table.delete(1, 1))).toBe('edit');
+    expect(askedInPlainTable((table) => rowOf(table, 0).delete(0, 1))).toBe('edit');
+    expect(askedInPlainTable((table) => table.insert(1, [rowOf(table, 0).clone()]))).toBe('edit');
+    expect(
+      askedInPlainTable((table) => {
+        const row = rowOf(table, 0).clone();
+        row.setAttribute('insertion', mark('b1', BEN) as never);
+        table.insert(1, [row]);
+      }),
+    ).toBe('edit');
+  });
+
   it('lets a Participant withdraw their own suggestion and suggest a deletion over another’s', () => {
     expect(
       askedOn((_, run) => {

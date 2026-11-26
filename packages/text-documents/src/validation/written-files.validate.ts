@@ -162,3 +162,75 @@ describe('suggested blocks re-saved by LibreOffice', () => {
     expect(regions.filter((id) => !named.has(id))).toEqual([]);
   }, 400_000);
 });
+
+// standard-mapping.md "Suggested blocks": LibreOffice reads LiveDoc's suggested rows and columns as tracked (its flag on
+// the row's or cell's style), so its own .docx of them carries Word's tracked rows and cells, and its re-saved .odt
+// reads back with every row and column still suggested; a suggested table's rows likewise.
+describe('suggested rows and columns through LibreOffice', () => {
+  it('are tracked rows and cells in its .docx and still suggested in its .odt', async () => {
+    const dir = mkdtempSync(join(OUT, 'suggested-rows-'));
+    const file = join(dir, 'suggested-rows.odt');
+    writeFileSync(
+      file,
+      (writeTextDocumentFile(CONSTRUCTS.suggestedRows!('odf'), 'odt') as { bytes: Uint8Array })
+        .bytes,
+    );
+    const blocksFile = join(dir, 'suggested-blocks.odt');
+    writeFileSync(
+      blocksFile,
+      (writeTextDocumentFile(CONSTRUCTS.suggestedBlocks!('odf'), 'odt') as { bytes: Uint8Array })
+        .bytes,
+    );
+    for (const to of ['docx', 'odt'])
+      execFileSync(
+        'soffice',
+        [
+          '--headless',
+          '--norestore',
+          '--convert-to',
+          to,
+          '--outdir',
+          join(dir, to),
+          file,
+          blocksFile,
+        ],
+        { stdio: 'pipe', timeout: 300_000 },
+      );
+    const documentXml = (name: string) =>
+      execFileSync('unzip', ['-p', join(dir, 'docx', name), 'word/document.xml'], {
+        maxBuffer: 64 * 1024 * 1024,
+      }).toString();
+    const rows = documentXml('suggested-rows.docx');
+    expect(rows.match(/<w:trPr>(?:(?!<\/w:trPr>).)*<w:ins /g)).toHaveLength(1);
+    expect(rows.match(/<w:trPr>(?:(?!<\/w:trPr>).)*<w:del /g)).toHaveLength(1);
+    expect(rows.match(/<w:cellIns /g)).toHaveLength(2);
+    expect(rows.match(/<w:cellDel /g)).toHaveLength(2);
+    expect(
+      documentXml('suggested-blocks.docx').match(/<w:trPr>(?:(?!<\/w:trPr>).)*<w:ins /g),
+    ).toHaveLength(2);
+
+    const read = await readTextDocumentFile(readFileSync(join(dir, 'odt', 'suggested-rows.odt')));
+    expect(read.ok).toBe(true);
+    if (!read.ok) return;
+    const tables = read.document.body.filter((b) => b.type === 'table');
+    expect(tables.map((t) => t.rows.map((r) => Object.keys(r.suggested ?? {})[0]))).toEqual([
+      [undefined, 'insertion', 'deletion'],
+      [undefined, undefined],
+      [undefined, undefined],
+    ]);
+    expect(
+      tables
+        .slice(1)
+        .map((t) => t.rows.map((r) => r.cells.map((c) => Object.keys(c.suggested ?? {})[0]))),
+    ).toEqual([
+      [
+        [undefined, 'insertion'],
+        [undefined, 'insertion'],
+      ],
+      [
+        [undefined, 'deletion'],
+        [undefined, 'deletion'],
+      ],
+    ]);
+  }, 400_000);
+});

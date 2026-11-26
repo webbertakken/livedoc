@@ -4,7 +4,7 @@
 import type { Block, Inline, Paragraph } from './blocks';
 import type { ListPlace } from './lists';
 import type { ParagraphProps, TextProps } from './props';
-import { Blocks } from './tables';
+import { Blocks, type Table, type TableRow } from './tables';
 
 /** Who made a suggestion: a file's name for them, or a LiveDoc person with their key and colour. */
 export type FileSuggestionAuthor = {
@@ -49,7 +49,7 @@ export type ParagraphSuggested = {
   readonly format?: FileParagraphFormatChange;
 };
 
-/** A whole block's suggestion: a table, a section break or a table of contents inserted or deleted. */
+/** A whole block's suggestion: a table, a table's row or cell, a section break or a table of contents inserted or deleted. */
 export type BlockSuggested = {
   readonly insertion?: FileSuggestionMark;
   readonly deletion?: FileSuggestionMark;
@@ -152,7 +152,13 @@ export const Suggestions = {
     sameMark(a?.format, b?.format),
   /** Every suggestion mark the blocks hold: whole blocks', and those in table cells, contents' entries and notes. */
   marks: (blocks: readonly Block[]): FileSuggestionMark[] => [
-    ...Blocks.tables(blocks).flatMap((t) => Object.values(t.suggested ?? {})),
+    ...Blocks.tables(blocks).flatMap((t) => [
+      ...Object.values(t.suggested ?? {}),
+      ...t.rows.flatMap((r) => [
+        ...Object.values(r.suggested ?? {}),
+        ...r.cells.flatMap((c) => Object.values(c.suggested ?? {})),
+      ]),
+    ]),
     ...blocks.flatMap((b) =>
       b.type === 'section'
         ? Object.values(b.suggested ?? {})
@@ -194,6 +200,42 @@ export const Suggestions = {
             }
           : b,
     ),
+  /**
+   * A table with each suggested row's and cell's writing absorbed into its own suggestion (`absorbed` with its kind
+   * and mark), then, when it carries none itself and every row is suggested of one kind, that kind's suggested table,
+   * its mark the first row's and its rows' suggestions its own (standard-mapping.md "Suggested blocks").
+   */
+  foldedRows: (table: Table): Table => {
+    const own = (s: Table['suggested'], blocks: readonly Block[]) => {
+      const found = Suggestions.ofBlock(s);
+      return found ? Suggestions.absorbed(blocks, found.kind, [found.mark]) : blocks;
+    };
+    const rows = table.rows.map((row): TableRow => ({
+      ...row,
+      cells: row.cells.map((cell) => ({
+        ...cell,
+        blocks: own(row.suggested, own(cell.suggested, cell.blocks)),
+      })),
+    }));
+    const kinds = rows.map((r) => Suggestions.ofBlock(r.suggested));
+    const kind = kinds[0]?.kind;
+    if (table.suggested || !kind || !kinds.every((k) => k?.kind === kind))
+      return { ...table, rows };
+    return {
+      ...table,
+      rows: rows.map(({ suggested: _, ...row }) => row),
+      suggested: { [kind]: kinds[0]!.mark },
+    };
+  },
+  /** A cell's effective suggestion: its own, else its row's, else its table's; undefined for none. */
+  ofCell: (
+    table: Table,
+    row: TableRow,
+    cell: TableRow['cells'][number],
+  ): { kind: BlockSuggestionKind; mark: FileSuggestionMark } | undefined =>
+    Suggestions.ofBlock(cell.suggested) ??
+    Suggestions.ofBlock(row.suggested) ??
+    Suggestions.ofBlock(table.suggested),
   /**
    * The blocks with `mark` laid under every inline that marks writing as its `kind`, in tables at any depth too, each
    * inline's own mark of that kind kept over it: a suggested block's content as Word writes it (standard-mapping.md

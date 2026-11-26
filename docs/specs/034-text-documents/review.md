@@ -354,8 +354,10 @@ office kinds; this spec says what a text document puts in them.
   - a **paragraph break** is a paragraph whose start carries an insertion (Enter while suggesting), a **join** one
     whose start carries a deletion (the break before it deleted while suggesting), and a **paragraph format**
     suggestion a paragraph carrying its style, list and paragraph formatting from before;
-  - a whole block (a table, a section break, a table of contents) carries an insertion or a deletion; what is
-    inside it carries only its own suggestions, never the block's.
+  - a whole block (a table, a section break, a table of contents), a table's row and a table's cell (a column is
+    its cells) carry an insertion or a deletion; what is inside them carries only its own suggestions, never theirs.
+    Rejecting an inserted row or cell, or accepting a deleted one, takes it away; a table left with no rows goes,
+    as does a row left with no cells.
 - **What each part holds**: its suggestion's id, its author (their adder key, name and colour, as a comment's author:
   [How a comment is kept](#how-a-comment-is-kept)) and when it was made. A suggestion is every part with one id,
   across stretches and paragraphs: one person's adjacent changes share an id, so they read and are accepted as one.
@@ -384,7 +386,7 @@ office kinds; this spec says what a text document puts in them.
   merged (default). A Word move arrives as a deletion where it left and an insertion where it landed (default). A
   file's own "track changes" setting is kept as the file has it, never read as anyone's mode (default). A tracked
   change in a header, footer or note is settled as the file is read, an insertion kept and a deletion dropped, and
-  reported `suggestion-in-story`. A suggested table, section break or table of contents leaves and arrives as each suite writes
+  reported `suggestion-in-story`. A suggested table, row, column, section break or table of contents leaves and arrives as each suite writes
   one ([Suggested blocks](standard-mapping.md#suggested-blocks)); LibreOffice keeps no tracked section break, so an
   `.odt`'s shows there as a plain break.
 - **Search** reads a suggested insertion as the writing it is, and a suggested deletion too, until it is accepted.
