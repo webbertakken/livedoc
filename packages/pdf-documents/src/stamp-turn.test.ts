@@ -51,7 +51,9 @@ describe('a stamp turned', () => {
 
   it('is resized by the box it shows, keeping its turn', () => {
     expect(MarkReshape.box(stamp(90))).toEqual([120, 80, 140, 140]);
-    expect(MarkReshape.reboxed(stamp(90), [120, 80, 150, 140])).toEqual({ rect: [105, 95, 165, 125] });
+    expect(MarkReshape.reboxed(stamp(90), [120, 80, 150, 140])).toEqual({
+      rect: [105, 95, 165, 125],
+    });
   });
 
   it('is reached where it shows', () => {
