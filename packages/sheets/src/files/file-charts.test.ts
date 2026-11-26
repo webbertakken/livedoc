@@ -325,6 +325,7 @@ describe('writeXlsx with charts', () => {
       'xl/charts/chart16.xml',
       'xl/charts/chart17.xml',
       'xl/charts/chart18.xml',
+      'xl/charts/chart19.xml',
       'xl/charts/chart2.xml',
       'xl/charts/chart3.xml',
       'xl/charts/chart4.xml',

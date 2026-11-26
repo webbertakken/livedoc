@@ -50,7 +50,7 @@ describe('chart types (docs/specs/009-elements/pie-chart.md "Chart types")', () 
 
   it('guards its closed sets', () => {
     expect(isChartType('doughnut')).toBe(true);
-    expect(isChartType('radar')).toBe(false);
+    expect(isChartType('bubble')).toBe(false);
     expect(isChartVariant('horizontal')).toBe(true);
     expect(isChartVariant('column')).toBe(false);
   });
@@ -146,7 +146,7 @@ describe('chart types (docs/specs/009-elements/pie-chart.md "Chart types")', () 
   it('validates and normalises the stored variant', () => {
     const pie = { ...createShape('pie-chart', 0, 0), chartVariant: 'doughnut' as const };
     expect(shapeValidationIssue(pie)).toBeNull();
-    expect(shapeValidationIssue({ ...pie, chartVariant: 'radar' })).not.toBeNull();
+    expect(shapeValidationIssue({ ...pie, chartVariant: 'bubble' })).not.toBeNull();
     expect((normaliseElement(pie) as typeof pie).chartVariant).toBe('doughnut');
     const dropped = normaliseElement({ ...pie, chartVariant: 'area' }) as Record<string, unknown>;
     expect(dropped.chartVariant).toBeUndefined();

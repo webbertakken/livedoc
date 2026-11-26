@@ -49,10 +49,10 @@ import { textAdvanceEm } from './text-advance';
 import { EXPORT_DEFAULT_FONT } from './svg-render-labels';
 import { r2, xmlEscape } from './svg-render-primitives';
 
-type Chart = BoxedElement & { type: 'shape' };
+export type Chart = BoxedElement & { type: 'shape' };
 
 const AXIS = '#cbd5e1';
-const AXIS_FAINT = '#e2e8f0';
+export const AXIS_FAINT = '#e2e8f0';
 
 // A key row's swatch at (x, y-centre): a square, or (a scatter series drawn as a line) a line through a dot.
 function svgSwatch(
@@ -73,7 +73,7 @@ function svgSwatch(
 // left for it. Mirrors ChartLegend's own gates, so a legend too small to read
 // is omitted here exactly as it is on the canvas.
 // The chart's title and axis titles (chart-titles.ts), where chartFrame laid them out.
-function svgChartTitles(
+export function svgChartTitles(
   el: Chart,
   titles: readonly ChartTitleText[],
   textColor: string,
@@ -90,7 +90,7 @@ function svgChartTitles(
     .join('');
 }
 
-function svgChartLegend(
+export function svgChartLegend(
   el: Chart,
   items: readonly ChartKeyItem[],
   colorAt: (i: number, d: { color?: string }) => string,
@@ -154,7 +154,7 @@ function svgChartLegend(
 }
 
 // Show Values (docs/specs/009-elements/pie-chart.md): each number as text, a wedge's in the ink that reads on it.
-function svgValueLabels(
+export function svgValueLabels(
   labels: readonly ChartValueLabel[],
   textColor: string,
   // The colour of the mark a label sits on; only a label on a mark (`onMark`) asks.

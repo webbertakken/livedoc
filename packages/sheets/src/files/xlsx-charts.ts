@@ -74,6 +74,7 @@ function seriesLook(chart: HeldFileChart, s: FileChartSeries): string {
     case 'doughnut':
       return '';
     case 'line':
+    case 'radar':
       return fill ? `<c:spPr><a:ln w="28575">${fill}</a:ln></c:spPr>` : '';
     case 'scatter':
       return s.line
@@ -169,6 +170,9 @@ function groupXml(
       return `<c:lineChart>${val('grouping', 'standard')}${val('varyColors', 0)}${series}${labels}${val('marker', 1)}${axisIds(ids)}</c:lineChart>`;
     case 'area':
       return `<c:areaChart>${val('grouping', chart.stack ? GROUPING[chart.stack] : 'standard')}${val('varyColors', 0)}${series}${labels}${axisIds(ids)}</c:areaChart>`;
+    case 'radar':
+      // Lines with a marker on each point, on a category and a value axis (D292).
+      return `<c:radarChart>${val('radarStyle', 'marker')}${val('varyColors', 0)}${series}${labels}${axisIds(ids)}</c:radarChart>`;
     case 'scatter':
       return `<c:scatterChart>${val('scatterStyle', 'lineMarker')}${val('varyColors', 0)}${series}${labels}${axisIds(ids)}</c:scatterChart>`;
     case 'pie':

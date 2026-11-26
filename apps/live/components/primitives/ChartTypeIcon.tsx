@@ -55,6 +55,12 @@ const MARKS: Record<ChartType, React.ReactNode> = {
       <path d="M12 3v5M21 12h-5" />
     </>
   ),
+  radar: (
+    <>
+      <path d="M12 3l8.5 6.2-3.3 10H6.8L3.5 9.2Z" />
+      <path d="M12 8l4 3.2-1.6 4.6H9.6L8 11.2Z" fill="currentColor" fillOpacity={0.25} />
+    </>
+  ),
   combo: (
     <>
       <path d={AXES} />

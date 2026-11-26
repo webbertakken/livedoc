@@ -741,6 +741,7 @@ export * from './chart-stack';
 export * from './chart-smooth';
 export * from './chart-combo';
 export * from './chart-stepped';
+export * from './chart-radar';
 export * from './chart-axis';
 export * from './chart-values';
 export * from './chart-source';

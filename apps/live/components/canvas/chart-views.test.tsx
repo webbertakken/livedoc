@@ -147,6 +147,31 @@ describe('chart views', () => {
     expect(container.textContent).toContain('Q2 · Revenue: 50');
   });
 
+  it('draws a radar chart round a web, its spoke names, values, and reads a hovered point (Radar, D291)', () => {
+    const { container } = render(
+      <LineChartView
+        element={el('line-chart', {
+          chartVariant: 'radar',
+          chartAxis: true,
+          chartValues: true,
+          lineCategories: ['Speed', 'Power', 'Range'],
+          lineSeries: [{ name: 'Model', values: [3, null, 5], color: '#aa3300' }],
+        })}
+        textColor="#000"
+      />,
+    );
+    // Two points either side of a gap: one open stretch, no fill.
+    const line = container.querySelector('path[stroke="#aa3300"]')!;
+    expect(line.getAttribute('d')).not.toContain('Z');
+    const points = container.querySelectorAll('circle[fill="#aa3300"]');
+    expect(points).toHaveLength(2);
+    const texts = [...container.querySelectorAll('text')].map((t) => t.textContent);
+    for (const t of ['Speed', 'Power', 'Range', '3', '5']) expect(texts).toContain(t);
+    expect(container.querySelectorAll('line').length).toBeGreaterThanOrEqual(3);
+    fireEvent.pointerEnter(points[1]!);
+    expect(container.textContent).toContain('Range · Model: 5');
+  });
+
   it('draws a smooth line chart’s lines as curves (Smooth Line, D284)', () => {
     const { container } = render(
       <LineChartView element={el('line-chart', { chartSmooth: true })} textColor="#000" />,

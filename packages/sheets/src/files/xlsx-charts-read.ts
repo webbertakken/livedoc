@@ -188,6 +188,9 @@ function groupType(group: XmlElement): { type: SheetChartType; stack?: SheetChar
       return { type: 'line' };
     case 'scatterChart':
       return /smooth/i.test(valOf(c(group, 'scatterStyle')) ?? '') ? null : { type: 'scatter' };
+    case 'radarChart':
+      // A filled radar is not built (D292).
+      return valOf(c(group, 'radarStyle')) === 'filled' ? null : { type: 'radar' };
     case 'pieChart':
       return { type: 'pie' };
     case 'doughnutChart':
@@ -221,7 +224,8 @@ function lookOf(type: SheetChartType, ser: XmlElement): Pick<FileChartSeries, 'c
     case 'pie':
     case 'doughnut':
       return {};
-    case 'line': {
+    case 'line':
+    case 'radar': {
       const color = colour(ln);
       return color ? { color } : {};
     }

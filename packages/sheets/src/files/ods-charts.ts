@@ -34,6 +34,7 @@ const CHART_CLASS: Record<HeldChartType, string> = {
   scatter: 'chart:scatter',
   pie: 'chart:circle',
   doughnut: 'chart:ring',
+  radar: 'chart:radar',
   // A Combo chart is a bar chart whose series name their own classes (D287).
   combo: 'chart:bar',
 };
@@ -96,6 +97,8 @@ function seriesStyle(chart: HeldFileChart, s: FileChartSeries, name: string): st
   // A Combo series looks as its own type does.
   const type = chart.type === 'combo' ? (s.type ?? 'column') : chart.type;
   if (type === 'line') chartProps.push('chart:symbol-type="none"');
+  // A radar's points carry markers (D292).
+  if (type === 'radar') chartProps.push('chart:symbol-type="automatic"');
   if (chart.type === 'scatter') {
     chartProps.push('chart:symbol-type="automatic"');
     if (!s.line) graphic.push('draw:stroke="none"');

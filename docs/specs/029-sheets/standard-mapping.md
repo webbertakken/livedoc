@@ -325,7 +325,7 @@ each suite writes its own, so LibreOffice, Excel and Google Sheets open them as 
   (`'Models'!$B$2:$B$40`, `Models.B2:Models.B40`), so the chart reads them live in every suite; an empty cell is a gap
   (XLSX `dispBlanksAs="gap"`). A chart with no data is written with no series.
 - **Look**: its type (Column and Bar as clustered bars, Line, Area, Scatter as markers, Pie, Doughnut with a half
-  hole), its stacking on a Column, Bar or Area chart (XLSX `grouping` `stacked` or `percentStacked`, bars with
+  hole, Radar as lines with markers: XLSX `c:radarChart` of `radarStyle` `marker`, ODF `chart:radar`) (default, D292), its stacking on a Column, Bar or Area chart (XLSX `grouping` `stacked` or `percentStacked`, bars with
   `overlap` 100; ODF `chart:stacked` or `chart:percentage` on the plot area) (default, D283), a Line chart's smoothing (XLSX `c:smooth` on
   each series; ODF `chart:interpolation="cubic-spline"` on the plot area) (default, D285), a Combo chart's series
   types (XLSX: one plot area holding a clustered `c:barChart` of its column series, a `c:lineChart` of its line
@@ -591,6 +591,9 @@ The code cites each by its id.
   reading one block of its own sheet and naming no part of its own; else the drawing is kept whole (default).
 - **D276** A read chart unchanged: its read sum (type, titles, legend, values, axis, alt, place, size, cells by
   position) equals the written one's; its kept chart part is then written in its place under a new name (default).
+- **D292** A Radar chart in a file: XLSX `c:radarChart` with `radarStyle` `marker` on a category and a value axis, ODF
+  `chart:class="chart:radar"`; read back from either, a filled radar (`filled`, `chart:filled-radar`) staying kept
+  (default).
 - **D290** A chart type no format holds: written as the nearest that does (Stepped Area as Area, a stepped area
   series as an area one), its original kept in the chart's own document (XLSX a `c:ext` of LiveDoc's uri, ODF the
   object's `meta:user-defined` `LiveDoc chart`) as JSON with the written chart's sum, restored on reading only while

@@ -213,6 +213,26 @@ describe('chart elements', () => {
     expect(mixed!.lineSeries!.map((s) => s.type)).toEqual([undefined, 'stepped-area']);
   });
 
+  it('draw a radar chart, which takes no right-hand axis (D291)', () => {
+    const { wb, sheet } = book();
+    const built = buildChartChange(wb, sheet.id, { op: 'chart', type: 'radar', range: 'A1:B3' });
+    if (!built.ok) throw new Error(built.message);
+    const [el] = sheetChartElements(
+      wb,
+      { x: 0, y: 0, width: 960, height: 560 },
+      sheet.id,
+      built.charts,
+    );
+    expect(el).toMatchObject({ shape: 'line-chart', chartVariant: 'radar' });
+    const refused = buildChartChange(wb, sheet.id, {
+      op: 'chart',
+      type: 'radar',
+      range: 'A1:B3',
+      rightAxis: ['B'],
+    });
+    expect(refused.ok).toBe(false);
+  });
+
   // sheet-store.md "Built for agents in a spreadsheet": the title options draw on a Plan chart too.
   it('carry the titles, the legend, the values, the axis and the stacking an agent gives', () => {
     const { wb, sheet } = book();

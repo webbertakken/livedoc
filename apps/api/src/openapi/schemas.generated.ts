@@ -2863,6 +2863,7 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
       "stepped-area",
       "scatter",
       "doughnut",
+      "radar",
       "combo"
     ],
     "type": "string"
@@ -15324,6 +15325,7 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
       "scatter",
       "pie",
       "doughnut",
+      "radar",
       "combo"
     ],
     "type": "string"

@@ -98,7 +98,7 @@ ChartAxis`); a series on the right shows "(right)" after its name in the Data su
 
 ## Chart types
 
-A **chart type** is how a chart draws its data, named as Google Sheets names it. Nine ship; each is a chart kind
+A **chart type** is how a chart draws its data, named as Google Sheets names it. Ten ship; each is a chart kind
 (the stored `shape`) and, for all but the first of its kind, a `chartVariant`:
 
 A chart is **named by its type** wherever the editor names an element: the selection badge says "Selected Column
@@ -113,6 +113,7 @@ Chart" and a screen reader hears "Column chart", as the palette's tile says, nev
 | Area         | `line-chart`   | `area`         | Line's lines, each with the area between it and zero filled in its colour at 25%, overlapping |
 | Scatter      | `line-chart`   | `scatter`      | A point per category per series, no lines, at x = the category read as a number (below)       |
 | Stepped Area | `line-chart`   | `stepped-area` | Each series a flat step across each category's slot, filled to zero as Area's (below)         |
+| Radar        | `line-chart`   | `radar`        | Each series a closed line through its points on spokes, one spoke per category (below)        |
 | Combo        | `line-chart`   | `combo`        | Each series as columns, a line, an area or a stepped area over one set of categories (below)  |
 | Pie          | `pie-chart`    | (none)         | Wedges clockwise from twelve o'clock                                                          |
 | Doughnut     | `pie-chart`    | `doughnut`     | Pie's wedges with the middle open: a ring whose hole is 55% of its radius                     |
@@ -167,6 +168,15 @@ Chart" and a screen reader hears "Column chart", as the palette's tile says, nev
     running total before it and after it, flat across each slot (Stacked Stepped Area, 100% Stacked Stepped Area).
   - Unstacked, a series on the right axis draws on a second scale of its own, as an area chart's does; Smooth Line is
     ignored and kept (default, D289).
+- **Radar** (Google Sheets' Radar chart): a line chart's data drawn around a centre.
+  - Each category is a spoke, evenly spaced clockwise from twelve o'clock, its name past the spoke's end. A value
+    sits on its category's spoke at its distance from the centre, the centre the range's least value (zero, or below
+    it when a value is), the spokes' ends its greatest; with Show Axis the range runs to round ticks.
+  - Each series is a closed line through its points, in its colour, a marker on each point, no fill. No value is a
+    gap: no point there, and the line breaks on either side of it; a value with no neighbour is its marker alone.
+  - A faint web is always drawn: the spokes and a ring through their ends; with Show Axis a ring at each tick, its
+    value on the twelve o'clock spoke. The readout and Show Values sit at the points.
+  - Stacking, Smooth Line and the right-hand axis are ignored and kept (default, D291).
 - **Combo** (Google Sheets' Combo chart): a line chart's data (`lineSeries` over `lineCategories`), each series drawn
   as its own **series type**: Column, Line, Area or Stepped Area (`LineSeries.type`). A series with no type of its own takes the
   default: the first half of the series, rounded up, are columns and the rest lines, so two series are a column and a
@@ -192,6 +202,7 @@ Chart" and a screen reader hears "Column chart", as the palette's tile says, nev
   - **Area**: the area breaks with the line; each run fills down to zero on its own.
   - **Stepped Area**: no step in its slot; each run of steps fills down to zero on its own.
   - **Scatter**: no point for that series at that x.
+  - **Radar**: no point on that spoke; the line breaks on either side of it.
   - **Column** and **Bar**: no column (bar) in its slot; the slot and a column's name under the plot stay.
   - **Pie** and **Doughnut**: no wedge; the others share the whole; the category stays in the legend.
   - Every type: no value draws no value label (Show Values) and no readout (there is no mark to hover), and
@@ -211,7 +222,7 @@ Chart" and a screen reader hears "Column chart", as the palette's tile says, nev
   sit squeezed at its top over an empty band. Values all equal widen by half a unit either way. Line, Area, Column
   and Bar keep zero in range: a line's rise and an area or bar's size read against it.
 - **The Chart Type section** opens first in the chart's Tools flyout, closed until opened (as every section is): a
-  grid of nine tiles, each the type's glyph over its name, the chart's own type pressed. Hovering a tile previews
+  grid of ten tiles, each the type's glyph over its name, the chart's own type pressed. Hovering a tile previews
   nothing; picking one changes the chart, one undo step, `Element · Changed · ChartType`.
 - **Changing type** keeps the chart's size, style, palette, legend and animation. Within a kind it only sets
   `chartVariant`. Across kinds it moves the data: a pie or bar chart's slices become one series named **Series 1**
@@ -365,7 +376,7 @@ paints no box; `LegendView` draws the card from the element's fill + stroke, and
 
 ## Element tour
 
-The **Chart tour** is on the actions group's **Start Chart Tour** button while a data chart (any of the nine chart types) is selected, once its kind is opted in to (Settings › Tours › Show Me), for an Editor on an unlocked element, and walks through it on the element
+The **Chart tour** is on the actions group's **Start Chart Tour** button while a data chart (any of the ten chart types) is selected, once its kind is opted in to (Settings › Tours › Show Me), for an Editor on an unlocked element, and walks through it on the element
 itself ([Element tours](../007-editor/element-tours.md) "The Chart tour").
 
 ## Defaults
@@ -390,6 +401,9 @@ The code cites each by its id.
 - **D289** Stepped Area: steps span their category's slot, risers on the shared edges, no markers, filled to zero at
   25%; stacked as Stacked Area; unstacked, the right axis as an area's; a Combo's stepped area series likewise
   (default).
+- **D291** Radar: spokes clockwise from twelve o'clock, the centre the range's least value (zero unless a value is
+  below it), closed lines with markers and no fill, a gap breaking the line on both sides, a web of spokes and an outer
+  ring always, rings and tick values with Show Axis; stacking, smoothing and the right axis ignored (default).
 - **D282** Stacking: a column's values above and below zero in stacks of their own, an area's as a running total;
   100% as each value's size over the sum of its category's sizes; no value zero in the stack and no mark; one series
   unstacked; values printed mid-segment when they fit; other types ignore and keep it (default).
