@@ -347,6 +347,10 @@ export const tabRender = defineVerb({
   input: z.object({
     doc: z.string().describe('A name, id prefix or LiveDoc URL'),
     tab: z.string().optional().describe('A tab name or id prefix; the first tab when omitted'),
+    range: z
+      .string()
+      .optional()
+      .describe("A spreadsheet's sheet tab: only this A1 range, from its top-left"),
     ...pictureFlags,
   }),
   output: pictureOutput,
@@ -355,7 +359,7 @@ export const tabRender = defineVerb({
     positionals: ['doc'],
     examples: [
       'livedoc tab render "Shop" --png shop.png',
-      'livedoc tab render 3f9c --tab Flow --svg flow.svg',
+      'livedoc tab render "Budget" --tab Costs --range A1:D20 --png costs.png',
     ],
     prints: '<path>  <width>×<height> · <n> KB',
   },

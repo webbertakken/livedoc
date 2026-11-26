@@ -29,7 +29,6 @@ import {
   UNDERLINE_SELECTION,
 } from './pdf-context-menu';
 import {
-  TOOL_DRAWING,
   TOOL_HIGHLIGHT,
   TOOL_SELECT,
   TOOL_SQUIGGLY,
@@ -47,6 +46,7 @@ import {
   type HeldTextMark,
 } from './pdf-text-mark-pick';
 import { DRAWING_WIDTH_PT } from './pdf-drawing';
+import { DRAWING_CONTROL, isDrawingTool, setDrawingPick } from './pdf-drawing-pick';
 import { setMarkColour, useMarkLooks } from './pdf-mark-looks';
 import { SHAPE_NAMES, SHAPE_WIDTH_PT } from './pdf-shape';
 import { isPolyTool, isShapeTool, setShapePick, SHAPE_CONTROL } from './pdf-shape-pick';
@@ -56,6 +56,7 @@ import { TEXT_MARK_TOOLS, TOOL_COLOUR } from './pdf-toolbar';
 import type { PdfDocumentOpen } from './usePdfDocument';
 import { usePdfDrawing } from './usePdfDrawing';
 import type { PdfPageShaping } from './usePdfPageShape';
+import { usePdfErase } from './usePdfErase';
 import { usePdfPolyTool } from './usePdfPolyTool';
 import { usePdfShapes } from './usePdfShapes';
 import { usePdfToolLine } from './usePdfToolLine';
@@ -65,7 +66,7 @@ import { usePdfTyping } from './usePdfTyping';
 import type { PdfTextSelected } from './usePdfTextSelection';
 
 /** What a page does with a press or a drag: select text, mark it with a kind, draw, or drag a line or shape. */
-export type PdfPageTool = 'select' | MarkKind;
+export type PdfPageTool = 'select' | MarkKind | 'erase';
 
 /** What a page draws a stroke with, while the Drawing tool is in hand. */
 export type PdfPageInk = {
@@ -122,6 +123,7 @@ const heldOf = (item: string | null): HeldTextMark | null =>
 const toolName = (tool: PdfPageTool): string => {
   if (tool === 'select') return 'Select';
   if (tool === 'drawing') return 'Drawing';
+  if (tool === 'erase') return 'Erase';
   if (tool === 'stamp') return 'Stamp';
   if (isShapeTool(tool)) return SHAPE_NAMES[tool];
   if (isTypedTool(tool)) return TYPED_NAMES[tool];
@@ -219,6 +221,7 @@ export function usePdfMarkTools({
       letGoPoly();
       track('Pdf', 'Selected', `Tool.${toolName(next)}`);
       if (isShapeTool(next)) setShapePick(next);
+      else if (isDrawingTool(next)) setDrawingPick(next);
       else if (isTypedTool(next)) setTypedPick(next);
       else if (isHeldTextMark(next)) setTextMarkPick(next);
     },
@@ -273,6 +276,8 @@ export function usePdfMarkTools({
   const offered = { offered: ready !== null && marking, inHand, pickTool };
   const shapeTools = usePdfToolControl(SHAPE_CONTROL, offered);
   const typedTools = usePdfToolControl(TYPED_CONTROL, offered);
+  const drawingTools = usePdfToolControl(DRAWING_CONTROL, offered);
+  const erasing = usePdfErase({ ready, erasing: inHand === 'erase' });
   const stampTool = usePdfStampTool({ ready, author, authorKey, ...offered, onProblem });
 
   /** What a drag across a page's text makes with the text tool in hand. */
@@ -307,7 +312,7 @@ export function usePdfMarkTools({
       ...shapeTools.actions,
       ...typedTools.actions,
       ...stampTool.actions,
-      [TOOL_DRAWING]: { run: () => pickTool('drawing'), checked: inHand === 'drawing' },
+      ...drawingTools.actions,
       // The toolbar's Highlight: the held tool last used; pressed again, back to Select.
       [TEXT_MARK_TOOLS]: {
         run: () => (inHand === pick && !selected ? pickTool('select') : take(pick)),
@@ -325,6 +330,7 @@ export function usePdfMarkTools({
     take,
     shapeTools.actions,
     typedTools.actions,
+    drawingTools.actions,
     stampTool.actions,
   ]);
 
@@ -348,10 +354,20 @@ export function usePdfMarkTools({
             },
             ...shapeTools.choices,
             ...typedTools.choices,
+            ...drawingTools.choices,
             ...stampTool.choices,
           }
         : {},
-    [ready, marking, pick, actions, shapeTools.choices, typedTools.choices, stampTool.choices],
+    [
+      ready,
+      marking,
+      pick,
+      actions,
+      shapeTools.choices,
+      typedTools.choices,
+      drawingTools.choices,
+      stampTool.choices,
+    ],
   );
 
   // "A tool's colour": the one colour picker, for the mark tool in hand; with Select in hand there is none, nor with
@@ -359,7 +375,7 @@ export function usePdfMarkTools({
   const line = usePdfToolLine({ inHand, looks, focusPages });
   const colours = useMemo<OfficeColours>(
     (): OfficeColours =>
-      inHand === 'select' || inHand === 'stamp'
+      inHand === 'select' || inHand === 'stamp' || inHand === 'erase'
         ? {}
         : {
             ...line.colours,
@@ -406,6 +422,7 @@ export function usePdfMarkTools({
     shaping,
     typing: typed.typing,
     stamping: stampTool.stamping,
+    erasing,
     actions,
     // The tool in hand's line (marks.md "A tool's line"), over the selected marks' restyle of the same items.
     lineActions: line.actions,

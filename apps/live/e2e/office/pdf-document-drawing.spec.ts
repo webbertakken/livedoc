@@ -81,3 +81,64 @@ test('strokes drawn on a page are Drawings, joined in a run, undone a stroke at 
   execFileSync('qpdf', ['--check', file], { stdio: 'pipe' });
   expectNoPageErrors(pageErrors);
 });
+
+/** A straight drag across page one, from and to points given as fractions of its box. */
+async function drag(page: Page, first: Locator, from: [number, number], to: [number, number]) {
+  const box = (await first.boundingBox())!;
+  const point = ([x, y]: [number, number]) =>
+    [box.x + box.width * x, box.y + box.height * y] as const;
+  await page.mouse.move(...point(from));
+  await page.mouse.down();
+  await page.mouse.move(...point(to), { steps: 8 });
+  await page.mouse.up();
+}
+
+// marks.md "Changing a mark": Erase rubs out the strokes it passes over, one step of undo; a Drawing left with none is
+// deleted; reading-surface.md "The toolbar": the Drawing control holds Drawing and Erase.
+test('Erase rubs out the strokes of a Drawing it passes over, a step of undo at a time', async ({
+  page,
+  pageErrors,
+}) => {
+  test.setTimeout(120_000);
+  await page.setViewportSize({ width: 1280, height: 860 });
+  await page.goto('/explorer/all');
+  await expect(page.getByRole('heading', { name: 'My Documents' }).first()).toBeVisible();
+  await dropPdf(page, 'Erase.pdf', await textPdf(2));
+  await page.waitForURL(/\/document\//, { timeout: 30_000 });
+  const first = await pageOneDrawn(page);
+  const drawings = page.locator(`${PAGE_ONE} [data-pdf-mark-kind="drawing"]`);
+  const tool = page.locator('[data-pdf-tool]');
+
+  // One Drawing of two strokes.
+  await page.locator('[data-pdf-pages]').focus();
+  await page.keyboard.press('d');
+  await stroke(page, first, [0.2, 0.25], [0.4, 0.28]);
+  await stroke(page, first, [0.2, 0.32], [0.4, 0.35]);
+  await expect(drawings.locator('polyline')).toHaveCount(2);
+
+  // Insert > Erase: the Drawing control shows it; a drag across the first stroke rubs it out alone.
+  await (await officeMenuItem(page, ['Insert', 'Erase'])).click();
+  await expect(tool).toHaveAttribute('data-pdf-tool', 'erase');
+  await expect(page.getByRole('button', { name: 'Erase', exact: true })).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  );
+  await drag(page, first, [0.3, 0.2], [0.3, 0.29]);
+  await expect(drawings.locator('polyline')).toHaveCount(1);
+  await page.screenshot({ path: test.info().outputPath('pdf-erase.png') });
+
+  // Undo brings it back; a drag across both deletes the Drawing; undo again brings both.
+  await page.keyboard.press('ControlOrMeta+z');
+  await expect(drawings.locator('polyline')).toHaveCount(2);
+  await drag(page, first, [0.3, 0.2], [0.3, 0.38]);
+  await expect(drawings).toHaveCount(0);
+  await page.keyboard.press('ControlOrMeta+z');
+  await expect(drawings.locator('polyline')).toHaveCount(2);
+
+  // D takes the Drawing again; the control shows Drawing.
+  await page.locator('[data-pdf-pages]').focus();
+  await page.keyboard.press('d');
+  await expect(tool).toHaveAttribute('data-pdf-tool', 'drawing');
+  await expect(page.getByRole('button', { name: 'Drawing', exact: true })).toBeVisible();
+  expectNoPageErrors(pageErrors);
+});

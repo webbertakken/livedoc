@@ -2,7 +2,8 @@
 
 **Status: specified; a first slice is built.** Built: the four text marks (Highlight, Underline, Strikethrough,
 Squiggly underline), made with the tool in hand by dragging across a line's text or from a text selection; the
-Drawing, made by freehand strokes; the Line, Arrow, Rectangle and Ellipse, made by a drag; the Text and Callout,
+Drawing, made by freehand strokes, and Erase; the Line, Arrow, Rectangle and Ellipse, made by a drag; the Polygon,
+Cloud and Connected lines, made a corner a press; the Text and Callout,
 typed onto the page; and the standard and dynamic stamps, placed by a press; each live in the document's changes once made, drawn over the page, written into the file as
 standard annotations under their own ids and read back by them; each tool's colour, chosen from the one colour picker
 and remembered; and the engine reads every mark a file holds, of any kind, as the file says it; a stroke shown to others as it is
@@ -246,7 +247,10 @@ written into the file as a standard annotation, so any reader shows it. The rese
   Align text's Left is checked for it where every paragraph reads left to right, Right where every one reads right to
   left, and none where they differ `(default)`.
 - Each restyle is one step of undo, and leaves the tool's remembered look as it was `(default)`.
-- **Rotate**: stamps, Text and shapes turn by a handle, snapping at 15°.
+- **Rotate**: stamps, Text and shapes turn by a handle, snapping at 15°; a stamp also turns a quarter at a time,
+  written as the stamp's `Rotate` and read back exactly. The quarter turns are built first; the free handle is built
+  with Text and shapes, after the stamp work, and its file form follows how Acrobat itself writes a stamp turned by
+  any angle before any entry of LiveDoc's own (Director, 2026-11-26).
 - **Arrange**: bring forward, send backward, to front, to back, among the marks of its page.
 - **Group**: several selected marks become one that moves and is answered as one; **Ungroup** undoes it.
   - Format > Group, with two or more marks selected, gives each the same new **group** (a fresh id), one step of
@@ -287,6 +291,12 @@ written into the file as a standard annotation, so any reader shows it. The rese
 - **A Note's glyph** is one of the standard's: comment (default), note, help, key, insert, paragraph, new paragraph.
 - **Erase** (on the Drawing control) rubs out the strokes of a Drawing it passes over, whole strokes at a time; a
   Drawing with no strokes left is deleted.
+  - Erase is a tool in hand, dragged by a mouse, a pen or one finger; a stroke is passed over where the drag comes
+    within `PDF_ERASER_REACH_PX` of its line, half its width added `(default)`.
+  - It reaches only the Drawings this session may change (Share roles); the file's own Drawings are taken as
+    LiveDoc's as any change takes them `(default)`.
+  - A stroke of LiveDoc's passed over disappears at once, a file's own once let go; letting go rubs them all out as
+    one change, one step of undo, and a cancelled drag rubs out none `(default)`.
 
 ## Stamps
 
@@ -486,6 +496,7 @@ question mark. The research is [Every script in a mark's words](../../research/p
 | `PDF_MARK_TEXT_MAX_CHARS`   | 10,000              | `(default)` A Text mark's or a note's words; longer belongs in a document                       |
 | `PDF_DRAWING_MAX_POINTS`    | 20,000              | `(default)` One Drawing; more strokes start a new mark                                          |
 | `PDF_DRAWING_JOIN_MS`       | 1,000               | `(default)` Strokes made closer in time are one Drawing; safe range 300 to 3,000                |
+| `PDF_ERASER_REACH_PX`       | 8                   | `(default)` Screen pixels from a stroke's line that Erase still rubs it out; safe range 4 to 16 |
 | `PDF_DRAWING_STEP_PT`       | 0.5                 | `(default)` A stroke's points closer than this, in points, are one; safe range 0.25 to 2        |
 | `PDF_SHAPE_MIN_PT`          | 2                   | `(default)` A drag spanning less, in points, makes no line or shape; safe range 1 to 6          |
 | `PDF_POLYGON_MAX_CORNERS`   | 1,000               | `(default)` Corners of one Polygon, Cloud or Connected lines; the last press past it ends it    |
@@ -546,14 +557,15 @@ Gated on the session's `can` (`pdfReviews`), and checked by the room.
 
 ## Telemetry and observability
 
-- `Pdf · Added · Mark.<Kind>`, `Pdf · Changed · Mark.<Moved|Resized|Restyled|Grouped|Ungrouped|Locked>`,
+- `Pdf · Added · Mark.<Kind>`, `Pdf · Changed · Mark.<Moved|Resized|Restyled|Grouped|Ungrouped|Locked|Erased>`,
   `Pdf · Deleted · Mark.<Kind>`, `Pdf · Added · Stamp.<Standard|Dynamic|Custom>`,
   `Pdf · Created · CustomStamp`, `Pdf · Changed · ToolColour` (a tool's colour chosen or reset), `Pdf · Changed · ToolLine` (a tool's line
   width, line style or fill chosen). A stamp placed is
   counted as `Stamp.<…>` alone, never also as `Mark.Stamp`; the tool taken in hand is `Tool.Stamp`. Never a mark's
   words, a stamp's name or a file's name.
 - A move is counted once a drag or a key press, `Mark.Moved`; a resize the same, `Mark.Resized`; a restyle once a
-  pick or a choice, `Mark.Restyled`; a deletion once a mark, `Mark.<Kind>` of its kind.
+  pick or a choice, `Mark.Restyled`; a deletion once a mark, `Mark.<Kind>` of its kind; an erase once a drag that rubs out any stroke, `Mark.Erased`, and
+  the tool `Tool.Erase`.
 - Fingerprints: `[pdf] mark-added kind=<kind>`, `[pdf] mark-refused name=<name>`,
   `[pdf] marks-moved count=<n>` (a drag or a key press), `[pdf] marks-boxed count=<n>` (a box drawn from empty space), `[pdf] mark-resized kind=<kind>`,
   `[pdf] marks-restyled count=<n> look=<colour|opacity|width|style|fill|end|size|align|font>` (a pick or a choice),
@@ -563,7 +575,7 @@ Gated on the session's `can` (`pdfReviews`), and checked by the room.
   `[pdf] marks-hidden count=<n>` (the file's own marks the pages are drawn without, each time they change),
   `[pdf] marks-hidden-failed reason=<reason>` (the engine was not told), `[pdf] poly-ended kind=<kind> corners=<n>`
   (a Polygon, a Cloud or Connected lines ended, before it is made), `[pdf] poly-let-go kind=<kind>` (one let go by
-  Escape).
+  Escape), `[pdf] strokes-erased strokes=<n> marks=<n> deleted=<n>` (a drag of Erase let go that rubbed out any).
 
 ## Errors
 

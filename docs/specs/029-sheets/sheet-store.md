@@ -417,6 +417,10 @@ tells them.
 - **`livedoc spreadsheet download <doc>`** writes the spreadsheet's file in its own format, or `--format` `ods`, `fods`,
   `xlsx`, `csv` or `tsv` (the sheet `--sheet` names, the first by default), to `--to` or, without it, under the name
   the api gives it in the working folder (D272). It carries every chart the file's standard holds.
+- **Previews**: a spreadsheet's sheet tab draws as its sheet laid out as a Plan Sheet tab is for its image: its cells
+  from A1 to the last filled cell and every chart over them, or a `range` from its top-left, within 4,000 px a side
+  (D273). `GET .../tabs/:tabId/render.svg?range=` answers it, `livedoc tab render --range` writes it as PNG or SVG,
+  and `read_document` with `image` (and the cells view's `range`) attaches it.
 - **`list_sheets` in a spreadsheet** lists the sheets in tab order, each with whether it is hidden and how many
   charts it holds.
 
@@ -455,4 +459,6 @@ The code cites each by its id.
   them; `check` lists them without converting (default).
 - **D272** Where `spreadsheet download` writes without `--to`: the file name the api answers (`Content-Disposition`),
   in the working folder, replacing a file of that name (default).
+- **D273** A range's preview: its rows and columns from its top-left, labelled as the sheet labels them, no frozen
+  panes; a chart drawn only when its top-left cell is in the range (default).
 - **D116** Kept content in a `.livedoc` file: Not carried (default).

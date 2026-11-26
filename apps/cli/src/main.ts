@@ -155,7 +155,11 @@ async function runOnline(
   };
   if (verb.id === 'tab.render') {
     const { renderTab } = await import('./commands/render');
-    return renderTab(io, ctx, input as { doc: string; tab?: string; png?: string; svg?: string });
+    return renderTab(
+      io,
+      ctx,
+      input as { doc: string; tab?: string; range?: string; png?: string; svg?: string },
+    );
   }
   if (verb.id === 'export') return exportAll(io, ctx, profile.host, input as ExportInput);
   if (verb.id === 'spreadsheet.download') {

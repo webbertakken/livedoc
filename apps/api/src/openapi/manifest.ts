@@ -695,12 +695,19 @@ export const ROUTE_MANIFEST: RouteSpec[] = [
     segment: 'documents',
     tag: 'Documents',
     summary:
-      'One tab drawn by the shared renderer (images inlined when the host stores them). Read-gated like the tab; never cached.',
+      "One tab drawn by the shared renderer (images inlined when the host stores them); a spreadsheet's sheet tab draws its sheet and charts, from A1 or a range's top-left. 400 invalid_value for a range it cannot read or on a tab that is no spreadsheet's. Read-gated like the tab; never cached.",
     auth: 'guest-or-session',
     tokenUsable: true,
+    query: [
+      {
+        name: 'range',
+        required: false,
+        description: "A spreadsheet's sheet tab: only this A1 cell or range.",
+      },
+    ],
     responseSchema: { type: 'string' },
     responseMediaType: 'image/svg+xml',
-    statuses: [200, 401, 403, 404, 410],
+    statuses: [200, 400, 401, 403, 404, 410],
   },
   {
     method: 'PUT',
