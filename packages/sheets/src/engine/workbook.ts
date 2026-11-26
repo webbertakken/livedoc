@@ -8,6 +8,7 @@ import { STANDARD_THEME, type SpreadsheetTheme } from '../themes/spreadsheet-the
 import { workbookClock, type ArrayDialect, type WorkbookOptions } from './workbook-options';
 import { SheetLimits, type GridSize } from '../sheet-limits';
 import { formatA1 } from '../address';
+import { workbookFilterReads } from '../filter-reads';
 import { layoutIndex } from '../layout';
 import { RECALC_READS_MAX } from '../limits';
 import { cellKey, type Sheet } from '../sheet';
@@ -159,6 +160,7 @@ export class Workbook {
       ctx: (s) => this.ctxFor(s),
       extent: (s) => this.extent(s),
       sheet: (s) => this.sheets.get(s),
+      filterReads: (s) => workbookFilterReads(this, s),
       sheetCount: () => this.sheets.size,
       sheetNumber: (s) => [...this.sheets.keys()].indexOf(s) + 1,
       input: (s, r, c) => this.inputAt(s, r, c),
@@ -391,6 +393,11 @@ export class Workbook {
         this.settle(e.no);
       }
     }
+  }
+
+  /** Today's serial in the workbook's time zone (a filter's date periods). */
+  today(): number {
+    return Math.floor(this.nowFn());
   }
 
   // A stored formula worked out as if it sat in (r, c), keeping no value and no dependency: a format rule's Custom

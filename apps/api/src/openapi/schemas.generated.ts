@@ -3145,6 +3145,7 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
       "lt",
       "lte",
       "between",
+      "notBetween",
       "eq",
       "neq"
     ],
@@ -5446,6 +5447,17 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
     ],
     "type": "string"
   },
+  "DatePeriod": {
+    "enum": [
+      "today",
+      "tomorrow",
+      "yesterday",
+      "pastWeek",
+      "pastMonth",
+      "pastYear"
+    ],
+    "type": "string"
+  },
   "DecisionStatus": {
     "enum": [
       "proposed",
@@ -6945,6 +6957,26 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
     ],
     "type": "string"
   },
+  "FilterColour": {
+    "additionalProperties": false,
+    "properties": {
+      "is": {
+        "type": "string"
+      },
+      "key": {
+        "enum": [
+          "bg",
+          "fc"
+        ],
+        "type": "string"
+      }
+    },
+    "required": [
+      "key",
+      "is"
+    ],
+    "type": "object"
+  },
   "FilterCondition": {
     "additionalProperties": false,
     "properties": {
@@ -6954,8 +6986,25 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
       "b": {
         "type": "string"
       },
+      "colour": {
+        "$ref": "#/components/schemas/FilterColour"
+      },
+      "d": {
+        "$ref": "#/components/schemas/DatePeriod"
+      },
+      "fx": {
+        "$ref": "#/components/schemas/StoredFormula"
+      },
       "op": {
-        "$ref": "#/components/schemas/ConditionOp"
+        "anyOf": [
+          {
+            "$ref": "#/components/schemas/ConditionOp"
+          },
+          {
+            "const": "formula",
+            "type": "string"
+          }
+        ]
       },
       "values": {
         "items": {

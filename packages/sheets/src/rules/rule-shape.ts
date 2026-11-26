@@ -173,7 +173,7 @@ function pointOk(v: unknown, end: 'min' | 'mid' | 'max'): boolean {
 }
 
 // A stored formula that reads, as a cell's formula input must (validate.ts inputProblem).
-function storedFormulaOk(f: unknown): f is StoredFormula {
+export function storedFormulaOk(f: unknown): f is StoredFormula {
   if (!isObj(f) || typeof f.t !== 'string' || !Array.isArray(f.r)) return false;
   if (Object.keys(f).some((k) => k !== 't' && k !== 'r')) return false;
   if (f.t.length > FORMAT_RULE_FORMULA_MAX) return false;

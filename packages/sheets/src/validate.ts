@@ -309,12 +309,14 @@ function layoutChangeProblem(ch: LayoutChange, layout: SheetLayout): Validation 
         !Array.isArray(conds) &&
         // A condition a column, on a spreadsheet's widest sheet at most.
         Object.keys(conds).length <= WORKBOOK_COLS_MAX &&
-        Object.entries(conds).every(([col, cond]) => isAxisId(col) && isFilterCondition(cond))
+        Object.entries(conds).every(
+          ([col, cond]) => isAxisId(col) && isFilterCondition(cond, refsOk),
+        )
         ? OK
         : no('filter_invalid');
     }
     case 'filterCond':
-      return isAxisId(ch.col) && (ch.cond === null || isFilterCondition(ch.cond))
+      return isAxisId(ch.col) && (ch.cond === null || isFilterCondition(ch.cond, refsOk))
         ? OK
         : no('filter_invalid');
     case 'vrule':

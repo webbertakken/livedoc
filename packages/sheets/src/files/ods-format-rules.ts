@@ -108,7 +108,7 @@ const TEXT_TESTS: Readonly<Record<string, ConditionOp>> = {
   'begins-with': 'startsWith',
   'ends-with': 'endsWith',
 };
-const ORDERED = new Set(['gt', 'gte', 'lt', 'lte', 'between']);
+const ORDERED = new Set(['gt', 'gte', 'lt', 'lte', 'between', 'notBetween']);
 
 /** A `calcext:value` as a condition, for a rule whose anchor is `anchor` (its base cell `shift` away); or null. */
 export function odfCondition(
@@ -139,8 +139,8 @@ export function odfCondition(
       const [f1, f2] = args.map((x) => x.trim());
       const a = literalOf(f1!);
       const b = literalOf(f2!);
-      if (name === 'between' && typeof a === 'number' && typeof b === 'number')
-        return { op: 'between', a, b };
+      if (typeof a === 'number' && typeof b === 'number')
+        return { op: name === 'between' ? 'between' : 'notBetween', a, b };
       const inside = `OR(AND(${at}>=${f1};${at}<=${f2});AND(${at}>=${f2};${at}<=${f1}))`;
       const formula = formulaOf(name === 'between' ? inside : `NOT(${inside})`, shift);
       return formula === null ? null : { op: 'formula', formula };
@@ -300,6 +300,7 @@ function conditionValue(rule: FileFormatRule, anchor: string): string {
   const sign = SIGNS[op];
   if (sign) return `${sign}${operand(rule.a!)}`;
   if (op === 'between') return `between(${operand(rule.a!)},${operand(rule.b!)})`;
+  if (op === 'notBetween') return `not-between(${operand(rule.a!)},${operand(rule.b!)})`;
   const text = TEXT_NAMES[op];
   if (text) return `${text}(${quoted(String(rule.a))})`;
   if (op === 'empty') return `formula-is(LEN(TRIM([.${anchor}]))=0)`;

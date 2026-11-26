@@ -303,6 +303,8 @@ describe('lines', () => {
   it('names each condition', () => {
     expect(formatRuleLine(fr({ op: 'gt', a: '100' }))).toBe('Greater Than 100');
     expect(formatRuleLine(fr({ op: 'between', a: '1', b: '5' }))).toBe('Is Between 1 and 5');
+    expect(formatRuleLine(fr({ op: 'notBetween', a: '1', b: '5' }))).toBe('Is Not Between 1 and 5');
+    expect(conditionValues('notBetween')).toBe(2);
     expect(formatRuleLine(fr({ op: 'empty' }))).toBe('Is Empty');
     expect(formatRuleLine(fr({ op: 'formula' }), '=$C2>100')).toBe('Custom Formula Is =$C2>100');
     expect(formatRuleLine(fr({ is: 'scale' }))).toBe('Colour Scale');

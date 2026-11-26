@@ -104,11 +104,27 @@ export type ConditionOp =
   | 'lt'
   | 'lte'
   | 'between'
+  | 'notBetween'
   | 'eq'
   | 'neq';
 
-// A column's filter: the displayed values kept (Filter by Values) and/or a condition (Filter by Condition).
-export type FilterCondition = { values?: string[]; op?: ConditionOp; a?: string; b?: string };
+// A column's filter: the displayed values kept (Filter by Values), a condition (Filter by Condition) and/or the fill
+// or text colour its cells are drawn in (Filter by Colour); a row is kept only when it meets every one set.
+export type FilterColour = { key: 'bg' | 'fc'; is: string };
+// A date condition's day or days counted from today (data-tools.md "Filters, filter views and slicers"), in place of
+// an exact date.
+export type DatePeriod = 'today' | 'tomorrow' | 'yesterday' | 'pastWeek' | 'pastMonth' | 'pastYear';
+export type FilterCondition = {
+  values?: string[];
+  // Custom Formula Is (`formula`): `fx`, written for the filter's first row under its header, true to keep a row.
+  op?: ConditionOp | 'formula';
+  a?: string;
+  b?: string;
+  // Date Is, Date Is Before, Date Is After: a period from today rather than the exact date in `a`.
+  d?: DatePeriod;
+  fx?: StoredFormula;
+  colour?: FilterColour;
+};
 
 export type SheetFilter = IdRange & { conds: Record<string, FilterCondition> };
 

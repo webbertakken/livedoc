@@ -88,10 +88,12 @@ describe('conditions', () => {
       op: 'formula',
       formula: '=OR(AND(B2>=1,B2<=C1),AND(B2>=C1,B2<=1))',
     });
-    expect(read('not-between(1,5)')).toEqual({
+    expect(read('not-between(1;[.C1])')).toEqual({
       op: 'formula',
-      formula: '=NOT(OR(AND(B2>=1,B2<=5),AND(B2>=5,B2<=1)))',
+      formula: '=NOT(OR(AND(B2>=1,B2<=C1),AND(B2>=C1,B2<=1)))',
     });
+    // Two numbers are Is Not Between itself.
+    expect(read('not-between(1,5)')).toEqual({ op: 'notBetween', a: 1, b: 5 });
   });
   it('reads nothing it does not know', () => {
     for (const value of [
@@ -221,6 +223,10 @@ describe('writing rules', () => {
     is: 'when',
     style: RED,
     ...x,
+  });
+  it('writes Is Not Between as itself', () => {
+    const xml = odsFormatRulesXml([when({ op: 'notBetween', a: 1, b: 5 })], 'S', () => 'C1');
+    expect(/calcext:value="([^"]*)"/.exec(xml[0]!)?.[1]).toBe('not-between(1,5)');
   });
   it('writes each condition, its style named, for the anchor of a sheet quoted as needed', () => {
     const xml = odsFormatRulesXml(

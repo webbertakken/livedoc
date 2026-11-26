@@ -30,7 +30,7 @@ the sheet's, seen by everyone, and worked out in every browser that shows it, as
   - The conditions are the [filter](sheet.md#filter)'s, worded as in Google Sheets: **Is Empty**, **Is Not Empty**,
     **Text Contains**, **Text Does Not Contain**, **Text Starts With**, **Text Ends With**, **Text Is Exactly**,
     **Date Is Before**, **Date Is After**, **Date Is**, **Greater Than**, **Greater Than or Equal To**, **Less Than**,
-    **Less Than or Equal To**, **Is Between**, **Is Equal To**, **Is Not Equal To**, and **Custom Formula Is**. Each
+    **Less Than or Equal To**, **Is Between**, **Is Not Between**, **Is Equal To**, **Is Not Equal To**, and **Custom Formula Is**. Each
     reads the cell's value as the filter does (text case aside, as shown).
   - **Custom Formula Is**: a formula written for the range's top-left cell (`=$C2>100`, `=ISODD(ROW())`), read for
     every other cell with its relative references moved by that cell's offset (up or left of it in a later rectangle

@@ -4,12 +4,25 @@ import { localeDayFirst, parseDateText } from './dates';
 import { parsePlainNumber } from './input';
 import { displayValue } from './number-format';
 import { layoutIndex, posRangeOf } from './layout';
-import { cellKey, type FilterCondition, type Sheet } from './sheet';
+import {
+  cellKey,
+  type ConditionOp,
+  type DatePeriod,
+  type FilterColour,
+  type FilterCondition,
+  type Sheet,
+  type StoredFormula,
+} from './sheet';
+import { dateFromSerial, serialFromDate } from './dates';
+import { isColour } from './format';
+import type { CellColourOf } from './filter-colours';
+import { workbookFilterReads } from './filter-reads';
+import { storedFormulaOk } from './rules/rule-shape';
 import { isError, type Scalar, type Value } from './formula/values';
 import { INPUT_MAX, SHEET_ROWS_MAX } from './limits';
 import type { Workbook } from './engine/workbook';
 
-export const CONDITION_OPS: readonly NonNullable<FilterCondition['op']>[] = [
+export const CONDITION_OPS: readonly ConditionOp[] = [
   'empty',
   'notEmpty',
   'contains',
@@ -25,17 +38,64 @@ export const CONDITION_OPS: readonly NonNullable<FilterCondition['op']>[] = [
   'lt',
   'lte',
   'between',
+  'notBetween',
   'eq',
   'neq',
 ];
 
-const CONDITION_KEYS = new Set(['values', 'op', 'a', 'b']);
+const CONDITION_KEYS = new Set(['values', 'op', 'a', 'b', 'd', 'fx', 'colour']);
+
+export const DATE_PERIODS: readonly DatePeriod[] = [
+  'today',
+  'tomorrow',
+  'yesterday',
+  'pastWeek',
+  'pastMonth',
+  'pastYear',
+];
+const DATE_OPS: ReadonlySet<unknown> = new Set(['dateOn', 'dateBefore', 'dateAfter']);
+
+// A period's first and last day (serials), counted from `today`: the past week, month and year end today.
+export function periodDays(d: DatePeriod, today: number): [number, number] {
+  const back = (months: number) => {
+    const p = dateFromSerial(today);
+    const total = p.y * 12 + (p.m - 1) - months;
+    const y = Math.floor(total / 12);
+    const m = (total % 12) + 1;
+    const last = serialFromDate(y, m + 1, 1) - serialFromDate(y, m, 1);
+    return serialFromDate(y, m, Math.min(p.d, last));
+  };
+  switch (d) {
+    case 'today':
+      return [today, today];
+    case 'tomorrow':
+      return [today + 1, today + 1];
+    case 'yesterday':
+      return [today - 1, today - 1];
+    case 'pastWeek':
+      return [today - 7, today];
+    case 'pastMonth':
+      return [back(1), today];
+    case 'pastYear':
+      return [back(12), today];
+  }
+}
+
+function isFilterColour(v: unknown): v is FilterColour {
+  if (typeof v !== 'object' || v === null || Array.isArray(v)) return false;
+  const c = v as Record<string, unknown>;
+  return Object.keys(c).length === 2 && (c.key === 'bg' || c.key === 'fc') && isColour(c.is);
+}
 const shortText = (v: unknown) => typeof v === 'string' && v.length <= INPUT_MAX;
 
 /** Whether `v` is a filter condition as a write may store one: its listed values (strings, at most
  *  a sheet's rows), a known operator and its operands (short strings), nothing else. Every viewer
  *  draws a stored condition, so a malformed one would break the sheet for all of them. */
-export function isFilterCondition(v: unknown): v is FilterCondition {
+export function isFilterCondition(
+  v: unknown,
+  // A custom formula's references (validate.ts isStoredRef), checked where a write is.
+  refsOk: (refs: unknown[]) => boolean = () => true,
+): v is FilterCondition {
   if (typeof v !== 'object' || v === null || Array.isArray(v)) return false;
   const c = v as Record<string, unknown>;
   if (!Object.keys(c).every((k) => CONDITION_KEYS.has(k))) return false;
@@ -44,7 +104,23 @@ export function isFilterCondition(v: unknown): v is FilterCondition {
     !(Array.isArray(c.values) && c.values.length <= SHEET_ROWS_MAX && c.values.every(shortText))
   )
     return false;
+  if (c.op === 'formula')
+    return (
+      c.a === undefined &&
+      c.b === undefined &&
+      c.d === undefined &&
+      storedFormulaOk(c.fx) &&
+      refsOk(c.fx.r) &&
+      (c.colour === undefined || isFilterColour(c.colour))
+    );
+  if (c.fx !== undefined) return false;
   if (c.op !== undefined && !(CONDITION_OPS as readonly unknown[]).includes(c.op)) return false;
+  if (
+    c.d !== undefined &&
+    !(DATE_OPS.has(c.op) && (DATE_PERIODS as readonly unknown[]).includes(c.d))
+  )
+    return false;
+  if (c.colour !== undefined && !isFilterColour(c.colour)) return false;
   return (c.a === undefined || shortText(c.a)) && (c.b === undefined || shortText(c.b));
 }
 
@@ -64,25 +140,30 @@ export function conditionMatches(
   locale: string,
   // `cond.values` as a set, built once per filter rather than scanned per row.
   valueSet?: ReadonlySet<string>,
+  today = 0,
 ): boolean {
-  return conditionMatcher(cond, locale, valueSet)(value, shown);
+  return conditionMatcher(cond, locale, valueSet, today)(value, shown);
 }
 
 // A condition read once (its operands parsed, its text lowered), for checking many cells: a format rule's condition
 // is checked for every drawn cell it covers (conditional-formatting.md "Performance").
+// A Custom Formula Is condition is met outside it (filterTest), so here it lets every value through.
 export function conditionMatcher(
   cond: FilterCondition,
   locale: string,
   valueSet?: ReadonlySet<string>,
+  // The day a period counts from (`cond.d`), as a serial.
+  today = 0,
 ): (value: Scalar, shown: string) => boolean {
   const a = (cond.a ?? '').toLowerCase();
-  const na = conditionNumber(cond.a, locale);
+  const period = cond.d ? periodDays(cond.d, today) : null;
+  const na = period ? null : conditionNumber(cond.a, locale);
   const nb = conditionNumber(cond.b, locale);
   const values = cond.values;
   const kept = values ? (valueSet ?? new Set(values)) : null;
   return (value, shown) => {
     if (kept && !kept.has(shown)) return false;
-    if (!cond.op) return true;
+    if (!cond.op || cond.op === 'formula') return true;
     const empty = value === null || value === '';
     const text = shown.toLowerCase();
     const num = typeof value === 'number' ? value : null;
@@ -102,13 +183,16 @@ export function conditionMatcher(
       case 'exactly':
         return text === a;
       case 'dateBefore':
+        if (period) return num !== null && Math.floor(num) < period[0];
+        return num !== null && na !== null && num < Math.floor(na);
       case 'lt':
-        return (
-          num !== null && na !== null && num < (cond.op === 'dateBefore' ? Math.floor(na) : na)
-        );
+        return num !== null && na !== null && num < na;
       case 'dateAfter':
+        if (period) return num !== null && Math.floor(num) > period[1];
         return num !== null && na !== null && Math.floor(num) > Math.floor(na);
       case 'dateOn':
+        if (period)
+          return num !== null && Math.floor(num) >= period[0] && Math.floor(num) <= period[1];
         return num !== null && na !== null && Math.floor(num) === Math.floor(na);
       case 'gt':
         return num !== null && na !== null && num > na;
@@ -124,6 +208,13 @@ export function conditionMatcher(
           num >= Math.min(na, nb) &&
           num <= Math.max(na, nb)
         );
+      case 'notBetween':
+        return (
+          num !== null &&
+          na !== null &&
+          nb !== null &&
+          (num < Math.min(na, nb) || num > Math.max(na, nb))
+        );
       case 'eq':
         return na !== null ? num === na : text === a;
       case 'neq':
@@ -137,7 +228,23 @@ export type FilterTest = (r: number, read: (r: number, c: number) => Value) => b
 
 // The test of a sheet's filter: rows of its range under the header row that some column's condition rejects; null
 // when the sheet has no filter or no condition. SUBTOTAL reads it through its formula's frame, so its reads are noted.
-export function filterTest(sheet: Sheet, locale: string): FilterTest | null {
+export type FilterReads = {
+  locale: string;
+  // Today's serial, for a date condition's period.
+  today: number;
+  // The cells' drawn colours (filter-colours.ts), for Filter by Colour.
+  colourOf: CellColourOf;
+  // Whether a Custom Formula Is condition, written for `anchor`, holds in (r, c).
+  formulaMet: (
+    fx: StoredFormula,
+    anchor: { r: number; c: number },
+    r: number,
+    c: number,
+  ) => boolean;
+};
+
+export function filterTest(sheet: Sheet, reads: FilterReads): FilterTest | null {
+  const { locale } = reads;
   const filter = sheet.layout.filter;
   if (!filter) return null;
   const box = posRangeOf(sheet.layout, filter);
@@ -151,12 +258,15 @@ export function filterTest(sheet: Sheet, locale: string): FilterTest | null {
       (x): x is { c: number; col: string; cond: FilterCondition } =>
         x.c !== undefined && isFilterCondition(x.cond),
     )
-    .map((x) => ({ ...x, matches: conditionMatcher(x.cond, locale) }));
+    .map((x) => ({ ...x, matches: conditionMatcher(x.cond, locale, undefined, reads.today) }));
   if (conds.length === 0) return null;
   return (r, read) => {
     if (r <= box.r1 || r > box.r2) return false;
     const rowId = sheet.layout.rows[r]!;
-    return conds.some(({ c, col, matches }) => {
+    return conds.some(({ c, col, cond, matches }) => {
+      if (cond.colour && reads.colourOf(r, c, cond.colour.key) !== cond.colour.is) return true;
+      if (cond.op === 'formula' && !reads.formulaMet(cond.fx!, { r: box.r1 + 1, c }, r, c))
+        return true;
       const v = read(r, c);
       const shown = displayValue(v, sheet.cells.get(cellKey(rowId, col))?.format, locale).text;
       return !matches(isError(v) ? v : (v as Scalar), shown);
@@ -168,7 +278,7 @@ export function filterTest(sheet: Sheet, locale: string): FilterTest | null {
 export function filteredOutRows(wb: Workbook, sheetId: string): Set<string> {
   const out = new Set<string>();
   const sheet = wb.sheet(sheetId);
-  const test = sheet && filterTest(sheet, wb.locale);
+  const test = sheet && filterTest(sheet, workbookFilterReads(wb, sheetId));
   if (!sheet || !test) return out;
   const read = (r: number, c: number): Value => wb.value(sheetId, r, c);
   sheet.layout.rows.forEach((rowId, r) => {

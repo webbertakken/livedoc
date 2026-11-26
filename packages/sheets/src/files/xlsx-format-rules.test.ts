@@ -87,7 +87,7 @@ describe('reading rules', () => {
       cf(
         'B2:B5',
         rule('type="cellIs" priority="1" operator="lessThan"', f('$C$1')) +
-          rule('type="cellIs" priority="2" operator="notBetween"', f('1') + f('5')) +
+          rule('type="cellIs" priority="2" operator="notBetween"', f('1') + f('C1')) +
           rule('type="cellIs" priority="3" operator="between"', f('1') + f('C1')) +
           rule('type="cellIs" priority="4" operator="greaterThan"', f('"m"')) +
           rule('type="cellIs" priority="5" operator="notEqual"', f('C1')) +
@@ -96,12 +96,18 @@ describe('reading rules', () => {
     );
     expect(read.rules.map((x) => x.formula)).toEqual([
       '=B2<$C$1',
-      '=NOT(OR(AND(B2>=1,B2<=5),AND(B2>=5,B2<=1)))',
+      '=NOT(OR(AND(B2>=1,B2<=C1),AND(B2>=C1,B2<=1)))',
       '=OR(AND(B2>=1,B2<=C1),AND(B2>=C1,B2<=1))',
       '=B2>"m"',
       '=B2<>C1',
       `=B2="${'x'.repeat(256)}"`,
     ]);
+  });
+  it('reads Is Not Between of two numbers as itself', () => {
+    const read = rulesOf(
+      cf('B2:B5', rule('type="cellIs" priority="1" operator="notBetween"', f('1') + f('5'))),
+    );
+    expect(read.rules[0]).toMatchObject({ op: 'notBetween', a: 1, b: 5 });
   });
   it('leaves unread what the model does not hold', () => {
     const long = 'x'.repeat(256);
@@ -270,6 +276,11 @@ describe('writing rules', () => {
     xlsxFormatRulesXml(rules, first, (s) => (s.b ? 1 : 0), new Map([['Old', 'New']]))
       .map((x) => x.xml)
       .join('\n');
+  it('writes Is Not Between as itself', () => {
+    expect(written([when({ op: 'notBetween', a: 1, b: 5 })])).toBe(
+      '<conditionalFormatting sqref="A1:A10"><cfRule type="cellIs" dxfId="0" priority="1" stopIfTrue="1" operator="notBetween"><formula>1</formula><formula>5</formula></cfRule></conditionalFormatting>',
+    );
+  });
   it('writes each condition with its operands and the anchor in its formulas', () => {
     const xml = written(
       [

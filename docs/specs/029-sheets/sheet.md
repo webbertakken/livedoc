@@ -668,10 +668,12 @@ coloured in one theme reads in the other (`@livedoc/document` `cellColours`):
 - **Filter** turns on a filter over the filled range around the selection (or the selection): its first row
   becomes a header with a filter button in each cell. A header cell keeps room at its right for the button, so a
   right-aligned heading is never covered by it.
-- A column's filter button opens: **Sort A to Z**, **Sort Z to A**, **Filter by Values** (a searchable list of the
+- A column's filter button opens: **Sort A to Z**, **Sort Z to A**, **Filter by Colour** (the fill and text colours
+  drawn in the column, as a spreadsheet's: [Data tools](data-tools.md#filters-filter-views-and-slicers)), **Filter by Values** (a searchable list of the
   column's values with counts, **Select All** and **Clear**), and **Filter by Condition** (is empty, is not empty,
   text contains, does not contain, starts with, ends with, is exactly, date is before / after / on, greater than,
-  less than, between, equal to, not equal to).
+  less than, between, not between, equal to, not equal to, custom formula is; a date by a period from today or an
+  exact date, as a spreadsheet's: [Data tools](data-tools.md#filters-filter-views-and-slicers)).
 - The filter menu's **Sort A to Z / Z to A** sorts the filter's rows under its header by that column (whichever cell
   is active), moving whole rows. The header row stays on top, and the filter covers the same rows on screen after.
 - Rows that do not match every column's filter are hidden; a filtered column's button is filled. Row numbers of
