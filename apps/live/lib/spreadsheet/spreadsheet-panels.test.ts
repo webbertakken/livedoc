@@ -1,7 +1,7 @@
 // formatting.md "Alternating colours" (D216): opening the panel makes a banding over the selection at once; closing it
 // writes nothing.
 import { describe, expect, it, vi } from 'vitest';
-import { withBandingOnOpen } from './spreadsheet-panels';
+import { withBandingOnOpen, withValidationPanel } from './spreadsheet-panels';
 
 describe('withBandingOnOpen', () => {
   it('adds a banding as the panel opens, never as it closes', () => {
@@ -17,5 +17,36 @@ describe('withBandingOnOpen', () => {
     expect([add.mock.calls.length, run.mock.calls.length]).toEqual([1, 2]);
     const none = {};
     expect(withBandingOnOpen(none, add)).toBe(none);
+  });
+});
+
+// data-validation.md "In a spreadsheet": Data › Data Validation, Insert › Checkbox and Insert › Dropdown.
+describe('withValidationPanel', () => {
+  const opts = () => ({ addCheckbox: vi.fn(), opened: vi.fn(), reveal: vi.fn() });
+
+  it('opens on the active cell’s rule, notes nothing as it closes', () => {
+    const o = opts();
+    const run = vi.fn();
+    withValidationPanel({ 'data-validation': { run, checked: false } }, o)[
+      'data-validation'
+    ]!.run();
+    expect(o.opened).toHaveBeenCalledWith(false);
+    withValidationPanel({ 'data-validation': { run, checked: true } }, o)['data-validation']!.run();
+    expect([o.opened.mock.calls.length, run.mock.calls.length]).toEqual([1, 2]);
+  });
+
+  it('makes a checkbox at once, and opens a new dropdown in the panel', () => {
+    const o = opts();
+    const bound = withValidationPanel({ 'data-validation': { run: vi.fn() } }, o);
+    bound['insert-checkbox']!.run();
+    expect(o.addCheckbox).toHaveBeenCalledOnce();
+    bound['insert-dropdown']!.run();
+    expect(o.opened).toHaveBeenCalledWith(true);
+    expect(o.reveal).toHaveBeenCalledOnce();
+  });
+
+  it('binds nothing for someone the panel is not bound for', () => {
+    const none = {};
+    expect(withValidationPanel(none, opts())).toBe(none);
   });
 });

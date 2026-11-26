@@ -15,7 +15,7 @@ import {
   SheetValidationRules,
   validationRuleShortLine,
 } from './SheetRuleSettings';
-import { settingsOf } from './SheetValidationEditor';
+import { settingsOf } from './validation-draft';
 import {
   makeSheet,
   renderSheet,

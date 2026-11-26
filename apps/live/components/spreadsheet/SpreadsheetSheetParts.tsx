@@ -14,8 +14,10 @@ import type { SheetsBridge } from '@/hooks/sheets/useSheetsBridge';
 import { useOfficePanels } from '@/lib/office/useOfficePanels';
 import {
   CHART_EDITOR_PANEL,
+  DATA_VALIDATION_PANEL,
   SPREADSHEET_PANELS,
   withBandingOnOpen,
+  withValidationPanel,
 } from '@/lib/spreadsheet/spreadsheet-panels';
 import { SheetBarSummary } from './SheetBarSummary';
 import { SpreadsheetGridMenus } from './SpreadsheetContextMenu';
@@ -63,16 +65,25 @@ export function SpreadsheetSheetParts({ bridge }: { bridge: SheetsBridge }) {
     },
     [reveal],
   );
+  // How Data Validation Rules was last opened (SpreadsheetRightPanel).
+  const [validation, setValidation] = useState({ nonce: 0, startNew: false });
   const charts = useSpreadsheetCharts(c, c.canShape ? editChart : undefined);
   const { insertChart } = charts;
   const canInsertChart = c.canShape;
   const bandingActions = useMemo(
     () => ({
-      ...withBandingOnOpen(panelActions, () => actions.addBanding()),
+      ...withValidationPanel(
+        withBandingOnOpen(panelActions, () => actions.addBanding()),
+        {
+          addCheckbox: () => actions.addCheckbox(),
+          opened: (startNew) => setValidation((v) => ({ nonce: v.nonce + 1, startNew })),
+          reveal: () => reveal(DATA_VALIDATION_PANEL),
+        },
+      ),
       // Insert › Chart and the toolbar's (charts.md "Inserting"): an Editor's.
       ...(canInsertChart ? { 'insert-chart': { run: insertChart } } : {}),
     }),
-    [panelActions, actions, canInsertChart, insertChart],
+    [panelActions, actions, canInsertChart, insertChart, reveal],
   );
   const office = useGridMenuBindings(
     actions,
@@ -130,6 +141,7 @@ export function SpreadsheetSheetParts({ bridge }: { bridge: SheetsBridge }) {
           panels={panels}
           actions={actions}
           chart={{ id: editingChart, change: charts.change }}
+          validation={validation}
         />
       </div>
       <SpreadsheetGridMenus actions={actions} bound={office.actions} />

@@ -1,6 +1,7 @@
 // The spreadsheet's side panels (docs/specs/004-interface-design/office-shell.md "Side panels"), on the right and an
 // Editor's: Conditional Format Rules (docs/specs/029-sheets/conditional-formatting.md "In a spreadsheet", D213) and
-// Alternating Colours (formatting.md "Alternating colours") and Themes ("Themes").
+// Alternating Colours (formatting.md "Alternating colours"), Themes ("Themes") and Data Validation Rules
+// (data-validation.md "In a spreadsheet").
 import type { OfficeActions } from '@/lib/office/office-catalogue';
 import type { OfficePanelSpec } from '@/lib/office/office-panels';
 
@@ -28,6 +29,14 @@ export const THEMES_PANEL: OfficePanelSpec = {
   editorsOnly: true,
 };
 
+export const DATA_VALIDATION_PANEL: OfficePanelSpec = {
+  id: 'data-validation-rules',
+  title: 'Data Validation Rules',
+  side: 'right',
+  item: 'data-validation',
+  editorsOnly: true,
+};
+
 // The Chart Editor (docs/specs/029-sheets/charts.md "Chart Editor"): opened from a chart, never from a menu item of
 // its own, so its item is bound to nothing.
 export const CHART_EDITOR_PANEL: OfficePanelSpec = {
@@ -42,6 +51,7 @@ export const SPREADSHEET_PANELS: readonly OfficePanelSpec[] = [
   CONDITIONAL_FORMAT_RULES_PANEL,
   ALTERNATING_COLOURS_PANEL,
   THEMES_PANEL,
+  DATA_VALIDATION_PANEL,
   CHART_EDITOR_PANEL,
 ];
 
@@ -60,6 +70,37 @@ export function withBandingOnOpen(bound: OfficeActions, addBanding: () => void):
       run: () => {
         if (!open.checked) addBanding();
         open.run();
+      },
+    },
+  };
+}
+
+/**
+ * Data › Data Validation, Insert › Checkbox and Insert › Dropdown (data-validation.md "In a spreadsheet"): the panel's
+ * item notes it opens on the active cell's rule; Checkbox makes one over the selection at once; Dropdown opens the
+ * panel on a new Dropdown over the selection. Each an Editor's, as the panel is.
+ */
+export function withValidationPanel(
+  bound: OfficeActions,
+  opts: { addCheckbox: () => void; opened: (startNew: boolean) => void; reveal: () => void },
+): OfficeActions {
+  const item = DATA_VALIDATION_PANEL.item;
+  const open = bound[item];
+  if (!open) return bound;
+  return {
+    ...bound,
+    [item]: {
+      ...open,
+      run: () => {
+        if (!open.checked) opts.opened(false);
+        open.run();
+      },
+    },
+    'insert-checkbox': { run: opts.addCheckbox },
+    'insert-dropdown': {
+      run: () => {
+        opts.opened(true);
+        opts.reveal();
       },
     },
   };
