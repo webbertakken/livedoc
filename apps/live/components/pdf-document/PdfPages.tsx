@@ -39,11 +39,13 @@ import {
   type PdfPeerText,
 } from '@/lib/pdf-document/pdf-presence-held';
 import type { PdfPresencePeer } from '@/lib/pdf-document/pdf-presence-store';
+import type { PdfPeerDraft } from '@/lib/pdf-document/pdf-draft-store';
 
 const NOTHING_SELECTED: readonly Quad[] = [];
 const NO_MARKS_CHOSEN: readonly string[] = [];
 const NO_HOLDS: readonly PdfPeerHold[] = [];
 const NO_TEXTS: readonly PdfPeerText[] = [];
+const NO_DRAFTS: readonly PdfPeerDraft[] = [];
 
 export function PdfPages({
   attach,
@@ -72,6 +74,7 @@ export function PdfPages({
   found,
   onDoubleTap,
   peers,
+  drafts,
 }: {
   // Hands the scroller to the view that lays the pages out and scrolls them.
   attach: (element: HTMLDivElement | null) => void;
@@ -115,6 +118,8 @@ export function PdfPages({
   onDoubleTap: (index: number, tap: PdfPageTap) => void;
   // The collaborators on this tab, and what each holds (live-editing-and-storage.md "Presence").
   peers: readonly PdfPresencePeer[];
+  // Collaborators' Drawing strokes as they are drawn (live-editing-and-storage.md "A mark as it is made").
+  drafts: readonly PdfPeerDraft[];
 }) {
   const scroller = useRef<HTMLDivElement | null>(null);
   const ref = useCallback(
@@ -166,6 +171,11 @@ export function PdfPages({
         out.set(peer.place.held.page, peerTextsOn(peers, peer.place.held.page));
     return out;
   }, [peers]);
+  const draftsByPage = useMemo(() => {
+    const out = new Map<string, PdfPeerDraft[]>();
+    for (const draft of drafts) out.set(draft.page, [...(out.get(draft.page) ?? []), draft]);
+    return out;
+  }, [drafts]);
 
   return (
     <div
@@ -219,6 +229,7 @@ export function PdfPages({
                   register={register}
                   holds={holds.get(page.name) ?? NO_HOLDS}
                   peerTexts={peerTexts.get(page.name) ?? NO_TEXTS}
+                  peerDrafts={draftsByPage.get(page.name) ?? NO_DRAFTS}
                 />
               );
             })

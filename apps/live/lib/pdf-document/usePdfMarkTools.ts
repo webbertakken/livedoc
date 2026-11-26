@@ -6,6 +6,7 @@
 // usePdfToolControl's, the Stamp control's usePdfStampTool's); the selection's mark items of the context menu and the selection bar; the tools' keys; and the
 // making of a mark, one step of the person's undo. Marks are Reviewing's: while `marking` is off the tool in
 // hand is Select and nothing marks.
+import type { PdfDraftLook } from '@livedoc/api-schema';
 import { useCallback, useMemo, useState, type KeyboardEvent } from 'react';
 import type { IconPrim } from '@livedoc/icons';
 import { lucideHighlighter, lucideStrikethrough, lucideUnderline } from '@livedoc/icons/lucide';
@@ -73,6 +74,8 @@ export type PdfPageInk = {
   readonly lineStyle?: Exclude<LineStyle, 'solid'>;
   // `begunAt`: when the stroke began, which decides whether it joins the Drawing before it.
   readonly onDraw: (index: number, stroke: Stroke, begunAt: number) => void;
+  // The stroke as it grows, and (null) its end or its letting go: told to collaborators.
+  readonly onStroke: (index: number, stroke: Stroke | null) => void;
 };
 
 type Ready = Pick<
@@ -139,6 +142,7 @@ export function usePdfMarkTools({
   clearSelection,
   focusPages,
   onProblem,
+  onStroke,
 }: {
   // The open PDF; null before it is.
   ready: Ready | null;
@@ -155,6 +159,8 @@ export function usePdfMarkTools({
   focusPages: () => void;
   // What the title row says went wrong; null once a mark is made.
   onProblem: (problem: string | null) => void;
+  // A Drawing's stroke as it grows, in the tool's look, and (null) its end: for collaborators.
+  onStroke: (index: number, stroke: Stroke | null, look: PdfDraftLook) => void;
 }) {
   const [tool, setTool] = useState<PdfPageTool>('select');
   const inHand: PdfPageTool = marking ? tool : 'select';
@@ -224,9 +230,20 @@ export function usePdfMarkTools({
   const ink = useMemo<PdfPageInk | null>(
     () =>
       inHand === 'drawing'
-        ? { ...looks.drawing, width: looks.drawing.width ?? DRAWING_WIDTH_PT, onDraw: draw }
+        ? {
+            ...looks.drawing,
+            width: looks.drawing.width ?? DRAWING_WIDTH_PT,
+            onDraw: draw,
+            onStroke: (index, stroke) =>
+              onStroke(index, stroke, {
+                colour: looks.drawing.colour,
+                opacity: looks.drawing.opacity,
+                width: looks.drawing.width ?? DRAWING_WIDTH_PT,
+                ...(looks.drawing.lineStyle ? { lineStyle: looks.drawing.lineStyle } : {}),
+              }),
+          }
         : null,
-    [inHand, looks, draw],
+    [inHand, looks, draw, onStroke],
   );
 
   const onShape = usePdfShapes({ ready, author, authorKey, looks, onProblem });

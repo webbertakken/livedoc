@@ -61,6 +61,14 @@ describe('gateClientOp', () => {
     expect(gateClientOp({ kind: 'drag-preview' }, as('participate'))).toEqual(DROP);
   });
 
+  it("relays a PDF's stroke as it is drawn from an Editor or a Participant, never a Viewer's", () => {
+    // docs/specs/035-pdf-documents/live-editing-and-storage.md "A mark as it is made".
+    const draft = { kind: 'pdf-draft', tabId: 't', stroke: 'k-1', points: null };
+    expect(gateClientOp(draft, as('edit'))).toEqual(relay(true));
+    expect(gateClientOp(draft, as('participate'))).toEqual(relay(true));
+    expect(gateClientOp(draft, as('view'))).toEqual(DROP);
+  });
+
   it('keeps a tab-scoped session to its own tab', () => {
     const scoped = as('edit', { tabScope: 't1' });
     expect(gateClientOp({ kind: 'tab', tabId: 't1', tab: { id: 't1' } }, scoped)).toEqual(

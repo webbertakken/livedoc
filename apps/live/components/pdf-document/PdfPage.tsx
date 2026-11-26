@@ -38,6 +38,7 @@ import { linkBox, PdfPageLinks, percentStyle } from './PdfPageLinks';
 import { PdfPeerHolds } from './PdfPeerHolds';
 import type { PdfPeerHold, PdfPeerText } from '@/lib/pdf-document/pdf-presence-held';
 import { usePdfPeerTexts } from '@/lib/pdf-document/usePdfPeerTexts';
+import type { PdfPeerDraft } from '@/lib/pdf-document/pdf-draft-store';
 import { PdfPageReading, pageRegionName } from './PdfPageReading';
 import { PdfPageTiles, type PdfTileSource } from './PdfPageTiles';
 import { paintPicture, REDRAW_SETTLE_MS } from '@/lib/pdf-document/pdf-paint';
@@ -107,6 +108,7 @@ export const PdfPage = memo(function PdfPage({
   register,
   holds,
   peerTexts,
+  peerDrafts,
 }: {
   index: number;
   count: number;
@@ -165,6 +167,8 @@ export const PdfPage = memo(function PdfPage({
   holds: readonly PdfPeerHold[];
   // Collaborators' text selections on the page, tinted in their colours.
   peerTexts: readonly PdfPeerText[];
+  // Collaborators' Drawing strokes on the page as they are drawn.
+  peerDrafts: readonly PdfPeerDraft[];
 }) {
   const marks = changeable.marks;
   const canvas = useRef<HTMLCanvasElement | null>(null);
@@ -465,6 +469,7 @@ export const PdfPage = memo(function PdfPage({
           outline={PDF_MARK_OUTLINE_PX / cssPerPoint}
           moving={markPress.moving}
           reshaping={reshaping}
+          peerDrafts={peerDrafts}
         />
       ) : null}
       {matrix && (holds.length > 0 || peerTextsShown.length > 0) ? (

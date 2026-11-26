@@ -174,6 +174,25 @@ writes one shape `(default)`:
 - **Every role is present**: an Editor's, a Participant's and a Viewer's page are each sent, and each may press an
   avatar to go to that person's page. A Viewer holds nothing.
 
+### A mark as it is made
+
+- **A Drawing's stroke is relayed as it is drawn** ([Marks](marks.md#together)), never stored nor replayed: the
+  finished stroke is written once, as one change, when it ends ([Undo](#undo) is unchanged).
+- **On the wire**: `pdf-draft` with the tab, the page's name, the stroke's own id (1 to 64 letters, digits, `_` and
+  `-`), the look (colour `#rrggbb`, opacity, line width), `from` (how many of the stroke's points came before) and the
+  new points since, as page-space `x, y` pairs; at the end, the tab and the stroke's id with no points.
+- **Sent** at the cursor's rate (`BROADCAST_THROTTLE_MS`), the last points always following, at most
+  `PDF_DRAFT_MAX_POINTS` points an op (a longer stretch goes as several). A stroke past `PDF_DRAWING_MAX_POINTS` sends
+  no more of itself; its end still goes. None go out while a hide-cursors vote is open, as presence.
+- **Drawn** by whoever receives it in the Drawing's look, under nothing it may cover, until its end arrives and the
+  page's marks next change, or `PDF_DRAFT_LINGER_MS` after its end, whichever is first, so the finished mark takes
+  its place without a gap; a stroke silent for `PDF_DRAFT_STALE_MS` (its drawer gone) is let go, as is every stroke
+  of a person who leaves the tab or the room.
+- **Joining late**: a person who joins mid-stroke sees that stroke as the finished mark, and each next stroke as it is
+  drawn: a `pdf-draft` whose `from` is not the count of points already held is ignored until a stroke begins at 0.
+- **Refused** by the room from a Viewer (they draw nothing), and by whoever receives it, drawing nothing, when it is
+  malformed or passes `PDF_DRAFT_MAX_CHARS` as it was sent, logged `[pdf] draft-refused`.
+
 ## Undo
 
 - Undo and redo take back **the person's own changes only**, newest first, on **one timeline across the editing
@@ -228,6 +247,7 @@ writes one shape `(default)`:
 | `pdf-stored`   | The stored file was replaced: the new `blob` and state | `MUTATION_OP_KINDS` | Editor; Participant only for a certificate signature |
 | `pdf-refused`  | The room's answer to a refused change, with its name   | `MUTATION_OP_KINDS` | The room                                             |
 | `pdf-presence` | Where a person is and what they hold                   | `PRESENCE_OP_KINDS` | Anyone on the document                               |
+| `pdf-draft`    | A Drawing's stroke as it is drawn, never stored        | `PRESENCE_OP_KINDS` | Editor; Participant                                  |
 
 - **The room checks what an update touches**, not only who sent it: a Participant's update may change `marks`,
   `threads`, `fieldValues`, `recognised` and `removed` entries for marks; one touching `pageOrder`, `pages`,
@@ -509,6 +529,10 @@ Comments on a branch are the branch's own, as for every kind. This Browser has n
 | `PDF_PRESENCE_MAX_CHARS`        | 512       | `(default)` Three names and two numbers                                                    |
 | `PDF_PRESENCE_NAME_MAX_CHARS`   | 80        | `(default)` An inserted page's name is 66 at most, a mark's id 36                          |
 | `PDF_PRESENCE_FRESH_MS`         | 3,000     | `(default)` A text document's caret label                                                  |
+| `PDF_DRAFT_MAX_POINTS`          | 512       | `(default)` About 15 s of a stroke at the cursor's rate in one op, if the relay stalled    |
+| `PDF_DRAFT_MAX_CHARS`           | 16,384    | `(default)` 512 points at 30 characters each, with the op's names                          |
+| `PDF_DRAFT_LINGER_MS`           | 1,000     | `(default)` The finished mark arrives in the room's round trip, well under it              |
+| `PDF_DRAFT_STALE_MS`            | 5,000     | `(default)` A drawer gone mid-stroke; a pen held still sends nothing, so not shorter       |
 | `PDF_UNDO_GROUP_MS`             | 500       | A text document's typing group                                                             |
 | `PDF_LOCAL_SAVE_MS`             | 500       | `(default)` A change the room has not confirmed by then is kept in this browser            |
 | `PDF_LOCAL_SAVE_RETRY_MS`       | 5,000     | `(default)` A failed save in This Browser is written again by itself, as a text document's |
@@ -554,7 +578,7 @@ of [Editing modes](editing-modes.md#errors), or "You can change your own marks."
   `[pdf] browser-thumbnail unreadable` (a stored picture that is no JPEG, never drawn),
   `[pdf] thumbnail-sent bytes=<n> quality=<q>`, `[pdf] thumbnail-skipped reason=<reason>`,
   `[pdf] changes-carried count=<n> already=<n>`, `[pdf] anchors-lost count=<n>`, `[pdf] local-copy on-another`,
-  `[pdf] presence-refused`.
+  `[pdf] presence-refused`, `[pdf] draft-refused`.
 - The room's shared live state logs its own under this kind's tag
   ([Kinds outside the canvas](../006-document/kinds-outside-the-canvas.md#live-state)): `[pdf] persisted bytes=<n>`
   (with `via=door` for a posted update), `[pdf] compacted`, `[pdf] update-refused reason=<reason>`,

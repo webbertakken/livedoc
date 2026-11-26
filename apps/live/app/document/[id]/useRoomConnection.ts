@@ -2,6 +2,12 @@ import type { RemoteApply } from '@/hooks/canvas/history-replay';
 import { LiveTabRoom } from '@/lib/live-tab/live-tab-bus';
 import { PdfDocumentBus, PdfStoredFiles } from '@/lib/pdf-document/pdf-document-bus';
 import {
+  forgetPdfDrafts,
+  receivePdfDraft,
+  resetPdfDrafts,
+  syncPdfDraftPeople,
+} from '@/lib/pdf-document/pdf-draft-store';
+import {
   receivePdfPresence,
   resetPdfPresencePeers,
   syncPdfPresencePeople,
@@ -20,6 +26,7 @@ import { noteAccessEnded } from '@/lib/access-notice';
 import type { EditorMode, QaNote } from '@livedoc/document';
 import {
   parseArticleCaret,
+  parsePdfDraft,
   parsePdfPresence,
   parseTextDocumentCaret,
   type AgentPresence,
@@ -397,6 +404,7 @@ export function useRoomConnection(opts: {
       // Where each person is in a PDF document is named from here too, and whoever joined hears where we are
       // (docs/specs/035-pdf-documents/live-editing-and-storage.md "Presence").
       syncPdfPresencePeople(participants);
+      syncPdfDraftPeople(present);
       // Drop tab-focus entries for people who left so their avatar
       // dot doesn't linger on a tab they no longer occupy, AND seed
       // from the presence list: the room echoes each peer's current
@@ -541,6 +549,14 @@ export function useRoomConnection(opts: {
         const presence = parsePdfPresence(op);
         if (presence) receivePdfPresence(from, presence);
         else debugLog('[pdf] presence-refused');
+        // Whoever leaves the tab takes their strokes in hand with them ("A mark as it is made").
+        if (presence?.page === null) forgetPdfDrafts(from);
+      } else if (op.kind === 'pdf-draft') {
+        // A collaborator's Drawing stroke as it is drawn (docs/specs/035-pdf-documents/live-editing-and-storage.md "A
+        // mark as it is made"), checked field by field; a malformed one is refused, drawing nothing.
+        const draft = parsePdfDraft(op);
+        if (draft) receivePdfDraft(from, draft);
+        else debugLog('[pdf] draft-refused');
       } else if (op.kind === 'text-document-caret') {
         // A collaborator's selection in a text document (docs/specs/034-text-documents/live-editing-and-storage.md
         // "Presence"), checked field by field; drawn by that tab's surface, never written.
@@ -733,6 +749,7 @@ export function useRoomConnection(opts: {
       resetArticlePeers();
       resetTextDocumentPeers();
       resetPdfPresencePeers();
+      resetPdfDrafts();
       return;
     }
     joinedRef.current = false;
@@ -813,6 +830,7 @@ export function useRoomConnection(opts: {
       resetArticlePeers();
       resetTextDocumentPeers();
       resetPdfPresencePeers();
+      resetPdfDrafts();
       // Nobody's words outlive the room they were said in.
       resetSpeechBubbles();
       openedRoom.close();

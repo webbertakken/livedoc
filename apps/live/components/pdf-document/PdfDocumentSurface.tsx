@@ -49,6 +49,8 @@ import { usePdfReadMode } from '@/lib/pdf-document/usePdfReadMode';
 import { usePdfPrint, type PdfPrintSource } from '@/lib/pdf-document/usePdfPrint';
 import { pdfPresencePeersOf, usePdfPresencePeers } from '@/lib/pdf-document/pdf-presence-store';
 import { usePdfPresencePlace } from '@/lib/pdf-document/usePdfPresencePlace';
+import { settlePdfDrafts, usePdfDraftPeers } from '@/lib/pdf-document/pdf-draft-store';
+import { usePdfDraftSend } from '@/lib/pdf-document/usePdfDraftSend';
 import { DOWNLOAD_PDF, GO_TO_PAGE, PDF_MENUS, REDO, UNDO } from '@/lib/pdf-document/pdf-menus';
 import { pdfLimitedLevel } from '@/lib/pdf-document/pdf-limits';
 import { PDF_MODES } from '@/lib/pdf-document/pdf-modes';
@@ -320,6 +322,8 @@ export function PdfDocumentSurface({
   });
   const { selection: textSelection, find } = reading;
   // "Making a mark": the tool in hand, and the text marks it makes.
+  // "A mark as it is made": this person's Drawing stroke sent as it grows, and the others' drawn.
+  const sendStroke = usePdfDraftSend({ tabId, pages });
   const tools = usePdfMarkTools({
     ready,
     marking,
@@ -329,6 +333,7 @@ export function PdfDocumentSurface({
     clearSelection: textSelection.clear,
     focusPages: focusPagesElement,
     onProblem: setProblem,
+    onStroke: sendStroke,
   });
   // "Changing a mark": the marks this person selected, moved and deleted.
   // "Share roles": an Editor changes any mark, a Participant their own.
@@ -358,6 +363,9 @@ export function PdfDocumentSurface({
     reviews: canReview,
   });
   const peers = usePdfPresencePeers(tabId);
+  const drafts = usePdfDraftPeers(tabId);
+  // A stroke ended stays until the marks next change: its finished mark has arrived.
+  useEffect(() => changeable?.subscribe(() => settlePdfDrafts(tabId)), [changeable, tabId]);
   const markRestyle = usePdfMarkRestyle({
     ready,
     marks: changeable,
@@ -574,6 +582,7 @@ export function PdfDocumentSurface({
                 found={find.tints}
                 onDoubleTap={zoomToColumn}
                 peers={peers}
+                drafts={drafts}
               />
               <PdfSelectionBar
                 selected={textSelection.selected}
