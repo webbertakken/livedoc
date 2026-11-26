@@ -974,16 +974,16 @@ describe('writing a turned mark', () => {
     return { x: 260 + cos * dx - 0.5 * dy, y: 330 + 0.5 * dx + cos * dy };
   };
 
-  it.each(['stamp', 'text', 'rectangle', 'ellipse'])(
+  it.for(['stamp', 'text', 'rectangle', 'ellipse'])(
     'writes a %s turned 30° with Rotate and its Matrix, and reads it back turned',
-    async (kind) => {
+    async (kind, { skip }) => {
       const pages = opened(await engine.open(stored));
       const mark = kinds(pages[0]!.name)[kind]!;
       const result = await bakeWith([PdfChange.addMark(mark)]);
       const added = Buffer.from(result.bytes).subarray(stored.length).toString('latin1');
       expect(added).toContain('/Rotate 30');
       expect(added).toMatch(/\/Matrix \[0\.866\d* 0\.5 -0\.5 0\.866\d* /);
-      expect(qpdfChecks(result.bytes, () => {})).toContain('No syntax or stream encoding errors');
+      expect(qpdfChecks(result.bytes, skip)).toContain('No syntax or stream encoding errors');
       opened(await engine.open(result.bytes));
       const [read] = await engine.fileMarks(0);
       expect(read!.mark).toMatchObject({ kind, turn: 30 });
