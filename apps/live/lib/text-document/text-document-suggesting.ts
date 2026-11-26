@@ -4,7 +4,7 @@
 // Backspace across paragraphs suggest a break and a join; formatting suggests a format change keeping what was before;
 // a paragraph's style, formatting or list a paragraph format change. One person's change next to their own earlier one
 // is the same suggestion. Pure: the state and transaction in, a transaction or a refusal out.
-import type { Mark, Node as PmNode, NodeType } from 'prosemirror-model';
+import type { Mark, Node as PmNode } from 'prosemirror-model';
 import { TextSelection, type EditorState, type Transaction } from 'prosemirror-state';
 import {
   AddMarkStep,
@@ -52,7 +52,7 @@ const PARAGRAPH = 'paragraph';
 type Attrs = Record<string, unknown>;
 
 const markOf = (marks: readonly Mark[], name: string): Attrs | undefined =>
-  marks.find((m) => m.type.name === name)?.attrs as Attrs | undefined;
+  marks.find((m) => m.type.name === name)?.attrs;
 
 const isOwn = (value: unknown, key: string): value is SuggestionMark =>
   typeof value === 'object' &&
@@ -67,7 +67,7 @@ function partsOf(node: PmNode): Attrs {
       [DELETION_MARK]: markOf(node.marks, DELETION_MARK),
       [FORMAT_CHANGE_MARK]: markOf(node.marks, FORMAT_CHANGE_MARK),
     };
-  return node.attrs as Attrs;
+  return node.attrs;
 }
 
 /** Whether a node is a block the transform cannot suggest around (a table, a section break, a kept block). */
@@ -79,11 +79,17 @@ function ownNear(doc: PmNode, from: number, to: number, key: string): Suggestion
   const near: PmNode[] = [];
   const $from = doc.resolve(Math.max(0, Math.min(from, doc.content.size)));
   const $to = doc.resolve(Math.max(0, Math.min(to, doc.content.size)));
-  for (const n of [$from.nodeBefore, $from.nodeAfter, $to.nodeBefore, $to.nodeAfter]) if (n) near.push(n);
+  for (const n of [$from.nodeBefore, $from.nodeAfter, $to.nodeBefore, $to.nodeAfter])
+    if (n) near.push(n);
   if (from < to) doc.nodesBetween(from, to, (n) => void near.push(n));
   for (const node of near) {
     const parts = partsOf(node);
-    for (const name of [INSERTION_MARK, DELETION_MARK, FORMAT_CHANGE_MARK, PARAGRAPH_FORMAT_CHANGE]) {
+    for (const name of [
+      INSERTION_MARK,
+      DELETION_MARK,
+      FORMAT_CHANGE_MARK,
+      PARAGRAPH_FORMAT_CHANGE,
+    ]) {
       const value = parts[name];
       if (isOwn(value, key)) return { id: value.id, at: value.at, author: value.author };
     }
@@ -162,14 +168,20 @@ class Rewriter {
       else if (action.kind === 'mark')
         this.out.addMark(action.pos, action.to, this.markType(DELETION_MARK).create(mark));
       else if (action.kind === 'atom')
-        this.out.setNodeMarkup(action.pos, undefined, { ...action.node.attrs, [DELETION_MARK]: mark });
+        this.out.setNodeMarkup(action.pos, undefined, {
+          ...action.node.attrs,
+          [DELETION_MARK]: mark,
+        });
       else {
         const $pos = this.out.doc.resolve(action.pos);
         const before = $pos.nodeBefore;
         const ownBreak = isOwn(action.node.attrs[INSERTION_MARK], this.who.key);
         if (ownBreak && before?.type.name === PARAGRAPH) this.out.join(action.pos);
         else if (before?.type.name === PARAGRAPH && !action.node.attrs[DELETION_MARK])
-          this.out.setNodeMarkup(action.pos, undefined, { ...action.node.attrs, [DELETION_MARK]: mark });
+          this.out.setNodeMarkup(action.pos, undefined, {
+            ...action.node.attrs,
+            [DELETION_MARK]: mark,
+          });
       }
     }
     return null;
@@ -202,7 +214,12 @@ class Rewriter {
   }
 
   /** A formatting change over `[from, to)`: the sender's own suggested text formatted, other text a format change. */
-  format(from: number, to: number, change: (from: number, to: number) => void, name: string): SuggestingRefusal | null {
+  format(
+    from: number,
+    to: number,
+    change: (from: number, to: number) => void,
+    name: string,
+  ): SuggestingRefusal | null {
     if (!FORMATTING_MARKS.has(name)) {
       change(from, to);
       return null;
@@ -224,8 +241,7 @@ class Rewriter {
         continue;
       }
       const existing = markOf(piece.node.marks, FORMAT_CHANGE_MARK) as
-        | (SuggestionMark & { before?: Attrs })
-        | undefined;
+        (SuggestionMark & { before?: Attrs }) | undefined;
       const before: Attrs = { ...(existing?.before ?? {}) };
       if (!(name in before)) before[name] = markOf(piece.node.marks, name) ?? null;
       change(piece.from, piece.to);
@@ -261,7 +277,8 @@ class Rewriter {
 function paragraphMarkup(step: Step, doc: PmNode): { pos: number; attrs: Attrs } | null {
   if (step instanceof AttrStep) {
     const node = doc.nodeAt(step.pos);
-    if (node?.type.name !== PARAGRAPH || !PARAGRAPH_FORMAT_ATTRIBUTES.includes(step.attr as never)) return null;
+    if (node?.type.name !== PARAGRAPH || !PARAGRAPH_FORMAT_ATTRIBUTES.includes(step.attr as never))
+      return null;
     return { pos: step.pos, attrs: { ...node.attrs, [step.attr]: step.value as unknown } };
   }
   if (!(step instanceof ReplaceAroundStep)) return null;
@@ -270,7 +287,7 @@ function paragraphMarkup(step: Step, doc: PmNode): { pos: number; attrs: Attrs }
   if (
     !node ||
     node.type.name !== PARAGRAPH ||
-    replacement?.type !== (node.type as NodeType) ||
+    replacement?.type !== node.type ||
     step.slice.content.childCount !== 1 ||
     step.to !== step.from + node.nodeSize ||
     step.gapFrom !== step.from + 1 ||
@@ -281,7 +298,7 @@ function paragraphMarkup(step: Step, doc: PmNode): { pos: number; attrs: Attrs }
     (a) => JSON.stringify(replacement.attrs[a]) !== JSON.stringify(node.attrs[a]),
   );
   if (!changed.every((a) => PARAGRAPH_FORMAT_ATTRIBUTES.includes(a as never))) return null;
-  return { pos: step.from, attrs: replacement.attrs as Attrs };
+  return { pos: step.from, attrs: replacement.attrs };
 }
 
 /**
@@ -346,6 +363,8 @@ export function suggestTransaction(
     if (value !== undefined) out.setMeta(meta, value);
   }
   if (caret !== undefined)
-    out.setSelection(TextSelection.create(out.doc, Math.max(0, Math.min(caret, out.doc.content.size))));
+    out.setSelection(
+      TextSelection.create(out.doc, Math.max(0, Math.min(caret, out.doc.content.size))),
+    );
   return { tr: out, made: [...rewriter.made] };
 }

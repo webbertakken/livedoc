@@ -133,7 +133,7 @@ export const TEXT_DOCUMENT_SHORTCUTS: readonly ShortcutRow[] = [
     'Ctrl+Alt+Shift+X',
     '⌘+Option+Shift+X',
     'Ctrl+Alt+Shift+X',
-    'specified',
+    'built',
   ),
   row(
     'switch-to-viewing',

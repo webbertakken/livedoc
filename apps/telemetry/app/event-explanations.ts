@@ -1305,6 +1305,8 @@ export const EXACT: Readonly<Record<string, string>> = {
   'Tab|Created|Dashboard':
     'Someone added a Dashboard tab from the + menu, opening Start Planning on its dashboards.',
   'Tab|Created|TextDocument': 'Someone added a text document tab from the + menu.',
+  'Element|Added|TextDocumentSuggestion':
+    'Someone began a suggestion in a text document while suggesting: an insertion, deletion or format change.',
   'Element|Added|TextDocumentTab':
     'Someone added a tab inside a text document, from its outline or Insert > Tab.',
   'Element|Changed|TextDocumentTab':

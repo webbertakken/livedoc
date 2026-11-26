@@ -44,6 +44,8 @@ function Surface({
           ...(level === 'edit' ? { 'clear-formatting': { run: () => {} } } : {}),
           // Comment is built: the surface binds it for a session that may comment (review.md "Threads in the margin").
           ...(level === 'edit' ? { comment: { run: () => {} } } : {}),
+          // Suggest edits is the Suggesting mode, bound by the shell (review.md "Editing modes").
+          ...(level !== 'view' ? { 'mode-suggesting': { run: () => {}, checked: false } } : {}),
           ...extra,
         }}
         shortcuts={TEXT_DOCUMENT_SHORTCUTS}
@@ -100,7 +102,7 @@ describe('the context menu', () => {
       'Paste without formattingCtrl+Shift+V',
       'Delete',
       'CommentCtrl+Alt+M',
-      'Suggest edits',
+      'Suggest editsCtrl+Alt+Shift+X',
       // Insert link shows only while the link actions bind it (links-and-navigation.md "Links"): none here.
       'Format options',
       'Clear formattingCtrl+\\',
@@ -167,12 +169,12 @@ describe('the context menu', () => {
     expect(menu()!.style.top).toBe('50px');
   });
 
-  it('dims what is not built, and Delete while nothing is selected', () => {
+  it('dims what cannot run now, and Delete while nothing is selected', () => {
     render(<Surface />);
     rightClick(screen.getByRole('textbox'));
     const item = (name: string) =>
       within(menu()!).getByRole('menuitem', { name: new RegExp(`^${name}`) });
-    expect(item('Suggest edits').getAttribute('aria-disabled')).toBe('true');
+    expect(item('Suggest edits').getAttribute('aria-disabled')).not.toBe('true');
     expect(item('Cut').getAttribute('aria-disabled')).toBe('true');
     expect(item('Delete').getAttribute('aria-disabled')).toBe('true');
   });
