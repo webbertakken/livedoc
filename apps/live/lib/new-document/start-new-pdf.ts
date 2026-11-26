@@ -37,7 +37,7 @@ export async function startNewPdf(request: {
     if (source === 'blank') assignAppLocation(newPdfHref(place));
     return;
   }
-  const file = source === 'blank' ? blankPdfFile() : await pickFile(PDF_TAB_ACCEPT);
+  const file = source === 'blank' ? await blankPdfFile() : await pickFile(PDF_TAB_ACCEPT);
   if (!file) return;
   try {
     // What reads, hashes and sends a file loads with the first PDF made, never with the Explorer.

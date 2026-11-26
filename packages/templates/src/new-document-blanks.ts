@@ -42,7 +42,7 @@ export type NewDocumentBlank = {
   templates: NewDocumentTemplateSource | null;
   /** The document kind it makes, for a kind's blank. */
   kind?: NewDocumentKind;
-  /** What a kind makes, in one line, said in its pane (D223). */
+  /** What a kind makes, in one line, said in its pane (D227). */
   pitch?: string;
 };
 

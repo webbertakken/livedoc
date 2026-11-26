@@ -32,7 +32,7 @@ const failure = (message: string): CreateFailure => ({
 });
 
 export async function makeNewPdf(source: NewPdfSource, deps: NewPdfDeps): Promise<void> {
-  const file = source === 'blank' ? blankPdfFile() : await pickFile(PDF_TAB_ACCEPT);
+  const file = source === 'blank' ? await blankPdfFile() : await pickFile(PDF_TAB_ACCEPT);
   if (!file) return;
   try {
     const located = await deps.location();

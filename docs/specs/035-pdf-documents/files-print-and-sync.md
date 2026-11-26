@@ -131,7 +131,7 @@ drawn.
 - **Kept as a PDF document**: a text document's, a spreadsheet's and a canvas tab's Download as PDF offers "Keep in
   LiveDoc as a PDF document": the written PDF becomes a PDF document beside its source, linked back to it in
   Properties. It is a copy: later changes to the source do not reach it.
-- **One writer.** Every kind's Download as PDF and every bake are written by the repository's one PDF writer; a
+- **One writer.** Every kind's Download as PDF, every bake and every Blank PDF are written by the repository's one PDF writer; a
   second PDF writer anywhere in the codebase is a defect, and a test finds one by the words no writer can do
   without.
 - **A canvas tab's and a Pages tab's PDF** is a page a picture: the pixels packed without loss, never re-encoded,

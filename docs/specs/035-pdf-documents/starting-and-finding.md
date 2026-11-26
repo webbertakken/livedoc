@@ -17,8 +17,9 @@ A PDF also arrives, or is made from another document:
   opened once stored ([New Document menu](../013-workspace/new-document-menu.md#the-blanks),
   [New document route](../007-editor/new-document-route.md#choosing-a-mode)). `/new?kind=pdf-document` makes a Blank
   PDF.
-- **A Blank PDF** is a real PDF file (PDF 1.7, one page, no content), written in the browser and stored as any PDF
-  is; everything a PDF document does, it does from there (adding text, pages, fields).
+- **A Blank PDF** is a real PDF file of one empty page, written by the repository's one PDF writer
+  ([Files, print and sync](files-print-and-sync.md), "One writer") and stored as any PDF is; everything a PDF document does,
+  it does from there (adding text, pages, fields).
 - **Another document kept as a PDF**: a text document's, a spreadsheet's or a canvas tab's Download as PDF offers
   "Keep in LiveDoc as a PDF document", which stores the written PDF beside its source
   ([Files, print and sync](files-print-and-sync.md#other-kinds-meeting-a-pdf)).

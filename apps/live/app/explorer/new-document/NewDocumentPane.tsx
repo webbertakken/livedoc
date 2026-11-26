@@ -86,7 +86,7 @@ export function NewDocumentPane({
   );
 }
 
-// A document kind's pane, until its gallery has templates (new-document-menu.md "The blanks", D223): its glyph, its name
+// A document kind's pane, until its gallery has templates (new-document-menu.md "The blanks", D227): its glyph, its name
 // and what it makes; PDF document's holds its two cards, Blank PDF and Open a PDF file, on the pane's first row.
 function KindPane({
   blank,

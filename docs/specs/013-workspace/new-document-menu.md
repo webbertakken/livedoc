@@ -220,7 +220,7 @@ The code cites each by its id.
   prepared at the click (default).
 - **D207** When the create starts: After the editor's first frame of the document, or 1 s at most: a create that lands
   at once would re-render it inside that frame (default).
-- **D223** A kind's pane without templates: its glyph, its name and one line on what it makes (default).
-- **D224** A Blank PDF's page: one empty A4 page, portrait (default).
+- **D227** A kind's pane without templates: its glyph, its name and one line on what it makes (default).
+- **D228** A Blank PDF's page: one empty A4 page, portrait (default).
 - **D222** Brainstorm's glyph and tint: The lightbulb (`lucideLightbulb`), rose (`text-rose-600`, `dark:text-rose-400`),
   the one hue no other blank wears (default).
