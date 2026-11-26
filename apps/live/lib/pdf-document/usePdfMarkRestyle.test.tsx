@@ -16,6 +16,7 @@ import {
   type PageMatrix,
   type Quad,
 } from '@livedoc/pdf-documents';
+import type { BlobKey } from '@livedoc/document';
 import { debugLog } from '@/lib/debug-log';
 import { track } from '@/lib/telemetry';
 import { FIRST_LOOKS } from './pdf-mark-looks';
@@ -96,6 +97,18 @@ function restyling({
       size: 10,
     })!,
   );
+  PdfLiveChanges.addMark(
+    doc,
+    Mark.stamp({
+      ...BASE,
+      colour: '#1565c0',
+      id: 'c',
+      rect: [400, 400, 460, 430],
+      stamp: 'custom-0b7c3c2e-5a8f-4f21-9a43-1f2d3e4c5b6a',
+      lines: ['Paid'],
+      picture: { key: 'cd'.repeat(32) as BlobKey, type: 'png', width: 8, height: 4 },
+    })!,
+  );
   const steps: unknown[] = [];
   const pageMatrix = vi.fn(async () => matrix);
   const focusPages = vi.fn();
@@ -165,6 +178,18 @@ describe('the selected marks’ colour', () => {
 
   it('is no control while no mark is selected', () => {
     expect(restyling({ chosen: null }).hook.result.current.colours).toEqual({});
+  });
+
+  // custom-stamps.md "Placing one": a custom stamp is its picture; Format's colour is not offered for it.
+  it('is no control for a custom stamp alone, and leaves one among others as it is', () => {
+    expect(
+      restyling({ chosen: { page: 0, ids: ['c'] } }).hook.result.current.colours[TOOL_COLOUR],
+    ).toBeUndefined();
+    const { hook, doc } = restyling({ chosen: { page: 0, ids: ['a', 'c'] } });
+    expect(hook.result.current.colours[TOOL_COLOUR]!.read()).toBe('#ff0000');
+    act(() => hook.result.current.colours[TOOL_COLOUR]!.set('#00aa00'));
+    expect(PdfLiveChanges.mark(doc, 'a')).toMatchObject({ colour: '#00aa00' });
+    expect(PdfLiveChanges.mark(doc, 'c')).toMatchObject({ colour: '#1565c0' });
   });
 });
 
