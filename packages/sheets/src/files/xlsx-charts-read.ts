@@ -104,43 +104,66 @@ const stackOf = (grouping: string | undefined, plain: string) =>
         ? ('percent' as const)
         : undefined;
 
-// Each chart group of the plot and the type its series draw as (one group, the chart's; a Combo's, its series').
+// Each chart group of the plot, the type its series draw as (one group, the chart's; a Combo's, its series') and
+// whether they sit on the right-hand axis; the right-hand axes' ids.
 type Typed = {
   type: SheetChartType;
-  groups: { group: XmlElement; as: SheetChartType }[];
+  groups: { group: XmlElement; as: SheetChartType; right: boolean }[];
   stack?: SheetChartStack;
+  rightIds: readonly string[];
 };
 
 // The chart's type and stacking, or null for one not built (a stacked line, smooth, 3-D, another mix of groups).
 function typeOf(plot: XmlElement): Typed | null {
   const groups = childElements(plot).filter((e) => e.uri === C_NS && e.local.endsWith('Chart'));
-  if (groups.length > 1) return comboOf(groups);
+  if (groups.length > 1) return severalOf(plot, groups);
   if (groups.length !== 1) return null;
   const one = groupType(groups[0]!);
   return (
     one && {
       type: one.type,
-      groups: [{ group: groups[0]!, as: one.type }],
+      groups: [{ group: groups[0]!, as: one.type, right: false }],
       ...(one.stack ? { stack: one.stack } : {}),
+      rightIds: [],
     }
   );
 }
 
-// A plot of two or three groups, each a different one of clustered columns, a standard line and a standard area, on one
-// pair of axes, is a Combo chart (D287).
+// A plot of several groups, each clustered columns, a standard line or a standard area, unstacked, no kind twice on one
+// pair of axes: on one pair, a Combo chart (D287); on two, the second's value axis at the right, its groups' series on
+// the right-hand axis, a Line or Area chart when every group is that kind, else a Combo chart (D288).
 const COMBO_GROUPS: readonly SheetChartType[] = ['column', 'line', 'area'];
-function comboOf(groups: readonly XmlElement[]): Typed | null {
-  const typed = groups.map((group) => ({ group, read: groupType(group) }));
-  const kinds = typed.map((t) => t.read?.type);
-  const axes = (g: XmlElement) => cs(g, 'axId').map(valOf).join(' ');
-  if (
-    groups.length > 3 ||
-    typed.some((t) => !t.read || t.read.stack || !COMBO_GROUPS.includes(t.read.type)) ||
-    new Set(kinds).size !== kinds.length ||
-    groups.some((g) => axes(g) !== axes(groups[0]!))
-  )
+function severalOf(plot: XmlElement, groups: readonly XmlElement[]): Typed | null {
+  const pairOf = (g: XmlElement) => cs(g, 'axId').map(valOf).join(' ');
+  const pairs = [...new Set(groups.map(pairOf))];
+  const atRight = (pair: string) =>
+    childElements(plot).some(
+      (x) =>
+        x.uri === C_NS &&
+        x.local === 'valAx' &&
+        (pair.split(' ') as (string | undefined)[]).includes(valOf(c(x, 'axId'))) &&
+        valOf(c(x, 'axPos')) === 'r',
+    );
+  const right = pairs.length === 2 ? pairs.filter(atRight) : [];
+  if (pairs.length > 2 || right.length !== pairs.length - 1) return null;
+  const typed = groups.map((group) => ({
+    group,
+    read: groupType(group),
+    right: pairOf(group) === right[0],
+  }));
+  if (typed.some((t) => !t.read || t.read.stack || !COMBO_GROUPS.includes(t.read.type)))
     return null;
-  return { type: 'combo', groups: typed.map((t) => ({ group: t.group, as: t.read!.type })) };
+  const keys = typed.map((t) => `${t.read!.type} ${t.right}`);
+  if (new Set(keys).size !== keys.length) return null;
+  const kinds = new Set(typed.map((t) => t.read!.type));
+  const type = kinds.size === 1 ? typed[0]!.read!.type : 'combo';
+  // A column chart draws no right-hand axis.
+  if (type === 'column') return null;
+  return {
+    type,
+    groups: typed.map((t) => ({ group: t.group, as: t.read!.type, right: t.right })),
+    rightIds: right[0]?.split(' ') ?? [],
+  };
 }
 
 // One chart group's type and stacking.
@@ -225,12 +248,14 @@ export function readXlsxChartXml(xml: string, sheetName: string): Read | null {
   const plot = c(chart, 'plotArea');
   const typed = plot && typeOf(plot);
   if (!chart || !plot || !typed) return null;
-  const { type, groups, stack } = typed;
+  const { type, groups, stack, rightIds } = typed;
   const scatter = type === 'scatter';
   // Every group's series, each with the type it draws as; a Combo's in their order across its groups.
   const order = (ser: XmlElement) => Number(valOf(c(ser, 'order')) ?? 0);
-  const sers = groups.flatMap(({ group, as }) => cs(group, 'ser').map((ser) => ({ ser, as })));
-  if (type === 'combo') sers.sort((x, y) => order(x.ser) - order(y.ser));
+  const sers = groups.flatMap(({ group, as, right }) =>
+    cs(group, 'ser').map((ser) => ({ ser, as, right })),
+  );
+  if (groups.length > 1) sers.sort((x, y) => order(x.ser) - order(y.ser));
   const own = (ref: string | null): FileRange | null => {
     const read = ref === null ? null : parseXlsxRef(ref);
     return read && read.sheet.toLowerCase() === sheetName.toLowerCase() ? read.range : null;
@@ -243,7 +268,7 @@ export function readXlsxChartXml(xml: string, sheetName: string): Read | null {
   const lines = smoothed.filter((x) => x.as === 'line');
   const smooth = lines.some((x) => x.on);
   if (smooth && !lines.every((x) => x.on)) return null;
-  for (const { ser, as } of sers) {
+  for (const { ser, as, right } of sers) {
     const values = own(refUnder(c(ser, scatter ? 'yVal' : 'val')));
     if (!values || values.c1 !== values.c2) return null;
     const tx = c(ser, 'tx');
@@ -262,10 +287,15 @@ export function readXlsxChartXml(xml: string, sheetName: string): Read | null {
       cached: [],
       ...lookOf(as, ser),
       ...(type === 'combo' ? { type: as as SheetComboSeriesType } : {}),
+      ...(right ? { right: true as const } : {}),
     });
   }
   if (!isOneBlock(series, labels ?? null)) return null;
-  const axes = childElements(plot).filter((e) => e.uri === C_NS && e.local.endsWith('Ax'));
+  // The primary axes: the right-hand pair holds no title nor the value axis's state.
+  const axes = childElements(plot).filter(
+    (e) =>
+      e.uri === C_NS && e.local.endsWith('Ax') && !rightIds.includes(valOf(c(e, 'axId')) ?? ''),
+  );
   if (axes.some((x) => x.local === 'serAx')) return null;
   const position = (x: XmlElement) => valOf(c(x, 'axPos'));
   const valueAxis = scatter

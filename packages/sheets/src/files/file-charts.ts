@@ -29,6 +29,8 @@ export type FileChartSeries = {
   line?: true;
   // Its type on a Combo chart, resolved (D287); never on another type.
   type?: SheetComboSeriesType;
+  // On the right-hand axis, as LiveDoc draws it (D288).
+  right?: true;
 };
 
 export type FileChart = {
@@ -100,6 +102,8 @@ export function fileChartSum(chart: FileChart): string {
       ...(chart.smooth ? ['smooth'] : []),
       // A Combo chart's series types, after the rest (D287).
       ...(chart.type === 'combo' ? [chart.series.map((s) => s.type ?? '')] : []),
+      // The series on the right-hand axis, after the rest (D288).
+      ...(chart.series.some((s) => s.right) ? [chart.series.map((s) => s.right === true)] : []),
     ]),
   );
 }
@@ -163,6 +167,7 @@ function fileChartOf(engine: Workbook, sheet: Sheet, chart: SheetChart, locale: 
       ...(look?.color ? { color: look.color } : {}),
       ...(look?.line ? { line: true as const } : {}),
       ...(types ? { type: types[i]! } : {}),
+      ...(look?.right ? { right: true as const } : {}),
     };
   });
   // A scatter's x is its label column's numbers, else its first column of numbers (charts.md "The model"); a label
@@ -180,6 +185,7 @@ function fileChartOf(engine: Workbook, sheet: Sheet, chart: SheetChart, locale: 
           }),
         }
       : null;
+  const series = onRightAxis(chart, scatterX ? rest : all);
   return {
     id: chart.id,
     type: chart.type,
@@ -207,8 +213,17 @@ function fileChartOf(engine: Workbook, sheet: Sheet, chart: SheetChart, locale: 
         ? null
         : { range: columnRange(rows, labels), cached: table.categories },
     x: scatterX ? { range: first!.values, cached: first!.cached } : labelX,
-    series: scatterX ? rest : all,
+    series,
   };
+}
+
+// The series on the right-hand axis only where LiveDoc draws one (D288): a Line, unstacked Area or Combo chart with a
+// series on each side; elsewhere every series on the one axis.
+function onRightAxis(chart: SheetChart, series: FileChartSeries[]): FileChartSeries[] {
+  const drawn =
+    (chart.type === 'line' || chart.type === 'combo' || (chart.type === 'area' && !chart.stack)) &&
+    series.some((s) => !s.right);
+  return drawn ? series : series.map(({ right: _right, ...s }) => s);
 }
 
 /** The sheet's charts as its file holds them, in paint order; none when it holds none. */
@@ -241,11 +256,12 @@ function sheetChartOf(chart: FileChart, layout: SheetLayout, id: string): SheetC
   const series: Record<string, SheetChartSeriesLook> = {};
   chart.series.forEach((s, i) => {
     const type = s.type && s.type !== defaults[i] ? s.type : undefined;
-    if (s.color || s.line || type)
+    if (s.color || s.line || type || s.right)
       series[col(s.values.c1)!] = {
         ...(s.color ? { color: s.color } : {}),
         ...(s.line ? { line: true as const } : {}),
         ...(type ? { type } : {}),
+        ...(s.right ? { right: true as const } : {}),
       };
   });
   return {

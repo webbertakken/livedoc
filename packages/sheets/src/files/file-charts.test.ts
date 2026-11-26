@@ -137,6 +137,27 @@ describe('fileChartsOf', () => {
     expect(column!.series.map((s) => s.type)).toEqual([undefined, undefined]);
   });
 
+  it('puts a series on the right-hand axis only where LiveDoc draws one (D288)', () => {
+    const sheet = costs();
+    const index = sheet.layout.cols[2]!;
+    const rightOf = (extra: Partial<SheetChart>) =>
+      filed(
+        withCharts(sheet, [chartOver(sheet, { series: { [index]: { right: true } }, ...extra })]),
+      )[0]!.series.map((s) => s.right ?? false);
+    expect(rightOf({ type: 'line' })).toEqual([false, true]);
+    expect(rightOf({ type: 'combo' })).toEqual([false, true]);
+    expect(rightOf({ type: 'area' })).toEqual([false, true]);
+    expect(rightOf({ type: 'area', stack: 'stacked' })).toEqual([false, false]);
+    expect(rightOf({ type: 'column' })).toEqual([false, false]);
+    // Every series on the right is every series on the one axis.
+    expect(
+      rightOf({
+        type: 'line',
+        series: { [index]: { right: true }, [sheet.layout.cols[1]!]: { right: true } },
+      }),
+    ).toEqual([false, false]);
+  });
+
   it('takes a scatter’s first column of numbers as its x when nothing labels the rows', () => {
     const sheet = costs();
     const { rows, cols } = sheet.layout;
@@ -286,6 +307,8 @@ describe('writeXlsx with charts', () => {
       'xl/charts/chart12.xml',
       'xl/charts/chart13.xml',
       'xl/charts/chart14.xml',
+      'xl/charts/chart15.xml',
+      'xl/charts/chart16.xml',
       'xl/charts/chart2.xml',
       'xl/charts/chart3.xml',
       'xl/charts/chart4.xml',
@@ -407,6 +430,16 @@ describe('ODF charts', () => {
     expect(combo).toContain('<chart:series chart:class="chart:line"');
     expect(combo).toContain('chart:interpolation="cubic-spline"');
     expect(combo.match(/chart:symbol-type="none"/g)).toHaveLength(1);
+    // A series on the right-hand axis names the secondary one, which the plot area holds (D288).
+    const right = doc({
+      ...line!,
+      series: line!.series.map((s, i) => (i ? { ...s, right: true } : s)),
+    });
+    expect(right).toContain('chart:attached-axis="secondary-y"');
+    expect(right).toContain(
+      '<chart:axis chart:dimension="y" chart:name="secondary-y" chart:style-name="axis"/>',
+    );
+    expect(doc(line!)).not.toContain('secondary-y');
     // A series with no type of its own is written as columns, its class the chart's.
     expect(doc({ ...column!, type: 'combo' })).not.toContain('<chart:series chart:class');
     expect(odsChartContent('S', line!, 'document')).toMatch(
@@ -553,6 +586,17 @@ describe('sheetChartsFromFile', () => {
         seeded(),
       )[0]!.series;
     expect(typed(['column', 'line'])).toBeUndefined();
+    const [right] = sheetChartsFromFile(
+      [
+        read({
+          type: 'line',
+          series: [{ name: 'A', nameAt: null, values: cell(2), cached: [], right: true }],
+        }),
+      ],
+      layout,
+      seeded(),
+    );
+    expect(right!.series).toEqual({ [cols[2]!]: { right: true } });
     expect(typed(['line', 'column', 'area'])).toEqual({
       [cols[1]!]: { type: 'line' },
       [cols[3]!]: { type: 'area' },

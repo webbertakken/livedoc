@@ -212,6 +212,21 @@ function chartSheet(): FileSheet {
       id: 'chart_combo_area',
       series: [series(1, 'Cost', { type: 'area' }), series(2, 'Index', { type: 'line' })],
     },
+    // The right-hand axis (D288): a line chart's and a combo's, the value axes hidden on the second.
+    {
+      ...base(types.length + 8, 'line'),
+      id: 'chart_right',
+      series: [series(1, 'Cost'), series(2, 'Index', { right: true })],
+    },
+    {
+      ...base(types.length + 9, 'combo'),
+      id: 'chart_combo_right',
+      axis: false,
+      series: [
+        series(1, 'Cost', { type: 'column' }),
+        series(2, 'Index', { type: 'line', right: true }),
+      ],
+    },
   );
   return { ...sheet("Costs' sheet", cells, 140, 8), charts };
 }

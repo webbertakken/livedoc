@@ -243,14 +243,19 @@ export function readOdsChartDocument(root: XmlElement, sheetName: string): Read 
   };
   const axes = kids(plot, CHART, 'axis');
   const axisOf = (dimension: string) =>
-    axes.find((x) => attributeOf(x, CHART, 'dimension') === dimension);
-  // Only the primary x and y axes: a secondary or a depth axis is a chart not built.
+    axes.find(
+      (x) => attributeOf(x, CHART, 'dimension') === dimension && axisName(x) !== 'secondary-y',
+    );
+  // Only a Line, unstacked Area or Combo chart draws a right-hand axis.
+  const rightAxis = type === 'line' || type === 'combo' || (type === 'area' && !stack);
+  // The primary x and y axes, and a secondary y for the right-hand axis (D288): another axis is a chart not built.
+  const axisName = (x: XmlElement) => attributeOf(x, CHART, 'name') ?? '';
   if (
     !round &&
     axes.some(
       (x) =>
         !['x', 'y'].includes(attributeOf(x, CHART, 'dimension')!) ||
-        !/^primary-|^$/.test(attributeOf(x, CHART, 'name') ?? ''),
+        !(/^primary-|^$/.test(axisName(x)) || (rightAxis && axisName(x) === 'secondary-y')),
     )
   )
     return null;
@@ -264,7 +269,8 @@ export function readOdsChartDocument(root: XmlElement, sheetName: string): Read 
       return null;
     const as = combo ? CLASSES[classes[i]!]! : type;
     const axis = attributeOf(ser, CHART, 'attached-axis');
-    if ((axis && axis !== 'primary-y') || unbuilt(ser, props)) return null;
+    const right = axis === 'secondary-y' && rightAxis;
+    if ((axis && axis !== 'primary-y' && !right) || unbuilt(ser, props)) return null;
     const values = own(attributeOf(ser, CHART, 'values-cell-range-address'));
     if (!values) return null;
     const labelAddress = attributeOf(ser, CHART, 'label-cell-address');
@@ -285,6 +291,7 @@ export function readOdsChartDocument(root: XmlElement, sheetName: string): Read 
       cached: [],
       ...lookOf(as, ser, props),
       ...(combo ? { type: as as SheetComboSeriesType } : {}),
+      ...(right ? { right: true as const } : {}),
     });
   }
   if (scatter && !x) return null;

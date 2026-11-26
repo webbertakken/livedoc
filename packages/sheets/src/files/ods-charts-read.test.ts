@@ -464,6 +464,32 @@ describe('a chart document, read', () => {
     ).toBeNull();
   });
 
+  it('reads a series on the secondary axis as on the right, of a line, area or combo chart alone (D288)', () => {
+    const axes =
+      '<chart:axis chart:dimension="x" chart:name="primary-x"/><chart:axis chart:dimension="y" chart:name="primary-y"/><chart:axis chart:dimension="y" chart:name="secondary-y"/>';
+    const series =
+      '<chart:series chart:values-cell-range-address="S.B2:S.B4"/><chart:series chart:values-cell-range-address="S.C2:S.C4" chart:attached-axis="secondary-y"/>';
+    const right = (o: Parameters<typeof doc>[0]) => chartDoc({ axes, series, ...o });
+    for (const cls of ['chart:line', 'chart:area'])
+      expect(right({ cls })!.series.map((s) => s.right ?? false)).toEqual([false, true]);
+    expect(
+      right({
+        series: series.replace('S.C4"', 'S.C4" chart:class="chart:line"'),
+      })!.series.map((s) => [s.type, s.right ?? false]),
+    ).toEqual([
+      ['column', false],
+      ['line', true],
+    ]);
+    expect(right({})).toBeNull();
+    expect(
+      right({
+        cls: 'chart:area',
+        styles: style('p', 'chart:stacked="true"'),
+        plot: ' chart:style-name="p"',
+      }),
+    ).toBeNull();
+  });
+
   it('reads none of what the model cannot draw (D277)', () => {
     const series = (attrs: string, inner = '') =>
       `<chart:series chart:values-cell-range-address="S.B2:S.B4"${attrs}>${inner}</chart:series>`;
