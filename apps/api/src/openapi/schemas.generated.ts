@@ -6945,6 +6945,26 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
     ],
     "type": "string"
   },
+  "FilterColour": {
+    "additionalProperties": false,
+    "properties": {
+      "is": {
+        "type": "string"
+      },
+      "key": {
+        "enum": [
+          "bg",
+          "fc"
+        ],
+        "type": "string"
+      }
+    },
+    "required": [
+      "key",
+      "is"
+    ],
+    "type": "object"
+  },
   "FilterCondition": {
     "additionalProperties": false,
     "properties": {
@@ -6953,6 +6973,9 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
       },
       "b": {
         "type": "string"
+      },
+      "colour": {
+        "$ref": "#/components/schemas/FilterColour"
       },
       "op": {
         "$ref": "#/components/schemas/ConditionOp"

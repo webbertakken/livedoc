@@ -107,8 +107,16 @@ export type ConditionOp =
   | 'eq'
   | 'neq';
 
-// A column's filter: the displayed values kept (Filter by Values) and/or a condition (Filter by Condition).
-export type FilterCondition = { values?: string[]; op?: ConditionOp; a?: string; b?: string };
+// A column's filter: the displayed values kept (Filter by Values), a condition (Filter by Condition) and/or the fill
+// or text colour its cells are drawn in (Filter by Colour); a row is kept only when it meets every one set.
+export type FilterColour = { key: 'bg' | 'fc'; is: string };
+export type FilterCondition = {
+  values?: string[];
+  op?: ConditionOp;
+  a?: string;
+  b?: string;
+  colour?: FilterColour;
+};
 
 export type SheetFilter = IdRange & { conds: Record<string, FilterCondition> };
 

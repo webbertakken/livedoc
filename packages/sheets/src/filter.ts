@@ -4,7 +4,9 @@ import { localeDayFirst, parseDateText } from './dates';
 import { parsePlainNumber } from './input';
 import { displayValue } from './number-format';
 import { layoutIndex, posRangeOf } from './layout';
-import { cellKey, type FilterCondition, type Sheet } from './sheet';
+import { cellKey, type FilterColour, type FilterCondition, type Sheet } from './sheet';
+import { isColour } from './format';
+import { colourOfSheet, type CellColourOf } from './filter-colours';
 import { isError, type Scalar, type Value } from './formula/values';
 import { INPUT_MAX, SHEET_ROWS_MAX } from './limits';
 import type { Workbook } from './engine/workbook';
@@ -29,7 +31,13 @@ export const CONDITION_OPS: readonly NonNullable<FilterCondition['op']>[] = [
   'neq',
 ];
 
-const CONDITION_KEYS = new Set(['values', 'op', 'a', 'b']);
+const CONDITION_KEYS = new Set(['values', 'op', 'a', 'b', 'colour']);
+
+function isFilterColour(v: unknown): v is FilterColour {
+  if (typeof v !== 'object' || v === null || Array.isArray(v)) return false;
+  const c = v as Record<string, unknown>;
+  return Object.keys(c).length === 2 && (c.key === 'bg' || c.key === 'fc') && isColour(c.is);
+}
 const shortText = (v: unknown) => typeof v === 'string' && v.length <= INPUT_MAX;
 
 /** Whether `v` is a filter condition as a write may store one: its listed values (strings, at most
@@ -45,6 +53,7 @@ export function isFilterCondition(v: unknown): v is FilterCondition {
   )
     return false;
   if (c.op !== undefined && !(CONDITION_OPS as readonly unknown[]).includes(c.op)) return false;
+  if (c.colour !== undefined && !isFilterColour(c.colour)) return false;
   return (c.a === undefined || shortText(c.a)) && (c.b === undefined || shortText(c.b));
 }
 
@@ -137,7 +146,12 @@ export type FilterTest = (r: number, read: (r: number, c: number) => Value) => b
 
 // The test of a sheet's filter: rows of its range under the header row that some column's condition rejects; null
 // when the sheet has no filter or no condition. SUBTOTAL reads it through its formula's frame, so its reads are noted.
-export function filterTest(sheet: Sheet, locale: string): FilterTest | null {
+// A colour is read through `colourOf` (the cells' drawn colours, filter-colours.ts); without it no colour is met.
+export function filterTest(
+  sheet: Sheet,
+  locale: string,
+  colourOf: CellColourOf = () => null,
+): FilterTest | null {
   const filter = sheet.layout.filter;
   if (!filter) return null;
   const box = posRangeOf(sheet.layout, filter);
@@ -156,7 +170,8 @@ export function filterTest(sheet: Sheet, locale: string): FilterTest | null {
   return (r, read) => {
     if (r <= box.r1 || r > box.r2) return false;
     const rowId = sheet.layout.rows[r]!;
-    return conds.some(({ c, col, matches }) => {
+    return conds.some(({ c, col, cond, matches }) => {
+      if (cond.colour && colourOf(r, c, cond.colour.key) !== cond.colour.is) return true;
       const v = read(r, c);
       const shown = displayValue(v, sheet.cells.get(cellKey(rowId, col))?.format, locale).text;
       return !matches(isError(v) ? v : (v as Scalar), shown);
@@ -168,7 +183,7 @@ export function filterTest(sheet: Sheet, locale: string): FilterTest | null {
 export function filteredOutRows(wb: Workbook, sheetId: string): Set<string> {
   const out = new Set<string>();
   const sheet = wb.sheet(sheetId);
-  const test = sheet && filterTest(sheet, wb.locale);
+  const test = sheet && filterTest(sheet, wb.locale, colourOfSheet(wb, sheetId));
   if (!sheet || !test) return out;
   const read = (r: number, c: number): Value => wb.value(sheetId, r, c);
   sheet.layout.rows.forEach((rowId, r) => {

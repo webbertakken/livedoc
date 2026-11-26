@@ -8,7 +8,9 @@ import { useMemo, useState, type ReactNode } from 'react';
 import {
   CONDITION_OPS,
   columnLetters,
+  columnColours,
   columnValueCounts,
+  type FilterColour,
   type FilterCondition,
   type SortKey,
 } from '@livedoc/sheets';
@@ -17,6 +19,7 @@ import { MenuActionRow } from '@/components/primitives/PortalMenu';
 import { useSheetController, type OpenMenu } from './sheet-controller';
 import type { SheetActions } from './useSheetActions';
 import { SheetCellMenu } from './SheetCellMenu';
+import { FilterByColour } from './FilterByColour';
 import { FilterIcon, SortIcon } from './sheet-icons';
 import { SheetLinesMenu } from './SheetLinesMenu';
 import { SheetResizeDialog } from './SheetResizeDialog';
@@ -143,6 +146,15 @@ function FilterMenu({
   const [kept, setKept] = useState<Set<string>>(
     () => new Set(current?.values ?? values.map((v) => v.text)),
   );
+  const colours = useMemo(
+    () => ({
+      bg: columnColours(c.workbook, c.sheet.id, colId, 'bg'),
+      fc: columnColours(c.workbook, c.sheet.id, colId, 'fc'),
+    }),
+    // Read again whenever a value or a format may have changed (`version`).
+    [c.workbook, c.sheet.id, colId, c.version], // oxlint-disable-line react/exhaustive-deps
+  );
+  const [colour, setColour] = useState<FilterColour | null>(current?.colour ?? null);
   const [search, setSearch] = useState('');
   const [op, setOp] = useState<FilterCondition['op'] | ''>(current?.op ?? '');
   const [a, setA] = useState(current?.a ?? '');
@@ -153,6 +165,7 @@ function FilterMenu({
     const cond: FilterCondition = {
       ...(all ? {} : { values: [...kept] }),
       ...(op ? { op, ...(a ? { a } : {}), ...(op === 'between' && b ? { b } : {}) } : {}),
+      ...(colour ? { colour } : {}),
     };
     actions.setFilter(colId, Object.keys(cond).length ? cond : null);
     onClose();
@@ -179,7 +192,8 @@ function FilterMenu({
       <ContextMenuDivider />
       {/* As wide as the menu, never wider: a wider panel spilled its fields, counts and OK past the menu's edge. */}
       <div className="w-full min-w-0 px-3 py-1.5 text-body" onKeyDown={(e) => e.stopPropagation()}>
-        <div className="mb-1 text-supporting text-slate-500 dark:text-slate-400">
+        <FilterByColour colours={colours} value={colour} onChange={setColour} />
+        <div className="mb-1 mt-2 text-supporting text-slate-500 dark:text-slate-400">
           Filter by Values
         </div>
         <input

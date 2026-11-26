@@ -1,7 +1,7 @@
 # Data tools
 
-**Status: partly built.** Sort Sheet, Sort Range with its Advanced Range Sorting Options, and Create a Filter
-are built; the rest is specified.
+**Status: partly built.** Sort Sheet, Sort Range with its Advanced Range Sorting Options, Create a Filter and Filter
+by Colour are built; the rest is specified.
 
 Sorting, filtering, validation, names, protection, tables and clean-up in a [spreadsheet](spreadsheet.md), as
 Google Sheets' Data menu does. Its rows of the [parity matrix](parity-matrix.md) name this page.
@@ -29,6 +29,14 @@ Google Sheets' Data menu does. Its rows of the [parity matrix](parity-matrix.md)
 - A column's filter menu: Sort A to Z, Sort Z to A, **Filter by Colour** (fill, text), **Filter by Condition** (every
   condition of Google's list and Custom Formula), **Filter by Values** (a searchable list with counts, Select All,
   Clear).
+- **Filter by Colour** lists, under **Fill Colour** and **Text Colour**, the colours the column's cells under the
+  header are drawn in, once each in the order they first appear, each a swatch named by its colour. A cell's colour
+  is a met format rule's over its own, a theme colour as the theme draws it; alternating colours never count (as
+  Google's: they shade by position). Pressing a colour keeps only the rows drawn in it (one colour, fill or text, a
+  column); pressing it again lets every colour through; OK applies it with the values and the condition, a row kept
+  only when it meets all three. A column with no colour says "No colours in this column". It filters by colours
+  already there, so it is not a colour picker ([Colour picker](../004-interface-design/colour-picker.md#not-colour-pickers)).
+  SUBTOTAL leaves out the rows it hides, as every filtered row.
 - **Filter views**: **Create Filter View** makes a named filter that changes only the viewer's view; others see it
   in Data › Filter Views and may open it. **Save as Filter View**, **Duplicate**, **Rename**, **Delete**; a link opens
   one. A Viewer may make temporary filter views of their own, as Google's.

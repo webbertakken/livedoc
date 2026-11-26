@@ -183,7 +183,9 @@ Colours** (the four-dot glyph), which opens the full picker.
 
 Preset tiles that set several things at once (sticky presets, chart palettes, theme cards, gradient presets),
 and colours that are assigned rather than chosen (Plan labels, a presence colour given at random) stay as they
-are. A presence colour someone chooses is chosen in the picker, from the presence colours.
+are. A presence colour someone chooses is chosen in the picker, from the presence colours. A spreadsheet filter's
+**Filter by Colour** lists the colours already drawn in a column to filter by, with the one swatch; it chooses no
+colour, so it is no picker ([Data tools](../029-sheets/data-tools.md#filters-filter-views-and-slicers)).
 
 ## Defaults
 

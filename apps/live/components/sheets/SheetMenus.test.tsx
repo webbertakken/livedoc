@@ -2,6 +2,7 @@
 // The grid's menus (docs/specs/029-sheets/sheet.md "Cell menu", "Rows and columns", "Filter", "Sort"): the cell menu,
 // a header's menu, a filter column's values and condition, and Custom Sort, each acting on the selection.
 import { act, fireEvent, screen, within } from '@testing-library/react';
+import { colourName } from '@/components/colour/colour-options';
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { OpenMenu } from './sheet-controller';
 import {
@@ -517,6 +518,44 @@ describe('the filter menu', () => {
     fireEvent.change(screen.getByLabelText('Condition'), { target: { value: '' } });
     fireEvent.click(btn('OK'));
     expect(cond()).toBeUndefined();
+  });
+
+  // data-tools.md "Filters, filter views and slicers": Filter by Colour.
+  it('filters by a fill or text colour drawn in the column, pressed again to let all through', async () => {
+    h = await makeSheet({
+      cells: { A1: 'Fruit', A2: 'apple', A3: 'pear', A4: 'apple', B1: 'n', B2: '1', B5: '9' },
+      format: { A1: { bg: '#123456' }, A2: { bg: '#ff0000' }, A3: { fc: '#0000ff' } },
+    });
+    await open();
+    const fill = screen.getByRole('group', { name: 'Fill Colour' });
+    // The header's colour is not the column's.
+    expect(within(fill).getAllByRole('button')).toHaveLength(1);
+    fireEvent.click(within(fill).getByRole('button', { name: colourName('#ff0000') }));
+    fireEvent.click(btn('OK'));
+    expect(cond()).toEqual({ colour: { key: 'bg', is: '#ff0000' } });
+    reopen();
+    const text = screen.getByRole('group', { name: 'Text Colour' });
+    expect(
+      within(fill)
+        .getByRole('button', { name: colourName('#ff0000') })
+        .getAttribute('aria-pressed'),
+    ).toBe('true');
+    fireEvent.click(within(text).getByRole('button', { name: colourName('#0000ff') }));
+    fireEvent.click(btn('OK'));
+    expect(cond()).toEqual({ colour: { key: 'fc', is: '#0000ff' } });
+    reopen();
+    fireEvent.click(
+      within(screen.getByRole('group', { name: 'Text Colour' })).getByRole('button', {
+        name: colourName('#0000ff'),
+      }),
+    );
+    fireEvent.click(btn('OK'));
+    expect(cond()).toBeUndefined();
+  });
+
+  it('says when no colour is drawn in the column', async () => {
+    await open();
+    expect(screen.getByText('No colours in this column')).toBeTruthy();
   });
 
   it('sorts the column, and cancels without a change', async () => {
