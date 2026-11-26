@@ -22,6 +22,8 @@ type ChartTable = {
   categories: string[];
   // Whether the read numbered the categories itself (no label column); absent, told by whether they run 1, 2, ….
   numbered?: boolean;
+  // Whether the label column holds text, naming a scatter's points (pie-chart.md "Scatter's point names").
+  named?: boolean;
   series: { name: string; values: (number | null)[] }[];
 };
 
@@ -128,7 +130,7 @@ const numbered = (categories: readonly string[]) => categories.every((c, i) => c
 export function chartFieldsFromTable(
   el: ChartFields,
   t: ChartTable,
-): { pieSlices: PieSlice[] } | { lineCategories: string[]; lineSeries: LineSeries[] } {
+): { pieSlices: PieSlice[] } | LineFields {
   if (el.shape === 'line-chart') return lineFieldsFromTable(el, t);
   const first = t.series[0]?.values ?? [];
   return {
@@ -144,14 +146,21 @@ export function chartFieldsFromTable(
   };
 }
 
-// A line, area or scatter chart's fields from a table (chartFieldsFromTable's line half): every series, a scatter's
-// numbered first column as its x.
-export function lineFieldsFromTable(
-  el: ChartFields,
-  t: ChartTable,
-): { lineCategories: string[]; lineSeries: LineSeries[] } {
-  const xFromFirst =
-    chartTypeOf(el) === 'scatter' && t.series.length >= 2 && (t.numbered ?? numbered(t.categories));
+// A line, area or scatter chart's data fields; `linePointNames` is always there, so a read clears names it no longer
+// gives.
+export type LineFields = {
+  lineCategories: string[];
+  lineSeries: LineSeries[];
+  linePointNames: string[] | undefined;
+};
+
+// A line, area or scatter chart's fields from a table (chartFieldsFromTable's line half): every series; a scatter's
+// numbered first column as its x, or its label column of text as its point names and its first column of numbers as
+// its x (pie-chart.md "Scatter's point names").
+export function lineFieldsFromTable(el: ChartFields, t: ChartTable): LineFields {
+  const scatterX = chartTypeOf(el) === 'scatter' && t.series.length >= 2;
+  const named = scatterX && t.named === true;
+  const xFromFirst = named || (scatterX && (t.numbered ?? numbered(t.categories)));
   // An empty x cell is an empty category: no x, so its points are not drawn.
   const categories = xFromFirst
     ? t.series[0]!.values.map((x) => (x === null ? '' : String(x)))
@@ -159,6 +168,7 @@ export function lineFieldsFromTable(
   const series = xFromFirst ? t.series.slice(1) : t.series;
   return {
     lineCategories: categories,
+    linePointNames: named ? t.categories : undefined,
     // What a series carries beyond its data stays with its place: its colour, Right Axis and Lines.
     lineSeries: series.map((s, i) => {
       const was = el.lineSeries?.[i];

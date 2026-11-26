@@ -39,6 +39,7 @@ describe('a chart from a range', () => {
       at: { header: 0, labels: 0, rows: [1, 2], cols: [1, 2] },
       categories: ['Jan', 'Feb'],
       numbered: false,
+      named: true,
       series: [
         { name: 'Sales', col: 's0c1', values: [10, 20] },
         { name: 'Costs', col: 's0c2', values: [4, null] },
@@ -76,12 +77,40 @@ describe('a chart from a range', () => {
     });
   });
 
+  // pie-chart.md "Scatter's point names": a label column of text names points; one of dates or numbers does not.
+  it('tells a label column of text, which names, from one of dates or numbers', () => {
+    const { b, link } = setup({
+      A1: 'Model',
+      B1: 'Cost',
+      C1: 'Index',
+      A2: 'Haiku',
+      B2: '0.2',
+      C2: '76',
+      A3: '',
+      B3: '0.3',
+      C3: '70',
+    });
+    expect(sheetChartTable(b.wb, link(0, 0, 2, 2), 'en-GB')).toMatchObject({
+      categories: ['Haiku', ''],
+      named: true,
+    });
+    const dated = setup({ A1: 'Day', B1: 'Index', A2: '03/04/2026', B2: '40' });
+    expect(sheetChartTable(dated.b.wb, dated.link(0, 0, 1, 1), 'en-GB')).toMatchObject({
+      numbered: false,
+      named: false,
+    });
+    const counted = setup({ A1: 'Cost', B1: 'Index', A2: '1', B2: '40' });
+    expect(sheetChartTable(counted.b.wb, counted.link(0, 0, 1, 1), 'en-GB')!.named).toBe(false);
+    expect(emptyChartTable().named).toBe(false);
+  });
+
   it('numbers the categories and names series by column without labels or a header', () => {
     const { b, link } = setup({ B1: '1', C1: '2', B2: '3', C2: '4' });
     expect(sheetChartTable(b.wb, link(0, 1, 1, 2), 'en-GB')).toEqual({
       at: { header: null, labels: null, rows: [0, 1], cols: [1, 2] },
       categories: ['1', '2'],
       numbered: true,
+      named: false,
       series: [
         { name: 'Column B', col: 's0c1', values: [1, 3] },
         { name: 'Column C', col: 's0c2', values: [2, 4] },
@@ -109,6 +138,7 @@ describe('a chart from a range', () => {
       at: { header: 0, labels: 0, rows: [1, 2], cols: [2] },
       categories: ['Rent', 'Food'],
       numbered: false,
+      named: true,
       series: [{ name: 'Amount', col: 's0c2', values: [1200, 320] }],
     });
   });

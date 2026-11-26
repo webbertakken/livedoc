@@ -28,6 +28,9 @@ the same 1-D data model, while the line chart carries a 2-D dataset (see Model).
   value is a gap"), shown as an empty field.
 - Hovering a mark (slice / bar / line point) shows a readout with its label +
   value, regardless of the legend toggle.
+- **The readout stays in view** (operator, 2026-11-26): it sits above its mark, centred, and moves in along its side
+  just far enough to stay inside what is seen of the page, a sheet scrolled part way past the chart, a panel's edge
+  or the window's; with no room above its mark it sits below it.
 - A **Chart** context-menu category holds display options: a **Legend**
   placement picker — **Off / Top / Left / Right / Below** (glyph-over-label
   tiles). Picking a side both turns the legend on and positions it (setting
@@ -138,6 +141,10 @@ Chart" and a screen reader hears "Column chart", as the palette's tile says, nev
   spaced values; otherwise the categories are evenly spaced, as Line's are, and labelled as Line's. A category left
   empty has no x: its points are not drawn, and it does not stop the others reading as numbers. Its readout reads
   `x · series: y`.
+- **Scatter's point names**: a scatter chart may name its points, one name per category (`linePointNames`); a named
+  point's readout reads `name, y, x`, its name, its value and its x, whatever series it is in (operator,
+  2026-11-26), so a point drawn on a line series (a frontier over the others) still says whose it is. A point with
+  an empty name reads as an unnamed one.
 - **Scatter's value range** fits its values, as Google Sheets' does: from a round value under the least to one over the
   greatest, with zero in it only when the values cross it, so points far from zero spread over the plot rather than
   sit squeezed at its top over an empty band. Values all equal widen by half a unit either way. Line, Area, Column
@@ -173,6 +180,8 @@ groups all three (they're all in `isSelfDrawingShape` too).
 - Line: `ShapeElement.lineCategories?: string[]` + `lineSeries?: LineSeries[]`
   (`{ name, color?, values: (number | null)[] }`), aligned to the categories — a 2-D
   dataset; `null` is no value (Chart types "No value is a gap"). `LINE_DEFAULT_CATEGORIES` / `LINE_DEFAULT_SERIES` seed a fresh chart.
+- Scatter: `ShapeElement.linePointNames?: string[]`, one name per category (Scatter's point names), each text;
+  absent when its points have none. Validation refuses a list that is not of text, as it does a category.
 - **Rows on the way in**: validation refuses a slice that is not `{ label, ... }`, a series that is
   not `{ name, values, ... }` and a category that is not text. A row that arrives malformed anyway
   (stored before, a peer's op, a file) is settled as it enters (`settleChartRows`): a slice or series
@@ -219,7 +228,9 @@ A chart may carry `chartSource` (a sheet and a range of it): its data is then re
 the element's own data is the last read ([Sheet charts](../029-sheets/sheet.md#charts)). Its Data menu offers
 **Unlink From Sheet** in place of the data editor. A Scatter chart from a Sheet whose first column holds numbers (so
 the read numbers its categories `1, 2, …` and makes that column a series) takes that column as its x and the other
-columns as its series, as a spreadsheet's scatter chart does. Each read keeps what its series carry beyond their
+columns as its series, as a spreadsheet's scatter chart does. A Scatter chart from a Sheet whose first column holds
+text (not dates) beside two or more columns of numbers names its points by that column and takes the next column as
+its x, the rest as its series (operator, 2026-11-26). Each read keeps what its series carry beyond their
 data, by position: a colour, `axis: 'right'` and `line: true`, so Right Axis and Lines survive the cells changing.
 
 ### Lines set by an agent
@@ -295,5 +306,6 @@ The code cites each by its id.
 - **D101** A chart with no data: Empty `pieSlices` (or line arrays) render the sample data (default).
 - **D102** Minimum rows in the menu / dialog editors: Remove is disabled at one row (slices, categories, series,
   checklist rows) (default).
-- **D106** Readout copy: `label: value` (blank label shows an em dash glyph); line `category · series: value` (default).
+- **D106** Readout copy: `label: value` (blank label shows an em dash glyph); line `category · series: value` (default);
+  a named scatter point `name, y, x` (operator, 2026-11-26).
 - **D107** Key strip when too small: Not rendered below 48 px wide (side) or 18 px tall (band) (default).

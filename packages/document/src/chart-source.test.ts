@@ -78,6 +78,38 @@ describe('a chart drawn from a sheet range', () => {
     });
   });
 
+  it('names a scatter chart’s points by a column of text, the next its x (pie-chart.md "Scatter\'s point names")', () => {
+    const scatter = { shape: 'line-chart', chartVariant: 'scatter' };
+    const named = {
+      categories: ['Haiku', 'Flash'],
+      numbered: false,
+      named: true,
+      series: [
+        { name: 'Cost', values: [0.2, null] },
+        { name: 'Index', values: [76, 70] },
+        { name: 'Pareto', values: [76, null] },
+      ],
+    };
+    expect(chartFieldsFromTable(scatter, named)).toEqual({
+      lineCategories: ['0.2', ''],
+      linePointNames: ['Haiku', 'Flash'],
+      lineSeries: [
+        { name: 'Index', values: [76, 70] },
+        { name: 'Pareto', values: [76, null] },
+      ],
+    });
+    // One column of numbers is no x and a series both; a line chart names no point. Each says so, so a read clears
+    // the names an earlier one gave.
+    const single = { ...named, series: [named.series[1]!] };
+    for (const fields of [
+      chartFieldsFromTable(scatter, single),
+      chartFieldsFromTable({ shape: 'line-chart' }, named),
+    ]) {
+      expect(fields).toHaveProperty('linePointNames', undefined);
+      expect(fields).toMatchObject({ lineCategories: ['Haiku', 'Flash'] });
+    }
+  });
+
   it('gives a bar its first series, a pie never below zero, and a line every series, keeping colours', () => {
     expect(
       chartFieldsFromTable(

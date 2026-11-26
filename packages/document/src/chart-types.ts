@@ -79,6 +79,7 @@ type ChartTypePatch = {
   pieSlices?: PieSlice[] | undefined;
   lineCategories?: string[] | undefined;
   lineSeries?: LineSeries[] | undefined;
+  linePointNames?: string[] | undefined;
 };
 
 // The patch that makes `el` draw as `type` (spec "Changing type"): within a kind only the variant; across kinds
@@ -110,6 +111,7 @@ export function chartTypeChange(el: ChartData, type: ChartType): ChartTypePatch 
     }
     patch.lineCategories = undefined;
     patch.lineSeries = undefined;
+    patch.linePointNames = undefined;
     return patch;
   }
   // Pie and bar share their slices; a pie never draws below zero.

@@ -63,7 +63,8 @@ export function sheetChartElement(
       pieSlices: color ? fields.pieSlices.map((s) => ({ ...s, color })) : fields.pieSlices,
     };
   }
-  // A scatter chart may take its first column as the x: the series drawn are the table's last ones.
+  // A scatter chart may take its first column of numbers as the x (and its column of text as its point names): the
+  // series drawn are the table's last ones.
   const skipped = table.series.length - fields.lineSeries.length;
   const lineSeries = fields.lineSeries.map((s, i): LineSeries => {
     const look = chart.series?.[table.series[i + skipped]!.col];
@@ -74,5 +75,10 @@ export function sheetChartElement(
       ...(look?.line ? { line: true as const } : {}),
     };
   });
-  return { ...base, lineCategories: fields.lineCategories, lineSeries };
+  return {
+    ...base,
+    lineCategories: fields.lineCategories,
+    lineSeries,
+    ...(fields.linePointNames ? { linePointNames: fields.linePointNames } : {}),
+  };
 }

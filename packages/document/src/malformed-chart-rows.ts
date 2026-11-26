@@ -37,6 +37,7 @@ const ROWS: readonly [string, (v: unknown) => boolean, (v: unknown) => unknown][
         : null,
   ],
   ['lineCategories', isChartCategory, asText],
+  ['linePointNames', isChartCategory, asText],
 ];
 
 /** The elements with every malformed chart row repaired or dropped; the same array when none had

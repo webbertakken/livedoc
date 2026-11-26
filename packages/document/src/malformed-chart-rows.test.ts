@@ -37,6 +37,8 @@ describe('settleChartRows', () => {
     ]);
     const el = out as ShapeElement;
     expect(el.lineCategories).toEqual(['Jan', '2024', '', '', 'true']);
+    const [named] = settleChartRows([chart('line-chart', { linePointNames: ['Haiku', 7, null] })]);
+    expect((named as ShapeElement).linePointNames).toEqual(['Haiku', '7', '']);
     expect(el.lineSeries).toEqual([
       { name: '', values: [] },
       { name: 'S', values: [1, 2] },
@@ -61,6 +63,10 @@ describe('a malformed chart row on the way in', () => {
     expect(elementValidationIssue(chart('line-chart', { lineCategories: [1] }))?.field).toBe(
       'lineCategories',
     );
+    expect(elementValidationIssue(chart('line-chart', { linePointNames: [1] }))?.field).toBe(
+      'linePointNames',
+    );
+    expect(elementValidationIssue(chart('line-chart', { linePointNames: ['Haiku'] }))).toBeNull();
   });
 
   it('is settled by the incoming-tab migration, so the tab validates and draws', () => {

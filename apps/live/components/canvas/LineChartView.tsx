@@ -19,6 +19,7 @@ import {
   LINE_DEFAULT_SERIES,
   legendFontPx,
   chartValue,
+  chartTypeOf,
   type ShapeElement,
 } from '@livedoc/document';
 import { useChartAnim, chartFrame } from '@/lib/chart';
@@ -70,6 +71,10 @@ export function LineChartView({
   // Only a drawn point is hovered: no value draws none (pie-chart.md "No value is a gap").
   const hovered = hover ? m.points[hover.s]?.[hover.i] : null;
   const hoveredValue = hover ? chartValue(series[hover.s]?.values[hover.i]) : null;
+  // A named scatter point reads by its name, its value and its x, whatever series it is in (pie-chart.md "Scatter's
+  // point names").
+  const pointName =
+    hover && chartTypeOf(element) === 'scatter' ? element.linePointNames?.[hover.i] : undefined;
 
   const group = useChartAnim(element, `${plotX0 + plotW / 2}px ${plotY0 + plotH / 2}px`);
   const legendItems = lineKeyItems(series, lineVariantOf(element));
@@ -90,8 +95,12 @@ export function LineChartView({
           <ChartReadout
             leftPct={(hovered.x / w) * 100}
             topPct={(hovered.y / h) * 100}
-            label={`${categories[hover.i] ?? ''} · ${series[hover.s]?.name ?? ''}`}
-            value={hoveredValue}
+            {...(pointName
+              ? { text: `${pointName}, ${hoveredValue}, ${categories[hover.i]}` }
+              : {
+                  label: `${categories[hover.i] ?? ''} · ${series[hover.s]?.name ?? ''}`,
+                  value: hoveredValue,
+                })}
           />
         ) : null
       }

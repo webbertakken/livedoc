@@ -110,12 +110,13 @@ function fileChartOf(engine: Workbook, sheet: Sheet, chart: SheetChart, locale: 
       ...(look?.line ? { line: true as const } : {}),
     };
   });
-  // A scatter's x is its label column's numbers, else its first column of numbers (charts.md "The model").
+  // A scatter's x is its label column's numbers, else its first column of numbers (charts.md "The model"); a label
+  // column of text names its points, which the file leaves in the sheet, and its first column of numbers is its x.
   const scatter = chart.type === 'scatter';
-  const scatterX = scatter && labels === null && all.length > 1;
+  const scatterX = scatter && (labels === null || table.named) && all.length > 1;
   const [first, ...rest] = all;
   const labelX =
-    scatter && labels !== null
+    scatter && labels !== null && !table.named
       ? {
           range: columnRange(rows, labels),
           cached: rows.map((r) => {

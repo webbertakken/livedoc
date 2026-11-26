@@ -56,6 +56,24 @@ describe('a spreadsheet chart as a chart element', () => {
     expect(el.chartSource).toEqual({ sheetId: 's1', range });
     expect(el.sheetAnchor).toEqual(at);
     expect([el.width, el.height]).toEqual([420, 280]);
+    expect('linePointNames' in el).toBe(false);
+  });
+
+  // pie-chart.md "Scatter's point names": a label column of text names the points; the next column is the x.
+  it('names a scatter’s points by its column of text, each series’ look still by its column', () => {
+    const named: SheetChartTable = {
+      ...table,
+      categories: ['Haiku', 'Flash', 'Pro'],
+      numbered: false,
+      named: true,
+    };
+    const el = sheetChartElement(chart({ series: { c0002: { line: true } } }), 's1', named, at);
+    expect(el.linePointNames).toEqual(['Haiku', 'Flash', 'Pro']);
+    expect(el.lineCategories).toEqual(['1', '2', '3']);
+    expect(el.lineSeries).toEqual([
+      { name: 'Index', values: [40, 50, 55] },
+      { name: 'Pareto', values: [40, null, 55], line: true },
+    ]);
   });
 
   it('shows the value axis and a bottom legend unless told otherwise, and carries titles and values', () => {
