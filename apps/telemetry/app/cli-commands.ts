@@ -40,6 +40,7 @@ export const CLI_COMMANDS: readonly { type: string; command: string; what: strin
   { type: 'SheetGet', command: 'sheet get', what: 'reading a sheet’s cells' },
   { type: 'SheetSet', command: 'sheet set', what: 'setting cells of a sheet' },
   { type: 'SheetAdd', command: 'sheet add', what: 'putting a new Sheet on a tab' },
+  { type: 'SpreadsheetNew', command: 'spreadsheet new', what: 'making a spreadsheet' },
   {
     type: 'SheetInsertRows',
     command: 'sheet insert-rows',
