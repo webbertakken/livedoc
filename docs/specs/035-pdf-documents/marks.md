@@ -271,7 +271,8 @@ written into the file as a standard annotation, so any reader shows it. The rese
   - **A turned mark's box** is the box as it shows; its selection outline, its handles and what a press reaches are
     its box turned with it. Resizing a turned mark resizes it in its own frame, its angle kept. Moving it moves it as
     it shows `(default)`.
-  - **A turned Text** is typed into turned, its words upright in its own frame `(default)`.
+  - **A turned Text's words** stand upright in its own frame, turned with it; a Text is typed into as it is made,
+    upright, so a turned one is never typed into `(default)`.
   - **In the file** a turned stamp, Text, Rectangle or Ellipse carries `Rotate` its angle (MuPDF's form), its
     appearance drawn upright in `BBox` with the turn as its `Matrix`, and `Rect` the box as it shows (its turned
     box's bounds). It is read back from `Rotate`, else from a turned appearance `Matrix`; a `Matrix` that is no turn
@@ -322,8 +323,8 @@ written into the file as a standard annotation, so any reader shows it. The rese
     `(default)`.
   - It reads, in order: Kind, Author, Subject, Made, Changed (the browser's date and 24-hour time, as a dynamic
     stamp's), Colour (its name in the colour picker, else `#rrggbb`), Opacity (a percentage), and where the mark has
-    them its Angle (degrees, [Rotate](#changing-a-mark)), Line width (points), Line style, Fill and Words; Locked and History join it when Lock and threads are
-    built `(default)`.
+    them its Angle (degrees, [Rotate](#changing-a-mark)), Line width (points), Line style, Fill and Words; Locked and
+    History join it when Lock and threads are built `(default)`.
   - **The subject** is a field of at most `PDF_MARK_SUBJECT_MAX_CHARS` characters, trimmed; Enter or leaving it
     changes the mark, one step of undo; emptied, the mark goes back to its kind's name; Escape puts the field back
     `(default)`. A Viewer, or a Participant on another's mark, never reaches it: only marks this session may change

@@ -4,7 +4,8 @@
 // a mark"): one over each mark made here, in the order the marks are drawn, named for its kind and author, pressed
 // while selected. The pointer passes through them to the page, which finds the mark a press reaches itself; the keys
 // reach them by Tab, which selects the mark. On a selected mark, arrow keys move the selection the way they point on
-// screen, ⇧ farther, and with ⌥ resize the mark; Delete or Backspace deletes it; Escape lets it go.
+// screen, ⇧ farther, and with ⌥ resize the mark; Delete or Backspace deletes it; Escape lets it go. A turned mark's
+// control is its box turned with it, so its focus ring follows the mark (marks.md "Changing a mark": Rotate).
 import type { KeyboardEvent } from 'react';
 import {
   Mark,
@@ -14,6 +15,7 @@ import {
   type PagePoint,
 } from '@livedoc/pdf-documents';
 import { markControlName } from '@/lib/pdf-document/pdf-mark-change';
+import { turnedViewBox } from '@/lib/pdf-document/pdf-rotate-handle';
 import type { PdfPageChoosing } from '@/lib/pdf-document/usePdfMarkSelection';
 import { linkBox } from './PdfPageLinks';
 
@@ -68,7 +70,15 @@ export function PdfPageMarks({
   };
 
   return marks.map((mark) => {
-    const box = linkBox(matrix, Mark.bounds(mark), width, height);
+    const turned = turnedViewBox(mark, matrix);
+    const box = turned
+      ? {
+          left: (turned.x / width) * 100,
+          top: (turned.y / height) * 100,
+          width: (turned.width / width) * 100,
+          height: (turned.height / height) * 100,
+        }
+      : linkBox(matrix, Mark.bounds(mark), width, height);
     const selected = chosen.includes(mark.id);
     return (
       <button
@@ -83,6 +93,7 @@ export function PdfPageMarks({
           top: `${box.top}%`,
           width: `${box.width}%`,
           height: `${box.height}%`,
+          ...(turned ? { rotate: `${turned.degrees}deg` } : {}),
         }}
         onFocus={() => {
           if (choosing && !selected && choosing.mayChange(mark))

@@ -5,6 +5,7 @@
 // this half is proven in a browser (e2e/office/pdf-document-thumbnail.spec.ts), never in jsdom.
 import {
   MarkDrawing,
+  MarkTurn,
   MarkWords,
   PageView,
   type Mark,
@@ -103,23 +104,25 @@ export async function encodePdfThumbnail(
   context.globalCompositeOperation = 'multiply';
   for (const mark of marks) {
     const { fills, strokes, fill } = MarkDrawing.of(mark);
+    // A turned mark is drawn upright, turned into place (marks.md "Changing a mark": Rotate).
+    const toView = MarkTurn.drawnIn(bitmap.toView, mark);
     context.globalAlpha = mark.opacity;
     // A shape's fill in its own colour, under its line.
     if (fill) {
       context.fillStyle = fill.colour;
-      trace(context, bitmap.toView, fill.points);
+      trace(context, toView, fill.points);
       context.closePath();
       context.fill();
     }
     context.fillStyle = mark.colour;
     context.strokeStyle = mark.colour;
     for (const points of fills) {
-      trace(context, bitmap.toView, points);
+      trace(context, toView, points);
       context.closePath();
       context.fill();
     }
     for (const stroke of strokes) {
-      trace(context, bitmap.toView, stroke.points);
+      trace(context, toView, stroke.points);
       if (stroke.closed) context.closePath();
       context.lineWidth = stroke.width;
       context.lineCap = stroke.round ? 'round' : 'butt';
@@ -127,7 +130,7 @@ export async function encodePdfThumbnail(
       context.setLineDash(stroke.dash ?? []);
       context.stroke();
     }
-    setWords(context, bitmap.toView, mark);
+    setWords(context, toView, mark);
   }
   const blob = await new Promise<Blob | null>((resolve) =>
     canvas.toBlob(resolve, 'image/jpeg', quality),

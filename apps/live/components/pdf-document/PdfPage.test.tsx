@@ -574,6 +574,7 @@ describe('changing a mark on a page', () => {
     leave: vi.fn(),
     move: vi.fn(),
     reshape: vi.fn(),
+    turn: vi.fn(),
     remove: vi.fn(),
   });
 

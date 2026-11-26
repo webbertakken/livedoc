@@ -1,10 +1,13 @@
 // A mark's handles as they show (docs/specs/035-pdf-documents/marks.md "Changing a mark"): where each sits in view
 // space, and the mark's geometry with one dragged. A box's handles are named for where they show, so the handle on the
 // right sizes the side that shows on the right whatever the page's turn; ⇧ with a corner keeps the box's proportions;
-// the box stays at least PDF_SHAPE_MIN_PT each way and on its page. ⌥ with an arrow key is the foot-right corner, or a
+// the box stays at least PDF_SHAPE_MIN_PT each way and on its page. A turned mark's handles sit on its box turned with
+// it, and a drag sizes it in its own frame (marks.md "Changing a mark": Rotate). ⌥ with an arrow key is the foot-right corner, or a
 // line's second end, moved the way the arrow points.
 import {
   MarkReshape,
+  MarkTurn,
+  PDF_MAX_COORDINATE,
   PageView,
   PDF_SHAPE_MIN_PT,
   type Box,
@@ -62,6 +65,29 @@ function onPage(matrix: PageMatrix, at: PagePoint, page: Box): PagePoint | null 
     : null;
 }
 
+/** Where a turned mark's frame lies beyond its page: its frame's points are held to none. */
+const NO_PAGE: Box = [
+  -PDF_MAX_COORDINATE,
+  -PDF_MAX_COORDINATE,
+  PDF_MAX_COORDINATE,
+  PDF_MAX_COORDINATE,
+];
+
+/**
+ * A point of view space carried between the view and a turned mark's own frame, as the view would show that frame
+ * upright: `into` undoes the mark's turn, `out` makes it; the point itself for an upright mark or a matrix that
+ * cannot be turned back.
+ */
+function framed(mark: Mark, matrix: PageMatrix, at: PagePoint, into: boolean): PagePoint {
+  if (!MarkTurn.angleOf(mark)) return at;
+  const page = PageView.toPage(matrix, at);
+  if (!page) return at;
+  return PageView.toView(
+    matrix,
+    into ? MarkTurn.toFrame(page, mark) : MarkTurn.fromFrame(page, mark),
+  );
+}
+
 /** Each of a mark's handles and where it shows. */
 export function handlePlaces(mark: Mark, matrix: PageMatrix): readonly HandlePlace[] {
   const box = MarkReshape.box(mark);
@@ -72,7 +98,7 @@ export function handlePlaces(mark: Mark, matrix: PageMatrix): readonly HandlePla
       handle,
       at: point
         ? PageView.toView(matrix, point)
-        : boxHandleAt(handle as BoxHandle, shown as ViewBox),
+        : framed(mark, matrix, boxHandleAt(handle as BoxHandle, shown as ViewBox), false),
     };
   });
 }
@@ -114,9 +140,16 @@ export function dragHandle(
       ? MarkReshape.pointed(mark, handle as Exclude<MarkHandle, BoxHandle>, point)
       : null;
   }
-  const box = dragged(viewBoxOf(matrix, MarkReshape.box(mark)!), handle as BoxHandle, to, square);
-  const one = onPage(matrix, { x: box.left, y: box.top }, page);
-  const other = onPage(matrix, { x: box.right, y: box.bottom }, page);
+  const box = dragged(
+    viewBoxOf(matrix, MarkReshape.box(mark)!),
+    handle as BoxHandle,
+    framed(mark, matrix, to, true),
+    square,
+  );
+  // A turned mark's box is sized in its own frame, whose points need not lie on the page for what shows to.
+  const held = MarkTurn.angleOf(mark) ? NO_PAGE : page;
+  const one = onPage(matrix, { x: box.left, y: box.top }, held);
+  const other = onPage(matrix, { x: box.right, y: box.bottom }, held);
   if (!one || !other) return null;
   return MarkReshape.reboxed(mark, [
     Math.min(one.x, other.x),

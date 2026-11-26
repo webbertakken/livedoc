@@ -176,3 +176,32 @@ describe('keyResize', () => {
     expect(keyResize(highlight, UPRIGHT, { x: 1, y: 0 }, PAGE)).toBeNull();
   });
 });
+
+// marks.md "Changing a mark": Rotate. A turned mark's handles sit on its box turned with it; a drag sizes it in its
+// own frame, its angle kept and the corner held where it shows.
+describe('a turned mark’s handles', () => {
+  const turned = { ...ellipse, turn: 90 };
+
+  it('sit on its box turned with it', () => {
+    const places = handlePlaces(turned, UPRIGHT);
+    // The upright box (100, 100)-(200, 150) a quarter anticlockwise about (150, 125): its east side's middle is on top.
+    const east = places.find((place) => place.handle === 'e')!.at;
+    expect(east.x).toBeCloseTo(150, 6);
+    expect(east.y).toBeCloseTo(400 - 175, 6);
+  });
+
+  it('size it in its own frame, the opposite corner held where it shows', () => {
+    const east = handlePlaces(turned, UPRIGHT).find((place) => place.handle === 'e')!.at;
+    // Dragged 20 further out (up on screen): 20 wider in its frame, its angle kept, its west side where it was.
+    const place = dragHandle(turned, 'e', UPRIGHT, { x: east.x, y: east.y - 20 }, false, PAGE)!;
+    const rect = (place as { rect: Box }).rect;
+    expect(rect[2] - rect[0]).toBeCloseTo(120, 6);
+    expect(rect[3] - rect[1]).toBeCloseTo(50, 6);
+    const after = { ...turned, ...place };
+    const west = handlePlaces(after, UPRIGHT).find((p) => p.handle === 'w')!.at;
+    const westBefore = handlePlaces(turned, UPRIGHT).find((p) => p.handle === 'w')!.at;
+    expect(west.x).toBeCloseTo(westBefore.x, 6);
+    expect(west.y).toBeCloseTo(westBefore.y, 6);
+    expect(MarkReshape.box(after)).toEqual(rect);
+  });
+});

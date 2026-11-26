@@ -1,7 +1,7 @@
 // docs/specs/035-pdf-documents/editing-modes.md "Switching", "Share roles"; reading-surface.md "Menus", "The
 // toolbar"; keyboard-shortcuts.md: a PDF document's modes, menus, toolbar and shortcuts as the office shell's data.
 import { describe, expect, it } from 'vitest';
-import { TURN_ITEMS } from './pdf-stamp-turns';
+import { TURN_ITEMS } from './pdf-mark-turns';
 import { catalogueFaults, catalogueItems, visibleMenus } from '@/lib/office/office-catalogue';
 import { levelInMode, modesFor, startingMode } from '@/lib/office/office-mode';
 import { visibleToolbar } from '@/lib/office/office-toolbar';
@@ -138,7 +138,7 @@ describe("a PDF document's menus and toolbar", () => {
     UNGROUP_MARKS,
     // usePdfMarkProperties.ts: Format > Properties.
     MARK_PROPERTIES,
-    // usePdfStampTurns.ts: Format > Rotate, the selected stamps.
+    // usePdfMarkTurns.ts: Format > Rotate, the selected marks that turn.
     ...Object.keys(TURN_ITEMS),
     // usePdfMarkRestyle.ts: Format > Opacity, Line width, Line style, Line ends and Align text, of the selected marks.
     ...Object.keys(OPACITY_ITEMS),

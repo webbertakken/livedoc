@@ -33,6 +33,7 @@ function marks(chosen: readonly string[] = [], choose = true) {
     leave: vi.fn(),
     move: vi.fn(),
     reshape: vi.fn(),
+    turn: vi.fn(),
     remove: vi.fn(),
   };
   const onNudge = vi.fn();
