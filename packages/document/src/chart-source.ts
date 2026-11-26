@@ -5,6 +5,7 @@
 import { PLAN_SHEET_ID_PATTERN } from './element-types';
 import { chartValue, type LineSeries, type PieSlice } from './data-shapes';
 import { chartTypeOf } from './chart-types';
+import { isComboSeriesType } from './chart-combo-types';
 
 export type ChartSource = {
   sheetId: string;
@@ -183,7 +184,7 @@ export function lineFieldsFromTable(el: ChartFields, t: ChartTable): LineFields 
   return {
     lineCategories: categories,
     linePointNames: named ? t.categories : undefined,
-    // What a series carries beyond its data stays with its place: its colour, Right Axis and Lines.
+    // What a series carries beyond its data stays with its place: its colour, Right Axis, Lines and Combo type.
     lineSeries: series.map((s, i) => {
       const was = el.lineSeries?.[i];
       return {
@@ -192,6 +193,7 @@ export function lineFieldsFromTable(el: ChartFields, t: ChartTable): LineFields 
         ...(was?.color ? { color: was.color } : {}),
         ...(was?.axis === 'right' ? { axis: 'right' as const } : {}),
         ...(was?.line === true ? { line: true as const } : {}),
+        ...(isComboSeriesType(was?.type) ? { type: was.type } : {}),
       };
     }),
   };

@@ -185,7 +185,7 @@ describe('a design', () => {
     );
     if (!built.ok) throw new Error(built.message);
     expect(built.line).toMatch(
-      /a chart \(a pie chart shows one series, Planned; line and area charts show all 2\)$/,
+      /a chart \(a pie chart shows one series, Planned; column, bar, line and area charts show all 2\)$/,
     );
     expect(built.charts[0]!.palette).toBe('earth');
   });

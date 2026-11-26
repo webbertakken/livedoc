@@ -412,8 +412,8 @@ export function lineKeyItems(series: readonly LineSeries[], variant: LineVariant
   }));
 }
 
-// A series' points split at each gap into runs of points side by side.
-function runsOf(points: readonly (ChartPoint | null)[]): ChartPoint[][] {
+/** A series' points split at each gap into runs of points side by side. */
+export function runsOf(points: readonly (ChartPoint | null)[]): ChartPoint[][] {
   const runs: ChartPoint[][] = [];
   let run: ChartPoint[] = [];
   for (const p of points) {

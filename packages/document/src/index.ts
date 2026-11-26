@@ -739,6 +739,7 @@ export * from './chart-marks';
 export * from './chart-bar-groups';
 export * from './chart-stack';
 export * from './chart-smooth';
+export * from './chart-combo';
 export * from './chart-axis';
 export * from './chart-values';
 export * from './chart-source';

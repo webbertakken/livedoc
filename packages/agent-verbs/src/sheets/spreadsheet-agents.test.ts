@@ -193,6 +193,59 @@ describe('a chart in a spreadsheet', () => {
     expect(read.charts![0]).toMatchObject({ type: 'line', smooth: true });
   });
 
+  it('types a combo chart’s series and puts one on the right axis, by name, and reads them back', async () => {
+    const { api } = book();
+    const made = await changeSheet(
+      api,
+      DOC_A,
+      {
+        sheet: 'Models',
+        changes: [
+          {
+            op: 'chart',
+            type: 'combo',
+            range: 'A1:D4',
+            seriesTypes: { index: 'area' },
+            rightAxis: ['Pareto'],
+          },
+        ],
+      },
+      'mcp',
+    );
+    expect(made.refusal).toBeUndefined();
+    const read = await readSheet(api, DOC_A, { sheet: 'Models' });
+    if (!read.ok) throw new Error(read.message);
+    expect(read.charts![0]).toMatchObject({
+      type: 'combo',
+      seriesTypes: { Cost: 'column', Index: 'area', Pareto: 'line' },
+      rightAxis: ['Pareto'],
+    });
+  });
+
+  it('refuses series types off a combo chart, a right axis off a line, area or combo, and an unknown series', async () => {
+    const { api } = book();
+    const tryChart = async (extra: Record<string, unknown>) =>
+      (
+        await changeSheet(
+          api,
+          DOC_A,
+          { sheet: 'Models', changes: [{ op: 'chart', range: 'A1:D4', ...extra } as never] },
+          'mcp',
+        )
+      ).refusal;
+    expect(await tryChart({ type: 'line', seriesTypes: { Cost: 'area' } })).toMatchObject({
+      code: 'write_invalid',
+      message: expect.stringContaining('seriesTypes type a combo chart'),
+    });
+    expect(await tryChart({ type: 'column', rightAxis: ['Cost'] })).toMatchObject({
+      message: expect.stringContaining('a column chart has one'),
+    });
+    expect(await tryChart({ type: 'combo', seriesTypes: { Price: 'line' } })).toMatchObject({
+      message: expect.stringContaining('"Price" is no series of the chart'),
+    });
+    expect(await tryChart({ type: 'area', rightAxis: ['Index'] })).toBeUndefined();
+  });
+
   it('refuses to replace a chart the sheet does not hold', async () => {
     const { api } = book();
     const result = await changeSheet(

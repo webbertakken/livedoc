@@ -2,7 +2,7 @@
 
 // The Chart Editor side panel's body (docs/specs/029-sheets/charts.md "Chart Editor"): Setup (the chart type, its
 // stacking, the data range, the series, a scatter's series drawn as lines) and Customise (titles, legend, values, the value axis, the
-// palette, each series' colour, alt text) for the chart being edited. Each control writes at once, one undo step; a
+// palette, Smooth, each series' colour and on a Combo chart its type and axis, alt text) for the chart being edited. Each control writes at once, one undo step; a
 // text writes when it is left or Enter is pressed.
 import { useId, useState } from 'react';
 import { Button, Select, Switch, TextInput } from '@livedoc/ui';
@@ -23,18 +23,16 @@ import {
   type SheetChartSeriesLook,
   type SheetChartType,
 } from '@livedoc/sheets';
-import { ColourSwatchButton } from '@/components/colour/ColourSwatchButton';
-import { OFFICE_COLOUR_ROWS } from '@/components/office/OfficeColourControl';
 import { useDocumentColours } from '@/hooks/ui/useDocumentColours';
 import { useSheetController } from '@/components/sheets/sheet-controller';
 import { ChartEditorField as Field } from './ChartEditorField';
 import { ChartLookSwitches } from './ChartLookSwitches';
+import { ChartSeriesLooks } from './ChartSeriesLooks';
 import { ChartStackingField } from './ChartStackingField';
 
 export const CHART_GONE = 'This chart is no longer on the sheet.';
 export const CHART_RANGE = 'Type a range like A1:D20';
 
-const NO_THEME: readonly never[] = [];
 const LEGEND_LABELS: Record<SheetChartLegend, string> = {
   top: 'Top',
   right: 'Right',
@@ -329,35 +327,7 @@ export function ChartEditorBody({
             </Select>
           </Field>
           <ChartLookSwitches chart={chart} set={set} />
-          {series.length ? (
-            <div role="group" aria-label="Series Colours" className="flex flex-wrap gap-3">
-              {series.map((s, i) => {
-                const colour = look(s.col).color;
-                const fallback =
-                  CHART_PALETTES.find((x) => x.id === chart.palette)?.colors ??
-                  CHART_PALETTES[0]!.colors;
-                return (
-                  <span key={s.col} className="flex flex-col items-center gap-1 text-supporting">
-                    <ColourSwatchButton
-                      label={`${s.name} Colour`}
-                      swatch={colour ?? fallback[i % fallback.length]!}
-                      value={colour ?? ''}
-                      theme={NO_THEME}
-                      standard={OFFICE_COLOUR_ROWS}
-                      yours={yours}
-                      onPick={(id) => {
-                        // A series takes a colour as #rrggbb (charts.md "The model").
-                        const hex = id.toLowerCase();
-                        if (/^#[0-9a-f]{6}$/.test(hex))
-                          setLook(s.col, { ...look(s.col), color: hex });
-                      }}
-                    />
-                    <span className="max-w-20 truncate">{s.name}</span>
-                  </span>
-                );
-              })}
-            </div>
-          ) : null}
+          <ChartSeriesLooks chart={chart} series={series} yours={yours} setLook={setLook} />
           <CommitText
             label="Alt Text"
             area

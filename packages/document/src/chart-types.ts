@@ -3,10 +3,19 @@
 // `chartVariant`, so every chart made before chart types keeps drawing as it did.
 import { chartValue, type LineSeries, type PieSlice } from './data-shapes';
 
-export const CHART_TYPES = ['column', 'bar', 'line', 'area', 'scatter', 'pie', 'doughnut'] as const;
+export const CHART_TYPES = [
+  'column',
+  'bar',
+  'line',
+  'area',
+  'scatter',
+  'pie',
+  'doughnut',
+  'combo',
+] as const;
 export type ChartType = (typeof CHART_TYPES)[number];
 
-export const CHART_VARIANTS = ['horizontal', 'area', 'scatter', 'doughnut'] as const;
+export const CHART_VARIANTS = ['horizontal', 'area', 'scatter', 'doughnut', 'combo'] as const;
 export type ChartVariant = (typeof CHART_VARIANTS)[number];
 
 type ChartKind = 'bar-chart' | 'line-chart' | 'pie-chart';
@@ -20,6 +29,7 @@ const SHAPES: Record<ChartType, { shape: ChartKind; chartVariant?: ChartVariant 
   scatter: { shape: 'line-chart', chartVariant: 'scatter' },
   pie: { shape: 'pie-chart' },
   doughnut: { shape: 'pie-chart', chartVariant: 'doughnut' },
+  combo: { shape: 'line-chart', chartVariant: 'combo' },
 };
 
 // The names people see ("Column", and "Column Chart" in a menu that inserts one).
@@ -31,6 +41,7 @@ export const CHART_TYPE_LABELS: Record<ChartType, string> = {
   scatter: 'Scatter',
   pie: 'Pie',
   doughnut: 'Doughnut',
+  combo: 'Combo',
 };
 
 export function isChartType(v: unknown): v is ChartType {

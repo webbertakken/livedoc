@@ -48,7 +48,7 @@ describe('what a chart may be', () => {
       xTitle: 'Cost',
       yTitle: 'Index',
       alt: 'Cost against index',
-      series: { [C(2)]: { color: '#3366cc', line: true, right: true } },
+      series: { [C(2)]: { color: '#3366cc', line: true, right: true, type: 'area' } },
       kept: { part: 'xl/charts/chart1.xml', sum: '0a1b2c3d' },
     });
     expect(isSheetObject(full, 'chart01')).toBe(true);
@@ -74,6 +74,7 @@ describe('what a chart may be', () => {
     no({ ...chart(), smooth: false });
     no(chart({ series: { [C(1)]: { color: 'red' } } }));
     no(chart({ series: { [C(1)]: { line: false as unknown as true } } }));
+    no(chart({ series: { [C(1)]: { type: 'steppedArea' as 'area' } } }));
     no(chart({ kept: { part: '', sum: '0a1b2c3d' } }));
     no(chart({ kept: { part: 'x'.repeat(201), sum: '0a1b2c3d' } }));
     no(chart({ kept: { part: 'p', sum: 'XYZ' } }));

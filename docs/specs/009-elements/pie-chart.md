@@ -98,7 +98,7 @@ ChartAxis`); a series on the right shows "(right)" after its name in the Data su
 
 ## Chart types
 
-A **chart type** is how a chart draws its data, named as Google Sheets names it. Seven ship; each is a chart kind
+A **chart type** is how a chart draws its data, named as Google Sheets names it. Eight ship; each is a chart kind
 (the stored `shape`) and, for all but the first of its kind, a `chartVariant`:
 
 A chart is **named by its type** wherever the editor names an element: the selection badge says "Selected Column
@@ -112,6 +112,7 @@ Chart" and a screen reader hears "Column chart", as the palette's tile says, nev
 | Line       | `line-chart`   | (none)         | A line with point markers per series                                                          |
 | Area       | `line-chart`   | `area`         | Line's lines, each with the area between it and zero filled in its colour at 25%, overlapping |
 | Scatter    | `line-chart`   | `scatter`      | A point per category per series, no lines, at x = the category read as a number (below)       |
+| Combo      | `line-chart`   | `combo`        | Each series as columns, a line or an area over one set of categories (below)                  |
 | Pie        | `pie-chart`    | (none)         | Wedges clockwise from twelve o'clock                                                          |
 | Doughnut   | `pie-chart`    | `doughnut`     | Pie's wedges with the middle open: a ring whose hole is 55% of its radius                     |
 
@@ -155,6 +156,23 @@ Chart" and a screen reader hears "Column chart", as the palette's tile says, nev
   falling as they do (a monotone cubic), so it never invents a peak or a dip the data does not hold. A gap still breaks
   it; points, readouts, values and the range are the line's. An area, scatter, column, bar, pie or doughnut chart
   ignores it and keeps it for a change back to a line chart (default, D284).
+- **Combo** (Google Sheets' Combo chart): a line chart's data (`lineSeries` over `lineCategories`), each series drawn
+  as its own **series type**: Column, Line or Area (`LineSeries.type`). A series with no type of its own takes the
+  default: the first half of the series, rounded up, are columns and the rest lines, so two series are a column and a
+  line, three are two columns and a line (Google's Clustered Column - Line) (default, D286).
+  - The categories are evenly spaced as a column chart's are: each a slot, its name under it. The column series are
+    clustered in each slot as a column chart's several series are (80% of the slot, an equal part each, at most 48 px
+    thick); a line series' points and an area series' points sit at the slots' middles.
+  - One value axis, zero always in it, runs over every series; a series on the right axis (`axis: 'right'`) is drawn
+    on a second scale of its own, columns too, when another series is on the left.
+  - Areas are drawn first, then columns, then lines, so a line reads over the columns it describes; each area fills
+    to zero at 25%, as an area chart's does.
+  - Gaps are each series type's own: no column, a broken line, a broken area.
+  - The legend keys a column or area series by a square and a line series by a line through a dot. A mark's readout
+    reads `category · series: value`; Show Values prints a column's number past its end and a point's over it.
+  - Smooth Line curves its line series; stacking is ignored and kept. Step Area, Google's fourth series type, is not
+    offered: no file format holds it, so it waits on the way a format keeps what it cannot hold (charts.md "Chart types").
+  - A series' type is kept by any other chart type, unused, so a change back to Combo draws it again (default, D286).
 - **No value is a gap.** A datum may have no value: a Sheet cell that is empty or holds no number (text, an error),
   a value left empty in the data editor, a CSV field that is empty or not a number. A 0 is a value and draws as 0.
   A chart draws no value as Excel ("Show empty cells as: Gaps") and Google Sheets do by default:
@@ -181,7 +199,7 @@ Chart" and a screen reader hears "Column chart", as the palette's tile says, nev
   sit squeezed at its top over an empty band. Values all equal widen by half a unit either way. Line, Area, Column
   and Bar keep zero in range: a line's rise and an area or bar's size read against it.
 - **The Chart Type section** opens first in the chart's Tools flyout, closed until opened (as every section is): a
-  grid of seven tiles, each the type's glyph over its name, the chart's own type pressed. Hovering a tile previews
+  grid of eight tiles, each the type's glyph over its name, the chart's own type pressed. Hovering a tile previews
   nothing; picking one changes the chart, one undo step, `Element · Changed · ChartType`.
 - **Changing type** keeps the chart's size, style, palette, legend and animation. Within a kind it only sets
   `chartVariant`. Across kinds it moves the data: a pie or bar chart's slices become one series named **Series 1**
@@ -208,8 +226,9 @@ groups all three (they're all in `isSelfDrawingShape` too).
   (no value, Chart types "No value is a gap").
 - `ShapeElement.chartValues?: boolean`: the numbers on the marks (Show Values); absent means off.
 - `ShapeElement.chartAxis?: boolean`: the value axis, its tick labels and gridlines (Show Axis); absent means off.
-  A `LineSeries` may carry `axis?: 'right'`, its own scale (a second axis), and `line?: true`, a scatter series
-  drawn as a line; any other value of either reads as absent (an agent's write drops it). The
+  A `LineSeries` may carry `axis?: 'right'`, its own scale (a second axis), `line?: true`, a scatter series
+  drawn as a line, and `type?: 'column' | 'line' | 'area'`, its series type on a Combo chart; any other value of each
+  reads as absent (an agent's write drops it). The
   axes are laid out with the marks, from `axisScale` and `axisLabelRoom` (`packages/document/src/chart-axis.ts`) for both renderers.
 - `ShapeElement.chartTitle?: string` and `chartAxisTitles?: { x?, y? }`: a title over the chart, and the horizontal and
   vertical axis titles of a column, bar, line, area or scatter chart (a pie has none); each takes a band of the box from
@@ -334,7 +353,7 @@ paints no box; `LegendView` draws the card from the element's fill + stroke, and
 
 ## Element tour
 
-The **Chart tour** is on the actions group's **Start Chart Tour** button while a data chart (any of the seven chart types) is selected, once its kind is opted in to (Settings › Tours › Show Me), for an Editor on an unlocked element, and walks through it on the element
+The **Chart tour** is on the actions group's **Start Chart Tour** button while a data chart (any of the eight chart types) is selected, once its kind is opted in to (Settings › Tours › Show Me), for an Editor on an unlocked element, and walks through it on the element
 itself ([Element tours](../007-editor/element-tours.md) "The Chart tour").
 
 ## Defaults
@@ -353,6 +372,9 @@ The code cites each by its id.
   before (default).
 - **D284** Smooth Line: a monotone cubic through each stretch of a line chart's points (no overshoot past neighbours'
   values); other types ignore and keep it (default).
+- **D286** Combo: a series with no type of its own: the first half, rounded up, columns, the rest lines; columns
+  clustered in slots as a column chart's, points at the slots' middles; areas, then columns, then lines; one series a
+  column; a series' type kept unused by other types (default).
 - **D282** Stacking: a column's values above and below zero in stacks of their own, an area's as a running total;
   100% as each value's size over the sum of its category's sizes; no value zero in the stack and no mark; one series
   unstacked; values printed mid-segment when they fit; other types ignore and keep it (default).

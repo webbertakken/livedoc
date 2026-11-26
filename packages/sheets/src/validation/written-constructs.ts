@@ -197,6 +197,21 @@ function chartSheet(): FileSheet {
     { ...base(types.length + 4, 'area'), id: 'chart_area_stacked', stack: 'stacked' },
     // Smooth Line (D285).
     { ...base(types.length + 5, 'line'), id: 'chart_smooth', smooth: true },
+    // Combo (D287): columns and a smooth line, then an area and a line.
+    {
+      ...base(types.length + 6, 'combo'),
+      id: 'chart_combo',
+      smooth: true,
+      series: [
+        series(1, 'Cost', { color: '#1a73e8', type: 'column' }),
+        series(2, 'Index', { type: 'line' }),
+      ],
+    },
+    {
+      ...base(types.length + 7, 'combo'),
+      id: 'chart_combo_area',
+      series: [series(1, 'Cost', { type: 'area' }), series(2, 'Index', { type: 'line' })],
+    },
   );
   return { ...sheet("Costs' sheet", cells, 140, 8), charts };
 }

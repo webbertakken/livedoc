@@ -49,6 +49,13 @@ const MARKS: Record<ChartType, React.ReactNode> = {
       <path d="M12 3v5M21 12h-5" />
     </>
   ),
+  combo: (
+    <>
+      <path d={AXES} />
+      <path d="M8 17v-4M13 17v-6M18 17v-3" />
+      <path d="m7 9 5-3 6 2" />
+    </>
+  ),
 };
 
 export function ChartTypeIcon({ type, size = 16 }: { type: ChartType; size?: number }) {

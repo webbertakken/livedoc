@@ -51,7 +51,7 @@ function models(): Sheet {
   return applySheetWrite(blank, made.write, { now: 0, by: NOBODY }).sheet;
 }
 
-const TYPES = ['scatter', 'column', 'bar', 'line', 'area', 'pie', 'doughnut'] as const;
+const TYPES = ['scatter', 'column', 'bar', 'line', 'area', 'pie', 'doughnut', 'combo'] as const;
 
 function chartOn(sheet: Sheet, extra: Partial<SheetChart> = {}): SheetChart {
   const { rows, cols } = sheet.layout;
@@ -165,14 +165,14 @@ describe('reading ODF charts', () => {
         ...(i % 3 ? {} : { values: true as const }),
         // Every type stacked: a column, bar or area chart's is written (D283), another's is not.
         stack: i % 2 ? ('stacked' as const) : ('percent' as const),
-        // Every type smooth: a line chart's is written (D285), another's is not.
+        // Every type smooth: a line or Combo chart's is written (D285, D287), another's is not.
         smooth: true,
       };
     });
     const file = fileOf(withCharts(base, charts));
     const want = file.sheets[0]!.charts!.map(fileChartSum);
     expect(file.sheets[0]!.charts!.map((c) => c.smooth ?? false)).toEqual(
-      TYPES.map((type) => type === 'line'),
+      TYPES.map((type) => type === 'line' || type === 'combo'),
     );
     expect(file.sheets[0]!.charts!.map((c) => c.stack ?? null)).toEqual(
       TYPES.map((type, i) =>
@@ -419,6 +419,49 @@ describe('a chart document, read', () => {
     expect(curve('chart:line', 'none')!.smooth).toBeUndefined();
     expect(curve('chart:line', 'b-spline')).toBeNull();
     expect(curve('chart:area', 'cubic-spline')).toBeNull();
+  });
+
+  it('reads LibreOffice’s Column and Line as a Combo chart, each series typed by its class (D287)', () => {
+    const series = (col: string, cls = '') =>
+      `<chart:series chart:values-cell-range-address="S.${col}2:S.${col}4" chart:label-cell-address="S.${col}1"${cls}/>`;
+    const combo = (o: Parameters<typeof doc>[0] = {}) =>
+      chartDoc({
+        series:
+          series('B') +
+          series('C', ' chart:class="chart:area"') +
+          series('D', ' chart:class="chart:line"'),
+        ...o,
+      });
+    const read = combo()!;
+    expect(read.type).toBe('combo');
+    expect(read.series.map((s) => s.type)).toEqual(['column', 'area', 'line']);
+    expect(read.smooth).toBeUndefined();
+    const smooth = combo({
+      styles: style('p', 'chart:interpolation="cubic-spline"'),
+      plot: ' chart:style-name="p"',
+    })!;
+    expect(smooth.smooth).toBe(true);
+    // A line chart whose series are bars is one too.
+    expect(
+      chartDoc({
+        cls: 'chart:line',
+        series: series('B', ' chart:class="chart:bar"') + series('C'),
+      })!.series.map((s) => s.type),
+    ).toEqual(['column', 'line']);
+    // Not read: bars on their side, a stacking, a scatter among them.
+    const flat = (chart: string) =>
+      combo({ styles: style('p', chart), plot: ' chart:style-name="p"' });
+    expect(flat('chart:vertical="true"')).toBeNull();
+    expect(flat('chart:stacked="true"')).toBeNull();
+    expect(
+      chartDoc({ series: series('B') + series('C', ' chart:class="chart:scatter"') }),
+    ).toBeNull();
+    expect(
+      chartDoc({
+        cls: 'chart:scatter',
+        series: series('B') + series('C', ' chart:class="chart:line"'),
+      }),
+    ).toBeNull();
   });
 
   it('reads none of what the model cannot draw (D277)', () => {

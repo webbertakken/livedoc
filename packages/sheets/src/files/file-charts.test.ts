@@ -118,6 +118,25 @@ describe('fileChartsOf', () => {
     });
   });
 
+  it('types a Combo chart’s every series, its own or the default’s, smooth kept (D286, D287)', () => {
+    const sheet = costs();
+    const [cost, index] = [sheet.layout.cols[1]!, sheet.layout.cols[2]!];
+    const [chart] = filed(
+      withCharts(sheet, [
+        chartOver(sheet, { type: 'combo', smooth: true, series: { [index]: { type: 'area' } } }),
+      ]),
+    );
+    expect(chart!.series.map((s) => s.type)).toEqual(['column', 'area']);
+    expect(chart!.smooth).toBe(true);
+    const [plain] = filed(withCharts(sheet, [chartOver(sheet, { type: 'combo' })]));
+    expect(plain!.series.map((s) => s.type)).toEqual(['column', 'line']);
+    // Another type's series carry no type, a Combo look kept unused.
+    const [column] = filed(
+      withCharts(sheet, [chartOver(sheet, { series: { [cost]: { type: 'line' } } })]),
+    );
+    expect(column!.series.map((s) => s.type)).toEqual([undefined, undefined]);
+  });
+
   it('takes a scatter’s first column of numbers as its x when nothing labels the rows', () => {
     const sheet = costs();
     const { rows, cols } = sheet.layout;
@@ -265,6 +284,8 @@ describe('writeXlsx with charts', () => {
       'xl/charts/chart10.xml',
       'xl/charts/chart11.xml',
       'xl/charts/chart12.xml',
+      'xl/charts/chart13.xml',
+      'xl/charts/chart14.xml',
       'xl/charts/chart2.xml',
       'xl/charts/chart3.xml',
       'xl/charts/chart4.xml',
@@ -375,6 +396,19 @@ describe('ODF charts', () => {
       '<chart:axis chart:dimension="y" chart:name="primary-y" chart:style-name="axis">',
     );
     expect(plain).not.toContain('style:name="series');
+    // A Combo chart is a bar chart whose series name their classes (D287).
+    const combo = doc({
+      ...column!,
+      type: 'combo',
+      smooth: true,
+      series: column!.series.map((s, i) => ({ ...s, type: i ? 'line' : 'column' })),
+    });
+    expect(combo).toContain('chart:class="chart:bar"');
+    expect(combo).toContain('<chart:series chart:class="chart:line"');
+    expect(combo).toContain('chart:interpolation="cubic-spline"');
+    expect(combo.match(/chart:symbol-type="none"/g)).toHaveLength(1);
+    // A series with no type of its own is written as columns, its class the chart's.
+    expect(doc({ ...column!, type: 'combo' })).not.toContain('<chart:series chart:class');
     expect(odsChartContent('S', line!, 'document')).toMatch(
       /^<office:document office:mimetype="application\/vnd.oasis.opendocument.chart"/,
     );
@@ -496,6 +530,32 @@ describe('sheetChartsFromFile', () => {
       range: { r1: rows[0], c1: cols[0], r2: rows[4], c2: cols[4] },
       cols: [cols[0], cols[2], cols[4]],
       series: { [cols[2]!]: { color: '#112233' }, [cols[4]!]: { line: true } },
+    });
+  });
+
+  it('keeps a Combo series’ type only where it is not the default’s (D286)', () => {
+    const typed = (types: ('column' | 'line' | 'area')[]) =>
+      sheetChartsFromFile(
+        [
+          read({
+            type: 'combo',
+            labels: { range: cell(0), cached: [] },
+            series: types.map((type, i) => ({
+              name: 'S',
+              nameAt: null,
+              values: cell(i + 1),
+              cached: [],
+              type,
+            })),
+          }),
+        ],
+        layout,
+        seeded(),
+      )[0]!.series;
+    expect(typed(['column', 'line'])).toBeUndefined();
+    expect(typed(['line', 'column', 'area'])).toEqual({
+      [cols[1]!]: { type: 'line' },
+      [cols[3]!]: { type: 'area' },
     });
   });
 

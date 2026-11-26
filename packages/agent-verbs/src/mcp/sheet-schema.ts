@@ -26,7 +26,12 @@ import {
   SHEET_CHART_STACKS,
   SHEET_CHART_TEXT_MAX,
 } from '@livedoc/sheets';
-import { CHART_PALETTES, CHART_TYPES, type ChartPaletteId } from '@livedoc/document';
+import {
+  CHART_PALETTES,
+  CHART_TYPES,
+  COMBO_SERIES_TYPES,
+  type ChartPaletteId,
+} from '@livedoc/document';
 import { BORDER_COLOUR_DEFAULT } from '../sheets/sheet-shape-change';
 import { DESIGN_ACCENT_DEFAULT } from '../sheets/sheet-design';
 import { SHEET_CHART_SIZE } from '../sheets/sheet-charts';
@@ -124,7 +129,7 @@ const designFormat = z
 const chartType = z
   .enum(CHART_TYPES)
   .describe(
-    'column, bar, pie and doughnut draw one series (the first value column); line, area and scatter draw every value column.',
+    'pie and doughnut draw one series (the first value column); column, bar, line, area and scatter draw every value column; combo draws each as columns, a line or an area (seriesTypes).',
   );
 
 const chartPalette = z
@@ -532,7 +537,19 @@ const sheetChange = z.discriminatedUnion('op', [
     smooth: z
       .boolean()
       .optional()
-      .describe('A line chart only: draw its lines as smooth curves through the points.'),
+      .describe('A line or combo chart: draw its lines as smooth curves through the points.'),
+    seriesTypes: z
+      .record(z.string(), z.enum(COMBO_SERIES_TYPES))
+      .optional()
+      .describe(
+        'A combo chart only: each series’ type by header name ({"Margin": "line"}): column, line or area. A series left out takes the default, the first half of the series columns and the rest lines.',
+      ),
+    rightAxis: z
+      .array(z.string())
+      .optional()
+      .describe(
+        'A line, area or combo chart: the series drawn on a second scale, labelled on the right, by header name (["Margin"]).',
+      ),
     alt: z
       .string()
       .max(SHEET_CHART_ALT_MAX)
@@ -775,6 +792,11 @@ const readChart = z.object({
   smooth: z.boolean().optional().describe('Whether its lines are smooth curves.'),
   alt: z.string().optional().describe('Its alt text.'),
   lines: z.array(z.string()).optional().describe('A scatter’s series drawn as lines, by name.'),
+  seriesTypes: z
+    .record(z.string(), z.enum(COMBO_SERIES_TYPES))
+    .optional()
+    .describe('A combo chart’s every series’ type, by name.'),
+  rightAxis: z.array(z.string()).optional().describe('The series on the right-hand axis, by name.'),
 });
 
 export const readSheetOutput = {

@@ -6,7 +6,7 @@ import type { TourStepOf } from './tour-step';
 import { elementSelector } from '@/lib/canvas-selectors';
 
 // The Chart tour (docs/specs/007-editor/element-tours.md "The Chart tour"), on a selected data chart of any of the
-// seven types: how it reads, a mark's readout, Grow previewed on it, its menu, and for a line, area or scatter chart its
+// eight types: how it reads, a mark's readout, Grow previewed on it, its menu, and for a line, area or scatter chart its
 // Chart Data dialog, opened by the tour, where each step rings a real control. Done closes the dialog with the tour.
 
 type Step = TourStepOf<ElementTourApi>;
@@ -26,11 +26,13 @@ const MARKS: Record<ChartType, [one: string, many: string]> = {
   scatter: ['point', 'points'],
   pie: ['slice', 'slices'],
   doughnut: ['slice', 'slices'],
+  combo: ['mark', 'marks'],
 };
 
-// A line, area or scatter chart's numbers are a grid, edited in the Chart Data dialog.
+// A line, area, scatter or combo chart's numbers are a grid, edited in the Chart Data dialog.
 const editsInDialog = (ctx: ChartTourContext) =>
-  !ctx.fromSheet && (ctx.type === 'line' || ctx.type === 'area' || ctx.type === 'scatter');
+  !ctx.fromSheet &&
+  (ctx.type === 'line' || ctx.type === 'area' || ctx.type === 'scatter' || ctx.type === 'combo');
 
 // A step inside the Chart Data dialog: opens it (again, if it was closed); the engine waits for its control and
 // scrolls it in.

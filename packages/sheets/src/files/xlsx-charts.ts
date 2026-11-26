@@ -115,9 +115,27 @@ function axisIds(): string {
   return AXIS_IDS.map((id) => val('axId', id)).join('');
 }
 
-// The type's own chart element.
+// The type's own chart element: on a Combo chart, a group per series type it holds (D287), areas, columns then lines,
+// the series' indexes running across them in series order.
 function plotXml(sheet: string, chart: FileChart): string {
-  const series = chart.series.map((s, i) => seriesXml(sheet, chart, s, i)).join('');
+  if (chart.type === 'combo')
+    return (['area', 'column', 'line'] as const)
+      .map((type) => {
+        const series = chart.series.flatMap((s, i) => (s.type === type ? [{ s, i }] : []));
+        if (!series.length) return '';
+        const group = { ...chart, type, stack: undefined };
+        return groupXml(group, series.map(({ s, i }) => seriesXml(sheet, group, s, i)).join(''));
+      })
+      .join('');
+  const one = { ...chart, type: chart.type };
+  return groupXml(one, chart.series.map((s, i) => seriesXml(sheet, chart, s, i)).join(''));
+}
+
+// A chart group of one type (a Combo chart is its groups).
+function groupXml(
+  chart: FileChart & { type: Exclude<FileChart['type'], 'combo'> },
+  series: string,
+): string {
   const labels = dataLabels(chart.values);
   switch (chart.type) {
     case 'column':

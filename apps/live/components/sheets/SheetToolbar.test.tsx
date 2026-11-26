@@ -101,8 +101,8 @@ describe('the sheet toolbar', () => {
     show(h);
     act(() => h.select('A1:A2'));
     open('Insert Chart');
-    // The seven chart types, each its glyph and name (docs/specs/009-elements/pie-chart.md "Chart types").
-    for (const name of ['Column', 'Bar', 'Line', 'Area', 'Scatter', 'Pie', 'Doughnut'])
+    // The eight chart types, each its glyph and name (docs/specs/009-elements/pie-chart.md "Chart types").
+    for (const name of ['Column', 'Bar', 'Line', 'Area', 'Scatter', 'Pie', 'Doughnut', 'Combo'])
       expect(row(`${name} Chart`)).toBeTruthy();
     fireEvent.click(row('Column Chart'));
     const [kind, pick] = h.placeChart.mock.calls[0]!;

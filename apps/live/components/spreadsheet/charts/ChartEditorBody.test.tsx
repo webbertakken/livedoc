@@ -104,6 +104,37 @@ describe('the Chart Editor', () => {
     expect(chartOf(h)!.smooth).toBeUndefined();
   });
 
+  it('types a Combo chart’s series and sets their axis, the default’s type stored as none (D286)', async () => {
+    const { h, cols } = await open('combo');
+    fireEvent.click(screen.getByRole('tab', { name: 'Customise' }));
+    const types = screen.getByRole('group', { name: 'Series Types' });
+    // Cost labels the rows; of two series the first is columns, the second a line.
+    const type = (name: string) =>
+      within(types).getByRole<HTMLSelectElement>('combobox', { name: `${name} Type` });
+    expect([type('Index').value, type('Pareto').value]).toEqual(['column', 'line']);
+    fireEvent.change(type('Index'), { target: { value: 'area' } });
+    expect(chartOf(h)!.series).toEqual({ [cols[1]!]: { type: 'area' } });
+    fireEvent.change(within(types).getByRole('combobox', { name: 'Pareto Axis' }), {
+      target: { value: 'right' },
+    });
+    expect(chartOf(h)!.series![cols[2]!]).toEqual({ right: true });
+    fireEvent.change(type('Index'), { target: { value: 'column' } });
+    fireEvent.change(within(types).getByRole('combobox', { name: 'Pareto Axis' }), {
+      target: { value: 'left' },
+    });
+    expect(chartOf(h)!.series).toBeUndefined();
+    // Smooth curves its lines.
+    fireEvent.click(screen.getByRole('switch', { name: 'Smooth' }));
+    expect(chartOf(h)!.smooth).toBe(true);
+  });
+
+  it('shows no series types off a Combo chart', async () => {
+    await open('column');
+    fireEvent.click(screen.getByRole('tab', { name: 'Customise' }));
+    expect(screen.queryByRole('group', { name: 'Series Types' })).toBeNull();
+    expect(screen.getByRole('group', { name: 'Series Colours' })).toBeTruthy();
+  });
+
   it('stacks a column, bar or area chart, Standard or 100%, and hides Stacking elsewhere', async () => {
     const { h } = await open();
     // A scatter takes no stacking.

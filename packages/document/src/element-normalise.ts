@@ -14,6 +14,7 @@ import { LOOK_MD_MAX_NODES } from './look-size';
 import { chartValue, CODE_LANGUAGES, readChartValue } from './data-shapes';
 import { isCodeThemeId } from './code-themes';
 import { variantFitsKind } from './chart-types';
+import { isComboSeriesType } from './chart-combo-types';
 import { entityHeight } from './entity-geometry';
 import { settleChips } from './attachment';
 import { createShape } from './shape-factory';
@@ -90,14 +91,16 @@ function normaliseChart(el: Raw): Raw {
       const values = Array.isArray(s.values) ? s.values.map(chartNum) : [];
       const fitted =
         count === undefined ? values : Array.from({ length: count }, (_, i) => values[i] ?? null);
-      // A second axis is `right` or nothing; a scatter series drawn as a line is `true` or nothing.
-      const { axis, line, ...rest } = s;
+      // A second axis is `right` or nothing; a scatter series drawn as a line is `true` or nothing; a Combo series'
+      // type one of its three or nothing.
+      const { axis, line, type, ...rest } = s;
       return {
         ...rest,
         name: str(s.name),
         values: fitted,
         ...(axis === 'right' ? { axis } : {}),
         ...(line === true ? { line } : {}),
+        ...(isComboSeriesType(type) ? { type } : {}),
       };
     });
   }

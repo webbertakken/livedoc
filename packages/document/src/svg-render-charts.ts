@@ -40,6 +40,7 @@ import {
 import { labelOn } from './readable-colour';
 import { chartTypeOf, lineVariantOf } from './chart-types';
 import { chartStackOf } from './chart-stack';
+import { comboKeyItems, comboMarks, comboValueLabels, isComboChart } from './chart-combo';
 import { LINE_DEFAULT_CATEGORIES, LINE_DEFAULT_SERIES, type ChartKeyItem } from './data-shapes';
 import type { BoxedElement } from './index';
 import { legendFontPx } from './label-font';
@@ -297,7 +298,7 @@ export function svgBarChart(
   );
 }
 
-/** A line, area or scatter chart: axes, its marks per series, the x labels, the key. */
+/** A line, area, scatter or combo chart: axes, its marks per series, the x labels, the key. */
 export function svgLineChart(
   el: Chart,
   labelColor: string,
@@ -311,17 +312,31 @@ export function svgLineChart(
   const categories =
     el.lineCategories && el.lineCategories.length > 0 ? el.lineCategories : LINE_DEFAULT_CATEGORIES;
   const series = el.lineSeries && el.lineSeries.length > 0 ? el.lineSeries : LINE_DEFAULT_SERIES;
-  const m = lineMarks(
-    area,
-    categories,
-    series,
-    lineVariantOf(el),
-    el.x,
-    el.y,
-    el.chartAxis === true,
-    chartStackOf({ ...el, lineSeries: series }),
-    el.chartSmooth === true,
-  );
+  // A Combo chart's series each drawn as its own type, on the line chart's axes (pie-chart.md "Combo").
+  const combo = isComboChart(el)
+    ? comboMarks(
+        area,
+        categories,
+        series,
+        el.x,
+        el.y,
+        el.chartAxis === true,
+        el.chartSmooth === true,
+      )
+    : null;
+  const m =
+    combo ??
+    lineMarks(
+      area,
+      categories,
+      series,
+      lineVariantOf(el),
+      el.x,
+      el.y,
+      el.chartAxis === true,
+      chartStackOf({ ...el, lineSeries: series }),
+      el.chartSmooth === true,
+    );
   const { x, y, w, h } = m.plot;
   const tickFont = ` font-family="${xmlEscape(fontFamily ?? EXPORT_DEFAULT_FONT)}" font-size="${AXIS_TICK_FONT_PX}"`;
   // Show Axis: a faint gridline and a label at each left tick, the right axis's labels in its first series' colour.
@@ -355,22 +370,39 @@ export function svgLineChart(
     ticks +
     `<path d="M ${r2(x)} ${r2(y)} L ${r2(x)} ${r2(y + h)}" stroke="${AXIS_FAINT}" stroke-width="1"/>` +
     `<path d="M ${r2(x)} ${r2(y + h)} L ${r2(x + w)} ${r2(y + h)}" stroke="${AXIS}" stroke-width="1"/>`;
-  const marks = series
-    .map((s, si) => {
-      const color = xmlEscape(colorAt(si, s));
-      const fill = m.areas[si]
-        ? `<path d="${m.areas[si]}" fill="${color}" fill-opacity="${AREA_FILL_OPACITY}"/>`
-        : '';
-      const line = m.lines[si]
-        ? `<path d="${m.lines[si]}" fill="none" stroke="${color}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`
-        : '';
-      // No value draws no point (pie-chart.md "No value is a gap").
-      const dots = m.points[si]!.map((p) =>
-        p ? `<circle cx="${r2(p.x)}" cy="${r2(p.y)}" r="${m.dot}" fill="${color}"/>` : '',
-      ).join('');
-      return fill + line + dots;
-    })
-    .join('');
+  const fills = series.map((s, si) =>
+    m.areas[si]
+      ? `<path d="${m.areas[si]}" fill="${xmlEscape(colorAt(si, s))}" fill-opacity="${AREA_FILL_OPACITY}"/>`
+      : '',
+  );
+  const strokes = series.map((s, si) => {
+    const color = xmlEscape(colorAt(si, s));
+    const line = m.lines[si]
+      ? `<path d="${m.lines[si]}" fill="none" stroke="${color}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`
+      : '';
+    // No value draws no point (pie-chart.md "No value is a gap").
+    const dots = m.points[si]!.map((p) =>
+      p ? `<circle cx="${r2(p.x)}" cy="${r2(p.y)}" r="${m.dot}" fill="${color}"/>` : '',
+    ).join('');
+    return line + dots;
+  });
+  // A Combo chart paints its areas, then its columns, then its lines over them; another, series by series.
+  const columns = combo
+    ? combo.bars
+        .map((bars, si) =>
+          bars
+            .map((b) =>
+              b
+                ? `<rect x="${r2(b.x)}" y="${r2(b.y)}" width="${r2(b.w)}" height="${r2(b.h)}" rx="${r2(b.rx)}" fill="${xmlEscape(colorAt(si, series[si]!))}"/>`
+                : '',
+            )
+            .join(''),
+        )
+        .join('')
+    : '';
+  const marks = combo
+    ? fills.join('') + columns + strokes.join('')
+    : series.map((_, si) => fills[si]! + strokes[si]!).join('');
   const font = ` font-family="${xmlEscape(fontFamily ?? EXPORT_DEFAULT_FONT)}"`;
   const labels = m.labels
     .map(
@@ -378,10 +410,16 @@ export function svgLineChart(
         `<text x="${r2(l.x)}" y="${r2(y + h + 13)}" text-anchor="middle"${font} font-size="9" fill="${xmlEscape(textColor)}">${xmlEscape(l.text)}</text>`,
     )
     .join('');
-  const legendItems = lineKeyItems(series, lineVariantOf(el));
+  const legendItems = combo ? comboKeyItems(series) : lineKeyItems(series, lineVariantOf(el));
   const px = chartValueFontPx(el.textSize);
   const values = el.chartValues
-    ? svgValueLabels(lineValueLabels(m, series), textColor, null, px, fontFamily)
+    ? svgValueLabels(
+        combo ? comboValueLabels(combo, series, px) : lineValueLabels(m, series),
+        textColor,
+        null,
+        px,
+        fontFamily,
+      )
     : '';
   return (
     axes +
