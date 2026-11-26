@@ -69,6 +69,58 @@ export function suggestedBreaks(doc: PmNode): SuggestedBreak[] {
   return out;
 }
 
+/** The blocks suggested whole (review.md "Whole blocks"). */
+const WHOLE_BLOCKS = new Set(['table', 'section_break', 'table_of_contents']);
+
+/** A block suggested whole: where it stands, its element's name, its kind, its suggestion and its author's ink. */
+export type SuggestedBlock = {
+  readonly from: number;
+  readonly to: number;
+  readonly name: string;
+  readonly kind: 'insertion' | 'deletion';
+  readonly id: string;
+  readonly ink?: string;
+};
+
+/** Each block suggested whole in the document, outermost first. */
+export function suggestedBlocks(doc: PmNode): SuggestedBlock[] {
+  const out: SuggestedBlock[] = [];
+  doc.descendants((node, pos) => {
+    if (!WHOLE_BLOCKS.has(node.type.name)) return !node.isInline;
+    for (const kind of [INSERTION_MARK, DELETION_MARK] as const) {
+      const mark = node.attrs[kind] as { id?: unknown; author?: { colour?: unknown } } | null;
+      if (!mark || typeof mark.id !== 'string') continue;
+      const colour = mark.author?.colour;
+      out.push({
+        from: pos,
+        to: pos + node.nodeSize,
+        name: node.type.name,
+        kind,
+        id: mark.id,
+        ...(typeof colour === 'string' && HEX.test(colour) ? { ink: paperInk(colour) } : {}),
+      });
+    }
+    return true;
+  });
+  return out;
+}
+
+/** A suggested block's outline: solid for an insertion, dashed and struck through for a deletion (default). */
+function blockDecoration({ from, to, kind, id, ink }: SuggestedBlock): Decoration {
+  const style = [
+    `outline: 2px ${kind === 'deletion' ? 'dashed' : 'solid'} ${ink ?? 'currentColor'}`,
+    'outline-offset: 2px',
+    kind === 'deletion' ? 'text-decoration-line: line-through' : '',
+  ]
+    .filter(Boolean)
+    .join('; ');
+  return Decoration.node(from, to, {
+    class: `text-document-suggested-block text-document-suggested-block-${kind}`,
+    'data-suggestion': id,
+    style,
+  });
+}
+
 function pilcrow(kind: SuggestedBreak['kind'], ink: string | undefined): HTMLElement {
   const span = document.createElement('span');
   span.className = `text-document-suggested-break text-document-suggested-break-${kind}`;
@@ -79,18 +131,21 @@ function pilcrow(kind: SuggestedBreak['kind'], ink: string | undefined): HTMLEle
   return span;
 }
 
-/** Draws each suggested break or join as a pilcrow (review.md "While suggesting", (default)). */
+/**
+ * Draws each suggested break or join as a pilcrow (review.md "While suggesting", (default)), and each block suggested
+ * whole inside its outline (review.md "Whole blocks", (default)).
+ */
 export function suggestedBreaksPlugin(): Plugin {
   const decorate = (doc: PmNode) =>
-    DecorationSet.create(
-      doc,
-      suggestedBreaks(doc).map(({ at, kind, ink }) =>
+    DecorationSet.create(doc, [
+      ...suggestedBreaks(doc).map(({ at, kind, ink }) =>
         Decoration.widget(at, () => pilcrow(kind, ink), {
           side: -1,
           key: `${kind}-${at}-${ink ?? ''}`,
         }),
       ),
-    );
+      ...suggestedBlocks(doc).map(blockDecoration),
+    ]);
   return new Plugin({
     state: {
       init: (_, state) => decorate(state.doc),

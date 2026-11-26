@@ -5,7 +5,11 @@ import { describe, expect, it } from 'vitest';
 import { EditorState } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
 import { textDocumentSchema as schema } from './text-document-schema';
-import { suggestedBreaks, suggestedBreaksPlugin } from './text-document-suggestion-marks';
+import {
+  suggestedBlocks,
+  suggestedBreaks,
+  suggestedBreaksPlugin,
+} from './text-document-suggestion-marks';
 
 const mark = (colour = '#0284c7') => ({
   id: 's1',
@@ -35,6 +39,43 @@ describe('suggestedBreaks', () => {
     });
     const drawn = view.dom.querySelector('.text-document-suggested-break-deletion') as HTMLElement;
     expect(drawn.textContent).toBe('¶');
+    expect(drawn.style.textDecorationLine).toBe('line-through');
+    view.destroy();
+  });
+});
+
+// review.md "Whole blocks": a suggested block drawn inside an outline in its author's colour, dashed and struck through
+// when deleted; what is inside it plain.
+describe('suggestedBlocks', () => {
+  const table = (attrs: Record<string, unknown>) =>
+    schema.nodes.table!.create(
+      attrs,
+      schema.nodes.table_row!.create(null, schema.nodes.table_cell!.create(null, p('in'))),
+    );
+
+  it('finds each suggested table, section break and table of contents with its kind and ink', () => {
+    const doc = schema.nodes.doc!.create(null, [
+      p('a'),
+      table({ insertion: mark() }),
+      schema.nodes.section_break!.create({ deletion: mark() }),
+      p('b'),
+    ]);
+    const blocks = suggestedBlocks(doc);
+    expect(blocks.map((b) => [b.name, b.kind, b.id])).toEqual([
+      ['table', 'insertion', 's1'],
+      ['section_break', 'deletion', 's1'],
+    ]);
+    expect(blocks[0]!.ink).toEqual(expect.any(String));
+  });
+
+  it('draws the outline in the view, dashed and struck through for a deletion', () => {
+    const doc = schema.nodes.doc!.create(null, [p('a'), table({ deletion: mark() }), p('b')]);
+    const view = new EditorView(document.createElement('div'), {
+      state: EditorState.create({ doc, plugins: [suggestedBreaksPlugin()] }),
+    });
+    const drawn = view.dom.querySelector('.text-document-suggested-block-deletion') as HTMLElement;
+    expect(drawn.getAttribute('data-suggestion')).toBe('s1');
+    expect(drawn.style.outlineStyle).toBe('dashed');
     expect(drawn.style.textDecorationLine).toBe('line-through');
     view.destroy();
   });
