@@ -230,7 +230,7 @@ export async function storeSheetChangeset(args: StoreArgs): Promise<SheetChanges
       ),
     );
     const results = await ctx.env.DOCUMENT_DB.batch(statements);
-    if (((results[0]?.results ?? []) as unknown[]).length === 0) {
+    if ((results[0]?.results ?? []).length === 0) {
       console.info('[sheet-changeset] retry', { ...where, attempt });
       continue;
     }
