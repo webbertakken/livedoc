@@ -83,6 +83,8 @@ export const SHEET_ERRORS = [
   // A value a Reject validation rule refuses; a sheet past its rules' limit (data-validation.md).
   'value_invalid',
   'rules_full',
+  // A sheet past its objects' limit (docs/specs/029-sheets/charts.md "The model").
+  'objects_full',
   'tab_not_found',
   // A spreadsheet's sheet name against its rules, or another sheet's (docs/specs/029-sheets/spreadsheet.md "Limits").
   'sheet_name_invalid',

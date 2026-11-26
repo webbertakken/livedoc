@@ -1287,11 +1287,20 @@ export const SPREADSHEETS_IMPORTS_ALLOWED = chart(
   { types: ['ImportAccess', 'RangeAccess'] },
 );
 
+// docs/specs/029-sheets/charts.md "Telemetry": a chart Insert › Chart made, by its type.
+export const SPREADSHEET_CHARTS_ADDED = chart(
+  'Spreadsheet',
+  'Added',
+  'Spreadsheet Charts Added',
+  'An editor inserted a chart into a spreadsheet, by its type.',
+  { types: ['Column', 'Bar', 'Line', 'Area', 'Scatter', 'Pie', 'Doughnut'] },
+);
+
 export const SPREADSHEETS: MetricStack = {
   stack: true,
   title: 'Spreadsheets',
   blurb:
-    'Spreadsheet documents on the open standards: made, opened from files, downloaded, converted, themed, imports allowed.',
+    'Spreadsheet documents on the open standards: made, opened from files, downloaded, converted, themed, imports allowed, charts added.',
   members: [
     SPREADSHEETS_CREATED,
     SPREADSHEETS_IMPORTED,
@@ -1299,6 +1308,7 @@ export const SPREADSHEETS: MetricStack = {
     SPREADSHEETS_CONVERTED,
     SPREADSHEETS_THEMED,
     SPREADSHEETS_IMPORTS_ALLOWED,
+    SPREADSHEET_CHARTS_ADDED,
   ],
 };
 

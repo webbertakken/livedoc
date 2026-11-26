@@ -1787,6 +1787,9 @@ importers:
       '@livedoc/items':
         specifier: workspace:*
         version: link:../items
+      '@livedoc/sheets':
+        specifier: workspace:*
+        version: link:../sheets
       '@livedoc/ui':
         specifier: workspace:*
         version: link:../ui

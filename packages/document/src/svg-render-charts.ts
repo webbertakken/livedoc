@@ -13,6 +13,7 @@
 
 import { AXIS_TICK_FONT_PX, AXIS_TICK_GAP } from './chart-axis';
 import { chartFrame, type ChartLegendRect } from './chart-frame';
+import type { ChartTitleText } from './chart-titles';
 import { chartTextInk } from './chart-ink';
 import { AREA_FILL_OPACITY, barMarks, lineKeyItems, lineMarks, pieMarks } from './chart-marks';
 import {
@@ -54,6 +55,24 @@ function svgSwatch(
 // The key: a swatch and a name per series, laid out in the strip chartFrame
 // left for it. Mirrors ChartLegend's own gates, so a legend too small to read
 // is omitted here exactly as it is on the canvas.
+// The chart's title and axis titles (chart-titles.ts), where chartFrame laid them out.
+function svgChartTitles(
+  el: Chart,
+  titles: readonly ChartTitleText[],
+  textColor: string,
+  fontFamily?: string,
+): string {
+  const font = xmlEscape(fontFamily ?? EXPORT_DEFAULT_FONT);
+  return titles
+    .map((t) => {
+      const x = r2(el.x + t.x);
+      const y = r2(el.y + t.y);
+      const turn = t.turned ? ` transform="rotate(-90 ${x} ${y})"` : '';
+      return `<text x="${x}" y="${y}"${turn} text-anchor="middle" dominant-baseline="central" font-family="${font}" font-size="${t.px}" font-weight="${t.bold ? 600 : 400}" fill="${xmlEscape(textColor)}">${xmlEscape(t.text)}</text>`;
+    })
+    .join('');
+}
+
 function svgChartLegend(
   el: Chart,
   items: readonly ChartKeyItem[],
@@ -145,7 +164,7 @@ export function svgPieChart(
   ground?: readonly string[],
 ): string {
   const textColor = chartTextInk(labelColor, ground);
-  const { data, colorAt, area, legend } = chartFrame(el, palette, ground);
+  const { data, colorAt, area, legend, titles } = chartFrame(el, palette, ground);
   const doughnut = chartTypeOf(el) === 'doughnut';
   const pie = pieMarks(area, data, doughnut, el.x, el.y);
   const { cx, cy, rad, wedges } = pie;
@@ -168,7 +187,12 @@ export function svgPieChart(
         fontFamily,
       )
     : '';
-  return marks + values + svgChartLegend(el, data, colorAt, legend, textColor, fontFamily);
+  return (
+    marks +
+    values +
+    svgChartLegend(el, data, colorAt, legend, textColor, fontFamily) +
+    svgChartTitles(el, titles, textColor, fontFamily)
+  );
 }
 
 /** A column chart (or, horizontal, a bar chart): a baseline and one bar per value, plus the key. */
@@ -181,7 +205,7 @@ export function svgBarChart(
   ground?: readonly string[],
 ): string {
   const textColor = chartTextInk(labelColor, ground);
-  const { data, colorAt, area, legend } = chartFrame(el, palette, ground);
+  const { data, colorAt, area, legend, titles } = chartFrame(el, palette, ground);
   const horizontal = chartTypeOf(el) === 'bar';
   const barM = barMarks(area, data, horizontal, el.x, el.y, el.chartAxis === true);
   const { baseline: b, bars } = barM;
@@ -221,7 +245,8 @@ export function svgBarChart(
     baseline +
     rects +
     values +
-    svgChartLegend(el, data, colorAt, legend, textColor, fontFamily)
+    svgChartLegend(el, data, colorAt, legend, textColor, fontFamily) +
+    svgChartTitles(el, titles, textColor, fontFamily)
   );
 }
 
@@ -235,7 +260,7 @@ export function svgLineChart(
   ground?: readonly string[],
 ): string {
   const textColor = chartTextInk(labelColor, ground);
-  const { colorAt, area, legend } = chartFrame(el, palette, ground);
+  const { colorAt, area, legend, titles } = chartFrame(el, palette, ground);
   const categories =
     el.lineCategories && el.lineCategories.length > 0 ? el.lineCategories : LINE_DEFAULT_CATEGORIES;
   const series = el.lineSeries && el.lineSeries.length > 0 ? el.lineSeries : LINE_DEFAULT_SERIES;
@@ -314,6 +339,7 @@ export function svgLineChart(
     marks +
     values +
     labels +
-    svgChartLegend(el, legendItems, colorAt, legend, textColor, fontFamily)
+    svgChartLegend(el, legendItems, colorAt, legend, textColor, fontFamily) +
+    svgChartTitles(el, titles, textColor, fontFamily)
   );
 }

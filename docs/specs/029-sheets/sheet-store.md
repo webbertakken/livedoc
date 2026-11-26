@@ -98,8 +98,10 @@ by viewport, the limits, the workbook's doors, offline and copies; in Phase 7, u
     sheet not the workbook's (`kept_anchor_invalid`); content of the other standard than what is stored
     (`kept_standard_mismatch`); past D113's sizes (`kept_too_large`).
   - Read whole by anyone who may read the spreadsheet (Take offline reads it), never on a tab-scoped link.
-- **Objects**: charts, pivot tables, images, drawings, slicers, filter views, tables and timelines, a row each by
-  sheet, their model as JSON.
+- **Objects**: charts, pivot tables, images, drawings, slicers, filter views, tables and timelines, kept in their
+  sheet's layout (`objects`, in paint order), each set whole or removed by its id with a layout write, as validation
+  rules are; so they load, copy, go offline, undo and stay live as the layout does. Built for charts
+  ([Charts](charts.md#the-model)); up to 100 a sheet.
 - **Loading by viewport**: opening a workbook fetches its workbook row, sheet list, styles and the active sheet's
   layout and the cells of the rows in view and a screen around them; the rest streams in behind, so a large sheet
   shows before it has loaded. Built:
@@ -169,7 +171,8 @@ Built in the api; the sheet bar and File › Settings call it with the grid surf
   group, put the groups' controls before or after them ([Groups](grid-and-editing.md#groups-and-the-outline)), set
   the freeze, merge or unmerge a range,
   set or clear the filter and its conditions, set or remove a [validation rule](data-validation.md) or a
-  [format rule](conditional-formatting.md), or reorder the format rules. A layout write naming an id that is gone does what still makes
+  [format rule](conditional-formatting.md), or reorder the format rules, set or remove an object (a
+  [chart](charts.md#the-model)). A layout write naming an id that is gone does what still makes
   sense (deleting a deleted row is nothing; inserting after a deleted row inserts at its old neighbour, else the
   end).
 - A cell write is checked against the sheet's validation rules ([Where values are checked](data-validation.md#where-values-are-checked)):

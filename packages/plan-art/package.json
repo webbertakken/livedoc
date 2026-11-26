@@ -22,6 +22,7 @@
     "@livedoc/forms": "workspace:*",
     "@livedoc/icons": "workspace:*",
     "@livedoc/items": "workspace:*",
+    "@livedoc/sheets": "workspace:*",
     "@livedoc/ui": "workspace:*"
   },
   "devDependencies": {

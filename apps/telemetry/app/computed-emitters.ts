@@ -753,6 +753,10 @@ export const COMPUTED_EMITTERS: Record<string, ComputedValues> = {
   'apps/live/components/sheets/sheet-controller.tsx Sheet·Changed': {
     values: [...SHEET_CHANGE_KINDS],
   },
+  // A chart Insert › Chart makes, by its type's label (@livedoc/document CHART_TYPE_LABELS; charts.md "Telemetry").
+  'apps/live/components/spreadsheet/charts/useSpreadsheetCharts.ts Spreadsheet·Added': {
+    values: ['Column', 'Bar', 'Line', 'Area', 'Scatter', 'Pie', 'Doughnut'],
+  },
   // A Sheet set up from Setup Sheet names how it started (SheetSetup.tsx TELEMETRY).
   'apps/live/components/sheets/SheetSetup.tsx Sheet·Created': {
     values: [

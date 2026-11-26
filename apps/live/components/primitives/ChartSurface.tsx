@@ -1,4 +1,5 @@
 import type { ComponentProps, ReactNode } from 'react';
+import type { ChartTitleText } from '@livedoc/document';
 import { ChartLegend } from '@/components/primitives/ChartLegend';
 
 // What every chart element is drawn on (docs/specs/009-elements/pie-chart.md): the positioned box, the
@@ -23,8 +24,11 @@ export function ChartSurface({
   fontFamily,
   fontPx,
   readout,
+  titles,
   children,
 }: ComponentProps<typeof ChartLegend> & {
+  // The chart's title and axis titles, laid out by chartFrame (chart-titles.ts).
+  titles?: readonly ChartTitleText[];
   // The element's own coordinate space, from chartFrame(). The SVG scales to
   // the element's real size, so marks are authored against these numbers.
   w: number;
@@ -45,6 +49,23 @@ export function ChartSurface({
         aria-hidden
       >
         {children}
+        {titles?.map((t) => (
+          <text
+            key={`${t.turned ? 'y' : t.bold ? 't' : 'x'}`}
+            x={t.x}
+            y={t.y}
+            transform={t.turned ? `rotate(-90 ${t.x} ${t.y})` : undefined}
+            textAnchor="middle"
+            dominantBaseline="central"
+            fontSize={t.px}
+            fontWeight={t.bold ? 600 : 400}
+            fontFamily={fontFamily}
+            fill={textColor}
+            data-chart-title={t.turned ? 'y' : t.bold ? 'title' : 'x'}
+          >
+            {t.text}
+          </text>
+        ))}
       </svg>
       {readout}
       <ChartLegend

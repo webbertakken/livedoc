@@ -12,6 +12,7 @@ const REFUSALS: Partial<Record<string, string>> = {
   input_too_long: 'A cell holds up to 10,000 characters',
   sheet_not_found: 'This sheet is no longer in this document',
   rules_full: 'This sheet holds the most rules it can',
+  objects_full: 'This sheet holds the most charts it can',
   sheet_loading: 'This sheet is still loading',
 };
 

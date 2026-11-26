@@ -122,6 +122,8 @@ export const ELEMENT_FIELD_NAMES = {
     'pieAnimRepeat',
     'chartLegend',
     'chartLegendPosition',
+    'chartTitle',
+    'chartAxisTitles',
     'chartValues',
     'chartAxis',
     'chartVariant',

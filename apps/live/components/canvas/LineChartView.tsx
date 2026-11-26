@@ -41,7 +41,7 @@ export function LineChartView({
   // What the chart sits on (chartPageGrounds): its series drawn adapted to it.
   ground?: readonly string[];
 }) {
-  const { w, h, colorAt, area, legend } = chartFrame(element, palette, ground);
+  const { w, h, colorAt, area, legend, titles } = chartFrame(element, palette, ground);
   const { hover, markProps } = useChartHover<{ s: number; i: number }>(
     (a, b) => a.s === b.s && a.i === b.i,
   );
@@ -81,6 +81,7 @@ export function LineChartView({
       items={legendItems}
       colorAt={colorAt}
       legend={legend}
+      titles={titles}
       textColor={textColor}
       fontFamily={fontFamily}
       fontPx={legendFontPx(element.textSize)}

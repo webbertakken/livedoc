@@ -124,3 +124,4 @@ export {
 export type { Frame, RangeRef, EvalValue } from './engine/frame';
 export { valuesOnly, writesFormats } from './values-only';
 export * from './migration/sheet-migration-plan';
+export * from './objects/sheet-objects';

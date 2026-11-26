@@ -26,6 +26,7 @@ import {
 } from './limits';
 import { isFormatRule, isValidationRule } from './rules/rule-shape';
 import { bandingOverlaps, isBanding } from './rules/bandings';
+import { isSheetObject, SHEET_OBJECTS_MAX } from './objects/sheet-objects';
 import { inputAllowed, ruleMessage, validationRuleAt, type RangeValues } from './rules/validation';
 import { layoutIndex } from './layout';
 import { posRangeOf } from './layout';
@@ -59,7 +60,9 @@ export type SheetRejection =
   | 'write_invalid'
   // A value a Reject validation rule refuses (data-validation.md), and a sheet past its rules' limit.
   | 'value_invalid'
-  | 'rules_full';
+  | 'rules_full'
+  // A sheet past its objects' limit (charts.md "The model").
+  | 'objects_full';
 
 export type Validation =
   { ok: true } | { ok: false; error: SheetRejection; at?: string; line?: string };
@@ -334,6 +337,10 @@ function layoutChangeProblem(ch: LayoutChange, layout: SheetLayout): Validation 
           (isBanding(ch.band, ch.id, layout) && !bandingOverlaps(layout, ch.band)))
         ? OK
         : no('write_invalid');
+    case 'object':
+      return typeof ch.id === 'string' && (ch.object === null || isSheetObject(ch.object, ch.id))
+        ? OK
+        : no('write_invalid');
     case 'fruleOrder':
       return Array.isArray(ch.ids) && ch.ids.length <= FORMAT_RULES_MAX && ch.ids.every(isAxisId)
         ? OK
@@ -381,6 +388,7 @@ export function sheetProblem(sheet: Sheet, limits: SheetLimits = SheetLimits.pla
     (layout.bands?.length ?? 0) > BANDINGS_MAX
   )
     return no('rules_full');
+  if ((layout.objects?.length ?? 0) > SHEET_OBJECTS_MAX) return no('objects_full');
   return mergeProblem(layout);
 }
 
@@ -483,7 +491,8 @@ export function validateWrite(sheet: Sheet, write: SheetWrite, opts: WriteCheck 
   const more =
     (after.layout.rules?.length ?? 0) > (sheet.layout.rules?.length ?? 0) ||
     (after.layout.formatRules?.length ?? 0) > (sheet.layout.formatRules?.length ?? 0) ||
-    (after.layout.bands?.length ?? 0) > (sheet.layout.bands?.length ?? 0);
+    (after.layout.bands?.length ?? 0) > (sheet.layout.bands?.length ?? 0) ||
+    (after.layout.objects?.length ?? 0) > (sheet.layout.objects?.length ?? 0);
   if (grew || more) {
     const v = limitsProblem(after, opts.limits ?? SheetLimits.plan);
     if (!v.ok) return v;
@@ -554,7 +563,10 @@ export function validateSheetCreate(
         !layout.bands.every(
           (x) =>
             isBanding(x, (x as { id?: string })?.id ?? '', layout) && !bandingOverlaps(layout, x),
-        )))
+        ))) ||
+    (layout.objects !== undefined &&
+      (!Array.isArray(layout.objects) ||
+        !layout.objects.every((x) => isSheetObject(x, (x as { id?: string })?.id ?? ''))))
   )
     return no('write_invalid');
   // The look a seed carries (Sheet Settings), held to what a write may set.

@@ -166,6 +166,10 @@ groups all three (they're all in `isSelfDrawingShape` too).
   A `LineSeries` may carry `axis?: 'right'`, its own scale (a second axis), and `line?: true`, a scatter series
   drawn as a line; any other value of either reads as absent (an agent's write drops it). The
   axes are laid out with the marks, from `axisScale` and `axisLabelRoom` (`packages/document/src/chart-axis.ts`) for both renderers.
+- `ShapeElement.chartTitle?: string` and `chartAxisTitles?: { x?, y? }`: a title over the chart, and the horizontal and
+  vertical axis titles of a column, bar, line, area or scatter chart (a pie has none); each takes a band of the box from
+  the plot, drawn the same on the canvas and in exports; absent or blank, none. A spreadsheet's chart sets them
+  ([Charts](../029-sheets/charts.md#the-model)); a Plan chart has no control for them yet.
 - Line: `ShapeElement.lineCategories?: string[]` + `lineSeries?: LineSeries[]`
   (`{ name, color?, values: (number | null)[] }`), aligned to the categories — a 2-D
   dataset; `null` is no value (Chart types "No value is a gap"). `LINE_DEFAULT_CATEGORIES` / `LINE_DEFAULT_SERIES` seed a fresh chart.

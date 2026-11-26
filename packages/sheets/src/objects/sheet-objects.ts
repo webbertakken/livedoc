@@ -1,0 +1,174 @@
+// A sheet's objects (docs/specs/029-sheets/charts.md "The model", sheet-store.md "Objects"): what floats over its
+// cells, kept in its layout in paint order, each set whole or removed by its id with a layout write. Charts are the
+// one kind built; pivot tables, images, drawings, slicers and timelines join the union as they are built.
+import { isAxisId } from '../ids';
+import type { IdRange } from '../sheet';
+
+// The chart types a spreadsheet's chart draws as (charts.md "Chart types", those built), named as
+// @livedoc/document CHART_TYPES names them; restated, as this package never imports that one (a test keeps them equal).
+export const SHEET_CHART_TYPES = [
+  'column',
+  'bar',
+  'line',
+  'area',
+  'scatter',
+  'pie',
+  'doughnut',
+] as const;
+export type SheetChartType = (typeof SHEET_CHART_TYPES)[number];
+
+export const SHEET_CHART_LEGENDS = ['top', 'right', 'bottom', 'left', 'none'] as const;
+export type SheetChartLegend = (typeof SHEET_CHART_LEGENDS)[number];
+
+// Where an object sits: the cell its top-left corner is in, by row and column ids, and the px into that cell (at 100%).
+export type CellAnchor = { r: string; c: string; dx: number; dy: number };
+
+// A series' own look, by its column's id: its colour, a scatter series drawn as a line, the right-hand axis.
+export type SheetChartSeriesLook = { color?: string; line?: true; right?: true };
+
+export type SheetChart = {
+  id: string;
+  kind: 'chart';
+  at: CellAnchor;
+  width: number;
+  height: number;
+  type: SheetChartType;
+  // The data, by ids; absent when every cell of it was deleted ("No data").
+  range?: IdRange;
+  // Only these of the range's columns, by id.
+  cols?: string[];
+  palette?: string;
+  legend?: SheetChartLegend;
+  values?: true;
+  // The value axis: shown unless false (Google shows it).
+  axis?: false;
+  title?: string;
+  xTitle?: string;
+  yTitle?: string;
+  alt?: string;
+  series?: Record<string, SheetChartSeriesLook>;
+};
+
+export type SheetObject = SheetChart;
+
+export const SHEET_OBJECTS_MAX = 100;
+export const SHEET_CHART_SIZE_MIN = { width: 160, height: 120 } as const;
+export const SHEET_CHART_SIZE_MAX = 2000;
+// The farthest an anchor's offset reaches into its cell: a column or a row is never wider than this.
+export const OBJECT_OFFSET_MAX = 2000;
+export const SHEET_CHART_TEXT_MAX = 200;
+export const SHEET_CHART_ALT_MAX = 1000;
+// The series cap and a label column (chart-data CHART_SERIES_MAX + 1).
+export const SHEET_CHART_COLS_MAX = 13;
+const PALETTE_ID_MAX = 40;
+
+const HEX = /^#[0-9a-f]{6}$/;
+const isRecord = (x: unknown): x is Record<string, unknown> =>
+  typeof x === 'object' && x !== null && !Array.isArray(x);
+const onlyKeys = (x: Record<string, unknown>, keys: readonly string[]) =>
+  Object.keys(x).every((k) => keys.includes(k));
+const inRange = (n: unknown, lo: number, hi: number) =>
+  typeof n === 'number' && Number.isFinite(n) && n >= lo && n <= hi;
+const textUpTo = (x: unknown, max: number) =>
+  x === undefined || (typeof x === 'string' && x.length <= max);
+
+const CHART_KEYS = [
+  'id',
+  'kind',
+  'at',
+  'width',
+  'height',
+  'type',
+  'range',
+  'cols',
+  'palette',
+  'legend',
+  'values',
+  'axis',
+  'title',
+  'xTitle',
+  'yTitle',
+  'alt',
+  'series',
+] as const;
+
+function isAnchor(x: unknown): x is CellAnchor {
+  return (
+    isRecord(x) &&
+    onlyKeys(x, ['r', 'c', 'dx', 'dy']) &&
+    isAxisId(x.r) &&
+    isAxisId(x.c) &&
+    inRange(x.dx, 0, OBJECT_OFFSET_MAX) &&
+    inRange(x.dy, 0, OBJECT_OFFSET_MAX)
+  );
+}
+
+function isIdRange(x: unknown): x is IdRange {
+  return (
+    isRecord(x) && onlyKeys(x, ['r1', 'c1', 'r2', 'c2']) && [x.r1, x.c1, x.r2, x.c2].every(isAxisId)
+  );
+}
+
+function isSeriesLook(x: unknown): x is SheetChartSeriesLook {
+  return (
+    isRecord(x) &&
+    onlyKeys(x, ['color', 'line', 'right']) &&
+    (x.color === undefined || (typeof x.color === 'string' && HEX.test(x.color))) &&
+    (x.line === undefined || x.line === true) &&
+    (x.right === undefined || x.right === true)
+  );
+}
+
+// Whether a value is a chart of this id, whole and within its bounds (charts.md "The model").
+function isSheetChart(x: Record<string, unknown>): boolean {
+  const { cols, series } = x;
+  return (
+    onlyKeys(x, CHART_KEYS) &&
+    isAnchor(x.at) &&
+    inRange(x.width, SHEET_CHART_SIZE_MIN.width, SHEET_CHART_SIZE_MAX) &&
+    inRange(x.height, SHEET_CHART_SIZE_MIN.height, SHEET_CHART_SIZE_MAX) &&
+    (SHEET_CHART_TYPES as readonly unknown[]).includes(x.type) &&
+    (x.range === undefined || isIdRange(x.range)) &&
+    (cols === undefined ||
+      (Array.isArray(cols) &&
+        cols.length > 0 &&
+        cols.length <= SHEET_CHART_COLS_MAX &&
+        new Set(cols).size === cols.length &&
+        cols.every(isAxisId))) &&
+    textUpTo(x.palette, PALETTE_ID_MAX) &&
+    (x.legend === undefined || (SHEET_CHART_LEGENDS as readonly unknown[]).includes(x.legend)) &&
+    (x.values === undefined || x.values === true) &&
+    (x.axis === undefined || x.axis === false) &&
+    textUpTo(x.title, SHEET_CHART_TEXT_MAX) &&
+    textUpTo(x.xTitle, SHEET_CHART_TEXT_MAX) &&
+    textUpTo(x.yTitle, SHEET_CHART_TEXT_MAX) &&
+    textUpTo(x.alt, SHEET_CHART_ALT_MAX) &&
+    (series === undefined ||
+      (isRecord(series) &&
+        Object.keys(series).length <= SHEET_CHART_COLS_MAX &&
+        Object.entries(series).every(([k, v]) => isAxisId(k) && isSeriesLook(v))))
+  );
+}
+
+// Whether a value is an object of this id: one of the kinds built, whole and within its bounds.
+export function isSheetObject(x: unknown, id: string): x is SheetObject {
+  if (!isRecord(x) || x.id !== id || !isAxisId(id)) return false;
+  return x.kind === 'chart' && isSheetChart(x);
+}
+
+// The layout's objects after one is set (in its place, else on top) or removed.
+export function objectsWith(
+  list: readonly SheetObject[] | undefined,
+  id: string,
+  object: SheetObject | null,
+): SheetObject[] | undefined {
+  const all = list ?? [];
+  const at = all.findIndex((x) => x.id === id);
+  const next =
+    object === null
+      ? all.filter((x) => x.id !== id)
+      : at >= 0
+        ? all.map((x, i) => (i === at ? object : x))
+        : [...all, object];
+  return next.length ? next : undefined;
+}

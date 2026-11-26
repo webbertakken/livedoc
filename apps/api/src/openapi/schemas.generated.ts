@@ -10073,6 +10073,34 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
           "ids"
         ],
         "type": "object"
+      },
+      {
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "k": {
+            "const": "object",
+            "type": "string"
+          },
+          "object": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SheetObject"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "k",
+          "id",
+          "object"
+        ],
+        "type": "object"
       }
     ]
   },
@@ -10677,6 +10705,30 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
       "custom"
     ],
     "type": "string"
+  },
+  "ObjectAnchor": {
+    "additionalProperties": false,
+    "properties": {
+      "c": {
+        "type": "string"
+      },
+      "r": {
+        "type": "string"
+      },
+      "x": {
+        "type": "number"
+      },
+      "y": {
+        "type": "number"
+      }
+    },
+    "required": [
+      "r",
+      "c",
+      "x",
+      "y"
+    ],
+    "type": "object"
   },
   "OutlineNode": {
     "additionalProperties": false,
@@ -14892,6 +14944,119 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
     ],
     "type": "object"
   },
+  "SheetChart": {
+    "additionalProperties": false,
+    "properties": {
+      "alt": {
+        "type": "string"
+      },
+      "at": {
+        "$ref": "#/components/schemas/ObjectAnchor"
+      },
+      "axis": {
+        "const": false,
+        "type": "boolean"
+      },
+      "cols": {
+        "items": {
+          "type": "string"
+        },
+        "type": "array"
+      },
+      "height": {
+        "type": "number"
+      },
+      "id": {
+        "type": "string"
+      },
+      "kind": {
+        "const": "chart",
+        "type": "string"
+      },
+      "legend": {
+        "$ref": "#/components/schemas/SheetChartLegend"
+      },
+      "palette": {
+        "type": "string"
+      },
+      "range": {
+        "$ref": "#/components/schemas/IdRange"
+      },
+      "series": {
+        "additionalProperties": {
+          "$ref": "#/components/schemas/SheetChartSeriesLook"
+        },
+        "type": "object"
+      },
+      "title": {
+        "type": "string"
+      },
+      "type": {
+        "$ref": "#/components/schemas/SheetChartType"
+      },
+      "values": {
+        "const": true,
+        "type": "boolean"
+      },
+      "width": {
+        "type": "number"
+      },
+      "xTitle": {
+        "type": "string"
+      },
+      "yTitle": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "id",
+      "kind",
+      "at",
+      "width",
+      "height",
+      "type"
+    ],
+    "type": "object"
+  },
+  "SheetChartLegend": {
+    "enum": [
+      "top",
+      "right",
+      "bottom",
+      "left",
+      "none"
+    ],
+    "type": "string"
+  },
+  "SheetChartSeriesLook": {
+    "additionalProperties": false,
+    "properties": {
+      "color": {
+        "type": "string"
+      },
+      "line": {
+        "const": true,
+        "type": "boolean"
+      },
+      "right": {
+        "const": true,
+        "type": "boolean"
+      }
+    },
+    "type": "object"
+  },
+  "SheetChartType": {
+    "enum": [
+      "column",
+      "bar",
+      "line",
+      "area",
+      "scatter",
+      "pie",
+      "doughnut"
+    ],
+    "type": "string"
+  },
   "SheetCreateRequest": {
     "additionalProperties": false,
     "properties": {
@@ -15107,6 +15272,12 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
         },
         "type": "array"
       },
+      "objects": {
+        "items": {
+          "$ref": "#/components/schemas/SheetObject"
+        },
+        "type": "array"
+      },
       "rowCollapsed": {
         "items": {
           "$ref": "#/components/schemas/GroupMark"
@@ -15228,6 +15399,9 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
       "count"
     ],
     "type": "string"
+  },
+  "SheetObject": {
+    "$ref": "#/components/schemas/SheetChart"
   },
   "SheetPerson": {
     "additionalProperties": false,

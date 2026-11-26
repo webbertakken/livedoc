@@ -11,6 +11,7 @@ import { chartMarkInk } from './chart-ink';
 import { chartRamp } from './chart-palettes';
 import { PIE_DEFAULT_SLICES, type PieSlice } from './data-shapes';
 import type { ShapeElement } from './index';
+import { chartTitleBand, chartTitles } from './chart-titles';
 
 export type ChartRect = { x: number; y: number; w: number; h: number };
 export type ChartLegendRect = ChartRect & {
@@ -47,23 +48,27 @@ export function chartFrame(
   // have more of to give.
   const pos = element.chartLegendPosition ?? 'bottom';
   const vertical = pos === 'left' || pos === 'right';
+  // A title takes a band off the top first; the legend and the plot share what is left (chart-titles.ts).
+  const top = Math.min(chartTitleBand(element), h / 2);
+  const body = h - top;
   const legendW = showLegend && vertical ? Math.max(0, Math.min(w * 0.4, 130)) : 0;
-  const legendH = showLegend && !vertical ? Math.max(0, Math.min(h * 0.32, 72)) : 0;
-  const area: ChartRect = {
+  const legendH = showLegend && !vertical ? Math.max(0, Math.min(body * 0.32, 72)) : 0;
+  const titled = chartTitles(element, w, {
     x: pos === 'left' ? legendW : 0,
-    y: pos === 'top' ? legendH : 0,
+    y: top + (pos === 'top' ? legendH : 0),
     w: w - legendW,
-    h: h - legendH,
-  };
+    h: body - legendH,
+  });
+  const area: ChartRect = titled.area;
   const legend: ChartLegendRect = {
     show: showLegend,
     pos,
     x: pos === 'right' ? w - legendW : 0,
-    y: pos === 'bottom' ? h - legendH : 0,
+    y: top + (pos === 'bottom' ? body - legendH : 0),
     w: vertical ? legendW : w,
-    h: vertical ? h : legendH,
+    h: vertical ? body : legendH,
   };
-  return { w, h, data, showLegend, colorAt, area, legend };
+  return { w, h, data, showLegend, colorAt, area, legend, titles: titled.texts };
 }
 
 // A line chart's x-axis label (9px) fits the gap between its neighbours: only a label wider than that

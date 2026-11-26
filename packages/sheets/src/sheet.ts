@@ -4,6 +4,7 @@ import { makeAxisIds, type Rand } from './ids';
 import { SHEET_COLS_NEW, SHEET_ROWS_NEW, SHEET_TITLE_MAX } from './limits';
 import { CellMap } from './cells/cell-map';
 import type { Rotation } from './text/rotation';
+import type { SheetObject } from './objects/sheet-objects';
 
 // A reference in a stored formula, by ids. Absent corner ids mean a whole column (no
 // rows) or a whole row (no columns).
@@ -203,6 +204,8 @@ export type SheetLayout = {
   formatRules?: FormatRule[];
   // Alternating colours, none overlapping another.
   bands?: Banding[];
+  // What floats over the cells, in paint order (charts.md "The model").
+  objects?: SheetObject[];
 };
 
 // A card table: its header row, each column's card field (as the header named it), which row is which card (row

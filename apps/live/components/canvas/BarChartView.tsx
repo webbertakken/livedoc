@@ -37,7 +37,7 @@ export function BarChartView({
   // What the chart sits on (chartPageGrounds): its series drawn adapted to it.
   ground?: readonly string[];
 }) {
-  const { w, h, data, colorAt, area, legend } = chartFrame(element, palette, ground);
+  const { w, h, data, colorAt, area, legend, titles } = chartFrame(element, palette, ground);
   const { hover, markProps } = useChartHover<number>();
   // Upright columns, or (the Bar chart type) bars to the right; laid out by the marks the export draws too.
   const horizontal = chartTypeOf(element) === 'bar';
@@ -56,6 +56,7 @@ export function BarChartView({
       items={data}
       colorAt={colorAt}
       legend={legend}
+      titles={titles}
       textColor={textColor}
       fontFamily={fontFamily}
       fontPx={legendFontPx(element.textSize)}

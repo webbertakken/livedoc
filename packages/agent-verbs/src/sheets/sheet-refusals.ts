@@ -22,6 +22,7 @@ export const SHEET_REFUSAL_WORDS: Readonly<Record<SheetError, string>> = {
   value_invalid:
     "a value is not one its cell's validation rule allows: read_sheet lists the rules and what each allows.",
   rules_full: 'a sheet holds up to 200 validation rules and 100 format rules.',
+  objects_full: 'a sheet holds up to 100 charts.',
   tab_not_found: 'no such tab in this document.',
   sheet_name_invalid:
     "a sheet's name is 1 to 100 characters, never ' at either end, and none of [ ] * ? / \\ :.",

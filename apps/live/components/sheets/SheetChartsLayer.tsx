@@ -55,10 +55,18 @@ export function SheetChartsLayer({ fontFamily }: { fontFamily?: string | undefin
   const bridge = useSheetsBridgeContext();
   const elements = ctx?.elements;
   const sheetId = c.sheet.id;
+  const writes = ctx?.writes;
+  // A spreadsheet hands its sheet's own charts over (charts.md "The model"); a Plan tab its elements, of every Sheet.
   const charts = useMemo(
-    () => (elements ? (chartsInSheet(elements as Element[], sheetId) as ShapeElement[]) : []),
-    [elements, sheetId],
+    () =>
+      writes
+        ? ((elements ?? []) as ShapeElement[])
+        : elements
+          ? (chartsInSheet(elements as Element[], sheetId) as ShapeElement[])
+          : [],
+    [elements, sheetId, writes],
   );
+  const openMenu = writes ? writes.menu : openElementMenu;
   // An Editor's, on the open tab, with the Sheet taking input (sheet.md "Charts"; share-roles.md).
   const editable = !!ctx?.editable && !!bridge && c.interactive && c.canShape === true;
   const drawn = ctx?.renderChart;
@@ -75,7 +83,13 @@ export function SheetChartsLayer({ fontFamily }: { fontFamily?: string | undefin
   }, [charts, editable]);
   if (charts.length === 0) return null;
 
-  const commit = (id: string, patch: (el: ShapeElement) => Partial<ShapeElement> | null) =>
+  const commit = (id: string, patch: (el: ShapeElement) => Partial<ShapeElement> | null) => {
+    if (writes) {
+      const cur = charts.find((el) => el.id === id);
+      const p = cur && patch(cur);
+      if (p) writes.change(id, p);
+      return;
+    }
     bridge?.commitElements((els) =>
       els.map((el) => {
         if (el.id !== id || el.type !== 'shape') return el;
@@ -83,8 +97,10 @@ export function SheetChartsLayer({ fontFamily }: { fontFamily?: string | undefin
         return p ? { ...el, ...p } : el;
       }),
     );
+  };
   const remove = (id: string) => {
-    bridge?.commitElements((els) => els.filter((el) => el.id !== id));
+    if (writes) writes.remove(id);
+    else bridge?.commitElements((els) => els.filter((el) => el.id !== id));
     setSelected(null);
     c.focusGrid();
   };
@@ -167,7 +183,7 @@ export function SheetChartsLayer({ fontFamily }: { fontFamily?: string | undefin
               key={el.id}
               data-sheet-chart={el.id}
               role={editable ? 'group' : 'img'}
-              aria-label={`${chartName(el)} chart`}
+              aria-label={writes ? writes.labelOf(el.id) : `${chartName(el)} chart`}
               tabIndex={editable ? 0 : -1}
               // Escape lets a selected chart go before it restores a maximised Sheet.
               data-keeps-escape={isSelected ? '' : undefined}
@@ -196,7 +212,7 @@ export function SheetChartsLayer({ fontFamily }: { fontFamily?: string | undefin
                 // The canvas's element menu for this chart, at the pointer (as a right-click on the canvas opens it).
                 e.preventDefault();
                 setSelected(el.id);
-                openElementMenu(el.id, new DOMRect(e.clientX, e.clientY - MENU_GAP_PX, 0, 0));
+                openMenu?.(el.id, new DOMRect(e.clientX, e.clientY - MENU_GAP_PX, 0, 0));
               }}
               aria-keyshortcuts={editable ? CHART_KEYS : undefined}
               aria-description={editable ? CHART_KEYS_HELP : undefined}
@@ -238,20 +254,29 @@ export function SheetChartsLayer({ fontFamily }: { fontFamily?: string | undefin
               <div
                 className={`pointer-events-none absolute inset-0 ${drawn ? '' : 'overflow-hidden rounded-lg'}`}
               >
-                <SheetLinkedChart element={shown}>
-                  {(live) =>
-                    drawn ? (
-                      drawn(live, !!ctx?.editable)
-                    ) : (
-                      <DataChartView
-                        element={live}
-                        fontFamily={fontFamily}
-                        textColor={c.palette.text}
-                        palette={ctx?.chartPalette}
-                      />
-                    )
-                  }
-                </SheetLinkedChart>
+                {writes?.noData.has(el.id) ? (
+                  <div
+                    className="flex h-full w-full items-center justify-center rounded-lg border text-sm"
+                    style={{ borderColor: c.palette.border, color: c.palette.muted }}
+                  >
+                    No data
+                  </div>
+                ) : (
+                  <SheetLinkedChart element={shown}>
+                    {(live) =>
+                      drawn ? (
+                        drawn(live, !!ctx?.editable)
+                      ) : (
+                        <DataChartView
+                          element={live}
+                          fontFamily={fontFamily}
+                          textColor={c.palette.text}
+                          palette={ctx?.chartPalette}
+                        />
+                      )
+                    }
+                  </SheetLinkedChart>
+                )}
               </div>
               {isSelected ? (
                 <>
@@ -261,16 +286,16 @@ export function SheetChartsLayer({ fontFamily }: { fontFamily?: string | undefin
                     data-sheet-chart-control
                     onPointerDown={(e) => e.stopPropagation()}
                   >
-                    <ChartButton
-                      label="Chart Options"
-                      palette={c.palette}
-                      menu
-                      onClick={(e) =>
-                        openElementMenu(el.id, e.currentTarget.getBoundingClientRect())
-                      }
-                    >
-                      <MoreIcon />
-                    </ChartButton>
+                    {openMenu ? (
+                      <ChartButton
+                        label="Chart Options"
+                        palette={c.palette}
+                        menu
+                        onClick={(e) => openMenu(el.id, e.currentTarget.getBoundingClientRect())}
+                      >
+                        <MoreIcon />
+                      </ChartButton>
+                    ) : null}
                     <ChartButton
                       label="Delete Chart"
                       palette={c.palette}

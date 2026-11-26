@@ -376,6 +376,10 @@ export type ShapeElement = {
   // Legend placement (docs/specs/009-elements/pie-chart.md); ignored when `chartLegend` is false. Missing /
   // undefined === 'right', the historical default.
   chartLegendPosition?: ChartLegendPosition;
+  // Chart and axis titles (docs/specs/029-sheets/charts.md "The model"): a title over the chart, and the horizontal
+  // (x) and vertical (y) axis titles of a column, bar, line, area or scatter chart. Absent or blank = none.
+  chartTitle?: string;
+  chartAxisTitles?: { x?: string; y?: string };
   // Chart type (docs/specs/009-elements/pie-chart.md "Chart types"): which of its kind's types a chart draws as
   // (bar-chart `horizontal`, line-chart `area` / `scatter`, pie-chart `doughnut`); absent, or one its kind does not
   // take, is the kind's first (Column, Line, Pie).
