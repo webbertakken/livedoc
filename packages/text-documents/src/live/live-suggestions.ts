@@ -11,15 +11,24 @@ import {
   PARAGRAPH,
   PARAGRAPH_FORMAT_CHANGE,
   SUGGESTION_MARKS,
-  TABLE,
   TABLE_CELL,
   TABLE_HEADER,
-  TABLE_ROW,
 } from './live-names';
 import { tabFragment } from './live-root';
 import { liveTabIds } from './live-tabs';
 import { fitTableWidth } from './live-table-fit';
-import type { TextDocumentCommentAuthor } from './live-threads';
+import {
+  deltaOf,
+  elementsOf,
+  emptiedContainer,
+  isEmpty,
+  isObject,
+  isSuggestionMark,
+  type FormatChangeMark,
+  type ParagraphFormatChangeMark,
+  type SuggestionMark,
+} from './live-suggestion-marks';
+import { ownBy, ownMarksWellFormed, ownRejected } from './live-suggestions-own';
 
 export {
   DELETION_MARK,
@@ -28,30 +37,16 @@ export {
   PARAGRAPH_FORMAT_CHANGE,
   SUGGESTION_MARKS,
 };
-
-/** The most suggestions one document holds (review.md "How a suggestion is kept", (default)). */
-export const TEXT_DOCUMENT_SUGGESTIONS_MAX = 5000;
-/** The longest suggestion id. */
-export const SUGGESTION_ID_MAX = 64;
-/** The longest name a suggestion's author carries, as a mention's. */
-export const SUGGESTION_AUTHOR_NAME_MAX = 100;
-
-/** What each part of a suggestion carries: its id, when it was made and by whom. */
-export type SuggestionMark = {
-  readonly id: string;
-  readonly at: number;
-  readonly author: TextDocumentCommentAuthor;
-};
-
-/** A format suggestion's mark: each text property mark it changed, with its attributes before (null: none). */
-export type FormatChangeMark = SuggestionMark & {
-  readonly before: Readonly<Record<string, unknown>>;
-};
-
-/** A paragraph format suggestion's mark: the paragraph's style, formatting and list before (null: none). */
-export type ParagraphFormatChangeMark = SuggestionMark & {
-  readonly before: { readonly style: unknown; readonly props: unknown; readonly list: unknown };
-};
+export {
+  isSuggestionMark,
+  isWellFormedMark,
+  SUGGESTION_AUTHOR_NAME_MAX,
+  SUGGESTION_ID_MAX,
+  TEXT_DOCUMENT_SUGGESTIONS_MAX,
+  type FormatChangeMark,
+  type ParagraphFormatChangeMark,
+  type SuggestionMark,
+} from './live-suggestion-marks';
 
 export type SuggestionPartKind =
   | 'insertion'
@@ -105,57 +100,14 @@ export type TextDocumentSuggestion = SuggestionMark & {
   readonly parts: readonly SuggestionPart[];
 };
 
-const isObject = (value: unknown): value is Record<string, unknown> =>
-  typeof value === 'object' && value !== null && !Array.isArray(value);
-
-/** Whether a value reads as a suggestion's mark: an id, a time and an author with a name. */
-export function isSuggestionMark(value: unknown): value is SuggestionMark {
-  return (
-    isObject(value) &&
-    typeof value.id === 'string' &&
-    value.id !== '' &&
-    typeof value.at === 'number' &&
-    isObject(value.author) &&
-    typeof value.author.name === 'string'
-  );
-}
-
-/** Whether a suggestion's mark is within its limits and the shape a person's editor writes. */
-export function isWellFormedMark(value: unknown): boolean {
-  if (!isSuggestionMark(value)) return false;
-  const { id, at, author } = value;
-  return (
-    id.length <= SUGGESTION_ID_MAX &&
-    Number.isFinite(at) &&
-    typeof author.key === 'string' &&
-    author.name.length <= SUGGESTION_AUTHOR_NAME_MAX &&
-    typeof author.colour === 'string' &&
-    author.colour.length <= 32 &&
-    (!('before' in value) || isObject((value as { before?: unknown }).before))
-  );
-}
-
 /** The text formatting attributes a format mark's `before` names. */
 const changedOf = (value: unknown): string[] => {
   const before = isObject(value) ? value.before : undefined;
   return isObject(before) ? Object.keys(before) : [];
 };
 
-const marksOf = (value: unknown, id: string): boolean => isSuggestionMark(value) && value.id === id;
-
-const elementsOf = (parent: Y.XmlFragment | Y.XmlElement): (Y.XmlElement | Y.XmlText)[] =>
-  parent
-    .toArray()
-    .filter(
-      (c): c is Y.XmlElement | Y.XmlText => c instanceof Y.XmlElement || c instanceof Y.XmlText,
-    );
-
-/** Whether an element holds nothing: no element, no text. */
-const isEmpty = (parent: Y.XmlElement): boolean =>
-  elementsOf(parent).every((c) => c instanceof Y.XmlText && c.length === 0);
-
-type DeltaOp = { insert?: unknown; attributes?: Record<string, unknown> };
-const deltaOf = (text: Y.XmlText): DeltaOp[] => text.toDelta() as DeltaOp[];
+const marksOf = (value: unknown, ids: ReadonlySet<string>): boolean =>
+  isSuggestionMark(value) && ids.has(value.id);
 
 const TEXT_KINDS: readonly [string, SuggestionPartKind][] = [
   [INSERTION_MARK, 'insertion'],
@@ -278,8 +230,8 @@ function joinIntoPrevious(parent: Y.XmlFragment | Y.XmlElement, index: number): 
   parent.delete(index, 1);
 }
 
-/** Settles one suggestion's marks on a text: deletes what goes, formats what stays. */
-function settleText(text: Y.XmlText, id: string, accept: boolean): void {
+/** Settles some suggestions' marks on a text: deletes what goes, formats what stays. */
+function settleText(text: Y.XmlText, ids: ReadonlySet<string>, accept: boolean): void {
   const steps: {
     at: number;
     length: number;
@@ -290,9 +242,9 @@ function settleText(text: Y.XmlText, id: string, accept: boolean): void {
   for (const op of deltaOf(text)) {
     const length = typeof op.insert === 'string' ? op.insert.length : 1;
     const attrs = op.attributes ?? {};
-    const inserted = marksOf(attrs[INSERTION_MARK], id);
-    const deleted = marksOf(attrs[DELETION_MARK], id);
-    const formatted = marksOf(attrs[FORMAT_CHANGE_MARK], id);
+    const inserted = marksOf(attrs[INSERTION_MARK], ids);
+    const deleted = marksOf(attrs[DELETION_MARK], ids);
+    const formatted = marksOf(attrs[FORMAT_CHANGE_MARK], ids);
     if (inserted || deleted || formatted) {
       const drop = (inserted && !accept) || (deleted && accept);
       const attributes: Record<string, unknown> = {};
@@ -325,18 +277,10 @@ function restoreParagraph(
   }
 }
 
-/** A table left with no rows, or a row left with no cells: it goes with them (review.md "How a suggestion is kept"). */
-const emptied = (node: Y.XmlElement | PlainElement): boolean => {
-  const name = 'nodeName' in node ? node.nodeName : node.element;
-  if (name !== TABLE && name !== TABLE_ROW) return false;
-  const children: unknown[] = 'nodeName' in node ? node.toArray() : node.children;
-  return children.length === 0;
-};
-
-/** Settles one suggestion within a parent's children, from the last backwards so indexes hold. */
+/** Settles some suggestions within a parent's children, from the last backwards so indexes hold. */
 function settleChildren(
   parent: Y.XmlFragment | Y.XmlElement,
-  id: string,
+  ids: ReadonlySet<string>,
   accept: boolean,
   inParagraph: boolean,
   // The tables a column of this suggestion was accepted into.
@@ -345,23 +289,23 @@ function settleChildren(
   for (let index = parent.length - 1; index >= 0; index--) {
     const node = parent.get(index);
     if (node instanceof Y.XmlText) {
-      settleText(node, id, accept);
+      settleText(node, ids, accept);
       continue;
     }
     if (!(node instanceof Y.XmlElement)) continue;
     if (node.nodeName === PARAGRAPH && !inParagraph) {
-      settleChildren(node, id, accept, true, widened);
+      settleChildren(node, ids, accept, true, widened);
       const format = node.getAttribute(PARAGRAPH_FORMAT_CHANGE) as unknown;
-      if (marksOf(format, id)) {
+      if (marksOf(format, ids)) {
         if (!accept) restoreParagraph(node, (format as ParagraphFormatChangeMark).before ?? {});
         node.removeAttribute(PARAGRAPH_FORMAT_CHANGE);
       }
       const joins =
-        (marksOf(node.getAttribute(INSERTION_MARK), id) && !accept) ||
-        (marksOf(node.getAttribute(DELETION_MARK), id) && accept);
-      const rejectsBreak = !accept && marksOf(node.getAttribute(INSERTION_MARK), id);
-      if (marksOf(node.getAttribute(INSERTION_MARK), id)) node.removeAttribute(INSERTION_MARK);
-      if (marksOf(node.getAttribute(DELETION_MARK), id)) node.removeAttribute(DELETION_MARK);
+        (marksOf(node.getAttribute(INSERTION_MARK), ids) && !accept) ||
+        (marksOf(node.getAttribute(DELETION_MARK), ids) && accept);
+      const rejectsBreak = !accept && marksOf(node.getAttribute(INSERTION_MARK), ids);
+      if (marksOf(node.getAttribute(INSERTION_MARK), ids)) node.removeAttribute(INSERTION_MARK);
+      if (marksOf(node.getAttribute(DELETION_MARK), ids)) node.removeAttribute(DELETION_MARK);
       const previous = index > 0 ? parent.get(index - 1) : null;
       if (joins && previous instanceof Y.XmlElement && previous.nodeName === PARAGRAPH)
         joinIntoPrevious(parent, index);
@@ -370,14 +314,18 @@ function settleChildren(
         parent.delete(index, 1);
       continue;
     }
-    if (!inParagraph) settleChildren(node, id, accept, false, widened);
-    const inserted = marksOf(node.getAttribute(INSERTION_MARK), id);
-    const deleted = marksOf(node.getAttribute(DELETION_MARK), id);
+    if (!inParagraph) settleChildren(node, ids, accept, false, widened);
+    const inserted = marksOf(node.getAttribute(INSERTION_MARK), ids);
+    const deleted = marksOf(node.getAttribute(DELETION_MARK), ids);
     if (inserted && accept && (node.nodeName === TABLE_CELL || node.nodeName === TABLE_HEADER)) {
       const table = parent.parent;
       if (table instanceof Y.XmlElement) widened.add(table as Y.XmlElement);
     }
-    if ((inserted && !accept) || (deleted && accept) || emptied(node)) {
+    if (
+      (inserted && !accept) ||
+      (deleted && accept) ||
+      emptiedContainer(node.nodeName, node.length)
+    ) {
       parent.delete(index, 1);
       continue;
     }
@@ -389,6 +337,24 @@ function settleChildren(
 /** How wide the text is where a settled table stands, in points: a table a column made wider is fitted to it. */
 export type SuggestionFit = { readonly width: number };
 
+/** Settles the suggestions `ids` in one transaction; how many there were. */
+function settleIds(
+  doc: Y.Doc,
+  ids: ReadonlySet<string>,
+  accept: boolean,
+  origin: unknown,
+  fit?: SuggestionFit,
+): number {
+  if (ids.size === 0) return 0;
+  doc.transact(() => {
+    const widened = new Set<Y.XmlElement>();
+    for (const tab of liveTabIds(doc))
+      settleChildren(tabFragment(doc, tab), ids, accept, false, widened);
+    if (fit) for (const table of widened) if (table.parent) fitTableWidth(table, fit.width);
+  }, origin);
+  return ids.size;
+}
+
 function settle(
   doc: Y.Doc,
   id: string,
@@ -397,150 +363,33 @@ function settle(
   fit?: SuggestionFit,
 ): boolean {
   if (!read(doc).some((s) => s.id === id)) return false;
-  doc.transact(() => {
-    const widened = new Set<Y.XmlElement>();
-    for (const tab of liveTabIds(doc))
-      settleChildren(tabFragment(doc, tab), id, accept, false, widened);
-    if (fit) for (const table of widened) if (table.parent) fitTableWidth(table, fit.width);
-  }, origin);
-  return true;
+  return settleIds(doc, new Set([id]), accept, origin, fit) > 0;
 }
 
-// ---- The writing with one person's suggestions rejected, as plain values (the judge's reading). ----
-
-type PlainText = { readonly text: { insert: string; attributes: Record<string, unknown> }[] };
-type PlainElement = {
-  readonly element: string;
-  attributes: Record<string, unknown>;
-  children: PlainNode[];
-};
-type PlainNode = PlainText | PlainElement;
-
-/** A value with every object's keys in order, so equal values print equal. */
-function canonical(value: unknown): unknown {
-  if (Array.isArray(value)) return value.map(canonical);
-  if (value instanceof Uint8Array) return [...value];
-  if (!isObject(value)) return value;
-  return Object.fromEntries(
-    Object.keys(value)
-      .sort()
-      .map((key) => [key, canonical(value[key])]),
+/**
+ * Settles every suggestion of the document, or only those of the author whose key is `only`, in one transaction
+ * (review.md "Reviewing suggestions"); how many.
+ */
+function settleAll(
+  doc: Y.Doc,
+  accept: boolean,
+  origin: unknown,
+  { only, fit }: { only?: string; fit?: SuggestionFit } = {},
+): number {
+  const ids = new Set(
+    read(doc)
+      .filter((s) => only === undefined || s.author.key === only)
+      .map((s) => s.id),
   );
+  return settleIds(doc, ids, accept, origin, fit);
 }
 
-const sameAttributes = (a: Record<string, unknown>, b: Record<string, unknown>) =>
-  JSON.stringify(canonical(a)) === JSON.stringify(canonical(b));
-
-/** Adds a node to a list, a text joining the text before it and runs with equal attributes joining. */
-function pushNode(list: PlainNode[], node: PlainNode): void {
-  if (!('text' in node)) {
-    list.push(node);
-    return;
-  }
-  if (node.text.length === 0) return;
-  const tail = list.at(-1);
-  const into = tail && 'text' in tail ? tail : null;
-  if (!into) {
-    list.push({ text: [] });
-    return pushNode(list, node);
-  }
-  for (const run of node.text) {
-    const end = into.text.at(-1);
-    if (end && sameAttributes(end.attributes, run.attributes)) end.insert += run.insert;
-    else into.text.push({ ...run });
-  }
-}
-
-const ownBy = (value: unknown, key: string): boolean =>
-  isSuggestionMark(value) && value.author.key === key;
-
-function plainText(text: Y.XmlText, key: string): PlainText {
-  const runs: PlainText['text'] = [];
-  for (const op of deltaOf(text)) {
-    const attributes = { ...(op.attributes ?? {}) };
-    if (ownBy(attributes[INSERTION_MARK], key)) continue;
-    if (ownBy(attributes[DELETION_MARK], key)) delete attributes[DELETION_MARK];
-    const format = attributes[FORMAT_CHANGE_MARK];
-    if (ownBy(format, key)) {
-      delete attributes[FORMAT_CHANGE_MARK];
-      for (const [name, value] of Object.entries((format as FormatChangeMark).before ?? {})) {
-        if (value === null || value === undefined) delete attributes[name];
-        else attributes[name] = value;
-      }
-    }
-    runs.push({
-      insert: typeof op.insert === 'string' ? op.insert : JSON.stringify(op.insert),
-      attributes,
-    });
-  }
-  return { text: runs };
-}
-
-function plainChildren(
-  parent: Y.XmlFragment | Y.XmlElement,
-  key: string,
-  inParagraph: boolean,
-): PlainNode[] {
-  const out: PlainNode[] = [];
-  for (const node of elementsOf(parent)) {
-    if (node instanceof Y.XmlText) {
-      pushNode(out, plainText(node, key));
-      continue;
-    }
-    const attributes: Record<string, unknown> = { ...node.getAttributes() };
-    const paragraph = node.nodeName === PARAGRAPH && !inParagraph;
-    if (!paragraph && ownBy(attributes[INSERTION_MARK], key)) continue;
-    if (ownBy(attributes[DELETION_MARK], key)) delete attributes[DELETION_MARK];
-    const format = attributes[PARAGRAPH_FORMAT_CHANGE];
-    if (paragraph && ownBy(format, key)) {
-      delete attributes[PARAGRAPH_FORMAT_CHANGE];
-      for (const [name, value] of Object.entries(
-        (format as ParagraphFormatChangeMark).before ?? {},
-      )) {
-        if (value === null || value === undefined) delete attributes[name];
-        else attributes[name] = value;
-      }
-    }
-    const children = plainChildren(node, key, inParagraph || paragraph);
-    if (paragraph && ownBy(attributes[INSERTION_MARK], key)) {
-      delete attributes[INSERTION_MARK];
-      const previous = out.at(-1);
-      if (previous && 'element' in previous && previous.element === PARAGRAPH) {
-        for (const child of children) pushNode(previous.children, child);
-        continue;
-      }
-      // The first one, nothing of it left, with a node after it: gone, as rejecting it leaves it.
-      if (out.length === 0 && children.length === 0 && node.nextSibling !== null) continue;
-    }
-    const plain = { element: node.nodeName, attributes, children };
-    if (emptied(plain)) continue;
-    out.push(plain);
-  }
-  return out;
-}
-
-/** The fragment as it reads with `key`'s suggestions rejected, printed so equal readings print equal. */
-const ownRejected = (fragment: Y.XmlFragment, key: string): string =>
-  JSON.stringify(canonical(plainChildren(fragment, key, false)));
-
-/** Whether every mark carrying `key` in the fragment is well formed. */
-function ownMarksWellFormed(fragment: Y.XmlFragment | Y.XmlElement, key: string): boolean {
-  for (const node of elementsOf(fragment)) {
-    if (node instanceof Y.XmlText) {
-      for (const op of deltaOf(node))
-        for (const name of SUGGESTION_MARKS) {
-          const value = op.attributes?.[name];
-          if (ownBy(value, key) && !isWellFormedMark(value)) return false;
-        }
-      continue;
-    }
-    for (const name of [INSERTION_MARK, DELETION_MARK, PARAGRAPH_FORMAT_CHANGE]) {
-      const value = node.getAttribute(name) as unknown;
-      if (ownBy(value, key) && !isWellFormedMark(value)) return false;
-    }
-    if (!ownMarksWellFormed(node, key)) return false;
-  }
-  return true;
+/** A copy of the document with every suggestion accepted or rejected, the document untouched: a preview's. */
+function settledCopy(doc: Y.Doc, accept: boolean): Y.Doc {
+  const copy = new Y.Doc();
+  Y.applyUpdate(copy, Y.encodeStateAsUpdate(doc));
+  settleAll(copy, accept, null);
+  return copy;
 }
 
 export const LiveSuggestions = {
@@ -556,6 +405,9 @@ export const LiveSuggestions = {
     settle(doc, id, true, origin, fit),
   /** Rejects a suggestion in one transaction; false when the document holds no part of it. */
   reject: (doc: Y.Doc, id: string, origin: unknown): boolean => settle(doc, id, false, origin),
+  /** Accepts or rejects every suggestion (or only `only`'s) as one change; how many (review.md "Reviewing suggestions"). */
+  settleAll,
+  settledCopy,
   ownRejected,
   ownMarksWellFormed,
 } as const;

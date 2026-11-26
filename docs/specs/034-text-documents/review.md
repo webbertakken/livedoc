@@ -403,8 +403,31 @@ office kinds; this spec says what a text document puts in them.
 
 ## Reviewing suggestions
 
-Tools > Review suggested edits (⌘⌥ O then U): a floating panel with **Accept all**, **Reject all**, the count, Next and
-Previous, and **Preview**: Show suggested edits, Preview accept all, Preview reject all.
+Tools > Review suggested edits (⌘⌥ O then U on a Mac, Ctrl+Alt+O then U elsewhere) opens the **Suggested edits** panel,
+as Google's box in the top right: a floating panel over the page's top right corner, below the toolbar, that leaves
+the writing usable beside it (non-modal). Pressing the item again, its × ("Close") or Escape within it closes it.
+
+- **The count**: "3 suggested edits" ("1 suggested edit", "No suggested edits"), of the whole document, every
+  document tab's (director, 2026-11-26). In a document of more than one tab, each tab holding any is listed under
+  it with its own count ("Tab 2: 1"), so no one accepts in a tab they cannot see without knowing. Google's help
+  ([Suggest edits in Google Docs](https://support.google.com/docs/answer/6033474)) does not say whether its Accept
+  all reaches every tab; LiveDoc's reaches the whole document (default), until a capture of Google's says otherwise.
+- **Previous** and **Next** (arrows, "Previous suggested edit", "Next suggested edit") select the previous or next
+  suggestion of the whole document, in the tabs' order and the writing's, showing its tab first where it is another,
+  as Move to next suggestion does in one tab; past the last or before the first nothing moves; while previewing they wait (default).
+- **Preview**, a choice of three: **Show suggested edits** (the writing with its suggestions, as always), **Preview
+  accept all** (the writing as it would read with every suggestion accepted) and **Preview reject all** (with every
+  one rejected), each drawn exactly as settling would leave it, on the document as it is now, following others'
+  changes. While previewing, the body is read only and the panel says why: "Previewing: the document can't be
+  edited until you choose Show suggested edits or close this panel." (default copy); suggestion cards are not drawn.
+- **Accept all** and **Reject all** settle every suggestion of the whole document at once, as one change of the
+  writing undone with one ⌘Z, made by the person who pressed it (director, 2026-11-26); the panel stays, its count
+  "No suggested edits".
+- **Who may**: an Editor has everything; a Participant has the count, Previous and Next, the previews and **Reject
+  all mine**, rejecting only their own suggestions (shown only while they have any), never Accept all; a Viewer has
+  the count, Previous and Next and the previews (director, 2026-11-26). In Viewing, everyone has only those.
+- Telemetry: `Element · Changed · TextDocumentSuggestionAcceptedAll` and `…RejectedAll`, once per press; a
+  Participant's Reject all mine counts as RejectedAll.
 
 ## Compare documents
 
@@ -434,11 +457,11 @@ setting is not shown and the Inbox carries them. Nothing is sent to someone who 
 
 ## Share roles
 
-| Role            | Comments                            | Suggestions                            | Versions                 |
-| --------------- | ----------------------------------- | -------------------------------------- | ------------------------ |
-| **Editor**      | All                                 | Make, accept, reject                   | See, name, restore, copy |
-| **Participant** | Add, reply, resolve, react, mention | Make (D7), reply; never accept         | See (as a Viewer does)   |
-| **Viewer**      | Read                                | Read (in Editing and Suggesting views) | None, as Google's Viewer |
+| Role            | Comments                            | Suggestions                                                                      | Versions                 |
+| --------------- | ----------------------------------- | -------------------------------------------------------------------------------- | ------------------------ |
+| **Editor**      | All                                 | Make, accept, reject, review all                                                 | See, name, restore, copy |
+| **Participant** | Add, reply, resolve, react, mention | Make (D7), reply, reject own (one or all mine); never accept; review and preview | See (as a Viewer does)   |
+| **Viewer**      | Read                                | Read (in Editing and Suggesting views), review and preview                       | None, as Google's Viewer |
 
 ## Telemetry
 

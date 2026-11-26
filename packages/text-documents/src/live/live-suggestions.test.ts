@@ -434,3 +434,55 @@ describe('isWellFormedMark', () => {
     expect(isWellFormedMark({ ...mark('s1'), before: 'bold' })).toBe(false);
   });
 });
+
+// review.md "Reviewing suggestions": Accept all and Reject all settle every suggestion as one change; a Participant's
+// Reject all mine only their own; a preview reads a settled copy, the document untouched.
+describe('LiveSuggestions.settleAll', () => {
+  const mixed = () =>
+    written([
+      'A ',
+      ['new', { [INSERTION_MARK]: mark('s1') }],
+      ' ',
+      ['old', { [DELETION_MARK]: mark('s2', BEN) }],
+      ' ',
+      ['his', { [INSERTION_MARK]: mark('s3', BEN) }],
+    ]);
+
+  it('accepts every suggestion in one change, and says how many', () => {
+    const { doc, body } = mixed();
+    let updates = 0;
+    doc.on('update', () => (updates += 1));
+    expect(LiveSuggestions.settleAll(doc, true, null)).toBe(3);
+    expect(updates).toBe(1);
+    expect(textOf(body)).toEqual(['A new  his']);
+    expect(LiveSuggestions.count(doc)).toBe(0);
+  });
+
+  it('rejects every suggestion, or only one person’s', () => {
+    const all = mixed();
+    expect(LiveSuggestions.settleAll(all.doc, false, null)).toBe(3);
+    expect(textOf(all.body)).toEqual(['A  old ']);
+    const bens = mixed();
+    expect(LiveSuggestions.settleAll(bens.doc, false, null, { only: BEN.key })).toBe(2);
+    expect(textOf(bens.body)).toEqual(['A new old ']);
+    expect(LiveSuggestions.read(bens.doc).map((s) => s.id)).toEqual(['s1']);
+  });
+
+  it('makes no change when there is nothing to settle', () => {
+    const { doc } = written(['plain']);
+    let updates = 0;
+    doc.on('update', () => (updates += 1));
+    expect(LiveSuggestions.settleAll(doc, true, null)).toBe(0);
+    expect(updates).toBe(0);
+  });
+
+  it('reads a settled copy, the document untouched', () => {
+    const { doc, body } = mixed();
+    const accepted = LiveSuggestions.settledCopy(doc, true);
+    const rejected = LiveSuggestions.settledCopy(doc, false);
+    expect(textOf(accepted.getXmlFragment('body'))).toEqual(['A new  his']);
+    expect(textOf(rejected.getXmlFragment('body'))).toEqual(['A  old ']);
+    expect(LiveSuggestions.count(doc)).toBe(3);
+    expect(textOf(body)).toEqual(['A new old his']);
+  });
+});
