@@ -154,6 +154,16 @@ describe('OfficeCommentsPanel', () => {
     expect(screen.getByText('No comments match')).toBeTruthy();
   });
 
+  // review.md "Assigning": a row leads with whom its thread is assigned to.
+  it('leads an assigned thread’s row with its assignee, you for the reader', () => {
+    const priya = { userId: 'u-priya', name: 'Priya Kaur', handle: 'priya-kaur' };
+    panel({}, [{ ...ROWS[0]!, assignee: priya }]);
+    expect(screen.getByText('Assigned to Priya Kaur')).toBeTruthy();
+    cleanup();
+    panel({ self: { key: 'me', userId: 'u-priya' } }, [{ ...ROWS[0]!, assignee: priya }]);
+    expect(screen.getByText('Assigned to you')).toBeTruthy();
+  });
+
   it('marks a file’s comment', () => {
     panel({}, [{ ...ROWS[0]!, comments: [comment('9', undefined, 'Cy')] }]);
     expect(screen.queryByText('From the file')).toBeNull();

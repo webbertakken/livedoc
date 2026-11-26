@@ -64,6 +64,7 @@ function threadsOn(
   commenter: TextDocumentCommenter | null = ADA,
   activeView: EditorView | null = view,
   onMentioned?: (text: string, mentions: readonly CommentMention[]) => void,
+  onAssigned?: (text: string, assignee: CommentMention) => void,
 ) {
   const docRef = { current: doc };
   return renderHook(() =>
@@ -76,6 +77,7 @@ function threadsOn(
       commenter,
       subscribe: noSubscribe,
       onMentioned,
+      onAssigned,
     }),
   );
 }
@@ -187,6 +189,32 @@ describe('useTextDocumentThreads', () => {
     act(() => result.current.edit(id, first, 'Ask anyone'));
     expect(LiveThreads.read(at.doc)[0]!.comments[0]!.mentions).toBeUndefined();
     expect(mentioned).toHaveBeenCalledTimes(2);
+  });
+
+  // review.md "Assigning": the assigning comment keeps its assignee; the email asked for and the action counted.
+  it('assigns a thread on sending or replying, and asks for the assignment’s email', async () => {
+    const at = await editor();
+    at.view.dispatch(at.view.state.tr.setSelection(TextSelection.create(at.view.state.doc, 1, 10)));
+    const assigned = vi.fn();
+    const { result } = threadsOn(at, ADA, at.view, undefined, assigned);
+    const priya = {
+      userId: 'u-priya',
+      memberId: 'm-priya',
+      name: 'Priya Kaur',
+      handle: 'priya-kaur',
+    };
+    act(() => result.current.addComment());
+    act(() => result.current.send('@priya-kaur check', [priya], priya));
+    const id = result.current.selected!;
+    expect(LiveThreads.read(at.doc)[0]!.comments[0]!.assignee).toEqual(priya);
+    expect(assigned).toHaveBeenCalledWith('@priya-kaur check', priya);
+    act(() => result.current.reply(id, '@priya-kaur again', [priya], priya));
+    expect(LiveThreads.read(at.doc)[0]!.comments[1]!.assignee).toEqual(priya);
+    expect(assigned).toHaveBeenCalledTimes(2);
+    expect(tracked.filter(([c]) => c === 'Action')).toEqual([
+      ['Action', 'Created', 'TextDocumentComment'],
+      ['Action', 'Created', 'TextDocumentComment'],
+    ]);
   });
 
   it('reacts beside the writing, signed with the commenter’s key, and takes it back', async () => {

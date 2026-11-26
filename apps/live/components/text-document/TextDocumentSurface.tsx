@@ -256,6 +256,8 @@ export type TextDocumentSurfaceProps = {
 export type TextDocumentMentions = {
   readonly selfUserId: string | null;
   readonly onMentioned: (text: string, mentions: readonly CommentMention[]) => void;
+  /** A comment that assigns its thread was added: email the assignee (review.md "Assigning"). */
+  readonly onAssigned: (text: string, assignee: CommentMention) => void;
 };
 
 type SurfaceState = 'loading' | 'ready' | 'failed';
@@ -919,6 +921,7 @@ export function TextDocumentSurface({
     commenter,
     subscribe: changes.subscribe,
     onMentioned: mentions?.onMentioned,
+    onAssigned: mentions?.onAssigned,
   });
   useEffect(() => {
     selectThreadRef.current = threads.select;
@@ -1323,6 +1326,7 @@ export function TextDocumentSurface({
           <TextDocumentMargin
             view={editorView}
             threads={threads}
+            selfUserId={mentions?.selfUserId ?? null}
             keys={threadKeys}
             commenter={commenter}
             subscribe={changes.subscribe}

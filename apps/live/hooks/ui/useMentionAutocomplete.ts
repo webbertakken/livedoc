@@ -146,6 +146,9 @@ export function useMentionAutocomplete({
     return kept;
   };
 
+  // The mentions still in the text, kept for the send (the assign offer reads them).
+  const held = (text: string): CommentMention[] => mentionsInText(text, picked);
+
   return {
     open,
     items,
@@ -156,5 +159,6 @@ export function useMentionAutocomplete({
     onType,
     bind: { onSelect: track, onClick: track, onKeyUp: track },
     take,
+    held,
   };
 }

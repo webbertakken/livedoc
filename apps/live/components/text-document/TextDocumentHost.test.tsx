@@ -34,10 +34,11 @@ function editor(isStructureReadOnly: boolean) {
     addDrawingTab: vi.fn(() => 'd1'),
     isStructureReadOnly,
     accountId: 'u-me',
-    commentMentions: { notifyMentioned },
+    commentMentions: { notifyMentioned, notifyAssigned },
   };
 }
 const notifyMentioned = vi.fn();
+const notifyAssigned = vi.fn();
 
 beforeEach(() => {
   surface.props = null;
@@ -66,6 +67,10 @@ describe('TextDocumentHost', () => {
   it('hands the surface the reader’s account and the editor’s mention notify', () => {
     editor(false);
     render(<TextDocumentHost tab={text} />);
-    expect(surface.props?.mentions).toEqual({ selfUserId: 'u-me', onMentioned: notifyMentioned });
+    expect(surface.props?.mentions).toEqual({
+      selfUserId: 'u-me',
+      onMentioned: notifyMentioned,
+      onAssigned: notifyAssigned,
+    });
   });
 });

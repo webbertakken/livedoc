@@ -58,6 +58,7 @@ export function useTextDocumentThreads({
   commenter,
   subscribe,
   onMentioned,
+  onAssigned,
 }: {
   /** The body's editor: comments are on the body alone. */
   view: EditorView | null;
@@ -73,6 +74,8 @@ export function useTextDocumentThreads({
   subscribe: (listener: () => void) => () => void;
   /** A draft or reply with mentions was added: count it and ask for the email (review.md "Mentions"). */
   onMentioned?: (text: string, mentions: readonly CommentMention[]) => void;
+  /** A draft or reply that assigns the thread was added: ask for the assignee's email (review.md "Assigning"). */
+  onAssigned?: (text: string, assignee: CommentMention) => void;
 }) {
   const [threads, setThreads] = useState<readonly TextDocumentThread[]>([]);
   const [stretches, setStretches] = useState<readonly ThreadStretch[]>([]);
@@ -133,26 +136,31 @@ export function useTextDocumentThreads({
   }, [view, activeView, commenter, threads.length, say]);
 
   const comment = useCallback(
-    (text: string, mentions: readonly CommentMention[]) => ({
+    (text: string, mentions: readonly CommentMention[], assignee?: CommentMention) => ({
       id: crypto.randomUUID(),
       text,
       at: Date.now(),
       author: { key: commenter!.key, name: commenter!.name, colour: commenter!.colour },
       ...(mentions.length ? { mentions } : {}),
+      ...(assignee ? { assignee } : {}),
     }),
     [commenter],
   );
 
-  // Once a comment with mentions is added: counted, and those it names emailed (never on an edit).
+  // Once a comment with mentions is added: counted, and those it names emailed (never on an edit); once one assigns
+  // the thread, the action counted and its assignee emailed.
   const mentioned = useCallback(
-    (text: string, mentions: readonly CommentMention[]) => {
+    (text: string, mentions: readonly CommentMention[], assignee?: CommentMention) => {
       if (mentions.length) onMentioned?.(text, mentions);
+      if (!assignee) return;
+      track('Action', 'Created', 'TextDocumentComment');
+      onAssigned?.(text, assignee);
     },
-    [onMentioned],
+    [onMentioned, onAssigned],
   );
 
   const send = useCallback(
-    (text: string, mentions: readonly CommentMention[] = []) => {
+    (text: string, mentions: readonly CommentMention[] = [], assignee?: CommentMention) => {
       const doc = ready ? docRef.current : null;
       if (!doc || !draft || !commenter) return;
       const id = crypto.randomUUID();
@@ -164,7 +172,7 @@ export function useTextDocumentThreads({
           start: draft.start,
           end: draft.end,
           quote: draft.quote,
-          comment: comment(text, mentions),
+          comment: comment(text, mentions, assignee),
         },
         THREADS_ORIGIN,
       );
@@ -172,8 +180,12 @@ export function useTextDocumentThreads({
       if (!begun) return;
       setSelected(id);
       track('Comment', 'Added', 'TextDocument');
-      mentioned(text, mentions);
-      debugLog('[text-document] thread begun', { thread: id, mentions: mentions.length });
+      mentioned(text, mentions, assignee);
+      debugLog('[text-document] thread begun', {
+        thread: id,
+        mentions: mentions.length,
+        assigned: !!assignee,
+      });
     },
     [ready, docRef, draft, commenter, tab, comment, mentioned],
   );
@@ -184,16 +196,26 @@ export function useTextDocumentThreads({
   }, [view]);
 
   const reply = useCallback(
-    (threadId: string, text: string, mentions: readonly CommentMention[] = []) => {
+    (
+      threadId: string,
+      text: string,
+      mentions: readonly CommentMention[] = [],
+      assignee?: CommentMention,
+    ) => {
       const doc = ready ? docRef.current : null;
       if (!doc || !commenter) return;
       const thread = threads.find((t) => t.id === threadId);
       if (thread && thread.comments.length >= TEXT_DOCUMENT_THREAD_COMMENTS_MAX)
         return say(COMMENTS_FULL);
-      if (!LiveThreads.reply(doc, threadId, comment(text, mentions), THREADS_ORIGIN)) return;
+      if (!LiveThreads.reply(doc, threadId, comment(text, mentions, assignee), THREADS_ORIGIN))
+        return;
       track('Comment', 'Added', 'TextDocument');
-      mentioned(text, mentions);
-      debugLog('[text-document] thread replied', { thread: threadId, mentions: mentions.length });
+      mentioned(text, mentions, assignee);
+      debugLog('[text-document] thread replied', {
+        thread: threadId,
+        mentions: mentions.length,
+        assigned: !!assignee,
+      });
     },
     [ready, docRef, commenter, comment, threads, say, mentioned],
   );

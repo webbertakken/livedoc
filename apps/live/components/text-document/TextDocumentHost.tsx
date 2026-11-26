@@ -49,8 +49,12 @@ export function TextDocumentHost({ tab, readOnly = false }: { tab: Tab; readOnly
   // Who reads the comments, and the email a mention asks for (review.md "Mentions").
   const { accountId, commentMentions } = ctx;
   const mentions = useMemo(
-    () => ({ selfUserId: accountId ?? null, onMentioned: commentMentions.notifyMentioned }),
-    [accountId, commentMentions.notifyMentioned],
+    () => ({
+      selfUserId: accountId ?? null,
+      onMentioned: commentMentions.notifyMentioned,
+      onAssigned: commentMentions.notifyAssigned,
+    }),
+    [accountId, commentMentions.notifyMentioned, commentMentions.notifyAssigned],
   );
   if (!documentId) return null;
   return (

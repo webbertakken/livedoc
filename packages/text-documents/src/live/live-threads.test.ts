@@ -165,6 +165,20 @@ describe('LiveThreads', () => {
     expect(LiveThreads.read(doc)[0]!.comments[0]!.mentions).toBeUndefined();
   });
 
+  // review.md "Assigning": the assigning comment keeps its assignee through an edit.
+  it('keeps a comment’s assignee, an edit never changing it', () => {
+    const { doc, run } = written();
+    const priya = { userId: 'u-priya', name: 'Priya Kaur', handle: 'priya-kaur' };
+    const start = startOn(run, 0, 9);
+    LiveThreads.begin(
+      doc,
+      { ...start, comment: { ...start.comment, mentions: [priya], assignee: priya } },
+      'me',
+    );
+    LiveThreads.edit(doc, 'th1', 'th1-c1', 'other words', 55, 'me', []);
+    expect(LiveThreads.read(doc)[0]!.comments[0]!.assignee).toEqual(priya);
+  });
+
   it('removes a reply alone, and the whole thread with its first comment', () => {
     const { doc, run } = written();
     LiveThreads.begin(doc, startOn(run, 0, 9), 'me');

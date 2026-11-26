@@ -211,6 +211,22 @@ describe('textDocumentLevelAsked', () => {
     ).toBe('participate');
   });
 
+  // review.md "Assigning": a Participant assigns only someone their comment mentions.
+  it('lets a Participant assign whom their comment mentions, and no one else', () => {
+    const priya = {
+      userId: 'u-priya',
+      memberId: 'm-priya',
+      name: 'Priya Kaur',
+      handle: 'priya-kaur',
+    };
+    const assigning = (assignee: unknown, mentions: unknown[] = [priya]) =>
+      asked((doc) => LiveThreads.reply(doc, 'ben', { ...comment('a2'), mentions, assignee }, 'me'));
+    expect(assigning(priya)).toBe('participate');
+    expect(assigning({ ...priya, userId: 'u-else' })).toBe('edit');
+    expect(assigning(priya, [])).toBe('edit');
+    expect(assigning('priya')).toBe('edit');
+  });
+
   it('asks for Editing for a thread begun resolved or with no anchor', () => {
     expect(
       asked((doc, run) => {

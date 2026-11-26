@@ -15,6 +15,17 @@ import type { ReviewThreadRow } from '@/lib/office/review/comment-filters';
 
 const text = (value: unknown): value is string => typeof value === 'string' && value !== '';
 
+/** A thread's assignee: its latest comment's that carries one well formed, else none (review.md "Assigning"). */
+export function threadAssignee(thread: {
+  readonly comments: readonly TextDocumentComment[];
+}): CommentMention | null {
+  for (let i = thread.comments.length - 1; i >= 0; i -= 1) {
+    const [assignee] = drawnMentions([thread.comments[i]!.assignee]);
+    if (assignee) return assignee;
+  }
+  return null;
+}
+
 /** A comment's mentions a chip is drawn from: each with a name and handle, a file's with no account (review.md "Mentions"). */
 function drawnMentions(mentions: TextDocumentComment['mentions']): CommentMention[] {
   const out: CommentMention[] = [];
@@ -71,6 +82,7 @@ export function commentRows(
       deleted: LiveThreads.anchor(doc, thread)?.deleted ?? false,
       resolved: thread.resolved,
       group: thread.tab,
+      assignee: threadAssignee(thread),
       comments: thread.comments.map(sharedComment),
     }));
 }

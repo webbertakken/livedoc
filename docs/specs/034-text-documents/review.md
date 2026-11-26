@@ -2,8 +2,8 @@
 
 **Status: being built.** Comment threads are kept beside the writing, travel in both formats' files, and the room
 judges a Participant's; they are drawn and added in the margin, listed in the comments panel and reached from the
-keyboard; people react to them and mention one another, a mention emailing whom it names. Assigning, the Inbox,
-suggestions, versions and notifications are still to come.
+keyboard; people react to them, mention one another and assign a comment, a mention or an assignment emailing whom
+it names. The Inbox, suggestions, versions and notifications are still to come.
 
 Comments, suggestions, version history, comparing documents and notifications in a [text document](text-document.md).
 The panels and threads are the shared [review surfaces](../012-collaboration/review-surfaces.md), built once for the
@@ -32,7 +32,7 @@ office kinds; this spec says what a text document puts in them.
 - **Mentions**: `@` or `+` in a comment lists the document's people, the team's members, as LiveDoc's comments do
   ([Mentions](#mentions)).
 - **Assigning**: a mention offers **Assign to <name>**; an assigned comment is an action, as LiveDoc's assigned
-  actions are ([Assigned actions](../012-collaboration/assigned-actions.md)), shown in the assignee's Inbox.
+  actions are ([Assigned actions](../012-collaboration/assigned-actions.md)) ([Assigning](#assigning)).
 - **Reactions**: emoji on a comment, as Google's ([Reactions](#reactions)).
 - **Highlight**: the commented text is tinted; the selected thread's text darker.
 - **The comments panel** (comment history, ⌘⌥⇧A): every thread, with filters **All**, **For you**, **Open**,
@@ -78,8 +78,8 @@ office kinds; this spec says what a text document puts in them.
 - **Its head**: the title **Comments**, then two lists side by side: **All comments** or **For you**, and **All**,
   **Open** or **Resolved** (default: All comments, All; the panel's choices are kept while the document is open).
   A document with more than one document tab adds a third, **All tabs** or each tab by its name (default: All tabs).
-- **For you** (default, until assigning is built): the threads where someone else replied after a comment of yours,
-  and those with a comment that mentions you; once assigning is built, also those assigned to you, as Google's.
+- **For you**: the threads where someone else replied after a comment of yours, those with a comment that mentions
+  you, and those assigned to you, as Google's.
 - **Its list**: every thread the choices let through, by document tab in the outline's order, and within a tab in the
   order the threads were begun (default), each a row: its quote (or "Original content deleted" and the quote, or
   nothing for a point comment), the first comment's author disc, name, time and text (three lines at most), "From
@@ -157,6 +157,30 @@ office kinds; this spec says what a text document puts in them.
 - Telemetry: `Comment · Mentioned` once for a comment added with mentions (never who), beside
   `Comment · Added · TextDocument`.
 
+### Assigning
+
+- **Offering**: while a draft's or a reply's text names someone it mentions, a checkbox under the field reads
+  **Assign to <name>**, for the last of them picked (default), unticked; on a thread already assigned it reads
+  **Reassign to <name>**, and is not offered for whom it is assigned to already. Ticking it and sending assigns the
+  thread to them.
+- **Kept**: the comment that assigns carries its `assignee`, one of its own mentions (the same account id, member id,
+  name and handle); the thread is assigned to the assignee of its latest comment that carries one. Editing a comment
+  never changes its assignee (default); deleting the comment that assigned takes the assignment back to the one
+  before it. The room takes a Participant's own comment only with an assignee that is one of its mentions.
+- **Drawn**: an assigned thread's card and its row in the comments panel lead with **Assigned to <name>** ("Assigned
+  to you" for the reader), and its Resolve reads **Mark as done** (default, as Google's); marking it done resolves the
+  thread, and Reopen opens it again, still assigned.
+- **For you** lists the threads assigned to the reader (by account), open or resolved as the second list says.
+- **The email**: once a comment that assigns is added, the editor asks the api to email the assignee, as an assigned
+  action's ([Assigned actions](../012-collaboration/assigned-actions.md#4-email-notification)): the action's name is
+  the comment's first line, cut at a word to 200 characters with an ellipsis, its description the whole comment
+  (default); best effort, honouring the assignee's setting, only where email is configured. The Inbox lists it once a
+  text document's threads reach it.
+- **In the files**: `livedoc:assignee` on the comment, a JSON object of the assignee's name and handle, never an id
+  (default) ([Standard mapping](standard-mapping.md#extensions)); a file read back draws "Assigned to <name>" and
+  reaches nobody.
+- Telemetry: `Action · Created · TextDocumentComment` when a comment assigns (never who).
+
 ### How a comment is kept
 
 - **Beside the writing, never in it**: a document's threads are one map, `threads`, beside the bodies
@@ -188,7 +212,7 @@ office kinds; this spec says what a text document puts in them.
   each format keeps them ([Standard mapping](standard-mapping.md)); a comment's author leaves as its name and comes
   back "From the file". A comment in a header, footer or note is not kept (default; Google places none there) and the
   conversion report counts it, as it counts a comment marker without its pair. Reactions and mentions
-  are kept as [Reactions](#reactions) and [Mentions](#mentions) say; assignees join the files with assigned actions.
+  are kept as [Reactions](#reactions) and [Mentions](#mentions) say, assignees as [Assigning](#assigning) says.
 - **The room judges a Participant's update** (fork D7) by what it touches: only `threads`, and in it only comments
   carrying the sender's own key added, edited or deleted, threads begun with one, resolved or reopened, and the
   sender's own key added to or taken from a reaction; anything else asks for Editing and is refused whole
@@ -254,6 +278,6 @@ setting is not shown and the Inbox carries them. Nothing is sent to someone who 
 ## Telemetry
 
 `Comment · Added · TextDocument`, `Comment · Resolved · TextDocument`, `UI · Opened · TextDocumentPanelComments`,
-`Comment · Added · TextDocumentReaction`, `Element · Added · TextDocumentSuggestion`, `Element · Changed · TextDocumentSuggestion<Accepted|Rejected|AcceptedAll|RejectedAll>`,
+`Comment · Added · TextDocumentReaction`, `Comment · Mentioned`, `Action · Created · TextDocumentComment`, `Element · Added · TextDocumentSuggestion`, `Element · Changed · TextDocumentSuggestion<Accepted|Rejected|AcceptedAll|RejectedAll>`,
 `UI · Changed · TextDocumentEditingMode<Mode>`, `Document · Opened · TextDocumentVersionHistory`,
 `Document · Changed · TextDocumentVersion<Named|Restored>`, `Document · Created · TextDocumentCompare`. Never text.

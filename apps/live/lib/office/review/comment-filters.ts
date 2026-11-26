@@ -1,7 +1,7 @@
 // The comments panel's filters (docs/specs/012-collaboration/review-surfaces.md "The comments panel"): a kind hands
 // the panel its threads as rows; whose (all, or for you), which (all, open, resolved) and the kind's own group (a
 // document tab) narrow them, keeping their order. Pure, so every office kind reads the filters alike.
-import type { Comment } from '@livedoc/document';
+import type { Comment, CommentMention } from '@livedoc/document';
 
 /** A thread as the comments panel lists it. `group` is what the kind's own filter reads (a document tab's id). */
 export type ReviewThreadRow = {
@@ -14,6 +14,8 @@ export type ReviewThreadRow = {
   readonly group: string;
   /** Its comments, oldest first; `authorId` is the author's key, absent for a file's comment. */
   readonly comments: readonly Comment[];
+  /** Whom the thread is assigned to (review.md "Assigning"); none where it is not. */
+  readonly assignee?: CommentMention | null;
 };
 
 export type ReviewWho = 'all' | 'for-you';
@@ -33,11 +35,13 @@ export const ReviewFilters = {
 /** Who reads the panel: the key their comments carry ('' without one) and their account (null without one). */
 export type ReviewSelf = { readonly key: string; readonly userId: string | null };
 
-/** A thread mentions you: one of its comments names your account. */
+/** A thread mentions you, or is assigned to you: one of its comments names your account. */
 const mentionsYou = (row: ReviewThreadRow, userId: string | null): boolean =>
-  userId !== null && row.comments.some((c) => c.mentions?.some((m) => m.userId === userId));
+  userId !== null &&
+  (row.assignee?.userId === userId ||
+    row.comments.some((c) => c.mentions?.some((m) => m.userId === userId)));
 
-/** A thread for you: another wrote in it after a comment of yours, or it mentions you (assignees join with them). */
+/** A thread for you: another wrote in it after a comment of yours, or it mentions you or is assigned to you. */
 export function forYou(row: ReviewThreadRow, self: ReviewSelf): boolean {
   if (mentionsYou(row, self.userId)) return true;
   if (self.key === '') return false;

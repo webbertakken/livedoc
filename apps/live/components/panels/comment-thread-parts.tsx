@@ -18,6 +18,7 @@ import {
 } from '@livedoc/ui';
 import type { Comment, CommentMention, CommentThread } from '@livedoc/document';
 import { MentionMenu } from '@/components/primitives/MentionMenu';
+import { CommentAssignBox } from './CommentAssignBox';
 import { MentionText } from '@/components/primitives/MentionText';
 import { useMentionAutocomplete } from '@/hooks/ui/useMentionAutocomplete';
 import { useMentionScope } from '@/components/canvas/collab/comment/MentionContext';
@@ -49,10 +50,13 @@ export function CommentResolveToggle({
   resolved,
   onResolve,
   onUnresolve,
+  resolveLabel = 'Resolve',
 }: {
   resolved: boolean;
   onResolve: () => void;
   onUnresolve: () => void;
+  // What resolving reads as: "Mark as done" on an assigned comment (review.md "Assigning").
+  resolveLabel?: string;
 }) {
   if (!resolved)
     return (
@@ -62,7 +66,7 @@ export function CommentResolveToggle({
         className="inline-flex min-h-row cursor-pointer items-center gap-1 rounded-control px-2 text-body text-slate-600 transition hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
       >
         <CheckIcon size={12} />
-        Resolve
+        {resolveLabel}
       </button>
     );
   return (
@@ -167,13 +171,17 @@ export function CommentComposer({
   density = 'compact',
   self,
   className,
+  assign,
 }: {
-  onAddComment: (text: string, mentions: CommentMention[]) => void;
+  // `assignee`: the person the writer ticked "Assign to" for (review.md "Assigning"), with `assign` alone.
+  onAddComment: (text: string, mentions: CommentMention[], assignee?: CommentMention) => void;
   // Lets the host focus the field (the popover does, once placed, on desktop).
   fieldRef?: RefObject<HTMLTextAreaElement | null>;
   density?: CommentDensity;
   self?: { name: string; color: string } | null;
   className?: string;
+  // The kind's offer to assign the thread to the last person the text mentions: its label, or null for none.
+  assign?: (mention: CommentMention) => string | null;
 }) {
   const [draft, setDraft] = useState('');
   const [focused, setFocused] = useState(false);
@@ -189,11 +197,17 @@ export function CommentComposer({
   const comfortable = density === 'comfortable';
   // Grows with its text up to COMPOSER_MAX_PX, then scrolls (useAutoHeight).
   useAutoHeight(ref, draft, COMPOSER_MAX);
+  // The assign offer: the last person the text still mentions, when the kind offers them; ticked by their handle.
+  const [ticked, setTicked] = useState<string | null>(null);
+  const offered = assign ? mention.held(draft.trim()).at(-1) : undefined;
+  const offer = offered && assign ? assign(offered) : null;
   const submit = () => {
     const text = draft.trim();
     if (!text) return;
-    onAddComment(text, mention.take(text));
+    const assignee = offer && offered && ticked === offered.handle ? offered : undefined;
+    onAddComment(text, mention.take(text), assignee);
     setDraft('');
+    setTicked(null);
   };
   return (
     <footer
@@ -248,6 +262,13 @@ export function CommentComposer({
             comfortable ? 'px-3 py-2 text-body' : 'px-2 py-1.5 text-body'
           }`}
         />
+        {offer && offered ? (
+          <CommentAssignBox
+            label={offer}
+            checked={ticked === offered.handle}
+            onChange={(on) => setTicked(on ? offered.handle : null)}
+          />
+        ) : null}
         <div className="mt-1.5 flex min-h-chip items-center justify-between gap-2">
           {/* A key combination, so only where there is a keyboard to press it: a touch screen sends with Comment. */}
           <p

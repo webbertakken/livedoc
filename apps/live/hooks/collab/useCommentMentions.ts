@@ -8,7 +8,13 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { assignHandles, type CommentMention } from '@livedoc/document';
-import { apiGetTeam, apiNotifyMention, type TeamListItem } from '@/lib/api-client';
+import {
+  apiGetTeam,
+  apiNotifyActionAssigned,
+  apiNotifyMention,
+  type TeamListItem,
+} from '@/lib/api-client';
+import { actionNameOf } from '@/lib/office/review/assigned-comment';
 import { track } from '@/lib/telemetry';
 import { teamMemberRows } from './team-member-rows';
 
@@ -88,5 +94,21 @@ export function useCommentMentions({
     [ownerId, team, documentId],
   );
 
-  return { candidates, available: team !== null, notifyMentioned };
+  // After a text document's comment that assigns its thread lands (docs/specs/034-text-documents/review.md
+  // "Assigning"): ask the api to email the assignee as an assigned action's; fire-and-forget, as the mention's.
+  const notifyAssigned = useCallback(
+    (text: string, assignee: CommentMention) => {
+      if (!ownerId || !team || !documentId) return;
+      void apiNotifyActionAssigned(ownerId, team.id, {
+        assigneeUserId: assignee.userId,
+        ...(assignee.memberId ? { assigneeMemberId: assignee.memberId } : {}),
+        documentId,
+        actionName: actionNameOf(text),
+        description: text,
+      }).catch(() => {});
+    },
+    [ownerId, team, documentId],
+  );
+
+  return { candidates, available: team !== null, notifyMentioned, notifyAssigned };
 }

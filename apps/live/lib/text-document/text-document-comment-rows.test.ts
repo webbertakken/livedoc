@@ -7,7 +7,13 @@ import {
   type DocumentTab,
   type TextDocumentComment,
 } from '@livedoc/text-documents';
-import { commentNoteOf, commentRows, sharedComment, tabGroups } from './text-document-comment-rows';
+import {
+  commentNoteOf,
+  commentRows,
+  sharedComment,
+  tabGroups,
+  threadAssignee,
+} from './text-document-comment-rows';
 
 const ADA: TextDocumentComment = {
   id: 'c',
@@ -110,5 +116,42 @@ describe('tabGroups', () => {
       { id: 't.0', label: 'One' },
       { id: 't.b', label: '📌 Two' },
     ]);
+  });
+});
+
+// review.md "Assigning": a thread is assigned to the assignee of its latest comment that carries one.
+describe('threadAssignee', () => {
+  const priya = {
+    userId: 'u-priya',
+    memberId: 'm-priya',
+    name: 'Priya Kaur',
+    handle: 'priya-kaur',
+  };
+  const sam = { userId: null, memberId: 'm-sam', name: 'Sam Lee', handle: 'sam-lee' };
+  const thread = (...assignees: unknown[]) => ({
+    comments: assignees.map((assignee, i) => ({
+      ...ADA,
+      id: String(i),
+      ...(assignee === undefined ? {} : { assignee }),
+    })),
+  });
+
+  it('takes the latest comment’s assignee, skipping those with none', () => {
+    expect(threadAssignee(thread(priya, sam, undefined))).toEqual(sam);
+    expect(threadAssignee(thread(undefined))).toBeNull();
+    expect(threadAssignee(thread(priya, { name: 7 }))).toEqual(priya);
+  });
+
+  it('puts it on the comments panel’s row', () => {
+    const { doc, begin } = documentWith('alpha beta');
+    begin('a', 't.0', 0, 5);
+    LiveThreads.reply(
+      doc,
+      'a',
+      { ...ADA, id: 'r', at: 2, mentions: [priya], assignee: priya },
+      null,
+    );
+    const [row] = commentRows(doc, LiveThreads.read(doc), [tab('t.0', 'One')]);
+    expect(row!.assignee).toEqual(priya);
   });
 });
