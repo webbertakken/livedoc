@@ -122,7 +122,7 @@ export function shrinkRange(
 // that corner's row or column, the range starts at the next one, so the formula's relative parts on this sheet move
 // with it: each keeps its offset from the corner, counted in the layout after. One the move takes off the grid is
 // #REF!. A corner that survives leaves the formula as it is (its references are by id, as a cell's are).
-function reanchorFormula(
+export function reanchorFormula(
   fx: StoredFormula,
   before: SheetLayout,
   after: SheetLayout,
@@ -262,9 +262,12 @@ export function applyLayoutChange(layout: SheetLayout, ch: LayoutChange): SheetL
         const rules = layout.rules.flatMap((x): ValidationRule[] => {
           const range = shrinkRange(x, layout, goneRows, goneCols);
           if (!range) return [];
-          if (!x.src) return [{ ...x, ...range }];
+          // A custom formula moves with its range's top-left cell, as a format rule's does.
+          const fx = x.fx && reanchorFormula(x.fx, layout, next, x, range);
+          const kept = fx ? { ...x, ...range, fx } : { ...x, ...range };
+          if (!x.src) return [kept];
           const src = shrinkRange(x.src, layout, goneRows, goneCols);
-          return src ? [{ ...x, ...range, src }] : [];
+          return src ? [{ ...kept, src }] : [];
         });
         next.rules = rules.length ? rules : undefined;
       }

@@ -22,7 +22,7 @@ import {
   applySheetWrite,
   cellKey,
   cellsWithPage,
-  rangeOptions,
+  workbookRuleChecks,
   inverseLayoutChanges,
   inverseSheetWrite,
   mergeSheetChange,
@@ -684,7 +684,7 @@ export class SheetStore {
         checkRules: checked,
         locale: this.deps.locale,
         limits: SheetLimits.of(this.deps.oneWorkbook ?? false),
-        ...(wb ? { rangeValues: (rule) => rangeOptions(wb, sheetId, rule) } : {}),
+        ...(wb ? workbookRuleChecks(wb, sheetId) : {}),
       };
       for (const part of parts) {
         const check = validateWrite(state, part, checks);

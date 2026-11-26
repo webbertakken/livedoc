@@ -25,10 +25,11 @@ and checked wherever a value is written: in the editor before it is sent, and by
 | ------------------------- | -------------------------------------------------------------------------------------------------------------------------------- | ----------------------- |
 | **Dropdown**              | One of the rule's options, typed into the rule (up to 500)                                                                       | Dropdown                |
 | **Dropdown from a Range** | One of the values of a range on the same sheet (`A2:A20`), read as they are shown                                                | Dropdown (From a Range) |
-| **Checkbox**              | TRUE or FALSE; an empty cell is unticked                                                                                         | Checkbox                |
+| **Checkbox**              | TRUE or FALSE, or its **custom cell values**; an empty cell is unticked                                                          | Checkbox                |
 | **Number**                | A number: between, not between, greater than, greater than or equal to, less than, less than or equal to, equal to, not equal to | Number                  |
 | **Date**                  | A date: is a valid date, before, on or before, after, on or after, on, between, not between                                      | Date                    |
 | **Text**                  | Text: contains, does not contain, is exactly, is a valid email, is a valid URL                                                   | Text                    |
+| **Custom Formula Is**     | A value for which the rule's formula, written for the range's top-left cell and moved to each cell, answers TRUE                 | Custom Formula Is       |
 
 Every rule also has:
 
@@ -39,12 +40,22 @@ Every rule also has:
   it grows with rows and columns inserted inside it, shrinks with ones deleted, and follows its corner cells when they
   move. A rule whose cells are all deleted goes.
 
+A Checkbox may **Use Custom Cell Values**: a **ticked value** (1 to 255 characters) and, optionally, an **unticked
+value** (without it, unticked is the empty cell), as Google Sheets' checkbox does. Its cells then hold those values,
+never TRUE or FALSE; the two differ, case aside. A value that reads as a number (`1`, `-2.5`) is stored as that number,
+any other as text.
+
+A **Custom Formula Is** rule's formula is written for the range's top-left cell, its references moving to each cell as
+a copied formula's do (a conditional format's Custom Formula Is moves the same way), up to 1,000 characters. A value is
+allowed when the formula answers TRUE or a number other than 0; any other answer, an error included, refuses it.
+
 A dropdown also has its **Display**: **Chip** (the default), **Arrow** (the value, and an arrow at the cell's right)
 or **Plain Text** (the value alone; the arrow shows on the active cell only).
 
 ## In a spreadsheet
 
-**Status: partly built.** The side panel, Insert › Checkbox and Insert › Dropdown are built; the rest is specified.
+**Status: partly built.** The side panel, Insert › Checkbox, Insert › Dropdown, Use Custom Cell Values and Custom
+Formula Is are built; the rest is specified.
 The rules above carry into the [spreadsheet](spreadsheet.md), with these changes
 ([Data tools](data-tools.md#data-validation)):
 
@@ -58,9 +69,8 @@ The rules above carry into the [spreadsheet](spreadsheet.md), with these changes
     on the list; **Insert › Dropdown** opens it on a new Dropdown over the selection; **Insert › Checkbox** makes a
     Checkbox rule over the selection at once, without the panel (one change, one undo step).
 - **Dropdown from a Range** may read a range of **any sheet** of the workbook (`Sheet2!A2:A20`).
-- **Checkbox** takes **Use Custom Cell Values** (a ticked and an unticked value).
-- **Number**, **Date** and **Text** gain Google's remaining criteria: Text Is Valid Email and URL (kept), Date Is Valid
-  Date, and **Custom Formula Is**.
+- **Checkbox** takes **Use Custom Cell Values** (a ticked and an unticked value), and the rules gain **Custom Formula
+  Is** ([Rules](#rules)); both are the Plan Sheet's too, the rule form being one.
 - A dropdown's options take **colours** (the one colour picker), drawn on its chips; **Allow Multiple Selections**
   holds several options in one cell, comma-separated.
 - Both file formats keep every rule ([Standard mapping](standard-mapping.md)); a criterion a format lacks is kept for
@@ -84,25 +94,30 @@ The rules above carry into the [spreadsheet](spreadsheet.md), with these changes
 - **Warned**: the value is saved and its cell marked.
 - **Rejected by the api**: a write the editor would have refused is refused by the api too, with `value_invalid` and
   the cell, so an agent or another client cannot store what a Reject rule refuses. The api checks Dropdown, Checkbox,
-  Number, Date and Text rules; a **Dropdown from a Range**'s options are worked out in the browser (they may be
-  formulas' results), so only the editor checks it. Undo and Redo (sent with `undo`) and the writes listed above as
-  not checked (sent with `unchecked`) are stored as they are: the flag only skips the rule check, never the limits or
+  Number, Date and Text rules; a **Dropdown from a Range**'s options and a **Custom Formula Is** rule's answer are
+  worked out in the browser (they are formulas' results), so only the editor checks those. Undo and Redo (sent with
+  `undo`) and the writes listed above as not checked (sent with `unchecked`) are stored as they are: the flag only skips the rule check, never the limits or
   the role check, and a person may already write any value into those cells by clearing the rule.
 
 ### What each rule allows, and its line
 
-| Rule                  | Allows                                                                                         | Line when refused (no Help Text)                                                          |
-| --------------------- | ---------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
-| Dropdown              | Text equal to an option, case aside; a number or true/false equal to an option's text as typed | Choose one of the dropdown's options: To Do, Doing, Done (the first 5, then "and 3 more") |
-| Dropdown from a Range | A value equal to one of the range's shown values (empty ones aside), case aside                | Choose one of the values in A2:A20                                                        |
-| Checkbox              | TRUE or FALSE                                                                                  | This cell is a checkbox: type TRUE or FALSE                                               |
-| Number                | A number meeting the condition                                                                 | Enter a number between 1 and 10 (greater than 5, ...)                                     |
-| Date                  | A date (a number formatted, or read, as a date) meeting the condition                          | Enter a date after 01/10/2026 (in the person's locale)                                    |
-| Text                  | Text meeting the condition (a number is read as it is shown)                                   | Enter text that contains “ref” / Enter an email address / Enter a web address             |
+| Rule                  | Allows                                                                                         | Line when refused (no Help Text)                                                           |
+| --------------------- | ---------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| Dropdown              | Text equal to an option, case aside; a number or true/false equal to an option's text as typed | Choose one of the dropdown's options: To Do, Doing, Done (the first 5, then "and 3 more")  |
+| Dropdown from a Range | A value equal to one of the range's shown values (empty ones aside), case aside                | Choose one of the values in A2:A20                                                         |
+| Checkbox              | TRUE or FALSE                                                                                  | This cell is a checkbox: type TRUE or FALSE                                                |
+| Checkbox, custom      | Its ticked or unticked value, case aside                                                       | This cell is a checkbox: type Yes or No (no unticked value: "type Yes, or leave it empty") |
+| Custom Formula Is     | A value the formula answers TRUE for, worked out with the cell read as that value              | Enter a value that meets the rule's formula                                                |
+| Number                | A number meeting the condition                                                                 | Enter a number between 1 and 10 (greater than 5, ...)                                      |
+| Date                  | A date (a number formatted, or read, as a date) meeting the condition                          | Enter a date after 01/10/2026 (in the person's locale)                                     |
+| Text                  | Text meeting the condition (a number is read as it is shown)                                   | Enter text that contains “ref” / Enter an email address / Enter a web address              |
 
 - An email is `something@something.something` with no spaces; a web address starts with one of Google's link
   schemes (`http://`, `https://`, `ftp://`, `gopher://`, `telnet://`, `news://`, `mailto:`, `aim:`), or is a domain with
   a dot (`docs.nu/help`).
+- A Custom Formula Is rule checks a typed value by working the formula out with its cell read as the new value (the
+  formula and every formula between it and the cell, as MULTIPLE.OPERATIONS does), the workbook untouched; a paste or
+  fill checks each cell with only that cell read anew. The invalid mark works the formula out on the cell as it is.
 - A Date rule's dates are stored as day numbers; `Is a Valid Date` allows any number from 1 (31 December 1899) to
   2,958,465 (31 December 9999).
 
@@ -116,8 +131,8 @@ The rules above carry into the [spreadsheet](spreadsheet.md), with these changes
   dropdown column keeps (as a card table's does).
 - **Plain Text**: the value alone; the active cell shows the arrow.
 - **Checkbox**: a 14 px box centred in the cell (its alignment aside), ticked in the cell's text colour (else the
-  Sheet's brand focus colour) for TRUE, an empty outline for FALSE or empty. A value that is not TRUE, FALSE or empty is
-  drawn as a value, marked invalid.
+  Sheet's brand focus colour) for TRUE (or the ticked value), an empty outline for FALSE (or the unticked value) or
+  empty. Any other value is drawn as a value, marked invalid.
 - **Invalid value**: a small red triangle (6 px) in the cell's top-left corner. Hovering the cell shows the rule's
   Help Text, else its line ("Invalid: Choose one of the dropdown's options"), with the shared Tooltip.
 - Exports, thumbnails, images and api or MCP renders draw a checkbox as ☑ or ☐, a chip as its text on the option's
@@ -138,8 +153,12 @@ The rules above carry into the [spreadsheet](spreadsheet.md), with these changes
 ## Using a checkbox
 
 - A press on the box toggles it (empty or FALSE to TRUE, TRUE to FALSE); a press elsewhere in the cell selects it.
+  With custom cell values, ticking writes the ticked value and unticking the unticked value, or empties the cell when
+  there is none; each cell of a toggle takes its own rule's values.
 - **Space** toggles every checkbox cell of the selection (any unticked: all ticked; all ticked: all unticked) as one
   change, one undo step; on a cell that is not a checkbox, Space types a space as before.
+- With custom cell values, typing the ticked or unticked value (any case) saves it in the rule's own spelling; TRUE
+  and FALSE are then values like any other.
 - Typing `true` or `false` (any case), or `1` or `0`, saves TRUE or FALSE; anything else is refused (a Reject rule)
   or kept and marked (a Warn rule).
 - A checkbox's value is TRUE or FALSE for formulas: `=COUNTIF(B2:B9,TRUE)` counts the ticked ones.
@@ -159,8 +178,11 @@ The rules above carry into the [spreadsheet](spreadsheet.md), with these changes
   scrolling inside the window), titled **Data Validation**:
   - **Apply to Range**: an A1 range field, the selection to start; a range that cannot be read says so under it
     ("Type a range like B2:B20").
-  - **Criteria**: the rule's kind as an option list (Dropdown, Dropdown (From a Range), Checkbox, Number, Date, Text),
-    then its fields: a Dropdown's **options**, each a text field with its colour button (the one
+  - **Criteria**: the rule's kind as an option list (Dropdown, Dropdown (From a Range), Checkbox, Number, Date, Text,
+    Custom Formula Is), then its fields: a Checkbox's **Use Custom Cell Values** (a tick box opening **Ticked Value**
+    and **Unticked Value**, "Enter a ticked value" when the first is empty, "Ticked and unticked values must be
+    different"); a Custom Formula Is's formula field (`=` to start, "That formula can't be read" when it cannot); a
+    Dropdown's **options**, each a text field with its colour button (the one
     [colour picker](../004-interface-design/colour-picker.md) in its swatch skin, **No Colour** first) and a remove
     button, dragged by a grip to reorder, **Add Another Option** under them (Enter in an option's field adds one after
     it), and its **Display** (Chip, Arrow, Plain Text); a range's A1 field; a Number, Date or Text rule's condition
@@ -174,8 +196,8 @@ The rules above carry into the [spreadsheet](spreadsheet.md), with these changes
   other validation rule (a rule partly covered keeps the rest of its cells, as up to four rules), as Google Sheets
   does. **Remove Validation** takes the selection out of every rule the same way.
 - **Sheet Settings** gains a **Data Validation** section (after Named Ranges): each rule as a row (its kind's glyph,
-  its range, its short line: "Dropdown: To Do, Doing, Done", "Checkbox", "Number between 1 and 10"), **Edit** (the
-  rule editor, anchored to the row), **Go To** (selects its range) and **Remove**; "No validation rules yet. Select
+  its range, its short line: "Dropdown: To Do, Doing, Done", "Checkbox", "Checkbox: Yes, No", "Number between 1 and
+  10", "Custom Formula Is =B2>A2"), **Edit** (the rule editor, anchored to the row), **Go To** (selects its range) and **Remove**; "No validation rules yet. Select
   cells and choose Dropdown or Checkbox from the toolbar's Data menu." when there are none ("No validation rules."
   for a Participant or Viewer, who has no toolbar). Edit and Remove are an Editor's.
 - Telemetry: `Sheet · Changed · Validation` for each rule change (made, edited, removed); never the options.
@@ -203,8 +225,8 @@ The rules above carry into the [spreadsheet](spreadsheet.md), with these changes
 ## Agents
 
 - `change_sheet` gains `validate` (a range and its rule: `{ type: "dropdown", options: ["To Do", "Doing", "Done"],
-colors?, display? }`, `{ type: "dropdown_range", source: "A2:A20" }`, `{ type: "checkbox" }`, `{ type: "number" |
-"date" | "text", condition, value?, value2? }`, plus `reject` (default true) and `help`) and `clear_validation` (a
+colors?, display? }`, `{ type: "dropdown_range", source: "A2:A20" }`, `{ type: "checkbox", checked?, unchecked? }`,
+  `{ type: "formula", formula: "=B2>A2" }`, `{ type: "number" | "date" | "text", condition, value?, value2? }`, plus `reject` (default true) and `help`) and `clear_validation` (a
   range). A rule made by an agent replaces what its range covers, as the editor's does.
 - `read_sheet` lists the sheet's rules (range, kind, options or condition) and marks invalid values.
 - An agent's `set` that a Reject rule refuses is refused with the cell and the rule's line ("B4 holds one of: To Do,

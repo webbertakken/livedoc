@@ -29,7 +29,25 @@ export type RangeOption = { value: Exclude<Scalar, null>; shown: string };
 // The options a Dropdown from a Range offers now (the editor works them out; the api cannot, so it skips them).
 export type RangeValues = (rule: ValidationRule) => readonly RangeOption[];
 
-export type RuleCtx = { locale: string; layout: SheetLayout; rangeValues?: RangeValues };
+// Whether a Custom Formula Is rule allows a value at a cell: worked out with the cell read as `v`, or as it is when
+// `v` is undefined (the editor works it out; the api cannot, so it lets the rule through).
+export type FormulaAllows = (
+  rule: ValidationRule,
+  r: number,
+  c: number,
+  v: Exclude<Scalar, null> | undefined,
+) => boolean;
+
+export type RuleCtx = {
+  locale: string;
+  layout: SheetLayout;
+  rangeValues?: RangeValues;
+  formulaAllows?: FormulaAllows;
+};
+
+// The cell a value is checked at: its position (a Custom Formula Is rule's) and, for Text rules over numbers, the
+// value as the cell shows it.
+export type CheckedCell = { r?: number; c?: number; shown?: string };
 
 const EMPTY: readonly ValidationRule[] = [];
 
@@ -44,6 +62,26 @@ export function validationRuleAt(layout: SheetLayout, r: number, c: number): Val
 export function checkboxValue(v: Scalar | undefined): boolean | null | undefined {
   if (v === null || v === undefined || v === '') return null;
   return typeof v === 'boolean' ? v : undefined;
+}
+
+// A typed custom checkbox value as stored: a plain decimal number as that number, any other text trimmed.
+export function customValue(text: string): string | number {
+  const t = text.trim();
+  return /^-?\d+(\.\d+)?$/.test(t) ? Number(t) : t;
+}
+
+const sameText = (a: Exclude<Scalar, null>, b: string | number) =>
+  scalarText(a).trim().toLowerCase() === String(b).trim().toLowerCase();
+
+// A checkbox cell's state under its rule: true ticked, false unticked, null empty, undefined anything else.
+export function checkState(
+  rule: ValidationRule,
+  v: Scalar | undefined,
+): boolean | null | undefined {
+  if (rule.on === undefined) return checkboxValue(v);
+  if (v === null || v === undefined || v === '') return null;
+  if (sameText(v, rule.on)) return true;
+  return rule.off !== undefined && sameText(v, rule.off) ? false : undefined;
 }
 
 function scalarText(v: Exclude<Scalar, null>): string {
@@ -113,15 +151,22 @@ function dateMeets(op: string | undefined, n: number, a: number, b: number): boo
   }
 }
 
-// Whether a rule allows a value (never empty: clearing is always allowed). `shown` is the value as its cell shows it,
-// for Text rules over numbers; without it a number's own text is used.
+// Whether a rule allows a value (never empty: clearing is always allowed). `at.shown` is the value as its cell shows
+// it, for Text rules over numbers; without it a number's own text is used. `at.r` and `at.c` place a Custom Formula
+// Is check; `asIs` checks the cell as it stands (the invalid mark) rather than with `v` read into it.
 export function scalarAllowed(
   rule: ValidationRule,
   v: Exclude<Scalar, null>,
   ctx: RuleCtx,
-  shown?: string,
+  at: CheckedCell = {},
+  asIs = false,
 ): boolean {
+  if (rule.is === 'formula') {
+    if (!ctx.formulaAllows || at.r === undefined || at.c === undefined) return true;
+    return ctx.formulaAllows(rule, at.r, at.c, asIs ? undefined : v);
+  }
   if (isError(v)) return true;
+  const shown = at.shown;
   switch (rule.is) {
     case 'list':
       return optionFor(rule, v) !== null;
@@ -138,7 +183,7 @@ export function scalarAllowed(
         );
     }
     case 'check':
-      return typeof v === 'boolean';
+      return checkState(rule, v) !== undefined;
     case 'num':
       return (
         typeof v === 'number' &&
@@ -178,23 +223,30 @@ function inputScalar(input: CellInput): Exclude<Scalar, null> | null {
   return null;
 }
 
-// Whether a rule allows an input as stored. A formula's value is checked where it is drawn, never here.
-export function inputAllowed(rule: ValidationRule, input: CellInput, ctx: RuleCtx): boolean {
+// Whether a rule allows an input as stored, at its cell. A formula's value is checked where it is drawn, never here.
+export function inputAllowed(
+  rule: ValidationRule,
+  input: CellInput,
+  ctx: RuleCtx,
+  at: CheckedCell = {},
+): boolean {
   if ('f' in input) return true;
   const v = inputScalar(input);
-  return v === null || scalarAllowed(rule, v, ctx);
+  return v === null || scalarAllowed(rule, v, ctx, at);
 }
 
-// Whether a cell's value (as worked out) breaks its rule: drawn with the invalid mark.
+// Whether a cell's value (as worked out) breaks its rule: drawn with the invalid mark. `at` places a Custom Formula
+// Is rule's check, worked out on the cell as it is.
 export function valueInvalid(
   rule: ValidationRule,
   value: Value,
   shown: string,
   ctx: RuleCtx,
+  at: { r: number; c: number } | null = null,
 ): boolean {
   const v = isArray(value) ? scalarOf(value) : value;
   if (v === null || v === '') return false;
-  return !scalarAllowed(rule, v, ctx, shown);
+  return !scalarAllowed(rule, v, ctx, { ...at, shown }, true);
 }
 
 // What a typed input becomes under a rule: a dropdown's option in its own spelling; a checkbox's 1 or 0 as TRUE or
@@ -203,6 +255,15 @@ export function inputForRule(rule: ValidationRule, input: CellInput): CellInput 
   if (rule.is === 'list' && ('s' in input || 'n' in input || 'b' in input)) {
     const o = optionFor(rule, inputScalar(input) ?? '');
     return o && !('s' in input && input.s === o.v) ? { s: o.v } : input;
+  }
+  if (rule.is === 'check' && rule.on !== undefined) {
+    const v = inputScalar(input);
+    if (v === null || 'f' in input) return input;
+    const state = checkState(rule, v);
+    const stored = state === true ? rule.on : state === false ? rule.off : undefined;
+    if (stored === undefined) return input;
+    const next: CellInput = typeof stored === 'number' ? { n: stored } : { s: stored };
+    return JSON.stringify(next) === JSON.stringify(input) ? input : next;
   }
   if (rule.is === 'check' && 'n' in input && (input.n === 1 || input.n === 0))
     return { b: input.n === 1 };
@@ -248,8 +309,15 @@ export function ruleLine(rule: ValidationRule, ctx: Pick<RuleCtx, 'locale' | 'la
         ? `Choose one of the values in ${formatRange(p)}`
         : 'Choose one of the listed values';
     }
-    case 'check':
-      return 'This cell is a checkbox: type TRUE or FALSE';
+    case 'check': {
+      if (rule.on === undefined) return 'This cell is a checkbox: type TRUE or FALSE';
+      const on = String(rule.on);
+      return rule.off === undefined
+        ? `This cell is a checkbox: type ${on}, or leave it empty`
+        : `This cell is a checkbox: type ${on} or ${String(rule.off)}`;
+    }
+    case 'formula':
+      return "Enter a value that meets the rule's formula";
     case 'num': {
       const a = numberText(Number(rule.a ?? 0));
       const b = numberText(Number(rule.b ?? 0));

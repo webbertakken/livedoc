@@ -3,6 +3,7 @@
 import { describe, expect, it } from 'vitest';
 import { applySheetWrite, inverseSheetWrite, type SheetWrite } from '../store';
 import { posRangeOf } from '../layout';
+import { compileFormula } from '../formula/stored';
 import { book, makeSheets } from '../testing/book';
 import type { GridRange } from '../address';
 import type { Sheet } from '../sheet';
@@ -117,5 +118,75 @@ describe('the checkbox toggle', () => {
     expect(toggleCheckboxes(b.wb, sheet.id, [g(0, 0)])).toBeNull();
     expect(toggleCheckboxes(b.wb, sheet.id, [g(3, 1)])).toBeNull();
     expect(toggleCheckboxes(b.wb, 'nope', [g(0, 1)])).toBeNull();
+  });
+});
+
+describe('custom checkbox values and formulas in edits', () => {
+  it('ticks with the ticked value and unticks with the unticked one, or empties the cell', () => {
+    const b = book({ B1: 'Yes', B2: 'no', B3: 'x', C1: 'TRUE' }, { rows: 8, cols: 4 });
+    const sheet = b.sheets[0]!;
+    const yes = setValidationRule(
+      sheet.layout,
+      g(0, 1, 5, 1),
+      { is: 'check', on: 'Yes', off: 'No' },
+      rand,
+    )!;
+    const s1 = apply(sheet, yes.write);
+    const one = setValidationRule(s1.layout, g(0, 2, 5, 2), { is: 'check', on: 1 }, rand)!;
+    const s2 = apply(s1, one.write);
+    b.wb.updateSheet(s2);
+    const id = (r: number, c: number) => `${s2.layout.rows[r]}:${s2.layout.cols[c]}`;
+    const cells = (w: SheetWrite | null) =>
+      w?.kind === 'cells' ? w.cells.map((ch) => [`${ch.r}:${ch.c}`, ch.i]) : null;
+    // B2 is unticked, so all tick; C1 holds TRUE, which a custom checkbox does not read as ticked.
+    expect(cells(toggleCheckboxes(b.wb, s2.id, [g(0, 1, 1, 2)]))).toEqual([
+      [id(0, 1), { s: 'Yes' }],
+      [id(1, 1), { s: 'Yes' }],
+      [id(0, 2), { n: 1 }],
+      [id(1, 2), { n: 1 }],
+    ]);
+    expect(cells(toggleCheckboxes(b.wb, s2.id, [g(0, 1)]))).toEqual([[id(0, 1), { s: 'No' }]]);
+    const ticked = apply(s2, {
+      kind: 'cells',
+      cells: [{ r: s2.layout.rows[0]!, c: s2.layout.cols[2]!, i: { n: 1 } }],
+    });
+    b.wb.updateSheet(ticked);
+    expect(cells(toggleCheckboxes(b.wb, s2.id, [g(0, 2)]))).toEqual([[id(0, 2), null]]);
+  });
+  it('moves a custom formula to the top-left of each piece a covering rule leaves', () => {
+    const b = book({}, { rows: 12, cols: 6 });
+    const sheet = b.sheets[0]!;
+    const fx = compileFormula('=B1>A1', b.wb.ctxFor(sheet.id));
+    if (!fx.ok) throw new Error('compile');
+    const s1 = apply(
+      sheet,
+      setValidationRule(sheet.layout, g(0, 1, 9, 1), { is: 'formula', fx: fx.formula }, rand)!
+        .write,
+    );
+    const s2 = apply(s1, setValidationRule(s1.layout, g(0, 1, 2, 1), { is: 'check' }, rand)!.write);
+    const left = s2.layout.rules!.find((x) => x.is === 'formula')!;
+    expect(posRangeOf(s2.layout, left)).toEqual(g(3, 1, 9, 1));
+    expect(left.fx!.r.map((x) => [x.r1, x.c1])).toEqual([
+      [s2.layout.rows[3], s2.layout.cols[1]],
+      [s2.layout.rows[3], s2.layout.cols[0]],
+    ]);
+  });
+  it('moves a custom formula when the rule loses its top row', () => {
+    const b = book({}, { rows: 12, cols: 6 });
+    const sheet = b.sheets[0]!;
+    const fx = compileFormula('=B1>A1', b.wb.ctxFor(sheet.id));
+    if (!fx.ok) throw new Error('compile');
+    const s1 = apply(
+      sheet,
+      setValidationRule(sheet.layout, g(0, 1, 9, 1), { is: 'formula', fx: fx.formula }, rand)!
+        .write,
+    );
+    const s2 = apply(s1, {
+      kind: 'layout',
+      changes: [{ k: 'deleteRows', ids: [s1.layout.rows[0]!] }],
+    });
+    const rule = s2.layout.rules![0]!;
+    expect(rule.r1).toBe(s1.layout.rows[1]);
+    expect(rule.fx!.r.map((x) => x.r1)).toEqual([s1.layout.rows[1], s1.layout.rows[1]]);
   });
 });

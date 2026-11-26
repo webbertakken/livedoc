@@ -12,7 +12,7 @@ import {
   ruleMessage,
   validationRuleAt,
   valueInvalid,
-  rangeOptions,
+  workbookRuleChecks,
   type SheetLayout,
 } from '@livedoc/sheets';
 import { readSheetsState, resolveSheet, workbookFor, type SheetRefusal } from './sheet-state';
@@ -107,8 +107,9 @@ export async function readSheet(
         ? validationRuleAt(layout, start.r1 + i, start.c1 + j)
         : null;
       if (rule) {
-        const ctx = { locale: 'en-GB', layout, rangeValues: () => rangeOptions(wb, id, rule) };
-        if (valueInvalid(rule, wb.value(id, start.r1 + i, start.c1 + j), cell.display, ctx))
+        const ctx = { locale: 'en-GB', layout, ...workbookRuleChecks(wb, id) };
+        const at = { r: start.r1 + i, c: start.c1 + j };
+        if (valueInvalid(rule, wb.value(id, at.r, at.c), cell.display, ctx, at))
           out.invalid = ruleMessage(rule, ctx);
       }
       chars += JSON.stringify(out).length;

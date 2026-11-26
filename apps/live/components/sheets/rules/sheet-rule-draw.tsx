@@ -6,7 +6,7 @@ import { bestInk } from '@livedoc/document';
 import { lucideGlyph } from '@livedoc/ui';
 import { lucideCheck, lucideChevronDown } from '@livedoc/icons/lucide';
 import {
-  checkboxValue,
+  checkState,
   isArray,
   isError,
   optionFor,
@@ -108,13 +108,15 @@ export function ruleCellDraw(opts: {
   palette: PlanPalette;
   ink: string;
   ctx: RuleCtx;
+  // The cell's place, for a Custom Formula Is rule's check.
+  at: { r: number; c: number };
   // Text style the chip's text takes (font, weight, decoration).
   textStyle: CSSProperties;
 }): RuleDraw {
   const { rule, value, box, palette, cellKey: key } = opts;
   const v = isArray(value) ? scalarOf(value) : value;
   const nodes: ReactNode[] = [];
-  const invalid = valueInvalid(rule, value, opts.shown, opts.ctx);
+  const invalid = valueInvalid(rule, value, opts.shown, opts.ctx, opts.at);
   if (invalid)
     nodes.push(
       <div
@@ -133,7 +135,7 @@ export function ruleCellDraw(opts: {
       />,
     );
   if (rule.is === 'check') {
-    const on = checkboxValue(isError(v) ? undefined : v);
+    const on = isError(v) ? undefined : checkState(rule, v);
     if (on === undefined) return { hideText: false, padEnd: false, nodes };
     const b = checkboxBox(box);
     nodes.push(

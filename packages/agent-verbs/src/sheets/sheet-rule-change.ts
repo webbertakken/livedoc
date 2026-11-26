@@ -5,6 +5,8 @@ import { withArticle } from '@livedoc/items';
 import {
   CONDITION_OPS,
   compileFormula,
+  customValue,
+  DROPDOWN_OPTION_MAX,
   formatRange,
   formatRuleLine,
   isColour,
@@ -42,7 +44,10 @@ export type AgentValidation =
       display?: 'chip' | 'arrow' | 'plain';
     }
   | { type: 'dropdown_range'; source: string; display?: 'chip' | 'arrow' | 'plain' }
-  | { type: 'checkbox' }
+  // Custom cell values: the ticked one and, optionally, the unticked one (else the empty cell).
+  | { type: 'checkbox'; checked?: string | number; unchecked?: string | number }
+  // Written for the range's top-left cell.
+  | { type: 'formula'; formula: string }
   | {
       type: 'number' | 'date' | 'text';
       condition: string;
@@ -158,16 +163,55 @@ function dateOf(v: number | string | undefined): number | null {
   return serialFromIso(v);
 }
 
+// A custom checkbox value as given: a number, or text (a typed number read as one, as the editor reads it).
+function customOf(v: string | number | undefined): string | number | null | undefined {
+  if (v === undefined) return undefined;
+  if (typeof v === 'number') return Number.isFinite(v) ? v : null;
+  const t = customValue(String(v));
+  return t === '' || String(t).length > DROPDOWN_OPTION_MAX ? null : t;
+}
+
 function validationSettings(
-  layout: SheetLayout,
+  wb: Workbook,
+  sheetId: string,
+  g: GridRange,
   rule: AgentValidation,
   extra: Pick<RuleSettings, 'warn' | 'help'>,
 ): { ok: true; settings: RuleSettings } | SheetRefusal {
+  const layout = wb.sheet(sheetId)!.layout;
   const show = (d?: string): { show?: 'arrow' | 'plain' } =>
     d === 'arrow' || d === 'plain' ? { show: d } : {};
   switch (rule.type) {
-    case 'checkbox':
-      return { ok: true, settings: { is: 'check', ...extra } };
+    case 'checkbox': {
+      const on = customOf(rule.checked);
+      const off = customOf(rule.unchecked);
+      if (on === null || off === null || (on === undefined && off !== undefined))
+        return refuse(
+          'rule_invalid',
+          'Give checked (and, optionally, unchecked) as text or numbers.',
+        );
+      if (off !== undefined && String(on).toLowerCase() === String(off).toLowerCase())
+        return refuse('rule_invalid', 'Checked and unchecked must differ.');
+      return {
+        ok: true,
+        settings: {
+          is: 'check',
+          ...(on === undefined ? {} : { on }),
+          ...(off === undefined ? {} : { off }),
+          ...extra,
+        },
+      };
+    }
+    case 'formula': {
+      const text = String(rule.formula ?? '').trim();
+      const made = compileFormula(text.startsWith('=') ? text : `=${text}`, wb.ctxFor(sheetId));
+      if (!text || text === '=' || !made.ok)
+        return refuse(
+          'formula_invalid',
+          `The formula "${text}" cannot be read (write it for ${formatRange({ ...g, r2: g.r1, c2: g.c1 })}).`,
+        );
+      return { ok: true, settings: { is: 'formula', fx: made.formula, ...extra } };
+    }
     case 'dropdown': {
       const opts = rule.options.map((v, i) => {
         const c = rule.colors?.[i]?.toLowerCase();
@@ -218,7 +262,7 @@ function validationSettings(
     default:
       return refuse(
         'rule_invalid',
-        'A rule type is dropdown, dropdown_range, checkbox, number, date or text.',
+        'A rule type is dropdown, dropdown_range, checkbox, number, date, text or formula.',
       );
   }
 }
@@ -268,7 +312,7 @@ export function buildRuleChange(
     case 'validate': {
       const g = rangeOn(layout, change.range);
       if (!g) return badRange(change.range);
-      const made = validationSettings(layout, change.rule, {
+      const made = validationSettings(wb, sheetId, g, change.rule, {
         ...(change.reject === false ? { warn: true as const } : {}),
         ...(change.help?.trim() ? { help: change.help.trim().slice(0, 255) } : {}),
       });
@@ -402,7 +446,11 @@ export function rulesRead(wb: Workbook, sheetId: string) {
       num: 'number',
       date: 'date',
       text: 'text',
+      formula: 'formula',
     }[r.is],
+    ...(r.on === undefined ? {} : { checked: r.on }),
+    ...(r.off === undefined ? {} : { unchecked: r.off }),
+    ...(r.fx ? { formula: renderFormula(r.fx, wb.ctxFor(sheetId)) } : {}),
     ...(r.opts ? { options: r.opts.map((o) => o.v) } : {}),
     ...(r.src ? { source: a1(r.src) } : {}),
     ...(r.op

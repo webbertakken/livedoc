@@ -131,7 +131,7 @@ export type SheetFilter = IdRange & { conds: Record<string, FilterCondition> };
 // Validation rules (docs/specs/029-sheets/data-validation.md): what a range of
 // cells may hold.
 export type DropdownOption = { v: string; c?: string };
-export type ValidationKind = 'list' | 'range' | 'check' | 'num' | 'date' | 'text';
+export type ValidationKind = 'list' | 'range' | 'check' | 'num' | 'date' | 'text' | 'formula';
 export type NumOp = 'between' | 'notBetween' | 'gt' | 'gte' | 'lt' | 'lte' | 'eq' | 'neq';
 export type DateOp =
   'valid' | 'before' | 'onOrBefore' | 'after' | 'onOrAfter' | 'on' | 'between' | 'notBetween';
@@ -148,6 +148,12 @@ export type ValidationRule = IdRange & {
   // Number and Date: numbers (a date's day number); Text: a string.
   a?: number | string;
   b?: number;
+  // A Checkbox's custom cell values (Use Custom Cell Values): the ticked one and, only with it, the unticked one
+  // (absent: unticked is the empty cell). Absent: TRUE and FALSE.
+  on?: string | number;
+  off?: string | number;
+  // Custom Formula Is: written for the range's top-left cell, moved to each cell as a copied formula is.
+  fx?: StoredFormula;
   // Show a Warning (absent: Reject the Value).
   warn?: true;
   help?: string;

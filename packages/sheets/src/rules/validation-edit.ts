@@ -4,11 +4,11 @@
 import type { GridRange } from '../address';
 import { makeAxisIds, type Rand } from '../ids';
 import { idRangeOf, posRangeOf } from '../layout';
-import type { LayoutChange } from '../store-layout';
+import { reanchorFormula, type LayoutChange } from '../store-layout';
 import type { CellChange, SheetWrite } from '../store';
-import { cellKey, type SheetLayout, type ValidationRule } from '../sheet';
+import { cellKey, type CellInput, type SheetLayout, type ValidationRule } from '../sheet';
 import type { Workbook } from '../engine/workbook';
-import { checkboxValue, validationRuleAt } from './validation';
+import { checkState, validationRuleAt } from './validation';
 
 // `a` less `b`, as up to four rectangles: the bands above, below, left and right of their overlap.
 export function subtractRect(a: GridRange, b: GridRange): GridRange[] {
@@ -46,7 +46,9 @@ function subtractRange(
       if (!ids) continue;
       const [id] = makeAxisIds(1, rand, taken);
       taken.add(id!);
-      out.push({ k: 'vrule', id: id!, rule: { ...rule, id: id!, ...ids } });
+      // A custom formula is written for its range's top-left cell: each piece's moves to its own.
+      const fx = rule.fx && reanchorFormula(rule.fx, layout, layout, rule, ids);
+      out.push({ k: 'vrule', id: id!, rule: { ...rule, id: id!, ...ids, ...(fx ? { fx } : {}) } });
     }
   }
   return out;
@@ -103,6 +105,14 @@ export function selectionHasCheckbox(layout: SheetLayout, ranges: readonly GridR
   return false;
 }
 
+// What a box holds ticked or unticked under its rule.
+function boxInput(rule: ValidationRule, tick: boolean): CellInput | null {
+  if (rule.on === undefined) return { b: tick };
+  const v = tick ? rule.on : rule.off;
+  if (v === undefined) return null;
+  return typeof v === 'number' ? { n: v } : { s: v };
+}
+
 // Space, or a press on a box: every checkbox cell of the ranges ticked when any is not, else all unticked
 // (data-validation.md "Using a checkbox"). Null when no checkbox cell is selected. Merged-away cells are skipped by
 // the caller passing a merge's top-left.
@@ -114,7 +124,7 @@ export function toggleCheckboxes(
   const sheet = wb.sheet(sheetId);
   if (!sheet || !selectionHasCheckbox(sheet.layout, ranges)) return null;
   const { layout } = sheet;
-  const boxes: { r: string; c: string; on: boolean }[] = [];
+  const boxes: { r: string; c: string; on: boolean; rule: ValidationRule }[] = [];
   const seen = new Set<string>();
   // Only where a checkbox rule meets the selection: a whole selected column never walks every row.
   const checks = (layout.rules ?? []).flatMap((x) => {
@@ -126,7 +136,8 @@ export function toggleCheckboxes(
       for (let r = Math.max(g.r1, p.r1); r <= Math.min(g.r2, p.r2); r++)
         for (let c = Math.max(g.c1, p.c1); c <= Math.min(g.c2, p.c2); c++) {
           // The cell's own rule (a later rule may have split this one away).
-          if (validationRuleAt(layout, r, c)?.is !== 'check') continue;
+          const rule = validationRuleAt(layout, r, c);
+          if (rule?.is !== 'check') continue;
           const rowId = layout.rows[r]!;
           const colId = layout.cols[c]!;
           const key = cellKey(rowId, colId);
@@ -144,10 +155,11 @@ export function toggleCheckboxes(
                   ? input.s
                   : null
             : null;
-          boxes.push({ r: rowId, c: colId, on: checkboxValue(v) === true });
+          boxes.push({ r: rowId, c: colId, on: checkState(rule, v) === true, rule });
         }
   if (!boxes.length) return null;
   const tick = boxes.some((b) => !b.on);
-  const cells: CellChange[] = boxes.map((b) => ({ r: b.r, c: b.c, i: { b: tick } }));
+  // Each cell takes its own rule's values: a custom checkbox's ticked value, its unticked one or the empty cell.
+  const cells: CellChange[] = boxes.map((b) => ({ r: b.r, c: b.c, i: boxInput(b.rule, tick) }));
   return { kind: 'cells', cells };
 }

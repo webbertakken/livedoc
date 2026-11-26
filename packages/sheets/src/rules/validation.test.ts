@@ -8,6 +8,9 @@ import { book, makeSheets } from '../testing/book';
 import type { CellInput, Sheet, ValidationRule } from '../sheet';
 import {
   checkboxValue,
+  checkState,
+  customValue,
+  type RuleCtx,
   inputAllowed,
   inputForRule,
   optionFor,
@@ -411,5 +414,113 @@ describe('a write as its rules take it', () => {
       kind: 'title',
       title: 'x',
     });
+  });
+});
+
+describe('a checkbox with custom cell values', () => {
+  const YES = rule({ is: 'check', on: 'Yes', off: 'No' });
+  const ONE = rule({ is: 'check', on: 1 });
+  const s = apply(base(), setRule(YES));
+  const x = ctx(s);
+  it('allows its ticked and unticked values, case aside, and nothing else', () => {
+    expect(scalarAllowed(YES, 'yes', x)).toBe(true);
+    expect(scalarAllowed(YES, 'NO', x)).toBe(true);
+    expect(scalarAllowed(YES, true, x)).toBe(false);
+    expect(scalarAllowed(YES, 'Maybe', x)).toBe(false);
+    expect(scalarAllowed(ONE, 1, x)).toBe(true);
+    expect(scalarAllowed(ONE, '1', x)).toBe(true);
+    expect(scalarAllowed(ONE, 0, x)).toBe(false);
+    expect(scalarAllowed(ONE, false, x)).toBe(false);
+  });
+  it('reads each value as ticked, unticked, empty or neither', () => {
+    expect(checkState(YES, 'YES')).toBe(true);
+    expect(checkState(YES, 'no')).toBe(false);
+    expect(checkState(YES, null)).toBeNull();
+    expect(checkState(YES, true)).toBeUndefined();
+    expect(checkState(ONE, 1)).toBe(true);
+    expect(checkState(ONE, 0)).toBeUndefined();
+    expect(checkState(rule({ is: 'check' }), false)).toBe(false);
+    expect(checkState(rule({ is: 'check' }), 'Yes')).toBeUndefined();
+  });
+  it('saves a typed value in the rule own spelling and type, and leaves TRUE and 1 alone', () => {
+    expect(inputForRule(YES, { s: 'yes' })).toEqual({ s: 'Yes' });
+    expect(inputForRule(YES, { s: 'no ' })).toEqual({ s: 'No' });
+    expect(inputForRule(YES, { b: true })).toEqual({ b: true });
+    expect(inputForRule(YES, { n: 1 })).toEqual({ n: 1 });
+    expect(inputForRule(ONE, { s: '1' })).toEqual({ n: 1 });
+  });
+  it('says its values in its line', () => {
+    expect(ruleLine(YES, x)).toBe('This cell is a checkbox: type Yes or No');
+    expect(ruleLine(ONE, x)).toBe('This cell is a checkbox: type 1, or leave it empty');
+  });
+  it('reads a typed custom value as a number only when it is one', () => {
+    expect(customValue(' 1 ')).toBe(1);
+    expect(customValue('-2.5')).toBe(-2.5);
+    expect(customValue('1e3')).toBe('1e3');
+    expect(customValue(' Yes ')).toBe('Yes');
+  });
+});
+
+describe('a custom formula rule', () => {
+  const FX = rule({ is: 'formula', fx: { t: '=TRUE', r: [] } });
+  const s = apply(base(), setRule(FX));
+  const seen: unknown[] = [];
+  const formulaAllows: RuleCtx['formulaAllows'] = (r, row, col, v) => {
+    seen.push([r.id, row, col, v]);
+    return v !== 'bad';
+  };
+  it('asks the editor, with the cell and its new value, and is let through by the api', () => {
+    const x = { ...ctx(s), formulaAllows };
+    expect(scalarAllowed(FX, 'good', x, { r: 2, c: 1 })).toBe(true);
+    expect(scalarAllowed(FX, 'bad', x, { r: 2, c: 1 })).toBe(false);
+    expect(seen).toEqual([
+      ['rule01', 2, 1, 'good'],
+      ['rule01', 2, 1, 'bad'],
+    ]);
+    expect(scalarAllowed(FX, 'bad', ctx(s), { r: 2, c: 1 })).toBe(true);
+    expect(validateWrite(s, cell(2, 1, { s: 'bad' })).ok).toBe(true);
+    expect(validateWrite(s, cell(2, 1, { s: 'bad' }), { formulaAllows }).ok).toBe(false);
+    expect(validateWrite(s, cell(2, 1, { s: 'fine' }), { formulaAllows }).ok).toBe(true);
+  });
+  it('marks a cell as it is, with no new value', () => {
+    seen.length = 0;
+    expect(
+      valueInvalid(FX, 'x', 'x', { ...ctx(s), formulaAllows: () => false }, { r: 3, c: 1 }),
+    ).toBe(true);
+    valueInvalid(FX, 'x', 'x', { ...ctx(s), formulaAllows }, { r: 3, c: 1 });
+    expect(seen).toEqual([['rule01', 3, 1, undefined]]);
+  });
+  it('says what it wants', () => {
+    expect(ruleLine(FX, ctx(s))).toBe("Enter a value that meets the rule's formula");
+  });
+});
+
+describe('the stored shape of the new criteria', () => {
+  const s = base();
+  const ok = (x: unknown) =>
+    validateWrite(s, {
+      kind: 'layout',
+      changes: [{ k: 'vrule', id: 'rule01', rule: x as ValidationRule }],
+    }).ok;
+  it('keeps custom checkbox values to a checkbox, distinct, bounded and ticked first', () => {
+    expect(ok(rule({ is: 'check', on: 'Yes', off: 'No' }))).toBe(true);
+    expect(ok(rule({ is: 'check', on: 1 }))).toBe(true);
+    expect(ok(rule({ is: 'check', off: 'No' }))).toBe(false);
+    expect(ok(rule({ is: 'check', on: 'Yes', off: 'yes' }))).toBe(false);
+    expect(ok(rule({ is: 'check', on: ' ' }))).toBe(false);
+    expect(ok(rule({ is: 'check', on: 'x'.repeat(256) }))).toBe(false);
+    expect(ok(rule({ is: 'check', on: Infinity }))).toBe(false);
+    expect(ok(rule({ is: 'check', on: true as never }))).toBe(false);
+    expect(ok(rule({ is: 'list', opts: [{ v: 'A' }], on: 'Yes' }))).toBe(false);
+  });
+  it('keeps a custom formula readable, with valid references, and nothing else', () => {
+    const fx = { t: '=ISNUMBER(@0)', r: [{ r1: R(1), c1: C(1) }] };
+    expect(ok(rule({ is: 'formula', fx }))).toBe(true);
+    expect(ok(rule({ is: 'formula' }))).toBe(false);
+    expect(ok(rule({ is: 'formula', fx: { t: '=(', r: [] } }))).toBe(false);
+    expect(ok(rule({ is: 'formula', fx: { t: '=1', r: [{ r1: 'nope' }] } }))).toBe(false);
+    expect(ok(rule({ is: 'formula', fx, op: 'gt' }))).toBe(false);
+    expect(ok(rule({ is: 'formula', fx, show: 'arrow' }))).toBe(false);
+    expect(ok(rule({ is: 'check', fx }))).toBe(false);
   });
 });

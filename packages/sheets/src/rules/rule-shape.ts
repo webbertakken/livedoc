@@ -44,6 +44,9 @@ const VALIDATION_KEYS = new Set([
   'b',
   'warn',
   'help',
+  'on',
+  'off',
+  'fx',
 ]);
 const FORMAT_RULE_KEYS = new Set([
   'id',
@@ -110,8 +113,27 @@ function optionsOk(v: unknown): boolean {
   return true;
 }
 
-// Whether `v` is a validation rule a write may store on this layout, with the id it names.
-export function isValidationRule(v: unknown, id: string, layout: SheetLayout): boolean {
+// A checkbox's custom cell value: a finite number, or text of 1 to DROPDOWN_OPTION_MAX characters, not blank.
+function customValueOk(v: unknown): v is string | number {
+  if (typeof v === 'number') return Number.isFinite(v);
+  return typeof v === 'string' && v.trim().length > 0 && v.length <= DROPDOWN_OPTION_MAX;
+}
+
+function customValuesOk(on: unknown, off: unknown): boolean {
+  if (on === undefined) return off === undefined;
+  if (!customValueOk(on)) return false;
+  if (off === undefined) return true;
+  return customValueOk(off) && String(on).trim().toLowerCase() !== String(off).trim().toLowerCase();
+}
+
+// Whether `v` is a validation rule a write may store on this layout, with the id it names. `refsOk` checks a custom
+// formula's references (validate.ts isStoredRef), as isFormatRule's does.
+export function isValidationRule(
+  v: unknown,
+  id: string,
+  layout: SheetLayout,
+  refsOk: (refs: unknown[]) => boolean,
+): boolean {
   if (!isObj(v) || v.id !== id || !isAxisId(id)) return false;
   if (!Object.keys(v).every((k) => VALIDATION_KEYS.has(k))) return false;
   if (!rangeOnSheet(v, layout)) return false;
@@ -123,6 +145,8 @@ export function isValidationRule(v: unknown, id: string, layout: SheetLayout): b
     return false;
   if (v.is !== 'list' && v.opts !== undefined) return false;
   if (v.is !== 'range' && v.src !== undefined) return false;
+  if (v.is !== 'check' && (v.on !== undefined || v.off !== undefined)) return false;
+  if (v.is !== 'formula' && v.fx !== undefined) return false;
   const noOperands = v.op === undefined && v.a === undefined && v.b === undefined;
   switch (v.is) {
     case 'list':
@@ -130,7 +154,9 @@ export function isValidationRule(v: unknown, id: string, layout: SheetLayout): b
     case 'range':
       return rangeOnSheet(v.src, layout) && noOperands;
     case 'check':
-      return noOperands;
+      return noOperands && customValuesOk(v.on, v.off);
+    case 'formula':
+      return noOperands && storedFormulaOk(v.fx) && refsOk(v.fx.r);
     case 'num':
     case 'date': {
       const ops = v.is === 'num' ? NUM_OPS : DATE_OPS;
