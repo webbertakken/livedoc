@@ -161,6 +161,7 @@ describe('chart elements', () => {
       values: true,
       axis: true,
       stack: 'stacked',
+      smooth: true,
     });
     if (!built.ok) throw new Error(built.message);
     const [el] = sheetChartElements(
@@ -176,6 +177,7 @@ describe('chart elements', () => {
       chartValues: true,
       chartAxis: true,
       chartStack: 'stacked',
+      chartSmooth: true,
     });
   });
 

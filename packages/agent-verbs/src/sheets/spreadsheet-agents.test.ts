@@ -179,6 +179,20 @@ describe('a chart in a spreadsheet', () => {
     expect(chart!.stack).toBeUndefined();
   });
 
+  it('draws a line chart smooth, and reads it back so', async () => {
+    const { api } = book();
+    const made = await changeSheet(
+      api,
+      DOC_A,
+      { sheet: 'Models', changes: [{ op: 'chart', type: 'line', range: 'B1:C4', smooth: true }] },
+      'mcp',
+    );
+    expect(made.refusal).toBeUndefined();
+    const read = await readSheet(api, DOC_A, { sheet: 'Models' });
+    if (!read.ok) throw new Error(read.message);
+    expect(read.charts![0]).toMatchObject({ type: 'line', smooth: true });
+  });
+
   it('refuses to replace a chart the sheet does not hold', async () => {
     const { api } = book();
     const result = await changeSheet(

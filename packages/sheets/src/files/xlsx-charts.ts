@@ -93,7 +93,7 @@ function seriesXml(sheet: string, chart: FileChart, s: FileChartSeries, i: numbe
   const marker = chart.type === 'line' ? `<c:marker>${val('symbol', 'none')}</c:marker>` : '';
   // A line series' marker sits between its look and its categories.
   const shaped = chart.type === 'line' ? head + marker : head;
-  const tail = chart.type === 'line' ? val('smooth', 0) : '';
+  const tail = chart.type === 'line' ? val('smooth', chart.smooth ? 1 : 0) : '';
   const invert = chart.type === 'column' || chart.type === 'bar' ? val('invertIfNegative', 0) : '';
   return `<c:ser>${shaped}${invert}${cat}<c:val>${values}</c:val>${tail}</c:ser>`;
 }

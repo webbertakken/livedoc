@@ -64,6 +64,8 @@ export function LineChartView({
     element.chartAxis === true,
     // An area chart's stacking (pie-chart.md "Stacking").
     chartStackOf({ ...element, lineSeries: series }),
+    // Smooth Line (pie-chart.md "Smooth Line").
+    element.chartSmooth === true,
   );
   // The second axis's labels in its first series' colour.
   const right = Math.max(

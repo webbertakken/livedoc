@@ -99,6 +99,16 @@ describe('chart views', () => {
     expect(container.textContent).toContain('Opus · Index: 60');
   });
 
+  it('draws a smooth line chart’s lines as curves (Smooth Line, D284)', () => {
+    const { container } = render(
+      <LineChartView element={el('line-chart', { chartSmooth: true })} textColor="#000" />,
+    );
+    const curves = [...container.querySelectorAll('path')].filter((p) =>
+      (p.getAttribute('d') ?? '').includes(' C '),
+    );
+    expect(curves.length).toBeGreaterThan(0);
+  });
+
   it('stacks an area chart’s series to 100%, its ticks percents', () => {
     const { container } = render(
       <LineChartView

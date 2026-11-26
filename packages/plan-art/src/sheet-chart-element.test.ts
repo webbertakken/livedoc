@@ -95,6 +95,7 @@ describe('a spreadsheet chart as a chart element', () => {
         yTitle: 'Index',
         palette: 'vivid',
         stack: 'percent',
+        smooth: true,
         cols: ['c0000', 'c0002'],
       }),
       's1',
@@ -109,10 +110,12 @@ describe('a spreadsheet chart as a chart element', () => {
       chartAxisTitles: { x: 'Cost', y: 'Index' },
       chartPalette: 'vivid',
       chartStack: 'percent',
+      chartSmooth: true,
       chartSource: { cols: ['c0000', 'c0002'] },
     });
     expect(told.chartLegendPosition).toBeUndefined();
     expect(plain.chartStack).toBeUndefined();
+    expect(plain.chartSmooth).toBeUndefined();
   });
 
   it('fills a column chart in its series colour, and leaves a pie its palette', () => {

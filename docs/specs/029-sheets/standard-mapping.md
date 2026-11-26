@@ -325,7 +325,8 @@ each suite writes its own, so LibreOffice, Excel and Google Sheets open them as 
   (XLSX `dispBlanksAs="gap"`). A chart with no data is written with no series.
 - **Look**: its type (Column and Bar as clustered bars, Line, Area, Scatter as markers, Pie, Doughnut with a half
   hole), its stacking on a Column, Bar or Area chart (XLSX `grouping` `stacked` or `percentStacked`, bars with
-  `overlap` 100; ODF `chart:stacked` or `chart:percentage` on the plot area) (default, D283), its title and axis titles, its legend's place or none, values on the marks, the value axis (deleted when
+  `overlap` 100; ODF `chart:stacked` or `chart:percentage` on the plot area) (default, D283), a Line chart's smoothing (XLSX `c:smooth` on
+  each series; ODF `chart:interpolation="cubic-spline"` on the plot area) (default, D285), its title and axis titles, its legend's place or none, values on the marks, the value axis (deleted when
   off), each series' own colour, a scatter series drawn as a line, and its alt text. Its palette is LiveDoc's: a series
   with no colour of its own takes the reading suite's (default, D260).
 - **Place**: its top-left cell and offset and its size. XLSX: one drawing part per sheet with charts
@@ -342,7 +343,8 @@ each suite writes its own, so LibreOffice, Excel and Google Sheets open them as 
   its series read one block of its own sheet: the rows they share, a header row above them naming the series, a
   label column (or a scatter's x) and the series' columns, in order. Its look is read as it is written above, a
   series' colour and a scatter series' line by its column. XLSX reads a bar or area chart's `grouping` as its stacking, `stacked` or `percentStacked`, and a
-  line chart's only when `standard`. It reads a sheet's charts only when its drawing holds
+  line chart's only when `standard`; a line chart is smooth when every series says `c:smooth` on, straight when none
+  does, and not read when they differ (D285). It reads a sheet's charts only when its drawing holds
   nothing else, every anchor a chart that qualifies and no chart naming a part of its own (`r:id`); otherwise the
   drawing stays kept whole and none of its charts is read (default, D275). ODF reads a sheet's charts only when every
   drawing on it, in its `table:shapes` and in its cells, is a `draw:frame` holding one chart object (and its
@@ -352,14 +354,15 @@ each suite writes its own, so LibreOffice, Excel and Google Sheets open them as 
   any of ODF's units. A series reads its cells by `chart:values-cell-range-address`, its name by
   `chart:label-cell-address`, a scatter's x by the first series' `chart:domain` (a later series has none or the
   same), the labels by the x axis's `chart:categories`. The look is read from the chart document's automatic styles:
-  a bar chart by `chart:vertical`; stacking by `chart:stacked` and `chart:percentage` on a bar or area chart; a
-  stacked or percentage line chart, 3-D, smoothed, combined (a series of another class) or
+  a bar chart by `chart:vertical`; stacking by `chart:stacked` and `chart:percentage` on a bar or area chart; a line chart's
+  `chart:interpolation` `cubic-spline` as smooth; a stacked or percentage line chart, 3-D, another interpolation,
+  a smoothed chart of another type, combined (a series of another class) or
   secondary-axis charts are not read; values on the marks by `chart:data-label-number="value"` on every series (or
   the plot area); the value axis off when it is missing, `chart:visible="false"` or `chart:display-label="false"`;
   a series' colour by its fill (stroke on a line chart), a scatter series a line unless `draw:stroke="none"`, its
   colour then the stroke's; the alt text by the frame's `svg:desc`, else its `svg:title`, when it is not the title.
 - **Kept while unchanged**: a chart read from a file keeps its file XML beside it (a kept part, named on the chart),
-  with a sum of what it was read as: its type, stacking, titles, legend, values, axis, alt, place and size, and its cells by
+  with a sum of what it was read as: its type, stacking, smoothing, titles, legend, values, axis, alt, place and size, and its cells by
   position. A write whose chart sums the same writes the kept XML in its place, under a new part name; a chart changed
   here (its look, its range, its place, or the cells moved by an insert or a delete) is written from the model, the
   sheet named (`chart_rewritten`). A conversion writes every chart from the model (default, D276). ODF keeps a chart
@@ -551,6 +554,8 @@ The code cites each by its id.
   reading one block of its own sheet and naming no part of its own; else the drawing is kept whole (default).
 - **D276** A read chart unchanged: its read sum (type, titles, legend, values, axis, alt, place, size, cells by
   position) equals the written one's; its kept chart part is then written in its place under a new name (default).
+- **D285** A line chart's smoothing in a file: XLSX `c:smooth` on every series, ODF `chart:interpolation="cubic-spline"`;
+  read from either, a line whose series differ, or another interpolation, stays kept (default).
 - **D283** A chart's stacking in a file: XLSX `grouping` `stacked` or `percentStacked` (bars `overlap` 100), ODF
   `chart:stacked` or `chart:percentage`, written and read on a column, bar or area chart only; a line chart's
   stacking is not read, so it stays kept (default).

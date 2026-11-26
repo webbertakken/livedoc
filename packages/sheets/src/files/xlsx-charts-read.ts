@@ -200,8 +200,11 @@ export function readXlsxChartXml(xml: string, sheetName: string): Read | null {
   };
   const series: FileChartSeries[] = [];
   let labels: FileRange | null | undefined;
+  // A line is smooth when every series says so, straight when none does (D285); any other smoothing is not built.
+  const smoothed = cs(group, 'ser').map((ser) => cs(ser, 'smooth').some(isOn));
+  const smooth = smoothed.some(Boolean);
+  if (smooth && (type !== 'line' || !smoothed.every(Boolean))) return null;
   for (const ser of cs(group, 'ser')) {
-    if (cs(ser, 'smooth').some(isOn)) return null;
     const values = own(refUnder(c(ser, scatter ? 'yVal' : 'val')));
     if (!values || values.c1 !== values.c2) return null;
     const tx = c(ser, 'tx');
@@ -238,6 +241,7 @@ export function readXlsxChartXml(xml: string, sheetName: string): Read | null {
     id: '',
     type,
     ...(stack ? { stack } : {}),
+    ...(smooth ? { smooth: true as const } : {}),
     ...(title ? { title } : {}),
     ...(xTitle ? { xTitle } : {}),
     ...(yTitle ? { yTitle } : {}),

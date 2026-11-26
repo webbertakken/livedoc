@@ -264,6 +264,7 @@ describe('writeXlsx with charts', () => {
       'xl/charts/chart1.xml',
       'xl/charts/chart10.xml',
       'xl/charts/chart11.xml',
+      'xl/charts/chart12.xml',
       'xl/charts/chart2.xml',
       'xl/charts/chart3.xml',
       'xl/charts/chart4.xml',
@@ -531,6 +532,7 @@ describe('sheetChartsFromFile', () => {
           axis: false,
           kept,
           stack: 'percent',
+          smooth: true,
         }),
       ],
       layout,
@@ -538,6 +540,7 @@ describe('sheetChartsFromFile', () => {
     );
     expect(chart).toMatchObject({
       stack: 'percent',
+      smooth: true,
       title: 'T',
       xTitle: 'X',
       yTitle: 'Y',

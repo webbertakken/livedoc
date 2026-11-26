@@ -294,8 +294,12 @@ describe('what is not read (D275)', () => {
       `<c:scatterChart><c:scatterStyle val="smoothMarker"/>${ser('<c:yVal><c:numRef><c:f>Q!$B$2:$B$4</c:f></c:numRef></c:yVal>')}</c:scatterChart>`,
     ],
     [
-      'a smooth line',
-      `<c:lineChart>${ser(`${valRef('Q!$B$2:$B$4')}<c:smooth val="1"/>`)}</c:lineChart>`,
+      'a line smooth in one series of two',
+      `<c:lineChart>${ser(`${valRef('Q!$B$2:$B$4')}<c:smooth val="1"/>`)}${ser(`${valRef('Q!$C$2:$C$4')}<c:smooth val="0"/>`)}</c:lineChart>`,
+    ],
+    [
+      'a smooth scatter series',
+      `<c:scatterChart>${ser(`<c:yVal><c:numRef><c:f>Q!$B$2:$B$4</c:f></c:numRef></c:yVal><c:smooth val="1"/>`)}</c:scatterChart>`,
     ],
     ['another sheet’s cells', `<c:lineChart>${ser(valRef('Other!$B$2:$B$4'))}</c:lineChart>`],
     ['a series over two columns', `<c:lineChart>${ser(valRef('Q!$B$2:$C$4'))}</c:lineChart>`],
@@ -475,6 +479,27 @@ describe('a written chart, read', () => {
     expect(fileChartSum({ ...read!, at: chart.at, width: 400, height: 300 })).toBe(
       fileChartSum(chart),
     );
+  });
+
+  it('reads a smooth line chart, every series smooth (D285)', () => {
+    const chart = {
+      ...base,
+      type: 'line' as const,
+      smooth: true as const,
+      labels: { range: cell(0), cached: ['a', 'b', 'c', 'd'] },
+      x: null,
+      series: [1, 2].map((c) => ({ name: 'S', nameAt: { r: 0, c }, values: cell(c), cached: [] })),
+    };
+    const xml = xlsxChartXml('Q', chart);
+    expect(xml.match(/<c:smooth val="1"\/>/g)).toHaveLength(2);
+    const read = readXlsxChartXml(xml, 'Q');
+    expect(read!.smooth).toBe(true);
+    expect(fileChartSum({ ...read!, at: chart.at, width: 400, height: 300 })).toBe(
+      fileChartSum(chart),
+    );
+    expect(
+      readXlsxChartXml(xlsxChartXml('Q', { ...chart, smooth: undefined }), 'Q')!.smooth,
+    ).toBeUndefined();
   });
 
   it('sums a chart with no stacking as before stacking was read', () => {

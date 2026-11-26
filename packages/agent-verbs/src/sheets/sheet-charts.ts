@@ -69,6 +69,8 @@ export type SheetChartLook = {
   axis?: boolean;
   // A column, bar or area chart's Stacking (pie-chart.md "Stacking").
   stack?: SheetChartStack;
+  // A line chart's Smooth Line (pie-chart.md "Smooth Line").
+  smooth?: boolean;
   alt?: string;
 };
 
@@ -80,6 +82,7 @@ const LOOK_KEYS = [
   'values',
   'axis',
   'stack',
+  'smooth',
   'alt',
 ] as const;
 
@@ -119,6 +122,7 @@ export function lookFields(look: SheetChartLook | undefined): Partial<ShapeEleme
     ...(look.values !== undefined ? { chartValues: look.values } : {}),
     ...(look.axis !== undefined ? { chartAxis: look.axis } : {}),
     ...(look.stack ? { chartStack: look.stack } : {}),
+    ...(look.smooth !== undefined ? { chartSmooth: look.smooth } : {}),
   };
 }
 

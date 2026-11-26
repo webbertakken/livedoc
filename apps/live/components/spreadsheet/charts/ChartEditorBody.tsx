@@ -28,6 +28,7 @@ import { OFFICE_COLOUR_ROWS } from '@/components/office/OfficeColourControl';
 import { useDocumentColours } from '@/hooks/ui/useDocumentColours';
 import { useSheetController } from '@/components/sheets/sheet-controller';
 import { ChartEditorField as Field } from './ChartEditorField';
+import { ChartLookSwitches } from './ChartLookSwitches';
 import { ChartStackingField } from './ChartStackingField';
 
 export const CHART_GONE = 'This chart is no longer on the sheet.';
@@ -327,26 +328,7 @@ export function ChartEditorBody({
               ))}
             </Select>
           </Field>
-          <div className="flex flex-wrap gap-4">
-            <span className="flex items-center gap-2">
-              <Switch
-                size="sm"
-                checked={chart.axis !== false}
-                label="Value Axis"
-                onChange={(on) => set('axis', on ? undefined : false)}
-              />
-              Value Axis
-            </span>
-            <span className="flex items-center gap-2">
-              <Switch
-                size="sm"
-                checked={chart.values === true}
-                label="Data Labels"
-                onChange={(on) => set('values', on ? true : undefined)}
-              />
-              Data Labels
-            </span>
-          </div>
+          <ChartLookSwitches chart={chart} set={set} />
           {series.length ? (
             <div role="group" aria-label="Series Colours" className="flex flex-wrap gap-3">
               {series.map((s, i) => {

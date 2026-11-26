@@ -106,11 +106,13 @@ export function odsChartContent(
     return ` chart:style-name="${name}"`;
   };
   const round = chart.type === 'pie' || chart.type === 'doughnut';
-  // A bar chart lies on its side; a stacking stacks (D283).
+  // A bar chart lies on its side; a stacking stacks (D283); a smooth line curves (D285).
   const plotProps = [
     ...(chart.type === 'bar' ? ['chart:vertical="true"'] : []),
     ...(chart.stack === 'stacked' ? ['chart:stacked="true"'] : []),
     ...(chart.stack === 'percent' ? ['chart:percentage="true"'] : []),
+    // A smooth line (D285).
+    ...(chart.smooth ? ['chart:interpolation="cubic-spline"'] : []),
   ];
   const plotStyle = style(
     plotProps.length

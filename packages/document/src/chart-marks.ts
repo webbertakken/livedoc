@@ -12,6 +12,7 @@ import {
 } from './chart-axis';
 import type { ChartRect } from './chart-frame';
 import { chartAxisLabel } from './chart-frame';
+import { smoothPath } from './chart-smooth';
 import { stackedValues, type ChartStack } from './chart-stack';
 import { chartValue, type ChartKeyItem, type LineSeries, type PieSlice } from './data-shapes';
 
@@ -250,6 +251,8 @@ export function lineMarks(
   showAxis = false,
   // An area chart's stacking (pie-chart.md "Stacking", D282): each series a band on the running total before it.
   stack: ChartStack | null = null,
+  // Smooth Line (pie-chart.md "Smooth Line", D284): a line chart's stretches drawn as curves.
+  smooth = false,
 ): LineMarks {
   const n = categories.length;
   const stacked = stack && variant === 'area' ? stackedValues(series, n, stack, false) : null;
@@ -356,6 +359,7 @@ export function lineMarks(
   // value breaking nothing (pie-chart.md "A scatter series drawn as a line"); the sort is stable, so equal x keep
   // their rows' order.
   const lines = series.map((s, si) => {
+    if (variant === 'line' && smooth) return runs[si]!.map(smoothPath).join(' ');
     if (variant !== 'scatter') return pathOf(runs[si]!);
     if (s.line !== true) return '';
     const present = points[si]!.filter((p): p is ChartPoint => p !== null).sort(

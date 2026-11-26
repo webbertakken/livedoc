@@ -529,6 +529,10 @@ const sheetChange = z.discriminatedUnion('op', [
       .describe(
         'Stacking of a column, bar or area chart of 2+ series: "stacked" (one on another) or "percent" (100%, each category’s shares); none by default.',
       ),
+    smooth: z
+      .boolean()
+      .optional()
+      .describe('A line chart only: draw its lines as smooth curves through the points.'),
     alt: z
       .string()
       .max(SHEET_CHART_ALT_MAX)
@@ -768,6 +772,7 @@ const readChart = z.object({
   values: z.boolean().describe('Whether each mark’s number is printed.'),
   axis: z.boolean().describe('Whether its value axis shows.'),
   stack: z.enum(SHEET_CHART_STACKS).optional().describe('Its stacking: stacked or percent (100%).'),
+  smooth: z.boolean().optional().describe('Whether its lines are smooth curves.'),
   alt: z.string().optional().describe('Its alt text.'),
   lines: z.array(z.string()).optional().describe('A scatter’s series drawn as lines, by name.'),
 });

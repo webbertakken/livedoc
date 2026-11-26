@@ -286,6 +286,7 @@ const SHAPE_FIELD_CHECKS: readonly FieldCheck[] = [
     rule: oneOfRule(CHART_VARIANTS),
   },
   { field: 'chartStack', valid: isChartStack, rule: oneOfRule(CHART_STACKS) },
+  flag('chartSmooth'),
   {
     field: 'chartPalette',
     valid: (v) => isChartPaletteId(v as string),

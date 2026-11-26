@@ -48,6 +48,8 @@ export type SheetChart = {
   // The value axis: shown unless false (Google shows it).
   axis?: false;
   stack?: SheetChartStack;
+  // A line chart's Smooth Line (charts.md "The model"); another type keeps it unused.
+  smooth?: true;
   title?: string;
   xTitle?: string;
   yTitle?: string;
@@ -100,6 +102,7 @@ const CHART_KEYS = [
   'values',
   'axis',
   'stack',
+  'smooth',
   'title',
   'xTitle',
   'yTitle',
@@ -168,6 +171,7 @@ function isSheetChart(x: Record<string, unknown>): boolean {
     (x.values === undefined || x.values === true) &&
     (x.axis === undefined || x.axis === false) &&
     (x.stack === undefined || (SHEET_CHART_STACKS as readonly unknown[]).includes(x.stack)) &&
+    (x.smooth === undefined || x.smooth === true) &&
     textUpTo(x.title, SHEET_CHART_TEXT_MAX) &&
     textUpTo(x.xTitle, SHEET_CHART_TEXT_MAX) &&
     textUpTo(x.yTitle, SHEET_CHART_TEXT_MAX) &&

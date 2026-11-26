@@ -401,14 +401,14 @@ tells them.
     the last shown sheet (`sheet_last_visible`). On a Plan Sheet both are refused (`not_spreadsheet`).
   - `chart` puts the sheet's own chart ([Charts](charts.md#the-model)) at the cell `at` names, with `title`,
     `xAxisTitle`, `yAxisTitle`, `legend` (top, right, bottom, left or none), `values`, `axis` (the value axis, shown
-    unless false), `stack` (`stacked` or `percent`: a column, bar or area chart's Stacking), `alt` and `lines` (a scatter's series drawn as lines, by name, kept by their columns); `replace`
+    unless false), `stack` (`stacked` or `percent`: a column, bar or area chart's Stacking), `smooth` (a line chart's Smooth Line), `alt` and `lines` (a scatter's series drawn as lines, by name, kept by their columns); `replace`
     names a chart of the sheet by id to put this one in its place, its id and paint order kept (`chart_not_found`
     when it is none). The title options draw on a Plan chart too.
   - `clear_charts` takes the sheet's charts off: those reading cells of a range, or every one; or, given `id`, the
     one chart of that id, the rest kept (`chart_not_found` when it is none; `write_invalid` with a range too). On a
     Plan Sheet an `id` is refused (`not_spreadsheet`).
 - **`read_sheet` in a spreadsheet** answers the sheet's charts: id, type, range and columns in A1, the cell it sits
-  on, size, titles, legend, values, axis, stacking, alt and the series drawn as lines.
+  on, size, titles, legend, values, axis, stacking, smoothing, alt and the series drawn as lines.
 - **Views** ([A spreadsheet's views](../024-agents/document-views.md#a-spreadsheets-views)): `read_document` and
   `livedoc tab view` on any of a spreadsheet's tabs answer the workbook outline; `view: "cells"` with a `range` reads
   that tab's sheet a row a line, bounded as `read_sheet` is.
