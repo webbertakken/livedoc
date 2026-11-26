@@ -19,8 +19,9 @@ import type { PageName } from '../page-name';
 import { PageView } from '../page-view';
 import { PdfChange, PdfChangeset } from '../pdf-change';
 import { corpusBytes, corpusFiles } from '../testing/corpus';
-import { readerWasm, signedPdf } from '../testing/fixtures';
+import { readerWasm, signedPdf, textPdf } from '../testing/fixtures';
 import { fetchPdfCorpus, fetchedBytes, fetchedFiles } from './fetched-corpus';
+import { drawnByPdfjs } from './second-renderer';
 
 const OUT = mkdtempSync(join(tmpdir(), 'livedoc-written-pdf-'));
 // qpdf's own exit codes: nothing wrong, errors, warnings alone.
@@ -237,5 +238,40 @@ describe('every written PDF passes the validators', () => {
     const verdicts = signatureVerdicts(onDisk('addition-signed.pdf', result.bytes));
     expect(verdicts).toHaveLength(1);
     expect(verdicts[0]).toContain('Signature is Valid');
+  });
+});
+
+// marks.md "Changing a mark": Rotate, Evidence. PDF.js draws a turned mark's appearance by its `Matrix`: a Rectangle
+// turned 30° and filled shows turned in the second renderer as in the engine.
+describe('a turned mark in the second renderer', () => {
+  it('draws a filled Rectangle turned 30° where it shows', async () => {
+    const opening = await engine.open(await textPdf(1));
+    if (!opening.ok) throw new Error('the text fixture did not open');
+    const rectangle = Mark.shape('rectangle', {
+      id: 'turned',
+      page: opening.pages[0]!.name,
+      rect: [200, 300, 320, 360],
+      width: 2,
+      fill: '#d93025',
+      colour: '#d93025',
+      opacity: 1,
+      author: 'Ada',
+      createdAt: Date.UTC(2026, 10, 26),
+      turn: 30,
+    })!;
+    const result = await baked([PdfChange.addMark(rectangle)]);
+    await engine.open(result.bytes);
+    const own = (await engine.drawPage(0, 1))!;
+    const second = drawnByPdfjs(onDisk('turned-rectangle.pdf', result.bytes), own);
+    if (typeof second === 'string') throw new Error(`the second renderer ${second} the file`);
+    // Page space up, pixels down; just inside the upright box's top-right corner, turned 30° about its middle.
+    const red = ({ x, y }: PagePoint): boolean => {
+      const at = ((own.height - Math.round(y)) * own.width + Math.round(x)) * 4;
+      const [r, g, b] = second.rgba.slice(at, at + 3);
+      return r! > 180 && g! < 110 && b! < 110;
+    };
+    const cos = Math.cos(Math.PI / 6);
+    expect(red({ x: 260 + cos * 55 - 0.5 * 25, y: 330 + 0.5 * 55 + cos * 25 })).toBe(true);
+    expect(red({ x: 318, y: 302 })).toBe(false);
   });
 });

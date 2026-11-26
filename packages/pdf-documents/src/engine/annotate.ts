@@ -35,7 +35,7 @@ import { MarkWords } from '../mark-words';
 import type { PageMatrix } from '../engine-contract';
 import { CustomStamp } from '../custom-stamp';
 import { Stamps } from '../stamps';
-import { StampTurn } from '../stamp-turn';
+import { MarkTurn } from '../mark-turn';
 import {
   APPEARANCE_BOLD_FONT,
   APPEARANCE_FONT,
@@ -56,6 +56,14 @@ export type MarkWriting = {
   readonly writing: MarkFaceWriting | null;
   readonly pictures: ReadonlyMap<string, Uint8Array>;
 };
+
+/**
+ * A turned mark's `Rotate`, its angle as MuPDF writes it (marks.md "Changing a mark": Rotate, In the file); nothing
+ * upright.
+ */
+function rotateOf(dict: PdfDict, turn: number | undefined): void {
+  if (turn) dict.set('Rotate', PdfNumber.of(turn));
+}
 
 /** The annotation flag that prints it (marks.md "In the file": the print flag set). */
 const PRINT = 4;
@@ -158,14 +166,32 @@ function styleOf(annotation: PdfDict, mark: DrawingMark | LineMark | ShapeMark |
     );
 }
 
-/** The annotation drawn as the page shows its mark: the appearance stream as its normal look, its box as its `Rect`. */
+/**
+ * The annotation drawn as the page shows its mark: the appearance stream as its normal look, its box as its `Rect`. A
+ * turned Rectangle or Ellipse is drawn upright, its angle its `Rotate` and its appearance's `Matrix`, `Rect` its
+ * grown box as it shows.
+ */
 function drawAppearance(pdf: PDF, annotation: PdfDict, mark: LineMark | ShapeMark): void {
   const appearance = appearanceOf(MarkDrawing.of(mark), mark);
-  annotation.set('AP', streamOf(pdf, appearance));
+  if ('line' in mark) {
+    annotation.set('AP', streamOf(pdf, appearance));
+    annotation.set('Rect', boxArray(appearance.box));
+    return;
+  }
   // A Rectangle's and an Ellipse's `Rect` is the box grown by half the line: the readers that draw their own draw it
   // inside it.
-  if (mark.kind === 'line' || mark.kind === 'arrow')
-    annotation.set('Rect', boxArray(appearance.box));
+  annotation.set(
+    'AP',
+    streamOf(pdf, appearance, null, MarkTurn.matrix({ rect: mark.rect, turn: mark.turn })),
+  );
+  if (!mark.turn) return;
+  const half = mark.width / 2;
+  const [left, bottom, right, top] = mark.rect;
+  annotation.set(
+    'Rect',
+    boxArray(MarkTurn.shownBox([left - half, bottom - half, right + half, top + half], mark.turn)),
+  );
+  rotateOf(annotation, mark.turn);
 }
 
 /** An alignment as the file's `Q` holds it: the standard has no justified, so that rides `DS` beside a 0. */
@@ -189,7 +215,8 @@ function defaultStyleOf({ font, align }: TypedMark): string | null {
 /**
  * A Text's or a Callout's `FreeText`, added to its page's list: its words as `Contents`, its font as `DA`, its
  * appearance its words as laid out; a Callout's line as `CL` with an open arrowhead at what is meant, `Rect` the
- * box and the line together, and `RD` the box within it.
+ * box and the line together, and `RD` the box within it. A turned Text is drawn upright, its angle its `Rotate` and
+ * its appearance's `Matrix`, `Rect` the box as it shows.
  */
 function annotateTyped(
   pdf: PDF,
@@ -198,16 +225,18 @@ function annotateTyped(
   writing: MarkFaceWriting | null,
 ): PdfDict {
   const appearance = appearanceOf(MarkDrawing.of(mark), mark, MarkWords.of(mark), writing?.setter);
+  const turn = mark.kind === 'text' ? mark.turn : undefined;
   const dict = PdfDict.of({
     Type: PdfName.of('Annot'),
     Subtype: PdfName.of('FreeText'),
-    Rect: boxArray(appearance.box),
+    Rect: boxArray(MarkTurn.shownBox(appearance.box, turn)),
     Contents: PdfString.fromString(mark.words),
     DA: PdfString.fromString(defaultAppearanceOf(mark.size, mark.colour)),
     F: PdfNumber.of(PRINT),
     BS: PdfDict.of({ W: PdfNumber.of(mark.kind === 'callout' ? 1 : 0) }),
-    AP: streamOf(pdf, appearance, writing),
+    AP: streamOf(pdf, appearance, writing, MarkTurn.matrix({ rect: appearance.box, turn })),
   });
+  rotateOf(dict, turn);
   if (mark.align) dict.set('Q', PdfNumber.of(FILE_ALIGNS[mark.align]));
   const style = defaultStyleOf(mark);
   if (style) dict.set('DS', PdfString.fromString(style));
@@ -237,7 +266,7 @@ function annotateStamp(
   writing: MarkFaceWriting | null,
 ): PdfDict {
   const appearance = appearanceOf(MarkDrawing.of(mark), mark, MarkWords.of(mark), writing?.setter);
-  const shown = StampTurn.upright(appearance.box, mark.turn);
+  const shown = MarkTurn.shownBox(appearance.box, mark.turn);
   const dict = page.addStampAnnotation({
     rect: rectOf(shown),
     name: Stamps.of(mark.stamp)?.fileName ?? mark.stamp,
@@ -245,9 +274,9 @@ function annotateStamp(
   }).dict;
   dict.set(
     'AP',
-    streamOf(pdf, appearance, writing, StampTurn.matrix({ rect: appearance.box, turn: mark.turn })),
+    streamOf(pdf, appearance, writing, MarkTurn.matrix({ rect: appearance.box, turn: mark.turn })),
   );
-  if (mark.turn) dict.set('Rotate', PdfNumber.of(mark.turn));
+  rotateOf(dict, mark.turn);
   dict.set('C', new PdfArray([1, 3, 5].map((at) => PdfNumber.of(channelOf(mark.colour, at)))));
   return dict;
 }
@@ -271,7 +300,7 @@ function annotatePictureStamp(
     name: CustomStamp.fileName(mark.stamp),
     contents: mark.lines.join('\n'),
   }).dict;
-  const matrix = StampTurn.matrix({ rect: mark.rect, turn: mark.turn });
+  const matrix = MarkTurn.matrix(mark);
   const stream = PdfStream.fromDict(
     {
       Type: PdfName.of('XObject'),
@@ -285,7 +314,7 @@ function annotatePictureStamp(
     ),
   );
   dict.set('AP', PdfDict.of({ N: pdf.register(stream) }));
-  if (mark.turn) dict.set('Rotate', PdfNumber.of(mark.turn));
+  rotateOf(dict, mark.turn);
   return dict;
 }
 

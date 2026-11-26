@@ -20,6 +20,7 @@ import {
 } from './limits';
 import { PageName } from './page-name';
 import { MarkFonts } from './mark-fonts';
+import { turnedBounds } from './turn-geometry';
 
 /** One quadrilateral in page space, as the standard's QuadPoints order them: upper left, upper right, lower left,
  *  lower right, each an x and a y. */
@@ -167,10 +168,12 @@ export type ShapeMark = MarkBase &
     readonly kind: ShapeMarkKind;
     /** What fills it inside its line, `#rrggbb`; absent for no fill. */
     readonly fill?: string;
-    /** The box the line runs along: its middle, so half the line falls outside it. */
+    /** The box the line runs along: its middle, so half the line falls outside it; upright, before its turn. */
     readonly rect: Box;
     /** The line's width in points. */
     readonly width: number;
+    /** Its angle (`MarkTurnDegrees`); absent upright. */
+    readonly turn?: number;
   };
 
 export type PolyMark = MarkBase &
@@ -199,7 +202,12 @@ type TypedBase = MarkBase & {
   readonly font?: string;
 };
 
-export type TextBoxMark = TypedBase & { readonly kind: 'text' };
+/** A Text: its `rect` upright, before its turn. */
+export type TextBoxMark = TypedBase & {
+  readonly kind: 'text';
+  /** Its angle (`MarkTurnDegrees`); absent upright. */
+  readonly turn?: number;
+};
 
 export type CalloutMark = TypedBase & { readonly kind: 'callout'; readonly callout: CalloutLine };
 
@@ -207,16 +215,13 @@ export type CalloutMark = TypedBase & { readonly kind: 'callout'; readonly callo
 export type TypedMark = TextBoxMark | CalloutMark;
 
 /** A stamp: ready-made words in a box, placed by a press (marks.md "Stamps"). */
-/** A stamp's turn, anticlockwise, in degrees. */
-export const STAMP_TURNS = [90, 180, 270] as const;
-export type StampTurnDegrees = (typeof STAMP_TURNS)[number];
-
 export type StampMark = MarkBase & {
   readonly kind: 'stamp';
   /** The box it is drawn in, upright: before its turn. */
   readonly rect: Box;
-  /** Its quarter turns anticlockwise about its middle, as a file's `Rotate` (marks.md "Changing a mark"); absent upright. */
-  readonly turn?: StampTurnDegrees;
+  /** Its angle anticlockwise about its middle, as a file's `Rotate` (marks.md "Changing a mark": Rotate); absent
+   *  upright. A whole number of degrees, 1 to 359. */
+  readonly turn?: number;
   /** Which stamp it is: a LiveDoc id (stamps.ts), any such id, so a stamp of a person's own fits too. */
   readonly stamp: string;
   /** Its words as drawn, fixed when placed: its name in capitals, and a dynamic stamp's who and when; a custom
@@ -365,9 +370,22 @@ function lineOf(base: MarkBase, v: Record<string, unknown>): LineMark | null {
   };
 }
 
+/**
+ * A turning mark's angle (marks.md "Changing a mark": Rotate): a whole number of degrees, 1 to 359; none upright (absent
+ * or 0); undefined, refusing the mark, for anything else.
+ */
+function turnOf(v: Record<string, unknown>): { turn?: number } | undefined {
+  const { turn } = v;
+  if (turn === undefined || turn === null || turn === 0) return {};
+  return Number.isInteger(turn) && (turn as number) > 0 && (turn as number) < 360
+    ? { turn: turn as number }
+    : undefined;
+}
+
 function shapeOf(base: MarkBase, v: Record<string, unknown>): ShapeMark | null {
   const lined = lineStyleOf(v);
-  if (!isFour(v.rect) || !isWidth(v.width) || !lined) return null;
+  const turned = turnOf(v);
+  if (!isFour(v.rect) || !isWidth(v.width) || !lined || !turned) return null;
   const [left, bottom, right, top] = v.rect;
   if (left > right || bottom > top) return null;
   const { fill } = v;
@@ -380,6 +398,7 @@ function shapeOf(base: MarkBase, v: Record<string, unknown>): ShapeMark | null {
     width: v.width,
     ...lined,
     ...(typeof fill === 'string' ? { fill } : {}),
+    ...turned,
   };
 }
 
@@ -427,14 +446,19 @@ function typedOf(base: MarkBase, v: Record<string, unknown>): TypedMark | null {
     ...(aligned ? { align: align as TextAlign } : {}),
     ...fontOf(v.font),
   };
-  if (v.kind === 'text') return { ...typed, kind: 'text' };
+  if (v.kind === 'text') {
+    const turned = turnOf(v);
+    return turned ? { ...typed, kind: 'text', ...turned } : null;
+  }
   if (!isSix(v.callout)) return null;
   const [x1, y1, x2, y2, x3, y3] = v.callout;
   return { ...typed, kind: 'callout', callout: [x1, y1, x2, y2, x3, y3] };
 }
 
 function stampOf(base: MarkBase, v: Record<string, unknown>): StampMark | null {
-  if (!isFour(v.rect) || typeof v.stamp !== 'string' || !STAMP_ID.test(v.stamp)) return null;
+  const turned = turnOf(v);
+  if (!isFour(v.rect) || typeof v.stamp !== 'string' || !STAMP_ID.test(v.stamp) || !turned)
+    return null;
   const [left, bottom, right, top] = v.rect;
   if (left >= right || bottom >= top) return null;
   const { lines } = v;
@@ -446,9 +470,7 @@ function stampOf(base: MarkBase, v: Record<string, unknown>): StampMark | null {
     rect: [left, bottom, right, top],
     stamp: v.stamp,
     lines: [...(lines as string[])],
-    ...(STAMP_TURNS.includes(v.turn as StampTurnDegrees)
-      ? { turn: v.turn as StampTurnDegrees }
-      : {}),
+    ...turned,
     ...pictureOf(v.stamp, v.picture),
   };
 }
@@ -486,20 +508,29 @@ function pointsAll(mark: Mark): readonly number[] {
   if (mark.kind === 'drawing') return mark.strokes.flat();
   if ('line' in mark) return mark.line;
   if ('corners' in mark) return mark.corners;
-  if (mark.kind === 'stamp') return shownBox(mark);
-  return mark.kind === 'callout' ? [...mark.rect, ...mark.callout] : mark.rect;
+  return mark.kind === 'callout' ? [...mark.rect, ...mark.callout] : shownBox(mark);
 }
 
-/** A stamp's box as it shows: a quarter or three-quarter turn swaps its sides about its middle. */
-function shownBox({ rect, turn }: StampMark): Box {
-  if (turn !== 90 && turn !== 270) return rect;
-  const [left, bottom, right, top] = rect;
-  const x = (left + right) / 2;
-  const y = (bottom + top) / 2;
-  const halfWide = (top - bottom) / 2;
-  const halfHigh = (right - left) / 2;
-  return [x - halfWide, y - halfHigh, x + halfWide, y + halfHigh];
+/** A mark that turns by its box: a stamp, a Text, a Rectangle, an Ellipse (marks.md "Changing a mark": Rotate). */
+export type BoxTurningMark = StampMark | TextBoxMark | ShapeMark;
+
+/** The box a boxed mark shows: its `rect` turned about its middle by its angle, as bounds; its `rect` upright. */
+function shownBox({ rect, turn }: { readonly rect: Box; readonly turn?: number }): Box {
+  return turnedBounds(rect, turn);
 }
+
+/** How each kind turns (marks.md "Changing a mark": Rotate): by its box, by its points, or not at all. */
+const TURNS_BY = {
+  stamp: 'box',
+  text: 'box',
+  rectangle: 'box',
+  ellipse: 'box',
+  line: 'points',
+  arrow: 'points',
+  polygon: 'points',
+  cloud: 'points',
+  polyline: 'points',
+} as const satisfies Partial<Record<MarkKind, 'box' | 'points'>>;
 
 export const Mark = {
   /** A mark of text of the kind given, over the quads given, or null when what is given is no such mark. */
@@ -575,10 +606,17 @@ export const Mark = {
     return KIND_OF[v.kind as MarkKind](base, v);
   },
 
-  /** The smallest upright rectangle holding all of the mark: `[left, bottom, right, top]` in page space. */
-  /** A stamp's box as it shows, its turn taken (marks.md "Changing a mark"). */
+  /** A boxed mark's box as it shows, its turn taken (marks.md "Changing a mark": Rotate). */
   shownBox,
 
+  /** How a mark turns: `box` (its angle), `points` (its points turned), or null for a kind left out. */
+  turns: (mark: Mark): 'box' | 'points' | null =>
+    (TURNS_BY as Partial<Record<MarkKind, 'box' | 'points'>>)[mark.kind] ?? null,
+
+  /** Whether a mark turns by its box, holding an angle. */
+  turnsByBox: (mark: Mark): mark is BoxTurningMark => Mark.turns(mark) === 'box',
+
+  /** The smallest upright rectangle holding all of the mark: `[left, bottom, right, top]` in page space. */
   bounds: (mark: Mark): readonly [number, number, number, number] => {
     const flat = pointsAll(mark);
     const xs = flat.filter((_, at) => at % 2 === 0);

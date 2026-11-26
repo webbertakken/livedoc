@@ -2,10 +2,12 @@
 // mark by the glyphs it covers; a Drawing, a Line, an Arrow, a Rectangle and an Ellipse by their line, within a reach
 // and half the line's width, so a box drawn round a paragraph leaves its text to select; a Text, a Callout and a stamp
 // anywhere in their box, and a Callout's line as a line; a filled Rectangle or Ellipse anywhere inside it. Where marks
-// overlap, the one drawn last. Pure geometry in page space, read from the same drawing the page shows.
+// overlap, the one drawn last. A turned mark is reached as it shows, turned with it. Pure geometry in page space,
+// read from the same drawing the page shows.
 import type { PagePoint } from './engine-contract';
 import { Mark, type Box, type Quad } from './mark';
 import { MarkDrawing, type MarkStroke } from './mark-drawing';
+import { MarkTurn } from './mark-turn';
 
 /** How far a point lies from the segment from `a` to `b`. */
 function distanceToSegment(p: PagePoint, a: PagePoint, b: PagePoint): number {
@@ -51,9 +53,12 @@ const inBox = (p: PagePoint, [left, bottom, right, top]: Box): boolean =>
 
 /** Whether a press at `p` reaches the mark. */
 function reaches(mark: Mark, p: PagePoint, reach: number): boolean {
+  // A turned mark is reached in its own frame, the press turned back about its middle against it upright.
+  if (MarkTurn.angleOf(mark))
+    return reaches({ ...mark, turn: undefined } as Mark, MarkTurn.toFrame(p, mark), reach);
   if (Mark.isText(mark)) return mark.quads.some((quad) => inQuad(p, quad));
   if (Mark.isTyped(mark) && inBox(p, mark.rect)) return true;
-  if (mark.kind === 'stamp' && inBox(p, Mark.shownBox(mark))) return true;
+  if (mark.kind === 'stamp' && inBox(p, mark.rect)) return true;
   if (mark.kind === 'text' || mark.kind === 'stamp') return false;
   const drawing = MarkDrawing.of(mark);
   if (drawing.fill && inOutline(p, drawing.fill.points)) return true;
