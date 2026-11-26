@@ -29,6 +29,7 @@ export function usePdfPolyTool({
   inHand,
   line,
   onShape,
+  focusPages,
 }: {
   // The corner tool in hand; null while another is.
   inHand: PolyMarkKind | null;
@@ -36,6 +37,8 @@ export function usePdfPolyTool({
   line: ToolLine & { width: number };
   // `shape` null for too few corners: nothing to make.
   onShape: (index: number, shape: PolyShape | null) => void;
+  // Gives the pages the keys: a press on a page takes no focus, and Enter, Backspace and Escape are heard there.
+  focusPages: () => void;
 }) {
   const [kept, setKept] = useState<PolyDraft | null>(null);
   const draft = inHand !== null && kept?.kind === inHand ? kept : null;
@@ -54,8 +57,9 @@ export function usePdfPolyTool({
       const pressed = pressCorner(inHand, draft, at);
       setKept(pressed.draft);
       if (pressed.ended) finish(pressed.ended);
+      focusPages();
     },
-    [inHand, draft, finish],
+    [inHand, draft, finish, focusPages],
   );
 
   const end = useCallback(() => {

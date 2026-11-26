@@ -182,7 +182,7 @@ export function usePdfMarkTools({
     const look = looks[polyKind ?? 'polygon'];
     return { ...look, width: look.width ?? SHAPE_WIDTH_PT };
   }, [looks, polyKind]);
-  const poly = usePdfPolyTool({ inHand: polyKind, line: polyLine, onShape });
+  const poly = usePdfPolyTool({ inHand: polyKind, line: polyLine, onShape, focusPages });
   const letGoPoly = poly.letGo;
 
   /** One mark of a kind over a page's text: one step of the person's undo, made on that page. */

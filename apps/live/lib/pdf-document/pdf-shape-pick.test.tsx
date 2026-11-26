@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-// docs/specs/035-pdf-documents/reading-surface.md "The toolbar": Shape holds Line, Arrow, Rectangle and Ellipse behind
+// docs/specs/035-pdf-documents/reading-surface.md "The toolbar": Shape holds the seven shape tools behind
 // its chevron and remembers the last one used, per person, in this browser, apart from Highlight's; Line until then.
 import { act, renderHook } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
@@ -10,6 +10,7 @@ import {
   SHAPE_TOOL_KINDS,
   useShapePick,
   isShapeTool,
+  isPolyTool,
 } from './pdf-shape-pick';
 import { resetTextMarkPick, setTextMarkPick, textMarkPick } from './pdf-text-mark-pick';
 
@@ -20,8 +21,22 @@ afterEach(() => {
 });
 
 describe('the shape tool the toolbar holds', () => {
-  it('holds Line, Arrow, Rectangle and Ellipse in that order', () => {
-    expect(SHAPE_TOOL_KINDS).toEqual(['line', 'arrow', 'rectangle', 'ellipse']);
+  it('holds Line, Arrow, Rectangle, Ellipse, Polygon, Cloud and Connected lines in that order', () => {
+    expect(SHAPE_TOOL_KINDS).toEqual([
+      'line',
+      'arrow',
+      'rectangle',
+      'ellipse',
+      'polygon',
+      'cloud',
+      'polyline',
+    ]);
+    expect(['polygon', 'cloud', 'polyline', 'line'].map(isPolyTool)).toEqual([
+      true,
+      true,
+      true,
+      false,
+    ]);
     expect(['line', 'ellipse', 'drawing', 'highlight'].map(isShapeTool)).toEqual([
       true,
       true,

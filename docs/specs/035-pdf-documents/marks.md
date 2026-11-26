@@ -101,6 +101,7 @@ written into the file as a standard annotation, so any reader shows it. The rese
 - **A Polygon, a Cloud and Connected lines** are made a corner a press, with the tool in hand: the shape so far shows
   in the tool's look, with a line on from its last corner to the pointer. A double press or Enter ends it, its last
   press a corner; a press on its first corner closes a Polygon or a Cloud there; Backspace takes the last corner back;
+  each press gives the pages the keys, wherever they were before;
   Escape, another tool or a press on another page lets it go, making nothing; the tool stays in hand after Escape,
   and a second Escape takes Select `(default)`.
 - A Polygon or a Cloud of fewer than 3 corners, or Connected lines of fewer than 2, makes no mark; a press within

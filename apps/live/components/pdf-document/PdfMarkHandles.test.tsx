@@ -19,12 +19,12 @@ const ellipse = Mark.shape('ellipse', {
 })!;
 const UPRIGHT: PageMatrix = [1, 0, 0, -1, 0, 400];
 
-function handles({ laidOut = true } = {}) {
+function handles({ laidOut = true, mark = ellipse }: { laidOut?: boolean; mark?: Mark } = {}) {
   const onPreview = vi.fn();
   const onReshape = vi.fn();
   const view = render(
     <PdfMarkHandles
-      mark={ellipse}
+      mark={mark}
       matrix={UPRIGHT}
       width={400}
       height={400}
@@ -51,6 +51,21 @@ describe('a selected mark’s handles', () => {
     expect(handle('se').className).toContain('size-chip');
     expect(handle('se').className).toContain('pointer-coarse:size-11');
     expect(handle('se').className).toContain('cursor-nwse-resize');
+  });
+
+  it('lays a target on each of a Polygon’s corners, moving that corner alone', () => {
+    const polygon = Mark.poly('polygon', {
+      ...ellipse,
+      id: 'g',
+      corners: [100, 100, 200, 100, 150, 200],
+    })!;
+    const { handle, onReshape, view } = handles({ mark: polygon });
+    expect(view.container.querySelectorAll('[data-pdf-mark-handle]')).toHaveLength(3);
+    expect(handle('corner-2').className).toContain('cursor-move');
+    fireEvent.pointerDown(handle('corner-2'), { pointerId: 1 });
+    fireEvent.pointerMove(handle('corner-2'), { pointerId: 1, clientX: 150, clientY: 150 });
+    fireEvent.pointerUp(handle('corner-2'), { pointerId: 1, clientX: 150, clientY: 150 });
+    expect(onReshape).toHaveBeenCalledWith({ corners: [100, 100, 200, 100, 150, 250] });
   });
 
   it('shows the mark as a drag has it and hands it over once let go', () => {

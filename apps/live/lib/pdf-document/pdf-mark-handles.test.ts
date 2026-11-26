@@ -149,6 +149,23 @@ describe('keyResize', () => {
     expect(keyResize(arrow, UPRIGHT, { x: 1, y: 0 }, PAGE)).toEqual({ line: [10, 10, 51, 60] });
   });
 
+  it('sizes the box round a Polygon’s corners from its right and foot, the corners scaled within it', () => {
+    const polygon = Mark.poly('polygon', {
+      ...BASE,
+      id: 'g',
+      corners: [100, 100, 200, 100, 150, 200],
+      width: 2,
+    })!;
+    expect(keyResize(polygon, UPRIGHT, { x: 100, y: 0 }, PAGE)).toEqual({
+      corners: [100, 100, 300, 100, 200, 200],
+    });
+    expect(handlePlaces(polygon, UPRIGHT).map((place) => place.handle)).toEqual([
+      'corner-0',
+      'corner-1',
+      'corner-2',
+    ]);
+  });
+
   it('sizes nothing for a text mark', () => {
     const highlight = Mark.highlight({
       ...BASE,

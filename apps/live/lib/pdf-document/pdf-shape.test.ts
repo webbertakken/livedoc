@@ -135,6 +135,34 @@ describe('addShape', () => {
     expect(PdfLiveChanges.marks(doc)[1]).toMatchObject({ line: [10, 20, 110, 70] });
   });
 
+  it('makes a Polygon, a Cloud or Connected lines of its corners, in the look given', () => {
+    const doc = PdfLiveChanges.load();
+    const look = { ...SHAPE_LOOK, fill: '#fde293' };
+    const corners = [0, 0, 40, 0, 20, 30];
+    const made = addShape(
+      doc,
+      { page, stored },
+      { kind: 'cloud', corners, width: 2, fill: '#fde293' },
+      { ...by('c1'), look },
+    );
+    expect(made.ok).toBe(true);
+    expect(PdfLiveChanges.mark(doc, 'c1')).toMatchObject({
+      kind: 'cloud',
+      corners,
+      fill: '#fde293',
+    });
+    addShape(
+      doc,
+      { page, stored },
+      { kind: 'polyline', corners: [0, 0, 9, 9], width: 2 },
+      by('p1'),
+    );
+    expect(PdfLiveChanges.mark(doc, 'p1')).toMatchObject({
+      kind: 'polyline',
+      corners: [0, 0, 9, 9],
+    });
+  });
+
   it('makes nothing of no shape, or of one no mark holds', () => {
     const doc = PdfLiveChanges.load();
     expect(addShape(doc, { page, stored }, null, by('s1'))).toEqual({

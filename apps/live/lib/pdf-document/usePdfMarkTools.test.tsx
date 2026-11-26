@@ -25,6 +25,9 @@ import {
   TOOL_CALLOUT,
   TOOL_DRAWING,
   TOOL_ELLIPSE,
+  TOOL_POLYGON,
+  TOOL_CLOUD,
+  TOOL_CONNECTED_LINES,
   TOOL_HIGHLIGHT,
   TOOL_LINE,
   TOOL_RECTANGLE,
@@ -347,8 +350,12 @@ describe('the tools’ keys', () => {
     expect(press({ key: 'u', ctrlKey: true })).toEqual({ taken: false, prevented: false });
     expect(press({ key: 'u', metaKey: true }).taken).toBe(false);
     expect(press({ key: 'u', altKey: true }).taken).toBe(false);
-    expect(press({ key: 'q' }).taken).toBe(false);
+    expect(press({ key: 'j' }).taken).toBe(false);
     expect(hook.result.current.inHand).toBe('select');
+    // Q takes the Cloud.
+    expect(press({ key: 'q' }).taken).toBe(true);
+    expect(hook.result.current.inHand).toBe('cloud');
+    expect(press({ key: 'Q', shiftKey: true }).taken).toBe(false);
   });
 
   it('marks a selection with U, and takes no tool outside Reviewing', () => {
@@ -492,6 +499,9 @@ describe('the shape tools', () => {
       [TOOL_ARROW, 'Arrow'],
       [TOOL_RECTANGLE, 'Rectangle'],
       [TOOL_ELLIPSE, 'Ellipse'],
+      [TOOL_POLYGON, 'Polygon'],
+      [TOOL_CLOUD, 'Cloud'],
+      [TOOL_CONNECTED_LINES, 'Connected lines'],
     ]);
     act(() => choice.actions[TOOL_ELLIPSE]!.run());
     expect(control().label).toBe('Ellipse');
@@ -521,11 +531,11 @@ describe('the shape tools', () => {
     expect(press()).toBe(true);
     expect(hook.result.current.inHand).toBe('line');
     const seen: string[] = [];
-    for (let step = 0; step < 4; step += 1) {
+    for (let step = 0; step < 7; step += 1) {
       press();
       seen.push(hook.result.current.inHand);
     }
-    expect(seen).toEqual(['arrow', 'rectangle', 'ellipse', 'line']);
+    expect(seen).toEqual(['arrow', 'rectangle', 'ellipse', 'polygon', 'cloud', 'polyline', 'line']);
     press();
     act(() => void hook.result.current.onKey(key({ key: 'd' }).event));
     expect(hook.result.current.inHand).toBe('drawing');
