@@ -372,3 +372,11 @@ export {
   type DocumentTabDropPlace,
   type DocumentTabEntry,
 } from './model/document-tab-list';
+export {
+  TEXT_DOCUMENT_COMPARE_BUDGET_MS,
+  TEXT_DOCUMENT_COMPARE_TOKENS_MAX,
+  TextDocumentComparison,
+  type ComparisonOptions,
+  type ComparisonRefusal,
+  type ComparisonResult,
+} from './compare/compare-documents';

@@ -223,7 +223,7 @@ describe('TextDocumentComparison.compare', () => {
   });
 
   it('reads objects in a line as words of their own', () => {
-    const bookmark = (name: string): Inline => ({ type: 'bookmark', name, props: {} }) as Inline;
+    const bookmark = (name: string): Inline => ({ type: 'bookmark', name, props: {} });
     const comparison = expectExact(
       doc(para([run('at '), bookmark('a'), run(' here')])),
       doc(para([run('at '), bookmark('b'), run(' here')])),
@@ -396,5 +396,154 @@ describe('TextDocumentComparison.compare', () => {
     });
     expect(performance.now() - started).toBeLessThan(TEXT_DOCUMENT_COMPARE_BUDGET_MS);
     expect(result.ok).toBe(true);
+  });
+});
+
+describe('TextDocumentComparison.compare, beside the writing', () => {
+  const kept = (name: string): Block => ({
+    type: 'kept',
+    name,
+    xml: { xml: `<${name}/>`, ns: {} },
+  });
+  const edge = (id: string, side: 'start' | 'end'): Inline => ({
+    type: 'comment',
+    edge: side,
+    id,
+    props: {},
+  });
+
+  it('keeps a kept block only the primary has and leaves out one only the selected has', () => {
+    const result = TextDocumentComparison.compare(
+      doc(para('x'), kept('a'), kept('same'), para('y')),
+      doc(para('x'), kept('same'), kept('b'), para('y')),
+      { name: NAME, at: AT, comments: false },
+    );
+    if (!result.ok) throw new Error(result.refusal);
+    expect(result.leftOut).toBe(1);
+    expect(
+      result.document.body
+        .filter((b) => b.type === 'kept')
+        .map((b) => (b as { name: string }).name),
+    ).toEqual(['a', 'same']);
+  });
+
+  it('suggests a section break whole and keeps one the same', () => {
+    const section = { ...blank.section, type: 'section' } as Block;
+    const comparison = compared(
+      doc(para('x'), section, para('y')),
+      doc(para('x'), section, para('z'), section, para('y')),
+    );
+    const sections = comparison.body.filter((b) => b.type === 'section');
+    expect(sections.map((b) => Object.keys((b as { suggested?: object }).suggested ?? {}))).toEqual(
+      [[], ['insertion']],
+    );
+  });
+
+  it('keeps the primary’s text style as before and an object the same in both', () => {
+    const bookmark: Inline = { type: 'bookmark', name: 'mark', props: {} };
+    const comparison = compared(
+      doc(para([run('a '), { ...run('styled'), style: 'Old' }, bookmark])),
+      doc(para([run('a '), { ...run('styled'), style: 'New' }, bookmark])),
+    );
+    const inlines = firstParagraph(comparison).inlines;
+    const styled = inlines.find((i): i is Run => i.type === 'run' && i.text === 'styled')!;
+    expect(styled.suggested?.format?.before).toEqual({ style: 'Old', props: {} });
+    expect(inlines.filter((i) => i.type === 'bookmark' && !i.suggested)).toHaveLength(1);
+  });
+
+  it('keeps a list paragraph’s place as before', () => {
+    const listed: Paragraph = { ...para('item'), list: { id: 'L1', level: 0 } };
+    const comparison = compared(doc(listed), doc(para('item')));
+    expect(firstParagraph(comparison).suggested?.format?.before.list).toEqual({
+      id: 'L1',
+      level: 0,
+    });
+  });
+
+  it('leaves the selected’s comment edges out of notes and cells unless asked', () => {
+    const note: Inline = {
+      type: 'note',
+      props: {},
+      blocks: [para([edge('n', 'start'), run('note'), edge('n', 'end')])],
+    };
+    const cellTable: Table = {
+      ...table(row('cell')),
+      rows: [
+        {
+          cells: [
+            { blocks: [para([edge('c', 'start'), run('cell'), edge('c', 'end')])], props: {} },
+          ],
+        },
+      ],
+    };
+    const comparison = compared(doc(para('x')), doc(para([run('x'), note]), cellTable, para('')));
+    expect(JSON.stringify(comparison.body)).not.toContain('"comment"');
+  });
+
+  it('adds the selected’s media to the primary’s', () => {
+    const media = (key: string) =>
+      ({ [key]: { mediaType: 'image/png', bytes: new Uint8Array([1]) } }) as TextDocument['media'];
+    const comparison = compared(
+      { ...doc(para('x')), media: media('p') },
+      { ...doc(para('x')), media: media('s') },
+    );
+    expect(Object.keys(comparison.media ?? {}).sort()).toEqual(['p', 's']);
+    expect(compared(doc(para('x')), doc(para('x'))).media).toBeUndefined();
+  });
+
+  it('pairs empty paragraphs and reads objects against words', () => {
+    const field: Inline = { type: 'field', field: 'page-number', text: '1', props: {} };
+    expectExact(
+      doc(para('top'), para(''), para('one two'), para([field]), table(row('t')), para('')),
+      doc(para('top'), para(''), para([run('one '), field]), para('two'), para('')),
+    );
+  });
+});
+
+describe('TextDocumentComparison.compare, over many pairs', () => {
+  /** A seeded generator, so every run reads the same pairs. */
+  const seeded = (seed: number) => () => {
+    seed = (seed * 1_103_515_245 + 12_345) % 2_147_483_648;
+    return seed / 2_147_483_648;
+  };
+  const WORDS = ['alpha', 'beta', 'gamma', 'delta', ',', '.', 'one', 'two'];
+  const field: Inline = { type: 'field', field: 'page-number', text: '1', props: {} };
+
+  function body(random: () => number): Block[] {
+    const pick = <T>(list: readonly T[]): T => list[Math.floor(random() * list.length)]!;
+    const paragraph = (): Paragraph => {
+      const inlines: Inline[] = [];
+      for (let k = Math.floor(random() * 5); k > 0; k--)
+        inlines.push(
+          random() < 0.1 ? field : run(`${pick(WORDS)} `, random() < 0.2 ? { bold: true } : {}),
+        );
+      return para(inlines, random() < 0.2 ? 'Heading1' : 'P');
+    };
+    const blocks: Block[] = [paragraph()];
+    for (let k = Math.floor(random() * 6); k > 0; k--)
+      blocks.push(
+        random() < 0.15
+          ? table(
+              ...Array.from({ length: 1 + Math.floor(random() * 3) }, () =>
+                row(pick(WORDS), pick(WORDS)),
+              ),
+            )
+          : paragraph(),
+      );
+    blocks.push(para(''));
+    return blocks;
+  }
+
+  it('reads as the primary rejected and as the selected accepted, every time', () => {
+    const random = seeded(42);
+    for (let k = 0; k < 300; k++) {
+      const primary = doc(...body(random));
+      const selected = doc(...body(random));
+      const comparison = compared(primary, selected);
+      expect(
+        [reading(settled(comparison, false)), reading(settled(comparison, true))],
+        `pair ${k}`,
+      ).toEqual([reading(primary), reading(selected)]);
+    }
   });
 });

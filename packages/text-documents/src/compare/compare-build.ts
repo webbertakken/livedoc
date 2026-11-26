@@ -47,10 +47,18 @@ export function buildBlocks(
   let stretch: FileSuggestionMark | null = null;
   let format: FileSuggestionMark | null = null;
   const stretchMark = () => (stretch ??= ctx.mark());
-  const close = () => {
+  // Blocks met while a paragraph is open wait for it to close: within a stretch the other side's words may still
+  // belong to it, and a paragraph never holds a block. A start that follows a paragraph on its own side lets them
+  // wait on past its paragraph, so that paragraph meets the one before it as it does on its side.
+  let waiting: Block[] = [];
+  const close = (letWait = false) => {
     if (open) out.push({ ...open.paragraph, inlines: open.inlines });
     open = null;
+    if (letWait) return;
+    out.push(...waiting);
+    waiting = [];
   };
+  const place = (blocks: readonly Block[]) => (open ? waiting : out).push(...blocks);
   const carry = (comments: readonly CommentMark[]) => {
     if (!open || comments.length === 0) return;
     open.inlines.push(...comments);
@@ -82,7 +90,7 @@ export function buildBlocks(
     const token = op.kind === 'insert' ? op.s : op.p;
 
     if (token.kind === 'start') {
-      close();
+      close(!token.opens && waiting.length > 0);
       if (op.kind === 'same' && op.s.kind === 'start') {
         const p = op.p as typeof token;
         const s = op.s.paragraph;
@@ -122,17 +130,17 @@ export function buildBlocks(
     }
 
     if (token.kind === 'block') {
-      close();
       if (op.kind === 'same') {
+        close();
         const p = token.block;
         const s = (op.s as typeof token).block;
         out.push(...(p.type === 'table' && s.type === 'table' ? ctx.tables(p, s) : [p]));
       } else if (token.block.type === 'kept') {
-        if (op.kind === 'delete') out.push(token.block);
+        if (op.kind === 'delete') place([token.block]);
         else ctx.leaveOut();
       } else {
         const kind = op.kind === 'insert' ? 'insertion' : 'deletion';
-        out.push({ ...token.block, suggested: { [kind]: stretchMark() } } as Block);
+        place([{ ...token.block, suggested: { [kind]: stretchMark() } }]);
       }
       continue;
     }

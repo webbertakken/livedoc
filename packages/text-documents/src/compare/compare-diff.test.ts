@@ -10,8 +10,8 @@ function sides(a: string[], b: string[], ops: readonly DiffOp[]): [string, strin
   let first = '';
   let second = '';
   for (const op of ops) {
-    if (op.kind !== 'insert') first += a[op.a!];
-    if (op.kind !== 'delete') second += b[op.b!];
+    if (op.kind !== 'insert') first += a[op.a];
+    if (op.kind !== 'delete') second += b[op.b];
   }
   return [first, second];
 }

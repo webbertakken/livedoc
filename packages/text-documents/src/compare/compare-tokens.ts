@@ -11,7 +11,12 @@ const WORDS = /\p{L}[\p{L}\p{N}'’]*|\p{N}+|\s+|[^\s\p{L}\p{N}]/gu;
 export const COMPARE_SIMILAR_PARAGRAPHS = 0.5;
 
 type Carries = { readonly comments: readonly CommentMark[] };
-export type StartToken = Carries & { readonly kind: 'start'; readonly paragraph: Paragraph };
+/** A paragraph's start; `opens` when no paragraph is before it (first in its container, or after a block). */
+export type StartToken = Carries & {
+  readonly kind: 'start';
+  readonly paragraph: Paragraph;
+  readonly opens: boolean;
+};
 export type TextToken = Carries & {
   readonly kind: 'text';
   readonly text: string;
@@ -55,10 +60,11 @@ export function tokensOf(blocks: readonly Block[]): ContainerTokens {
     pending = [];
     return carried;
   };
-  const lists = blocks.map((block): CompareToken[] => {
+  const lists = blocks.map((block, index): CompareToken[] => {
     if (block.type !== 'paragraph')
       return [{ kind: 'block', block, key: stableKey(block), comments: take() }];
-    const tokens: CompareToken[] = [{ kind: 'start', paragraph: block, comments: take() }];
+    const opens = blocks[index - 1]?.type !== 'paragraph';
+    const tokens: CompareToken[] = [{ kind: 'start', paragraph: block, opens, comments: take() }];
     for (const inline of block.inlines) {
       if (inline.type === 'comment') pending.push(inline);
       else if (inline.type === 'run')
@@ -91,7 +97,9 @@ export function tokenCount(blocks: readonly Block[]): number {
 
 /** Whether two tokens read the same: any two starts; words alike in text and link; objects and blocks the same. */
 export function sameToken(a: CompareToken, b: CompareToken): boolean {
-  if (a.kind === 'start' || b.kind === 'start') return a.kind === b.kind;
+  // Two starts are the same when both open or both follow a paragraph, so no paragraph is ever joined to a block.
+  if (a.kind === 'start' || b.kind === 'start')
+    return a.kind === 'start' && b.kind === 'start' && a.opens === b.opens;
   if (a.kind === 'text' && b.kind === 'text') return a.text === b.text && a.run.link === b.run.link;
   if (a.kind === 'text' || b.kind === 'text') return false;
   return a.kind === b.kind && a.key === b.key;

@@ -377,8 +377,9 @@ office kinds; this spec says what a text document puts in them.
 - **Accepting** an insertion or a paragraph break keeps it and drops its mark; a deletion removes its text, a join
   joins its paragraph to the one before, a format drops what was before. **Rejecting** removes an insertion's text,
   joins a paragraph break's paragraph back, drops a deletion's or a join's mark, and puts a format's before back. A
-  paragraph break with no paragraph before it (the first of a document tab) is removed with its paragraph when nothing
-  of the paragraph is left once the suggestion is rejected and a block follows it; otherwise its mark is dropped.
+  paragraph joins the paragraph before it past any block the same settling takes away. A rejected paragraph break with
+  no paragraph before it (the first of its container, or after a block), or an accepted join after a block, is removed
+  with its paragraph when nothing of the paragraph is left and something follows it; otherwise its mark is dropped.
   Either is one change of the writing, undone with ⌘Z.
 - **Where**: in the body of each document tab. Headers, footers and notes take no suggestions; while suggesting they
   read as they do in Viewing (default).
@@ -477,7 +478,9 @@ document and rejecting them all as the primary, as Google's
   as "Replace: “…” with “…”".
 - **Formatting**: kept text whose text style or formatting differs carries the selected document's, as a format
   suggestion holding the primary's; a kept paragraph whose style, formatting or list differs carries the selected's as
-  a paragraph format suggestion. A link added, changed or taken off is a deletion and an insertion (default).
+  a paragraph format suggestion. A link added, changed or taken off is a deletion and an insertion (default). Two
+  paragraphs are alike enough to pair when at least half of all their words are in both (`COMPARE_SIMILAR_PARAGRAPHS`, 0.5,
+  (default)).
 - **Objects in a line** (pictures, equations, fields, footnotes, bookmarks) are words of their own, the same when
   they are the same object; a footnote's own writing is not compared inside it (default).
 - **Tables** pair in order where both have one at that place in the reading. Two with as many columns compare row by
@@ -486,20 +489,22 @@ document and rejecting them all as the primary, as Google's
   counts are the primary's table suggested deleted and the selected's suggested inserted (default). Column widths,
   as Google's, and a table's or a cell's own formatting are not compared: the primary's are kept.
 - **Section breaks and tables of contents** are the same or else deleted and inserted, whole.
-- **Not compared** (the primary's kept): page setup, headers and footers, styles and list definitions, the document's
-  properties, and anything the model keeps without reading (a kept block only the selected document has is left out
-  and counted in the log).
+- **Not compared** (the primary's kept): page setup, headers and footers, styles and list definitions (the
+  selected's styles, lists and pictures' media that the comparison uses are added where the primary has none of that
+  name), the document's properties, and anything the model keeps without reading: a kept block only the primary has
+  stays unmarked, one only the selected has is left out and counted in the log (default).
 - **Comments**: the primary's threads are not carried; with Include comments ticked, the selected document's threads
   are, each on its own text, their authors kept by name and none as anyone's own (default).
 - **Who it is from**: every suggestion is attributed to the name given, with no LiveDoc person behind it, so no one
   rejects it as their own; its card reads "From the comparison" under the name (default copy).
 - **Exact both ways**: rejecting every suggestion reads as the primary; accepting every one reads as the selected
-  document but for what is not compared, and an empty paragraph where a break or a join meets a table (default).
+  document but for what is not compared (default).
 - **Bounded**: comparing two documents of `TEXT_DOCUMENT_COMPARE_TOKENS_MAX` words, spaces and marks each (300,000,
   about 300 pages, (default)) finishes within `TEXT_DOCUMENT_COMPARE_BUDGET_MS` (2,000 ms, (default)) however much
-  they differ: past `TEXT_DOCUMENT_COMPARE_EDITS_MAX` differing words in one stretch the stretch reads as wholly
-  deleted and inserted rather than searched further (default). A side past the token limit is refused: "These
-  documents are too long to compare." (default copy).
+  they differ: a stretch is searched for at most `TEXT_DOCUMENT_COMPARE_EDITS_MAX` differences (2,000), fewer the
+  longer it is so no search takes more than `TEXT_DOCUMENT_COMPARE_WORK_MAX` steps (20,000,000), and past that it
+  reads as wholly deleted and inserted (default). A side past the token limit is refused: "These documents are too
+  long to compare." (default copy).
 
 ## Version history
 

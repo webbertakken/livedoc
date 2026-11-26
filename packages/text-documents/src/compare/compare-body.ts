@@ -34,9 +34,13 @@ type Side = {
 function sideOf(tokens: readonly (readonly CompareToken[])[]): Side {
   return {
     tokens,
-    keys: tokens.map((t) =>
-      t[0]!.kind === 'start' ? `p${readingKey(t)}` : `b${(t[0] as { key: string }).key}`,
-    ),
+    keys: tokens.map((t) => {
+      // A paragraph's key says whether it opens (no paragraph before it), as its start's sameness does.
+      const first = t[0]!;
+      return first.kind === 'start'
+        ? `p${first.opens ? 1 : 0}${readingKey(t)}`
+        : `b${(first as { key: string }).key}`;
+    }),
     words: tokens.map((t) => (t[0]!.kind === 'start' ? wordsOf(t) : null)),
   };
 }
@@ -91,7 +95,11 @@ function gapOps(p: Side, s: Side, as: readonly number[], bs: readonly number[]):
   const alike = (a: number, b: number): boolean => {
     const wa = p.words[a];
     const wb = s.words[b];
-    if (wa && wb) return likeness(wa, wb) >= COMPARE_SIMILAR_PARAGRAPHS;
+    if (wa && wb)
+      return (
+        sameToken(p.tokens[a]![0]!, s.tokens[b]![0]!) &&
+        likeness(wa, wb) >= COMPARE_SIMILAR_PARAGRAPHS
+      );
     const ta = tableOf(p.tokens[a]!);
     const tb = tableOf(s.tokens[b]!);
     if (ta && tb) return true;
