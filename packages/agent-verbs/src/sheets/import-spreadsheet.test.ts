@@ -33,7 +33,7 @@ function server(answer: (seen: Seen) => Response = () => Response.json({})) {
   return { api, seen };
 }
 
-const bytesOf = (data: Uint8Array) => new Uint8Array(data) as Uint8Array<ArrayBuffer>;
+const bytesOf = (data: Uint8Array) => new Uint8Array(data);
 
 function xlsx(rows: number, kept = false) {
   const cells = Array.from({ length: rows }, (_, r) => ({

@@ -16,7 +16,6 @@ import {
   importReportLine,
   importSpreadsheetFile,
   nameFromFile,
-  type FileOpenRejection,
   type SpreadsheetFilePort,
 } from '@livedoc/sheets/files';
 import { apiRefusalOf } from '../plan/api-refusal';
@@ -49,7 +48,8 @@ export type ImportedSpreadsheetResult =
       // The import report's lines (files-and-print.md "The import report").
       report: string[];
     }
-  | { ok: false; code: FileOpenRejection | string; message: string };
+  // `code`: the file's rejection (a `FileOpenRejection`), or the api's code for a request it refused.
+  | { ok: false; code: string; message: string };
 
 const documentPath = (documentId: string) => `/documents/${encodeURIComponent(documentId)}`;
 

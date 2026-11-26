@@ -46,7 +46,7 @@ function fakePort(overrides: Partial<SpreadsheetFilePort> = {}): Fake {
   return Object.assign(fake, overrides);
 }
 
-const bytesOf = (data: Uint8Array) => new Uint8Array(data) as Uint8Array<ArrayBuffer>;
+const bytesOf = (data: Uint8Array) => new Uint8Array(data);
 
 function xlsx(rows: number, name = 'Q3.xlsx'): SpreadsheetFile {
   const cells = Array.from({ length: rows }, (_, r) => ({
