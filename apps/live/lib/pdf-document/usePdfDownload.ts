@@ -9,7 +9,7 @@ import type { PdfEngine } from '@livedoc/pdf-documents';
 import { debugLog } from '@/lib/debug-log';
 import { downloadBlob } from '@/lib/download-blob';
 import { track } from '@/lib/telemetry';
-import { BAKE_FAILED_COPY, bakeForDownload, bakeProblemOf } from './download-pdf';
+import { BAKE_FAILED_COPY, bakeForDownload, bakeProblemOf, type ReadPicture } from './download-pdf';
 
 const NO_ENGINE: Pick<PdfEngine, 'bake'> = {
   bake: async () => ({ ok: false, refusal: 'unreadable' }),
@@ -20,6 +20,7 @@ export function usePdfDownload({
   doc,
   documentName,
   readStored,
+  readPicture,
   onProblem,
 }: {
   // The open file's engine and live changes; null where none was read.
@@ -28,6 +29,8 @@ export function usePdfDownload({
   documentName: string;
   // The stored file's bytes; null where there is no stored file to download.
   readStored: (() => Promise<Uint8Array<ArrayBuffer>>) | null;
+  // A picture a mark names (a custom stamp's), read from where the document holds it.
+  readPicture?: ReadPicture;
   onProblem: (problem: string | null) => void;
 }): () => Promise<void> {
   return useCallback(async () => {
@@ -39,6 +42,7 @@ export function usePdfDownload({
         doc,
         documentName,
         readStored,
+        ...(readPicture ? { readPicture } : {}),
       });
       if (!baked.ok) return onProblem(bakeProblemOf(baked.refusal));
       downloadBlob(new Blob([baked.bytes], { type: 'application/pdf' }), baked.fileName);
@@ -47,5 +51,5 @@ export function usePdfDownload({
       debugLog('[pdf] download failed', String(error));
       onProblem(BAKE_FAILED_COPY);
     }
-  }, [engine, doc, documentName, readStored, onProblem]);
+  }, [engine, doc, documentName, readStored, readPicture, onProblem]);
 }

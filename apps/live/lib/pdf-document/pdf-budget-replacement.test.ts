@@ -88,7 +88,7 @@ describe('watchPdfBudget', () => {
     expect(deps.engine.bake).not.toHaveBeenCalled();
     await idle(1);
     const update = PdfLiveChanges.encode(doc);
-    expect(deps.engine.bake).toHaveBeenCalledWith(update);
+    expect(deps.engine.bake).toHaveBeenCalledWith(update, new Map());
     const blob = await blobKeyOf(BAKED);
     expect(deps.store).toHaveBeenCalledWith(blob, BAKED);
     expect(deps.ask).toHaveBeenCalledWith({

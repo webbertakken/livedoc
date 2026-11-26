@@ -1,8 +1,9 @@
 // @vitest-environment jsdom
 // docs/specs/035-pdf-documents/dark-pages.md "The recolouring": a mark made in LiveDoc passes through the same step as
 // the file's own, so under Dark pages it takes the step's colour and lightens the dark page rather than multiplying.
-import { render } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { render, waitFor } from '@testing-library/react';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import type { BlobKey } from '@livedoc/document';
 import {
   DarkPages,
   MARK_FACE_DATA,
@@ -13,6 +14,11 @@ import {
   type Quad,
 } from '@livedoc/pdf-documents';
 import { PdfLookContext } from '@/lib/pdf-document/pdf-look';
+import {
+  PdfStampPicturesContext,
+  type PdfStampPictureRead,
+} from '@/lib/pdf-document/pdf-stamp-pictures';
+import { resetStampPictureUrls } from '@/lib/pdf-document/stamp-picture-urls';
 import { markFacesStack } from '@/lib/pdf-document/pdf-mark-faces';
 import { TYPED_FACES } from '@/lib/pdf-document/pdf-typed';
 import { PdfMarksOverlay } from './PdfMarksOverlay';
@@ -423,5 +429,55 @@ describe('collaborators’ strokes as they are drawn', () => {
     expect(drawn.getAttribute('opacity')).toBe('0.5');
     expect(drawn.querySelector('polyline')!.getAttribute('points')).toBe('10,90 20,70 40,70');
     expect(drawn.querySelector('polyline')!.getAttribute('stroke-dasharray')).not.toBeNull();
+  });
+});
+
+// custom-stamps.md "Placing one": the page draws a custom stamp's picture across its box, read from the document; its
+// outlined box with its name while the picture is on its way, or where it failed.
+describe('a custom stamp over a page', () => {
+  const custom = Mark.stamp({
+    id: 'c1',
+    page: PageName.ofObject(1),
+    rect: [10, 20, 50, 40],
+    colour: '#1565c0',
+    opacity: 1,
+    author: 'Ada',
+    createdAt: 0,
+    stamp: 'custom-0b7c3c2e-5a8f-4f21-9a43-1f2d3e4c5b6a',
+    lines: ['Paid'],
+    picture: { key: 'cd'.repeat(32) as BlobKey, type: 'png', width: 80, height: 40 },
+  })!;
+
+  const drawn = (read: PdfStampPictureRead | null) =>
+    render(
+      <PdfStampPicturesContext.Provider value={read}>
+        <PdfMarksOverlay matrix={[1, 0, 0, -1, 0, 100]} width={100} height={100} marks={[custom]} />
+      </PdfStampPicturesContext.Provider>,
+    ).container.querySelector('svg')!;
+
+  afterEach(() => resetStampPictureUrls());
+
+  it('draws its picture across its box once read from the document', async () => {
+    URL.createObjectURL = vi.fn(() => 'blob:paid');
+    const read = vi.fn(async () => new Uint8Array([1]));
+    const svg = drawn(read);
+    expect(svg.querySelector('[data-pdf-mark="c1"] text')!.textContent).toBe('Paid');
+    await waitFor(() => expect(svg.querySelector('[data-pdf-stamp-picture="c1"]')).not.toBeNull());
+    const image = svg.querySelector('[data-pdf-stamp-picture="c1"]')!;
+    expect(image.getAttribute('href')).toBe('blob:paid');
+    // Its top left at the box's (10, 40 on the page: 10, 60 in view), 40 across and 20 down.
+    expect(image.getAttribute('transform')).toBe('matrix(40 0 0 20 10 60)');
+    expect(read).toHaveBeenCalledWith(custom.picture!.key);
+  });
+
+  it('draws its outlined box with its name where its picture failed', async () => {
+    const read = vi.fn(async () => {
+      throw new Error('blob_missing');
+    });
+    const svg = drawn(read);
+    await waitFor(() => expect(read).toHaveBeenCalled());
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(svg.querySelector('[data-pdf-stamp-picture]')).toBeNull();
+    expect(svg.querySelector('[data-pdf-mark="c1"] text')!.textContent).toBe('Paid');
   });
 });

@@ -5,7 +5,7 @@
 import type * as Y from 'yjs';
 import { PDF_PRINT_DPI, type Mark, type PageInfo, type PdfEngine } from '@livedoc/pdf-documents';
 import { debugLog } from '@/lib/debug-log';
-import { bakeForDownload } from './download-pdf';
+import { bakeForDownload, type ReadPicture } from './download-pdf';
 import type { PdfThumbnailPicture } from './pdf-thumbnail';
 
 /** What a person chose: the pages by index (null for all) and whether the live marks print. */
@@ -32,6 +32,8 @@ export type PdfPrintDeps = {
   doc: Y.Doc | null;
   documentName: string;
   readStored: () => Promise<Uint8Array<ArrayBuffer>>;
+  /** A picture a mark names (a custom stamp's), read from where the document holds it. */
+  readPicture?: ReadPicture;
   pages: readonly PageInfo[];
   /** Draw the pages as pictures: the browser cannot print a PDF, or the file allows only a rough print. */
   pictures: boolean;
@@ -68,6 +70,7 @@ async function filed(
     doc: choice.marks ? deps.doc : null,
     documentName: deps.documentName,
     readStored: deps.readStored,
+    ...(deps.readPicture ? { readPicture: deps.readPicture } : {}),
   });
   if (!baked.ok) return { ok: false, step: 'bake' };
   if (choice.pages === null) return { ok: true, way: 'pdf', bytes: baked.bytes };
