@@ -48,7 +48,7 @@ import {
   PREVIEW_IMAGE_MAX_BYTES,
   previewLeftOutNote,
 } from './preview-budget';
-import { apiFetch, apiJson } from './api';
+import { apiFetch, apiJson, apiText } from './api';
 import type { Env } from './env';
 import { textResult, type StructuredValue, type ToolResult } from './tool-helpers';
 
@@ -177,7 +177,12 @@ export async function tabPreview(
   auth?: { env: Env; token: string; documentId?: string },
   // One page of a Pages tab to draw alone (read_document's `page`); every page when absent.
   page?: LaidOutPage,
+  range?: string,
 ): Promise<(TextBlock | ImageBlock)[]> {
+  // A spreadsheet's sheet tab draws its sheet as the api draws it (docs/specs/029-sheets/sheet-store.md "Agents in a
+  // spreadsheet", Previews), all of it or read_document's `range`.
+  const sheet = await spreadsheetPreview(tab, auth, range);
+  if (sheet) return [sheet];
   // A Form tab draws as its form, as respondents see it.
   const form = await formPreview(tab);
   if (form) return [form];
@@ -289,4 +294,18 @@ export async function imageResult(
         : undefined;
   const preview = await tabPreview(tab, auth && documentId ? { ...auth, documentId } : auth);
   return { ...result, content: [...result.content, ...texts, ...preview] };
+}
+
+// A spreadsheet's sheet tab holds no elements: its picture is the api's render of its sheet and charts (render.svg),
+// rasterised here as every preview is. Null for any other tab.
+async function spreadsheetPreview(
+  tab: Tab,
+  auth: { env: Env; token: string; documentId?: string } | undefined,
+  range: string | undefined,
+): Promise<ImageBlock | null> {
+  if (tab.kind !== 'sheet' || tab.elements.length > 0 || !auth?.documentId) return null;
+  const query = range ? `?range=${encodeURIComponent(range)}` : '';
+  const path = `/documents/${encodeURIComponent(auth.documentId)}/tabs/${encodeURIComponent(tab.id)}/render.svg${query}`;
+  const { text: svg } = await apiText(auth.env, auth.token, path);
+  return { type: 'image', data: await svgToPngBase64(svg), mimeType: 'image/png' };
 }

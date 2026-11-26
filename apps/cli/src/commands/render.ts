@@ -28,11 +28,13 @@ function targetOf(flags: PictureFlags): { path: string; format: 'png' | 'svg' } 
 export async function renderTab(
   io: CliIo,
   ctx: VerbContext,
-  input: { doc: string; tab?: string } & PictureFlags,
+  input: { doc: string; tab?: string; range?: string } & PictureFlags,
 ): Promise<{ lines: string[] }> {
   const target = targetOf(input);
   const { document, tab } = await tabOf(ctx, input.doc, input.tab);
-  const { body } = await ctx.api.text(`${tabPath(document.id, tab.id)}/render.svg`);
+  // A spreadsheet's sheet tab draws its sheet, or only --range of it (sheet-store.md "Agents in a spreadsheet").
+  const range = input.range ? `?range=${encodeURIComponent(input.range)}` : '';
+  const { body } = await ctx.api.text(`${tabPath(document.id, tab.id)}/render.svg${range}`);
   return { lines: [pictureLine(await writePicture(io, target.path, body, target.format))] };
 }
 

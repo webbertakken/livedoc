@@ -15,3 +15,4 @@ export * from './phase-colours';
 export * from './board-widget-info';
 export * from './form-art';
 export * from './sheet-chart-element';
+export * from './spreadsheet-sheet-image';

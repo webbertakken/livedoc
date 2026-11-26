@@ -70,16 +70,17 @@ export type SheetRenderModel = {
   hideHeaders?: true;
 };
 
-// The visible positions, frozen first, filling `extent` pixels (at least one).
+// The visible positions from `start`, filling `extent` pixels (at least one).
 function visible(
   ids: readonly string[],
   hidden: ReadonlySet<string>,
   size: (id: string) => number,
   extent: number,
+  start: number,
 ): number[] {
   const out: number[] = [];
   let used = 0;
-  for (let i = 0; i < ids.length && (used < extent || out.length === 0); i++) {
+  for (let i = start; i < ids.length && (used < extent || out.length === 0); i++) {
     if (hidden.has(ids[i]!)) continue;
     out.push(i);
     used += size(ids[i]!);
@@ -87,21 +88,30 @@ function visible(
   return out;
 }
 
-// `font` is the tab's font id: what a cell with no font of its own is measured in (row-fit.ts).
+// `font` is the tab's font id: what a cell with no font of its own is measured in (row-fit.ts). `origin` is the
+// top-left position the window starts at (a range's preview, docs/specs/029-sheets/sheet-store.md "Agents in a
+// spreadsheet"); A1 by default, frozen rows and columns then drawn as frozen.
 export function renderWindow(
   wb: Workbook,
   sheetId: string,
   window: { width: number; height: number },
   locale: string,
   font?: string,
+  origin: { r: number; c: number } = { r: 0, c: 0 },
 ): SheetRenderModel | undefined {
   const sheet = wb.sheet(sheetId);
   if (!sheet) return undefined;
   const { layout } = sheet;
   const ix = layoutIndex(layout);
   const heightOf = rowHeights(wb, sheetId, font);
-  const rows = visible(layout.rows, ix.hiddenRows, heightOf, window.height);
-  const cols = visible(layout.cols, ix.hiddenCols, (id) => colWidth(layout, id), window.width);
+  const rows = visible(layout.rows, ix.hiddenRows, heightOf, window.height, origin.r);
+  const cols = visible(
+    layout.cols,
+    ix.hiddenCols,
+    (id) => colWidth(layout, id),
+    window.width,
+    origin.c,
+  );
   const rowAt = new Map(rows.map((r, i) => [r, i]));
   const colAt = new Map(cols.map((c, i) => [c, i]));
   const covered = new Set<string>();
@@ -227,8 +237,9 @@ export function renderWindow(
     rowHeights: rows.map((r) => heightOf(layout.rows[r]!)),
     colLabels: cols.map((c) => columnLetters(c)),
     rowLabels: rows.map((r) => String(r + 1)),
-    frozenRows: Math.min(layout.frozenRows ?? 0, rows.length),
-    frozenCols: Math.min(layout.frozenCols ?? 0, cols.length),
+    // A window that starts past A1 shows no frozen panes: its first rows and columns are the range's.
+    frozenRows: origin.r > 0 ? 0 : Math.min(layout.frozenRows ?? 0, rows.length),
+    frozenCols: origin.c > 0 ? 0 : Math.min(layout.frozenCols ?? 0, cols.length),
     cells,
     font: measuredFont(font),
     ...(layout.showGrid === false ? { hideGrid: true as const } : {}),
