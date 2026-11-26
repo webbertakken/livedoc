@@ -57,6 +57,7 @@ export {
   type StampShape,
   type TypedShape,
 } from './mark-drawing';
+export { MarkErase } from './mark-erase';
 export { MarkHit } from './mark-hit';
 export { MarkPlace } from './mark-place';
 export { MarkGroups } from './mark-groups';

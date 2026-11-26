@@ -1369,6 +1369,7 @@ export const PDF_TOOLS_SELECTED = chart(
       'Tool.Polygon',
       'Tool.Cloud',
       'Tool.ConnectedLines',
+      'Tool.Erase',
       'Tool.Text',
       'Tool.Callout',
       'Tool.Stamp',
@@ -1415,7 +1416,14 @@ export const PDF_MARKS_CHANGED = chart(
   'PDF Marks Changed',
   'Marks on a PDF page changed after they were made: moved, resized by a handle or the keys, restyled, grouped or ungrouped.',
   {
-    types: ['Mark.Moved', 'Mark.Resized', 'Mark.Restyled', 'Mark.Grouped', 'Mark.Ungrouped'],
+    types: [
+      'Mark.Moved',
+      'Mark.Resized',
+      'Mark.Restyled',
+      'Mark.Grouped',
+      'Mark.Ungrouped',
+      'Mark.Erased',
+    ],
     rising: 'neutral',
   },
 );

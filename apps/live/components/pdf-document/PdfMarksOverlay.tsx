@@ -15,6 +15,7 @@ import {
   Helvetica,
   Mark,
   MarkDrawing,
+  MarkErase,
   MarkPlace,
   MarkWords,
   PageView,
@@ -143,6 +144,17 @@ export type PdfMarkReshaping = { readonly id: string; readonly place: MarkPlace 
 /** No mark of the file's own. */
 const NO_IDS: ReadonlySet<string> = new Set();
 
+/** No strokes erased. */
+const NO_ERASED: ReadonlyMap<string, readonly number[]> = new Map();
+
+/** A Drawing as an Erase drag leaves it: its strokes passed over gone, nothing where none is left. */
+function unerased(mark: Mark, erased: ReadonlyMap<string, readonly number[]>): Mark[] {
+  const gone = erased.get(mark.id);
+  if (!gone || mark.kind !== 'drawing') return [mark];
+  const left = MarkErase.without(mark, gone);
+  return left ? [{ ...mark, ...left }] : [];
+}
+
 /** Whether a mark is being dragged or resized now. */
 const inHand = (id: string, moving: PdfMarksMoving | null, reshaping: PdfMarkReshaping | null) =>
   reshaping?.id === id || moving?.ids.includes(id) === true;
@@ -196,6 +208,7 @@ export function PdfMarksOverlay({
   moving = null,
   reshaping = null,
   peerDrafts = [],
+  erased = NO_ERASED,
 }: {
   // Page space to view space, as the picture under it was drawn.
   matrix: PageMatrix;
@@ -223,8 +236,13 @@ export function PdfMarksOverlay({
   reshaping?: PdfMarkReshaping | null;
   // Collaborators' strokes on the page as they are drawn, each in its Drawing's look.
   peerDrafts?: readonly PdfPeerDraft[];
+  // The strokes an Erase drag has passed over so far, by place, of each Drawing by id: drawn gone.
+  erased?: ReadonlyMap<string, readonly number[]>;
 }) {
-  const shown = moving || reshaping ? marks.map((mark) => placed(mark, moving, reshaping)) : marks;
+  const placedMarks =
+    moving || reshaping ? marks.map((mark) => placed(mark, moving, reshaping)) : marks;
+  const shown =
+    erased.size > 0 ? placedMarks.flatMap((mark) => unerased(mark, erased)) : placedMarks;
   const dark = useContext(PdfLookContext) === 'dark';
   return (
     <svg

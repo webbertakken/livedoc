@@ -974,6 +974,7 @@ export const EXACT: Readonly<Record<string, string>> = {
   'Pdf|Changed|Mark.Grouped':
     'Someone grouped marks on a PDF page, so they move and are answered as one.',
   'Pdf|Changed|Mark.Ungrouped': 'Someone ungrouped marks on a PDF page.',
+  'Pdf|Changed|Mark.Erased': 'Someone rubbed out strokes of drawings on a PDF page with Erase.',
   'Pdf|Deleted|Mark.Highlight': 'Someone deleted a highlight from a PDF page.',
   'Pdf|Deleted|Mark.Underline': 'Someone deleted an underline from a PDF page.',
   'Pdf|Deleted|Mark.Strikethrough': 'Someone deleted a strikethrough from a PDF page.',
@@ -1005,6 +1006,7 @@ export const EXACT: Readonly<Record<string, string>> = {
   'Pdf|Selected|Tool.Cloud': 'Someone took the Cloud tool in hand on a PDF document.',
   'Pdf|Selected|Tool.ConnectedLines':
     'Someone took the Connected lines tool in hand on a PDF document.',
+  'Pdf|Selected|Tool.Erase': 'Someone took the Erase tool in hand on a PDF document.',
   'Pdf|Selected|Tool.Text': 'Someone took the Text tool in hand on a PDF document.',
   'Pdf|Selected|Tool.Callout': 'Someone took the Callout tool in hand on a PDF document.',
   'Pdf|Selected|Tool.Stamp': 'Someone took the Stamp tool in hand on a PDF document.',

@@ -572,6 +572,7 @@ export function PdfDocumentSurface({
                 ink={tools.ink}
                 shaping={tools.shaping}
                 stamping={tools.stamping}
+                erasing={tools.erasing}
                 typing={tools.typing}
                 selection={textSelection.selected}
                 chosen={markSelection.chosen}
