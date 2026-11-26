@@ -1,4 +1,4 @@
-// docs/specs/029-sheets/standard-mapping.md "Charts in the file" (D294): a Bubble chart reads its range as a scatter
+// docs/specs/029-sheets/standard-mapping.md "Charts in the file" (D298): a Bubble chart reads its range as a scatter
 // does, its last series the sizes, written as each suite writes a bubble chart (XLSX `c:bubbleChart`, ODF
 // `chart:bubble`, its values the sizes and its domains y then x) and read back from either; one with no sizes is
 // written as a Scatter chart, its original kept (D290).

@@ -179,7 +179,7 @@ export function odsChartContent(
     const domainOf = (range: FileRange) =>
       `<chart:domain table:cell-range-address="${escapeXmlAttribute(odfRange(sheet, range))}"/>`;
     const x = chart.x ? domainOf(chart.x.range) : '';
-    // A bubble series' values are its sizes, its domains its y and then its x (ODF 1.3 Part 3 §11.13, D294).
+    // A bubble series' values are its sizes, its domains its y and then its x (ODF 1.3 Part 3 §11.13, D298).
     const bubble = chart.type === 'bubble' ? chart.sizes : undefined;
     const domain = bubble ? domainOf(s.values) + x : x;
     const values = bubble ? bubble.range : s.values;

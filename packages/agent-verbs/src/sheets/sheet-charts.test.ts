@@ -213,7 +213,7 @@ describe('chart elements', () => {
     expect(mixed!.lineSeries!.map((s) => s.type)).toEqual([undefined, 'stepped-area']);
   });
 
-  it('draw a bubble chart, which joins no lines (D293)', () => {
+  it('draw a bubble chart, which joins no lines (D297)', () => {
     const { wb, sheet } = book();
     const built = buildChartChange(wb, sheet.id, { op: 'chart', type: 'bubble', range: 'A1:C3' });
     if (!built.ok) throw new Error(built.message);

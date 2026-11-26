@@ -89,7 +89,7 @@ describe('the Chart Editor', () => {
     expect(screen.queryByRole('switch', { name: /as a Line/ })).toBeNull();
   });
 
-  it('names a bubble chart’s last series as its sizes, its x read as a scatter’s (D293)', async () => {
+  it('names a bubble chart’s last series as its sizes, its x read as a scatter’s (D297)', async () => {
     await open('bubble');
     const series = screen.getByRole('group', { name: 'Series' });
     expect(within(series).getByText('Index')).toBeTruthy();

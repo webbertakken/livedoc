@@ -1,4 +1,4 @@
-// docs/specs/009-elements/pie-chart.md "Chart types", "Bubble" (D293): a scatter's data, the last of two or more series
+// docs/specs/009-elements/pie-chart.md "Chart types", "Bubble" (D297): a scatter's data, the last of two or more series
 // the sizes, each bubble's area in proportion to its size, largest first, names inside when they fit.
 import { describe, expect, it } from 'vitest';
 import {

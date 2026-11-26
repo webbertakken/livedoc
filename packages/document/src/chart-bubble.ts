@@ -1,4 +1,4 @@
-// A Bubble chart (docs/specs/009-elements/pie-chart.md "Bubble", D293): a scatter chart's data, each point a circle
+// A Bubble chart (docs/specs/009-elements/pie-chart.md "Bubble", D297): a scatter chart's data, each point a circle
 // whose area is in proportion to its size. With two or more series the last is the sizes, shared by every other
 // series; with one, every bubble is one size. Laid out once for both renderers as LineMarks over the drawn series (a
 // scatter's, over the plot drawn in by the largest radius so no bubble hangs past the axes) with the bubbles beside
@@ -14,11 +14,11 @@ import { textAdvanceEm } from './text-advance';
 export const isBubbleChart = (el: { shape: string; chartVariant?: unknown }) =>
   chartTypeOf(el) === 'bubble';
 
-// The largest bubble's radius: this share of the plot's shorter side, held between the least and the most (D293).
+// The largest bubble's radius: this share of the plot's shorter side, held between the least and the most (D297).
 export const BUBBLE_PLOT_SHARE = 0.1;
 export const BUBBLE_RADIUS_MIN = 6;
 export const BUBBLE_RADIUS_MAX = 30;
-// A bubble's fill, over what it covers (D293).
+// A bubble's fill, over what it covers (D297).
 export const BUBBLE_FILL_OPACITY = 0.6;
 // A name in a bubble: its size, and the room it leaves either side.
 export const BUBBLE_NAME_FONT_PX = 9;

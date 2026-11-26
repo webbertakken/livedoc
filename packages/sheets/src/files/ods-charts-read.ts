@@ -270,7 +270,7 @@ export function readOdsChartDocument(root: XmlElement, sheetName: string): Read 
   const yAxis = axisOf('y');
   const series: FileChartSeries[] = [];
   let x: FileRange | null = null;
-  // A bubble chart's sizes: every series' values, one column shared (D294).
+  // A bubble chart's sizes: every series' values, one column shared (D298).
   let sizes: FileRange | null = null;
   for (const [i, ser] of kids(plot, CHART, 'series').entries()) {
     const own_ = classOf(ser);
@@ -290,7 +290,7 @@ export function readOdsChartDocument(root: XmlElement, sheetName: string): Read 
       own(attributeOf(d, TABLE, 'cell-range-address')),
     );
     if (domains.some((d) => !d)) return null;
-    // A bubble series' values are its sizes, its domains its y and then its x (ODF 1.3 Part 3 §11.13, D294).
+    // A bubble series' values are its sizes, its domains its y and then its x (ODF 1.3 Part 3 §11.13, D298).
     if (bubble) {
       if (domains.length !== 2 || (sizes && JSON.stringify(sizes) !== JSON.stringify(read)))
         return null;

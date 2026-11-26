@@ -54,7 +54,7 @@ export type FileChart = {
   labels: { range: FileRange; cached: string[] } | null;
   x: { range: FileRange; cached: (number | null)[] } | null;
   series: FileChartSeries[];
-  // A Bubble chart's sizes: the last of its two or more series, shared by the others (D293, D294); never on another type.
+  // A Bubble chart's sizes: the last of its two or more series, shared by the others (D297, D298); never on another type.
   sizes?: { range: FileRange; cached: (number | null)[] };
   // A chart read from a file: its kept XML and the sum it was read as (D276).
   kept?: SheetChartKept;
@@ -106,7 +106,7 @@ export function fileChartSum(chart: FileChart): string {
       ...(chart.type === 'combo' ? [chart.series.map((s) => s.type ?? '')] : []),
       // The series on the right-hand axis, after the rest (D288).
       ...(chart.series.some((s) => s.right) ? [chart.series.map((s) => s.right === true)] : []),
-      // A Bubble chart's sizes, after the rest (D294).
+      // A Bubble chart's sizes, after the rest (D298).
       ...(chart.sizes ? [['sizes', chart.sizes.range]] : []),
     ]),
   );
@@ -140,7 +140,7 @@ export function isOneBlock(series: readonly FileChartSeries[], labels: FileRange
 }
 
 /**
- * A read chart's series as one block with a Bubble chart's sizes (D294): the sizes its last column, named from the header
+ * A read chart's series as one block with a Bubble chart's sizes (D298): the sizes its last column, named from the header
  * row when the series are; the series alone without sizes.
  */
 export function sizedBlock(
@@ -206,7 +206,7 @@ function fileChartOf(engine: Workbook, sheet: Sheet, chart: SheetChart, locale: 
         }
       : null;
   const plotted = scatterX ? rest : all;
-  // A bubble chart's last of two or more series is its sizes (D293).
+  // A bubble chart's last of two or more series is its sizes (D297).
   const sized = chart.type === 'bubble' && plotted.length > 1 ? plotted.at(-1)! : null;
   const series = onRightAxis(chart, sized ? plotted.slice(0, -1) : plotted);
   return {

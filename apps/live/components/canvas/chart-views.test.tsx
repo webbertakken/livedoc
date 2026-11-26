@@ -172,7 +172,7 @@ describe('chart views', () => {
     expect(container.textContent).toContain('Range · Model: 5');
   });
 
-  it('draws a bubble chart’s sized circles, a name inside, values, and reads a hovered bubble (Bubble, D293)', () => {
+  it('draws a bubble chart’s sized circles, a name inside, values, and reads a hovered bubble (Bubble, D297)', () => {
     const { container } = render(
       <LineChartView
         element={el('line-chart', {

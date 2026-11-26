@@ -190,7 +190,7 @@ function groupType(group: XmlElement): { type: SheetChartType; stack?: SheetChar
     case 'scatterChart':
       return /smooth/i.test(valOf(c(group, 'scatterStyle')) ?? '') ? null : { type: 'scatter' };
     case 'bubbleChart':
-      // A 3-D bubble is not built (D294).
+      // A 3-D bubble is not built (D298).
       return isOn(c(group, 'bubble3D')) || cs(group, 'ser').some((ser) => isOn(c(ser, 'bubble3D')))
         ? null
         : { type: 'bubble' };
@@ -282,7 +282,7 @@ export function readXlsxChartXml(xml: string, sheetName: string): Read | null {
   };
   const series: FileChartSeries[] = [];
   let labels: FileRange | null | undefined;
-  // A bubble chart's size column, one shared by every series (D294).
+  // A bubble chart's size column, one shared by every series (D298).
   let sizes: FileRange | null | undefined;
   // A line is smooth when every series says so, straight when none does (D285); another series smoothing is not built.
   const smoothed = sers.map(({ ser, as }) => ({ as, on: cs(ser, 'smooth').some(isOn) }));

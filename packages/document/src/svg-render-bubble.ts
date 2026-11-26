@@ -1,4 +1,4 @@
-// A Bubble chart in the headless render (docs/specs/009-elements/pie-chart.md "Bubble", D293): a scatter's axes, each
+// A Bubble chart in the headless render (docs/specs/009-elements/pie-chart.md "Bubble", D297): a scatter's axes, each
 // bubble filled at 60% with an edge of its colour, largest first, the names that fit inside, Show Values over them,
 // from the marks the canvas draws too (chart-bubble.ts).
 import {
