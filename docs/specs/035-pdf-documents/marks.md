@@ -435,8 +435,8 @@ question mark. The research is [Every script in a mark's words](../../research/p
 ## Together
 
 - A mark appears for everyone as it is made: a drawing as it is drawn, at the cursor's rate
-  ([A mark as it is made](live-editing-and-storage.md#a-mark-as-it-is-made)); a Text mark's words as
-  they are typed, merged by character.
+  ([A mark as it is made](live-editing-and-storage.md#a-mark-as-it-is-made)); a Text's and a Callout's words as
+  they are typed, keystroke by keystroke, merged by character.
 - A mark someone has selected is outlined in their colour with their name, the name shown as a held mark's is
   ([Presence](live-editing-and-storage.md#presence)); two people may style one mark at once,
   the later write winning per property.

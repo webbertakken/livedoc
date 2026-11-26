@@ -8,6 +8,7 @@ import { PDF_MAX_MARKS } from './limits';
 import type { DrawingMark, LineEnd, LineStyle, Mark, TextAlign, TextMark, TypedMark } from './mark';
 import type { MarkPlace } from './mark-place';
 import type { PageName } from './page-name';
+import { wordsDiff } from './words-diff';
 
 /** The roots a change reaches; the others join as what they hold is built. */
 export type PdfChangeRoot = 'marks' | 'fieldValues' | 'pages' | 'removed';
@@ -34,7 +35,7 @@ export type PdfChangeRefusal = 'pdf_change_target_missing' | 'pdf_too_many_marks
 export type MarkLook = Partial<
   Pick<TextMark, 'colour' | 'opacity' | 'quads' | 'text' | 'modifiedAt'> &
     Pick<DrawingMark, 'strokes' | 'width'> &
-    Pick<TypedMark, 'size'> & {
+    Pick<TypedMark, 'size' | 'words'> & {
       /** A Text's or a Callout's alignment once chosen. */
       readonly align: TextAlign;
       /** A line's style; Solid reads as none. */
@@ -63,7 +64,38 @@ export type PdfChangesetResult =
 const entriesOf = (doc: Y.Doc, root: PdfChangeRoot): Y.Map<Y.Map<unknown>> =>
   doc.getMap<Y.Map<unknown>>(root);
 
-const held = (entry: Y.Map<unknown>): PdfEntry => Object.fromEntries(entry.entries());
+// A Text's and a Callout's words are a text type in the live changes, read as their words.
+const plain = (value: unknown): unknown => (value instanceof Y.Text ? value.toJSON() : value);
+
+const held = (entry: Y.Map<unknown>): PdfEntry =>
+  Object.fromEntries([...entry.entries()].map(([key, value]) => [key, plain(value)]));
+
+/** The property of a mark held as a text type, merged by character. */
+const WORDS = 'words';
+
+/** Words set: into the text type already there by the characters that differ, or as a new one. */
+function setWords(entry: Y.Map<unknown>, words: string): void {
+  const text = entry.get(WORDS);
+  if (!(text instanceof Y.Text)) {
+    entry.set(WORDS, new Y.Text(words));
+    return;
+  }
+  const diff = wordsDiff(text.toJSON(), words);
+  if (!diff) return;
+  if (diff.remove > 0) text.delete(diff.at, diff.remove);
+  if (diff.insert) text.insert(diff.at, diff.insert);
+}
+
+/** One property of an entry set: a mark's words as a text type, anything else as a whole value. */
+function setProperty(
+  root: PdfChangeRoot,
+  entry: Y.Map<unknown>,
+  key: string,
+  value: unknown,
+): void {
+  if (root === 'marks' && key === WORDS && typeof value === 'string') setWords(entry, value);
+  else entry.set(key, value);
+}
 
 function refusalOf(doc: Y.Doc, change: PdfChange): PdfChangeRefusal | null {
   const entries = entriesOf(doc, change.root);
@@ -80,11 +112,13 @@ function write(doc: Y.Doc, change: PdfChange): void {
     entries.delete(change.id);
   } else if ('put' in change) {
     const entry = new Y.Map<unknown>();
-    for (const [key, value] of Object.entries(change.put)) entry.set(key, value);
     entries.set(change.id, entry);
+    for (const [key, value] of Object.entries(change.put))
+      setProperty(change.root, entry, key, value);
   } else {
     const entry = entries.get(change.id)!;
-    for (const [key, value] of Object.entries(change.set)) entry.set(key, value);
+    for (const [key, value] of Object.entries(change.set))
+      setProperty(change.root, entry, key, value);
     for (const key of change.unset) entry.delete(key);
   }
 }
@@ -136,7 +170,7 @@ export const PdfChange = {
     return {
       root,
       id,
-      set: Object.fromEntries(before.map((key) => [key, entry.get(key)])),
+      set: Object.fromEntries(before.map((key) => [key, plain(entry.get(key))])),
       unset: touched.filter((key) => !entry.has(key)),
     };
   },

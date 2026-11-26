@@ -43,7 +43,7 @@ writes one shape `(default)`:
 | `stored`      | Map   | `blob`: the stored file these changes are on; `pages`: how many pages it has. Written once per stored file         |
 | `pageOrder`   | Array | The pages in order, each a **page name**; absent until a page operation is made                                    |
 | `pages`       | Map   | By page name: a page's own changes (rotation, crop, size, label) and, for an inserted page, where it came from     |
-| `marks`       | Map   | By mark id: the mark, each property a whole value; a Text mark's words a text type ([Marks](marks.md))             |
+| `marks`       | Map   | By mark id: the mark, each property a whole value; a Text's and a Callout's words a text type ([Marks](marks.md))  |
 | `threads`     | Map   | By mark id: the comment thread on that mark, as LiveDoc's comments are ([Comments](comments.md))                   |
 | `fieldValues` | Map   | By the field's full name: its value and who set it ([Fields](fields.md))                                           |
 | `objects`     | Map   | By page name, then object name: an edit to page content ([Editing text](editing-text.md), [Objects](objects.md))   |
@@ -70,6 +70,10 @@ writes one shape `(default)`:
 - **Each change has the change that takes it back**, read from the state before it is made: a put is taken back by
   removing the entry or putting what it held; a set by setting what the properties held and unsetting those that were
   absent; a removal by putting the entry back. A change that changes nothing has none.
+- **A Text's and a Callout's words are a text type**, never a whole value: words set are written as the characters
+  that differ, from the first that differs to the last, into the text already there, so two people changing one
+  mark's words keep each other's characters. Words held as a whole value, as a state from before held them, become a
+  text type at their next change; every reader reads them as the words alone.
 - **A changeset is several changes as one step**: all are made in one transaction, or none where one is refused, and
   what takes it back is the changes that take each back, last first. An agent's changeset is reverted so
   ([Agents](agents.md#changesets)); a person's Undo is their own timeline ([Undo](#undo)).
@@ -88,7 +92,7 @@ writes one shape `(default)`:
 | Two people at once                            | Result                                                                                                            |
 | --------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
 | Each adds a mark, on one page or two          | Both marks                                                                                                        |
-| Both change one mark                          | Per property, the later write wins; both typing in one Text mark keep every character                             |
+| Both change one mark                          | Per property, the later write wins; both typing in one Text's words keep every character                          |
 | Both reply in one thread                      | Both replies, in time order                                                                                       |
 | Both fill different fields                    | Both values                                                                                                       |
 | Both fill one field                           | The later write wins, as a spreadsheet's cell; the other person's Undo never puts theirs back over it `(default)` |
@@ -192,6 +196,13 @@ writes one shape `(default)`:
   drawn: a `pdf-draft` whose `from` is not the count of points already held is ignored until a stroke begins at 0.
 - **Refused** by the room from a Viewer (they draw nothing), and by whoever receives it, drawing nothing, when it is
   malformed or passes `PDF_DRAFT_MAX_CHARS` as it was sent, logged `[pdf] draft-refused`.
+
+- **A Text's and a Callout's words are relayed as they are typed** ([Marks](marks.md#together)): the mark is made at
+  the first character other than a space, its words and box changed with each keystroke (each a Yjs update, as any
+  change), taken away again if all but spaces are deleted while still typing, and kept when the typing ends. Typing a
+  box, from its first character to its end, is one step of undo however long it took; ended with nothing but spaces,
+  it leaves no step. The person typing sees the box they type in, never the mark beneath it.
+- **Joining late**, a person sees the words as they stand, and each next keystroke.
 
 ## Undo
 
