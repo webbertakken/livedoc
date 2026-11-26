@@ -319,6 +319,48 @@ describe('a chart drawn from a sheet', () => {
     });
   });
 
+  // pie-chart.md "Scatter's point names": a scatter over a column of text keeps its names, and is then up to date.
+  it('keeps a scatter’s point names with its last read, and then reads it as up to date', async () => {
+    const costed: SheetJson = {
+      ...sheet,
+      cells: [
+        ...sheet.cells,
+        { r: R[0]!, c: C[2]!, i: { s: 'Index' } },
+        { r: R[1]!, c: C[2]!, i: { n: 70 } },
+        { r: R[2]!, c: C[2]!, i: { n: 76 } },
+      ],
+    };
+    vi.mocked(api.fetchSheets).mockResolvedValue([costed]);
+    const b = bridge();
+    const scatter = chart({
+      shape: 'line-chart',
+      chartVariant: 'scatter',
+      chartSource: { sheetId: 'sheetAAAA', range: { ...range, c2: C[2]! } },
+    });
+    b.elements = [scatter];
+    const named = (el: ShapeElement) => (
+      <span data-testid="chart">{(el.linePointNames ?? []).join(',')}</span>
+    );
+    const view = render(
+      <SheetsBridgeContext.Provider value={b}>
+        <SheetLinkedChart element={scatter}>{named}</SheetLinkedChart>
+      </SheetsBridgeContext.Provider>,
+    );
+    await waitFor(() => expect(screen.getByTestId('chart').textContent).toBe('Jan,Feb'));
+    expect(b.elements[0]).toMatchObject({
+      linePointNames: ['Jan', 'Feb'],
+      lineCategories: ['12', '20'],
+      lineSeries: [{ name: 'Index', values: [70, 76] }],
+    });
+    const ticks = vi.mocked(b.tickElements).mock.calls.length;
+    view.rerender(
+      <SheetsBridgeContext.Provider value={b}>
+        <SheetLinkedChart element={b.elements[0] as ShapeElement}>{named}</SheetLinkedChart>
+      </SheetsBridgeContext.Provider>,
+    );
+    expect(vi.mocked(b.tickElements).mock.calls.length).toBe(ticks);
+  });
+
   it('leaves the element alone for a viewer, and when the sheet is gone', async () => {
     const b = bridge({ canEdit: false });
     render(

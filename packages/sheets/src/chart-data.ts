@@ -19,6 +19,9 @@ export type SheetChartTable = {
   categories: string[];
   // Whether they are the read's own numbers (no label column): labels that happen to run 1, 2, … are not.
   numbered: boolean;
+  // Whether the label column holds text, not dates: on a scatter chart it names the points (pie-chart.md "Scatter's
+  // point names").
+  named: boolean;
   // One per value column, its name from the header row (or its column letter), its column's id; null where a cell
   // holds no number.
   series: { name: string; col: string; values: (number | null)[] }[];
@@ -40,6 +43,7 @@ const isBlank = (v: Value) => v === null || v === '';
 export const emptyChartTable = (): SheetChartTable => ({
   categories: [],
   numbered: true,
+  named: false,
   series: [],
   at: { header: null, labels: null, rows: [], cols: [] },
 });
@@ -76,13 +80,13 @@ export function sheetChartTable(
   const nf = (r: number, c: number) =>
     sheet.cells.get(cellKey(layout.rows[r]!, layout.cols[c]!))?.format?.nf;
 
-  // A first column of text or dates labels the categories (only beside other columns).
-  const labelled =
-    cols.length > 1 &&
-    rows.some((r) => {
-      const v = value(r, cols[0]!);
-      return (!isNumber(v) && !isBlank(v) && !isError(v)) || DATE_FORMATS.has(nf(r, cols[0]!)!);
-    });
+  // A first column of text or dates labels the categories (only beside other columns); one of text names them.
+  const isText = (r: number, c: number) => {
+    const v = value(r, c);
+    return !isNumber(v) && !isBlank(v) && !isError(v);
+  };
+  const dated = (r: number, c: number) => DATE_FORMATS.has(nf(r, c)!);
+  const labelled = cols.length > 1 && rows.some((r) => isText(r, cols[0]!) || dated(r, cols[0]!));
   const valueCols = labelled ? cols.slice(1) : cols;
   // A first row with no numbers among the values names the series (only above other rows).
   const headed =
@@ -100,6 +104,8 @@ export function sheetChartTable(
     },
     categories: body.map((r, i) => (labelled ? text(r, cols[0]!) : String(i + 1))),
     numbered: !labelled,
+    named:
+      labelled && !body.some((r) => dated(r, cols[0]!)) && body.some((r) => isText(r, cols[0]!)),
     series: charted.map((c) => ({
       name: (headed ? text(rows[0]!, c) : '') || `Column ${columnLetters(c)}`,
       col: layout.cols[c]!,

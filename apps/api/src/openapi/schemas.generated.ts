@@ -14174,6 +14174,12 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
         },
         "type": "array"
       },
+      "linePointNames": {
+        "items": {
+          "type": "string"
+        },
+        "type": "array"
+      },
       "lineSeries": {
         "items": {
           "$ref": "#/components/schemas/LineSeries"

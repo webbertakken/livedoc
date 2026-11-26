@@ -41,7 +41,7 @@ function LiveChart({ element, bridge, children }: Props & { bridge: SheetsBridge
   }, [store, tabId, source, locale, version]); // oxlint-disable-line react/exhaustive-deps
   // The fields those tables give this chart: its type (a Scatter takes a numbered read's first column as its x) and
   // its slices' or series' colours (by position) decide them.
-  const { shape, chartVariant, pieSlices, lineSeries, lineCategories } = element;
+  const { shape, chartVariant, pieSlices, lineSeries, lineCategories, linePointNames } = element;
   const { shown, kept } = useMemo(() => {
     const fields = (t: typeof tables.kept) =>
       t ? chartFieldsFromTable({ shape, chartVariant, pieSlices, lineSeries }, t) : null;
@@ -50,8 +50,9 @@ function LiveChart({ element, bridge, children }: Props & { bridge: SheetsBridge
   }, [tables, shape, chartVariant, pieSlices, lineSeries]);
   // The element keeps the last read (quietly, no undo step), so an export, a thumbnail or an agent sees it too.
   const stale = useMemo(
-    () => kept !== null && !sameData({ pieSlices, lineSeries, lineCategories }, kept),
-    [kept, pieSlices, lineSeries, lineCategories],
+    () =>
+      kept !== null && !sameData({ pieSlices, lineSeries, lineCategories, linePointNames }, kept),
+    [kept, pieSlices, lineSeries, lineCategories, linePointNames],
   );
   const id = element.id;
   useEffect(() => {
@@ -61,7 +62,10 @@ function LiveChart({ element, bridge, children }: Props & { bridge: SheetsBridge
   return <>{children(shown ? { ...element, ...shown } : element)}</>;
 }
 
-type DataFields = Pick<ShapeElement, 'pieSlices' | 'lineSeries' | 'lineCategories'>;
+type DataFields = Pick<
+  ShapeElement,
+  'pieSlices' | 'lineSeries' | 'lineCategories' | 'linePointNames'
+>;
 
 function sameData(el: DataFields, fields: ReturnType<typeof chartFieldsFromTable>): boolean {
   return Object.entries(fields).every(

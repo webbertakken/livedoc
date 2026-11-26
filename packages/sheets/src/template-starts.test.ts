@@ -112,6 +112,7 @@ describe('template starts', () => {
       },
       categories: ['Home', 'Food', 'Travel', 'Leisure', 'Savings'],
       numbered: false,
+      named: true,
       series: [{ name: 'Spent', col: expect.any(String), values: [1364, 478, 120, 92, 300] }],
     });
   });

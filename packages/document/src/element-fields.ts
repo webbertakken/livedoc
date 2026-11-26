@@ -129,6 +129,7 @@ export const ELEMENT_FIELD_NAMES = {
     'chartVariant',
     'lineCategories',
     'lineSeries',
+    'linePointNames',
     'legendItems',
     'sankeyFlows',
     'sankeyNodes',

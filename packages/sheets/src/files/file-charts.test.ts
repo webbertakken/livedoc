@@ -409,7 +409,8 @@ describe('ODF charts', () => {
 });
 
 describe('charts without a header or label column', () => {
-  it('names series by column, a scatter over text labels with no x numbers, in both formats', () => {
+  // pie-chart.md "Scatter's point names": the names stay in the sheet; the file's x is the first column of numbers.
+  it('names series by column, and takes a scatter over text labels’ next column as its x, in both formats', () => {
     const sheet = costs();
     const { rows, cols } = sheet.layout;
     const numbers = { r1: rows[1]!, c1: cols[1]!, r2: rows[2]!, c2: cols[2]! };
@@ -421,7 +422,7 @@ describe('charts without a header or label column', () => {
     );
     expect(column!.series[0]).toMatchObject({ name: 'Column B', nameAt: null });
     expect(column!.labels).toBeNull();
-    expect(scatter!.x).toEqual({ range: { r1: 1, c1: 0, r2: 2, c2: 0 }, cached: [null, null] });
+    expect(scatter!.x).toEqual({ range: { r1: 1, c1: 1, r2: 2, c2: 1 }, cached: [15, 3] });
     const xlsx = xlsxChartXml('S', column!);
     expect(xlsx).not.toContain('<c:cat>');
     expect(xlsx).toContain('<c:tx><c:v>Column B</c:v></c:tx>');

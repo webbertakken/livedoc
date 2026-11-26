@@ -388,6 +388,8 @@ export type ShapeElement = {
   // series (CSV-importable). Only meaningful on the 'line-chart' kind.
   lineCategories?: string[];
   lineSeries?: LineSeries[];
+  // A scatter chart's point names, one per category (pie-chart.md "Scatter's point names"); absent when it has none.
+  linePointNames?: string[];
   // Legend (docs/specs/009-elements/pie-chart.md): the colour-coded rows. Only meaningful on the 'legend'
   // kind; bounded in validate.ts.
   legendItems?: LegendItem[];

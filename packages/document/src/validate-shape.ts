@@ -245,6 +245,11 @@ const SHAPE_FIELD_CHECKS: readonly FieldCheck[] = [
     rule: arrayRule(MAX_DATA_ARRAY, 'categories, each text'),
   },
   {
+    field: 'linePointNames',
+    valid: rowsOf(MAX_DATA_ARRAY, isChartCategory),
+    rule: arrayRule(MAX_DATA_ARRAY, 'point names, each text'),
+  },
+  {
     field: 'pieSlices',
     valid: rowsOf(MAX_DATA_ARRAY, isChartSlice),
     rule: arrayRule(MAX_DATA_ARRAY, 'slices, each { label, value }'),

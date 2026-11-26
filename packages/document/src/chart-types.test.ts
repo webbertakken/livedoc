@@ -94,7 +94,15 @@ describe('chart types (docs/specs/009-elements/pie-chart.md "Chart types")', () 
         chartVariant: undefined,
         lineCategories: undefined,
         lineSeries: undefined,
+        linePointNames: undefined,
       });
+    });
+
+    it('drops a scatter’s point names with its line data, and keeps them within the line kind', () => {
+      const named = { shape: 'line-chart', chartVariant: 'scatter', linePointNames: ['Haiku'] };
+      expect('linePointNames' in chartTypeChange(named, 'pie')!).toBe(true);
+      expect(chartTypeChange(named, 'pie')!.linePointNames).toBeUndefined();
+      expect('linePointNames' in chartTypeChange(named, 'line')!).toBe(false);
     });
 
     it('turns a line chart’s first series into slices, a pie never below zero', () => {

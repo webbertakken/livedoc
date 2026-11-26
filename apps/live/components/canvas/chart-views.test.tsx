@@ -123,6 +123,34 @@ describe('chart views', () => {
     expect(scatter.textContent).toContain('5 · Y');
   });
 
+  // pie-chart.md "Scatter's point names": a named point reads `name, y, x`, whatever series it is in.
+  it('reads a named scatter point by its name, its value and its x, on a line series too', () => {
+    const named = (linePointNames?: string[]) =>
+      render(
+        <LineChartView
+          element={el('line-chart', {
+            chartVariant: 'scatter',
+            lineCategories: ['0.2', '1.5'],
+            lineSeries: [
+              { name: 'Ranks 11 to 25', values: [76.2, null] },
+              { name: 'Pareto frontier', values: [76.2, 83.4], line: true },
+            ],
+            ...(linePointNames ? { linePointNames } : {}),
+          })}
+          textColor="#000"
+        />,
+      ).container;
+    const scatter = named(['Claude Haiku 5.5', '']);
+    const dots = scatter.querySelectorAll('circle');
+    fireEvent.pointerEnter(dots[1]!);
+    expect(scatter.textContent).toContain('Claude Haiku 5.5, 76.2, 0.2');
+    expect(scatter.textContent).not.toContain('Pareto frontier:');
+    fireEvent.pointerLeave(dots[1]!);
+    // A point with an empty name reads as an unnamed one.
+    fireEvent.pointerEnter(dots[2]!);
+    expect(scatter.textContent).toContain('1.5 · Pareto frontier: 83.4');
+  });
+
   // pie-chart.md "A scatter series drawn as a line": its points joined in order of x, a line in its key.
   it('joins a scatter series drawn as a line, and keys it with a line', () => {
     const scatter = render(

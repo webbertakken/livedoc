@@ -32,7 +32,9 @@ and two changing one chart resolve to the last write. Each change is one undo st
   (the next, else the one before).
 - **Data**: one range by row and column ids, and optionally only some of its columns (picked by id, up to 13),
   read as today's charts from a Sheet read one ([Sheet](sheet.md#charts)): a first row of names heads the series, a
-  first column of labels (or, on a scatter chart, of numbers: the x) labels them. Deleting rows or columns inside
+  first column of labels (or, on a scatter chart, of numbers: the x) labels them; on a scatter chart a first column
+  of text beside two or more columns of numbers names its points, and the next column is its x
+  ([Scatter's point names](../009-elements/pie-chart.md#chart-types)). Deleting rows or columns inside
   the range shrinks it; deleting all of it leaves the chart with no data, drawn as "No data".
 - **Type**: one of [Chart types](#chart-types) built: Column, Bar, Line, Area, Scatter, Pie and Doughnut.
 - **Look**: a palette ([Chart palettes](../009-elements/pie-chart.md#chart-palettes)); per series, by its column's id,
