@@ -756,6 +756,28 @@ describe('baking', () => {
     for (const mark of made) expect(read.get(mark.id)).toEqual(mark);
   });
 
+  // marks.md "In the file": a subject is written as `Subj` and read back; one that is its kind's name reads as none.
+  it('writes a mark’s subject as Subj and reads it back, its kind’s own name as none', async () => {
+    opened(await engine.open(stored));
+    const doc = PdfLiveChanges.load([await changesWithHighlight(0)]);
+    const [kept] = PdfLiveChanges.marks(doc);
+    PdfLiveChanges.addMark(doc, { ...kept!, id: 's-a', subject: 'Check the date' });
+    PdfLiveChanges.addMark(doc, { ...kept!, id: 's-b', subject: 'highlight' });
+    const result = await engine.bake(PdfLiveChanges.encode(doc));
+    if (!result.ok) throw new Error(result.refusal);
+    const written = (await PDF.load(result.bytes.slice())).getPages()[0]!.getAnnotations();
+    const named = new Map(written.map((annotation) => [annotation.name, annotation]));
+    expect(named.get('s-a')!.dict.getString('Subj')?.asString()).toBe('Check the date');
+    expect(named.get('mark-1')!.dict.getString('Subj')).toBeUndefined();
+    opened(await engine.open(result.bytes));
+    const read = new Map((await engine.fileMarks(0)).map((mark) => [mark.id, mark.mark?.subject]));
+    expect([read.get('s-a'), read.get('s-b'), read.get('mark-1')]).toEqual([
+      'Check the date',
+      undefined,
+      undefined,
+    ]);
+  });
+
   it('counts a mark whose page the stored file does not hold, and writes the rest', async () => {
     const pages = opened(await engine.open(stored));
     const doc = PdfLiveChanges.load([await changesWithHighlight(0)]);

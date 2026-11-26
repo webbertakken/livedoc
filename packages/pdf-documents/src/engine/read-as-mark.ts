@@ -5,6 +5,7 @@
 import type { FileMark } from '../engine-contract';
 import {
   LINE_STYLES,
+  MARK_KIND_LABELS,
   Mark,
   type Box,
   type LineEnd,
@@ -269,7 +270,16 @@ function drawnWithin(rect: Box, drawing: (rect: Box) => ReturnType<typeof MarkDr
   return box.map(thousandth) as unknown as Box;
 }
 
-/** What every kind holds: its id, page, colour, opacity, author and dates. */
+/** A file's `Subj` as the mark's subject; none where it is the kind's own name, as LiveDoc reads its kind. */
+function subjectRead(mark: Omit<FileMark, 'mark'>): { subject?: string } {
+  const subject = mark.subject.trim();
+  const own = Object.values(MARK_KIND_LABELS).some(
+    (label) => label.toLowerCase() === subject.toLowerCase(),
+  );
+  return subject && !own ? { subject } : {};
+}
+
+/** What every kind holds: its id, page, colour, opacity, author, subject and dates. */
 function baseOf(mark: Omit<FileMark, 'mark'>, page: PageName, colour: string | null) {
   const created = PdfDate.read(mark.created);
   const modified = PdfDate.read(mark.modified);
@@ -279,6 +289,7 @@ function baseOf(mark: Omit<FileMark, 'mark'>, page: PageName, colour: string | n
     colour: colour ?? NO_COLOUR,
     opacity: within(mark.opacity, 0.1, 1),
     author: mark.author,
+    ...subjectRead(mark),
     createdAt: Math.max(created ?? modified ?? 0, 0),
     modifiedAt: Math.max(modified ?? created ?? 0, 0),
   };
