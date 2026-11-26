@@ -5,14 +5,14 @@ Squiggly underline), made with the tool in hand by dragging across a line's text
 Drawing, made by freehand strokes; the Line, Arrow, Rectangle and Ellipse, made by a drag; the Text and Callout,
 typed onto the page; and the standard and dynamic stamps, placed by a press; each live in the document's changes once made, drawn over the page, written into the file as
 standard annotations under their own ids and read back by them; each tool's colour, chosen from the one colour picker
-and remembered; and the engine reads every mark a file holds, of any kind, as the file says it. A stroke shown to
-others as it is drawn, words shown to others as they are typed, a face for every script, a tool's other looks,
-snapping, every other kind made here, custom stamps and Manage stamps, and the room's own-marks check are not built.
+and remembered; and the engine reads every mark a file holds, of any kind, as the file says it; a stroke shown to others as it is
+drawn and words as they are typed; a face for every script; and the room's own-marks check. A tool's other looks,
+snapping, every other kind made here, custom stamps and Manage stamps are not built.
 Of changing a mark, selecting, moving, resizing and deleting a mark made here, and restyling its colour, opacity, line
 width, line style, fill and line end, and a Text's and a Callout's size and alignment, Format > Colour and Fill
 colour, the toolbar's Line width and a tool's remembered width, style and fill are built, and so are they for the
-file's own marks of the kinds LiveDoc makes; a Text's and a Callout's font, a tool's remembered opacity, line ends,
-font and size, rotating, arranging, grouping, locking, copying, Properties, Erase and the file's own marks of other
+file's own marks of the kinds LiveDoc makes, and a Text's and a Callout's font and line ends; a tool's remembered
+opacity, font and size, rotating, arranging, grouping, locking, copying, Properties, Erase and the file's own marks of other
 kinds are not.
 
 A **mark** is something placed on top of a PDF page that leaves the page's own content alone: a highlight, a note, a
