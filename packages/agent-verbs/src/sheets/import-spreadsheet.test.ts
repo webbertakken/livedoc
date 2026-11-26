@@ -172,3 +172,12 @@ describe('importSpreadsheet', () => {
     expect(seen.at(-1)!.method).toBe('DELETE');
   });
 });
+
+describe('spreadsheet import', () => {
+  it('is run by the CLI, which reads the file, and prints its lines', async () => {
+    const { spreadsheetImport } = await import('../verbs/spreadsheet');
+    expect(spreadsheetImport.local).toBe(true);
+    expect(spreadsheetImport.text!({ lines: ['+ spreadsheet a'] })).toEqual(['+ spreadsheet a']);
+    expect(spreadsheetImport.input.parse({ file: 'a.xlsx' }).file).toBe('a.xlsx');
+  });
+});
