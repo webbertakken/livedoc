@@ -94,6 +94,7 @@ export {
   formatPatchOf,
   listSheets,
   createSpreadsheet,
+  convertSpreadsheet,
   readSheet,
   readSheets,
   resolveSheet,

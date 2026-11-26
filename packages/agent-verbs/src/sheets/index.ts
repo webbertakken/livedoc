@@ -8,5 +8,6 @@ export * from './sheet-change-build';
 export * from './change-sheet';
 export * from './add-sheet';
 export * from './create-spreadsheet';
+export * from './convert-spreadsheet';
 export * from './sheet-chart-objects';
 export * from './live-charts';

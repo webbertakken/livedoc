@@ -3,6 +3,7 @@
 // exit code is one of eight; stdout carries data only.
 
 import type { StormExportInput } from './commands/storm-export';
+import type { SpreadsheetDownloadInput } from './commands/spreadsheet-download';
 import { graphLint, renderSkill, type Verb, type VerbContext } from '@livedoc/agent-verbs';
 import { DOCUMENT_FORMAT } from '@livedoc/api-schema';
 import { resolveCredential } from './auth/credentials';
@@ -157,6 +158,10 @@ async function runOnline(
     return renderTab(io, ctx, input as { doc: string; tab?: string; png?: string; svg?: string });
   }
   if (verb.id === 'export') return exportAll(io, ctx, profile.host, input as ExportInput);
+  if (verb.id === 'spreadsheet.download') {
+    const { spreadsheetDownload } = await import('./commands/spreadsheet-download');
+    return spreadsheetDownload(io, ctx, input as SpreadsheetDownloadInput);
+  }
   if (verb.id === 'storm.export') {
     const { stormExport } = await import('./commands/storm-export');
     return stormExport(io, ctx, input as StormExportInput);

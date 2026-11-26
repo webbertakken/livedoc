@@ -3,7 +3,13 @@
 // stdin), through the engine create_spreadsheet shares. Its sheets are then the sheet verbs' (`sheet set`, `sheet get`).
 import { z } from 'zod';
 import { defineVerb, VerbRefusal, type Verb } from '../define';
+import { WORKBOOK_FORMATS } from '@livedoc/sheets';
+import { convertSpreadsheet } from '../sheets/convert-spreadsheet';
 import { createSpreadsheet } from '../sheets/create-spreadsheet';
+import { documentOf } from './shared';
+
+// What a spreadsheet downloads as: its standards' formats, and one sheet's values as text.
+export const DOWNLOAD_FORMATS = [...WORKBOOK_FORMATS, 'csv', 'tsv'] as const;
 
 export const spreadsheetNew = defineVerb({
   id: 'spreadsheet.new',
@@ -70,4 +76,88 @@ export const spreadsheetNew = defineVerb({
   },
 });
 
-export const spreadsheetVerbs: readonly Verb[] = [spreadsheetNew];
+// `spreadsheet convert` (sheet-store.md "Built for agents in a spreadsheet", D271): the losses, then the conversion.
+export const spreadsheetConvert = defineVerb({
+  id: 'spreadsheet.convert',
+  summary: "Change a spreadsheet's file format",
+  description:
+    'Converts a spreadsheet to ods, fods or xlsx: prints what a file of that format cannot hold, then converts. With --check it only prints them.',
+  behaviour: 'write',
+  input: z.object({
+    doc: z.string().describe('A name, id prefix or LiveDoc URL'),
+    to: z.enum(WORKBOOK_FORMATS).describe('The format: ods, fods or xlsx'),
+    check: z.boolean().optional().describe('Only list what the new format cannot hold'),
+  }),
+  output: z.object({
+    documentId: z.string(),
+    from: z.string(),
+    to: z.string(),
+    converted: z.boolean(),
+    losses: z.array(z.string()),
+  }),
+  run: async (ctx, { doc, to, check }) => {
+    const document = await documentOf(ctx, doc);
+    const result = await convertSpreadsheet(
+      ctx.api,
+      document.id,
+      { to, check: check === true },
+      'cli',
+    );
+    if (!result.ok)
+      throw new VerbRefusal({
+        status: result.code === 'workbook_not_found' ? 404 : 409,
+        code: result.code,
+        message: result.message,
+        hint: 'check first with: livedoc spreadsheet convert <doc> <to> --check',
+      });
+    const { ok: _ok, ...converted } = result;
+    return { documentId: document.id, ...converted };
+  },
+  text: ({ from, to, converted, losses }) => [
+    converted
+      ? `~ spreadsheet converted ${from} → ${to}`
+      : `spreadsheet ${from} → ${to}, not converted`,
+    ...losses,
+  ],
+  quiet: ({ documentId }) => [documentId],
+  cli: {
+    positionals: ['doc', 'to'],
+    examples: [
+      'livedoc spreadsheet convert "Budget 2027" xlsx --check',
+      'livedoc spreadsheet convert 3f9c xlsx',
+    ],
+    prints: 'what was converted, then what the new format cannot hold, a line each',
+  },
+});
+
+// `spreadsheet download` (D272): the CLI writes the file, so it runs it (apps/cli/src/commands/spreadsheet-download.ts).
+export const spreadsheetDownload = defineVerb({
+  id: 'spreadsheet.download',
+  summary: 'A spreadsheet as a file',
+  description:
+    "Writes a spreadsheet's file in its own format, or --format ods, fods, xlsx, csv or tsv (csv and tsv: the sheet --sheet names, the first by default), to --to or under its own name here. Charts go with it.",
+  behaviour: 'read',
+  local: true,
+  input: z.object({
+    doc: z.string().describe('A name, id prefix or LiveDoc URL'),
+    format: z.enum(DOWNLOAD_FORMATS).optional().describe('ods, fods, xlsx, csv or tsv'),
+    sheet: z.string().optional().describe('csv and tsv: the sheet, by name'),
+    to: z.string().optional().describe('The file to write'),
+  }),
+  output: z.object({ lines: z.array(z.string()) }),
+  text: ({ lines }) => lines,
+  cli: {
+    positionals: ['doc'],
+    examples: [
+      'livedoc spreadsheet download "Budget 2027"',
+      'livedoc spreadsheet download 3f9c --format csv --sheet Costs --to costs.csv',
+    ],
+    prints: '<path>  <n> KB',
+  },
+});
+
+export const spreadsheetVerbs: readonly Verb[] = [
+  spreadsheetNew,
+  spreadsheetConvert,
+  spreadsheetDownload,
+];

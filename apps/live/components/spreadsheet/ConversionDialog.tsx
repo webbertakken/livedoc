@@ -11,7 +11,7 @@ import {
   conversionLead,
   conversionLine,
   conversionTitle,
-} from '@/lib/spreadsheet/conversion-copy';
+} from '@livedoc/sheets/files';
 import type { ConversionState } from './useWorkbookConversion';
 
 const TITLE_ID = 'conversion-dialog-title';

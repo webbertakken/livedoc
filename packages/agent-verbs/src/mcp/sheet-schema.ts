@@ -4,6 +4,7 @@
 import { z } from 'zod';
 import {
   AGENT_READ_CELLS_MAX,
+  WORKBOOK_FORMATS,
   AXIS_SIZE_MAX,
   COLUMN_WIDTH_MIN,
   COLUMN_WIDTH_NEW,
@@ -878,5 +879,27 @@ export const createSpreadsheetOutput = {
     .describe(
       'Set when a sheet’s filling was refused after the spreadsheet was made: which, and why.',
     ),
+  url,
+};
+
+// convert_spreadsheet (docs/specs/029-sheets/sheet-store.md "Built for agents in a spreadsheet", D271).
+export const convertSpreadsheetShape = {
+  documentId,
+  to: z
+    .enum(WORKBOOK_FORMATS)
+    .describe('The file format: ods or fods (OpenDocument), or xlsx (Excel).'),
+  check: z
+    .boolean()
+    .optional()
+    .describe('Only answer what the new format cannot hold, without converting.'),
+};
+
+export const convertSpreadsheetOutput = {
+  from: z.enum(WORKBOOK_FORMATS).describe('The format it was in.'),
+  to: z.enum(WORKBOOK_FORMATS).describe('The format asked for.'),
+  converted: z.boolean().describe('Whether it now is in that format.'),
+  losses: z
+    .array(z.string())
+    .describe('What a file of that format cannot hold, a line each, after a lead line.'),
   url,
 };
