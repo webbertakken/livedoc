@@ -12,6 +12,7 @@ import {
   type TableRow,
 } from '../model/tables';
 import { PARAGRAPH, TABLE, TABLE_CELL, TABLE_HEADER, TABLE_ROW } from './live-names';
+import { blockSuggestionAttributes, readBlockSuggested } from './live-suggestion-files';
 
 type Attributes = Record<string, unknown>;
 
@@ -22,7 +23,13 @@ export function tableElement(
   set: (element: Y.XmlElement, attributes: Attributes) => void,
 ): Y.XmlElement {
   const element = new Y.XmlElement(TABLE);
-  set(element, { align: table.align, indent: table.indent, kept: table.kept, tag: table.tag });
+  set(element, {
+    align: table.align,
+    indent: table.indent,
+    kept: table.kept,
+    tag: table.tag,
+    ...blockSuggestionAttributes(table.suggested),
+  });
   const grid = Tables.grid(table);
   const rows = table.rows.map((row, r) => {
     const rowElement = new Y.XmlElement(TABLE_ROW);
@@ -129,6 +136,7 @@ export function tableOf(
     indent: a.indent as Table['indent'],
     kept: a.kept as Table['kept'],
     tag: a.tag as Table['tag'],
+    suggested: readBlockSuggested(a),
   });
   return Tables.normalised(table, normal, () => {});
 }

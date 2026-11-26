@@ -54,7 +54,13 @@ import { Contents, type TableOfContents } from '../model/contents';
 import { DocumentTabs, type DocumentTabStart } from '../model/document-tabs';
 import { Comments, type CommentMark } from '../model/comments';
 import { COMMENT_RELATIONSHIPS, OoxmlCommentsReader } from './ooxml-comments';
-import { Suggestions, type InlineSuggested, type ParagraphSuggested } from '../model/suggestions';
+import {
+  Suggestions,
+  type BlockSuggested,
+  type BlockSuggestionKind,
+  type InlineSuggested,
+  type ParagraphSuggested,
+} from '../model/suggestions';
 import {
   isPropertyRevision,
   isRevisionRuns,
@@ -132,6 +138,21 @@ function runsOf(p: XmlElement): XmlElement[] {
   return childElements(p).flatMap((c) => (isW(c, 'r') ? [c] : isW(c, 'pPr') ? [] : runsOf(c)));
 }
 
+/**
+ * The tracked change a table of contents' field begins inside, as Word writes a suggested one (standard-mapping.md
+ * "Suggested blocks"): the `w:ins` or `w:del` around its first field's begin; none when it begins plainly.
+ */
+function fieldBeginChange(paragraphs: readonly XmlElement[]): XmlElement | undefined {
+  const begins = (run: XmlElement) =>
+    childElements(run).some((c) => isW(c, 'fldChar') && wVal(c, 'fldCharType') === 'begin');
+  for (const p of paragraphs)
+    for (const c of childElements(p)) {
+      if (isW(c, 'r') && begins(c)) return undefined;
+      if (isRevisionRuns(c) && runsOf(c).some(begins)) return c;
+    }
+  return undefined;
+}
+
 /** How many complex fields a paragraph opens and leaves open (less than 0 for those it closes). */
 function fieldDepth(p: XmlElement): number {
   let depth = 0;
@@ -152,7 +173,8 @@ function contentsInstruction(p: XmlElement): string | undefined {
         const type = wVal(c, 'fldCharType');
         if (type === 'begin' && !begun) begun = true;
         else if (begun) return /^\s*TOC\b/i.test(instruction) ? instruction.trim() : undefined;
-      } else if (begun && isW(c, 'instrText')) instruction += textContent(c);
+      } else if (begun && (isW(c, 'instrText') || isW(c, 'delInstrText')))
+        instruction += textContent(c);
     }
   return begun && /^\s*TOC\b/i.test(instruction) ? instruction.trim() : undefined;
 }
@@ -635,12 +657,22 @@ class OoxmlReader {
         const ends = sectPr !== undefined;
         // A paragraph holding a `w:sectPr` ends the section that sectPr describes; the next one starts after it.
         const next = ends ? sections[sectionAt + 1] : undefined;
-        blocks.push(this.paragraph(e, ends ? sections[sectionAt] : undefined));
+        const paragraph = this.paragraph(e, ends ? sections[sectionAt] : undefined);
+        // Its mark tracked is the section break's suggestion, never the next paragraph's break (standard-mapping.md
+        // "Suggested blocks").
+        const tracked = next ? this.paragraphMarks.get(paragraph) : undefined;
+        if (tracked) this.paragraphMarks.delete(paragraph);
+        blocks.push(paragraph);
         const tab = sectPr && tabOf(sectPr);
         if (tab) tabEnds.push({ at: blocks.length, head: tab });
         if (ends) {
           sectionAt += 1;
-          if (next) blocks.push({ type: 'section', ...next });
+          const suggested: BlockSuggested | undefined = tracked?.break
+            ? { insertion: tracked.break }
+            : tracked?.join
+              ? { deletion: tracked.join }
+              : undefined;
+          if (next) blocks.push({ type: 'section', ...next, ...compact({ suggested }) });
         }
       } else if (isW(e, 'sectPr') || this.betweenParagraphs(e)) continue;
       else if (isW(e, 'tbl')) {
@@ -793,7 +825,11 @@ class OoxmlReader {
       inlines,
     };
     const mark = this.inStory ? undefined : readParagraphMark(pPr);
-    if (mark) this.paragraphMarks.set(paragraph, mark);
+    // In a suggested table's cells, a mark of its kind is part of the table's suggestion.
+    const partOfBlock =
+      (this.withinBlock === 'insertion' && mark?.break) ||
+      (this.withinBlock === 'deletion' && mark?.join);
+    if (mark && !partOfBlock) this.paragraphMarks.set(paragraph, mark);
     return paragraph;
   }
 
@@ -834,10 +870,21 @@ class OoxmlReader {
     return overLines(under, tableLinesOf(childElement(style, W_NS, 'tblPr')));
   }
 
+  /** The kind of suggested table whose cells are being read, if any. */
+  withinBlock: BlockSuggestionKind | undefined;
+
   /** A `w:tbl` as a table, a kept block past the limits, or nothing for one with no rows. */
   table(tbl: XmlElement): Block | null {
     return readOoxmlTable(tbl, {
-      cellBlocks: (tc) => this.blocksOf(tc),
+      cellBlocks: (tc, within) => {
+        const outer = this.withinBlock;
+        this.withinBlock = within ?? outer;
+        try {
+          return this.blocksOf(tc);
+        } finally {
+          this.withinBlock = outer;
+        }
+      },
       kept: (e) => this.kept(this.part.parsed, e),
       propsKept: (e, values, mapped) => this.propsKept(this.part.parsed, e, values, mapped),
       styleLines: (id) => this.styleLines(id),
@@ -857,9 +904,20 @@ class OoxmlReader {
     styles: readonly Style[],
   ): TableOfContents {
     for (const run of paragraphs.flatMap(runsOf))
-      if (childElements(run).some((c) => isW(c, 'fldChar') || isW(c, 'instrText')))
+      if (
+        childElements(run).some(
+          (c) => isW(c, 'fldChar') || isW(c, 'instrText') || isW(c, 'delInstrText'),
+        )
+      )
         this.fieldMarks.add(run);
-    const entries = paragraphs.map((p) => this.paragraph(p, undefined));
+    const change = fieldBeginChange(paragraphs);
+    const suggested = change && revisionRunsSuggested(change);
+    const block = Suggestions.ofBlock(suggested);
+    const read = paragraphs.map((p) => this.paragraph(p, undefined));
+    // A suggested one's entries carry only their own suggestions (standard-mapping.md "Suggested blocks").
+    const entries = block
+      ? (Suggestions.absorbed(read, block.kind, [block.mark]) as Paragraph[])
+      : read;
     const range = /\\o\s+"?\s*(\d+)\s*-\s*(\d+)/.exec(instruction);
     const noPages = /\\n(?!\s+"?\s*\d)/.test(instruction);
     const tabbed = entries.some((p) =>
@@ -875,6 +933,7 @@ class OoxmlReader {
       }),
       levels: Contents.levelsOf(range ? Number(range[2]) : undefined),
       entries,
+      ...compact({ suggested }),
     };
   }
 

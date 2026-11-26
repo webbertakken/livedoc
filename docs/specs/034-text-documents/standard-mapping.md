@@ -129,8 +129,8 @@ A table, a section break or a table of contents inserted or deleted while sugges
 it, asked of LibreOffice 24.2 by converting Word's tracked forms to ODF and back:
 
 - **A table**: OOXML, each row's `w:trPr` holds a `w:ins` (or `w:del`), each cell's runs sit in a `w:ins` (`w:del`,
-  its text as `w:delText`) and each cell paragraph's mark holds one, as Word writes them; read, a table whose every
-  row's `w:trPr` holds one of one kind is that kind's suggestion. ODF has no tracked row: each row is one changed
+  its text as `w:delText`), as Word writes them; read, a table whose every row's `w:trPr` holds one of one kind is
+  that kind's suggestion, and the cells' paragraph marks Word tracks too are part of it. ODF has no tracked row: each row is one changed
   region, a `text:change-start` and `text:change-end` of its id first and last in every paragraph of its cells, an
   empty paragraph holding a U+200D zero width joiner between them, and LiveDoc's regions say they are a table's
   (`livedoc:block="table"`). Read as LibreOffice reads one: a table whose every row holds writing, all of it in

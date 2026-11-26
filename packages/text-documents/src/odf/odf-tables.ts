@@ -289,8 +289,10 @@ export type OdfTableHost = {
   /** The kept automatic style's name, when it is free or the same. */
   keptName(kept: KeptProperties | undefined): string | undefined;
   kept(xml: KeptXml): string;
-  /** A cell's blocks as ODF content. */
-  cellXml(blocks: readonly Block[]): string;
+  /** A cell's blocks as ODF content; `region`: a suggested row's change every paragraph of it is whole in. */
+  cellXml(blocks: readonly Block[], region?: string): string;
+  /** A suggested table's row's changed region (`livedoc:block="table"`), one per row; none where nothing is tracked. */
+  rowRegion?(table: Table): string | undefined;
   /** A name no other table of the document holds. */
   tableName(): string;
 };
@@ -337,6 +339,7 @@ function rowXml(
   host: OdfTableHost,
   row: TableRow,
   places: ReturnType<typeof Tables.grid>[number],
+  region?: string,
 ): string {
   const values = compact({ height: row.height, heightRule: row.heightRule, breaks: row.breaks });
   const hasStyle = !isEmpty(values);
@@ -376,7 +379,7 @@ function rowXml(
         'table:number-rows-spanned',
         cell.rowSpan && cell.rowSpan > 1 ? String(cell.rowSpan) : undefined,
       );
-    return `<table:table-cell${attr('table:style-name', style)}${spans}${tagAttributes(cell.tag, host.ns)}>${host.cellXml(cell.blocks)}</table:table-cell>`;
+    return `<table:table-cell${attr('table:style-name', style)}${spans}${tagAttributes(cell.tag, host.ns)}>${host.cellXml(cell.blocks, region)}</table:table-cell>`;
   });
   return `<table:table-row${attr('table:style-name', name)}${tagAttributes(row.tag, host.ns)}>${cells.join('')}</table:table-row>`;
 }
@@ -407,7 +410,8 @@ export function odfTableXml(host: OdfTableHost, table: Table): string {
           })
           .join('');
   const grid = Tables.grid(table);
-  const rows = table.rows.map((row, r) => rowXml(host, row, grid[r]!));
+  // A suggested table: each row one changed region, as LibreOffice writes one (standard-mapping.md "Suggested blocks").
+  const rows = table.rows.map((row, r) => rowXml(host, row, grid[r]!, host.rowRegion?.(table)));
   const header =
     table.headerRows > 0
       ? `<table:table-header-rows>${rows.slice(0, table.headerRows).join('')}</table:table-header-rows>`

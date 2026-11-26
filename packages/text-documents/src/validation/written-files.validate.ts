@@ -120,3 +120,45 @@ describe('every written file validates against its format’s schema', () => {
     }
   }, 400_000);
 });
+
+// standard-mapping.md "Suggested blocks" (Webber, 2026-11-26): LibreOffice keeps no tracked section break, so an .odt
+// of LiveDoc's re-saved by it comes back with a plain one, no changed region left that nothing names, and its suggested
+// table and table of contents still suggested.
+describe('suggested blocks re-saved by LibreOffice', () => {
+  it('come back with a plain section break and no orphaned region', async () => {
+    const dir = mkdtempSync(join(OUT, 'suggested-blocks-'));
+    const file = join(dir, 'suggested-blocks.odt');
+    writeFileSync(
+      file,
+      (writeTextDocumentFile(CONSTRUCTS.suggestedBlocks!('odf'), 'odt') as { bytes: Uint8Array })
+        .bytes,
+    );
+    const saved = join(dir, 'saved');
+    execFileSync(
+      'soffice',
+      ['--headless', '--norestore', '--convert-to', 'odt', '--outdir', saved, file],
+      { stdio: 'pipe', timeout: 300_000 },
+    );
+    const bytes = readFileSync(join(saved, 'suggested-blocks.odt'));
+    const read = await readTextDocumentFile(bytes);
+    expect(read.ok).toBe(true);
+    if (!read.ok) return;
+    const blocks = read.document.body;
+    expect(blocks.find((b) => b.type === 'section')?.suggested).toBeUndefined();
+    expect(blocks.find((b) => b.type === 'table')?.suggested?.insertion).toBeDefined();
+    expect(blocks.find((b) => b.type === 'contents')?.suggested?.deletion).toBeDefined();
+    expect(read.report.dropped.filter((d) => d.reason === 'suggestion-dangling')).toEqual([]);
+    const content = execFileSync(
+      'unzip',
+      ['-p', join(saved, 'suggested-blocks.odt'), 'content.xml'],
+      {
+        maxBuffer: 64 * 1024 * 1024,
+      },
+    ).toString();
+    const regions = [...content.matchAll(/<text:changed-region[^>]*\stext:id="([^"]+)"/g)].map(
+      (m) => m[1]!,
+    );
+    const named = new Set([...content.matchAll(/text:change-id="([^"]+)"/g)].map((m) => m[1]!));
+    expect(regions.filter((id) => !named.has(id))).toEqual([]);
+  }, 400_000);
+});

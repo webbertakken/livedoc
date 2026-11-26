@@ -27,6 +27,8 @@ import {
   type TableRow,
 } from '../model/tables';
 import type { ReportBuilder } from '../report';
+import { Suggestions, type BlockSuggestionKind } from '../model/suggestions';
+import { ooxmlSuggestionMark } from './ooxml-suggestions';
 import { borderSize, lineOf, OOXML_DASH, readShading, shadingXml } from './ooxml-borders';
 import { W_NS } from './ooxml-names';
 import { ordered } from './ooxml-props';
@@ -67,6 +69,10 @@ export const MAPPED_TRPR: ReadonlySet<string> = new Set([
   'wBefore',
   'wAfter',
 ]);
+
+/** A suggested table's rows' properties: their tracked change is the table's suggestion, never kept. */
+const MAPPED_SUGGESTED_TRPR: ReadonlySet<string> = new Set([...MAPPED_TRPR, 'ins', 'del']);
+const ROW_REVISION = /<w:(?:ins|del)\b[^>]*\/>/g;
 export const MAPPED_TCPR: ReadonlySet<string> = new Set([
   'tcW',
   'gridSpan',
@@ -135,7 +141,7 @@ export const overLines = (under: TableLines, over: TableLines): TableLines => ({
 /** What reading a table takes from the document's reader. */
 export type OoxmlTableSource = {
   /** A cell's content read as blocks, as the body's. */
-  readonly cellBlocks: (tc: XmlElement) => Block[];
+  readonly cellBlocks: (tc: XmlElement, within?: BlockSuggestionKind) => Block[];
   readonly kept: (e: XmlElement) => KeptXml;
   readonly propsKept: (
     e: XmlElement | undefined,
@@ -214,6 +220,20 @@ export function readOoxmlTable(tbl: XmlElement, source: OoxmlTableSource): Block
       : undefined;
   const lines = overLines(source.styleLines(wVal(child(tblPr, 'tblStyle'))), tableLinesOf(tblPr));
 
+  // A suggested table: every row's `w:trPr` tracked, all one kind (standard-mapping.md "Suggested blocks").
+  const rowChanges = rowElements.map((tr) => {
+    const trPr = child(tr, 'trPr');
+    return trPr && childElements(trPr).find((e) => isW(e, 'ins') || isW(e, 'del'));
+  });
+  const kinds = new Set(rowChanges.map((c) => (c ? c.local : undefined)));
+  const suggestedKind: BlockSuggestionKind | undefined =
+    kinds.size === 1 && rowChanges[0]
+      ? rowChanges[0].local === 'ins'
+        ? 'insertion'
+        : 'deletion'
+      : undefined;
+  const rowMarks = suggestedKind ? rowChanges.map((c) => ooxmlSuggestionMark(c!)) : [];
+
   // Place every cell on the grid: gridBefore's places as empty cells, vertical merges into their first cell.
   const builds: CellBuild[][] = [];
   const open = new Map<number, CellBuild>();
@@ -272,7 +292,7 @@ export function readOoxmlTable(tbl: XmlElement, source: OoxmlTableSource): Block
     const offGrid = ['gridBefore', 'gridAfter', 'wBefore', 'wAfter'].some((n) => child(trPr, n));
     const cells = builds[r]!.map((b): TableCell => {
       const props = cellProps(b, r, rowElements.length, width, lines);
-      const blocks = b.tc ? source.cellBlocks(b.tc) : [];
+      const blocks = b.tc ? source.cellBlocks(b.tc, suggestedKind) : [];
       const tcPr = b.tc && child(b.tc, 'tcPr');
       const kept = source.propsKept(
         tcPr,
@@ -292,11 +312,16 @@ export function readOoxmlTable(tbl: XmlElement, source: OoxmlTableSource): Block
         ...compact({ kept }),
       };
     });
-    const kept = source.propsKept(
+    const held = source.propsKept(
       trPr,
       { ...values, header, ...(offGrid ? { offGrid } : {}) },
-      MAPPED_TRPR,
+      suggestedKind ? MAPPED_SUGGESTED_TRPR : MAPPED_TRPR,
     );
+    // A suggested table's rows' tracked changes are its suggestion, never kept.
+    const kept =
+      held && suggestedKind
+        ? { ...held, xml: { ...held.xml, xml: held.xml.xml.replace(ROW_REVISION, '') } }
+        : held;
     return { cells, ...values, ...compact({ kept }) };
   });
 
@@ -320,7 +345,10 @@ export function readOoxmlTable(tbl: XmlElement, source: OoxmlTableSource): Block
     { columns, align: table.align, indent: table.indent },
     MAPPED_TBLPR,
   );
-  return { ...table, ...compact({ kept }) };
+  if (!suggestedKind) return { ...table, ...compact({ kept }) };
+  // What is inside it carries only its own suggestions.
+  const absorbed = Suggestions.absorbed([table], suggestedKind, rowMarks)[0] as Table;
+  return { ...absorbed, ...compact({ kept }), suggested: { [suggestedKind]: rowMarks[0]! } };
 }
 
 /** A cell's formatting: the table's lines on the edges it reaches, its own over them; shading, margins, alignment. */
@@ -366,6 +394,8 @@ export type OoxmlTableHost = {
   kept(xml: KeptXml): string;
   /** A cell's blocks as WordprocessingML. */
   blocksXml(blocks: readonly Block[]): string;
+  /** A suggested table's row revision: a `w:ins` or `w:del` for each row's `w:trPr` (standard-mapping.md). */
+  rowRevision?(): string;
 };
 
 const twips = (pt: number) => ptToTwips(pt);
@@ -436,23 +466,26 @@ export function ooxmlTableXml(host: OoxmlTableHost, table: Table): string {
   const rows = table.rows.map((row, r) => {
     const header = r < table.headerRows;
     const values = compact({ height: row.height, heightRule: row.heightRule, breaks: row.breaks });
-    const trPr = keptStillHolds(row.kept, { ...values, header })
-      ? host.kept(row.kept!.xml)
-      : (() => {
-          const children = ordered(
-            TRPR_ORDER,
-            {
-              cantSplit: row.breaks === false ? '<w:cantSplit/>' : undefined,
-              trHeight:
-                row.height === undefined
-                  ? undefined
-                  : `<w:trHeight w:val="${twips(row.height)}" w:hRule="${row.heightRule === 'exact' ? 'exact' : 'atLeast'}"/>`,
-              tblHeader: header ? '<w:tblHeader/>' : undefined,
-            },
-            (row.kept?.residue ?? []).map((k) => host.kept(k)),
-          );
-          return children ? `<w:trPr>${children}</w:trPr>` : '';
-        })();
+    const revision = host.rowRevision?.();
+    const trPr =
+      !revision && keptStillHolds(row.kept, { ...values, header })
+        ? host.kept(row.kept!.xml)
+        : (() => {
+            const children = ordered(
+              TRPR_ORDER,
+              {
+                cantSplit: row.breaks === false ? '<w:cantSplit/>' : undefined,
+                trHeight:
+                  row.height === undefined
+                    ? undefined
+                    : `<w:trHeight w:val="${twips(row.height)}" w:hRule="${row.heightRule === 'exact' ? 'exact' : 'atLeast'}"/>`,
+                tblHeader: header ? '<w:tblHeader/>' : undefined,
+                [revision?.startsWith('<w:del') ? 'del' : 'ins']: revision,
+              },
+              (row.kept?.residue ?? []).map((k) => host.kept(k)),
+            );
+            return children ? `<w:trPr>${children}</w:trPr>` : '';
+          })();
     // Each cell once, at its first column: where it starts, or a place of a row span it continues.
     const cells = places[r]!.flatMap((place, column) => {
       if (!place || place.column !== column) return [];

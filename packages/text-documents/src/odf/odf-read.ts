@@ -82,6 +82,7 @@ const said = (e: XmlElement, name: string): string | undefined => attributeOf(e,
 import { keptShownText } from '../live/kept-presence';
 import { OdfChangeTracker, readOdfChangedRegions, type OdfChange } from './odf-suggestions';
 import { Suggestions, type InlineSuggested } from '../model/suggestions';
+import type { Table } from '../model/tables';
 
 export type OdfParts = {
   content: XmlParsed;
@@ -470,6 +471,8 @@ export function readOdfParts(parts: OdfParts, report: ReportBuilder): TextDocume
     return story.blocks;
   };
   const body = new BodyReader(reader, styles, defaults).read();
+  // A region nothing named reads as nothing (standard-mapping.md "Suggested blocks").
+  for (const id of reader.changes.unnamed()) report.drop('suggestion-dangling', id);
   const settingsRoot = parts.settings && childElement(parts.settings.root, NS.office, 'settings');
   const source: OdfSource = {
     format: 'odf',
@@ -546,16 +549,26 @@ class BodyReader {
   readonly notes: boolean;
   /** A table cell's writing: a region in it is kept as it is. */
   readonly cell: boolean;
+  /**
+   * Whether its tracked changes are read as suggestions: the body's, its tables' cells' and its tables of contents'
+   * entries'; a header's, footer's or note's are settled as it is read (review.md "In the files").
+   */
+  readonly tracks: boolean;
 
   constructor(
     r: OdfReader,
     styles: readonly Style[],
     defaults: StyleDefaults,
     story = false,
-    { notes = !story, cell = false }: { notes?: boolean; cell?: boolean } = {},
+    {
+      notes = !story,
+      cell = false,
+      tracks = !story,
+    }: { notes?: boolean; cell?: boolean; tracks?: boolean } = {},
   ) {
     this.r = r;
     this.story = story;
+    this.tracks = tracks;
     this.notes = notes;
     this.cell = cell;
     this.styles = styles;
@@ -688,10 +701,23 @@ class BodyReader {
       : undefined;
     const parts = template ? childElements(template) : [];
     const tab = parts.find((c) => is(c, NS.text, 'index-entry-tab-stop'));
-    const reader = new BodyReader(this.r, this.styles, this.defaults, true, { notes: this.notes });
+    const reader = new BodyReader(this.r, this.styles, this.defaults, true, {
+      notes: this.notes,
+      tracks: this.tracks,
+    });
     const body = childElement(e, NS.text, 'index-body');
     if (body) reader.container(body);
-    const entries = reader.blocks.filter((b): b is Paragraph => b.type === 'paragraph');
+    const read = reader.blocks.filter((b): b is Paragraph => b.type === 'paragraph');
+    // A suggested one: every entry in changes of one kind (standard-mapping.md "Suggested blocks"); an entry only a
+    // joiner held goes.
+    const tracked = this.tracks
+      ? Suggestions.tracked([read], this.r.changes.blockMarks('contents'))
+      : undefined;
+    const entries = tracked
+      ? (Suggestions.absorbed(read, tracked.kind, tracked.marks) as Paragraph[]).filter(
+          (p, i) => p.inlines.length > 0 || read[i]!.inlines.length === 0,
+        )
+      : read;
     const pages = template
       ? parts.some((c) => is(c, NS.text, 'index-entry-page-number'))
       : entries.some((p) => p.inlines.some((i) => i.type === 'run' && i.text.includes('\t')));
@@ -705,6 +731,7 @@ class BodyReader {
         source ? Number(attributeOf(source, NS.text, 'outline-level')) : undefined,
       ),
       entries,
+      ...compact({ suggested: tracked && { [tracked.kind]: tracked.marks[0] } }),
     });
   }
 
@@ -720,6 +747,7 @@ class BodyReader {
         const reader = new BodyReader(this.r, this.styles, this.defaults, true, {
           notes: this.notes,
           cell: true,
+          tracks: this.tracks,
         });
         reader.container(cell);
         return reader.blocks;
@@ -728,14 +756,43 @@ class BodyReader {
       report: this.r.report,
       normal: Styles.idOfRole(this.styles, 'normal') ?? 'Standard',
     });
-    if (block) this.blocks.push(block);
+    if (block) this.blocks.push(block.type === 'table' ? this.suggestedTable(block) : block);
+  }
+
+  /**
+   * A table whose every row's writing is in changes of one kind is that kind's suggestion, as LibreOffice reads a
+   * tracked row (standard-mapping.md "Suggested blocks"); what is inside it keeps only its own suggestions.
+   */
+  suggestedTable(table: Table): Table {
+    if (!this.tracks) return table;
+    const groups = table.rows.map((row) =>
+      row.cells.flatMap((c) => c.blocks.filter((b): b is Paragraph => b.type === 'paragraph')),
+    );
+    const tracked = Suggestions.tracked(groups, this.r.changes.blockMarks('table'));
+    if (!tracked) return table;
+    const absorbed = Suggestions.absorbed([table], tracked.kind, tracked.marks)[0] as Table;
+    return { ...absorbed, suggested: { [tracked.kind]: tracked.marks[0] } };
+  }
+
+  /**
+   * The suggestion of the section break an element starts, from the region its `livedoc:section-change` names; a name
+   * of no region reads as a plain break, reported (standard-mapping.md "Suggested blocks").
+   */
+  sectionSuggested(e: XmlElement): SectionBreak['suggested'] {
+    const id = said(e, 'section-change');
+    if (id === undefined || !this.tracks) return undefined;
+    const suggested = this.r.changes.sectionChange(id);
+    if (!suggested) this.r.report.drop('suggestion-dangling', id);
+    return suggested;
   }
 
   region(e: XmlElement): void {
     const parsed = this.r.part.parsed;
+    // Its suggestion is the model's, never kept with its start tag.
     const open = parsed.source
       .slice(e.start, parsed.source.indexOf('>', e.start) + 1)
-      .replace(/\/>$/, '>');
+      .replace(/\/>$/, '>')
+      .replace(/\s[\w.-]+:section-change="[^"]*"/, '');
     const columnsStyle = this.r.part.auto.get(attributeOf(e, NS.text, 'style-name') ?? '');
     const columns =
       columnsStyle &&
@@ -749,6 +806,7 @@ class BodyReader {
       start: 'continuous',
       setup: compact({ ...setup, columns }),
       region: { xml: open, ns: startTagBindings(e) },
+      ...compact({ suggested: this.sectionSuggested(e) }),
     });
     this.container(e);
     this.blocks.push({ type: 'section', start: 'continuous', setup });
@@ -825,6 +883,10 @@ class BodyReader {
     const startsPage = !this.story && (isFirst || master !== undefined);
     const start = startsPage ? auto?.pageNumber : undefined;
     if (isFirst && !this.story) this.firstStart = start;
+    // A pointer to no region, on whatever element, reads as nothing (standard-mapping.md "Suggested blocks").
+    const pointer = said(e, 'section-change');
+    if (pointer !== undefined && !this.r.changes.regions.has(pointer) && master === undefined)
+      this.r.report.drop('suggestion-dangling', pointer);
     if (master !== undefined && !this.story) {
       const section = this.r.sectionOf(master, 'next-page');
       if (isFirst && !this.section && section) this.section = section;
@@ -834,7 +896,7 @@ class BodyReader {
         this.blocks.push({
           type: 'section',
           ...section,
-          ...compact({ numberStart: start }),
+          ...compact({ numberStart: start, suggested: this.sectionSuggested(e) }),
         } satisfies SectionBreak);
       }
     }
@@ -845,13 +907,13 @@ class BodyReader {
       ? { xml: auto.kept, read: canonical(values), residue: [], name: styleName }
       : undefined;
     // A header's, a footer's or a note's notes stay kept content (page-layout.md "Footnotes").
-    const started = this.story ? undefined : this.r.changes.paragraphStart();
-    const inlines = new InlineReader(this.r, this.notes, this.story).read(e);
+    const started = this.tracks ? this.r.changes.paragraphStart() : undefined;
+    const inlines = new InlineReader(this.r, this.notes, !this.tracks).read(e);
     const format = this.r.changes.takeParagraphFormat({ style, props });
-    if (this.story && format) this.r.report.drop('suggestion-in-story', 'paragraph');
+    if (!this.tracks && format) this.r.report.drop('suggestion-in-story', 'paragraph');
     const suggested =
-      started || (format && !this.story)
-        ? { ...started, ...(format && !this.story ? { format } : {}) }
+      started || (format && this.tracks)
+        ? { ...started, ...(format && this.tracks ? { format } : {}) }
         : undefined;
     const paragraph: Paragraph = {
       type: 'paragraph',
