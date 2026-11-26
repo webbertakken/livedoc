@@ -160,3 +160,12 @@ describe('keepPicture', () => {
     });
   });
 });
+
+describe('sniffPicture on hostile markup', () => {
+  it('reads many comments in one pass, and an unclosed one as no picture', () => {
+    const many = `<!--${'--><!--'.repeat(150)}-->`;
+    expect(sniffPicture(bytesOf(`${many}<svg>`, 0))).toBeNull();
+    expect(sniffPicture(bytesOf(`<!-- a --><!-- b --><!doctype svg><svg width="2">`))).toBe('svg');
+    expect(sniffPicture(bytesOf('<!-- never closed <svg>'))).toBeNull();
+  });
+});

@@ -84,10 +84,23 @@ export function sniffPicture(bytes: Uint8Array): PictureSource | null {
   if (StampPictureBytes.fit('png', bytes)) return 'png';
   if (StampPictureBytes.fit('jpeg', bytes)) return 'jpeg';
   if (startsWith(bytes, '%PDF-')) return 'pdf';
-  const head = new TextDecoder().decode(bytes.subarray(0, 1024)).trimStart().toLowerCase();
-  return /^(<\?xml[^>]*>\s*)?(<!--[\s\S]*?-->\s*)*(<!doctype svg[^>]*>\s*)?<svg[\s>]/.test(head)
-    ? 'svg'
-    : null;
+  const head = new TextDecoder().decode(bytes.subarray(0, 1024)).toLowerCase();
+  return /^<svg[\s>]/.test(pastProlog(head)) ? 'svg' : null;
+}
+
+/** Where a markup file's first element begins: past its XML declaration, comments and doctype, read in one pass. */
+function pastProlog(text: string): string {
+  let rest = text.trimStart();
+  const skip = (open: string, close: string): boolean => {
+    if (!rest.startsWith(open)) return false;
+    const end = rest.indexOf(close, open.length);
+    rest = end < 0 ? '' : rest.slice(end + close.length).trimStart();
+    return true;
+  };
+  skip('<?xml', '>');
+  while (skip('<!--', '-->'));
+  skip('<!doctype svg', '>');
+  return rest;
 }
 
 /** A size held to `max` on its longer side, its shape kept, each side a whole pixel at least. */
