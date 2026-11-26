@@ -100,7 +100,7 @@ display style (Chip, Arrow, Plain Text) with option colours. Dropdowns and tick 
     workbook's named functions, case aside ("Another named function is called that"). A placeholder: the same
     characters, not a cell reference, unique in its function; up to 20 (D302).
   - A definition that cannot be read says why under it ("That formula can't be read"), as does a reference in it
-    ([Formulas](formulas.md#named-functions), D301); a placeholder the definition never reads is allowed, as Google's.
+    ([Formulas](formulas.md#named-functions), D301, until named functions come from files); a placeholder the definition never reads is allowed, as Google's.
   - Create, Update and Remove are each one undo step, on the person's timeline with their cell changes; the list is
     saved whole, so two Editors saving at once keep the later save (D303).
   - Formulas offer the workbook's named functions with the built-in ones as they are typed, with their description and

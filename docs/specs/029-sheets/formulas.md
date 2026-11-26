@@ -165,9 +165,11 @@ settings"). A Plan Sheet has none of its own: it reads as the viewer's browser d
 - A definition may call other named functions, and itself: each call counts against the recalculation budget as a
   `LAMBDA`'s does, and calls nested deeper than 100 are `#NUM!` ("This named function calls itself too deeply")
   (default, D300).
-- A definition reads cells through its placeholders and named ranges, never a reference of its own: `A1` or
-  `Sheet2!B:B` in one is refused when it is saved ("Use an argument placeholder or a named range for cells"), so a
-  definition never goes stale as sheets are renamed or rows move (default, D301).
+- A definition reads cells through its placeholders and named ranges; until named functions come from files, a
+  reference of its own (`A1`, `Sheet2!B:B`) is refused when it is saved ("Pass the cell as an argument, or use a
+  named range"). Then, as Google's, a reference in a definition is kept as an absolute reference to its sheet,
+  follows that sheet's renames and its rows and columns inserted or deleted as a formula's references do, and is
+  `#REF!` once its sheet is deleted (D301, ruled 2026-11-26).
 - Changing or removing a named function works every formula out again; a call to one removed is `#NAME?` ("Unknown
   function CONTAINS"), as any unknown function is.
 
@@ -1647,6 +1649,7 @@ The code cites each by its id.
   no day count found (measured: 213.5 days of a 214-day span at Actual/365) (default).
 - **D300** How deep named functions call each other: 100 calls deep, past which the formula is `#NUM!`, so a definition
   calling itself without end stops before the browser's own stack does (default).
-- **D301** A cell reference in a named function's definition: Refused, cells being read through placeholders and named
-  ranges; Google instead saves it as an absolute reference to the sheet it was typed on (default).
+- **D301** A cell reference in a named function's definition: Refused until named functions are read from files, then
+  kept as Google keeps it, an absolute reference to its sheet adjusted as a formula's are (ruled by the Director,
+  2026-11-26: a refusal for good would turn files' LAMBDA names into errors).
 - The imports' defaults, D61 to D66 and D72 to D74, are kept in [Imports from the web](imports.md#defaults).

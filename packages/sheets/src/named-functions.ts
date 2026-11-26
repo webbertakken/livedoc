@@ -41,7 +41,7 @@ export type NamedFunctionProblem = {
 
 export const NAMED_FUNCTION_TAKEN = 'Another named function is called that';
 export const NAMED_FUNCTION_UNREADABLE = "That formula can't be read";
-export const NAMED_FUNCTION_REFERENCE = 'Use an argument placeholder or a named range for cells';
+export const NAMED_FUNCTION_REFERENCE = 'Pass the cell as an argument, or use a named range';
 
 const IDENTIFIER = /^[A-Za-z_][A-Za-z0-9_]*$/;
 const sameName = (a: string, b: string) => a.toUpperCase() === b.toUpperCase();
@@ -100,7 +100,7 @@ function definitionProblem(body: string): string | null {
     return `A definition holds up to ${NAMED_FUNCTION_BODY_MAX} characters`;
   const parsed = parseFormula(body);
   if (!parsed.ok) return NAMED_FUNCTION_UNREADABLE;
-  // D301: cells are read through placeholders and named ranges, so a definition never goes stale.
+  // D301: a definition reads cells through its placeholders and named ranges.
   return refsOf(parsed.ast).length > 0 ? NAMED_FUNCTION_REFERENCE : null;
 }
 

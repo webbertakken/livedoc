@@ -98,7 +98,7 @@ describe('namedFunctionProblem', () => {
     for (const body of ['=A1+search_query', "=SUM('Sheet 2'!B:B)", '=search_range+1:1'])
       expect(namedFunctionProblem(fn({ body }), [])).toEqual({
         field: 'definition',
-        message: 'Use an argument placeholder or a named range for cells',
+        message: 'Pass the cell as an argument, or use a named range',
       });
     expect(
       namedFunctionProblem(fn({ body: `="${'x'.repeat(NAMED_FUNCTION_BODY_MAX)}"` }), []),

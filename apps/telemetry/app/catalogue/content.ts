@@ -1312,11 +1312,21 @@ export const SPREADSHEET_CHARTS_ADDED = chart(
   { types: ['Column', 'Bar', 'Line', 'Area', 'Scatter', 'Pie', 'Doughnut'] },
 );
 
+// docs/specs/029-sheets/data-tools.md "Named ranges and named functions": an Editor made, changed or removed a named
+// function in Data › Named Functions.
+export const SPREADSHEET_NAMED_FUNCTIONS = chart(
+  'Spreadsheet',
+  'Changed',
+  'Spreadsheet Named Functions Changed',
+  'An editor made, changed or removed a named function in a spreadsheet.',
+  { types: ['NamedFunction'] },
+);
+
 export const SPREADSHEETS: MetricStack = {
   stack: true,
   title: 'Spreadsheets',
   blurb:
-    'Spreadsheet documents on the open standards: made, opened from files, downloaded, converted, themed, imports allowed, charts added.',
+    'Spreadsheet documents on the open standards: made, opened from files, downloaded, converted, themed, imports allowed, charts added, named functions.',
   members: [
     SPREADSHEETS_CREATED,
     SPREADSHEETS_IMPORTED,
@@ -1325,6 +1335,7 @@ export const SPREADSHEETS: MetricStack = {
     SPREADSHEETS_THEMED,
     SPREADSHEETS_IMPORTS_ALLOWED,
     SPREADSHEET_CHARTS_ADDED,
+    SPREADSHEET_NAMED_FUNCTIONS,
   ],
 };
 

@@ -89,7 +89,7 @@ export function NamedFunctionForm({
     const saved = await onSave(fn);
     setSaving(false);
     if (!saved) return;
-    track('Spreadsheet', existing ? 'Changed' : 'Added', 'NamedFunction');
+    track('Spreadsheet', 'Changed', 'NamedFunction');
     onClose();
   };
 

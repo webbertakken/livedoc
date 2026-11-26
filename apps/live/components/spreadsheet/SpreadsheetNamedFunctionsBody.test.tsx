@@ -137,7 +137,7 @@ describe('the Named Functions panel', () => {
     expect(saves).toEqual([
       [{ ...CONTAINS, hints: [{ description: 'The value', example: '"x"' }] }, TWICE],
     ]);
-    expect(track).toHaveBeenCalledWith('Spreadsheet', 'Added', 'NamedFunction');
+    expect(track).toHaveBeenCalledWith('Spreadsheet', 'Changed', 'NamedFunction');
     expect(screen.getByRole('button', { name: 'Edit CONTAINS' })).toBeTruthy();
   });
 
@@ -161,7 +161,7 @@ describe('the Named Functions panel', () => {
     type('Formula Definition', '=x*A1');
     await act(async () => fireEvent.click(screen.getByRole('button', { name: 'Create' })));
     expect(screen.getByRole('alert').textContent).toBe(
-      'Use an argument placeholder or a named range for cells',
+      'Pass the cell as an argument, or use a named range',
     );
     type('Function Description', 'd'.repeat(1_001));
     await act(async () => fireEvent.click(screen.getByRole('button', { name: 'Create' })));
@@ -194,7 +194,7 @@ describe('the Named Functions panel', () => {
     await act(async () => fireEvent.click(screen.getByRole('button', { name: 'Remove CONTAINS' })));
     expect(saves).toEqual([[TWICE]]);
     expect(screen.queryByRole('button', { name: 'Edit CONTAINS' })).toBeNull();
-    expect(track).toHaveBeenCalledWith('Spreadsheet', 'Removed', 'NamedFunction');
+    expect(track).toHaveBeenCalledWith('Spreadsheet', 'Changed', 'NamedFunction');
   });
 
   it('opens Argument Details only with arguments', async () => {

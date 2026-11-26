@@ -39,7 +39,7 @@ export function SpreadsheetNamedFunctionsBody() {
     );
   }
   const remove = (fn: NamedFunction) => {
-    track('Spreadsheet', 'Removed', 'NamedFunction');
+    track('Spreadsheet', 'Changed', 'NamedFunction');
     void save(NamedFunction.without(functions, fn.name));
   };
   return (
