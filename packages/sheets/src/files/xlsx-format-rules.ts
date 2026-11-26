@@ -142,8 +142,8 @@ const POINTS: Readonly<Record<string, ScalePoint['at']>> = {
 
 type Condition = Pick<FileFormatRule, 'op' | 'a' | 'b' | 'formula'>;
 
-// A formula of the file's (Excel's grammar) in Google's syntax, or null when it cannot be read or is too long.
-function formulaOf(excel: string): string | null {
+/** A formula of the file's (Excel's grammar) in Google's syntax, or null when it cannot be read or is too long. */
+export function googleFormulaOf(excel: string): string | null {
   const google = fromExcelFormula(excel);
   return google !== null && google.length <= FORMAT_RULE_FORMULA_MAX + 1 && parseFormula(google).ok
     ? google
@@ -175,14 +175,14 @@ function cellIsOf(operator: string, operands: string[], anchor: string): Conditi
     const inside = `OR(AND(${anchor}>=${f1},${anchor}<=${f2}),AND(${anchor}>=${f2},${anchor}<=${f1}))`;
     excel = operator === 'between' ? inside : `NOT(${inside})`;
   }
-  const formula = excel === null ? null : formulaOf(excel);
+  const formula = excel === null ? null : googleFormulaOf(excel);
   return formula === null ? null : { op: 'formula', formula };
 }
 
 // A custom formula, or Is Empty and Is Not Empty as Excel and LibreOffice write them.
 function expressionOf(excel: string | undefined, anchor: string): Condition | null {
   if (excel === undefined) return null;
-  const formula = formulaOf(excel);
+  const formula = googleFormulaOf(excel);
   if (formula === null) return null;
   const plain = formula.replace(/\s+/g, '').toUpperCase();
   if (plain === `=LEN(TRIM(${anchor}))=0`) return { op: 'empty' };

@@ -79,6 +79,8 @@ format it arrived in ([Standard mapping](standard-mapping.md)).
   - **Styles**: "Rotation, indents, patterned fills and other styling are left out of 2 sheets: Data and Totals".
   - **Format rules**: "1 conditional formatting rule LiveDoc cannot read is left out: Data!A2"
     ([Format rules in the file](standard-mapping.md#format-rules-in-the-file)).
+  - **Validation rules**: "1 data validation rule LiveDoc cannot read is left out: Data!A2"
+    ([Validation in the file](standard-mapping.md#validation-in-the-file)).
   - **Sizes**: "Row heights and column widths past the most a sheet holds are left out of 1 sheet: Data".
   - **Charts**: "Charts are left out of 1 sheet that keeps the file's own drawings: Data"
     ([Charts in the file](standard-mapping.md#charts-in-the-file)).
@@ -140,6 +142,10 @@ Every case of [Security](../../research/sheets-open-standard/security.md) is a t
     each formula calling a function the spreadsheet's meaning (Google's for one made in LiveDoc) and the new format's
     standard answer differently ([The file's meaning](formulas.md#function-catalogue), D100). Converting gives a
     spreadsheet with a file's meaning the new format's; one with Google's keeps it.
+  - **Validation rules other apps hold more simply**: "3 data validation rules work more simply in Excel: option
+    colours, chips and arrows, multiple selections and checkboxes", counted by rule, naming what is lost in this
+    order; listed on every conversion and download to the other format, as both formats carry the same standard rule
+    ([Validation in the file](standard-mapping.md#validation-in-the-file)). "in other apps" for OpenDocument.
   - **Kept from the file**: "4 things kept from the OpenDocument file stay behind: drawings, notes and named ranges",
     the kept content ([Standard mapping](standard-mapping.md#unknown-content)) counted by element, named by kind, the
     three most common first; it stays with the spreadsheet, and converting back writes it again (D109).

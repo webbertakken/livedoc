@@ -35,7 +35,7 @@ native; a file keeps the format it arrived in). Research: [The standard](../../r
 | Merges                                                | `table:number-columns-spanned`, `-rows-spanned`, covered cells                                                              | `mergeCells`                                                                   |
 | Cell styles and number formats                        | Automatic and named `style:style` (`table-cell`), data styles (`number:number-style`, `number:date-style`, ...)             | `xl/styles.xml`: `numFmts`, `fonts`, `fills`, `borders`, `cellXfs`             |
 | Named ranges, named functions                         | `table:named-range`, `table:named-expression`                                                                               | `definedNames`                                                                 |
-| Validation                                            | `table:content-validation`                                                                                                  | `dataValidations`                                                              |
+| Validation                                            | `table:content-validation`, LiveDoc's rule in `livedoc:` attributes                                                         | `dataValidations`, LiveDoc's rule in an `extLst` `ext`                         |
 | Conditional formats                                   | `calcext:conditional-formats` (LibreOffice's extension namespace)                                                           | `conditionalFormatting`                                                        |
 | Filters, filter views                                 | `table:database-range` with `table:filter`                                                                                  | `autoFilter`; filter views have no XLSX form (Unknown content)                 |
 | Protection                                            | `table:protected` and protection keys                                                                                       | `sheetProtection`, `protectedRanges`                                           |
@@ -271,6 +271,62 @@ The table is the contract the readers and writers are tested against, one test p
 - Excel and LibreOffice draw a comparison on a text or an empty cell (Excel's `"abc">5` is TRUE, an empty cell is
   0); LiveDoc draws numbers alone, as Google Sheets does: the same file can draw differently there (default, D215).
 
+## Validation in the file
+
+- A sheet's [validation rules](data-validation.md) are written and read both ways, each as the **standard rule**
+  closest to it, which every app checks, and **LiveDoc's rule** beside it, exact, which LiveDoc reads back
+  (default, D293). The evidence is Google Sheets' own export
+  (`plans/assets/0020/research/google-validation-export.md`): it writes no checkbox and no Text Is Exactly.
+- **XLSX**: one `dataValidation` a rule in the worksheet's one `dataValidations` (after the kept ones, `count`
+  their sum), `allowBlank="1"`; LiveDoc's rules in one `ext` of the worksheet's `extLst`, its `uri` LiveDoc's
+  namespace `urn:livedoc:xmlns:spreadsheet:1.0`, one `livedoc:dataValidation` a rule naming its standard rule by
+  `sqref`.
+- **ODF**: one `table:content-validation` a rule in the spreadsheet's one `table:content-validations` (after the
+  kept ones), named `LiveDocValidation1`, ... (a name a kept one holds skipped), each of its cells naming it
+  (`table:content-validation-name`), `table:allow-empty-cell="true"`, `table:base-cell-address` its top-left cell;
+  LiveDoc's rule in its `livedoc:rule` and `livedoc:fingerprint` attributes, the same namespace.
+- **LiveDoc's rule** (`livedoc:rule`) is the rule's settings as JSON, its range left to the standard rule's: `is`,
+  `opts` (each `v` and `c`), `src` (`'My Lists'!A1:A3`, or `A1:A3` on its own sheet), `show`, `multi`, `op`,
+  `a`, `b`, `on`, `off`, `fx` (Google's syntax, for the range's top-left cell), `warn`, `help`.
+- Its `livedoc:fingerprint` is the CRC-32 (8 lower-case hex digits) of the standard rule as written: XLSX's `type`,
+  `operator`, `formula1`, `formula2`, `showErrorMessage`, `errorStyle` and `prompt`; ODF's `table:condition`,
+  its error message's type and its help message's text; each a line. **Read**, LiveDoc's rule is taken when its
+  fingerprint is the standard rule's as read; else another app changed the standard rule since, so the standard
+  rule is read, LiveDoc's dropped, and the read names it (`validation_rule_changed`, logged, never reported)
+  (default, D294).
+
+| Model                            | XLSX `dataValidation` (standard rule)                                                              | ODF `table:condition` (standard rule)                                                       |
+| -------------------------------- | -------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| Dropdown                         | `list`, `formula1` `"To Do,Doing,Done"`                                                            | `of:cell-content-is-in-list("To Do";"Doing";"Done")`, `table:display-list="unsorted"`       |
+| Dropdown from a Range            | `list`, `formula1` `'My Lists'!$A$1:$A$3`                                                          | `of:cell-content-is-in-list([$'My Lists'.$A$1:.$A$3])`, `unsorted`                          |
+| Checkbox                         | `list` `"TRUE,FALSE"`; with custom cell values, `"Yes,No"` (or `"Yes"`)                            | `cell-content-is-in-list("TRUE";"FALSE")`, the custom values the same                       |
+| Number                           | `decimal`, `operator` `between`, ..., `notEqual`, the numbers                                      | `of:cell-content-is-decimal-number() and cell-content-is-between(1,10)`, `cell-content()>5` |
+| Date (before, ..., between)      | `date`, `operator` `lessThan`, `lessThanOrEqual`, `greaterThan`, ..., `equal`, day numbers         | `of:cell-content-is-date() and cell-content()<46296`, ...                                   |
+| Date Is a Valid Date             | `custom`, Google's `OR(NOT(ISERROR(DATEVALUE(A1))),AND(ISNUMBER(A1),LEFT(CELL("format",A1))="D"))` | `of:is-true-formula(...)`, the same formula                                                 |
+| Text Contains, Does Not          | `custom`, `NOT(ISERROR(SEARCH("x",A1)))`, `ISERROR(SEARCH("x",A1))`                                | `is-true-formula(...)`                                                                      |
+| Text Is Exactly                  | `custom`, `A1="x"` (case aside, as LiveDoc checks it)                                              | `is-true-formula([.A1]="x")`                                                                |
+| Text Is a Valid Email, URL       | `custom`, `IFERROR(ISEMAIL(A1),TRUE)`, `ISURL`, kept by S5's convention                            | `is-true-formula(IFERROR(ISEMAIL([.A1]);TRUE()))`                                           |
+| Custom Formula Is                | `custom`, the formula (S5's convention when Excel lacks a function)                                | `of:is-true-formula(...)`                                                                   |
+| Reject the Value, Show a Warning | `showErrorMessage="1"`; a warning adds `errorStyle="warning"`                                      | `table:error-message` `table:message-type="stop"` or `"warning"`, `table:display="true"`    |
+| Help Text                        | `showInputMessage="1" prompt="..."`                                                                | `table:help-message table:display="true"` › `text:p`                                        |
+
+- A dropdown's options the standard list cannot say (an option holding a comma in XLSX, or a list past XLSX's 255
+  characters) are written as a rule that allows any value (no `type`), LiveDoc's rule beside it (default, D295).
+- **What another app loses**: an option's colour, the Chip and Arrow display, Allow Multiple Selections (a plain
+  list: a cell of several options is invalid there) and a checkbox (a TRUE, FALSE list). Converting lists them
+  ([Converting](files-and-print.md#converting), `validation_simplified`), counted by rule.
+- **Read without LiveDoc's rule** (another app's file, or a changed one): a `list` of literal values is a Dropdown
+  (a `TRUE,FALSE` one too); a `list` of one range a Dropdown from a Range; `decimal` and `date` with number
+  operands a Number and a Date rule; `custom` a Custom Formula Is, Google's malformed ODF custom formula
+  (`of: and cell-content-is-between(FORMULA,0)`) read as FORMULA; a rule is Reject the Value only when it shows a
+  `stop` error; its input message is its Help Text, its own error message and titles left out. A custom formula is
+  moved from its base cell (ODF) to each rectangle's top-left. A rule over several rectangles (an `sqref` of
+  several, an ODF rule's cells) becomes one rule a rectangle (default, D296).
+- What the model does not hold (`whole`, `textLength`, `time`, a list of a formula or a name, a rule over cells
+  another rule already holds, a formula LiveDoc cannot read, past `VALIDATION_RULES_MAX` or `FORMAT_RULE_RANGES_MAX`
+  rectangles) stays the file's own: kept as it came, without the rules read beside it; a read rule the grid cannot
+  hold is named at its top-left cell (`validation_rule_unread`).
+
 ## Rows and columns in the file
 
 - A line's own size, whether it is hidden by hand, its group depth, the collapsed groups, the side their controls sit
@@ -493,13 +549,14 @@ and write is measured against what arrives in practice, not only against LiveDoc
 ## Conformance claimed
 
 - **ODF**: every `.ods` and `.fods` written is a conforming OpenDocument 1.4 spreadsheet document, valid against the
-  Part 3 RELAX NG schema (extended conformance where `calcext:` and `loext:` content is kept), checked in CI.
+  Part 3 RELAX NG schema (extended conformance where `calcext:` and `loext:` content is kept, or LiveDoc's own
+  `livedoc:` validation rules are written), checked in CI.
 - **OpenFormula**: an evaluator of the **Small** group to start, the **Large** group as the definition of done
   (OpenFormula Part 4 §2.3), measured by the oracle corpus ([Formulas](formulas.md#the-oracle)).
 - **XLSX**: every `.xlsx` written validates against ECMA-376 Transitional's schemas, checked in CI, and opens in
   Excel, LibreOffice and Google Sheets with the same values.
 - Built: `pnpm --filter @livedoc/sheets validate:files` writes one workbook per construct group (values, formulas,
-  arrays, number formats, Excel's bounds) in all three files, validates each against its schema with Jing, and has
+  arrays, number formats, Excel's bounds, validation rules) in all three files, validates each against its schema with Jing, and has
   LibreOffice open and save each again with the same values ([Office packages](../020-import-export/office-packages.md#validation));
   CI's Office files job runs it.
 
@@ -620,5 +677,12 @@ The code cites each by its id.
   (default).
 - **D280** A chart's place in ODF: anchored in its cell at its offset, not placed over the sheet by position, as
   LibreOffice draws rows sized to their text shorter than LiveDoc does (default).
+- **D293** Validation rules in a file: the closest standard rule for other apps, LiveDoc's exact rule beside it in
+  LiveDoc's namespace (the Director's ruling, 2026-11-26).
+- **D294** A LiveDoc rule beside a standard rule changed since: the standard rule wins, LiveDoc's dropped and logged
+  (the Director's ruling, 2026-11-26).
+- **D295** A dropdown XLSX's list cannot say: a rule allowing any value, LiveDoc's rule beside it (default).
+- **D296** A standard rule read without LiveDoc's: the closest LiveDoc rule, one a rectangle; error messages and
+  titles left out (default).
 - **D261** A sheet's own charts beside a drawing kept from its file: Not written, the sheet named (`charts_unwritten`),
   as a worksheet holds one drawing and ODF one `table:shapes` (default).

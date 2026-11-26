@@ -12,6 +12,7 @@ import { GOOGLE_ONLY_FUNCTIONS } from './odf-function-names';
 import { toOpenFormula } from './open-formula';
 import type { FileCell, WorkbookFile } from './workbook-file';
 import { fileKept } from './kept-anchors';
+import { simplifiedElsewhere, type SimplifiedFeature } from './file-validation';
 import {
   keptKinds,
   keptStandardOf,
@@ -39,6 +40,8 @@ export type ConversionLoss =
   | { k: 'columns_cut'; count: number; sheets: string[] }
   // Formulas calling a function the spreadsheet's meaning and the new format's standard answer differently (D100).
   | { k: 'answers_differ'; count: number; functions: string[] }
+  // Validation rules other apps hold more simply (standard-mapping.md "Validation in the file"), and what they lose.
+  | { k: 'validation_simplified'; count: number; features: SimplifiedFeature[] }
   // What was kept from the file, which a file of the other standard leaves behind (standard-mapping.md "Unknown
   // content"): counted, its kinds the most common first.
   | { k: 'kept'; count: number; kinds: KeptKind[] };
@@ -132,6 +135,8 @@ export function conversionLosses(
   if (wide.length > 0) losses.push({ k: 'columns_cut', count: wide.length, sheets: wide });
   const differ = answersDiffering(file, meaning, to);
   if (differ.count > 0) losses.push({ k: 'answers_differ', ...differ });
+  const simpler = simplifiedElsewhere(file.sheets.flatMap((s) => s.validations ?? []));
+  if (simpler.count > 0) losses.push({ k: 'validation_simplified', ...simpler });
   const kept =
     file.kept && file.kept.standard !== keptStandardOf(to) ? keptKinds(file.kept.items) : null;
   if (kept && kept.count > 0) losses.push({ k: 'kept', ...kept });

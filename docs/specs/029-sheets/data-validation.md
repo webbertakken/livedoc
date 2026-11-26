@@ -66,8 +66,8 @@ every comma-separated part (each trimmed, empty ones aside) is an option; each i
 
 ## In a spreadsheet
 
-**Status: partly built.** The side panel, Insert › Checkbox, Insert › Dropdown, Use Custom Cell Values, Custom
-Formula Is, a Dropdown from a Range on any sheet and Allow Multiple Selections are built; the rest is specified.
+**Status: built.** The side panel, Insert › Checkbox, Insert › Dropdown, Use Custom Cell Values, Custom Formula Is,
+a Dropdown from a Range on any sheet, Allow Multiple Selections, and every rule read and written in both file formats.
 The rules above carry into the [spreadsheet](spreadsheet.md), with these changes
 ([Data tools](data-tools.md#data-validation)):
 
@@ -86,8 +86,9 @@ The rules above carry into the [spreadsheet](spreadsheet.md), with these changes
   Is** ([Rules](#rules)); both are the Plan Sheet's too, the rule form being one.
 - A dropdown's options take **colours** (the one colour picker), drawn on its chips; **Allow Multiple Selections**
   holds several options in one cell, comma-separated ([Rules](#rules)); the Plan Sheet's too, the rule form being one.
-- Both file formats keep every rule ([Standard mapping](standard-mapping.md)); a criterion a format lacks is kept for
-  LiveDoc as unknown content and listed on conversion.
+- Both file formats keep every rule exactly for LiveDoc, each beside the closest standard rule other apps check
+  ([Validation in the file](standard-mapping.md#validation-in-the-file)); what those apps lose (an option's colour,
+  the Chip and Arrow display, multiple selections, a checkbox) is listed on conversion.
 
 ## Where values are checked
 

@@ -28,6 +28,11 @@ import type { KeptContent, StoredAt } from './kept-content';
 import { bandingRules } from '../rules/bandings';
 import { STANDARD_THEME, type SpreadsheetTheme } from '../themes/spreadsheet-theme';
 import { fileFormatRulesOf, formatRulesFromFile, type FileFormatRule } from './file-format-rules';
+import {
+  fileValidationRulesOf,
+  validationRulesFromFile,
+  type FileValidationRule,
+} from './file-validation';
 
 export type FileValue =
   { k: 'n'; v: number } | { k: 's'; v: string } | { k: 'b'; v: boolean } | { k: 'e'; v: ErrorCode };
@@ -60,6 +65,8 @@ export type FileSheet = {
   hidden?: true;
   // Its format rules in list order (standard-mapping.md "Format rules in the file").
   formatRules?: FileFormatRule[];
+  // Its validation rules in list order (standard-mapping.md "Validation in the file").
+  validations?: FileValidationRule[];
   // Its charts in paint order (standard-mapping.md "Charts in the file").
   charts?: FileChart[];
 };
@@ -98,6 +105,10 @@ export type FileLoss =
   | { k: 'styles_unread'; sheet: string }
   // A file's format rule the grid cannot hold (standard-mapping.md "Format rules in the file"), at its anchor.
   | { k: 'format_rule_unread'; sheet: string; r: number; c: number }
+  // A file's validation rule the grid cannot hold (standard-mapping.md "Validation in the file"), at its top-left cell.
+  | { k: 'validation_rule_unread'; sheet: string; r: number; c: number }
+  // LiveDoc's rule beside a standard rule another app changed since: the standard rule read (D294); logged only.
+  | { k: 'validation_rule_changed'; sheet: string; r: number; c: number }
   // A sheet whose sized rows and columns pass the most it holds: the rest left out (D124).
   | { k: 'sizes_cut'; sheet: string }
   | { k: 'kept_unread'; count: number }
@@ -209,6 +220,7 @@ export function workbookFileOf(
       const own = fileFormatRulesOf(sheet.layout, ctx, locale) ?? [];
       const all = [...own, ...bandingRules(sheet.layout)];
       const formatRules = all.length ? all : undefined;
+      const validations = fileValidationRulesOf(sheet.layout, ctx);
       const charts = fileChartsOf(engine, sheet, locale);
       return {
         name: sheet.title,
@@ -219,6 +231,7 @@ export function workbookFileOf(
         ...(sheet.layout.tabColour ? { tabColour: sheet.layout.tabColour } : {}),
         ...(sheet.layout.hidden ? { hidden: true as const } : {}),
         ...(formatRules ? { formatRules } : {}),
+        ...(validations ? { validations } : {}),
         ...(charts.length ? { charts } : {}),
       };
     }),
@@ -430,9 +443,11 @@ export function sheetsFromFile(
       rand,
       losses,
     );
+    const rules = validationRulesFromFile(m.file.validations, m.layout, ctx, m.title, rand, losses);
     const objects = sheetChartsFromFile(m.file.charts, m.layout, rand);
     const layout = {
       ...m.layout,
+      ...(rules ? { rules } : {}),
       ...(formatRules ? { formatRules } : {}),
       ...(objects.length ? { objects } : {}),
     };

@@ -3377,6 +3377,30 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
           "count": {
             "type": "number"
           },
+          "features": {
+            "items": {
+              "$ref": "#/components/schemas/SimplifiedFeature"
+            },
+            "type": "array"
+          },
+          "k": {
+            "const": "validation_simplified",
+            "type": "string"
+          }
+        },
+        "required": [
+          "k",
+          "count",
+          "features"
+        ],
+        "type": "object"
+      },
+      {
+        "additionalProperties": false,
+        "properties": {
+          "count": {
+            "type": "number"
+          },
           "k": {
             "const": "kept",
             "type": "string"
@@ -16071,6 +16095,15 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
     "enum": [
       "google",
       "email-code"
+    ],
+    "type": "string"
+  },
+  "SimplifiedFeature": {
+    "enum": [
+      "colours",
+      "chips",
+      "multi",
+      "checkboxes"
     ],
     "type": "string"
   },

@@ -26,6 +26,39 @@ const formula = (f: string, r = 0, c = 0): FileCell & { formula: string } => ({
   value: { k: 'n', v: 1 },
 });
 
+// standard-mapping.md "Validation in the file": what other apps lose of a rule, on every conversion and download.
+describe('validation rules other apps hold more simply', () => {
+  const rules: FileSheet['validations'] = [
+    { ranges: [{ r1: 0, c1: 0, r2: 0, c2: 0 }], is: 'list', opts: [{ v: 'a', c: '#ff0000' }] },
+    {
+      ranges: [{ r1: 1, c1: 0, r2: 1, c2: 0 }],
+      is: 'range',
+      src: 'B1:B2',
+      show: 'plain',
+      multi: true,
+    },
+    { ranges: [{ r1: 2, c1: 0, r2: 2, c2: 0 }], is: 'list', opts: [{ v: 'a' }], show: 'plain' },
+    { ranges: [{ r1: 3, c1: 0, r2: 3, c2: 0 }], is: 'check' },
+    { ranges: [{ r1: 4, c1: 0, r2: 4, c2: 0 }], is: 'num', op: 'gt', a: 1 },
+  ];
+  it('counts each rule losing something and names what is lost, in order', () => {
+    const losses = conversionLosses(file({ ...sheet('A', []), validations: rules }), 'ods', 'xlsx');
+    expect(losses).toEqual([
+      {
+        k: 'validation_simplified',
+        count: 3,
+        features: ['colours', 'chips', 'multi', 'checkboxes'],
+      },
+    ]);
+    expect(
+      conversionLosses(file({ ...sheet('A', []), validations: rules.slice(2) }), 'xlsx', 'ods'),
+    ).toEqual([{ k: 'validation_simplified', count: 1, features: ['checkboxes'] }]);
+    expect(
+      conversionLosses(file({ ...sheet('A', []), validations: rules.slice(4) }), 'xlsx', 'ods'),
+    ).toEqual([]);
+  });
+});
+
 describe('convertedFormat', () => {
   it('goes to Excel from either ODF form, and to the ODF package from Excel', () => {
     expect(convertedFormat('ods')).toBe('xlsx');
