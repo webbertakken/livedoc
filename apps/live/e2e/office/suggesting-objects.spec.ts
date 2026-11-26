@@ -4,7 +4,7 @@ import { solidPng } from './office-pictures';
 
 // Objects and breaks while suggesting (docs/specs/034-text-documents/review.md "While suggesting": Objects in a line,
 // Breaks and lines, Not yet): an Editor in Suggesting puts in a page break, an equation and a horizontal line, each a
-// card of its own kind; rejecting the line takes it away; Footnote is dimmed, "Editing only". A Participant's horizontal
+// card of its own kind; rejecting the line takes it away; a new drawing is dimmed, "Editing only". A Participant's horizontal
 // line reaches the Editor as a card, and so does their picture, drawn from its media for the Editor, who accepts it.
 
 const BODY = '[role="textbox"][aria-label="Document body"]';
@@ -66,11 +66,12 @@ test('objects and breaks are suggested, each with its card', async ({
   await expect(body.locator(':scope > p')).toHaveCount(paragraphs);
   await expect(page.locator(CARD).filter({ hasText: 'Add: Page break' })).toHaveCount(1);
 
-  // Footnote cannot be suggested yet: dimmed, saying where it runs.
-  const footnote = await officeMenuItem(page, ['Insert', 'Footnote']);
-  await expect(footnote).toHaveAttribute('aria-disabled', 'true');
-  await expect(footnote).toContainText('Editing only');
-  await expect(footnote).toHaveAccessibleDescription(/An Editor changes it in Editing/);
+  // A new drawing cannot be suggested yet: dimmed, saying where it runs.
+  const drawing = await officeMenuItem(page, ['Insert', 'Drawing', 'New']);
+  await expect(drawing).toHaveAttribute('aria-disabled', 'true');
+  await expect(drawing).toContainText('Editing only');
+  await expect(drawing).toHaveAccessibleDescription(/An Editor changes it in Editing/);
+  await page.keyboard.press('Escape');
   await page.keyboard.press('Escape');
 
   // A Participant on a share link puts in a horizontal line; the Editor sees its card.
