@@ -117,6 +117,17 @@ test('a Participant reviews a PDF, and its stored file is replaced in one step f
   await peer.keyboard.press('Escape');
   await expect(holding).toHaveCount(0);
 
+  // The Participant's text selection is tinted for the Editor, in the Participant's colour, with their name.
+  await peer.locator('[data-pdf-pages]').focus();
+  await peer.keyboard.press('ControlOrMeta+a');
+  await expect(peer.locator('[data-pdf-text-selection]')).toHaveCount(1);
+  const tinted = page.locator(`${PAGE_ONE} [data-pdf-peer-tint] polygon`);
+  await expect(tinted.first()).toBeVisible();
+  await expect(page.locator(`${PAGE_ONE} [data-pdf-peer-text] span`)).not.toHaveText('');
+  await page.screenshot({ path: test.info().outputPath('pdf-peer-text.png') });
+  await peer.keyboard.press('Escape');
+  await expect(tinted).toHaveCount(0);
+
   // The new stored file: the bake of what the room holds, as an Editor's surface makes it.
   const downloadItem = await officeMenuItem(page, ['File', 'Download', 'PDF']);
   const [download] = await Promise.all([page.waitForEvent('download'), downloadItem.click()]);

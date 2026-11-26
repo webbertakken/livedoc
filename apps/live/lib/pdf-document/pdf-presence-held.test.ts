@@ -1,7 +1,7 @@
 // What a person holds in a PDF (docs/specs/035-pdf-documents/live-editing-and-storage.md "Presence").
 import { describe, expect, it } from 'vitest';
 import { Mark, PageName } from '@livedoc/pdf-documents';
-import { heldOf, peerHoldsOn } from './pdf-presence-held';
+import { heldOf, peerHoldsOn, peerTextsOn } from './pdf-presence-held';
 import type { PdfPresencePeer } from './pdf-presence-store';
 
 const mark = (id: string): Mark =>
@@ -23,18 +23,58 @@ const peer = (id: string, held: PdfPresencePeer['place']['held']): PdfPresencePe
   place: { page: 'p:1', mode: 'reviewing', held },
 });
 
+const text = {
+  page: 'p:2',
+  spans: [
+    [4, 9],
+    [12, 20],
+  ] as const,
+};
+
 describe('heldOf', () => {
+  const held = (over: Partial<Parameters<typeof heldOf>[0]>) =>
+    heldOf({ chosen: null, text: null, focused: true, reviews: true, ...over });
+
   it('holds the first mark selected, the one given the keys', () => {
-    expect(heldOf({ page: 0, ids: ['m2', 'm1'] }, true)).toEqual({ what: 'mark', name: 'm2' });
+    expect(held({ chosen: { page: 0, ids: ['m2', 'm1'] } })).toEqual({ what: 'mark', name: 'm2' });
   });
 
-  it('holds nothing with no mark selected', () => {
-    expect(heldOf(null, true)).toBeNull();
-    expect(heldOf({ page: 0, ids: [] }, true)).toBeNull();
+  it('holds the text selected, from its first character to its last', () => {
+    expect(held({ text })).toEqual({ what: 'text', page: 'p:2', first: 4, last: 19 });
+  });
+
+  it('holds a mark before text', () => {
+    expect(held({ chosen: { page: 0, ids: ['m1'] }, text })).toMatchObject({ what: 'mark' });
+  });
+
+  it('holds nothing with nothing selected', () => {
+    expect(held({})).toBeNull();
+    expect(held({ chosen: { page: 0, ids: [] } })).toBeNull();
+    expect(held({ text: { page: 'p:2', spans: [] } })).toBeNull();
   });
 
   it('holds nothing while focus is outside the surface', () => {
-    expect(heldOf({ page: 0, ids: ['m1'] }, false)).toBeNull();
+    expect(held({ chosen: { page: 0, ids: ['m1'] }, text, focused: false })).toBeNull();
+  });
+
+  it('holds nothing for a Viewer, whose text selection is their own', () => {
+    expect(held({ text, reviews: false })).toBeNull();
+  });
+});
+
+describe('peerTextsOn', () => {
+  it('finds each collaborator whose text selection is on the page', () => {
+    const texts = peerTextsOn(
+      [
+        peer('a', { what: 'text', page: 'p:1', first: 2, last: 7 }),
+        peer('b', { what: 'text', page: 'p:9', first: 0, last: 3 }),
+        peer('c', { what: 'mark', name: 'm1' }),
+        peer('d', null),
+      ],
+      'p:1',
+    );
+    expect(texts).toEqual([{ id: 'a', name: 'Person a', color: '#2563eb', first: 2, last: 7 }]);
+    expect(peerTextsOn([], 'p:1')).toBe(peerTextsOn([peer('d', null)], 'p:1'));
   });
 });
 

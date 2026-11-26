@@ -354,6 +354,8 @@ export function PdfDocumentSurface({
     page: viewer.page,
     mode,
     chosen: markSelection.chosen,
+    text: textSelection.selected,
+    reviews: canReview,
   });
   const peers = usePdfPresencePeers(tabId);
   const markRestyle = usePdfMarkRestyle({

@@ -36,7 +36,8 @@ import { PdfMarksOverlay, type PdfMarkReshaping } from './PdfMarksOverlay';
 import { keyResize } from '@/lib/pdf-document/pdf-mark-handles';
 import { linkBox, PdfPageLinks, percentStyle } from './PdfPageLinks';
 import { PdfPeerHolds } from './PdfPeerHolds';
-import type { PdfPeerHold } from '@/lib/pdf-document/pdf-presence-held';
+import type { PdfPeerHold, PdfPeerText } from '@/lib/pdf-document/pdf-presence-held';
+import { usePdfPeerTexts } from '@/lib/pdf-document/usePdfPeerTexts';
 import { PdfPageReading, pageRegionName } from './PdfPageReading';
 import { PdfPageTiles, type PdfTileSource } from './PdfPageTiles';
 import { paintPicture, REDRAW_SETTLE_MS } from '@/lib/pdf-document/pdf-paint';
@@ -105,6 +106,7 @@ export const PdfPage = memo(function PdfPage({
   onDoubleTap,
   register,
   holds,
+  peerTexts,
 }: {
   index: number;
   count: number;
@@ -161,6 +163,8 @@ export const PdfPage = memo(function PdfPage({
   register: (index: number, element: HTMLElement | null) => void;
   // The marks of the page collaborators hold, outlined in their colours (live-editing-and-storage.md "Presence").
   holds: readonly PdfPeerHold[];
+  // Collaborators' text selections on the page, tinted in their colours.
+  peerTexts: readonly PdfPeerText[];
 }) {
   const marks = changeable.marks;
   const canvas = useRef<HTMLCanvasElement | null>(null);
@@ -243,6 +247,9 @@ export const PdfPage = memo(function PdfPage({
   // The picture there as it is turned now; a picture of the page turned otherwise is hidden until it is drawn again,
   // never stretched across the turned box with its marks misplaced.
   const current = drawn?.turns === turns ? drawn : null;
+
+  // Collaborators' text selections, from the page's own text (live-editing-and-storage.md "Presence").
+  const peerTextsShown = usePdfPeerTexts(index, texts, peerTexts);
 
   // A pointer's place on the page as the file has it (marks.md: a mark is made on the page as the file has it).
   const pointAt = (client: { x: number; y: number }): PagePoint | null => {
@@ -460,9 +467,10 @@ export const PdfPage = memo(function PdfPage({
           reshaping={reshaping}
         />
       ) : null}
-      {matrix && holds.length > 0 ? (
+      {matrix && (holds.length > 0 || peerTextsShown.length > 0) ? (
         <PdfPeerHolds
           holds={holds}
+          texts={peerTextsShown}
           matrix={matrix}
           width={shown.width}
           height={shown.height}
