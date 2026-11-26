@@ -9,7 +9,7 @@ import { emptyLayout, emptySheet, NOBODY, type Sheet } from '../sheet';
 import type { SheetChart } from '../objects/sheet-objects';
 import { WRITTEN_CONSTRUCTS } from '../validation/written-constructs';
 import { excelFileWithKept, odfFlatWithKept } from '../testing/kept-files';
-import { fileChartsOf, type FileChart } from './file-charts';
+import { fileChartsOf, sheetChartsFromFile, type FileChart } from './file-charts';
 import { odsChartContent, odsChartFrames } from './ods-charts';
 import { writeFlatOds, writeOds } from './ods-write';
 import { readOds } from './ods-read';
@@ -437,5 +437,100 @@ describe('a scatter over numbers alone, and picked columns', () => {
     expect(two!.series.map((s) => s.name)).toEqual(['Column C']);
     expect([one!.x, one!.series.length]).toEqual([null, 1]);
     expect(picked!.series.map((s) => s.name)).toEqual(['Index']);
+  });
+});
+
+// standard-mapping.md "Charts in the file", Reading: a read chart becomes the sheet's own by its ids.
+describe('sheetChartsFromFile', () => {
+  const layout = emptyLayout(seeded(4), 10, 6);
+  const { rows, cols } = layout;
+  const cell = (c: number, r1 = 1, r2 = 4) => ({ r1, c1: c, r2, c2: c });
+  const read = (extra: Partial<FileChart> = {}): FileChart => ({
+    id: '',
+    type: 'column',
+    legend: 'bottom',
+    values: false,
+    axis: true,
+    at: { r: 2, c: 1, dx: 5, dy: 6 },
+    width: 300,
+    height: 200,
+    labels: null,
+    x: null,
+    series: [{ name: 'A', nameAt: null, values: cell(2), cached: [] }],
+    ...extra,
+  });
+
+  it('names its place and block by ids, a gap in its columns listed, looks by column, the defaults left out', () => {
+    const [chart] = sheetChartsFromFile(
+      [
+        read({
+          labels: { range: cell(0), cached: [] },
+          series: [
+            { name: 'A', nameAt: { r: 0, c: 2 }, values: cell(2), cached: [], color: '#112233' },
+            { name: 'B', nameAt: { r: 0, c: 4 }, values: cell(4), cached: [], line: true },
+          ],
+        }),
+      ],
+      layout,
+      seeded(),
+    );
+    expect(chart).toEqual({
+      id: expect.stringMatching(/^[a-z0-9]{6}$/),
+      kind: 'chart',
+      at: { r: rows[2], c: cols[1], dx: 5, dy: 6 },
+      width: 300,
+      height: 200,
+      type: 'column',
+      range: { r1: rows[0], c1: cols[0], r2: rows[4], c2: cols[4] },
+      cols: [cols[0], cols[2], cols[4]],
+      series: { [cols[2]!]: { color: '#112233' }, [cols[4]!]: { line: true } },
+    });
+  });
+
+  it('reads a scatter’s x as its first column, and leaves out a chart past the sheet', () => {
+    const charts = sheetChartsFromFile(
+      [
+        read({ type: 'scatter', x: { range: cell(1), cached: [] }, legend: 'none' }),
+        read({ at: { r: 40, c: 0, dx: 0, dy: 0 } }),
+        read({ series: [{ name: 'A', nameAt: null, values: cell(2, 1, 40), cached: [] }] }),
+        read({ series: [] }),
+      ],
+      layout,
+      seeded(),
+    );
+    expect(charts).toHaveLength(1);
+    expect(charts[0]).toMatchObject({
+      type: 'scatter',
+      legend: 'none',
+      range: { r1: rows[1], c1: cols[1], r2: rows[4], c2: cols[2] },
+    });
+    expect(charts[0]!.cols).toBeUndefined();
+  });
+
+  it('keeps titles, alt, values, a hidden axis and its kept XML', () => {
+    const kept = { part: 'xl/charts/chart1.xml', sum: '0123abcd' };
+    const [chart] = sheetChartsFromFile(
+      [read({ title: 'T', xTitle: 'X', yTitle: 'Y', alt: 'A', values: true, axis: false, kept })],
+      layout,
+      seeded(),
+    );
+    expect(chart).toMatchObject({
+      title: 'T',
+      xTitle: 'X',
+      yTitle: 'Y',
+      alt: 'A',
+      values: true,
+      axis: false,
+      kept,
+    });
+    expect(sheetChartsFromFile(undefined, layout, seeded())).toEqual([]);
+  });
+});
+
+describe('a read chart, written', () => {
+  it('carries its kept XML’s name and sum to the file', () => {
+    const sheet = costs();
+    const kept = { part: 'xl/charts/chart1.xml', sum: '0123abcd' };
+    expect(filed(withCharts(sheet, [chartOver(sheet, { kept })]))[0]!.kept).toEqual(kept);
   });
 });

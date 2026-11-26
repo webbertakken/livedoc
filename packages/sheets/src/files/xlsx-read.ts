@@ -25,6 +25,7 @@ import { shiftFormulaText } from './formula-text-shift';
 import { isoDateSerial } from './ods-read';
 import { FILE_READ_CELLS_MAX } from './file-read-limits';
 import type { FileCell, FileLoss, FileRead, FileSheet, FileValue } from './workbook-file';
+import { readXlsxCharts } from './xlsx-charts-read';
 import { allRead, WORKBOOK_READ, WORKSHEET_READ, XlsxKeeper } from './xlsx-kept-read';
 import { readXlsxDxfs, readXlsxFormatRules } from './xlsx-format-rules';
 import { readThemeColours } from './xlsx-colours';
@@ -348,11 +349,13 @@ export async function readXlsx(
   const unread = strictUnread + (keeper?.unread ?? 0);
   if (unread > 0) book.losses.push({ k: 'kept_unread', count: unread });
   if (pkg.dropped.length > 0) book.losses.push({ k: 'entries_dropped', entries: [...pkg.dropped] });
-  const kept = keeper?.content();
+  // The charts of a kept drawing that qualifies are the sheets' own (standard-mapping.md "Charts in the file").
+  const charted = readXlsxCharts(sheets, keeper?.content());
+  const kept = charted.kept;
   return {
     ok: true,
     file: {
-      sheets,
+      sheets: charted.sheets,
       ...(kept ? { kept } : {}),
       ...(fileTheme && fileTheme !== STANDARD_THEME ? { theme: fileTheme } : {}),
     },

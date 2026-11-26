@@ -41,6 +41,7 @@ describe('spreadsheet import', () => {
     expect(answer).toMatch(
       /^\+ spreadsheet [0-9a-f]{8} "Q3 budget" · ods · Q3 budget · https:\/\/docs\.nu\/document\/[0-9a-f-]{36}$/,
     );
+    expect(opened.out).not.toContain('[workbook]');
     expect(report).toEqual(['1 cell’s text is cut to 50,000 characters']);
     expect(made.at(-1)).toMatchObject({ name: 'Q3 budget', workbook: { format: 'ods' } });
     const named = await cli(['spreadsheet', 'import', '/data/m.csv', '--name', 'Models'], {

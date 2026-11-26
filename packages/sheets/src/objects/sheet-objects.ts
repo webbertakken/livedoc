@@ -47,7 +47,13 @@ export type SheetChart = {
   yTitle?: string;
   alt?: string;
   series?: Record<string, SheetChartSeriesLook>;
+  // Read from a file: its file XML, a kept part by name, and the sum of what it was read as; written in its place while
+  // the chart sums the same (standard-mapping.md "Charts in the file", D276).
+  kept?: SheetChartKept;
 };
+
+/** A read chart's kept file XML: the kept part's name and the sum of the chart it was read as. */
+export type SheetChartKept = { part: string; sum: string };
 
 export type SheetObject = SheetChart;
 
@@ -63,6 +69,8 @@ export const SHEET_CHART_COLS_MAX = 13;
 const PALETTE_ID_MAX = 40;
 
 const HEX = /^#[0-9a-f]{6}$/;
+const KEPT_SUM = /^[0-9a-f]{8}$/;
+export const SHEET_CHART_KEPT_PART_MAX = 200;
 const isRecord = (x: unknown): x is Record<string, unknown> =>
   typeof x === 'object' && x !== null && !Array.isArray(x);
 const onlyKeys = (x: Record<string, unknown>, keys: readonly string[]) =>
@@ -90,6 +98,7 @@ const CHART_KEYS = [
   'yTitle',
   'alt',
   'series',
+  'kept',
 ] as const;
 
 function isAnchor(x: unknown): x is CellAnchor {
@@ -116,6 +125,18 @@ function isSeriesLook(x: unknown): x is SheetChartSeriesLook {
     (x.color === undefined || (typeof x.color === 'string' && HEX.test(x.color))) &&
     (x.line === undefined || x.line === true) &&
     (x.right === undefined || x.right === true)
+  );
+}
+
+function isKept(x: unknown): x is SheetChartKept {
+  return (
+    isRecord(x) &&
+    onlyKeys(x, ['part', 'sum']) &&
+    typeof x.part === 'string' &&
+    x.part.length > 0 &&
+    x.part.length <= SHEET_CHART_KEPT_PART_MAX &&
+    typeof x.sum === 'string' &&
+    KEPT_SUM.test(x.sum)
   );
 }
 
@@ -146,7 +167,8 @@ function isSheetChart(x: Record<string, unknown>): boolean {
     (series === undefined ||
       (isRecord(series) &&
         Object.keys(series).length <= SHEET_CHART_COLS_MAX &&
-        Object.entries(series).every(([k, v]) => isAxisId(k) && isSeriesLook(v))))
+        Object.entries(series).every(([k, v]) => isAxisId(k) && isSeriesLook(v)))) &&
+    (x.kept === undefined || isKept(x.kept))
   );
 }
 

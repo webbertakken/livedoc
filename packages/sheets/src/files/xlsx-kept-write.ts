@@ -136,6 +136,11 @@ export class XlsxKeptWriter {
   }
 
   /** Whether a sheet keeps a child of this name from its file (its `drawing`). */
+  /** A kept part by name, reached or not: a read chart's own XML (standard-mapping.md "Charts in the file"). */
+  part(name: string): KeptPart | undefined {
+    return this.kept?.parts.find((p) => p.name === name);
+  }
+
   keepsWorksheetChild(local: string, sheet: number): boolean {
     return this.of('worksheet', sheet).some((item) => keptLocalName(item.xml) === local);
   }

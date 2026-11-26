@@ -54,7 +54,11 @@ export type ImportedSpreadsheetResult =
 const documentPath = (documentId: string) => `/documents/${encodeURIComponent(documentId)}`;
 
 // The agents' requests for the shared flow: the parts stored unchecked, as an import's are.
-function agentPort(api: ApiClient, client: 'mcp' | 'cli'): SpreadsheetFilePort {
+function agentPort(
+  api: ApiClient,
+  client: 'mcp' | 'cli',
+  log: (line: string) => void,
+): SpreadsheetFilePort {
   let documentId = '';
   const headers = { [CLIENT_HEADER]: client };
   return {
@@ -108,7 +112,7 @@ function agentPort(api: ApiClient, client: 'mcp' | 'cli'): SpreadsheetFilePort {
       const res = await api.fetch(documentPath(id), { method: 'DELETE', headers });
       if (!res.ok) throw new Error(`bin answered ${res.status}`);
     },
-    log: (event, data) => console.info(event, data),
+    log: (event, data) => log(`${event} ${JSON.stringify(data)}`),
   };
 }
 
@@ -116,12 +120,14 @@ export async function importSpreadsheet(
   api: ApiClient,
   input: ImportSpreadsheetInput,
   client: 'mcp' | 'cli',
+  // Where the flow's decisions are logged: the CLI's debug log, else the console.
+  log: (line: string) => void = (line) => console.info(line),
 ): Promise<ImportedSpreadsheetResult> {
   const name = input.name?.trim() || nameFromFile(input.fileName) || input.fileName;
   const opened = await importSpreadsheetFile(
     { fileName: input.fileName, name, bytes: input.bytes },
     WorkbookRecord.create({ locale: AGENT_LOCALE, timeZone: 'UTC' }),
-    agentPort(api, client),
+    agentPort(api, client, log),
   );
   if (!opened.ok) {
     // A request the api refused is named by the api's code and words; anything else not from the api throws.

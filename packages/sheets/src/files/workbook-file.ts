@@ -2,7 +2,7 @@
 // name, cells by position, each with its formula in Google's syntax and the value it last showed. The bridge between
 // the model (cells by row and column id, formulas by id references) and each format's reader and writer, so neither
 // format ever sees an id and the model never sees a format.
-import { fileChartsOf, type FileChart } from './file-charts';
+import { fileChartsOf, sheetChartsFromFile, type FileChart } from './file-charts';
 import type { PackageRefusal } from '@livedoc/office-packages';
 import { layoutIndex } from '../layout';
 import {
@@ -109,6 +109,8 @@ export type FileLoss =
   | { k: 'parts_left'; count: number }
   // A sheet's own charts not written beside the drawings it kept from its file (standard-mapping.md "Charts in the file").
   | { k: 'charts_unwritten'; sheet: string }
+  // A chart read from the file, changed since, written from the model in place of its own XML (D276).
+  | { k: 'chart_rewritten'; sheet: string }
   // Formulas calling a function the spreadsheet's meaning and the format's standard answer differently (D100).
   | { k: 'answers_differ'; count: number; functions: string[] };
 
@@ -426,7 +428,12 @@ export function sheetsFromFile(
       rand,
       losses,
     );
-    const layout = formatRules ? { ...m.layout, formatRules } : m.layout;
+    const objects = sheetChartsFromFile(m.file.charts, m.layout, rand);
+    const layout = {
+      ...m.layout,
+      ...(formatRules ? { formatRules } : {}),
+      ...(objects.length ? { objects } : {}),
+    };
     return { id: m.id, title: m.title, layout, cells };
   });
   if (!file.kept) return { sheets, losses };

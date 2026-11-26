@@ -124,11 +124,13 @@ describe('importSpreadsheet', () => {
 
   it('refuses a damaged file in the editor’s words, sending nothing', async () => {
     const { api, seen } = server();
+    const logged: string[] = [];
     expect(
       await importSpreadsheet(
         api,
         { fileName: 'x.ods', bytes: bytesOf(new Uint8Array([1])) },
         'cli',
+        (line) => logged.push(line),
       ),
     ).toEqual({
       ok: false,
@@ -136,6 +138,7 @@ describe('importSpreadsheet', () => {
       message: 'This file is damaged and could not be opened.',
     });
     expect(seen).toEqual([]);
+    expect(logged).toEqual([expect.stringMatching(/^\[workbook\] refused \{/)]);
     expect(fileTooLarge()).toEqual({
       code: 'package_too_large',
       message: 'This file is too large to open.',

@@ -3,6 +3,7 @@
 // column and cell follows in writes, each within a write's limits, in the order they must land: a sheet's rows, its
 // columns, then its cells. Pure: the editor sends what this plans, and counts its progress in `units`.
 import { splitWrite } from '../commands';
+import type { SheetObject } from '../objects/sheet-objects';
 import type { CellChange, SheetWrite } from '../store';
 import { WORKBOOK_COLS_NEW, WORKBOOK_ROWS_NEW } from '../workbook-record';
 import type { SheetFromFile } from './workbook-file';
@@ -60,6 +61,7 @@ export function fileParts(sheets: readonly SheetFromFile[]): FileParts {
     rows: string[];
     cols: string[];
     cells: CellChange[];
+    objects: SheetObject[];
   }[] = [];
   let bytes = 0;
   let seededUnits = 0;
@@ -68,38 +70,50 @@ export function fileParts(sheets: readonly SheetFromFile[]): FileParts {
     const { rows, cols } = sheet.layout;
     const seedRows = rows.slice(0, WORKBOOK_ROWS_NEW);
     const seedCols = cols.slice(0, WORKBOOK_COLS_NEW);
-    const layout = { ...sheet.layout, rows: seedRows, cols: seedCols };
+    // Its charts land last, once every row and column they read is there.
+    const { objects, ...rest } = sheet.layout;
+    const layout = { ...rest, rows: seedRows, cols: seedCols };
     bytes += sizeOf(layout) + sizeOf(sheet.title) + sizeOf(sheet.id);
     const rowAt = new Map(rows.map((id, i) => [id, i]));
     const colAt = new Map(cols.map((id, i) => [id, i]));
     const seeded: SheetFromFile['cells'] = [];
-    const rest: CellChange[] = [];
+    const cellsLater: CellChange[] = [];
     for (const cell of sheet.cells) {
       const inGrid = rowAt.get(cell.r)! < seedRows.length && colAt.get(cell.c)! < seedCols.length;
       const size = sizeOf(cell);
       if (inGrid && bytes + size <= FILE_CREATE_BYTES_MAX) {
         seeded.push(cell);
         bytes += size;
-      } else rest.push(cell);
+      } else cellsLater.push(cell);
     }
     seeds.push({ id: sheet.id, title: sheet.title, layout, cells: seeded });
     seededUnits += seedRows.length + seedCols.length + seeded.length;
-    totalUnits += rows.length + cols.length + sheet.cells.length;
+    totalUnits += rows.length + cols.length + sheet.cells.length + (objects?.length ?? 0);
     later.push({
       id: sheet.id,
       after: [seedRows.at(-1)!, seedCols.at(-1)!],
       rows: rows.slice(seedRows.length),
       cols: cols.slice(seedCols.length),
-      cells: rest,
+      cells: cellsLater,
+      objects: objects ?? [],
     });
   }
   const parts: FilePart[] = [];
-  for (const { id, after, rows, cols, cells } of later) {
+  for (const { id, after, rows, cols, cells, objects } of later) {
     parts.push(...axisParts(id, 'insertRows', rows, after[0]));
     parts.push(...axisParts(id, 'insertCols', cols, after[1]));
     const writes = cells.length === 0 ? [] : splitWrite({ kind: 'cells', cells });
     for (const write of writes.filter((w): w is CellsWrite => w.kind === 'cells'))
       parts.push({ sheetId: id, write, units: write.cells.length });
+    if (objects.length)
+      parts.push({
+        sheetId: id,
+        write: {
+          kind: 'layout',
+          changes: objects.map((object) => ({ k: 'object', id: object.id, object })),
+        },
+        units: objects.length,
+      });
   }
   return { seeds, parts, seededUnits, totalUnits };
 }
