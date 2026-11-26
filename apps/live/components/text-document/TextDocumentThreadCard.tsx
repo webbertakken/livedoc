@@ -33,7 +33,7 @@ export function cardLabel(thread: TextDocumentThread): string {
   return quote ? `Comment by ${by} on “${quote}”` : `Comment by ${by}`;
 }
 
-const CARD =
+export const THREAD_CARD_CLASS =
   'rounded-surface border border-slate-200 bg-white text-left shadow-sm transition-shadow motion-reduce:transition-none dark:border-slate-700 dark:bg-slate-900';
 
 export function TextDocumentThreadCard({
@@ -118,7 +118,7 @@ export function TextDocumentThreadCard({
       data-thread-card={thread.id}
       onClick={() => !selected && onSelect()}
       onKeyDown={onKeyDown}
-      className={`${CARD} outline-none focus-visible:ring-2 focus-visible:ring-(--office-focus) ${selected ? 'shadow-lg ring-1 ring-brand-400/40' : 'cursor-pointer'}`}
+      className={`${THREAD_CARD_CLASS} outline-none focus-visible:ring-2 focus-visible:ring-(--office-focus) ${selected ? 'shadow-lg ring-1 ring-brand-400/40' : 'cursor-pointer'}`}
     >
       {deleted ? (
         <div className="border-b border-slate-100 px-3 pt-2 pb-1.5 dark:border-slate-800">
@@ -222,7 +222,7 @@ export function TextDocumentDraftCard({
       aria-label="New comment"
       data-thread-card="draft"
       onKeyDown={onKeyDown}
-      className={`${CARD} shadow-lg`}
+      className={`${THREAD_CARD_CLASS} shadow-lg`}
     >
       <p className="px-3 pt-2 text-body text-slate-900 dark:text-slate-50">{commenter.name}</p>
       <CommentComposer fieldRef={field} onAddComment={onSend} assign={ASSIGN_NEW} />

@@ -1325,6 +1325,10 @@ export const EXACT: Readonly<Record<string, string>> = {
   'Tab|Created|TextDocument': 'Someone added a text document tab from the + menu.',
   'Element|Added|TextDocumentSuggestion':
     'Someone began a suggestion in a text document while suggesting: an insertion, deletion or format change.',
+  'Element|Changed|TextDocumentSuggestionAccepted':
+    'Someone accepted a suggestion in a text document from its card: its change kept, its marks gone.',
+  'Element|Changed|TextDocumentSuggestionRejected':
+    'Someone rejected a suggestion in a text document from its card, or took back their own: the writing as before it.',
   'Element|Added|TextDocumentTab':
     'Someone added a tab inside a text document, from its outline or Insert > Tab.',
   'Element|Changed|TextDocumentTab':

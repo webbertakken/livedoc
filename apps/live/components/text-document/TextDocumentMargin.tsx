@@ -5,7 +5,8 @@
 // the selected one level with its text; a draft's card where Add comment opened it; Add comment beside a selection of
 // the body. While cards are shown and the window is wide enough the page moves left to make room; narrower, the column
 // lies over the page's right edge. On a phone there is no column: the selected thread opens as a sheet at the bottom.
-import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
+// Suggestion cards (review.md "Suggestion cards") stand in the same column, stacked with the threads'.
+import { useCallback, useEffect, useRef, useState, type ReactNode, type RefObject } from 'react';
 import type { EditorView } from 'prosemirror-view';
 import { lucideMessageSquarePlus } from '@livedoc/icons/lucide';
 import { Tooltip, lucideGlyph } from '@livedoc/ui';
@@ -13,7 +14,13 @@ import { stackCards, type CardWanted } from '@/lib/text-document/text-document-t
 import { TextDocumentDraftCard, TextDocumentThreadCard } from './TextDocumentThreadCard';
 import type { TextDocumentCommenter } from '@/lib/text-document/text-document-commenter';
 import type { TextDocumentThreads } from './useTextDocumentThreads';
-import type { TextDocumentThreadKeys } from './useTextDocumentThreadKeys';
+import type { CardFocusRequest, TextDocumentThreadKeys } from './useTextDocumentThreadKeys';
+import type { TextDocumentSuggestionCards } from './useTextDocumentSuggestionCards';
+import { TextDocumentSuggestionCard } from './TextDocumentSuggestionCard';
+
+/** A suggestion card's id in the column, apart from the threads'. */
+const SUGGESTION = 'suggestion:';
+const NO_SUGGESTIONS: TextDocumentSuggestionCards['cards'] = [];
 
 /** The column's width and its gap from the page, in px (review.md, (default)). */
 export const MARGIN_WIDTH_PX = 280;
@@ -54,6 +61,7 @@ export function TextDocumentMargin({
   selfUserId = null,
   subscribe,
   subscribeCaret,
+  suggestions = null,
   children,
 }: {
   view: EditorView | null;
@@ -65,6 +73,8 @@ export function TextDocumentMargin({
   selfUserId?: string | null;
   subscribe: (listener: () => void) => () => void;
   subscribeCaret: (listener: () => void) => () => void;
+  /** The suggestions' cards, beside the threads'; none where the surface has none. */
+  suggestions?: TextDocumentSuggestionCards | null;
   children: ReactNode;
 }) {
   const wrapper = useRef<HTMLDivElement | null>(null);
@@ -73,7 +83,11 @@ export function TextDocumentMargin({
   const { stretches, selected, draft } = threads;
   const byId = new Map(threads.threads.map((t) => [t.id, t]));
   const shown = stretches.filter((s) => byId.has(s.id));
-  const cards = shown.length > 0 || draft !== null;
+  const suggestionCards = suggestions?.cards ?? NO_SUGGESTIONS;
+  const cards = shown.length > 0 || draft !== null || suggestionCards.length > 0;
+  // One card is selected: a thread, else a suggestion.
+  const raised =
+    selected ?? (suggestions?.selected ? `${SUGGESTION}${suggestions.selected}` : null);
 
   const measure = useCallback(() => {
     const box = wrapper.current;
@@ -103,6 +117,12 @@ export function TextDocumentMargin({
       const top = topOf(s.from);
       if (top !== null) wanted.push({ id: s.id, top, height: height(s.id) });
     }
+    for (const c of suggestionCards) {
+      const id = `${SUGGESTION}${c.id}`;
+      const top = topOf(c.from);
+      if (top !== null) wanted.push({ id, top, height: height(id) });
+    }
+    wanted.sort((a, b) => a.top - b.top);
     if (draft) {
       const top = topOf(draft.from);
       if (top !== null) {
@@ -117,12 +137,12 @@ export function TextDocumentMargin({
     setLayout((was) => ({
       reserve,
       left,
-      tops: stackCards(wanted, draft ? 'draft' : selected),
+      tops: stackCards(wanted, draft ? 'draft' : raised),
       add,
       sheet,
       slides: new Set(was.tops.keys()),
     }));
-  }, [view, shown, draft, selected, cards, commenter]);
+  }, [view, shown, suggestionCards, draft, raised, cards, commenter]);
 
   // Measured again after any change that moves a card: the writing, the selection, the threads, a resize.
   const measureNow = useRef(measure);
@@ -147,23 +167,28 @@ export function TextDocumentMargin({
       offCaret();
       resized.disconnect();
     };
-  }, [subscribe, subscribeCaret, stretches, draft, selected, cards]);
+  }, [subscribe, subscribeCaret, stretches, suggestionCards, draft, raised, cards]);
 
   // A card asked for the focus takes it once it is placed (it is hidden until then), once per ask.
-  const served = useRef(0);
-  const request = keys.focusRequest;
-  useEffect(() => {
-    if (!request || served.current === request.n || !layout.tops.has(request.id)) return;
-    const frame = requestAnimationFrame(() => {
-      served.current = request.n;
-      wrapper.current
-        ?.querySelector<HTMLElement>(`[data-thread-card="${CSS.escape(request.id)}"]`)
-        ?.focus({ preventScroll: true });
-    });
-    return () => cancelAnimationFrame(frame);
-  }, [request, layout]);
+  useCardFocus(wrapper, keys.focusRequest, layout.tops);
+  useCardFocus(wrapper, suggestions?.focusRequest ?? null, layout.tops);
 
   const card = (id: string) => {
+    if (id.startsWith(SUGGESTION) && suggestions) {
+      const suggestion = suggestionCards.find((c) => `${SUGGESTION}${c.id}` === id);
+      return suggestion ? (
+        <TextDocumentSuggestionCard
+          card={suggestion}
+          selected={raised === id}
+          offers={suggestions.offers(suggestion)}
+          onSelect={() => suggestions.select(suggestion.id)}
+          onAccept={() => suggestions.accept(suggestion.id)}
+          onReject={() => suggestions.reject(suggestion.id)}
+          onStep={suggestions.step}
+          onExit={suggestions.exit}
+        />
+      ) : null;
+    }
     if (id === 'draft')
       return draft && commenter ? (
         <TextDocumentDraftCard
@@ -196,9 +221,13 @@ export function TextDocumentMargin({
     );
   };
 
-  const ids = [...shown.map((s) => s.id), ...(draft ? ['draft'] : [])];
-  // On a phone the selected thread, or the draft, opens as a sheet at the bottom.
-  const sheetId = draft ? 'draft' : selected;
+  const ids = [
+    ...shown.map((s) => s.id),
+    ...suggestionCards.map((c) => `${SUGGESTION}${c.id}`),
+    ...(draft ? ['draft'] : []),
+  ];
+  // On a phone the selected card, or the draft, opens as a sheet at the bottom.
+  const sheetId = draft ? 'draft' : raised;
   return (
     <div
       ref={wrapper}
@@ -230,7 +259,7 @@ export function TextDocumentMargin({
               style={{
                 top: layout.tops.get(id) ?? 0,
                 visibility: layout.tops.has(id) ? 'visible' : 'hidden',
-                zIndex: id === selected || id === 'draft' ? 2 : 1,
+                zIndex: id === raised || id === 'draft' ? 2 : 1,
               }}
             >
               {card(id)}
@@ -254,4 +283,23 @@ export function TextDocumentMargin({
       )}
     </div>
   );
+}
+
+/** Focuses the card a request names once the margin has placed it, once per ask. */
+function useCardFocus(
+  wrapper: RefObject<HTMLDivElement | null>,
+  request: CardFocusRequest | null,
+  tops: ReadonlyMap<string, number>,
+): void {
+  const served = useRef(0);
+  useEffect(() => {
+    if (!request || served.current === request.n || !tops.has(request.id)) return;
+    const frame = requestAnimationFrame(() => {
+      served.current = request.n;
+      wrapper.current
+        ?.querySelector<HTMLElement>(`[data-thread-card="${CSS.escape(request.id)}"]`)
+        ?.focus({ preventScroll: true });
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [wrapper, request, tops]);
 }

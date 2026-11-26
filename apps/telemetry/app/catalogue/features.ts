@@ -1134,6 +1134,16 @@ export const TEXT_DOCUMENT_SUGGESTION = chart(
   { types: ['TextDocumentSuggestion'], rising: 'good' },
 );
 
+// A person accepted or rejected a suggestion in a text document from its card (docs/specs/034-text-documents/review.md
+// "Suggestion cards"): once per suggestion settled.
+export const TEXT_DOCUMENT_SUGGESTIONS_SETTLED = chart(
+  'Element',
+  'Changed',
+  'Text Document Suggestions Settled',
+  'Someone accepted or rejected a suggestion in a text document, from its card in the margin.',
+  { types: ['TextDocumentSuggestionAccepted', 'TextDocumentSuggestionRejected'], rising: 'good' },
+);
+
 // A person changed their editing mode on a PDF document (docs/specs/035-pdf-documents/editing-modes.md "Telemetry and
 // observability").
 export const PDF_DOCUMENT_MODE = chart(
@@ -1665,6 +1675,7 @@ export const EDITOR_CHROME: MetricStack = {
     TEXT_DOCUMENT_FOLLOWED,
     TEXT_DOCUMENT_ZOOMED,
     TEXT_DOCUMENT_SUGGESTION,
+    TEXT_DOCUMENT_SUGGESTIONS_SETTLED,
     TEXT_DOCUMENT_MODE,
     PDF_DOCUMENT_MODE,
     TEXT_DOCUMENT_MY_FONTS,

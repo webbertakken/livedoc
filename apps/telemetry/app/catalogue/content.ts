@@ -559,7 +559,8 @@ export const ELEMENTS_CHANGED = chart(
   // document's (`TextDocumentFormat…`, Text Document Formatting; its styles, Text Document Paragraph Style),
   // as are a logo page's tools (Logo Tools Used), a text document's tables' changes (Text Document Table Changes),
   // its pictures' (Text Document Picture Changes), its links' (Text Document Links Edited) and its tables of contents'
-  // (Text Document Tables of Contents Changed), and its document tabs' (Text Document Tabs Changed).
+  // (Text Document Tables of Contents Changed), its document tabs' (Text Document Tabs Changed) and its suggestions
+  // settled (Text Document Suggestions Settled).
   // An entity's fields and a relationship's cardinality are Data Models'.
   {
     typeIn: (t) =>
@@ -574,6 +575,7 @@ export const ELEMENTS_CHANGED = chart(
       !(t ?? '').startsWith('TextDocumentImage') &&
       t !== 'TextDocumentLink' &&
       t !== 'TextDocumentTab' &&
+      !(t ?? '').startsWith('TextDocumentSuggestion') &&
       !LOGO_TOOL_TYPES.includes(t ?? '') &&
       !DATA_MODEL_CHANGED.includes(t ?? ''),
   },

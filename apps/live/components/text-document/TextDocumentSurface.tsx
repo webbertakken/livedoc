@@ -72,14 +72,9 @@ import { subscribeLists } from '@/lib/text-document/text-document-live-lists';
 import { useTextDocumentLists } from './useTextDocumentLists';
 import { useTextDocumentCharacterDialogs } from './useTextDocumentCharacterDialogs';
 import type { TextDocumentCommenter } from '@/lib/text-document/text-document-commenter';
-import { useTextDocumentThreads } from './useTextDocumentThreads';
 import { TextDocumentMargin } from './TextDocumentMargin';
-import { useTextDocumentThreadKeys } from './useTextDocumentThreadKeys';
-import {
-  useTextDocumentThreadArrival,
-  type TextDocumentThreadArrival,
-} from './useTextDocumentThreadArrival';
-import { useTextDocumentCommentsPanel } from './useTextDocumentCommentsPanel';
+import type { TextDocumentThreadArrival } from './useTextDocumentThreadArrival';
+import { useTextDocumentReview } from './useTextDocumentReview';
 import { threadHighlightPlugin } from '@/lib/text-document/text-document-threads';
 import { useTextDocumentLinks } from './useTextDocumentLinks';
 import { useTextDocumentBookmarks } from './useTextDocumentBookmarks';
@@ -951,37 +946,39 @@ export function TextDocumentSurface({
   });
   // Insert > Symbols > Special characters and Insert > Emoji (objects.md), in whichever writing has the caret.
   const characterDialogs = useTextDocumentCharacterDialogs(activeView, textWrites);
-  // Comment threads in the margin, added on the body's writing (review.md "Threads in the margin").
-  const threads = useTextDocumentThreads({
+  // Comment threads, their keys and panel, and the suggestion cards (review.md); an Editor accepts and rejects in a mode
+  // that shows suggestions, whoever suggests takes back their own.
+  const suggestionRights = useMemo(
+    () => ({
+      accepts: canEdit && mode !== 'viewing',
+      ownKey: suggests ? (commenter?.key ?? null) : null,
+    }),
+    [canEdit, mode, suggests, commenter],
+  );
+  const {
+    threads,
+    threadKeys,
+    commentsPanel,
+    suggestions,
+    actions: reviewActions,
+  } = useTextDocumentReview({
     view: editorView,
     activeView,
     doc: liveDoc,
     ready: state === 'ready',
     tab: shownTab ?? FIRST_DOCUMENT_TAB_ID,
+    tabs: tabs.list,
+    showTab: tabs.show,
     commenter,
+    rights: suggestionRights,
+    panelOpen: panels.open.right === COMMENTS_PANEL.id,
+    arrival,
     subscribe: changes.subscribe,
     onMentioned: mentions?.onMentioned,
     onAssigned: mentions?.onAssigned,
   });
   useEffect(() => {
     selectThreadRef.current = threads.select;
-  });
-  // Going to a thread and the keys between them (review.md "The comments panel", "Keys on a selected comment").
-  const threadKeys = useTextDocumentThreadKeys({
-    view: editorView,
-    threads,
-    tab: shownTab ?? FIRST_DOCUMENT_TAB_ID,
-    showTab: tabs.show,
-  });
-  useTextDocumentThreadArrival({ arrival, ready: state === 'ready', arrive: threadKeys.arrive });
-  // The comments panel's rows and filters (review.md "The comments panel").
-  const commentsPanel = useTextDocumentCommentsPanel({
-    open: panels.open.right === COMMENTS_PANEL.id,
-    doc: liveDoc,
-    ready: state === 'ready',
-    threads: threads.threads,
-    tabs: tabs.list,
-    subscribe: changes.subscribe,
   });
   // Insert > Table (tables.md "Inserting"), at the caret's section's column width.
   const tableActions = useTextDocumentTables(
@@ -1126,8 +1123,7 @@ export function TextDocumentSurface({
       ...tabs.actions,
       ...equationInsert,
       ...characterDialogs.actions,
-      ...threads.actions,
-      ...threadKeys.actions,
+      ...reviewActions,
       ...links.actions,
       ...bookmarks.actions,
       ...headingLinks.actions,
@@ -1147,8 +1143,7 @@ export function TextDocumentSurface({
       tabs.actions,
       equationInsert,
       characterDialogs.actions,
-      threads.actions,
-      threadKeys.actions,
+      reviewActions,
       links.actions,
       bookmarks.actions,
       headingLinks.actions,
@@ -1372,6 +1367,7 @@ export function TextDocumentSurface({
             threads={threads}
             selfUserId={mentions?.selfUserId ?? null}
             keys={threadKeys}
+            suggestions={suggestions}
             commenter={commenter}
             subscribe={changes.subscribe}
             subscribeCaret={changes.subscribeCaret}
