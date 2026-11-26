@@ -32,7 +32,9 @@ import {
 } from '../mark';
 import { MarkDrawing } from '../mark-drawing';
 import { MarkWords } from '../mark-words';
+import type { PageMatrix } from '../engine-contract';
 import { Stamps } from '../stamps';
+import { StampTurn } from '../stamp-turn';
 import {
   APPEARANCE_BOLD_FONT,
   APPEARANCE_FONT,
@@ -86,6 +88,7 @@ function streamOf(
   pdf: PDF,
   appearance: Appearance,
   writing: MarkFaceWriting | null = null,
+  matrix: PageMatrix | null = null,
 ): PdfDict {
   const resources = new PdfDict();
   const standard = appearance.fonts.map((font): [string, PdfObject] => [
@@ -121,6 +124,7 @@ function streamOf(
       Subtype: PdfName.of('Form'),
       BBox: boxArray(appearance.box),
       Resources: resources,
+      ...(matrix ? { Matrix: new PdfArray(matrix.map((n) => PdfNumber.of(n))) } : {}),
     },
     new TextEncoder().encode(appearance.content),
   );
@@ -216,7 +220,8 @@ function annotateTyped(
 
 /**
  * A stamp's `Stamp`: `Name` the standard's name for it (or LiveDoc's, or its own id for a stamp LiveDoc does not draw),
- * `Contents` its words a line each, its appearance LiveDoc's style, `Rect` that appearance's box.
+ * `Contents` its words a line each, its appearance LiveDoc's style, `Rect` that appearance's box. A turned one is drawn
+ * upright, its turn the appearance's `Matrix` and its `Rotate`, `Rect` the box as it shows (marks.md "In the file").
  */
 function annotateStamp(
   pdf: PDF,
@@ -225,12 +230,17 @@ function annotateStamp(
   writing: MarkFaceWriting | null,
 ): PdfDict {
   const appearance = appearanceOf(MarkDrawing.of(mark), mark, MarkWords.of(mark), writing?.setter);
+  const shown = StampTurn.upright(appearance.box, mark.turn);
   const dict = page.addStampAnnotation({
-    rect: rectOf(appearance.box),
+    rect: rectOf(shown),
     name: Stamps.of(mark.stamp)?.fileName ?? mark.stamp,
     contents: mark.lines.join('\n'),
   }).dict;
-  dict.set('AP', streamOf(pdf, appearance, writing));
+  dict.set(
+    'AP',
+    streamOf(pdf, appearance, writing, StampTurn.matrix({ rect: appearance.box, turn: mark.turn })),
+  );
+  if (mark.turn) dict.set('Rotate', PdfNumber.of(mark.turn));
   dict.set('C', new PdfArray([1, 3, 5].map((at) => PdfNumber.of(channelOf(mark.colour, at)))));
   return dict;
 }

@@ -6,6 +6,7 @@ import type { PagePoint } from './engine-contract';
 import { PDF_TEXT_PADDING_PT } from './limits';
 import { Mark, type Box, type CalloutLine, type Stroke, type TypedMark } from './mark';
 import type { MarkPlace } from './mark-place';
+import { StampTurn } from './stamp-turn';
 import { TypedLayout } from './typed-layout';
 
 /** A box's handles, named for where they sit as the box shows; a line's two ends; a Callout's tip and knee. */
@@ -56,9 +57,11 @@ export const MarkReshape = {
     return mark.kind === 'callout' ? [...BOX_HANDLES, 'tip', 'knee'] : BOX_HANDLES;
   },
 
-  /** The box a mark's box handles size: its rect, or a Drawing's bounds; null for a line or a text mark. */
+  /** The box a mark's box handles size: its rect, a turned stamp's as it shows, or a Drawing's bounds; null for a line
+   *  or a text mark. */
   box: (mark: Mark): Box | null => {
     if (Mark.isText(mark) || 'line' in mark) return null;
+    if (mark.kind === 'stamp') return Mark.shownBox(mark);
     return mark.kind === 'drawing' || 'corners' in mark ? Mark.bounds(mark) : mark.rect;
   },
 
@@ -80,6 +83,8 @@ export const MarkReshape = {
       const [x, y] = mark.callout;
       return { rect, callout: TypedLayout.calloutLine({ x, y }, rect) };
     }
+    // A turned stamp keeps its turn: the box shown, upright again.
+    if (mark.kind === 'stamp') return { rect: StampTurn.upright(box, mark.turn) };
     return { rect: box };
   },
 

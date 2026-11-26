@@ -100,3 +100,67 @@ test('stamps are placed on a page from the Stamp control and leave as Stamp anno
   execFileSync('qpdf', ['--check', file], { stdio: 'pipe' });
   expectNoPageErrors(pageErrors);
 });
+
+// marks.md "Changing a mark": A stamp's quarter turns, from Format > Rotate, one step of undo each; drawn turned; "In
+// the file": `Rotate` and the appearance's `Matrix`.
+test('a stamp is turned a quarter from Format > Rotate and leaves turned', async ({
+  page,
+  pageErrors,
+}) => {
+  test.setTimeout(120_000);
+  await page.setViewportSize({ width: 1280, height: 860 });
+  await page.goto('/explorer/all');
+  await expect(page.getByRole('heading', { name: 'My Documents' }).first()).toBeVisible();
+  const stored = await textPdf(2);
+  await dropPdf(page, 'Turned.pdf', stored);
+  await page.waitForURL(/\/document\//, { timeout: 30_000 });
+  const first = await pageOneDrawn(page);
+  const stamps = page.locator(`${PAGE_ONE} [data-pdf-mark-kind="stamp"]`);
+
+  // An Approved stamp, selected with Select; Rotate is dimmed until a stamp is selected.
+  await page.locator('[data-pdf-pages]').focus();
+  await page.keyboard.press('k');
+  await pressAt(page, first, [0.3, 0.2]);
+  await page.keyboard.press('v');
+  const upright = (await stamps.boundingBox())!;
+  expect(upright.width).toBeGreaterThan(upright.height);
+  await page.mouse.click(upright.x + upright.width / 2, upright.y + upright.height / 2);
+  await expect(page.getByRole('button', { name: /^Stamp by / })).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  );
+
+  // Format > Rotate > Counterclockwise: it stands on end about its middle, its words turned with it.
+  await (await officeMenuItem(page, ['Format', 'Rotate', 'Counterclockwise'])).click();
+  await expect
+    .poll(async () => {
+      const box = (await stamps.boundingBox())!;
+      return box.height > box.width;
+    })
+    .toBe(true);
+  const turned = (await stamps.boundingBox())!;
+  expect(Math.abs(turned.x + turned.width / 2 - (upright.x + upright.width / 2))).toBeLessThan(2);
+  await page.screenshot({ path: test.info().outputPath('pdf-stamp-turned.png') });
+
+  // Undo stands it upright again; redo turns it again.
+  await page.locator('[data-pdf-pages]').focus();
+  await page.keyboard.press('ControlOrMeta+z');
+  await expect
+    .poll(async () => (await stamps.boundingBox())!.width)
+    .toBeGreaterThan(upright.width - 2);
+  await page.keyboard.press('ControlOrMeta+Shift+z');
+  await expect
+    .poll(async () => (await stamps.boundingBox())!.height)
+    .toBeGreaterThan(upright.width - 2);
+
+  // Downloaded: the Stamp carries Rotate 90 and its appearance its turn.
+  const item = await officeMenuItem(page, ['File', 'Download', 'PDF']);
+  const [download] = await Promise.all([page.waitForEvent('download'), item.click()]);
+  const file = join(mkdtempSync(join(tmpdir(), 'pdf-turned-')), 'Turned.pdf');
+  await download.saveAs(file);
+  const added = readFileSync(file).subarray(stored.length).toString('latin1');
+  expect(added).toContain('/Rotate 90');
+  expect(added).toMatch(/\/Matrix \[0 1 -1 0 /);
+  execFileSync('qpdf', ['--check', file], { stdio: 'pipe' });
+  expectNoPageErrors(pageErrors);
+});

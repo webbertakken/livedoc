@@ -1446,6 +1446,7 @@ export const PDF_MARKS_CHANGED = chart(
       'Mark.Ungrouped',
       'Mark.Erased',
       'Mark.Subject',
+      'Mark.Turned',
     ],
     rising: 'neutral',
   },
