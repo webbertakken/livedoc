@@ -30,7 +30,7 @@ globs = ["**/*.ttf", "**/*.otf"]
 [vars]
 # DO NOT MERGE: this branch's preview only, to measure the content summaries' dry run (document-storage.md
 # "Refreshing the summaries"). `off` while documents are seeded and go idle; `dry` on the second push.
-SUMMARY_REFRESH = "off"
+SUMMARY_REFRESH = "dry"
 
 # Origin allow-list for POST /api/ai (docs/specs/007-editor/ai-assistance.md). Stated HERE, not in the
 # Cloudflare dashboard: a dashboard-only value is invisible to code review, so
