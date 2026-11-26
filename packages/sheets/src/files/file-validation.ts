@@ -1,4 +1,4 @@
-// Validation rules as a file holds them (docs/specs/029-sheets/standard-mapping.md "Validation in the file", D289):
+// Validation rules as a file holds them (docs/specs/029-sheets/standard-mapping.md "Validation in the file", D293):
 // each rule's settings with its rectangles by position, a range source as text (`'My Lists'!A1:A3`), a custom
 // formula in Google's syntax written for the first rectangle's top-left cell. Each format's reader and writer maps
 // this to its standard rule and LiveDoc's rule beside it (validation-standard.ts).

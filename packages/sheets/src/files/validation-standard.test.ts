@@ -1,5 +1,5 @@
-// A validation rule's two forms in a file (docs/specs/029-sheets/standard-mapping.md "Validation in the file", D289 to
-// D292): the closest standard rule for every criterion, the standard rule read back as LiveDoc's closest, LiveDoc's
+// A validation rule's two forms in a file (docs/specs/029-sheets/standard-mapping.md "Validation in the file", D293 to
+// D296): the closest standard rule for every criterion, the standard rule read back as LiveDoc's closest, LiveDoc's
 // own rule as JSON, and the fingerprint that tells a standard rule changed by another app.
 import { describe, expect, it } from 'vitest';
 import type { FileValidationSettings } from './file-validation';

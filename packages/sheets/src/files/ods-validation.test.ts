@@ -1,4 +1,4 @@
-// Validation rules in ODF (docs/specs/029-sheets/standard-mapping.md "Validation in the file", D289 to D292): each
+// Validation rules in ODF (docs/specs/029-sheets/standard-mapping.md "Validation in the file", D293 to D296): each
 // criterion written as its closest `table:content-validation` with LiveDoc's exact rule beside it, read back exactly;
 // Google's and LibreOffice's conditions read as the closest rules; a changed standard rule read over LiveDoc's; cells'
 // runs made into rectangles; the rest left unread.
@@ -183,7 +183,7 @@ describe('another app’s rules in ODF', () => {
     ).toBeUndefined();
   });
 
-  it('reads a standard rule changed since LiveDoc wrote it over LiveDoc’s rule, named (D290)', () => {
+  it('reads a standard rule changed since LiveDoc wrote it over LiveDoc’s rule, named (D294)', () => {
     const { out } = roundTrip([{ ranges: at(1, 0), is: 'list', opts: [{ v: 'A', c: '#00ff00' }] }]);
     const changed = out.elements[0]!.replace('&quot;A&quot;)', '&quot;A&quot;;&quot;B&quot;)');
     const read = readOdsValidations(

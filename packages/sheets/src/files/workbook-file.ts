@@ -107,7 +107,7 @@ export type FileLoss =
   | { k: 'format_rule_unread'; sheet: string; r: number; c: number }
   // A file's validation rule the grid cannot hold (standard-mapping.md "Validation in the file"), at its top-left cell.
   | { k: 'validation_rule_unread'; sheet: string; r: number; c: number }
-  // LiveDoc's rule beside a standard rule another app changed since: the standard rule read (D290); logged only.
+  // LiveDoc's rule beside a standard rule another app changed since: the standard rule read (D294); logged only.
   | { k: 'validation_rule_changed'; sheet: string; r: number; c: number }
   // A sheet whose sized rows and columns pass the most it holds: the rest left out (D124).
   | { k: 'sizes_cut'; sheet: string }

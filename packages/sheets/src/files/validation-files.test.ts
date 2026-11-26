@@ -1,5 +1,5 @@
-// Validation rules through whole files (docs/specs/029-sheets/standard-mapping.md "Validation in the file", D289 to
-// D292): a workbook holding every criterion written as XLSX, ODS and flat ODF reads back with the same rules, by
+// Validation rules through whole files (docs/specs/029-sheets/standard-mapping.md "Validation in the file", D293 to
+// D296): a workbook holding every criterion written as XLSX, ODS and flat ODF reads back with the same rules, by
 // position; a flat file whose standard rule another app changed reads that rule, LiveDoc's dropped and named.
 import { describe, expect, it } from 'vitest';
 import { compileFormula } from '../formula/stored';

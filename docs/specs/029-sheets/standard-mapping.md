@@ -275,7 +275,7 @@ The table is the contract the readers and writers are tested against, one test p
 
 - A sheet's [validation rules](data-validation.md) are written and read both ways, each as the **standard rule**
   closest to it, which every app checks, and **LiveDoc's rule** beside it, exact, which LiveDoc reads back
-  (default, D289). The evidence is Google Sheets' own export
+  (default, D293). The evidence is Google Sheets' own export
   (`plans/assets/0020/research/google-validation-export.md`): it writes no checkbox and no Text Is Exactly.
 - **XLSX**: one `dataValidation` a rule in the worksheet's one `dataValidations` (after the kept ones, `count`
   their sum), `allowBlank="1"`; LiveDoc's rules in one `ext` of the worksheet's `extLst`, its `uri` LiveDoc's
@@ -293,7 +293,7 @@ The table is the contract the readers and writers are tested against, one test p
   its error message's type and its help message's text; each a line. **Read**, LiveDoc's rule is taken when its
   fingerprint is the standard rule's as read; else another app changed the standard rule since, so the standard
   rule is read, LiveDoc's dropped, and the read names it (`validation_rule_changed`, logged, never reported)
-  (default, D290).
+  (default, D294).
 
 | Model                            | XLSX `dataValidation` (standard rule)                                                              | ODF `table:condition` (standard rule)                                                       |
 | -------------------------------- | -------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
@@ -311,7 +311,7 @@ The table is the contract the readers and writers are tested against, one test p
 | Help Text                        | `showInputMessage="1" prompt="..."`                                                                | `table:help-message table:display="true"` › `text:p`                                        |
 
 - A dropdown's options the standard list cannot say (an option holding a comma in XLSX, or a list past XLSX's 255
-  characters) are written as a rule that allows any value (no `type`), LiveDoc's rule beside it (default, D291).
+  characters) are written as a rule that allows any value (no `type`), LiveDoc's rule beside it (default, D295).
 - **What another app loses**: an option's colour, the Chip and Arrow display, Allow Multiple Selections (a plain
   list: a cell of several options is invalid there) and a checkbox (a TRUE, FALSE list). Converting lists them
   ([Converting](files-and-print.md#converting), `validation_simplified`), counted by rule.
@@ -321,7 +321,7 @@ The table is the contract the readers and writers are tested against, one test p
   (`of: and cell-content-is-between(FORMULA,0)`) read as FORMULA; a rule is Reject the Value only when it shows a
   `stop` error; its input message is its Help Text, its own error message and titles left out. A custom formula is
   moved from its base cell (ODF) to each rectangle's top-left. A rule over several rectangles (an `sqref` of
-  several, an ODF rule's cells) becomes one rule a rectangle (default, D292).
+  several, an ODF rule's cells) becomes one rule a rectangle (default, D296).
 - What the model does not hold (`whole`, `textLength`, `time`, a list of a formula or a name, a rule over cells
   another rule already holds, a formula LiveDoc cannot read, past `VALIDATION_RULES_MAX` or `FORMAT_RULE_RANGES_MAX`
   rectangles) stays the file's own: kept as it came, without the rules read beside it; a read rule the grid cannot
@@ -674,12 +674,12 @@ The code cites each by its id.
   (default).
 - **D280** A chart's place in ODF: anchored in its cell at its offset, not placed over the sheet by position, as
   LibreOffice draws rows sized to their text shorter than LiveDoc does (default).
-- **D289** Validation rules in a file: the closest standard rule for other apps, LiveDoc's exact rule beside it in
+- **D293** Validation rules in a file: the closest standard rule for other apps, LiveDoc's exact rule beside it in
   LiveDoc's namespace (the Director's ruling, 2026-11-26).
-- **D290** A LiveDoc rule beside a standard rule changed since: the standard rule wins, LiveDoc's dropped and logged
+- **D294** A LiveDoc rule beside a standard rule changed since: the standard rule wins, LiveDoc's dropped and logged
   (the Director's ruling, 2026-11-26).
-- **D291** A dropdown XLSX's list cannot say: a rule allowing any value, LiveDoc's rule beside it (default).
-- **D292** A standard rule read without LiveDoc's: the closest LiveDoc rule, one a rectangle; error messages and
+- **D295** A dropdown XLSX's list cannot say: a rule allowing any value, LiveDoc's rule beside it (default).
+- **D296** A standard rule read without LiveDoc's: the closest LiveDoc rule, one a rectangle; error messages and
   titles left out (default).
 - **D261** A sheet's own charts beside a drawing kept from its file: Not written, the sheet named (`charts_unwritten`),
   as a worksheet holds one drawing and ODF one `table:shapes` (default).

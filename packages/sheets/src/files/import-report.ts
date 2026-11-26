@@ -63,7 +63,7 @@ function entriesOf(loss: FileLoss): Entry[] {
     case 'format_rule_unread':
     case 'validation_rule_unread':
       return [[loss.k, 1, cellName(loss.sheet, loss.r, loss.c)]];
-    // The other app's change is read as it left it: logged with the read's losses, never reported (D290).
+    // The other app's change is read as it left it: logged with the read's losses, never reported (D294).
     case 'validation_rule_changed':
       return [];
     case 'sheet_cut':

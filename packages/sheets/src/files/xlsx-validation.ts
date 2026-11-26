@@ -1,4 +1,4 @@
-// Validation rules in XLSX (docs/specs/029-sheets/standard-mapping.md "Validation in the file", D289 to D292): a
+// Validation rules in XLSX (docs/specs/029-sheets/standard-mapping.md "Validation in the file", D293 to D296): a
 // worksheet's `dataValidations`, one `dataValidation` a rule as its closest standard rule, and LiveDoc's exact rules in
 // one `extLst` `ext` under LiveDoc's namespace, each naming its standard rule by `sqref` and fingerprint. A rule the
 // model does not hold is left unread, so the keeper keeps it as the file's own.
@@ -92,7 +92,7 @@ function absoluteRef(src: string, renamed: ReadonlyMap<string, string>): string 
   return `${prefix}${at(g.r1, g.c1)}:${at(g.r2, g.c2)}`;
 }
 
-// A check as `dataValidation` says it: its type, operator and formulas; a list it cannot say allows anything (D291).
+// A check as `dataValidation` says it: its type, operator and formulas; a list it cannot say allows anything (D295).
 function writtenCheck(
   check: StandardCheck,
   renamed: ReadonlyMap<string, string>,

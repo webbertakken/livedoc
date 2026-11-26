@@ -1,4 +1,4 @@
-// Validation rules in XLSX (docs/specs/029-sheets/standard-mapping.md "Validation in the file", D289 to D292): each
+// Validation rules in XLSX (docs/specs/029-sheets/standard-mapping.md "Validation in the file", D293 to D296): each
 // criterion written as its closest `dataValidation` with LiveDoc's exact rule in an `ext`, read back exactly; Google's
 // own export read as the closest rules; a standard rule another app changed read over LiveDoc's; the rest left unread.
 import { parseXml } from '@livedoc/office-packages';
@@ -84,7 +84,7 @@ describe('every criterion in XLSX', () => {
     expect(validations[16]).toContain('<formula1>I2&gt;H2</formula1>');
   });
 
-  it('writes a list XLSX cannot say as a rule allowing anything, still exact for LiveDoc (D291)', () => {
+  it('writes a list XLSX cannot say as a rule allowing anything, still exact for LiveDoc (D295)', () => {
     const rules: FileValidationRule[] = [
       { ranges: at(0, 0), is: 'list', opts: [{ v: 'a,b' }] },
       {
@@ -157,7 +157,7 @@ describe('another app’s rules in XLSX', () => {
     ]);
   });
 
-  it('reads a standard rule changed since LiveDoc wrote it over LiveDoc’s rule, naming it (D290)', () => {
+  it('reads a standard rule changed since LiveDoc wrote it over LiveDoc’s rule, naming it (D294)', () => {
     const rules: FileValidationRule[] = [
       { ranges: at(1, 0, 3, 0), is: 'list', opts: [{ v: 'A', c: '#00ff00' }, { v: 'B' }] },
       { ranges: at(1, 1), is: 'check' },

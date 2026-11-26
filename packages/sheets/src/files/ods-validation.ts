@@ -1,4 +1,4 @@
-// Validation rules in ODF (docs/specs/029-sheets/standard-mapping.md "Validation in the file", D289 to D292): the
+// Validation rules in ODF (docs/specs/029-sheets/standard-mapping.md "Validation in the file", D293 to D296): the
 // spreadsheet's `table:content-validations`, one `table:content-validation` a rule as its closest standard rule with
 // LiveDoc's exact rule in `livedoc:` attributes, and each cell naming its rule. A rule the model does not hold is left
 // unread, so the keeper keeps it, and its cells' names, as the file's own.

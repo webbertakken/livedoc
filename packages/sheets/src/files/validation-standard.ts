@@ -1,5 +1,5 @@
-// A validation rule's two forms in a file (docs/specs/029-sheets/standard-mapping.md "Validation in the file", D289 to
-// D292): the standard rule closest to it, which every app checks, and LiveDoc's rule beside it, exact, read back only
+// A validation rule's two forms in a file (docs/specs/029-sheets/standard-mapping.md "Validation in the file", D293 to
+// D296): the standard rule closest to it, which every app checks, and LiveDoc's rule beside it, exact, read back only
 // while the standard rule's fingerprint is the one LiveDoc wrote. Format-neutral: each format maps a standard rule to
 // its own XML and names the lines its fingerprint is taken over.
 import { crc32 } from '@livedoc/office-packages';
@@ -92,7 +92,7 @@ export function standardRuleOf(rule: FileValidationSettings, at: string): Standa
   };
 }
 
-/** A standard rule read as LiveDoc's closest rule (D292); null for one that allows anything. */
+/** A standard rule read as LiveDoc's closest rule (D296); null for one that allows anything. */
 export function settingsFromStandard(std: StandardRule): FileValidationSettings | null {
   const base = {
     ...(std.strict ? {} : { warn: true as const }),
@@ -134,7 +134,7 @@ export function liveDocRuleFrom(json: string): FileValidationSettings | null {
   }
 }
 
-/** A standard rule's fingerprint: the CRC-32 of its lines as written, 8 lower-case hex digits (D290). */
+/** A standard rule's fingerprint: the CRC-32 of its lines as written, 8 lower-case hex digits (D294). */
 export function validationFingerprint(lines: readonly string[]): string {
   return crc32(new TextEncoder().encode(lines.join('\n')))
     .toString(16)
@@ -149,7 +149,7 @@ export type ValidationRead = { settings: FileValidationSettings; changed: boolea
 
 /**
  * A rule as read: LiveDoc's when its fingerprint is the standard rule's as read (`fingerprint`), else the standard
- * rule's, `changed` when LiveDoc's was there (D290); null when neither can be read, so the file keeps it.
+ * rule's, `changed` when LiveDoc's was there (D294); null when neither can be read, so the file keeps it.
  */
 export function readValidation(
   std: StandardRule | null,

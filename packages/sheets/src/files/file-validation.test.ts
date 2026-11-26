@@ -1,5 +1,5 @@
 // Validation rules between the model and a file (docs/specs/029-sheets/standard-mapping.md "Validation in the file",
-// D289): positions, sources as text, formulas in Google's syntax for the top-left cell, and the read rules made again
+// D293): positions, sources as text, formulas in Google's syntax for the top-left cell, and the read rules made again
 // on the grid, one a rectangle, cut, moved, checked, and named when they cannot be made.
 import { describe, expect, it } from 'vitest';
 import { book } from '../testing/book';
