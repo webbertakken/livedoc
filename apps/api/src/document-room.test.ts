@@ -589,8 +589,9 @@ describe('DocumentRoom op-role enforcement', () => {
   // `follow` is the room's alone: never relayed, it tells the person followed (the "DocumentRoom follow" block).
   const ROOM_DECIDED_PRESENCE_KINDS = ['poll-answer', 'follow'];
   // A reaction is taking part (docs/specs/013-workspace/share-roles.md): a Participant's, never a Viewer's.
-  // So is speaking (docs/specs/008-canvas/avatar-mode.md "Who may speak").
-  const PARTICIPANT_PRESENCE_KINDS = ['reaction', 'avatar-say'];
+  // So is speaking (docs/specs/008-canvas/avatar-mode.md "Who may speak"), and a PDF's stroke as it is drawn
+  // (docs/specs/035-pdf-documents/live-editing-and-storage.md "A mark as it is made").
+  const PARTICIPANT_PRESENCE_KINDS = ['reaction', 'avatar-say', 'pdf-draft'];
   for (const kind of PARTICIPANT_PRESENCE_KINDS) {
     it(`drops a '${kind}' from a Viewer and relays a Participant's`, () => {
       const { room } = newRoom();
