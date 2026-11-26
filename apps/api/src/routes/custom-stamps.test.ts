@@ -61,6 +61,17 @@ describe('making a custom stamp', () => {
     expect(listed.stamps.map((s) => s.id)).toEqual([OTHER_ID, ID]);
   });
 
+  // custom-stamps.md "Making one": Show who and when, kept with it; a stamp made without it lists without it.
+  it('keeps whether it shows who and when', async () => {
+    expect((await make({ dynamic: true })).status).toBe(201);
+    await make({ id: OTHER_ID, name: 'Due' });
+    const listed = await (
+      await call('GET', '/api/custom-stamps')
+    ).json<{ stamps: { id: string; dynamic?: boolean }[] }>();
+    expect(listed.stamps.find((s) => s.id === ID)).toMatchObject({ dynamic: true });
+    expect(listed.stamps.find((s) => s.id === OTHER_ID)).not.toHaveProperty('dynamic');
+  });
+
   it('lists nobody else’s', async () => {
     await make();
     const listed = await (

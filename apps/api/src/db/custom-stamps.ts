@@ -22,6 +22,7 @@ type CustomStampRow = {
   height: number;
   natural_width: number;
   natural_height: number;
+  dynamic: number;
   created_at: number;
   updated_at: number;
 };
@@ -30,7 +31,7 @@ type CustomStampRow = {
 export type OwnedCustomStamp = { readonly ownerId: string; readonly stamp: CustomStampRecord };
 
 const COLS =
-  'id, owner_id, name, category, picture_key, picture_type, width, height, natural_width, natural_height, created_at, updated_at';
+  'id, owner_id, name, category, picture_key, picture_type, width, height, natural_width, natural_height, dynamic, created_at, updated_at';
 
 const recordOf = (row: CustomStampRow): CustomStampRecord => ({
   id: row.id,
@@ -43,6 +44,7 @@ const recordOf = (row: CustomStampRow): CustomStampRecord => ({
     height: row.height,
   },
   natural: { width: row.natural_width, height: row.natural_height },
+  ...(row.dynamic === 1 ? { dynamic: true as const } : {}),
   createdAt: row.created_at,
   updatedAt: row.updated_at,
 });
@@ -85,7 +87,7 @@ export async function createCustomStamp(
 ): Promise<CustomStampRecord | null> {
   const made = await env.DB.prepare(
     `INSERT INTO custom_stamps (${COLS})
-     SELECT ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?11
+     SELECT ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?13, ?11, ?11
       WHERE (SELECT COUNT(*) FROM custom_stamps WHERE owner_id = ?2) < ?12`,
   )
     .bind(
@@ -101,6 +103,7 @@ export async function createCustomStamp(
       input.natural.height,
       now,
       PDF_CUSTOM_STAMPS_MAX,
+      input.dynamic ? 1 : 0,
     )
     .run();
   if ((made.meta.changes ?? 0) === 0) return null;

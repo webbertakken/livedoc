@@ -195,6 +195,8 @@ const CUSTOM_STAMP = {
       properties: { width: { type: 'number' }, height: { type: 'number' } },
       required: ['width', 'height'],
     },
+    // Whether it shows who and when under its picture; absent, it does not.
+    dynamic: { type: 'boolean' },
     createdAt: { type: 'integer' },
     updatedAt: { type: 'integer' },
   },
