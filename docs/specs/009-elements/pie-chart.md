@@ -165,7 +165,7 @@ Chart" and a screen reader hears "Column chart", as the palette's tile says, nev
   `chartVariant`. Across kinds it moves the data: a pie or bar chart's slices become one series named **Series 1**
   over their labels (their colours dropped, so the series takes the palette's first), and a line chart's first
   series becomes the slices over its categories (below zero read as zero on a pie). Two or more series stay series
-between a line and a column or bar chart, drawn side by side on the column chart; a pie keeps the first. A chart drawn from a Sheet
+  between a line and a column or bar chart, drawn side by side on the column chart; a pie keeps the first. A chart drawn from a Sheet
   re-reads its range as the new type at once.
 - Who may: as every other chart change, someone who may edit the canvas (an Editor); a Participant and a Viewer get
   no Chart Type section.

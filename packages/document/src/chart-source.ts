@@ -128,10 +128,7 @@ const numbered = (categories: readonly string[]) => categories.every((c, i) => c
 // series to draw side by side (D281); a line, area or scatter chart reads them all.
 // A scatter chart whose first column held numbers (the read numbered its categories and made that column a series)
 // takes that column as its x (docs/specs/009-elements/pie-chart.md "Charts drawn from a sheet").
-export function chartFieldsFromTable(
-  el: ChartFields,
-  t: ChartTable,
-): SliceFields | LineFields {
+export function chartFieldsFromTable(el: ChartFields, t: ChartTable): SliceFields | LineFields {
   if (el.shape === 'line-chart') return lineFieldsFromTable(el, t);
   const first = t.series[0]?.values ?? [];
   const slices: SliceFields = {
