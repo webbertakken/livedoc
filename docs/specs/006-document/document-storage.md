@@ -76,6 +76,32 @@ In a [spreadsheet](../029-sheets/spreadsheet.md) a sheet tab's content is its sh
 A create writes the first summary with the document, so a new row never reads empty for want of a push.
 A summary that is missing reads as unknown: never empty in the Explorer, and never moved to the Trash by the clean-up.
 
+### Refreshing the summaries
+
+A field added to the summary reaches a document only when its room pushes again, so a document unedited since lacks
+it: an older text document never lists in Compare documents' picker. A one-off refresh re-pushes every document's
+summary from its room (director, 2026-11-26), as a background job behind a Worker variable, as the
+[content move](document-storage-move.md) and the [Sheets migration](../029-sheets/migration.md#how-it-runs) are; no
+admin routes.
+
+- **The switch**: the api's plain variable `SUMMARY_REFRESH`; absent (every fork's default) is off, `dry` counts and
+  `run` writes. docs.nu sets it in `hosted-vars.json`, with Webber's yes before each of preview and production.
+- **A dry run**: while the switch is `dry`, each minute up to 25 documents not checked yet, oldest first, are asked by
+  their rooms for their summary, compared with D1's, and the answer is written to D1's `summary_refreshes` as flags
+  (would change, would gain `textDocument`), never content, logged `[summary-refresh] dry <documentId> changed=<0|1>
+textDocument=<0|1>`. A failed check is named (`[summary-refresh] failed <documentId> <reason>`) and tried again
+  after an hour.
+- **The run**: while the switch is `run`, each minute up to 25 documents not written yet are asked the same, and a
+  changed summary is written only if D1's is still the one compared (a push in between is newer and stands); a
+  document's saved time never moves. Each is recorded written, logged `[summary-refresh] wrote <documentId>
+changed=<0|1> textDocument=<0|1>`. Running it twice changes nothing more.
+- **The operator's read**: `scripts/summary-refresh.ts report (--local | --remote)` in `apps/api` reads those rows
+  through wrangler, never writing, prints the documents, how many are checked, would change, would gain
+  `textDocument`, are written, and every failure, and exits non-zero until every document is checked (dry) or
+  written (run) and none failed.
+- **No way back is kept**: a summary is derived from the room, which still holds everything it is made from; the
+  next push writes the same again.
+
 ## Reaching the content
 
 - The api Worker authenticates the caller and runs its cross-cutting gates (rate limits, read-only tokens,

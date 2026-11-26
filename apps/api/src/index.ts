@@ -1,5 +1,6 @@
 import { CONTENT_MOVE_CRON, sweepContentMoves } from './document-room/content-move-sweep';
 import { sweepSheetMigrationDry } from './sheets-migration/sheet-migration-sweep';
+import { sweepSummaryRefresh } from './summary-refresh/summary-refresh-sweep';
 import {
   fromLegacyRequest,
   isLegacyDocumentsPath,
@@ -657,6 +658,13 @@ const worker = {
       ctx.waitUntil(
         sweepSheetMigrationDry(env, Date.now()).catch((err: unknown) =>
           console.error('[sheets-migrate] dry sweep failed', err),
+        ),
+      );
+      // docs/specs/006-document/document-storage.md "Refreshing the summaries": while SUMMARY_REFRESH is `dry` or
+      // `run`, documents' summaries are checked, and written by the run.
+      ctx.waitUntil(
+        sweepSummaryRefresh(env, Date.now()).catch((err: unknown) =>
+          console.error('[summary-refresh] sweep failed', err),
         ),
       );
       // docs/specs/016-platform/bug-reports.md "Filing": every 15 minutes, stored bug reports are filed again.

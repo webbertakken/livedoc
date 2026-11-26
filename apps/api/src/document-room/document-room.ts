@@ -1380,6 +1380,11 @@ export class DocumentRoom extends DurableObject<Env | undefined> {
     return (await this.content.rpc(documentId)).sheetMigrationDry(documentId, documentName);
   }
 
+  // The content summaries' refresh (docs/specs/006-document/document-storage.md "Refreshing the summaries"): reads.
+  async contentSummary(documentId: string): Promise<ContentSummary> {
+    return (await this.content.rpc(documentId)).contentSummary(documentId);
+  }
+
   // The sweep's move (docs/specs/006-document/document-storage-move.md "The sweep"): the room's move
   // outcome, moving now when it has not; null when D1 has no row for the document (G1).
   async move(documentId: string): Promise<MoveOutcome | null> {

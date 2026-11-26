@@ -455,7 +455,9 @@ document and rejecting them all as the primary, as Google's
   list does); **Attribute differences to**, a field holding the person's name (their commenting name, else empty),
   at most `SUGGESTION_AUTHOR_NAME_MAX` (100) characters; **Include comments from the selected document**, unticked;
   the note "Suggestions in either document are left out."; **Cancel** and **Compare**, which waits for a document
-  chosen (default layout).
+  chosen (default layout). The list knows a text document by its content summary; one unedited since that field
+  arrived lists once the [summaries are refreshed](../006-document/document-storage.md#refreshing-the-summaries)
+  (director, 2026-11-26).
 - **Comparing**: Compare says "Comparing…", reads both documents, makes the comparison and stores it as the person's
   own document, filed beside the primary where they may file there and else at the root of My Documents, as a copy
   is ([Default folders](../013-workspace/default-folders.md)); the dialog then says "Comparison ready" with **Open**
