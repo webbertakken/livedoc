@@ -86,6 +86,7 @@ import { PdfSelectionBar } from './PdfSelectionBar';
 import { PdfLeftPanel } from './PdfLeftPanel';
 import { CustomStampDialog } from './CustomStampDialog';
 import { ManageStampsDialog } from './ManageStampsDialog';
+import { usePdfStampIdentity } from '@/lib/pdf-document/usePdfStampIdentity';
 import { PdfLinkDialog } from './PdfLinkDialog';
 import { PdfPrintDialog } from './PdfPrintDialog';
 import { PdfFindBar } from './PdfFindBar';
@@ -353,8 +354,11 @@ export function PdfDocumentSurface({
         : null,
     [filesEnabled, home, ownerId, documentId, tabId, shareCode],
   );
+  // marks.md "Stamps": the person's stamp identity, kept in their preferences.
+  const stampIdentity = usePdfStampIdentity({ ownerId });
   const tools = usePdfMarkTools({
     custom: customStamps,
+    identity: stampIdentity,
     ready,
     marking,
     author,

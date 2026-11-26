@@ -164,3 +164,57 @@ test('a stamp is turned a quarter from Format > Rotate and leaves turned', async
   execFileSync('qpdf', ['--check', file], { stdio: 'pipe' });
   expectNoPageErrors(pageErrors);
 });
+
+// marks.md "Stamps": a person's stamp identity, filled in under Identity in Manage stamps, gives the dynamic stamps they
+// place a third line; a standard stamp keeps its name alone; custom-stamps.md "Managing them": Identity comes first.
+test('a stamp identity filled in Manage stamps gives a dynamic stamp a third line', async ({
+  page,
+  pageErrors,
+}) => {
+  test.setTimeout(120_000);
+  await page.setViewportSize({ width: 1280, height: 860 });
+  await page.goto('/explorer/all');
+  await expect(page.getByRole('heading', { name: 'My Documents' }).first()).toBeVisible();
+  await dropPdf(page, 'Identity.pdf', await textPdf(2));
+  await page.waitForURL(/\/document\//, { timeout: 30_000 });
+  const first = await pageOneDrawn(page);
+  const stamps = page.locator(`${PAGE_ONE} [data-pdf-mark-kind="stamp"]`);
+
+  // Insert > Stamp > Manage stamps: Identity first, each field kept once left.
+  await (await officeMenuItem(page, ['Insert', 'Stamp', 'Manage stamps'])).click();
+  const dialog = page.getByRole('dialog', { name: 'Manage stamps' });
+  await expect(dialog.getByRole('heading', { name: 'Identity' })).toBeVisible();
+  await dialog.getByLabel('Title').fill('Chief Engineer');
+  await dialog.getByLabel('Organisation').fill('Analytical Ltd');
+  await dialog.getByLabel('Unit').fill('Engines');
+  await dialog.getByLabel('Unit').press('Tab');
+  await page.waitForFunction(() =>
+    document.getAnimations().every((animation) => animation.playState !== 'running'),
+  );
+  await page.screenshot({ path: test.info().outputPath('pdf-stamp-identity.png') });
+  await page.keyboard.press('Escape');
+  await expect(dialog).toHaveCount(0);
+
+  // Kept in the preferences: open again, the fields hold it.
+  await (await officeMenuItem(page, ['Insert', 'Stamp', 'Manage stamps'])).click();
+  await expect(dialog.getByLabel('Organisation')).toHaveValue('Analytical Ltd');
+  await page.keyboard.press('Escape');
+
+  // A dynamic stamp placed: its name, who and when, then the title and organisation; never the unit.
+  await (await officeMenuItem(page, ['Insert', 'Stamp', 'Dynamic stamps'])).click();
+  await pressAt(page, first, [0.4, 0.2]);
+  await expect(stamps).toHaveCount(1);
+  const lines = stamps.locator('text');
+  await expect(lines).toHaveCount(3);
+  await expect(lines.nth(0)).toHaveText('APPROVED');
+  await expect(lines.nth(1)).toHaveText(/^by .+, \d{1,2} \w{3} \d{4}, \d\d:\d\d$/);
+  await expect(lines.nth(2)).toHaveText('Chief Engineer, Analytical Ltd');
+
+  // A standard stamp keeps its name alone.
+  await (await officeMenuItem(page, ['Insert', 'Stamp', 'Standard stamps'])).click();
+  await pressAt(page, first, [0.3, 0.34]);
+  await expect(stamps).toHaveCount(2);
+  await expect(stamps.filter({ hasNotText: 'Chief' }).locator('text')).toHaveText('APPROVED');
+  await page.screenshot({ path: test.info().outputPath('pdf-stamp-identity-placed.png') });
+  expectNoPageErrors(pageErrors);
+});

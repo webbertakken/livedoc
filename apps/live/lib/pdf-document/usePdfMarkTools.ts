@@ -61,6 +61,7 @@ import { usePdfPolyTool } from './usePdfPolyTool';
 import { usePdfShapes } from './usePdfShapes';
 import { usePdfToolLine } from './usePdfToolLine';
 import type { PdfCustomStampsHome } from './usePdfCustomStamps';
+import type { PdfStampIdentity } from './usePdfStampIdentity';
 import { usePdfStampTool } from './usePdfStampTool';
 import { usePdfToolControl } from './usePdfToolControl';
 import { usePdfTyping } from './usePdfTyping';
@@ -148,6 +149,7 @@ export function usePdfMarkTools({
   onProblem,
   onStroke,
   custom = null,
+  identity,
 }: {
   // The open PDF; null before it is.
   ready: Ready | null;
@@ -168,6 +170,8 @@ export function usePdfMarkTools({
   onStroke: (index: number, stroke: Stroke | null, look: PdfDraftLook) => void;
   // Where a person's custom stamps come from and go; null where they are not offered.
   custom?: PdfCustomStampsHome | null;
+  // The person's stamp identity: written into the dynamic stamps they place, filled in by Manage stamps.
+  identity: PdfStampIdentity;
 }) {
   const [tool, setTool] = useState<PdfPageTool>('select');
   const inHand: PdfPageTool = marking ? tool : 'select';
@@ -289,6 +293,7 @@ export function usePdfMarkTools({
     ...offered,
     onProblem,
     custom,
+    identity,
   });
 
   /** What a drag across a page's text makes with the text tool in hand. */

@@ -14,11 +14,11 @@ A row is done when it reads **built** (with its test) or **left out** (with Webb
 
 | Status                                             | Means                                                                            | Rows |
 | -------------------------------------------------- | -------------------------------------------------------------------------------- | ---- |
-| `specified`                                        | In, by the spec named                                                            | 104  |
+| `specified`                                        | In, by the spec named                                                            | 103  |
 | `specified, in part`                               | In, but for the part its rule names as left out                                  | 49   |
 | `left out (<ruling>)`                              | Not built, by the ruling or fork named                                           | 160  |
 | `not a function`                                   | Not a function of a PDF: installing, updating and troubleshooting Acrobat itself | 54   |
-| `built (<test>)`                                   | Built, with the test that proves it                                              | 22   |
+| `built (<test>)`                                   | Built, with the test that proves it                                              | 23   |
 | `built, in part (<test>)`                          | Built, but for the part its rule names as left out                               | 3    |
 | `built so far: <what> (<test>); the rest: Phase N` | The part named is built and proven; the rest lands in the phase named            | 11   |
 
@@ -481,7 +481,7 @@ A row is done when it reads **built** (with its test) or **left out** (with Webb
 | Create custom stamps                | Custom stamps from a picture or a PDF page                              | Reviewing | built (`custom-stamp-picture.test.ts`, `make-custom-stamp.test.ts`, `usePdfStampTool.test.tsx`, `pdf-document-custom-stamps.spec.ts`)                                                                                                                                                      | [Custom stamps](custom-stamps.md)               |
 | Create custom dynamic stamps        | Dynamic stamps with the stamper's name and the time                     | Reviewing | built so far: dynamic stamps with the stamper's name and the time (`pdf-stamp.test.ts`, `pdf-document-stamps.spec.ts`); the rest: custom ones, Phase 8                                                                                                                                     | [Marks](marks.md#stamps)                        |
 | Delete custom stamps and categories | Manage stamps: rename, delete, categories                               | Reviewing | built (`manage-custom-stamps.test.ts`, `ManageStampsDialog.test.tsx`, `pdf-document-custom-stamps.spec.ts`)                                                                                                                                                                                | [Custom stamps](custom-stamps.md#managing-them) |
-| Update digital stamp identities     | Stamp identity: display name, title and organisation for dynamic stamps | Reviewing | specified                                                                                                                                                                                                                                                                                  | [Marks](marks.md#stamps)                        |
+| Update digital stamp identities     | Stamp identity: display name, title and organisation for dynamic stamps | Reviewing | built (`stamp-identity.test.ts`, `usePdfStampIdentity.test.tsx`, `StampIdentityFields.test.tsx`, `pdf-stamp.test.ts`, `pdf-document-stamps.spec.ts`)                                                                                                                                       | [Marks](marks.md#stamps)                        |
 
 ## Manage reviews
 

@@ -370,7 +370,7 @@ describe('a stamp', () => {
 
   it.each([
     ['no lines', { lines: [] }],
-    ['three lines', { lines: ['A', 'B', 'C'] }],
+    ['four lines', { lines: ['A', 'B', 'C', 'D'] }],
     ['a line of only spaces', { lines: ['APPROVED', '  '] }],
     ['a line that is no string', { lines: [7] }],
     ['lines that are no list', { lines: 'APPROVED' }],
@@ -402,6 +402,11 @@ describe('a stamp', () => {
     expect(
       Mark.stamp(stamp({ stamp: CUSTOM, picture: broken }) as unknown as StampInput)!.picture,
     ).toBeUndefined();
+  });
+
+  it("keeps a dynamic stamp of three lines, its third the stamper's identity", () => {
+    const lines = ['APPROVED', 'by Ada', 'Chief Engineer, Analytical Ltd'];
+    expect(Mark.stamp(stamp({ lines }) as unknown as StampInput)!.lines).toEqual(lines);
   });
 
   it('keeps a line at its limit', () => {

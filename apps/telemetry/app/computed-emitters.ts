@@ -540,6 +540,10 @@ export const COMPUTED_EMITTERS: Record<string, ComputedValues> = {
   'apps/live/lib/pdf-document/usePdfStampTool.ts Pdf·Added': {
     values: PDF_STAMP_KINDS.map((kind) => `Stamp.${kind}`),
   },
+  // A stamp identity's field kept (marks.md "Telemetry and observability": `StampIdentity.<Field>`), never its words.
+  'apps/live/lib/pdf-document/usePdfStampIdentity.ts Pdf·Changed': {
+    values: ['Title', 'Organisation', 'Unit', 'Email'].map((field) => `StampIdentity.${field}`),
+  },
   // A mark deleted (marks.md "Telemetry and observability": `Mark.<Kind>`), each kind's name read from the marks' own.
   'apps/live/lib/pdf-document/usePdfMarkSelection.ts Pdf·Deleted': {
     values: PDF_MARK_KIND_NAMES.map((name) => `Mark.${name}`),

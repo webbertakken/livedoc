@@ -299,6 +299,10 @@ export type UserPreferences = {
   // Dark pages (docs/specs/035-pdf-documents/dark-pages.md "The setting"): a PDF's pages shown dark in the dark
   // scheme. Missing === on: the pages follow the dark scheme until the person turns it off.
   pdfDarkPages?: boolean;
+  // Stamp identity (docs/specs/035-pdf-documents/marks.md "Stamps"): title, organisation, unit and email, each
+  // optional, written only into the dynamic stamps this person places. Read through StampIdentity.read, which refuses
+  // a field past PDF_STAMP_IDENTITY_FIELD_MAX_CHARS.
+  pdfStampIdentity?: { title?: string; organisation?: string; unit?: string; email?: string };
   // A text document's default page setup (docs/specs/034-text-documents/page-layout.md "Page setup"): sides,
   // orientation, margins and colour in points. Read through PageSetup.parse.
   textDocumentPageSetup?: Record<string, unknown>;

@@ -1,7 +1,7 @@
 'use client';
 
-// Manage stamps (docs/specs/035-pdf-documents/custom-stamps.md "Managing them"): the shell's dialog listing a person's
-// custom stamps a category each, in the grid's order. A category's name and a stamp's name are fields, kept once left;
+// Manage stamps (docs/specs/035-pdf-documents/custom-stamps.md "Managing them"): the shell's dialog holding a person's
+// stamp identity first, then, where the deployment stores files, their custom stamps a category each, in the grid's order. A category's name and a stamp's name are fields, kept once left;
 // a stamp moves by its Category list (New category… asks for one in place); Delete asks in place first. Each change is
 // manage-custom-stamps.ts', LiveDoc's at once; one that fails is said here and the list read again.
 import { useState, type FocusEvent, type KeyboardEvent } from 'react';
@@ -22,6 +22,7 @@ import {
   type StampChanged,
 } from '@/lib/pdf-document/manage-custom-stamps';
 import type { ManageStampsDialogProps } from '@/lib/pdf-document/usePdfCustomStamps';
+import { StampIdentityFields } from './StampIdentityFields';
 
 /** A field asked for in place takes the caret as it appears; stable, so it is focused once. */
 const focusField = (field: HTMLInputElement | null) => field?.focus({ preventScroll: true });
@@ -61,6 +62,8 @@ function keptField(was: string, keep: (text: string) => void) {
 
 export function ManageStampsDialog({
   open,
+  customs,
+  identity,
   ownerId,
   stamps,
   pictures,
@@ -172,7 +175,15 @@ export function ManageStampsDialog({
   return (
     <OfficeDialog open={open} onClose={onClose} title="Manage stamps" wide>
       <div className="flex flex-col gap-6">
-        {sections.length === 0 ? (
+        <StampIdentityFields
+          identity={identity.identity}
+          keep={identity.keep}
+          onProblem={setProblem}
+        />
+        {customs ? (
+          <h3 className="text-body font-medium text-(--office-ink)">Custom stamps</h3>
+        ) : null}
+        {customs && sections.length === 0 ? (
           <div className="flex flex-col items-start gap-3">
             <p className="text-body">You have no custom stamps yet.</p>
             <button
@@ -184,7 +195,7 @@ export function ManageStampsDialog({
             </button>
           </div>
         ) : null}
-        {sections.map(({ category, stamps: inIt }) => (
+        {(customs ? sections : []).map(({ category, stamps: inIt }) => (
           <section key={category} aria-label={category} className="flex flex-col gap-2">
             {asking?.kind === 'category' && asking.name === category ? (
               ask(`Delete ${category} and its ${inIt.length} stamps?`, () =>
