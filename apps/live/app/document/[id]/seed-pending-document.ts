@@ -1,4 +1,5 @@
 import type { Tab } from '@livedoc/document';
+import type { WorkbookRecord } from '@livedoc/sheets';
 import type { SavedItemTypes } from '@/lib/api/item-types';
 import { debugLog } from '@/lib/debug-log';
 import { documentIdFromPath } from '@/lib/legacy-editor-path';
@@ -28,6 +29,8 @@ export type EditorSeed = {
   activeId: string;
   loadedTabIds: Set<string>;
   itemTypes: SavedItemTypes;
+  // A spreadsheet's workbook record, so it opens as a spreadsheet (docs/specs/029-sheets/spreadsheet.md).
+  workbook: WorkbookRecord | null;
   // A This Browser document is the local sentinel's; a LiveDoc one its creator's.
   ownerId: string;
   teamId: string | null;
@@ -44,6 +47,7 @@ export function pendingEditorSeed(doc: PendingDocument, self: Participant): Edit
     activeId: doc.tabs[0]!.id,
     loadedTabIds: new Set(doc.tabs.map((t) => t.id)),
     itemTypes: { itemTypes: doc.itemTypes, itemTypesRev: 0 },
+    workbook: doc.workbook ?? null,
     ownerId: isOfflineLocation(doc.location) ? OFFLINE_OWNER_ID : doc.ownerId,
     teamId: doc.teamId,
     self: { ...self, id: doc.ownerId, key: ensureCollabKey(), status: 'online' },

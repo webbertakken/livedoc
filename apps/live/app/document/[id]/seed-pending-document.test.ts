@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it } from 'vitest';
+import type { WorkbookRecord } from '@livedoc/sheets';
 import type { Tab } from '@livedoc/document';
 import {
   addPendingDocument,
@@ -59,6 +60,17 @@ describe('readEditorSeed', () => {
     expect(seed.teamId).toBe('team-1');
     expect(seed.self).toMatchObject({ id: 'owner-1', name: 'Guest', status: 'online' });
     expect(seed.self.key).toEqual(expect.any(String));
+  });
+
+  // new-document-menu.md "The blanks": a spreadsheet made from the menu opens as one, its workbook from memory.
+  it('seeds a spreadsheet’s workbook record, and none for another document', () => {
+    const workbook = { settings: { locale: 'en-GB' } } as unknown as WorkbookRecord;
+    add({ workbook });
+    expect(readEditorSeed(`/document/${ID}`, PLACEHOLDER)!.workbook).toBe(workbook);
+    resetPendingDocumentsForTests();
+    resetCreateHoldsForTests();
+    add();
+    expect(readEditorSeed(`/document/${ID}`, PLACEHOLDER)!.workbook).toBeNull();
   });
 
   it('makes a This Browser document the local sentinel’s', () => {

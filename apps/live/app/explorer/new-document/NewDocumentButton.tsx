@@ -11,6 +11,7 @@ import { PlusIcon } from '@/components/primitives/explorer-icons';
 import { useIsMobileViewport } from '@/hooks/ui/useIsMobileViewport';
 import { useLastBlank, writeLastBlank } from '@/lib/new-document/last-blank';
 import { track } from '@/lib/telemetry';
+import { useToast } from '@/hooks/ui/useToast';
 import { BlankGlyph } from './blank-glyphs';
 import {
   prefetchNewDocumentOpen,
@@ -28,6 +29,7 @@ const NewDocumentSheet = dynamic(loadSheet, { ssr: false });
 const CHOICE_TELEMETRY: Record<NewDocumentChoice, string> = {
   blank: 'NewDocumentBlank',
   template: 'NewDocumentTemplate',
+  file: 'NewDocumentFile',
 };
 
 function CaretDownIcon() {
@@ -50,6 +52,7 @@ export function NewDocumentButton({
   const last = useLastBlank();
   const lastBlank = newDocumentBlankOf(last)!;
   const phone = useIsMobileViewport();
+  const toast = useToast();
   const [open, setOpen] = useState(false);
   const [anchor, setAnchor] = useState<HTMLButtonElement | null>(null);
 
@@ -69,9 +72,10 @@ export function NewDocumentButton({
         blank: id,
         template,
         place,
+        say: toast.error,
       });
     },
-    [place],
+    [place, toast.error],
   );
 
   const openMenu = () => {

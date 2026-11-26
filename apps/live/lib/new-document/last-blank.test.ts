@@ -21,8 +21,8 @@ describe('last blank', () => {
   it('follows the blank made last', () => {
     const { result } = renderHook(() => useLastBlank());
     expect(result.current).toBe('diagram');
-    act(() => writeLastBlank('sheet'));
-    expect(result.current).toBe('sheet');
+    act(() => writeLastBlank('spreadsheet'));
+    expect(result.current).toBe('spreadsheet');
   });
 
   it('keeps the blank for the session when local storage refuses it', () => {

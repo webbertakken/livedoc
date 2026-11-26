@@ -4,6 +4,7 @@
 // when it fails. Memory only: a page load forgets it, by which time the create has landed or the page warned.
 import type { Tab } from '@livedoc/document';
 import type { ItemTypeCatalogue } from '@livedoc/items';
+import type { WorkbookRecord } from '@livedoc/sheets';
 import { debugLog } from '@/lib/debug-log';
 import type { SaveLocationId } from '@/lib/save-locations';
 import { createFailureCopy, type CreateFailure } from './create-failure';
@@ -20,6 +21,8 @@ export type PendingDocumentInput = {
   // Whole, every element: the editor opens them as they are.
   tabs: Tab[];
   itemTypes: ItemTypeCatalogue | null;
+  // A spreadsheet's workbook record (docs/specs/029-sheets/spreadsheet.md "Making a spreadsheet"); none otherwise.
+  workbook?: WorkbookRecord | null;
   // Who is creating: the reader the editor opens as. A This Browser document's owner is the local sentinel.
   ownerId: string;
   location: SaveLocationId;

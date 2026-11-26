@@ -7,8 +7,10 @@ import {
   newDocumentBlankOf,
   untitledNameForTemplate,
   type NewDocumentBlankId,
+  type NewDocumentKind,
   type TemplateKind,
 } from '@livedoc/templates';
+import { startNewPdf } from '@/lib/new-document/start-new-pdf';
 import { apiLoadSelf } from '@/lib/api-client';
 import { assignAppLocation, interceptAppNavigation } from '@/lib/app-location';
 import { debugLog } from '@/lib/debug-log';
@@ -33,6 +35,10 @@ import { newDocumentLocationFor } from '@/lib/new-document/new-document-location
 import { NEW_DOCUMENT_THEME_ID } from '@/lib/new-document/new-document-theme';
 import { trackNewDocumentCreated, writeNewDocument } from '@/lib/new-document/write-new-document';
 import type { NewDocumentContent } from '@/lib/new-document-content';
+import { textDocumentContent } from '@/lib/text-document/text-document-content';
+import { noteTextDocumentMade } from '@/lib/text-document/text-document-made';
+import { UNTITLED_TEXT_DOCUMENT } from '@/lib/text-document/text-document-tab';
+import { UNTITLED_SPREADSHEET } from '@/lib/spreadsheet/spreadsheet-name';
 import { handTemplatePick } from '@/lib/placement-defaults/template-pick-handoff';
 import { isOfflineLocation, type SaveLocationId } from '@/lib/save-locations';
 import {
@@ -40,7 +46,8 @@ import {
   setStandbyInPlace,
 } from '@/app/explorer/in-place-editor/in-place-editor-store';
 
-export type NewDocumentChoice = 'blank' | 'template';
+// 'file': PDF document's Open a PDF file (new-document-menu.md "The blanks").
+export type NewDocumentChoice = 'blank' | 'template' | 'file';
 
 export type NewDocumentRequest = {
   choice: NewDocumentChoice;
@@ -49,12 +56,16 @@ export type NewDocumentRequest = {
   template: TemplateKind;
   // The section's place; absent is no choice, where a default folder may answer.
   place: NewDocumentPlace;
+  // Says what went wrong where a document cannot open at once (a PDF's file refused), as a toast does.
+  say?: (message: string) => void;
 };
 
 // The /new address for the same request: the way when the document cannot open here, and a workspace frame's own.
 export function newDocumentHref(request: NewDocumentRequest): string {
   const params = new URLSearchParams();
-  params.set('template', request.template);
+  const kind = newDocumentBlankOf(request.blank)?.kind;
+  if (kind) params.set('kind', kind);
+  else params.set('template', request.template);
   if (request.place.folderId) params.set('folder', request.place.folderId);
   if (request.place.teamId) params.set('team', request.place.teamId);
   return `/new?${params.toString()}`;
@@ -91,6 +102,15 @@ export function startNewDocument(request: NewDocumentRequest): void {
   }
   // A workspace frame makes it its own way, in the frame (useWorkspaceNavigation).
   if (interceptAppNavigation(newDocumentHref(request), false)) return;
+  // A PDF document is a stored file before it opens, blank or chosen (new-document-menu.md "Opening at once").
+  if (newDocumentBlankOf(blank)?.kind === 'pdf-document') {
+    void startNewPdf({
+      source: choice === 'file' ? 'file' : 'blank',
+      place: request.place,
+      say: request.say ?? ((message) => console.warn('[new-document] pdf', message)),
+    });
+    return;
+  }
   const creator = newDocumentCreator();
   if (!creator) {
     debugLog('[new-document] no-creator');
@@ -123,6 +143,8 @@ type PreparedDocument = {
   content: NewDocumentContent;
   location: SaveLocationId;
   ownerId: string;
+  /** The document kind it is, for a kind's blank. */
+  kind?: NewDocumentKind | null;
 };
 
 async function prepareDocument(
@@ -130,8 +152,14 @@ async function prepareDocument(
   choice: NewDocumentChoice,
   creator: NewDocumentCreator,
   location: SaveLocationId,
+  kind: NewDocumentKind | null = null,
 ): Promise<PreparedDocument> {
   const ids = createIdsFor(null);
+  // A text document or a spreadsheet: one empty tab of its kind, as /new?kind= makes (new-document-menu.md).
+  if (kind === 'text-document' || kind === 'spreadsheet') {
+    const made = await kindDocumentContent(kind, ids.tabId);
+    return { ids, template, choice, ...made, location, ownerId: creator.ownerId, kind };
+  }
   const { newDocumentContent } = await loadNewDocumentContent();
   const content = await newDocumentContent({
     templateKind: template,
@@ -150,11 +178,27 @@ async function prepareDocument(
   };
 }
 
+// A kind's empty document and its name; what builds a spreadsheet's loads only for one.
+async function kindDocumentContent(
+  kind: 'text-document' | 'spreadsheet',
+  tabId: string,
+): Promise<{ name: string; content: NewDocumentContent }> {
+  if (kind === 'text-document') {
+    return {
+      name: UNTITLED_TEXT_DOCUMENT,
+      content: textDocumentContent(tabId, UNTITLED_TEXT_DOCUMENT),
+    };
+  }
+  const { spreadsheetDocumentContent } = await import('@/lib/spreadsheet/spreadsheet-document');
+  return { name: UNTITLED_SPREADSHEET, content: spreadsheetDocumentContent(tabId) };
+}
+
 const inputOf = (doc: PreparedDocument, teamId: string | null, startedAt: number) => ({
   id: doc.ids.documentId,
   name: doc.name,
   tabs: doc.content.tabs ?? [doc.content.tab],
   itemTypes: doc.content.itemTypes,
+  workbook: doc.content.workbook ?? null,
   ownerId: doc.ownerId,
   location: doc.location,
   teamId,
@@ -182,6 +226,7 @@ export async function prepareStandbyDocument(lastBlank: NewDocumentBlankId): Pro
   if (
     standby &&
     standby.template === blank.blank &&
+    (standby.kind ?? null) === (blank.kind ?? null) &&
     standby.ownerId === creator.ownerId &&
     standby.location === location
   )
@@ -189,7 +234,8 @@ export async function prepareStandbyDocument(lastBlank: NewDocumentBlankId): Pro
   preparing = true;
   try {
     await loadEditorPage();
-    setStandby(await prepareDocument(blank.blank, 'blank', creator, location));
+    if (blank.kind === 'pdf-document') return;
+    setStandby(await prepareDocument(blank.blank, 'blank', creator, location, blank.kind));
     debugLog(`[new-document] standby blank=${blank.id}`);
   } catch (error) {
     // Background work (docs/specs/016-platform/stale-builds.md "Background work"): its code gone after a deploy, or
@@ -212,6 +258,7 @@ function takeStandby(
     !taken ||
     taken.choice !== request.choice ||
     taken.template !== request.template ||
+    (taken.kind ?? null) !== (newDocumentBlankOf(request.blank)?.kind ?? null) ||
     taken.ownerId !== creator.ownerId ||
     taken.location !== location
   )
@@ -231,17 +278,20 @@ async function openNewDocument(
   const location = newDocumentLocationFor(place, creator);
   const fromStandby = takeStandby(request, creator, location);
   debugLog(`[new-document] standby=${fromStandby ? 'used' : 'none'}`);
-  const doc = fromStandby ?? (await prepareDocument(template, choice, creator, location));
+  const kind = newDocumentBlankOf(request.blank)?.kind ?? null;
+  const doc = fromStandby ?? (await prepareDocument(template, choice, creator, location, kind));
   const { ids, name, content } = doc;
   const { documentId, tabId } = ids;
   const offline = isOfflineLocation(location);
   // A mode's blank in the cloud: a template picked on its start may move it to that template's default folder
   // (docs/specs/013-workspace/default-folders.md "A template picked after creation").
   handTemplatePick(
-    !offline && isBlankTemplate(template)
+    !offline && !kind && isBlankTemplate(template)
       ? { documentId, tabId, placementChosen: !!(place.folderId || place.teamId) }
       : null,
   );
+  // A text document made here starts in its maker's default styles when it first opens (text-and-paragraphs.md).
+  if (doc.kind === 'text-document') noteTextDocumentMade(tabId);
   // Whoever is making a document has their name; the join prompt is for someone arriving at another's.
   markNameConfirmed();
   await loadEditorPage();

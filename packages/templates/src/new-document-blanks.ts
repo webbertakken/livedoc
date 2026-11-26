@@ -8,10 +8,10 @@ export const NEW_DOCUMENT_BLANK_IDS = [
   'diagram',
   'whiteboard',
   'brainstorm',
-  'page',
-  'sheet',
+  'text-document',
+  'spreadsheet',
+  'pdf-document',
   'board',
-  'slides',
   'form',
   'workshop',
 ] as const;
@@ -20,19 +20,30 @@ export type NewDocumentBlankId = (typeof NEW_DOCUMENT_BLANK_IDS)[number];
 
 /**
  * Where a blank's templates come from: a template start's groups (all of them, or one), or one Plan family
- * (Sheet, Board and Form templates are Plan templates, listed by their family).
+ * (Board and Form templates are Plan templates, listed by their family).
  */
 export type NewDocumentTemplateSource =
-  { start: Exclude<TabOpening, 'plan'>; group?: string } | { plan: 'sheets' | 'boards' | 'forms' };
+  { start: Exclude<TabOpening, 'plan'>; group?: string } | { plan: 'boards' | 'forms' };
+
+/** The document kinds New Document makes, each a document of its own kind rather than a template. */
+export const NEW_DOCUMENT_KINDS = ['text-document', 'spreadsheet', 'pdf-document'] as const;
+export type NewDocumentKind = (typeof NEW_DOCUMENT_KINDS)[number];
+
+export const isNewDocumentKind = (value: unknown): value is NewDocumentKind =>
+  NEW_DOCUMENT_KINDS.some((k) => k === value);
 
 export type NewDocumentBlank = {
   id: NewDocumentBlankId;
   /** "Diagram": the row's name, and the face's "New Diagram". */
   name: string;
-  /** What the blank makes. */
+  /** What the blank makes: its blank template; a kind's reads 'blank' and is never made. */
   blank: TemplateKind;
-  /** Where the pane's templates come from. */
-  templates: NewDocumentTemplateSource;
+  /** Where the pane's templates come from; none for a kind, whose gallery is still to come. */
+  templates: NewDocumentTemplateSource | null;
+  /** The document kind it makes, for a kind's blank. */
+  kind?: NewDocumentKind;
+  /** What a kind makes, in one line, said in its pane (D227). */
+  pitch?: string;
 };
 
 export const NEW_DOCUMENT_BLANKS: readonly NewDocumentBlank[] = [
@@ -55,28 +66,34 @@ export const NEW_DOCUMENT_BLANKS: readonly NewDocumentBlank[] = [
     templates: { start: 'diagram', group: 'mindmaps' },
   },
   {
-    id: 'page',
-    name: 'Page',
-    blank: 'blank-article',
-    templates: { start: 'pages', group: 'articles' },
+    id: 'text-document',
+    name: 'Text document',
+    blank: 'blank',
+    templates: null,
+    kind: 'text-document',
+    pitch: 'An empty text document, with pages, styles and comments, as Google Docs makes one.',
   },
   {
-    id: 'sheet',
-    name: 'Sheet',
-    blank: 'blank-spreadsheet',
-    templates: { plan: 'sheets' },
+    id: 'spreadsheet',
+    name: 'Spreadsheet',
+    blank: 'blank',
+    templates: null,
+    kind: 'spreadsheet',
+    pitch: 'An empty spreadsheet of one sheet, with formulas, charts and filters.',
+  },
+  {
+    id: 'pdf-document',
+    name: 'PDF document',
+    blank: 'blank',
+    templates: null,
+    kind: 'pdf-document',
+    pitch: 'A blank PDF page to write and sign on, or a PDF file of your own.',
   },
   {
     id: 'board',
     name: 'Board',
     blank: 'blank-board',
     templates: { plan: 'boards' },
-  },
-  {
-    id: 'slides',
-    name: 'Slides',
-    blank: 'blank-slide-deck',
-    templates: { start: 'pages', group: 'slides' },
   },
   {
     id: 'form',

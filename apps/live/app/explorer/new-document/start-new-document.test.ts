@@ -12,7 +12,9 @@ const mocks = vi.hoisted(() => ({
   loadEditor: vi.fn(async () => () => null),
   loadPlanSeeds: vi.fn(async () => ({})),
   ensureIconCatalogs: vi.fn(async () => {}),
+  startNewPdf: vi.fn(async () => {}),
 }));
+vi.mock('@/lib/new-document/start-new-pdf', () => ({ startNewPdf: mocks.startNewPdf }));
 vi.mock('@/lib/app-location', () => ({
   assignAppLocation: mocks.assign,
   interceptAppNavigation: mocks.intercept,
@@ -234,10 +236,50 @@ describe('a click before anything was fetched ahead', () => {
   });
 });
 
+// docs/specs/013-workspace/new-document-menu.md "The blanks": the three document kinds.
+describe('startNewDocument, a document kind', () => {
+  it('opens a text document in place at once, one text document tab', async () => {
+    startNewDocument(request({ blank: 'text-document' }));
+    await opened();
+    const doc = pendingDocument(openedId())!;
+    expect(doc.tabs.map((t) => t.kind)).toEqual(['text-document']);
+    expect(mocks.openInPlace).toHaveBeenCalledWith(openedId());
+  });
+
+  it('opens a spreadsheet in place at once, one sheet tab, its workbook written with it', async () => {
+    startNewDocument(request({ blank: 'spreadsheet' }));
+    await opened();
+    expect(pendingDocument(openedId())!.tabs.map((t) => t.kind)).toEqual(['sheet']);
+    await vi.waitFor(() =>
+      expect(mocks.write).toHaveBeenCalledWith(
+        expect.objectContaining({
+          content: expect.objectContaining({ workbook: expect.anything() }),
+        }),
+      ),
+    );
+  });
+
+  it('hands a PDF document to its own start, blank or from a file, with the place', () => {
+    startNewDocument(request({ blank: 'pdf-document', place: { folderId: 'f1' } }));
+    expect(mocks.startNewPdf).toHaveBeenCalledWith(
+      expect.objectContaining({ source: 'blank', place: { folderId: 'f1' } }),
+    );
+    startNewDocument(request({ blank: 'pdf-document', choice: 'file' }));
+    expect(mocks.startNewPdf).toHaveBeenLastCalledWith(expect.objectContaining({ source: 'file' }));
+    expect(mocks.openInPlace).not.toHaveBeenCalled();
+  });
+});
+
 describe('newDocumentHref', () => {
   it('names the template and the place', () => {
     expect(newDocumentHref(request({ place: { folderId: 'f1' } }))).toBe(
       '/new?template=blank&folder=f1',
+    );
+  });
+
+  it('names a document kind', () => {
+    expect(newDocumentHref(request({ blank: 'spreadsheet', place: { teamId: 't1' } }))).toBe(
+      '/new?kind=spreadsheet&team=t1',
     );
   });
 });

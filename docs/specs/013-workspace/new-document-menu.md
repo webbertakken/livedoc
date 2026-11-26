@@ -33,17 +33,17 @@ closed: whoever asked for a blank gets a blank.
 
 In this order, each with its glyph and number key:
 
-| #   | Blank      | Makes (its blank template)              | Its templates, in the pane                                              |
-| --- | ---------- | --------------------------------------- | ----------------------------------------------------------------------- |
-| 1   | Diagram    | Blank Diagram (`blank`)                 | Start Diagramming's, in its groups, Recommended first, but Brainstorm's |
-| 2   | Whiteboard | Blank Whiteboard (`whiteboard`)         | Start Sketching's, in its groups, Recommended first                     |
-| 3   | Brainstorm | Blank Brainstorm (`blank-brainstorm`)   | Start Diagramming's Brainstorm: the mind maps, then Event Storming      |
-| 4   | Page       | Blank Article (`blank-article`)         | Start Making Pages' Articles                                            |
-| 5   | Sheet      | Blank Spreadsheet (`blank-spreadsheet`) | The spreadsheet templates (Budget, Timesheet, Invoice, ...)             |
-| 6   | Board      | Blank Board (`blank-board`)             | The Plan templates that set up boards (Kanban, Bug Triage, ...)         |
-| 7   | Slides     | Blank Slide Deck (`blank-slide-deck`)   | Start Making Pages' Slides                                              |
-| 8   | Form       | Blank Form (`blank-form`)               | The form templates                                                      |
-| 9   | Workshop   | Blank Session (`blank-session`)         | Start a Workshop's, in its groups, Recommended first                    |
+| #   | Blank         | Makes                                                                      | Its templates, in the pane                                              |
+| --- | ------------- | -------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| 1   | Diagram       | Blank Diagram (`blank`)                                                    | Start Diagramming's, in its groups, Recommended first, but Brainstorm's |
+| 2   | Whiteboard    | Blank Whiteboard (`whiteboard`)                                            | Start Sketching's, in its groups, Recommended first                     |
+| 3   | Brainstorm    | Blank Brainstorm (`blank-brainstorm`)                                      | Start Diagramming's Brainstorm: the mind maps, then Event Storming      |
+| 4   | Text document | A [text document](../034-text-documents/text-document.md) of one empty tab | None yet: the pane says what it makes                                   |
+| 5   | Spreadsheet   | A [spreadsheet](../029-sheets/spreadsheet.md) of one empty sheet           | None yet: the pane says what it makes                                   |
+| 6   | PDF document  | A [PDF document](../035-pdf-documents/pdf-document.md) of one blank page   | **Blank PDF** and **Open a PDF file**                                   |
+| 7   | Board         | Blank Board (`blank-board`)                                                | The Plan templates that set up boards (Kanban, Bug Triage, ...)         |
+| 8   | Form          | Blank Form (`blank-form`)                                                  | The form templates                                                      |
+| 9   | Workshop      | Blank Session (`blank-session`)                                            | Start a Workshop's, in its groups, Recommended first                    |
 
 - **Brainstorm** is the quickest way into a mind map. Blank Brainstorm is a diagram holding one central idea and
   nothing else, and it opens with that idea selected, so the first key typed names it and Tab grows its first branch
@@ -51,8 +51,18 @@ In this order, each with its glyph and number key:
   small example to grow from rather than a finished map. It sits third, after Whiteboard: Diagram, Whiteboard and
   Brainstorm are the three ways onto a canvas, and Brainstorm is the freest of them after a whiteboard.
 
-- **Page** is prose. It makes an Article ([Article pages](../007-editor/article-pages.md)) until the
-  [markdown tab](../031-markdown/markdown-tab.md) ships; then it makes a page, a document of one markdown tab.
+- **Text document, Spreadsheet and PDF document** are the three document kinds, each a document of its own kind
+  rather than a template: they take the places Page, Sheet and Slides had. **Page** and **Slides** (Pages mode, which
+  is being retired, [Text documents](../034-text-documents/migration.md)) and **Sheet** (the Plan Sheet, which the
+  spreadsheet replaces) are no longer offered; documents already made of them open as before. A last blank that was
+  one of them reads as Diagram.
+- **A kind's templates** join its pane when its gallery has them (text documents' and spreadsheets' galleries are
+  still to come); until then its pane holds its glyph, its name and one line on what it makes (default): "An empty
+  text document, with pages, styles and comments, as Google Docs makes one.", "An empty spreadsheet of one sheet,
+  with formulas, charts and filters."
+- **PDF document**: its row, its number key and the face make a **Blank PDF**, one empty A4 page (default); its pane
+  offers two cards, **Blank PDF** and **Open a PDF file**, which opens the file chooser and makes the chosen PDF a
+  document, as a PDF dropped on the Explorer is ([Starting and finding](../035-pdf-documents/starting-and-finding.md)).
 - **Blank Board** is a new blank: one Board tab holding a Blank board, which starts on Setup Board
   ([Plan board](../026-plan/plan-board.md)). Every other blank is an existing template.
 - **Dashboard is not a blank.** A dashboard shows a document's own boards and sheets, and a new document has none;
@@ -80,7 +90,7 @@ A popover under the button, its right edge on the button's. Two panes side by si
   and name, under the headings of its template groups (Recommended, Brainstorm, Design, ...). A template appears
   once, under the first group holding it. The pane scrolls within the menu; each group's heading stays at the top
   while its templates pass under it, and a soft fade at the foot says there is more. A blank with one group
-  (Brainstorm, Page, Slides, Sheet, Board, Form) has one heading.
+  (Brainstorm, Board, Form) has one heading; a kind without templates has none.
 - **A template has one blank.** A whole mode's pane leaves out every template another blank lists from the same
   start, so Diagram's pane holds no mind map and no Event Storming: they are Brainstorm's.
   The editor's start still lists them all.
@@ -100,6 +110,7 @@ A popover under the button, its right edge on the button's. Two panes side by si
 | -------------------------------------------------- | ----------------------------- | --------------------------------- |
 | The face, a list row, Enter on a row, a number key | The blank                     | The canvas, its start closed      |
 | A template card                                    | A document from that template | The template                      |
+| Open a PDF file (PDF document's pane)              | A PDF document of that file   | The PDF, once stored              |
 | New Folder                                         | A folder, as before           | The folder, its name being edited |
 
 - Every document choice remembers its blank as the last blank and closes the menu.
@@ -119,7 +130,8 @@ As every new document does ([New document route](../007-editor/new-document-rout
 
 ## Opening at once
 
-A blank is on screen, editable, **within 200 ms of the click**, and a template within 500 ms.
+A blank is on screen, editable, **within 200 ms of the click**, and a template within 500 ms. A PDF document,
+blank or opened from a file, opens once its file is stored, as a dropped PDF does: its pages are the file's.
 
 - **No page load.** The Explorer opens the editor in its own place, as `/new` hands off
   ([In-place handoff](../007-editor/new-document-route.md#in-place-handoff-to-the-editor)), the address bar moving
@@ -180,8 +192,8 @@ The code cites each by its id.
 
 - **D191** How the pane orders a whole mode's templates: Its start's groups in rail order, Recommended first, each
   template once under its first group (default).
-- **D192** Which templates Sheet, Board and Form list: The spreadsheet Plan templates, the other Plan templates, and the
-  form templates, in catalogue order (default).
+- **D192** Which templates Board and Form list: the Plan templates that set up boards, and the form templates, in
+  catalogue order (default).
 - **D193** How menu aim decides the pointer heads for the pane: The triangle of the previous point and the pane's two
   near corners; held at most 300 ms after the last move (default).
 - **D195** When the menu's code is fetched: On idle, and on pointer enter or focus of the button (default).
@@ -208,5 +220,7 @@ The code cites each by its id.
   prepared at the click (default).
 - **D207** When the create starts: After the editor's first frame of the document, or 1 s at most: a create that lands
   at once would re-render it inside that frame (default).
+- **D227** A kind's pane without templates: its glyph, its name and one line on what it makes (default).
+- **D228** A Blank PDF's page: one empty A4 page, portrait (default).
 - **D222** Brainstorm's glyph and tint: The lightbulb (`lucideLightbulb`), rose (`text-rose-600`, `dark:text-rose-400`),
   the one hue no other blank wears (default).

@@ -14,6 +14,8 @@ import {
 import { StatusTopLine } from '@/components/chrome/lines/StatusTopLine';
 import { ApiErrorPage } from '@/components/chrome/ApiErrorPage';
 import { NewDocumentWizard } from '@/components/palette/NewDocumentWizard';
+import { makeNewPdf } from './new-pdf';
+import type { NewPdfSource } from '@/lib/new-document/start-new-pdf';
 import type { NewDocumentSettings } from './new-document-settings';
 import { DocumentLoading } from '@/components/chrome/DocumentLoading';
 import { OpeningScreen } from '@/components/chrome/OpeningScreen';
@@ -302,8 +304,10 @@ export default function NewDocumentPage() {
     // A text document (`?kind=text-document`) and a spreadsheet (`?kind=spreadsheet`) go where any document goes
     // (docs/specs/034-text-documents/live-editing-and-storage.md "Offline", docs/specs/029-sheets/sheet-store.md
     // "Offline documents").
-    const textDocument = wizardBypassTabKind(window.location.search) === 'text-document';
-    const spreadsheet = wizardBypassTabKind(window.location.search) === 'spreadsheet';
+    // The kind the wizard's card chose, else the address's.
+    const tabKind = chosenKind.current ?? wizardBypassTabKind(window.location.search);
+    const textDocument = tabKind === 'text-document';
+    const spreadsheet = tabKind === 'spreadsheet';
     const settings: NewDocumentSettings = asked;
     // Save location (docs/specs/006-document/save-locations.md): only This Browser takes the offline branch.
     const offline = isOfflineLocation(settings.saveLocation);
@@ -400,6 +404,23 @@ export default function NewDocumentPage() {
   const creating = useRef(false);
   // Set when a default create failed before it reached commitNewDocument: its Retry starts it again.
   const retryDefaultCreate = useRef<(() => void) | null>(null);
+  // A document kind chosen on the wizard's step (new-document-route.md "Choosing a mode"): made as `?kind=` makes it.
+  const chosenKind = useRef<'text-document' | 'spreadsheet' | null>(null);
+  // PDF document, blank or from a file: stored, then opened; what fails is the error card's, Try Again making it again.
+  const createPdf = (source: NewPdfSource) =>
+    void makeNewPdf(source, {
+      search: window.location.search,
+      ownerId: async () => (await resolveSelf()).id,
+      location: () => {
+        const { folderId, teamId } = placementParamsFromSearch(window.location.search);
+        return attemptCreate(() => resolveSaveLocation(!!(folderId || teamId), resolveSelf));
+      },
+      go: (href) => window.location.assign(href),
+      fail: (failure) => {
+        retryDefaultCreate.current = () => createPdf(source);
+        setCreateError(failure);
+      },
+    });
   const createByDefault = async (kind: TemplateKind, blank: boolean) => {
     if (creating.current || submitting) return;
     creating.current = true;
@@ -439,6 +460,8 @@ export default function NewDocumentPage() {
     // point, never user content. (The template itself is reported by the
     // usual Document / Created event the commit fires.)
     track('UI', 'Used', kind === 'blank' ? 'JustDraw' : 'TemplateLink');
+    // `?kind=pdf-document` makes a Blank PDF, a stored file rather than a blank tab.
+    if (wizardBypassTabKind(window.location.search) === 'pdf-document') return createPdf('blank');
     void createByDefault(kind, true);
   });
   useEffect(() => {
@@ -500,7 +523,7 @@ export default function NewDocumentPage() {
       <script
         dangerouslySetInnerHTML={{
           __html: trustedHtml(
-            "try{var p=new URLSearchParams(location.search);if(p.has('blank')||p.has('template')||p.get('kind')==='text-document'||p.get('kind')==='spreadsheet')document.documentElement.setAttribute('data-just-draw','');if(p.has('mode')||p.has('q'))document.documentElement.setAttribute('data-wizard-preset','')}catch(e){}",
+            "try{var p=new URLSearchParams(location.search);if(p.has('blank')||p.has('template')||p.get('kind')==='text-document'||p.get('kind')==='spreadsheet'||p.get('kind')==='pdf-document')document.documentElement.setAttribute('data-just-draw','');if(p.has('mode')||p.has('q'))document.documentElement.setAttribute('data-wizard-preset','')}catch(e){}",
           ),
         }}
       />
@@ -525,6 +548,11 @@ export default function NewDocumentPage() {
             onCreate={(kind) =>
               void createByDefault(kind, wizardStartsBlank(window.location.search))
             }
+            onCreateKind={(kind, source) => {
+              if (kind === 'pdf-document') return createPdf(source);
+              chosenKind.current = kind;
+              void createByDefault('blank', true);
+            }}
             onSkip={() => void createByDefault('blank', true)}
             onOpenExisting={() => window.location.assign('/explorer/recent')}
             // Escape backs out to the page that opened /new, creating nothing

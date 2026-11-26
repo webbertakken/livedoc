@@ -11,6 +11,7 @@
     "./engine": "./src/engine/index.ts",
     "./engine/browser": "./src/engine/browser.ts",
     "./pictures": "./src/engine/picture-pages.ts",
+    "./blank": "./src/engine/blank-pages.ts",
     "./testing": "./src/testing/fixtures.ts"
   },
   "scripts": {

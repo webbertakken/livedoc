@@ -26,6 +26,7 @@ describe('paneGroupsFor', () => {
 
   it('lists each template once, under its first group, never a blank', () => {
     for (const b of NEW_DOCUMENT_BLANKS) {
+      if (!b.templates) continue;
       const kinds = paneGroupsFor(b).flatMap((g) => g.kinds);
       expect(new Set(kinds).size, b.id).toBe(kinds.length);
       expect(kinds.some(isBlankTemplate), b.id).toBe(false);
@@ -35,10 +36,10 @@ describe('paneGroupsFor', () => {
     }
   });
 
-  it('lists one group of a start for Page and Slides', () => {
-    expect(groupsOf('page').map((g) => g.name)).toEqual(['Articles']);
-    expect(groupsOf('slides').map((g) => g.name)).toEqual(['Slides']);
-    expect(groupsOf('page')[0]!.kinds).toContain('article');
+  // new-document-menu.md "The blanks": a kind lists no templates until its gallery has them.
+  it('lists nothing for a document kind', () => {
+    for (const id of ['text-document', 'spreadsheet', 'pdf-document'])
+      expect(groupsOf(id)).toEqual([]);
   });
 
   it('lists the mind maps and Event Storming for Brainstorm, and leaves them out of Diagram', () => {
@@ -57,9 +58,7 @@ describe('paneGroupsFor', () => {
     expect(diagram).toContain('flowchart');
   });
 
-  it('lists a Plan family for Sheet, Board and Form', () => {
-    expect(groupsOf('sheet')[0]!.kinds).toContain('budget-planner');
-    expect(groupsOf('sheet')[0]!.kinds).not.toContain('kanban');
+  it('lists a Plan family for Board and Form', () => {
     expect(groupsOf('board')[0]!.kinds).toContain('kanban');
     expect(groupsOf('board')[0]!.kinds).not.toContain('invoice');
     expect(groupsOf('form')[0]!.kinds).toContain('feedback-form');

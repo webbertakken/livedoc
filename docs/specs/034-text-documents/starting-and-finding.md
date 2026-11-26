@@ -1,13 +1,14 @@
 # Starting and finding
 
-**Status: specified.** Nothing is built.
+**Status: being built.** New Document offers a text document; the rest is specified.
 
 How a person starts a [text document](text-document.md) and finds it again.
 
 ## Starting one
 
-- **The Explorer's New** lists **Text document** beside the other kinds, with its glyph; it makes a blank text document
-  in the current folder and opens it, the caret at the start.
+- **New Document** (the Explorer's menu, fourth, and the `/new` wizard's Text document card) offers **Text document**
+  beside the other kinds, with its glyph; it makes a blank text document in the current folder and opens it, the caret
+  at the start ([New Document menu](../013-workspace/new-document-menu.md#the-blanks)).
 - **`/new?kind=text-document`** does the same; `/new?template=<id>` with a text document template makes one from it.
 - **File > New > Document** (in a text document) opens a blank one in a new browser tab; **From a template** opens the
   gallery filtered to text documents.
