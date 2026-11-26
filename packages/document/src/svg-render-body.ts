@@ -21,6 +21,8 @@ import { defaultPadding, PADDING_PX } from './index';
 import { svgBarChart, svgLineChart, svgPieChart } from './svg-render-charts';
 import { isRadarChart } from './chart-radar';
 import { svgRadarChart } from './svg-render-radar';
+import { isBubbleChart } from './chart-bubble';
+import { svgBubbleChart } from './svg-render-bubble';
 import { svgSankey } from './svg-render-sankey';
 import { isSankeyShape } from './sankey-wire';
 import { svgProgressBar, svgProgressRing, svgRating } from './svg-render-data';
@@ -112,7 +114,9 @@ export function svgElementBody(
   if (isLineShape(el.shape))
     return isRadarChart(el)
       ? svgRadarChart(el, labelColor, chartPalette, fontFamily, chartGround)
-      : svgLineChart(el, labelColor, chartPalette, fontFamily, chartGround);
+      : isBubbleChart(el)
+        ? svgBubbleChart(el, labelColor, chartPalette, fontFamily, chartGround)
+        : svgLineChart(el, labelColor, chartPalette, fontFamily, chartGround);
   if (isSankeyShape(el.shape))
     return svgSankey(el, labelColor, chartPalette, fontFamily, chartGround);
   // The empty track is the element's OWN fill, else the paper's default track,

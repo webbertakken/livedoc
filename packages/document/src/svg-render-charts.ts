@@ -22,6 +22,7 @@ import {
   lineMarks,
   pieMarks,
   type BarMarks,
+  type LineMarks,
   type BarRect,
 } from './chart-marks';
 import {
@@ -300,6 +301,48 @@ export function svgBarChart(
 }
 
 /** A line, area, scatter or combo chart: axes, its marks per series, the x labels, the key. */
+// A plotted chart's axes (pie-chart.md "Show Axis"): a faint gridline and a label at each left tick, the right axis's
+// labels and its edge in its first series' colour, the plot's two edges; and the x labels under it, drawn last.
+export function svgPlotAxes(
+  m: Pick<LineMarks, 'plot' | 'axis' | 'labels'>,
+  textColor: string,
+  rightColor: string,
+  fontFamily?: string,
+): { axes: string; labels: string } {
+  const { x, y, w, h } = m.plot;
+  const tickFont = ` font-family="${xmlEscape(fontFamily ?? EXPORT_DEFAULT_FONT)}" font-size="${AXIS_TICK_FONT_PX}"`;
+  const rightInk = xmlEscape(rightColor);
+  const ticks =
+    m.axis.left
+      .map(
+        (t) =>
+          `<path d="M ${r2(x)} ${r2(t.y)} L ${r2(x + w)} ${r2(t.y)}" stroke="${AXIS_FAINT}" stroke-width="1"/>` +
+          `<text x="${r2(x - AXIS_TICK_GAP)}" y="${r2(t.y + AXIS_TICK_FONT_PX / 3)}" text-anchor="end"${tickFont} fill="${xmlEscape(textColor)}">${xmlEscape(t.text)}</text>`,
+      )
+      .join('') +
+    m.axis.right
+      .map(
+        (t) =>
+          `<text x="${r2(x + w + AXIS_TICK_GAP)}" y="${r2(t.y + AXIS_TICK_FONT_PX / 3)}" text-anchor="start"${tickFont} fill="${xmlEscape(textColor)}">${xmlEscape(t.text)}</text>`,
+      )
+      .join('') +
+    (m.axis.right.length
+      ? `<path d="M ${r2(x + w)} ${r2(y)} L ${r2(x + w)} ${r2(y + h)}" stroke="${rightInk}" stroke-width="2"/>`
+      : '');
+  const axes =
+    ticks +
+    `<path d="M ${r2(x)} ${r2(y)} L ${r2(x)} ${r2(y + h)}" stroke="${AXIS_FAINT}" stroke-width="1"/>` +
+    `<path d="M ${r2(x)} ${r2(y + h)} L ${r2(x + w)} ${r2(y + h)}" stroke="${AXIS}" stroke-width="1"/>`;
+  const font = ` font-family="${xmlEscape(fontFamily ?? EXPORT_DEFAULT_FONT)}"`;
+  const labels = m.labels
+    .map(
+      (l) =>
+        `<text x="${r2(l.x)}" y="${r2(y + h + 13)}" text-anchor="middle"${font} font-size="9" fill="${xmlEscape(textColor)}">${xmlEscape(l.text)}</text>`,
+    )
+    .join('');
+  return { axes, labels };
+}
+
 export function svgLineChart(
   el: Chart,
   labelColor: string,
@@ -338,39 +381,15 @@ export function svgLineChart(
       chartStackOf({ ...el, lineSeries: series }),
       el.chartSmooth === true,
     );
-  const { x, y, w, h } = m.plot;
-  const tickFont = ` font-family="${xmlEscape(fontFamily ?? EXPORT_DEFAULT_FONT)}" font-size="${AXIS_TICK_FONT_PX}"`;
-  // Show Axis: a faint gridline and a label at each left tick, the right axis's labels in its first series' colour.
-  const rightInk = xmlEscape(
-    colorAt(
-      Math.max(
-        0,
-        series.findIndex((s) => s.axis === 'right'),
-      ),
-      series.find((s) => s.axis === 'right') ?? {},
+  // The right axis's edge in its first series' colour.
+  const rightInk = colorAt(
+    Math.max(
+      0,
+      series.findIndex((s) => s.axis === 'right'),
     ),
+    series.find((s) => s.axis === 'right') ?? {},
   );
-  const ticks =
-    m.axis.left
-      .map(
-        (t) =>
-          `<path d="M ${r2(x)} ${r2(t.y)} L ${r2(x + w)} ${r2(t.y)}" stroke="${AXIS_FAINT}" stroke-width="1"/>` +
-          `<text x="${r2(x - AXIS_TICK_GAP)}" y="${r2(t.y + AXIS_TICK_FONT_PX / 3)}" text-anchor="end"${tickFont} fill="${xmlEscape(textColor)}">${xmlEscape(t.text)}</text>`,
-      )
-      .join('') +
-    m.axis.right
-      .map(
-        (t) =>
-          `<text x="${r2(x + w + AXIS_TICK_GAP)}" y="${r2(t.y + AXIS_TICK_FONT_PX / 3)}" text-anchor="start"${tickFont} fill="${xmlEscape(textColor)}">${xmlEscape(t.text)}</text>`,
-      )
-      .join('') +
-    (m.axis.right.length
-      ? `<path d="M ${r2(x + w)} ${r2(y)} L ${r2(x + w)} ${r2(y + h)}" stroke="${rightInk}" stroke-width="2"/>`
-      : '');
-  const axes =
-    ticks +
-    `<path d="M ${r2(x)} ${r2(y)} L ${r2(x)} ${r2(y + h)}" stroke="${AXIS_FAINT}" stroke-width="1"/>` +
-    `<path d="M ${r2(x)} ${r2(y + h)} L ${r2(x + w)} ${r2(y + h)}" stroke="${AXIS}" stroke-width="1"/>`;
+  const { axes, labels } = svgPlotAxes(m, textColor, rightInk, fontFamily);
   const fills = series.map((s, si) =>
     m.areas[si]
       ? `<path d="${m.areas[si]}" fill="${xmlEscape(colorAt(si, s))}" fill-opacity="${AREA_FILL_OPACITY}"/>`
@@ -406,13 +425,6 @@ export function svgLineChart(
   const marks = combo
     ? fills.join('') + columns + strokes.join('')
     : series.map((_, si) => fills[si]! + strokes[si]!).join('');
-  const font = ` font-family="${xmlEscape(fontFamily ?? EXPORT_DEFAULT_FONT)}"`;
-  const labels = m.labels
-    .map(
-      (l) =>
-        `<text x="${r2(l.x)}" y="${r2(y + h + 13)}" text-anchor="middle"${font} font-size="9" fill="${xmlEscape(textColor)}">${xmlEscape(l.text)}</text>`,
-    )
-    .join('');
   const legendItems = combo ? comboKeyItems(series) : lineKeyItems(series, lineVariantOf(el));
   const px = chartValueFontPx(el.textSize);
   const values = el.chartValues

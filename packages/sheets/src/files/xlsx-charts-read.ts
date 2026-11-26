@@ -28,6 +28,7 @@ import {
 import {
   fileChartSum,
   isOneBlock,
+  sizedBlock,
   type FileChart,
   type FileChartSeries,
   type FileRange,
@@ -188,6 +189,11 @@ function groupType(group: XmlElement): { type: SheetChartType; stack?: SheetChar
       return { type: 'line' };
     case 'scatterChart':
       return /smooth/i.test(valOf(c(group, 'scatterStyle')) ?? '') ? null : { type: 'scatter' };
+    case 'bubbleChart':
+      // A 3-D bubble is not built (D294).
+      return isOn(c(group, 'bubble3D')) || cs(group, 'ser').some((ser) => isOn(c(ser, 'bubble3D')))
+        ? null
+        : { type: 'bubble' };
     case 'radarChart':
       // A filled radar is not built (D292).
       return valOf(c(group, 'radarStyle')) === 'filled' ? null : { type: 'radar' };
@@ -263,7 +269,7 @@ export function readXlsxChartXml(xml: string, sheetName: string): Read | null {
   const typed = plot && typeOf(plot);
   if (!chart || !plot || !typed) return null;
   const { type, groups, stack, rightIds } = typed;
-  const scatter = type === 'scatter';
+  const scatter = type === 'scatter' || type === 'bubble';
   // Every group's series, each with the type it draws as; a Combo's in their order across its groups.
   const order = (ser: XmlElement) => Number(valOf(c(ser, 'order')) ?? 0);
   const sers = groups.flatMap(({ group, as, right }) =>
@@ -276,6 +282,8 @@ export function readXlsxChartXml(xml: string, sheetName: string): Read | null {
   };
   const series: FileChartSeries[] = [];
   let labels: FileRange | null | undefined;
+  // A bubble chart's size column, one shared by every series (D294).
+  let sizes: FileRange | null | undefined;
   // A line is smooth when every series says so, straight when none does (D285); another series smoothing is not built.
   const smoothed = sers.map(({ ser, as }) => ({ as, on: cs(ser, 'smooth').some(isOn) }));
   if (smoothed.some((x) => x.on && x.as !== 'line')) return null;
@@ -294,6 +302,11 @@ export function readXlsxChartXml(xml: string, sheetName: string): Read | null {
     if (catEl && !cat) return null;
     if (labels !== undefined && JSON.stringify(labels) !== JSON.stringify(cat)) return null;
     labels = cat;
+    if (type === 'bubble') {
+      const size = own(refUnder(c(ser, 'bubbleSize')));
+      if (!size || (sizes && JSON.stringify(sizes) !== JSON.stringify(size))) return null;
+      sizes = size;
+    }
     series.push({
       name: titleOf(tx) ?? '',
       nameAt: nameRef ? { r: nameRef.r1, c: nameRef.c1 } : null,
@@ -304,7 +317,7 @@ export function readXlsxChartXml(xml: string, sheetName: string): Read | null {
       ...(right ? { right: true as const } : {}),
     });
   }
-  if (!isOneBlock(series, labels ?? null)) return null;
+  if (!isOneBlock(sizedBlock(series, sizes), labels ?? null)) return null;
   // The primary axes: the right-hand pair holds no title nor the value axis's state.
   const axes = childElements(plot).filter(
     (e) =>
@@ -340,6 +353,7 @@ export function readXlsxChartXml(xml: string, sheetName: string): Read | null {
     labels: labels && !scatter ? { range: labels, cached: [] } : null,
     x: labels && scatter ? { range: labels, cached: [] } : null,
     series,
+    ...(sizes ? { sizes: { range: sizes, cached: [] } } : {}),
     ...(original === undefined ? {} : { original }),
   };
 }

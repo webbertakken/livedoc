@@ -321,11 +321,15 @@ each suite writes its own, so LibreOffice, Excel and Google Sheets open them as 
 
 - **Data**: each chart's range is read as the grid reads it ([Charts](charts.md#the-model)): its first row names the
   series when it holds no number, its first column labels them when it holds text or dates, and on a scatter chart
-  the first column of numbers is the x. Each series is written as references to its cells in the file's own syntax
+  and a bubble chart the first column of numbers is the x (a bubble's last series its sizes). Each series is written as references to its cells in the file's own syntax
   (`'Models'!$B$2:$B$40`, `Models.B2:Models.B40`), so the chart reads them live in every suite; an empty cell is a gap
   (XLSX `dispBlanksAs="gap"`). A chart with no data is written with no series.
 - **Look**: its type (Column and Bar as clustered bars, Line, Area, Scatter as markers, Pie, Doughnut with a half
-  hole, Radar as lines with markers: XLSX `c:radarChart` of `radarStyle` `marker`, ODF `chart:radar`) (default, D292), its stacking on a Column, Bar or Area chart (XLSX `grouping` `stacked` or `percentStacked`, bars with
+  hole, Radar as lines with markers: XLSX `c:radarChart` of `radarStyle` `marker`, ODF `chart:radar`) (default, D292),
+  Bubble with its sizes (XLSX `c:bubbleChart` on two value axes, each series its `c:xVal`, `c:yVal` and the size
+  column as `c:bubbleSize`, `c:bubbleScale` 100 and no negative bubbles; ODF `chart:bubble`, each series' values the
+  size column and its two `chart:domain` children the y column and then the x column, as ODF 1.3 Part 3 §11.13 orders
+  them) (default, D294), its stacking on a Column, Bar or Area chart (XLSX `grouping` `stacked` or `percentStacked`, bars with
   `overlap` 100; ODF `chart:stacked` or `chart:percentage` on the plot area) (default, D283), a Line chart's smoothing (XLSX `c:smooth` on
   each series; ODF `chart:interpolation="cubic-spline"` on the plot area) (default, D285), a Combo chart's series
   types (XLSX: one plot area holding a clustered `c:barChart` of its column series, a `c:lineChart` of its line
@@ -367,7 +371,10 @@ each suite writes its own, so LibreOffice, Excel and Google Sheets open them as 
   replacement picture, title and description) that qualifies; otherwise every drawing stays kept and none of its
   charts is read (default, D277). A frame in `table:shapes` is placed by its position over the sheet's line sizes; one
   in a cell (LibreOffice's "To cell") on that cell, its `svg:x` and `svg:y` the offset into it. Lengths are read in
-  any of ODF's units. A series reads its cells by `chart:values-cell-range-address`, its name by
+  any of ODF's units. A Bubble chart is read from XLSX's `c:bubbleChart` (not 3-D) whose series share one x column
+  and one size column, the size column after every y column in the block, and from ODF's `chart:bubble` whose
+  series' values are one size column and whose two domains are each series' y column and the shared x column
+  (D294). A series reads its cells by `chart:values-cell-range-address`, its name by
   `chart:label-cell-address`, a scatter's x by the first series' `chart:domain` (a later series has none or the
   same), the labels by the x axis's `chart:categories`. The look is read from the chart document's automatic styles:
   a bar chart by `chart:vertical`; stacking by `chart:stacked` and `chart:percentage` on a bar or area chart; a line chart's
@@ -390,8 +397,8 @@ each suite writes its own, so LibreOffice, Excel and Google Sheets open them as 
   object its `styles.xml` beside it; kept XML is written only to the ODF form it was read from, so a package's chart
   written to a flat file, or a flat file's to a package, is written from the model and named (default, D278).
 - **Written as the nearest type**: a chart no format holds is written as the nearest one it does, which every suite
-  draws: a Stepped Area chart as an Area chart of the same stacking, and a Combo chart's stepped area series as area
-  series. The file also keeps the **original** for LiveDoc, a record of what the nearest type lost: its type, on a
+  draws: a Stepped Area chart as an Area chart of the same stacking, a Combo chart's stepped area series as area
+  series, and a Bubble chart of one series (no sizes, so no format's bubble) as a Scatter chart (D294). The file also keeps the **original** for LiveDoc, a record of what the nearest type lost: its type, on a
   Combo chart each series' type in series order, and the sum the written chart reads back as (as "Kept while
   unchanged" sums it), as JSON (`{"type":"stepped-area","sum":"0a1b2c3d"}`,
   `{"type":"combo","series":["column","stepped-area"],"sum":"…"}`). It travels with the chart, in the chart's own
@@ -591,6 +598,11 @@ The code cites each by its id.
   reading one block of its own sheet and naming no part of its own; else the drawing is kept whole (default).
 - **D276** A read chart unchanged: its read sum (type, titles, legend, values, axis, alt, place, size, cells by
   position) equals the written one's; its kept chart part is then written in its place under a new name (default).
+- **D294** A Bubble chart in a file: XLSX `c:bubbleChart` (`varyColors` 0, each series `c:xVal`, `c:yVal`,
+  `c:bubbleSize` of the shared size column and `c:bubble3D` 0; `c:bubbleScale` 100, `c:showNegBubbles` 0; two
+  `c:valAx`); ODF `chart:class="chart:bubble"`, each series' `chart:values-cell-range-address` the size column and its
+  domains the y column then the x column; read back when the series share one x and one size column, the size
+  column last; one series (no sizes) written as Scatter with the original kept (D290) (default).
 - **D292** A Radar chart in a file: XLSX `c:radarChart` with `radarStyle` `marker` on a category and a value axis, ODF
   `chart:class="chart:radar"`; read back from either, a filled radar (`filled`, `chart:filled-radar`) staying kept
   (default).

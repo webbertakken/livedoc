@@ -340,14 +340,14 @@ The tour points at the section by name; it never opens the menu itself.
 
 ## The Chart tour
 
-On a selected data chart (`pie-chart`, `bar-chart` or `line-chart`, any of the ten chart types), from
+On a selected data chart (`pie-chart`, `bar-chart` or `line-chart`, any of the eleven chart types), from
 `chart-tour-steps.ts`. Its words name the chart's own type and marks (slices, bars or points). A line, area or
 scatter chart's numbers are edited in its **Chart Data** dialog, which the tour opens and carries on inside, as the
 Sankey tour does with Flows; every dialog step rings a real control (`data-tour-id`: `chart-data-table`,
 `chart-data-series`, `chart-data-add-row`, `chart-data-import`). A canvas step puts the dialog away. While it runs,
 Escape is the tour's and never closes the dialog.
 
-1. **Sized by Value**: rings the chart; each mark is drawn from a number, and it is one of ten chart types.
+1. **Sized by Value**: rings the chart; each mark is drawn from a number, and it is one of eleven chart types.
 2. **Point for the Number** (not on a touch screen): rings the chart; hovering a mark reads its label and value.
 3. **Make It Grow**: rings the chart and previews **Grow** on it, looping while the step is up, never stored. Grow and
    Pop play once as it appears; Spin and Pulse loop.

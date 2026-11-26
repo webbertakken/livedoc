@@ -90,12 +90,15 @@ function seriesLook(chart: HeldFileChart, s: FileChartSeries): string {
 function seriesXml(sheet: string, chart: HeldFileChart, s: FileChartSeries, i: number): string {
   const head = `${val('idx', i)}${val('order', i)}${seriesName(sheet, s)}${seriesLook(chart, s)}`;
   const values = numRef(refOf(sheet, s.values), s.cached);
-  if (chart.type === 'scatter') {
+  if (chart.type === 'scatter' || chart.type === 'bubble') {
     const x = chart.x
       ? `<c:xVal>${numRef(refOf(sheet, chart.x.range), chart.x.cached)}</c:xVal>`
       : chart.labels
         ? `<c:xVal>${strRef(refOf(sheet, chart.labels.range), chart.labels.cached)}</c:xVal>`
         : '';
+    // A bubble's size is its chart's size column, shared by every series (D294).
+    if (chart.type === 'bubble')
+      return `<c:ser>${head}${val('invertIfNegative', 0)}${x}<c:yVal>${values}</c:yVal><c:bubbleSize>${numRef(refOf(sheet, chart.sizes!.range), chart.sizes!.cached)}</c:bubbleSize>${val('bubble3D', 0)}</c:ser>`;
     return `<c:ser>${head}${x}<c:yVal>${values}</c:yVal>${val('smooth', 0)}</c:ser>`;
   }
   const cat = chart.labels
@@ -175,6 +178,9 @@ function groupXml(
       return `<c:radarChart>${val('radarStyle', 'marker')}${val('varyColors', 0)}${series}${labels}${axisIds(ids)}</c:radarChart>`;
     case 'scatter':
       return `<c:scatterChart>${val('scatterStyle', 'lineMarker')}${val('varyColors', 0)}${series}${labels}${axisIds(ids)}</c:scatterChart>`;
+    case 'bubble':
+      // Flat bubbles sized by area at 100%, none for a size below zero (D294).
+      return `<c:bubbleChart>${val('varyColors', 0)}${series}${labels}${val('bubbleScale', 100)}${val('showNegBubbles', 0)}${axisIds(ids)}</c:bubbleChart>`;
     case 'pie':
       return `<c:pieChart>${val('varyColors', 1)}${series}${labels}${val('firstSliceAng', 0)}</c:pieChart>`;
     case 'doughnut':
@@ -199,7 +205,7 @@ function axis(
 function axesXml(chart: HeldFileChart): string {
   if (chart.type === 'pie' || chart.type === 'doughnut') return '';
   const [catId, valId] = AXIS_IDS;
-  const scatter = chart.type === 'scatter';
+  const scatter = chart.type === 'scatter' || chart.type === 'bubble';
   const side = chart.type === 'bar';
   const cat = axis(scatter ? 'valAx' : 'catAx', catId, valId, side ? 'l' : 'b', {
     ...(chart.xTitle ? { title: chart.xTitle } : {}),

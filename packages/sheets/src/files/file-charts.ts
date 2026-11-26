@@ -54,6 +54,8 @@ export type FileChart = {
   labels: { range: FileRange; cached: string[] } | null;
   x: { range: FileRange; cached: (number | null)[] } | null;
   series: FileChartSeries[];
+  // A Bubble chart's sizes: the last of its two or more series, shared by the others (D293, D294); never on another type.
+  sizes?: { range: FileRange; cached: (number | null)[] };
   // A chart read from a file: its kept XML and the sum it was read as (D276).
   kept?: SheetChartKept;
 };
@@ -104,6 +106,8 @@ export function fileChartSum(chart: FileChart): string {
       ...(chart.type === 'combo' ? [chart.series.map((s) => s.type ?? '')] : []),
       // The series on the right-hand axis, after the rest (D288).
       ...(chart.series.some((s) => s.right) ? [chart.series.map((s) => s.right === true)] : []),
+      // A Bubble chart's sizes, after the rest (D294).
+      ...(chart.sizes ? [['sizes', chart.sizes.range]] : []),
     ]),
   );
 }
@@ -133,6 +137,22 @@ export function isOneBlock(series: readonly FileChartSeries[], labels: FileRange
     last = s.values.c1;
   }
   return !labels || (isColumn(labels) && sameRows(labels, first.values));
+}
+
+/**
+ * A read chart's series as one block with a Bubble chart's sizes (D294): the sizes its last column, named from the header
+ * row when the series are; the series alone without sizes.
+ */
+export function sizedBlock(
+  series: readonly FileChartSeries[],
+  sizes: FileRange | null | undefined,
+): readonly FileChartSeries[] {
+  if (!sizes) return series;
+  const head = series[0]?.nameAt;
+  return [
+    ...series,
+    { name: '', nameAt: head ? { r: head.r, c: sizes.c1 } : null, values: sizes, cached: [] },
+  ];
 }
 
 const columnRange = (rows: readonly number[], c: number): FileRange => ({
@@ -170,9 +190,9 @@ function fileChartOf(engine: Workbook, sheet: Sheet, chart: SheetChart, locale: 
       ...(look?.right ? { right: true as const } : {}),
     };
   });
-  // A scatter's x is its label column's numbers, else its first column of numbers (charts.md "The model"); a label
-  // column of text names its points, which the file leaves in the sheet, and its first column of numbers is its x.
-  const scatter = chart.type === 'scatter';
+  // A scatter's or bubble's x is its label column's numbers, else its first column of numbers (charts.md "The model"); a
+  // label column of text names its points, which the file leaves in the sheet, and its first column of numbers is its x.
+  const scatter = chart.type === 'scatter' || chart.type === 'bubble';
   const scatterX = scatter && (labels === null || table.named) && all.length > 1;
   const [first, ...rest] = all;
   const labelX =
@@ -185,7 +205,10 @@ function fileChartOf(engine: Workbook, sheet: Sheet, chart: SheetChart, locale: 
           }),
         }
       : null;
-  const series = onRightAxis(chart, scatterX ? rest : all);
+  const plotted = scatterX ? rest : all;
+  // A bubble chart's last of two or more series is its sizes (D293).
+  const sized = chart.type === 'bubble' && plotted.length > 1 ? plotted.at(-1)! : null;
+  const series = onRightAxis(chart, sized ? plotted.slice(0, -1) : plotted);
   return {
     id: chart.id,
     type: chart.type,
@@ -214,6 +237,7 @@ function fileChartOf(engine: Workbook, sheet: Sheet, chart: SheetChart, locale: 
         : { range: columnRange(rows, labels), cached: table.categories },
     x: scatterX ? { range: first!.values, cached: first!.cached } : labelX,
     series,
+    ...(sized ? { sizes: { range: sized.values, cached: sized.cached } } : {}),
   };
 }
 
@@ -242,12 +266,13 @@ function sheetChartOf(chart: FileChart, layout: SheetLayout, id: string): SheetC
   const col = (c: number) => layout.cols[c];
   const at = { r: row(chart.at.r), c: col(chart.at.c) };
   const first = chart.labels?.range ?? chart.x?.range ?? chart.series[0]?.values;
-  const last = chart.series.at(-1)?.values;
+  const last = chart.sizes?.range ?? chart.series.at(-1)?.values;
   if (!at.r || !at.c || !first || !last) return null;
   const header = chart.series[0]!.nameAt?.r;
   const columns = [
     ...(chart.labels ? [chart.labels.range.c1] : chart.x ? [chart.x.range.c1] : []),
     ...chart.series.map((s) => s.values.c1),
+    ...(chart.sizes ? [chart.sizes.range.c1] : []),
   ];
   const ids = columns.map(col);
   const [r1, r2, c1, c2] = [row(header ?? first.r1), row(last.r2), col(first.c1), col(last.c1)];

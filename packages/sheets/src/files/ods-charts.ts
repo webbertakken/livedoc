@@ -32,6 +32,7 @@ const CHART_CLASS: Record<HeldChartType, string> = {
   line: 'chart:line',
   area: 'chart:area',
   scatter: 'chart:scatter',
+  bubble: 'chart:bubble',
   pie: 'chart:circle',
   doughnut: 'chart:ring',
   radar: 'chart:radar',
@@ -67,6 +68,7 @@ export function odsChartFrames(
       ...(chart.x ? [chart.x.range] : []),
     ]
       .concat(chart.series.map((s) => s.values))
+      .concat(chart.sizes ? [chart.sizes.range] : [])
       .map((r) => odfRange(sheet, r))
       .join(' ');
     const notify = ranges ? ` draw:notify-on-update-of-ranges="${escapeXmlAttribute(ranges)}"` : '';
@@ -174,14 +176,18 @@ export function odsChartContent(
     const label = s.nameAt
       ? ` chart:label-cell-address="${escapeXmlAttribute(cellOf(sheet, s.nameAt.r, s.nameAt.c))}"`
       : '';
-    const domain = chart.x
-      ? `<chart:domain table:cell-range-address="${escapeXmlAttribute(odfRange(sheet, chart.x.range))}"/>`
-      : '';
+    const domainOf = (range: FileRange) =>
+      `<chart:domain table:cell-range-address="${escapeXmlAttribute(odfRange(sheet, range))}"/>`;
+    const x = chart.x ? domainOf(chart.x.range) : '';
+    // A bubble series' values are its sizes, its domains its y and then its x (ODF 1.3 Part 3 §11.13, D294).
+    const bubble = chart.type === 'bubble' ? chart.sizes : undefined;
+    const domain = bubble ? domainOf(s.values) + x : x;
+    const values = bubble ? bubble.range : s.values;
     const ownClass =
       chart.type === 'combo' && s.type ? ` chart:class="${SERIES_CLASS[s.type]}"` : '';
     // A series on the right-hand axis names the secondary one (D288).
     const attached = s.right ? ' chart:attached-axis="secondary-y"' : '';
-    return `<chart:series${ownClass}${attached} chart:values-cell-range-address="${escapeXmlAttribute(odfRange(sheet, s.values))}"${label}${own}>${domain}</chart:series>`;
+    return `<chart:series${ownClass}${attached} chart:values-cell-range-address="${escapeXmlAttribute(odfRange(sheet, values))}"${label}${own}>${domain}</chart:series>`;
   });
   const categories = chart.labels
     ? `<chart:categories table:cell-range-address="${escapeXmlAttribute(odfRange(sheet, chart.labels.range))}"/>`
