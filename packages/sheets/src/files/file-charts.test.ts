@@ -262,6 +262,8 @@ describe('writeXlsx with charts', () => {
       [...entries.keys()].filter((n) => /charts\/chart\d+\.xml$|drawings\//.test(n)).sort(),
     ).toEqual([
       'xl/charts/chart1.xml',
+      'xl/charts/chart10.xml',
+      'xl/charts/chart11.xml',
       'xl/charts/chart2.xml',
       'xl/charts/chart3.xml',
       'xl/charts/chart4.xml',
@@ -269,6 +271,7 @@ describe('writeXlsx with charts', () => {
       'xl/charts/chart6.xml',
       'xl/charts/chart7.xml',
       'xl/charts/chart8.xml',
+      'xl/charts/chart9.xml',
       'xl/drawings/_rels/drawing1.xml.rels',
       'xl/drawings/drawing1.xml',
     ]);
