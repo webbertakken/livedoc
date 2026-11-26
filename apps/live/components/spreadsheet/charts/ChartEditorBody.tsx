@@ -191,7 +191,7 @@ export function ChartEditorBody({
       aria-selected={tab === id}
       aria-controls={`${ids}-${id}-panel`}
       tabIndex={tab === id ? 0 : -1}
-      className="flex-1 cursor-pointer border-b-2 border-transparent px-2 py-1 text-body aria-selected:border-brand-500 aria-selected:font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+      className="flex-1 cursor-pointer border-b-2 border-transparent px-2 py-1 text-body aria-selected:border-brand-500 aria-selected:font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
       onClick={() => setTab(id)}
       onKeyDown={(e) => {
         if (e.key === 'ArrowLeft' || e.key === 'ArrowRight')
