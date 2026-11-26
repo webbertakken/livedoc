@@ -301,7 +301,6 @@ Each loss by direction; each is listed in the import, conversion or download rep
 | Google Docs `.odt`       | Its fonts embedded (Liberation, `Fonts/`), a layout cache and `manifest.rdf`, kept as entries                           |
 | Google Docs `.docx`      | A field's marks in one run and no result text; no core or app properties, no footnote separators                        |
 | Word files               | A move (`w:moveFrom`, `w:moveTo`) reads as a deletion and an insertion; written back as such                            |
-| Either format            | A tracked change in a header, footer or note is settled on read, reported `suggestion-in-story`                         |
 | Either format            | A tracked change named by nothing, or naming nothing, reads as nothing, reported `suggestion-dangling`                  |
 | ODF to another suite     | A suggested section break shows as a plain break; LibreOffice keeps no tracked section break                            |
 | Word files               | A tracked section break is the break's suggestion: rejecting it leaves its paragraph split, where Word joins it         |
