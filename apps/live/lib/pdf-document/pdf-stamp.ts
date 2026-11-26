@@ -51,12 +51,25 @@ type StampedBy = { author: string; now: number; identity?: StampIdentity };
  *  title and organisation where either is set, cut to the stamp's width (marks.md "Stamps"). */
 export function stampLines(stamp: Stamp, by: StampedBy): readonly string[] {
   const name = stamp.name.toUpperCase();
-  if (!stamp.dynamic) return [name];
+  return stamp.dynamic ? StampLayout.clip([name, ...whoAndWhen(by)]) : [name];
+}
+
+/** A dynamic stamp's second line, who and when, and its third, the stamper's identity where they set one. */
+function whoAndWhen(by: StampedBy): readonly string[] {
   const who = by.author.trim();
   const when = stampWhen(by.now);
   const identity = by.identity ? StampIdentity.line(by.identity) : null;
-  const lines = [name, who === '' ? when : `by ${who}, ${when}`];
-  return identity === null ? lines : StampLayout.clip([...lines, identity]);
+  const detail = who === '' ? when : `by ${who}, ${when}`;
+  return identity === null ? [detail] : [detail, identity];
+}
+
+/**
+ * A custom stamp's lines as placed (custom-stamps.md "Placing one"): its name, then who and when where it shows them,
+ * the third line held to the second's width, as the name is not drawn.
+ */
+export function customStampLines(stamp: CustomStampRecord, by: StampedBy): readonly string[] {
+  if (!stamp.dynamic) return [stamp.name];
+  return [stamp.name, ...StampLayout.clip(['', ...whoAndWhen(by)]).slice(1)];
 }
 
 /** A stamp's category in telemetry (marks.md "Telemetry and observability": `Stamp.<Standard|Dynamic|Custom>`). */
@@ -125,15 +138,16 @@ export function addCustomStamp(
   at: PagePoint,
   by: StampBy,
 ): StampMade {
+  const lines = customStampLines(stamp, by);
   return written(
     doc,
     where,
     Mark.stamp({
       ...markedBy(where, by),
       colour: CUSTOM_STAMP_COLOUR,
-      rect: placeNatural(stamp.natural, at, where.box),
+      rect: placeNatural(StampLayout.picturedNatural(lines, stamp.natural), at, where.box),
       stamp: stamp.id,
-      lines: [stamp.name],
+      lines,
       picture: stamp.picture,
     }),
   );

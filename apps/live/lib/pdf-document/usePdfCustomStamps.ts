@@ -9,7 +9,7 @@
 import { useCallback, useMemo, useRef, useState } from 'react';
 import type { BlobKey } from '@livedoc/document';
 import { lucidePlus } from '@livedoc/icons/lucide';
-import type { Box, CustomStampRecord, PagePoint } from '@livedoc/pdf-documents';
+import type { Box, CustomStampRecord, PagePoint, StampIdentity } from '@livedoc/pdf-documents';
 import type { OfficeGridCell, OfficeGridSection } from '@/components/office/OfficeChoiceGrid';
 import { debugLog } from '@/lib/debug-log';
 import { track } from '@/lib/telemetry';
@@ -142,7 +142,8 @@ export function usePdfCustomStamps({
       ready: Ready,
       stamp: CustomStampRecord,
       where: { index: number; at: PagePoint; box: Box },
-      by: { author: string; authorKey: string | null },
+      // Who places it, and their stamp identity, for one that shows who and when.
+      by: { author: string; authorKey: string | null; identity?: StampIdentity },
       onProblem: (problem: string | null) => void,
     ) => {
       const page = ready.pages[where.index];

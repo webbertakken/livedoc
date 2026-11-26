@@ -134,7 +134,13 @@ export function usePdfStampTool({
       const page = ready?.pages[index];
       if (!ready || !page) return;
       if (mine) {
-        place(ready, mine, { index, at, box }, { author, authorKey }, onProblem);
+        place(
+          ready,
+          mine,
+          { index, at, box },
+          { author, authorKey, identity: identity.identity },
+          onProblem,
+        );
         return;
       }
       const made = ready.undo.step({ page: page.name }, () =>

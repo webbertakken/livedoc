@@ -1,10 +1,10 @@
 'use client';
 
 // A custom stamp's picture on its page (docs/specs/035-pdf-documents/custom-stamps.md "Placing one"): drawn across the
-// stamp's box, upright in it as its turn has it, once its bytes are read from the document; while they are on their
+// stamp's box (above its lines where it shows who and when), upright in it as its turn has it, once its bytes are read from the document; while they are on their
 // way, or where they failed, nothing is drawn here and the stamp shows as its outlined box with its name.
 import { useContext, useMemo } from 'react';
-import { PageView, type PageMatrix, type StampMark } from '@livedoc/pdf-documents';
+import { PageView, StampLayout, type PageMatrix, type StampMark } from '@livedoc/pdf-documents';
 import { PdfStampPicturesContext } from '@/lib/pdf-document/pdf-stamp-pictures';
 import { useStampPictureUrls } from '@/lib/pdf-document/stamp-picture-urls';
 
@@ -49,7 +49,10 @@ export function PdfStampPicture({
       width={1}
       height={1}
       preserveAspectRatio="none"
-      transform={pictureTransform(matrix, mark.rect)}
+      transform={pictureTransform(
+        matrix,
+        mark.picture ? StampLayout.pictured({ ...mark, picture: mark.picture }).picture : mark.rect,
+      )}
     />
   );
 }

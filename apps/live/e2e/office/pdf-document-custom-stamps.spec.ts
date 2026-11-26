@@ -136,3 +136,60 @@ test('a picture is made a custom stamp, placed, and leaves as a Stamp with its p
   await expect(stamp.locator('[data-pdf-stamp-picture]')).toHaveCount(1);
   expectNoPageErrors(pageErrors);
 });
+
+// custom-stamps.md "Making one": Show who and when; "Placing one": its picture with who and when under it; "In the
+// file": the lines set as text in its appearance, and its Contents.
+test('a custom stamp that shows who and when is placed with them and leaves with them', async ({
+  page,
+  pageErrors,
+}) => {
+  test.setTimeout(120_000);
+  await page.setViewportSize({ width: 1280, height: 860 });
+  await page.goto('/explorer/all');
+  await expect(page.getByRole('heading', { name: 'My Documents' }).first()).toBeVisible();
+  const stored = await textPdf(2);
+  await dropPdf(page, 'Received.pdf', stored);
+  await page.waitForURL(/\/document\//, { timeout: 30_000 });
+  const first = await pageOneDrawn(page);
+
+  // Create custom stamp, Show who and when checked.
+  await (await officeMenuItem(page, ['Insert', 'Stamp', 'Custom stamps'])).click();
+  const dialog = page.getByRole('dialog', { name: 'Create custom stamp' });
+  await dialog.getByLabel('Picture').setInputFiles({
+    name: 'Received.png',
+    mimeType: 'image/png',
+    buffer: await picture(page),
+  });
+  const check = dialog.getByRole('checkbox', { name: 'Show who and when' });
+  await expect(check).not.toBeChecked();
+  await check.check();
+  await page.waitForFunction(() =>
+    document.getAnimations().every((animation) => animation.playState !== 'running'),
+  );
+  await page.screenshot({ path: test.info().outputPath('pdf-custom-dynamic-dialog.png') });
+  await dialog.getByRole('button', { name: 'Create', exact: true }).click();
+  await expect(dialog).toBeHidden();
+
+  // Placed: its picture, and under it "by" the placer and the time.
+  await pressAt(page, first, [0.3, 0.15]);
+  const stamp = page.locator(`${PAGE_ONE} [data-pdf-mark-kind="stamp"]`);
+  await expect(stamp.locator('[data-pdf-stamp-picture]')).toHaveCount(1);
+  await expect(stamp.locator('text')).toHaveText([
+    /^by .+, \d{1,2} [A-Z][a-z]{2} \d{4}, \d{2}:\d{2}$/,
+  ]);
+  await page.screenshot({ path: test.info().outputPath('pdf-custom-dynamic-placed.png') });
+
+  // Downloaded: who and when set as text under the picture, in a valid file.
+  const item = await officeMenuItem(page, ['File', 'Download', 'PDF']);
+  const [download] = await Promise.all([page.waitForEvent('download'), item.click()]);
+  const folder = mkdtempSync(join(tmpdir(), 'pdf-custom-dynamic-'));
+  const file = join(folder, 'Received.pdf');
+  await download.saveAs(file);
+  execFileSync('qpdf', ['--check', file], { stdio: 'pipe' });
+  const plain = join(folder, 'plain.pdf');
+  execFileSync('qpdf', ['--qdf', '--object-streams=disable', file, plain], { stdio: 'pipe' });
+  const text = readFileSync(plain).toString('latin1');
+  expect(text).toMatch(/\/Im0 Do Q/);
+  expect(text).toMatch(/\(by [^)]+, \d{1,2} [A-Z][a-z]{2} \d{4}, \d{2}:\d{2}\) Tj/);
+  expectNoPageErrors(pageErrors);
+});

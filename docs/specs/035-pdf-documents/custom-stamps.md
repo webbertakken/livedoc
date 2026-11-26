@@ -1,7 +1,7 @@
 # Custom stamps
 
 **Status: built: where they are kept, their api, their file form, making one, placing one and managing them, and
-Manage stamps' Identity ([Marks](marks.md#stamps)); specified: a custom stamp that shows who and when (Director,
+Manage stamps' Identity ([Marks](marks.md#stamps)), and a custom stamp that shows who and when (Director,
 2026-11-26).**
 
 A **custom stamp** is a person's own stamp: a picture, or a page of a PDF, given a name and a category, kept in
@@ -199,7 +199,7 @@ are the matrix's "Stamps" ([Parity matrix](parity-matrix.md#stamps)).
   `UI · Opened · PdfDocumentCustomStampDialog`. Never a stamp's name, category or picture.
 - `[custom-stamps] created id=<id> bytes=<n>`, `[custom-stamps] refused reason=<refusal> owner=<id>`,
   `[custom-stamps] deleted id=<id>`, `[custom-stamps] picture-missing id=<id> key=<8>` in the api; `[pdf] pictures-missing count=<n> unfit=<n>` in the engine (a bake
-  refused `pictures-unavailable`: a picture its marks name not handed in, or not the type it says); `[pdf] custom-stamp-made from=<picture|svg|pdf> bytes=<n>
+  refused `pictures-unavailable`: a picture its marks name not handed in, or not the type it says); `[pdf] custom-stamp-made dynamic=<bool> from=<picture|svg|pdf> bytes=<n>
 scaled=<bool>`, `[pdf] custom-stamp-failed reason=<unreadable|too_large|too_many|files_full|failed|list>`, `[pdf] custom-stamp-placed held=<bool>`
   (false: its picture could not be sent, nothing placed), `[pdf] custom-stamps-read count=<n>`,
   `[pdf] custom-stamp-keep-skipped` (this browser would not keep a made stamp's bytes), `[pdf] stamp-picture-failed

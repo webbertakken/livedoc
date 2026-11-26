@@ -30,6 +30,8 @@ export type CustomStampForm = {
   readonly picture: KeptPicture;
   readonly name: string;
   readonly category: string;
+  /** "Show who and when" checked. */
+  readonly dynamic: boolean;
 };
 
 export type CustomStampMade =
@@ -61,6 +63,7 @@ export async function makeCustomStamp(
       category: form.category,
       picture: { key, type: picture.type, width: picture.width, height: picture.height },
       natural: picture.natural,
+      ...(form.dynamic ? { dynamic: true as const } : {}),
     });
     // Kept here, so placing it reads nothing back; a blocked keep only reads it back.
     await thisBrowserBlobs()
@@ -68,7 +71,7 @@ export async function makeCustomStamp(
       .catch((error: unknown) => debugLog('[pdf] custom-stamp-keep-skipped', String(error)));
     rememberCustomStamp(ownerId, stamp);
     debugLog(
-      `[pdf] custom-stamp-made from=${picture.source === 'pdf' ? 'pdf' : picture.source === 'svg' ? 'svg' : 'picture'} bytes=${picture.bytes.byteLength} scaled=${picture.scaled}`,
+      `[pdf] custom-stamp-made dynamic=${form.dynamic} from=${picture.source === 'pdf' ? 'pdf' : picture.source === 'svg' ? 'svg' : 'picture'} bytes=${picture.bytes.byteLength} scaled=${picture.scaled}`,
     );
     track('Pdf', 'Created', 'CustomStamp');
     return { ok: true, stamp };

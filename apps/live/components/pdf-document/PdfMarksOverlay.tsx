@@ -59,8 +59,16 @@ const helveticas = (text: string): boolean =>
  * down as the matrix turns them, held to the width the file sets it at where Helvetica writes it; a mark in the mark
  * faces drawn in them as shaped, from its own side; a mark in a chosen font in its family first.
  */
-export function PdfMarkWords({ matrix, mark }: { matrix: PageMatrix; mark: Mark }) {
-  const words = MarkWords.of(mark);
+export function PdfMarkWords({
+  matrix,
+  mark,
+  words = MarkWords.of(mark),
+}: {
+  matrix: PageMatrix;
+  mark: Mark;
+  // The words to set: the mark's own unless given, as a custom stamp's lines under its picture are.
+  words?: MarkWords | null;
+}) {
   const region = words?.faces === 'embedded' ? words.region : null;
   const faced = region !== null;
   const font = region === null ? undefined : words?.font;
@@ -252,7 +260,11 @@ function PictureStampDrawn({
 }) {
   const src = useMarkPicture(mark);
   return src ? (
-    <PdfStampPicture matrix={matrix} mark={mark} src={src} />
+    <>
+      <PdfStampPicture matrix={matrix} mark={mark} src={src} />
+      {/* A custom stamp that shows who and when: its lines under its picture (custom-stamps.md "Placing one"). */}
+      <PdfMarkWords matrix={matrix} mark={mark} words={MarkWords.pictured(mark)} />
+    </>
   ) : (
     <MarkDrawn matrix={matrix} mark={mark} dark={dark} />
   );

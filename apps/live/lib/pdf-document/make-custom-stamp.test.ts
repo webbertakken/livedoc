@@ -63,7 +63,11 @@ describe('makeCustomStamp', () => {
     api.apiCreateCustomStamp.mockImplementation(
       async (_owner: string, input: Partial<CustomStampRecord>) => record(input),
     );
-    const made = await makeCustomStamp('ada', { picture, name: 'Paid', category: 'Accounts' }, ID);
+    const made = await makeCustomStamp(
+      'ada',
+      { picture, name: 'Paid', category: 'Accounts', dynamic: false },
+      ID,
+    );
     expect(made).toMatchObject({ ok: true, stamp: { id: ID, name: 'Paid' } });
     const [owner, key, bytes, options] = sent.sendBlob.mock.calls[0]!;
     expect([owner, bytes, options]).toEqual(['ada', picture.bytes, undefined]);
@@ -79,6 +83,18 @@ describe('makeCustomStamp', () => {
     expect(track).toHaveBeenCalledWith('Pdf', 'Created', 'CustomStamp');
   });
 
+  // custom-stamps.md "Making one": Show who and when, sent with it.
+  it('makes one that shows who and when', async () => {
+    api.apiCreateCustomStamp.mockImplementation(
+      async (_owner: string, input: Partial<CustomStampRecord>) => record(input),
+    );
+    await makeCustomStamp('ada', { picture, name: 'Paid', category: 'A', dynamic: true }, ID);
+    expect(api.apiCreateCustomStamp).toHaveBeenCalledWith(
+      'ada',
+      expect.objectContaining({ dynamic: true }),
+    );
+  });
+
   it.each([
     ['too_many_custom_stamps', 409, CUSTOM_STAMP_COPY.too_many],
     ['usage_exceeded', 403, CUSTOM_STAMP_COPY.files_full],
@@ -86,7 +102,9 @@ describe('makeCustomStamp', () => {
     ['custom_stamp_invalid', 400, CUSTOM_STAMP_COPY.failed],
   ])('says %s in the spec’s words, making nothing', async (code, status, problem) => {
     api.apiCreateCustomStamp.mockRejectedValue(new ApiError('create custom stamp', status, code));
-    expect(await makeCustomStamp('ada', { picture, name: 'Paid', category: 'C' })).toEqual({
+    expect(
+      await makeCustomStamp('ada', { picture, name: 'Paid', category: 'C', dynamic: false }),
+    ).toEqual({
       ok: false,
       problem,
     });
@@ -95,7 +113,9 @@ describe('makeCustomStamp', () => {
 
   it('says a failed send as a stamp not made', async () => {
     sent.sendBlob.mockRejectedValue(new TypeError('offline'));
-    expect(await makeCustomStamp('ada', { picture, name: 'Paid', category: 'C' })).toEqual({
+    expect(
+      await makeCustomStamp('ada', { picture, name: 'Paid', category: 'C', dynamic: false }),
+    ).toEqual({
       ok: false,
       problem: CUSTOM_STAMP_COPY.failed,
     });
