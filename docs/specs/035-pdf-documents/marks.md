@@ -288,6 +288,19 @@ written into the file as a standard annotation, so any reader shows it. The rese
 - **Properties** (the side panel, for one selected mark): its kind, author, **subject** (a short label of the
   maker's own, the kind's name until changed), when made and changed, its look, its words, Locked, its **history**
   (each state its thread was given, by whom and when), and "Make this look the default" for its kind.
+  - Format > Properties opens it on the right, as the shell's side panel; it follows the selection, and with no mark
+    or several selected it reads "Select one mark to see its properties." Opening it closes Find's results there
+    `(default)`.
+  - It reads, in order: Kind, Author, Subject, Made, Changed (the browser's date and 24-hour time, as a dynamic
+    stamp's), Colour (its name in the colour picker, else `#rrggbb`), Opacity (a percentage), and where the mark has
+    them its Line width (points), Line style, Fill and Words; Locked and History join it when Lock and threads are
+    built `(default)`.
+  - **The subject** is a field of at most `PDF_MARK_SUBJECT_MAX_CHARS` characters, trimmed; Enter or leaving it
+    changes the mark, one step of undo; emptied, the mark goes back to its kind's name; Escape puts the field back
+    `(default)`. A Viewer, or a Participant on another's mark, never reaches it: only marks this session may change
+    are selected.
+  - **"Make this look the default"** gives the mark's kind's tool the mark's colour, and its width, line style and
+    fill where the tool keeps them; offered for every kind but a stamp, whose colour is its own `(default)`.
 - **A Note's glyph** is one of the standard's: comment (default), note, help, key, insert, paragraph, new paragraph.
 - **Erase** (on the Drawing control) rubs out the strokes of a Drawing it passes over, whole strokes at a time; a
   Drawing with no strokes left is deleted.
@@ -429,7 +442,8 @@ question mark. The research is [Every script in a mark's words](../../research/p
 - **Each mark is one annotation** of the kind above, with: its rectangle and geometry in page space; colour, opacity,
   border and line ends as the standard's own entries; an **appearance stream** drawn by LiveDoc, so every reader
   shows exactly what was made; `NM` its LiveDoc id; `T` its author's display name; `M` and `CreationDate`; `Contents`
-  its words; the print flag set.
+  its words; `Subj` its subject where it has one; the print flag set. A file's `Subj` is read as the mark's subject,
+  and one that is its kind's name as none `(default)`.
 - **A group** is written as the standard's own: the group's first mark, in the order the page draws them, is its head;
   every other mark of it carries `IRT`, the head, and `RT` `Group` `(default)`. A file's marks grouped so are read as
   one group named for the head's id, and behave as one here.
@@ -489,36 +503,37 @@ question mark. The research is [Every script in a mark's words](../../research/p
 
 ## Limits
 
-| Constant                    | Value               | Why                                                                                             |
-| --------------------------- | ------------------- | ----------------------------------------------------------------------------------------------- |
-| `PDF_MAX_MARKS`             | 20,000              | `(default)` Marks in one PDF document ([PDF document](pdf-document.md#limits))                  |
-| `PDF_PAGE_MAX_MARKS`        | 5,000               | `(default)` Marks read on one page; a page past it reads its first, and the rest still draw     |
-| `PDF_MARK_TEXT_MAX_CHARS`   | 10,000              | `(default)` A Text mark's or a note's words; longer belongs in a document                       |
-| `PDF_DRAWING_MAX_POINTS`    | 20,000              | `(default)` One Drawing; more strokes start a new mark                                          |
-| `PDF_DRAWING_JOIN_MS`       | 1,000               | `(default)` Strokes made closer in time are one Drawing; safe range 300 to 3,000                |
-| `PDF_ERASER_REACH_PX`       | 8                   | `(default)` Screen pixels from a stroke's line that Erase still rubs it out; safe range 4 to 16 |
-| `PDF_DRAWING_STEP_PT`       | 0.5                 | `(default)` A stroke's points closer than this, in points, are one; safe range 0.25 to 2        |
-| `PDF_SHAPE_MIN_PT`          | 2                   | `(default)` A drag spanning less, in points, makes no line or shape; safe range 1 to 6          |
-| `PDF_POLYGON_MAX_CORNERS`   | 1,000               | `(default)` Corners of one Polygon, Cloud or Connected lines; the last press past it ends it    |
-| `PDF_CLOUD_ARC_PT`          | 12                  | `(default)` A Cloud's arc across, in points, as drawn; safe range 6 to 24                       |
-| `PDF_ARROW_HEAD_WIDTHS`     | 4                   | `(default)` An arrowhead's side, in line widths; safe range 3 to 6                              |
-| `PDF_ARROW_HEAD_MIN_PT`     | 6                   | `(default)` An arrowhead's side at the least, in points; safe range 4 to 10                     |
-| `PDF_TEXT_BOX_WIDTH_PT`     | 216                 | `(default)` A Text box opened by a press, in points, before it narrows; safe range 144 to 360   |
-| `PDF_TEXT_PADDING_PT`       | 2                   | `(default)` Room between a Text's or a Callout's box and its words, in points; safe 0 to 6      |
-| `PDF_TEXT_SIZE_MIN_PT`      | 4                   | `(default)` The smallest size a Text's or a Callout's words are set at, in points               |
-| `PDF_TEXT_SIZE_MAX_PT`      | 144                 | `(default)` The largest size a Text's or a Callout's words are set at, in points                |
-| `PDF_CALLOUT_KNEE_PT`       | 12                  | `(default)` How far a Callout's knee stands out from its box, in points; safe range 6 to 24     |
-| `PDF_SNAP_PX`               | 6                   | `(default)` Screen pixels within which a shape snaps to the page's lines                        |
-| `PDF_MARK_REACH_PX`         | 6                   | `(default)` Screen pixels from a mark's line that a press still selects it; safe range 4 to 12  |
-| `PDF_MARK_TOUCH_REACH_PX`   | 22                  | `(default)` Screen pixels from a mark that a finger's tap still selects it: half a 44 px target |
-| `PDF_MARK_OUTLINE_PX`       | 3                   | `(default)` Screen pixels between a selected mark and its outline; safe range 2 to 6            |
-| `PDF_DRAG_SLOP_PX`          | 3                   | `(default)` Screen pixels a pointer moves before a press is a drag; safe range 2 to 6           |
-| `PDF_MARK_NUDGE_PT`         | 1                   | `(default)` Points an arrow key moves a selected mark                                           |
-| `PDF_MARK_NUDGE_FAR_PT`     | 10                  | `(default)` Points ⇧ with an arrow key moves it                                                 |
-| `PDF_SQUIGGLE_STEP_PT`      | 2                   | `(default)` A squiggly underline's tooth, wide and high, in points; safe range 1 to 4           |
-| `PDF_STAMP_LINE_MAX_CHARS`  | 300                 | `(default)` A stamp's line as placed: a display name and a time fit; safe range 100 to 1,000    |
-| `PDF_STAMP_MAX_BYTES`       | 2,097,152           | `(default)` A custom stamp's picture; larger is scaled down before it is kept                   |
-| `PDF_PINNED_FILE_MAX_BYTES` | 26,214,400 (25 MiB) | `(default)` A pinned file is written into the bake, which must itself fit `FILE_TAB_MAX_BYTES`  |
+| Constant                     | Value               | Why                                                                                             |
+| ---------------------------- | ------------------- | ----------------------------------------------------------------------------------------------- |
+| `PDF_MAX_MARKS`              | 20,000              | `(default)` Marks in one PDF document ([PDF document](pdf-document.md#limits))                  |
+| `PDF_PAGE_MAX_MARKS`         | 5,000               | `(default)` Marks read on one page; a page past it reads its first, and the rest still draw     |
+| `PDF_MARK_TEXT_MAX_CHARS`    | 10,000              | `(default)` A Text mark's or a note's words; longer belongs in a document                       |
+| `PDF_MARK_SUBJECT_MAX_CHARS` | 64                  | `(default)` A mark's subject                                                                    |
+| `PDF_DRAWING_MAX_POINTS`     | 20,000              | `(default)` One Drawing; more strokes start a new mark                                          |
+| `PDF_DRAWING_JOIN_MS`        | 1,000               | `(default)` Strokes made closer in time are one Drawing; safe range 300 to 3,000                |
+| `PDF_ERASER_REACH_PX`        | 8                   | `(default)` Screen pixels from a stroke's line that Erase still rubs it out; safe range 4 to 16 |
+| `PDF_DRAWING_STEP_PT`        | 0.5                 | `(default)` A stroke's points closer than this, in points, are one; safe range 0.25 to 2        |
+| `PDF_SHAPE_MIN_PT`           | 2                   | `(default)` A drag spanning less, in points, makes no line or shape; safe range 1 to 6          |
+| `PDF_POLYGON_MAX_CORNERS`    | 1,000               | `(default)` Corners of one Polygon, Cloud or Connected lines; the last press past it ends it    |
+| `PDF_CLOUD_ARC_PT`           | 12                  | `(default)` A Cloud's arc across, in points, as drawn; safe range 6 to 24                       |
+| `PDF_ARROW_HEAD_WIDTHS`      | 4                   | `(default)` An arrowhead's side, in line widths; safe range 3 to 6                              |
+| `PDF_ARROW_HEAD_MIN_PT`      | 6                   | `(default)` An arrowhead's side at the least, in points; safe range 4 to 10                     |
+| `PDF_TEXT_BOX_WIDTH_PT`      | 216                 | `(default)` A Text box opened by a press, in points, before it narrows; safe range 144 to 360   |
+| `PDF_TEXT_PADDING_PT`        | 2                   | `(default)` Room between a Text's or a Callout's box and its words, in points; safe 0 to 6      |
+| `PDF_TEXT_SIZE_MIN_PT`       | 4                   | `(default)` The smallest size a Text's or a Callout's words are set at, in points               |
+| `PDF_TEXT_SIZE_MAX_PT`       | 144                 | `(default)` The largest size a Text's or a Callout's words are set at, in points                |
+| `PDF_CALLOUT_KNEE_PT`        | 12                  | `(default)` How far a Callout's knee stands out from its box, in points; safe range 6 to 24     |
+| `PDF_SNAP_PX`                | 6                   | `(default)` Screen pixels within which a shape snaps to the page's lines                        |
+| `PDF_MARK_REACH_PX`          | 6                   | `(default)` Screen pixels from a mark's line that a press still selects it; safe range 4 to 12  |
+| `PDF_MARK_TOUCH_REACH_PX`    | 22                  | `(default)` Screen pixels from a mark that a finger's tap still selects it: half a 44 px target |
+| `PDF_MARK_OUTLINE_PX`        | 3                   | `(default)` Screen pixels between a selected mark and its outline; safe range 2 to 6            |
+| `PDF_DRAG_SLOP_PX`           | 3                   | `(default)` Screen pixels a pointer moves before a press is a drag; safe range 2 to 6           |
+| `PDF_MARK_NUDGE_PT`          | 1                   | `(default)` Points an arrow key moves a selected mark                                           |
+| `PDF_MARK_NUDGE_FAR_PT`      | 10                  | `(default)` Points ⇧ with an arrow key moves it                                                 |
+| `PDF_SQUIGGLE_STEP_PT`       | 2                   | `(default)` A squiggly underline's tooth, wide and high, in points; safe range 1 to 4           |
+| `PDF_STAMP_LINE_MAX_CHARS`   | 300                 | `(default)` A stamp's line as placed: a display name and a time fit; safe range 100 to 1,000    |
+| `PDF_STAMP_MAX_BYTES`        | 2,097,152           | `(default)` A custom stamp's picture; larger is scaled down before it is kept                   |
+| `PDF_PINNED_FILE_MAX_BYTES`  | 26,214,400 (25 MiB) | `(default)` A pinned file is written into the bake, which must itself fit `FILE_TAB_MAX_BYTES`  |
 
 ## Share roles
 
@@ -557,7 +572,8 @@ Gated on the session's `can` (`pdfReviews`), and checked by the room.
 
 ## Telemetry and observability
 
-- `Pdf · Added · Mark.<Kind>`, `Pdf · Changed · Mark.<Moved|Resized|Restyled|Grouped|Ungrouped|Locked|Erased>`,
+- `Pdf · Added · Mark.<Kind>`, `Pdf · Changed · Mark.<Moved|Resized|Restyled|Grouped|Ungrouped|Locked|Erased|Subject>`, `Pdf · Changed ·
+LookDefault.<Kind>` ("Make this look the default"), `Pdf · Opened · MarkProperties`,
   `Pdf · Deleted · Mark.<Kind>`, `Pdf · Added · Stamp.<Standard|Dynamic|Custom>`,
   `Pdf · Created · CustomStamp`, `Pdf · Changed · ToolColour` (a tool's colour chosen or reset), `Pdf · Changed · ToolLine` (a tool's line
   width, line style or fill chosen). A stamp placed is
@@ -575,7 +591,9 @@ Gated on the session's `can` (`pdfReviews`), and checked by the room.
   `[pdf] marks-hidden count=<n>` (the file's own marks the pages are drawn without, each time they change),
   `[pdf] marks-hidden-failed reason=<reason>` (the engine was not told), `[pdf] poly-ended kind=<kind> corners=<n>`
   (a Polygon, a Cloud or Connected lines ended, before it is made), `[pdf] poly-let-go kind=<kind>` (one let go by
-  Escape), `[pdf] strokes-erased strokes=<n> marks=<n> deleted=<n>` (a drag of Erase let go that rubbed out any).
+  Escape), `[pdf] strokes-erased strokes=<n> marks=<n> deleted=<n>` (a drag of Erase let go that rubbed out any),
+  `[pdf] mark-subject kind=<kind> cleared=<bool>` (a subject changed), `[pdf] look-defaulted kind=<kind>` (a mark's look
+  made its tool's).
 
 ## Errors
 
