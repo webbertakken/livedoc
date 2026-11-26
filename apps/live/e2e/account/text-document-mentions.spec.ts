@@ -1,5 +1,6 @@
 import { expect, expectNoPageErrors, test } from '../fixtures';
-import { signIn, type Account } from './sign-in';
+import type { Account } from './sign-in';
+import { BODY, teamTextDocument } from './text-document-team';
 
 // Mentions and assigning on a text document's comments, signed in (docs/specs/034-text-documents/review.md
 // "Mentions", "Assigning"): on a document in a team's library, `+` in a draft lists the team's members; picking one
@@ -7,19 +8,6 @@ import { signIn, type Account } from './sign-in';
 // to <name>", reads "Mark as done", and emails the assignee as an assigned action.
 
 test.use({ colorScheme: 'dark', viewport: { width: 1440, height: 900 } });
-
-const READY = '[data-text-document-surface="ready"]';
-const BODY = '[role="textbox"][aria-label="Document body"]';
-
-async function api(who: Account, method: 'POST' | 'PUT', path: string, data?: unknown) {
-  const res = await who.request.fetch(`/api${path}`, {
-    method,
-    headers: await who.apiHeaders(),
-    ...(data === undefined ? {} : { data }),
-  });
-  expect(res.ok(), `${method} ${path} failed: ${res.status()}`).toBe(true);
-  return res;
-}
 
 /** The newest email the stack's outbox holds for `email`, once its subject matches. */
 async function newestMail(who: Account, email: string, subject: RegExp) {
@@ -41,27 +29,13 @@ test('a teammate is mentioned and assigned a text document’s comment, and emai
   pageErrors,
 }) => {
   test.setTimeout(120_000);
-  await page.addInitScript(() => localStorage.setItem('livedoc:v2:name-confirmed', '1'));
-  const ann = await signIn(page.context(), { baseURL: baseURL!, name: 'Ann Tester' });
-  const bobContext = await browser.newContext({ baseURL });
-  const bob = await signIn(bobContext, { baseURL: baseURL!, name: 'Bob Tester' });
-  const team = crypto.randomUUID();
-  await api(ann, 'POST', '/teams', { id: team, name: 'Writers' });
-  const link = (await (await api(ann, 'POST', `/teams/${team}/invite-link`)).json()) as {
-    inviteLink: { token: string };
-  };
-  await api(bob, 'POST', `/teams/invite-link/${link.inviteLink.token}/join`);
+  const { ann, bob, bobContext } = await teamTextDocument(
+    page,
+    browser,
+    baseURL!,
+    'The quarterly results are in.',
+  );
   await bobContext.close();
-
-  // A text document, moved into the team's library so its members can be mentioned.
-  await page.goto('/new?kind=text-document');
-  await expect(page.locator(READY)).toBeVisible({ timeout: 30_000 });
-  const id = new URL(page.url()).pathname.split('/')[2]!;
-  await page.locator(BODY).click();
-  await page.keyboard.type('The quarterly results are in.');
-  await api(ann, 'PUT', `/documents/${id}/folder`, { folderId: null, teamId: team });
-  await page.reload();
-  await expect(page.locator(READY)).toBeVisible({ timeout: 30_000 });
 
   // A draft on "quarterly": `+` lists Bob; picking him draws his handle; the mention emails him.
   const body = page.locator(BODY);

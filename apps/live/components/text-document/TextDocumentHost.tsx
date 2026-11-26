@@ -56,6 +56,15 @@ export function TextDocumentHost({ tab, readOnly = false }: { tab: Tab; readOnly
     }),
     [accountId, commentMentions.notifyMentioned, commentMentions.notifyAssigned],
   );
+  // An Inbox row's thread on this tab (docs/specs/013-workspace/inbox.md §1.8), for the editor's pane alone.
+  const { textThreadArrival } = ctx;
+  const arrival = useMemo(
+    () =>
+      !readOnly && textThreadArrival?.tabId === tab.id
+        ? { threadId: textThreadArrival.threadId, n: textThreadArrival.n }
+        : null,
+    [readOnly, textThreadArrival, tab.id],
+  );
   if (!documentId) return null;
   return (
     <TextDocumentSurface
@@ -78,6 +87,7 @@ export function TextDocumentHost({ tab, readOnly = false }: { tab: Tab; readOnly
       drawingTabs={drawingTabs}
       commenter={commenter}
       mentions={mentions}
+      arrival={arrival}
     />
   );
 }

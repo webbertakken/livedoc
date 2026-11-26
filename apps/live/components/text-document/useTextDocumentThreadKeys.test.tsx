@@ -149,9 +149,11 @@ describe('useTextDocumentThreadKeys', () => {
     const at = await editor();
     const { result } = keysOn(at);
     act(() => result.current.keys.arrive('none'));
-    await waitFor(() =>
-      expect(render(result.current.threads.status).container.textContent).toBe(TEXT_GONE),
-    );
+    // Rendering inside waitFor would mutate the DOM its observer watches, re-running the callback without end: wait on
+    // the hook's own word, then draw the status once.
+    const said = () => (result.current.threads.status.props as { children?: unknown }).children;
+    await waitFor(() => expect(said()).toBe(TEXT_GONE));
+    expect(render(result.current.threads.status).container.textContent).toBe(TEXT_GONE);
   });
 
   it('shows another tab first, then goes once its writing is there', async () => {

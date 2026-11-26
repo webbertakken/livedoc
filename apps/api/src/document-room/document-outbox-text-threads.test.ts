@@ -167,6 +167,47 @@ describe('a text document tab’s push to the collaboration index', () => {
     expect(actionRows(d1)).toMatchObject([{ team_id: 'team-1' }]);
   });
 
+  it('matches someone who joins after a push at the tab’s next push', async () => {
+    const later = await adderKeyFor(D, 'u-later');
+    const h = await drained(await stateWithThread([later]));
+    expect(threadRows(h.d1)[0]!.participant_ids).toBe('[]');
+    h.d1.exec(`INSERT INTO teams (id, name, created_at, updated_at) VALUES ('team-1', 'T', 1, 1);
+      UPDATE documents SET team_id = 'team-1' WHERE id = '${D}';
+      INSERT INTO team_members (id, team_id, user_id, role, status, created_at, updated_at)
+        VALUES ('m1', 'team-1', 'u-later', 'member', 'joined', 1, 1);`);
+    // The tab's next change: a reply.
+    await appendLiveTabUpdate(
+      h.env,
+      TEXT_DOCUMENT_LIVE_TAB,
+      'td',
+      await stateWithThread([later, later]),
+    );
+    await drainOutbox(h.env, D);
+    expect(JSON.parse(threadRows(h.d1)[0]!.participant_ids)).toEqual(['u-later']);
+  });
+
+  it('lists someone it mentions whoever they are, the people unread', async () => {
+    const { d1 } = await drained(
+      await stateWithThread([await adderKeyFor(D, 'stranger')], { mentions: [sam] }),
+    );
+    expect(threadRows(d1)[0]!.mentioned_ids).toBe('["u-sam","m-sam"]');
+  });
+
+  it('logs every key it could not match, with their count', async () => {
+    warn.mockClear();
+    const stranger = await adderKeyFor(D, 'stranger');
+    await drained(await stateWithThread([await adderKeyFor(D, 'o'), stranger, 'unknown-key']));
+    expect(warn).toHaveBeenCalledWith(
+      `[outbox] text-threads-unmatched document=${D} tab=td count=2 keys=${stranger},unknown-key`,
+    );
+  });
+
+  it('logs no unmatched keys when every key is matched', async () => {
+    warn.mockClear();
+    await drained(await stateWithThread([await adderKeyFor(D, 'o')]));
+    expect(warn).not.toHaveBeenCalled();
+  });
+
   it('logs what it wrote', async () => {
     info.mockClear();
     await drained(await stateWithThread([await adderKeyFor(D, 'o'), 'unknown-key']));

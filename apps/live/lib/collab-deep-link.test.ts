@@ -16,6 +16,7 @@ const place: ActivityPlace = {
   tabName: 'Flow',
   elementId: 'el&1',
   elementLabel: 'Checkout',
+  anchor: 'element',
 };
 
 describe('collabDeepLinkHref', () => {

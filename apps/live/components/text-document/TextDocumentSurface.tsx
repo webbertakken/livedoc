@@ -75,6 +75,10 @@ import type { TextDocumentCommenter } from '@/lib/text-document/text-document-co
 import { useTextDocumentThreads } from './useTextDocumentThreads';
 import { TextDocumentMargin } from './TextDocumentMargin';
 import { useTextDocumentThreadKeys } from './useTextDocumentThreadKeys';
+import {
+  useTextDocumentThreadArrival,
+  type TextDocumentThreadArrival,
+} from './useTextDocumentThreadArrival';
 import { useTextDocumentCommentsPanel } from './useTextDocumentCommentsPanel';
 import { threadHighlightPlugin } from '@/lib/text-document/text-document-threads';
 import { useTextDocumentLinks } from './useTextDocumentLinks';
@@ -250,6 +254,8 @@ export type TextDocumentSurfaceProps = {
   commenter?: TextDocumentCommenter | null;
   // Who reads the comments, and the email a comment's mentions ask for (review.md "Mentions"); absent outside an editor.
   mentions?: TextDocumentMentions | null;
+  // The thread an Inbox row asked to go to (docs/specs/013-workspace/inbox.md §1.8); absent outside an editor.
+  arrival?: TextDocumentThreadArrival | null;
 };
 
 /** The reader's account (For you reads it) and what a comment added with mentions tells the editor. */
@@ -279,6 +285,7 @@ export function TextDocumentSurface({
   drawingTabs = null,
   commenter = null,
   mentions = null,
+  arrival = null,
 }: TextDocumentSurfaceProps) {
   const root = useRef<HTMLDivElement | null>(null);
   const mount = useRef<HTMLDivElement | null>(null);
@@ -933,6 +940,7 @@ export function TextDocumentSurface({
     tab: shownTab ?? FIRST_DOCUMENT_TAB_ID,
     showTab: tabs.show,
   });
+  useTextDocumentThreadArrival({ arrival, ready: state === 'ready', arrive: threadKeys.arrive });
   // The comments panel's rows and filters (review.md "The comments panel").
   const commentsPanel = useTextDocumentCommentsPanel({
     open: panels.open.right === COMMENTS_PANEL.id,

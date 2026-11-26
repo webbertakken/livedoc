@@ -28,6 +28,7 @@ const place = {
   tabId: 't1',
   tabName: 'Flow',
   elementLabel: 'Checkout',
+  anchor: 'element' as const,
 };
 
 function action(

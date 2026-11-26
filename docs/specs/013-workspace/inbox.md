@@ -490,6 +490,11 @@ element tab's are (`textDocumentCollabRows` in `packages/text-documents`):
   its share links were opened by (`shared_with`), and every identity those used to be (§2.2). A key none of them
   makes is left out of `participant_ids`, as a canvas comment with no author id is; a comment from a file has no key
   and reaches nobody. Keys never leave the room: the row holds identities as an element thread's does.
+- **When the people are read again.** The set is made afresh on every push of the tab, never kept, so someone who
+  becomes one of the document's people after a push (a new teammate, a new opener of a share link, an identity
+  merged at sign-up) is matched by the tab's next push, its next change. A mention never waits on it: mentions
+  match by account and member id. Each push logs the keys it could not match, with their count
+  (`[outbox] text-threads-unmatched document= tab= count= keys=`), so a gap shows rather than passes silently.
 - **Mentions**: each comment's mentions' account and member ids, as an element thread's (§2).
 - **An action row** for a thread with an assignee ([Review](../034-text-documents/review.md#assigning)), the
   thread's current one: its element id the thread's id, its action id the id of the comment that assigned it, its

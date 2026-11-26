@@ -453,6 +453,12 @@ async function tabCollab(
   console.info(
     `[outbox] text-threads document=${documentId} tab=${tabId} threads=${rows.threads.length} actions=${rows.actions.length} keys=${keys.size} resolved=${owners.size}`,
   );
+  // A key none of the document's people make: its author is left out of the row; said, so the gap shows (§2.7).
+  const unmatched = [...keys].filter((key) => !owners.has(key));
+  if (unmatched.length > 0)
+    console.warn(
+      `[outbox] text-threads-unmatched document=${documentId} tab=${tabId} count=${unmatched.length} keys=${unmatched.join(',')}`,
+    );
   return { rows: resolveCollabKeys(rows, owners, teamId), anchor: 'text' };
 }
 
