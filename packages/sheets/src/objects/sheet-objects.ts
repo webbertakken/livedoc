@@ -11,6 +11,7 @@ export const SHEET_CHART_TYPES = [
   'bar',
   'line',
   'area',
+  'stepped-area',
   'scatter',
   'pie',
   'doughnut',
@@ -19,7 +20,7 @@ export const SHEET_CHART_TYPES = [
 export type SheetChartType = (typeof SHEET_CHART_TYPES)[number];
 
 // Stacking (charts.md "The model"): Standard or 100%, as @livedoc/document CHART_STACKS names them (a test keeps
-// them equal); a Column, Bar or Area chart draws it, another type keeps it unused.
+// them equal); a Column, Bar, Area or Stepped Area chart draws it, another type keeps it unused.
 export const SHEET_CHART_STACKS = ['stacked', 'percent'] as const;
 export type SheetChartStack = (typeof SHEET_CHART_STACKS)[number];
 
@@ -31,7 +32,7 @@ export type CellAnchor = { r: string; c: string; dx: number; dy: number };
 
 // A Combo chart's series types (charts.md "The model"), as @livedoc/document COMBO_SERIES_TYPES names them (a test
 // keeps them equal).
-export const SHEET_COMBO_SERIES_TYPES = ['column', 'line', 'area'] as const;
+export const SHEET_COMBO_SERIES_TYPES = ['column', 'line', 'area', 'stepped-area'] as const;
 export type SheetComboSeriesType = (typeof SHEET_COMBO_SERIES_TYPES)[number];
 
 // A series' own look, by its column's id: its colour, a scatter series drawn as a line, the right-hand axis, and its

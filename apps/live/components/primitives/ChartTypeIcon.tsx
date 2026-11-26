@@ -32,6 +32,12 @@ const MARKS: Record<ChartType, React.ReactNode> = {
       <path d="M7 17v-3l4-5 3 3 5-5v10Z" fill="currentColor" fillOpacity={0.25} />
     </>
   ),
+  'stepped-area': (
+    <>
+      <path d={AXES} />
+      <path d="M7 17v-4h4V9h4v3h4v5Z" fill="currentColor" fillOpacity={0.25} />
+    </>
+  ),
   scatter: (
     <>
       <path d={AXES} />

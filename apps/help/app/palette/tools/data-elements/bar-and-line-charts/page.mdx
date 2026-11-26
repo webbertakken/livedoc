@@ -46,9 +46,10 @@ Any chart can draw its data eight ways, named as Google Sheets and Excel name th
 - **Bar**: the same bars lying down, growing to the right, which leaves room for long category names.
 - **Line**: a line with a point per category, for each series.
 - **Area**: the lines, with the space under each one filled in its colour, so a total's shape reads at a glance.
+- **Stepped Area**: each value a flat step across its category, filled underneath, for amounts that hold until they change, such as a price or a headcount. Excel and other spreadsheet apps show it as an area chart; LiveDoc keeps it stepped.
 - **Scatter**: a point per category, no lines. When every category is a number, each point sits at its number along the bottom, so it shows how two measures relate.
 - **Pie** and **Doughnut**: slices of a whole; a doughnut leaves the middle open.
-- **Combo**: columns and lines together over the same categories, such as revenue as columns and its margin as a line. By default the first half of the series are columns and the rest lines.
+- **Combo**: columns, lines, areas and stepped areas together over the same categories, such as revenue as columns and its margin as a line. By default the first half of the series are columns and the rest lines.
 
 Switching keeps the chart's size, colours, legend and animation. Moving between a column, bar or pie chart and a line, area or scatter chart moves the data too: the bars become one series named Series 1, or the first series becomes the bars.
 

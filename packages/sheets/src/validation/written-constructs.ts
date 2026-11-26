@@ -227,6 +227,13 @@ function chartSheet(): FileSheet {
         series(2, 'Index', { type: 'line', right: true }),
       ],
     },
+    // Written as the nearest type, the original kept (D290): a stacked Stepped Area, a Combo's stepped area series.
+    { ...base(types.length + 10, 'stepped-area'), id: 'chart_stepped', stack: 'stacked' },
+    {
+      ...base(types.length + 11, 'combo'),
+      id: 'chart_combo_stepped',
+      series: [series(1, 'Cost', { type: 'column' }), series(2, 'Index', { type: 'stepped-area' })],
+    },
   );
   return { ...sheet("Costs' sheet", cells, 140, 8), charts };
 }

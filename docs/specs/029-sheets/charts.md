@@ -36,15 +36,15 @@ and two changing one chart resolve to the last write. Each change is one undo st
   of text beside two or more columns of numbers names its points, and the next column is its x
   ([Scatter's point names](../009-elements/pie-chart.md#chart-types)). Deleting rows or columns inside
   the range shrinks it; deleting all of it leaves the chart with no data, drawn as "No data".
-- **Type**: one of [Chart types](#chart-types) built: Column, Bar, Line, Area, Scatter, Pie, Doughnut and Combo. A Column
+- **Type**: one of [Chart types](#chart-types) built: Column, Bar, Line, Area, Stepped Area, Scatter, Pie, Doughnut and Combo. A Column
   or Bar chart draws every series of its range side by side, as Google's does
   ([Several series](../009-elements/pie-chart.md#chart-types), D281).
-- **Stacking**: a Column, Bar or Area chart stacks its series, Standard or 100%, or none (Google's Setup › Stacking),
-  drawing Stacked Column, Stacked Bar, Stacked Area and their 100% kinds ([Stacking](../009-elements/pie-chart.md#chart-types),
+- **Stacking**: a Column, Bar, Area or Stepped Area chart stacks its series, Standard or 100%, or none (Google's Setup ›
+  Stacking), drawing Stacked Column, Stacked Bar, Stacked Area, Stacked Stepped Area and their 100% kinds ([Stacking](../009-elements/pie-chart.md#chart-types),
   D282). Another type keeps it unused.
 - **Smooth**: a Line chart draws its lines as curves through its points (Smooth Line, Google's Customise › Chart
   Style › Smooth; [Smooth Line](../009-elements/pie-chart.md#chart-types), D284). Another type keeps it unused.
-- **Series types**: a Combo chart draws each series as columns, a line or an area, by its column's id; a series with
+- **Series types**: a Combo chart draws each series as columns, a line, an area or a stepped area, by its column's id; a series with
   none set takes Google's default, the first half columns and the rest lines ([Combo](../009-elements/pie-chart.md#chart-types),
   D286). Another type keeps them unused.
 - **Look**: a palette ([Chart palettes](../009-elements/pie-chart.md#chart-palettes)); per series, by its column's id,
@@ -62,7 +62,8 @@ Every type Google offers: Line, Smooth Line, Area, Stacked Area, 100% Stacked Ar
 Column, Stacked Column, 100% Stacked Column, Bar, Stacked Bar, 100% Stacked Bar, Pie, Doughnut, 3D Pie, Combo,
 Scatter, Bubble, Histogram, Candlestick, OHLC, Waterfall, Treemap, Geo (regions, markers), Gauge, Scorecard, Radar,
 Organisational, Timeline, Table, Annotated Timeline. A type a format cannot hold is written as the nearest it can,
-with the original kept for LiveDoc as unknown content, and the loss listed.
+with the original kept for LiveDoc, and the loss listed ([Written as the nearest type](standard-mapping.md#charts-in-the-file),
+D290): Stepped Area is written as Area.
 
 ## Inserting
 
@@ -84,10 +85,10 @@ A side panel of two tabs:
   Ticks.
 
 Built of the Chart Editor: it opens on a chart inserted, on its Edit Chart button and on a double click; Setup holds
-Chart Type (the built types), Stacking (None, Standard, 100%; on a Column, Bar or Area chart), Data Range (one range in A1, a typo refused "Type a range like A1:D20") and the Series,
+Chart Type (the built types), Stacking (None, Standard, 100%; on a Column, Bar, Area or Stepped Area chart), Data Range (one range in A1, a typo refused "Type a range like A1:D20") and the Series,
 each a scatter's to draw as a line; Customise holds Chart Title, Horizontal and Vertical Axis Title, Legend, Palette,
 Value Axis, Data Labels, Smooth (on a Line or Combo chart), each series' colour (the one colour picker), on a Combo
-chart each series' Type (Column, Line, Area) and Axis (Left, Right), and Alt Text. A control writes the chart at
+chart each series' Type (Column, Line, Area, Stepped Area) and Axis (Left, Right), and Alt Text. A control writes the chart at
 once, one undo step; a text when it is left or Enter is pressed, Escape taking it back. A chart whose cells are gone
 shows "No data" there.
 

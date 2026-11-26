@@ -37,7 +37,9 @@ import {
   type FileChartSeries,
   type FileRange,
 } from './file-charts';
+import { chartRestored } from './chart-nearest';
 import { lineAtPx } from './file-lines';
+import { ODS_CHART_ORIGINAL } from './ods-charts';
 import type { FileAt, KeptContent, KeptItem, KeptPart } from './kept-content';
 import type { FileSheet } from './workbook-file';
 
@@ -50,6 +52,7 @@ const {
   chart: CHART,
   xlink: XLINK,
   text: TEXT,
+  meta: META,
 } = ODF_NS;
 
 const CLASSES: Readonly<Record<string, SheetChartType>> = {
@@ -412,6 +415,20 @@ const FRAME_CHILDREN: ReadonlySet<string> = new Set([
 
 const decode = (data: Uint8Array) => new TextDecoder().decode(data);
 
+// The original LiveDoc kept in a chart object's metadata (its `office:meta`), when it holds one (D290).
+function originalOf(holder: XmlElement): string | undefined {
+  const property = kids(childElement(holder, OFFICE, 'meta'), META, 'user-defined').find(
+    (p) => attributeOf(p, META, 'name') === ODS_CHART_ORIGINAL,
+  );
+  return property && textContent(property);
+}
+
+// A package's chart object's `meta.xml`, read for its original; none when it is missing or unreadable.
+function packageOriginal(meta: KeptPart | undefined): string | undefined {
+  const parsed = meta && parseXml(decode(meta.data));
+  return parsed && parsed.ok ? originalOf(parsed.root) : undefined;
+}
+
 type Found = {
   chart: FileChart;
   // The kept part holding its document: a package's, or a flat file's made from the inline one.
@@ -441,6 +458,7 @@ function chartOf(
   let root: XmlElement;
   let part: KeptPart;
   let gone: string[] = [];
+  let original: string | undefined;
   if (href !== undefined) {
     const name = href.replace(/^\.\//, '').replace(/\/$/, '');
     const folder = `${name}/`;
@@ -452,8 +470,10 @@ function chartOf(
     root = parsed.root;
     part = content!;
     gone = [folder, `${folder}meta.xml`, `ObjectReplacements/${name}`];
+    original = packageOriginal(parts.get(`${folder}meta.xml`));
   } else if (inline) {
     root = inline;
+    original = originalOf(inline);
     const xml = keptXmlWithin(keptXmlOf(drawing.parsed, inline), {});
     part = {
       name: flatName(),
@@ -470,11 +490,15 @@ function chartOf(
     return el ? textContent(el).trim() : '';
   };
   const alt = text('desc') || text('title');
-  const chart: FileChart = {
-    ...read,
-    ...place,
-    ...(alt && alt !== read.title ? { alt: alt.slice(0, SHEET_CHART_ALT_MAX) } : {}),
-  };
+  // The original LiveDoc kept, while the chart still sums as it was written (D290).
+  const chart = chartRestored(
+    {
+      ...read,
+      ...place,
+      ...(alt && alt !== read.title ? { alt: alt.slice(0, SHEET_CHART_ALT_MAX) } : {}),
+    },
+    original,
+  );
   const z = Number(attributeOf(frame, DRAW, 'z-index') ?? NaN);
   return {
     chart: { ...chart, kept: { part: part.name, sum: fileChartSum(chart) } },

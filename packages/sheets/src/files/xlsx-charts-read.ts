@@ -35,7 +35,8 @@ import {
 import { lineStartPx } from './file-lines';
 import type { FileAt, KeptContent, KeptPart } from './kept-content';
 import type { FileSheet } from './workbook-file';
-import { EMU_PER_PX, GROUPING } from './xlsx-charts';
+import { chartRestored } from './chart-nearest';
+import { EMU_PER_PX, GROUPING, LIVEDOC_CHART_NS } from './xlsx-charts';
 
 const C_NS = 'http://schemas.openxmlformats.org/drawingml/2006/chart';
 const A_NS = 'http://schemas.openxmlformats.org/drawingml/2006/main';
@@ -236,7 +237,16 @@ function lookOf(type: SheetChartType, ser: XmlElement): Pick<FileChartSeries, 'c
   }
 }
 
-type Read = Omit<FileChart, 'at' | 'width' | 'height' | 'alt' | 'kept'>;
+// A chart as its part reads, and the original LiveDoc kept in its extension, when it holds one (D290).
+type Read = Omit<FileChart, 'at' | 'width' | 'height' | 'alt' | 'kept'> & { original?: string };
+
+// The text of LiveDoc's own extension of a chart part (D290).
+function originalOf(root: XmlElement): string | undefined {
+  const list = c(root, 'extLst');
+  const ext = list && cs(list, 'ext').find((e) => attributeOf(e, '', 'uri') === LIVEDOC_CHART_NS);
+  const original = ext && childElement(ext, LIVEDOC_CHART_NS, 'original');
+  return original && textContent(original);
+}
 
 // One chart part, read as the model holds a chart, or null when it does not qualify (D275).
 export function readXlsxChartXml(xml: string, sheetName: string): Read | null {
@@ -311,6 +321,7 @@ export function readXlsxChartXml(xml: string, sheetName: string): Read | null {
   const title = titleOf(c(c(chart, 'title'), 'tx'));
   const xTitle = titleOf(c(c(categoryAxis, 'title'), 'tx'));
   const yTitle = titleOf(c(c(valueAxis, 'title'), 'tx'));
+  const original = originalOf(parsed.root);
   return {
     id: '',
     type,
@@ -325,6 +336,7 @@ export function readXlsxChartXml(xml: string, sheetName: string): Read | null {
     labels: labels && !scatter ? { range: labels, cached: [] } : null,
     x: labels && scatter ? { range: labels, cached: [] } : null,
     series,
+    ...(original === undefined ? {} : { original }),
   };
 }
 
@@ -400,11 +412,16 @@ function drawingCharts(
     const nv = childElement(frame!, XDR_NS, 'nvGraphicFramePr');
     const cNvPr = nv && childElement(nv, XDR_NS, 'cNvPr');
     const descr = cNvPr && attributeOf(cNvPr, '', 'descr');
-    const chart: FileChart = {
-      ...read,
-      ...place,
-      ...(descr && descr !== read.title ? { alt: descr.slice(0, SHEET_CHART_ALT_MAX) } : {}),
-    };
+    const { original, ...as } = read;
+    // The original LiveDoc kept, while the chart still sums as it was written (D290).
+    const chart = chartRestored(
+      {
+        ...as,
+        ...place,
+        ...(descr && descr !== read.title ? { alt: descr.slice(0, SHEET_CHART_ALT_MAX) } : {}),
+      },
+      original,
+    );
     charts.push({ ...chart, kept: { part: name!, sum: fileChartSum(chart) } });
   }
   return charts.length ? charts : null;

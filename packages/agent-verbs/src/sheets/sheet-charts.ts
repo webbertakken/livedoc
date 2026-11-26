@@ -150,7 +150,7 @@ export type SheetChartChange = SheetChartLook & {
 // The chart types that draw one series, the first (sheet.md "Charts"); the others draw them all (D281).
 const ONE_SERIES_TYPES: readonly ChartType[] = ['pie', 'doughnut'];
 // The types a series may sit on the right-hand axis of.
-const RIGHT_AXIS_TYPES: readonly ChartType[] = ['line', 'area', 'combo'];
+const RIGHT_AXIS_TYPES: readonly ChartType[] = ['line', 'area', 'stepped-area', 'combo'];
 
 // What a chart of a one-series type shows of several value columns, said in its answer.
 export function seriesNote(type: ChartType, values: readonly string[]): string {
@@ -354,7 +354,7 @@ function linesOf(
   if (change.type !== 'scatter')
     return refuse(
       'write_invalid',
-      `lines draw on a scatter chart; ${withArticle(change.type)} chart draws ${change.type === 'line' || change.type === 'area' ? 'every series as a line already' : 'no lines'}.`,
+      `lines draw on a scatter chart; ${withArticle(change.type)} chart draws ${change.type === 'line' || change.type === 'area' || change.type === 'stepped-area' ? 'every series as a line already' : 'no lines'}.`,
     );
   const unknown = unknownSeries(wb, sheetId, change, read, change.lines);
   return unknown ?? change.lines;
@@ -408,7 +408,7 @@ function seriesLooksOf(
   if (right.length && !RIGHT_AXIS_TYPES.includes(change.type))
     return refuse(
       'write_invalid',
-      `rightAxis puts a line, area or combo chart's series on a second axis; ${withArticle(change.type)} chart has one.`,
+      `rightAxis puts a line, area, stepped-area or combo chart's series on a second axis; ${withArticle(change.type)} chart has one.`,
     );
   const unknown = unknownSeries(wb, sheetId, change, read, [...types, ...right]);
   if (unknown) return unknown;

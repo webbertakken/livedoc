@@ -36,7 +36,7 @@ export type FileChartSeries = {
 export type FileChart = {
   id: string;
   type: SheetChartType;
-  // A column, bar or area chart's stacking (charts.md "The model", D283); never on another type.
+  // A column, bar, area or stepped area chart's stacking (charts.md "The model", D283); never on another type.
   stack?: SheetChartStack;
   // A line or Combo chart's smoothing (D285); never on another type.
   smooth?: true;
@@ -109,7 +109,7 @@ export function fileChartSum(chart: FileChart): string {
 }
 
 // The types a file holds a stacking on (D283), and a smoothing on (D285, D287).
-const STACKED_TYPES: readonly SheetChartType[] = ['column', 'bar', 'area'];
+const STACKED_TYPES: readonly SheetChartType[] = ['column', 'bar', 'area', 'stepped-area'];
 const SMOOTH_TYPES: readonly SheetChartType[] = ['line', 'combo'];
 
 const isColumn = (r: FileRange) => r.c1 === r.c2;
@@ -217,11 +217,13 @@ function fileChartOf(engine: Workbook, sheet: Sheet, chart: SheetChart, locale: 
   };
 }
 
-// The series on the right-hand axis only where LiveDoc draws one (D288): a Line, unstacked Area or Combo chart with a
-// series on each side; elsewhere every series on the one axis.
+// The series on the right-hand axis only where LiveDoc draws one (D288): a Line, unstacked Area or Stepped Area, or
+// Combo chart with a series on each side; elsewhere every series on the one axis.
 function onRightAxis(chart: SheetChart, series: FileChartSeries[]): FileChartSeries[] {
   const drawn =
-    (chart.type === 'line' || chart.type === 'combo' || (chart.type === 'area' && !chart.stack)) &&
+    (chart.type === 'line' ||
+      chart.type === 'combo' ||
+      ((chart.type === 'area' || chart.type === 'stepped-area') && !chart.stack)) &&
     series.some((s) => !s.right);
   return drawn ? series : series.map(({ right: _right, ...s }) => s);
 }

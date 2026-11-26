@@ -3,12 +3,20 @@
 // reference, each with a cache of what it showed. Elements in the order ECMA-376's schema asks.
 import { escapeXmlAttribute, escapeXmlText } from '@livedoc/office-packages';
 import { columnLetters } from '../address';
+import {
+  chartOriginalText,
+  nearestFileChart,
+  type HeldChartType,
+  type HeldFileChart,
+} from './chart-nearest';
 import type { FileChart, FileChartSeries, FileRange } from './file-charts';
 
 const C_NS = 'http://schemas.openxmlformats.org/drawingml/2006/chart';
 const A_NS = 'http://schemas.openxmlformats.org/drawingml/2006/main';
 const XDR_NS = 'http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing';
 const R_NS = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships';
+/** LiveDoc's own extension of a chart part: the original of a chart written as its nearest type (D290). */
+export const LIVEDOC_CHART_NS = 'https://docs.nu/ns/chart/1';
 
 // A px at 100% in English Metric Units.
 export const EMU_PER_PX = 9_525;
@@ -59,7 +67,7 @@ function seriesName(sheet: string, s: FileChartSeries): string {
 }
 
 // A series' own look: a fill for marks with area, a stroke for lines; a scatter series not drawn as a line has none.
-function seriesLook(chart: FileChart, s: FileChartSeries): string {
+function seriesLook(chart: HeldFileChart, s: FileChartSeries): string {
   const fill = s.color ? `<a:solidFill>${rgb(s.color)}</a:solidFill>` : '';
   switch (chart.type) {
     case 'pie':
@@ -78,7 +86,7 @@ function seriesLook(chart: FileChart, s: FileChartSeries): string {
   }
 }
 
-function seriesXml(sheet: string, chart: FileChart, s: FileChartSeries, i: number): string {
+function seriesXml(sheet: string, chart: HeldFileChart, s: FileChartSeries, i: number): string {
   const head = `${val('idx', i)}${val('order', i)}${seriesName(sheet, s)}${seriesLook(chart, s)}`;
   const values = numRef(refOf(sheet, s.values), s.cached);
   if (chart.type === 'scatter') {
@@ -117,12 +125,12 @@ function axisIds(ids: readonly number[]): string {
   return ids.map((id) => val('axId', id)).join('');
 }
 
-type GroupType = Exclude<FileChart['type'], 'combo'>;
+type GroupType = Exclude<HeldChartType, 'combo'>;
 
 // The type's own chart element: on a Combo chart, a group per series type it holds (D287), areas, columns then lines;
 // the series on the right-hand axis in groups of their own on the second pair of axes, after the left ones (D288). The
 // series' indexes run across the groups in series order. The left group of a chart of one type is written even empty.
-function plotXml(sheet: string, chart: FileChart): string {
+function plotXml(sheet: string, chart: HeldFileChart): string {
   const types: readonly GroupType[] =
     chart.type === 'combo' ? ['area', 'column', 'line'] : [chart.type];
   return [false, true]
@@ -147,7 +155,7 @@ function plotXml(sheet: string, chart: FileChart): string {
 
 // A chart group of one type (a Combo chart is its groups).
 function groupXml(
-  chart: FileChart & { type: GroupType },
+  chart: HeldFileChart & { type: GroupType },
   series: string,
   ids: readonly number[],
 ): string {
@@ -184,7 +192,7 @@ function axis(
 }
 
 // A chart's axes: its categories (or a scatter's x) and its values; a bar chart lays them on their sides.
-function axesXml(chart: FileChart): string {
+function axesXml(chart: HeldFileChart): string {
   if (chart.type === 'pie' || chart.type === 'doughnut') return '';
   const [catId, valId] = AXIS_IDS;
   const scatter = chart.type === 'scatter';
@@ -210,8 +218,12 @@ function axesXml(chart: FileChart): string {
   );
 }
 
-/** One chart's part: `c:chartSpace` reading the sheet named `sheet` (as the file names it). */
-export function xlsxChartXml(sheet: string, chart: FileChart): string {
+/**
+ * One chart's part: `c:chartSpace` reading the sheet named `sheet` (as the file names it); a type no file holds as the
+ * nearest that does, its original in LiveDoc's extension (D290).
+ */
+export function xlsxChartXml(sheet: string, own: FileChart): string {
+  const { chart, original } = nearestFileChart(own);
   const legend =
     chart.legend === 'none'
       ? ''
@@ -221,6 +233,9 @@ export function xlsxChartXml(sheet: string, chart: FileChart): string {
     `<c:chartSpace xmlns:c="${C_NS}" xmlns:a="${A_NS}" xmlns:r="${R_NS}">`,
     val('roundedCorners', 0),
     `<c:chart>${heading}<c:plotArea><c:layout/>${plotXml(sheet, chart)}${axesXml(chart)}</c:plotArea>${legend}${val('plotVisOnly', 1)}${val('dispBlanksAs', 'gap')}</c:chart>`,
+    original
+      ? `<c:extLst><c:ext uri="${LIVEDOC_CHART_NS}"><ldc:original xmlns:ldc="${LIVEDOC_CHART_NS}">${escapeXmlText(chartOriginalText(original))}</ldc:original></c:ext></c:extLst>`
+      : '',
     '</c:chartSpace>',
   ].join('');
 }

@@ -1,5 +1,5 @@
 // Stacking (docs/specs/009-elements/pie-chart.md "Chart types", "Stacking", D282): a column or bar chart of two or
-// more series, or an area chart, drawing its series one on another (Standard) or as shares of each category (100%).
+// more series, or an area or stepped area chart, drawing its series one on another (Standard) or as shares of each category (100%).
 // Where each value's mark starts and ends, worked once for both renderers. Pure.
 import { chartTypeOf } from './chart-types';
 import { chartValue, type LineSeries } from './data-shapes';
@@ -11,7 +11,10 @@ export function isChartStack(v: unknown): v is ChartStack {
   return (CHART_STACKS as readonly unknown[]).includes(v);
 }
 
-/** The stacking a chart draws with: its own, on a column, bar or area chart of two or more series; else none. */
+/**
+ * The stacking a chart draws with: its own, on a column, bar, area or stepped area chart of two or more series; else
+ * none.
+ */
 export function chartStackOf(el: {
   shape: string;
   chartVariant?: string;
@@ -20,7 +23,9 @@ export function chartStackOf(el: {
 }): ChartStack | null {
   if (!isChartStack(el.chartStack) || (el.lineSeries?.length ?? 0) < 2) return null;
   const type = chartTypeOf(el);
-  return type === 'column' || type === 'bar' || type === 'area' ? el.chartStack : null;
+  return type === 'column' || type === 'bar' || type === 'area' || type === 'stepped-area'
+    ? el.chartStack
+    : null;
 }
 
 export type StackedValues = {

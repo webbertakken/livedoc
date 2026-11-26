@@ -14,6 +14,7 @@ import type { ChartRect } from './chart-frame';
 import { chartAxisLabel } from './chart-frame';
 import { smoothPath } from './chart-smooth';
 import { stackedValues, type ChartStack } from './chart-stack';
+import { stepAreaPath, stepBandPath, stepPath } from './chart-stepped';
 import { chartValue, type ChartKeyItem, type LineSeries, type PieSlice } from './data-shapes';
 
 export type ChartPoint = { x: number; y: number };
@@ -199,7 +200,7 @@ export function barMarks(
   };
 }
 
-type LineVariant = 'line' | 'area' | 'scatter';
+type LineVariant = 'line' | 'area' | 'stepped-area' | 'scatter';
 
 export type LineMarks = {
   plot: { x: number; y: number; w: number; h: number };
@@ -249,13 +250,17 @@ export function lineMarks(
   oy = 0,
   // Show Axis: tick labels and gridlines, the plot drawn in from the sides they take.
   showAxis = false,
-  // An area chart's stacking (pie-chart.md "Stacking", D282): each series a band on the running total before it.
+  // An area or stepped area chart's stacking (pie-chart.md "Stacking", D282): each series a band on the running total
+  // before it.
   stack: ChartStack | null = null,
   // Smooth Line (pie-chart.md "Smooth Line", D284): a line chart's stretches drawn as curves.
   smooth = false,
 ): LineMarks {
   const n = categories.length;
-  const stacked = stack && variant === 'area' ? stackedValues(series, n, stack, false) : null;
+  // A stepped area's categories are slots, as a column chart's, each value a step across its own (D289).
+  const stepped = variant === 'stepped-area';
+  const stacked =
+    stack && (variant === 'area' || stepped) ? stackedValues(series, n, stack, false) : null;
   // A series on the second axis, when another is on the first (chart-axis.ts); stacked, all share the one.
   const onRight = stacked ? series.map(() => false) : rightAxisSeries(series);
   // Zero is in range so the baseline reads naturally; an all-equal range widens so the line is not flat against the
@@ -306,7 +311,13 @@ export function lineMarks(
     plotY0 + plotH - ((v - r.min) / (r.max - r.min)) * plotH;
   const yAt = yOn(left);
   const yRight = right ? yOn(right) : yAt;
-  const evenX = (i: number) => (n <= 1 ? plotX0 + plotW / 2 : plotX0 + (i / (n - 1)) * plotW);
+  const half = plotW / Math.max(1, n) / 2;
+  const evenX = (i: number) =>
+    stepped
+      ? plotX0 + half * (2 * i + 1)
+      : n <= 1
+        ? plotX0 + plotW / 2
+        : plotX0 + (i / (n - 1)) * plotW;
 
   // Scatter places each point at its category's number when every category is one; a category left empty has no x,
   // so draws no point, and does not stop the others reading as numbers.
@@ -349,8 +360,8 @@ export function lineMarks(
     }),
   );
   // Each series' runs of points side by side: the line breaks at a gap (pie-chart.md "No value is a gap"). A point
-  // with no neighbour is no stretch of line; it is drawn as its marker alone.
-  const runs = points.map((pts) => runsOf(pts).filter((run) => run.length > 1));
+  // with no neighbour is no stretch of line; it is drawn as its marker alone. A step alone is a step.
+  const runs = points.map((pts) => runsOf(pts).filter((run) => stepped || run.length > 1));
   const pathOf = (rs: readonly ChartPoint[][]) =>
     rs
       .map((run) => run.map((p, k) => `${k === 0 ? 'M' : 'L'} ${q(p.x)} ${q(p.y)}`).join(' '))
@@ -360,6 +371,7 @@ export function lineMarks(
   // their rows' order.
   const lines = series.map((s, si) => {
     if (variant === 'line' && smooth) return runs[si]!.map(smoothPath).join(' ');
+    if (stepped) return runs[si]!.map((run) => stepPath(run, half)).join(' ');
     if (variant !== 'scatter') return pathOf(runs[si]!);
     if (s.line !== true) return '';
     const present = points[si]!.filter((p): p is ChartPoint => p !== null).sort(
@@ -367,19 +379,29 @@ export function lineMarks(
     );
     return present.length > 1 ? pathOf([present]) : '';
   });
+  const slots = categories.map((_c, i) => evenX(i));
+  const under = (si: number, i: number) => (si === 0 ? 0 : stacked!.levels[si - 1]![i]!);
   const areas = stacked
     ? series.map((_, si) => {
+        if (stepped)
+          return stepBandPath(
+            slots,
+            stacked.levels[si]!.map(yAt),
+            slots.map((_x, i) => yAt(under(si, i))),
+            half,
+          );
         // The band between the total before it and after it, over every category: no value adds no thickness.
         const top = stacked.levels[si]!.map((v, i) => `${q(evenX(i))} ${q(yAt(v))}`);
         const bottom = categories
-          .map((_c, i) => `${q(evenX(i))} ${q(yAt(si === 0 ? 0 : stacked.levels[si - 1]![i]!))}`)
+          .map((_c, i) => `${q(evenX(i))} ${q(yAt(under(si, i)))}`)
           .reverse();
         return top.length ? `M ${[...top, ...bottom].join(' L ')} Z` : '';
       })
-    : variant === 'area'
+    : variant === 'area' || stepped
       ? runs.map((rs, si) => {
           // Down to its own axis's zero, a shape per run.
           const zeroY = q((onRight[si] ? yRight : yAt)(0));
+          if (stepped) return rs.map((run) => stepAreaPath(run, half, zeroY)).join(' ');
           return rs
             .map(
               (run) =>
@@ -394,7 +416,8 @@ export function lineMarks(
     lines,
     areas,
     labels,
-    dot: variant === 'scatter' ? 4 : 3,
+    // A step carries no marker (D289).
+    dot: variant === 'scatter' ? 4 : stepped ? 0 : 3,
     axis: {
       left: left.scale?.ticks.map((t) => ({ y: yAt(t.value), text: t.text })) ?? [],
       right: right?.scale?.ticks.map((t) => ({ y: yRight(t.value), text: t.text })) ?? [],
