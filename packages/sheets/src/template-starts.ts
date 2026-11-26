@@ -66,7 +66,7 @@ export function sheetFromTemplate(opts: {
         wb,
         { sheetId: id, range: ch.range, ...(ch.cols ? { cols: ch.cols } : {}) },
         'en-GB',
-      ) ?? { categories: [], series: [] },
+      ) ?? { categories: [], numbered: true, series: [] },
     })),
   };
 }

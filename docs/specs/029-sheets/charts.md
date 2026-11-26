@@ -1,7 +1,7 @@
 # Charts
 
-**Status: built in part** (plan 0020 Phase 11): the model, drawing over the cells, Insert › Chart and working with a
-chart; the rest specified.
+**Status: built in part** (plan 0020 Phase 11): the model, drawing over the cells, Insert › Chart, working with a
+chart, and the Chart Editor's controls for what the model holds (below); the rest specified.
 
 Charts in a [spreadsheet](spreadsheet.md), as Google Sheets makes them: the workbook's own objects, kept in both
 file formats, drawn by LiveDoc's chart code. Research: [Charts and pivots](../../research/sheets-open-standard/charts-and-pivots.md).
@@ -67,6 +67,13 @@ A side panel of two tabs:
   bars, trendline: linear, exponential, polynomial, logarithmic, power series, moving average, with its label and R²),
   Legend (position, font, colour), Horizontal Axis, Vertical Axis (min, max, log scale, number format), Gridlines and
   Ticks.
+
+Built of the Chart Editor: it opens on a chart inserted, on its Edit Chart button and on a double click; Setup holds
+Chart Type (the built types), Data Range (one range in A1, a typo refused "Type a range like A1:D20") and the Series,
+each a scatter's to draw as a line; Customise holds Chart Title, Horizontal and Vertical Axis Title, Legend, Palette,
+Value Axis, Data Labels, each series' colour (the one colour picker) and Alt Text. A control writes the chart at
+once, one undo step; a text when it is left or Enter is pressed, Escape taking it back. A chart whose cells are gone
+shows "No data" there.
 
 ## Working with a chart
 

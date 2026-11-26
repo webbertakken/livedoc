@@ -19,6 +19,7 @@ const chart = (x: Partial<SheetChart> = {}): SheetChart => ({
 // Cost (the x), Index and Pareto, one empty Pareto cell a gap.
 const table: SheetChartTable = {
   categories: ['1', '2', '3'],
+  numbered: true,
   series: [
     { name: 'Cost', col: 'c0000', values: [1, 2, 3] },
     { name: 'Index', col: 'c0001', values: [40, 50, 55] },
@@ -88,6 +89,7 @@ describe('a spreadsheet chart as a chart element', () => {
   it('fills a column chart in its series colour, and leaves a pie its palette', () => {
     const one: SheetChartTable = {
       categories: ['a', 'b'],
+      numbered: false,
       series: [{ name: 'N', col: 'c0001', values: [1, 2] }],
     };
     const looks = { series: { c0001: { color: '#abcdef' } } };

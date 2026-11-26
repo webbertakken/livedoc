@@ -52,6 +52,20 @@ test('Insert › Chart draws a scatter of the data, kept on reload, deleted and 
     path: test.info().outputPath('chart-inserted.png'),
     animations: 'disabled',
   });
+  // Inserted with the Chart Editor open on it: a title and an axis title, written as each is left.
+  const editor = page.getByRole('complementary', { name: 'Chart Editor' });
+  await expect(editor).toBeVisible();
+  await editor.getByRole('tab', { name: 'Customise' }).click();
+  await editor.getByRole('textbox', { name: 'Chart Title' }).fill('Value for money');
+  await editor.getByRole('textbox', { name: 'Vertical Axis Title' }).click();
+  await editor.getByRole('textbox', { name: 'Vertical Axis Title' }).fill('Coding index');
+  await editor.getByRole('textbox', { name: 'Horizontal Axis Title' }).click();
+  await expect(chart(page).locator('[data-chart-title="title"]')).toHaveText('Value for money');
+  await expect(chart(page).locator('[data-chart-title="y"]')).toHaveText('Coding index');
+  await page.screenshot({
+    path: test.info().outputPath('chart-editor.png'),
+    animations: 'disabled',
+  });
 
   await page.reload();
   await expect(page.locator(READY)).toBeVisible();

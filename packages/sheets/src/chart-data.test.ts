@@ -37,6 +37,7 @@ describe('a chart from a range', () => {
     });
     expect(sheetChartTable(b.wb, link(0, 0, 2, 2), 'en-GB')).toEqual({
       categories: ['Jan', 'Feb'],
+      numbered: false,
       series: [
         { name: 'Sales', col: 's0c1', values: [10, 20] },
         { name: 'Costs', col: 's0c2', values: [4, null] },
@@ -64,10 +65,21 @@ describe('a chart from a range', () => {
     ]);
   });
 
+  // A header over a column of numbers makes them labels, though they run 1, 2: a scatter takes them as its x.
+  it('tells labels that run 1, 2 from categories it numbered itself', () => {
+    const { b, link } = setup({ A1: 'Cost', B1: 'Index', A2: '1', B2: '40', A3: '2', B3: '50' });
+    expect(sheetChartTable(b.wb, link(0, 0, 2, 1), 'en-GB')).toMatchObject({
+      categories: ['1', '2'],
+      numbered: false,
+      series: [{ name: 'Index', values: [40, 50] }],
+    });
+  });
+
   it('numbers the categories and names series by column without labels or a header', () => {
     const { b, link } = setup({ B1: '1', C1: '2', B2: '3', C2: '4' });
     expect(sheetChartTable(b.wb, link(0, 1, 1, 2), 'en-GB')).toEqual({
       categories: ['1', '2'],
+      numbered: true,
       series: [
         { name: 'Column B', col: 's0c1', values: [1, 3] },
         { name: 'Column C', col: 's0c2', values: [2, 4] },
@@ -93,6 +105,7 @@ describe('a chart from a range', () => {
       sheetChartTable(b.wb, { ...link(0, 0, 2, 2), cols: [cols[0]!, cols[2]!] }, 'en-GB'),
     ).toEqual({
       categories: ['Rent', 'Food'],
+      numbered: false,
       series: [{ name: 'Amount', col: 's0c2', values: [1200, 320] }],
     });
   });
@@ -111,7 +124,7 @@ describe('a chart from a range', () => {
     expect(sheetChartTable(b.wb, { ...l, sheetId: 'nope' }, 'en-GB')).toBeNull();
     expect(sheetChartTable(b.wb, { ...l, range: { ...l.range, r1: 'gone' } }, 'en-GB')).toBeNull();
     apply({ kind: 'layout', changes: [{ k: 'hide', axis: 'r', ids: [l.range.r1], hidden: true }] });
-    expect(sheetChartTable(b.wb, l, 'en-GB')).toEqual({ categories: [], series: [] });
+    expect(sheetChartTable(b.wb, l, 'en-GB')).toEqual({ categories: [], numbered: true, series: [] });
   });
 
   it('keeps at most the series limit', () => {

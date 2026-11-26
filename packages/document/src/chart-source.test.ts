@@ -71,6 +71,11 @@ describe('a chart drawn from a sheet range', () => {
     expect(chartFieldsFromTable({ shape: 'line-chart' }, numbered)).toMatchObject({
       lineCategories: ['1', '2'],
     });
+    // Labels that run 1, 2 under a header are labels still: the read says it numbered nothing, so they are the x.
+    expect(chartFieldsFromTable(scatter, { ...numbered, numbered: false })).toMatchObject({
+      lineCategories: ['1', '2'],
+      lineSeries: [{ name: 'X' }, { name: 'Y' }],
+    });
   });
 
   it('gives a bar its first series, a pie never below zero, and a line every series, keeping colours', () => {

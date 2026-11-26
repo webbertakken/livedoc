@@ -17,6 +17,8 @@ type SheetChartLink = { sheetId: string; range: IdRange; cols?: readonly string[
 export type SheetChartTable = {
   // The category labels, one per row of data.
   categories: string[];
+  // Whether they are the read's own numbers (no label column): labels that happen to run 1, 2, … are not.
+  numbered: boolean;
   // One per value column, its name from the header row (or its column letter), its column's id; null where a cell
   // holds no number.
   series: { name: string; col: string; values: (number | null)[] }[];
@@ -52,7 +54,7 @@ export function sheetChartTable(
     const id = layout.cols[c]!;
     if (!ix.hiddenCols.has(id) && (!picked || picked.has(id))) cols.push(c);
   }
-  if (!rows.length || !cols.length) return { categories: [], series: [] };
+  if (!rows.length || !cols.length) return { categories: [], numbered: true, series: [] };
   const value = (r: number, c: number) => wb.value(link.sheetId, r, c);
   const text = (r: number, c: number) =>
     displayValue(
@@ -79,6 +81,7 @@ export function sheetChartTable(
   const body = (headed ? rows.slice(1) : rows).slice(0, CHART_CATEGORIES_MAX);
   return {
     categories: body.map((r, i) => (labelled ? text(r, cols[0]!) : String(i + 1))),
+    numbered: !labelled,
     series: valueCols.slice(0, CHART_SERIES_MAX).map((c) => ({
       name: (headed ? text(rows[0]!, c) : '') || `Column ${columnLetters(c)}`,
       col: layout.cols[c]!,

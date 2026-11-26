@@ -61,7 +61,7 @@ export function anchorAt(px: SheetAnchor, layout: SheetLayout, g: Lines): CellAn
 // two to eight labelled rows is a pie; numbers against a first column of numbers a scatter; dated labels a line;
 // anything else a column chart.
 export function suggestChartType(t: SheetChartTable, datedLabels: boolean): SheetChartType {
-  const numbered = t.categories.every((c, i) => c === String(i + 1));
+  const { numbered } = t;
   // Numbers against numbers: a first column the read numbered (no labels), or labels that are all numbers.
   if (
     numbered
