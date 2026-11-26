@@ -269,7 +269,21 @@ office kinds; this spec says what a text document puts in them.
   gallery is off) is written in the same change as the picture, so no one ever holds a picture without its media.
   A Participant's picture is stored in their own gallery and served to the document while their share link lasts
   ([Images](../009-elements/images.md)), as on a canvas.
-- **Not yet**: tables and their rows and columns, section breaks, tables of contents, footnotes and drawings, and what is kept beside the writing (page setup, headers and footers, document tabs,
+- **Whole blocks**: a **table** (Insert > Table), a **section break** (Insert > Break) or a **table of contents**
+  (Insert > Table of contents) put in while suggesting is a suggested insertion of the whole block, its card saying
+  "Add: Table" ("Add: Section break", "Add: Table of contents"); a paragraph split to make room for it, and the
+  bookmarks a table of contents gives its headings, are part of the same suggestion, and its card names only the
+  block (default). What is inside a suggested block is not marked: it is drawn plain, inside the block's outline in
+  its author's colour (default). Deleting a selection that holds a whole block suggests its deletion ("Delete:
+  Table"), the block drawn struck through in the author's colour; one's own suggested block deleted goes. A deletion
+  inside a table's cells marks the text, as anywhere.
+- **Inside a suggested block**: one's own suggested table is written in plainly, as one's own suggested text is,
+  part of its suggestion and settled with it (its cells' writing, and its rows, columns and cells changed). Anyone
+  else typing in it suggests their own insertion, never folded into the block's suggestion: rejecting the block takes
+  their writing with it, accepting theirs alone keeps it in the still-suggested block (director, 2026-11-26). Updating
+  one's own suggested table of contents changes it plainly.
+- **Not yet**: the rows, columns and cells of a table not one's own suggested table (added, deleted, merged, split),
+  updating a table of contents not one's own suggested one, footnotes and drawings, and what is kept beside the writing (page setup, headers and footers, document tabs,
   styles, list definitions), say "This can't be suggested yet." (default) and change nothing. Insert's Footnote,
   Drawing, Header and Footer are dimmed while suggesting with the note "Editing only" and the hint "This can't be
   suggested yet. An Editor changes it in Editing." (default); the others are absent or dimmed as the menus draw
@@ -280,7 +294,8 @@ office kinds; this spec says what a text document puts in them.
 - **A Participant** sees an Editor's menus, toolbar and context menu in Suggesting, as Google's Commenter does
   ([Office shell](../004-interface-design/office-shell.md#modes)). What can be suggested runs: Edit's Undo, Redo, Cut,
   Paste, Paste without formatting and Delete; Insert's Image (Upload from computer, Search the web, LiveDoc gallery), Link, Special characters, Emoji, Equation (with the equation
-  toolbar), Horizontal line, Page break, Column break and Bookmark; Format's Text, Align &
+  toolbar), Table, Horizontal line, Page break, Column break, Section break (Next page, Continuous), Table of
+  contents and Bookmark; Format's Text, Align &
   indent, Line & paragraph spacing, Borders and shading and Clear formatting; and the toolbar's Paint format, font,
   size, text formatting, Align, Line and paragraph spacing, indents and Clear formatting. Everything else is dimmed:
   what cannot yet be suggested, what is kept beside the writing, and paragraph styles and lists, whose definitions
