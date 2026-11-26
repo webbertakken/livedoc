@@ -48,6 +48,31 @@ describe('chart views', () => {
     }
   });
 
+  it('draws several series side by side, each in its colour, names its groups, reads a hovered bar (D281)', () => {
+    const { container } = render(
+      <BarChartView
+        element={el('bar-chart', {
+          chartValues: true,
+          lineCategories: ['Opus', 'Sonnet'],
+          lineSeries: [
+            { name: 'Cost', values: [15, null], color: '#aa3300' },
+            { name: 'Index', values: [60, 54] },
+          ],
+        })}
+        textColor="#000"
+      />,
+    );
+    const bars = container.querySelectorAll('rect[rx]');
+    const filled = [...bars].filter((r) => r.getAttribute('fill') === '#aa3300');
+    expect(filled.length).toBeGreaterThanOrEqual(1);
+    const texts = [...container.querySelectorAll('text')].map((t) => t.textContent);
+    for (const t of ['Opus', 'Sonnet', '60', '54']) expect(texts).toContain(t);
+    fireEvent.pointerEnter(filled[0]!);
+    expect(container.textContent).toContain('Opus · Cost: 15');
+    fireEvent.pointerLeave(filled[0]!);
+    expect(container.textContent).not.toContain('Opus · Cost: 15');
+  });
+
   it('draws a doughnut as even-odd ring segments, and reads a hovered slice', () => {
     const { container } = render(
       <PieChartView element={el('pie-chart', { chartVariant: 'doughnut' })} textColor="#000" />,

@@ -107,8 +107,8 @@ Chart" and a screen reader hears "Column chart", as the palette's tile says, nev
 
 | Chart type | Kind (`shape`) | `chartVariant` | Draws                                                                                         |
 | ---------- | -------------- | -------------- | --------------------------------------------------------------------------------------------- |
-| Column     | `bar-chart`    | (none)         | Upright bars from a baseline, one per datum                                                   |
-| Bar        | `bar-chart`    | `horizontal`   | Bars to the right from a left baseline, one per datum, top to bottom                          |
+| Column     | `bar-chart`    | (none)         | Upright bars from a baseline, one per datum; several series side by side (below)              |
+| Bar        | `bar-chart`    | `horizontal`   | Bars to the right from a left baseline, one per datum, top to bottom; several series likewise |
 | Line       | `line-chart`   | (none)         | A line with point markers per series                                                          |
 | Area       | `line-chart`   | `area`         | Line's lines, each with the area between it and zero filled in its colour at 25%, overlapping |
 | Scatter    | `line-chart`   | `scatter`      | A point per category per series, no lines, at x = the category read as a number (below)       |
@@ -124,6 +124,15 @@ Chart" and a screen reader hears "Column chart", as the palette's tile says, nev
   negatives too: its ticks run from a round value under the smallest to one over the largest, zero always a tick.
   A chart with no negative value draws exactly as before (the baseline at the plot's foot). Only a pie reads below
   zero as zero.
+- **Several series on a column or bar chart** (clustered, as Google Sheets and Excel draw them): a column or bar
+  chart holding two or more series (`lineSeries` over `lineCategories`, as a line chart's) draws each category as a
+  group of bars side by side, one per series in series order (top to bottom on a bar chart), each in its series'
+  colour (its own, else the palette's by its place). The group takes 80% of the category's share and each bar an
+  equal part of it, at most 48 px thick. Each category's name sits under its group (left of it on a bar chart),
+  cut to its share; the legend names the series. A bar's readout reads `category · series: value`, and Show Values
+  prints each bar's number past its end. The value range, the baseline at zero, Show Axis and gaps are a single
+  series' (a series with no value at a category leaves its place in the group empty). A chart with one series
+  draws as it always has (`pieSlices`, one colour each) (default, D281).
 - **No value is a gap.** A datum may have no value: a Sheet cell that is empty or holds no number (text, an error),
   a value left empty in the data editor, a CSV field that is empty or not a number. A 0 is a value and draws as 0.
   A chart draws no value as Excel ("Show empty cells as: Gaps") and Google Sheets do by default:
@@ -155,7 +164,8 @@ Chart" and a screen reader hears "Column chart", as the palette's tile says, nev
 - **Changing type** keeps the chart's size, style, palette, legend and animation. Within a kind it only sets
   `chartVariant`. Across kinds it moves the data: a pie or bar chart's slices become one series named **Series 1**
   over their labels (their colours dropped, so the series takes the palette's first), and a line chart's first
-  series becomes the slices over its categories (below zero read as zero on a pie). A chart drawn from a Sheet
+  series becomes the slices over its categories (below zero read as zero on a pie). Two or more series stay series
+  between a line and a column or bar chart, drawn side by side on the column chart; a pie keeps the first. A chart drawn from a Sheet
   re-reads its range as the new type at once.
 - Who may: as every other chart change, someone who may edit the canvas (an Editor); a Participant and a Viewer get
   no Chart Type section.
@@ -166,6 +176,8 @@ Each chart is a `ShapeKind` (`'pie-chart'` / `'bar-chart'` / `'line-chart'`),
 not a new top-level type — so they inherit boxed-element behaviour. `isChartShape`
 groups all three (they're all in `isSelfDrawingShape` too).
 
+- A bar chart of two or more series also carries `lineCategories` and `lineSeries`, drawn side by side; with
+  fewer it draws its `pieSlices`.
 - Pie + bar: `ShapeElement.pieSlices?: PieSlice[]` (`{ label, value, color? }`), `value` a number or `null`
   (no value, Chart types "No value is a gap").
 - `ShapeElement.chartValues?: boolean`: the numbers on the marks (Show Values); absent means off.
@@ -230,7 +242,8 @@ the element's own data is the last read ([Sheet charts](../029-sheets/sheet.md#c
 the read numbers its categories `1, 2, …` and makes that column a series) takes that column as its x and the other
 columns as its series, as a spreadsheet's scatter chart does. A Scatter chart from a Sheet whose first column holds
 text (not dates) beside two or more columns of numbers names its points by that column and takes the next column as
-its x, the rest as its series (operator, 2026-11-26). Each read keeps what its series carry beyond their
+its x, the rest as its series (operator, 2026-11-26). A Column or Bar chart from a Sheet reads every series: one
+draws as its slices, two or more side by side (Chart types, "Several series"). Each read keeps what its series carry beyond their
 data, by position: a colour, `axis: 'right'` and `line: true`, so Right Axis and Lines survive the cells changing.
 
 ### Lines set by an agent
@@ -309,3 +322,6 @@ The code cites each by its id.
 - **D106** Readout copy: `label: value` (blank label shows an em dash glyph); line `category · series: value` (default);
   a named scatter point `name, y, x` (operator, 2026-11-26).
 - **D107** Key strip when too small: Not rendered below 48 px wide (side) or 18 px tall (band) (default).
+- **D281** Several series on a column or bar chart: side by side in a group taking 80% of its category's share, each
+  bar an equal part of it and at most 48 px thick, the category named under (beside) its group; one series draws as
+  before (default).

@@ -36,7 +36,9 @@ and two changing one chart resolve to the last write. Each change is one undo st
   of text beside two or more columns of numbers names its points, and the next column is its x
   ([Scatter's point names](../009-elements/pie-chart.md#chart-types)). Deleting rows or columns inside
   the range shrinks it; deleting all of it leaves the chart with no data, drawn as "No data".
-- **Type**: one of [Chart types](#chart-types) built: Column, Bar, Line, Area, Scatter, Pie and Doughnut.
+- **Type**: one of [Chart types](#chart-types) built: Column, Bar, Line, Area, Scatter, Pie and Doughnut. A Column
+  or Bar chart draws every series of its range side by side, as Google's does
+  ([Several series](../009-elements/pie-chart.md#chart-types), D281).
 - **Look**: a palette ([Chart palettes](../009-elements/pie-chart.md#chart-palettes)); per series, by its column's id,
   a colour, a scatter series drawn as a line ([Lines set by an agent](../009-elements/pie-chart.md#lines-set-by-an-agent)),
   and the right-hand axis; the legend's place (top, right, bottom, left) or none; the values printed on the marks;

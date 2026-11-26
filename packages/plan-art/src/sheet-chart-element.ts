@@ -51,9 +51,10 @@ export function sheetChartElement(
       ? { ...base, lineCategories: [], lineSeries: [] }
       : { ...base, pieSlices: [] };
   const fields = chartFieldsFromTable(base, table);
-  if (!('lineSeries' in fields)) {
-    // A pie, column or bar chart draws its first series; a column or bar chart's every bar takes its colour, when its
-    // column has one (a pie's slices keep the palette's, one each).
+  // A pie, and a column or bar chart of one series, draws its first series as slices; a column or bar chart's every
+  // bar takes its colour, when its column has one (a pie's slices keep the palette's, one each). A column or bar chart
+  // of two or more draws them side by side (D281), each series' look from its column, below.
+  if ('pieSlices' in fields && (fields.lineSeries?.length ?? 0) < 2) {
     const color =
       shape === 'bar-chart' && table.series[0]
         ? chart.series?.[table.series[0].col]?.color
@@ -65,8 +66,9 @@ export function sheetChartElement(
   }
   // A scatter chart may take its first column of numbers as the x (and its column of text as its point names): the
   // series drawn are the table's last ones.
-  const skipped = table.series.length - fields.lineSeries.length;
-  const lineSeries = fields.lineSeries.map((s, i): LineSeries => {
+  const series = fields.lineSeries!;
+  const skipped = table.series.length - series.length;
+  const lineSeries = series.map((s, i): LineSeries => {
     const look = chart.series?.[table.series[i + skipped]!.col];
     return {
       ...s,
@@ -77,8 +79,11 @@ export function sheetChartElement(
   });
   return {
     ...base,
-    lineCategories: fields.lineCategories,
+    ...('pieSlices' in fields ? { pieSlices: fields.pieSlices } : {}),
+    lineCategories: fields.lineCategories!,
     lineSeries,
-    ...(fields.linePointNames ? { linePointNames: fields.linePointNames } : {}),
+    ...('linePointNames' in fields && fields.linePointNames
+      ? { linePointNames: fields.linePointNames }
+      : {}),
   };
 }

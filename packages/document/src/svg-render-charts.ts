@@ -15,7 +15,21 @@ import { AXIS_TICK_FONT_PX, AXIS_TICK_GAP } from './chart-axis';
 import { chartFrame, type ChartLegendRect } from './chart-frame';
 import type { ChartTitleText } from './chart-titles';
 import { chartTextInk } from './chart-ink';
-import { AREA_FILL_OPACITY, barMarks, lineKeyItems, lineMarks, pieMarks } from './chart-marks';
+import {
+  AREA_FILL_OPACITY,
+  barMarks,
+  lineKeyItems,
+  lineMarks,
+  pieMarks,
+  type BarMarks,
+  type BarRect,
+} from './chart-marks';
+import {
+  BAR_GROUP_NAME_FONT_PX,
+  barGroupMarks,
+  barGroupValueLabels,
+  isBarGroupChart,
+} from './chart-bar-groups';
 import {
   barValueLabels,
   chartValueFontPx,
@@ -140,14 +154,15 @@ function svgChartLegend(
 function svgValueLabels(
   labels: readonly ChartValueLabel[],
   textColor: string,
-  fillOf: (i: number) => string,
+  // The colour of the mark a label sits on; only a label on a mark (`onMark`) asks.
+  fillOf: ((i: number) => string) | null,
   fontPx: number,
   fontFamily?: string,
 ): string {
   const font = ` font-family="${xmlEscape(fontFamily ?? EXPORT_DEFAULT_FONT)}"`;
   return labels
     .map((l) => {
-      const ink = l.onMark !== undefined ? labelOn(fillOf(l.onMark)) : textColor;
+      const ink = l.onMark !== undefined && fillOf ? labelOn(fillOf(l.onMark)) : textColor;
       const weight = l.category ? '' : ' font-weight="600"';
       return `<text x="${r2(l.x)}" y="${r2(l.y)}" text-anchor="${l.anchor}"${font} font-size="${fontPx}"${weight} fill="${xmlEscape(ink)}">${xmlEscape(l.text)}</text>`;
     })
@@ -207,8 +222,19 @@ export function svgBarChart(
   const textColor = chartTextInk(labelColor, ground);
   const { data, colorAt, area, legend, titles } = chartFrame(el, palette, ground);
   const horizontal = chartTypeOf(el) === 'bar';
-  const barM = barMarks(area, data, horizontal, el.x, el.y, el.chartAxis === true);
-  const { baseline: b, bars } = barM;
+  const groups = isBarGroupChart(el)
+    ? barGroupMarks(
+        area,
+        el.lineCategories ?? [],
+        el.lineSeries!,
+        horizontal,
+        el.x,
+        el.y,
+        el.chartAxis === true,
+      )
+    : null;
+  const barM = groups ?? barMarks(area, data, horizontal, el.x, el.y, el.chartAxis === true);
+  const { baseline: b } = barM;
   const font = ` font-family="${xmlEscape(fontFamily ?? EXPORT_DEFAULT_FONT)}"`;
   // Show Axis: a faint gridline at each tick and its label, under a column chart's left side or a bar chart's bottom.
   const [s0, s1] = barM.axis.span;
@@ -222,30 +248,48 @@ export function svgBarChart(
     )
     .join('');
   const baseline = `<path d="M ${r2(b.x1)} ${r2(b.y1)} L ${r2(b.x2)} ${r2(b.y2)}" stroke="${AXIS}" stroke-width="1"/>`;
-  // No value draws no bar (pie-chart.md "No value is a gap").
-  const rects = bars
-    .map((bar, i) =>
-      bar
-        ? `<rect x="${r2(bar.x)}" y="${r2(bar.y)}" width="${r2(bar.w)}" height="${r2(bar.h)}" rx="${r2(bar.rx)}" fill="${xmlEscape(colorAt(i, data[i]!))}"/>`
-        : '',
-    )
-    .join('');
+  // No value draws no bar (pie-chart.md "No value is a gap"); several series take their series' colours (D281).
+  const rect = (bar: BarRect | null, fill: string) =>
+    bar
+      ? `<rect x="${r2(bar.x)}" y="${r2(bar.y)}" width="${r2(bar.w)}" height="${r2(bar.h)}" rx="${r2(bar.rx)}" fill="${xmlEscape(fill)}"/>`
+      : '';
+  const series = el.lineSeries ?? [];
+  const rects = groups
+    ? groups.bars
+        .map((bars, j) => bars.map((bar) => rect(bar, colorAt(j, series[j]!))).join(''))
+        .join('')
+    : (barM as BarMarks).bars.map((bar, i) => rect(bar, colorAt(i, data[i]!))).join('');
   const px = chartValueFontPx(el.textSize);
-  const values = el.chartValues
-    ? svgValueLabels(
-        barValueLabels(barM, data, horizontal, px),
-        textColor,
-        (i) => colorAt(i, data[i]!),
-        px,
-        fontFamily,
-      )
+  const values = !el.chartValues
+    ? ''
+    : groups
+      ? svgValueLabels(
+          barGroupValueLabels(groups, series, horizontal, px),
+          textColor,
+          null,
+          px,
+          fontFamily,
+        )
+      : svgValueLabels(
+          barValueLabels(barM as BarMarks, data, horizontal, px),
+          textColor,
+          null,
+          px,
+          fontFamily,
+        );
+  const names = groups
+    ? svgValueLabels(groups.names, textColor, null, BAR_GROUP_NAME_FONT_PX, fontFamily)
     : '';
+  const keys: readonly ChartKeyItem[] = groups
+    ? series.map((s) => ({ label: s.name, ...(s.color ? { color: s.color } : {}) }))
+    : data;
   return (
     axis +
     baseline +
     rects +
     values +
-    svgChartLegend(el, data, colorAt, legend, textColor, fontFamily) +
+    names +
+    svgChartLegend(el, keys, colorAt, legend, textColor, fontFamily) +
     svgChartTitles(el, titles, textColor, fontFamily)
   );
 }
@@ -332,7 +376,7 @@ export function svgLineChart(
   const legendItems = lineKeyItems(series, lineVariantOf(el));
   const px = chartValueFontPx(el.textSize);
   const values = el.chartValues
-    ? svgValueLabels(lineValueLabels(m, series), textColor, () => textColor, px, fontFamily)
+    ? svgValueLabels(lineValueLabels(m, series), textColor, null, px, fontFamily)
     : '';
   return (
     axes +
