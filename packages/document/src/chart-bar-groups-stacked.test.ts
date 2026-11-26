@@ -96,7 +96,8 @@ describe('stacked charts in SVG', () => {
       chart('bar-chart', { chartStack: 'stacked', chartValues: true, chartAxis: true }),
       '#777777',
     );
-    expect(svg.match(/<rect [^>]*rx="0"/g)).toHaveLength(5);
+    const rects = svg.split('<rect ').slice(1);
+    expect(rects.filter((r) => r.slice(0, r.indexOf('>')).includes('rx="0"'))).toHaveLength(5);
     // 30 sits on the near-black segment: light ink; 10 on the white one: dark ink.
     expect(svg).toMatch(/fill="#ffffff">30</);
     expect(svg).toMatch(/fill="#[0-9a-f]{6}">10</);
