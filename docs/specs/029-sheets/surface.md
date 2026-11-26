@@ -97,8 +97,9 @@ Left to right, a hairline between the groups:
 
 - **Name box** (96 px): the selection (`B4`, `B4:D9`) or its named range's name; typing a reference, a range or a
   name and Enter selects it; its arrow lists the named ranges, each with its range, and a pick selects it. Rules as
-  today ([Sheet](sheet.md#formula-bar)). A sheet's names are its own ([Named ranges](sheet.md#named-ranges)), so the
-  list is the open sheet's, and says "No named ranges" when it has none (default, D129).
+  today ([Sheet](sheet.md#formula-bar)). Names are the workbook's ([Named ranges](sheet.md#named-ranges)), so the
+  list is every sheet's, the open sheet's ranges as `A1:B4` and another's as `Sheet2!A1:B4`; a pick, or a name typed,
+  on another sheet opens it with the range selected; "No named ranges" when there are none (default, D129).
 - **fx** then the **input**: the active cell's input as typed; editing there is editing the cell. It grows to show
   a long input, up to three lines, then scrolls; its foot is a handle (a `separator`, moved by a drag or Up and
   Down) that sets its height in lines, from one to as many as a third of the grid holds, kept for the page; a
@@ -214,8 +215,8 @@ Phone and tablet are the office shell's ([Office shell](../004-interface-design/
 - **D126** A menu row naming Google: Matched by LiveDoc's own words, Sheets Help as **Help** (default).
 - **D127** The menus' telemetry: The shell's events with the kind's name, Spreadsheet, never one per item (default).
 - **D128** The toolbar's font size steps: One point a press, within 6 to 400 (default).
-- **D129** The name box's list: The open sheet's named ranges, each with its range, as names are a sheet's own
-  (default).
+- **D129** The name box's list: The workbook's named ranges in name order, each with its range, another sheet's
+  prefixed with its name (default).
 - **D130** The formula bar's height: Up to three lines by its input; a drag on its foot from one line to a third of
   the grid, kept for the page (default).
 - **D131** The function help card hidden by F1: Kept hidden for the person in their browser until F1 again (default).

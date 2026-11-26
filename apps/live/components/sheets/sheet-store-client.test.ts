@@ -3,6 +3,7 @@ import {
   applySheetWrite,
   cellKey,
   emptyLayout,
+  namedRangeWrites,
   sheetFromJson,
   sheetToJson,
   type Sheet,
@@ -374,6 +375,40 @@ describe('the sheet store client', () => {
       ]),
     ).toBe('write_invalid');
     expect(value(2, 0)).toBeNull();
+    await s.settle();
+  });
+  // data-tools.md "Named ranges and named functions": a name moved to another sheet is one change.
+  it('moves a named range to another sheet as one change, one undo step putting it back', async () => {
+    const steps: { undo: () => void; redo: () => void }[] = [];
+    s = store(srv.api, { pushUndo: (st) => steps.push(st as never) });
+    await s.loadTab('t1');
+    s.create({ id: 'sheet0002', tabId: 't1', title: 'Two', layout: emptyLayout(rand, 2, 2) });
+    const one = s.sheet('sheet0001')!.layout;
+    const two = s.sheet('sheet0002')!.layout;
+    const cell = (l: typeof one) => ({
+      r1: l.rows[0]!,
+      c1: l.cols[0]!,
+      r2: l.rows[0]!,
+      c2: l.cols[0]!,
+    });
+    s.write('sheet0001', {
+      kind: 'layout',
+      changes: [{ k: 'name', name: 'Rate', range: cell(one) }],
+    });
+    steps.length = 0;
+    const move = namedRangeWrites({
+      was: { name: 'Rate', sheetId: 'sheet0001' },
+      name: 'Rate',
+      sheetId: 'sheet0002',
+      range: cell(two),
+    });
+    expect(s.writeAll(move)).toBeNull();
+    expect(s.sheet('sheet0001')!.layout.names).toBeUndefined();
+    expect(s.sheet('sheet0002')!.layout.names).toEqual([{ name: 'Rate', ...cell(two) }]);
+    expect(steps).toHaveLength(1);
+    steps[0]!.undo();
+    expect(s.sheet('sheet0001')!.layout.names).toEqual([{ name: 'Rate', ...cell(one) }]);
+    expect(s.sheet('sheet0002')!.layout.names).toBeUndefined();
     await s.settle();
   });
   it('creates, deletes and hears sheets come and go', async () => {

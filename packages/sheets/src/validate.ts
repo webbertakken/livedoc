@@ -267,7 +267,7 @@ function layoutChangeProblem(ch: LayoutChange, layout: SheetLayout): Validation 
         layout.rows.includes(r.r2!) &&
         layout.cols.includes(r.c1!) &&
         layout.cols.includes(r.c2!);
-      return onSheet && rangeNameProblem(ch.name, layout, ch.name) === null
+      return onSheet && rangeNameProblem(ch.name, layout, { except: ch.name }) === null
         ? OK
         : no('write_invalid');
     }

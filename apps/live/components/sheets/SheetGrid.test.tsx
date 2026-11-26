@@ -120,6 +120,15 @@ describe('the grid frame', () => {
       { top: 40 * 24 + 24 - (400 - COL_HEADER_PX), left: 0 },
     ]);
   });
+
+  // A named range's Go To on another sheet opens it on the range: in view once the grid has its size.
+  it('brings a range gone to from another sheet into view as it opens', async () => {
+    await mountGrid({ rows: 100, arrive: { r1: 40, c1: 0, r2: 41, c2: 0 } });
+    expect(gridScrolls).toContainEqual([
+      'to',
+      { top: 40 * 24 + 24 - (400 - COL_HEADER_PX), left: 0 },
+    ]);
+  });
 });
 
 describe('the keyboard map', () => {
