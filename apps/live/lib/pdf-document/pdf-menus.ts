@@ -451,8 +451,11 @@ export const PDF_MENUS: OfficeCatalogue = [
     ]),
     item(GROUP_MARKS, 'Group', 'participate', BUILT),
     item(UNGROUP_MARKS, 'Ungroup', 'participate', BUILT),
-    item(MARK_PROPERTIES, 'Properties', 'participate', { ...BUILT, keywords: ['subject', 'author'] }),
     item('lock', 'Lock', 'participate', CHECK),
+    item(MARK_PROPERTIES, 'Properties', 'participate', {
+      ...BUILT,
+      keywords: ['subject', 'author'],
+    }),
     SEPARATOR,
     choices(
       'text',

@@ -11,6 +11,7 @@ import {
   DELETE_MARKS,
   DOWNLOAD_PDF,
   GROUP_MARKS,
+  MARK_PROPERTIES,
   UNGROUP_MARKS,
   FORMAT_COLOUR,
   FORMAT_FILL_COLOUR,
@@ -132,6 +133,8 @@ describe("a PDF document's menus and toolbar", () => {
     DELETE_MARKS,
     GROUP_MARKS,
     UNGROUP_MARKS,
+    // usePdfMarkProperties.ts: Format > Properties.
+    MARK_PROPERTIES,
     // usePdfMarkRestyle.ts: Format > Opacity, Line width, Line style, Line ends and Align text, of the selected marks.
     ...Object.keys(OPACITY_ITEMS),
     ...Object.keys(ALIGN_ITEMS),

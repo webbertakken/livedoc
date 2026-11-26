@@ -93,7 +93,7 @@ export function usePdfMarkProperties({
             [MARK_PROPERTIES]: {
               run: () => {
                 if (opened) return close();
-                track('Pdf', 'Opened', 'MarkProperties');
+                track('UI', 'Opened', 'PdfDocumentPanelProperties');
                 setOpened(true);
                 setFocusNonce((n) => n + 1);
                 onOpen();

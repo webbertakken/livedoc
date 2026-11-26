@@ -573,7 +573,7 @@ Gated on the session's `can` (`pdfReviews`), and checked by the room.
 ## Telemetry and observability
 
 - `Pdf · Added · Mark.<Kind>`, `Pdf · Changed · Mark.<Moved|Resized|Restyled|Grouped|Ungrouped|Locked|Erased|Subject>`, `Pdf · Changed ·
-LookDefault.<Kind>` ("Make this look the default"), `Pdf · Opened · MarkProperties`,
+LookDefault.<Kind>` ("Make this look the default"), `UI · Opened · PdfDocumentPanelProperties` (the panel opened),
   `Pdf · Deleted · Mark.<Kind>`, `Pdf · Added · Stamp.<Standard|Dynamic|Custom>`,
   `Pdf · Created · CustomStamp`, `Pdf · Changed · ToolColour` (a tool's colour chosen or reset), `Pdf · Changed · ToolLine` (a tool's line
   width, line style or fill chosen). A stamp placed is
