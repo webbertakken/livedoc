@@ -12,6 +12,7 @@ export const CHART_TYPES = [
   'scatter',
   'pie',
   'doughnut',
+  'radar',
   'combo',
 ] as const;
 export type ChartType = (typeof CHART_TYPES)[number];
@@ -22,6 +23,7 @@ export const CHART_VARIANTS = [
   'stepped-area',
   'scatter',
   'doughnut',
+  'radar',
   'combo',
 ] as const;
 export type ChartVariant = (typeof CHART_VARIANTS)[number];
@@ -38,6 +40,7 @@ const SHAPES: Record<ChartType, { shape: ChartKind; chartVariant?: ChartVariant 
   scatter: { shape: 'line-chart', chartVariant: 'scatter' },
   pie: { shape: 'pie-chart' },
   doughnut: { shape: 'pie-chart', chartVariant: 'doughnut' },
+  radar: { shape: 'line-chart', chartVariant: 'radar' },
   combo: { shape: 'line-chart', chartVariant: 'combo' },
 };
 
@@ -51,6 +54,7 @@ export const CHART_TYPE_LABELS: Record<ChartType, string> = {
   scatter: 'Scatter',
   pie: 'Pie',
   doughnut: 'Doughnut',
+  radar: 'Radar',
   combo: 'Combo',
 };
 

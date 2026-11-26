@@ -32,6 +32,7 @@ const NEAREST_TYPE: Readonly<Record<SheetChartType, HeldChartType>> = {
   scatter: 'scatter',
   pie: 'pie',
   doughnut: 'doughnut',
+  radar: 'radar',
   combo: 'combo',
 };
 const NEAREST_SERIES_TYPE: Readonly<Record<SheetComboSeriesType, HeldSeriesType>> = {

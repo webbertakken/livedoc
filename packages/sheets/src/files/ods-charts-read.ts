@@ -62,6 +62,7 @@ const CLASSES: Readonly<Record<string, SheetChartType>> = {
   scatter: 'scatter',
   circle: 'pie',
   ring: 'doughnut',
+  radar: 'radar',
 };
 
 // The classes a Combo chart's series take (D287).
@@ -191,7 +192,7 @@ function lookOf(
     const color = line ? stroke : fill;
     return { ...(color ? { color } : {}), ...(line ? { line: true as const } : {}) };
   }
-  const color = type === 'line' ? stroke : fill;
+  const color = type === 'line' || type === 'radar' ? stroke : fill;
   return color ? { color } : {};
 }
 

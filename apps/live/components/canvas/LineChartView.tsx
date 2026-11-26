@@ -1,6 +1,6 @@
 'use client';
 
-// Line, Area, Stepped Area, Scatter and Combo charts (docs/specs/009-elements/pie-chart.md "Chart types"): a 2-D chart — shared x-axis `lineCategories` and one or
+// Line, Area, Stepped Area, Scatter, Radar and Combo charts (docs/specs/009-elements/pie-chart.md "Chart types"): a 2-D chart — shared x-axis `lineCategories` and one or
 // more named `lineSeries`, each drawn as a polyline with point markers in the
 // theme palette, with an optional legend listing the series. Data is edited as
 // a grid (or imported from CSV) via the Data menu. Reuses the chart-family
@@ -26,32 +26,40 @@ import {
   comboMarks,
   comboValueLabels,
   isComboChart,
+  isRadarChart,
   pointsMarked,
   type ShapeElement,
 } from '@livedoc/document';
 
-// How far from a step's middle the pointer reads it.
-const STEP_HOVER_PX = 6;
 import { useChartAnim, chartFrame } from '@/lib/chart';
 import { useChartHover } from '@/hooks/canvas/useChartHover';
 import { ChartReadout } from '@/components/primitives/ChartReadout';
 import { ChartSurface } from '@/components/primitives/ChartSurface';
 import { ChartValues } from '@/components/primitives/ChartValues';
+import { RadarChartView } from './RadarChartView';
 
-export function LineChartView({
-  element,
-  fontFamily,
-  textColor,
-  palette,
-  ground,
-}: {
+// How far from a step's middle the pointer reads it.
+const STEP_HOVER_PX = 6;
+
+type Props = {
   element: ShapeElement;
   fontFamily?: string;
   textColor: string;
   palette?: readonly string[];
   // What the chart sits on (chartPageGrounds): its series drawn adapted to it.
   ground?: readonly string[];
-}) {
+};
+
+// A Radar chart draws around a centre (pie-chart.md "Radar"); every other line chart on its two axes.
+export function LineChartView(props: Props) {
+  return isRadarChart(props.element) ? (
+    <RadarChartView {...props} />
+  ) : (
+    <PlotLineChartView {...props} />
+  );
+}
+
+function PlotLineChartView({ element, fontFamily, textColor, palette, ground }: Props) {
   const { w, h, colorAt, area, legend, titles } = chartFrame(element, palette, ground);
   const { hover, markProps } = useChartHover<{ s: number; i: number }>(
     (a, b) => a.s === b.s && a.i === b.i,

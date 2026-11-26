@@ -234,6 +234,8 @@ function chartSheet(): FileSheet {
       id: 'chart_combo_stepped',
       series: [series(1, 'Cost', { type: 'column' }), series(2, 'Index', { type: 'stepped-area' })],
     },
+    // Radar (D292): lines with markers round a web.
+    { ...base(types.length + 12, 'radar'), id: 'chart_radar', values: true },
   );
   return { ...sheet("Costs' sheet", cells, 140, 8), charts };
 }

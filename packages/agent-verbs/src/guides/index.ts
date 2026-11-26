@@ -342,7 +342,8 @@ A chart is the sheet's own, reading its range live, its top-left on the cell at 
   chart {type: "scatter", range: "B1:D40", at: "F2", title, xAxisTitle, yAxisTitle,
          lines: ["Pareto"], axis: true}
 A scatter's first column of numbers is its x; lines draws those series as lines, by name.
-type: "stepped-area" draws each value as a flat step across its category (files hold it as an area chart).
+type: "stepped-area" draws each value as a flat step across its category (files hold it as an area chart);
+type: "radar" draws each series as a closed line round a spoke per category.
 stack: "stacked" or "percent" stacks a column, bar, area or stepped-area chart's series (100% as shares);
 smooth: true curves a line chart's lines.
 type: "combo" draws each series as columns, a line, an area or a stepped area: seriesTypes {"Margin": "line"}
