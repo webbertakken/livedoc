@@ -17,9 +17,9 @@ async function chord(page: Page, first: string, then: string) {
   await page.keyboard.down('Control');
   await page.keyboard.down('Alt');
   await page.keyboard.press(first);
+  await page.keyboard.press(then);
   await page.keyboard.up('Alt');
   await page.keyboard.up('Control');
-  await page.keyboard.press(then);
 }
 
 async function suggesting(page: Page) {
@@ -69,16 +69,16 @@ test('the Suggested edits panel counts, steps across tabs, previews and settles 
   const panel = page.getByRole('dialog', { name: 'Suggested edits' });
   await expect(panel).toBeVisible();
   await expect(panel.getByText('3 suggested edits')).toBeVisible();
-  await expect(panel.getByRole('list', { name: 'Suggested edits by tab' })).toHaveText([
-    'Tab 1: 2',
-    'Tab 2: 1',
-  ]);
+  await expect(
+    panel.getByRole('list', { name: 'Suggested edits by tab' }).getByRole('listitem'),
+  ).toHaveText(['Tab 1: 2', 'Tab 2: 1']);
 
   // Next past the shown tab's last goes on into the second tab.
   await panel.getByRole('button', { name: 'Next suggested edit' }).click();
   await panel.getByRole('button', { name: 'Next suggested edit' }).click();
   await panel.getByRole('button', { name: 'Next suggested edit' }).click();
   await expect(body).toHaveText('Second more');
+  await body.click();
   await page.keyboard.press('Control+Shift+PageUp');
   await expect(body).toHaveText('New Kept words');
 

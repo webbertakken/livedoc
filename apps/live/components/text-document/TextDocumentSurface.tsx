@@ -664,10 +664,13 @@ export function TextDocumentSurface({
         liveDoc.current = doc;
         setTabsStore(textDocumentTabsStore(doc));
         // The body bound to another fragment of the same tab: a preview's settled copy, or the live writing again.
-        bindBody.current = (fragment) =>
+        // What reads the writing (cards, the outline) reads it again, as when another tab is shown.
+        bindBody.current = (fragment) => {
           view.updateState(
             EditorState.create({ schema: textDocumentSchema, plugins: pluginsFor(fragment) }),
           );
+          changes.touch();
+        };
         teardown = () => {
           bindBody.current = () => {};
           showTab.current = () => {};
