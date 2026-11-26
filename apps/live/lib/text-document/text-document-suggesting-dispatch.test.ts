@@ -44,7 +44,10 @@ describe('dispatchWithSuggesting', () => {
     const ctx = context(true);
     dispatchWithSuggesting(
       view,
-      view.state.tr.insert(0, schema.nodes.section_break!.create()),
+      view.state.tr.insert(
+        0,
+        schema.nodes.kept_block!.create({ name: 'x', xml: { xml: '<x/>', ns: {} } }),
+      ),
       ctx,
     );
     expect(view.state.doc.childCount).toBe(1);
@@ -82,10 +85,17 @@ describe('dispatchWithSuggesting', () => {
     dispatchWithSuggesting(view, view.state.tr.insertText('y'), { ...context(false), alongside });
     expect(alongside.apply).toHaveBeenCalledTimes(2);
     expect(view.state.doc.textContent).toContain('x');
-    dispatchWithSuggesting(view, view.state.tr.insert(0, schema.nodes.section_break!.create()), {
-      ...context(true),
-      alongside,
-    });
+    dispatchWithSuggesting(
+      view,
+      view.state.tr.insert(
+        0,
+        schema.nodes.kept_block!.create({ name: 'x', xml: { xml: '<x/>', ns: {} } }),
+      ),
+      {
+        ...context(true),
+        alongside,
+      },
+    );
     expect(alongside.drop).toHaveBeenCalledOnce();
     expect(alongside.apply).toHaveBeenCalledTimes(2);
     const synced = view.state.tr.insertText('z').setMeta(ySyncPluginKey, { isChangeOrigin: true });

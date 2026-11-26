@@ -75,9 +75,50 @@ function partsOf(node: PmNode): Attrs {
   return node.attrs;
 }
 
-/** Whether a node is a block the transform cannot suggest around (a table, a section break, a kept block). */
+/** The blocks suggested whole (review.md "Whole blocks"): their insertion or deletion is an attribute of their own. */
+const WHOLE_BLOCKS = new Set(['table', 'section_break', 'table_of_contents']);
+/** A table's rows and cells: written in as a table is, never suggested on their own (yet). */
+const TABLE_PARTS = new Set(['table_row', 'table_cell', 'table_header']);
+
+const isWholeBlock = (node: PmNode): boolean => WHOLE_BLOCKS.has(node.type.name);
+const isTablePart = (node: PmNode): boolean => TABLE_PARTS.has(node.type.name);
+
+/** Whether a node is a block the transform cannot suggest around: a kept block, anything not written or whole. */
 const isStructure = (node: PmNode): boolean =>
-  node.isBlock && node.type.name !== PARAGRAPH && node.type.name !== 'doc';
+  node.isBlock &&
+  node.type.name !== PARAGRAPH &&
+  node.type.name !== 'doc' &&
+  !isWholeBlock(node) &&
+  !isTablePart(node);
+
+/** The nearest block around a position carrying `key`'s own insertion, and where it starts; none when there is none. */
+function ownBlockAround(
+  doc: PmNode,
+  pos: number,
+  key: string,
+): { node: PmNode; at: number } | null {
+  const $pos = doc.resolve(Math.max(0, Math.min(pos, doc.content.size)));
+  for (let depth = $pos.depth; depth > 0; depth--) {
+    const node = $pos.node(depth);
+    if (isWholeBlock(node) && isOwn(node.attrs[INSERTION_MARK], key))
+      return { node, at: $pos.before(depth) };
+  }
+  return null;
+}
+
+/** Whether a step changes only what is inside one of `key`'s own suggested blocks: part of its suggestion. */
+function insideOwnBlock(step: Step, doc: PmNode, key: string): boolean {
+  const range =
+    step instanceof AttrStep
+      ? { from: step.pos, to: step.pos }
+      : step instanceof ReplaceStep || step instanceof ReplaceAroundStep
+        ? { from: step.from, to: step.to }
+        : null;
+  if (!range) return false;
+  const from = ownBlockAround(doc, range.from, key);
+  const to = ownBlockAround(doc, range.to, key);
+  return from !== null && to !== null && from.at === to.at && range.from > from.at;
+}
 
 /** The sender's own suggestion touching a range, to join: its id, time and author. */
 function ownNear(doc: PmNode, from: number, to: number, key: string): SuggestionMark | undefined {
@@ -91,6 +132,9 @@ function ownNear(doc: PmNode, from: number, to: number, key: string): Suggestion
     doc.nodesBetween(from, to, (n, pos) => {
       if (n.isInline || pos >= from) near.push(n);
     });
+  // One's own suggested block around it: writing there is part of that block's suggestion.
+  const block = ownBlockAround(doc, from, key);
+  if (block) near.push(block.node);
   for (const node of near) {
     const parts = partsOf(node);
     for (const name of [
@@ -147,6 +191,7 @@ class Rewriter {
       | { pos: number; kind: 'remove'; to: number }
       | { pos: number; kind: 'mark'; to: number }
       | { pos: number; kind: 'atom'; node: PmNode }
+      | { pos: number; kind: 'block'; node: PmNode }
       | { pos: number; kind: 'join'; node: PmNode };
     const actions: Action[] = [];
     doc.nodesBetween(from, to, (node, pos) => {
@@ -155,6 +200,14 @@ class Rewriter {
         refused = 'structure';
         return false;
       }
+      // A whole block covered is suggested deleted whole (one's own taken away); one partly covered is gone into.
+      if (isWholeBlock(node) && pos >= from && pos + node.nodeSize <= to) {
+        if (isOwn(node.attrs[INSERTION_MARK], this.who.key))
+          actions.push({ pos, kind: 'remove', to: pos + node.nodeSize });
+        else if (!node.attrs[DELETION_MARK]) actions.push({ pos, kind: 'block', node });
+        return false;
+      }
+      if (isWholeBlock(node) || isTablePart(node)) return true;
       if (node.type.name === PARAGRAPH) {
         if (pos >= from && pos < to) actions.push({ pos, kind: 'join', node });
         return true;
@@ -176,7 +229,7 @@ class Rewriter {
       if (action.kind === 'remove') this.out.delete(action.pos, action.to);
       else if (action.kind === 'mark')
         this.out.addMark(action.pos, action.to, this.markType(DELETION_MARK).create(mark));
-      else if (action.kind === 'atom')
+      else if (action.kind === 'atom' || action.kind === 'block')
         this.out.setNodeMarkup(action.pos, undefined, {
           ...action.node.attrs,
           [DELETION_MARK]: mark,
@@ -203,9 +256,26 @@ class Rewriter {
     const schema = this.schema;
     for (const name of [DELETION_MARK, FORMAT_CHANGE_MARK, INSERTION_MARK])
       this.out.removeMark(from, to, schema.marks[name]);
-    this.out.addMark(from, to, schema.marks[INSERTION_MARK]!.create(mark));
-    const marked: { pos: number; node: PmNode; paragraph: boolean }[] = [];
+    // A whole block put in carries the insertion itself; what is inside it is not marked.
+    const blocks: { pos: number; node: PmNode }[] = [];
     this.out.doc.nodesBetween(from, to, (node, pos) => {
+      if (isWholeBlock(node) && pos >= from && pos + node.nodeSize <= to) {
+        blocks.push({ pos, node });
+        return false;
+      }
+      return !node.isInline;
+    });
+    let start = from;
+    for (const { pos, node } of [...blocks, { pos: to, node: null }]) {
+      if (pos > start) this.out.addMark(start, pos, schema.marks[INSERTION_MARK]!.create(mark));
+      start = node ? pos + node.nodeSize : start;
+    }
+    const marked: { pos: number; node: PmNode; paragraph: boolean }[] = blocks.map((b) => ({
+      ...b,
+      paragraph: false,
+    }));
+    this.out.doc.nodesBetween(from, to, (node, pos) => {
+      if (blocks.some((b) => b.pos === pos)) return false;
       if (node.type.name === PARAGRAPH) {
         if (pos >= from && pos < to) marked.push({ pos, node, paragraph: true });
         return true;
@@ -363,10 +433,15 @@ export function suggestTransaction(
     const at = out.steps.length;
     const map = (pos: number, assoc = 1) => into.map(pos, assoc);
     let refused: SuggestingRefusal | null = null;
-    const markup = paragraphMarkup(step, doc);
-    const object = markup ? null : objectChange(step, doc);
-    if (!object) ownObjectsOnly = false;
-    if (markup) rewriter.paragraphFormat(map(markup.pos), markup.attrs);
+    // Inside one's own suggested block, any change is plainly part of it.
+    const ownBlock = insideOwnBlock(step, doc, who.key);
+    const markup = ownBlock ? null : paragraphMarkup(step, doc);
+    const object = markup || ownBlock ? null : objectChange(step, doc);
+    if (!object && !ownBlock) ownObjectsOnly = false;
+    if (ownBlock) {
+      const mapped = step.map(into);
+      if (!mapped || out.maybeStep(mapped).failed) refused = 'structure';
+    } else if (markup) rewriter.paragraphFormat(map(markup.pos), markup.attrs);
     else if (object) {
       // One's own suggested object changes plainly, part of its suggestion; anyone else's never.
       const mapped = isOwn(object.node.attrs[INSERTION_MARK], who.key) ? step.map(into) : null;
@@ -374,7 +449,11 @@ export function suggestTransaction(
     } else if (step instanceof ReplaceStep) {
       const from = map(step.from, -1);
       const to = map(step.to, 1);
+      // A kept block never, nor a table's rows or cells on their own (outside one's own suggested table).
       let structural = false;
+      step.slice.content.forEach((node) => {
+        if (isTablePart(node)) structural = true;
+      });
       step.slice.content.descendants((node) => {
         if (isStructure(node)) structural = true;
         return !structural;
