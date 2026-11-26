@@ -1,7 +1,12 @@
 // Where a spreadsheet's chart sits and the type Insert › Chart suggests (docs/specs/029-sheets/charts.md "The model",
 // "Inserting").
 import { describe, expect, it } from 'vitest';
-import { emptyChartTable, sheetFromJson, type SheetChartTable, type SheetJson } from '@livedoc/sheets';
+import {
+  emptyChartTable,
+  sheetFromJson,
+  type SheetChartTable,
+  type SheetJson,
+} from '@livedoc/sheets';
 import {
   anchorAt,
   anchorPx,
