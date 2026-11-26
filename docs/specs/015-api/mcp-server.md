@@ -876,7 +876,8 @@ document's Plan cards when a formula reads them.
   (`conditionalFormats`) in words, and `invalid` on a cell whose value its rule does not allow. A read covers at most `AGENT_READ_CELLS_MAX` (5,000) cells
   of the range and answers at most `SHEET_READ_CHARS_MAX` (100,000) characters of cells; past either it stops,
   sets `truncated` and says in `note` where to read on.
-- **`change_sheet`** (destructive, as it clears and deletes): up to 50 changes in order, each built against the
+- **`change_sheet`** (destructive, as it clears and deletes): up to 50 changes in order, landing together as one
+  [sheet changeset](../024-agents/agent-changesets.md#a-sheets-changesets) or not at all, each built against the
   sheet as the ones before it left it: `set` `{ at, rows }`, `clear` `{ range, what }`, `format` `{ range, format }`
   (bold, italic, underline, strikethrough, colours, font size, alignment, wrap, number format, decimals,
   currency), `insert_rows` / `insert_cols` `{ at, count, side }`, `delete_rows` `{ rows }`, `delete_cols`
@@ -1079,11 +1080,11 @@ which is how the gap was found.
 Three behaviours cover every tool, and each is a preset in
 `apps/mcp/src/tool-annotations.ts`:
 
-| Behaviour       | `readOnlyHint` | `destructiveHint` | Tools                                                                                                                                                                                                                           |
-| --------------- | -------------- | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **read**        | `true`         | (not applicable)  | `find_documents`, `read_document`, `list_templates`, `search_icons`, `list_trash`, `list_items`, `list_sheets`, `read_sheet`, `read_form`, `read_event_storming`, `export_event_storming`                                       |
-| **write**       | `false`        | `false`           | `create_document`, `add_tab`, `share_document`, `rename_document`, `restore_document`, `add_board`, `change_board`, `add_sheet`, `create_spreadsheet`, `add_form`, `share_form`, `try_form`, `suggest_notes`, `add_photo_notes` |
-| **destructive** | `false`        | `true`            | `update_document`, `delete_document`, `change_items`, `change_card_types`, `change_sheet`, `change_pages`, `write_article`, `change_form`                                                                                       |
+| Behaviour       | `readOnlyHint` | `destructiveHint` | Tools                                                                                                                                                                                                                                                  |
+| --------------- | -------------- | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **read**        | `true`         | (not applicable)  | `find_documents`, `read_document`, `list_templates`, `search_icons`, `list_trash`, `list_items`, `list_sheets`, `read_sheet`, `read_form`, `read_event_storming`, `export_event_storming`                                                              |
+| **write**       | `false`        | `false`           | `create_document`, `add_tab`, `share_document`, `rename_document`, `restore_document`, `add_board`, `change_board`, `add_sheet`, `create_spreadsheet`, `convert_spreadsheet`, `add_form`, `share_form`, `try_form`, `suggest_notes`, `add_photo_notes` |
+| **destructive** | `false`        | `true`            | `update_document`, `delete_document`, `change_items`, `change_card_types`, `change_sheet`, `change_pages`, `write_article`, `change_form`                                                                                                              |
 
 The split mirrors §4.11's read-only-token boundary exactly (what a
 `read_only = 1` token can still reach is what `read` annotates), so the hint a
@@ -1189,7 +1190,7 @@ says why by its status (no such tab, view only, the last tab).
 | `change_card_types`   | `applied[]` (with the ids made), `trashed[]`, `types[]`, `url`                                                                                                                                                          |
 | `list_sheets`         | `sheets[]` of `{ id, title, tabId, tabName, rows, cols, filled, elementId, hidden?, charts? }`, `url`                                                                                                                   |
 | `read_sheet`          | `sheetId`, `title`, `tabId`, `range`, `rows`, `cols`, `cells[]` of `{ at, input, value, display }`, `truncated`, `note?`, `frozen { rows, cols }`, `merges[]`, `filter`, `charts[]?` (a spreadsheet's), `url`           |
-| `change_sheet`        | `sheetId`, `title`, `applied[]` (one line per change), `rev`, `url`                                                                                                                                                     |
+| `change_sheet`        | `sheetId`, `title`, `applied[]` (one line per change), `rev`, `changesetId`, `url`                                                                                                                                      |
 | `add_sheet`           | `tabId`, `sheetId`, `elementId` (null in a spreadsheet), `title`, `filled`, `truncated`, `changesetId`, `rev`, `url`                                                                                                    |
 | `create_spreadsheet`  | `documentId`, `name`, `sheets[]` of `{ name, sheetId, tabId, filled }`, `refusal?`, `url`                                                                                                                               |
 | `convert_spreadsheet` | `from`, `to`, `converted`, `losses[]`, `url`                                                                                                                                                                            |

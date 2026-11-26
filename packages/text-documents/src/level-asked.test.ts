@@ -6,6 +6,7 @@ import { describe, expect, it } from 'vitest';
 import { MENTIONS_MAX } from '@livedoc/document';
 import * as Y from 'yjs';
 import { textDocumentLevelAsked } from './level-asked';
+import { TEXT_DOCUMENT_SUGGESTIONS_MAX } from './live/live-suggestions';
 import {
   LiveThreads,
   TEXT_DOCUMENT_COMMENT_TEXT_MAX,
@@ -287,5 +288,169 @@ describe('textDocumentLevelAsked', () => {
     expect(textDocumentLevelAsked(base.updates, new Uint8Array([1, 2, 3]), 'k-ada')).toBe(
       'unreadable',
     );
+  });
+});
+
+// docs/specs/034-text-documents/review.md "How a suggestion is kept": a Participant's update to the writing is theirs
+// when the writing reads the same with the sender's own suggestions rejected, before and after.
+describe('textDocumentLevelAsked on suggestions', () => {
+  const mark = (id: string, author = ADA) => ({ id, at: 5, author });
+
+  /** A stored body of two paragraphs, `quarterly results` and `are in`, the second carrying Ben's suggestions. */
+  function askedOn(
+    change: (doc: Y.Doc, first: Y.XmlText, second: Y.XmlText) => void,
+    key: string | null = ADA.key,
+  ) {
+    const doc = new Y.Doc({ gc: false });
+    const body = doc.getXmlFragment('body');
+    const runs = ['quarterly results', 'are in'].map((text) => {
+      const paragraph = new Y.XmlElement('paragraph');
+      const run = new Y.XmlText();
+      paragraph.insert(0, [run]);
+      body.push([paragraph]);
+      run.insert(0, text);
+      return run;
+    });
+    runs[1]!.format(0, 3, { insertion: mark('ben-1', BEN) });
+    const stored = [Y.encodeStateAsUpdate(doc)];
+    const replica = new Y.Doc({ gc: false });
+    Y.applyUpdate(replica, stored[0]!);
+    const vector = Y.encodeStateVector(replica);
+    const paragraphs = replica.getXmlFragment('body').toArray() as Y.XmlElement[];
+    change(replica, paragraphs[0]!.get(0) as Y.XmlText, paragraphs[1]!.get(0) as Y.XmlText);
+    return textDocumentLevelAsked(stored, Y.encodeStateAsUpdate(replica, vector), key);
+  }
+
+  it('lets a Participant suggest an insertion, a deletion and a format of their own', () => {
+    expect(askedOn((_, run) => run.insert(10, 'final ', { insertion: mark('a1') }))).toBe(
+      'participate',
+    );
+    expect(askedOn((_, run) => run.format(0, 9, { deletion: mark('a1') }))).toBe('participate');
+    expect(
+      askedOn((_, run) =>
+        run.format(0, 9, {
+          bold: { value: true },
+          format_change: { ...mark('a1'), before: { bold: null } },
+        }),
+      ),
+    ).toBe('participate');
+  });
+
+  it('lets a Participant suggest a paragraph break, a join and a paragraph format of their own', () => {
+    expect(
+      askedOn((doc, run) => {
+        doc.transact(() => {
+          run.delete(9, 8);
+          const paragraph = new Y.XmlElement('paragraph');
+          paragraph.setAttribute('insertion', mark('a1') as unknown as string);
+          const text = new Y.XmlText();
+          paragraph.insert(0, [text]);
+          doc.getXmlFragment('body').insert(1, [paragraph]);
+          text.insert(0, ' results');
+        });
+      }),
+    ).toBe('participate');
+    expect(
+      askedOn((doc) => {
+        (doc.getXmlFragment('body').get(1) as Y.XmlElement).setAttribute(
+          'deletion',
+          mark('a1') as unknown as string,
+        );
+      }),
+    ).toBe('participate');
+    expect(
+      askedOn((doc) => {
+        const paragraph = doc.getXmlFragment('body').get(0) as Y.XmlElement;
+        doc.transact(() => {
+          paragraph.setAttribute('style', 'Title');
+          paragraph.setAttribute('formatChange', {
+            ...mark('a1'),
+            before: { style: null, props: null, list: null },
+          } as unknown as string);
+        });
+      }),
+    ).toBe('participate');
+  });
+
+  it('lets a Participant withdraw their own suggestion and suggest a deletion over another’s', () => {
+    expect(
+      askedOn((_, run) => {
+        run.insert(0, 'new ', { insertion: mark('a1') });
+        run.delete(0, 4);
+      }),
+    ).toBe('participate');
+    expect(askedOn((_, __, ben) => ben.format(0, 3, { deletion: mark('a1') }))).toBe('participate');
+  });
+
+  it('asks for Editing to type, to accept or reject another’s suggestion, or to write as another', () => {
+    expect(askedOn((_, run) => run.insert(0, 'new '))).toBe('edit');
+    expect(askedOn((_, __, ben) => ben.format(0, 3, { insertion: null }))).toBe('edit');
+    expect(askedOn((_, __, ben) => ben.delete(0, 3))).toBe('edit');
+    expect(askedOn((_, run) => run.insert(0, 'new ', { insertion: mark('a1', BEN) }))).toBe('edit');
+    expect(askedOn((_, run) => run.format(0, 9, { bold: { value: true } }))).toBe('edit');
+  });
+
+  it('asks for Editing to accept one’s own suggestion', () => {
+    expect(
+      askedOn((_, run) => {
+        run.insert(0, 'new ', { insertion: mark('a1') });
+        run.format(0, 4, { insertion: null });
+      }),
+    ).toBe('edit');
+  });
+
+  it('asks for Editing for a malformed mark, a header, past the limit, or with no key', () => {
+    expect(
+      askedOn((_, run) =>
+        run.insert(0, 'x', {
+          insertion: { id: 'a1', at: 5, author: { key: ADA.key, name: 'Ada' } },
+        }),
+      ),
+    ).toBe('edit');
+    expect(
+      askedOn((doc) => doc.getXmlFragment('header:h1').push([new Y.XmlElement('paragraph')])),
+    ).toBe('edit');
+    expect(askedOn((_, run) => run.insert(0, 'x', { insertion: mark('a1') }), null)).toBe('edit');
+    expect(
+      askedOn((_, run) => {
+        for (let i = 0; i < TEXT_DOCUMENT_SUGGESTIONS_MAX; i++)
+          run.insert(0, 'x', { insertion: mark(`a${i}`) });
+      }),
+    ).toBe('edit');
+  });
+
+  it('judges threads and the writing together', () => {
+    expect(
+      askedOn((doc, run) => {
+        run.insert(0, 'x', { insertion: mark('a1') });
+        LiveThreads.begin(
+          doc,
+          {
+            id: 'forged',
+            tab: 't.0',
+            ...LiveThreads.anchorFor(run, 0, 1),
+            quote: 'x',
+            comment: comment('f1', BEN),
+          },
+          'me',
+        );
+      }),
+    ).toBe('edit');
+    expect(
+      askedOn((doc, run) => {
+        run.insert(0, 'x', { insertion: mark('a1') });
+        LiveThreads.begin(
+          doc,
+          {
+            id: 'own',
+            tab: 't.0',
+            ...LiveThreads.anchorFor(run, 0, 1),
+            quote: 'x',
+            comment: comment('o1'),
+          },
+          'me',
+        );
+      }),
+    ).toBe('participate');
   });
 });

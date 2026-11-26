@@ -838,6 +838,20 @@ export const ROUTE_MANIFEST: RouteSpec[] = [
     statuses: [200, 400, 401, 403, 404, 409, 410, 413],
   },
   {
+    method: 'POST',
+    path: '/documents/{id}/sheets/{sheetId}/changesets',
+    segment: 'documents',
+    tag: 'Sheets',
+    summary:
+      "An agent's change to a sheet as one sheet changeset: its writes in order, every one landing or none (400 with the refused write's index), the revision advancing by one per write; recorded for the history and its revert (POST /documents/{id}/changesets/{changesetId}/revert). 412 stale_sheet when strict and the sheet moved on; 413 too_large past 200 writes, 50,000 cells or 8 MiB.",
+    auth: 'guest-or-session',
+    tokenUsable: true,
+    query: [SHEET_TAB_QUERY],
+    requestSchema: 'SheetChangesetRequest',
+    responseSchema: 'SheetChangesetResponse',
+    statuses: [200, 400, 401, 403, 404, 409, 410, 412, 413],
+  },
+  {
     method: 'GET',
     path: '/documents/{id}/sheets/{sheetId}/cells',
     segment: 'documents',

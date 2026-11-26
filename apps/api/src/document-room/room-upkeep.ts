@@ -1,5 +1,5 @@
 // A room's own upkeep (docs/specs/006-document/document-storage.md "Upkeep"), run from its alarm
-// at most once per UPKEEP_INTERVAL_MS: agent changesets past their retention go (their parts by the cascade), and
+// at most once per UPKEEP_INTERVAL_MS: agent and sheet changesets past their retention go (their parts by the cascade), and
 // sheets no tab has referenced for SHEET_UNREFERENCED_DAYS (sheet-sweep.ts). It answers when the next run is due:
 // the moment the oldest thing left would age out, never sooner than a day, or none when nothing is left to age, so
 // an idle room is not woken for nothing.
@@ -7,6 +7,7 @@
 import { CHANGESET_RETENTION_MS } from '@livedoc/api-schema';
 import { DAY_MS } from '@livedoc/items';
 import { deleteOldChangesets } from '../db/changesets';
+import { deleteOldSheetChangesets } from '../db/sheet-changesets';
 import { runSheetExpiry, SHEET_UNREFERENCED_DAYS } from '../sheet-sweep';
 import type { DocumentEnv } from '../types';
 
@@ -24,10 +25,13 @@ export async function maintainRoom(
   documentId: string,
   now: number,
 ): Promise<UpkeepOutcome> {
-  const changesets = await deleteOldChangesets(env, now - CHANGESET_RETENTION_MS);
+  const changesets =
+    (await deleteOldChangesets(env, now - CHANGESET_RETENTION_MS)) +
+    (await deleteOldSheetChangesets(env, now - CHANGESET_RETENTION_MS));
   const expired = await runSheetExpiry(env, now);
   const oldest = await env.DOCUMENT_DB.prepare(
-    `SELECT (SELECT MIN(created_at) FROM agent_changesets) AS changeset,
+    `SELECT (SELECT MIN(created_at) FROM (SELECT created_at FROM agent_changesets UNION ALL
+                                              SELECT created_at FROM sheet_changesets)) AS changeset,
             (SELECT MIN(unreferenced_since) FROM sheets WHERE unreferenced_since IS NOT NULL) AS sheet`,
   ).first<{ changeset: number | null; sheet: number | null }>();
   // Each cutoff is strict (older than), so the oldest ages out a millisecond past its period.

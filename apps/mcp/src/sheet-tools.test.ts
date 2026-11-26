@@ -16,12 +16,17 @@ function api(opts: { refuseWrites?: string } = {}) {
     const path = new URL(request.url).pathname.replace(/^\/api/, '');
     if (path.endsWith('/events')) return new Response(null, { status: 204 });
     if (path.endsWith('/sheets')) return Response.json({ sheets: [SHEET] });
-    if (path.endsWith('/writes')) {
-      const body = await request.json<{ write: unknown }>();
+    // A sheet changeset (agent-changesets.md "A sheet's changesets"): its writes, landing together.
+    if (path.endsWith('/changesets')) {
+      const body = await request.json<{ writes: unknown[] }>();
       writes.push(body);
       return opts.refuseWrites
         ? Response.json({ error: opts.refuseWrites }, { status: 413 })
-        : Response.json({ applied: body.write, rev: writes.length, cells: [] });
+        : Response.json({
+            changeset: { id: 'sc_0000000001' },
+            rev: body.writes.length,
+            applied: body.writes,
+          });
     }
     return Response.json({ document: LIVE_DOC });
   };
@@ -53,7 +58,7 @@ describe('the sheet tools', () => {
     expect(missing.content[0]!.text).toBe('No sheet "Budget". Sheets: "Costs" (sheet_costs1).');
   });
 
-  it('say which changes went through before a refusal', async () => {
+  it('say a refused call wrote nothing', async () => {
     const { handler, writes } = api({ refuseWrites: 'sheet_full' });
     const result = await call(handler, 'change_sheet', {
       sheet: 'Costs',
@@ -73,7 +78,7 @@ describe('the sheet tools', () => {
       ],
     });
     expect(partly.content[0]!.text).toBe(
-      'A sheet title is 1 to 100 characters. Applied before it: froze 1 row.',
+      'A sheet title is 1 to 100 characters. Nothing of this call was written.',
     );
   });
 

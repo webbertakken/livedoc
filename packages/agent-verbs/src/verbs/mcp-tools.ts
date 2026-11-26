@@ -403,8 +403,8 @@ export const mcpChangeSheet = mcpTool('change_sheet', {
     'chart {type, range, at, title, xAxisTitle, yAxisTitle, axis, legend, lines, replace} (a chart over the cells, ' +
     'read live; empty cells are gaps), clear_charts {range}, and in a spreadsheet move {after} (its tab after a ' +
     'sheet, null first) and hide {hidden}. Cells by A1, rows by number, columns by letter. A ' +
-    'formula that cannot be read is refused, naming the cell. Everyone with the document open sees each change at ' +
-    'once.',
+    'formula that cannot be read is refused, naming the cell. The changes land together or not at all, as one ' +
+    'changeset (its id answered). Everyone with the document open sees them at once.',
   inputSchema: changeSheetShape,
   outputSchema: changeSheetOutput,
 });

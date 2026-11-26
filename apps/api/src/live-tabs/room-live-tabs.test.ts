@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import {
   Body,
+  INSERTION_MARK,
   LiveThreads,
   TextDocumentState,
   TEXT_DOCUMENT_CHUNK_BYTES,
@@ -376,6 +377,51 @@ describe("a Participant's comment on a text document", () => {
       from: 'system',
       op: { kind: 'text-document-refused', tabId: 't1', name: 'level_too_low' },
     });
+  });
+});
+
+// review.md "How a suggestion is kept": a Participant's update to the writing that is only its own suggestion is relayed;
+// one in another's name is refused whole.
+describe("a Participant's suggestion on a text document", () => {
+  const written = TextDocumentState.fromBody(Body.of('quarterly'));
+  /** A Participant's insertion before the Editor's text, in `key`'s name. */
+  const suggestionFrame = (key: string) => {
+    const doc = TextDocumentState.load([written]);
+    const paragraph = TextDocumentState.body(doc).get(0) as unknown as { get(i: number): unknown };
+    const text = paragraph.get(0) as { insert(at: number, text: string, marks: object): void };
+    text.insert(0, 'new ', {
+      [INSERTION_MARK]: { id: 's1', at: 1, author: { key, name: 'Ada', colour: '#000' } },
+    });
+    return {
+      kind: 'text-document',
+      tabId: 't1',
+      update: base64OfBytes(TextDocumentState.encode(doc)),
+    };
+  };
+  const sender = {
+    ws,
+    presenceId: 'p1',
+    documentId: 'D',
+    level: 'participate' as const,
+    adderKey: 'k-ada',
+  };
+  const editor = { ...sender, presenceId: 'p0', level: 'edit' as const };
+  const editorFrame = { kind: 'text-document', tabId: 't1', update: base64OfBytes(written) };
+
+  it("stores and relays a suggestion in the sender's own name", async () => {
+    const db = sqliteD1();
+    const { room } = await roomWith(db);
+    expect(await room.accept(editor, editorFrame)).toBe(true);
+    expect(await room.accept(sender, suggestionFrame('k-ada'))).toBe(true);
+    expect(await storedUpdates(db.env, 't1')).toHaveLength(2);
+  });
+
+  it("refuses a suggestion in another's name whole", async () => {
+    const db = sqliteD1();
+    const { room } = await roomWith(db);
+    expect(await room.accept(editor, editorFrame)).toBe(true);
+    expect(await room.accept(sender, suggestionFrame('k-ben'))).toBe(false);
+    expect(await storedUpdates(db.env, 't1')).toHaveLength(1);
   });
 });
 

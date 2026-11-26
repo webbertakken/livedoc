@@ -528,6 +528,38 @@ ALTER TABLE tabs ADD COLUMN drawing_of TEXT;
 UPDATE tabs SET drawing_of = json_extract(data, '$.drawingOf') WHERE json_valid(data);
 `;
 
+// A sheet's changesets (docs/specs/024-agents/agent-changesets.md "A sheet's changesets", D265): one row each beside its
+// sheet, going with it; its writes as they landed, their inverse and its after-image beside it, one row a part.
+const SHEET_CHANGESETS_STEP = `
+CREATE TABLE IF NOT EXISTS sheet_changesets (
+  id           TEXT    PRIMARY KEY,
+  document_id  TEXT    NOT NULL,
+  sheet_id     TEXT    NOT NULL,
+  tab_id       TEXT    NOT NULL,
+  rev          INTEGER NOT NULL,
+  previous_rev INTEGER NOT NULL,
+  author_id    TEXT    NOT NULL,
+  author_name  TEXT    NOT NULL,
+  author_color TEXT    NOT NULL,
+  token_id     TEXT,
+  summary      TEXT,
+  added        INTEGER NOT NULL,
+  changed      INTEGER NOT NULL,
+  removed      INTEGER NOT NULL,
+  revert_of    TEXT,
+  created_at   INTEGER NOT NULL,
+  FOREIGN KEY (document_id, sheet_id) REFERENCES sheets (document_id, id) ON DELETE CASCADE
+);
+CREATE INDEX IF NOT EXISTS sheet_changesets_document_created ON sheet_changesets (document_id, created_at);
+CREATE INDEX IF NOT EXISTS sheet_changesets_created ON sheet_changesets (created_at);
+CREATE TABLE IF NOT EXISTS sheet_changeset_parts (
+  changeset_id TEXT NOT NULL REFERENCES sheet_changesets (id) ON DELETE CASCADE,
+  part         TEXT NOT NULL CHECK (part IN ('writes', 'inverse', 'after')),
+  data         TEXT NOT NULL,
+  PRIMARY KEY (changeset_id, part)
+);
+`;
+
 /** Every step the room's schema has taken, in order; a change appends one and never edits a shipped step. */
 export const DOCUMENT_SCHEMA_STEPS: readonly string[] = [
   STEP_1 + OUTBOX + SHARES,
@@ -546,6 +578,7 @@ export const DOCUMENT_SCHEMA_STEPS: readonly string[] = [
   PDF_PREVIOUS_STEP,
   WORKBOOK_KEPT_STEP,
   TAB_DRAWING_OF_STEP,
+  SHEET_CHANGESETS_STEP,
 ];
 
 export const DOCUMENT_SCHEMA_VERSION = DOCUMENT_SCHEMA_STEPS.length;

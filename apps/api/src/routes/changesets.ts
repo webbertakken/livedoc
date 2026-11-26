@@ -7,6 +7,7 @@
 import {
   CHANGESET_LIST_DEFAULT,
   CHANGESET_LIST_MAX,
+  isSheetChangesetId,
   type ChangesetConflict,
   type ChangesetSummary,
   type ResultLine,
@@ -24,6 +25,12 @@ import { revertChangeset } from '../changesets/revert';
 import { submitChangeset, type SubmitResult } from '../changesets/submit';
 import type { Author } from '../changesets/write';
 import { isTabInScope } from '../tab-scope';
+import { getSheetChangeset, listSheetChangesets } from '../db/sheet-changesets';
+import {
+  revertSheetChangeset,
+  sheetChangesetSummary,
+  showSheetChangeset,
+} from '../sheet-changesets/routes';
 import type { DocumentDTO } from '../types';
 import {
   gateEdit,
@@ -63,6 +70,14 @@ export async function handleChangesetRoutes(ctx: DocumentRouteContext): Promise<
   if (!document) return missingDocument(ctx, id);
   if (submit) return handleSubmit(ctx, document, segments[4]!, owner);
   if (list) return handleList(ctx, document, owner);
+  // A sheet's changesets answer through the same doors (agent-changesets.md "A sheet's changesets").
+  if (isSheetChangesetId(segments[4])) {
+    const sheetRecord = await getSheetChangeset(ctx.env, id, segments[4]);
+    if (!sheetRecord) return notFound();
+    return one
+      ? showSheetChangeset(ctx, document, sheetRecord, owner)
+      : revertSheetChangeset(ctx, document, sheetRecord, owner);
+  }
   const record = await getChangeset(ctx.env, id, segments[4]!);
   if (!record) return notFound();
   if (one) return handleOne(ctx, document, record, owner);
@@ -117,11 +132,19 @@ async function handleList(
     return json({ changesets: [] });
   }
   const tabId = asked ?? grant.tabScope ?? undefined;
-  const records = await listChangesets(ctx.env, document.id, {
-    limit,
-    ...(tabId ? { tabId } : {}),
-  });
-  return json({ changesets: records.map((r) => summaryOf(r, owner)) });
+  const scope = { limit, ...(tabId ? { tabId } : {}) };
+  const [records, sheetRecords] = await Promise.all([
+    listChangesets(ctx.env, document.id, scope),
+    listSheetChangesets(ctx.env, document.id, scope),
+  ]);
+  // Tab and sheet changesets together, newest first, cut to the limit.
+  const changesets = [
+    ...records.map((r) => summaryOf(r, owner)),
+    ...sheetRecords.map((r) => sheetChangesetSummary(r, owner)),
+  ]
+    .sort((a, b) => b.createdAt - a.createdAt)
+    .slice(0, limit);
+  return json({ changesets });
 }
 
 async function handleOne(

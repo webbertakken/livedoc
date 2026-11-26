@@ -1,8 +1,9 @@
 // The level an update to a text document asks (docs/specs/034-text-documents/review.md "How a comment is kept"): the
 // room judges a Participant's update by what it touches, never by what its sender says. Only `threads`, and in it only
 // what is the sender's own: comments carrying its adder key added, edited or removed (the first removing its thread),
-// threads begun with one, any thread resolved or reopened, its own key added to or taken from a reaction. Read by
-// applying the update to the stored state, the threads before against after.
+// threads begun with one, any thread resolved or reopened, its own key added to or taken from a reaction; and in the
+// document tabs' bodies only its own suggestions ("How a suggestion is kept"), the writing reading the same with them
+// rejected. Read by applying the update to the stored state, the threads and bodies before against after.
 import { MENTIONS_MAX, sanitizeMentions } from '@livedoc/document';
 import { touchedRoots } from '@livedoc/live-updates';
 import {
@@ -16,6 +17,9 @@ import {
   type TextDocumentComment,
   type TextDocumentThread,
 } from './live/live-threads';
+import { BODY_FRAGMENT, tabFragmentName } from './live/live-root';
+import { LiveSuggestions, TEXT_DOCUMENT_SUGGESTIONS_MAX } from './live/live-suggestions';
+import { liveTabIds } from './live/live-tabs';
 import { TextDocumentState } from './text-document-state';
 
 /** The least level an update needs, or that it stands on changes the stored state lacks and cannot be judged. */
@@ -133,18 +137,56 @@ export function textDocumentLevelAsked(
 ): TextDocumentLevelAsked {
   const doc = TextDocumentState.load(stored);
   const before = new Map(LiveThreads.read(doc).map((t) => [t.id, t]));
+  const bodies = new Set(liveTabIds(doc).map(tabFragmentName)).add(BODY_FRAGMENT);
   const touched = touchedRoots(doc, update);
   if (touched === 'unreadable') return 'unreadable';
-  if ([...touched].some((root) => root !== THREADS_MAP)) return 'edit';
+  if ([...touched].some((root) => root !== THREADS_MAP && !bodies.has(root))) return 'edit';
   if (adderKey === null) return 'edit';
-  const after = LiveThreads.read(doc);
-  if (after.length > TEXT_DOCUMENT_THREADS_MAX) return 'edit';
+  if (touched.has(THREADS_MAP) && !ownThreads(before, LiveThreads.read(doc), adderKey))
+    return 'edit';
+  const writing = [...touched].filter((root) => bodies.has(root));
+  if (writing.length > 0 && !ownSuggestions(stored, doc, writing, adderKey)) return 'edit';
+  return 'participate';
+}
+
+/** Whether the threads changed only as the sender may change them. */
+function ownThreads(
+  before: ReadonlyMap<string, TextDocumentThread>,
+  after: readonly TextDocumentThread[],
+  adderKey: string,
+): boolean {
+  if (after.length > TEXT_DOCUMENT_THREADS_MAX) return false;
   const now = new Map(after.map((t) => [t.id, t]));
   for (const [id, thread] of before)
-    if (!now.has(id) && thread.comments[0]!.author.key !== adderKey) return 'edit';
+    if (!now.has(id) && thread.comments[0]!.author.key !== adderKey) return false;
   for (const thread of after) {
     const was = before.get(thread.id);
-    if (was ? !ownChange(was, thread, adderKey) : !ownStart(thread, adderKey)) return 'edit';
+    if (was ? !ownChange(was, thread, adderKey) : !ownStart(thread, adderKey)) return false;
   }
-  return 'participate';
+  return true;
+}
+
+/**
+ * Whether the writing changed only by the sender's own suggestions (review.md "How a suggestion is kept"): each touched
+ * body reads the same with the sender's suggestions rejected before and after, their marks are well formed, and the
+ * document holds no more suggestions than it may.
+ */
+function ownSuggestions(
+  stored: readonly Uint8Array[],
+  after: ReturnType<typeof TextDocumentState.load>,
+  roots: readonly string[],
+  adderKey: string,
+): boolean {
+  const before = TextDocumentState.load(stored);
+  for (const root of roots) {
+    const now = after.getXmlFragment(root);
+    if (!LiveSuggestions.ownMarksWellFormed(now, adderKey)) return false;
+    if (
+      LiveSuggestions.ownRejected(before.getXmlFragment(root), adderKey) !==
+      LiveSuggestions.ownRejected(now, adderKey)
+    )
+      return false;
+  }
+  const count = LiveSuggestions.count(after);
+  return count <= TEXT_DOCUMENT_SUGGESTIONS_MAX || count <= LiveSuggestions.count(before);
 }

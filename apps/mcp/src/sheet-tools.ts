@@ -55,6 +55,7 @@ export function registerSheetTools(server: McpServer, env: Env): void {
       title: result.title,
       applied: result.applied,
       rev: result.rev,
+      changesetId: result.changesetId,
       url: deepLink(env, args.documentId),
     });
   });

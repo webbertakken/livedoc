@@ -221,12 +221,13 @@ differently, main's stands and the branch's is kept as a comment, "Not merged fr
 
 ## Share roles
 
-The room relays a text document's mutation ops only from an `edit` session, and its suggestion and comment ops from a
-`participate` session as participation (`PARTICIPATION_OP_KINDS`), refusing a Participant's op that is not a
-suggestion or comment (fork D7). A mutation op from a level too low is refused as every live tab kind's is
+The room relays a text document's updates from an `edit` session unjudged, and judges a `participate` session's by
+what they change (fork D7): only the sender's own comments ([How a comment is kept](review.md#how-a-comment-is-kept))
+and the sender's own suggestions ([How a suggestion is kept](review.md#how-a-suggestion-is-kept)). An update from a
+level too low is refused whole, as every live tab kind's is
 ([Live state](../006-document/kinds-outside-the-canvas.md#live-state)): its sender alone hears
-`{ kind: 'text-document-refused', tabId, name: 'level_too_low' }`. Tests: the room refuses each forbidden op for each
-level.
+`{ kind: 'text-document-refused', tabId, name: 'level_too_low' }`. Tests: the judge refuses each forbidden change, and the
+room refuses an update its judge asks Editing for.
 
 ## Limits
 

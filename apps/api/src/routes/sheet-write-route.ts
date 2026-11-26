@@ -7,7 +7,6 @@
 import type { SheetWriteRequest, SheetWriteResponse } from '@livedoc/api-schema';
 import {
   SheetLimits,
-  SheetName,
   applySheetWrite,
   cellKey,
   cellsFromJson,
@@ -16,7 +15,6 @@ import {
   valuesOnly,
   writesFormats,
   CellMap,
-  type CellChange,
   type Sheet,
   type SheetPerson,
   type SheetWrite,
@@ -24,8 +22,6 @@ import {
 import {
   axisDeleteStatement,
   cellWriteStatements,
-  documentSheetTotals,
-  existingCells,
   headWriteStatement,
   listSheetHeads,
   readCells,
@@ -41,8 +37,8 @@ import { forbidden, json } from '../responses';
 import { relayTabRename } from '../room-client';
 import { axisWriteStatements } from '../db/sheet-axes';
 import { readCellWriteHead } from '../db/sheet-cell-head';
-import { gridsWith, workbookGrids } from '../db/sheet-grids';
 import { tabLookProblem } from './workbook-shown-sheets';
+import { capsProblem, deletes, gridProblem, titleProblem } from './sheet-write-checks';
 import { readBody, type DocumentRouteContext } from './context';
 import { writer } from './item-route-kit';
 import {
@@ -75,7 +71,7 @@ function readWrite(raw: unknown): SheetWriteRequest | null {
 // ranges shrink (docs/specs/029-sheets/formulas.md "Other sheets"): each reading sheet's formula cells read once, its
 // rewrites stored and relayed as a write of its own. Linear in the tab's formula references; the tab's sheets are read
 // side by side.
-async function shrinkReaders(
+export async function shrinkReaders(
   ctx: DocumentRouteContext,
   documentId: string,
   head: SheetHead,
@@ -104,82 +100,6 @@ async function shrinkReaders(
         else console.warn('[sheets] sheets.readers.shrink_failed', { status: res.status });
       }),
   );
-}
-
-function deletes(write: SheetWrite): boolean {
-  return (
-    write.kind === 'layout' &&
-    write.changes.some((c) => c.k === 'deleteRows' || c.k === 'deleteCols')
-  );
-}
-
-// Upper bounds of what a write adds: cells it may create and the bytes it may store.
-function growth(cells: readonly CellChange[]): { count: number; bytes: number; keys: string[] } {
-  let count = 0;
-  let bytes = 0;
-  const keys: string[] = [];
-  for (const ch of cells) {
-    if ((ch.i !== undefined && ch.i !== null) || (ch.f !== undefined && ch.f !== null)) {
-      count++;
-      keys.push(cellKey(ch.r, ch.c));
-    }
-    if (ch.i) bytes += JSON.stringify(ch.i).length;
-    if (ch.f) bytes += JSON.stringify(ch.f).length;
-  }
-  return { count, bytes, keys };
-}
-
-async function capsProblem(
-  ctx: DocumentRouteContext,
-  documentId: string,
-  head: SheetHead,
-  cells: readonly CellChange[],
-  limits: SheetLimits,
-): Promise<Response | null> {
-  const g = growth(cells);
-  if (g.count === 0) return null;
-  let added = g.count;
-  let addedBytes = g.bytes;
-  const near = head.cellCount + g.count > limits.cells || head.cellBytes + g.bytes > limits.bytes;
-  const totals = await documentSheetTotals(ctx.env, documentId);
-  const docNear =
-    totals.cells + g.count > limits.documentCells || totals.bytes + g.bytes > limits.documentBytes;
-  if (near || docNear) {
-    // Close to a cap: count exactly, as cells the write replaces add nothing new.
-    const existing = await existingCells(ctx.env, documentId, head.id, g.keys);
-    added -= existing.count;
-    addedBytes -= existing.bytes;
-  }
-  if (head.cellCount + added > limits.cells || head.cellBytes + addedBytes > limits.bytes) {
-    console.info('[sheets] sheets.full', { documentId });
-    return sheetRejected('sheet_full', 413);
-  }
-  if (totals.cells + added > limits.documentCells) return sheetRejected('sheets_full', 413);
-  // A spreadsheet's stored bytes over every sheet (spreadsheet.md "Limits").
-  if (totals.bytes + addedBytes > limits.documentBytes) {
-    console.info('[workbook] refused', { error: 'workbook_full', bytes: true });
-    return sheetRejected('workbook_full', 413);
-  }
-  return null;
-}
-
-// A spreadsheet's grid grown by a write, against the workbook's rows and grid cells over every sheet
-// (spreadsheet.md "Limits"): read only when the write adds rows or columns.
-async function gridProblem(
-  ctx: DocumentRouteContext,
-  documentId: string,
-  head: SheetHead,
-  after: Sheet,
-  limits: SheetLimits,
-): Promise<Response | null> {
-  const rows = after.layout.rows.length;
-  const cols = after.layout.cols.length;
-  if (rows <= head.layout.rows.length && cols <= head.layout.cols.length) return null;
-  const grids = gridsWith(await workbookGrids(ctx.env, documentId), { id: head.id, rows, cols });
-  const refusal = SheetLimits.workbookRefusal(limits, grids);
-  if (!refusal) return null;
-  console.info('[workbook] refused', { error: refusal, rows, cols });
-  return sheetRejected(refusal, 413);
 }
 
 export async function writeSheet(
@@ -233,16 +153,8 @@ export async function storeSheetWrite(
     const look = await tabLookProblem(ctx, documentId, sheetId, write, spreadsheet);
     if (look) return look;
     if (write.kind === 'title') {
-      const others = (await listSheetHeads(ctx.env, documentId, scope))
-        .filter((h) => h.id !== sheetId)
-        .map((h) => h.title);
-      const title = typeof write.title === 'string' ? write.title : '';
-      if (spreadsheet) {
-        const named = SheetName.check(title, others);
-        if (!named.ok)
-          return sheetRejected(named.refusal, named.refusal === 'sheet_name_taken' ? 409 : 400);
-      } else if (others.some((t) => t.toLowerCase() === title.trim().toLowerCase()))
-        return sheetRejected('sheet_title_taken', 409);
+      const titled = await titleProblem(ctx, documentId, sheetId, write.title, spreadsheet, scope);
+      if (titled) return titled;
     }
     // The light sheet the engine applies to: the layout, and the formulas when rows or columns go.
     const light: Sheet = {
