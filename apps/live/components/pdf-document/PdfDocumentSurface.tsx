@@ -43,6 +43,7 @@ import { usePdfDarkPages } from '@/lib/pdf-document/usePdfDarkPages';
 import { usePdfMarkRestyle } from '@/lib/pdf-document/usePdfMarkRestyle';
 import { usePdfMarkSelection } from '@/lib/pdf-document/usePdfMarkSelection';
 import { usePdfMarkTools } from '@/lib/pdf-document/usePdfMarkTools';
+import { usePdfMarkProperties } from '@/lib/pdf-document/usePdfMarkProperties';
 import { usePdfFullScreen } from '@/lib/pdf-document/usePdfFullScreen';
 import { PdfLookContext } from '@/lib/pdf-document/pdf-look';
 import { usePdfReadMode } from '@/lib/pdf-document/usePdfReadMode';
@@ -83,6 +84,7 @@ import { PdfLinkDialog } from './PdfLinkDialog';
 import { PdfPrintDialog } from './PdfPrintDialog';
 import { PdfFindBar } from './PdfFindBar';
 import { PdfFindResults } from './PdfFindResults';
+import { PdfMarkPropertiesPanel } from './PdfMarkPropertiesPanel';
 
 const NO_STEPS: PdfUndoState = { canUndo: false, canRedo: false };
 const NO_PAGES: readonly PageInfo[] = [];
@@ -373,6 +375,17 @@ export function PdfDocumentSurface({
     chosen: markSelection.chosen,
     focusPages: focusPagesElement,
   });
+  // "Changing a mark": a mark's Properties, on the right, Find's results giving it up and taking it back.
+  const findListShown = find.open && find.listOpen;
+  const { setListOpen } = find;
+  const markProperties = usePdfMarkProperties({
+    ready,
+    marks: changeable,
+    marking,
+    chosen: markSelection.chosen,
+    covered: findListShown,
+    onOpen: useCallback(() => setListOpen(false), [setListOpen]),
+  });
   const zoomToColumn = usePdfColumnZoom(viewer, textSelection.texts);
   // "Read mode", "Full screen": one person's room for the pages.
   const readMode = usePdfReadMode();
@@ -402,6 +415,7 @@ export function PdfDocumentSurface({
             ...markSelection.actions,
             ...markRestyle.actions,
             ...tools.lineActions,
+            ...markProperties.actions,
             [GO_TO_PAGE]: { run: focusPageField },
           }
         : {}),
@@ -447,6 +461,7 @@ export function PdfDocumentSurface({
       markSelection.actions,
       markRestyle.actions,
       tools.lineActions,
+      markProperties.actions,
     ],
   );
 
@@ -546,8 +561,10 @@ export function PdfDocumentSurface({
               )
             }
             right={
-              !readMode.on && find.open && find.listOpen ? (
+              readMode.on ? null : findListShown ? (
                 <PdfFindResults find={find} pages={ready.pages} focusNonce={0} />
+              ) : markProperties.open ? (
+                <PdfMarkPropertiesPanel properties={markProperties} />
               ) : null
             }
           >
