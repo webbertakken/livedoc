@@ -2,7 +2,8 @@
 
 **Status: being built.** Comment threads are kept beside the writing, travel in both formats' files, and the room
 judges a Participant's; they are drawn and added in the margin, listed in the comments panel and reached from the
-keyboard; people react to them. Mentions, assigning, suggestions, versions and notifications are still to come.
+keyboard; people react to them and mention one another, a mention emailing whom it names. Assigning, the Inbox,
+suggestions, versions and notifications are still to come.
 
 Comments, suggestions, version history, comparing documents and notifications in a [text document](text-document.md).
 The panels and threads are the shared [review surfaces](../012-collaboration/review-surfaces.md), built once for the
@@ -28,8 +29,8 @@ office kinds; this spec says what a text document puts in them.
   appears in the right margin beside a selection. The thread opens in the margin beside its text.
 - **A thread**: the first comment and its replies, each with its author, time, and **Edit** and **Delete** for its own
   author; **Resolve** (a tick) closes it; a resolved thread can be **Reopened** from the comments panel.
-- **Mentions**: `@` or `+` in a comment lists the document's people and the owner's contacts; mentioning someone who
-  cannot open the document offers to share it ([Comment mentions](../012-collaboration/comment-mentions.md)).
+- **Mentions**: `@` or `+` in a comment lists the document's people, the team's members, as LiveDoc's comments do
+  ([Mentions](#mentions)).
 - **Assigning**: a mention offers **Assign to <name>**; an assigned comment is an action, as LiveDoc's assigned
   actions are ([Assigned actions](../012-collaboration/assigned-actions.md)), shown in the assignee's Inbox.
 - **Reactions**: emoji on a comment, as Google's ([Reactions](#reactions)).
@@ -77,8 +78,8 @@ office kinds; this spec says what a text document puts in them.
 - **Its head**: the title **Comments**, then two lists side by side: **All comments** or **For you**, and **All**,
   **Open** or **Resolved** (default: All comments, All; the panel's choices are kept while the document is open).
   A document with more than one document tab adds a third, **All tabs** or each tab by its name (default: All tabs).
-- **For you** (default, until mentions and assigning are built): the threads where someone else replied after a
-  comment of yours; once they are, also those that mention you or are assigned to you, as Google's.
+- **For you** (default, until assigning is built): the threads where someone else replied after a comment of yours,
+  and those with a comment that mentions you; once assigning is built, also those assigned to you, as Google's.
 - **Its list**: every thread the choices let through, by document tab in the outline's order, and within a tab in the
   order the threads were begun (default), each a row: its quote (or "Original content deleted" and the quote, or
   nothing for a point comment), the first comment's author disc, name, time and text (three lines at most), "From
@@ -128,6 +129,34 @@ office kinds; this spec says what a text document puts in them.
   the reactions and names their people "Someone".
 - Telemetry: `Comment · Added · TextDocumentReaction` when one is added (never the emoji).
 
+### Mentions
+
+- **Writing**: in a draft or a reply, `@` or `+` at the start of the field or after a space lists the document's
+  people, as [Comment mentions](../012-collaboration/comment-mentions.md#writing-a-mention) says: the members of the
+  team whose library holds the document, joined and invited, except oneself; picking one puts `@handle ` in the
+  text. On a personal document, in This Browser and for a guest there is nobody: `@` shows "Mention teammates on a
+  team document" and `+` shows nothing.
+- **Nobody to share with**: Google also lists the owner's contacts and offers to share the document with someone
+  who cannot open it; LiveDoc's people are the team's, who open it already, so there is no share offer
+  ([Comment mentions](../012-collaboration/comment-mentions.md#who-can-be-mentioned)).
+- **Kept** on the comment as its `mentions`, the shared shape (account id, member id, name, handle), only those whose
+  handle is still in the text when it is sent, at most `MENTIONS_MAX` (20); editing a comment keeps those whose handle
+  is still in its text, and adds none (default: the edit field lists nobody). The room takes a Participant's own
+  comment with mentions in that shape and within the limits, and refuses one past them.
+- **Drawn**: an `@handle` that matches one of the comment's mentions is a chip, semibold in the accent on a soft
+  tint, in the margin and in the comments panel; an `@word` that matches none is plain text.
+- **The email**: once a draft or a reply with mentions is added (never an edit), the editor asks the api to email
+  those it names, the way a comment on a canvas does
+  ([Comment mentions](../012-collaboration/comment-mentions.md#the-email)): "{author} mentioned you in {document}",
+  the comment quoted, **Open the document**; best effort, honouring each person's setting, only where email is
+  configured. The Inbox lists the thread for whom it mentions once a text document's threads reach it (with
+  assigning).
+- **In the files**: `livedoc:mentions` on the comment (ODF's `office:annotation`, Word's `w:comment`), a JSON array
+  of each mention's name and handle, never its account or member id, which say who someone is beyond this document
+  (default) ([Standard mapping](standard-mapping.md#extensions)). A file read back draws the chips and reaches nobody.
+- Telemetry: `Comment · Mentioned` once for a comment added with mentions (never who), beside
+  `Comment · Added · TextDocument`.
+
 ### How a comment is kept
 
 - **Beside the writing, never in it**: a document's threads are one map, `threads`, beside the bodies
@@ -158,8 +187,8 @@ office kinds; this spec says what a text document puts in them.
 - **In the files**: a thread is written as the standard's comment at its anchor, its replies and resolved state as
   each format keeps them ([Standard mapping](standard-mapping.md)); a comment's author leaves as its name and comes
   back "From the file". A comment in a header, footer or note is not kept (default; Google places none there) and the
-  conversion report counts it, as it counts a comment marker without its pair. Reactions are kept as
-  [Reactions](#reactions) says; assignees join the files with assigned actions.
+  conversion report counts it, as it counts a comment marker without its pair. Reactions and mentions
+  are kept as [Reactions](#reactions) and [Mentions](#mentions) say; assignees join the files with assigned actions.
 - **The room judges a Participant's update** (fork D7) by what it touches: only `threads`, and in it only comments
   carrying the sender's own key added, edited or deleted, threads begun with one, resolved or reopened, and the
   sender's own key added to or taken from a reaction; anything else asks for Editing and is refused whole

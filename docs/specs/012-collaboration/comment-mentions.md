@@ -18,7 +18,7 @@ almost certainly cannot.
 
 - On a **personal document** or for a **guest** there is nobody to mention.
   Typing `@` then shows one quiet row, "Mention teammates on a team document",
-  and nothing is inserted.
+  and nothing is inserted; `+` shows nothing, so a "+1" stays quiet.
 - An **invited** member (no account yet) can be mentioned. They are keyed by
   their membership row, like an invited assignee, and get the email at their
   invite address. The Inbox finds it once they join and the lazy claim
@@ -26,22 +26,22 @@ almost certainly cannot.
 
 ## Writing a mention
 
-- Typing `@` at the start of the field or after a space opens a **suggestion
+- Typing `@` (or `+`, as Google Docs takes too) at the start of the field or after a space opens a **suggestion
   list** above the caret-side of the composer: the teammates whose name or
   handle starts with what follows the `@`, up to six, each with their initials
   disc, name and handle. Invited members carry an "Invited" tag.
 - **Arrow Up / Down** move the highlight, **Enter** or **Tab** picks, **Esc**
   closes the list and leaves the text as typed. Clicking a row picks it.
   While the list is open, Enter picks rather than sends.
-- Picking replaces the `@query` with the member's **handle** plus a space.
+- Picking replaces the `@query` (or `+query`) with the member's **handle** plus a space.
 - A **handle** is the member's display name in lower kebab case (`Thomas
 McClean` becomes `thomas-mcclean`, accents folded, anything else dropped).
   Two members with the same handle get `-2`, `-3` in list order. A member with
   no usable name falls back to the local part of their email.
 - On send, the comment keeps only the mentions whose `@handle` is still in the
   text: deleting the handle deletes the mention.
-- Both composers support it: the [Comment panel](comment-pin.md) card's and the comment
-  popover's.
+- Every composer supports it: the [Comment panel](comment-pin.md) card's, the comment
+  popover's, and a text document's margin ([Review](../034-text-documents/review.md#mentions)).
 
 ## The data
 
