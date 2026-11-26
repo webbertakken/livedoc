@@ -2,7 +2,8 @@
 
 // A text document's review in the editor (docs/specs/034-text-documents/review.md): the comment threads in the margin
 // and the keys between them, an Inbox row's arrival, the comments panel's rows, and the suggestion cards beside the
-// threads, with one card selected at a time. Composed once here so the surface wires review with one call.
+// threads, with one card selected at a time, and the Suggested edits panel. Composed once here so the surface wires
+// review with one call.
 import { useCallback, useEffect, useMemo, type RefObject } from 'react';
 import type { EditorView } from 'prosemirror-view';
 import type * as Y from 'yjs';
@@ -19,6 +20,8 @@ import {
 } from './useTextDocumentThreadArrival';
 import { useTextDocumentCommentsPanel } from './useTextDocumentCommentsPanel';
 import { useTextDocumentSuggestionCards } from './useTextDocumentSuggestionCards';
+import { useTextDocumentReviewPanel } from './useTextDocumentReviewPanel';
+import type { ReviewPreview } from './useTextDocumentReviewPreview';
 import { SUGGESTION_ROW } from '@/lib/text-document/text-document-comment-rows';
 
 export function useTextDocumentReview({
@@ -37,6 +40,7 @@ export function useTextDocumentReview({
   onMentioned,
   onAssigned,
   textWidth,
+  preview,
 }: {
   /** The body's editor, and the editor with the caret. */
   view: EditorView | null;
@@ -60,6 +64,12 @@ export function useTextDocumentReview({
   onAssigned?: (text: string, assignee: CommentMention) => void;
   /** The text's width in points, a table a column accepted makes wider fitted to it. */
   textWidth?: number;
+  /** The Suggested edits panel's preview of the body. */
+  preview: {
+    readonly mode: ReviewPreview;
+    readonly setMode: (mode: ReviewPreview) => void;
+    readonly previewing: boolean;
+  };
 }) {
   // Comment threads in the margin, added on the body's writing (review.md "Threads in the margin").
   const threads = useTextDocumentThreads({
@@ -107,9 +117,23 @@ export function useTextDocumentReview({
     if (selectedThread !== null) selectSuggestion(null);
   }, [selectedThread, selectSuggestion]);
 
+  const panelTabs = useMemo(() => tabs.map((t) => ({ id: t.id, name: t.name })), [tabs]);
+  const panel = useTextDocumentReviewPanel({
+    doc,
+    ready,
+    view,
+    tab,
+    tabs: panelTabs,
+    rights,
+    cards: suggestions,
+    subscribe,
+    preview,
+    textWidth,
+  });
+
   const actions: OfficeActions = useMemo(
-    () => ({ ...threads.actions, ...threadKeys.actions, ...suggestions.actions }),
-    [threads.actions, threadKeys.actions, suggestions.actions],
+    () => ({ ...threads.actions, ...threadKeys.actions, ...suggestions.actions, ...panel.actions }),
+    [threads.actions, threadKeys.actions, suggestions.actions, panel.actions],
   );
 
   // A press on a panel's row: a suggestion's goes to its card, on its tab; a thread's to its thread.
@@ -125,5 +149,5 @@ export function useTextDocumentReview({
     [rows, tab, goToSuggestion, goToThread],
   );
 
-  return { threads, threadKeys, commentsPanel, suggestions, actions, go };
+  return { threads, threadKeys, commentsPanel, suggestions, panel, actions, go };
 }

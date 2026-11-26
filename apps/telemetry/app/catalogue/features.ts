@@ -1144,6 +1144,19 @@ export const TEXT_DOCUMENT_SUGGESTIONS_SETTLED = chart(
   { types: ['TextDocumentSuggestionAccepted', 'TextDocumentSuggestionRejected'], rising: 'good' },
 );
 
+// Every suggestion settled at once from the Suggested edits panel (docs/specs/034-text-documents/review.md "Reviewing
+// suggestions"): once per press of Accept all, Reject all or Reject all mine.
+export const TEXT_DOCUMENT_SUGGESTIONS_SETTLED_ALL = chart(
+  'Element',
+  'Changed',
+  'Text Document Suggestions Settled All',
+  'Someone accepted or rejected every suggestion of a text document at once, from the Suggested edits panel.',
+  {
+    types: ['TextDocumentSuggestionAcceptedAll', 'TextDocumentSuggestionRejectedAll'],
+    rising: 'good',
+  },
+);
+
 // A person changed their editing mode on a PDF document (docs/specs/035-pdf-documents/editing-modes.md "Telemetry and
 // observability").
 export const PDF_DOCUMENT_MODE = chart(
@@ -1676,6 +1689,7 @@ export const EDITOR_CHROME: MetricStack = {
     TEXT_DOCUMENT_ZOOMED,
     TEXT_DOCUMENT_SUGGESTION,
     TEXT_DOCUMENT_SUGGESTIONS_SETTLED,
+    TEXT_DOCUMENT_SUGGESTIONS_SETTLED_ALL,
     TEXT_DOCUMENT_MODE,
     PDF_DOCUMENT_MODE,
     TEXT_DOCUMENT_MY_FONTS,

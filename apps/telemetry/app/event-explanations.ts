@@ -1337,6 +1337,10 @@ export const EXACT: Readonly<Record<string, string>> = {
     'Someone accepted a suggestion in a text document from its card: its change kept, its marks gone.',
   'Element|Changed|TextDocumentSuggestionRejected':
     'Someone rejected a suggestion in a text document from its card, or took back their own: the writing as before it.',
+  'Element|Changed|TextDocumentSuggestionAcceptedAll':
+    'An Editor accepted every suggestion of a text document at once from the Suggested edits panel, as one change.',
+  'Element|Changed|TextDocumentSuggestionRejectedAll':
+    'Someone rejected every suggestion of a text document at once (a Participant only their own), as one change.',
   'Element|Added|TextDocumentTab':
     'Someone added a tab inside a text document, from its outline or Insert > Tab.',
   'Element|Changed|TextDocumentTab':

@@ -419,7 +419,7 @@ the writing usable beside it (non-modal). Pressing the item again, its × ("Clos
   accept all** (the writing as it would read with every suggestion accepted) and **Preview reject all** (with every
   one rejected), each drawn exactly as settling would leave it, on the document as it is now, following others'
   changes. While previewing, the body is read only and the panel says why: "Previewing: the document can't be
-  edited until you choose Show suggested edits or close this panel." (default copy); suggestion cards are not drawn.
+  edited until you choose Show suggested edits or close this panel." (default copy); suggestion cards are not drawn; back to the writing, its undo starts again, as after showing another tab (default).
 - **Accept all** and **Reject all** settle every suggestion of the whole document at once, as one change of the
   writing undone with one ⌘Z, made by the person who pressed it (director, 2026-11-26); the panel stays, its count
   "No suggested edits".

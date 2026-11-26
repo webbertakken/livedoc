@@ -124,7 +124,7 @@ by the writing, [Review](review.md#keys-on-a-selected-comment)), `the browser's`
 | Move to previous footnote                        | `Ctrl+Alt+P, F`    | `Ctrl+⌘+P, F`      | `Ctrl+Alt+P, F`    | built                             |
 | Move to next suggestion                          | `Ctrl+Alt+N, U`    | `Ctrl+⌘+N, U`      | `Ctrl+Alt+N, U`    | built                             |
 | Move to previous suggestion                      | `Ctrl+Alt+P, U`    | `Ctrl+⌘+P, U`      | `Ctrl+Alt+P, U`    | built                             |
-| Review suggested edits                           | `Ctrl+Alt+O, U`    | `Ctrl+⌘+O, U`      | `Ctrl+Alt+O, U`    | specified                         |
+| Review suggested edits                           | `Ctrl+Alt+O, U`    | `Ctrl+⌘+O, U`      | `Ctrl+Alt+O, U`    | built                             |
 | Move to next comment                             | `Ctrl+Alt+N, C`    | `Ctrl+⌘+N, C`      | `Ctrl+Alt+N, C`    | built (`comments.spec.ts`)        |
 | Move to previous comment                         | `Ctrl+Alt+P, C`    | `Ctrl+⌘+P, C`      | `Ctrl+Alt+P, C`    | built (`comments.spec.ts`)        |
 | Reply to current comment                         | `R`                | `R`                | `R`                | on a comment (`comments.spec.ts`) |

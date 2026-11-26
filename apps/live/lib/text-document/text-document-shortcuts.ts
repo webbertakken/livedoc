@@ -524,7 +524,7 @@ export const TEXT_DOCUMENT_SHORTCUTS: readonly ShortcutRow[] = [
     'Ctrl+Alt+O, U',
     'Ctrl+⌘+O, U',
     'Ctrl+Alt+O, U',
-    'specified',
+    'built',
   ),
   row(
     'move-to-next-comment',

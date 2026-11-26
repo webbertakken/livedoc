@@ -18,8 +18,6 @@ import { tableView } from '@/lib/text-document/text-document-table-dom';
 import { pictureCroppingPlugin } from '@/lib/text-document/text-document-picture-cropping-plugin';
 import { pictureView, type PictureSizingHooks } from '@/lib/text-document/text-document-pictures';
 import { galleryPicturesOf } from '@/lib/text-document/text-document-gallery-pictures';
-import type { AccessLevel } from '@livedoc/api-schema';
-import type { CommentMention, TextDocumentFormat } from '@livedoc/document';
 import {
   Columns,
   CONTENTS,
@@ -39,10 +37,9 @@ import {
   apiLoadTextDocumentState,
   apiLoadTextDocumentStateSince,
   apiPostTextDocumentUpdate,
-  type TextDocumentScope,
 } from '@/lib/api/text-documents';
 import { debugLog } from '@/lib/debug-log';
-import { openRoomYjs, type TextDocumentFrame } from '@/lib/text-document/room-yjs-provider';
+import { openRoomYjs } from '@/lib/text-document/room-yjs-provider';
 import { TextDocumentCopies } from '@/lib/text-document/text-document-copies';
 import { paintFormatPlugin } from '@/lib/text-document/text-document-paint-format';
 import { clipboardPlugin } from '@/lib/text-document/text-document-clipboard';
@@ -71,10 +68,11 @@ import { tabStopsPlugin } from '@/lib/text-document/text-document-tab-layout';
 import { subscribeLists } from '@/lib/text-document/text-document-live-lists';
 import { useTextDocumentLists } from './useTextDocumentLists';
 import { useTextDocumentCharacterDialogs } from './useTextDocumentCharacterDialogs';
-import type { TextDocumentCommenter } from '@/lib/text-document/text-document-commenter';
 import { TextDocumentMargin } from './TextDocumentMargin';
-import type { TextDocumentThreadArrival } from './useTextDocumentThreadArrival';
 import { useTextDocumentReview } from './useTextDocumentReview';
+import type { TextDocumentSurfaceProps } from './text-document-surface-props';
+import { useTextDocumentReviewPreview } from './useTextDocumentReviewPreview';
+import { TextDocumentReviewPanel } from './TextDocumentReviewPanel';
 import { threadHighlightPlugin } from '@/lib/text-document/text-document-threads';
 import { useTextDocumentLinks } from './useTextDocumentLinks';
 import { useTextDocumentBookmarks } from './useTextDocumentBookmarks';
@@ -113,7 +111,6 @@ import {
 } from '@/lib/text-document/text-document-peers';
 import { useSurfaceView } from '@/hooks/ui/useSurfaceView';
 import type { SurfaceSelection } from '@/lib/surface-view';
-import type { OfficeChrome } from '@/components/office/office-chrome';
 import type { SaveFactsSource } from '@/lib/text-document/text-document-save-status';
 import { useTextDocumentSaveStatus } from '@/lib/text-document/useTextDocumentSaveStatus';
 import { useTextDocumentZoom } from '@/lib/text-document/useTextDocumentZoom';
@@ -156,7 +153,6 @@ import { useTextDocumentDrawingReveal } from './useTextDocumentDrawingReveal';
 import { drawingHostStore, useTextDocumentDrawingPictures } from './useTextDocumentDrawingPictures';
 import {
   drawingOpenPlugin,
-  type DrawingTabs,
   type OpenDrawing,
 } from '@/lib/text-document/text-document-drawing-open-plugin';
 import { pictureBarKeys } from '@/lib/text-document/text-document-picture-bar';
@@ -231,42 +227,6 @@ function restoreSelectionIn(view: EditorView, { anchor, head }: SurfaceSelection
   const selection = TextSelection.between(doc.resolve(clamp(anchor)), doc.resolve(clamp(head)));
   view.dispatch(view.state.tr.setSelection(selection).setMeta('addToHistory', false));
 }
-
-export type TextDocumentSurfaceProps = {
-  scope: TextDocumentScope;
-  documentName: string;
-  format: TextDocumentFormat;
-  canEdit: boolean;
-  // The session's share level: what the menus show (editing-surface.md "The menu bar").
-  level: AccessLevel;
-  // One frame to the room; true once the room has stored it ("Sending").
-  sequence: (op: TextDocumentFrame) => Promise<boolean>;
-  // A text document in This Browser: no room; its state lives in its offline record ("A text document in This
-  // Browser"). Fixed for the surface's life: its host keys it by this.
-  local?: boolean;
-  // The title row's document parts (editing-surface.md "The title row"); null in the read-only pane of a split.
-  chrome?: OfficeChrome | null;
-  // The person's LiveDoc documents, which the link editor offers and the link card names (links-and-navigation.md).
-  documents?: readonly LinkDocument[];
-  // Adds an empty drawing tab of this tab and opens it (objects.md "Drawings"); absent where none may be added.
-  createDrawing?: (() => string | null) | null;
-  // The editor's drawing tabs (objects.md "Opening it again"); absent outside an editor, where drawings stay their PNGs.
-  drawingTabs?: DrawingTabs | null;
-  // Who comments in this session (review.md "Threads in the margin"); null where it reads the threads alone.
-  commenter?: TextDocumentCommenter | null;
-  // Who reads the comments, and the email a comment's mentions ask for (review.md "Mentions"); absent outside an editor.
-  mentions?: TextDocumentMentions | null;
-  // The thread an Inbox row asked to go to (docs/specs/013-workspace/inbox.md §1.8); absent outside an editor.
-  arrival?: TextDocumentThreadArrival | null;
-};
-
-/** The reader's account (For you reads it) and what a comment added with mentions tells the editor. */
-export type TextDocumentMentions = {
-  readonly selfUserId: string | null;
-  readonly onMentioned: (text: string, mentions: readonly CommentMention[]) => void;
-  /** A comment that assigns its thread was added: email the assignee (review.md "Assigning"). */
-  readonly onAssigned: (text: string, assignee: CommentMention) => void;
-};
 
 type SurfaceState = 'loading' | 'ready' | 'failed';
 
@@ -357,10 +317,17 @@ export function TextDocumentSurface({
     choice: modeChoice,
     actions: modeActions,
   } = useOfficeMode(level, TEXT_DOCUMENT_MODES, 'TextDocumentMode');
-  const writes = canEdit && mode === 'editing';
+  // Previewing the writing settled (review.md "Reviewing suggestions"), the body shows a copy: it takes no edits.
+  const preview = useTextDocumentReviewPreview({
+    doc: liveDoc,
+    tab: shownTab ?? FIRST_DOCUMENT_TAB_ID,
+  });
+  const { bindBody } = preview;
+  const writes = canEdit && mode === 'editing' && !preview.previewing;
   // While suggesting (review.md "While suggesting"), the writing takes edits as suggestions: typing, formatting and
   // paragraph formatting; lists and styles, which write beside the writing, stay an Editor's.
-  const suggests = mode === 'suggesting' && commenter !== null;
+  const suggestsMode = mode === 'suggesting' && commenter !== null;
+  const suggests = suggestsMode && !preview.previewing;
   const textWrites = writes || suggests;
   const listWrites = writes || (suggests && canEdit);
   const suggesting = useTextDocumentSuggesting({ suggests, commenter });
@@ -696,7 +663,13 @@ export function TextDocumentSurface({
         setSaveFacts(binding.saveFacts);
         liveDoc.current = doc;
         setTabsStore(textDocumentTabsStore(doc));
+        // The body bound to another fragment of the same tab: a preview's settled copy, or the live writing again.
+        bindBody.current = (fragment) =>
+          view.updateState(
+            EditorState.create({ schema: textDocumentSchema, plugins: pluginsFor(fragment) }),
+          );
         teardown = () => {
+          bindBody.current = () => {};
           showTab.current = () => {};
           editor.current = null;
           setEditorView(null);
@@ -734,6 +707,7 @@ export function TextDocumentSurface({
     emojiColonPlugin,
     drawsDrawings,
     drawingHosts,
+    bindBody,
   ]);
 
   useEffect(() => {
@@ -964,15 +938,16 @@ export function TextDocumentSurface({
   const suggestionRights = useMemo(
     () => ({
       accepts: canEdit && mode !== 'viewing',
-      ownKey: suggests ? (commenter?.key ?? null) : null,
+      ownKey: suggestsMode ? (commenter?.key ?? null) : null,
     }),
-    [canEdit, mode, suggests, commenter],
+    [canEdit, mode, suggestsMode, commenter],
   );
   const {
     threads,
     threadKeys,
     commentsPanel,
     suggestions,
+    panel: reviewPanel,
     actions: reviewActions,
     go: goToReview,
   } = useTextDocumentReview({
@@ -983,7 +958,8 @@ export function TextDocumentSurface({
     tab: shownTab ?? FIRST_DOCUMENT_TAB_ID,
     tabs: tabs.list,
     showTab: tabs.show,
-    commenter,
+    // No one comments while previewing: a thread would anchor in the copy.
+    commenter: preview.previewing ? null : commenter,
     rights: suggestionRights,
     panelOpen: panels.open.right === COMMENTS_PANEL.id,
     arrival,
@@ -991,6 +967,7 @@ export function TextDocumentSurface({
     onMentioned: mentions?.onMentioned,
     onAssigned: mentions?.onAssigned,
     textWidth: Columns.width(page.caret.section.setup),
+    preview,
   });
   useEffect(() => {
     selectThreadRef.current = threads.select;
@@ -1343,101 +1320,106 @@ export function TextDocumentSurface({
           />
         }
       >
-        <div
-          ref={scroller}
-          data-region="document"
-          // Pageless, the page's colour fills the document's whole area (page-layout.md "Pageless"). Its scroll padding
-          // keeps what is scrolled into sight below the ruler standing over it.
-          style={page.pageless ? pageBox(page.section.setup) : undefined}
-          className={`min-h-0 flex-1 overflow-y-auto scroll-pt-8 ${page.pageless ? 'text-document-pageless-ground' : 'pb-6'}`}
-        >
-          {ruler.shown && state === 'ready' ? (
-            <TextDocumentRuler
-              view={editorView}
-              readFormatting={readRulerFormatting}
-              setup={rulerSetup}
-              pageless={page.pageless}
-              onSetup={page.setCaretSetup}
-              scale={scale}
-              canEdit={writes}
-              refresh={changes.subscribeCaret}
-              guideHeight={() => scroller.current?.clientHeight ?? 0}
-            />
+        <div className="relative flex min-h-0 flex-1 flex-col">
+          {reviewPanel.open && state === 'ready' ? (
+            <TextDocumentReviewPanel {...reviewPanel.props} />
           ) : null}
-          {state === 'failed' ? (
-            <div
-              role="alert"
-              className="mx-auto mt-16 max-w-sm text-center text-body text-slate-700 dark:text-slate-200"
-            >
-              <p>This text document could not be opened.</p>
-              <Button
-                className="mt-3"
-                onClick={() => {
-                  setState('loading');
-                  setAttempt((n) => n + 1);
-                }}
-              >
-                Try Again
-              </Button>
-            </div>
-          ) : null}
-          {/* The page: a fixed width and a page's height before the state arrives, so nothing shifts as it does. */}
-          <TextDocumentMargin
-            view={editorView}
-            threads={threads}
-            selfUserId={mentions?.selfUserId ?? null}
-            keys={threadKeys}
-            suggestions={suggestions}
-            commenter={commenter}
-            subscribe={changes.subscribe}
-            subscribeCaret={changes.subscribeCaret}
+          <div
+            ref={scroller}
+            data-region="document"
+            // Pageless, the page's colour fills the document's whole area (page-layout.md "Pageless"). Its scroll padding
+            // keeps what is scrolled into sight below the ruler standing over it.
+            style={page.pageless ? pageBox(page.section.setup) : undefined}
+            className={`min-h-0 flex-1 overflow-y-auto scroll-pt-8 ${page.pageless ? 'text-document-pageless-ground' : 'pb-6'}`}
           >
-            <div
-              // CSS zoom scales the page and its layout box alike, so the scroller scrolls the page as drawn. Its width and
-              // margins are its setup's; a phone flows it to the window (editing-surface.md "Phone and tablet").
-              style={{
-                zoom: scale,
-                ...pageBox(drawn),
-                ...(sheets
-                  ? { '--pages-width': `${sheets.width}px`, minHeight: `${sheets.height}px` }
-                  : { '--pages-width': 'var(--page-width)' }),
-              }}
-              data-page-format={page.pageless ? 'pageless' : 'pages'}
-              data-editing-story={headers.editing?.kind}
-              onDoubleClick={(event) => headers.onDoubleClick(event, scale)}
-              data-pages={paginated ? pageList.length : undefined}
-              data-laid-out={paginated ? 'pages' : 'flow'}
-              className={`relative isolate mx-auto w-(--pages-width) max-w-full text-document-page px-6 py-10 text-[11pt] leading-[1.15] ${page.pageless ? '' : 'mt-6 min-h-(--page-height)'} ${state === 'failed' ? 'hidden' : ''}`}
+            {ruler.shown && state === 'ready' ? (
+              <TextDocumentRuler
+                view={editorView}
+                readFormatting={readRulerFormatting}
+                setup={rulerSetup}
+                pageless={page.pageless}
+                onSetup={page.setCaretSetup}
+                scale={scale}
+                canEdit={writes}
+                refresh={changes.subscribeCaret}
+                guideHeight={() => scroller.current?.clientHeight ?? 0}
+              />
+            ) : null}
+            {state === 'failed' ? (
+              <div
+                role="alert"
+                className="mx-auto mt-16 max-w-sm text-center text-body text-slate-700 dark:text-slate-200"
+              >
+                <p>This text document could not be opened.</p>
+                <Button
+                  className="mt-3"
+                  onClick={() => {
+                    setState('loading');
+                    setAttempt((n) => n + 1);
+                  }}
+                >
+                  Try Again
+                </Button>
+              </div>
+            ) : null}
+            {/* The page: a fixed width and a page's height before the state arrives, so nothing shifts as it does. */}
+            <TextDocumentMargin
+              view={editorView}
+              threads={threads}
+              selfUserId={mentions?.selfUserId ?? null}
+              keys={threadKeys}
+              suggestions={suggestions}
+              commenter={commenter}
+              subscribe={changes.subscribe}
+              subscribeCaret={changes.subscribeCaret}
             >
-              <TextDocumentSheets
-                pages={paginated && state === 'ready' ? pageList : null}
-                shadow={!page.pageless}
-                storyHost={headers.storyHost}
-                editing={headers.editing}
-                editingBox={headers.box}
-                editingBar={headers.bar}
-                watermark={watermarkLook(watermark.watermark, page.section.setup)}
-              />
-              {state === 'loading' ? (
-                <p className="text-(--office-muted)" aria-live="polite">
-                  Loading the text document…
-                </p>
-              ) : null}
-              <div ref={mount} />
-              <TextDocumentPageNotes
-                pages={paginated && state === 'ready' ? pageList : null}
-                editing={headers.note}
-                box={headers.noteBox}
-                onPress={headers.onNotePress}
-              />
-              <TextDocumentEndNotes
-                notes={endNotes}
-                editing={headers.note}
-                box={headers.noteBox}
-                onPress={headers.onNotePress}
-              />
-            </div>
-          </TextDocumentMargin>
+              <div
+                // CSS zoom scales the page and its layout box alike, so the scroller scrolls the page as drawn. Its width and
+                // margins are its setup's; a phone flows it to the window (editing-surface.md "Phone and tablet").
+                style={{
+                  zoom: scale,
+                  ...pageBox(drawn),
+                  ...(sheets
+                    ? { '--pages-width': `${sheets.width}px`, minHeight: `${sheets.height}px` }
+                    : { '--pages-width': 'var(--page-width)' }),
+                }}
+                data-page-format={page.pageless ? 'pageless' : 'pages'}
+                data-editing-story={headers.editing?.kind}
+                onDoubleClick={(event) => headers.onDoubleClick(event, scale)}
+                data-pages={paginated ? pageList.length : undefined}
+                data-laid-out={paginated ? 'pages' : 'flow'}
+                className={`relative isolate mx-auto w-(--pages-width) max-w-full text-document-page px-6 py-10 text-[11pt] leading-[1.15] ${page.pageless ? '' : 'mt-6 min-h-(--page-height)'} ${state === 'failed' ? 'hidden' : ''}`}
+              >
+                <TextDocumentSheets
+                  pages={paginated && state === 'ready' ? pageList : null}
+                  shadow={!page.pageless}
+                  storyHost={headers.storyHost}
+                  editing={headers.editing}
+                  editingBox={headers.box}
+                  editingBar={headers.bar}
+                  watermark={watermarkLook(watermark.watermark, page.section.setup)}
+                />
+                {state === 'loading' ? (
+                  <p className="text-(--office-muted)" aria-live="polite">
+                    Loading the text document…
+                  </p>
+                ) : null}
+                <div ref={mount} />
+                <TextDocumentPageNotes
+                  pages={paginated && state === 'ready' ? pageList : null}
+                  editing={headers.note}
+                  box={headers.noteBox}
+                  onPress={headers.onNotePress}
+                />
+                <TextDocumentEndNotes
+                  notes={endNotes}
+                  editing={headers.note}
+                  box={headers.noteBox}
+                  onPress={headers.onNotePress}
+                />
+              </div>
+            </TextDocumentMargin>
+          </div>
         </div>
       </OfficePanelLayout>
     </div>
