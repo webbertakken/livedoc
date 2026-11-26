@@ -124,7 +124,11 @@ describe('a chart from a range', () => {
     expect(sheetChartTable(b.wb, { ...l, sheetId: 'nope' }, 'en-GB')).toBeNull();
     expect(sheetChartTable(b.wb, { ...l, range: { ...l.range, r1: 'gone' } }, 'en-GB')).toBeNull();
     apply({ kind: 'layout', changes: [{ k: 'hide', axis: 'r', ids: [l.range.r1], hidden: true }] });
-    expect(sheetChartTable(b.wb, l, 'en-GB')).toEqual({ categories: [], numbered: true, series: [] });
+    expect(sheetChartTable(b.wb, l, 'en-GB')).toEqual({
+      categories: [],
+      numbered: true,
+      series: [],
+    });
   });
 
   it('keeps at most the series limit', () => {
