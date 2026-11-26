@@ -34,6 +34,7 @@ import {
   SheetLimits,
 } from '@livedoc/sheets';
 import type { SheetRefusal } from './sheet-state';
+import { rowsRefusal } from './sheet-refusals';
 import { buildRuleChange, type SheetRuleChange } from './sheet-rule-change';
 import { buildShapeChange, type SheetShapeChange } from './sheet-shape-change';
 import { buildDesign, type SheetDesignInput } from './sheet-design';
@@ -96,7 +97,7 @@ type BuiltChange =
       charts?: SheetChartOut[];
       // The charts to take off the tab: those reading a range's cells, or (null) every one of the sheet's.
       clearCharts?: GridRange | null;
-      // A spreadsheet's sheet tab moved after the sheet of this title (first for null), through the workbook's door.
+      // A spreadsheet's sheet tab moved after the sheet tab of this id (first for null), through the workbook's door.
       moveAfter?: string | null;
     }
   | SheetRefusal;
@@ -201,8 +202,8 @@ export function buildSheetChange(
     case 'set': {
       const made = writeRows(wb, sheetId, change.at, change.rows, rand);
       if (!made.ok)
-        return made.error === 'formula_invalid'
-          ? refuse('formula_invalid', `The formula in ${made.at} cannot be read: ${made.why}.`)
+        return made.error === 'formula_invalid' || made.error === 'input_too_long'
+          ? rowsRefusal(made)
           : badRange(change.at);
       // A value a Reject rule refuses is refused here, naming the cell and what its rule allows (data-validation.md
       // "Agents"); the api would refuse it too.
@@ -419,7 +420,7 @@ export function buildSheetChange(
         );
       if (after.id === sheetId)
         return refuse('write_invalid', 'A sheet moves after another sheet.');
-      return { ok: true, writes: [], line: `moved after "${after.title}"`, moveAfter: after.title };
+      return { ok: true, writes: [], line: `moved after "${after.title}"`, moveAfter: after.tabId };
     }
     case 'hide':
       if (!context.spreadsheet) return notSpreadsheet('hide');

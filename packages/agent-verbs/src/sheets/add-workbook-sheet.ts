@@ -1,8 +1,8 @@
 // add_sheet in a spreadsheet (docs/specs/029-sheets/sheet-store.md "Built for agents in a spreadsheet"): a sheet tab
 // added through the workbook's own door, named as given (else the next free SheetN), after the sheet `after` names
-// (last when absent), then filled with its first cells or a design, whose charts are the sheet's own. The first cells
-// are checked against the workbook's caps before the tab is made; a tab whose filling then fails is deleted, so a
-// failed call leaves no half-made sheet.
+// (last when absent), then filled with its first cells or a design, whose charts are the sheet's own. Formulas are
+// read before the tab is made; a tab whose filling the room then refuses (a cap) is deleted, so a failed call leaves
+// no half-made sheet.
 import type { ApiClient } from '@livedoc/api-client';
 import {
   CLIENT_HEADER,
@@ -10,10 +10,9 @@ import {
   type WorkbookSheetAddResponse,
 } from '@livedoc/api-schema';
 import {
-  documentCellCount,
   emptySheet,
+  makeSheetId,
   sheetFromJson,
-  SheetLimits,
   SheetName,
   splitWrite,
   workbookSheetLayout,
@@ -21,9 +20,9 @@ import {
   type Sheet,
   type SheetJson,
 } from '@livedoc/sheets';
-import { capsRefusal, sendSheetWrite, workbookSheetsPath } from './change-sheet';
+import { sendSheetWrite, workbookSheetsPath } from './change-sheet';
 import { firstCells, type AddSheetInput, type AddSheetResult } from './add-sheet';
-import { chartObjectWrite } from './sheet-chart-objects';
+import { chartObjectSet, newChartId } from './sheet-chart-objects';
 import type { SheetRefusal } from './sheet-state';
 
 const refuse = (code: string, message: string): SheetRefusal => ({ ok: false, code, message });
@@ -60,38 +59,31 @@ export async function addWorkbookSheet(
       `No sheet "${input.after}" to add it after. Sheets: ${titles.map((t) => `"${t}"`).join(', ')}.`,
     );
   const name = named?.ok ? named.name : SheetName.next(titles);
-  // The first cells, checked against the workbook's caps on a blank of the new sheet's shape before anything is made.
-  const probe = emptySheet({
-    id: 'probe00000',
-    tabId: 'probe',
+  // The first cells, built on a blank of the new sheet's shape before anything is made; the room checks them against
+  // the workbook's caps as they land, and a refused filling takes the new tab away again.
+  // Its layout is sent with it, so the writes made here name the row and column ids it is made with.
+  const blank = emptySheet({
+    id: makeSheetId(rand),
+    tabId: 'pending',
     title: name,
     layout: workbookSheetLayout(),
   });
   const others = sheets.map(sheetFromJson);
-  const first = firstCells(input, others, probe, false, rand);
+  const first = firstCells(input, others, blank, false, rand);
   if ('ok' in first) return first;
-  if (first.writes.length) {
-    const over = capsRefusal(
-      probe,
-      first.writes,
-      documentCellCount(sheets),
-      SheetLimits.spreadsheet,
-    );
-    if (over) return { ok: false, ...over };
-  }
-  const body: WorkbookSheetAddRequest = { name, ...(after ? { after: after.tabId } : {}) };
+  const body: WorkbookSheetAddRequest = {
+    name,
+    sheetId: blank.id,
+    seed: { layout: blank.layout, cells: [] },
+    ...(after ? { after: after.tabId } : {}),
+  };
   const { sheet: made } = await api.json<WorkbookSheetAddResponse>(workbookSheetsPath(documentId), {
     method: 'POST',
     headers: { [CLIENT_HEADER]: client },
     body: JSON.stringify(body),
   });
-  // Built again on the sheet as it was made: its row and column ids are the room's.
   const sheet = sheetFromJson(made);
-  const built = firstCells(input, others, sheet, false, rand);
-  if ('ok' in built) {
-    await deleteMade(api, documentId, sheet.id);
-    return built;
-  }
+  const built = first;
   let filled: Sheet = sheet;
   try {
     for (const part of built.writes.flatMap((w) => splitWrite(w)))
@@ -100,14 +92,10 @@ export async function addWorkbookSheet(
     const taken = new Set<string>();
     for (const out of built.laidOut?.charts ?? []) {
       built.laidOut!.wb.updateSheet(filled);
-      const chart = chartObjectWrite(built.laidOut!.wb, sheet.id, out, undefined, rand, taken);
-      // A new chart's id is always free, so this is never refused; were it, the sheet goes as on any failure.
-      if (!chart.ok) {
-        await deleteMade(api, documentId, sheet.id);
-        return chart;
-      }
-      taken.add(chart.id);
-      filled = await sendSheetWrite(api, documentId, filled, chart.write, client);
+      const id = newChartId(filled.layout, rand, taken);
+      taken.add(id);
+      const write = chartObjectSet(built.laidOut!.wb, sheet.id, out, id);
+      filled = await sendSheetWrite(api, documentId, filled, write, client);
     }
   } catch (err) {
     await deleteMade(api, documentId, sheet.id);

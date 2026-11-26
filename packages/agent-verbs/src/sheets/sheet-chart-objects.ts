@@ -30,15 +30,22 @@ const sameName = (a: string, b: string) => a.trim().toLowerCase() === b.trim().t
 const charts = (layout: SheetLayout): SheetChart[] =>
   (layout.objects ?? []).filter((x): x is SheetChart => x.kind === 'chart');
 
-// The sheet's chart an agent's `chart` change makes: the layout write that sets it, and the line that says so.
+// The id a new chart of the sheet takes: free among its charts and those made alongside it (a design's several).
+export function newChartId(
+  layout: SheetLayout,
+  rand: Rand,
+  taken: ReadonlySet<string> = new Set(),
+): string {
+  return makeAxisIds(1, rand, new Set([...taken, ...charts(layout).map((x) => x.id)]))[0]!;
+}
+
+// The sheet's chart an agent's `chart` change makes: a new one, or (`replace`) one of the sheet's in its place.
 export function chartObjectWrite(
   wb: Workbook,
   sheetId: string,
   out: SheetChartOut,
   replace: string | undefined,
   rand: Rand,
-  // Ids made already alongside this one (a design's several charts).
-  taken: ReadonlySet<string> = new Set(),
 ): { ok: true; write: SheetWrite; id: string } | SheetRefusal {
   const { layout } = wb.sheet(sheetId)!;
   const existing = charts(layout);
@@ -47,7 +54,18 @@ export function chartObjectWrite(
       'chart_not_found',
       `No chart "${replace}" on this sheet. Its charts: ${existing.map((x) => x.id).join(', ') || 'none'} (read_sheet lists them).`,
     );
-  const id = replace ?? makeAxisIds(1, rand, new Set([...taken, ...existing.map((x) => x.id)]))[0]!;
+  const id = replace ?? newChartId(layout, rand);
+  return { ok: true, id, write: chartObjectSet(wb, sheetId, out, id) };
+}
+
+// The layout write that sets the chart `out` describes, under `id`.
+export function chartObjectSet(
+  wb: Workbook,
+  sheetId: string,
+  out: SheetChartOut,
+  id: string,
+): SheetWrite {
+  const { layout } = wb.sheet(sheetId)!;
   // The series drawn as lines, kept by their columns' ids so they follow a column moved or renamed.
   const table = out.lines?.length
     ? sheetChartTable(
@@ -57,10 +75,8 @@ export function chartObjectWrite(
       )
     : null;
   const series: Record<string, SheetChartSeriesLook> = {};
-  for (const name of out.lines ?? []) {
-    const s = table?.series.find((x) => sameName(x.name, name));
-    if (s) series[s.col] = { line: true };
-  }
+  for (const s of table?.series ?? [])
+    if (out.lines!.some((name) => sameName(s.name, name))) series[s.col] = { line: true };
   const look = out.look ?? {};
   const [r, c] = out.cell;
   const object: SheetChart = {
@@ -87,7 +103,7 @@ export function chartObjectWrite(
     ...(look.alt ? { alt: look.alt } : {}),
     ...(Object.keys(series).length ? { series } : {}),
   };
-  return { ok: true, id, write: { kind: 'layout', changes: [{ k: 'object', id, object }] } };
+  return { kind: 'layout', changes: [{ k: 'object', id, object }] };
 }
 
 // Whether a chart reads any cell of `g`.
@@ -158,7 +174,8 @@ export function chartsRead(wb: Workbook, sheetId: string): ChartRead[] {
       type: x.type,
       range: p ? formatRange(p) : null,
       ...(columns?.length ? { columns } : {}),
-      at: formatA1(ix.rowPos.get(x.at.r) ?? 0, ix.colPos.get(x.at.c) ?? 0),
+      // An anchor's cell is always the sheet's: a deletion moves it to the line taking its place.
+      at: formatA1(ix.rowPos.get(x.at.r)!, ix.colPos.get(x.at.c)!),
       width: x.width,
       height: x.height,
       ...(x.title ? { title: x.title } : {}),

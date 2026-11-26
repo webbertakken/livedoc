@@ -388,11 +388,13 @@ tells them.
 - **`create_spreadsheet`** (`livedoc spreadsheet new`): a name, and its sheets in order, each a name and optionally its
   first cells as rows or CSV text from A1 (one sheet, `Sheet1`, when none are named); in ODF (C5), its locale
   `en-GB` and time zone UTC; filed as `create_document` files a document, marked as made by its agent. Names follow
-  the sheet name's rules and are unique (`sheet_name_invalid`, `sheet_name_taken`, before anything is made); the first
-  cells are checked against the caps first, as `add_sheet`'s are; a sheet whose filling is then refused leaves the
+  the sheet name's rules and are unique (`sheet_name_invalid`, `sheet_name_taken`, before anything is made); every
+  formula is read first (`formula_invalid`, naming the sheet and cell) and a value too long refused (`input_too_long`);
+  the room checks the caps as the cells land, and a sheet whose filling is refused leaves the
   spreadsheet made and says which sheets were filled. It answers the document, its link and each sheet's name and id.
 - **`add_sheet` in a spreadsheet** adds a sheet tab, named as given (else the next free `SheetN`), after the sheet
-  `after` names (by name; last when absent), through the workbook's own door, then fills it as on a Plan tab; a
+  `after` names (by name; last when absent), through the workbook's own door, then fills it as on a Plan tab, the room checking the caps (a refused filling
+  deletes the new tab again); a
   `tabId` is refused there (`write_invalid`).
 - **`change_sheet` in a spreadsheet** also:
   - `move`: the sheet after the sheet `after` names, or first for `null`; `hide` with `hidden` true or false, never

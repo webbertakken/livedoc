@@ -4,7 +4,7 @@
 // sheet is added through the workbook's door, and create_spreadsheet makes the document with its sheets filled.
 import { describe, expect, it } from 'vitest';
 import type { SheetChart, SheetJson, SheetWrite } from '@livedoc/sheets';
-import { WorkbookRecord } from '@livedoc/sheets';
+import { emptySheet, sheetToJson, WorkbookRecord } from '@livedoc/sheets';
 import { DOC_A, fakeApi } from '../testing/fake-api';
 import { seeded, sheetJson, sheetServer } from '../testing/sheets';
 import { addSheet } from './add-sheet';
@@ -42,9 +42,21 @@ function book(sheets: SheetJson[] = [], opts: { refuse?: string } = {}) {
         },
       },
       [`/documents/${DOC_A}/workbook/sheets`]: async (r: Request) => {
-        const body = (await r.json()) as { name: string; after?: string };
+        const body = (await r.json()) as {
+          name: string;
+          after?: string;
+          sheetId: string;
+          seed: { layout: SheetJson['layout'] };
+        };
         adds.push(body);
-        const made = sheetJson({ id: 'sheet_added1', tabId: 'tab-added1', title: body.name });
+        const made = sheetToJson(
+          emptySheet({
+            id: body.sheetId,
+            tabId: 'tab-added1',
+            title: body.name,
+            layout: body.seed.layout,
+          }),
+        );
         server.sheets.push(made);
         return Response.json({
           tab: { id: made.tabId, name: made.title, orderIndex: 9 },
@@ -279,8 +291,14 @@ describe("a spreadsheet's sheet tabs", () => {
       seeded(),
     );
     expect(result).toMatchObject({ ok: true, title: 'Pareto', elementId: null, filled: 'A1:B2' });
-    expect(adds).toEqual([{ name: 'Pareto', after: 'tab-models' }]);
-    expect(server.writes.at(-1)!.sheetId).toBe('sheet_added1');
+    expect(adds).toEqual([
+      expect.objectContaining({
+        name: 'Pareto',
+        after: 'tab-models',
+        seed: expect.objectContaining({ cells: [] }),
+      }),
+    ]);
+    expect(server.writes.at(-1)!.sheetId).toBe((adds[0] as { sheetId: string }).sheetId);
   });
 
   it('refuses a taken name or a tabId in a spreadsheet before anything is made', async () => {

@@ -42,7 +42,7 @@ import { apiRefusalOf } from '../plan/api-refusal';
 import { SHEET_REFUSAL_WORDS } from './sheet-refusals';
 import { buildSheetChange, type SheetChange, type SheetChangeContext } from './sheet-change-build';
 import { readSheetsState, resolveSheet, sheetWritesPath, workbookFor } from './sheet-state';
-import { chartObjectWrite } from './sheet-chart-objects';
+import { chartObjectSet, newChartId } from './sheet-chart-objects';
 
 export const workbookSheetsPath = (documentId: string) =>
   `/documents/${encodeURIComponent(documentId)}/workbook/sheets`;
@@ -50,20 +50,14 @@ export const workbookSheetsPath = (documentId: string) =>
 type Built = Extract<ReturnType<typeof buildSheetChange>, { ok: true }>;
 
 // A built change's charts (a design's) as the spreadsheet sheet's own, their writes after the change's.
-function withChartObjects(
-  wb: Workbook,
-  sheetId: string,
-  built: Built,
-  rand: Rand,
-): Built | { ok: false; code: string; message: string } {
+function withChartObjects(wb: Workbook, sheetId: string, built: Built, rand: Rand): Built {
   if (!built.charts?.length) return built;
   const writes = [...built.writes];
   const taken = new Set<string>();
   for (const out of built.charts) {
-    const made = chartObjectWrite(wb, sheetId, out, undefined, rand, taken);
-    if (!made.ok) return made;
-    taken.add(made.id);
-    writes.push(made.write);
+    const id = newChartId(wb.sheet(sheetId)!.layout, rand, taken);
+    taken.add(id);
+    writes.push(chartObjectSet(wb, sheetId, out, id));
   }
   return { ...built, writes, charts: [] };
 }
@@ -155,8 +149,6 @@ async function applySheetChanges(
       return { applied, rev, charts, clear, refusal: { code: made.code, message: made.message } };
     // A spreadsheet's design charts are the sheet's own, set with the design's writes (charts.md "The model").
     const built = context.spreadsheet ? withChartObjects(wb, sheetId, made, rand) : made;
-    if (!built.ok)
-      return { applied, rev, charts, clear, refusal: { code: built.code, message: built.message } };
     const over = capsRefusal(sheet, built.writes, cells, wb.limits);
     if (over) return { applied, rev, charts, clear, refusal: over };
     const parts = built.writes.flatMap((w) => splitWrite(w));
@@ -184,10 +176,7 @@ async function applySheetChanges(
       rev = next.rev;
     }
     if (built.moveAfter !== undefined) {
-      const after =
-        built.moveAfter === null
-          ? ''
-          : (wb.sheetList().find((x) => x.title === built.moveAfter)?.tabId ?? '');
+      const after = built.moveAfter ?? '';
       try {
         await api.json(`${workbookSheetsPath(documentId)}/${encodeURIComponent(sheetId)}/move`, {
           method: 'POST',

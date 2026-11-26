@@ -276,6 +276,8 @@ describe('agents', () => {
     });
     expect(writeRows(b.wb, id, 'A1', [['x'.repeat(10_001)]])).toMatchObject({
       ok: false,
+      error: 'input_too_long',
+      at: 'A1',
       why: 'The value is too long',
     });
     expect(writeRows(b.wb, id, '??', [])).toEqual({ ok: false, error: 'range_invalid' });

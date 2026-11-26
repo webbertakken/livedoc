@@ -1,7 +1,7 @@
 // create_spreadsheet and `livedoc spreadsheet new` (docs/specs/029-sheets/sheet-store.md "Built for agents in a
 // spreadsheet"): a spreadsheet document, its sheets named in order, each a sheet tab, made in one request in ODF (C5)
-// with the agents' locale and UTC; then each sheet's first cells, read as typed in the agents' locale and checked
-// against the workbook's caps before anything is made. A sheet whose filling is refused after the spreadsheet is made
+// with the agents' locale and UTC; then each sheet's first cells, read as typed in the agents' locale, every formula
+// read before anything is made; the room checks the caps as they land. A sheet whose filling is refused after the spreadsheet is made
 // leaves it made, and the answer says which sheets were filled.
 import type { ApiClient } from '@livedoc/api-client';
 import { CLIENT_HEADER, creationIntentOf, type DocumentResponse } from '@livedoc/api-schema';
@@ -19,7 +19,6 @@ import {
   workbookSheetLayout,
   WORKBOOK_FIRST_SHEET_NAME,
   writeRows,
-  writesCapsProblem,
   type AgentValue,
   type Rand,
   type Sheet,
@@ -27,7 +26,7 @@ import {
 } from '@livedoc/sheets';
 import { apiRefusalOf } from '../plan/api-refusal';
 import { sendSheetWrite } from './change-sheet';
-import { SHEET_REFUSAL_WORDS } from './sheet-refusals';
+import { rowsRefusal } from './sheet-refusals';
 import type { SheetRefusal } from './sheet-state';
 
 export type SpreadsheetSheetInput = { name: string; rows?: AgentValue[][]; csv?: string };
@@ -92,7 +91,6 @@ function plan(input: CreateSpreadsheetInput, rand: Rand): Planned[] | SheetRefus
     limits: SheetLimits.spreadsheet,
   });
   const planned: Planned[] = [];
-  let cells = 0;
   for (const [i, s] of given.entries()) {
     const blank = blanks[i]!;
     const parsed = s.csv !== undefined ? parseCsv(s.csv) : null;
@@ -102,18 +100,7 @@ function plan(input: CreateSpreadsheetInput, rand: Rand): Planned[] | SheetRefus
       continue;
     }
     const made = writeRows(wb, blank.id, 'A1', rows, rand);
-    if (!made.ok)
-      return refuse(
-        'formula_invalid',
-        `The formula in "${blank.title}"!${made.at} cannot be read: ${made.why}.`,
-      );
-    const over = writesCapsProblem(blank, [made.write], cells, SheetLimits.spreadsheet);
-    if (over)
-      return refuse(
-        over,
-        `"${blank.title}" would pass a limit, so nothing was made: ${SHEET_REFUSAL_WORDS[over]}`,
-      );
-    cells += rows.reduce((n, r) => n + r.length, 0);
+    if (!made.ok) return rowsRefusal(made, blank.title);
     planned.push({ sheet: blank, writes: [made.write], filled: made.range });
   }
   return planned;

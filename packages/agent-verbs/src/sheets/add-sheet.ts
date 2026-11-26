@@ -47,6 +47,7 @@ import {
   type SheetWrite,
 } from '@livedoc/sheets';
 import { apiRefusalOf } from '../plan/api-refusal';
+import { rowsRefusal } from './sheet-refusals';
 import { tabPath } from '../verbs/shared';
 import { capsRefusal, sendSheetWrite } from './change-sheet';
 import { readSheets, readSheetsState, sheetsPath, type SheetRefusal } from './sheet-state';
@@ -128,13 +129,8 @@ export function firstCells(
   if (!rows?.length || rows.every((r) => r.length === 0))
     return { writes: [], filled: null, truncated: !!parsed?.truncated };
   const made = writeRows(wb, blank.id, 'A1', rows, rand);
-  // The blank sheet is in the workbook and A1 is a cell, so only a formula can be refused.
-  if (!made.ok)
-    return {
-      ok: false,
-      code: 'formula_invalid',
-      message: `The formula in ${made.at} cannot be read: ${made.why}.`,
-    };
+  // The blank sheet is in the workbook and A1 is a cell, so only a formula or a value too long is refused.
+  if (!made.ok) return rowsRefusal(made);
   return {
     writes: [made.write],
     filled: made.range,

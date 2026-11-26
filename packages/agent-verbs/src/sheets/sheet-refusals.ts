@@ -34,3 +34,23 @@ export const SHEET_REFUSAL_WORDS: Readonly<Record<SheetError, string>> = {
   rows_invalid:
     'rows are asked as <from>-<to> by position, from not past to, up to 5,000 rows a page.',
 };
+
+// What a refused writeRows says: the formula that cannot be read, or the value too long for a cell, by its cell (on
+// a sheet named when several are written at once).
+export function rowsRefusal(
+  made: { error: string; at?: string; why?: string },
+  sheet?: string,
+): { ok: false; code: string; message: string } {
+  const at = sheet ? `"${sheet}"!${made.at}` : made.at;
+  return made.error === 'input_too_long'
+    ? {
+        ok: false,
+        code: 'input_too_long',
+        message: `The value in ${at} is too long for a cell: a Plan Sheet's holds up to 10,000 characters, a spreadsheet's up to 50,000.`,
+      }
+    : {
+        ok: false,
+        code: 'formula_invalid',
+        message: `The formula in ${at} cannot be read: ${made.why}.`,
+      };
+}

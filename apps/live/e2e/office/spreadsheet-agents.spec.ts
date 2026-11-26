@@ -1,5 +1,5 @@
 import { createApiClient } from '@livedoc/api-client';
-import { changeSheet, createSpreadsheet, readSheet } from '@livedoc/agent-verbs';
+import { addSheet, changeSheet, createSpreadsheet, readSheet } from '@livedoc/agent-verbs';
 import { expect, expectNoPageErrors, pageOwnerHeaders, test } from '../fixtures';
 
 // Agents in a spreadsheet (plan 0020 Phase 15; docs/specs/029-sheets/sheet-store.md "Built for agents in a
@@ -85,6 +85,22 @@ test('an agent makes a spreadsheet, fills, shapes and charts it, and reads it ba
     'mcp',
   );
   expect(moved.refusal).toBeUndefined();
+
+  // A third sheet through the workbook door, after Models, filled.
+  const added = await addSheet(
+    api,
+    made.documentId,
+    {
+      title: 'Pareto',
+      after: 'Models',
+      rows: [
+        ['Cost', 'Index'],
+        [1.5, 40],
+      ],
+    },
+    'mcp',
+  );
+  expect(added).toMatchObject({ ok: true, title: 'Pareto', filled: 'A1:B2' });
 
   const read = await readSheet(api, made.documentId, { sheet: 'Models', range: 'A1:E5' });
   if (!read.ok) throw new Error(read.message);
