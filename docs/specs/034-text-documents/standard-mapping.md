@@ -144,9 +144,10 @@ it, asked of LibreOffice 24.2 by converting Word's tracked forms to ODF and back
   LibreOffice writes one, the region `livedoc:block="contents"`; read, one whose every entry is so is suggested (in a
   file LiveDoc wrote, only when the region says so). The marks inside it are dropped, as a
   table's.
-- **A section break**: OOXML, its `w:sectPr` in an empty paragraph of its own whose mark holds a `w:ins` (`w:del`),
-  as Word writes a tracked section break; read, a paragraph holding a `w:sectPr` whose mark is tracked makes the
-  section break that kind's suggestion (an empty one is no paragraph of its own), never the next paragraph's break.
+- **A section break**: OOXML, its `w:sectPr` in the paragraph before it, whose mark holds a `w:ins` (`w:del`), as
+  Word writes a tracked section break; in an empty paragraph of its own where there is none or that paragraph's mark
+  holds the next paragraph's break. Read, a paragraph holding a `w:sectPr` whose mark is tracked makes the section
+  break that kind's suggestion, never the next paragraph's break; the paragraph stays, as for any section break.
   ODF has no tracked section break, and LibreOffice 24.2 keeps none (Word's reads into it as a plain break, inserted
   or deleted alike): the region is listed in `text:tracked-changes` as any, and the element that starts the section
   (its first paragraph or table, or its `text:section`) names it in `livedoc:section-change`; another suite shows a
@@ -296,7 +297,7 @@ Each loss by direction; each is listed in the import, conversion or download rep
 | Either format            | A tracked change in a header, footer or note is settled on read, reported `suggestion-in-story`                         |
 | Either format            | A tracked change named by nothing, or naming nothing, reads as nothing, reported `suggestion-dangling`                  |
 | ODF to another suite     | A suggested section break shows as a plain break; LibreOffice keeps no tracked section break                            |
-| Word files               | A section break tracked inside a paragraph's text is the section break's suggestion; the paragraph stays split          |
+| Word files               | A tracked section break is the break's suggestion: rejecting it leaves its paragraph split, where Word joins it         |
 | Either format            | A suggestion's replies are written as a comment on its stretch, read back as a comment thread (no tie to it)            |
 | LiveDoc to another suite | Reactions, assignees, document tabs and pageless show as their fallbacks                                                |
 
