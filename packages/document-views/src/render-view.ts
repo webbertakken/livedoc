@@ -21,6 +21,7 @@ import { showView } from './show';
 import { selectedElements, showSelectedView } from './show-selected';
 import { SELECTED_REF } from './constants';
 import { pagesView } from './pages';
+import { CELLS_NOT_SPREADSHEET } from './workbook/cells';
 
 export type ViewRequest = {
   view: TabViewName;
@@ -33,6 +34,8 @@ export type ViewRequest = {
   style?: boolean;
   all?: boolean;
   q?: string;
+  // `cells`: an A1 cell or range.
+  range?: string;
 };
 
 type ViewRefusal = RefErrorBody | { error: 'invalid_value'; message: string };
@@ -170,5 +173,8 @@ export function renderView(
       return done(findView(model, request.q, { budget, door }));
     case 'pages':
       return done(pagesView(model, { budget, door }));
+    case 'cells':
+      // A spreadsheet's sheet is read by the door that holds its workbook (workbook/cells.ts); a tab alone holds no cells.
+      return { ok: false, refusal: { error: 'invalid_value', message: CELLS_NOT_SPREADSHEET } };
   }
 }

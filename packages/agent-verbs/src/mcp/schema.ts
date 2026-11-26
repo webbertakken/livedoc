@@ -679,7 +679,9 @@ export const readDocumentShape = {
       'How to read the tab. outline (default): one line per element with its ref, label and arrows, ' +
         'nested by frame. graph: what connects to what. layout: where things sit. comments: open threads ' +
         'in full. show: one element in full (needs ref). find: elements holding some text (needs q). ' +
-        "pages: a Pages tab's pages with their rectangles, each article as Markdown, and the layouts on offer.",
+        "pages: a Pages tab's pages with their rectangles, each article as Markdown, and the layouts on offer. " +
+        "On a spreadsheet's tab, outline is the workbook (its sheets, used ranges, names, rules and charts) and " +
+        'cells reads that sheet a row a line (range: A1, the used range by default).',
     ),
   budget: z
     .number()
@@ -708,6 +710,14 @@ export const readDocumentShape = {
     .max(FIND_QUERY_MAX_LENGTH)
     .optional()
     .describe('find: the text to look for, case-insensitive.'),
+  range: z
+    .string()
+    .min(1)
+    .max(40)
+    .optional()
+    .describe(
+      "cells: an A1 cell or range of a spreadsheet's sheet, like A1:D20; the used range by default.",
+    ),
   coarse: z.boolean().optional().describe('layout: rows per frame instead of coordinates.'),
   all: z.boolean().optional().describe('comments: include resolved threads.'),
   style: z

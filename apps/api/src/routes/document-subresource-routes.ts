@@ -144,7 +144,7 @@ export async function handleDocumentSubresources(
       }
       const safe = await grantedTab(ctx, existing, tabId, owner);
       if (!safe) return notFound();
-      if (view && document) return answerTabView(ctx, view, document, safe, owner);
+      if (view && document) return answerTabView(ctx, view, document, safe, owner, grant.tabScope);
       recordTabRead(ctx, existing, grant, owner);
       // The revision as a weak ETag too (docs/specs/024-agents/agent-changesets.md "The tab
       // revision", CS5): what an agent read, for its changeset base.

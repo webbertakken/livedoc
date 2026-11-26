@@ -341,7 +341,9 @@ A scatter's first column of numbers is its x; lines draws those series as lines,
 read_sheet lists the charts with their ids; chart {..., replace: "<id>"} rewrites one in place,
 clear_charts {} takes them all off. add_sheet {title, after} adds a sheet after another.
 
-Read back with read_sheet: each cell's input, the value worked out, what it shows.`,
+Read back with read_sheet: each cell's input, the value worked out, what it shows. Cheaper:
+read_document on any of its tabs outlines the workbook (sheets, used ranges, rules, charts);
+view "cells" {range: "A1:D40"} prints the sheet a row a line, a formula with what it shows.`,
   },
 } as const;
 

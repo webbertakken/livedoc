@@ -23,6 +23,7 @@ type ReadDocumentArgs = {
   only?: string;
   ref?: string;
   q?: string;
+  range?: string;
   coarse?: boolean;
   all?: boolean;
   style?: boolean;
@@ -40,7 +41,7 @@ export function revFromEtag(etag: string | null): number | null {
 
 function viewQuery(args: ReadDocumentArgs, view: TabViewName, budget: number): string {
   const query = new URLSearchParams({ view, door: 'mcp', budget: String(budget) });
-  for (const key of ['only', 'ref', 'q'] as const) {
+  for (const key of ['only', 'ref', 'q', 'range'] as const) {
     const value = args[key];
     if (value !== undefined) query.set(key, value);
   }
