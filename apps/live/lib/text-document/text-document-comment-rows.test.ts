@@ -8,6 +8,7 @@ import {
   type TextDocumentComment,
 } from '@livedoc/text-documents';
 import {
+  authorNoteOf,
   commentNoteOf,
   commentRows,
   sharedComment,
@@ -90,6 +91,13 @@ describe('sharedComment', () => {
     expect(file.authorId).toBeUndefined();
     expect(commentNoteOf(file)).toBe('From the file');
     expect(commentNoteOf(sharedComment(ADA))).toBeNull();
+  });
+
+  // review.md "Suggestion cards": a comparison's author reads "From the comparison".
+  it('says From the comparison under a comparison’s author', () => {
+    expect(authorNoteOf({ fromComparison: true })).toBe('From the comparison');
+    expect(authorNoteOf({ fromFile: true })).toBe('From the file');
+    expect(authorNoteOf({})).toBeNull();
   });
 
   // review.md "Mentions": the chips are drawn from the comment's mentions, a file's (no account) too; a malformed one

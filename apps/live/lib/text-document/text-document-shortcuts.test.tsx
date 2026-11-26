@@ -79,6 +79,7 @@ import { FOOTNOTE_KEY_ACTIONS } from '@/components/text-document/useTextDocument
 import { COMMENT_KEY_ACTIONS } from '@/components/text-document/useTextDocumentThreadKeys';
 import { SUGGESTION_KEY_ACTIONS } from '@/components/text-document/useTextDocumentSuggestionCards';
 import { REVIEW_SUGGESTED_EDITS } from '@/components/text-document/useTextDocumentReviewPanel';
+import { COMPARE_DOCUMENTS } from '@/components/text-document/useTextDocumentCompare';
 import { textDocumentUndoPlugins } from './text-document-undo';
 import { LINK_ITEM, OPEN_LINK } from './text-document-links';
 import { BOOKMARK_ITEM } from './text-document-bookmarks';
@@ -194,6 +195,8 @@ describe('the text document menus', () => {
         ...Object.keys(CONTENTS_LOOK_ITEMS),
         // Tools > Review suggested edits (useTextDocumentReviewPanel), bound by the surface.
         REVIEW_SUGGESTED_EDITS,
+        // Tools > Compare documents (useTextDocumentCompare), bound by the surface.
+        COMPARE_DOCUMENTS,
       ];
       expect(
         catalogueFaults(textDocumentMenus(format), {

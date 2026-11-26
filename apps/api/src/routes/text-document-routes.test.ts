@@ -48,6 +48,7 @@ async function bodyOfFile(res: Response): Promise<Body | undefined> {
   return read.ok ? Body.of(...TextDocument.paragraphTexts(read.document)) : undefined;
 }
 import { handleDocuments } from './documents';
+import { listDocumentsByOwner } from '../db/documents';
 import { fileNameOf } from './text-document-routes';
 
 // docs/specs/034-text-documents/files-and-print.md "Opening" and "Downloading";
@@ -411,5 +412,24 @@ describe('the state since a reader’s vector', () => {
     const res = await call(db, 'GET', '/api/documents/D/text-documents/t1/state?since=***');
     expect(res.status).toBe(400);
     expect(await res.json()).toEqual({ error: 'state_vector_invalid' });
+  });
+});
+
+// review.md "The dialog": Compare documents lists the person's text documents, from the document list.
+describe('a text document in the document list', () => {
+  it('says a document holding a text document is one', async () => {
+    const db = sqliteD1();
+    expect((await create(db)).status).toBe(201);
+    const canvas = { id: 'c1', name: 'Board', elements: [] };
+    expect(
+      (await call(db, 'POST', '/api/documents', { id: 'C', name: 'Board', tabs: [canvas] })).status,
+    ).toBe(201);
+    const listed = await listDocumentsByOwner(db.env, 'owner');
+    expect(listed.map((d) => [d.id, d.textDocument])).toEqual(
+      expect.arrayContaining([
+        ['D', true],
+        ['C', undefined],
+      ]),
+    );
   });
 });

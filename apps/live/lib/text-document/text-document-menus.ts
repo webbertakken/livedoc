@@ -410,7 +410,8 @@ export function textDocumentMenus(format: TextDocumentFormat): OfficeCatalogue {
         shortcut: 'review-suggested-edits',
         status: 'built',
       }),
-      item('compare-documents', 'Compare documents', 'edit'),
+      // review.md "Compare documents": anyone who reads it compares; the comparison is their own new document.
+      item('compare-documents', 'Compare documents', 'view', { status: 'built' }),
       item('line-numbers', 'Line numbers', 'edit', { checkable: 'checkbox', status: 'built' }),
       SEPARATOR,
       item('notification-settings', 'Notification settings', 'participate'),

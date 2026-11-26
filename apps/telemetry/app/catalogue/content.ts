@@ -161,7 +161,8 @@ export const DOCUMENTS_CREATED: Metric = {
   action: 'Created',
   allTypes: true,
   title: 'Documents Created',
-  blurb: 'New documents from the New Document wizard, stored in the cloud or in This Browser.',
+  blurb:
+    'New documents from the New Document wizard, stored in the cloud or in This Browser, and comparisons of two text documents.',
 };
 
 export const DOCUMENTS_RENAMED: Metric = {
@@ -232,6 +233,16 @@ export const LOCAL_MOVE_DISMISSED = chart(
   'Move Prompt Put Off',
   'Not Now on that prompt: asked again only when there are more documents to move.',
   { types: ['LocalMovePrompt'], rising: 'neutral' },
+);
+
+// A comparison made from Tools > Compare documents (docs/specs/034-text-documents/review.md "Compare documents"): once
+// per comparison stored, a new document of suggestions. Part of Documents Created.
+export const TEXT_DOCUMENT_COMPARED = chart(
+  'Document',
+  'Created',
+  'Text Documents Compared',
+  'Someone compared two text documents, making a new document holding the differences as suggestions. Part of Documents Created.',
+  { types: ['TextDocumentCompare'], rising: 'good' },
 );
 
 export const OFFLINE_MODE: MetricStack = {
@@ -311,7 +322,7 @@ export const DOCUMENT_ACTIONS: MetricStack = {
   stack: true,
   title: 'Document Actions',
   blurb:
-    'Documents opened, made, renamed, deleted and duplicated, and how new ones were started: Start Blank, a template link, or in This Browser (those three are part of Documents Created), and how often the wizard was backed out of with Escape.',
+    'Documents opened, made, renamed, deleted and duplicated, and how new ones were started: Start Blank, a template link, in This Browser, or a comparison of two text documents (those four are part of Documents Created), and how often the wizard was backed out of with Escape.',
   members: [
     DOCUMENTS_LOADED,
     DOCUMENTS_CREATED,
@@ -322,6 +333,7 @@ export const DOCUMENT_ACTIONS: MetricStack = {
     TEMPLATE_LINKS,
     NEW_DOCUMENT_MENU,
     CREATED_OFFLINE,
+    TEXT_DOCUMENT_COMPARED,
     NEW_DOCUMENT_BACKED_OUT,
   ],
   headline: [DOCUMENTS_CREATED, DOCUMENTS_RENAMED, DOCUMENTS_DELETED, DOCUMENTS_DUPLICATED],

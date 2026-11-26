@@ -5,8 +5,9 @@ judges a Participant's; they are drawn and added in the margin, listed in the co
 keyboard; people react to them, mention one another and assign a comment, a mention or an assignment emailing whom
 it names, and the Inbox lists the threads and assigned comments of those they concern. Suggestions are kept in the
 writing, travel in both formats' files as tracked changes and the room judges a Participant's; Editors and
-Participants suggest in Suggesting mode, from the writing, the menus and the toolbar. Suggestion cards, accepting and
-rejecting, versions and notifications are still to come.
+Participants suggest in Suggesting mode, from the writing, the menus and the toolbar; suggestion cards accept and
+reject one, the Suggested edits panel all at once, and Tools > Compare documents makes a comparison. Versions and
+notifications are still to come.
 
 Comments, suggestions, version history, comparing documents and notifications in a [text document](text-document.md).
 The panels and threads are the shared [review surfaces](../012-collaboration/review-surfaces.md), built once for the
@@ -317,6 +318,7 @@ office kinds; this spec says what a text document puts in them.
   comment threads' cards as they are ([Threads in the margin](#threads-in-the-margin)), and in the sheet on a phone.
 - **A card**: the author's disc, name and time (the time of its first part), "From the file" under a file's author,
   and what it does, one line per kind, quoted text cut at 60 characters with an ellipsis (default copy):
+  - under a comparison's author, "From the comparison" in place of "From the file" ([Compare documents](#compare-documents));
   - **Add: “…”** for inserted text, **Delete: “…”** for deleted text, and **Replace: “…” with “…”** when one
     suggestion deletes text and inserts text;
   - **Format: Bold, Italic** naming what a format suggestion changed (Bold, Italic, Underline, Strikethrough,
@@ -439,30 +441,38 @@ document and rejecting them all as the primary, as Google's
 
 ### The dialog
 
-- **Compare documents** (Tools > Compare documents) is offered to everyone who reads the document, an Editor, a
-  Participant and a Viewer alike, as the comparison is a new document of their own and changes nothing here
-  (director, 2026-11-26). It takes a document away as a copy does, so it follows Make a copy's and Download's one
-  rule, on both documents: where a share or a setting keeps a reader from copying or downloading either, they cannot
-  compare it, and the dialog says "You can't copy <name>, so it can't be compared." (default copy), so Compare is
-  never a way round it ([Share roles](files-and-print.md#share-roles)). In This Browser it is dimmed with the hint "Comparing needs a document stored in LiveDoc." (default).
-  The dialog reads "Compare **<this document>** against", a **Choose a document** button listing the person's own text documents but this one, newest
-  first, narrowed by a search on their names (loading, none and a failed list each say so, as Copy To's list does);
-  **Attribute differences to**, a field holding the person's name (default: their name, or "Guest" with none), at
-  most `SUGGESTION_AUTHOR_NAME_MAX` (100) characters; **Include comments from the selected document**, unticked;
+- **Who**: Tools > Compare documents is offered to everyone who reads the document, an Editor, a Participant and a
+  Viewer alike, as the comparison is a new document of their own and changes nothing here (director, 2026-11-26).
+  In This Browser it is dimmed with the hint "Comparing needs a document stored in LiveDoc." (default).
+- **Taking a document away**: a comparison takes both documents away as a copy does, so it follows Make a copy's and
+  Download's one rule ([Share roles](files-and-print.md#share-roles)) on both: where a share or a setting keeps a
+  reader from copying or downloading either, they cannot compare it, so Compare is never a way round it. No setting
+  turns copying off yet, so today every reader may; the selected document is read as the person, and one they may
+  not read is refused "You can't copy <name>, so it can't be compared." (default copy).
+- **The dialog**, titled **Compare documents**: "Compare **<this document>** against", then a search field
+  ("Search your text documents") over a list of the person's own text documents but this one, newest first, one to
+  be chosen (loading, none, "No text documents match" and a failed list with **Try again** each say so, as Copy To's
+  list does); **Attribute differences to**, a field holding the person's name (their commenting name, else empty),
+  at most `SUGGESTION_AUTHOR_NAME_MAX` (100) characters; **Include comments from the selected document**, unticked;
   the note "Suggestions in either document are left out."; **Cancel** and **Compare**, which waits for a document
-  chosen.
-- **Comparing**: Compare reads both documents, makes the comparison and stores it as the person's own document,
-  filed beside the primary where they may file there and else at the root of My Documents, as a copy is
-  ([Default folders](../013-workspace/default-folders.md)), and the dialog says "Comparison ready" with **Open** (the comparison in a new browser tab, as Google's)
-  and **Close** (default). A blank attribution field compares as the person's name.
-- **Named** "Comparison of <primary> and <selected>" (default, Google's).
-- **Refusals**, each said in the dialog, nothing made: the selected document cannot be read ("That document couldn't be
-  read. Try again."); the two differ in more than `TEXT_DOCUMENT_SUGGESTIONS_MAX` places ("These documents differ in
-  too many places to compare."); the comparison cannot be stored ("The comparison couldn't be made. Try again.")
-  (default copy).
+  chosen (default layout).
+- **Comparing**: Compare says "Comparing…", reads both documents, makes the comparison and stores it as the person's
+  own document, filed beside the primary where they may file there and else at the root of My Documents, as a copy
+  is ([Default folders](../013-workspace/default-folders.md)); the dialog then says "Comparison ready" with **Open**
+  (the comparison in a new browser tab, as Google's) and **Close** (default). A blank attribution field compares as
+  "Guest" (default).
+- **Named** "Comparison of <primary> and <selected>" (default, Google's), in the primary's format.
+- **Refusals**, each said in the dialog, nothing made, the choices kept for another try: the selected document
+  cannot be read ("That document couldn't be read. Try again."), or the person may not read it (above); a side too
+  long ("These documents are too long to compare."); the two differ in more than `TEXT_DOCUMENT_SUGGESTIONS_MAX`
+  places ("These documents differ in too many places to compare."); the comparison cannot be stored ("The comparison
+  couldn't be made. Try again.") (default copy).
+- **Pictures** come as they are in each document; a drawing comes as its picture, its drawing tab staying with its
+  own document (default).
 - **Versions**: comparing with one of this document's versions comes with [Version history](#version-history)
   (director, 2026-11-26).
-- Telemetry: `Document · Created · TextDocumentCompare` once a comparison is stored.
+- Telemetry: `Document · Created · TextDocumentCompare` once a comparison is stored; the log line
+  `[text-document] compared suggestions=<n> leftOut=<n> ms=<n>`, or `[text-document] compare refused reason=<r>`.
 
 ### What is compared
 

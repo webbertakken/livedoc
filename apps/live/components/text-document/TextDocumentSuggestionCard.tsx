@@ -1,7 +1,7 @@
 'use client';
 
 // A suggestion's card in the margin (docs/specs/034-text-documents/review.md "Suggestion cards"): its author's disc,
-// name and time, "From the file" under a file's author, what it does one line per kind, and Accept and Reject as the
+// name and time, "From the file" or "From the comparison" under an author no person stands behind, what it does one line per kind, and Accept and Reject as the
 // person's rights allow, and its replies (a thread tied to it) with Reply while it is selected. Pressed, it is
 // selected; on the focused card J and K step, R replies, U and Escape let it go.
 import { useRef, useState, type KeyboardEvent } from 'react';
@@ -10,12 +10,15 @@ import type { CommentMention } from '@livedoc/document';
 import type { TextDocumentThread } from '@livedoc/text-documents';
 import { CommentComposer, CommentThreadList } from '@/components/panels/comment-thread-parts';
 import { reactionChips } from '@/lib/office/review/comment-reactions';
-import { commentNoteOf, sharedComment } from '@/lib/text-document/text-document-comment-rows';
+import {
+  authorNoteOf,
+  commentNoteOf,
+  sharedComment,
+} from '@/lib/text-document/text-document-comment-rows';
 import type { TextDocumentCommenter } from '@/lib/text-document/text-document-commenter';
 import { CheckIcon, CloseIcon, IDENTITY_FILL, Tooltip, identityVars } from '@livedoc/ui';
 import { initialsOf } from '@/lib/identity';
 import { formatRelativeTimeCompact, useRelativeNow } from '@/lib/relative-time';
-import { FROM_THE_FILE } from '@/lib/text-document/text-document-comment-rows';
 import type { SuggestionCard } from '@/lib/text-document/text-document-suggestion-cards';
 import { THREAD_CARD_CLASS } from './TextDocumentThreadCard';
 
@@ -138,8 +141,10 @@ export function TextDocumentSuggestionCard({
               </Tooltip>
             ) : null}
           </div>
-          {card.author.fromFile ? (
-            <p className="text-supporting text-slate-500 dark:text-slate-400">{FROM_THE_FILE}</p>
+          {authorNoteOf(card.author) ? (
+            <p className="text-supporting text-slate-500 dark:text-slate-400">
+              {authorNoteOf(card.author)}
+            </p>
           ) : null}
           {card.lines.map((line) => (
             <p key={line} className="text-body break-words text-slate-700 dark:text-slate-200">

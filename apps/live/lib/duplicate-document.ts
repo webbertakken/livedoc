@@ -32,7 +32,7 @@ import {
   apiLoadTab,
   apiSaveDocumentMeta,
 } from './api-client';
-import { ApiError } from './api/core';
+import { createBeside } from './create-beside';
 import {
   isOfflineId,
   offlineCreateDocument,
@@ -47,15 +47,6 @@ import { apiLoadPdfState } from './api/pdf-documents';
 import { apiLoadTextDocumentState } from './api/text-documents';
 import { fetchKept, sendKept } from './api/workbook-kept';
 import { base64OfBytes } from '@livedoc/text-documents/base64';
-
-// The refusals that mean "not beside the source for this person", where the copy is filed at the
-// explicit root of My Documents instead (docs/specs/013-workspace/default-folders.md "Duplicate").
-const PLACE_REFUSALS: ReadonlySet<string> = new Set([
-  'team_forbidden',
-  'folder_not_found',
-  'folder_scope_mismatch',
-]);
-const EXPLICIT_ROOT: DocumentPlacement = { teamId: null, folderId: null };
 
 // The source's recorded creation intent, carried unchanged; none when it is unknown.
 // The copy's kept content sent after its create; a refusal moves the half-made copy to the Bin and fails the copy.
@@ -266,17 +257,11 @@ export async function duplicateDocument(
       ...(textDocuments.length ? { textDocuments } : {}),
       ...(pdfDocuments.length ? { pdfDocuments } : {}),
     });
+  // Beside the source, or at the root of My Documents where the person may not file there.
   try {
-    await create(placement ?? { teamId: src.teamId, folderId: src.folderId });
-  } catch (error) {
-    const code = error instanceof ApiError ? error.code : null;
-    if (code === null || !PLACE_REFUSALS.has(code)) return undefined;
-    console.warn(`[duplicate] placement refused reason=${code}, filed at the root`);
-    try {
-      await create(EXPLICIT_ROOT);
-    } catch {
-      return undefined;
-    }
+    await createBeside(create, placement ?? { teamId: src.teamId, folderId: src.folderId });
+  } catch {
+    return undefined;
   }
   if (kept && !(await keptSent(ownerId, newId, kept))) return undefined;
   // Tab-folder structure (docs/specs/006-document/tab-folders.md) doesn't ride the create — the seed

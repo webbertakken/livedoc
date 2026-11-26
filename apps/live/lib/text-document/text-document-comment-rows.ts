@@ -42,13 +42,19 @@ export const sharedComment = (c: TextDocumentComment): Comment & { fromFile?: tr
 };
 
 export const FROM_THE_FILE = 'From the file';
+export const FROM_THE_COMPARISON = 'From the comparison';
 
-/** The line under a comment's author: "From the file" for a file's comment, else none. */
-export const commentNoteOf = (c: Comment): string | null =>
-  (c as { fromFile?: true }).fromFile ? FROM_THE_FILE : null;
+type NotedAuthor = { readonly fromFile?: true; readonly fromComparison?: true };
+
+/** The line under an author with no LiveDoc person behind it: a file's, or a comparison's (review.md "Suggestion cards"). */
+export const authorNoteOf = (author: NotedAuthor): string | null =>
+  author.fromComparison ? FROM_THE_COMPARISON : author.fromFile ? FROM_THE_FILE : null;
+
+/** The line under a comment's author: "From the file" or "From the comparison", else none. */
+export const commentNoteOf = (c: Comment): string | null => authorNoteOf(c as NotedAuthor);
 
 /** A suggestion as its row's first comment: its card's lines, by its author, when it was made. */
-function suggestionComment(suggestion: TextDocumentSuggestion): Comment & { fromFile?: true } {
+function suggestionComment(suggestion: TextDocumentSuggestion): Comment & NotedAuthor {
   const { author } = suggestion;
   return {
     id: `${SUGGESTION_ROW}${suggestion.id}`,
@@ -58,6 +64,7 @@ function suggestionComment(suggestion: TextDocumentSuggestion): Comment & { from
     authorColor: author.colour,
     ...(author.key ? { authorId: author.key } : {}),
     ...(author.fromFile ? { fromFile: true as const } : {}),
+    ...(author.fromComparison ? { fromComparison: true as const } : {}),
   };
 }
 
