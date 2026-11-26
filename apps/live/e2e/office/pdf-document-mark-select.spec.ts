@@ -104,6 +104,8 @@ test('a mark made here is selected, moved by a drag and the arrow keys, and dele
   await expect(outlines).toHaveCount(2);
   await expect(page.locator('[data-pdf-mark-box]')).toHaveCount(0);
   await page.screenshot({ path: test.info().outputPath('pdf-mark-box.png') });
+  await page.keyboard.press('Escape');
+  await expect(outlines).toHaveCount(0);
   await page.mouse.click(...(await leftEdge(kind('rectangle'))));
   await expect(outlines).toHaveCount(1);
   await page.keyboard.down('Shift');
