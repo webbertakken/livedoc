@@ -170,6 +170,17 @@ describe('validation rules for agents', () => {
         rule: { type: 'checkbox', checked: 'a', unchecked: 'A' },
       }),
     ).toBe('rule_invalid');
+    for (const checked of [Infinity, ' ', 'x'.repeat(256)])
+      expect(code({ op: 'validate', range: 'A1', rule: { type: 'checkbox', checked } })).toBe(
+        'rule_invalid',
+      );
+    expect(run({ op: 'validate', range: 'E1', rule: { type: 'checkbox', checked: 1 } }).ok).toBe(
+      true,
+    );
+    for (const formula of ['', undefined as never as string])
+      expect(code({ op: 'validate', range: 'A1', rule: { type: 'formula', formula } })).toBe(
+        'formula_invalid',
+      );
     expect(code({ op: 'validate', range: 'A1', rule: { type: 'formula', formula: '=(' } })).toBe(
       'formula_invalid',
     );
