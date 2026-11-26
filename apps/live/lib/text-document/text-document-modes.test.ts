@@ -24,12 +24,13 @@ describe("a text document's modes", () => {
     expect(startingMode(TEXT_DOCUMENT_MODES, 'view')).toBe('viewing');
   });
 
-  it('never draws more than the level', () => {
+  it('never draws more than the level, but Suggesting 19s proposals', () => {
     expect(levelInMode(TEXT_DOCUMENT_MODES, 'edit', 'editing')).toBe('edit');
     expect(levelInMode(TEXT_DOCUMENT_MODES, 'edit', 'viewing')).toBe('view');
-    // Suggesting draws an Editor's menus, never more than the session's.
+    // Suggesting draws an Editor's menus, for a Participant too: their changes are proposals the room judges
+    // (office-shell.md "Modes"; text-document-proposals.test.ts guards what runs).
     expect(levelInMode(TEXT_DOCUMENT_MODES, 'edit', 'suggesting')).toBe('edit');
-    expect(levelInMode(TEXT_DOCUMENT_MODES, 'participate', 'suggesting')).toBe('participate');
+    expect(levelInMode(TEXT_DOCUMENT_MODES, 'participate', 'suggesting')).toBe('edit');
     expect(levelInMode(TEXT_DOCUMENT_MODES, 'view', 'suggesting')).toBe('view');
   });
 });
