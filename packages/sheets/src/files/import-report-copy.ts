@@ -107,7 +107,8 @@ export function importReportLine(loss: ReportedLoss): string {
     case 'chart_rewritten':
       return named(
         `${counted(count, 'chart changed since the file was opened is', 'charts changed since the file was opened are')} written as LiveDoc draws charts`,
-        loss,
+        // Its names are the sheets, not the charts it counts.
+        { ...loss, count: loss.names.length },
       );
     case 'sheet_renamed':
       return `${counted(count, 'sheet name is', 'sheet names are')} changed to fit: ${renamed(loss.names)}`;
