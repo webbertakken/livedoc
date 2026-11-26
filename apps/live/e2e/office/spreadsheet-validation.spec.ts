@@ -164,6 +164,6 @@ test('a Dropdown from a Range reads another sheet, and shrinks with its rows', a
   await select(page, 'A1');
   await (await officeMenuItem(page, ['Edit', 'Delete', 'Delete Row 1'])).click();
   await tabs.getByRole('tab', { name: 'Sheet1', exact: true }).click();
-  await expect(panel).toContainText('values in Sheet2!A1:A2');
+  await expect(panel.getByPlaceholder('A2:A20')).toHaveValue('Sheet2!A1:A2');
   expectNoPageErrors(pageErrors);
 });
