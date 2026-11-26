@@ -6,6 +6,7 @@ import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-li
 import { describe, expect, it, vi } from 'vitest';
 import type { TextDocumentThread } from '@livedoc/text-documents';
 import { cardLabel, TextDocumentDraftCard, TextDocumentThreadCard } from './TextDocumentThreadCard';
+import { MentionContext } from '@/components/canvas/collab/comment/MentionContext';
 import type { TextDocumentCommenter } from '@/lib/text-document/text-document-commenter';
 
 const ADA = { key: 'k-ada', name: 'Ada', colour: '#0284c7' };
@@ -128,7 +129,7 @@ describe('TextDocumentThreadCard', () => {
     const field = screen.getByRole('textbox', { name: 'Add a comment' });
     fireEvent.change(field, { target: { value: 'Thanks' } });
     fireEvent.click(screen.getByRole('button', { name: 'Comment' }));
-    expect(selected.onReply).toHaveBeenCalledWith('Thanks');
+    expect(selected.onReply).toHaveBeenCalledWith('Thanks', []);
     expect(screen.getByRole('group', { current: true })).toBeTruthy();
   });
 
@@ -216,6 +217,23 @@ describe('TextDocumentThreadCard keys', () => {
   });
 });
 
+// review.md "Mentions": an @handle the comment names is a chip; another @word is plain.
+describe('a comment’s mentions on the card', () => {
+  it('draws the handles it names as chips, and another @word plain', () => {
+    const priya = { userId: 'u-priya', name: 'Priya Kaur', handle: 'priya-kaur' };
+    card(as(ADA), {
+      thread: {
+        ...thread,
+        comments: [
+          { id: 'c1', text: 'Ask @priya-kaur and @nobody', at: 1, author: ADA, mentions: [priya] },
+        ],
+      },
+    });
+    expect(screen.getByText('@priya-kaur').className).toContain('rounded-control');
+    expect(screen.getByText(/and @nobody/).className).not.toContain('rounded-control');
+  });
+});
+
 describe('TextDocumentDraftCard', () => {
   it('focuses its field, sends with Comment, and drops with Cancel or Escape', async () => {
     const onSend = vi.fn();
@@ -227,10 +245,33 @@ describe('TextDocumentDraftCard', () => {
     await waitFor(() => expect(document.activeElement).toBe(field));
     fireEvent.change(field, { target: { value: 'Check this' } });
     fireEvent.click(screen.getByRole('button', { name: 'Comment' }));
-    expect(onSend).toHaveBeenCalledWith('Check this');
+    expect(onSend).toHaveBeenCalledWith('Check this', []);
     fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
     fireEvent.keyDown(field, { key: 'Escape' });
     expect(onCancel).toHaveBeenCalledTimes(2);
+  });
+
+  // review.md "Mentions": the draft lists the document's people after @ and sends whom it names.
+  it('lists the document’s people after @ and sends the mention', async () => {
+    const onSend = vi.fn();
+    const priya = {
+      userId: 'u-priya',
+      memberId: 'm-priya',
+      name: 'Priya Kaur',
+      handle: 'priya-kaur',
+    };
+    render(
+      <MentionContext.Provider
+        value={{ candidates: [{ ...priya, pending: false }], available: true }}
+      >
+        <TextDocumentDraftCard commenter={as(ADA)} placed onSend={onSend} onCancel={vi.fn()} />
+      </MentionContext.Provider>,
+    );
+    const field = screen.getByRole('textbox', { name: 'Add a comment' });
+    fireEvent.change(field, { target: { value: 'Ask +pri', selectionStart: 8, selectionEnd: 8 } });
+    fireEvent.keyDown(field, { key: 'Enter' });
+    fireEvent.click(screen.getByRole('button', { name: 'Comment' }));
+    expect(onSend).toHaveBeenCalledWith('Ask @priya-kaur', [priya]);
   });
 
   it('waits to take the focus until the margin has placed it (a hidden field takes none)', async () => {

@@ -31,9 +31,14 @@ const sam: MentionCandidate = {
 
 describe('mentionQueryAt', () => {
   it('finds the @query the caret ends, at the start or after a space', () => {
-    expect(mentionQueryAt('@pri', 4)).toEqual({ start: 0, text: 'pri' });
-    expect(mentionQueryAt('hi @Pri', 7)).toEqual({ start: 3, text: 'pri' });
-    expect(mentionQueryAt('hi @', 4)).toEqual({ start: 3, text: '' });
+    expect(mentionQueryAt('@pri', 4)).toEqual({ start: 0, text: 'pri', sign: '@' });
+    expect(mentionQueryAt('hi @Pri', 7)).toEqual({ start: 3, text: 'pri', sign: '@' });
+    expect(mentionQueryAt('hi @', 4)).toEqual({ start: 3, text: '', sign: '@' });
+  });
+
+  it('takes a + as Google Docs does', () => {
+    expect(mentionQueryAt('+pri', 4)).toEqual({ start: 0, text: 'pri', sign: '+' });
+    expect(mentionQueryAt('a+pri', 5)).toBeNull();
   });
 
   it('ignores an email address and a finished word', () => {
@@ -131,6 +136,24 @@ describe('mentions in the composer', () => {
     fireEvent.keyDown(field, { key: 'Escape' });
     expect(screen.queryByRole('listbox')).toBeNull();
     expect(field.value).toBe('@pri');
+  });
+
+  it('picks after a + and writes the handle with an @', () => {
+    const { field, type, onSubmit } = setup();
+    type('ask +sa');
+    fireEvent.keyDown(field, { key: 'Enter' });
+    expect(field.value).toBe('ask @sam-lee ');
+    fireEvent.keyDown(field, { key: 'Enter' });
+    expect(onSubmit).toHaveBeenCalledWith('ask @sam-lee', [
+      { userId: null, memberId: 'm-sam', name: 'Sam Lee', handle: 'sam-lee' },
+    ]);
+  });
+
+  it('stays quiet after a + on a personal document, so a +1 is plain', () => {
+    const { type } = setup(false);
+    type('+1');
+    expect(screen.queryByText(MENTION_UNAVAILABLE_HINT)).toBeNull();
+    expect(screen.queryByRole('listbox')).toBeNull();
   });
 
   it('explains why nobody can be mentioned on a personal document', () => {

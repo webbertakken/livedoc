@@ -7,6 +7,7 @@
 import { useCallback, useEffect, useMemo, useState, type RefObject } from 'react';
 import type { EditorView } from 'prosemirror-view';
 import type * as Y from 'yjs';
+import { mentionsInText, sanitizeMentions, type CommentMention } from '@livedoc/document';
 import {
   LiveThreads,
   THREADS_MAP,
@@ -56,6 +57,7 @@ export function useTextDocumentThreads({
   tab,
   commenter,
   subscribe,
+  onMentioned,
 }: {
   /** The body's editor: comments are on the body alone. */
   view: EditorView | null;
@@ -69,6 +71,8 @@ export function useTextDocumentThreads({
   commenter: TextDocumentCommenter | null;
   /** Told when the writing changed. */
   subscribe: (listener: () => void) => () => void;
+  /** A draft or reply with mentions was added: count it and ask for the email (review.md "Mentions"). */
+  onMentioned?: (text: string, mentions: readonly CommentMention[]) => void;
 }) {
   const [threads, setThreads] = useState<readonly TextDocumentThread[]>([]);
   const [stretches, setStretches] = useState<readonly ThreadStretch[]>([]);
@@ -129,32 +133,49 @@ export function useTextDocumentThreads({
   }, [view, activeView, commenter, threads.length, say]);
 
   const comment = useCallback(
-    (text: string) => ({
+    (text: string, mentions: readonly CommentMention[]) => ({
       id: crypto.randomUUID(),
       text,
       at: Date.now(),
       author: { key: commenter!.key, name: commenter!.name, colour: commenter!.colour },
+      ...(mentions.length ? { mentions } : {}),
     }),
     [commenter],
   );
 
+  // Once a comment with mentions is added: counted, and those it names emailed (never on an edit).
+  const mentioned = useCallback(
+    (text: string, mentions: readonly CommentMention[]) => {
+      if (mentions.length) onMentioned?.(text, mentions);
+    },
+    [onMentioned],
+  );
+
   const send = useCallback(
-    (text: string) => {
+    (text: string, mentions: readonly CommentMention[] = []) => {
       const doc = ready ? docRef.current : null;
       if (!doc || !draft || !commenter) return;
       const id = crypto.randomUUID();
       const begun = LiveThreads.begin(
         doc,
-        { id, tab, start: draft.start, end: draft.end, quote: draft.quote, comment: comment(text) },
+        {
+          id,
+          tab,
+          start: draft.start,
+          end: draft.end,
+          quote: draft.quote,
+          comment: comment(text, mentions),
+        },
         THREADS_ORIGIN,
       );
       setDraft(null);
       if (!begun) return;
       setSelected(id);
       track('Comment', 'Added', 'TextDocument');
-      debugLog('[text-document] thread begun', { thread: id });
+      mentioned(text, mentions);
+      debugLog('[text-document] thread begun', { thread: id, mentions: mentions.length });
     },
-    [ready, docRef, draft, commenter, tab, comment],
+    [ready, docRef, draft, commenter, tab, comment, mentioned],
   );
 
   const cancel = useCallback(() => {
@@ -163,27 +184,45 @@ export function useTextDocumentThreads({
   }, [view]);
 
   const reply = useCallback(
-    (threadId: string, text: string) => {
+    (threadId: string, text: string, mentions: readonly CommentMention[] = []) => {
       const doc = ready ? docRef.current : null;
       if (!doc || !commenter) return;
       const thread = threads.find((t) => t.id === threadId);
       if (thread && thread.comments.length >= TEXT_DOCUMENT_THREAD_COMMENTS_MAX)
         return say(COMMENTS_FULL);
-      if (!LiveThreads.reply(doc, threadId, comment(text), THREADS_ORIGIN)) return;
+      if (!LiveThreads.reply(doc, threadId, comment(text, mentions), THREADS_ORIGIN)) return;
       track('Comment', 'Added', 'TextDocument');
-      debugLog('[text-document] thread replied', { thread: threadId });
+      mentioned(text, mentions);
+      debugLog('[text-document] thread replied', { thread: threadId, mentions: mentions.length });
     },
-    [ready, docRef, commenter, comment, threads, say],
+    [ready, docRef, commenter, comment, threads, say, mentioned],
   );
 
   const edit = useCallback(
     (threadId: string, commentId: string, text: string) => {
       const doc = ready ? docRef.current : null;
       if (!doc || !commenter) return;
-      const done = LiveThreads.edit(doc, threadId, commentId, text, Date.now(), THREADS_ORIGIN);
-      debugLog('[text-document] comment edited', { thread: threadId, done });
+      // An edit keeps the mentions whose handle is still in its text, and adds none.
+      const held = threads
+        .find((t) => t.id === threadId)
+        ?.comments.find((c) => c.id === commentId)?.mentions;
+      const kept = held ? mentionsInText(text, sanitizeMentions(held) ?? []) : undefined;
+      const done = LiveThreads.edit(
+        doc,
+        threadId,
+        commentId,
+        text,
+        Date.now(),
+        THREADS_ORIGIN,
+        kept,
+      );
+      debugLog('[text-document] comment edited', {
+        thread: threadId,
+        done,
+        mentions: kept?.length,
+      });
     },
-    [ready, docRef, commenter],
+    [ready, docRef, commenter, threads],
   );
 
   const remove = useCallback(

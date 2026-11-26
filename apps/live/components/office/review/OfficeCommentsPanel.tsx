@@ -15,6 +15,7 @@ import {
   filterRows,
   repliesLabel,
   type ReviewFilters,
+  type ReviewSelf,
   type ReviewState,
   type ReviewThreadRow,
   type ReviewWho,
@@ -45,7 +46,7 @@ export function goLabel(row: ReviewThreadRow): string {
 export function OfficeCommentsPanel({
   rows,
   groups,
-  selfKey,
+  self,
   canComment,
   filters,
   onFilters,
@@ -57,8 +58,8 @@ export function OfficeCommentsPanel({
   rows: readonly ReviewThreadRow[];
   /** The kind's own filter's choices (document tabs); its list shows only with more than one. */
   groups: readonly { id: string; label: string }[];
-  /** The session's author key ('' without one): For you reads it. */
-  selfKey: string;
+  /** Who reads it (their key, their account): For you reads it. */
+  self: ReviewSelf;
   /** The session may comment: Reopen and the empty state's hint. */
   canComment: boolean;
   filters: ReviewFilters;
@@ -72,7 +73,7 @@ export function OfficeCommentsPanel({
 }) {
   // A filter naming a group that went reads as every group.
   const group = groups.some((g) => g.id === filters.group) ? filters.group : null;
-  const shown = filterRows(rows, { ...filters, group }, selfKey);
+  const shown = filterRows(rows, { ...filters, group }, self);
   const change = (next: ReviewFilters) => {
     debugLog('[office] comments filter', { ...next });
     onFilters(next);

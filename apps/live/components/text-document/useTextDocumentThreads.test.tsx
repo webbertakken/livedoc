@@ -21,6 +21,7 @@ import {
   THREADS_ORIGIN,
   useTextDocumentThreads,
 } from './useTextDocumentThreads';
+import type { CommentMention } from '@livedoc/document';
 import type { TextDocumentCommenter } from '@/lib/text-document/text-document-commenter';
 
 const tracked = vi.hoisted(() => [] as string[][]);
@@ -62,6 +63,7 @@ function threadsOn(
   { doc, view }: Awaited<ReturnType<typeof editor>>,
   commenter: TextDocumentCommenter | null = ADA,
   activeView: EditorView | null = view,
+  onMentioned?: (text: string, mentions: readonly CommentMention[]) => void,
 ) {
   const docRef = { current: doc };
   return renderHook(() =>
@@ -73,6 +75,7 @@ function threadsOn(
       tab: 't.0',
       commenter,
       subscribe: noSubscribe,
+      onMentioned,
     }),
   );
 }
@@ -155,6 +158,35 @@ describe('useTextDocumentThreads', () => {
       ['Comment', 'Added', 'TextDocument'],
       ['Comment', 'Resolved', 'TextDocument'],
     ]);
+  });
+
+  // review.md "Mentions": kept on the comment; the email asked for once a draft or reply with any is added, never an
+  // edit; an edit keeps those whose handle is still in its text.
+  it('keeps a comment’s mentions, asks for the email on adding one, and drops those an edit takes out', async () => {
+    const at = await editor();
+    at.view.dispatch(at.view.state.tr.setSelection(TextSelection.create(at.view.state.doc, 1, 10)));
+    const mentioned = vi.fn();
+    const { result } = threadsOn(at, ADA, at.view, mentioned);
+    const priya = {
+      userId: 'u-priya',
+      memberId: 'm-priya',
+      name: 'Priya Kaur',
+      handle: 'priya-kaur',
+    };
+    act(() => result.current.addComment());
+    act(() => result.current.send('Ask @priya-kaur', [priya]));
+    const id = result.current.selected!;
+    expect(LiveThreads.read(at.doc)[0]!.comments[0]!.mentions).toEqual([priya]);
+    expect(mentioned).toHaveBeenCalledWith('Ask @priya-kaur', [priya]);
+    act(() => result.current.reply(id, 'No one', []));
+    act(() => result.current.reply(id, 'Again @priya-kaur', [priya]));
+    expect(mentioned).toHaveBeenCalledTimes(2);
+    const first = LiveThreads.read(at.doc)[0]!.comments[0]!.id;
+    act(() => result.current.edit(id, first, 'Ask @priya-kaur, please'));
+    expect(LiveThreads.read(at.doc)[0]!.comments[0]!.mentions).toEqual([priya]);
+    act(() => result.current.edit(id, first, 'Ask anyone'));
+    expect(LiveThreads.read(at.doc)[0]!.comments[0]!.mentions).toBeUndefined();
+    expect(mentioned).toHaveBeenCalledTimes(2);
   });
 
   it('reacts beside the writing, signed with the commenter’s key, and takes it back', async () => {

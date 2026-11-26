@@ -97,6 +97,7 @@ export class OdfCommentsReader {
         ...(initials ? { initials } : {}),
       },
       ...Comments.reactionsFrom(attributeOf(e, LIVEDOC_NS, 'reactions')),
+      ...Comments.mentionsFrom(attributeOf(e, LIVEDOC_NS, 'mentions')),
     };
     const parent = attributeOf(e, NS.loext, 'parent-name');
     const joins = parent === undefined ? undefined : this.#threadOfName.get(parent);
@@ -167,9 +168,11 @@ function annotationXml(comment: FileComment, attributes: string): string {
     .map((line) => `<text:p>${escapeXmlText(line)}</text:p>`)
     .join('');
   const reactions = Comments.reactionsText(comment.reactions);
-  const reacted = reactions
-    ? ` xmlns:livedoc="${LIVEDOC_NS}" livedoc:reactions="${escapeXmlAttribute(reactions)}"`
-    : '';
+  const mentions = Comments.mentionsText(comment.mentions);
+  const extended =
+    (reactions ? ` livedoc:reactions="${escapeXmlAttribute(reactions)}"` : '') +
+    (mentions ? ` livedoc:mentions="${escapeXmlAttribute(mentions)}"` : '');
+  const reacted = extended ? ` xmlns:livedoc="${LIVEDOC_NS}"${extended}` : '';
   return `<office:annotation${attributes}${reacted}><dc:creator>${escapeXmlText(comment.author.name)}</dc:creator>${date}${initials ? `<meta:creator-initials>${escapeXmlText(initials)}</meta:creator-initials>` : ''}${paragraphs}</office:annotation>`;
 }
 

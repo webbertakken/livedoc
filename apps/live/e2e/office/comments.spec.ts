@@ -206,3 +206,32 @@ test('a reaction is added to a comment and taken back', async ({ page, pageError
   await expect(chip).toHaveCount(0);
   expectNoPageErrors(pageErrors);
 });
+
+// review.md "Mentions": `@` in a draft lists the document's people; a document with no team has nobody, which `@`
+// says and `+` keeps quiet about, so "+1" sends as plain text.
+test('a draft’s @ says there is nobody to mention on a personal document; + stays quiet', async ({
+  page,
+  pageErrors,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto('/new?kind=text-document');
+  await expect(page.locator(READY)).toBeVisible();
+  await page.locator(BODY).click();
+  await page.keyboard.type('alpha');
+  await page.keyboard.press('Control+Alt+KeyM');
+  const draft = page.getByRole('group', { name: 'New comment' });
+  const field = draft.getByRole('textbox', { name: 'Add a comment' });
+  await expect(field).toBeFocused();
+  await page.keyboard.type('Ask @');
+  await expect(draft.getByText('Mention teammates on a team document')).toBeVisible();
+  await page.waitForTimeout(300);
+  await page.screenshot({ path: test.info().outputPath('comment-mention-hint.png') });
+  await page.keyboard.press('Escape');
+  await expect(draft.getByText('Mention teammates on a team document')).toHaveCount(0);
+  await field.fill('+1');
+  await expect(draft.getByText('Mention teammates on a team document')).toHaveCount(0);
+  await draft.getByRole('button', { name: 'Comment' }).click();
+  const card = page.locator('[data-thread-card]:not([data-thread-card="draft"])');
+  await expect(card.getByText('+1')).toBeVisible();
+  expectNoPageErrors(pageErrors);
+});

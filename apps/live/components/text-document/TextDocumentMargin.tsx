@@ -180,7 +180,7 @@ export function TextDocumentMargin({
         selected={selected === id}
         commenter={commenter}
         onSelect={() => threads.select(id)}
-        onReply={(text) => threads.reply(id, text)}
+        onReply={(text, mentions) => threads.reply(id, text, mentions)}
         onEdit={(commentId, text) => threads.edit(id, commentId, text)}
         onRemove={(commentId) => threads.remove(id, commentId)}
         onResolve={(resolved) => threads.resolve(id, resolved)}

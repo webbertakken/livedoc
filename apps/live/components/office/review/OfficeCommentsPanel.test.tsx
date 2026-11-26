@@ -53,7 +53,7 @@ function panel(
           { id: 't.0', label: 'One' },
           { id: 't.b', label: 'Two' },
         ]}
-        selfKey="me"
+        self={{ key: 'me', userId: null }}
         canComment
         filters={filters}
         onFilters={setFilters}

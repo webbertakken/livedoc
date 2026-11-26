@@ -19,7 +19,7 @@ import { pictureCroppingPlugin } from '@/lib/text-document/text-document-picture
 import { pictureView, type PictureSizingHooks } from '@/lib/text-document/text-document-pictures';
 import { galleryPicturesOf } from '@/lib/text-document/text-document-gallery-pictures';
 import type { AccessLevel } from '@livedoc/api-schema';
-import type { TextDocumentFormat } from '@livedoc/document';
+import type { CommentMention, TextDocumentFormat } from '@livedoc/document';
 import {
   Columns,
   CONTENTS,
@@ -248,6 +248,14 @@ export type TextDocumentSurfaceProps = {
   drawingTabs?: DrawingTabs | null;
   // Who comments in this session (review.md "Threads in the margin"); null where it reads the threads alone.
   commenter?: TextDocumentCommenter | null;
+  // Who reads the comments, and the email a comment's mentions ask for (review.md "Mentions"); absent outside an editor.
+  mentions?: TextDocumentMentions | null;
+};
+
+/** The reader's account (For you reads it) and what a comment added with mentions tells the editor. */
+export type TextDocumentMentions = {
+  readonly selfUserId: string | null;
+  readonly onMentioned: (text: string, mentions: readonly CommentMention[]) => void;
 };
 
 type SurfaceState = 'loading' | 'ready' | 'failed';
@@ -268,6 +276,7 @@ export function TextDocumentSurface({
   createDrawing = null,
   drawingTabs = null,
   commenter = null,
+  mentions = null,
 }: TextDocumentSurfaceProps) {
   const root = useRef<HTMLDivElement | null>(null);
   const mount = useRef<HTMLDivElement | null>(null);
@@ -909,6 +918,7 @@ export function TextDocumentSurface({
     tab: shownTab ?? FIRST_DOCUMENT_TAB_ID,
     commenter,
     subscribe: changes.subscribe,
+    onMentioned: mentions?.onMentioned,
   });
   useEffect(() => {
     selectThreadRef.current = threads.select;
@@ -1263,7 +1273,7 @@ export function TextDocumentSurface({
             contents={contents}
             comments={{
               ...commentsPanel,
-              selfKey: commenter?.key ?? '',
+              self: { key: commenter?.key ?? '', userId: mentions?.selfUserId ?? null },
               canComment: commenter !== null,
               go: threadKeys.go,
               reopen: (id) => threads.resolve(id, false),

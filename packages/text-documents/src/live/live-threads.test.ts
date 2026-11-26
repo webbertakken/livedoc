@@ -147,6 +147,24 @@ describe('LiveThreads', () => {
     });
   });
 
+  // review.md "Mentions": kept as sent; an edit keeps those whose handle is still in its text.
+  it('keeps a comment’s mentions, and an edit replaces or drops them', () => {
+    const { doc, run } = written();
+    const priya = {
+      userId: 'u-priya',
+      memberId: 'm-priya',
+      name: 'Priya Kaur',
+      handle: 'priya-kaur',
+    };
+    const start = startOn(run, 0, 9);
+    LiveThreads.begin(doc, { ...start, comment: { ...start.comment, mentions: [priya] } }, 'me');
+    expect(LiveThreads.read(doc)[0]!.comments[0]!.mentions).toEqual([priya]);
+    LiveThreads.edit(doc, 'th1', 'th1-c1', 'still @priya-kaur', 55, 'me');
+    expect(LiveThreads.read(doc)[0]!.comments[0]!.mentions).toEqual([priya]);
+    LiveThreads.edit(doc, 'th1', 'th1-c1', 'nobody', 56, 'me', []);
+    expect(LiveThreads.read(doc)[0]!.comments[0]!.mentions).toBeUndefined();
+  });
+
   it('removes a reply alone, and the whole thread with its first comment', () => {
     const { doc, run } = written();
     LiveThreads.begin(doc, startOn(run, 0, 9), 'me');

@@ -3,7 +3,7 @@
 // in `threads`, its edges as positions that follow the text. Written, each marker's place is noted as the writing is
 // built and anchored once it is in the document; read, each thread's anchor puts its markers back where it stands.
 import * as Y from 'yjs';
-import { Comments, type CommentMark, type FileThread } from '../model/comments';
+import { Comments, type CommentMark, type FileMention, type FileThread } from '../model/comments';
 import type { Block } from '../model/blocks';
 import { FIRST_DOCUMENT_TAB_ID } from '../model/document-tabs';
 import {
@@ -91,6 +91,9 @@ function liveComment(comment: FileThread['comments'][number]): TextDocumentComme
     at: comment.at ?? 0,
     author,
     ...(comment.reactions ? { reactions: comment.reactions } : {}),
+    ...(comment.mentions
+      ? { mentions: comment.mentions.map(({ name, handle }) => ({ userId: null, name, handle })) }
+      : {}),
   };
 }
 
@@ -103,7 +106,20 @@ function fileComment(comment: TextDocumentComment): FileThread['comments'][numbe
     ...(comment.at > 0 ? { at: comment.at } : {}),
     author: key === undefined ? { name, ...(initials ? { initials } : {}) } : { name, key, colour },
     ...(comment.reactions ? { reactions: comment.reactions } : {}),
+    ...Comments.mentionsFrom(Comments.mentionsText(fileMentions(comment.mentions))),
   };
+}
+
+/** A live comment's mentions as a file keeps them, each with text for its name and handle; others left out. */
+function fileMentions(mentions: TextDocumentComment['mentions']): FileMention[] | undefined {
+  const kept = (mentions ?? []).filter(
+    (m): m is FileMention =>
+      typeof m === 'object' &&
+      m !== null &&
+      typeof (m as FileMention).name === 'string' &&
+      typeof (m as FileMention).handle === 'string',
+  );
+  return kept.length ? kept : undefined;
 }
 
 /** The markers to put back, by the type they sit in: each with its index there, in order. */

@@ -10,6 +10,7 @@ import { currentOfficePlatform } from '@/lib/office/office-platform';
 import type { OfficePanelsState } from '@/lib/office/useOfficePanels';
 import { OfficeCommentsPanel } from '@/components/office/review/OfficeCommentsPanel';
 import { commentNoteOf } from '@/lib/text-document/text-document-comment-rows';
+import type { ReviewSelf } from '@/lib/office/review/comment-filters';
 import type { TextDocumentCommentsPanel } from './useTextDocumentCommentsPanel';
 import {
   COMMENTS_PANEL,
@@ -78,7 +79,7 @@ export function TextDocumentRightPanel({
     change: (change: ContentsChange) => void;
   };
   comments: TextDocumentCommentsPanel & {
-    selfKey: string;
+    self: ReviewSelf;
     canComment: boolean;
     go: (id: string) => void;
     reopen: (id: string) => void;
@@ -106,7 +107,7 @@ export function TextDocumentRightPanel({
         <OfficeCommentsPanel
           rows={comments.rows}
           groups={comments.groups}
-          selfKey={comments.selfKey}
+          self={comments.self}
           canComment={comments.canComment}
           filters={comments.filters}
           onFilters={comments.setFilters}

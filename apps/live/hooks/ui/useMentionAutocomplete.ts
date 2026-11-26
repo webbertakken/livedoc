@@ -17,17 +17,21 @@ export const MENTION_UNAVAILABLE_HINT = 'Mention teammates on a team document';
 
 type Field = HTMLInputElement | HTMLTextAreaElement;
 
-// The `@query` the caret sits at the end of, or null. An `@` counts only at
-// the start of the field or after whitespace, so an email address never
-// opens the list.
+// The `@query` (or `+query`, as Google Docs takes) the caret sits at the end
+// of, or null. The sign counts only at the start of the field or after
+// whitespace, so an email address never opens the list.
 export function mentionQueryAt(
   value: string,
   caret: number,
-): { start: number; text: string } | null {
+): { start: number; text: string; sign: '@' | '+' } | null {
   const before = value.slice(0, caret);
-  const hit = /(^|\s)@([a-z0-9-]*)$/i.exec(before);
+  const hit = /(^|\s)([@+])([a-z0-9-]*)$/i.exec(before);
   if (!hit) return null;
-  return { start: caret - hit[2]!.length - 1, text: hit[2]!.toLowerCase() };
+  return {
+    start: caret - hit[3]!.length - 1,
+    text: hit[3]!.toLowerCase(),
+    sign: hit[2] as '@' | '+',
+  };
 }
 
 // Candidates for a query: handle prefix, or any word of the name.
@@ -74,7 +78,8 @@ export function useMentionAutocomplete({
     () => (queryText === null ? [] : matchCandidates(scope.candidates, queryText)),
     [queryText, scope.candidates],
   );
-  const hint = live && !scope.available ? MENTION_UNAVAILABLE_HINT : null;
+  // A `+` with nobody to list stays quiet, so a "+1" never shows the hint.
+  const hint = live && query?.sign === '@' && !scope.available ? MENTION_UNAVAILABLE_HINT : null;
   const open = items.length > 0 || hint !== null;
   const active = Math.min(highlight, Math.max(0, items.length - 1));
 

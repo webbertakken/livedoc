@@ -6,6 +6,7 @@ import {
   forYou,
   repliesLabel,
   ReviewFilters,
+  type ReviewSelf,
   type ReviewThreadRow,
 } from './comment-filters';
 
@@ -18,6 +19,8 @@ const comment = (id: string, authorId?: string): Comment => ({
   ...(authorId ? { authorId } : {}),
 });
 
+const ME: ReviewSelf = { key: 'me', userId: 'u-me' };
+
 const row = (id: string, over: Partial<ReviewThreadRow> = {}): ReviewThreadRow => ({
   id,
   label: 'quote',
@@ -28,32 +31,47 @@ const row = (id: string, over: Partial<ReviewThreadRow> = {}): ReviewThreadRow =
   ...over,
 });
 
-// docs/specs/034-text-documents/review.md "The comments panel": For you, until mentions are kept.
+// docs/specs/034-text-documents/review.md "The comments panel": For you, replies after yours and mentions of you.
 describe('forYou', () => {
   it('holds a thread where another replied after a comment of yours', () => {
-    expect(forYou(row('a', { comments: [comment('1', 'me'), comment('2', 'them')] }), 'me')).toBe(
+    expect(forYou(row('a', { comments: [comment('1', 'me'), comment('2', 'them')] }), ME)).toBe(
       true,
     );
   });
 
   it('counts a file comment after yours as another', () => {
-    expect(forYou(row('a', { comments: [comment('1', 'me'), comment('2')] }), 'me')).toBe(true);
+    expect(forYou(row('a', { comments: [comment('1', 'me'), comment('2')] }), ME)).toBe(true);
   });
 
   it('leaves a thread of yours alone without a reply after it', () => {
-    expect(forYou(row('a', { comments: [comment('1', 'them'), comment('2', 'me')] }), 'me')).toBe(
+    expect(forYou(row('a', { comments: [comment('1', 'them'), comment('2', 'me')] }), ME)).toBe(
       false,
     );
   });
 
   it('leaves out a thread you never wrote in', () => {
-    expect(forYou(row('a', { comments: [comment('1', 'them'), comment('2', 'x')] }), 'me')).toBe(
+    expect(forYou(row('a', { comments: [comment('1', 'them'), comment('2', 'x')] }), ME)).toBe(
       false,
     );
   });
 
+  it('holds a thread with a comment that mentions you, by your account', () => {
+    const mentioning = (userId: string | null): ReviewThreadRow =>
+      row('a', {
+        comments: [{ ...comment('1', 'them'), mentions: [{ userId, name: 'Me', handle: 'me' }] }],
+      });
+    expect(forYou(mentioning('u-me'), ME)).toBe(true);
+    expect(forYou(mentioning('u-else'), ME)).toBe(false);
+    expect(forYou(mentioning(null), { key: 'me', userId: null })).toBe(false);
+  });
+
   it('holds nothing for a session without a key', () => {
-    expect(forYou(row('a', { comments: [comment('1', ''), comment('2', 'x')] }), '')).toBe(false);
+    expect(
+      forYou(row('a', { comments: [comment('1', ''), comment('2', 'x')] }), {
+        key: '',
+        userId: null,
+      }),
+    ).toBe(false);
   });
 });
 
@@ -64,7 +82,7 @@ describe('filterRows', () => {
     row('done', { resolved: true }),
     row('other', { group: 't.b', comments: [comment('1', 'me'), comment('2', 'x')] }),
   ];
-  const ids = (filters: ReviewFilters) => filterRows(rows, filters, 'me').map((r) => r.id);
+  const ids = (filters: ReviewFilters) => filterRows(rows, filters, ME).map((r) => r.id);
 
   it('keeps every row, in order, with the first filters', () => {
     expect(ids(ReviewFilters.initial)).toEqual(['open', 'done', 'other']);
