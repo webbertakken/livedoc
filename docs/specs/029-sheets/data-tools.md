@@ -87,8 +87,29 @@ display style (Chip, Arrow, Plain Text) with option colours. Dropdowns and tick 
   - A Participant or Viewer reads the list and goes to a range; with none, "No named ranges."; an Editor's empty
     list says "No named ranges yet."
   - The panel stays open while its Go To opens another sheet.
-- **Named Functions** panel: a name, argument placeholders, a definition formula that uses the placeholders by name, a description and argument hints; usable in every cell of the workbook; **Import Function**
-  from another spreadsheet the person may read.
+- **Named Functions** panel (Data › Named Functions), for everyone: the workbook's named functions in name order, each
+  its call (`CONTAINS(search_query, search_range)`) and description (how they work out:
+  [Formulas](formulas.md#named-functions)).
+  - An Editor's rows carry **Edit** and **Remove**; under the list, **Add New Function** and **Import Function**.
+  - **Add New Function** and **Edit** turn the panel into a form: **Function Name** (shown and saved in capitals),
+    **Function Description**, **Argument Placeholders** (each a field with a remove button, **Add Argument** under
+    them), **Formula Definition** (a formula, `=` first), and under **Argument Details**, closed until opened, each
+    placeholder's **Description** and **Example**; **Cancel** and **Create** (**Update** when editing).
+  - A name: letters, digits and `_`, not starting with a digit, up to 254 characters; not a built-in function's name
+    ("SUM is a built-in function"), `TRUE` or `FALSE`, or one that reads as a cell reference; unique among the
+    workbook's named functions, case aside ("Another named function is called that"). A placeholder: the same
+    characters, not a cell reference, unique in its function; up to 20 (D302).
+  - A definition that cannot be read says why under it ("That formula can't be read"), as does a reference in it
+    ([Formulas](formulas.md#named-functions), D301); a placeholder the definition never reads is allowed, as Google's.
+  - Create, Update and Remove are each one undo step, on the person's timeline with their cell changes; the list is
+    saved whole, so two Editors saving at once keep the later save (D303).
+  - Formulas offer the workbook's named functions with the built-in ones as they are typed, with their description and
+    each argument's description and example in the function help.
+  - **Import Function** opens a picker of the spreadsheets the person may read, then that spreadsheet's named functions
+    with a tick each and **Import All**; **Import** adds them, one undo step, a function of a name already here taking
+    its place, as Google's; one calling another named function not imported says so beside it.
+  - A Participant or Viewer reads the list; with none, "No named functions."; an Editor's empty list says "No named
+    functions yet."
 
 ## Protected ranges
 
@@ -136,6 +157,8 @@ display style (Chip, Arrow, Plain Text) with option colours. Dropdowns and tick 
 - `[workbook] range sorted` with the key count and whether the data has a header row (Advanced Range Sorting
   Options).
 - `[sheet] filter formula refused` with the column id, when a filter's Custom Formula Is cannot be read.
+- `[workbook] named functions saved` with their count (the api), and `[workbook] named function refused` with the
+  field (`name`, `argument`, `definition`) when Create or Update cannot save.
 - `[workbook] named range moved` when a name's range moves to another sheet, and `[workbook] named range refused`
   with the reason (`name`, `range`) when Done cannot save.
 
@@ -155,5 +178,9 @@ display style (Chip, Arrow, Plain Text) with option colours. Dropdowns and tick 
 Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
 The code cites each by its id.
 
+- **D302** A named function's limits: a name up to 254 characters (Google's), up to 20 placeholders, a definition up
+  to 2,000 characters, a description up to 1,000, an argument's description and example up to 200 each (default).
+- **D303** Two Editors saving named functions at once: The list is saved whole and the later save stands, as File ›
+  Settings' do (default).
 - **D299** Where the Named Ranges panel opens: On the list; on Add a Range for an Editor while the workbook has no
   names, as Google's (default).
