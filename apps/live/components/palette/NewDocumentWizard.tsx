@@ -3,12 +3,21 @@
 import { useLayoutEffect, useState } from 'react';
 import { Button, CloseIcon, useEscape } from '@livedoc/ui';
 import type { TabOpening } from '@livedoc/document';
-import { BLANK_TEMPLATE_FOR_OPENING, type TemplateKind } from '@livedoc/templates';
+import {
+  BLANK_TEMPLATE_FOR_OPENING,
+  isNewDocumentKind,
+  type NewDocumentKind,
+  type TemplateKind,
+} from '@livedoc/templates';
 import { HelpArticleLink } from '@/components/primitives/HelpArticleLink';
 import { useModalGuard } from '@/hooks/ui/useModalGuard';
 import { takeEarlyModeChoice } from '@/app/new/early-mode-choice';
 import { CanvasModalCard } from './CanvasModalCard';
-import { NewDocumentModeStep } from './NewDocumentModeStep';
+import {
+  NewDocumentModeStep,
+  type NewDocumentSource,
+  type NewDocumentStepChoice,
+} from './NewDocumentModeStep';
 import { FolderOpenIcon, SparkleIcon, Spinner } from './template-picker-icons';
 
 // The New Document wizard (docs/specs/007-editor/new-document-route.md "One-step wizard"): one question, what you are
@@ -19,6 +28,7 @@ export function NewDocumentWizard({
   busy = false,
   initialMode = null,
   onCreate,
+  onCreateKind,
   onSkip,
   onBackOut,
   onOpenExisting,
@@ -29,6 +39,8 @@ export function NewDocumentWizard({
   initialMode?: TabOpening | null;
   // Make the document from a mode's blank.
   onCreate: (kind: TemplateKind) => void;
+  // Make a document of a kind: its blank, or (PDF document) a file chosen.
+  onCreateKind: (kind: NewDocumentKind, source: NewDocumentSource) => void;
   // Make a Blank Diagram with its start closed (the documented Skip defaults).
   onSkip: () => void;
   // Back to the page that opened /new, creating nothing.
@@ -37,11 +49,14 @@ export function NewDocumentWizard({
   onOpenExisting?: () => void;
 }) {
   useModalGuard(true);
-  const [chosen, setChosen] = useState<TabOpening | null>(null);
-  const mode = chosen ?? initialMode;
-  const create = (next: TabOpening | null) => {
+  const [chosen, setChosen] = useState<NewDocumentStepChoice | null>(null);
+  // Pages is no longer offered: its preset chooses nothing (new-document-route.md "Choosing a mode").
+  const mode = chosen ?? (initialMode === 'pages' ? null : initialMode);
+  const create = (next: NewDocumentStepChoice | null, source: NewDocumentSource = 'blank') => {
     if (busy) return;
-    if (next) setChosen(next);
+    // Open a PDF file chooses no card: the chooser may be left, and nothing is made then.
+    if (next && source === 'blank') setChosen(next);
+    if (next && isNewDocumentKind(next)) return onCreateKind(next, source);
     onCreate(BLANK_TEMPLATE_FOR_OPENING[next ?? 'diagram']);
   };
   // A card clicked before hydration is chosen now, before the browser can hand React another event.

@@ -9,7 +9,13 @@ import { NewDocumentWizard } from './NewDocumentWizard';
 afterEach(cleanup);
 
 function wizard(over: { busy?: boolean; initialMode?: EditorMode | null } = {}) {
-  const props = { onCreate: vi.fn(), onSkip: vi.fn(), onBackOut: vi.fn(), onOpenExisting: vi.fn() };
+  const props = {
+    onCreate: vi.fn(),
+    onCreateKind: vi.fn(),
+    onSkip: vi.fn(),
+    onBackOut: vi.fn(),
+    onOpenExisting: vi.fn(),
+  };
   render(<NewDocumentWizard {...props} {...over} />);
   return props;
 }
@@ -32,19 +38,31 @@ describe('NewDocumentWizard', () => {
 
   it('creates from the number keys too', () => {
     const p = wizard();
-    fireEvent.keyDown(screen.getByRole('group', { name: 'What are you making?' }), { key: '5' });
+    fireEvent.keyDown(screen.getByRole('group', { name: 'What are you making?' }), { key: '4' });
     expect(p.onCreate).toHaveBeenCalledWith('blank-plan');
   });
 
+  // new-document-route.md "Choosing a mode": the three kinds; PDF document blank or from a file.
+  it('creates a document kind, and a PDF from a file', () => {
+    const p = wizard();
+    fireEvent.click(screen.getByRole('button', { name: /^Text document:/ }));
+    expect(p.onCreateKind).toHaveBeenCalledWith('text-document', 'blank');
+    fireEvent.click(screen.getByRole('button', { name: 'Open a PDF file' }));
+    expect(p.onCreateKind).toHaveBeenLastCalledWith('pdf-document', 'file');
+    expect(p.onCreate).not.toHaveBeenCalled();
+  });
+
   it("creates the preset mode's blank from Create, else a Blank Diagram", () => {
-    const p = wizard({ initialMode: 'pages' });
-    expect(screen.getByRole('button', { name: /^Pages:/ }).getAttribute('aria-pressed')).toBe(
+    const p = wizard({ initialMode: 'plan' });
+    expect(screen.getByRole('button', { name: /^Plan:/ }).getAttribute('aria-pressed')).toBe(
       'true',
     );
     fireEvent.click(screen.getByRole('button', { name: 'Create' }));
-    expect(p.onCreate).toHaveBeenCalledWith('blank-illustration');
+    expect(p.onCreate).toHaveBeenCalledWith('blank-plan');
     cleanup();
-    const q = wizard();
+    // Pages is no longer offered: its preset chooses nothing.
+    const q = wizard({ initialMode: 'pages' });
+    expect(screen.queryByRole('button', { name: /^Pages:/ })).toBeNull();
     fireEvent.click(screen.getByRole('button', { name: 'Create' }));
     expect(q.onCreate).toHaveBeenCalledWith('blank');
   });

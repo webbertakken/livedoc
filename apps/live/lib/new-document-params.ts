@@ -28,9 +28,10 @@ export function wizardBypassKind(search: string): TemplateKind | null {
 
 // The kinds a /new URL can ask a blank of: `?kind=text-document` makes a text document
 // (docs/specs/034-text-documents/text-document.md "The single-tab document"), `?kind=spreadsheet` a spreadsheet
-// (docs/specs/029-sheets/spreadsheet.md "Making a spreadsheet"). Any other kind is ignored, so a stale link opens the
-// wizard.
-export const WIZARD_TAB_KINDS = ['text-document', 'spreadsheet'] as const;
+// (docs/specs/029-sheets/spreadsheet.md "Making a spreadsheet"), `?kind=pdf-document` a Blank PDF
+// (docs/specs/035-pdf-documents/starting-and-finding.md "Starting one"). Any other kind is ignored, so a stale link
+// opens the wizard.
+export const WIZARD_TAB_KINDS = ['text-document', 'spreadsheet', 'pdf-document'] as const;
 export type WizardTabKind = (typeof WIZARD_TAB_KINDS)[number];
 
 export function wizardBypassTabKind(search: string): WizardTabKind | null {
