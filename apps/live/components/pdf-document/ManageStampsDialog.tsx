@@ -171,7 +171,7 @@ export function ManageStampsDialog({
 
   return (
     <OfficeDialog open={open} onClose={onClose} title="Manage stamps" wide>
-      <div className="flex flex-col gap-5">
+      <div className="flex flex-col gap-6">
         {sections.length === 0 ? (
           <div className="flex flex-col items-start gap-3">
             <p className="text-body">You have no custom stamps yet.</p>
@@ -197,7 +197,7 @@ export function ManageStampsDialog({
                   type="text"
                   aria-label={`Category ${category}`}
                   maxLength={PDF_CUSTOM_STAMP_CATEGORY_MAX_CHARS}
-                  className={`${FIELD} font-semibold`}
+                  className={`${FIELD}`}
                   {...keptField(category, (text) =>
                     said(renameCustomStampCategory(ownerId, category, text)),
                   )}
