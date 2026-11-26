@@ -762,7 +762,12 @@ export class SheetStore {
         const cells = shrinkReadersOf(sheetId, target.layout, write.changes, entry.view.cells);
         if (cells.length) out.push({ sheetId: id, write: { kind: 'cells', cells } });
         // A Dropdown from a Range reading the sheet shrinks with it (data-validation.md "Rules").
-        const changes = shrinkRuleSourcesOf(sheetId, target.layout, write.changes, entry.view.layout);
+        const changes = shrinkRuleSourcesOf(
+          sheetId,
+          target.layout,
+          write.changes,
+          entry.view.layout,
+        );
         if (changes.length) out.push({ sheetId: id, write: { kind: 'layout', changes } });
       }
     }
