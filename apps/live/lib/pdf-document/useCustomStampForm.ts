@@ -40,6 +40,8 @@ export function useCustomStampForm<Held>({
   const [keeping, setKeeping] = useState(false);
   const [name, setName] = useState('');
   const [category, setCategory] = useState(DEFAULT_STAMP_CATEGORY);
+  // "Show who and when": unchecked until checked.
+  const [dynamic, setDynamic] = useState(false);
   const [problem, setProblem] = useState<string | null>(null);
   const [making, setMaking] = useState(false);
   const latest = useRef(0);
@@ -97,11 +99,12 @@ export function useCustomStampForm<Held>({
       picture: kept,
       name: name.trim(),
       category: category.trim(),
+      dynamic,
     });
     setMaking(false);
     if (made.ok) onMade(made.stamp);
     else setProblem(made.problem);
-  }, [ready, kept, ownerId, name, category, onMade]);
+  }, [ready, kept, ownerId, name, category, dynamic, onMade]);
 
   /** Everything forgotten: the dialog closed. */
   const reset = useCallback(() => {
@@ -112,6 +115,7 @@ export function useCustomStampForm<Held>({
     setKeeping(false);
     setName('');
     setCategory(DEFAULT_STAMP_CATEGORY);
+    setDynamic(false);
     setProblem(null);
     setMaking(false);
   }, []);
@@ -135,6 +139,8 @@ export function useCustomStampForm<Held>({
     setName: (to: string) => setName(to.slice(0, PDF_CUSTOM_STAMP_NAME_MAX_CHARS)),
     category,
     setCategory: (to: string) => setCategory(to.slice(0, PDF_CUSTOM_STAMP_CATEGORY_MAX_CHARS)),
+    dynamic,
+    setDynamic,
     problem,
     making,
     ready,

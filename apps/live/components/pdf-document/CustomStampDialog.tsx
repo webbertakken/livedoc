@@ -141,6 +141,15 @@ function CustomStampForm({
             ))}
           </datalist>
         </label>
+        <label className="flex h-row cursor-pointer items-center gap-2 text-body text-(--office-ink) pointer-coarse:h-11">
+          <input
+            type="checkbox"
+            checked={form.dynamic}
+            onChange={(e) => form.setDynamic(e.target.checked)}
+            className="size-icon-row accent-(--office-primary)"
+          />
+          Show who and when
+        </label>
         {form.problem ? (
           <p role="alert" className="text-body text-(--office-error)">
             {form.problem}

@@ -38,6 +38,8 @@ export type CustomStampInput = {
   readonly picture: StampPicture;
   /** The size it is placed at before it is held to a third of the page, in points. */
   readonly natural: { readonly width: number; readonly height: number };
+  /** Whether it shows who and when under its picture (custom-stamps.md "Making one"); absent, it does not. */
+  readonly dynamic?: true;
 };
 
 /** A custom stamp as it is kept and listed: what `GET /api/custom-stamps` answers, newest first. */
@@ -98,6 +100,7 @@ export const CustomStamp = {
     const natural = v.natural;
     if (!name || !category || !picture || !isRecord(natural)) return invalid;
     if (!isPoints(natural.width) || !isPoints(natural.height)) return invalid;
+    if (v.dynamic !== undefined && typeof v.dynamic !== 'boolean') return invalid;
     return {
       ok: true,
       value: {
@@ -106,6 +109,7 @@ export const CustomStamp = {
         category,
         picture,
         natural: { width: natural.width, height: natural.height },
+        ...(v.dynamic === true ? { dynamic: true as const } : {}),
       },
     };
   },

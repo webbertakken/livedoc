@@ -172,3 +172,66 @@ describe('StampLayout.clip', () => {
     expect(third!.endsWith('…')).toBe(true);
   });
 });
+
+// custom-stamps.md "Placing one": a custom stamp that shows who and when is its picture, as wide as its widest line
+// under it, its shape kept, with its second and third lines under it; the whole scaled to its box and centred.
+describe('a custom stamp with who and when', () => {
+  const THIRD = 'Chief Engineer';
+  const GAP = STAMP_LINE_GAP_PT;
+  const DETAIL_HIGH = (STAMP_DETAIL_PT * (Helvetica.ascent + Helvetica.descent)) / 1000;
+  const DETAIL_ASCENT = (STAMP_DETAIL_PT * Helvetica.ascent) / 1000;
+  const wide = measure(DETAIL, Helvetica, STAMP_DETAIL_PT);
+  // A picture twice as wide as it is high.
+  const picture = { width: 400, height: 200 };
+
+  it('fills its box with its picture alone where it has only its name', () => {
+    const rect: Box = [10, 20, 110, 70];
+    expect(StampLayout.pictured({ rect, lines: ['Paid'], picture })).toEqual({
+      picture: rect,
+      lines: [],
+    });
+    expect(StampLayout.picturedNatural(['Paid'], { width: 300, height: 150 })).toEqual({
+      width: 300,
+      height: 150,
+    });
+  });
+
+  it('sets the picture as wide as its widest line, its lines under it, at their size in a box of its natural size', () => {
+    const high = wide / 2 + 2 * (GAP + DETAIL_HIGH);
+    const rect: Box = [100, 100, 100 + wide, 100 + high];
+    const { picture: box, lines } = StampLayout.pictured({
+      rect,
+      lines: ['Paid', DETAIL, THIRD],
+      picture,
+    });
+    [100, 100 + 2 * (GAP + DETAIL_HIGH), 100 + wide, 100 + high].forEach((n, at) =>
+      expect(box[at]).toBeCloseTo(n, 6),
+    );
+    expect(lines.map((line) => line.text)).toEqual([DETAIL, THIRD]);
+    expect(lines[0]!.size).toBeCloseTo(STAMP_DETAIL_PT, 6);
+    expect(lines[0]!.x).toBeCloseTo(100, 6);
+    expect(lines[0]!.y).toBeCloseTo(box[1] - GAP - DETAIL_ASCENT, 6);
+    expect(lines[1]!.y).toBeCloseTo(lines[0]!.y - GAP - DETAIL_HIGH, 6);
+    // Centred across: the shorter third line.
+    expect(lines[1]!.x + lines[1]!.width / 2).toBeCloseTo(100 + wide / 2, 6);
+  });
+
+  it('scales the whole in proportion to a box twice the size, centred in a wider one', () => {
+    const high = wide / 2 + GAP + DETAIL_HIGH;
+    const rect: Box = [0, 0, 4 * wide, 2 * high];
+    const { picture: box, lines } = StampLayout.pictured({
+      rect,
+      lines: ['Paid', DETAIL],
+      picture,
+    });
+    expect(lines[0]!.size).toBeCloseTo(2 * STAMP_DETAIL_PT, 6);
+    expect(box[2] - box[0]).toBeCloseTo(2 * wide, 6);
+    expect((box[0] + box[2]) / 2).toBeCloseTo(2 * wide, 6);
+  });
+
+  it('is placed at its picture’s natural width, the height that width gives the whole', () => {
+    const natural = StampLayout.picturedNatural(['Paid', DETAIL], { width: 300, height: 150 });
+    expect(natural.width).toBe(300);
+    expect(natural.height).toBeCloseTo(150 + ((GAP + DETAIL_HIGH) * 300) / wide, 6);
+  });
+});

@@ -79,8 +79,16 @@ describe('CustomStamp.input', () => {
     ['a natural size of none', { natural: { width: 0, height: 10 } }],
     ['a natural size past a page', { natural: { width: PDF_MAX_PAGE_POINTS + 1, height: 10 } }],
     ['a natural size not a number', { natural: { width: '10', height: 10 } }],
+    ['who and when not a yes or no', { dynamic: 'yes' }],
   ])('refuses %s as custom_stamp_invalid', (_, over) => {
     expect(CustomStamp.input(input(over))).toEqual({ ok: false, refusal: 'custom_stamp_invalid' });
+  });
+
+  // custom-stamps.md "Making one": Show who and when.
+  it('reads whether it shows who and when, kept only when it does', () => {
+    expect(CustomStamp.input(input({ dynamic: true }))).toMatchObject({ value: { dynamic: true } });
+    const off = CustomStamp.input(input({ dynamic: false }));
+    expect(off.ok && off.value).not.toHaveProperty('dynamic');
   });
 
   it('refuses what is not an object', () => {

@@ -368,7 +368,8 @@ written into the file as a standard annotation, so any reader shows it. The rese
   category; kept in LiveDoc for their maker, owner-scoped as custom themes are: a guest's under this browser's guest
   id, taken to the account on sign-up, an account's wherever they sign in; renamed, deleted and moved between
   categories in **Manage stamps**. A custom stamp's picture is a blob named in the mark
-  ([Custom stamps](custom-stamps.md)).
+  ([Custom stamps](custom-stamps.md)). Made with **Show who and when**, it is a **custom dynamic stamp**: its picture
+  with a dynamic stamp's lines under it.
 - The Stamp control shows the last stamp used; its menu shows categories, each a grid of stamps with names.
 - A stamp is placed at its natural size, at most a third of the page's width, and resized by its handles.
 - **LiveDoc's style** for a standard or dynamic stamp: a box with rounded corners and a 2-point border, the stamp's
@@ -383,6 +384,10 @@ written into the file as a standard annotation, so any reader shows it. The rese
 - **Read from a file**, a stamp's lines are its `Contents`' lines, at most three; a file's stamp of more keeps its
   first three `(default)`.
 - A stamp's words are fixed when it is placed: a dynamic stamp keeps its name and time however often it is read.
+- **A file's own dynamic stamp** (Acrobat's, its name and time reckoned by JavaScript when it is placed) shows its
+  stored appearance as the file draws it, and its script is never run, here or anywhere a file is read
+  ([Security](security.md)); a person's own custom stamp shows who and when as LiveDoc's words instead
+  ([Custom stamps](custom-stamps.md#placing-one)).
 - **Placing a stamp**: with the Stamp tool in hand (K), a press places the stamp the Stamp control shows, centred on
   the press; a stamp that would leave its page is moved onto it. The tool stays in hand, as every tool does.
 - **The Stamp control** holds the stamps behind its chevron as Highlight holds the text tools: a grid headed Standard

@@ -10,6 +10,7 @@ import {
   Mark,
   MarkFaceSlices,
   PageName,
+  StampLayout,
   type PageMatrix,
   type Quad,
 } from '@livedoc/pdf-documents';
@@ -468,6 +469,34 @@ describe('a custom stamp over a page', () => {
     // Its top left at the box's (10, 40 on the page: 10, 60 in view), 40 across and 20 down.
     expect(image.getAttribute('transform')).toBe('matrix(40 0 0 20 10 60)');
     expect(read).toHaveBeenCalledWith(custom.picture!.key);
+  });
+
+  // custom-stamps.md "Placing one": one that shows who and when, its picture above its lines, its name not drawn.
+  it('draws who and when under its picture', async () => {
+    URL.createObjectURL = vi.fn(() => 'blob:paid');
+    const dynamic = {
+      ...custom,
+      rect: [10, 20, 90, 80] as const,
+      lines: ['Paid', 'by Ada', 'Chief'],
+    };
+    const svg = render(
+      <PdfStampPicturesContext.Provider value={vi.fn(async () => new Uint8Array([1]))}>
+        <PdfMarksOverlay
+          matrix={[1, 0, 0, -1, 0, 100]}
+          width={100}
+          height={100}
+          marks={[dynamic]}
+        />
+      </PdfStampPicturesContext.Provider>,
+    ).container.querySelector('svg')!;
+    await waitFor(() => expect(svg.querySelector('[data-pdf-stamp-picture="c1"]')).not.toBeNull());
+    const texts = [...svg.querySelectorAll('[data-pdf-mark="c1"] text')].map((t) => t.textContent);
+    expect(texts).toEqual(['by Ada', 'Chief']);
+    const box = StampLayout.pictured({ ...dynamic, picture: dynamic.picture! }).picture;
+    const image = svg.querySelector('[data-pdf-stamp-picture="c1"]')!;
+    expect(image.getAttribute('transform')).toBe(
+      `matrix(${box[2] - box[0]} 0 0 ${box[3] - box[1]} ${box[0]} ${100 - box[3]})`,
+    );
   });
 
   it('draws its outlined box with its name where its picture failed', async () => {

@@ -16,6 +16,7 @@ import {
 import {
   addCustomStamp,
   addStamp,
+  customStampLines,
   CUSTOM_STAMP_COLOUR,
   placeNatural,
   placeStamp,
@@ -273,6 +274,44 @@ describe('addCustomStamp', () => {
       },
     ]);
     expect(PdfLiveChanges.stored(doc)).toEqual(stored);
+  });
+
+  // custom-stamps.md "Placing one": one that shows who and when carries a dynamic stamp's lines under its name,
+  // placed at its picture's natural width and the height that gives the whole.
+  it('places one that shows who and when with who, when and their identity', () => {
+    const dynamic = { ...custom, dynamic: true as const };
+    const by = { author: 'Ada', now: NOW, identity: { title: 'Chief Engineer' } };
+    expect(customStampLines(dynamic, by)).toEqual([
+      'Paid',
+      'by Ada, 21 Nov 2026, 14:02',
+      'Chief Engineer',
+    ]);
+    expect(customStampLines(custom, by)).toEqual(['Paid']);
+    const doc = PdfLiveChanges.load();
+    addCustomStamp(
+      doc,
+      { page, stored, box: LETTER },
+      dynamic,
+      { x: 306, y: 396 },
+      {
+        ...by,
+        id: 'c2',
+      },
+    );
+    const [mark] = PdfLiveChanges.marks(doc) as unknown as [{ rect: Box; lines: string[] }];
+    expect(mark.lines).toHaveLength(3);
+    const natural = StampLayout.picturedNatural(mark.lines, custom.natural);
+    const [left, bottom, right, top] = mark.rect;
+    expect(right - left).toBeCloseTo(204, 6);
+    expect(top - bottom).toBeCloseTo((natural.height * 204) / natural.width, 6);
+  });
+
+  it('cuts a long identity line under its picture to the width of who and when', () => {
+    const lines = customStampLines(
+      { ...custom, dynamic: true },
+      { author: 'Ada', now: NOW, identity: { title: 'T'.repeat(80) } },
+    );
+    expect(lines[2]!.endsWith('…')).toBe(true);
   });
 
   it('keeps a small one at its natural size', () => {
