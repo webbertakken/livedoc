@@ -7,7 +7,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 const mocks = vi.hoisted(() => ({
   assign: vi.fn(),
   pick: vi.fn(async (): Promise<File | null> => null),
-  open: vi.fn(async () => ({ ok: true, documentId: 'd1', held: false }) as unknown),
+  open: vi.fn(async (): Promise<unknown> => ({ ok: true, documentId: 'd1', held: false })),
   track: vi.fn(),
 }));
 vi.mock('@/lib/app-location', () => ({ assignAppLocation: mocks.assign }));

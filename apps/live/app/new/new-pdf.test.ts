@@ -5,7 +5,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
   pick: vi.fn(async (): Promise<File | null> => null),
-  open: vi.fn(async () => ({ ok: true, documentId: 'd1', held: false }) as unknown),
+  open: vi.fn(async (): Promise<unknown> => ({ ok: true, documentId: 'd1', held: false })),
   track: vi.fn(),
 }));
 vi.mock('@/lib/pick-file', () => ({ pickFile: mocks.pick }));

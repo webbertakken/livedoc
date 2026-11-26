@@ -32,7 +32,7 @@ describe('paneGroupsFor', () => {
       expect(kinds.some(isBlankTemplate), b.id).toBe(false);
       expect(kinds.length, b.id).toBeGreaterThan(0);
       for (const k of kinds)
-        expect(templateOpening(k), `${b.id} ${k}`).toBe(newDocumentTemplateMode(b.templates!));
+        expect(templateOpening(k), `${b.id} ${k}`).toBe(newDocumentTemplateMode(b.templates));
     }
   });
 
