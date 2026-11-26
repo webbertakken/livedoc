@@ -93,6 +93,7 @@ export {
   chartsReadLive,
   formatPatchOf,
   listSheets,
+  createSpreadsheet,
   readSheet,
   readSheets,
   resolveSheet,

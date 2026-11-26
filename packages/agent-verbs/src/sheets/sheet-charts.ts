@@ -31,7 +31,10 @@ import {
   rowHeights,
   type RowHeights,
   sheetChartTable,
+  SHEET_CHART_ALT_MAX,
+  SHEET_CHART_TEXT_MAX,
   type IdRange,
+  type SheetChartLegend,
   type SheetLayout,
   type Workbook,
 } from '@livedoc/sheets';
@@ -50,9 +53,65 @@ export type SheetChartOut = {
   palette?: ChartPaletteId;
   // A scatter chart's series drawn as lines, by name (pie-chart.md "Lines set by an agent").
   lines?: string[];
+  // The cell it sits on (row, column), and its titles and the rest of its look (charts.md "The model").
+  cell: [number, number];
+  look?: SheetChartLook;
 };
 
-export type SheetChartChange = {
+// A chart's titles and look as an agent gives them (sheet-store.md "Built for agents in a spreadsheet").
+export type SheetChartLook = {
+  title?: string;
+  xAxisTitle?: string;
+  yAxisTitle?: string;
+  legend?: SheetChartLegend;
+  values?: boolean;
+  axis?: boolean;
+  alt?: string;
+};
+
+const LOOK_KEYS = ['title', 'xAxisTitle', 'yAxisTitle', 'legend', 'values', 'axis', 'alt'] as const;
+
+// The look a change gives, held to the chart's bounds, or the refusal.
+function lookOf(change: SheetChartLook): SheetChartLook | SheetRefusal | undefined {
+  const look: SheetChartLook = {};
+  for (const key of LOOK_KEYS)
+    if (change[key] !== undefined) Object.assign(look, { [key]: change[key] });
+  const long = (['title', 'xAxisTitle', 'yAxisTitle'] as const).find(
+    (k) => (look[k]?.length ?? 0) > SHEET_CHART_TEXT_MAX,
+  );
+  if (long)
+    return refuse(
+      'write_invalid',
+      `A chart's ${long} is up to ${SHEET_CHART_TEXT_MAX} characters.`,
+    );
+  if ((look.alt?.length ?? 0) > SHEET_CHART_ALT_MAX)
+    return refuse(
+      'write_invalid',
+      `A chart's alt text is up to ${SHEET_CHART_ALT_MAX} characters.`,
+    );
+  return Object.keys(look).length ? look : undefined;
+}
+
+// The element fields a look gives a Plan chart (pie-chart.md "Model"); the value axis only when it is said.
+export function lookFields(look: SheetChartLook | undefined): Partial<ShapeElement> {
+  if (!look) return {};
+  const titles = {
+    ...(look.xAxisTitle ? { x: look.xAxisTitle } : {}),
+    ...(look.yAxisTitle ? { y: look.yAxisTitle } : {}),
+  };
+  return {
+    ...(look.title ? { chartTitle: look.title } : {}),
+    ...(titles.x || titles.y ? { chartAxisTitles: titles } : {}),
+    ...(look.legend === 'none' ? { chartLegend: false } : {}),
+    ...(look.legend && look.legend !== 'none' ? { chartLegendPosition: look.legend } : {}),
+    ...(look.values !== undefined ? { chartValues: look.values } : {}),
+    ...(look.axis !== undefined ? { chartAxis: look.axis } : {}),
+  };
+}
+
+export type SheetChartChange = SheetChartLook & {
+  // A chart of the sheet's, by id, this one takes the place of (a spreadsheet's).
+  replace?: string;
   op: 'chart';
   type: ChartType;
   range: string;
@@ -172,6 +231,7 @@ export function designCharts(
       },
       ...(picked.length ? { cols: picked.slice(0, CHART_SOURCE_COLS_MAX) } : {}),
       anchor: anchorAt(layout, at, heightOf),
+      cell: at,
       width: sized(t.chart.width, SHEET_CHART_SIZE.width, CHART_MIN.width),
       height: sized(t.chart.height, SHEET_CHART_SIZE.height, CHART_MIN.height),
       palette:
@@ -216,6 +276,8 @@ export function buildChartChange(
   }
   const lines = linesOf(wb, sheetId, change, { range: ids, cols: picked });
   if (!Array.isArray(lines)) return lines;
+  const look = lookOf(change);
+  if (look && 'ok' in look) return look;
   const sheet = wb.sheet(sheetId)!;
   const cols = change.columns?.length
     ? change.columns.map((l) => columnIndex(l.trim()))
@@ -242,6 +304,8 @@ export function buildChartChange(
         height: sized(change.height, SHEET_CHART_SIZE.height, CHART_MIN.height),
         ...(palette ? { palette } : {}),
         ...(lines.length ? { lines } : {}),
+        cell: at,
+        ...(look ? { look } : {}),
       },
     ],
   };
@@ -301,6 +365,7 @@ export function sheetChartElements(
       chartSource: source,
       sheetAnchor: ch.anchor,
       ...(ch.palette ? { chartPalette: ch.palette } : {}),
+      ...lookFields(ch.look),
     };
     // Its range was just read from this workbook, so it reads.
     const table = sheetChartTable(wb, source, wb.locale)!;

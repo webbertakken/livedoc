@@ -383,6 +383,33 @@ tells them.
 - **Previews**: a sheet's range drawn as a PNG through `render-png`, as Plan previews are.
 - Values an agent reads are worked out by the same engine; formulas an agent writes are read in `en-GB`, as today.
 
+### Built for agents in a spreadsheet
+
+- **`create_spreadsheet`** (`livedoc spreadsheet new`): a name, and its sheets in order, each a name and optionally its
+  first cells as rows or CSV text from A1 (one sheet, `Sheet1`, when none are named); in ODF (C5), its locale
+  `en-GB` and time zone UTC; filed as `create_document` files a document, marked as made by its agent. Names follow
+  the sheet name's rules and are unique (`sheet_name_invalid`, `sheet_name_taken`, before anything is made); every
+  formula is read first (`formula_invalid`, naming the sheet and cell) and a value too long refused (`input_too_long`);
+  the room checks the caps as the cells land, and a sheet whose filling is refused leaves the
+  spreadsheet made and says which sheets were filled. It answers the document, its link and each sheet's name and id.
+- **`add_sheet` in a spreadsheet** adds a sheet tab, named as given (else the next free `SheetN`), after the sheet
+  `after` names (by name; last when absent), through the workbook's own door, then fills it as on a Plan tab, the room checking the caps (a refused filling
+  deletes the new tab again); a
+  `tabId` is refused there (`write_invalid`).
+- **`change_sheet` in a spreadsheet** also:
+  - `move`: the sheet after the sheet `after` names, or first for `null`; `hide` with `hidden` true or false, never
+    the last shown sheet (`sheet_last_visible`). On a Plan Sheet both are refused (`not_spreadsheet`).
+  - `chart` puts the sheet's own chart ([Charts](charts.md#the-model)) at the cell `at` names, with `title`,
+    `xAxisTitle`, `yAxisTitle`, `legend` (top, right, bottom, left or none), `values`, `axis` (the value axis, shown
+    unless false), `alt` and `lines` (a scatter's series drawn as lines, by name, kept by their columns); `replace`
+    names a chart of the sheet by id to put this one in its place, its id and paint order kept (`chart_not_found`
+    when it is none). The title options draw on a Plan chart too.
+  - `clear_charts` takes the sheet's charts off: those reading cells of a range, or every one.
+- **`read_sheet` in a spreadsheet** answers the sheet's charts: id, type, range and columns in A1, the cell it sits
+  on, size, titles, legend, values, axis, alt and the series drawn as lines.
+- **`list_sheets` in a spreadsheet** lists the sheets in tab order, each with whether it is hidden and how many
+  charts it holds.
+
 ## Limits
 
 A Plan Sheet's; a [spreadsheet](spreadsheet.md#limits)'s sheets take the workbook's instead.

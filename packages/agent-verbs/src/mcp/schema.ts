@@ -314,12 +314,16 @@ types, fields and people as the board shows them; add_board puts a board on a
 tab in Plan (a preset or columns by name) and change_board changes one (title, columns,
 the card types it shows); change_card_types adds and edits card types and their
 custom fields. A board shows only the card types it takes. A Plan template (kanban, project-planner, bug-triage)
-makes a document with boards ready to fill. Sheets (spreadsheets on a tab) have
-theirs: list_sheets lists a document's sheets, read_sheet reads one's cells by A1
+makes a document with boards ready to fill. A spreadsheet is a document of its own
+(create_spreadsheet makes one, its sheets named and filled; each sheet is a tab), and
+Sheets (spreadsheets on a tab in Plan) sit beside boards. Both have the sheet tools:
+list_sheets lists a document's sheets, read_sheet reads one's cells by A1
 (inputs, worked-out values and what they show), change_sheet sets, clears and
 formats cells, inserts and deletes rows and columns, sorts, freezes and renames,
 and sets dropdowns, checkboxes and other validation rules and conditional formats,
-and add_sheet puts a new Sheet on a tab in Plan, blank or from rows or CSV text.
+puts charts over the cells (with titles; in a spreadsheet, moves and hides the sheet),
+and add_sheet adds a sheet (a spreadsheet's tab, or a Sheet on a tab in Plan), blank or
+from rows or CSV text.
 Tabs in Pages mode hold pages: infographics, slides, logo artboards and articles
 (documents of text on pages). change_pages adds, changes, lays out (from a
 ready-made layout), moves, copies and deletes infographic, slide and logo pages

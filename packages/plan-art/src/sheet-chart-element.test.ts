@@ -1,8 +1,8 @@
 // A spreadsheet's chart as the chart element LiveDoc's chart code draws (docs/specs/029-sheets/charts.md "The model"):
 // its type, look and titles carried over, its data read, each series' look by its column, and no data drawn as none.
 import { describe, expect, it } from 'vitest';
-import { chartTypeOf } from '@livedoc/document';
-import type { SheetChart, SheetChartTable } from '@livedoc/sheets';
+import { CHART_TYPES, chartTypeOf } from '@livedoc/document';
+import { SHEET_CHART_TYPES, type SheetChart, type SheetChartTable } from '@livedoc/sheets';
 import { sheetChartElement } from './sheet-chart-element';
 
 const range = { r1: 'r0000', c1: 'c0000', r2: 'r0003', c2: 'c0002' };
@@ -28,6 +28,11 @@ const table: SheetChartTable = {
 const at = { x: 300, y: 20 };
 
 describe('a spreadsheet chart as a chart element', () => {
+  // @livedoc/sheets restates the chart types it never imports: the two lists stay one.
+  it('knows every chart type LiveDoc draws, by the same names', () => {
+    expect([...SHEET_CHART_TYPES]).toEqual([...CHART_TYPES]);
+  });
+
   it('draws a scatter of numbers against its first column, a series as a line by its column, gaps kept', () => {
     const el = sheetChartElement(
       chart({ series: { c0002: { line: true, color: '#112233' } } }),

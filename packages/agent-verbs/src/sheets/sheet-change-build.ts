@@ -34,10 +34,12 @@ import {
   SheetLimits,
 } from '@livedoc/sheets';
 import type { SheetRefusal } from './sheet-state';
+import { rowsRefusal } from './sheet-refusals';
 import { buildRuleChange, type SheetRuleChange } from './sheet-rule-change';
 import { buildShapeChange, type SheetShapeChange } from './sheet-shape-change';
 import { buildDesign, type SheetDesignInput } from './sheet-design';
 import { buildChartChange, type SheetChartChange, type SheetChartOut } from './sheet-charts';
+import { chartObjectWrite, chartsClearWrite } from './sheet-chart-objects';
 import { plural } from '@livedoc/document';
 
 // How a cell looks, in words; null clears that part (false clears a flag).
@@ -79,7 +81,11 @@ export type SheetChange =
   // A sheet laid out as a template is (sheet-design.ts), and a chart over cells (sheet-charts.ts).
   | { op: 'design'; design: SheetDesignInput }
   | SheetChartChange
-  | { op: 'clear_charts'; range?: string };
+  | { op: 'clear_charts'; range?: string }
+  // A spreadsheet's sheet tab (sheet-store.md "Built for agents in a spreadsheet"): moved after a sheet (first for
+  // null), hidden or shown.
+  | { op: 'move'; after: string | null }
+  | { op: 'hide'; hidden: boolean };
 
 // What one change sends, the line that says what it did, and the charts it puts over the cells (for the caller to add
 // to the tab).
@@ -91,12 +97,25 @@ type BuiltChange =
       charts?: SheetChartOut[];
       // The charts to take off the tab: those reading a range's cells, or (null) every one of the sheet's.
       clearCharts?: GridRange | null;
+      // A spreadsheet's sheet tab moved after the sheet tab of this id (first for null), through the workbook's door.
+      moveAfter?: string | null;
     }
   | SheetRefusal;
 
 // What a change needs of where its sheet is drawn: whether its tab's canvas is dark (a design's tints follow it).
 // What a change is built for: its tab's canvas (a design's tints) and its tab's font (what rows are measured in).
-export type SheetChangeContext = { dark?: boolean; font?: string | undefined };
+// And whether the sheet is a spreadsheet's, whose charts are its own objects and whose tabs move and hide.
+export type SheetChangeContext = {
+  dark?: boolean;
+  font?: string | undefined;
+  spreadsheet?: boolean;
+};
+
+const notSpreadsheet = (op: string) =>
+  refuse(
+    'not_spreadsheet',
+    `${op} works on a spreadsheet's sheet; this sheet sits on a Plan tab (move or hide the tab instead).`,
+  );
 
 const refuse = (code: string, message: string): SheetRefusal => ({ ok: false, code, message });
 
@@ -183,8 +202,8 @@ export function buildSheetChange(
     case 'set': {
       const made = writeRows(wb, sheetId, change.at, change.rows, rand);
       if (!made.ok)
-        return made.error === 'formula_invalid'
-          ? refuse('formula_invalid', `The formula in ${made.at} cannot be read: ${made.why}.`)
+        return made.error === 'formula_invalid' || made.error === 'input_too_long'
+          ? rowsRefusal(made)
           : badRange(change.at);
       // A value a Reject rule refuses is refused here, naming the cell and what its rule allows (data-validation.md
       // "Agents"); the api would refuse it too.
@@ -361,20 +380,55 @@ export function buildSheetChange(
         { dark: !!context.dark, font: context.font },
         rand,
       );
-    case 'chart':
-      return buildChartChange(wb, sheetId, change, context.font);
+    case 'chart': {
+      const built = buildChartChange(wb, sheetId, change, context.font);
+      if (!built.ok || !context.spreadsheet) return built;
+      // A spreadsheet's chart is the sheet's own (charts.md "The model"): one layout write sets it.
+      const made = chartObjectWrite(wb, sheetId, built.charts[0]!, change.replace, rand);
+      if (!made.ok) return made;
+      const line = change.replace
+        ? built.line.replace(/^charted/, `charted (in place of ${change.replace})`)
+        : built.line;
+      return { ok: true, writes: [made.write], line: `${line} (chart ${made.id})` };
+    }
     case 'clear_charts': {
-      if (change.range === undefined)
-        return { ok: true, writes: [], line: 'cleared the sheet’s charts', clearCharts: null };
-      const range = parseRangeText(change.range);
-      if (!range) return badRange(change.range);
+      const range = change.range === undefined ? null : parseRangeText(change.range);
+      if (change.range !== undefined && !range) return badRange(change.range);
+      const what = range ? `the charts reading ${formatRange(range)}` : 'the sheet’s charts';
+      if (context.spreadsheet) {
+        const cleared = chartsClearWrite(sheet.layout, range);
+        return cleared
+          ? { ok: true, writes: [cleared.write], line: `cleared ${what} (${cleared.count})` }
+          : { ok: true, writes: [], line: `cleared ${what} (none there)` };
+      }
+      return { ok: true, writes: [], line: `cleared ${what}`, clearCharts: range };
+    }
+    case 'move': {
+      if (!context.spreadsheet) return notSpreadsheet('move');
+      if (change.after === null)
+        return { ok: true, writes: [], line: 'moved first', moveAfter: null };
+      const after = wb
+        .sheetList()
+        .find((x) => x.title.toLowerCase() === change.after!.trim().toLowerCase());
+      if (!after)
+        return refuse(
+          'sheet_not_found',
+          `No sheet "${change.after}" to move after. Sheets: ${wb
+            .sheetList()
+            .map((x) => `"${x.title}"`)
+            .join(', ')}.`,
+        );
+      if (after.id === sheetId)
+        return refuse('write_invalid', 'A sheet moves after another sheet.');
+      return { ok: true, writes: [], line: `moved after "${after.title}"`, moveAfter: after.tabId };
+    }
+    case 'hide':
+      if (!context.spreadsheet) return notSpreadsheet('hide');
       return {
         ok: true,
-        writes: [],
-        line: `cleared the charts reading ${formatRange(range)}`,
-        clearCharts: range,
+        writes: [{ kind: 'layout', changes: [{ k: 'options', hidden: change.hidden }] }],
+        line: change.hidden ? 'hidden' : 'shown',
       };
-    }
     case 'freeze': {
       if (change.rows === undefined && change.cols === undefined)
         return refuse('write_invalid', 'Freeze names rows, cols or both (0 unfreezes).');

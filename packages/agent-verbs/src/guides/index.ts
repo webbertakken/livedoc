@@ -317,6 +317,32 @@ A lane plan changes lanes and keeps time; arranging changes time and keeps lanes
     summary: 'what a good answer to each ask on an Event Storming board looks like',
     text: STORM_ASKS_GUIDE,
   },
+  spreadsheet: {
+    summary: 'make a spreadsheet, fill and shape its sheets, chart them, read them back',
+    text: `Spreadsheets
+
+A spreadsheet is a document of sheets, each a tab, as in Google Sheets; it is kept in ODF.
+Make one with its sheets named in order, the first filled from a CSV file:
+
+  livedoc spreadsheet new "Model values" Models Pareto --csv models.csv
+
+Over MCP: create_spreadsheet {name, sheets: [{name, rows}]}. Cells are read as typed in en-GB:
+a number stays a number, "1/2" is a date (send text as a formula, ="1/2"), a leading = a
+formula, which may read another sheet (=Models!B2). An empty cell is no value: a chart gaps it.
+
+Shape a sheet with change_sheet, changes in order, each seeing what the ones before left:
+  set {at, rows}  format {range, format}  merge {range}  freeze {rows}  filter {range}
+  resize {cols, fit: true}  validate {range, rule: {type: "checkbox"}}  move {after}  hide {hidden}
+
+A chart is the sheet's own, reading its range live, its top-left on the cell at names:
+  chart {type: "scatter", range: "B1:D40", at: "F2", title, xAxisTitle, yAxisTitle,
+         lines: ["Pareto"], axis: true}
+A scatter's first column of numbers is its x; lines draws those series as lines, by name.
+read_sheet lists the charts with their ids; chart {..., replace: "<id>"} rewrites one in place,
+clear_charts {} takes them all off. add_sheet {title, after} adds a sheet after another.
+
+Read back with read_sheet: each cell's input, the value worked out, what it shows.`,
+  },
 } as const;
 
 type GuideTopic = keyof typeof GUIDE_TOPICS;

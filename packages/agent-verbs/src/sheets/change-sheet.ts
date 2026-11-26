@@ -11,6 +11,7 @@ import {
   type ChangesetResponse,
   type SheetWriteRequest,
   type SheetWriteResponse,
+  type WorkbookSheetMoveRequest,
   type TabRecord,
   type TabResponse,
 } from '@livedoc/api-schema';
@@ -41,6 +42,25 @@ import { apiRefusalOf } from '../plan/api-refusal';
 import { SHEET_REFUSAL_WORDS } from './sheet-refusals';
 import { buildSheetChange, type SheetChange, type SheetChangeContext } from './sheet-change-build';
 import { readSheetsState, resolveSheet, sheetWritesPath, workbookFor } from './sheet-state';
+import { chartObjectSet, newChartId } from './sheet-chart-objects';
+
+export const workbookSheetsPath = (documentId: string) =>
+  `/documents/${encodeURIComponent(documentId)}/workbook/sheets`;
+
+type Built = Extract<ReturnType<typeof buildSheetChange>, { ok: true }>;
+
+// A built change's charts (a design's) as the spreadsheet sheet's own, their writes after the change's.
+function withChartObjects(wb: Workbook, sheetId: string, built: Built, rand: Rand): Built {
+  if (!built.charts?.length) return built;
+  const writes = [...built.writes];
+  const taken = new Set<string>();
+  for (const out of built.charts) {
+    const id = newChartId(wb.sheet(sheetId)!.layout, rand, taken);
+    taken.add(id);
+    writes.push(chartObjectSet(wb, sheetId, out, id));
+  }
+  return { ...built, writes, charts: [] };
+}
 
 interface SheetChangesResult {
   sheetId: string;
@@ -124,9 +144,11 @@ async function applySheetChanges(
       .sheetList()
       .filter((s) => s.id !== sheetId)
       .map((s) => s.title);
-    const built = buildSheetChange(wb, sheetId, change, others, rand, context);
-    if (!built.ok)
-      return { applied, rev, charts, clear, refusal: { code: built.code, message: built.message } };
+    const made = buildSheetChange(wb, sheetId, change, others, rand, context);
+    if (!made.ok)
+      return { applied, rev, charts, clear, refusal: { code: made.code, message: made.message } };
+    // A spreadsheet's design charts are the sheet's own, set with the design's writes (charts.md "The model").
+    const built = context.spreadsheet ? withChartObjects(wb, sheetId, made, rand) : made;
     const over = capsRefusal(sheet, built.writes, cells, wb.limits);
     if (over) return { applied, rev, charts, clear, refusal: over };
     const parts = built.writes.flatMap((w) => splitWrite(w));
@@ -152,6 +174,20 @@ async function applySheetChanges(
       cells += next.cells.size - sheet.cells.size;
       wb.updateSheet(next);
       rev = next.rev;
+    }
+    if (built.moveAfter !== undefined) {
+      const after = built.moveAfter ?? '';
+      try {
+        await api.json(`${workbookSheetsPath(documentId)}/${encodeURIComponent(sheetId)}/move`, {
+          method: 'POST',
+          headers: { [CLIENT_HEADER]: client },
+          body: JSON.stringify({ after } satisfies WorkbookSheetMoveRequest),
+        });
+      } catch (err) {
+        const refusal = apiRefusalOf(err);
+        if (!refusal) throw err;
+        return { applied, rev, charts, clear, refusal };
+      }
     }
     applied.push(built.line);
     charts.push(...(built.charts ?? []));
@@ -250,7 +286,8 @@ export async function changeSheet(
   const { id, tabId } = found.sheet;
   const wb = await workbookFor(api, documentId, state, tabId);
   // A design is tinted for its tab's canvas, and charts are on the tab: read it only when a change needs it.
-  const needsTab = input.changes.some((c) => TOUCHES_CHARTS.has(c.op));
+  // A spreadsheet's charts are its sheet's own, anchored to cells: its tab holds none, so it is never read.
+  const needsTab = state.workbook === null && input.changes.some((c) => TOUCHES_CHARTS.has(c.op));
   const readTab = async () => (await api.json<TabResponse>(tabPath(documentId, tabId))).tab;
   const early = needsTab ? await readTab() : null;
   const dark = darkCanvas(early?.backgroundColor);
@@ -266,12 +303,13 @@ export async function changeSheet(
     client,
     documentCellCount(sheets),
     Math.random,
-    { dark, font },
+    { dark, font, spreadsheet: state.workbook !== null },
   );
   // A change to cells alone can make rows taller or shorter (sheet.md "Row height"), which moves the cells under a
   // chart as a resize does: the tab is read then too.
   const after = { layout: wb.sheet(id)!.layout, heights: rowHeights(wb, id, font) };
-  const tab = early ?? (after.heights !== before.heights ? await readTab() : null);
+  const tab =
+    early ?? (state.workbook === null && after.heights !== before.heights ? await readTab() : null);
   if (tab) {
     try {
       const lines = await updateSheetCharts(

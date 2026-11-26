@@ -693,6 +693,12 @@ importers:
       '@axe-core/playwright':
         specifier: ^4.14.0
         version: 4.14.0(playwright-core@1.65.1)
+      '@livedoc/agent-verbs':
+        specifier: workspace:*
+        version: link:../../packages/agent-verbs
+      '@livedoc/api-client':
+        specifier: workspace:*
+        version: link:../../packages/api-client
       '@livedoc/fake-google':
         specifier: workspace:*
         version: link:../../packages/fake-google

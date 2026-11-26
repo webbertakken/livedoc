@@ -32,6 +32,7 @@ const GROUPED_ROWS = [
 const NAMED_ONLY = [
   'board',
   'sheet',
+  'spreadsheet',
   'page',
   'article',
   'form',
@@ -83,7 +84,7 @@ export function topHelp(): string {
     'Start',
     '  livedoc document ls auth        find a document',
     '  livedoc tab view "Auth flow"    its first tab, as an outline',
-    '  livedoc tab lint "Auth flow"    what is wrong with how it is drawn',
+    '  livedoc tab lint "Auth flow"    what is drawn wrong',
     '  livedoc guide edit              change a tab with edit operations',
     '',
     'Sign in: LIVEDOC_TOKEN, or auth login --with-token. Never prompts.',

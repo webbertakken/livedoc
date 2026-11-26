@@ -17,6 +17,7 @@ import {
 } from '@livedoc/sheets';
 import { readSheetsState, resolveSheet, workbookFor, type SheetRefusal } from './sheet-state';
 import { rulesRead } from './sheet-rule-change';
+import { chartsRead, type ChartRead } from './sheet-chart-objects';
 
 // The most characters of cells one read answers with (docs/specs/029-sheets/sheet-store.md, Defaults): about
 // 25,000 tokens, so
@@ -54,6 +55,7 @@ export interface SheetRead {
   // Validation and format rules, in words (data-validation.md, conditional-formatting.md "Agents").
   validation: ReturnType<typeof rulesRead>['validation'];
   conditionalFormats: ReturnType<typeof rulesRead>['conditionalFormats'];
+  charts?: ChartRead[];
 }
 
 function layoutFacts(layout: SheetLayout) {
@@ -137,5 +139,7 @@ export async function readSheet(
     ...(note ? { note } : {}),
     ...layoutFacts(wb.sheet(id)!.layout),
     ...rulesRead(wb, id),
+    // A spreadsheet's sheet holds its own charts (sheet-store.md "Built for agents in a spreadsheet").
+    ...(state.workbook ? { charts: chartsRead(wb, id) } : {}),
   };
 }

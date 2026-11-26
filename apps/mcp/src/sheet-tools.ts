@@ -2,8 +2,20 @@
 // read_sheet, change_sheet and add_sheet, over the sheet engine the CLI shares (@livedoc/agent-verbs). Sheets are
 // named by title, cells by A1; a refusal is a tool error that says what is there.
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { addSheet, changeSheet, listSheets, readSheet } from '@livedoc/agent-verbs';
-import { mcpAddSheet, mcpChangeSheet, mcpListSheets, mcpReadSheet } from '@livedoc/agent-verbs/mcp';
+import {
+  addSheet,
+  changeSheet,
+  createSpreadsheet,
+  listSheets,
+  readSheet,
+} from '@livedoc/agent-verbs';
+import {
+  mcpAddSheet,
+  mcpChangeSheet,
+  mcpCreateSpreadsheet,
+  mcpListSheets,
+  mcpReadSheet,
+} from '@livedoc/agent-verbs/mcp';
 import { clientFor } from './api';
 import type { Env } from './env';
 import { registerTool } from './tool-annotations';
@@ -54,5 +66,18 @@ export function registerSheetTools(server: McpServer, env: Env): void {
     if (!result.ok) return errorResult(result.message);
     const { ok: _ok, ...sheet } = result;
     return textResult({ ...sheet, url: deepLink(env, documentId) });
+  });
+  registerTool(server, env, mcpCreateSpreadsheet, async (args, extra) => {
+    const api = clientFor(env, requireToken(extra));
+    if ((args.sheets ?? []).some((s) => s.rows !== undefined && s.csv !== undefined))
+      return errorResult('Give a sheet’s first cells as rows or csv, one of them.');
+    const result = await createSpreadsheet(api, args, 'mcp');
+    if (!result.ok) return errorResult(result.message);
+    const { ok: _ok, refusal, ...made } = result;
+    return textResult({
+      ...made,
+      ...(refusal ? { refusal: refusal.message } : {}),
+      url: deepLink(env, made.documentId),
+    });
   });
 }

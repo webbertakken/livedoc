@@ -139,6 +139,11 @@ export const MCP_TOOL_METRICS: readonly Metric[] = [
   ),
   mcpTool('AddSheet', 'Add Sheet', 'Putting a new Sheet on a tab, blank or from rows or CSV.'),
   mcpTool(
+    'CreateSpreadsheet',
+    'Create Spreadsheet',
+    'Making a spreadsheet, its sheets named and filled.',
+  ),
+  mcpTool(
     'ChangePages',
     'Change Pages',
     'Adding, changing, laying out, moving or deleting pages: slides, logos, infographics.',

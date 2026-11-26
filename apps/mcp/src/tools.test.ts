@@ -269,7 +269,7 @@ const AUTHED = { authInfo: { token: 'tok_test' } };
 const flush = () => new Promise((resolve) => setTimeout(resolve, 0));
 
 describe('registerTools', () => {
-  it('registers the thirty-two documented tools, each with a description', () => {
+  it('registers the thirty-three documented tools, each with a description', () => {
     const { registered } = harness();
     const current = registered.filter((r) => !isDeprecated(r));
     expect(current.map((r) => r.name).sort()).toEqual([
@@ -285,6 +285,7 @@ describe('registerTools', () => {
       'change_pages',
       'change_sheet',
       'create_document',
+      'create_spreadsheet',
       'delete_document',
       'export_event_storming',
       'find_documents',
@@ -425,6 +426,7 @@ describe('tool annotations', () => {
     read_sheet: 'read',
     change_sheet: 'destructive',
     add_sheet: 'write',
+    create_spreadsheet: 'write',
     // docs/specs/024-agents/pages-for-agents.md: change_pages deletes pages and replaces their
     // content; write_article replaces an article's text.
     change_pages: 'destructive',

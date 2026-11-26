@@ -69,7 +69,7 @@ type RowsWrite =
   | { ok: true; write: SheetWrite; range: string; truncated: boolean }
   | {
       ok: false;
-      error: 'range_invalid' | 'sheet_not_found' | 'formula_invalid';
+      error: 'range_invalid' | 'sheet_not_found' | 'formula_invalid' | 'input_too_long';
       at?: string;
       why?: string;
     };
@@ -140,11 +140,15 @@ export function writeRows(
           r2: start.r1 + i,
           c2: start.c1 + j,
         });
-        const why =
-          read.reason === 'input_too_long'
-            ? 'The value is too long'
-            : PARSE_FAILURE_COPY[read.reason];
-        return { ok: false, error: 'formula_invalid', at: a1, why };
+        // A value past a cell's length is no formula's fault: it is named as what it is.
+        if (read.reason === 'input_too_long')
+          return { ok: false, error: 'input_too_long', at: a1, why: 'The value is too long' };
+        return {
+          ok: false,
+          error: 'formula_invalid',
+          at: a1,
+          why: PARSE_FAILURE_COPY[read.reason],
+        };
       }
       const ch: CellChange = { r, c, i: read.kind === 'clear' ? null : read.input };
       // A formula's hint is taken only by a cell whose own format is Automatic.
