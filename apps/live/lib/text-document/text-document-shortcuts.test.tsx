@@ -77,6 +77,7 @@ import { TEXT_WIDTH_ITEMS } from './useTextDocumentTextWidth';
 import { FOOTNOTE_ITEM } from './text-document-footnotes-edit';
 import { FOOTNOTE_KEY_ACTIONS } from '@/components/text-document/useTextDocumentNoteEditing';
 import { COMMENT_KEY_ACTIONS } from '@/components/text-document/useTextDocumentThreadKeys';
+import { SUGGESTION_KEY_ACTIONS } from '@/components/text-document/useTextDocumentSuggestionCards';
 import { textDocumentUndoPlugins } from './text-document-undo';
 import { LINK_ITEM, OPEN_LINK } from './text-document-links';
 import { BOOKMARK_ITEM } from './text-document-bookmarks';
@@ -232,6 +233,8 @@ describe('the text document menus', () => {
       // Between comment threads (useTextDocumentThreadKeys), and the comments panel (useOfficePanels).
       ...COMMENT_KEY_ACTIONS,
       COMMENTS_PANEL.item,
+      // Between suggestions (useTextDocumentSuggestionCards).
+      ...SUGGESTION_KEY_ACTIONS,
     ];
     expect(builtRows.sort()).toEqual(
       [...new Set([...builtItems, ...shellRows, ...keyRows])].sort(),

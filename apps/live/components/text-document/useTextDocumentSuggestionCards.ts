@@ -24,6 +24,10 @@ import type { CardFocusRequest } from './useTextDocumentThreadKeys';
 /** The shortcuts bound here under their rows' ids (keyboard-shortcuts.md "Comments and footnotes"). */
 export const MOVE_TO_NEXT_SUGGESTION = 'move-to-next-suggestion';
 export const MOVE_TO_PREVIOUS_SUGGESTION = 'move-to-previous-suggestion';
+export const SUGGESTION_KEY_ACTIONS: readonly string[] = [
+  MOVE_TO_NEXT_SUGGESTION,
+  MOVE_TO_PREVIOUS_SUGGESTION,
+];
 
 /** Brings a position's line into the middle of the view. */
 function scrollToPos(view: EditorView, pos: number): void {
