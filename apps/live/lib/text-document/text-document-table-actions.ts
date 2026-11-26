@@ -44,7 +44,8 @@ const pinnedUpTo = (view: EditorView): number =>
 export const TABLE_EDIT_ITEMS: readonly {
   readonly item: string;
   readonly telemetry: string;
-  readonly command: (view: EditorView) => Command;
+  /** Its command; `suggests`: the person is suggesting (a column added then grows the table, review.md). */
+  readonly command: (view: EditorView, how: { readonly suggests: boolean }) => Command;
   readonly label?: (view: EditorView) => string | undefined;
 }[] = [
   { item: 'table-insert-row-above', telemetry: 'InsertRow', command: () => insertRows('above') },
@@ -52,12 +53,12 @@ export const TABLE_EDIT_ITEMS: readonly {
   {
     item: 'table-insert-column-left',
     telemetry: 'InsertColumn',
-    command: () => insertColumns('left'),
+    command: (_, { suggests }) => insertColumns('left', { keepWidths: suggests }),
   },
   {
     item: 'table-insert-column-right',
     telemetry: 'InsertColumn',
-    command: () => insertColumns('right'),
+    command: (_, { suggests }) => insertColumns('right', { keepWidths: suggests }),
   },
   { item: 'table-delete-row', telemetry: 'DeleteRow', command: () => deleteRows },
   { item: 'table-delete-column', telemetry: 'DeleteColumn', command: () => deleteColumns },
@@ -98,9 +99,10 @@ export const TABLE_EDIT_ITEMS: readonly {
 
 export function textDocumentTableEditActions(
   view: EditorView | null,
-  { canEdit }: { canEdit: boolean },
+  { canEdit, suggests = false }: { canEdit: boolean; suggests?: boolean },
 ): OfficeActions {
   if (!view || !canEdit) return {};
+  const how = { suggests };
   const actions: Record<string, OfficeAction> = {};
   for (const { item, telemetry, command, label } of TABLE_EDIT_ITEMS)
     actions[item] = {
@@ -109,7 +111,7 @@ export function textDocumentTableEditActions(
       },
       run: () => {
         if (view.isDestroyed) return;
-        const own = command(view);
+        const own = command(view, how);
         // A step of its own: the writing before it and after it undo apart.
         startUndoStep(view);
         if (own(view.state, view.dispatch)) {
@@ -120,7 +122,7 @@ export function textDocumentTableEditActions(
         view.focus();
       },
       get disabled() {
-        return view.isDestroyed || !command(view)(view.state);
+        return view.isDestroyed || !command(view, how)(view.state);
       },
     };
   return actions;

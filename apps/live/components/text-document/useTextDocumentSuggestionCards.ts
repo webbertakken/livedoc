@@ -51,6 +51,7 @@ export function useTextDocumentSuggestionCards({
   showTab,
   onSettled,
   say,
+  textWidth,
 }: {
   /** The body's editor: suggestions are in the body alone. */
   view: EditorView | null;
@@ -68,6 +69,8 @@ export function useTextDocumentSuggestionCards({
   onSettled?: (id: string) => void;
   /** Says a line in the status line. */
   say?: (text: string) => void;
+  /** The text's width in points: a table a column accepted makes wider is fitted to it (review.md "Rows and columns"). */
+  textWidth?: number;
 }) {
   const [cards, setCards] = useState<readonly SuggestionCard[]>([]);
   const [chosen, setChosen] = useState<string | null>(null);
@@ -100,7 +103,12 @@ export function useTextDocumentSuggestionCards({
       const offers = cardOffers(card, rights);
       if (accept ? !offers.accept : !offers.reject) return;
       const done = accept
-        ? LiveSuggestions.accept(doc, id, TEXT_DOCUMENT_SUGGESTIONS_ORIGIN)
+        ? LiveSuggestions.accept(
+            doc,
+            id,
+            TEXT_DOCUMENT_SUGGESTIONS_ORIGIN,
+            textWidth === undefined ? undefined : { width: textWidth },
+          )
         : LiveSuggestions.reject(doc, id, TEXT_DOCUMENT_SUGGESTIONS_ORIGIN);
       debugLog('[text-document] suggestion settled', { suggestion: id, accept, done });
       if (!done) return;
@@ -112,7 +120,7 @@ export function useTextDocumentSuggestionCards({
       );
       setChosen((was) => (was === id ? null : was));
     },
-    [ready, docRef, cards, rights, onSettled],
+    [ready, docRef, cards, rights, onSettled, textWidth],
   );
 
   const land = useCallback(

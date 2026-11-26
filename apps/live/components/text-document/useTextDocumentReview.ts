@@ -36,6 +36,7 @@ export function useTextDocumentReview({
   subscribe,
   onMentioned,
   onAssigned,
+  textWidth,
 }: {
   /** The body's editor, and the editor with the caret. */
   view: EditorView | null;
@@ -57,6 +58,8 @@ export function useTextDocumentReview({
   subscribe: (listener: () => void) => () => void;
   onMentioned?: (text: string, mentions: readonly CommentMention[]) => void;
   onAssigned?: (text: string, assignee: CommentMention) => void;
+  /** The text's width in points, a table a column accepted makes wider fitted to it. */
+  textWidth?: number;
 }) {
   // Comment threads in the margin, added on the body's writing (review.md "Threads in the margin").
   const threads = useTextDocumentThreads({
@@ -97,6 +100,7 @@ export function useTextDocumentReview({
     showTab,
     onSettled: resolveTied,
     say,
+    textWidth,
   });
   const { select: selectSuggestion } = suggestions;
   useEffect(() => {

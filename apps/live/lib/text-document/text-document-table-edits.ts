@@ -24,6 +24,16 @@ import { columnWidths } from './text-document-table-dom';
 
 const round = (value: number) => Math.round(value * 100) / 100;
 
+/**
+ * Set on a transaction that moves, sorts, distributes, merges or splits a table's rows, columns or cells: while
+ * suggesting it runs only inside one's own suggested block (review.md "Not yet"), never read as rows and cells added and
+ * taken out.
+ */
+export const TABLE_RESHAPE_META = 'textDocumentTableReshape';
+
+/** `tr` marked a reshape. */
+export const reshaping = (tr: Transaction): Transaction => tr.setMeta(TABLE_RESHAPE_META, true);
+
 /** The table at the caret, as `prosemirror-tables` reads it; null outside a table. */
 const rectOf = (state: EditorState): TableRect | null =>
   isInTable(state) ? selectedRect(state) : null;
@@ -47,6 +57,25 @@ export function setColumnWidths(
       colwidth: widths.slice(left, right).map(round),
     });
   }
+}
+
+/** The `count` new columns from grid column `index`: each of their own cells `width` wide, no other cell touched. */
+function newColumnWidths(
+  tr: Transaction,
+  tableStart: number,
+  index: number,
+  count: number,
+  width: number,
+): void {
+  const table = tr.doc.nodeAt(tableStart - 1)!;
+  const map = TableMap.get(table);
+  for (let row = 0; row < map.height; row++)
+    for (let column = index; column < index + count; column++) {
+      const pos = map.map[row * map.width + column]!;
+      const cell = table.nodeAt(pos)!;
+      if ((cell.attrs.colspan as number) > 1) continue;
+      tr.setNodeMarkup(tableStart + pos, null, { ...cell.attrs, colwidth: [round(width)] });
+    }
 }
 
 /** The widths scaled so they sum to `total`. */
@@ -132,9 +161,13 @@ export const insertRows =
     return true;
   };
 
-/** Insert columns left of the caret's or the selection's first column, or right of its last; the table keeps its width. */
+/**
+ * Insert columns left of the caret's or the selection's first column, or right of its last; the table keeps its width,
+ * or, with `keepWidths` (while suggesting), grows by the new columns, each its neighbour's width, no other cell
+ * changed, so rejecting them gives the table back as it was (review.md "Rows and columns").
+ */
 export const insertColumns =
-  (side: 'left' | 'right'): Command =>
+  (side: 'left' | 'right', { keepWidths = false }: { keepWidths?: boolean } = {}): Command =>
   (state, dispatch) => {
     const rect = rectOf(state);
     if (!rect) return false;
@@ -167,7 +200,8 @@ export const insertColumns =
         }
         widths.splice(index, 0, before[like]!);
       }
-      setColumnWidths(tr, rect.tableStart, scaledTo(widths, total));
+      if (keepWidths) newColumnWidths(tr, rect.tableStart, index, count, before[like]!);
+      else setColumnWidths(tr, rect.tableStart, scaledTo(widths, total));
       dispatch(tr.scrollIntoView());
     }
     return true;
@@ -215,7 +249,7 @@ export const distributeColumns: Command = (state, dispatch) => {
       rect.tableStart,
       widths.map((w, i) => (i >= from && i < to ? share : w)),
     );
-    dispatch(tr);
+    dispatch(reshaping(tr));
   }
   return true;
 };
@@ -240,7 +274,7 @@ export const distributeRows =
         const row = state.doc.nodeAt(pos)!;
         tr.setNodeMarkup(pos, null, { ...row.attrs, height: round(tallest), heightRule: null });
       }
-      dispatch(tr);
+      dispatch(reshaping(tr));
     }
     return true;
   };
@@ -257,7 +291,7 @@ const keepingWidths =
       dispatch &&
         ((tr) => {
           setColumnWidths(tr, rect.tableStart, widths);
-          dispatch(tr);
+          dispatch(reshaping(tr));
         }),
       view,
     );
@@ -358,7 +392,7 @@ export const sortTable =
       for (let r = 0; r < header; r++) rows.push(table.child(r));
       for (const r of order) rows.push(table.child(r));
       const tr = state.tr.replaceWith(rect.tableStart, rect.tableStart + table.content.size, rows);
-      dispatch(tr);
+      dispatch(reshaping(tr));
     }
     return true;
   };

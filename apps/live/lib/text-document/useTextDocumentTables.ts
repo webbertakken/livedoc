@@ -12,14 +12,16 @@ export function useTextDocumentTables(
   canEdit: boolean,
   // The caret's section's text width in points (its column's in a section of columns).
   sectionWidth: number,
+  // Whether the person is suggesting in the body (review.md "Rows and columns").
+  suggests = false,
 ): OfficeActions {
   return useMemo(
     () => ({
       ...textDocumentTableActions(view, { canEdit, sectionWidth }),
-      ...textDocumentTableEditActions(view, { canEdit }),
+      ...textDocumentTableEditActions(view, { canEdit, suggests }),
       // Moving through tables is anyone's who reads the document (tables.md "Working in a table").
       ...textDocumentTableNavigation(view),
     }),
-    [view, canEdit, sectionWidth],
+    [view, canEdit, sectionWidth, suggests],
   );
 }

@@ -11,15 +11,7 @@ import {
   type EditorState,
   type Transaction,
 } from 'prosemirror-state';
-import {
-  AddMarkStep,
-  AttrStep,
-  Mapping,
-  RemoveMarkStep,
-  ReplaceAroundStep,
-  ReplaceStep,
-  type Step,
-} from 'prosemirror-transform';
+import { AddMarkStep, Mapping, RemoveMarkStep, ReplaceStep } from 'prosemirror-transform';
 import {
   DELETION_MARK,
   FORMAT_CHANGE_MARK,
@@ -39,6 +31,19 @@ import {
   ownBlockAround,
   selectionInBlock,
 } from './text-document-suggesting-blocks';
+import {
+  crossed,
+  insideOwnPart,
+  isTableParts,
+  ownPartChange,
+  reshapesOthers,
+} from './text-document-suggesting-tables';
+import {
+  loneObject,
+  objectChange,
+  PARAGRAPH_FORMAT_ATTRIBUTES,
+  paragraphMarkup,
+} from './text-document-suggesting-steps';
 
 /** Who suggests: their key, name and colour, the time, and a fresh id for a new suggestion. */
 export type Suggester = {
@@ -56,8 +61,6 @@ export type SuggestingResult =
   | { readonly tr: Transaction; readonly made: readonly string[] }
   | { readonly refused: SuggestingRefusal };
 
-/** The paragraph attributes a paragraph format suggestion keeps from before. */
-const PARAGRAPH_FORMAT_ATTRIBUTES = ['style', 'props', 'list'] as const;
 /** The marks a format suggestion covers: a run's formatting, never what a file kept. */
 const FORMATTING_MARKS = new Set<string>(RUN_MARKS.filter((m) => m !== RUN_KEPT_MARK));
 /** The metas a rewritten transaction keeps. */
@@ -86,8 +89,9 @@ function ownNear(doc: PmNode, from: number, to: number, key: string): Suggestion
   const $from = doc.resolve(Math.max(0, Math.min(from, doc.content.size)));
   const $to = doc.resolve(Math.max(0, Math.min(to, doc.content.size)));
   // Text and objects either side; a paragraph only where its start (its break or join) lies in the range.
+  // Text and objects either side; rows or cells either side too, so rows added one after another join.
   for (const n of [$from.nodeBefore, $from.nodeAfter, $to.nodeBefore, $to.nodeAfter])
-    if (n?.isInline) near.push(n);
+    if (n?.isInline || (n && isTablePart(n))) near.push(n);
   if (from < to)
     doc.nodesBetween(from, to, (n, pos) => {
       if (n.isInline || pos >= from) near.push(n);
@@ -116,6 +120,8 @@ class Rewriter {
   readonly made = new Set<string>();
   /** Where the first whole block put in starts, and the steps after which that holds; none put in yet. */
   placedBlock: { pos: number; after: number } | undefined;
+  /** Whether a row or cell was suggested deleted, so the caret stays where it was. */
+  partDeleted = false;
   #base: SuggestionMark | undefined;
 
   constructor(state: EditorState, who: Suggester) {
@@ -169,9 +175,16 @@ class Rewriter {
         else if (!node.attrs[DELETION_MARK]) actions.push({ pos, kind: 'block', node });
         return false;
       }
-      // A whole row or cell of a table not wholly covered: rows and columns are not suggested yet.
+      // A whole row or cell of a table not wholly covered: suggested deleted (one's own taken away), unless a merged
+      // cell crosses it (not yet).
       if (isTablePart(node) && pos >= from && pos + node.nodeSize <= to) {
-        refused = 'structure';
+        if (crossed(doc, pos, node)) refused = 'structure';
+        else if (isOwn(node.attrs[INSERTION_MARK], this.who.key))
+          actions.push({ pos, kind: 'remove', to: pos + node.nodeSize });
+        else if (!node.attrs[DELETION_MARK]) {
+          actions.push({ pos, kind: 'block', node });
+          this.partDeleted = true;
+        }
         return false;
       }
       if (isWholeBlock(node) || isTablePart(node)) return true;
@@ -223,10 +236,10 @@ class Rewriter {
     const schema = this.schema;
     for (const name of [DELETION_MARK, FORMAT_CHANGE_MARK, INSERTION_MARK])
       this.out.removeMark(from, to, schema.marks[name]);
-    // A whole block put in carries the insertion itself; what is inside it is not marked.
+    // A whole block, row or cell put in carries the insertion itself; what is inside it is not marked.
     const blocks: { pos: number; node: PmNode }[] = [];
     this.out.doc.nodesBetween(from, to, (node, pos) => {
-      if (isWholeBlock(node) && pos >= from && pos + node.nodeSize <= to) {
+      if ((isWholeBlock(node) || isTablePart(node)) && pos >= from && pos + node.nodeSize <= to) {
         blocks.push({ pos, node });
         return false;
       }
@@ -237,8 +250,9 @@ class Rewriter {
       if (pos > start) this.out.addMark(start, pos, schema.marks[INSERTION_MARK]!.create(mark));
       start = node ? pos + node.nodeSize : start;
     }
-    if (blocks.length > 0 && !this.placedBlock)
-      this.placedBlock = { pos: blocks[0]!.pos, after: this.out.steps.length };
+    const whole = blocks.find((b) => isWholeBlock(b.node));
+    if (whole && !this.placedBlock)
+      this.placedBlock = { pos: whole.pos, after: this.out.steps.length };
     const marked: { pos: number; node: PmNode; paragraph: boolean }[] = blocks.map((b) => ({
       ...b,
       paragraph: false,
@@ -321,64 +335,6 @@ class Rewriter {
   }
 }
 
-/** The paragraph attributes a node-markup step sets, when it only changes a paragraph's style, formatting or list. */
-function paragraphMarkup(step: Step, doc: PmNode): { pos: number; attrs: Attrs } | null {
-  if (step instanceof AttrStep) {
-    const node = doc.nodeAt(step.pos);
-    if (node?.type.name !== PARAGRAPH || !PARAGRAPH_FORMAT_ATTRIBUTES.includes(step.attr as never))
-      return null;
-    return { pos: step.pos, attrs: { ...node.attrs, [step.attr]: step.value as unknown } };
-  }
-  if (!(step instanceof ReplaceAroundStep)) return null;
-  const node = doc.nodeAt(step.from);
-  const replacement = step.slice.content.firstChild;
-  if (
-    !node ||
-    node.type.name !== PARAGRAPH ||
-    replacement?.type !== node.type ||
-    step.slice.content.childCount !== 1 ||
-    step.to !== step.from + node.nodeSize ||
-    step.gapFrom !== step.from + 1 ||
-    step.gapTo !== step.to - 1
-  )
-    return null;
-  const changed = Object.keys(replacement.attrs).filter(
-    (a) => JSON.stringify(replacement.attrs[a]) !== JSON.stringify(node.attrs[a]),
-  );
-  if (!changed.every((a) => PARAGRAPH_FORMAT_ATTRIBUTES.includes(a as never))) return null;
-  return { pos: step.from, attrs: replacement.attrs };
-}
-
-/**
- * The object in a line a step changes in place (its attribute set, or the object replaced by one of its type, as
- * setNodeMarkup does), at its position before the step; null for any other step.
- */
-function objectChange(step: Step, doc: PmNode): { pos: number; node: PmNode } | null {
-  if (step instanceof AttrStep) {
-    const node = doc.nodeAt(step.pos);
-    return node?.isInline && node.isAtom ? { pos: step.pos, node } : null;
-  }
-  if (!(step instanceof ReplaceStep)) return null;
-  const node = doc.nodeAt(step.from);
-  const replacement = step.slice.content.firstChild;
-  return node?.isInline &&
-    node.isAtom &&
-    !node.isText &&
-    step.to === step.from + node.nodeSize &&
-    step.slice.openStart === 0 &&
-    step.slice.openEnd === 0 &&
-    step.slice.content.childCount === 1 &&
-    replacement?.type === node.type
-    ? { pos: step.from, node }
-    : null;
-}
-
-/** The object in a line a slice is, alone; null for any other slice. */
-const loneObject = (step: ReplaceStep): PmNode | null => {
-  const only = step.slice.content.childCount === 1 ? step.slice.content.firstChild : null;
-  return only?.isInline && only.isAtom && !only.isText ? only : null;
-};
-
 /**
  * `tr` rewritten as `who`'s suggestions on `state`, or why it cannot be. Each step is replayed in order against the
  * new transaction, its positions mapped from the document it was made on.
@@ -397,17 +353,24 @@ export function suggestTransaction(
   let placed: { pos: number; after: number } | undefined;
   // Whether every step changed one of the person's own suggested objects in place, so the transaction stands as it is.
   let ownObjectsOnly = true;
+  // Moving, sorting, distributing, merging or splitting anyone else's table: not yet.
+  if (reshapesOthers(tr, who.key)) return { refused: 'structure' };
   for (const [i, step] of tr.steps.entries()) {
     const doc = tr.docs[i]!;
     const at = out.steps.length;
     const map = (pos: number, assoc = 1) => into.map(pos, assoc);
     let refused: SuggestingRefusal | null = null;
-    // Inside one's own suggested block, any change is plainly part of it.
-    const ownBlock = insideOwnBlock(step, doc, who.key);
+    // Inside one's own suggested block, any change is plainly part of it; so is writing in one's own suggested row or
+    // cell, and a change to the look of a row or cell one's own suggestion put in.
+    const ownBlock = insideOwnBlock(step, doc, who.key) || insideOwnPart(step, doc, who.key);
+    const ownPart = ownBlock ? null : ownPartChange(step, into, out, who.key);
     const markup = ownBlock ? null : paragraphMarkup(step, doc);
     const object = markup || ownBlock ? null : objectChange(step, doc);
     if (!object && !ownBlock) ownObjectsOnly = false;
-    if (ownBlock) {
+    if (ownPart) {
+      ownObjectsOnly = false;
+      ownPart();
+    } else if (ownBlock) {
       const mapped = step.map(into);
       if (!mapped || out.maybeStep(mapped).failed) refused = 'structure';
     } else if (insideContents(step, doc)) refused = 'structure';
@@ -419,11 +382,12 @@ export function suggestTransaction(
     } else if (step instanceof ReplaceStep) {
       const from = map(step.from, -1);
       const to = map(step.to, 1);
-      // A kept block never, nor a table's rows or cells on their own (outside one's own suggested table).
+      // A kept block never; a table's rows or cells only whole, as a row's or column's insertion.
       let structural = false;
-      step.slice.content.forEach((node) => {
-        if (isTablePart(node)) structural = true;
-      });
+      if (!isTableParts(step))
+        step.slice.content.forEach((node) => {
+          if (isTablePart(node)) structural = true;
+        });
       step.slice.content.descendants((node) => {
         if (isStructure(node)) structural = true;
         return !structural;
@@ -477,7 +441,10 @@ export function suggestTransaction(
         ? NodeSelection.create(out.doc, start)
         : TextSelection.create(out.doc, start + inBlock.offset),
     );
-  } else if (selected && at !== undefined && out.doc.nodeAt(at)?.type === selected.type)
+  } else if (rewriter.partDeleted)
+    // A row or column suggested deleted stays: the caret stays where it was in it.
+    out.setSelection(state.selection.map(out.doc, out.mapping));
+  else if (selected && at !== undefined && out.doc.nodeAt(at)?.type === selected.type)
     out.setSelection(NodeSelection.create(out.doc, at));
   else if (caret !== undefined)
     out.setSelection(

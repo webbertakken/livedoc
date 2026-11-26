@@ -71,6 +71,9 @@ export function suggestedBreaks(doc: PmNode): SuggestedBreak[] {
 
 /** The blocks suggested whole (review.md "Whole blocks"). */
 const WHOLE_BLOCKS = new Set(['table', 'section_break', 'table_of_contents']);
+/** A table's row, suggested whole, and its cells: a column's are suggested each (review.md "Rows and columns"). */
+const ROW = 'table_row';
+const CELLS = new Set(['table_cell', 'table_header']);
 
 /** A block suggested whole: where it stands, its element's name, its kind, its suggestion and its author's ink. */
 export type SuggestedBlock = {
@@ -80,36 +83,52 @@ export type SuggestedBlock = {
   readonly kind: 'insertion' | 'deletion';
   readonly id: string;
   readonly ink?: string;
+  /** Drawn inside the box rather than around it: a row's or a column's cells, so the grid's lines stay clear. */
+  readonly inset?: boolean;
 };
 
-/** Each block suggested whole in the document, outermost first. */
+/**
+ * Each block suggested whole in the document, outermost first; a suggested row as each of its cells (an outline on a
+ * table row is not drawn), and a suggested cell itself, both inset.
+ */
 export function suggestedBlocks(doc: PmNode): SuggestedBlock[] {
   const out: SuggestedBlock[] = [];
-  doc.descendants((node, pos) => {
-    if (!WHOLE_BLOCKS.has(node.type.name)) return !node.isInline;
+  const add = (node: PmNode, from: number, to: number, name: string, inset: boolean) => {
     for (const kind of [INSERTION_MARK, DELETION_MARK] as const) {
       const mark = node.attrs[kind] as { id?: unknown; author?: { colour?: unknown } } | null;
       if (!mark || typeof mark.id !== 'string') continue;
       const colour = mark.author?.colour;
       out.push({
-        from: pos,
-        to: pos + node.nodeSize,
-        name: node.type.name,
+        from,
+        to,
+        name,
         kind,
         id: mark.id,
         ...(typeof colour === 'string' && HEX.test(colour) ? { ink: paperInk(colour) } : {}),
+        ...(inset ? { inset } : {}),
       });
     }
+  };
+  doc.descendants((node, pos) => {
+    const name = node.type.name;
+    if (name === ROW)
+      node.forEach((cell, offset) => {
+        const at = pos + 1 + offset;
+        add(node, at, at + cell.nodeSize, ROW, true);
+      });
+    else if (CELLS.has(name)) add(node, pos, pos + node.nodeSize, name, true);
+    else if (WHOLE_BLOCKS.has(name)) add(node, pos, pos + node.nodeSize, name, false);
+    else return !node.isInline;
     return true;
   });
   return out;
 }
 
 /** A suggested block's outline: solid for an insertion, dashed and struck through for a deletion (default). */
-function blockDecoration({ from, to, kind, id, ink }: SuggestedBlock): Decoration {
+function blockDecoration({ from, to, kind, id, ink, inset }: SuggestedBlock): Decoration {
   const style = [
     `outline: 2px ${kind === 'deletion' ? 'dashed' : 'solid'} ${ink ?? 'currentColor'}`,
-    'outline-offset: 2px',
+    `outline-offset: ${inset ? '-2px' : '2px'}`,
     kind === 'deletion' ? 'text-decoration-line: line-through' : '',
   ]
     .filter(Boolean)

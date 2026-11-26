@@ -290,6 +290,28 @@ describe('suggested rows and columns in the live state', () => {
     expect(LiveSuggestions.count(doc)).toBe(0);
   });
 
+  // review.md "Rows and columns" (director, 2026-11-26): Accept fits a table a column made wider than the text.
+  it('fits a table wider than the text to it when a column is accepted, never on reject or within the width', () => {
+    const columnsOf = (doc: Y.Doc) =>
+      tables(TextDocumentState.document(doc, 'odf')).map((t) => t.columns);
+    const fitted = load();
+    expect(LiveSuggestions.accept(fitted, 'sColumn', null, { width: 200 })).toBe(true);
+    expect(columnsOf(fitted)).toEqual([
+      [144, 144],
+      [100, 100],
+      [144, 144],
+    ]);
+    const roomy = load();
+    LiveSuggestions.accept(roomy, 'sColumn', null, { width: 400 });
+    expect(columnsOf(roomy)[1]).toEqual([144, 144]);
+    const unfitted = load();
+    LiveSuggestions.accept(unfitted, 'sColumn', null);
+    expect(columnsOf(unfitted)[1]).toEqual([144, 144]);
+    const rejected = load();
+    LiveSuggestions.reject(rejected, 'sColumn', null);
+    expect(columnsOf(rejected)[1]).toEqual([144]);
+  });
+
   it('takes a table away when its last row goes, and a row when its last cell goes', () => {
     const document = CONSTRUCTS.suggestedRows!('odf');
     const gone = { id: 'sAll', at: 1, author: { name: 'Bo' } };
