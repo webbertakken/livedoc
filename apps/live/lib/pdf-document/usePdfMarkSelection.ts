@@ -3,27 +3,30 @@
 // The marks a person has selected (docs/specs/035-pdf-documents/marks.md "Changing a mark"): a press selects a mark,
 // ⇧ adds one or takes one out, and a selection holds the marks of one page; a mark selected lets a text selection go,
 // and text selected lets the marks go. The selection moved, by a drag or an arrow key, and deleted, by Delete or
-// Edit > Delete, and a mark resized by a handle or ⌥ with an arrow key, each one step of the person's undo. Marks are
+// Edit > Delete, and a mark resized by a handle or ⌥ with an arrow key, each one step of the person's undo. A press on a
+// grouped mark selects its group, and Format > Group and Ungroup make the selection one or take it apart. Marks are
 // Reviewing's: while `marking` is off nothing is chosen; and a mark the session may not change (a Participant's
 // another's, marks.md "Share roles") is never chosen.
 import { useCallback, useMemo, useState, useSyncExternalStore } from 'react';
-import type { Mark, MarkPlace, PagePoint } from '@livedoc/pdf-documents';
+import { MarkGroups, type Mark, type MarkPlace, type PagePoint } from '@livedoc/pdf-documents';
 import { debugLog } from '@/lib/debug-log';
 import type { OfficeActions } from '@/lib/office/office-catalogue';
 import { track } from '@/lib/telemetry';
 import {
   deleteMarks,
+  groupMarks,
   MARK_KIND_NAMES,
   moveMarks,
   NO_FILE_MARKS,
   reshapeMark,
+  ungroupMarks,
 } from './pdf-mark-change';
 import {
   changeableOnPage,
   type PdfChangeableByPage,
   type PdfChangeableStore,
 } from './pdf-changeable-marks';
-import { DELETE_MARKS } from './pdf-menus';
+import { DELETE_MARKS, GROUP_MARKS, UNGROUP_MARKS } from './pdf-menus';
 import type { PdfDocumentOpen } from './usePdfDocument';
 import type { PdfTextSelected } from './usePdfTextSelection';
 
@@ -120,40 +123,61 @@ export function usePdfMarkSelection({
     [byPage, ready],
   );
 
+  // The marks of a page, and the ids given widened to their whole groups, of the marks this session may change.
+  const marksOn = useCallback(
+    (index: number): readonly Mark[] => {
+      const page = ready?.pages[index];
+      return page ? changeableOnPage(byPage, page.name).marks : [];
+    },
+    [ready, byPage],
+  );
+  const widened = useCallback(
+    (there: readonly Mark[], ids: readonly string[]) =>
+      MarkGroups.widen(there, ids).filter((id) => {
+        const mark = there.find((each) => each.id === id);
+        return mark !== undefined && mayChange(mark);
+      }),
+    [mayChange],
+  );
+
   const choose = useCallback(
     (index: number, id: string, shift: boolean) => {
-      const page = ready?.pages[index];
-      const mark = page && changeableOnPage(byPage, page.name).marks.find((each) => each.id === id);
+      const there = marksOn(index);
+      const mark = there.find((each) => each.id === id);
       if (!mark || !mayChange(mark)) return;
+      const group = widened(there, [id]);
       clearText();
       setHeld((before) => {
-        if (!before || before.page !== index) return { page: index, ids: [id] };
-        if (!shift) return before.ids.includes(id) ? before : { page: index, ids: [id] };
-        if (!before.ids.includes(id)) return { page: index, ids: [...before.ids, id] };
-        const ids = before.ids.filter((other) => other !== id);
+        if (!before || before.page !== index) return { page: index, ids: group };
+        if (!shift) return before.ids.includes(id) ? before : { page: index, ids: group };
+        if (!before.ids.includes(id))
+          return {
+            page: index,
+            ids: [...before.ids, ...group.filter((other) => !before.ids.includes(other))],
+          };
+        const ids = before.ids.filter((other) => !group.includes(other));
         return ids.length > 0 ? { page: index, ids } : null;
       });
     },
-    [clearText, ready, byPage, mayChange],
+    [clearText, marksOn, widened, mayChange],
   );
   const chooseAll = useCallback(
     (index: number, ids: readonly string[], add: boolean) => {
-      const page = ready?.pages[index];
-      const there = page ? changeableOnPage(byPage, page.name).marks : [];
-      const taken = there.filter((mark) => ids.includes(mark.id) && mayChange(mark));
+      const there = marksOn(index);
+      const taken = widened(
+        there,
+        there.filter((mark) => ids.includes(mark.id) && mayChange(mark)).map((mark) => mark.id),
+      );
       debugLog(`[pdf] marks-boxed count=${taken.length}`);
       if (taken.length > 0) clearText();
       setHeld((before) => {
         const kept = add && before?.page === index ? before.ids : [];
-        const joined = [
-          ...kept,
-          ...taken.map((mark) => mark.id).filter((id) => !kept.includes(id)),
-        ];
+        const joined = [...kept, ...taken.filter((id) => !kept.includes(id))];
         if (joined.length > 0) return { page: index, ids: joined };
         return add ? before : null;
       });
     },
-    [clearText, ready, byPage, mayChange],
+    [clearText, marksOn, widened, mayChange],
   );
   const letGo = useCallback(() => setHeld(null), []);
   const leave = useCallback(() => {
@@ -201,14 +225,50 @@ export function usePdfMarkSelection({
     focusPages();
   }, [ready, chosen, focusPages, fileOwnOn]);
 
+  const group = useCallback(() => {
+    const page = chosen ? ready?.pages[chosen.page] : undefined;
+    if (!ready || !chosen || !page || chosen.ids.length < 2) return;
+    const count = ready.undo.step({ page: page.name }, () =>
+      groupMarks(
+        ready.binding.doc,
+        chosen.ids,
+        crypto.randomUUID(),
+        Date.now(),
+        fileOwnOn(chosen.page),
+      ),
+    );
+    if (count === 0) return;
+    debugLog(`[pdf] marks-grouped count=${count}`);
+    track('Pdf', 'Changed', 'Mark.Grouped');
+  }, [ready, chosen, fileOwnOn]);
+
+  const ungroup = useCallback(() => {
+    const page = chosen ? ready?.pages[chosen.page] : undefined;
+    if (!ready || !chosen || !page) return;
+    const count = ready.undo.step({ page: page.name }, () =>
+      ungroupMarks(ready.binding.doc, chosen.ids, Date.now(), fileOwnOn(chosen.page)),
+    );
+    if (count === 0) return;
+    debugLog(`[pdf] marks-ungrouped count=${count}`);
+    track('Pdf', 'Changed', 'Mark.Ungrouped');
+  }, [ready, chosen, fileOwnOn]);
+
   const changing = marking && ready !== null;
   const choosing = useMemo<PdfPageChoosing | null>(
     () => (changing ? { mayChange, choose, chooseAll, letGo, leave, move, reshape, remove } : null),
     [changing, mayChange, choose, chooseAll, letGo, leave, move, reshape, remove],
   );
+  const grouped = chosen !== null && MarkGroups.anyGrouped(marksOn(chosen.page), chosen.ids);
   const actions = useMemo<OfficeActions>(
-    () => (changing ? { [DELETE_MARKS]: { run: remove, disabled: chosen === null } } : {}),
-    [changing, remove, chosen],
+    () =>
+      changing
+        ? {
+            [DELETE_MARKS]: { run: remove, disabled: chosen === null },
+            [GROUP_MARKS]: { run: group, disabled: (chosen?.ids.length ?? 0) < 2 },
+            [UNGROUP_MARKS]: { run: ungroup, disabled: !grouped },
+          }
+        : {},
+    [changing, remove, group, ungroup, chosen, grouped],
   );
 
   return { chosen, choosing, actions };

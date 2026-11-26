@@ -968,6 +968,9 @@ export const EXACT: Readonly<Record<string, string>> = {
     'Someone gave marks on a PDF page a new colour, opacity, line width, line style, fill or line end.',
   'Pdf|Changed|Mark.Moved':
     'Someone moved marks on a PDF page, by dragging them or with the arrow keys.',
+  'Pdf|Changed|Mark.Grouped':
+    'Someone grouped marks on a PDF page, so they move and are answered as one.',
+  'Pdf|Changed|Mark.Ungrouped': 'Someone ungrouped marks on a PDF page.',
   'Pdf|Deleted|Mark.Highlight': 'Someone deleted a highlight from a PDF page.',
   'Pdf|Deleted|Mark.Underline': 'Someone deleted an underline from a PDF page.',
   'Pdf|Deleted|Mark.Strikethrough': 'Someone deleted a strikethrough from a PDF page.',

@@ -459,3 +459,65 @@ test('a selected Text is given a font, drawn and downloaded in it', async ({
   await expect(toolbar.getByRole('button', { name: 'Font: Helvetica' })).toBeVisible();
   expectNoPageErrors(pageErrors);
 });
+
+// marks.md "Changing a mark": Format > Group makes two marks one, a press on one selects both and a drag moves both;
+// Format > Ungroup takes them apart; "In the file": the group is downloaded as the standard's own.
+test('two marks grouped are selected and moved as one, and ungrouped', async ({
+  page,
+  pageErrors,
+}) => {
+  test.setTimeout(120_000);
+  await page.setViewportSize({ width: 1280, height: 860 });
+  await page.goto('/explorer/all');
+  await expect(page.getByRole('heading', { name: 'My Documents' }).first()).toBeVisible();
+  await dropPdf(page, 'Group.pdf', await textPdf(2));
+  await page.waitForURL(/\/document\//, { timeout: 30_000 });
+  const first = await pageOneDrawn(page);
+  const kind = (name: string) => page.locator(`${PAGE_ONE} [data-pdf-mark-kind="${name}"]`);
+  const outlines = page.locator(`${PAGE_ONE} [data-pdf-mark-outline]`);
+  await (await officeMenuItem(page, ['Insert', 'Shape', 'Rectangle'])).click();
+  await drag(page, first, [0.5, 0.15], [0.75, 0.25]);
+  await (await officeMenuItem(page, ['Insert', 'Shape', 'Arrow'])).click();
+  await drag(page, first, [0.15, 0.32], [0.4, 0.32]);
+  await page.locator('[data-pdf-pages]').focus();
+  await page.keyboard.press('v');
+
+  // Group is dimmed for one mark; with both selected it groups them.
+  await page.mouse.click(...(await leftEdge(kind('rectangle'))));
+  await expect(await officeMenuItem(page, ['Format', 'Group'])).toBeDisabled();
+  await page.keyboard.press('Escape');
+  await page.mouse.click(...(await leftEdge(kind('rectangle'))));
+  await page.keyboard.down('Shift');
+  await page.mouse.click(...(await leftEdge(kind('arrow'))));
+  await page.keyboard.up('Shift');
+  await expect(outlines).toHaveCount(2);
+  await (await officeMenuItem(page, ['Format', 'Group'])).click();
+
+  // A press on nothing lets them go; a press on the arrow alone selects the group, and a drag moves both.
+  const nothing = async () => {
+    const box = (await first.boundingBox())!;
+    await page.mouse.click(box.x + box.width * 0.9, box.y + box.height * 0.08);
+  };
+  await nothing();
+  await expect(outlines).toHaveCount(0);
+  await page.mouse.click(...(await leftEdge(kind('arrow'))));
+  await expect(outlines).toHaveCount(2);
+  const before = (await kind('rectangle').boundingBox())!;
+  const [x, y] = await leftEdge(kind('arrow'));
+  await page.mouse.move(x, y);
+  await page.mouse.down();
+  await page.mouse.move(x + 40, y + 30, { steps: 8 });
+  await page.mouse.up();
+  const moved = (await kind('rectangle').boundingBox())!;
+  expect(moved.x).toBeCloseTo(before.x + 40, -1);
+  expect(moved.y).toBeCloseTo(before.y + 30, -1);
+  await page.screenshot({ path: test.info().outputPath('pdf-mark-group.png') });
+
+  // Ungrouped, a press on the arrow selects it alone.
+  await (await officeMenuItem(page, ['Format', 'Ungroup'])).click();
+  await nothing();
+  await expect(outlines).toHaveCount(0);
+  await page.mouse.click(...(await leftEdge(kind('arrow'))));
+  await expect(outlines).toHaveCount(1);
+  expectNoPageErrors(pageErrors);
+});

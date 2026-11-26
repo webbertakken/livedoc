@@ -693,6 +693,33 @@ describe('baking', () => {
     expect(annotation!.dict.getString('T')?.asString()).toBe('Ada');
   });
 
+  // marks.md "In the file": a group is written as the standard's own, and read back as one group.
+  it('writes a group as marks answering its head, grouped, and reads it back as one group', async () => {
+    opened(await engine.open(stored));
+    const doc = PdfLiveChanges.load([await changesWithHighlight(0)]);
+    const [kept] = PdfLiveChanges.marks(doc);
+    PdfLiveChanges.addMark(doc, { ...kept!, id: 'g-a', group: 'fresh-group' });
+    PdfLiveChanges.addMark(doc, { ...kept!, id: 'g-b', group: 'fresh-group' });
+    PdfLiveChanges.addMark(doc, { ...kept!, id: 'lone', group: 'alone' });
+    const result = await engine.bake(PdfLiveChanges.encode(doc));
+    if (!result.ok) throw new Error(result.refusal);
+    const written = (await PDF.load(result.bytes.slice())).getPages()[0]!.getAnnotations();
+    const named = new Map(written.map((annotation) => [annotation.name, annotation]));
+    const head = named.get('g-a')!;
+    expect(head.dict.get('IRT')).toBeUndefined();
+    expect(named.get('g-b')!.dict.get('IRT')).toEqual(head.ref);
+    expect(named.get('g-b')!.dict.getName('RT')?.value).toBe('Group');
+    expect(named.get('lone')!.dict.get('IRT')).toBeUndefined();
+    opened(await engine.open(result.bytes));
+    const read = new Map((await engine.fileMarks(0)).map((mark) => [mark.id, mark.mark?.group]));
+    expect([read.get('g-a'), read.get('g-b'), read.get('lone'), read.get('mark-1')]).toEqual([
+      'g-a',
+      'g-a',
+      undefined,
+      undefined,
+    ]);
+  });
+
   it('counts a mark whose page the stored file does not hold, and writes the rest', async () => {
     const pages = opened(await engine.open(stored));
     const doc = PdfLiveChanges.load([await changesWithHighlight(0)]);

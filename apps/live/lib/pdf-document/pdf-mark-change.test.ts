@@ -6,11 +6,13 @@ import * as Y from 'yjs';
 import { MARK_KINDS, Mark, PageName, PdfLiveChanges, type Quad } from '@livedoc/pdf-documents';
 import {
   deleteMarks,
+  groupMarks,
   MARK_KIND_LABELS,
   MARK_KIND_NAMES,
   markControlName,
   moveMarks,
   reshapeMark,
+  ungroupMarks,
 } from './pdf-mark-change';
 import { SHAPE_NAMES } from './pdf-shape';
 import { TEXT_MARK_NAMES } from './pdf-text-mark';
@@ -125,6 +127,31 @@ describe('deleteMarks', () => {
 
 // marks.md "Changing a mark": marks the file arrived with behave the same; changing one takes it as LiveDoc's, in one
 // step, under its own id, and names the file's own gone; deleting one names it gone.
+// marks.md "Changing a mark": Group gives the marks one new group, Ungroup takes them out; each one step.
+describe('groupMarks and ungroupMarks', () => {
+  it('gives every mark named the group, as one step of the person’s, and answers how many', () => {
+    const { doc, origins } = withMarks();
+    origins.length = 0;
+    expect(groupMarks(doc, ['l', 's', 'gone'], 'g-1', T + 1)).toBe(2);
+    expect(PdfLiveChanges.mark(doc, 'l')).toMatchObject({ group: 'g-1', modifiedAt: T + 1 });
+    expect(PdfLiveChanges.mark(doc, 's')).toMatchObject({ group: 'g-1' });
+    expect(PdfLiveChanges.mark(doc, 'h')).not.toHaveProperty('group');
+    expect(origins).toEqual([PDF_LOCAL_ORIGIN]);
+  });
+
+  it('takes every mark named out of its group, leaving one with none as it is', () => {
+    const { doc, origins } = withMarks();
+    groupMarks(doc, ['l', 's'], 'g-1', T + 1);
+    origins.length = 0;
+    expect(ungroupMarks(doc, ['l', 's', 'h'], T + 2)).toBe(2);
+    expect(PdfLiveChanges.mark(doc, 'l')).not.toHaveProperty('group');
+    expect(PdfLiveChanges.mark(doc, 's')).toMatchObject({ modifiedAt: T + 2 });
+    expect(PdfLiveChanges.mark(doc, 'h')).toMatchObject({ modifiedAt: T });
+    expect(origins).toEqual([PDF_LOCAL_ORIGIN]);
+    expect(ungroupMarks(doc, ['h'], T + 3)).toBe(0);
+  });
+});
+
 describe('a mark the file arrived with', () => {
   const theirs = Mark.shape('rectangle', {
     ...BASE,
@@ -169,6 +196,17 @@ describe('a mark the file arrived with', () => {
     expect(deleteMarks(other, ['o:12'], fileOwn)).toEqual(['rectangle']);
     expect(PdfLiveChanges.mark(other, 'o:12')).toBeNull();
     expect(gone(other)).toEqual([['o:12', 'mark']]);
+  });
+
+  it('is grouped and ungrouped as LiveDoc’s own, the file’s own named gone', () => {
+    const { doc } = withMarks();
+    expect(groupMarks(doc, ['o:12', 'l'], 'g-1', T + 1, fileOwn)).toBe(2);
+    expect(PdfLiveChanges.mark(doc, 'o:12')).toMatchObject({ group: 'g-1' });
+    expect(gone(doc)).toEqual([['o:12', 'mark']]);
+    const grouped = new Map([[theirs.id, { ...theirs, group: 'o:12' }]]);
+    const other = withMarks().doc;
+    expect(ungroupMarks(other, ['o:12'], T + 1, grouped)).toBe(1);
+    expect(PdfLiveChanges.mark(other, 'o:12')).not.toHaveProperty('group');
   });
 
   it('is left the file’s own where nothing changes it', () => {
