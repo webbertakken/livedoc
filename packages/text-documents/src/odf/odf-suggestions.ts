@@ -173,7 +173,7 @@ export class OdfChangeTracker {
       ...change.mark,
       before: {
         style: typeof before.style === 'string' ? before.style : paragraph.style,
-        props: (isObject(before.props) ? before.props : paragraph.props),
+        props: isObject(before.props) ? before.props : paragraph.props,
         ...(isObject(before.list) ? { list: before.list as never } : {}),
       },
     };
