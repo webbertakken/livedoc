@@ -96,6 +96,8 @@ export function fakeIo(
     stdinIsTTY?: boolean;
     stdoutIsTTY?: boolean;
     files?: Record<string, string>;
+    // Files of bytes, read by readBytes and size.
+    bytes?: Record<string, Uint8Array>;
     links?: Record<string, string>;
     // The answers `readLine` gives, in order; null is the end of input; past the end, null.
     lines?: (string | null)[];
@@ -111,7 +113,7 @@ export function fakeIo(
   const fileMap = new Map(
     Object.entries(options.files ?? {}).map(([k, v]) => [k, { data: v, mode: 0o600 }]),
   );
-  const byteMap = new Map<string, Uint8Array>();
+  const byteMap = new Map<string, Uint8Array>(Object.entries(options.bytes ?? {}));
   const dirMap = new Set<string>();
   const linkMap = new Map(Object.entries(options.links ?? {}));
   const watchers = new Set<{ dir: string; onChange: (path: string) => void }>();
@@ -168,6 +170,11 @@ export function fakeIo(
     },
     files: {
       read: async (path) => fileMap.get(path)?.data ?? null,
+      readBytes: async (path) => {
+        const bytes = byteMap.get(path);
+        return bytes ? new Uint8Array(bytes) : null;
+      },
+      size: async (path) => byteMap.get(path)?.length ?? null,
       write: async (path, data, mode) => void fileMap.set(path, { data, mode: mode ?? 0o644 }),
       writeBytes: async (path, data) => void byteMap.set(path, data),
       mkdir: async (path) => void dirMap.add(path),

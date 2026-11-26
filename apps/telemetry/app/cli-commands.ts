@@ -42,6 +42,11 @@ export const CLI_COMMANDS: readonly { type: string; command: string; what: strin
   { type: 'SheetAdd', command: 'sheet add', what: 'putting a new Sheet on a tab' },
   { type: 'SpreadsheetNew', command: 'spreadsheet new', what: 'making a spreadsheet' },
   {
+    type: 'SpreadsheetImport',
+    command: 'spreadsheet import',
+    what: 'opening a file as a new spreadsheet',
+  },
+  {
     type: 'SpreadsheetConvert',
     command: 'spreadsheet convert',
     what: 'changing a spreadsheet’s file format',

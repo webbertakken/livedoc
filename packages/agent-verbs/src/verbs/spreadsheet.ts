@@ -156,8 +156,34 @@ export const spreadsheetDownload = defineVerb({
   },
 });
 
+// `spreadsheet import` (D274): the CLI reads the file, so it runs it (apps/cli/src/commands/spreadsheet-import.ts).
+export const spreadsheetImport = defineVerb({
+  id: 'spreadsheet.import',
+  summary: 'Open a file as a new spreadsheet',
+  description:
+    'Opens an .ods, .fods, .xlsx, .xlsm, .csv, .tsv or .txt file as a new spreadsheet, as File › Open does: in the format its bytes are in (csv and tsv one sheet of an ODF one), named after the file or --name. Prints its id, format, sheets and link, then what the file held that the spreadsheet does not.',
+  behaviour: 'write',
+  local: true,
+  input: z.object({
+    file: z.string().describe('The file to open'),
+    name: z.string().optional().describe('The spreadsheet\u2019s name; the file\u2019s by default'),
+  }),
+  output: z.object({ lines: z.array(z.string()) }),
+  text: ({ lines }) => lines,
+  cli: {
+    positionals: ['file'],
+    examples: [
+      'livedoc spreadsheet import budget.xlsx',
+      'livedoc spreadsheet import models.csv --name "Model values"',
+    ],
+    prints:
+      '+ spreadsheet <ref> "<name>" · <format> · <sheets> · <link>, then the import report a line each',
+  },
+});
+
 export const spreadsheetVerbs: readonly Verb[] = [
   spreadsheetNew,
+  spreadsheetImport,
   spreadsheetConvert,
   spreadsheetDownload,
 ];
