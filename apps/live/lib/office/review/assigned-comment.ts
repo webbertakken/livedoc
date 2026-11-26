@@ -25,4 +25,3 @@ export const assignOffer =
       : samePerson(current, mention)
         ? null
         : `Reassign to ${mention.name}`;
-

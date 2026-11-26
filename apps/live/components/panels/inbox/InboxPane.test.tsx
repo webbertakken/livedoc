@@ -226,7 +226,10 @@ describe('the verbs', () => {
       <Harness
         initial={{
           threads: [
-            { kind: 'thread', ...thread({ anchor: 'text', latest: { ...thread().latest, at: NOW } }) },
+            {
+              kind: 'thread',
+              ...thread({ anchor: 'text', latest: { ...thread().latest, at: NOW } }),
+            },
           ],
         }}
       />,

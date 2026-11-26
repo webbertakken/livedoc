@@ -76,9 +76,7 @@ describe('offeredVerbs', () => {
   });
 
   it('offers nothing on a text document’s thread or assigned comment (D229)', () => {
-    const text = only(
-      feedOf({ threads: [{ kind: 'thread', ...thread({ anchor: 'text' }) }] }),
-    );
+    const text = only(feedOf({ threads: [{ kind: 'thread', ...thread({ anchor: 'text' }) }] }));
     expect(offeredVerbs(text, done)).toEqual([]);
     const assigned = only(
       feedOf({ assignedToMe: [{ kind: 'action', ...action({ anchor: 'text' }) }] }),
