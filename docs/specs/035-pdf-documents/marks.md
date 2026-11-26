@@ -235,7 +235,7 @@ written into the file as a standard annotation, so any reader shows it. The rese
 - **Group**: several selected marks become one that moves and is answered as one; **Ungroup** undoes it.
   - Format > Group, with two or more marks selected, gives each the same new **group** (a fresh id), one step of
     undo; a mark already in a group leaves it for the new one. Format > Ungroup, with a selected mark in a group,
-    takes every selected mark out of its group, one step. Each is shown only while it can act `(default)`.
+    takes every selected mark out of its group, one step. Each is dimmed while it cannot act `(default)`.
   - A group is the marks of one page that share it, as a selection is the marks of one page; a group holding one mark
     acts as none `(default)`.
   - **A press on a grouped mark selects its group**: every mark of it on that page this session may change; ⇧ adds or

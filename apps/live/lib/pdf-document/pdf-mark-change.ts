@@ -128,3 +128,40 @@ export function deleteMarks(
   );
   return changeAsOne(doc, changes) ? there.map((mark) => mark.kind) : [];
 }
+
+/** The marks of `ids` given `group` as one change, `now` their time of change; answers how many it reached. */
+export function groupMarks(
+  doc: Y.Doc,
+  ids: readonly string[],
+  group: string,
+  now: number,
+  fileOwn: ReadonlyMap<string, Mark> = NO_FILE_MARKS,
+): number {
+  const there = ids.flatMap((id) => {
+    const mark = markIn(doc, id, fileOwn);
+    return mark ? [mark] : [];
+  });
+  const changes = there.flatMap((mark) => [
+    ...adopting(doc, mark),
+    PdfChange.changeMark(mark.id, { group, modifiedAt: now }),
+  ]);
+  return changeAsOne(doc, changes) ? there.length : 0;
+}
+
+/** The marks of `ids` in a group taken out of it as one change; answers how many were. */
+export function ungroupMarks(
+  doc: Y.Doc,
+  ids: readonly string[],
+  now: number,
+  fileOwn: ReadonlyMap<string, Mark> = NO_FILE_MARKS,
+): number {
+  const grouped = ids.flatMap((id) => {
+    const mark = markIn(doc, id, fileOwn);
+    return mark?.group ? [mark] : [];
+  });
+  const changes = grouped.flatMap((mark): PdfChange[] => [
+    ...adopting(doc, mark),
+    { root: 'marks', id: mark.id, set: { modifiedAt: now }, unset: ['group'] },
+  ]);
+  return changeAsOne(doc, changes) ? grouped.length : 0;
+}

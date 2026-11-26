@@ -46,6 +46,8 @@ export type MarkLook = Partial<
       readonly fill: string | null;
       /** A Text's or a Callout's font, a family of the Font menu; null takes it away, Helvetica again. */
       readonly font: string | null;
+      /** The group it joins (marks.md "Changing a mark"); taken away by unsetting it. */
+      readonly group: string;
     }
 >;
 

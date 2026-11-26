@@ -10,7 +10,7 @@ import { debugLog } from '@/lib/debug-log';
 import { track } from '@/lib/telemetry';
 import { pdfChangeableStore } from './pdf-changeable-marks';
 import { pdfMarksStore } from './pdf-marks-store';
-import { DELETE_MARKS } from './pdf-menus';
+import { DELETE_MARKS, GROUP_MARKS, UNGROUP_MARKS } from './pdf-menus';
 import type { PdfTextSelected } from './usePdfTextSelection';
 import { usePdfMarkSelection } from './usePdfMarkSelection';
 
@@ -173,6 +173,73 @@ describe('selecting marks', () => {
     expect(selecting({ marking: false }).hook.result.current.choosing).toBeNull();
     expect(selecting({ open: false }).hook.result.current.choosing).toBeNull();
     expect(selecting({ marking: false }).hook.result.current.actions).toEqual({});
+  });
+});
+
+// marks.md "Changing a mark": Group and Ungroup; a press on a grouped mark selects its group.
+describe('grouping the selected marks', () => {
+  const grouped = (mayChange?: (mark: Mark) => boolean) => {
+    const made = selecting(mayChange ? { mayChange } : {});
+    PdfLiveChanges.addMark(made.doc, line('d'));
+    return made;
+  };
+  const run = (hook: ReturnType<typeof selecting>['hook'], id: string) =>
+    act(() => hook.result.current.actions[id]!.run());
+
+  it('groups two or more selected as one step, logged and counted; dimmed for fewer', () => {
+    const { hook, doc, steps } = grouped();
+    act(() => hook.result.current.choosing!.choose(0, 'a', false));
+    expect(hook.result.current.actions[GROUP_MARKS]!.disabled).toBe(true);
+    expect(hook.result.current.actions[UNGROUP_MARKS]!.disabled).toBe(true);
+    act(() => hook.result.current.choosing!.choose(0, 'b', true));
+    expect(hook.result.current.actions[GROUP_MARKS]!.disabled).toBe(false);
+    run(hook, GROUP_MARKS);
+    const group = PdfLiveChanges.mark(doc, 'a')!.group;
+    expect(group).toEqual(expect.any(String));
+    expect(PdfLiveChanges.mark(doc, 'b')!.group).toBe(group);
+    expect(steps).toEqual([{ page: PAGES[0]!.name }]);
+    expect(debugLog).toHaveBeenLastCalledWith('[pdf] marks-grouped count=2');
+    expect(track).toHaveBeenLastCalledWith('Pdf', 'Changed', 'Mark.Grouped');
+    expect(hook.result.current.actions[UNGROUP_MARKS]!.disabled).toBe(false);
+  });
+
+  it('selects a whole group by a press on one of it, adds and takes it out whole with ⇧, and by a box', () => {
+    const { hook } = grouped();
+    act(() => hook.result.current.choosing!.choose(0, 'a', false));
+    act(() => hook.result.current.choosing!.choose(0, 'b', true));
+    run(hook, GROUP_MARKS);
+    act(() => hook.result.current.choosing!.letGo());
+    act(() => hook.result.current.choosing!.choose(0, 'b', false));
+    expect(hook.result.current.chosen).toEqual({ page: 0, ids: ['b', 'a'] });
+    act(() => hook.result.current.choosing!.choose(0, 'd', false));
+    act(() => hook.result.current.choosing!.choose(0, 'a', true));
+    expect(hook.result.current.chosen).toEqual({ page: 0, ids: ['d', 'a', 'b'] });
+    act(() => hook.result.current.choosing!.choose(0, 'b', true));
+    expect(hook.result.current.chosen).toEqual({ page: 0, ids: ['d'] });
+    act(() => hook.result.current.choosing!.chooseAll(0, ['a'], false));
+    expect(hook.result.current.chosen).toEqual({ page: 0, ids: ['a', 'b'] });
+  });
+
+  it('ungroups the selection as one step, logged and counted', () => {
+    const { hook, doc } = grouped();
+    act(() => hook.result.current.choosing!.choose(0, 'a', false));
+    act(() => hook.result.current.choosing!.choose(0, 'b', true));
+    run(hook, GROUP_MARKS);
+    run(hook, UNGROUP_MARKS);
+    expect(PdfLiveChanges.mark(doc, 'a')).not.toHaveProperty('group');
+    expect(PdfLiveChanges.mark(doc, 'b')).not.toHaveProperty('group');
+    expect(debugLog).toHaveBeenLastCalledWith('[pdf] marks-ungrouped count=2');
+    expect(track).toHaveBeenLastCalledWith('Pdf', 'Changed', 'Mark.Ungrouped');
+    expect(hook.result.current.actions[UNGROUP_MARKS]!.disabled).toBe(true);
+  });
+
+  it('selects of a group only the marks the session may change', () => {
+    const { hook, doc } = grouped((mark) => mark.id !== 'b');
+    act(() => {
+      for (const id of ['a', 'b', 'd']) PdfLiveChanges.addMark(doc, { ...line(id), group: 'g' });
+    });
+    act(() => hook.result.current.choosing!.choose(0, 'a', false));
+    expect(hook.result.current.chosen).toEqual({ page: 0, ids: ['a', 'd'] });
   });
 });
 
