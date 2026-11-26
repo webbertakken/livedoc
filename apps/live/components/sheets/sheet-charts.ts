@@ -105,6 +105,9 @@ export function chartSizeOf(type: ChartType): { width: number; height: number } 
 
 // The chart this person placed last, for its Sheet to select once it draws it (SheetChartsLayer).
 let placedChartId: string | null = null;
+export function markPlacedChart(id: string): void {
+  placedChartId = id;
+}
 export function takePlacedChart(id: string): boolean {
   if (placedChartId !== id) return false;
   placedChartId = null;

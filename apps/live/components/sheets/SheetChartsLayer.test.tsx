@@ -371,3 +371,71 @@ describe('the charts in a Sheet', () => {
     });
   });
 });
+
+// A spreadsheet's charts are its sheet's objects (docs/specs/029-sheets/charts.md "The model"): drawn from the elements
+// handed over, each change sent through the spreadsheet's writes rather than the canvas's elements.
+describe("a spreadsheet's charts", () => {
+  const writes = () => ({
+    change: vi.fn(),
+    remove: vi.fn(),
+    labelOf: (id: string) => `Chart ${id}`,
+    noData: new Set(['empty']),
+  });
+  function mountBook(w: ReturnType<typeof writes>, menu?: (id: string, at: DOMRect) => void) {
+    return renderSheet(
+      h,
+      () => (
+        <SheetsBridgeContext.Provider value={bridge}>
+          <SheetChartsContext.Provider
+            value={{ elements, editable: true, writes: { ...w, ...(menu ? { menu } : {}) } }}
+          >
+            <SheetChartsLayer />
+          </SheetChartsContext.Provider>
+        </SheetsBridgeContext.Provider>
+      ),
+      { canShape: true, interactive: true },
+    );
+  }
+
+  it('draws every chart handed over, by its label, and says No data for one whose range is gone', () => {
+    elements = [chart('one', { chartSource: { sheetId: 'elsewhere', range } }), chart('empty')];
+    const w = writes();
+    mountBook(w);
+    expect(box('one').getAttribute('aria-label')).toBe('Chart one');
+    expect(screen.getByTestId('drawn-one')).toBeTruthy();
+    expect(box('empty').textContent).toContain('No data');
+    expect(screen.queryByTestId('drawn-empty')).toBeNull();
+  });
+
+  it('writes a move, a resize, a nudge and a delete back, never the canvas elements', () => {
+    elements = [chart('one')];
+    const w = writes();
+    mountBook(w);
+    drag(box('one'), 30, 20);
+    expect(w.change).toHaveBeenLastCalledWith('one', { sheetAnchor: { x: 130, y: 70 } });
+    act(() => box('one').focus());
+    const handle = box('one').querySelector<HTMLElement>('[data-sheet-chart-resize]')!;
+    drag(handle, 40, 10);
+    expect(w.change).toHaveBeenLastCalledWith('one', { width: 300, height: 230 });
+    fireEvent.keyDown(box('one'), { key: 'ArrowRight', shiftKey: true });
+    expect(w.change).toHaveBeenLastCalledWith('one', { sheetAnchor: { x: 110, y: 50 } });
+    fireEvent.keyDown(box('one'), { key: 'Delete' });
+    expect(w.remove).toHaveBeenCalledWith('one');
+    expect(bridge.commitElements).not.toHaveBeenCalled();
+  });
+
+  it("opens the spreadsheet's chart menu, and offers none while it has none", () => {
+    elements = [chart('one')];
+    const menu = vi.fn();
+    const w = writes();
+    const view = mountBook(w);
+    act(() => box('one').focus());
+    expect(screen.queryByRole('button', { name: 'Chart Options' })).toBeNull();
+    view.unmount();
+    mountBook(w, menu);
+    act(() => box('one').focus());
+    fireEvent.click(screen.getByRole('button', { name: 'Chart Options' }));
+    expect(menu).toHaveBeenCalledWith('one', expect.objectContaining({ width: 0 }));
+    expect(openElementMenu).not.toHaveBeenCalled();
+  });
+});

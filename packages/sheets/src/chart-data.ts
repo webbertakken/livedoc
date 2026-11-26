@@ -17,8 +17,9 @@ type SheetChartLink = { sheetId: string; range: IdRange; cols?: readonly string[
 export type SheetChartTable = {
   // The category labels, one per row of data.
   categories: string[];
-  // One per value column, its name from the header row (or its column letter); null where a cell holds no number.
-  series: { name: string; values: (number | null)[] }[];
+  // One per value column, its name from the header row (or its column letter), its column's id; null where a cell
+  // holds no number.
+  series: { name: string; col: string; values: (number | null)[] }[];
 };
 
 // Bounds: a chart past these is unreadable, and they keep a read cheap on a huge range.
@@ -80,6 +81,7 @@ export function sheetChartTable(
     categories: body.map((r, i) => (labelled ? text(r, cols[0]!) : String(i + 1))),
     series: valueCols.slice(0, CHART_SERIES_MAX).map((c) => ({
       name: (headed ? text(rows[0]!, c) : '') || `Column ${columnLetters(c)}`,
+      col: layout.cols[c]!,
       values: body.map((r) => {
         const v = value(r, c);
         return isNumber(v) ? v : null;

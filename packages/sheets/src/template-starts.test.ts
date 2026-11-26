@@ -105,7 +105,7 @@ describe('template starts', () => {
     expect(made!.charts[0]!.kind).toBe('pie-chart');
     expect(made!.charts[0]!.table).toEqual({
       categories: ['Home', 'Food', 'Travel', 'Leisure', 'Savings'],
-      series: [{ name: 'Spent', values: [1364, 478, 120, 92, 300] }],
+      series: [{ name: 'Spent', col: expect.any(String), values: [1364, 478, 120, 92, 300] }],
     });
   });
 

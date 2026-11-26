@@ -312,7 +312,7 @@ const INSERT_MENU = menu('insert', 'Insert', [
   SEPARATOR,
   item('insert-table', 'Table', 'edit'),
   item('insert-timeline', 'Timeline', 'edit'),
-  item('insert-chart', 'Chart', 'edit'),
+  built('insert-chart', 'Chart', 'edit'),
   item('insert-pivot-table', 'Pivot Table', 'edit'),
   submenu('insert-image', 'Image', [
     item('insert-image-in-cell', 'Insert Image in Cell', 'edit'),

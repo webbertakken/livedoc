@@ -25,6 +25,8 @@ import { useCustomAngleDialog } from './useCustomAngleDialog';
 import { useGridMenuBindings } from './useGridMenuBindings';
 import { useMergeDialog } from './useMergeDialog';
 import { useNumberFormatDialogs } from './useNumberFormatDialogs';
+import { SheetChartsContext } from '@/components/sheets/sheet-charts-context';
+import { useSpreadsheetCharts } from './charts/useSpreadsheetCharts';
 
 export function SpreadsheetSheetParts({ bridge }: { bridge: SheetsBridge }) {
   const actions = useSheetActions();
@@ -45,9 +47,16 @@ export function SpreadsheetSheetParts({ bridge }: { bridge: SheetsBridge }) {
     writes: c.canEdit && c.canShape,
   });
   const { actions: panelActions } = panels;
+  const charts = useSpreadsheetCharts(c);
+  const { insertChart } = charts;
+  const canInsertChart = c.canShape;
   const bandingActions = useMemo(
-    () => withBandingOnOpen(panelActions, () => actions.addBanding()),
-    [panelActions, actions],
+    () => ({
+      ...withBandingOnOpen(panelActions, () => actions.addBanding()),
+      // Insert › Chart and the toolbar's (charts.md "Inserting"): an Editor's.
+      ...(canInsertChart ? { 'insert-chart': { run: insertChart } } : {}),
+    }),
+    [panelActions, actions, canInsertChart, insertChart],
   );
   const office = useGridMenuBindings(
     actions,
@@ -86,16 +95,18 @@ export function SpreadsheetSheetParts({ bridge }: { bridge: SheetsBridge }) {
         <div className="flex min-w-0 flex-1 flex-col">
           <SpreadsheetFormulaBarRow actions={actions} input={input} />
           <div data-region="document" className="relative flex min-h-0 flex-1 flex-col">
-            <SheetGrid
-              elementId={`sheet-${c.sheet.id}`}
-              actions={actions}
-              input={input}
-              pointRef={pointRef}
-              peers={bridge.peers}
-              zoom={zoom}
-              surfaceKeys={surfaceKeys}
-              fontFamily={DocumentFonts.stack(theme.font)}
-            />
+            <SheetChartsContext.Provider value={charts.value}>
+              <SheetGrid
+                elementId={`sheet-${c.sheet.id}`}
+                actions={actions}
+                input={input}
+                pointRef={pointRef}
+                peers={bridge.peers}
+                zoom={zoom}
+                surfaceKeys={surfaceKeys}
+                fontFamily={DocumentFonts.stack(theme.font)}
+              />
+            </SheetChartsContext.Provider>
           </div>
         </div>
         <SpreadsheetRightPanel panels={panels} actions={actions} />

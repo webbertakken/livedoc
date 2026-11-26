@@ -1,6 +1,7 @@
 # Charts
 
-**Status: specified.** Nothing is built.
+**Status: built in part** (plan 0020 Phase 11): the model, drawing over the cells, Insert › Chart and working with a
+chart; the rest specified.
 
 Charts in a [spreadsheet](spreadsheet.md), as Google Sheets makes them: the workbook's own objects, kept in both
 file formats, drawn by LiveDoc's chart code. Research: [Charts and pivots](../../research/sheets-open-standard/charts-and-pivots.md).
@@ -17,6 +18,28 @@ file formats, drawn by LiveDoc's chart code. Research: [Charts and pivots](../..
   the shared piece "charts" this plan owns, which plan 0019's documents use too.
 - ODF keeps it as an embedded chart document, XLSX as a DrawingML chart, each read and written by its mapping
   ([Standard mapping](standard-mapping.md)).
+
+## The model
+
+A chart is one of its sheet's **objects**, kept in the sheet's layout beside its rules ([Sheet store](sheet-store.md#in-a-spreadsheet)).
+A layout write sets one whole by its id, or removes it; two people changing two charts never overwrite each other,
+and two changing one chart resolve to the last write. Each change is one undo step.
+
+- **Place**: the cell its top-left corner sits in, by row and column ids, and an offset into that cell in px at
+  100%; a width of 160 to 2,000 px and a height of 120 to 2,000 px. Inserting or resizing rows and columns before
+  it moves it with its cell. When its cell's row or column is deleted, it moves to the one that takes its place
+  (the next, else the one before).
+- **Data**: one range by row and column ids, and optionally only some of its columns (picked by id, up to 13),
+  read as today's charts from a Sheet read one ([Sheet](sheet.md#charts)): a first row of names heads the series, a
+  first column of labels (or, on a scatter chart, of numbers: the x) labels them. Deleting rows or columns inside
+  the range shrinks it; deleting all of it leaves the chart with no data, drawn as "No data".
+- **Type**: one of [Chart types](#chart-types) built: Column, Bar, Line, Area, Scatter, Pie and Doughnut.
+- **Look**: a palette ([Chart palettes](../009-elements/pie-chart.md#chart-palettes)); per series, by its column's id,
+  a colour, a scatter series drawn as a line ([Lines set by an agent](../009-elements/pie-chart.md#lines-set-by-an-agent)),
+  and the right-hand axis; the legend's place (top, right, bottom, left) or none; the values printed on the marks;
+  the value axis, shown unless turned off (Google shows it; a Plan chart's is off until turned on); a title, a
+  horizontal axis title and a vertical axis title, each up to 200 characters; alt text up to 1,000.
+- Up to 100 objects a sheet (`objects_full`); a chart that is not one of these shapes is refused (`write_invalid`).
 
 ## Chart types
 
@@ -103,4 +126,5 @@ reader may open ([Plan's links](plan-links.md)).
 
 ## Telemetry
 
-`Spreadsheet · Inserted · Chart` with its type; `Spreadsheet · Changed · Chart`.
+`Spreadsheet · Added · <type>` when Insert › Chart makes one (Column, Bar, Line, Area, Scatter, Pie, Doughnut);
+`Sheet · Changed · Chart` for each move, resize, change or delete (the sheet's change kinds, `SHEET_CHANGE_KINDS`).

@@ -39,7 +39,15 @@ export function PieChartView({
   // What the chart sits on (chartPageGrounds): its series drawn adapted to it.
   ground?: readonly string[];
 }) {
-  const { w, h, data: slices, colorAt, area, legend } = chartFrame(element, palette, ground);
+  const {
+    w,
+    h,
+    data: slices,
+    colorAt,
+    area,
+    legend,
+    titles,
+  } = chartFrame(element, palette, ground);
   const { hover, markProps } = useChartHover<number>();
   // The pie (or doughnut) fills the chart area chartFrame leaves after the legend strip, laid out by the marks the
   // export draws too.
@@ -59,6 +67,7 @@ export function PieChartView({
       items={slices}
       colorAt={colorAt}
       legend={legend}
+      titles={titles}
       textColor={textColor}
       fontFamily={fontFamily}
       fontPx={legendFontPx(element.textSize)}

@@ -14,3 +14,4 @@ export * from './metric-tile-model';
 export * from './phase-colours';
 export * from './board-widget-info';
 export * from './form-art';
+export * from './sheet-chart-element';

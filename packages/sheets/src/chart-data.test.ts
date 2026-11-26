@@ -38,8 +38,8 @@ describe('a chart from a range', () => {
     expect(sheetChartTable(b.wb, link(0, 0, 2, 2), 'en-GB')).toEqual({
       categories: ['Jan', 'Feb'],
       series: [
-        { name: 'Sales', values: [10, 20] },
-        { name: 'Costs', values: [4, null] },
+        { name: 'Sales', col: 's0c1', values: [10, 20] },
+        { name: 'Costs', col: 's0c2', values: [4, null] },
       ],
     });
   });
@@ -59,8 +59,8 @@ describe('a chart from a range', () => {
       C4: '=1/0',
     });
     expect(sheetChartTable(b.wb, link(0, 0, 3, 2), 'en-GB')!.series).toEqual([
-      { name: 'A', values: [70, null, null] },
-      { name: 'B', values: [null, 0, null] },
+      { name: 'A', col: 's0c1', values: [70, null, null] },
+      { name: 'B', col: 's0c2', values: [null, 0, null] },
     ]);
   });
 
@@ -69,8 +69,8 @@ describe('a chart from a range', () => {
     expect(sheetChartTable(b.wb, link(0, 1, 1, 2), 'en-GB')).toEqual({
       categories: ['1', '2'],
       series: [
-        { name: 'Column B', values: [1, 3] },
-        { name: 'Column C', values: [2, 4] },
+        { name: 'Column B', col: 's0c1', values: [1, 3] },
+        { name: 'Column C', col: 's0c2', values: [2, 4] },
       ],
     });
   });
@@ -93,7 +93,7 @@ describe('a chart from a range', () => {
       sheetChartTable(b.wb, { ...link(0, 0, 2, 2), cols: [cols[0]!, cols[2]!] }, 'en-GB'),
     ).toEqual({
       categories: ['Rent', 'Food'],
-      series: [{ name: 'Amount', values: [1200, 320] }],
+      series: [{ name: 'Amount', col: 's0c2', values: [1200, 320] }],
     });
   });
 

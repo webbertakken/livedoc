@@ -19,6 +19,8 @@ import type {
 import { sameName } from './range-names';
 import { ruleRectangles } from './rules/rule-ranges';
 import { applyOutlineChange, outlineAfterDelete, outlineInPlace } from './outline-store';
+import { objectsWith, type SheetObject } from './objects/sheet-objects';
+import { objectsAfterDelete } from './objects/objects-after-delete';
 
 export type Axis = 'r' | 'c';
 
@@ -64,7 +66,9 @@ export type LayoutChange =
   // A format rule set (in place, else inserted at `at`, else appended) or removed (null), by id
   // (conditional-formatting.md); and the format rules put in an order.
   | { k: 'frule'; id: string; rule: FormatRule | null; at?: number }
-  | { k: 'fruleOrder'; ids: string[] };
+  | { k: 'fruleOrder'; ids: string[] }
+  // An object (a chart) set whole (in place, else on top) or removed (null), by id (charts.md "The model").
+  | { k: 'object'; id: string; object: SheetObject | null };
 
 function sameRange(a: IdRange, b: IdRange): boolean {
   return a.r1 === b.r1 && a.c1 === b.c1 && a.r2 === b.r2 && a.c2 === b.c2;
@@ -284,6 +288,7 @@ export function applyLayoutChange(layout: SheetLayout, ch: LayoutChange): SheetL
         });
         next.bands = bands.length ? bands : undefined;
       }
+      if (layout.objects?.length) next.objects = objectsAfterDelete(layout, goneRows, goneCols);
       // Card tables lose the deleted rows' links and drafts; a table whose header row or every column went is gone,
       // and a deleted Controls column is dropped (the next one is found again).
       if (layout.cardTables?.length) {
@@ -381,6 +386,8 @@ export function applyLayoutChange(layout: SheetLayout, ch: LayoutChange): SheetL
             : [...list, ch.band];
       return clean({ ...layout, bands: next.length ? next : undefined });
     }
+    case 'object':
+      return clean({ ...layout, objects: objectsWith(layout.objects, ch.id, ch.object) });
     case 'frule': {
       const list = layout.formatRules ?? [];
       const at = list.findIndex((x) => x.id === ch.id);

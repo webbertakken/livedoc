@@ -593,6 +593,8 @@ export const SHEET_CHANGE_KINDS = [
   'ConditionalFormat',
   // Alternating colours (docs/specs/029-sheets/formatting.md "Alternating colours").
   'Banding',
+  // A spreadsheet's charts (docs/specs/029-sheets/charts.md "The model").
+  'Chart',
   'Resize',
   'Hide',
   'Group',

@@ -730,6 +730,7 @@ export * from './entity-related';
 export * from './code-themes';
 export * from './chart-palettes';
 export * from './chart-frame';
+export * from './chart-titles';
 export * from './chart-ink';
 export * from './chart-types';
 export * from './chart-marks';
