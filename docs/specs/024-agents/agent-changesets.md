@@ -209,6 +209,38 @@ erases anything:
 - Landing event-storming notes on lanes and coercing shapes are the engine's, for every front door.
 - `rename_document` with a tab renames through the tab name route.
 
+## A sheet's changesets
+
+A sheet's cells, rows, columns, layout and title are stored apart from its tab
+([Sheet store](../029-sheets/sheet-store.md)), so an agent's change to a sheet is a **sheet changeset**: an ordered
+list of the sheet's own writes, the editor's unit, applied as one. It holds for a Plan Sheet and a
+[spreadsheet](../029-sheets/spreadsheet.md)'s sheet alike.
+
+- **Submit.** `POST /api/documents/:id/sheets/:sheetId/changesets` with `writes` (the sheet writes in order),
+  optionally `summary` (as above) and `rev` (the sheet revision read) with `strict`. A Participant's changeset carries
+  values only and an Editor's anything, as each write on its own (D262).
+- **Atomic.** Each write is checked and applied against the sheet as the writes before it leave it; one refused
+  refuses the changeset, nothing written, the answer naming the write by its position. The caps are checked over
+  the whole. It is stored in one batch guarded by the sheet's revision, which advances by one per write, and relayed
+  to the room as that many sheet writes in order, so editors apply it as a person's writes, live.
+- **The base.** Without `strict`, a changeset whose `rev` is behind lands on the current sheet, cells merging one by
+  one as people's writes do; with `strict` it is refused `412 stale_sheet`, nothing written (D263).
+- **Attributed.** Every cell it writes carries its author, as a person's write does; its record keeps the author, the
+  token and the summary.
+- **Recorded** in the document's room beside the sheet: the writes as they landed, their inverse, and the state it
+  left every cell and every chart, rule and banding it touched in (D265). A changeset that changes nothing is not
+  recorded (CS11).
+- **History.** The document's changesets list holds its sheet changesets among its tab ones, each naming its sheet,
+  its counts being cells added, changed and removed; `GET` of one and its revert take either.
+- **Revert** applies the inverse as a new sheet changeset by the reverter (D266):
+  - a cell changed since it is kept, as is a chart, validation rule, format rule or banding changed since, and the
+    sheet's title when renamed since;
+  - rows or columns it inserted are deleted only when no cell in them changed since;
+  - the rest of its layout (sizes, merges, freezing, the filter, hidden rows and columns) goes back as it was.
+- **Not held**: a sheet has no held cells; a person's write and an agent's merge cell by cell (D267).
+- **What it leaves out**: the references other sheets' formulas hold into rows or columns it deleted are shrunk after
+  it, as a person's delete shrinks them, and are not put back by its revert (D268).
+
 ## Limits
 
 | Constant                      | Value      | Why                                                                      |
@@ -340,3 +372,26 @@ The code cites each by its id.
   `elementId: null` with no ids clears the entry (default).
 - **CS48** Whether a token's revert is held: Yes, on every element the reverted changeset touched, as any agent
   changeset; a person's revert never is (default).
+- **D262** A sheet changeset's door and body: `POST /api/documents/:id/sheets/:sheetId/changesets`
+  `{ writes, summary?, rev?, strict? }`; a Participant's writes are cut to their values as the write route cuts one,
+  and one of formats alone, or of rows, columns, layout or title, is refused `403` (default).
+- **D263** A sheet changeset's base: the sheet's revision only, never cell fingerprints; `strict` without `rev` is
+  `400 strict_needs_base`, a `rev` newer than the sheet's `400 invalid_base` (default).
+- **D264** A sheet changeset's size: at most 200 writes (`SHEET_CHANGESET_WRITES_MAX`), 50,000 cells over them
+  (`SHEET_CHANGESET_CELLS_MAX`, a Plan Sheet's whole) and 8 MiB of writes (`SHEET_CHANGESET_BYTES_MAX`); past any,
+  `413 too_large`; each write held to the write route's own caps (default).
+- **D265** A sheet changeset's record: `sheet_changesets` beside the sheet (its rows go with the sheet), id `sc_` and
+  10 base32 characters (CS7), its parts `writes`, `inverse` and `after` in `sheet_changeset_parts`, kept
+  `CHANGESET_RETENTION_DAYS` by the room's upkeep; `after` holds a canonical JSON of each touched cell's input and
+  format, and of each touched chart, rule and banding (default).
+- **D266** What a sheet changeset's revert keeps: what differs from `after` (cells; charts, validation and format
+  rules, bandings; the title); inserted rows or columns holding any cell not as `after` left it; the rest of the
+  layout is put back whole (default).
+- **D267** A sheet changeset in the editor: never held, no toast; its writes show live as a peer's (default).
+- **D268** Other sheets' references a sheet changeset's delete shrinks: shrunk after it as their own writes, outside
+  the changeset and its revert (default).
+- **D269** `change_sheet` and the CLI's sheet verbs: one sheet changeset a call, every change's writes in it; a
+  spreadsheet's `move` lands after it through the workbook's door, and a Plan Sheet's chart elements in a tab
+  changeset after it (default).
+- **D270** A sheet changeset's answer: `{ changeset: { id, sheetId, tabId, rev, previousRev, counts } | null, rev,
+applied }`, `applied` being the writes as they landed, for the caller to follow (default).

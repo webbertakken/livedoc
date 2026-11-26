@@ -738,12 +738,14 @@ describe('a sheet the form makes or switches to', () => {
     ]);
     // A Sheet tab's changeset makes its sheet, as the api does for a marked Sheet element.
     const newTab = /^\/documents\/doc\/tabs\/[0-9a-f-]{36}$/;
+    // A tab's changesets, not a sheet's (those are the sheet server's).
+    const tabChangesets = (k: string) => k.endsWith('/changesets') && k.includes('/tabs/');
     const routes = new Proxy(server.routes, {
-      has: (t, k: string) => k in t || k.endsWith('/changesets') || newTab.test(k),
+      has: (t, k: string) => k in t || tabChangesets(k) || newTab.test(k),
       get: (t, k: string) =>
         newTab.test(k)
           ? { tab: { id: k.split('/')[4], kind: 'sheet', elements: [], rev: 1 } }
-          : k.endsWith('/changesets')
+          : tabChangesets(k)
             ? async (r: Request) => {
                 const body = (await r.json()) as {
                   replace?: { kind?: string; elements?: { planSheet?: { sheetId: string } }[] };

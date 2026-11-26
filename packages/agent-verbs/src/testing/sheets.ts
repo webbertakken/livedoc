@@ -50,6 +50,8 @@ export type SheetServer = {
   sheets: SheetJson[];
   // Every write body, every create and every deleted sheet id, in order.
   writes: { sheetId: string; write: SheetWrite; wid?: string }[];
+  // Every sheet changeset, as the writes it carried.
+  changesets: { sheetId: string; writes: SheetWrite[] }[];
   creates: unknown[];
   deletes: string[];
   routes: Record<string, unknown>;
@@ -62,7 +64,14 @@ export function sheetServer(
   sheets: SheetJson[],
   opts: { refuse?: string; status?: number; refuseAfter?: number; workbook?: WorkbookRecord } = {},
 ): SheetServer {
-  const server: SheetServer = { sheets, writes: [], creates: [], deletes: [], routes: {} };
+  const server: SheetServer = {
+    sheets,
+    writes: [],
+    changesets: [],
+    creates: [],
+    deletes: [],
+    routes: {},
+  };
   const base = `/documents/${documentId}/sheets`;
   server.routes[base] = async (r: Request) => {
     if (r.method === 'POST') {
@@ -95,6 +104,34 @@ export function sheetServer(
     server.sheets[at] = { ...sheetToJson(landed.sheet), rev };
     return Response.json({ applied: landed.applied, rev, cells: [] });
   };
+  // A sheet changeset (docs/specs/024-agents/agent-changesets.md "A sheet's changesets"): its writes kept as sent,
+  // then applied in order, or none when `refuse` answers one of them.
+  const changesets = async (r: Request) => {
+    const sheetId = new URL(r.url).pathname.split('/').at(-2)!;
+    const body = (await r.json()) as { writes: SheetWrite[] };
+    server.changesets.push({ sheetId, writes: body.writes });
+    for (const write of body.writes) server.writes.push({ sheetId, write });
+    if (opts.refuse && server.writes.length > (opts.refuseAfter ?? 0))
+      return Response.json({ error: opts.refuse }, { status: opts.status ?? 400 });
+    const at = server.sheets.findIndex((s) => s.id === sheetId);
+    let sheet = sheetFromJson(server.sheets[at]!);
+    const applied: SheetWrite[] = [];
+    for (const write of body.writes) {
+      const landed = applySheetWrite(sheet, write, { now: 0, by: NOBODY });
+      applied.push(landed.applied);
+      sheet = landed.sheet;
+    }
+    const before = server.sheets[at]!;
+    const after = sheetToJson(sheet);
+    // Writes that change nothing are no changeset (CS11).
+    const content = (s: SheetJson) => JSON.stringify([s.title, s.layout, s.cells]);
+    if (content(after) === content(before))
+      return Response.json({ changeset: null, rev: before.rev, applied: [] });
+    const rev = before.rev + body.writes.length;
+    server.sheets[at] = { ...after, rev };
+    const id = `sc_${String(server.changesets.length).padStart(10, '0')}`;
+    return Response.json({ changeset: { id, sheetId, rev }, rev, applied });
+  };
   const remove = (r: Request) => {
     if (r.method !== 'DELETE') return Response.json({ error: 'not_found' }, { status: 404 });
     const sheetId = new URL(r.url).pathname.split('/').at(-1)!;
@@ -105,13 +142,22 @@ export function sheetServer(
   // Every sheet's writes and deletes, those made during the test included.
   const isWrites = (key: string | symbol) =>
     typeof key === 'string' && key.startsWith(`${base}/`) && key.endsWith('/writes');
+  const isChangesets = (key: string | symbol) =>
+    typeof key === 'string' && key.startsWith(`${base}/`) && key.endsWith('/changesets');
   const isSheet = (key: string | symbol) =>
     typeof key === 'string' &&
     key.startsWith(`${base}/`) &&
     !key.slice(base.length + 1).includes('/');
   server.routes = new Proxy(server.routes, {
-    has: (target, key) => isWrites(key) || isSheet(key) || key in target,
-    get: (target, key) => (isWrites(key) ? writes : isSheet(key) ? remove : target[key as string]),
+    has: (target, key) => isWrites(key) || isChangesets(key) || isSheet(key) || key in target,
+    get: (target, key) =>
+      isWrites(key)
+        ? writes
+        : isChangesets(key)
+          ? changesets
+          : isSheet(key)
+            ? remove
+            : target[key as string],
     ownKeys: (target) => Reflect.ownKeys(target),
   });
   return server;

@@ -24,6 +24,7 @@ const changeOutput = z.object({
   title: z.string(),
   applied: z.array(z.string()),
   rev: z.number().nullable(),
+  changesetId: z.string().nullable(),
 });
 
 // Changes through the engine, a refusal as the verb's.
@@ -35,13 +36,21 @@ async function changeVia(
 ): Promise<z.infer<typeof changeOutput>> {
   const document = await documentOf(ctx, doc);
   const result = await changeSheet(ctx.api, document.id, { sheet, changes }, 'cli');
-  // Each verb sends one change, so a refusal means nothing went through.
+  // The call is one sheet changeset, so a refusal means nothing went through.
   if (result.refusal) throw refusal(result.refusal.code, result.refusal.message);
-  return { sheetId: result.sheetId, title: result.title, applied: result.applied, rev: result.rev };
+  return {
+    sheetId: result.sheetId,
+    title: result.title,
+    applied: result.applied,
+    rev: result.rev,
+    changesetId: result.changesetId,
+  };
 }
 
-const changeText = ({ title, applied }: z.infer<typeof changeOutput>) =>
-  applied.map((line) => `~ sheet ${JSON.stringify(title)}: ${line}`);
+const changeText = ({ title, applied, changesetId }: z.infer<typeof changeOutput>) => [
+  ...applied.map((line) => `~ sheet ${JSON.stringify(title)}: ${line}`),
+  ...(changesetId ? [`changeset ${changesetId}`] : []),
+];
 
 export const sheetLs = defineVerb({
   id: 'sheet.ls',

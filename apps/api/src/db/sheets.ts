@@ -374,14 +374,16 @@ export function headWriteStatement(
   nonce: string,
   now: number,
   by: SheetPerson,
-  change: { layout?: SheetLayout; title?: string },
+  // `steps`: how many writes the batch stores, each a revision (a sheet changeset's, D262); one by default.
+  change: { layout?: SheetLayout; title?: string; steps?: number },
 ): D1PreparedStatement {
   return env.DOCUMENT_DB.prepare(
-    `UPDATE sheets SET rev = rev + 1, write_nonce = ?, updated_at = ?, updated_by = ?${change.layout ? ', layout = ?' : ''}${
+    `UPDATE sheets SET rev = rev + ?, write_nonce = ?, updated_at = ?, updated_by = ?${change.layout ? ', layout = ?' : ''}${
       change.title !== undefined ? ', title = ?' : ''
     }
       WHERE document_id = ? AND id = ? AND rev = ? RETURNING rev`,
   ).bind(
+    change.steps ?? 1,
     nonce,
     now,
     JSON.stringify(by),

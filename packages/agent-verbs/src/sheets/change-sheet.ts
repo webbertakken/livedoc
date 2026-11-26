@@ -1,9 +1,8 @@
 // Changing a sheet for an agent (docs/specs/029-sheets/sheet-store.md "Agents", MCP change_sheet and the CLI's sheet
-// verbs): changes in order, each built against the sheet as the ones before it left it, and sent through the api's
-// write route as the editor sends them (one write a call, a large one split, each with its own write id). The
-// api answers with the write as it landed, which is applied here so the next change reads what is stored. A refused
-// change stops the rest and says which went through. A change is checked against the store's caps whole before any
-// part is sent (writesCapsProblem), and one whose later part is still refused says how much of it landed.
+// verbs): changes in order, each built against the sheet as the ones before it left it, then sent together as one
+// sheet changeset (docs/specs/024-agents/agent-changesets.md "A sheet's changesets", D269): every change lands or
+// none does, a large one split into the write route's parts inside it. A change is checked against the store's caps
+// whole before anything is sent (writesCapsProblem); a refusal says nothing was written.
 import type { ApiClient } from '@livedoc/api-client';
 import {
   CLIENT_HEADER,
@@ -11,6 +10,8 @@ import {
   type ChangesetResponse,
   type SheetWriteRequest,
   type SheetWriteResponse,
+  type SheetChangesetRequest,
+  type SheetChangesetResponse,
   type WorkbookSheetMoveRequest,
   type TabRecord,
   type TabResponse,
@@ -41,7 +42,13 @@ import {
 import { apiRefusalOf } from '../plan/api-refusal';
 import { SHEET_REFUSAL_WORDS } from './sheet-refusals';
 import { buildSheetChange, type SheetChange, type SheetChangeContext } from './sheet-change-build';
-import { readSheetsState, resolveSheet, sheetWritesPath, workbookFor } from './sheet-state';
+import {
+  readSheetsState,
+  resolveSheet,
+  sheetChangesetsPath,
+  sheetWritesPath,
+  workbookFor,
+} from './sheet-state';
 import { chartObjectSet, newChartId } from './sheet-chart-objects';
 
 export const workbookSheetsPath = (documentId: string) =>
@@ -67,16 +74,20 @@ interface SheetChangesResult {
   title: string;
   applied: string[];
   rev: number | null;
+  // The sheet changeset the call wrote, which `livedoc changeset revert` undoes; null when nothing changed.
+  changesetId: string | null;
   refusal?: { code: string; message: string };
 }
 
-// What applying changes answers: the lines, the revision, a refusal, and the charts they put over the cells.
+// What applying changes answers: the lines, the revision, the changeset, a refusal, and the charts they put over the
+// cells.
 type Applied = Omit<SheetChangesResult, 'sheetId' | 'title'> & {
   charts: SheetChartOut[];
   clear: (GridRange | null)[];
 };
 
-// One write through the api, and the sheet after it as stored.
+// One write through the api's write route, and the sheet after it as stored: a filling's (add_sheet,
+// create_spreadsheet), not a change's.
 export async function sendSheetWrite(
   api: ApiClient,
   documentId: string,
@@ -110,18 +121,28 @@ export function capsRefusal(
   };
 }
 
-// A change goes in parts only when splitWrite cut its cells, so every part of one holds cells: a title, or a write
-// with no cells, is always sent whole and never lands partly.
-const cellsIn = (write: SheetWrite) => (write as { cells: readonly unknown[] }).cells.length;
-
-// What a change whose later part was refused left behind, as its applied line: the cells that landed.
-function partlyLine(line: string, parts: readonly SheetWrite[], sent: number): string {
-  const total = parts.reduce((n, p) => n + cellsIn(p), 0);
-  const landed = parts.slice(0, sent).reduce((n, p) => n + cellsIn(p), 0);
-  return `partly ${line}: ${landed} of its ${total} cells landed before the refusal`;
+// The writes as one sheet changeset (docs/specs/024-agents/agent-changesets.md "A sheet's changesets", D269): every one
+// lands or none does.
+async function sendSheetChangeset(
+  api: ApiClient,
+  documentId: string,
+  sheetId: string,
+  writes: readonly SheetWrite[],
+  client: 'mcp' | 'cli',
+): Promise<SheetChangesetResponse> {
+  const body: SheetChangesetRequest = { writes: [...writes] };
+  return api.json<SheetChangesetResponse>(sheetChangesetsPath(documentId, sheetId), {
+    method: 'POST',
+    headers: { [CLIENT_HEADER]: client },
+    body: JSON.stringify(body),
+  });
 }
 
-// Builds and sends each change in turn against the workbook, which follows every landed write.
+const NOTHING_WRITTEN = 'Nothing of this call was written.';
+
+// Builds each change in turn against the workbook, which follows every change as built, then sends them all as one
+// sheet changeset; a spreadsheet's moves follow it through the workbook's door. A refused change, or a refused
+// changeset, writes nothing.
 async function applySheetChanges(
   api: ApiClient,
   documentId: string,
@@ -133,10 +154,25 @@ async function applySheetChanges(
   rand: Rand = Math.random,
   context: SheetChangeContext = {},
 ): Promise<Applied> {
-  const applied: string[] = [];
+  const lines: string[] = [];
   const charts: SheetChartOut[] = [];
   const clear: (GridRange | null)[] = [];
-  let rev: number | null = null;
+  const writes: SheetWrite[] = [];
+  const moves: string[] = [];
+  const start = wb.sheet(sheetId)!;
+  const refused = (refusal: { code: string; message: string }): Applied => {
+    // The workbook is put back as stored, so what follows reads nothing of the refused call.
+    wb.updateSheet(start);
+    const message = `${refusal.message} ${NOTHING_WRITTEN}`;
+    return {
+      applied: [],
+      rev: null,
+      changesetId: null,
+      charts: [],
+      clear: [],
+      refusal: { ...refusal, message },
+    };
+  };
   let cells = documentCells;
   for (const change of changes) {
     const sheet = wb.sheet(sheetId)!;
@@ -145,55 +181,52 @@ async function applySheetChanges(
       .filter((s) => s.id !== sheetId)
       .map((s) => s.title);
     const made = buildSheetChange(wb, sheetId, change, others, rand, context);
-    if (!made.ok)
-      return { applied, rev, charts, clear, refusal: { code: made.code, message: made.message } };
+    if (!made.ok) return refused({ code: made.code, message: made.message });
     // A spreadsheet's design charts are the sheet's own, set with the design's writes (charts.md "The model").
     const built = context.spreadsheet ? withChartObjects(wb, sheetId, made, rand) : made;
     const over = capsRefusal(sheet, built.writes, cells, wb.limits);
-    if (over) return { applied, rev, charts, clear, refusal: over };
-    const parts = built.writes.flatMap((w) => splitWrite(w));
+    if (over) return refused(over);
     let next = sheet;
-    let sent = 0;
-    try {
-      for (const part of parts) {
-        next = await sendSheetWrite(api, documentId, next, part, client);
-        sent++;
-      }
-    } catch (err) {
-      const refusal = apiRefusalOf(err);
-      if (!refusal) throw err;
-      if (sent > 0) {
-        // Some parts landed: the sheet holds them, so say so rather than report nothing applied.
-        wb.updateSheet(next);
-        rev = next.rev;
-        applied.push(partlyLine(built.line, parts, sent));
-      }
-      return { applied, rev, charts, clear, refusal };
+    for (const part of built.writes.flatMap((w) => splitWrite(w))) {
+      next = applySheetWrite(next, part, { now: Date.now(), by: NOBODY }).sheet;
+      writes.push(part);
     }
-    if (next !== sheet) {
-      cells += next.cells.size - sheet.cells.size;
-      wb.updateSheet(next);
-      rev = next.rev;
-    }
-    if (built.moveAfter !== undefined) {
-      const after = built.moveAfter ?? '';
-      try {
-        await api.json(`${workbookSheetsPath(documentId)}/${encodeURIComponent(sheetId)}/move`, {
-          method: 'POST',
-          headers: { [CLIENT_HEADER]: client },
-          body: JSON.stringify({ after } satisfies WorkbookSheetMoveRequest),
-        });
-      } catch (err) {
-        const refusal = apiRefusalOf(err);
-        if (!refusal) throw err;
-        return { applied, rev, charts, clear, refusal };
-      }
-    }
-    applied.push(built.line);
+    cells += next.cells.size - sheet.cells.size;
+    if (next !== sheet) wb.updateSheet(next);
+    if (built.moveAfter !== undefined) moves.push(built.moveAfter ?? '');
+    lines.push(built.line);
     charts.push(...(built.charts ?? []));
     if (built.clearCharts !== undefined) clear.push(built.clearCharts);
   }
-  return { applied, rev, charts, clear };
+  let rev: number | null = null;
+  let changesetId: string | null = null;
+  if (writes.length) {
+    try {
+      const answer = await sendSheetChangeset(api, documentId, sheetId, writes, client);
+      rev = answer.rev;
+      changesetId = answer.changeset?.id ?? null;
+      wb.updateSheet({ ...wb.sheet(sheetId)!, rev: answer.rev });
+    } catch (err) {
+      const refusal = apiRefusalOf(err);
+      if (!refusal) throw err;
+      return refused(refusal);
+    }
+  }
+  for (const after of moves) {
+    try {
+      await api.json(`${workbookSheetsPath(documentId)}/${encodeURIComponent(sheetId)}/move`, {
+        method: 'POST',
+        headers: { [CLIENT_HEADER]: client },
+        body: JSON.stringify({ after } satisfies WorkbookSheetMoveRequest),
+      });
+    } catch (err) {
+      const refusal = apiRefusalOf(err);
+      if (!refusal) throw err;
+      // The changeset landed; only the move did not.
+      return { applied: lines, rev, changesetId, charts, clear, refusal };
+    }
+  }
+  return { applied: lines, rev, changesetId, charts, clear };
 }
 
 // What changes did to the sheet's charts on its tab, in one changeset: the charts `clear_charts` took removed, those
@@ -281,7 +314,14 @@ export async function changeSheet(
   const found = resolveSheet(sheets, input.sheet);
   if (!found.ok) {
     const { code, message } = found;
-    return { sheetId: '', title: input.sheet, applied: [], rev: null, refusal: { code, message } };
+    return {
+      sheetId: '',
+      title: input.sheet,
+      applied: [],
+      rev: null,
+      changesetId: null,
+      refusal: { code, message },
+    };
   }
   const { id, tabId } = found.sheet;
   const wb = await workbookFor(api, documentId, state, tabId);

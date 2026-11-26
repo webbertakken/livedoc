@@ -4,6 +4,7 @@
 // writes (sheet-write-route.ts). People and agents use the same doors; every change reaches the room as an
 // ordered `sheets` op.
 
+import { submitSheetChangeset } from '../sheet-changesets/routes';
 import type { SheetCreateRequest, SheetResponse, SheetsResponse } from '@livedoc/api-schema';
 import {
   DOCUMENT_SHEETS_MAX,
@@ -273,6 +274,8 @@ export async function handleSheetRoutes(ctx: DocumentRouteContext): Promise<Resp
   const sheetId = segments[4]!;
   if (segments.length === 5)
     return method === 'DELETE' ? remove(ctx, documentId, sheetId) : methodNotAllowed();
+  if (segments.length === 6 && segments[5] === 'changesets')
+    return method === 'POST' ? submitSheetChangeset(ctx, documentId, sheetId) : methodNotAllowed();
   if (segments.length === 6 && segments[5] === 'writes')
     return method === 'POST' ? writeSheet(ctx, documentId, sheetId) : methodNotAllowed();
   if (segments.length === 6 && segments[5] === 'cells')
