@@ -11,3 +11,4 @@ export * from './create-spreadsheet';
 export * from './convert-spreadsheet';
 export * from './sheet-chart-objects';
 export * from './live-charts';
+export * from './import-spreadsheet';

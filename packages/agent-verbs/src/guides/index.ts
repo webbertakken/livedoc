@@ -326,6 +326,10 @@ Make one with its sheets named in order, the first filled from a CSV file:
 
   livedoc spreadsheet new "Model values" Models Pareto --csv models.csv
 
+Or open a file as one, as File > Open does (ods, fods, xlsx, csv, tsv; kept in its format):
+
+  livedoc spreadsheet import budget.xlsx [--name "Budget"]
+
 Over MCP: create_spreadsheet {name, sheets: [{name, rows}]}. Cells are read as typed in en-GB:
 a number stays a number, "1/2" is a date (send text as a formula, ="1/2"), a leading = a
 formula, which may read another sheet (=Models!B2). An empty cell is no value: a chart gaps it.
