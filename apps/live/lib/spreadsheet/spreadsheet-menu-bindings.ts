@@ -54,6 +54,8 @@ export type GridMenuActions = {
   setOptions: (options: { showGrid?: boolean }) => void;
   sortColumn: (ascending: boolean) => void;
   sortRange: (keys: { col: number; ascending: boolean }[], header: boolean) => void;
+  // Data › Sort Range › Advanced Range Sorting Options' dialog (data-tools.md "Sort").
+  openSortRange: () => void;
   toggleFilter: () => void;
   cut: () => void;
   copy: () => void;
@@ -251,6 +253,7 @@ function shapeBindings(port: GridMenuPort): Record<string, OfficeAction> {
     'sort-range-z-to-a': run(() =>
       act.sortRange([{ col: port.active.c, ascending: false }], false),
     ),
+    'sort-range-advanced': run(act.openSortRange),
     'create-a-filter': run(act.toggleFilter, {
       checked: port.filtered,
       ...(port.filtered ? { label: 'Remove Filter' } : {}),

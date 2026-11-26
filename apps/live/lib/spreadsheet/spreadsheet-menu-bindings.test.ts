@@ -52,6 +52,7 @@ const actions = (): GridMenuActions => ({
   paintStart: vi.fn(),
   paintStop: vi.fn(),
   openCustomAngle: vi.fn(),
+  openSortRange: vi.fn(),
 });
 
 const noGroups = { selected: false, collapsed: false, expanded: false };
@@ -362,6 +363,14 @@ describe('gridMenuBindings', () => {
     expect(gridMenuBindings(port({ filtered: true }))['create-a-filter']!.label).toBe(
       'Remove Filter',
     );
+  });
+
+  // data-tools.md "Sort": an Editor's, as every sort is.
+  it("opens Advanced Range Sorting Options' dialog", () => {
+    const p = port();
+    gridMenuBindings(p)['sort-range-advanced']!.run();
+    expect(p.act.openSortRange).toHaveBeenCalledOnce();
+    expect(gridMenuBindings(port({ canShape: false }))['sort-range-advanced']).toBeUndefined();
   });
 });
 

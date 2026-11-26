@@ -29,6 +29,7 @@ import { useCustomAngleDialog } from './useCustomAngleDialog';
 import { useGridMenuBindings } from './useGridMenuBindings';
 import { useMergeDialog } from './useMergeDialog';
 import { useNumberFormatDialogs } from './useNumberFormatDialogs';
+import { useSortRangeDialog } from './useSortRangeDialog';
 import { SheetChartsContext } from '@/components/sheets/sheet-charts-context';
 import { useSpreadsheetCharts } from './charts/useSpreadsheetCharts';
 
@@ -44,6 +45,7 @@ export function SpreadsheetSheetParts({ bridge }: { bridge: SheetsBridge }) {
   const formatDialogs = useNumberFormatDialogs(actions);
   const mergeDialog = useMergeDialog(actions);
   const angleDialog = useCustomAngleDialog(actions);
+  const sortDialog = useSortRangeDialog(actions);
   const panels = useOfficePanels({
     kind: 'Spreadsheet',
     panels: SPREADSHEET_PANELS,
@@ -78,6 +80,7 @@ export function SpreadsheetSheetParts({ bridge }: { bridge: SheetsBridge }) {
       ...formatDialogs,
       merge: mergeDialog.merge,
       openCustomAngle: angleDialog.openCustomAngle,
+      openSortRange: sortDialog.openSortRange,
     },
     bandingActions,
   );
@@ -133,6 +136,7 @@ export function SpreadsheetSheetParts({ bridge }: { bridge: SheetsBridge }) {
       {formatDialogs.dialog}
       {angleDialog.dialog}
       {mergeDialog.dialog}
+      {sortDialog.dialog}
       <SheetBarSummary />
     </div>
   );
