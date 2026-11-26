@@ -3,7 +3,9 @@ import { describe, expect, it } from 'vitest';
 import { EditorState } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
 import { undo, ySyncPlugin, yUndoPluginKey } from 'y-prosemirror';
+import * as Y from 'yjs';
 import {
+  addLiveTab,
   LiveSuggestions,
   TEXT_DOCUMENT_UNDO_GROUP_MS,
   TextDocumentState,
@@ -166,6 +168,35 @@ describe('textDocumentUndoPlugins with suggestions', () => {
     undo(view.state);
     expect(LiveSuggestions.count(doc)).toBe(1);
     expect(view.state.doc.textContent).toBe('quick');
+    view.destroy();
+  });
+});
+
+// review.md "Reviewing suggestions": Accept all and Reject all reach every document tab as one change, one ⌘Z takes
+// it all back, whichever tab is shown (director, 2026-11-26).
+describe('undoing a settle of every suggestion', () => {
+  it('takes back every tab’s part with one undo', async () => {
+    const doc = TextDocumentState.load();
+    addLiveTab(doc, { id: 't.second', name: 'Tab 2', style: 'Standard' });
+    const author = { key: 'k', name: 'Ada', colour: '#0284c7' };
+    const suggest = (fragment: ReturnType<typeof TextDocumentState.body>, id: string) => {
+      const text = new Y.XmlText();
+      (fragment.get(0) as Y.XmlElement).insert(0, [text]);
+      text.insert(0, 'x', { insertion: { id, at: 1, author } });
+    };
+    suggest(TextDocumentState.body(doc), 's1');
+    suggest(TextDocumentState.tabBody(doc, 't.second'), 's2');
+    const view = new EditorView(document.createElement('div'), {
+      state: EditorState.create({
+        schema: textDocumentSchema,
+        plugins: [ySyncPlugin(TextDocumentState.body(doc)), ...textDocumentUndoPlugins()],
+      }),
+    });
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(LiveSuggestions.settleAll(doc, false, TEXT_DOCUMENT_SUGGESTIONS_ORIGIN)).toBe(2);
+    expect(LiveSuggestions.count(doc)).toBe(0);
+    undo(view.state);
+    expect(LiveSuggestions.read(doc).map((s) => s.id)).toEqual(['s1', 's2']);
     view.destroy();
   });
 });

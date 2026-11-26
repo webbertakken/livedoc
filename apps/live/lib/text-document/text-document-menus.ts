@@ -405,8 +405,10 @@ export function textDocumentMenus(format: TextDocumentFormat): OfficeCatalogue {
         shortcut: 'open-spelling-and-grammar',
       }),
       item('word-count', 'Word count', 'view', { shortcut: 'word-count' }),
-      item('review-suggested-edits', 'Review suggested edits', 'edit', {
+      // review.md "Reviewing suggestions": anyone reviews; what they may settle is their role's.
+      item('review-suggested-edits', 'Review suggested edits', 'view', {
         shortcut: 'review-suggested-edits',
+        status: 'built',
       }),
       item('compare-documents', 'Compare documents', 'edit'),
       item('line-numbers', 'Line numbers', 'edit', { checkable: 'checkbox', status: 'built' }),

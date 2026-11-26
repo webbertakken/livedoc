@@ -37,6 +37,10 @@ export function textDocumentUndoPlugins({ story = false }: { story?: boolean } =
           undoManager.addToScope(TextDocumentState.metaType(undoManager.doc));
           undoManager.addTrackedOrigin(TEXT_DOCUMENT_PAGE_ORIGIN);
           undoManager.addTrackedOrigin(TEXT_DOCUMENT_SUGGESTIONS_ORIGIN);
+          // Accept all and Reject all reach every document tab: one undo takes back each tab's part (review.md
+          // "Reviewing suggestions"). Only that origin writes other tabs from this editor.
+          for (const tab of TextDocumentState.tabIds(undoManager.doc))
+            undoManager.addToScope(TextDocumentState.tabBody(undoManager.doc, tab));
         }
         return {};
       },

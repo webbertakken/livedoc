@@ -7,7 +7,7 @@ import { MAX_IMAGE_BYTES } from '@livedoc/api-schema';
 import { MENTIONS_MAX } from '@livedoc/document';
 import * as Y from 'yjs';
 import { textDocumentLevelAsked } from './level-asked';
-import { TEXT_DOCUMENT_SUGGESTIONS_MAX } from './live/live-suggestions';
+import { LiveSuggestions, TEXT_DOCUMENT_SUGGESTIONS_MAX } from './live/live-suggestions';
 import {
   LiveThreads,
   TEXT_DOCUMENT_COMMENT_TEXT_MAX,
@@ -344,6 +344,15 @@ describe('textDocumentLevelAsked on suggestions', () => {
     change(replica, paragraphs[0]!.get(0) as Y.XmlText, paragraphs[1]!.get(0) as Y.XmlText);
     return textDocumentLevelAsked(stored, Y.encodeStateAsUpdate(replica, vector), key);
   }
+
+  // review.md "Reviewing suggestions": a Participant's Reject all mine is theirs; Accept all never is.
+  it('lets a Participant reject all their own suggestions at once, never accept all', () => {
+    expect(
+      askedOn((doc) => LiveSuggestions.settleAll(doc, false, null, { only: BEN.key }), BEN.key),
+    ).toBe('participate');
+    expect(askedOn((doc) => LiveSuggestions.settleAll(doc, true, null), BEN.key)).toBe('edit');
+    expect(askedOn((doc) => LiveSuggestions.settleAll(doc, false, null), ADA.key)).toBe('edit');
+  });
 
   it('lets a Participant suggest an insertion, a deletion and a format of their own', () => {
     expect(askedOn((_, run) => run.insert(10, 'final ', { insertion: mark('a1') }))).toBe(
