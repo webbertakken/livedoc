@@ -5,7 +5,12 @@
 // An Editor's update is stored as it is; anyone else's is judged by what it changes ("The level an update asks").
 // A kind whose state stands on something its tab's row names refuses a frame made on anything else, and may have
 // the state replaced together with its row ("Replacing a state with its row").
-import { isRoomOpRef, type AccessLevel, type ServerMessage } from '@livedoc/api-schema';
+import {
+  isRoomOpRef,
+  type AccessLevel,
+  type LiveTabRefusalName,
+  type ServerMessage,
+} from '@livedoc/api-schema';
 import type { Tab } from '@livedoc/document';
 import { base64OfBytes, bytesOfBase64 } from '@livedoc/text-documents';
 import { isTabRevStale, tabWriteStatements } from '../db/tabs';
@@ -53,13 +58,21 @@ export type LiveTabRefusal =
   'shape' | 'decode' | 'wrong-kind' | 'no-store' | 'unreadable' | 'stands-elsewhere';
 
 /**
- * Why an update that reached a tab of the kind was kept out: its sender's level asks more, it cannot be read yet, or
- * it was made on something the tab's row no longer names.
+ * Why an update that reached a tab of the kind was kept out: its sender's level asks more, it changes what is not its
+ * sender's own, it cannot be read yet, or it was made on something the tab's row no longer names.
  */
-type StandingRefusal = 'level' | 'unreadable' | 'stands-elsewhere';
+type StandingRefusal = 'level' | 'not-yours' | 'unreadable' | 'stands-elsewhere';
 
 /** What became of an update sent by the door: stored (and relayed), or why it was refused. */
-export type PostedOutcome = 'stored' | 'level' | Exclude<LiveTabRefusal, 'shape'> | LiveTabLimit;
+export type PostedOutcome =
+  'stored' | 'level' | 'not-yours' | Exclude<LiveTabRefusal, 'shape'> | LiveTabLimit;
+
+/** What a standing refusal told to its sender is named. */
+const REFUSAL_NAMES: Record<Exclude<StandingRefusal, 'unreadable'>, LiveTabRefusalName> = {
+  level: 'level_too_low',
+  'not-yours': 'not_your_mark',
+  'stands-elsewhere': 'stored_file_changed',
+};
 
 /** The frame, when the op is one of the kind's; else null. */
 export function liveTabFrameOf(kind: LiveTabKind, op: unknown): LiveTabFrame | null {
@@ -128,7 +141,7 @@ export class RoomLiveTabs {
     console.warn(
       `${kind.tag} level-refused document=${documentId} tab=${tabId} level=${level} asks=${asks}`,
     );
-    return 'level';
+    return asks === 'not_your_mark' ? 'not-yours' : 'level';
   }
 
   /** One op from the room to one socket. */
@@ -246,7 +259,7 @@ export class RoomLiveTabs {
           this.tell(sender.ws, {
             kind: `${kind.frame}-refused`,
             tabId: frame.tabId,
-            name: standing === 'level' ? 'level_too_low' : 'stored_file_changed',
+            name: REFUSAL_NAMES[standing],
           });
         return false;
       }

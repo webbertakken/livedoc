@@ -95,6 +95,11 @@ type MarkBase = {
   readonly opacity: number;
   /** The display name of who made it: the file's `T`. */
   readonly author: string;
+  /**
+   * The adder key of who made it here, on this document (marks.md "Share roles"): what makes it a person's own. Kept in
+   * the live changes alone, never in the file; absent on a file's own mark and on one made with no key.
+   */
+  readonly authorKey?: string;
   /** Milliseconds since the epoch: the file's `CreationDate` and `M`. */
   readonly createdAt: number;
   readonly modifiedAt: number;
@@ -178,6 +183,8 @@ const STAMP_MAX_LINES = 2;
 const COLOUR = /^#[0-9a-f]{6}$/;
 /** A display name, cut as every name shown from a file is (security.md "Limits": PDF_NAME_MAX_CHARS). */
 const AUTHOR_MAX_CHARS = 255;
+/** An adder key: 32 hex characters from the room, or a participant key in This Browser. */
+const AUTHOR_KEY = /^[A-Za-z0-9_-]{1,64}$/;
 const OPACITY_MIN = 0.1;
 /** A JavaScript date's own range, so a mark's time always writes as a date. */
 const TIME_MAX = 8.64e15;
@@ -242,6 +249,9 @@ function baseOf(v: Record<string, unknown>): MarkBase | null {
     colour: v.colour,
     opacity: v.opacity,
     author: v.author.slice(0, AUTHOR_MAX_CHARS),
+    ...Mark.keyed(
+      typeof v.authorKey === 'string' && AUTHOR_KEY.test(v.authorKey) ? v.authorKey : null,
+    ),
     createdAt: v.createdAt,
     modifiedAt: v.modifiedAt,
   };
@@ -421,6 +431,13 @@ export const Mark = {
   /** Whether a mark is one of the kinds made by selecting text. */
   isText: (mark: Mark): mark is TextMark =>
     (TEXT_MARK_KINDS as readonly MarkKind[]).includes(mark.kind),
+
+  /** A mark's author key as its properties: `{ authorKey }`, or none for no key. */
+  keyed: (key: string | null | undefined): { readonly authorKey?: string } =>
+    key ? { authorKey: key } : {},
+
+  /** Whether `mark` is the own of the person holding `key` (marks.md "Share roles"): no key owns nothing. */
+  isOwn: (mark: Mark, key: string | null): boolean => key !== null && mark.authorKey === key,
 
   /** How many points a Drawing's strokes hold, all told. */
   points: (mark: DrawingMark): number => pointsOf(mark.strokes),

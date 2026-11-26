@@ -1,14 +1,18 @@
 // The level an update to a PDF document's live changes asks (docs/specs/035-pdf-documents/
 // live-editing-and-storage.md "The room's op kinds"): the room judges a Participant's update by what it touches,
 // never by what its sender says. Read by applying the update to the stored state and asking Yjs which roots it
-// landed in; `removed` and `stored` are judged by what they hold, before against after.
+// landed in; `marks`, `removed` and `stored` are judged by what they hold, before against after. A Participant changes
+// only their own marks (marks.md "Share roles"): those carrying the adder key their session holds.
 import type * as Y from 'yjs';
 import { touchedRoots } from '@livedoc/live-updates';
 import { canonical } from './canonical';
 import { PdfLiveChanges, type PdfRoot } from './live-changes';
 
-/** The least level an update needs, or that it stands on changes the stored state lacks and cannot be judged. */
-export type PdfLevelAsked = 'participate' | 'edit' | 'unreadable';
+/**
+ * The least level an update needs; that it changes a mark not its sender's own (`not_your_mark`); or that it stands on
+ * changes the stored state lacks and cannot be judged.
+ */
+export type PdfLevelAsked = 'participate' | 'edit' | 'not_your_mark' | 'unreadable';
 
 /** The roots Reviewing changes; of `removed`, only what was a mark of the stored file. */
 export const PDF_REVIEWING_ROOTS = [
@@ -34,6 +38,24 @@ function removedAsksEdit(before: Held, after: Held): boolean {
   return false;
 }
 
+/** Whether an entry of `marks` carries `key`. */
+const carries = (entry: unknown, key: string | null): boolean =>
+  key !== null &&
+  typeof entry === 'object' &&
+  entry !== null &&
+  'authorKey' in entry &&
+  entry.authorKey === key;
+
+/** Whether every mark added, changed or deleted carried `key` where it was and carries it where it is. */
+function marksOwn(before: Held, after: Held, key: string | null): boolean {
+  for (const id of new Set([...Object.keys(before), ...Object.keys(after)])) {
+    if (canonical(before[id]) === canonical(after[id])) continue;
+    for (const entry of [before[id], after[id]])
+      if (entry !== undefined && !carries(entry, key)) return false;
+  }
+  return true;
+}
+
 /** A Participant may name the stored file once, as the tab names it; after that it must read as it did. */
 function storedAsksEdit(doc: Y.Doc, before: Held, after: Held, tabBlob: string | null): boolean {
   if (canonical(before) === canonical(after)) return false;
@@ -44,16 +66,20 @@ function storedAsksEdit(doc: Y.Doc, before: Held, after: Held, tabBlob: string |
 
 /**
  * The least level `update` needs on the state `stored` makes. `tabBlob`: the stored file the tab names, the only
- * one a Participant's update may say the changes are on.
+ * one a Participant's update may say the changes are on. `adderKey`: the sender's, which their own marks carry; none
+ * owns nothing.
  */
 export function pdfLevelAsked(
   stored: readonly Uint8Array[],
   update: Uint8Array,
   tabBlob: string | null,
+  adderKey: string | null,
 ): PdfLevelAsked {
   const doc = PdfLiveChanges.load(stored);
   const storedRoot = doc.getMap<unknown>('stored');
   const removedRoot = doc.getMap<unknown>('removed');
+  const marksRoot = doc.getMap<unknown>('marks');
+  const marksBefore: Held = marksRoot.toJSON();
   const storedBefore: Held = storedRoot.toJSON();
   const removedBefore: Held = removedRoot.toJSON();
   const touched = touchedRoots(doc, update);
@@ -64,5 +90,8 @@ export function pdfLevelAsked(
   }
   if (removedAsksEdit(removedBefore, removedRoot.toJSON())) return 'edit';
   if (storedAsksEdit(doc, storedBefore, storedRoot.toJSON(), tabBlob)) return 'edit';
+  // What is left of `removed` is a file's own mark changed or deleted: nobody's own.
+  if (canonical(removedBefore) !== canonical(removedRoot.toJSON())) return 'not_your_mark';
+  if (!marksOwn(marksBefore, marksRoot.toJSON(), adderKey)) return 'not_your_mark';
   return 'participate';
 }

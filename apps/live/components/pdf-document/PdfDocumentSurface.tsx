@@ -15,7 +15,7 @@ import {
   type KeyboardEvent,
 } from 'react';
 import type { AccessLevel } from '@livedoc/api-schema';
-import type { PageInfo } from '@livedoc/pdf-documents';
+import { Mark, type PageInfo } from '@livedoc/pdf-documents';
 import type { OfficeChrome } from '@/components/office/office-chrome';
 import { OfficePanelLayout } from '@/components/office/OfficePanel';
 import { OfficeTitleRow } from '@/components/office/OfficeTitleRow';
@@ -95,6 +95,7 @@ export function PdfDocumentSurface({
   level,
   canReview,
   author,
+  authorKey,
   chrome,
   present,
   sequence,
@@ -108,6 +109,8 @@ export function PdfDocumentSurface({
   canReview: boolean;
   // The display name a mark made here carries.
   author: string;
+  // The key a mark made here carries, which makes it this person's own (marks.md "Share roles"); none for no key.
+  authorKey: string | null;
   // The document's own parts in the title row; null where another pane shows them.
   chrome: OfficeChrome | null;
   // Whether this is the tab the person is on: the other pane of a split says nothing of where they are.
@@ -334,16 +337,23 @@ export function PdfDocumentSurface({
     ready,
     marking,
     author,
+    authorKey,
     selected: textSelection.selected,
     clearSelection: textSelection.clear,
     focusPages: focusPagesElement,
     onProblem: setProblem,
   });
   // "Changing a mark": the marks this person selected, moved and deleted.
+  // "Share roles": an Editor changes any mark, a Participant their own.
+  const mayChange = useCallback(
+    (mark: Mark) => level === 'edit' || Mark.isOwn(mark, authorKey),
+    [level, authorKey],
+  );
   const markSelection = usePdfMarkSelection({
     ready,
     marks: changeable,
     marking,
+    mayChange,
     textSelected: textSelection.selected,
     clearText: textSelection.clear,
     focusPages: focusPagesElement,

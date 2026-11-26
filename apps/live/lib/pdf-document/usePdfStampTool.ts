@@ -60,6 +60,7 @@ const GRID = {
 export function usePdfStampTool({
   ready,
   author,
+  authorKey,
   offered,
   inHand,
   pickTool,
@@ -69,6 +70,8 @@ export function usePdfStampTool({
   ready: Ready | null;
   // The display name a stamp placed here carries, and a dynamic stamp writes.
   author: string;
+  // The author key this session holds (marks.md "Share roles"): what makes a mark made here its own.
+  authorKey: string | null;
   // Whether the Stamp tool may be taken now: an open PDF, in Reviewing, for a session that reviews.
   offered: boolean;
   inHand: PdfPageTool;
@@ -97,7 +100,7 @@ export function usePdfStampTool({
           { page: page.name, stored: { blob: ready.storedFile, pages: ready.pages.length }, box },
           stamp,
           at,
-          { author, now: Date.now(), id: crypto.randomUUID() },
+          { author, authorKey, now: Date.now(), id: crypto.randomUUID() },
         ),
       );
       if (made.ok) {
@@ -109,7 +112,7 @@ export function usePdfStampTool({
         onProblem(TOO_MANY_MARKS_COPY);
       } else debugLog(`[pdf] mark-refused name=${made.reason}`);
     },
-    [ready, author, stamp, onProblem],
+    [ready, author, authorKey, stamp, onProblem],
   );
   const stamping = useMemo<PdfPageStamping | null>(
     () => (inHand === 'stamp' ? { onStamp } : null),

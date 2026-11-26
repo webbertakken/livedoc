@@ -14,6 +14,7 @@ import {
   TEXT_DOCUMENT_STATE_VECTOR_HEADER,
   type AccessLevel,
 } from '@livedoc/api-schema';
+import { adderKeyFor } from '../adder-key';
 import { getDocumentMeta } from '../db';
 import { readLiveTabState } from '../live-tabs/live-tab-store';
 import { storedPdfTab } from '../pdf-documents/pdf-document-store';
@@ -120,11 +121,18 @@ async function postUpdate(ctx: DocumentRouteContext): Promise<Response> {
   if (!PdfLiveChanges.decodes(update)) return refusedUpdate(where, 'update_invalid', 400);
   // The stored file the update was made on: the room refuses one made on another.
   const on = request.headers.get(PDF_STORED_FILE_HEADER);
-  const { status, limit } = await postLiveTabUpdate(env, PDF_LIVE_TAB, documentId, tabId, update, {
-    level,
-    on,
-  });
+  // A Participant's own marks carry the key its identity has on the document (marks.md "Share roles").
+  const adderKey = level === 'participate' ? await adderKeyFor(documentId, owner) : null;
+  const { status, limit, name } = await postLiveTabUpdate(
+    env,
+    PDF_LIVE_TAB,
+    documentId,
+    tabId,
+    update,
+    { level, on, adderKey },
+  );
   if (status === 204) return new Response(null, { status: 204, headers: CORS_HEADERS });
+  if (status === 403 && name === 'not_your_mark') return forbidden('not_your_mark');
   if (status === 403) return tooLow(level);
   if (status === 409) return refusedUpdate(where, 'update_unreadable', 409);
   if (status === 412) return refusedUpdate(where, 'stored_file_changed', 409);

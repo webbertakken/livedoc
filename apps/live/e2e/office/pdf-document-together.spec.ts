@@ -68,6 +68,46 @@ test('a Participant reviews a PDF, and its stored file is replaced in one step f
   await expect(page.locator(`${PAGE_ONE} [data-pdf-mark="${markId}"]`)).toHaveCount(1);
   await peer.screenshot({ path: test.info().outputPath('pdf-together-participant.png') });
 
+  // marks.md "Share roles": the Editor's rectangle is drawn for the Participant, but Select reaches their own marks
+  // alone: a press on the rectangle selects nothing, a press on their highlight selects it.
+  await (await officeMenuItem(page, ['Insert', 'Shape', 'Rectangle'])).click();
+  const editorFirst = (await (await pageOneDrawn(page)).boundingBox())!;
+  await page.mouse.move(
+    editorFirst.x + editorFirst.width * 0.5,
+    editorFirst.y + editorFirst.height * 0.15,
+  );
+  await page.mouse.down();
+  await page.mouse.move(
+    editorFirst.x + editorFirst.width * 0.75,
+    editorFirst.y + editorFirst.height * 0.25,
+    {
+      steps: 8,
+    },
+  );
+  await page.mouse.up();
+  const theirs = peer.locator(`${PAGE_ONE} [data-pdf-mark-kind="rectangle"]`);
+  await expect(theirs).toHaveCount(1);
+  const theirsId = (await theirs.getAttribute('data-pdf-mark'))!;
+  await peer.locator('[data-pdf-pages]').focus();
+  await peer.keyboard.press('v');
+  await expect(peer.locator('[data-pdf-tool]')).toHaveAttribute('data-pdf-tool', 'select');
+  const rect = (await theirs.boundingBox())!;
+  await peer.mouse.click(rect.x + 1, rect.y + rect.height / 4);
+  const outlines = peer.locator(`${PAGE_ONE} [data-pdf-mark-outline]`);
+  await expect(outlines).toHaveCount(0);
+  await expect(peer.locator(`[data-pdf-mark-control="${theirsId}"]`)).not.toHaveAttribute(
+    'aria-pressed',
+  );
+  const own = (await peer.locator(`${PAGE_ONE} [data-pdf-mark="${markId}"]`).boundingBox())!;
+  await peer.mouse.click(own.x + own.width / 2, own.y + own.height / 2);
+  await expect(peer.locator(`[data-pdf-mark-outline="${markId}"]`)).toHaveCount(1);
+  await expect(peer.locator(`[data-pdf-mark-control="${markId}"]`)).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  );
+  await peer.screenshot({ path: test.info().outputPath('pdf-not-your-mark.png') });
+  await peer.keyboard.press('Escape');
+
   // The new stored file: the bake of what the room holds, as an Editor's surface makes it.
   const downloadItem = await officeMenuItem(page, ['File', 'Download', 'PDF']);
   const [download] = await Promise.all([page.waitForEvent('download'), downloadItem.click()]);
@@ -113,9 +153,13 @@ test('a Participant reviews a PDF, and its stored file is replaced in one step f
 
   // Both browsers open the new file in place: the highlight is the file's own now, and no live mark is left.
   for (const surface of [page, peer]) {
-    await expect(surface.locator(PAGE_ONE)).toHaveAttribute('data-pdf-file-marks', markId, {
-      timeout: 30_000,
-    });
+    await expect(surface.locator(PAGE_ONE)).toHaveAttribute(
+      'data-pdf-file-marks',
+      new RegExp(markId),
+      {
+        timeout: 30_000,
+      },
+    );
     await expect(surface.locator('[data-pdf-mark]')).toHaveCount(0);
     await expect(surface.locator('[data-pdf-surface="ready"]')).toBeVisible();
   }

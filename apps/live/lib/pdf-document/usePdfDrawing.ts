@@ -19,11 +19,14 @@ type Ready = Pick<
 export function usePdfDrawing({
   ready,
   author,
+  authorKey,
   look,
   onProblem,
 }: {
   ready: Ready | null;
   author: string;
+  // The author key this session holds (marks.md "Share roles"): what makes a mark made here its own.
+  authorKey: string | null;
   // The Drawing tool's look now.
   look: TextMarkLook;
   onProblem: (problem: string | null) => void;
@@ -40,7 +43,7 @@ export function usePdfDrawing({
           ready.binding.doc,
           { page: page.name, stored: { blob: ready.storedFile, pages: ready.pages.length } },
           stroke,
-          { author, now, begunAt, id: crypto.randomUUID(), look, last: last.current },
+          { author, authorKey, now, begunAt, id: crypto.randomUUID(), look, last: last.current },
         ),
       );
       if (made.ok) {
@@ -56,6 +59,6 @@ export function usePdfDrawing({
         onProblem(TOO_MANY_MARKS_COPY);
       } else debugLog(`[pdf] mark-refused name=${made.reason}`);
     },
-    [ready, author, look, onProblem],
+    [ready, author, authorKey, look, onProblem],
   );
 }

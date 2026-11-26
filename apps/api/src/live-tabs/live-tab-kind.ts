@@ -17,10 +17,10 @@ export type LiveTabDigest = {
 };
 
 /**
- * The least level an update needs ("The level an update asks"), or `unreadable`: it stands on changes the stored
- * state lacks, so what it touches cannot be judged.
+ * The least level an update needs ("The level an update asks"); `not_your_mark`: it changes a PDF's mark its sender
+ * does not own; or `unreadable`: it stands on changes the stored state lacks, so what it touches cannot be judged.
  */
-export type LevelAsked = 'participate' | 'edit' | 'unreadable';
+export type LevelAsked = 'participate' | 'edit' | 'not_your_mark' | 'unreadable';
 
 /** The kind's three tables in the room's SQLite: the updates log, the chunks it folds into, and the digest. */
 export type LiveTabTables = {

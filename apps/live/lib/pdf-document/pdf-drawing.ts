@@ -68,6 +68,7 @@ export function addStroke(
   stroke: Stroke,
   by: {
     author: string;
+    authorKey?: string | null;
     now: number;
     // When the stroke began: within PDF_DRAWING_JOIN_MS of the last one's end, it joins it.
     begunAt: number;
@@ -87,6 +88,7 @@ export function addStroke(
         width: DRAWING_WIDTH_PT,
         ...by.look,
         author: by.author,
+        ...Mark.keyed(by.authorKey),
         createdAt: by.now,
       });
   if (!mark || mark.kind !== 'drawing') return { ok: false, reason: 'no_stroke' };

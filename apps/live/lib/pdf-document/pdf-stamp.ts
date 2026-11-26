@@ -78,7 +78,7 @@ export function addStamp(
   where: { page: PageName; stored: { blob: BlobKey; pages: number }; box: Box },
   stamp: Stamp,
   at: PagePoint,
-  by: { author: string; now: number; id: string },
+  by: { author: string; authorKey?: string | null; now: number; id: string },
 ): StampMade {
   const lines = stampLines(stamp, by);
   const mark = Mark.stamp({
@@ -87,6 +87,7 @@ export function addStamp(
     colour: STAMP_COLOURS[stamp.tone],
     opacity: 1,
     author: by.author,
+    ...Mark.keyed(by.authorKey),
     createdAt: by.now,
     rect: placeStamp(lines, at, where.box),
     stamp: stamp.id,

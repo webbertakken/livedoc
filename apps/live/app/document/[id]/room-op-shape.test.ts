@@ -40,6 +40,7 @@ const WELL_FORMED: Record<string, unknown>[] = [
   { kind: 'pdf-refused', tabId: 't1', limit: 'state' },
   { kind: 'pdf-refused', tabId: 't1', name: 'level_too_low' },
   { kind: 'pdf-refused', tabId: 't1', name: 'stored_file_changed' },
+  { kind: 'pdf-refused', tabId: 't1', name: 'not_your_mark' },
   { kind: 'pdf-refused', tabId: 't1', name: 'live_changes_moved', replacement: true },
   { kind: 'pdf-stored', tabId: 't1', from: 'a', blob: 'b', size: 3, pages: 1, reason: 'budget' },
   // Presence, and a kind this build does not know, pass as they always have.

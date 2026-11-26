@@ -52,6 +52,7 @@ function stampTool({
       usePdfStampTool({
         ready,
         author: 'Ada Lovelace',
+        authorKey: 'k-ada',
         offered,
         inHand: props.inHand,
         pickTool,
@@ -160,6 +161,7 @@ describe('placing a stamp', () => {
         lines: ['APPROVED'],
         page: PAGES[1]!.name,
         author: 'Ada Lovelace',
+        authorKey: 'k-ada',
       }),
     ]);
     expect(steps).toEqual([{ page: PAGES[1]!.name }]);
@@ -206,6 +208,7 @@ describe('placing a stamp', () => {
       usePdfStampTool({
         ready: null,
         author: 'Ada',
+        authorKey: null,
         offered: false,
         inHand: 'stamp',
         pickTool,

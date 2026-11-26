@@ -114,9 +114,16 @@ export function addShape(
   doc: Y.Doc,
   where: { page: PageName; stored: { blob: BlobKey; pages: number } },
   shape: LineShape | BoxShape | null,
-  by: { author: string; now: number; id: string; look: ToolLook },
+  by: { author: string; authorKey?: string | null; now: number; id: string; look: ToolLook },
 ): ShapeMade {
-  const base = { id: by.id, page: where.page, ...by.look, author: by.author, createdAt: by.now };
+  const base = {
+    id: by.id,
+    page: where.page,
+    ...by.look,
+    author: by.author,
+    ...Mark.keyed(by.authorKey),
+    createdAt: by.now,
+  };
   const mark = !shape
     ? null
     : 'line' in shape

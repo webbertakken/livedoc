@@ -75,7 +75,7 @@ export function PdfPageMarks({
         key={mark.id}
         type="button"
         aria-label={markControlName(mark)}
-        aria-pressed={choosing ? selected : undefined}
+        aria-pressed={choosing?.mayChange(mark) ? selected : undefined}
         data-pdf-mark-control={mark.id}
         className="pointer-events-none absolute rounded-control outline-none focus-visible:ring-2 focus-visible:ring-(--office-focus)"
         style={{
@@ -85,7 +85,8 @@ export function PdfPageMarks({
           height: `${box.height}%`,
         }}
         onFocus={() => {
-          if (choosing && !selected) choosing.choose(index, mark.id, false);
+          if (choosing && !selected && choosing.mayChange(mark))
+            choosing.choose(index, mark.id, false);
         }}
         onKeyDown={onKeyDown(mark.id)}
       />

@@ -32,7 +32,13 @@ function shaping(doc = PdfLiveChanges.load(), isOpen = true) {
     } as never,
   };
   const hook = renderHook(() =>
-    usePdfShapes({ ready: isOpen ? ready : null, author: 'Ada', looks: LOOKS, onProblem }),
+    usePdfShapes({
+      ready: isOpen ? ready : null,
+      author: 'Ada',
+      authorKey: 'k-ada',
+      looks: LOOKS,
+      onProblem,
+    }),
   );
   return { shape: hook.result.current, doc, steps, onProblem };
 }
@@ -47,7 +53,12 @@ describe('the shape tools’ marks', () => {
     const { shape, doc, steps, onProblem } = shaping();
     act(() => shape(0, { kind: 'ellipse', rect: [10, 10, 60, 40], width: 2 }));
     expect(PdfLiveChanges.marks(doc)).toEqual([
-      expect.objectContaining({ kind: 'ellipse', colour: '#1a73e8', author: 'Ada' }),
+      expect.objectContaining({
+        kind: 'ellipse',
+        colour: '#1a73e8',
+        author: 'Ada',
+        authorKey: 'k-ada',
+      }),
     ]);
     expect(steps).toEqual([{ page: PAGES[0]!.name }]);
     expect(debugLog).toHaveBeenCalledWith('[pdf] mark-added kind=ellipse');

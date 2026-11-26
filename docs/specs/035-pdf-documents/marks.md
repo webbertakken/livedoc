@@ -471,8 +471,19 @@ question mark. The research is [Every script in a mark's words](../../research/p
 | **Participant** | Makes any; changes and deletes their own; answers anyone's; may not delete the file's own or another person's `(default)` |
 | **Viewer**      | Sees them, reads their words, hides them for themselves; makes none                                                       |
 
-Gated on the session's `can` (`pdfReviews`), and checked by the room: a Participant's update that removes or changes
-a mark another person made is refused with `not_your_mark`.
+Gated on the session's `can` (`pdfReviews`), and checked by the room.
+
+- **A person's own mark** carries their key: the adder key their session holds on the document
+  ([Share roles](../013-workspace/share-roles.md#integrity)), stamped as `authorKey` where the mark is made, kept
+  in the live changes alone and never written into the file. In This Browser it is the person's own participant key.
+- **Nobody's own**: a file's own mark, a mark that carries no key, and so every mark once the stored file is
+  replaced, its marks the file's own then ([Saving](saving.md#when-the-stored-file-is-replaced)).
+- **The room refuses** a Participant's update whole with `not_your_mark` where it adds a mark that does not carry
+  their key, changes or deletes a mark that did not, takes their key off one, or changes or deletes a file's own
+  mark (an entry of `removed`) ([The room's op kinds](live-editing-and-storage.md#the-rooms-op-kinds)). A session
+  with no key owns nothing.
+- **Select reaches a Participant's own marks alone**: another's mark is drawn and named as before, but a press on it
+  falls to the text beneath and focusing its control selects nothing.
 
 ## Keyboard and accessibility
 
@@ -512,6 +523,6 @@ a mark another person made is refused with `not_your_mark`.
 | ---------------------------------------------- | ------------------------------------------------------------------------------------------------ |
 | A text tool is used where the page has no text | "This page has no text to mark. Drag to highlight an area, or recognise its text."               |
 | The mark limit is reached                      | "This PDF holds the most marks LiveDoc keeps for one file (20,000)."                             |
-| A Participant changes another person's mark    | The change is undone: "You can change your own marks."                                           |
+| A Participant changes another person's mark    | The change is dropped: "You can change your own marks."                                          |
 | A certified file forbids marks                 | "The person who certified this PDF doesn't allow marks." ([Signing](signing.md#certified-files)) |
 | A custom stamp's picture cannot be read        | "That picture couldn't be read. Choose a PNG, JPEG or SVG."                                      |

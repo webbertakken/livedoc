@@ -27,7 +27,7 @@ export type InternalRoom = {
     documentId: string,
     tabId: string,
     update: Uint8Array,
-    sent: { level: AccessLevel; on?: string },
+    sent: { level: AccessLevel; on?: string; adderKey?: string | null },
   ) => Promise<PostedOutcome>;
 };
 
@@ -38,6 +38,7 @@ const POSTED_STATUS: Record<PostedOutcome, number> = {
   'wrong-kind': 404,
   'no-store': 503,
   level: 403,
+  'not-yours': 403,
   unreadable: 409,
   'stands-elsewhere': 412,
   characters: 413,
@@ -124,11 +125,15 @@ export async function answerInternal(
     // The route says its caller's level; one this room does not know reads as the lowest.
     const level = parseStoredLevel(url.searchParams.get('level'));
     const on = url.searchParams.get('on');
-    const sent = on === null ? { level } : { level, on };
+    // The caller's adder key, which the route derived from its identity (share-roles.md "Integrity").
+    const adderKey = url.searchParams.get('adder');
+    const sent = { level, adderKey, ...(on === null ? {} : { on }) };
     const outcome = await room.acceptPostedLiveTab(frame, documentId, tabId, update, sent);
     // A refused edit names its limit ("Refused edits").
     if (outcome === 'characters' || outcome === 'state')
       return Response.json({ limit: outcome }, { status: POSTED_STATUS[outcome] });
+    if (outcome === 'not-yours')
+      return Response.json({ name: 'not_your_mark' }, { status: POSTED_STATUS[outcome] });
     return new Response(null, { status: POSTED_STATUS[outcome] });
   }
   if (request.method === 'POST' && url.pathname === '/mutation') {

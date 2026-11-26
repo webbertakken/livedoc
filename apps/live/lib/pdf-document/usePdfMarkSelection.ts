@@ -3,7 +3,9 @@
 // The marks a person has selected (docs/specs/035-pdf-documents/marks.md "Changing a mark"): a press selects a mark,
 // ⇧ adds one or takes one out, and a selection holds the marks of one page; a mark selected lets a text selection go,
 // and text selected lets the marks go. The selection moved, by a drag or an arrow key, and deleted, by Delete or
-// Edit > Delete, and a mark resized by a handle or ⌥ with an arrow key, each one step of the person's undo. Marks are Reviewing's: while `marking` is off nothing is chosen.
+// Edit > Delete, and a mark resized by a handle or ⌥ with an arrow key, each one step of the person's undo. Marks are
+// Reviewing's: while `marking` is off nothing is chosen; and a mark the session may not change (a Participant's
+// another's, marks.md "Share roles") is never chosen.
 import { useCallback, useMemo, useState, useSyncExternalStore } from 'react';
 import type { Mark, MarkPlace, PagePoint } from '@livedoc/pdf-documents';
 import { debugLog } from '@/lib/debug-log';
@@ -32,6 +34,8 @@ export type PdfMarksChosen = { readonly page: number; readonly ids: readonly str
 
 /** What a page does with its marks while they may be changed. */
 export type PdfPageChoosing = {
+  /** Whether this session may change `mark`: a press on one it may not falls to the page beneath. */
+  readonly mayChange: (mark: Mark) => boolean;
   /** A press on a mark of the page at `index`; `shift` adds it, or takes it out. */
   readonly choose: (index: number, id: string, shift: boolean) => void;
   /** A press on nothing: the marks go. */
@@ -80,6 +84,7 @@ export function usePdfMarkSelection({
   ready,
   marks,
   marking,
+  mayChange,
   textSelected,
   clearText,
   focusPages,
@@ -89,6 +94,8 @@ export function usePdfMarkSelection({
   marks: PdfChangeableStore | null;
   // Whether marks may be changed now: Reviewing, for a session that reviews.
   marking: boolean;
+  // Whether this session may change a mark: an Editor any, a Participant their own (marks.md "Share roles").
+  mayChange: (mark: Mark) => boolean;
   // The text selected on the pages, which a mark selected lets go.
   textSelected: PdfTextSelected | null;
   clearText: () => void;
@@ -113,6 +120,9 @@ export function usePdfMarkSelection({
 
   const choose = useCallback(
     (index: number, id: string, shift: boolean) => {
+      const page = ready?.pages[index];
+      const mark = page && changeableOnPage(byPage, page.name).marks.find((each) => each.id === id);
+      if (!mark || !mayChange(mark)) return;
       clearText();
       setHeld((before) => {
         if (!before || before.page !== index) return { page: index, ids: [id] };
@@ -122,7 +132,7 @@ export function usePdfMarkSelection({
         return ids.length > 0 ? { page: index, ids } : null;
       });
     },
-    [clearText],
+    [clearText, ready, byPage, mayChange],
   );
   const letGo = useCallback(() => setHeld(null), []);
   const leave = useCallback(() => {
@@ -172,8 +182,8 @@ export function usePdfMarkSelection({
 
   const changing = marking && ready !== null;
   const choosing = useMemo<PdfPageChoosing | null>(
-    () => (changing ? { choose, letGo, leave, move, reshape, remove } : null),
-    [changing, choose, letGo, leave, move, reshape, remove],
+    () => (changing ? { mayChange, choose, letGo, leave, move, reshape, remove } : null),
+    [changing, mayChange, choose, letGo, leave, move, reshape, remove],
   );
   const actions = useMemo<OfficeActions>(
     () => (changing ? { [DELETE_MARKS]: { run: remove, disabled: chosen === null } } : {}),

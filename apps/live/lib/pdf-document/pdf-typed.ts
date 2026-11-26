@@ -155,13 +155,14 @@ export function addTyped(
   doc: Y.Doc,
   where: { page: PageName; stored: { blob: BlobKey; pages: number } },
   typed: Typed,
-  by: { author: string; now: number; id: string; look: TextMarkLook },
+  by: { author: string; authorKey?: string | null; now: number; id: string; look: TextMarkLook },
 ): TypedMade {
   const base = {
     id: by.id,
     page: where.page,
     ...by.look,
     author: by.author,
+    ...Mark.keyed(by.authorKey),
     createdAt: by.now,
     rect: typed.rect,
     words: typed.words,

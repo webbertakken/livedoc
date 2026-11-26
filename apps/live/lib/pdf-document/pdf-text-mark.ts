@@ -45,7 +45,7 @@ export function addTextMark(
   kind: TextMarkKind,
   where: { page: PageName; stored: { blob: BlobKey; pages: number } },
   selection: TextSelection | null,
-  by: { author: string; now: number; id: string },
+  by: { author: string; authorKey?: string | null; now: number; id: string },
   // The look the tool has now (pdf-mark-looks.ts); the kind's first look by default.
   look: TextMarkLook = TEXT_MARK_LOOKS[kind],
 ): TextMarkMade {
@@ -57,6 +57,7 @@ export function addTextMark(
     text: selection.text,
     ...look,
     author: by.author,
+    ...Mark.keyed(by.authorKey),
     createdAt: by.now,
   });
   if (!mark) return { ok: false, reason: 'no_text' };

@@ -24,7 +24,11 @@ const BASE = { colour: '#ff0000', opacity: 1, author: 'Ada', createdAt: T };
 const line = (id: string, page = PAGES[0]!.name) =>
   Mark.line('arrow', { ...BASE, page, id, line: [10, 10, 50, 60], width: 2 })!;
 
-function selecting({ marking = true, open = true } = {}) {
+function selecting({
+  marking = true,
+  open = true,
+  mayChange = (_mark: Mark) => true,
+}: { marking?: boolean; open?: boolean; mayChange?: (mark: Mark) => boolean } = {}) {
   const doc = PdfLiveChanges.load();
   for (const mark of [line('a'), line('b'), line('c', PAGES[1]!.name)])
     PdfLiveChanges.addMark(doc, mark);
@@ -49,6 +53,7 @@ function selecting({ marking = true, open = true } = {}) {
         ready: open ? ready : null,
         marks: open ? marks : null,
         marking,
+        mayChange,
         textSelected: text,
         clearText,
         focusPages,
@@ -84,6 +89,18 @@ describe('selecting marks', () => {
     expect(hook.result.current.chosen).toEqual({ page: 0, ids: ['b'] });
     act(() => hook.result.current.choosing!.choose(0, 'b', true));
     expect(hook.result.current.chosen).toBeNull();
+  });
+
+  it('never selects a mark the session may not change, nor one that is not there', () => {
+    const { hook, clearText } = selecting({ mayChange: (mark) => mark.id !== 'b' });
+    expect(hook.result.current.choosing!.mayChange(line('b'))).toBe(false);
+    act(() => hook.result.current.choosing!.choose(0, 'b', false));
+    act(() => hook.result.current.choosing!.choose(0, 'gone', false));
+    expect(hook.result.current.chosen).toBeNull();
+    expect(clearText).not.toHaveBeenCalled();
+    act(() => hook.result.current.choosing!.choose(0, 'a', false));
+    act(() => hook.result.current.choosing!.choose(0, 'b', true));
+    expect(hook.result.current.chosen).toEqual({ page: 0, ids: ['a'] });
   });
 
   it('holds one page’s marks: a press on another page’s starts a new selection', () => {

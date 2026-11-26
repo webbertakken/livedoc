@@ -434,6 +434,7 @@ describe('changing a mark on a page', () => {
     createdAt: 0,
   })!;
   const choosing = (): PdfPageChoosing => ({
+    mayChange: () => true,
     choose: vi.fn(),
     letGo: vi.fn(),
     leave: vi.fn(),
@@ -529,6 +530,24 @@ describe('changing a mark on a page', () => {
       clientY: 400,
     });
     expect(chose.letGo).toHaveBeenCalled();
+    expect(onText).toHaveBeenCalledWith(1, expect.objectContaining({ kind: 'press' }));
+  });
+
+  // marks.md "Share roles": Select reaches a Participant's own marks alone; a press on another's falls to the text.
+  it('passes a press on a mark the session may not change to the text beneath', async () => {
+    const chose = { ...choosing(), mayChange: () => false };
+    const { box, onText } = await page('select', [], [], false, null, null, null, null, null, {
+      marks: [arrow],
+      choosing: chose,
+    });
+    fireEvent.pointerDown(box, {
+      button: 0,
+      pointerType: 'mouse',
+      pointerId: 1,
+      clientX: 150,
+      clientY: 92,
+    });
+    expect(chose.choose).not.toHaveBeenCalled();
     expect(onText).toHaveBeenCalledWith(1, expect.objectContaining({ kind: 'press' }));
   });
 

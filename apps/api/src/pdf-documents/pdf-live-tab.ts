@@ -26,8 +26,9 @@ export const PDF_LIVE_TAB = liveTabKind({
     // A PDF's size is its stored file's; its live changes are bounded by their bytes alone.
     insertedCharacters: () => 0,
     digest: (updates) => pdfDigest(PdfLiveChanges.load(updates)),
-    // "The room's op kinds": a Participant's update is judged by the roots it touches.
-    asks: (stored, update, tab) => pdfLevelAsked(stored, update, pdfTabOf(tab)?.blob ?? null),
+    // "The room's op kinds": a Participant's update is judged by the roots it touches, and its marks by whose they are.
+    asks: (stored, update, tab, sender) =>
+      pdfLevelAsked(stored, update, pdfTabOf(tab)?.blob ?? null, sender.adderKey),
   },
   sizes: {
     chunkBytes: PDF_CHUNK_BYTES,
