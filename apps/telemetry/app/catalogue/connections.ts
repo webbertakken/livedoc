@@ -144,6 +144,11 @@ export const MCP_TOOL_METRICS: readonly Metric[] = [
     'Making a spreadsheet, its sheets named and filled.',
   ),
   mcpTool(
+    'ConvertSpreadsheet',
+    'Convert Spreadsheet',
+    'Changing a spreadsheet’s file format, after listing what the new format cannot hold.',
+  ),
+  mcpTool(
     'ChangePages',
     'Change Pages',
     'Adding, changing, laying out, moving or deleting pages: slides, logos, infographics.',
