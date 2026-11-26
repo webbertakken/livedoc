@@ -381,6 +381,8 @@ type Found = {
   part: KeptPart;
   // A package's object entries the chart no longer names (its folder, meta, replacement picture).
   gone: string[];
+  // Its frame's place in paint order (`draw:z-index`); one with none after those with one.
+  z: number;
 };
 
 // One drawing's chart, or null when it is not a chart frame that qualifies.
@@ -436,7 +438,13 @@ function chartOf(
     ...place,
     ...(alt && alt !== read.title ? { alt: alt.slice(0, SHEET_CHART_ALT_MAX) } : {}),
   };
-  return { chart: { ...chart, kept: { part: part.name, sum: fileChartSum(chart) } }, part, gone };
+  const z = Number(attributeOf(frame, DRAW, 'z-index') ?? NaN);
+  return {
+    chart: { ...chart, kept: { part: part.name, sum: fileChartSum(chart) } },
+    part,
+    gone,
+    z: Number.isFinite(z) ? z : Number.MAX_SAFE_INTEGER,
+  };
 }
 
 /**
@@ -480,6 +488,8 @@ export function readOdsCharts(
       ...keptParts.filter((p) => !gone.has(p.name)),
       ...found.map((f) => f.part).filter((p) => !parts.has(p.name)),
     ];
+    // In paint order: by each frame's `draw:z-index`, else as the sheet holds them.
+    found.sort((a, b) => a.z - b.z);
     return { ...sheet, charts: found.map((f) => f.chart) };
   });
   return { sheets: out, kept: { ...kept, items, parts: keptParts } };

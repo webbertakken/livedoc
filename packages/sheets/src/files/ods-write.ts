@@ -70,6 +70,8 @@ type Out = {
   theme: SpreadsheetTheme;
   // Where its charts' objects go (standard-mapping.md "Charts in the file").
   charts: OdsChartObjects;
+  // The sheet's chart frames by the cell each is anchored in (`r,c`).
+  frames?: ReadonlyMap<string, string>;
 };
 
 // A cell's style, its number format's and its look's; a format ODF cannot say is named, the cell written without it.
@@ -142,7 +144,8 @@ function cellXml(cell: FileCell, out: Out): string {
   const kept = out.kept.cell(out.index, cell.r, cell.c);
   const body = cell.value ? paragraphs(shownText(cell.value)) : '';
   const open = `<table:table-cell${attrs.map((a) => ` ${a}`).join('')}${kept?.attributes ?? ''}>`;
-  return `${open}${kept?.before ?? ''}${body}${kept?.after ?? ''}</table:table-cell>`;
+  const frames = out.frames?.get(`${cell.r},${cell.c}`) ?? '';
+  return `${open}${kept?.before ?? ''}${frames}${body}${kept?.after ?? ''}</table:table-cell>`;
 }
 
 const repeated = (axis: 'columns' | 'rows', n: number) =>
@@ -190,10 +193,21 @@ function columnsXml(cols: number, axis: OdsAxisOut): string[] {
 
 function tableXml(sheet: FileSheet, index: number, out: Omit<Out, 'sheet' | 'index'>): string[] {
   const { kept } = out;
-  const sheetOut: Out = { ...out, sheet: sheet.name, index };
-  // A cell keeping content is written, empty or not, so its content stays on it.
+  const before = kept.table('table-before', index);
+  const frames = chartFrames(before, sheet, out);
+  const sheetOut: Out = { ...out, sheet: sheet.name, index, frames };
+  // A cell keeping content, or a chart, is written, empty or not, so what it holds stays on it.
   const held = new Set(sheet.cells.map((c) => `${c.r},${c.c}`));
-  const keptCells = kept.cellsOf(index).filter((p) => !held.has(`${p.r},${p.c}`));
+  const anchors = [...frames.keys()].map((at) => {
+    const [r, c] = at.split(',').map(Number);
+    return { r: r!, c: c! };
+  });
+  const keptCells = [...kept.cellsOf(index), ...anchors].filter((p) => {
+    const at = `${p.r},${p.c}`;
+    if (held.has(at)) return false;
+    held.add(at);
+    return true;
+  });
   const rows = new Map<number, FileCell[]>();
   for (const cell of [...sheet.cells, ...keptCells]) {
     const row = rows.get(cell.r);
@@ -228,7 +242,7 @@ function tableXml(sheet: FileSheet, index: number, out: Omit<Out, 'sheet' | 'ind
   });
   return [
     `<table:table table:name="${escapeXmlAttribute(sheet.name)}"${tableStyleAttribute(sheet, out.styles)}${kept.tableAttributes(index)}>`,
-    ...withCharts(kept.table('table-before', index), sheet, sheetOut),
+    ...before,
     ...columnsXml(cols, colAxis),
     ...rowAxis.nest(runs, 'table-row-group'),
     ...withFormatRules(
@@ -239,15 +253,19 @@ function tableXml(sheet: FileSheet, index: number, out: Omit<Out, 'sheet' | 'ind
   ];
 }
 
-// A table's charts in a `table:shapes` of their own after what it kept before its columns; none beside kept shapes, the
-// sheet named (D261).
-function withCharts(before: string[], sheet: FileSheet, out: Out): string[] {
-  if (!sheet.charts?.length) return before;
+// A table's chart frames, each in the cell it is anchored in (D280); none beside the shapes it kept, the sheet named
+// (D261).
+function chartFrames(
+  before: readonly string[],
+  sheet: FileSheet,
+  out: Omit<Out, 'sheet' | 'index'>,
+): Map<string, string> {
+  if (!sheet.charts?.length) return new Map();
   if (before.some((xml) => /^<[\w.-]+:shapes\b/.test(xml))) {
     out.losses.push({ k: 'charts_unwritten', sheet: sheet.name });
-    return before;
+    return new Map();
   }
-  return [...before, out.charts.shapes(sheet.name, sheet.charts, sheet.lines)];
+  return out.charts.frames(sheet.name, sheet.charts);
 }
 
 // A table's format rules after its kept ones, in the kept `calcext:conditional-formats` or one of their own (D215).
