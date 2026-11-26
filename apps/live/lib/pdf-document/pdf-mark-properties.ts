@@ -12,7 +12,13 @@ import {
 } from '@livedoc/pdf-documents';
 import { colourName } from '@/components/colour/colour-options';
 import { adopting, changeAsOne, markIn } from './pdf-mark-change';
-import { isFilledKind, isLinedKind, setMarkColour, setMarkLine, type LookedKind } from './pdf-mark-looks';
+import {
+  isFilledKind,
+  isLinedKind,
+  setMarkColour,
+  setMarkLine,
+  type LookedKind,
+} from './pdf-mark-looks';
 import { fillOf, lineStyleOf, widthOf } from './pdf-mark-restyle';
 import { stampWhen } from './pdf-stamp';
 
@@ -85,7 +91,8 @@ export function changeSubject(
 }
 
 /** Whether "Make this look the default" is offered for a mark: every kind but a stamp, whose colour is its own. */
-export const mayDefaultLook = (mark: Mark): mark is Mark & { kind: LookedKind } => mark.kind !== 'stamp';
+export const mayDefaultLook = (mark: Mark): mark is Mark & { kind: LookedKind } =>
+  mark.kind !== 'stamp';
 
 /** The mark's colour, and its width, line style and fill where its kind's tool keeps them, made its tool's look. */
 export function defaultLook(mark: Mark): void {
