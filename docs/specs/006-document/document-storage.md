@@ -85,22 +85,32 @@ summary from its room (director, 2026-11-26), as a background job behind a Worke
 admin routes.
 
 - **The switch**: the api's plain variable `SUMMARY_REFRESH`; absent (every fork's default) is off, `dry` counts and
-  `run` writes. docs.nu sets it in `hosted-vars.json`, with Webber's yes before each of preview and production.
+  `run` writes. docs.nu sets it in `hosted-vars.json`: a dry run on preview, then production, with the director's
+  yes; the run only with Webber's, given the dry run's counts.
 - **A dry run**: while the switch is `dry`, each minute up to 25 documents not checked yet, oldest first, are asked by
   their rooms for their summary, compared with D1's, and the answer is written to D1's `summary_refreshes` as flags
-  (would change, would gain `textDocument`), never content, logged `[summary-refresh] dry <documentId> changed=<0|1>
-textDocument=<0|1>`. A failed check is named (`[summary-refresh] failed <documentId> <reason>`) and tried again
-  after an hour.
+  (would change, would gain `textDocument`), never content. Each is logged as
+  `[summary-refresh] dry <documentId> changed=<0|1> textDocument=<0|1>`. A failed check is named as
+  `[summary-refresh] failed <documentId> <reason>` and tried again after an hour. The switch goes back off, a change
+  of its own, once the counts are in.
+- **A read that writes nothing** (director, 2026-11-26): a room asked for its summary reads its SQLite through a
+  read-only view, which takes no schema step (a table an older schema lacks reads as empty), refuses any write and
+  tells the room of none, so no upkeep or compaction is armed. It skips the handover and the move: a room whose
+  content has not moved is refused, a named failure. A room's wake sets no alarm it already holds, and a batch of
+  reads arms nothing. A wake's clean-up of agent presence already past its expiry is the only write it may still make.
 - **The run**: while the switch is `run`, each minute up to 25 documents not written yet are asked the same, and a
   changed summary is written only if D1's is still the one compared (a push in between is newer and stands); a
-  document's saved time never moves. Each is recorded written, logged `[summary-refresh] wrote <documentId>
-changed=<0|1> textDocument=<0|1>`. Running it twice changes nothing more.
-- **The operator's read**: `scripts/summary-refresh.ts report (--local | --remote)` in `apps/api` reads those rows
-  through wrangler, never writing, prints the documents, how many are checked, would change, would gain
-  `textDocument`, are written, and every failure, and exits non-zero until every document is checked (dry) or
-  written (run) and none failed.
+  document's saved time never moves. Each is recorded written and logged as
+  `[summary-refresh] wrote <documentId> changed=<0|1> textDocument=<0|1>`. Running it twice changes nothing more.
+- **The operator's read**: `scripts/summary-refresh.ts report (--local | --remote) [--run]` in `apps/api` reads those
+  rows through wrangler, never writing. It prints for its environment the documents, how many are checked, would
+  change, would gain `textDocument` and are written, how long the pass took (first check to last), and every failure
+  with its reason. It exits non-zero until every document is checked (dry) or written (`--run`) and none failed.
 - **No way back is kept**: a summary is derived from the room, which still holds everything it is made from; the
   next push writes the same again.
+- **Afterwards**: `summary_refreshes` is the run's record until the run is complete; the change that removes the
+  switch then empties it by a migration, leaving the table and the sweep, empty and off, for a later field's refresh
+  (director, 2026-11-26).
 
 ## Reaching the content
 

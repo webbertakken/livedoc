@@ -322,6 +322,9 @@ export class DocumentRoom extends DurableObject<Env | undefined> {
     await this.baton.restore();
     await this.poll.restore();
     for (const r of await this.agents.restore()) agentPresenceLog('expired', r);
+    // A state without alarms to read (a test's) leaves it unknown, so the first arm writes.
+    const storage = this.state.storage;
+    this.armedAt = 'getAlarm' in storage ? await storage.getAlarm() : undefined;
     this.armAlarm();
   }
 
@@ -1125,19 +1128,27 @@ export class DocumentRoom extends DurableObject<Env | undefined> {
 
   // The room's one alarm, at the earliest of the facilitator grace deadline, every agent presence expiry and the
   // outbox's drain, or none when there is none of them (agent-presence I5, PR29; document-storage "The outbox").
+  // The alarm as last set or read (null: none; undefined: not known), so a wake that changes no deadline writes none.
+  private armedAt: number | null | undefined = undefined;
+
   private armAlarm(): void {
     const deadlines = [
       this.baton.deadline(),
       this.agents.nextExpiry() ?? undefined,
       this.content.deadline() ?? undefined,
     ].filter((d): d is number => d !== undefined);
-    if (deadlines.length === 0) void this.state.storage.deleteAlarm();
-    else void this.state.storage.setAlarm(Math.min(...deadlines));
+    const at = deadlines.length === 0 ? null : Math.min(...deadlines);
+    if (at === this.armedAt) return;
+    this.armedAt = at;
+    if (at === null) void this.state.storage.deleteAlarm();
+    else void this.state.storage.setAlarm(at);
   }
 
   /** Agent entries past their expiry go; then the grace clock ran out (or did not, if they came back). */
   override async alarm(): Promise<void> {
     this.wake.take();
+    // A fired alarm is spent: none is set until this sets the next.
+    this.armedAt = null;
     const expired = await this.agents.sweep();
     for (const r of expired) agentPresenceLog('expired', r);
     if (expired.length > 0) this.broadcastPresence();
@@ -1381,8 +1392,9 @@ export class DocumentRoom extends DurableObject<Env | undefined> {
   }
 
   // The content summaries' refresh (docs/specs/006-document/document-storage.md "Refreshing the summaries"): reads.
+  // Never through `rpc`, whose gate may move content or take a handover: the read leaves the room's storage as it was.
   async contentSummary(documentId: string): Promise<ContentSummary> {
-    return (await this.content.rpc(documentId)).contentSummary(documentId);
+    return this.content.summaryWithoutWriting(documentId);
   }
 
   // The sweep's move (docs/specs/006-document/document-storage-move.md "The sweep"): the room's move

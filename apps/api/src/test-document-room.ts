@@ -111,11 +111,14 @@ export function testDocumentRoom(
   // The same room after a wake: a new instance on the same storage, as the runtime makes after an eviction.
   wake: () => DocumentRoom;
   kv: Map<string, unknown>;
+  // Every key-value and alarm write the room asked of its storage, the same value again included.
+  storageWrites: () => number;
 } {
   const sql = new DatabaseSync(':memory:');
   sql.exec('PRAGMA foreign_keys = ON');
   const kv = new Map<string, unknown>();
   let alarm: number | null = null;
+  let writes = 0;
   let gate: Promise<unknown> = Promise.resolve();
   const id = {
     name: name ?? 'room',
@@ -126,12 +129,18 @@ export function testDocumentRoom(
     sql: nodeDocumentSql(sql),
     transactionSync: nodeTransaction(sql),
     get: async (key: string) => kv.get(key),
-    put: async (key: string, value: unknown) => {
-      kv.set(key, value);
+    put: async (key: string | Record<string, unknown>, value?: unknown) => {
+      writes++;
+      if (typeof key === 'string') kv.set(key, value);
+      else for (const [k, v] of Object.entries(key)) kv.set(k, v);
     },
-    delete: async (key: string) => kv.delete(key),
+    delete: async (key: string) => {
+      writes++;
+      return kv.delete(key);
+    },
     list: async () => new Map(kv),
     deleteAll: async () => {
+      writes++;
       kv.clear();
       // As the room's deleteAll: everything goes at once, so no trigger or foreign key sees a half-dropped schema.
       sql.exec('PRAGMA foreign_keys = OFF');
@@ -149,16 +158,22 @@ export function testDocumentRoom(
     kv: {
       get: (key: string) => kv.get(key),
       put: (key: string, value: unknown) => {
+        writes++;
         kv.set(key, value);
       },
-      delete: (key: string) => kv.delete(key),
+      delete: (key: string) => {
+        writes++;
+        return kv.delete(key);
+      },
       list: () => kv.entries(),
     },
     getAlarm: async () => alarm,
     setAlarm: async (at: number) => {
+      writes++;
       alarm = at;
     },
     deleteAlarm: async () => {
+      writes++;
       alarm = null;
     },
   };
@@ -181,6 +196,7 @@ export function testDocumentRoom(
     alarms: () => alarm,
     kv,
     wake: () => new DocumentRoom(state, env),
+    storageWrites: () => writes,
   };
 }
 

@@ -78,4 +78,52 @@ describe('DocumentDb', () => {
     await db.prepare('INSERT INTO t (id, n) VALUES (?, ?)').bind('a', 1).run();
     expect(onWrite).toHaveBeenCalledTimes(1);
   });
+
+  it('tells the room of no write for a batch of reads', async () => {
+    const { db, onWrite } = setup();
+    await db.prepare('INSERT INTO t (id, n) VALUES (?, ?)').bind('a', 1).run();
+    onWrite.mockClear();
+    const [read] = await db.batch([db.prepare('SELECT id FROM t'), db.prepare('SELECT n FROM t')]);
+    expect(read?.results).toEqual([{ id: 'a' }]);
+    expect(onWrite).not.toHaveBeenCalled();
+  });
+});
+
+// docs/specs/006-document/document-storage.md "Refreshing the summaries": a dry run's read of a room writes nothing.
+describe('DocumentDb.readOnly', () => {
+  function readOnly(made: boolean) {
+    const raw = new DatabaseSync(':memory:');
+    raw.exec('CREATE TABLE t (id TEXT PRIMARY KEY)');
+    raw.exec("INSERT INTO t (id) VALUES ('a')");
+    const db = DocumentDb.readOnly(nodeDocumentSql(raw), () => made);
+    const changes = () => Number(raw.prepare('SELECT total_changes() AS n').get()!.n);
+    return { raw, db, changes };
+  }
+
+  it('reads, alone and in a batch, writing nothing', async () => {
+    const { db, changes } = readOnly(true);
+    const before = changes();
+    expect(await db.prepare('SELECT id FROM t').all()).toMatchObject({ results: [{ id: 'a' }] });
+    const [read] = await db.batch([db.prepare('SELECT id FROM t')]);
+    expect(read?.results).toEqual([{ id: 'a' }]);
+    expect(changes()).toBe(before);
+  });
+
+  it('refuses a write, by name', async () => {
+    const { db, raw } = readOnly(true);
+    await expect(db.prepare("INSERT INTO t (id) VALUES ('b')").run()).rejects.toThrow(
+      'document_read_only',
+    );
+    await expect(db.batch([db.prepare('DELETE FROM t')])).rejects.toThrow('document_read_only');
+    expect(raw.prepare('SELECT id FROM t').all()).toEqual([{ id: 'a' }]);
+  });
+
+  it('reads a table an older schema lacks as empty, and a room with none as empty', async () => {
+    expect(await readOnly(true).db.prepare('SELECT x FROM missing').all()).toMatchObject({
+      results: [],
+    });
+    expect(await readOnly(false).db.prepare('SELECT id FROM t').all()).toMatchObject({
+      results: [],
+    });
+  });
 });

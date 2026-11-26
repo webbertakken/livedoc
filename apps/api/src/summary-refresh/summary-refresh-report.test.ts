@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   formatSummaryReport,
+  formatTook,
   SUMMARY_REPORT_QUERIES,
   summaryReportOf,
   type SummaryRefreshRow,
@@ -14,6 +15,7 @@ const row = (id: string, over: Partial<SummaryRefreshRow> = {}): SummaryRefreshR
   document_id: id,
   changed: 0,
   gains_text_document: 0,
+  checked_at: 1_000,
   written_at: null,
   error: null,
   ...over,
@@ -26,7 +28,7 @@ describe('summaryReportOf', () => {
         row('a', { changed: 1, gains_text_document: 1 }),
         row('b', { changed: 1 }),
         row('c'),
-        row('d', { error: 'TypeError' }),
+        row('d', { error: 'TypeError', checked_at: 1_000 + 61 * 60_000 }),
       ],
       6,
       'dry',
@@ -39,6 +41,7 @@ describe('summaryReportOf', () => {
       gainsTextDocument: 1,
       written: 0,
       failed: [{ documentId: 'd', error: 'TypeError' }],
+      tookMs: 61 * 60_000,
       complete: false,
     });
   });
@@ -73,6 +76,7 @@ describe('formatSummaryReport', () => {
         'would change: 1',
         'would gain textDocument: 1',
         'written: 0',
+        'took: 0h 00m',
         'failed d E',
         'complete: no',
       ].join('\n'),
@@ -83,5 +87,13 @@ describe('formatSummaryReport', () => {
 describe('SUMMARY_REPORT_QUERIES', () => {
   it('only reads', () => {
     for (const q of SUMMARY_REPORT_QUERIES) expect(q.trimStart().startsWith('SELECT')).toBe(true);
+  });
+});
+
+describe('formatTook', () => {
+  it('says hours and minutes', () => {
+    expect(formatTook(0)).toBe('0h 00m');
+    expect(formatTook(61 * 60_000)).toBe('1h 01m');
+    expect(formatTook(7 * 60_000 + 29_000)).toBe('0h 07m');
   });
 });

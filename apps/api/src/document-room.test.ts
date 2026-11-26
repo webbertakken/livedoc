@@ -2741,7 +2741,7 @@ describe('DocumentRoom agent presence (docs/specs/024-agents/agent-presence.md)'
     expect(await full.json()).toEqual({ error: 'agent_presence_full' });
   });
 
-  it('arms the alarm at the earliest expiry, sweeps on it, and clears the alarm when nothing is left', async () => {
+  it('arms the alarm at the earliest expiry, sweeps on it, and sets none when nothing is left', async () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date(1_000_000));
     const { room, state } = newRoom();
@@ -2750,9 +2750,14 @@ describe('DocumentRoom agent presence (docs/specs/024-agents/agent-presence.md)'
     await put(room, body({ ttlMs: 5_000 }));
     expect(state.alarms.at(-1)).toBe(1_005_000);
     vi.setSystemTime(new Date(1_006_000));
+    const armed = state.alarms.length;
     await room.alarm();
     expect(lastAgents(ada)).toEqual([]);
-    expect(state.alarms.at(-1)).toBeNull();
+    // The fired alarm is spent (the runtime deletes it): nothing left sets no other, and deleting it again would be a
+    // write for nothing.
+    expect(state.alarms.length).toBe(armed);
+    await put(room, body({ ttlMs: 5_000 }));
+    expect(state.alarms.at(-1)).toBe(1_011_000);
     vi.useRealTimers();
   });
 
