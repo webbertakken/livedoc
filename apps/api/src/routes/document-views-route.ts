@@ -50,6 +50,10 @@ import { json, textPlain } from '../responses';
 import { reportServerEvent } from '../server-telemetry';
 import type { DocumentDTO, TabDTO, DocumentEnv } from '../types';
 import type { DocumentRouteContext } from './context';
+import { answerWorkbookView } from './workbook-views-route';
+
+// The longest `range` a cells view takes: any A1 range on the grid's limits, with room to spare.
+const VIEW_RANGE_MAX_LENGTH = 40;
 
 export type ParsedView = { request: ViewRequest; json: boolean };
 // `view=lint` (docs/specs/024-agents/diagram-lint.md): answered by the lint, not by `renderView`.
@@ -167,6 +171,14 @@ export function parseViewQuery(
       );
     }
   }
+  const range = query.get(VIEW_QUERY.range);
+  if (range !== null && (range === '' || range.length > VIEW_RANGE_MAX_LENGTH)) {
+    return refuse(
+      'range',
+      INVALID_VIEW_VALUE_ERROR,
+      `range takes an A1 cell or range of 1 to ${VIEW_RANGE_MAX_LENGTH} characters`,
+    );
+  }
   const q = query.get(VIEW_QUERY.q);
   if (q !== null && (q === '' || Array.from(q).length > FIND_QUERY_MAX_LENGTH)) {
     return refuse(
@@ -188,6 +200,7 @@ export function parseViewQuery(
     only: query.get(VIEW_QUERY.only) ?? undefined,
     ref: query.get(VIEW_QUERY.ref) ?? undefined,
     q: q ?? undefined,
+    range: query.get(VIEW_QUERY.range) ?? undefined,
     coarse: flag('coarse'),
     style: flag('style'),
     all: flag('all'),
@@ -209,6 +222,7 @@ const TITLE_CASE: Record<
   show: 'Show',
   find: 'Find',
   pages: 'Pages',
+  cells: 'Cells',
 };
 
 function countViewed(
@@ -327,9 +341,22 @@ export async function answerTabView(
   document: DocumentDTO,
   tab: TabDTO,
   owner: string,
+  tabScope: string | null = null,
 ): Promise<Response> {
   if ('lint' in parsed) return answerLintView(ctx, parsed, document, tab);
   if ('storm' in parsed) return answerStormView(ctx, parsed, document, tab);
+  const sheet = await answerWorkbookView(
+    ctx.env,
+    parsed.request,
+    parsed.json,
+    document,
+    tab,
+    tabScope,
+  );
+  if (sheet) {
+    if (sheet.response.ok) countViewed(ctx, sheet.view);
+    return sheet.response;
+  }
   const selected = await ownerSelection(ctx, parsed.request, document.id, tab.id, owner);
   const started = Date.now();
   const rendered = renderView(parsed.request, tab, {

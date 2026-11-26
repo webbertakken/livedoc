@@ -14,3 +14,15 @@ export { selectionReference } from './selection-reference';
 export { pagesView } from './pages';
 export { elementFindTexts } from './find';
 export { tabSearchText } from './search-text';
+export {
+  workbookOutlineView,
+  type WorkbookOutlineInput,
+  type WorkbookOutlineJson,
+  type WorkbookOutlineSheet,
+} from './workbook/outline';
+export {
+  CELLS_NOT_SPREADSHEET,
+  sheetCellsView,
+  SHEET_VIEW_CHARS_MAX,
+  type CellsJson,
+} from './workbook/cells';

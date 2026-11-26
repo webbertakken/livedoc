@@ -407,6 +407,9 @@ tells them.
   - `clear_charts` takes the sheet's charts off: those reading cells of a range, or every one.
 - **`read_sheet` in a spreadsheet** answers the sheet's charts: id, type, range and columns in A1, the cell it sits
   on, size, titles, legend, values, axis, alt and the series drawn as lines.
+- **Views** ([A spreadsheet's views](../024-agents/document-views.md#a-spreadsheets-views)): `read_document` and
+  `livedoc tab view` on any of a spreadsheet's tabs answer the workbook outline; `view: "cells"` with a `range` reads
+  that tab's sheet a row a line, bounded as `read_sheet` is.
 - **`list_sheets` in a spreadsheet** lists the sheets in tab order, each with whether it is hidden and how many
   charts it holds.
 

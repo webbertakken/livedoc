@@ -19,6 +19,7 @@
   "dependencies": {
     "@livedoc/api-schema": "workspace:*",
     "@livedoc/document": "workspace:*",
+    "@livedoc/sheets": "workspace:*",
     "@livedoc/templates": "workspace:*"
   },
   "devDependencies": {

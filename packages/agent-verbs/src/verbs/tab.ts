@@ -82,7 +82,7 @@ export const tabView = defineVerb({
   id: 'tab.view',
   summary: 'A view of a tab; the outline by default',
   description:
-    'Prints a view of a tab as the api renders it: outline (default), graph, layout, comments, show (needs --ref), find (needs --text) or pages (a Pages tab’s pages and articles). --budget fits it to that many tokens; --raw prints the plain tab instead.',
+    'Prints a view of a tab as the api renders it: outline (default; on a spreadsheet, its workbook), graph, layout, comments, show (needs --ref), find (needs --text), pages (a Pages tab’s pages) or cells (a spreadsheet’s sheet; --range). --budget fits it to that many tokens; --raw prints the plain tab.',
   behaviour: 'read',
   input: z.object({
     doc: z.string().describe('A name, id prefix or LiveDoc URL'),
@@ -93,6 +93,7 @@ export const tabView = defineVerb({
       .describe(`One of ${TAB_VIEW_NAMES.join(', ')}`),
     ref: z.string().optional().describe('show: the element by ref, or selected'),
     text: z.string().optional().describe('find: the text to look for'),
+    range: z.string().optional().describe('cells: an A1 range; the used range by default'),
     budget: z.coerce
       .number()
       .int()
@@ -113,6 +114,7 @@ export const tabView = defineVerb({
       view: input.view,
       ref: input.ref,
       q: input.text,
+      range: input.range,
       budget: input.budget,
       only: input.only,
       coarse: input.coarse,
@@ -137,7 +139,10 @@ export const tabView = defineVerb({
   json: (output) => output.json ?? { text: output.text },
   cli: {
     positionals: ['doc'],
-    examples: ['livedoc tab view "Auth flow"', 'livedoc tab view 3f9c --view show --ref orders'],
+    examples: [
+      'livedoc tab view "Auth flow"',
+      'livedoc tab view "Model costs" --view cells --range A1:D20',
+    ],
     prints: 'the view as the api serves it',
   },
 });

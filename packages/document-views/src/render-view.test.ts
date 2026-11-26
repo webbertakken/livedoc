@@ -13,7 +13,10 @@ const REQUESTS: Record<TabViewName, ViewRequest> = {
   show: { view: 'show', ref: '146b' },
   find: { view: 'find', q: 'pay' },
   pages: { view: 'pages' },
+  cells: { view: 'cells' },
 };
+// The views a tab alone answers: `cells` reads a spreadsheet's workbook, which the door holding it renders.
+const TAB_VIEWS = TAB_VIEW_NAMES.filter((view) => view !== 'cells');
 // Every element's ref in the checkout tab: the first four characters of its pinned id.
 const ELEMENT_REFS = new Set(checkoutTab().elements.map((el) => el.id.slice(0, 4)));
 const render = (request: ViewRequest, tab: Tab = checkoutTab()) =>
@@ -21,7 +24,7 @@ const render = (request: ViewRequest, tab: Tab = checkoutTab()) =>
 
 describe('renderView', () => {
   it('opens every view with the header and its revision (R18, I5)', () => {
-    for (const view of TAB_VIEW_NAMES) {
+    for (const view of TAB_VIEWS) {
       const result = render(REQUESTS[view]);
       if (!result.ok) throw new Error(view);
       expect(result.text.split('\n')[0]).toMatch(
@@ -33,7 +36,7 @@ describe('renderView', () => {
   });
 
   it('gives text and JSON that agree on refs and counts (R19)', () => {
-    for (const view of TAB_VIEW_NAMES) {
+    for (const view of TAB_VIEWS) {
       const result = render(REQUESTS[view]);
       if (!result.ok) throw new Error(view);
       const json = JSON.stringify(result.json);
@@ -48,7 +51,7 @@ describe('renderView', () => {
   });
 
   it('gives the same bytes every time, reading no clock (R22, I1)', () => {
-    for (const view of TAB_VIEW_NAMES) {
+    for (const view of TAB_VIEWS) {
       expect(render(REQUESTS[view])).toEqual(render(REQUESTS[view]));
     }
   });
@@ -140,6 +143,15 @@ describe('renderView refusals (R4, R5, E17, E18)', () => {
     expect(render({ view: 'find', q: '' }, tab)).toMatchObject({
       ok: false,
       refusal: { error: 'invalid_value' },
+    });
+  });
+});
+
+describe('renderView cells', () => {
+  it('refuses cells on a tab alone: only a spreadsheet’s door holds its cells', () => {
+    expect(render({ view: 'cells', range: 'A1' })).toEqual({
+      ok: false,
+      refusal: { error: 'invalid_value', message: "cells reads a spreadsheet's sheet" },
     });
   });
 });

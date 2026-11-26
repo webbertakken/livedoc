@@ -151,6 +151,12 @@ const TAB_VIEW_QUERY = [
     description: `find (required): the text to look for, 1 to ${FIND_QUERY_MAX_LENGTH} characters.`,
   },
   { name: 'all', required: false, description: 'comments: `1` adds resolved threads.' },
+  {
+    name: 'range',
+    required: false,
+    description:
+      "cells (a spreadsheet's sheet): an A1 cell or range, the used range when absent; outline on a spreadsheet's tab is its workbook.",
+  },
 ];
 const DOCUMENT_VIEW_QUERY = [
   {
