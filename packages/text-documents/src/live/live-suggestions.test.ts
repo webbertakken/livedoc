@@ -150,6 +150,34 @@ describe('LiveSuggestions.read', () => {
     ]);
   });
 
+  it('names a break’s kind: a page break, a column break, a horizontal line, else none', () => {
+    const { doc } = written(
+      ['one'],
+      {
+        runs: ['two'],
+        attributes: { [INSERTION_MARK]: mark('s1'), props: { pageBreakBefore: true } },
+      },
+      {
+        runs: ['three'],
+        attributes: { [INSERTION_MARK]: mark('s2'), props: { columnBreakBefore: true } },
+      },
+      {
+        runs: [],
+        attributes: { [INSERTION_MARK]: mark('s3'), props: { borders: { bottom: { width: 1 } } } },
+      },
+      {
+        runs: ['four'],
+        attributes: { [INSERTION_MARK]: mark('s4'), props: { borders: { bottom: { width: 1 } } } },
+      },
+    );
+    expect(LiveSuggestions.read(doc).map((s) => s.parts[0]!.breakKind)).toEqual([
+      'page',
+      'column',
+      'horizontal-line',
+      undefined,
+    ]);
+  });
+
   it('reads a suggestion in another document tab with that tab', () => {
     const { doc } = written(['first']);
     doc.getMap('tabs').set('t.0', { name: 'One', order: 0 });
@@ -236,11 +264,36 @@ describe('LiveSuggestions.accept and reject', () => {
     expect((rejected.body.get(1) as Y.XmlElement).getAttribute(DELETION_MARK)).toBeUndefined();
   });
 
-  it('drops a join’s mark when no paragraph stands before it', () => {
+  it('drops a join’s mark when no paragraph stands before it, even an empty one', () => {
+    const empty = written({ runs: [], attributes: { [DELETION_MARK]: mark('s1') } }, ['text']);
+    LiveSuggestions.accept(empty.doc, 's1', 'test');
+    expect(textOf(empty.body)).toEqual(['', 'text']);
     const { doc, body } = written({ runs: ['only'], attributes: { [DELETION_MARK]: mark('s1') } });
     LiveSuggestions.accept(doc, 's1', 'test');
     expect(textOf(body)).toEqual(['only']);
     expect((body.get(0) as Y.XmlElement).getAttribute(DELETION_MARK)).toBeUndefined();
+  });
+
+  it('removes a first paragraph’s rejected break with its paragraph when nothing of it is left', () => {
+    const line = { [INSERTION_MARK]: mark('s1'), props: { borders: { bottom: { width: 1 } } } };
+    const followed = written({ runs: [], attributes: line }, ['text']);
+    LiveSuggestions.reject(followed.doc, 's1', 'test');
+    expect(textOf(followed.body)).toEqual(['text']);
+    const typed = written({ runs: [['new', { [INSERTION_MARK]: mark('s1') }]], attributes: line }, [
+      'text',
+    ]);
+    LiveSuggestions.reject(typed.doc, 's1', 'test');
+    expect(textOf(typed.body)).toEqual(['text']);
+  });
+
+  it('keeps a first paragraph whose rejected break leaves text, or that nothing follows', () => {
+    const kept = written({ runs: ['old'], attributes: { [INSERTION_MARK]: mark('s1') } }, ['text']);
+    LiveSuggestions.reject(kept.doc, 's1', 'test');
+    expect(textOf(kept.body)).toEqual(['old', 'text']);
+    const alone = written({ runs: [], attributes: { [INSERTION_MARK]: mark('s1') } });
+    LiveSuggestions.reject(alone.doc, 's1', 'test');
+    expect(textOf(alone.body)).toEqual(['']);
+    expect((alone.body.get(0) as Y.XmlElement).getAttribute(INSERTION_MARK)).toBeUndefined();
   });
 
   it('puts a paragraph’s style, formatting and list back on rejecting its paragraph format', () => {
@@ -323,6 +376,26 @@ describe('LiveSuggestions.ownRejected', () => {
       attributes: { [INSERTION_MARK]: mark('s1') },
     });
     expect(LiveSuggestions.ownRejected(split.body, ADA.key)).toBe(
+      LiveSuggestions.ownRejected(plain.body, ADA.key),
+    );
+  });
+
+  it('reads the person’s own first paragraph, empty once rejected, as gone, as rejecting it leaves it', () => {
+    const plain = written(['text']);
+    const line = written(
+      {
+        runs: [],
+        attributes: { [INSERTION_MARK]: mark('s1'), props: { borders: { bottom: { width: 1 } } } },
+      },
+      ['text'],
+    );
+    expect(LiveSuggestions.ownRejected(line.body, ADA.key)).toBe(
+      LiveSuggestions.ownRejected(plain.body, ADA.key),
+    );
+    const others = written({ runs: [], attributes: { [INSERTION_MARK]: mark('s1', BEN) } }, [
+      'text',
+    ]);
+    expect(LiveSuggestions.ownRejected(others.body, ADA.key)).not.toBe(
       LiveSuggestions.ownRejected(plain.body, ADA.key),
     );
   });

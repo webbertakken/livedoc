@@ -327,6 +327,8 @@ of modes is the kind's own; the shell draws it, keeps the person's choice and bi
 - A mode is one person's, never shared, kept while the surface is open and never stored; a level that changes under
   the person leaves a mode it no longer reaches for the starting one.
 - What a mode lets the person change is the kind's: the shell gives the kind the mode and the level to draw at.
+- An item a mode dims may carry a **note** and a **hint**: the note in the menu row where its shortcut would be, the
+  hint in a hover card on the row and as its description to a screen reader, saying why it is dimmed and where it runs.
 - Each built mode's menu item is bound by the shell (`run` chooses it, `checked` while it is chosen); a change logs
   `[office] mode` and tracks `UI · Changed · <the kind's mode type>`.
 

@@ -235,23 +235,29 @@ const BREAK_TYPES = {
   'section-break-continuous': 'TextDocumentBreakSectionContinuous',
 } as const;
 
-/** Insert > Break's items, for an Editor; Column break dimmed while the caret's section has one column. */
+/**
+ * Insert > Break's items, for an Editor; while suggesting, page and column breaks alone (review.md "Breaks and
+ * lines"). Column break dimmed while the caret's section has one column.
+ */
 export function textDocumentBreakActions(
   view: EditorView | null,
   {
     canEdit,
+    suggests = false,
     liveDoc,
     format,
     columns = 1,
   }: {
     canEdit: boolean;
+    // Writing as suggestions: the breaks that are a paragraph's own.
+    suggests?: boolean;
     liveDoc: RefObject<Y.Doc | null>;
     format: TextDocumentFormat;
     // The caret's section's columns (one where columns are not drawn).
     columns?: number;
   },
 ): OfficeActions {
-  if (!canEdit) return {};
+  if (!canEdit && !suggests) return {};
   const run = (item: keyof typeof BREAK_TYPES) => () => {
     const doc = liveDoc.current;
     if (!view || !doc) return;
@@ -275,9 +281,13 @@ export function textDocumentBreakActions(
     }
     view.focus();
   };
-  return {
+  const paragraphBreaks: OfficeActions = {
     'page-break': { run: run('page-break') },
     'column-break': { run: run('column-break'), disabled: columns < 2 },
+  };
+  if (!canEdit) return paragraphBreaks;
+  return {
+    ...paragraphBreaks,
     'section-break-next-page': { run: run('section-break-next-page') },
     'section-break-continuous': { run: run('section-break-continuous') },
   };

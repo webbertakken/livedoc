@@ -170,6 +170,25 @@ describe('OfficeMenuBar', () => {
     expect(screen.queryByRole('menu')).toBeNull();
   });
 
+  it('draws a dimmed item’s note in its row and its hint as its hover card and description', () => {
+    const run = vi.fn();
+    const hint = "This can't be suggested yet. An Editor changes it in Editing.";
+    render(
+      <Shell
+        actions={{ ...ACTIONS(), undo: { run, disabled: true, note: 'Editing only', hint } }}
+      />,
+    );
+    fireEvent.click(name('Edit'));
+    // Its name stays its label: the note and hint describe it, never name it.
+    const undo = screen.getByRole('menuitem', { name: 'Undo' });
+    expect(undo.getAttribute('aria-disabled')).toBe('true');
+    expect(undo.textContent).toContain('Editing only');
+    const described = undo.getAttribute('aria-describedby')!.split(' ');
+    expect(described.map((id) => document.getElementById(id)?.textContent)).toContain(hint);
+    fireEvent.click(undo);
+    expect(run).not.toHaveBeenCalled();
+  });
+
   it('opens a submenu with Right, its first item focused, and runs from it', () => {
     const actions = ACTIONS();
     render(<Shell actions={actions} />);

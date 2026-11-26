@@ -78,6 +78,22 @@ describe('suggestionCards', () => {
     ]);
   });
 
+  it('names a page break, a column break and a horizontal line its break carries, each once', () => {
+    const doc = docOf(
+      p(['one']),
+      p(['two'], { insertion: mark('s1'), props: { pageBreakBefore: true } }),
+      p(['three'], { insertion: mark('s1'), props: { pageBreakBefore: true } }),
+      p(['four'], { insertion: mark('s2'), props: { columnBreakBefore: true } }),
+      p([], { insertion: mark('s3'), props: { borders: { bottom: { width: 1 } } } }),
+      p(['five'], { insertion: mark('s3') }),
+    );
+    expect(suggestionCards(doc).map((c) => c.lines)).toEqual([
+      ['Add: Page break'],
+      ['Add: Column break'],
+      ['Add: Horizontal line', 'Add: Paragraph break'],
+    ]);
+  });
+
   it('reads an object in a line by its name, once per verb', () => {
     const bookmark = (id: string) =>
       schema.nodes.bookmark!.create({ id, name: id, insertion: mark('s1') });
@@ -183,6 +199,7 @@ describe('cardPartsOf', () => {
       { kind: 'block-deletion', text: 'table', element: 'table' },
       { kind: 'block-insertion', text: 'kept_block', element: 'kept_block' },
       { kind: 'break', text: '' },
+      { kind: 'break', text: '', breakKind: 'page' },
       { kind: 'join', text: '' },
       { kind: 'paragraph-format', text: '' },
     ]);
@@ -192,6 +209,7 @@ describe('cardPartsOf', () => {
       'Add: Picture',
       'Add: Object',
       'Delete: Table',
+      'Add: Page break',
       'Add: Paragraph break',
       'Delete: Paragraph break',
       'Format: Paragraph',

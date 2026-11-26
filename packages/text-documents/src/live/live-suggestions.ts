@@ -66,9 +66,33 @@ export type SuggestionPart = {
   readonly changed?: readonly string[];
   /** An object's or a block's part: its element's name. */
   readonly element?: string;
+  /** A break part: the break its paragraph starts with, where it is more than a paragraph break. */
+  readonly breakKind?: SuggestedBreakKind;
 };
 
-type ReadPart = { kind: SuggestionPartKind; text: string; changed?: string[]; element?: string };
+/** What a suggested paragraph break puts in, beyond a paragraph: a page break, a column break, a horizontal line. */
+export type SuggestedBreakKind = 'page' | 'column' | 'horizontal-line';
+
+/**
+ * The break a paragraph carrying a suggested break starts with, by its own formatting: a page or a column break before
+ * it, else a horizontal line where it is empty with a bottom border (review.md "Breaks and lines"); none otherwise.
+ */
+export function suggestedBreakKind(props: unknown, empty: boolean): SuggestedBreakKind | undefined {
+  if (!isObject(props)) return undefined;
+  if (props.pageBreakBefore === true) return 'page';
+  if (props.columnBreakBefore === true) return 'column';
+  const borders = props.borders;
+  if (empty && isObject(borders) && isObject(borders.bottom)) return 'horizontal-line';
+  return undefined;
+}
+
+type ReadPart = {
+  kind: SuggestionPartKind;
+  text: string;
+  changed?: string[];
+  element?: string;
+  breakKind?: SuggestedBreakKind;
+};
 
 export type TextDocumentSuggestion = SuggestionMark & {
   /** The document tab its first part is in. */
@@ -121,6 +145,10 @@ const elementsOf = (parent: Y.XmlFragment | Y.XmlElement): (Y.XmlElement | Y.Xml
       (c): c is Y.XmlElement | Y.XmlText => c instanceof Y.XmlElement || c instanceof Y.XmlText,
     );
 
+/** Whether an element holds nothing: no element, no text. */
+const isEmpty = (parent: Y.XmlElement): boolean =>
+  elementsOf(parent).every((c) => c instanceof Y.XmlText && c.length === 0);
+
 type DeltaOp = { insert?: unknown; attributes?: Record<string, unknown> };
 const deltaOf = (text: Y.XmlText): DeltaOp[] => text.toDelta() as DeltaOp[];
 
@@ -140,6 +168,7 @@ function read(doc: Y.Doc): TextDocumentSuggestion[] {
     kind: SuggestionPartKind,
     text: string,
     element?: string,
+    breakKind?: SuggestedBreakKind,
   ) => {
     if (!isSuggestionMark(value)) return;
     let entry = found.get(value.id);
@@ -167,6 +196,7 @@ function read(doc: Y.Doc): TextDocumentSuggestion[] {
       text,
       ...(kind === 'format' ? { changed: changedOf(value).sort() } : {}),
       ...(element !== undefined ? { element } : {}),
+      ...(breakKind !== undefined ? { breakKind } : {}),
     };
     entry.parts.push(last);
   };
@@ -183,7 +213,8 @@ function read(doc: Y.Doc): TextDocumentSuggestion[] {
       }
       const name = node.nodeName;
       if (name === PARAGRAPH) {
-        add(tab, node.getAttribute(INSERTION_MARK), 'break', '');
+        const kind = suggestedBreakKind(node.getAttribute('props'), isEmpty(node));
+        add(tab, node.getAttribute(INSERTION_MARK), 'break', '', undefined, kind);
         add(tab, node.getAttribute(DELETION_MARK), 'join', '');
         add(tab, node.getAttribute(PARAGRAPH_FORMAT_CHANGE), 'paragraph-format', '');
         last = null;
@@ -313,11 +344,15 @@ function settleChildren(
       const joins =
         (marksOf(node.getAttribute(INSERTION_MARK), id) && !accept) ||
         (marksOf(node.getAttribute(DELETION_MARK), id) && accept);
+      const rejectsBreak = !accept && marksOf(node.getAttribute(INSERTION_MARK), id);
       if (marksOf(node.getAttribute(INSERTION_MARK), id)) node.removeAttribute(INSERTION_MARK);
       if (marksOf(node.getAttribute(DELETION_MARK), id)) node.removeAttribute(DELETION_MARK);
       const previous = index > 0 ? parent.get(index - 1) : null;
       if (joins && previous instanceof Y.XmlElement && previous.nodeName === PARAGRAPH)
         joinIntoPrevious(parent, index);
+      // A rejected break with no paragraph before it: its paragraph goes when nothing of it is left and a block follows.
+      else if (rejectsBreak && index === 0 && parent.length > 1 && isEmpty(node))
+        parent.delete(index, 1);
       continue;
     }
     if (!inParagraph) settleChildren(node, id, accept, false);
@@ -443,6 +478,8 @@ function plainChildren(
         for (const child of children) pushNode(previous.children, child);
         continue;
       }
+      // The first one, nothing of it left, with a node after it: gone, as rejecting it leaves it.
+      if (out.length === 0 && children.length === 0 && node.nextSibling !== null) continue;
     }
     out.push({ element: node.nodeName, attributes, children });
   }

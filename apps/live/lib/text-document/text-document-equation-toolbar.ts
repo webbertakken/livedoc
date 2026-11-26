@@ -6,7 +6,7 @@ import { debugLog } from '@/lib/debug-log';
 import { track } from '@/lib/telemetry';
 import { equationBoxOf, writeEquation } from './text-document-equation-box';
 import { equationMath } from './text-document-equations';
-import { insertEquation } from './text-document-equation-insert';
+import { enterSelectedEquation, insertEquation } from './text-document-equation-insert';
 import { startUndoStep } from './text-document-undo';
 
 /** Writes a symbol or structure from the toolbar, the writing focused again; false where nothing could be written. */
@@ -26,6 +26,7 @@ export function newEquationFromToolbar(view: EditorView): boolean {
   view.focus();
   startUndoStep(view);
   if (!insertEquation(view.state, view.dispatch)) return false;
+  enterSelectedEquation(view.state, view.dispatch);
   track('Element', 'Added', 'TextDocumentEquation');
   debugLog('[text-document] equation inserted', { from: 'toolbar' });
   return true;

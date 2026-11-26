@@ -65,6 +65,9 @@ export type OfficeAction = {
   double?: () => void;
   checked?: boolean;
   disabled?: boolean;
+  // Why a dimmed item is dimmed: a short note in its row, and the hint saying where it runs (office-shell.md "Modes").
+  note?: string;
+  hint?: string;
   label?: string;
   // A size grid's choice: the size pointed at or keyed.
   runSized?: (size: GridSize) => void;

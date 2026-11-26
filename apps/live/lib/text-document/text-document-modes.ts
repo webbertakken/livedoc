@@ -1,6 +1,7 @@
 // A text document's modes (docs/specs/034-text-documents/review.md "Editing modes"): Editing, Suggesting and Viewing,
 // in Google's order and words, on the office shell's mode switch (office-shell.md "Modes").
 import { lucideEye, lucidePencil, lucidePencilLine } from '@livedoc/icons/lucide';
+import type { OfficeActions } from '@/lib/office/office-catalogue';
 import type { OfficeModeInfo } from '@/lib/office/office-mode';
 
 export type TextDocumentMode = 'editing' | 'suggesting' | 'viewing';
@@ -16,10 +17,16 @@ export const SUGGESTING_PROPOSALS: readonly string[] = [
   'paste',
   'paste-without-formatting',
   'delete',
-  // Insert
+  // Insert: what goes in the writing, objects in a line and breaks (review.md "Objects in a line", "Breaks and lines")
   'link',
   'special-characters',
   'emoji',
+  'equation',
+  'show-equation-toolbar',
+  'horizontal-line',
+  'page-break',
+  'column-break',
+  'bookmark',
   // Format > Text, Clear formatting and the paint roller
   'bold',
   'italic',
@@ -58,6 +65,22 @@ export const SUGGESTING_PROPOSALS: readonly string[] = [
   'align',
   'line-spacing',
 ];
+
+// What writes beside the writing and cannot be suggested yet (review.md "While suggesting", "Not yet"): dimmed while
+// suggesting, for an Editor too, saying where it runs.
+export const NOT_YET_SUGGESTED: readonly string[] = ['drawing-new', 'footnote', 'header', 'footer'];
+export const NOT_YET_SUGGESTED_NOTE = 'Editing only';
+export const NOT_YET_SUGGESTED_HINT =
+  "This can't be suggested yet. An Editor changes it in Editing.";
+
+/** The not-yet items bound dimmed, with their note and hint, for the menus while suggesting. */
+export const notYetSuggestedActions = (): OfficeActions =>
+  Object.fromEntries(
+    NOT_YET_SUGGESTED.map((id) => [
+      id,
+      { run: () => {}, disabled: true, note: NOT_YET_SUGGESTED_NOTE, hint: NOT_YET_SUGGESTED_HINT },
+    ]),
+  );
 
 export const TEXT_DOCUMENT_MODES: readonly OfficeModeInfo<TextDocumentMode>[] = [
   {
