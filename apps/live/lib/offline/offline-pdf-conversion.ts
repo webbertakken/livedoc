@@ -49,7 +49,7 @@ export async function sendOfflinePdfFiles(
   const blobs = thisBrowserBlobs();
   let sent = 0;
   let held = 0;
-  for (const key of new Set(blobKeysOfRecord({ ...rec, pdfDocuments: states }))) {
+  for (const key of new Set(await blobKeysOfRecord({ ...rec, pdfDocuments: states }))) {
     const bytes = await blobs.read(key);
     if (!bytes) throw refusedSync(404, 'blob_missing');
     try {

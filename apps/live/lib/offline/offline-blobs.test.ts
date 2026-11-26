@@ -36,7 +36,7 @@ const file = async (text: string) => {
 describe('the keys This Browser documents name', () => {
   it('are each record’s PDF tabs’ files, in the local Trash too', async () => {
     const rec = testRecord({ id: 'A', tabs: [pdfTab('t1'), testTab('canvas')] });
-    expect(blobKeysOfRecord(rec)).toEqual([PDF_BLOB]);
+    expect(await blobKeysOfRecord(rec)).toEqual([PDF_BLOB]);
     await offlinePutRecord(rec);
     await offlinePutRecord(
       testRecord({ id: 'B', tabs: [pdfTab('t1', OTHER_PDF_BLOB)], trashedAt: 5 }),
@@ -46,7 +46,7 @@ describe('the keys This Browser documents name', () => {
   });
 
   // custom-stamps.md "Placing one": a custom stamp's picture is held as the document's file is.
-  it('are the pictures its PDF tabs’ marks name too', () => {
+  it('are the pictures its PDF tabs’ marks name too', async () => {
     const doc = PdfLiveChanges.load();
     PdfLiveChanges.addMark(
       doc,
@@ -69,7 +69,7 @@ describe('the keys This Browser documents name', () => {
       tabs: [pdfTab('t1')],
       pdfDocuments: [{ tabId: 't1', state, savedAt: 1 }],
     });
-    expect(blobKeysOfRecord(rec)).toEqual([PDF_BLOB, OTHER_PDF_BLOB]);
+    expect(await blobKeysOfRecord(rec)).toEqual([PDF_BLOB, OTHER_PDF_BLOB]);
   });
 });
 

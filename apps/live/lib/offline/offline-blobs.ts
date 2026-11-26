@@ -1,7 +1,6 @@
 // This browser's blob store as the offline documents use it (docs/specs/006-document/blob-store.md "This Browser"):
 // the origin private file system where a page can write it, IndexedDB where not, and never forgetting a key a This
 // Browser document names, which is asked of the offline records each time.
-import { pdfDigest, PdfLiveChanges } from '@livedoc/pdf-documents';
 import { pdfTabOf, type BlobKey } from '@livedoc/document';
 import { indexedDbBlobBytes, indexedDbBlobIndex } from '../blob-store/local-blob-indexeddb';
 import { opfsBlobBytes } from '../blob-store/local-blob-opfs';
@@ -9,19 +8,23 @@ import { localBlobStore, type LocalBlobBytes } from '../blob-store/local-blob-st
 import { localBlobs, type LocalBlobs } from '../blob-store/local-blobs';
 import { offlineBackend, type OfflineDocumentRecord } from './offline-store';
 
-/** The keys a record's PDF tabs name: each tab's file, and each picture its marks name (a custom stamp's). */
-export const blobKeysOfRecord = (
+/**
+ * The keys a record's PDF tabs name: each tab's file, and each picture its marks name (a custom stamp's), read by a
+ * module loaded only for a record holding PDF live changes.
+ */
+export async function blobKeysOfRecord(
   rec: Pick<OfflineDocumentRecord, 'tabs' | 'pdfDocuments'>,
-): BlobKey[] => [
-  ...rec.tabs.flatMap((tab) => pdfTabOf(tab)?.blob ?? []),
-  ...(rec.pdfDocuments ?? []).flatMap(
-    ({ state }) => pdfDigest(PdfLiveChanges.load([state])).blobKeys,
-  ),
-];
+): Promise<BlobKey[]> {
+  const states = rec.pdfDocuments ?? [];
+  const pictures =
+    states.length > 0 ? (await import('./offline-pdf-pictures')).pictureKeysOf(states) : [];
+  return [...rec.tabs.flatMap((tab) => pdfTabOf(tab)?.blob ?? []), ...pictures];
+}
 
 /** Every key a This Browser document names, in the local Trash too. */
 export async function offlineNamedBlobKeys(): Promise<Set<BlobKey>> {
-  return new Set((await offlineBackend().all()).flatMap(blobKeysOfRecord));
+  const records = await offlineBackend().all();
+  return new Set((await Promise.all(records.map(blobKeysOfRecord))).flat());
 }
 
 const persist = async (): Promise<boolean> => {
