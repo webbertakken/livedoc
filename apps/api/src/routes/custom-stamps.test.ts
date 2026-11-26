@@ -51,20 +51,20 @@ describe('making a custom stamp', () => {
   it('keeps it for its owner and lists it, newest first', async () => {
     const made = await make();
     expect(made.status).toBe(201);
-    const { stamp } = (await made.json()) as { stamp: { id: string; name: string } };
+    const { stamp } = await made.json<{ stamp: { id: string; name: string } }>();
     expect(stamp).toMatchObject({ id: ID, name: 'Paid', category: 'Accounts' });
     await make({ id: OTHER_ID, name: 'Due' });
-    const listed = (await (await call('GET', '/api/custom-stamps')).json()) as {
-      stamps: { id: string }[];
-    };
+    const listed = await (
+      await call('GET', '/api/custom-stamps')
+    ).json<{ stamps: { id: string }[] }>();
     expect(listed.stamps.map((s) => s.id)).toEqual([OTHER_ID, ID]);
   });
 
   it('lists nobody else’s', async () => {
     await make();
-    const listed = (await (await call('GET', '/api/custom-stamps', { owner: 'bo' })).json()) as {
-      stamps: unknown[];
-    };
+    const listed = await (
+      await call('GET', '/api/custom-stamps', { owner: 'bo' })
+    ).json<{ stamps: unknown[] }>();
     expect(listed.stamps).toEqual([]);
   });
 
@@ -142,9 +142,7 @@ describe('changing and deleting one', () => {
 
   it('deletes it', async () => {
     expect((await call('DELETE', `/api/custom-stamps/${ID}`)).status).toBe(204);
-    const listed = (await (await call('GET', '/api/custom-stamps')).json()) as {
-      stamps: unknown[];
-    };
+    const listed = await (await call('GET', '/api/custom-stamps')).json<{ stamps: unknown[] }>();
     expect(listed.stamps).toEqual([]);
   });
 

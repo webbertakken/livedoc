@@ -1,7 +1,7 @@
 # Custom stamps
 
-**Status: specified; making and placing one is built.** Manage stamps (renaming, deleting, categories) and stamp
-identity are not.
+**Status: specified; where they are kept, their api and their file form are built.** Making one in the browser,
+placing one, Manage stamps (renaming, deleting, categories) and stamp identity are not.
 
 A **custom stamp** is a person's own stamp: a picture, or a page of a PDF, given a name and a category, kept in
 LiveDoc for them, and placed on any PDF as a standard or dynamic stamp is ([Marks](marks.md#stamps)). The parity rows
@@ -76,6 +76,8 @@ are the matrix's "Stamps" ([Parity matrix](parity-matrix.md#stamps)).
   it rather than drawing one of its own ([Marks](marks.md#in-the-file)); `Contents` its name; its appearance its
   picture across `BBox`, as an image of the picture's own pixels (a JPEG's bytes as they are, a PNG's as its colours
   and its see-through as a soft mask).
+- **A bake is handed each picture its marks name**, by key; one missing, or whose bytes are not the type it says,
+  refuses the bake by name (`pictures-unavailable`), never a stamp written without its picture `(default)`.
 - **Read back**: LiveDoc's own custom stamp, while the live changes hold it, is read by its id as every mark is. A
   file's `Stamp` whose `Name` begins with `#` is a stamp LiveDoc does not draw: drawn as the file says, never selected
   ([Marks](marks.md#changing-a-mark)).
@@ -135,7 +137,8 @@ are the matrix's "Stamps" ([Parity matrix](parity-matrix.md#stamps)).
 - `Pdf · Created · CustomStamp` (one made; from a picture or a page alike), `Pdf · Added · Stamp.Custom` (one placed),
   `UI · Opened · PdfDocumentCustomStampDialog`. Never a stamp's name, category or picture.
 - `[custom-stamps] created id=<id> bytes=<n>`, `[custom-stamps] refused reason=<refusal> owner=<id>`,
-  `[custom-stamps] deleted id=<id>` in the api; `[pdf] custom-stamp-made from=<picture|svg|pdf> bytes=<n>
+  `[custom-stamps] deleted id=<id>` in the api; `[pdf] pictures-missing count=<n> unfit=<n>` in the engine (a bake
+  refused `pictures-unavailable`: a picture its marks name not handed in, or not the type it says); `[pdf] custom-stamp-made from=<picture|svg|pdf> bytes=<n>
 scaled=<bool>`, `[pdf] custom-stamp-failed reason=<reason>`, `[pdf] custom-stamp-placed held=<bool>` in the
   browser.
 
