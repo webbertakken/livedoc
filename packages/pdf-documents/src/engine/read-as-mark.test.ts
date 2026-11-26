@@ -324,7 +324,7 @@ describe('a mark another program wrote', () => {
       '<< /Type /Annot /Subtype /FreeText /Rect [100 100 300 150] /Contents (   ) /DA (/Helv 12 Tf 0 g) >>',
       '<< /Type /Annot /Subtype /Square /NM (a b) /Rect [10 10 30 30] >>',
       '<< /Type /Annot /Subtype /Ink /InkList [] >>',
-      '<< /Type /Annot /Subtype /Polygon /Rect [10 10 30 30] /Vertices [10 10 30 10 20 30] >>',
+      '<< /Type /Annot /Subtype /Polygon /Rect [10 10 30 30] /Vertices [10 10 30 10] >>',
     ]);
     expect(marks.map((mark) => mark.mark)).toEqual([null, null, null, null, null, null]);
   });

@@ -11,7 +11,9 @@ import { TypedLayout } from './typed-layout';
 /** A box's handles, named for where they sit as the box shows; a line's two ends; a Callout's tip and knee. */
 export const BOX_HANDLES = ['nw', 'n', 'ne', 'e', 'se', 's', 'sw', 'w'] as const;
 export type BoxHandle = (typeof BOX_HANDLES)[number];
-export type PointHandle = 'start' | 'end' | 'tip' | 'knee';
+/** A Polygon's, a Cloud's or Connected lines' corner, by its place in order. */
+export type CornerHandle = `corner-${number}`;
+export type PointHandle = 'start' | 'end' | 'tip' | 'knee' | CornerHandle;
 export type MarkHandle = BoxHandle | PointHandle;
 
 /** Where `n` falls in the span `from`, mapped onto the span `to`; a span of no length keeps its offset. */
@@ -35,34 +37,43 @@ function typedBox(
   return [left, top - high, left + wide, top];
 }
 
+/** The corner a handle names, by its place; null for any other handle. */
+function cornerOf(handle: MarkHandle): number | null {
+  const named = /^corner-(\d+)$/.exec(handle);
+  return named ? Number(named[1]) : null;
+}
+
 export const MarkReshape = {
   /** The handles a mark is resized by. */
   handles: (mark: Mark): readonly MarkHandle[] => {
     if (Mark.isText(mark)) return [];
     if ('line' in mark) return ['start', 'end'];
+    if ('corners' in mark)
+      return Array.from(
+        { length: mark.corners.length / 2 },
+        (_, at): CornerHandle => `corner-${at}`,
+      );
     return mark.kind === 'callout' ? [...BOX_HANDLES, 'tip', 'knee'] : BOX_HANDLES;
   },
 
   /** The box a mark's box handles size: its rect, or a Drawing's bounds; null for a line or a text mark. */
   box: (mark: Mark): Box | null => {
     if (Mark.isText(mark) || 'line' in mark) return null;
-    return mark.kind === 'drawing' ? Mark.bounds(mark) : mark.rect;
+    return mark.kind === 'drawing' || 'corners' in mark ? Mark.bounds(mark) : mark.rect;
   },
 
   /** The mark's geometry in the box given; null for a mark with no box. */
   reboxed: (mark: Mark, box: Box): MarkPlace | null => {
     const was = MarkReshape.box(mark);
     if (!was) return null;
-    if (mark.kind === 'drawing') {
-      const xs = [was[0], was[2]] as const;
-      const ys = [was[1], was[3]] as const;
-      const strokes = mark.strokes.map((stroke): Stroke =>
-        stroke.map((n, at) =>
-          at % 2 === 0 ? remap(n, xs, [box[0], box[2]]) : remap(n, ys, [box[1], box[3]]),
-        ),
+    const xs = [was[0], was[2]] as const;
+    const ys = [was[1], was[3]] as const;
+    const reboxedStroke = (stroke: Stroke): Stroke =>
+      stroke.map((n, at) =>
+        at % 2 === 0 ? remap(n, xs, [box[0], box[2]]) : remap(n, ys, [box[1], box[3]]),
       );
-      return { strokes };
-    }
+    if (mark.kind === 'drawing') return { strokes: mark.strokes.map(reboxedStroke) };
+    if ('corners' in mark) return { corners: reboxedStroke(mark.corners) };
     if (mark.kind === 'text') return { rect: typedBox(mark, box) };
     if (mark.kind === 'callout') {
       const rect = typedBox(mark, box);
@@ -88,6 +99,11 @@ export const MarkReshape = {
 
   /** Where a point handle sits in page space; null for a box handle or a handle the mark has not. */
   at: (mark: Mark, handle: MarkHandle): PagePoint | null => {
+    const corner = cornerOf(handle);
+    if (corner !== null) {
+      if (!('corners' in mark) || corner >= mark.corners.length / 2) return null;
+      return { x: mark.corners[2 * corner]!, y: mark.corners[2 * corner + 1]! };
+    }
     if ('line' in mark && (handle === 'start' || handle === 'end')) {
       const at = handle === 'start' ? 0 : 2;
       return { x: mark.line[at], y: mark.line[at + 1]! };
@@ -102,6 +118,13 @@ export const MarkReshape = {
   /** The mark's geometry with a point handle moved to `to`; null where the mark has no such handle. */
   pointed: (mark: Mark, handle: PointHandle, to: PagePoint): MarkPlace | null => {
     if (MarkReshape.at(mark, handle) === null) return null;
+    const corner = cornerOf(handle);
+    if (corner !== null && 'corners' in mark)
+      return {
+        corners: mark.corners.map((n, at) =>
+          at === 2 * corner ? to.x : at === 2 * corner + 1 ? to.y : n,
+        ),
+      };
     if ('line' in mark) {
       const [x1, y1, x2, y2] = mark.line;
       return { line: handle === 'start' ? [to.x, to.y, x2, y2] : [x1, y1, to.x, to.y] };

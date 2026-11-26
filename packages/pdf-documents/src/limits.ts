@@ -59,6 +59,10 @@ export const PDF_MARK_WIDTH_MIN_PT = 0.5;
 export const PDF_MARK_WIDTH_MAX_PT = 12;
 /** (default) A drag spanning less both ways, in points, makes no line or shape (marks.md "Limits"). Safe range: 1 to 6. */
 export const PDF_SHAPE_MIN_PT = 2;
+/** (default) Corners of one Polygon, Cloud or Connected lines (marks.md "Limits"); the last press past it ends it. */
+export const PDF_POLYGON_MAX_CORNERS = 1000;
+/** (default) A Cloud's arc across, in points, as drawn (marks.md "Limits"); safe range 6 to 24. */
+export const PDF_CLOUD_ARC_PT = 12;
 /** (default) Screen pixels from a mark's line that a press still selects it (marks.md "Limits"). Safe range: 4 to 12. */
 export const PDF_MARK_REACH_PX = 6;
 /**

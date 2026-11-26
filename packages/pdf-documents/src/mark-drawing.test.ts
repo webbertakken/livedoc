@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   PDF_ARROW_HEAD_MIN_PT,
   PDF_ARROW_HEAD_WIDTHS,
+  PDF_CLOUD_ARC_PT,
   PDF_MARK_LINE_PT,
   PDF_SQUIGGLE_STEP_PT,
 } from './limits';
@@ -410,5 +411,63 @@ describe('a line end drawn', () => {
     const [from, to] = turned.strokes[1]!.points;
     expect(from!.y).toBeCloseTo(100);
     expect(Math.abs(to!.x - from!.x)).toBeCloseTo(side);
+  });
+});
+
+// marks.md "Making a mark": a Polygon closed through its corners, a Cloud's edge of arcs bulging outward, Connected
+// lines open with their last end.
+describe('a Polygon’s, a Cloud’s and Connected lines’ drawing', () => {
+  // A square 120 points a side, drawn clockwise and anticlockwise.
+  const square = [0, 0, 120, 0, 120, 120, 0, 120];
+  const clockwise = [0, 0, 0, 120, 120, 120, 120, 0];
+
+  it('closes a Polygon through its corners, its fill inside', () => {
+    const drawing = MarkDrawing.of({ kind: 'polygon', corners: square, width: 2, fill: '#ffeeaa' });
+    expect(drawing.strokes).toHaveLength(1);
+    expect(drawing.strokes[0]).toMatchObject({ closed: true, width: 2 });
+    expect(drawing.strokes[0]!.points).toEqual([
+      { x: 0, y: 0 },
+      { x: 120, y: 0 },
+      { x: 120, y: 120 },
+      { x: 0, y: 120 },
+    ]);
+    expect(drawing.fill).toEqual({ points: drawing.strokes[0]!.points, colour: '#ffeeaa' });
+  });
+
+  it.each([
+    ['anticlockwise', square],
+    ['clockwise', clockwise],
+  ])(
+    'edges a Cloud drawn %s with whole arcs bulging outward, PDF_CLOUD_ARC_PT across',
+    (_, corners) => {
+      const [outline] = MarkDrawing.of({ kind: 'cloud', corners, width: 2 }).strokes;
+      expect(outline!.closed).toBe(true);
+      const xs = outline!.points.map((point) => point.x);
+      const ys = outline!.points.map((point) => point.y);
+      // Each side holds 10 arcs of 12 points: they bulge half an arc out past the square, never into it further.
+      expect(Math.min(...xs)).toBeCloseTo(-PDF_CLOUD_ARC_PT / 2, 0);
+      expect(Math.max(...xs)).toBeCloseTo(120 + PDF_CLOUD_ARC_PT / 2, 0);
+      expect(Math.min(...ys)).toBeCloseTo(-PDF_CLOUD_ARC_PT / 2, 0);
+      expect(Math.max(...ys)).toBeCloseTo(120 + PDF_CLOUD_ARC_PT / 2, 0);
+      const inside = outline!.points.filter(
+        (p) => p.x > 0.5 && p.x < 119.5 && p.y > 0.5 && p.y < 119.5,
+      );
+      expect(inside).toEqual([]);
+    },
+  );
+
+  it('runs Connected lines open through their corners, their last end in its look', () => {
+    const plain = MarkDrawing.of({ kind: 'polyline', corners: [0, 0, 50, 0, 50, 50], width: 2 });
+    expect(plain.strokes).toHaveLength(1);
+    expect(plain.strokes[0]).toMatchObject({ closed: false });
+    expect(plain.strokes[0]!.points).toHaveLength(3);
+    const headed = MarkDrawing.of({
+      kind: 'polyline',
+      corners: [0, 0, 50, 0, 50, 50],
+      width: 2,
+      lineEnd: 'open-arrow',
+    });
+    expect(headed.strokes).toHaveLength(2);
+    expect(headed.strokes[1]!.points[1]).toEqual({ x: 50, y: 50 });
   });
 });

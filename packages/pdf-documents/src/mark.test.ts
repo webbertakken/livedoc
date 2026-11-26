@@ -5,6 +5,7 @@ import {
   PDF_MARK_TEXT_MAX_CHARS,
   PDF_MARK_WIDTH_MAX_PT,
   PDF_MARK_WIDTH_MIN_PT,
+  PDF_POLYGON_MAX_CORNERS,
   PDF_STAMP_LINE_MAX_CHARS,
   PDF_TEXT_SIZE_MAX_PT,
   PDF_TEXT_SIZE_MIN_PT,
@@ -19,6 +20,7 @@ import {
   type LineInput,
   type Quad,
   type CalloutInput,
+  type PolyInput,
   type ShapeInput,
   type StampInput,
   type TextBoxInput,
@@ -466,5 +468,72 @@ describe('a line end', () => {
 
   it('refuses an end it does not know', () => {
     expect(Mark.parse({ ...base, kind: 'line', lineEnd: 'slash' })).toBeNull();
+  });
+});
+
+// marks.md "Making a mark": a Polygon, a Cloud and Connected lines are their corners.
+describe('a Polygon, a Cloud or Connected lines', () => {
+  const base = {
+    id: 'p1',
+    page: 'p:4',
+    width: 2,
+    colour: '#d93025',
+    opacity: 1,
+    author: 'Ada',
+    createdAt: 1_795_000_000_000,
+  };
+  const corners = [100, 600, 200, 650, 150, 700];
+  const poly = (over: Record<string, unknown> = {}) => ({ ...base, corners, ...over });
+
+  it.each(['polygon', 'cloud', 'polyline'] as const)(
+    'makes a %s of its corners, read back unchanged',
+    (kind) => {
+      const mark = Mark.poly(kind, poly() as unknown as PolyInput)!;
+      expect(mark).toEqual({ ...poly(), kind, modifiedAt: base.createdAt });
+      expect(Mark.parse(JSON.parse(JSON.stringify(mark)))).toEqual(mark);
+      expect(Mark.bounds(mark)).toEqual([100, 600, 200, 700]);
+      expect(Mark.isPoly(mark)).toBe(true);
+    },
+  );
+
+  it('keeps a Polygon’s fill and Connected lines’ last end, and neither of the other', () => {
+    expect(Mark.poly('cloud', poly({ fill: '#ffeeaa' }) as unknown as PolyInput)).toMatchObject({
+      fill: '#ffeeaa',
+    });
+    expect(
+      Mark.poly('polyline', poly({ lineEnd: 'open-arrow' }) as unknown as PolyInput),
+    ).toMatchObject({ lineEnd: 'open-arrow' });
+    expect(
+      Mark.poly('polyline', poly({ lineEnd: 'none' }) as unknown as PolyInput),
+    ).not.toHaveProperty('lineEnd');
+    expect(
+      Mark.parse({ ...poly({ fill: '#ffeeaa' }), kind: 'polyline', modifiedAt: 0 }),
+    ).toBeNull();
+    expect(
+      Mark.parse({ ...poly({ lineEnd: 'arrow' }), kind: 'polygon', modifiedAt: 0 }),
+    ).toBeNull();
+  });
+
+  it('takes Connected lines of two corners, and no Polygon of fewer than three', () => {
+    expect(
+      Mark.poly('polyline', poly({ corners: [1, 1, 50, 50] }) as unknown as PolyInput),
+    ).not.toBeNull();
+    expect(
+      Mark.poly('polygon', poly({ corners: [1, 1, 50, 50] }) as unknown as PolyInput),
+    ).toBeNull();
+  });
+
+  it.each([
+    ['no corners', { corners: undefined }],
+    ['an odd count', { corners: [1, 2, 3, 4, 5] }],
+    ['one corner', { corners: [1, 2] }],
+    ['a corner far off any page', { corners: [1e9, 2, 3, 4, 5, 6] }],
+    [
+      'too many corners',
+      { corners: Array.from({ length: 2 * (PDF_POLYGON_MAX_CORNERS + 1) }, (_, at) => at) },
+    ],
+    ['a fill that is no colour', { fill: 'red' }],
+  ])('refuses %s', (_, over) => {
+    expect(Mark.parse({ ...poly(over), kind: 'cloud', modifiedAt: 0 })).toBeNull();
   });
 });

@@ -181,3 +181,31 @@ describe('MarkReshape', () => {
     expect(MarkReshape.pointed(arrow, 'tip', { x: 1, y: 1 })).toBeNull();
   });
 });
+
+// marks.md "Changing a mark": a Polygon's, a Cloud's and Connected lines' corners are their handles.
+describe('MarkReshape, a shape of corners', () => {
+  const cloud = Mark.poly('cloud', {
+    ...BASE,
+    id: 'q',
+    corners: [10, 10, 110, 10, 60, 90],
+    width: 2,
+  })!;
+
+  it('gives a handle at each corner, and sizes its corners’ box', () => {
+    expect(MarkReshape.handles(cloud)).toEqual(['corner-0', 'corner-1', 'corner-2']);
+    expect(MarkReshape.box(cloud)).toEqual([10, 10, 110, 90]);
+    expect(MarkReshape.reboxed(cloud, [10, 10, 210, 170])).toEqual({
+      corners: [10, 10, 210, 10, 110, 170],
+    });
+  });
+
+  it('places and moves a corner alone', () => {
+    expect(MarkReshape.at(cloud, 'corner-1')).toEqual({ x: 110, y: 10 });
+    expect(MarkReshape.at(cloud, 'corner-3')).toBeNull();
+    expect(MarkReshape.at(arrow, 'corner-0')).toBeNull();
+    expect(MarkReshape.pointed(cloud, 'corner-2', { x: 70, y: 120 })).toEqual({
+      corners: [10, 10, 110, 10, 70, 120],
+    });
+    expect(MarkReshape.pointed(cloud, 'corner-9', { x: 1, y: 1 })).toBeNull();
+  });
+});
