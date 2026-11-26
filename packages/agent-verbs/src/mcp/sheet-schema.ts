@@ -357,7 +357,7 @@ const sheetChange = z.discriminatedUnion('op', [
     op: z
       .literal('validate')
       .describe(
-        'Set what a range may hold (a dropdown, a checkbox, a number, date or text rule); it replaces the rules ' +
+        'Set what a range may hold (a dropdown, a checkbox, a number, date, text or formula rule); it replaces the rules ' +
           'the range covered.',
       ),
     range: rangeArg,
@@ -366,7 +366,9 @@ const sheetChange = z.discriminatedUnion('op', [
         z.object({
           type: z
             .literal('dropdown')
-            .describe('A rule is a dropdown, dropdown_range, checkbox, number, date or text.'),
+            .describe(
+              'A rule is a dropdown, dropdown_range, checkbox, number, date, text or formula.',
+            ),
           options: z.array(z.string()).min(1).max(500).describe('The values offered, in order.'),
           colors: z
             .array(z.string().nullable())
@@ -384,7 +386,28 @@ const sheetChange = z.discriminatedUnion('op', [
           ),
           display: z.enum(['chip', 'arrow', 'plain']).optional(),
         }),
-        z.object({ type: z.literal('checkbox') }),
+        z.object({
+          type: z.literal('checkbox'),
+          checked: z
+            .union([z.string().min(1).max(255), z.number()])
+            .optional()
+            .describe('A ticked value other than TRUE ("Yes").'),
+          unchecked: z
+            .union([z.string().min(1).max(255), z.number()])
+            .optional()
+            .describe('The unticked value, with checked ("No"); without it unticked is empty.'),
+        }),
+        z.object({
+          type: z.literal('formula'),
+          formula: z
+            .string()
+            .min(1)
+            .max(1000)
+            .describe(
+              "Allows a value when this formula, written for the range's top-left cell and moved to each cell, " +
+                'answers TRUE ("=B2>A2").',
+            ),
+        }),
         z.object({
           type: z.enum(['number', 'date', 'text']),
           condition: z

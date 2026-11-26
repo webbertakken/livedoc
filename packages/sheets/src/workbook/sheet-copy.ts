@@ -21,14 +21,15 @@ export function sheetCopyOf(
   return {
     id: to.id,
     title: to.title,
-    layout: layout.formatRules
-      ? {
-          ...layout,
-          formatRules: layout.formatRules.map((rule) =>
-            rule.fx ? { ...rule, fx: carried(rule.fx) } : rule,
-          ),
-        }
-      : layout,
+    layout: {
+      ...layout,
+      ...(layout.formatRules
+        ? { formatRules: layout.formatRules.map((x) => (x.fx ? { ...x, fx: carried(x.fx) } : x)) }
+        : {}),
+      ...(layout.rules
+        ? { rules: layout.rules.map((x) => (x.fx ? { ...x, fx: carried(x.fx) } : x)) }
+        : {}),
+    },
     cells: [...sheet.cells].map(([key, cell]) => {
       const json = cellToJson(key, cell);
       return json.i ? { ...json, i: input(json.i) } : json;

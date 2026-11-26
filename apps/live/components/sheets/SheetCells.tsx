@@ -19,6 +19,7 @@ import {
   isPending,
   numberText,
   rangeOptions,
+  validationFormulaAllows,
   ruleIndex,
   rulesAt,
   validationRuleAt,
@@ -150,6 +151,7 @@ function RegionCells({ region, ...p }: CellsProps & { region: Region }) {
       if (!known) ranged.set(rule.id, (known = rangeOptions(workbook, sheet.id, rule)));
       return known;
     },
+    formulaAllows: validationFormulaAllows(workbook, sheet.id),
   };
   const hasRules = !!sheet.layout.rules?.length;
   const hasBands = !!sheet.layout.bands?.length;
@@ -217,6 +219,7 @@ function RegionCells({ region, ...p }: CellsProps & { region: Region }) {
             palette,
             ink: colours.ink,
             ctx: ruleCtx,
+            at: { r, c },
             textStyle,
           })
         : null;

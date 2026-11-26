@@ -9,7 +9,7 @@ import { cellKey, type Border, type CellFormat } from '../sheet';
 import { Workbook } from './workbook';
 import type { CardSource } from '../cards';
 import { sheetFromJson, type SheetJson } from '../sheet-json';
-import { checkboxValue, optionFor, validationRuleAt } from '../rules/validation';
+import { checkState, optionFor, validationRuleAt } from '../rules/validation';
 import { formatRuleStyle } from '../rules/format-rules';
 import { bandingFillAt } from '../rules/bandings';
 import { resolveColour, themedFormat } from '../themes/spreadsheet-theme';
@@ -158,7 +158,7 @@ export function renderWindow(
       const scalar = isArray(value) ? scalarOf(value) : value;
       let chip: { color?: string } | undefined;
       if (rule?.is === 'check') {
-        const box = checkboxValue(scalar);
+        const box = isError(scalar) ? undefined : checkState(rule, scalar);
         if (box !== undefined) shown = { text: box ? '☑' : '☐', align: 'c', kind: 'text' };
       } else if (
         (rule?.is === 'list' || rule?.is === 'range') &&

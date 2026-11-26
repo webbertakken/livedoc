@@ -3,35 +3,23 @@
 // a colour scale meets every number it covers. Worked out per drawn cell, with what is costly (a scale's numbers, a
 // custom formula moved to a cell) kept until the workbook's next recalculation.
 import { conditionMatcher } from '../filter';
-import { posRangeOf } from '../layout';
-import { shiftForCopy } from '../formula/stored';
 import { isArray, isError, scalarOf, type Value } from '../formula/values';
-import type {
-  ConditionOp,
-  FormatRule,
-  FormatStyle,
-  ScalePoint,
-  SheetLayout,
-  StoredFormula,
-} from '../sheet';
+import type { ConditionOp, FormatRule, FormatStyle, ScalePoint, SheetLayout } from '../sheet';
 import type { Workbook } from '../engine/workbook';
 import { ruleIndex, rulesAt } from './rule-index';
 import { rulePositions } from './rule-ranges';
-
-// The most custom formulas kept moved to their cells per recalculation, so a long scroll cannot grow it unbounded.
-const MOVED_KEEP_MAX = 20_000;
+import { formulaAnswerMet, movedFormula } from './moved-formula';
 
 type Cache = {
   version: number;
   scales: Map<string, number[]>;
-  moved: Map<string, StoredFormula>;
 };
 const CACHES = new WeakMap<Workbook, Cache>();
 
 function cacheOf(wb: Workbook): Cache {
   let cache = CACHES.get(wb);
   if (!cache || cache.version !== wb.version) {
-    cache = { version: wb.version, scales: new Map(), moved: new Map() };
+    cache = { version: wb.version, scales: new Map() };
     CACHES.set(wb, cache);
   }
   return cache;
@@ -148,21 +136,8 @@ function formulaMet(
   r: number,
   c: number,
 ): boolean {
-  const sheet = wb.sheet(sheetId);
-  const p = sheet && rule.fx ? posRangeOf(sheet.layout, rule) : null;
-  if (!sheet || !p || !rule.fx) return false;
-  const cache = cacheOf(wb);
-  const dr = r - p.r1;
-  const dc = c - p.c1;
-  const key = `${sheetId}|${rule.id}|${dr}|${dc}`;
-  let moved = cache.moved.get(key);
-  if (!moved) {
-    moved = dr === 0 && dc === 0 ? rule.fx : shiftForCopy(rule.fx, dr, dc, wb.ctxFor(sheetId));
-    if (cache.moved.size >= MOVED_KEEP_MAX) cache.moved.clear();
-    cache.moved.set(key, moved);
-  }
-  const v = wb.evaluateAt(sheetId, r, c, moved);
-  return v === true || (typeof v === 'number' && v !== 0);
+  const moved = movedFormula(wb, sheetId, rule, r, c, 'format');
+  return !!moved && formulaAnswerMet(wb.evaluateAt(sheetId, r, c, moved));
 }
 
 // The style the cell's first met rule draws it with, or null. `shown` is the value as its cell shows it.

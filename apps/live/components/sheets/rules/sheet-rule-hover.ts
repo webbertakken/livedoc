@@ -3,10 +3,10 @@
 import {
   cellKey,
   displayValue,
-  rangeOptions,
   ruleMessage,
   validationRuleAt,
   valueInvalid,
+  workbookRuleChecks,
 } from '@livedoc/sheets';
 import type { SheetController } from '../sheet-controller';
 
@@ -21,7 +21,9 @@ export function invalidWhy(c: SheetController, r: number, col: number): string |
   const ctx = {
     locale: c.locale,
     layout,
-    rangeValues: () => rangeOptions(c.workbook, c.sheet.id, rule),
+    ...workbookRuleChecks(c.workbook, c.sheet.id),
   };
-  return valueInvalid(rule, value, shown, ctx) ? `Invalid: ${ruleMessage(rule, ctx)}` : null;
+  return valueInvalid(rule, value, shown, ctx, { r, c: col })
+    ? `Invalid: ${ruleMessage(rule, ctx)}`
+    : null;
 }

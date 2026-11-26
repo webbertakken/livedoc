@@ -33,15 +33,8 @@ function dependentsOf(src: FrameSource, swaps: readonly Swap[]): Set<string> {
   return seen;
 }
 
-/** The value of `target` with each swapped cell read as its stand-in (the first swap of a cell wins). */
-export function workOutWith(
-  src: FrameSource,
-  reader: CellNo,
-  target: CellAt,
-  swaps: readonly Swap[],
-): Value {
-  // The target worked out as it stands first: its chain is then in the dependency graph, and the reader hears it.
-  const plain = src.cell(target.sheetId, target.r, target.c, reader);
+// Frames that read each swapped cell as its stand-in, and every formula between them and the swaps afresh.
+function swappedFrames(src: FrameSource, reader: CellNo, swaps: readonly Swap[]) {
   const affected = dependentsOf(src, swaps);
   const memo = new Map<string, Value>();
   const working = new Set<string>();
@@ -88,7 +81,39 @@ export function workOutWith(
     workOut: (t, more) => workOutWith(src, reader, t, [...more, ...swaps]),
   });
 
-  const key = keyOf(target);
-  const formula = affected.has(key) ? formulaAt(target) : null;
-  return formula ? afresh(target, key, formula) : plain;
+  // The value of a cell, afresh when the swaps can change it.
+  const valueOf = (target: CellAt, plain: Value): Value => {
+    const key = keyOf(target);
+    const formula = affected.has(key) ? formulaAt(target) : null;
+    return formula ? afresh(target, key, formula) : plain;
+  };
+  return { swappedFrame, valueOf };
+}
+
+/** The value of `target` with each swapped cell read as its stand-in (the first swap of a cell wins). */
+export function workOutWith(
+  src: FrameSource,
+  reader: CellNo,
+  target: CellAt,
+  swaps: readonly Swap[],
+): Value {
+  // The target worked out as it stands first: its chain is then in the dependency graph, and the reader hears it.
+  const plain = src.cell(target.sheetId, target.r, target.c, reader);
+  return swappedFrames(src, reader, swaps).valueOf(target, plain);
+}
+
+/** A stored formula worked out as if it sat at `at`, each swapped cell read as its stand-in (a validation rule's
+ * Custom Formula Is, data-validation.md): the formula's own reads of the swapped cells, and of every formula between
+ * them, see the stand-ins. Null when the formula does not parse. */
+export function evaluateWith(
+  src: FrameSource,
+  reader: CellNo,
+  at: CellAt,
+  stored: StoredFormula,
+  swaps: readonly Swap[],
+): Value | null {
+  const ast = storedAst(stored);
+  if (!ast) return null;
+  const frame = swappedFrames(src, reader, swaps).swappedFrame(at);
+  return deref(evaluate(ast, stored.r, frame), frame);
 }

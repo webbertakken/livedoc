@@ -57,3 +57,56 @@ test('Insert › Checkbox and Dropdown make rules the Data Validation panel list
   await page.screenshot({ path: test.info().outputPath('validation-rules.png') });
   expectNoPageErrors(pageErrors);
 });
+
+test('a Custom Formula Is rule refuses a typed value, and a custom checkbox ticks with its own value', async ({
+  page,
+  pageErrors,
+}) => {
+  test.setTimeout(120_000);
+  await page.setViewportSize({ width: 1280, height: 860 });
+  await page.goto('/new?kind=spreadsheet');
+  await page.waitForURL(/\/document\//);
+  await expect(page.locator(READY)).toBeVisible();
+
+  // B1:B5 allows only a value greater than its row's A.
+  await select(page, 'B1:B5');
+  await (await officeMenuItem(page, ['Data', 'Data Validation'])).click();
+  const panel = page.getByRole('complementary', { name: 'Data Validation Rules' });
+  await panel.getByRole('button', { name: 'Add Rule', exact: true }).click();
+  await panel.getByRole('combobox', { name: 'Criteria' }).selectOption('formula');
+  await panel.getByRole('textbox', { name: 'Formula', exact: true }).fill('=B1>A1');
+  await page.screenshot({ path: test.info().outputPath('validation-custom-formula.png') });
+  await panel.getByRole('button', { name: 'Done', exact: true }).click();
+  await expect(panel).toContainText('Custom Formula Is =B1>A1');
+
+  await select(page, 'A1');
+  await page.keyboard.type('5');
+  await page.keyboard.press('Enter');
+  await select(page, 'B1');
+  await page.keyboard.type('2');
+  await page.keyboard.press('Enter');
+  await expect(page.getByText("Enter a value that meets the rule's formula").first()).toBeVisible();
+  await page.screenshot({ path: test.info().outputPath('validation-formula-refused.png') });
+  await page.keyboard.press('Escape');
+  expect(await inputOf(page, 'B1')).toBe('');
+  await page.keyboard.type('9');
+  await page.keyboard.press('Enter');
+  expect(await inputOf(page, 'B1')).toBe('9');
+
+  // C1:C3 a checkbox ticked Yes, unticked No.
+  await select(page, 'C1:C3');
+  await panel.getByRole('button', { name: 'Add Rule', exact: true }).click();
+  await panel.getByRole('combobox', { name: 'Criteria' }).selectOption('check');
+  await panel.getByRole('checkbox', { name: 'Use Custom Cell Values' }).check();
+  await panel.getByRole('textbox', { name: 'Ticked Value', exact: true }).fill('Yes');
+  await panel.getByRole('textbox', { name: 'Unticked Value', exact: true }).fill('No');
+  await panel.getByRole('button', { name: 'Done', exact: true }).click();
+  await expect(panel).toContainText('Checkbox: Yes, No');
+  await select(page, 'C2');
+  await page.keyboard.press('Space');
+  expect(await inputOf(page, 'C2')).toBe('Yes');
+  await page.keyboard.press('Space');
+  expect(await inputOf(page, 'C2')).toBe('No');
+  await page.screenshot({ path: test.info().outputPath('validation-custom-checkbox.png') });
+  expectNoPageErrors(pageErrors);
+});

@@ -57,6 +57,20 @@ describe('sheetCopyOf', () => {
           ).f,
         } as never,
       ],
+      rules: [
+        {
+          id: 'vr1',
+          r1: budget.layout.rows[0]!,
+          c1: budget.layout.cols[0]!,
+          r2: budget.layout.rows[0]!,
+          c2: budget.layout.cols[0]!,
+          is: 'formula',
+          fx: (
+            budget.cells.get(cellKey(budget.layout.rows[0]!, budget.layout.cols[2]!))!
+              .input as never as { f: never }
+          ).f,
+        },
+      ],
     };
     return sheets;
   };
@@ -83,6 +97,7 @@ describe('sheetCopyOf', () => {
     expect(text).toEqual([{ n: 2 }, '=A1*2', '=Costs!A1+1', '=SUM(Costs!A1:A2)']);
     const rule = copy.layout.formatRules![0]!;
     expect(rule.fx!.r[0]).toMatchObject({ st: 'Costs', p: [0, 0, -1, -1] });
+    expect(copy.layout.rules![0]!.fx!.r[0]).toMatchObject({ st: 'Costs' });
   });
 
   it('reads a reference to a sheet gone as #REF!, and leaves a sheet with no other sheet named as it is', () => {

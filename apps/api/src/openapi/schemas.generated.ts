@@ -18377,7 +18377,8 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
       "check",
       "num",
       "date",
-      "text"
+      "text",
+      "formula"
     ],
     "type": "string"
   },
@@ -18399,6 +18400,9 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
       "c2": {
         "type": "string"
       },
+      "fx": {
+        "$ref": "#/components/schemas/StoredFormula"
+      },
       "help": {
         "type": "string"
       },
@@ -18407,6 +18411,18 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
       },
       "is": {
         "$ref": "#/components/schemas/ValidationKind"
+      },
+      "off": {
+        "type": [
+          "string",
+          "number"
+        ]
+      },
+      "on": {
+        "type": [
+          "string",
+          "number"
+        ]
       },
       "op": {
         "anyOf": [

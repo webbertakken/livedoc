@@ -125,6 +125,55 @@ describe('validation rules for agents', () => {
     expect(run({ op: 'clear_validation', range: 'A1:E5' }).ok).toBe(true);
     expect(rulesRead(wb, id).validation.map((r) => r.range)).toEqual(['F1']);
   });
+  it('makes custom checkboxes and custom formula rules, checked as the editor checks them', () => {
+    const { wb, id, run } = book();
+    expect(
+      run({
+        op: 'validate',
+        range: 'A1:A5',
+        rule: { type: 'checkbox', checked: 'Yes', unchecked: 'No' },
+      }).ok,
+    ).toBe(true);
+    expect(run({ op: 'set', at: 'A1', rows: [['yes']] }).ok).toBe(true);
+    expect(wb.value(id, 0, 0)).toBe('Yes');
+    expect(run({ op: 'set', at: 'A2', rows: [['TRUE']] })).toMatchObject({
+      ok: false,
+      code: 'value_invalid',
+    });
+    expect(
+      run({ op: 'validate', range: 'C1:C5', rule: { type: 'formula', formula: 'C1>B1' } }),
+    ).toMatchObject({ ok: true, line: 'made C1:C5 a formula rule' });
+    expect(run({ op: 'set', at: 'B1', rows: [[5]] }).ok).toBe(true);
+    const refused = run({ op: 'set', at: 'C1', rows: [[2]] });
+    expect(!refused.ok && refused.message).toMatch(/meets the rule's formula/);
+    expect(run({ op: 'set', at: 'C1', rows: [[9]] }).ok).toBe(true);
+    expect(rulesRead(wb, id).validation).toEqual([
+      expect.objectContaining({
+        range: 'A1:A5',
+        type: 'checkbox',
+        checked: 'Yes',
+        unchecked: 'No',
+      }),
+      expect.objectContaining({ range: 'C1:C5', type: 'formula', formula: '=C1>B1' }),
+    ]);
+    const code = (c: SheetChange) => {
+      const r = run(c);
+      return r.ok ? null : r.code;
+    };
+    expect(code({ op: 'validate', range: 'A1', rule: { type: 'checkbox', unchecked: 'No' } })).toBe(
+      'rule_invalid',
+    );
+    expect(
+      code({
+        op: 'validate',
+        range: 'A1',
+        rule: { type: 'checkbox', checked: 'a', unchecked: 'A' },
+      }),
+    ).toBe('rule_invalid');
+    expect(code({ op: 'validate', range: 'A1', rule: { type: 'formula', formula: '=(' } })).toBe(
+      'formula_invalid',
+    );
+  });
   it('refuses what cannot be a rule', () => {
     const { run } = book();
     const code = (c: SheetChange) => {

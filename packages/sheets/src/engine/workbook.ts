@@ -43,6 +43,8 @@ import { Dependencies } from './dependencies';
 import { evaluate } from './evaluate';
 import { deref } from '../formula/fn';
 import { cellFrame, type FrameSource } from './cell-frame';
+import { evaluateWith } from './what-if';
+import type { Swap } from './frame';
 import {
   isRef,
   type CellAt,
@@ -408,6 +410,25 @@ export class Workbook {
     return this.evaluateNodeAt(sheetId, r, c, ast, stored.r);
   }
 
+  // A stored formula worked out as if it sat in (r, c) with some cells read as stand-ins, keeping no value and no
+  // dependency: a validation rule's Custom Formula Is checking a value before it is written (data-validation.md).
+  evaluateWith(
+    sheetId: string,
+    r: number,
+    c: number,
+    stored: StoredFormula,
+    swaps: readonly Swap[],
+  ): Value {
+    // Worked out as it stands first, so the cells between it and the swaps are in the dependency graph.
+    const plain = this.evaluateAt(sheetId, r, c, stored);
+    if (!swaps.length) return plain;
+    return this.readAside(() =>
+      scalarCell(
+        evaluateWith(this.frameSource, NO_CELL, { sheetId, r, c }, stored, swaps) ?? err('#ERROR!'),
+      ),
+    );
+  }
+
   // The cells a reference formula names, worked out as if it sat at the sheet's top left, keeping nothing: the
   // range IMPORTRANGE reads of a source (docs/specs/029-sheets/formulas.md "Other workbooks"). Null when it names none.
   rangeOf(sheetId: string, stored: StoredFormula): RangeRef | null {
@@ -481,17 +502,25 @@ export class Workbook {
     refs: StoredFormula['r'],
     hooks: DrawHooks = {},
   ): Value {
+    return this.readAside(() => {
+      const frame = cellFrame(this.frameSource, NO_CELL, sheetId, r, c);
+      const { answer, ...drawing } = hooks;
+      Object.assign(frame, drawing);
+      const raw = evaluate(ast, refs, frame);
+      answer?.(raw);
+      return scalarCell(deref(raw, frame));
+    });
+  }
+
+  // A read on no cell's behalf (NO_CELL its reader): what it notes is forgotten as it ends; a loop too deep to follow
+  // is settled and the read run again.
+  private readAside(run: () => Value): Value {
     for (;;) {
       try {
         if (this.depth === 0) this.startRead();
         this.depth++;
         try {
-          const frame = cellFrame(this.frameSource, NO_CELL, sheetId, r, c);
-          const { answer, ...drawing } = hooks;
-          Object.assign(frame, drawing);
-          const raw = evaluate(ast, refs, frame);
-          answer?.(raw);
-          return scalarCell(deref(raw, frame));
+          return run();
         } finally {
           this.depth--;
           this.deps.clear(NO_CELL);

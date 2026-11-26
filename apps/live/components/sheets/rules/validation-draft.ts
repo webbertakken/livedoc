@@ -3,6 +3,9 @@
 // draft as a rule's settings or why it cannot be one. Shared by the Plan Sheet's popover and the spreadsheet's panel.
 import {
   DROPDOWN_OPTIONS_MAX,
+  compileTypedFormula,
+  customValue,
+  formulaAsTyped,
   DROPDOWN_OPTION_MAX,
   VALIDATION_HELP_MAX,
   cellKey,
@@ -15,6 +18,7 @@ import {
   serialFromIso,
   type GridRange,
   type RuleSettings,
+  type StoredFormula,
   type ValidationKind,
   type ValidationRule,
 } from '@livedoc/sheets';
@@ -39,6 +43,7 @@ export const KINDS: { id: ValidationKind; label: string }[] = [
   { id: 'num', label: 'Number' },
   { id: 'date', label: 'Date' },
   { id: 'text', label: 'Text' },
+  { id: 'formula', label: 'Custom Formula Is' },
 ];
 export const OPS: Record<
   'num' | 'date' | 'text',
@@ -90,7 +95,33 @@ export type Draft = {
   b: string;
   warn: boolean;
   help: string;
+  // A Checkbox's Use Custom Cell Values, and its ticked and unticked values as typed.
+  custom: boolean;
+  on: string;
+  off: string;
+  // A Custom Formula Is rule's formula as typed, for the range's top-left cell.
+  fx: string;
 };
+
+// What reading a draft needs: the person's locale, a range's ids on the sheet, and a formula compiled for the
+// range's top-left cell (null when it cannot be read).
+export type DraftEnv = {
+  locale: string;
+  rangeIds: (g: GridRange) => ValidationRule['src'] | null;
+  compile: (text: string) => StoredFormula | null;
+};
+
+// The draft env of the open sheet.
+export function draftEnv(c: SheetController, rangeIds: DraftEnv['rangeIds']): DraftEnv {
+  return {
+    locale: c.locale,
+    rangeIds,
+    compile: (text) => {
+      const made = compileTypedFormula(text, c.locale, c.workbook.ctxFor(c.sheet.id));
+      return made.ok ? made.formula : null;
+    },
+  };
+}
 
 let optionKey = 0;
 export const nextKey = () => ++optionKey;
@@ -152,6 +183,10 @@ export function draftOf(
       b: '',
       warn: false,
       help: '',
+      custom: false,
+      on: '',
+      off: '',
+      fx: '=',
     };
   }
   const asText = (v: number | string | undefined) =>
@@ -171,22 +206,43 @@ export function draftOf(
     b: asText(rule.b),
     warn: !!rule.warn,
     help: rule.help ?? '',
+    custom: rule.on !== undefined,
+    on: rule.on === undefined ? '' : String(rule.on),
+    off: rule.off === undefined ? '' : String(rule.off),
+    fx: rule.fx ? formulaAsTyped(rule.fx, c.workbook.ctxFor(c.sheet.id), c.locale) : '=',
   };
 }
 
 // The draft as a rule's settings, or why it cannot be one.
 export function settingsOf(
   d: Draft,
-  locale: string,
-  rangeIds: (g: GridRange) => ValidationRule['src'] | null,
+  env: DraftEnv,
 ): { ok: true; settings: RuleSettings } | { ok: false; why: string } {
+  const { locale, rangeIds } = env;
   const extra = {
     ...(d.warn ? { warn: true as const } : {}),
     ...(d.help.trim() ? { help: d.help.trim().slice(0, VALIDATION_HELP_MAX) } : {}),
   };
   switch (d.is) {
-    case 'check':
-      return { ok: true, settings: { is: 'check', ...extra } };
+    case 'check': {
+      if (!d.custom) return { ok: true, settings: { is: 'check', ...extra } };
+      const on = customValue(d.on);
+      const off = d.off.trim() ? customValue(d.off) : undefined;
+      if (on === '') return { ok: false, why: 'Enter a ticked value' };
+      if (off !== undefined && String(on).toLowerCase() === String(off).toLowerCase())
+        return { ok: false, why: 'Ticked and unticked values must be different' };
+      return {
+        ok: true,
+        settings: { is: 'check', on, ...(off === undefined ? {} : { off }), ...extra },
+      };
+    }
+    case 'formula': {
+      const text = d.fx.trim();
+      const fx =
+        text && text !== '=' ? env.compile(text.startsWith('=') ? text : `=${text}`) : null;
+      if (!fx) return { ok: false, why: "That formula can't be read" };
+      return { ok: true, settings: { is: 'formula', fx, ...extra } };
+    }
     case 'list': {
       const opts = d.opts.map((o) => ({ v: o.v.trim(), c: o.c })).filter((o) => o.v);
       if (!opts.length) return { ok: false, why: 'Add at least one option' };

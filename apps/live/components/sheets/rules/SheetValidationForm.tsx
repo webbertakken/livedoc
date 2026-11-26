@@ -9,6 +9,7 @@ import { Button, Select, TextInput, DateInput } from '@livedoc/ui';
 import {
   DROPDOWN_OPTIONS_MAX,
   DROPDOWN_OPTION_MAX,
+  FORMAT_RULE_FORMULA_MAX,
   VALIDATION_HELP_MAX,
   parseRangeText,
   type ValidationKind,
@@ -25,6 +26,7 @@ import {
   OPTION_COLOURS,
   OPTION_GROUPS,
   SHOWS,
+  draftEnv,
   draftOf,
   nextKey,
   settingsOf,
@@ -70,7 +72,10 @@ export function SheetValidationForm({
     const g = parseRangeText(d.range);
     if (!g || g.r2 >= c.sheet.layout.rows.length || g.c2 >= c.sheet.layout.cols.length)
       return setWhy('Type a range like B2:B20');
-    const made = settingsOf(d, c.locale, (x) => actions.rangeIds(x));
+    const made = settingsOf(
+      d,
+      draftEnv(c, (x) => actions.rangeIds(x)),
+    );
     if (!made.ok) return setWhy(made.why);
     if (actions.setValidation(g, made.settings, existing?.id)) onClose();
   };
@@ -184,6 +189,53 @@ export function SheetValidationForm({
             Add Another Option
           </Button>
         </div>
+      ) : null}
+      {d.is === 'check' ? (
+        <div className="flex flex-col gap-2">
+          <label className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              className="size-4 accent-current"
+              checked={d.custom}
+              onChange={(e) => set({ custom: e.target.checked })}
+            />
+            <span>Use Custom Cell Values</span>
+          </label>
+          {d.custom ? (
+            <>
+              <label className="flex flex-col gap-1">
+                <span className={label}>Ticked Value</span>
+                <TextInput
+                  maxLength={DROPDOWN_OPTION_MAX}
+                  value={d.on}
+                  placeholder="Yes"
+                  onChange={(e) => set({ on: e.target.value })}
+                />
+              </label>
+              <label className="flex flex-col gap-1">
+                <span className={label}>Unticked Value</span>
+                <TextInput
+                  maxLength={DROPDOWN_OPTION_MAX}
+                  value={d.off}
+                  placeholder="Optional"
+                  onChange={(e) => set({ off: e.target.value })}
+                />
+              </label>
+            </>
+          ) : null}
+        </div>
+      ) : null}
+      {d.is === 'formula' ? (
+        <label className="flex flex-col gap-1">
+          <span className={label}>Formula</span>
+          <TextInput
+            className="font-mono"
+            maxLength={FORMAT_RULE_FORMULA_MAX}
+            value={d.fx}
+            placeholder="=B2>A2"
+            onChange={(e) => set({ fx: e.target.value })}
+          />
+        </label>
       ) : null}
       {d.is === 'range' ? (
         <label className="flex flex-col gap-1">

@@ -25,9 +25,15 @@ export const NO_FORMAT_RULES =
 export const NO_VALIDATION_RULES_READ = 'No validation rules.';
 export const NO_FORMAT_RULES_READ = 'No format rules.';
 
-// A validation rule's short line: "Dropdown: To Do, Doing, Done", "Checkbox", "Number between 1 and 10".
+// A validation rule's short line: "Dropdown: To Do, Doing, Done", "Checkbox", "Checkbox: Yes, No", "Number between 1
+// and 10", "Custom Formula Is =B2>A2".
 export function validationRuleShortLine(rule: ValidationRule, c: SheetController): string {
-  if (rule.is === 'check') return 'Checkbox';
+  if (rule.is === 'check')
+    return rule.on === undefined
+      ? 'Checkbox'
+      : `Checkbox: ${[rule.on, rule.off].filter((v) => v !== undefined).join(', ')}`;
+  if (rule.is === 'formula')
+    return `Custom Formula Is ${rule.fx ? formulaAsTyped(rule.fx, c.workbook.ctxFor(c.sheet.id), c.locale) : ''}`.trim();
   if (rule.is === 'list') return `Dropdown: ${(rule.opts ?? []).map((o) => o.v).join(', ')}`;
   const line = ruleLine(rule, { locale: c.locale, layout: c.sheet.layout });
   // "Enter a number between 1 and 10" → "Number between 1 and 10".

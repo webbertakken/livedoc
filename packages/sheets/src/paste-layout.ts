@@ -127,18 +127,19 @@ export function pasteClipLayout(
       const [id] = makeAxisIds(1, rand, taken);
       taken.add(id!);
       const where = { id: id!, ...box };
+      // A custom formula is written for its rule's top-left cell: moved as far as that corner lands from it.
+      const dr = at.r - clip.from.r + corner.dr + place.i1 - first.i1;
+      const dc = at.c - clip.from.c + corner.dc + place.j1 - first.j1;
+      const fx = rule.fx ? { fx: shiftForCopy(rule.fx, dr, dc, from, to) } : {};
       if (mode === 'formatRules') {
         const f = rule as ClipRule<FormatRule>['rule'];
         const also = rest.length ? { also: rest.map((x) => x.box) } : {};
-        const dr = at.r - clip.from.r + corner.dr + place.i1 - first.i1;
-        const dc = at.c - clip.from.c + corner.dc + place.j1 - first.j1;
-        const fx = f.fx ? { fx: shiftForCopy(f.fx, dr, dc, from, to) } : {};
         changes.push({ k: 'frule', id: id!, rule: { ...f, ...fx, ...where, ...also } });
       } else {
         changes.push({
           k: 'vrule',
           id: id!,
-          rule: { ...(rule as ClipRule<ValidationRule>['rule']), ...where },
+          rule: { ...(rule as ClipRule<ValidationRule>['rule']), ...fx, ...where },
         });
       }
     }

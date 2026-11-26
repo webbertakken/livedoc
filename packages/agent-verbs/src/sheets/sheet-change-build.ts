@@ -19,7 +19,7 @@ import {
   writeRows,
   formatA1,
   layoutIndex,
-  rangeOptions,
+  workbookRuleChecks,
   splitCellKey,
   validateWrite,
   writeForRules,
@@ -207,9 +207,11 @@ export function buildSheetChange(
           : badRange(change.at);
       // A value a Reject rule refuses is refused here, naming the cell and what its rule allows (data-validation.md
       // "Agents"); the api would refuse it too.
-      const check = validateWrite(sheet, writeForRules(sheet.layout, made.write), {
-        rangeValues: (rule) => rangeOptions(wb, sheetId, rule),
-      });
+      const check = validateWrite(
+        sheet,
+        writeForRules(sheet.layout, made.write),
+        workbookRuleChecks(wb, sheetId),
+      );
       if (!check.ok && check.error === 'value_invalid') {
         const ix = layoutIndex(sheet.layout);
         // A refused value always names its cell, on this sheet.

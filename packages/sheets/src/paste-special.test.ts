@@ -229,6 +229,29 @@ describe('Paste Special, the layout', () => {
     expect(pasteClipLayout(t.b.wb, t.id, { r: 10, c: 0 }, clip, 'validation')).toBeNull();
   });
 
+  it('Data Validation Only moves a custom formula to the pasted corner', () => {
+    const t = setup({});
+    const L = t.layout();
+    const fx = compileFormula('=$B1>10', t.b.wb.ctxFor(t.id));
+    if (!fx.ok) throw new Error('compile');
+    const rule: ValidationRule = {
+      id: 'rule06',
+      r1: L.rows[0]!,
+      c1: L.cols[0]!,
+      r2: L.rows[3]!,
+      c2: L.cols[0]!,
+      is: 'formula',
+      fx: fx.formula,
+    };
+    t.apply({ kind: 'layout', changes: [{ k: 'vrule', id: rule.id, rule }] });
+    const clip = clipFromRange(t.b.wb, t.id, { r1: 2, c1: 0, r2: 3, c2: 0 })!;
+    t.apply(
+      pasteClipLayout(t.b.wb, t.id, { r: 5, c: 2 }, clip, 'validation', seeded())!.edits[0]!.write,
+    );
+    const pasted = t.layout().rules!.at(-1)!;
+    expect(inputAsText({ f: pasted.fx! }, t.b.wb.ctxFor(t.id), 'en-GB')).toBe('=$B6>10');
+  });
+
   it('pastes nothing from a clip that holds none, or past the grid, or to no sheet', () => {
     const t = setup({ A1: '1' });
     const clip = clipFromRange(t.b.wb, t.id, { r1: 0, c1: 0, r2: 0, c2: 0 })!;

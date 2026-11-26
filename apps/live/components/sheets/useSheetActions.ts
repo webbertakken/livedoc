@@ -61,7 +61,7 @@ import {
   type SortKey,
   shiftCells,
   type ShiftMode,
-  rangeOptions,
+  workbookRuleChecks,
   validateWrite,
   writeForRules,
   type SheetWrite,
@@ -111,7 +111,7 @@ function ruleRefusal(c: SheetController, write: SheetWrite): string | null {
   if (!layout.rules?.length) return null;
   const check = validateWrite(c.sheet, writeForRules(layout, write), {
     locale: c.locale,
-    rangeValues: (rule) => rangeOptions(c.workbook, c.sheet.id, rule),
+    ...workbookRuleChecks(c.workbook, c.sheet.id),
   });
   return !check.ok && check.error === 'value_invalid' ? (check.line ?? null) : null;
 }

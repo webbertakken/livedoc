@@ -27,7 +27,13 @@ import {
 import { isFormatRule, isValidationRule } from './rules/rule-shape';
 import { bandingOverlaps, isBanding } from './rules/bandings';
 import { isSheetObject, SHEET_OBJECTS_MAX } from './objects/sheet-objects';
-import { inputAllowed, ruleMessage, validationRuleAt, type RangeValues } from './rules/validation';
+import {
+  inputAllowed,
+  ruleMessage,
+  validationRuleAt,
+  type FormulaAllows,
+  type RangeValues,
+} from './rules/validation';
 import { layoutIndex } from './layout';
 import { posRangeOf } from './layout';
 import { applySheetWrite, type CellChange, type SheetWrite } from './store';
@@ -322,7 +328,7 @@ function layoutChangeProblem(ch: LayoutChange, layout: SheetLayout): Validation 
     case 'vrule':
       return typeof ch.id === 'string' &&
         isAxisId(ch.id) &&
-        (ch.rule === null || isValidationRule(ch.rule, ch.id, layout))
+        (ch.rule === null || isValidationRule(ch.rule, ch.id, layout, refsOk))
         ? OK
         : no('write_invalid');
     case 'frule':
@@ -414,12 +420,14 @@ const refsOk = (refs: unknown[]) => refs.every(isStoredRef);
 
 // Options for checking a write against the sheet's validation rules (data-validation.md "Where values are checked"):
 // `checkRules` false for an undo, a redo and the writes stored as they are; `rangeValues` from the editor, which can
-// work a Dropdown from a Range's options out (the api cannot, so it skips those rules). `limits`: the sheet's kind's
+// work a Dropdown from a Range's options out, and `formulaAllows` a Custom Formula Is rule's answer (the api can do
+// neither, so it skips those rules). `limits`: the sheet's kind's
 // (SheetLimits), a Plan Sheet's by default.
 export type WriteCheck = {
   checkRules?: boolean;
   locale?: string;
   rangeValues?: RangeValues;
+  formulaAllows?: FormulaAllows;
   limits?: SheetLimits;
 };
 
@@ -428,7 +436,12 @@ function rulesProblem(after: Sheet, write: SheetWrite, opts: WriteCheck): Valida
   if (write.kind === 'title' || !after.layout.rules?.length) return OK;
   const layout = after.layout;
   const ix = layoutIndex(layout);
-  const ctx = { locale: opts.locale ?? 'en-GB', layout, rangeValues: opts.rangeValues };
+  const ctx = {
+    locale: opts.locale ?? 'en-GB',
+    layout,
+    rangeValues: opts.rangeValues,
+    formulaAllows: opts.formulaAllows,
+  };
   for (const ch of write.cells ?? []) {
     if (!ch.i) continue;
     const r = ix.rowPos.get(ch.r);
@@ -436,7 +449,7 @@ function rulesProblem(after: Sheet, write: SheetWrite, opts: WriteCheck): Valida
     if (r === undefined || c === undefined) continue;
     const rule = validationRuleAt(layout, r, c);
     if (!rule || rule.warn) continue;
-    if (!inputAllowed(rule, ch.i, ctx))
+    if (!inputAllowed(rule, ch.i, ctx, { r, c }))
       return {
         ok: false,
         error: 'value_invalid',
@@ -553,7 +566,7 @@ export function validateSheetCreate(
     (layout.rules !== undefined &&
       (!Array.isArray(layout.rules) ||
         !layout.rules.every((x) =>
-          isValidationRule(x, (x as { id?: string })?.id ?? '', layout),
+          isValidationRule(x, (x as { id?: string })?.id ?? '', layout, refsOk),
         ))) ||
     (layout.formatRules !== undefined &&
       (!Array.isArray(layout.formatRules) ||

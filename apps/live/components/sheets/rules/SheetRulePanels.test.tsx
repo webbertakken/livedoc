@@ -115,6 +115,50 @@ describe('the Data Validation editor', () => {
   });
 });
 
+describe('the new criteria in the editor', () => {
+  it('writes a checkbox with custom cell values, and opens it again with them', async () => {
+    const { h, anchor, actions } = await open();
+    act(() => h.select('C2:C4'));
+    act(() => actions().openValidation(anchor, { start: 'list' }));
+    let dialog = await screen.findByRole('dialog', { name: 'Data Validation' });
+    fireEvent.change(within(dialog).getByLabelText('Criteria'), { target: { value: 'check' } });
+    expect(within(dialog).queryByLabelText('Ticked Value')).toBeNull();
+    fireEvent.click(within(dialog).getByLabelText('Use Custom Cell Values'));
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Done' }));
+    expect(within(dialog).getByRole('alert').textContent).toBe('Enter a ticked value');
+    fireEvent.change(within(dialog).getByLabelText('Ticked Value'), { target: { value: 'Yes' } });
+    fireEvent.change(within(dialog).getByLabelText('Unticked Value'), { target: { value: 'No' } });
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Done' }));
+    expect(rules(h)[0]).toMatchObject({ is: 'check', on: 'Yes', off: 'No' });
+    act(() => h.select('C3'));
+    act(() => actions().openValidation(anchor));
+    dialog = await screen.findByRole('dialog', { name: 'Data Validation' });
+    expect(within(dialog).getByLabelText<HTMLInputElement>('Use Custom Cell Values').checked).toBe(
+      true,
+    );
+    expect(within(dialog).getByLabelText<HTMLInputElement>('Unticked Value').value).toBe('No');
+    expect(screen.getByText('Checkbox: Yes, No')).toBeTruthy();
+  });
+  it('writes a custom formula for the range top-left cell, and says when it cannot be read', async () => {
+    const { h, anchor, actions } = await open();
+    act(() => h.select('B2:B6'));
+    act(() => actions().openValidation(anchor, { start: 'list' }));
+    let dialog = await screen.findByRole('dialog', { name: 'Data Validation' });
+    fireEvent.change(within(dialog).getByLabelText('Criteria'), { target: { value: 'formula' } });
+    fireEvent.change(within(dialog).getByLabelText('Formula'), { target: { value: '=SUM(' } });
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Done' }));
+    expect(within(dialog).getByRole('alert').textContent).toBe("That formula can't be read");
+    fireEvent.change(within(dialog).getByLabelText('Formula'), { target: { value: '=B2>A2' } });
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Done' }));
+    expect(rules(h)[0]).toMatchObject({ is: 'formula' });
+    act(() => h.select('B4'));
+    act(() => actions().openValidation(anchor));
+    dialog = await screen.findByRole('dialog', { name: 'Data Validation' });
+    expect(within(dialog).getByLabelText<HTMLInputElement>('Formula').value).toBe('=B2>A2');
+    expect(screen.getByText('Custom Formula Is =B2>A2')).toBeTruthy();
+  });
+});
+
 describe('a rule draft as settings', () => {
   const ids = () => ({ r1: 'r1', c1: 'c1', r2: 'r1', c2: 'c1' });
   const d = {
@@ -128,9 +172,47 @@ describe('a rule draft as settings', () => {
     b: '',
     warn: false,
     help: '',
+    custom: false,
+    on: '',
+    off: '',
+    fx: '=',
   };
+  const STORED = { t: '=@0>0', r: [{ r1: 'r1', c1: 'c1' }] };
+  const compile = (text: string) => (text === '=A1>0' ? STORED : null);
+  const env = { locale: 'en-GB', rangeIds: ids, compile };
+  it('reads custom checkbox values and a custom formula, and refuses what cannot be one', () => {
+    const check = { ...d, is: 'check' as const, custom: true };
+    expect(settingsOf({ ...check, on: ' Yes ', off: 'No' }, env)).toEqual({
+      ok: true,
+      settings: { is: 'check', on: 'Yes', off: 'No' },
+    });
+    expect(settingsOf({ ...check, on: '1' }, env)).toEqual({
+      ok: true,
+      settings: { is: 'check', on: 1 },
+    });
+    expect(settingsOf({ ...check, on: ' ' }, env)).toEqual({
+      ok: false,
+      why: 'Enter a ticked value',
+    });
+    expect(settingsOf({ ...check, on: 'a', off: 'A' }, env)).toEqual({
+      ok: false,
+      why: 'Ticked and unticked values must be different',
+    });
+    expect(settingsOf({ ...check, custom: false, on: 'Yes' }, env)).toEqual({
+      ok: true,
+      settings: { is: 'check' },
+    });
+    expect(settingsOf({ ...d, is: 'formula', fx: 'A1>0' }, env)).toEqual({
+      ok: true,
+      settings: { is: 'formula', fx: STORED },
+    });
+    expect(settingsOf({ ...d, is: 'formula', fx: '=' }, env)).toEqual({
+      ok: false,
+      why: "That formula can't be read",
+    });
+  });
   it('reads each kind, and refuses what cannot be one', () => {
-    expect(settingsOf({ ...d, is: 'check' }, 'en-GB', ids)).toEqual({
+    expect(settingsOf({ ...d, is: 'check' }, env)).toEqual({
       ok: true,
       settings: { is: 'check' },
     });
@@ -143,52 +225,50 @@ describe('a rule draft as settings', () => {
             { key: 2, v: 'a' },
           ],
         },
-        'en-GB',
-        ids,
+        env,
       ),
     ).toEqual({ ok: false, why: 'Each option must be different' });
     expect(
-      settingsOf({ ...d, opts: [{ key: 1, v: 'A', c: '#ff0000' }], show: 'arrow' }, 'en-GB', ids),
+      settingsOf({ ...d, opts: [{ key: 1, v: 'A', c: '#ff0000' }], show: 'arrow' }, env),
     ).toEqual({
       ok: true,
       settings: { is: 'list', opts: [{ v: 'A', c: '#ff0000' }], show: 'arrow' },
     });
-    expect(settingsOf({ ...d, is: 'range', src: 'A1:A3' }, 'en-GB', ids)).toMatchObject({
+    expect(settingsOf({ ...d, is: 'range', src: 'A1:A3' }, env)).toMatchObject({
       ok: true,
       settings: { is: 'range' },
     });
-    expect(settingsOf({ ...d, is: 'range', src: '' }, 'en-GB', () => null)).toMatchObject({
+    expect(
+      settingsOf({ ...d, is: 'range', src: '' }, { ...env, rangeIds: () => null }),
+    ).toMatchObject({
       ok: false,
     });
-    expect(
-      settingsOf({ ...d, is: 'date', op: 'after', a: '2026-10-01' }, 'en-GB', ids),
-    ).toMatchObject({ ok: true, settings: { is: 'date', op: 'after' } });
-    expect(settingsOf({ ...d, is: 'date', op: 'after', a: '' }, 'en-GB', ids)).toEqual({
+    expect(settingsOf({ ...d, is: 'date', op: 'after', a: '2026-10-01' }, env)).toMatchObject({
+      ok: true,
+      settings: { is: 'date', op: 'after' },
+    });
+    expect(settingsOf({ ...d, is: 'date', op: 'after', a: '' }, env)).toEqual({
       ok: false,
       why: 'Enter a date',
     });
-    expect(settingsOf({ ...d, is: 'date', op: 'valid' }, 'en-GB', ids)).toEqual({
+    expect(settingsOf({ ...d, is: 'date', op: 'valid' }, env)).toEqual({
       ok: true,
       settings: { is: 'date', op: 'valid' },
     });
-    expect(settingsOf({ ...d, is: 'num', op: 'gt', a: 'x' }, 'en-GB', ids)).toEqual({
+    expect(settingsOf({ ...d, is: 'num', op: 'gt', a: 'x' }, env)).toEqual({
       ok: false,
       why: 'Enter a number',
     });
-    expect(settingsOf({ ...d, is: 'text', op: 'email' }, 'en-GB', ids)).toEqual({
+    expect(settingsOf({ ...d, is: 'text', op: 'email' }, env)).toEqual({
       ok: true,
       settings: { is: 'text', op: 'email' },
     });
-    expect(settingsOf({ ...d, is: 'text', op: 'contains', a: ' ' }, 'en-GB', ids)).toEqual({
+    expect(settingsOf({ ...d, is: 'text', op: 'contains', a: ' ' }, env)).toEqual({
       ok: false,
       why: 'Enter a value',
     });
     expect(
-      settingsOf(
-        { ...d, is: 'text', op: 'contains', a: 'ref', help: ' Say ', warn: true },
-        'en-GB',
-        ids,
-      ),
+      settingsOf({ ...d, is: 'text', op: 'contains', a: 'ref', help: ' Say ', warn: true }, env),
     ).toEqual({
       ok: true,
       settings: { is: 'text', op: 'contains', a: 'ref', warn: true, help: 'Say' },
