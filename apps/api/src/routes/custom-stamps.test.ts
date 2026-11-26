@@ -204,3 +204,72 @@ describe('reading a custom stamp’s picture', () => {
     expect((await call('DELETE', `/api/custom-stamps/${ID}/picture`)).status).toBe(404);
   });
 });
+
+// custom-stamps.md "Managing them": a category renamed or deleted as one request, the owner's alone.
+describe('a category of custom stamps', () => {
+  const THIRD = 'custom-2b7c3c2e-5a8f-4f21-9a43-1f2d3e4c5b6a';
+  beforeEach(async () => {
+    await make();
+    await make({ id: OTHER_ID, name: 'Due' });
+    await make({ id: THIRD, name: 'Void', category: 'Bills' });
+  });
+  const categories = async (owner = 'ada') =>
+    (
+      await (
+        await call('GET', '/api/custom-stamps', { owner })
+      ).json<{
+        stamps: { id: string; category: string }[];
+      }>()
+    ).stamps.map((s) => `${s.id.slice(7, 8)}:${s.category}`);
+
+  it('is renamed for every stamp in it, answering theirs', async () => {
+    const renamed = await call('PATCH', '/api/custom-stamps/categories/Accounts', {
+      body: { category: ' Ledger ' },
+    });
+    expect(renamed.status).toBe(200);
+    const { stamps } = await renamed.json<{ stamps: { category: string }[] }>();
+    expect(stamps.map((s) => s.category).sort()).toEqual(['Bills', 'Ledger', 'Ledger']);
+    expect((await categories()).sort()).toEqual(['0:Ledger', '1:Ledger', '2:Bills']);
+  });
+
+  it('merges into another of theirs when renamed onto it', async () => {
+    await call('PATCH', '/api/custom-stamps/categories/Bills', { body: { category: 'Accounts' } });
+    expect(new Set((await categories()).map((c) => c.split(':')[1]))).toEqual(
+      new Set(['Accounts']),
+    );
+  });
+
+  it('is deleted with every stamp in it, answering what is left', async () => {
+    const deleted = await call('DELETE', '/api/custom-stamps/categories/Accounts');
+    expect(deleted.status).toBe(200);
+    expect(await deleted.json()).toMatchObject({ stamps: [{ id: THIRD }] });
+  });
+
+  it('reads a category name escaped in the path', async () => {
+    await make({ id: 'custom-3b7c3c2e-5a8f-4f21-9a43-1f2d3e4c5b6a', category: 'A/B & C' });
+    const deleted = await call(
+      'DELETE',
+      `/api/custom-stamps/categories/${encodeURIComponent('A/B & C')}`,
+    );
+    expect(deleted.status).toBe(200);
+  });
+
+  it('refuses another’s or none as custom_stamp_category_not_found, and a bad name as invalid', async () => {
+    for (const [method, owner] of [
+      ['DELETE', 'bo'],
+      ['PATCH', 'bo'],
+    ] as const) {
+      const refused = await call(method, '/api/custom-stamps/categories/Accounts', {
+        owner,
+        body: { category: 'Mine' },
+      });
+      expect(refused.status).toBe(404);
+      expect(await refused.json()).toEqual({ error: 'custom_stamp_category_not_found' });
+    }
+    const invalid = await call('PATCH', '/api/custom-stamps/categories/Accounts', {
+      body: { category: '' },
+    });
+    expect(invalid.status).toBe(400);
+    expect(await categories()).toHaveLength(3);
+  });
+});
