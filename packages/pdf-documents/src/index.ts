@@ -54,6 +54,7 @@ export {
 } from './mark-drawing';
 export { MarkHit } from './mark-hit';
 export { MarkPlace } from './mark-place';
+export { MarkGroups } from './mark-groups';
 export {
   BOX_HANDLES,
   MarkReshape,

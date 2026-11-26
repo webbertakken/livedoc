@@ -100,6 +100,8 @@ type MarkBase = {
    * the live changes alone, never in the file; absent on a file's own mark and on one made with no key.
    */
   readonly authorKey?: string;
+  /** The group it is one of (marks.md "Changing a mark"): the marks of its page sharing it move and answer as one. */
+  readonly group?: string;
   /** Milliseconds since the epoch: the file's `CreationDate` and `M`. */
   readonly createdAt: number;
   readonly modifiedAt: number;
@@ -252,6 +254,7 @@ function baseOf(v: Record<string, unknown>): MarkBase | null {
     ...Mark.keyed(
       typeof v.authorKey === 'string' && AUTHOR_KEY.test(v.authorKey) ? v.authorKey : null,
     ),
+    ...(typeof v.group === 'string' && ID.test(v.group) ? { group: v.group } : {}),
     createdAt: v.createdAt,
     modifiedAt: v.modifiedAt,
   };

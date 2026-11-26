@@ -6,6 +6,7 @@
 import {
   PdfArray,
   PdfDict,
+  PdfName,
   PdfRef,
   PdfString,
   type PDF,
@@ -112,6 +113,41 @@ function addMarks(
   return lost;
 }
 
+/**
+ * Writes each group of the marks as the standard's own (marks.md "In the file"): on its page, the head is the mark the
+ * group is named for where the page holds it, else its first mark written; every other mark of it written here answers
+ * the head, grouped. A group of one is none.
+ */
+function groupMarks(pdf: PDF, pages: Pages, marks: readonly Mark[]): void {
+  const groups = new Map<string, Mark[]>();
+  for (const mark of marks) {
+    if (!mark.group || !pages.has(mark.page)) continue;
+    const key = `${mark.page} ${mark.group}`;
+    groups.set(key, [...(groups.get(key) ?? []), mark]);
+  }
+  for (const members of groups.values()) {
+    const [first] = members;
+    if (!first?.group || members.length < 2) continue;
+    const annotations = new Map(
+      pages
+        .get(first.page)!
+        .getAnnotations()
+        .flatMap((annotation) => {
+          const name = nameOf(pdf, annotation.ref ?? annotation.dict);
+          return name ? [[name, annotation] as const] : [];
+        }),
+    );
+    const head = annotations.get(first.group) ?? annotations.get(first.id);
+    if (!head?.ref) continue;
+    for (const mark of members) {
+      const annotation = annotations.get(mark.id);
+      if (!annotation || annotation === head) continue;
+      annotation.dict.set('IRT', head.ref);
+      annotation.dict.set('RT', PdfName.of('Group'));
+    }
+  }
+}
+
 /** Removes the stored file's own marks that were deleted, each named as the reader names it. */
 function removeMarks(pdf: PDF, pages: Pages, removed: BakeChanges['removed']): void {
   if (![...removed.values()].includes('mark')) return;
@@ -201,6 +237,7 @@ export async function bakeChanges(
   // The file's own removed first: a mark of the file changed here is written under its own id, in its place.
   removeMarks(pdf, pages, changes.removed);
   anchorsLost += addMarks(pdf, pages, changes.marks, writing);
+  groupMarks(pdf, pages, changes.marks);
   const glyphsMissing = faces?.finish().missing ?? 0;
   const fieldsLost = changes.fieldValues.filter((value) => !fillField(pdf, value)).length;
   const bytes = (await pdf.save({ incremental: true })) as Uint8Array<ArrayBuffer>;

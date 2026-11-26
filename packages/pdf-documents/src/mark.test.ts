@@ -61,6 +61,15 @@ describe('Mark', () => {
     expect(Mark.keyed(null)).toEqual({});
   });
 
+  // marks.md "Changing a mark": Group.
+  it('carries its group, read back; a group not of an id’s form reads as none, the mark kept', () => {
+    const mark = Mark.highlight({ ...input(), group: 'g-1' })!;
+    expect(mark.group).toBe('g-1');
+    expect(Mark.parse(JSON.parse(JSON.stringify(mark)))).toEqual(mark);
+    for (const bad of ['', 'a b', 'g'.repeat(65), 7, null])
+      expect(Mark.parse({ ...mark, group: bad })).not.toHaveProperty('group');
+  });
+
   it('is own to the key it carries alone; no key owns nothing', () => {
     const mine = Mark.highlight({ ...input(), ...Mark.keyed('k1') })!;
     const none = Mark.highlight(input())!;

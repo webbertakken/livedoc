@@ -233,6 +233,16 @@ written into the file as a standard annotation, so any reader shows it. The rese
 - **Rotate**: stamps, Text and shapes turn by a handle, snapping at 15°.
 - **Arrange**: bring forward, send backward, to front, to back, among the marks of its page.
 - **Group**: several selected marks become one that moves and is answered as one; **Ungroup** undoes it.
+  - Format > Group, with two or more marks selected, gives each the same new **group** (a fresh id), one step of
+    undo; a mark already in a group leaves it for the new one. Format > Ungroup, with a selected mark in a group,
+    takes every selected mark out of its group, one step. Each is shown only while it can act `(default)`.
+  - A group is the marks of one page that share it, as a selection is the marks of one page; a group holding one mark
+    acts as none `(default)`.
+  - **A press on a grouped mark selects its group**: every mark of it on that page this session may change; ⇧ adds or
+    takes out the group whole, and a box from empty space takes the whole group of any mark it takes `(default)`.
+  - What a selection does a group does: moved, restyled and deleted together; a group selected shows no handles, as
+    any selection of two or more does, so its marks are resized one at a time once ungrouped `(default)`.
+  - A Participant groups and ungroups only marks it may change, its own, as any change ([Share roles](#share-roles)).
 - **Lock**: a locked mark is not moved, changed or deleted until unlocked; anyone who may review may unlock
   `(default)`.
 - **Copy, cut, paste, duplicate**: within a page, across pages and across PDF documents; a paste lands where the
@@ -394,6 +404,9 @@ question mark. The research is [Every script in a mark's words](../../research/p
   border and line ends as the standard's own entries; an **appearance stream** drawn by LiveDoc, so every reader
   shows exactly what was made; `NM` its LiveDoc id; `T` its author's display name; `M` and `CreationDate`; `Contents`
   its words; the print flag set.
+- **A group** is written as the standard's own: the group's first mark, in the order the page draws them, is its head;
+  every other mark of it carries `IRT`, the head, and `RT` `Group` `(default)`. A file's marks grouped so are read as
+  one group named for the head's id, and behave as one here.
 - **Written as an addition** ([Saving](saving.md#addition-or-rewrite)): a highlight on a 1 MB paper adds about half a
   kilobyte, and every earlier signature stays valid.
 - A mark changed or deleted in LiveDoc is written as the changed or removed annotation in the same addition; the
@@ -511,7 +524,7 @@ Gated on the session's `can` (`pdfReviews`), and checked by the room.
 
 ## Telemetry and observability
 
-- `Pdf · Added · Mark.<Kind>`, `Pdf · Changed · Mark.<Moved|Resized|Restyled|Grouped|Locked>`,
+- `Pdf · Added · Mark.<Kind>`, `Pdf · Changed · Mark.<Moved|Resized|Restyled|Grouped|Ungrouped|Locked>`,
   `Pdf · Deleted · Mark.<Kind>`, `Pdf · Added · Stamp.<Standard|Dynamic|Custom>`,
   `Pdf · Created · CustomStamp`, `Pdf · Changed · ToolColour` (a tool's colour chosen or reset), `Pdf · Changed · ToolLine` (a tool's line
   width, line style or fill chosen). A stamp placed is
@@ -522,7 +535,7 @@ Gated on the session's `can` (`pdfReviews`), and checked by the room.
 - Fingerprints: `[pdf] mark-added kind=<kind>`, `[pdf] mark-refused name=<name>`,
   `[pdf] marks-moved count=<n>` (a drag or a key press), `[pdf] marks-boxed count=<n>` (a box drawn from empty space), `[pdf] mark-resized kind=<kind>`,
   `[pdf] marks-restyled count=<n> look=<colour|opacity|width|style|fill|end|size|align|font>` (a pick or a choice),
-  `[pdf] marks-deleted count=<n>`, `[pdf] tool-look kind=<kind> look=<width|style|fill>` (a tool's line chosen),
+  `[pdf] marks-deleted count=<n>`, `[pdf] marks-grouped count=<n>`, `[pdf] marks-ungrouped count=<n>`, `[pdf] tool-look kind=<kind> look=<width|style|fill>` (a tool's line chosen),
   `[pdf] marks-read count=<n> unknown=<n>` (per open), `[pdf] drawing-joined strokes=<n>` (a stroke joined to a
   Drawing), `[pdf] typing-dropped kind=<kind>` (a Note, Text or Callout ended with nothing typed),
   `[pdf] marks-hidden count=<n>` (the file's own marks the pages are drawn without, each time they change),

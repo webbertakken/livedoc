@@ -10,6 +10,7 @@ import {
   PDF_PAGE_MAX_MARKS,
 } from '../limits';
 import { PageName } from '../page-name';
+import { withFileGroups } from '../mark-groups';
 import { readAsMark } from './read-as-mark';
 import type { ReaderFile } from './reader-file';
 
@@ -65,7 +66,7 @@ export function readMarks(
         p.FPDFPage_CloseAnnot(annotation);
       }
       if (n < count) file.clamped('list');
-      return marks;
+      return withFileGroups(marks);
     }) ?? []
   );
 }
