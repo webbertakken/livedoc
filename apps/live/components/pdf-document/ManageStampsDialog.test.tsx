@@ -52,7 +52,7 @@ describe('Manage stamps', () => {
 
   it('keeps a name once left, and puts back an empty one', () => {
     drawn();
-    const name = screen.getByLabelText('Name of Paid') as HTMLInputElement;
+    const name = screen.getByLabelText<HTMLInputElement>('Name of Paid');
     fireEvent.change(name, { target: { value: 'Settled' } });
     fireEvent.keyDown(name, { key: 'Enter' });
     fireEvent.blur(name);
