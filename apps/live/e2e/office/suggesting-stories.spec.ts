@@ -95,9 +95,9 @@ test('suggestions are written in a header and a note, by an Editor and a Partici
   await (await officeMenuItem(peer, ['Insert', 'Headers & footers', 'Header'])).click();
   const peerHeader = peer.getByRole('textbox', { name: 'Header' });
   await expect(peerHeader).toBeFocused();
-  await peer.keyboard.press('Home');
-  await peer.keyboard.type('Ours: ');
-  await expect(peerHeader.locator('.text-document-insertion').first()).toHaveText('Ours: ');
+  await peer.keyboard.press('End');
+  await peer.keyboard.type(' ours');
+  await expect(peerHeader.locator('.text-document-insertion').last()).toHaveText(' ours');
   // A Participant puts no footer in: a section's setting.
   await peer.getByRole('menuitem', { name: 'Insert' }).click();
   await peer.getByRole('menuitem', { name: /Headers & footers/ }).hover();
@@ -107,7 +107,9 @@ test('suggestions are written in a header and a note, by an Editor and a Partici
   await peer.keyboard.press('Escape');
 
   // The room took the Participant's suggestion: the Editor's page draws it in the header.
-  await expect(page.getByText('Ours: Running head draft').first()).toBeVisible({ timeout: 15_000 });
+  await expect(
+    page.getByText('Running head draft ours').filter({ visible: true }).first(),
+  ).toBeVisible({ timeout: 15_000 });
   await page.screenshot({ path: test.info().outputPath('suggesting-header-participant.png') });
 
   expectNoPageErrors(pageErrors);
