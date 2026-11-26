@@ -2,7 +2,8 @@
 
 **Status: partly built.** Sort Sheet, Sort Range with its Advanced Range Sorting Options, Create a Filter, Filter by Colour,
 every condition of Filter by Condition, and data validation (the Data Validation Rules panel, Insert › Checkbox,
-Insert › Dropdown, every criterion, kept in both file formats) are built; the rest is specified.
+Insert › Dropdown, every criterion, kept in both file formats) and the Named Ranges panel are built; the rest is
+specified.
 
 Sorting, filtering, validation, names, protection, tables and clean-up in a [spreadsheet](spreadsheet.md), as
 Google Sheets' Data menu does. Its rows of the [parity matrix](parity-matrix.md) name this page.
@@ -70,8 +71,22 @@ display style (Chip, Arrow, Plain Text) with option colours. Dropdowns and tick 
 
 ## Named ranges and named functions
 
-- **Named Ranges** panel: each name and range, **Add a Range**, edit, delete. Rules for names as today ([Sheet](sheet.md#named-ranges)),
-  but scoped to the workbook.
+- **Named Ranges** panel (Data › Named Ranges, and the cell menu's **Define Named Range**), for everyone: every name
+  of the workbook in name order, each with its range (`A1:B4` on the open sheet, `Sheet2!A1:B4` on another). Rules
+  for names as [Sheet](sheet.md#named-ranges) states, unique in the workbook.
+  - Pressing a name selects its range, opening its sheet first when it is another (**Go To**).
+  - An Editor's rows carry **Edit** and **Remove** (one undo step); under the list, **Add a Range**.
+  - **Add a Range** and **Edit** turn the panel into a form: **Name**, then **Range** (the selection when adding, as
+    the name box writes it, following cells picked in the grid until typed over; any sheet's, `Sheet2!A1:B4`, as a Dropdown from a Range's range is typed), **Cancel**
+    and **Done**. Done with a name the rules refuse says why under the name (the name box's words); a range it cannot
+    read says "Enter a range, like A1:B4 or Sheet2!A1:B4" under the range; either way the form stays.
+  - Done renames, moves, or both, as one undo step; moving a name to another sheet takes it off one sheet and puts
+    it on the other in the same change. Renaming or removing a name does not rewrite formulas
+    ([Formulas](formulas.md#named-ranges)).
+  - It opens on the list; an Editor in a workbook with no names opens on Add a Range, as Google's (default, D299).
+  - A Participant or Viewer reads the list and goes to a range; with none, "No named ranges."; an Editor's empty
+    list says "No named ranges yet."
+  - The panel stays open while its Go To opens another sheet.
 - **Named Functions** panel: a name, argument placeholders, a definition formula that uses the placeholders by name, a description and argument hints; usable in every cell of the workbook; **Import Function**
   from another spreadsheet the person may read.
 
@@ -114,13 +129,15 @@ display style (Chip, Arrow, Plain Text) with option colours. Dropdowns and tick 
 - **Editor**: everything here.
 - **Participant**: sort and filter only through filter views of their own; writes values through validation; picks
   from dropdowns and ticks tick boxes; finds; never replaces formulas or protected cells unless named.
-- **Viewer**: finds, uses filter views of their own, reads named ranges.
+- **Viewer**: finds, uses filter views of their own, reads named ranges and goes to them.
 
 ## Observability
 
 - `[workbook] range sorted` with the key count and whether the data has a header row (Advanced Range Sorting
   Options).
 - `[sheet] filter formula refused` with the column id, when a filter's Custom Formula Is cannot be read.
+- `[workbook] named range moved` when a name's range moves to another sheet, and `[workbook] named range refused`
+  with the reason (`name`, `range`) when Done cannot save.
 
 ## Errors and limits
 
@@ -132,3 +149,11 @@ display style (Chip, Arrow, Plain Text) with option colours. Dropdowns and tick 
 
 `Spreadsheet · Changed · <Kind>`: `Sort`, `Filter`, `FilterView`, `Slicer`, `Validation`, `NamedRange`,
 `NamedFunction`, `Protection`, `Table`, `Cleanup`, `Split`, `Randomise`, `Replace`; `Spreadsheet · Opened · Find`.
+
+## Defaults
+
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+The code cites each by its id.
+
+- **D299** Where the Named Ranges panel opens: On the list; on Add a Range for an Editor while the workbook has no
+  names, as Google's (default).

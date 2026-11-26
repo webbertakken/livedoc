@@ -16,6 +16,7 @@ import { track } from '@/lib/telemetry';
 import type { PlanPalette } from '@/components/plan/plan-palette';
 import { SheetStore } from './sheet-store-client';
 import {
+  arriveAt,
   SheetControllerProvider,
   useSheetController,
   useSheetControllerState,
@@ -161,6 +162,15 @@ describe('the selection', () => {
     });
     const second = mount(store, id);
     expect(second.result.current.selection.active).toEqual({ r: 0, c: 0 });
+  });
+
+  // A named range's Go To on another sheet (data-tools.md "Named ranges and named functions").
+  it('opens on the range gone to from another sheet', async () => {
+    const { store, id } = await makeStore();
+    arriveAt(id, { r1: 2, c1: 1, r2: 4, c2: 2 });
+    const view = mount(store, id).result.current.selection;
+    expect(view.ranges).toEqual([{ r1: 2, c1: 1, r2: 4, c2: 2 }]);
+    expect(view.active).toEqual({ r: 2, c: 1 });
   });
 
   it('starts at A1 for a sheet seen for the first time', async () => {

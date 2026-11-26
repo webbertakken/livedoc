@@ -1,10 +1,10 @@
 'use client';
 
-// The name box's arrow (docs/specs/029-sheets/surface.md "Formula bar", D129): a menu of the sheet's named ranges,
-// each with the range it covers; a pick selects it. A sheet's names are its own, so the list is the open sheet's.
+// The name box's arrow (docs/specs/029-sheets/surface.md "Formula bar", D129): a menu of the workbook's named ranges,
+// each with the range it covers (another sheet's with its name); a pick selects it, opening its sheet.
 import { useState } from 'react';
 import { ChevronDownIcon } from '@livedoc/ui';
-import { formatRange, posRangeOf, type GridRange, type SheetLayout } from '@livedoc/sheets';
+import type { WorkbookNamedRange } from '@livedoc/sheets';
 import { OfficeMenuPanel } from '@/components/office/OfficeMenuPanel';
 import { OfficePopup } from '@/components/office/OfficePopup';
 import { noShortcuts, type OfficeActions, type OfficeEntry } from '@/lib/office/office-catalogue';
@@ -13,13 +13,9 @@ const NONE_ID = 'no-named-ranges';
 
 /** The list's items and what each runs: a name and its range, or "No named ranges" dimmed. */
 export function nameBoxMenu(
-  layout: SheetLayout,
-  goTo: (range: GridRange) => void,
+  named: readonly WorkbookNamedRange[],
+  goTo: (target: WorkbookNamedRange) => void,
 ): { entries: OfficeEntry[]; actions: OfficeActions } {
-  const named = (layout.names ?? []).flatMap((x) => {
-    const at = posRangeOf(layout, x);
-    return at ? [{ name: x.name, at }] : [];
-  });
   if (!named.length)
     return {
       entries: [
@@ -28,32 +24,34 @@ export function nameBoxMenu(
       actions: { [NONE_ID]: { run: () => {}, disabled: true } },
     };
   return {
-    entries: named.map(({ name, at }) => ({
+    // A name on two sheets (D297) is listed twice, so each item is its sheet's and its name's.
+    entries: named.map((x) => ({
       kind: 'item',
-      id: `name:${name}`,
-      label: name,
+      id: `name:${x.sheetId}:${x.name}`,
+      label: x.name,
       level: 'view',
       status: 'built',
-      note: formatRange(at),
+      note: x.text,
     })),
     actions: Object.fromEntries(
-      named.map(({ name, at }) => [`name:${name}`, { run: () => goTo(at) }]),
+      named.map((x) => [`name:${x.sheetId}:${x.name}`, { run: () => goTo(x) }]),
     ),
   };
 }
 
 export function NameBoxList({
-  layout,
+  names,
   goTo,
   colour,
 }: {
-  layout: SheetLayout;
-  goTo: (range: GridRange) => void;
+  // Worked out only when the list opens.
+  names: () => readonly WorkbookNamedRange[];
+  goTo: (target: WorkbookNamedRange) => void;
   colour: string;
 }) {
   const [trigger, setTrigger] = useState<HTMLButtonElement | null>(null);
   const [open, setOpen] = useState(false);
-  const menu = open ? nameBoxMenu(layout, goTo) : null;
+  const menu = open ? nameBoxMenu(names(), goTo) : null;
   return (
     <>
       <button

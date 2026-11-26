@@ -18,6 +18,7 @@ import {
   emptyLayout,
   makeSheetId,
   sheetFromJson,
+  layoutForCopy,
   sheetToJson,
   validateSheetCreate,
   validateWrite,
@@ -125,7 +126,10 @@ export async function offlineCreateSheet(
         id,
         tabId: create.tabId,
         title: create.title,
-        layout: source?.layout ?? create.layout ?? emptyLayout(),
+        // A spreadsheet's copy leaves its named ranges with the original (sheet.md D298).
+        layout: source
+          ? layoutForCopy(source.layout, spreadsheet)
+          : (create.layout ?? emptyLayout()),
         cells: source?.cells ?? create.cells ?? [],
         rev: 0,
         createdAt: now,

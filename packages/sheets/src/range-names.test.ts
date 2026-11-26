@@ -1,7 +1,15 @@
 // Named ranges (docs/specs/029-sheets/sheet.md "Named ranges", formulas.md "Named ranges").
 import { describe, expect, it } from 'vitest';
 import { applySheetWrite, inverseSheetWrite, type SheetWrite } from './store';
-import { rangeNameProblem, nameHome, findRangeName } from './range-names';
+import {
+  layoutForCopy,
+  namedRangeWrites,
+  nameHome,
+  findRangeName,
+  NAME_TAKEN,
+  rangeNameProblem,
+  workbookNamedRanges,
+} from './range-names';
 import { validateWrite } from './validate';
 import { book, makeSheets } from './testing/book';
 import type { Sheet } from './sheet';
@@ -35,9 +43,17 @@ describe('what may name a range', () => {
     expect(rangeNameProblem('Rate2', layout)).toMatch(/cell reference/);
     expect(rangeNameProblem('Sales2024', layout)).toBeNull();
     const named = apply(base(), name('Rate', 0, 0)).sheet.layout;
-    expect(rangeNameProblem('RATE', named)).toMatch(/Another range/);
+    expect(rangeNameProblem('RATE', named)).toBe(NAME_TAKEN);
     // Renaming to another spelling of itself is fine.
-    expect(rangeNameProblem('RATE', named, 'Rate')).toBeNull();
+    expect(rangeNameProblem('RATE', named, { except: 'Rate' })).toBeNull();
+  });
+
+  it('is unique in the workbook: a name on another sheet is taken, unless it is the one being changed', () => {
+    const own = base().layout;
+    const other = apply(base(), name('Rate', 0, 0)).sheet.layout;
+    expect(rangeNameProblem('rate', own, { others: [other] })).toBe(NAME_TAKEN);
+    expect(rangeNameProblem('Rate', own, { others: [other], except: 'RATE' })).toBeNull();
+    expect(rangeNameProblem('Tax', own, { others: [other] })).toBeNull();
   });
 });
 
@@ -171,5 +187,103 @@ describe('a name in a formula', () => {
     expect(nameHome('x', b, [a, b])?.sheet.id).toBe('a');
     expect(nameHome('y', b, [a, b])).toBeNull();
     expect(findRangeName(a.layout, 'X')?.name).toBe('X');
+  });
+});
+
+describe("the workbook's names", () => {
+  const two = () => {
+    const [a, b] = makeSheets({ 'Sheet 1': {}, "Bob's": {} }, { rows: 8, cols: 4 });
+    const named = (s: Sheet, tag: string, n: string, r1: number, c1: number, r2 = r1, c2 = c1) =>
+      apply(s, {
+        kind: 'layout',
+        changes: [
+          {
+            k: 'name',
+            name: n,
+            range: {
+              r1: `${tag}r${r1}`,
+              c1: `${tag}c${c1}`,
+              r2: `${tag}r${r2}`,
+              c2: `${tag}c${c2}`,
+            },
+          },
+        ],
+      }).sheet;
+    return {
+      a: named(named(a!, 's0', 'zeta', 0, 0), 's0', 'Alpha', 1, 0, 3, 1),
+      b: named(b!, 's1', 'Mid', 2, 2),
+    };
+  };
+
+  it("lists every sheet's names in name order, another sheet's range with its quoted title", () => {
+    const { a, b } = two();
+    expect(workbookNamedRanges([a, b], a.id)).toEqual([
+      { name: 'Alpha', sheetId: a.id, range: { r1: 1, c1: 0, r2: 3, c2: 1 }, text: 'A2:B4' },
+      { name: 'Mid', sheetId: b.id, range: { r1: 2, c1: 2, r2: 2, c2: 2 }, text: "'Bob''s'!C3" },
+      { name: 'zeta', sheetId: a.id, range: { r1: 0, c1: 0, r2: 0, c2: 0 }, text: 'A1' },
+    ]);
+    expect(workbookNamedRanges([a, b], b.id)[0]!.text).toBe("'Sheet 1'!A2:B4");
+  });
+
+  it('leaves out a name whose cells are gone', () => {
+    const { a } = two();
+    const broken = { ...a, layout: { ...a.layout, rows: a.layout.rows.slice(4) } };
+    expect(workbookNamedRanges([broken], a.id).map((x) => x.name)).toEqual([]);
+  });
+
+  it('writes a new name, a rename and a move to another sheet as one change', () => {
+    const { a, b } = two();
+    const range = { r1: 's1r0', c1: 's1c0', r2: 's1r1', c2: 's1c0' };
+    expect(namedRangeWrites({ name: 'New', sheetId: b.id, range })).toEqual([
+      { sheetId: b.id, write: { kind: 'layout', changes: [{ k: 'name', name: 'New', range }] } },
+    ]);
+    const own = { r1: 's0r0', c1: 's0c0', r2: 's0r0', c2: 's0c0' };
+    const renamed = namedRangeWrites({
+      was: { name: 'zeta', sheetId: a.id },
+      name: 'Eta',
+      sheetId: a.id,
+      range: own,
+    });
+    expect(renamed).toEqual([
+      {
+        sheetId: a.id,
+        write: {
+          kind: 'layout',
+          changes: [
+            { k: 'name', name: 'zeta', range: null },
+            { k: 'name', name: 'Eta', range: own },
+          ],
+        },
+      },
+    ]);
+    const after = apply(a, renamed[0]!.write).sheet;
+    expect(after.layout.names?.map((x) => x.name)).toEqual(['Alpha', 'Eta']);
+    const back = apply(
+      after,
+      inverseSheetWrite(a, applySheetWrite(a, renamed[0]!.write, ctx)),
+    ).sheet;
+    // The names come back, in whichever order (a list's order means nothing).
+    expect(back.layout.names).toHaveLength(2);
+    expect(back.layout.names).toEqual(expect.arrayContaining(a.layout.names!));
+    const moved = namedRangeWrites({
+      was: { name: 'zeta', sheetId: a.id },
+      name: 'zeta',
+      sheetId: b.id,
+      range,
+    });
+    expect(moved).toEqual([
+      {
+        sheetId: a.id,
+        write: { kind: 'layout', changes: [{ k: 'name', name: 'zeta', range: null }] },
+      },
+      { sheetId: b.id, write: { kind: 'layout', changes: [{ k: 'name', name: 'zeta', range }] } },
+    ]);
+  });
+
+  it("leaves a copied sheet's names behind in a spreadsheet, and keeps them for a Plan Sheet", () => {
+    const { a } = two();
+    expect(layoutForCopy(a.layout, true).names).toBeUndefined();
+    expect(layoutForCopy(a.layout, true).rows).toBe(a.layout.rows);
+    expect(layoutForCopy(a.layout, false)).toBe(a.layout);
   });
 });

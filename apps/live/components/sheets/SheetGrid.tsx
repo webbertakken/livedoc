@@ -151,7 +151,10 @@ export function SheetGrid({
     });
     if (next) el.scrollTo(domScrollOf(room, next));
   };
-  useEffect(revealActive, [ar, ac]); // oxlint-disable-line react/exhaustive-deps
+  // Once more when the grid first has its size, so a sheet opened on a range far down (a named range gone to from
+  // another sheet) shows it.
+  const sized = !!c.gridEl && c.view.width > 0 && c.view.height > 0;
+  useEffect(revealActive, [ar, ac, sized]); // oxlint-disable-line react/exhaustive-deps
 
   // This person's selection, said to the room (useSheetPresence's store throttles it).
   useEffect(() => {

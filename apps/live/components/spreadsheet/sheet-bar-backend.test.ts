@@ -103,6 +103,21 @@ describe('offlineSheetBar', () => {
     expect(seed!.layout.rows).toEqual(source.layout.rows);
   });
 
+  // The workbook's names stay with the original (sheet.md D298).
+  it('seeds a copy without the named ranges, which are the workbook’s', async () => {
+    const o = offline();
+    const r = source.layout.rows[0]!;
+    const c = source.layout.cols[0]!;
+    o.store.sheet.mockReturnValue(
+      sheetFromJson({
+        ...source,
+        layout: { ...source.layout, names: [{ name: 'Rate', r1: r, c1: c, r2: r, c2: c }] },
+      }),
+    );
+    await o.bar.put({ ...entry, copyOf: 'sheetOne1' });
+    expect(o.store.create.mock.calls[0]![1]!.layout.names).toBeUndefined();
+  });
+
   it('refuses a copy of a sheet it does not hold, taking the tab back out', async () => {
     const o = offline();
     await expect(o.bar.put({ ...entry, copyOf: 'sheetGone1' })).rejects.toMatchObject({

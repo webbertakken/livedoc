@@ -9,6 +9,7 @@ import {
   readTypedInput,
   sheetToJson,
   type CellFormat,
+  type GridRange,
   type Sheet,
   type SheetLayout,
   type SheetWrite,
@@ -22,6 +23,7 @@ import {
 } from '@/hooks/sheets/useSheetsBridge';
 import { SheetStore } from './sheet-store-client';
 import {
+  arriveAt,
   SheetControllerProvider,
   useSheetControllerState,
   type SheetController,
@@ -100,6 +102,8 @@ export let gridScrolls: [string, unknown][] = [];
 type ActionCall = [keyof SheetActions, unknown[]];
 
 export type MountOptions = {
+  // A range gone to from another sheet, which the grid opens on.
+  arrive?: GridRange;
   rows?: number;
   cols?: number;
   layout?: Partial<SheetLayout>;
@@ -190,6 +194,7 @@ export async function mountGrid(o: MountOptions = {}): Promise<MountedGrid> {
     } as never,
   });
   await store.loadTab(TAB_ID);
+  if (o.arrive) arriveAt(sheetId, o.arrive);
   const calls: ActionCall[] = [];
   const ref: { c: SheetController | null; actions: SheetActions | null } = {
     c: null,

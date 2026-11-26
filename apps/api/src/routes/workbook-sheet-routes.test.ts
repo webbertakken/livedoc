@@ -176,6 +176,29 @@ describe('duplicating a sheet', () => {
     expect(row.unreferenced_since).toBeNull();
   });
 
+  // The workbook's names stay with the original, so the copy's formulas read its ranges (sheet.md D298).
+  it('leaves the sheet’s named ranges with the original', async () => {
+    const names = [
+      {
+        name: 'Rate',
+        r1: kit.layout.rows[0]!,
+        c1: kit.layout.cols[0]!,
+        r2: kit.layout.rows[0]!,
+        c2: kit.layout.cols[0]!,
+      },
+    ];
+    kit.sql.sql
+      .prepare("UPDATE sheets SET layout = json_set(layout, '$.names', json(?)) WHERE id = ?")
+      .run(JSON.stringify(names), 'book1Sheet');
+    const { sheet } = await (await add({ copyOf: 'book1Sheet' })).json<WorkbookSheetAddResponse>();
+    expect(sheet.layout.names).toBeUndefined();
+    expect(sheet.layout.rows).toEqual(kit.layout.rows);
+    const kept = kit.sql.sql
+      .prepare('SELECT layout FROM sheets WHERE id = ?')
+      .get('book1Sheet') as { layout: string };
+    expect((JSON.parse(kept.layout) as { names?: unknown }).names).toEqual(names);
+  });
+
   it('takes the name, the place and the ids it is given', async () => {
     const res = await add({
       copyOf: 'book1Sheet',

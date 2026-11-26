@@ -442,7 +442,7 @@ const DATA_MENU = menu('data', 'Data', [
   item('add-a-slicer', 'Add a Slicer', 'edit'),
   SEPARATOR,
   item('protect-sheets-and-ranges', 'Protect Sheets and Ranges', 'edit'),
-  item('named-ranges', 'Named Ranges', 'edit'),
+  built('named-ranges', 'Named Ranges', 'view'),
   item('named-functions', 'Named Functions', 'edit'),
   item('randomise-range', 'Randomise Range', 'edit'),
   SEPARATOR,

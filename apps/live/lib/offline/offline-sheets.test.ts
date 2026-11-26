@@ -310,6 +310,26 @@ describe('an offline spreadsheet', () => {
     ]);
   });
 
+  // The workbook's names stay with the original (sheet.md D298); a Plan Sheet's copy keeps its own.
+  it('copies a sheet without its named ranges, which are the workbook’s', async () => {
+    const names = [{ name: 'Rate', r1: 'aaaa', c1: 'cccc', r2: 'aaaa', c2: 'cccc' }];
+    const named = { ...stored('sheetAAAA', 't1', 'One'), layout: { ...layout, names } };
+    await offlinePutRecord(book([named]));
+    const copy = await offlineCreateSheet(
+      'd1',
+      { id: 'sheetCOPY', tabId: 't2', title: 'Two', copyOf: 'sheetAAAA' },
+      ME,
+    );
+    expect(copy.layout).toEqual(layout);
+    await offlinePutRecord(testRecord({ sheets: [named] }));
+    const plan = await offlineCreateSheet(
+      'd1',
+      { id: 'sheetPLAN', tabId: 't2', title: 'Two', copyOf: 'sheetAAAA' },
+      ME,
+    );
+    expect(plan.layout.names).toEqual(names);
+  });
+
   it('names a new sheet by the workbook, case aside, and by the name rules', async () => {
     await offlinePutRecord(book([stored('sheetAAAA', 't1', 'Costs')]));
     await expect(
