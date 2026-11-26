@@ -8,6 +8,7 @@ import {
   FORMAT_CHANGE_MARK,
   INSERTION_MARK,
   PARAGRAPH_FORMAT_CHANGE,
+  type SuggestionPart,
   type TextDocumentCommentAuthor,
 } from '@livedoc/text-documents';
 
@@ -114,7 +115,32 @@ function readMark(value: unknown): Read | null {
 const markOf = (marks: readonly Mark[], name: string) =>
   marks.find((m) => m.type.name === name)?.attrs;
 
-const objectName = (node: PmNode) => OBJECT_LABELS[node.type.name] ?? OTHER_OBJECT;
+/** An object's or a block's name on a card, by its element's name. */
+export const objectLabel = (name: string): string => OBJECT_LABELS[name] ?? OTHER_OBJECT;
+
+const objectName = (node: PmNode) => objectLabel(node.type.name);
+
+/** The live state's parts of a suggestion (LiveSuggestions.read) as a card's, for the comments panel's rows. */
+export function cardPartsOf(parts: readonly SuggestionPart[]): CardPart[] {
+  return parts.map((part): CardPart => {
+    switch (part.kind) {
+      case 'insertion':
+      case 'deletion':
+        return part.element === undefined
+          ? { kind: part.kind, text: part.text }
+          : { kind: `object-${part.kind}`, name: objectLabel(part.element) };
+      case 'block-insertion':
+        return { kind: 'object-insertion', name: objectLabel(part.element ?? part.text) };
+      case 'block-deletion':
+        return { kind: 'object-deletion', name: objectLabel(part.element ?? part.text) };
+      case 'format':
+        // A format naming nothing is still one: an unnamed change reads as Text formatting.
+        return { kind: 'format', changed: part.changed?.length ? part.changed : [''] };
+      default:
+        return { kind: part.kind };
+    }
+  });
+}
 
 /** Every suggestion in the writing, in the order of its first part. */
 export function suggestionCards(doc: PmNode): SuggestionCard[] {

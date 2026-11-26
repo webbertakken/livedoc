@@ -18,7 +18,11 @@ import {
   type TextDocumentThread,
 } from './live/live-threads';
 import { BODY_FRAGMENT, tabFragmentName } from './live/live-root';
-import { LiveSuggestions, TEXT_DOCUMENT_SUGGESTIONS_MAX } from './live/live-suggestions';
+import {
+  LiveSuggestions,
+  SUGGESTION_ID_MAX,
+  TEXT_DOCUMENT_SUGGESTIONS_MAX,
+} from './live/live-suggestions';
 import { liveTabIds } from './live/live-tabs';
 import { TextDocumentState } from './text-document-state';
 
@@ -96,6 +100,7 @@ function ownReactions(
 /** Whether a thread's change is the sender's to make. */
 function ownChange(before: TextDocumentThread, after: TextDocumentThread, key: string): boolean {
   if (before.tab !== after.tab || before.quote !== after.quote) return false;
+  if (before.suggestion !== after.suggestion) return false;
   if (!sameBytes(before.start, after.start) || !sameBytes(before.end, after.end)) return false;
   if (after.comments.length > TEXT_DOCUMENT_THREAD_COMMENTS_MAX) return false;
   if (after.comments[0]!.id !== before.comments[0]!.id) return false;
@@ -121,6 +126,7 @@ function ownChange(before: TextDocumentThread, after: TextDocumentThread, key: s
 /** Whether a thread begun by the sender is theirs, open and anchored. */
 const ownStart = (thread: TextDocumentThread, key: string): boolean =>
   !thread.resolved &&
+  (thread.suggestion === undefined || thread.suggestion.length <= SUGGESTION_ID_MAX) &&
   thread.start.byteLength > 0 &&
   thread.end.byteLength > 0 &&
   thread.comments.length <= TEXT_DOCUMENT_THREAD_COMMENTS_MAX &&

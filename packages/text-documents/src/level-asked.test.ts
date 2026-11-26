@@ -167,6 +167,27 @@ describe('textDocumentLevelAsked', () => {
     ).toBe('edit');
   });
 
+  // review.md "Suggestion cards", Replies: the tie never changes after the thread begins.
+  it('lets a Participant begin and reply on a thread tied to a suggestion, never move the tie', () => {
+    const tied = (doc: Y.Doc, run: Y.XmlText, suggestion = 's1') =>
+      LiveThreads.begin(
+        doc,
+        {
+          id: 'tied',
+          tab: 't.0',
+          ...LiveThreads.anchorFor(run, 10, 17),
+          quote: 'Add: “results”',
+          comment: comment('a1'),
+          suggestion,
+        },
+        'me',
+      );
+    expect(asked((doc, run) => tied(doc, run))).toBe('participate');
+    expect(asked((doc, run) => tied(doc, run, 'x'.repeat(65)))).toBe('edit');
+    const thread = (doc: Y.Doc) => doc.getMap<Y.Map<unknown>>(THREADS_MAP).get('ben')!;
+    expect(asked((doc) => thread(doc).set('suggestion', 's9'))).toBe('edit');
+  });
+
   it('asks for Editing for reactions past the most, an emoji too long, or a new comment carrying any', () => {
     const reactionsOf = (doc: Y.Doc) => {
       const thread = doc.getMap<Y.Map<unknown>>(THREADS_MAP).get('ben')!;

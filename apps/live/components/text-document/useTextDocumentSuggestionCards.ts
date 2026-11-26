@@ -3,7 +3,8 @@
 // Suggestion cards in the editor (docs/specs/034-text-documents/review.md "Suggestion cards"): the suggestions of the
 // tab shown read off the writing as it changes, the one selected, Accept and Reject as the person's rights allow (each
 // one change of the writing, undone with ⌘Z, the room judging a Participant's), and Move to next and previous
-// suggestion from the selected card or the caret.
+// suggestion from the selected card or the caret. A press on a suggestion's row in the comments panel goes to its
+// card, showing its document tab first where it is another.
 import { useCallback, useEffect, useMemo, useState, type RefObject } from 'react';
 import type { EditorView } from 'prosemirror-view';
 import type * as Y from 'yjs';
@@ -19,7 +20,10 @@ import {
   type SuggestionRights,
 } from '@/lib/text-document/text-document-suggestion-cards';
 import { TEXT_DOCUMENT_SUGGESTIONS_ORIGIN } from '@/lib/text-document/text-document-undo';
-import type { CardFocusRequest } from './useTextDocumentThreadKeys';
+import { GO_FRAMES_MAX, type CardFocusRequest } from './useTextDocumentThreadKeys';
+
+/** What the status line says when a suggestion's row goes nowhere (review.md, (default)). */
+export const SUGGESTION_GONE = 'This suggestion is gone';
 
 /** The shortcuts bound here under their rows' ids (keyboard-shortcuts.md "Comments and footnotes"). */
 export const MOVE_TO_NEXT_SUGGESTION = 'move-to-next-suggestion';
@@ -43,6 +47,10 @@ export function useTextDocumentSuggestionCards({
   rights,
   subscribe,
   onSelect,
+  tab = null,
+  showTab,
+  onSettled,
+  say,
 }: {
   /** The body's editor: suggestions are in the body alone. */
   view: EditorView | null;
@@ -53,6 +61,13 @@ export function useTextDocumentSuggestionCards({
   subscribe: (listener: () => void) => () => void;
   /** A suggestion was selected: a selected comment thread is let go. */
   onSelect?: () => void;
+  /** The document tab shown, and how another is shown. */
+  tab?: string | null;
+  showTab?: (id: string) => void;
+  /** A suggestion was accepted or rejected here: its tied threads are resolved. */
+  onSettled?: (id: string) => void;
+  /** Says a line in the status line. */
+  say?: (text: string) => void;
 }) {
   const [cards, setCards] = useState<readonly SuggestionCard[]>([]);
   const [chosen, setChosen] = useState<string | null>(null);
@@ -89,6 +104,7 @@ export function useTextDocumentSuggestionCards({
         : LiveSuggestions.reject(doc, id, TEXT_DOCUMENT_SUGGESTIONS_ORIGIN);
       debugLog('[text-document] suggestion settled', { suggestion: id, accept, done });
       if (!done) return;
+      onSettled?.(id);
       track(
         'Element',
         'Changed',
@@ -96,7 +112,7 @@ export function useTextDocumentSuggestionCards({
       );
       setChosen((was) => (was === id ? null : was));
     },
-    [ready, docRef, cards, rights],
+    [ready, docRef, cards, rights, onSettled],
   );
 
   const land = useCallback(
@@ -109,6 +125,37 @@ export function useTextDocumentSuggestionCards({
     },
     [cards, view, setSelected],
   );
+
+  // A go waiting for its tab's writing: landed once its card is read, else said gone after GO_FRAMES_MAX frames.
+  const [pending, setPending] = useState<{ id: string; tab: string } | null>(null);
+  const go = useCallback(
+    (id: string, where: string) => {
+      debugLog('[text-document] suggestion go', { suggestion: id, tab: where });
+      setPending({ id, tab: where });
+      if (tab !== null && where !== tab) showTab?.(where);
+    },
+    [tab, showTab],
+  );
+  useEffect(() => {
+    if (!pending || (tab !== null && pending.tab !== tab)) return;
+    let frames = 0;
+    let frame = requestAnimationFrame(function wait() {
+      frames += 1;
+      if (cards.some((c) => c.id === pending.id)) {
+        land(pending.id);
+        setPending(null);
+        return;
+      }
+      if (frames < GO_FRAMES_MAX) {
+        frame = requestAnimationFrame(wait);
+        return;
+      }
+      debugLog('[text-document] suggestion go', { suggestion: pending.id, found: false });
+      say?.(SUGGESTION_GONE);
+      setPending(null);
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [pending, tab, cards, land, say]);
 
   const step = useCallback(
     (forward: boolean) => {
@@ -145,6 +192,7 @@ export function useTextDocumentSuggestionCards({
     reject: (id: string) => settle(id, false),
     step,
     exit,
+    go,
     focusRequest,
     actions,
   };

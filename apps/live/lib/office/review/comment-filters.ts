@@ -16,6 +16,8 @@ export type ReviewThreadRow = {
   readonly comments: readonly Comment[];
   /** Whom the thread is assigned to (review.md "Assigning"); none where it is not. */
   readonly assignee?: CommentMention | null;
+  /** A suggestion's row (review.md "Suggestion cards"): its first comment is the suggestion itself. */
+  readonly kind?: 'suggestion';
 };
 
 export type ReviewWho = 'all' | 'for-you';

@@ -6,6 +6,7 @@ import { textDocumentSchema as schema } from './text-document-schema';
 import {
   cardLines,
   cardOffers,
+  cardPartsOf,
   quoteOf,
   SUGGESTION_QUOTE_MAX,
   suggestionBeside,
@@ -169,5 +170,37 @@ describe('cardOffers', () => {
       accept: false,
       reject: false,
     });
+  });
+});
+
+describe('cardPartsOf', () => {
+  it('reads the live state’s parts as a card’s, so the panel says what the card says', () => {
+    const parts = cardPartsOf([
+      { kind: 'deletion', text: 'dog' },
+      { kind: 'insertion', text: 'cat' },
+      { kind: 'format', text: 'x', changed: ['italic'] },
+      { kind: 'insertion', text: 'picture', element: 'picture' },
+      { kind: 'block-deletion', text: 'table', element: 'table' },
+      { kind: 'block-insertion', text: 'kept_block', element: 'kept_block' },
+      { kind: 'break', text: '' },
+      { kind: 'join', text: '' },
+      { kind: 'paragraph-format', text: '' },
+    ]);
+    expect(cardLines(parts)).toEqual([
+      'Replace: “dog” with “cat”',
+      'Format: Italic',
+      'Add: Picture',
+      'Add: Object',
+      'Delete: Table',
+      'Add: Paragraph break',
+      'Delete: Paragraph break',
+      'Format: Paragraph',
+    ]);
+  });
+
+  it('reads a format part with no names as Text formatting', () => {
+    expect(cardLines(cardPartsOf([{ kind: 'format', text: 'x' }]))).toEqual([
+      'Format: Text formatting',
+    ]);
   });
 });

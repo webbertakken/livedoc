@@ -19,6 +19,7 @@ import {
 } from './useTextDocumentThreadArrival';
 import { useTextDocumentCommentsPanel } from './useTextDocumentCommentsPanel';
 import { useTextDocumentSuggestionCards } from './useTextDocumentSuggestionCards';
+import { SUGGESTION_ROW } from '@/lib/text-document/text-document-comment-rows';
 
 export function useTextDocumentReview({
   view,
@@ -82,7 +83,8 @@ export function useTextDocumentReview({
     subscribe,
   });
   // The suggestions' cards beside the threads' (review.md "Suggestion cards"); one card is selected at a time.
-  const { select: selectThread, selected: selectedThread } = threads;
+  // Settling one resolves its tied threads (review.md "Suggestion cards", Replies).
+  const { select: selectThread, selected: selectedThread, resolveTied, say } = threads;
   const letThreadGo = useCallback(() => selectThread(null), [selectThread]);
   const suggestions = useTextDocumentSuggestionCards({
     view,
@@ -91,6 +93,10 @@ export function useTextDocumentReview({
     rights,
     subscribe,
     onSelect: letThreadGo,
+    tab,
+    showTab,
+    onSettled: resolveTied,
+    say,
   });
   const { select: selectSuggestion } = suggestions;
   useEffect(() => {
@@ -102,5 +108,18 @@ export function useTextDocumentReview({
     [threads.actions, threadKeys.actions, suggestions.actions],
   );
 
-  return { threads, threadKeys, commentsPanel, suggestions, actions };
+  // A press on a panel's row: a suggestion's goes to its card, on its tab; a thread's to its thread.
+  const { rows } = commentsPanel;
+  const { go: goToSuggestion } = suggestions;
+  const { go: goToThread } = threadKeys;
+  const go = useCallback(
+    (id: string) => {
+      if (!id.startsWith(SUGGESTION_ROW)) return goToThread(id);
+      const row = rows.find((r) => r.id === id);
+      goToSuggestion(id.slice(SUGGESTION_ROW.length), row?.group ?? tab);
+    },
+    [rows, tab, goToSuggestion, goToThread],
+  );
+
+  return { threads, threadKeys, commentsPanel, suggestions, actions, go };
 }

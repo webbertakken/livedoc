@@ -190,6 +190,16 @@ describe('LiveThreads', () => {
     expect(doc.getMap(THREADS_MAP).size).toBe(0);
   });
 
+  // review.md "Suggestion cards", Replies: a thread tied to a suggestion carries its id.
+  it('keeps a thread’s tie to a suggestion, and none where it has none', () => {
+    const { doc, run } = written();
+    LiveThreads.begin(doc, { ...startOn(run, 0, 9), suggestion: 's1' }, 'me');
+    LiveThreads.begin(doc, startOn(run, 10, 17, 'th2', 20), 'me');
+    const [tied, plain] = LiveThreads.read(doc);
+    expect(tied!.suggestion).toBe('s1');
+    expect(plain).not.toHaveProperty('suggestion');
+  });
+
   it('resolves and reopens a thread', () => {
     const { doc, run } = written();
     LiveThreads.begin(doc, startOn(run, 0, 9), 'me');
