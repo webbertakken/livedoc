@@ -7,14 +7,18 @@ How a [PDF document](pdf-document.md) comes to be in the Explorer and is found a
 
 ## Starting one
 
-Fork F12 `(default)`: **a PDF document is never started from nothing.** A PDF arrives, or is made from another
-document:
+Fork F12, ruled (Webber, 2026-11-26): **a PDF document is offered in the New Document flow**, blank or from a file.
+A PDF also arrives, or is made from another document:
 
 - **A PDF arrives** by a drop, a paste, an import, a sync, the Drive mirror or an agent
   ([Files, print and sync](files-print-and-sync.md#opening)).
-- **The Explorer's New** lists **PDF document**, with its glyph and the line "Upload a PDF"; it opens the file
-  chooser, and the chosen PDF becomes a document in the current folder, opened at once.
-- **`/new?kind=pdf`** opens the same chooser on the Explorer; there is no blank PDF to land on.
+- **New Document** (the Explorer's menu and the `/new` wizard) offers **PDF document**: it makes a **Blank PDF**, one
+  empty A4 page (default), and offers **Open a PDF file**, whose chosen PDF becomes a document in the current folder,
+  opened once stored ([New Document menu](../013-workspace/new-document-menu.md#the-blanks),
+  [New document route](../007-editor/new-document-route.md#choosing-a-mode)). `/new?kind=pdf-document` makes a Blank
+  PDF.
+- **A Blank PDF** is a real PDF file (PDF 1.7, one page, no content), written in the browser and stored as any PDF
+  is; everything a PDF document does, it does from there (adding text, pages, fields).
 - **Another document kept as a PDF**: a text document's, a spreadsheet's or a canvas tab's Download as PDF offers
   "Keep in LiveDoc as a PDF document", which stores the written PDF beside its source
   ([Files, print and sync](files-print-and-sync.md#other-kinds-meeting-a-pdf)).

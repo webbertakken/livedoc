@@ -318,29 +318,33 @@ full library. Component: `apps/live/app/new/RecentDocumentsCard.tsx`.
 
 ## Choosing a mode
 
-The wizard's first step asks **what you are making**, as the five openings (the three editor modes, Workshop and
-Plan, [Templates by mode](templates-by-mode.md)), never a template
+The wizard's first step asks **what you are making**: the four openings that remain (Sketch, Structured, Workshop
+and Plan, [Templates by mode](templates-by-mode.md)) and the three document kinds (Text document, Spreadsheet and
+PDF document), never a template
 (`NewDocumentModeStep`, `components/palette/NewDocumentModeStep.tsx`). The templates wait on the canvas, in the
 mode's own start ([Template starts](start-diagramming.md)); the marketing site's gallery is where every template is
 browsed before signing up.
 
 - **Heading:** "What are you making today?"
-- **Five cards**, in the order every opening list shows them (`TAB_OPENINGS`: Sketch, Structured, Pages,
-  Workshop, Plan), three then two from 640px (a six-track grid: the first row's cards take two tracks each, the
-  second row's three, `modeCardSpan`; one column on a phone). Every card has the same build and, across both rows,
-  the same height (`auto-rows-fr`), so **Structured**, where most start, sits in the top row as an equal
-  rather than a wide, short strip. The cards carry no template names and no "Most Popular" badge.
+- **Seven cards**: the openings in the order every opening list shows them (`TAB_OPENINGS` less Pages: Sketch,
+  Structured, Workshop, Plan), then the kinds (Text document, Spreadsheet, PDF document); four then three from 640px
+  (a twelve-track grid: the first row's cards take three tracks each, the second row's four, `modeCardSpan`; one
+  column on a phone). Every card has the same build and, across both rows, the same height (`auto-rows-fr`). The
+  cards carry no template names and no "Most Popular" badge. **Pages** is not offered: it is being retired
+  ([Text documents](../034-text-documents/migration.md)); `?mode=pages` preselects nothing.
 - **Each card:** a fan of its own templates' previews on top (`PreviewFan`, the mode's Popular shelf less its blank)
-  wider on hover, then the mode's mark, its name and its **number key** (1 to 5, a small key cap at the row's end,
+  wider on hover (a kind, with no templates yet, shows a drawing of its own blank page instead, `KindPlate`), then the mode's mark, its name and its **number key** (1 to 7, a small key cap at the row's end,
   hidden on a phone, which has no keys), then a line on what it makes in the words of the work ("Flowcharts, mind
   maps, org charts and architecture, snapped neatly into place."). The number is `aria-hidden`; the card carries it
   as `aria-keyshortcuts`.
 - **Choosing a card creates the document at once**, as an empty tab of the choice's blank (`BLANK_TEMPLATE_FOR_OPENING`),
-  which opens on its start.
+  which opens on its start; a kind's card makes that kind's blank, as `?kind=` does.
+- **PDF document's card** makes a Blank PDF (one empty A4 page); under its line it carries a second button, **Open a
+  PDF file**, which opens the file chooser and makes the chosen PDF a document. A chooser left makes nothing.
 - **Keyboard:** the chosen (else the first) card is focused on a fine pointer; the arrow keys move between cards,
-  and 1 to 5 choose one straight away, wherever the focus is on the page (after a click on the backdrop too), except
+  and 1 to 7 choose one straight away, wherever the focus is on the page (after a click on the backdrop too), except
   in a field being typed in or with Cmd, Ctrl or Alt held.
-- **`?mode=`** (`draw`, `diagram`, `pages`, `workshop` or `plan`, and the legacy names) preselects that card (and its blank for **Create**); **`?q=`** is handed to the new document's
+- **`?mode=`** (`draw`, `diagram`, `workshop` or `plan`, and the legacy names) preselects that card (and its blank for **Create**); **`?q=`** is handed to the new document's
   start as its search ([Template starts](start-diagramming.md) "Search handed over").
 
 ## One-step wizard
