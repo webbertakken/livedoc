@@ -28,6 +28,9 @@ globs = ["**/*.ttf", "**/*.otf"]
 # (docs/specs/017-telemetry/telemetry.md): "true" turns it on; anything else,
 # or absent, keeps it fully off.
 [vars]
+# DO NOT MERGE: this branch's preview only, to measure the content summaries' dry run (document-storage.md
+# "Refreshing the summaries"). `off` while documents are seeded and go idle; `dry` on the second push.
+SUMMARY_REFRESH = "off"
 
 # Origin allow-list for POST /api/ai (docs/specs/007-editor/ai-assistance.md). Stated HERE, not in the
 # Cloudflare dashboard: a dashboard-only value is invisible to code review, so
