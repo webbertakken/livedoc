@@ -337,6 +337,25 @@ export {
   threadAssignment,
   threadLabel,
 } from './live/live-thread-index';
+export {
+  DELETION_MARK,
+  FORMAT_CHANGE_MARK,
+  INSERTION_MARK,
+  isSuggestionMark,
+  isWellFormedMark,
+  LiveSuggestions,
+  PARAGRAPH_FORMAT_CHANGE,
+  SUGGESTION_AUTHOR_NAME_MAX,
+  SUGGESTION_ID_MAX,
+  SUGGESTION_MARKS,
+  TEXT_DOCUMENT_SUGGESTIONS_MAX,
+  type FormatChangeMark,
+  type ParagraphFormatChangeMark,
+  type SuggestionMark,
+  type SuggestionPart,
+  type SuggestionPartKind,
+  type TextDocumentSuggestion,
+} from './live/live-suggestions';
 export { textDocumentLevelAsked, type TextDocumentLevelAsked } from './level-asked';
 export {
   addLiveTab,
