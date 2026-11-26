@@ -1,5 +1,5 @@
 // A sheet's charts in ODF (docs/specs/029-sheets/standard-mapping.md "Charts in the file"): a `draw:frame` per chart in
-// the sheet's `table:shapes`, placed where its cell sits by the sheet's line sizes, holding a `draw:object` that names
+// the cell it is anchored to, at its offset into that cell, holding a `draw:object` that names
 // an embedded chart document whose series read the sheet's cells by address. Elements in ODF 1.4's schema order.
 import {
   escapeXmlAttribute,
@@ -9,11 +9,9 @@ import {
   ODF_VERSION,
 } from '@livedoc/office-packages';
 import { columnLetters } from '../address';
-import { COLUMN_WIDTH_NEW, ROW_HEIGHT_NEW } from '../limits';
 import { fileChartSum, type FileChart, type FileChartSeries, type FileRange } from './file-charts';
 import type { KeptPart } from './kept-content';
 import type { FileLoss } from './workbook-file';
-import { lineStartPx, type FileLines } from './file-lines';
 
 const CHART_MEDIA_TYPE = ODF_MEDIA_TYPES.chart;
 
@@ -39,17 +37,18 @@ const cellOf = (sheet: string, r: number, c: number) =>
 export const odfRange = (sheet: string, at: FileRange) =>
   `${cellOf(sheet, at.r1, at.c1)}:${cellOf(sheet, at.r2, at.c2)}`;
 
-/** The frames of a sheet's charts, for its `table:shapes`, each naming its object by `objects[n]`. */
+/**
+ * The frames of a sheet's charts by the cell each is anchored in (`r,c`), in paint order, each at its offset into
+ * that cell (LibreOffice's "To cell", D280) and naming its object by `objects[n]`.
+ */
 export function odsChartFrames(
   charts: readonly FileChart[],
-  lines: FileLines | undefined,
   sheet: string,
   // Each chart's object: a package's folder name, or a flat file's inline document.
   objects: readonly ({ href: string } | { inline: string })[],
-): string {
-  const frames = charts.map((chart, i) => {
-    const x = lineStartPx(lines?.c, chart.at.c, COLUMN_WIDTH_NEW) + chart.at.dx;
-    const y = lineStartPx(lines?.r, chart.at.r, ROW_HEIGHT_NEW) + chart.at.dy;
+): Map<string, string> {
+  const frames = new Map<string, string>();
+  charts.forEach((chart, i) => {
     const ranges = [
       ...(chart.labels ? [chart.labels.range] : []),
       ...(chart.x ? [chart.x.range] : []),
@@ -59,14 +58,16 @@ export function odsChartFrames(
       .join(' ');
     const notify = ranges ? ` draw:notify-on-update-of-ranges="${escapeXmlAttribute(ranges)}"` : '';
     const alt = chart.alt ?? chart.title;
-    return [
-      `<draw:frame draw:z-index="${i}" draw:name="Chart ${i + 1}" svg:x="${cm(x)}" svg:y="${cm(y)}" svg:width="${cm(chart.width)}" svg:height="${cm(chart.height)}">`,
+    const frame = [
+      `<draw:frame draw:z-index="${i}" draw:name="Chart ${i + 1}" svg:x="${cm(chart.at.dx)}" svg:y="${cm(chart.at.dy)}" svg:width="${cm(chart.width)}" svg:height="${cm(chart.height)}">`,
       objectXml(objects[i]!, notify),
       alt ? `<svg:title>${escapeXmlText(alt)}</svg:title>` : '',
       '</draw:frame>',
     ].join('');
+    const at = `${chart.at.r},${chart.at.c}`;
+    frames.set(at, (frames.get(at) ?? '') + frame);
   });
-  return `<table:shapes>${frames.join('')}</table:shapes>`;
+  return frames;
 }
 
 function objectXml(object: { href: string } | { inline: string }, notify: string): string {
@@ -206,8 +207,8 @@ export class OdsChartObjects {
     return null;
   }
 
-  /** A sheet's `table:shapes` holding its charts. */
-  shapes(sheet: string, charts: readonly FileChart[], lines: FileLines | undefined): string {
+  /** A sheet's chart frames by the cell each is anchored in (`r,c`). */
+  frames(sheet: string, charts: readonly FileChart[]): Map<string, string> {
     const objects = charts.map((chart) => {
       const own = this.keptDocument(sheet, chart);
       if (this.flat)
@@ -234,6 +235,6 @@ export class OdsChartObjects {
       );
       return { href: name };
     });
-    return odsChartFrames(charts, lines, sheet, objects);
+    return odsChartFrames(charts, sheet, objects);
   }
 }

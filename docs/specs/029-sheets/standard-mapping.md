@@ -329,8 +329,9 @@ each suite writes its own, so LibreOffice, Excel and Google Sheets open them as 
   with no colour of its own takes the reading suite's (default, D260).
 - **Place**: its top-left cell and offset and its size. XLSX: one drawing part per sheet with charts
   (`xl/drawings/drawingN.xml`, a `oneCellAnchor` per chart, px × 9,525 EMU) and a chart part per chart
-  (`xl/charts/chartN.xml`). ODF: a `draw:frame` per chart in the sheet's `table:shapes`, at the cell's position worked
-  out from the sheet's line sizes, holding a `draw:object` that names an embedded chart document (`Object N/` in a
+  (`xl/charts/chartN.xml`). ODF: a `draw:frame` per chart in the cell it is anchored to (LibreOffice's "To cell"), its
+  `svg:x` and `svg:y` its offset into that cell, so a suite that sizes rows to their text keeps it on its cell
+  (default, D280), holding a `draw:object` that names an embedded chart document (`Object N/` in a
   package; inline in a flat `.fods`). A shown value axis says so (`chart:display-label="true"`), as LibreOffice
   reads an axis that does not as one without labels (default, D279).
 - **A sheet keeping its file's drawings**: a sheet whose kept content holds a drawing (XLSX `drawing`) or shapes
@@ -554,5 +555,7 @@ The code cites each by its id.
 - **D279** A shown value axis in ODF: written with `chart:display-label="true"`, as LibreOffice reads an axis
   without it as unlabelled; read as off when missing, `chart:visible="false"` or `chart:display-label="false"`
   (default).
+- **D280** A chart's place in ODF: anchored in its cell at its offset, not placed over the sheet by position, as
+  LibreOffice draws rows sized to their text shorter than LiveDoc does (default).
 - **D261** A sheet's own charts beside a drawing kept from its file: Not written, the sheet named (`charts_unwritten`),
   as a worksheet holds one drawing and ODF one `table:shapes` (default).

@@ -304,33 +304,28 @@ describe('writeXlsx with charts', () => {
 });
 
 describe('ODF charts', () => {
-  it('places each frame by the sheet’s line sizes, hidden lines taking none', () => {
+  it('anchors each frame in its cell at its offset, charts sharing a cell in paint order (D280)', () => {
     const chart = chartsOf()[0]!;
-    const lines = {
-      c: {
-        lines: new Map([
-          [0, { size: 96 }],
-          [1, { hidden: true as const }],
-        ]),
-        collapsed: [],
-        size: 48,
-      },
-    };
-    const xml = odsChartFrames([{ ...chart, at: { r: 2, c: 3, dx: 0, dy: 0 } }], lines, 'S', [
-      { href: 'Object 1' },
-    ]);
-    // Columns: 96 + 0 (hidden) + 48 px = 1 inch + 0.5 inch; rows: two of LiveDoc's own.
-    expect(xml).toContain('svg:x="3.810cm"');
-    expect(xml).toContain('xlink:href="./Object 1"');
-    expect(xml).toContain('<svg:title>Cost &amp; "index"</svg:title>');
-    const bare = odsChartFrames(
-      [{ ...chart, title: undefined, labels: null, series: [] }],
-      undefined,
+    const frames = odsChartFrames(
+      [
+        { ...chart, at: { r: 2, c: 3, dx: 48, dy: 96 } },
+        { ...chart, at: { r: 2, c: 3, dx: 0, dy: 0 }, title: undefined, labels: null, series: [] },
+        { ...chart, at: { r: 0, c: 0, dx: 0, dy: 0 } },
+      ],
       'S',
-      [{ inline: '<x/>' }],
+      [{ href: 'Object 1' }, { inline: '<x/>' }, { href: 'Object 3' }],
     );
-    expect(bare).toContain('<draw:object><x/></draw:object>');
-    expect(bare).not.toContain('svg:title');
+    expect([...frames.keys()]).toEqual(['2,3', '0,0']);
+    const shared = frames.get('2,3')!;
+    // Half an inch across, an inch down, into the cell.
+    expect(shared).toMatch(
+      /^<draw:frame draw:z-index="0" draw:name="Chart 1" svg:x="1.270cm" svg:y="2.540cm"/,
+    );
+    expect(shared).toContain('xlink:href="./Object 1"');
+    expect(shared).toContain('<svg:title>Cost &amp; "index"</svg:title>');
+    expect(shared).toContain('<draw:frame draw:z-index="1" draw:name="Chart 2"');
+    expect(shared).toContain('<draw:object><x/></draw:object></draw:frame>');
+    expect(frames.get('0,0')).toContain('draw:z-index="2"');
   });
 
   it('writes each type’s class, its titles, legend, axes and series styles', () => {
@@ -388,7 +383,9 @@ describe('ODF charts', () => {
       'manifest:full-path="Object 1/" manifest:media-type="application/vnd.oasis.opendocument.chart"',
     );
     expect(entries.get('Object 8/content.xml')).toContain('<office:document-content');
-    expect(entries.get('content.xml')).toMatch(/<table:shapes><draw:frame/);
+    // In its anchor cell, not over the sheet.
+    expect(entries.get('content.xml')).not.toContain('<table:shapes>');
+    expect(entries.get('content.xml')).toMatch(/<table:table-cell><draw:frame draw:z-index="0"/);
     const flat = writeFlatOds(CHARTS, 'charts').data;
     expect(flat).toContain('<draw:object draw:notify-on-update-of-ranges=');
     expect(flat).toContain(
