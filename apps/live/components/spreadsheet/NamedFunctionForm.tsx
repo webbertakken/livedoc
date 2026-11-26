@@ -129,12 +129,12 @@ export function NamedFunctionForm({
         <TextInput
           id={`${id}-name`}
           autoFocus
-          className="font-mono uppercase"
+          className="font-mono"
           maxLength={NAMED_FUNCTION_NAME_MAX + 1}
           value={name}
           aria-invalid={!!nameWhy.node}
           aria-describedby={nameWhy.describedBy}
-          onChange={(e) => change(setName)(e.target.value)}
+          onChange={(e) => change(setName)(e.target.value.toUpperCase())}
         />
         {nameWhy.node}
       </div>
