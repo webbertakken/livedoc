@@ -3,7 +3,7 @@
 // A box drawn from empty space with Select in hand (docs/specs/035-pdf-documents/marks.md "Changing a mark"): a mouse's
 // or a pen's press where it reaches no mark and no line of text lies within a line height of it is armed once the
 // page's text is read; a drag past the slop from it draws the box, and once let go every mark of the page it touches
-// is selected, ⇧ adding them. A press on text, or a finger, is left to the text as before.
+// is selected, ⇧ adding them, the keys going to the first of them as a press gives them. A press on text, or a finger, is left to the text as before.
 import { useRef, useState, type PointerEvent } from 'react';
 import {
   MarkHit,
@@ -41,6 +41,7 @@ export function usePdfPageBoxing({
   marks,
   choosing,
   pointAt,
+  focusMark,
 }: {
   index: number;
   // The pages' text, read once and kept; null before the file is open.
@@ -51,6 +52,8 @@ export function usePdfPageBoxing({
   choosing: PdfPageChoosing | null;
   // A pointer's place on the page as the file has it; null before the page is drawn.
   pointAt: (client: { x: number; y: number }) => PagePoint | null;
+  // The keys go to a mark's control, once the selection holds it.
+  focusMark: (id: string) => void;
 }) {
   const armed = useRef<Armed | null>(null);
   // The box as it is drawn, in page space; null while none is.
@@ -102,6 +105,9 @@ export function usePdfPageBoxing({
       touched.map((mark) => mark.id),
       now.shift,
     );
+    // After the selection is drawn, so focusing the control finds its mark selected already.
+    const first = touched[0];
+    if (first) queueMicrotask(() => focusMark(first.id));
     return true;
   };
 

@@ -314,6 +314,10 @@ export const PdfPage = memo(function PdfPage({
     marks: pressable,
     choosing: tool === 'select' && current ? choosing : null,
     pointAt,
+    focusMark: (id) =>
+      box
+        ?.querySelector<HTMLElement>(`[data-pdf-mark-control="${id}"]`)
+        ?.focus({ preventScroll: true }),
   });
   // One selected mark has handles; the mark as a handle's drag has it, while it lasts (marks.md "Changing a mark").
   const [reshaping, setReshaping] = useState<PdfMarkReshaping | null>(null);

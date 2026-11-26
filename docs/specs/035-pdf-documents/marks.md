@@ -137,7 +137,7 @@ written into the file as a standard annotation, so any reader shows it. The rese
 - **Empty space** `(default)`: where a press reaches no mark and no line of text lies within a line height of it (a
   margin, a gap between columns, a page with no text). A mouse's or a pen's drag from it draws a box, a dashed line in
   the shell's focus colour, and once let go selects every mark of that page whose smallest box it touches, ⇧ adding
-  them to the marks selected there; a drag from text selects text, as before. A box shorter than `PDF_DRAG_SLOP_PX`
+  them to the marks selected there, and the keys go to the first of them as a press gives them; a drag from text selects text, as before. A box shorter than `PDF_DRAG_SLOP_PX`
   is a press.
 - **A finger's tap** with Select in hand selects the mark it lands on, within `PDF_MARK_TOUCH_REACH_PX` of it, as a
   press does; a tap on nothing lets the marks go and falls to the text. A finger's drag scrolls, so a mark is moved

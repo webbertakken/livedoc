@@ -41,6 +41,7 @@ const pointer = (x: number, y: number, over: Record<string, unknown> = {}) =>
 
 function boxing({ choose = true, text = TEXT as PageText | null } = {}) {
   const choosing = { chooseAll: vi.fn() } as unknown as PdfPageChoosing;
+  const focusMark = vi.fn();
   const texts: PdfPageTexts = { read: vi.fn(async () => text), tags: vi.fn() };
   const hook = renderHook(() =>
     usePdfPageBoxing({
@@ -49,6 +50,7 @@ function boxing({ choose = true, text = TEXT as PageText | null } = {}) {
       marks: [left, right],
       choosing: choose ? choosing : null,
       pointAt,
+      focusMark,
     }),
   );
   /** A press at a screen point, its text read. */
@@ -56,12 +58,12 @@ function boxing({ choose = true, text = TEXT as PageText | null } = {}) {
     hook.result.current.down(pointer(x, y, over), pointAt({ x, y }));
     await act(async () => {});
   };
-  return { hook, choosing, press };
+  return { hook, choosing, press, focusMark };
 }
 
 describe('a box drawn from empty space', () => {
   it('draws from the margin and selects the marks it touches once let go', async () => {
-    const { hook, choosing, press } = boxing();
+    const { hook, choosing, press, focusMark } = boxing();
     await press(10, 790);
     expect(hook.result.current.move(pointer(10 + PDF_DRAG_SLOP_PX - 1, 790))).toBe(true);
     expect(hook.result.current.box).toBeNull();
@@ -71,6 +73,8 @@ describe('a box drawn from empty space', () => {
     act(() => void (taken = hook.result.current.up(pointer(200, 750))));
     expect(taken).toBe(true);
     expect(choosing.chooseAll).toHaveBeenCalledWith(2, ['l'], false);
+    await act(async () => {});
+    expect(focusMark).toHaveBeenCalledWith('l');
     expect(hook.result.current.box).toBeNull();
   });
 
