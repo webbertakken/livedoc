@@ -28,6 +28,7 @@ export type GridDialogs = {
   openCustomDateTime: () => void;
   merge: (mode: MergeMode) => void;
   openCustomAngle: () => void;
+  openSortRange: () => void;
 };
 
 export function useGridMenuBindings(
@@ -80,6 +81,7 @@ export function useGridMenuBindings(
       openCustomDateTime: dialogs.openCustomDateTime,
       merge: dialogs.merge,
       openCustomAngle: dialogs.openCustomAngle,
+      openSortRange: dialogs.openSortRange,
     },
   });
   const published = {

@@ -1,6 +1,7 @@
 # Data tools
 
-**Status: specified.** Nothing is built.
+**Status: partly built.** Sort Sheet, Sort Range with its Advanced Range Sorting Options, and Create a Filter
+are built; the rest is specified.
 
 Sorting, filtering, validation, names, protection, tables and clean-up in a [spreadsheet](spreadsheet.md), as
 Google Sheets' Data menu does. Its rows of the [parity matrix](parity-matrix.md) name this page.
@@ -8,8 +9,16 @@ Google Sheets' Data menu does. Its rows of the [parity matrix](parity-matrix.md)
 ## Sort
 
 - **Sort Sheet** A to Z, Z to A by the active column (a header row frozen stays put).
-- **Sort Range** A to Z, Z to A, and **Advanced Range Sorting Options**: "Data has header row", then sort keys in
-  order, each a column and A to Z or Z to A, **Add Another Sort Column**.
+- **Sort Range** A to Z, Z to A by the active column, and **Advanced Range Sorting Options**: a dialog titled
+  "Sort range from B1 to D10" (the selection's first and last cells), with **Data has header row**, then the sort keys
+  in order, each a column and **A → Z** or **Z → A**, **Add Another Sort Column**, **Cancel** and **Sort**.
+  - The first key is the active column when it is in the range, else the range's first column, A to Z.
+  - A column is offered by its letter ("Column B"); with a header row ticked, by its header's text as shown, a blank
+    header by its letter. The header row stays in place.
+  - An added key ("Then by") takes the first column not yet a key (the first column once all are) and has a remove
+    button ("Remove sort column 2"); the first key has none.
+  - Sort runs every key at once, one undo step, the keys back in the grid; Cancel, Escape and × change nothing.
+  - A range of fewer than two rows to sort changes nothing; a merge across the rows refuses, as Sort Range does.
 - Text sorts by the workbook's locale, numbers before text, blanks last, as Google's.
 - A whole-sheet sort is a layout write of row order; a range sort a cell write (as today, [Sheet store](sheet-store.md)).
 

@@ -35,6 +35,7 @@ function Menus({ actions }: { actions: SheetActions }) {
       openCustomDateTime: vi.fn(),
       merge: vi.fn(),
       openCustomAngle: vi.fn(),
+      openSortRange: vi.fn(),
     },
     // The side panel's item, as SpreadsheetSheetParts binds it.
     { 'conditional-formatting': { run: vi.fn(), checked: false } },

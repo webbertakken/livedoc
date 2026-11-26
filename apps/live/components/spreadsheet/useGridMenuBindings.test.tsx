@@ -68,6 +68,7 @@ function bound(
           openCustomDateTime,
           merge: vi.fn(),
           openCustomAngle: vi.fn(),
+          openSortRange: vi.fn(),
         },
         panelActions,
       ),

@@ -433,7 +433,7 @@ const DATA_MENU = menu('data', 'Data', [
   submenu('sort-range', 'Sort Range', [
     built('sort-range-a-to-z', 'A to Z', 'edit'),
     built('sort-range-z-to-a', 'Z to A', 'edit'),
-    item('sort-range-advanced', 'Advanced Range Sorting Options', 'edit'),
+    built('sort-range-advanced', 'Advanced Range Sorting Options', 'edit'),
   ]),
   SEPARATOR,
   built('create-a-filter', 'Create a Filter', 'edit'),
