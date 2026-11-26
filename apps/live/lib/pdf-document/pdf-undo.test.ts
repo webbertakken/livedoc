@@ -207,3 +207,101 @@ describe('pdfUndo', () => {
     expect(ids(doc)).toEqual(['a']);
   });
 });
+
+// "A mark as it is made": typing a box, from its first character to its end, is one step however long it took.
+describe('pdfUndo, an open step', () => {
+  const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+  it('joins every change made while open into one step, past the group’s time', async () => {
+    const doc = PdfLiveChanges.load();
+    const undo = pdfUndo(doc, 20);
+    add(doc, 'a');
+    const open = undo.open({ page });
+    add(doc, 'b');
+    await wait(40);
+    add(doc, 'c');
+    open.close();
+    add(doc, 'd');
+    undo.undo();
+    expect(ids(doc)).toEqual(['a', 'b', 'c']);
+    undo.undo();
+    expect(ids(doc)).toEqual(['a']);
+  });
+
+  it('groups again by the group’s time once closed', async () => {
+    const doc = PdfLiveChanges.load();
+    const undo = pdfUndo(doc, 20);
+    undo.open({ page }).close();
+    add(doc, 'a');
+    await wait(40);
+    add(doc, 'b');
+    undo.undo();
+    expect(ids(doc)).toEqual(['a']);
+  });
+
+  it('says where the step was made when it is taken back', () => {
+    const { doc, undo } = person();
+    const returned: PdfUndoPlace[] = [];
+    undo.onReturn((place) => returned.push(place));
+    const open = undo.open({ page: other });
+    add(doc, 'a', other);
+    open.close();
+    undo.undo();
+    expect(returned).toEqual([{ page: other }]);
+  });
+
+  it('leaves no step when discarded, the step before it kept', () => {
+    const { doc, undo, mark } = person();
+    mark('a');
+    const open = undo.open({ page });
+    add(doc, 'b');
+    PdfChange.apply(doc, PdfChange.removeMark('b'), PDF_LOCAL_ORIGIN);
+    open.discard();
+    expect(undo.get()).toEqual({ canUndo: true, canRedo: false });
+    undo.undo();
+    expect(ids(doc)).toEqual([]);
+    expect(undo.get().canUndo).toBe(false);
+  });
+
+  it('takes no earlier step off when discarded with nothing changed', () => {
+    const { doc, undo, mark } = person();
+    mark('a');
+    undo.open({ page }).discard();
+    undo.undo();
+    expect(ids(doc)).toEqual([]);
+  });
+
+  it('closes the step open before it, when another opens', () => {
+    const { doc, undo } = person();
+    undo.open({ page });
+    add(doc, 'a');
+    const second = undo.open({ page });
+    add(doc, 'b');
+    second.close();
+    undo.undo();
+    expect(ids(doc)).toEqual(['a']);
+  });
+
+  it('brings back a Text’s words when the step is made again', () => {
+    const { doc, undo } = person();
+    const text = Mark.text({
+      id: 't',
+      page,
+      colour: '#ff0000',
+      opacity: 1,
+      author: 'Ada',
+      createdAt: 1,
+      rect: [72, 700, 272, 730],
+      words: 'H',
+      size: 12,
+    })!;
+    const open = undo.open({ page });
+    PdfChange.apply(doc, PdfChange.addMark(text), PDF_LOCAL_ORIGIN);
+    PdfChange.apply(doc, PdfChange.changeMark('t', { words: 'Hi there' }), PDF_LOCAL_ORIGIN);
+    open.close();
+    undo.undo();
+    expect(ids(doc)).toEqual([]);
+    undo.redo();
+    expect(PdfLiveChanges.mark(doc, 't')).toEqual({ ...text, words: 'Hi there' });
+  });
+});
