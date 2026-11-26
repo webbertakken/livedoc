@@ -93,7 +93,12 @@ test('the menus run what the grid does, and dim what is still to come', async ({
   await size.press('Enter');
   await select(page, 'A3');
   await expect(size).toHaveValue('14');
-  await expect(toolbar.getByRole('button', { name: 'Insert Chart' })).toHaveAttribute(
+  // Insert Link is still to come; Insert Chart is built (charts.md "Inserting").
+  await expect(toolbar.getByRole('button', { name: 'Insert Link' })).toHaveAttribute(
+    'aria-disabled',
+    'true',
+  );
+  await expect(toolbar.getByRole('button', { name: 'Insert Chart' })).not.toHaveAttribute(
     'aria-disabled',
     'true',
   );
