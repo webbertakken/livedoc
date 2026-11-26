@@ -143,6 +143,7 @@ Editing. Shortcuts are in [Keyboard shortcuts](keyboard-shortcuts.md).
 | Highlight, Underline, Strikethrough, Squiggly underline | A text mark on the selection                                                                                                                  | participate | Reviewing |
 | Text, Callout                                           | A text mark ([Marks](marks.md))                                                                                                               | participate | Reviewing |
 | Drawing                                                 | Freehand                                                                                                                                      | participate | Reviewing |
+| Erase                                                   | Rubs out a Drawing's strokes ([Marks](marks.md#changing-a-mark))                                                                              | participate | Reviewing |
 | Shape ▸                                                 | Line; Arrow; Rectangle; Ellipse; Polygon; Cloud; Connected lines                                                                              | participate | Reviewing |
 | Stamp ▸                                                 | Standard stamps; Dynamic stamps; Custom stamps; Manage stamps. Each opens the stamps there ([Marks](marks.md#stamps))                         | participate | Reviewing |
 | Tick, Cross, Dot                                        | Fill marks for a PDF with no fields ([Fields](fields.md#a-pdf-with-no-fields))                                                                | participate | Reviewing |
@@ -254,6 +255,8 @@ rest are the mode's own. A control past the width goes into the shell's overflow
   in this browser: the button then shows that tool, its glyph and its name `(default)`.
 - **Shape** holds Line, Arrow, Rectangle, Ellipse, Polygon, Cloud and Connected lines behind its chevron the same
   way, remembered apart, Line until another is taken `(default)`.
+- **Drawing** holds Drawing and Erase behind its chevron the same way, remembered apart, Drawing until Erase is
+  taken; D takes the Drawing `(default)`.
 - **Text** holds Text and Callout behind its chevron the same way, remembered apart, Text until another is taken
   `(default)`.
 - **Stamp** holds the stamps behind its chevron, in grids by category, each drawn as it looks; Approved until another
