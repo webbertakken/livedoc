@@ -494,12 +494,11 @@ test('two marks grouped are selected and moved as one, and ungrouped', async ({
   await (await officeMenuItem(page, ['Format', 'Group'])).click();
 
   // A press on nothing lets them go; a press on the arrow alone selects the group, and a drag moves both.
-  await page.mouse.click(
-    ...(await (async () => {
-      const box = (await first.boundingBox())!;
-      return [box.x + box.width * 0.9, box.y + box.height * 0.08] as const;
-    })()),
-  );
+  const nothing = async () => {
+    const box = (await first.boundingBox())!;
+    await page.mouse.click(box.x + box.width * 0.9, box.y + box.height * 0.08);
+  };
+  await nothing();
   await expect(outlines).toHaveCount(0);
   await page.mouse.click(...(await leftEdge(kind('arrow'))));
   await expect(outlines).toHaveCount(2);
@@ -516,7 +515,8 @@ test('two marks grouped are selected and moved as one, and ungrouped', async ({
 
   // Ungrouped, a press on the arrow selects it alone.
   await (await officeMenuItem(page, ['Format', 'Ungroup'])).click();
-  await page.keyboard.press('Escape');
+  await nothing();
+  await expect(outlines).toHaveCount(0);
   await page.mouse.click(...(await leftEdge(kind('arrow'))));
   await expect(outlines).toHaveCount(1);
   expectNoPageErrors(pageErrors);
