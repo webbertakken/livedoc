@@ -72,10 +72,7 @@ export function SheetValidationForm({
     const g = parseRangeText(d.range);
     if (!g || g.r2 >= c.sheet.layout.rows.length || g.c2 >= c.sheet.layout.cols.length)
       return setWhy('Type a range like B2:B20');
-    const made = settingsOf(
-      d,
-      draftEnv(c, (x) => actions.rangeIds(x)),
-    );
+    const made = settingsOf(d, draftEnv(c));
     if (!made.ok) return setWhy(made.why);
     if (actions.setValidation(g, made.settings, existing?.id)) onClose();
   };

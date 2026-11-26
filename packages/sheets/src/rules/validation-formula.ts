@@ -3,6 +3,7 @@
 // no workbook, lets those rules through.
 import type { Workbook } from '../engine/workbook';
 import { formulaAnswerMet, movedFormula } from './moved-formula';
+import { sourceSheetOf } from './rule-source';
 import { rangeOptions, type FormulaAllows, type RuleCtx } from './validation';
 
 // Whether a Custom Formula Is rule allows `v` at (r, c): its formula, moved there, worked out with the cell read as
@@ -23,8 +24,9 @@ export function validationFormulaAllows(wb: Workbook, sheetId: string): FormulaA
 export function workbookRuleChecks(
   wb: Workbook,
   sheetId: string,
-): Required<Pick<RuleCtx, 'rangeValues' | 'formulaAllows'>> {
+): Required<Pick<RuleCtx, 'rangeValues' | 'formulaAllows' | 'sourceOf'>> {
   return {
+    sourceOf: (src) => sourceSheetOf(wb.ctxFor(sheetId), src),
     rangeValues: (rule) => rangeOptions(wb, sheetId, rule),
     formulaAllows: validationFormulaAllows(wb, sheetId),
   };

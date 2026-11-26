@@ -179,7 +179,8 @@ describe('a rule draft as settings', () => {
   };
   const STORED = { t: '=@0>0', r: [{ r1: 'r1', c1: 'c1' }] };
   const compile = (text: string) => (text === '=A1>0' ? STORED : null);
-  const env = { locale: 'en-GB', rangeIds: ids, compile };
+  const source = (text: string) => (text ? ids() : null);
+  const env = { locale: 'en-GB', source, compile };
   it('reads custom checkbox values and a custom formula, and refuses what cannot be one', () => {
     const check = { ...d, is: 'check' as const, custom: true };
     expect(settingsOf({ ...check, on: ' Yes ', off: 'No' }, env)).toEqual({
@@ -239,7 +240,7 @@ describe('a rule draft as settings', () => {
       settings: { is: 'range' },
     });
     expect(
-      settingsOf({ ...d, is: 'range', src: '' }, { ...env, rangeIds: () => null }),
+      settingsOf({ ...d, is: 'range', src: '' }, { ...env, source: () => null }),
     ).toMatchObject({
       ok: false,
     });

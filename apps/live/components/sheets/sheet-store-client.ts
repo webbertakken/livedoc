@@ -29,6 +29,7 @@ import {
   sheetFromJson,
   sheetToJson,
   shrinkReadersOf,
+  shrinkRuleSourcesOf,
   splitWrite,
   undoReadsNow,
   uniqueSheetTitle,
@@ -760,6 +761,9 @@ export class SheetStore {
         if (named.has(id) || !this.inScope(entry.view, this.scopeOf(target.tabId))) continue;
         const cells = shrinkReadersOf(sheetId, target.layout, write.changes, entry.view.cells);
         if (cells.length) out.push({ sheetId: id, write: { kind: 'cells', cells } });
+        // A Dropdown from a Range reading the sheet shrinks with it (data-validation.md "Rules").
+        const changes = shrinkRuleSourcesOf(sheetId, target.layout, write.changes, entry.view.layout);
+        if (changes.length) out.push({ sheetId: id, write: { kind: 'layout', changes } });
       }
     }
     return out;

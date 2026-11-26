@@ -70,6 +70,7 @@ export * from './themes/spreadsheet-theme';
 export * from './rules/rule-shape';
 export * from './rules/validation';
 export * from './rules/validation-formula';
+export * from './rules/rule-source';
 export * from './rules/validation-edit';
 export * from './rules/format-rules';
 export * from './write-caps';

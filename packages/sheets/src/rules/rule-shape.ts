@@ -1,7 +1,7 @@
 // What a stored rule may be: every viewer draws a stored rule, so a malformed
 // one would break the sheet for all of them. Closed lists, bounded text and counts, ranges on the sheet.
 import { isColour, validFormatValue } from '../format';
-import { isAxisId } from '../ids';
+import { isAxisId, isSheetId } from '../ids';
 import { layoutIndex } from '../layout';
 import { CONDITION_OPS } from '../filter';
 import { storedAst } from '../formula/stored';
@@ -12,6 +12,7 @@ import {
   FORMAT_RULE_FORMULA_MAX,
   FORMAT_RULE_RANGES_MAX,
   FORMAT_RULE_VALUE_MAX,
+  SHEET_TITLE_MAX,
   VALIDATION_HELP_MAX,
 } from '../limits';
 import type { SheetLayout, StoredFormula } from '../sheet';
@@ -98,6 +99,23 @@ function moreOnSheet(v: unknown, layout: SheetLayout): boolean {
   );
 }
 
+// A Dropdown from a Range's cells: on this sheet, or on another by id or by title (never both), whose corners are
+// that sheet's to keep (a deletion there shrinks them; one that is gone offers nothing).
+function sourceOk(v: unknown, layout: SheetLayout): boolean {
+  if (!isObj(v)) return false;
+  const keys = Object.keys(v).filter((k) => v[k] !== undefined);
+  if (!keys.every((k) => ['r1', 'c1', 'r2', 'c2', 's', 'st'].includes(k))) return false;
+  if (v.s === undefined && v.st === undefined) return rangeOnSheet(v, layout);
+  if (v.s !== undefined && v.st !== undefined) return false;
+  if (v.s !== undefined && !isSheetId(v.s)) return false;
+  if (
+    v.st !== undefined &&
+    (typeof v.st !== 'string' || v.st.length === 0 || v.st.length > SHEET_TITLE_MAX)
+  )
+    return false;
+  return isAxisId(v.r1) && isAxisId(v.r2) && isAxisId(v.c1) && isAxisId(v.c2);
+}
+
 function optionsOk(v: unknown): boolean {
   if (!Array.isArray(v) || v.length === 0 || v.length > DROPDOWN_OPTIONS_MAX) return false;
   const seen = new Set<string>();
@@ -152,7 +170,7 @@ export function isValidationRule(
     case 'list':
       return optionsOk(v.opts) && noOperands;
     case 'range':
-      return rangeOnSheet(v.src, layout) && noOperands;
+      return sourceOk(v.src, layout) && noOperands;
     case 'check':
       return noOperands && customValuesOk(v.on, v.off);
     case 'formula':
