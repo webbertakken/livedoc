@@ -57,7 +57,8 @@ const DOCUMENT_SCOPE: Record<string, Decision> = {
   'POST /documents/{id}/sheets': 'allow',
   'DELETE /documents/{id}/sheets/{sheetId}': 'allow',
   'POST /documents/{id}/sheets/{sheetId}/writes': 'allow',
-  'POST /documents/{id}/sheets/{sheetId}/changesets': 'allow',
+  // A workbench writes no agent changesets (agent-changesets.md "Whole-tab saves and tab renames").
+  'POST /documents/{id}/sheets/{sheetId}/changesets': 'confined',
   'GET /documents/{id}/sheets/{sheetId}/cells': 'allow',
   // A spreadsheet's workbook; its imports read other documents (WB68).
   'GET /documents/{id}/workbook': 'allow',
