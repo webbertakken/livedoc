@@ -1,0 +1,88 @@
+// The parts a workbook's charts add to its XLSX (docs/specs/029-sheets/standard-mapping.md "Charts in the file"): per
+// sheet with charts, a drawing part and its relationship from the worksheet, and a chart part per chart, named past
+// the parts the file kept. A sheet keeping its file's own drawing writes none of its charts (D261).
+import {
+  OOXML_CONTENT_TYPES,
+  RELATIONSHIP_TYPES,
+  XML_DECLARATION,
+  type OoxmlPart,
+  type Relationship,
+} from '@livedoc/office-packages';
+import type { FileLoss, FileSheet } from './workbook-file';
+import { xlsxChartXml, xlsxDrawingXml } from './xlsx-charts';
+import { ownIds, type XlsxKeptWriter } from './xlsx-kept-write';
+
+export type XlsxChartParts = {
+  // By sheet: the worksheet's relationship id for its drawing, and that relationship.
+  sheets: ({ relId: string; rels: Relationship[] } | null)[];
+  parts: OoxmlPart[];
+  // Each drawing part's relationships to its charts.
+  relationships: [string, Relationship[]][];
+};
+
+const encode = (xml: string) => new TextEncoder().encode(`${XML_DECLARATION}\n${xml}\n`);
+
+// The next free name of a numbered part: `xl/charts/chart1.xml`, `chart2.xml`, ... none the file kept.
+function namer(taken: ReadonlySet<string>): (dir: string, stem: string) => number {
+  const next = new Map<string, number>();
+  return (dir, stem) => {
+    let n = next.get(stem) ?? 0;
+    do n++;
+    while (taken.has(`xl/${dir}/${stem}${n}.xml`));
+    next.set(stem, n);
+    return n;
+  };
+}
+
+export function xlsxChartParts(
+  sheets: readonly FileSheet[],
+  kept: XlsxKeptWriter,
+  keptParts: readonly OoxmlPart[],
+  renamed: ReadonlyMap<string, string>,
+  losses: FileLoss[],
+): XlsxChartParts {
+  const out: XlsxChartParts = { sheets: [], parts: [], relationships: [] };
+  const nextOf = namer(new Set(keptParts.map((p) => p.name)));
+  sheets.forEach((sheet, i) => {
+    const charts = sheet.charts ?? [];
+    if (!charts.length || kept.keepsWorksheetChild('drawing', i)) {
+      if (charts.length) losses.push({ k: 'charts_unwritten', sheet: sheet.name });
+      out.sheets.push(null);
+      return;
+    }
+    const name = renamed.get(sheet.name) ?? sheet.name;
+    const drawing = `xl/drawings/drawing${nextOf('drawings', 'drawing')}.xml`;
+    const chartRels: Relationship[] = charts.map((chart, n) => {
+      const part = `chart${nextOf('charts', 'chart')}.xml`;
+      out.parts.push({
+        name: `xl/charts/${part}`,
+        contentType: OOXML_CONTENT_TYPES.chart,
+        data: encode(xlsxChartXml(name, chart)),
+      });
+      return { id: `rId${n + 1}`, type: RELATIONSHIP_TYPES.chart, target: `../charts/${part}` };
+    });
+    out.parts.push({
+      name: drawing,
+      contentType: OOXML_CONTENT_TYPES.drawing,
+      data: encode(
+        xlsxDrawingXml(
+          charts,
+          chartRels.map((r) => r.id),
+        ),
+      ),
+    });
+    out.relationships.push([drawing, chartRels]);
+    const relId = ownIds(kept.relationships('sheet', i))();
+    out.sheets.push({
+      relId,
+      rels: [
+        {
+          id: relId,
+          type: RELATIONSHIP_TYPES.drawing,
+          target: `../${drawing.slice('xl/'.length)}`,
+        },
+      ],
+    });
+  });
+  return out;
+}

@@ -135,6 +135,11 @@ export class XlsxKeptWriter {
     return at;
   }
 
+  /** Whether a sheet keeps a child of this name from its file (its `drawing`). */
+  keepsWorksheetChild(local: string, sheet: number): boolean {
+    return this.of('worksheet', sheet).some((item) => keptLocalName(item.xml) === local);
+  }
+
   /** Whether the workbook keeps a child of this name (its `bookViews`). */
   keepsWorkbookChild(local: string): boolean {
     return this.children('workbook').some((item) => keptLocalName(item.xml) === local);

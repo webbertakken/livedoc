@@ -7,7 +7,7 @@ import { emptyLayout, emptySheet, NOBODY } from './sheet';
 import { sheetToJson } from './sheet-json';
 import { applySheetWrite } from './store';
 import { Workbook } from './engine/workbook';
-import { sheetChartTable, type SheetChartTable } from './chart-data';
+import { emptyChartTable, sheetChartTable, type SheetChartTable } from './chart-data';
 import { designWrite, type TemplateChart } from './sheet-templates/compile';
 import { sheetTemplateInfo, type SheetTemplateId } from './sheet-templates/catalogue';
 import { sheetTemplate } from './sheet-templates/template-design';
@@ -62,11 +62,12 @@ export function sheetFromTemplate(opts: {
     sheet: { id, tabId, title, layout: json.layout, cells: json.cells },
     charts: made.charts.map((ch) => ({
       ...ch,
-      table: sheetChartTable(
-        wb,
-        { sheetId: id, range: ch.range, ...(ch.cols ? { cols: ch.cols } : {}) },
-        'en-GB',
-      ) ?? { categories: [], numbered: true, series: [] },
+      table:
+        sheetChartTable(
+          wb,
+          { sheetId: id, range: ch.range, ...(ch.cols ? { cols: ch.cols } : {}) },
+          'en-GB',
+        ) ?? emptyChartTable(),
     })),
   };
 }

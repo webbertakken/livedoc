@@ -149,6 +149,11 @@ export class OdsKeptWriter {
   }
 
   /** The kept entries still reached: a picture or an object while written kept XML names its path, the rest always. */
+  /** Every kept entry's name, reached or not: what a new entry must not be named. */
+  partNames(): Set<string> {
+    return new Set(this.parts.map((part) => part.name));
+  }
+
   entries(): OdfEntry[] {
     const named = this.written.join('\n');
     const reached = (name: string) => {

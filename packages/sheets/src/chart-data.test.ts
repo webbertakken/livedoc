@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { book } from './testing/book';
 import { applySheetWrite, type SheetWrite } from './store';
-import { regionAround, sheetChartTable, CHART_SERIES_MAX } from './chart-data';
+import { emptyChartTable, regionAround, sheetChartTable, CHART_SERIES_MAX } from './chart-data';
 
 const ctx = { now: 1, by: { id: '', name: '', color: '#000000' } };
 
@@ -36,6 +36,7 @@ describe('a chart from a range', () => {
       C3: 'n/a',
     });
     expect(sheetChartTable(b.wb, link(0, 0, 2, 2), 'en-GB')).toEqual({
+      at: { header: 0, labels: 0, rows: [1, 2], cols: [1, 2] },
       categories: ['Jan', 'Feb'],
       numbered: false,
       series: [
@@ -78,6 +79,7 @@ describe('a chart from a range', () => {
   it('numbers the categories and names series by column without labels or a header', () => {
     const { b, link } = setup({ B1: '1', C1: '2', B2: '3', C2: '4' });
     expect(sheetChartTable(b.wb, link(0, 1, 1, 2), 'en-GB')).toEqual({
+      at: { header: null, labels: null, rows: [0, 1], cols: [1, 2] },
       categories: ['1', '2'],
       numbered: true,
       series: [
@@ -104,6 +106,7 @@ describe('a chart from a range', () => {
     expect(
       sheetChartTable(b.wb, { ...link(0, 0, 2, 2), cols: [cols[0]!, cols[2]!] }, 'en-GB'),
     ).toEqual({
+      at: { header: 0, labels: 0, rows: [1, 2], cols: [2] },
       categories: ['Rent', 'Food'],
       numbered: false,
       series: [{ name: 'Amount', col: 's0c2', values: [1200, 320] }],
@@ -124,11 +127,8 @@ describe('a chart from a range', () => {
     expect(sheetChartTable(b.wb, { ...l, sheetId: 'nope' }, 'en-GB')).toBeNull();
     expect(sheetChartTable(b.wb, { ...l, range: { ...l.range, r1: 'gone' } }, 'en-GB')).toBeNull();
     apply({ kind: 'layout', changes: [{ k: 'hide', axis: 'r', ids: [l.range.r1], hidden: true }] });
-    expect(sheetChartTable(b.wb, l, 'en-GB')).toEqual({
-      categories: [],
-      numbered: true,
-      series: [],
-    });
+    expect(sheetChartTable(b.wb, l, 'en-GB')).toEqual(emptyChartTable());
+    expect(emptyChartTable().at).toEqual({ header: null, labels: null, rows: [], cols: [] });
   });
 
   it('keeps at most the series limit', () => {

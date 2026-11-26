@@ -18,6 +18,7 @@ import { odsFormatRulesXml } from './ods-format-rules';
 import { odsDefaultCellStyles } from './ods-cell-style';
 import { themedFormat, themeOf, type SpreadsheetTheme } from '../themes/spreadsheet-theme';
 import { OdsAxisOut } from './ods-lines';
+import { OdsChartObjects } from './ods-charts';
 import { toOpenFormula } from './open-formula';
 import type {
   FileCell,
@@ -67,6 +68,8 @@ type Out = {
   kept: OdsKeptWriter;
   // The workbook's theme: a theme colour written as the colour it is (standard-mapping.md "The theme in the file").
   theme: SpreadsheetTheme;
+  // Where its charts' objects go (standard-mapping.md "Charts in the file").
+  charts: OdsChartObjects;
 };
 
 // A cell's style, its number format's and its look's; a format ODF cannot say is named, the cell written without it.
@@ -225,7 +228,7 @@ function tableXml(sheet: FileSheet, index: number, out: Omit<Out, 'sheet' | 'ind
   });
   return [
     `<table:table table:name="${escapeXmlAttribute(sheet.name)}"${tableStyleAttribute(sheet, out.styles)}${kept.tableAttributes(index)}>`,
-    ...kept.table('table-before', index),
+    ...withCharts(kept.table('table-before', index), sheet, sheetOut),
     ...columnsXml(cols, colAxis),
     ...rowAxis.nest(runs, 'table-row-group'),
     ...withFormatRules(
@@ -234,6 +237,17 @@ function tableXml(sheet: FileSheet, index: number, out: Omit<Out, 'sheet' | 'ind
     ),
     '</table:table>',
   ];
+}
+
+// A table's charts in a `table:shapes` of their own after what it kept before its columns; none beside kept shapes, the
+// sheet named (D261).
+function withCharts(before: string[], sheet: FileSheet, out: Out): string[] {
+  if (!sheet.charts?.length) return before;
+  if (before.some((xml) => /^<[\w.-]+:shapes\b/.test(xml))) {
+    out.losses.push({ k: 'charts_unwritten', sheet: sheet.name });
+    return before;
+  }
+  return [...before, out.charts.shapes(sheet.name, sheet.charts, sheet.lines)];
 }
 
 // A table's format rules after its kept ones, in the kept `calcext:conditional-formats` or one of their own (D215).
@@ -277,15 +291,16 @@ function bodyXml(
   kept: OdsKeptWriter,
   common: XmlBindings,
   flat: boolean,
-): { body: string[]; common: string[] } {
+): { body: string[]; common: string[]; charts: OdsChartObjects } {
   const styles = new OdsStyles();
   const keptCommon = kept.commonStyles(common);
   styles.reserve(
     new Set(keptCommon.flatMap((xml) => /style:display-name="([^"]*)"/.exec(xml)?.[1] ?? [])),
   );
+  const charts = new OdsChartObjects(flat, kept.partNames());
   const theme = themeOf(file.theme);
   const tables = file.sheets.flatMap((sheet, i) =>
-    tableXml(sheet, i, { losses, styles, kept, theme }),
+    tableXml(sheet, i, { losses, styles, kept, theme, charts }),
   );
   const commonXml = commonStyles(theme.font, [...keptCommon, ...styles.conditionalStyles()]);
   const body = [
@@ -302,12 +317,17 @@ function bodyXml(
     '</office:spreadsheet>',
     '</office:body>',
   ];
-  return { body, common: commonXml };
+  return { body, common: commonXml, charts };
 }
 
-// The namespaces a root declares: `calcext` too when a sheet has format rules.
-const withRules = (file: WorkbookFile, prefixes: readonly Prefix[]): readonly Prefix[] =>
-  file.sheets.some((s) => s.formatRules?.length) ? [...prefixes, 'calcext'] : prefixes;
+// The namespaces a root declares: `calcext` too when a sheet has format rules, a drawing's and a chart's when one has charts.
+const withRules = (file: WorkbookFile, prefixes: readonly Prefix[]): readonly Prefix[] => [
+  ...prefixes,
+  ...(file.sheets.some((s) => s.formatRules?.length) ? (['calcext'] as const) : []),
+  ...(file.sheets.some((s) => s.charts?.length)
+    ? (['draw', 'svg', 'xlink', 'chart'] as const).filter((p) => !prefixes.includes(p))
+    : []),
+];
 
 function metaXml(title: string): string[] {
   return [
@@ -353,7 +373,7 @@ export function writeOds(file: WorkbookFile, title: string): FileWritten<Uint8Ar
   const prefixes = withRules(file, CONTENT_NAMESPACES);
   const own = bindings(prefixes);
   const kept = new OdsKeptWriter(file.kept, own);
-  const { body, common } = bodyXml(file, losses, kept, bindings(STYLES_NAMESPACES), false);
+  const { body, common, charts } = bodyXml(file, losses, kept, bindings(STYLES_NAMESPACES), false);
   const settingsOwn = bindings(SETTINGS_NAMESPACES);
   const settings = kept.settings({ ...kept.settingsNs, ...settingsOwn });
   const data = writeOdfPackage(ODF_MEDIA_TYPES.spreadsheet, [
@@ -389,6 +409,7 @@ export function writeOds(file: WorkbookFile, title: string): FileWritten<Uint8Ar
         ]
       : []),
     ...kept.entries(),
+    ...charts.entries,
   ]);
   return { data, losses };
 }

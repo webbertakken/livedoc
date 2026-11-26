@@ -30,6 +30,7 @@ import {
 } from './xlsx-parts';
 import { cachedLiteral, cutXlsxText, xlsxFormula, type XlsxFormula } from './xlsx-bounds';
 import { ownIds, XlsxKeptWriter } from './xlsx-kept-write';
+import { xlsxChartParts } from './xlsx-chart-parts';
 import { xlsxTabColor } from './xlsx-tab-look';
 import { XlsxStyles } from './xlsx-styles';
 import { xlsxFormatRulesXml } from './xlsx-format-rules';
@@ -182,6 +183,7 @@ function worksheetXml(
   book: { strings: SharedStrings; styles: XlsxStyles; kept: XlsxKeptWriter },
   renamed: ReadonlyMap<string, string>,
   losses: FileLoss[],
+  drawingRelId: string | null,
 ): { xml: string; dynamic: boolean } {
   const { strings, styles, kept } = book;
   // Cells past Excel's last column are left out, and the cut named (D89).
@@ -244,6 +246,8 @@ function worksheetXml(
       (style) => styles.dxf(style),
       renamed,
     ),
+    // Its charts, through its drawing part (standard-mapping.md "Charts in the file").
+    ...(drawingRelId ? [{ name: 'drawing', xml: `<drawing r:id="${drawingRelId}"/>` }] : []),
   ];
   const rootNs = kept.rootBindings('worksheet', OWN_NS, index);
   const xml = [
@@ -314,8 +318,17 @@ export function writeXlsx(file: WorkbookFile, title: string): FileWritten<Uint8A
   const theme = themeOf(file.theme);
   const styles = new XlsxStyles(kept.stylesheet({ '': SPREADSHEETML_NS }), theme.font);
   let dynamic = false;
+  const keptParts = kept.parts();
+  const drawn = xlsxChartParts(file.sheets, kept, keptParts.parts, renamed, losses);
   const sheetParts = file.sheets.map((sheet, i): OoxmlPart => {
-    const written = worksheetXml(sheet, i, { strings, styles, kept }, renamed, losses);
+    const written = worksheetXml(
+      sheet,
+      i,
+      { strings, styles, kept },
+      renamed,
+      losses,
+      drawn.sheets[i]?.relId ?? null,
+    );
     dynamic ||= written.dynamic;
     return {
       name: `xl/worksheets/sheet${i + 1}.xml`,
@@ -357,6 +370,7 @@ export function writeXlsx(file: WorkbookFile, title: string): FileWritten<Uint8A
     xmlPart('xl/sharedStrings.xml', OOXML_CONTENT_TYPES.sharedStrings, strings.xml()),
     // The workbook's theme (standard-mapping.md "The theme in the file").
     xmlPart('xl/theme/theme1.xml', OOXML_CONTENT_TYPES.theme, xlsxThemeXml(theme)),
+    ...drawn.parts,
     ...(dynamic
       ? [xmlPart('xl/metadata.xml', OOXML_CONTENT_TYPES.sheetMetadata, DYNAMIC_ARRAY_METADATA_XML)]
       : []),
@@ -373,7 +387,6 @@ export function writeXlsx(file: WorkbookFile, title: string): FileWritten<Uint8A
   ];
   const keptPackageRels = kept.relationships('package');
   const packageId = ownIds(keptPackageRels);
-  const keptParts = kept.parts();
   const relationships = new Map<string, readonly Relationship[]>([
     [
       '',
@@ -391,8 +404,9 @@ export function writeXlsx(file: WorkbookFile, title: string): FileWritten<Uint8A
     ['xl/workbook.xml', [...workbookRels, ...keptWorkbookRels]],
     ...sheetParts.map((part, i): [string, Relationship[]] => [
       part.name,
-      kept.relationships('sheet', i),
+      [...kept.relationships('sheet', i), ...(drawn.sheets[i]?.rels ?? [])],
     ]),
+    ...drawn.relationships,
     ...keptParts.relationships,
   ]);
   return { data: writeOoxmlPackage([...parts, ...keptParts.parts], relationships), losses };
