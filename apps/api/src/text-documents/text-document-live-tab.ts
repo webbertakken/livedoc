@@ -27,6 +27,7 @@ export const TEXT_DOCUMENT_LIVE_TAB = liveTabKind({
     decodes: (update) => TextDocumentState.decodes(update),
     insertedCharacters: (update) => TextDocumentState.insertedCharacters(update),
     digest: (updates) => textDocumentDigest(TextDocumentState.load(updates)),
+    placedImages: (update) => TextDocumentState.galleryImagesWritten(update),
     // review.md "How a comment is kept": a Participant's update is judged by what it touches, its own comments alone.
     asks: (stored, update, _tab, sender) => textDocumentLevelAsked(stored, update, sender.adderKey),
   },

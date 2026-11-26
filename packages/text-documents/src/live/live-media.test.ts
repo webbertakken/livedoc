@@ -50,3 +50,36 @@ describe('TextDocumentState.drawingPlace', () => {
     expect(TextDocumentState.drawingPlace(doc, 'gone')).toBeNull();
   });
 });
+
+// docs/specs/009-elements/images.md "A live tab's references": the gallery images an update writes, read from it alone.
+describe('TextDocumentState.galleryImagesWritten', () => {
+  const updateOf = (change: (doc: Y.Doc) => void) => {
+    const doc = TextDocumentState.load();
+    doc.getXmlFragment('body').insert(0, [paragraph()]);
+    const vector = Y.encodeStateVector(doc);
+    change(doc);
+    return Y.encodeStateAsUpdate(doc, vector);
+  };
+
+  it('names the gallery image each media entry the update writes holds', () => {
+    const update = updateOf((doc) =>
+      doc.transact(() => {
+        doc.getMap('media').set('k1', { mediaType: 'image/png', image: 'img-1' });
+        doc.getMap('media').set('k2', { mediaType: 'image/png', bytes: new Uint8Array(4) });
+        doc
+          .getMap('media')
+          .set('k3', { mediaType: 'image/png', image: 'data:image/png;base64,AA' });
+        (doc.getXmlFragment('body').get(0) as Y.XmlElement).insert(0, [picture({ media: 'k1' })]);
+      }),
+    );
+    expect(TextDocumentState.galleryImagesWritten(update)).toEqual(['img-1']);
+  });
+
+  it('names none for an update that writes no media, or one it cannot read', () => {
+    const update = updateOf((doc) =>
+      (doc.getXmlFragment('body').get(0) as Y.XmlElement).insert(0, [picture({ media: 'k1' })]),
+    );
+    expect(TextDocumentState.galleryImagesWritten(update)).toEqual([]);
+    expect(TextDocumentState.galleryImagesWritten(new Uint8Array([1, 2, 3]))).toEqual([]);
+  });
+});

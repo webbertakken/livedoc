@@ -3,6 +3,7 @@
 // reopened, and the sender's own reactions; anything else asks for Editing. An update standing on changes the stored
 // state lacks cannot be judged.
 import { describe, expect, it } from 'vitest';
+import { MAX_IMAGE_BYTES } from '@livedoc/api-schema';
 import { MENTIONS_MAX } from '@livedoc/document';
 import * as Y from 'yjs';
 import { textDocumentLevelAsked } from './level-asked';
@@ -321,6 +322,7 @@ describe('textDocumentLevelAsked on suggestions', () => {
   function askedOn(
     change: (doc: Y.Doc, first: Y.XmlText, second: Y.XmlText) => void,
     key: string | null = ADA.key,
+    media: Record<string, unknown> = {},
   ) {
     const doc = new Y.Doc({ gc: false });
     const body = doc.getXmlFragment('body');
@@ -333,6 +335,7 @@ describe('textDocumentLevelAsked on suggestions', () => {
       return run;
     });
     runs[1]!.format(0, 3, { insertion: mark('ben-1', BEN) });
+    for (const [k, v] of Object.entries(media)) doc.getMap('media').set(k, v);
     const stored = [Y.encodeStateAsUpdate(doc)];
     const replica = new Y.Doc({ gc: false });
     Y.applyUpdate(replica, stored[0]!);
@@ -417,6 +420,58 @@ describe('textDocumentLevelAsked on suggestions', () => {
         doc.getXmlFragment('body').insert(0, [line]);
       }),
     ).toBe('edit');
+  });
+
+  describe('a picture’s media', () => {
+    const PNG = { mediaType: 'image/png', image: 'img-1' };
+    /** A picture keyed `key` in the first paragraph, carrying `insertion` when given, its media written with it. */
+    const placed =
+      (key: string, insertion: unknown, media: Record<string, unknown> | null = PNG) =>
+      (doc: Y.Doc) =>
+        doc.transact(() => {
+          if (media) doc.getMap('media').set(key, media);
+          const picture = new Y.XmlElement('picture');
+          picture.setAttribute('media', key);
+          if (insertion) picture.setAttribute('insertion', insertion as string);
+          (doc.getXmlFragment('body').get(0) as Y.XmlElement).insert(1, [picture]);
+        });
+
+    it('lets a Participant put in their own suggested picture with its media, in one update', () => {
+      expect(askedOn(placed('k1', mark('a1')))).toBe('participate');
+      expect(
+        askedOn(placed('k1', mark('a1'), { mediaType: 'image/png', bytes: new Uint8Array(8) })),
+      ).toBe('participate');
+    });
+
+    it('asks for Editing for media no own suggested picture names, or a picture of no suggestion', () => {
+      expect(askedOn((doc) => doc.getMap('media').set('k9', PNG))).toBe('edit');
+      expect(askedOn(placed('k1', null))).toBe('edit');
+      expect(askedOn(placed('k1', mark('b1', BEN)))).toBe('edit');
+    });
+
+    it('asks for Editing to change held media, or for media that is malformed or past the upload cap', () => {
+      expect(
+        askedOn(
+          (doc) => {
+            placed('k1', mark('a1'))(doc);
+            doc.getMap('media').set('held', { mediaType: 'image/png', image: 'swapped' });
+          },
+          ADA.key,
+          { held: PNG },
+        ),
+      ).toBe('edit');
+      expect(askedOn(placed('k1', mark('a1'), { mediaType: 'text/html', image: 'x' }))).toBe(
+        'edit',
+      );
+      expect(
+        askedOn(
+          placed('k1', mark('a1'), {
+            mediaType: 'image/png',
+            bytes: new Uint8Array(MAX_IMAGE_BYTES + 1),
+          }),
+        ),
+      ).toBe('edit');
+    });
   });
 
   it('lets a Participant withdraw their own suggestion and suggest a deletion over another’s', () => {

@@ -93,6 +93,11 @@ export type LiveTabKind = {
     /** The digest of the state the updates make. */
     readonly digest: (updates: readonly Uint8Array[]) => LiveTabDigest;
     /**
+     * The gallery images an update places, read from it alone: added to the tab's references as it is stored, before
+     * it is relayed (docs/specs/009-elements/images.md "A live tab's references"). A kind placing no images has none.
+     */
+    readonly placedImages?: (update: Uint8Array) => readonly string[];
+    /**
      * The level `update` asks on the state `stored` makes, for the tab whose body is `tab`. Read for a
      * Participant's update only; a kind that declares none asks an Editor for every update. `sender`: the adder key
      * its session holds (share-roles.md "Integrity"), none for a session without an identity.

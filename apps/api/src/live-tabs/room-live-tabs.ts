@@ -14,6 +14,7 @@ import {
 import type { Tab } from '@livedoc/document';
 import { base64OfBytes, bytesOfBase64 } from '@livedoc/text-documents';
 import { isTabRevStale, tabWriteStatements } from '../db/tabs';
+import { imageRefAddStatements } from '../db/image-refs';
 import type { DocumentEnv } from '../types';
 import type { LiveTabCaps, LiveTabKind, LiveTabLimit } from './live-tab-kind';
 import { liveTabLimitOf } from './live-tab-limits';
@@ -272,6 +273,7 @@ export class RoomLiveTabs {
       }
       const started = Date.now();
       const log = await appendLiveTabUpdate(env, kind, frame.tabId, update);
+      await indexPlacedImages(env, kind, frame.tabId, update);
       const seq = this.hooks.sequence(sender.presenceId, frame, sender.ws);
       const echo = isRoomOpRef(ref) ? { ref } : {};
       this.hooks.sendTo(sender.ws, {
@@ -342,6 +344,7 @@ export class RoomLiveTabs {
         const log = await appendLiveTabUpdate(env, kind, tabId, update);
         if (compactionDue(kind, log)) await compactLiveTab(env, kind, tabId);
       }
+      await indexPlacedImages(env, kind, tabId, update);
       const encoded = base64OfBytes(update);
       const op =
         encoded.length <= kind.sizes.frameChars
@@ -354,4 +357,21 @@ export class RoomLiveTabs {
       return 'stored';
     });
   }
+}
+
+/**
+ * The gallery images a stored update places, added to its tab's references before it is relayed, so a reader who draws
+ * the picture the moment it arrives is served (docs/specs/009-elements/images.md "A live tab's references"); the
+ * drain's replace then corrects the rows to what the state places.
+ */
+async function indexPlacedImages(
+  env: DocumentEnv,
+  kind: LiveTabKind,
+  tabId: string,
+  update: Uint8Array,
+): Promise<void> {
+  const placed = kind.state.placedImages?.(update) ?? [];
+  if (placed.length === 0) return;
+  await env.DOCUMENT_DB.batch(imageRefAddStatements(env, tabId, [...placed]));
+  console.info(`${kind.tag} images indexed tab=${tabId} count=${placed.length}`);
 }

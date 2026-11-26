@@ -22,7 +22,12 @@ import type { Watermark } from './model/watermark';
 import { Summary } from './model/summary';
 import type { ListDefinition } from './model/lists';
 import { paragraphElementsOf } from './live/live-tables';
-import { liveDrawingNames, liveDrawingPlace, liveGalleryImages } from './live/live-media';
+import {
+  liveDrawingNames,
+  liveDrawingPlace,
+  liveGalleryImages,
+  liveGalleryImagesWritten,
+} from './live/live-media';
 import {
   addLiveStyle,
   setLiveList,
@@ -238,6 +243,8 @@ export const TextDocumentState = {
     doc.transact(() => writeLiveMedia(doc.getMap<unknown>(MEDIA_MAP), Object.entries(media))),
   /** The ids of the gallery images its pictures hold: the tab's references (objects.md "Where the bytes live"). */
   galleryImages: (doc: Y.Doc): string[] => liveGalleryImages(doc),
+  /** The gallery images the media an update writes name, read from the update alone (images.md). */
+  galleryImagesWritten: (update: Uint8Array): string[] => liveGalleryImagesWritten(update),
   /** How many pictures name each drawing tab, by its id (objects.md "One drawing, one picture"). */
   drawingNames: (doc: Y.Doc): ReadonlyMap<string, number> => liveDrawingNames(doc),
   /** The document tab whose body holds the drawing tab's picture (objects.md "The document around it"), or null. */

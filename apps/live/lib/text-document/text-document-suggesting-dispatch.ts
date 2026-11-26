@@ -12,6 +12,7 @@ import {
   INSERTION_MARK,
   PARAGRAPH_FORMAT_CHANGE,
 } from '@livedoc/text-documents';
+import type { PendingMedia } from './text-document-pending-media';
 import {
   suggestTransaction,
   type Suggester,
@@ -24,6 +25,8 @@ export type SuggestingDispatch = {
   readonly onRefused: (reason: SuggestingRefusal) => void;
   /** The suggestions a transaction began (never one it joined). */
   readonly onMade: (ids: readonly string[]) => void;
+  /** What goes with a local change: wraps each one applied (its pasted media), and is dropped when one is refused. */
+  readonly alongside?: Pick<PendingMedia, 'apply' | 'drop'>;
 };
 
 const fromSync = (tr: Transaction): boolean =>
@@ -73,16 +76,22 @@ export function dispatchWithSuggesting(
     view.updateState(view.state.apply(tr));
     return;
   }
+  const apply = (next: Transaction) => {
+    const write = () => view.updateState(view.state.apply(next));
+    if (context.alongside) context.alongside.apply(write);
+    else write();
+  };
   const suggester = context.suggester();
   if (!suggester) {
-    view.updateState(view.state.apply(withoutCopiedSuggestions(tr)));
+    apply(withoutCopiedSuggestions(tr));
     return;
   }
   const result = suggestTransaction(view.state, tr, suggester);
   if ('refused' in result) {
+    context.alongside?.drop();
     context.onRefused(result.refused);
     return;
   }
-  view.updateState(view.state.apply(result.tr));
+  apply(result.tr);
   if (result.made.length > 0) context.onMade(result.made);
 }
