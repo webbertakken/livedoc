@@ -3,13 +3,18 @@ import { describe, expect, it } from 'vitest';
 import { EditorState } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
 import { undo, ySyncPlugin, yUndoPluginKey } from 'y-prosemirror';
-import { TEXT_DOCUMENT_UNDO_GROUP_MS, TextDocumentState } from '@livedoc/text-documents';
+import {
+  LiveSuggestions,
+  TEXT_DOCUMENT_UNDO_GROUP_MS,
+  TextDocumentState,
+} from '@livedoc/text-documents';
 import { textDocumentSchema } from './text-document-schema';
 import {
   continueUndoStep,
   startUndoStep,
   TEXT_DOCUMENT_PAGE_ORIGIN,
   TEXT_DOCUMENT_STYLES_ORIGIN,
+  TEXT_DOCUMENT_SUGGESTIONS_ORIGIN,
   textDocumentUndoPlugins,
 } from './text-document-undo';
 
@@ -133,6 +138,34 @@ describe('textDocumentUndoPlugins with the page setup', () => {
     expect(TextDocumentState.section(doc, 'odf').setup.margins.left).toBe(36);
     undo(view.state);
     expect(TextDocumentState.section(doc, 'odf').setup.margins.left).toBe(72);
+    view.destroy();
+  });
+});
+
+// review.md "Suggestion cards": Accept and Reject are each one change of the writing, undone with ⌘Z.
+describe('textDocumentUndoPlugins with suggestions', () => {
+  it('undoes an accept made with its origin as one step', async () => {
+    const doc = TextDocumentState.load();
+    const view = new EditorView(document.createElement('div'), {
+      state: EditorState.create({
+        schema: textDocumentSchema,
+        plugins: [ySyncPlugin(TextDocumentState.body(doc)), ...textDocumentUndoPlugins()],
+      }),
+    });
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    const author = { key: 'k-ada', name: 'Ada', colour: '#0284c7' };
+    const insertion = textDocumentSchema.marks.insertion!.create({ id: 's1', at: 1, author });
+    view.dispatch(
+      view.state.tr
+        .insert(1, textDocumentSchema.text('quick', [insertion]))
+        .setMeta('addToHistory', false),
+    );
+    expect(LiveSuggestions.count(doc)).toBe(1);
+    expect(LiveSuggestions.accept(doc, 's1', TEXT_DOCUMENT_SUGGESTIONS_ORIGIN)).toBe(true);
+    expect(LiveSuggestions.count(doc)).toBe(0);
+    undo(view.state);
+    expect(LiveSuggestions.count(doc)).toBe(1);
+    expect(view.state.doc.textContent).toBe('quick');
     view.destroy();
   });
 });

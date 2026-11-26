@@ -1,7 +1,8 @@
 // A text document's undo (docs/specs/034-text-documents/live-editing-and-storage.md "Undo"): the person's own changes
 // only (y-prosemirror's undo tracks the local origin), with typing within TEXT_DOCUMENT_UNDO_GROUP_MS one step. The
 // document's styles, lists and page setup are on the same timeline: a change to them made with
-// TEXT_DOCUMENT_STYLES_ORIGIN, TEXT_DOCUMENT_LISTS_ORIGIN or TEXT_DOCUMENT_PAGE_ORIGIN is undone with the rest.
+// TEXT_DOCUMENT_STYLES_ORIGIN, TEXT_DOCUMENT_LISTS_ORIGIN or TEXT_DOCUMENT_PAGE_ORIGIN is undone with the rest, as is
+// a suggestion accepted or rejected with TEXT_DOCUMENT_SUGGESTIONS_ORIGIN.
 import { Plugin } from 'prosemirror-state';
 import type { EditorView } from 'prosemirror-view';
 import { yUndoPlugin, yUndoPluginKey } from 'y-prosemirror';
@@ -11,6 +12,8 @@ import { TEXT_DOCUMENT_UNDO_GROUP_MS, TextDocumentState } from '@livedoc/text-do
 export const TEXT_DOCUMENT_STYLES_ORIGIN = Symbol('text-document-styles');
 /** The origin a person's change to the page's setup is made with (page-layout.md "Page setup"). */
 export const TEXT_DOCUMENT_PAGE_ORIGIN = Symbol('text-document-page');
+/** The origin Accept and Reject settle a suggestion with, so undo takes it back (review.md "Suggestion cards"). */
+export const TEXT_DOCUMENT_SUGGESTIONS_ORIGIN = Symbol('text-document-suggestions');
 /** The origin a person's change to the document's lists is made with (lists.md "Making a list"). */
 export const TEXT_DOCUMENT_LISTS_ORIGIN = Symbol('text-document-lists');
 
@@ -33,6 +36,7 @@ export function textDocumentUndoPlugins({ story = false }: { story?: boolean } =
           undoManager.addTrackedOrigin(TEXT_DOCUMENT_LISTS_ORIGIN);
           undoManager.addToScope(TextDocumentState.metaType(undoManager.doc));
           undoManager.addTrackedOrigin(TEXT_DOCUMENT_PAGE_ORIGIN);
+          undoManager.addTrackedOrigin(TEXT_DOCUMENT_SUGGESTIONS_ORIGIN);
         }
         return {};
       },

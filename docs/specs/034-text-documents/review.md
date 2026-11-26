@@ -269,6 +269,33 @@ office kinds; this spec says what a text document puts in them.
   are kept beside the writing too (default).
 - Telemetry: `Element · Added · TextDocumentSuggestion` once per suggestion begun, never per keystroke.
 
+### Suggestion cards
+
+- **Where**: each suggestion of the tab shown has a card in the margin beside its first part, stacked with the
+  comment threads' cards as they are ([Threads in the margin](#threads-in-the-margin)), and in the sheet on a phone.
+- **A card**: the author's disc, name and time (the time of its first part), "From the file" under a file's author,
+  and what it does, one line per kind, quoted text cut at 60 characters with an ellipsis (default copy):
+  - **Add: “…”** for inserted text, **Delete: “…”** for deleted text, and **Replace: “…” with “…”** when one
+    suggestion deletes text and inserts text;
+  - **Format: Bold, Italic** naming what a format suggestion changed (Bold, Italic, Underline, Strikethrough,
+    Superscript or subscript, Small caps, Font, Font size, Text colour, Highlight colour, Link, Text style; anything
+    else "Text formatting");
+  - **Add: Paragraph break** and **Delete: Paragraph break** for a break and a join, **Format: Paragraph** for a
+    paragraph format suggestion;
+  - **Add: Picture** (or the object's name: Equation, Footnote, Field, Bookmark) for an object in a line, **Add:
+    Table** (or Section break, Table of contents) for a block, and **Delete: …** for either deleted.
+- **Accept** (a tick, "Accept suggestion") and **Reject** (×, "Reject suggestion") on the card: an Editor has both
+  on every suggestion; a Participant has Reject on their own alone, which takes it back; a Viewer has neither. In
+  Viewing no one has them (default). Either settles the whole suggestion, all its parts, as one change of the
+  writing undone with ⌘Z, and the card goes.
+- **Selecting**: pressing a card selects it, raised and moved level with its text, as a thread's; a selected comment
+  thread is let go, and the other way round. Escape lets it go.
+- **Move to next suggestion** (Ctrl+⌘+N then U on a Mac, Ctrl+Alt+N then U elsewhere) and **Move to previous
+  suggestion** (P then U) select the next or previous suggestion of the tab shown, after or before the selected one or
+  else the caret, scroll its text into view and focus its card; past the last or before the first nothing moves
+  (default, as comments).
+- Telemetry: `Element · Changed · TextDocumentSuggestionAccepted` and `…Rejected`, once per suggestion settled.
+
 ### How a suggestion is kept
 
 - **In the writing, where it stands**, never beside it ([Live editing and storage](live-editing-and-storage.md#the-live-model)),

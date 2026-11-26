@@ -506,7 +506,7 @@ export const TEXT_DOCUMENT_SHORTCUTS: readonly ShortcutRow[] = [
     'Ctrl+Alt+N, U',
     'Ctrl+⌘+N, U',
     'Ctrl+Alt+N, U',
-    'specified',
+    'built',
   ),
   row(
     'move-to-previous-suggestion',
@@ -515,7 +515,7 @@ export const TEXT_DOCUMENT_SHORTCUTS: readonly ShortcutRow[] = [
     'Ctrl+Alt+P, U',
     'Ctrl+⌘+P, U',
     'Ctrl+Alt+P, U',
-    'specified',
+    'built',
   ),
   row(
     'review-suggested-edits',
