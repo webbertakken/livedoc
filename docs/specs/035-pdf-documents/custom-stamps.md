@@ -1,7 +1,7 @@
 # Custom stamps
 
-**Status: specified; where they are kept, their api and their file form are built.** Making one in the browser,
-placing one, Manage stamps (renaming, deleting, categories) and stamp identity are not.
+**Status: built: where they are kept, their api, their file form, making one in the browser and placing one.** Manage
+stamps (renaming, deleting, categories) and stamp identity are not.
 
 A **custom stamp** is a person's own stamp: a picture, or a page of a PDF, given a name and a category, kept in
 LiveDoc for them, and placed on any PDF as a standard or dynamic stamp is ([Marks](marks.md#stamps)). The parity rows
@@ -71,7 +71,10 @@ are the matrix's "Stamps" ([Parity matrix](parity-matrix.md#stamps)).
   ([Getting bytes out](../006-document/blob-store.md#getting-bytes-out)), across the stamp's box; a picture still on
   its way, or one that fails, draws the stamp's box outlined in its colour with its name.
 - Selected, moved, resized, turned and deleted as every stamp is. Its colour is none: Format's colour and "Make this
-  look the default" are not offered for it.
+  look the default" are not offered for it, and a colour given to marks selected with it leaves it as it is. Its
+  mark still carries one, the Blue tone's `(default)`, which only its outlined box shows.
+- **Their pictures are read once a page** and drawn for as long as it is open, as they are few and small
+  (`PDF_STAMP_MAX_BYTES` each) `(default)`.
 - **In the file** a custom stamp is a `Stamp` whose `Name` is `#` and its id, so Acrobat keeps its look when it turns
   it rather than drawing one of its own ([Marks](marks.md#in-the-file)); `Contents` its name; its appearance its
   picture across `BBox`, as an image of the picture's own pixels (a JPEG's bytes as they are, a PNG's as its colours
@@ -130,14 +133,15 @@ are the matrix's "Stamps" ([Parity matrix](parity-matrix.md#stamps)).
 
 ## Errors
 
-| When                                          | A person sees                                                                             |
-| --------------------------------------------- | ----------------------------------------------------------------------------------------- |
-| The file cannot be read as a picture or a PDF | "That picture couldn't be read. Choose a PNG, JPEG, SVG or PDF."                          |
-| The picture is still too large, drawn smaller | "That picture is too large for a stamp. Choose a smaller one."                            |
-| They keep the most custom stamps              | "You have the most custom stamps LiveDoc keeps (200). Delete one in Manage stamps first." |
-| Their files are full                          | "Your files are full. Free some space, then try again."                                   |
-| Sending or making it fails otherwise          | "That stamp couldn't be made. Try again."                                                 |
-| A custom stamp's picture cannot be placed     | "That stamp couldn't be placed. Try again."                                               |
+| When                                          | A person sees                                                                                                                   |
+| --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| The file cannot be read as a picture or a PDF | "That picture couldn't be read. Choose a PNG, JPEG, SVG or PDF."                                                                |
+| The picture is still too large, drawn smaller | "That picture is too large for a stamp. Choose a smaller one."                                                                  |
+| They keep the most custom stamps              | "You have the most custom stamps LiveDoc keeps (200). Delete one in Manage stamps first."                                       |
+| Their files are full                          | "Your files are full. Free some space, then try again."                                                                         |
+| Sending or making it fails otherwise          | "That stamp couldn't be made. Try again."                                                                                       |
+| A custom stamp's picture cannot be placed     | "That stamp couldn't be placed. Try again."                                                                                     |
+| A bake cannot read a picture its marks name   | "Some of this PDF's stamps need a picture that couldn't be read. Check your connection, then try again. Your changes are safe." |
 
 ## Telemetry and observability
 
@@ -146,8 +150,11 @@ are the matrix's "Stamps" ([Parity matrix](parity-matrix.md#stamps)).
 - `[custom-stamps] created id=<id> bytes=<n>`, `[custom-stamps] refused reason=<refusal> owner=<id>`,
   `[custom-stamps] deleted id=<id>`, `[custom-stamps] picture-missing id=<id> key=<8>` in the api; `[pdf] pictures-missing count=<n> unfit=<n>` in the engine (a bake
   refused `pictures-unavailable`: a picture its marks name not handed in, or not the type it says); `[pdf] custom-stamp-made from=<picture|svg|pdf> bytes=<n>
-scaled=<bool>`, `[pdf] custom-stamp-failed reason=<reason>`, `[pdf] custom-stamp-placed held=<bool>` in the
-  browser.
+scaled=<bool>`, `[pdf] custom-stamp-failed reason=<unreadable|too_large|too_many|files_full|failed|list>`, `[pdf] custom-stamp-placed held=<bool>`
+  (false: its picture could not be sent, nothing placed), `[pdf] custom-stamps-read count=<n>`,
+  `[pdf] custom-stamp-keep-skipped` (this browser would not keep a made stamp's bytes), `[pdf] stamp-picture-failed
+key=<8>` (a picture the page or the grid could not read), `[pdf] picture-read-failed key=<8>` (one a bake could not
+  read) in the browser.
 
 ## Tests
 

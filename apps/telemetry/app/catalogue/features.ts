@@ -1866,6 +1866,13 @@ export const PDF_DOCUMENT_PANELS_OPENED = opened(
   (t) => (t ?? '').startsWith('PdfDocumentPanel'),
 );
 
+// Create custom stamp opened (docs/specs/035-pdf-documents/custom-stamps.md "Making one").
+export const PDF_CUSTOM_STAMP_DIALOG_OPENED = opened(
+  'PDF Custom Stamp Dialog',
+  'Create custom stamp opened on a PDF document, from Insert > Stamp > Custom stamps or the Stamp control.',
+  (t) => t === 'PdfDocumentCustomStampDialog',
+);
+
 // A text document's context menu opened (docs/specs/004-interface-design/office-shell.md "Context menus").
 export const TEXT_DOCUMENT_CONTEXT_MENU_OPENED = opened(
   'Text Document Context Menu',
@@ -1914,6 +1921,7 @@ export const PANELS_OPENED: MetricStack = {
     TEXT_DOCUMENT_PANELS_OPENED,
     SPREADSHEET_PANELS_OPENED,
     PDF_DOCUMENT_PANELS_OPENED,
+    PDF_CUSTOM_STAMP_DIALOG_OPENED,
     TEXT_DOCUMENT_CONTEXT_MENU_OPENED,
     SPREADSHEET_CONTEXT_MENU_OPENED,
     TEXT_DOCUMENT_MORE_FONTS_OPENED,

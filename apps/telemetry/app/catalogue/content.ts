@@ -1345,6 +1345,7 @@ export const PDF_MARKS_ADDED = chart(
       'Mark.Callout',
       'Stamp.Standard',
       'Stamp.Dynamic',
+      'Stamp.Custom',
     ],
   },
 );
@@ -1376,6 +1377,15 @@ export const PDF_TOOLS_SELECTED = chart(
     ],
     rising: 'neutral',
   },
+);
+
+// docs/specs/035-pdf-documents/custom-stamps.md "Telemetry and observability": one made, from a picture or a page alike.
+export const PDF_CUSTOM_STAMPS_CREATED = chart(
+  'Pdf',
+  'Created',
+  'Custom Stamps Made',
+  'A person’s own stamp made from a picture or a page of a PDF, in Create custom stamp.',
+  { types: ['CustomStamp'] },
 );
 
 export const PDFS_EXPORTED = chart(
@@ -1582,6 +1592,7 @@ export const PDF_DOCUMENTS: MetricStack = {
     PDF_MARKS_DELETED,
     PDF_UNDOS,
     PDF_REDOS,
+    PDF_CUSTOM_STAMPS_CREATED,
     PDFS_EXPORTED,
     PDF_PAGE_DISPLAYS,
     PDF_VIEW_TURNS,
