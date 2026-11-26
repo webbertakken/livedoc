@@ -25,7 +25,17 @@ export const FIELD = 'field';
 export const FOOTNOTE = 'footnote';
 
 /** The attributes each element holds, each a whole value. */
-export const PARAGRAPH_ATTRIBUTES = ['style', 'props', 'list', 'text', 'kept'] as const;
+export const PARAGRAPH_ATTRIBUTES = [
+  'style',
+  'props',
+  'list',
+  'text',
+  'kept',
+  // Its break, join and paragraph format suggestions (review.md "How a suggestion is kept").
+  'insertion',
+  'deletion',
+  'formatChange',
+] as const;
 export const SECTION_BREAK_ATTRIBUTES = [
   'start',
   'setup',
@@ -73,16 +83,60 @@ export const PICTURE_ATTRIBUTES = [
   'link',
   'drawing',
   'kept',
+  'insertion',
+  'deletion',
 ] as const;
 /** An equation (objects.md "Equations in the editor"): an atom inside its paragraph, its maths one whole value. */
 export const EQUATION = 'equation';
-export const EQUATION_ATTRIBUTES = ['math', 'props', 'style', 'link', 'kept'] as const;
+export const EQUATION_ATTRIBUTES = [
+  'math',
+  'props',
+  'style',
+  'link',
+  'kept',
+  'insertion',
+  'deletion',
+] as const;
 /** A bookmark (links-and-navigation.md "Bookmarks"): an atom of no width inside its paragraph, by its name. */
 export const BOOKMARK = 'bookmark';
-export const BOOKMARK_ATTRIBUTES = ['name', 'props', 'style', 'link', 'kept'] as const;
-export const KEPT_INLINE_ATTRIBUTES = ['name', 'xml', 'props', 'style', 'link', 'kept'] as const;
-export const FIELD_ATTRIBUTES = ['field', 'text', 'props', 'style', 'link', 'kept'] as const;
-export const FOOTNOTE_ATTRIBUTES = ['story', 'props', 'style', 'link', 'kept'] as const;
+export const BOOKMARK_ATTRIBUTES = [
+  'name',
+  'props',
+  'style',
+  'link',
+  'kept',
+  'insertion',
+  'deletion',
+] as const;
+export const KEPT_INLINE_ATTRIBUTES = [
+  'name',
+  'xml',
+  'props',
+  'style',
+  'link',
+  'kept',
+  'insertion',
+  'deletion',
+] as const;
+export const FIELD_ATTRIBUTES = [
+  'field',
+  'text',
+  'props',
+  'style',
+  'link',
+  'kept',
+  'insertion',
+  'deletion',
+] as const;
+export const FOOTNOTE_ATTRIBUTES = [
+  'story',
+  'props',
+  'style',
+  'link',
+  'kept',
+  'insertion',
+  'deletion',
+] as const;
 
 /** One text formatting attribute per text property, each holding `{ value }`. */
 export const TEXT_PROPERTY_MARK_OF = {

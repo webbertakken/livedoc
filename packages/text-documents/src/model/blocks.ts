@@ -10,6 +10,7 @@ import type { Equation } from './equations';
 import type { Bookmark } from './bookmarks';
 import type { CommentMark } from './comments';
 import type { TableOfContents } from './contents';
+import type { InlineSuggested, ParagraphSuggested } from './suggestions';
 
 /** Characters with one formatting: tabs as `\t`, line breaks as `\n`. */
 export type Run = {
@@ -21,6 +22,8 @@ export type Run = {
   /** `http(s):`, `mailto:` or `#bookmark`. */
   readonly link?: string;
   readonly kept?: KeptProperties;
+  /** The suggestions it is part of (review.md "How a suggestion is kept"). */
+  readonly suggested?: InlineSuggested;
 };
 
 /** Something inside a paragraph the model does not map (a hidden bookmark, another field, an endnote, a picture), kept as the file has it. */
@@ -34,6 +37,8 @@ export type KeptInline = {
   readonly style?: string;
   readonly link?: string;
   readonly kept?: KeptProperties;
+  /** The suggestions it is part of (review.md "How a suggestion is kept"). */
+  readonly suggested?: InlineSuggested;
 };
 
 /** What a field shows (page-layout.md "Page numbers"): the page it is drawn on, or how many pages there are. */
@@ -50,6 +55,8 @@ export type Field = {
   readonly style?: string;
   readonly link?: string;
   readonly kept?: KeptProperties;
+  /** The suggestions it is part of (review.md "How a suggestion is kept"). */
+  readonly suggested?: InlineSuggested;
 };
 
 /**
@@ -63,6 +70,8 @@ export type Note = {
   readonly style?: string;
   readonly link?: string;
   readonly kept?: KeptProperties;
+  /** The suggestions it is part of (review.md "How a suggestion is kept"). */
+  readonly suggested?: InlineSuggested;
 };
 
 export type Inline = Run | Field | Note | Picture | Equation | Bookmark | CommentMark | KeptInline;
@@ -77,6 +86,8 @@ export type Paragraph = {
   readonly text?: TextProps;
   readonly inlines: readonly Inline[];
   readonly kept?: KeptProperties;
+  /** Its break, join and paragraph format suggestions (review.md "How a suggestion is kept"). */
+  readonly suggested?: ParagraphSuggested;
 };
 
 /** Starts a section: everything after it, to the next break, has its setup. */

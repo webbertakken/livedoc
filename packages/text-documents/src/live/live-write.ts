@@ -38,6 +38,12 @@ import { DocumentTabs, FIRST_DOCUMENT_TAB_ID } from '../model/document-tabs';
 import { tableElement } from './live-tables';
 import { CommentPlaces } from './live-thread-files';
 import { THREADS_MAP } from './live-names';
+import { inlineSuggestionAttributes, paragraphSuggestionAttributes } from './live-suggestion-files';
+import type { InlineSuggested } from '../model/suggestions';
+
+/** An object's suggestions: inserted or deleted, never a format change (a run's alone). */
+const objectSuggested = (suggested: InlineSuggested | undefined): InlineSuggested | undefined =>
+  suggested && { insertion: suggested.insertion, deletion: suggested.deletion };
 
 /** A value as the state holds it: plain JSON, undefined fields left out. */
 const plain = <T>(value: T): T => JSON.parse(JSON.stringify(value)) as T;
@@ -56,7 +62,7 @@ export function runAttributes(inline: Run | KeptInline): Record<string, unknown>
   if (inline.link !== undefined) attributes[LINK_MARK] = { href: inline.link };
   if (inline.style !== undefined) attributes[TEXT_STYLE_MARK] = { id: inline.style };
   if (inline.kept !== undefined) attributes[RUN_KEPT_MARK] = { kept: plain(inline.kept) };
-  return attributes;
+  return { ...attributes, ...inlineSuggestionAttributes(inline) };
 }
 
 /** Where a comment marker sits as the inlines are built: in a run of text, or between the paragraph's children. */
@@ -120,6 +126,7 @@ function inlineNodes(
       style: inline.style,
       link: inline.link,
       kept: inline.kept,
+      ...inlineSuggestionAttributes({ props: {}, suggested: objectSuggested(inline.suggested) }),
     });
     nodes.push(element);
   }
@@ -129,8 +136,12 @@ function inlineNodes(
 /** A picture as its atom: its values as attributes, its media by key. */
 export function pictureElement(picture: Picture): Y.XmlElement {
   const element = new Y.XmlElement(PICTURE);
-  const { type: _, props, ...values } = picture;
-  setAttributes(element, { ...values, props: isEmpty(props) ? undefined : props });
+  const { type: _, props, suggested, ...values } = picture;
+  setAttributes(element, {
+    ...values,
+    props: isEmpty(props) ? undefined : props,
+    ...inlineSuggestionAttributes({ props: {}, suggested: objectSuggested(suggested) }),
+  });
   return element;
 }
 
@@ -160,6 +171,7 @@ function paragraphNode(
     list: paragraph.list,
     text: paragraph.text,
     kept: paragraph.kept,
+    ...paragraphSuggestionAttributes(paragraph),
   });
   const children = inlineNodes(
     paragraph.inlines,

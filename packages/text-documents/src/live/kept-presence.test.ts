@@ -10,6 +10,10 @@ describe('keptPresenceOf', () => {
       'bookmarkStart',
       'commentRangeEnd',
       'proofErr',
+      'tracked-changes',
+      'change-start',
+      'change-end',
+      'change',
     ])
       expect(keptPresenceOf(name)).toBe('hidden');
   });

@@ -53,6 +53,15 @@ import {
   runPropsChildren,
   sectionXml,
 } from './ooxml-props';
+import { Suggestions, type InlineSuggested, type ParagraphSuggested } from '../model/suggestions';
+import {
+  OoxmlRevisionIds,
+  paragraphChangeXml,
+  paragraphMarkXml,
+  runChangeXml,
+  withParagraphMark,
+  wrapRevisions,
+} from './ooxml-suggestions';
 
 /** The font Word writes maths in (objects.md "Equations in the formats", written). */
 const MATHS_FONT = 'Cambria Math';
@@ -117,6 +126,10 @@ class OoxmlWriter {
   #bookmarkId: number;
   /** Each section's place among the sections, by the section itself. */
   readonly #sectionAt = new Map<Section, number>();
+  /** The tracked changes' w:ids (review.md "In the files"). */
+  readonly revisionIds: OoxmlRevisionIds;
+  /** Each paragraph carrying the next one's break or join on its mark. */
+  readonly #markBefore: Map<Paragraph, ParagraphSuggested>;
 
   constructor(tabbed: TextDocument) {
     // Whole-document walks (sections, notes, lists) read every tab's blocks as one flow.
@@ -163,6 +176,8 @@ class OoxmlWriter {
     this.noteIds = footnoteIds(Notes.all(doc.body), source?.footnotes);
     this.commentIds = ooxmlCommentIds(doc.comments ?? [], keptCommentIds(keptXmlTexts(doc)));
     this.assignNumIds();
+    this.revisionIds = new OoxmlRevisionIds(Suggestions.marks(doc.body));
+    this.#markBefore = Suggestions.marksBefore(doc.body);
   }
 
   kept(xml: KeptXml, ns: Readonly<Record<string, string>> = this.ns): string {
@@ -253,7 +268,10 @@ class OoxmlWriter {
       },
     };
     // A paragraph ending a document tab writes its section's tab afresh.
-    if (p.kept && !(ends && this.#tabEnding) && keptStillHolds(p.kept, values)) {
+    const mark = this.#markBefore.get(p);
+    const change = p.suggested?.format;
+    const tracked = mark !== undefined || change !== undefined;
+    if (p.kept && !tracked && !(ends && this.#tabEnding) && keptStillHolds(p.kept, values)) {
       if (ends) this.headerParts.referencesXml(ends, this.#sectionAt.get(ends) ?? 0);
       return this.kept(p.kept.xml);
     }
@@ -269,17 +287,68 @@ class OoxmlWriter {
         ends && this.sectPr(ends),
         this.inheritedTabs(p.style),
       ),
-      (p.kept?.residue ?? []).map((r) => this.kept(r)),
+      this.markedResidue(
+        (p.kept?.residue ?? []).map((r) => this.kept(r)),
+        mark,
+      ),
     );
-    return children ? `<w:pPr>${children}</w:pPr>` : '';
+    const before = change && this.paragraphBefore(change.before);
+    const changed = change ? paragraphChangeXml(change, before!, this.revisionIds) : '';
+    return children || changed ? `<w:pPr>${children}${changed}</w:pPr>` : '';
   }
 
-  rPr(inline: { style?: string; props: TextProps; kept?: Inline['kept'] }): string {
-    if (inline.kept && keptStillHolds(inline.kept, { style: inline.style, props: inline.props }))
+  /** A paragraph's kept properties with the next paragraph's break or join put on its mark's `w:rPr`. */
+  markedResidue(residue: string[], mark: ParagraphSuggested | undefined): string[] {
+    if (!mark) return residue;
+    const marks = paragraphMarkXml(mark, this.revisionIds);
+    const at = residue.findIndex((xml) => /^<(?:[\w.-]+:)?rPr\b/.test(xml));
+    if (at === -1) return [...residue, withParagraphMark(undefined, marks)];
+    return residue.map((xml, i) => (i === at ? withParagraphMark(xml, marks) : xml));
+  }
+
+  /** A paragraph format suggestion's properties before, as `w:pPr` children. */
+  paragraphBefore(before: NonNullable<ParagraphSuggested['format']>['before']): string {
+    const list = before.list && {
+      id: this.numIds.get(before.list.id) ?? before.list.id,
+      level: before.list.level,
+    };
+    const style = before.style === this.defaultStyle ? undefined : before.style;
+    return ordered(
+      PPR_ORDER,
+      paragraphPropsChildren(
+        style,
+        before.props,
+        list,
+        undefined,
+        this.inheritedTabs(before.style),
+      ),
+      [],
+    );
+  }
+
+  rPr(inline: {
+    style?: string;
+    props: TextProps;
+    kept?: Inline['kept'];
+    suggested?: InlineSuggested;
+  }): string {
+    const change = inline.suggested?.format;
+    if (
+      !change &&
+      inline.kept &&
+      keptStillHolds(inline.kept, { style: inline.style, props: inline.props })
+    )
       return this.kept(inline.kept.xml);
+    const before =
+      change &&
+      runChangeXml(
+        change,
+        ordered(RPR_ORDER, runPropsChildren(change.before.style, change.before.props), []),
+        this.revisionIds,
+      );
     const children = ordered(
       RPR_ORDER,
-      runPropsChildren(inline.style, inline.props),
+      { ...runPropsChildren(inline.style, inline.props), rPrChange: before },
       (inline.kept?.residue ?? []).map((r) => this.kept(r)),
     );
     return children ? `<w:rPr>${children}</w:rPr>` : '';
@@ -337,25 +406,27 @@ class OoxmlWriter {
 
   /** A paragraph; `lead`, a run before its content (a note's number). */
   paragraphXml(p: Paragraph, ends: Section | undefined, lead = ''): string {
-    const pieces = p.inlines.map((i) => ({
-      link: i.link,
-      xml:
-        i.type === 'run'
-          ? this.runXml(i)
-          : i.type === 'field'
-            ? ooxmlFieldXml(i.field, this.runXml({ ...i, type: 'run' }))
-            : i.type === 'note'
-              ? this.markXml(i)
-              : i.type === 'picture'
-                ? this.pictureXml(i)
-                : i.type === 'equation'
-                  ? this.equationXml(i)
-                  : i.type === 'bookmark'
-                    ? this.bookmarkXml(i)
-                    : i.type === 'comment'
-                      ? ooxmlCommentMarkXml(i.edge, this.commentIds.get(i.id) ?? [])
-                      : this.kept(i.xml),
-    }));
+    const pieces: { link: string | undefined; xml: string; suggested?: InlineSuggested }[] =
+      p.inlines.map((i) => ({
+        link: i.link,
+        suggested: i.type === 'comment' ? undefined : i.suggested,
+        xml:
+          i.type === 'run'
+            ? this.runXml(i)
+            : i.type === 'field'
+              ? ooxmlFieldXml(i.field, this.runXml({ ...i, type: 'run' }))
+              : i.type === 'note'
+                ? this.markXml(i)
+                : i.type === 'picture'
+                  ? this.pictureXml(i)
+                  : i.type === 'equation'
+                    ? this.equationXml(i)
+                    : i.type === 'bookmark'
+                      ? this.bookmarkXml(i)
+                      : i.type === 'comment'
+                        ? ooxmlCommentMarkXml(i.edge, this.commentIds.get(i.id) ?? [])
+                        : this.kept(i.xml),
+      }));
     // A paragraph of only equations is a display equation, as Word writes one (objects.md "Equations in the formats").
     const display =
       p.inlines.length > 0 && p.inlines.every((i) => i.type === 'equation' && i.link === undefined);
@@ -365,8 +436,8 @@ class OoxmlWriter {
     for (let i = 0; i < pieces.length;) {
       const link = pieces[i]!.link;
       let j = i;
-      let xml = '';
-      while (j < pieces.length && pieces[j]!.link === link) xml += pieces[j++]!.xml;
+      while (j < pieces.length && pieces[j]!.link === link) j++;
+      const xml = wrapRevisions(pieces.slice(i, j), this.revisionIds);
       if (link === undefined) content += xml;
       else if (link.startsWith('#'))
         content += `<w:hyperlink w:anchor="${escapeXmlAttribute(link.slice(1))}">${xml}</w:hyperlink>`;

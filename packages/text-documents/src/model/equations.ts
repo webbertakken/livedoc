@@ -2,6 +2,7 @@
 // structures, the part of MathML and OMML both formats share.
 import { EQUATION_MAX_DEPTH, EQUATION_MAX_NODES } from '../limits';
 import type { KeptProperties, TextProps } from './props';
+import type { InlineSuggested } from './suggestions';
 
 export type MathTokenKind = 'identifier' | 'number' | 'operator' | 'text';
 export const MATH_TOKEN_KINDS: readonly MathTokenKind[] = [
@@ -77,6 +78,8 @@ export type Equation = {
   readonly style?: string;
   readonly link?: string;
   readonly kept?: KeptProperties;
+  /** The suggestions it is part of (review.md "How a suggestion is kept"). */
+  readonly suggested?: InlineSuggested;
 };
 
 /** Large operators: integrals take their limits as scripts beside the sign, the others under and over it. */
