@@ -55,17 +55,20 @@ export function liveSectionHeaders(
 
 /** The notes' fragments every tab's marks name, in the marks' order, tab by tab. */
 export function liveNoteIds(doc: Y.Doc): string[] {
-  return liveTabFragments(doc)
-    .flatMap(paragraphElementsOf)
-    .flatMap((node) =>
-      node.toArray().flatMap((child) => {
-        const story =
-          child instanceof Y.XmlElement && child.nodeName === FOOTNOTE
-            ? child.getAttribute('story')
-            : undefined;
-        return typeof story === 'string' ? [story] : [];
-      }),
-    );
+  return liveTabFragments(doc).flatMap(noteIdsIn);
+}
+
+/** The notes' fragments one body's marks name, in the marks' order. */
+function noteIdsIn(body: Y.XmlFragment): string[] {
+  return paragraphElementsOf(body).flatMap((node) =>
+    node.toArray().flatMap((child) => {
+      const story =
+        child instanceof Y.XmlElement && child.nodeName === FOOTNOTE
+          ? child.getAttribute('story')
+          : undefined;
+      return typeof story === 'string' ? [story] : [];
+    }),
+  );
 }
 
 /**
@@ -184,4 +187,37 @@ export class StoryReader {
     this.#read.set(story, h);
     return h;
   }
+}
+
+/** A body or a story whose writing a document tab shows: its fragment, its tab, and its story's id when a story. */
+export type LiveWriting = {
+  readonly tab: string;
+  readonly story?: string;
+  readonly fragment: Y.XmlFragment;
+};
+
+/**
+ * Every writing, tab by tab: the tab's body, then each story it shows that no earlier tab did, its sections' headers
+ * and footers (default, first, even) before the notes its body's marks name (review.md "How a suggestion is kept").
+ * A fragment nothing names is no story.
+ */
+export function liveWritings(doc: Y.Doc): LiveWriting[] {
+  const seen = new Set<string>();
+  const out: LiveWriting[] = [];
+  const story = (tab: string, id: string) => {
+    if (seen.has(id)) return;
+    seen.add(id);
+    out.push({ tab, story: id, fragment: storyFragment(doc, id) });
+  };
+  for (const tab of liveTabIds(doc)) {
+    out.push({ tab, fragment: tabFragment(doc, tab) });
+    for (const headers of liveSectionHeaders(doc, tab))
+      for (const kind of HEADER_FOOTER_KINDS)
+        for (const slot of HEADER_FOOTER_SLOTS) {
+          const id = headers?.[kind]?.[slot]?.story;
+          if (typeof id === 'string') story(tab, id);
+        }
+    for (const id of noteIdsIn(tabFragment(doc, tab))) story(tab, id);
+  }
+  return out;
 }

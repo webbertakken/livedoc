@@ -14,8 +14,7 @@ import {
   TABLE_CELL,
   TABLE_HEADER,
 } from './live-names';
-import { tabFragment } from './live-root';
-import { liveTabIds } from './live-tabs';
+import { liveWritings } from './live-stories';
 import { fitTableWidth } from './live-table-fit';
 import {
   deltaOf,
@@ -95,8 +94,10 @@ type ReadPart = {
 };
 
 export type TextDocumentSuggestion = SuggestionMark & {
-  /** The document tab its first part is in. */
+  /** The document tab its first part is in, or the tab that shows the story it is in. */
   readonly tab: string;
+  /** The story (a header's, footer's or note's fragment id) its first part is in; none in a tab's body. */
+  readonly story?: string;
   readonly parts: readonly SuggestionPart[];
 };
 
@@ -115,12 +116,19 @@ const TEXT_KINDS: readonly [string, SuggestionPartKind][] = [
   [FORMAT_CHANGE_MARK, 'format'],
 ];
 
-/** The document's suggestions, in the tabs' order and the writing's, each with its parts. */
+/**
+ * The document's suggestions, in the tabs' order and the writing's, each tab's body before the stories it shows, each
+ * with its parts.
+ */
 function read(doc: Y.Doc): TextDocumentSuggestion[] {
-  const found = new Map<string, { mark: SuggestionMark; tab: string; parts: ReadPart[] }>();
+  const found = new Map<
+    string,
+    { mark: SuggestionMark; tab: string; story?: string; parts: ReadPart[] }
+  >();
   let last: ReadPart | null = null;
+  // The writing being walked.
+  let where: { tab: string; story?: string } = { tab: '' };
   const add = (
-    tab: string,
     value: unknown,
     kind: SuggestionPartKind,
     text: string,
@@ -130,7 +138,7 @@ function read(doc: Y.Doc): TextDocumentSuggestion[] {
     if (!isSuggestionMark(value)) return;
     let entry = found.get(value.id);
     if (!entry) {
-      entry = { mark: value, tab, parts: [] };
+      entry = { mark: value, ...where, parts: [] };
       found.set(value.id, entry);
     }
     const previous = entry.parts.at(-1);
@@ -157,37 +165,35 @@ function read(doc: Y.Doc): TextDocumentSuggestion[] {
     };
     entry.parts.push(last);
   };
-  const walk = (tab: string, parent: Y.XmlFragment | Y.XmlElement, inParagraph: boolean): void => {
+  const walk = (parent: Y.XmlFragment | Y.XmlElement, inParagraph: boolean): void => {
     for (const node of elementsOf(parent)) {
       if (node instanceof Y.XmlText) {
         for (const op of deltaOf(node)) {
           const text = typeof op.insert === 'string' ? op.insert : '';
           const marks = TEXT_KINDS.filter(([name]) => isSuggestionMark(op.attributes?.[name]));
           if (marks.length === 0) last = null;
-          for (const [name, kind] of marks) add(tab, op.attributes![name], kind, text);
+          for (const [name, kind] of marks) add(op.attributes![name], kind, text);
         }
         continue;
       }
       const name = node.nodeName;
       if (name === PARAGRAPH) {
         const kind = suggestedBreakKind(node.getAttribute('props'), isEmpty(node));
-        add(tab, node.getAttribute(INSERTION_MARK), 'break', '', undefined, kind);
-        add(tab, node.getAttribute(DELETION_MARK), 'join', '');
-        add(tab, node.getAttribute(PARAGRAPH_FORMAT_CHANGE), 'paragraph-format', '');
+        add(node.getAttribute(INSERTION_MARK), 'break', '', undefined, kind);
+        add(node.getAttribute(DELETION_MARK), 'join', '');
+        add(node.getAttribute(PARAGRAPH_FORMAT_CHANGE), 'paragraph-format', '');
         last = null;
-        walk(tab, node, true);
+        walk(node, true);
         last = null;
         continue;
       }
       add(
-        tab,
         node.getAttribute(INSERTION_MARK),
         inParagraph ? 'insertion' : 'block-insertion',
         name,
         name,
       );
       add(
-        tab,
         node.getAttribute(DELETION_MARK),
         inParagraph ? 'deletion' : 'block-deletion',
         name,
@@ -195,19 +201,21 @@ function read(doc: Y.Doc): TextDocumentSuggestion[] {
       );
       if (!inParagraph) {
         last = null;
-        walk(tab, node, false);
+        walk(node, false);
       }
     }
   };
-  for (const tab of liveTabIds(doc)) {
+  for (const { tab, story, fragment } of liveWritings(doc)) {
     last = null;
-    walk(tab, tabFragment(doc, tab), false);
+    where = story === undefined ? { tab } : { tab, story };
+    walk(fragment, false);
   }
-  return [...found.entries()].map(([id, { mark, tab, parts }]) => ({
+  return [...found.entries()].map(([id, { mark, tab, story, parts }]) => ({
     id,
     at: mark.at,
     author: mark.author,
     tab,
+    ...(story === undefined ? {} : { story }),
     parts,
   }));
 }
@@ -357,8 +365,8 @@ function settleIds(
   if (ids.size === 0) return 0;
   doc.transact(() => {
     const widened = new Set<Y.XmlElement>();
-    for (const tab of liveTabIds(doc))
-      settleChildren(tabFragment(doc, tab), ids, accept, false, widened);
+    for (const { fragment } of liveWritings(doc))
+      settleChildren(fragment, ids, accept, false, widened);
     if (fit) for (const table of widened) if (table.parent) fitTableWidth(table, fit.width);
   }, origin);
   return ids.size;

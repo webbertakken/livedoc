@@ -824,7 +824,7 @@ class OoxmlReader {
       ...compact({ list, kept, suggested }),
       inlines,
     };
-    const mark = this.inStory ? undefined : readParagraphMark(pPr);
+    const mark = readParagraphMark(pPr);
     // In a suggested table's cells, a mark of its kind is part of the table's suggestion.
     const partOfBlock =
       (this.withinBlock === 'insertion' && mark?.break) ||
@@ -833,7 +833,7 @@ class OoxmlReader {
     return paragraph;
   }
 
-  /** A paragraph's paragraph format suggestion; in a header, footer or note settled as the file stands (reported). */
+  /** A paragraph's paragraph format suggestion, in the body or a header, footer or note alike. */
   paragraphSuggested(pPr: XmlElement | undefined): ParagraphSuggested | undefined {
     const format = readParagraphChange(pPr, (before) => {
       const style = wVal(childElement(before ?? pPr!, W_NS, 'pStyle')) ?? this.normalId();
@@ -854,9 +854,7 @@ class OoxmlReader {
       );
       return compact({ style, props, list });
     });
-    const inStory = this.inStory && (format || readParagraphMark(pPr));
-    if (inStory) this.report.drop('suggestion-in-story', 'paragraph');
-    return format && !this.inStory ? { format } : undefined;
+    return format ? { format } : undefined;
   }
 
   /** A table style's lines and margins, down its `w:basedOn`; the default table style's for none. */
@@ -1263,16 +1261,11 @@ class RunReader {
   }
 
   /**
-   * Runs inside a `w:ins` or `w:del` (review.md "In the files"): each inline read inside it is part of its suggestion.
-   * In a header, footer or note the change is settled as the file is read: an insertion kept, a deletion dropped.
+   * Runs inside a `w:ins` or `w:del` (review.md "In the files"): each inline read inside it is part of its suggestion,
+   * in the body or a header, footer or note alike.
    */
   revision(e: XmlElement, ctx: RunContext): void {
     const own = revisionRunsSuggested(e);
-    if (this.r.inStory) {
-      this.r.report.drop('suggestion-in-story', e.local);
-      if (own.insertion) for (const c of childElements(e)) this.node(c, ctx);
-      return;
-    }
     const from = this.out.length;
     const outer = this.suggested;
     this.suggested = Suggestions.merged(outer, own);
@@ -1291,8 +1284,7 @@ class RunReader {
   run(r: XmlElement, ctx: RunContext): void {
     const outer = this.suggested;
     const change = readRunChange(childElement(r, W_NS, 'rPr'), readRunProps);
-    if (change && this.r.inStory) this.r.report.drop('suggestion-in-story', 'rPrChange');
-    else if (change) this.suggested = Suggestions.merged(outer, { format: change });
+    if (change) this.suggested = Suggestions.merged(outer, { format: change });
     this.readRun(r, ctx);
     this.suggested = outer;
   }

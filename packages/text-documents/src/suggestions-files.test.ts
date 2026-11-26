@@ -2,7 +2,7 @@
 // "Suggestions": Word's tracked changes read as suggestions from the file (runs inside `w:ins` / `w:del` and moves,
 // a run's `w:rPrChange`, a paragraph's `w:pPrChange`, a paragraph mark's change as the next paragraph's break or join),
 // never kept twice, written back as Word writes them, one LiveDoc suggestion reading back as one; a change in a story
-// settled and reported.
+// (a header, footer or note) read and written as the body's.
 import { readOoxmlPackage } from '@livedoc/office-packages';
 import { describe, expect, it } from 'vitest';
 import { readTextDocumentFile, writeTextDocumentFile } from './files';
@@ -311,7 +311,7 @@ describe('ODF’s tracked changes, read', () => {
     });
   });
 
-  it('settles a change in a footnote as it reads: an insertion kept, a deletion left out', async () => {
+  it('reads a change in a footnote as the note’s own suggestions', async () => {
     const { document, report } = await read(
       TC(
         region('c1', 'insertion') + region('c2', 'deletion'),
@@ -320,8 +320,8 @@ describe('ODF’s tracked changes, read', () => {
     );
     const note = paragraphs(document)[0]!.inlines.find((i) => i.type === 'note');
     const text = note?.type === 'note' ? (note.blocks[0] as Paragraph).inlines : [];
-    expect(shape(text)).toBe('in');
-    expect(report.dropped.find((d) => d.reason === 'suggestion-in-story')).toBeDefined();
+    expect(shape(text)).toBe('+in+-out-');
+    expect(report.dropped).toEqual([]);
   });
 });
 
@@ -394,5 +394,100 @@ describe('suggestions converted', () => {
     const written = writeTextDocumentFile(odf, 'fodt');
     if (!written.ok) throw new Error(written.rejection);
     expect(kinds((await read(written.bytes)).document)).toEqual(kinds(document));
+  });
+});
+
+// review.md "In the files": a header's, footer's or note's tracked change arrives as a suggestion there and leaves as
+// the same format's tracked change in that story, in both formats, and holds in the live state.
+describe('suggestions in stories, in both formats', () => {
+  const MARK = { id: 's1', at: AT, author: { key: 'k', name: 'Ada', colour: '#0284c7' } };
+
+  function withFirstRunInserted<T extends { blocks: readonly unknown[] }>(story: T): T {
+    const [first, ...rest] = story.blocks as Paragraph[];
+    const i = first!.inlines.findIndex((x) => x.type === 'run');
+    const inlines = first!.inlines.map((x, n) =>
+      n === i ? { ...x, suggested: { insertion: MARK } } : x,
+    );
+    return { ...story, blocks: [{ ...first!, inlines }, ...rest] };
+  }
+
+  /** The headers construct, its default header's first run a suggested insertion. */
+  function headed(format: 'odf' | 'ooxml'): TextDocument {
+    const document = CONSTRUCTS.headers!(format);
+    const headers = document.section.headers!;
+    const header = { ...headers.header!, default: withFirstRunInserted(headers.header!.default!) };
+    return { ...document, section: { ...document.section, headers: { ...headers, header } } };
+  }
+
+  /** The footnotes construct, its first note's first run a suggested insertion. */
+  function noted(format: 'odf' | 'ooxml'): TextDocument {
+    const document = CONSTRUCTS.footnotes!(format);
+    let done = false;
+    const body = document.body.map((b) => {
+      if (done || b.type !== 'paragraph') return b;
+      const inlines = b.inlines.map((x) => {
+        if (done || x.type !== 'note') return x;
+        done = true;
+        return withFirstRunInserted(x);
+      });
+      return { ...b, inlines };
+    });
+    return { ...document, body };
+  }
+
+  const headerRun = (document: TextDocument) =>
+    (document.section.headers!.header!.default!.blocks[0] as Paragraph).inlines.find(
+      (x): x is Run => x.type === 'run',
+    );
+  const noteRun = (document: TextDocument) => {
+    for (const b of document.body)
+      if (b.type === 'paragraph')
+        for (const x of b.inlines)
+          if (x.type === 'note')
+            return (x.blocks[0] as Paragraph).inlines.find((r): r is Run => r.type === 'run');
+    return undefined;
+  };
+
+  it.each([
+    ['docx', 'ooxml'],
+    ['odt', 'odf'],
+  ] as const)(
+    'writes and reads back a header’s and a note’s suggestion (%s)',
+    async (type, format) => {
+      for (const [document, run] of [
+        [headed(format), headerRun],
+        [noted(format), noteRun],
+      ] as const) {
+        const out = writeTextDocumentFile(document, type);
+        if (!out.ok) throw new Error(out.rejection);
+        const back = await read(out.bytes);
+        expect(run(back.document)?.suggested?.insertion).toMatchObject({
+          at: AT,
+          author: { name: 'Ada' },
+        });
+        expect(back.report.dropped.map((d) => d.reason)).not.toContain('suggestion-dangling');
+      }
+    },
+  );
+
+  it('holds a story’s suggestion in the live state, read with the tab that shows it', () => {
+    for (const document of [headed('odf'), noted('odf')]) {
+      const doc = TextDocumentState.load([TextDocumentState.fromDocument(document)]);
+      const [found] = LiveSuggestions.read(doc);
+      expect(found).toMatchObject({ id: 's1', tab: 't.0', author: { name: 'Ada' } });
+      expect(found?.story).toBeDefined();
+    }
+  });
+});
+
+describe('LibreOffice’s header with a tracked change', () => {
+  it('reads the header’s own list of changes as the header’s suggestion', async () => {
+    const bytes = readFileSync(
+      join(import.meta.dirname, '..', 'corpus', 'libreoffice', 'story-suggestions.fodt'),
+    );
+    const { document, report } = await read(bytes);
+    const header = document.section.headers!.header!.default!.blocks[0] as Paragraph;
+    expect(shape(header.inlines)).toBe('+Header+');
+    expect(report.dropped).toEqual([]);
   });
 });
