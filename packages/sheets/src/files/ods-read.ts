@@ -23,6 +23,7 @@ import { SheetLimits } from '../sheet-limits';
 import { ERROR_CODES, type ErrorCode } from '../formula/values';
 import { FILE_READ_CELLS_MAX } from './file-read-limits';
 import { KEPT_REPEAT_MAX, type FileAt, type KeptItem, type KeptPart } from './kept-content';
+import { readOdsCharts } from './ods-charts-read';
 import { keptOdfParts, keptSettings, OdsKeeper } from './ods-kept-read';
 import { odsLineStyles, readOdsLines, type OdsLineStyles } from './ods-lines';
 import { odsTabLooks, type OdsTabLook } from './ods-tab-look';
@@ -389,8 +390,14 @@ function readBody(
   // A file that keeps nothing reads as the model alone.
   if (keeper.items.length === 0 && parts.length === 0)
     return { ok: true, file: { sheets }, losses };
-  const kept = { standard: 'odf' as const, items: keeper.items, parts, relationships: [] };
-  return { ok: true, file: { sheets, kept }, losses };
+  // The charts of kept drawings that qualify are the sheets' own (standard-mapping.md "Charts in the file").
+  const charted = readOdsCharts(sheets, {
+    standard: 'odf',
+    items: keeper.items,
+    parts,
+    relationships: [],
+  });
+  return { ok: true, file: { sheets: charted.sheets, kept: charted.kept! }, losses };
 }
 
 /** An `.ods` or `.fods` file's sheets, or the package's named rejection; `budgets` the package's (tests pass smaller). */

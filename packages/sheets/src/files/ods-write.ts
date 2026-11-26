@@ -297,7 +297,7 @@ function bodyXml(
   styles.reserve(
     new Set(keptCommon.flatMap((xml) => /style:display-name="([^"]*)"/.exec(xml)?.[1] ?? [])),
   );
-  const charts = new OdsChartObjects(flat, kept.partNames());
+  const charts = new OdsChartObjects(flat, kept.partNames(), kept, losses);
   const theme = themeOf(file.theme);
   const tables = file.sheets.flatMap((sheet, i) =>
     tableXml(sheet, i, { losses, styles, kept, theme, charts }),

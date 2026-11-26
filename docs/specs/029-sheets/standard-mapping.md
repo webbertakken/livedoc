@@ -315,7 +315,7 @@ The table is the contract the readers and writers are tested against, one test p
 
 ## Charts in the file
 
-**Status: written built; read built for XLSX, specified for ODF.** A sheet's [charts](charts.md#the-model) are written into both formats as
+**Status: built, written and read in both formats.** A sheet's [charts](charts.md#the-model) are written into both formats as
 each suite writes its own, so LibreOffice, Excel and Google Sheets open them as charts reading the same cells.
 
 - **Data**: each chart's range is read as the grid reads it ([Charts](charts.md#the-model)): its first row names the
@@ -331,21 +331,37 @@ each suite writes its own, so LibreOffice, Excel and Google Sheets open them as 
   (`xl/drawings/drawingN.xml`, a `oneCellAnchor` per chart, px × 9,525 EMU) and a chart part per chart
   (`xl/charts/chartN.xml`). ODF: a `draw:frame` per chart in the sheet's `table:shapes`, at the cell's position worked
   out from the sheet's line sizes, holding a `draw:object` that names an embedded chart document (`Object N/` in a
-  package; inline in a flat `.fods`).
+  package; inline in a flat `.fods`). A shown value axis says so (`chart:display-label="true"`), as LibreOffice
+  reads an axis that does not as one without labels (default, D279).
 - **A sheet keeping its file's drawings**: a sheet whose kept content holds a drawing (XLSX `drawing`) or shapes
   (ODF `table:shapes`) from the file it arrived in keeps them, and its own charts are not written beside them; the
   write names the sheet (`charts_unwritten`) (default, D261).
-- **Reading** (XLSX built, ODF specified): a chart a file holds is read into the model when its type is one built and
+- **Reading**: a chart a file holds is read into the model when its type is one built and
   its series read one block of its own sheet: the rows they share, a header row above them naming the series, a
   label column (or a scatter's x) and the series' columns, in order. Its look is read as it is written above, a
   series' colour and a scatter series' line by its column. XLSX reads a sheet's charts only when its drawing holds
   nothing else, every anchor a chart that qualifies and no chart naming a part of its own (`r:id`); otherwise the
-  drawing stays kept whole and none of its charts is read (default, D275).
+  drawing stays kept whole and none of its charts is read (default, D275). ODF reads a sheet's charts only when every
+  drawing on it, in its `table:shapes` and in its cells, is a `draw:frame` holding one chart object (and its
+  replacement picture, title and description) that qualifies; otherwise every drawing stays kept and none of its
+  charts is read (default, D277). A frame in `table:shapes` is placed by its position over the sheet's line sizes; one
+  in a cell (LibreOffice's "To cell") on that cell, its `svg:x` and `svg:y` the offset into it. Lengths are read in
+  any of ODF's units. A series reads its cells by `chart:values-cell-range-address`, its name by
+  `chart:label-cell-address`, a scatter's x by the first series' `chart:domain` (a later series has none or the
+  same), the labels by the x axis's `chart:categories`. The look is read from the chart document's automatic styles:
+  a bar chart by `chart:vertical`; stacked, percentage, 3-D, smoothed, combined (a series of another class) or
+  secondary-axis charts are not read; values on the marks by `chart:data-label-number="value"` on every series (or
+  the plot area); the value axis off when it is missing, `chart:visible="false"` or `chart:display-label="false"`;
+  a series' colour by its fill (stroke on a line chart), a scatter series a line unless `draw:stroke="none"`, its
+  colour then the stroke's; the alt text by the frame's `svg:desc`, else its `svg:title`, when it is not the title.
 - **Kept while unchanged**: a chart read from a file keeps its file XML beside it (a kept part, named on the chart),
   with a sum of what it was read as: its type, titles, legend, values, axis, alt, place and size, and its cells by
   position. A write whose chart sums the same writes the kept XML in its place, under a new part name; a chart changed
   here (its look, its range, its place, or the cells moved by an insert or a delete) is written from the model, the
-  sheet named (`chart_rewritten`). A conversion writes every chart from the model (default, D276).
+  sheet named (`chart_rewritten`). A conversion writes every chart from the model (default, D276). ODF keeps a chart
+  object's `content.xml` (a flat file's inline `office:document`, its bindings declared on itself), and a package's
+  object its `styles.xml` beside it; kept XML is written only to the ODF form it was read from, so a package's chart
+  written to a flat file, or a flat file's to a package, is written from the model and named (default, D278).
 - Any other chart stays kept content.
 
 ## Unknown content
@@ -531,5 +547,12 @@ The code cites each by its id.
   reading one block of its own sheet and naming no part of its own; else the drawing is kept whole (default).
 - **D276** A read chart unchanged: its read sum (type, titles, legend, values, axis, alt, place, size, cells by
   position) equals the written one's; its kept chart part is then written in its place under a new name (default).
+- **D277** Which ODF charts are read: a sheet's, when every drawing on it (`table:shapes` and in its cells) is a frame
+  of one chart object of a type built, reading one block of its own sheet; else every drawing is kept (default).
+- **D278** A read ODF chart unchanged: its object's `content.xml` (and a package's `styles.xml`), or a flat file's
+  inline document, written in its place under a new object name, to the same ODF form only (default).
+- **D279** A shown value axis in ODF: written with `chart:display-label="true"`, as LibreOffice reads an axis
+  without it as unlabelled; read as off when missing, `chart:visible="false"` or `chart:display-label="false"`
+  (default).
 - **D261** A sheet's own charts beside a drawing kept from its file: Not written, the sheet named (`charts_unwritten`),
   as a worksheet holds one drawing and ODF one `table:shapes` (default).

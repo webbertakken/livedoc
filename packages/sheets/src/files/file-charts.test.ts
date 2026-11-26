@@ -348,7 +348,10 @@ describe('ODF charts', () => {
     expect(doc(bar!)).toContain('chart:display-label="false"');
     expect(doc(bar!)).not.toContain('<chart:legend');
     expect(doc(line!)).toContain('chart:symbol-type="none"');
-    expect(doc(pie!)).not.toContain('<chart:axis');
+    expect(doc(pie!)).not.toContain('primary-y');
+    expect(doc(pie!)).toMatch(
+      /<chart:axis chart:dimension="x" chart:name="primary-x"><chart:categories /,
+    );
     expect(doc(pie!)).not.toContain('draw:fill-color');
     expect(doc(scatter)).toContain('<chart:domain table:cell-range-address=');
     expect(
@@ -365,7 +368,14 @@ describe('ODF charts', () => {
       series: [{ ...column!.series[1]! }],
     });
     expect(plain).toContain('legend-position="end"');
-    expect(plain).not.toContain('office:automatic-styles');
+    // A shown axis says so, else LibreOffice draws it without labels (D279); no series style of its own.
+    expect(plain).toContain(
+      '<chart:axis chart:dimension="x" chart:name="primary-x" chart:style-name="axis">',
+    );
+    expect(plain).toContain(
+      '<chart:axis chart:dimension="y" chart:name="primary-y" chart:style-name="axis">',
+    );
+    expect(plain).not.toContain('style:name="series');
     expect(odsChartContent('S', line!, 'document')).toMatch(
       /^<office:document office:mimetype="application\/vnd.oasis.opendocument.chart"/,
     );
