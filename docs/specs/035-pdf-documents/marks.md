@@ -2,7 +2,8 @@
 
 **Status: specified; a first slice is built.** Built: the four text marks (Highlight, Underline, Strikethrough,
 Squiggly underline), made with the tool in hand by dragging across a line's text or from a text selection; the
-Drawing, made by freehand strokes; the Line, Arrow, Rectangle and Ellipse, made by a drag; the Text and Callout,
+Drawing, made by freehand strokes, and Erase; the Line, Arrow, Rectangle and Ellipse, made by a drag; the Polygon,
+Cloud and Connected lines, made a corner a press; the Text and Callout,
 typed onto the page; and the standard and dynamic stamps, placed by a press; each live in the document's changes once made, drawn over the page, written into the file as
 standard annotations under their own ids and read back by them; each tool's colour, chosen from the one colour picker
 and remembered; and the engine reads every mark a file holds, of any kind, as the file says it; a stroke shown to others as it is
