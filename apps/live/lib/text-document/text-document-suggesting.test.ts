@@ -4,7 +4,13 @@
 import { describe, expect, it } from 'vitest';
 import { EditorState, TextSelection, type Transaction } from 'prosemirror-state';
 import type { Mark, Node as PmNode } from 'prosemirror-model';
-import { baseKeymap, splitBlock, joinBackward, deleteSelection, toggleMark } from 'prosemirror-commands';
+import {
+  baseKeymap,
+  splitBlock,
+  joinBackward,
+  deleteSelection,
+  toggleMark,
+} from 'prosemirror-commands';
 import { textDocumentSchema as schema } from './text-document-schema';
 import { suggestTransaction, type Suggester } from './text-document-suggesting';
 
@@ -34,7 +40,10 @@ function stateWith(blocks: PmNode[], anchor: number, head = anchor) {
 }
 
 /** The transaction a command makes. */
-function commanded(state: EditorState, command: (s: EditorState, d: (tr: Transaction) => void) => boolean) {
+function commanded(
+  state: EditorState,
+  command: (s: EditorState, d: (tr: Transaction) => void) => boolean,
+) {
   let made: Transaction | undefined;
   command(state, (tr) => (made = tr));
   return made!;
@@ -54,8 +63,10 @@ function shape(doc: PmNode): string[] {
     if (block.attrs.insertion) line += `¶+${(block.attrs.insertion as { id: string }).id} `;
     if (block.attrs.deletion) line += `¶-${(block.attrs.deletion as { id: string }).id} `;
     block.forEach((child) => {
-      const i = child.marks.find((m) => m.type.name === 'insertion')?.attrs as { id: string } | undefined;
-      const d = child.marks.find((m) => m.type.name === 'deletion')?.attrs as { id: string } | undefined;
+      const i = child.marks.find((m) => m.type.name === 'insertion')?.attrs as
+        { id: string } | undefined;
+      const d = child.marks.find((m) => m.type.name === 'deletion')?.attrs as
+        { id: string } | undefined;
       const value = child.text ?? `[${child.type.name}]`;
       line += i ? `+${value}+${i.id}` : d ? `-${value}-${d.id}` : value;
     });
@@ -87,7 +98,10 @@ describe('suggestTransaction', () => {
   });
 
   it('removes the person’s own suggested text for real, skips text already deleted, and joins their suggestion', () => {
-    const state = stateWith([p('a', text('bc', ins(mark('s0'))), text('d', del(mark('x', BEN))), 'e')], 5);
+    const state = stateWith(
+      [p('a', text('bc', ins(mark('s0'))), text('d', del(mark('x', BEN))), 'e')],
+      5,
+    );
     const { state: next } = suggest(state, state.tr.delete(2, 6));
     expect(shape(next.doc)).toEqual(['a-d-x-e-s0']);
   });
@@ -150,7 +164,10 @@ describe('suggestTransaction', () => {
 
   it('suggests a paragraph format change keeping its style, formatting and list before', () => {
     const state = stateWith([p('title')], 2);
-    const tr = state.tr.setNodeMarkup(0, undefined, { ...state.doc.firstChild!.attrs, style: 'Heading1' });
+    const tr = state.tr.setNodeMarkup(0, undefined, {
+      ...state.doc.firstChild!.attrs,
+      style: 'Heading1',
+    });
     const { state: next } = suggest(state, tr);
     const attrs = next.doc.firstChild!.attrs;
     expect(attrs.style).toBe('Heading1');
@@ -166,7 +183,10 @@ describe('suggestTransaction', () => {
     const state = stateWith([p('a')], 1);
     const table = state.tr.insert(0, schema.nodes.section_break!.create());
     expect(suggestTransaction(state, table, who())).toEqual({ refused: 'structure' });
-    const typed = state.tr.insertText('x').setMeta('uiEvent', 'paste').setMeta('addToHistory', false);
+    const typed = state.tr
+      .insertText('x')
+      .setMeta('uiEvent', 'paste')
+      .setMeta('addToHistory', false);
     const result = suggestTransaction(state, typed, who());
     if ('refused' in result) throw new Error('refused');
     expect(result.tr.getMeta('uiEvent')).toBe('paste');
@@ -177,9 +197,11 @@ describe('suggestTransaction', () => {
     const state = stateWith([p('abc')], 1, 3);
     const tr = commanded(state, toggleMark(schema.marks.italic!, { value: true }));
     const { state: next } = suggest(state, tr);
-    expect(next.doc.firstChild!.child(0).marks.map((m) => m.type.name).sort()).toEqual([
-      'format_change',
-      'italic',
-    ]);
+    expect(
+      next.doc
+        .firstChild!.child(0)
+        .marks.map((m) => m.type.name)
+        .sort(),
+    ).toEqual(['format_change', 'italic']);
   });
 });
