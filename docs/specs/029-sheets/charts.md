@@ -1,7 +1,8 @@
 # Charts
 
 **Status: built in part** (plan 0020 Phase 11): the model, drawing over the cells, Insert › Chart, working with a
-chart, and the Chart Editor's controls for what the model holds (below); the rest specified.
+chart, the Chart Editor's controls for what the model holds (below), and writing charts into both file formats
+([Charts in the file](standard-mapping.md#charts-in-the-file)); the rest specified.
 
 Charts in a [spreadsheet](spreadsheet.md), as Google Sheets makes them: the workbook's own objects, kept in both
 file formats, drawn by LiveDoc's chart code. Research: [Charts and pivots](../../research/sheets-open-standard/charts-and-pivots.md).

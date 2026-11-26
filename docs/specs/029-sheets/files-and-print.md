@@ -79,6 +79,8 @@ format it arrived in ([Standard mapping](standard-mapping.md)).
   - **Format rules**: "1 conditional formatting rule LiveDoc cannot read is left out: Data!A2"
     ([Format rules in the file](standard-mapping.md#format-rules-in-the-file)).
   - **Sizes**: "Row heights and column widths past the most a sheet holds are left out of 1 sheet: Data".
+  - **Charts**: "Charts are left out of 1 sheet that keeps the file's own drawings: Data"
+    ([Charts in the file](standard-mapping.md#charts-in-the-file)).
   - **Sheet names**: "2 sheet names are changed to fit: “Data” becomes “Data (2)”".
 - A file's preview picture (its thumbnail) is not listed: it shows nothing in the sheet, and LiveDoc's files carry
   none.
