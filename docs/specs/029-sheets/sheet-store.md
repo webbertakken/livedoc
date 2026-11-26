@@ -295,7 +295,7 @@ Sheets follow the document's access ([Auth and guest access](../014-identity/aut
 ## Copies and exports
 
 - **Duplicate** copies the sheet store with the document (same ids), and a spreadsheet's workbook row with it, so a
-  copy of a spreadsheet is a spreadsheet; its kept content comes too.
+  copy of a spreadsheet is a spreadsheet, its named functions with it; its kept content comes too.
 - A `.livedoc` file (the Drive mirror's) carries the workbook row beside the sheets, optional and additive, and a
   copy imported from one is a spreadsheet.
 - **Duplicate Tab** copies the tab's sheets as new sheets on the new tab (new ids, `(copy)` titles kept unique

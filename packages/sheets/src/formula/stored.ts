@@ -6,6 +6,7 @@ import { AST_SHAPES_MAX } from '../limits';
 import { layoutIndex } from '../layout';
 import type { SheetLayout, StoredFormula, StoredRef } from '../sheet';
 import type { A1Ref, Node } from './ast';
+import type { NamedFunctionDef } from '../named-functions';
 import { parseFormula, type ParseFailure } from './parse';
 import { refsOf } from './ast';
 import { tokenize } from './tokens';
@@ -19,6 +20,8 @@ export type SheetsCtx = {
   byId(id: string): SheetHandle | undefined;
   // A named range by name, as the formula's sheet reads it (formulas.md "Named ranges"); null when it reads none.
   name?(name: string): PosRef | null;
+  // A named function by name (formulas.md "Named functions"): the spreadsheet's, null when it has none of that name.
+  fn?(name: string): NamedFunctionDef | null;
   // The characters a typed input may hold: the sheet's kind's (SheetLimits), a Plan Sheet's by default.
   inputMax?: number;
 };

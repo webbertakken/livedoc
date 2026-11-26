@@ -61,6 +61,8 @@ export type Frame = {
   arrays: boolean;
   // The names declared around the node being worked out (LET, LAMBDA); none outside them.
   scope?: Scope;
+  // How many named function calls deep the node being worked out is (formulas.md "Named functions"); absent, none.
+  fnDepth?: number;
   // A cell's value (worked out on demand). `inRange` when read as part of a noted range, so it is not noted on
   // its own as well.
   cell(sheetId: string, r: number, c: number, inRange?: boolean): Value;

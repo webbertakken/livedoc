@@ -10,6 +10,7 @@ import type { EngineIn, EngineOut } from './engine-protocol';
 import type { ImportFamily } from './import-book';
 import { ITERATION_OFF, type Iteration } from './loops';
 import { WorkbookCopy } from './workbook-copy';
+import type { NamedFunction } from '../named-functions';
 
 type PortOptions = {
   sheets: readonly Sheet[];
@@ -20,6 +21,8 @@ type PortOptions = {
   meaning?: FileMeaning;
   limits?: SheetLimits;
   iteration?: Iteration;
+  // A spreadsheet's named functions (formulas.md "Named functions"); absent, none.
+  functions?: readonly NamedFunction[];
   // A spreadsheet's imports (imports.md): whether they may fetch, and who fetches what the Worker asks.
   imports?: { access: ImportAccess; ask: (asks: ImportAsk[]) => void };
   send: (msg: EngineIn) => void;
@@ -47,6 +50,7 @@ export class EnginePort {
       ...(opts.timeZone ? { timeZone: opts.timeZone } : {}),
       limits,
       iteration,
+      ...(opts.functions ? { functions: opts.functions } : {}),
     });
   }
 
@@ -64,6 +68,7 @@ export class EnginePort {
       ...(this.meaning ? { meaning: this.meaning } : {}),
       limits: this.copy.limits === SheetLimits.spreadsheet ? 'spreadsheet' : 'plan',
       iteration: this.copy.iterationSetting(),
+      ...(this.copy.functionList().length > 0 ? { functions: [...this.copy.functionList()] } : {}),
       ...(this.imports ? { imports: this.imports.access } : {}),
     });
   }
@@ -120,6 +125,12 @@ export class EnginePort {
   setIteration(iteration: Iteration): void {
     this.copy.setIteration(iteration);
     this.send({ t: 'iteration', rev: ++this.rev, iteration });
+  }
+
+  /** The named functions changed: the Worker works every formula out again. */
+  setFunctions(functions: readonly NamedFunction[]): void {
+    this.copy.setFunctions(functions);
+    this.send({ t: 'functions', rev: ++this.rev, functions: [...functions] });
   }
 
   tick(): void {

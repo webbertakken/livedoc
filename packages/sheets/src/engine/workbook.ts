@@ -20,6 +20,11 @@ import {
 } from '../imports/import-request';
 import { ImportBook, type ImportFamily } from './import-book';
 import { callsOf, type Node } from '../formula/ast';
+import {
+  compileNamedFunctions,
+  type NamedFunction,
+  type NamedFunctionDef,
+} from '../named-functions';
 import type { FormulaMeaning } from '../formula/meaning';
 import { safeHyperlink } from '../hyperlink';
 import type { Sparkline } from '../sparkline/sparkline-read';
@@ -102,6 +107,9 @@ export class Workbook {
   protected spills = new Spills(this.nos);
   private readonly extents = new Map<string, { rows: number; cols: number }>();
   private readonly ctxs = new Map<string, SheetsCtx>();
+  // The spreadsheet's named functions (formulas.md "Named functions"), each definition read once.
+  private functions: readonly NamedFunction[] = [];
+  private namedDefs: ReadonlyMap<string, NamedFunctionDef> = new Map();
   private readonly computing = new Set<CellNo>();
   private readonly stack: CellNo[] = [];
   private depth = 0;
@@ -152,6 +160,7 @@ export class Workbook {
     this.nowFn = opts.now ?? workbookClock(opts.timeZone);
     this.randFn = opts.rand ?? Math.random;
     this.iteration = opts.iteration ?? ITERATION_OFF;
+    if (opts.functions) this.useFunctions(opts.functions);
     this.frameSource = {
       locale: this.locale,
       meaning: this.meaning,
@@ -333,6 +342,24 @@ export class Workbook {
     this.iteration = iteration;
     this.version++;
     this.restart();
+  }
+
+  /** The named functions in force. */
+  functionList(): readonly NamedFunction[] {
+    return this.functions;
+  }
+
+  /** The named functions changed (made, edited, removed): every value is worked out afresh. */
+  setFunctions(functions: readonly NamedFunction[]): void {
+    if (functions === this.functions) return;
+    this.useFunctions(functions);
+    this.version++;
+    this.restart();
+  }
+
+  private useFunctions(functions: readonly NamedFunction[]): void {
+    this.functions = functions;
+    this.namedDefs = compileNamedFunctions(functions);
   }
 
   // TODAY and NOW move on: forget every volatile cell.
@@ -607,7 +634,8 @@ export class Workbook {
     return this.calls(RANGE_IMPORT_NAMES);
   }
 
-  private calls(names: ReadonlySet<string>): boolean {
+  private calls(direct: ReadonlySet<string>): boolean {
+    const names = this.namedCalling(direct);
     for (const sheet of this.sheets.values())
       for (const cell of sheet.cells.values()) {
         const f = cell.input && 'f' in cell.input ? cell.input.f : null;
@@ -618,10 +646,27 @@ export class Workbook {
     return false;
   }
 
+  // The names given and every named function whose definition calls one of them, however deep.
+  private namedCalling(direct: ReadonlySet<string>): ReadonlySet<string> {
+    const names = new Set(direct);
+    for (let grew = true; grew;) {
+      grew = false;
+      for (const def of this.namedDefs.values())
+        if (!names.has(def.name) && [...callsOf(def.ast)].some((n) => names.has(n))) {
+          names.add(def.name);
+          grew = true;
+        }
+    }
+    return names;
+  }
+
   ctxFor(sheetId: string): SheetsCtx {
     let ctx = this.ctxs.get(sheetId);
     if (!ctx) {
-      ctx = sheetsCtxOf(this.sheets, sheetId, this.limits.input);
+      ctx = {
+        ...sheetsCtxOf(this.sheets, sheetId, this.limits.input),
+        fn: (name) => this.namedDefs.get(name) ?? null,
+      };
       this.ctxs.set(sheetId, ctx);
     }
     return ctx;

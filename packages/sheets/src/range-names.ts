@@ -14,7 +14,7 @@ export const NAME_TAKEN = 'Another named range is called that';
 const NAME_SHAPE = /^[A-Za-z_][A-Za-z0-9_.]*$/;
 // What a formula would read as a cell reference: A1 style (up to four letters, then a row, as the parser reads one)
 // or R1C1 style.
-const CELL_LIKE = /^(?:[A-Za-z]{1,4}[0-9]+|[Rr][0-9]+[Cc][0-9]+)$/;
+export const CELL_LIKE = /^(?:[A-Za-z]{1,4}[0-9]+|[Rr][0-9]+[Cc][0-9]+)$/;
 
 // Why `name` cannot name a range on `layout`, or null when it can: `others` are the workbook's other sheets' layouts,
 // `except` the name being changed (taken off wherever it is).

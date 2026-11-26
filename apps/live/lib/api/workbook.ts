@@ -3,10 +3,11 @@
 import type {
   WorkbookConversionResponse,
   WorkbookConvertRequest,
+  WorkbookFunctionsRequest,
   WorkbookSettingsRequest,
   WorkbookSettingsResponse,
 } from '@livedoc/api-schema';
-import type { WorkbookFormat, WorkbookSettings } from '@livedoc/sheets';
+import type { NamedFunction, WorkbookFormat, WorkbookSettings } from '@livedoc/sheets';
 import { isOfflineId } from '../offline/offline-store';
 import { API_BASE, apiFetch, apiHeaders, expectOk, expectOkVoid } from './core';
 
@@ -98,4 +99,26 @@ export async function apiSaveWorkbookSettings(
     },
   );
   return expectOk<WorkbookSettingsResponse>(res, 'save workbook settings');
+}
+
+/** An Editor saves the workbook's named functions whole (formulas.md "Named functions"); the room sends them on. */
+export async function apiSaveWorkbookFunctions(
+  scope: WorkbookScope,
+  functions: readonly NamedFunction[],
+): Promise<WorkbookSettingsResponse> {
+  if (await isOfflineId(scope.documentId))
+    return (await import('../offline/offline-workbook-functions')).offlineSaveWorkbookFunctions(
+      scope.documentId,
+      functions,
+    );
+  const body: WorkbookFunctionsRequest = { functions: [...functions] };
+  const res = await apiFetch(
+    `${API_BASE}/documents/${encodeURIComponent(scope.documentId)}/workbook/functions`,
+    {
+      method: 'PUT',
+      headers: await apiHeaders(scope.ownerId, { share: scope.shareCode, body: true }),
+      body: JSON.stringify(body),
+    },
+  );
+  return expectOk<WorkbookSettingsResponse>(res, 'save named functions');
 }

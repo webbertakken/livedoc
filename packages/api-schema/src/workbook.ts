@@ -2,7 +2,12 @@
 // its sheets added, renamed and deleted with their tabs, and its settings saved. The request and response bodies; the
 // shapes come from @livedoc/sheets.
 
-import type { WorkbookFormat, WorkbookRecord, WorkbookSettings } from '@livedoc/sheets';
+import type {
+  NamedFunction,
+  WorkbookFormat,
+  WorkbookRecord,
+  WorkbookSettings,
+} from '@livedoc/sheets';
 import type { ConversionLoss } from '@livedoc/sheets/files';
 import type { SheetCellDto, SheetDto, SheetLayout } from './sheets';
 
@@ -52,6 +57,10 @@ export type WorkbookSettingsRequest = { settings: WorkbookSettings };
 
 export type WorkbookSettingsResponse = { workbook: WorkbookRecord; rev: number };
 
+// PUT /documents/:id/workbook/functions: a spreadsheet's named functions saved whole (formulas.md "Named functions").
+// Answered with the record as it now stands (WorkbookSettingsResponse).
+export type WorkbookFunctionsRequest = { functions: NamedFunction[] };
+
 // GET /documents/:id/workbook/conversion?to=<format>: what a file in `to` cannot hold that one in the workbook's own
 // format could (files-and-print.md "Converting"), one entry a kind; none within one standard.
 export type WorkbookConversionResponse = {
@@ -88,6 +97,10 @@ export const WORKBOOK_ERRORS = [
   'range_sources_invalid',
   // A connect past the sources a workbook keeps (WORKBOOK_RANGE_SOURCES_MAX).
   'range_sources_full',
+  // A functions body that is not a list of well made named functions (formulas.md "Named functions").
+  'functions_invalid',
+  // More named functions than a workbook keeps (NAMED_FUNCTIONS_MAX).
+  'functions_full',
 ] as const;
 export type WorkbookError = (typeof WORKBOOK_ERRORS)[number];
 

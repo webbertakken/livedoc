@@ -158,7 +158,8 @@ display style (Chip, Arrow, Plain Text) with option colours. Dropdowns and tick 
   Options).
 - `[sheet] filter formula refused` with the column id, when a filter's Custom Formula Is cannot be read.
 - `[workbook] named functions saved` with their count (the api), and `[workbook] named function refused` with the
-  field (`name`, `argument`, `definition`) when Create or Update cannot save.
+  field (`name`, `description`, `argument`, `definition`) when Create or Update cannot save; a save the api refuses
+  or cannot reach is toasted and the form stays open.
 - `[workbook] named range moved` when a name's range moves to another sheet, and `[workbook] named range refused`
   with the reason (`name`, `range`) when Done cannot save.
 

@@ -11,6 +11,7 @@ import type {
   FileMeaning,
   ImportAccess,
   Iteration,
+  NamedFunction,
   SheetPerson,
   WorkbookRecalc,
 } from '@livedoc/sheets';
@@ -40,6 +41,8 @@ export type SheetsBridge = {
   oneWorkbook: boolean;
   // A spreadsheet's iterative calculation (docs/specs/029-sheets/settings.md "Calculation"); absent, off.
   iteration?: Iteration;
+  // A spreadsheet's named functions (formulas.md "Named functions"); absent, none.
+  functions?: readonly NamedFunction[];
   // A spreadsheet's Recalculation (settings.md "Calculation"); absent, on change.
   recalc?: WorkbookRecalc;
   // Whether a spreadsheet's imports may fetch (imports.md "Allow access", "A spreadsheet in This Browser"); absent
@@ -102,6 +105,7 @@ export function useSheetsBridge(opts: {
   tabScope: string | null;
   oneWorkbook: boolean;
   iteration?: Iteration;
+  functions?: readonly NamedFunction[];
   recalc?: WorkbookRecalc;
   importAccess?: ImportAccess;
   rangeSources?: readonly string[];
@@ -148,6 +152,7 @@ export function useSheetsBridge(opts: {
     tabScope,
     oneWorkbook,
     iteration,
+    functions,
     recalc,
     importAccess,
     rangeSources,
@@ -165,6 +170,7 @@ export function useSheetsBridge(opts: {
       scope: { documentId, ownerId, shareCode, tabId: tabScope },
       oneWorkbook,
       ...(iteration ? { iteration } : {}),
+      ...(functions ? { functions } : {}),
       ...(recalc ? { recalc } : {}),
       ...(importAccess !== undefined ? { importAccess } : {}),
       ...(rangeSources ? { rangeSources } : {}),
@@ -194,6 +200,7 @@ export function useSheetsBridge(opts: {
       tabScope,
       oneWorkbook,
       iteration,
+      functions,
       recalc,
       importAccess,
       rangeSources,

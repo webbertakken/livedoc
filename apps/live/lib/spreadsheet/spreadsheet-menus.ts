@@ -443,7 +443,7 @@ const DATA_MENU = menu('data', 'Data', [
   SEPARATOR,
   item('protect-sheets-and-ranges', 'Protect Sheets and Ranges', 'edit'),
   built('named-ranges', 'Named Ranges', 'view'),
-  item('named-functions', 'Named Functions', 'edit'),
+  built('named-functions', 'Named Functions', 'view'),
   item('randomise-range', 'Randomise Range', 'edit'),
   SEPARATOR,
   item('column-stats', 'Column Stats', 'view'),

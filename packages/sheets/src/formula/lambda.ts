@@ -3,7 +3,7 @@
 import { isLambda, type EvalValue, type Frame, type Lambda } from '../engine/frame';
 import { err, type SheetError } from './values';
 
-const plural = (n: number) => `${n} argument${n === 1 ? '' : 's'}`;
+export const plural = (n: number) => `${n} argument${n === 1 ? '' : 's'}`;
 
 // Google's words for a LAMBDA given another count of values than it has names.
 export function wrongCount(lambda: Lambda, given: number): SheetError | null {

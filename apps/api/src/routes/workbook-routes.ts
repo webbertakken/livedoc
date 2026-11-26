@@ -17,6 +17,7 @@ import type { DocumentRouteContext } from './context';
 import { openWorkbook } from './sheet-page-routes';
 import { sheetCaller, workbookRefused } from './sheet-route-kit';
 import { saveSettings } from './workbook-settings-route';
+import { saveFunctions } from './workbook-functions-route';
 import { conversionLosses, convert } from './workbook-conversion-route';
 import { keepFileContent, readKeptContent } from './workbook-kept-route';
 import { allowImports, fetchImport } from './sheet-imports-route';
@@ -122,6 +123,8 @@ export async function handleWorkbookRoutes(ctx: DocumentRouteContext): Promise<R
     return request.method === 'GET' ? file(ctx, documentId) : methodNotAllowed();
   if (segments.length === 5 && segments[4] === 'settings')
     return request.method === 'PUT' ? saveSettings(ctx, documentId) : methodNotAllowed();
+  if (segments.length === 5 && segments[4] === 'functions')
+    return request.method === 'PUT' ? saveFunctions(ctx, documentId) : methodNotAllowed();
   // One word for both doors: each new word this deep multiplies the route-parity probe's sweep.
   if (segments.length === 5 && segments[4] === 'conversion') {
     if (request.method === 'GET') return conversionLosses(ctx, documentId);

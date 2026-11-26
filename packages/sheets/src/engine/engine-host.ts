@@ -33,6 +33,7 @@ export class EngineHost {
         ...(msg.meaning ? { meaning: msg.meaning } : {}),
         limits: msg.limits === 'spreadsheet' ? SheetLimits.spreadsheet : SheetLimits.plan,
         iteration: msg.iteration,
+        ...(msg.functions ? { functions: msg.functions } : {}),
         trackForgotten: true,
         ...(msg.imports ? { imports: { access: msg.imports } } : {}),
       });
@@ -55,6 +56,7 @@ export class EngineHost {
       else if (msg.t === 'remove') wb.removeSheet(msg.sheetId);
       else if (msg.t === 'order') wb.orderSheets(msg.sheetIds);
       else if (msg.t === 'iteration') wb.setIteration(msg.iteration);
+      else if (msg.t === 'functions') wb.setFunctions(msg.functions);
       else if (msg.t === 'imported') wb.landImport(msg.key, msg.answer);
       else if (msg.t === 'imports-allowed') wb.allowImports();
       else if (msg.t === 'imports-online') wb.onlineImports(msg.allowed);

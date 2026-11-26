@@ -69,7 +69,8 @@ export function useFormulaInput(actions: SheetActions): FormulaInput {
   const editing = c.editing;
   const draft = editing?.draft ?? '';
   const rangeNames = (c.sheet.layout.names ?? []).map((x) => x.name);
-  const matches = editing ? functionMatches(draft, caret, 8, rangeNames) : null;
+  const namedFunctions = c.workbook.functionList().map((f) => f.name);
+  const matches = editing ? functionMatches(draft, caret, 8, rangeNames, namedFunctions) : null;
   // Escape closes the options and keeps the typing, until the next change.
   const [optionsClosed, setOptionsClosed] = useState(false);
   const options =

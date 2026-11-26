@@ -219,7 +219,9 @@ export async function exportDocumentCopy(
       )
       .bind(documentId, tabIds),
     db
-      .prepare('SELECT format, settings, meaning, created_at FROM workbook WHERE document_id = ?')
+      .prepare(
+        'SELECT format, settings, meaning, functions, created_at FROM workbook WHERE document_id = ?',
+      )
       .bind(documentId),
   ]);
   const doc = head?.results?.[0] as
@@ -351,13 +353,14 @@ export async function importDocumentCopy(
     );
   }
   // A copy of a spreadsheet is a spreadsheet: its workbook row comes first, so its sheet tabs reference their sheets.
-  // It keeps the spreadsheet's meaning (formulas.md, the file's meaning).
+  // It keeps the spreadsheet's meaning (formulas.md, the file's meaning) and named functions (formulas.md "Named
+  // functions").
   if (copy.workbook)
     stmts.push(
       db
         .prepare(
-          `INSERT INTO workbook (document_id, format, settings, meaning, rev, created_at, updated_at)
-           VALUES (?, ?, ?, ?, 0, ?, ?)
+          `INSERT INTO workbook (document_id, format, settings, meaning, functions, rev, created_at, updated_at)
+           VALUES (?, ?, ?, ?, ?, 0, ?, ?)
            ON CONFLICT (document_id) DO NOTHING`,
         )
         .bind(
@@ -365,6 +368,7 @@ export async function importDocumentCopy(
           copy.workbook.format,
           copy.workbook.settings,
           copy.workbook.meaning ?? null,
+          copy.workbook.functions ?? null,
           copy.workbook.created_at,
           now,
         ),
