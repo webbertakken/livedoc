@@ -38,6 +38,8 @@ export type PdfPageChoosing = {
   readonly mayChange: (mark: Mark) => boolean;
   /** A press on a mark of the page at `index`; `shift` adds it, or takes it out. */
   readonly choose: (index: number, id: string, shift: boolean) => void;
+  /** A box drawn from empty space on the page at `index` let go over the marks of `ids`; `add` (⇧) joins them. */
+  readonly chooseAll: (index: number, ids: readonly string[], add: boolean) => void;
   /** A press on nothing: the marks go. */
   readonly letGo: () => void;
   /** Escape: the marks go, and the pages take the keys. */
@@ -134,6 +136,25 @@ export function usePdfMarkSelection({
     },
     [clearText, ready, byPage, mayChange],
   );
+  const chooseAll = useCallback(
+    (index: number, ids: readonly string[], add: boolean) => {
+      const page = ready?.pages[index];
+      const there = page ? changeableOnPage(byPage, page.name).marks : [];
+      const taken = there.filter((mark) => ids.includes(mark.id) && mayChange(mark));
+      debugLog(`[pdf] marks-boxed count=${taken.length}`);
+      if (taken.length > 0) clearText();
+      setHeld((before) => {
+        const kept = add && before?.page === index ? before.ids : [];
+        const joined = [
+          ...kept,
+          ...taken.map((mark) => mark.id).filter((id) => !kept.includes(id)),
+        ];
+        if (joined.length > 0) return { page: index, ids: joined };
+        return add ? before : null;
+      });
+    },
+    [clearText, ready, byPage, mayChange],
+  );
   const letGo = useCallback(() => setHeld(null), []);
   const leave = useCallback(() => {
     setHeld(null);
@@ -182,8 +203,8 @@ export function usePdfMarkSelection({
 
   const changing = marking && ready !== null;
   const choosing = useMemo<PdfPageChoosing | null>(
-    () => (changing ? { mayChange, choose, letGo, leave, move, reshape, remove } : null),
-    [changing, mayChange, choose, letGo, leave, move, reshape, remove],
+    () => (changing ? { mayChange, choose, chooseAll, letGo, leave, move, reshape, remove } : null),
+    [changing, mayChange, choose, chooseAll, letGo, leave, move, reshape, remove],
   );
   const actions = useMemo<OfficeActions>(
     () => (changing ? { [DELETE_MARKS]: { run: remove, disabled: chosen === null } } : {}),

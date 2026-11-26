@@ -63,4 +63,13 @@ export const MarkHit = {
   /** The mark a press at `at` reaches, `reach` points from a line; the one drawn last of those, or null. */
   at: (marks: readonly Mark[], at: PagePoint, reach: number): Mark | null =>
     marks.findLast((mark) => reaches(mark, at, reach)) ?? null,
+  /**
+   * The marks a box drawn from empty space touches (marks.md "Changing a mark"): those whose smallest box meets
+   * `box`, `[left, bottom, right, top]` in page space, edges included; in the order drawn.
+   */
+  touching: (marks: readonly Mark[], box: Box): readonly Mark[] =>
+    marks.filter((mark) => {
+      const [left, bottom, right, top] = Mark.bounds(mark);
+      return left <= box[2] && right >= box[0] && bottom <= box[3] && top >= box[1];
+    }),
 } as const;

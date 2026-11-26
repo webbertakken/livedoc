@@ -103,6 +103,33 @@ describe('selecting marks', () => {
     expect(hook.result.current.chosen).toEqual({ page: 0, ids: ['a'] });
   });
 
+  it('selects the marks a box touched, ⇧ adding them, never one it may not change', () => {
+    const { hook, clearText } = selecting({ mayChange: (mark) => mark.id !== 'b' });
+    act(() => hook.result.current.choosing!.chooseAll(0, ['b'], false));
+    expect(hook.result.current.chosen).toBeNull();
+    expect(clearText).not.toHaveBeenCalled();
+    act(() => hook.result.current.choosing!.chooseAll(0, ['a', 'b', 'gone'], false));
+    expect(hook.result.current.chosen).toEqual({ page: 0, ids: ['a'] });
+    expect(clearText).toHaveBeenCalled();
+    expect(debugLog).toHaveBeenLastCalledWith('[pdf] marks-boxed count=1');
+    act(() => hook.result.current.choosing!.chooseAll(1, ['c'], true));
+    expect(hook.result.current.chosen).toEqual({ page: 1, ids: ['c'] });
+    act(() => hook.result.current.choosing!.chooseAll(1, ['c'], true));
+    expect(hook.result.current.chosen).toEqual({ page: 1, ids: ['c'] });
+    // A box touching nothing lets the marks go, unless ⇧ adds.
+    act(() => hook.result.current.choosing!.chooseAll(1, [], true));
+    expect(hook.result.current.chosen).toEqual({ page: 1, ids: ['c'] });
+    act(() => hook.result.current.choosing!.chooseAll(1, [], false));
+    expect(hook.result.current.chosen).toBeNull();
+  });
+
+  it('adds two marks of a page by a box with ⇧ to one selected there', () => {
+    const { hook } = selecting();
+    act(() => hook.result.current.choosing!.choose(0, 'a', false));
+    act(() => hook.result.current.choosing!.chooseAll(0, ['b', 'a'], true));
+    expect(hook.result.current.chosen).toEqual({ page: 0, ids: ['a', 'b'] });
+  });
+
   it('holds one page’s marks: a press on another page’s starts a new selection', () => {
     const { hook } = selecting();
     act(() => hook.result.current.choosing!.choose(0, 'a', false));

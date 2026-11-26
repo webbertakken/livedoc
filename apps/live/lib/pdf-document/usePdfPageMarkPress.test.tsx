@@ -11,6 +11,7 @@ import {
   PageName,
   PDF_DRAG_SLOP_PX,
   PDF_MARK_REACH_PX,
+  PDF_MARK_TOUCH_REACH_PX,
   type PageMatrix,
   type Quad,
 } from '@livedoc/pdf-documents';
@@ -55,6 +56,7 @@ function pressing({
 }: { chosen?: string[]; choose?: boolean; matrix?: PageMatrix | null; drawn?: boolean } = {}) {
   const choosing: PdfPageChoosing = {
     mayChange: () => true,
+    chooseAll: vi.fn(),
     choose: vi.fn(),
     letGo: vi.fn(),
     leave: vi.fn(),
@@ -98,6 +100,24 @@ describe('a press on a page’s marks', () => {
     expect(run((press) => press.up(pointer(30, 390 - PDF_MARK_REACH_PX)))).toBe(true);
     expect(focusMark).toHaveBeenCalledWith('a');
     expect(choosing.move).not.toHaveBeenCalled();
+  });
+
+  it('keeps the marks for a press on nothing with ⇧, for a box to add to them', () => {
+    const { run, choosing } = pressing({ chosen: ['a'] });
+    expect(run((press) => press.down(pointer(340, 60, { shiftKey: true })))).toBe(false);
+    expect(choosing.letGo).not.toHaveBeenCalled();
+  });
+
+  it('selects the mark a finger taps, a finger’s reach from its line, and nothing else', () => {
+    const { run, choosing, focusMark } = pressing();
+    expect(run((press) => press.tap({ x: 30, y: 10 + PDF_MARK_TOUCH_REACH_PX - 1 }))).toBe(true);
+    expect(choosing.choose).toHaveBeenCalledWith(2, 'a', false);
+    expect(focusMark).toHaveBeenCalledWith('a');
+    expect(run((press) => press.tap({ x: 340, y: 340 }))).toBe(false);
+    expect(choosing.letGo).toHaveBeenCalled();
+    expect(choosing.choose).toHaveBeenCalledTimes(1);
+    const { run: none } = pressing({ choose: false });
+    expect(none((press) => press.tap({ x: 30, y: 10 }))).toBe(false);
   });
 
   it('lets the marks go for a press on nothing, and leaves it to the text', () => {

@@ -27,6 +27,7 @@ const arrow = Mark.line('arrow', {
 function marks(chosen: readonly string[] = [], choose = true) {
   const choosing: PdfPageChoosing = {
     mayChange: () => true,
+    chooseAll: vi.fn(),
     choose: vi.fn(),
     letGo: vi.fn(),
     leave: vi.fn(),

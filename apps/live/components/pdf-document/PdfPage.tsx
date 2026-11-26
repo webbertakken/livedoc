@@ -34,7 +34,7 @@ import { pictureScale, type PdfPageDrawer } from '@/lib/pdf-document/pdf-page-dr
 import { PdfMarkHandles } from './PdfMarkHandles';
 import { PdfMarksOverlay, type PdfMarkReshaping } from './PdfMarksOverlay';
 import { keyResize } from '@/lib/pdf-document/pdf-mark-handles';
-import { PdfPageLinks } from './PdfPageLinks';
+import { linkBox, PdfPageLinks } from './PdfPageLinks';
 import { PdfPageReading, pageRegionName } from './PdfPageReading';
 import { PdfPageTiles, type PdfTileSource } from './PdfPageTiles';
 import { paintPicture, REDRAW_SETTLE_MS } from '@/lib/pdf-document/pdf-paint';
@@ -56,6 +56,7 @@ import type { PdfPageTyping as Typing } from '@/lib/pdf-document/usePdfTyping';
 import { screenBoxOf } from '@/lib/pdf-document/pdf-shape';
 import { PdfPageTyping } from './PdfPageTyping';
 import { PdfPageMarks } from './PdfPageMarks';
+import { usePdfPageBoxing } from '@/lib/pdf-document/usePdfPageBoxing';
 import type { PdfPageChoosing } from '@/lib/pdf-document/usePdfMarkSelection';
 import { usePdfPageMarkPress } from '@/lib/pdf-document/usePdfPageMarkPress';
 
@@ -68,6 +69,14 @@ type Drawn = {
   fileMarks: readonly string[];
   by: PdfPageDrawer;
 };
+
+/** A box in percent of the page, as the page's overlays are placed. */
+const percentBox = (box: { left: number; top: number; width: number; height: number }) => ({
+  left: `${box.left}%`,
+  top: `${box.top}%`,
+  width: `${box.width}%`,
+  height: `${box.height}%`,
+});
 
 export const PdfPage = memo(function PdfPage({
   index,
@@ -258,6 +267,7 @@ export const PdfPage = memo(function PdfPage({
     pointAt,
     onText,
     onDoubleTap,
+    onTap: (at) => markPress.tap(at),
   });
 
   // The page as the file has it, in page space; null before it is drawn.
@@ -297,6 +307,14 @@ export const PdfPage = memo(function PdfPage({
         ?.querySelector<HTMLElement>(`[data-pdf-mark-control="${id}"]`)
         ?.focus({ preventScroll: true }),
   });
+  // A box drawn from empty space selects the marks it touches (marks.md "Changing a mark").
+  const boxing = usePdfPageBoxing({
+    index,
+    texts,
+    marks: pressable,
+    choosing: tool === 'select' && current ? choosing : null,
+    pointAt,
+  });
   // One selected mark has handles; the mark as a handle's drag has it, while it lasts (marks.md "Changing a mark").
   const [reshaping, setReshaping] = useState<PdfMarkReshaping | null>(null);
   const sizing = tool === 'select' && current && choosing && chosen.length === 1 ? choosing : null;
@@ -332,6 +350,7 @@ export const PdfPage = memo(function PdfPage({
       if (!at) return;
       event.currentTarget.setPointerCapture(event.pointerId);
       selecting.current = true;
+      boxing.down(event, at);
       return onText(index, { kind: 'press', at, shift: event.shiftKey, alt: event.altKey });
     }
     if (!marking || event.button !== 0) return;
@@ -342,7 +361,7 @@ export const PdfPage = memo(function PdfPage({
     textMark.begin(from);
   };
   const onPointerMove = (event: PointerEvent<HTMLElement>) => {
-    if (inking.move(event) || markPress.move(event)) return;
+    if (inking.move(event) || markPress.move(event) || boxing.move(event)) return;
     const at = selecting.current ? pagePoint(event) : null;
     if (at) return onText(index, { kind: 'drag', at });
     const to = textMark.dragging() ? pagePoint(event) : null;
@@ -388,11 +407,15 @@ export const PdfPage = memo(function PdfPage({
       onPointerMove={onPointerMove}
       onPointerUp={(event) => {
         fingers.up(event);
-        if (!inking.up(event, true) && !markPress.up(event)) endDrag(event, true);
+        if (inking.up(event, true) || markPress.up(event)) return;
+        boxing.up(event);
+        endDrag(event, true);
       }}
       onPointerCancel={(event) => {
         fingers.cancel(event);
-        if (!inking.up(event, false) && !markPress.cancel()) endDrag(event, false);
+        if (inking.up(event, false) || markPress.cancel()) return;
+        boxing.cancel();
+        endDrag(event, false);
       }}
       onClick={onClick}
     >
@@ -447,6 +470,14 @@ export const PdfPage = memo(function PdfPage({
           choosing={tool === 'select' ? choosing : null}
           onNudge={markPress.nudge}
           onResize={resizeBy}
+        />
+      ) : null}
+      {matrix && boxing.box ? (
+        <div
+          aria-hidden
+          data-pdf-mark-box
+          className="pointer-events-none absolute border border-dashed border-(--office-focus)"
+          style={percentBox(linkBox(matrix, boxing.box, shown.width, shown.height))}
         />
       ) : null}
       {matrix && sizing && sized && !markPress.moving ? (

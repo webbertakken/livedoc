@@ -4,7 +4,7 @@
 // reaches selected, ⇧ adding it or taking it out; a drag from a selected mark moving the selection, shown as it goes,
 // held on the page and made one move once let go; a press on a text mark selecting it once let go where pressed, a
 // drag from it handed to the text; and an arrow key's move, the way it points on screen. A finger scrolls, as it does
-// on text.
+// on text, and a finger's tap selects the mark it lands on, a finger's reach from it.
 import { useRef, useState, type PointerEvent } from 'react';
 import {
   MarkHit,
@@ -12,6 +12,7 @@ import {
   PageView,
   PDF_DRAG_SLOP_PX,
   PDF_MARK_REACH_PX,
+  PDF_MARK_TOUCH_REACH_PX,
   type Box,
   type Mark,
   type PageMatrix,
@@ -102,7 +103,8 @@ export function usePdfPageMarkPress({
     const from = pointAt({ x: event.clientX, y: event.clientY });
     const mark = reached({ x: event.clientX, y: event.clientY });
     if (!from || !mark) {
-      choosing.letGo();
+      // ⇧ keeps the marks, for a box drawn from here to add to them.
+      if (!event.shiftKey) choosing.letGo();
       return false;
     }
     const text = !MarkPlace.isMovable(mark);
@@ -166,6 +168,19 @@ export function usePdfPageMarkPress({
     return true;
   };
 
+  /** A finger's tap at `at`: the mark it lands on chosen, a finger's reach from it; on none the marks go, false. */
+  const tap = (at: PagePoint): boolean => {
+    const mark = choosing ? MarkHit.at(marks, at, PDF_MARK_TOUCH_REACH_PX / cssPerPoint) : null;
+    if (!choosing) return false;
+    if (!mark) {
+      choosing.letGo();
+      return false;
+    }
+    choosing.choose(index, mark.id, false);
+    focusMark(mark.id);
+    return true;
+  };
+
   /** An arrow key: the selection moved `step` the way it points in view space, held on the page. */
   const nudge = (step: PagePoint): boolean => {
     const toView = matrix();
@@ -178,5 +193,5 @@ export function usePdfPageMarkPress({
     return true;
   };
 
-  return { down, move, up, cancel, nudge, moving, over: choosing ? over : null };
+  return { down, move, up, cancel, tap, nudge, moving, over: choosing ? over : null };
 }

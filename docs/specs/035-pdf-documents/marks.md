@@ -134,6 +134,14 @@ written into the file as a standard annotation, so any reader shows it. The rese
 ## Changing a mark
 
 - **Select** by a press; a drag from empty space selects every mark it touches; ⇧ adds to the selection.
+- **Empty space** `(default)`: where a press reaches no mark and no line of text lies within a line height of it (a
+  margin, a gap between columns, a page with no text). A mouse's or a pen's drag from it draws a box, a dashed line in
+  the shell's focus colour, and once let go selects every mark of that page whose smallest box it touches, ⇧ adding
+  them to the marks selected there; a drag from text selects text, as before. A box shorter than `PDF_DRAG_SLOP_PX`
+  is a press.
+- **A finger's tap** with Select in hand selects the mark it lands on, within `PDF_MARK_TOUCH_REACH_PX` of it, as a
+  press does; a tap on nothing lets the marks go and falls to the text. A finger's drag scrolls, so a mark is moved
+  by a mouse, a pen or the keys `(default)`.
 - A press with Select in hand, in Reviewing, for a session that may review, selects the mark it lands on; where
   marks overlap, the one drawn last, on top.
 - **What a press reaches** `(default)`: a text mark's glyphs; a Drawing's, a Line's, an Arrow's, a Rectangle's and
@@ -144,7 +152,7 @@ written into the file as a standard annotation, so any reader shows it. The rese
 - ⇧ with a press on a selected mark takes it out of the selection `(default)`.
 - **A selection holds the marks of one page**: a press on a mark of another page starts a new one there
   `(default)`.
-- A press on nothing lets the marks go; a mark selected lets a text selection go, and text selected lets the marks
+- A press on nothing lets the marks go, ⇧ keeping them; a mark selected lets a text selection go, and text selected lets the marks
   go; Escape lets them go and gives the pages the keys.
 - **A selected mark is outlined**: a dashed line in the shell's focus colour round the smallest box holding it,
   `PDF_MARK_OUTLINE_PX` out from it `(default)`.
@@ -436,32 +444,33 @@ question mark. The research is [Every script in a mark's words](../../research/p
 
 ## Limits
 
-| Constant                    | Value               | Why                                                                                            |
-| --------------------------- | ------------------- | ---------------------------------------------------------------------------------------------- |
-| `PDF_MAX_MARKS`             | 20,000              | `(default)` Marks in one PDF document ([PDF document](pdf-document.md#limits))                 |
-| `PDF_PAGE_MAX_MARKS`        | 5,000               | `(default)` Marks read on one page; a page past it reads its first, and the rest still draw    |
-| `PDF_MARK_TEXT_MAX_CHARS`   | 10,000              | `(default)` A Text mark's or a note's words; longer belongs in a document                      |
-| `PDF_DRAWING_MAX_POINTS`    | 20,000              | `(default)` One Drawing; more strokes start a new mark                                         |
-| `PDF_DRAWING_JOIN_MS`       | 1,000               | `(default)` Strokes made closer in time are one Drawing; safe range 300 to 3,000               |
-| `PDF_DRAWING_STEP_PT`       | 0.5                 | `(default)` A stroke's points closer than this, in points, are one; safe range 0.25 to 2       |
-| `PDF_SHAPE_MIN_PT`          | 2                   | `(default)` A drag spanning less, in points, makes no line or shape; safe range 1 to 6         |
-| `PDF_ARROW_HEAD_WIDTHS`     | 4                   | `(default)` An arrowhead's side, in line widths; safe range 3 to 6                             |
-| `PDF_ARROW_HEAD_MIN_PT`     | 6                   | `(default)` An arrowhead's side at the least, in points; safe range 4 to 10                    |
-| `PDF_TEXT_BOX_WIDTH_PT`     | 216                 | `(default)` A Text box opened by a press, in points, before it narrows; safe range 144 to 360  |
-| `PDF_TEXT_PADDING_PT`       | 2                   | `(default)` Room between a Text's or a Callout's box and its words, in points; safe 0 to 6     |
-| `PDF_TEXT_SIZE_MIN_PT`      | 4                   | `(default)` The smallest size a Text's or a Callout's words are set at, in points              |
-| `PDF_TEXT_SIZE_MAX_PT`      | 144                 | `(default)` The largest size a Text's or a Callout's words are set at, in points               |
-| `PDF_CALLOUT_KNEE_PT`       | 12                  | `(default)` How far a Callout's knee stands out from its box, in points; safe range 6 to 24    |
-| `PDF_SNAP_PX`               | 6                   | `(default)` Screen pixels within which a shape snaps to the page's lines                       |
-| `PDF_MARK_REACH_PX`         | 6                   | `(default)` Screen pixels from a mark's line that a press still selects it; safe range 4 to 12 |
-| `PDF_MARK_OUTLINE_PX`       | 3                   | `(default)` Screen pixels between a selected mark and its outline; safe range 2 to 6           |
-| `PDF_DRAG_SLOP_PX`          | 3                   | `(default)` Screen pixels a pointer moves before a press is a drag; safe range 2 to 6          |
-| `PDF_MARK_NUDGE_PT`         | 1                   | `(default)` Points an arrow key moves a selected mark                                          |
-| `PDF_MARK_NUDGE_FAR_PT`     | 10                  | `(default)` Points ⇧ with an arrow key moves it                                                |
-| `PDF_SQUIGGLE_STEP_PT`      | 2                   | `(default)` A squiggly underline's tooth, wide and high, in points; safe range 1 to 4          |
-| `PDF_STAMP_LINE_MAX_CHARS`  | 300                 | `(default)` A stamp's line as placed: a display name and a time fit; safe range 100 to 1,000   |
-| `PDF_STAMP_MAX_BYTES`       | 2,097,152           | `(default)` A custom stamp's picture; larger is scaled down before it is kept                  |
-| `PDF_PINNED_FILE_MAX_BYTES` | 26,214,400 (25 MiB) | `(default)` A pinned file is written into the bake, which must itself fit `FILE_TAB_MAX_BYTES` |
+| Constant                    | Value               | Why                                                                                             |
+| --------------------------- | ------------------- | ----------------------------------------------------------------------------------------------- |
+| `PDF_MAX_MARKS`             | 20,000              | `(default)` Marks in one PDF document ([PDF document](pdf-document.md#limits))                  |
+| `PDF_PAGE_MAX_MARKS`        | 5,000               | `(default)` Marks read on one page; a page past it reads its first, and the rest still draw     |
+| `PDF_MARK_TEXT_MAX_CHARS`   | 10,000              | `(default)` A Text mark's or a note's words; longer belongs in a document                       |
+| `PDF_DRAWING_MAX_POINTS`    | 20,000              | `(default)` One Drawing; more strokes start a new mark                                          |
+| `PDF_DRAWING_JOIN_MS`       | 1,000               | `(default)` Strokes made closer in time are one Drawing; safe range 300 to 3,000                |
+| `PDF_DRAWING_STEP_PT`       | 0.5                 | `(default)` A stroke's points closer than this, in points, are one; safe range 0.25 to 2        |
+| `PDF_SHAPE_MIN_PT`          | 2                   | `(default)` A drag spanning less, in points, makes no line or shape; safe range 1 to 6          |
+| `PDF_ARROW_HEAD_WIDTHS`     | 4                   | `(default)` An arrowhead's side, in line widths; safe range 3 to 6                              |
+| `PDF_ARROW_HEAD_MIN_PT`     | 6                   | `(default)` An arrowhead's side at the least, in points; safe range 4 to 10                     |
+| `PDF_TEXT_BOX_WIDTH_PT`     | 216                 | `(default)` A Text box opened by a press, in points, before it narrows; safe range 144 to 360   |
+| `PDF_TEXT_PADDING_PT`       | 2                   | `(default)` Room between a Text's or a Callout's box and its words, in points; safe 0 to 6      |
+| `PDF_TEXT_SIZE_MIN_PT`      | 4                   | `(default)` The smallest size a Text's or a Callout's words are set at, in points               |
+| `PDF_TEXT_SIZE_MAX_PT`      | 144                 | `(default)` The largest size a Text's or a Callout's words are set at, in points                |
+| `PDF_CALLOUT_KNEE_PT`       | 12                  | `(default)` How far a Callout's knee stands out from its box, in points; safe range 6 to 24     |
+| `PDF_SNAP_PX`               | 6                   | `(default)` Screen pixels within which a shape snaps to the page's lines                        |
+| `PDF_MARK_REACH_PX`         | 6                   | `(default)` Screen pixels from a mark's line that a press still selects it; safe range 4 to 12  |
+| `PDF_MARK_TOUCH_REACH_PX`   | 22                  | `(default)` Screen pixels from a mark that a finger's tap still selects it: half a 44 px target |
+| `PDF_MARK_OUTLINE_PX`       | 3                   | `(default)` Screen pixels between a selected mark and its outline; safe range 2 to 6            |
+| `PDF_DRAG_SLOP_PX`          | 3                   | `(default)` Screen pixels a pointer moves before a press is a drag; safe range 2 to 6           |
+| `PDF_MARK_NUDGE_PT`         | 1                   | `(default)` Points an arrow key moves a selected mark                                           |
+| `PDF_MARK_NUDGE_FAR_PT`     | 10                  | `(default)` Points ⇧ with an arrow key moves it                                                 |
+| `PDF_SQUIGGLE_STEP_PT`      | 2                   | `(default)` A squiggly underline's tooth, wide and high, in points; safe range 1 to 4           |
+| `PDF_STAMP_LINE_MAX_CHARS`  | 300                 | `(default)` A stamp's line as placed: a display name and a time fit; safe range 100 to 1,000    |
+| `PDF_STAMP_MAX_BYTES`       | 2,097,152           | `(default)` A custom stamp's picture; larger is scaled down before it is kept                   |
+| `PDF_PINNED_FILE_MAX_BYTES` | 26,214,400 (25 MiB) | `(default)` A pinned file is written into the bake, which must itself fit `FILE_TAB_MAX_BYTES`  |
 
 ## Share roles
 
@@ -509,7 +518,7 @@ Gated on the session's `can` (`pdfReviews`), and checked by the room.
 - A move is counted once a drag or a key press, `Mark.Moved`; a resize the same, `Mark.Resized`; a restyle once a
   pick or a choice, `Mark.Restyled`; a deletion once a mark, `Mark.<Kind>` of its kind.
 - Fingerprints: `[pdf] mark-added kind=<kind>`, `[pdf] mark-refused name=<name>`,
-  `[pdf] marks-moved count=<n>` (a drag or a key press), `[pdf] mark-resized kind=<kind>`,
+  `[pdf] marks-moved count=<n>` (a drag or a key press), `[pdf] marks-boxed count=<n>` (a box drawn from empty space), `[pdf] mark-resized kind=<kind>`,
   `[pdf] marks-restyled count=<n> look=<colour|opacity|width|style|fill|end|size|align|font>` (a pick or a choice),
   `[pdf] marks-deleted count=<n>`, `[pdf] tool-look kind=<kind> look=<width|style|fill>` (a tool's line chosen),
   `[pdf] marks-read count=<n> unknown=<n>` (per open), `[pdf] drawing-joined strokes=<n>` (a stroke joined to a

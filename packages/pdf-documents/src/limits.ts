@@ -61,6 +61,11 @@ export const PDF_MARK_WIDTH_MAX_PT = 12;
 export const PDF_SHAPE_MIN_PT = 2;
 /** (default) Screen pixels from a mark's line that a press still selects it (marks.md "Limits"). Safe range: 4 to 12. */
 export const PDF_MARK_REACH_PX = 6;
+/**
+ * (default) Screen pixels from a mark that a finger's tap still selects it: half the 44 px target a finger is given
+ * (marks.md "Limits"; accessibility.md). Safe range: 16 to 30.
+ */
+export const PDF_MARK_TOUCH_REACH_PX = 22;
 /** (default) Screen pixels between a selected mark and its outline (marks.md "Limits"). Safe range: 2 to 6. */
 export const PDF_MARK_OUTLINE_PX = 3;
 /** (default) Screen pixels a pointer moves before a press is a drag (marks.md "Limits"). Safe range: 2 to 6. */
