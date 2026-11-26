@@ -11,8 +11,8 @@ snapping, every other kind made here, custom stamps and Manage stamps are not bu
 Of changing a mark, selecting, moving, resizing and deleting a mark made here, and restyling its colour, opacity, line
 width, line style, fill and line end, and a Text's and a Callout's size and alignment, Format > Colour and Fill
 colour, the toolbar's Line width and a tool's remembered width, style and fill are built, and so are they for the
-file's own marks of the kinds LiveDoc makes, as is a Text's and a Callout's font; a tool's remembered
-opacity, font and size, rotating, arranging, grouping, locking, copying, Properties, Erase and the file's own marks of other
+file's own marks of the kinds LiveDoc makes, as are a Text's and a Callout's font and grouping (answered as one with Phase 9's threads); a tool's remembered
+opacity, font and size, rotating, arranging, locking, copying, Properties, Erase and the file's own marks of other
 kinds are not.
 
 A **mark** is something placed on top of a PDF page that leaves the page's own content alone: a highlight, a note, a
