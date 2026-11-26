@@ -7,7 +7,7 @@ import { liveMediaOf } from './live-read';
 import { liveTabFragments, liveTabIds } from './live-tabs';
 import { tabFragment } from './live-root';
 import { liveStoryIds, storyFragment } from './live-stories';
-import { PICTURE } from './live-names';
+import { MEDIA_MAP, PICTURE } from './live-names';
 
 function* picturesIn(fragment: Y.XmlFragment): Generator<Y.XmlElement> {
   for (const node of fragment.createTreeWalker(
@@ -53,4 +53,29 @@ export function liveDrawingPlace(doc: Y.Doc, drawingTabId: string): string | nul
     for (const picture of picturesIn(tabFragment(doc, id)))
       if (picture.getAttribute('drawing') === drawingTabId) return id;
   return null;
+}
+
+/**
+ * The gallery images the media entries an update writes name, read from the update alone (docs/specs/009-elements/
+ * images.md "A live tab's references"): the room adds them to the tab's references as it stores the update, before
+ * any drain. Bytes and data URIs name none; an update it cannot read names none.
+ */
+export function liveGalleryImagesWritten(update: Uint8Array): string[] {
+  let structs: ReturnType<typeof Y.decodeUpdate>['structs'];
+  try {
+    structs = Y.decodeUpdate(update).structs;
+  } catch {
+    return [];
+  }
+  const images = new Set<string>();
+  for (const struct of structs) {
+    // A decoded update names a root parent by its name; Yjs types it as an integrated item's.
+    if (!(struct instanceof Y.Item) || (struct.parent as unknown) !== MEDIA_MAP) continue;
+    for (const value of struct.content.getContent() as unknown[]) {
+      const image = (value as { image?: unknown } | null)?.image;
+      if (typeof image === 'string' && image.length > 0 && !image.startsWith('data:'))
+        images.add(image);
+    }
+  }
+  return [...images];
 }

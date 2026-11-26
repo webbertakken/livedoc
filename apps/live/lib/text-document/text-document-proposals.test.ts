@@ -35,7 +35,8 @@ const EDITOR_ONLY = [
   /^(numbered-list|bulleted-list|checklist|restart-numbering|continue-numbering|more-bullets)$/,
   /^columns-/,
   /^table-/,
-  /^image-/,
+  // Format > Image's: a picture's size, crop, colours and placing; putting one in can be suggested.
+  /^image-(?!upload$|search$|gallery$)/,
   /^drawing-/,
   /^building-block-/,
   /^code-block-/,

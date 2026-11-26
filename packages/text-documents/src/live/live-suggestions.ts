@@ -513,6 +513,8 @@ function ownMarksWellFormed(fragment: Y.XmlFragment | Y.XmlElement, key: string)
 export const LiveSuggestions = {
   read,
   count,
+  /** Whether a value is a well-read suggestion mark whose author holds `key`. */
+  isOwnMark: ownBy,
   /** Accepts a suggestion in one transaction; false when the document holds no part of it. */
   accept: (doc: Y.Doc, id: string, origin: unknown): boolean => settle(doc, id, true, origin),
   /** Rejects a suggestion in one transaction; false when the document holds no part of it. */

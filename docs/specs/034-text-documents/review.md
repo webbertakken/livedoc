@@ -264,9 +264,12 @@ office kinds; this spec says what a text document puts in them.
   settled with it (an equation written in its box), as Google keeps it. Anyone else's object, suggested or not, takes
   only a deletion: changing it says "This can't be suggested yet." and changes nothing, so a change is never folded
   into someone else's suggestion (default).
-- **Pictures** are put in while suggesting by an Editor; a Participant's pictures are not yet suggested (below).
-- **Not yet**: tables and their rows and columns, section breaks, tables of contents, footnotes, drawings and a
-  Participant's pictures, and what is kept beside the writing (page setup, headers and footers, document tabs,
+- **Pictures** uploaded, searched for, chosen from the gallery, pasted or dropped while suggesting are suggested
+  insertions, an Editor's and a Participant's alike. A picture's media (its gallery image, or its bytes where the
+  gallery is off) is written in the same change as the picture, so no one ever holds a picture without its media.
+  A Participant's picture is stored in their own gallery and served to the document while their share link lasts
+  ([Images](../009-elements/images.md)), as on a canvas.
+- **Not yet**: tables and their rows and columns, section breaks, tables of contents, footnotes and drawings, and what is kept beside the writing (page setup, headers and footers, document tabs,
   styles, list definitions), say "This can't be suggested yet." (default) and change nothing. Insert's Footnote,
   Drawing, Header and Footer are dimmed while suggesting with the note "Editing only" and the hint "This can't be
   suggested yet. An Editor changes it in Editing." (default); the others are absent or dimmed as the menus draw
@@ -276,7 +279,7 @@ office kinds; this spec says what a text document puts in them.
 - The refusal lines show for 5 seconds (`SUGGESTING_NOTICE_MS`, (default)) in the status band.
 - **A Participant** sees an Editor's menus, toolbar and context menu in Suggesting, as Google's Commenter does
   ([Office shell](../004-interface-design/office-shell.md#modes)). What can be suggested runs: Edit's Undo, Redo, Cut,
-  Paste, Paste without formatting and Delete; Insert's Link, Special characters, Emoji, Equation (with the equation
+  Paste, Paste without formatting and Delete; Insert's Image (Upload from computer, Search the web, LiveDoc gallery), Link, Special characters, Emoji, Equation (with the equation
   toolbar), Horizontal line, Page break, Column break and Bookmark; Format's Text, Align &
   indent, Line & paragraph spacing, Borders and shading and Clear formatting; and the toolbar's Paint format, font,
   size, text formatting, Align, Line and paragraph spacing, indents and Clear formatting. Everything else is dimmed:
@@ -354,7 +357,9 @@ office kinds; this spec says what a text document puts in them.
 - **The room judges a Participant's update** (fork D7): it is theirs when the writing, read with the sender's own
   suggestions rejected, is the same before and after, so it adds, changes or withdraws only the sender's own
   suggestions, never anyone's writing or anyone else's suggestion; anything else asks for Editing and is refused
-  whole. The comments' rules stand beside it. An Editor's update is not judged, as with comments.
+  whole. A picture's media is theirs to add when each entry is new (none already held is changed), reads as media,
+  holds no more than an upload may (`MAX_IMAGE_BYTES`, 10 MB) and is named by a picture of the sender's own suggested
+  insertion in the writing after the update. The comments' rules stand beside it. An Editor's update is not judged, as with comments.
 - **Limits**: at most `TEXT_DOCUMENT_SUGGESTIONS_MAX` suggestions (5,000, (default)) in one document; the editor
   makes none past it and the room refuses a Participant's update past it.
 - **In the files**: a suggestion leaves as each format's tracked change ([Standard mapping](standard-mapping.md)) and

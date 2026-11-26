@@ -18,6 +18,7 @@ import { base64OfBytes } from '@livedoc/text-documents';
 import { TEXT_DOCUMENT_LIVE_TAB } from '../text-documents/text-document-live-tab';
 import { RoomLiveTabs, liveTabFrameOf } from './room-live-tabs';
 import { storedUpdates as storedOf } from './live-tab-store';
+import { documentPlacesImage } from '../db/image-refs';
 
 const storedUpdates = (env: Parameters<typeof storedOf>[0], tabId: string) =>
   storedOf(env, TEXT_DOCUMENT_LIVE_TAB, tabId);
@@ -130,6 +131,30 @@ describe('RoomLiveTabs, for a text document', () => {
     expect(chunks.n).toBeGreaterThan(1);
     const state = TextDocumentState.load(await storedUpdates(db.env, 't1'));
     expect(TextDocumentState.paragraphs(state)).toEqual(Body.of(big));
+  });
+
+  // docs/specs/009-elements/images.md "A live tab's references": an image placed a moment ago is placed at once.
+  it('adds the gallery images an update writes to the tab’s references as it stores it, by frame and by door', async () => {
+    const db = sqliteD1();
+    const { room } = await roomWith(db);
+    const placing = (image: string) => {
+      const doc = TextDocumentState.load([TextDocumentState.fromBody(Body.of('Text'))]);
+      TextDocumentState.addMedia(doc, { [`k-${image}`]: { mediaType: 'image/png', image } });
+      return TextDocumentState.encode(doc);
+    };
+    expect(await documentPlacesImage(db.env, 'D', 'img-1', null)).toBe(false);
+    const editor = {
+      ws,
+      presenceId: 'p1',
+      documentId: 'D',
+      level: 'edit' as const,
+      adderKey: null,
+    };
+    const op = { kind: 'text-document', tabId: 't1', update: base64OfBytes(placing('img-1')) };
+    expect(await room.accept(editor, op, 1)).toBe(true);
+    expect(await documentPlacesImage(db.env, 'D', 'img-1', null)).toBe(true);
+    expect(await room.acceptPosted('D', 't1', placing('img-2'))).toBe('stored');
+    expect(await documentPlacesImage(db.env, 'D', 'img-2', null)).toBe(true);
   });
 
   it('stores an update sent by the door and relays it as an op when it fits a frame', async () => {

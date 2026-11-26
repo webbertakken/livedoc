@@ -2127,6 +2127,9 @@ importers:
 
   packages/text-documents:
     dependencies:
+      '@livedoc/api-schema':
+        specifier: workspace:*
+        version: link:../api-schema
       '@livedoc/document':
         specifier: workspace:*
         version: link:../document

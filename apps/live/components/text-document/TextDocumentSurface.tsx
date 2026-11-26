@@ -219,6 +219,7 @@ import { useTextDocumentPictureSize, IMAGE_OPTIONS_ITEM } from './useTextDocumen
 import { useTextDocumentPicturePlacing } from './useTextDocumentPicturePlacing';
 import { useTextDocumentPictureBar } from './useTextDocumentPictureBar';
 import { dispatchWithSuggesting } from '@/lib/text-document/text-document-suggesting-dispatch';
+import { pendingMedia } from '@/lib/text-document/text-document-pending-media';
 import { useTextDocumentSuggesting } from './useTextDocumentSuggesting';
 import { suggestedBreaksPlugin } from '@/lib/text-document/text-document-suggestion-marks';
 
@@ -474,6 +475,8 @@ export function TextDocumentSurface({
           set: (id: string, list: ListDefinition) =>
             TextDocumentState.setList(doc, id, list, TEXT_DOCUMENT_LISTS_ORIGIN),
         };
+        // The media a paste or a drop brings, written with the change that puts its pictures in.
+        const pastedMedia = pendingMedia(() => doc);
         // The editor's plugins, bound to one document tab's body (links-and-navigation.md "Document tabs in the
         // outline"): built again for each tab shown.
         const pluginsFor = (body: Y.XmlFragment): Plugin[] => [
@@ -540,10 +543,11 @@ export function TextDocumentSurface({
               () => live.current.format,
               () => editor.current?.state.doc ?? null,
             ),
-            // A copied picture's media goes with it (objects.md "In the editor").
+            // A copied picture's media goes with it (objects.md "In the editor"), written in the change that pastes it
+            // (review.md "Pictures").
             media: {
               read: (key) => TextDocumentState.media(doc, key),
-              place: (media) => TextDocumentState.addMedia(doc, media),
+              place: pastedMedia.queue,
             },
             onLeftOut: (count) => clipboardLeftOut.current(count),
           }),
@@ -634,7 +638,10 @@ export function TextDocumentSurface({
           editable: () => live.current.textWrites,
           // Edits rewritten as suggestions while suggesting (review.md "While suggesting").
           dispatchTransaction(this: EditorView, tr) {
-            dispatchWithSuggesting(this, tr, live.current.suggesting);
+            dispatchWithSuggesting(this, tr, {
+              ...live.current.suggesting,
+              alongside: pastedMedia,
+            });
           },
           // Page numbers and page counts drawn as their page's (page-layout.md "Page numbers"); a table's columns drawn
           // again as its cells' widths change (tables.md "In the editor"); pictures from the state's media (objects.md).
@@ -1022,8 +1029,8 @@ export function TextDocumentSurface({
     liveDoc,
     ownerId,
     documentId,
-    // An Editor's while suggesting too; a Participant's pictures are not yet suggested (review.md "Pictures").
-    canEdit: bodyWrites || (bodySuggests && canEdit),
+    // Suggested while suggesting, an Editor's and a Participant's alike (review.md "Pictures").
+    canEdit: bodyInserts,
     room: pictureRoom,
   });
   useLayoutEffect(() => {

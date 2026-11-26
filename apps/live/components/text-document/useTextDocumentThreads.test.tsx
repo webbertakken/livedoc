@@ -297,10 +297,10 @@ describe('useTextDocumentThreads on a suggestion', () => {
     act(() => result.current.replyToSuggestion(card, 'Why this?'));
     act(() => result.current.replyToSuggestion({ ...card, id: 's2' }, 'And this?'));
     act(() => result.current.resolveTied('s1'));
-    expect(LiveThreads.read(at.doc).map((t) => [t.suggestion, t.resolved])).toEqual([
-      ['s1', true],
-      ['s2', false],
-    ]);
+    // Two threads on one stretch read in no fixed order: compared by their suggestion.
+    expect(
+      Object.fromEntries(LiveThreads.read(at.doc).map((t) => [t.suggestion, t.resolved])),
+    ).toEqual({ s1: true, s2: false });
     // A new reply after it settled begins afresh.
     act(() => result.current.replyToSuggestion(card, 'Again'));
     expect(LiveThreads.read(at.doc)).toHaveLength(3);

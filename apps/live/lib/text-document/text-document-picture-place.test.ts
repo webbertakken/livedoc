@@ -4,6 +4,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { EditorState, TextSelection } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
+import { ySyncPluginKey } from 'y-prosemirror';
 import { mediaKeyOf } from '@livedoc/office-packages';
 import { PICTURE, TextDocumentState } from '@livedoc/text-documents';
 import { ImageUploadError } from '@/lib/upload-image';
@@ -54,6 +55,23 @@ describe('placePictureFile', () => {
     const key = await mediaKeyOf(PNG);
     expect(picture()?.attrs).toMatchObject({ media: key, width: 120, height: 60 });
     expect(TextDocumentState.media(live, key)).toEqual({ mediaType: 'image/png', image: 'img-1' });
+  });
+
+  it('writes the media in the change that puts the picture in, one update the room judges whole', async () => {
+    const { view, live, placing } = setup();
+    const inside: boolean[] = [];
+    view.setProps({
+      dispatchTransaction(tr) {
+        // y-prosemirror writes the view's change here, inside whatever transaction is open on the state.
+        inside.push((live as unknown as { _transaction: unknown })._transaction !== null);
+        view.updateState(view.state.apply(tr));
+      },
+    });
+    const origins: unknown[] = [];
+    live.on('update', (_update: Uint8Array, origin: unknown) => origins.push(origin));
+    await placePictureFile(placing, file(PNG), async () => 'img-1');
+    expect(inside).toEqual([true]);
+    expect(origins).toEqual([ySyncPluginKey]);
   });
 
   it('keeps the bytes where the gallery cannot hold it', async () => {

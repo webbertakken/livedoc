@@ -74,4 +74,22 @@ describe('dispatchWithSuggesting', () => {
     expect(view.state.doc.textContent).toBe('axyb');
     expect(view.state.doc.firstChild!.childCount).toBe(1);
   });
+
+  it('wraps each local change it applies in what goes alongside, and drops that on a refusal', () => {
+    const view = viewOf('abcd');
+    const alongside = { apply: vi.fn((write: () => void) => write()), drop: vi.fn() };
+    dispatchWithSuggesting(view, view.state.tr.insertText('x'), { ...context(true), alongside });
+    dispatchWithSuggesting(view, view.state.tr.insertText('y'), { ...context(false), alongside });
+    expect(alongside.apply).toHaveBeenCalledTimes(2);
+    expect(view.state.doc.textContent).toContain('x');
+    dispatchWithSuggesting(view, view.state.tr.insert(0, schema.nodes.section_break!.create()), {
+      ...context(true),
+      alongside,
+    });
+    expect(alongside.drop).toHaveBeenCalledOnce();
+    expect(alongside.apply).toHaveBeenCalledTimes(2);
+    const synced = view.state.tr.insertText('z').setMeta(ySyncPluginKey, { isChangeOrigin: true });
+    dispatchWithSuggesting(view, synced, { ...context(true), alongside });
+    expect(alongside.apply).toHaveBeenCalledTimes(2);
+  });
 });

@@ -3,7 +3,10 @@
 // what is the sender's own: comments carrying its adder key added, edited or removed (the first removing its thread),
 // threads begun with one, any thread resolved or reopened, its own key added to or taken from a reaction; and in the
 // document tabs' bodies only its own suggestions ("How a suggestion is kept"), the writing reading the same with them
-// rejected. Read by applying the update to the stored state, the threads and bodies before against after.
+// rejected; and in `media` only new media its own suggested pictures name. Read by applying the update to the stored
+// state, the threads, bodies and media before against after.
+import * as Y from 'yjs';
+import { MAX_IMAGE_BYTES } from '@livedoc/api-schema';
 import { MENTIONS_MAX, sanitizeMentions } from '@livedoc/document';
 import { touchedRoots } from '@livedoc/live-updates';
 import {
@@ -24,6 +27,8 @@ import {
   TEXT_DOCUMENT_SUGGESTIONS_MAX,
 } from './live/live-suggestions';
 import { liveTabIds } from './live/live-tabs';
+import { liveMediaOf } from './live/live-read';
+import { INSERTION_MARK, MEDIA_MAP, PICTURE } from './live/live-names';
 import { TextDocumentState } from './text-document-state';
 
 /** The least level an update needs, or that it stands on changes the stored state lacks and cannot be judged. */
@@ -146,8 +151,10 @@ export function textDocumentLevelAsked(
   const bodies = new Set(liveTabIds(doc).map(tabFragmentName)).add(BODY_FRAGMENT);
   const touched = touchedRoots(doc, update);
   if (touched === 'unreadable') return 'unreadable';
-  if ([...touched].some((root) => root !== THREADS_MAP && !bodies.has(root))) return 'edit';
+  if ([...touched].some((root) => root !== THREADS_MAP && root !== MEDIA_MAP && !bodies.has(root)))
+    return 'edit';
   if (adderKey === null) return 'edit';
+  if (touched.has(MEDIA_MAP) && !ownMedia(stored, update, doc, bodies, adderKey)) return 'edit';
   if (touched.has(THREADS_MAP) && !ownThreads(before, LiveThreads.read(doc), adderKey))
     return 'edit';
   const writing = [...touched].filter((root) => bodies.has(root));
@@ -195,4 +202,48 @@ function ownSuggestions(
   }
   const count = LiveSuggestions.count(after);
   return count <= TEXT_DOCUMENT_SUGGESTIONS_MAX || count <= LiveSuggestions.count(before);
+}
+
+/** The media keys the pictures of the sender's own suggested insertion name, in the bodies. */
+function ownPictureMedia(doc: Y.Doc, bodies: ReadonlySet<string>, adderKey: string): Set<string> {
+  const keys = new Set<string>();
+  for (const root of bodies)
+    for (const node of doc
+      .getXmlFragment(root)
+      .createTreeWalker((n) => n instanceof Y.XmlElement && n.nodeName === PICTURE)) {
+      const picture = node as Y.XmlElement;
+      const insertion = picture.getAttribute(INSERTION_MARK) as unknown;
+      const key = picture.getAttribute('media') as unknown;
+      if (LiveSuggestions.isOwnMark(insertion, adderKey) && typeof key === 'string') keys.add(key);
+    }
+  return keys;
+}
+
+/**
+ * Whether the media changed only as the sender may change it (review.md "How a suggestion is kept"): each key the update
+ * writes is new, reads as media within the upload cap, and is named by a picture of the sender's own suggested
+ * insertion in the writing after the update.
+ */
+function ownMedia(
+  stored: readonly Uint8Array[],
+  update: Uint8Array,
+  after: Y.Doc,
+  bodies: ReadonlySet<string>,
+  adderKey: string,
+): boolean {
+  const replay = TextDocumentState.load(stored);
+  const media = replay.getMap<unknown>(MEDIA_MAP);
+  const held = new Set(media.keys());
+  const written = new Set<string>();
+  media.observe((event) => {
+    for (const key of event.keysChanged as Set<string>) written.add(key);
+  });
+  Y.applyUpdate(replay, update);
+  const named = ownPictureMedia(after, bodies, adderKey);
+  for (const key of written) {
+    if (held.has(key) || !named.has(key)) return false;
+    const value = liveMediaOf(after, key);
+    if (!value || (value.bytes && value.bytes.byteLength > MAX_IMAGE_BYTES)) return false;
+  }
+  return true;
 }

@@ -1,10 +1,11 @@
 import { expect, expectNoPageErrors, pageOwnerHeaders, test } from '../fixtures';
 import { officeMenuItem } from './office-menus';
+import { solidPng } from './office-pictures';
 
 // Objects and breaks while suggesting (docs/specs/034-text-documents/review.md "While suggesting": Objects in a line,
 // Breaks and lines, Not yet): an Editor in Suggesting puts in a page break, an equation and a horizontal line, each a
 // card of its own kind; rejecting the line takes it away; Footnote is dimmed, "Editing only". A Participant's horizontal
-// line reaches the Editor as a card.
+// line reaches the Editor as a card, and so does their picture, drawn from its media for the Editor, who accepts it.
 
 const BODY = '[role="textbox"][aria-label="Document body"]';
 const READY = '[data-text-document-surface="ready"]';
@@ -106,8 +107,33 @@ test('objects and breaks are suggested, each with its card', async ({
   await peer.reload();
   await expect(peer.locator(READY)).toBeVisible();
   await expect(peer.locator(CARD).filter({ hasText: 'Add: Horizontal line' })).toHaveCount(1);
+
+  // The Participant uploads a picture: suggested, its media with it, drawn for the Editor, who accepts it.
+  await peerBody.locator(':scope > p').last().click();
+  await peer.keyboard.press('End');
+  const [chooser] = await Promise.all([
+    peer.waitForEvent('filechooser'),
+    (await officeMenuItem(peer, ['Insert', 'Image', 'Upload from computer'])).click(),
+  ]);
+  await chooser.setFiles({
+    name: 'suggested.png',
+    mimeType: 'image/png',
+    buffer: solidPng(240, 120, [14, 165, 233]),
+  });
+  await expect(peer.locator(CARD).filter({ hasText: 'Add: Picture' })).toHaveCount(1);
+  const pictureCard = page.locator(CARD).filter({ hasText: 'Add: Picture' });
+  await expect(pictureCard).toHaveCount(1, { timeout: 15_000 });
+  const picture = body.locator('[data-media]');
+  await expect(picture).toHaveCount(1);
+  await expect(picture.locator('img')).toHaveCount(1);
+  await expect(body.locator('.text-document-picture-missing')).toHaveCount(0);
   await peer.waitForTimeout(300);
   await peer.screenshot({ path: test.info().outputPath('suggesting-objects-participant.png') });
+  await page.screenshot({ path: test.info().outputPath('suggesting-objects-picture.png') });
+  await pictureCard.click();
+  await pictureCard.getByRole('button', { name: 'Accept suggestion' }).click();
+  await expect(pictureCard).toHaveCount(0);
+  await expect(picture).toHaveCount(1);
 
   await ctx.close();
   expectNoPageErrors(pageErrors);

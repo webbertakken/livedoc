@@ -19,6 +19,7 @@
     "validate:files": "vitest run --config vitest.validate.config.ts"
   },
   "dependencies": {
+    "@livedoc/api-schema": "workspace:*",
     "@livedoc/document": "workspace:*",
     "@livedoc/live-updates": "workspace:*",
     "@livedoc/office-packages": "workspace:*",

@@ -5,10 +5,10 @@ import type { Command } from 'prosemirror-state';
 import type { EditorView } from 'prosemirror-view';
 import type * as Y from 'yjs';
 import { FEATURE_OFF_ERROR } from '@livedoc/api-schema';
-import { TextDocumentState } from '@livedoc/text-documents';
 import { debugLog } from '@/lib/debug-log';
 import { ImageUploadError } from '@/lib/upload-image';
 import { startUndoStep } from './text-document-undo';
+import { writeWithMedia } from './text-document-pending-media';
 import {
   insertedPictureSize,
   insertPicture,
@@ -57,11 +57,15 @@ export async function placeStoredPicture(
   const doc = placing.doc();
   if (!view || view.isDestroyed || !doc) return false;
   const media = pictureMediaOf(picture.mediaType, bytes, stored);
-  TextDocumentState.addMedia(doc, { [picture.key]: media });
   const size = insertedPictureSize(picture.pixels, placing.room());
   // One insert or replacement is one undo step.
   startUndoStep(view);
-  const placed = put({ key: picture.key, pixels: picture.pixels, size })(view.state, view.dispatch);
+  // Its media written in the change that puts it in (review.md "Pictures"): y-prosemirror writes the view's change
+  // inside this transaction, so the room receives, and judges, one update, and no one holds a picture without its media.
+  let placed = false;
+  writeWithMedia(doc, { [picture.key]: media }, () => {
+    placed = put({ key: picture.key, pixels: picture.pixels, size })(view.state, view.dispatch);
+  });
   startUndoStep(view);
   debugLog('[text-document] picture placed', {
     key: picture.key,

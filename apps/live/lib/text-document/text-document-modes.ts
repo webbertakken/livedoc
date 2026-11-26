@@ -18,6 +18,9 @@ export const SUGGESTING_PROPOSALS: readonly string[] = [
   'paste-without-formatting',
   'delete',
   // Insert: what goes in the writing, objects in a line and breaks (review.md "Objects in a line", "Breaks and lines")
+  'image-upload',
+  'image-search',
+  'image-gallery',
   'link',
   'special-characters',
   'emoji',
