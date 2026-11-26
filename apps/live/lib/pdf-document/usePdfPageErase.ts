@@ -52,7 +52,9 @@ export function usePdfPageErase({
     let grew = false;
     for (const mark of drawings) {
       const was = now.gone.get(mark.id) ?? [];
-      const hit = MarkErase.passed(mark, [now.last, to], now.reach).filter((at) => !was.includes(at));
+      const hit = MarkErase.passed(mark, [now.last, to], now.reach).filter(
+        (at) => !was.includes(at),
+      );
       if (hit.length === 0) continue;
       now.gone.set(mark.id, [...was, ...hit]);
       grew = true;

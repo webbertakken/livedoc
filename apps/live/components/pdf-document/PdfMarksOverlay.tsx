@@ -241,7 +241,8 @@ export function PdfMarksOverlay({
 }) {
   const placedMarks =
     moving || reshaping ? marks.map((mark) => placed(mark, moving, reshaping)) : marks;
-  const shown = erased.size > 0 ? placedMarks.flatMap((mark) => unerased(mark, erased)) : placedMarks;
+  const shown =
+    erased.size > 0 ? placedMarks.flatMap((mark) => unerased(mark, erased)) : placedMarks;
   const dark = useContext(PdfLookContext) === 'dark';
   return (
     <svg

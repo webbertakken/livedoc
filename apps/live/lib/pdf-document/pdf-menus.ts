@@ -340,7 +340,11 @@ export const PDF_MENUS: OfficeCatalogue = [
       ...BUILT,
       keywords: ['freehand', 'pen'],
     }),
-    item(TOOL_ERASE, 'Erase', 'participate', { ...ONE_OF, ...BUILT, keywords: ['eraser', 'rub out'] }),
+    item(TOOL_ERASE, 'Erase', 'participate', {
+      ...ONE_OF,
+      ...BUILT,
+      keywords: ['eraser', 'rub out'],
+    }),
     submenu('shape', 'Shape', [
       item(TOOL_LINE, 'Line', 'participate', { ...ONE_OF, ...BUILT }),
       item(TOOL_ARROW, 'Arrow', 'participate', { ...ONE_OF, ...BUILT }),

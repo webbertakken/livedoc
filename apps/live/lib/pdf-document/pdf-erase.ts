@@ -16,7 +16,11 @@ import { adopting, changeAsOne, markIn } from './pdf-mark-change';
 export type Erased = { readonly mark: DrawingMark; readonly gone: readonly number[] };
 
 /** What one erase did: the strokes rubbed out, the Drawings they were of, and of those the ones deleted. */
-export type EraseCount = { readonly strokes: number; readonly marks: number; readonly deleted: number };
+export type EraseCount = {
+  readonly strokes: number;
+  readonly marks: number;
+  readonly deleted: number;
+};
 
 const NONE: EraseCount = { strokes: 0, marks: 0, deleted: 0 };
 
@@ -33,7 +37,8 @@ export function eraseStrokes(doc: Y.Doc, erased: readonly Erased[], now: number)
       marks: count.marks + 1,
       deleted: count.deleted + (left ? 0 : 1),
     };
-    if (left) return [...adopting(doc, mark), PdfChange.changeMark(mark.id, { ...left, modifiedAt: now })];
+    if (left)
+      return [...adopting(doc, mark), PdfChange.changeMark(mark.id, { ...left, modifiedAt: now })];
     return [
       PdfLiveChanges.mark(doc, mark.id)
         ? PdfChange.removeMark(mark.id)
