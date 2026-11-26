@@ -212,7 +212,7 @@ function replaceBodyOf(
 type SummaryResult =
   { ok: true; text: string | null } | { ok: false; refused: 'too_long' | 'invalid' };
 
-function parseSummary(raw: unknown): SummaryResult {
+export function parseSummary(raw: unknown): SummaryResult {
   if (raw === undefined || raw === null) return { ok: true, text: null };
   if (typeof raw !== 'string') return { ok: false, refused: 'invalid' };
   const clean = withoutControls(raw).trim();

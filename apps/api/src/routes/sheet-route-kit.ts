@@ -114,18 +114,35 @@ export async function sheetCaller(
   return { documentId, owner, scopeTab: tabId, ownerId: doc.ownerId, teamId: doc.teamId };
 }
 
+// An op as relayed: one too large to relay asks clients to fetch the sheet (D5).
+function relayable(op: SheetsRoomOp): SheetsRoomOp {
+  return JSON.stringify(op).length > SHEET_RELAY_BYTES_MAX
+    ? {
+        kind: 'sheets',
+        sheetId: op.sheetId,
+        tabId: op.tabId,
+        rev: op.rev,
+        refetch: true,
+        ...(op.wid ? { wid: op.wid } : {}),
+      }
+    : op;
+}
+
 export function relaySheet(ctx: RouteContext, documentId: string, op: SheetsRoomOp): void {
-  const size = JSON.stringify(op).length;
-  const sent: SheetsRoomOp =
-    size > SHEET_RELAY_BYTES_MAX
-      ? {
-          kind: 'sheets',
-          sheetId: op.sheetId,
-          tabId: op.tabId,
-          rev: op.rev,
-          refetch: true,
-          ...(op.wid ? { wid: op.wid } : {}),
-        }
-      : op;
-  ctx.waitUntil?.(relaySheets(ctx.env, documentId, sent));
+  ctx.waitUntil?.(relaySheets(ctx.env, documentId, relayable(op)));
+}
+
+// Several writes of one sheet relayed one after another, so the room sequences them in their order (a sheet
+// changeset's, docs/specs/024-agents/agent-changesets.md "A sheet's changesets").
+export function relaySheetsInOrder(
+  ctx: RouteContext,
+  documentId: string,
+  ops: readonly SheetsRoomOp[],
+): void {
+  ctx.waitUntil?.(
+    ops.reduce<Promise<void>>(
+      (sent, op) => sent.then(() => relaySheets(ctx.env, documentId, relayable(op))),
+      Promise.resolve(),
+    ),
+  );
 }

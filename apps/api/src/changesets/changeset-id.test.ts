@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { CHANGESET_ID_PATTERN } from '@livedoc/api-schema';
-import { mintChangesetId } from './changeset-id';
+import {
+  CHANGESET_ID_PATTERN,
+  SHEET_CHANGESET_ID_PATTERN,
+  isSheetChangesetId,
+} from '@livedoc/api-schema';
+import { mintChangesetId, mintSheetChangesetId } from './changeset-id';
 
 describe('mintChangesetId', () => {
   it('mints cs_ and 10 lowercase Crockford base32 characters', () => {
@@ -16,5 +20,13 @@ describe('mintChangesetId', () => {
   it('does not repeat', () => {
     const ids = new Set(Array.from({ length: 1000 }, () => mintChangesetId()));
     expect(ids.size).toBe(1000);
+  });
+});
+
+describe('mintSheetChangesetId', () => {
+  it('mints sc_ and 10 lowercase Crockford base32 characters', () => {
+    expect(mintSheetChangesetId()).toMatch(SHEET_CHANGESET_ID_PATTERN);
+    expect(isSheetChangesetId(mintSheetChangesetId())).toBe(true);
+    expect(isSheetChangesetId('cs_0000000000')).toBe(false);
   });
 });

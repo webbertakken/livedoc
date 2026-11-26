@@ -283,6 +283,8 @@ export type ChangesetAuthor = { name: string; color: string };
 export type ChangesetSummary = {
   id: string;
   tabId: string;
+  // A sheet changeset's sheet (D265); its counts are cells.
+  sheetId?: string;
   rev: number;
   author: ChangesetAuthor;
   agent: boolean;
