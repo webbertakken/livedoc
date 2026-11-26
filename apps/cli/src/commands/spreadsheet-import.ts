@@ -38,6 +38,7 @@ export async function spreadsheetImport(
     ctx.api,
     { fileName, bytes, ...(input.name !== undefined ? { name: input.name } : {}) },
     'cli',
+    ctx.log,
   );
   if (!opened.ok)
     throw new VerbRefusal({
