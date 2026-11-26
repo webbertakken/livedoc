@@ -245,6 +245,13 @@ async function api(request: Request): Promise<Response> {
     return request.method === 'POST'
       ? json({ sheet: { ...SHEET, id: (await request.json<{ id: string }>()).id, cells: [] } })
       : json({ sheets: [SHEET] });
+  if (path.includes('/sheets/') && path.endsWith('/changesets')) {
+    const { writes } = await request.json<{ writes: SheetWrite[] }>();
+    const applied = writes.map(
+      (write) => applySheetWrite(sheetFromJson(SHEET), write, { now: 0, by: NOBODY }).applied,
+    );
+    return json({ changeset: { id: 'sc_0000000001' }, rev: 2, applied });
+  }
   if (path.endsWith('/writes')) {
     const { write } = await request.json<{ write: SheetWrite }>();
     const applied = applySheetWrite(sheetFromJson(SHEET), write, { now: 0, by: NOBODY }).applied;
