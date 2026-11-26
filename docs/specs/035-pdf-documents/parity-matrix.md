@@ -14,13 +14,13 @@ A row is done when it reads **built** (with its test) or **left out** (with Webb
 
 | Status                                             | Means                                                                            | Rows |
 | -------------------------------------------------- | -------------------------------------------------------------------------------- | ---- |
-| `specified`                                        | In, by the spec named                                                            | 108  |
+| `specified`                                        | In, by the spec named                                                            | 107  |
 | `specified, in part`                               | In, but for the part its rule names as left out                                  | 49   |
 | `left out (<ruling>)`                              | Not built, by the ruling or fork named                                           | 160  |
 | `not a function`                                   | Not a function of a PDF: installing, updating and troubleshooting Acrobat itself | 54   |
 | `built (<test>)`                                   | Built, with the test that proves it                                              | 19   |
 | `built, in part (<test>)`                          | Built, but for the part its rule names as left out                               | 3    |
-| `built so far: <what> (<test>); the rest: Phase N` | The part named is built and proven; the rest lands in the phase named            | 10   |
+| `built so far: <what> (<test>); the rest: Phase N` | The part named is built and proven; the rest lands in the phase named            | 11   |
 
 - Left out, by ruling: 7 `left out (C4)`, 1 `left out (F10)`, 1 `left out (F12)`, 50 `left out (F14)`, 101 `left out (F5)`.
 - **C4, F5 and F14 are ruled** (Webber, 2026-11-21): the reference is this inventory, and Acrobat's far tools are left
@@ -470,7 +470,7 @@ A row is done when it reads **built** (with its test) or **left out** (with Webb
 | Add shapes, lines, and freeform drawings        | Drawing with an eraser, line, arrow, rectangle, ellipse, polygon, cloud, connected lines | Reviewing | built so far: freehand drawing, line, arrow, rectangle, ellipse (`pdf-drawing.test.ts`, `pdf-shape.test.ts`, `PdfPage.test.tsx`, `pdf-document-drawing.spec.ts`, `pdf-document-shapes.spec.ts`); the rest: polygon, cloud, connected lines and the eraser, Phase 8 | [Marks](marks.md#kinds)                     |
 | Delete comments                                 | Delete a mark; its thread is kept as on deleted content                                  | Reviewing | built so far: a mark deleted (`usePdfMarkSelection.test.tsx`, `pdf-document-mark-select.spec.ts`); the rest: its thread kept as on deleted content, Phase 9                                                                                                        | [Marks](marks.md#changing-a-mark)           |
 | Edit comments                                   | Edit one's own comment                                                                   | Reviewing | specified                                                                                                                                                                                                                                                          | [Comments](comments.md#threads)             |
-| Group and ungroup comments                      | Group and ungroup marks                                                                  | Reviewing | specified                                                                                                                                                                                                                                                          | [Marks](marks.md#changing-a-mark)           |
+| Group and ungroup comments                      | Group and ungroup marks                                                                  | Reviewing | built so far: marks grouped, selected, moved and written as one (`mark-groups.test.ts`, `engine.test.ts`, `usePdfMarkSelection.test.tsx`, `pdf-document-mark-select.spec.ts`); the rest: answered as one, Phase 9                                                  | [Marks](marks.md#changing-a-mark)           |
 | Join PDF reviews                                | Opening a shared document is joining its review                                          | Reviewing | specified, in part                                                                                                                                                                                                                                                 | [PDF document](pdf-document.md#share-roles) |
 
 ## Stamps
