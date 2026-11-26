@@ -20,6 +20,7 @@ import type { PdfPageTap } from '@/lib/pdf-document/usePdfColumnZoom';
 import type { PdfPageInk, PdfPageTool } from '@/lib/pdf-document/usePdfMarkTools';
 import type { PdfPageShaping } from '@/lib/pdf-document/usePdfPageShape';
 import type { PdfPageStamping } from '@/lib/pdf-document/usePdfStampTool';
+import type { PdfPageErasing } from '@/lib/pdf-document/usePdfErase';
 import type { PdfPageTyping } from '@/lib/pdf-document/usePdfTyping';
 import type { PdfPageTexts } from '@/lib/pdf-document/pdf-page-texts';
 import type { PdfPageChoosing } from '@/lib/pdf-document/usePdfMarkSelection';
@@ -62,6 +63,8 @@ type Choosing = {
   choosing?: PdfPageChoosing | null;
   // The pages' text, where a test reads it.
   texts?: PdfPageTexts | null;
+  // Where Erase's drags go, with Erase in hand.
+  erasing?: PdfPageErasing | null;
 };
 
 async function page(
@@ -81,6 +84,7 @@ async function page(
     chosen = [],
     choosing = null,
     texts = null,
+    erasing = null,
   }: Choosing = {},
 ) {
   const onFileMarks = vi.fn();
@@ -114,6 +118,7 @@ async function page(
       shaping={shaping}
       typing={typing}
       stamping={stamping}
+      erasing={erasing}
       selected={selected}
       handles={handles}
       chosen={chosen}
@@ -369,6 +374,66 @@ describe('drawing on a page', () => {
     fireEvent.pointerDown(box, { ...at(72, 92), button: 2 });
     fireEvent.pointerUp(box, { ...at(72, 92), button: 2 });
     expect(onDraw).not.toHaveBeenCalled();
+  });
+});
+
+// marks.md "Changing a mark": Erase dragged across a Drawing's strokes, those passed over drawn gone at once and handed
+// over once let go; a cancel rubs out none.
+describe('erasing on a page', () => {
+  const drawing = Mark.drawing({
+    id: 'd',
+    page: PAGE.name,
+    strokes: [
+      [50, 700, 150, 700],
+      [50, 600, 150, 600],
+    ],
+    width: 2,
+    colour: '#d93025',
+    opacity: 1,
+    author: 'Ada',
+    createdAt: 1,
+  })!;
+  const at = (x: number, y: number) => ({
+    button: 0,
+    pointerType: 'mouse',
+    pointerId: 1,
+    clientX: x,
+    clientY: y,
+  });
+  const lines = (view: ReturnType<typeof render>) =>
+    view.container.querySelectorAll('[data-pdf-mark="d"] polyline').length;
+
+  it('shows the strokes passed over gone and hands them over once let go', async () => {
+    const onErase = vi.fn();
+    const { box, view, onMark } = await page('erase', [], [], false, null, null, null, null, null, {
+      marks: [drawing],
+      erasing: { onErase },
+    });
+    expect(box.className).toContain('cursor-crosshair touch-none');
+    expect(lines(view)).toBe(2);
+    fireEvent.pointerDown(box, at(100, 70));
+    fireEvent.pointerMove(box, at(100, 110));
+    expect(lines(view)).toBe(1);
+    fireEvent.pointerUp(box, at(100, 110));
+    expect(onErase).toHaveBeenCalledWith(1, [{ mark: drawing, gone: [0] }]);
+    expect(lines(view)).toBe(2);
+    expect(onMark).not.toHaveBeenCalled();
+  });
+
+  it('rubs out none on a cancel, or for a drag that passes nothing', async () => {
+    const onErase = vi.fn();
+    const { box, view } = await page('erase', [], [], false, null, null, null, null, null, {
+      marks: [drawing],
+      erasing: { onErase },
+    });
+    fireEvent.pointerDown(box, at(100, 70));
+    fireEvent.pointerMove(box, at(100, 300));
+    expect(view.container.querySelector('[data-pdf-mark="d"]')).toBeNull();
+    fireEvent.pointerCancel(box, at(100, 300));
+    expect(lines(view)).toBe(2);
+    fireEvent.pointerDown(box, at(400, 400));
+    fireEvent.pointerUp(box, at(400, 410));
+    expect(onErase).not.toHaveBeenCalled();
   });
 });
 

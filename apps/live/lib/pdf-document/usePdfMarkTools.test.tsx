@@ -7,6 +7,7 @@ import type { KeyboardEvent } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { BlobKey } from '@livedoc/document';
 import {
+  Mark,
   PageName,
   PDF_MAX_MARKS,
   PdfLiveChanges,
@@ -24,6 +25,7 @@ import {
   TOOL_ARROW,
   TOOL_CALLOUT,
   TOOL_DRAWING,
+  TOOL_ERASE,
   TOOL_ELLIPSE,
   TOOL_POLYGON,
   TOOL_CLOUD,
@@ -45,6 +47,8 @@ import { resetMarkLooks } from './pdf-mark-looks';
 import { SHAPE_LOOK, SHAPE_WIDTH_PT } from './pdf-shape';
 import { resetShapePick, shapePick } from './pdf-shape-pick';
 import { resetStampPick } from './pdf-stamp-pick';
+import { DRAWING_TOOLS } from './pdf-toolbar';
+import { drawingPick, resetDrawingPick } from './pdf-drawing-pick';
 import {
   FILL_COLOUR,
   SHAPE_TOOLS,
@@ -158,6 +162,7 @@ afterEach(() => {
   resetShapePick();
   resetTypedPick();
   resetStampPick();
+  resetDrawingPick();
 });
 
 describe('the text tools', () => {
@@ -389,6 +394,50 @@ describe('the tool in hand’s colour', () => {
     expect(PdfLiveChanges.marks(doc)[0]!.colour).toBe('#7c3aed');
     act(() => colour().set(null));
     expect(colour().read()).toBe(TEXT_MARK_LOOKS.underline.colour);
+  });
+});
+
+// marks.md "Changing a mark": Erase on the Drawing control; reading-surface.md "The toolbar": Drawing holds Drawing and
+// Erase, remembered apart; D takes the Drawing.
+describe('the Erase tool', () => {
+  it('is taken from Insert or the Drawing control, which then shows it, and erases one step on its page', () => {
+    const { hook, run, doc, steps } = tools();
+    expect(hook.result.current.erasing).toBeNull();
+    const control = () => hook.result.current.actions[DRAWING_TOOLS]!;
+    expect(control().label).toBe('Drawing');
+    run(TOOL_ERASE);
+    expect(hook.result.current.inHand).toBe('erase');
+    expect(track).toHaveBeenLastCalledWith('Pdf', 'Selected', 'Tool.Erase');
+    expect(control()).toMatchObject({ label: 'Erase', checked: true });
+    expect(drawingPick()).toBe('erase');
+    // Erase has no colour of its own, and gives the pages no ink.
+    expect(hook.result.current.colours).toEqual({});
+    expect(hook.result.current.ink).toBeNull();
+    const mark = Mark.drawing({
+      id: 'd',
+      page: PAGES[0]!.name,
+      strokes: [[1, 1, 9, 9]],
+      width: 2,
+      colour: '#d93025',
+      opacity: 1,
+      author: 'Ada',
+      createdAt: 1,
+    })!;
+    PdfLiveChanges.addMark(doc, mark);
+    act(() => hook.result.current.erasing!.onErase(0, [{ mark, gone: [0] }]));
+    expect(PdfLiveChanges.marks(doc)).toEqual([]);
+    expect(steps).toEqual([{ page: PAGES[0]!.name }]);
+    expect(debugLog).toHaveBeenLastCalledWith('[pdf] strokes-erased strokes=1 marks=1 deleted=1');
+    expect(track).toHaveBeenLastCalledWith('Pdf', 'Changed', 'Mark.Erased');
+    // Nothing erased is no step; D takes the Drawing, the control pressed again Select.
+    act(() => hook.result.current.erasing!.onErase(0, []));
+    act(() => hook.result.current.erasing!.onErase(9, [{ mark, gone: [0] }]));
+    expect(steps).toHaveLength(1);
+    act(() => void hook.result.current.onKey(key({ key: 'd' }).event));
+    expect(hook.result.current.inHand).toBe('drawing');
+    expect(hook.result.current.erasing).toBeNull();
+    run(DRAWING_TOOLS);
+    expect(hook.result.current.inHand).toBe('select');
   });
 });
 

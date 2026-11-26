@@ -83,6 +83,8 @@ export const TOOL_SQUIGGLY = 'tool-squiggly-underline';
 export const TOOL_TEXT = 'tool-text';
 export const TOOL_CALLOUT = 'tool-callout';
 export const TOOL_DRAWING = 'tool-drawing';
+/** Insert > Erase: rubs out a Drawing's strokes (marks.md "Changing a mark"). */
+export const TOOL_ERASE = 'tool-erase';
 /** Insert > Stamp's categories built so far (marks.md "Stamps"): each takes the Stamp tool with a stamp of it. */
 export const STAMP_STANDARD = 'stamp-standard-stamps';
 export const STAMP_DYNAMIC = 'stamp-dynamic-stamps';
@@ -338,6 +340,7 @@ export const PDF_MENUS: OfficeCatalogue = [
       ...BUILT,
       keywords: ['freehand', 'pen'],
     }),
+    item(TOOL_ERASE, 'Erase', 'participate', { ...ONE_OF, ...BUILT, keywords: ['eraser', 'rub out'] }),
     submenu('shape', 'Shape', [
       item(TOOL_LINE, 'Line', 'participate', { ...ONE_OF, ...BUILT }),
       item(TOOL_ARROW, 'Arrow', 'participate', { ...ONE_OF, ...BUILT }),

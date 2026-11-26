@@ -45,6 +45,7 @@ import {
   TOOL_ARROW,
   TOOL_CALLOUT,
   TOOL_DRAWING,
+  TOOL_ERASE,
   TOOL_ELLIPSE,
   TOOL_POLYGON,
   TOOL_CLOUD,
@@ -78,6 +79,7 @@ import {
   PAGE_DISPLAY_CONTROL,
   pdfToolbar,
   SHAPE_TOOLS,
+  DRAWING_TOOLS,
   TEXT_MARK_TOOLS,
   STAMP_TOOLS,
   TYPED_TOOLS,
@@ -145,6 +147,7 @@ describe("a PDF document's menus and toolbar", () => {
     TOOL_STRIKETHROUGH,
     TOOL_SQUIGGLY,
     TOOL_DRAWING,
+    TOOL_ERASE,
     TOOL_TEXT,
     TOOL_CALLOUT,
     // usePdfToolControl.ts: the shape tools.
@@ -244,10 +247,9 @@ describe("a PDF document's menus and toolbar", () => {
   // reading-surface.md "Share roles": an item above the session's level is not drawn.
   it('shows a Viewer the download and no tool that marks', () => {
     const actions = Object.fromEntries(
-      [...BOUND, TEXT_MARK_TOOLS, TYPED_TOOLS, SHAPE_TOOLS, STAMP_TOOLS].map((id) => [
-        id,
-        { run: () => {} },
-      ]),
+      [...BOUND, TEXT_MARK_TOOLS, TYPED_TOOLS, DRAWING_TOOLS, SHAPE_TOOLS, STAMP_TOOLS].map(
+        (id) => [id, { run: () => {} }],
+      ),
     );
     const seen = (level: 'view' | 'participate') =>
       catalogueItems(visibleMenus(PDF_MENUS, level, actions)).map(({ item }) => item.id);
@@ -281,7 +283,7 @@ describe("a PDF document's menus and toolbar", () => {
       TOOL_SELECT,
       TEXT_MARK_TOOLS,
       TYPED_TOOLS,
-      TOOL_DRAWING,
+      DRAWING_TOOLS,
       SHAPE_TOOLS,
       STAMP_TOOLS,
     ]);

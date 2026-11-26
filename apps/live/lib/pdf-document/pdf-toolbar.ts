@@ -50,7 +50,6 @@ import {
   PRINT,
   REDO,
   ROTATE_VIEW_CLOCKWISE,
-  TOOL_DRAWING,
   TOOL_HAND,
   TOOL_SELECT,
   TOOL_TICK,
@@ -136,6 +135,8 @@ export const TEXT_MARK_TOOLS = 'text-mark-tools';
 export const SHAPE_TOOLS = 'shape-tools';
 /** Text, holding Text and Callout behind its chevron: the last of them taken in hand. */
 export const TYPED_TOOLS = 'typed-tools';
+/** Drawing, holding Drawing and Erase behind its chevron: the last of them taken in hand. */
+export const DRAWING_TOOLS = 'drawing-tools';
 /** Stamp, holding the stamps behind its chevron, by category: the last of them taken in hand. */
 export const STAMP_TOOLS = 'stamp-tools';
 /** The tool in hand's colour ("The toolbar"): the one colour picker's swatch button, while a mark tool is in hand. */
@@ -174,7 +175,10 @@ const OWN: Readonly<Record<PdfMode, OfficeToolbar>> = {
         ...toggle(TYPED_TOOLS, 'Text', 'participate', lucideType, BUILT),
         look: { kind: 'icon', icon: lucideType, toggle: true, split: true },
       },
-      toggle(TOOL_DRAWING, 'Drawing', 'participate', lucidePencilLine, BUILT),
+      {
+        ...toggle(DRAWING_TOOLS, 'Drawing', 'participate', lucidePencilLine, BUILT),
+        look: { kind: 'icon', icon: lucidePencilLine, toggle: true, split: true },
+      },
       {
         ...toggle(SHAPE_TOOLS, 'Shape', 'participate', lucideShapes, BUILT),
         look: { kind: 'icon', icon: lucideShapes, toggle: true, split: true },

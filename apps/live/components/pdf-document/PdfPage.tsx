@@ -55,6 +55,8 @@ import { usePdfPageDraft } from '@/lib/pdf-document/usePdfPageDraft';
 import { usePdfPageTextMark } from '@/lib/pdf-document/usePdfPageTextMark';
 import type { PdfPageShaping } from '@/lib/pdf-document/usePdfPageShape';
 import type { PdfPageStamping } from '@/lib/pdf-document/usePdfStampTool';
+import type { PdfPageErasing } from '@/lib/pdf-document/usePdfErase';
+import { usePdfPageErase } from '@/lib/pdf-document/usePdfPageErase';
 import { pageBoxOf } from '@/lib/pdf-document/pdf-typed';
 import type { PdfPageTyping as Typing } from '@/lib/pdf-document/usePdfTyping';
 import { screenBoxOf } from '@/lib/pdf-document/pdf-shape';
@@ -95,6 +97,7 @@ export const PdfPage = memo(function PdfPage({
   shaping,
   typing,
   stamping,
+  erasing,
   selected,
   handles,
   chosen,
@@ -141,6 +144,8 @@ export const PdfPage = memo(function PdfPage({
   shaping: PdfPageShaping | null;
   // Where the Stamp tool's presses go; null while another tool is in hand.
   stamping: PdfPageStamping | null;
+  // Where Erase's drags go; null while another tool is in hand.
+  erasing: PdfPageErasing | null;
   // The Text or the Callout tool's look and where its marks go; null while another tool is in hand.
   typing: Typing | null;
   // The text selected on this page, and where a press, a drag or presses in a row go while Select is in hand.
@@ -302,6 +307,13 @@ export const PdfPage = memo(function PdfPage({
     () => (choosing ? marks.filter(choosing.mayChange) : marks),
     [marks, choosing],
   );
+  // Erase's drag across the Drawings this session may change (marks.md "Changing a mark": Erase).
+  const erase = usePdfPageErase({
+    index,
+    erasing: current ? erasing : null,
+    marks: pressable,
+    pointAt,
+  });
   const markPress = usePdfPageMarkPress({
     index,
     marks: pressable,
@@ -354,13 +366,14 @@ export const PdfPage = memo(function PdfPage({
     if (place) choosing?.reshape(index, id, place);
   };
   // A drag across text marks it with a text tool in hand: not with a drawing, shape or typing tool.
-  const marking = tool !== 'select' && !inking.active && !typing && current !== null;
+  const marking =
+    tool !== 'select' && !inking.active && !erase.active && !typing && current !== null;
   // "Selecting text": a mouse or a pen selects with Select in hand; a finger scrolls.
   const selectingText = (event: PointerEvent<HTMLElement>) =>
     tool === 'select' && event.button === 0 && event.pointerType !== 'touch';
   const onPointerDown = (event: PointerEvent<HTMLElement>) => {
     fingers.down(event);
-    if (inking.down(event)) return;
+    if (erase.down(event) || inking.down(event)) return;
     if (markPress.down(event)) return;
     if (selectingText(event)) {
       const at = pagePoint(event);
@@ -378,7 +391,8 @@ export const PdfPage = memo(function PdfPage({
     textMark.begin(from);
   };
   const onPointerMove = (event: PointerEvent<HTMLElement>) => {
-    if (inking.move(event) || markPress.move(event) || boxing.move(event)) return;
+    if (erase.move(event) || inking.move(event) || markPress.move(event) || boxing.move(event))
+      return;
     const at = selecting.current ? pagePoint(event) : null;
     if (at) return onText(index, { kind: 'drag', at });
     const to = textMark.dragging() ? pagePoint(event) : null;
@@ -410,7 +424,7 @@ export const PdfPage = memo(function PdfPage({
       className={`absolute bg-(--pdf-paper) shadow-sm outline outline-1 outline-(--office-line) select-none ${
         marking
           ? 'cursor-text touch-none'
-          : inking.active
+          : inking.active || erase.active
             ? 'cursor-crosshair touch-none'
             : markPress.over === 'movable' || markPress.moving
               ? 'cursor-move'
@@ -425,13 +439,13 @@ export const PdfPage = memo(function PdfPage({
       onPointerMove={onPointerMove}
       onPointerUp={(event) => {
         fingers.up(event);
-        if (inking.up(event, true) || markPress.up(event)) return;
+        if (erase.up(event, true) || inking.up(event, true) || markPress.up(event)) return;
         boxing.up(event);
         endDrag(event, true);
       }}
       onPointerCancel={(event) => {
         fingers.cancel(event);
-        if (inking.up(event, false) || markPress.cancel()) return;
+        if (erase.up(event, false) || inking.up(event, false) || markPress.cancel()) return;
         boxing.cancel();
         endDrag(event, false);
       }}
@@ -469,6 +483,7 @@ export const PdfPage = memo(function PdfPage({
           fileOwn={changeable.fileOwn}
           preview={textMark.preview}
           draft={inking.draft}
+          erased={erase.gone}
           selected={selected}
           found={found}
           chosen={chosen}
