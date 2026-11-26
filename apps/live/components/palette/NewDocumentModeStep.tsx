@@ -61,10 +61,14 @@ function examplesOf(mode: TabOpening): TemplateKind[] {
   return popularKindsFor(mode).filter((k) => !isBlankTemplate(k));
 }
 
-// Where each card sits in the twelve-track grid from 640px: the first row's four openings take three tracks each, the
-// second row's three kinds take four, so both rows span the dialog at one height (`auto-rows-fr`).
+// Where each card sits in the twelve-track grid: from 1024px the four openings take three tracks each and the three
+// kinds four, so both rows span the dialog at one height (`auto-rows-fr`); from 640px two to a row, PDF document, the
+// seventh, across its own.
 export function modeCardSpan(index: number): string {
-  return index < NEW_DOCUMENT_MODES.length ? 'sm:col-span-3' : 'sm:col-span-4';
+  if (index < NEW_DOCUMENT_MODES.length) return 'sm:col-span-6 lg:col-span-3';
+  return index === NEW_DOCUMENT_CHOICES.length - 1
+    ? 'sm:col-span-12 lg:col-span-4'
+    : 'sm:col-span-6 lg:col-span-4';
 }
 
 function ModeCard({

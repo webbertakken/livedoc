@@ -327,9 +327,9 @@ browsed before signing up.
 
 - **Heading:** "What are you making today?"
 - **Seven cards**: the openings in the order every opening list shows them (`TAB_OPENINGS` less Pages: Sketch,
-  Structured, Workshop, Plan), then the kinds (Text document, Spreadsheet, PDF document); four then three from 640px
-  (a twelve-track grid: the first row's cards take three tracks each, the second row's four, `modeCardSpan`; one
-  column on a phone). Every card has the same build and, across both rows, the same height (`auto-rows-fr`). The
+  Structured, Workshop, Plan), then the kinds (Text document, Spreadsheet, PDF document); four then three from 1024px, the dialog 58rem
+  wide (a twelve-track grid: the first row's cards take three tracks each, the second row's four, `modeCardSpan`), two
+  to a row from 640px with PDF document across its own, and one column on a phone. Every card has the same build and, across both rows, the same height (`auto-rows-fr`). The
   cards carry no template names and no "Most Popular" badge. **Pages** is not offered: it is being retired
   ([Text documents](../034-text-documents/migration.md)); `?mode=pages` preselects nothing.
 - **Each card:** a fan of its own templates' previews on top (`PreviewFan`, the mode's Popular shelf less its blank)

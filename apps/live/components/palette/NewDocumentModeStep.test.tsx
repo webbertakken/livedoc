@@ -74,9 +74,14 @@ describe('NewDocumentModeStep', () => {
     expect(diagram!.className).toContain('flex-col');
     expect(diagram!.className).not.toMatch(/sm:flex-row/);
     const spans = cards().map(
-      (c) => c.closest('[data-mode-card]')!.className.match(/sm:col-span-\d/)?.[0],
+      (c) => c.closest('[data-mode-card]')!.className.match(/sm:col-span-\d+ lg:col-span-\d+/)?.[0],
     );
-    expect(spans).toEqual([...Array(4).fill('sm:col-span-3'), ...Array(3).fill('sm:col-span-4')]);
+    expect(spans).toEqual([
+      ...Array(4).fill('sm:col-span-6 lg:col-span-3'),
+      'sm:col-span-6 lg:col-span-4',
+      'sm:col-span-6 lg:col-span-4',
+      'sm:col-span-12 lg:col-span-4',
+    ]);
     expect([0, 1, 2, 3, 4, 5, 6].map(modeCardSpan)).toEqual(spans);
     const grid = diagram!.closest('[data-mode-card]')!.parentElement!;
     expect(grid.className).toMatch(/sm:grid-cols-12/);

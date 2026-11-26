@@ -70,7 +70,7 @@ export function NewDocumentWizard({
     if (!busy) onBackOut();
   });
   return (
-    <CanvasModalCard label="Start a new document" width="sm:w-[44rem]">
+    <CanvasModalCard label="Start a new document" width="sm:w-[44rem] lg:w-[58rem]">
       <div className="flex items-start justify-between gap-3 border-b border-slate-100 px-6 pb-5 pt-6 dark:border-slate-800">
         <div>
           <h2 className="text-dialog-title text-slate-900 dark:text-slate-50">New Document</h2>

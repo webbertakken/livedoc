@@ -198,6 +198,7 @@ const inputOf = (doc: PreparedDocument, teamId: string | null, startedAt: number
   name: doc.name,
   tabs: doc.content.tabs ?? [doc.content.tab],
   itemTypes: doc.content.itemTypes,
+  workbook: doc.content.workbook ?? null,
   ownerId: doc.ownerId,
   location: doc.location,
   teamId,

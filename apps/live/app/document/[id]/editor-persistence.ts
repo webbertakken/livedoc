@@ -30,7 +30,7 @@ export function useEditorPersistence({
 }: {
   toast: ReturnType<typeof useToast>;
   // A document just made, opened from memory (seed-pending-document.ts).
-  seed?: Pick<EditorSeed, 'documentName' | 'itemTypes'> | null;
+  seed?: Pick<EditorSeed, 'documentName' | 'itemTypes' | 'workbook'> | null;
 }) {
   // Surfaced in the footer (bottom-right of the TabBar). The autosave
   // used to swallow errors silently which made an offline API look
@@ -50,7 +50,10 @@ export function useEditorPersistence({
   // See useItemTypes, which shows this editor's unsaved changes over it.
   // The workbook record when the document is a spreadsheet (docs/specs/029-sheets/sheet-store.md "In a
   // spreadsheet"): seeded on load; null for any other document.
-  const [documentWorkbook, setDocumentWorkbook] = useState<WorkbookRecord | null>(null);
+  // A spreadsheet just made opens with its workbook record from memory (seed-pending-document.ts).
+  const [documentWorkbook, setDocumentWorkbook] = useState<WorkbookRecord | null>(
+    seed?.workbook ?? null,
+  );
   const [documentItemTypes, setDocumentItemTypes] = useState<SavedItemTypes>(
     seed?.itemTypes ?? { itemTypes: null, itemTypesRev: 0 },
   );
