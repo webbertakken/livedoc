@@ -134,6 +134,15 @@ describe('insertColumns', () => {
       ['', 'a2', 'b2'],
     ]);
   });
+
+  // review.md "Rows and columns": while suggesting, the table grows by the new column, no other cell changed.
+  it('grows the table by a column of its neighbour\u2019s width with keepWidths, the others untouched', () => {
+    const before = widths(caretIn(grid(), 'b1'));
+    const right = run(caretIn(grid(), 'b1'), insertColumns('right', { keepWidths: true })).state;
+    expect(widths(right).map((row) => row.slice(0, 2))).toEqual(before);
+    expect(widths(right).map((row) => row[2])).toEqual([[300], [300]]);
+    expect(right.doc.firstChild!.child(0).child(2).attrs.props).toEqual(SHADE);
+  });
 });
 
 describe('deleting', () => {

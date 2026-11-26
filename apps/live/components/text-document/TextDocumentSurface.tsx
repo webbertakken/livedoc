@@ -990,6 +990,7 @@ export function TextDocumentSurface({
     subscribe: changes.subscribe,
     onMentioned: mentions?.onMentioned,
     onAssigned: mentions?.onAssigned,
+    textWidth: Columns.width(page.caret.section.setup),
   });
   useEffect(() => {
     selectThreadRef.current = threads.select;
@@ -999,6 +1000,7 @@ export function TextDocumentSurface({
     editorView,
     bodyInserts,
     Columns.width(page.caret.section.setup),
+    bodySuggests,
   );
   // Insert > Building blocks (objects.md "Building blocks"), in the body, at the caret's text width.
   const buildingBlocks = useTextDocumentBuildingBlocks(

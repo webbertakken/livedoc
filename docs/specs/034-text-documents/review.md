@@ -282,8 +282,17 @@ office kinds; this spec says what a text document puts in them.
   else typing in it suggests their own insertion, never folded into the block's suggestion: rejecting the block takes
   their writing with it, accepting theirs alone keeps it in the still-suggested block (director, 2026-11-26). Updating
   one's own suggested table of contents changes it plainly.
-- **Not yet**: the rows, columns and cells of a table not one's own suggested table (added, deleted, merged, split),
-  updating a table of contents not one's own suggested one, footnotes and drawings, and what is kept beside the writing (page setup, headers and footers, document tabs,
+- **Rows and columns**: Insert row above or below and Insert column left or right in any table suggest the new row's
+  or column's insertion, its card saying "Add: Row" ("Add: Column"); Delete row and Delete column suggest its deletion
+  ("Delete: Row", "Delete: Column"), the row or column staying, drawn struck through inside a dashed outline in its
+  author's colour, the caret where it was (default); one's own suggested row or column deleted goes. Rows or columns
+  added one after another are one suggestion. Writing in one's own suggested row or column is plain, part of it;
+  anyone else's is their own suggestion. A new column takes its neighbour's width and the others keep theirs, so the
+  table grows (it may run past the margin while suggested) and Reject gives back the table as it was; Accept fits a
+  table wider than the text back to the text width, as an Editor's plain change (director, 2026-11-26).
+- **Not yet**: a row or column a merged cell crosses (director, 2026-11-26); merging, splitting, moving, sorting and
+  distributing the rows and columns of a table not one's own suggested table (default); updating a table of contents
+  not one's own suggested one, footnotes and drawings, and what is kept beside the writing (page setup, headers and footers, document tabs,
   styles, list definitions), say "This can't be suggested yet." (default) and change nothing. Insert's Footnote,
   Drawing, Header and Footer are dimmed while suggesting with the note "Editing only" and the hint "This can't be
   suggested yet. An Editor changes it in Editing." (default); the others are absent or dimmed as the menus draw
@@ -316,7 +325,8 @@ office kinds; this spec says what a text document puts in them.
   - **Add: Paragraph break** and **Delete: Paragraph break** for a break and a join, **Format: Paragraph** for a
     paragraph format suggestion;
   - **Add: Picture** (or the object's name: Equation, Footnote, Field, Bookmark) for an object in a line, **Add:
-    Table** (or Section break, Table of contents) for a block, and **Delete: …** for either deleted.
+    Table** (or Section break, Table of contents) for a block, **Add: Row** and **Add: Column** for a table's row
+    and column, one line however many (director, 2026-11-26), and **Delete: …** for any of them deleted.
 - **Accept** (a tick, "Accept suggestion") and **Reject** (×, "Reject suggestion") on the card: an Editor has both
   on every suggestion; a Participant has Reject on their own alone, which takes it back; a Viewer has neither. In
   Viewing no one has them (default). Either settles the whole suggestion, all its parts, as one change of the

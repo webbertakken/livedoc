@@ -2,58 +2,32 @@
 // section break or a table of contents put in as the person's insertion of the whole block, its content unmarked and a
 // paragraph split for it part of the same suggestion; a whole block deleted as a suggestion (one's own taken away);
 // one's own suggested table written in and changed plainly; anyone else's typing in it their own insertion (director,
-// 2026-11-26); anyone else's table's rows and columns not yet; a kept block never.
+// 2026-11-26); a kept block never.
 import { describe, expect, it } from 'vitest';
-import { EditorState, NodeSelection, TextSelection, type Transaction } from 'prosemirror-state';
+import { NodeSelection, TextSelection } from 'prosemirror-state';
 import type { Node as PmNode } from 'prosemirror-model';
 import { deleteSelection } from 'prosemirror-commands';
 import { PageSetup } from '@livedoc/text-documents';
 import { textDocumentSchema as schema } from './text-document-schema';
-import { suggestTransaction, type Suggester } from './text-document-suggesting';
-import { insertTable, newTable } from './text-document-tables';
+import { suggestTransaction } from './text-document-suggesting';
+import { insertTable } from './text-document-tables';
+import {
+  ADA,
+  BEN,
+  as,
+  blockOf,
+  commanded,
+  idOf,
+  inFirstCell,
+  mark,
+  p,
+  stateWith,
+  suggest,
+  table,
+} from './text-document-suggesting.test-kit';
 import { insertRows } from './text-document-table-edits';
 import { insertSectionBreak } from './text-document-breaks';
 
-const ADA = { key: 'k-ada', name: 'Ada', colour: '#0284c7' };
-const BEN = { key: 'k-ben', name: 'Ben', colour: '#16a34a' };
-const mark = (id: string, author = ADA, at = 5) => ({ id, at, author });
-const as = (person: typeof ADA, id = 's1'): Suggester => ({ ...person, now: 100, newId: () => id });
-
-const p = (text = '') => schema.nodes.paragraph!.create(null, text ? schema.text(text) : null);
-const table = (attrs: Record<string, unknown> = {}) => {
-  const made = newTable({ rows: 2, columns: 2, width: 200 });
-  return made.type.create({ ...made.attrs, ...attrs }, made.content);
-};
-
-function stateWith(blocks: PmNode[], anchor: number, head = anchor) {
-  const doc = schema.nodes.doc!.create(null, blocks);
-  return EditorState.create({ doc, selection: TextSelection.create(doc, anchor, head) });
-}
-
-function commanded(
-  state: EditorState,
-  command: (s: EditorState, d: (tr: Transaction) => void) => boolean,
-) {
-  let made: Transaction | undefined;
-  command(state, (tr) => (made = tr));
-  return made!;
-}
-
-function suggest(state: EditorState, tr: Transaction, who = as(ADA)) {
-  const result = suggestTransaction(state, tr, who);
-  if ('refused' in result) throw new Error(result.refused);
-  return state.apply(result.tr);
-}
-
-const idOf = (value: unknown) => (value as { id?: string } | null)?.id;
-const blockOf = (state: EditorState, name: string) => {
-  let found: PmNode | undefined;
-  state.doc.descendants((n) => {
-    if (!found && n.type.name === name) found = n;
-    return !found;
-  });
-  return found;
-};
 /** Each text node's text and its insertion's id, in order. */
 const marked = (node: PmNode) => {
   const out: [string, string | undefined][] = [];
@@ -63,16 +37,6 @@ const marked = (node: PmNode) => {
   });
   return out;
 };
-/** The first cell's first paragraph's inside position of the first table in the doc. */
-const inFirstCell = (state: EditorState) => {
-  let at = -1;
-  state.doc.descendants((n, pos) => {
-    if (at < 0 && n.type.name === 'paragraph' && state.doc.resolve(pos).depth > 0) at = pos + 1;
-    return at < 0;
-  });
-  return at;
-};
-
 describe('suggestTransaction on whole blocks', () => {
   it('puts a table in as the person’s insertion, its cells unmarked, a split paragraph’s break the same suggestion', () => {
     const state = stateWith([p('abcd')], 3);
@@ -133,21 +97,17 @@ describe('suggestTransaction on whole blocks', () => {
     expect(idOf(blockOf(next, 'table')!.attrs.insertion)).toBe('s0');
   });
 
-  it('adds a row to one’s own suggested table plainly, and refuses one to anyone else’s', () => {
+  it('adds a row to one’s own suggested table plainly, part of it', () => {
     const own = stateWith([p('a'), table({ insertion: mark('s0') }), p('b')], 1);
     const inOwn = own.apply(own.tr.setSelection(TextSelection.create(own.doc, inFirstCell(own))));
     const grown = suggest(inOwn, commanded(inOwn, insertRows('below')));
     expect(blockOf(grown, 'table')!.childCount).toBe(3);
-
-    const others = stateWith([p('a'), table(), p('b')], 1);
-    const inOthers = others.apply(
-      others.tr.setSelection(TextSelection.create(others.doc, inFirstCell(others))),
-    );
-    expect(suggestTransaction(inOthers, commanded(inOthers, insertRows('below')), as(ADA))).toEqual(
-      {
-        refused: 'structure',
-      },
-    );
+    let marks = 0;
+    blockOf(grown, 'table')!.descendants((n) => {
+      if (n.attrs.insertion) marks += 1;
+      return true;
+    });
+    expect(marks).toBe(0);
   });
 
   it('marks someone else’s writing deleted inside a table’s cell, never joining cells', () => {
@@ -165,14 +125,6 @@ describe('suggestTransaction on whole blocks', () => {
     });
     expect(cellText).toEqual(['xy']);
     expect(blockOf(next, 'table')!.childCount).toBe(2);
-  });
-
-  it('refuses a whole row of anyone else’s table deleted: rows are not suggested yet', () => {
-    const state = stateWith([p('a'), table(), p('b')], 1);
-    const tableAt = 3;
-    const row = state.doc.nodeAt(tableAt)!.firstChild!;
-    const tr = state.tr.delete(tableAt + 1, tableAt + 1 + row.nodeSize);
-    expect(suggestTransaction(state, tr, as(ADA))).toEqual({ refused: 'structure' });
   });
 
   it('refuses a change inside anyone else’s table of contents, and makes one inside one’s own plainly', () => {

@@ -3,7 +3,7 @@
 // back on the far side, so the rows or cells moved are never re-made: the caret and a cell selection stay in them.
 import { Selection, type Command, type EditorState } from 'prosemirror-state';
 import { TableMap, isInTable, selectedRect } from 'prosemirror-tables';
-import { headerRowsOf } from './text-document-table-edits';
+import { headerRowsOf, reshaping } from './text-document-table-edits';
 
 // Whether every cell in rows `from` to `to` (inclusive) starts and ends in its own row.
 function rowsWhole(map: TableMap, from: number, to: number): boolean {
@@ -46,7 +46,7 @@ export const moveRows =
     const tr = state.tr;
     tr.delete(rowStart(neighbour), rowStart(neighbour) + moved.nodeSize);
     tr.insert(tr.mapping.map(rowStart(direction === 'up' ? bottom : top)), moved);
-    dispatch(tr.scrollIntoView());
+    dispatch(reshaping(tr).scrollIntoView());
     return true;
   };
 
@@ -74,7 +74,7 @@ export const moveColumns =
       tr.delete(from, from + cell.nodeSize);
       tr.insert(tr.mapping.map(tableStart + far), cell);
     }
-    dispatch(tr.scrollIntoView());
+    dispatch(reshaping(tr).scrollIntoView());
     return true;
   };
 
@@ -119,7 +119,7 @@ export const moveRowTo =
     const at = tr.mapping.map(rowStart(to));
     tr.insert(at, moved);
     tr.setSelection(Selection.near(tr.doc.resolve(at + 1)));
-    dispatch(tr.scrollIntoView());
+    dispatch(reshaping(tr).scrollIntoView());
     return true;
   };
 
@@ -152,6 +152,6 @@ export const moveColumnTo =
       if (first < 0) first = put;
     }
     tr.setSelection(Selection.near(tr.doc.resolve(first + 1)));
-    dispatch(tr.scrollIntoView());
+    dispatch(reshaping(tr).scrollIntoView());
     return true;
   };

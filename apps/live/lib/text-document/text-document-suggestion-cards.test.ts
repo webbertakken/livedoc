@@ -127,6 +127,35 @@ describe('suggestionCards', () => {
     ).toEqual(['Add: Table of contents', 'Delete: Table', 'Add: Object']);
   });
 
+  // review.md "Suggestion cards" (director, 2026-11-26): a row's or column's card names it once, however many.
+  it('names a row and a column once each, however many rows or cells', () => {
+    const cell = (attrs: Record<string, unknown> = {}) =>
+      schema.nodes.table_cell!.create(attrs, p(['x']));
+    const table = schema.nodes.table!.create(null, [
+      schema.nodes.table_row!.create(null, [cell(), cell({ deletion: mark('s2', BEN) })]),
+      schema.nodes.table_row!.create({ insertion: mark('s1') }, [
+        cell(),
+        cell({ deletion: mark('s2', BEN) }),
+      ]),
+      schema.nodes.table_row!.create({ insertion: mark('s1') }, [
+        cell(),
+        cell({ deletion: mark('s2', BEN) }),
+      ]),
+    ]);
+    expect(suggestionCards(docOf(p(['a']), table, p(['b']))).map((c) => c.lines)).toEqual([
+      ['Delete: Column'],
+      ['Add: Row'],
+    ]);
+    expect(
+      cardLines(
+        cardPartsOf([
+          { kind: 'block-insertion', text: 'table_cell', element: 'table_cell' },
+          { kind: 'block-insertion', text: 'table_header', element: 'table_header' },
+        ]),
+      ),
+    ).toEqual(['Add: Column']);
+  });
+
   it('keeps the parts of one suggestion across paragraphs as one card, from its first part', () => {
     const doc = docOf(
       p(['ab', text('cd', ins(mark('s1')))]),

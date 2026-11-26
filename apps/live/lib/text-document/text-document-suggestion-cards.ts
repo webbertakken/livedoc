@@ -75,6 +75,10 @@ const OBJECT_LABELS: Readonly<Record<string, string>> = {
   table: 'Table',
   section_break: 'Section break',
   table_of_contents: 'Table of contents',
+  // A table's row, and a column's cells: one line however many (review.md "Suggestion cards").
+  table_row: 'Row',
+  table_cell: 'Column',
+  table_header: 'Column',
 };
 const OTHER_OBJECT = 'Object';
 

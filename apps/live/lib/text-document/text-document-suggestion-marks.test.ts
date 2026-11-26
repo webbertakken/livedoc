@@ -68,6 +68,34 @@ describe('suggestedBlocks', () => {
     expect(blocks[0]!.ink).toEqual(expect.any(String));
   });
 
+  // review.md "Rows and columns": a suggested row is drawn on each of its cells, a column's on its cells, inset.
+  it('finds a suggested row as each of its cells, and a suggested cell itself', () => {
+    const cell = (attrs: Record<string, unknown> = {}) =>
+      schema.nodes.table_cell!.create(attrs, p('x'));
+    const doc = schema.nodes.doc!.create(null, [
+      p('a'),
+      schema.nodes.table!.create(null, [
+        schema.nodes.table_row!.create({ insertion: mark() }, [cell(), cell()]),
+        schema.nodes.table_row!.create(null, [cell(), cell({ deletion: mark() })]),
+      ]),
+      p('b'),
+    ]);
+    const blocks = suggestedBlocks(doc);
+    expect(blocks.map((b) => [b.name, b.kind, doc.nodeAt(b.from)!.type.name, b.inset])).toEqual([
+      ['table_row', 'insertion', 'table_cell', true],
+      ['table_row', 'insertion', 'table_cell', true],
+      ['table_cell', 'deletion', 'table_cell', true],
+    ]);
+    const view = new EditorView(document.createElement('div'), {
+      state: EditorState.create({ doc, plugins: [suggestedBreaksPlugin()] }),
+    });
+    const drawn = view.dom.querySelector(
+      'td.text-document-suggested-block-deletion',
+    ) as HTMLElement;
+    expect(drawn.style.outlineOffset).toBe('-2px');
+    view.destroy();
+  });
+
   it('draws the outline in the view, dashed and struck through for a deletion', () => {
     const doc = schema.nodes.doc!.create(null, [p('a'), table({ deletion: mark() }), p('b')]);
     const view = new EditorView(document.createElement('div'), {

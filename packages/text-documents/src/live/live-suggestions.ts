@@ -12,10 +12,13 @@ import {
   PARAGRAPH_FORMAT_CHANGE,
   SUGGESTION_MARKS,
   TABLE,
+  TABLE_CELL,
+  TABLE_HEADER,
   TABLE_ROW,
 } from './live-names';
 import { tabFragment } from './live-root';
 import { liveTabIds } from './live-tabs';
+import { fitTableWidth } from './live-table-fit';
 import type { TextDocumentCommentAuthor } from './live-threads';
 
 export {
@@ -336,6 +339,8 @@ function settleChildren(
   id: string,
   accept: boolean,
   inParagraph: boolean,
+  // The tables a column of this suggestion was accepted into.
+  widened: Set<Y.XmlElement> = new Set(),
 ): void {
   for (let index = parent.length - 1; index >= 0; index--) {
     const node = parent.get(index);
@@ -345,7 +350,7 @@ function settleChildren(
     }
     if (!(node instanceof Y.XmlElement)) continue;
     if (node.nodeName === PARAGRAPH && !inParagraph) {
-      settleChildren(node, id, accept, true);
+      settleChildren(node, id, accept, true, widened);
       const format = node.getAttribute(PARAGRAPH_FORMAT_CHANGE) as unknown;
       if (marksOf(format, id)) {
         if (!accept) restoreParagraph(node, (format as ParagraphFormatChangeMark).before ?? {});
@@ -365,9 +370,13 @@ function settleChildren(
         parent.delete(index, 1);
       continue;
     }
-    if (!inParagraph) settleChildren(node, id, accept, false);
+    if (!inParagraph) settleChildren(node, id, accept, false, widened);
     const inserted = marksOf(node.getAttribute(INSERTION_MARK), id);
     const deleted = marksOf(node.getAttribute(DELETION_MARK), id);
+    if (inserted && accept && (node.nodeName === TABLE_CELL || node.nodeName === TABLE_HEADER)) {
+      const table = parent.parent;
+      if (table instanceof Y.XmlElement) widened.add(table as Y.XmlElement);
+    }
     if ((inserted && !accept) || (deleted && accept) || emptied(node)) {
       parent.delete(index, 1);
       continue;
@@ -377,10 +386,22 @@ function settleChildren(
   }
 }
 
-function settle(doc: Y.Doc, id: string, accept: boolean, origin: unknown): boolean {
+/** How wide the text is where a settled table stands, in points: a table a column made wider is fitted to it. */
+export type SuggestionFit = { readonly width: number };
+
+function settle(
+  doc: Y.Doc,
+  id: string,
+  accept: boolean,
+  origin: unknown,
+  fit?: SuggestionFit,
+): boolean {
   if (!read(doc).some((s) => s.id === id)) return false;
   doc.transact(() => {
-    for (const tab of liveTabIds(doc)) settleChildren(tabFragment(doc, tab), id, accept, false);
+    const widened = new Set<Y.XmlElement>();
+    for (const tab of liveTabIds(doc))
+      settleChildren(tabFragment(doc, tab), id, accept, false, widened);
+    if (fit) for (const table of widened) if (table.parent) fitTableWidth(table, fit.width);
   }, origin);
   return true;
 }
@@ -527,8 +548,12 @@ export const LiveSuggestions = {
   count,
   /** Whether a value is a well-read suggestion mark whose author holds `key`. */
   isOwnMark: ownBy,
-  /** Accepts a suggestion in one transaction; false when the document holds no part of it. */
-  accept: (doc: Y.Doc, id: string, origin: unknown): boolean => settle(doc, id, true, origin),
+  /**
+   * Accepts a suggestion in one transaction; false when the document holds no part of it. With `fit`, a table a
+   * column of it was accepted into that now runs past the text's width is fitted to it (review.md "Rows and columns").
+   */
+  accept: (doc: Y.Doc, id: string, origin: unknown, fit?: SuggestionFit): boolean =>
+    settle(doc, id, true, origin, fit),
   /** Rejects a suggestion in one transaction; false when the document holds no part of it. */
   reject: (doc: Y.Doc, id: string, origin: unknown): boolean => settle(doc, id, false, origin),
   ownRejected,
