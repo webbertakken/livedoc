@@ -49,7 +49,8 @@ import {
 import { apiRefusalOf } from '../plan/api-refusal';
 import { tabPath } from '../verbs/shared';
 import { capsRefusal, sendSheetWrite } from './change-sheet';
-import { readSheets, sheetsPath, type SheetRefusal } from './sheet-state';
+import { readSheets, readSheetsState, sheetsPath, type SheetRefusal } from './sheet-state';
+import { addWorkbookSheet } from './add-workbook-sheet';
 import { buildDesign, darkCanvas, type SheetDesignInput } from './sheet-design';
 import { sheetChartElements, type SheetChartOut } from './sheet-charts';
 
@@ -61,7 +62,7 @@ const SHEET_CHROME = {
 } as const;
 const SHEET_FRAME_MAX = { width: 1800, height: 1400 } as const;
 
-interface AddSheetInput {
+export interface AddSheetInput {
   tabId?: string;
   title?: string;
   // The first cells, from A1: rows of values, or CSV text (a tab-separated first line reads as TSV).
@@ -69,14 +70,17 @@ interface AddSheetInput {
   csv?: string;
   // Or the sheet laid out as a template is (sheet-design.ts).
   design?: SheetDesignInput;
+  // In a spreadsheet: the sheet this one goes after, by name (last when absent).
+  after?: string;
 }
 
-type AddSheetResult =
+export type AddSheetResult =
   | {
       ok: true;
       tabId: string;
       sheetId: string;
-      elementId: string;
+      // The Sheet element framing it on a Plan tab; null in a spreadsheet, whose sheets are its tabs.
+      elementId: string | null;
       title: string;
       // The cells filled, in A1; null for a blank sheet.
       filled: string | null;
@@ -88,7 +92,7 @@ type AddSheetResult =
     }
   | SheetRefusal;
 
-type FirstCells = {
+export type FirstCells = {
   writes: SheetWrite[];
   filled: string | null;
   truncated: boolean;
@@ -97,7 +101,7 @@ type FirstCells = {
 };
 
 // The first cells as writes against the new sheet, read as typed in the agents' locale, or a design laid out on it.
-function firstCells(
+export function firstCells(
   input: AddSheetInput,
   tabSheets: readonly Sheet[],
   blank: Sheet,
@@ -162,6 +166,10 @@ export async function addSheet(
   rand: Rand = Math.random,
 ): Promise<AddSheetResult> {
   try {
+    // A spreadsheet adds a sheet tab through the workbook's door (add-workbook-sheet.ts).
+    const state = await readSheetsState(api, documentId);
+    if (state.workbook)
+      return await addWorkbookSheet(api, documentId, state.sheets, input, client, rand);
     const { document } = await api.json<DocumentResponse>(
       `/documents/${encodeURIComponent(documentId)}`,
     );

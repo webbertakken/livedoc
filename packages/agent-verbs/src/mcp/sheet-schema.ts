@@ -19,6 +19,10 @@ import {
   SHEET_COLS_MAX,
   SHEET_LOOKS,
   SHEET_ROWS_MAX,
+  SHEET_CHART_ALT_MAX,
+  SheetLimits,
+  SHEET_CHART_LEGENDS,
+  SHEET_CHART_TEXT_MAX,
 } from '@livedoc/sheets';
 import { CHART_PALETTES, CHART_TYPES, type ChartPaletteId } from '@livedoc/document';
 import { BORDER_COLOUR_DEFAULT } from '../sheets/sheet-shape-change';
@@ -495,14 +499,59 @@ const sheetChange = z.discriminatedUnion('op', [
       .describe(
         'A scatter chart only: the series drawn as lines, by header name (["Pareto"]), their points joined in order of x; the others stay points.',
       ),
+    title: z.string().max(SHEET_CHART_TEXT_MAX).optional().describe('A title over the chart.'),
+    xAxisTitle: z
+      .string()
+      .max(SHEET_CHART_TEXT_MAX)
+      .optional()
+      .describe('The horizontal axis title (a column, bar, line, area or scatter chart).'),
+    yAxisTitle: z
+      .string()
+      .max(SHEET_CHART_TEXT_MAX)
+      .optional()
+      .describe('The vertical axis title (a column, bar, line, area or scatter chart).'),
+    legend: z
+      .enum(SHEET_CHART_LEGENDS)
+      .optional()
+      .describe('Where the legend sits, or none; bottom by default.'),
+    values: z.boolean().optional().describe('Print each mark’s number on the chart.'),
+    axis: z
+      .boolean()
+      .optional()
+      .describe(
+        'The value axis with its ticks and gridlines: a spreadsheet’s chart shows it unless false; a Plan chart only when true.',
+      ),
+    alt: z
+      .string()
+      .max(SHEET_CHART_ALT_MAX)
+      .optional()
+      .describe('Alt text for screen readers (a spreadsheet’s chart).'),
+    replace: z
+      .string()
+      .optional()
+      .describe(
+        'A spreadsheet only: the id of one of the sheet’s charts (read_sheet lists them) this one takes the place of, keeping its id.',
+      ),
   }),
   z.object({
     op: z
       .literal('clear_charts')
-      .describe(
-        'Take the sheet’s charts off its tab: those reading cells of a range, or every one.',
-      ),
+      .describe('Take the sheet’s charts off: those reading cells of a range, or every one.'),
     range: rangeArg.optional().describe('Only the charts reading cells of this range.'),
+  }),
+  z.object({
+    op: z
+      .literal('move')
+      .describe('A spreadsheet only: put this sheet’s tab after another sheet, or first.'),
+    after: z.string().nullable().describe('The sheet it goes after, by name; null puts it first.'),
+  }),
+  z.object({
+    op: z
+      .literal('hide')
+      .describe(
+        'A spreadsheet only: hide this sheet’s tab, or show it again; the last shown sheet stays shown.',
+      ),
+    hidden: z.boolean(),
   }),
   z.object({
     op: z
@@ -619,12 +668,18 @@ export const addSheetShape = {
     .string()
     .optional()
     .describe(
-      'The tab to put it on, which must be in Plan; defaults to the first tab with a sheet, else the first tab.',
+      'The tab to put it on, which must be in Plan; defaults to the first tab with a sheet, else the first tab. Never in a spreadsheet, whose sheets are its tabs.',
     ),
   title: z
     .string()
     .optional()
-    .describe('The sheet’s title (made unique on the tab); "Sheet 1", "Sheet 2"... when left out.'),
+    .describe(
+      'The sheet’s title (made unique on the tab); "Sheet 1", "Sheet 2"... when left out. In a spreadsheet its name, unique in it ("Sheet2"... when left out).',
+    ),
+  after: z
+    .string()
+    .optional()
+    .describe('A spreadsheet only: the sheet it goes after, by name; last when left out.'),
   rows: rowsArg.optional().describe('Its first cells, from A1: rows of values, read as typed.'),
   csv: z
     .string()
@@ -650,7 +705,11 @@ const listedSheet = z.object({
   elementId: z
     .string()
     .nullable()
-    .describe('The Sheet element that frames it on its tab; null when none does.'),
+    .describe(
+      'The Sheet element that frames it on its tab; null when none does (a spreadsheet’s sheet).',
+    ),
+  hidden: z.boolean().optional().describe('A spreadsheet’s sheet: whether its tab is hidden.'),
+  charts: z.number().optional().describe('A spreadsheet’s sheet: how many charts it holds.'),
 });
 
 export const listSheetsOutput = {
@@ -673,6 +732,27 @@ const readCell = z.object({
     .string()
     .optional()
     .describe('Set when its validation rule does not allow the value: what the rule allows.'),
+});
+
+const readChart = z.object({
+  id: z.string().describe('The chart id.'),
+  type: z.string().describe('Its chart type.'),
+  range: z
+    .string()
+    .nullable()
+    .describe('The range it reads, in A1; null when its cells were deleted.'),
+  columns: z.array(z.string()).optional().describe('Only these columns of it, by letter.'),
+  at: z.string().describe('The cell its top-left sits on.'),
+  width: z.number().describe('Its width in px.'),
+  height: z.number().describe('Its height in px.'),
+  title: z.string().optional().describe('The title over it.'),
+  xAxisTitle: z.string().optional().describe('Its horizontal axis title.'),
+  yAxisTitle: z.string().optional().describe('Its vertical axis title.'),
+  legend: z.string().describe('Where its legend sits, or none.'),
+  values: z.boolean().describe('Whether each mark’s number is printed.'),
+  axis: z.boolean().describe('Whether its value axis shows.'),
+  alt: z.string().optional().describe('Its alt text.'),
+  lines: z.array(z.string()).optional().describe('A scatter’s series drawn as lines, by name.'),
 });
 
 export const readSheetOutput = {
@@ -703,6 +783,12 @@ export const readSheetOutput = {
     .describe(
       'Format rules in list order (the first met draws a cell): range, rule, style or scale.',
     ),
+  charts: z
+    .array(readChart)
+    .optional()
+    .describe(
+      'A spreadsheet’s sheet: its charts, in paint order (change_sheet chart replace takes an id).',
+    ),
   url,
 };
 
@@ -720,7 +806,12 @@ export const changeSheetOutput = {
 export const addSheetOutput = {
   tabId: z.string().describe('The tab it was put on.'),
   sheetId: z.string().describe('The new sheet’s id.'),
-  elementId: z.string().describe('The Sheet element that frames it.'),
+  elementId: z
+    .string()
+    .nullable()
+    .describe(
+      'The Sheet element that frames it; null in a spreadsheet, whose sheets are its tabs.',
+    ),
   title: z
     .string()
     .describe('Its title, unique on the tab: what read_sheet and change_sheet take.'),
@@ -737,5 +828,55 @@ export const addSheetOutput = {
     .nullable()
     .describe('The changeset that placed the element (revertible).'),
   rev: z.number().nullable().describe('The tab revision after it.'),
+  url,
+};
+
+export const createSpreadsheetShape = {
+  name: z.string().min(1).describe('The spreadsheet’s name.'),
+  sheets: z
+    .array(
+      z.object({
+        name: z
+          .string()
+          .describe(
+            'The sheet’s name, unique in the spreadsheet (up to 100 characters, none of [ ] * ? / \\ :).',
+          ),
+        rows: rowsArg
+          .optional()
+          .describe('Its first cells, from A1: rows of values, read as typed.'),
+        csv: z.string().optional().describe('Or its first cells as CSV text, from A1.'),
+      }),
+    )
+    .max(SheetLimits.spreadsheet.sheets)
+    .optional()
+    .describe('Its sheets in order; one, Sheet1, when left out.'),
+  folderId: z
+    .string()
+    .nullable()
+    .optional()
+    .describe(
+      'A folder to file it in, or null for the root; left out, it is filed as create_document files.',
+    ),
+};
+
+export const createSpreadsheetOutput = {
+  documentId: z.string().describe('The spreadsheet’s document id: what the sheet tools take.'),
+  name: z.string().describe('Its name.'),
+  sheets: z
+    .array(
+      z.object({
+        name: z.string().describe('The sheet’s name: what read_sheet and change_sheet take.'),
+        sheetId: z.string().describe('The sheet id.'),
+        tabId: z.string().describe('Its tab: each sheet of a spreadsheet is a tab.'),
+        filled: z.string().nullable().describe('The cells filled, in A1; null for a blank sheet.'),
+      }),
+    )
+    .describe('The sheets made and filled, in order.'),
+  refusal: z
+    .string()
+    .optional()
+    .describe(
+      'Set when a sheet’s filling was refused after the spreadsheet was made: which, and why.',
+    ),
   url,
 };

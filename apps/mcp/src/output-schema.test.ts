@@ -467,6 +467,11 @@ const CALLS: { tool: string; output: keyof typeof outputs; args: Record<string, 
     args: { documentId: 'd1', tabId: 'f1', title: 'Costs', csv: 'a,b\n1,2' },
   },
   {
+    tool: 'create_spreadsheet',
+    output: 'createSpreadsheetOutput',
+    args: { name: 'Model values', sheets: [{ name: 'Models' }, { name: 'Pareto' }] },
+  },
+  {
     tool: 'change_pages',
     output: 'changePagesOutput',
     args: { documentId: 'd1', changes: [{ op: 'add', kind: 'slide', layout: 'slide-title' }] },

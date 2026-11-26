@@ -146,6 +146,47 @@ describe('chart elements', () => {
     expect(el).toMatchObject({ shape: 'pie-chart', chartSource: { sheetId: sheet.id } });
     expect(el!.chartPalette).toBeUndefined();
   });
+
+  // sheet-store.md "Built for agents in a spreadsheet": the title options draw on a Plan chart too.
+  it('carry the titles, the legend, the values and the axis an agent gives', () => {
+    const { wb, sheet } = book();
+    const built = buildChartChange(wb, sheet.id, {
+      op: 'chart',
+      type: 'line',
+      range: 'A1:B3',
+      title: 'Sales',
+      xAxisTitle: 'Month',
+      yAxisTitle: 'EUR',
+      legend: 'none',
+      values: true,
+      axis: true,
+    });
+    if (!built.ok) throw new Error(built.message);
+    const [el] = sheetChartElements(
+      wb,
+      { x: 0, y: 0, width: 960, height: 560 },
+      sheet.id,
+      built.charts,
+    );
+    expect(el).toMatchObject({
+      chartTitle: 'Sales',
+      chartAxisTitles: { x: 'Month', y: 'EUR' },
+      chartLegend: false,
+      chartValues: true,
+      chartAxis: true,
+    });
+  });
+
+  it('refuse a title or alt text past its length', () => {
+    expect(run({ type: 'line', range: 'A1:B3', title: 'x'.repeat(201) }).built).toMatchObject({
+      ok: false,
+      code: 'write_invalid',
+    });
+    expect(run({ type: 'line', range: 'A1:B3', alt: 'x'.repeat(1001) }).built).toMatchObject({
+      ok: false,
+      code: 'write_invalid',
+    });
+  });
 });
 
 // pie-chart.md "Lines set by an agent": `lines` names the series of a scatter chart drawn as lines, by header.

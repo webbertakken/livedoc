@@ -4,7 +4,7 @@ import type { ApiClient } from '@livedoc/api-client';
 import type { DocumentResponse, TabResponse } from '@livedoc/api-schema';
 import { AGENT_LOCALE, formatRange, sheetFromJson, Workbook } from '@livedoc/sheets';
 import { tabPath } from '../verbs/shared';
-import { readSheets } from './sheet-state';
+import { readSheetsState } from './sheet-state';
 
 interface ListedSheet {
   id: string;
@@ -17,6 +17,10 @@ interface ListedSheet {
   filled: string | null;
   // The Sheet element on the tab that frames it, or null when none does (a sheet nothing references expires after 30 days).
   elementId: string | null;
+  // A spreadsheet's sheet: whether its tab is hidden, and how many charts it holds (sheet-store.md "Built for agents
+  // in a spreadsheet").
+  hidden?: boolean;
+  charts?: number;
 }
 
 type Framing = { id?: unknown; shape?: unknown; planSheet?: { sheetId?: unknown } };
@@ -46,13 +50,18 @@ export async function listSheets(
   documentId: string,
   tabId?: string,
 ): Promise<{ sheets: ListedSheet[] }> {
-  const [{ document }, sheets] = await Promise.all([
+  const [{ document }, state] = await Promise.all([
     api.json<DocumentResponse>(`/documents/${encodeURIComponent(documentId)}`),
-    readSheets(api, documentId, tabId),
+    readSheetsState(api, documentId),
   ]);
+  const spreadsheet = state.workbook !== null;
+  const sheets = tabId ? state.sheets.filter((s) => s.tabId === tabId) : state.sheets;
   const order = new Map(document.tabs.map((t) => [t.id, t.orderIndex ?? 0]));
   const names = new Map(document.tabs.map((t) => [t.id, t.name]));
-  const frames = await framesOf(api, documentId, [...new Set(sheets.map((s) => s.tabId))]);
+  // A spreadsheet's sheets are its tabs: no Sheet element frames one, so no tab is read.
+  const frames = spreadsheet
+    ? new Map<string, string>()
+    : await framesOf(api, documentId, [...new Set(sheets.map((s) => s.tabId))]);
   // Only the extents are read: the workbook works nothing out until asked for a value.
   const wb = new Workbook({ sheets: sheets.map(sheetFromJson), locale: AGENT_LOCALE });
   const listed = sheets.map((s): ListedSheet => {
@@ -66,6 +75,12 @@ export async function listSheets(
       cols,
       filled: rows && cols ? formatRange({ r1: 0, c1: 0, r2: rows - 1, c2: cols - 1 }) : null,
       elementId: frames.get(s.id) ?? null,
+      ...(spreadsheet
+        ? {
+            hidden: s.layout.hidden === true,
+            charts: (s.layout.objects ?? []).filter((x) => x.kind === 'chart').length,
+          }
+        : {}),
     };
   });
   listed.sort(

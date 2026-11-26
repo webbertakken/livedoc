@@ -49,6 +49,7 @@ import { itemVerbs } from './verbs/item';
 import { boardVerbs } from './verbs/board';
 import { cardTypeVerbs } from './verbs/card-type';
 import { sheetVerbs } from './verbs/sheet';
+import { spreadsheetVerbs } from './verbs/spreadsheet';
 import { pagesVerbs } from './verbs/pages';
 import { formVerbs } from './verbs/form';
 import { stormVerbs } from './verbs/storm';
@@ -77,6 +78,7 @@ export const VERBS: readonly Verb[] = [
   ...boardVerbs,
   ...cardTypeVerbs,
   ...sheetVerbs,
+  ...spreadsheetVerbs,
   ...pagesVerbs,
   ...formVerbs,
   ...stormVerbs,
@@ -135,6 +137,7 @@ export const RESOURCES: readonly { name: string; alias?: string; summary: string
   { name: 'board', summary: 'Plan boards: add one' },
   { name: 'type', summary: 'Card types and their fields' },
   { name: 'sheet', summary: 'Sheets: their cells by A1, rows and columns' },
+  { name: 'spreadsheet', summary: 'Spreadsheets: make one' },
   { name: 'page', summary: 'Pages: slides, logos, infographics' },
   { name: 'article', summary: 'Articles as Markdown' },
   { name: 'form', summary: 'Forms: build, read and publish one' },

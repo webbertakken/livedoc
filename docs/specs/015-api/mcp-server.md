@@ -884,8 +884,9 @@ document's Plan cards when a formula reads them.
 scale, first? }` and `clear_conditional_formats` `{ range? }` ([Data validation](../029-sheets/data-validation.md#agents),
   [Conditional formatting](../029-sheets/conditional-formatting.md#agents)); `resize` `{ cols | rows, px | fit }`,
   `merge` `{ range, across? }`, `unmerge` `{ range }`, `border` `{ range, sides, color, width, style }`, `filter`
-  `{ range | null }`, `chart` `{ type, range, columns?, at?, width?, height?, palette?, lines? }` (`lines`: series drawn as lines, by header name, scatter only; [pie-chart.md](../009-elements/pie-chart.md#lines-set-by-an-agent)), `clear_charts`
-  `{ range? }` and `design` `{ design }`
+  `{ range | null }`, `chart` `{ type, range, columns?, at?, width?, height?, palette?, lines?, title?, xAxisTitle?,
+yAxisTitle?, legend?, values?, axis?, alt?, replace? }` (`lines`: series drawn as lines, by header name, scatter only; [pie-chart.md](../009-elements/pie-chart.md#lines-set-by-an-agent)), `clear_charts`
+  `{ range? }`, `design` `{ design }`, and in a spreadsheet `move` `{ after }` and `hide` `{ hidden }`
   ([Shaping a sheet, A design](../029-sheets/sheet-store.md#agents); `sheet-shape-change.ts`, `sheet-design.ts`,
   `sheet-charts.ts`, `sheet-chart-follow.ts`). Inserted rows take their neighbour's formats, columns its look. After the
   writes, one changeset on the sheet's tab removes the charts `clear_charts` took, moves those a change left over
@@ -894,8 +895,14 @@ scale, first? }` and `clear_conditional_formats` `{ range? }` ([Data validation]
   is sent through the sheet write route as the editor sends it (one write a call, split past 5,000 cells, each with
   its own write id). A formula that cannot be read is refused naming the cell (`formula_invalid`), as is a value a Reject
   validation rule does not allow (`value_invalid`, with what the rule allows); a refusal
-  answers what was applied before it.
-- **`add_sheet`** (write): a new sheet on a tab in Plan (the tab named, else the first with a sheet, else the first;
+  answers what was applied before it. In a spreadsheet a chart is the sheet's own (a layout write, no changeset;
+  `replace` sets it in the place of one by id) and `read_sheet` answers its `charts`
+  ([Built for agents in a spreadsheet](../029-sheets/sheet-store.md#built-for-agents-in-a-spreadsheet)).
+- **`create_spreadsheet`** (write): a spreadsheet document, its `sheets` in order (each a `name`, and `rows` or `csv`
+  from A1), one `Sheet1` by default, in ODF, filed as `create_document` files; then each sheet's first cells through
+  the sheet write route. Answers `documentId`, `name`, `sheets[]` and, when a filling was refused after the making,
+  `refusal`.
+- **`add_sheet`** (write): in a spreadsheet, a sheet tab through the workbook route, `after` a sheet by name; a new sheet on a tab in Plan (the tab named, else the first with a sheet, else the first;
   any other tab is refused `tab_not_plan` before a sheet is made, [Plan tabs](../026-plan/plan-tabs.md#only-in-plan)), titled
   uniquely on the tab, blank or filled from A1 with `rows`, `csv` or a `design` (one of them), then a Sheet element
   framing it placed beside what the tab holds, as `add_board` places a board, in one changeset with a design's charts.
@@ -1067,11 +1074,11 @@ which is how the gap was found.
 Three behaviours cover every tool, and each is a preset in
 `apps/mcp/src/tool-annotations.ts`:
 
-| Behaviour       | `readOnlyHint` | `destructiveHint` | Tools                                                                                                                                                                                                     |
-| --------------- | -------------- | ----------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **read**        | `true`         | (not applicable)  | `find_documents`, `read_document`, `list_templates`, `search_icons`, `list_trash`, `list_items`, `list_sheets`, `read_sheet`, `read_form`, `read_event_storming`, `export_event_storming`                 |
-| **write**       | `false`        | `false`           | `create_document`, `add_tab`, `share_document`, `rename_document`, `restore_document`, `add_board`, `change_board`, `add_sheet`, `add_form`, `share_form`, `try_form`, `suggest_notes`, `add_photo_notes` |
-| **destructive** | `false`        | `true`            | `update_document`, `delete_document`, `change_items`, `change_card_types`, `change_sheet`, `change_pages`, `write_article`, `change_form`                                                                 |
+| Behaviour       | `readOnlyHint` | `destructiveHint` | Tools                                                                                                                                                                                                                           |
+| --------------- | -------------- | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **read**        | `true`         | (not applicable)  | `find_documents`, `read_document`, `list_templates`, `search_icons`, `list_trash`, `list_items`, `list_sheets`, `read_sheet`, `read_form`, `read_event_storming`, `export_event_storming`                                       |
+| **write**       | `false`        | `false`           | `create_document`, `add_tab`, `share_document`, `rename_document`, `restore_document`, `add_board`, `change_board`, `add_sheet`, `create_spreadsheet`, `add_form`, `share_form`, `try_form`, `suggest_notes`, `add_photo_notes` |
+| **destructive** | `false`        | `true`            | `update_document`, `delete_document`, `change_items`, `change_card_types`, `change_sheet`, `change_pages`, `write_article`, `change_form`                                                                                       |
 
 The split mirrors §4.11's read-only-token boundary exactly (what a
 `read_only = 1` token can still reach is what `read` annotates), so the hint a
@@ -1157,28 +1164,29 @@ code or status: a document in the Trash, a view-only grant, an id that names not
 (a tab id the document lacks names its tabs); only a 5xx or a network failure throws. A deleted tab's refusal
 says why by its status (no such tab, view only, the last tab).
 
-| Tool                | Result object                                                                                                                                                                                                           |
-| ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `find_documents`    | `count`, `documents[]` of `{ id, name, updatedAt, library, url }`                                                                                                                                                       |
-| `read_document`     | `id`, `name`, `tab { id, name, rev, ... }`, `tabs[]` of `{ id, name }` (every tab, in order), `url`                                                                                                                     |
-| `list_templates`    | `categories[]` of `{ id, label, description }`, `templates[]` of `{ kind, title, description, category }`                                                                                                               |
-| `create_document`   | `id` and `documentId` (the same), `name`, `tabCount`, `tabIds[]`, `folder`, `url`                                                                                                                                       |
-| `add_tab`           | `documentId`, `tabId`, `name`, `url`, `note` when a template has more tabs than it added                                                                                                                                |
-| `update_document`   | `id` and `documentId` (the same), `tabId`, `url`                                                                                                                                                                        |
-| `share_document`    | `url`, `role`, `expiresAt` (ms epoch, or null for never), `documentUrl`                                                                                                                                                 |
-| `rename_document`   | `renamed` (`document` or `tab`), `name`, then `id` + `url` for a document or `tabId` for a tab                                                                                                                          |
-| `delete_document`   | `deleted` (`document` or `tab`), `documentId`, then `trashed` + `restorableForDays` or `tabId`                                                                                                                          |
-| `list_trash`        | `trash[]` of `{ id, name, library, reason, deletedAt, purgeAt }` (ISO timestamps)                                                                                                                                       |
-| `restore_document`  | `restored`, `id`, `name` (null when the api omits it), `url`                                                                                                                                                            |
-| `list_items`        | `boards[]` of `{ title, tab, tabId, kind, takes, columns[] { name, status, wipLimit?, cards[] } }`, `notOnBoard[]`, `count`, `items[]` of `{ ref, id, type, status, column, title, fields }`, `types[]`, `hint?`, `url` |
-| `change_items`      | `applied[]` (one line per change, naming the column), `url`                                                                                                                                                             |
-| `add_board`         | `tabId`, `elementId`, `title`, `columns[]` of `{ name, status }`, `changesetId`, `rev`, `url`                                                                                                                           |
-| `change_board`      | `tabId`, `elementId`, `title`, `columns[]` of `{ name, status }`, `takes`, `changesetId`, `rev`, `url`                                                                                                                  |
-| `change_card_types` | `applied[]` (with the ids made), `trashed[]`, `types[]`, `url`                                                                                                                                                          |
-| `list_sheets`       | `sheets[]` of `{ id, title, tabId, tabName, rows, cols, filled, elementId }`, `url`                                                                                                                                     |
-| `read_sheet`        | `sheetId`, `title`, `tabId`, `range`, `rows`, `cols`, `cells[]` of `{ at, input, value, display }`, `truncated`, `note?`, `frozen { rows, cols }`, `merges[]`, `filter`, `url`                                          |
-| `change_sheet`      | `sheetId`, `title`, `applied[]` (one line per change), `rev`, `url`                                                                                                                                                     |
-| `add_sheet`         | `tabId`, `sheetId`, `elementId`, `title`, `filled`, `truncated`, `changesetId`, `rev`, `url`                                                                                                                            |
+| Tool                 | Result object                                                                                                                                                                                                           |
+| -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `find_documents`     | `count`, `documents[]` of `{ id, name, updatedAt, library, url }`                                                                                                                                                       |
+| `read_document`      | `id`, `name`, `tab { id, name, rev, ... }`, `tabs[]` of `{ id, name }` (every tab, in order), `url`                                                                                                                     |
+| `list_templates`     | `categories[]` of `{ id, label, description }`, `templates[]` of `{ kind, title, description, category }`                                                                                                               |
+| `create_document`    | `id` and `documentId` (the same), `name`, `tabCount`, `tabIds[]`, `folder`, `url`                                                                                                                                       |
+| `add_tab`            | `documentId`, `tabId`, `name`, `url`, `note` when a template has more tabs than it added                                                                                                                                |
+| `update_document`    | `id` and `documentId` (the same), `tabId`, `url`                                                                                                                                                                        |
+| `share_document`     | `url`, `role`, `expiresAt` (ms epoch, or null for never), `documentUrl`                                                                                                                                                 |
+| `rename_document`    | `renamed` (`document` or `tab`), `name`, then `id` + `url` for a document or `tabId` for a tab                                                                                                                          |
+| `delete_document`    | `deleted` (`document` or `tab`), `documentId`, then `trashed` + `restorableForDays` or `tabId`                                                                                                                          |
+| `list_trash`         | `trash[]` of `{ id, name, library, reason, deletedAt, purgeAt }` (ISO timestamps)                                                                                                                                       |
+| `restore_document`   | `restored`, `id`, `name` (null when the api omits it), `url`                                                                                                                                                            |
+| `list_items`         | `boards[]` of `{ title, tab, tabId, kind, takes, columns[] { name, status, wipLimit?, cards[] } }`, `notOnBoard[]`, `count`, `items[]` of `{ ref, id, type, status, column, title, fields }`, `types[]`, `hint?`, `url` |
+| `change_items`       | `applied[]` (one line per change, naming the column), `url`                                                                                                                                                             |
+| `add_board`          | `tabId`, `elementId`, `title`, `columns[]` of `{ name, status }`, `changesetId`, `rev`, `url`                                                                                                                           |
+| `change_board`       | `tabId`, `elementId`, `title`, `columns[]` of `{ name, status }`, `takes`, `changesetId`, `rev`, `url`                                                                                                                  |
+| `change_card_types`  | `applied[]` (with the ids made), `trashed[]`, `types[]`, `url`                                                                                                                                                          |
+| `list_sheets`        | `sheets[]` of `{ id, title, tabId, tabName, rows, cols, filled, elementId, hidden?, charts? }`, `url`                                                                                                                   |
+| `read_sheet`         | `sheetId`, `title`, `tabId`, `range`, `rows`, `cols`, `cells[]` of `{ at, input, value, display }`, `truncated`, `note?`, `frozen { rows, cols }`, `merges[]`, `filter`, `charts[]?` (a spreadsheet's), `url`           |
+| `change_sheet`       | `sheetId`, `title`, `applied[]` (one line per change), `rev`, `url`                                                                                                                                                     |
+| `add_sheet`          | `tabId`, `sheetId`, `elementId` (null in a spreadsheet), `title`, `filled`, `truncated`, `changesetId`, `rev`, `url`                                                                                                    |
+| `create_spreadsheet` | `documentId`, `name`, `sheets[]` of `{ name, sheetId, tabId, filled }`, `refusal?`, `url`                                                                                                                               |
 
 **The schema and the result can't drift.** Each tool is a verb in the shared catalogue
 (`packages/agent-verbs/src/verbs/mcp-tools.ts`, [CLI](cli.md#one-catalogue-for-the-cli-and-the-mcp)) holding its

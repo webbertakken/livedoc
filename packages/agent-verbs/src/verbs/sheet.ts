@@ -177,9 +177,9 @@ export const sheetSet = defineVerb({
 
 export const sheetAdd = defineVerb({
   id: 'sheet.add',
-  summary: 'Put a new Sheet on a tab',
+  summary: 'Put a new Sheet on a tab, or a sheet in a spreadsheet',
   description:
-    'Puts a new Sheet beside what a tab holds, titled uniquely on the tab, blank or filled from a CSV file (or stdin) from A1.',
+    'Puts a new Sheet beside what a tab holds, titled uniquely on the tab, blank or filled from a CSV file (or stdin) from A1. In a spreadsheet it adds a sheet tab, named as given, after the sheet --after names (last by default).',
   behaviour: 'write',
   input: z.object({
     doc: docArg,
@@ -187,13 +187,17 @@ export const sheetAdd = defineVerb({
       .string()
       .optional()
       .describe('The tab id, a tab in Plan; the first tab with a sheet, else the first tab'),
-    title: z.string().optional().describe('The title (made unique on the tab)'),
+    title: z
+      .string()
+      .optional()
+      .describe('The title (made unique on the tab); a spreadsheet\u2019s sheet name'),
     csv: z.string().optional().describe('A CSV file to fill it from, or - for stdin'),
+    after: z.string().optional().describe('In a spreadsheet: the sheet it goes after, by name'),
   }),
   output: z.object({
     tabId: z.string(),
     sheetId: z.string(),
-    elementId: z.string(),
+    elementId: z.string().nullable(),
     title: z.string(),
     filled: z.string().nullable(),
   }),
@@ -207,6 +211,7 @@ export const sheetAdd = defineVerb({
         ...(input.tab ? { tabId: input.tab } : {}),
         ...(input.title ? { title: input.title } : {}),
         ...(csv !== undefined ? { csv } : {}),
+        ...(input.after ? { after: input.after } : {}),
       },
       'cli',
     );
@@ -221,7 +226,7 @@ export const sheetAdd = defineVerb({
     positionals: ['doc'],
     examples: [
       'livedoc sheet add "Budget 2027" --title Costs',
-      'livedoc sheet add 3f9c --tab tab-one --csv costs.csv',
+      'livedoc sheet add "Model values" --title Pareto --after Models',
     ],
     prints: '+ sheet "<title>": <range filled>',
   },
