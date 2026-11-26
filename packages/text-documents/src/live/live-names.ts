@@ -62,8 +62,20 @@ export const TABLE_ATTRIBUTES = [
   'insertion',
   'deletion',
 ] as const;
-export const TABLE_ROW_ATTRIBUTES = ['height', 'heightRule', 'breaks', 'kept', 'tag'] as const;
-/** A cell's spans, its spanned columns' widths in points, its formatting and what its file kept. */
+/** A row's height, whether it breaks, what its file kept, and its insertion or deletion whole. */
+export const TABLE_ROW_ATTRIBUTES = [
+  'height',
+  'heightRule',
+  'breaks',
+  'kept',
+  'tag',
+  'insertion',
+  'deletion',
+] as const;
+/**
+ * A cell's spans, its spanned columns' widths in points, its formatting, what its file kept, and its insertion or
+ * deletion whole (a column's).
+ */
 export const TABLE_CELL_ATTRIBUTES = [
   'colspan',
   'rowspan',
@@ -71,6 +83,8 @@ export const TABLE_CELL_ATTRIBUTES = [
   'props',
   'kept',
   'tag',
+  'insertion',
+  'deletion',
 ] as const;
 /** A picture in line (objects.md "In the editor"): an atom inside its paragraph, its media by key. */
 export const PICTURE = 'picture';

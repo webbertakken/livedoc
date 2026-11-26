@@ -30,7 +30,7 @@ export type OdfChange = {
   readonly kind: Kind;
   readonly mark: FileSuggestionMark;
   readonly paragraph: boolean;
-  /** A whole block's region: a suggested table's row or table of contents (`livedoc:block`). */
+  /** A table of contents' region (`livedoc:block`). */
   readonly block?: string;
   /** Whether LiveDoc wrote it: it carries one of LiveDoc's own attributes. */
   readonly livedoc: boolean;
@@ -117,10 +117,10 @@ export class OdfChangeTracker {
   }
 
   /**
-   * Which marks may make a whole block of `block`'s kind suggested: in a file LiveDoc wrote, only its block regions'
-   * (so text suggested into every cell stays text); in another suite's, any (standard-mapping.md "Suggested blocks").
+   * Which marks may make a table of contents suggested: in a file LiveDoc wrote, only its contents regions' (so text
+   * suggested into every entry stays text); in another suite's, any (standard-mapping.md "Suggested blocks").
    */
-  blockMarks(block: 'table' | 'contents'): ((mark: FileSuggestionMark) => boolean) | undefined {
+  blockMarks(block: 'contents'): ((mark: FileSuggestionMark) => boolean) | undefined {
     const regions = [...this.regions.values()];
     if (!regions.some((r) => r.livedoc)) return undefined;
     const ids = new Set(regions.filter((r) => r.block === block).map((r) => r.mark.id));
@@ -244,7 +244,8 @@ const escape = (value: string): string =>
 export type WholeChange = {
   readonly kind: 'insertion' | 'deletion';
   readonly mark: FileSuggestionMark;
-  readonly block: 'table' | 'contents';
+  /** A table of contents' change says so (`livedoc:block`); a table's rows and cells say it on their styles. */
+  readonly block?: 'contents';
 };
 
 /** The changed regions a written document lists, each range given its own id; `text:tracked-changes` of them. */
@@ -255,7 +256,7 @@ export class OdfChangeRegions {
   add(
     kind: Kind,
     mark: FileSuggestionMark,
-    extra: { before?: unknown; paragraph?: boolean; block?: 'table' | 'contents' } = {},
+    extra: { before?: unknown; paragraph?: boolean; block?: 'contents' } = {},
   ): string {
     const id = `ct${this.#regions.length + 1}`;
     const element = kind === 'format' ? 'text:format-change' : `text:${kind}`;

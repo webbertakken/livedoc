@@ -550,10 +550,7 @@ function contentXml(
     kept: (xml) => w.kept(xml),
     cellXml: (cellBlocks, whole) =>
       contentXml(w, cellBlocks, true, undefined, { tracks, ...compact({ whole }) }),
-    whole: (table) => {
-      const suggested = Suggestions.ofBlock(table.suggested);
-      return suggested && tracks ? { ...suggested, block: 'table' } : undefined;
-    },
+    tracks,
     tableName: () => w.tableName(),
   };
 

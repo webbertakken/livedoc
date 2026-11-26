@@ -15,7 +15,7 @@ import {
   type XmlElement,
   type XmlParsed,
 } from '@livedoc/office-packages';
-import type { Block } from '../model/blocks';
+import type { Block, Paragraph } from '../model/blocks';
 import { canonical, compact, isEmpty, keptStillHolds, type KeptProperties } from '../model/props';
 import {
   CELL_SIDES,
@@ -29,6 +29,7 @@ import {
   type TableRow,
 } from '../model/tables';
 import type { ReportBuilder } from '../report';
+import { Suggestions } from '../model/suggestions';
 import { NS } from './odf-names';
 import type { WholeChange } from './odf-suggestions';
 import { borderLine, borderValue } from './odf-props';
@@ -46,6 +47,38 @@ export type OdfTableSource = {
   readonly report: ReportBuilder;
   /** The paragraph style an empty cell added on read holds. */
   readonly normal: string;
+  /**
+   * The suggestion a tracked row's or cell's writing is in, all of it one kind: its kind and first mark; absent where
+   * writing is not tracked (a header's, a footer's).
+   */
+  readonly tracked?: (paragraphs: readonly Paragraph[]) => BlockSuggestion | undefined;
+};
+
+/** A row's, cell's or table's suggestion: its kind and mark. */
+type BlockSuggestion = NonNullable<ReturnType<typeof Suggestions.ofBlock>>;
+
+/**
+ * LibreOffice's mark of a tracked row or cell (a column's) on its style's properties: `loext:text-changes-only`
+ * "false", the kind its writing's change (standard-mapping.md "Suggested blocks").
+ */
+const TEXT_CHANGES_ONLY = 'text-changes-only';
+
+/** Whether a row's or cell's style marks it tracked. */
+const tracksChanges = (style: OdfTableStyle | undefined, properties: string): boolean => {
+  const p = style && childElement(style.element, NS.style, properties);
+  return p !== undefined && attributeOf(p, NS.loext, TEXT_CHANGES_ONLY) === 'false';
+};
+
+/** A tracked row's or cell's suggestion, from its writing; none where it is not tracked or holds none of one kind. */
+const suggestedOf = (
+  source: OdfTableSource,
+  flagged: boolean,
+  blocks: readonly Block[],
+): { suggested?: Table['suggested'] } => {
+  const found = flagged
+    ? source.tracked?.(blocks.filter((b): b is Paragraph => b.type === 'paragraph'))
+    : undefined;
+  return found ? { suggested: { [found.kind]: found.mark } } : {};
 };
 
 const is = (e: XmlElement, local: string) => e.uri === NS.table && e.local === local;
@@ -225,6 +258,7 @@ export function readOdfTable(e: XmlElement, source: OdfTableSource): Block | nul
       const cellStyleName = attributeOf(cell, NS.table, 'style-name');
       const cellStyle = source.style(cellStyleName);
       const props = readCellProps(cellStyle);
+      const cellFlagged = tracksChanges(cellStyle, 'table-cell-properties');
       const colSpan = count(cell, 'number-columns-spanned', TEXT_DOCUMENT_TABLE_MAX_COLUMNS);
       const rowSpan = count(cell, 'number-rows-spanned', TEXT_DOCUMENT_TABLE_MAX_ROWS);
       const blocks = source.cellBlocks(cell);
@@ -235,16 +269,32 @@ export function readOdfTable(e: XmlElement, source: OdfTableSource): Block | nul
         ...(colSpan > 1 ? { colSpan } : {}),
         ...(rowSpan > 1 ? { rowSpan } : {}),
         ...compact({
-          kept: keptOf(cellStyle, cellStyleName, { props }),
+          kept: keptOf(cellStyle, cellStyleName, {
+            props,
+            ...(cellFlagged ? { changesTracked: true } : {}),
+          }),
           tag: tagOf(cell),
         }),
+        ...suggestedOf(source, cellFlagged, blocks),
       };
       for (let i = 0; i < repeated; i += 1) cells.push(read);
     }
+    const rowFlagged = tracksChanges(rowStyle, 'table-row-properties');
     const built: TableRow = {
       cells,
       ...values,
-      ...compact({ kept: keptOf(rowStyle, rowStyleName, values), tag: tagOf(row) }),
+      ...compact({
+        kept: keptOf(rowStyle, rowStyleName, {
+          ...values,
+          ...(rowFlagged ? { changesTracked: true } : {}),
+        }),
+        tag: tagOf(row),
+      }),
+      ...suggestedOf(
+        source,
+        rowFlagged,
+        cells.flatMap((c) => c.blocks),
+      ),
     };
     for (let i = 0; i < repeat; i += 1) rows.push(built);
     if (header && leading) headerRows += repeat;
@@ -290,10 +340,10 @@ export type OdfTableHost = {
   /** The kept automatic style's name, when it is free or the same. */
   keptName(kept: KeptProperties | undefined): string | undefined;
   kept(xml: KeptXml): string;
-  /** A cell's blocks as ODF content; `whole`: a suggested table's change every paragraph of it is whole in. */
+  /** A cell's blocks as ODF content; `whole`: its effective suggestion's change every paragraph of it is whole in. */
   cellXml(blocks: readonly Block[], whole?: WholeChange): string;
-  /** A suggested table's change, where its writing is tracked. */
-  whole?(table: Table): WholeChange | undefined;
+  /** Whether writing is tracked here (the body's, never a header's): only then are rows and cells suggested. */
+  readonly tracks: boolean;
   /** A name no other table of the document holds. */
   tableName(): string;
 };
@@ -303,7 +353,7 @@ const attr = (name: string, value: string | undefined) =>
 
 const ALIGN_OUT = { start: 'left', center: 'center', end: 'right' } as const;
 
-function cellPropsXml(props: CellProps): string {
+function cellPropsXml(props: CellProps, tracked = false): string {
   const borders = props.borders
     ? CELL_SIDES.map((side) => {
         const line = props.borders![side];
@@ -314,7 +364,7 @@ function cellPropsXml(props: CellProps): string {
     const pt = props.padding?.[side];
     return attr(`fo:padding-${side}`, pt === undefined ? undefined : ptToOdf(pt));
   }).join('');
-  return `<style:table-cell-properties${attr('fo:background-color', props.background)}${borders}${padding}${attr('style:vertical-align', props.verticalAlign)}/>`;
+  return `<style:table-cell-properties${tracked ? TRACKED_FLAG : ''}${attr('fo:background-color', props.background)}${borders}${padding}${attr('style:vertical-align', props.verticalAlign)}/>`;
 }
 
 function styleName(
@@ -336,13 +386,23 @@ function styleName(
   );
 }
 
+/** LibreOffice's flag on a tracked row's or cell's style properties, its namespace declared with it. */
+const TRACKED_FLAG = ` xmlns:loext="${NS.loext}" loext:${TEXT_CHANGES_ONLY}="false"`;
+
 function rowXml(
   host: OdfTableHost,
+  table: Table,
   row: TableRow,
   places: ReturnType<typeof Tables.grid>[number],
-  whole?: WholeChange,
 ): string {
-  const values = compact({ height: row.height, heightRule: row.heightRule, breaks: row.breaks });
+  // A row of a suggested table, or a suggested row, is tracked: LibreOffice's flag on its style (standard-mapping.md).
+  const tracked = host.tracks && !!(row.suggested ?? table.suggested);
+  const values = compact({
+    height: row.height,
+    heightRule: row.heightRule,
+    breaks: row.breaks,
+    changesTracked: tracked || undefined,
+  });
   const hasStyle = !isEmpty(values);
   const name = hasStyle
     ? styleName(
@@ -351,7 +411,7 @@ function rowXml(
         values,
         'LDRow',
         'table-row',
-        `<style:table-row-properties${attr(row.heightRule === 'exact' ? 'style:row-height' : 'style:min-row-height', row.height === undefined ? undefined : ptToOdf(row.height))}${attr('fo:keep-together', row.breaks === false ? 'always' : undefined)}/>`,
+        `<style:table-row-properties${tracked ? TRACKED_FLAG : ''}${attr(row.heightRule === 'exact' ? 'style:row-height' : 'style:min-row-height', row.height === undefined ? undefined : ptToOdf(row.height))}${attr('fo:keep-together', row.breaks === false ? 'always' : undefined)}/>`,
       )
     : keptStillHolds(row.kept, values)
       ? host.keptName(row.kept)
@@ -359,18 +419,24 @@ function rowXml(
   const cells = places.map((place) => {
     if (!place || !place.origin) return '<table:covered-table-cell/>';
     const cell = place.cell;
-    const style = isEmpty(cell.props)
-      ? keptStillHolds(cell.kept, { props: cell.props })
-        ? host.keptName(cell.kept)
-        : undefined
-      : styleName(
-          host,
-          cell.kept,
-          { props: cell.props },
-          'LDCell',
-          'table-cell',
-          cellPropsXml(cell.props),
-        );
+    const cellTracked = host.tracks && !!cell.suggested;
+    const cellValues = { props: cell.props, ...(cellTracked ? { changesTracked: true } : {}) };
+    const style =
+      isEmpty(cell.props) && !cellTracked
+        ? keptStillHolds(cell.kept, cellValues)
+          ? host.keptName(cell.kept)
+          : undefined
+        : styleName(
+            host,
+            cell.kept,
+            cellValues,
+            'LDCell',
+            'table-cell',
+            cellPropsXml(cell.props, cellTracked),
+          );
+    // Its writing whole in its effective suggestion's change, as LibreOffice writes one.
+    const suggested = host.tracks ? Suggestions.ofCell(table, row, cell) : undefined;
+    const whole: WholeChange | undefined = suggested && { ...suggested };
     const spans =
       attr(
         'table:number-columns-spanned',
@@ -411,9 +477,7 @@ export function odfTableXml(host: OdfTableHost, table: Table): string {
           })
           .join('');
   const grid = Tables.grid(table);
-  // A suggested table: every paragraph of its cells whole in its change, as LibreOffice writes one (standard-mapping.md).
-  const whole = host.whole?.(table);
-  const rows = table.rows.map((row, r) => rowXml(host, row, grid[r]!, whole));
+  const rows = table.rows.map((row, r) => rowXml(host, table, row, grid[r]!));
   const header =
     table.headerRows > 0
       ? `<table:table-header-rows>${rows.slice(0, table.headerRows).join('')}</table:table-header-rows>`

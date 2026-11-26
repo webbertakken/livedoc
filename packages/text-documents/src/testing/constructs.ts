@@ -843,6 +843,55 @@ export const CONSTRUCTS: Record<string, (format: TextDocumentFormat) => TextDocu
       p([run('After')]),
     ]);
   },
+  // standard-mapping.md "Suggested blocks": a row inserted with another author's text inside and an empty cell, a row
+  // deleted, a column inserted with an empty cell, a column deleted.
+  suggestedRows: (format) => {
+    const at = Date.UTC(2026, 10, 26, 10);
+    const mark = (id: string, name: string) => ({ id, at, author: { name } });
+    const p = (inlines: Paragraph['inlines']) => paragraph(format, 'normal', inlines);
+    const cell = (text: string, suggested?: TableCell['suggested']): TableCell => ({
+      blocks: [p(text ? [run(text)] : [])],
+      props: {},
+      ...(suggested ? { suggested } : {}),
+    });
+    const table = (rows: Table['rows']): Table => ({
+      type: 'table',
+      columns: [144, 144],
+      headerRows: 0,
+      rows,
+    });
+    const addedColumn = { insertion: mark('sColumn', 'Ada Lovelace') };
+    const goneColumn = { deletion: mark('sColumnGone', 'Bo') };
+    return base(format, [
+      table([
+        { cells: [cell('A1'), cell('B1')] },
+        {
+          cells: [
+            {
+              blocks: [
+                p([run('A2 '), { ...run('mine'), suggested: { insertion: mark('sBo', 'Bo') } }]),
+              ],
+              props: {},
+            },
+            cell(''),
+          ],
+          suggested: { insertion: mark('sRow', 'Ada Lovelace') },
+        },
+        { cells: [cell('A3'), cell('B3')], suggested: { deletion: mark('sRowGone', 'Bo') } },
+      ]),
+      p([run('Between')]),
+      table([
+        { cells: [cell('C1'), cell('D1', addedColumn)] },
+        { cells: [cell('C2'), cell('', addedColumn)] },
+      ]),
+      p([run('And')]),
+      table([
+        { cells: [cell('E1'), cell('F1', goneColumn)] },
+        { cells: [cell('E2'), cell('F2', goneColumn)] },
+      ]),
+      p([run('After')]),
+    ]);
+  },
   // links-and-navigation.md "Table of contents": a Dotted one of two levels, each entry its heading's text and page
   // number linked to the heading's id, then the headings it lists.
   contents: (format) => {

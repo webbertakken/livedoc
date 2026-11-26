@@ -43,6 +43,8 @@ export type TableCell = {
   readonly kept?: KeptProperties;
   /** ODF: the element's start tag, its attributes the model does not map written back. */
   readonly tag?: KeptXml;
+  /** Its insertion or deletion, whole: a column's cells carry one (review.md "How a suggestion is kept"). */
+  readonly suggested?: BlockSuggested;
 };
 
 export type TableRow = {
@@ -55,6 +57,8 @@ export type TableRow = {
   readonly breaks?: false;
   readonly kept?: KeptProperties;
   readonly tag?: KeptXml;
+  /** Its insertion or deletion, whole (review.md "How a suggestion is kept"). */
+  readonly suggested?: BlockSuggested;
 };
 
 /** Where a table narrower than the text stands; absent, at the start. */

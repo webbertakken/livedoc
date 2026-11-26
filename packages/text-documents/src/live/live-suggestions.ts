@@ -11,6 +11,8 @@ import {
   PARAGRAPH,
   PARAGRAPH_FORMAT_CHANGE,
   SUGGESTION_MARKS,
+  TABLE,
+  TABLE_ROW,
 } from './live-names';
 import { tabFragment } from './live-root';
 import { liveTabIds } from './live-tabs';
@@ -320,6 +322,14 @@ function restoreParagraph(
   }
 }
 
+/** A table left with no rows, or a row left with no cells: it goes with them (review.md "How a suggestion is kept"). */
+const emptied = (node: Y.XmlElement | PlainElement): boolean => {
+  const name = 'nodeName' in node ? node.nodeName : node.element;
+  if (name !== TABLE && name !== TABLE_ROW) return false;
+  const children: unknown[] = 'nodeName' in node ? node.toArray() : node.children;
+  return children.length === 0;
+};
+
 /** Settles one suggestion within a parent's children, from the last backwards so indexes hold. */
 function settleChildren(
   parent: Y.XmlFragment | Y.XmlElement,
@@ -358,7 +368,7 @@ function settleChildren(
     if (!inParagraph) settleChildren(node, id, accept, false);
     const inserted = marksOf(node.getAttribute(INSERTION_MARK), id);
     const deleted = marksOf(node.getAttribute(DELETION_MARK), id);
-    if ((inserted && !accept) || (deleted && accept)) {
+    if ((inserted && !accept) || (deleted && accept) || emptied(node)) {
       parent.delete(index, 1);
       continue;
     }
@@ -481,7 +491,9 @@ function plainChildren(
       // The first one, nothing of it left, with a node after it: gone, as rejecting it leaves it.
       if (out.length === 0 && children.length === 0 && node.nextSibling !== null) continue;
     }
-    out.push({ element: node.nodeName, attributes, children });
+    const plain = { element: node.nodeName, attributes, children };
+    if (emptied(plain)) continue;
+    out.push(plain);
   }
   return out;
 }

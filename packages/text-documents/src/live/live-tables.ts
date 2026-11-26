@@ -39,6 +39,7 @@ export function tableElement(
       breaks: row.breaks,
       kept: row.kept,
       tag: row.tag,
+      ...blockSuggestionAttributes(row.suggested),
     });
     const origins = grid[r]!.filter((place) => place?.origin && place.row === r);
     const cells = row.cells.map((cell) => {
@@ -52,6 +53,7 @@ export function tableElement(
         props: Object.keys(cell.props).length > 0 ? cell.props : undefined,
         kept: cell.kept,
         tag: cell.tag,
+        ...blockSuggestionAttributes(cell.suggested),
       });
       cellElement.insert(0, cell.blocks.map(blockNode));
       return cellElement;
@@ -116,6 +118,7 @@ export function tableOf(
         props: (ca.props as CellProps | undefined) ?? {},
         kept: ca.kept as TableCell['kept'],
         tag: ca.tag as TableCell['tag'],
+        suggested: readBlockSuggested(ca),
       });
     });
     return defined({
@@ -125,6 +128,7 @@ export function tableOf(
       breaks: ra.breaks as TableRow['breaks'],
       kept: ra.kept as TableRow['kept'],
       tag: ra.tag as TableRow['tag'],
+      suggested: readBlockSuggested(ra),
     });
   });
   const table: Table = defined({

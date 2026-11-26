@@ -485,23 +485,36 @@ class OoxmlWriter {
 
   /** A table, its cells' blocks written as the body's. */
   tableXml(table: Table): string {
-    const suggested = Suggestions.ofBlock(table.suggested);
     return ooxmlTableXml(
       {
         kept: (xml) => this.kept(xml),
-        blocksXml: (blocks) =>
+        blocksXml: (blocks, suggested) =>
           this.blocksXml(
             suggested ? Suggestions.overlaid(blocks, suggested.kind, suggested.mark) : blocks,
           ),
-        ...(suggested ? { rowRevision: () => this.markRevision(suggested) } : {}),
+        revision: (suggested, of) => this.markRevision(suggested, of),
       },
       table,
     );
   }
 
-  /** A whole block's suggestion as an empty `w:ins` or `w:del`, for a row's or a paragraph mark's properties. */
-  markRevision({ kind, mark }: { kind: BlockSuggestionKind; mark: FileSuggestionMark }): string {
-    return `<w:${kind === 'insertion' ? 'ins' : 'del'} ${revisionAttributes(mark, this.revisionIds)}/>`;
+  /**
+   * A whole block's suggestion as an empty `w:ins` or `w:del`, for a row's or a paragraph mark's properties, or a
+   * `w:cellIns` or `w:cellDel` for a cell's.
+   */
+  markRevision(
+    { kind, mark }: { kind: BlockSuggestionKind; mark: FileSuggestionMark },
+    of: 'row' | 'cell' = 'row',
+  ): string {
+    const name =
+      of === 'cell'
+        ? kind === 'insertion'
+          ? 'cellIns'
+          : 'cellDel'
+        : kind === 'insertion'
+          ? 'ins'
+          : 'del';
+    return `<w:${name} ${revisionAttributes(mark, this.revisionIds)}/>`;
   }
 
   /**

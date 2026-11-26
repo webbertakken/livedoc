@@ -755,23 +755,25 @@ class BodyReader {
       kept: (x) => this.r.kept(this.r.part.parsed, x),
       report: this.r.report,
       normal: Styles.idOfRole(this.styles, 'normal') ?? 'Standard',
+      ...(this.tracks
+        ? {
+            tracked: (paragraphs: readonly Paragraph[]) => {
+              const found = Suggestions.tracked([paragraphs]);
+              return found && { kind: found.kind, mark: found.marks[0]! };
+            },
+          }
+        : {}),
     });
     if (block) this.blocks.push(block.type === 'table' ? this.suggestedTable(block) : block);
   }
 
   /**
-   * A table whose every row's writing is in changes of one kind is that kind's suggestion, as LibreOffice reads a
-   * tracked row (standard-mapping.md "Suggested blocks"); what is inside it keeps only its own suggestions.
+   * A table's tracked rows and cells (LibreOffice's flag on their styles) carry their own suggestion, what is inside
+   * them only its own; a table every row of which is suggested, of one kind, is that kind's (standard-mapping.md
+   * "Suggested blocks").
    */
   suggestedTable(table: Table): Table {
-    if (!this.tracks) return table;
-    const groups = table.rows.map((row) =>
-      row.cells.flatMap((c) => c.blocks.filter((b): b is Paragraph => b.type === 'paragraph')),
-    );
-    const tracked = Suggestions.tracked(groups, this.r.changes.blockMarks('table'));
-    if (!tracked) return table;
-    const absorbed = Suggestions.absorbed([table], tracked.kind, tracked.marks)[0] as Table;
-    return { ...absorbed, suggested: { [tracked.kind]: tracked.marks[0] } };
+    return this.tracks ? Suggestions.foldedRows(table) : table;
   }
 
   /**
