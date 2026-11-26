@@ -35,6 +35,7 @@ function drawingOf(
       width: 612 * scale,
       height: 792 * scale,
       points: { width: 612, height: 792 },
+      pages: 3,
       held: 'page',
     })),
   };
@@ -84,6 +85,8 @@ describe('keepPicture', () => {
         height: 200,
         natural: { width: 300, height: 150 },
         scaled: false,
+        source: 'png',
+        pages: null,
       },
     });
     expect(drawing.encode).not.toHaveBeenCalled();
@@ -119,7 +122,7 @@ describe('keepPicture', () => {
     const kept = await keepPicture(bytesOf('<svg viewBox="0 0 2 1">'), drawing);
     expect(kept).toMatchObject({
       ok: true,
-      picture: { type: 'png', width: 240, height: 120, scaled: false },
+      picture: { type: 'png', width: 240, height: 120, scaled: false, source: 'svg', pages: null },
     });
     expect(drawing.read).toHaveBeenCalledWith(expect.anything(), 'svg');
   });
@@ -130,7 +133,14 @@ describe('keepPicture', () => {
     expect(drawing.page).toHaveBeenCalledWith(expect.anything(), 2, PDF_CUSTOM_STAMP_PAGE_SCALE);
     expect(kept).toMatchObject({
       ok: true,
-      picture: { type: 'png', width: 927, height: 1200, natural: { width: 612, height: 792 } },
+      picture: {
+        type: 'png',
+        width: 927,
+        height: 1200,
+        natural: { width: 612, height: 792 },
+        source: 'pdf',
+        pages: 3,
+      },
     });
   });
 

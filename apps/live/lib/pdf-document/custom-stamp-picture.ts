@@ -26,6 +26,10 @@ export type KeptPicture = {
   readonly natural: { readonly width: number; readonly height: number };
   /** Whether it was drawn smaller than it came. */
   readonly scaled: boolean;
+  /** What the chosen file was. */
+  readonly source: PictureSource;
+  /** A PDF's pages, of which one was drawn; null for a picture. */
+  readonly pages: number | null;
 };
 
 export type PictureKept =
@@ -53,7 +57,14 @@ export type PictureDrawing<Held> = {
     bytes: Uint8Array<ArrayBuffer>,
     index: number,
     scale: number,
-  ) => Promise<(DrawnPicture & { readonly held: Held; readonly points: DrawnPicture }) | null>;
+  ) => Promise<
+    | (DrawnPicture & {
+        readonly held: Held;
+        readonly points: DrawnPicture;
+        readonly pages: number;
+      })
+    | null
+  >;
 };
 
 /** (default) A picture's pixel at 96 to the inch: three quarters of a point. */
@@ -129,7 +140,7 @@ export async function keepPicture<Held>(
     if (!drawn) return { ok: false, refusal: 'unreadable' };
     const fit = await drawnToFit(drawing, drawn.held, heldSize(drawn), 'png');
     if (!fit) return { ok: false, refusal: 'too_large' };
-    return kept(fit, 'png', drawn.points, true);
+    return kept(fit, 'png', drawn.points, true, { source, pages: drawn.pages });
   }
   const read = await drawing.read(bytes, source);
   if (!read) return { ok: false, refusal: 'unreadable' };
@@ -137,12 +148,13 @@ export async function keepPicture<Held>(
   const size = heldSize(read);
   const asItCame =
     source !== 'svg' && size.width === read.width && bytes.byteLength <= PDF_STAMP_MAX_BYTES;
-  if (asItCame) return kept({ bytes, size }, type, naturalOf(size), false);
+  const from = { source, pages: null };
+  if (asItCame) return kept({ bytes, size }, type, naturalOf(size), false, from);
   const fit = await drawnToFit(drawing, read.held, size, type);
   if (!fit) return { ok: false, refusal: 'too_large' };
   // An SVG is always drawn; it is drawn smaller only where its size changed.
   const scaled = source !== 'svg' || fit.size.width !== read.width;
-  return kept(fit, type, naturalOf(fit.size), scaled);
+  return kept(fit, type, naturalOf(fit.size), scaled, from);
 }
 
 /** A kept picture's natural size: its pixels at 96 to the inch. */
@@ -156,9 +168,10 @@ function kept(
   type: StampPictureType,
   natural: DrawnPicture,
   scaled: boolean,
+  from: { source: PictureSource; pages: number | null },
 ): PictureKept {
   return {
     ok: true,
-    picture: { bytes, type, width: size.width, height: size.height, natural, scaled },
+    picture: { bytes, type, width: size.width, height: size.height, natural, scaled, ...from },
   };
 }

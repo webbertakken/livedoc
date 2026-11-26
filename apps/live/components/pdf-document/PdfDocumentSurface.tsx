@@ -4,6 +4,7 @@
 // shell's title row, menus and toolbar filled for a PDF, and under them the pages, or what is said when there are
 // none to show. The pages are the engine's pictures, drawn in a worker; the chrome is the shell's tokens in both
 // schemes, and a page is as its file says.
+import type { BlobKey } from '@livedoc/document';
 import {
   useCallback,
   useEffect,
@@ -30,7 +31,8 @@ import { sendBlob } from '@/lib/blob-store/send-blob';
 import { watchPdfBudget, type PdfStoredAsking } from '@/lib/pdf-document/pdf-budget-replacement';
 import { PdfStoredFiles } from '@/lib/pdf-document/pdf-document-bus';
 import { startPdfEngineWorker } from '@/lib/pdf-document/pdf-engine-client';
-import { pdfReadsOf, type PdfHome } from '@/lib/pdf-document/pdf-home';
+import { pdfBlobSendOf, pdfReadsOf, type PdfHome } from '@/lib/pdf-document/pdf-home';
+import { useCapabilities } from '@/hooks/persistence/useCapabilities';
 import type { BindPdfLiveChanges } from '@/lib/pdf-document/pdf-live-binding';
 import { pdfLocalBinding } from '@/lib/pdf-document/pdf-local-binding';
 import { lookControls } from '@/lib/pdf-document/pdf-look-controls';
@@ -81,6 +83,7 @@ import { PdfViewerPageBar } from './PdfPageBar';
 import { PdfPages } from './PdfPages';
 import { PdfSelectionBar } from './PdfSelectionBar';
 import { PdfLeftPanel } from './PdfLeftPanel';
+import { CustomStampDialog } from './CustomStampDialog';
 import { PdfLinkDialog } from './PdfLinkDialog';
 import { PdfPrintDialog } from './PdfPrintDialog';
 import { PdfFindBar } from './PdfFindBar';
@@ -327,7 +330,21 @@ export function PdfDocumentSurface({
   // "Making a mark": the tool in hand, and the text marks it makes.
   // "A mark as it is made": this person's Drawing stroke sent as it grows, and the others' drawn.
   const sendStroke = usePdfDraftSend({ tabId, pages });
+  // custom-stamps.md "Where they are kept": a person's own stamps, where the deployment stores files.
+  const { filesEnabled } = useCapabilities();
+  const customStamps = useMemo(
+    () =>
+      filesEnabled
+        ? {
+            ownerId,
+            send: (key: BlobKey, bytes: Uint8Array<ArrayBuffer>) =>
+              pdfBlobSendOf(home)({ ownerId, documentId, tabId, shareCode }, key, bytes),
+          }
+        : null,
+    [filesEnabled, home, ownerId, documentId, tabId, shareCode],
+  );
   const tools = usePdfMarkTools({
+    custom: customStamps,
     ready,
     marking,
     author,
@@ -636,6 +653,7 @@ export function PdfDocumentSurface({
         onDownload={() => void download()}
       />
       <PdfLinkDialog asked={links.asked} onClose={links.close} />
+      <CustomStampDialog {...tools.customStampDialog} />
       <PdfPrintDialog {...printing.dialog} count={pages?.length ?? 0} current={viewer.page} />
     </div>
   );

@@ -3,21 +3,37 @@
 // The Stamp tool (docs/specs/035-pdf-documents/marks.md "Stamps"; reading-surface.md "The toolbar"): the Stamp
 // control, holding every stamp behind its chevron in a grid a category, each drawn as it looks; Insert > Stamp's
 // Standard stamps and Dynamic stamps; and a press on a page with the tool in hand placing the stamp the control shows,
-// one step of the person's undo. The tool in hand is usePdfMarkTools'; this names what takes it.
+// one step of the person's undo. A person's custom stamps (custom-stamps.md) join the grid after them, with Insert >
+// Stamp > Custom stamps and the grid's Create custom stamp… opening Create custom stamp (usePdfCustomStamps'); a
+// custom stamp taken that is theirs no longer reads as Approved. The tool in hand is usePdfMarkTools'; this names what
+// takes it.
 import { useCallback, useMemo } from 'react';
 import { lucideStamp } from '@livedoc/icons/lucide';
-import { STAMPS, Stamps, type Box, type PagePoint, type Stamp } from '@livedoc/pdf-documents';
+import {
+  CustomStamp,
+  STAMPS,
+  Stamps,
+  type Box,
+  type CustomStampRecord,
+  type PagePoint,
+  type Stamp,
+} from '@livedoc/pdf-documents';
 import type { OfficeChoices } from '@/components/office/OfficeChoiceMenu';
 import { debugLog } from '@/lib/debug-log';
 import type { OfficeActions } from '@/lib/office/office-catalogue';
 import { track } from '@/lib/telemetry';
-import { STAMP_DYNAMIC, STAMP_STANDARD } from './pdf-menus';
+import { STAMP_CUSTOM, STAMP_DYNAMIC, STAMP_STANDARD } from './pdf-menus';
 import { addStamp, STAMP_COLOURS, stampKindName } from './pdf-stamp';
 import { setStampPick, useStampPick } from './pdf-stamp-pick';
 import { TOO_MANY_MARKS_COPY } from './pdf-surface-copy';
 import { STAMP_TOOLS } from './pdf-toolbar';
 import type { PdfDocumentOpen } from './usePdfDocument';
 import type { PdfPageTool } from './usePdfMarkTools';
+import {
+  CREATE_CUSTOM_STAMP_CELL,
+  usePdfCustomStamps,
+  type PdfCustomStampsHome,
+} from './usePdfCustomStamps';
 
 type Ready = Pick<
   Extract<PdfDocumentOpen, { phase: 'ready' }>,
@@ -38,6 +54,8 @@ export const stampCell = (id: string): string => `stamp-pick-${id}`;
 /** A stamp's name as the grid and the control say it: a dynamic one says what it adds. */
 export const stampLabel = (stamp: Stamp): string =>
   stamp.dynamic ? `${stamp.name}, with name and time` : stamp.name;
+
+const APPROVED = Stamps.of('approved')!;
 
 const GRID = {
   columns: STAMP_COLUMNS,
@@ -65,6 +83,7 @@ export function usePdfStampTool({
   inHand,
   pickTool,
   onProblem,
+  custom,
 }: {
   // The open PDF; null before it is.
   ready: Ready | null;
@@ -78,9 +97,10 @@ export function usePdfStampTool({
   pickTool: (tool: PdfPageTool) => void;
   // What the title row says went wrong; null once a stamp is placed.
   onProblem: (problem: string | null) => void;
+  // Where custom stamps come from and go; null where they are not offered (no file storage).
+  custom: PdfCustomStampsHome | null;
 }) {
   const pick = useStampPick();
-  const stamp = Stamps.of(pick)!;
 
   const take = useCallback(
     (id: string) => {
@@ -89,11 +109,24 @@ export function usePdfStampTool({
     },
     [pickTool],
   );
+  const customs = usePdfCustomStamps({ home: custom, offered, cellOf: stampCell, take });
+  // The stamp the control shows: a standard or dynamic one, a custom stamp still theirs, else Approved.
+  const mine: CustomStampRecord | null = CustomStamp.isId(pick)
+    ? (customs.stamps.find((kept) => kept.id === pick) ?? null)
+    : null;
+  const stamp = Stamps.of(pick) ?? APPROVED;
+  const shown = mine ? mine.id : stamp.id;
+  const label = mine ? mine.name : stampLabel(stamp);
+  const { place } = customs;
 
   const onStamp = useCallback(
     (index: number, at: PagePoint, box: Box) => {
       const page = ready?.pages[index];
       if (!ready || !page) return;
+      if (mine) {
+        place(ready, mine, { index, at, box }, { author, authorKey }, onProblem);
+        return;
+      }
       const made = ready.undo.step({ page: page.name }, () =>
         addStamp(
           ready.binding.doc,
@@ -112,7 +145,7 @@ export function usePdfStampTool({
         onProblem(TOO_MANY_MARKS_COPY);
       } else debugLog(`[pdf] mark-refused name=${made.reason}`);
     },
-    [ready, author, authorKey, stamp, onProblem],
+    [ready, author, authorKey, stamp, mine, place, onProblem],
   );
   const stamping = useMemo<PdfPageStamping | null>(
     () => (inHand === 'stamp' ? { onStamp } : null),
@@ -124,38 +157,63 @@ export function usePdfStampTool({
     const cells = Object.fromEntries(
       STAMPS.map(({ id }) => [
         stampCell(id),
-        { run: () => take(id), checked: inHand === 'stamp' && pick === id },
+        { run: () => take(id), checked: inHand === 'stamp' && shown === id },
       ]),
     );
+    const custom = customs.enabled
+      ? {
+          ...Object.fromEntries(
+            customs.stamps.map(({ id }) => [
+              stampCell(id),
+              { run: () => take(id), checked: inHand === 'stamp' && shown === id },
+            ]),
+          ),
+          [CREATE_CUSTOM_STAMP_CELL]: { run: customs.openDialog },
+          [STAMP_CUSTOM]: { run: customs.openDialog },
+        }
+      : {};
     return {
       ...cells,
+      ...custom,
       // Insert > Stamp: the stamp the control shows where it is of the category, else the category's first.
-      [STAMP_STANDARD]: { run: () => take(stamp.dynamic ? Stamps.standard[0]!.id : pick) },
-      [STAMP_DYNAMIC]: { run: () => take(stamp.dynamic ? pick : Stamps.dynamic[0]!.id) },
+      [STAMP_STANDARD]: {
+        run: () => take(mine || stamp.dynamic ? Stamps.standard[0]!.id : stamp.id),
+      },
+      [STAMP_DYNAMIC]: {
+        run: () => take(!mine && stamp.dynamic ? stamp.id : Stamps.dynamic[0]!.id),
+      },
       // The control: the stamp last taken; pressed again, back to Select.
       [STAMP_TOOLS]: {
         run: () => pickTool(inHand === 'stamp' ? 'select' : 'stamp'),
         checked: inHand === 'stamp',
-        label: `Stamp: ${stampLabel(stamp)}`,
+        label: `Stamp: ${label}`,
       },
     };
-  }, [offered, inHand, pick, stamp, take, pickTool]);
+  }, [offered, inHand, shown, stamp, mine, label, customs, take, pickTool]);
 
+  const grid = useMemo(
+    () => ({
+      ...GRID,
+      cells: [...GRID.cells, ...customs.grid.cells],
+      sections: [...GRID.sections, ...customs.grid.sections],
+    }),
+    [customs.grid],
+  );
   const choices = useMemo<OfficeChoices>(
     (): OfficeChoices =>
       offered
         ? {
             [STAMP_TOOLS]: {
-              read: () => stampCell(pick),
+              read: () => stampCell(shown),
               entries: [],
               actions,
               iconOf: () => lucideStamp,
-              grid: GRID,
+              grid,
             },
           }
         : {},
-    [offered, pick, actions],
+    [offered, shown, actions, grid],
   );
 
-  return { actions, choices, stamping };
+  return { actions, choices, stamping, customStampDialog: customs.dialog };
 }

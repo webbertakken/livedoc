@@ -9,6 +9,7 @@ import {
   PdfLiveChanges,
   StampLayout,
   type Box,
+  type CustomStampRecord,
   type PageName,
   type PagePoint,
   type PdfLimitRefusal,
@@ -58,9 +59,17 @@ export const stampKindName = (stamp: Stamp): 'Standard' | 'Dynamic' =>
 const within = (n: number, low: number, high: number): number => Math.max(low, Math.min(n, high));
 
 /** Where a stamp of these words lies, placed by a press on a page: its natural size, centred, held to the page. */
-export function placeStamp(lines: readonly string[], at: PagePoint, page: Box): Box {
+export const placeStamp = (lines: readonly string[], at: PagePoint, page: Box): Box =>
+  placeNatural(StampLayout.natural(lines), at, page);
+
+/** Where a stamp of this natural size lies: at most a third of the page's width, its shape kept, centred on the press
+ *  and held to the page. */
+export function placeNatural(
+  natural: { readonly width: number; readonly height: number },
+  at: PagePoint,
+  page: Box,
+): Box {
   const [pageLeft, pageBottom, pageRight, pageTop] = page;
-  const natural = StampLayout.natural(lines);
   const scale = Math.min(1, ((pageRight - pageLeft) * STAMP_MAX_PAGE_SHARE) / natural.width);
   const width = natural.width * scale;
   const height = natural.height * scale;
@@ -72,27 +81,67 @@ export function placeStamp(lines: readonly string[], at: PagePoint, page: Box): 
 export type StampMade =
   { ok: true; mark: Mark } | { ok: false; reason: PdfLimitRefusal | 'no_stamp' };
 
+/** Where a placed stamp goes: its page, the stored file the live changes are on, and the page's box. */
+type StampWhere = { page: PageName; stored: { blob: BlobKey; pages: number }; box: Box };
+type StampBy = { author: string; authorKey?: string | null; now: number; id: string };
+
 /** A stamp placed by a press on a page, its words fixed now, as one change. */
 export function addStamp(
   doc: Y.Doc,
-  where: { page: PageName; stored: { blob: BlobKey; pages: number }; box: Box },
+  where: StampWhere,
   stamp: Stamp,
   at: PagePoint,
-  by: { author: string; authorKey?: string | null; now: number; id: string },
+  by: StampBy,
 ): StampMade {
   const lines = stampLines(stamp, by);
-  const mark = Mark.stamp({
-    id: by.id,
-    page: where.page,
-    colour: STAMP_COLOURS[stamp.tone],
-    opacity: 1,
-    author: by.author,
-    ...Mark.keyed(by.authorKey),
-    createdAt: by.now,
-    rect: placeStamp(lines, at, where.box),
-    stamp: stamp.id,
-    lines,
-  });
+  return written(
+    doc,
+    where,
+    Mark.stamp({
+      ...markedBy(where, by),
+      colour: STAMP_COLOURS[stamp.tone],
+      rect: placeStamp(lines, at, where.box),
+      stamp: stamp.id,
+      lines,
+    }),
+  );
+}
+
+/** (default) A custom stamp's colour, which only its outline shows while its picture is on its way: the Blue tone's. */
+export const CUSTOM_STAMP_COLOUR = STAMP_COLOURS.blue;
+
+/** A custom stamp placed by a press on a page (custom-stamps.md "Placing one"), its picture already held. */
+export function addCustomStamp(
+  doc: Y.Doc,
+  where: StampWhere,
+  stamp: CustomStampRecord,
+  at: PagePoint,
+  by: StampBy,
+): StampMade {
+  return written(
+    doc,
+    where,
+    Mark.stamp({
+      ...markedBy(where, by),
+      colour: CUSTOM_STAMP_COLOUR,
+      rect: placeNatural(stamp.natural, at, where.box),
+      stamp: stamp.id,
+      lines: [stamp.name],
+      picture: stamp.picture,
+    }),
+  );
+}
+
+const markedBy = (where: StampWhere, by: StampBy) => ({
+  id: by.id,
+  page: where.page,
+  opacity: 1,
+  author: by.author,
+  ...Mark.keyed(by.authorKey),
+  createdAt: by.now,
+});
+
+function written(doc: Y.Doc, where: StampWhere, mark: Mark | null): StampMade {
   if (!mark) return { ok: false, reason: 'no_stamp' };
   let refusal: PdfLimitRefusal | null = null;
   doc.transact(() => {

@@ -60,6 +60,7 @@ import { usePdfErase } from './usePdfErase';
 import { usePdfPolyTool } from './usePdfPolyTool';
 import { usePdfShapes } from './usePdfShapes';
 import { usePdfToolLine } from './usePdfToolLine';
+import type { PdfCustomStampsHome } from './usePdfCustomStamps';
 import { usePdfStampTool } from './usePdfStampTool';
 import { usePdfToolControl } from './usePdfToolControl';
 import { usePdfTyping } from './usePdfTyping';
@@ -146,6 +147,7 @@ export function usePdfMarkTools({
   focusPages,
   onProblem,
   onStroke,
+  custom = null,
 }: {
   // The open PDF; null before it is.
   ready: Ready | null;
@@ -164,6 +166,8 @@ export function usePdfMarkTools({
   onProblem: (problem: string | null) => void;
   // A Drawing's stroke as it grows, in the tool's look, and (null) its end: for collaborators.
   onStroke: (index: number, stroke: Stroke | null, look: PdfDraftLook) => void;
+  // Where a person's custom stamps come from and go; null where they are not offered.
+  custom?: PdfCustomStampsHome | null;
 }) {
   const [tool, setTool] = useState<PdfPageTool>('select');
   const inHand: PdfPageTool = marking ? tool : 'select';
@@ -278,7 +282,14 @@ export function usePdfMarkTools({
   const typedTools = usePdfToolControl(TYPED_CONTROL, offered);
   const drawingTools = usePdfToolControl(DRAWING_CONTROL, offered);
   const erasing = usePdfErase({ ready, erasing: inHand === 'erase' });
-  const stampTool = usePdfStampTool({ ready, author, authorKey, ...offered, onProblem });
+  const stampTool = usePdfStampTool({
+    ready,
+    author,
+    authorKey,
+    ...offered,
+    onProblem,
+    custom,
+  });
 
   /** What a drag across a page's text makes with the text tool in hand. */
   const make = useCallback(
@@ -422,6 +433,7 @@ export function usePdfMarkTools({
     shaping,
     typing: typed.typing,
     stamping: stampTool.stamping,
+    customStampDialog: stampTool.customStampDialog,
     erasing,
     actions,
     // The tool in hand's line (marks.md "A tool's line"), over the selected marks' restyle of the same items.

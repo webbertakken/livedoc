@@ -88,6 +88,7 @@ export function browserPictureDrawing(
           width: drawn.width,
           height: drawn.height,
           points: { width: drawn.width / scale, height: drawn.height / scale },
+          pages: opened.ok ? opened.pages.length : 0,
           held: canvas,
         };
       } catch {
