@@ -377,10 +377,10 @@ describe('TextDocumentComparison.compare', () => {
     let result: ReturnType<typeof TextDocumentComparison.compare> | null = null;
     const spent = cpuMsOf(() => {
       result = TextDocumentComparison.compare(doc(...pages(false)), doc(...pages(true)), {
-      name: NAME,
-      at: AT,
-      comments: false,
-    });
+        name: NAME,
+        at: AT,
+        comments: false,
+      });
     });
     expect(spent).toBeLessThan(cpuBudgetMs(TEXT_DOCUMENT_COMPARE_BUDGET_MS));
     expect(result!.ok).toBe(true);
@@ -394,10 +394,10 @@ describe('TextDocumentComparison.compare', () => {
     let result: ReturnType<typeof TextDocumentComparison.compare> | null = null;
     const spent = cpuMsOf(() => {
       result = TextDocumentComparison.compare(doc(...pages('a')), doc(...pages('b')), {
-      name: NAME,
-      at: AT,
-      comments: false,
-    });
+        name: NAME,
+        at: AT,
+        comments: false,
+      });
     });
     expect(spent).toBeLessThan(cpuBudgetMs(TEXT_DOCUMENT_COMPARE_BUDGET_MS));
     expect(result!.ok).toBe(true);
