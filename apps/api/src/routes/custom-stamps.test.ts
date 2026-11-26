@@ -2,7 +2,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { BlobKey } from '@livedoc/document';
 import { PDF_CUSTOM_STAMPS_MAX, PDF_STAMP_MAX_BYTES } from '@livedoc/pdf-documents';
-import { claimBlob, markBlobStored } from '../db';
+import { claimBlob, heldBlob, markBlobStored } from '../db';
+import { testImagesBucket, type TestImagesBucket } from '../test-images-bucket';
 import { sqliteD1, type SqliteD1 } from '../test-sqlite-d1';
 import { handleCustomStamps } from './custom-stamps';
 import { makeTestRouteContext } from './test-route-context';
@@ -156,5 +157,50 @@ describe('changing and deleting one', () => {
       expect(refused.status).toBe(404);
       expect(await refused.json()).toEqual({ error: 'custom_stamp_not_found' });
     }
+  });
+});
+
+// custom-stamps.md "API": its picture read back by its owner alone, typed, kept by the browser as a blob is.
+describe('reading a custom stamp’s picture', () => {
+  const PNG = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 1, 2, 3]);
+  let bucket: TestImagesBucket;
+  beforeEach(async () => {
+    bucket = testImagesBucket();
+    db.env.FILES = bucket;
+    await make();
+  });
+
+  const stored = async () => {
+    const row = await heldBlob(db.env, 'ada', KEY);
+    await bucket.put(row!.object, PNG);
+  };
+
+  it('answers its bytes, typed as its picture', async () => {
+    await stored();
+    const read = await call('GET', `/api/custom-stamps/${ID}/picture`);
+    expect(read.status).toBe(200);
+    expect(read.headers.get('Content-Type')).toBe('image/png');
+    expect(read.headers.get('X-Content-Type-Options')).toBe('nosniff');
+    expect(read.headers.get('Cache-Control')).toBe('private, max-age=31536000, immutable');
+    expect(read.headers.get('ETag')).toBe(`"${KEY}"`);
+    expect(new Uint8Array(await read.arrayBuffer())).toEqual(PNG);
+  });
+
+  it('reads another’s as custom_stamp_not_found', async () => {
+    await stored();
+    const refused = await call('GET', `/api/custom-stamps/${ID}/picture`, { owner: 'bo' });
+    expect(refused.status).toBe(404);
+    expect(await refused.json()).toEqual({ error: 'custom_stamp_not_found' });
+  });
+
+  it('answers blob_missing where storage no longer has it', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    const refused = await call('GET', `/api/custom-stamps/${ID}/picture`);
+    expect(refused.status).toBe(404);
+    expect(await refused.json()).toEqual({ error: 'blob_missing' });
+  });
+
+  it('answers nothing else at the picture', async () => {
+    expect((await call('DELETE', `/api/custom-stamps/${ID}/picture`)).status).toBe(404);
   });
 });

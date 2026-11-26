@@ -97,12 +97,13 @@ are the matrix's "Stamps" ([Parity matrix](parity-matrix.md#stamps)).
 
 `/api/custom-stamps`, owner-scoped (`requireOwner`): guests included.
 
-| Request                         | Body                                                                                        | Answer                         |
-| ------------------------------- | ------------------------------------------------------------------------------------------- | ------------------------------ |
-| `GET /api/custom-stamps`        |                                                                                             | `200 { stamps }`, newest first |
-| `POST /api/custom-stamps`       | `{ id, name, category, picture: { key, type, width, height }, natural: { width, height } }` | `201 { stamp }`                |
-| `PATCH /api/custom-stamps/:id`  | `{ name?, category? }`                                                                      | `200 { stamp }`                |
-| `DELETE /api/custom-stamps/:id` |                                                                                             | `204`                          |
+| Request                              | Body                                                                                        | Answer                         |
+| ------------------------------------ | ------------------------------------------------------------------------------------------- | ------------------------------ |
+| `GET /api/custom-stamps`             |                                                                                             | `200 { stamps }`, newest first |
+| `POST /api/custom-stamps`            | `{ id, name, category, picture: { key, type, width, height }, natural: { width, height } }` | `201 { stamp }`                |
+| `PATCH /api/custom-stamps/:id`       | `{ name?, category? }`                                                                      | `200 { stamp }`                |
+| `DELETE /api/custom-stamps/:id`      |                                                                                             | `204`                          |
+| `GET /api/custom-stamps/:id/picture` |                                                                                             | `200` its picture's bytes      |
 
 | Refusal                          | Status | When                                                                                                                                                                                                                                                         |
 | -------------------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -112,7 +113,13 @@ are the matrix's "Stamps" ([Parity matrix](parity-matrix.md#stamps)).
 | `custom_stamp_picture_missing`   | 409    | The owner holds no stored blob of the picture's key                                                                                                                                                                                                          |
 | `custom_stamp_picture_too_large` | 413    | The blob held is larger than `PDF_STAMP_MAX_BYTES`                                                                                                                                                                                                           |
 | `custom_stamp_not_found`         | 404    | No custom stamp of that id is the owner's (another's reads as none)                                                                                                                                                                                          |
+| `blob_missing`                   | 404    | Storage no longer has the picture a custom stamp names (`GET .../picture`)                                                                                                                                                                                   |
 | `files_unavailable`              | 503    | The deployment has no file storage                                                                                                                                                                                                                           |
+
+- **Its picture is read back by its owner alone**, `GET /api/custom-stamps/:id/picture`: the bytes as kept, typed
+  `image/png` or `image/jpeg`, `nosniff`, kept by the browser as a blob's are (`private`, a year, `immutable`, its
+  key the `ETag`) `(default)`. The browser that made it keeps its bytes too, so it reads them from here only where it
+  did not (another browser, signed in). Another's reads as `custom_stamp_not_found`.
 
 ## Share roles
 
@@ -137,7 +144,7 @@ are the matrix's "Stamps" ([Parity matrix](parity-matrix.md#stamps)).
 - `Pdf · Created · CustomStamp` (one made; from a picture or a page alike), `Pdf · Added · Stamp.Custom` (one placed),
   `UI · Opened · PdfDocumentCustomStampDialog`. Never a stamp's name, category or picture.
 - `[custom-stamps] created id=<id> bytes=<n>`, `[custom-stamps] refused reason=<refusal> owner=<id>`,
-  `[custom-stamps] deleted id=<id>` in the api; `[pdf] pictures-missing count=<n> unfit=<n>` in the engine (a bake
+  `[custom-stamps] deleted id=<id>`, `[custom-stamps] picture-missing id=<id> key=<8>` in the api; `[pdf] pictures-missing count=<n> unfit=<n>` in the engine (a bake
   refused `pictures-unavailable`: a picture its marks name not handed in, or not the type it says); `[pdf] custom-stamp-made from=<picture|svg|pdf> bytes=<n>
 scaled=<bool>`, `[pdf] custom-stamp-failed reason=<reason>`, `[pdf] custom-stamp-placed held=<bool>` in the
   browser.

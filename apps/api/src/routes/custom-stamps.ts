@@ -5,7 +5,8 @@
 //   POST   /api/custom-stamps        one made, its picture a blob the owner already holds
 //   PATCH  /api/custom-stamps/:id    renamed, or moved to another category
 //   DELETE /api/custom-stamps/:id    deleted
-import { CustomStamp, PDF_STAMP_MAX_BYTES } from '@livedoc/pdf-documents';
+//   GET    /api/custom-stamps/:id/picture  its picture's bytes, typed
+import { CustomStamp, PDF_STAMP_MAX_BYTES, type CustomStampRecord } from '@livedoc/pdf-documents';
 import {
   createCustomStamp,
   deleteCustomStamp,
@@ -14,8 +15,9 @@ import {
   listCustomStamps,
   updateCustomStamp,
 } from '../db';
-import { json, noContent, notFound } from '../responses';
-import { refusedBlob } from './blob-door';
+import { readBlob } from '../blob-store/blob-store';
+import { CORS_HEADERS, json, noContent, notFound } from '../responses';
+import { refusedBlob, short } from './blob-door';
 import { readBody, requireOwner, type RouteContext } from './context';
 
 /** Each refusal of a custom stamp's, with its status. */
@@ -59,9 +61,37 @@ async function change(ctx: RouteContext, owner: string, id: string): Promise<Res
   return json({ stamp: (await getCustomStamp(ctx.env, id))!.stamp });
 }
 
+const PICTURE_MIME = { png: 'image/png', jpeg: 'image/jpeg' } as const;
+
+/** Its picture, to its owner: the bytes as kept, typed, kept by the browser as a blob's are. */
+async function picture(
+  ctx: RouteContext,
+  owner: string,
+  stamp: CustomStampRecord,
+): Promise<Response> {
+  const { key, type } = stamp.picture;
+  const held = await heldBlob(ctx.env, owner, key);
+  const body = held ? await readBlob(ctx.env.FILES!, held.object, null) : null;
+  if (!held || !body) {
+    console.error(`[custom-stamps] picture-missing id=${stamp.id} key=${short(key)}`);
+    return json({ error: 'blob_missing' }, { status: 404 });
+  }
+  return new Response(body, {
+    headers: {
+      ...CORS_HEADERS,
+      ETag: `"${key}"`,
+      'Cache-Control': 'private, max-age=31536000, immutable',
+      'Content-Type': PICTURE_MIME[type],
+      'Content-Length': String(held.size),
+      'X-Content-Type-Options': 'nosniff',
+    },
+  });
+}
+
 export async function handleCustomStamps(ctx: RouteContext): Promise<Response> {
   const { request, env, segments } = ctx;
-  if (segments[1] !== 'custom-stamps' || segments.length > 3) return notFound();
+  if (segments[1] !== 'custom-stamps' || segments.length > 4) return notFound();
+  if (segments.length === 4 && segments[3] !== 'picture') return notFound();
   // A custom stamp is a picture in the blob store: a deployment without one keeps none.
   if (!env.FILES) return refusedBlob('files_unavailable', {});
   const owner = requireOwner(ctx);
@@ -74,6 +104,8 @@ export async function handleCustomStamps(ctx: RouteContext): Promise<Response> {
   const id = segments[2]!;
   const kept = await getCustomStamp(env, id);
   if (!kept || kept.ownerId !== owner) return refused('custom_stamp_not_found', owner);
+  if (segments.length === 4)
+    return request.method === 'GET' ? picture(ctx, owner, kept.stamp) : notFound();
   if (request.method === 'PATCH') return change(ctx, owner, id);
   if (request.method === 'DELETE') {
     await deleteCustomStamp(env, id);

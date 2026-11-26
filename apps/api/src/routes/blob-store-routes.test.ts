@@ -5,6 +5,7 @@ import { blobKeyOf, FILE_TAB_MAX_BYTES, type BlobKey } from '@livedoc/document';
 import { testFilesBucket, type TestFilesBucket } from '../blob-store/test-files-bucket';
 import { sqliteD1, type SqliteD1 } from '../test-sqlite-d1';
 import { migrateOwnerId } from '../db';
+import { createShareLink } from '../db/share';
 import { handleBlobStoreRoutes } from './blob-store-routes';
 import { handleDocuments } from './documents';
 import { makeTestRouteContext } from './test-route-context';
@@ -179,6 +180,26 @@ describe('getting bytes in', () => {
     const missing = await files('PUT', `/api/files/${nextKey}?document=nope`, { bytes: next });
     expect(missing.status).toBe(404);
   });
+});
+
+// blob-store.md "Getting bytes in": participate access for bytes a Participant's change brings (a stamp's picture);
+// a Viewer stores nothing for the document.
+it('stores bytes for a document for a Participant, never a Viewer', async () => {
+  await files('PUT', `/api/files/${key}`, { bytes: PDF });
+  expect((await create()).status).toBe(201);
+  await createShareLink(db.env, 'D', 'PARTCODE', 'participate');
+  await createShareLink(db.env, 'D', 'VIEWCODE', 'view');
+  const next = Uint8Array.from(new TextEncoder().encode('a stamp picture'));
+  const nextKey = await blobKeyOf(next);
+  const put = (code: string) =>
+    files('PUT', `/api/files/${nextKey}?document=D`, {
+      bytes: next,
+      owner: 'bo',
+      headers: { 'X-Share-Code': code },
+    });
+  expect((await put('VIEWCODE')).status).toBe(403);
+  expect((await put('PARTCODE')).status).toBe(201);
+  expect(bucket.blob('ada', nextKey)).toEqual(next);
 });
 
 describe('a tab naming a blob', () => {
