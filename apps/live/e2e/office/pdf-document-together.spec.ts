@@ -120,7 +120,8 @@ test('a Participant reviews a PDF, and its stored file is replaced in one step f
   // The Editor's text selection is tinted for the Participant, in the Editor's colour.
   await page.locator('[data-pdf-pages]').focus();
   await page.keyboard.press('v');
-  await dragAcrossFirstLine(page, await pageOneDrawn(page));
+  // A drag across the first line would take the Participant's highlight, which an Editor may move: Select all.
+  await page.keyboard.press('ControlOrMeta+a');
   const tinted = peer.locator(`${PAGE_ONE} [data-pdf-peer-tint] polygon`);
   await expect(tinted.first()).toBeVisible();
   await expect(peer.locator(`${PAGE_ONE} [data-pdf-peer-text] span`)).not.toHaveText('');
