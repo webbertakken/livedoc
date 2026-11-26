@@ -47,6 +47,7 @@ describe('what a chart may be', () => {
       yTitle: 'Index',
       alt: 'Cost against index',
       series: { [C(2)]: { color: '#3366cc', line: true, right: true } },
+      kept: { part: 'xl/charts/chart1.xml', sum: '0a1b2c3d' },
     });
     expect(isSheetObject(full, 'chart01')).toBe(true);
   });
@@ -69,6 +70,12 @@ describe('what a chart may be', () => {
     no({ ...chart(), axis: true });
     no(chart({ series: { [C(1)]: { color: 'red' } } }));
     no(chart({ series: { [C(1)]: { line: false as unknown as true } } }));
+    no(chart({ kept: { part: '', sum: '0a1b2c3d' } }));
+    no(chart({ kept: { part: 'x'.repeat(201), sum: '0a1b2c3d' } }));
+    no(chart({ kept: { part: 'p', sum: 'XYZ' } }));
+    no({ ...chart(), kept: { part: 'p', sum: '0a1b2c3d', more: 1 } });
+    no({ ...chart(), kept: { part: 1, sum: 2 } });
+    no({ ...chart(), kept: 'p' });
   });
 });
 

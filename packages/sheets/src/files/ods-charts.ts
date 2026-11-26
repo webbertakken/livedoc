@@ -11,7 +11,7 @@ import {
 import { columnLetters } from '../address';
 import { COLUMN_WIDTH_NEW, ROW_HEIGHT_NEW } from '../limits';
 import type { FileChart, FileChartSeries, FileRange } from './file-charts';
-import type { FileAxisLines, FileLines } from './file-lines';
+import { lineStartPx, type FileLines } from './file-lines';
 
 const CHART_MEDIA_TYPE = ODF_MEDIA_TYPES.chart;
 
@@ -37,16 +37,6 @@ const cellOf = (sheet: string, r: number, c: number) =>
 export const odfRange = (sheet: string, at: FileRange) =>
   `${cellOf(sheet, at.r1, at.c1)}:${cellOf(sheet, at.r2, at.c2)}`;
 
-// Where a line starts, in px: the sizes of the lines before it, a hidden one none.
-function offsetOf(axis: FileAxisLines | undefined, at: number, size: number): number {
-  let px = 0;
-  for (let p = 0; p < at; p++) {
-    const line = axis?.lines.get(p);
-    if (!line?.hidden) px += line?.size ?? axis?.size ?? size;
-  }
-  return px;
-}
-
 /** The frames of a sheet's charts, for its `table:shapes`, each naming its object by `objects[n]`. */
 export function odsChartFrames(
   charts: readonly FileChart[],
@@ -56,8 +46,8 @@ export function odsChartFrames(
   objects: readonly ({ href: string } | { inline: string })[],
 ): string {
   const frames = charts.map((chart, i) => {
-    const x = offsetOf(lines?.c, chart.at.c, COLUMN_WIDTH_NEW) + chart.at.dx;
-    const y = offsetOf(lines?.r, chart.at.r, ROW_HEIGHT_NEW) + chart.at.dy;
+    const x = lineStartPx(lines?.c, chart.at.c, COLUMN_WIDTH_NEW) + chart.at.dx;
+    const y = lineStartPx(lines?.r, chart.at.r, ROW_HEIGHT_NEW) + chart.at.dy;
     const ranges = [
       ...(chart.labels ? [chart.labels.range] : []),
       ...(chart.x ? [chart.x.range] : []),

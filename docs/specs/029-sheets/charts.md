@@ -40,6 +40,8 @@ and two changing one chart resolve to the last write. Each change is one undo st
   and the right-hand axis; the legend's place (top, right, bottom, left) or none; the values printed on the marks;
   the value axis, shown unless turned off (Google shows it; a Plan chart's is off until turned on); a title, a
   horizontal axis title and a vertical axis title, each up to 200 characters; alt text up to 1,000.
+- **Kept file XML**: a chart read from a file names its file XML, kept with the workbook, and the sum it was read as;
+  the file is written with that XML while the chart is unchanged ([Charts in the file](standard-mapping.md#charts-in-the-file), D276).
 - Up to 100 objects a sheet (`objects_full`); a chart that is not one of these shapes is refused (`write_invalid`).
 
 ## Chart types

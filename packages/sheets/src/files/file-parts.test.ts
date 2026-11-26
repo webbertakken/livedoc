@@ -89,3 +89,28 @@ describe('fileParts', () => {
     expect(plan.parts.reduce((n, p) => n + p.units, 0)).toBe(500 - seeded);
   });
 });
+
+// standard-mapping.md "Charts in the file": a file's charts land last, once the rows and columns they read are there.
+describe('a file’s charts', () => {
+  it('ride a layout write after the sheet’s cells, never the create', () => {
+    const base = sheet('k', 3, 3, [[0, 0, { n: 1 }]]);
+    const chart = {
+      id: 'chart1',
+      kind: 'chart' as const,
+      type: 'line' as const,
+      at: { r: 'kr0', c: 'kc0', dx: 0, dy: 0 },
+      width: 400,
+      height: 300,
+    };
+    const plan = fileParts([{ ...base, layout: { ...base.layout, objects: [chart] } }]);
+    expect(plan.seeds[0]!.layout).toEqual(base.layout);
+    expect(plan.parts).toEqual([
+      {
+        sheetId: 'k',
+        write: { kind: 'layout', changes: [{ k: 'object', id: 'chart1', object: chart }] },
+        units: 1,
+      },
+    ]);
+    expect(plan.totalUnits - plan.seededUnits).toBe(1);
+  });
+});

@@ -84,6 +84,10 @@ describe('the import report’s copy', () => {
         'Row heights and column widths past the most a sheet holds are left out of 1 sheet: Data',
       ],
       [
+        { k: 'chart_rewritten', count: 2, names: ['Models'] },
+        '2 charts changed since the file was opened are written as LiveDoc draws charts: Models',
+      ],
+      [
         {
           k: 'sheet_renamed',
           count: 2,

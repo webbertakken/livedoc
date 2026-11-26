@@ -8,6 +8,7 @@ import {
   type OoxmlPart,
   type Relationship,
 } from '@livedoc/office-packages';
+import { fileChartSum, type FileChart } from './file-charts';
 import type { FileLoss, FileSheet } from './workbook-file';
 import { xlsxChartXml, xlsxDrawingXml } from './xlsx-charts';
 import { ownIds, type XlsxKeptWriter } from './xlsx-kept-write';
@@ -34,6 +35,20 @@ function namer(taken: ReadonlySet<string>): (dir: string, stem: string) => numbe
   };
 }
 
+// A read chart's own XML, while the chart sums as it was read (D276); a chart changed since is written anew, named.
+function keptChart(
+  chart: FileChart,
+  kept: XlsxKeptWriter,
+  sheet: string,
+  losses: FileLoss[],
+): Uint8Array | null {
+  const own = chart.kept && kept.part(chart.kept.part);
+  if (!own) return null;
+  if (fileChartSum(chart) === chart.kept!.sum) return own.data;
+  losses.push({ k: 'chart_rewritten', sheet });
+  return null;
+}
+
 export function xlsxChartParts(
   sheets: readonly FileSheet[],
   kept: XlsxKeptWriter,
@@ -57,7 +72,7 @@ export function xlsxChartParts(
       out.parts.push({
         name: `xl/charts/${part}`,
         contentType: OOXML_CONTENT_TYPES.chart,
-        data: encode(xlsxChartXml(name, chart)),
+        data: keptChart(chart, kept, sheet.name, losses) ?? encode(xlsxChartXml(name, chart)),
       });
       return { id: `rId${n + 1}`, type: RELATIONSHIP_TYPES.chart, target: `../charts/${part}` };
     });

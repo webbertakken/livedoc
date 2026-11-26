@@ -315,7 +315,7 @@ The table is the contract the readers and writers are tested against, one test p
 
 ## Charts in the file
 
-**Status: written built; read specified.** A sheet's [charts](charts.md#the-model) are written into both formats as
+**Status: written built; read built for XLSX, specified for ODF.** A sheet's [charts](charts.md#the-model) are written into both formats as
 each suite writes its own, so LibreOffice, Excel and Google Sheets open them as charts reading the same cells.
 
 - **Data**: each chart's range is read as the grid reads it ([Charts](charts.md#the-model)): its first row names the
@@ -335,10 +335,18 @@ each suite writes its own, so LibreOffice, Excel and Google Sheets open them as 
 - **A sheet keeping its file's drawings**: a sheet whose kept content holds a drawing (XLSX `drawing`) or shapes
   (ODF `table:shapes`) from the file it arrived in keeps them, and its own charts are not written beside them; the
   write names the sheet (`charts_unwritten`) (default, D261).
-- **Reading** (specified): a chart a file holds is read into the model when its type is one built and its series
-  read one range of its own sheet; its file XML is kept beside it and written back in its place while it is
-  unchanged, and a chart changed here is written from the model, the loss named (`chart_rewritten`). Any other chart
-  stays kept content.
+- **Reading** (XLSX built, ODF specified): a chart a file holds is read into the model when its type is one built and
+  its series read one block of its own sheet: the rows they share, a header row above them naming the series, a
+  label column (or a scatter's x) and the series' columns, in order. Its look is read as it is written above, a
+  series' colour and a scatter series' line by its column. XLSX reads a sheet's charts only when its drawing holds
+  nothing else, every anchor a chart that qualifies and no chart naming a part of its own (`r:id`); otherwise the
+  drawing stays kept whole and none of its charts is read (default, D275).
+- **Kept while unchanged**: a chart read from a file keeps its file XML beside it (a kept part, named on the chart),
+  with a sum of what it was read as: its type, titles, legend, values, axis, alt, place and size, and its cells by
+  position. A write whose chart sums the same writes the kept XML in its place, under a new part name; a chart changed
+  here (its look, its range, its place, or the cells moved by an insert or a delete) is written from the model, the
+  sheet named (`chart_rewritten`). A conversion writes every chart from the model (default, D276).
+- Any other chart stays kept content.
 
 ## Unknown content
 
@@ -519,5 +527,9 @@ The code cites each by its id.
   none (default).
 - **D260** A chart's palette in a file: Not written; a series without a colour of its own takes the reading suite's
   colours (default).
+- **D275** Which XLSX charts are read: a sheet's, when its drawing holds only charts of the types built, each
+  reading one block of its own sheet and naming no part of its own; else the drawing is kept whole (default).
+- **D276** A read chart unchanged: its read sum (type, titles, legend, values, axis, alt, place, size, cells by
+  position) equals the written one's; its kept chart part is then written in its place under a new name (default).
 - **D261** A sheet's own charts beside a drawing kept from its file: Not written, the sheet named (`charts_unwritten`),
   as a worksheet holds one drawing and ODF one `table:shapes` (default).

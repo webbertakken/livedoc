@@ -31,6 +31,16 @@ export type FileAxisLines = {
 
 export type FileLines = { r?: FileAxisLines; c?: FileAxisLines };
 
+/** Where a line starts, in px: the sizes of the lines before it, a hidden one none; `size` the format's own. */
+export function lineStartPx(axis: FileAxisLines | undefined, at: number, size: number): number {
+  let px = 0;
+  for (let p = 0; p < at; p++) {
+    const line = axis?.lines.get(p);
+    if (!line?.hidden) px += line?.size ?? axis?.size ?? size;
+  }
+  return px;
+}
+
 /** A group as positions, and whether it is collapsed. */
 export type FileGroup = { depth: number; from: number; to: number; collapsed: boolean };
 

@@ -46,8 +46,9 @@ format it arrived in ([Standard mapping](standard-mapping.md)).
   rows over every sheet, the grid's cells and 200 sheets; past them it is cut, each cut named in the read's losses
   (shown to the person in the [import report](#the-import-report)).
 - The new spreadsheet is made with each sheet's first 1,000 rows and 26 columns and as many of its cells as one
-  request of 4 MB carries; the rest follows in writes, in order: each sheet's other rows, its other columns, then its
-  cells, each write within a write's own limits (default, D86).
+  request of 4 MB carries; the rest follows in writes, in order: each sheet's other rows, its other columns, its
+  cells, then the charts read from the file ([Charts in the file](standard-mapping.md#charts-in-the-file)) in one
+  layout write once every cell they read is there, each write within a write's own limits (default, D86).
 - Then what the file holds that the model does not, its kept content ([Standard
   mapping](standard-mapping.md#unknown-content)), up to its sizes (D113), in requests of its own (D114).
 - While it is sent, the title row shows **Opening “<name>”… <n>%**, the share of rows, columns and cells sent.
