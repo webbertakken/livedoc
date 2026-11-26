@@ -3145,6 +3145,7 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
       "lt",
       "lte",
       "between",
+      "notBetween",
       "eq",
       "neq"
     ],
@@ -5446,6 +5447,17 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
     ],
     "type": "string"
   },
+  "DatePeriod": {
+    "enum": [
+      "today",
+      "tomorrow",
+      "yesterday",
+      "pastWeek",
+      "pastMonth",
+      "pastYear"
+    ],
+    "type": "string"
+  },
   "DecisionStatus": {
     "enum": [
       "proposed",
@@ -6977,8 +6989,22 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
       "colour": {
         "$ref": "#/components/schemas/FilterColour"
       },
+      "d": {
+        "$ref": "#/components/schemas/DatePeriod"
+      },
+      "fx": {
+        "$ref": "#/components/schemas/StoredFormula"
+      },
       "op": {
-        "$ref": "#/components/schemas/ConditionOp"
+        "anyOf": [
+          {
+            "$ref": "#/components/schemas/ConditionOp"
+          },
+          {
+            "const": "formula",
+            "type": "string"
+          }
+        ]
       },
       "values": {
         "items": {

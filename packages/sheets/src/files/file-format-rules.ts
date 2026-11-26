@@ -33,7 +33,16 @@ const DATE_TESTS: Partial<Record<ConditionOp, string>> = {
   dateAfter: '>',
   dateOn: '=',
 };
-const COMPARED: ReadonlySet<string> = new Set(['gt', 'gte', 'lt', 'lte', 'eq', 'neq', 'between']);
+const COMPARED: ReadonlySet<string> = new Set([
+  'gt',
+  'gte',
+  'lt',
+  'lte',
+  'eq',
+  'neq',
+  'between',
+  'notBetween',
+]);
 
 // A date condition as the formula testing the same day; one whose date cannot be read meets nothing, as it draws.
 function dateFormula(op: ConditionOp, a: string | undefined, anchor: string, locale: string) {

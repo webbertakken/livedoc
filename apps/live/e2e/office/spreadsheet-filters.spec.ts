@@ -2,8 +2,8 @@ import type { Page } from '@playwright/test';
 import { expect, expectNoPageErrors, test } from '../fixtures';
 import { officeMenuItem } from './office-menus';
 
-// Filter by Colour (plan 0020 Phase 10 box 1; docs/specs/029-sheets/data-tools.md "Filters, filter views and
-// slicers"): a filter column lists the fill colours drawn in it, and pressing one keeps only the rows drawn in it.
+// Filters (plan 0020 Phase 10 box 1; docs/specs/029-sheets/data-tools.md "Filters, filter views and
+// slicers"): Filter by Colour keeps the rows drawn in the colour pressed; Custom formula is the rows it holds for.
 
 const READY = '[data-spreadsheet-surface="ready"]';
 
@@ -64,5 +64,48 @@ test('Filter by Colour keeps the rows drawn in the chosen fill', async ({ page, 
   await expect(shown(page, 'apple')).toHaveCount(1);
   await expect(shown(page, 'plum')).toHaveCount(1);
   await expect(shown(page, 'Fruit')).toHaveCount(1);
+  expectNoPageErrors(pageErrors);
+});
+
+test('Filter by Condition keeps the rows a custom formula holds for', async ({
+  page,
+  pageErrors,
+}) => {
+  test.setTimeout(120_000);
+  await page.setViewportSize({ width: 1280, height: 860 });
+  await page.goto('/new?kind=spreadsheet');
+  await page.waitForURL(/\/document\//);
+  await expect(page.locator(READY)).toBeVisible();
+  for (const [i, [fruit, n]] of [
+    ['Fruit', 'Count'],
+    ['apple', '3'],
+    ['pear', '8'],
+    ['plum', '1'],
+    ['fig', '12'],
+  ].entries()) {
+    await typeInto(page, `A${i + 1}`, fruit!);
+    await typeInto(page, `B${i + 1}`, n!);
+  }
+  await select(page, 'A1:B5');
+  await (await officeMenuItem(page, ['Data', 'Create a Filter'])).click();
+  await page.getByRole('button', { name: 'Filter column 1' }).click();
+  await page
+    .getByRole('combobox', { name: 'Condition', exact: true })
+    .selectOption({ label: 'Custom formula is' });
+  const formula = page.getByRole('textbox', { name: 'Formula', exact: true });
+  await formula.fill('=B2>');
+  await page.getByRole('button', { name: 'OK' }).click();
+  await expect(page.getByText("That formula can't be read")).toBeVisible();
+  await formula.fill('=B2>5');
+  await page.waitForFunction(() =>
+    document.getAnimations().every((a) => a.playState !== 'running'),
+  );
+  await page.screenshot({ path: test.info().outputPath('filter-formula.png') });
+  await page.getByRole('button', { name: 'OK' }).click();
+
+  await expect(shown(page, 'apple')).toHaveCount(0);
+  await expect(shown(page, 'plum')).toHaveCount(0);
+  await expect(shown(page, 'pear')).toHaveCount(1);
+  await expect(shown(page, 'fig')).toHaveCount(1);
   expectNoPageErrors(pageErrors);
 });

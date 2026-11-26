@@ -116,6 +116,7 @@ const CELL_IS: Readonly<Record<string, ConditionOp>> = {
   equal: 'eq',
   notEqual: 'neq',
   between: 'between',
+  notBetween: 'notBetween',
 };
 const SIGN: Readonly<Record<string, string>> = {
   greaterThan: '>',
@@ -291,6 +292,7 @@ const OPERATORS: Partial<Record<ConditionOp | 'formula', string>> = {
   eq: 'equal',
   neq: 'notEqual',
   between: 'between',
+  notBetween: 'notBetween',
 };
 const TEXT_TYPES: Partial<
   Record<ConditionOp | 'formula', [string, string, (t: string, a: string) => string]>

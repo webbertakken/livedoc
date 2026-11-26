@@ -46,7 +46,7 @@ const MATCHERS = new WeakMap<FormatRule, { locale: string; fn: Matcher }>();
 function matcherOf(rule: FormatRule, locale: string): Matcher {
   const known = MATCHERS.get(rule);
   if (known && known.locale === locale) return known.fn;
-  const fn = conditionMatcher({ op: rule.op as never, a: rule.a, b: rule.b }, locale);
+  const fn = conditionMatcher({ op: rule.op, a: rule.a, b: rule.b }, locale);
   MATCHERS.set(rule, { locale, fn });
   return fn;
 }
@@ -215,6 +215,7 @@ export const FORMAT_CONDITION_LABELS: Record<ConditionOp | 'formula', string> = 
   lt: 'Less Than',
   lte: 'Less Than or Equal To',
   between: 'Is Between',
+  notBetween: 'Is Not Between',
   eq: 'Is Equal To',
   neq: 'Is Not Equal To',
   formula: 'Custom Formula Is',
@@ -223,7 +224,7 @@ export const FORMAT_CONDITION_LABELS: Record<ConditionOp | 'formula', string> = 
 // How many values each condition takes.
 export function conditionValues(op: ConditionOp | 'formula'): 0 | 1 | 2 {
   if (op === 'empty' || op === 'notEmpty') return 0;
-  return op === 'between' ? 2 : 1;
+  return op === 'between' || op === 'notBetween' ? 2 : 1;
 }
 
 // The rule's line in the list: "Greater Than 100", "Is Between 1 and 5", "Custom Formula Is =$C2>100",

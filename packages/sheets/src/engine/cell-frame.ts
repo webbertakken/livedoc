@@ -7,8 +7,7 @@ import type { ImportRead } from './import-book';
 import { childrenOf, type Node } from '../formula/ast';
 import { renderFormula, storedAst, type SheetsCtx } from '../formula/stored';
 import { formulaSyntaxOf, formulaToLocale } from '../formula/locale-syntax';
-import { filterTest, type FilterTest } from '../filter';
-import type { CellColourOf } from '../filter-colours';
+import { filterTest, type FilterReads, type FilterTest } from '../filter';
 import type { Value } from '../formula/values';
 import { colWidth, layoutIndex } from '../layout';
 import { cellKey, type CellInput, type Sheet } from '../sheet';
@@ -28,8 +27,8 @@ export type FrameSource = {
   ctx(sheetId: string): SheetsCtx;
   extent(sheetId: string): { rows: number; cols: number };
   sheet(sheetId: string): Sheet | undefined;
-  // A sheet's cells' drawn colours, for Filter by Colour (filter-colours.ts).
-  colourOf(sheetId: string): CellColourOf;
+  // What a sheet's filter reads beyond its cells' values (filter-reads.ts).
+  filterReads(sheetId: string): FilterReads;
   sheetCount(): number;
   sheetNumber(sheetId: string): number;
   input(sheetId: string, r: number, c: number): CellInput | undefined;
@@ -66,7 +65,7 @@ export function cellFrame(
   const filters = new Map<string, FilterTest | null>();
   const filterOf = (s: string): FilterTest | null => {
     // A range's sheet exists: a reference to a removed sheet is #REF! before any function reads it.
-    if (!filters.has(s)) filters.set(s, filterTest(src.sheet(s)!, src.locale, src.colourOf(s)));
+    if (!filters.has(s)) filters.set(s, filterTest(src.sheet(s)!, src.filterReads(s)));
     return filters.get(s)!;
   };
   // Hidden by hand or collapsed in a group: SUBTOTAL's 101 to 111 leave both out.

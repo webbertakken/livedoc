@@ -553,6 +553,46 @@ describe('the filter menu', () => {
     expect(cond()).toBeUndefined();
   });
 
+  // data-tools.md "Filters, filter views and slicers": Google's conditions.
+  it('filters by a date period, Is not between, and a custom formula', async () => {
+    await open();
+    fireEvent.change(screen.getByLabelText('Condition'), { target: { value: 'dateOn' } });
+    expect(screen.getByLabelText<HTMLSelectElement>('Date').value).toBe('');
+    expect(screen.getByLabelText('Value')).toBeTruthy();
+    fireEvent.change(screen.getByLabelText('Date'), { target: { value: 'pastWeek' } });
+    expect(screen.queryByLabelText('Value')).toBeNull();
+    fireEvent.click(btn('OK'));
+    expect(cond()).toEqual({ op: 'dateOn', d: 'pastWeek' });
+    reopen();
+    expect(screen.getByLabelText<HTMLSelectElement>('Date').value).toBe('pastWeek');
+    fireEvent.change(screen.getByLabelText('Condition'), { target: { value: 'notBetween' } });
+    expect(screen.queryByLabelText('Date')).toBeNull();
+    fireEvent.change(screen.getByLabelText('Value'), { target: { value: '2' } });
+    fireEvent.change(screen.getByLabelText('And'), { target: { value: '4' } });
+    fireEvent.click(btn('OK'));
+    expect(cond()).toEqual({ op: 'notBetween', a: '2', b: '4' });
+    reopen();
+    fireEvent.change(screen.getByLabelText('Condition'), { target: { value: 'formula' } });
+    expect(screen.queryByLabelText('Value')).toBeNull();
+    fireEvent.change(screen.getByLabelText('Formula'), { target: { value: '=LEN(A2)>4' } });
+    fireEvent.click(btn('OK'));
+    expect(cond()).toMatchObject({ op: 'formula', fx: { t: expect.stringContaining('LEN(') } });
+    reopen();
+    expect(screen.getByLabelText<HTMLInputElement>('Formula').value).toBe('=LEN(A2)>4');
+  });
+
+  it('refuses a custom formula it cannot read, and stays open', async () => {
+    await open();
+    fireEvent.change(screen.getByLabelText('Condition'), { target: { value: 'formula' } });
+    fireEvent.change(screen.getByLabelText('Formula'), { target: { value: '=A2>' } });
+    fireEvent.click(btn('OK'));
+    expect(screen.getByRole('status').textContent).toBe("That formula can't be read");
+    expect(h.ctl().menu).not.toBeNull();
+    expect(cond()).toBeUndefined();
+    fireEvent.change(screen.getByLabelText('Formula'), { target: { value: '=A2>"b"' } });
+    expect(screen.getByRole('status').textContent).toBe('');
+  });
+
   it('says when no colour is drawn in the column', async () => {
     await open();
     expect(screen.getByText('No colours in this column')).toBeTruthy();

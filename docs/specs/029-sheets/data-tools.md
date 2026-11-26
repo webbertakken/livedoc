@@ -1,7 +1,7 @@
 # Data tools
 
-**Status: partly built.** Sort Sheet, Sort Range with its Advanced Range Sorting Options, Create a Filter and Filter
-by Colour are built; the rest is specified.
+**Status: partly built.** Sort Sheet, Sort Range with its Advanced Range Sorting Options, Create a Filter, Filter by Colour
+and every condition of Filter by Condition are built; the rest is specified.
 
 Sorting, filtering, validation, names, protection, tables and clean-up in a [spreadsheet](spreadsheet.md), as
 Google Sheets' Data menu does. Its rows of the [parity matrix](parity-matrix.md) name this page.
@@ -37,6 +37,20 @@ Google Sheets' Data menu does. Its rows of the [parity matrix](parity-matrix.md)
   only when it meets all three. A column with no colour says "No colours in this column". It filters by colours
   already there, so it is not a colour picker ([Colour picker](../004-interface-design/colour-picker.md#not-colour-pickers)).
   SUBTOTAL leaves out the rows it hides, as every filtered row.
+- **Filter by Condition** offers Google's list: Is Empty, Is Not Empty, Text Contains, Text Does Not Contain, Text
+  Starts With, Text Ends With, Text Is Exactly, Date Is, Date Is Before, Date Is After, Greater Than, Greater Than or
+  Equal To, Less Than, Less Than or Equal To, Is Equal To, Is Not Equal To, Is Between, Is Not Between, Custom
+  Formula Is.
+  - A date condition takes **Today**, **Tomorrow**, **Yesterday**, **In the Past Week**, **In the Past Month**, **In
+    the Past Year** or **Exact Date** (then a date typed as the locale reads it; the default, as before). A period is
+    its days counted from the workbook's today (the past week the 7 days before today and today; the past month and
+    year from the same day a month or a year back, the last day of a shorter month); Date Is keeps a date in it, Date
+    Is Before one before its first day, Date Is After one after its last.
+  - Is Between and Is Not Between take two values either way round; Is Not Between keeps the numbers outside them.
+  - **Custom Formula Is**: a formula written for the filter's first row under its header (`=B2>5`), read for every
+    other row with its relative references moved by that row's offset, keeping the rows where it is TRUE or a non-zero
+    number (an error or a text keeps none); OK with a formula it cannot read says "That formula can't be read" under
+    the field and stays open. It meets the values ticked and the colour as well.
 - **Filter views**: **Create Filter View** makes a named filter that changes only the viewer's view; others see it
   in Data › Filter Views and may open it. **Save as Filter View**, **Duplicate**, **Rename**, **Delete**; a link opens
   one. A Viewer may make temporary filter views of their own, as Google's.
@@ -100,6 +114,12 @@ display style (Chip, Arrow, Plain Text) with option colours. Dropdowns and tick 
 - **Participant**: sort and filter only through filter views of their own; writes values through validation; picks
   from dropdowns and ticks tick boxes; finds; never replaces formulas or protected cells unless named.
 - **Viewer**: finds, uses filter views of their own, reads named ranges.
+
+## Observability
+
+- `[workbook] range sorted` with the key count and whether the data has a header row (Advanced Range Sorting
+  Options).
+- `[sheet] filter formula refused` with the column id, when a filter's Custom Formula Is cannot be read.
 
 ## Errors and limits
 

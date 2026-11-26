@@ -251,6 +251,7 @@ The table is the contract the readers and writers are tested against, one test p
 | Text Is Exactly             | `cellIs` `equal` with the text                                                                   | `="x"`                                                                                                |
 | Greater Than, ... Not Equal | `cellIs` `greaterThan`, `greaterThanOrEqual`, `lessThan`, `lessThanOrEqual`, `equal`, `notEqual` | `>`, `>=`, `<`, `<=`, `=`, `!=`                                                                       |
 | Is Between                  | `cellIs` `between`, two `formula`s                                                               | `between(1,5)`                                                                                        |
+| Is Not Between              | `cellIs` `notBetween`, two `formula`s                                                            | `not-between(1,5)`                                                                                    |
 | Date Is Before, After, Is   | `expression`: `AND(ISNUMBER(A1),INT(A1)<DATE(2026,1,5))`                                         | `formula-is(...)`, the same formula                                                                   |
 | Custom Formula Is           | `expression`                                                                                     | `formula-is(...)`                                                                                     |
 | Colour Scale                | `colorScale`: `cfvo` `min`, `max`, `num`, `percent`, `percentile`; `color@rgb`                   | `calcext:color-scale-entry`: `minimum`, `maximum`, `number`, `percent`, `percentile`; `calcext:color` |
@@ -258,7 +259,7 @@ The table is the contract the readers and writers are tested against, one test p
 
 - A condition's value is written as a number when it reads as one (a date as its day number), else as text.
 - **Read**: a `cellIs` or ODF comparison whose operand is a number or a text is its condition; any other operand (a
-  reference, a formula) and `notBetween` read as the same test written as a Custom Formula Is. An empty or not empty
+  reference, a formula) reads as the same test written as a Custom Formula Is. An empty or not empty
   test written as `LEN(TRIM(...))` reads as Is Empty or Is Not Empty; Date Is and Text Is Exactly come back as a
   Custom Formula Is and Is Equal To, drawing the same cells (default, D215).
 - What the model does not hold (data bars, icon sets, top and bottom, above average, duplicates, errors, time periods,

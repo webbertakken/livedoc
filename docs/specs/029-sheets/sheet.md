@@ -672,7 +672,8 @@ coloured in one theme reads in the other (`@livedoc/document` `cellColours`):
   drawn in the column, as a spreadsheet's: [Data tools](data-tools.md#filters-filter-views-and-slicers)), **Filter by Values** (a searchable list of the
   column's values with counts, **Select All** and **Clear**), and **Filter by Condition** (is empty, is not empty,
   text contains, does not contain, starts with, ends with, is exactly, date is before / after / on, greater than,
-  less than, between, equal to, not equal to).
+  less than, between, not between, equal to, not equal to, custom formula is; a date by a period from today or an
+  exact date, as a spreadsheet's: [Data tools](data-tools.md#filters-filter-views-and-slicers)).
 - The filter menu's **Sort A to Z / Z to A** sorts the filter's rows under its header by that column (whichever cell
   is active), moving whole rows. The header row stays on top, and the filter covers the same rows on screen after.
 - Rows that do not match every column's filter are hidden; a filtered column's button is filled. Row numbers of
