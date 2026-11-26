@@ -46,7 +46,7 @@ export function TextDocumentHost({ tab, readOnly = false }: { tab: Tab; readOnly
       }),
     [can.commentKey, can.level, selfParticipant, local, readOnly],
   );
-  // Who reads the comments, and the email a mention asks for (review.md "Mentions"); a read-only pane adds none.
+  // Who reads the comments, and the email a mention asks for (review.md "Mentions").
   const { accountId, commentMentions } = ctx;
   const mentions = useMemo(
     () => ({ selfUserId: accountId ?? null, onMentioned: commentMentions.notifyMentioned }),
