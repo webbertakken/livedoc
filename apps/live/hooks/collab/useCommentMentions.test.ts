@@ -4,7 +4,11 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 // The notify a mentioning comment fires (docs/specs/012-collaboration/comment-mentions.md "The email"): counted
 // once, then the api asked to email; a Plan card's comment names its card so the email opens it.
-const api = vi.hoisted(() => ({ apiGetTeam: vi.fn(), apiNotifyMention: vi.fn() }));
+const api = vi.hoisted(() => ({
+  apiGetTeam: vi.fn(),
+  apiNotifyMention: vi.fn(),
+  apiNotifyActionAssigned: vi.fn(),
+}));
 vi.mock('@/lib/api-client', () => api);
 const track = vi.hoisted(() => vi.fn());
 vi.mock('@/lib/telemetry', () => ({ track }));
@@ -18,6 +22,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   api.apiGetTeam.mockResolvedValue({ members: [] });
   api.apiNotifyMention.mockResolvedValue(undefined);
+  api.apiNotifyActionAssigned.mockResolvedValue(undefined);
 });
 
 function hook(ownerId: string | null = 'me') {
@@ -55,5 +60,30 @@ describe('useCommentMentions notify', () => {
     track.mockClear();
     result.current.notifyMentioned('Hi', []);
     expect(track).not.toHaveBeenCalled();
+  });
+});
+
+// docs/specs/034-text-documents/review.md "Assigning": an assigned comment emails its assignee as an assigned action.
+describe('useCommentMentions notifyAssigned', () => {
+  it('asks the api to email the assignee, the action named by the comment’s first line', async () => {
+    const { result } = hook();
+    await waitFor(() => expect(api.apiGetTeam).toHaveBeenCalled());
+    result.current.notifyAssigned('Check the totals\nplease', mentions[0]!);
+    expect(api.apiNotifyActionAssigned).toHaveBeenCalledWith('me', 't1', {
+      assigneeUserId: 'u2',
+      assigneeMemberId: 'm2',
+      documentId: 'd1',
+      actionName: 'Check the totals',
+      description: 'Check the totals\nplease',
+    });
+  });
+
+  it('sends nothing for a guest, and swallows a failure', async () => {
+    hook(null).result.current.notifyAssigned('x', mentions[0]!);
+    expect(api.apiNotifyActionAssigned).not.toHaveBeenCalled();
+    api.apiNotifyActionAssigned.mockRejectedValue(new Error('404'));
+    const { result } = hook();
+    await waitFor(() => expect(api.apiGetTeam).toHaveBeenCalled());
+    expect(() => result.current.notifyAssigned('x', mentions[0]!)).not.toThrow();
   });
 });

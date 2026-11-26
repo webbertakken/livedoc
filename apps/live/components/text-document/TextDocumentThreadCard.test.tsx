@@ -129,7 +129,7 @@ describe('TextDocumentThreadCard', () => {
     const field = screen.getByRole('textbox', { name: 'Add a comment' });
     fireEvent.change(field, { target: { value: 'Thanks' } });
     fireEvent.click(screen.getByRole('button', { name: 'Comment' }));
-    expect(selected.onReply).toHaveBeenCalledWith('Thanks', []);
+    expect(selected.onReply).toHaveBeenCalledWith('Thanks', [], undefined);
     expect(screen.getByRole('group', { current: true })).toBeTruthy();
   });
 
@@ -234,6 +234,79 @@ describe('a comment’s mentions on the card', () => {
   });
 });
 
+// review.md "Assigning": the card leads with whom it is assigned to, its Resolve reads Mark as done, and the reply
+// offers to reassign.
+describe('an assigned thread’s card', () => {
+  const priya = {
+    userId: 'u-priya',
+    memberId: 'm-priya',
+    name: 'Priya Kaur',
+    handle: 'priya-kaur',
+  };
+  const assigned: TextDocumentThread = {
+    ...thread,
+    comments: [
+      {
+        id: 'c1',
+        text: '@priya-kaur check',
+        at: 1,
+        author: ADA,
+        mentions: [priya],
+        assignee: priya,
+      },
+    ],
+  };
+
+  it('leads with the assignee, you for the reader, and offers Mark as done', () => {
+    const props = card(as(ADA), { thread: assigned, selfUserId: null });
+    expect(screen.getByText('Assigned to Priya Kaur')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Mark as done' }));
+    expect(props.onResolve).toHaveBeenCalledWith(true);
+    cleanup();
+    card(as(ADA), { thread: assigned, selfUserId: 'u-priya' });
+    expect(screen.getByText('Assigned to you')).toBeTruthy();
+  });
+
+  it('reads Resolve on a thread assigned to no one', () => {
+    card(as(ADA));
+    expect(screen.getByRole('button', { name: 'Resolve' })).toBeTruthy();
+    expect(screen.queryByText(/^Assigned to/)).toBeNull();
+  });
+
+  it('sends a reply’s reassignment', () => {
+    const sam = { userId: 'u-sam', memberId: 'm-sam', name: 'Sam Lee', handle: 'sam-lee' };
+    const onReply = vi.fn();
+    render(
+      <MentionContext.Provider
+        value={{ candidates: [{ ...sam, pending: false }], available: true }}
+      >
+        <TextDocumentThreadCard
+          thread={assigned}
+          deleted={false}
+          selected
+          commenter={as(ADA)}
+          selfUserId={null}
+          onSelect={vi.fn()}
+          onReply={onReply}
+          onEdit={vi.fn()}
+          onRemove={vi.fn()}
+          onResolve={vi.fn()}
+          onStep={vi.fn()}
+          onExit={vi.fn()}
+          onReact={vi.fn()}
+          names={new Map()}
+        />
+      </MentionContext.Provider>,
+    );
+    const field = screen.getByRole('textbox', { name: 'Add a comment' });
+    fireEvent.change(field, { target: { value: '@sa', selectionStart: 3, selectionEnd: 3 } });
+    fireEvent.keyDown(field, { key: 'Enter' });
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Reassign to Sam Lee' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Comment' }));
+    expect(onReply).toHaveBeenCalledWith('@sam-lee', [sam], sam);
+  });
+});
+
 describe('TextDocumentDraftCard', () => {
   it('focuses its field, sends with Comment, and drops with Cancel or Escape', async () => {
     const onSend = vi.fn();
@@ -245,7 +318,7 @@ describe('TextDocumentDraftCard', () => {
     await waitFor(() => expect(document.activeElement).toBe(field));
     fireEvent.change(field, { target: { value: 'Check this' } });
     fireEvent.click(screen.getByRole('button', { name: 'Comment' }));
-    expect(onSend).toHaveBeenCalledWith('Check this', []);
+    expect(onSend).toHaveBeenCalledWith('Check this', [], undefined);
     fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
     fireEvent.keyDown(field, { key: 'Escape' });
     expect(onCancel).toHaveBeenCalledTimes(2);
@@ -270,8 +343,9 @@ describe('TextDocumentDraftCard', () => {
     const field = screen.getByRole('textbox', { name: 'Add a comment' });
     fireEvent.change(field, { target: { value: 'Ask +pri', selectionStart: 8, selectionEnd: 8 } });
     fireEvent.keyDown(field, { key: 'Enter' });
+    expect(screen.getByRole('checkbox', { name: 'Assign to Priya Kaur' })).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'Comment' }));
-    expect(onSend).toHaveBeenCalledWith('Ask @priya-kaur', [priya]);
+    expect(onSend).toHaveBeenCalledWith('Ask @priya-kaur', [priya], undefined);
   });
 
   it('waits to take the focus until the margin has placed it (a hidden field takes none)', async () => {

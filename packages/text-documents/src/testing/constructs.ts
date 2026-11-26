@@ -745,6 +745,7 @@ export const CONSTRUCTS: Record<string, (format: TextDocumentFormat) => TextDocu
                 author,
                 reactions: { '👍': ['a1', 'b2'] },
                 mentions: [{ name: 'Priya Kaur', handle: 'priya-kaur' }],
+                assignee: { name: 'Priya Kaur', handle: 'priya-kaur' },
               },
               {
                 id: ids.r1,

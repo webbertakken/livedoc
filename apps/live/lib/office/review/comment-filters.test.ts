@@ -65,6 +65,16 @@ describe('forYou', () => {
     expect(forYou(mentioning(null), { key: 'me', userId: null })).toBe(false);
   });
 
+  it('holds a thread assigned to you', () => {
+    const assigned = (userId: string | null) =>
+      row('a', {
+        comments: [comment('1', 'them')],
+        assignee: { userId, name: 'Me', handle: 'me' },
+      });
+    expect(forYou(assigned('u-me'), ME)).toBe(true);
+    expect(forYou(assigned('u-else'), ME)).toBe(false);
+  });
+
   it('holds nothing for a session without a key', () => {
     expect(
       forYou(row('a', { comments: [comment('1', ''), comment('2', 'x')] }), {

@@ -10,6 +10,7 @@ import { CheckIcon } from '@livedoc/ui';
 import type { Comment } from '@livedoc/document';
 import { OFFICE_PANEL_SELECT } from '@/components/office/OfficePanel';
 import { CommentSummary } from '@/components/panels/CommentSummary';
+import { assignedLabel } from '@/lib/office/review/assigned-comment';
 import {
   countLabel,
   filterRows,
@@ -164,6 +165,7 @@ export function OfficeCommentsPanel({
               canComment={canComment}
               onGo={() => onGo(row.id)}
               onReopen={() => onReopen(row.id)}
+              selfUserId={self.userId}
               noteOf={noteOf}
             />
           ))}
@@ -175,12 +177,14 @@ export function OfficeCommentsPanel({
 
 function CommentsPanelRow({
   row,
+  selfUserId,
   canComment,
   onGo,
   onReopen,
   noteOf,
 }: {
   row: ReviewThreadRow;
+  selfUserId: string | null;
   canComment: boolean;
   onGo: () => void;
   onReopen: () => void;
@@ -198,6 +202,11 @@ function CommentsPanelRow({
         onClick={onGo}
         className="absolute inset-0 cursor-pointer rounded-control outline-none focus-visible:ring-2 focus-visible:ring-(--office-focus) focus-visible:ring-inset"
       />
+      {row.assignee ? (
+        <p className="truncate text-supporting text-slate-700 dark:text-slate-200">
+          {assignedLabel(row.assignee, selfUserId)}
+        </p>
+      ) : null}
       {row.deleted ? (
         <p className="text-supporting text-slate-500 dark:text-slate-400">
           Original content deleted

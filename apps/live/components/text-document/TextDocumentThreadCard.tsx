@@ -7,7 +7,15 @@
 import type { CommentMention } from '@livedoc/document';
 import { useEffect, useRef, useState, type KeyboardEvent } from 'react';
 import type { TextDocumentThread } from '@livedoc/text-documents';
-import { commentNoteOf, sharedComment } from '@/lib/text-document/text-document-comment-rows';
+import {
+  commentNoteOf,
+  sharedComment,
+  threadAssignee,
+} from '@/lib/text-document/text-document-comment-rows';
+import { assignedLabel, assignOffer } from '@/lib/office/review/assigned-comment';
+
+// A new thread is assigned to no one yet: its draft offers "Assign to <name>".
+const ASSIGN_NEW = assignOffer(null);
 import { reactionChips } from '@/lib/office/review/comment-reactions';
 import {
   CommentComposer,
@@ -42,13 +50,14 @@ export function TextDocumentThreadCard({
   onExit,
   onReact,
   names,
+  selfUserId = null,
 }: {
   thread: TextDocumentThread;
   deleted: boolean;
   selected: boolean;
   commenter: TextDocumentCommenter | null;
   onSelect: () => void;
-  onReply: (text: string, mentions: CommentMention[]) => void;
+  onReply: (text: string, mentions: CommentMention[], assignee?: CommentMention) => void;
   onEdit: (commentId: string, text: string) => void;
   onRemove: (commentId: string) => void;
   onResolve: (resolved: boolean) => void;
@@ -60,8 +69,11 @@ export function TextDocumentThreadCard({
   onReact: (commentId: string, emoji: string, on: boolean) => void;
   /** The document's people by key, naming who reacted. */
   names: ReadonlyMap<string, string>;
+  /** The reader's account, so a thread assigned to them reads "Assigned to you" (review.md "Assigning"). */
+  selfUserId?: string | null;
 }) {
   const [confirming, setConfirming] = useState(false);
+  const assignee = threadAssignee(thread);
   const replyField = useRef<HTMLTextAreaElement>(null);
   // The keys on a selected comment, heard on the card itself, never in its fields (review.md "Keys on a selected
   // comment"); R and E only for whoever may comment.
@@ -118,13 +130,21 @@ export function TextDocumentThreadCard({
           </p>
         </div>
       ) : null}
-      {commenter ? (
-        <div className="flex justify-end px-1 pt-1">
-          <CommentResolveToggle
-            resolved={thread.resolved}
-            onResolve={() => onResolve(true)}
-            onUnresolve={() => onResolve(false)}
-          />
+      {assignee || commenter ? (
+        <div className="flex items-center justify-end gap-2 px-1 pt-1">
+          {assignee ? (
+            <p className="min-w-0 flex-1 px-2 text-supporting break-words text-slate-600 dark:text-slate-300">
+              {assignedLabel(assignee, selfUserId)}
+            </p>
+          ) : null}
+          {commenter ? (
+            <CommentResolveToggle
+              resolved={thread.resolved}
+              resolveLabel={assignee ? 'Mark as done' : undefined}
+              onResolve={() => onResolve(true)}
+              onUnresolve={() => onResolve(false)}
+            />
+          ) : null}
         </div>
       ) : null}
       <CommentThreadList
@@ -146,7 +166,11 @@ export function TextDocumentThreadCard({
         className="max-h-96 overflow-y-auto px-3 py-1"
       />
       {selected && commenter ? (
-        <CommentComposer fieldRef={replyField} onAddComment={onReply} />
+        <CommentComposer
+          fieldRef={replyField}
+          onAddComment={onReply}
+          assign={assignOffer(assignee)}
+        />
       ) : null}
       <ConfirmDialog
         open={confirming}
@@ -172,7 +196,7 @@ export function TextDocumentDraftCard({
   commenter: TextDocumentCommenter;
   /** The margin has placed it: hidden until then, it can take no focus. */
   placed: boolean;
-  onSend: (text: string, mentions: CommentMention[]) => void;
+  onSend: (text: string, mentions: CommentMention[], assignee?: CommentMention) => void;
   onCancel: () => void;
 }) {
   const field = useRef<HTMLTextAreaElement>(null);
@@ -201,7 +225,7 @@ export function TextDocumentDraftCard({
       className={`${CARD} shadow-lg`}
     >
       <p className="px-3 pt-2 text-body text-slate-900 dark:text-slate-50">{commenter.name}</p>
-      <CommentComposer fieldRef={field} onAddComment={onSend} />
+      <CommentComposer fieldRef={field} onAddComment={onSend} assign={ASSIGN_NEW} />
       <div className="flex justify-end px-2 pb-2">
         <Button size="xs" variant="secondary" onClick={onCancel}>
           Cancel

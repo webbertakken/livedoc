@@ -51,6 +51,7 @@ export function TextDocumentMargin({
   threads,
   keys,
   commenter,
+  selfUserId = null,
   subscribe,
   subscribeCaret,
   children,
@@ -60,6 +61,8 @@ export function TextDocumentMargin({
   /** Going between threads from the keyboard: the card asked for the focus, J and K, U. */
   keys: Pick<TextDocumentThreadKeys, 'focusRequest' | 'step' | 'exit'>;
   commenter: TextDocumentCommenter | null;
+  /** The reader's account, so a thread assigned to them reads "Assigned to you" (review.md "Assigning"). */
+  selfUserId?: string | null;
   subscribe: (listener: () => void) => () => void;
   subscribeCaret: (listener: () => void) => () => void;
   children: ReactNode;
@@ -180,7 +183,8 @@ export function TextDocumentMargin({
         selected={selected === id}
         commenter={commenter}
         onSelect={() => threads.select(id)}
-        onReply={(text, mentions) => threads.reply(id, text, mentions)}
+        onReply={(text, mentions, assignee) => threads.reply(id, text, mentions, assignee)}
+        selfUserId={selfUserId}
         onEdit={(commentId, text) => threads.edit(id, commentId, text)}
         onRemove={(commentId) => threads.remove(id, commentId)}
         onResolve={(resolved) => threads.resolve(id, resolved)}

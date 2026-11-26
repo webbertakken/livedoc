@@ -94,6 +94,9 @@ function liveComment(comment: FileThread['comments'][number]): TextDocumentComme
     ...(comment.mentions
       ? { mentions: comment.mentions.map(({ name, handle }) => ({ userId: null, name, handle })) }
       : {}),
+    ...(comment.assignee
+      ? { assignee: { userId: null, name: comment.assignee.name, handle: comment.assignee.handle } }
+      : {}),
   };
 }
 
@@ -107,6 +110,7 @@ function fileComment(comment: TextDocumentComment): FileThread['comments'][numbe
     author: key === undefined ? { name, ...(initials ? { initials } : {}) } : { name, key, colour },
     ...(comment.reactions ? { reactions: comment.reactions } : {}),
     ...Comments.mentionsFrom(Comments.mentionsText(fileMentions(comment.mentions))),
+    ...Comments.assigneeFrom(Comments.assigneeText(fileMentions([comment.assignee])?.[0])),
   };
 }
 

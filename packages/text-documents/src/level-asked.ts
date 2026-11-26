@@ -36,11 +36,27 @@ const mentionsWithin = ({ mentions }: TextDocumentComment): boolean =>
     sanitizeMentions(mentions)?.length === mentions.length &&
     mentions.every((m) => Object.keys(m as object).every((field) => MENTION_FIELDS.has(field))));
 
-/** Whether a comment is the sender's own, within its length and its mentions' limits. */
+/** Whether a comment assigns no one, or one of the people it mentions (review.md "Assigning"). */
+const assigneeWithin = ({ assignee, mentions }: TextDocumentComment): boolean =>
+  assignee === undefined ||
+  (typeof assignee === 'object' &&
+    assignee !== null &&
+    (mentions ?? []).some((m) => sameFields(m, assignee)));
+
+/** Whether two plain objects hold the same fields, whatever their order. */
+const sameFields = (a: unknown, b: unknown): boolean => {
+  if (typeof a !== 'object' || a === null || typeof b !== 'object' || b === null) return false;
+  const left = Object.entries(a).sort(([x], [y]) => (x < y ? -1 : 1));
+  const right = Object.entries(b).sort(([x], [y]) => (x < y ? -1 : 1));
+  return same(left, right);
+};
+
+/** Whether a comment is the sender's own, within its length, its mentions' limits and its assignee's. */
 const ownComment = (comment: TextDocumentComment, key: string): boolean =>
   comment.author.key === key &&
   comment.text.length <= TEXT_DOCUMENT_COMMENT_TEXT_MAX &&
-  mentionsWithin(comment);
+  mentionsWithin(comment) &&
+  assigneeWithin(comment);
 
 /** What a comment says, apart from its reactions. */
 const said = ({ reactions: _reactions, ...rest }: TextDocumentComment) => rest;

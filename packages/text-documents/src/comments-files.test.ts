@@ -711,3 +711,55 @@ describe('a comment’s mentions in the files', () => {
     ).toBeUndefined();
   });
 });
+
+// review.md "Assigning": `livedoc:assignee` on the comment in both formats, its name and handle alone.
+describe('a comment’s assignee in the files', () => {
+  const run = (text: string): Inline => ({ type: 'run', text, props: {} });
+  const mark = (edge: 'start' | 'end'): Inline => ({ type: 'comment', edge, id: 't', props: {} });
+  const priya = { name: 'Priya Kaur', handle: 'priya-kaur' };
+  const assigned: TextDocument = {
+    ...TextDocument.blank(),
+    body: [
+      {
+        ...(TextDocument.blank().body[0] as Paragraph),
+        inlines: [run('ab'), mark('start'), run('cd'), mark('end')],
+      },
+    ],
+    comments: [
+      {
+        id: 't',
+        resolved: false,
+        comments: [
+          {
+            id: 't',
+            text: '@priya-kaur please',
+            author: { name: 'Ada', key: 'a1' },
+            mentions: [priya],
+            assignee: priya,
+          },
+        ],
+      },
+    ],
+  };
+  const assigneeOf = (document: TextDocument) => document.comments?.[0]?.comments[0]?.assignee;
+
+  it('writes it in ODF and OOXML, and reads it back', async () => {
+    for (const type of ['fodt', 'odt', 'docx'] as const) {
+      const source = type === 'docx' ? convertTextDocument(assigned, 'ooxml').document : assigned;
+      expect(assigneeOf((await read(written(source, type))).document)).toEqual(priya);
+    }
+    expect(new TextDecoder().decode(written(assigned, 'fodt'))).toContain('livedoc:assignee=');
+  });
+
+  it('carries no account out of the live state, and brings none back', () => {
+    const doc = TextDocumentState.load([TextDocumentState.fromDocument(assigned)]);
+    expect(LiveThreads.read(doc)[0]!.comments[0]!.assignee).toEqual({ userId: null, ...priya });
+    expect(assigneeOf(TextDocumentState.document(doc, 'odf'))).toEqual(priya);
+  });
+
+  it('reads a malformed assignee as none', () => {
+    for (const bad of ['not json', '[]', '{"name":"A"}', '{"name":7,"handle":"x"}'])
+      expect(Comments.readAssignee(bad)).toBeUndefined();
+    expect(Comments.readAssignee(JSON.stringify({ ...priya, userId: 'u' }))).toEqual(priya);
+  });
+});
