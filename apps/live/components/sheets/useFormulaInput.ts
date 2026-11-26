@@ -27,7 +27,7 @@ import {
 } from './formula-assist';
 import { formulaKey } from './formula-keys';
 import { useSheetController } from './sheet-controller';
-import { dropdownMatches } from './rules/dropdown-assist';
+import { dropdownMatches, type DropdownMatch } from './rules/dropdown-assist';
 import { toggleFunctionHelp } from './function-help-pref';
 import type { SheetActions } from './useSheetActions';
 
@@ -44,7 +44,7 @@ export type FormulaInput = {
   setPick: (i: number) => void;
   matches: ReturnType<typeof functionMatches>;
   // A dropdown cell's options matching what is typed (data-validation.md "Using a dropdown"), or null.
-  options: string[] | null;
+  options: DropdownMatch[] | null;
   pickOption: (value: string) => void;
   caret: number;
   setCaret: (n: number) => void;
@@ -133,7 +133,7 @@ export function useFormulaInput(actions: SheetActions): FormulaInput {
     ) {
       e.preventDefault();
       pickOption(
-        options[Math.min(pick, options.length - 1)]!,
+        options[Math.min(pick, options.length - 1)]!.value,
         e.key === 'Tab' ? (e.shiftKey ? 'left' : 'right') : e.shiftKey ? 'up' : 'down',
       );
       return;

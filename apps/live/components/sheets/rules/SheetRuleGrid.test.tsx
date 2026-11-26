@@ -180,6 +180,46 @@ describe('dropdowns', () => {
   });
 });
 
+describe('a dropdown allowing multiple selections', () => {
+  const MULTI = { ...LIST, multi: true as const };
+  const select = (h: Awaited<ReturnType<typeof mount>>, r: number, c: number) =>
+    act(() =>
+      h.c().setSelection({
+        ranges: [{ r1: r, c1: c, r2: r, c2: c }],
+        active: { r, c },
+        anchor: { r, c },
+      }),
+    );
+  it('ticks and unticks options in its list, each a write, the list kept open', async () => {
+    const h = await mount({ layout: { rules: [MULTI] } });
+    select(h, 6, 2);
+    fireEvent.keyDown(h.grid, { key: 'ArrowDown', altKey: true });
+    let list = await screen.findByRole('dialog', { name: 'Options for C7' });
+    fireEvent.click(within(list).getByText('Done'));
+    expect(at(h, 6, 2)?.input).toEqual({ s: 'Done' });
+    list = await screen.findByRole('dialog', { name: 'Options for C7' });
+    fireEvent.click(within(list).getByText('To Do'));
+    expect(at(h, 6, 2)?.input).toEqual({ s: 'Done, To Do' });
+    fireEvent.click(within(list).getByText('Done'));
+    expect(at(h, 6, 2)?.input).toEqual({ s: 'To Do' });
+    expect(h.c().rules.dropdown).toEqual({ r: 6, c: 2 });
+    expect(within(list).getByRole('checkbox', { name: 'To Do' }).getAttribute('aria-checked')).toBe(
+      'true',
+    );
+    fireEvent.click(within(list).getByText('To Do'));
+    expect(at(h, 6, 2)?.input).toBeUndefined();
+  });
+  it('completes the part after the last comma as it is typed', async () => {
+    const h = await mount({ layout: { rules: [MULTI] } });
+    select(h, 6, 2);
+    act(() => h.actions().startEdit('type', 'Done, to'));
+    const list = await screen.findByRole('listbox', { name: 'Options' });
+    expect([...list.querySelectorAll('li')].map((li) => li.textContent)).toEqual(['To Do']);
+    fireEvent.keyDown(screen.getByRole('textbox', { name: 'Edit cell C7' }), { key: 'Enter' });
+    expect(at(h, 6, 2)?.input).toEqual({ s: 'Done, To Do' });
+  });
+});
+
 describe('typing in a ruled cell', () => {
   it('refuses a value a Reject rule does not allow, keeping the edit and saying why', async () => {
     const h = await mount();

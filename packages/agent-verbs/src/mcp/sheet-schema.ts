@@ -383,6 +383,10 @@ const sheetChange = z.discriminatedUnion('op', [
             .enum(['chip', 'arrow', 'plain'])
             .optional()
             .describe('How it shows (default chip).'),
+          multiple: z
+            .boolean()
+            .optional()
+            .describe('Allow several options in one cell, written "To Do, Done".'),
         }),
         z.object({
           type: z.literal('dropdown_range'),
@@ -390,6 +394,7 @@ const sheetChange = z.discriminatedUnion('op', [
             'The cells whose values are offered: "A2:A20" on this sheet, "Sheet2!A2:A20" on another.',
           ),
           display: z.enum(['chip', 'arrow', 'plain']).optional(),
+          multiple: z.boolean().optional().describe('Allow several of its values in one cell.'),
         }),
         z.object({
           type: z.literal('checkbox'),

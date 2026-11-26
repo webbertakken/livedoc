@@ -103,6 +103,44 @@ export function optionFor(
   return rule.opts?.find((o) => o.v.trim().toLowerCase() === text) ?? null;
 }
 
+// A multiple-selection cell's parts: split at commas, each trimmed, empty ones aside.
+export function selectionParts(text: string): string[] {
+  return text
+    .split(',')
+    .map((p) => p.trim())
+    .filter((p) => p.length > 0);
+}
+
+// Parts written back as one cell's text.
+export function joinSelections(parts: readonly string[]): string {
+  return parts.join(', ');
+}
+
+// A multiple-selection cell's text with an option ticked (added at the end) or unticked, case aside; null when none
+// is left.
+export function toggleSelection(text: string, option: string): string | null {
+  const parts = selectionParts(text);
+  const key = option.trim().toLowerCase();
+  const kept = parts.filter((p) => p.toLowerCase() !== key);
+  const next = kept.length === parts.length ? [...parts, option] : kept;
+  return next.length ? joinSelections(next) : null;
+}
+
+// Whether one value is a dropdown's option, or one of its range's values.
+function oneAllowed(rule: ValidationRule, v: Exclude<Scalar, null>, ctx: RuleCtx): boolean {
+  if (rule.is === 'list') return optionFor(rule, v) !== null;
+  // The api cannot work a range's values out: it lets them through, and the editor checks.
+  if (!ctx.rangeValues) return true;
+  const text = scalarText(v).toLowerCase();
+  return ctx
+    .rangeValues(rule)
+    .some((o) =>
+      typeof v === 'number' && typeof o.value === 'number'
+        ? o.value === v
+        : o.shown.toLowerCase() === text || scalarText(o.value).toLowerCase() === text,
+    );
+}
+
 function inRange(n: number, a: number, b: number): boolean {
   return n >= Math.min(a, b) && n <= Math.max(a, b);
 }
@@ -172,18 +210,10 @@ export function scalarAllowed(
   const shown = at.shown;
   switch (rule.is) {
     case 'list':
-      return optionFor(rule, v) !== null;
     case 'range': {
-      // The api cannot work a range's values out: it lets them through, and the editor checks.
-      if (!ctx.rangeValues) return true;
-      const text = scalarText(v).toLowerCase();
-      return ctx
-        .rangeValues(rule)
-        .some((o) =>
-          typeof v === 'number' && typeof o.value === 'number'
-            ? o.value === v
-            : o.shown.toLowerCase() === text || scalarText(o.value).toLowerCase() === text,
-        );
+      if (!rule.multi || typeof v !== 'string') return oneAllowed(rule, v, ctx);
+      const parts = selectionParts(v);
+      return parts.length > 0 && parts.every((p) => oneAllowed(rule, p, ctx));
     }
     case 'check':
       return checkState(rule, v) !== undefined;
@@ -255,6 +285,12 @@ export function valueInvalid(
 // What a typed input becomes under a rule: a dropdown's option in its own spelling; a checkbox's 1 or 0 as TRUE or
 // FALSE (data-validation.md "Where values are checked").
 export function inputForRule(rule: ValidationRule, input: CellInput): CellInput {
+  if (rule.is === 'list' && rule.multi && 's' in input) {
+    const opts = selectionParts(input.s).map((p) => optionFor(rule, p));
+    if (!opts.length || opts.some((o) => !o)) return input;
+    const text = joinSelections(opts.map((o) => o!.v));
+    return text === input.s ? input : { s: text };
+  }
   if (rule.is === 'list' && ('s' in input || 'n' in input || 'b' in input)) {
     const o = optionFor(rule, inputScalar(input) ?? '');
     return o && !('s' in input && input.s === o.v) ? { s: o.v } : input;
@@ -307,7 +343,7 @@ export function ruleLine(
       const opts = (rule.opts ?? []).map((o) => o.v);
       const named = opts.slice(0, LINE_OPTIONS_SHOWN).join(', ');
       const more = opts.length - LINE_OPTIONS_SHOWN;
-      return `Choose one of the dropdown's options: ${named}${more > 0 ? `, and ${more} more` : ''}`;
+      return `Choose ${rule.multi ? 'one or more' : 'one'} of the dropdown's options: ${named}${more > 0 ? `, and ${more} more` : ''}`;
     }
     case 'range': {
       const src = rule.src;
@@ -318,7 +354,8 @@ export function ruleLine(
           ? { id: '', title: null, layout: ctx.layout }
           : (ctx.sourceOf?.(src) ?? null);
       const text = src ? sourceText(sheet, src) : '';
-      return text ? `Choose one of the values in ${text}` : 'Choose one of the listed values';
+      const how = rule.multi ? 'one or more' : 'one';
+      return text ? `Choose ${how} of the values in ${text}` : `Choose ${how} of the listed values`;
     }
     case 'check': {
       if (rule.on === undefined) return 'This cell is a checkbox: type TRUE or FALSE';

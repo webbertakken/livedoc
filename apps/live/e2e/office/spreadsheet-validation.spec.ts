@@ -167,3 +167,50 @@ test('a Dropdown from a Range reads another sheet, and shrinks with its rows', a
   await expect(panel.getByPlaceholder('A2:A20')).toHaveValue('Sheet2!A1:A2');
   expectNoPageErrors(pageErrors);
 });
+
+test('a dropdown allowing multiple selections holds several options as chips', async ({
+  page,
+  pageErrors,
+}) => {
+  test.setTimeout(120_000);
+  await page.setViewportSize({ width: 1280, height: 860 });
+  await page.goto('/new?kind=spreadsheet');
+  await page.waitForURL(/\/document\//);
+  await expect(page.locator(READY)).toBeVisible();
+
+  await select(page, 'B1:B3');
+  await (await officeMenuItem(page, ['Insert', 'Dropdown'])).click();
+  const panel = page.getByRole('complementary', { name: 'Data Validation Rules' });
+  await panel.getByRole('textbox', { name: 'Option 1' }).fill('To Do');
+  await panel.getByRole('textbox', { name: 'Option 2' }).fill('Done');
+  await panel.getByRole('checkbox', { name: 'Allow Multiple Selections' }).check();
+  await panel.getByRole('button', { name: 'Done', exact: true }).click();
+
+  // Two picks from the list, which stays open between them.
+  await select(page, 'B1');
+  await page.keyboard.press('Alt+ArrowDown');
+  const list = page.getByRole('dialog', { name: 'Options for B1' });
+  await list.getByRole('checkbox', { name: 'Done', exact: true }).click();
+  await list.getByRole('checkbox', { name: 'To Do', exact: true }).click();
+  await expect(list.getByRole('checkbox', { name: 'Done', exact: true })).toHaveAttribute(
+    'aria-checked',
+    'true',
+  );
+  await page.keyboard.press('Escape');
+  expect(await inputOf(page, 'B1')).toBe('Done, To Do');
+  await page.screenshot({ path: test.info().outputPath('validation-multiple.png') });
+
+  // Typed parts take the options' spelling; a part that is no option is refused.
+  await select(page, 'B2');
+  await page.keyboard.type('to do,done');
+  await page.keyboard.press('Enter');
+  await select(page, 'B3');
+  await page.keyboard.type('Done, Blocked');
+  await page.keyboard.press('Enter');
+  await expect(
+    page.getByText("Choose one or more of the dropdown's options: To Do, Done").first(),
+  ).toBeVisible();
+  await page.keyboard.press('Escape');
+  expect(await inputOf(page, 'B2')).toBe('To Do, Done');
+  expectNoPageErrors(pageErrors);
+});

@@ -112,6 +112,7 @@ export function SheetRuleLayer({ actions }: { actions: SheetActions }) {
           anchor={dropAnchor}
           current={currentAt(open)}
           onPick={(v) => actions.pickOption(open, v)}
+          onToggle={(v) => actions.toggleOption(open, v, currentAt(open))}
           onClose={() => {
             c.rules.setDropdown(null);
             c.focusGrid();

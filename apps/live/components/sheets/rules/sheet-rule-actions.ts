@@ -9,6 +9,7 @@ import {
   posRangeOf,
   pasteClip,
   removeValidation,
+  toggleSelection,
   setValidationRule,
   toggleCheckboxes,
   validationRuleAt,
@@ -65,6 +66,18 @@ export function sheetRuleActions(c: SheetController) {
       );
       c.focusGrid();
       return ok;
+    },
+    // A press on an option of a dropdown allowing multiple selections: the option ticked or unticked in the cell, the
+    // list kept open (data-validation.md "Using a dropdown").
+    toggleOption(at: { r: number; c: number }, option: string, current: string): boolean {
+      const r = layout().rows[at.r];
+      const col = layout().cols[at.c];
+      if (!r || !col) return false;
+      const next = toggleSelection(current, option);
+      return c.write(
+        { kind: 'cells', cells: [{ r, c: col, i: next === null ? null : { s: next } }] },
+        'Cell',
+      );
     },
     // ---- Validation rules (an Editor's: the Sheet's shape) ----
     addCheckbox(range: GridRange = primary(c)): void {

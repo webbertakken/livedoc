@@ -145,6 +145,8 @@ export type ValidationRule = IdRange & {
   // A Dropdown's options; a Dropdown from a Range's cells.
   opts?: DropdownOption[];
   src?: RuleSource;
+  // Allow Multiple Selections (a dropdown's): its cells hold one or more options, joined by ", ".
+  multi?: true;
   // A dropdown's Display: absent is Chip.
   show?: 'arrow' | 'plain';
   op?: NumOp | DateOp | TextOp;

@@ -45,8 +45,15 @@ export type AgentValidation =
       // A colour per option (#rrggbb), or null for none.
       colors?: (string | null)[];
       display?: 'chip' | 'arrow' | 'plain';
+      // Allow Multiple Selections: a cell holds one or more options, joined by ", ".
+      multiple?: boolean;
     }
-  | { type: 'dropdown_range'; source: string; display?: 'chip' | 'arrow' | 'plain' }
+  | {
+      type: 'dropdown_range';
+      source: string;
+      display?: 'chip' | 'arrow' | 'plain';
+      multiple?: boolean;
+    }
   // Custom cell values: the ticked one and, optionally, the unticked one (else the empty cell).
   | { type: 'checkbox'; checked?: string | number; unchecked?: string | number }
   // Written for the range's top-left cell.
@@ -183,6 +190,7 @@ function validationSettings(
 ): { ok: true; settings: RuleSettings } | SheetRefusal {
   const show = (d?: string): { show?: 'arrow' | 'plain' } =>
     d === 'arrow' || d === 'plain' ? { show: d } : {};
+  const multi = (m?: boolean): { multi?: true } => (m === true ? { multi: true } : {});
   switch (rule.type) {
     case 'checkbox': {
       const on = customOf(rule.checked);
@@ -221,12 +229,18 @@ function validationSettings(
       });
       if (!opts.length || opts.some((o) => !o.v))
         return refuse('rule_invalid', 'A dropdown needs one or more options, none empty.');
-      return { ok: true, settings: { is: 'list', opts, ...show(rule.display), ...extra } };
+      return {
+        ok: true,
+        settings: { is: 'list', opts, ...show(rule.display), ...multi(rule.multiple), ...extra },
+      };
     }
     case 'dropdown_range': {
       const src = sourceFromText(wb.ctxFor(sheetId), rule.source);
       if (!src) return badRange(rule.source);
-      return { ok: true, settings: { is: 'range', src, ...show(rule.display), ...extra } };
+      return {
+        ok: true,
+        settings: { is: 'range', src, ...show(rule.display), ...multi(rule.multiple), ...extra },
+      };
     }
     case 'number':
     case 'date':
@@ -453,6 +467,7 @@ export function rulesRead(wb: Workbook, sheetId: string) {
     ...(r.off === undefined ? {} : { unchecked: r.off }),
     ...(r.fx ? { formula: renderFormula(r.fx, wb.ctxFor(sheetId)) } : {}),
     ...(r.opts ? { options: r.opts.map((o) => o.v) } : {}),
+    ...(r.multi ? { multiple: true } : {}),
     ...(r.src ? { source: sourceText(sourceSheetOf(wb.ctxFor(sheetId), r.src), r.src) } : {}),
     ...(r.op
       ? { condition: back(r.is === 'num' ? NUM_OPS : r.is === 'date' ? DATE_OPS : TEXT_OPS, r.op) }

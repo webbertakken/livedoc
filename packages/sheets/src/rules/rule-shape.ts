@@ -48,6 +48,7 @@ const VALIDATION_KEYS = new Set([
   'on',
   'off',
   'fx',
+  'multi',
 ]);
 const FORMAT_RULE_KEYS = new Set([
   'id',
@@ -162,6 +163,7 @@ export function isValidationRule(
   if (v.show !== undefined && !(dropdown && (v.show === 'arrow' || v.show === 'plain')))
     return false;
   if (v.is !== 'list' && v.opts !== undefined) return false;
+  if (v.multi !== undefined && !(dropdown && v.multi === true)) return false;
   if (v.is !== 'range' && v.src !== undefined) return false;
   if (v.is !== 'check' && (v.on !== undefined || v.off !== undefined)) return false;
   if (v.is !== 'formula' && v.fx !== undefined) return false;
