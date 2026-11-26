@@ -5,6 +5,7 @@ import type { AvatarConfig } from './avatar';
 import type { AvatarSayOp } from './avatar-say';
 import type { LivePoll } from './poll';
 import type { DragPreviewPatch } from './drag-preview';
+import type { PdfDraftLook } from './pdf-draft';
 import type { PdfPresenceHeld, PdfPresenceMode } from './pdf-presence';
 import type { ChangesetRoomOp } from './changesets';
 import type { ItemsRoomOp, ItemTypesRoomOp } from './items';
@@ -147,6 +148,10 @@ export const PRESENCE_OP_KINDS = [
   // Where someone is in a PDF document (docs/specs/035-pdf-documents/live-editing-and-storage.md "Presence"): the
   // page in view and what they hold, at cursor rates, writing nothing. From any session: a Viewer's page is sent.
   'pdf-presence',
+  // A Drawing's stroke as it is drawn (docs/specs/035-pdf-documents/live-editing-and-storage.md "A mark as it is
+  // made"): new points at cursor rates, writing nothing; the finished stroke follows as a `pdf` change. The room relays
+  // it from an Editor or a Participant only: a Viewer draws nothing.
+  'pdf-draft',
   // Whose hands are on a Plan board's card (docs/specs/026-plan/plan-board.md "What the board shows"):
   // the card someone is dragging or reading, so peers ring it in their colour. Ephemeral, never
   // logged, from any session (a viewer reads items too).
@@ -632,6 +637,21 @@ export type RoomOp =
       held?: PdfPresenceHeld | null;
     }
   | { kind: 'pdf-presence'; tabId: string; page: null }
+  // A Drawing's stroke as it is drawn (live-editing-and-storage.md "A mark as it is made"): the points since `from`,
+  // flat `x, y` in page space, or (points null) its end. Throttled like the cursor; parsed with parsePdfDraft.
+  | {
+      kind: 'pdf-draft';
+      tabId: string;
+      page: string;
+      stroke: string;
+      colour: string;
+      opacity: number;
+      width: number;
+      lineStyle?: PdfDraftLook['lineStyle'];
+      from: number;
+      points: number[];
+    }
+  | { kind: 'pdf-draft'; tabId: string; stroke: string; points: null }
   // One sample of the sender's laser-pointer trail (canvas-coords).
   // Sent on every pointer move while the sender is in laser tool
   // mode, throttled like cursor. Receivers append to a per-

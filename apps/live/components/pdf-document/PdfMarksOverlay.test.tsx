@@ -397,3 +397,31 @@ describe('the find tints, the text selected and a mark’s preview over a page',
     expect(container.querySelectorAll('[data-pdf-text-selection] polygon')).toHaveLength(1);
   });
 });
+
+// live-editing-and-storage.md "A mark as it is made": a collaborator's stroke as it is drawn, in the Drawing's look.
+describe('collaborators’ strokes as they are drawn', () => {
+  it('draws each in its own look, as a Drawing is drawn', () => {
+    const { container } = render(
+      <PdfMarksOverlay
+        matrix={[1, 0, 0, -1, 0, 100]}
+        width={100}
+        height={100}
+        marks={[]}
+        peerDrafts={[
+          {
+            person: 'ada',
+            stroke: 's1',
+            page: 'p:1',
+            look: { colour: '#7c3aed', opacity: 0.5, width: 3, lineStyle: 'dashed' },
+            points: [10, 10, 20, 30, 40, 30],
+          },
+        ]}
+      />,
+    );
+    const drawn = container.querySelector('[data-pdf-peer-draft="s1"]')!;
+    expect(drawn.getAttribute('stroke')).toBe('#7c3aed');
+    expect(drawn.getAttribute('opacity')).toBe('0.5');
+    expect(drawn.querySelector('polyline')!.getAttribute('points')).toBe('10,90 20,70 40,70');
+    expect(drawn.querySelector('polyline')!.getAttribute('stroke-dasharray')).not.toBeNull();
+  });
+});

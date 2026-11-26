@@ -97,6 +97,9 @@ export function gateClientOp(op: unknown, sender: GateSender): OpGate {
   // Speaking is taking part too (docs/specs/008-canvas/avatar-mode.md "Who may speak"), and a message is held to
   // the limits here as every receiver holds it, so a malformed one reaches nobody.
   if (opKind === 'avatar-say' && (level === 'view' || !parseAvatarSay(op))) return DROP;
+  // A PDF's stroke as it is drawn is a mark being made (docs/specs/035-pdf-documents/live-editing-and-storage.md "A
+  // mark as it is made"): a Viewer makes none, so theirs reaches nobody.
+  if (opKind === 'pdf-draft' && level === 'view') return DROP;
   // Bring Focus moves everyone's view (docs/specs/012-collaboration/bring-focus.md): running the session, so an
   // Editor's alone.
   if (opKind === 'focus-here' && level !== 'edit') return DROP;

@@ -128,6 +128,24 @@ test('a Participant reviews a PDF, and its stored file is replaced in one step f
   await peer.keyboard.press('Escape');
   await expect(tinted).toHaveCount(0);
 
+  // live-editing-and-storage.md "A mark as it is made": the Participant's stroke reaches the Editor as it is drawn,
+  // and the finished Drawing takes its place.
+  await peer.locator('[data-pdf-pages]').focus();
+  await peer.keyboard.press('d');
+  await expect(peer.locator('[data-pdf-tool="drawing"]')).toBeVisible();
+  const sheet = (await (await pageOneDrawn(peer)).boundingBox())!;
+  await peer.mouse.move(sheet.x + sheet.width * 0.1, sheet.y + sheet.height * 0.32);
+  await peer.mouse.down();
+  await peer.mouse.move(sheet.x + sheet.width * 0.25, sheet.y + sheet.height * 0.36, { steps: 10 });
+  await peer.mouse.move(sheet.x + sheet.width * 0.4, sheet.y + sheet.height * 0.32, { steps: 10 });
+  const drawing = page.locator(`${PAGE_ONE} [data-pdf-peer-draft] polyline`);
+  await expect(drawing).toHaveCount(1);
+  await page.screenshot({ path: test.info().outputPath('pdf-peer-draft.png') });
+  await peer.mouse.up();
+  await expect(page.locator(`${PAGE_ONE} [data-pdf-mark-kind="drawing"]`)).toHaveCount(1);
+  await expect(drawing).toHaveCount(0);
+  await peer.keyboard.press('v');
+
   // The new stored file: the bake of what the room holds, as an Editor's surface makes it.
   const downloadItem = await officeMenuItem(page, ['File', 'Download', 'PDF']);
   const [download] = await Promise.all([page.waitForEvent('download'), downloadItem.click()]);

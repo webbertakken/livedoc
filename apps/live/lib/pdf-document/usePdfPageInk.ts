@@ -2,7 +2,8 @@
 
 // A stroke drawn on one page with the Drawing tool in hand (docs/specs/035-pdf-documents/marks.md "Making a mark": A
 // Drawing): by a mouse, a pen or one finger; its points kept in page space as the pointer passes, shown as it is
-// drawn, and handed over once it ends. A second finger, or a cancel, lets the stroke go unmade.
+// drawn and told as it grows (for collaborators, live-editing-and-storage.md "A mark as it is made"), and handed
+// over once it ends, its end told after. A second finger, or a cancel, lets the stroke go unmade.
 import { useRef, useState, type PointerEvent } from 'react';
 import type { PagePoint, Stroke } from '@livedoc/pdf-documents';
 import { extendStroke } from './pdf-drawing';
@@ -34,6 +35,7 @@ export function usePdfPageInk({
       // A second pointer at once is no stroke: the first is let go.
       drawing.current = null;
       setStroke(NO_STROKE);
+      ink.onStroke(index, null);
       return true;
     }
     const point = event.button === 0 ? at(event) : null;
@@ -46,6 +48,7 @@ export function usePdfPageInk({
       begunAt: Date.now(),
     };
     setStroke(drawing.current.stroke);
+    ink.onStroke(index, drawing.current.stroke);
     return true;
   };
 
@@ -57,6 +60,7 @@ export function usePdfPageInk({
     if (next !== now.stroke) {
       now.stroke = next;
       setStroke(next);
+      ink?.onStroke(index, next);
     }
     return true;
   };
@@ -68,6 +72,7 @@ export function usePdfPageInk({
     drawing.current = null;
     setStroke(NO_STROKE);
     if (made && ink) ink.onDraw(index, now.stroke, now.begunAt);
+    ink?.onStroke(index, null);
     return true;
   };
 

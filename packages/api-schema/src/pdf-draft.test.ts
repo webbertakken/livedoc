@@ -42,9 +42,11 @@ describe('pdf-draft on the wire', () => {
   });
 
   it('keeps a stroke\u2019s end: the tab and the id, no points', () => {
-    expect(
-      parsePdfDraft({ kind: 'pdf-draft', tabId: 't', stroke: 'k-1', points: null }),
-    ).toEqual({ tabId: 't', stroke: 'k-1', points: null });
+    expect(parsePdfDraft({ kind: 'pdf-draft', tabId: 't', stroke: 'k-1', points: null })).toEqual({
+      tabId: 't',
+      stroke: 'k-1',
+      points: null,
+    });
   });
 
   it('carries nothing a sender added', () => {

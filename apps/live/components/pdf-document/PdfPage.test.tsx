@@ -127,6 +127,7 @@ async function page(
       register={() => {}}
       holds={[]}
       peerTexts={[]}
+      peerDrafts={[]}
     />,
   );
   const box = view.container.querySelector<HTMLElement>('[data-pdf-page]')!;
@@ -301,11 +302,12 @@ describe('marking text on a page', () => {
 
 // marks.md "Making a mark": A Drawing: a stroke of the pointer, shown as it is drawn, handed over as it ends.
 describe('drawing on a page', () => {
-  const ink = (onDraw = vi.fn()): PdfPageInk => ({
+  const ink = (onDraw = vi.fn(), onStroke = vi.fn()): PdfPageInk => ({
     colour: '#d93025',
     opacity: 1,
     width: 2,
     onDraw,
+    onStroke,
   });
   const at = (x: number, y: number, pointerId = 1) => ({
     button: 0,
@@ -334,6 +336,26 @@ describe('drawing on a page', () => {
     fireEvent.pointerUp(box, at(90, 92));
     expect(onDraw).toHaveBeenLastCalledWith(1, [80, 700, 90, 700], expect.any(Number));
     expect(onMark).not.toHaveBeenCalled();
+  });
+
+  // live-editing-and-storage.md "A mark as it is made": each point told as it goes, for collaborators, then the end.
+  it('tells the stroke as it grows, and its end after it is handed over', async () => {
+    const order: string[] = [];
+    const onDraw = vi.fn(() => void order.push('draw'));
+    const onStroke = vi.fn((_index: number, stroke: readonly number[] | null) => {
+      order.push(stroke ? `stroke ${stroke.length}` : 'end');
+    });
+    const { box } = await page('drawing', [], [], false, null, ink(onDraw, onStroke));
+    fireEvent.pointerDown(box, at(72, 92));
+    fireEvent.pointerMove(box, at(100, 92));
+    fireEvent.pointerUp(box, at(100, 92));
+    expect(onStroke).toHaveBeenNthCalledWith(1, 1, [72, 700]);
+    expect(onStroke).toHaveBeenNthCalledWith(2, 1, [72, 700, 100, 700]);
+    expect(order).toEqual(['stroke 2', 'stroke 4', 'draw', 'end']);
+    // A stroke let go unmade ends too.
+    fireEvent.pointerDown(box, at(72, 92));
+    fireEvent.pointerCancel(box, at(72, 92));
+    expect(onStroke).toHaveBeenLastCalledWith(1, null);
   });
 
   it('lets a stroke go on a cancel, a second finger, or a press that is not the main one', async () => {

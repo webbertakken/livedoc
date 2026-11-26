@@ -98,6 +98,7 @@ function tools({
   const clearSelection = vi.fn();
   const focusPages = vi.fn();
   const onProblem = vi.fn();
+  const onStroke = vi.fn();
   const hook = renderHook(
     (props: { selected: PdfTextSelected | null; marking: boolean }) =>
       usePdfMarkTools({
@@ -109,11 +110,12 @@ function tools({
         clearSelection,
         focusPages,
         onProblem,
+        onStroke,
       }),
     { initialProps: { selected, marking } },
   );
   const run = (id: string) => act(() => hook.result.current.actions[id]!.run());
-  return { hook, run, clearSelection, focusPages, onProblem, ...open };
+  return { hook, run, clearSelection, focusPages, onProblem, onStroke, ...open };
 }
 
 const key = (event: Partial<KeyboardEvent<HTMLElement>>) => {
@@ -376,7 +378,7 @@ describe('the tool in hand’s colour', () => {
 // marks.md "Making a mark": A Drawing; keyboard-shortcuts.md "Tools": D.
 describe('the Drawing tool', () => {
   it('is taken by its item or D, gives the pages its ink, and draws in its colour', () => {
-    const { hook, run, doc } = tools();
+    const { hook, run, doc, onStroke } = tools();
     expect(hook.result.current.ink).toBeNull();
     run(TOOL_DRAWING);
     expect(hook.result.current.inHand).toBe('drawing');
@@ -388,6 +390,13 @@ describe('the Drawing tool', () => {
     expect(PdfLiveChanges.marks(doc)).toEqual([]);
     act(() => hook.result.current.colours[TOOL_COLOUR]!.set('#7c3aed'));
     act(() => hook.result.current.ink!.onDraw(0, [1, 1, 5, 5], Date.now()));
+    // The stroke as it grows goes out with the tool's look (live-editing-and-storage.md "A mark as it is made").
+    hook.result.current.ink!.onStroke(0, [1, 1]);
+    expect(onStroke).toHaveBeenLastCalledWith(0, [1, 1], {
+      colour: '#7c3aed',
+      opacity: DRAWING_LOOK.opacity,
+      width: DRAWING_WIDTH_PT,
+    });
     expect(PdfLiveChanges.marks(doc)).toEqual([
       expect.objectContaining({ kind: 'drawing', colour: '#7c3aed' }),
     ]);

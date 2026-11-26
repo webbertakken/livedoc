@@ -271,6 +271,7 @@ import { useDragPreviewBroadcast } from '@/hooks/collab/useDragPreviewBroadcast'
 import { useArticleCaretBroadcast } from '@/hooks/collab/useArticleCaretBroadcast';
 import { useTextDocumentCaretBroadcast } from '@/hooks/collab/useTextDocumentCaretBroadcast';
 import { usePdfPresenceBroadcast } from '@/hooks/collab/usePdfPresenceBroadcast';
+import { usePdfDraftBroadcast } from '@/hooks/collab/usePdfDraftBroadcast';
 
 // The open tab's elements before the tabs load.
 const NO_ELEMENTS: readonly Element[] = [];
@@ -1588,6 +1589,12 @@ export function useEditorState(opts: { surface?: EditorSurface } = {}) {
   });
   // Where we are in a PDF document, live for collaborators (035-pdf-documents/live-editing-and-storage.md).
   usePdfPresenceBroadcast({
+    roomRef,
+    live: hydrated && !!documentId && (documentShareable || !!documentTeamId),
+    hidden: voteCursorsHidden,
+  });
+  // A Drawing's stroke as it is drawn, live for collaborators (the same doc, "A mark as it is made").
+  usePdfDraftBroadcast({
     roomRef,
     live: hydrated && !!documentId && (documentShareable || !!documentTeamId),
     hidden: voteCursorsHidden,

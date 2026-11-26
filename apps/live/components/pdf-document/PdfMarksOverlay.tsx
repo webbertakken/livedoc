@@ -6,6 +6,8 @@
 // Callout's and a stamp's words are set line for line as MarkWords places them, in a face with Helvetica's widths,
 // a stamp's name bold; or in the mark faces, as shaped (marks.md "Words in every script"). A selected mark is
 // outlined in the shell's focus colour, and marks being dragged are drawn where the drag has them ("Changing a mark").
+// Collaborators' strokes as they are drawn sit under this person's own (live-editing-and-storage.md "A mark as it is
+// made").
 import { useContext, useEffect } from 'react';
 import type { MarkShape, PageMatrix, PagePoint, Quad } from '@livedoc/pdf-documents';
 import {
@@ -21,6 +23,7 @@ import { PdfLookContext } from '@/lib/pdf-document/pdf-look';
 import { addMarkFaces, addMarkFont, facesStackOf } from '@/lib/pdf-document/pdf-mark-faces';
 import type { PdfFindTints } from '@/lib/pdf-document/usePdfFind';
 import type { PdfMarksMoving } from '@/lib/pdf-document/usePdfPageMarkPress';
+import type { PdfPeerDraft } from '@/lib/pdf-document/pdf-draft-store';
 
 /** A quad as an SVG polygon's points, in view space. */
 export const pointsOf = (matrix: PageMatrix, quad: Quad): string =>
@@ -192,6 +195,7 @@ export function PdfMarksOverlay({
   outline = 0,
   moving = null,
   reshaping = null,
+  peerDrafts = [],
 }: {
   // Page space to view space, as the picture under it was drawn.
   matrix: PageMatrix;
@@ -217,6 +221,8 @@ export function PdfMarksOverlay({
   moving?: PdfMarksMoving | null;
   // The mark being resized by a handle, as the drag has it.
   reshaping?: PdfMarkReshaping | null;
+  // Collaborators' strokes on the page as they are drawn, each in its Drawing's look.
+  peerDrafts?: readonly PdfPeerDraft[];
 }) {
   const shown = moving || reshaping ? marks.map((mark) => placed(mark, moving, reshaping)) : marks;
   const dark = useContext(PdfLookContext) === 'dark';
@@ -276,6 +282,29 @@ export function PdfMarksOverlay({
             ))}
         </g>
       ) : null}
+      {peerDrafts.map((peer) => {
+        const colour = dark ? DarkPages.hex(peer.look.colour) : peer.look.colour;
+        const { lineStyle } = peer.look;
+        return (
+          <g
+            key={`${peer.person} ${peer.stroke}`}
+            data-pdf-peer-draft={peer.stroke}
+            fill={colour}
+            stroke={colour}
+            opacity={peer.look.opacity}
+          >
+            <MarkShapes
+              matrix={matrix}
+              shape={{
+                kind: 'drawing',
+                strokes: [peer.points],
+                width: peer.look.width,
+                ...(lineStyle ? { lineStyle } : {}),
+              }}
+            />
+          </g>
+        );
+      })}
       {draft ? (
         <g
           data-pdf-draft={draft.shape.kind}
