@@ -14,8 +14,10 @@ import {
   chartValueFontPx,
   legendFontPx,
   chartValue,
+  isBarGroupChart,
   type ShapeElement,
 } from '@livedoc/document';
+import { BarGroupChartView } from './BarGroupChartView';
 import { ChartValues } from '@/components/primitives/ChartValues';
 import { BarChartAxis } from './ChartAxis';
 import { useChartAnim, chartFrame } from '@/lib/chart';
@@ -23,20 +25,25 @@ import { useChartHover } from '@/hooks/canvas/useChartHover';
 import { ChartReadout } from '@/components/primitives/ChartReadout';
 import { ChartSurface } from '@/components/primitives/ChartSurface';
 
-export function BarChartView({
-  element,
-  fontFamily,
-  textColor,
-  palette,
-  ground,
-}: {
+type Props = {
   element: ShapeElement;
   fontFamily?: string;
   textColor: string;
   palette?: readonly string[];
   // What the chart sits on (chartPageGrounds): its series drawn adapted to it.
   ground?: readonly string[];
-}) {
+};
+
+// A chart of two or more series draws them side by side (D281); one series draws its slices.
+export function BarChartView(props: Props) {
+  return isBarGroupChart(props.element) ? (
+    <BarGroupChartView {...props} />
+  ) : (
+    <SingleSeriesBarChartView {...props} />
+  );
+}
+
+function SingleSeriesBarChartView({ element, fontFamily, textColor, palette, ground }: Props) {
   const { w, h, data, colorAt, area, legend, titles } = chartFrame(element, palette, ground);
   const { hover, markProps } = useChartHover<number>();
   // Upright columns, or (the Bar chart type) bars to the right; laid out by the marks the export draws too.

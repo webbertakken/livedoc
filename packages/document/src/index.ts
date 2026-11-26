@@ -736,6 +736,7 @@ export * from './chart-titles';
 export * from './chart-ink';
 export * from './chart-types';
 export * from './chart-marks';
+export * from './chart-bar-groups';
 export * from './chart-axis';
 export * from './chart-values';
 export * from './chart-source';

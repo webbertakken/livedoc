@@ -130,6 +130,22 @@ describe('a spreadsheet chart as a chart element', () => {
     ]);
   });
 
+  it('draws a column or bar chart’s every series side by side, each look by its column (D281)', () => {
+    const looks = { series: { c0002: { color: '#aa3300' } } };
+    for (const type of ['column', 'bar'] as const) {
+      const el = sheetChartElement(chart({ type, ...looks }), 's1', table, at);
+      expect(el.lineCategories).toEqual(['1', '2', '3']);
+      expect(el.lineSeries).toEqual([
+        { name: 'Cost', values: [1, 2, 3] },
+        { name: 'Index', values: [40, 50, 55] },
+        { name: 'Pareto', values: [40, null, 55], color: '#aa3300' },
+      ]);
+      expect(el.pieSlices).toHaveLength(3);
+    }
+    // A pie still draws its first.
+    expect(sheetChartElement(chart({ type: 'pie' }), 's1', table, at).lineSeries).toBeUndefined();
+  });
+
   it('draws no marks with no data, and reads no range', () => {
     const { range: _r, ...none } = chart();
     const el = sheetChartElement(none, 's1', null, at);

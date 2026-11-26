@@ -91,9 +91,11 @@ export function chartTypeChange(el: ChartData, type: ChartType): ChartTypePatch 
   const to = SHAPES[type];
   const patch: ChartTypePatch = { shape: to.shape, chartVariant: to.chartVariant };
   if (to.shape === el.shape) return patch;
+  // A column or bar chart of several series keeps them (D281): a line chart draws them all, a column chart side by side.
+  const several = (el.lineSeries?.length ?? 0) >= 2;
   if (to.shape === 'line-chart') {
     // Only when the chart has data of its own: an empty one draws the line chart's sample data, as a new one does.
-    if (el.pieSlices?.length) {
+    if (el.pieSlices?.length && !several) {
       patch.lineCategories = el.pieSlices.map((s) => s.label);
       patch.lineSeries = [{ name: 'Series 1', values: el.pieSlices.map((s) => s.value) }];
     }
@@ -109,10 +111,17 @@ export function chartTypeChange(el: ChartData, type: ChartType): ChartTypePatch 
         return { label, value: v !== null && to.shape === 'pie-chart' ? Math.max(0, v) : v };
       });
     }
-    patch.lineCategories = undefined;
-    patch.lineSeries = undefined;
+    if (!several || to.shape === 'pie-chart') {
+      patch.lineCategories = undefined;
+      patch.lineSeries = undefined;
+    }
     patch.linePointNames = undefined;
     return patch;
+  }
+  // A pie draws one series: a bar chart's several go.
+  if (to.shape === 'pie-chart' && el.lineSeries) {
+    patch.lineCategories = undefined;
+    patch.lineSeries = undefined;
   }
   // Pie and bar share their slices; a pie never draws below zero.
   if (to.shape === 'pie-chart' && el.pieSlices?.some((s) => (chartValue(s.value) ?? 0) < 0))

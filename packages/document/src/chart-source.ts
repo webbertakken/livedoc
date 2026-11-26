@@ -124,16 +124,17 @@ type ChartFields = {
 const numbered = (categories: readonly string[]) => categories.every((c, i) => c === String(i + 1));
 
 // The data fields a table gives a chart, keeping the colours its slices or series already carry (by position).
-// A pie or bar chart reads the first series (a pie never below zero); a line, area or scatter chart reads them all.
+// A pie reads the first series (never below zero); a column or bar chart its first as slices and, of two or more, every
+// series to draw side by side (D281); a line, area or scatter chart reads them all.
 // A scatter chart whose first column held numbers (the read numbered its categories and made that column a series)
 // takes that column as its x (docs/specs/009-elements/pie-chart.md "Charts drawn from a sheet").
 export function chartFieldsFromTable(
   el: ChartFields,
   t: ChartTable,
-): { pieSlices: PieSlice[] } | LineFields {
+): SliceFields | LineFields {
   if (el.shape === 'line-chart') return lineFieldsFromTable(el, t);
   const first = t.series[0]?.values ?? [];
-  return {
+  const slices: SliceFields = {
     pieSlices: t.categories.map((label, i) => {
       const color = el.pieSlices?.[i]?.color;
       const v = chartValue(first[i]);
@@ -144,7 +145,23 @@ export function chartFieldsFromTable(
       };
     }),
   };
+  if (el.shape !== 'bar-chart') return slices;
+  // Fewer than two series clear the several a chart read before, so it draws its slices again.
+  if (t.series.length < 2)
+    return el.lineSeries?.length ? { ...slices, lineCategories: [], lineSeries: [] } : slices;
+  const { lineCategories, lineSeries } = lineFieldsFromTable(el, t);
+  return { ...slices, lineCategories, lineSeries };
 }
+
+/**
+ * A pie, column or bar chart's data fields: its slices, and a column or bar chart's series when it reads two or more
+ * (D281), or none to clear those it read before.
+ */
+export type SliceFields = {
+  pieSlices: PieSlice[];
+  lineCategories?: string[];
+  lineSeries?: LineSeries[];
+};
 
 // A line, area or scatter chart's data fields; `linePointNames` is always there, so a read clears names it no longer
 // gives.

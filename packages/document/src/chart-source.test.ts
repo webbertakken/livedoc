@@ -110,7 +110,7 @@ describe('a chart drawn from a sheet range', () => {
     }
   });
 
-  it('gives a bar its first series, a pie never below zero, and a line every series, keeping colours', () => {
+  it('gives a bar its first series and every one of two (D281), a pie never below zero, and a line every series', () => {
     expect(
       chartFieldsFromTable(
         { shape: 'bar-chart', pieSlices: [{ label: 'x', value: 1, color: '#ff0000' }] },
@@ -121,6 +121,19 @@ describe('a chart drawn from a sheet range', () => {
         { label: 'Jan', value: 10, color: '#ff0000' },
         { label: 'Feb', value: -2 },
       ],
+      lineCategories: ['Jan', 'Feb'],
+      lineSeries: [
+        { name: 'Sales', values: [10, -2] },
+        { name: 'Costs', values: [4, 5] },
+      ],
+    });
+    // One series again clears the several it read before.
+    const one = { categories: ['Jan'], series: [{ name: 'Sales', values: [3] }] };
+    expect(
+      chartFieldsFromTable({ shape: 'bar-chart', lineSeries: [{ name: 'a', values: [] }] }, one),
+    ).toEqual({ pieSlices: [{ label: 'Jan', value: 3 }], lineCategories: [], lineSeries: [] });
+    expect(chartFieldsFromTable({ shape: 'bar-chart' }, one)).toEqual({
+      pieSlices: [{ label: 'Jan', value: 3 }],
     });
     expect(chartFieldsFromTable({ shape: 'pie-chart' }, table)).toEqual({
       pieSlices: [

@@ -65,7 +65,7 @@ export function BarChartAxis({
   horizontal,
   textColor,
   fontFamily,
-}: Ink & { marks: BarMarks; horizontal: boolean }) {
+}: Ink & { marks: Pick<BarMarks, 'axis'>; horizontal: boolean }) {
   const [s0, s1] = marks.axis.span;
   return (
     <g aria-hidden="true">

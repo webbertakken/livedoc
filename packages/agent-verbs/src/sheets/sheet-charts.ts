@@ -375,7 +375,7 @@ export function sheetChartElements(
       ...base,
       ...fields,
       // The series drawn as lines, marked by name (pie-chart.md "Lines set by an agent").
-      ...('lineSeries' in fields && lines.length
+      ...('lineSeries' in fields && fields.lineSeries && lines.length
         ? {
             lineSeries: fields.lineSeries.map((s) =>
               lines.some((l) => sameName(l, s.name)) ? { ...s, line: true as const } : s,
