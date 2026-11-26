@@ -40,6 +40,7 @@ describe('importReport', () => {
       { k: 'cells_cut', sheet: 'Data' },
       { k: 'sheet_cut', sheet: 'Data', rows: 10, cols: 10 },
       { k: 'sheet_unread', sheet: 'Chart1' },
+      { k: 'charts_unwritten', sheet: 'Data' },
       { k: 'sheets_cut', kept: 200, had: 203 },
     ];
     const report = importReport(losses);
@@ -64,6 +65,7 @@ describe('importReport', () => {
       { k: 'styles_unread', count: 1, names: ['Data'] },
       { k: 'format_rule_unread', count: 1, names: ['Data!A2'] },
       { k: 'sizes_cut', count: 1, names: ['Data'] },
+      { k: 'charts_unwritten', count: 1, names: ['Data'] },
       { k: 'sheet_renamed', count: 1, names: [{ from: 'Data', to: 'Data (2)' }] },
     ]);
   });

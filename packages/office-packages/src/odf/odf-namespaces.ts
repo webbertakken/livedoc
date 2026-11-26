@@ -12,6 +12,8 @@ export const ODF_NS = {
   dc: 'http://purl.org/dc/elements/1.1/',
   meta: 'urn:oasis:names:tc:opendocument:xmlns:meta:1.0',
   svg: 'urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0',
+  // A chart document's (ODF 1.4 part 3, "Charts"): a spreadsheet's charts are each one, embedded.
+  chart: 'urn:oasis:names:tc:opendocument:xmlns:chart:1.0',
   manifest: 'urn:oasis:names:tc:opendocument:xmlns:manifest:1.0',
   // OpenFormula (ODF 1.4 part 4): a spreadsheet's `table:formula` names it by its prefix, so a file declares it.
   of: 'urn:oasis:names:tc:opendocument:xmlns:of:1.2',
@@ -31,4 +33,5 @@ export const ODF_MEDIA_TYPES = {
   text: 'application/vnd.oasis.opendocument.text',
   textTemplate: 'application/vnd.oasis.opendocument.text-template',
   spreadsheet: 'application/vnd.oasis.opendocument.spreadsheet',
+  chart: 'application/vnd.oasis.opendocument.chart',
 } as const;

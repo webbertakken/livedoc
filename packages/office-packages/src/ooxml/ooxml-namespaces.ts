@@ -39,6 +39,8 @@ export const RELATIONSHIP_TYPES = {
   worksheet: `${TRANSITIONAL_RELS}/worksheet`,
   sharedStrings: `${TRANSITIONAL_RELS}/sharedStrings`,
   sheetMetadata: `${TRANSITIONAL_RELS}/sheetMetadata`,
+  drawing: `${TRANSITIONAL_RELS}/drawing`,
+  chart: `${TRANSITIONAL_RELS}/chart`,
 } as const;
 
 /** A relationship type with Strict's namespace read as Transitional's. */
@@ -72,4 +74,6 @@ export const OOXML_CONTENT_TYPES = {
   spreadsheetStyles: 'application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml',
   theme: 'application/vnd.openxmlformats-officedocument.theme+xml',
   sheetMetadata: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheetMetadata+xml',
+  drawing: 'application/vnd.openxmlformats-officedocument.drawing+xml',
+  chart: 'application/vnd.openxmlformats-officedocument.drawingml.chart+xml',
 } as const;

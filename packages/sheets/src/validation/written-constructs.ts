@@ -2,7 +2,8 @@
 // what the schema validation writes in every format (written-files.validate.ts).
 import type { NumberFormatKind } from '../sheet';
 import { formatCodeOf } from '../files/number-format-code';
-import type { FileCell, WorkbookFile } from '../files/workbook-file';
+import type { FileChart, FileChartSeries } from '../files/file-charts';
+import type { FileCell, FileSheet, WorkbookFile } from '../files/workbook-file';
 
 const sheet = (name: string, cells: FileCell[], rows = 10, cols = 6) => ({
   name,
@@ -124,4 +125,70 @@ export const WRITTEN_CONSTRUCTS: Readonly<Record<string, WorkbookFile>> = {
       sheet('Empty', []),
     ],
   },
+  charts: { sheets: [chartSheet()] },
 };
+
+// A table of costs and an index with a gap, and a chart of every type over it, each with its own look (standard-mapping.md
+// "Charts in the file").
+function chartSheet(): FileSheet {
+  const rows: [string, number, number | null][] = [
+    ['Opus', 15, 60],
+    ['Sonnet', 3, null],
+    ["O'Neil", 1, 40],
+  ];
+  const cells: FileCell[] = [
+    { r: 0, c: 0, value: { k: 's', v: 'Model' } },
+    { r: 0, c: 1, value: { k: 's', v: 'Cost' } },
+    { r: 0, c: 2, value: { k: 's', v: 'Index' } },
+    ...rows.flatMap(([name, cost, index], i): FileCell[] => [
+      { r: i + 1, c: 0, value: { k: 's', v: name } },
+      { r: i + 1, c: 1, value: { k: 'n', v: cost } },
+      ...(index === null ? [] : [{ r: i + 1, c: 2, value: { k: 'n' as const, v: index } }]),
+    ]),
+  ];
+  const values = (c: number) => ({ r1: 1, c1: c, r2: 3, c2: c });
+  const series = (
+    c: number,
+    name: string,
+    extra: Partial<FileChartSeries> = {},
+  ): FileChartSeries => ({
+    name,
+    nameAt: { r: 0, c },
+    values: values(c),
+    cached: rows.map((row) => row[c] as number | null),
+    ...extra,
+  });
+  const base = (i: number, type: FileChart['type']): FileChart => ({
+    id: `chart_${type}`,
+    type,
+    legend: 'bottom',
+    values: false,
+    axis: true,
+    at: { r: 5 + i * 15, c: 4, dx: 4, dy: 2 },
+    width: 420,
+    height: 280,
+    labels: { range: values(0), cached: rows.map((row) => row[0]) },
+    x: null,
+    series: [series(1, 'Cost', { color: '#1a73e8' }), series(2, 'Index')],
+  });
+  const types: FileChart['type'][] = ['column', 'bar', 'line', 'area', 'pie', 'doughnut'];
+  const charts = types.map((type, i) => base(i, type));
+  charts[0] = {
+    ...charts[0]!,
+    title: 'Cost & "index"',
+    xTitle: 'Model',
+    yTitle: 'Dollars',
+    values: true,
+  };
+  charts[1] = { ...charts[1]!, legend: 'none', axis: false, alt: 'Costs by model' };
+  charts.push({
+    ...base(types.length, 'scatter'),
+    title: 'Cost against index',
+    legend: 'right',
+    labels: null,
+    x: { range: values(1), cached: rows.map((row) => row[1]) },
+    series: [series(2, 'Index', { line: true, color: '#e8710a' })],
+  });
+  charts.push({ ...base(types.length + 1, 'column'), id: 'chart_none', labels: null, series: [] });
+  return { ...sheet("Costs' sheet", cells, 140, 8), charts };
+}

@@ -1,7 +1,12 @@
 // Where a spreadsheet's chart sits and the type Insert › Chart suggests (docs/specs/029-sheets/charts.md "The model",
 // "Inserting").
 import { describe, expect, it } from 'vitest';
-import { sheetFromJson, type SheetChartTable, type SheetJson } from '@livedoc/sheets';
+import {
+  emptyChartTable,
+  sheetFromJson,
+  type SheetChartTable,
+  type SheetJson,
+} from '@livedoc/sheets';
 import {
   anchorAt,
   anchorPx,
@@ -52,6 +57,7 @@ describe('a chart anchor', () => {
 });
 
 const table = (categories: string[], ...series: (number | null)[][]): SheetChartTable => ({
+  ...emptyChartTable(),
   categories,
   numbered: categories.every((c, i) => c === String(i + 1)),
   series: series.map((values, i) => ({ name: `S${i}`, col: `c000${i}`, values })),

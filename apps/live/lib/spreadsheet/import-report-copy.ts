@@ -97,6 +97,11 @@ export function importReportLine(loss: ReportedLoss): string {
         `Row heights and column widths past the most a sheet holds are left out of ${counted(count, 'sheet', 'sheets')}`,
         loss,
       );
+    case 'charts_unwritten':
+      return named(
+        `Charts are left out of ${counted(count, 'sheet', 'sheets')} that keep the file's own drawings`,
+        loss,
+      );
     case 'sheet_renamed':
       return `${counted(count, 'sheet name is', 'sheet names are')} changed to fit: ${renamed(loss.names)}`;
   }

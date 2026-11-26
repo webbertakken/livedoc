@@ -30,6 +30,7 @@ export const REPORTED_KINDS = [
   'styles_unread',
   'format_rule_unread',
   'sizes_cut',
+  'charts_unwritten',
   'sheet_renamed',
 ] as const;
 
@@ -64,6 +65,7 @@ function entriesOf(loss: FileLoss): Entry[] {
     case 'formats_cut':
     case 'styles_unread':
     case 'sizes_cut':
+    case 'charts_unwritten':
       return [[loss.k, 1, loss.sheet]];
     case 'sheets_cut':
       return [['sheets_cut', loss.had - loss.kept]];

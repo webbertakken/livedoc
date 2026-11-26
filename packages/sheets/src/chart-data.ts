@@ -22,6 +22,9 @@ export type SheetChartTable = {
   // One per value column, its name from the header row (or its column letter), its column's id; null where a cell
   // holds no number.
   series: { name: string; col: string; values: (number | null)[] }[];
+  // Where it was read from, by position: the header row and label column when the range has them, the rows of data
+  // in order, and each series' column (a file's chart names these cells, standard-mapping.md "Charts in the file").
+  at: { header: number | null; labels: number | null; rows: number[]; cols: number[] };
 };
 
 // Bounds: a chart past these is unreadable, and they keep a read cheap on a huge range.
@@ -32,6 +35,14 @@ const DATE_FORMATS: ReadonlySet<NumberFormatKind> = new Set(['date', 'time', 'da
 
 const isNumber = (v: Value): v is number => typeof v === 'number' && Number.isFinite(v);
 const isBlank = (v: Value) => v === null || v === '';
+
+// A chart with nothing to read.
+export const emptyChartTable = (): SheetChartTable => ({
+  categories: [],
+  numbered: true,
+  series: [],
+  at: { header: null, labels: null, rows: [], cols: [] },
+});
 
 // The table a range holds now, or null when the sheet or a corner of the range is gone.
 export function sheetChartTable(
@@ -54,7 +65,7 @@ export function sheetChartTable(
     const id = layout.cols[c]!;
     if (!ix.hiddenCols.has(id) && (!picked || picked.has(id))) cols.push(c);
   }
-  if (!rows.length || !cols.length) return { categories: [], numbered: true, series: [] };
+  if (!rows.length || !cols.length) return emptyChartTable();
   const value = (r: number, c: number) => wb.value(link.sheetId, r, c);
   const text = (r: number, c: number) =>
     displayValue(
@@ -79,10 +90,17 @@ export function sheetChartTable(
     valueCols.every((c) => !isNumber(value(rows[0]!, c))) &&
     valueCols.some((c) => !isBlank(value(rows[0]!, c)));
   const body = (headed ? rows.slice(1) : rows).slice(0, CHART_CATEGORIES_MAX);
+  const charted = valueCols.slice(0, CHART_SERIES_MAX);
   return {
+    at: {
+      header: headed ? rows[0]! : null,
+      labels: labelled ? cols[0]! : null,
+      rows: body,
+      cols: charted,
+    },
     categories: body.map((r, i) => (labelled ? text(r, cols[0]!) : String(i + 1))),
     numbered: !labelled,
-    series: valueCols.slice(0, CHART_SERIES_MAX).map((c) => ({
+    series: charted.map((c) => ({
       name: (headed ? text(rows[0]!, c) : '') || `Column ${columnLetters(c)}`,
       col: layout.cols[c]!,
       values: body.map((r) => {

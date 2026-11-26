@@ -2,7 +2,12 @@
 // its type, look and titles carried over, its data read, each series' look by its column, and no data drawn as none.
 import { describe, expect, it } from 'vitest';
 import { CHART_TYPES, chartTypeOf } from '@livedoc/document';
-import { SHEET_CHART_TYPES, type SheetChart, type SheetChartTable } from '@livedoc/sheets';
+import {
+  emptyChartTable,
+  SHEET_CHART_TYPES,
+  type SheetChart,
+  type SheetChartTable,
+} from '@livedoc/sheets';
 import { sheetChartElement } from './sheet-chart-element';
 
 const range = { r1: 'r0000', c1: 'c0000', r2: 'r0003', c2: 'c0002' };
@@ -18,6 +23,7 @@ const chart = (x: Partial<SheetChart> = {}): SheetChart => ({
 });
 // Cost (the x), Index and Pareto, one empty Pareto cell a gap.
 const table: SheetChartTable = {
+  ...emptyChartTable(),
   categories: ['1', '2', '3'],
   numbered: true,
   series: [
@@ -88,6 +94,7 @@ describe('a spreadsheet chart as a chart element', () => {
 
   it('fills a column chart in its series colour, and leaves a pie its palette', () => {
     const one: SheetChartTable = {
+      ...emptyChartTable(),
       categories: ['a', 'b'],
       numbered: false,
       series: [{ name: 'N', col: 'c0001', values: [1, 2] }],

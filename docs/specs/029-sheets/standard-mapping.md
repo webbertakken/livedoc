@@ -313,6 +313,33 @@ The table is the contract the readers and writers are tested against, one test p
   older `tableooo:tab-color` is read too.
 - A file hiding every sheet opens with its first shown, as a spreadsheet always shows one (default, D182).
 
+## Charts in the file
+
+**Status: written built; read specified.** A sheet's [charts](charts.md#the-model) are written into both formats as
+each suite writes its own, so LibreOffice, Excel and Google Sheets open them as charts reading the same cells.
+
+- **Data**: each chart's range is read as the grid reads it ([Charts](charts.md#the-model)): its first row names the
+  series when it holds no number, its first column labels them when it holds text or dates, and on a scatter chart
+  the first column of numbers is the x. Each series is written as references to its cells in the file's own syntax
+  (`'Models'!$B$2:$B$40`, `Models.B2:Models.B40`), so the chart reads them live in every suite; an empty cell is a gap
+  (XLSX `dispBlanksAs="gap"`). A chart with no data is written with no series.
+- **Look**: its type (Column and Bar as clustered bars, Line, Area, Scatter as markers, Pie, Doughnut with a half
+  hole), its title and axis titles, its legend's place or none, values on the marks, the value axis (deleted when
+  off), each series' own colour, a scatter series drawn as a line, and its alt text. Its palette is LiveDoc's: a series
+  with no colour of its own takes the reading suite's (default, D260).
+- **Place**: its top-left cell and offset and its size. XLSX: one drawing part per sheet with charts
+  (`xl/drawings/drawingN.xml`, a `oneCellAnchor` per chart, px × 9,525 EMU) and a chart part per chart
+  (`xl/charts/chartN.xml`). ODF: a `draw:frame` per chart in the sheet's `table:shapes`, at the cell's position worked
+  out from the sheet's line sizes, holding a `draw:object` that names an embedded chart document (`Object N/` in a
+  package; inline in a flat `.fods`).
+- **A sheet keeping its file's drawings**: a sheet whose kept content holds a drawing (XLSX `drawing`) or shapes
+  (ODF `table:shapes`) from the file it arrived in keeps them, and its own charts are not written beside them; the
+  write names the sheet (`charts_unwritten`) (default, D261).
+- **Reading** (specified): a chart a file holds is read into the model when its type is one built and its series
+  read one range of its own sheet; its file XML is kept beside it and written back in its place while it is
+  unchanged, and a chart changed here is written from the model, the loss named (`chart_rewritten`). Any other chart
+  stays kept content.
+
 ## Unknown content
 
 - Whatever a file holds that the model does not (an embedded chart, a format's own setting, a smart chip, a filter
@@ -490,3 +517,7 @@ The code cites each by its id.
   for its text properties alone, as LibreOffice draws its cells by "Default" (default).
 - **D212** An ODF angle between 90° and 270°: Left out and named (`styles_unread`), as Google's −90° to 90° holds
   none (default).
+- **D260** A chart's palette in a file: Not written; a series without a colour of its own takes the reading suite's
+  colours (default).
+- **D261** A sheet's own charts beside a drawing kept from its file: Not written, the sheet named (`charts_unwritten`),
+  as a worksheet holds one drawing and ODF one `table:shapes` (default).

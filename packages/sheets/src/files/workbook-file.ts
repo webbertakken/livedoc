@@ -2,6 +2,7 @@
 // name, cells by position, each with its formula in Google's syntax and the value it last showed. The bridge between
 // the model (cells by row and column id, formulas by id references) and each format's reader and writer, so neither
 // format ever sees an id and the model never sees a format.
+import { fileChartsOf, type FileChart } from './file-charts';
 import type { PackageRefusal } from '@livedoc/office-packages';
 import { layoutIndex } from '../layout';
 import {
@@ -59,6 +60,8 @@ export type FileSheet = {
   hidden?: true;
   // Its format rules in list order (standard-mapping.md "Format rules in the file").
   formatRules?: FileFormatRule[];
+  // Its charts in paint order (standard-mapping.md "Charts in the file").
+  charts?: FileChart[];
 };
 
 /**
@@ -104,6 +107,8 @@ export type FileLoss =
   | { k: 'entries_dropped'; entries: string[] }
   // Kept pictures and objects a flat file cannot hold (D111).
   | { k: 'parts_left'; count: number }
+  // A sheet's own charts not written beside the drawings it kept from its file (standard-mapping.md "Charts in the file").
+  | { k: 'charts_unwritten'; sheet: string }
   // Formulas calling a function the spreadsheet's meaning and the format's standard answer differently (D100).
   | { k: 'answers_differ'; count: number; functions: string[] };
 
@@ -200,6 +205,7 @@ export function workbookFileOf(
       const own = fileFormatRulesOf(sheet.layout, ctx, locale) ?? [];
       const all = [...own, ...bandingRules(sheet.layout)];
       const formatRules = all.length ? all : undefined;
+      const charts = fileChartsOf(engine, sheet, locale);
       return {
         name: sheet.title,
         rows: sheet.layout.rows.length,
@@ -209,6 +215,7 @@ export function workbookFileOf(
         ...(sheet.layout.tabColour ? { tabColour: sheet.layout.tabColour } : {}),
         ...(sheet.layout.hidden ? { hidden: true as const } : {}),
         ...(formatRules ? { formatRules } : {}),
+        ...(charts.length ? { charts } : {}),
       };
     }),
     ...(engine.theme === STANDARD_THEME ? {} : { theme: engine.theme }),
