@@ -107,7 +107,8 @@ test('an Editor and a Participant suggest, and each sees the other’s suggestio
     .getByRole('menuitem', { name: 'File' })
     .click();
   const pageSetup = peer.getByRole('menuitem', { name: 'Page setup', exact: true });
-  if ((await pageSetup.count()) > 0) await expect(pageSetup).toHaveAttribute('aria-disabled', 'true');
+  if ((await pageSetup.count()) > 0)
+    await expect(pageSetup).toHaveAttribute('aria-disabled', 'true');
   await peer.waitForTimeout(300);
   await peer.screenshot({ path: test.info().outputPath('suggesting-participant-menus.png') });
   await peer.keyboard.press('Escape');
