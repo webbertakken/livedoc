@@ -12,11 +12,21 @@ export const PDF_LOCAL_ORIGIN = 'pdf-local';
 /** Where a step was made. */
 export type PdfUndoPlace = { readonly page: PageName };
 
+/** A step left open: every change made until it closes is one step, however long it takes. */
+export type PdfOpenStep = {
+  /** The step ends here; what follows groups by the group's time again. */
+  close: () => void;
+  /** The step ends and leaves no step: what it changed netted out (a box typed in and emptied again). */
+  discard: () => void;
+};
+
 export type PdfUndoState = { readonly canUndo: boolean; readonly canRedo: boolean };
 
 export type PdfUndo = {
   /** Makes what `act` changes one step of its own, made at `place`; answers what `act` does. */
   step: <Made>(place: PdfUndoPlace, act: () => Made) => Made;
+  /** Opens a step made at `place`, closing one already open (live-editing-and-storage.md "A mark as it is made"). */
+  open: (place: PdfUndoPlace) => PdfOpenStep;
   undo: () => void;
   redo: () => void;
   /** Whether there is a step to take back, and one to make again; the same object until either changes. */
@@ -44,6 +54,8 @@ export function pdfUndo(doc: Y.Doc, groupMs: number = PDF_UNDO_GROUP_MS): PdfUnd
   let state: PdfUndoState = { canUndo: false, canRedo: false };
   // The place of the step being made, while `step` runs.
   let placing: PdfUndoPlace | null = null;
+  // The step left open, and whether it has made a step on the stack yet.
+  let opened: { made: boolean } | null = null;
 
   const changed = () => {
     const canUndo = manager.undoStack.length > 0;
@@ -54,6 +66,7 @@ export function pdfUndo(doc: Y.Doc, groupMs: number = PDF_UNDO_GROUP_MS): PdfUnd
   };
   manager.on('stack-item-added', ({ stackItem }) => {
     if (placing) stackItem.meta.set(PLACE, placing);
+    if (opened) opened.made = true;
     changed();
   });
   manager.on('stack-item-popped', ({ stackItem, type }) => {
@@ -77,6 +90,29 @@ export function pdfUndo(doc: Y.Doc, groupMs: number = PDF_UNDO_GROUP_MS): PdfUnd
         placing = null;
         manager.stopCapturing();
       }
+    },
+    open: (place) => {
+      manager.stopCapturing();
+      const own = { made: false };
+      opened = own;
+      placing = place;
+      manager.captureTimeout = Number.POSITIVE_INFINITY;
+      const end = () => {
+        if (opened !== own) return false;
+        opened = null;
+        placing = null;
+        manager.captureTimeout = groupMs;
+        manager.stopCapturing();
+        return true;
+      };
+      return {
+        close: () => void end(),
+        discard: () => {
+          if (!end() || !own.made) return;
+          manager.undoStack.pop();
+          changed();
+        },
+      };
     },
     undo: () => void manager.undo(),
     redo: () => void manager.redo(),

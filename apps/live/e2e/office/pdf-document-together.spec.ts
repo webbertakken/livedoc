@@ -144,6 +144,26 @@ test('a Participant reviews a PDF, and its stored file is replaced in one step f
   await peer.mouse.up();
   await expect(page.locator(`${PAGE_ONE} [data-pdf-mark-kind="drawing"]`)).toHaveCount(1);
   await expect(drawing).toHaveCount(0);
+
+  // A Text's words reach the Editor as they are typed, before the box ends; the Participant sees only their box.
+  await peer.keyboard.press('x');
+  await expect(peer.locator('[data-pdf-typing-layer="text"]')).toBeVisible();
+  await peer.mouse.click(sheet.x + sheet.width * 0.55, sheet.y + sheet.height * 0.12);
+  const box = peer.locator('textarea[data-pdf-typing="text"]');
+  await expect(box).toBeFocused();
+  await peer.keyboard.type('Hel');
+  const typedMark = page.locator(`${PAGE_ONE} [data-pdf-mark-kind="text"]`);
+  await expect(typedMark).toContainText('Hel');
+  await peer.keyboard.type('lo there');
+  await expect(typedMark).toContainText('Hello there');
+  await expect(peer.locator(`${PAGE_ONE} [data-pdf-mark-kind="text"]`)).toHaveCount(0);
+  await page.screenshot({ path: test.info().outputPath('pdf-peer-typing.png') });
+  await peer.keyboard.press('Escape');
+  await expect(box).toHaveCount(0);
+  await expect(peer.locator(`${PAGE_ONE} [data-pdf-mark-kind="text"]`)).toContainText(
+    'Hello there',
+  );
+  await expect(typedMark).toHaveCount(1);
   await peer.keyboard.press('v');
 
   // The new stored file: the bake of what the room holds, as an Editor's surface makes it.

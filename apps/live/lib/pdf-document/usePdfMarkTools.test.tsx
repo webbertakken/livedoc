@@ -64,9 +64,12 @@ const PAGES = [PageName.ofObject(3), PageName.ofObject(4)].map((name) => ({ name
 function opened() {
   const doc = PdfLiveChanges.load();
   const steps: unknown[] = [];
+  // How the open steps ended, by their place.
+  const ended: { closed: unknown[]; discarded: unknown[] } = { closed: [], discarded: [] };
   return {
     doc,
     steps,
+    ended,
     ready: {
       pages: PAGES,
       storedFile: 'ab'.repeat(32) as BlobKey,
@@ -75,6 +78,13 @@ function opened() {
         step: <Made,>(place: unknown, made: () => Made) => {
           steps.push(place);
           return made();
+        },
+        open: (place: unknown) => {
+          steps.push(place);
+          return {
+            close: () => ended.closed.push(place),
+            discard: () => ended.discarded.push(place),
+          };
         },
       } as never,
     },
@@ -593,6 +603,61 @@ describe('the typing tools', () => {
     });
     run(TOOL_TEXT);
     act(() => hook.result.current.typing!.onTyped(0, 'text', typed));
+    expect(onProblem).toHaveBeenLastCalledWith(TOO_MANY_MARKS_COPY);
+    expect(debugLog).toHaveBeenLastCalledWith('[pdf] limit-refused name=pdf_too_many_marks');
+  });
+
+  // live-editing-and-storage.md "A mark as it is made".
+  it('relays the words as they are typed: the first character makes the mark, each next changes it, one step', () => {
+    const { hook, run, doc, steps, ended } = tools();
+    run(TOOL_TEXT);
+    act(() => hook.result.current.typing!.onWords(1, 'text', { ...typed, words: 'C' }));
+    const [made] = PdfLiveChanges.marks(doc);
+    expect(made).toMatchObject({ kind: 'text', words: 'C', page: PAGES[1]!.name });
+    expect(hook.result.current.typing!.id).toBe(made!.id);
+    act(() => hook.result.current.typing!.onWords(1, 'text', typed));
+    expect(PdfLiveChanges.marks(doc)).toEqual([
+      expect.objectContaining({ id: made!.id, words: 'Check' }),
+    ]);
+    act(() => hook.result.current.typing!.onTyped(1, 'text', { ...typed, words: 'Check it' }));
+    expect(PdfLiveChanges.marks(doc)).toEqual([expect.objectContaining({ words: 'Check it' })]);
+    expect(steps).toEqual([{ page: PAGES[1]!.name }]);
+    expect(ended.closed).toEqual(steps);
+    expect(hook.result.current.typing!.id).toBeNull();
+    expect(debugLog).toHaveBeenLastCalledWith('[pdf] mark-added kind=text');
+  });
+
+  it('takes the mark away while emptied, and leaves no step where the box ends empty', () => {
+    const { hook, run, doc, ended } = tools();
+    run(TOOL_TEXT);
+    act(() => hook.result.current.typing!.onWords(0, 'text', { ...typed, words: 'C' }));
+    act(() => hook.result.current.typing!.onWords(0, 'text', null));
+    expect(PdfLiveChanges.marks(doc)).toEqual([]);
+    act(() => hook.result.current.typing!.onTyped(0, 'text', null));
+    expect(ended).toEqual({ closed: [], discarded: [{ page: PAGES[0]!.name }] });
+    expect(debugLog).toHaveBeenLastCalledWith('[pdf] typing-dropped kind=text');
+  });
+
+  it('keeps what was typed, one step, where the tool is put down mid-box', () => {
+    const { hook, run, doc, ended } = tools();
+    run(TOOL_TEXT);
+    act(() => hook.result.current.typing!.onWords(0, 'text', { ...typed, words: 'C' }));
+    run(TOOL_SELECT);
+    expect(PdfLiveChanges.marks(doc)).toEqual([expect.objectContaining({ words: 'C' })]);
+    expect(ended.closed).toEqual([{ page: PAGES[0]!.name }]);
+  });
+
+  it('stops writing a box refused past PDF_MAX_MARKS, saying so once', () => {
+    const { hook, run, doc, onProblem } = tools();
+    doc.transact(() => {
+      const marks = doc.getMap('marks');
+      for (let n = 0; n < PDF_MAX_MARKS; n += 1) marks.set(`m${n}`, 1);
+    });
+    run(TOOL_TEXT);
+    act(() => hook.result.current.typing!.onWords(0, 'text', { ...typed, words: 'C' }));
+    act(() => hook.result.current.typing!.onWords(0, 'text', typed));
+    act(() => hook.result.current.typing!.onTyped(0, 'text', typed));
+    expect(onProblem).toHaveBeenCalledTimes(1);
     expect(onProblem).toHaveBeenLastCalledWith(TOO_MANY_MARKS_COPY);
     expect(debugLog).toHaveBeenLastCalledWith('[pdf] limit-refused name=pdf_too_many_marks');
   });

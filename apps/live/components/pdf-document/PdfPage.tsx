@@ -170,7 +170,12 @@ export const PdfPage = memo(function PdfPage({
   // Collaborators' Drawing strokes on the page as they are drawn.
   peerDrafts: readonly PdfPeerDraft[];
 }) {
-  const marks = changeable.marks;
+  // The mark being typed is its box's while it is typed (live-editing-and-storage.md "A mark as it is made").
+  const typingId = typing?.id ?? null;
+  const marks = useMemo(
+    () => (typingId ? changeable.marks.filter((mark) => mark.id !== typingId) : changeable.marks),
+    [changeable.marks, typingId],
+  );
   const canvas = useRef<HTMLCanvasElement | null>(null);
   // The page's box: where a finger's points are read against.
   const [box, setBox] = useState<HTMLElement | null>(null);

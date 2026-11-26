@@ -8,6 +8,7 @@ import {
   PDF_TEXT_BOX_WIDTH_PT,
   PDF_TEXT_PADDING_PT,
   PageView,
+  PdfChange,
   PdfLiveChanges,
   TypedLayout,
   type Box,
@@ -181,4 +182,17 @@ export function addTyped(
     refusal = PdfLiveChanges.addMark(doc, mark, PDF_LOCAL_ORIGIN);
   }, PDF_LOCAL_ORIGIN);
   return refusal ? { ok: false, reason: refusal } : { ok: true, mark };
+}
+
+/** The words, the box and a Callout's line of a mark being typed, changed as the person types. */
+export function changeTyped(doc: Y.Doc, id: string, typed: Typed): void {
+  PdfChange.apply(
+    doc,
+    PdfChange.changeMark(id, {
+      words: typed.words,
+      rect: typed.rect,
+      ...(typed.callout ? { callout: typed.callout } : {}),
+    }),
+    PDF_LOCAL_ORIGIN,
+  );
 }

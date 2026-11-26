@@ -14,13 +14,13 @@ A row is done when it reads **built** (with its test) or **left out** (with Webb
 
 | Status                                             | Means                                                                            | Rows |
 | -------------------------------------------------- | -------------------------------------------------------------------------------- | ---- |
-| `specified`                                        | In, by the spec named                                                            | 109  |
+| `specified`                                        | In, by the spec named                                                            | 108  |
 | `specified, in part`                               | In, but for the part its rule names as left out                                  | 49   |
 | `left out (<ruling>)`                              | Not built, by the ruling or fork named                                           | 160  |
 | `not a function`                                   | Not a function of a PDF: installing, updating and troubleshooting Acrobat itself | 54   |
-| `built (<test>)`                                   | Built, with the test that proves it                                              | 17   |
+| `built (<test>)`                                   | Built, with the test that proves it                                              | 19   |
 | `built, in part (<test>)`                          | Built, but for the part its rule names as left out                               | 3    |
-| `built so far: <what> (<test>); the rest: Phase N` | The part named is built and proven; the rest lands in the phase named            | 11   |
+| `built so far: <what> (<test>); the rest: Phase N` | The part named is built and proven; the rest lands in the phase named            | 10   |
 
 - Left out, by ruling: 7 `left out (C4)`, 1 `left out (F10)`, 1 `left out (F12)`, 50 `left out (F14)`, 101 `left out (F5)`.
 - **C4, F5 and F14 are ruled** (Webber, 2026-11-21): the reference is this inventory, and Acrobat's far tools are left
@@ -447,11 +447,11 @@ A row is done when it reads **built** (with its test) or **left out** (with Webb
 
 ## Comment preferences
 
-| Topic                             | Rule                                                                                     | Mode      | Status             | Spec                              |
-| --------------------------------- | ---------------------------------------------------------------------------------------- | --------- | ------------------ | --------------------------------- |
-| Change author name on comments    | A comment's author is the person's display name; a comment is never given another author | Reviewing | specified, in part | [Comments](comments.md#authors)   |
-| Set comment properties            | A mark's subject, look, a note's glyph, its history, and making its look the default     | Reviewing | specified          | [Marks](marks.md#changing-a-mark) |
-| Set or change text box properties | A Text mark's font, size, colour and alignment                                           | Reviewing | specified          | [Marks](marks.md#changing-a-mark) |
+| Topic                             | Rule                                                                                     | Mode      | Status                                                                                               | Spec                              |
+| --------------------------------- | ---------------------------------------------------------------------------------------- | --------- | ---------------------------------------------------------------------------------------------------- | --------------------------------- |
+| Change author name on comments    | A comment's author is the person's display name; a comment is never given another author | Reviewing | specified, in part                                                                                   | [Comments](comments.md#authors)   |
+| Set comment properties            | A mark's subject, look, a note's glyph, its history, and making its look the default     | Reviewing | specified                                                                                            | [Marks](marks.md#changing-a-mark) |
+| Set or change text box properties | A Text mark's font, size, colour and alignment                                           | Reviewing | built (`pdf-mark-restyle.test.ts`, `usePdfMarkRestyle.test.tsx`, `pdf-document-mark-select.spec.ts`) | [Marks](marks.md#changing-a-mark) |
 
 ## Review documents
 
@@ -463,7 +463,7 @@ A row is done when it reads **built** (with its test) or **left out** (with Webb
 | Add comments in callouts                        | A Callout mark                                                                           | Reviewing | built (`typed-layout.test.ts`, `PdfPageTyping.test.tsx`, `pdf-document-typing.spec.ts`)                                                                                                                                                                            | [Marks](marks.md#kinds)                     |
 | Add comments to selected text or images         | Comment on selected text or an area                                                      | Reviewing | specified                                                                                                                                                                                                                                                          | [Comments](comments.md#anchors)             |
 | Add markups                                     | Highlight, underline, strikethrough, squiggly underline                                  | Reviewing | built (`mark-drawing.test.ts`, `usePdfMarkTools.test.tsx`, `pdf-document-text-marks.spec.ts`)                                                                                                                                                                      | [Marks](marks.md#kinds)                     |
-| Change markup colors                            | Colours from the one colour picker                                                       | Reviewing | built so far: a tool's colour (`pdf-mark-looks.test.tsx`, `pdf-document-text-marks.spec.ts`); the rest: a mark restyled, Phase 8                                                                                                                                   | [Marks](marks.md#changing-a-mark)           |
+| Change markup colors                            | Colours from the one colour picker                                                       | Reviewing | built (`pdf-mark-looks.test.tsx`, `pdf-mark-restyle.test.ts`, `usePdfMarkRestyle.test.tsx`, `pdf-document-text-marks.spec.ts`, `pdf-document-mark-select.spec.ts`)                                                                                                 | [Marks](marks.md#changing-a-mark)           |
 | Add comments using sticky notes or chat bubbles | A Note mark                                                                              | Reviewing | specified                                                                                                                                                                                                                                                          | [Marks](marks.md#kinds)                     |
 | Add comments in text boxes                      | A Text mark                                                                              | Reviewing | built (`pdf-typed.test.ts`, `PdfPageTyping.test.tsx`, `pdf-document-typing.spec.ts`)                                                                                                                                                                               | [Marks](marks.md#kinds)                     |
 | Add comments to videos in Acrobat Pro           | Media a file embeds is not played                                                        |           | left out (F5)                                                                                                                                                                                                                                                      | [Marks](marks.md#kinds)                     |
