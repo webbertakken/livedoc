@@ -195,7 +195,7 @@ export function SheetValidationForm({
           <label className="flex items-center gap-2">
             <input
               type="checkbox"
-              className="size-4 accent-current"
+              className="size-icon-row accent-brand-600"
               checked={d.custom}
               onChange={(e) => set({ custom: e.target.checked })}
             />
