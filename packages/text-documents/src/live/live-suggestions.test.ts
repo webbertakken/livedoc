@@ -3,6 +3,11 @@
 // read with one person's suggestions rejected.
 import { describe, expect, it } from 'vitest';
 import * as Y from 'yjs';
+import { Paragraph, type Block } from '../model/blocks';
+import type { Table } from '../model/tables';
+import { TextDocument } from '../model/text-document';
+import { writeLiveDocument } from './live-write';
+import { readLiveDocument } from './live-read';
 import {
   DELETION_MARK,
   FORMAT_CHANGE_MARK,
@@ -484,5 +489,83 @@ describe('LiveSuggestions.settleAll', () => {
     expect(textOf(rejected.getXmlFragment('body'))).toEqual(['A  old ']);
     expect(LiveSuggestions.count(doc)).toBe(3);
     expect(textOf(body)).toEqual(['A new old his']);
+  });
+});
+
+describe('LiveSuggestions joining past a block', () => {
+  // review.md "How a suggestion is kept": a join joins its paragraph to the one before, past any block the same
+  // settling takes away.
+  const fileMark = { id: 'j', at: 1, author: { name: 'File' } };
+  const paragraph = (text: string, suggested?: object): Paragraph => ({
+    type: 'paragraph',
+    style: 'P',
+    props: {},
+    inlines: [{ type: 'run', text, props: {} }],
+    ...(suggested ? { suggested } : {}),
+  });
+  const table: Table = {
+    type: 'table',
+    columns: [100],
+    rows: [{ cells: [{ blocks: [paragraph('cell')], props: {} }] }],
+    headerRows: 0,
+    suggested: { deletion: fileMark },
+  };
+
+  it('joins into the paragraph before a table its acceptance deletes', () => {
+    const live = new Y.Doc();
+    writeLiveDocument(live, {
+      ...TextDocument.blank(),
+      body: [paragraph('a'), table, paragraph('b', { join: fileMark })],
+    });
+    LiveSuggestions.accept(live, 'j', null);
+    const body = readLiveDocument(live, 'odf').body;
+    expect(body.map((b) => (b.type === 'paragraph' ? Paragraph.text(b) : b.type))).toEqual(['ab']);
+  });
+
+  it('takes away a paragraph after a table when its rejected break or accepted join leaves nothing', () => {
+    const kept = { ...table, suggested: {} };
+    const inserted = (text: string): Paragraph => ({
+      ...paragraph('', { break: fileMark }),
+      inlines: [{ type: 'run', text, props: {}, suggested: { insertion: fileMark } }],
+    });
+    const deleted = (text: string): Paragraph => ({
+      ...paragraph('', { join: fileMark }),
+      inlines: [{ type: 'run', text, props: {}, suggested: { deletion: fileMark } }],
+    });
+    const settledText = (body: Block[], accept: boolean) => {
+      const live = new Y.Doc();
+      writeLiveDocument(live, { ...TextDocument.blank(), body });
+      if (accept) LiveSuggestions.accept(live, 'j', null);
+      else LiveSuggestions.reject(live, 'j', null);
+      return readLiveDocument(live, 'odf').body.map((b) =>
+        b.type === 'paragraph' ? Paragraph.text(b) : b.type,
+      );
+    };
+    expect(settledText([paragraph('a'), kept, inserted('new'), paragraph('z')], false)).toEqual([
+      'a',
+      'table',
+      'z',
+    ]);
+    expect(settledText([paragraph('a'), kept, deleted('old'), paragraph('z')], true)).toEqual([
+      'a',
+      'table',
+      'z',
+    ]);
+    expect(settledText([paragraph('a'), kept, deleted('old')], true)).toEqual(['a', 'table', '']);
+  });
+
+  it('keeps the paragraph when the table before it stays', () => {
+    const live = new Y.Doc();
+    writeLiveDocument(live, {
+      ...TextDocument.blank(),
+      body: [paragraph('a'), { ...table, suggested: {} }, paragraph('b', { join: fileMark })],
+    });
+    LiveSuggestions.accept(live, 'j', null);
+    const body = readLiveDocument(live, 'odf').body;
+    expect(body.map((b) => (b.type === 'paragraph' ? Paragraph.text(b) : b.type))).toEqual([
+      'a',
+      'table',
+      'b',
+    ]);
   });
 });

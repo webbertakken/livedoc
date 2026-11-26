@@ -215,10 +215,10 @@ function read(doc: Y.Doc): TextDocumentSuggestion[] {
 /** The distinct suggestions the bodies hold. */
 const count = (doc: Y.Doc): number => read(doc).length;
 
-/** Appends a paragraph's content to the paragraph before it, its first text into the other's last. */
-function joinIntoPrevious(parent: Y.XmlFragment | Y.XmlElement, index: number): void {
+/** Appends a paragraph's content to the paragraph at `into` before it, its first text into the other's last. */
+function joinInto(parent: Y.XmlFragment | Y.XmlElement, index: number, into: number): void {
   const paragraph = parent.get(index) as Y.XmlElement;
-  const previous = parent.get(index - 1) as Y.XmlElement;
+  const previous = parent.get(into) as Y.XmlElement;
   for (const child of elementsOf(paragraph)) {
     const tail = previous.length > 0 ? previous.get(previous.length - 1) : null;
     if (child instanceof Y.XmlText && tail instanceof Y.XmlText) {
@@ -277,6 +277,12 @@ function restoreParagraph(
   }
 }
 
+/** Whether settling takes a block away: its insertion rejected or its deletion accepted. */
+const takenAway = (node: unknown, ids: ReadonlySet<string>, accept: boolean): boolean =>
+  node instanceof Y.XmlElement &&
+  node.nodeName !== PARAGRAPH &&
+  marksOf(node.getAttribute(accept ? DELETION_MARK : INSERTION_MARK), ids);
+
 /** Settles some suggestions within a parent's children, from the last backwards so indexes hold. */
 function settleChildren(
   parent: Y.XmlFragment | Y.XmlElement,
@@ -303,14 +309,17 @@ function settleChildren(
       const joins =
         (marksOf(node.getAttribute(INSERTION_MARK), ids) && !accept) ||
         (marksOf(node.getAttribute(DELETION_MARK), ids) && accept);
-      const rejectsBreak = !accept && marksOf(node.getAttribute(INSERTION_MARK), ids);
       if (marksOf(node.getAttribute(INSERTION_MARK), ids)) node.removeAttribute(INSERTION_MARK);
       if (marksOf(node.getAttribute(DELETION_MARK), ids)) node.removeAttribute(DELETION_MARK);
-      const previous = index > 0 ? parent.get(index - 1) : null;
+      // The paragraph it joins: the one before, past any block this settling takes away.
+      let before = index - 1;
+      while (before >= 0 && takenAway(parent.get(before), ids, accept)) before--;
+      const previous = before >= 0 ? parent.get(before) : null;
       if (joins && previous instanceof Y.XmlElement && previous.nodeName === PARAGRAPH)
-        joinIntoPrevious(parent, index);
-      // A rejected break with no paragraph before it: its paragraph goes when nothing of it is left and a block follows.
-      else if (rejectsBreak && index === 0 && parent.length > 1 && isEmpty(node))
+        joinInto(parent, index, before);
+      // A rejected break with no paragraph before it (first, or after a block), or an accepted join after a block: its
+      // paragraph goes when nothing of it is left and something follows it.
+      else if (joins && (before >= 0 || !accept) && index < parent.length - 1 && isEmpty(node))
         parent.delete(index, 1);
       continue;
     }

@@ -377,8 +377,9 @@ office kinds; this spec says what a text document puts in them.
 - **Accepting** an insertion or a paragraph break keeps it and drops its mark; a deletion removes its text, a join
   joins its paragraph to the one before, a format drops what was before. **Rejecting** removes an insertion's text,
   joins a paragraph break's paragraph back, drops a deletion's or a join's mark, and puts a format's before back. A
-  paragraph break with no paragraph before it (the first of a document tab) is removed with its paragraph when nothing
-  of the paragraph is left once the suggestion is rejected and a block follows it; otherwise its mark is dropped.
+  paragraph joins the paragraph before it past any block the same settling takes away. A rejected paragraph break with
+  no paragraph before it (the first of its container, or after a block), or an accepted join after a block, is removed
+  with its paragraph when nothing of the paragraph is left and something follows it; otherwise its mark is dropped.
   Either is one change of the writing, undone with ⌘Z.
 - **Where**: in the body of each document tab. Headers, footers and notes take no suggestions; while suggesting they
   read as they do in Viewing (default).
@@ -431,9 +432,79 @@ the writing usable beside it (non-modal). Pressing the item again, its × ("Clos
 
 ## Compare documents
 
-Tools > Compare documents: choose another LiveDoc text document (or a version), an attribution name, and "Include
-comments from the selected document"; it makes a new text document holding the first with every difference as a
-suggestion attributed to that name.
+Tools > Compare documents makes a **comparison**: a new text document holding this one (the **primary**) with every
+difference from another (the **selected** document) as a suggestion, so accepting them all reads as the selected
+document and rejecting them all as the primary, as Google's
+([Compare documents in Google Docs](https://support.google.com/docs/answer/18512262)).
+
+### The dialog
+
+- **Compare documents** (Tools > Compare documents) is offered to everyone who reads the document, an Editor, a
+  Participant and a Viewer alike, as the comparison is a new document of their own and changes nothing here
+  (director, 2026-11-26). It takes a document away as a copy does, so it follows Make a copy's and Download's one
+  rule, on both documents: where a share or a setting keeps a reader from copying or downloading either, they cannot
+  compare it, and the dialog says "You can't copy <name>, so it can't be compared." (default copy), so Compare is
+  never a way round it ([Share roles](files-and-print.md#share-roles)). In This Browser it is dimmed with the hint "Comparing needs a document stored in LiveDoc." (default).
+  The dialog reads "Compare **<this document>** against", a **Choose a document** button listing the person's own text documents but this one, newest
+  first, narrowed by a search on their names (loading, none and a failed list each say so, as Copy To's list does);
+  **Attribute differences to**, a field holding the person's name (default: their name, or "Guest" with none), at
+  most `SUGGESTION_AUTHOR_NAME_MAX` (100) characters; **Include comments from the selected document**, unticked;
+  the note "Suggestions in either document are left out."; **Cancel** and **Compare**, which waits for a document
+  chosen.
+- **Comparing**: Compare reads both documents, makes the comparison and stores it as the person's own document,
+  filed beside the primary where they may file there and else at the root of My Documents, as a copy is
+  ([Default folders](../013-workspace/default-folders.md)), and the dialog says "Comparison ready" with **Open** (the comparison in a new browser tab, as Google's)
+  and **Close** (default). A blank attribution field compares as the person's name.
+- **Named** "Comparison of <primary> and <selected>" (default, Google's).
+- **Refusals**, each said in the dialog, nothing made: the selected document cannot be read ("That document couldn't be
+  read. Try again."); the two differ in more than `TEXT_DOCUMENT_SUGGESTIONS_MAX` places ("These documents differ in
+  too many places to compare."); the comparison cannot be stored ("The comparison couldn't be made. Try again.")
+  (default copy).
+- **Versions**: comparing with one of this document's versions comes with [Version history](#version-history)
+  (director, 2026-11-26).
+- Telemetry: `Document · Created · TextDocumentCompare` once a comparison is stored.
+
+### What is compared
+
+- **Each side as it is written**: a document's own suggestions are read rejected, as though never made (director,
+  2026-11-26); the comparison holds only the differences, and the dialog says so.
+- **Document tabs** pair in order, the first with the first (default). A tab only the selected document has is added
+  at the end, its writing a suggested insertion; a tab only the primary has keeps its writing as a suggested deletion.
+  Tabs themselves are never suggested: accepting every suggestion leaves such a tab empty (default).
+- **Writing**, word by word: the two bodies are read as words, spaces, punctuation marks and paragraph breaks, and
+  their longest common reading is kept; a stretch only the primary has is a suggested deletion, one only the selected
+  has a suggested insertion, a paragraph break only the selected has a suggested break, one only the primary has a
+  suggested join. One stretch of differences, between two kept stretches, is one suggestion, so a word changed reads
+  as "Replace: “…” with “…”".
+- **Formatting**: kept text whose text style or formatting differs carries the selected document's, as a format
+  suggestion holding the primary's; a kept paragraph whose style, formatting or list differs carries the selected's as
+  a paragraph format suggestion. A link added, changed or taken off is a deletion and an insertion (default). Two
+  paragraphs are alike enough to pair when at least half of all their words are in both (`COMPARE_SIMILAR_PARAGRAPHS`, 0.5,
+  (default)).
+- **Objects in a line** (pictures, equations, fields, footnotes, bookmarks) are words of their own, the same when
+  they are the same object; a footnote's own writing is not compared inside it (default).
+- **Tables** pair in order where both have one at that place in the reading. Two with as many columns compare row by
+  row: rows the same in both are kept, rows in a stretch of differences pair in order and their cells compare as
+  writing does, and a stretch's rows left over are suggested row insertions or deletions. Two with different column
+  counts are the primary's table suggested deleted and the selected's suggested inserted (default). Column widths,
+  as Google's, and a table's or a cell's own formatting are not compared: the primary's are kept.
+- **Section breaks and tables of contents** are the same or else deleted and inserted, whole.
+- **Not compared** (the primary's kept): page setup, headers and footers, styles and list definitions (the
+  selected's styles, lists and pictures' media that the comparison uses are added where the primary has none of that
+  name), the document's properties, and anything the model keeps without reading: a kept block only the primary has
+  stays unmarked, one only the selected has is left out and counted in the log (default).
+- **Comments**: the primary's threads are not carried; with Include comments ticked, the selected document's threads
+  are, each on its own text, their authors kept by name and none as anyone's own (default).
+- **Who it is from**: every suggestion is attributed to the name given, with no LiveDoc person behind it, so no one
+  rejects it as their own; its card reads "From the comparison" under the name (default copy).
+- **Exact both ways**: rejecting every suggestion reads as the primary; accepting every one reads as the selected
+  document but for what is not compared (default).
+- **Bounded**: comparing two documents of `TEXT_DOCUMENT_COMPARE_TOKENS_MAX` words, spaces and marks each (300,000,
+  about 300 pages, (default)) finishes within `TEXT_DOCUMENT_COMPARE_BUDGET_MS` (2,000 ms, (default)) however much
+  they differ: a stretch is searched for at most `TEXT_DOCUMENT_COMPARE_EDITS_MAX` differences (2,000), fewer the
+  longer it is so no search takes more than `TEXT_DOCUMENT_COMPARE_WORK_MAX` steps (20,000,000), and past that it
+  reads as wholly deleted and inserted (default). A side past the token limit is refused: "These documents are too
+  long to compare." (default copy).
 
 ## Version history
 
