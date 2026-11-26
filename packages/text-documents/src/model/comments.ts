@@ -6,6 +6,7 @@ import type { KeptProperties, TextProps } from './props';
 import type { TextDocument } from './text-document';
 import { DocumentTabs } from './document-tabs';
 import type { ReportBuilder } from '../report';
+import { MENTION_FIELD_MAX, MENTIONS_MAX } from '@livedoc/document';
 
 /** One edge of a thread's stretch in the writing. */
 export type CommentMark = {
@@ -37,7 +38,12 @@ export type FileComment = {
   readonly author: CommentAuthor;
   /** Each emoji's reactors by key, sorted (review.md "Reactions"); kept in `livedoc:reactions`. */
   readonly reactions?: Readonly<Record<string, readonly string[]>>;
+  /** Whom it mentions, by name and handle alone (review.md "Mentions"); kept in `livedoc:mentions`. */
+  readonly mentions?: readonly FileMention[];
 };
+
+/** A mention as a file keeps it: never an account or member id, which say who someone is beyond the document. */
+export type FileMention = { readonly name: string; readonly handle: string };
 
 /** (default) The most different emoji one comment holds as reactions (review.md "Reactions"). */
 export const TEXT_DOCUMENT_REACTIONS_MAX = 20;
@@ -249,6 +255,43 @@ export const Comments = {
   reactionsFrom: (text: string | undefined): { reactions?: Record<string, readonly string[]> } => {
     const reactions = Comments.readReactions(text);
     return reactions ? { reactions } : {};
+  },
+
+  /** A comment's mentions as `livedoc:mentions` holds them: a JSON array of each one's name and handle; none for none. */
+  mentionsText: (mentions: FileComment['mentions']): string | undefined =>
+    mentions && mentions.length > 0
+      ? JSON.stringify(mentions.map(({ name, handle }) => ({ name, handle })))
+      : undefined,
+
+  /**
+   * `livedoc:mentions` read: the first `MENTIONS_MAX` entries whose name and handle are text of 1 to
+   * `MENTION_FIELD_MAX` characters, each as just those two; anything else reads as none.
+   */
+  readMentions: (text: string | undefined): FileComment['mentions'] => {
+    if (text === undefined) return undefined;
+    let value: unknown;
+    try {
+      value = JSON.parse(text);
+    } catch {
+      return undefined;
+    }
+    if (!Array.isArray(value)) return undefined;
+    const field = (v: unknown): v is string =>
+      typeof v === 'string' && v.length > 0 && v.length <= MENTION_FIELD_MAX;
+    const out: FileMention[] = [];
+    for (const entry of value as unknown[]) {
+      if (out.length === MENTIONS_MAX) break;
+      if (typeof entry !== 'object' || entry === null) continue;
+      const { name, handle } = entry as Record<string, unknown>;
+      if (field(name) && field(handle)) out.push({ name, handle });
+    }
+    return out.length > 0 ? out : undefined;
+  },
+
+  /** `livedoc:mentions` read as a comment's field: `{ mentions }`, or nothing where there are none. */
+  mentionsFrom: (text: string | undefined): { mentions?: readonly FileMention[] } => {
+    const mentions = Comments.readMentions(text);
+    return mentions ? { mentions } : {};
   },
 
   /** A comment's plain text as its paragraphs, one at least. */

@@ -3,6 +3,7 @@
 // what is the sender's own: comments carrying its adder key added, edited or removed (the first removing its thread),
 // threads begun with one, any thread resolved or reopened, its own key added to or taken from a reaction. Read by
 // applying the update to the stored state, the threads before against after.
+import { MENTIONS_MAX, sanitizeMentions } from '@livedoc/document';
 import { touchedRoots } from '@livedoc/live-updates';
 import {
   LiveThreads,
@@ -25,9 +26,21 @@ const same = (a: unknown, b: unknown): boolean => JSON.stringify(a) === JSON.str
 const sameBytes = (a: Uint8Array, b: Uint8Array): boolean =>
   a.byteLength === b.byteLength && a.every((byte, i) => byte === b[i]);
 
-/** Whether a comment is the sender's own, and within its length. */
+const MENTION_FIELDS = new Set(['userId', 'memberId', 'name', 'handle']);
+
+/** Whether a comment's mentions are none, or at most so many in the shared shape (review.md "Mentions"). */
+const mentionsWithin = ({ mentions }: TextDocumentComment): boolean =>
+  mentions === undefined ||
+  mentions.length === 0 ||
+  (mentions.length <= MENTIONS_MAX &&
+    sanitizeMentions(mentions)?.length === mentions.length &&
+    mentions.every((m) => Object.keys(m as object).every((field) => MENTION_FIELDS.has(field))));
+
+/** Whether a comment is the sender's own, within its length and its mentions' limits. */
 const ownComment = (comment: TextDocumentComment, key: string): boolean =>
-  comment.author.key === key && comment.text.length <= TEXT_DOCUMENT_COMMENT_TEXT_MAX;
+  comment.author.key === key &&
+  comment.text.length <= TEXT_DOCUMENT_COMMENT_TEXT_MAX &&
+  mentionsWithin(comment);
 
 /** What a comment says, apart from its reactions. */
 const said = ({ reactions: _reactions, ...rest }: TextDocumentComment) => rest;

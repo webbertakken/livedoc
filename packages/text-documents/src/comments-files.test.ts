@@ -16,6 +16,7 @@ import { TextDocument } from './model/text-document';
 import { docx, fodt, W_P, W_R } from './testing/packages';
 import { TextDocumentState } from './text-document-state';
 import { LiveThreads, TEXT_DOCUMENT_REACTIONS_MAX } from './live/live-threads';
+import { MENTIONS_MAX } from '@livedoc/document';
 import { FILE_AUTHOR_COLOUR } from './live/live-thread-files';
 import { wholeOf } from './testing/compare';
 import { keptCommentIds, ooxmlCommentIds } from './ooxml/ooxml-comments';
@@ -637,5 +638,76 @@ describe('a comment’s reactions in the files', () => {
     );
     expect(Comments.readReactions(JSON.stringify(many))).toBeUndefined();
     expect(Comments.readReactions('{"👍":["a1"],"🎉":[]}')).toEqual({ '👍': ['a1'] });
+  });
+});
+
+// review.md "Mentions": `livedoc:mentions` on the comment in both formats, each mention's name and handle alone; a
+// file's mention reaches nobody, so it comes back with no account.
+describe('a comment’s mentions in the files', () => {
+  const run = (text: string): Inline => ({ type: 'run', text, props: {} });
+  const mark = (edge: 'start' | 'end'): Inline => ({ type: 'comment', edge, id: 't', props: {} });
+  const priya = { name: 'Priya Kaur', handle: 'priya-kaur' };
+  const mentioned: TextDocument = {
+    ...TextDocument.blank(),
+    body: [
+      {
+        ...(TextDocument.blank().body[0] as Paragraph),
+        inlines: [run('ab'), mark('start'), run('cd'), mark('end')],
+      },
+    ],
+    comments: [
+      {
+        id: 't',
+        resolved: false,
+        comments: [
+          {
+            id: 't',
+            text: 'ask @priya-kaur',
+            at: 5,
+            author: { name: 'Ada', key: 'a1' },
+            mentions: [priya],
+          },
+          { id: 't.1', text: 'y', author: { name: 'Bo' } },
+        ],
+      },
+    ],
+  };
+  const mentionsOf = (document: TextDocument) =>
+    document.comments?.[0]?.comments.map((c) => c.mentions);
+
+  it('writes them on each comment in ODF and OOXML, and reads them back', async () => {
+    for (const type of ['fodt', 'odt', 'docx'] as const) {
+      const source = type === 'docx' ? convertTextDocument(mentioned, 'ooxml').document : mentioned;
+      const again = (await read(written(source, type))).document;
+      expect(mentionsOf(again)).toEqual([[priya], undefined]);
+    }
+    expect(new TextDecoder().decode(written(mentioned, 'fodt'))).toContain('livedoc:mentions=');
+  });
+
+  it('carries no account or member id out of the live state, and brings none back', () => {
+    const doc = TextDocumentState.load([TextDocumentState.fromDocument(mentioned)]);
+    expect(LiveThreads.read(doc)[0]!.comments[0]!.mentions).toEqual([{ userId: null, ...priya }]);
+    const start = LiveThreads.read(doc)[0]!;
+    LiveThreads.edit(doc, start.id, start.comments[0]!.id, 'ask @priya-kaur', 9, 'me', [
+      { userId: 'u-priya', memberId: 'm-priya', ...priya },
+    ]);
+    const back = TextDocumentState.document(doc, 'odf');
+    expect(mentionsOf(back)).toEqual([[priya], undefined]);
+    expect(new TextDecoder().decode(written(back, 'fodt'))).not.toContain('u-priya');
+  });
+
+  it('reads malformed mentions as none, and keeps the well-formed ones of a list', () => {
+    for (const bad of ['not json', '{}', '[1]', '[{"name":"A"}]', '[]'])
+      expect(Comments.readMentions(bad)).toBeUndefined();
+    expect(
+      Comments.readMentions(
+        JSON.stringify([priya, { name: 7, handle: 'x' }, { ...priya, extra: 1 }]),
+      ),
+    ).toEqual([priya, priya]);
+    const many = Array.from({ length: MENTIONS_MAX + 1 }, () => priya);
+    expect(Comments.readMentions(JSON.stringify(many))).toHaveLength(MENTIONS_MAX);
+    expect(
+      Comments.readMentions(JSON.stringify([{ name: 'x'.repeat(101), handle: 'x' }])),
+    ).toBeUndefined();
   });
 });

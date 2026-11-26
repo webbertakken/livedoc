@@ -744,6 +744,7 @@ export const CONSTRUCTS: Record<string, (format: TextDocumentFormat) => TextDocu
                 at: Date.UTC(2026, 10, 18, 10),
                 author,
                 reactions: { '👍': ['a1', 'b2'] },
+                mentions: [{ name: 'Priya Kaur', handle: 'priya-kaur' }],
               },
               {
                 id: ids.r1,

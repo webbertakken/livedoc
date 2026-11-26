@@ -30,24 +30,32 @@ export const ReviewFilters = {
   initial: { who: 'all', state: 'all', group: null } as ReviewFilters,
 } as const;
 
-/** A thread for you: another wrote in it after a comment of yours (mentions and assignees join with them). */
-export function forYou(row: ReviewThreadRow, selfKey: string): boolean {
-  if (selfKey === '') return false;
-  const first = row.comments.findIndex((c) => c.authorId === selfKey);
-  return first >= 0 && row.comments.slice(first + 1).some((c) => c.authorId !== selfKey);
+/** Who reads the panel: the key their comments carry ('' without one) and their account (null without one). */
+export type ReviewSelf = { readonly key: string; readonly userId: string | null };
+
+/** A thread mentions you: one of its comments names your account. */
+const mentionsYou = (row: ReviewThreadRow, userId: string | null): boolean =>
+  userId !== null && row.comments.some((c) => c.mentions?.some((m) => m.userId === userId));
+
+/** A thread for you: another wrote in it after a comment of yours, or it mentions you (assignees join with them). */
+export function forYou(row: ReviewThreadRow, self: ReviewSelf): boolean {
+  if (mentionsYou(row, self.userId)) return true;
+  if (self.key === '') return false;
+  const first = row.comments.findIndex((c) => c.authorId === self.key);
+  return first >= 0 && row.comments.slice(first + 1).some((c) => c.authorId !== self.key);
 }
 
 /** The rows the filters let through, in the order given. */
 export function filterRows(
   rows: readonly ReviewThreadRow[],
   filters: ReviewFilters,
-  selfKey: string,
+  self: ReviewSelf,
 ): ReviewThreadRow[] {
   return rows.filter(
     (row) =>
       (filters.state === 'all' || row.resolved === (filters.state === 'resolved')) &&
       (filters.group === null || row.group === filters.group) &&
-      (filters.who === 'all' || forYou(row, selfKey)),
+      (filters.who === 'all' || forYou(row, self)),
   );
 }
 

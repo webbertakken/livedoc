@@ -3,6 +3,7 @@
 // reopened, and the sender's own reactions; anything else asks for Editing. An update standing on changes the stored
 // state lacks cannot be judged.
 import { describe, expect, it } from 'vitest';
+import { MENTIONS_MAX } from '@livedoc/document';
 import * as Y from 'yjs';
 import { textDocumentLevelAsked } from './level-asked';
 import {
@@ -184,6 +185,30 @@ describe('textDocumentLevelAsked', () => {
         LiveThreads.reply(doc, 'ben', { ...comment('a2'), reactions: { '👍': ['k-ada'] } }, 'me'),
       ),
     ).toBe('edit');
+  });
+
+  // review.md "Mentions": the room takes a Participant's own comment with mentions in the shared shape and limits.
+  it('lets a Participant mention, and asks for Editing for mentions past the most or malformed', () => {
+    const priya = {
+      userId: 'u-priya',
+      memberId: 'm-priya',
+      name: 'Priya Kaur',
+      handle: 'priya-kaur',
+    };
+    const mentioning = (mentions: unknown[]) =>
+      asked((doc) => LiveThreads.reply(doc, 'ben', { ...comment('a2'), mentions }, 'me'));
+    expect(mentioning([priya])).toBe('participate');
+    expect(mentioning([{ ...priya, userId: null }])).toBe('participate');
+    expect(mentioning(Array.from({ length: MENTIONS_MAX + 1 }, () => priya))).toBe('edit');
+    expect(mentioning([{ ...priya, name: 7 }])).toBe('edit');
+    expect(mentioning([{ ...priya, handle: 'x'.repeat(101) }])).toBe('edit');
+    expect(mentioning(['priya'])).toBe('edit');
+    expect(
+      asked((doc) => {
+        LiveThreads.reply(doc, 'ben', comment('a2'), 'me');
+        LiveThreads.edit(doc, 'ben', 'a2', '@priya-kaur', 2, 'me', [priya]);
+      }),
+    ).toBe('participate');
   });
 
   it('asks for Editing for a thread begun resolved or with no anchor', () => {

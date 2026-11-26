@@ -4,6 +4,7 @@
 // comments drawn by the shared thread parts, "From the file" under a file's author, "Original content deleted" and the
 // quote once the text is gone, Resolve for whoever may comment, Edit on one's own comments, Delete on one's own (an
 // Editor's on any), and Reply while the thread is selected. Deleting the first comment asks first: it takes the thread.
+import type { CommentMention } from '@livedoc/document';
 import { useEffect, useRef, useState, type KeyboardEvent } from 'react';
 import type { TextDocumentThread } from '@livedoc/text-documents';
 import { commentNoteOf, sharedComment } from '@/lib/text-document/text-document-comment-rows';
@@ -47,7 +48,7 @@ export function TextDocumentThreadCard({
   selected: boolean;
   commenter: TextDocumentCommenter | null;
   onSelect: () => void;
-  onReply: (text: string) => void;
+  onReply: (text: string, mentions: CommentMention[]) => void;
   onEdit: (commentId: string, text: string) => void;
   onRemove: (commentId: string) => void;
   onResolve: (resolved: boolean) => void;
@@ -145,7 +146,7 @@ export function TextDocumentThreadCard({
         className="max-h-96 overflow-y-auto px-3 py-1"
       />
       {selected && commenter ? (
-        <CommentComposer fieldRef={replyField} onAddComment={(text) => onReply(text)} />
+        <CommentComposer fieldRef={replyField} onAddComment={onReply} />
       ) : null}
       <ConfirmDialog
         open={confirming}
@@ -171,7 +172,7 @@ export function TextDocumentDraftCard({
   commenter: TextDocumentCommenter;
   /** The margin has placed it: hidden until then, it can take no focus. */
   placed: boolean;
-  onSend: (text: string) => void;
+  onSend: (text: string, mentions: CommentMention[]) => void;
   onCancel: () => void;
 }) {
   const field = useRef<HTMLTextAreaElement>(null);
@@ -200,7 +201,7 @@ export function TextDocumentDraftCard({
       className={`${CARD} shadow-lg`}
     >
       <p className="px-3 pt-2 text-body text-slate-900 dark:text-slate-50">{commenter.name}</p>
-      <CommentComposer fieldRef={field} onAddComment={(text) => onSend(text)} />
+      <CommentComposer fieldRef={field} onAddComment={onSend} />
       <div className="flex justify-end px-2 pb-2">
         <Button size="xs" variant="secondary" onClick={onCancel}>
           Cancel

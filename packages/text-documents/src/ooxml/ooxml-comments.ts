@@ -93,6 +93,7 @@ export class OoxmlCommentsReader {
           ...(initials ? { initials } : {}),
         },
         ...Comments.reactionsFrom(attributeOf(c, LIVEDOC_NS, 'reactions')),
+        ...Comments.mentionsFrom(attributeOf(c, LIVEDOC_NS, 'mentions')),
       };
       const info = paraId ? ex.get(paraId.toUpperCase()) : undefined;
       const parentThread = info?.parent ? threadOfPara.get(info.parent) : undefined;
@@ -225,7 +226,10 @@ export function ooxmlCommentsXml(
       const initials = initialsOf(comment);
       const date = comment.at === undefined ? '' : ` w:date="${dateOf(comment.at)}"`;
       const reactions = Comments.reactionsText(comment.reactions);
-      const reacted = reactions ? ` livedoc:reactions="${escapeXmlAttribute(reactions)}"` : '';
+      const mentions = Comments.mentionsText(comment.mentions);
+      const reacted =
+        (reactions ? ` livedoc:reactions="${escapeXmlAttribute(reactions)}"` : '') +
+        (mentions ? ` livedoc:mentions="${escapeXmlAttribute(mentions)}"` : '');
       comments.push(
         `<w:comment w:id="${n}" w:author="${escapeXmlAttribute(comment.author.name)}"${date}${initials ? ` w:initials="${escapeXmlAttribute(initials)}"` : ''}${reacted}>${paras.map((p) => p.xml).join('')}</w:comment>`,
       );

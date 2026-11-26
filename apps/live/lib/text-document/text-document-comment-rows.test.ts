@@ -85,6 +85,23 @@ describe('sharedComment', () => {
     expect(commentNoteOf(file)).toBe('From the file');
     expect(commentNoteOf(sharedComment(ADA))).toBeNull();
   });
+
+  // review.md "Mentions": the chips are drawn from the comment's mentions, a file's (no account) too; a malformed one
+  // is left out.
+  it('carries the mentions a chip is drawn from, a file’s too, and leaves out a malformed one', () => {
+    const priya = {
+      userId: 'u-priya',
+      memberId: 'm-priya',
+      name: 'Priya Kaur',
+      handle: 'priya-kaur',
+    };
+    const fromFile = { userId: null, name: 'Bo Lee', handle: 'bo-lee' };
+    expect(
+      sharedComment({ ...ADA, mentions: [priya, fromFile, { handle: 7 }, 'x'] }).mentions,
+    ).toEqual([priya, fromFile]);
+    expect(sharedComment({ ...ADA, mentions: [] }).mentions).toBeUndefined();
+    expect(sharedComment(ADA).mentions).toBeUndefined();
+  });
 });
 
 describe('tabGroups', () => {

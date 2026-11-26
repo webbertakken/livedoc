@@ -241,12 +241,16 @@ export const LiveThreads = {
     text: string,
     at: number,
     origin: unknown,
+    mentions?: readonly unknown[],
   ): boolean => {
     const map = commentAt(doc, threadId, commentId);
     if (!map) return false;
     doc.transact(() => {
       map.set('text', text);
       map.set('edited', at);
+      if (mentions === undefined) return;
+      if (mentions.length) map.set('mentions', [...mentions]);
+      else map.delete('mentions');
     }, origin);
     return true;
   },
