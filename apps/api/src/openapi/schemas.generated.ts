@@ -2862,6 +2862,7 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
       "area",
       "stepped-area",
       "scatter",
+      "bubble",
       "doughnut",
       "radar",
       "combo"
@@ -15347,6 +15348,7 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
       "area",
       "stepped-area",
       "scatter",
+      "bubble",
       "pie",
       "doughnut",
       "radar",

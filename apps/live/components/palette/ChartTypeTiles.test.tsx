@@ -4,7 +4,7 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import { ChartTypeTiles } from './ChartTypeTiles';
 
 describe('ChartTypeTiles (docs/specs/009-elements/pie-chart.md "Chart types")', () => {
-  it('offers the ten types, the chart’s own pressed, and picks one', () => {
+  it('offers the eleven types, the chart’s own pressed, and picks one', () => {
     const onSet = vi.fn();
     render(<ChartTypeTiles current="doughnut" onSet={onSet} />);
     const tiles = screen.getAllByRole('button');
@@ -15,6 +15,7 @@ describe('ChartTypeTiles (docs/specs/009-elements/pie-chart.md "Chart types")', 
       'Area',
       'Stepped Area',
       'Scatter',
+      'Bubble',
       'Pie',
       'Doughnut',
       'Radar',

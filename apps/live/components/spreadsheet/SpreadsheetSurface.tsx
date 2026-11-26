@@ -4,15 +4,17 @@
 // "The surface"): the title row, the formula bar, the grid of the open sheet tab and the sheet bar at the foot. The
 // grid is the sheet engine's own (components/sheets), on the document's sheet store, live through the room. Loaded as
 // its own chunk, with the engine, only when a spreadsheet opens.
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { planPalette, type Tab } from '@livedoc/document';
-import type { WorkbookRecord } from '@livedoc/sheets';
+import type { GridRange, WorkbookRecord } from '@livedoc/sheets';
 import { Button } from '@livedoc/ui';
 import { useCanvasSurface } from '@/components/canvas/CanvasSurfaceContext';
 import {
+  arriveAt,
   SheetControllerProvider,
   useSheetControllerState,
 } from '@/components/sheets/sheet-controller';
+import { SheetNavigationContext } from '@/components/sheets/sheet-navigation';
 import type { SheetStore } from '@/components/sheets/sheet-store-client';
 import { useAttachedSheetStore } from '@/components/sheets/useAttachedSheetStore';
 import { ShowFormulasContext, useShowFormulas } from '@/components/sheets/show-formulas';
@@ -151,6 +153,7 @@ export function SpreadsheetSurface({
                             <OpenSheet
                               bridge={bridge}
                               tabId={tabId}
+                              onSelectTab={onSelectTab}
                               sync={sync}
                               onWorkbook={onWorkbook}
                             />
@@ -213,11 +216,13 @@ function Status({
 function OpenSheet({
   bridge,
   tabId,
+  onSelectTab,
   sync,
   onWorkbook,
 }: {
   bridge: SheetsBridge;
   tabId: string;
+  onSelectTab: (tabId: string) => void;
   sync: ImportSync | undefined;
   onWorkbook: ((workbook: WorkbookRecord) => void) | undefined;
 }) {
@@ -246,6 +251,7 @@ function OpenSheet({
       tabId={tabId}
       version={version}
       bridge={bridge}
+      onSelectTab={onSelectTab}
       sync={sync}
       onWorkbook={onWorkbook}
     />
@@ -258,6 +264,7 @@ function SheetWorkspace({
   tabId,
   version,
   bridge,
+  onSelectTab,
   sync,
   onWorkbook,
 }: {
@@ -266,6 +273,7 @@ function SheetWorkspace({
   tabId: string;
   version: number;
   bridge: SheetsBridge;
+  onSelectTab: (tabId: string) => void;
   sync: ImportSync | undefined;
   onWorkbook: ((workbook: WorkbookRecord) => void) | undefined;
 }) {
@@ -304,37 +312,49 @@ function SheetWorkspace({
       : bridge.importAccess === 'blocked' && store.usesImports();
   // IMPORTRANGE's sources waiting to be connected (formulas.md "Connecting two spreadsheets").
   const waiting = store.rangeSourcesWaiting();
+  // A named range on another sheet: that sheet opens on it (data-tools.md "Named ranges and named functions").
+  const openSheetAt = useCallback(
+    (id: string, range: GridRange) => {
+      const to = store.sheet(id)?.tabId;
+      if (!to) return;
+      arriveAt(id, range);
+      onSelectTab(to);
+    },
+    [store, onSelectTab],
+  );
   return (
-    <SheetControllerProvider value={c}>
-      <SheetImagesContext.Provider value={images}>
-        <div
-          data-spreadsheet-surface="ready"
-          className="relative isolate flex min-h-0 flex-1 flex-col overflow-hidden"
-          style={{ backgroundColor: palette.surface, color: palette.text }}
-        >
-          {importBar ? (
-            <ImportAccessBar
-              scope={bridge.scope}
-              canAllow={bridge.canEdit && bridge.canShape}
-              offline={bridge.importAccess === 'offline'}
-              sync={sync}
-              onAllowed={onWorkbook}
-            />
-          ) : null}
-          {waiting.length > 0 ? (
-            <RangeAccessBar
-              scope={bridge.scope}
-              sources={waiting}
-              canAllow={bridge.canEdit && bridge.canShape}
-              onAllowed={onWorkbook}
-            />
-          ) : null}
-          <SpreadsheetSheetParts bridge={bridge} />
-          <p aria-live="polite" className="sr-only">
-            {announcement}
-          </p>
-        </div>
-      </SheetImagesContext.Provider>
-    </SheetControllerProvider>
+    <SheetNavigationContext.Provider value={openSheetAt}>
+      <SheetControllerProvider value={c}>
+        <SheetImagesContext.Provider value={images}>
+          <div
+            data-spreadsheet-surface="ready"
+            className="relative isolate flex min-h-0 flex-1 flex-col overflow-hidden"
+            style={{ backgroundColor: palette.surface, color: palette.text }}
+          >
+            {importBar ? (
+              <ImportAccessBar
+                scope={bridge.scope}
+                canAllow={bridge.canEdit && bridge.canShape}
+                offline={bridge.importAccess === 'offline'}
+                sync={sync}
+                onAllowed={onWorkbook}
+              />
+            ) : null}
+            {waiting.length > 0 ? (
+              <RangeAccessBar
+                scope={bridge.scope}
+                sources={waiting}
+                canAllow={bridge.canEdit && bridge.canShape}
+                onAllowed={onWorkbook}
+              />
+            ) : null}
+            <SpreadsheetSheetParts bridge={bridge} />
+            <p aria-live="polite" className="sr-only">
+              {announcement}
+            </p>
+          </div>
+        </SheetImagesContext.Provider>
+      </SheetControllerProvider>
+    </SheetNavigationContext.Provider>
   );
 }

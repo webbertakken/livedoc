@@ -1,8 +1,8 @@
 // review.md "Compare documents" ("What is compared"): the primary with every difference from the selected as a
 // suggestion; rejecting every one reads as the primary, accepting every one as the selected; bounded.
 import { describe, expect, it } from 'vitest';
-import { cpuBudgetMs, cpuMsOf } from '@livedoc/vitest-config/cpu-time';
 import * as Y from 'yjs';
+import { cpuBudgetMs, cpuNowMs } from '@livedoc/vitest-config/cpu-time';
 import type { Block, Inline, Paragraph, Run } from '../model/blocks';
 import type { Table, TableRow } from '../model/tables';
 import type { TextProps } from '../model/props';
@@ -374,16 +374,15 @@ describe('TextDocumentComparison.compare', () => {
       ).join(' ');
     const pages = (change: boolean) =>
       Array.from({ length: 1_500 }, (_, p) => para(`${p} ${words(45, change)}`));
-    let result: ReturnType<typeof TextDocumentComparison.compare> | null = null;
-    const spent = cpuMsOf(() => {
-      result = TextDocumentComparison.compare(doc(...pages(false)), doc(...pages(true)), {
-        name: NAME,
-        at: AT,
-        comments: false,
-      });
+    // CPU time, not the wall clock: a busy runner's wait for a core is not the comparison's cost.
+    const started = cpuNowMs();
+    const result = TextDocumentComparison.compare(doc(...pages(false)), doc(...pages(true)), {
+      name: NAME,
+      at: AT,
+      comments: false,
     });
-    expect(spent).toBeLessThan(cpuBudgetMs(TEXT_DOCUMENT_COMPARE_BUDGET_MS));
-    expect(result!.ok).toBe(true);
+    expect(cpuNowMs() - started).toBeLessThan(cpuBudgetMs(TEXT_DOCUMENT_COMPARE_BUDGET_MS));
+    expect(result.ok).toBe(true);
   });
 
   it('compares two long documents that share nothing within its budget', () => {
@@ -391,16 +390,15 @@ describe('TextDocumentComparison.compare', () => {
       Array.from({ length: 1_500 }, (_, p) =>
         para(Array.from({ length: 45 }, (_, k) => `${side}${p}x${k}`).join(' ')),
       );
-    let result: ReturnType<typeof TextDocumentComparison.compare> | null = null;
-    const spent = cpuMsOf(() => {
-      result = TextDocumentComparison.compare(doc(...pages('a')), doc(...pages('b')), {
-        name: NAME,
-        at: AT,
-        comments: false,
-      });
+    // CPU time, not the wall clock: a busy runner's wait for a core is not the comparison's cost.
+    const started = cpuNowMs();
+    const result = TextDocumentComparison.compare(doc(...pages('a')), doc(...pages('b')), {
+      name: NAME,
+      at: AT,
+      comments: false,
     });
-    expect(spent).toBeLessThan(cpuBudgetMs(TEXT_DOCUMENT_COMPARE_BUDGET_MS));
-    expect(result!.ok).toBe(true);
+    expect(cpuNowMs() - started).toBeLessThan(cpuBudgetMs(TEXT_DOCUMENT_COMPARE_BUDGET_MS));
+    expect(result.ok).toBe(true);
   });
 });
 

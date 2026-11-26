@@ -153,6 +153,7 @@ async function makeSheet(
         create.copyOf,
         { id, tabId: create.tabId, title: create.title, by },
         now,
+        spreadsheet,
       ),
     );
   } else {

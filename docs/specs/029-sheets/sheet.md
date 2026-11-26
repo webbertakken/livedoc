@@ -249,7 +249,7 @@ category dropdown, in its toolbar style, a tile grid), and to its right the chos
 | Text      | **Bold**, **Italic**, **Underline**, **Strikethrough** · **Text Colour** (a quick row of the one [colour picker](../004-interface-design/colour-picker.md): the Theme Palette's first five, the cell's picked, and **More Text Colours** (the four-dot glyph) for the full picker) · **Font**, **Font Size** (· a divider)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
 | Cells     | **Paint Format** · **Fill Colour**, **Borders** · **Align Left**, **Align Centre**, **Align Right** · **Align Top**, **Align Middle**, **Align Bottom** · **Merge Cells**, **Wrap Text**, **Freeze** (rows, columns) · **Clear Formatting**                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 | Numbers   | **Number Format** (Automatic, Number, Percent, Currency, Accounting, Scientific, Date, Time, Date Time, Duration, Plain Text, **Custom…**), **Fewer Decimals**, **More Decimals**                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
-| Data      | **Sort** (A to Z, Z to A, Custom Sort…), **Filter** (on or off) · **Dropdown**, **Checkbox**, **Data Validation**, **Conditional Formatting** ([Data validation](data-validation.md), [Conditional formatting](conditional-formatting.md)) · **Insert Chart** (a menu of the ten chart types, each its glyph and name: Column, Bar, Line, Area, Stepped Area, Scatter, Pie, Doughnut, Radar, Combo; [Charts](#charts))                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| Data      | **Sort** (A to Z, Z to A, Custom Sort…), **Filter** (on or off) · **Dropdown**, **Checkbox**, **Data Validation**, **Conditional Formatting** ([Data validation](data-validation.md), [Conditional formatting](conditional-formatting.md)) · **Insert Chart** (a menu of the eleven chart types, each its glyph and name: Column, Bar, Line, Area, Stepped Area, Scatter, Bubble, Pie, Doughnut, Radar, Combo; [Charts](#charts))                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
 | Functions | A menu per family of functions, each its glyph beside its name (Maths a calculator, Statistics a rising column chart, Database a cylinder, Logic a fork, Lambda a lambda, Information an info circle, Lookup a magnifier, Text a T, Date and Time a calendar, Arrays a grid, Finance coins, Engineering a chip, Parser a scale, Web a globe, Plan Cards a kanban square), **Maths**, **Statistics**, **Database**, **Logic**, **Lambda**, **Information**, **Lookup**, **Text**, **Date and Time**, **Arrays**, **Finance**, **Engineering**, **Parser**, **Web**, **Plan Cards** (named "Maths Functions" and so on: every function of the family the engine knows, each with its arguments and summary from the engine's catalogue, scrolling; a pick with several cells selected writes it over them into the cell below, `=SUM(B2:B6)`, else starts it in the active cell) · **All Functions** (shown as "All Functions…") |
 
 - **Search**, at the toolbar's far right after a divider (a magnifier and the word, tooltip "Search for a function"),
@@ -286,8 +286,8 @@ category dropdown, in its toolbar style, a tile grid), and to its right the chos
 - The **name box** shows the selection (`B4`, or `B4:D9`), or its name when the selection is exactly a named range;
   typing a reference or range there and pressing Enter selects it; typing a **name** selects that named range, or,
   for a new name, names the selection ([Named ranges](#named-ranges)). A name that cannot be one says why in a toast
-  ("Names start with a letter or _, then letters, digits, _ or .", "That reads as a cell reference", "Another range on
-  this sheet is called that").
+  ("Names start with a letter or _, then letters, digits, _ or .", "That reads as a cell reference", "Another named
+  range is called that").
 - **An open edit is saved before the name box moves.** Enter in the name box saves the cell being edited first, as a
   press on another cell does; an edit that cannot be saved (a formula missing its bracket) stays open, back in it
   with its error, and the selection does not move. Escape there also returns to the edit. Wherever focus lands on the
@@ -697,15 +697,22 @@ coloured in one theme reads in the other (`@livedoc/document` `cellColours`):
 - A sheet's **named ranges** (`layout.names`): each a name and the cells it covers, by row and column ids, as merges
   are, so it grows with rows inserted inside it and follows moves ([Formulas](formulas.md#named-ranges)).
 - A name: 1 to 60 characters, starting with a letter or `_`, then letters, digits, `_` or `.`; not `TRUE` or
-  `FALSE`; not one that reads as a cell reference (`AB12`, `R1C1`); unique on its sheet, case aside. Up to 100 a sheet.
+  `FALSE`; not one that reads as a cell reference (`AB12`, `R1C1`); unique in its **workbook** (a spreadsheet's sheets,
+  or the Sheets on a Plan tab, which its formulas read), case aside. Up to 100 a sheet.
+- A name is kept on the sheet whose cells it covers. Uniqueness across the workbook is checked in the editor, where a name is made
+  or changed; the api holds a sheet's own names unique. Two people naming two sheets alike at once,
+  or a workbook from before, can leave one name on two sheets: each reads as [Formulas](formulas.md#named-ranges)
+  says, and the names lists show both, each with its sheet, for an Editor to rename one (default, D297).
 - **Naming** (an Editor): select the cells and type the name in the formula bar's name box, then Enter (one undo
   step). Typing an existing name there selects its range, for anyone.
 - **Sheet Settings** has a **Named Ranges** section: each name with its range (`A1:B4`), **Go To** (selects it) and
   **Remove** (an Editor; one undo step); "No named ranges yet. Select cells and type a name in the name box." when there
   are none, and "No named ranges." for a Participant or Viewer, who cannot name cells.
 - Formulas offer the sheet's names in their autocomplete, after the functions that match.
-- Deleting every row or every column a range covers removes its name; Clear Sheet removes them all. A copied sheet
-  keeps its names (they are its own).
+- Deleting every row or every column a range covers removes its name; Clear Sheet removes them all. A copied Sheet
+  element keeps its names (they are its own); a sheet duplicated in a spreadsheet leaves them behind, so its formulas
+  read the original's ranges, as Google's (default, D298).
+- In a spreadsheet, names are made and changed in **Data › Named Ranges** ([Data tools](data-tools.md#named-ranges-and-named-functions)).
 - Telemetry: `Sheet · Changed · Name`.
 
 ## Cell comments
@@ -807,7 +814,7 @@ then, what ships:
 
 ## Charts
 
-- **Insert Chart** makes a chart of any of the ten chart types (Column, Bar, Line, Area, Stepped Area, Scatter, Pie, Doughnut, Radar, Combo;
+- **Insert Chart** makes a chart of any of the eleven chart types (Column, Bar, Line, Area, Stepped Area, Scatter, Bubble, Pie, Doughnut, Radar, Combo;
   [Chart types](../009-elements/pie-chart.md#chart-types)) from the sheet's cells: the toolbar's **Data** category
   (its **Insert Chart** menu) and the cell menu's **Chart** category. It reads the selection; a single cell reads the block of data around it (a spreadsheet's current
   region). A single empty cell with nothing around it says "Select the cells to chart first".
@@ -1077,3 +1084,7 @@ The code cites each by its id.
   character 1 em, an emoji 1.25 em, anything else the font's average letter (default).
 - **D99** What a cell with no font is measured and drawn in: Inter, chosen over the device's own font, a wider
   system face, and seven other faces shown side by side (ruled 2026-11-22).
+- **D297** A name on two sheets of one workbook: Kept and read as before; the names lists show both with their sheets
+  for an Editor to rename one, the api holding only a sheet's own names unique (default).
+- **D298** Named ranges of a sheet duplicated in a spreadsheet: Left with the original, its formulas reading the
+  original's ranges, as Google's; a copied Plan Sheet element keeps its own (default).

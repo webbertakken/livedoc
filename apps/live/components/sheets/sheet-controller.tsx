@@ -156,6 +156,12 @@ export function useSheetController(): SheetController {
 const KEPT_SELECTIONS = new Map<string, Selection>();
 const KEPT_SELECTIONS_MAX = 200;
 
+// The selection a sheet about to be opened opens on: a range gone to from another sheet (a named range's Go To).
+export function arriveAt(sheetId: string, range: GridRange): void {
+  const at = { r: range.r1, c: range.c1 };
+  KEPT_SELECTIONS.set(sheetId, { ranges: [range], active: at, anchor: at });
+}
+
 function keptSelection(sheetId: string, layout: SheetLayout): Selection {
   const kept = KEPT_SELECTIONS.get(sheetId);
   if (!kept) return single({ r: 0, c: 0 });
