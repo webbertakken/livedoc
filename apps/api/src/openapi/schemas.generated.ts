@@ -2727,6 +2727,9 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
           "null"
         ]
       },
+      "sheetId": {
+        "type": "string"
+      },
       "summary": {
         "type": [
           "string",
@@ -14974,6 +14977,92 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
     ],
     "type": "object"
   },
+  "SheetChangesetRequest": {
+    "additionalProperties": false,
+    "properties": {
+      "rev": {
+        "type": "number"
+      },
+      "strict": {
+        "type": "boolean"
+      },
+      "summary": {
+        "type": "string"
+      },
+      "writes": {
+        "items": {
+          "$ref": "#/components/schemas/SheetWrite"
+        },
+        "type": "array"
+      }
+    },
+    "required": [
+      "writes"
+    ],
+    "type": "object"
+  },
+  "SheetChangesetResponse": {
+    "additionalProperties": false,
+    "properties": {
+      "applied": {
+        "items": {
+          "$ref": "#/components/schemas/SheetWrite"
+        },
+        "type": "array"
+      },
+      "changeset": {
+        "anyOf": [
+          {
+            "$ref": "#/components/schemas/SheetChangesetWritten"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "rev": {
+        "type": "number"
+      }
+    },
+    "required": [
+      "changeset",
+      "rev",
+      "applied"
+    ],
+    "type": "object"
+  },
+  "SheetChangesetWritten": {
+    "additionalProperties": false,
+    "properties": {
+      "counts": {
+        "$ref": "#/components/schemas/ChangesetCounts"
+      },
+      "id": {
+        "type": "string"
+      },
+      "previousRev": {
+        "type": "number"
+      },
+      "rev": {
+        "type": "number"
+      },
+      "sheetId": {
+        "type": "string"
+      },
+      "tabId": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "id",
+      "sheetId",
+      "tabId",
+      "rev",
+      "previousRev",
+      "counts"
+    ],
+    "type": "object"
+  },
   "SheetChart": {
     "additionalProperties": false,
     "properties": {
@@ -15462,6 +15551,36 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
     },
     "required": [
       "sheet"
+    ],
+    "type": "object"
+  },
+  "SheetRevertResponse": {
+    "additionalProperties": false,
+    "properties": {
+      "changeset": {
+        "anyOf": [
+          {
+            "$ref": "#/components/schemas/SheetChangesetWritten"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "kept": {
+        "items": {
+          "type": "string"
+        },
+        "type": "array"
+      },
+      "reverted": {
+        "type": "number"
+      }
+    },
+    "required": [
+      "changeset",
+      "reverted",
+      "kept"
     ],
     "type": "object"
   },
