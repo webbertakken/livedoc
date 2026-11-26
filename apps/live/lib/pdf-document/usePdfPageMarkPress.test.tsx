@@ -62,6 +62,7 @@ function pressing({
     leave: vi.fn(),
     move: vi.fn(),
     reshape: vi.fn(),
+    turn: vi.fn(),
     remove: vi.fn(),
   };
   const onTextPress = vi.fn();

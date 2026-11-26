@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 // docs/specs/035-pdf-documents/marks.md "Changing a mark": Properties opens from Format > Properties in Reviewing,
-// follows the selection, changes a subject as one step on its page, makes a look the default; Find's results taking the
+// follows the selection, changes a subject and an Angle (Rotate) as one step on its page, makes a look the default; Find's results taking the
 // right close it; "Telemetry and observability".
 import { act, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -34,6 +34,8 @@ function properties({ marking = true } = {}) {
   const onOpen = vi.fn();
   const ready = {
     pages: PAGES,
+    // A page the engine cannot read is held to no page.
+    engine: { pageMatrix: async () => null } as never,
     binding: { doc } as never,
     undo: {
       step: <Made,>(place: unknown, made: () => Made) => {
@@ -87,6 +89,17 @@ describe('a mark’s Properties', () => {
     vi.mocked(track).mockClear();
     act(() => hook.result.current.setSubject('Round this'));
     expect(track).not.toHaveBeenCalled();
+  });
+
+  it('turns the mark to the Angle given as one step on its page, logged and counted', async () => {
+    const { hook, doc, steps } = properties();
+    await act(async () => hook.result.current.setAngle(30));
+    expect(PdfLiveChanges.mark(doc, 'e')).toMatchObject({ turn: 30 });
+    expect(steps).toEqual([{ page: PAGES[0]!.name }]);
+    expect(debugLog).toHaveBeenCalledWith('[pdf] marks-turned count=1 way=angle degrees=30');
+    expect(track).toHaveBeenCalledWith('Pdf', 'Changed', 'Mark.Turned');
+    await act(async () => hook.result.current.setAngle(0));
+    expect(PdfLiveChanges.mark(doc, 'e')).not.toHaveProperty('turn');
   });
 
   it('makes the mark’s look its tool’s, for every kind but a stamp', () => {

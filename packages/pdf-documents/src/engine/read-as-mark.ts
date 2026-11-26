@@ -8,8 +8,6 @@ import {
   MARK_KIND_LABELS,
   Mark,
   STAMP_MAX_LINES,
-  STAMP_TURNS,
-  type StampTurnDegrees,
   type Box,
   type LineEnd,
   type LineStyle,
@@ -29,7 +27,7 @@ import {
   PDF_TEXT_SIZE_MIN_PT,
 } from '../limits';
 import { Stamps } from '../stamps';
-import { StampTurn } from '../stamp-turn';
+import { MarkTurn } from '../mark-turn';
 import { appearanceBox } from './appearance';
 import type { ReaderFile } from './reader-file';
 import { MarkFonts } from '../mark-fonts';
@@ -283,17 +281,38 @@ function subjectRead(mark: Omit<FileMark, 'mark'>): { subject?: string } {
   return subject && !own ? { subject } : {};
 }
 
-/** A stamp's `Rotate` where it is a quarter turn (marks.md "In the file"); any other reads as none. */
-function turnOf(file: ReaderFile, annotation: number): StampTurnDegrees | undefined {
+/** How near a turn's sides must keep their length and stay square for its appearance `Matrix` to read as one. */
+const TURN_MATRIX_TOLERANCE = 1e-3;
+
+/** The appearance's normal look, as `EPDFAnnot_GetAPMatrix` names it. */
+const APPEARANCE_NORMAL = 0;
+
+/**
+ * A turned mark's angle (marks.md "Changing a mark": Rotate, In the file): its `Rotate` at any angle, to the nearest
+ * degree; else the angle its appearance's `Matrix` turns by, where that `Matrix` is a turn and nothing else (`a = d`,
+ * `b = -c`, `a² + b² = 1`); else upright.
+ */
+function turnOf(file: ReaderFile, annotation: number): number | undefined {
   const out = file.alloc(4);
   const named = file.p.FPDFAnnot_GetNumberValue(annotation, 'Rotate', out);
   const read = file.runtime.getValue(out, 'float');
   file.free(out);
-  const degrees = named && Number.isFinite(read) ? ((Math.round(read) % 360) + 360) % 360 : 0;
-  return STAMP_TURNS.includes(degrees as StampTurnDegrees)
-    ? (degrees as StampTurnDegrees)
-    : undefined;
+  if (named && Number.isFinite(read)) return MarkTurn.normal(read);
+  const matrix = floatsRead(file, 6, (at) =>
+    file.p.EPDFAnnot_GetAPMatrix(annotation, APPEARANCE_NORMAL, at),
+  );
+  if (!matrix || !matrix.every(Number.isFinite)) return undefined;
+  const [a, b, c, d] = matrix as [number, number, number, number];
+  const turn =
+    Math.abs(a - d) <= TURN_MATRIX_TOLERANCE &&
+    Math.abs(b + c) <= TURN_MATRIX_TOLERANCE &&
+    Math.abs(a * a + b * b - 1) <= TURN_MATRIX_TOLERANCE;
+  return turn ? MarkTurn.normal((Math.atan2(b, a) * 180) / Math.PI) : undefined;
 }
+
+/** A box read from a file as a turned mark's upright box, to the thousandth. */
+const uprightRead = (shown: Box, turn: number | undefined): Box =>
+  turn ? (MarkTurn.uprightOf(shown, turn).map(thousandth) as unknown as Box) : shown;
 
 /** What every kind holds: its id, page, colour, opacity, author, subject and dates. */
 function baseOf(mark: Omit<FileMark, 'mark'>, page: PageName, colour: string | null) {
@@ -393,12 +412,14 @@ function valueOf(
     const lined = lineOf(file, annotation);
     const half = lined.width / 2;
     const fill = insideColour(file, annotation);
+    const turn = turnOf(file, annotation);
     return {
       ...baseOf(mark, name, mark.colour),
       kind: subtype === 'square' ? 'rectangle' : 'ellipse',
-      rect: shrunk(innerBox(file, annotation, rect), [half, half, half, half]),
+      rect: shrunk(uprightRead(innerBox(file, annotation, rect), turn), [half, half, half, half]),
       ...lined,
       ...(fill ? { fill } : {}),
+      ...(turn ? { turn } : {}),
     };
   }
   if (subtype === 'freetext') {
@@ -414,8 +435,15 @@ function valueOf(
       ...alignOf(file, annotation, style),
       ...fontOf(style),
     };
-    if (callout.length < 4)
-      return { ...typed, kind: 'text', rect: innerBox(file, annotation, rect) };
+    if (callout.length < 4) {
+      const turn = turnOf(file, annotation);
+      return {
+        ...typed,
+        kind: 'text',
+        rect: uprightRead(innerBox(file, annotation, rect), turn),
+        ...(turn ? { turn } : {}),
+      };
+    }
     // A line of two points has no knee: it bends at what it points to.
     const [x1, y1, ...rest] = callout;
     const line = callout.length >= 6 ? callout.slice(0, 6) : [x1, y1, x1, y1, ...rest.slice(0, 2)];
@@ -442,10 +470,10 @@ function valueOf(
       lines: lines.length > 0 ? lines : [stamp.name.toUpperCase()],
       ...(turn ? { turn } : {}),
     };
-    // A turned stamp's `Rect` is its box as it shows: its upright drawing's box is that, its sides swapped back.
+    // A turned stamp's `Rect` is its box as it shows: its upright drawing's box is that, its turn undone.
     return {
       ...value,
-      rect: drawnWithin(StampTurn.upright(rect, turn), (box) =>
+      rect: drawnWithin(MarkTurn.uprightOf(rect, turn), (box) =>
         MarkDrawing.of({ ...value, rect: box }),
       ),
     };

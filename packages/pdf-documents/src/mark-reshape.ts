@@ -6,7 +6,8 @@ import type { PagePoint } from './engine-contract';
 import { PDF_TEXT_PADDING_PT } from './limits';
 import { Mark, type Box, type CalloutLine, type Stroke, type TypedMark } from './mark';
 import type { MarkPlace } from './mark-place';
-import { StampTurn } from './stamp-turn';
+import { MarkTurn } from './mark-turn';
+import { middleOf } from './turn-geometry';
 import { TypedLayout } from './typed-layout';
 
 /** A box's handles, named for where they sit as the box shows; a line's two ends; a Callout's tip and knee. */
@@ -44,6 +45,41 @@ function cornerOf(handle: MarkHandle): number | null {
   return named ? Number(named[1]) : null;
 }
 
+/**
+ * A place worked out in a turned mark's own frame, as it lies on the page: its box moved so its middle sits where the
+ * mark's frame puts it, so every point of it lands where that frame put it; the place itself for an upright mark.
+ */
+function inFrame(mark: Mark, place: MarkPlace): MarkPlace {
+  if (!('rect' in place) || !MarkTurn.angleOf(mark)) return place;
+  const middle = middleOf(place.rect);
+  const shown = MarkTurn.fromFrame(middle, mark);
+  const [left, bottom, right, top] = place.rect;
+  const dx = shown.x - middle.x;
+  const dy = shown.y - middle.y;
+  return { ...place, rect: [left + dx, bottom + dy, right + dx, top + dy] };
+}
+
+/** A mark's geometry in the box given, as though upright; null for a mark with no box. */
+function reboxedUpright(mark: Mark, box: Box): MarkPlace | null {
+  const was = MarkReshape.box(mark);
+  if (!was) return null;
+  const xs = [was[0], was[2]] as const;
+  const ys = [was[1], was[3]] as const;
+  const reboxedStroke = (stroke: Stroke): Stroke =>
+    stroke.map((n, at) =>
+      at % 2 === 0 ? remap(n, xs, [box[0], box[2]]) : remap(n, ys, [box[1], box[3]]),
+    );
+  if (mark.kind === 'drawing') return { strokes: mark.strokes.map(reboxedStroke) };
+  if ('corners' in mark) return { corners: reboxedStroke(mark.corners) };
+  if (mark.kind === 'text') return { rect: typedBox(mark, box) };
+  if (mark.kind === 'callout') {
+    const rect = typedBox(mark, box);
+    const [x, y] = mark.callout;
+    return { rect, callout: TypedLayout.calloutLine({ x, y }, rect) };
+  }
+  return { rect: box };
+}
+
 export const MarkReshape = {
   /** The handles a mark is resized by. */
   handles: (mark: Mark): readonly MarkHandle[] => {
@@ -57,35 +93,23 @@ export const MarkReshape = {
     return mark.kind === 'callout' ? [...BOX_HANDLES, 'tip', 'knee'] : BOX_HANDLES;
   },
 
-  /** The box a mark's box handles size: its rect, a turned stamp's as it shows, or a Drawing's bounds; null for a line
-   *  or a text mark. */
+  /**
+   * The box a mark's box handles size: its rect (a turned mark's upright, in its own frame: `MarkTurn.toFrame` takes a
+   * pointer there), or a Drawing's bounds; null for a line or a text mark.
+   */
   box: (mark: Mark): Box | null => {
     if (Mark.isText(mark) || 'line' in mark) return null;
-    if (mark.kind === 'stamp') return Mark.shownBox(mark);
     return mark.kind === 'drawing' || 'corners' in mark ? Mark.bounds(mark) : mark.rect;
   },
 
-  /** The mark's geometry in the box given; null for a mark with no box. */
+  /**
+   * The mark's geometry in the box given, in its own frame (marks.md "Changing a mark": Rotate): a turned mark keeps its
+   * angle, and every point of its new box lies on the page where its old frame put it, so the corner held stays put;
+   * null for a mark with no box.
+   */
   reboxed: (mark: Mark, box: Box): MarkPlace | null => {
-    const was = MarkReshape.box(mark);
-    if (!was) return null;
-    const xs = [was[0], was[2]] as const;
-    const ys = [was[1], was[3]] as const;
-    const reboxedStroke = (stroke: Stroke): Stroke =>
-      stroke.map((n, at) =>
-        at % 2 === 0 ? remap(n, xs, [box[0], box[2]]) : remap(n, ys, [box[1], box[3]]),
-      );
-    if (mark.kind === 'drawing') return { strokes: mark.strokes.map(reboxedStroke) };
-    if ('corners' in mark) return { corners: reboxedStroke(mark.corners) };
-    if (mark.kind === 'text') return { rect: typedBox(mark, box) };
-    if (mark.kind === 'callout') {
-      const rect = typedBox(mark, box);
-      const [x, y] = mark.callout;
-      return { rect, callout: TypedLayout.calloutLine({ x, y }, rect) };
-    }
-    // A turned stamp keeps its turn: the box shown, upright again.
-    if (mark.kind === 'stamp') return { rect: StampTurn.upright(box, mark.turn) };
-    return { rect: box };
+    const place = reboxedUpright(mark, box);
+    return place && inFrame(mark, place);
   },
 
   /**
@@ -97,7 +121,7 @@ export const MarkReshape = {
     const [left, bottom, right, top] = typedBox({ ...mark, size }, mark.rect);
     const up = Math.max(0, page[1] - bottom);
     const rect: Box = [left, bottom + up, right, top + up];
-    if (mark.kind === 'text') return { rect };
+    if (mark.kind === 'text') return inFrame(mark, { rect });
     const [x, y] = mark.callout;
     return { rect, callout: TypedLayout.calloutLine({ x, y }, rect) };
   },

@@ -5,16 +5,7 @@
 import * as Y from 'yjs';
 import type { FieldValue } from './field-value';
 import { PDF_MAX_MARKS } from './limits';
-import type {
-  DrawingMark,
-  LineEnd,
-  LineStyle,
-  Mark,
-  StampTurnDegrees,
-  TextAlign,
-  TextMark,
-  TypedMark,
-} from './mark';
+import type { DrawingMark, LineEnd, LineStyle, Mark, TextAlign, TextMark, TypedMark } from './mark';
 import type { MarkPlace } from './mark-place';
 import type { PageName } from './page-name';
 import { wordsDiff } from './words-diff';
@@ -57,8 +48,9 @@ export type MarkLook = Partial<
       readonly font: string | null;
       /** The group it joins (marks.md "Changing a mark"); taken away by unsetting it. */
       readonly group: string;
-      /** A stamp's quarter turns (marks.md "Changing a mark"); upright again by unsetting it. */
-      readonly turn: StampTurnDegrees;
+      /** A stamp's, a Text's, a Rectangle's or an Ellipse's angle, whole degrees 1 to 359 (marks.md "Changing a
+       *  mark": Rotate); upright again by unsetting it. */
+      readonly turn: number;
       /** Its subject (marks.md "Changing a mark": Properties); its kind's name again by unsetting it. */
       readonly subject: string;
     }

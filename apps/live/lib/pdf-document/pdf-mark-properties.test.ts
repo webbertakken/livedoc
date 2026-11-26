@@ -7,6 +7,8 @@ import { standardColours } from '@livedoc/document';
 import { Mark, PageName, PDF_MARK_SUBJECT_MAX_CHARS, PdfLiveChanges } from '@livedoc/pdf-documents';
 import { markLooks, resetMarkLooks } from './pdf-mark-looks';
 import {
+  angleShown,
+  angleTyped,
   changeSubject,
   defaultLook,
   mayDefaultLook,
@@ -65,6 +67,8 @@ describe('propertyRows', () => {
         { label: 'Changed', value: '21 Nov 2026, 14:02' },
         { label: 'Colour', value: BLUE.label },
         { label: 'Opacity', value: '50%' },
+      ],
+      last: [
         { label: 'Line width', value: '4 pt' },
         { label: 'Line style', value: 'Dashed' },
         { label: 'Fill', value: OTHER },
@@ -75,14 +79,26 @@ describe('propertyRows', () => {
   it('reads a text mark’s words, and an unknown author', () => {
     const rows = propertyRows({ ...highlight, author: ' ' });
     expect(rows.before[1]).toEqual({ label: 'Author', value: 'Unknown' });
-    expect(rows.after.map((row) => row.label)).toEqual([
-      'Made',
-      'Changed',
-      'Colour',
-      'Opacity',
-      'Words',
-    ]);
-    expect(rows.after.at(-1)).toEqual({ label: 'Words', value: 'Lease' });
+    expect(rows.after.map((row) => row.label)).toEqual(['Made', 'Changed', 'Colour', 'Opacity']);
+    expect(rows.last).toEqual([{ label: 'Words', value: 'Lease' }]);
+  });
+});
+
+// marks.md "Changing a mark": Rotate, Properties' Angle.
+describe('the Angle', () => {
+  it('shows a boxed mark’s angle as it stands, and none for a mark with no box to turn', () => {
+    expect(angleShown(box)).toBe('0');
+    expect(angleShown({ ...box, turn: 37 })).toBe('37');
+    expect(angleShown(highlight)).toBeNull();
+  });
+
+  it('takes what is typed to the nearest 15° within 0 to 359, and refuses what is no number', () => {
+    expect(angleTyped('37')).toBe(30);
+    expect(angleTyped(' 50° ')).toBe(45);
+    expect(angleTyped('-90')).toBe(270);
+    expect(angleTyped('720')).toBe(0);
+    expect(angleTyped('')).toBeNull();
+    expect(angleTyped('tilt')).toBeNull();
   });
 });
 

@@ -932,3 +932,92 @@ describe('whether a file can take an addition', () => {
     expect(await engine.canAppend()).toBe(false);
   });
 });
+
+// marks.md "Changing a mark": Rotate, In the file. A turned stamp, Text, Rectangle and Ellipse carry `Rotate` their
+// angle, their appearance drawn upright and turned by its `Matrix`, `Rect` the box as it shows; read back from
+// `Rotate`, else from a `Matrix` that is a turn; a `Matrix` that is no turn reads upright.
+describe('writing a turned mark', () => {
+  const red = '#d93025';
+  const shared = (page: PageName) => ({
+    page,
+    colour: red,
+    opacity: 1,
+    author: 'Ada',
+    createdAt: at,
+    rect: [200, 300, 320, 360] as const,
+    turn: 30,
+  });
+  const kinds = (page: PageName): Record<string, Mark> => ({
+    stamp: Mark.stamp({ ...shared(page), id: 'stamp', stamp: 'approved', lines: ['APPROVED'] })!,
+    text: Mark.text({ ...shared(page), id: 'text', words: 'Turned words', size: 12 })!,
+    rectangle: Mark.shape('rectangle', {
+      ...shared(page),
+      id: 'rectangle',
+      width: 2,
+      fill: '#d93025',
+    })!,
+    ellipse: Mark.shape('ellipse', { ...shared(page), id: 'ellipse', width: 2 })!,
+  });
+  const redIn = (
+    drawn: { width: number; height: number; rgba: Uint8ClampedArray },
+    { x, y }: { x: number; y: number },
+  ) => {
+    const index = ((drawn.height - Math.round(y)) * drawn.width + Math.round(x)) * 4;
+    const [r, g, b] = drawn.rgba.slice(index, index + 3);
+    return r! > 180 && g! < 110 && b! < 110;
+  };
+  /** A point of the 30° turn of (200, 300)-(320, 360) about its middle (260, 330). */
+  const turned = (x: number, y: number) => {
+    const cos = Math.cos(Math.PI / 6);
+    const dx = x - 260;
+    const dy = y - 330;
+    return { x: 260 + cos * dx - 0.5 * dy, y: 330 + 0.5 * dx + cos * dy };
+  };
+
+  it.for(['stamp', 'text', 'rectangle', 'ellipse'])(
+    'writes a %s turned 30° with Rotate and its Matrix, and reads it back turned',
+    async (kind, { skip }) => {
+      const pages = opened(await engine.open(stored));
+      const mark = kinds(pages[0]!.name)[kind]!;
+      const result = await bakeWith([PdfChange.addMark(mark)]);
+      const added = Buffer.from(result.bytes).subarray(stored.length).toString('latin1');
+      expect(added).toContain('/Rotate 30');
+      expect(added).toMatch(/\/Matrix \[0\.866\d* 0\.5 -0\.5 0\.866\d* /);
+      expect(qpdfChecks(result.bytes, skip)).toContain('No syntax or stream encoding errors');
+      opened(await engine.open(result.bytes));
+      const [read] = await engine.fileMarks(0);
+      expect(read!.mark).toMatchObject({ kind, turn: 30 });
+      const rect = (read!.mark as Mark & { rect: readonly number[] }).rect;
+      [200, 300, 320, 360].forEach((n, i) => expect(rect[i]).toBeCloseTo(n, 1));
+    },
+  );
+
+  it('draws a turned Rectangle where it shows, not where it stood upright', async () => {
+    const pages = opened(await engine.open(stored));
+    const result = await bakeWith([PdfChange.addMark(kinds(pages[0]!.name).rectangle!)]);
+    opened(await engine.open(result.bytes));
+    const drawn = (await engine.drawPage(0, 1))!;
+    // Just inside the upright box's top-right corner, turned: filled. That corner upright: left bare by the turn.
+    expect(redIn(drawn, turned(315, 355))).toBe(true);
+    expect(redIn(drawn, { x: 318, y: 302 })).toBe(false);
+  });
+
+  it('reads a turn from a Matrix alone, and a Matrix that is no turn as upright', async () => {
+    const pages = opened(await engine.open(stored));
+    const result = await bakeWith([PdfChange.addMark(kinds(pages[0]!.name).rectangle!)]);
+    const text = Buffer.from(result.bytes).toString('latin1');
+    // The same length, so every offset holds: `Rotate` renamed away, then the Matrix skewed.
+    const matrixOnly = Buffer.from(text.replace('/Rotate 30', '/Rotatx 30'), 'latin1');
+    opened(await engine.open(new Uint8Array(matrixOnly)));
+    const [fromMatrix] = await engine.fileMarks(0);
+    expect(fromMatrix!.mark).toMatchObject({ kind: 'rectangle', turn: 30 });
+    const skewed = Buffer.from(
+      matrixOnly.toString('latin1').replace(/ 0\.5 -0\.5 /, ' 0.5 -0.1 '),
+      'latin1',
+    );
+    opened(await engine.open(new Uint8Array(skewed)));
+    const [fromSkew] = await engine.fileMarks(0);
+    expect(fromSkew!.mark).toMatchObject({ kind: 'rectangle' });
+    expect(fromSkew!.mark).not.toHaveProperty('turn');
+  });
+});

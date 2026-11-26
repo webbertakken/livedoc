@@ -24,6 +24,7 @@ function panel(over: Partial<PdfMarkProperties> = {}) {
     close: vi.fn(),
     mark: ellipse,
     setSubject: vi.fn(),
+    setAngle: vi.fn(),
     makeDefault: vi.fn(),
     actions: {},
     focusNonce: 0,
@@ -59,6 +60,31 @@ describe('the Properties panel', () => {
     expect(props.close).not.toHaveBeenCalled();
     fireEvent.keyDown(field, { key: 'Escape' });
     expect(props.close).toHaveBeenCalled();
+  });
+
+  // marks.md "Changing a mark": Rotate, Properties' Angle.
+  it('turns a boxed mark by its Angle, snapped to 15°, and puts the field back with Escape', () => {
+    const props = panel({ mark: { ...ellipse, turn: 37 } });
+    const field = screen.getByLabelText('Angle');
+    // A file's angle shows as the file has it.
+    expect(field).toHaveProperty('value', '37');
+    expect(field.getAttribute('inputmode')).toBe('numeric');
+    fireEvent.change(field, { target: { value: '50' } });
+    fireEvent.keyDown(field, { key: 'Enter' });
+    expect(props.setAngle).toHaveBeenLastCalledWith(45);
+    expect(field).toHaveProperty('value', '45');
+    fireEvent.change(field, { target: { value: '100' } });
+    fireEvent.keyDown(field, { key: 'Escape' });
+    expect(field).toHaveProperty('value', '37');
+    fireEvent.change(field, { target: { value: 'tilt' } });
+    fireEvent.blur(field);
+    expect(field).toHaveProperty('value', '37');
+    expect(props.setAngle).toHaveBeenCalledTimes(1);
+  });
+
+  it('offers no Angle for a mark with no box to turn', () => {
+    panel({ mark: Mark.line('line', { ...ellipse, id: 'l', line: [0, 0, 9, 9] })! });
+    expect(screen.queryByLabelText('Angle')).toBeNull();
   });
 
   it('makes the look the default, and offers none where the kind takes none', () => {

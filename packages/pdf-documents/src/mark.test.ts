@@ -577,3 +577,50 @@ describe('a Polygon, a Cloud or Connected lines', () => {
     expect(Mark.parse({ ...poly(over), kind: 'cloud', modifiedAt: 0 })).toBeNull();
   });
 });
+
+// marks.md "Changing a mark": Rotate. A stamp, a Text, a Rectangle and an Ellipse hold a whole angle, 1 to 359.
+describe('a mark’s angle', () => {
+  const shared = {
+    id: 'm1',
+    page: 'p:4',
+    rect: [100, 600, 200, 650],
+    colour: '#d93025',
+    opacity: 1,
+    author: 'Ada',
+    createdAt: 1,
+    modifiedAt: 1,
+  };
+  const kinds = {
+    stamp: { ...shared, kind: 'stamp', stamp: 'approved', lines: ['APPROVED'] },
+    text: { ...shared, kind: 'text', words: 'Hi', size: 12 },
+    rectangle: { ...shared, kind: 'rectangle', width: 2 },
+    ellipse: { ...shared, kind: 'ellipse', width: 2 },
+  };
+
+  it('is held by a stamp, a Text, a Rectangle and an Ellipse, read back unchanged', () => {
+    Object.values(kinds).forEach((value) => {
+      const mark = Mark.parse({ ...value, turn: 30 })!;
+      expect(mark).toMatchObject({ turn: 30 });
+      expect(Mark.parse(JSON.parse(JSON.stringify(mark)))).toEqual(mark);
+      expect(Mark.turns(mark)).toBe('box');
+    });
+  });
+
+  it('reads 0 as upright, and refuses an angle that is not whole or out of 1 to 359', () => {
+    expect(Mark.parse({ ...kinds.rectangle, turn: 0 })).not.toHaveProperty('turn');
+    [30.5, 360, -30, '30', Number.NaN].forEach((turn) =>
+      expect(Mark.parse({ ...kinds.text, turn })).toBeNull(),
+    );
+  });
+
+  it('is not carried by a Callout, which is left out', () => {
+    const callout = Mark.parse({
+      ...kinds.text,
+      kind: 'callout',
+      callout: [40, 500, 88, 625, 100, 625],
+      turn: 30,
+    })!;
+    expect(callout).not.toHaveProperty('turn');
+    expect(Mark.turns(callout)).toBeNull();
+  });
+});

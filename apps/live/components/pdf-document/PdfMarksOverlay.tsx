@@ -9,14 +9,21 @@
 // Collaborators' strokes as they are drawn sit under this person's own (live-editing-and-storage.md "A mark as it is
 // made").
 import { useContext, useEffect } from 'react';
-import type { MarkShape, PageMatrix, PagePoint, Quad, StampMark } from '@livedoc/pdf-documents';
+import type {
+  Box,
+  MarkShape,
+  PageMatrix,
+  PagePoint,
+  Quad,
+  StampMark,
+} from '@livedoc/pdf-documents';
 import {
   DarkPages,
   Helvetica,
   Mark,
   MarkDrawing,
   MarkErase,
-  StampTurn,
+  MarkTurn,
   MarkPlace,
   MarkWords,
   PageView,
@@ -140,27 +147,16 @@ export function MarkShapes({
 }
 
 /** A mark being resized, and its geometry as the handle's drag has it. */
-export type PdfMarkReshaping = { readonly id: string; readonly place: MarkPlace };
+export type PdfMarkReshaping = {
+  readonly id: string;
+  readonly place: MarkPlace;
+  /** Whether the rotate handle turns it: its box handles stand aside while it does. */
+  readonly turning?: boolean;
+};
 
 /** A mark where a drag has it: moved by the drag's offset while among the marks dragged, or resized by a handle. */
 /** No mark of the file's own. */
 const NO_IDS: ReadonlySet<string> = new Set();
-
-/** The matrix a mark is drawn by: the page's, and a turned stamp's turn of its upright drawing before it. */
-function drawnIn(matrix: PageMatrix, mark: Mark): PageMatrix {
-  const turn = mark.kind === 'stamp' ? StampTurn.matrix(mark) : null;
-  if (!turn) return matrix;
-  const [a, b, c, d, e, f] = matrix;
-  const [ta, tb, tc, td, te, tf] = turn;
-  return [
-    a * ta + c * tb,
-    b * ta + d * tb,
-    a * tc + c * td,
-    b * tc + d * td,
-    a * te + c * tf + e,
-    b * te + d * tf + f,
-  ];
-}
 
 /** No strokes erased. */
 const NO_ERASED: ReadonlyMap<string, readonly number[]> = new Map();
@@ -186,10 +182,33 @@ function placed(
   return moving?.ids.includes(mark.id) ? { ...mark, ...MarkPlace.moved(mark, moving.by) } : mark;
 }
 
-/** The outline round a selected mark, in view space: the box holding it and its line, `gap` points out. */
+/**
+ * The outline round a selected mark, in view space: the box holding it and its line, `gap` points out; a turned mark's
+ * its own box turned with it (marks.md "Changing a mark": Rotate).
+ */
 function MarkOutline({ matrix, mark, gap }: { matrix: PageMatrix; mark: Mark; gap: number }) {
-  const [left, bottom, right, top] = Mark.bounds(mark);
   const out = gap + ('width' in mark ? mark.width / 2 : 0);
+  if (MarkTurn.angleOf(mark)) {
+    const [left, bottom, right, top] = (mark as Mark & { rect: Box }).rect;
+    const turned = MarkTurn.drawnIn(matrix, mark);
+    const points = [
+      { x: left - out, y: bottom - out },
+      { x: right + out, y: bottom - out },
+      { x: right + out, y: top + out },
+      { x: left - out, y: top + out },
+    ].map((corner) => PageView.toView(turned, corner));
+    return (
+      <polygon
+        data-pdf-mark-outline={mark.id}
+        points={points.map(({ x, y }) => `${x},${y}`).join(' ')}
+        fill="none"
+        strokeWidth={1.5}
+        strokeDasharray="4 3"
+        vectorEffect="non-scaling-stroke"
+      />
+    );
+  }
+  const [left, bottom, right, top] = Mark.bounds(mark);
   const corners = [
     { x: left - out, y: bottom - out },
     { x: right + out, y: top + out },
@@ -312,9 +331,13 @@ export function PdfMarksOverlay({
               opacity={mark.opacity}
             >
               {mark.kind === 'stamp' && mark.picture ? (
-                <PictureStampDrawn matrix={drawnIn(matrix, mark)} mark={mark} dark={dark} />
+                <PictureStampDrawn
+                  matrix={MarkTurn.drawnIn(matrix, mark)}
+                  mark={mark}
+                  dark={dark}
+                />
               ) : (
-                <MarkDrawn matrix={drawnIn(matrix, mark)} mark={mark} dark={dark} />
+                <MarkDrawn matrix={MarkTurn.drawnIn(matrix, mark)} mark={mark} dark={dark} />
               )}
             </g>
           );

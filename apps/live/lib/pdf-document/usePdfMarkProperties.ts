@@ -2,7 +2,7 @@
 
 // A mark's Properties (docs/specs/035-pdf-documents/marks.md "Changing a mark": Properties): Format > Properties opens
 // the side panel on the right, following the selection; its subject changed is one step of the person's undo on its
-// page; "Make this look the default" gives its kind's tool its look. Marks are Reviewing's: outside it the panel is
+// page, and so is its Angle (Rotate); "Make this look the default" gives its kind's tool its look. Marks are Reviewing's: outside it the panel is
 // closed and Format > Properties is not offered. Find's results opening on the right closes it, as it closes them.
 import { useMemo, useState } from 'react';
 import type { Mark } from '@livedoc/pdf-documents';
@@ -13,11 +13,16 @@ import type { PdfChangeableStore } from './pdf-changeable-marks';
 import { MARK_KIND_NAMES } from './pdf-mark-change';
 import { changeSubject, defaultLook, mayDefaultLook } from './pdf-mark-properties';
 import { MARK_PROPERTIES } from './pdf-menus';
+import { turnMarksOn } from './pdf-mark-turn-step';
 import type { PdfDocumentOpen } from './usePdfDocument';
 import { usePdfChosenMarks } from './usePdfChosenMarks';
 import { fileOwnOf, type PdfMarksChosen } from './usePdfMarkSelection';
+import { pageBoxAt } from './usePdfMarkTurns';
 
-type Ready = Pick<Extract<PdfDocumentOpen, { phase: 'ready' }>, 'pages' | 'binding' | 'undo'>;
+type Ready = Pick<
+  Extract<PdfDocumentOpen, { phase: 'ready' }>,
+  'pages' | 'engine' | 'binding' | 'undo'
+>;
 
 export type PdfMarkProperties = {
   // Whether the panel shows now.
@@ -27,6 +32,8 @@ export type PdfMarkProperties = {
   readonly mark: Mark | null;
   // The subject typed, made the mark's.
   readonly setSubject: (typed: string) => void;
+  // The mark turned to the angle given, whole degrees snapped already (Properties' Angle).
+  readonly setAngle: (to: number) => void;
   // "Make this look the default"; null where the mark's kind takes none.
   readonly makeDefault: (() => void) | null;
   readonly actions: OfficeActions;
@@ -79,6 +86,20 @@ export function usePdfMarkProperties({
       debugLog(`[pdf] mark-subject kind=${mark.kind} cleared=${changed.cleared}`);
       track('Pdf', 'Changed', 'Mark.Subject');
     };
+    const setAngle = (to: number) => {
+      if (!ready || !page || !mark || !chosen) return;
+      void pageBoxAt(ready.engine, chosen.page, page).then((box) =>
+        turnMarksOn({
+          ready,
+          page,
+          box,
+          ids: [mark.id],
+          asked: { to },
+          way: 'angle',
+          fileOwn: fileOwnOf(byPage, page.name),
+        }),
+      );
+    };
     const makeDefault =
       mark && mayDefaultLook(mark)
         ? () => {
@@ -102,6 +123,6 @@ export function usePdfMarkProperties({
             },
           }
         : {};
-    return { open, close, mark, setSubject, makeDefault, actions, focusNonce };
-  }, [ready, marking, page, mark, byPage, opened, open, onOpen, focusNonce]);
+    return { open, close, mark, setSubject, setAngle, makeDefault, actions, focusNonce };
+  }, [ready, marking, page, mark, chosen, byPage, opened, open, onOpen, focusNonce]);
 }

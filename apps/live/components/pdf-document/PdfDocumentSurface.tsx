@@ -46,7 +46,7 @@ import { usePdfMarkRestyle } from '@/lib/pdf-document/usePdfMarkRestyle';
 import { usePdfMarkSelection } from '@/lib/pdf-document/usePdfMarkSelection';
 import { usePdfMarkTools } from '@/lib/pdf-document/usePdfMarkTools';
 import { usePdfMarkProperties } from '@/lib/pdf-document/usePdfMarkProperties';
-import { usePdfStampTurns } from '@/lib/pdf-document/usePdfStampTurns';
+import { usePdfMarkTurns } from '@/lib/pdf-document/usePdfMarkTurns';
 import { usePdfFullScreen } from '@/lib/pdf-document/usePdfFullScreen';
 import { PdfLookContext } from '@/lib/pdf-document/pdf-look';
 import { PdfStampPicturesContext } from '@/lib/pdf-document/pdf-stamp-pictures';
@@ -418,7 +418,7 @@ export function PdfDocumentSurface({
     covered: findListShown,
     onOpen: useCallback(() => setListOpen(false), [setListOpen]),
   });
-  const stampTurns = usePdfStampTurns({
+  const markTurns = usePdfMarkTurns({
     ready,
     marks: changeable,
     marking,
@@ -454,7 +454,7 @@ export function PdfDocumentSurface({
             ...markRestyle.actions,
             ...tools.lineActions,
             ...markProperties.actions,
-            ...stampTurns,
+            ...markTurns,
             [GO_TO_PAGE]: { run: focusPageField },
           }
         : {}),
@@ -501,7 +501,7 @@ export function PdfDocumentSurface({
       markRestyle.actions,
       tools.lineActions,
       markProperties.actions,
-      stampTurns,
+      markTurns,
     ],
   );
 

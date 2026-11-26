@@ -1,10 +1,12 @@
 // A mark's Properties (docs/specs/035-pdf-documents/marks.md "Changing a mark": Properties): what the side panel reads
 // of one mark, in order; its subject changed as one change under the person's own origin, so it is one step of their
-// undo; and its look given to its kind's tool, "Make this look the default".
+// undo; its Angle as the field shows it and as typed (Rotate); and its look given to its kind's tool, "Make this look
+// the default".
 import type * as Y from 'yjs';
 import {
   Mark as Marks,
   MARK_KIND_LABELS,
+  MarkTurn,
   PDF_MARK_SUBJECT_MAX_CHARS,
   PdfChange,
   type LineStyle,
@@ -41,8 +43,15 @@ function wordsOf(mark: Mark): string | null {
   return mark.kind === 'stamp' ? mark.lines.join(' ') : null;
 }
 
-/** The rows above and below the subject's field: Kind and Author before it, the rest after. */
-export function propertyRows(mark: Mark): { before: PropertyRow[]; after: PropertyRow[] } {
+/**
+ * The rows around the fields: Kind and Author before the subject's; its dates, colour and opacity after it; and below
+ * the Angle's (where the mark has one) its line, fill and words.
+ */
+export function propertyRows(mark: Mark): {
+  before: PropertyRow[];
+  after: PropertyRow[];
+  last: PropertyRow[];
+} {
   const width = widthOf(mark);
   const style = lineStyleOf(mark);
   const fill = fillOf(mark);
@@ -57,12 +66,28 @@ export function propertyRows(mark: Mark): { before: PropertyRow[]; after: Proper
       { label: 'Changed', value: stampWhen(mark.modifiedAt) },
       { label: 'Colour', value: colourName(mark.colour) },
       { label: 'Opacity', value: `${Math.round(mark.opacity * 100)}%` },
+    ],
+    last: [
       ...(width === undefined ? [] : [{ label: 'Line width', value: `${width} pt` }]),
       ...(style === undefined ? [] : [{ label: 'Line style', value: STYLE_NAMES[style] }]),
       ...(fill === undefined ? [] : [{ label: 'Fill', value: fill ? colourName(fill) : 'None' }]),
       ...(words === null ? [] : [{ label: 'Words', value: words }]),
     ],
   };
+}
+
+/**
+ * A mark's Angle as its field shows it, whole degrees as the mark stands (a file's own as the file has it); null for a
+ * mark with no box to turn (marks.md "Changing a mark": Rotate, Properties' Angle).
+ */
+export const angleShown = (mark: Mark): string | null =>
+  Marks.turnsByBox(mark) ? String(MarkTurn.angleOf(mark)) : null;
+
+/** The angle typed into the Angle field, taken to the nearest 15° within 0 to 359; null for what is no number. */
+export function angleTyped(typed: string): number | null {
+  const bare = typed.trim().replace(/°$/, '').trim();
+  const degrees = bare === '' ? Number.NaN : Number(bare);
+  return Number.isFinite(degrees) ? (MarkTurn.snap(degrees) ?? 0) : null;
 }
 
 /** A mark's subject as the field shows it: its own, else its kind's name. */

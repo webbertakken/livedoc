@@ -481,3 +481,40 @@ describe('a custom stamp over a page', () => {
     expect(svg.querySelector('[data-pdf-mark="c1"] text')!.textContent).toBe('Paid');
   });
 });
+
+// marks.md "Changing a mark": Rotate. A turned mark is drawn upright, turned into place; its outline its box turned.
+describe('a turned mark over a page', () => {
+  it('draws its shape turned about its middle and outlines its box turned with it', () => {
+    const turned = Mark.shape('rectangle', {
+      id: 'r',
+      page: PageName.ofObject(3),
+      rect: [100, 100, 200, 140],
+      width: 2,
+      colour: '#d93025',
+      opacity: 1,
+      author: 'Ada',
+      createdAt: 1,
+      turn: 90,
+    })!;
+    const { container } = render(
+      <PdfMarksOverlay
+        matrix={[1, 0, 0, -1, 0, 792]}
+        width={612}
+        height={792}
+        marks={[turned]}
+        chosen={['r']}
+      />,
+    );
+    const outline = container.querySelector('[data-pdf-mark-outline="r"]')!;
+    expect(outline.tagName.toLowerCase()).toBe('polygon');
+    // The box (100, 100)-(200, 140) a quarter anticlockwise about (150, 120): (130, 70)-(170, 170) in page space.
+    const points = outline
+      .getAttribute('points')!
+      .split(' ')
+      .map((pair) => pair.split(',').map(Number) as [number, number]);
+    const xs = points.map(([x]) => Math.round(x));
+    const ys = points.map(([, y]) => Math.round(792 - y));
+    expect([Math.min(...xs), Math.max(...xs)]).toEqual([129, 171]);
+    expect([Math.min(...ys), Math.max(...ys)]).toEqual([69, 171]);
+  });
+});

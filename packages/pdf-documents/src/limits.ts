@@ -95,6 +95,11 @@ export const PDF_TEXT_SIZE_MIN_PT = 4;
 export const PDF_TEXT_SIZE_MAX_PT = 144;
 /** (default) How far a Callout's knee stands out from its box, in points. Safe range: 6 to 24. */
 export const PDF_CALLOUT_KNEE_PT = 12;
+/** (default) The steps the rotate handle and Properties' Angle turn a mark by, in degrees (marks.md "Limits"). Safe
+ *  range: 5 to 45. */
+export const PDF_ROTATE_SNAP_DEGREES = 15;
+/** (default) Screen pixels between a mark's box and its rotate handle (marks.md "Limits"). Safe range: 16 to 40. */
+export const PDF_ROTATE_HANDLE_GAP_PX = 24;
 /** (default) A stamp's line as placed, in characters: a display name and a time fit (marks.md "Limits"). Safe range:
  *  100 to 1,000. */
 export const PDF_STAMP_LINE_MAX_CHARS = 300;

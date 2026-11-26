@@ -14,7 +14,6 @@ export {
   Mark,
   POLY_MARK_KINDS,
   SHAPE_MARK_KINDS,
-  STAMP_TURNS,
   TEXT_ALIGNS,
   TEXT_MARK_KINDS,
   TYPED_MARK_KINDS,
@@ -41,7 +40,7 @@ export {
   type ShapeMarkKind,
   type StampInput,
   type StampMark,
-  type StampTurnDegrees,
+  type BoxTurningMark,
   type Stroke,
   type TextAlign,
   type TextBoxInput,
@@ -83,7 +82,7 @@ export {
   type StampIdentityRead,
   type StampIdentityRefusal,
 } from './stamp-identity';
-export { StampTurn, type TurnWay } from './stamp-turn';
+export { MarkTurn, type MarkTurned, type TurnWay } from './mark-turn';
 export { HelveticaBold } from './helvetica-bold';
 export { TYPED_LINE_HEIGHT, TypedLayout, type PlacedLine, type TypedLine } from './typed-layout';
 export { Helvetica, HELVETICA_STAND_IN } from './helvetica';

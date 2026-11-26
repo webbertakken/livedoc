@@ -8,7 +8,13 @@
 // Reviewing's: while `marking` is off nothing is chosen; and a mark the session may not change (a Participant's
 // another's, marks.md "Share roles") is never chosen.
 import { useCallback, useMemo, useState, useSyncExternalStore } from 'react';
-import { MarkGroups, type Mark, type MarkPlace, type PagePoint } from '@livedoc/pdf-documents';
+import {
+  MarkGroups,
+  type Box,
+  type Mark,
+  type MarkPlace,
+  type PagePoint,
+} from '@livedoc/pdf-documents';
 import { debugLog } from '@/lib/debug-log';
 import type { OfficeActions } from '@/lib/office/office-catalogue';
 import { track } from '@/lib/telemetry';
@@ -29,6 +35,7 @@ import {
 import { DELETE_MARKS, GROUP_MARKS, UNGROUP_MARKS } from './pdf-menus';
 import type { PdfDocumentOpen } from './usePdfDocument';
 import type { PdfTextSelected } from './usePdfTextSelection';
+import { turnMarksOn } from './pdf-mark-turn-step';
 
 type Ready = Pick<Extract<PdfDocumentOpen, { phase: 'ready' }>, 'pages' | 'binding' | 'undo'>;
 
@@ -51,6 +58,9 @@ export type PdfPageChoosing = {
   readonly move: (index: number, by: PagePoint) => void;
   /** A mark of the page at `index` given new geometry by a handle or ⌥ with an arrow key. */
   readonly reshape: (index: number, id: string, place: MarkPlace) => void;
+  /** A mark of the page at `index` turned by its rotate handle to `to` (a mark that turns its points, by it), held on
+   *  `page` (marks.md "Changing a mark": Rotate). */
+  readonly turn: (index: number, id: string, to: number, page: Box) => void;
   /** The selection deleted. */
   readonly remove: () => void;
 };
@@ -213,6 +223,23 @@ export function usePdfMarkSelection({
     [ready, fileOwnOn],
   );
 
+  const turn = useCallback(
+    (index: number, id: string, to: number, box: Box) => {
+      const page = ready?.pages[index];
+      if (!ready || !page) return;
+      turnMarksOn({
+        ready,
+        page,
+        box,
+        ids: [id],
+        asked: { to },
+        way: 'handle',
+        fileOwn: fileOwnOn(index),
+      });
+    },
+    [ready, fileOwnOn],
+  );
+
   const remove = useCallback(() => {
     const page = chosen ? ready?.pages[chosen.page] : undefined;
     if (!ready || !chosen || !page) return;
@@ -255,8 +282,9 @@ export function usePdfMarkSelection({
 
   const changing = marking && ready !== null;
   const choosing = useMemo<PdfPageChoosing | null>(
-    () => (changing ? { mayChange, choose, chooseAll, letGo, leave, move, reshape, remove } : null),
-    [changing, mayChange, choose, chooseAll, letGo, leave, move, reshape, remove],
+    () =>
+      changing ? { mayChange, choose, chooseAll, letGo, leave, move, reshape, turn, remove } : null,
+    [changing, mayChange, choose, chooseAll, letGo, leave, move, reshape, turn, remove],
   );
   const grouped = chosen !== null && MarkGroups.anyGrouped(marksOn(chosen.page), chosen.ids);
   const actions = useMemo<OfficeActions>(

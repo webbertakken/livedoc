@@ -15,8 +15,10 @@ import {
   type PointerEvent,
 } from 'react';
 import {
+  Mark as Marks,
   PageView,
   PDF_MARK_OUTLINE_PX,
+  PDF_ROTATE_HANDLE_GAP_PX,
   type LinkTarget,
   type Mark,
   type PageInfo,
@@ -32,6 +34,7 @@ import {
 import type { PdfChangeableMarks } from '@/lib/pdf-document/pdf-changeable-marks';
 import { pictureScale, type PdfPageDrawer } from '@/lib/pdf-document/pdf-page-drawer';
 import { PdfMarkHandles } from './PdfMarkHandles';
+import { PdfRotateHandle } from './PdfRotateHandle';
 import { PdfMarksOverlay, type PdfMarkReshaping } from './PdfMarksOverlay';
 import { keyResize } from '@/lib/pdf-document/pdf-mark-handles';
 import { linkBox, PdfPageLinks, percentStyle } from './PdfPageLinks';
@@ -526,7 +529,7 @@ export const PdfPage = memo(function PdfPage({
           style={percentStyle(linkBox(matrix, boxing.box, shown.width, shown.height))}
         />
       ) : null}
-      {matrix && sizing && sized && !markPress.moving ? (
+      {matrix && sizing && sized && !markPress.moving && !reshaping?.turning ? (
         <PdfMarkHandles
           key={sized.id}
           mark={sized}
@@ -537,6 +540,23 @@ export const PdfPage = memo(function PdfPage({
           pageBox={pageBox}
           onPreview={(place) => setReshaping(place ? { id: sized.id, place } : null)}
           onReshape={(place) => sizing.reshape(index, sized.id, place)}
+        />
+      ) : null}
+      {matrix && sizing && sized && !markPress.moving && Marks.turns(sized) ? (
+        <PdfRotateHandle
+          key={`rotate ${sized.id}`}
+          mark={sized}
+          matrix={matrix}
+          width={shown.width}
+          height={shown.height}
+          gap={PDF_ROTATE_HANDLE_GAP_PX / cssPerPoint}
+          toView={viewAt}
+          pageBox={pageBox}
+          onPreview={(place) => setReshaping(place ? { id: sized.id, place, turning: true } : null)}
+          onTurn={(to) => {
+            const page = pageBox();
+            if (page) sizing.turn(index, sized.id, to, page);
+          }}
         />
       ) : null}
       {matrix && typing ? (

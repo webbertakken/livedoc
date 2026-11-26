@@ -2,7 +2,8 @@
 
 // A mark's Properties (docs/specs/035-pdf-documents/marks.md "Changing a mark": Properties): the side panel on the
 // right, reading the one selected mark's kind, author, subject, dates and look; its subject a field, changed by Enter or
-// by leaving it and put back by Escape; and "Make this look the default" for its kind's tool.
+// by leaving it and put back by Escape; a boxed mark's Angle a field the same way, snapped to 15° (Rotate); and "Make
+// this look the default" for its kind's tool.
 import { useState } from 'react';
 import { PDF_MARK_SUBJECT_MAX_CHARS, type Mark } from '@livedoc/pdf-documents';
 import {
@@ -17,6 +18,8 @@ import {
 } from '@/lib/office/office-panels';
 import { MARK_PROPERTIES } from '@/lib/pdf-document/pdf-menus';
 import {
+  angleShown,
+  angleTyped,
   propertyRows,
   subjectShown,
   type PropertyRow,
@@ -78,10 +81,62 @@ function SubjectField({ mark, onSubject }: { mark: Mark; onSubject: (typed: stri
   );
 }
 
+/** The Angle's field: whole degrees, taken to the nearest 15° by Enter or leaving it; Escape puts it back. */
+function AngleField({
+  mark,
+  shown,
+  onAngle,
+}: {
+  mark: Mark;
+  shown: string;
+  onAngle: (to: number) => void;
+}) {
+  const [typed, setTyped] = useState(shown);
+  const take = () => {
+    const to = angleTyped(typed);
+    setTyped(to === null ? shown : String(to));
+    if (to !== null && String(to) !== shown) onAngle(to);
+  };
+  return (
+    <div className="grid grid-cols-[7rem_1fr] items-center gap-2 px-2 py-1">
+      <dt>
+        <label htmlFor={`angle-${mark.id}`} className="text-supporting text-(--office-muted)">
+          Angle
+        </label>
+      </dt>
+      <dd className="flex items-center gap-1">
+        <input
+          id={`angle-${mark.id}`}
+          className={`${OFFICE_PANEL_CONTROL} w-20`}
+          inputMode="numeric"
+          aria-describedby={`angle-unit-${mark.id}`}
+          value={typed}
+          onChange={(event) => setTyped(event.target.value)}
+          onBlur={take}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter') {
+              event.preventDefault();
+              take();
+            } else if (event.key === 'Escape' && typed !== shown) {
+              event.preventDefault();
+              event.stopPropagation();
+              setTyped(shown);
+            }
+          }}
+        />
+        <span id={`angle-unit-${mark.id}`} className="text-body text-(--office-muted)">
+          degrees
+        </span>
+      </dd>
+    </div>
+  );
+}
+
 export function PdfMarkPropertiesPanel({ properties }: { properties: PdfMarkProperties }) {
   const [width, setWidth] = useState<number>(OFFICE_PANEL_WIDTH.initial);
   const { mark, makeDefault } = properties;
   const rows = mark ? propertyRows(mark) : null;
+  const angle = mark ? angleShown(mark) : null;
   return (
     <OfficePanel
       spec={MARK_PROPERTIES_PANEL}
@@ -101,6 +156,16 @@ export function PdfMarkPropertiesPanel({ properties }: { properties: PdfMarkProp
               onSubject={properties.setSubject}
             />
             <Rows rows={rows.after} />
+            {mark && angle !== null ? (
+              // A new angle from anyone, or another mark, starts the field afresh.
+              <AngleField
+                key={`${mark.id} ${angle}`}
+                mark={mark}
+                shown={angle}
+                onAngle={properties.setAngle}
+              />
+            ) : null}
+            <Rows rows={rows.last} />
           </dl>
           {makeDefault ? (
             <button
