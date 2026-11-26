@@ -48,7 +48,8 @@ const CLIPBOARD: readonly ContextEntrySpec[] = [
 // Edit › Delete's Row and Column, named for the context; the binding counts the lines (Delete Rows 2 - 4).
 const DELETE_ROWS = { id: 'delete-rows', label: 'Delete Row' };
 const DELETE_COLUMNS = { id: 'delete-columns', label: 'Delete Column' };
-const DEFINE_NAMED_RANGE = { id: 'named-ranges', label: 'Define Named Range' };
+// Opens Named Ranges on Add a Range over the selection: an Editor's, where Data › Named Ranges is everyone's.
+const DEFINE_NAMED_RANGE = own('define-named-range', 'Define Named Range', 'edit', 'built');
 const PROTECT_RANGE = { id: 'protect-sheets-and-ranges', label: 'Protect Range' };
 const VALIDATION: readonly ContextEntrySpec[] = ['conditional-formatting', 'data-validation'];
 

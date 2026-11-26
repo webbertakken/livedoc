@@ -14,12 +14,15 @@ import {
   parseRangeText,
   posRangeOf,
   rangeNameProblem,
+  sameName,
   type GridRange,
   type SheetLayout,
 } from '@livedoc/sheets';
 import { SHAPE_REFUSED, useSheetController } from './sheet-controller';
 import { ColouredDraft, FunctionAssist } from './SheetCellEditor';
 import { inputTextAt, type SheetActions } from './useSheetActions';
+import { goToNamed, listedNames, otherLayouts } from './named-ranges';
+import { useSheetNavigation, type OpenSheetAt } from './sheet-navigation';
 import type { FormulaInput } from './useFormulaInput';
 
 // The named range that is exactly `range`, if one is.
@@ -32,11 +35,12 @@ function nameOfRange(layout: SheetLayout, range: GridRange): string | null {
   return null;
 }
 
-// The name box's Enter (sheet.md "Formula bar"): a reference or range selects it; a name this sheet has selects its
-// range; a new name names the selection, or says why it cannot.
+// The name box's Enter (sheet.md "Formula bar"): a reference or range selects it; a name the workbook has selects its
+// range (opening its sheet, surface.md D129); a new name names the selection, or says why it cannot.
 function enterNameBox(
   c: ReturnType<typeof useSheetController>,
   actions: SheetActions,
+  open: OpenSheetAt | null,
   text: string,
 ): void {
   if (!text) return;
@@ -50,10 +54,12 @@ function enterNameBox(
   const named = findRangeName(layout, text);
   const at = named && posRangeOf(layout, named);
   if (at) return actions.goTo(at);
+  const elsewhere = open && listedNames(c, open).find((x) => sameName(x.name, text));
+  if (elsewhere) return goToNamed(c, actions.goTo, open, elsewhere);
   // Naming is a change to the sheet's layout: an Editor's (docs/specs/029-sheets/sheet.md "Who may do what"),
   // said rather than swallowed, as any other shape change is.
   if (!c.canShape) return c.toast(SHAPE_REFUSED);
-  const problem = rangeNameProblem(text, layout);
+  const problem = rangeNameProblem(text, layout, { others: otherLayouts(c) });
   if (problem) return c.toast(problem);
   const sel = c.selection.ranges[c.selection.ranges.length - 1]!;
   const ids = idRangeOf(layout, sel.r1, sel.c1, sel.r2, sel.c2);
@@ -74,6 +80,7 @@ export function SheetFormulaBar({
   // The selection, or its name when it is exactly a named range (sheet.md "Named ranges").
   const name = nameOfRange(c.sheet.layout, range) ?? formatRange(range);
   const [box, setBox] = useState<string | null>(null);
+  const open = useSheetNavigation();
   const barRef = useRef<HTMLTextAreaElement | null>(null);
   const editing = c.editing;
   const { r, c: col } = c.selection.active;
@@ -127,7 +134,7 @@ export function SheetFormulaBar({
               backToEdit();
               return;
             }
-            enterNameBox(c, actions, (box ?? '').trim());
+            enterNameBox(c, actions, open, (box ?? '').trim());
             setBox(null);
             c.focusGrid();
           } else if (e.key === 'Escape') {
@@ -139,9 +146,9 @@ export function SheetFormulaBar({
         }}
       />
       <NameBoxList
-        layout={c.sheet.layout}
-        goTo={(range) => {
-          actions.goTo(range);
+        names={() => listedNames(c, open)}
+        goTo={(target) => {
+          goToNamed(c, actions.goTo, open, target);
           c.focusGrid();
         }}
         colour={c.palette.muted}

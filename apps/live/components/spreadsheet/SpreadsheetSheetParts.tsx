@@ -15,8 +15,10 @@ import { useOfficePanels } from '@/lib/office/useOfficePanels';
 import {
   CHART_EDITOR_PANEL,
   DATA_VALIDATION_PANEL,
+  NAMED_RANGES_PANEL,
   SPREADSHEET_PANELS,
   withBandingOnOpen,
+  withNamedRangesPanel,
   withValidationPanel,
 } from '@/lib/spreadsheet/spreadsheet-panels';
 import { SheetBarSummary } from './SheetBarSummary';
@@ -67,23 +69,32 @@ export function SpreadsheetSheetParts({ bridge }: { bridge: SheetsBridge }) {
   );
   // How Data Validation Rules was last opened (SpreadsheetRightPanel).
   const [validation, setValidation] = useState({ nonce: 0, startNew: false });
+  // How Named Ranges was last opened (SpreadsheetRightPanel).
+  const [named, setNamed] = useState({ nonce: 0, startAdding: false });
   const charts = useSpreadsheetCharts(c, c.canShape ? editChart : undefined);
   const { insertChart } = charts;
   const canInsertChart = c.canShape;
   const bandingActions = useMemo(
     () => ({
-      ...withValidationPanel(
-        withBandingOnOpen(panelActions, () => actions.addBanding()),
+      ...withNamedRangesPanel(
+        withValidationPanel(
+          withBandingOnOpen(panelActions, () => actions.addBanding()),
+          {
+            addCheckbox: () => actions.addCheckbox(),
+            opened: (startNew) => setValidation((v) => ({ nonce: v.nonce + 1, startNew })),
+            reveal: () => reveal(DATA_VALIDATION_PANEL),
+          },
+        ),
         {
-          addCheckbox: () => actions.addCheckbox(),
-          opened: (startNew) => setValidation((v) => ({ nonce: v.nonce + 1, startNew })),
-          reveal: () => reveal(DATA_VALIDATION_PANEL),
+          opened: (startAdding) => setNamed((v) => ({ nonce: v.nonce + 1, startAdding })),
+          reveal: () => reveal(NAMED_RANGES_PANEL),
+          canShape: c.canShape,
         },
       ),
       // Insert › Chart and the toolbar's (charts.md "Inserting"): an Editor's.
       ...(canInsertChart ? { 'insert-chart': { run: insertChart } } : {}),
     }),
-    [panelActions, actions, canInsertChart, insertChart, reveal],
+    [panelActions, actions, canInsertChart, insertChart, reveal, c.canShape],
   );
   const office = useGridMenuBindings(
     actions,
@@ -142,6 +153,7 @@ export function SpreadsheetSheetParts({ bridge }: { bridge: SheetsBridge }) {
           actions={actions}
           chart={{ id: editingChart, change: charts.change }}
           validation={validation}
+          named={named}
         />
       </div>
       <SpreadsheetGridMenus actions={actions} bound={office.actions} />

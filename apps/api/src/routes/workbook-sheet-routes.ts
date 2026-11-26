@@ -138,7 +138,14 @@ async function addSheet(ctx: DocumentRouteContext, documentId: string): Promise<
     await ctx.env.DOCUMENT_DB.batch([
       tabOrderOpenStatement(ctx.env, documentId, orderIndex),
       ...tabWriteStatements(ctx.env, documentId, tab, orderIndex, { advance: true }, now),
-      ...copySheetStatements(ctx.env, documentId, source.id, { id, tabId, title: name, by }, now),
+      ...copySheetStatements(
+        ctx.env,
+        documentId,
+        source.id,
+        { id, tabId, title: name, by },
+        now,
+        true,
+      ),
     ]);
     return added(ctx, documentId, tab, id, orderIndex, started, 'copied');
   }

@@ -5,6 +5,7 @@ import { act, fireEvent, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { SHEET_ID, makeSheet, renderSheet, type SheetHarness } from './sheet-ui-test-utils';
 import { SheetFormulaBar } from './SheetFormulaBar';
+import { SheetNavigationContext } from './sheet-navigation';
 
 vi.mock('@/lib/telemetry', () => ({ track: vi.fn() }));
 
@@ -268,6 +269,55 @@ describe('the formula bar', () => {
   });
 });
 
+// docs/specs/029-sheets/sheet.md "Named ranges" (unique in the workbook) and surface.md D129 (every sheet's names).
+describe('the name box in a workbook', () => {
+  const OTHER = 'other0000';
+  const nameOther = (h: SheetHarness, name: string) => {
+    const { rows, cols } = h.store.sheet(OTHER)!.layout;
+    h.store.write(OTHER, {
+      kind: 'layout',
+      changes: [
+        { k: 'name', name, range: { r1: rows[0]!, c1: cols[0]!, r2: rows[1]!, c2: cols[0]! } },
+      ],
+    });
+  };
+  const type = (text: string) => {
+    fireEvent.focus(nameBox());
+    fireEvent.change(nameBox(), { target: { value: text } });
+    fireEvent.keyDown(nameBox(), { key: 'Enter' });
+  };
+
+  it('refuses a name another sheet has, in a spreadsheet and on a Plan tab alike', async () => {
+    const h = await makeSheet({ otherTitles: ['Rates'] });
+    nameOther(h, 'Rate');
+    show(h);
+    act(() => h.select('B1'));
+    type('RATE');
+    // Without a way to open the other sheet (a Plan Sheet) the name is not listed here, and still taken.
+    expect(h.toast).toHaveBeenLastCalledWith('Another named range is called that');
+    expect(h.store.sheet(SHEET_ID)!.layout.names).toBeUndefined();
+  });
+
+  it('lists another sheet’s names with their sheet, and goes there by a pick or by its name typed', async () => {
+    const h = await makeSheet({ otherTitles: ['Rates'] });
+    nameOther(h, 'Rate');
+    const open = vi.fn();
+    renderSheet(h, ({ actions, input }) => (
+      <SheetNavigationContext.Provider value={open}>
+        <SheetFormulaBar actions={actions} input={input} />
+      </SheetNavigationContext.Provider>
+    ));
+    fireEvent.click(screen.getByRole('button', { name: 'Named Ranges' }));
+    const rate = screen.getByRole('menuitem', { name: /Rate/ });
+    expect(rate.textContent).toContain('Rates!A1:A2');
+    fireEvent.click(rate);
+    expect(open).toHaveBeenLastCalledWith(OTHER, { r1: 0, c1: 0, r2: 1, c2: 0 });
+    type('rate');
+    expect(open).toHaveBeenCalledTimes(2);
+    expect(h.ctl().selection.ranges).toEqual([{ r1: 0, c1: 0, r2: 0, c2: 0 }]);
+  });
+});
+
 describe('the formula bar on a formatted number', () => {
   it('shows a date as the date, and a percent unformatted (formulas.md)', async () => {
     const h = await makeSheet({ cells: { A1: '8/10/2026', A2: '12%' } });
@@ -281,15 +331,10 @@ describe('the formula bar on a formatted number', () => {
 });
 
 describe('nameBoxMenu', () => {
-  it('leaves out a name whose range is gone, and runs nothing for an empty list', async () => {
+  it('runs nothing for an empty list', async () => {
     const { nameBoxMenu } = await import('./NameBoxList');
     const goTo = vi.fn();
-    const layout = {
-      rows: ['r1'],
-      cols: ['c1'],
-      names: [{ name: 'Gone', range: { r1: 'x', c1: 'x', r2: 'x', c2: 'x' } }],
-    };
-    const menu = nameBoxMenu(layout as never, goTo);
+    const menu = nameBoxMenu([], goTo);
     expect(menu.entries.map((e) => (e.kind === 'item' ? e.label : '-'))).toEqual([
       'No named ranges',
     ]);

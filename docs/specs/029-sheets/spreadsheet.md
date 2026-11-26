@@ -106,7 +106,8 @@ tab's menu holds:
   sheet, as Google's does (D170); either opens it.
 - **Duplicate** names the copy "Copy of <name>", or when that is taken "Copy of <name> 2" and up, by the sheet
   name's rules (default, D171); the copy holds the sheet's cells and its layout (sizes, hidden lines, groups,
-  freeze, merges, filter, rules, names), and opens.
+  freeze, merges, filter, rules), not its named ranges, which are the workbook's and stay with the original
+  ([Named ranges](sheet.md#named-ranges), D298), and opens.
 - **Rename** (and a double-click on a tab, and Alt+1 on the open one) turns the tab into a field: Enter or leaving it
   saves, Escape keeps the name; a name the rules refuse says why and keeps the old one (default, D172).
 - Renaming a sheet rewrites every formula that names it, as today ([Formulas](formulas.md#other-sheets)).
