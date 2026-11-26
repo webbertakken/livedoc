@@ -5,7 +5,7 @@ import 'fake-indexeddb/auto';
 import { IDBFactory } from 'fake-indexeddb';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { blobKeyOf } from '@livedoc/document';
-import { Mark, PdfLiveChanges, type PageName } from '@livedoc/pdf-documents';
+import { Mark, PdfLiveChanges, PageName } from '@livedoc/pdf-documents';
 import { fakeBlobDirectory } from '../blob-store/local-blob-testing';
 import {
   __setThisBrowserBlobs,
@@ -52,7 +52,7 @@ describe('the keys This Browser documents name', () => {
       doc,
       Mark.stamp({
         id: 'paid',
-        page: 'p:1' as PageName,
+        page: PageName.ofObject(1),
         rect: [0, 0, 10, 10],
         stamp: 'custom-0b7c3c2e-5a8f-4f21-9a43-1f2d3e4c5b6a',
         lines: ['Paid'],
