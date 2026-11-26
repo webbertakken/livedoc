@@ -64,12 +64,17 @@ describe('ChartReadout', () => {
     rerender(
       <div data-clip style={{ overflow: 'hidden' }}>
         <div data-frame>
-          <ChartReadout leftPct={60} topPct={50} text="Haiku, 76.2, 0.2" />
+          <ChartReadout leftPct={60} topPct={50} lines={['Haiku', 'Coding index: 76.2']} />
         </div>
       </div>,
     );
     expect(readout(container).style.marginLeft).toBe('');
-    expect(readout(container).textContent).toBe('Haiku, 76.2, 0.2');
+    // Lines, one under the other, the first a heading.
+    expect([...readout(container).children].map((line) => line.textContent)).toEqual([
+      'Haiku',
+      'Coding index: 76.2',
+    ]);
+    expect(readout(container).firstElementChild!.className).toContain('font-semibold');
   });
 
   it('sits below a point with no room above it', () => {
