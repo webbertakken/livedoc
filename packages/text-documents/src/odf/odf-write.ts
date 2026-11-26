@@ -145,7 +145,9 @@ class OdfWriter {
   readonly noteNumbers: Map<Note, number>;
   /** The writing's tracked changes (review.md "In the files"): their regions, each paragraph carrying the next one's
    * break or join, and the ranges the next paragraph closes at its start. */
-  readonly changes = new OdfChangeRegions();
+  changes = new OdfChangeRegions();
+  /** How many headers' and footers' region lists are written, each with ids of its own. */
+  storyRegions = 0;
   marksBefore = new Map<Paragraph, ParagraphSuggested>();
   readonly pendingEnds: string[] = [];
   /** Each thread by id with the name its annotation is written with (review.md "How a comment is kept"). */
@@ -505,8 +507,26 @@ function withPageNumber(propsXml: string, start: number | undefined): string {
 function storyContentXml(w: OdfWriter, blocks: readonly Block[]): string {
   const outer = w.automatic;
   w.automatic = w.pageStyles;
-  const xml = contentXml(w, blocks, true);
+  // Its tracked changes listed inside it, before its paragraphs, as LibreOffice writes a header's (review.md "In the
+  // files").
+  const body = w.changes;
+  const own = new OdfChangeRegions(`ct${++w.storyRegions}h`);
+  w.changes = own;
+  const xml = trackedStoryXml(w, blocks);
+  w.changes = body;
   w.automatic = outer;
+  return own.size > 0 ? own.xml() + xml : xml;
+}
+
+/**
+ * A header's, footer's or note's writing, its suggestions tracked as the body's (review.md "How a suggestion is kept"):
+ * its paragraphs' breaks and joins known, and the ranges the body has open kept for the body.
+ */
+function trackedStoryXml(w: OdfWriter, blocks: readonly Block[]): string {
+  for (const [p, mark] of Suggestions.marksBefore(blocks)) w.marksBefore.set(p, mark);
+  const open = w.pendingEnds.splice(0);
+  const xml = contentXml(w, blocks, true, undefined, { tracks: true });
+  w.pendingEnds.splice(0, w.pendingEnds.length, ...open);
   return xml;
 }
 
@@ -598,7 +618,7 @@ function contentXml(
           : i.type === 'note'
             ? odfFootnoteXml(
                 w.noteNumbers.get(i) ?? w.noteNumbers.size + 1,
-                contentXml(w, i.blocks, true),
+                trackedStoryXml(w, i.blocks),
               )
             : i.type === 'picture'
               ? w.pictureXml(i)
@@ -921,7 +941,13 @@ function writeParts(tabbed: TextDocument, generator: string, asFlat: boolean): O
   const styles = `${XML_DECLARATION}\n<office:document-styles${root}>${faces}<office:styles>${named}</office:styles><office:automatic-styles>${w.pageStyles.xml()}</office:automatic-styles>${masters}</office:document-styles>\n`;
   const metaXml = `${XML_DECLARATION}\n<office:document-meta${root}><office:meta>${meta}</office:meta></office:document-meta>\n`;
   const settingsXml = `${XML_DECLARATION}\n<office:document-settings${root}${settings ? `>${settings}</office:document-settings>` : '/>'}\n`;
+  // One set in a flat file: those the file held first, in its order (a header's claim of one of them moves nothing),
+  // then the page styles, then the body's new ones.
   const allAutomatic = new Named();
+  for (const { name } of w.source?.automaticStyles ?? []) {
+    const xml = w.pageStyles.byName.get(name) ?? w.contentAutomatic.byName.get(name);
+    if (xml !== undefined) allAutomatic.add(name, xml);
+  }
   for (const name of w.pageStyles.order) allAutomatic.add(name, w.pageStyles.byName.get(name)!);
   for (const name of w.contentAutomatic.order)
     allAutomatic.add(name, w.contentAutomatic.byName.get(name)!);

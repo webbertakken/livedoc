@@ -8,6 +8,7 @@ import {
   childElement,
   odfLengthToPt,
   ptToOdf,
+  type KeptXml,
   type XmlElement,
 } from '@livedoc/office-packages';
 import {
@@ -252,3 +253,15 @@ export function withStories(master: string, stories: string): string {
 /** A master page's XML without its headers and footers, the space between its children gone. */
 export const withoutStories = (master: string): string =>
   master.replace(STORY_ELEMENT, '').replace(/>\s+</g, '><');
+
+/**
+ * A kept master page without its headers and footers (they are the model's), binding only the prefixes what is left
+ * uses: what its stories held (a tracked change's `dc:` or `livedoc:`) is no part of it.
+ */
+export function keptWithoutStories(master: KeptXml): KeptXml {
+  const xml = withoutStories(master.xml);
+  const ns = Object.fromEntries(
+    Object.entries(master.ns).filter(([prefix]) => new RegExp(`[<\\s]${prefix}:`).test(xml)),
+  );
+  return { xml, ns };
+}

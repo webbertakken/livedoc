@@ -70,9 +70,8 @@ const textOf = (fragment: Y.XmlFragment): string =>
   fragment
     .toArray()
     .map((p) =>
-      ((p as Y.XmlElement).get(0) as Y.XmlText)
-        .toDelta()
-        .map((op: { insert: unknown }) => op.insert)
+      (((p as Y.XmlElement).get(0) as Y.XmlText).toDelta() as { insert: unknown }[])
+        .map((op) => op.insert)
         .join(''),
     )
     .join('|');

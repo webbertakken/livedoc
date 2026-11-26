@@ -47,7 +47,12 @@ import {
   unquote,
 } from './odf-props';
 import { keptSettings, pagelessIn } from './odf-settings';
-import { masterStoryElements, unlinked, withHeaderMargins, withoutStories } from './odf-headers';
+import {
+  keptWithoutStories,
+  masterStoryElements,
+  unlinked,
+  withHeaderMargins,
+} from './odf-headers';
 import {
   HeadersAndFooters,
   type HeaderFooter,
@@ -317,7 +322,7 @@ class OdfReader {
     for (const page of master ? childElements(master) : []) {
       const xml = keptXmlOf(styles!, page);
       // A master page's headers and footers are the model's: what is kept is the rest of it.
-      kept.push(is(page, NS.style, 'master-page') ? { ...xml, xml: withoutStories(xml.xml) } : xml);
+      kept.push(is(page, NS.style, 'master-page') ? keptWithoutStories(xml) : xml);
       if (is(page, NS.style, 'master-page')) {
         const name = attributeOf(page, NS.style, 'name') ?? '';
         this.masters.set(name, attributeOf(page, NS.style, 'page-layout-name') ?? '');
@@ -466,6 +471,9 @@ export function readOdfParts(parts: OdfParts, report: ReportBuilder): TextDocume
   const masterStyles: KeptXml[] = [];
   reader.readMasters(parts.styles, masterStyles);
   reader.readStory = (element) => {
+    reader.changes.include(
+      readOdfChangedRegions(element, (name) => reader.report.drop('suggestion-unknown', name)),
+    );
     const story = new BodyReader(reader, styles, defaults, true);
     story.container(element);
     return story.blocks;
@@ -555,10 +563,7 @@ class BodyReader {
     styles: readonly Style[],
     defaults: StyleDefaults,
     story = false,
-    {
-      notes = !story,
-      cell = false,
-    }: { notes?: boolean; cell?: boolean } = {},
+    { notes = !story, cell = false }: { notes?: boolean; cell?: boolean } = {},
   ) {
     this.r = r;
     this.story = story;
@@ -659,6 +664,8 @@ class BodyReader {
 
   container(parent: XmlElement): void {
     const top = !this.story && !this.cell && is(parent, NS.office, 'text');
+    // A header's or footer's own list of its tracked changes, before its paragraphs, as LibreOffice writes one.
+    const masterStory = this.story && !this.cell && parent.uri === NS.style;
     for (const e of childElements(parent)) {
       if (is(e, NS.text, 'p') || is(e, NS.text, 'h')) this.paragraph(e, undefined);
       else if (is(e, NS.text, 'list')) this.list(e, 0, undefined);
@@ -669,7 +676,7 @@ class BodyReader {
       else if (is(e, NS.text, 'index-title')) this.r.report.drop('layout-hint', e.local);
       else if (is(e, NS.text, 'soft-page-break')) this.r.report.drop('layout-hint', e.local);
       // Read as suggestions where the writing marks them (review.md "In the files").
-      else if (top && is(e, NS.text, 'tracked-changes')) continue;
+      else if ((top || masterStory) && is(e, NS.text, 'tracked-changes')) continue;
       else if (isDde(e)) this.r.report.drop('field', e.local);
       else {
         this.blocks.push({

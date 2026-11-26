@@ -479,3 +479,15 @@ describe('suggestions in stories, in both formats', () => {
     }
   });
 });
+
+describe('LibreOffice’s header with a tracked change', () => {
+  it('reads the header’s own list of changes as the header’s suggestion', async () => {
+    const bytes = readFileSync(
+      join(import.meta.dirname, '..', 'corpus', 'libreoffice', 'story-suggestions.fodt'),
+    );
+    const { document, report } = await read(bytes);
+    const header = document.section.headers!.header!.default!.blocks[0] as Paragraph;
+    expect(shape(header.inlines)).toBe('+Header+');
+    expect(report.dropped).toEqual([]);
+  });
+});
