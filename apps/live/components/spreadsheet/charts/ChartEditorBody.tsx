@@ -1,10 +1,10 @@
 'use client';
 
-// The Chart Editor side panel's body (docs/specs/029-sheets/charts.md "Chart Editor"): Setup (the chart type, the data
-// range, the series, a scatter's series drawn as lines) and Customise (titles, legend, values, the value axis, the
+// The Chart Editor side panel's body (docs/specs/029-sheets/charts.md "Chart Editor"): Setup (the chart type, its
+// stacking, the data range, the series, a scatter's series drawn as lines) and Customise (titles, legend, values, the value axis, the
 // palette, each series' colour, alt text) for the chart being edited. Each control writes at once, one undo step; a
 // text writes when it is left or Enter is pressed.
-import { useId, useState, type ReactNode } from 'react';
+import { useId, useState } from 'react';
 import { Button, Select, Switch, TextInput } from '@livedoc/ui';
 import { CHART_PALETTES, CHART_TYPE_LABELS, lineFieldsFromTable } from '@livedoc/document';
 import {
@@ -27,6 +27,8 @@ import { ColourSwatchButton } from '@/components/colour/ColourSwatchButton';
 import { OFFICE_COLOUR_ROWS } from '@/components/office/OfficeColourControl';
 import { useDocumentColours } from '@/hooks/ui/useDocumentColours';
 import { useSheetController } from '@/components/sheets/sheet-controller';
+import { ChartEditorField as Field } from './ChartEditorField';
+import { ChartStackingField } from './ChartStackingField';
 
 export const CHART_GONE = 'This chart is no longer on the sheet.';
 export const CHART_RANGE = 'Type a range like A1:D20';
@@ -92,15 +94,6 @@ function CommitText({
           }}
         />
       )}
-    </label>
-  );
-}
-
-function Field({ label, children }: { label: string; children: ReactNode }) {
-  return (
-    <label className="flex flex-col gap-1">
-      <span className="text-supporting text-slate-600 dark:text-slate-300">{label}</span>
-      {children}
     </label>
   );
 }
@@ -228,6 +221,7 @@ export function ChartEditorBody({
               ))}
             </Select>
           </Field>
+          <ChartStackingField chart={chart} onStack={(v) => set('stack', v)} />
           <Field label="Data Range">
             <TextInput
               aria-label="Data Range"

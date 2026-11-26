@@ -190,9 +190,9 @@ function lookOf(
 
 type Read = Omit<FileChart, 'at' | 'width' | 'height' | 'alt' | 'kept'>;
 
-// What a plot or a series says that the model cannot draw: stacked, 3-D or smoothed.
-const unbuilt = (el: XmlElement, props: Props) =>
-  ['stacked', 'percentage', 'three-dimensional', 'deep'].some(
+// What a plot or a series says that the model cannot draw: 3-D or smoothed; a stacking where `stacks` is false.
+const unbuilt = (el: XmlElement, props: Props, stacks = false) =>
+  [...(stacks ? [] : ['stacked', 'percentage']), 'three-dimensional', 'deep'].some(
     (local) => props(el, 'chart', local) === 'true',
   ) || !['none', undefined].includes(props(el, 'chart', 'interpolation'));
 
@@ -207,9 +207,17 @@ export function readOdsChartDocument(root: XmlElement, sheetName: string): Read 
   const kind = chart && classOf(chart);
   if (!chart || !plot || !kind || !CLASSES[kind]) return null;
   const props = propsOf(stylesOf(root));
-  if (unbuilt(plot, props)) return null;
+  // A bar or area chart's stacking is read; a line chart's is not (D283).
+  const stacks = kind === 'bar' || kind === 'area';
+  if (unbuilt(plot, props, stacks)) return null;
   const vertical = props(plot, 'chart', 'vertical') === 'true';
   const type: SheetChartType = kind === 'bar' && vertical ? 'bar' : CLASSES[kind];
+  const stack =
+    stacks && props(plot, 'chart', 'percentage') === 'true'
+      ? ('percent' as const)
+      : stacks && props(plot, 'chart', 'stacked') === 'true'
+        ? ('stacked' as const)
+        : null;
   const round = type === 'pie' || type === 'doughnut';
   const scatter = type === 'scatter';
   const own = (address: string | undefined): FileRange | null => {
@@ -279,6 +287,7 @@ export function readOdsChartDocument(root: XmlElement, sheetName: string): Read 
   return {
     id: '',
     type,
+    ...(stack ? { stack } : {}),
     ...(title ? { title } : {}),
     ...(xTitle ? { xTitle } : {}),
     ...(yTitle ? { yTitle } : {}),

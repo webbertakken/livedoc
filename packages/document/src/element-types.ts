@@ -31,6 +31,7 @@ import type { MindFlow, MindSpacing } from './mind-flow';
 import type { FlowchartDirection } from './flowchart';
 import type { ChartPaletteId } from './chart-palettes';
 import type { ChartVariant } from './chart-types';
+import type { ChartStack } from './chart-stack';
 import type {
   SankeyAlign,
   SankeyLeftover,
@@ -384,6 +385,9 @@ export type ShapeElement = {
   // (bar-chart `horizontal`, line-chart `area` / `scatter`, pie-chart `doughnut`); absent, or one its kind does not
   // take, is the kind's first (Column, Line, Pie).
   chartVariant?: ChartVariant;
+  // Stacking (docs/specs/009-elements/pie-chart.md "Stacking"): a column or bar chart of two or more series, or an area
+  // chart, drawing its series one on another or as shares; absent = none. Other types keep it unused.
+  chartStack?: ChartStack;
   // Line chart (docs/specs/009-elements/pie-chart.md): the shared x-axis categories + one or more named
   // series (CSV-importable). Only meaningful on the 'line-chart' kind.
   lineCategories?: string[];

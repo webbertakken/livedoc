@@ -127,6 +127,7 @@ export const ELEMENT_FIELD_NAMES = {
     'chartValues',
     'chartAxis',
     'chartVariant',
+    'chartStack',
     'lineCategories',
     'lineSeries',
     'linePointNames',

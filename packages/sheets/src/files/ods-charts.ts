@@ -106,9 +106,15 @@ export function odsChartContent(
     return ` chart:style-name="${name}"`;
   };
   const round = chart.type === 'pie' || chart.type === 'doughnut';
+  // A bar chart lies on its side; a stacking stacks (D283).
+  const plotProps = [
+    ...(chart.type === 'bar' ? ['chart:vertical="true"'] : []),
+    ...(chart.stack === 'stacked' ? ['chart:stacked="true"'] : []),
+    ...(chart.stack === 'percent' ? ['chart:percentage="true"'] : []),
+  ];
   const plotStyle = style(
-    chart.type === 'bar'
-      ? '<style:style style:name="plot" style:family="chart"><style:chart-properties chart:vertical="true"/></style:style>'
+    plotProps.length
+      ? `<style:style style:name="plot" style:family="chart"><style:chart-properties ${plotProps.join(' ')}/></style:style>`
       : null,
     'plot',
   );

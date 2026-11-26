@@ -39,6 +39,7 @@ import {
 } from './chart-values';
 import { labelOn } from './readable-colour';
 import { chartTypeOf, lineVariantOf } from './chart-types';
+import { chartStackOf } from './chart-stack';
 import { LINE_DEFAULT_CATEGORIES, LINE_DEFAULT_SERIES, type ChartKeyItem } from './data-shapes';
 import type { BoxedElement } from './index';
 import { legendFontPx } from './label-font';
@@ -231,6 +232,7 @@ export function svgBarChart(
         el.x,
         el.y,
         el.chartAxis === true,
+        chartStackOf(el),
       )
     : null;
   const barM = groups ?? barMarks(area, data, horizontal, el.x, el.y, el.chartAxis === true);
@@ -266,7 +268,8 @@ export function svgBarChart(
       ? svgValueLabels(
           barGroupValueLabels(groups, series, horizontal, px),
           textColor,
-          null,
+          // A stacked segment's number sits on it, in the ink that reads on its series' colour.
+          (j) => colorAt(j, series[j]!),
           px,
           fontFamily,
         )
@@ -316,6 +319,7 @@ export function svgLineChart(
     el.x,
     el.y,
     el.chartAxis === true,
+    chartStackOf({ ...el, lineSeries: series }),
   );
   const { x, y, w, h } = m.plot;
   const tickFont = ` font-family="${xmlEscape(fontFamily ?? EXPORT_DEFAULT_FONT)}" font-size="${AXIS_TICK_FONT_PX}"`;

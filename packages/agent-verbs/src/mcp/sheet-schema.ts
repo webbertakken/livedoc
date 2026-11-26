@@ -23,6 +23,7 @@ import {
   SHEET_CHART_ALT_MAX,
   SheetLimits,
   SHEET_CHART_LEGENDS,
+  SHEET_CHART_STACKS,
   SHEET_CHART_TEXT_MAX,
 } from '@livedoc/sheets';
 import { CHART_PALETTES, CHART_TYPES, type ChartPaletteId } from '@livedoc/document';
@@ -522,6 +523,12 @@ const sheetChange = z.discriminatedUnion('op', [
       .describe(
         'The value axis with its ticks and gridlines: a spreadsheet’s chart shows it unless false; a Plan chart only when true.',
       ),
+    stack: z
+      .enum(SHEET_CHART_STACKS)
+      .optional()
+      .describe(
+        'Stacking of a column, bar or area chart of 2+ series: "stacked" (one on another) or "percent" (100%, each category’s shares); none by default.',
+      ),
     alt: z
       .string()
       .max(SHEET_CHART_ALT_MAX)
@@ -760,6 +767,7 @@ const readChart = z.object({
   legend: z.string().describe('Where its legend sits, or none.'),
   values: z.boolean().describe('Whether each mark’s number is printed.'),
   axis: z.boolean().describe('Whether its value axis shows.'),
+  stack: z.enum(SHEET_CHART_STACKS).optional().describe('Its stacking: stacked or percent (100%).'),
   alt: z.string().optional().describe('Its alt text.'),
   lines: z.array(z.string()).optional().describe('A scatter’s series drawn as lines, by name.'),
 });

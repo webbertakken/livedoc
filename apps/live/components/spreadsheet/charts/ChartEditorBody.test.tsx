@@ -89,6 +89,24 @@ describe('the Chart Editor', () => {
     expect(screen.queryByRole('switch', { name: /as a Line/ })).toBeNull();
   });
 
+  it('stacks a column, bar or area chart, Standard or 100%, and hides Stacking elsewhere', async () => {
+    const { h } = await open();
+    // A scatter takes no stacking.
+    expect(screen.queryByRole('combobox', { name: 'Stacking' })).toBeNull();
+    fireEvent.change(screen.getByRole('combobox', { name: 'Chart Type' }), {
+      target: { value: 'area' },
+    });
+    const stacking = screen.getByRole<HTMLSelectElement>('combobox', { name: 'Stacking' });
+    expect(stacking.value).toBe('');
+    expect([...stacking.options].map((o) => o.text)).toEqual(['None', 'Standard', '100%']);
+    fireEvent.change(stacking, { target: { value: 'percent' } });
+    expect(chartOf(h)!.stack).toBe('percent');
+    fireEvent.change(screen.getByRole('combobox', { name: 'Stacking' }), {
+      target: { value: '' },
+    });
+    expect(chartOf(h)!.stack).toBeUndefined();
+  });
+
   it('sets the titles when left, the legend, palette, axis, labels and alt text, and closes', async () => {
     const { h, onClose } = await open('line');
     fireEvent.click(screen.getByRole('tab', { name: 'Customise' }));

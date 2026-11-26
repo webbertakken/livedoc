@@ -2,12 +2,13 @@
 
 // A column or bar chart of several series (docs/specs/009-elements/pie-chart.md "Several series on a column or bar
 // chart", D281): each category a group of bars side by side, one per series in its colour, the category named under
-// (beside) its group, the key naming the series. Laid out by the marks the export draws too (`barGroupMarks`).
+// (beside) its group, the key naming the series; stacked (Stacking, D282), each category one bar of a segment per series. Laid out by the marks the export draws too (`barGroupMarks`).
 
 import {
   BAR_GROUP_NAME_FONT_PX,
   barGroupMarks,
   barGroupValueLabels,
+  chartStackOf,
   chartTypeOf,
   chartValue,
   chartValueFontPx,
@@ -51,6 +52,7 @@ export function BarGroupChartView({
     0,
     0,
     element.chartAxis === true,
+    chartStackOf(element),
   );
   const { baseline, bars, origin } = marks;
   const valuePx = chartValueFontPx(element.textSize);
@@ -124,7 +126,8 @@ export function BarGroupChartView({
         <ChartValues
           labels={barGroupValueLabels(marks, series, horizontal, valuePx)}
           textColor={textColor}
-          fillOf={() => textColor}
+          // A stacked segment's number sits on it, in the ink that reads on its series' colour.
+          fillOf={(j) => colorAt(j, series[j]!)}
           fontPx={valuePx}
           fontFamily={fontFamily}
         />

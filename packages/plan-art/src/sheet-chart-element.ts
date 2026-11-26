@@ -37,6 +37,7 @@ export function sheetChartElement(
     ...(legend !== 'none' ? { chartLegendPosition: legend } : {}),
     ...(chart.values ? { chartValues: true } : {}),
     chartAxis: chart.axis !== false,
+    ...(chart.stack ? { chartStack: chart.stack } : {}),
     ...(chart.title ? { chartTitle: chart.title } : {}),
     ...(titles.x || titles.y ? { chartAxisTitles: titles } : {}),
     ...(chart.range

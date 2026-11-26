@@ -2849,6 +2849,13 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
     ],
     "type": "object"
   },
+  "ChartStack": {
+    "enum": [
+      "stacked",
+      "percent"
+    ],
+    "type": "string"
+  },
   "ChartVariant": {
     "enum": [
       "horizontal",
@@ -13988,6 +13995,9 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
       "chartSource": {
         "$ref": "#/components/schemas/ChartSource"
       },
+      "chartStack": {
+        "$ref": "#/components/schemas/ChartStack"
+      },
       "chartTitle": {
         "type": "string"
       },
@@ -15116,6 +15126,9 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
         },
         "type": "object"
       },
+      "stack": {
+        "$ref": "#/components/schemas/SheetChartStack"
+      },
       "title": {
         "type": "string"
       },
@@ -15189,6 +15202,13 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
       }
     },
     "type": "object"
+  },
+  "SheetChartStack": {
+    "enum": [
+      "stacked",
+      "percent"
+    ],
+    "type": "string"
   },
   "SheetChartType": {
     "enum": [

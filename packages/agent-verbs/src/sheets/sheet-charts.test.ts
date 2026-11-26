@@ -148,7 +148,7 @@ describe('chart elements', () => {
   });
 
   // sheet-store.md "Built for agents in a spreadsheet": the title options draw on a Plan chart too.
-  it('carry the titles, the legend, the values and the axis an agent gives', () => {
+  it('carry the titles, the legend, the values, the axis and the stacking an agent gives', () => {
     const { wb, sheet } = book();
     const built = buildChartChange(wb, sheet.id, {
       op: 'chart',
@@ -160,6 +160,7 @@ describe('chart elements', () => {
       legend: 'none',
       values: true,
       axis: true,
+      stack: 'stacked',
     });
     if (!built.ok) throw new Error(built.message);
     const [el] = sheetChartElements(
@@ -174,6 +175,7 @@ describe('chart elements', () => {
       chartLegend: false,
       chartValues: true,
       chartAxis: true,
+      chartStack: 'stacked',
     });
   });
 

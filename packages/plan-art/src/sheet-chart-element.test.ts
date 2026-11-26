@@ -1,9 +1,10 @@
 // A spreadsheet's chart as the chart element LiveDoc's chart code draws (docs/specs/029-sheets/charts.md "The model"):
 // its type, look and titles carried over, its data read, each series' look by its column, and no data drawn as none.
 import { describe, expect, it } from 'vitest';
-import { CHART_TYPES, chartTypeOf } from '@livedoc/document';
+import { CHART_STACKS, CHART_TYPES, chartTypeOf } from '@livedoc/document';
 import {
   emptyChartTable,
+  SHEET_CHART_STACKS,
   SHEET_CHART_TYPES,
   type SheetChart,
   type SheetChartTable,
@@ -38,6 +39,7 @@ describe('a spreadsheet chart as a chart element', () => {
   // @livedoc/sheets restates the chart types it never imports: the two lists stay one.
   it('knows every chart type LiveDoc draws, by the same names', () => {
     expect([...SHEET_CHART_TYPES]).toEqual([...CHART_TYPES]);
+    expect([...SHEET_CHART_STACKS]).toEqual([...CHART_STACKS]);
   });
 
   it('draws a scatter of numbers against its first column, a series as a line by its column, gaps kept', () => {
@@ -92,6 +94,7 @@ describe('a spreadsheet chart as a chart element', () => {
         xTitle: 'Cost',
         yTitle: 'Index',
         palette: 'vivid',
+        stack: 'percent',
         cols: ['c0000', 'c0002'],
       }),
       's1',
@@ -105,9 +108,11 @@ describe('a spreadsheet chart as a chart element', () => {
       chartTitle: 'Value',
       chartAxisTitles: { x: 'Cost', y: 'Index' },
       chartPalette: 'vivid',
+      chartStack: 'percent',
       chartSource: { cols: ['c0000', 'c0002'] },
     });
     expect(told.chartLegendPosition).toBeUndefined();
+    expect(plain.chartStack).toBeUndefined();
   });
 
   it('fills a column chart in its series colour, and leaves a pie its palette', () => {

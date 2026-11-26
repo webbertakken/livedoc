@@ -1,13 +1,16 @@
 // A column or bar chart of several series (docs/specs/009-elements/pie-chart.md "Chart types", "Several series on a
 // column or bar chart", D281): each category a group of bars side by side, one per series, laid out once for both
-// renderers as chart-marks.ts lays out a single series. Pure; `ox` / `oy` shift every point.
+// renderers as chart-marks.ts lays out a single series. Stacked (pie-chart.md "Stacking", D282), each category one bar
+// of a segment per series. Pure; `ox` / `oy` shift every point.
 import { AXIS_TICK_FONT_PX, AXIS_TICK_GAP, axisLabelRoom, axisScale } from './chart-axis';
 import type { ChartRect } from './chart-frame';
 import { chartAxisLabel } from './chart-frame';
 import type { BarMarks, BarRect } from './chart-marks';
+import { stackedValues, type ChartStack } from './chart-stack';
 import type { ChartValueLabel } from './chart-values';
 import { shortNumber } from './chart-values';
 import { chartValue, type LineSeries } from './data-shapes';
+import { glyphWidth } from './graph-authoring';
 
 /** The share of a category's slot its group of bars takes, and the thickest a bar is drawn. */
 export const BAR_GROUP_SHARE = 0.8;
@@ -26,6 +29,8 @@ export type BarGroupMarks = Omit<BarMarks, 'bars'> & {
   bars: (BarRect | null)[][];
   // Each category's name, under its group (left of it on a bar chart), cut to its share.
   names: ChartValueLabel[];
+  // The stacking drawn: each bar then a segment of its category's one stack.
+  stack: ChartStack | null;
 };
 
 export function barGroupMarks(
@@ -36,34 +41,54 @@ export function barGroupMarks(
   ox = 0,
   oy = 0,
   showAxis = false,
+  stack: ChartStack | null = null,
 ): BarGroupMarks {
+  const n = Math.max(1, categories.length);
+  // Where each bar starts and ends along the value axis: from zero, or (stacked) from the end of the one below it.
+  const stacked = stack ? stackedValues(series, categories.length, stack, true) : null;
+  const span0 = (j: number, i: number): [number, number] | null => {
+    if (stacked) {
+      const end = stacked.ends[j]![i] ?? null;
+      return end === null ? null : [stacked.starts[j]![i]!, end];
+    }
+    const v = chartValue(series[j]!.values[i]);
+    return v === null ? null : [0, v];
+  };
   let lo = 0;
   let hi = 0;
-  for (const s of series)
-    for (const raw of s.values) {
-      const v = chartValue(raw);
-      if (v === null) continue;
-      if (v < lo) lo = v;
-      if (v > hi) hi = v;
+  series.forEach((_, j) => {
+    for (let i = 0; i < categories.length; i++) {
+      const end = span0(j, i)?.[1];
+      if (end === undefined) continue;
+      if (end < lo) lo = end;
+      if (end > hi) hi = end;
     }
+  });
   if (hi === lo) hi = lo + 1;
-  const scale = showAxis ? axisScale(lo, hi) : null;
+  const scaled = showAxis ? axisScale(lo, hi) : null;
+  // 100%'s ticks read percents.
+  const scale =
+    scaled && stack === 'percent'
+      ? { ...scaled, ticks: scaled.ticks.map((t) => ({ ...t, text: `${t.text}%` })) }
+      : scaled;
   const minVal = scale ? scale.min : lo;
   const span = (scale ? scale.max : hi) - minVal;
   const at = (v: number) => (v - minVal) / span;
-  const n = Math.max(1, categories.length);
-  const k = Math.max(1, series.length);
+  // Stacked, a category holds one bar.
+  const k = stacked ? 1 : Math.max(1, series.length);
   // A bar's place in its category's slot: the group centred in it, each bar an equal part.
   const place = (slot: number, i: number, j: number, from: number) => {
     const thick = Math.min((slot * BAR_GROUP_SHARE) / k, BAR_THICK_MAX);
     const start = from + slot * (i + 0.5) - (thick * k) / 2;
-    return { start: start + thick * j, thick };
+    return { start: start + thick * (stacked ? 0 : j), thick };
   };
-  const barsOf = (draw: (v: number, i: number, j: number) => BarRect) =>
-    series.map((s, j) =>
-      categories.map((_, i) => {
-        const v = chartValue(s.values[i]);
-        return v === null ? null : draw(v, i, j);
+  // A stacked segment is square-cornered, so a stack reads as one bar.
+  const corner = (thick: number) => (stacked ? 0 : Math.min(3, thick / 4));
+  const barsOf = (draw: (from: number, to: number, i: number, j: number) => BarRect) =>
+    series.map((_, j) =>
+      categories.map((_c, i) => {
+        const ends = span0(j, i);
+        return ends === null ? null : draw(ends[0], ends[1], i, j);
       }),
     );
   if (horizontal) {
@@ -81,15 +106,16 @@ export function barGroupMarks(
     const room = Math.floor((nameCol - NAME_GAP) / NAME_GLYPH_PX);
     return {
       baseline: { x1: zeroX, y1: y0, x2: zeroX, y2: y0 + innerH },
-      bars: barsOf((v, i, j) => {
+      bars: barsOf((from, to, i, j) => {
         const { start, thick } = place(slot, i, j, y0);
-        const end = xOf(v);
+        const foot = xOf(from);
+        const end = xOf(to);
         return {
-          x: Math.min(zeroX, end),
+          x: Math.min(foot, end),
           y: start,
-          w: Math.abs(end - zeroX),
+          w: Math.abs(end - foot),
           h: thick,
-          rx: Math.min(3, thick / 4),
+          rx: corner(thick),
           tip: { x: end, y: start + thick / 2 },
         };
       }),
@@ -106,6 +132,7 @@ export function barGroupMarks(
         anchor: 'end' as const,
         category: true,
       })),
+      stack,
     };
   }
   const padX = Math.min(20, area.w * 0.08);
@@ -121,15 +148,16 @@ export function barGroupMarks(
   const x0 = ox + area.x + padX + tickCol;
   return {
     baseline: { x1: x0, y1: zeroY, x2: x0 + innerW, y2: zeroY },
-    bars: barsOf((v, i, j) => {
+    bars: barsOf((from, to, i, j) => {
       const { start, thick } = place(slot, i, j, x0);
-      const end = yOf(v);
+      const foot = yOf(from);
+      const end = yOf(to);
       return {
         x: start,
-        y: Math.min(zeroY, end),
+        y: Math.min(foot, end),
         w: thick,
-        h: Math.abs(zeroY - end),
-        rx: Math.min(3, thick / 4),
+        h: Math.abs(foot - end),
+        rx: corner(thick),
         tip: { x: start + thick / 2, y: end },
       };
     }),
@@ -147,13 +175,18 @@ export function barGroupMarks(
       anchor: 'middle' as const,
       category: true,
     })),
+    stack,
   };
 }
 
-// How far a number stands off its bar.
+// How far a number stands off its bar, and the room a stacked segment keeps around its number.
 const GAP = 6;
+const LABEL_AIR = 4;
 
-/** Show Values on a chart of several series: each bar's number past its end, below zero past its foot. */
+/**
+ * Show Values on a chart of several series: each bar's number past its end, below zero past its foot; stacked, each
+ * segment's own value in its middle, in the ink that reads on it (`onMark`: its series), when the segment holds it.
+ */
 export function barGroupValueLabels(
   marks: BarGroupMarks,
   series: readonly LineSeries[],
@@ -165,6 +198,21 @@ export function barGroupValueLabels(
     bars.forEach((bar, i) => {
       const value = chartValue(series[j]?.values[i]);
       if (!bar || value === null) return;
+      if (marks.stack) {
+        const text = shortNumber(value);
+        const fits = horizontal
+          ? bar.w >= glyphWidth(text, fontPx) + LABEL_AIR
+          : bar.h >= fontPx + LABEL_AIR;
+        if (fits)
+          out.push({
+            x: bar.x + bar.w / 2,
+            y: bar.y + bar.h / 2 + fontPx * 0.35,
+            text,
+            anchor: 'middle',
+            onMark: j,
+          });
+        return;
+      }
       const below = value < 0;
       out.push(
         horizontal
