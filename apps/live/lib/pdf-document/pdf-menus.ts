@@ -478,7 +478,7 @@ export const PDF_MENUS: OfficeCatalogue = [
     choices('distribute', 'Distribute', 'edit', ['Horizontally', 'Vertically']),
     choices('match-size', 'Match size', 'edit', ['Width', 'Height', 'Both']),
     choices('flip', 'Flip', 'edit', ['Horizontally', 'Vertically']),
-    choices('rotate', 'Rotate', 'edit', ['Clockwise', 'Counterclockwise']),
+    choices('rotate', 'Rotate', 'participate', ['Clockwise', 'Counterclockwise'], BUILT),
     item('crop-picture', 'Crop', 'edit'),
   ]),
   menu('pages', 'Pages', [

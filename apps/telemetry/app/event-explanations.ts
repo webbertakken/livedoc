@@ -993,6 +993,7 @@ export const EXACT: Readonly<Record<string, string>> = {
     "Someone made a mark's look the Text tool's own from its Properties on a PDF document.",
   'Pdf|Changed|LookDefault.Callout':
     "Someone made a mark's look the Callout tool's own from its Properties on a PDF document.",
+  'Pdf|Changed|Mark.Turned': 'Someone turned stamps on a PDF page a quarter with Format > Rotate.',
   'Pdf|Changed|Mark.Subject': "Someone changed a mark's subject in its Properties on a PDF page.",
   'Pdf|Changed|Mark.Resized':
     'Someone resized a mark on a PDF page, by a handle or with ⌥ and the arrow keys.',

@@ -16,6 +16,7 @@ import {
   Mark,
   MarkDrawing,
   MarkErase,
+  StampTurn,
   MarkPlace,
   MarkWords,
   PageView,
@@ -144,6 +145,22 @@ export type PdfMarkReshaping = { readonly id: string; readonly place: MarkPlace 
 /** No mark of the file's own. */
 const NO_IDS: ReadonlySet<string> = new Set();
 
+/** The matrix a mark is drawn by: the page's, and a turned stamp's turn of its upright drawing before it. */
+function drawnIn(matrix: PageMatrix, mark: Mark): PageMatrix {
+  const turn = mark.kind === 'stamp' ? StampTurn.matrix(mark) : null;
+  if (!turn) return matrix;
+  const [a, b, c, d, e, f] = matrix;
+  const [ta, tb, tc, td, te, tf] = turn;
+  return [
+    a * ta + c * tb,
+    b * ta + d * tb,
+    a * tc + c * td,
+    b * tc + d * td,
+    a * te + c * tf + e,
+    b * te + d * tf + f,
+  ];
+}
+
 /** No strokes erased. */
 const NO_ERASED: ReadonlyMap<string, readonly number[]> = new Map();
 
@@ -265,8 +282,8 @@ export function PdfMarksOverlay({
               stroke={colour}
               opacity={mark.opacity}
             >
-              <MarkShapes matrix={matrix} shape={mark} dark={dark} />
-              <PdfMarkWords matrix={matrix} mark={mark} />
+              <MarkShapes matrix={drawnIn(matrix, mark)} shape={mark} dark={dark} />
+              <PdfMarkWords matrix={drawnIn(matrix, mark)} mark={mark} />
             </g>
           );
         })}
