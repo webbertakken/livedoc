@@ -215,18 +215,24 @@ function ownSuggestions(
   return count <= TEXT_DOCUMENT_SUGGESTIONS_MAX || count <= LiveSuggestions.count(before);
 }
 
-/** The empty writing: what a new note may leave once its author's suggestions are rejected. */
-const EMPTY_NOTE = (() => {
+/**
+ * The empty writing: what a new note may leave once its author's suggestions are rejected. Made on first use, never as
+ * the module loads: a Y.Doc draws a random client id, which a Worker refuses in its global scope.
+ */
+let emptyNote: readonly string[] | null = null;
+function emptyNoteWritings(): readonly string[] {
+  if (emptyNote) return emptyNote;
   const doc = new Y.Doc();
   const fragment = doc.getXmlFragment('note');
   const paragraph = new Y.XmlElement('paragraph');
   paragraph.insert(0, [new Y.XmlText()]);
   fragment.insert(0, [paragraph]);
-  return [
+  emptyNote = [
     LiveSuggestions.ownRejected(doc.getXmlFragment('none'), ''),
     LiveSuggestions.ownRejected(fragment, ''),
   ];
-})();
+  return emptyNote;
+}
 
 /** Whether a note new in the update is named only by the sender's own suggested footnotes and holds only theirs. */
 function ownNewNote(doc: Y.Doc, story: string, note: Y.XmlFragment, adderKey: string): boolean {
@@ -250,7 +256,7 @@ function ownNewNote(doc: Y.Doc, story: string, note: Y.XmlFragment, adderKey: st
     )
   )
     return false;
-  return EMPTY_NOTE.includes(LiveSuggestions.ownRejected(note, adderKey));
+  return emptyNoteWritings().includes(LiveSuggestions.ownRejected(note, adderKey));
 }
 
 /** The media keys the pictures of the sender's own suggested insertion name, in the bodies. */
