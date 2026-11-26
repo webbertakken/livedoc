@@ -426,7 +426,9 @@ describe('typing on a page', () => {
       size: 12,
       tip: null,
       onTip: vi.fn(),
+      onWords: vi.fn(),
       onTyped: vi.fn(),
+      id: null,
     };
     const { view, onMark } = await page('text', [], [], false, null, null, null, typing);
     const layer = view.container.querySelector<HTMLElement>('[data-pdf-typing-layer="text"]')!;
@@ -436,6 +438,38 @@ describe('typing on a page', () => {
     fireEvent.pointerUp(layer, at);
     expect(view.container.querySelector('textarea[data-pdf-typing="text"]')).not.toBeNull();
     expect(onMark).not.toHaveBeenCalled();
+  });
+
+  // live-editing-and-storage.md "A mark as it is made": the person typing sees the box, never the mark beneath it.
+  it('leaves the mark being typed to its box, drawing every other', async () => {
+    const typed = (id: string) =>
+      Mark.text({
+        id,
+        page: PAGE.name,
+        rect: [72, 600, 272, 640],
+        words: 'Check',
+        size: 12,
+        colour: '#d93025',
+        opacity: 1,
+        author: 'Ada',
+        createdAt: 0,
+      })!;
+    const typing: PdfPageTyping = {
+      kind: 'text',
+      colour: '#d93025',
+      opacity: 1,
+      size: 12,
+      tip: null,
+      onTip: vi.fn(),
+      onWords: vi.fn(),
+      onTyped: vi.fn(),
+      id: 't1',
+    };
+    const { view } = await page('text', [], [], false, null, null, null, typing, null, {
+      marks: [typed('t1'), typed('t2')],
+    });
+    expect(view.container.querySelector('[data-pdf-mark="t1"]')).toBeNull();
+    expect(view.container.querySelector('[data-pdf-mark="t2"]')).not.toBeNull();
   });
 });
 

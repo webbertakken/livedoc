@@ -202,7 +202,11 @@ export function PdfPageTyping({
           spellCheck
           maxLength={PDF_MARK_TEXT_MAX_CHARS}
           value={words}
-          onChange={(event) => setWords(event.target.value)}
+          onChange={(event) => {
+            const now = event.target.value;
+            setWords(now);
+            typing.onWords(index, opening.kind, typedOf(opening, now, typing.size, page));
+          }}
           onBlur={() => end(opening)}
           onKeyDown={(event) => {
             // The words' own keys: none reaches the pages' tools.

@@ -30,7 +30,9 @@ function typingOf(over: Partial<Typing> = {}): Typing {
     size: 12,
     tip: null,
     onTip: vi.fn(),
+    onWords: vi.fn(),
     onTyped: vi.fn(),
+    id: null,
     ...over,
   };
 }
@@ -118,6 +120,26 @@ describe('a Text opened by a press', () => {
     expect(typed!.rect[3]).toBe(700);
     expect(typed!.rect[2]).toBeLessThan(72 + PDF_TEXT_BOX_WIDTH_PT);
     expect(area()).toBeNull();
+  });
+
+  // live-editing-and-storage.md "A mark as it is made".
+  it('hands over what the box makes with each change of its words, for everyone to see as typed', () => {
+    const typing = typingOf();
+    const { box, area } = layer(typing);
+    press(box, 72, 92);
+    fireEvent.change(area()!, { target: { value: 'H' } });
+    fireEvent.change(area()!, { target: { value: 'Hi' } });
+    fireEvent.change(area()!, { target: { value: ' ' } });
+    expect(
+      vi
+        .mocked(typing.onWords)
+        .mock.calls.map(([index, kind, typed]) => [index, kind, typed?.words ?? null]),
+    ).toEqual([
+      [1, 'text', 'H'],
+      [1, 'text', 'Hi'],
+      [1, 'text', null],
+    ]);
+    expect(vi.mocked(typing.onWords).mock.calls[1]![2]!.rect[0]).toBe(72);
   });
 
   it('ends with Escape, making nothing of nothing typed, its keys its own', () => {

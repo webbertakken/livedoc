@@ -16,6 +16,7 @@ import {
 } from '@livedoc/pdf-documents';
 import {
   addTyped,
+  changeTyped,
   openByDrag,
   openByPress,
   pageBoxOf,
@@ -213,5 +214,53 @@ describe('addTyped', () => {
       ok: false,
       reason: 'pdf_too_many_marks',
     });
+  });
+});
+
+// live-editing-and-storage.md "A mark as it is made": the words relayed as they are typed.
+describe('changeTyped', () => {
+  const text = (over: Partial<Typed> = {}): Typed => ({
+    kind: 'text',
+    rect: [10, 20, 110, 70],
+    words: 'C',
+    size: 12,
+    callout: null,
+    ...over,
+  });
+
+  it('changes the words, the box and a Callout’s line of the mark being typed, as the person', () => {
+    const doc = PdfLiveChanges.load();
+    addTyped(
+      doc,
+      { page, stored },
+      text({ kind: 'callout', callout: [0, 0, 1, 1, 10, 45] }),
+      by('c1'),
+    );
+    const origins: unknown[] = [];
+    doc.on('update', (_update: Uint8Array, origin: unknown) => origins.push(origin));
+    changeTyped(
+      doc,
+      'c1',
+      text({
+        kind: 'callout',
+        words: 'Check',
+        rect: [10, 20, 140, 70],
+        callout: [0, 0, 2, 2, 10, 45],
+      }),
+    );
+    expect(PdfLiveChanges.mark(doc, 'c1')).toMatchObject({
+      words: 'Check',
+      rect: [10, 20, 140, 70],
+      callout: [0, 0, 2, 2, 10, 45],
+    });
+    expect(origins).toEqual([PDF_LOCAL_ORIGIN]);
+  });
+
+  it('leaves a Text without a line', () => {
+    const doc = PdfLiveChanges.load();
+    addTyped(doc, { page, stored }, text(), by('t1'));
+    changeTyped(doc, 't1', text({ words: 'Check' }));
+    expect(PdfLiveChanges.mark(doc, 't1')).not.toHaveProperty('callout');
+    expect(PdfLiveChanges.mark(doc, 't1')).toMatchObject({ words: 'Check' });
   });
 });
