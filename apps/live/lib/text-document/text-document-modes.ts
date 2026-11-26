@@ -22,8 +22,8 @@ export const TEXT_DOCUMENT_MODES: readonly OfficeModeInfo<TextDocumentMode>[] = 
     description: 'Edits become suggestions',
     icon: lucidePencilLine,
     level: 'participate',
-    drawnAt: 'participate',
-    status: 'comingSoon',
+    drawnAt: 'edit',
+    status: 'built',
     item: 'mode-suggesting',
   },
   {

@@ -19,15 +19,17 @@ describe("a text document's modes", () => {
 
   it('starts at the most a level allows of what is built', () => {
     expect(startingMode(TEXT_DOCUMENT_MODES, 'edit')).toBe('editing');
-    // Suggesting is not built yet: a Participant starts in Viewing.
-    expect(startingMode(TEXT_DOCUMENT_MODES, 'participate')).toBe('viewing');
+    // A Participant starts in Suggesting (fork D7, ruled).
+    expect(startingMode(TEXT_DOCUMENT_MODES, 'participate')).toBe('suggesting');
     expect(startingMode(TEXT_DOCUMENT_MODES, 'view')).toBe('viewing');
   });
 
   it('never draws more than the level', () => {
     expect(levelInMode(TEXT_DOCUMENT_MODES, 'edit', 'editing')).toBe('edit');
     expect(levelInMode(TEXT_DOCUMENT_MODES, 'edit', 'viewing')).toBe('view');
-    expect(levelInMode(TEXT_DOCUMENT_MODES, 'edit', 'suggesting')).toBe('participate');
+    // Suggesting draws an Editor's menus, never more than the session's.
+    expect(levelInMode(TEXT_DOCUMENT_MODES, 'edit', 'suggesting')).toBe('edit');
+    expect(levelInMode(TEXT_DOCUMENT_MODES, 'participate', 'suggesting')).toBe('participate');
     expect(levelInMode(TEXT_DOCUMENT_MODES, 'view', 'suggesting')).toBe('view');
   });
 });

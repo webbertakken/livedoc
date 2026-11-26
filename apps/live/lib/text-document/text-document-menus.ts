@@ -162,6 +162,7 @@ export function textDocumentMenus(format: TextDocumentFormat): OfficeCatalogue {
         item('mode-suggesting', 'Suggesting', 'view', {
           shortcut: 'switch-to-suggesting',
           checkable: 'radio',
+          status: 'built',
         }),
         item('mode-viewing', 'Viewing', 'view', {
           shortcut: 'switch-to-viewing',
