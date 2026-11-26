@@ -48,6 +48,13 @@ describe('pdf-presence on the wire', () => {
     }
   });
 
+  it('keeps a mark the file named itself: a GUID in braces, a dotted name', () => {
+    for (const name of ['{5B1C3D2E-0F4A-4B6C-9D8E-7F6A5B4C3D2E}', 'Annot.12.a']) {
+      const held = { what: 'mark', name };
+      expect(parsePdfPresence({ ...place, held })).toMatchObject({ held });
+    }
+  });
+
   it('carries nothing a sender added: only what the spec names crosses', () => {
     const parsed = parsePdfPresence({
       ...place,

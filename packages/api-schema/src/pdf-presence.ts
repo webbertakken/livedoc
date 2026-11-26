@@ -21,7 +21,8 @@ export type PdfPresence =
   | { tabId: string; page: string; mode: PdfPresenceMode; held: PdfPresenceHeld | null }
   | { tabId: string; page: null };
 
-const NAME = /^[A-Za-z0-9:_-]+$/;
+// A page name, a LiveDoc id, or a mark the file named itself (a GUID in braces, a dotted name).
+const NAME = /^[A-Za-z0-9.:{}_-]+$/;
 const HELD_BY_NAME = ['mark', 'object', 'typing'] as const;
 
 const name = (v: unknown): v is string =>

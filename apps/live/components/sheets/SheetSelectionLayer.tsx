@@ -4,11 +4,10 @@
 // "Collaboration"): the selection's tint and border with its fill handle, the active cell, the copied range's dashed
 // marquee, each peer's selection in their colour with their name, the references a formula being written names
 // (in their colours), and the filter's buttons on its header row.
-import { useEffect, useState } from 'react';
-import { IDENTITY_FILL, identityVars } from '@livedoc/ui';
 import type { GridRange, Selection } from '@livedoc/sheets';
 import type { PlanPalette } from '@/components/plan/plan-palette';
 import { cellBox, mergeAt, type Geometry } from './sheet-geometry';
+import { OfficePeerTag } from '@/components/office/OfficePeerTag';
 import { FilterIcon } from './sheet-icons';
 import { SheetCellSlot } from './SheetCellSlot';
 
@@ -28,36 +27,6 @@ export type Outline = {
 };
 
 export const PEER_TAG_MS = 3_000;
-
-// A peer's name tag: shown when they move, hidden after PEER_TAG_MS still, shown again on hover.
-function PeerTag({
-  text,
-  color,
-  at,
-  hover,
-}: {
-  text: string;
-  color: string;
-  at?: number;
-  hover?: boolean;
-}) {
-  const [quiet, setQuiet] = useState<number | null>(null);
-  useEffect(() => {
-    if (at === undefined) return;
-    const left = at + PEER_TAG_MS - Date.now();
-    const t = setTimeout(() => setQuiet(at), Math.max(0, left));
-    return () => clearTimeout(t);
-  }, [at]);
-  if (at !== undefined && quiet === at && !hover) return null;
-  return (
-    <span
-      className={`absolute -top-4 right-0 whitespace-nowrap rounded-sm px-1 text-[10px] font-medium leading-4 text-white ${IDENTITY_FILL}`}
-      style={identityVars(color)}
-    >
-      {text}
-    </span>
-  );
-}
 
 type Props = {
   geometry: Geometry;
@@ -194,7 +163,13 @@ export function SheetSelectionLayer({
             }}
           >
             {o.label ? (
-              <PeerTag text={o.label} color={o.color} at={o.labelAt} hover={o.labelHover} />
+              <OfficePeerTag
+                text={o.label}
+                color={o.color}
+                freshMs={PEER_TAG_MS}
+                at={o.labelAt}
+                hover={o.labelHover}
+              />
             ) : null}
           </div>
         );

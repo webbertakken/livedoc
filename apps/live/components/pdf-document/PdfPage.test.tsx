@@ -125,6 +125,7 @@ async function page(
       found={null}
       onDoubleTap={onDoubleTap}
       register={() => {}}
+      holds={[]}
     />,
   );
   const box = view.container.querySelector<HTMLElement>('[data-pdf-page]')!;

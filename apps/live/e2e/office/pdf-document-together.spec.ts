@@ -106,7 +106,16 @@ test('a Participant reviews a PDF, and its stored file is replaced in one step f
     'true',
   );
   await peer.screenshot({ path: test.info().outputPath('pdf-not-your-mark.png') });
+
+  // live-editing-and-storage.md "Presence": the mark the Participant holds is outlined for the Editor in their colour,
+  // with their name; let go, it is no longer.
+  const holding = page.locator(`${PAGE_ONE} [data-pdf-peer-hold="${markId}"]`);
+  await expect(holding).toHaveCount(1);
+  await expect(holding).toHaveCSS('border-top-style', 'solid');
+  await expect(holding.locator('span')).not.toHaveText('');
+  await page.screenshot({ path: test.info().outputPath('pdf-peer-hold.png') });
   await peer.keyboard.press('Escape');
+  await expect(holding).toHaveCount(0);
 
   // The new stored file: the bake of what the room holds, as an Editor's surface makes it.
   const downloadItem = await officeMenuItem(page, ['File', 'Download', 'PDF']);

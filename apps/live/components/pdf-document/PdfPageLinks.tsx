@@ -31,6 +31,19 @@ export function linkBox(
   };
 }
 
+/** A box in percent of the page, as the page's overlays are placed. */
+export const percentStyle = (box: {
+  left: number;
+  top: number;
+  width: number;
+  height: number;
+}) => ({
+  left: `${box.left}%`,
+  top: `${box.top}%`,
+  width: `${box.width}%`,
+  height: `${box.height}%`,
+});
+
 export function PdfPageLinks({
   matrix,
   width,
@@ -58,12 +71,7 @@ export function PdfPageLinks({
           aria-label={name}
           data-pdf-link={at + 1}
           className="absolute cursor-pointer rounded-control outline-none focus-visible:ring-2 focus-visible:ring-(--office-focus)"
-          style={{
-            left: `${box.left}%`,
-            top: `${box.top}%`,
-            width: `${box.width}%`,
-            height: `${box.height}%`,
-          }}
+          style={percentStyle(box)}
           // A press on a link is the link's: it starts no selection on the page under it.
           onPointerDown={(event) => event.stopPropagation()}
           onClick={(event) => {

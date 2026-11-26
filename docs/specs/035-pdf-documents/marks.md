@@ -436,7 +436,8 @@ question mark. The research is [Every script in a mark's words](../../research/p
 
 - A mark appears for everyone as it is made: a drawing as it is drawn, at the cursor's rate; a Text mark's words as
   they are typed, merged by character.
-- A mark someone has selected is outlined in their colour with their name; two people may style one mark at once,
+- A mark someone has selected is outlined in their colour with their name, the name shown as a held mark's is
+  ([Presence](live-editing-and-storage.md#presence)); two people may style one mark at once,
   the later write winning per property.
 - **Who made a mark** is its author: a LiveDoc person for a mark made here (their name, colour and picture), or
   "From the file" with the file's own name for a mark that arrived ([Comments](comments.md#authors)).
