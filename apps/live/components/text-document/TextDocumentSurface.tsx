@@ -119,7 +119,10 @@ import { useTextDocumentSaveStatus } from '@/lib/text-document/useTextDocumentSa
 import { useTextDocumentZoom } from '@/lib/text-document/useTextDocumentZoom';
 import { levelInMode, proposalsInMode } from '@/lib/office/office-mode';
 import { useOfficeMode } from '@/lib/office/useOfficeMode';
-import { TEXT_DOCUMENT_MODES } from '@/lib/text-document/text-document-modes';
+import {
+  notYetSuggestedActions,
+  TEXT_DOCUMENT_MODES,
+} from '@/lib/text-document/text-document-modes';
 import { OfficePanel, OfficePanelLayout } from '@/components/office/OfficePanel';
 import { TextDocumentRightPanel } from './TextDocumentRightPanel';
 import { useTextDocumentWatermark } from './useTextDocumentWatermark';
@@ -866,36 +869,39 @@ export function TextDocumentSurface({
         : null,
     [format],
   );
-  // Insert > Break (page-layout.md "Breaks").
+  // Writing in the body: not in a header, a footer or a note (page-layout.md "Editing headers and footers"); suggesting
+  // there; and either, for what goes in the writing as a suggestion too (review.md "Objects in a line").
+  const bodyWrites = writes && headers.editing === null && headers.note === null;
+  const bodySuggests = suggests && headers.editing === null && headers.note === null;
+  const bodyInserts = bodyWrites || bodySuggests;
+  // Insert > Break (page-layout.md "Breaks"); its page and column breaks while suggesting (review.md "Breaks and lines").
   const breakActions = useTextDocumentBreaks(
     editorView,
     liveDoc,
     format,
-    // None while a header, footer or footnote is edited (page-layout.md "Editing headers and footers").
-    writes && headers.editing === null && headers.note === null,
+    bodyWrites,
+    bodySuggests,
     page.pageless ? 1 : Columns.of(page.caret.section.setup).count,
   );
-  // Writing in the body: not in a header, a footer or a note.
-  const bodyWrites = writes && headers.editing === null && headers.note === null;
   // Insert > Horizontal line (objects.md "Horizontal line").
   const lineActions = useMemo(
-    () => horizontalLineActions(editorView, bodyWrites),
-    [editorView, bodyWrites],
+    () => horizontalLineActions(editorView, bodyInserts),
+    [editorView, bodyInserts],
   );
   // Insert > Symbols > Equation and View > Show equation toolbar (objects.md "Equations in the editor"), in the body;
   // an equation put in turns the toolbar on.
   const equationToolbar = useTextDocumentViewToggle(EQUATION_TOOLBAR_TOGGLE);
   const equationInsert = useMemo(
     () => ({
-      ...equationActions(editorView, bodyWrites, () => showViewToggle(EQUATION_TOOLBAR_TOGGLE)),
-      ...(bodyWrites ? equationToolbar.actions : {}),
+      ...equationActions(editorView, bodyInserts, () => showViewToggle(EQUATION_TOOLBAR_TOGGLE)),
+      ...(bodyInserts ? equationToolbar.actions : {}),
     }),
-    [editorView, bodyWrites, equationToolbar.actions],
+    [editorView, bodyInserts, equationToolbar.actions],
   );
   // Insert > Bookmark, a bookmark's card, and going to one (links-and-navigation.md "Bookmarks"), in the body.
   const bookmarks = useTextDocumentBookmarks({
     view: editorView,
-    writes: bodyWrites,
+    writes: bodyInserts,
     ready: state === 'ready',
     documentId,
     subscribe: changes.subscribeCaret,
@@ -1016,7 +1022,8 @@ export function TextDocumentSurface({
     liveDoc,
     ownerId,
     documentId,
-    canEdit: bodyWrites,
+    // An Editor's while suggesting too; a Participant's pictures are not yet suggested (review.md "Pictures").
+    canEdit: bodyWrites || (bodySuggests && canEdit),
     room: pictureRoom,
   });
   useLayoutEffect(() => {
@@ -1137,8 +1144,11 @@ export function TextDocumentSurface({
       ...pictureSize.actions,
       ...tableProperties.actions,
       ...headers.actions,
+      // What cannot be suggested yet, dimmed and saying where it runs (review.md "Not yet").
+      ...(mode === 'suggesting' ? notYetSuggestedActions() : {}),
     }),
     [
+      mode,
       breakActions,
       lineActions,
       tabs.actions,
@@ -1274,7 +1284,7 @@ export function TextDocumentSurface({
       {clipboard.notice}
       {suggesting.notice}
       {pictures.notice}
-      {equationToolbar.shown && bodyWrites && state === 'ready' && editorView ? (
+      {equationToolbar.shown && bodyInserts && state === 'ready' && editorView ? (
         <TextDocumentEquationToolbar
           onNew={() => newEquationFromToolbar(editorView)}
           onPick={(node) => writeFromEquationToolbar(editorView, node)}

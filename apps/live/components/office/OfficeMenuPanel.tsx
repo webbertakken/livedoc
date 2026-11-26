@@ -18,6 +18,7 @@ import type {
   OfficeSubmenu,
 } from '@/lib/office/office-catalogue';
 
+import { HoverCard } from '@livedoc/ui';
 import { contextMenuPlace, submenuLift, type Point } from '@/lib/office/context-menu-place';
 import { OfficeSizeGrid } from './OfficeSizeGrid';
 import type { ShortcutText } from '@/lib/office/shortcut-notation';
@@ -58,7 +59,7 @@ function ItemRow({
       : item.checkable === 'radio'
         ? 'menuitemradio'
         : 'menuitem';
-  return (
+  const row = (
     <button
       type="button"
       role={role}
@@ -97,6 +98,13 @@ function ItemRow({
         >
           Coming soon
         </span>
+      ) : action?.note ? (
+        <span
+          aria-hidden="true"
+          className="whitespace-nowrap text-supporting text-(--office-muted)"
+        >
+          {action.note}
+        </span>
       ) : item.note ? (
         <span
           id={soonId}
@@ -111,6 +119,14 @@ function ItemRow({
         </span>
       ) : null}
     </button>
+  );
+  // Why a dimmed item is dimmed and where it runs (office-shell.md "Modes"), on hover and focus, and as its description.
+  return !soon && action?.hint ? (
+    <HoverCard title={action.label ?? item.label} description={action.hint} block>
+      {row}
+    </HoverCard>
+  ) : (
+    row
   );
 }
 

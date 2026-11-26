@@ -5,7 +5,12 @@
 // a paragraph's style, formatting or list a paragraph format change. One person's change next to their own earlier one
 // is the same suggestion. Pure: the state and transaction in, a transaction or a refusal out.
 import type { Mark, Node as PmNode } from 'prosemirror-model';
-import { TextSelection, type EditorState, type Transaction } from 'prosemirror-state';
+import {
+  NodeSelection,
+  TextSelection,
+  type EditorState,
+  type Transaction,
+} from 'prosemirror-state';
 import {
   AddMarkStep,
   AttrStep,
@@ -79,9 +84,13 @@ function ownNear(doc: PmNode, from: number, to: number, key: string): Suggestion
   const near: PmNode[] = [];
   const $from = doc.resolve(Math.max(0, Math.min(from, doc.content.size)));
   const $to = doc.resolve(Math.max(0, Math.min(to, doc.content.size)));
+  // Text and objects either side; a paragraph only where its start (its break or join) lies in the range.
   for (const n of [$from.nodeBefore, $from.nodeAfter, $to.nodeBefore, $to.nodeAfter])
-    if (n) near.push(n);
-  if (from < to) doc.nodesBetween(from, to, (n) => void near.push(n));
+    if (n?.isInline) near.push(n);
+  if (from < to)
+    doc.nodesBetween(from, to, (n, pos) => {
+      if (n.isInline || pos >= from) near.push(n);
+    });
   for (const node of near) {
     const parts = partsOf(node);
     for (const name of [
@@ -302,6 +311,36 @@ function paragraphMarkup(step: Step, doc: PmNode): { pos: number; attrs: Attrs }
 }
 
 /**
+ * The object in a line a step changes in place (its attribute set, or the object replaced by one of its type, as
+ * setNodeMarkup does), at its position before the step; null for any other step.
+ */
+function objectChange(step: Step, doc: PmNode): { pos: number; node: PmNode } | null {
+  if (step instanceof AttrStep) {
+    const node = doc.nodeAt(step.pos);
+    return node?.isInline && node.isAtom ? { pos: step.pos, node } : null;
+  }
+  if (!(step instanceof ReplaceStep)) return null;
+  const node = doc.nodeAt(step.from);
+  const replacement = step.slice.content.firstChild;
+  return node?.isInline &&
+    node.isAtom &&
+    !node.isText &&
+    step.to === step.from + node.nodeSize &&
+    step.slice.openStart === 0 &&
+    step.slice.openEnd === 0 &&
+    step.slice.content.childCount === 1 &&
+    replacement?.type === node.type
+    ? { pos: step.from, node }
+    : null;
+}
+
+/** The object in a line a slice is, alone; null for any other slice. */
+const loneObject = (step: ReplaceStep): PmNode | null => {
+  const only = step.slice.content.childCount === 1 ? step.slice.content.firstChild : null;
+  return only?.isInline && only.isAtom && !only.isText ? only : null;
+};
+
+/**
  * `tr` rewritten as `who`'s suggestions on `state`, or why it cannot be. Each step is replayed in order against the
  * new transaction, its positions mapped from the document it was made on.
  */
@@ -315,14 +354,24 @@ export function suggestTransaction(
   // From the document each original step was made on to the new transaction's.
   let into = new Mapping();
   let caret: number | undefined;
+  // A lone object put in: where it stands, and the steps after which that holds, to leave it selected.
+  let placed: { pos: number; after: number } | undefined;
+  // Whether every step changed one of the person's own suggested objects in place, so the transaction stands as it is.
+  let ownObjectsOnly = true;
   for (const [i, step] of tr.steps.entries()) {
     const doc = tr.docs[i]!;
     const at = out.steps.length;
     const map = (pos: number, assoc = 1) => into.map(pos, assoc);
     let refused: SuggestingRefusal | null = null;
     const markup = paragraphMarkup(step, doc);
+    const object = markup ? null : objectChange(step, doc);
+    if (!object) ownObjectsOnly = false;
     if (markup) rewriter.paragraphFormat(map(markup.pos), markup.attrs);
-    else if (step instanceof ReplaceStep) {
+    else if (object) {
+      // One's own suggested object changes plainly, part of its suggestion; anyone else's never.
+      const mapped = isOwn(object.node.attrs[INSERTION_MARK], who.key) ? step.map(into) : null;
+      if (!mapped || out.maybeStep(mapped).failed) refused = 'structure';
+    } else if (step instanceof ReplaceStep) {
       const from = map(step.from, -1);
       const to = map(step.to, 1);
       let structural = false;
@@ -333,11 +382,15 @@ export function suggestTransaction(
       refused = structural ? 'structure' : rewriter.delete(from, to);
       if (!refused && step.slice.size > 0) {
         const point = out.mapping.slice(at).map(to, 1);
+        // Its suggestion chosen from what stands either side before it goes in, never from what the slice copied.
+        rewriter.base(point, point);
         const before = out.steps.length;
         out.replace(point, point, step.slice);
         const end = out.mapping.slice(before).map(point, 1);
         rewriter.inserted(point, end);
         caret = out.mapping.slice(before).map(point, 1);
+        if (loneObject(step))
+          placed = { pos: out.mapping.slice(before).map(point, -1), after: out.steps.length };
       } else if (!refused) {
         const head = state.selection.head;
         const backwards = state.selection.empty && tr.steps.length === 1 && head === step.to;
@@ -358,11 +411,17 @@ export function suggestTransaction(
     // The original step's own map taken back, then what the rewrite did: the next step's positions in the new doc.
     into = new Mapping([step.getMap().invert(), ...into.maps, ...out.mapping.maps.slice(at)]);
   }
+  // Positions unchanged, so what the transaction carries for plugins (an equation box's caret) still holds.
+  if (ownObjectsOnly) return { tr, made: [] };
   for (const meta of KEPT_METAS) {
     const value = tr.getMeta(meta) as unknown;
     if (value !== undefined) out.setMeta(meta, value);
   }
-  if (caret !== undefined)
+  const selected = tr.selection instanceof NodeSelection ? tr.selection.node : null;
+  const at = placed && out.mapping.slice(placed.after).map(placed.pos, 1);
+  if (selected && at !== undefined && out.doc.nodeAt(at)?.type === selected.type)
+    out.setSelection(NodeSelection.create(out.doc, at));
+  else if (caret !== undefined)
     out.setSelection(
       TextSelection.create(out.doc, Math.max(0, Math.min(caret, out.doc.content.size))),
     );

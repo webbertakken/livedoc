@@ -254,15 +254,30 @@ office kinds; this spec says what a text document puts in them.
 - **A paragraph's** style, alignment, indents, spacing or list suggests a paragraph format change keeping its style,
   formatting and list before; one's own suggested paragraph is simply changed.
 - **One suggestion**: a change next to the person's own earlier suggestion (touching it, or replacing text) joins it.
-- **Not yet**: a change of structure (a table, a section or page break, a table of contents), and what is kept beside
-  the writing (page setup, headers and footers, document tabs, styles, list definitions), says "This can't be
-  suggested yet." (default) and changes nothing; the controls for the latter are dimmed while suggesting.
+- **Objects in a line**: a picture, an equation or a bookmark put in while suggesting is a suggested insertion, its
+  card saying "Add: Picture" ("Add: Equation", "Add: Bookmark"); deleting one suggests its deletion, as text does.
+- **Breaks and lines**: a **page break** or a **column break** is a suggested paragraph break, its card saying "Add:
+  Page break" ("Add: Column break"); a **horizontal line** is a suggested paragraph, its card saying "Add: Horizontal
+  line". Rejecting one takes it away: the paragraph rejoins the one before it, or, at the very start of a document
+  tab with nothing of it left, goes.
+- **One's own suggested object** is changed as one's own suggested text is: plainly, part of its suggestion and
+  settled with it (an equation written in its box), as Google keeps it. Anyone else's object, suggested or not, takes
+  only a deletion: changing it says "This can't be suggested yet." and changes nothing, so a change is never folded
+  into someone else's suggestion (default).
+- **Pictures** are put in while suggesting by an Editor; a Participant's pictures are not yet suggested (below).
+- **Not yet**: tables and their rows and columns, section breaks, tables of contents, footnotes, drawings and a
+  Participant's pictures, and what is kept beside the writing (page setup, headers and footers, document tabs,
+  styles, list definitions), say "This can't be suggested yet." (default) and change nothing. Insert's Footnote,
+  Drawing, Header and Footer are dimmed while suggesting with the note "Editing only" and the hint "This can't be
+  suggested yet. An Editor changes it in Editing." (default); the others are absent or dimmed as the menus draw
+  them.
 - **Pasting** inserts as typing does; what is pasted from suggested text arrives plain in Editing.
 - **Undo** takes back one's own suggestions step by step, as any edit.
 - The refusal lines show for 5 seconds (`SUGGESTING_NOTICE_MS`, (default)) in the status band.
 - **A Participant** sees an Editor's menus, toolbar and context menu in Suggesting, as Google's Commenter does
   ([Office shell](../004-interface-design/office-shell.md#modes)). What can be suggested runs: Edit's Undo, Redo, Cut,
-  Paste, Paste without formatting and Delete; Insert's Link, Special characters and Emoji; Format's Text, Align &
+  Paste, Paste without formatting and Delete; Insert's Link, Special characters, Emoji, Equation (with the equation
+  toolbar), Horizontal line, Page break, Column break and Bookmark; Format's Text, Align &
   indent, Line & paragraph spacing, Borders and shading and Clear formatting; and the toolbar's Paint format, font,
   size, text formatting, Align, Line and paragraph spacing, indents and Clear formatting. Everything else is dimmed:
   what cannot yet be suggested, what is kept beside the writing, and paragraph styles and lists, whose definitions
@@ -330,7 +345,9 @@ office kinds; this spec says what a text document puts in them.
   carries someone else's format suggestion is not offered while suggesting (default).
 - **Accepting** an insertion or a paragraph break keeps it and drops its mark; a deletion removes its text, a join
   joins its paragraph to the one before, a format drops what was before. **Rejecting** removes an insertion's text,
-  joins a paragraph break's paragraph back, drops a deletion's or a join's mark, and puts a format's before back.
+  joins a paragraph break's paragraph back, drops a deletion's or a join's mark, and puts a format's before back. A
+  paragraph break with no paragraph before it (the first of a document tab) is removed with its paragraph when nothing
+  of the paragraph is left once the suggestion is rejected and a block follows it; otherwise its mark is dropped.
   Either is one change of the writing, undone with ⌘Z.
 - **Where**: in the body of each document tab. Headers, footers and notes take no suggestions; while suggesting they
   read as they do in Viewing (default).

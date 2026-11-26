@@ -235,4 +235,16 @@ describe('column breaks (page-layout.md "Breaks": a column break)', () => {
     });
     expect(two['column-break']?.disabled).toBe(false);
   });
+
+  it('offers page and column breaks while suggesting, never section breaks, and nothing to a reader', () => {
+    const liveDoc = { current: null };
+    const suggesting = textDocumentBreakActions(null, {
+      canEdit: false,
+      suggests: true,
+      liveDoc,
+      format: 'odf',
+    });
+    expect(Object.keys(suggesting).sort()).toEqual(['column-break', 'page-break']);
+    expect(textDocumentBreakActions(null, { canEdit: false, liveDoc, format: 'odf' })).toEqual({});
+  });
 });

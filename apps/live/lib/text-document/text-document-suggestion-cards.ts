@@ -8,6 +8,8 @@ import {
   FORMAT_CHANGE_MARK,
   INSERTION_MARK,
   PARAGRAPH_FORMAT_CHANGE,
+  suggestedBreakKind,
+  type SuggestedBreakKind,
   type SuggestionPart,
   type TextDocumentCommentAuthor,
 } from '@livedoc/text-documents';
@@ -31,7 +33,15 @@ export type CardPart =
   | { readonly kind: 'insertion' | 'deletion'; readonly text: string }
   | { readonly kind: 'format'; readonly changed: readonly string[] }
   | { readonly kind: 'object-insertion' | 'object-deletion'; readonly name: string }
-  | { readonly kind: 'break' | 'join' | 'paragraph-format' };
+  | { readonly kind: 'break'; readonly breakKind?: SuggestedBreakKind }
+  | { readonly kind: 'join' | 'paragraph-format' };
+
+/** What a suggested break puts in beyond a paragraph, on a card, in the order a card lists them. */
+const BREAK_LABELS: ReadonlyArray<readonly [SuggestedBreakKind, string]> = [
+  ['page', 'Page break'],
+  ['column', 'Column break'],
+  ['horizontal-line', 'Horizontal line'],
+];
 
 /** What a format suggestion names, in the order a card lists it. */
 export const FORMAT_LABELS: ReadonlyArray<readonly [string, string]> = [
@@ -95,7 +105,9 @@ export function cardLines(parts: readonly CardPart[]): string[] {
   ] as const)
     for (const name of uniqueNames(parts.flatMap((p) => (p.kind === kind ? [p.name] : []))))
       lines.push(`${verb}: ${name}`);
-  if (parts.some((p) => p.kind === 'break')) lines.push('Add: Paragraph break');
+  const breaks = parts.flatMap((p) => (p.kind === 'break' ? [p.breakKind] : []));
+  for (const [kind, label] of BREAK_LABELS) if (breaks.includes(kind)) lines.push(`Add: ${label}`);
+  if (breaks.includes(undefined)) lines.push('Add: Paragraph break');
   if (parts.some((p) => p.kind === 'join')) lines.push('Delete: Paragraph break');
   if (parts.some((p) => p.kind === 'paragraph-format')) lines.push('Format: Paragraph');
   return lines;
@@ -136,6 +148,8 @@ export function cardPartsOf(parts: readonly SuggestionPart[]): CardPart[] {
       case 'format':
         // A format naming nothing is still one: an unnamed change reads as Text formatting.
         return { kind: 'format', changed: part.changed?.length ? part.changed : [''] };
+      case 'break':
+        return part.breakKind ? { kind: 'break', breakKind: part.breakKind } : { kind: 'break' };
       default:
         return { kind: part.kind };
     }
@@ -171,7 +185,13 @@ export function suggestionCards(doc: PmNode): SuggestionCard[] {
     }
     if (node.type.name === 'paragraph') {
       const start = pos + 1;
-      add(node.attrs[INSERTION_MARK], start, start, { kind: 'break' });
+      const breakKind = suggestedBreakKind(node.attrs.props, node.content.size === 0);
+      add(
+        node.attrs[INSERTION_MARK],
+        start,
+        start,
+        breakKind ? { kind: 'break', breakKind } : { kind: 'break' },
+      );
       add(node.attrs[DELETION_MARK], start, start, { kind: 'join' });
       add(node.attrs[PARAGRAPH_FORMAT_CHANGE], start, start, { kind: 'paragraph-format' });
       return true;

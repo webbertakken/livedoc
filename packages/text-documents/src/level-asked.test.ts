@@ -393,6 +393,32 @@ describe('textDocumentLevelAsked on suggestions', () => {
     ).toBe('participate');
   });
 
+  it('lets a Participant suggest a horizontal line at the very start, and an equation of their own', () => {
+    expect(
+      askedOn((doc) => {
+        const line = new Y.XmlElement('paragraph');
+        line.setAttribute('insertion', mark('a1') as unknown as string);
+        line.setAttribute('props', { borders: { bottom: { width: 1 } } } as unknown as string);
+        doc.getXmlFragment('body').insert(0, [line]);
+      }),
+    ).toBe('participate');
+    expect(
+      askedOn((doc) => {
+        const equation = new Y.XmlElement('equation');
+        equation.setAttribute('math', [] as unknown as string);
+        equation.setAttribute('insertion', mark('a1') as unknown as string);
+        (doc.getXmlFragment('body').get(0) as Y.XmlElement).insert(1, [equation]);
+      }),
+    ).toBe('participate');
+    expect(
+      askedOn((doc) => {
+        const line = new Y.XmlElement('paragraph');
+        line.setAttribute('insertion', mark('b9', BEN) as unknown as string);
+        doc.getXmlFragment('body').insert(0, [line]);
+      }),
+    ).toBe('edit');
+  });
+
   it('lets a Participant withdraw their own suggestion and suggest a deletion over another’s', () => {
     expect(
       askedOn((_, run) => {
