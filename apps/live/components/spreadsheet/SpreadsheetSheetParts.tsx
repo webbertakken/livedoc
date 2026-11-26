@@ -3,7 +3,7 @@
 // The open sheet's parts (docs/specs/029-sheets/surface.md): the formula bar, the grid, the right side panel beside them
 // (office-shell.md "Side panels"), the grid's menus and dialogs and the sheet bar's summary, all on the open sheet's
 // controller.
-import { useEffect, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { DocumentFonts } from '@livedoc/document';
 import { useSheetController } from '@/components/sheets/sheet-controller';
 import { SheetGrid } from '@/components/sheets/SheetGrid';
@@ -12,7 +12,11 @@ import { useFormulaPointing } from '@/components/sheets/useFormulaPointing';
 import { useSheetActions } from '@/components/sheets/useSheetActions';
 import type { SheetsBridge } from '@/hooks/sheets/useSheetsBridge';
 import { useOfficePanels } from '@/lib/office/useOfficePanels';
-import { SPREADSHEET_PANELS, withBandingOnOpen } from '@/lib/spreadsheet/spreadsheet-panels';
+import {
+  CHART_EDITOR_PANEL,
+  SPREADSHEET_PANELS,
+  withBandingOnOpen,
+} from '@/lib/spreadsheet/spreadsheet-panels';
 import { SheetBarSummary } from './SheetBarSummary';
 import { SpreadsheetGridMenus } from './SpreadsheetContextMenu';
 import { SpreadsheetFormulaBarRow } from './SpreadsheetFormulaBarRow';
@@ -47,7 +51,17 @@ export function SpreadsheetSheetParts({ bridge }: { bridge: SheetsBridge }) {
     writes: c.canEdit && c.canShape,
   });
   const { actions: panelActions } = panels;
-  const charts = useSpreadsheetCharts(c);
+  // The chart the Chart Editor is open on (charts.md "Chart Editor").
+  const [editingChart, setEditingChart] = useState<string | null>(null);
+  const { reveal } = panels;
+  const editChart = useCallback(
+    (id: string) => {
+      setEditingChart(id);
+      reveal(CHART_EDITOR_PANEL);
+    },
+    [reveal],
+  );
+  const charts = useSpreadsheetCharts(c, c.canShape ? editChart : undefined);
   const { insertChart } = charts;
   const canInsertChart = c.canShape;
   const bandingActions = useMemo(
@@ -109,7 +123,11 @@ export function SpreadsheetSheetParts({ bridge }: { bridge: SheetsBridge }) {
             </SheetChartsContext.Provider>
           </div>
         </div>
-        <SpreadsheetRightPanel panels={panels} actions={actions} />
+        <SpreadsheetRightPanel
+          panels={panels}
+          actions={actions}
+          chart={{ id: editingChart, change: charts.change }}
+        />
       </div>
       <SpreadsheetGridMenus actions={actions} bound={office.actions} />
       {formatDialogs.dialog}

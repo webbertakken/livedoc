@@ -381,13 +381,21 @@ describe("a spreadsheet's charts", () => {
     labelOf: (id: string) => `Chart ${id}`,
     noData: new Set(['empty']),
   });
-  function mountBook(w: ReturnType<typeof writes>, menu?: (id: string, at: DOMRect) => void) {
+  function mountBook(
+    w: ReturnType<typeof writes>,
+    menu?: (id: string, at: DOMRect) => void,
+    menuLabel?: string,
+  ) {
     return renderSheet(
       h,
       () => (
         <SheetsBridgeContext.Provider value={bridge}>
           <SheetChartsContext.Provider
-            value={{ elements, editable: true, writes: { ...w, ...(menu ? { menu } : {}) } }}
+            value={{
+              elements,
+              editable: true,
+              writes: { ...w, ...(menu ? { menu } : {}), ...(menuLabel ? { menuLabel } : {}) },
+            }}
           >
             <SheetChartsLayer />
           </SheetChartsContext.Provider>
@@ -436,6 +444,14 @@ describe("a spreadsheet's charts", () => {
     act(() => box('one').focus());
     fireEvent.click(screen.getByRole('button', { name: 'Chart Options' }));
     expect(menu).toHaveBeenCalledWith('one', expect.objectContaining({ width: 0 }));
+    // A double click opens it too, its button named as the spreadsheet names it.
+    menu.mockClear();
+    fireEvent.doubleClick(box('one'));
+    expect(menu).toHaveBeenCalledWith('one', expect.objectContaining({ width: 0 }));
+    cleanup();
+    mountBook(w, menu, 'Edit Chart');
+    act(() => box('one').focus());
+    expect(screen.getByRole('button', { name: 'Edit Chart' })).toBeTruthy();
     expect(openElementMenu).not.toHaveBeenCalled();
   });
 });

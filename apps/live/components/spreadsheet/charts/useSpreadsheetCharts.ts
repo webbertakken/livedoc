@@ -40,9 +40,15 @@ export function chartLabel(chart: SheetChart): string {
   return chart.title?.trim() ? `${kind}: ${chart.title.trim()}` : kind;
 }
 
-export function useSpreadsheetCharts(c: SheetController): {
+export function useSpreadsheetCharts(
+  c: SheetController,
+  // Opens the Chart Editor on a chart (charts.md "Chart Editor").
+  onEdit?: (id: string) => void,
+): {
   value: SheetChartsValue | null;
   insertChart: () => void;
+  // A chart set whole (the Chart Editor's changes), one undo step.
+  change: (next: SheetChart) => void;
 } {
   const { sheet, workbook, version, geometry, canShape, write } = c;
   const objects = sheet.layout.objects;
@@ -103,13 +109,14 @@ export function useSpreadsheetCharts(c: SheetController): {
         put(id, next, patch.sheetAnchor ? 'moved' : 'resized');
       },
       remove: (id) => void put(id, null, 'removed'),
+      ...(onEdit ? { menu: (id: string) => onEdit(id), menuLabel: 'Edit Chart' } : {}),
       labelOf: (id) => {
         const cur = byId.get(id);
         return cur ? chartLabel(cur) : 'Chart';
       },
       noData: new Set(charts.filter((x) => !x.range).map((x) => x.id)),
     };
-  }, [charts, sheet.layout, geometry, put]);
+  }, [charts, sheet.layout, geometry, put, onEdit]);
 
   const insertChart = useCallback(() => {
     if (!canShape) return;
@@ -132,12 +139,17 @@ export function useSpreadsheetCharts(c: SheetController): {
     const [id] = makeAxisIds(1, Math.random, new Set(charts.map((x) => x.id)));
     // Selected as it draws, ready to move (SheetChartsLayer).
     markPlacedChart(id!);
-    if (put(id!, newSheetChart(id!, type, pick, anchor), 'inserted'))
+    if (put(id!, newSheetChart(id!, type, pick, anchor), 'inserted')) {
       track('Spreadsheet', 'Added', CHART_TYPE_LABELS[type]);
-  }, [c, canShape, workbook, sheet, charts, put]);
+      // Inserted with the Chart Editor open on it (charts.md "Inserting").
+      onEdit?.(id!);
+    }
+  }, [c, canShape, workbook, sheet, charts, put, onEdit]);
+  const change = useCallback((next: SheetChart) => void put(next.id, next, 'changed'), [put]);
 
   return {
     value: { elements, editable: canShape, writes },
     insertChart,
+    change,
   };
 }

@@ -30,6 +30,8 @@ export type SheetChartWrites = {
   remove: (id: string) => void;
   // The chart's menu, at a rect; absent while it has none.
   menu?: ((id: string, at: DOMRect) => void) | undefined;
+  // What its button is called (Chart Options by default).
+  menuLabel?: string | undefined;
   // What a chart is called to a screen reader: its alt text, else its type and title.
   labelOf: (id: string) => string;
   // The charts whose range is gone ("No data").

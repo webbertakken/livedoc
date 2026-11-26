@@ -20,6 +20,8 @@ export const CHART_SOURCE_COLS_MAX = 13;
 // value column, null where a cell holds no number (pie-chart.md "No value is a gap").
 type ChartTable = {
   categories: string[];
+  // Whether the read numbered the categories itself (no label column); absent, told by whether they run 1, 2, ….
+  numbered?: boolean;
   series: { name: string; values: (number | null)[] }[];
 };
 
@@ -149,7 +151,7 @@ export function lineFieldsFromTable(
   t: ChartTable,
 ): { lineCategories: string[]; lineSeries: LineSeries[] } {
   const xFromFirst =
-    chartTypeOf(el) === 'scatter' && t.series.length >= 2 && numbered(t.categories);
+    chartTypeOf(el) === 'scatter' && t.series.length >= 2 && (t.numbered ?? numbered(t.categories));
   // An empty x cell is an empty category: no x, so its points are not drawn.
   const categories = xFromFirst
     ? t.series[0]!.values.map((x) => (x === null ? '' : String(x)))

@@ -53,6 +53,7 @@ describe('a chart anchor', () => {
 
 const table = (categories: string[], ...series: (number | null)[][]): SheetChartTable => ({
   categories,
+  numbered: categories.every((c, i) => c === String(i + 1)),
   series: series.map((values, i) => ({ name: `S${i}`, col: `c000${i}`, values })),
 });
 

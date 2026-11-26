@@ -204,7 +204,13 @@ export function SheetChartsLayer({ fontFamily }: { fontFamily?: string | undefin
               }}
               onPointerUpCapture={(e) => viewPress(e) && e.stopPropagation()}
               onClickCapture={(e) => viewPress(e) && e.stopPropagation()}
-              onDoubleClickCapture={(e) => framePress(e) && e.stopPropagation()}
+              onDoubleClickCapture={(e) => {
+                if (!framePress(e)) return;
+                e.stopPropagation();
+                // A spreadsheet's chart opens its Chart Editor (charts.md "Working with a chart").
+                if (editable && writes?.menu)
+                  writes.menu(el.id, e.currentTarget.getBoundingClientRect());
+              }}
               onContextMenuCapture={(e) => {
                 if (!framePress(e)) return;
                 e.stopPropagation();
@@ -288,7 +294,7 @@ export function SheetChartsLayer({ fontFamily }: { fontFamily?: string | undefin
                   >
                     {openMenu ? (
                       <ChartButton
-                        label="Chart Options"
+                        label={writes?.menuLabel ?? 'Chart Options'}
                         palette={c.palette}
                         menu
                         onClick={(e) => openMenu(el.id, e.currentTarget.getBoundingClientRect())}
