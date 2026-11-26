@@ -54,6 +54,32 @@ export function rememberCustomStamp(ownerId: string, stamp: CustomStampRecord): 
   });
 }
 
+/** Their stamps as LiveDoc answered a change with them all. */
+export function replaceCustomStamps(ownerId: string, stamps: readonly CustomStampRecord[]): void {
+  set(ownerId, { phase: 'ready', stamps });
+}
+
+/** One of their stamps as changed, in its place; one deleted (null), gone. */
+export function changedCustomStamp(
+  ownerId: string,
+  id: string,
+  stamp: CustomStampRecord | null,
+): void {
+  const { phase, stamps } = customStampsOf(ownerId);
+  set(ownerId, {
+    phase,
+    stamps: stamp
+      ? stamps.map((kept) => (kept.id === id ? stamp : kept))
+      : stamps.filter((kept) => kept.id !== id),
+  });
+}
+
+/** Reads their stamps again, whatever was read before: after a change that failed. */
+export function reloadCustomStamps(ownerId: string): void {
+  set(ownerId, { phase: 'idle', stamps: customStampsOf(ownerId).stamps });
+  loadCustomStamps(ownerId);
+}
+
 /** An owner's stamps, read once `enabled` (a PDF that offers them); none before. */
 export function useCustomStamps(ownerId: string, enabled: boolean): readonly CustomStampRecord[] {
   useEffect(() => {

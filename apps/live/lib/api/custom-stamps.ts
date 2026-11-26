@@ -58,3 +58,34 @@ export async function apiReadCustomStampPicture(
   await expectOkVoid(res, 'read custom stamp picture');
   return new Uint8Array(await res.arrayBuffer());
 }
+
+/** One of the owner's categories renamed, or merged into another; their stamps after. */
+export async function apiRenameCustomStampCategory(
+  ownerId: string,
+  category: string,
+  to: string,
+): Promise<CustomStampRecord[]> {
+  const res = await apiFetch(
+    `${API_BASE}/custom-stamps/categories/${encodeURIComponent(category)}`,
+    {
+      method: 'PATCH',
+      headers: await apiHeaders(ownerId, { body: true }),
+      body: JSON.stringify({ category: to }),
+    },
+  );
+  const { stamps } = await expectOk<{ stamps: CustomStampRecord[] }>(res, 'rename stamp category');
+  return stamps;
+}
+
+/** One of the owner's categories deleted with its stamps; their stamps after. */
+export async function apiDeleteCustomStampCategory(
+  ownerId: string,
+  category: string,
+): Promise<CustomStampRecord[]> {
+  const res = await apiFetch(
+    `${API_BASE}/custom-stamps/categories/${encodeURIComponent(category)}`,
+    { method: 'DELETE', headers: await apiHeaders(ownerId) },
+  );
+  const { stamps } = await expectOk<{ stamps: CustomStampRecord[] }>(res, 'delete stamp category');
+  return stamps;
+}

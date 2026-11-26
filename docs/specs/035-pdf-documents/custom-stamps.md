@@ -1,7 +1,7 @@
 # Custom stamps
 
-**Status: built: where they are kept, their api, their file form, making one in the browser and placing one; Managing
-them specified.** Stamp identity is not built.
+**Status: built: where they are kept, their api, their file form, making one, placing one and managing them.** Stamp
+identity is not built.
 
 A **custom stamp** is a person's own stamp: a picture, or a page of a PDF, given a name and a category, kept in
 LiveDoc for them, and placed on any PDF as a standard or dynamic stamp is ([Marks](marks.md#stamps)). The parity rows
@@ -88,23 +88,25 @@ are the matrix's "Stamps" ([Parity matrix](parity-matrix.md#stamps)).
 ## Managing them
 
 - **Insert > Stamp > Manage stamps** opens **Manage stamps**, a dialog listing their stamps a category each, in the
-  grid's order: each category's name, then its stamps, each its picture, its name and a menu (⋯).
+  grid's order: each category's name, then its stamps, each its picture, its name, its category and **Delete**
+  `(default)`.
 - **Renaming a stamp**: its name is a field; a name changed and left (Enter, Tab, a press elsewhere) is kept, trimmed
   and held to `PDF_CUSTOM_STAMP_NAME_MAX_CHARS`; an empty one goes back to what it was. Its marks already placed keep
   the name they were placed with: a mark's words are fixed when placed.
-- **Moving a stamp**: its menu's **Move to** lists their other categories and **New category…**, which asks for a
-  name in place. A category left empty is gone: a category is only its stamps' `(default)`.
-- **Deleting a stamp**: its menu's **Delete** asks in place, "Delete <name>? Stamps already placed stay." with
-  **Delete** and **Cancel**; deleted, it leaves their stamps and the grid. Its marks already placed stay as they are,
-  their pictures held by the documents that name them ([Blob store](../006-document/blob-store.md#holds-and-retention)).
-  The stamp the Stamp control shows, deleted, becomes Approved.
+- **Moving a stamp**: its category is a list of theirs and **New category…**, which asks for a name in place (Enter or
+  leaving keeps it, Escape or leaving it empty moves nothing). A category left empty is gone: a category is only its
+  stamps' `(default)`.
+- **Deleting a stamp**: its **Delete** asks in place, "Delete <name>? Stamps already placed stay." with **Delete** and
+  **Cancel**; deleted, it leaves their stamps and the grid. Its marks already placed stay as they are, their pictures
+  held by the documents that name them ([Blob store](../006-document/blob-store.md#holds-and-retention)). The stamp the
+  Stamp control shows, deleted, becomes Approved.
 - **Renaming a category**: its name is a field, as a stamp's is; renamed onto another of theirs, the two become one.
-- **Deleting a category**: its menu's **Delete category** asks in place, "Delete <category> and its <n> stamps?",
-  and deletes them all as one request.
+- **Deleting a category**: its **Delete category** asks in place, with **Delete** and **Cancel**, "Delete <category>
+  and its <n> stamps?", and deletes them all as one request.
 - Nothing here has undo: each change is LiveDoc's at once, as a renamed document is `(default)`. A change refused or
   failed says so in the dialog and leaves the list as LiveDoc holds it, read again.
-- **Done** and Escape close it. With no stamps it says "You have no custom stamps yet." and offers **Create custom
-  stamp…**.
+- Its × and Escape close it; Escape in a field changed first puts back what it held. With no stamps it says "You have
+  no custom stamps yet." and offers **Create custom stamp…**.
 
 ## Limits
 
@@ -191,6 +193,9 @@ count=<n>`, `[custom-stamps] category-deleted count=<n>` in the api; `[pdf] cust
   move on sign-up and the delete with the account, and the retention sweep keeping a picture a custom stamp holds.
 - The package: a custom stamp mark's bounds, the bake's `Stamp` with `#` `Name`, its picture's image (JPEG as is, PNG
   with its soft mask) round trip, checked by qpdf; a file's `#` stamp read as one LiveDoc does not draw.
+- Managing them: the api's category rename and delete (owner-scoped, `custom_stamp_category_not_found`); each change,
+  its failure read again; the dialog's fields, lists and asks (`manage-custom-stamps.test.ts`,
+  `ManageStampsDialog.test.tsx`); e2e: a stamp renamed and deleted.
 - The browser: the picture kept (scaled, SVG drawn, a PDF page drawn), the dialog's fields and errors, the grid's
   sections, placing (sent first, the mark), the page drawing the picture; e2e: a PNG made a stamp, placed, and in the
   downloaded file.

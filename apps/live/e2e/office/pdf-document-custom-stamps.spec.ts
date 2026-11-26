@@ -11,7 +11,8 @@ import { dropPdf, PAGE_ONE, pageOneDrawn } from './pdf-document-pages';
 // Custom stamps end to end (docs/specs/035-pdf-documents/custom-stamps.md "Making one": Insert > Stamp > Custom stamps
 // opens Create custom stamp, a PNG chosen, named by its file, in Custom; Create makes it the stamp shown, the tool in
 // hand; "Placing one": a press places it, the page draws its picture; the grid shows it under its category, then
-// Create custom stamp…; "In the file": a Stamp named `#` and its id, its picture an image).
+// Create custom stamp…; "In the file": a Stamp named `#` and its id, its picture an image; "Managing them": renamed and
+// deleted in Manage stamps, the stamp placed staying).
 
 async function pressAt(page: Page, first: Locator, [x, y]: [number, number]) {
   const box = (await first.boundingBox())!;
@@ -112,5 +113,26 @@ test('a picture is made a custom stamp, placed, and leaves as a Stamp with its p
   expect(added).toMatch(/\/Name \/#23custom-|\/Name \/#custom-/);
   expect(added).toContain('/Subtype /Image');
   execFileSync('qpdf', ['--check', file], { stdio: 'pipe' });
+
+  // Manage stamps: renamed once left, the control saying the new name; deleted after asking, the placed stamp staying.
+  await (await officeMenuItem(page, ['Insert', 'Stamp', 'Manage stamps'])).click();
+  const manage = page.getByRole('dialog', { name: 'Manage stamps' });
+  await expect(manage.getByRole('region', { name: 'Custom' })).toBeVisible();
+  const name = manage.getByLabel('Name of Paid');
+  await name.fill('Settled');
+  await name.press('Enter');
+  await expect(page.getByRole('button', { name: 'Stamp: Settled', exact: true })).toBeVisible();
+  await page.waitForFunction(() =>
+    document.getAnimations().every((animation) => animation.playState !== 'running'),
+  );
+  await page.screenshot({ path: test.info().outputPath('pdf-manage-stamps.png') });
+  await manage.getByRole('button', { name: 'Delete Settled' }).click();
+  await expect(manage.getByText('Delete Settled? Stamps already placed stay.')).toBeVisible();
+  await manage.getByRole('button', { name: 'Delete', exact: true }).click();
+  await expect(manage.getByText('You have no custom stamps yet.')).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(manage).toBeHidden();
+  await expect(page.getByRole('button', { name: 'Stamp: Approved', exact: true })).toBeVisible();
+  await expect(stamp.locator('[data-pdf-stamp-picture]')).toHaveCount(1);
   expectNoPageErrors(pageErrors);
 });
