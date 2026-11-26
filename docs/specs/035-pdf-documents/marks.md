@@ -247,7 +247,10 @@ written into the file as a standard annotation, so any reader shows it. The rese
   Align text's Left is checked for it where every paragraph reads left to right, Right where every one reads right to
   left, and none where they differ `(default)`.
 - Each restyle is one step of undo, and leaves the tool's remembered look as it was `(default)`.
-- **Rotate**: stamps, Text and shapes turn by a handle, snapping at 15°.
+- **Rotate**: stamps, Text and shapes turn by a handle, snapping at 15°; a stamp also turns a quarter at a time,
+  written as the stamp's `Rotate` and read back exactly. The quarter turns are built first; the free handle is built
+  with Text and shapes, after the stamp work, and its file form follows how Acrobat itself writes a stamp turned by
+  any angle before any entry of LiveDoc's own (Director, 2026-11-26).
 - **Arrange**: bring forward, send backward, to front, to back, among the marks of its page.
 - **Group**: several selected marks become one that moves and is answered as one; **Ungroup** undoes it.
   - Format > Group, with two or more marks selected, gives each the same new **group** (a fresh id), one step of
