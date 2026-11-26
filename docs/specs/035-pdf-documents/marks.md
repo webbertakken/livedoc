@@ -251,6 +251,14 @@ written into the file as a standard annotation, so any reader shows it. The rese
   written as the stamp's `Rotate` and read back exactly. The quarter turns are built first; the free handle is built
   with Text and shapes, after the stamp work, and its file form follows how Acrobat itself writes a stamp turned by
   any angle before any entry of LiveDoc's own (Director, 2026-11-26).
+  - **A stamp's quarter turns**: Format > Rotate > Clockwise or Counterclockwise turns every selected stamp a quarter
+    about its middle, one step of undo; a stamp that would leave its page is moved onto it; each is dimmed with no
+    stamp selected `(default)`.
+  - A turned stamp's box, its handles and what a press reaches are the box as it shows; resizing it keeps it turned
+    `(default)`.
+  - **In the file** a turned stamp carries `Rotate` (90, 180 or 270, anticlockwise, as pdf.js writes and reads it), its
+    appearance drawn upright in `BBox` with the turn as its `Matrix`, and `Rect` the box as it shows; a file's stamp
+    of LiveDoc's with `Rotate` a quarter turn is read back turned, any other `Rotate` as none `(default)`.
 - **Arrange**: bring forward, send backward, to front, to back, among the marks of its page.
 - **Group**: several selected marks become one that moves and is answered as one; **Ungroup** undoes it.
   - Format > Group, with two or more marks selected, gives each the same new **group** (a fresh id), one step of
@@ -573,7 +581,7 @@ Gated on the session's `can` (`pdfReviews`), and checked by the room.
 ## Telemetry and observability
 
 - `Pdf · Added · Mark.<Kind>`,
-  `Pdf · Changed · Mark.<Moved|Resized|Restyled|Grouped|Ungrouped|Locked|Erased|Subject>`,
+  `Pdf · Changed · Mark.<Moved|Resized|Restyled|Grouped|Ungrouped|Locked|Erased|Subject|Turned>`,
   `Pdf · Changed · LookDefault.<Kind>` ("Make this look the default"),
   `UI · Opened · PdfDocumentPanelProperties` (the panel opened),
   `Pdf · Deleted · Mark.<Kind>`, `Pdf · Added · Stamp.<Standard|Dynamic|Custom>`,
@@ -595,7 +603,7 @@ Gated on the session's `can` (`pdfReviews`), and checked by the room.
   (a Polygon, a Cloud or Connected lines ended, before it is made), `[pdf] poly-let-go kind=<kind>` (one let go by
   Escape), `[pdf] strokes-erased strokes=<n> marks=<n> deleted=<n>` (a drag of Erase let go that rubbed out any),
   `[pdf] mark-subject kind=<kind> cleared=<bool>` (a subject changed), `[pdf] look-defaulted kind=<kind>` (a mark's look
-  made its tool's).
+  made its tool's), `[pdf] stamps-turned count=<n> way=<clockwise|counterclockwise>`.
 
 ## Errors
 
