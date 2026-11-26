@@ -117,16 +117,15 @@ test('a Participant reviews a PDF, and its stored file is replaced in one step f
   await peer.keyboard.press('Escape');
   await expect(holding).toHaveCount(0);
 
-  // The Editor's text selection is tinted for the Participant, in the Editor's colour.
-  await page.locator('[data-pdf-pages]').focus();
-  await page.keyboard.press('v');
-  // A drag across the first line would take the Participant's highlight, which an Editor may move: Select all.
-  await page.keyboard.press('ControlOrMeta+a');
-  const tinted = peer.locator(`${PAGE_ONE} [data-pdf-peer-tint] polygon`);
+  // The Participant's text selection is tinted for the Editor, in the Participant's colour, with their name.
+  await peer.locator('[data-pdf-pages]').focus();
+  await peer.keyboard.press('ControlOrMeta+a');
+  await expect(peer.locator('[data-pdf-text-selection]')).toHaveCount(1);
+  const tinted = page.locator(`${PAGE_ONE} [data-pdf-peer-tint] polygon`);
   await expect(tinted.first()).toBeVisible();
-  await expect(peer.locator(`${PAGE_ONE} [data-pdf-peer-text] span`)).not.toHaveText('');
-  await peer.screenshot({ path: test.info().outputPath('pdf-peer-text.png') });
-  await page.keyboard.press('Escape');
+  await expect(page.locator(`${PAGE_ONE} [data-pdf-peer-text] span`)).not.toHaveText('');
+  await page.screenshot({ path: test.info().outputPath('pdf-peer-text.png') });
+  await peer.keyboard.press('Escape');
   await expect(tinted).toHaveCount(0);
 
   // The new stored file: the bake of what the room holds, as an Editor's surface makes it.
