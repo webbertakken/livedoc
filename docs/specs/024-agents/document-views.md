@@ -80,6 +80,7 @@ The example is abridged; a real outline prints every element.
 | `lint`         | Is the drawing sound?           | The [lint](diagram-lint.md) findings, refs first                                                                                                               |
 | `diff --since` | What changed since I last read? | Added, removed, changed and moved elements since a revision                                                                                                    |
 | `pages`        | What pages does this tab have?  | Its pages, each article as Markdown, the layouts on offer ([Pages for agents](pages-for-agents.md#reading-the-pages-view))                                     |
+| `cells`        | What do these cells hold?       | A spreadsheet's sheet: a range's non-empty cells, a row a line ([A spreadsheet's views](#a-spreadsheets-views))                                                |
 
 Every view opens with a header line naming the tab, its counts and its `rev`, so a later write can carry it as a
 base. Every view takes `--json` for the same data as JSON; the stored tab itself is `--raw`.
@@ -91,6 +92,51 @@ it. The api serves it; a pulled file has no live selection.
 
 `diff` is computed by the CLI: it keeps the last tab it read of each document and tab, with its revision, and
 compares that copy with the current tab. The api serves no diff.
+
+## A spreadsheet's views
+
+A [spreadsheet](../029-sheets/spreadsheet.md)'s tabs are its sheets and hold no elements, so two views read it
+instead, through the same doors (`read_document`, `livedoc tab view`, `?view=`), by sheet name and A1, never ids.
+
+- **`outline`** of any of its tabs is the **workbook outline**: a header naming the spreadsheet, its file format,
+  sheet count, locale and time zone, then one line per sheet in tab order, the tab asked for marked `◂`, each
+  followed by its parts, two spaces in:
+
+  ```text
+  spreadsheet "Model costs" · ods · 2 sheets · en-GB · UTC
+  sheet "Models" ◂ · A1:F40 · 212 cells · frozen 1 row · filter A1:F40 · 2 merges
+    names Total=F2:F40
+    rules 1 validation, 2 format
+    chart c7k2a9 scatter B1:C40 at H2 "Cost against index" lines=C
+  sheet "Notes" · hidden · empty
+  ```
+
+  - A sheet line holds its used range (to the last cell with an input) and cell count, or `empty`; `hidden`, its
+    frozen rows and columns, its filter and its merge count when it has them.
+  - Its parts: its named ranges (`names`), its rule counts (`rules`), its alternating colours (`bands`), and one line
+    per chart (id in full, as `change_sheet` `replace` takes it; type; range; the cell it sits on; title; the
+    columns of the series drawn as lines). Pivot tables and tables print as their own lines once the model holds
+    them.
+  - `only` and `style` are refused on it (`invalid_value`): it has no elements. A link to one tab sees only its own
+    sheet's line.
+
+- **`cells`** reads one sheet, the tab's: `range` an A1 cell or range (the used range when absent). One line per row
+  holding a non-empty cell, `<row> | <cell> | <cell>`, each cell its A1 address and its input, a text as a JSON
+  string, a number or boolean as typed, a formula with its `=` and `→ <what it shows>`; a value whose shown text
+  differs from its input (a format) adds `→ "<shown>"`:
+
+  ```text
+  sheet "Models" · cells A1:C3 of A1:F40
+  1 | A1 "Model" | B1 "Cost" | C1 "Index"
+  2 | A2 "Opus" | B2 15 → "$15.00" | C2 =B2*4 → 60
+  ```
+
+  - Bounded as `read_sheet` is: at most 5,000 cells of the range and 100,000 characters, then a closing line saying
+    where to read on (`… read on with range A2001:F40`); a `budget` keeps whole rows and names what it left out.
+  - Values are worked out by the editor's engine over the whole workbook, so a formula reading another sheet
+    answers as it does in the grid.
+  - Asked of a tab that is no spreadsheet's sheet, it is refused `invalid_value` ("cells reads a spreadsheet's
+    sheet"); a range that is no A1 range, `invalid_value` naming it.
 
 ## Budgets
 
