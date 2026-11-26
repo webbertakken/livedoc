@@ -997,7 +997,7 @@ export function TextDocumentSurface({
   // Insert > Table (tables.md "Inserting"), at the caret's section's column width.
   const tableActions = useTextDocumentTables(
     editorView,
-    bodyWrites,
+    bodyInserts,
     Columns.width(page.caret.section.setup),
   );
   // Insert > Building blocks (objects.md "Building blocks"), in the body, at the caret's text width.
@@ -1011,7 +1011,7 @@ export function TextDocumentSurface({
   // Insert > Table of contents (links-and-navigation.md "Table of contents").
   const contents = useTextDocumentContents({
     view: editorView,
-    writes: bodyWrites,
+    writes: bodyInserts,
     liveDoc,
     format,
     pageless: page.pageless,

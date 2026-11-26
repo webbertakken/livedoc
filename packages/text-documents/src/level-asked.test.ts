@@ -474,6 +474,62 @@ describe('textDocumentLevelAsked on suggestions', () => {
     });
   });
 
+  // review.md "Whole blocks", "Inside a suggested block": a whole table is a Participant's own suggestion, its writing
+  // plainly part of it; anyone else's writing in it is theirs to suggest, never plain (director, 2026-11-26).
+  const tableOf = (insertion?: unknown) => {
+    const table = new Y.XmlElement('table');
+    if (insertion) table.setAttribute('insertion', insertion as string);
+    const row = new Y.XmlElement('table_row');
+    const cell = new Y.XmlElement('table_cell');
+    const paragraph = new Y.XmlElement('paragraph');
+    const run = new Y.XmlText();
+    paragraph.insert(0, [run]);
+    cell.insert(0, [paragraph]);
+    row.insert(0, [cell]);
+    table.insert(0, [row]);
+    return { table, run };
+  };
+  /** The stored body `before`, then Ben's suggested table holding `in`; `change` given its cell's run. */
+  function askedInBensTable(change: (doc: Y.Doc, cell: Y.XmlText) => void) {
+    const doc = new Y.Doc({ gc: false });
+    const body = doc.getXmlFragment('body');
+    const before = new Y.XmlElement('paragraph');
+    before.insert(0, [new Y.XmlText('before')]);
+    const { table, run } = tableOf(mark('ben-t', BEN));
+    body.insert(0, [before, table]);
+    run.insert(0, 'in');
+    const stored = [Y.encodeStateAsUpdate(doc)];
+    const replica = new Y.Doc({ gc: false });
+    Y.applyUpdate(replica, stored[0]!);
+    const vector = Y.encodeStateVector(replica);
+    const cell = (
+      (
+        ((replica.getXmlFragment('body').get(1) as Y.XmlElement).get(0) as Y.XmlElement).get(
+          0,
+        ) as Y.XmlElement
+      ).get(0) as Y.XmlElement
+    ).get(0) as Y.XmlText;
+    change(replica, cell);
+    return textDocumentLevelAsked(stored, Y.encodeStateAsUpdate(replica, vector), ADA.key);
+  }
+
+  it('lets a Participant suggest a whole table and write in it plainly, part of it', () => {
+    expect(
+      askedOn((doc) => {
+        const { table, run } = tableOf(mark('a1'));
+        doc.getXmlFragment('body').insert(1, [table]);
+        run.insert(0, 'plain in my own table');
+      }),
+    ).toBe('participate');
+  });
+
+  it('asks for Editing to write plainly in another’s suggested table, never to suggest there', () => {
+    expect(askedInBensTable((_, cell) => cell.insert(2, ' mine'))).toBe('edit');
+    expect(askedInBensTable((_, cell) => cell.insert(2, ' mine', { insertion: mark('a1') }))).toBe(
+      'participate',
+    );
+  });
+
   it('lets a Participant withdraw their own suggestion and suggest a deletion over another’s', () => {
     expect(
       askedOn((_, run) => {

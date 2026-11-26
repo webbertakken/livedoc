@@ -29,6 +29,16 @@ import {
   RUN_MARKS,
   type SuggestionMark,
 } from '@livedoc/text-documents';
+import {
+  insideContents,
+  insideOwnBlock,
+  isOwn,
+  isStructure,
+  isTablePart,
+  isWholeBlock,
+  ownBlockAround,
+  selectionInBlock,
+} from './text-document-suggesting-blocks';
 
 /** Who suggests: their key, name and colour, the time, and a fresh id for a new suggestion. */
 export type Suggester = {
@@ -59,11 +69,6 @@ type Attrs = Record<string, unknown>;
 const markOf = (marks: readonly Mark[], name: string): Attrs | undefined =>
   marks.find((m) => m.type.name === name)?.attrs;
 
-const isOwn = (value: unknown, key: string): value is SuggestionMark =>
-  typeof value === 'object' &&
-  value !== null &&
-  (value as { author?: { key?: unknown } }).author?.key === key;
-
 /** The suggestion parts of a text node or inline atom carry: its marks for text, its attributes for an atom. */
 function partsOf(node: PmNode): Attrs {
   if (node.isText)
@@ -74,10 +79,6 @@ function partsOf(node: PmNode): Attrs {
     };
   return node.attrs;
 }
-
-/** Whether a node is a block the transform cannot suggest around (a table, a section break, a kept block). */
-const isStructure = (node: PmNode): boolean =>
-  node.isBlock && node.type.name !== PARAGRAPH && node.type.name !== 'doc';
 
 /** The sender's own suggestion touching a range, to join: its id, time and author. */
 function ownNear(doc: PmNode, from: number, to: number, key: string): SuggestionMark | undefined {
@@ -91,6 +92,9 @@ function ownNear(doc: PmNode, from: number, to: number, key: string): Suggestion
     doc.nodesBetween(from, to, (n, pos) => {
       if (n.isInline || pos >= from) near.push(n);
     });
+  // One's own suggested block around it: writing there is part of that block's suggestion.
+  const block = ownBlockAround(doc, from, key);
+  if (block) near.push(block.node);
   for (const node of near) {
     const parts = partsOf(node);
     for (const name of [
@@ -110,6 +114,8 @@ class Rewriter {
   readonly out: Transaction;
   readonly who: Suggester;
   readonly made = new Set<string>();
+  /** Where the first whole block put in starts, and the steps after which that holds; none put in yet. */
+  placedBlock: { pos: number; after: number } | undefined;
   #base: SuggestionMark | undefined;
 
   constructor(state: EditorState, who: Suggester) {
@@ -147,6 +153,7 @@ class Rewriter {
       | { pos: number; kind: 'remove'; to: number }
       | { pos: number; kind: 'mark'; to: number }
       | { pos: number; kind: 'atom'; node: PmNode }
+      | { pos: number; kind: 'block'; node: PmNode }
       | { pos: number; kind: 'join'; node: PmNode };
     const actions: Action[] = [];
     doc.nodesBetween(from, to, (node, pos) => {
@@ -155,6 +162,19 @@ class Rewriter {
         refused = 'structure';
         return false;
       }
+      // A whole block covered is suggested deleted whole (one's own taken away); one partly covered is gone into.
+      if (isWholeBlock(node) && pos >= from && pos + node.nodeSize <= to) {
+        if (isOwn(node.attrs[INSERTION_MARK], this.who.key))
+          actions.push({ pos, kind: 'remove', to: pos + node.nodeSize });
+        else if (!node.attrs[DELETION_MARK]) actions.push({ pos, kind: 'block', node });
+        return false;
+      }
+      // A whole row or cell of a table not wholly covered: rows and columns are not suggested yet.
+      if (isTablePart(node) && pos >= from && pos + node.nodeSize <= to) {
+        refused = 'structure';
+        return false;
+      }
+      if (isWholeBlock(node) || isTablePart(node)) return true;
       if (node.type.name === PARAGRAPH) {
         if (pos >= from && pos < to) actions.push({ pos, kind: 'join', node });
         return true;
@@ -176,7 +196,7 @@ class Rewriter {
       if (action.kind === 'remove') this.out.delete(action.pos, action.to);
       else if (action.kind === 'mark')
         this.out.addMark(action.pos, action.to, this.markType(DELETION_MARK).create(mark));
-      else if (action.kind === 'atom')
+      else if (action.kind === 'atom' || action.kind === 'block')
         this.out.setNodeMarkup(action.pos, undefined, {
           ...action.node.attrs,
           [DELETION_MARK]: mark,
@@ -203,9 +223,28 @@ class Rewriter {
     const schema = this.schema;
     for (const name of [DELETION_MARK, FORMAT_CHANGE_MARK, INSERTION_MARK])
       this.out.removeMark(from, to, schema.marks[name]);
-    this.out.addMark(from, to, schema.marks[INSERTION_MARK]!.create(mark));
-    const marked: { pos: number; node: PmNode; paragraph: boolean }[] = [];
+    // A whole block put in carries the insertion itself; what is inside it is not marked.
+    const blocks: { pos: number; node: PmNode }[] = [];
     this.out.doc.nodesBetween(from, to, (node, pos) => {
+      if (isWholeBlock(node) && pos >= from && pos + node.nodeSize <= to) {
+        blocks.push({ pos, node });
+        return false;
+      }
+      return !node.isInline;
+    });
+    let start = from;
+    for (const { pos, node } of [...blocks, { pos: to, node: null }]) {
+      if (pos > start) this.out.addMark(start, pos, schema.marks[INSERTION_MARK]!.create(mark));
+      start = node ? pos + node.nodeSize : start;
+    }
+    if (blocks.length > 0 && !this.placedBlock)
+      this.placedBlock = { pos: blocks[0]!.pos, after: this.out.steps.length };
+    const marked: { pos: number; node: PmNode; paragraph: boolean }[] = blocks.map((b) => ({
+      ...b,
+      paragraph: false,
+    }));
+    this.out.doc.nodesBetween(from, to, (node, pos) => {
+      if (blocks.some((b) => b.pos === pos)) return false;
       if (node.type.name === PARAGRAPH) {
         if (pos >= from && pos < to) marked.push({ pos, node, paragraph: true });
         return true;
@@ -363,10 +402,16 @@ export function suggestTransaction(
     const at = out.steps.length;
     const map = (pos: number, assoc = 1) => into.map(pos, assoc);
     let refused: SuggestingRefusal | null = null;
-    const markup = paragraphMarkup(step, doc);
-    const object = markup ? null : objectChange(step, doc);
-    if (!object) ownObjectsOnly = false;
-    if (markup) rewriter.paragraphFormat(map(markup.pos), markup.attrs);
+    // Inside one's own suggested block, any change is plainly part of it.
+    const ownBlock = insideOwnBlock(step, doc, who.key);
+    const markup = ownBlock ? null : paragraphMarkup(step, doc);
+    const object = markup || ownBlock ? null : objectChange(step, doc);
+    if (!object && !ownBlock) ownObjectsOnly = false;
+    if (ownBlock) {
+      const mapped = step.map(into);
+      if (!mapped || out.maybeStep(mapped).failed) refused = 'structure';
+    } else if (insideContents(step, doc)) refused = 'structure';
+    else if (markup) rewriter.paragraphFormat(map(markup.pos), markup.attrs);
     else if (object) {
       // One's own suggested object changes plainly, part of its suggestion; anyone else's never.
       const mapped = isOwn(object.node.attrs[INSERTION_MARK], who.key) ? step.map(into) : null;
@@ -374,7 +419,11 @@ export function suggestTransaction(
     } else if (step instanceof ReplaceStep) {
       const from = map(step.from, -1);
       const to = map(step.to, 1);
+      // A kept block never, nor a table's rows or cells on their own (outside one's own suggested table).
       let structural = false;
+      step.slice.content.forEach((node) => {
+        if (isTablePart(node)) structural = true;
+      });
       step.slice.content.descendants((node) => {
         if (isStructure(node)) structural = true;
         return !structural;
@@ -419,7 +468,16 @@ export function suggestTransaction(
   }
   const selected = tr.selection instanceof NodeSelection ? tr.selection.node : null;
   const at = placed && out.mapping.slice(placed.after).map(placed.pos, 1);
-  if (selected && at !== undefined && out.doc.nodeAt(at)?.type === selected.type)
+  // A whole block put in: the selection the command chose in it (a table's first cell, the table of contents itself).
+  const inBlock = rewriter.placedBlock && tr.selectionSet ? selectionInBlock(tr) : null;
+  if (inBlock && rewriter.placedBlock) {
+    const start = out.mapping.slice(rewriter.placedBlock.after).map(rewriter.placedBlock.pos, 1);
+    out.setSelection(
+      inBlock.node
+        ? NodeSelection.create(out.doc, start)
+        : TextSelection.create(out.doc, start + inBlock.offset),
+    );
+  } else if (selected && at !== undefined && out.doc.nodeAt(at)?.type === selected.type)
     out.setSelection(NodeSelection.create(out.doc, at));
   else if (caret !== undefined)
     out.setSelection(

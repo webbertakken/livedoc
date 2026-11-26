@@ -101,6 +101,32 @@ describe('suggestionCards', () => {
     expect(suggestionCards(doc)[0]!.lines).toEqual(['Add: “x”', 'Add: Bookmark']);
   });
 
+  // review.md "Whole blocks": a block's card names only the block, its split paragraph and bookmarks not listed.
+  it('names only the block a suggestion puts in or takes out', () => {
+    const table = schema.nodes.table!.create(
+      { insertion: mark('s1') },
+      schema.nodes.table_row!.create(null, schema.nodes.table_cell!.create(null, p(['in']))),
+    );
+    const doc = docOf(
+      p(['ab', schema.nodes.bookmark!.create({ id: 'h', name: 'h', insertion: mark('s1') })]),
+      table,
+      p(['cd'], { insertion: mark('s1') }),
+      schema.nodes.section_break!.create({ deletion: mark('s2', BEN) }),
+    );
+    const cards = suggestionCards(doc);
+    expect(cards.map((c) => c.lines)).toEqual([['Add: Table'], ['Delete: Section break']]);
+    expect(
+      cardLines(
+        cardPartsOf([
+          { kind: 'block-insertion', text: 'table_of_contents' },
+          { kind: 'block-deletion', text: 'table', element: 'table' },
+          { kind: 'block-insertion', text: 'kept_block', element: 'kept_block' },
+          { kind: 'break', text: '' },
+        ]),
+      ),
+    ).toEqual(['Add: Table of contents', 'Delete: Table', 'Add: Object']);
+  });
+
   it('keeps the parts of one suggestion across paragraphs as one card, from its first part', () => {
     const doc = docOf(
       p(['ab', text('cd', ins(mark('s1')))]),
@@ -196,8 +222,6 @@ describe('cardPartsOf', () => {
       { kind: 'insertion', text: 'cat' },
       { kind: 'format', text: 'x', changed: ['italic'] },
       { kind: 'insertion', text: 'picture', element: 'picture' },
-      { kind: 'block-deletion', text: 'table', element: 'table' },
-      { kind: 'block-insertion', text: 'kept_block', element: 'kept_block' },
       { kind: 'break', text: '' },
       { kind: 'break', text: '', breakKind: 'page' },
       { kind: 'join', text: '' },
@@ -207,8 +231,6 @@ describe('cardPartsOf', () => {
       'Replace: “dog” with “cat”',
       'Format: Italic',
       'Add: Picture',
-      'Add: Object',
-      'Delete: Table',
       'Add: Page break',
       'Add: Paragraph break',
       'Delete: Paragraph break',

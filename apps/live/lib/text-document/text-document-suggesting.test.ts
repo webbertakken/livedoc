@@ -181,8 +181,11 @@ describe('suggestTransaction', () => {
 
   it('refuses a structural change, and keeps the transaction’s metas', () => {
     const state = stateWith([p('a')], 1);
-    const table = state.tr.insert(0, schema.nodes.section_break!.create());
-    expect(suggestTransaction(state, table, who())).toEqual({ refused: 'structure' });
+    const kept = state.tr.insert(
+      0,
+      schema.nodes.kept_block!.create({ name: 'x', xml: { xml: '<x/>', ns: {} } }),
+    );
+    expect(suggestTransaction(state, kept, who())).toEqual({ refused: 'structure' });
     const typed = state.tr
       .insertText('x')
       .setMeta('uiEvent', 'paste')

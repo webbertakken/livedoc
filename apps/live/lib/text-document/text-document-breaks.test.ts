@@ -236,7 +236,8 @@ describe('column breaks (page-layout.md "Breaks": a column break)', () => {
     expect(two['column-break']?.disabled).toBe(false);
   });
 
-  it('offers page and column breaks while suggesting, never section breaks, and nothing to a reader', () => {
+  // review.md "Whole blocks": a section break put in while suggesting is a suggested block.
+  it('offers every break while suggesting, and nothing to a reader', () => {
     const liveDoc = { current: null };
     const suggesting = textDocumentBreakActions(null, {
       canEdit: false,
@@ -244,7 +245,12 @@ describe('column breaks (page-layout.md "Breaks": a column break)', () => {
       liveDoc,
       format: 'odf',
     });
-    expect(Object.keys(suggesting).sort()).toEqual(['column-break', 'page-break']);
+    expect(Object.keys(suggesting).sort()).toEqual([
+      'column-break',
+      'page-break',
+      'section-break-continuous',
+      'section-break-next-page',
+    ]);
     expect(textDocumentBreakActions(null, { canEdit: false, liveDoc, format: 'odf' })).toEqual({});
   });
 });

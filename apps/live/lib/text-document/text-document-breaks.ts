@@ -249,7 +249,7 @@ export function textDocumentBreakActions(
     columns = 1,
   }: {
     canEdit: boolean;
-    // Writing as suggestions: the breaks that are a paragraph's own.
+    // Writing as suggestions: every break is one (review.md "Breaks and lines", "Whole blocks").
     suggests?: boolean;
     liveDoc: RefObject<Y.Doc | null>;
     format: TextDocumentFormat;
@@ -281,13 +281,9 @@ export function textDocumentBreakActions(
     }
     view.focus();
   };
-  const paragraphBreaks: OfficeActions = {
+  return {
     'page-break': { run: run('page-break') },
     'column-break': { run: run('column-break'), disabled: columns < 2 },
-  };
-  if (!canEdit) return paragraphBreaks;
-  return {
-    ...paragraphBreaks,
     'section-break-next-page': { run: run('section-break-next-page') },
     'section-break-continuous': { run: run('section-break-continuous') },
   };
