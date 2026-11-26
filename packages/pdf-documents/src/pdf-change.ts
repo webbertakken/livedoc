@@ -48,6 +48,8 @@ export type MarkLook = Partial<
       readonly font: string | null;
       /** The group it joins (marks.md "Changing a mark"); taken away by unsetting it. */
       readonly group: string;
+      /** Its subject (marks.md "Changing a mark": Properties); its kind's name again by unsetting it. */
+      readonly subject: string;
     }
 >;
 

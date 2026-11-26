@@ -14,13 +14,13 @@ A row is done when it reads **built** (with its test) or **left out** (with Webb
 
 | Status                                             | Means                                                                            | Rows |
 | -------------------------------------------------- | -------------------------------------------------------------------------------- | ---- |
-| `specified`                                        | In, by the spec named                                                            | 107  |
+| `specified`                                        | In, by the spec named                                                            | 106  |
 | `specified, in part`                               | In, but for the part its rule names as left out                                  | 49   |
 | `left out (<ruling>)`                              | Not built, by the ruling or fork named                                           | 160  |
 | `not a function`                                   | Not a function of a PDF: installing, updating and troubleshooting Acrobat itself | 54   |
 | `built (<test>)`                                   | Built, with the test that proves it                                              | 20   |
 | `built, in part (<test>)`                          | Built, but for the part its rule names as left out                               | 3    |
-| `built so far: <what> (<test>); the rest: Phase N` | The part named is built and proven; the rest lands in the phase named            | 10   |
+| `built so far: <what> (<test>); the rest: Phase N` | The part named is built and proven; the rest lands in the phase named            | 11   |
 
 - Left out, by ruling: 7 `left out (C4)`, 1 `left out (F10)`, 1 `left out (F12)`, 50 `left out (F14)`, 101 `left out (F5)`.
 - **C4, F5 and F14 are ruled** (Webber, 2026-11-21): the reference is this inventory, and Acrobat's far tools are left
@@ -447,11 +447,11 @@ A row is done when it reads **built** (with its test) or **left out** (with Webb
 
 ## Comment preferences
 
-| Topic                             | Rule                                                                                     | Mode      | Status                                                                                               | Spec                              |
-| --------------------------------- | ---------------------------------------------------------------------------------------- | --------- | ---------------------------------------------------------------------------------------------------- | --------------------------------- |
-| Change author name on comments    | A comment's author is the person's display name; a comment is never given another author | Reviewing | specified, in part                                                                                   | [Comments](comments.md#authors)   |
-| Set comment properties            | A mark's subject, look, a note's glyph, its history, and making its look the default     | Reviewing | specified (Phases 8 and 9)                                                                           | [Marks](marks.md#changing-a-mark) |
-| Set or change text box properties | A Text mark's font, size, colour and alignment                                           | Reviewing | built (`pdf-mark-restyle.test.ts`, `usePdfMarkRestyle.test.tsx`, `pdf-document-mark-select.spec.ts`) | [Marks](marks.md#changing-a-mark) |
+| Topic                             | Rule                                                                                     | Mode      | Status                                                                                                                                                                                                                                                                             | Spec                              |
+| --------------------------------- | ---------------------------------------------------------------------------------------- | --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------- |
+| Change author name on comments    | A comment's author is the person's display name; a comment is never given another author | Reviewing | specified, in part                                                                                                                                                                                                                                                                 | [Comments](comments.md#authors)   |
+| Set comment properties            | A mark's subject, look, a note's glyph, its history, and making its look the default     | Reviewing | built so far: a mark's subject, its look read, and making its look the default (`pdf-mark-properties.test.ts`, `usePdfMarkProperties.test.tsx`, `PdfMarkPropertiesPanel.test.tsx`, `pdf-document-mark-properties.spec.ts`); the rest: a note's glyph and a mark's history, Phase 9 | [Marks](marks.md#changing-a-mark) |
+| Set or change text box properties | A Text mark's font, size, colour and alignment                                           | Reviewing | built (`pdf-mark-restyle.test.ts`, `usePdfMarkRestyle.test.tsx`, `pdf-document-mark-select.spec.ts`)                                                                                                                                                                               | [Marks](marks.md#changing-a-mark) |
 
 ## Review documents
 

@@ -578,6 +578,25 @@ export const COMPUTED_EMITTERS: Record<string, ComputedValues> = {
       'SpreadsheetMove',
     ],
   },
+  // A mark's look made its tool's from Properties (docs/specs/035-pdf-documents/marks.md "Changing a mark"), by kind.
+  'apps/live/lib/pdf-document/usePdfMarkProperties.ts Pdf·Changed': {
+    values: [
+      'Highlight',
+      'Underline',
+      'Strikethrough',
+      'SquigglyUnderline',
+      'Drawing',
+      'Line',
+      'Arrow',
+      'Rectangle',
+      'Ellipse',
+      'Polygon',
+      'Cloud',
+      'ConnectedLines',
+      'Text',
+      'Callout',
+    ].map((kind) => `LookDefault.${kind}`),
+  },
   // A side panel of an office kind opened (docs/specs/004-interface-design/office-shell.md "Side panels"), by its title.
   'apps/live/lib/office/useOfficePanels.ts UI·Opened': {
     values: [

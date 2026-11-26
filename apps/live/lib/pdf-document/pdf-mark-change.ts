@@ -5,6 +5,7 @@
 // step, under its own id, and the file's own named gone; deleted, it is named gone.
 import type * as Y from 'yjs';
 import {
+  MARK_KIND_LABELS,
   MarkPlace,
   PdfChange,
   PdfChangeset,
@@ -35,24 +36,7 @@ export const MARK_KIND_NAMES = {
   stamp: 'Stamp',
 } as const satisfies Readonly<Record<MarkKind, string>>;
 
-/** Each kind's name as a person reads it: a mark's control is named for it (marks.md "Keyboard and accessibility"). */
-export const MARK_KIND_LABELS = {
-  highlight: 'Highlight',
-  underline: 'Underline',
-  strikeout: 'Strikethrough',
-  squiggly: 'Squiggly underline',
-  drawing: 'Drawing',
-  line: 'Line',
-  arrow: 'Arrow',
-  rectangle: 'Rectangle',
-  ellipse: 'Ellipse',
-  polygon: 'Polygon',
-  cloud: 'Cloud',
-  polyline: 'Connected lines',
-  text: 'Text',
-  callout: 'Callout',
-  stamp: 'Stamp',
-} as const satisfies Readonly<Record<MarkKind, string>>;
+export { MARK_KIND_LABELS };
 
 /** A mark's control's name: its kind and who made it, "Highlight by Ada Lovelace". */
 export const markControlName = (mark: { kind: MarkKind; author: string }): string =>

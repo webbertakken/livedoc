@@ -8,7 +8,7 @@
 // and Align text set a step, checked where every mark it reaches holds it, dimmed while none has what it sets. Each
 // restyle is one step of the person's undo, and gives the pages the keys. Marks are Reviewing's: while `marking` is
 // off nothing is bound.
-import { useMemo, useSyncExternalStore } from 'react';
+import { useMemo } from 'react';
 import {
   MARK_FONTS,
   PDF_MAX_COORDINATE,
@@ -17,6 +17,7 @@ import {
   type Box,
   type Mark,
   type MarkChange,
+  type PageInfo,
 } from '@livedoc/pdf-documents';
 import type { OfficeColours } from '@/components/office/OfficeColourControl';
 import type { OfficeFontFamily } from '@/components/office/OfficeFontMenu';
@@ -45,11 +46,8 @@ import {
   widthOf,
   type RestyledLook,
 } from './pdf-mark-restyle';
-import {
-  changeableOnPage,
-  type PdfChangeableByPage,
-  type PdfChangeableStore,
-} from './pdf-changeable-marks';
+import type { PdfChangeableStore } from './pdf-changeable-marks';
+import { usePdfChosenMarks } from './usePdfChosenMarks';
 import { addMarkFont } from './pdf-mark-faces';
 import { FILL_COLOUR, TOOL_COLOUR } from './pdf-toolbar';
 import { pageBoxOf } from './pdf-typed';
@@ -61,10 +59,7 @@ type Ready = Pick<
   'pages' | 'engine' | 'binding' | 'undo'
 >;
 
-const NO_MARKS: PdfChangeableByPage = new Map();
-const NONE: readonly Mark[] = [];
-const neverChanges = () => () => {};
-const noMarks = () => NO_MARKS;
+const NO_PAGES: readonly PageInfo[] = [];
 /** Where a page cannot be read, a box held to no page. */
 const NO_PAGE: Box = [
   -PDF_MAX_COORDINATE,
@@ -107,16 +102,11 @@ export function usePdfMarkRestyle({
   // Gives the pages the keys, once a restyle is made.
   focusPages: () => void;
 }) {
-  const read = marks?.get ?? noMarks;
-  const byPage = useSyncExternalStore(marks?.subscribe ?? neverChanges, read, read);
-  const page = chosen ? ready?.pages[chosen.page] : undefined;
-  const selected = useMemo(
-    () =>
-      chosen && page
-        ? changeableOnPage(byPage, page.name).marks.filter((mark) => chosen.ids.includes(mark.id))
-        : NONE,
-    [byPage, chosen, page],
-  );
+  const { byPage, page, selected } = usePdfChosenMarks({
+    pages: ready?.pages ?? NO_PAGES,
+    marks,
+    chosen,
+  });
 
   return useMemo(() => {
     if (!marking || !ready) return { colours: {}, actions: {}, fontSize: null, fontFamily: null };

@@ -107,6 +107,7 @@ function addMarks(
     holdList(pdf, page);
     const annotation = annotate(pdf, page, mark, writing);
     annotation.set('NM', PdfString.fromString(mark.id));
+    if (mark.subject) annotation.set('Subj', PdfString.fromString(mark.subject));
     annotation.set('M', PdfString.fromString(PdfDate.write(mark.modifiedAt)));
     annotation.set('CreationDate', PdfString.fromString(PdfDate.write(mark.createdAt)));
   }

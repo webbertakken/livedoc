@@ -1406,8 +1406,30 @@ export const PDF_TOOL_LOOKS = chart(
   'Pdf',
   'Changed',
   'PDF Tool Looks Chosen',
-  'A colour chosen or reset, or a line width, line style or fill chosen, for the mark tool in hand on a PDF document.',
-  { types: ['ToolColour', 'ToolLine'], rising: 'neutral' },
+  "A colour chosen or reset, or a line width, line style or fill chosen, for the mark tool in hand on a PDF document; or a mark's look made its tool's from Properties.",
+  {
+    types: [
+      'ToolColour',
+      'ToolLine',
+      ...[
+        'Highlight',
+        'Underline',
+        'Strikethrough',
+        'SquigglyUnderline',
+        'Drawing',
+        'Line',
+        'Arrow',
+        'Rectangle',
+        'Ellipse',
+        'Polygon',
+        'Cloud',
+        'ConnectedLines',
+        'Text',
+        'Callout',
+      ].map((kind) => `LookDefault.${kind}`),
+    ],
+    rising: 'neutral',
+  },
 );
 
 export const PDF_MARKS_CHANGED = chart(
@@ -1423,6 +1445,7 @@ export const PDF_MARKS_CHANGED = chart(
       'Mark.Grouped',
       'Mark.Ungrouped',
       'Mark.Erased',
+      'Mark.Subject',
     ],
     rising: 'neutral',
   },

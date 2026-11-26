@@ -1858,11 +1858,11 @@ export const SPREADSHEET_PANELS_OPENED = opened(
   (t) => (t ?? '').startsWith('SpreadsheetPanel'),
 );
 
-// A PDF document's left panel opened (docs/specs/035-pdf-documents/reading-surface.md "The left panel"): its rail, its
-// View item or its key.
+// A PDF document's side panel opened (docs/specs/035-pdf-documents/reading-surface.md "The left panel"): its rail, its
+// View item or its key; or a mark's Properties on the right (marks.md "Changing a mark").
 export const PDF_DOCUMENT_PANELS_OPENED = opened(
   'PDF Document Panels',
-  'A left panel of a PDF document opened from its rail, its View item or its key: the thumbnails, the outline, the embedded files or the layers.',
+  "A side panel of a PDF document opened: from its rail, its View item or its key, the thumbnails, the outline, the embedded files or the layers; from Format, a mark's Properties.",
   (t) => (t ?? '').startsWith('PdfDocumentPanel'),
 );
 

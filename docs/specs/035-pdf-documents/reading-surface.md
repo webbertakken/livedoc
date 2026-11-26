@@ -176,6 +176,7 @@ to act on is dimmed. Colours come from the one colour picker
 | Align text ▸         | Left; Centre; Right; Justified. A Text or Callout mark's words, or a text box's                            | participate | Reviewing |
 | Arrange ▸            | Bring to front; Bring forward; Send backward; Send to back                                                 | participate | Reviewing |
 | Group, Ungroup, Lock | Marks ([Marks](marks.md#changing-a-mark)); Lock is a check                                                 | participate | Reviewing |
+| Properties           | The selected mark's, in the side panel ([Marks](marks.md#changing-a-mark))                                 | participate | Reviewing |
 | Text ▸               | Bold; Italic; Underline; Strikethrough; Superscript; Subscript. [Editing text](editing-text.md#formatting) | edit        | Editing   |
 | Spacing              | Line, paragraph and character spacing and the horizontal scale, in the side panel                          | edit        | Editing   |
 | List ▸               | Bulleted; Numbered; None                                                                                   | edit        | Editing   |

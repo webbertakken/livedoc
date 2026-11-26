@@ -65,6 +65,8 @@ export const PDF_POLYGON_MAX_CORNERS = 1000;
 export const PDF_CLOUD_ARC_PT = 12;
 /** (default) Screen pixels from a mark's line that a press still selects it (marks.md "Limits"). Safe range: 4 to 12. */
 export const PDF_MARK_REACH_PX = 6;
+/** (default) A mark's subject (marks.md "Limits"). */
+export const PDF_MARK_SUBJECT_MAX_CHARS = 64;
 /** (default) Screen pixels from a stroke's line that Erase still rubs it out (marks.md "Limits"). Safe range: 4 to 16. */
 export const PDF_ERASER_REACH_PX = 8;
 /**

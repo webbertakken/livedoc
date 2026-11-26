@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   PDF_DRAWING_MAX_POINTS,
   PDF_MARK_MAX_QUADS,
+  PDF_MARK_SUBJECT_MAX_CHARS,
   PDF_MARK_TEXT_MAX_CHARS,
   PDF_MARK_WIDTH_MAX_PT,
   PDF_MARK_WIDTH_MIN_PT,
@@ -70,6 +71,20 @@ describe('Mark', () => {
     expect(Mark.parse(JSON.parse(JSON.stringify(mark)))).toEqual(mark);
     for (const bad of ['', 'a b', 'g'.repeat(65), 7, null])
       expect(Mark.parse({ ...mark, group: bad })).not.toHaveProperty('group');
+  });
+
+  // marks.md "Changing a mark": Properties, the subject.
+  it('carries its subject, trimmed and cut to PDF_MARK_SUBJECT_MAX_CHARS; a blank one reads as none', () => {
+    const mark = Mark.highlight({ ...input(), subject: '  Check the date ' })!;
+    expect(mark.subject).toBe('Check the date');
+    expect(Mark.parse(JSON.parse(JSON.stringify(mark)))).toEqual(mark);
+    expect(
+      Mark.parse({ ...mark, subject: 'x'.repeat(PDF_MARK_SUBJECT_MAX_CHARS + 9) }),
+    ).toMatchObject({
+      subject: 'x'.repeat(PDF_MARK_SUBJECT_MAX_CHARS),
+    });
+    for (const bad of ['', '   ', 7, null])
+      expect(Mark.parse({ ...mark, subject: bad })).not.toHaveProperty('subject');
   });
 
   it('is own to the key it carries alone; no key owns nothing', () => {

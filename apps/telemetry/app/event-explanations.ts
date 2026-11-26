@@ -965,6 +965,35 @@ export const EXACT: Readonly<Record<string, string>> = {
     'Someone chose a colour, or reset it, for the mark tool in hand on a PDF document.',
   'Pdf|Changed|ToolLine':
     'Someone chose a line width, line style or fill for the mark tool in hand on a PDF document.',
+  'Pdf|Changed|LookDefault.Highlight':
+    "Someone made a mark's look the Highlight tool's own from its Properties on a PDF document.",
+  'Pdf|Changed|LookDefault.Underline':
+    "Someone made a mark's look the Underline tool's own from its Properties on a PDF document.",
+  'Pdf|Changed|LookDefault.Strikethrough':
+    "Someone made a mark's look the Strikethrough tool's own from its Properties on a PDF document.",
+  'Pdf|Changed|LookDefault.SquigglyUnderline':
+    "Someone made a mark's look the Squiggly underline tool's own from its Properties on a PDF document.",
+  'Pdf|Changed|LookDefault.Drawing':
+    "Someone made a mark's look the Drawing tool's own from its Properties on a PDF document.",
+  'Pdf|Changed|LookDefault.Line':
+    "Someone made a mark's look the Line tool's own from its Properties on a PDF document.",
+  'Pdf|Changed|LookDefault.Arrow':
+    "Someone made a mark's look the Arrow tool's own from its Properties on a PDF document.",
+  'Pdf|Changed|LookDefault.Rectangle':
+    "Someone made a mark's look the Rectangle tool's own from its Properties on a PDF document.",
+  'Pdf|Changed|LookDefault.Ellipse':
+    "Someone made a mark's look the Ellipse tool's own from its Properties on a PDF document.",
+  'Pdf|Changed|LookDefault.Polygon':
+    "Someone made a mark's look the Polygon tool's own from its Properties on a PDF document.",
+  'Pdf|Changed|LookDefault.Cloud':
+    "Someone made a mark's look the Cloud tool's own from its Properties on a PDF document.",
+  'Pdf|Changed|LookDefault.ConnectedLines':
+    "Someone made a mark's look the Connected lines tool's own from its Properties on a PDF document.",
+  'Pdf|Changed|LookDefault.Text':
+    "Someone made a mark's look the Text tool's own from its Properties on a PDF document.",
+  'Pdf|Changed|LookDefault.Callout':
+    "Someone made a mark's look the Callout tool's own from its Properties on a PDF document.",
+  'Pdf|Changed|Mark.Subject': "Someone changed a mark's subject in its Properties on a PDF page.",
   'Pdf|Changed|Mark.Resized':
     'Someone resized a mark on a PDF page, by a handle or with ⌥ and the arrow keys.',
   'Pdf|Changed|Mark.Restyled':

@@ -67,6 +67,8 @@ export const DELETE_MARKS = 'delete';
 /** Format > Group and Ungroup: the selected marks made one, or taken apart (marks.md "Changing a mark"). */
 export const GROUP_MARKS = 'group';
 export const UNGROUP_MARKS = 'ungroup';
+/** Format > Properties: the selected mark's, in the side panel (marks.md "Changing a mark"). */
+export const MARK_PROPERTIES = 'mark-properties';
 export const PRINT = 'print';
 /** Edit > Copy and Select all: the text selected on the pages (reading-surface.md "The pages"). */
 export const COPY = 'copy';
@@ -450,6 +452,10 @@ export const PDF_MENUS: OfficeCatalogue = [
     item(GROUP_MARKS, 'Group', 'participate', BUILT),
     item(UNGROUP_MARKS, 'Ungroup', 'participate', BUILT),
     item('lock', 'Lock', 'participate', CHECK),
+    item(MARK_PROPERTIES, 'Properties', 'participate', {
+      ...BUILT,
+      keywords: ['subject', 'author'],
+    }),
     SEPARATOR,
     choices(
       'text',

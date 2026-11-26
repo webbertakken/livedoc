@@ -8,6 +8,7 @@ import {
   PDF_DRAWING_MAX_POINTS,
   PDF_POLYGON_MAX_CORNERS,
   PDF_MARK_MAX_QUADS,
+  PDF_MARK_SUBJECT_MAX_CHARS,
   PDF_MARK_TEXT_MAX_CHARS,
   PDF_MARK_WIDTH_MAX_PT,
   PDF_MARK_WIDTH_MIN_PT,
@@ -86,6 +87,25 @@ export type PolyMarkKind = (typeof POLY_MARK_KINDS)[number];
 /** The kinds whose words are typed straight onto the page. */
 export type TypedMarkKind = (typeof TYPED_MARK_KINDS)[number];
 
+/** Each kind's name as a person reads it (marks.md "Keyboard and accessibility"), and a mark's subject until changed. */
+export const MARK_KIND_LABELS = {
+  highlight: 'Highlight',
+  underline: 'Underline',
+  strikeout: 'Strikethrough',
+  squiggly: 'Squiggly underline',
+  drawing: 'Drawing',
+  line: 'Line',
+  arrow: 'Arrow',
+  rectangle: 'Rectangle',
+  ellipse: 'Ellipse',
+  polygon: 'Polygon',
+  cloud: 'Cloud',
+  polyline: 'Connected lines',
+  text: 'Text',
+  callout: 'Callout',
+  stamp: 'Stamp',
+} as const satisfies Readonly<Record<MarkKind, string>>;
+
 /** What a mark drawn as a line holds of its line's look past its width. */
 type Lined = {
   /** Its line's style; absent for Solid. */
@@ -108,6 +128,8 @@ type MarkBase = {
   readonly authorKey?: string;
   /** The group it is one of (marks.md "Changing a mark"): the marks of its page sharing it move and answer as one. */
   readonly group?: string;
+  /** Its subject (marks.md "Changing a mark": Properties), the file's `Subj`; absent for its kind's name. */
+  readonly subject?: string;
   /** Milliseconds since the epoch: the file's `CreationDate` and `M`. */
   readonly createdAt: number;
   readonly modifiedAt: number;
@@ -258,6 +280,13 @@ export type CalloutInput = Omit<CalloutMark, 'kind' | 'modifiedAt'>;
 export type StampInput = Omit<StampMark, 'kind' | 'modifiedAt'>;
 
 /** What every kind holds, checked and bounded; null where any of it is not what a mark holds. */
+/** A subject as a mark holds it: trimmed, cut to its most; nothing for none, or a blank one. */
+function subjectOf(subject: unknown): { subject?: string } {
+  const trimmed =
+    typeof subject === 'string' ? subject.trim().slice(0, PDF_MARK_SUBJECT_MAX_CHARS).trim() : '';
+  return trimmed ? { subject: trimmed } : {};
+}
+
 function baseOf(v: Record<string, unknown>): MarkBase | null {
   const page = PageName.parse(v.page);
   if (typeof v.id !== 'string' || !ID.test(v.id) || !page) return null;
@@ -275,6 +304,7 @@ function baseOf(v: Record<string, unknown>): MarkBase | null {
       typeof v.authorKey === 'string' && AUTHOR_KEY.test(v.authorKey) ? v.authorKey : null,
     ),
     ...(typeof v.group === 'string' && ID.test(v.group) ? { group: v.group } : {}),
+    ...subjectOf(v.subject),
     createdAt: v.createdAt,
     modifiedAt: v.modifiedAt,
   };
