@@ -57,3 +57,18 @@ export function insideOwnBlock(step: Step, doc: PmNode, key: string): boolean {
   const to = ownBlockAround(doc, range.to, key);
   return from !== null && to !== null && from.at === to.at && range.from > from.at;
 }
+
+/** Whether a step changes what is inside a table of contents: the document makes its entries, never a suggestion. */
+export function insideContents(step: Step, doc: PmNode): boolean {
+  const at =
+    step instanceof AttrStep
+      ? step.pos
+      : step instanceof ReplaceStep || step instanceof ReplaceAroundStep
+        ? step.from
+        : null;
+  if (at === null) return false;
+  const $at = doc.resolve(Math.max(0, Math.min(at, doc.content.size)));
+  for (let depth = $at.depth; depth > 0; depth--)
+    if ($at.node(depth).type.name === 'table_of_contents') return true;
+  return false;
+}

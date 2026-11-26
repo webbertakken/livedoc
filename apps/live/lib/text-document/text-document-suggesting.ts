@@ -30,6 +30,7 @@ import {
   type SuggestionMark,
 } from '@livedoc/text-documents';
 import {
+  insideContents,
   insideOwnBlock,
   isOwn,
   isStructure,
@@ -163,6 +164,11 @@ class Rewriter {
         if (isOwn(node.attrs[INSERTION_MARK], this.who.key))
           actions.push({ pos, kind: 'remove', to: pos + node.nodeSize });
         else if (!node.attrs[DELETION_MARK]) actions.push({ pos, kind: 'block', node });
+        return false;
+      }
+      // A whole row or cell of a table not wholly covered: rows and columns are not suggested yet.
+      if (isTablePart(node) && pos >= from && pos + node.nodeSize <= to) {
+        refused = 'structure';
         return false;
       }
       if (isWholeBlock(node) || isTablePart(node)) return true;
@@ -399,7 +405,8 @@ export function suggestTransaction(
     if (ownBlock) {
       const mapped = step.map(into);
       if (!mapped || out.maybeStep(mapped).failed) refused = 'structure';
-    } else if (markup) rewriter.paragraphFormat(map(markup.pos), markup.attrs);
+    } else if (insideContents(step, doc)) refused = 'structure';
+    else if (markup) rewriter.paragraphFormat(map(markup.pos), markup.attrs);
     else if (object) {
       // One's own suggested object changes plainly, part of its suggestion; anyone else's never.
       const mapped = isOwn(object.node.attrs[INSERTION_MARK], who.key) ? step.map(into) : null;

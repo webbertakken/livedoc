@@ -34,14 +34,13 @@ const EDITOR_ONLY = [
   /^reset-styles$/,
   /^(numbered-list|bulleted-list|checklist|restart-numbering|continue-numbering|more-bullets)$/,
   /^columns-/,
-  /^table-/,
+  // Format > Table's dialog, templates and the table of contents' options: kept as an Editor's (review.md "Not yet").
+  /^table-(properties|templates|pin-header-rows|of-contents-options)$/,
   // Format > Image's: a picture's size, crop, colours and placing; putting one in can be suggested.
   /^image-(?!upload$|search$|gallery$)/,
   /^drawing-/,
   /^building-block-/,
   /^code-block-/,
-  /^(section-break-next-page|section-break-continuous)$/,
-  /^toc-/,
   /^footnote$/,
   /^watermark$/,
   /^line-numbers$/,

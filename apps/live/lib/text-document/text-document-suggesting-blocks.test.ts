@@ -165,6 +165,26 @@ describe('suggestTransaction on whole blocks', () => {
     expect(blockOf(next, 'table')!.childCount).toBe(2);
   });
 
+  it('refuses a whole row of anyone else’s table deleted: rows are not suggested yet', () => {
+    const state = stateWith([p('a'), table(), p('b')], 1);
+    const tableAt = 3;
+    const row = state.doc.nodeAt(tableAt)!.firstChild!;
+    const tr = state.tr.delete(tableAt + 1, tableAt + 1 + row.nodeSize);
+    expect(suggestTransaction(state, tr, as(ADA))).toEqual({ refused: 'structure' });
+  });
+
+  it('refuses a change inside anyone else’s table of contents, and makes one inside one’s own plainly', () => {
+    const contents = (attrs: Record<string, unknown>) =>
+      schema.nodes.table_of_contents!.create({ look: 'plain', levels: 6, ...attrs }, p('entry'));
+    const others = stateWith([p('a'), contents({}), p('b')], 1);
+    expect(suggestTransaction(others, others.tr.insertText('x', 5), as(ADA))).toEqual({
+      refused: 'structure',
+    });
+    const own = stateWith([p('a'), contents({ insertion: mark('s0') }), p('b')], 1);
+    const next = suggest(own, own.tr.insertText('x', 5));
+    expect(marked(blockOf(next, 'table_of_contents')!)).toEqual([['xentry', undefined]]);
+  });
+
   it('refuses a kept block, in a slice or deleted', () => {
     const kept = schema.nodes.kept_block!.create({ name: 'x', xml: { xml: '<x/>', ns: {} } });
     const state = stateWith([p('ab')], 2);
