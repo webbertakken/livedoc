@@ -876,7 +876,8 @@ document's Plan cards when a formula reads them.
   (`conditionalFormats`) in words, and `invalid` on a cell whose value its rule does not allow. A read covers at most `AGENT_READ_CELLS_MAX` (5,000) cells
   of the range and answers at most `SHEET_READ_CHARS_MAX` (100,000) characters of cells; past either it stops,
   sets `truncated` and says in `note` where to read on.
-- **`change_sheet`** (destructive, as it clears and deletes): up to 50 changes in order, each built against the
+- **`change_sheet`** (destructive, as it clears and deletes): up to 50 changes in order, landing together as one
+  [sheet changeset](../024-agents/agent-changesets.md#a-sheets-changesets) or not at all, each built against the
   sheet as the ones before it left it: `set` `{ at, rows }`, `clear` `{ range, what }`, `format` `{ range, format }`
   (bold, italic, underline, strikethrough, colours, font size, alignment, wrap, number format, decimals,
   currency), `insert_rows` / `insert_cols` `{ at, count, side }`, `delete_rows` `{ rows }`, `delete_cols`
@@ -1185,7 +1186,7 @@ says why by its status (no such tab, view only, the last tab).
 | `change_card_types`  | `applied[]` (with the ids made), `trashed[]`, `types[]`, `url`                                                                                                                                                          |
 | `list_sheets`        | `sheets[]` of `{ id, title, tabId, tabName, rows, cols, filled, elementId, hidden?, charts? }`, `url`                                                                                                                   |
 | `read_sheet`         | `sheetId`, `title`, `tabId`, `range`, `rows`, `cols`, `cells[]` of `{ at, input, value, display }`, `truncated`, `note?`, `frozen { rows, cols }`, `merges[]`, `filter`, `charts[]?` (a spreadsheet's), `url`           |
-| `change_sheet`       | `sheetId`, `title`, `applied[]` (one line per change), `rev`, `url`                                                                                                                                                     |
+| `change_sheet`       | `sheetId`, `title`, `applied[]` (one line per change), `rev`, `changesetId`, `url`                                                                                                                                      |
 | `add_sheet`          | `tabId`, `sheetId`, `elementId` (null in a spreadsheet), `title`, `filled`, `truncated`, `changesetId`, `rev`, `url`                                                                                                    |
 | `create_spreadsheet` | `documentId`, `name`, `sheets[]` of `{ name, sheetId, tabId, filled }`, `refusal?`, `url`                                                                                                                               |
 

@@ -394,4 +394,4 @@ The code cites each by its id.
   spreadsheet's `move` lands after it through the workbook's door, and a Plan Sheet's chart elements in a tab
   changeset after it (default).
 - **D270** A sheet changeset's answer: `{ changeset: { id, sheetId, tabId, rev, previousRev, counts } | null, rev,
-  applied }`, `applied` being the writes as they landed, for the caller to follow (default).
+applied }`, `applied` being the writes as they landed, for the caller to follow (default).
