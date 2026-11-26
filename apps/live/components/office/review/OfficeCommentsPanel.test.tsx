@@ -174,3 +174,26 @@ describe('OfficeCommentsPanel', () => {
     expect(screen.getByText('From the file')).toBeTruthy();
   });
 });
+
+// review.md "Suggestion cards", In the comments panel: a suggestion's row names who made it.
+describe('OfficeCommentsPanel, a suggestion’s row', () => {
+  it('names the suggestion and its maker, with its replies counted', () => {
+    const row: ReviewThreadRow = {
+      id: 'suggestion:s1',
+      label: '',
+      deleted: false,
+      resolved: false,
+      group: 't.0',
+      kind: 'suggestion',
+      comments: [
+        { ...comment('suggestion:s1', 'ben', 'Ben'), text: 'Add: “quick”' },
+        comment('r1', 'me', 'Ada'),
+      ],
+    };
+    const { onGo } = panel({}, [row]);
+    fireEvent.click(screen.getByRole('button', { name: 'Go to suggestion by Ben' }));
+    expect(onGo).toHaveBeenCalledWith('suggestion:s1');
+    expect(screen.getByText('Add: “quick”')).toBeTruthy();
+    expect(screen.getByText('1 reply')).toBeTruthy();
+  });
+});

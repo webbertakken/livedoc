@@ -53,6 +53,8 @@ export type TextDocumentThread = {
   readonly quote: string;
   readonly resolved: boolean;
   readonly comments: readonly TextDocumentComment[];
+  /** The suggestion it is tied to (review.md "Suggestion cards", Replies); never changed once begun. */
+  readonly suggestion?: string;
 };
 
 /** What begins a thread: its anchor, quote and first comment. */
@@ -147,6 +149,9 @@ function readThread(id: string, thread: YThread): TextDocumentThread | null {
     end: bytes('end'),
     quote: stringOf(thread.get('quote')),
     resolved: thread.get('resolved') === true,
+    ...(typeof thread.get('suggestion') === 'string'
+      ? { suggestion: thread.get('suggestion') as string }
+      : {}),
     comments: firstThen(
       stringOf(thread.get('first')),
       [...comments.entries()].map(([cid, c]) => readComment(cid, c)).sort(byTimeThenId),
@@ -216,6 +221,7 @@ export const LiveThreads = {
       thread.set('quote', start.quote);
       thread.set('resolved', false);
       thread.set('first', start.comment.id);
+      if (start.suggestion !== undefined) thread.set('suggestion', start.suggestion);
       const comments = new Y.Map<Y.Map<unknown>>();
       comments.set(start.comment.id, commentMap(start.comment));
       thread.set('comments', comments);

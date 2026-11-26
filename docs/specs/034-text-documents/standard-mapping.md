@@ -259,6 +259,7 @@ Each loss by direction; each is listed in the import, conversion or download rep
 | Google Docs `.docx`      | A field's marks in one run and no result text; no core or app properties, no footnote separators                        |
 | Word files               | A move (`w:moveFrom`, `w:moveTo`) reads as a deletion and an insertion; written back as such                            |
 | Either format            | A tracked change in a header, footer or note is settled on read, reported `suggestion-in-story`                         |
+| Either format            | A suggestion's replies are written as a comment on its stretch, read back as a comment thread (no tie to it)            |
 | LiveDoc to another suite | Reactions, assignees, document tabs and pageless show as their fallbacks                                                |
 
 ## Limits

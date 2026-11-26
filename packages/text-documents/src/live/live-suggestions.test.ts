@@ -97,13 +97,21 @@ describe('LiveSuggestions.read', () => {
         'gh',
         { [FORMAT_CHANGE_MARK]: { ...mark('s2'), before: { bold: null } }, bold: { value: true } },
       ],
+      [
+        'ij',
+        {
+          [FORMAT_CHANGE_MARK]: { ...mark('s2'), before: { italic: null, bold: null } },
+          italic: { value: true },
+        },
+      ],
     ]);
     const [first, second] = LiveSuggestions.read(doc);
     expect(first!.parts).toEqual([
       { kind: 'insertion', text: 'abcd' },
       { kind: 'insertion', text: 'ef' },
     ]);
-    expect(second!.parts).toEqual([{ kind: 'format', text: 'gh' }]);
+    // A format part names the marks it changed, merged parts all of theirs.
+    expect(second!.parts).toEqual([{ kind: 'format', text: 'ghij', changed: ['bold', 'italic'] }]);
   });
 
   it('reads objects, joins, paragraph formats and blocks, and ignores what is no mark', () => {
@@ -122,12 +130,24 @@ describe('LiveSuggestions.read', () => {
     table.setAttribute(INSERTION_MARK, mark('s4') as unknown as string);
     body.push([table]);
     expect(LiveSuggestions.read(doc).map((s) => [s.id, s.parts])).toEqual([
-      ['s1', [{ kind: 'insertion', text: 'picture' }]],
+      // An object's and a block's parts name their element.
+      ['s1', [{ kind: 'insertion', text: 'picture', element: 'picture' }]],
       ['s2', [{ kind: 'join', text: '' }]],
       ['s3', [{ kind: 'paragraph-format', text: '' }]],
-      ['s4', [{ kind: 'block-insertion', text: 'table' }]],
+      ['s4', [{ kind: 'block-insertion', text: 'table', element: 'table' }]],
     ]);
     expect(LiveSuggestions.count(doc)).toBe(4);
+  });
+
+  it('never merges an object into the text beside it', () => {
+    const { doc } = written({
+      runs: [['x', { [INSERTION_MARK]: mark('s1') }]],
+      atom: { media: 'm1', [INSERTION_MARK]: mark('s1') },
+    });
+    expect(LiveSuggestions.read(doc)[0]!.parts).toEqual([
+      { kind: 'insertion', text: 'x' },
+      { kind: 'insertion', text: 'picture', element: 'picture' },
+    ]);
   });
 
   it('reads a suggestion in another document tab with that tab', () => {

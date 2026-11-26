@@ -79,3 +79,85 @@ describe('TextDocumentSuggestionCard', () => {
     expect(card.getAttribute('aria-current')).toBe('true');
   });
 });
+
+// review.md "Suggestion cards", Replies: the tied thread's replies under the lines; Reply while selected.
+describe('TextDocumentSuggestionCard replies', () => {
+  const ADA = { key: 'k-ada', name: 'Ada', colour: '#0284c7', mayDeleteAny: false };
+  const thread = {
+    id: 'th',
+    tab: 't.0',
+    start: new Uint8Array([1]),
+    end: new Uint8Array([1]),
+    quote: 'Add: “quick”',
+    resolved: false,
+    suggestion: 's1',
+    comments: [
+      {
+        id: 'r1',
+        text: 'Why quick?',
+        at: 5,
+        author: { key: 'k-ben', name: 'Ben', colour: '#16a34a' },
+      },
+    ],
+  };
+  const replies = (over: object = {}) => ({
+    thread,
+    commenter: ADA,
+    onReply: vi.fn(),
+    onEdit: vi.fn(),
+    onRemove: vi.fn(),
+    onReact: vi.fn(),
+    names: new Map<string, string>(),
+    ...over,
+  });
+
+  it('draws the replies, and Reply only while selected for whoever may comment', () => {
+    const { rerender } = render(
+      <TextDocumentSuggestionCard
+        card={CARD}
+        selected={false}
+        offers={{ accept: true, reject: true }}
+        onSelect={vi.fn()}
+        onAccept={vi.fn()}
+        onReject={vi.fn()}
+        onStep={vi.fn()}
+        onExit={vi.fn()}
+        replies={replies()}
+      />,
+    );
+    expect(screen.getByText('Why quick?')).toBeTruthy();
+    expect(screen.queryByRole('textbox')).toBeNull();
+    const props = {
+      card: CARD,
+      selected: true,
+      offers: { accept: true, reject: true },
+      onSelect: vi.fn(),
+      onAccept: vi.fn(),
+      onReject: vi.fn(),
+      onStep: vi.fn(),
+      onExit: vi.fn(),
+    };
+    rerender(<TextDocumentSuggestionCard {...props} replies={replies()} />);
+    expect(screen.getByRole('textbox')).toBeTruthy();
+    rerender(<TextDocumentSuggestionCard {...props} replies={replies({ commenter: null })} />);
+    expect(screen.queryByRole('textbox')).toBeNull();
+  });
+
+  it('focuses Reply with R on a selected card', () => {
+    render(
+      <TextDocumentSuggestionCard
+        card={CARD}
+        selected
+        offers={{ accept: false, reject: false }}
+        onSelect={vi.fn()}
+        onAccept={vi.fn()}
+        onReject={vi.fn()}
+        onStep={vi.fn()}
+        onExit={vi.fn()}
+        replies={replies({ thread: null })}
+      />,
+    );
+    fireEvent.keyDown(screen.getByRole('group'), { key: 'r' });
+    expect(document.activeElement).toBe(screen.getByRole('textbox'));
+  });
+});

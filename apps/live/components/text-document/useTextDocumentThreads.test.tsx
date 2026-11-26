@@ -266,3 +266,55 @@ describe('useTextDocumentThreads', () => {
     expect(renderStatus(result.current.status).container.textContent).toBe(COMMENTS_FULL);
   });
 });
+
+// review.md "Suggestion cards", Replies: the first reply begins a thread tied to the suggestion, later ones join it;
+// settling the suggestion resolves it.
+describe('useTextDocumentThreads on a suggestion', () => {
+  const card = { id: 's1', from: 11, to: 18, lines: ['Add: “results”'] };
+
+  it('begins a tied thread on the suggestion’s stretch, then replies on it', async () => {
+    const at = await editor();
+    const { result } = threadsOn(at);
+    act(() => result.current.replyToSuggestion(card, 'Why this?'));
+    const [thread] = LiveThreads.read(at.doc);
+    expect(thread).toMatchObject({ suggestion: 's1', quote: 'Add: “results”', tab: 't.0' });
+    expect(LiveThreads.anchor(at.doc, thread!)).toMatchObject({ deleted: false });
+    act(() => result.current.replyToSuggestion(card, 'Because.'));
+    expect(LiveThreads.read(at.doc)).toHaveLength(1);
+    expect(LiveThreads.read(at.doc)[0]!.comments.map((c) => c.text)).toEqual([
+      'Why this?',
+      'Because.',
+    ]);
+    expect(tracked).toEqual([
+      ['Comment', 'Added', 'TextDocument'],
+      ['Comment', 'Added', 'TextDocument'],
+    ]);
+  });
+
+  it('resolves the tied thread, and only it, once the suggestion is settled', async () => {
+    const at = await editor();
+    const { result } = threadsOn(at);
+    act(() => result.current.replyToSuggestion(card, 'Why this?'));
+    act(() => result.current.replyToSuggestion({ ...card, id: 's2' }, 'And this?'));
+    act(() => result.current.resolveTied('s1'));
+    expect(LiveThreads.read(at.doc).map((t) => [t.suggestion, t.resolved])).toEqual([
+      ['s1', true],
+      ['s2', false],
+    ]);
+    // A new reply after it settled begins afresh.
+    act(() => result.current.replyToSuggestion(card, 'Again'));
+    expect(LiveThreads.read(at.doc)).toHaveLength(3);
+  });
+
+  it('says so with nobody to sign it, or no stretch to anchor on', async () => {
+    const at = await editor();
+    const none = threadsOn(at, null);
+    act(() => none.result.current.replyToSuggestion(card, 'x'));
+    expect(LiveThreads.read(at.doc)).toHaveLength(0);
+    const { result } = threadsOn(at);
+    act(() => result.current.replyToSuggestion({ ...card, from: 999, to: 999 }, 'x'));
+    expect(LiveThreads.read(at.doc)).toHaveLength(0);
+    const { getByRole } = renderStatus(result.current.status);
+    expect(getByRole('status').textContent).toBe(NOTHING_TO_COMMENT_ON);
+  });
+});

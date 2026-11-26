@@ -81,9 +81,18 @@ export function TextDocumentMargin({
   const column = useRef<HTMLElement | null>(null);
   const [layout, setLayout] = useState<Layout>(NO_LAYOUT);
   const { stretches, selected, draft } = threads;
-  const byId = new Map(threads.threads.map((t) => [t.id, t]));
-  const shown = stretches.filter((s) => byId.has(s.id));
   const suggestionCards = suggestions?.cards ?? NO_SUGGESTIONS;
+  // A thread tied to a suggestion whose card is here is drawn in that card, never as a card of its own.
+  const tiedTo = new Map(
+    threads.threads.flatMap((t) =>
+      t.suggestion !== undefined && suggestionCards.some((c) => c.id === t.suggestion)
+        ? [[t.suggestion, t] as const]
+        : [],
+    ),
+  );
+  const tied = new Set([...tiedTo.values()].map((t) => t.id));
+  const byId = new Map(threads.threads.filter((t) => !tied.has(t.id)).map((t) => [t.id, t]));
+  const shown = stretches.filter((s) => byId.has(s.id));
   const cards = shown.length > 0 || draft !== null || suggestionCards.length > 0;
   // One card is selected: a thread, else a suggestion.
   const raised =
@@ -186,6 +195,16 @@ export function TextDocumentMargin({
           onReject={() => suggestions.reject(suggestion.id)}
           onStep={suggestions.step}
           onExit={suggestions.exit}
+          replies={{
+            thread: tiedTo.get(suggestion.id) ?? null,
+            commenter,
+            onReply: (text, mentions, assignee) =>
+              threads.replyToSuggestion(suggestion, text, mentions, assignee),
+            onEdit: threads.edit,
+            onRemove: threads.remove,
+            onReact: threads.react,
+            names: threads.names,
+          }}
         />
       ) : null;
     }
