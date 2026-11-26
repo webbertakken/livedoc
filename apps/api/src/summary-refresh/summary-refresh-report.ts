@@ -3,7 +3,7 @@
 // each difference's range, every hasContent flip and every document the run skipped. Pure, so the script that runs it through
 // wrangler only fetches and prints.
 
-import { SUMMARY_FIELDS } from './summary-refresh-diff';
+import { SUMMARY_FIELDS } from './summary-refresh-fields';
 
 /** The numeric differences in the order they are printed. */
 const DELTA_NAMES = [
