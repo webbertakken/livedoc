@@ -2,7 +2,7 @@
 // LiveDoc's style; "Words in every script"): a Text's and a Callout's as TypedLayout places them, a stamp's as
 // StampLayout does, each line with its size and face, the box they are set in, and the faces the mark is set in. One
 // answer, so the surface's overlay, the canvas pictures and the appearance a bake writes set every mark's words alike.
-import { Mark, type Box } from './mark';
+import { Mark, type Box, type StampMark } from './mark';
 import type { MarkFaceRegion } from './mark-face-families';
 import type { MarkFaceSet } from './mark-faces';
 import { StampLayout, type StampLine } from './stamp-layout';
@@ -39,6 +39,20 @@ export const MarkWords = {
       faces: TypedLayout.faces(mark.words, mark.font),
       region: TypedLayout.region(mark.words),
       ...(mark.font ? { font: mark.font } : {}),
+    };
+  },
+
+  /**
+   * A custom stamp's lines under its picture, where it shows who and when (custom-stamps.md "Placing one"); null for
+   * any other stamp, or one with only its name.
+   */
+  pictured: (mark: StampMark): MarkWords | null => {
+    if (!mark.picture || mark.lines.length < 2) return null;
+    return {
+      lines: StampLayout.pictured({ ...mark, picture: mark.picture }).lines,
+      box: mark.rect,
+      faces: StampLayout.picturedFaces(mark),
+      region: StampLayout.picturedRegion(mark),
     };
   },
 } as const;

@@ -1,11 +1,13 @@
 // How a stamp is drawn in LiveDoc's style (docs/specs/035-pdf-documents/marks.md "Stamps"): a box with rounded corners
 // and a border, the stamp's name in capitals in Helvetica Bold, a dynamic stamp's second and third lines in Helvetica, each line
 // centred; in the mark faces where Helvetica cannot write a line ("Words in every script"). Its natural size is what its words need; in a box of any other size it is scaled, kept in proportion and
-// centred. Pure, so the surface's overlay, the canvas pictures and the appearance a bake writes draw one stamp the same.
+// centred. A custom stamp that shows who and when is its picture with its second and third lines under it
+// (custom-stamps.md "Placing one"). Pure, so the surface's overlay, the canvas pictures and the appearance a bake
+// writes draw one stamp the same.
 import type { PagePoint } from './engine-contract';
 import { Helvetica } from './helvetica';
 import { HelveticaBold } from './helvetica-bold';
-import type { StampMark } from './mark';
+import type { Box, StampMark } from './mark';
 import type { MarkFaceRegion } from './mark-face-families';
 import { MarkFaces, type MarkFaceSet } from './mark-faces';
 import type { MarkStroke } from './mark-drawing';
@@ -61,6 +63,27 @@ const widthOf = (text: string, at: number, { faces, region }: Setting): number =
       : MarkFaces.width({ text, bold, region });
   return thousandths * (size / 1000);
 };
+
+/** What a custom stamp's lines under its picture are set in: its second and third lines, plain. */
+const detailSettingOf = (details: readonly string[]): Setting => {
+  const faced = details.map((text) => ({ text, bold: false }));
+  return { faces: MarkFaces.setOf(faced), region: MarkFaces.regionOf(faced) };
+};
+
+/** The widest of a custom stamp's lines under its picture at their natural size, and the height they take with their
+ *  gaps, in points. */
+function detailsNatural(details: readonly string[]): { width: number; height: number } {
+  const setting = detailSettingOf(details);
+  return {
+    width: Math.max(...details.map((text) => widthOf(text, 1, setting))),
+    height: details.length * (STAMP_LINE_GAP_PT + DETAIL_HIGH),
+  };
+}
+
+/** A custom stamp drawn with who and when: the box its picture fills, and its lines under it. */
+export type PicturedStamp = { readonly picture: Box; readonly lines: readonly StampLine[] };
+
+type Pictured = Stamped & { readonly picture: { readonly width: number; readonly height: number } };
 
 /** A corner's arc round `centre`, from `from` radians a quarter turn on. */
 const arc = (centre: PagePoint, radius: number, from: number): PagePoint[] =>
@@ -131,6 +154,69 @@ export const StampLayout = {
       };
     });
   },
+
+  /**
+   * A custom stamp's picture and the lines under it (custom-stamps.md "Placing one"): the picture as wide as the widest
+   * of its second and third lines, its shape kept, those lines under it; the whole scaled in proportion to the box and
+   * centred in it. With only its name, the picture fills the box and no line is drawn.
+   */
+  pictured: (stamp: Pictured): PicturedStamp => {
+    const details = stamp.lines.slice(1);
+    if (details.length === 0) return { picture: stamp.rect, lines: [] };
+    const [left, bottom, right, top] = stamp.rect;
+    const natural = detailsNatural(details);
+    const pictureHigh = (natural.width * stamp.picture.height) / stamp.picture.width;
+    const scale = Math.min(
+      (right - left) / natural.width,
+      (top - bottom) / (pictureHigh + natural.height),
+    );
+    const wide = natural.width * scale;
+    const high = (pictureHigh + natural.height) * scale;
+    const x = (left + right) / 2 - wide / 2;
+    const ceiling = (bottom + top) / 2 + high / 2;
+    const floor = ceiling - pictureHigh * scale;
+    const setting = detailSettingOf(details);
+    return {
+      picture: [x, floor, x + wide, ceiling],
+      lines: details.map((text, at): StampLine => {
+        const width = widthOf(text, 1, setting) * scale;
+        return {
+          text,
+          width,
+          rtl: false,
+          x: (left + right) / 2 - width / 2,
+          y:
+            floor -
+            (STAMP_LINE_GAP_PT + DETAIL_ASCENT + at * (STAMP_LINE_GAP_PT + DETAIL_HIGH)) * scale,
+          size: STAMP_DETAIL_PT * scale,
+          bold: false,
+        };
+      }),
+    };
+  },
+
+  /** A custom stamp's natural size with its lines under its picture: its picture's natural width, and the height that
+   *  width gives the whole; its picture's own with only its name. */
+  picturedNatural: (
+    lines: readonly string[],
+    natural: { readonly width: number; readonly height: number },
+  ): { width: number; height: number } => {
+    const details = lines.slice(1);
+    if (details.length === 0) return natural;
+    const words = detailsNatural(details);
+    return {
+      width: natural.width,
+      height: natural.height + (words.height * natural.width) / words.width,
+    };
+  },
+
+  /** The faces a custom stamp's lines under its picture are set in. */
+  picturedFaces: (stamp: Pick<StampMark, 'lines'>): MarkFaceSet =>
+    detailSettingOf(stamp.lines.slice(1)).faces,
+
+  /** The region a custom stamp's lines under its picture set their Chinese, Japanese or Korean in. */
+  picturedRegion: (stamp: Pick<StampMark, 'lines'>): MarkFaceRegion =>
+    detailSettingOf(stamp.lines.slice(1)).region,
 
   /** The faces a stamp's lines are set in. */
   faces: (stamp: Pick<StampMark, 'lines'>): MarkFaceSet => settingOf(stamp.lines).faces,

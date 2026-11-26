@@ -11,6 +11,7 @@ import {
   PdfString,
   rgb,
   type PDF,
+  type PdfRef,
   type PdfObject,
   type PDFPage,
   type PDFTextMarkupAnnotation,
@@ -35,6 +36,7 @@ import { MarkWords } from '../mark-words';
 import type { PageMatrix } from '../engine-contract';
 import { CustomStamp } from '../custom-stamp';
 import { Stamps } from '../stamps';
+import { StampLayout } from '../stamp-layout';
 import { MarkTurn } from '../mark-turn';
 import {
   APPEARANCE_BOLD_FONT,
@@ -95,6 +97,13 @@ const rectOf = ([left, bottom, right, top]: Box) => ({
 
 const boxArray = (box: Box): PdfArray => new PdfArray(box.map((n) => PdfNumber.of(n)));
 
+/** A picture an appearance draws first, across its box: the image's reference. */
+type AppearancePicture = { readonly ref: PdfRef; readonly box: Box };
+
+/** The operators that draw the appearance's picture across `box`. */
+const pictureDrawn = ([left, bottom, right, top]: Box): string =>
+  `q ${right - left} 0 0 ${top - bottom} ${left} ${bottom} cm /${PICTURE} Do Q`;
+
 /** Each font an appearance names, as the standard's own face it is. */
 const FACES = { [APPEARANCE_FONT]: 'Helvetica', [APPEARANCE_BOLD_FONT]: 'Helvetica-Bold' } as const;
 
@@ -104,8 +113,10 @@ function streamOf(
   appearance: Appearance,
   writing: MarkFaceWriting | null = null,
   matrix: PageMatrix | null = null,
+  picture: AppearancePicture | null = null,
 ): PdfDict {
   const resources = new PdfDict();
+  if (picture) resources.set('XObject', PdfDict.of({ [PICTURE]: picture.ref }));
   const standard = appearance.fonts.map((font): [string, PdfObject] => [
     font,
     PdfDict.of({
@@ -141,7 +152,9 @@ function streamOf(
       Resources: resources,
       ...(matrix ? { Matrix: new PdfArray(matrix.map((n) => PdfNumber.of(n))) } : {}),
     },
-    new TextEncoder().encode(appearance.content),
+    new TextEncoder().encode(
+      picture ? `${pictureDrawn(picture.box)}\n${appearance.content}` : appearance.content,
+    ),
   );
   return PdfDict.of({ N: pdf.register(stream) });
 }
@@ -283,37 +296,39 @@ function annotateStamp(
 
 /**
  * A custom stamp's `Stamp` (custom-stamps.md "Placing one"): `Name` `#` and its id, so Acrobat keeps its look when it
- * turns it; `Contents` its name; its appearance its picture across its box, an image of the picture's own pixels (a
- * JPEG's bytes as they are, a PNG's colours with its see-through as a soft mask). Turned as every stamp is. The engine
- * refuses the bake before a picture is missing, so `bytes` is always the picture's.
+ * turns it; `Contents` its name, and who and when a line each where it shows them; its appearance its picture across
+ * its box, an image of the picture's own pixels (a JPEG's bytes as they are, a PNG's colours with its see-through as a
+ * soft mask), and where it shows who and when, the picture in its place and the lines under it as a stamp's words are
+ * set. Turned as every stamp is. The engine refuses the bake before a picture is missing, so `bytes` is always the
+ * picture's.
  */
 function annotatePictureStamp(
   pdf: PDF,
   page: PDFPage,
   mark: StampMark,
   bytes: Uint8Array,
+  writing: MarkFaceWriting | null,
 ): PdfDict {
   const image = mark.picture!.type === 'jpeg' ? pdf.embedJpeg(bytes) : pdf.embedPng(bytes);
-  const [left, bottom, right, top] = mark.rect;
   const dict = page.addStampAnnotation({
     rect: rectOf(Mark.shownBox(mark)),
     name: CustomStamp.fileName(mark.stamp),
     contents: mark.lines.join('\n'),
   }).dict;
-  const matrix = MarkTurn.matrix(mark);
-  const stream = PdfStream.fromDict(
-    {
-      Type: PdfName.of('XObject'),
-      Subtype: PdfName.of('Form'),
-      BBox: boxArray(mark.rect),
-      Resources: PdfDict.of({ XObject: PdfDict.of({ [PICTURE]: image.ref }) }),
-      ...(matrix ? { Matrix: new PdfArray(matrix.map((n) => PdfNumber.of(n))) } : {}),
-    },
-    new TextEncoder().encode(
-      `q ${right - left} 0 0 ${top - bottom} ${left} ${bottom} cm /${PICTURE} Do Q`,
-    ),
+  const pictured = StampLayout.pictured({ ...mark, picture: mark.picture! });
+  const words = MarkWords.pictured(mark);
+  // The appearance's box is the stamp's whole box, its words within it.
+  const appearance = {
+    ...appearanceOf({ fills: [], strokes: [] }, { ...mark, opacity: 1 }, words, writing?.setter),
+    box: mark.rect,
+  };
+  dict.set(
+    'AP',
+    streamOf(pdf, appearance, writing, MarkTurn.matrix(mark), {
+      ref: image.ref,
+      box: pictured.picture,
+    }),
   );
-  dict.set('AP', PdfDict.of({ N: pdf.register(stream) }));
   rotateOf(dict, mark.turn);
   return dict;
 }
@@ -446,7 +461,7 @@ export function annotate(
     ? annotateTyped(pdf, page, mark, writing)
     : mark.kind === 'stamp'
       ? mark.picture
-        ? annotatePictureStamp(pdf, page, mark, pictures.get(mark.picture.key)!)
+        ? annotatePictureStamp(pdf, page, mark, pictures.get(mark.picture.key)!, writing)
         : annotateStamp(pdf, page, mark, writing)
       : mark.kind === 'drawing'
         ? annotateDrawing(pdf, page, mark, color)

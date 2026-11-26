@@ -2,6 +2,7 @@ import { execFileSync } from 'node:child_process';
 import { mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { inflateSync } from 'node:zlib';
 import { beforeAll, describe, expect, it } from 'vitest';
 import type { BakeResult, PdfEngine, PdfOpened } from '../engine-contract';
 import { PdfLiveChanges } from '../live-changes';
@@ -70,6 +71,25 @@ async function highlightOn(pageIndex: number, pages: ReturnType<typeof opened>, 
       createdAt: at,
     })!,
   );
+}
+/** Every stream of `bytes` as text, inflated where it is compressed. */
+function streamsOf(bytes: Buffer): string[] {
+  const text = bytes.toString('latin1');
+  const found: string[] = [];
+  let from = 0;
+  for (;;) {
+    const start = text.indexOf('stream\n', from);
+    if (start < 0) return found;
+    const end = text.indexOf('endstream', start);
+    if (end < 0) return found;
+    const raw = bytes.subarray(start + 'stream\n'.length, end);
+    try {
+      found.push(inflateSync(raw).toString('latin1'));
+    } catch {
+      found.push(raw.toString('latin1'));
+    }
+    from = end + 'endstream'.length;
+  }
 }
 const startsWith = (bytes: Uint8Array, prefix: Uint8Array) =>
   bytes.length > prefix.length && prefix.every((byte, n) => bytes[n] === byte);
@@ -631,6 +651,38 @@ describe('writing a custom stamp', () => {
     expect(qpdfChecks(result.bytes, skip)).toContain('No syntax or stream encoding errors');
     opened(await engine.open(result.bytes));
     expect(redIn((await engine.drawPage(0, 1))!, [100, 300, 200, 350])).toBe(0);
+  });
+
+  // custom-stamps.md "Placing one", "In the file": one that shows who and when, its picture on top and its lines
+  // under it as text; Contents its name and its lines.
+  it('writes who and when under its picture as text, and draws the picture above them', async ({
+    skip,
+  }) => {
+    const pages = opened(await engine.open(stored));
+    const picture = pngOf(8, 4, [220, 20, 20, 255]);
+    const detail = 'by Ada Lovelace, 22 Nov 2026, 09:00';
+    const mark = custom(pages[0]!.name, {
+      rect: [100, 300, 260, 400],
+      lines: ['Paid', detail, 'Chief Engineer'],
+    });
+    const result = baked(await bakeCustom(mark, new Map([[KEY, picture]])));
+    const added = Buffer.from(result.bytes).subarray(stored.length);
+    const content = streamsOf(added).join('\n');
+    expect(content).toContain('/Im0 Do Q');
+    expect(content).toContain('(by Ada Lovelace, 22 Nov 2026, 09:00) Tj');
+    expect(content).toContain('(Chief Engineer) Tj');
+    expect(added.toString('latin1')).toContain('/BaseFont /Helvetica');
+    expect(qpdfChecks(result.bytes, skip)).toContain('No syntax or stream encoding errors');
+    opened(await engine.open(result.bytes));
+    const [read] = await engine.fileMarks(0);
+    expect(read!.words).toBe(`Paid\n${detail}\nChief Engineer`);
+    const drawn = (await engine.drawPage(0, 1))!;
+    // The picture in its place: as wide as the lines, the top of the box; red stops above the lines.
+    const placed = StampLayout.pictured({ ...mark, picture: mark.picture! }).picture;
+    expect(
+      redIn(drawn, [placed[0] + 2, placed[1] + 2, placed[2] - 2, placed[3] - 2]),
+    ).toBeGreaterThan(2000);
+    expect(redIn(drawn, [100, 300, 260, placed[1] - 1])).toBe(0);
   });
 
   it('writes a turned one with Rotate and its appearance turned', async () => {
