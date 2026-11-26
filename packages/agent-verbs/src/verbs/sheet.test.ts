@@ -101,6 +101,8 @@ describe('sheet set', () => {
     );
     expect(sheetSet.text!(out)).toEqual(['~ sheet "Costs": set C1:D1', 'changeset sc_0000000001']);
     expect(sheetSet.quiet!(out)).toEqual(['sheet_costs1']);
+    // A call that changed nothing names no changeset.
+    expect(sheetSet.text!({ ...out, changesetId: null })).toEqual(['~ sheet "Costs": set C1:D1']);
     expect(server.writes).toHaveLength(1);
   });
 
