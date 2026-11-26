@@ -19,29 +19,30 @@ import { TEMPLATE_STARTS } from '@/components/start/start-template-items';
 export type PaneGroup = { id: string; name: string; kinds: readonly TemplateKind[] };
 
 const PLAN_FAMILY_NAMES = {
-  sheets: 'Sheet Templates',
   boards: 'Board Templates',
   forms: 'Form Templates',
 };
 
-function planFamily(family: 'sheets' | 'boards' | 'forms'): TemplateKind[] {
+function planFamily(family: 'boards' | 'forms'): TemplateKind[] {
   if (family === 'forms') return [...FORM_TEMPLATE_KINDS];
-  return PLAN_TEMPLATE_KINDS.filter((k) => isSpreadsheetPlanTemplate(k) === (family === 'sheets'));
+  return PLAN_TEMPLATE_KINDS.filter((k) => !isSpreadsheetPlanTemplate(k));
 }
 
-// The groups of a start another blank lists on its own (Brainstorm's mind maps, Page's articles), so a whole mode's
+// The groups of a start another blank lists on its own (Brainstorm's mind maps), so a whole mode's
 // pane leaves their templates to that blank.
 function groupsClaimedFrom(start: string, by: NewDocumentBlank): Set<string> {
   return new Set(
     NEW_DOCUMENT_BLANKS.flatMap((b) => {
       const s = b.templates;
-      return b !== by && 'start' in s && s.start === start && s.group ? [s.group] : [];
+      return b !== by && s && 'start' in s && s.start === start && s.group ? [s.group] : [];
     }),
   );
 }
 
 export function paneGroupsFor(blank: NewDocumentBlank): PaneGroup[] {
   const source = blank.templates;
+  // A document kind lists no templates until its gallery has them (new-document-menu.md "The blanks").
+  if (!source) return [];
   const listed = (kinds: readonly TemplateKind[], seen: Set<TemplateKind>) =>
     kinds.filter((k) => !isBlankTemplate(k) && !seen.has(k) && (seen.add(k), true));
   if ('plan' in source) {

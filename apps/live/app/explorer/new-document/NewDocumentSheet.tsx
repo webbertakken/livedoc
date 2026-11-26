@@ -5,7 +5,7 @@
 // with Back. A command menu like the desktop's (useMenu), so it reads and closes the same way.
 import { useState } from 'react';
 import { NEW_DOCUMENT_BLANKS, type NewDocumentBlankId } from '@livedoc/templates';
-import { lucideChevronLeft, lucideLayoutGrid } from '@livedoc/icons/lucide';
+import { lucideChevronLeft, lucideFileUp, lucideLayoutGrid } from '@livedoc/icons/lucide';
 import { MenuTreeContext, lucideGlyph, useMenu } from '@livedoc/ui';
 import { BottomSheet } from '@/components/primitives/BottomSheet';
 import { FolderOutlineIcon } from '@/components/primitives/explorer-icons';
@@ -16,6 +16,7 @@ import type { NewDocumentMenuProps } from './NewDocumentMenu';
 
 const BackIcon = lucideGlyph(lucideChevronLeft, 16);
 const GridIcon = lucideGlyph(lucideLayoutGrid, 16);
+const FileUpIcon = lucideGlyph(lucideFileUp, 16);
 
 const ROW =
   'flex min-h-11 items-center gap-3 px-4 text-left outline-none transition focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-brand-600 dark:focus-visible:outline-brand-400';
@@ -61,6 +62,7 @@ export default function NewDocumentSheet({
                   blank={blank}
                   groups={paneGroupsFor(blank)}
                   onChoose={(template) => onChoose(blank.id, 'template', template)}
+                  onChooseKind={(choice) => onChoose(blank.id, choice, blank.blank)}
                 />
               </div>
             </>
@@ -79,17 +81,32 @@ export default function NewDocumentSheet({
                     <BlankGlyph id={b.id} />
                     {b.name}
                   </button>
-                  <button
-                    type="button"
-                    role="menuitem"
-                    tabIndex={-1}
-                    aria-label={`${b.name} templates`}
-                    onClick={() => setShown(b.id)}
-                    className={`${ROW} text-body text-slate-500 dark:text-slate-400`}
-                  >
-                    <GridIcon aria-hidden />
-                    Templates
-                  </button>
+                  {/* A kind without templates has no Templates; PDF document opens a file instead. */}
+                  {b.kind === 'pdf-document' ? (
+                    <button
+                      type="button"
+                      role="menuitem"
+                      tabIndex={-1}
+                      aria-label="Open a PDF file"
+                      onClick={() => onChoose(b.id, 'file', b.blank)}
+                      className={`${ROW} text-body text-slate-500 dark:text-slate-400`}
+                    >
+                      <FileUpIcon aria-hidden />
+                      Open file
+                    </button>
+                  ) : b.templates ? (
+                    <button
+                      type="button"
+                      role="menuitem"
+                      tabIndex={-1}
+                      aria-label={`${b.name} templates`}
+                      onClick={() => setShown(b.id)}
+                      className={`${ROW} text-body text-slate-500 dark:text-slate-400`}
+                    >
+                      <GridIcon aria-hidden />
+                      Templates
+                    </button>
+                  ) : null}
                 </div>
               ))}
               {onCreateFolder ? (

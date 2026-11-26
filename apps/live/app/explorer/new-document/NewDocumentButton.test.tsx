@@ -34,22 +34,25 @@ describe('NewDocumentButton', () => {
   it('makes the last blank from its face, at once', () => {
     render(<NewDocumentButton place={{ folderId: 'f1' }} />);
     fireEvent.click(screen.getByRole('button', { name: 'New Diagram' }));
-    expect(started).toHaveBeenCalledWith({
-      choice: 'blank',
-      blank: 'diagram',
-      template: 'blank',
-      place: { folderId: 'f1' },
-    });
+    expect(started).toHaveBeenCalledWith(
+      expect.objectContaining({
+        choice: 'blank',
+        blank: 'diagram',
+        template: 'blank',
+        place: { folderId: 'f1' },
+        say: expect.any(Function),
+      }),
+    );
   });
 
   it('names its face after the blank made last', async () => {
     render(<NewDocumentButton place={{}} />);
     await openMenu();
-    fireEvent.click(screen.getByRole('menuitem', { name: 'Sheet, blank' }));
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Spreadsheet, blank' }));
     expect(started).toHaveBeenLastCalledWith(
-      expect.objectContaining({ choice: 'blank', blank: 'sheet', template: 'blank-spreadsheet' }),
+      expect.objectContaining({ choice: 'blank', blank: 'spreadsheet' }),
     );
-    expect(screen.getByRole('button', { name: 'New Sheet' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'New Spreadsheet' })).toBeTruthy();
   });
 
   it('opens the menu on the last blank, its row focused', async () => {
@@ -84,7 +87,7 @@ describe('NewDocumentButton', () => {
   it('makes a blank from its number key', async () => {
     render(<NewDocumentButton place={{}} />);
     const menu = await openMenu();
-    fireEvent.keyDown(menu.querySelector('[data-spot="list:0"]')!, { key: '6' });
+    fireEvent.keyDown(menu.querySelector('[data-spot="list:0"]')!, { key: '7' });
     expect(started).toHaveBeenCalledWith(
       expect.objectContaining({ blank: 'board', template: 'blank-board' }),
     );
@@ -116,12 +119,35 @@ describe('NewDocumentButton', () => {
   });
 
   it('lists every template of the blank, in its groups', async () => {
-    act(() => writeLastBlank('page'));
+    act(() => writeLastBlank('board'));
     render(<NewDocumentButton place={{}} />);
     await openMenu();
-    const pane = screen.getByRole('group', { name: 'Page templates' });
-    expect(pane.querySelectorAll('h3')[0]?.textContent).toBe('Articles');
-    expect(screen.getByRole('menuitem', { name: 'Project Brief' })).toBeTruthy();
+    const pane = screen.getByRole('group', { name: 'Board templates' });
+    expect(pane.querySelectorAll('h3')[0]?.textContent).toBe('Board Templates');
+    expect(screen.getByRole('menuitem', { name: 'Kanban Board' })).toBeTruthy();
+  });
+
+  // new-document-menu.md "The blanks": a kind's pane says what it makes; PDF document's offers its two cards.
+  it('says what a kind makes, and offers Blank PDF and Open a PDF file for PDF document', async () => {
+    act(() => writeLastBlank('text-document'));
+    const { unmount } = render(<NewDocumentButton place={{}} />);
+    await openMenu();
+    expect(screen.getByText(/An empty text document/)).toBeTruthy();
+    unmount();
+    act(() => writeLastBlank('pdf-document'));
+    render(<NewDocumentButton place={{ folderId: 'f1' }} />);
+    await openMenu();
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Open a PDF file' }));
+    expect(started).toHaveBeenLastCalledWith(
+      expect.objectContaining({ choice: 'file', blank: 'pdf-document', place: { folderId: 'f1' } }),
+    );
+  });
+
+  it('no longer offers Page, Sheet or Slides', async () => {
+    render(<NewDocumentButton place={{}} />);
+    await openMenu();
+    for (const gone of ['Page', 'Sheet', 'Slides'])
+      expect(screen.queryByRole('menuitem', { name: `${gone}, blank` })).toBeNull();
   });
 
   it('moves along the list and into the pane with the arrow keys', async () => {

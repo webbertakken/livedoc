@@ -17,7 +17,7 @@ import { PortalMenu } from '@/components/primitives/PortalMenu';
 import { FolderOutlineIcon } from '@/components/primitives/explorer-icons';
 import { paneGroupsFor } from '@/lib/new-document/pane-groups';
 import { BlankGlyph } from './blank-glyphs';
-import { NewDocumentPane, spotAttr } from './NewDocumentPane';
+import { kindPaneCards, NewDocumentPane, spotAttr } from './NewDocumentPane';
 import { digitRow, moveInMenu, paneRowsFor, type MenuSpot } from './new-document-keys';
 import { useMenuAim } from './useMenuAim';
 import type { NewDocumentChoice } from './start-new-document';
@@ -103,7 +103,9 @@ export default function NewDocumentMenu({
     if (!at) return;
     const to = moveInMenu(event.key, at, {
       listLength: NEW_DOCUMENT_BLANKS.length,
-      pane: paneRowsFor(paneGroups.map((g) => g.kinds.length)),
+      pane: paneRowsFor(
+        blank.kind ? [kindPaneCards(blank)] : paneGroups.map((g) => g.kinds.length),
+      ),
     });
     if (!to) return;
     event.preventDefault();
@@ -200,6 +202,7 @@ export default function NewDocumentMenu({
             blank={blank}
             groups={paneGroups}
             onChoose={(template) => onChoose(blank.id, 'template', template)}
+            onChooseKind={(choice) => onChoose(blank.id, choice, blank.blank)}
           />
         </div>
       </div>
