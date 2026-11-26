@@ -32,7 +32,12 @@ export type SuggestionCard = {
 export type CardPart =
   | { readonly kind: 'insertion' | 'deletion'; readonly text: string }
   | { readonly kind: 'format'; readonly changed: readonly string[] }
-  | { readonly kind: 'object-insertion' | 'object-deletion'; readonly name: string }
+  | {
+      readonly kind: 'object-insertion' | 'object-deletion';
+      readonly name: string;
+      /** A whole block (a table, a section break, a table of contents): its card names only it. */
+      readonly block?: true;
+    }
   | { readonly kind: 'break'; readonly breakKind?: SuggestedBreakKind }
   | { readonly kind: 'join' | 'paragraph-format' };
 
@@ -85,6 +90,14 @@ const uniqueNames = (names: readonly string[]) => [...new Set(names)];
 
 /** What a card says, one line per kind: text, formatting, objects, paragraph breaks, paragraph formats. */
 export function cardLines(parts: readonly CardPart[]): string[] {
+  // A whole block's suggestion names only the block: its split paragraph and bookmarks go with it (review.md).
+  const blocks = parts.flatMap((p) =>
+    (p.kind === 'object-insertion' || p.kind === 'object-deletion') && p.block ? [p] : [],
+  );
+  if (blocks.length > 0)
+    return uniqueNames(
+      blocks.map((p) => `${p.kind === 'object-insertion' ? 'Add' : 'Delete'}: ${p.name}`),
+    );
   const inserted = parts.flatMap((p) => (p.kind === 'insertion' ? [p.text] : [])).join('');
   const deleted = parts.flatMap((p) => (p.kind === 'deletion' ? [p.text] : [])).join('');
   const lines: string[] = [];
@@ -142,9 +155,17 @@ export function cardPartsOf(parts: readonly SuggestionPart[]): CardPart[] {
           ? { kind: part.kind, text: part.text }
           : { kind: `object-${part.kind}`, name: objectLabel(part.element) };
       case 'block-insertion':
-        return { kind: 'object-insertion', name: objectLabel(part.element ?? part.text) };
+        return {
+          kind: 'object-insertion',
+          name: objectLabel(part.element ?? part.text),
+          block: true,
+        };
       case 'block-deletion':
-        return { kind: 'object-deletion', name: objectLabel(part.element ?? part.text) };
+        return {
+          kind: 'object-deletion',
+          name: objectLabel(part.element ?? part.text),
+          block: true,
+        };
       case 'format':
         // A format naming nothing is still one: an unnamed change reads as Text formatting.
         return { kind: 'format', changed: part.changed?.length ? part.changed : [''] };
@@ -197,8 +218,17 @@ export function suggestionCards(doc: PmNode): SuggestionCard[] {
       return true;
     }
     const end = pos + node.nodeSize;
-    add(node.attrs[INSERTION_MARK], pos, end, { kind: 'object-insertion', name: objectName(node) });
-    add(node.attrs[DELETION_MARK], pos, end, { kind: 'object-deletion', name: objectName(node) });
+    const block = node.isBlock ? ({ block: true } as const) : {};
+    add(node.attrs[INSERTION_MARK], pos, end, {
+      kind: 'object-insertion',
+      name: objectName(node),
+      ...block,
+    });
+    add(node.attrs[DELETION_MARK], pos, end, {
+      kind: 'object-deletion',
+      name: objectName(node),
+      ...block,
+    });
     return true;
   });
   return [...found.entries()]
