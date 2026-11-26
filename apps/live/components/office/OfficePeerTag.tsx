@@ -29,7 +29,7 @@ export function OfficePeerTag({
   if (at !== undefined && quiet === at && !hover) return null;
   return (
     <span
-      className={`absolute -top-4 right-0 whitespace-nowrap rounded-sm px-1 text-[10px] font-medium leading-4 text-white ${IDENTITY_FILL}`}
+      className={`absolute -top-4 right-0 whitespace-nowrap rounded-control px-1 text-glyph font-medium leading-4 text-white ${IDENTITY_FILL}`}
       style={identityVars(color)}
     >
       {text}
