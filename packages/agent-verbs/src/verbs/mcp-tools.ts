@@ -399,7 +399,7 @@ export const mcpChangeSheet = mcpTool('change_sheet', {
     'delete_cols {cols}, rename {title}, sort {by, range}, freeze {rows, cols}, filter {range}, validate {range, ' +
     'rule} (dropdowns, checkboxes, number, date and text rules), conditional_format {range, when or scale, style}, ' +
     'chart {type, range, at, title, xAxisTitle, yAxisTitle, axis, legend, lines, replace} (a chart over the cells, ' +
-    'read live; empty cells are gaps), clear_charts {range}, and in a spreadsheet move {after} (its tab after a ' +
+    'read live; empty cells are gaps), clear_charts {range or id}, and in a spreadsheet move {after} (its tab after a ' +
     'sheet, null first) and hide {hidden}. Cells by A1, rows by number, columns by letter. A ' +
     'formula that cannot be read is refused, naming the cell. The changes land together or not at all, as one ' +
     'changeset (its id answered). Everyone with the document open sees them at once.',

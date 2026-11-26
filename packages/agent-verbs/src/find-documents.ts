@@ -30,6 +30,8 @@ export type FoundDocument = {
   name: string;
   updatedAt: number;
   library: string;
+  // A spreadsheet, as its library lists it (DocumentSummary.spreadsheet); absent for any other document.
+  spreadsheet?: true;
 };
 
 // Each joined team's library, documents and folders. Best-effort by design: the
@@ -85,7 +87,13 @@ export function matchDocuments(
   const all: FoundDocument[] = [
     ...personal.map((d) => ({ d, library: 'personal' })),
     ...teamLibraries.flatMap((lib) => lib.documents.map((d) => ({ d, library: lib.teamName }))),
-  ].map(({ d, library }) => ({ id: d.id, name: d.name, updatedAt: d.savedAt, library }));
+  ].map(({ d, library }) => ({
+    id: d.id,
+    name: d.name,
+    updatedAt: d.savedAt,
+    library,
+    ...(d.spreadsheet ? { spreadsheet: true as const } : {}),
+  }));
   return all
     .filter((d) => !q || d.name.toLowerCase().includes(q))
     .sort((a, b) => b.updatedAt - a.updatedAt)

@@ -39,7 +39,7 @@ import { buildRuleChange, type SheetRuleChange } from './sheet-rule-change';
 import { buildShapeChange, type SheetShapeChange } from './sheet-shape-change';
 import { buildDesign, type SheetDesignInput } from './sheet-design';
 import { buildChartChange, type SheetChartChange, type SheetChartOut } from './sheet-charts';
-import { chartObjectWrite, chartsClearWrite } from './sheet-chart-objects';
+import { chartClearWrite, chartObjectWrite, chartsClearWrite } from './sheet-chart-objects';
 import { plural } from '@livedoc/document';
 
 // How a cell looks, in words; null clears that part (false clears a flag).
@@ -81,7 +81,7 @@ export type SheetChange =
   // A sheet laid out as a template is (sheet-design.ts), and a chart over cells (sheet-charts.ts).
   | { op: 'design'; design: SheetDesignInput }
   | SheetChartChange
-  | { op: 'clear_charts'; range?: string }
+  | { op: 'clear_charts'; range?: string; id?: string }
   // A spreadsheet's sheet tab (sheet-store.md "Built for agents in a spreadsheet"): moved after a sheet (first for
   // null), hidden or shown.
   | { op: 'move'; after: string | null }
@@ -392,6 +392,15 @@ export function buildSheetChange(
       return { ok: true, writes: [made.write], line: `${line} (chart ${made.id})` };
     }
     case 'clear_charts': {
+      if (change.id !== undefined) {
+        if (change.range !== undefined)
+          return refuse('write_invalid', 'clear_charts takes a range or an id, never both.');
+        if (!context.spreadsheet) return notSpreadsheet('clear_charts by id');
+        const one = chartClearWrite(sheet.layout, change.id);
+        return one.ok
+          ? { ok: true, writes: [one.write], line: `cleared the chart ${change.id}` }
+          : one;
+      }
       const range = change.range === undefined ? null : parseRangeText(change.range);
       if (change.range !== undefined && !range) return badRange(change.range);
       const what = range ? `the charts reading ${formatRange(range)}` : 'the sheet’s charts';

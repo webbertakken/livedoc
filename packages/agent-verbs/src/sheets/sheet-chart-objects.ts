@@ -1,6 +1,7 @@
 // A spreadsheet's charts for an agent (docs/specs/029-sheets/sheet-store.md "Built for agents in a spreadsheet",
 // charts.md "The model"): change_sheet's chart becomes the sheet's own chart, a layout write that sets it whole (a new
-// one on top, or in the place of the one `replace` names), clear_charts the writes that take them off, and read_sheet
+// one on top, or in the place of the one `replace` names), clear_charts the writes that take them off (by a range, or
+// one by its id), and read_sheet
 // the charts as A1. Pure.
 import {
   formatA1,
@@ -39,6 +40,18 @@ export function newChartId(
   return makeAxisIds(1, rand, new Set([...taken, ...charts(layout).map((x) => x.id)]))[0]!;
 }
 
+// The refusal for a chart id the sheet does not hold, naming those it does.
+function noChart(layout: SheetLayout, id: string): SheetRefusal {
+  return refuse(
+    'chart_not_found',
+    `No chart "${id}" on this sheet. Its charts: ${
+      charts(layout)
+        .map((x) => x.id)
+        .join(', ') || 'none'
+    } (read_sheet lists them).`,
+  );
+}
+
 // The sheet's chart an agent's `chart` change makes: a new one, or (`replace`) one of the sheet's in its place.
 export function chartObjectWrite(
   wb: Workbook,
@@ -48,12 +61,8 @@ export function chartObjectWrite(
   rand: Rand,
 ): { ok: true; write: SheetWrite; id: string } | SheetRefusal {
   const { layout } = wb.sheet(sheetId)!;
-  const existing = charts(layout);
-  if (replace !== undefined && !existing.some((x) => x.id === replace))
-    return refuse(
-      'chart_not_found',
-      `No chart "${replace}" on this sheet. Its charts: ${existing.map((x) => x.id).join(', ') || 'none'} (read_sheet lists them).`,
-    );
+  if (replace !== undefined && !charts(layout).some((x) => x.id === replace))
+    return noChart(layout, replace);
   const id = replace ?? newChartId(layout, rand);
   return { ok: true, id, write: chartObjectSet(wb, sheetId, out, id) };
 }
@@ -127,6 +136,15 @@ export function chartsClearWrite(
       changes: gone.map((x) => ({ k: 'object' as const, id: x.id, object: null })),
     },
   };
+}
+
+// The write that takes off the one chart of `id`, the rest kept; refused when the sheet holds none of that id.
+export function chartClearWrite(
+  layout: SheetLayout,
+  id: string,
+): { ok: true; write: SheetWrite } | SheetRefusal {
+  if (!charts(layout).some((x) => x.id === id)) return noChart(layout, id);
+  return { ok: true, write: { kind: 'layout', changes: [{ k: 'object', id, object: null }] } };
 }
 
 // A chart as read_sheet answers it: in A1, its lines by their series' names.

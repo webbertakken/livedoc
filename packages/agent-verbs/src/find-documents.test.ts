@@ -115,6 +115,28 @@ describe('matchDocuments', () => {
     const hits = matchDocuments(personal, teamLibs, undefined, 2);
     expect(hits.map((h) => h.id)).toEqual(['p1', 'c1']);
   });
+
+  it('marks a spreadsheet as one, in either library, and no other document', () => {
+    const hits = matchDocuments(
+      [
+        summary({ id: 's1', name: 'Costs', savedAt: 3, spreadsheet: true }),
+        summary({ id: 'p1', name: 'Costs', savedAt: 2 }),
+      ],
+      [
+        {
+          teamName: 'Crew',
+          documents: [summary({ id: 'c1', name: 'Costs', savedAt: 1, spreadsheet: true })],
+        },
+      ],
+      'costs',
+      20,
+    );
+    expect(hits).toEqual([
+      { id: 's1', name: 'Costs', updatedAt: 3, library: 'personal', spreadsheet: true },
+      { id: 'p1', name: 'Costs', updatedAt: 2, library: 'personal' },
+      { id: 'c1', name: 'Costs', updatedAt: 1, library: 'Crew', spreadsheet: true },
+    ]);
+  });
 });
 
 describe('listAllDocuments', () => {

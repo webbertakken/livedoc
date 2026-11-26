@@ -203,6 +203,52 @@ describe('a chart in a spreadsheet', () => {
     expect(all.applied).toEqual(['cleared the sheet’s charts (1)']);
   });
 
+  it('clears the one chart its id names, keeping the rest', async () => {
+    const { api } = book();
+    await changeSheet(
+      api,
+      DOC_A,
+      {
+        sheet: 'Models',
+        changes: [
+          { op: 'chart', type: 'column', range: 'B1:C4' },
+          { op: 'chart', type: 'column', range: 'B1:C4', at: 'F20' },
+        ],
+      },
+      'mcp',
+    );
+    const before = await readSheet(api, DOC_A, { sheet: 'Models' });
+    const [first, second] = before.ok ? before.charts!.map((c) => c.id) : [];
+    const cleared = await changeSheet(
+      api,
+      DOC_A,
+      { sheet: 'Models', changes: [{ op: 'clear_charts', id: first! }] },
+      'mcp',
+    );
+    expect(cleared.applied).toEqual([`cleared the chart ${first}`]);
+    const after = await readSheet(api, DOC_A, { sheet: 'Models' });
+    expect(after.ok && after.charts!.map((c) => c.id)).toEqual([second]);
+  });
+
+  it('refuses clearing a chart id the sheet does not hold, or an id with a range', async () => {
+    const { api } = book();
+    const none = await changeSheet(
+      api,
+      DOC_A,
+      { sheet: 'Models', changes: [{ op: 'clear_charts', id: 'nochart' }] },
+      'mcp',
+    );
+    expect(none.refusal?.code).toBe('chart_not_found');
+    expect(none.refusal?.message).toContain('Its charts: none');
+    const both = await changeSheet(
+      api,
+      DOC_A,
+      { sheet: 'Models', changes: [{ op: 'clear_charts', id: 'x', range: 'A1' }] },
+      'mcp',
+    );
+    expect(both.refusal?.code).toBe('write_invalid');
+  });
+
   it('lists each sheet with whether it is hidden and how many charts it holds', async () => {
     const { api } = book();
     await changeSheet(
