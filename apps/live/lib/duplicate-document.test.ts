@@ -429,7 +429,7 @@ describe('duplicateDocument placement and recorded intent', () => {
     expect(mCreate).toHaveBeenCalledTimes(2);
     expect(mCreate.mock.calls[1]![1]).toMatchObject({ teamId: null, folderId: null });
     expect(warn).toHaveBeenCalledWith(
-      '[duplicate] placement refused reason=team_forbidden, filed at the root',
+      '[create-beside] placement refused reason=team_forbidden, filed at the root',
     );
     warn.mockRestore();
   });

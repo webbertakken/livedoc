@@ -20,6 +20,8 @@ export type ContentSummary = {
   hasContent: boolean;
   // A spreadsheet (it holds a workbook): Copy To's picker lists it (docs/specs/029-sheets/spreadsheet.md D183).
   spreadsheet?: true;
+  // Holds a text document tab: Compare documents' picker lists it (docs/specs/034-text-documents/review.md "The dialog").
+  textDocument?: true;
 };
 
 // The `first_tab_count` column of a document list (docs/specs/006-document/document-snapshots.md): the element count
@@ -38,6 +40,12 @@ export function firstTabCountSql(documentIdSql: string, scopeTabSql: string | nu
 export function spreadsheetSql(documentIdSql: string): string {
   return `(SELECT json_extract(cs.content_summary, '$.spreadsheet')
              FROM documents cs WHERE cs.id = ${documentIdSql}) AS spreadsheet`;
+}
+
+// Whether a document holds a text document, as the `text_document` column: 1, or NULL for none or no summary yet.
+export function textDocumentSql(documentIdSql: string): string {
+  return `(SELECT json_extract(cs.content_summary, '$.textDocument')
+             FROM documents cs WHERE cs.id = ${documentIdSql}) AS text_document`;
 }
 
 // A document's Details-view stats as the `doc_stats` column readDocumentStats reads: JSON text, or NULL.

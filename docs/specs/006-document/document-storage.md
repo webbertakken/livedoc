@@ -64,6 +64,8 @@ No tab body, tab order, tab stat, image reference by tab, changeset, item, sheet
 - the document's stats (last mode, elements, comments, bytes), the Details view's columns;
 - whether the document has any content, by the [Empty document clean-up](../013-workspace/empty-document-cleanup.md)'s
   own test (a tab with an element, an article, a form or a filled dashboard slot).
+- whether it is a spreadsheet (Copy To's picker) and whether it holds a text document (Compare documents' picker,
+  [Review](../034-text-documents/review.md#the-dialog)); a document not summarised since reads as neither.
 
 In a [spreadsheet](../029-sheets/spreadsheet.md) a sheet tab's content is its sheet's filled cells (default):
 

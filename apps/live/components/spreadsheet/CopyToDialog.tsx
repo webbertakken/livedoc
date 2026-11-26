@@ -3,18 +3,14 @@
 // Copy To › Existing Spreadsheet's picker (docs/specs/029-sheets/spreadsheet.md "Sheets in the sheet bar", D183): the
 // person's own spreadsheets but this one, newest first, narrowed by a search on their names; picking one copies the
 // sheet there. Loading, none and a failed list each say so.
-import { useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 import type { DocumentSummary } from '@livedoc/api-schema';
 import { Button, TextInput } from '@livedoc/ui';
 import { Dialog } from '@/components/dialogs/Dialog';
 import { DialogFooter } from '@/components/dialogs/DialogFooter';
-import { apiListDocuments } from '@/lib/api/documents';
-import { debugLog } from '@/lib/debug-log';
+import { useOwnDocuments } from '@/components/dialogs/useOwnDocuments';
 
 const TITLE_ID = 'copy-to-title';
-
-type Listing =
-  { state: 'loading' } | { state: 'failed' } | { state: 'ready'; spreadsheets: DocumentSummary[] };
 
 /** The spreadsheets a sheet may be copied into: the person's own, never `currentId`. */
 export function copyTargets(documents: readonly DocumentSummary[], currentId: string) {
@@ -34,28 +30,16 @@ export function CopyToDialog({
   onPick: (target: { documentId: string; name: string }) => void;
   onClose: () => void;
 }) {
-  const [listing, setListing] = useState<Listing>({ state: 'loading' });
-  const [attempt, setAttempt] = useState(0);
+  const pick = useCallback(
+    (documents: readonly DocumentSummary[]) => copyTargets(documents, currentId),
+    [currentId],
+  );
+  const { listing, retry } = useOwnDocuments(ownerId, pick, 'workbook copy to');
   const [query, setQuery] = useState('');
-  useEffect(() => {
-    let live = true;
-    apiListDocuments(ownerId).then(
-      (documents) => {
-        if (live) setListing({ state: 'ready', spreadsheets: copyTargets(documents, currentId) });
-      },
-      (error: unknown) => {
-        debugLog('[workbook] copy to list failed', { error: String(error) });
-        if (live) setListing({ state: 'failed' });
-      },
-    );
-    return () => {
-      live = false;
-    };
-  }, [ownerId, currentId, attempt]);
   const wanted = query.trim().toLowerCase();
   const shown =
     listing.state === 'ready'
-      ? listing.spreadsheets.filter((d) => d.name.toLowerCase().includes(wanted))
+      ? listing.documents.filter((d) => d.name.toLowerCase().includes(wanted))
       : [];
   return (
     <Dialog open onClose={onClose} titleId={TITLE_ID}>
@@ -79,20 +63,13 @@ export function CopyToDialog({
             className="flex items-center gap-3 text-body text-slate-700 dark:text-slate-200"
           >
             <span>Your spreadsheets could not be listed.</span>
-            <Button
-              variant="secondary"
-              size="xs"
-              onClick={() => {
-                setListing({ state: 'loading' });
-                setAttempt((n) => n + 1);
-              }}
-            >
+            <Button variant="secondary" size="xs" onClick={retry}>
               Try Again
             </Button>
           </div>
         ) : shown.length === 0 ? (
           <p className="text-body text-slate-600 dark:text-slate-300">
-            {listing.spreadsheets.length === 0
+            {listing.documents.length === 0
               ? 'You have no other spreadsheets yet.'
               : 'No spreadsheet is called that.'}
           </p>

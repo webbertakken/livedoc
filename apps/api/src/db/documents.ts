@@ -19,6 +19,7 @@ import { purgeRooms } from '../room-purge-client';
 import {
   docStatsSql,
   spreadsheetSql,
+  textDocumentSql,
   firstTabCountSql,
   isEmptyCount,
   type ContentSummary,
@@ -53,6 +54,7 @@ export type SummaryRow = DocumentRow & {
   first_tab_count: number | null;
   doc_stats: string | null;
   spreadsheet: number | null;
+  text_document: number | null;
 };
 
 async function rowToDocument(env: Env, row: OpenedDocumentRow): Promise<DocumentDTO> {
@@ -99,7 +101,7 @@ const OWNER_COLS =
   '(SELECT name FROM participants WHERE participants.id = documents.owner_id) AS owner_name, ' +
   '(SELECT color FROM participants WHERE participants.id = documents.owner_id) AS owner_color';
 // The list projection reads the content summary the room pushed (content-summary.ts), never a room.
-export const DOCUMENT_SUMMARY_COLS = `id, owner_id, name, shareable, folder_id, team_id, source, ${INTENT_COLS}, saved_at, created_at, ${SHARE_CODE_EXPR}, ${firstTabCountSql('documents.id')}, ${docStatsSql('documents.id')}, ${spreadsheetSql('documents.id')}`;
+export const DOCUMENT_SUMMARY_COLS = `id, owner_id, name, shareable, folder_id, team_id, source, ${INTENT_COLS}, saved_at, created_at, ${SHARE_CODE_EXPR}, ${firstTabCountSql('documents.id')}, ${docStatsSql('documents.id')}, ${spreadsheetSql('documents.id')}, ${textDocumentSql('documents.id')}`;
 
 // Gate-only projection: the columns access checks need (owner + team +
 // name for notifications) in ONE query — no participant join, no tab
@@ -243,6 +245,7 @@ export function rowToSummary(row: SummaryRow): DocumentSummary {
     empty: isEmptyCount(row.first_tab_count),
     stats: readDocumentStats(row.doc_stats),
     ...(row.spreadsheet === 1 ? { spreadsheet: true as const } : {}),
+    ...(row.text_document === 1 ? { textDocument: true as const } : {}),
   };
 }
 

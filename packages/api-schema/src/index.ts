@@ -114,6 +114,9 @@ export type DocumentSummary = {
   // A spreadsheet, as its room last summarised it (Copy To's picker, docs/specs/029-sheets/spreadsheet.md D183); absent
   // for any other document and for one not summarised since spreadsheets were.
   spreadsheet?: true;
+  // Holds a text document, as its room last summarised it (Compare documents' picker, docs/specs/034-text-documents/
+  // review.md "The dialog"); absent for any other document and for one not summarised since text documents were.
+  textDocument?: true;
 } & RecordedIntent;
 
 // A document's tab stats (docs/specs/013-workspace/explorer-details-view.md "Where the numbers come

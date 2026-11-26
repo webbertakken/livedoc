@@ -5917,6 +5917,10 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
             "type": "null"
           }
         ]
+      },
+      "textDocument": {
+        "const": true,
+        "type": "boolean"
       }
     },
     "required": [

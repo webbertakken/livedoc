@@ -42,6 +42,8 @@ type TabCountRow = {
   has_content: number;
   // The tab names a stored file (a PDF document's): it always has that to draw.
   holds_file: number;
+  // The tab is a text document.
+  text_document: number;
 };
 // A spreadsheet's sheet tab: its sheets' filled cells and their stored bytes.
 type SheetTabRow = { tab_id: string; cells: number; bytes: number };
@@ -55,7 +57,9 @@ export async function contentSummaryOf(
   const [tabs, stats, sheetTabs, textDocumentTabs, workbook] = await env.DOCUMENT_DB.batch([
     env.DOCUMENT_DB.prepare(
       `SELECT dt.tab_id, COALESCE(t.element_count, -1) AS element_count, ${HAS_CONTENT} AS has_content,
-              CASE WHEN json_valid(t.data) AND json_type(t.data, '$.blob') = 'text' THEN 1 ELSE 0 END AS holds_file
+              CASE WHEN json_valid(t.data) AND json_type(t.data, '$.blob') = 'text' THEN 1 ELSE 0 END AS holds_file,
+              CASE WHEN json_valid(t.data) AND json_extract(t.data, '$.kind') = 'text-document' THEN 1 ELSE 0 END
+                AS text_document
          FROM document_tabs dt JOIN tabs t ON t.id = dt.tab_id
         WHERE dt.document_id = ?
         ORDER BY dt.order_index ASC`,
@@ -96,6 +100,7 @@ export async function contentSummaryOf(
     ]),
     hasContent: rows.some((r) => r.has_content === 1 || (sheets.get(r.tab_id)?.cells ?? 0) > 0),
     ...(workbook?.results?.length ? { spreadsheet: true as const } : {}),
+    ...(rows.some((r) => r.text_document === 1) ? { textDocument: true as const } : {}),
   };
 }
 

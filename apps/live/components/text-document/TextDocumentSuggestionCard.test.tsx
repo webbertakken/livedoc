@@ -57,6 +57,11 @@ describe('TextDocumentSuggestionCard', () => {
     expect(screen.queryByRole('button')).toBeNull();
   });
 
+  it('says From the comparison under a comparison’s author', () => {
+    draw({ card: { ...CARD, author: { name: 'Ada', colour: '#64748b', fromComparison: true } } });
+    expect(screen.getByText('From the comparison')).toBeTruthy();
+  });
+
   it('says From the file under a file’s author, with no time where it had none', () => {
     draw({
       card: { ...CARD, at: 0, author: { name: 'Word', colour: '#64748b', fromFile: true } },

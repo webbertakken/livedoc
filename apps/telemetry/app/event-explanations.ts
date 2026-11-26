@@ -266,6 +266,8 @@ export const EXACT: Readonly<Record<string, string>> = {
   'Comment|Unresolved|': 'A resolved comment thread was reopened.',
   'Document|Created|Cloud': 'A brand-new document was created.',
   'Document|Created|Offline': 'A brand-new document was created.',
+  'Document|Created|TextDocumentCompare':
+    'Someone compared two text documents from Tools > Compare documents, making a new document of suggestions.',
   'Document|Deleted|': 'A document was deleted.',
   'Document|Duplicated|': 'A document was duplicated into a new one.',
   'Document|Duplicated|Copy': 'A document was duplicated into a new one.',

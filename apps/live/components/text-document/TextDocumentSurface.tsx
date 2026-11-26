@@ -70,6 +70,7 @@ import { useTextDocumentLists } from './useTextDocumentLists';
 import { useTextDocumentCharacterDialogs } from './useTextDocumentCharacterDialogs';
 import { TextDocumentMargin } from './TextDocumentMargin';
 import { useTextDocumentReview } from './useTextDocumentReview';
+import { useTextDocumentCompare } from './useTextDocumentCompare';
 import type { TextDocumentSurfaceProps } from './text-document-surface-props';
 import { useTextDocumentReviewPreview } from './useTextDocumentReviewPreview';
 import { TextDocumentReviewPanel } from './TextDocumentReviewPanel';
@@ -1093,6 +1094,16 @@ export function TextDocumentSurface({
       move: picturePlacing.drag,
     };
   });
+  // Tools > Compare documents (review.md "Compare documents").
+  const compare = useTextDocumentCompare({
+    ownerId,
+    documentId,
+    documentName,
+    format,
+    liveDoc,
+    local,
+    defaultName: commenter?.name ?? '',
+  });
   // Edit > Undo, Redo and Select all, run by the menus and the shortcut layer (keyboard-shortcuts.md).
   const editorActions = useMemo(
     () => ({
@@ -1121,6 +1132,7 @@ export function TextDocumentSurface({
       ...equationInsert,
       ...characterDialogs.actions,
       ...reviewActions,
+      ...compare.actions,
       ...links.actions,
       ...bookmarks.actions,
       ...headingLinks.actions,
@@ -1144,6 +1156,7 @@ export function TextDocumentSurface({
       equationInsert,
       characterDialogs.actions,
       reviewActions,
+      compare.actions,
       links.actions,
       bookmarks.actions,
       headingLinks.actions,
@@ -1327,6 +1340,7 @@ export function TextDocumentSurface({
           {reviewPanel.open && state === 'ready' ? (
             <TextDocumentReviewPanel {...reviewPanel.props} />
           ) : null}
+          {compare.dialog}
           <div
             ref={scroller}
             data-region="document"
