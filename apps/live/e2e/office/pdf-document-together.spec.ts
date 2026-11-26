@@ -160,7 +160,9 @@ test('a Participant reviews a PDF, and its stored file is replaced in one step f
   await page.screenshot({ path: test.info().outputPath('pdf-peer-typing.png') });
   await peer.keyboard.press('Escape');
   await expect(box).toHaveCount(0);
-  await expect(peer.locator(`${PAGE_ONE} [data-pdf-mark-kind="text"]`)).toContainText('Hello there');
+  await expect(peer.locator(`${PAGE_ONE} [data-pdf-mark-kind="text"]`)).toContainText(
+    'Hello there',
+  );
   await expect(typedMark).toHaveCount(1);
   await peer.keyboard.press('v');
 
