@@ -40,6 +40,12 @@ export type CustomStampInput = {
   readonly natural: { readonly width: number; readonly height: number };
 };
 
+/** A custom stamp as it is kept and listed: what `GET /api/custom-stamps` answers, newest first. */
+export type CustomStampRecord = CustomStampInput & {
+  readonly createdAt: number;
+  readonly updatedAt: number;
+};
+
 /** What renaming or moving one changes. */
 export type CustomStampPatch = { readonly name?: string; readonly category?: string };
 

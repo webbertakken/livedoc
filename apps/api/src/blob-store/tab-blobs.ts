@@ -45,12 +45,15 @@ export type BlobHold = { readonly key: BlobKey; readonly until: number | null };
 
 /**
  * The keys a tab holds ("Each document tells what it holds"): a PDF tab's stored file, for as long as the tab names
- * it, and each previous version until its day. A key held both ways is held as the tab's own. Null for a tab of a
+ * it, each picture its marks name while a mark names it, and each previous version until its day. A key held both
+ * ways is held as the tab's own. Null for a tab of a
  * kind that never holds a blob, which tells nothing.
  */
 export function tabBlobHolds(
   body: { kind?: unknown; blob?: unknown; size?: unknown },
   previous: readonly PreviousStoredFile[] = [],
+  // The pictures its marks name (a custom stamp's), from its digest: held while a mark names them.
+  marked: readonly BlobKey[] = [],
 ): BlobHold[] | null {
   if (body.kind !== 'pdf') return null;
   const holds = new Map<BlobKey, number | null>();
@@ -59,6 +62,7 @@ export function tabBlobHolds(
     holds.set(version.blob, Math.max(holds.get(version.blob) ?? 0, until));
   }
   const file = pdfTabOf(body);
+  for (const picture of marked) holds.set(picture, null);
   if (file) holds.set(file.blob, null);
   return [...holds].map(([key, until]) => ({ key, until }));
 }

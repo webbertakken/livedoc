@@ -20,6 +20,7 @@ export * from './favourites';
 export * from './tags';
 export * from './placement-defaults';
 export * from './custom-themes';
+export * from './custom-stamps';
 export * from './shape-libraries';
 export * from './team-invites';
 export * from './teams';

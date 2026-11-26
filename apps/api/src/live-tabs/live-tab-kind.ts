@@ -3,7 +3,7 @@
 // what is its own: its tab and frame kinds, its tables, how its updates merge, its sizes, limits and digest; and, where
 // it has them, the level an update asks, what its state stands on, and how the state is replaced with its row.
 import type { AccessLevel } from '@livedoc/api-schema';
-import type { CollabIndexRows } from '@livedoc/document';
+import type { BlobKey, CollabIndexRows } from '@livedoc/document';
 import type { DocumentEnv } from '../types';
 
 /** A live tab's digest, read from its state when the outbox drains the tab. */
@@ -15,6 +15,9 @@ export type LiveTabDigest = {
   readonly searchText: string;
   /** The gallery images its state places: its rows in the reference index (images.md "Reference index"). */
   readonly imageIds?: readonly string[];
+  /** The blobs its state names besides its row's (a PDF's marks' pictures): what its tab holds of the blob store
+   *  (blob-store.md "Holds and retention"). */
+  readonly blobKeys?: readonly BlobKey[];
   /** Its rows in the collaboration index, authors as adder keys (inbox.md §2.7): a kind with comments. */
   readonly collab?: CollabIndexRows;
 };

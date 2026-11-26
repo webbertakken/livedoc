@@ -7,7 +7,12 @@
 // Every D1 write is guarded by the document's D1 row (G2), so a drain racing a purge writes nothing. Every unit is a
 // full replace of what it derives, so D1's rows are safe to drop and refill.
 
-import { collabIndexRowsFromElements, type CollabIndexRows, type Element } from '@livedoc/document';
+import {
+  collabIndexRowsFromElements,
+  type BlobKey,
+  type CollabIndexRows,
+  type Element,
+} from '@livedoc/document';
 import { tabSearchText } from '@livedoc/document-views';
 import { itemsSearchText } from '@livedoc/items';
 import { sheetSearchInputs } from '@livedoc/sheets';
@@ -168,6 +173,8 @@ type TabUnitInput = {
   readonly body: Record<string, unknown>;
   readonly storedTexts: readonly string[];
   readonly previous: readonly PreviousStoredFile[];
+  /** The blobs a live tab's state names besides its row's, from its digest (a PDF's marks' pictures). */
+  readonly marked: readonly BlobKey[];
   readonly collab: TabCollab;
 };
 
@@ -287,8 +294,9 @@ function blobHoldStatements({
   tab,
   body,
   previous,
+  marked,
 }: TabUnitInput): D1PreparedStatement[] {
-  const holds = tab ? tabBlobHolds(body, previous) : [];
+  const holds = tab ? tabBlobHolds(body, previous, marked) : [];
   if (holds === null) return [];
   const stmts = [
     env.DB.prepare('DELETE FROM document_blobs WHERE document_id = ?1 AND tab_id = ?2').bind(
@@ -407,7 +415,8 @@ async function tabStatements(
   // A PDF tab's previous versions, whose bytes it holds until their day.
   const previous = tab && body.kind === 'pdf' ? await previousStoredFiles(env, tabId) : [];
   const collab = await tabCollab(env, documentId, tabId, body, digest);
-  const input = { env, documentId, tabId, tab, body, storedTexts: texts, previous, collab };
+  const marked = digest?.blobKeys ?? [];
+  const input = { env, documentId, tabId, tab, body, storedTexts: texts, previous, marked, collab };
   const unit = TAB_UNIT_PARTS.flatMap((part) => part(input));
   if (!tab?.drawing_of) return unit;
   return [...unit, ...(await textDocumentSearchStatements(env, documentId, tab.drawing_of))];

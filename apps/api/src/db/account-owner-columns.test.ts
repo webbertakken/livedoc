@@ -43,6 +43,8 @@ const OWNER_COLUMNS: OwnerColumn[] = [
   { table: 'placement_defaults', column: 'owner_id', migrate: { kind: 'moves' } },
   { table: 'user_preferences', column: 'owner_id', migrate: { kind: 'moves' } },
   { table: 'custom_themes', column: 'owner_id', migrate: { kind: 'moves' } },
+  // Custom stamps (docs/specs/035-pdf-documents/custom-stamps.md): guests have them too.
+  { table: 'custom_stamps', column: 'owner_id', migrate: { kind: 'moves' } },
   // Shape libraries (docs/specs/013-workspace/shape-libraries.md): guests have them too.
   { table: 'shape_libraries', column: 'owner_id', migrate: { kind: 'moves' } },
   // Explorer Home's opens (docs/specs/013-workspace/explorer-home.md): guests open documents too.
@@ -200,6 +202,20 @@ function seedGuestHoldable(sql: DatabaseSync, id: string, peerDocument: string) 
     owner_id: id,
     name: 'Mine',
     definition: '{}',
+    created_at: T0,
+    updated_at: T0,
+  });
+  insert(sql, 'custom_stamps', {
+    id: `cs-${id}`,
+    owner_id: id,
+    name: 'Paid',
+    category: 'Custom',
+    picture_key: 'a'.repeat(64),
+    picture_type: 'png',
+    width: 4,
+    height: 4,
+    natural_width: 3,
+    natural_height: 3,
     created_at: T0,
     updated_at: T0,
   });
