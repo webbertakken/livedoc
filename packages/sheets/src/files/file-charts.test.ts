@@ -515,14 +515,26 @@ describe('sheetChartsFromFile', () => {
     expect(charts[0]!.cols).toBeUndefined();
   });
 
-  it('keeps titles, alt, values, a hidden axis and its kept XML', () => {
+  it('keeps titles, alt, values, a hidden axis, its stacking and its kept XML', () => {
     const kept = { part: 'xl/charts/chart1.xml', sum: '0123abcd' };
     const [chart] = sheetChartsFromFile(
-      [read({ title: 'T', xTitle: 'X', yTitle: 'Y', alt: 'A', values: true, axis: false, kept })],
+      [
+        read({
+          title: 'T',
+          xTitle: 'X',
+          yTitle: 'Y',
+          alt: 'A',
+          values: true,
+          axis: false,
+          kept,
+          stack: 'percent',
+        }),
+      ],
       layout,
       seeded(),
     );
     expect(chart).toMatchObject({
+      stack: 'percent',
       title: 'T',
       xTitle: 'X',
       yTitle: 'Y',

@@ -273,8 +273,12 @@ describe('what is not read (D275)', () => {
 
   it.each([
     [
-      'a stacked bar',
-      `<c:barChart><c:grouping val="stacked"/>${ser(valRef('Q!$B$2:$B$4'))}</c:barChart>`,
+      'a bar of another grouping',
+      `<c:barChart><c:grouping val="sideways"/>${ser(valRef('Q!$B$2:$B$4'))}</c:barChart>`,
+    ],
+    [
+      'an area of another grouping',
+      `<c:areaChart><c:grouping val="clustered"/>${ser(valRef('Q!$B$2:$B$4'))}</c:areaChart>`,
     ],
     [
       'a stacked line',
@@ -447,6 +451,36 @@ describe('a written chart, read', () => {
     expect(fileChartSum({ ...read!, at: chart.at, width: 400, height: 300 })).toBe(
       fileChartSum(chart),
     );
+  });
+
+  it.each([
+    ['column', 'stacked'],
+    ['bar', 'percent'],
+    ['area', 'stacked'],
+    ['area', 'percent'],
+  ] as const)('reads a %s chart %s (D283)', (type, stack) => {
+    const chart = {
+      ...base,
+      type,
+      stack,
+      labels: { range: cell(0), cached: ['a', 'b', 'c', 'd'] },
+      x: null,
+      series: [1, 2].map((c) => ({ name: 'S', nameAt: { r: 0, c }, values: cell(c), cached: [] })),
+    };
+    const xml = xlsxChartXml('Q', chart);
+    expect(xml).toContain(stack === 'percent' ? 'percentStacked' : '"stacked"');
+    expect(xml.includes('<c:overlap val="100"/>')).toBe(type !== 'area');
+    const read = readXlsxChartXml(xml, 'Q');
+    expect(read!.stack).toBe(stack);
+    expect(fileChartSum({ ...read!, at: chart.at, width: 400, height: 300 })).toBe(
+      fileChartSum(chart),
+    );
+  });
+
+  it('sums a chart with no stacking as before stacking was read', () => {
+    const chart = { ...base, type: 'column' as const, labels: null, x: null, series: [] };
+    expect(fileChartSum(chart)).not.toBe(fileChartSum({ ...chart, stack: 'stacked' }));
+    expect(fileChartSum(chart)).toBe('0ef04d8b');
   });
 
   it('reads a scatter with its x, a series as a line and one as markers', () => {

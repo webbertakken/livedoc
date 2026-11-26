@@ -133,6 +133,23 @@ Chart" and a screen reader hears "Column chart", as the palette's tile says, nev
   prints each bar's number past its end. The value range, the baseline at zero, Show Axis and gaps are a single
   series' (a series with no value at a category leaves its place in the group empty). A chart with one series
   draws as it always has (`pieSlices`, one colour each) (default, D281).
+- **Stacking** (Google Sheets' Setup › Stacking: None, Standard, 100%): a column or bar chart of two or more
+  series, or an area chart, may stack its series (`chartStack`), drawing Stacked Column, Stacked Bar and Stacked
+  Area, or their 100% kinds.
+  - **Standard** (`stacked`): each category's values one on another in series order, the first from zero. A column's
+    values above zero stack up from it and those below down from it (a bar's right and left), each its own stack;
+    an area's series each fill the band between the running total before it and after it, its line along the top.
+  - **100%** (`percent`): each value is its share of its category's total (its size over the sum of the sizes),
+    stacked as Standard, so each stack reaches 100% (−100% below zero); the value axis's ticks read percents.
+  - A stacked column or bar is one per category, 80% of its share and at most 48 px thick, square-cornered, each
+    series a segment in its colour. Show Values prints each segment's own value (not its share) in its middle, in the
+    ink that reads on its colour, when the segment is long enough to hold it; an area prints it over its point.
+    A segment's readout reads `category · series: value`, as a group's bar's does.
+  - No value counts as zero in its stack and draws no mark: no segment; on an area no point, its band no thicker
+    there and its line broken. The value range runs over the stacks' ends, zero always in it. A series on the right
+    axis stacks on the one axis.
+  - A chart of one series draws as it does unstacked; a line, scatter, pie or doughnut chart ignores stacking and
+    keeps it, so a change back to a column, bar or area chart stacks again (default, D282).
 - **No value is a gap.** A datum may have no value: a Sheet cell that is empty or holds no number (text, an error),
   a value left empty in the data editor, a CSV field that is empty or not a number. A 0 is a value and draws as 0.
   A chart draws no value as Excel ("Show empty cells as: Gaps") and Google Sheets do by default:
@@ -176,6 +193,8 @@ Each chart is a `ShapeKind` (`'pie-chart'` / `'bar-chart'` / `'line-chart'`),
 not a new top-level type — so they inherit boxed-element behaviour. `isChartShape`
 groups all three (they're all in `isSelfDrawingShape` too).
 
+- `ShapeElement.chartStack?: 'stacked' | 'percent'`: Stacking (Chart types); absent means none. A spreadsheet's chart
+  sets it ([Charts](../029-sheets/charts.md#the-model)); a Plan chart has no control for it yet.
 - A bar chart of two or more series also carries `lineCategories` and `lineSeries`, drawn side by side; with
   fewer it draws its `pieSlices`.
 - Pie + bar: `ShapeElement.pieSlices?: PieSlice[]` (`{ label, value, color? }`), `value` a number or `null`
@@ -325,3 +344,6 @@ The code cites each by its id.
 - **D281** Several series on a column or bar chart: side by side in a group taking 80% of its category's share, each
   bar an equal part of it and at most 48 px thick, the category named under (beside) its group; one series draws as
   before (default).
+- **D282** Stacking: a column's values above and below zero in stacks of their own, an area's as a running total;
+  100% as each value's size over the sum of its category's sizes; no value zero in the stack and no mark; one series
+  unstacked; values printed mid-segment when they fit; other types ignore and keep it (default).

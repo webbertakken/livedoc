@@ -15,6 +15,7 @@ import {
   type SheetChart,
   type SheetChartLegend,
   type SheetChartSeriesLook,
+  type SheetChartStack,
   type SheetChartType,
   type SheetLayout,
   type SheetWrite,
@@ -106,6 +107,7 @@ export function chartObjectSet(
     ...(look.legend ? { legend: look.legend } : {}),
     ...(look.values ? { values: true as const } : {}),
     ...(look.axis === false ? { axis: false as const } : {}),
+    ...(look.stack ? { stack: look.stack } : {}),
     ...(look.title ? { title: look.title } : {}),
     ...(look.xAxisTitle ? { xTitle: look.xAxisTitle } : {}),
     ...(look.yAxisTitle ? { yTitle: look.yAxisTitle } : {}),
@@ -162,6 +164,7 @@ export type ChartRead = {
   legend: SheetChartLegend;
   values: boolean;
   axis: boolean;
+  stack?: SheetChartStack;
   alt?: string;
   lines?: string[];
 };
@@ -202,6 +205,7 @@ export function chartsRead(wb: Workbook, sheetId: string): ChartRead[] {
       legend: x.legend ?? 'bottom',
       values: x.values === true,
       axis: x.axis !== false,
+      ...(x.stack ? { stack: x.stack } : {}),
       ...(x.alt ? { alt: x.alt } : {}),
       ...(lines.length ? { lines } : {}),
     };

@@ -12,6 +12,7 @@ import {
 } from './chart-axis';
 import type { ChartRect } from './chart-frame';
 import { chartAxisLabel } from './chart-frame';
+import { stackedValues, type ChartStack } from './chart-stack';
 import { chartValue, type ChartKeyItem, type LineSeries, type PieSlice } from './data-shapes';
 
 export type ChartPoint = { x: number; y: number };
@@ -247,10 +248,13 @@ export function lineMarks(
   oy = 0,
   // Show Axis: tick labels and gridlines, the plot drawn in from the sides they take.
   showAxis = false,
+  // An area chart's stacking (pie-chart.md "Stacking", D282): each series a band on the running total before it.
+  stack: ChartStack | null = null,
 ): LineMarks {
   const n = categories.length;
-  // A series on the second axis, when another is on the first (chart-axis.ts).
-  const onRight = rightAxisSeries(series);
+  const stacked = stack && variant === 'area' ? stackedValues(series, n, stack, false) : null;
+  // A series on the second axis, when another is on the first (chart-axis.ts); stacked, all share the one.
+  const onRight = stacked ? series.map(() => false) : rightAxisSeries(series);
   // Zero is in range so the baseline reads naturally; an all-equal range widens so the line is not flat against the
   // top edge. With Show Axis the range runs to round ticks. A scatter's range fits its values instead, to round values
   // either side, so points far from zero spread over the plot (pie-chart.md "Scatter's value range").
@@ -258,14 +262,16 @@ export function lineMarks(
   const range = (right: boolean): { min: number; max: number; scale: AxisScale | null } => {
     let minV = holdsZero ? 0 : Infinity;
     let maxV = holdsZero ? 0 : -Infinity;
+    const take = (v: number | null) => {
+      if (v === null) return;
+      if (v < minV) minV = v;
+      if (v > maxV) maxV = v;
+    };
     series.forEach((s, i) => {
       if (onRight[i] !== right) return;
-      for (const raw of s.values) {
-        const v = chartValue(raw);
-        if (v === null) continue;
-        if (v < minV) minV = v;
-        if (v > maxV) maxV = v;
-      }
+      // Stacked, the range runs over the running totals.
+      if (stacked) stacked.levels[i]!.forEach(take);
+      else for (const raw of s.values) take(chartValue(raw));
     });
     if (!holdsZero) {
       // No value at all: the plain 0 to 1 a line chart with none draws.
@@ -276,7 +282,12 @@ export function lineMarks(
     if (maxV === minV) maxV = minV + 1;
     if (!showAxis) return { min: minV, max: maxV, scale: null };
     const scale = axisScale(minV, maxV);
-    return { min: scale.min, max: scale.max, scale };
+    // 100%'s ticks read percents.
+    const ticks =
+      stack === 'percent' && stacked
+        ? scale.ticks.map((t) => ({ ...t, text: `${t.text}%` }))
+        : scale.ticks;
+    return { min: scale.min, max: scale.max, scale: { ...scale, ticks } };
   };
   const left = range(false);
   const right = onRight.some(Boolean) ? range(true) : null;
@@ -328,7 +339,8 @@ export function lineMarks(
 
   const points = series.map((s, si) =>
     categories.map((_, i): ChartPoint | null => {
-      const v = chartValue(s.values[i]);
+      // Stacked, a point sits at its series' end of the stack.
+      const v = stacked ? (stacked.ends[si]![i] ?? null) : chartValue(s.values[i]);
       const x = v === null ? null : xAt(i);
       return x === null || v === null ? null : { x, y: (onRight[si] ? yRight : yAt)(v) };
     }),
@@ -351,8 +363,16 @@ export function lineMarks(
     );
     return present.length > 1 ? pathOf([present]) : '';
   });
-  const areas =
-    variant === 'area'
+  const areas = stacked
+    ? series.map((_, si) => {
+        // The band between the total before it and after it, over every category: no value adds no thickness.
+        const top = stacked.levels[si]!.map((v, i) => `${q(evenX(i))} ${q(yAt(v))}`);
+        const bottom = categories
+          .map((_c, i) => `${q(evenX(i))} ${q(yAt(si === 0 ? 0 : stacked.levels[si - 1]![i]!))}`)
+          .reverse();
+        return top.length ? `M ${[...top, ...bottom].join(' L ')} Z` : '';
+      })
+    : variant === 'area'
       ? runs.map((rs, si) => {
           // Down to its own axis's zero, a shape per run.
           const zeroY = q((onRight[si] ? yRight : yAt)(0));

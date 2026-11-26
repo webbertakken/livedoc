@@ -15,6 +15,8 @@ export const EMU_PER_PX = 9_525;
 // The two axes' ids every chart with axes names.
 const AXIS_IDS = [500_000_001, 500_000_002] as const;
 const LEGEND_POS = { top: 't', right: 'r', bottom: 'b', left: 'l' } as const;
+// A stacking's grouping (D283).
+export const GROUPING = { stacked: 'stacked', percent: 'percentStacked' } as const;
 // A doughnut's hole, as Google draws it: half its size.
 const DOUGHNUT_HOLE = 50;
 
@@ -120,11 +122,12 @@ function plotXml(sheet: string, chart: FileChart): string {
   switch (chart.type) {
     case 'column':
     case 'bar':
-      return `<c:barChart>${val('barDir', chart.type === 'bar' ? 'bar' : 'col')}${val('grouping', 'clustered')}${val('varyColors', 0)}${series}${labels}${val('gapWidth', 150)}${axisIds()}</c:barChart>`;
+      // Stacked bars overlap whole, so each category's segments make one bar (D283).
+      return `<c:barChart>${val('barDir', chart.type === 'bar' ? 'bar' : 'col')}${val('grouping', chart.stack ? GROUPING[chart.stack] : 'clustered')}${val('varyColors', 0)}${series}${labels}${val('gapWidth', 150)}${chart.stack ? val('overlap', 100) : ''}${axisIds()}</c:barChart>`;
     case 'line':
       return `<c:lineChart>${val('grouping', 'standard')}${val('varyColors', 0)}${series}${labels}${val('marker', 1)}${axisIds()}</c:lineChart>`;
     case 'area':
-      return `<c:areaChart>${val('grouping', 'standard')}${val('varyColors', 0)}${series}${labels}${axisIds()}</c:areaChart>`;
+      return `<c:areaChart>${val('grouping', chart.stack ? GROUPING[chart.stack] : 'standard')}${val('varyColors', 0)}${series}${labels}${axisIds()}</c:areaChart>`;
     case 'scatter':
       return `<c:scatterChart>${val('scatterStyle', 'lineMarker')}${val('varyColors', 0)}${series}${labels}${axisIds()}</c:scatterChart>`;
     case 'pie':

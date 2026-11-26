@@ -163,10 +163,17 @@ describe('reading ODF charts', () => {
         ...chart,
         ...(i % 2 ? { axis: false as const } : {}),
         ...(i % 3 ? {} : { values: true as const }),
+        // Every type stacked: a column, bar or area chart's is written (D283), another's is not.
+        stack: i % 2 ? ('stacked' as const) : ('percent' as const),
       };
     });
     const file = fileOf(withCharts(base, charts));
     const want = file.sheets[0]!.charts!.map(fileChartSum);
+    expect(file.sheets[0]!.charts!.map((c) => c.stack ?? null)).toEqual(
+      TYPES.map((type, i) =>
+        ['column', 'bar', 'area'].includes(type) ? (i % 2 ? 'stacked' : 'percent') : null,
+      ),
+    );
     for (const data of [writeOds(file, 'all').data, writeFlatOds(file, 'all').data]) {
       const got = await read(data);
       const back = got.file.sheets[0]!.charts!;
@@ -383,6 +390,22 @@ describe('a chart document, read', () => {
     expect(chartDoc({ cls: 'c2:line' })!.type).toBe('line');
   });
 
+  it('reads a bar or area chart’s stacking, LibreOffice’s 100% beside its stacked="false" (D283)', () => {
+    const plot = ' chart:style-name="p"';
+    expect(chartDoc({ styles: style('p', 'chart:stacked="true"'), plot })!.stack).toBe('stacked');
+    expect(
+      chartDoc({
+        cls: 'chart:area',
+        styles: style('p', 'chart:stacked="false" chart:percentage="true"'),
+        plot,
+      })!.stack,
+    ).toBe('percent');
+    expect(
+      chartDoc({ styles: style('p', 'chart:vertical="true" chart:stacked="true"'), plot }),
+    ).toMatchObject({ type: 'bar', stack: 'stacked' });
+    expect(chartDoc({})!.stack).toBeUndefined();
+  });
+
   it('reads none of what the model cannot draw (D277)', () => {
     const series = (attrs: string, inner = '') =>
       `<chart:series chart:values-cell-range-address="S.B2:S.B4"${attrs}>${inner}</chart:series>`;
@@ -390,8 +413,20 @@ describe('a chart document, read', () => {
       { cls: 'chart:stock' },
       { cls: 'x:bar' },
       { cls: 'bar' },
-      { styles: style('p', 'chart:stacked="true"'), plot: ' chart:style-name="p"' },
-      { styles: style('p', 'chart:percentage="true"'), plot: ' chart:style-name="p"' },
+      {
+        cls: 'chart:line',
+        styles: style('p', 'chart:stacked="true"'),
+        plot: ' chart:style-name="p"',
+      },
+      {
+        cls: 'chart:line',
+        styles: style('p', 'chart:percentage="true"'),
+        plot: ' chart:style-name="p"',
+      },
+      {
+        styles: style('s', 'chart:stacked="true"'),
+        series: '<chart:series chart:values-cell-range-address="S.B2:S.B4" chart:style-name="s"/>',
+      },
       { styles: style('p', 'chart:three-dimensional="true"'), plot: ' chart:style-name="p"' },
       { styles: style('p', 'chart:interpolation="cubic-spline"'), plot: ' chart:style-name="p"' },
       {

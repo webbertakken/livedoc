@@ -20,6 +20,7 @@ import {
   legendFontPx,
   chartValue,
   chartTypeOf,
+  chartStackOf,
   type ShapeElement,
 } from '@livedoc/document';
 import { useChartAnim, chartFrame } from '@/lib/chart';
@@ -61,6 +62,8 @@ export function LineChartView({
     0,
     0,
     element.chartAxis === true,
+    // An area chart's stacking (pie-chart.md "Stacking").
+    chartStackOf({ ...element, lineSeries: series }),
   );
   // The second axis's labels in its first series' colour.
   const right = Math.max(

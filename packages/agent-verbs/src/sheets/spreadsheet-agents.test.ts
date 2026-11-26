@@ -151,7 +151,16 @@ describe('a chart in a spreadsheet', () => {
       DOC_A,
       {
         sheet: 'Models',
-        changes: [{ op: 'chart', type: 'line', range: 'B1:C4', axis: false, replace: chart!.id }],
+        changes: [
+          {
+            op: 'chart',
+            type: 'area',
+            range: 'B1:C4',
+            axis: false,
+            stack: 'percent',
+            replace: chart!.id,
+          },
+        ],
       },
       'mcp',
     );
@@ -159,8 +168,15 @@ describe('a chart in a spreadsheet', () => {
     const again = await readSheet(api, DOC_A, { sheet: 'Models' });
     if (!again.ok) throw new Error(again.message);
     expect(again.charts).toEqual([
-      expect.objectContaining({ id: chart!.id, type: 'line', range: 'B1:C4', axis: false }),
+      expect.objectContaining({
+        id: chart!.id,
+        type: 'area',
+        range: 'B1:C4',
+        axis: false,
+        stack: 'percent',
+      }),
     ]);
+    expect(chart!.stack).toBeUndefined();
   });
 
   it('refuses to replace a chart the sheet does not hold', async () => {

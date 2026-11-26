@@ -35,6 +35,7 @@ import {
   SHEET_CHART_TEXT_MAX,
   type IdRange,
   type SheetChartLegend,
+  type SheetChartStack,
   type SheetLayout,
   type Workbook,
 } from '@livedoc/sheets';
@@ -66,10 +67,21 @@ export type SheetChartLook = {
   legend?: SheetChartLegend;
   values?: boolean;
   axis?: boolean;
+  // A column, bar or area chart's Stacking (pie-chart.md "Stacking").
+  stack?: SheetChartStack;
   alt?: string;
 };
 
-const LOOK_KEYS = ['title', 'xAxisTitle', 'yAxisTitle', 'legend', 'values', 'axis', 'alt'] as const;
+const LOOK_KEYS = [
+  'title',
+  'xAxisTitle',
+  'yAxisTitle',
+  'legend',
+  'values',
+  'axis',
+  'stack',
+  'alt',
+] as const;
 
 // The look a change gives, held to the chart's bounds, or the refusal.
 function lookOf(change: SheetChartLook): SheetChartLook | SheetRefusal | undefined {
@@ -106,6 +118,7 @@ export function lookFields(look: SheetChartLook | undefined): Partial<ShapeEleme
     ...(look.legend && look.legend !== 'none' ? { chartLegendPosition: look.legend } : {}),
     ...(look.values !== undefined ? { chartValues: look.values } : {}),
     ...(look.axis !== undefined ? { chartAxis: look.axis } : {}),
+    ...(look.stack ? { chartStack: look.stack } : {}),
   };
 }
 

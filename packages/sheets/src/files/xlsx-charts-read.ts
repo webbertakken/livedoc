@@ -21,6 +21,7 @@ import {
   SHEET_CHART_SIZE_MIN,
   SHEET_CHART_TEXT_MAX,
   type SheetChartLegend,
+  type SheetChartStack,
   type SheetChartType,
 } from '../objects/sheet-objects';
 import {
@@ -33,7 +34,7 @@ import {
 import { lineStartPx } from './file-lines';
 import type { FileAt, KeptContent, KeptPart } from './kept-content';
 import type { FileSheet } from './workbook-file';
-import { EMU_PER_PX } from './xlsx-charts';
+import { EMU_PER_PX, GROUPING } from './xlsx-charts';
 
 const C_NS = 'http://schemas.openxmlformats.org/drawingml/2006/chart';
 const A_NS = 'http://schemas.openxmlformats.org/drawingml/2006/main';
@@ -92,20 +93,40 @@ const colour = (fill: XmlElement | undefined): string | undefined => {
   return hex && /^[0-9a-f]{6}$/i.test(hex) ? `#${hex.toLowerCase()}` : undefined;
 };
 
-// The chart group's type, or null for one not built (stacked, smooth, 3-D, combined).
-function typeOf(plot: XmlElement): { type: SheetChartType; group: XmlElement } | null {
+// A bar or area chart's grouping as its stacking (D283): none for clustered or standard, undefined for one not built.
+const stackOf = (grouping: string | undefined, plain: string) =>
+  grouping === undefined || grouping === plain
+    ? null
+    : grouping === GROUPING.stacked
+      ? ('stacked' as const)
+      : grouping === GROUPING.percent
+        ? ('percent' as const)
+        : undefined;
+
+type Typed = { type: SheetChartType; group: XmlElement; stack?: SheetChartStack };
+
+// The chart group's type and stacking, or null for one not built (a stacked line, smooth, 3-D, combined).
+function typeOf(plot: XmlElement): Typed | null {
   const groups = childElements(plot).filter((e) => e.uri === C_NS && e.local.endsWith('Chart'));
   if (groups.length !== 1) return null;
   const group = groups[0]!;
   const grouping = valOf(c(group, 'grouping'));
   switch (group.local) {
     case 'barChart':
-      if (grouping !== undefined && grouping !== 'clustered') return null;
-      return { type: valOf(c(group, 'barDir')) === 'bar' ? 'bar' : 'column', group };
+    case 'areaChart': {
+      const stack = stackOf(grouping, group.local === 'barChart' ? 'clustered' : 'standard');
+      if (stack === undefined) return null;
+      const type =
+        group.local === 'areaChart'
+          ? 'area'
+          : valOf(c(group, 'barDir')) === 'bar'
+            ? 'bar'
+            : 'column';
+      return { type, group, ...(stack ? { stack } : {}) };
+    }
     case 'lineChart':
-    case 'areaChart':
       if (grouping !== undefined && grouping !== 'standard') return null;
-      return { type: group.local === 'lineChart' ? 'line' : 'area', group };
+      return { type: 'line', group };
     case 'scatterChart':
       return /smooth/i.test(valOf(c(group, 'scatterStyle')) ?? '')
         ? null
@@ -171,7 +192,7 @@ export function readXlsxChartXml(xml: string, sheetName: string): Read | null {
   const plot = c(chart, 'plotArea');
   const typed = plot && typeOf(plot);
   if (!chart || !plot || !typed) return null;
-  const { type, group } = typed;
+  const { type, group, stack } = typed;
   const scatter = type === 'scatter';
   const own = (ref: string | null): FileRange | null => {
     const read = ref === null ? null : parseXlsxRef(ref);
@@ -216,6 +237,7 @@ export function readXlsxChartXml(xml: string, sheetName: string): Read | null {
   return {
     id: '',
     type,
+    ...(stack ? { stack } : {}),
     ...(title ? { title } : {}),
     ...(xTitle ? { xTitle } : {}),
     ...(yTitle ? { yTitle } : {}),

@@ -42,6 +42,7 @@ describe('what a chart may be', () => {
       legend: 'none',
       values: true,
       axis: false,
+      stack: 'percent',
       title: 'Value',
       xTitle: 'Cost',
       yTitle: 'Index',
@@ -68,6 +69,7 @@ describe('what a chart may be', () => {
     no(chart({ alt: 'x'.repeat(1001) }));
     no({ ...chart(), legend: 'middle' });
     no({ ...chart(), axis: true });
+    no({ ...chart(), stack: 'none' });
     no(chart({ series: { [C(1)]: { color: 'red' } } }));
     no(chart({ series: { [C(1)]: { line: false as unknown as true } } }));
     no(chart({ kept: { part: '', sum: '0a1b2c3d' } }));

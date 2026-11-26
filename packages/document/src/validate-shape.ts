@@ -9,6 +9,7 @@ import { isPlanSheetRef } from './element-types';
 import { isFlowchartDirection } from './flowchart';
 import { isChartSource, isSheetAnchor } from './chart-source';
 import { CHART_VARIANTS, isChartVariant } from './chart-types';
+import { CHART_STACKS, isChartStack } from './chart-stack';
 import { EMBED_PROVIDERS } from './youtube';
 import { SELECTION_MODES, isPickerSource, isSelectionMode, isSessionTool } from './selection-mode';
 import { RESPONSES_MAX, RESPONSE_VALUE_MAX } from './responses';
@@ -284,6 +285,7 @@ const SHAPE_FIELD_CHECKS: readonly FieldCheck[] = [
     valid: isChartVariant,
     rule: oneOfRule(CHART_VARIANTS),
   },
+  { field: 'chartStack', valid: isChartStack, rule: oneOfRule(CHART_STACKS) },
   {
     field: 'chartPalette',
     valid: (v) => isChartPaletteId(v as string),

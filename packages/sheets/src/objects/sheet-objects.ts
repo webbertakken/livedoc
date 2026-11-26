@@ -17,6 +17,11 @@ export const SHEET_CHART_TYPES = [
 ] as const;
 export type SheetChartType = (typeof SHEET_CHART_TYPES)[number];
 
+// Stacking (charts.md "The model"): Standard or 100%, as @livedoc/document CHART_STACKS names them (a test keeps
+// them equal); a Column, Bar or Area chart draws it, another type keeps it unused.
+export const SHEET_CHART_STACKS = ['stacked', 'percent'] as const;
+export type SheetChartStack = (typeof SHEET_CHART_STACKS)[number];
+
 export const SHEET_CHART_LEGENDS = ['top', 'right', 'bottom', 'left', 'none'] as const;
 export type SheetChartLegend = (typeof SHEET_CHART_LEGENDS)[number];
 
@@ -42,6 +47,7 @@ export type SheetChart = {
   values?: true;
   // The value axis: shown unless false (Google shows it).
   axis?: false;
+  stack?: SheetChartStack;
   title?: string;
   xTitle?: string;
   yTitle?: string;
@@ -93,6 +99,7 @@ const CHART_KEYS = [
   'legend',
   'values',
   'axis',
+  'stack',
   'title',
   'xTitle',
   'yTitle',
@@ -160,6 +167,7 @@ function isSheetChart(x: Record<string, unknown>): boolean {
     (x.legend === undefined || (SHEET_CHART_LEGENDS as readonly unknown[]).includes(x.legend)) &&
     (x.values === undefined || x.values === true) &&
     (x.axis === undefined || x.axis === false) &&
+    (x.stack === undefined || (SHEET_CHART_STACKS as readonly unknown[]).includes(x.stack)) &&
     textUpTo(x.title, SHEET_CHART_TEXT_MAX) &&
     textUpTo(x.xTitle, SHEET_CHART_TEXT_MAX) &&
     textUpTo(x.yTitle, SHEET_CHART_TEXT_MAX) &&

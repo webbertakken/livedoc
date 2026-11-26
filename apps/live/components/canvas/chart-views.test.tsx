@@ -73,6 +73,51 @@ describe('chart views', () => {
     expect(container.textContent).not.toContain('Opus · Cost: 15');
   });
 
+  it('stacks a column chart’s series, its numbers on their segments in readable ink (Stacking, D282)', () => {
+    const { container } = render(
+      <BarChartView
+        element={el('bar-chart', {
+          chartValues: true,
+          chartStack: 'stacked',
+          height: 400,
+          lineCategories: ['Opus', 'Sonnet'],
+          lineSeries: [
+            { name: 'Cost', values: [15, 20], color: '#111111' },
+            { name: 'Index', values: [60, 54], color: '#eeeeee' },
+          ],
+        })}
+        textColor="#777"
+      />,
+    );
+    const bars = [...container.querySelectorAll('rect[rx="0"]')];
+    expect(bars).toHaveLength(4);
+    // One stack a category: a category's segments share their column.
+    expect(bars[0]!.getAttribute('x')).toBe(bars[2]!.getAttribute('x'));
+    const fifteen = [...container.querySelectorAll('text')].find((t) => t.textContent === '15')!;
+    expect(fifteen.getAttribute('fill')).toBe('#ffffff');
+    fireEvent.pointerEnter(bars[2]!);
+    expect(container.textContent).toContain('Opus · Index: 60');
+  });
+
+  it('stacks an area chart’s series to 100%, its ticks percents', () => {
+    const { container } = render(
+      <LineChartView
+        element={el('line-chart', {
+          chartVariant: 'area',
+          chartStack: 'percent',
+          chartAxis: true,
+          lineCategories: ['W1', 'W2'],
+          lineSeries: [
+            { name: 'A', values: [1, 3] },
+            { name: 'B', values: [3, 1] },
+          ],
+        })}
+        textColor="#000"
+      />,
+    );
+    expect([...container.querySelectorAll('text')].map((t) => t.textContent)).toContain('100%');
+  });
+
   it('draws a doughnut as even-odd ring segments, and reads a hovered slice', () => {
     const { container } = render(
       <PieChartView element={el('pie-chart', { chartVariant: 'doughnut' })} textColor="#000" />,

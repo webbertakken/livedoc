@@ -190,5 +190,11 @@ function chartSheet(): FileSheet {
     series: [series(2, 'Index', { line: true, color: '#e8710a' })],
   });
   charts.push({ ...base(types.length + 1, 'column'), id: 'chart_none', labels: null, series: [] });
+  // Stacking (D283): stacked columns, 100% bars, a stacked area.
+  charts.push(
+    { ...base(types.length + 2, 'column'), id: 'chart_stacked', stack: 'stacked' },
+    { ...base(types.length + 3, 'bar'), id: 'chart_percent', stack: 'percent' },
+    { ...base(types.length + 4, 'area'), id: 'chart_area_stacked', stack: 'stacked' },
+  );
   return { ...sheet("Costs' sheet", cells, 140, 8), charts };
 }
