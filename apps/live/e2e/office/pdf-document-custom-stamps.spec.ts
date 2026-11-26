@@ -70,6 +70,10 @@ test('a picture is made a custom stamp, placed, and leaves as a Stamp with its p
   ).toBeVisible();
   await expect(dialog.getByLabel('Name')).toHaveValue('Paid');
   await expect(dialog.getByLabel('Category')).toHaveValue('Custom');
+  // Settled after its fade in, so the picture shows it as a person sees it.
+  await page.waitForFunction(() =>
+    document.getAnimations().every((animation) => animation.playState !== 'running'),
+  );
   await page.screenshot({ path: test.info().outputPath('pdf-custom-stamp-dialog.png') });
 
   // Create makes it the stamp shown, the Stamp tool in hand.
