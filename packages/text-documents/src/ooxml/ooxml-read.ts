@@ -54,6 +54,16 @@ import { Contents, type TableOfContents } from '../model/contents';
 import { DocumentTabs, type DocumentTabStart } from '../model/document-tabs';
 import { Comments, type CommentMark } from '../model/comments';
 import { COMMENT_RELATIONSHIPS, OoxmlCommentsReader } from './ooxml-comments';
+import { Suggestions, type InlineSuggested, type ParagraphSuggested } from '../model/suggestions';
+import {
+  isPropertyRevision,
+  isRevisionRuns,
+  keptWithoutRevisions,
+  readParagraphChange,
+  readParagraphMark,
+  readRunChange,
+  revisionRunsSuggested,
+} from './ooxml-suggestions';
 
 /** What a `w:sectPr` says of the document tab it ends, when it ends one. */
 function tabOf(sectPr: XmlElement): DocumentTabStart['head'] | undefined {
@@ -382,10 +392,16 @@ class OoxmlReader {
     mapped: ReadonlySet<string>,
   ): KeptProperties | undefined {
     if (!e) return undefined;
+    // A run's or paragraph's tracked changes are read as suggestions, never kept (review.md "In the files").
+    const formatting = e.uri === W_NS && (e.local === 'rPr' || e.local === 'pPr');
+    const keep = (x: XmlElement) =>
+      formatting ? keptWithoutRevisions(parsed, x) : keptXmlOf(parsed, x);
     const residue = childElements(e)
-      .filter((c) => !(c.uri === W_NS && mapped.has(c.local)))
-      .map((c) => keptXmlOf(parsed, c));
-    return { xml: keptXmlOf(parsed, e), read: canonical(values), residue };
+      .filter(
+        (c) => !(c.uri === W_NS && mapped.has(c.local)) && !(formatting && isPropertyRevision(c)),
+      )
+      .map(keep);
+    return { xml: keep(e), read: canonical(values), residue };
   }
 
   readStyles(): { styles: Style[]; defaults: StyleDefaults; kept: KeptXml[] } {
@@ -711,7 +727,7 @@ class OoxmlReader {
       lists,
       section: first,
       ...(readPageless(this.parts.settings?.root) ? { pageless: true as const } : {}),
-      body: blocks,
+      body: this.carryMarks(blocks),
       ...compact({ media: this.taken.held() }),
       source,
     };
@@ -768,13 +784,43 @@ class OoxmlReader {
       },
     };
     const kept = this.propsKept(doc, pPr, values, MAPPED_PPR);
-    return {
+    const suggested = this.paragraphSuggested(pPr);
+    const paragraph: Paragraph = {
       type: 'paragraph',
       style,
       props,
-      ...compact({ list, kept }),
+      ...compact({ list, kept, suggested }),
       inlines,
     };
+    const mark = this.inStory ? undefined : readParagraphMark(pPr);
+    if (mark) this.paragraphMarks.set(paragraph, mark);
+    return paragraph;
+  }
+
+  /** A paragraph's paragraph format suggestion; in a header, footer or note settled as the file stands (reported). */
+  paragraphSuggested(pPr: XmlElement | undefined): ParagraphSuggested | undefined {
+    const format = readParagraphChange(pPr, (before) => {
+      const style = wVal(childElement(before ?? pPr!, W_NS, 'pStyle')) ?? this.normalId();
+      const numPr = before && childElement(before, W_NS, 'numPr');
+      const numId = wVal(childElement(numPr ?? pPr!, W_NS, 'numId'));
+      const level = Math.max(
+        0,
+        Math.min(8, Number(wVal(childElement(numPr ?? pPr!, W_NS, 'ilvl')) ?? '0') || 0),
+      );
+      const list =
+        numPr && numId !== undefined && numId !== '0'
+          ? { id: this.numAliases.get(numId)?.list ?? numId, level }
+          : undefined;
+      const props = readParagraphProps(
+        before,
+        Styles.paragraphPropsOf(this.tabs.styles, this.tabs.defaults, style).tabStops ?? [],
+        this.dropTabs,
+      );
+      return compact({ style, props, list });
+    });
+    const inStory = this.inStory && (format || readParagraphMark(pPr));
+    if (inStory) this.report.drop('suggestion-in-story', 'paragraph');
+    return format && !this.inStory ? { format } : undefined;
   }
 
   /** A table style's lines and margins, down its `w:basedOn`; the default table style's for none. */
@@ -833,6 +879,31 @@ class OoxmlReader {
   }
 
   /** The blocks a cell, header, footer or note holds: paragraphs, tables and kept elements. */
+  /** Each paragraph's own mark's tracked change, carried to the paragraph after it (`carryMarks`). */
+  readonly paragraphMarks = new Map<Paragraph, ParagraphSuggested>();
+
+  /**
+   * Blocks with each paragraph mark's tracked change moved to the paragraph after it, as its break or join (Word puts
+   * the change on the paragraph before the break; the model on the one after it). A mark with no paragraph after it, a
+   * section break aside, is dropped and reported `suggestion-last-mark`.
+   */
+  carryMarks(blocks: Block[]): Block[] {
+    let carried: ParagraphSuggested | undefined;
+    const out = blocks.map((block) => {
+      if (block.type === 'section') return block;
+      if (carried && block.type !== 'paragraph')
+        this.report.drop('suggestion-last-mark', 'paragraph mark');
+      const marked =
+        carried && block.type === 'paragraph'
+          ? { ...block, suggested: { ...block.suggested, ...carried } }
+          : block;
+      carried = block.type === 'paragraph' ? this.paragraphMarks.get(block) : undefined;
+      return marked;
+    });
+    if (carried) this.report.drop('suggestion-last-mark', 'paragraph mark');
+    return out;
+  }
+
   blocksOf(parent: XmlElement): Block[] {
     const blocks: Block[] = [];
     for (const e of childElements(parent)) {
@@ -847,7 +918,7 @@ class OoxmlReader {
         this.report.keep(e.local);
       }
     }
-    return blocks;
+    return this.carryMarks(blocks);
   }
 
   normalId(): string {
@@ -909,6 +980,8 @@ class RunReader {
   readonly skipped = new Set<XmlElement>();
   /** Complex fields the model holds (page-layout.md "Page numbers"), by their begin run: what each is, and its result runs. */
   readonly fields = new Map<XmlElement, { kind: FieldKind; results: XmlElement[] }>();
+  /** The suggestions what is read now is part of: the `w:ins` / `w:del` around it, a run's format change. */
+  suggested: InlineSuggested | undefined;
 
   constructor(r: OoxmlReader, p: XmlElement) {
     this.r = r;
@@ -961,7 +1034,7 @@ class RunReader {
       childElements(run).flatMap((c) =>
         isW(c, 'fldChar')
           ? [{ char: wVal(c, 'fldCharType'), instr: undefined as XmlElement | undefined }]
-          : isW(c, 'instrText')
+          : isW(c, 'instrText') || isW(c, 'delInstrText')
             ? [{ char: undefined, instr: c }]
             : [],
       );
@@ -1022,12 +1095,14 @@ class RunReader {
       last.style === style &&
       last.link === link &&
       last.kept === kept &&
+      Suggestions.sameInline(last.suggested, this.suggested) &&
       canonical(last.props) === canonical(props)
     ) {
       this.out[this.out.length - 1] = { ...last, text: last.text + text };
       return;
     }
-    const run: Run = { type: 'run', text, props, ...compact({ style, link, kept }) };
+    const suggested = this.suggested;
+    const run: Run = { type: 'run', text, props, ...compact({ style, link, kept, suggested }) };
     this.out.push(run);
   }
 
@@ -1076,6 +1151,7 @@ class RunReader {
         this.r.report.drop('layout-hint', e.local);
         return;
       }
+      if (isRevisionRuns(e)) return this.revision(e, ctx);
       if (e.local === 'hyperlink') {
         const href = this.r.linkOf(e);
         const safe = href !== undefined && isSafeLink(href);
@@ -1127,7 +1203,42 @@ class RunReader {
     });
   }
 
+  /**
+   * Runs inside a `w:ins` or `w:del` (review.md "In the files"): each inline read inside it is part of its suggestion.
+   * In a header, footer or note the change is settled as the file is read: an insertion kept, a deletion dropped.
+   */
+  revision(e: XmlElement, ctx: RunContext): void {
+    const own = revisionRunsSuggested(e);
+    if (this.r.inStory) {
+      this.r.report.drop('suggestion-in-story', e.local);
+      if (own.insertion) for (const c of childElements(e)) this.node(c, ctx);
+      return;
+    }
+    const from = this.out.length;
+    const outer = this.suggested;
+    this.suggested = Suggestions.merged(outer, own);
+    for (const c of childElements(e)) this.node(c, ctx);
+    for (let i = from; i < this.out.length; i++) {
+      const inline = this.out[i]!;
+      if (inline.type !== 'run' && inline.type !== 'comment')
+        this.out[i] = {
+          ...inline,
+          suggested: Suggestions.merged(inline.suggested, this.suggested),
+        };
+    }
+    this.suggested = outer;
+  }
+
   run(r: XmlElement, ctx: RunContext): void {
+    const outer = this.suggested;
+    const change = readRunChange(childElement(r, W_NS, 'rPr'), readRunProps);
+    if (change && this.r.inStory) this.r.report.drop('suggestion-in-story', 'rPrChange');
+    else if (change) this.suggested = Suggestions.merged(outer, { format: change });
+    this.readRun(r, ctx);
+    this.suggested = outer;
+  }
+
+  readRun(r: XmlElement, ctx: RunContext): void {
     const field = this.fields.get(r);
     if (field) return this.field(field.kind, field.results, r, ctx);
     if (this.skipped.has(r) || this.r.fieldMarks.has(r)) return;
@@ -1148,6 +1259,7 @@ class RunReader {
             this.keepWhole(r, rPr, c, ctx, props, style);
           break;
         case 't':
+        case 'delText':
           this.push(textContent(c), style, props, ctx.link, kept);
           break;
         case 'tab':

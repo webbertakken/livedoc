@@ -2,6 +2,7 @@
 // writing. A name both formats accept is made for a new one; a hidden one (its name starting with `_`, as Word and
 // Google hide theirs) is one too, never shown: the first at a heading's start is the heading's id.
 import type { KeptProperties, TextProps } from './props';
+import type { InlineSuggested } from './suggestions';
 
 export type Bookmark = {
   readonly type: 'bookmark';
@@ -11,6 +12,8 @@ export type Bookmark = {
   readonly style?: string;
   readonly link?: string;
   readonly kept?: KeptProperties;
+  /** The suggestions it is part of (review.md "How a suggestion is kept"). */
+  readonly suggested?: InlineSuggested;
 };
 
 /** A new bookmark's name: this many lowercase letters and digits, the first a letter. */

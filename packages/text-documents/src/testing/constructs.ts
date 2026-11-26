@@ -769,6 +769,34 @@ export const CONSTRUCTS: Record<string, (format: TextDocumentFormat) => TextDocu
       },
     );
   },
+  // review.md "How a suggestion is kept": an insertion, a deletion and a format change in one paragraph, a paragraph break
+  // before the second, and a paragraph format on the third. Word's ids, so the file reads back equal (ODF in 12d2b).
+  suggestions: (format) => {
+    const at = Date.UTC(2026, 10, 20, 9, 30);
+    const author = { name: 'Ada Lovelace' };
+    const mark = (n: number) => ({ id: `f.${n}`, at, author });
+    return base(format, [
+      paragraph(format, 'normal', [
+        run('The '),
+        { ...run('quick '), suggested: { insertion: mark(1) } },
+        { ...run('slow '), suggested: { deletion: mark(2) } },
+        {
+          ...run('fox', { bold: true }),
+          suggested: { format: { ...mark(3), before: { props: {} } } },
+        },
+      ]),
+      { ...paragraph(format, 'normal', [run('jumps')]), suggested: { break: mark(4) } },
+      {
+        ...paragraph(format, 'heading1', [run('Over')]),
+        suggested: {
+          format: {
+            ...mark(5),
+            before: { style: Styles.idOfRole(Styles.builtIn(format), 'normal')!, props: {} },
+          },
+        },
+      },
+    ]);
+  },
   // links-and-navigation.md "Table of contents": a Dotted one of two levels, each entry its heading's text and page
   // number linked to the heading's id, then the headings it lists.
   contents: (format) => {

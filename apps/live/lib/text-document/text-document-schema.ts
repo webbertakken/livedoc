@@ -37,6 +37,7 @@ import { equationNodeSpec } from './text-document-equations';
 import { nullAttributes } from './text-document-attributes';
 import { bookmarkNodeSpec } from './text-document-bookmarks';
 import { contentsNodeSpec } from './text-document-contents';
+import { SUGGESTION_MARK_SPECS } from './text-document-suggestion-marks';
 
 const fieldText = (text: unknown): string => (typeof text === 'string' ? text : '');
 
@@ -95,6 +96,7 @@ const marks: Record<string, MarkSpec> = {
   // A run's text style and its file's own formatting element: carried, drawn by nothing yet.
   text_style: { attrs: { id: {} }, toDOM: () => ['span', 0] },
   run_kept: { attrs: { kept: {} }, toDOM: () => ['span', 0] },
+  ...SUGGESTION_MARK_SPECS,
 };
 
 // Something kept from the file, shown as it reads (standard-mapping.md "Kept content", "Shown as it reads"): nothing

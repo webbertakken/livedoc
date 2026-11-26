@@ -10,6 +10,7 @@ import type { Block, Inline } from './blocks';
 import { HEADER_FOOTER_KINDS, HEADER_FOOTER_SLOTS, type SectionHeaders } from './headers';
 import type { TextDocument } from './text-document';
 import { DocumentTabs } from './document-tabs';
+import type { InlineSuggested } from './suggestions';
 
 /** The share of the picture's own width or height cut from each side, each from 0 to below 1. */
 export type PictureCrop = {
@@ -43,6 +44,8 @@ export type Picture = PictureColouring & {
   /** A drawing's picture: the id of the drawing tab it shows (objects.md "Drawings"); absent on any other picture. */
   readonly drawing?: string;
   readonly kept?: KeptProperties;
+  /** The suggestions it is part of (review.md "How a suggestion is kept"). */
+  readonly suggested?: InlineSuggested;
 };
 
 /**

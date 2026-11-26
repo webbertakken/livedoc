@@ -19,6 +19,7 @@ import {
 import { readTextDocumentFile, writeTextDocumentFile } from '../files';
 import { TextDocument } from '../model/text-document';
 import { CONSTRUCTS } from '../testing/constructs';
+import { Blocks } from '../model/tables';
 import { LIVEDOC_NS, NS } from '../odf/odf-names';
 
 const OUT = mkdtempSync(join(tmpdir(), 'livedoc-written-'));
@@ -27,7 +28,16 @@ const FOREIGN = new Set([LIVEDOC_NS, NS.loext]);
 fetchOfficeSchemas();
 
 /** Each written file, its paragraphs' texts and its threads' comments' texts. */
-const written: { file: string; texts: string[]; threads: string[][] }[] = [];
+const written: { file: string; texts: string[]; threads: string[][]; suggestions: string[] }[] = [];
+
+/** Each paragraph's suggestion kinds in reading order, as text: a break or join, a paragraph format, then its inlines'. */
+const suggestionKindsOf = (document: TextDocument) =>
+  Blocks.paragraphs(document.body).flatMap((p) => [
+    ...Object.keys(p.suggested ?? {}).sort(),
+    ...p.inlines.flatMap((i) =>
+      i.type === 'comment' ? [] : Object.keys(i.suggested ?? {}).sort(),
+    ),
+  ]);
 const threadsOf = (document: TextDocument) =>
   (document.comments ?? []).map((t) => t.comments.map((c) => c.text));
 
@@ -43,6 +53,7 @@ describe('every written file validates against its format’s schema', () => {
           file,
           texts: TextDocument.paragraphTexts(document),
           threads: threadsOf(document),
+          suggestions: suggestionKindsOf(document),
         });
         if (type === 'fodt')
           validateFlatOdf(new TextDecoder().decode(bytes), join(OUT, `${name}-fodt`), FOREIGN);
@@ -59,6 +70,7 @@ describe('every written file validates against its format’s schema', () => {
         file,
         texts: TextDocument.paragraphTexts(document),
         threads: threadsOf(document),
+        suggestions: suggestionKindsOf(document),
       });
       expect((await readOoxmlPackage(new Uint8Array(bytes))).ok).toBe(true);
       // Word's comments extension (MS-DOCX) has no ISO/IEC 29500 schema; comments.xml itself is checked.
@@ -103,6 +115,9 @@ describe('every written file validates against its format’s schema', () => {
         expect(texts(TextDocument.paragraphTexts(read.document)), out).toEqual(texts(w.texts));
       // review.md "How a comment is kept": its comment threads, replies included, come back as they were.
       if (read.ok) expect(threadsOf(read.document), out).toEqual(w.threads);
+      // review.md "In the files": Word's tracked changes come back as suggestions of the same kinds (ODF in 12d2b).
+      if (read.ok && out.endsWith('.docx'))
+        expect(suggestionKindsOf(read.document), out).toEqual(w.suggestions);
     }
   }, 400_000);
 });

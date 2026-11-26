@@ -22,6 +22,7 @@ import {
   KEPT_INLINE,
   KEPT_INLINE_ATTRIBUTES,
   PARAGRAPH_ATTRIBUTES,
+  SUGGESTION_MARKS,
   PICTURE,
   PICTURE_ATTRIBUTES,
   readTextDocumentFile,
@@ -78,6 +79,31 @@ describe('textDocumentSchema', () => {
 
   it('has a mark for every run attribute', () => {
     for (const mark of RUN_MARKS) expect(textDocumentSchema.marks[mark], mark).toBeDefined();
+  });
+
+  // review.md "How a suggestion is kept": the suggestion marks bind, never stretch, and draw in the author's colour.
+  it('has a mark for every suggestion, never inclusive, drawn in its author’s colour', () => {
+    for (const name of SUGGESTION_MARKS) {
+      const type = textDocumentSchema.marks[name];
+      expect(type, name).toBeDefined();
+      expect(type!.spec.inclusive).toBe(false);
+    }
+    const mark = textDocumentSchema.marks.insertion!.create({
+      id: 's1',
+      at: 1,
+      author: { key: 'k', name: 'Ada', colour: '#0284c7' },
+    });
+    const [tag, attrs] = mark.type.spec.toDOM!(mark, true) as [string, Record<string, string>];
+    expect(tag).toBe('span');
+    expect(attrs['data-suggestion']).toBe('s1');
+    expect(attrs.style).toContain('text-decoration-line: underline');
+    const odd = textDocumentSchema.marks.deletion!.create({
+      id: 's2',
+      at: 1,
+      author: { colour: 'red;x' },
+    });
+    const [, plain] = odd.type.spec.toDOM!(odd, true) as [string, Record<string, string>];
+    expect(plain.style).toBe('text-decoration-line: line-through');
   });
 
   // standard-mapping.md "Shown as it reads".

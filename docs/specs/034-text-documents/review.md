@@ -267,6 +267,13 @@ office kinds; this spec says what a text document puts in them.
   whole. The comments' rules stand beside it. An Editor's update is not judged, as with comments.
 - **Limits**: at most `TEXT_DOCUMENT_SUGGESTIONS_MAX` suggestions (5,000, (default)) in one document; the editor
   makes none past it and the room refuses a Participant's update past it.
+- **In the files**: a suggestion leaves as each format's tracked change ([Standard mapping](standard-mapping.md)) and
+  a file's tracked change arrives as a suggestion **From the file**: its author the file's name for them, never a
+  LiveDoc person, as a file's comment's. Each tracked change is its own suggestion; adjacent ones of one author are not
+  merged (default). A Word move arrives as a deletion where it left and an insertion where it landed (default). A
+  file's own "track changes" setting is kept as the file has it, never read as anyone's mode (default). A tracked
+  change in a header, footer or note is settled as the file is read, an insertion kept and a deletion dropped, and
+  reported `suggestion-in-story`.
 - **Search** reads a suggested insertion as the writing it is, and a suggested deletion too, until it is accepted.
 
 ## Reviewing suggestions

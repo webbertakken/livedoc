@@ -56,6 +56,7 @@ import { readSource } from './live-source';
 import { StoryReader, type LiveHeaders } from './live-stories';
 import { readLiveComments, type LiveCommentMarks } from './live-thread-files';
 import type { CommentMark } from '../model/comments';
+import { readInlineSuggested, readParagraphSuggested } from './live-suggestion-files';
 
 const PROPERTY_OF_MARK = new Map<string, keyof TextProps>(
   (Object.entries(TEXT_PROPERTY_MARK_OF) as [keyof TextProps, string][]).map(([p, m]) => [m, p]),
@@ -80,6 +81,7 @@ function runOf(text: string, attributes: Attributes): Run {
     props,
     link: (attributes[LINK_MARK] as { href?: string } | undefined)?.href,
     kept: (attributes[RUN_KEPT_MARK] as { kept?: Run['kept'] } | undefined)?.kept,
+    suggested: readInlineSuggested(attributes),
   });
 }
 
@@ -135,6 +137,7 @@ function inlinesOf(
           style: a.style as string | undefined,
           link: a.link as string | undefined,
           kept: a.kept as Field['kept'],
+          suggested: readInlineSuggested(a),
         }),
       );
       continue;
@@ -149,6 +152,7 @@ function inlinesOf(
           style: a.style as string | undefined,
           link: a.link as string | undefined,
           kept: a.kept as Note['kept'],
+          suggested: readInlineSuggested(a),
         }),
       );
       continue;
@@ -176,6 +180,7 @@ function inlinesOf(
           link: a.link as string | undefined,
           drawing: typeof a.drawing === 'string' ? a.drawing : undefined,
           kept: a.kept as Picture['kept'],
+          suggested: readInlineSuggested(a),
         }),
       );
       continue;
@@ -191,6 +196,7 @@ function inlinesOf(
           style: a.style as string | undefined,
           link: a.link as string | undefined,
           kept: a.kept as Equation['kept'],
+          suggested: readInlineSuggested(a),
         }),
       );
       continue;
@@ -207,6 +213,7 @@ function inlinesOf(
           style: a.style as string | undefined,
           link: a.link as string | undefined,
           kept: a.kept as Bookmark['kept'],
+          suggested: readInlineSuggested(a),
         }),
       );
       continue;
@@ -222,6 +229,7 @@ function inlinesOf(
           style: a.style as string | undefined,
           link: a.link as string | undefined,
           kept: a.kept as KeptInline['kept'],
+          suggested: readInlineSuggested(a),
         }),
       );
     }
@@ -247,6 +255,7 @@ function blockOf(
         text: a.text as Paragraph['text'],
         inlines: inlinesOf(node, stories, marks),
         kept: a.kept as Paragraph['kept'],
+        suggested: readParagraphSuggested(a, normal),
       });
     case SECTION_BREAK: {
       const { headers, ...rest } = a as Omit<SectionBreak, 'type' | 'headers'> & {
