@@ -2,7 +2,7 @@
 
 // Hover readout for a chart mark (pie slice / bar / point), shared by the chart-family
 // views (docs/specs/009-elements/pie-chart.md). Shows the hovered datum's label + value, or lines one under the other,
-// the first a heading (a scatter point's: its name, then `label: number` a line). Positioned by percentage within the chart body (the `absolute inset-0` wrapper),
+// the first naming it (a scatter point's: its name, then `label: number` a line). Positioned by percentage within the chart body (the `absolute inset-0` wrapper),
 // anchored above its point (translate -50% / -100%), and kept in view: it moves in along its side when what is seen
 // of the page cuts it, and sits below its point with no room above ("The readout stays in view"). pointer-events-none
 // so it never eats the hover that drives it or the element's drag. Independent of the legend toggle — it's the only
@@ -27,7 +27,7 @@ export function ChartReadout(
         // A number for a chart's datum; a ready-made phrase for a Sankey band or node (docs/specs/009-elements/sankey.md).
         value: number | string;
       }
-    // A ready-made line (a grouped bar's), or lines one under the other, the first a heading.
+    // A ready-made line (a grouped bar's), or lines one under the other, the first naming the point.
     | { text: string }
     | { lines: readonly string[] }
   ),
@@ -90,13 +90,7 @@ export function ChartReadout(
         ...(place.below ? { marginTop: READOUT_BELOW_GAP_PX } : {}),
       }}
     >
-      {lines
-        ? lines.map((line, at) => (
-            <div key={at} className={at === 0 ? 'font-semibold' : undefined}>
-              {line}
-            </div>
-          ))
-        : text}
+      {lines ? lines.map((line, at) => <div key={at}>{line}</div>) : text}
     </div>
   );
 }

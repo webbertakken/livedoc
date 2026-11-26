@@ -69,12 +69,11 @@ describe('ChartReadout', () => {
       </div>,
     );
     expect(readout(container).style.marginLeft).toBe('');
-    // Lines, one under the other, the first a heading.
+    // Lines, one under the other, the first naming the point.
     expect([...readout(container).children].map((line) => line.textContent)).toEqual([
       'Haiku',
       'Coding index: 76.2',
     ]);
-    expect(readout(container).firstElementChild!.className).toContain('font-semibold');
   });
 
   it('sits below a point with no room above it', () => {
