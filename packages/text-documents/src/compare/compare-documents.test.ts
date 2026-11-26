@@ -1,6 +1,7 @@
 // review.md "Compare documents" ("What is compared"): the primary with every difference from the selected as a
 // suggestion; rejecting every one reads as the primary, accepting every one as the selected; bounded.
 import { describe, expect, it } from 'vitest';
+import { cpuBudgetMs, cpuMsOf } from '@livedoc/vitest-config/cpu-time';
 import * as Y from 'yjs';
 import type { Block, Inline, Paragraph, Run } from '../model/blocks';
 import type { Table, TableRow } from '../model/tables';
@@ -373,14 +374,16 @@ describe('TextDocumentComparison.compare', () => {
       ).join(' ');
     const pages = (change: boolean) =>
       Array.from({ length: 1_500 }, (_, p) => para(`${p} ${words(45, change)}`));
-    const started = performance.now();
-    const result = TextDocumentComparison.compare(doc(...pages(false)), doc(...pages(true)), {
+    let result: ReturnType<typeof TextDocumentComparison.compare> | null = null;
+    const spent = cpuMsOf(() => {
+      result = TextDocumentComparison.compare(doc(...pages(false)), doc(...pages(true)), {
       name: NAME,
       at: AT,
       comments: false,
     });
-    expect(performance.now() - started).toBeLessThan(TEXT_DOCUMENT_COMPARE_BUDGET_MS);
-    expect(result.ok).toBe(true);
+    });
+    expect(spent).toBeLessThan(cpuBudgetMs(TEXT_DOCUMENT_COMPARE_BUDGET_MS));
+    expect(result!.ok).toBe(true);
   });
 
   it('compares two long documents that share nothing within its budget', () => {
@@ -388,14 +391,16 @@ describe('TextDocumentComparison.compare', () => {
       Array.from({ length: 1_500 }, (_, p) =>
         para(Array.from({ length: 45 }, (_, k) => `${side}${p}x${k}`).join(' ')),
       );
-    const started = performance.now();
-    const result = TextDocumentComparison.compare(doc(...pages('a')), doc(...pages('b')), {
+    let result: ReturnType<typeof TextDocumentComparison.compare> | null = null;
+    const spent = cpuMsOf(() => {
+      result = TextDocumentComparison.compare(doc(...pages('a')), doc(...pages('b')), {
       name: NAME,
       at: AT,
       comments: false,
     });
-    expect(performance.now() - started).toBeLessThan(TEXT_DOCUMENT_COMPARE_BUDGET_MS);
-    expect(result.ok).toBe(true);
+    });
+    expect(spent).toBeLessThan(cpuBudgetMs(TEXT_DOCUMENT_COMPARE_BUDGET_MS));
+    expect(result!.ok).toBe(true);
   });
 });
 
