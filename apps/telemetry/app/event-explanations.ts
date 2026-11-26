@@ -1003,7 +1003,8 @@ export const EXACT: Readonly<Record<string, string>> = {
   'Pdf|Selected|Tool.Ellipse': 'Someone took the Ellipse tool in hand on a PDF document.',
   'Pdf|Selected|Tool.Polygon': 'Someone took the Polygon tool in hand on a PDF document.',
   'Pdf|Selected|Tool.Cloud': 'Someone took the Cloud tool in hand on a PDF document.',
-  'Pdf|Selected|Tool.ConnectedLines': 'Someone took the Connected lines tool in hand on a PDF document.',
+  'Pdf|Selected|Tool.ConnectedLines':
+    'Someone took the Connected lines tool in hand on a PDF document.',
   'Pdf|Selected|Tool.Text': 'Someone took the Text tool in hand on a PDF document.',
   'Pdf|Selected|Tool.Callout': 'Someone took the Callout tool in hand on a PDF document.',
   'Pdf|Selected|Tool.Stamp': 'Someone took the Stamp tool in hand on a PDF document.',
