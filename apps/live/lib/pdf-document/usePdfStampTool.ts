@@ -22,7 +22,7 @@ import type { OfficeChoices } from '@/components/office/OfficeChoiceMenu';
 import { debugLog } from '@/lib/debug-log';
 import type { OfficeActions } from '@/lib/office/office-catalogue';
 import { track } from '@/lib/telemetry';
-import { STAMP_CUSTOM, STAMP_DYNAMIC, STAMP_STANDARD } from './pdf-menus';
+import { STAMP_CUSTOM, STAMP_DYNAMIC, STAMP_MANAGE, STAMP_STANDARD } from './pdf-menus';
 import { addStamp, STAMP_COLOURS, stampKindName } from './pdf-stamp';
 import { setStampPick, useStampPick } from './pdf-stamp-pick';
 import { TOO_MANY_MARKS_COPY } from './pdf-surface-copy';
@@ -170,6 +170,7 @@ export function usePdfStampTool({
           ),
           [CREATE_CUSTOM_STAMP_CELL]: { run: customs.openDialog },
           [STAMP_CUSTOM]: { run: customs.openDialog },
+          [STAMP_MANAGE]: { run: customs.openManage },
         }
       : {};
     return {
@@ -215,5 +216,11 @@ export function usePdfStampTool({
     [offered, shown, actions, grid],
   );
 
-  return { actions, choices, stamping, customStampDialog: customs.dialog };
+  return {
+    actions,
+    choices,
+    stamping,
+    customStampDialog: customs.dialog,
+    manageStampsDialog: customs.manageDialog,
+  };
 }

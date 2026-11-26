@@ -6,10 +6,14 @@
 //   PATCH  /api/custom-stamps/:id    renamed, or moved to another category
 //   DELETE /api/custom-stamps/:id    deleted
 //   GET    /api/custom-stamps/:id/picture  its picture's bytes, typed
+//   PATCH  /api/custom-stamps/categories/:category  a category renamed, onto another merged
+//   DELETE /api/custom-stamps/categories/:category  a category and its stamps deleted
 import { CustomStamp, PDF_STAMP_MAX_BYTES, type CustomStampRecord } from '@livedoc/pdf-documents';
 import {
   createCustomStamp,
   deleteCustomStamp,
+  deleteCustomStampCategory,
+  renameCustomStampCategory,
   getCustomStamp,
   heldBlob,
   listCustomStamps,
@@ -28,6 +32,7 @@ export const CUSTOM_STAMP_REFUSALS = {
   custom_stamp_picture_missing: 409,
   custom_stamp_picture_too_large: 413,
   custom_stamp_not_found: 404,
+  custom_stamp_category_not_found: 404,
 } as const;
 export type CustomStampRefusalName = keyof typeof CUSTOM_STAMP_REFUSALS;
 
@@ -88,10 +93,43 @@ async function picture(
   });
 }
 
+/** A category of the owner's (custom-stamps.md "Managing them"): renamed, or deleted with its stamps; theirs after. */
+async function category(ctx: RouteContext, owner: string, raw: string): Promise<Response> {
+  const { request, env } = ctx;
+  let name: string;
+  try {
+    name = decodeURIComponent(raw);
+  } catch {
+    return refused('custom_stamp_invalid', owner);
+  }
+  if (request.method === 'PATCH') {
+    const body = await readBody(ctx);
+    if (body instanceof Response) return body;
+    const read = CustomStamp.patch(body);
+    if (!read.ok || read.value.category === undefined || read.value.name !== undefined)
+      return refused('custom_stamp_invalid', owner);
+    const moved = await renameCustomStampCategory(
+      env,
+      owner,
+      name,
+      read.value.category,
+      Date.now(),
+    );
+    if (moved === 0) return refused('custom_stamp_category_not_found', owner);
+    console.info(`[custom-stamps] category-renamed count=${moved}`);
+  } else if (request.method === 'DELETE') {
+    const gone = await deleteCustomStampCategory(env, owner, name);
+    if (gone === 0) return refused('custom_stamp_category_not_found', owner);
+    console.info(`[custom-stamps] category-deleted count=${gone}`);
+  } else return notFound();
+  return json({ stamps: await listCustomStamps(env, owner) });
+}
+
 export async function handleCustomStamps(ctx: RouteContext): Promise<Response> {
   const { request, env, segments } = ctx;
   if (segments[1] !== 'custom-stamps' || segments.length > 4) return notFound();
-  if (segments.length === 4 && segments[3] !== 'picture') return notFound();
+  if (segments.length === 4 && segments[2] !== 'categories' && segments[3] !== 'picture')
+    return notFound();
   // A custom stamp is a picture in the blob store: a deployment without one keeps none.
   if (!env.FILES) return refusedBlob('files_unavailable', {});
   const owner = requireOwner(ctx);
@@ -101,6 +139,8 @@ export async function handleCustomStamps(ctx: RouteContext): Promise<Response> {
     if (request.method === 'POST') return make(ctx, owner);
     return notFound();
   }
+  if (segments[2] === 'categories')
+    return segments.length === 4 ? category(ctx, owner, segments[3]!) : notFound();
   const id = segments[2]!;
   const kept = await getCustomStamp(env, id);
   if (!kept || kept.ownerId !== owner) return refused('custom_stamp_not_found', owner);

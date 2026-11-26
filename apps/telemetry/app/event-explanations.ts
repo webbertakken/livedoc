@@ -963,6 +963,18 @@ export const EXACT: Readonly<Record<string, string>> = {
     'Someone placed one of their own custom stamps, a picture they made a stamp, on a PDF page.',
   'Pdf|Created|CustomStamp':
     'Someone made a custom stamp of their own from a picture or a page of a PDF.',
+  'Pdf|Changed|CustomStamp.Renamed':
+    'Someone renamed one of their own custom stamps in Manage stamps.',
+  'Pdf|Changed|CustomStamp.Moved':
+    'Someone moved one of their own custom stamps to another category in Manage stamps.',
+  'Pdf|Changed|CustomStamp.CategoryRenamed':
+    'Someone renamed a category of their own custom stamps in Manage stamps.',
+  'Pdf|Deleted|CustomStamp.Stamp':
+    'Someone deleted one of their own custom stamps in Manage stamps.',
+  'Pdf|Deleted|CustomStamp.Category':
+    'Someone deleted a category of their own custom stamps, with every stamp in it, in Manage stamps.',
+  'UI|Opened|PdfDocumentManageStampsDialog':
+    'Someone opened Manage stamps on a PDF document, to rename, move or delete their own stamps.',
   'UI|Opened|PdfDocumentCustomStampDialog':
     'Someone opened Create custom stamp on a PDF document, to make a stamp of their own.',
   'Pdf|Added|Stamp.Dynamic':

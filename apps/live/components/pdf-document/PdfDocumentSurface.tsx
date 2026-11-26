@@ -85,6 +85,7 @@ import { PdfPages } from './PdfPages';
 import { PdfSelectionBar } from './PdfSelectionBar';
 import { PdfLeftPanel } from './PdfLeftPanel';
 import { CustomStampDialog } from './CustomStampDialog';
+import { ManageStampsDialog } from './ManageStampsDialog';
 import { PdfLinkDialog } from './PdfLinkDialog';
 import { PdfPrintDialog } from './PdfPrintDialog';
 import { PdfFindBar } from './PdfFindBar';
@@ -667,6 +668,7 @@ export function PdfDocumentSurface({
       />
       <PdfLinkDialog asked={links.asked} onClose={links.close} />
       <CustomStampDialog {...tools.customStampDialog} />
+      <ManageStampsDialog {...tools.manageStampsDialog} />
       <PdfPrintDialog {...printing.dialog} count={pages?.length ?? 0} current={viewer.page} />
     </div>
   );

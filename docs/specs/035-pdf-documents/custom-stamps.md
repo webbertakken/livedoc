@@ -1,7 +1,7 @@
 # Custom stamps
 
-**Status: built: where they are kept, their api, their file form, making one in the browser and placing one.** Manage
-stamps (renaming, deleting, categories) and stamp identity are not.
+**Status: built: where they are kept, their api, their file form, making one, placing one and managing them.** Stamp
+identity is not built.
 
 A **custom stamp** is a person's own stamp: a picture, or a page of a PDF, given a name and a category, kept in
 LiveDoc for them, and placed on any PDF as a standard or dynamic stamp is ([Marks](marks.md#stamps)). The parity rows
@@ -85,6 +85,29 @@ are the matrix's "Stamps" ([Parity matrix](parity-matrix.md#stamps)).
   file's `Stamp` whose `Name` begins with `#` is a stamp LiveDoc does not draw: drawn as the file says, never selected
   ([Marks](marks.md#changing-a-mark)).
 
+## Managing them
+
+- **Insert > Stamp > Manage stamps** opens **Manage stamps**, a dialog listing their stamps a category each, in the
+  grid's order: each category's name, then its stamps, each its picture, its name, its category and **Delete**
+  `(default)`.
+- **Renaming a stamp**: its name is a field; a name changed and left (Enter, Tab, a press elsewhere) is kept, trimmed
+  and held to `PDF_CUSTOM_STAMP_NAME_MAX_CHARS`; an empty one goes back to what it was. Its marks already placed keep
+  the name they were placed with: a mark's words are fixed when placed.
+- **Moving a stamp**: its category is a list of theirs and **New category…**, which asks for a name in place (Enter or
+  leaving keeps it, Escape or leaving it empty moves nothing). A category left empty is gone: a category is only its
+  stamps' `(default)`.
+- **Deleting a stamp**: its **Delete** asks in place, "Delete <name>? Stamps already placed stay." with **Delete** and
+  **Cancel**; deleted, it leaves their stamps and the grid. Its marks already placed stay as they are, their pictures
+  held by the documents that name them ([Blob store](../006-document/blob-store.md#holds-and-retention)). The stamp the
+  Stamp control shows, deleted, becomes Approved.
+- **Renaming a category**: its name is a field, as a stamp's is; renamed onto another of theirs, the two become one.
+- **Deleting a category**: its **Delete category** asks in place, with **Delete** and **Cancel**, "Delete <category>
+  and its <n> stamps?", and deletes them all as one request.
+- Nothing here has undo: each change is LiveDoc's at once, as a renamed document is `(default)`. A change refused or
+  failed says so in the dialog and leaves the list as LiveDoc holds it, read again.
+- Its × and Escape close it; Escape in a field changed first puts back what it held. With no stamps it says "You have
+  no custom stamps yet." and offers **Create custom stamp…**.
+
 ## Limits
 
 | Constant                              | Value     | Why                                                                                                               |
@@ -100,24 +123,27 @@ are the matrix's "Stamps" ([Parity matrix](parity-matrix.md#stamps)).
 
 `/api/custom-stamps`, owner-scoped (`requireOwner`): guests included.
 
-| Request                              | Body                                                                                        | Answer                         |
-| ------------------------------------ | ------------------------------------------------------------------------------------------- | ------------------------------ |
-| `GET /api/custom-stamps`             |                                                                                             | `200 { stamps }`, newest first |
-| `POST /api/custom-stamps`            | `{ id, name, category, picture: { key, type, width, height }, natural: { width, height } }` | `201 { stamp }`                |
-| `PATCH /api/custom-stamps/:id`       | `{ name?, category? }`                                                                      | `200 { stamp }`                |
-| `DELETE /api/custom-stamps/:id`      |                                                                                             | `204`                          |
-| `GET /api/custom-stamps/:id/picture` |                                                                                             | `200` its picture's bytes      |
+| Request                                          | Body                                                                                        | Answer                                           |
+| ------------------------------------------------ | ------------------------------------------------------------------------------------------- | ------------------------------------------------ |
+| `GET /api/custom-stamps`                         |                                                                                             | `200 { stamps }`, newest first                   |
+| `POST /api/custom-stamps`                        | `{ id, name, category, picture: { key, type, width, height }, natural: { width, height } }` | `201 { stamp }`                                  |
+| `PATCH /api/custom-stamps/:id`                   | `{ name?, category? }`                                                                      | `200 { stamp }`                                  |
+| `PATCH /api/custom-stamps/categories/:category`  | `{ category }`                                                                              | `200 { stamps }`: theirs, the category renamed   |
+| `DELETE /api/custom-stamps/categories/:category` |                                                                                             | `200 { stamps }`: theirs, the category's deleted |
+| `DELETE /api/custom-stamps/:id`                  |                                                                                             | `204`                                            |
+| `GET /api/custom-stamps/:id/picture`             |                                                                                             | `200` its picture's bytes                        |
 
-| Refusal                          | Status | When                                                                                                                                                                                                                                                         |
-| -------------------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `custom_stamp_invalid`           | 400    | A field missing or of the wrong form: an id not `custom-<uuid>`, a name or category empty or too long, a type not `png` or `jpeg`, a size not a whole count up to `PDF_CUSTOM_STAMP_MAX_SIDE_PX`, a natural size not above 0 and up to `PDF_MAX_PAGE_POINTS` |
-| `custom_stamp_exists`            | 409    | The id is taken (a create sent again)                                                                                                                                                                                                                        |
-| `too_many_custom_stamps`         | 409    | The owner keeps `PDF_CUSTOM_STAMPS_MAX` already                                                                                                                                                                                                              |
-| `custom_stamp_picture_missing`   | 409    | The owner holds no stored blob of the picture's key                                                                                                                                                                                                          |
-| `custom_stamp_picture_too_large` | 413    | The blob held is larger than `PDF_STAMP_MAX_BYTES`                                                                                                                                                                                                           |
-| `custom_stamp_not_found`         | 404    | No custom stamp of that id is the owner's (another's reads as none)                                                                                                                                                                                          |
-| `blob_missing`                   | 404    | Storage no longer has the picture a custom stamp names (`GET .../picture`)                                                                                                                                                                                   |
-| `files_unavailable`              | 503    | The deployment has no file storage                                                                                                                                                                                                                           |
+| Refusal                           | Status | When                                                                                                                                                                                                                                                         |
+| --------------------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `custom_stamp_invalid`            | 400    | A field missing or of the wrong form: an id not `custom-<uuid>`, a name or category empty or too long, a type not `png` or `jpeg`, a size not a whole count up to `PDF_CUSTOM_STAMP_MAX_SIDE_PX`, a natural size not above 0 and up to `PDF_MAX_PAGE_POINTS` |
+| `custom_stamp_exists`             | 409    | The id is taken (a create sent again)                                                                                                                                                                                                                        |
+| `too_many_custom_stamps`          | 409    | The owner keeps `PDF_CUSTOM_STAMPS_MAX` already                                                                                                                                                                                                              |
+| `custom_stamp_picture_missing`    | 409    | The owner holds no stored blob of the picture's key                                                                                                                                                                                                          |
+| `custom_stamp_picture_too_large`  | 413    | The blob held is larger than `PDF_STAMP_MAX_BYTES`                                                                                                                                                                                                           |
+| `custom_stamp_category_not_found` | 404    | They keep no stamp in that category                                                                                                                                                                                                                          |
+| `custom_stamp_not_found`          | 404    | No custom stamp of that id is the owner's (another's reads as none)                                                                                                                                                                                          |
+| `blob_missing`                    | 404    | Storage no longer has the picture a custom stamp names (`GET .../picture`)                                                                                                                                                                                   |
+| `files_unavailable`               | 503    | The deployment has no file storage                                                                                                                                                                                                                           |
 
 - **Its picture is read back by its owner alone**, `GET /api/custom-stamps/:id/picture`: the bytes as kept, typed
   `image/png` or `image/jpeg`, `nosniff`, kept by the browser as a blob's are (`private`, a year, `immutable`, its
@@ -155,6 +181,11 @@ scaled=<bool>`, `[pdf] custom-stamp-failed reason=<unreadable|too_large|too_many
   `[pdf] custom-stamp-keep-skipped` (this browser would not keep a made stamp's bytes), `[pdf] stamp-picture-failed
 key=<8>` (a picture the page or the grid could not read), `[pdf] picture-read-failed key=<8>` (one a bake could not
   read) in the browser.
+- Managing them: `Pdf · Changed · CustomStamp.<Renamed|Moved|CategoryRenamed>`, `Pdf · Deleted ·
+CustomStamp.<Stamp|Category>`, `UI · Opened · PdfDocumentManageStampsDialog`; `[custom-stamps] category-renamed
+count=<n>`, `[custom-stamps] category-deleted count=<n>` in the api; `[pdf] custom-stamp-changed what=<name|category|category-name>`,
+  `[pdf] custom-stamp-deleted what=<stamp|category> count=<n>`, `[pdf] custom-stamp-change-failed what=<…> reason=<code>`
+  in the browser.
 
 ## Tests
 
@@ -162,6 +193,9 @@ key=<8>` (a picture the page or the grid could not read), `[pdf] picture-read-fa
   move on sign-up and the delete with the account, and the retention sweep keeping a picture a custom stamp holds.
 - The package: a custom stamp mark's bounds, the bake's `Stamp` with `#` `Name`, its picture's image (JPEG as is, PNG
   with its soft mask) round trip, checked by qpdf; a file's `#` stamp read as one LiveDoc does not draw.
+- Managing them: the api's category rename and delete (owner-scoped, `custom_stamp_category_not_found`); each change,
+  its failure read again; the dialog's fields, lists and asks (`manage-custom-stamps.test.ts`,
+  `ManageStampsDialog.test.tsx`); e2e: a stamp renamed and deleted.
 - The browser: the picture kept (scaled, SVG drawn, a PDF page drawn), the dialog's fields and errors, the grid's
   sections, placing (sent first, the mark), the page drawing the picture; e2e: a PNG made a stamp, placed, and in the
   downloaded file.

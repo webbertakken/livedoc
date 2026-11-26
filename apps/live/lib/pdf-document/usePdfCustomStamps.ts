@@ -4,7 +4,8 @@
 // one"): their stamps read once the tool is offered on a deployment that stores files, drawn in the Stamp control's
 // grid a category each after Standard and Dynamic, then Create custom stamp…; Create custom stamp, the dialog, opened
 // and closed; and a press placing one: its picture sent for the document first, the mark made once it is held, one
-// step of the person's undo. A press while a picture is sent places nothing more.
+// step of the person's undo. A press while a picture is sent places nothing more. Manage stamps, the dialog, opened
+// and closed (custom-stamps.md "Managing them").
 import { useCallback, useMemo, useRef, useState } from 'react';
 import type { BlobKey } from '@livedoc/document';
 import { lucidePlus } from '@livedoc/icons/lucide';
@@ -16,7 +17,7 @@ import { customStampPicture, customStampSections, useCustomStamps } from './cust
 import { CUSTOM_STAMP_COPY } from './make-custom-stamp';
 import { addCustomStamp, type StampMade } from './pdf-stamp';
 import { TOO_MANY_MARKS_COPY } from './pdf-surface-copy';
-import { useStampPictureUrls } from './stamp-picture-urls';
+import { useStampPictureUrls, type StampPictureUrl } from './stamp-picture-urls';
 import type { PdfDocumentOpen } from './usePdfDocument';
 
 type Ready = Pick<
@@ -42,6 +43,17 @@ export type CustomStampDialogProps = {
   readonly categories: readonly string[];
   readonly onClose: () => void;
   readonly onMade: (stamp: CustomStampRecord) => void;
+};
+
+/** What Manage stamps, the dialog, is told: their stamps, their pictures as drawn, and how to make another. */
+export type ManageStampsDialogProps = {
+  readonly open: boolean;
+  readonly ownerId: string;
+  readonly stamps: readonly CustomStampRecord[];
+  readonly pictures: ReadonlyMap<BlobKey, StampPictureUrl>;
+  readonly onClose: () => void;
+  // Closes this and opens Create custom stamp.
+  readonly onCreate: () => void;
 };
 
 export function usePdfCustomStamps({
@@ -73,11 +85,17 @@ export function usePdfCustomStamps({
   const pictures = useMemo(() => stamps.map((stamp) => stamp.picture), [stamps]);
   const urls = useStampPictureUrls(pictures, enabled ? read : null);
   const [creating, setCreating] = useState(false);
+  const [managing, setManaging] = useState(false);
   const sending = useRef(false);
 
   const openDialog = useCallback(() => {
     track('UI', 'Opened', 'PdfDocumentCustomStampDialog');
+    setManaging(false);
     setCreating(true);
+  }, []);
+  const openManage = useCallback(() => {
+    track('UI', 'Opened', 'PdfDocumentManageStampsDialog');
+    setManaging(true);
   }, []);
 
   const sections = useMemo(() => customStampSections(stamps), [stamps]);
@@ -174,5 +192,17 @@ export function usePdfCustomStamps({
     [creating, enabled, ownerId, sections, take],
   );
 
-  return { enabled, stamps, grid, openDialog, place, dialog };
+  const manageDialog = useMemo<ManageStampsDialogProps>(
+    () => ({
+      open: managing && enabled,
+      ownerId,
+      stamps,
+      pictures: urls,
+      onClose: () => setManaging(false),
+      onCreate: openDialog,
+    }),
+    [managing, enabled, ownerId, stamps, urls, openDialog],
+  );
+
+  return { enabled, stamps, grid, openDialog, openManage, place, dialog, manageDialog };
 }

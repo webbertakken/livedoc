@@ -1390,6 +1390,26 @@ export const PDF_CUSTOM_STAMPS_CREATED = chart(
   { types: ['CustomStamp'] },
 );
 
+// custom-stamps.md "Managing them": a person's own stamps renamed, moved, or deleted, alone or a category at once.
+export const PDF_CUSTOM_STAMPS_MANAGED = chart(
+  'Pdf',
+  'Changed',
+  'Custom Stamps Managed',
+  'A person’s own stamp renamed or moved to another category, or a category of them renamed, in Manage stamps.',
+  {
+    types: ['CustomStamp.Renamed', 'CustomStamp.Moved', 'CustomStamp.CategoryRenamed'],
+    rising: 'neutral',
+  },
+);
+
+export const PDF_CUSTOM_STAMPS_DELETED = chart(
+  'Pdf',
+  'Deleted',
+  'Custom Stamps Deleted',
+  'A person’s own stamp deleted, or a category of them with every stamp in it, in Manage stamps.',
+  { types: ['CustomStamp.Stamp', 'CustomStamp.Category'], rising: 'neutral' },
+);
+
 export const PDFS_EXPORTED = chart(
   'Pdf',
   'Exported',
@@ -1595,6 +1615,8 @@ export const PDF_DOCUMENTS: MetricStack = {
     PDF_UNDOS,
     PDF_REDOS,
     PDF_CUSTOM_STAMPS_CREATED,
+    PDF_CUSTOM_STAMPS_MANAGED,
+    PDF_CUSTOM_STAMPS_DELETED,
     PDFS_EXPORTED,
     PDF_PAGE_DISPLAYS,
     PDF_VIEW_TURNS,

@@ -126,3 +126,31 @@ export async function updateCustomStamp(
 export async function deleteCustomStamp(env: Db, id: string): Promise<void> {
   await env.DB.prepare('DELETE FROM custom_stamps WHERE id = ?').bind(id).run();
 }
+
+/** Moves every one of the owner's custom stamps in `from` to `to`; how many moved. */
+export async function renameCustomStampCategory(
+  env: Db,
+  ownerId: string,
+  from: string,
+  to: string,
+  now: number,
+): Promise<number> {
+  const res = await env.DB.prepare(
+    'UPDATE custom_stamps SET category = ?3, updated_at = ?4 WHERE owner_id = ?1 AND category = ?2',
+  )
+    .bind(ownerId, from, to, now)
+    .run();
+  return res.meta.changes ?? 0;
+}
+
+/** Deletes every one of the owner's custom stamps in a category; how many went. */
+export async function deleteCustomStampCategory(
+  env: Db,
+  ownerId: string,
+  category: string,
+): Promise<number> {
+  const res = await env.DB.prepare('DELETE FROM custom_stamps WHERE owner_id = ? AND category = ?')
+    .bind(ownerId, category)
+    .run();
+  return res.meta.changes ?? 0;
+}

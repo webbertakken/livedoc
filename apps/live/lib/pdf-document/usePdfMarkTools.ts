@@ -434,6 +434,7 @@ export function usePdfMarkTools({
     typing: typed.typing,
     stamping: stampTool.stamping,
     customStampDialog: stampTool.customStampDialog,
+    manageStampsDialog: stampTool.manageStampsDialog,
     erasing,
     actions,
     // The tool in hand's line (marks.md "A tool's line"), over the selected marks' restyle of the same items.

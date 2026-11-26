@@ -91,6 +91,7 @@ export const TOOL_ERASE = 'tool-erase';
 export const STAMP_STANDARD = 'stamp-standard-stamps';
 export const STAMP_DYNAMIC = 'stamp-dynamic-stamps';
 export const STAMP_CUSTOM = 'stamp-custom-stamps';
+export const STAMP_MANAGE = 'stamp-manage-stamps';
 /** Insert > Shape's tools (marks.md "Making a mark": The shape tools). */
 export const TOOL_LINE = 'shape-line';
 export const TOOL_ARROW = 'shape-arrow';
@@ -377,7 +378,7 @@ export const PDF_MENUS: OfficeCatalogue = [
       item(STAMP_STANDARD, 'Standard stamps', 'participate', BUILT),
       item(STAMP_DYNAMIC, 'Dynamic stamps', 'participate', BUILT),
       item(STAMP_CUSTOM, 'Custom stamps', 'participate', BUILT),
-      item('stamp-manage-stamps', 'Manage stamps', 'participate'),
+      item(STAMP_MANAGE, 'Manage stamps', 'participate', BUILT),
     ]),
     SEPARATOR,
     item(TOOL_TICK, 'Tick', 'participate', ONE_OF),

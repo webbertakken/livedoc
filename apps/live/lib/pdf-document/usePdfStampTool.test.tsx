@@ -21,7 +21,7 @@ import { resetStampPictureUrls } from './stamp-picture-urls';
 import { CREATE_CUSTOM_STAMP_CELL, type PdfCustomStampsHome } from './usePdfCustomStamps';
 import { debugLog } from '@/lib/debug-log';
 import { track } from '@/lib/telemetry';
-import { STAMP_CUSTOM, STAMP_DYNAMIC, STAMP_STANDARD } from './pdf-menus';
+import { STAMP_CUSTOM, STAMP_DYNAMIC, STAMP_MANAGE, STAMP_STANDARD } from './pdf-menus';
 import { STAMP_COLOURS } from './pdf-stamp';
 import { resetStampPick, stampPick } from './pdf-stamp-pick';
 import { TOO_MANY_MARKS_COPY } from './pdf-surface-copy';
@@ -292,6 +292,19 @@ describe('custom stamps', () => {
     expect(track).toHaveBeenCalledWith('UI', 'Opened', 'PdfDocumentCustomStampDialog');
     act(() => hook.result.current.customStampDialog.onClose());
     run(CREATE_CUSTOM_STAMP_CELL);
+    expect(hook.result.current.customStampDialog.open).toBe(true);
+  });
+
+  // custom-stamps.md "Managing them": Insert > Stamp > Manage stamps opens it; its Create opens Create custom stamp.
+  it('opens Manage stamps, with their stamps, and Create from it', async () => {
+    const { hook, run } = withCustom();
+    await vi.waitFor(() => expect(hook.result.current.actions[STAMP_MANAGE]).toBeDefined());
+    run(STAMP_MANAGE);
+    expect(hook.result.current.manageStampsDialog).toMatchObject({ open: true, ownerId: 'ada' });
+    expect(hook.result.current.manageStampsDialog.stamps).toEqual([PAID]);
+    expect(track).toHaveBeenCalledWith('UI', 'Opened', 'PdfDocumentManageStampsDialog');
+    act(() => hook.result.current.manageStampsDialog.onCreate());
+    expect(hook.result.current.manageStampsDialog.open).toBe(false);
     expect(hook.result.current.customStampDialog.open).toBe(true);
   });
 
