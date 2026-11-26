@@ -85,7 +85,13 @@ function liveComment(comment: FileThread['comments'][number]): TextDocumentComme
     key === undefined
       ? { name, ...(initials ? { initials } : {}), colour: FILE_AUTHOR_COLOUR, fromFile: true }
       : { key, name, colour: colour ?? FILE_AUTHOR_COLOUR };
-  return { id: comment.id, text: comment.text, at: comment.at ?? 0, author };
+  return {
+    id: comment.id,
+    text: comment.text,
+    at: comment.at ?? 0,
+    author,
+    ...(comment.reactions ? { reactions: comment.reactions } : {}),
+  };
 }
 
 /** A live comment as the model's: its author's name and a file's initials, or a LiveDoc person's key and colour; a time of 0 is none. */
@@ -96,6 +102,7 @@ function fileComment(comment: TextDocumentComment): FileThread['comments'][numbe
     text: comment.text,
     ...(comment.at > 0 ? { at: comment.at } : {}),
     author: key === undefined ? { name, ...(initials ? { initials } : {}) } : { name, key, colour },
+    ...(comment.reactions ? { reactions: comment.reactions } : {}),
   };
 }
 

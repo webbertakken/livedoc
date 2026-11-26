@@ -11,11 +11,11 @@ import * as Y from 'yjs';
 import { convertTextDocument } from './convert';
 import { readTextDocumentFile, writeTextDocumentFile } from './files';
 import type { Block, Inline, Paragraph } from './model/blocks';
-import type { FileThread } from './model/comments';
+import { Comments, type FileThread } from './model/comments';
 import { TextDocument } from './model/text-document';
 import { docx, fodt, W_P, W_R } from './testing/packages';
 import { TextDocumentState } from './text-document-state';
-import { LiveThreads } from './live/live-threads';
+import { LiveThreads, TEXT_DOCUMENT_REACTIONS_MAX } from './live/live-threads';
 import { FILE_AUTHOR_COLOUR } from './live/live-thread-files';
 import { wholeOf } from './testing/compare';
 import { keptCommentIds, ooxmlCommentIds } from './ooxml/ooxml-comments';
@@ -570,5 +570,72 @@ describe('a comment’s text, authors and names in the files', () => {
       name: 'comment marker',
       count: 3,
     });
+  });
+});
+
+// review.md "Reactions": `livedoc:reactions` on the comment in both formats; a malformed one dropped.
+describe('a comment’s reactions in the files', () => {
+  const run = (text: string): Inline => ({ type: 'run', text, props: {} });
+  const mark = (edge: 'start' | 'end'): Inline => ({ type: 'comment', edge, id: 't', props: {} });
+  const reacted: TextDocument = {
+    ...TextDocument.blank(),
+    body: [
+      {
+        ...(TextDocument.blank().body[0] as Paragraph),
+        inlines: [run('ab'), mark('start'), run('cd'), mark('end')],
+      },
+    ],
+    comments: [
+      {
+        id: 't',
+        resolved: false,
+        comments: [
+          {
+            id: 't',
+            text: 'x',
+            at: 5,
+            author: { name: 'Ada', key: 'a1' },
+            reactions: { '👍': ['a1', 'b2'], '🎉': ['c3'] },
+          },
+          { id: 't.1', text: 'y', author: { name: 'Bo' }, reactions: { '❤️': ['b2'] } },
+        ],
+      },
+    ],
+  };
+  const reactionsOf = (document: TextDocument) =>
+    document.comments?.[0]?.comments.map((c) => c.reactions);
+
+  it('writes them on each comment in ODF and OOXML, and reads them back', async () => {
+    for (const type of ['fodt', 'odt', 'docx'] as const) {
+      const source = type === 'docx' ? convertTextDocument(reacted, 'ooxml').document : reacted;
+      const again = (await read(written(source, type))).document;
+      expect(reactionsOf(again)).toEqual([{ '👍': ['a1', 'b2'], '🎉': ['c3'] }, { '❤️': ['b2'] }]);
+    }
+    expect(new TextDecoder().decode(written(reacted, 'fodt'))).toContain('livedoc:reactions=');
+  });
+
+  it('carries them into the live state and back', () => {
+    const doc = TextDocumentState.load([TextDocumentState.fromDocument(reacted)]);
+    expect(LiveThreads.read(doc)[0]!.comments.map((c) => c.reactions)).toEqual([
+      { '👍': ['a1', 'b2'], '🎉': ['c3'] },
+      { '❤️': ['b2'] },
+    ]);
+    expect(reactionsOf(TextDocumentState.document(doc, 'odf'))).toEqual(reactionsOf(reacted));
+  });
+
+  it('reads malformed reactions as none', () => {
+    for (const bad of [
+      'not json',
+      '[1]',
+      '{"👍":"a1"}',
+      '{"👍":["NOT HEX"]}',
+      `{"${'x'.repeat(17)}":["a1"]}`,
+    ])
+      expect(Comments.readReactions(bad)).toBeUndefined();
+    const many = Object.fromEntries(
+      Array.from({ length: TEXT_DOCUMENT_REACTIONS_MAX + 1 }, (_, i) => [`e${i}`, ['a1']]),
+    );
+    expect(Comments.readReactions(JSON.stringify(many))).toBeUndefined();
+    expect(Comments.readReactions('{"👍":["a1"],"🎉":[]}')).toEqual({ '👍': ['a1'] });
   });
 });

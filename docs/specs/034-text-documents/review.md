@@ -2,7 +2,7 @@
 
 **Status: being built.** Comment threads are kept beside the writing, travel in both formats' files, and the room
 judges a Participant's; they are drawn and added in the margin, listed in the comments panel and reached from the
-keyboard. Mentions, assigning, reactions, suggestions, versions and notifications are still to come.
+keyboard; people react to them. Mentions, assigning, suggestions, versions and notifications are still to come.
 
 Comments, suggestions, version history, comparing documents and notifications in a [text document](text-document.md).
 The panels and threads are the shared [review surfaces](../012-collaboration/review-surfaces.md), built once for the
@@ -32,7 +32,7 @@ office kinds; this spec says what a text document puts in them.
   cannot open the document offers to share it ([Comment mentions](../012-collaboration/comment-mentions.md)).
 - **Assigning**: a mention offers **Assign to <name>**; an assigned comment is an action, as LiveDoc's assigned
   actions are ([Assigned actions](../012-collaboration/assigned-actions.md)), shown in the assignee's Inbox.
-- **Reactions**: emoji on a comment, as Google's.
+- **Reactions**: emoji on a comment, as Google's ([Reactions](#reactions)).
 - **Highlight**: the commented text is tinted; the selected thread's text darker.
 - **The comments panel** (comment history, ⌘⌥⇧A): every thread, with filters **All**, **For you**, **Open**,
   **Resolved**, and by document tab; a press goes to the text ([The comments panel](#the-comments-panel)).
@@ -109,6 +109,25 @@ office kinds; this spec says what a text document puts in them.
 - J and K go between the open threads of the tab shown in the writing's order, never wrapping; a session that may not
   comment has J, K, U and Escape, never R or E.
 
+### Reactions
+
+- **Adding**: whoever may comment sees **Add emoji reaction** (a smiley with a plus) on a comment while it is hovered
+  or holds the focus; it opens six quick reactions, 👍 ❤️ 😂 😮 😢 🎉, and **More emoji**, which opens the Insert emoji
+  dialog and closes it on a pick (default). Picking one already given by oneself takes it back.
+- **Drawn** under the comment's text as chips, each its emoji and how many gave it, the quick six first in their order,
+  then the others by their characters (default). A chip with one's own reaction is tinted and pressed; a press adds or
+  takes back one's own. For a session that may not comment the chips are text, never buttons.
+- **Who**: each chip names its people, "You" first for one's own, each other by the name their comments in this
+  document carry (the latest), else "Someone" (default): "You and Ada reacted with 👍".
+- **Kept** beside the comment's text, one entry per emoji and reactor key, so two people reacting at once never lose
+  one; a comment holds at most `TEXT_DOCUMENT_REACTIONS_MAX` (20, default) different emoji, each at most 16 UTF-16
+  code units. The room takes a Participant's own key added or taken back alone ([How a comment is kept](#how-a-comment-is-kept)).
+- **In the files**: `livedoc:reactions` on the comment (ODF's `office:annotation`, Word's `w:comment`), a JSON object
+  of each emoji's reactor keys ([Standard mapping](standard-mapping.md#extensions)); another suite shows the
+  comment without them. A reactor key names a person on this document alone, so a file opened as a new document keeps
+  the reactions and names their people "Someone".
+- Telemetry: `Comment · Added · TextDocumentReaction` when one is added (never the emoji).
+
 ### How a comment is kept
 
 - **Beside the writing, never in it**: a document's threads are one map, `threads`, beside the bodies
@@ -139,8 +158,8 @@ office kinds; this spec says what a text document puts in them.
 - **In the files**: a thread is written as the standard's comment at its anchor, its replies and resolved state as
   each format keeps them ([Standard mapping](standard-mapping.md)); a comment's author leaves as its name and comes
   back "From the file". A comment in a header, footer or note is not kept (default; Google places none there) and the
-  conversion report counts it, as it counts a comment marker without its pair. Reactions and assignees join the files
-  with mentions and assigned actions.
+  conversion report counts it, as it counts a comment marker without its pair. Reactions are kept as
+  [Reactions](#reactions) says; assignees join the files with assigned actions.
 - **The room judges a Participant's update** (fork D7) by what it touches: only `threads`, and in it only comments
   carrying the sender's own key added, edited or deleted, threads begun with one, resolved or reopened, and the
   sender's own key added to or taken from a reaction; anything else asks for Editing and is refused whole
@@ -206,6 +225,6 @@ setting is not shown and the Inbox carries them. Nothing is sent to someone who 
 ## Telemetry
 
 `Comment · Added · TextDocument`, `Comment · Resolved · TextDocument`, `UI · Opened · TextDocumentPanelComments`,
-`Element · Added · TextDocumentSuggestion`, `Element · Changed · TextDocumentSuggestion<Accepted|Rejected|AcceptedAll|RejectedAll>`,
+`Comment · Added · TextDocumentReaction`, `Element · Added · TextDocumentSuggestion`, `Element · Changed · TextDocumentSuggestion<Accepted|Rejected|AcceptedAll|RejectedAll>`,
 `UI · Changed · TextDocumentEditingMode<Mode>`, `Document · Opened · TextDocumentVersionHistory`,
 `Document · Changed · TextDocumentVersion<Named|Restored>`, `Document · Created · TextDocumentCompare`. Never text.

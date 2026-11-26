@@ -25,6 +25,8 @@ import {
   type ThreadStretch,
 } from '@/lib/text-document/text-document-threads';
 import type { TextDocumentCommenter } from '@/lib/text-document/text-document-commenter';
+import { reactorNames } from '@/lib/office/review/comment-reactions';
+import { sharedComment } from '@/lib/text-document/text-document-comment-rows';
 
 /** The menu item, toolbar button and context menu item that add a comment (Insert > Comment, ⌘⌥M). */
 export const COMMENT_ITEM = 'comment';
@@ -208,6 +210,29 @@ export function useTextDocumentThreads({
     [ready, docRef, commenter],
   );
 
+  const react = useCallback(
+    (threadId: string, commentId: string, emoji: string, on: boolean) => {
+      const doc = ready ? docRef.current : null;
+      if (!doc || !commenter) return;
+      const done = LiveThreads.react(
+        doc,
+        threadId,
+        commentId,
+        { emoji, key: commenter.key, on },
+        THREADS_ORIGIN,
+      );
+      if (done && on) track('Comment', 'Added', 'TextDocumentReaction');
+      debugLog('[text-document] comment reacted', { thread: threadId, on, done });
+    },
+    [ready, docRef, commenter],
+  );
+
+  // Who reacted, by key: each author's latest name in this document (review.md "Reactions").
+  const names = useMemo(
+    () => reactorNames(threads.flatMap((t) => t.comments.map(sharedComment))),
+    [threads],
+  );
+
   const actions: OfficeActions = useMemo(
     () => (commenter ? { [COMMENT_ITEM]: { run: addComment } } : {}),
     [commenter, addComment],
@@ -232,6 +257,8 @@ export function useTextDocumentThreads({
     edit,
     remove,
     resolve,
+    react,
+    names,
     actions,
     status,
     say,

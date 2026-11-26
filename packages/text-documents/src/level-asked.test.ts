@@ -8,6 +8,7 @@ import { textDocumentLevelAsked } from './level-asked';
 import {
   LiveThreads,
   TEXT_DOCUMENT_COMMENT_TEXT_MAX,
+  TEXT_DOCUMENT_REACTIONS_MAX,
   TEXT_DOCUMENT_THREAD_COMMENTS_MAX,
   TEXT_DOCUMENT_THREADS_MAX,
   THREADS_MAP,
@@ -161,6 +162,27 @@ describe('textDocumentLevelAsked', () => {
         LiveThreads.reply(doc, 'ben', comment('a2'), 'me');
         thread(doc).set('first', 'a2');
       }),
+    ).toBe('edit');
+  });
+
+  it('asks for Editing for reactions past the most, an emoji too long, or a new comment carrying any', () => {
+    const reactionsOf = (doc: Y.Doc) => {
+      const thread = doc.getMap<Y.Map<unknown>>(THREADS_MAP).get('ben')!;
+      const comments = thread.get('comments') as Y.Map<Y.Map<unknown>>;
+      return comments.get('b1')!.get('reactions') as Y.Map<boolean>;
+    };
+    expect(
+      asked((doc) => {
+        for (let i = 0; i <= TEXT_DOCUMENT_REACTIONS_MAX; i += 1)
+          reactionsOf(doc).set(`e${i}\nk-ada`, true);
+      }),
+    ).toBe('edit');
+    expect(asked((doc) => reactionsOf(doc).set(`${'x'.repeat(17)}\nk-ada`, true))).toBe('edit');
+    expect(asked((doc) => reactionsOf(doc).set('🎉\nk-ada', true))).toBe('participate');
+    expect(
+      asked((doc) =>
+        LiveThreads.reply(doc, 'ben', { ...comment('a2'), reactions: { '👍': ['k-ada'] } }, 'me'),
+      ),
     ).toBe('edit');
   });
 

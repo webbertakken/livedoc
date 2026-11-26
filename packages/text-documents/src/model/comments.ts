@@ -35,7 +35,16 @@ export type FileComment = {
   /** When it was made (ms), where it says. */
   readonly at?: number;
   readonly author: CommentAuthor;
+  /** Each emoji's reactors by key, sorted (review.md "Reactions"); kept in `livedoc:reactions`. */
+  readonly reactions?: Readonly<Record<string, readonly string[]>>;
 };
+
+/** (default) The most different emoji one comment holds as reactions (review.md "Reactions"). */
+export const TEXT_DOCUMENT_REACTIONS_MAX = 20;
+/** The longest emoji a reaction holds, in UTF-16 code units: a family or flag sequence fits. */
+export const REACTION_EMOJI_MAX = 16;
+// A reactor key: the room's adder key, hex (share-roles.md SR4).
+const REACTOR_KEY = /^[0-9a-f]{1,64}$/;
 
 export type FileThread = {
   readonly id: string;
@@ -204,6 +213,42 @@ export const Comments = {
     const trimmed = date.trim();
     const at = Date.parse(/T[\d:.]+$/.test(trimmed) ? `${trimmed}Z` : trimmed);
     return Number.isFinite(at) ? at : undefined;
+  },
+
+  /** A comment's reactions as `livedoc:reactions` holds them: a JSON object of each emoji's reactor keys; none for none. */
+  reactionsText: (reactions: FileComment['reactions']): string | undefined =>
+    reactions && Object.keys(reactions).length > 0 ? JSON.stringify(reactions) : undefined,
+
+  /**
+   * `livedoc:reactions` read: an object of at most `TEXT_DOCUMENT_REACTIONS_MAX` emoji, each at most
+   * `REACTION_EMOJI_MAX` long, holding reactor keys; an emoji with none is left out; anything else reads as none.
+   */
+  readReactions: (text: string | undefined): FileComment['reactions'] => {
+    if (text === undefined) return undefined;
+    let value: unknown;
+    try {
+      value = JSON.parse(text);
+    } catch {
+      return undefined;
+    }
+    if (typeof value !== 'object' || value === null || Array.isArray(value)) return undefined;
+    const entries = Object.entries(value as Record<string, unknown>);
+    if (entries.length > TEXT_DOCUMENT_REACTIONS_MAX) return undefined;
+    const out: Record<string, string[]> = {};
+    for (const [emoji, keys] of entries) {
+      if (emoji === '' || emoji.length > REACTION_EMOJI_MAX || emoji.includes('\n'))
+        return undefined;
+      if (!Array.isArray(keys) || !keys.every((k) => typeof k === 'string' && REACTOR_KEY.test(k)))
+        return undefined;
+      if (keys.length > 0) out[emoji] = [...new Set(keys as string[])].sort();
+    }
+    return Object.keys(out).length > 0 ? out : undefined;
+  },
+
+  /** `livedoc:reactions` read as a comment's field: `{ reactions }`, or nothing where there are none. */
+  reactionsFrom: (text: string | undefined): { reactions?: Record<string, readonly string[]> } => {
+    const reactions = Comments.readReactions(text);
+    return reactions ? { reactions } : {};
   },
 
   /** A comment's plain text as its paragraphs, one at least. */

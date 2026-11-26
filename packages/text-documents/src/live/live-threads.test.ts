@@ -5,6 +5,8 @@ import { describe, expect, it } from 'vitest';
 import * as Y from 'yjs';
 import {
   LiveThreads,
+  REACTION_EMOJI_MAX,
+  TEXT_DOCUMENT_REACTIONS_MAX,
   THREADS_MAP,
   type TextDocumentComment,
   type TextDocumentThreadStart,
@@ -177,6 +179,46 @@ describe('LiveThreads', () => {
     });
     LiveThreads.react(doc, 'th1', 'th1-c1', { emoji: '🎉', key: 'k-ada', on: false }, 'me');
     expect(LiveThreads.read(doc)[0]!.comments[0]!.reactions).toEqual({ '👍': ['k-ada', 'k-ben'] });
+  });
+
+  // review.md "Reactions": kept one entry per emoji and reactor, so two first reactions at once both stay.
+  it('keeps two people’s first reactions made at once', () => {
+    const { doc, run } = written();
+    LiveThreads.begin(doc, startOn(run, 0, 9), 'me');
+    const other = new Y.Doc();
+    Y.applyUpdate(other, Y.encodeStateAsUpdate(doc));
+    LiveThreads.react(doc, 'th1', 'th1-c1', { emoji: '👍', key: 'k-ada', on: true }, 'me');
+    LiveThreads.react(other, 'th1', 'th1-c1', { emoji: '👍', key: 'k-ben', on: true }, 'me');
+    Y.applyUpdate(doc, Y.encodeStateAsUpdate(other));
+    expect(LiveThreads.read(doc)[0]!.comments[0]!.reactions).toEqual({ '👍': ['k-ada', 'k-ben'] });
+  });
+
+  it('refuses an emoji too long, or one more past the most a comment holds', () => {
+    const { doc, run } = written();
+    LiveThreads.begin(doc, startOn(run, 0, 9), 'me');
+    const react = (emoji: string) =>
+      LiveThreads.react(doc, 'th1', 'th1-c1', { emoji, key: 'k', on: true }, 'me');
+    expect(react('x'.repeat(REACTION_EMOJI_MAX + 1))).toBe(false);
+    for (let i = 0; i < TEXT_DOCUMENT_REACTIONS_MAX; i += 1) expect(react(`e${i}`)).toBe(true);
+    expect(react('one more')).toBe(false);
+    expect(react('e0')).toBe(true);
+    expect(Object.keys(LiveThreads.read(doc)[0]!.comments[0]!.reactions!)).toHaveLength(
+      TEXT_DOCUMENT_REACTIONS_MAX,
+    );
+  });
+
+  it('keeps a comment’s reactions given when it is begun or replied (a file’s)', () => {
+    const { doc, run } = written();
+    LiveThreads.begin(
+      doc,
+      { ...startOn(run, 0, 9), comment: { ...comment('th1-c1', 1), reactions: { '👍': ['k1'] } } },
+      'me',
+    );
+    LiveThreads.reply(doc, 'th1', { ...comment('r', 2), reactions: { '🎉': ['k2', 'k3'] } }, 'me');
+    expect(LiveThreads.read(doc)[0]!.comments.map((c) => c.reactions)).toEqual([
+      { '👍': ['k1'] },
+      { '🎉': ['k2', 'k3'] },
+    ]);
   });
 
   it('changes nothing for a thread or comment that is not there, and says so', () => {

@@ -738,7 +738,13 @@ export const CONSTRUCTS: Record<string, (format: TextDocumentFormat) => TextDocu
             id: ids.t1,
             resolved: true,
             comments: [
-              { id: ids.t1, text: 'Is this final?', at: Date.UTC(2026, 10, 18, 10), author },
+              {
+                id: ids.t1,
+                text: 'Is this final?',
+                at: Date.UTC(2026, 10, 18, 10),
+                author,
+                reactions: { '👍': ['a1', 'b2'] },
+              },
               {
                 id: ids.r1,
                 text: 'Yes & <done>.',
