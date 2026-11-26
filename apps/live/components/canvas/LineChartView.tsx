@@ -1,6 +1,6 @@
 'use client';
 
-// Line, Area, Stepped Area, Scatter, Radar and Combo charts (docs/specs/009-elements/pie-chart.md "Chart types"): a 2-D chart — shared x-axis `lineCategories` and one or
+// Line, Area, Stepped Area, Scatter, Bubble, Radar and Combo charts (docs/specs/009-elements/pie-chart.md "Chart types"): a 2-D chart — shared x-axis `lineCategories` and one or
 // more named `lineSeries`, each drawn as a polyline with point markers in the
 // theme palette, with an optional legend listing the series. Data is edited as
 // a grid (or imported from CSV) via the Data menu. Reuses the chart-family
@@ -26,6 +26,7 @@ import {
   comboMarks,
   comboValueLabels,
   isComboChart,
+  isBubbleChart,
   isRadarChart,
   pointsMarked,
   type ShapeElement,
@@ -37,6 +38,7 @@ import { ChartReadout } from '@/components/primitives/ChartReadout';
 import { ChartSurface } from '@/components/primitives/ChartSurface';
 import { ChartValues } from '@/components/primitives/ChartValues';
 import { RadarChartView } from './RadarChartView';
+import { BubbleChartView } from './BubbleChartView';
 
 // How far from a step's middle the pointer reads it.
 const STEP_HOVER_PX = 6;
@@ -50,8 +52,10 @@ type Props = {
   ground?: readonly string[];
 };
 
-// A Radar chart draws around a centre (pie-chart.md "Radar"); every other line chart on its two axes.
+// A Radar chart draws around a centre (pie-chart.md "Radar"), a Bubble chart its sized circles ("Bubble"); every other
+// line chart its lines and points on its two axes.
 export function LineChartView(props: Props) {
+  if (isBubbleChart(props.element)) return <BubbleChartView {...props} />;
   return isRadarChart(props.element) ? (
     <RadarChartView {...props} />
   ) : (

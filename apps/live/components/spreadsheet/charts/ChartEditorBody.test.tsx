@@ -89,6 +89,15 @@ describe('the Chart Editor', () => {
     expect(screen.queryByRole('switch', { name: /as a Line/ })).toBeNull();
   });
 
+  it('names a bubble chart’s last series as its sizes, its x read as a scatter’s (D320)', async () => {
+    await open('bubble');
+    const series = screen.getByRole('group', { name: 'Series' });
+    expect(within(series).getByText('Index')).toBeTruthy();
+    expect(within(series).getByText('Pareto (size)')).toBeTruthy();
+    expect(within(series).queryByText('Cost')).toBeNull();
+    expect(within(series).queryByRole('switch')).toBeNull();
+  });
+
   it('curves a line chart with Smooth, shown on a line chart only (D284)', async () => {
     const { h } = await open();
     fireEvent.click(screen.getByRole('tab', { name: 'Customise' }));

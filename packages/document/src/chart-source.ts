@@ -4,7 +4,7 @@
 // kept for anything that cannot read the sheet. Pure, and free of the sheets engine.
 import { PLAN_SHEET_ID_PATTERN } from './element-types';
 import { chartValue, type LineSeries, type PieSlice } from './data-shapes';
-import { chartTypeOf } from './chart-types';
+import { chartTypeOf, readsXFromNumbers } from './chart-types';
 import { isComboSeriesType } from './chart-combo-types';
 
 export type ChartSource = {
@@ -169,11 +169,11 @@ export type LineFields = {
   linePointNames: string[] | undefined;
 };
 
-// A line, area or scatter chart's fields from a table (chartFieldsFromTable's line half): every series; a scatter's
+// A line, area, scatter or bubble chart's fields from a table (chartFieldsFromTable's line half): every series; a scatter's or bubble's
 // numbered first column as its x, or its label column of text as its point names and its first column of numbers as
 // its x (pie-chart.md "Scatter's point names").
 export function lineFieldsFromTable(el: ChartFields, t: ChartTable): LineFields {
-  const scatterX = chartTypeOf(el) === 'scatter' && t.series.length >= 2;
+  const scatterX = readsXFromNumbers(chartTypeOf(el)) && t.series.length >= 2;
   const named = scatterX && t.named === true;
   const xFromFirst = named || (scatterX && (t.numbered ?? numbered(t.categories)));
   // An empty x cell is an empty category: no x, so its points are not drawn.
