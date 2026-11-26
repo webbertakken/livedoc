@@ -1,0 +1,68 @@
+// A spreadsheet's sheet tab drawn (docs/specs/029-sheets/sheet-store.md "Agents in a spreadsheet", Previews): its
+// cells and charts through render.svg, the whole sheet or a range, on a real SQLite.
+import { beforeEach, describe, expect, it } from 'vitest';
+import type { SheetWrite } from '@livedoc/sheets';
+import { workbookKit, type WorkbookKit } from './routes/workbook-test-kit';
+
+let kit: WorkbookKit;
+const R = (i: number) => kit.layout.rows[i]!;
+const C = (i: number) => kit.layout.cols[i]!;
+const render = (id: string, query = '') =>
+  kit.call({ method: 'GET', path: `/${id}/tabs/${id}t/render.svg${query}` });
+
+beforeEach(async () => {
+  kit = workbookKit();
+  const cells = [
+    { r: R(0), c: C(0), i: { s: 'Cost' } },
+    { r: R(0), c: C(1), i: { s: 'Score' } },
+    { r: R(1), c: C(0), i: { n: 3 } },
+    { r: R(1), c: C(1), i: { n: 7 } },
+    { r: R(5), c: C(3), i: { s: 'Far away' } },
+  ];
+  expect((await kit.call({ path: '', body: kit.document('book1', true, cells) })).status).toBe(201);
+  expect((await kit.call({ path: '', body: kit.document('plan1', false) })).status).toBe(201);
+  const chart: SheetWrite = {
+    kind: 'layout',
+    changes: [
+      {
+        k: 'object',
+        id: 'chart01',
+        object: {
+          id: 'chart01',
+          kind: 'chart',
+          type: 'scatter',
+          at: { r: R(0), c: C(2), dx: 0, dy: 0 },
+          width: 420,
+          height: 280,
+          range: { r1: R(0), c1: C(0), r2: R(1), c2: C(1) },
+          title: 'Value',
+        },
+      },
+    ],
+  };
+  expect((await kit.write('book1', chart)).status).toBe(200);
+});
+
+describe('a spreadsheet tab’s render', () => {
+  it('draws the whole sheet with its chart', async () => {
+    const res = await render('book1');
+    expect(res.status).toBe(200);
+    const svg = await res.text();
+    expect(svg).toContain('Cost');
+    expect(svg).toContain('Far away');
+    expect(svg).toContain('Value');
+  });
+
+  it('draws a range from its top-left, leaving the rest and charts before it out', async () => {
+    const svg = await (await render('book1', '?range=D6:E7')).text();
+    expect(svg).toContain('Far away');
+    expect(svg).not.toContain('Cost');
+    expect(svg).not.toContain('Value');
+  });
+
+  it('refuses a range it cannot read, and one on a tab that is no spreadsheet’s', async () => {
+    expect((await render('book1', '?range=nope')).status).toBe(400);
+    expect((await render('plan1', '?range=A1')).status).toBe(400);
+    expect((await render('plan1')).status).toBe(200);
+  });
+});

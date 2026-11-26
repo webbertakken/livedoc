@@ -23,6 +23,11 @@ vi.mock('./api', () => ({
   apiJson: async () => {
     throw new Error('not read');
   },
+  // A spreadsheet's sheet tab, as the api draws it.
+  apiText: async (_env: unknown, _token: string, path: string) => {
+    fetched.push(path);
+    return { text: '<svg id="sheet"/>', etag: null };
+  },
 }));
 
 const { imageResult, tabFontIds, tabPreview } = await import('./image-result');
@@ -146,5 +151,30 @@ describe('tabPreview', () => {
     } as never;
     const blocks = await tabPreview(tab, { env: {} as never, token: 't' });
     expect(blocks.map((b) => b.type)).toEqual(['image']);
+  });
+});
+
+describe('a spreadsheet tab’s preview', () => {
+  it('is the api’s render of its sheet, all of it or a range', async () => {
+    drawn.length = 0;
+    fetched.length = 0;
+    const tab = { id: 'sheet tab', name: 'Costs', kind: 'sheet', elements: [] } as never;
+    const auth = { env: {} as never, token: 't', documentId: 'doc 1' };
+    expect(await tabPreview(tab, auth)).toEqual([
+      { type: 'image', data: 'cG5n', mimeType: 'image/png' },
+    ]);
+    await tabPreview(tab, auth, undefined, 'A1:D9');
+    expect(fetched).toEqual([
+      '/documents/doc%201/tabs/sheet%20tab/render.svg',
+      '/documents/doc%201/tabs/sheet%20tab/render.svg?range=A1%3AD9',
+    ]);
+    expect(drawn).toEqual(['<svg id="sheet"/>', '<svg id="sheet"/>']);
+  });
+
+  it('is drawn as any tab without a document to ask', async () => {
+    fetched.length = 0;
+    const tab = { id: 't', name: 'Costs', kind: 'sheet', elements: [] } as never;
+    await tabPreview(tab);
+    expect(fetched).toEqual([]);
   });
 });

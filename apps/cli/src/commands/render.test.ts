@@ -55,6 +55,18 @@ describe('tab render', () => {
     expect(svg.io.fileMap.get('shop.svg')!.data).toBe(SVG);
   });
 
+  it('draws a range of a spreadsheet tab with --range', async () => {
+    const asked: string[] = [];
+    const spy: Route = (r, url) => {
+      if (url.pathname.endsWith('/render.svg')) asked.push(url.search);
+      return host(r, url);
+    };
+    const io = fakeIo({ env: { LIVEDOC_TOKEN: TOKEN }, routes: [spy] });
+    const out = await cli(['tab', 'render', DOC, '--range', 'A1:D20', '--svg', 'r.svg'], io);
+    expect(out.code).toBe(0);
+    expect(asked).toEqual(['?range=A1%3AD20']);
+  });
+
   it('needs exactly one of --png and --svg', async () => {
     for (const argv of [
       ['tab', 'render', DOC],

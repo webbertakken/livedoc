@@ -410,6 +410,10 @@ tells them.
 - **Views** ([A spreadsheet's views](../024-agents/document-views.md#a-spreadsheets-views)): `read_document` and
   `livedoc tab view` on any of a spreadsheet's tabs answer the workbook outline; `view: "cells"` with a `range` reads
   that tab's sheet a row a line, bounded as `read_sheet` is.
+- **Previews**: a spreadsheet's sheet tab draws as its sheet laid out as a Plan Sheet tab is for its image: its cells
+  from A1 to the last filled cell and every chart over them, or a `range` from its top-left, within 4,000 px a side
+  (D273). `GET .../tabs/:tabId/render.svg?range=` answers it, `livedoc tab render --range` writes it as PNG or SVG,
+  and `read_document` with `image` (and the cells view's `range`) attaches it.
 - **`list_sheets` in a spreadsheet** lists the sheets in tab order, each with whether it is hidden and how many
   charts it holds.
 
@@ -444,4 +448,6 @@ The code cites each by its id.
 - **D114** Kept content in the store: package entries in chunks of 1 MB; sent in requests of up to 7 MB each, entries' bytes as base64
   (default).
 - **D115** Kept content of a sheet Duplicate Tab copies: Stays with the sheet it came from (default).
+- **D273** A range's preview: its rows and columns from its top-left, labelled as the sheet labels them, no frozen
+  panes; a chart drawn only when its top-left cell is in the range (default).
 - **D116** Kept content in a `.livedoc` file: Not carried (default).
