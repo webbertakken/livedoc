@@ -129,6 +129,7 @@ function collector(reader: OfflineReader) {
           ...tabPlace,
           elementId: a.elementId,
           elementLabel: a.elementLabel,
+          anchor: 'element',
           id: a.actionId,
           name: a.name,
           description: a.description,
@@ -146,6 +147,7 @@ function collector(reader: OfflineReader) {
           ...tabPlace,
           elementId: t.elementId,
           elementLabel: t.elementLabel,
+          anchor: 'element',
           commentCount: t.commentCount,
           latest: {
             text: t.latestText,

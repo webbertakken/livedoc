@@ -22,7 +22,12 @@ const board = {
 
 function arrive(
   link: CollabDeepLink,
-  over: { activeId?: string; state?: TabLoadState; elements?: Element[] } = {},
+  over: {
+    activeId?: string;
+    state?: TabLoadState;
+    elements?: Element[];
+    activeIsTextDocument?: boolean;
+  } = {},
 ) {
   const calls = {
     select: vi.fn(),
@@ -30,6 +35,7 @@ function arrive(
     openActionPopover: vi.fn(),
     openComments: vi.fn(),
     openItem: vi.fn(),
+    openTextThread: vi.fn(),
   };
   const props = {
     link: { current: link },
@@ -37,6 +43,7 @@ function arrive(
     activeId: over.activeId ?? 't1',
     activeTabLoadState: over.state ?? 'ready',
     elements: over.elements ?? [board],
+    activeIsTextDocument: over.activeIsTextDocument ?? false,
     ...calls,
   };
   const hook = renderHook((p: typeof props) => useCollabDeepLink(p), { initialProps: props });
@@ -44,6 +51,29 @@ function arrive(
 }
 
 describe('useCollabDeepLink', () => {
+  // inbox.md §1.8: a text document's row names its thread as the element; the text document goes to it.
+  it('hands a text document’s thread to the text document, selecting no element', () => {
+    const { calls } = arrive(
+      { at: { tabId: 't1', elementId: 'th1' }, open: 'comments', itemId: null },
+      { elements: [], activeIsTextDocument: true },
+    );
+    expect(calls.openTextThread).toHaveBeenCalledWith('t1', 'th1');
+    expect(calls.select).not.toHaveBeenCalled();
+    expect(calls.openComments).not.toHaveBeenCalled();
+  });
+
+  it('waits for the text document’s tab before handing its thread over', () => {
+    const { calls, hook, props } = arrive(
+      { at: { tabId: 't2', elementId: 'th1' }, open: 'action', itemId: null },
+      { elements: [], activeIsTextDocument: true },
+    );
+    expect(calls.openTextThread).not.toHaveBeenCalled();
+    hook.rerender({ ...props, activeId: 't2' });
+    expect(calls.openTextThread).toHaveBeenCalledTimes(1);
+    hook.rerender({ ...props, activeId: 't2', elements: [] });
+    expect(calls.openTextThread).toHaveBeenCalledTimes(1);
+  });
+
   it('selects the element and opens its popover', () => {
     const { calls } = arrive({
       at: { tabId: 't1', elementId: 'b1' },

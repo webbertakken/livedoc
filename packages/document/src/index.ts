@@ -715,6 +715,8 @@ export * from './seeded-random';
 export * from './plural';
 // Per-element assigned actions (docs/specs/012-collaboration/assigned-actions.md).
 export * from './element-action';
+// A one-line name cut at a word (action names, Inbox labels).
+export * from './cut-at-word';
 export * from './data-shapes';
 export * from './sankey-wire';
 export * from './sankey-model';

@@ -5,7 +5,12 @@
 // `owner_aliases` (the identities an owner used to be, §2.2).
 
 import { FORM_RESPONSES_SQL, formResponsesFromRows, type FormResponsesRow } from './activity-forms';
-import type { ActivityAction, ActivityReadResult, ActivityThread } from '@livedoc/api-schema';
+import type {
+  ActivityAction,
+  ActivityReadResult,
+  ActivityThread,
+  CollabAnchor,
+} from '@livedoc/api-schema';
 import { VISIBLE_DOCUMENTS_CTES } from './document-visibility';
 import {
   CARDS_CTES,
@@ -57,6 +62,7 @@ type PlaceRow = {
   via: 'own' | 'team' | 'shared';
   share_code: string | null;
   tab_name: string;
+  anchor: CollabAnchor;
 };
 
 type ActionRow = PlaceRow & {
@@ -91,7 +97,7 @@ const ACTIONS_SQL = `${SCOPE_CTES}
          ca.assignee_user_id, ca.assignee_name, ca.assigner_id, ca.assigner_name,
          ca.created_at, ca.updated_at,
          v.id AS document_id, v.name AS document_name, v.team_id AS document_team_id,
-         v.via, v.share_code, ca.tab_name,
+         v.via, v.share_code, ca.tab_name, ca.anchor,
          CASE WHEN ca.assignee_user_id IN (SELECT id FROM me)
                 OR ca.assignee_member_id IN (SELECT id FROM my_members) THEN 1 ELSE 0 END AS assigned_to_me,
          CASE WHEN ca.assigner_id IN (SELECT id FROM me) THEN 1 ELSE 0 END AS created_by_me
@@ -116,7 +122,7 @@ export const THREADS_SQL = `${SCOPE_CTES}
   SELECT ct.tab_id, ct.element_id, ct.element_label, ct.comment_count,
          ct.latest_text, ct.latest_author_name, ct.latest_author_color, ct.first_at, ct.latest_at,
          v.id AS document_id, v.name AS document_name, v.team_id AS document_team_id,
-         v.via, v.share_code, ct.tab_name, v.share_level,
+         v.via, v.share_code, ct.tab_name, ct.anchor, v.share_level,
          CASE WHEN EXISTS (SELECT 1 FROM json_each(ct.participant_ids) je
                             WHERE je.value IN (SELECT id FROM me)) THEN 1 ELSE 0 END AS you_commented,
          CASE WHEN v.owner_id = ?1 THEN 1 ELSE 0 END AS on_your_document,
@@ -171,6 +177,7 @@ function placeOf(row: PlaceRow) {
     tabName: row.tab_name,
     elementId: row.element_id,
     elementLabel: row.element_label,
+    anchor: row.anchor,
   };
 }
 

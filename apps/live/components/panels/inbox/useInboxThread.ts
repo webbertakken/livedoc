@@ -26,7 +26,9 @@ export function useInboxThread(
   entry: InboxEntry | undefined,
   bump: number,
 ): DocumentCommentThread | null | undefined {
-  const row = entry?.kind === 'Thread' && !entry.row.local ? entry.row : null;
+  // A text document's thread is read from nowhere (inbox.md D229): the pane shows its latest comment.
+  const row =
+    entry?.kind === 'Thread' && !entry.row.local && entry.row.anchor !== 'text' ? entry.row : null;
   const key = row && entry ? `${ownerId}|${entry.key}@${entry.at}:${bump}` : null;
   const [held, setHeld] = useState<{ key: string; value: DocumentCommentThread | null } | null>(
     null,

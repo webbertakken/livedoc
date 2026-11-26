@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { DocumentCommentThread } from '@livedoc/api-schema';
 
-// The reading pane's verbs (docs/specs/013-workspace/inbox.md §1.5): which a row is offered, and the comment calls
+// The reading pane's verbs (docs/specs/013-workspace/inbox.md Â§1.5): which a row is offered, and the comment calls
 // behind Reply and Resolve.
 
 const api = vi.hoisted(() => ({
@@ -75,6 +75,15 @@ describe('offeredVerbs', () => {
     expect(offeredVerbs(localAction, done)).toEqual([]);
   });
 
+  it('offers nothing on a text document’s thread or assigned comment (D229)', () => {
+    const text = only(feedOf({ threads: [{ kind: 'thread', ...thread({ anchor: 'text' }) }] }));
+    expect(offeredVerbs(text, done)).toEqual([]);
+    const assigned = only(
+      feedOf({ assignedToMe: [{ kind: 'action', ...action({ anchor: 'text' }) }] }),
+    );
+    expect(offeredVerbs(assigned, done)).toEqual([]);
+  });
+
   it('offers nothing on a Plan card, a card thread or a form', () => {
     expect(
       offeredVerbs(only(feedOf({ assignedToMe: [{ kind: 'card', ...card() }] })), done),
@@ -89,7 +98,7 @@ describe('offeredVerbs', () => {
 describe('the comment calls', () => {
   const row = thread({ shareCode: 'code-1' });
 
-  it('reads the row’s own thread, never a cell’s, through the share code', async () => {
+  it('reads the rowâs own thread, never a cellâs, through the share code', async () => {
     api.apiListCommentThreads.mockResolvedValue([
       listed({ cell: 'r1:c1', comments: [] }),
       listed({ elementId: 'other' }),
@@ -104,7 +113,7 @@ describe('the comment calls', () => {
     expect(await readThread('me', row)).toBeNull();
   });
 
-  it('replies on the element’s own thread', async () => {
+  it('replies on the elementâs own thread', async () => {
     api.apiAddComment.mockResolvedValue({ id: 'c3' });
     await replyToThread('me', row, 'On it');
     expect(api.apiAddComment).toHaveBeenCalledWith('me', 'd1', 't1', 'e9', 'On it', 'code-1');

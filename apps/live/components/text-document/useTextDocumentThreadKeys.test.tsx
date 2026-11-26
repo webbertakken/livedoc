@@ -126,6 +126,36 @@ describe('useTextDocumentThreadKeys', () => {
     expect(result.current.threads.selected).toBeNull();
   });
 
+  // inbox.md §1.8: an Inbox row's thread, handed over before the threads may have been read.
+  it('arrives at a thread of the tab shown', async () => {
+    const at = await editor();
+    at.begin('b', 7, 11);
+    const { result } = keysOn(at);
+    act(() => result.current.keys.arrive('b'));
+    await waitFor(() => expect(result.current.threads.selected).toBe('b'));
+  });
+
+  it('arrives at a thread of another tab, showing it first', async () => {
+    const at = await editor();
+    at.begin('b', 7, 11, 't.b');
+    const { result, showTab, rerender } = keysOn(at);
+    act(() => result.current.keys.arrive('b'));
+    await waitFor(() => expect(showTab).toHaveBeenCalledWith('t.b'));
+    rerender({ tab: 't.b' });
+    await waitFor(() => expect(result.current.threads.selected).toBe('b'));
+  });
+
+  it('says the text is gone when the thread arrived at is not there', async () => {
+    const at = await editor();
+    const { result } = keysOn(at);
+    act(() => result.current.keys.arrive('none'));
+    // Rendering inside waitFor would mutate the DOM its observer watches, re-running the callback without end: wait on
+    // the hook's own word, then draw the status once.
+    const said = () => (result.current.threads.status.props as { children?: unknown }).children;
+    await waitFor(() => expect(said()).toBe(TEXT_GONE));
+    expect(render(result.current.threads.status).container.textContent).toBe(TEXT_GONE);
+  });
+
   it('shows another tab first, then goes once its writing is there', async () => {
     const at = await editor();
     at.begin('b', 7, 11, 't.b');

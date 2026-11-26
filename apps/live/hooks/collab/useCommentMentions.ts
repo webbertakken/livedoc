@@ -7,14 +7,14 @@
 // open the document). A personal document or a guest has none.
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { assignHandles, type CommentMention } from '@livedoc/document';
+import { actionNameOf, assignHandles, type CommentMention } from '@livedoc/document';
 import {
   apiGetTeam,
   apiNotifyActionAssigned,
   apiNotifyMention,
   type TeamListItem,
 } from '@/lib/api-client';
-import { actionNameOf } from '@/lib/office/review/assigned-comment';
+
 import { track } from '@/lib/telemetry';
 import { teamMemberRows } from './team-member-rows';
 

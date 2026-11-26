@@ -1,7 +1,6 @@
-// docs/specs/034-text-documents/review.md "Assigning": the label the card leads with, the offer the composer makes,
-// and the action name the assignment email carries.
+// docs/specs/034-text-documents/review.md "Assigning": the label the card leads with and the offer the composer makes.
 import { describe, expect, it } from 'vitest';
-import { actionNameOf, assignedLabel, assignOffer, ACTION_NAME_MAX } from './assigned-comment';
+import { assignedLabel, assignOffer } from './assigned-comment';
 
 const priya = { userId: 'u-priya', memberId: 'm-priya', name: 'Priya Kaur', handle: 'priya-kaur' };
 const sam = { userId: null, memberId: 'm-sam', name: 'Sam Lee', handle: 'sam-lee' };
@@ -23,16 +22,5 @@ describe('assignOffer', () => {
     expect(
       assignOffer({ userId: null, name: 'Bo', handle: 'bo' })({ ...sam, handle: 'bo' }),
     ).toBeNull();
-  });
-});
-
-describe('actionNameOf', () => {
-  it('takes the first line, cut at a word with an ellipsis past the most', () => {
-    expect(actionNameOf('Check the totals\nand the dates')).toBe('Check the totals');
-    const long = `${'word '.repeat(60)}end`;
-    const name = actionNameOf(long);
-    expect(name.length).toBeLessThanOrEqual(ACTION_NAME_MAX);
-    expect(name.endsWith('word…')).toBe(true);
-    expect(actionNameOf('x'.repeat(300))).toHaveLength(ACTION_NAME_MAX);
   });
 });

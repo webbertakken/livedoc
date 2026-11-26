@@ -7,7 +7,7 @@
 // Every D1 write is guarded by the document's D1 row (G2), so a drain racing a purge writes nothing. Every unit is a
 // full replace of what it derives, so D1's rows are safe to drop and refill.
 
-import { collabIndexRowsFromElements, type Element } from '@livedoc/document';
+import { collabIndexRowsFromElements, type CollabIndexRows, type Element } from '@livedoc/document';
 import { tabSearchText } from '@livedoc/document-views';
 import { itemsSearchText } from '@livedoc/items';
 import { sheetSearchInputs } from '@livedoc/sheets';
@@ -18,12 +18,14 @@ import { listItems } from '../db/items';
 import { listSheets } from '../db/sheets';
 import { refreshLiveTabDigest } from '../live-tabs/live-tab-digest';
 import { liveTabKindOfTab } from '../live-tabs/live-tab-kinds';
+import type { LiveTabDigest } from '../live-tabs/live-tab-kind';
 import { documentImageIds } from '../db/image-refs';
 import { imageGrantPlacementStatements } from '../db/image-grants';
 import { formLinkShown } from '../forms/form-link-shown';
 import type { DocumentEnv } from '../types';
 import { contentSummaryOf } from './content-summary';
 import { CARD_THREADS_TAB, readInboxCards } from './inbox-cards';
+import { keyOwners, resolveCollabKeys, rowKeys } from './collab-key-owners';
 
 // Tab units one drain pushes; the rest go in the next drain, straight after.
 export const DRAIN_TABS = 50;
@@ -156,6 +158,22 @@ async function cardsStatements(
 
 type StoredTab = { id: string; name: string; data: string; drawing_of: string | null };
 
+// What every part of a tab unit is built from: the tab as stored (null once it has gone), its body, the texts it holds
+// outside its body, a PDF tab's previous files, and its rows in the collaboration index with what they anchor to.
+type TabUnitInput = {
+  readonly env: DocumentEnv;
+  readonly documentId: string;
+  readonly tabId: string;
+  readonly tab: StoredTab | null;
+  readonly body: Record<string, unknown>;
+  readonly storedTexts: readonly string[];
+  readonly previous: readonly PreviousStoredFile[];
+  readonly collab: TabCollab;
+};
+
+// A tab's collaboration rows: an element tab's from its elements, a live tab's from its state (inbox.md §2.7).
+type TabCollab = { readonly rows: CollabIndexRows; readonly anchor: 'element' | 'text' };
+
 function parseBody(data: string): Record<string, unknown> {
   try {
     const body: unknown = JSON.parse(data);
@@ -167,13 +185,13 @@ function parseBody(data: string): Record<string, unknown> {
 
 // The tab's comment threads and actions (docs/specs/013-workspace/inbox.md §2.1), replaced whole. `tab` null: the
 // tab has gone, and its rows with it.
-function collabStatements(
-  env: DocumentEnv,
-  documentId: string,
-  tabId: string,
-  tab: StoredTab | null,
-  body: Record<string, unknown>,
-): D1PreparedStatement[] {
+function collabStatements({
+  env,
+  documentId,
+  tabId,
+  tab,
+  collab,
+}: TabUnitInput): D1PreparedStatement[] {
   const stmts = [
     env.DB.prepare('DELETE FROM collab_actions WHERE document_id = ?1 AND tab_id = ?2').bind(
       documentId,
@@ -185,23 +203,22 @@ function collabStatements(
     ),
   ];
   if (!tab) return stmts;
-  const elements = Array.isArray(body.elements) ? (body.elements as Element[]) : [];
-  const rows = collabIndexRowsFromElements(elements);
+  const { rows, anchor } = collab;
   for (const chunk of jsonChunks(rows.actions)) {
     stmts.push(
       env.DB.prepare(
         `INSERT INTO collab_actions
            (document_id, tab_id, tab_name, element_id, action_id, element_label, name, description, status,
             assignee_user_id, assignee_member_id, assignee_name, assigner_id, assigner_name, team_id,
-            created_at, updated_at)
+            created_at, updated_at, anchor)
          SELECT ?1, ?2, ?3, value ->> '$.elementId', value ->> '$.actionId', value ->> '$.elementLabel',
                 value ->> '$.name', value ->> '$.description', value ->> '$.status',
                 value ->> '$.assigneeUserId', value ->> '$.assigneeMemberId', value ->> '$.assigneeName',
                 value ->> '$.assignerId', value ->> '$.assignerName', value ->> '$.teamId',
-                value ->> '$.createdAt', value ->> '$.updatedAt'
+                value ->> '$.createdAt', value ->> '$.updatedAt', ?5
            FROM json_each(?4)
           WHERE ${EXISTS_DOCUMENT}`,
-      ).bind(documentId, tabId, tab.name, chunk),
+      ).bind(documentId, tabId, tab.name, chunk, anchor),
     );
   }
   for (const chunk of jsonChunks(rows.threads)) {
@@ -210,15 +227,15 @@ function collabStatements(
         `INSERT INTO collab_threads
            (document_id, tab_id, tab_name, element_id, element_label, resolved, comment_count,
             participant_ids, mentioned_ids, latest_text, latest_author_name, latest_author_color,
-            first_at, latest_at)
+            first_at, latest_at, anchor)
          SELECT ?1, ?2, ?3, value ->> '$.elementId', value ->> '$.elementLabel',
                 CASE WHEN value ->> '$.resolved' THEN 1 ELSE 0 END, value ->> '$.commentCount',
                 value -> '$.participantIds', value -> '$.mentionedIds', value ->> '$.latestText',
                 value ->> '$.latestAuthorName', value ->> '$.latestAuthorColor',
-                value ->> '$.firstAt', value ->> '$.latestAt'
+                value ->> '$.firstAt', value ->> '$.latestAt', ?5
            FROM json_each(?4)
           WHERE ${EXISTS_DOCUMENT}`,
-      ).bind(documentId, tabId, tab.name, chunk),
+      ).bind(documentId, tabId, tab.name, chunk, anchor),
     );
   }
   return stmts;
@@ -226,13 +243,13 @@ function collabStatements(
 
 // What the Inbox shows of the tab's form (docs/specs/030-forms/forms.md "Hearing about responses"): its name, its
 // heading and the board its responses land on, on the tab's form links.
-function formLinkStatements(
-  env: DocumentEnv,
-  documentId: string,
-  tabId: string,
-  tab: StoredTab | null,
-  body: Record<string, unknown>,
-): D1PreparedStatement[] {
+function formLinkStatements({
+  env,
+  documentId,
+  tabId,
+  tab,
+  body,
+}: TabUnitInput): D1PreparedStatement[] {
   if (!tab) return [];
   const shown = formLinkShown(tab.name, body);
   return [
@@ -246,12 +263,7 @@ function formLinkStatements(
 
 // A tab that has gone takes its tab-scoped share links with it (docs/specs/013-workspace/tab-scoped-share-links.md),
 // as the tab's own delete route does; this keeps any other way a tab goes from leaving one behind.
-function goneTabStatements(
-  env: DocumentEnv,
-  documentId: string,
-  tabId: string,
-  tab: StoredTab | null,
-): D1PreparedStatement[] {
+function goneTabStatements({ env, documentId, tabId, tab }: TabUnitInput): D1PreparedStatement[] {
   if (tab) return [];
   return [
     env.DB.prepare('DELETE FROM shared_with WHERE document_id = ?1 AND tab_id = ?2').bind(
@@ -268,15 +280,14 @@ function goneTabStatements(
 // The keys the tab holds in the blob store (docs/specs/006-document/blob-store.md "Holds and retention"), replaced
 // whole: what the retention sweep reads. A tab of a kind that never holds a blob writes nothing; a tab that has gone
 // lets go of what it held.
-function blobHoldStatements(
-  env: DocumentEnv,
-  documentId: string,
-  tabId: string,
-  tab: StoredTab | null,
-  body: Record<string, unknown>,
-  _storedTexts: readonly string[],
-  previous: readonly PreviousStoredFile[],
-): D1PreparedStatement[] {
+function blobHoldStatements({
+  env,
+  documentId,
+  tabId,
+  tab,
+  body,
+  previous,
+}: TabUnitInput): D1PreparedStatement[] {
   const holds = tab ? tabBlobHolds(body, previous) : [];
   if (holds === null) return [];
   const stmts = [
@@ -299,14 +310,17 @@ function blobHoldStatements(
 // The tab's content search row (docs/specs/013-workspace/content-search.md): its text with the texts it holds outside
 // its body (the inputs of the sheets it references, a text document's writing and drawings), or a delete when it has
 // gone or holds no text. A drawing tab has none: its words are its text document's ("What is searched").
-function searchStatements(
-  env: DocumentEnv,
-  documentId: string,
-  tabId: string,
-  tab: StoredTab | null,
-  body: Record<string, unknown>,
-  storedTexts: readonly string[],
-): D1PreparedStatement[] {
+function searchStatements({
+  env,
+  documentId,
+  tabId,
+  tab,
+  body,
+  storedTexts,
+}: Pick<
+  TabUnitInput,
+  'env' | 'documentId' | 'tabId' | 'tab' | 'body' | 'storedTexts'
+>): D1PreparedStatement[] {
   if (!tab || tab.drawing_of) return contentSearchStatements(env, documentId, tabId, '', null);
   const text = tabSearchText({ ...body, name: tab.name }, storedTexts);
   return contentSearchStatements(env, documentId, tabId, tab.name, text);
@@ -357,8 +371,8 @@ async function textDocumentSearchStatements(
   const tab = await readStoredTab(env, documentId, textTabId);
   if (!tab || tab.drawing_of) return [];
   const body = parseBody(tab.data);
-  const storedTexts = await storedTextsOf(env, documentId, textTabId, body);
-  return searchStatements(env, documentId, textTabId, tab, body, storedTexts);
+  const { texts } = await storedTextsOf(env, documentId, textTabId, body);
+  return searchStatements({ env, documentId, tabId: textTabId, tab, body, storedTexts: texts });
 }
 
 // Each drawing tab's words of a text document tab, in the document's order, its name left out.
@@ -387,31 +401,72 @@ async function tabStatements(
   const tab = await readStoredTab(env, documentId, tabId);
   // One body at a time: a drain after a 200-tab import holds one tab in memory, never the document.
   const body = tab ? parseBody(tab.data) : {};
-  const storedTexts = tab ? await storedTextsOf(env, documentId, tabId, body) : [];
+  const { texts, digest } = tab
+    ? await storedTextsOf(env, documentId, tabId, body)
+    : { texts: [], digest: null };
   // A PDF tab's previous versions, whose bytes it holds until their day.
   const previous = tab && body.kind === 'pdf' ? await previousStoredFiles(env, tabId) : [];
-  const unit = TAB_UNIT_PARTS.flatMap((part) =>
-    part(env, documentId, tabId, tab, body, storedTexts, previous),
-  );
+  const collab = await tabCollab(env, documentId, tabId, body, digest);
+  const input = { env, documentId, tabId, tab, body, storedTexts: texts, previous, collab };
+  const unit = TAB_UNIT_PARTS.flatMap((part) => part(input));
   if (!tab?.drawing_of) return unit;
   return [...unit, ...(await textDocumentSearchStatements(env, documentId, tab.drawing_of))];
 }
 
 // What a tab holds outside its body, as text: a live tab's (a text document's writing), read through its digest
-// (docs/specs/006-document/kinds-outside-the-canvas.md "Live state"), or the inputs of the sheets it references.
+// (docs/specs/006-document/kinds-outside-the-canvas.md "Live state"), which comes back with it, or the inputs of the
+// sheets it references.
 async function storedTextsOf(
   env: DocumentEnv,
   documentId: string,
   tabId: string,
   body: Record<string, unknown>,
-): Promise<string[]> {
+): Promise<{ texts: string[]; digest: LiveTabDigest | null }> {
   const live = liveTabKindOfTab(body);
-  if (live)
-    return [
-      (await refreshLiveTabDigest(env, live, documentId, tabId)).searchText,
-      ...(await drawingSearchTexts(env, documentId, tabId)),
-    ];
-  return referencedSheetInputs(env, documentId, tabId);
+  if (!live) return { texts: await referencedSheetInputs(env, documentId, tabId), digest: null };
+  const digest = await refreshLiveTabDigest(env, live, documentId, tabId);
+  return {
+    texts: [digest.searchText, ...(await drawingSearchTexts(env, documentId, tabId))],
+    digest,
+  };
+}
+
+// The tab's rows in the collaboration index (docs/specs/013-workspace/inbox.md §2.1, §2.7): an element tab's from its
+// elements; a live tab's from its digest, its authors' keys turned into identities and its actions given the
+// document's team.
+async function tabCollab(
+  env: DocumentEnv,
+  documentId: string,
+  tabId: string,
+  body: Record<string, unknown>,
+  digest: LiveTabDigest | null,
+): Promise<TabCollab> {
+  if (!digest) {
+    const elements = Array.isArray(body.elements) ? (body.elements as Element[]) : [];
+    return { rows: collabIndexRowsFromElements(elements), anchor: 'element' };
+  }
+  const rows = digest.collab ?? { actions: [], threads: [] };
+  if (rows.threads.length === 0) return { rows, anchor: 'text' };
+  const keys = rowKeys(rows);
+  const owners = await keyOwners(env, documentId, keys);
+  const teamId = rows.actions.length > 0 ? await documentTeam(env, documentId) : null;
+  console.info(
+    `[outbox] text-threads document=${documentId} tab=${tabId} threads=${rows.threads.length} actions=${rows.actions.length} keys=${keys.size} resolved=${owners.size}`,
+  );
+  // A key none of the document's people make: its author is left out of the row; said, so the gap shows (§2.7).
+  const unmatched = [...keys].filter((key) => !owners.has(key));
+  if (unmatched.length > 0)
+    console.warn(
+      `[outbox] text-threads-unmatched document=${documentId} tab=${tabId} count=${unmatched.length} keys=${unmatched.join(',')}`,
+    );
+  return { rows: resolveCollabKeys(rows, owners, teamId), anchor: 'text' };
+}
+
+async function documentTeam(env: DocumentEnv, documentId: string): Promise<string | null> {
+  const row = await env.DB.prepare('SELECT team_id FROM documents WHERE id = ?')
+    .bind(documentId)
+    .first<{ team_id: string | null }>();
+  return row?.team_id ?? null;
 }
 
 // The cards' content search row, under ITEMS_SEARCH_KEY; no cards deletes it.

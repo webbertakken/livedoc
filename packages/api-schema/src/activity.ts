@@ -10,6 +10,9 @@
 // (docs/specs/013-workspace/timeline.md) records that an action WAS assigned, this says whether it
 // is still open.
 
+// An element, or a stretch of a text document's writing.
+export type CollabAnchor = 'element' | 'text';
+
 // Where a row lives, and how the reader reaches it. `via` is how the
 // document is visible to them (their own, a joined team's library, or
 // shared with them); `shareCode` is set only for 'shared', so the client
@@ -24,8 +27,11 @@ export type ActivityPlace = {
   tabName: string;
   elementId: string;
   // The element's list name (its label, a table's first cell, or
-  // "Untitled"), per `elementDisplayLabel` in @livedoc/document.
+  // "Untitled"), per `elementDisplayLabel` in @livedoc/document; a text document's thread's quote (inbox.md §2.7).
   elementLabel: string;
+  // What the row hangs off: an element, or a stretch of a text document's writing (inbox.md §2.7), whose row the
+  // page offers Open alone and lands on the thread.
+  anchor: CollabAnchor;
 };
 
 // An open action (docs/specs/012-collaboration/assigned-actions.md) the reader assigned or was assigned. The two

@@ -1,14 +1,10 @@
-import { DatabaseSync } from 'node:sqlite';
+import type { DatabaseSync } from 'node:sqlite';
 import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { Body, TextDocument, TextDocumentState } from '@livedoc/text-documents';
-import { sqliteD1 } from '../test-sqlite-d1';
 import { appendLiveTabUpdate } from '../live-tabs/live-tab-store';
 import { TEXT_DOCUMENT_LIVE_TAB } from '../text-documents/text-document-live-tab';
-import { nodeDocumentSql, nodeTransaction } from '../test-document-sql';
-import type { DocumentEnv } from '../types';
-import { DocumentDb } from './document-db';
 import { DRAIN_TABS, drainOutbox, PUSH_CONCURRENCY } from './document-outbox';
-import { migrateDocumentSchema } from './document-schema';
+import { harness } from './test-outbox-harness';
 
 // The drain (docs/specs/006-document/document-storage.md "The outbox"): its bounds, its concurrency, its
 // retry, a key written again during a drain, and G2 (nothing lands in D1 once the document's row is gone). The room's
@@ -30,65 +26,6 @@ const thread = (id: string) => ({
     resolved: false,
   },
 });
-
-type Harness = {
-  env: DocumentEnv;
-  room: DatabaseSync;
-  d1: DatabaseSync;
-  // A batch's first statement's SQL and binds, for a test that fails or watches one unit.
-  onBatch: (hook: (sql: string[], binds: unknown[][]) => Promise<void> | void) => void;
-};
-
-function harness(): Harness {
-  const { env: d1Env, sql: d1 } = sqliteD1({}, { keepD1Content: true });
-  d1.exec(
-    `INSERT INTO documents (id, owner_id, name, saved_at, created_at) VALUES ('${D}', 'o', 'Doc', 1, 1)`,
-  );
-  const room = new DatabaseSync(':memory:');
-  room.exec('PRAGMA foreign_keys = ON');
-  const roomSql = nodeDocumentSql(room);
-  migrateDocumentSchema((q) => roomSql.exec(q));
-  const documentDb = new DocumentDb(roomSql, {
-    transaction: nodeTransaction(room),
-    ensureSchema: () => {},
-    hasSchema: () => true,
-    onWrite: () => {},
-  });
-  room.exec(`INSERT INTO document (id, saved_at, created_at) VALUES ('${D}', 5, 1)`);
-  let hook: (sql: string[], binds: unknown[][]) => Promise<void> | void = () => {};
-  const realPrepare = d1Env.DB.prepare.bind(d1Env.DB);
-  const realBatch = d1Env.DB.batch.bind(d1Env.DB);
-  const seen = new WeakMap<object, { sql: string; binds: unknown[] }>();
-  const DB = {
-    ...d1Env.DB,
-    prepare: (query: string) => {
-      const wrap = (statement: D1PreparedStatement, binds: unknown[]): D1PreparedStatement => {
-        const proxy = new Proxy(statement, {
-          get: (target, prop) => {
-            if (prop === 'bind') return (...next: unknown[]) => wrap(target.bind(...next), next);
-            const value: unknown = Reflect.get(target, prop);
-            return typeof value === 'function'
-              ? (value as (...a: unknown[]) => unknown).bind(target)
-              : value;
-          },
-        });
-        seen.set(proxy, { sql: query, binds });
-        return proxy;
-      };
-      return wrap(realPrepare(query), []);
-    },
-    batch: async (statements: D1PreparedStatement[]) => {
-      const meta = statements.map((s) => seen.get(s) ?? { sql: '', binds: [] });
-      await hook(
-        meta.map((m) => m.sql),
-        meta.map((m) => m.binds),
-      );
-      return realBatch(statements);
-    },
-  } as unknown as D1Database;
-  const env = { ...d1Env, DB, DOCUMENT_DB: documentDb.asD1() } as unknown as DocumentEnv;
-  return { env, room, d1, onBatch: (h) => (hook = h) };
-}
 
 function addTabs(room: DatabaseSync, count: number, from = 0): void {
   for (let i = from; i < from + count; i++) {
@@ -137,7 +74,7 @@ afterAll(() => {
 
 describe('drainOutbox', () => {
   it('pushes at most DRAIN_TABS tab units a drain and says more are owed', async () => {
-    const { env, room, d1 } = harness();
+    const { env, room, d1 } = harness(D);
     addTabs(room, DRAIN_TABS + 20);
     const first = await drainOutbox(env, D);
     expect(first).toMatchObject({ units: DRAIN_TABS + 1, failed: 0, more: true });
@@ -151,7 +88,7 @@ describe('drainOutbox', () => {
   });
 
   it('keeps at most PUSH_CONCURRENCY batches in flight', async () => {
-    const { env, room, onBatch } = harness();
+    const { env, room, onBatch } = harness(D);
     addTabs(room, 20);
     let inFlight = 0;
     let most = 0;
@@ -166,7 +103,7 @@ describe('drainOutbox', () => {
   });
 
   it("keeps a failed unit's keys for the retry, and drops the rest", async () => {
-    const { env, room, d1, onBatch } = harness();
+    const { env, room, d1, onBatch } = harness(D);
     addTabs(room, 3);
     let fail = true;
     onBatch((sql, binds) => {
@@ -187,7 +124,7 @@ describe('drainOutbox', () => {
   });
 
   it('keeps a key written again while its unit was pushed', async () => {
-    const { env, room, onBatch } = harness();
+    const { env, room, onBatch } = harness(D);
     addTabs(room, 2);
     onBatch((sql, binds) => {
       if (tabOf(sql, binds) === 't0') room.exec("UPDATE tabs SET name = 'Renamed' WHERE id = 't0'");
@@ -198,7 +135,7 @@ describe('drainOutbox', () => {
   });
 
   it("writes nothing once the document's D1 row is gone, and drops its keys (G2)", async () => {
-    const { env, room, d1 } = harness();
+    const { env, room, d1 } = harness(D);
     addTabs(room, 2);
     d1.exec(`DELETE FROM documents WHERE id = '${D}'`);
     const result = await drainOutbox(env, D);
@@ -210,7 +147,7 @@ describe('drainOutbox', () => {
   });
 
   it('pushes nothing with nothing owed', async () => {
-    const { env, room, onBatch } = harness();
+    const { env, room, onBatch } = harness(D);
     room.exec('DELETE FROM outbox');
     const batches = vi.fn();
     onBatch(batches);
@@ -219,7 +156,7 @@ describe('drainOutbox', () => {
   });
 
   it('pushes the content summary and the saved time to the listing', async () => {
-    const { env, room, d1 } = harness();
+    const { env, room, d1 } = harness(D);
     addTabs(room, 2);
     await drainOutbox(env, D);
     const row = d1
@@ -243,7 +180,7 @@ describe('the content search rows the drain writes', () => {
       .map((r) => ({ ...r }));
 
   it("writes each tab's search text, its sheets' inputs included", async () => {
-    const { env, room, d1 } = harness();
+    const { env, room, d1 } = harness(D);
     addTabs(room, 1);
     room.exec(`INSERT INTO sheets (document_id, id, tab_id, title, layout, rev, created_at, updated_at, updated_by)
       VALUES ('${D}', 's1', 't0', 'Budget', '{"rows":["r1"],"cols":["c1","c2"]}', 1, 1, 1, '{}');
@@ -257,7 +194,7 @@ describe('the content search rows the drain writes', () => {
   });
 
   it('re-indexes a tab when a cell of a sheet it references changes', async () => {
-    const { env, room, d1 } = harness();
+    const { env, room, d1 } = harness(D);
     addTabs(room, 1);
     room.exec(`INSERT INTO sheets (document_id, id, tab_id, title, layout, rev, created_at, updated_at, updated_by)
       VALUES ('${D}', 's1', 't0', 'Budget', '{"rows":["r1"],"cols":["c1"]}', 1, 1, 1, '{}');
@@ -272,7 +209,7 @@ describe('the content search rows the drain writes', () => {
   });
 
   it('deletes the row of a tab that has gone', async () => {
-    const { env, room, d1 } = harness();
+    const { env, room, d1 } = harness(D);
     addTabs(room, 2);
     await drainOutbox(env, D);
     room.exec("DELETE FROM document_tabs WHERE tab_id = 't1'");
@@ -300,7 +237,7 @@ describe('the content search rows the drain writes', () => {
     });
 
     it('queues the tab for every stored update, then indexes its body and keeps its digest', async () => {
-      const { env, room, d1 } = harness();
+      const { env, room, d1 } = harness(D);
       textDocumentTab(room);
       await drainOutbox(env, D);
       await appendLiveTabUpdate(
@@ -321,7 +258,7 @@ describe('the content search rows the drain writes', () => {
 
     // "Saved": each rebuild of the digest marks the document saved, for Modified and the thumbnail.
     it('marks the document saved when it rebuilds the digest', async () => {
-      const { env, room } = harness();
+      const { env, room } = harness(D);
       textDocumentTab(room);
       room.prepare('UPDATE document SET saved_at = 1 WHERE id = ?').run(D);
       await appendLiveTabUpdate(
@@ -339,7 +276,7 @@ describe('the content search rows the drain writes', () => {
     });
 
     it('digests an empty text document as no content', async () => {
-      const { env, room } = harness();
+      const { env, room } = harness(D);
       textDocumentTab(room);
       await drainOutbox(env, D);
       expect(digestOf(room)).toEqual({ characters: 0, words: 0, pages: 1, has_content: 0 });
@@ -348,7 +285,7 @@ describe('the content search rows the drain writes', () => {
     // docs/specs/006-document/document-storage.md D8: the tabs' units are built before the document's, so the image
     // references a text document's digest writes reach the image index in the same drain.
     it('pushes the images its digest finds in the drain that finds them', async () => {
-      const { env, room, d1 } = harness();
+      const { env, room, d1 } = harness(D);
       textDocumentTab(room);
       await drainOutbox(env, D);
       const blank = TextDocument.blank();
@@ -405,7 +342,7 @@ describe('the content search rows the drain writes', () => {
       }
 
       it('indexes their words in the text document row, and gives them no row of their own', async () => {
-        const { env, room, d1 } = harness();
+        const { env, room, d1 } = harness(D);
         textDocumentTab(room);
         drawingTab(room, 'd2', 'Second sketch', 2);
         drawingTab(room, 'd1', 'First sketch', 1);
@@ -426,7 +363,7 @@ describe('the content search rows the drain writes', () => {
       });
 
       it("writes the text document's row again when a drawing changes", async () => {
-        const { env, room, d1 } = harness();
+        const { env, room, d1 } = harness(D);
         textDocumentTab(room);
         drawingTab(room, 'd1', 'First sketch', 1);
         await drainOutbox(env, D);
@@ -450,7 +387,7 @@ describe('the content search rows the drain writes', () => {
   });
 
   it("writes the cards' text under ~items, and deletes it with the last card", async () => {
-    const { env, room, d1 } = harness();
+    const { env, room, d1 } = harness(D);
     room.exec(`INSERT INTO items (document_id, id, type, item_key, rank, fields, rev, created_at, updated_at, created_by, updated_by)
       VALUES ('${D}', 'i1', 'task', 1, 'a', '{"title":"Fix the boiler","status":"todo"}', 1, 1, 1, 'o', 'o')`);
     await drainOutbox(env, D);

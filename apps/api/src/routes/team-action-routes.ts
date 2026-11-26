@@ -5,6 +5,7 @@
 // the scope in.
 
 import { isOpenTeamMember } from '@livedoc/api-schema';
+import { ACTION_NAME_MAX } from '@livedoc/document';
 import { legacyDocumentIdOf } from '../legacy-request-forms';
 import type { TeamMember } from '@livedoc/api-schema';
 import { reachesDocument } from '../auth/document-reach';
@@ -15,7 +16,6 @@ import { notifyActionAssigned } from '../email/notifications';
 import type { RouteContext } from './context';
 
 // docs/specs/012-collaboration/assigned-actions.md notify-action body caps: generous vs any real action, tight vs abuse.
-const ACTION_NAME_MAX = 200;
 const ACTION_DESCRIPTION_MAX = 2000;
 
 type DocumentMeta = { id: string; ownerId: string; teamId: string | null };
