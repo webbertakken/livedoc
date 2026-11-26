@@ -39,7 +39,7 @@ const pointer = (x: number, y: number, over: Record<string, unknown> = {}) =>
     ...over,
   }) as unknown as PointerEvent<HTMLElement>;
 
-function boxing({ choose = true, text = TEXT as PageText | null } = {}) {
+function boxing({ choose = true, text = TEXT }: { choose?: boolean; text?: PageText | null } = {}) {
   const choosing = { chooseAll: vi.fn() } as unknown as PdfPageChoosing;
   const focusMark = vi.fn();
   const texts: PdfPageTexts = { read: vi.fn(async () => text), tags: vi.fn() };
