@@ -98,6 +98,9 @@ export const PDF_CALLOUT_KNEE_PT = 12;
 /** (default) A stamp's line as placed, in characters: a display name and a time fit (marks.md "Limits"). Safe range:
  *  100 to 1,000. */
 export const PDF_STAMP_LINE_MAX_CHARS = 300;
+/** (default) One field of a stamp identity, in characters: four fit the 4 KB preferences with room (marks.md
+ *  "Limits"). Safe range: 32 to 128. */
+export const PDF_STAMP_IDENTITY_FIELD_MAX_CHARS = 64;
 /** (default) A custom stamp's picture as kept, 2 MiB: larger is drawn smaller first (custom-stamps.md "Limits"). */
 export const PDF_STAMP_MAX_BYTES = 2_097_152;
 /** (default) A custom stamp picture's longer side as kept: a third of an A4 page printed at 600 dpi. Safe range: 600 to

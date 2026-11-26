@@ -216,6 +216,19 @@ describe('a mark saved here, opened again', () => {
         lines: ['APPROVED', 'by Ada Lovelace, 22 Nov 2026, 14:02'],
         rect: [300, 650, 480, 695],
       },
+      {
+        ...base,
+        id: 'si',
+        kind: 'stamp',
+        colour: '#086f1e',
+        stamp: 'approved-by',
+        lines: [
+          'APPROVED',
+          'by Ada Lovelace, 22 Nov 2026, 14:02',
+          'Chief Engineer, Analytical Ltd',
+        ],
+        rect: [300, 500, 480, 555],
+      },
     ];
     const marks = values.map((value) => Mark.parse(value)!);
     expect(marks.every(Boolean)).toBe(true);
@@ -239,6 +252,23 @@ const pageWith = (annotations: readonly string[]) =>
     `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << >> /Annots [${annotations.map((_, n) => `${n + 4} 0 R`).join(' ')}] >>`,
     ...annotations,
   ]);
+
+describe('a file’s stamp of more lines than a stamp holds', () => {
+  it('keeps its first three', async () => {
+    opened(
+      await engine.open(
+        pageWith([
+          '<< /Type /Annot /Subtype /Stamp /NM (four) /Name /Approved /Rect [100 600 260 680] /C [0 0.5 0] /Contents (APPROVED\\nby Ada\\nChief\\nEngines) >>',
+        ]),
+      ),
+    );
+    const [read] = await engine.fileMarks(0);
+    expect(read?.mark).toMatchObject({
+      kind: 'stamp',
+      lines: ['APPROVED', 'by Ada', 'Chief'],
+    });
+  });
+});
 
 describe('a file’s mark changed here', () => {
   it('is written in place of the file’s own, under its own id, and read back changed', async () => {

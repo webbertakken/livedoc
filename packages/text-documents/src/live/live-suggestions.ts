@@ -62,7 +62,13 @@ export type SuggestionPartKind =
 export type SuggestionPart = {
   readonly kind: SuggestionPartKind;
   readonly text: string;
+  /** A format part: the text formatting attributes it changed, as its marks' `before` name them. */
+  readonly changed?: readonly string[];
+  /** An object's or a block's part: its element's name. */
+  readonly element?: string;
 };
+
+type ReadPart = { kind: SuggestionPartKind; text: string; changed?: string[]; element?: string };
 
 export type TextDocumentSuggestion = SuggestionMark & {
   /** The document tab its first part is in. */
@@ -100,6 +106,12 @@ export function isWellFormedMark(value: unknown): boolean {
   );
 }
 
+/** The text formatting attributes a format mark's `before` names. */
+const changedOf = (value: unknown): string[] => {
+  const before = isObject(value) ? value.before : undefined;
+  return isObject(before) ? Object.keys(before) : [];
+};
+
 const marksOf = (value: unknown, id: string): boolean => isSuggestionMark(value) && value.id === id;
 
 const elementsOf = (parent: Y.XmlFragment | Y.XmlElement): (Y.XmlElement | Y.XmlText)[] =>
@@ -120,12 +132,15 @@ const TEXT_KINDS: readonly [string, SuggestionPartKind][] = [
 
 /** The document's suggestions, in the tabs' order and the writing's, each with its parts. */
 function read(doc: Y.Doc): TextDocumentSuggestion[] {
-  const found = new Map<
-    string,
-    { mark: SuggestionMark; tab: string; parts: { kind: SuggestionPartKind; text: string }[] }
-  >();
-  let last: { kind: SuggestionPartKind; text: string } | null = null;
-  const add = (tab: string, value: unknown, kind: SuggestionPartKind, text: string) => {
+  const found = new Map<string, { mark: SuggestionMark; tab: string; parts: ReadPart[] }>();
+  let last: ReadPart | null = null;
+  const add = (
+    tab: string,
+    value: unknown,
+    kind: SuggestionPartKind,
+    text: string,
+    element?: string,
+  ) => {
     if (!isSuggestionMark(value)) return;
     let entry = found.get(value.id);
     if (!entry) {
@@ -138,12 +153,21 @@ function read(doc: Y.Doc): TextDocumentSuggestion[] {
       previous === last &&
       previous.kind === kind &&
       kind !== 'break' &&
-      kind !== 'join'
+      kind !== 'join' &&
+      element === undefined &&
+      previous.element === undefined
     ) {
       previous.text += text;
+      if (previous.changed)
+        previous.changed = [...new Set([...previous.changed, ...changedOf(value)])].sort();
       return;
     }
-    last = { kind, text };
+    last = {
+      kind,
+      text,
+      ...(kind === 'format' ? { changed: changedOf(value).sort() } : {}),
+      ...(element !== undefined ? { element } : {}),
+    };
     entry.parts.push(last);
   };
   const walk = (tab: string, parent: Y.XmlFragment | Y.XmlElement, inParagraph: boolean): void => {
@@ -172,8 +196,15 @@ function read(doc: Y.Doc): TextDocumentSuggestion[] {
         node.getAttribute(INSERTION_MARK),
         inParagraph ? 'insertion' : 'block-insertion',
         name,
+        name,
       );
-      add(tab, node.getAttribute(DELETION_MARK), inParagraph ? 'deletion' : 'block-deletion', name);
+      add(
+        tab,
+        node.getAttribute(DELETION_MARK),
+        inParagraph ? 'deletion' : 'block-deletion',
+        name,
+        name,
+      );
       if (!inParagraph) {
         last = null;
         walk(tab, node, false);

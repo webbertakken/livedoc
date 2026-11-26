@@ -76,6 +76,13 @@ export {
 export { MarkWords, type WordLine } from './mark-words';
 export { STAMPS, Stamps, type Stamp, type StampTone } from './stamps';
 export { StampLayout, type StampLine } from './stamp-layout';
+export {
+  STAMP_IDENTITY_FIELDS,
+  StampIdentity,
+  type StampIdentityField,
+  type StampIdentityRead,
+  type StampIdentityRefusal,
+} from './stamp-identity';
 export { StampTurn, type TurnWay } from './stamp-turn';
 export { HelveticaBold } from './helvetica-bold';
 export { TYPED_LINE_HEIGHT, TypedLayout, type PlacedLine, type TypedLine } from './typed-layout';

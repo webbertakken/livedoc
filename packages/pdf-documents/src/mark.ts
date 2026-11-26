@@ -231,8 +231,8 @@ export type Mark = TextMark | DrawingMark | LineMark | ShapeMark | PolyMark | Ty
 // A LiveDoc id, or a file mark's own: its `NM` as files name marks (a GUID in braces, dotted names) or `o:<object>`.
 const ID = /^[A-Za-z0-9_.:{}-]{1,64}$/;
 const STAMP_ID = /^[a-z0-9-]{1,64}$/;
-/** A stamp's lines: its name, and a dynamic stamp's second. */
-const STAMP_MAX_LINES = 2;
+/** A stamp's lines: its name, a dynamic stamp's second, and its stamper's identity. */
+export const STAMP_MAX_LINES = 3;
 const COLOUR = /^#[0-9a-f]{6}$/;
 /** A display name, cut as every name shown from a file is (security.md "Limits": PDF_NAME_MAX_CHARS). */
 const AUTHOR_MAX_CHARS = 255;

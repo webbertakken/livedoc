@@ -11,6 +11,7 @@ import { textDocumentUndoPlugins } from '@/lib/text-document/text-document-undo'
 import type { SuggestionRights } from '@/lib/text-document/text-document-suggestion-cards';
 import {
   MOVE_TO_NEXT_SUGGESTION,
+  SUGGESTION_GONE,
   useTextDocumentSuggestionCards,
 } from './useTextDocumentSuggestionCards';
 
@@ -151,6 +152,65 @@ describe('useTextDocumentSuggestionCards, selecting', () => {
     act(() => result.current.step(true));
     expect(onSelect).toHaveBeenCalledTimes(2);
     expect(result.current.selected).toBe('s2');
+    w.view.destroy();
+  });
+});
+
+describe('useTextDocumentSuggestionCards, going and settling', () => {
+  it('goes to a card of the tab shown, and tells who settles it', async () => {
+    vi.useFakeTimers({ toFake: ['requestAnimationFrame', 'cancelAnimationFrame'] });
+    const w = await writing();
+    const onSettled = vi.fn();
+    const { result } = renderHook(() =>
+      useTextDocumentSuggestionCards({
+        view: w.view,
+        doc: { current: w.doc },
+        ready: true,
+        rights: { accepts: true, ownKey: null },
+        subscribe: w.subscribe,
+        tab: 't.0',
+        onSettled,
+      }),
+    );
+    act(() => result.current.go('s2', 't.0'));
+    act(() => {
+      vi.advanceTimersByTime(20);
+    });
+    expect(result.current.selected).toBe('s2');
+    vi.useRealTimers();
+    act(() => result.current.reject('s2'));
+    expect(onSettled).toHaveBeenCalledWith('s2');
+    w.view.destroy();
+  });
+
+  it('shows another tab first, and says a suggestion is gone when it never arrives', async () => {
+    vi.useFakeTimers({ toFake: ['requestAnimationFrame', 'cancelAnimationFrame'] });
+    const w = await writing();
+    const showTab = vi.fn();
+    const say = vi.fn();
+    const { result, rerender } = renderHook(
+      ({ tab }: { tab: string }) =>
+        useTextDocumentSuggestionCards({
+          view: w.view,
+          doc: { current: w.doc },
+          ready: true,
+          rights: { accepts: true, ownKey: null },
+          subscribe: w.subscribe,
+          tab,
+          showTab,
+          say,
+        }),
+      { initialProps: { tab: 't.0' } },
+    );
+    act(() => result.current.go('elsewhere', 't.b'));
+    expect(showTab).toHaveBeenCalledWith('t.b');
+    rerender({ tab: 't.b' });
+    act(() => {
+      vi.advanceTimersByTime(2000);
+    });
+    expect(say).toHaveBeenCalledWith(SUGGESTION_GONE);
+    expect(result.current.selected).toBeNull();
+    vi.useRealTimers();
     w.view.destroy();
   });
 });

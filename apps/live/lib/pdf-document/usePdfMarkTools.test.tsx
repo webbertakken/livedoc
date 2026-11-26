@@ -128,6 +128,7 @@ function tools({
         focusPages,
         onProblem,
         onStroke,
+        identity: { identity: {}, keep: () => null },
       }),
     { initialProps: { selected, marking } },
   );

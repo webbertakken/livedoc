@@ -37,9 +37,10 @@ const QUOTE_SHOWN = 40;
 
 const GO = 'data-comment-go';
 
-/** A row's button's name: who began the thread and on what. */
+/** A row's button's name: who began the thread and on what, or who made the suggestion. */
 export function goLabel(row: ReviewThreadRow): string {
   const by = row.comments[0]?.authorName || 'someone';
+  if (row.kind === 'suggestion') return `Go to suggestion by ${by}`;
   const quote = row.label.length > QUOTE_SHOWN ? `${row.label.slice(0, QUOTE_SHOWN)}…` : row.label;
   return quote ? `Go to comment by ${by} on “${quote}”` : `Go to comment by ${by}`;
 }

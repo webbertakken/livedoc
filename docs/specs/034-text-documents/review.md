@@ -294,7 +294,22 @@ office kinds; this spec says what a text document puts in them.
   suggestion** (P then U) select the next or previous suggestion of the tab shown, after or before the selected one or
   else the caret, scroll its text into view and focus its card; past the last or before the first nothing moves
   (default, as comments).
-- Telemetry: `Element · Changed · TextDocumentSuggestionAccepted` and `…Rejected`, once per suggestion settled.
+- **Replies**: a selected card shows **Reply** to whoever may comment, as a thread's card does; the first reply
+  begins a thread tied to the suggestion, on its stretch, quoting the card's first line, and every reply after joins
+  it. The card shows the replies under its lines, with Edit, Delete and reactions as a thread's comments have them.
+  A thread tied to a suggestion is drawn in its card, never as a card of its own; settling the suggestion resolves
+  its thread, which waits in the comments panel; a thread whose suggestion is gone otherwise is drawn as a comment
+  thread on its stretch. The room judges a Participant's replies as any comment; the tie is never changed after the
+  thread begins.
+- **In the comments panel**: each open suggestion of every document tab is a row, after the threads of its tab in
+  the order the suggestions were made: the author's disc, name and time, the card's lines as its text, "n replies",
+  and "From the file" under a file's author. **Open** lists them, **Resolved** never; **For you** lists those with a
+  reply that mentions the reader or a reply from someone else after the reader's own. A press on a row goes to its
+  card as a press on a thread's row goes to its thread, showing its document tab first where it is another.
+- **In the files**: a suggestion's replies leave as a comment on its stretch and come back as a comment thread; the
+  tie to the suggestion is LiveDoc's own and is not kept (default).
+- Telemetry: `Element · Changed · TextDocumentSuggestionAccepted` and `…Rejected`, once per suggestion settled;
+  a reply counts as `Comment · Added · TextDocument`, as any comment.
 
 ### How a suggestion is kept
 

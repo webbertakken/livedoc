@@ -7,6 +7,7 @@ import {
   LINE_STYLES,
   MARK_KIND_LABELS,
   Mark,
+  STAMP_MAX_LINES,
   STAMP_TURNS,
   type StampTurnDegrees,
   type Box,
@@ -424,7 +425,11 @@ function valueOf(
     const fileName = file.written(64, (buffer, size) =>
       p.FPDFAnnot_GetStringValue(annotation, 'Name', buffer, size),
     );
-    const lines = mark.words.split('\n').filter((line) => /\S/.test(line));
+    // marks.md "Stamps": a stamp's lines are its Contents' lines, at most three; a file's of more keeps its first.
+    const lines = mark.words
+      .split('\n')
+      .filter((line) => /\S/.test(line))
+      .slice(0, STAMP_MAX_LINES);
     const stamp = (lines.length > 1 ? Stamps.dynamic : Stamps.standard).find(
       (each) => each.fileName === fileName.replace(/^\//, ''),
     );

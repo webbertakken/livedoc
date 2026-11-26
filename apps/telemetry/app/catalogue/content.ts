@@ -1404,6 +1404,23 @@ export const PDF_CUSTOM_STAMPS_MANAGED = chart(
   },
 );
 
+// marks.md "Stamps": a person's stamp identity, a field kept in Manage stamps; never its words.
+export const PDF_STAMP_IDENTITY_CHANGED = chart(
+  'Pdf',
+  'Changed',
+  'Stamp Identity Changed',
+  'A person’s title, organisation, unit or email for their dynamic stamps, kept in Manage stamps.',
+  {
+    types: [
+      'StampIdentity.Title',
+      'StampIdentity.Organisation',
+      'StampIdentity.Unit',
+      'StampIdentity.Email',
+    ],
+    rising: 'neutral',
+  },
+);
+
 export const PDF_CUSTOM_STAMPS_DELETED = chart(
   'Pdf',
   'Deleted',
@@ -1618,6 +1635,7 @@ export const PDF_DOCUMENTS: MetricStack = {
     PDF_REDOS,
     PDF_CUSTOM_STAMPS_CREATED,
     PDF_CUSTOM_STAMPS_MANAGED,
+    PDF_STAMP_IDENTITY_CHANGED,
     PDF_CUSTOM_STAMPS_DELETED,
     PDFS_EXPORTED,
     PDF_PAGE_DISPLAYS,

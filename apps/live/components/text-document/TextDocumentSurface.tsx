@@ -961,6 +961,7 @@ export function TextDocumentSurface({
     commentsPanel,
     suggestions,
     actions: reviewActions,
+    go: goToReview,
   } = useTextDocumentReview({
     view: editorView,
     activeView,
@@ -1317,7 +1318,7 @@ export function TextDocumentSurface({
               ...commentsPanel,
               self: { key: commenter?.key ?? '', userId: mentions?.selfUserId ?? null },
               canComment: commenter !== null,
-              go: threadKeys.go,
+              go: goToReview,
               reopen: (id) => threads.resolve(id, false),
             }}
           />

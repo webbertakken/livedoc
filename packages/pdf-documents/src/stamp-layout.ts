@@ -1,5 +1,5 @@
 // How a stamp is drawn in LiveDoc's style (docs/specs/035-pdf-documents/marks.md "Stamps"): a box with rounded corners
-// and a border, the stamp's name in capitals in Helvetica Bold, a dynamic stamp's second line in Helvetica, each line
+// and a border, the stamp's name in capitals in Helvetica Bold, a dynamic stamp's second and third lines in Helvetica, each line
 // centred; in the mark faces where Helvetica cannot write a line ("Words in every script"). Its natural size is what its words need; in a box of any other size it is scaled, kept in proportion and
 // centred. Pure, so the surface's overlay, the canvas pictures and the appearance a bake writes draw one stamp the same.
 import type { PagePoint } from './engine-contract';
@@ -32,13 +32,15 @@ const INSET = STAMP_BORDER_PT + STAMP_PADDING_PT;
 const NAME_HIGH = (STAMP_NAME_PT * Helvetica.ascent) / 1000;
 const DETAIL_ASCENT = (STAMP_DETAIL_PT * Helvetica.ascent) / 1000;
 const DETAIL_HIGH = (STAMP_DETAIL_PT * (Helvetica.ascent + Helvetica.descent)) / 1000;
+/** What ends a third line cut to fit. */
+const ELLIPSIS = '…';
 
 /** A stamp's line placed on the page, with its size and face. */
 export type StampLine = PlacedLine & { readonly size: number; readonly bold: boolean };
 
 type Stamped = Pick<StampMark, 'rect' | 'lines'>;
 
-/** Each line's size and face: the name bold, the second line plain and small. */
+/** Each line's size and face: the name bold, the second and third lines plain and small. */
 const faceOf = (at: number) =>
   at === 0
     ? { face: HelveticaBold, size: STAMP_NAME_PT, bold: true }
@@ -71,8 +73,29 @@ export const StampLayout = {
   /** The size a stamp's words need, in points, its border and room included. */
   natural: (lines: readonly string[]): { width: number; height: number } => ({
     width: 2 * INSET + Math.max(...lines.map((text, at) => widthOf(text, at, settingOf(lines)))),
-    height: 2 * INSET + NAME_HIGH + (lines.length > 1 ? STAMP_LINE_GAP_PT + DETAIL_HIGH : 0),
+    height: 2 * INSET + NAME_HIGH + (lines.length - 1) * (STAMP_LINE_GAP_PT + DETAIL_HIGH),
   }),
+
+  /** A stamp's lines as placed: a third line wider than the widest other cut a character at a time, ending "…". */
+  clip: (lines: readonly string[]): readonly string[] => {
+    if (lines.length < 3) return lines;
+    const [name, detail, third] = lines as [string, string, string];
+    const widest = Math.max(
+      ...[name, detail].map((text, at) => widthOf(text, at, settingOf(lines))),
+    );
+    const fits = (text: string): boolean =>
+      widthOf(text, 2, settingOf([name, detail, text])) <= widest;
+    if (fits(third)) return lines;
+    const characters = Array.from(third);
+    let kept = characters.length;
+    let cut = ELLIPSIS;
+    while (kept > 0) {
+      kept -= 1;
+      cut = `${characters.slice(0, kept).join('').trimEnd()}${ELLIPSIS}`;
+      if (fits(cut)) break;
+    }
+    return [name, detail, cut];
+  },
 
   /** How much a stamp is scaled from its natural size to fit its box, kept in proportion. */
   scale: ({ rect: [left, bottom, right, top], lines }: Stamped): number => {
@@ -97,7 +120,12 @@ export const StampLayout = {
         width,
         rtl: false,
         x: middle - width / 2,
-        y: at === 0 ? name : name - (STAMP_LINE_GAP_PT + DETAIL_ASCENT) * scale,
+        y:
+          at === 0
+            ? name
+            : name -
+              (STAMP_LINE_GAP_PT + DETAIL_ASCENT + (at - 1) * (STAMP_LINE_GAP_PT + DETAIL_HIGH)) *
+                scale,
         size: size * scale,
         bold,
       };

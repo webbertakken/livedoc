@@ -18,6 +18,7 @@ import { CUSTOM_STAMP_COPY } from './make-custom-stamp';
 import { addCustomStamp, type StampMade } from './pdf-stamp';
 import { TOO_MANY_MARKS_COPY } from './pdf-surface-copy';
 import { useStampPictureUrls, type StampPictureUrl } from './stamp-picture-urls';
+import type { PdfStampIdentity } from './usePdfStampIdentity';
 import type { PdfDocumentOpen } from './usePdfDocument';
 
 type Ready = Pick<
@@ -45,9 +46,13 @@ export type CustomStampDialogProps = {
   readonly onMade: (stamp: CustomStampRecord) => void;
 };
 
-/** What Manage stamps, the dialog, is told: their stamps, their pictures as drawn, and how to make another. */
+/** What Manage stamps, the dialog, is told: their identity, their stamps, their pictures as drawn, and how to make
+ *  another. */
 export type ManageStampsDialogProps = {
   readonly open: boolean;
+  // Whether custom stamps are offered: a deployment that stores files. Identity is offered either way.
+  readonly customs: boolean;
+  readonly identity: PdfStampIdentity;
   readonly ownerId: string;
   readonly stamps: readonly CustomStampRecord[];
   readonly pictures: ReadonlyMap<BlobKey, StampPictureUrl>;
@@ -59,13 +64,16 @@ export type ManageStampsDialogProps = {
 export function usePdfCustomStamps({
   home,
   offered,
+  identity,
   cellOf,
   take,
 }: {
   // Null where they are not offered: a deployment without file storage.
   home: PdfCustomStampsHome | null;
-  // Whether the Stamp tool is offered now.
+  // Whether the Stamp tool is offered now: Manage stamps is offered with it.
   offered: boolean;
+  // The person's stamp identity, which Manage stamps fills in.
+  identity: PdfStampIdentity;
   // A stamp's cell in the grid, by its id.
   cellOf: (id: string) => string;
   // Takes a stamp by its id, the Stamp tool in hand.
@@ -194,14 +202,16 @@ export function usePdfCustomStamps({
 
   const manageDialog = useMemo<ManageStampsDialogProps>(
     () => ({
-      open: managing && enabled,
+      open: managing && offered,
+      customs: enabled,
+      identity,
       ownerId,
       stamps,
       pictures: urls,
       onClose: () => setManaging(false),
       onCreate: openDialog,
     }),
-    [managing, enabled, ownerId, stamps, urls, openDialog],
+    [managing, offered, enabled, identity, ownerId, stamps, urls, openDialog],
   );
 
   return { enabled, stamps, grid, openDialog, openManage, place, dialog, manageDialog };

@@ -963,6 +963,14 @@ export const EXACT: Readonly<Record<string, string>> = {
     'Someone placed one of their own custom stamps, a picture they made a stamp, on a PDF page.',
   'Pdf|Created|CustomStamp':
     'Someone made a custom stamp of their own from a picture or a page of a PDF.',
+  'Pdf|Changed|StampIdentity.Title':
+    'Someone kept the title their dynamic stamps show, in Manage stamps.',
+  'Pdf|Changed|StampIdentity.Organisation':
+    'Someone kept the organisation their dynamic stamps show, in Manage stamps.',
+  'Pdf|Changed|StampIdentity.Unit':
+    'Someone kept the unit of their stamp identity, in Manage stamps.',
+  'Pdf|Changed|StampIdentity.Email':
+    'Someone kept the email of their stamp identity, in Manage stamps.',
   'Pdf|Changed|CustomStamp.Renamed':
     'Someone renamed one of their own custom stamps in Manage stamps.',
   'Pdf|Changed|CustomStamp.Moved':

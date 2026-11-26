@@ -190,6 +190,67 @@ export function useTextDocumentThreads({
     [ready, docRef, draft, commenter, tab, comment, mentioned],
   );
 
+  // A reply on a suggestion's card (review.md "Suggestion cards", Replies): its open tied thread takes it, else it begins
+  // one on the suggestion's stretch, quoting the card's first line.
+  const replyToSuggestion = useCallback(
+    (
+      card: {
+        readonly id: string;
+        readonly from: number;
+        readonly to: number;
+        readonly lines: readonly string[];
+      },
+      text: string,
+      mentions: readonly CommentMention[] = [],
+      assignee?: CommentMention,
+    ) => {
+      const doc = ready ? docRef.current : null;
+      if (!doc || !commenter || !view || view.isDestroyed) return;
+      const tied = threads.find((t) => t.suggestion === card.id && !t.resolved);
+      if (tied) {
+        if (tied.comments.length >= TEXT_DOCUMENT_THREAD_COMMENTS_MAX) return say(COMMENTS_FULL);
+        if (!LiveThreads.reply(doc, tied.id, comment(text, mentions, assignee), THREADS_ORIGIN))
+          return;
+      } else {
+        if (threads.length >= TEXT_DOCUMENT_THREADS_MAX) return say(COMMENTS_FULL);
+        // A card read before the writing last changed may stand past its end.
+        const inside = card.to <= view.state.doc.content.size;
+        const anchors = inside ? anchorsOf(view.state, card.from, card.to) : null;
+        if (!anchors) return say(NOTHING_TO_COMMENT_ON);
+        const begun = LiveThreads.begin(
+          doc,
+          {
+            id: crypto.randomUUID(),
+            tab,
+            start: anchors.start,
+            end: anchors.end,
+            quote: card.lines[0] ?? '',
+            comment: comment(text, mentions, assignee),
+            suggestion: card.id,
+          },
+          THREADS_ORIGIN,
+        );
+        if (!begun) return;
+      }
+      track('Comment', 'Added', 'TextDocument');
+      mentioned(text, mentions, assignee);
+      debugLog('[text-document] suggestion replied', { suggestion: card.id, began: !tied });
+    },
+    [ready, docRef, commenter, view, threads, tab, comment, mentioned, say],
+  );
+
+  // A suggestion settled: its open tied threads are resolved, waiting in the comments panel.
+  const resolveTied = useCallback(
+    (suggestion: string) => {
+      const doc = ready ? docRef.current : null;
+      if (!doc) return;
+      for (const thread of threads)
+        if (thread.suggestion === suggestion && !thread.resolved)
+          LiveThreads.resolve(doc, thread.id, true, THREADS_ORIGIN);
+    },
+    [ready, docRef, threads],
+  );
+
   const cancel = useCallback(() => {
     setDraft(null);
     if (view && !view.isDestroyed) view.focus();
@@ -315,6 +376,8 @@ export function useTextDocumentThreads({
     send,
     cancel,
     reply,
+    replyToSuggestion,
+    resolveTied,
     edit,
     remove,
     resolve,

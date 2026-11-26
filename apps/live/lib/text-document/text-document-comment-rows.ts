@@ -7,13 +7,19 @@ import type { Comment, CommentMention } from '@livedoc/document';
 import {
   FIRST_DOCUMENT_TAB_ID,
   drawnMentions,
+  LiveSuggestions,
   LiveThreads,
   type DocumentTab,
+  type TextDocumentSuggestion,
   type TextDocumentComment,
   type TextDocumentThread,
   threadAssignment,
 } from '@livedoc/text-documents';
 import type { ReviewThreadRow } from '@/lib/office/review/comment-filters';
+import { cardLines, cardPartsOf } from './text-document-suggestion-cards';
+
+/** A suggestion's row id in the comments panel (review.md "Suggestion cards", In the comments panel). */
+export const SUGGESTION_ROW = 'suggestion:';
 
 /** A thread's assignee: its latest comment's that carries one well formed, else none (review.md "Assigning"). */
 export const threadAssignee = (thread: {
@@ -41,27 +47,77 @@ export const FROM_THE_FILE = 'From the file';
 export const commentNoteOf = (c: Comment): string | null =>
   (c as { fromFile?: true }).fromFile ? FROM_THE_FILE : null;
 
-/** The comments panel's rows: by tab in the outline's order (the first tab first, unknown tabs last), then as read. */
+/** A suggestion as its row's first comment: its card's lines, by its author, when it was made. */
+function suggestionComment(suggestion: TextDocumentSuggestion): Comment & { fromFile?: true } {
+  const { author } = suggestion;
+  return {
+    id: `${SUGGESTION_ROW}${suggestion.id}`,
+    text: cardLines(cardPartsOf(suggestion.parts)).join('\n'),
+    createdAt: suggestion.at,
+    authorName: author.name,
+    authorColor: author.colour,
+    ...(author.key ? { authorId: author.key } : {}),
+    ...(author.fromFile ? { fromFile: true as const } : {}),
+  };
+}
+
+/**
+ * The comments panel's rows: by tab in the outline's order (the first tab first, unknown tabs last); in a tab its
+ * threads as read, then its open suggestions as made, each with its tied thread's comments under it. A thread tied to
+ * an open suggestion is no row of its own.
+ */
 export function commentRows(
   doc: Y.Doc,
   threads: readonly TextDocumentThread[],
   tabs: readonly DocumentTab[],
+  suggestions: readonly TextDocumentSuggestion[] = LiveSuggestions.read(doc),
 ): ReviewThreadRow[] {
   const order = new Map(tabs.map((tab, index) => [tab.id, index]));
   if (!order.has(FIRST_DOCUMENT_TAB_ID)) order.set(FIRST_DOCUMENT_TAB_ID, -1);
   const rank = (tab: string) => order.get(tab) ?? Number.MAX_SAFE_INTEGER;
-  return threads
-    .map((thread, index) => ({ thread, index }))
-    .sort((a, b) => rank(a.thread.tab) - rank(b.thread.tab) || a.index - b.index)
-    .map(({ thread }) => ({
-      id: thread.id,
-      label: thread.quote,
-      deleted: LiveThreads.anchor(doc, thread)?.deleted ?? false,
-      resolved: thread.resolved,
-      group: thread.tab,
-      assignee: threadAssignee(thread),
-      comments: thread.comments.map(sharedComment),
+  const open = new Set(suggestions.map((s) => s.id));
+  const tied = new Map(
+    threads
+      .filter((t) => t.suggestion !== undefined && open.has(t.suggestion) && !t.resolved)
+      .map((t) => [t.suggestion!, t]),
+  );
+  const threadRows = threads
+    .filter(
+      (thread) => !(thread.suggestion !== undefined && tied.get(thread.suggestion) === thread),
+    )
+    .map((thread, index) => ({
+      index,
+      at: 0,
+      row: {
+        id: thread.id,
+        label: thread.quote,
+        deleted: LiveThreads.anchor(doc, thread)?.deleted ?? false,
+        resolved: thread.resolved,
+        group: thread.tab,
+        assignee: threadAssignee(thread),
+        comments: thread.comments.map(sharedComment),
+      } satisfies ReviewThreadRow,
     }));
+  const suggestionRows = suggestions.map((suggestion, index) => ({
+    index: threads.length + index,
+    at: suggestion.at,
+    row: {
+      id: `${SUGGESTION_ROW}${suggestion.id}`,
+      label: '',
+      deleted: false,
+      resolved: false,
+      group: suggestion.tab,
+      assignee: null,
+      kind: 'suggestion',
+      comments: [
+        suggestionComment(suggestion),
+        ...(tied.get(suggestion.id)?.comments.map(sharedComment) ?? []),
+      ],
+    } satisfies ReviewThreadRow,
+  }));
+  return [...threadRows, ...suggestionRows]
+    .sort((a, b) => rank(a.row.group) - rank(b.row.group) || a.at - b.at || a.index - b.index)
+    .map(({ row }) => row);
 }
 
 /** The comments panel's third list: each document tab by its name, its emoji before it. */

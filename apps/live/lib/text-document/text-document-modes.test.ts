@@ -24,7 +24,7 @@ describe("a text document's modes", () => {
     expect(startingMode(TEXT_DOCUMENT_MODES, 'view')).toBe('viewing');
   });
 
-  it('never draws more than the level, but Suggesting 19s proposals', () => {
+  it('never draws more than the level, but Suggesting’s proposals', () => {
     expect(levelInMode(TEXT_DOCUMENT_MODES, 'edit', 'editing')).toBe('edit');
     expect(levelInMode(TEXT_DOCUMENT_MODES, 'edit', 'viewing')).toBe('view');
     // Suggesting draws an Editor's menus, for a Participant too: their changes are proposals the room judges

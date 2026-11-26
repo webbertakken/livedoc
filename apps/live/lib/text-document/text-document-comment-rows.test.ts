@@ -155,3 +155,65 @@ describe('threadAssignee', () => {
     expect(row!.assignee).toEqual(priya);
   });
 });
+
+// review.md "Suggestion cards", In the comments panel: each open suggestion a row after its tab's threads, its replies
+// under it; a thread tied to an open suggestion is no row of its own.
+describe('commentRows with suggestions', () => {
+  const BEN = { key: 'k-ben', name: 'Ben', colour: '#16a34a' };
+  it('lists each open suggestion after its tab’s threads, its tied thread’s comments under it', () => {
+    const { doc, node, begin } = documentWith('quarterly results are in');
+    node.format(0, 9, { insertion: { id: 's2', at: 9, author: BEN } });
+    node.format(10, 7, {
+      deletion: { id: 's1', at: 5, author: { name: 'Word', colour: '#6b7280', fromFile: true } },
+    });
+    begin('plain', 't.0', 18, 21, 3);
+    LiveThreads.begin(
+      doc,
+      {
+        id: 'tied',
+        tab: 't.0',
+        ...LiveThreads.anchorFor(node, 0, 9),
+        quote: 'Add: “quarterly”',
+        comment: { ...ADA, id: 'r1', text: 'why?', at: 10 },
+        suggestion: 's2',
+      },
+      null,
+    );
+    const rows = commentRows(doc, LiveThreads.read(doc), []);
+    expect(rows.map((r) => r.id)).toEqual(['plain', 'suggestion:s1', 'suggestion:s2']);
+    expect(rows[1]).toMatchObject({ label: '', group: 't.0', resolved: false, deleted: false });
+    expect(rows[1]!.comments).toEqual([
+      {
+        id: 'suggestion:s1',
+        text: 'Delete: “results”',
+        createdAt: 5,
+        authorName: 'Word',
+        authorColor: '#6b7280',
+        fromFile: true,
+      },
+    ]);
+    expect(rows[2]!.comments.map((c) => [c.id, c.text, c.authorId])).toEqual([
+      ['suggestion:s2', 'Add: “quarterly”', 'k-ben'],
+      ['r1', 'why?', 'k'],
+    ]);
+  });
+
+  it('lists a tied thread whose suggestion is gone as a thread', () => {
+    const { doc, node } = documentWith('quarterly results');
+    LiveThreads.begin(
+      doc,
+      {
+        id: 'tied',
+        tab: 't.0',
+        ...LiveThreads.anchorFor(node, 0, 9),
+        quote: 'Add: “quarterly”',
+        comment: { ...ADA, id: 'r1', at: 10 },
+        suggestion: 'gone',
+      },
+      null,
+    );
+    expect(commentRows(doc, LiveThreads.read(doc), []).map((r) => [r.id, r.label])).toEqual([
+      ['tied', 'Add: “quarterly”'],
+    ]);
+  });
+});
