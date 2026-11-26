@@ -356,6 +356,17 @@ describe('a sheet’s charts through later changes', () => {
     expect(sent).toHaveLength(1);
   });
 
+  it('refuses clearing a chart by id on a Plan Sheet', async () => {
+    const { api } = setup({ elements: [SHEET_EL, CHART] });
+    const result = await changeSheet(
+      api,
+      DOC_A,
+      { sheet: 'Sheet 1', changes: [{ op: 'clear_charts', id: 'c1' }] },
+      'mcp',
+    );
+    expect(result.refusal?.code).toBe('not_spreadsheet');
+  });
+
   it('clears only the charts reading a range, refuses a range it cannot read, and sends nothing with nothing to do', async () => {
     const { api, sent } = setup({ elements: [SHEET_EL, CHART] });
     const none = await changeSheet(

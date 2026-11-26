@@ -404,7 +404,9 @@ tells them.
     unless false), `alt` and `lines` (a scatter's series drawn as lines, by name, kept by their columns); `replace`
     names a chart of the sheet by id to put this one in its place, its id and paint order kept (`chart_not_found`
     when it is none). The title options draw on a Plan chart too.
-  - `clear_charts` takes the sheet's charts off: those reading cells of a range, or every one.
+  - `clear_charts` takes the sheet's charts off: those reading cells of a range, or every one; or, given `id`, the
+    one chart of that id, the rest kept (`chart_not_found` when it is none; `write_invalid` with a range too). On a
+    Plan Sheet an `id` is refused (`not_spreadsheet`).
 - **`read_sheet` in a spreadsheet** answers the sheet's charts: id, type, range and columns in A1, the cell it sits
   on, size, titles, legend, values, axis, alt and the series drawn as lines.
 - **Views** ([A spreadsheet's views](../024-agents/document-views.md#a-spreadsheets-views)): `read_document` and

@@ -537,8 +537,16 @@ const sheetChange = z.discriminatedUnion('op', [
   z.object({
     op: z
       .literal('clear_charts')
-      .describe('Take the sheet’s charts off: those reading cells of a range, or every one.'),
+      .describe(
+        'Take the sheet’s charts off: those reading cells of a range, the one chart an id names, or every one.',
+      ),
     range: rangeArg.optional().describe('Only the charts reading cells of this range.'),
+    id: z
+      .string()
+      .optional()
+      .describe(
+        'A spreadsheet only: only the chart of this id (read_sheet lists them), the rest kept; never with range.',
+      ),
   }),
   z.object({
     op: z

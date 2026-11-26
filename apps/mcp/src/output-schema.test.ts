@@ -238,7 +238,12 @@ async function api(request: Request): Promise<Response> {
     return new Response('tab t1 "Tab 1" · 0 elements · rev 3', { headers: { ETag: 'W/"3"' } });
   }
   if (path === '/documents' && request.method === 'GET') {
-    return json({ documents: [{ id: 'd1', name: 'Roadmap', savedAt: 1_700_000_000_000 }] });
+    return json({
+      documents: [
+        { id: 'd1', name: 'Roadmap', savedAt: 1_700_000_000_000 },
+        { id: 'd2', name: 'Costs', savedAt: 1_700_000_000_000, spreadsheet: true },
+      ],
+    });
   }
   if (path === '/teams') return json({ teams: [] });
   if (path.endsWith('/workbook/conversion'))

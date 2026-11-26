@@ -22,6 +22,12 @@ export const findDocumentsOutput = {
           .string()
           .describe('Where it lives: "personal", or the name of the team whose library holds it.'),
         url,
+        spreadsheet: z
+          .literal(true)
+          .optional()
+          .describe(
+            'Set for a spreadsheet (create_spreadsheet’s kind); absent for any other document.',
+          ),
       }),
     )
     .describe('The matches, most relevant first.'),

@@ -214,8 +214,10 @@ the token identity on those reads — [Public API and API tokens §3.4](public-a
 merges, and ranks newest-saved first. The team sweep is best-effort: a teams
 failure degrades to personal-only results, never an error. Input: optional
 `query` (name match), `limit`. Returns a compact list:
-`{ id, name, updatedAt, library, url }` where `library` is `personal` or the
-team's name and `url` is the `docs.nu` deep link to open it. **No image
+`{ id, name, updatedAt, library, url, spreadsheet? }` where `library` is `personal` or the
+team's name, `url` is the `docs.nu` deep link to open it, and `spreadsheet` is `true` for a
+[spreadsheet](../029-sheets/spreadsheet.md) (absent for any other document), as its library lists it: an agent
+tells a spreadsheet from a document of the same name without reading either. **No image
 here** — kept lightweight so the model can scan many results cheaply, then
 `read_document` the one it wants.
 
@@ -888,7 +890,7 @@ scale, first? }` and `clear_conditional_formats` `{ range? }` ([Data validation]
   `merge` `{ range, across? }`, `unmerge` `{ range }`, `border` `{ range, sides, color, width, style }`, `filter`
   `{ range | null }`, `chart` `{ type, range, columns?, at?, width?, height?, palette?, lines?, title?, xAxisTitle?,
 yAxisTitle?, legend?, values?, axis?, alt?, replace? }` (`lines`: series drawn as lines, by header name, scatter only; [pie-chart.md](../009-elements/pie-chart.md#lines-set-by-an-agent)), `clear_charts`
-  `{ range? }`, `design` `{ design }`, and in a spreadsheet `move` `{ after }` and `hide` `{ hidden }`
+  `{ range? | id? }`, `design` `{ design }`, and in a spreadsheet `move` `{ after }` and `hide` `{ hidden }`
   ([Shaping a sheet, A design](../029-sheets/sheet-store.md#agents); `sheet-shape-change.ts`, `sheet-design.ts`,
   `sheet-charts.ts`, `sheet-chart-follow.ts`). Inserted rows take their neighbour's formats, columns its look. After the
   writes, one changeset on the sheet's tab removes the charts `clear_charts` took, moves those a change left over
@@ -1172,7 +1174,7 @@ says why by its status (no such tab, view only, the last tab).
 
 | Tool                  | Result object                                                                                                                                                                                                           |
 | --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `find_documents`      | `count`, `documents[]` of `{ id, name, updatedAt, library, url }`                                                                                                                                                       |
+| `find_documents`      | `count`, `documents[]` of `{ id, name, updatedAt, library, url, spreadsheet? }`                                                                                                                                         |
 | `read_document`       | `id`, `name`, `tab { id, name, rev, ... }`, `tabs[]` of `{ id, name }` (every tab, in order), `url`                                                                                                                     |
 | `list_templates`      | `categories[]` of `{ id, label, description }`, `templates[]` of `{ kind, title, description, category }`                                                                                                               |
 | `create_document`     | `id` and `documentId` (the same), `name`, `tabCount`, `tabIds[]`, `folder`, `url`                                                                                                                                       |

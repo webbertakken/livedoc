@@ -343,7 +343,7 @@ A chart is the sheet's own, reading its range live, its top-left on the cell at 
          lines: ["Pareto"], axis: true}
 A scatter's first column of numbers is its x; lines draws those series as lines, by name.
 read_sheet lists the charts with their ids; chart {..., replace: "<id>"} rewrites one in place,
-clear_charts {} takes them all off. add_sheet {title, after} adds a sheet after another.
+clear_charts {id: "<id>"} takes one off, clear_charts {} all. add_sheet {title, after} adds a sheet after another.
 
 Read back with read_sheet: each cell's input, the value worked out, what it shows. Cheaper:
 read_document on any of its tabs outlines the workbook (sheets, used ranges, rules, charts);
