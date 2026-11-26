@@ -13,7 +13,6 @@ const ROOT = fileURLToPath(new URL('../../..', import.meta.url));
 const NOT_BUILT: Record<string, string> = {
   PDF_INLINE_MAX_BYTES: 'pictures a change brings (marks and objects)',
   PDF_SEARCH_TEXT_MAX_CHARS: 'the file’s search text (the engine in the api Worker)',
-  PDF_PRESENCE_FRESH_MS: 'a selection’s name label (reading)',
 };
 
 /** The table's rows: each constant and its value. */

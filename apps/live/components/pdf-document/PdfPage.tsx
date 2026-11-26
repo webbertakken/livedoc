@@ -34,7 +34,9 @@ import { pictureScale, type PdfPageDrawer } from '@/lib/pdf-document/pdf-page-dr
 import { PdfMarkHandles } from './PdfMarkHandles';
 import { PdfMarksOverlay, type PdfMarkReshaping } from './PdfMarksOverlay';
 import { keyResize } from '@/lib/pdf-document/pdf-mark-handles';
-import { linkBox, PdfPageLinks } from './PdfPageLinks';
+import { linkBox, PdfPageLinks, percentStyle } from './PdfPageLinks';
+import { PdfPeerHolds } from './PdfPeerHolds';
+import type { PdfPeerHold } from '@/lib/pdf-document/pdf-presence-held';
 import { PdfPageReading, pageRegionName } from './PdfPageReading';
 import { PdfPageTiles, type PdfTileSource } from './PdfPageTiles';
 import { paintPicture, REDRAW_SETTLE_MS } from '@/lib/pdf-document/pdf-paint';
@@ -70,14 +72,6 @@ type Drawn = {
   by: PdfPageDrawer;
 };
 
-/** A box in percent of the page, as the page's overlays are placed. */
-const percentBox = (box: { left: number; top: number; width: number; height: number }) => ({
-  left: `${box.left}%`,
-  top: `${box.top}%`,
-  width: `${box.width}%`,
-  height: `${box.height}%`,
-});
-
 export const PdfPage = memo(function PdfPage({
   index,
   count,
@@ -110,6 +104,7 @@ export const PdfPage = memo(function PdfPage({
   found,
   onDoubleTap,
   register,
+  holds,
 }: {
   index: number;
   count: number;
@@ -164,6 +159,8 @@ export const PdfPage = memo(function PdfPage({
   onDoubleTap: (index: number, tap: PdfPageTap) => void;
   // Hands the page's box to whoever watches which pages are near view.
   register: (index: number, element: HTMLElement | null) => void;
+  // The marks of the page collaborators hold, outlined in their colours (live-editing-and-storage.md "Presence").
+  holds: readonly PdfPeerHold[];
 }) {
   const marks = changeable.marks;
   const canvas = useRef<HTMLCanvasElement | null>(null);
@@ -463,6 +460,17 @@ export const PdfPage = memo(function PdfPage({
           reshaping={reshaping}
         />
       ) : null}
+      {matrix && holds.length > 0 ? (
+        <PdfPeerHolds
+          holds={holds}
+          matrix={matrix}
+          width={shown.width}
+          height={shown.height}
+          gap={PDF_MARK_OUTLINE_PX / cssPerPoint}
+          target={box}
+          pointAt={pointAt}
+        />
+      ) : null}
       {matrix ? (
         <PdfPageMarks
           index={index}
@@ -481,7 +489,7 @@ export const PdfPage = memo(function PdfPage({
           aria-hidden
           data-pdf-mark-box
           className="pointer-events-none absolute border border-dashed border-(--office-focus)"
-          style={percentBox(linkBox(matrix, boxing.box, shown.width, shown.height))}
+          style={percentStyle(linkBox(matrix, boxing.box, shown.width, shown.height))}
         />
       ) : null}
       {matrix && sizing && sized && !markPress.moving ? (

@@ -32,9 +32,12 @@ import type { PdfFindTints } from '@/lib/pdf-document/usePdfFind';
 import type { PdfPageTexts } from '@/lib/pdf-document/pdf-page-texts';
 import type { PdfPageTap } from '@/lib/pdf-document/usePdfColumnZoom';
 import type { PdfMarksChosen, PdfPageChoosing } from '@/lib/pdf-document/usePdfMarkSelection';
+import { peerHoldsOn, type PdfPeerHold } from '@/lib/pdf-document/pdf-presence-held';
+import type { PdfPresencePeer } from '@/lib/pdf-document/pdf-presence-store';
 
 const NOTHING_SELECTED: readonly Quad[] = [];
 const NO_MARKS_CHOSEN: readonly string[] = [];
+const NO_HOLDS: readonly PdfPeerHold[] = [];
 
 export function PdfPages({
   attach,
@@ -62,6 +65,7 @@ export function PdfPages({
   onFollow,
   found,
   onDoubleTap,
+  peers,
 }: {
   // Hands the scroller to the view that lays the pages out and scrolls them.
   attach: (element: HTMLDivElement | null) => void;
@@ -103,6 +107,8 @@ export function PdfPages({
   found: ReadonlyMap<number, PdfFindTints>;
   // Where a finger's double tap on a page goes (usePdfColumnZoom.ts).
   onDoubleTap: (index: number, tap: PdfPageTap) => void;
+  // The collaborators on this tab, and what each holds (live-editing-and-storage.md "Presence").
+  peers: readonly PdfPresencePeer[];
 }) {
   const scroller = useRef<HTMLDivElement | null>(null);
   const ref = useCallback(
@@ -136,6 +142,16 @@ export function PdfPages({
   }, [drawer, viewStore]);
   const byPage = useSyncExternalStore(marks.subscribe, marks.get, marks.get);
   const linkName = useCallback((target: LinkTarget) => pdfLinkName(target, pages), [pages]);
+  // The marks collaborators hold, by page name: only a page someone holds a mark of is drawn again as they move.
+  const holds = useMemo(() => {
+    const out = new Map<string, readonly PdfPeerHold[]>();
+    if (peers.length === 0) return out;
+    for (const [page, changeable] of byPage) {
+      const found = peerHoldsOn(peers, changeable.marks);
+      if (found.length > 0) out.set(page, found);
+    }
+    return out;
+  }, [peers, byPage]);
 
   return (
     <div
@@ -187,6 +203,7 @@ export function PdfPages({
                   found={found.get(box.index) ?? null}
                   onDoubleTap={onDoubleTap}
                   register={register}
+                  holds={holds.get(page.name) ?? NO_HOLDS}
                 />
               );
             })

@@ -47,7 +47,8 @@ import { usePdfFullScreen } from '@/lib/pdf-document/usePdfFullScreen';
 import { PdfLookContext } from '@/lib/pdf-document/pdf-look';
 import { usePdfReadMode } from '@/lib/pdf-document/usePdfReadMode';
 import { usePdfPrint, type PdfPrintSource } from '@/lib/pdf-document/usePdfPrint';
-import { pdfPresencePeersOf, setLocalPdfPresence } from '@/lib/pdf-document/pdf-presence-store';
+import { pdfPresencePeersOf, usePdfPresencePeers } from '@/lib/pdf-document/pdf-presence-store';
+import { usePdfPresencePlace } from '@/lib/pdf-document/usePdfPresencePlace';
 import { DOWNLOAD_PDF, GO_TO_PAGE, PDF_MENUS, REDO, UNDO } from '@/lib/pdf-document/pdf-menus';
 import { pdfLimitedLevel } from '@/lib/pdf-document/pdf-limits';
 import { PDF_MODES } from '@/lib/pdf-document/pdf-modes';
@@ -254,20 +255,6 @@ export function PdfDocumentSurface({
     [undo, pages, showPage],
   );
 
-  // "Presence": the page in view and the mode, said for the tab this person is on, and taken back on leaving it.
-  const inView = useRef(0);
-  const publishPlace = useCallback(() => {
-    if (!present || !pages) return;
-    const page = pages[Math.min(inView.current, pages.length - 1)];
-    if (page) setLocalPdfPresence(tabId, { page: page.name, mode, held: null });
-  }, [present, pages, tabId, mode]);
-  useEffect(publishPlace, [publishPlace]);
-  useEffect(() => (present ? () => setLocalPdfPresence(tabId, null) : undefined), [present, tabId]);
-  const inViewNow = viewer.page;
-  useEffect(() => {
-    inView.current = inViewNow;
-    publishPlace();
-  }, [inViewNow, publishPlace]);
   // A press on a person in the title row goes to the page they are on; false where their page is not in this file.
   const goToPerson = useCallback(
     (personId: string): boolean => {
@@ -359,6 +346,16 @@ export function PdfDocumentSurface({
     focusPages: focusPagesElement,
   });
   // "Changing a mark": the selected marks' colour, fill, size and Format menu looks.
+  // "Presence": the page in view, the mode and the mark held, said for the tab this person is on; the others' held marks.
+  const presenceFocus = usePdfPresencePlace({
+    tabId,
+    present,
+    pages,
+    page: viewer.page,
+    mode,
+    chosen: markSelection.chosen,
+  });
+  const peers = usePdfPresencePeers(tabId);
   const markRestyle = usePdfMarkRestyle({
     ready,
     marks: changeable,
@@ -476,6 +473,8 @@ export function PdfDocumentSurface({
       data-pdf-tool={tools.inHand}
       data-pdf-look={darkPages.look}
       onKeyDown={onKeyDown}
+      onFocus={presenceFocus.onFocus}
+      onBlur={presenceFocus.onBlur}
     >
       <OfficeTitleRow
         name={documentName || UNTITLED_PDF}
@@ -572,6 +571,7 @@ export function PdfDocumentSurface({
                 onFollow={links.follow}
                 found={find.tints}
                 onDoubleTap={zoomToColumn}
+                peers={peers}
               />
               <PdfSelectionBar
                 selected={textSelection.selected}

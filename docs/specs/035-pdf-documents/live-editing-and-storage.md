@@ -156,15 +156,18 @@ writes one shape `(default)`:
   the tab says the tab with no page. Never stored or replayed.
 - **Refused** by whoever receives it, drawing nothing, when a name is malformed or the op passes
   `PDF_PRESENCE_MAX_CHARS` as it was sent, logged `[pdf] presence-refused`. A name on the wire is 1 to
-  `PDF_PRESENCE_NAME_MAX_CHARS` letters, digits, `:`, `_` and `-` `(default)`; one the receiver's file does not hold
+  `PDF_PRESENCE_NAME_MAX_CHARS` letters, digits, `.`, `:`, `_`, `{`, `}` and `-`, so a mark the file named itself
+  (a GUID in braces, a dotted name) is held as well `(default)`; one the receiver's file does not hold
   places nobody.
 - **The page in view** is the page under the middle of the view; between two pages, the one last under it
   `(default)`.
 - **Drawn** as: the person's colour on their page's thumbnail; their text selection tinted in their colour with their
-  name for `PDF_PRESENCE_FRESH_MS` after it moves and on hover; the mark or object they hold outlined in their colour;
+  name for `PDF_PRESENCE_FRESH_MS` after it moves and on hover; the mark or object they hold outlined in their colour,
+  its name shown the same way (it moves when they hold another, or the mark moves or changes size);
   the title row's avatars, a press on one scrolling to that person's page.
 - **Sent** at the cursor's rate, the last place always following: the page in view while the tab is the one the
-  person is on, what is held while the surface has focus `(default)`. The other pane of a split says nothing: a person
+  person is on, what is held while focus is within the surface (its pages, panels and toolbar) `(default)`.
+  Of several marks selected, the first is held: the one given the keys `(default)`. The other pane of a split says nothing: a person
   is on one tab. None go out while a hide-cursors vote is open, and a place already shown is taken back.
 - **Whoever joins hears where everyone is.** The room keeps no presence, so each person says their place again when
   someone joins, and when their own connection returns `(default)`.

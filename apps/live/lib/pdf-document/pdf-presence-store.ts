@@ -9,6 +9,9 @@ import { useSyncExternalStore } from 'react';
 import type { PdfPresence, PdfPresenceHeld, PdfPresenceMode } from '@livedoc/api-schema';
 import { liveTabPeers, type LiveTabPeer, type LiveTabPerson } from '@/lib/live-tab/live-tab-peers';
 
+/** (default) How long a collaborator's name shows over what they hold after it moves: a text document's caret label. */
+export const PDF_PRESENCE_FRESH_MS = 3_000;
+
 /** A person's place in a PDF document: the page in view by its name, their editing mode, at most one thing held. */
 export type PdfPlace = { page: string; mode: PdfPresenceMode; held: PdfPresenceHeld | null };
 
