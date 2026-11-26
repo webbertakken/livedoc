@@ -31,13 +31,15 @@ const FORMATTING_MARKS = [...PROPERTY_OF_MARK.keys(), TEXT_STYLE_MARK];
 
 /** A model mark as the live state's: a file's author keyless, in the neutral colour, from the file. */
 export function liveMarkOf(mark: FileSuggestionMark): SuggestionMark {
-  const { name, initials, key, colour } = mark.author;
+  const { name, initials, key, colour, comparison } = mark.author;
   return {
     id: mark.id,
     at: mark.at ?? 0,
     author:
       key === undefined
-        ? { name, colour: FILE_AUTHOR_COLOUR, fromFile: true, ...(initials ? { initials } : {}) }
+        ? comparison
+          ? { name, colour: FILE_AUTHOR_COLOUR, fromComparison: true }
+          : { name, colour: FILE_AUTHOR_COLOUR, fromFile: true, ...(initials ? { initials } : {}) }
         : { key, name, colour: colour ?? FILE_AUTHOR_COLOUR, ...(initials ? { initials } : {}) },
   };
 }
@@ -45,13 +47,14 @@ export function liveMarkOf(mark: FileSuggestionMark): SuggestionMark {
 /** A live mark as the model's; undefined for what does not read as a mark. */
 export function fileMarkOf(value: unknown): FileSuggestionMark | undefined {
   if (!isSuggestionMark(value)) return undefined;
-  const { key, name, colour, initials } = value.author;
+  const { key, name, colour, initials, fromComparison } = value.author;
   return {
     id: value.id,
     ...(value.at === 0 ? {} : { at: value.at }),
     author: {
       name,
       ...(initials ? { initials } : {}),
+      ...(fromComparison && key === undefined ? { comparison: true as const } : {}),
       ...(key === undefined ? {} : { key, ...(colour ? { colour } : {}) }),
     },
   };

@@ -29,6 +29,8 @@ export type TextDocumentCommentAuthor = {
   readonly initials?: string;
   readonly colour: string;
   readonly fromFile?: true;
+  /** A comparison's attribution, never anyone's own (review.md "Compare documents"). */
+  readonly fromComparison?: true;
 };
 
 export type TextDocumentComment = {

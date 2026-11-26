@@ -12,6 +12,8 @@ export type FileSuggestionAuthor = {
   readonly initials?: string;
   readonly key?: string;
   readonly colour?: string;
+  /** A comparison's attribution, no LiveDoc person behind it (review.md "Compare documents"). */
+  readonly comparison?: true;
 };
 
 /** What every part of a suggestion carries: its id, when it was made (ms) and by whom. */
