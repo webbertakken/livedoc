@@ -1,7 +1,8 @@
 # Custom stamps
 
 **Status: built: where they are kept, their api, their file form, making one, placing one and managing them, and
-Manage stamps' Identity ([Marks](marks.md#stamps)).**
+Manage stamps' Identity ([Marks](marks.md#stamps)); specified: a custom stamp that shows who and when (Director,
+2026-11-26).**
 
 A **custom stamp** is a person's own stamp: a picture, or a page of a PDF, given a name and a category, kept in
 LiveDoc for them, and placed on any PDF as a standard or dynamic stamp is ([Marks](marks.md#stamps)). The parity rows
@@ -15,6 +16,7 @@ are the matrix's "Stamps" ([Parity matrix](parity-matrix.md#stamps)).
 | **their stamps** | Every custom stamp one owner keeps                                                       | stamp library        |
 | **its picture**  | The custom stamp's bytes, one blob, a PNG or a JPEG                                      | image, asset         |
 | **natural size** | The size a custom stamp is placed at before it is held to a third of the page, in points |                      |
+| **who and when** | A custom stamp's lines under its picture: who placed it and when, and their identity     | caption, footer      |
 
 ## Where they are kept
 
@@ -23,8 +25,8 @@ are the matrix's "Stamps" ([Parity matrix](parity-matrix.md#stamps)).
   A guest's stamps are this browser's; a guest who signs up takes them to the account, by the same move as their
   documents; an account's are there wherever they sign in. Deleting the account deletes them.
 - A row each, in D1's `custom_stamps`: its id (`custom-<uuid>`), owner, name, category, its picture's key, the
-  picture's type (`png` or `jpeg`), its size in pixels and its natural size in points, and when it was made and
-  changed. Newest first.
+  picture's type (`png` or `jpeg`), its size in pixels and its natural size in points, whether it shows who and when
+  (`dynamic`, 0 or 1, 0 for every stamp made before it), and when it was made and changed. Newest first.
 - **Its picture is a blob the owner holds** ([Blob store](../006-document/blob-store.md#holds-and-retention)): sent
   by an upload that names no document, before the stamp is made, and **held by the custom stamp** for as long as it
   is kept. It counts against the owner's file allowance, as every blob does (F16).
@@ -38,7 +40,12 @@ are the matrix's "Stamps" ([Parity matrix](parity-matrix.md#stamps)).
 - It asks, in order: **a file** (PNG, JPEG, SVG or PDF; one, by choosing or dropping it); for a PDF, **which page**
   (a number from 1, the first `(default)`); **a name** (the file's name without its ending `(default)`, at most
   `PDF_CUSTOM_STAMP_NAME_MAX_CHARS`, trimmed, never empty); **a category** (one of theirs, or a new one typed, at most
-  `PDF_CUSTOM_STAMP_CATEGORY_MAX_CHARS`; `Custom` `(default)`). A preview shows the picture as it will be kept.
+  `PDF_CUSTOM_STAMP_CATEGORY_MAX_CHARS`; `Custom` `(default)`); and **Show who and when**, a check, unchecked
+  `(default)`. A preview shows the picture as it will be kept.
+- **Show who and when** makes it a custom dynamic stamp: placed, it shows under its picture the lines a dynamic stamp
+  carries ([Marks](marks.md#stamps)): "by" the display name and the time, and the stamper's identity line where they
+  have set one. Whether it shows them is fixed when it is made: Manage stamps changes its name and category only
+  `(default)`.
   **Create** makes it; **Cancel** and Escape make nothing.
 - **The picture as kept** is made in the browser, never on the servers:
   - a PNG or a JPEG is kept as it came where it is at most `PDF_CUSTOM_STAMP_MAX_SIDE_PX` on its longer side and at
@@ -67,6 +74,16 @@ are the matrix's "Stamps" ([Parity matrix](parity-matrix.md#stamps)).
   sent places nothing more.
 - **The mark** is a stamp whose `stamp` is the custom stamp's id, its `lines` its name, its `picture` the key, the
   picture's type and its size in pixels. The mark holds no category: a category is their stamps', never a mark's.
+- **A custom stamp that shows who and when** is placed as a mark whose `lines` are its name, then a dynamic stamp's
+  second line and third line, written when placed and fixed as every stamp's words are
+  ([Marks](marks.md#stamps)). It is drawn as one picture with its words: the picture on top, as wide as the widest of
+  those lines, its shape kept; under it the second and third lines centred in Helvetica (the mark faces where
+  Helvetica cannot write them), each `STAMP_DETAIL_PT` at that size and `STAMP_LINE_GAP_PT` apart, in the mark's
+  colour; the whole scaled in proportion to its box and centred in it, as a stamp in LiveDoc's style is. Its name is
+  not drawn: the picture is its face `(default)`. Its natural size is its picture's natural width, and the height
+  that width gives the whole.
+- **No file's script ever runs** for a stamp: who and when is LiveDoc's words, written once when placed, never a form
+  field or JavaScript reckoned when a file opens.
 - **The page draws its picture**, fetched from the document by its key
   ([Getting bytes out](../006-document/blob-store.md#getting-bytes-out)), across the stamp's box; a picture still on
   its way, or one that fails, draws the stamp's box outlined in its colour with its name.
@@ -79,7 +96,9 @@ are the matrix's "Stamps" ([Parity matrix](parity-matrix.md#stamps)).
   it rather than drawing one of its own ([Marks](marks.md#in-the-file)); `Contents` its name; its appearance its
   picture across `BBox`, as an image of the picture's own pixels (a JPEG's bytes as they are, a PNG's as its colours
   and its see-through as a soft mask).
-- **A bake is handed each picture its marks name**, by key; one missing, or whose bytes are not the type it says,
+- **A custom stamp that shows who and when, in the file**, is the same `Stamp`, its appearance its picture in the
+  picture's place and its lines as text under it, set as a stamp's words are ([Marks](marks.md#in-the-file));
+  `Contents` its name and its lines, a line each.- **A bake is handed each picture its marks name**, by key; one missing, or whose bytes are not the type it says,
   refuses the bake by name (`pictures-unavailable`), never a stamp written without its picture `(default)`.
 - **Read back**: LiveDoc's own custom stamp, while the live changes hold it, is read by its id as every mark is. A
   file's `Stamp` whose `Name` begins with `#` is a stamp LiveDoc does not draw: drawn as the file says, never selected
@@ -127,15 +146,16 @@ are the matrix's "Stamps" ([Parity matrix](parity-matrix.md#stamps)).
 
 `/api/custom-stamps`, owner-scoped (`requireOwner`): guests included.
 
-| Request                                          | Body                                                                                        | Answer                                           |
-| ------------------------------------------------ | ------------------------------------------------------------------------------------------- | ------------------------------------------------ |
-| `GET /api/custom-stamps`                         |                                                                                             | `200 { stamps }`, newest first                   |
-| `POST /api/custom-stamps`                        | `{ id, name, category, picture: { key, type, width, height }, natural: { width, height } }` | `201 { stamp }`                                  |
-| `PATCH /api/custom-stamps/:id`                   | `{ name?, category? }`                                                                      | `200 { stamp }`                                  |
-| `PATCH /api/custom-stamps/categories/:category`  | `{ category }`                                                                              | `200 { stamps }`: theirs, the category renamed   |
-| `DELETE /api/custom-stamps/categories/:category` |                                                                                             | `200 { stamps }`: theirs, the category's deleted |
-| `DELETE /api/custom-stamps/:id`                  |                                                                                             | `204`                                            |
-| `GET /api/custom-stamps/:id/picture`             |                                                                                             | `200` its picture's bytes                        |
+| Request                   | Body                                                                                                  | Answer                         |
+| ------------------------- | ----------------------------------------------------------------------------------------------------- | ------------------------------ |
+| `GET /api/custom-stamps`  |                                                                                                       | `200 { stamps }`, newest first |
+| `POST /api/custom-stamps` | `{ id, name, category, picture: { key, type, width, height }, natural: { width, height }, dynamic? }` | `201 { stamp }`                |
+
+| `PATCH /api/custom-stamps/:id` | `{ name?, category? }` | `200 { stamp }` |
+| `PATCH /api/custom-stamps/categories/:category` | `{ category }` | `200 { stamps }`: theirs, the category renamed |
+| `DELETE /api/custom-stamps/categories/:category` | | `200 { stamps }`: theirs, the category's deleted |
+| `DELETE /api/custom-stamps/:id` | | `204` |
+| `GET /api/custom-stamps/:id/picture` | | `200` its picture's bytes |
 
 | Refusal                           | Status | When                                                                                                                                                                                                                                                         |
 | --------------------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
