@@ -2274,6 +2274,30 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
     ],
     "type": "object"
   },
+  "CellAnchor": {
+    "additionalProperties": false,
+    "properties": {
+      "c": {
+        "type": "string"
+      },
+      "dx": {
+        "type": "number"
+      },
+      "dy": {
+        "type": "number"
+      },
+      "r": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "r",
+      "c",
+      "dx",
+      "dy"
+    ],
+    "type": "object"
+  },
   "CellChange": {
     "additionalProperties": false,
     "properties": {
@@ -10706,30 +10730,6 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
     ],
     "type": "string"
   },
-  "ObjectAnchor": {
-    "additionalProperties": false,
-    "properties": {
-      "c": {
-        "type": "string"
-      },
-      "r": {
-        "type": "string"
-      },
-      "x": {
-        "type": "number"
-      },
-      "y": {
-        "type": "number"
-      }
-    },
-    "required": [
-      "r",
-      "c",
-      "x",
-      "y"
-    ],
-    "type": "object"
-  },
   "OutlineNode": {
     "additionalProperties": false,
     "properties": {
@@ -13946,6 +13946,18 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
       "chartAxis": {
         "type": "boolean"
       },
+      "chartAxisTitles": {
+        "additionalProperties": false,
+        "properties": {
+          "x": {
+            "type": "string"
+          },
+          "y": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
       "chartLegend": {
         "type": "boolean"
       },
@@ -13957,6 +13969,9 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
       },
       "chartSource": {
         "$ref": "#/components/schemas/ChartSource"
+      },
+      "chartTitle": {
+        "type": "string"
       },
       "chartValues": {
         "type": "boolean"
@@ -14951,7 +14966,7 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
         "type": "string"
       },
       "at": {
-        "$ref": "#/components/schemas/ObjectAnchor"
+        "$ref": "#/components/schemas/CellAnchor"
       },
       "axis": {
         "const": false,
