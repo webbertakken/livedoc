@@ -70,6 +70,7 @@ describe('sweepSummaryRefresh', () => {
         checked: 0,
         written: 0,
         failed: 0,
+        skipped: 0,
       });
       expect(s.asked).toEqual([]);
       expect(s.rows()).toEqual([]);
@@ -86,6 +87,7 @@ describe('sweepSummaryRefresh', () => {
       checked: 3,
       written: 0,
       failed: 0,
+      skipped: 0,
     });
     expect(s.asked).toEqual(['a', 'b', 'c']);
     expect(s.rows()).toEqual([
@@ -96,6 +98,11 @@ describe('sweepSummaryRefresh', () => {
         checked_at: NOW,
         written_at: null,
         error: null,
+        fields: 'textDocument',
+        has_content_before: 1,
+        has_content_after: 1,
+        deltas: '{}',
+        skipped: null,
       },
       {
         document_id: 'b',
@@ -104,6 +111,11 @@ describe('sweepSummaryRefresh', () => {
         checked_at: NOW,
         written_at: null,
         error: null,
+        fields: '',
+        has_content_before: 1,
+        has_content_after: 1,
+        deltas: '{}',
+        skipped: null,
       },
       {
         document_id: 'c',
@@ -112,6 +124,11 @@ describe('sweepSummaryRefresh', () => {
         checked_at: NOW,
         written_at: null,
         error: null,
+        fields: 'missing',
+        has_content_before: null,
+        has_content_after: 1,
+        deltas: '{}',
+        skipped: null,
       },
     ]);
     expect(s.stored('a').content_summary).toBe(JSON.stringify(older));
@@ -127,6 +144,7 @@ describe('sweepSummaryRefresh', () => {
       checked: 1,
       written: 1,
       failed: 0,
+      skipped: 0,
     });
     expect(s.stored('a')).toEqual({ content_summary: JSON.stringify(fresh), saved_at: 7 });
     expect(s.rows()[0]).toMatchObject({ changed: 1, gains_text_document: 1, written_at: NOW });
@@ -143,6 +161,7 @@ describe('sweepSummaryRefresh', () => {
       checked: 1,
       written: 0,
       failed: 0,
+      skipped: 0,
     });
     expect(s.rows()[0]).toMatchObject({ changed: 0, written_at: NOW + 1 });
     expect(s.stored('a').content_summary).toBe(JSON.stringify(older));
@@ -183,6 +202,7 @@ describe('sweepSummaryRefresh', () => {
         checked: 0,
         written: 0,
         failed: 1,
+        skipped: 0,
       });
       expect(s.rows()[0]).toMatchObject({ error: 'TypeError', written_at: null });
       fail = false;
@@ -191,4 +211,40 @@ describe('sweepSummaryRefresh', () => {
       expect(s.rows()[0]).toMatchObject({ error: null, gains_text_document: 1 });
     },
   );
+
+  it('records which fields differ and by how much, never a tab id', async () => {
+    const counted: ContentSummary = {
+      ...older,
+      tabCounts: { t: 6 },
+      firstTabCount: 6,
+      stats: { mode: 'diagram', elements: 6, comments: 0, bytes: 120 },
+    };
+    const s = setup('dry', async () => counted);
+    s.add('a', 1, { ...older, stats: { mode: 'diagram', elements: 4, comments: 0, bytes: 100 } });
+    await sweepSummaryRefresh(s.env, NOW);
+    expect(s.rows()[0]).toMatchObject({
+      fields: 'firstTabCount,tabCounts,stats.elements,stats.bytes',
+      deltas: JSON.stringify({ firstTabCount: 2, tabCounts: 1, elements: 2, bytes: 20 }),
+    });
+  });
+
+  it('never writes a summary that would lose a document its content, and skips it for good', async () => {
+    const s = setup('run', async (id) =>
+      id === 'lost' ? { ...older, hasContent: false } : { ...fresh, hasContent: true },
+    );
+    s.add('lost', 1);
+    s.add('gained', 2, { ...older, hasContent: false });
+    expect(await sweepSummaryRefresh(s.env, NOW)).toMatchObject({ written: 1, skipped: 1 });
+    expect(s.stored('lost').content_summary).toBe(JSON.stringify(older));
+    expect((JSON.parse(s.stored('gained').content_summary!) as ContentSummary).hasContent).toBe(
+      true,
+    );
+    expect(s.rows().find((r) => r.document_id === 'lost')).toMatchObject({
+      skipped: 'has_content_lost',
+      written_at: null,
+      has_content_before: 1,
+      has_content_after: 0,
+    });
+    expect((await sweepSummaryRefresh(s.env, NOW + SUMMARY_REFRESH_RETRY_MS * 2)).found).toBe(0);
+  });
 });
