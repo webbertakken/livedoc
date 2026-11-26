@@ -18,6 +18,7 @@ describe('the MCP tool verbs', () => {
       'change_sheet',
       'add_sheet',
       'create_spreadsheet',
+      'convert_spreadsheet',
       'change_pages',
       'write_article',
       'list_images',

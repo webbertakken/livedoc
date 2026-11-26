@@ -220,6 +220,9 @@ import { pictureRoom as roomForPictures } from '@/lib/text-document/text-documen
 import { useTextDocumentPictureSize, IMAGE_OPTIONS_ITEM } from './useTextDocumentPictureSize';
 import { useTextDocumentPicturePlacing } from './useTextDocumentPicturePlacing';
 import { useTextDocumentPictureBar } from './useTextDocumentPictureBar';
+import { dispatchWithSuggesting } from '@/lib/text-document/text-document-suggesting-dispatch';
+import { useTextDocumentSuggesting } from './useTextDocumentSuggesting';
+import { suggestedBreaksPlugin } from '@/lib/text-document/text-document-suggestion-marks';
 
 // A remembered selection put back, clamped to the body there is now (docs/specs/006-document/kinds-outside-the-canvas.md
 // "Switching tabs"): the text may have changed since it was left.
@@ -356,6 +359,12 @@ export function TextDocumentSurface({
     actions: modeActions,
   } = useOfficeMode(level, TEXT_DOCUMENT_MODES, 'TextDocumentMode');
   const writes = canEdit && mode === 'editing';
+  // While suggesting (review.md "While suggesting"), the writing takes edits as suggestions: typing, formatting and
+  // paragraph formatting; lists and styles, which write beside the writing, stay an Editor's.
+  const suggests = mode === 'suggesting' && commenter !== null;
+  const textWrites = writes || suggests;
+  const listWrites = writes || (suggests && canEdit);
+  const suggesting = useTextDocumentSuggesting({ suggests, commenter });
   // The side panels (office-shell.md "Side panels"); closing one gives the writing the keyboard back. Line numbers is
   // an Editor's (page-layout.md "Line numbers").
   const panels = useOfficePanels({
@@ -364,9 +373,25 @@ export function TextDocumentSurface({
     onFocusDocument: () => editor.current?.focus(),
     writes,
   });
-  const live = useRef({ sequence, canEdit, writes, format, commenter });
+  const live = useRef({
+    sequence,
+    canEdit,
+    writes,
+    textWrites,
+    format,
+    commenter,
+    suggesting: suggesting.dispatch,
+  });
   useLayoutEffect(() => {
-    live.current = { sequence, canEdit, writes, format, commenter };
+    live.current = {
+      sequence,
+      canEdit,
+      writes,
+      textWrites,
+      format,
+      commenter,
+      suggesting: suggesting.dispatch,
+    };
   });
   // Where the person was in this tab, back when they return to it.
   const { noteViewChanged } = useSurfaceView({
@@ -591,8 +616,10 @@ export function TextDocumentSurface({
           }),
           // Comment threads' stretches tinted, a press in one selecting it (review.md "Threads in the margin").
           threadHighlightPlugin({ onSelect: (id) => selectThreadRef.current(id) }),
+          // A suggested paragraph break or join drawn as a pilcrow (review.md "While suggesting").
+          suggestedBreaksPlugin(),
           textDocumentPeersPlugin({
-            canEdit: () => live.current.writes,
+            canEdit: () => live.current.textWrites,
             publish: (selection) => setLocalTextDocumentCaret(tabId, selection),
           }),
         ];
@@ -604,7 +631,11 @@ export function TextDocumentSurface({
         const firstTab = initialTab(liveTabList(doc), window.location.search);
         const view = new EditorView(mount.current, {
           state: stateFor(firstTab),
-          editable: () => live.current.writes,
+          editable: () => live.current.textWrites,
+          // Edits rewritten as suggestions while suggesting (review.md "While suggesting").
+          dispatchTransaction(this: EditorView, tr) {
+            dispatchWithSuggesting(this, tr, live.current.suggesting);
+          },
           // Page numbers and page counts drawn as their page's (page-layout.md "Page numbers"); a table's columns drawn
           // again as its cells' widths change (tables.md "In the editor"); pictures from the state's media (objects.md).
           nodeViews: {
@@ -635,7 +666,7 @@ export function TextDocumentSurface({
             role: 'textbox',
             'aria-multiline': 'true',
             'aria-label': 'Document body',
-            'aria-readonly': live.current.writes ? 'false' : 'true',
+            'aria-readonly': live.current.textWrites ? 'false' : 'true',
             tabindex: '0',
             // Spaces and line breaks show as typed; the caret is the focus mark, as in any word processor.
             class: 'text-document-body whitespace-pre-wrap break-words outline-none',
@@ -769,7 +800,7 @@ export function TextDocumentSurface({
   });
   const { activeView } = headers;
   // Edit > Cut, Copy, Paste (text-and-paragraphs.md "Clipboard"); the editor's plugin tells it of a paste's losses.
-  const clipboard = useTextDocumentClipboard(activeView, writes);
+  const clipboard = useTextDocumentClipboard(activeView, textWrites);
   // Tools > Preferences (tools.md "Preferences"); the writing reads the aids it keeps.
   const preferences = useTextDocumentPreferences(editorView, ownerId);
   useLayoutEffect(() => {
@@ -779,7 +810,7 @@ export function TextDocumentSurface({
     clipboardLeftOut.current = clipboard.onLeftOut;
   });
   // Format > Text and the toolbar's text controls (text-and-paragraphs.md "Text formatting").
-  const formatting = useTextDocumentFormatting(activeView, liveDoc, format, writes);
+  const formatting = useTextDocumentFormatting(activeView, liveDoc, format, textWrites);
   // A family from Google Fonts that the text names loads from there (fonts.md "Substitution").
   useGoogleDocumentFonts(editorView, liveDoc, format, changes.subscribe);
   // Format > Paragraph styles and the Styles control, the paragraphs drawn in their styles.
@@ -787,17 +818,17 @@ export function TextDocumentSurface({
     activeView,
     liveDoc,
     format,
-    writes,
+    listWrites,
     ownerId,
   );
   // Format > Align & indent, the toolbar's Align and indent controls, and Indentation options.
   // Format > Bullets & numbering and the toolbar's list buttons (lists.md).
-  const lists = useTextDocumentLists(activeView, liveDoc, writes);
+  const lists = useTextDocumentLists(activeView, liveDoc, listWrites);
   const paragraphs = useTextDocumentParagraphs(
     activeView,
     liveDoc,
     format,
-    writes,
+    textWrites,
     lists.stepLevel,
   );
   // Format > Columns (page-layout.md "Columns").
@@ -910,14 +941,14 @@ export function TextDocumentSurface({
   // Insert > Link, the link card and Open link (links-and-navigation.md "Links"), in whichever writing has the caret.
   const links = useTextDocumentLinks({
     view: activeView,
-    writes,
+    writes: textWrites,
     documents,
     subscribe: changes.subscribeCaret,
     showCard: preferences.aids.linkDetails,
     inDocument: headingLinks.places,
   });
   // Insert > Symbols > Special characters and Insert > Emoji (objects.md), in whichever writing has the caret.
-  const characterDialogs = useTextDocumentCharacterDialogs(activeView, writes);
+  const characterDialogs = useTextDocumentCharacterDialogs(activeView, textWrites);
   // Comment threads in the margin, added on the body's writing (review.md "Threads in the margin").
   const threads = useTextDocumentThreads({
     view: editorView,
@@ -1241,6 +1272,7 @@ export function TextDocumentSurface({
         </p>
       ) : null}
       {clipboard.notice}
+      {suggesting.notice}
       {pictures.notice}
       {equationToolbar.shown && bodyWrites && state === 'ready' && editorView ? (
         <TextDocumentEquationToolbar

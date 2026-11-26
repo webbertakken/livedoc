@@ -20,7 +20,6 @@ office kinds; this spec says what a text document puts in them.
   text document's modes on the office shell's switch ([Office shell](../004-interface-design/office-shell.md#modes)).
 - A mode never grants more than the level: Viewing shows the menus and toolbar a Viewer sees, and the writing is read
   only; a mode the level does not allow is not listed.
-- Until suggesting is built, Suggesting is listed dimmed ("Coming soon") and a Participant starts in Viewing.
 - The mode is kept while the document is open, never stored: each open starts at the level's mode `(default)`.
 - Telemetry: `UI · Changed · TextDocumentMode` when a person changes it.
 
@@ -237,6 +236,29 @@ office kinds; this spec says what a text document puts in them.
 - Suggestions are kept in the file as tracked changes (ODF `text:tracked-changes`, OOXML `w:ins` / `w:del` /
   `w:rPrChange`), so Word and LibreOffice show them as tracked changes and theirs arrive as suggestions.
 - A suggestion on a structural change (a table row, a page break, a picture) is shown with its kind's card.
+
+### While suggesting
+
+- **Typing** inserts suggested text, after any text it replaces, which is suggested deleted; the caret follows it.
+- **Deleting** one's own suggested text removes it; anyone else's text is marked deleted and stays, the caret moving
+  past it: before it for Backspace, after it for Delete. Text already suggested deleted is passed over.
+- **Enter** suggests a paragraph break; **Backspace** at a paragraph's start suggests a join, or takes back one's own
+  suggested break. A deletion across paragraphs marks the text in each and joins the later ones.
+- **Formatting** text suggests a format change that keeps the formatting before; formatting one's own suggested text
+  simply formats it; formatting text someone else suggested a format change to says "Someone else has suggested a
+  change to this formatting." (default) and changes nothing.
+- **A paragraph's** style, alignment, indents, spacing or list suggests a paragraph format change keeping its style,
+  formatting and list before; one's own suggested paragraph is simply changed.
+- **One suggestion**: a change next to the person's own earlier suggestion (touching it, or replacing text) joins it.
+- **Not yet**: a change of structure (a table, a section or page break, a table of contents), and what is kept beside
+  the writing (page setup, headers and footers, document tabs, styles, list definitions), says "This can't be
+  suggested yet." (default) and changes nothing; the controls for the latter are dimmed while suggesting.
+- **Pasting** inserts as typing does; what is pasted from suggested text arrives plain in Editing.
+- **Undo** takes back one's own suggestions step by step, as any edit.
+- The refusal lines show for 5 seconds (`SUGGESTING_NOTICE_MS`, (default)) in the status band.
+- A Participant suggests by typing, deleting, pasting and with the keyboard's formatting shortcuts; the toolbar and
+  menus they see in Suggesting follow (default).
+- Telemetry: `Element · Added · TextDocumentSuggestion` once per suggestion begun, never per keystroke.
 
 ### How a suggestion is kept
 

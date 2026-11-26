@@ -10,15 +10,16 @@ import { OfficeModeSwitch } from './OfficeModeSwitch';
 
 vi.mock('@/lib/telemetry', () => ({ track: vi.fn() }));
 
+// A kind with a mode not yet built: listed dimmed, never chosen, never started in.
+const WITH_COMING = TEXT_DOCUMENT_MODES.map((m) =>
+  m.mode === 'suggesting' ? { ...m, status: 'comingSoon' as const } : m,
+);
+
 // docs/specs/004-interface-design/office-shell.md "Modes"; 034-text-documents/review.md "Editing modes".
 describe('OfficeModeSwitch', () => {
   it('names the mode, and lists the modes the level allows with what each does', () => {
     render(
-      <OfficeModeSwitch
-        mode="editing"
-        modes={modesFor(TEXT_DOCUMENT_MODES, 'edit')}
-        onChange={vi.fn()}
-      />,
+      <OfficeModeSwitch mode="editing" modes={modesFor(WITH_COMING, 'edit')} onChange={vi.fn()} />,
     );
     const pill = screen.getByRole('button', { name: 'Mode: Editing' });
     fireEvent.click(pill);
@@ -35,11 +36,7 @@ describe('OfficeModeSwitch', () => {
   it('changes the mode on a choice, and never to one not yet built', () => {
     const onChange = vi.fn();
     render(
-      <OfficeModeSwitch
-        mode="editing"
-        modes={modesFor(TEXT_DOCUMENT_MODES, 'edit')}
-        onChange={onChange}
-      />,
+      <OfficeModeSwitch mode="editing" modes={modesFor(WITH_COMING, 'edit')} onChange={onChange} />,
     );
     fireEvent.click(screen.getByRole('button', { name: 'Mode: Editing' }));
     fireEvent.click(screen.getByRole('menuitemradio', { name: /Suggesting/ }));
@@ -68,7 +65,11 @@ describe('useOfficeMode', () => {
       useOfficeMode('edit', TEXT_DOCUMENT_MODES, 'TextDocumentMode'),
     );
     expect(result.current.mode).toBe('editing');
-    expect(Object.keys(result.current.actions)).toEqual(['mode-editing', 'mode-viewing']);
+    expect(Object.keys(result.current.actions)).toEqual([
+      'mode-editing',
+      'mode-suggesting',
+      'mode-viewing',
+    ]);
     expect(result.current.actions['mode-editing']!.checked).toBe(true);
     act(() => result.current.actions['mode-viewing']!.run());
     expect(result.current.mode).toBe('viewing');
@@ -76,14 +77,25 @@ describe('useOfficeMode', () => {
     expect(track).toHaveBeenCalledWith('UI', 'Changed', 'TextDocumentMode');
   });
 
-  it('starts a Participant and a Viewer in Viewing, binding Viewing alone', () => {
-    for (const level of ['participate', 'view'] as const) {
-      const { result } = renderHook(() =>
-        useOfficeMode(level, TEXT_DOCUMENT_MODES, 'TextDocumentMode'),
-      );
-      expect(result.current.mode).toBe('viewing');
-      expect(Object.keys(result.current.actions)).toEqual(['mode-viewing']);
-    }
+  it('starts a Participant in Suggesting and a Viewer in Viewing, binding what each reaches', () => {
+    const participant = renderHook(() =>
+      useOfficeMode('participate', TEXT_DOCUMENT_MODES, 'TextDocumentMode'),
+    ).result;
+    expect(participant.current.mode).toBe('suggesting');
+    expect(Object.keys(participant.current.actions)).toEqual(['mode-suggesting', 'mode-viewing']);
+    const viewer = renderHook(() =>
+      useOfficeMode('view', TEXT_DOCUMENT_MODES, 'TextDocumentMode'),
+    ).result;
+    expect(viewer.current.mode).toBe('viewing');
+    expect(Object.keys(viewer.current.actions)).toEqual(['mode-viewing']);
+  });
+
+  it('never starts in a mode not yet built', () => {
+    const { result } = renderHook(() =>
+      useOfficeMode('participate', WITH_COMING, 'TextDocumentMode'),
+    );
+    expect(result.current.mode).toBe('viewing');
+    expect(Object.keys(result.current.actions)).toEqual(['mode-viewing']);
   });
 
   it("falls back to the level's mode when the level no longer allows the one chosen", () => {

@@ -183,6 +183,14 @@ export function nodeIo(): CliIo {
     },
     files: {
       read: (path) => readFile(path, 'utf8').catch(() => null),
+      readBytes: async (path) => {
+        const data = await readFile(path).catch(() => null);
+        return data ? new Uint8Array(data) : null;
+      },
+      size: async (path) => {
+        const found = await stat(path).catch(() => null);
+        return found?.isFile() ? found.size : null;
+      },
       write: async (path, data, mode) => {
         await mkdir(dirname(path), { recursive: true });
         const temporary = `${path}.${process.pid}.tmp`;

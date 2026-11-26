@@ -184,7 +184,7 @@ to act on is dimmed. Colours come from the one colour picker
 | Distribute ▸         | Horizontally; Vertically                                                                                   | edit        | Editing   |
 | Match size ▸         | Width; Height; Both                                                                                        | edit        | Editing   |
 | Flip ▸               | Horizontally; Vertically                                                                                   | edit        | Editing   |
-| Rotate ▸             | Clockwise; Counterclockwise                                                                                | edit        | Editing   |
+| Rotate ▸             | Clockwise; Counterclockwise. The selected stamps a quarter ([Marks](marks.md#changing-a-mark)), or objects | participate | Reviewing |
 | Crop                 | A picture ([Objects](objects.md#pictures))                                                                 | edit        | Editing   |
 
 - The table is Format's items `(default)`: every one is a function [Marks](marks.md#changing-a-mark),

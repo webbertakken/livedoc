@@ -3,6 +3,10 @@
 
 export type CliFiles = {
   read: (path: string) => Promise<string | null>;
+  // A file's bytes (a spreadsheet to import), or null when there is no file.
+  readBytes: (path: string) => Promise<Uint8Array<ArrayBuffer> | null>;
+  // A file's size in bytes, read before its bytes are; null when there is no file.
+  size: (path: string) => Promise<number | null>;
   // Written to a temporary file in the same directory, then renamed; `mode` for secrets (0o600).
   write: (path: string, data: string, mode?: number) => Promise<void>;
   // Bytes, written the same way (a PNG).

@@ -54,3 +54,20 @@ describe('openerFor', () => {
     expect(openerFor('linux', '--help')).toBeNull();
   });
 });
+
+// `spreadsheet import` reads a file's size before its bytes; a directory or nothing there is no file.
+describe('a file’s bytes', () => {
+  it('reads its size and bytes, and null for no file', async () => {
+    const { mkdtemp, rm, writeFile } = await import('node:fs/promises');
+    const { tmpdir } = await import('node:os');
+    const dir = await mkdtemp(`${tmpdir()}/livedoc-cli-`);
+    await writeFile(`${dir}/a.csv`, 'a,b\n');
+    const { files } = nodeIo();
+    expect(await files.size(`${dir}/a.csv`)).toBe(4);
+    expect([...(await files.readBytes(`${dir}/a.csv`))!]).toEqual([97, 44, 98, 10]);
+    expect(await files.size(dir)).toBeNull();
+    expect(await files.size(`${dir}/none`)).toBeNull();
+    expect(await files.readBytes(`${dir}/none`)).toBeNull();
+    await rm(dir, { recursive: true });
+  });
+});

@@ -5,6 +5,7 @@ import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import {
   addSheet,
   changeSheet,
+  convertSpreadsheet,
   createSpreadsheet,
   listSheets,
   readSheet,
@@ -12,6 +13,7 @@ import {
 import {
   mcpAddSheet,
   mcpChangeSheet,
+  mcpConvertSpreadsheet,
   mcpCreateSpreadsheet,
   mcpListSheets,
   mcpReadSheet,
@@ -80,5 +82,14 @@ export function registerSheetTools(server: McpServer, env: Env): void {
       ...(refusal ? { refusal: refusal.message } : {}),
       url: deepLink(env, made.documentId),
     });
+  });
+
+  registerTool(server, env, mcpConvertSpreadsheet, async (args, extra) => {
+    const api = clientFor(env, requireToken(extra));
+    const { documentId, ...input } = args;
+    const result = await convertSpreadsheet(api, documentId, input, 'mcp');
+    if (!result.ok) return errorResult(result.message);
+    const { ok: _ok, ...converted } = result;
+    return textResult({ ...converted, url: deepLink(env, documentId) });
   });
 }

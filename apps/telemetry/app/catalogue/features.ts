@@ -1120,8 +1120,18 @@ export const TEXT_DOCUMENT_MODE = chart(
   'UI',
   'Changed',
   'Text Document Mode',
-  'Someone switched a text document between Editing and Viewing.',
+  'Someone switched a text document between Editing, Suggesting and Viewing.',
   { types: ['TextDocumentMode'], rising: 'neutral' },
+);
+
+// A person began a suggestion in a text document while suggesting (docs/specs/034-text-documents/review.md "While
+// suggesting"): once per suggestion, never per keystroke.
+export const TEXT_DOCUMENT_SUGGESTION = chart(
+  'Element',
+  'Added',
+  'Text Document Suggestion',
+  'Someone began a suggestion in a text document: typed, deleted or formatted while suggesting.',
+  { types: ['TextDocumentSuggestion'], rising: 'good' },
 );
 
 // A person changed their editing mode on a PDF document (docs/specs/035-pdf-documents/editing-modes.md "Telemetry and
@@ -1654,6 +1664,7 @@ export const EDITOR_CHROME: MetricStack = {
     SPREADSHEET_ZOOMED,
     TEXT_DOCUMENT_FOLLOWED,
     TEXT_DOCUMENT_ZOOMED,
+    TEXT_DOCUMENT_SUGGESTION,
     TEXT_DOCUMENT_MODE,
     PDF_DOCUMENT_MODE,
     TEXT_DOCUMENT_MY_FONTS,

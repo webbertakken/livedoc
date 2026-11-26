@@ -53,7 +53,7 @@ by the writing, [Review](review.md#keys-on-a-selected-comment)), `the browser's`
 | Tool finder                    | `Alt+/ or Alt+Shift+Z or Alt+Z (Chrome)` | `Option+/ or Ctrl+Option+Z` | `Alt+Z or Alt+/`   | built (`OfficeToolFinder.test.tsx`)                      |
 | Repeat last action             | `Ctrl+Y`                                 | `⌘+Y`                       | —                  | specified                                                |
 | Switch to editing              | `Ctrl+Alt+Shift+Z`                       | `⌘+Option+Shift+Z`          | `Ctrl+Alt+Shift+Z` | built (`OfficeModeSwitch.test.tsx`)                      |
-| Switch to suggesting           | `Ctrl+Alt+Shift+X`                       | `⌘+Option+Shift+X`          | `Ctrl+Alt+Shift+X` | specified                                                |
+| Switch to suggesting           | `Ctrl+Alt+Shift+X`                       | `⌘+Option+Shift+X`          | `Ctrl+Alt+Shift+X` | built (`OfficeModeSwitch.test.tsx`)                      |
 | Switch to viewing              | `Ctrl+Alt+Shift+C`                       | `⌘+Option+Shift+C`          | `Ctrl+Alt+Shift+C` | built (`OfficeModeSwitch.test.tsx`)                      |
 | Zoom in                        | `Ctrl+Plus`                              | `⌘+Plus`                    | —                  | the browser's                                            |
 | Zoom out                       | `Ctrl+-`                                 | `⌘+-`                       | —                  | the browser's                                            |

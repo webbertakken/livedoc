@@ -44,6 +44,7 @@ import { usePdfMarkRestyle } from '@/lib/pdf-document/usePdfMarkRestyle';
 import { usePdfMarkSelection } from '@/lib/pdf-document/usePdfMarkSelection';
 import { usePdfMarkTools } from '@/lib/pdf-document/usePdfMarkTools';
 import { usePdfMarkProperties } from '@/lib/pdf-document/usePdfMarkProperties';
+import { usePdfStampTurns } from '@/lib/pdf-document/usePdfStampTurns';
 import { usePdfFullScreen } from '@/lib/pdf-document/usePdfFullScreen';
 import { PdfLookContext } from '@/lib/pdf-document/pdf-look';
 import { usePdfReadMode } from '@/lib/pdf-document/usePdfReadMode';
@@ -386,6 +387,12 @@ export function PdfDocumentSurface({
     covered: findListShown,
     onOpen: useCallback(() => setListOpen(false), [setListOpen]),
   });
+  const stampTurns = usePdfStampTurns({
+    ready,
+    marks: changeable,
+    marking,
+    chosen: markSelection.chosen,
+  });
   const zoomToColumn = usePdfColumnZoom(viewer, textSelection.texts);
   // "Read mode", "Full screen": one person's room for the pages.
   const readMode = usePdfReadMode();
@@ -416,6 +423,7 @@ export function PdfDocumentSurface({
             ...markRestyle.actions,
             ...tools.lineActions,
             ...markProperties.actions,
+            ...stampTurns,
             [GO_TO_PAGE]: { run: focusPageField },
           }
         : {}),
@@ -462,6 +470,7 @@ export function PdfDocumentSurface({
       markRestyle.actions,
       tools.lineActions,
       markProperties.actions,
+      stampTurns,
     ],
   );
 

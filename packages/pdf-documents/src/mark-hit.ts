@@ -52,7 +52,8 @@ const inBox = (p: PagePoint, [left, bottom, right, top]: Box): boolean =>
 /** Whether a press at `p` reaches the mark. */
 function reaches(mark: Mark, p: PagePoint, reach: number): boolean {
   if (Mark.isText(mark)) return mark.quads.some((quad) => inQuad(p, quad));
-  if ((Mark.isTyped(mark) || mark.kind === 'stamp') && inBox(p, mark.rect)) return true;
+  if (Mark.isTyped(mark) && inBox(p, mark.rect)) return true;
+  if (mark.kind === 'stamp' && inBox(p, Mark.shownBox(mark))) return true;
   if (mark.kind === 'text' || mark.kind === 'stamp') return false;
   const drawing = MarkDrawing.of(mark);
   if (drawing.fill && inOutline(p, drawing.fill.points)) return true;

@@ -6,7 +6,7 @@ import { useSyncExternalStore } from 'react';
 import { Button } from '@livedoc/ui';
 import { Dialog } from '@/components/dialogs/Dialog';
 import { DialogFooter } from '@/components/dialogs/DialogFooter';
-import { IMPORT_REPORT_LEAD, importReportTitle } from '@/lib/spreadsheet/import-report-copy';
+import { IMPORT_REPORT_LEAD, importReportTitle } from '@livedoc/sheets/files';
 import {
   dismissImportReport,
   subscribeImportReports,

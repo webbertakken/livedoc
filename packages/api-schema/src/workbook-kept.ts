@@ -3,6 +3,7 @@
 // travel as they are; an entry's bytes as base64. Sent in requests of up to KEPT_REQUEST_BYTES each (D114).
 import {
   isKeptPlace,
+  keptWithinSizes,
   type KeptContent,
   type KeptItem,
   type KeptPart,
@@ -195,4 +196,16 @@ export function keptBatches(kept: KeptContent<StoredAt>): WorkbookKeptDto[] {
   for (const rel of kept.relationships) add('relationships', rel);
   for (const part of kept.parts) add('parts', partToWire(part));
   return batches;
+}
+
+/**
+ * The requests that send a spreadsheet's kept content, fitted to the sizes a spreadsheet stores (D113), and how many
+ * of its items, relationships and entries were past them and left out.
+ */
+export function keptRequests(kept: KeptContent<StoredAt>): {
+  batches: WorkbookKeptDto[];
+  left: number;
+} {
+  const fitted = keptWithinSizes(kept);
+  return { batches: keptBatches(fitted.kept), left: fitted.left };
 }

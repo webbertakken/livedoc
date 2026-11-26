@@ -17,13 +17,9 @@ const keptUrl = (scope: KeptScope) =>
  * items, relationships and entries were past the sizes and left out (`kept_too_large`), 0 for none.
  */
 export async function sendKept(scope: KeptScope, kept: KeptContent<StoredAt>): Promise<number> {
-  const [{ keptBatches }, { keptWithinSizes }] = await Promise.all([
-    import('@livedoc/api-schema/workbook-kept'),
-    import('@livedoc/sheets/files'),
-  ]);
-  const fitted = keptWithinSizes(kept);
-  if (fitted.left > 0) debugLog('[workbook] kept too large', { left: fitted.left });
-  const batches = keptBatches(fitted.kept);
+  const { keptRequests } = await import('@livedoc/api-schema/workbook-kept');
+  const { batches, left } = keptRequests(kept);
+  if (left > 0) debugLog('[workbook] kept too large', { left });
   for (const batch of batches) {
     const res = await apiFetch(keptUrl(scope), {
       method: 'POST',
@@ -32,8 +28,8 @@ export async function sendKept(scope: KeptScope, kept: KeptContent<StoredAt>): P
     });
     await expectOk(res, 'keep file content');
   }
-  debugLog('[workbook] kept sent', { requests: batches.length, left: fitted.left });
-  return fitted.left;
+  debugLog('[workbook] kept sent', { requests: batches.length, left });
+  return left;
 }
 
 /** A spreadsheet's kept content whole, or undefined when it keeps none. */

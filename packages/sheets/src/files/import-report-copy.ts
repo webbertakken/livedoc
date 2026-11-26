@@ -1,7 +1,9 @@
 // What the import report says (docs/specs/029-sheets/files-and-print.md "The import report", D120): a line a kind,
 // counted, naming up to three; the words a person reads for each of the read's losses.
-import { FILE_READ_CELLS_MAX, WORKBOOK_INPUT_MAX, WORKBOOK_SHEETS_MAX } from '@livedoc/sheets';
-import type { ReportedLoss, SheetRename } from '@livedoc/sheets/files';
+import { WORKBOOK_INPUT_MAX, WORKBOOK_SHEETS_MAX } from '../workbook/workbook-limits';
+import { FILE_READ_CELLS_MAX } from './file-read-limits';
+import type { FileOpenRejection } from './import-file';
+import type { ReportedLoss, SheetRename } from './import-report';
 
 export const IMPORT_REPORT_LEAD = 'Some of what the file holds is not in the spreadsheet:';
 
@@ -106,3 +108,22 @@ export function importReportLine(loss: ReportedLoss): string {
       return `${counted(count, 'sheet name is', 'sheet names are')} changed to fit: ${renamed(loss.names)}`;
   }
 }
+
+// What each refusal of a file says (docs/specs/020-import-export/office-packages.md "Named rejections").
+const FILE_OPEN_REFUSAL_WORDS: Record<FileOpenRejection, string> = {
+  package_damaged: 'This file is damaged and could not be opened.',
+  package_too_large: 'This file is too large to open.',
+  picture_too_large: 'This file holds a picture too large to open.',
+  document_too_large: 'This file is too large to open.',
+  package_encrypted:
+    'This file is protected by a password. Remove the password, then open it again.',
+  package_wrong_type: 'This file is not a spreadsheet LiveDoc can open yet.',
+  xml_doctype_refused: 'This file holds content LiveDoc never opens.',
+  xml_malformed: 'This file is damaged and could not be opened.',
+  no_sheets: 'This file holds no sheets to open.',
+  import_refused: 'The file could not be opened. Try again.',
+};
+
+/** The words a person reads for a file that did not open. */
+export const fileOpenRefusalWords = (rejection: FileOpenRejection): string =>
+  FILE_OPEN_REFUSAL_WORDS[rejection];

@@ -326,6 +326,10 @@ Make one with its sheets named in order, the first filled from a CSV file:
 
   livedoc spreadsheet new "Model values" Models Pareto --csv models.csv
 
+Or open a file as one, as File > Open does (ods, fods, xlsx, csv, tsv; kept in its format):
+
+  livedoc spreadsheet import budget.xlsx [--name "Budget"]
+
 Over MCP: create_spreadsheet {name, sheets: [{name, rows}]}. Cells are read as typed in en-GB:
 a number stays a number, "1/2" is a date (send text as a formula, ="1/2"), a leading = a
 formula, which may read another sheet (=Models!B2). An empty cell is no value: a chart gaps it.
@@ -343,7 +347,11 @@ clear_charts {id: "<id>"} takes one off, clear_charts {} all. add_sheet {title, 
 
 Read back with read_sheet: each cell's input, the value worked out, what it shows. Cheaper:
 read_document on any of its tabs outlines the workbook (sheets, used ranges, rules, charts);
-view "cells" {range: "A1:D40"} prints the sheet a row a line, a formula with what it shows.`,
+view "cells" {range: "A1:D40"} prints the sheet a row a line, a formula with what it shows.
+
+The file: livedoc spreadsheet download <doc> [--format xlsx|ods|fods|csv|tsv] [--sheet <name>]
+writes it with its charts. Change its format with convert_spreadsheet {to: "xlsx"} (or
+livedoc spreadsheet convert <doc> xlsx); check: true only lists what Excel cannot hold.`,
   },
 } as const;
 

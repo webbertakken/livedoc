@@ -27,6 +27,7 @@ export const COMMAND_OF_TOOL: Readonly<Record<string, string>> = {
   change_sheet: 'sheet set',
   add_sheet: 'sheet add',
   create_spreadsheet: 'spreadsheet new',
+  convert_spreadsheet: 'spreadsheet convert',
   change_pages: 'page set',
   write_article: 'article set',
   read_form: 'form get',

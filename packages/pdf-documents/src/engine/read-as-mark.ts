@@ -7,6 +7,8 @@ import {
   LINE_STYLES,
   MARK_KIND_LABELS,
   Mark,
+  STAMP_TURNS,
+  type StampTurnDegrees,
   type Box,
   type LineEnd,
   type LineStyle,
@@ -26,6 +28,7 @@ import {
   PDF_TEXT_SIZE_MIN_PT,
 } from '../limits';
 import { Stamps } from '../stamps';
+import { StampTurn } from '../stamp-turn';
 import { appearanceBox } from './appearance';
 import type { ReaderFile } from './reader-file';
 import { MarkFonts } from '../mark-fonts';
@@ -279,6 +282,18 @@ function subjectRead(mark: Omit<FileMark, 'mark'>): { subject?: string } {
   return subject && !own ? { subject } : {};
 }
 
+/** A stamp's `Rotate` where it is a quarter turn (marks.md "In the file"); any other reads as none. */
+function turnOf(file: ReaderFile, annotation: number): StampTurnDegrees | undefined {
+  const out = file.alloc(4);
+  const named = file.p.FPDFAnnot_GetNumberValue(annotation, 'Rotate', out);
+  const read = file.runtime.getValue(out, 'float');
+  file.free(out);
+  const degrees = named && Number.isFinite(read) ? ((Math.round(read) % 360) + 360) % 360 : 0;
+  return STAMP_TURNS.includes(degrees as StampTurnDegrees)
+    ? (degrees as StampTurnDegrees)
+    : undefined;
+}
+
 /** What every kind holds: its id, page, colour, opacity, author, subject and dates. */
 function baseOf(mark: Omit<FileMark, 'mark'>, page: PageName, colour: string | null) {
   const created = PdfDate.read(mark.created);
@@ -414,15 +429,20 @@ function valueOf(
       (each) => each.fileName === fileName.replace(/^\//, ''),
     );
     if (!stamp) return {};
+    const turn = turnOf(file, annotation);
     const value = {
       ...baseOf(mark, name, mark.colour),
       kind: 'stamp' as const,
       stamp: stamp.id,
       lines: lines.length > 0 ? lines : [stamp.name.toUpperCase()],
+      ...(turn ? { turn } : {}),
     };
+    // A turned stamp's `Rect` is its box as it shows: its upright drawing's box is that, its sides swapped back.
     return {
       ...value,
-      rect: drawnWithin(rect, (box) => MarkDrawing.of({ ...value, rect: box })),
+      rect: drawnWithin(StampTurn.upright(rect, turn), (box) =>
+        MarkDrawing.of({ ...value, rect: box }),
+      ),
     };
   }
   return undefined;

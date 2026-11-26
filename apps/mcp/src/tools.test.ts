@@ -132,6 +132,12 @@ const SHEET = sheetToJson(emptySheet({ id: 'sheet_budget', tabId: 't_1', title: 
 function okResponse(request: Request): Response {
   const url = new URL(request.url);
   const path = url.pathname.replace(/^\/api/, '');
+  if (path.endsWith('/workbook/conversion'))
+    return Response.json(
+      request.method === 'POST'
+        ? { workbook: {}, rev: 1 }
+        : { from: 'ods', to: 'xlsx', losses: [] },
+    );
   if (url.searchParams.get('view') === 'storm') {
     const reading = {
       schema: 'livedoc.storm/1',
@@ -269,7 +275,7 @@ const AUTHED = { authInfo: { token: 'tok_test' } };
 const flush = () => new Promise((resolve) => setTimeout(resolve, 0));
 
 describe('registerTools', () => {
-  it('registers the thirty-three documented tools, each with a description', () => {
+  it('registers the thirty-four documented tools, each with a description', () => {
     const { registered } = harness();
     const current = registered.filter((r) => !isDeprecated(r));
     expect(current.map((r) => r.name).sort()).toEqual([
@@ -284,6 +290,7 @@ describe('registerTools', () => {
       'change_items',
       'change_pages',
       'change_sheet',
+      'convert_spreadsheet',
       'create_document',
       'create_spreadsheet',
       'delete_document',
@@ -427,6 +434,7 @@ describe('tool annotations', () => {
     change_sheet: 'destructive',
     add_sheet: 'write',
     create_spreadsheet: 'write',
+    convert_spreadsheet: 'write',
     // docs/specs/024-agents/pages-for-agents.md: change_pages deletes pages and replaces their
     // content; write_article replaces an article's text.
     change_pages: 'destructive',

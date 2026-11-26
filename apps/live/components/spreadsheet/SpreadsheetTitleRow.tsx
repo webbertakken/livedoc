@@ -18,7 +18,7 @@ import { apiDownloadWorkbook, type DownloadFormat } from '@/lib/api/workbook';
 import { debugLog } from '@/lib/debug-log';
 import { downloadBlob } from '@/lib/download-blob';
 import {
-  nameFromFile,
+  spreadsheetNameFor,
   openingNotice,
   openSpreadsheetFile,
 } from '@/lib/spreadsheet/open-spreadsheet-file';
@@ -186,7 +186,7 @@ export function SpreadsheetTitleRow({
 
   const open = async (file: File) => {
     setProblem(null);
-    const name = nameFromFile(file.name);
+    const name = spreadsheetNameFor(file.name);
     setOpening(openingNotice(name, 0));
     const opened = await openSpreadsheetFile(scope.ownerId, file, (share) =>
       setOpening(openingNotice(name, share)),
