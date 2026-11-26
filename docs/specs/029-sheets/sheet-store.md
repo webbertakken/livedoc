@@ -410,6 +410,13 @@ tells them.
 - **Views** ([A spreadsheet's views](../024-agents/document-views.md#a-spreadsheets-views)): `read_document` and
   `livedoc tab view` on any of a spreadsheet's tabs answer the workbook outline; `view: "cells"` with a `range` reads
   that tab's sheet a row a line, bounded as `read_sheet` is.
+- **`convert_spreadsheet`** (`livedoc spreadsheet convert <doc> <to>`) changes a spreadsheet's file format to `ods`,
+  `fods` or `xlsx` ([Converting](files-and-print.md)): it answers what a file of that format cannot hold, in the
+  conversion dialog's words, then converts; with `check` it only answers them (D271). Within one standard it is
+  refused `format_same_standard`, as the editor's is.
+- **`livedoc spreadsheet download <doc>`** writes the spreadsheet's file in its own format, or `--format` `ods`, `fods`,
+  `xlsx`, `csv` or `tsv` (the sheet `--sheet` names, the first by default), to `--to` or, without it, under the name
+  the api gives it in the working folder (D272). It carries every chart the file's standard holds.
 - **Previews**: a spreadsheet's sheet tab draws as its sheet laid out as a Plan Sheet tab is for its image: its cells
   from A1 to the last filled cell and every chart over them, or a `range` from its top-left, within 4,000 px a side
   (D273). `GET .../tabs/:tabId/render.svg?range=` answers it, `livedoc tab render --range` writes it as PNG or SVG,
@@ -448,6 +455,10 @@ The code cites each by its id.
 - **D114** Kept content in the store: package entries in chunks of 1 MB; sent in requests of up to 7 MB each, entries' bytes as base64
   (default).
 - **D115** Kept content of a sheet Duplicate Tab copies: Stays with the sheet it came from (default).
+- **D271** An agent's conversion: one call lists the losses and converts, as the dialog's Convert would after reading
+  them; `check` lists them without converting (default).
+- **D272** Where `spreadsheet download` writes without `--to`: the file name the api answers (`Content-Disposition`),
+  in the working folder, replacing a file of that name (default).
 - **D273** A range's preview: its rows and columns from its top-left, labelled as the sheet labels them, no frozen
   panes; a chart drawn only when its top-left cell is in the range (default).
 - **D116** Kept content in a `.livedoc` file: Not carried (default).

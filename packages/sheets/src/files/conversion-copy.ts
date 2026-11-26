@@ -1,7 +1,8 @@
 // The conversion dialog's words (docs/specs/029-sheets/files-and-print.md "Converting", D88): its title, and one line
 // a loss, counted, naming up to three sheets or functions. Pure, so every line is tested without React.
-import type { WorkbookFormat } from '@livedoc/sheets';
-import type { ConversionLoss, KeptKind } from '@livedoc/sheets/files';
+import type { WorkbookFormat } from '../workbook-record';
+import type { ConversionLoss } from './conversion';
+import type { KeptKind } from './kept-content';
 
 /** The names a line shows before it counts the rest. */
 export const CONVERSION_NAMES_SHOWN = 3;

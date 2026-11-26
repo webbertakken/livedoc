@@ -241,6 +241,10 @@ async function api(request: Request): Promise<Response> {
     return json({ documents: [{ id: 'd1', name: 'Roadmap', savedAt: 1_700_000_000_000 }] });
   }
   if (path === '/teams') return json({ teams: [] });
+  if (path.endsWith('/workbook/conversion'))
+    return request.method === 'POST'
+      ? json({ workbook: {}, rev: 1 })
+      : json({ from: 'ods', to: 'xlsx', losses: [{ k: 'text_cut', count: 1 }] });
   if (path.endsWith('/sheets'))
     return request.method === 'POST'
       ? json({ sheet: { ...SHEET, id: (await request.json<{ id: string }>()).id, cells: [] } })
@@ -477,6 +481,11 @@ const CALLS: { tool: string; output: keyof typeof outputs; args: Record<string, 
     tool: 'create_spreadsheet',
     output: 'createSpreadsheetOutput',
     args: { name: 'Model values', sheets: [{ name: 'Models' }, { name: 'Pareto' }] },
+  },
+  {
+    tool: 'convert_spreadsheet',
+    output: 'convertSpreadsheetOutput',
+    args: { documentId: 'd1', to: 'xlsx' },
   },
   {
     tool: 'change_pages',

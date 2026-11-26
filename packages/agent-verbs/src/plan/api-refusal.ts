@@ -36,6 +36,11 @@ const BY_CODE: Readonly<Record<string, string>> = {
   form_full: 'the board or sheet its responses go to is full.',
   form_busy: 'the form is busy: wait a minute, then try again.',
   not_a_form_tab: 'that tab holds no form: add one with add_form.',
+  // A spreadsheet's file (docs/specs/029-sheets/sheet-store.md "Built for agents in a spreadsheet").
+  workbook_not_found: 'that document is no spreadsheet: create_spreadsheet makes one.',
+  format_same_standard:
+    'the spreadsheet is already in that standard: an .ods and a .fods file are both OpenDocument.',
+  file_type_unknown: 'that is not a spreadsheet format: ods, fods or xlsx.',
 };
 
 const BY_STATUS: Readonly<Record<number, string>> = {

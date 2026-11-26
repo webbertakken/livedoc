@@ -12,6 +12,7 @@ export * from './read-workbook-file';
 export * from './file-parts';
 export * from './xlsx-bounds';
 export * from './conversion';
+export * from './conversion-copy';
 export * from './kept-content';
 export * from './kept-anchors';
 export * from './kept-sizes';

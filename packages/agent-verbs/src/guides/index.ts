@@ -343,7 +343,11 @@ clear_charts {} takes them all off. add_sheet {title, after} adds a sheet after 
 
 Read back with read_sheet: each cell's input, the value worked out, what it shows. Cheaper:
 read_document on any of its tabs outlines the workbook (sheets, used ranges, rules, charts);
-view "cells" {range: "A1:D40"} prints the sheet a row a line, a formula with what it shows.`,
+view "cells" {range: "A1:D40"} prints the sheet a row a line, a formula with what it shows.
+
+The file: livedoc spreadsheet download <doc> [--format xlsx|ods|fods|csv|tsv] [--sheet <name>]
+writes it with its charts. Change its format with convert_spreadsheet {to: "xlsx"} (or
+livedoc spreadsheet convert <doc> xlsx); check: true only lists what Excel cannot hold.`,
   },
 } as const;
 

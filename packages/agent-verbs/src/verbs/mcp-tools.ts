@@ -85,6 +85,8 @@ import {
   readSheetShape,
   createSpreadsheetOutput,
   createSpreadsheetShape,
+  convertSpreadsheetOutput,
+  convertSpreadsheetShape,
 } from '../mcp/sheet-schema';
 
 type ToolDecl<S extends z.ZodRawShape, O extends z.ZodRawShape> = {
@@ -433,6 +435,17 @@ export const mcpCreateSpreadsheet = mcpTool('create_spreadsheet', {
   outputSchema: createSpreadsheetOutput,
 });
 
+export const mcpConvertSpreadsheet = mcpTool('convert_spreadsheet', {
+  behaviour: 'write',
+  title: 'Convert a spreadsheet',
+  description:
+    "Change a spreadsheet's file format: ods or fods (OpenDocument) or xlsx (Excel). Answers what a file of the " +
+    'new format cannot hold (sheet names cut, functions Excel lacks, ...), then converts; with check only answers. ' +
+    'Its sheets and cells stay as they are; its downloads are then in that format.',
+  inputSchema: convertSpreadsheetShape,
+  outputSchema: convertSpreadsheetOutput,
+});
+
 export const mcpChangePages = mcpTool('change_pages', {
   behaviour: 'destructive',
   title: 'Change pages',
@@ -602,6 +615,7 @@ export const MCP_TOOL_VERBS: readonly McpToolVerb[] = [
   mcpChangeSheet,
   mcpAddSheet,
   mcpCreateSpreadsheet,
+  mcpConvertSpreadsheet,
   mcpChangePages,
   mcpWriteArticle,
   mcpListImages,

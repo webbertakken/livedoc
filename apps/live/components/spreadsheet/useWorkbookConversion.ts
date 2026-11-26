@@ -9,7 +9,7 @@ import type { ConversionLoss } from '@livedoc/sheets/files';
 import type { ItemUndoStep } from '@/hooks/plan/item-undo-journal';
 import { apiConvertWorkbook, apiWorkbookConversion, type WorkbookScope } from '@/lib/api/workbook';
 import { debugLog } from '@/lib/debug-log';
-import type { ConversionPurpose } from '@/lib/spreadsheet/conversion-copy';
+import type { ConversionPurpose } from '@livedoc/sheets/files';
 import { track } from '@/lib/telemetry';
 
 export const CONVERT_FAILED = 'The spreadsheet could not be converted. Try again.';
