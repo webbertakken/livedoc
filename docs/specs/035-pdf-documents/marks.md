@@ -248,18 +248,38 @@ written into the file as a standard annotation, so any reader shows it. The rese
   Align text's Left is checked for it where every paragraph reads left to right, Right where every one reads right to
   left, and none where they differ `(default)`.
 - Each restyle is one step of undo, and leaves the tool's remembered look as it was `(default)`.
-- **Rotate**: stamps, Text and shapes turn by a handle, snapping at 15°; a stamp also turns a quarter at a time,
-  written as the stamp's `Rotate` and read back exactly. The quarter turns are built first; the free handle is built
-  with Text and shapes, after the stamp work, and its file form follows how Acrobat itself writes a stamp turned by
-  any angle before any entry of LiveDoc's own (Director, 2026-11-26).
-  - **A stamp's quarter turns**: Format > Rotate > Clockwise or Counterclockwise turns every selected stamp a quarter
-    about its middle, one step of undo; a stamp that would leave its page is moved onto it; each is dimmed with no
-    stamp selected `(default)`.
-  - A turned stamp's box, its handles and what a press reaches are the box as it shows; resizing it keeps it turned
-    `(default)`.
-  - **In the file** a turned stamp carries `Rotate` (90, 180 or 270, anticlockwise, as pdf.js writes and reads it), its
-    appearance drawn upright in `BBox` with the turn as its `Matrix`, and `Rect` the box as it shows; a file's stamp
-    of LiveDoc's with `Rotate` a quarter turn is read back turned, any other `Rotate` as none `(default)`.
+- **Rotate**: a mark that turns is turned by its handle, snapping at 15°, by Format > Rotate a quarter at a time, or to
+  an angle typed in Properties (Director, 2026-11-26).
+  - **Marks that turn**: a stamp, a Text, a Rectangle and an Ellipse turn about their middle, their box and words
+    with them; a Line, an Arrow, a Polygon, a Cloud and Connected lines turn by their points turning about the middle
+    of their bounds. **Left out, by name**: a Callout, as whether its leader turns with its box or keeps pointing
+    where it points is not settled; a Drawing, as the spec's list never held it; the text marks, which follow the
+    page's text `(default)`.
+  - **A mark's angle** is a whole number of degrees, anticlockwise, 0 to 359; upright reads as none. A file's angle
+    that is not whole is read to the nearest degree `(default)`.
+  - **The handle**: a selected mark that turns, alone, shows a round handle `PDF_ROTATE_HANDLE_GAP_PX` above the top
+    of its box as it shows, joined to it by a line; dragging it turns the mark about its middle to the pointer's
+    angle, snapped to the nearest 15°, drawn turned as it goes; letting go is one change, one step of undo, and
+    Escape or a cancelled drag puts it back. A mark whose box would leave its page is moved onto it. A finger drags it
+    as a pointer does; the handle's target is at least 24 px `(default)`.
+  - **Format > Rotate > Clockwise or Counterclockwise** turns every selected mark that turns a quarter about its own
+    middle, one step of undo; each is dimmed with none of them selected; a mark that would leave its page is moved
+    onto it `(default)`.
+  - **Properties' Angle** is a field of degrees for a mark that turns and has a box (a stamp, a Text, a Rectangle, an
+    Ellipse): a number typed is taken to the nearest 15° and held within 0 to 359; Enter or leaving it turns the
+    mark, one step of undo; Escape puts the field back. It shows a file's angle as the file has it `(default)`.
+  - **A turned mark's box** is the box as it shows; its selection outline, its handles and what a press reaches are
+    its box turned with it. Resizing a turned mark resizes it in its own frame, its angle kept. Moving it moves it as
+    it shows `(default)`.
+  - **A turned Text** is typed into turned, its words upright in its own frame `(default)`.
+  - **In the file** a turned stamp, Text, Rectangle or Ellipse carries `Rotate` its angle (MuPDF's form), its
+    appearance drawn upright in `BBox` with the turn as its `Matrix`, and `Rect` the box as it shows (its turned
+    box's bounds). It is read back from `Rotate`, else from a turned appearance `Matrix`; a `Matrix` that is no turn
+    (skewed, or scaled unevenly) reads as upright. A Line, an Arrow, a Polygon, a Cloud and Connected lines are
+    written with their points turned, which every reader reads.
+  - **Evidence**: pdf.js writes a stamp's `Rotate` as anticlockwise degrees and draws its appearance by its `Matrix`,
+    but reads `Rotate` only as a multiple of 90; MuPDF writes `Rotate` at any angle. How Acrobat writes a stamp turned
+    30° is unverified: no Acrobat-made file of one has been read.
 - **Arrange**: bring forward, send backward, to front, to back, among the marks of its page.
 - **Group**: several selected marks become one that moves and is answered as one; **Ungroup** undoes it.
   - Format > Group, with two or more marks selected, gives each the same new **group** (a fresh id), one step of
@@ -302,7 +322,7 @@ written into the file as a standard annotation, so any reader shows it. The rese
     `(default)`.
   - It reads, in order: Kind, Author, Subject, Made, Changed (the browser's date and 24-hour time, as a dynamic
     stamp's), Colour (its name in the colour picker, else `#rrggbb`), Opacity (a percentage), and where the mark has
-    them its Line width (points), Line style, Fill and Words; Locked and History join it when Lock and threads are
+    them its Angle (degrees, [Rotate](#changing-a-mark)), Line width (points), Line style, Fill and Words; Locked and History join it when Lock and threads are
     built `(default)`.
   - **The subject** is a field of at most `PDF_MARK_SUBJECT_MAX_CHARS` characters, trimmed; Enter or leaving it
     changes the mark, one step of undo; emptied, the mark goes back to its kind's name; Escape puts the field back
@@ -558,6 +578,8 @@ question mark. The research is [Every script in a mark's words](../../research/p
 | `PDF_MARK_NUDGE_PT`                  | 1                   | `(default)` Points an arrow key moves a selected mark                                              |
 | `PDF_MARK_NUDGE_FAR_PT`              | 10                  | `(default)` Points ⇧ with an arrow key moves it                                                    |
 | `PDF_SQUIGGLE_STEP_PT`               | 2                   | `(default)` A squiggly underline's tooth, wide and high, in points; safe range 1 to 4              |
+| `PDF_ROTATE_SNAP_DEGREES`            | 15                  | `(default)` The steps the handle and Properties' Angle turn a mark by; safe range 5 to 45          |
+| `PDF_ROTATE_HANDLE_GAP_PX`           | 24                  | `(default)` Screen pixels between a mark's box and its rotate handle; safe range 16 to 40          |
 | `PDF_STAMP_LINE_MAX_CHARS`           | 300                 | `(default)` A stamp's line as placed: a display name and a time fit; safe range 100 to 1,000       |
 | `PDF_STAMP_IDENTITY_FIELD_MAX_CHARS` | 64                  | `(default)` One field of a stamp identity: four fit the 4 KB preferences with room; safe 32 to 128 |
 | `PDF_PINNED_FILE_MAX_BYTES`          | 26,214,400 (25 MiB) | `(default)` A pinned file is written into the bake, which must itself fit `FILE_TAB_MAX_BYTES`     |
@@ -623,7 +645,7 @@ Gated on the session's `can` (`pdfReviews`), and checked by the room.
   (a Polygon, a Cloud or Connected lines ended, before it is made), `[pdf] poly-let-go kind=<kind>` (one let go by
   Escape), `[pdf] strokes-erased strokes=<n> marks=<n> deleted=<n>` (a drag of Erase let go that rubbed out any),
   `[pdf] mark-subject kind=<kind> cleared=<bool>` (a subject changed), `[pdf] look-defaulted kind=<kind>` (a mark's look
-  made its tool's), `[pdf] stamps-turned count=<n> way=<clockwise|counterclockwise>`,
+  made its tool's), `[pdf] marks-turned count=<n> way=<clockwise|counterclockwise|handle|angle> degrees=<n>` (degrees the last turn's angle),
   `[pdf] stamp-identity-changed field=<title|organisation|unit|email> set=<bool>`, `[pdf] stamp-identity-not-saved`
   (this browser would not keep it), `[pdf] stamp-identity-refused reason=stamp_identity_too_long field=<field>` (a
   field kept too long, read as not set).

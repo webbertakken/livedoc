@@ -166,26 +166,26 @@ colour, weight, alignment, spacing), an object (arrange, align, distribute, flip
 to act on is dimmed. Colours come from the one colour picker
 ([Colour picker](../004-interface-design/colour-picker.md)).
 
-| Item                 | Does                                                                                                       | Level       | Mode      |
-| -------------------- | ---------------------------------------------------------------------------------------------------------- | ----------- | --------- |
-| Colour, Fill colour  | Of the selected mark, text or shape                                                                        | participate | Reviewing |
-| Opacity ▸            | 100%; 75%; 50%; 25%; 10%                                                                                   | participate | Reviewing |
-| Line width ▸         | 0.5 pt; 1 pt; 2 pt; 4 pt; 8 pt; 12 pt                                                                      | participate | Reviewing |
-| Line style ▸         | Solid; Dashed; Dotted; Dash dot; Long dashes                                                               | participate | Reviewing |
-| Line ends ▸          | None; Arrow; Open arrow; Circle; Square; Diamond; Bar                                                      | participate | Reviewing |
-| Align text ▸         | Left; Centre; Right; Justified. A Text or Callout mark's words, or a text box's                            | participate | Reviewing |
-| Arrange ▸            | Bring to front; Bring forward; Send backward; Send to back                                                 | participate | Reviewing |
-| Group, Ungroup, Lock | Marks ([Marks](marks.md#changing-a-mark)); Lock is a check                                                 | participate | Reviewing |
-| Properties           | The selected mark's, in the side panel ([Marks](marks.md#changing-a-mark))                                 | participate | Reviewing |
-| Text ▸               | Bold; Italic; Underline; Strikethrough; Superscript; Subscript. [Editing text](editing-text.md#formatting) | edit        | Editing   |
-| Spacing              | Line, paragraph and character spacing and the horizontal scale, in the side panel                          | edit        | Editing   |
-| List ▸               | Bulleted; Numbered; None                                                                                   | edit        | Editing   |
-| Align objects ▸      | Left; Centre; Right; Top; Middle; Bottom. [Objects](objects.md#arranging)                                  | edit        | Editing   |
-| Distribute ▸         | Horizontally; Vertically                                                                                   | edit        | Editing   |
-| Match size ▸         | Width; Height; Both                                                                                        | edit        | Editing   |
-| Flip ▸               | Horizontally; Vertically                                                                                   | edit        | Editing   |
-| Rotate ▸             | Clockwise; Counterclockwise. The selected stamps a quarter ([Marks](marks.md#changing-a-mark)), or objects | participate | Reviewing |
-| Crop                 | A picture ([Objects](objects.md#pictures))                                                                 | edit        | Editing   |
+| Item                 | Does                                                                                                                | Level       | Mode      |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------- | ----------- | --------- |
+| Colour, Fill colour  | Of the selected mark, text or shape                                                                                 | participate | Reviewing |
+| Opacity ▸            | 100%; 75%; 50%; 25%; 10%                                                                                            | participate | Reviewing |
+| Line width ▸         | 0.5 pt; 1 pt; 2 pt; 4 pt; 8 pt; 12 pt                                                                               | participate | Reviewing |
+| Line style ▸         | Solid; Dashed; Dotted; Dash dot; Long dashes                                                                        | participate | Reviewing |
+| Line ends ▸          | None; Arrow; Open arrow; Circle; Square; Diamond; Bar                                                               | participate | Reviewing |
+| Align text ▸         | Left; Centre; Right; Justified. A Text or Callout mark's words, or a text box's                                     | participate | Reviewing |
+| Arrange ▸            | Bring to front; Bring forward; Send backward; Send to back                                                          | participate | Reviewing |
+| Group, Ungroup, Lock | Marks ([Marks](marks.md#changing-a-mark)); Lock is a check                                                          | participate | Reviewing |
+| Properties           | The selected mark's, in the side panel ([Marks](marks.md#changing-a-mark))                                          | participate | Reviewing |
+| Text ▸               | Bold; Italic; Underline; Strikethrough; Superscript; Subscript. [Editing text](editing-text.md#formatting)          | edit        | Editing   |
+| Spacing              | Line, paragraph and character spacing and the horizontal scale, in the side panel                                   | edit        | Editing   |
+| List ▸               | Bulleted; Numbered; None                                                                                            | edit        | Editing   |
+| Align objects ▸      | Left; Centre; Right; Top; Middle; Bottom. [Objects](objects.md#arranging)                                           | edit        | Editing   |
+| Distribute ▸         | Horizontally; Vertically                                                                                            | edit        | Editing   |
+| Match size ▸         | Width; Height; Both                                                                                                 | edit        | Editing   |
+| Flip ▸               | Horizontally; Vertically                                                                                            | edit        | Editing   |
+| Rotate ▸             | Clockwise; Counterclockwise. The selected marks that turn a quarter ([Marks](marks.md#changing-a-mark)), or objects | participate | Reviewing |
+| Crop                 | A picture ([Objects](objects.md#pictures))                                                                          | edit        | Editing   |
 
 - The table is Format's items `(default)`: every one is a function [Marks](marks.md#changing-a-mark),
   [Editing text](editing-text.md#formatting) or [Objects](objects.md#arranging) names, and none is new here.
