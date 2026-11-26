@@ -6,42 +6,19 @@ import type * as Y from 'yjs';
 import type { Comment, CommentMention } from '@livedoc/document';
 import {
   FIRST_DOCUMENT_TAB_ID,
+  drawnMentions,
   LiveThreads,
   type DocumentTab,
   type TextDocumentComment,
   type TextDocumentThread,
+  threadAssignment,
 } from '@livedoc/text-documents';
 import type { ReviewThreadRow } from '@/lib/office/review/comment-filters';
 
-const text = (value: unknown): value is string => typeof value === 'string' && value !== '';
-
 /** A thread's assignee: its latest comment's that carries one well formed, else none (review.md "Assigning"). */
-export function threadAssignee(thread: {
+export const threadAssignee = (thread: {
   readonly comments: readonly TextDocumentComment[];
-}): CommentMention | null {
-  for (let i = thread.comments.length - 1; i >= 0; i -= 1) {
-    const [assignee] = drawnMentions([thread.comments[i]!.assignee]);
-    if (assignee) return assignee;
-  }
-  return null;
-}
-
-/** A comment's mentions a chip is drawn from: each with a name and handle, a file's with no account (review.md "Mentions"). */
-function drawnMentions(mentions: TextDocumentComment['mentions']): CommentMention[] {
-  const out: CommentMention[] = [];
-  for (const m of mentions ?? []) {
-    if (typeof m !== 'object' || m === null) continue;
-    const { userId, memberId, name, handle } = m as Record<string, unknown>;
-    if (!text(name) || !text(handle)) continue;
-    out.push({
-      userId: text(userId) ? userId : null,
-      ...(text(memberId) ? { memberId } : {}),
-      name,
-      handle,
-    });
-  }
-  return out;
-}
+}): CommentMention | null => threadAssignment(thread)?.assignee ?? null;
 
 /** A text document's comment in the shared shape; its author's key is the shape's author id. */
 export const sharedComment = (c: TextDocumentComment): Comment & { fromFile?: true } => {

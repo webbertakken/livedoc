@@ -17,6 +17,7 @@ export const place = {
   tabId: 't1',
   tabName: 'Flow',
   elementLabel: 'Checkout',
+  anchor: 'element' as const,
 };
 
 export const action = (over: Partial<ActivityAction> = {}): ActivityAction => ({

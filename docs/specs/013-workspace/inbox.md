@@ -72,7 +72,8 @@ Four kinds of row, each told apart by **why it is here**:
   is @-mentioned in it ([Comment mentions](../012-collaboration/comment-mentions.md)), or the thread is on a document
   the reader **owns** (owners already hear about every new comment by email,
   [Transactional & lifecycle email (Resend)](../014-identity/transactional-email.md)). A Plan card's thread lists
-  here too (§2.5), by the same rules.
+  here too (§2.5), by the same rules, and so does a thread on a stretch of a text document's writing (§2.7), whose
+  assigned comment lists under My Actions and Assigned by Me as an action does.
 - **Form Responses**: forms with responses the reader has not seen, in documents they own or reach through a team
   ([Forms](../030-forms/forms.md#hearing-about-responses)). The Inbox badge does not count them.
 
@@ -91,7 +92,7 @@ Each row is three lines:
    **Form Responses**, where no one person stands behind the row. The name is semibold when the row asks something
    of the reader: theirs to do, a mention, a thread on their document, new responses.
 2. **What it is**: the action's name; the card's **#key title**; the element a thread is on (its label, a table's
-   first cell, or "Untitled"); the form's heading.
+   first cell, or "Untitled"); the text a text document's thread is on (§2.7); the form's heading.
 3. **Why it is here**, as an icon and words: **To Do**, **Waiting on Bo** (the assignee's first name, else "a
    teammate"), **Mentioned You** (a mention wins), **On Your Document** (until the reader comments),
    **You Commented**, or **6 New Responses**; then a **document chip** naming the document (a team document's chip
@@ -140,6 +141,9 @@ kind. The rest are offered only where the page can carry them out, row by row:
 - **Mark Done** (e) on an **action**, only in the editor's Explorer panel and only for an action on the tab the
   editor has open, through the canvas's own Mark Done, offered when the editor offers it (an action's status has no
   route of its own). `Activity·Resolved·Action`.
+- Nothing more on a **text document's thread** or its assigned comment (§2.7): its comments live in the document's
+  live state, which the comment routes do not reach, so it is answered, resolved and marked done in the document
+  (D229). The pane shows the row's latest comment, as it does when a read fails, and reads nothing.
 - Nothing more on a **This Browser** row (no page here reaches the browser's store but the editor), on a **Plan
   card** or its thread (done is its board's column; a card thread is answered on the card), or on a **form**.
 
@@ -191,6 +195,11 @@ with a fragment the editor reads on load:
 /document/<id>[?s=<code>]#t=<tabId>&el=<elementId>&open=action|comments
 /document/<id>[?s=<code>]#t=<tabId>&el=<boardId>&item=<itemId>
 ```
+
+A text document's row (§2.7) names its thread as the element: once the tab's writing is there, the thread is gone to
+as a press in the comments panel goes ([Review](../034-text-documents/review.md#the-comments-panel)): its document tab
+shown, an open thread selected in the margin with its card given the keyboard, a resolved one's text selected. A
+thread the document no longer holds says "This comment's text is gone" and leaves the tab open.
 
 A card row's link names the board it is on (§2.4): the editor selects
 the board, scrolls it into view and opens the card in the item panel
@@ -258,6 +267,7 @@ CREATE TABLE collab_actions (
   assigner_id TEXT NOT NULL, assigner_name TEXT,
   team_id TEXT,
   created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL,
+  anchor TEXT NOT NULL DEFAULT 'element',  -- 'element' | 'text' (§2.7)
   PRIMARY KEY (tab_id, element_id, action_id),
   FOREIGN KEY (tab_id) REFERENCES tabs(id) ON DELETE CASCADE
 );
@@ -271,6 +281,7 @@ CREATE TABLE collab_threads (
   mentioned_ids TEXT NOT NULL DEFAULT '[]', -- JSON array of @-mentioned user ids + member ids
   latest_text TEXT NOT NULL, latest_author_name TEXT NOT NULL, latest_author_color TEXT NOT NULL,
   first_at INTEGER NOT NULL, latest_at INTEGER NOT NULL,
+  anchor TEXT NOT NULL DEFAULT 'element',  -- 'element' | 'text' (§2.7)
   PRIMARY KEY (tab_id, element_id),
   FOREIGN KEY (tab_id) REFERENCES tabs(id) ON DELETE CASCADE
 );
@@ -318,7 +329,7 @@ The rows are derived by a pure function over the tab's elements
 (`collabIndexRowsFromElements` in `packages/document`, shared with the browser's read of documents in This Browser, §2.6), which reuses the element-label rule
 the Collaborate Panel already applies (`elementDisplayLabel`, moved
 into `packages/document` so the panel and the index cannot disagree on
-what a row is called).
+what a row is called). A text document's rows are derived from its live state instead (§2.7).
 
 **Comment times.** A thread's place in the Inbox is its latest comment's time, and that time is the writer's clock. A save (an autosave or an agent's changeset) carrying a comment timed later than the server's now plus `FUTURE_SLACK_MS` (five minutes, a device clock a little ahead) stores it at now when the comment is new, and at its stored time when it is the author's own, edited (`rewriteCommentAuthors`, `apps/api/src/comments.ts`). Without the cap, one comment from a clock running fast, or a bad value, would sit on top of everyone's Inbox for good.
 
@@ -460,6 +471,38 @@ the server's rows (`readOfflineActivity`, `apps/live/lib/offline/offline-activit
 - **Failure.** The offline store failing to answer is logged (`[inbox] offline-read-failed`) and lists nothing local;
   the page's failed state stays the server read's. A browser with no documents in This Browser reads nothing more than the
   index of ids it already holds.
+
+### 2.7 Text document threads
+
+A [text document](../034-text-documents/text-document.md)'s comment threads are kept in its live state, not in its
+tab's elements ([Review](../034-text-documents/review.md#how-a-comment-is-kept)). The tab's push reads them from the
+state when it refreshes the tab's digest, so the state is loaded once per push, and replaces the tab's rows as an
+element tab's are (`textDocumentCollabRows` in `packages/text-documents`):
+
+- **A thread row** for each thread with a comment: its element id the thread's id, its label the text it is on
+  (§1.2), `resolved` from the thread, the comments' count, the latest comment's text, author name and colour, and
+  the first and latest times.
+- **The label**: the thread's quote on one line, cut at a word to `INBOX_QUOTE_MAX` (100) characters with an
+  ellipsis, or **Comment** for a comment on no text (D231).
+- **Who is in it.** A comment's author is its adder key on the document, which says whose it is without saying who
+  ([Share roles](share-roles.md#integrity)). The push turns each key back into the identity it was made from by
+  making the keys of everyone who may have written on the document: its owner, its team's joined members, everyone
+  its share links were opened by (`shared_with`), and every identity those used to be (§2.2). A key none of them
+  makes is left out of `participant_ids`, as a canvas comment with no author id is; a comment from a file has no key
+  and reaches nobody. Keys never leave the room: the row holds identities as an element thread's does.
+- **Mentions**: each comment's mentions' account and member ids, as an element thread's (§2).
+- **An action row** for a thread with an assignee ([Review](../034-text-documents/review.md#assigning)), the
+  thread's current one: its element id the thread's id, its action id the id of the comment that assigned it, its
+  name that comment's first line cut as the assignment email cuts it, its description the comment, the assignee's
+  account id, member id and name, the assigner the comment's author (its identity found as above, else none), the
+  team of the document, created at that comment's time and updated at the thread's latest; **open** while the thread
+  is open, **done** once it is resolved (Mark as done).
+- **Where it anchors**: `collab_threads.anchor` and `collab_actions.anchor` (migration 0116) read `element` for every
+  row above them and `text` for a text document's. The read hands it to the page as `anchor`, which offers such a
+  row Open alone (§1.5) and lands it on the thread (§1.8).
+
+A text document in This Browser has no room and no push; its threads are not read by the browser's Inbox read
+(§2.6) (D230).
 
 ## 3. API
 
@@ -652,6 +695,12 @@ Never an action name, comment text, document name, or any identity.
 - `offline-activity.test.ts`: the browser read of documents in This Browser (§2.6): assigned to and by the reader, the
   guest id, threads, open and finished cards, linked cards, trashed documents, placement, the cap.
 - `collab-index-rows.test.ts` and `plan-board-rows.test.ts` live in `packages/document` with the functions.
+- `live-thread-index.test.ts` (`packages/text-documents`): a text document's rows (§2.7): labels, counts, latest,
+  keys, mentions, a file's comment, the current assignee's action and its status.
+- `document-outbox.test.ts`: a text document tab's push writes its rows with `anchor` `text`, its keys turned into
+  the owner's, a team member's, a share visitor's and an alias's identities, an unknown key left out.
+- `inbox-verbs.test.ts` and `useCollabDeepLink.test.tsx`: a text row offered Open alone and read from nowhere; its
+  link handed to the text document, which goes to the thread.
 - Help: the registry / icon / colour / articleCount tests pick the new
   article up automatically.
 
@@ -680,3 +729,9 @@ The code cites each by its id.
   error (default).
 - **D190** How long a row done here stays gone: The feed's lifetime (the visit), even if a read before the index catches
   up lists it (default).
+- **D229** What the pane offers on a text document's thread or assigned comment: Open alone; it is answered, resolved
+  and marked done in the document (default).
+- **D230** Whether the browser's read lists a text document in This Browser: No; its threads live in its own state,
+  which the Inbox's read in the browser does not load (default).
+- **D231** What a text document's thread is called in a row: its quote on one line, cut at a word to 100 characters
+  with an ellipsis, or "Comment" for a comment on no text (default).

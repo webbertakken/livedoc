@@ -220,6 +220,24 @@ describe('the verbs', () => {
     expect(within(pane()!).getByText('Still there?')).toBeTruthy();
   });
 
+  it('reads nothing for a text document’s thread and shows its latest comment, Open alone (D229)', async () => {
+    vi.useFakeTimers();
+    render(
+      <Harness
+        initial={{
+          threads: [
+            { kind: 'thread', ...thread({ anchor: 'text', latest: { ...thread().latest, at: NOW } }) },
+          ],
+        }}
+      />,
+    );
+    await act(() => vi.advanceTimersByTimeAsync(250));
+    expect(api.apiListCommentThreads).not.toHaveBeenCalled();
+    expect(within(pane()!).getByText('Any news?')).toBeTruthy();
+    const verbs = within(pane()!.querySelector('[data-inbox-verbs]') as HTMLElement);
+    expect(verbs.queryAllByRole('button')).toHaveLength(0);
+  });
+
   it('offers only Open on a thread reached through a view link, a card, a form or This Browser', () => {
     render(
       <Harness

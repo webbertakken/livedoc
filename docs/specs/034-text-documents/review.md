@@ -3,7 +3,8 @@
 **Status: being built.** Comment threads are kept beside the writing, travel in both formats' files, and the room
 judges a Participant's; they are drawn and added in the margin, listed in the comments panel and reached from the
 keyboard; people react to them, mention one another and assign a comment, a mention or an assignment emailing whom
-it names. The Inbox, suggestions, versions and notifications are still to come.
+it names, and the Inbox lists the threads and assigned comments of those they concern. Suggestions, versions and
+notifications are still to come.
 
 Comments, suggestions, version history, comparing documents and notifications in a [text document](text-document.md).
 The panels and threads are the shared [review surfaces](../012-collaboration/review-surfaces.md), built once for the
@@ -149,8 +150,8 @@ office kinds; this spec says what a text document puts in them.
   those it names, the way a comment on a canvas does
   ([Comment mentions](../012-collaboration/comment-mentions.md#the-email)): "{author} mentioned you in {document}",
   the comment quoted, **Open the document**; best effort, honouring each person's setting, only where email is
-  configured. The Inbox lists the thread for whom it mentions once a text document's threads reach it (with
-  assigning).
+  configured. The [Inbox](../013-workspace/inbox.md#27-text-document-threads) lists the thread for whom it mentions,
+  for whom wrote in it and for the document's owner, while it is open; its Open goes to the thread.
 - **In the files**: `livedoc:mentions` on the comment (ODF's `office:annotation`, Word's `w:comment`), a JSON array
   of each mention's name and handle, never its account or member id, which say who someone is beyond this document
   (default) ([Standard mapping](standard-mapping.md#extensions)). A file read back draws the chips and reaches nobody.
@@ -174,8 +175,9 @@ office kinds; this spec says what a text document puts in them.
 - **The email**: once a comment that assigns is added, the editor asks the api to email the assignee, as an assigned
   action's ([Assigned actions](../012-collaboration/assigned-actions.md#4-email-notification)): the action's name is
   the comment's first line, cut at a word to 200 characters with an ellipsis, its description the whole comment
-  (default); best effort, honouring the assignee's setting, only where email is configured. The Inbox lists it once a
-  text document's threads reach it.
+  (default); best effort, honouring the assignee's setting, only where email is configured. The
+  [Inbox](../013-workspace/inbox.md#27-text-document-threads) lists it as an action under My Actions for the
+  assignee and Assigned by Me for whoever assigned it, until it is marked done.
 - **In the files**: `livedoc:assignee` on the comment, a JSON object of the assignee's name and handle, never an id
   (default) ([Standard mapping](standard-mapping.md#extensions)); a file read back draws "Assigned to <name>" and
   reaches nobody.

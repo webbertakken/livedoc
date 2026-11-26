@@ -3,6 +3,8 @@
 // thread is. At most one action per element. Split into its own module like
 // comments.ts; re-exported from ./index so the public surface is unchanged.
 
+import { cutAtWord } from './cut-at-word';
+
 // The assignee/assigner identity is denormalised for rendering only (who to
 // show), never for permissions: anyone with edit access can complete, edit,
 // or delete an action. No email address is ever stored here — documents
@@ -114,3 +116,9 @@ export const ACTION_STATUS_LABELS: Record<ElementActionStatus, string> = {
   done: 'Done',
   'wont-do': 'Won’t Do',
 };
+
+/** The most an assigned action's name holds, as the notify route takes it (assigned-actions.md §4). */
+export const ACTION_NAME_MAX = 200;
+
+/** An assigned comment's action name: its first line, cut at a word to `ACTION_NAME_MAX` with an ellipsis. */
+export const actionNameOf = (text: string): string => cutAtWord(text, ACTION_NAME_MAX);

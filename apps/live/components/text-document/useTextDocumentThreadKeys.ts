@@ -5,7 +5,8 @@
 // first where it is another; an open thread is selected and its card asked for the focus, a resolved one's text is
 // selected in the writing. Move to next and previous comment and Enter current comment select a thread of the tab
 // shown from the caret or the selected thread, never wrapping; exit lets it go and gives the writing the keyboard.
-import { useCallback, useEffect, useMemo, useState } from 'react';
+// Arriving from an Inbox row (inbox.md §1.8) goes the same way, once the thread is read.
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { TextSelection } from 'prosemirror-state';
 import type { EditorView } from 'prosemirror-view';
 import { debugLog } from '@/lib/debug-log';
@@ -54,6 +55,8 @@ export function useTextDocumentThreadKeys({
   showTab: (id: string) => void;
 }) {
   const [pending, setPending] = useState<string | null>(null);
+  // The document tab a pending go has asked to be shown, so it is asked once.
+  const askedTab = useRef<string | null>(null);
   const [focusRequest, setFocusRequest] = useState<CardFocusRequest | null>(null);
   const { threads: all, stretches, selected, select, say } = threads;
 
@@ -87,6 +90,7 @@ export function useTextDocumentThreadKeys({
       if (thread.tab !== tab) {
         debugLog('[text-document] thread go', { thread: id, tab: thread.tab, found: 'pending' });
         setPending(id);
+        askedTab.current = thread.tab;
         showTab(thread.tab);
         return;
       }
@@ -97,11 +101,25 @@ export function useTextDocumentThreadKeys({
     [all, tab, showTab, land, say],
   );
 
-  // A go waiting on another tab lands once that tab is shown and its writing is there, or says the text is gone.
+  // An arrival from an Inbox row: gone to once the threads are read, or said gone (inbox.md §1.8).
+  const arrive = useCallback((id: string) => {
+    debugLog('[text-document] thread arrive', { thread: id });
+    askedTab.current = null;
+    setPending(id);
+  }, []);
+
+  // A go waiting on another tab lands once that tab is shown and its writing is there, or says the text is gone. An
+  // arrival's thread on another tab asks for it first.
   useEffect(() => {
     if (pending === null) return;
     const thread = all.find((t) => t.id === pending);
-    if (thread && thread.tab !== tab) return;
+    if (thread && thread.tab !== tab) {
+      if (askedTab.current !== thread.tab) {
+        askedTab.current = thread.tab;
+        showTab(thread.tab);
+      }
+      return;
+    }
     let frames = 0;
     let frame = requestAnimationFrame(function attempt() {
       frames += 1;
@@ -118,7 +136,7 @@ export function useTextDocumentThreadKeys({
       setPending(null);
     });
     return () => cancelAnimationFrame(frame);
-  }, [pending, all, tab, land, say]);
+  }, [pending, all, tab, land, say, showTab]);
 
   const step = useCallback(
     (forward: boolean) => {
@@ -155,7 +173,7 @@ export function useTextDocumentThreadKeys({
     [stretches.length, step, enterCurrent],
   );
 
-  return { go, step, enterCurrent, exit, focusRequest, actions };
+  return { go, arrive, step, enterCurrent, exit, focusRequest, actions };
 }
 
 export type TextDocumentThreadKeys = ReturnType<typeof useTextDocumentThreadKeys>;

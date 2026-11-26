@@ -19,6 +19,7 @@ describe('textDocumentDigest', () => {
       hasContent: false,
       searchText: '',
       imageIds: [],
+      collab: { actions: [], threads: [] },
     });
   });
 
@@ -30,6 +31,7 @@ describe('textDocumentDigest', () => {
       hasContent: true,
       searchText: 'Hello, world.\n\n  two  words ',
       imageIds: [],
+      collab: { actions: [], threads: [] },
     });
   });
 
@@ -85,5 +87,31 @@ describe('textDocumentDigest with comment threads', () => {
     const digest = textDocumentDigest(doc);
     expect(digest.searchText).toBe('Quarterly results\nNice\nThanks\nCheck the totals');
     expect(digest.words).toBe(2);
+  });
+
+  it('carries the threads’ rows for the Inbox, authors as keys (inbox.md Â§2.7)', () => {
+    const doc = stateOf('Quarterly results');
+    const run = (TextDocumentState.body(doc).get(0) as Y.XmlElement).get(0) as Y.XmlText;
+    const author = { key: 'k', name: 'Ada', colour: '#000' };
+    LiveThreads.begin(
+      doc,
+      {
+        id: 'th',
+        tab: 't.0',
+        ...LiveThreads.anchorFor(run, 0, 9),
+        quote: 'Quarterly',
+        comment: { id: 'c', text: 'Nice', at: 10, author },
+      },
+      'me',
+    );
+    const { collab } = textDocumentDigest(doc);
+    expect(collab.actions).toEqual([]);
+    expect(collab.threads).toMatchObject([
+      { elementId: 'th', elementLabel: 'Quarterly', participantIds: ['k'], latestText: 'Nice' },
+    ]);
+  });
+
+  it('carries no rows without threads', () => {
+    expect(textDocumentDigest(stateOf('Plain')).collab).toEqual({ actions: [], threads: [] });
   });
 });

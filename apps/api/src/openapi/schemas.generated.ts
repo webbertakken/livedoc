@@ -24,6 +24,9 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
   "ActivityAction": {
     "additionalProperties": false,
     "properties": {
+      "anchor": {
+        "$ref": "#/components/schemas/CollabAnchor"
+      },
       "assignedToMe": {
         "type": "boolean"
       },
@@ -126,6 +129,7 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
       }
     },
     "required": [
+      "anchor",
       "assignedToMe",
       "assignee",
       "assigner",
@@ -434,6 +438,9 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
   "ActivityThread": {
     "additionalProperties": false,
     "properties": {
+      "anchor": {
+        "$ref": "#/components/schemas/CollabAnchor"
+      },
       "canComment": {
         "type": "boolean"
       },
@@ -516,6 +523,7 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
       }
     },
     "required": [
+      "anchor",
       "canComment",
       "commentCount",
       "documentId",
@@ -2898,6 +2906,13 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
       "contrast",
       "paper",
       "parchment"
+    ],
+    "type": "string"
+  },
+  "CollabAnchor": {
+    "enum": [
+      "element",
+      "text"
     ],
     "type": "string"
   },

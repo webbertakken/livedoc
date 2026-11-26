@@ -22,6 +22,8 @@ const DONE_VERBS: readonly InboxVerb[] = ['done'];
 export function offeredVerbs(e: InboxEntry, done: InboxDone | null): readonly InboxVerb[] {
   // No page here reaches the browser's store but the editor.
   if ('local' in e.row && e.row.local === true) return NONE;
+  // A text document's thread lives in its live state, which no comment route reaches: Open alone (D229).
+  if ('anchor' in e.row && e.row.anchor === 'text') return NONE;
   if (e.kind === 'Thread') return e.row.canComment ? THREAD_VERBS : NONE;
   if (e.kind === 'Action' && done) {
     return done.documentId === e.row.documentId && done.tabId === e.row.tabId ? DONE_VERBS : NONE;

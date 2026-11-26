@@ -330,6 +330,13 @@ export {
   type TextDocumentThreadAnchor,
   type TextDocumentThreadStart,
 } from './live/live-threads';
+export {
+  INBOX_QUOTE_MAX,
+  drawnMentions,
+  textDocumentCollabRows,
+  threadAssignment,
+  threadLabel,
+} from './live/live-thread-index';
 export { textDocumentLevelAsked, type TextDocumentLevelAsked } from './level-asked';
 export {
   addLiveTab,
