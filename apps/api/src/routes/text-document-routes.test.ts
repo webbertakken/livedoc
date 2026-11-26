@@ -49,6 +49,8 @@ async function bodyOfFile(res: Response): Promise<Body | undefined> {
 }
 import { handleDocuments } from './documents';
 import { listDocumentsByOwner } from '../db/documents';
+import { SUMMARY_REFRESH_RUN, sweepSummaryRefresh } from '../summary-refresh/summary-refresh-sweep';
+import type { Env } from '../types';
 import { fileNameOf } from './text-document-routes';
 
 // docs/specs/034-text-documents/files-and-print.md "Opening" and "Downloading";
@@ -431,5 +433,26 @@ describe('a text document in the document list', () => {
         ['C', undefined],
       ]),
     );
+  });
+});
+
+// document-storage.md "Refreshing the summaries": an older text document, its summary pushed before it said so and
+// unedited since, lists as one once the run has refreshed it.
+describe('an older text document once the summaries are refreshed', () => {
+  it('lists as a text document after the run, not before', async () => {
+    const db = sqliteD1();
+    expect((await create(db)).status).toBe(201);
+    db.sql
+      .prepare(
+        "UPDATE documents SET content_summary = json_remove(content_summary, '$.textDocument') WHERE id = 'D'",
+      )
+      .run();
+    const listed = async () =>
+      (await listDocumentsByOwner(db.env, 'owner')).find((d) => d.id === 'D')?.textDocument;
+    expect(await listed()).toBeUndefined();
+    // The env itself: its DOCUMENT_ROOM is not enumerable, so a spread would lose it.
+    const env = Object.assign(db.env as unknown as Env, { SUMMARY_REFRESH: SUMMARY_REFRESH_RUN });
+    expect(await sweepSummaryRefresh(env, Date.now())).toMatchObject({ written: 1, failed: 0 });
+    expect(await listed()).toBe(true);
   });
 });

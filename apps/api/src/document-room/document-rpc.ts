@@ -9,6 +9,7 @@ import { answerRangeRead, type RangeReadQuery } from '../routes/sheet-range-read
 import { nestedFrom } from '../routes/sheet-range-import';
 import type { Item } from '@livedoc/items';
 import type { ContentSummary } from '../db/content-summary';
+import { contentSummaryOf } from './content-summary';
 import { readItem } from '../db';
 import { documentPlacesImage } from '../db/image-refs';
 import { answerFormRequest } from '../routes/forms';
@@ -84,6 +85,8 @@ export type DocumentRoomRpc = {
   receiveShares(documentId: string, from: string, messages: ShareMessage[]): Promise<ShareAnswer[]>;
   // The Sheets migration's dry run (docs/specs/029-sheets/migration.md "How it runs"): counts, nothing written.
   sheetMigrationDry(documentId: string, documentName: string): Promise<SheetMigrationDry>;
+  // The content summary as the room would push it now (document-storage.md "Refreshing the summaries"): reads only.
+  contentSummary(documentId: string): Promise<ContentSummary>;
 };
 
 export function documentRpc(
@@ -120,5 +123,6 @@ export function documentRpc(
     receiveShares: (documentId, from, messages) => receiveShares(env, documentId, from, messages),
     sheetMigrationDry: (documentId, documentName) =>
       sheetMigrationDry(env, documentId, documentName),
+    contentSummary: (documentId) => contentSummaryOf(env, documentId),
   };
 }

@@ -52,6 +52,8 @@ export type DocumentRoomClient = {
   move(): Promise<MoveOutcome | null>;
   // The Sheets migration's dry run (sheet-migration-dry.ts): what the document would become, as counts.
   sheetMigrationDry(documentName: string): Promise<SheetMigrationDry>;
+  // The room's content summary as it would push it now (summary-refresh-sweep.ts); reads only.
+  contentSummary(): Promise<ContentSummary>;
 };
 
 type RoomStub = DocumentRoomRpc & {
@@ -94,6 +96,7 @@ export function documentRoom(
     receiveShares: (from, messages) => room.receiveShares(documentId, from, messages),
     move: () => room.move(documentId),
     sheetMigrationDry: (documentName) => room.sheetMigrationDry(documentId, documentName),
+    contentSummary: () => room.contentSummary(documentId),
   };
 }
 

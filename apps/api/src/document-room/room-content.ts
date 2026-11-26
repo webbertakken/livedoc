@@ -4,6 +4,8 @@
 // deadline and runs the drain when it is due.
 
 import type { DocumentRoom } from './document-room';
+import type { ContentSummary } from '../db/content-summary';
+import { contentSummaryOf } from './content-summary';
 import { markBorn, moveIntoRoom, storedMove, type MoveOutcome } from './content-move';
 import { DocumentDb } from './document-db';
 import { json } from '../responses';
@@ -142,6 +144,20 @@ export class RoomContent {
     if (!this.env) throw new Error('room has no content store');
     const env = timing ? { ...this.env, DB: timing.d1(this.env.DB) } : this.env;
     return documentRpc(env, (p) => this.state.waitUntil(p));
+  }
+
+  // The content summary as the room would push it, read without writing (docs/specs/006-document/document-storage.md
+  // "Refreshing the summaries"): through a read-only view, so no schema step, no move, no handover and no write noted.
+  // A room whose content has not moved yet has nothing of its own to read: refused by name.
+  async summaryWithoutWriting(documentId: string): Promise<ContentSummary> {
+    this.bind(documentId);
+    const env = this.env;
+    const sql = this.state.storage.sql as SqlStorage | undefined;
+    if (!env || !sql) throw new Error('room has no content store');
+    const kv = this.state.storage.kv;
+    if (!this.moved && !(kv && storedMove(kv))) throw new RoomNotReadyError(documentId, 'move');
+    const view = DocumentDb.readOnly(sql, () => hasDocumentSchema((q) => sql.exec(q)));
+    return contentSummaryOf({ ...env, DOCUMENT_DB: view.asD1() }, documentId);
   }
 
   // The move gate (docs/specs/006-document/document-storage-move.md, M1): before any content is served,

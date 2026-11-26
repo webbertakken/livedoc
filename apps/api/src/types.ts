@@ -129,6 +129,9 @@ export type Env = {
   // The Sheets migration's switch (docs/specs/029-sheets/migration.md "How it runs"): `dry` plans every document
   // and writes counts to D1; absent or anything else is off. A plain var, in hosted-vars.json when docs.nu turns it on.
   SHEETS_MIGRATION?: string;
+  // The content summaries' one-off refresh (docs/specs/006-document/document-storage.md "Refreshing the summaries"):
+  // `dry` counts, `run` writes; absent or anything else is off. A plain var, in hosted-vars.json when docs.nu turns it on.
+  SUMMARY_REFRESH?: string;
   // Resend API key (docs/specs/014-identity/transactional-email.md): the email transport when no `EMAIL` binding
   // exists (email/transport.ts). `wrangler secret put RESEND_API_KEY`; `apps/api/.dev.vars` locally.
   RESEND_API_KEY?: string;

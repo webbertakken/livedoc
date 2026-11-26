@@ -77,13 +77,29 @@ class DocumentStatement {
   }
 }
 
+/** A write through a read-only view (`DocumentDb.readOnly`): refused, nothing run. */
+export const DOCUMENT_READ_ONLY = 'document_read_only';
+
+const NO_HOOKS = { ensureSchema: () => {}, onWrite: () => {} };
+
 export class DocumentDb {
   private readonly sql: DocumentSql;
   private readonly hooks: DocumentDbHooks;
+  private readonly readOnlyView: boolean;
 
-  constructor(sql: DocumentSql, hooks: DocumentDbHooks) {
+  constructor(sql: DocumentSql, hooks: DocumentDbHooks, readOnlyView = false) {
     this.sql = sql;
     this.hooks = hooks;
+    this.readOnlyView = readOnlyView;
+  }
+
+  /**
+   * A view that only reads (docs/specs/006-document/document-storage.md "Refreshing the summaries"): it never makes or
+   * upgrades the schema, never tells the room of a write, refuses any statement that may write, and reads a table an
+   * older schema lacks as empty, so reading a room through it leaves the room's storage as it was.
+   */
+  static readOnly(sql: DocumentSql, hasSchema: () => boolean): DocumentDb {
+    return new DocumentDb(sql, { ...NO_HOOKS, transaction: (fn) => fn(), hasSchema }, true);
   }
 
   prepare(query: string): DocumentStatement {
@@ -92,15 +108,22 @@ export class DocumentDb {
 
   // One transaction for the whole batch, as D1. The results are D1's: a read's rows, a write's change count.
   async batch(statements: DocumentStatement[]): Promise<Result[]> {
-    if (!statements.some((s) => mayWrite(s.query)) && !this.hooks.hasSchema())
-      return statements.map(() => emptyResult());
+    const writes = statements.some((s) => mayWrite(s.query));
+    if (this.readOnlyView) {
+      if (writes) throw new Error(DOCUMENT_READ_ONLY);
+      if (!this.hooks.hasSchema()) return statements.map(() => emptyResult());
+      return statements.map((s) => this.readOne(s));
+    }
+    if (!writes && !this.hooks.hasSchema()) return statements.map(() => emptyResult());
     this.hooks.ensureSchema();
     const results = this.hooks.transaction(() => statements.map((s) => this.executeOne(s)));
-    this.hooks.onWrite();
+    // A batch of reads changed nothing: the room arms no flush or upkeep for it.
+    if (writes || results.some((r) => r.meta.changes > 0)) this.hooks.onWrite();
     return results;
   }
 
   async exec(query: string): Promise<{ count: number; duration: number }> {
+    if (this.readOnlyView) throw new Error(DOCUMENT_READ_ONLY);
     this.hooks.ensureSchema();
     this.sql.exec(query);
     this.hooks.onWrite();
@@ -108,6 +131,10 @@ export class DocumentDb {
   }
 
   execute(statement: DocumentStatement): Result {
+    if (this.readOnlyView) {
+      if (mayWrite(statement.query)) throw new Error(DOCUMENT_READ_ONLY);
+      return this.hooks.hasSchema() ? this.readOne(statement) : emptyResult();
+    }
     if (!mayWrite(statement.query) && !this.hooks.hasSchema()) return emptyResult();
     this.hooks.ensureSchema();
     const result = this.executeOne(statement);
@@ -124,6 +151,17 @@ export class DocumentDb {
     const wrote = this.totalChanges() !== before;
     const changes = wrote ? Number(this.sql.exec('SELECT changes() AS n').toArray()[0]?.n ?? 0) : 0;
     return { results, success: true, meta: { changes } };
+  }
+
+  // A read-only view's read: a table an older schema has not made yet holds no rows.
+  private readOne(statement: DocumentStatement): Result {
+    try {
+      const results = this.sql.exec(statement.query, ...statement.args).toArray();
+      return { results, success: true, meta: { changes: 0 } };
+    } catch (error) {
+      if (error instanceof Error && /no such table/i.test(error.message)) return emptyResult();
+      throw error;
+    }
   }
 
   private totalChanges(): number {
