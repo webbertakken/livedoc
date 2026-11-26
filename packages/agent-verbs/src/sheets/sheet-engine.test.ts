@@ -347,7 +347,9 @@ describe('changing a sheet', () => {
       'froze 1 row',
       'renamed to "Budget"',
     ]);
-    expect(server.writes.every((w) => typeof w.wid === 'string')).toBe(true);
+    // One sheet changeset carries them all (agent-changesets.md "A sheet's changesets", D269).
+    expect(server.changesets).toHaveLength(1);
+    expect(result.changesetId).toMatch(/^sc_/);
     const r = await read(api, 'Budget');
     // The inserted row moved Rent down; the total still reads the cells it read, and now shows pounds.
     expect(r.cells.find((c) => c.at === 'B5')).toMatchObject({
@@ -437,8 +439,11 @@ describe('changing a sheet', () => {
       },
       'mcp',
     );
-    expect(partly.applied).toEqual(['froze 1 column']);
+    // Every change lands or none does: the freeze before the refused delete is not written.
+    expect(partly.applied).toEqual([]);
     expect(partly.refusal?.code).toBe('range_invalid');
+    expect(partly.refusal?.message).toContain('Nothing of this call was written.');
+    expect(partly.changesetId).toBeNull();
   });
 
   // sheet.md "Row height": an agent acting for a Participant or a Viewer is refused, as that person is.
@@ -482,8 +487,8 @@ describe('changing a sheet', () => {
       },
       'mcp',
     );
-    // 26 columns new, so room for 174 more.
-    expect(wide.applied).toEqual(['inserted 174 columns before column A']);
+    // 26 columns new, so room for 174 more; the second insert is refused, and the call writes neither.
+    expect(wide.applied).toEqual([]);
     expect(wide.refusal?.code).toBe('sheet_too_large');
     const { api: narrow } = setup();
     const last = await changeSheet(
@@ -498,11 +503,11 @@ describe('changing a sheet', () => {
       },
       'mcp',
     );
-    // Asked for A:Z of 26 columns: one always stays, so the line names the 25 deleted.
-    expect(last.applied).toEqual(['deleted columns A:Y; column Z stays, as a sheet keeps one']);
+    // A:Z of 26 columns leaves Z (a sheet keeps one), so deleting A then is refused, and neither is written.
+    expect(last.applied).toEqual([]);
     expect(last.refusal).toEqual({
       code: 'range_invalid',
-      message: 'A sheet keeps at least one row and one column.',
+      message: 'A sheet keeps at least one row and one column. Nothing of this call was written.',
     });
   });
 
@@ -838,7 +843,7 @@ describe('changes larger than one write', () => {
     expect(server.writes).toEqual([]);
   });
 
-  it('says how much of a change landed when a later part is still refused', async () => {
+  it('writes none of a change the api refuses, its parts in one changeset', async () => {
     const { api, server } = setup(undefined, { refuse: 'sheet_busy', refuseAfter: 1 });
     const result = await changeSheet(
       api,
@@ -849,12 +854,12 @@ describe('changes larger than one write', () => {
       },
       'mcp',
     );
-    expect(server.writes).toHaveLength(2);
-    expect(result.applied).toEqual([
-      `partly set A10:T309: ${SHEET_WRITE_CELLS_MAX} of its 6000 cells landed before the refusal`,
-    ]);
+    expect(server.changesets).toHaveLength(1);
+    expect(server.changesets[0]!.writes.length).toBe(Math.ceil(6000 / SHEET_WRITE_CELLS_MAX));
+    expect(result.applied).toEqual([]);
     expect(result.refusal?.code).toBe('sheet_busy');
-    expect(result.rev).toBe(2);
+    expect(result.rev).toBeNull();
+    expect(server.sheets[0]!.rev).toBe(1);
   });
 
   it('add_sheet refuses first cells past the document’s cells without making a sheet', async () => {
@@ -912,5 +917,26 @@ describe('changes larger than one write', () => {
     await expect(addSheet(api, DOC_A, { rows: [['a']] }, 'mcp')).rejects.toThrow('network down');
     expect(server.creates).toHaveLength(1);
     expect(server.deletes).toEqual([]);
+  });
+});
+
+describe('a call that changes nothing', () => {
+  it('answers no changeset', async () => {
+    const { api } = setup();
+    const first = await changeSheet(
+      api,
+      DOC_A,
+      { sheet: 'Costs', changes: [{ op: 'freeze', rows: 1 }] },
+      'mcp',
+    );
+    expect(first.changesetId).toMatch(/^sc_/);
+    const again = await changeSheet(
+      api,
+      DOC_A,
+      { sheet: 'Costs', changes: [{ op: 'freeze', rows: 1 }] },
+      'mcp',
+    );
+    expect(again.changesetId).toBeNull();
+    expect(again.applied).toEqual(['froze 1 row']);
   });
 });

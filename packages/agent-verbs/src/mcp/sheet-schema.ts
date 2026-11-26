@@ -800,6 +800,10 @@ export const changeSheetOutput = {
     .number()
     .nullable()
     .describe('The sheet revision after them; null when nothing was written.'),
+  changesetId: z
+    .string()
+    .nullable()
+    .describe('The sheet changeset that wrote them all (revertible); null when nothing changed.'),
   url,
 };
 

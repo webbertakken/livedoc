@@ -21,6 +21,10 @@ export const sheetsPath = (documentId: string) =>
 export const sheetWritesPath = (documentId: string, sheetId: string) =>
   `${sheetsPath(documentId)}/${encodeURIComponent(sheetId)}/writes`;
 
+// A sheet changeset's door (docs/specs/024-agents/agent-changesets.md "A sheet's changesets").
+export const sheetChangesetsPath = (documentId: string, sheetId: string) =>
+  `${sheetsPath(documentId)}/${encodeURIComponent(sheetId)}/changesets`;
+
 // A refusal a sheet tool words itself, with what there is.
 export type SheetRefusal = { ok: false; code: string; message: string };
 

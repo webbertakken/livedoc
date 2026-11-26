@@ -120,7 +120,7 @@ describe('a chart in a spreadsheet', () => {
     });
     expect(chart.axis).toBeUndefined();
     // No canvas element is placed: the chart is the sheet's.
-    expect(api.calls.some((c) => c.includes('/changesets'))).toBe(false);
+    expect(api.calls.some((c) => c.includes('/tabs/') && c.includes('/changesets'))).toBe(false);
   });
 
   it('reads back with its id, then is replaced in place, keeping its id, and the axis turned off', async () => {

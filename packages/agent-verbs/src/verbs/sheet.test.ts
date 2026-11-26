@@ -99,7 +99,7 @@ describe('sheet set', () => {
       ctx,
       sheetSet.input.parse({ doc: DOC_A, sheet: 'Costs', at: 'C1', values: ['Yearly', '=B2*12'] }),
     );
-    expect(sheetSet.text!(out)).toEqual(['~ sheet "Costs": set C1:D1']);
+    expect(sheetSet.text!(out)).toEqual(['~ sheet "Costs": set C1:D1', 'changeset sc_0000000001']);
     expect(sheetSet.quiet!(out)).toEqual(['sheet_costs1']);
     expect(server.writes).toHaveLength(1);
   });
@@ -165,7 +165,9 @@ describe('sheet rows and columns', () => {
   it('inserts and deletes rows and columns by number and letter', async () => {
     const { ctx } = ctxWith();
     const run = async (verb: typeof sheetInsertRows, input: Record<string, unknown>) =>
-      verb.text!(await verb.run!(ctx, verb.input.parse({ doc: DOC_A, sheet: 'Costs', ...input })));
+      verb.text!(
+        await verb.run!(ctx, verb.input.parse({ doc: DOC_A, sheet: 'Costs', ...input })),
+      ).filter((line) => !line.startsWith('changeset '));
     expect(await run(sheetInsertRows, { where: '2', count: '2', after: true })).toEqual([
       '~ sheet "Costs": inserted 2 rows after row 2',
     ]);
