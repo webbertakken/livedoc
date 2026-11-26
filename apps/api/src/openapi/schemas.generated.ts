@@ -15088,6 +15088,9 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
       "id": {
         "type": "string"
       },
+      "kept": {
+        "$ref": "#/components/schemas/SheetChartKept"
+      },
       "kind": {
         "const": "chart",
         "type": "string"
@@ -15134,6 +15137,23 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
       "width",
       "height",
       "type"
+    ],
+    "type": "object"
+  },
+  "SheetChartKept": {
+    "additionalProperties": false,
+    "description": "A read chart's kept file XML: the kept part's name and the sum of the chart it was read as.",
+    "properties": {
+      "part": {
+        "type": "string"
+      },
+      "sum": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "part",
+      "sum"
     ],
     "type": "object"
   },
