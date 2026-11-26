@@ -32,6 +32,7 @@ import {
   ruleMessage,
   validationRuleAt,
   type FormulaAllows,
+  type RuleCtx,
   type RangeValues,
 } from './rules/validation';
 import { layoutIndex } from './layout';
@@ -428,6 +429,8 @@ export type WriteCheck = {
   locale?: string;
   rangeValues?: RangeValues;
   formulaAllows?: FormulaAllows;
+  // The sheet a Dropdown from a Range reads, so a refusal names it (Sheet2!A2:A20).
+  sourceOf?: RuleCtx['sourceOf'];
   limits?: SheetLimits;
 };
 
@@ -441,6 +444,7 @@ function rulesProblem(after: Sheet, write: SheetWrite, opts: WriteCheck): Valida
     layout,
     rangeValues: opts.rangeValues,
     formulaAllows: opts.formulaAllows,
+    sourceOf: opts.sourceOf,
   };
   for (const ch of write.cells ?? []) {
     if (!ch.i) continue;

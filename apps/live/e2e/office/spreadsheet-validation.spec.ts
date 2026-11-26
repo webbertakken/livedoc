@@ -162,12 +162,7 @@ test('a Dropdown from a Range reads another sheet, and shrinks with its rows', a
   // Sheet2 loses its first row: the rule now reads A1:A2 there.
   await tabs.getByRole('tab', { name: 'Sheet2', exact: true }).click();
   await select(page, 'A1');
-  await (
-    await officeMenuItem(page, ['Edit', 'Delete', 'x'])
-  )
-    .or(page.getByRole('menuitem', { name: /^Delete Row 1$/i }))
-    .first()
-    .click();
+  await (await officeMenuItem(page, ['Edit', 'Delete', 'Delete Row 1'])).click();
   await tabs.getByRole('tab', { name: 'Sheet1', exact: true }).click();
   await (await officeMenuItem(page, ['Data', 'Data Validation'])).click();
   await expect(panel).toContainText('values in Sheet2!A1:A2');

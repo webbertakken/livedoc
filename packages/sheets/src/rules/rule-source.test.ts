@@ -59,6 +59,17 @@ describe('a dropdown source on another sheet', () => {
       'Choose one of the listed values',
     );
   });
+  it('names that sheet when a write is refused', () => {
+    const { b, one } = twoSheets();
+    const w: SheetWrite = {
+      kind: 'cells',
+      cells: [{ r: one.layout.rows[0]!, c: one.layout.cols[1]!, i: { s: 'Blue' } }],
+    };
+    expect(validateWrite(one, w, workbookRuleChecks(b.wb, one.id))).toMatchObject({
+      ok: false,
+      line: "Choose one of the values in 'My Lists'!A1:A4",
+    });
+  });
   it('offers nothing once its sheet is gone', () => {
     const { b, one, lists, rule } = twoSheets();
     b.wb.removeSheet(lists.id);
