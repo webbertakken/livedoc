@@ -150,7 +150,9 @@ export function odsChartContent(
       : '';
     const ownClass =
       chart.type === 'combo' && s.type ? ` chart:class="${SERIES_CLASS[s.type]}"` : '';
-    return `<chart:series${ownClass} chart:values-cell-range-address="${escapeXmlAttribute(odfRange(sheet, s.values))}"${label}${own}>${domain}</chart:series>`;
+    // A series on the right-hand axis names the secondary one (D288).
+    const attached = s.right ? ' chart:attached-axis="secondary-y"' : '';
+    return `<chart:series${ownClass}${attached} chart:values-cell-range-address="${escapeXmlAttribute(odfRange(sheet, s.values))}"${label}${own}>${domain}</chart:series>`;
   });
   const categories = chart.labels
     ? `<chart:categories table:cell-range-address="${escapeXmlAttribute(odfRange(sheet, chart.labels.range))}"/>`
@@ -162,6 +164,9 @@ export function odsChartContent(
     : [
         `<chart:axis chart:dimension="x" chart:name="primary-x"${shownAxis}>${chart.xTitle ? `<chart:title>${paragraph(chart.xTitle)}</chart:title>` : ''}${categories}</chart:axis>`,
         `<chart:axis chart:dimension="y" chart:name="primary-y"${hiddenAxis}>${chart.yTitle ? `<chart:title>${paragraph(chart.yTitle)}</chart:title>` : ''}<chart:grid chart:class="major"/></chart:axis>`,
+        chart.series.some((s) => s.right)
+          ? `<chart:axis chart:dimension="y" chart:name="secondary-y"${hiddenAxis}/>`
+          : '',
       ].join('');
   const legend =
     chart.legend === 'none'

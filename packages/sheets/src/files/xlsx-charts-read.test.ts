@@ -583,6 +583,77 @@ describe('a written chart, read', () => {
     expect(xlsxChartXml('Q', two)).not.toContain('<c:areaChart>');
   });
 
+  it('writes the right-hand axis as a second pair of axes, and reads it back (D288)', () => {
+    const chart = {
+      ...base,
+      axis: true,
+      type: 'line' as const,
+      labels: { range: cell(0), cached: ['a', 'b', 'c', 'd'] },
+      x: null,
+      series: [1, 2, 3].map((c) => ({
+        name: 'S',
+        nameAt: { r: 0, c },
+        values: cell(c),
+        cached: [],
+        ...(c === 2 ? { right: true as const } : {}),
+      })),
+    };
+    const xml = xlsxChartXml('Q', chart);
+    expect(xml.match(/<c:lineChart>/g)).toHaveLength(2);
+    expect(xml).toContain('<c:axId val="500000003"/><c:axId val="500000004"/></c:lineChart>');
+    expect(xml).toContain('<c:axPos val="r"/>');
+    expect(xml).toContain('<c:crosses val="max"/>');
+    const read = readXlsxChartXml(xml, 'Q')!;
+    expect(read.type).toBe('line');
+    expect(read.series.map((s) => s.right ?? false)).toEqual([false, true, false]);
+    expect(read.axis).toBe(true);
+    expect(fileChartSum({ ...read, at: chart.at, width: 400, height: 300 })).toBe(
+      fileChartSum(chart),
+    );
+    expect(
+      fileChartSum({ ...chart, series: chart.series.map(({ right: _r, ...s }) => s) }),
+    ).not.toBe(fileChartSum(chart));
+    // Hidden, both value axes are deleted; a combo's right series sit in their own groups.
+    const hidden = xlsxChartXml('Q', { ...chart, axis: false });
+    expect(
+      hidden.match(
+        /<c:valAx><c:axId val="\d+"\/><c:scaling><c:orientation val="minMax"\/><\/c:scaling><c:delete val="1"\/>/g,
+      ),
+    ).toHaveLength(2);
+    expect(readXlsxChartXml(hidden, 'Q')!.axis).toBe(false);
+    const combo = {
+      ...chart,
+      type: 'combo' as const,
+      series: chart.series.map((s, i) => ({
+        ...s,
+        type: i === 2 ? ('column' as const) : ('line' as const),
+      })),
+    };
+    const comboRead = readXlsxChartXml(xlsxChartXml('Q', combo), 'Q')!;
+    expect(comboRead.series.map((s) => [s.type, s.right ?? false])).toEqual([
+      ['line', false],
+      ['line', true],
+      ['column', false],
+    ]);
+  });
+
+  it.each([
+    [
+      'columns on two pairs of axes',
+      `<c:barChart>${ser(valRef('Q!$B$2:$B$4'))}<c:axId val="1"/><c:axId val="2"/></c:barChart><c:barChart>${ser(valRef('Q!$C$2:$C$4'))}<c:axId val="3"/><c:axId val="4"/></c:barChart><c:valAx><c:axId val="4"/><c:axPos val="r"/></c:valAx>`,
+    ],
+    [
+      'two pairs, neither at the right',
+      `<c:lineChart>${ser(valRef('Q!$B$2:$B$4'))}<c:axId val="1"/><c:axId val="2"/></c:lineChart><c:lineChart>${ser(valRef('Q!$C$2:$C$4'))}<c:axId val="3"/><c:axId val="4"/></c:lineChart>`,
+    ],
+    [
+      'three pairs',
+      `<c:lineChart>${ser(valRef('Q!$B$2:$B$4'))}<c:axId val="1"/><c:axId val="2"/></c:lineChart><c:lineChart>${ser(valRef('Q!$C$2:$C$4'))}<c:axId val="3"/><c:axId val="4"/></c:lineChart><c:areaChart>${ser(valRef('Q!$D$2:$D$4'))}<c:axId val="5"/><c:axId val="6"/></c:areaChart><c:valAx><c:axId val="4"/><c:axPos val="r"/></c:valAx>`,
+    ],
+  ])('reads no right-hand axis from %s (D288)', (_name, plot) => {
+    expect(readXlsxChartXml(chartXml(plot), 'Q')).toBeNull();
+  });
+
   it('sums a chart with no stacking as before stacking was read', () => {
     const chart = { ...base, type: 'column' as const, labels: null, x: null, series: [] };
     expect(fileChartSum(chart)).not.toBe(fileChartSum({ ...chart, stack: 'stacked' }));

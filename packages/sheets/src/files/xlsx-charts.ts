@@ -14,6 +14,8 @@ const R_NS = 'http://schemas.openxmlformats.org/officeDocument/2006/relationship
 export const EMU_PER_PX = 9_525;
 // The two axes' ids every chart with axes names.
 const AXIS_IDS = [500_000_001, 500_000_002] as const;
+// The second pair, for the series on the right-hand axis (D288).
+const RIGHT_AXIS_IDS = [500_000_003, 500_000_004] as const;
 const LEGEND_POS = { top: 't', right: 'r', bottom: 'b', left: 'l' } as const;
 // A stacking's grouping (D283).
 export const GROUPING = { stacked: 'stacked', percent: 'percentStacked' } as const;
@@ -111,43 +113,56 @@ function dataLabels(on: boolean): string {
   return `<c:dLbls>${shows.map((s) => val(s, s === 'showVal' ? 1 : 0)).join('')}</c:dLbls>`;
 }
 
-function axisIds(): string {
-  return AXIS_IDS.map((id) => val('axId', id)).join('');
+function axisIds(ids: readonly number[]): string {
+  return ids.map((id) => val('axId', id)).join('');
 }
 
-// The type's own chart element: on a Combo chart, a group per series type it holds (D287), areas, columns then lines,
-// the series' indexes running across them in series order.
+type GroupType = Exclude<FileChart['type'], 'combo'>;
+
+// The type's own chart element: on a Combo chart, a group per series type it holds (D287), areas, columns then lines;
+// the series on the right-hand axis in groups of their own on the second pair of axes, after the left ones (D288). The
+// series' indexes run across the groups in series order. The left group of a chart of one type is written even empty.
 function plotXml(sheet: string, chart: FileChart): string {
-  if (chart.type === 'combo')
-    return (['area', 'column', 'line'] as const)
-      .map((type) => {
-        const series = chart.series.flatMap((s, i) => (s.type === type ? [{ s, i }] : []));
-        if (!series.length) return '';
-        const group = { ...chart, type, stack: undefined };
-        return groupXml(group, series.map(({ s, i }) => seriesXml(sheet, group, s, i)).join(''));
-      })
-      .join('');
-  const one = { ...chart, type: chart.type };
-  return groupXml(one, chart.series.map((s, i) => seriesXml(sheet, chart, s, i)).join(''));
+  const types: readonly GroupType[] =
+    chart.type === 'combo' ? ['area', 'column', 'line'] : [chart.type];
+  return [false, true]
+    .flatMap((right) => types.map((type) => ({ right, type })))
+    .map(({ right, type }) => {
+      const series = chart.series.flatMap((s, i) =>
+        (chart.type !== 'combo' || s.type === type) && (s.right === true) === right
+          ? [{ s, i }]
+          : [],
+      );
+      if (!series.length && (right || chart.type === 'combo')) return '';
+      const group =
+        chart.type === 'combo' ? { ...chart, type, stack: undefined } : { ...chart, type };
+      return groupXml(
+        group,
+        series.map(({ s, i }) => seriesXml(sheet, group, s, i)).join(''),
+        right ? RIGHT_AXIS_IDS : AXIS_IDS,
+      );
+    })
+    .join('');
 }
 
 // A chart group of one type (a Combo chart is its groups).
 function groupXml(
-  chart: FileChart & { type: Exclude<FileChart['type'], 'combo'> },
+  chart: FileChart & { type: GroupType },
   series: string,
+  ids: readonly number[],
 ): string {
   const labels = dataLabels(chart.values);
   switch (chart.type) {
     case 'column':
     case 'bar':
       // Stacked bars overlap whole, so each category's segments make one bar (D283).
-      return `<c:barChart>${val('barDir', chart.type === 'bar' ? 'bar' : 'col')}${val('grouping', chart.stack ? GROUPING[chart.stack] : 'clustered')}${val('varyColors', 0)}${series}${labels}${val('gapWidth', 150)}${chart.stack ? val('overlap', 100) : ''}${axisIds()}</c:barChart>`;
+      return `<c:barChart>${val('barDir', chart.type === 'bar' ? 'bar' : 'col')}${val('grouping', chart.stack ? GROUPING[chart.stack] : 'clustered')}${val('varyColors', 0)}${series}${labels}${val('gapWidth', 150)}${chart.stack ? val('overlap', 100) : ''}${axisIds(ids)}</c:barChart>`;
     case 'line':
-      return `<c:lineChart>${val('grouping', 'standard')}${val('varyColors', 0)}${series}${labels}${val('marker', 1)}${axisIds()}</c:lineChart>`;
+      return `<c:lineChart>${val('grouping', 'standard')}${val('varyColors', 0)}${series}${labels}${val('marker', 1)}${axisIds(ids)}</c:lineChart>`;
     case 'area':
-      return `<c:areaChart>${val('grouping', chart.stack ? GROUPING[chart.stack] : 'standard')}${val('varyColors', 0)}${series}${labels}${axisIds()}</c:areaChart>`;
+      return `<c:areaChart>${val('grouping', chart.stack ? GROUPING[chart.stack] : 'standard')}${val('varyColors', 0)}${series}${labels}${axisIds(ids)}</c:areaChart>`;
     case 'scatter':
-      return `<c:scatterChart>${val('scatterStyle', 'lineMarker')}${val('varyColors', 0)}${series}${labels}${axisIds()}</c:scatterChart>`;
+      return `<c:scatterChart>${val('scatterStyle', 'lineMarker')}${val('varyColors', 0)}${series}${labels}${axisIds(ids)}</c:scatterChart>`;
     case 'pie':
       return `<c:pieChart>${val('varyColors', 1)}${series}${labels}${val('firstSliceAng', 0)}</c:pieChart>`;
     case 'doughnut':
@@ -159,13 +174,13 @@ function axis(
   kind: 'catAx' | 'valAx',
   id: number,
   cross: number,
-  pos: 'b' | 'l',
-  opts: { title?: string; hidden: boolean; scatter: boolean },
+  pos: 'b' | 'l' | 'r',
+  opts: { title?: string; hidden: boolean; scatter: boolean; crosses?: 'autoZero' | 'max' },
 ): string {
   const scaling = `<c:scaling>${val('orientation', 'minMax')}</c:scaling>`;
   const grid = kind === 'valAx' && pos === 'l' ? '<c:majorGridlines/>' : '';
   const between = kind === 'valAx' ? val('crossBetween', opts.scatter ? 'midCat' : 'between') : '';
-  return `<c:${kind}>${val('axId', id)}${scaling}${val('delete', opts.hidden ? 1 : 0)}${val('axPos', pos)}${grid}${title(opts.title)}${val('majorTickMark', 'out')}${val('minorTickMark', 'none')}${val('tickLblPos', 'nextTo')}${val('crossAx', cross)}${val('crosses', 'autoZero')}${between}</c:${kind}>`;
+  return `<c:${kind}>${val('axId', id)}${scaling}${val('delete', opts.hidden ? 1 : 0)}${val('axPos', pos)}${grid}${title(opts.title)}${val('majorTickMark', 'out')}${val('minorTickMark', 'none')}${val('tickLblPos', 'nextTo')}${val('crossAx', cross)}${val('crosses', opts.crosses ?? 'autoZero')}${between}</c:${kind}>`;
 }
 
 // A chart's axes: its categories (or a scatter's x) and its values; a bar chart lays them on their sides.
@@ -184,7 +199,15 @@ function axesXml(chart: FileChart): string {
     hidden: !chart.axis,
     scatter,
   });
-  return cat + values;
+  if (!chart.series.some((s) => s.right)) return cat + values;
+  // The right-hand axis (D288): its own category axis, deleted, and a value axis at the right crossing at the maximum.
+  const [rightCat, rightVal] = RIGHT_AXIS_IDS;
+  return (
+    cat +
+    values +
+    axis('catAx', rightCat, rightVal, 'b', { hidden: true, scatter }) +
+    axis('valAx', rightVal, rightCat, 'r', { hidden: !chart.axis, scatter, crosses: 'max' })
+  );
 }
 
 /** One chart's part: `c:chartSpace` reading the sheet named `sheet` (as the file names it). */

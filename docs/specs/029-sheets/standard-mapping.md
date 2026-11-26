@@ -332,8 +332,14 @@ each suite writes its own, so LibreOffice, Excel and Google Sheets open them as 
   series and a `c:areaChart` of its area series, each only when it holds one, sharing one pair of axes, the series'
   `c:idx` and `c:order` running in series order; ODF: `chart:class="chart:bar"` on the chart, each series its own
   `chart:class`, `chart:bar`, `chart:line` or `chart:area`) (default, D287), its title and axis titles, its legend's place or none, values on the marks, the value axis (deleted when
-  off), each series' own colour, a scatter series drawn as a line, and its alt text. Its palette is LiveDoc's: a series
+  off), each series' own colour, a scatter series drawn as a line, the right-hand axis (below), and its alt text. Its palette is LiveDoc's: a series
   with no colour of its own takes the reading suite's (default, D260).
+- **The right-hand axis**: a series on the right axis of a Line, unstacked Area or Combo chart, when another series is
+  on the left (as LiveDoc draws it), is written on a secondary axis. XLSX: the right series in chart groups of their
+  own, after the left ones, naming a second pair of axes, a deleted category axis and a value axis at the right
+  (`axPos="r"`, crossing at the maximum, no gridlines; deleted with the value axis off). ODF: the series say
+  `chart:attached-axis="secondary-y"` and the plot area holds a `secondary-y` axis styled as the primary one
+  (default, D288). Any other chart writes every series on the one axis.
 - **Place**: its top-left cell and offset and its size. XLSX: one drawing part per sheet with charts
   (`xl/drawings/drawingN.xml`, a `oneCellAnchor` per chart, px × 9,525 EMU) and a chart part per chart
   (`xl/charts/chartN.xml`). ODF: a `draw:frame` per chart in the cell it is anchored to (LibreOffice's "To cell"), its
@@ -351,7 +357,9 @@ each suite writes its own, so LibreOffice, Excel and Google Sheets open them as 
   line chart's only when `standard`; a line chart is smooth when every series says `c:smooth` on, straight when none
   does, and not read when they differ (D285). A plot area of two or three chart groups, each a different one of a
   clustered column `c:barChart`, a standard `c:lineChart` and a standard `c:areaChart`, sharing one pair of axes, is
-  read as a Combo chart, its series in `c:order` order, each typed by its group (D287); any other plot area of
+  read as a Combo chart, its series in `c:order` order, each typed by its group (D287). Groups on a second pair of axes,
+  its value axis at the right, put their series on the right axis: groups of one kind, line or area, on the two pairs
+  read as that type, groups of those kinds as a Combo chart, no kind twice on one pair (D288); any other plot area of
   several groups is not read. It reads a sheet's charts only when its drawing holds
   nothing else, every anchor a chart that qualifies and no chart naming a part of its own (`r:id`); otherwise the
   drawing stays kept whole and none of its charts is read (default, D275). ODF reads a sheet's charts only when every
@@ -364,8 +372,9 @@ each suite writes its own, so LibreOffice, Excel and Google Sheets open them as 
   same), the labels by the x axis's `chart:categories`. The look is read from the chart document's automatic styles:
   a bar chart by `chart:vertical`; stacking by `chart:stacked` and `chart:percentage` on a bar or area chart; a line chart's
   `chart:interpolation` `cubic-spline` as smooth; a stacked or percentage line chart, 3-D, another interpolation,
-  a smoothed chart of another type or
-  secondary-axis charts are not read; a bar, line or area chart whose series name their own classes among
+  a smoothed chart of another type, or a series on a secondary axis
+  (`chart:attached-axis="secondary-y"`) of any chart but a Line, unstacked Area or Combo chart, are not read, the
+  series of one read on its right axis (D288); a bar, line or area chart whose series name their own classes among
   `chart:bar` (upright), `chart:line` and `chart:area`, two or more of them, unstacked, is read as a Combo chart, each
   series typed by its class (a series naming none takes the chart's) (D287), and a series of any other class is not
   read; values on the marks by `chart:data-label-number="value"` on every series (or
@@ -373,15 +382,13 @@ each suite writes its own, so LibreOffice, Excel and Google Sheets open them as 
   a series' colour by its fill (stroke on a line chart), a scatter series a line unless `draw:stroke="none"`, its
   colour then the stroke's; the alt text by the frame's `svg:desc`, else its `svg:title`, when it is not the title.
 - **Kept while unchanged**: a chart read from a file keeps its file XML beside it (a kept part, named on the chart),
-  with a sum of what it was read as: its type, stacking, smoothing, a Combo chart's series types, titles, legend, values, axis, alt, place and size, and its cells by
+  with a sum of what it was read as: its type, stacking, smoothing, a Combo chart's series types, the series on the right axis, titles, legend, values, axis, alt, place and size, and its cells by
   position. A write whose chart sums the same writes the kept XML in its place, under a new part name; a chart changed
   here (its look, its range, its place, or the cells moved by an insert or a delete) is written from the model, the
   sheet named (`chart_rewritten`). A conversion writes every chart from the model (default, D276). ODF keeps a chart
   object's `content.xml` (a flat file's inline `office:document`, its bindings declared on itself), and a package's
   object its `styles.xml` beside it; kept XML is written only to the ODF form it was read from, so a package's chart
   written to a flat file, or a flat file's to a package, is written from the model and named (default, D278).
-- **The right-hand axis is not yet written**: a series on the right axis is written on the one axis, and read back
-  there; secondary axes in both formats follow.
 - Any other chart stays kept content.
 
 ## Unknown content
@@ -569,6 +576,9 @@ The code cites each by its id.
   position) equals the written one's; its kept chart part is then written in its place under a new name (default).
 - **D285** A line chart's smoothing in a file: XLSX `c:smooth` on every series, ODF `chart:interpolation="cubic-spline"`;
   read from either, a line whose series differ, or another interpolation, stays kept (default).
+- **D288** The right-hand axis in a file: written only as LiveDoc draws it (a Line, unstacked Area or Combo chart with a
+  series on each side); XLSX right series in groups on a second axis pair (category axis deleted, value axis at the
+  right, crossing at the maximum), ODF `secondary-y`; read back from either (default).
 - **D287** A Combo chart in a file: XLSX one plot area of a clustered column group, a line group and an area group
   (those holding a series) on one pair of axes; ODF `chart:class="chart:bar"` with a class per series; read back from
   either when its groups or classes are two or three of those, unstacked; any other mix stays kept (default).
