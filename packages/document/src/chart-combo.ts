@@ -10,38 +10,16 @@ import { chartAxisLabel } from './chart-frame';
 import { runsOf, type BarRect, type ChartPoint, type LineMarks } from './chart-marks';
 import { smoothPath } from './chart-smooth';
 import { chartTypeOf } from './chart-types';
+import { comboSeriesTypes, type ComboSeriesType } from './chart-combo-types';
 import { shortNumber, type ChartValueLabel } from './chart-values';
 import { chartValue, type ChartKeyItem, type LineSeries } from './data-shapes';
 import { r2 as q } from './svg-render-primitives';
 
-/** A Combo chart's series types, as Google Sheets offers them (Step Area waits on a file holding it). */
-export const COMBO_SERIES_TYPES = ['column', 'line', 'area'] as const;
-export type ComboSeriesType = (typeof COMBO_SERIES_TYPES)[number];
-
-export const COMBO_SERIES_TYPE_LABELS: Record<ComboSeriesType, string> = {
-  column: 'Column',
-  line: 'Line',
-  area: 'Area',
-};
-
-export function isComboSeriesType(v: unknown): v is ComboSeriesType {
-  return (COMBO_SERIES_TYPES as readonly unknown[]).includes(v);
-}
+export * from './chart-combo-types';
 
 /** Whether a chart draws as a Combo chart. */
 export const isComboChart = (el: { shape: string; chartVariant?: unknown }) =>
   chartTypeOf(el) === 'combo';
-
-/**
- * Each series' type as a Combo chart draws it: its own, else the default (D286), the first half of the series,
- * rounded up, columns and the rest lines.
- */
-export function comboSeriesTypes(series: readonly { type?: unknown }[]): ComboSeriesType[] {
-  const columns = Math.ceil(series.length / 2);
-  return series.map((s, i) =>
-    isComboSeriesType(s.type) ? s.type : i < columns ? 'column' : 'line',
-  );
-}
 
 export type ComboMarks = LineMarks & {
   // Each series' type, resolved.

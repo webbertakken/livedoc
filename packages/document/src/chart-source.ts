@@ -5,7 +5,7 @@
 import { PLAN_SHEET_ID_PATTERN } from './element-types';
 import { chartValue, type LineSeries, type PieSlice } from './data-shapes';
 import { chartTypeOf } from './chart-types';
-import { isComboSeriesType } from './chart-combo';
+import { isComboSeriesType } from './chart-combo-types';
 
 export type ChartSource = {
   sheetId: string;

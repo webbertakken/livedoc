@@ -14,7 +14,7 @@ import { LOOK_MD_MAX_NODES } from './look-size';
 import { chartValue, CODE_LANGUAGES, readChartValue } from './data-shapes';
 import { isCodeThemeId } from './code-themes';
 import { variantFitsKind } from './chart-types';
-import { isComboSeriesType } from './chart-combo';
+import { isComboSeriesType } from './chart-combo-types';
 import { entityHeight } from './entity-geometry';
 import { settleChips } from './attachment';
 import { createShape } from './shape-factory';
