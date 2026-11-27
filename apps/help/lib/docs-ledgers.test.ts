@@ -80,10 +80,7 @@ function blocksOf(readme: string): [number, number][] {
 }
 
 /** The ids at or past FIRST_BLOCKED in no block, and the blocks that overlap another. */
-function blockProblems(
-  ids: readonly string[],
-  blocks: readonly [number, number][],
-): string[] {
+function blockProblems(ids: readonly string[], blocks: readonly [number, number][]): string[] {
   const out: string[] = [];
   for (const id of ids) {
     const n = Number(id.slice(1));
