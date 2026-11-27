@@ -463,7 +463,8 @@ each suite writes its own, so LibreOffice, Excel and Google Sheets open them as 
   series, a Bubble chart of one series (no sizes, so no format's bubble) as a Scatter chart (D321), a Candlestick chart
   of three series as OHLC, a Candlestick or OHLC chart of fewer than three series or more than four as a Line chart,
   and in ODF an OHLC chart of four series as a Candlestick, as no suite draws ODF's open and close ticks (LibreOffice
-  24.2 draws them wrongly) (D323). The file also keeps the **original** for LiveDoc, a record of what the nearest type lost: its type, on a
+  24.2 draws them wrongly) (D323), and a Histogram chart as a Column chart of the values it counts, its series and
+  labels as they are (Excel's own histogram is a `cx:chart` part no other suite reads, and ODF has none) (D325). The file also keeps the **original** for LiveDoc, a record of what the nearest type lost: its type, on a
   Combo chart each series' type in series order, and the sum the written chart reads back as (as "Kept while
   unchanged" sums it), as JSON (`{"type":"stepped-area","sum":"0a1b2c3d"}`,
   `{"type":"combo","series":["column","stepped-area"],"sum":"…"}`). It travels with the chart, in the chart's own
@@ -664,6 +665,9 @@ The code cites each by its id.
   reading one block of its own sheet and naming no part of its own; else the drawing is kept whole (default).
 - **D276** A read chart unchanged: its read sum (type, titles, legend, values, axis, alt, place, size, cells by
   position) equals the written one's; its kept chart part is then written in its place under a new name (default).
+- **D325** A Histogram chart in a file: written in both formats as a Column chart of the same series and labels (the
+  values it counts, not its buckets), the original kept (D290); Excel's `cx:chart` histogram neither written nor read
+  (default).
 - **D323** Candlestick and OHLC in a file: XLSX `c:stockChart` (`c:hiLowLines`; a Candlestick's `c:upDownBars`, gap
   width 150; an OHLC's open and close series marked `dash`; series lines not drawn) on a category and a value axis;
   ODF `chart:stock` with its series in ODF's order (open, minimum, maximum, close), a Candlestick's plot

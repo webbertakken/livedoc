@@ -744,6 +744,7 @@ export * from './chart-stepped';
 export * from './chart-radar';
 export * from './chart-bubble';
 export * from './chart-stock';
+export * from './chart-histogram';
 export * from './chart-axis';
 export * from './chart-values';
 export * from './chart-source';

@@ -2867,6 +2867,7 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
       "radar",
       "candlestick",
       "ohlc",
+      "histogram",
       "combo"
     ],
     "type": "string"
@@ -15414,6 +15415,7 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
       "radar",
       "candlestick",
       "ohlc",
+      "histogram",
       "combo"
     ],
     "type": "string"

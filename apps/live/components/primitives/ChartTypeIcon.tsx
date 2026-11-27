@@ -82,6 +82,12 @@ const MARKS: Record<ChartType, React.ReactNode> = {
       <path d="M16 6v13M13.5 9H16M16 16h2.5" />
     </>
   ),
+  histogram: (
+    <>
+      <path d={AXES} />
+      <path d="M7 17v-5h3v5M10 17V7h3v10M13 17v-7h3v7M16 17v-3h3v3" />
+    </>
+  ),
   combo: (
     <>
       <path d={AXES} />
