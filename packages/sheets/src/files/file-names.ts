@@ -13,6 +13,7 @@ import {
   type XmlParsed,
 } from '@livedoc/office-packages';
 import { parseFormula } from '../formula/parse';
+import { VIEW_NAME } from './xlsx-filters';
 import { posRangeOf } from '../layout';
 import { rangeNameProblem } from '../range-names';
 import type { RangeName, Sheet, SheetLayout } from '../sheet';
@@ -208,6 +209,9 @@ export function readOdsNames(
   for (const element of holder ? childElements(holder) : []) {
     const name = attributeOf(element, TABLE, 'name');
     if (!name) continue;
+    // A filter view's range as Google's and LibreOffice's ODS keep it: the file's own, kept, never named
+    // (standard-mapping.md "Filters in the file").
+    if (VIEW_NAME.test(name)) continue;
     const ref =
       element.uri === TABLE && element.local === 'named-range'
         ? parseOdfRef(attributeOf(element, TABLE, 'cell-range-address') ?? '')
@@ -231,7 +235,11 @@ export function readOdsNames(
   }
   for (const table of childElements(spreadsheet))
     if (table.uri === TABLE && table.local === 'table')
-      out.unread.push(...namesIn(childElement(table, TABLE, 'named-expressions')));
+      out.unread.push(
+        ...namesIn(childElement(table, TABLE, 'named-expressions')).filter(
+          (n) => !VIEW_NAME.test(n),
+        ),
+      );
   return out;
 }
 

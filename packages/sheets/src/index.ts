@@ -70,6 +70,7 @@ export * from './tables/table';
 export * from './tables/table-ref';
 export * from './tables/table-store';
 export * from './tables/table-commands';
+export * from './tables/table-filter';
 export * from './tables/table-column-commands';
 export * from './tables/table-paste';
 export * from './cleanup';

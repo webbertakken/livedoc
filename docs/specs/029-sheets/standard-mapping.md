@@ -494,41 +494,70 @@ The table is the contract the readers and writers are tested against, one test p
 - The sheet's filter, its filter views and its slicers are written and read through one mapping of a column's
   condition (`FilterCondition`, [Data tools](data-tools.md#filters-filter-views-and-slicers)) to each format's
   filter form, with **LiveDoc's record** beside it for what that form cannot say, as tables are (D293, D294).
+- **The one mapping** turns a column's condition into a **standard column**: its kept values (the blank apart), or
+  one or two tests (Is Equal To, Is Not Equal To, the four comparisons, Contains, Does Not Contain, Begins With, Ends
+  With, Is Empty, Is Not Empty), joined by and or by or, or a day (today, tomorrow, yesterday). Each format writes
+  and reads the standard column; read back, it is the condition it says (D477):
+  - a condition before kept values: a column with both is written as its condition, the record keeping both;
+  - Text Is Exactly is Is Equal To, which compares text as text; a comparison of text has no form;
+  - Is Between is `≥ a` and `≤ b`, Is Not Between `< a` or `> b` (the smaller first);
+  - a date is its day number: Date Is a day as `≥ d` and `< d + 1` (read back as Date Is), Date Is Before as
+    `< d`, Date Is After as `≥ d + 1`; a period today, tomorrow or yesterday as its day, the past week, month or year
+    as `≥` its first day and `< ` the day after its last, counted from the day it is written;
+  - Filter by Colour and Custom Formula Is have no standard column.
 - **XLSX filter**: the worksheet's `autoFilter` (`ref` the filter's range), one `filterColumn` a filtered column
   (`colId` its place in the range): kept values as `filters` › `filter val` (the blank as `filters blank="1"`); a
   condition as `customFilters` (`and="1"` for Is Between, two `customFilter`s; Is Not Between two joined by or; the
   text conditions as Excel's wildcards, `*x*`, `x*`, `*x`, Does Not Contain `notEqual` `*x*`); a date period as
   `dynamicFilter` (`today`, `tomorrow`, `yesterday`; the past week, month and year as the two days they span);
-  every row the filter hides written `hidden="1"`, as Excel draws a file's filter from its rows (read back, a hidden row the filter hides is the filter's, not a hidden line); and Excel's hidden
-  `_xlnm._FilterDatabase` name for the sheet, its range. Filter by Colour and Custom Formula Is have no form there
-  but LiveDoc's record.
+  every row the filter hides written `hidden="1"`, as Excel draws a file's filter from its rows; and Excel's hidden
+  `_xlnm._FilterDatabase` name for the sheet, its range. A text in a wildcard form escapes Excel's `*`, `?` and
+  `~` with `~`. Read back, a hidden row of a filter with a condition, under its header, is the filter's, not a
+  hidden line, as Excel holds them (D478); LiveDoc's record lists the rows there hidden by hand (`hidden`). A
+  table's filter (data-tools.md, D481) is its table part's own `autoFilter` (its `filterColumn`s, the part's
+  `ref` its header and data rows), as Excel holds a table's, and a table part's `autoFilter` with a
+  `filterColumn` is read back as the sheet's filter over that table (the first such table's; another's columns
+  named `filter_unread`). Excel refuses a sheet's `autoFilter` over a table's cells, so a filter still overlapping a
+  table another way (D480) is written in LiveDoc's record alone, its rows still hidden.
 - **XLSX filter views**, as Google writes them (`plans/assets/0020/research/google-filter-view-export.md`): each a
-  `customSheetView` (`guid` from the view's id, `filter="1"`, `showAutoFilter="1"`) holding an `autoFilter` as the
+  `customSheetView` (`guid` made of the sheet's place and the view's id, D479, `filter="1"`, `showAutoFilter="1"`)
+  holding an `autoFilter` as the
   filter's and the view's sort as its `sortState` (`sortCondition`, `descending="1"` for Z to A); a hidden
   `Z_<guid>_.wvu.FilterData` name with its range; and a `customWorkbookView` named the view's name.
 - **ODF filter**: LibreOffice's own form, the sheet-local `table:database-range` named `__Anonymous_Sheet_DB__N`
   (`table:display-filter-buttons="true"`) with `table:filter` › `table:filter-and` › `table:filter-condition`
-  (`table:field-number`, `table:operator`, `table:value`, `table:data-type`; kept values as `table:filter-set-item`s),
+  (`table:field-number`, `table:operator`, `table:value`; kept values as `table:filter-set-item`s),
   as Google writes the same; read back as the sheet's filter, never a table, and never named in the import report
-  (Director, 2026-11-27).
-- **ODF** has no filter views nor slicers: written to ODS they are left out, listed first in the Download and Convert
+  (Director, 2026-11-27). Kept values are `=` with a set item each (the blank `""`), the tests LibreOffice's
+  `=`, `!=`, `>`, `>=`, `<`, `<=` (no `table:data-type`, as LibreOffice writes them), `contains`, `!contains`,
+  `begins`, `ends`, `empty`, `!empty`, a day as `>=` its day number and `<` the next; LibreOffice reads one
+  list joined by and, so Is Not Between has no ODF form but LiveDoc's record (measured with LibreOffice 2026-11-27,
+  `plans/assets/0020/research/libreoffice-filter-proof.md`). The rows the filter hides are
+  `table:visibility="filter"`, LibreOffice's own, read back as the filter's, never hidden lines.
+  A table's filter (D481) is the `table:filter` of the table's own `table:database-range`, as LibreOffice holds a
+  database range's filter, read back as the sheet's filter over that table.
+- **ODF** has no filter views nor slicers: written to ODS they are left out, listed in the Download and Convert
   dialog ("2 filter views are left out", "1 slicer is left out"); Google's ODS keeps only each view's range as a
   `Z_…_.wvu.FilterData` name, which LiveDoc neither writes nor reads as a view.
 - **XLSX slicers**: LiveDoc's record, and Excel's table slicer (`slicers`, `slicerCaches`, a drawing anchor) when
   the slicer's range is a table's exactly. No table is made for one (Google makes a `Table_1`; a table the person
   never made would change their workbook, Director 2026-11-27); a slicer over another range is listed in the Download
   and Convert dialog: "1 slicer is not seen by Excel".
-- **LiveDoc's record**: one JSON object, `filter` (range as A1 text and conditions by column letter), `views` (each its
-  name, range, conditions and sort) and `slicers`; in XLSX `livedoc:filters` (`record`, `fingerprint`) in the
+- **LiveDoc's record**: one JSON object, `filter` (range as A1 text, conditions by column letter, a Custom Formula Is
+  as its formula's text for the first row under the header, and `hidden`), `views` (each its name, range,
+  conditions and sort) and `slicers`; in XLSX `livedoc:filters` (`record`, `fingerprint`) in the
   worksheet's LiveDoc `ext`, in ODF the `table:table`'s `livedoc:filters` and `livedoc:filters-fingerprint`. Its
   fingerprint is the CRC-32 of the standard form as written (the filter's range and each column's form a line, each
   view's the same); read, the record is taken when the fingerprint is the standard form's as read, else the standard
-  form is read and the record dropped (`filters_changed`, logged, never reported), as D294.
+  form is read and the record dropped (`filters_changed`, logged, never reported), as D294. A record that does not
+  parse, or a condition in it a write would refuse, is dropped the same way.
 - **Read without LiveDoc's record**: an `autoFilter` or anonymous database range is the sheet's filter, each column's
   form read back into its condition; a form LiveDoc has no condition for (`top10`, `colorFilter`, `iconFilter`, an
   `and` of other operators) leaves that column unfiltered and is named (`filter_unread`, reported). Each
   `customSheetView` holding an `autoFilter` is a filter view, named by its `customWorkbookView` (`Filter N` without
-  one); one without an `autoFilter` is Excel's custom view, kept as unknown content.
+  one); one without an `autoFilter` is Excel's custom view, kept as unknown content. Views past 50 a sheet holds
+  are left out, each named (`filter_unread`). The `_xlnm._FilterDatabase` and `Z_…_.wvu.FilterData` names and the
+  `customWorkbookView`s of the views read are LiveDoc's to write again, never kept.
 
 ## Rows and columns in the file
 
@@ -1086,6 +1115,16 @@ The code cites each by its id.
 - **D452** A table's header cells in XLSX: written as their column names, text (a blank header `Column N`, a number
   its text), as Excel holds a table's header and Google's export writes it
   (`plans/assets/0020/research/google-table-export.md`) (default).
+- **D477** A column's condition in a file: the one standard column both formats write, as near as each format's
+  filter says it; a date as its day number, as Excel compares one; a condition before kept values (default).
+- **D478** A hidden row of a file's filter: in XLSX the filter's when the filter has a condition, as Excel's filter
+  shows again every row a condition keeps; in ODF only `table:visibility="filter"`, LibreOffice's own (default).
+- **D479** A filter view's `guid` in XLSX: the sheet's place (four hex digits) and the view's id in hex, padded, so
+  it is the same at every write and unique in the workbook (default).
+- **D480** The fallback for a filter that already overlaps a table other than as its filter (stored before D481, or
+  read from an OpenDocument file): it stays, its conditions still editable; in XLSX it is LiveDoc's record alone, no
+  `autoFilter` nor `_xlnm._FilterDatabase` (Excel repairs a file whose sheet filter overlaps a table), its rows still
+  hidden; logged once a read or write (`filter_beside_table`), never reported (the Director's ruling, 2026-11-27).
 - **D453** A kept table at an XLSX write named as one of the sheets' own tables (by Excel's rules, case aside): dropped
   and counted (`kept_dropped`), the own table written, as D341 (default).
 - **D352** A file's protection LiveDoc does not read (a password-protected `protectedRange`, one of an unprotected

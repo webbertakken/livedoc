@@ -61,6 +61,8 @@ type Run = {
   size: number | undefined;
   fixed: boolean;
   hidden: boolean;
+  // Hidden by the sheet's filter (`table:visibility="filter"`), LibreOffice's own.
+  filtered: boolean;
   depth: number;
 };
 
@@ -104,13 +106,16 @@ function runsOf(table: XmlElement, axis: 'r' | 'c', styles: OdsLineStyles, max: 
         if (at >= max) continue;
         const repeat = Number(attributeOf(child, TABLE, names.repeat) ?? '1');
         const n = Math.min(Number.isInteger(repeat) && repeat > 0 ? repeat : 1, max - at);
-        const hidden = attributeOf(child, TABLE, 'visibility') === 'collapse';
+        const visibility = attributeOf(child, TABLE, 'visibility');
+        const hidden = visibility === 'collapse';
+        const filtered = axis === 'r' && visibility === 'filter';
         runs.push({
           from: at,
           n,
           size,
           fixed: axis === 'c' || height?.optimal === false,
           hidden,
+          filtered,
           depth,
         });
         at += n;
@@ -145,11 +150,12 @@ export function readOdsLines(
     const lines = new Map<number, FileLine>();
     for (const run of runs) {
       const sized = run.fixed && run.size !== undefined && run.size !== own;
-      if (!sized && !run.hidden && !run.depth) continue;
+      if (!sized && !run.hidden && !run.filtered && !run.depth) continue;
       for (let p = run.from; p < run.from + run.n; p++)
         lines.set(p, {
           ...(sized ? { size: run.size } : {}),
           ...(run.hidden ? { hidden: true as const } : {}),
+          ...(run.filtered ? { filtered: true as const } : {}),
           ...(run.depth ? { depth: run.depth } : {}),
         });
     }
@@ -212,7 +218,12 @@ export class OdsAxisOut {
 
   at(p: number): LineOut {
     const line = this.axis.lines.get(p);
-    const hidden = line?.hidden || this.folded.has(p) ? ' table:visibility="collapse"' : '';
+    const hidden =
+      line?.hidden || this.folded.has(p)
+        ? ' table:visibility="collapse"'
+        : line?.filtered
+          ? ' table:visibility="filter"'
+          : '';
     const attrs = line?.size === undefined ? this.plain : this.style(line.size);
     return { attrs: attrs + hidden, depth: line?.depth ?? 0 };
   }

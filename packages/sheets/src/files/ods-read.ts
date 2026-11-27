@@ -37,6 +37,7 @@ import { OdsValidationCells, readOdsValidations, type OdsValidationsRead } from 
 import { odsCellLooks, type OdsCellLooks } from './ods-cell-style';
 import { fromOpenFormula } from './open-formula';
 import { readOdsDatabaseRanges, readOdsTableRecord, withOdsTables } from './ods-tables';
+import { withOdsFilter } from './ods-filters';
 import { OdsFreeCells, readOdsTableProtection, type OdsRowCell } from './ods-protection';
 import { protectionsFound } from './file-protections';
 import type { FileCell, FileLoss, FileRead, FileSheet, FileValue } from './workbook-file';
@@ -424,7 +425,12 @@ function readBody(
   const tableSheets = tables
     .slice(0, SHEETS_MAX)
     .map((t, i) =>
-      withOdsTables(readTable(t, i, book), databases.standard[i]!, readOdsTableRecord(t), losses),
+      withOdsFilter(
+        withOdsTables(readTable(t, i, book), databases.standard[i]!, readOdsTableRecord(t), losses),
+        databases.filters[i],
+        t,
+        losses,
+      ),
     );
   if (tables.length > SHEETS_MAX)
     losses.push({ k: 'sheets_cut', kept: SHEETS_MAX, had: tables.length });

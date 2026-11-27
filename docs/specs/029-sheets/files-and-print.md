@@ -73,6 +73,9 @@ format it arrived in ([Standard mapping](standard-mapping.md)).
     ([Named ranges in the file](standard-mapping.md#named-ranges-in-the-file)).
   - **Tables**: "1 table LiveDoc cannot read stays plain cells: Sales"
     ([Tables in the file](standard-mapping.md#tables-in-the-file)).
+  - **Filters**: "2 filter columns LiveDoc cannot read are left unfiltered: Data!C1 and Data!F1" (a top ten, a colour
+    or icon filter, a condition LiveDoc has none for; a view past 50, named by its name)
+    ([Filters in the file](standard-mapping.md#filters-in-the-file)).
   - **Protection**: "1 protected sheet frees more than 50 ranges; the rest stay protected: Data"
     ([Protection in the file](standard-mapping.md#protection-in-the-file)).
   - **Named functions**: "1 named function LiveDoc cannot read is kept for Excel: TOOLONG"

@@ -35,6 +35,13 @@ import { readXlsxDxfs, readXlsxFormatRules } from './xlsx-format-rules';
 import { readXlsxValidations } from './xlsx-validation';
 import { liveDocExtOf, readXlsxProtection } from './xlsx-protection';
 import { readXlsxTableRecord, readXlsxTables } from './xlsx-tables';
+import {
+  isFilterName,
+  readXlsxFilters,
+  readXlsxWorkbookViews,
+  withXlsxFilters,
+  type XlsxFiltersRead,
+} from './xlsx-filters-read';
 import { protectionsFound } from './file-protections';
 import { readThemeColours } from './xlsx-colours';
 import {
@@ -359,6 +366,8 @@ export async function readXlsx(
   const placed = new Map<number, number>();
   // Each sheet's record of its tables (standard-mapping.md "Tables in the file"), by its place in `sheets`.
   const tableRecords: ReturnType<typeof readXlsxTableRecord>[] = [];
+  // Each sheet's filter and filter views (standard-mapping.md "Filters in the file"), by its place in `sheets`.
+  const filterReads: XlsxFiltersRead[] = [];
   for (const [at, sheet] of listed.entries()) {
     const name = attributeOf(sheet, '', 'name') ?? '';
     const rel = rels.find((r) => r.id === attributeOf(sheet, relsNs, 'id'));
@@ -387,14 +396,21 @@ export async function readXlsx(
     const found = protectionsFound(protection);
     if (found.changed) book.losses.push({ k: 'protection_changed', sheet: name });
     if (protection.cut) book.losses.push({ k: 'protection_cut', sheet: name });
-    const read = new Set([...rules.read, ...validations.read, ...protection.read]);
+    const filtered = readXlsxFilters(worksheet.root, ns, liveDocExtOf(worksheet.root, ns));
+    filterReads.push(filtered);
+    const read = new Set([
+      ...rules.read,
+      ...validations.read,
+      ...protection.read,
+      ...filtered.read,
+    ]);
     tableRecords.push(readXlsxTableRecord(liveDocExtOf(worksheet.root, ns)));
     keeper?.sheetEntry(sheet, sheets.length);
     keeper?.worksheet(worksheet, part!, sheets.length, read);
     strictUnread += keeper
       ? 0
       : unreadChildren(worksheet.root, WORKSHEET_READ) -
-        childElements(worksheet.root).filter((e) => allRead(e, read)).length;
+        childElements(worksheet.root).filter((e) => read.has(e) || allRead(e, read)).length;
     const index = sheets.length;
     // A cell's rich text is kept on its cell (D377); a Strict file's is named with its other unread content (D108).
     const cells = readSheet(
@@ -424,18 +440,29 @@ export async function readXlsx(
     const at = sheets.findIndex((s) => s.name.toLowerCase() === title.toLowerCase());
     return at < 0 ? undefined : at;
   };
-  keeper?.workbook(parsed, pkg.mainPart, listed, placed, (name, kept, scoped) => {
-    const own = attributeOf(name, '', 'name');
-    if (!own || isExcelOwnName(own, name)) return false;
-    const fn = scoped ? null : readXlsxFunction(name, kept);
-    const range = scoped || fn ? null : xlsxRangeName(own, name, sheetAt, kept);
-    if (fn) functions.push(fn);
-    if (range) names.push(range);
-    if (fn || range) return true;
-    const lambda = /^\s*_xlfn\.LAMBDA\(/i.test(textContent(name));
-    book.losses.push({ k: lambda ? 'function_unread' : 'name_unread', name: own });
-    return false;
-  });
+  // The filter views' names, by `guid`; their workbook views and the filters' names are LiveDoc's to write again.
+  const guids = new Set(filterReads.flatMap((f) => f.views.map((v) => v.guid)));
+  const workbookViews = readXlsxWorkbookViews(parsed.root, ns, guids);
+  keeper?.workbook(
+    parsed,
+    pkg.mainPart,
+    listed,
+    placed,
+    (name, kept, scoped) => {
+      const own = attributeOf(name, '', 'name');
+      if (own && isFilterName(own, guids)) return true;
+      if (!own || isExcelOwnName(own, name)) return false;
+      const fn = scoped ? null : readXlsxFunction(name, kept);
+      const range = scoped || fn ? null : xlsxRangeName(own, name, sheetAt, kept);
+      if (fn) functions.push(fn);
+      if (range) names.push(range);
+      if (fn || range) return true;
+      const lambda = /^\s*_xlfn\.LAMBDA\(/i.test(textContent(name));
+      book.losses.push({ k: lambda ? 'function_unread' : 'name_unread', name: own });
+      return false;
+    },
+    workbookViews.read,
+  );
   keeper?.styles(stylesXml);
   const unread = strictUnread + (keeper?.unread ?? 0);
   if (unread > 0) book.losses.push({ k: 'kept_unread', count: unread });
@@ -450,8 +477,19 @@ export async function readXlsx(
     names.map((n) => n.name),
     book.losses,
   );
+  // Each sheet's filter and views ("Filters in the file"): a table's filter its table part's (D481).
+  const filtered = tabled.sheets.map((sheet, i) => {
+    const read = filterReads[i]!;
+    const filter = read.filter ?? tabled.filters[i];
+    return withXlsxFilters(
+      sheet,
+      { ...read, ...(filter ? { filter } : {}) },
+      workbookViews.names,
+      book.losses,
+    );
+  });
   // Its pivot tables LiveDoc wrote are its own again (standard-mapping.md "Pivot tables in the file").
-  const pivoted = readXlsxPivots(tabled.sheets, tabled.kept, book.losses, names);
+  const pivoted = readXlsxPivots(filtered, tabled.kept, book.losses, names);
   const kept = pivoted.kept;
   return {
     ok: true,

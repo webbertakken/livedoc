@@ -2,6 +2,7 @@
 // the ODF reader does not read, kept as the file wrote it, by where it sat; and the package entries it does not read.
 import { isOdsProtectionAttribute } from './ods-protection';
 import { isOdsTableRecordAttribute } from './ods-tables';
+import { isOdsFilterRecordAttribute } from './ods-filters';
 import { cellParagraphs, isMarkedParagraph } from './ods-cell-text';
 import {
   attributeOf,
@@ -157,7 +158,8 @@ export class OdsKeeper {
         (attribute.uri === TABLE &&
           (attribute.local === 'name' || attribute.local === 'style-name')) ||
         isOdsProtectionAttribute(attribute) ||
-        isOdsTableRecordAttribute(attribute)
+        isOdsTableRecordAttribute(attribute) ||
+        isOdsFilterRecordAttribute(attribute)
       )
         continue;
       this.items.push({

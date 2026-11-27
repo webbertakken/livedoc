@@ -30,6 +30,16 @@ Google Sheets' Data menu does. Its rows of the [parity matrix](parity-matrix.md)
 
 - **Create a Filter** (Ctrl+Alt+R in the matrix's list): a filter over the data region, its header cells with
   filter buttons; one filter a sheet, seen by everyone.
+  - **A table's filter** (the Director's ruling, 2026-11-27, as Google's: a table has its own filter): the sheet's
+    filter over exactly a table's header and data rows (its total row apart) is that table's filter. Create a Filter
+    with the selection inside a table makes it, over the table's rows. A filter that would overlap a table any other
+    way is refused, nothing changed, with "This range overlaps Table1: use the table's filter" in a toast, and
+    Create a Filter is dimmed there with the note "Overlaps Table1" (D481).
+  - The table's filter follows its table: rows inserted in the table grow both, a total row turned on stays outside
+    it, and Convert to Range or Delete Table leaves the filter on the cells as the sheet's (D481).
+  - The room's judge refuses the same: a write setting the sheet's filter over part of a table (an agent's changeset
+    or an import's included) is `filter_overlaps_table`; a filter already overlapping one (stored before this rule,
+    or read from an OpenDocument file) stays as it is and may still change its conditions (D480).
 - A column's filter menu: Sort A to Z, Sort Z to A, **Filter by Colour** (fill, text), **Filter by Condition** (every
   condition of Google's list and Custom Formula), **Filter by Values** (a searchable list with counts, Select All,
   Clear).
@@ -258,7 +268,9 @@ sheet's, seen by everyone, kept by row and column ids as a named range is.
   - its look an [alternating colours](formatting.md#alternating-colours) banding over the table, the table's own, in
     the first default style, the header on, the footer on with a total row (D442);
   - then the **Table Settings** panel opens on it.
-  - Refused, with a toast and nothing changed: a range touching another table ("Tables can't overlap"), holding a
+  - Refused, with a toast and nothing changed: a range touching another table ("Tables can't overlap"), touching the
+    sheet's filter unless the filter covers exactly the new table ("This range overlaps the sheet's filter: remove it
+    or filter the table's cells only"; a filter covering exactly the new table becomes its filter, D481), holding a
     merge ("Unmerge cells before making a table"), touching a banding not wholly inside it ("Alternating colours
     can't overlap"; one wholly inside is replaced by the table's), or past the sheet's 50 tables (D440).
 - **Names**: a table's name is 1 to 255 characters of letters, digits, underscores and spaces, not starting with a
@@ -512,6 +524,9 @@ The code cites each by its id.
 
 - **D440** A sheet's tables: up to 50, as filter views and slicers, a table up to the sheet's columns wide; past it,
   `tables_full` (default).
+- **D481** A table's filter: the sheet's filter over exactly the table's header and data rows, as Google's table has
+  its own filter; any other overlap of a filter and a table is refused in the editor and by the room's judge (the
+  Director's ruling, 2026-11-27); the refusals' words and the dimmed item's note (default).
 - **D441** Convert to Table's guessed column types: a type when every filled data cell is that type, else Text; a
   column with none filled None, as Google guesses (default).
 - **D442** A table's look: the alternating colours banding over it, the table's own, in the first default style; it

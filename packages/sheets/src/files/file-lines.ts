@@ -13,8 +13,42 @@ import {
 import { depthsOf, groupsOf, marksOf, type OutlineAxis } from '../outline';
 import type { GroupMark, SheetLayout } from '../sheet';
 
-/** One line's own: its size in pixels, hidden by hand, its group depth (1 to 7); absent is none. */
-export type FileLine = { size?: number; hidden?: true; depth?: number };
+/**
+ * One line's own: its size in pixels, hidden by hand, hidden by the sheet's filter (a row, standard-mapping.md
+ * "Filters in the file"), its group depth (1 to 7); absent is none.
+ */
+export type FileLine = { size?: number; hidden?: true; filtered?: true; depth?: number };
+
+/** Lines with the rows the sheet's filter hides marked so; none when it hides none. */
+export function withFilteredRows(
+  lines: FileLines | undefined,
+  rows: readonly number[],
+): FileLines | undefined {
+  if (rows.length === 0) return lines;
+  const axis = lines?.r;
+  const out = new Map<number, FileLine>(axis?.lines ?? []);
+  for (const p of rows) out.set(p, { ...out.get(p), filtered: true });
+  return { ...lines, r: { ...(axis ?? { collapsed: [] }), lines: out } };
+}
+
+/** Lines with the rows a file's filter hides (`rows`, hidden there) read as the filter's, not hidden by hand. */
+export function filteredFromHidden(
+  lines: FileLines | undefined,
+  rows: (p: number) => boolean,
+): FileLines | undefined {
+  const axis = lines?.r;
+  if (!axis) return lines;
+  const out = new Map<number, FileLine>();
+  for (const [p, line] of axis.lines) {
+    if (!line.hidden || !rows(p)) {
+      out.set(p, line);
+      continue;
+    }
+    const { hidden: _, ...rest } = line;
+    out.set(p, { ...rest, filtered: true });
+  }
+  return { ...lines, r: { ...axis, lines: out } };
+}
 
 /** A collapsed group, by a line in it and its depth. */
 export type FileGroupMark = { at: number; depth: number };
