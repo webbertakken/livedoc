@@ -123,8 +123,8 @@ export function SpreadsheetTitleRow({
   const [opening, setOpening] = useState<string | null>(null);
   const grid = useChannelBindings(channel);
   const catalogue = useMemo(
-    () => spreadsheetMenus(format, locale, grid.recentCodes),
-    [format, locale, grid.recentCodes],
+    () => spreadsheetMenus(format, locale, grid.recentCodes, grid.filterViews ?? null),
+    [format, locale, grid.recentCodes, grid.filterViews],
   );
   const fontSize = useMemo(
     () => (grid.fontSize === null ? null : { read: () => grid.fontSize, set: grid.setFontSize }),

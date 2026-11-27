@@ -21,6 +21,7 @@ import { usePublishedBindings } from './office-bindings-channel';
 import { useBorderLine } from './border-line-context';
 import { useSheetBarActionsContext } from './useSheetBarActions';
 import { useFindReplace } from './find-replace-state';
+import { changeViewTitles } from '@/components/sheets/filter-view-menu';
 
 /** The dialogs the open sheet hosts that its menu items open, and the merge that asks first (useMergeDialog). */
 export type GridDialogs = {
@@ -89,6 +90,7 @@ export function useGridMenuBindings(
   const findReplace = useFindReplace();
   const published = {
     ...office,
+    filterViews: changeViewTitles(layout, c.filterViews.open),
     actions: {
       ...office.actions,
       ...sheetBarBindings(bar),

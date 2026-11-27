@@ -425,36 +425,57 @@ const formatMenu = (locale: string | null, recentCodes: readonly string[]) =>
     built('clear-formatting', 'Clear Formatting', 'edit', { shortcut: 'clear-formatting' }),
   ]);
 
-const DATA_MENU = menu('data', 'Data', [
-  submenu('sort-sheet', 'Sort Sheet', [
-    built('sort-sheet-a-to-z', 'A to Z', 'edit'),
-    built('sort-sheet-z-to-a', 'Z to A', 'edit'),
-  ]),
-  submenu('sort-range', 'Sort Range', [
-    built('sort-range-a-to-z', 'A to Z', 'edit'),
-    built('sort-range-z-to-a', 'Z to A', 'edit'),
-    built('sort-range-advanced', 'Advanced Range Sorting Options', 'edit'),
-  ]),
-  SEPARATOR,
-  built('create-a-filter', 'Create a Filter', 'edit'),
-  item('create-group-by-view', 'Create Group by View', 'view'),
-  item('create-filter-view', 'Create Filter View', 'view'),
-  item('add-a-slicer', 'Add a Slicer', 'edit'),
-  SEPARATOR,
-  built('protect-sheets-and-ranges', 'Protect Sheets and Ranges', 'view'),
-  built('named-ranges', 'Named Ranges', 'view'),
-  built('named-functions', 'Named Functions', 'view'),
-  built('randomise-range', 'Randomise Range', 'edit'),
-  SEPARATOR,
-  built('column-stats', 'Column Stats', 'view'),
-  built('data-validation', 'Data Validation', 'edit'),
-  submenu('data-clean-up', 'Data Clean-up', [
-    built('clean-up-suggestions', 'Clean-up Suggestions', 'edit'),
-    built('remove-duplicates', 'Remove Duplicates', 'edit'),
-    built('trim-whitespace', 'Trim Whitespace', 'edit'),
-  ]),
-  built('split-text-to-columns', 'Split Text to Columns', 'edit'),
-]);
+/** Data › Change View's item for the sheet's view at `i` (data-tools.md "Filters, filter views and slicers"). */
+export const filterViewItemId = (i: number) => `filter-view-${i}`;
+
+// Data › Change View: shown while the sheet has a view or a filter (`views` its views' names, null when hidden).
+const changeViewEntries = (views: readonly string[] | null): OfficeEntry[] =>
+  views === null
+    ? []
+    : [
+        submenu('change-view', 'Change View', [
+          ...views.map((title, i) =>
+            built(filterViewItemId(i), title, 'view', { checkable: 'radio' }),
+          ),
+          ...(views.length ? [SEPARATOR] : []),
+          built('close-filter-view', 'Close View', 'view'),
+          built('save-as-filter-view', 'Save as Filter View', 'edit'),
+        ]),
+      ];
+
+const dataMenu = (views: readonly string[] | null) =>
+  menu('data', 'Data', [
+    submenu('sort-sheet', 'Sort Sheet', [
+      built('sort-sheet-a-to-z', 'A to Z', 'edit'),
+      built('sort-sheet-z-to-a', 'Z to A', 'edit'),
+    ]),
+    submenu('sort-range', 'Sort Range', [
+      built('sort-range-a-to-z', 'A to Z', 'edit'),
+      built('sort-range-z-to-a', 'Z to A', 'edit'),
+      built('sort-range-advanced', 'Advanced Range Sorting Options', 'edit'),
+    ]),
+    SEPARATOR,
+    built('create-a-filter', 'Create a Filter', 'edit'),
+    item('create-group-by-view', 'Create Group by View', 'view'),
+    built('create-filter-view', 'Create Filter View', 'view'),
+    ...changeViewEntries(views),
+    item('add-a-slicer', 'Add a Slicer', 'edit'),
+    SEPARATOR,
+    built('protect-sheets-and-ranges', 'Protect Sheets and Ranges', 'view'),
+    built('named-ranges', 'Named Ranges', 'view'),
+    built('named-functions', 'Named Functions', 'view'),
+    built('randomise-range', 'Randomise Range', 'edit'),
+    SEPARATOR,
+    built('column-stats', 'Column Stats', 'view'),
+    built('data-validation', 'Data Validation', 'edit'),
+    submenu('data-clean-up', 'Data Clean-up', [
+      built('clean-up-suggestions', 'Clean-up Suggestions', 'edit'),
+      built('remove-duplicates', 'Remove Duplicates', 'edit'),
+      built('trim-whitespace', 'Trim Whitespace', 'edit'),
+    ]),
+    built('split-text-to-columns', 'Split Text to Columns', 'edit'),
+  ]);
+const DATA_MENU = dataMenu(null);
 
 const TOOLS_MENU = menu('tools', 'Tools', [
   item('create-a-new-form', 'Create a New Form', 'edit'),
@@ -518,6 +539,8 @@ export function spreadsheetMenus(
   format: WorkbookFormat,
   locale: string,
   recentCodes: readonly string[] = [],
+  // The open sheet's filter views by name for Data › Change View; null hides it.
+  filterViews: readonly string[] | null = null,
 ): OfficeCatalogue {
   return [
     fileMenu(format),
@@ -525,7 +548,7 @@ export function spreadsheetMenus(
     VIEW_MENU,
     INSERT_MENU,
     formatMenu(locale, recentCodes),
-    DATA_MENU,
+    dataMenu(filterViews),
     TOOLS_MENU,
     HELP_MENU,
   ];

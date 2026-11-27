@@ -369,6 +369,8 @@ export type GridOffice = {
   colours: OfficeColours | null;
   // The Number menu's recently used codes (D194), for the title row's catalogue.
   recentCodes: readonly string[];
+  // The open sheet's filter views by name, for Data › Change View; null hides it (data-tools.md).
+  filterViews?: readonly string[] | null;
   // The active cell's size in points; null while no sheet is open or the session may not format.
   fontSize: number | null;
   setFontSize: (pt: number) => void;
@@ -418,6 +420,7 @@ export function gridOffice(port: GridMenuPort): GridOffice {
     actions: gridMenuBindings(port),
     colours: editor ? gridColours(port) : null,
     recentCodes: port.recentCodes,
+    filterViews: null,
     fontSize: editor ? fontSizeOf(port.format) : null,
     setFontSize: (pt) => {
       if (editor) setFontSize(port.act, pt);
