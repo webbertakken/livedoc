@@ -7,6 +7,7 @@
 //   DELETE /api/documents/<id>/workbook/sheets/<sheetId>          its tab removed, its sheet kept for Undo; never the
 //                                                                 last visible sheet
 // Editors only, never on a tab-scoped link. Answered inside the document's room.
+import { protectedRefusal, protectionCallerOf, sheetDeleteRefusal } from './sheet-protection';
 import type {
   SheetWriteResponse,
   WorkbookSheetAddRequest,
@@ -253,6 +254,7 @@ async function renameSheet(
     { write: { kind: 'title', title: raw.name } },
     await writer(ctx, caller.owner),
     null,
+    await protectionCallerOf(ctx, caller, caller.owner),
   );
   if (!res.ok) return res;
   const landed = await res.json<SheetWriteResponse>();
@@ -298,6 +300,12 @@ async function deleteSheet(
   const head = live.find((h) => h.id === sheetId);
   if (!head) return workbookRefused('sheet_not_found', 404);
   if (!shownElsewhere(live, sheetId)) return workbookRefused('sheet_last_visible', 409);
+  // A protected sheet goes only by one its protection admits (D347).
+  const guarded = sheetDeleteRefusal(
+    head.layout,
+    await protectionCallerOf(ctx, caller, caller.owner),
+  );
+  if (guarded) return protectedRefusal(guarded, documentId);
   await removeDocumentTab(ctx, documentId, head.tabId);
   await relayTabs(ctx, documentId);
   relaySheet(ctx, documentId, {

@@ -1,5 +1,6 @@
 // The sheet model (docs/specs/029-sheets/sheet-store.md "What a sheet is").
 // Cells are keyed by row id and column id, never by position: a row's place is only its index in the layout.
+import type { Protection } from './protection';
 import { makeAxisIds, type Rand } from './ids';
 import { SHEET_COLS_NEW, SHEET_ROWS_NEW, SHEET_TITLE_MAX } from './limits';
 import { CellMap } from './cells/cell-map';
@@ -226,6 +227,8 @@ export type SheetLayout = {
   cardTables?: CardTable[];
   // Named ranges (docs/specs/029-sheets/sheet.md "Named ranges"): each a name and the cells it covers, by id.
   names?: RangeName[];
+  // Protected ranges and the protected sheet (data-tools.md "Protected ranges"), each by id.
+  protections?: Protection[];
   // Validation rules and format rules (data-validation.md, conditional-formatting.md); format rules in list order.
   rules?: ValidationRule[];
   formatRules?: FormatRule[];

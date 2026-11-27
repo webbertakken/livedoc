@@ -1,5 +1,6 @@
 // The frame a formula is worked out in: what it reads of its workbook, each read noted against the formula reading
 // (its `reader`; NO_CELL keeps nothing). The workbook gives its parts once, as a FrameSource.
+import { protectionsAt } from '../protection';
 import type { CardSource } from '../cards';
 import type { FormulaMeaning } from '../formula/meaning';
 import type { ImportAccess, ImportRequest } from '../imports/import-request';
@@ -94,6 +95,10 @@ export function cellFrame(
       const layout = src.sheet(s)?.layout;
       const colId = layout?.cols[c];
       return layout && colId ? colWidth(layout, colId) : 0;
+    },
+    isProtected: (s, r, c) => {
+      const layout = src.sheet(s)?.layout;
+      return !!layout && protectionsAt(layout, r, c).length > 0;
     },
     sheetCount: () => src.sheetCount(),
     sheetNumber: (s) => src.sheetNumber(s),

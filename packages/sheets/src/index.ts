@@ -62,6 +62,7 @@ export * from './text-patterns';
 export * from './store';
 export * from './store-layout';
 export * from './range-names';
+export * from './protection';
 export * from './named-functions';
 export * from './named-function-refs';
 export * from './named-function-import';

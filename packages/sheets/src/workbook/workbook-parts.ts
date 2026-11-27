@@ -1,6 +1,6 @@
 // What a workbook holds beside its sheets' cells (docs/specs/029-sheets/sheet-store.md "In a spreadsheet";
-// spreadsheet.md "What a workbook holds"): protected sheets and ranges, objects over a sheet (charts, pivot tables,
-// images, ...) and the content a file carried that LiveDoc does not model, kept to be written back
+// spreadsheet.md "What a workbook holds"): objects over a sheet (charts, pivot tables, images, ...) and the content a
+// file carried that LiveDoc does not model, kept to be written back
 // (standard-mapping.md "Unknown content"). Each a plain value with a reader that refuses what is not one.
 import { isAxisId, isSheetId } from '../ids';
 import type { IdRange } from '../sheet';
@@ -11,50 +11,6 @@ const PART_ID = /^[A-Za-z0-9_-]{1,64}$/;
 const isPartId = (v: unknown): v is string => typeof v === 'string' && PART_ID.test(v);
 const isRecord = (v: unknown): v is Record<string, unknown> =>
   typeof v === 'object' && v !== null && !Array.isArray(v);
-
-// ---- Protection (data-tools.md "Protected ranges") ---------------------------------------------------------------
-
-// The most people one protection names, and its description's length.
-export const PROTECTION_EDITORS_MAX = 200;
-export const PROTECTION_DESCRIPTION_MAX = 255;
-
-export type Protection = {
-  readonly id: string;
-  readonly sheetId: string;
-  // The protected range, by ids; null protects the whole sheet.
-  readonly range: IdRange | null;
-  // Who may still edit it, beside its sheet's owner: participant ids.
-  readonly editors: readonly string[];
-  // Show a warning only, rather than refuse an edit.
-  readonly warnOnly: boolean;
-  readonly description: string;
-};
-
-export const Protection = {
-  read: (raw: unknown): Protection | null => {
-    if (!isRecord(raw)) return null;
-    const { id, sheetId, range, editors, warnOnly, description } = raw;
-    if (!isPartId(id) || !isSheetId(sheetId)) return null;
-    if (range !== null && !idRangeOk(range)) return null;
-    if (
-      !Array.isArray(editors) ||
-      editors.length > PROTECTION_EDITORS_MAX ||
-      !editors.every((e) => typeof e === 'string' && e.length > 0 && e.length <= 128)
-    )
-      return null;
-    if (typeof warnOnly !== 'boolean') return null;
-    if (typeof description !== 'string' || description.length > PROTECTION_DESCRIPTION_MAX)
-      return null;
-    return {
-      id,
-      sheetId,
-      range,
-      editors: editors as string[],
-      warnOnly,
-      description,
-    };
-  },
-} as const;
 
 // ---- Objects over a sheet ----------------------------------------------------------------------------------------
 

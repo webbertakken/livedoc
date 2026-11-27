@@ -1,6 +1,7 @@
 // A response as a Sheet row (docs/specs/030-forms/forms.md "Responses to a Sheet"): the sheet's header row and the rows
 // in use read, the row planned by @livedoc/forms (responseRowWrite), and stored through the sheet store's own
 // checks, caps and relay (storeSheetWrite), unchecked against the sheet's validation rules so a response always lands.
+import { PROTECTION_SYSTEM } from '@livedoc/sheets';
 import type { AnswerValue, FormSheetDestination } from '@livedoc/forms';
 import { responseRowWrite, type FormDefinition } from '@livedoc/forms';
 import { cellKey, type SheetPerson } from '@livedoc/sheets';
@@ -68,6 +69,8 @@ export async function writeResponseRow(
     { write, unchecked: true },
     input.by,
     null,
+    // A response row is written as the form's owner (data-tools.md "Protected ranges").
+    PROTECTION_SYSTEM,
   );
   if (res.ok) return 'written';
   console.warn('[forms] form.sheet.unwritten', { documentId, status: res.status });

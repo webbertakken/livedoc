@@ -1,19 +1,18 @@
 // A workbook whole (docs/specs/029-sheets/spreadsheet.md "What a workbook holds"): its record, its sheets in tab
-// order, its styles, protections, objects and kept content. What a file maps to and from and what a migration makes;
-// never stored whole (the room keeps each part in its own table, sheet-store.md "In a spreadsheet").
+// order (each holding its protections, protection.ts), its styles, objects and kept content. What a file maps to and
+// from and what a migration makes; never stored whole (the room keeps each part in its own table, sheet-store.md "In a spreadsheet").
 import type { Sheet } from '../sheet';
 import type { WorkbookRecord } from '../workbook-record';
 import { StyleTable } from './cell-style';
 import { SheetName } from './sheet-name';
 import { SheetLimits } from '../sheet-limits';
 import type { WorkbookLimitRefusal } from './workbook-limits';
-import type { KeptPart, Protection, WorkbookObject } from './workbook-parts';
+import type { KeptPart, WorkbookObject } from './workbook-parts';
 
 export type WorkbookModel = {
   readonly record: WorkbookRecord;
   readonly sheets: readonly Sheet[];
   readonly styles: StyleTable;
-  readonly protections: readonly Protection[];
   readonly objects: readonly WorkbookObject[];
   readonly kept: readonly KeptPart[];
 };
@@ -40,7 +39,7 @@ function problems(model: WorkbookModel): WorkbookProblem[] {
   );
   if (limit) out.push({ k: limit });
   const ids = new Set(model.sheets.map((s) => s.id));
-  for (const part of [...model.protections, ...model.objects])
+  for (const part of model.objects)
     if (!ids.has(part.sheetId))
       out.push({ k: 'part_orphaned', id: part.id, sheetId: part.sheetId });
   for (const kept of model.kept)
@@ -55,7 +54,6 @@ export const WorkbookModel = {
     record,
     sheets,
     styles: StyleTable.empty(),
-    protections: [],
     objects: [],
     kept: [],
   }),

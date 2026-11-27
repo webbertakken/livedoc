@@ -3,7 +3,8 @@
 // upgrade. The largest resource: every sub-path
 // under a document id lives here.
 
-import { getDocument, getDocumentForSave, getDocumentMeta } from '../db';
+import { protectedRefusal, protectionCallerOf, sheetDeleteRefusal } from './sheet-protection';
+import { getDocument, getDocumentForSave, getDocumentMeta, listSheetHeads } from '../db';
 import { conflict, forbidden, json, noContent, notFound } from '../responses';
 import { tabEtag } from '@livedoc/api-schema';
 import { drawingTabIdsOf, listedTabs } from '@livedoc/document';
@@ -170,6 +171,23 @@ export async function handleDocumentSubresources(
       // the other in one save can reach here first.
       // A text document's drawing tabs are never counted (docs/specs/034-text-documents/objects.md "Never counted").
       if (ctx.token && listedTabs(existing.tabs).length <= 1) return conflict('last_tab');
+      // A spreadsheet's protected sheet goes only by one its protection admits (data-tools.md "Protected ranges").
+      if (existing.workbook) {
+        const [sheet] = await listSheetHeads(env, id, tabId);
+        const owner = requireOwner(ctx);
+        const guarded =
+          sheet && typeof owner === 'string'
+            ? sheetDeleteRefusal(
+                sheet.layout,
+                await protectionCallerOf(
+                  ctx,
+                  { documentId: id, ownerId: existing.ownerId, teamId: existing.teamId },
+                  owner,
+                ),
+              )
+            : null;
+        if (guarded) return protectedRefusal(guarded, id);
+      }
       await removeDocumentTab(ctx, id, tabId);
       // Its drawing tabs go with a text document tab (objects.md "Deleting"); an editor's own later delete of each
       // is a 404 its client lets through.

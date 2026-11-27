@@ -2,6 +2,7 @@
 // checked and applied against the sheet as the ones before it leave it, so the whole lands or none of it does. The
 // plan answers the writes as they landed (relayed one by one), their inverse in undo order, one net change per cell
 // (what the store writes once), the counts, and the after-image its revert compares against (D265).
+import { Protection, protectionsTouched, type ProtectionCaller } from '../protection';
 import type { FormatPatch } from '../format';
 import { applySheetWrite, inverseSheetWrite, type CellChange, type SheetWrite } from '../store';
 import { splitCellKey, type Cell, type CellFormat, type Sheet, type SheetPerson } from '../sheet';
@@ -30,6 +31,8 @@ export type SheetChangesetPlan = {
   after: SheetChangesetAfter;
   // Whether it changes anything at all.
   changes: boolean;
+  // The warning protections it wrote under (data-tools.md "Protected ranges"), by id: never asked, only logged.
+  warned: string[];
 };
 
 export type SheetChangesetRefusal = {
@@ -41,7 +44,13 @@ export type SheetChangesetRefusal = {
   line?: string;
 };
 
-export type SheetChangesetContext = { now: number; by: SheetPerson; check: WriteCheck };
+export type SheetChangesetContext = {
+  now: number;
+  by: SheetPerson;
+  check: WriteCheck;
+  // Who writes, for the sheet's protections (data-tools.md "Protected ranges").
+  caller: ProtectionCaller;
+};
 
 // The patch that turns a stored format into `after`: its keys set, the stored keys it lacks cleared; null clears it all.
 function formatDiff(
@@ -75,9 +84,22 @@ export function planSheetChangeset(
   const touched = new Set<string>();
   const things = new Set<string>();
   let titled = false;
+  const warned = new Set<string>();
   for (const [index, raw] of writes.entries()) {
     let result;
     try {
+      // Each write against the sheet as the ones before it left it (D347).
+      const touched = protectionsTouched(sheet.layout, raw);
+      const refused = touched.find((p) => !Protection.admits(p, ctx.caller));
+      if (refused)
+        return {
+          ok: false,
+          error: 'protected',
+          index,
+          at: refused.id,
+          line: Protection.refusalLine(refused),
+        };
+      for (const p of touched) if (p.can === 'warn') warned.add(p.id);
       // A malformed write can throw in the check or the apply: refused as the write route refuses it.
       const check = validateWrite(sheet, raw, ctx.check);
       if (!check.ok)
@@ -124,5 +146,6 @@ export function planSheetChangeset(
     counts,
     after: afterImageOf(sheet, changed, things, titled),
     changes,
+    warned: [...warned],
   };
 }

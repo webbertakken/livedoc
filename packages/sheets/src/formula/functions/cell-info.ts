@@ -68,9 +68,9 @@ function cellInfo(type: string, r: RangeRef, own: boolean, f: Frame): Value {
     // A LiveDoc document is no file: OpenFormula's answer for a file never saved (default).
     case 'filename':
       return '';
-    // Formulas read no protections yet: every cell is unprotected to them (default).
+    // 1 under any protection, a warning one too (data-tools.md "Protected ranges", D42).
     case 'protect':
-      return 0;
+      return f.isProtected(r.sheetId, r.r1, r.c1) ? 1 : 0;
     default:
       return err('#VALUE!', `"${type}" is not something CELL can tell`);
   }

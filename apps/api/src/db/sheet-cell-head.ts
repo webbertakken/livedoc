@@ -1,5 +1,6 @@
 // A sheet's head as a cell write needs it (docs/specs/029-sheets/performance.md "Held in memory"): its columns whole,
-// and of its rows only the ones the write names, the rows its validation rules start and end on, and its first row,
+// and of its rows only the ones the write names, the rows its validation rules and protections start and end on, and
+// its first row,
 // in their true order. A cell write asks the order only whether a row still exists and how rows lie against one
 // another (a rule's range covering a cell), and an order-preserving subset answers both as the whole order does; the
 // first row keeps the sheet holding a cell, as the engine requires. So a cell write on a sheet of a million rows
@@ -39,6 +40,12 @@ export async function readCellWriteHead(
     wanted.add(rule.r1);
     wanted.add(rule.r2);
   }
+  // And every protection's rows, so a cell is known inside one or not (data-tools.md "Protected ranges").
+  for (const p of head.layout.protections ?? [])
+    for (const range of [...(p.range ? [p.range] : []), ...(p.except ?? [])]) {
+      wanted.add(range.r1);
+      wanted.add(range.r2);
+    }
   const rows = await rowsInOrder(env, documentId, sheetId, [...wanted]);
   return { ...head, layout: { ...head.layout, rows } };
 }

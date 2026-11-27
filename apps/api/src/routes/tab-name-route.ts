@@ -3,6 +3,8 @@
 // MCP and any script, which never do whole-tab saves. Advances the tab's revision and is relayed to
 // the room as the same tab-meta an editor's own rename sends (CS42).
 
+import type { ProtectionCaller } from '@livedoc/sheets';
+import { protectionCallerOf } from './sheet-protection';
 import { getDocument, listSheetHeads, renameTab } from '../db';
 import { capStoredName } from '../names';
 import { forbidden, json, notFound } from '../responses';
@@ -45,7 +47,19 @@ export async function handleTabRename(
   }
   // A spreadsheet's sheet tab is named as its sheet (docs/specs/029-sheets/spreadsheet.md "The workbook shape"): the
   // rename is its sheet's, by the sheet name's rules, which renames the tab with it.
-  if (existing.workbook) return renameSheetTab(ctx, id, summary, body.name, owner);
+  if (existing.workbook)
+    return renameSheetTab(
+      ctx,
+      id,
+      summary,
+      body.name,
+      owner,
+      await protectionCallerOf(
+        ctx,
+        { documentId: id, ownerId: existing.ownerId, teamId: existing.teamId },
+        owner,
+      ),
+    );
   const name = capStoredName(body.name, summary.name, 'tab');
   const rev = await renameTab(ctx.env, tabId, name);
   if (rev === null) return notFound();
@@ -61,6 +75,7 @@ async function renameSheetTab(
   summary: { id: string },
   name: string,
   owner: string,
+  caller: ProtectionCaller,
 ): Promise<Response> {
   const tabId = summary.id;
   const [sheet] = await listSheetHeads(ctx.env, id, tabId);
@@ -73,6 +88,7 @@ async function renameSheetTab(
     { write: { kind: 'title', title: name } },
     by,
     null,
+    caller,
   );
   if (!res.ok) return res;
   const title = name.trim();

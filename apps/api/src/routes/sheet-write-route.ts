@@ -4,6 +4,8 @@
 // formulas a deletion shrinks), stored in one batch guarded by the sheet's rev (retried on a lost race), answered
 // with the stored state of every cell it touched, and relayed in order.
 
+import { PROTECTION_SYSTEM, protectionRefusal, type ProtectionCaller } from '@livedoc/sheets';
+import { protectedRefusal, protectionCallerOf } from './sheet-protection';
 import type { SheetWriteRequest, SheetWriteResponse } from '@livedoc/api-schema';
 import {
   SheetLimits,
@@ -105,6 +107,8 @@ export async function shrinkReaders(
           { write, unchecked: true },
           by,
           null,
+          // A deletion's rewrites elsewhere are the room's own, never a person's (D347).
+          PROTECTION_SYSTEM,
         );
         if (res.ok)
           console.info('[sheets] sheets.readers.shrunk', {
@@ -136,8 +140,11 @@ export async function writeSheet(
     if (!values) return forbidden();
     body = { ...read, write: values };
   }
-  const by = await writer(ctx, caller.owner);
-  return storeSheetWrite(ctx, documentId, sheetId, body, by, caller.scopeTab ?? null);
+  const [by, who] = await Promise.all([
+    writer(ctx, caller.owner),
+    protectionCallerOf(ctx, caller, caller.owner),
+  ]);
+  return storeSheetWrite(ctx, documentId, sheetId, body, by, caller.scopeTab ?? null, who);
 }
 
 // A checked write stored (docs/specs/029-sheets/sheet-store.md "Changing a sheet"): validated and applied by the engine,
@@ -150,6 +157,8 @@ export async function storeSheetWrite(
   body: SheetWriteRequest,
   by: SheetPerson,
   scopeTab: string | null,
+  // Who writes, to the sheet's protections (data-tools.md "Protected ranges").
+  caller: ProtectionCaller,
 ): Promise<Response> {
   const write = body.write;
   for (let attempt = 0; attempt < SHEET_WRITE_RETRIES; attempt++) {
@@ -166,6 +175,14 @@ export async function storeSheetWrite(
     const limits = SheetLimits.of(spreadsheet);
     const look = await tabLookProblem(ctx, documentId, sheetId, write, spreadsheet);
     if (look) return look;
+    // A protection the caller is not admitted by refuses the whole write; the grid's hatching never decides (D347).
+    let refused;
+    try {
+      refused = protectionRefusal(head.layout, write, caller);
+    } catch {
+      return sheetRejected('write_invalid');
+    }
+    if (refused) return protectedRefusal(refused, documentId);
     if (write.kind === 'title') {
       const titled = await titleProblem(ctx, documentId, sheetId, write.title, spreadsheet, scope);
       if (titled) return titled;

@@ -484,7 +484,7 @@ export function insertSheetStatements(
 
 // A copy of one of the document's sheets, cells and all, under a new id and title.
 // A copy of a sheet: in a spreadsheet (`inSpreadsheet`) its named ranges stay with the original, being the workbook's
-// (docs/specs/029-sheets/sheet.md "Named ranges", D298).
+// (docs/specs/029-sheets/sheet.md "Named ranges", D298); its protections always do (data-tools.md, D348).
 export function copySheetStatements(
   env: DocumentEnv,
   documentId: string,
@@ -493,7 +493,9 @@ export function copySheetStatements(
   now: number,
   inSpreadsheet: boolean,
 ): D1PreparedStatement[] {
-  const layout = inSpreadsheet ? `json_remove(layout, '$.names')` : 'layout';
+  const layout = inSpreadsheet
+    ? `json_remove(layout, '$.names', '$.protections')`
+    : `json_remove(layout, '$.protections')`;
   return [
     env.DOCUMENT_DB.prepare(
       `INSERT INTO sheets (document_id, id, tab_id, title, layout, rev, cell_count, cell_bytes, created_at, updated_at, updated_by)

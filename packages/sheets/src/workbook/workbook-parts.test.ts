@@ -1,34 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { KeptPart, Protection, WorkbookObject } from './workbook-parts';
+import { KeptPart, WorkbookObject } from './workbook-parts';
 
-// docs/specs/029-sheets/sheet-store.md "In a spreadsheet": protections, objects over a sheet and the content a file
+// docs/specs/029-sheets/sheet-store.md "In a spreadsheet": objects over a sheet and the content a file
 // carried that LiveDoc does not model, each read whole or not at all.
 const range = { r1: 'rowa', c1: 'cola', r2: 'rowb', c2: 'colb' };
-
-describe('Protection.read', () => {
-  const valid = {
-    id: 'p1',
-    sheetId: 'sheet01',
-    range,
-    editors: ['user_a'],
-    warnOnly: false,
-    description: 'Totals',
-  };
-
-  it('reads a protected range, and a whole protected sheet', () => {
-    expect(Protection.read(valid)).toEqual(valid);
-    expect(Protection.read({ ...valid, range: null })).toMatchObject({ range: null });
-  });
-
-  it.each([
-    ['a missing sheet', { ...valid, sheetId: '' }],
-    ['a range not by ids', { ...valid, range: { r1: 'A1' } }],
-    ['editors that are not ids', { ...valid, editors: [3] }],
-    ['a description past its length', { ...valid, description: 'd'.repeat(256) }],
-  ])('refuses %s', (_, raw) => {
-    expect(Protection.read(raw)).toBeNull();
-  });
-});
 
 describe('WorkbookObject.read', () => {
   const chart = {

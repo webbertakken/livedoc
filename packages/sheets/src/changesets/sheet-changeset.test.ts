@@ -1,6 +1,7 @@
 // A sheet's changesets (docs/specs/024-agents/agent-changesets.md "A sheet's changesets", D262-D270): planned whole
 // or refused whole, one net change per cell, counts, the inverse in undo order, and the revert keeping what changed
 // since.
+import { PROTECTION_SYSTEM } from '../protection';
 import { describe, expect, it } from 'vitest';
 import { applySheetWrite, type SheetWrite } from '../store';
 import { makeSheets } from '../testing/book';
@@ -10,7 +11,7 @@ import { planSheetChangeset, type SheetChangesetPlan } from './sheet-changeset';
 import { planSheetRevert } from './sheet-revert';
 
 const by = { id: 'p', name: 'P', color: '#000000' };
-const ctx = { now: 5, by, check: { checkRules: true } };
+const ctx = { now: 5, by, check: { checkRules: true }, caller: PROTECTION_SYSTEM };
 const R = (i: number) => `s0r${i}`;
 const C = (i: number) => `s0c${i}`;
 const K = (r: number, c: number) => `${R(r)}:${C(c)}`;
@@ -152,6 +153,29 @@ describe('planSheetChangeset', () => {
       ctx,
     );
     expect(p).toMatchObject({ ok: false, index: 1 });
+  });
+
+  // data-tools.md "Protected ranges" (D347): an agent's changeset is checked write by write against the sheet as it
+  // then stands; a warning never stops it, and is named for the room's log.
+  it('refuses the whole at a write a protection does not admit, and names the warnings it passed', () => {
+    const guarded = (can: 'warn' | 'editors') => {
+      const s = sheet();
+      const range = { r1: R(0), c1: C(0), r2: R(1), c2: C(0) };
+      return { ...s, layout: { ...s.layout, protections: [{ id: 'p1', range, can }] } };
+    };
+    const participant = { ...ctx, caller: { owner: false, editor: false } };
+    expect(
+      planSheetChangeset(guarded('editors'), [set(4, 4, 1), set(1, 0, 2)], participant),
+    ).toEqual({
+      ok: false,
+      error: 'protected',
+      index: 1,
+      at: 'p1',
+      line: 'This range is protected: only Editors can change it.',
+    });
+    const warned = planSheetChangeset(guarded('warn'), [set(1, 0, 2), set(0, 0, 3)], participant);
+    expect(warned).toMatchObject({ ok: true, warned: ['p1'] });
+    expect(plan(sheet(), [set(1, 0, 2)]).warned).toEqual([]);
   });
 
   it('refuses a write the engine cannot apply', () => {

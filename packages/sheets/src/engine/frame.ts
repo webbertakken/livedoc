@@ -74,6 +74,8 @@ export type Frame = {
   format(sheetId: string, r: number, c: number): CellFormat | undefined;
   // A column's width in pixels (CELL's "width").
   colWidth(sheetId: string, c: number): number;
+  // Whether any protection covers a cell (CELL's "protect").
+  isProtected(sheetId: string, r: number, c: number): boolean;
   // How many sheets the workbook holds (SHEETS), and a sheet's place among them from 1 (SHEET); 0 for none.
   sheetCount(): number;
   sheetNumber(sheetId: string): number;

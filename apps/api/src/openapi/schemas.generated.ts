@@ -10180,6 +10180,34 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
       {
         "additionalProperties": false,
         "properties": {
+          "id": {
+            "type": "string"
+          },
+          "k": {
+            "const": "protection",
+            "type": "string"
+          },
+          "protection": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Protection"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "k",
+          "id",
+          "protection"
+        ],
+        "type": "object"
+      },
+      {
+        "additionalProperties": false,
+        "properties": {
           "band": {
             "anyOf": [
               {
@@ -13067,6 +13095,44 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
     ],
     "type": "string"
   },
+  "Protection": {
+    "additionalProperties": false,
+    "description": "A protection of a range (`range`), or of its whole sheet (no `range`) but its `except` ranges.",
+    "properties": {
+      "can": {
+        "$ref": "#/components/schemas/ProtectionPermission"
+      },
+      "description": {
+        "type": "string"
+      },
+      "except": {
+        "items": {
+          "$ref": "#/components/schemas/IdRange"
+        },
+        "type": "array"
+      },
+      "id": {
+        "type": "string"
+      },
+      "range": {
+        "$ref": "#/components/schemas/IdRange"
+      }
+    },
+    "required": [
+      "id",
+      "can"
+    ],
+    "type": "object"
+  },
+  "ProtectionPermission": {
+    "description": "Who writes where a protection stands: anyone after a warning, Editors (and the owner), or the owner alone.",
+    "enum": [
+      "warn",
+      "editors",
+      "owner"
+    ],
+    "type": "string"
+  },
   "PublicForm": {
     "additionalProperties": false,
     "properties": {
@@ -15697,6 +15763,12 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
       "objects": {
         "items": {
           "$ref": "#/components/schemas/SheetObject"
+        },
+        "type": "array"
+      },
+      "protections": {
+        "items": {
+          "$ref": "#/components/schemas/Protection"
         },
         "type": "array"
       },

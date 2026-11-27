@@ -42,6 +42,8 @@ export function writeRefusalMessage(
       ? `${formatA1(row, col)}: ${check.line}`
       : check.line;
   }
+  // A protection says who may change its cells (data-tools.md "Protected ranges"), as the room words it.
+  if (check.error === 'protected' && check.line) return check.line;
   return sheetRefusalMessage(check.error, spreadsheet);
 }
 

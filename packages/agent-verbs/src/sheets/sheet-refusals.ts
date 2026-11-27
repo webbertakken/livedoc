@@ -33,6 +33,8 @@ export const SHEET_REFUSAL_WORDS: Readonly<Record<SheetError, string>> = {
     'a spreadsheet always shows at least one sheet: show another before hiding or deleting this one.',
   rows_invalid:
     'rows are asked as <from>-<to> by position, from not past to, up to 5,000 rows a page.',
+  protected:
+    'those cells are protected: only the owner (or Editors, as the protection says) may change them. Write elsewhere, or ask the owner.',
 };
 
 // What a refused writeRows says: the formula that cannot be read, or the value too long for a cell, by its cell (on
