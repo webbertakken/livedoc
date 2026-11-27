@@ -6,6 +6,7 @@ import { sheetFromJson, Workbook, WorkbookRecord, type SheetPivot } from '@lived
 import { DOC_A, fakeApi } from '../testing/fake-api';
 import { sheetJson, sheetServer } from '../testing/sheets';
 import { changeSheet } from './change-sheet';
+import { readSheet } from './read-sheet';
 import { buildPivotChange, pivotsClearWrite, pivotsRead } from './sheet-pivot-objects';
 
 const WORKBOOK = WorkbookRecord.create({ locale: 'en-GB', timeZone: 'UTC' });
@@ -56,6 +57,10 @@ describe('change_sheet’s pivot', () => {
     expect(made.applied[0]).toBe(
       `pivot table ${pivot.id} of A1:C4 at E1: rows Region; values SUM of Units, COUNTA of Rep`,
     );
+    const read = (await readSheet(api, DOC_A, { sheet: 'Data' })) as { pivots?: { id: string }[] };
+    expect(read.pivots?.map((x) => x.id)).toEqual([pivot.id]);
+    const missing = await change(api, 'Data', [{ op: 'clear_pivots', id: 'nope' }]);
+    expect(missing.refusal?.code).toBe('pivot_not_found');
     const typed = await change(api, 'Data', [{ op: 'set', at: 'F2', rows: [[9]] }]);
     expect(typed.refusal?.code).toBe('pivot_cell');
     const cleared = await change(api, 'Data', [{ op: 'clear_pivots', id: pivot.id }]);
