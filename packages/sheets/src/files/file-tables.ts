@@ -172,9 +172,7 @@ export function tablesFound(found: TablesFound): {
   if (record && record.tables.length === found.standard.length) {
     const cells = Object.keys(record.refs ?? {});
     const lines = cells.map((at) => found.refLine?.(at) ?? null);
-    const now = lines.every((l) => l !== null)
-      ? tableFingerprint(found.standard, lines)
-      : null;
+    const now = lines.every((l) => l !== null) ? tableFingerprint(found.standard, lines) : null;
     if (now !== null && now === found.record!.fingerprint)
       return {
         tables: record.tables.map((t, i) => ({ ...t, columns: found.standard[i]!.columns })),
