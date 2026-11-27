@@ -185,7 +185,8 @@ export const DOCUMENTS_DUPLICATED: Metric = {
   action: 'Duplicated',
   allTypes: true,
   title: 'Documents Duplicated',
-  blurb: 'A document copied from the Explorer, or a shared document cloned into your own account.',
+  blurb:
+    'A document copied from the Explorer, a shared document cloned into your own account, or a copy made of a text document’s version.',
 };
 
 // Offline Mode (docs/specs/006-document/offline-mode.md): a document kept only in this browser, and the two

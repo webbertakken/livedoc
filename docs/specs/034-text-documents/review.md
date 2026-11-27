@@ -611,7 +611,8 @@ their limits are in [Live editing and storage](live-editing-and-storage.md#versi
 - **Show changes** (a check box, on by default as Google's): what the chosen version changed since the version
   before it, each editor's insertions in their colour and deletions struck through in it; a deletion whose deleter
   went unrecorded is drawn in the neutral grey of a file's author (default). ⌘⌥ N then R and ⌘⌥ P then R go to the
-  next and previous change.
+  next and previous change (Ctrl+Alt+K and Ctrl+Alt+J too, off a Mac), ringed and scrolled to the middle, a screen
+  reader told "Change 2 of 5", or "No changes shown" where none is drawn (default copy).
 - **Name current version** (File > Version history): a dialog "Name current version", a field (the time as its
   placeholder), **Cancel** and **Save**, which waits for a name (default); it names the newest version when nothing changed since it, else takes a
   version of now and names it. A refusal is said in the dialog, which stays open (default).
@@ -631,7 +632,8 @@ their limits are in [Live editing and storage](live-editing-and-storage.md#versi
     the mode closes and the restorer is back on the current version.
   - **Make a copy**: a dialog, "Copy document" (default copy, after Google's), a **Name** field ("Copy of <title>"), **Cancel** and
     **Make a copy**: a new text document holding the version as it reads, in this one's format and place, with no
-    history, versions or comments (default), opened in a new browser tab.
+    history, versions or comments (default), opened in a new browser tab; one that cannot be made says "The copy
+    couldn't be made. Try again." in the dialog, which stays (default copy).
 - **Back** (the arrow at the top left) or Escape leaves the mode, on the current version.
 - **Refusals**, said as a status in the panel, nothing changed: the history cannot be read ("Version history
   couldn't be loaded. Try again."), a version cannot be read, named or restored ("That didn't work. Try again.")
@@ -686,4 +688,4 @@ tools read them, so the room never sends them:
 `Comment · Added · TextDocument`, `Comment · Resolved · TextDocument`, `UI · Opened · TextDocumentPanelComments`,
 `Comment · Added · TextDocumentReaction`, `Comment · Mentioned`, `Action · Created · TextDocumentComment`, `Element · Added · TextDocumentSuggestion`, `Element · Changed · TextDocumentSuggestion<Accepted|Rejected|AcceptedAll|RejectedAll>`,
 `UI · Changed · TextDocumentEditingMode<Mode>`, `Document · Opened · TextDocumentVersionHistory`,
-`Document · Changed · TextDocumentVersion<Named|Restored>`, `Document · Created · TextDocumentCompare`. Never text.
+`Document · Changed · TextDocumentVersion<Named|Restored>`, `Document · Duplicated · TextDocumentVersionCopy`, `Document · Created · TextDocumentCompare`. Never text.

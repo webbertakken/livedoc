@@ -42,6 +42,8 @@ export const RELATIONSHIP_TYPES = {
   drawing: `${TRANSITIONAL_RELS}/drawing`,
   chart: `${TRANSITIONAL_RELS}/chart`,
   table: `${TRANSITIONAL_RELS}/table`,
+  pivotTable: `${TRANSITIONAL_RELS}/pivotTable`,
+  pivotCacheDefinition: `${TRANSITIONAL_RELS}/pivotCacheDefinition`,
 } as const;
 
 /** A relationship type with Strict's namespace read as Transitional's. */
@@ -78,4 +80,7 @@ export const OOXML_CONTENT_TYPES = {
   drawing: 'application/vnd.openxmlformats-officedocument.drawing+xml',
   chart: 'application/vnd.openxmlformats-officedocument.drawingml.chart+xml',
   table: 'application/vnd.openxmlformats-officedocument.spreadsheetml.table+xml',
+  pivotTable: 'application/vnd.openxmlformats-officedocument.spreadsheetml.pivotTable+xml',
+  pivotCacheDefinition:
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.pivotCacheDefinition+xml',
 } as const;

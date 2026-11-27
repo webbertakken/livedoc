@@ -13,6 +13,7 @@ import { toOpenFormula } from './open-formula';
 import type { FileCell, WorkbookFile } from './workbook-file';
 import { fileKept } from './kept-anchors';
 import { simplifiedElsewhere, type SimplifiedFeature } from './file-validation';
+import { PIVOT_SIMPLIFIED, pivotSimplified, type PivotSimplified } from './file-pivots';
 import {
   keptKinds,
   keptStandardOf,
@@ -52,6 +53,8 @@ export type ConversionLoss =
   // "Protection in the file", D351).
   | { k: 'protections_simplified'; count: number; features: ProtectionSimplified[] }
   | { k: 'protection_passwords_left'; count: number }
+  // Pivot tables other apps hold more simply (standard-mapping.md "Pivot tables in the file", D606), and what they lose.
+  | { k: 'pivots_simplified'; count: number; features: PivotSimplified[] }
   // What was kept from the file, which a file of the other standard leaves behind (standard-mapping.md "Unknown
   // content"): counted, its kinds the most common first.
   | { k: 'kept'; count: number; kinds: KeptKind[] };
@@ -160,10 +163,25 @@ export function conversionLosses(
     losses.push({ k: 'protections_simplified', count: guarded.count, features: guarded.features });
   if (guarded.passwords > 0)
     losses.push({ k: 'protection_passwords_left', count: guarded.passwords });
+  const pivots = pivotsElsewhere(file, isXlsx(to) ? 'xlsx' : 'odf');
+  if (pivots.count > 0) losses.push({ k: 'pivots_simplified', ...pivots });
   const kept =
     file.kept && file.kept.standard !== keptStandardOf(to) ? keptKinds(file.kept.items) : null;
   if (kept && kept.count > 0) losses.push({ k: 'kept', ...kept });
   return losses;
+}
+
+/** The pivot tables a format's other apps hold more simply, counted, and every feature they lose, in order. */
+function pivotsElsewhere(
+  file: WorkbookFile,
+  format: 'xlsx' | 'odf',
+): { count: number; features: PivotSimplified[] } {
+  const lost = file.sheets
+    .flatMap((s) => s.pivots ?? [])
+    .map((p) => pivotSimplified(p.fields, format));
+  const found = new Set(lost.flat());
+  const order = PIVOT_SIMPLIFIED.filter((f) => found.has(f));
+  return { count: lost.filter((f) => f.length > 0).length, features: order };
 }
 
 /** What converting a workbook to `to` loses, its values worked out as a download's are, its kept content listed. */

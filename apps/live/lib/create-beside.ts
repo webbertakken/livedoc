@@ -29,3 +29,22 @@ export async function createBeside(
     return 'root';
   }
 }
+
+/** Where a document is filed, for a new one to sit beside it; the root when it cannot be read. */
+export async function placementOf(
+  load: (
+    ownerId: string,
+    documentId: string,
+  ) => Promise<{ teamId?: string | null; folderId?: string | null } | null>,
+  ownerId: string,
+  documentId: string,
+): Promise<DocumentPlacement> {
+  try {
+    const source = await load(ownerId, documentId);
+    return source
+      ? { teamId: source.teamId ?? null, folderId: source.folderId ?? null }
+      : EXPLICIT_ROOT;
+  } catch {
+    return EXPLICIT_ROOT;
+  }
+}

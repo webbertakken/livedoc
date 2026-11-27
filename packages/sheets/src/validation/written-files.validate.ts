@@ -30,6 +30,11 @@ import { readOds } from '../files/ods-read';
 import { readXlsx } from '../files/xlsx-read';
 import { LIVEDOC_SPREADSHEET_NS } from '../files/validation-standard';
 import { VALIDATIONS, WRITTEN_CONSTRUCTS } from './written-constructs';
+import { ByteBudget, listZip, readZipEntry } from '@livedoc/office-packages';
+import { PIVOT_CASES } from '../../corpus/pivot-cases';
+import { casesInTheGrid } from '../testing/pivot-cases-book';
+import { workbookFileOf } from '../files/workbook-file';
+import { pivotSimplified } from '../files/file-pivots';
 
 const OUT = mkdtempSync(join(tmpdir(), 'livedoc-sheets-written-'));
 // LibreOffice's extensions, kept from its files: extended conformance leaves them out of the check.
@@ -211,3 +216,53 @@ describe('validation rules other apps check', () => {
     }
   }, 120_000);
 });
+
+// standard-mapping.md "Pivot tables in the file": every evidence case's pivot table, written to each format, validates
+// against its schema, and LibreOffice reads each into a pivot table of its own, working out the same grand totals.
+describe('pivot tables other apps read', () => {
+  const b = casesInTheGrid();
+  const file = workbookFileOf(b.wb, b.sheets, 'en-US');
+  const numbers = (cells: readonly FileCell[]) =>
+    new Set(cells.flatMap((c) => (c.value?.k === 'n' ? [Math.round(c.value.v * 1e9) / 1e9] : [])));
+
+  it('pivots.ods, pivots.fods and pivots.xlsx against their schemas', async () => {
+    await validateOdfPackage(writeOds(file, 'pivots').data, join(OUT, 'pivots-ods'), ODF_OWN);
+    validateFlatOdf(writeFlatOds(file, 'pivots').data, join(OUT, 'pivots-fods'), ODF_OWN);
+    await validateOoxmlPackage(writeXlsx(file, 'pivots').data, join(OUT, 'pivots-xlsx'));
+  });
+
+  it.each([
+    ['xlsx', 'ods', 'xlsx'],
+    ['ods', 'xlsx:Calc MS Excel 2007 XML', 'odf'],
+  ] as const)(
+    'LibreOffice reads every pivot table of the .%s it opens',
+    async (type, target, format) => {
+      const path = join(OUT, `pivots-lo.${type}`);
+      writeFileSync(path, type === 'ods' ? writeOds(file, 'p').data : writeXlsx(file, 'p').data);
+      const saved = libreOfficeConvert(path, target);
+      const text = type === 'xlsx' ? await odsContent(saved) : '';
+      if (type === 'xlsx')
+        expect(text.match(/<table:data-pilot-table /g)).toHaveLength(PIVOT_CASES.length);
+      const read = await readWorkbookFile(new Uint8Array(saved));
+      if (!read.ok) throw new Error(`${type}: ${read.rejection}`);
+      for (const sheet of file.sheets) {
+        const p = sheet.pivots?.[0];
+        if (!p || pivotSimplified(p.fields, format).length > 0) continue;
+        const last = sheet.cells.filter((c) => c.r === p.at.r + p.output.rows - 1);
+        const theirs = numbers(read.file.sheets.find((s) => s.name === sheet.name)!.cells);
+        for (const n of numbers(last)) expect(theirs.has(n), `${sheet.name} ${n}`).toBe(true);
+      }
+    },
+    180_000,
+  );
+});
+
+async function odsContent(saved: Uint8Array): Promise<string> {
+  const bytes = new Uint8Array(saved);
+  const listed = listZip(bytes);
+  if (!listed.ok) throw new Error('zip');
+  const entry = listed.entries.find((e) => e.name === 'content.xml')!;
+  const read = await readZipEntry(bytes, entry, new ByteBudget(100_000_000));
+  if (!read.ok) throw new Error('zip');
+  return new TextDecoder().decode(read.bytes);
+}

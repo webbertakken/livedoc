@@ -29,6 +29,7 @@ import { isoDateSerial } from './ods-read';
 import { FILE_READ_CELLS_MAX } from './file-read-limits';
 import type { FileCell, FileLoss, FileRead, FileSheet, FileValue } from './workbook-file';
 import { readXlsxCharts } from './xlsx-charts-read';
+import { readXlsxPivots } from './xlsx-pivots-read';
 import { allRead, WORKBOOK_READ, WORKSHEET_READ, XlsxKeeper } from './xlsx-kept-read';
 import { readXlsxDxfs, readXlsxFormatRules } from './xlsx-format-rules';
 import { readXlsxValidations } from './xlsx-validation';
@@ -449,11 +450,13 @@ export async function readXlsx(
     names.map((n) => n.name),
     book.losses,
   );
-  const kept = tabled.kept;
+  // Its pivot tables LiveDoc wrote are its own again (standard-mapping.md "Pivot tables in the file").
+  const pivoted = readXlsxPivots(tabled.sheets, tabled.kept, book.losses);
+  const kept = pivoted.kept;
   return {
     ok: true,
     file: {
-      sheets: tabled.sheets,
+      sheets: pivoted.sheets,
       ...(kept ? { kept } : {}),
       ...(fileTheme && fileTheme !== STANDARD_THEME ? { theme: fileTheme } : {}),
       ...(functions.length ? { functions } : {}),

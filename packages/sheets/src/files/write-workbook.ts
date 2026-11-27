@@ -77,6 +77,10 @@ export function writeWorkbook(
   }
   const out = written(file, title, format);
   losses.unshift(...out.losses);
+  // A pivot table whose source was deleted has no standard form: left out, named (D607).
+  for (const sheet of file.sheets)
+    for (let n = 0; n < (sheet.pivotsLeft ?? 0); n++)
+      losses.push({ k: 'pivot_unwritten', sheet: sheet.name });
   const differ = answersDiffering(file, record.meaning ?? 'google', format);
   if (differ.count > 0) losses.push({ k: 'answers_differ', ...differ });
   return { data: out.data, losses };

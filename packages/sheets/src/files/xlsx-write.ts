@@ -39,6 +39,7 @@ import {
   type XlsxTableParts,
 } from './xlsx-tables';
 import { tableFormulaName } from '../tables/table';
+import { xlsxPivotParts } from './xlsx-pivots';
 import { xlsxTabColor } from './xlsx-tab-look';
 import { XlsxStyles } from './xlsx-styles';
 import { xlsxFormatRulesXml } from './xlsx-format-rules';
@@ -343,6 +344,7 @@ function workbookXml(
   ids: readonly string[],
   kept: XlsxKeptWriter,
   functions: ReturnType<typeof definedNames>,
+  pivotCaches: readonly string[],
 ): string {
   const sheets = sheetsOf.map(
     ({ name, hidden }, i) =>
@@ -359,7 +361,7 @@ function workbookXml(
   return [
     XML_DECLARATION,
     `<workbook xmlns="${SPREADSHEETML_NS}" xmlns:r="${OFFICE_RELATIONSHIPS_NS}"${kept.rootAttributes('workbook', OWN_NS)}>`,
-    ...kept.workbookChildren(own, kept.rootBindings('workbook', OWN_NS), functions),
+    ...kept.workbookChildren(own, kept.rootBindings('workbook', OWN_NS), functions, pivotCaches),
     '</workbook>',
     '',
   ].join('\n');
@@ -443,6 +445,12 @@ export function writeXlsx(file: WorkbookFile, title: string): FileWritten<Uint8A
   more(RELATIONSHIP_TYPES.sharedStrings, 'sharedStrings.xml');
   more(RELATIONSHIP_TYPES.theme, 'theme/theme1.xml');
   if (dynamic) more(RELATIONSHIP_TYPES.sheetMetadata, 'metadata.xml');
+  // Its pivot tables, each with its cache (standard-mapping.md "Pivot tables in the file").
+  const pivoted = xlsxPivotParts(file.sheets, kept, keptParts.parts, renamed, workbookId, (i) => [
+    ...sheetRels(i),
+    ...(tabled.sheets[i]?.rels ?? []),
+  ]);
+  workbookRels.push(...pivoted.caches.rels);
   const xmlPart = (name: string, contentType: string, xml: string): OoxmlPart => ({
     name,
     contentType,
@@ -452,7 +460,7 @@ export function writeXlsx(file: WorkbookFile, title: string): FileWritten<Uint8A
     {
       name: 'xl/workbook.xml',
       contentType: OOXML_CONTENT_TYPES.spreadsheet,
-      data: encode(workbookXml(names, sheetIds, kept, functions)),
+      data: encode(workbookXml(names, sheetIds, kept, functions, pivoted.caches.entries)),
     },
     ...sheetParts,
     xmlPart('xl/styles.xml', OOXML_CONTENT_TYPES.spreadsheetStyles, styles.xml()),
@@ -461,6 +469,7 @@ export function writeXlsx(file: WorkbookFile, title: string): FileWritten<Uint8A
     xmlPart('xl/theme/theme1.xml', OOXML_CONTENT_TYPES.theme, xlsxThemeXml(theme)),
     ...drawn.parts,
     ...tabled.parts,
+    ...pivoted.parts,
     ...(dynamic
       ? [xmlPart('xl/metadata.xml', OOXML_CONTENT_TYPES.sheetMetadata, DYNAMIC_ARRAY_METADATA_XML)]
       : []),
@@ -494,9 +503,10 @@ export function writeXlsx(file: WorkbookFile, title: string): FileWritten<Uint8A
     ['xl/workbook.xml', [...workbookRels, ...keptWorkbookRels]],
     ...sheetParts.map((part, i): [string, Relationship[]] => [
       part.name,
-      [...sheetRels(i), ...(tabled.sheets[i]?.rels ?? [])],
+      [...sheetRels(i), ...(tabled.sheets[i]?.rels ?? []), ...(pivoted.sheets[i] ?? [])],
     ]),
     ...drawn.relationships,
+    ...pivoted.relationships,
     ...keptParts.relationships,
   ]);
   // A kept workbook name a named function took is dropped, and counted (D341).

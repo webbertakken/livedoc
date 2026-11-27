@@ -275,6 +275,8 @@ export const EXACT: Readonly<Record<string, string>> = {
   'Document|Deleted|': 'A document was deleted.',
   'Document|Duplicated|': 'A document was duplicated into a new one.',
   'Document|Duplicated|Copy': 'A document was duplicated into a new one.',
+  'Document|Duplicated|TextDocumentVersionCopy':
+    'An Editor made a new text document from one of a text document’s versions, in its version history.',
   'Document|Opened|TextDocumentVersionHistory':
     'An Editor opened a text document’s version history (File > Version history > See version history, or its keys).',
   'Document|Joined|Edit':

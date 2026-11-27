@@ -24,6 +24,7 @@ import { ERROR_CODES, type ErrorCode } from '../formula/values';
 import { FILE_READ_CELLS_MAX } from './file-read-limits';
 import { KEPT_REPEAT_MAX, type FileAt, type KeptItem, type KeptPart } from './kept-content';
 import { readOdsCharts } from './ods-charts-read';
+import { readOdsPivots } from './ods-pivots-read';
 import { cellText } from './ods-cell-text';
 import { keptOdfParts, keptSettings, OdsKeeper } from './ods-kept-read';
 import { odsLineStyles, readOdsLines, type OdsLineStyles } from './ods-lines';
@@ -412,19 +413,22 @@ function readBody(
     ruleStyles,
     validations: validations.byName,
   };
-  const sheets = tables.slice(0, SHEETS_MAX).map((t, i) => readTable(t, i, book));
+  const tableSheets = tables.slice(0, SHEETS_MAX).map((t, i) => readTable(t, i, book));
   if (tables.length > SHEETS_MAX)
     losses.push({ k: 'sheets_cut', kept: SHEETS_MAX, had: tables.length });
   // The common styles kept format rules name go with them (a flat file's are its own).
   if (ruleStyles.size > 0) keeper.commonStyles(stylesParsed ?? parsed, ruleStyles);
   // A file that keeps nothing reads as the model alone.
   const names = named.names.length ? { names: named.names } : {};
-  if (keeper.items.length === 0 && parts.length === 0)
+  // Its pivot tables LiveDoc wrote are its own again (standard-mapping.md "Pivot tables in the file").
+  const pivoted = readOdsPivots(parsed, spreadsheet, tableSheets, keeper.items, losses);
+  const sheets = pivoted.sheets;
+  if (pivoted.items.length === 0 && parts.length === 0)
     return { ok: true, file: { sheets, ...names }, losses };
   // The charts of kept drawings that qualify are the sheets' own (standard-mapping.md "Charts in the file").
   const charted = readOdsCharts(sheets, {
     standard: 'odf',
-    items: keeper.items,
+    items: pivoted.items,
     parts,
     relationships: [],
   });
