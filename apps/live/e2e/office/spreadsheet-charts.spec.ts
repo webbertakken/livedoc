@@ -72,6 +72,8 @@ test('Insert › Chart draws a scatter of the data, kept on reload, deleted and 
   await expect(chart(page)).toHaveCount(1);
 
   await chart(page).click({ position: { x: 200, y: 8 } });
+  // Its keys are its own once it is selected: a press before that lands nowhere.
+  await expect(chart(page)).toHaveAttribute('data-selected', '');
   await page.keyboard.press('Delete');
   await expect(chart(page)).toHaveCount(0);
   await page.keyboard.press('ControlOrMeta+z');

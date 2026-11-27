@@ -187,6 +187,8 @@ export function SheetChartsLayer({ fontFamily }: { fontFamily?: string | undefin
               tabIndex={editable ? 0 : -1}
               // Escape lets a selected chart go before it restores a maximised Sheet.
               data-keeps-escape={isSelected ? '' : undefined}
+              // Whether it is selected, for its keys and for tests to wait on before pressing them.
+              data-selected={isSelected ? '' : undefined}
               className={`absolute outline-none ${drawn ? '' : 'rounded-lg border'} ${editable ? 'pointer-events-auto cursor-move' : ''}`}
               style={{
                 left: pos.x - c.scroll.left,

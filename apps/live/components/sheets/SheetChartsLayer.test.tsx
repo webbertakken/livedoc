@@ -181,9 +181,11 @@ describe('the charts in a Sheet', () => {
   it('takes a press without a drag as a selection, changing nothing', () => {
     elements = [chart('c')];
     mount();
+    expect(box('c').hasAttribute('data-selected')).toBe(false);
     drag(box('c'), 1, 1);
     expect(bridge.commitElements).not.toHaveBeenCalled();
     expect(screen.getByRole('button', { name: 'Delete Chart' })).toBeTruthy();
+    expect(box('c').hasAttribute('data-selected')).toBe(true);
   });
 
   it('resizes a chart from its corner as one change', () => {
@@ -210,6 +212,7 @@ describe('the charts in a Sheet', () => {
     fireEvent.focus(box('c'));
     fireEvent.keyDown(box('c'), { key: 'Escape' });
     expect(screen.queryByRole('button', { name: 'Delete Chart' })).toBeNull();
+    expect(box('c').hasAttribute('data-selected')).toBe(false);
     fireEvent.focus(box('c'));
     fireEvent.click(screen.getByRole('button', { name: 'Delete Chart' }));
     expect(elements).toEqual([]);
