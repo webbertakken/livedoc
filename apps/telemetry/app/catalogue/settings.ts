@@ -160,6 +160,13 @@ export const APPEARANCE_SETTINGS = settingsStack('Appearance Settings', 'How the
     'Misspelt words underlined in a text document, from Tools > Spelling and grammar > Show spelling suggestions.',
   ),
   toggle(
+    'UI',
+    'TextDocumentScreenReaderOn',
+    'TextDocumentScreenReaderOff',
+    'Screen Reader Support',
+    'Screen reader support in a text document, from Tools > Accessibility or its shortcut: the Accessibility menu and what it says.',
+  ),
+  toggle(
     'Pdf',
     'DarkPagesOn',
     'DarkPagesOff',

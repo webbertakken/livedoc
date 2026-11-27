@@ -1,7 +1,8 @@
 # Tools
 
 **Status: being built.** Word count, spelling (Dutch and French, with the card, the personal dictionary and automatic
-correction) and Preferences are built; the other parts below are still to come.
+correction), Preferences and screen reader support with the Accessibility menu are built; the other parts below are still
+to come.
 
 Find and replace, word count, spelling and grammar, the dictionary, citations, preferences, accessibility settings,
 language and activity in a [text document](text-document.md), and what fork C3 (ruled: core only) leaves out.
@@ -128,9 +129,47 @@ Cancel and OK; nothing changes until OK. Per person, kept with their account, el
 
 ## Accessibility settings
 
-Tools > Accessibility: **Turn on screen reader support** (⌘⌥Z): the editor announces edits, formatting and position, and
-the Accessibility menu appears with Google's verbalise commands (⌘⌥ A then X, R, L, F, …); **Turn on braille support**;
-**Show spelling suggestions in the dictionary panel**. Per person.
+As Google Docs' Tools > Accessibility ([Google Docs Editors Help 6282736](https://support.google.com/docs/answer/6282736)
+and [15931224](https://support.google.com/docs/answer/15931224), fetched 2026-11-27); the dialog's look and the
+Accessibility menu's order are (default) until a capture of Google's.
+
+- **The dialog**: Tools > Accessibility opens an office dialog **Accessibility settings**: the checkbox **Turn on screen
+  reader support**, then the sentence "Braille displays and screen magnifiers follow LiveDoc’s text directly; nothing to
+  turn on.", focusable and read in the tab order, then **OK**, which closes. The checkbox acts as it is ticked.
+- **Braille and magnifiers** (director, 2026-11-27): Google's **Turn on braille support** and **Turn on screen magnifier
+  support** exist because its page is drawn; LiveDoc's page is editable text, which braille displays, their cursor
+  routing and screen magnifiers follow without a switch. Neither switch is shown, never dimmed (a disabled checkbox is
+  skipped or read as unavailable); Ctrl+Alt+H stays unbound.
+- **Screen reader support**: ⌘⌥Z (Ctrl+Alt+Z, Alt+Shift+~) or the checkbox turns it on or off anywhere in the
+  document, and a polite live region says "Screen reader support enabled" or "Screen reader support disabled"
+  (Google's words). It is each person's own, kept with their account, else this browser, for every text document; off
+  until turned on. Typing, the caret and the selection are read by the screen reader from the page itself.
+- **The Accessibility menu** shows after Help only while screen reader support is on (Alt+A, Ctrl+Option+A):
+  **Verbalize** (Verbalize selection, Verbalize from cursor location, Verbalize cursor location, Verbalize selection
+  formatting, Verbalize word count); **Table** (Verbalize table cell location, Verbalize table row and column headers,
+  Verbalize table row header, Verbalize table column header); **Comments** (Verbalize comment, Verbalize comment
+  anchor); **Show live edits**; then **Accessibility settings**. Their keys are those of [Keyboard
+  shortcuts](keyboard-shortcuts.md#screen-reader), heard only while screen reader support is on.
+- **What each says**, through the same live region, never shown (each (default) until Google's words are captured):
+  - Verbalize selection: the selected text, else "Nothing selected".
+  - Verbalize from cursor location: the text from the caret to the end of its paragraph and the paragraphs after it, up
+    to 1,000 characters, cut at a word.
+  - Verbalize cursor location (and Announce cursor location): "Page 2 of 5" where pages are laid out, then the
+    paragraph's style ("Heading 1", "Normal text"), "List item, level 2" in a list, and "Table, row 2, column 3" in a
+    table, joined by ", ".
+  - Verbalize selection formatting (and Announce formatting at cursor location): the font, the size in points, then
+    each of bold, italic, underline, strikethrough, superscript and subscript that is on, a link "Link to
+    example.com", and the alignment ("Left aligned"); a part that differs across the selection is "Mixed font",
+    "Mixed size".
+  - Verbalize word count: "340 words", or "12 of 340 words selected".
+  - Table: "Row 2, column 3 of 4 rows and 3 columns"; headers are the first row's cell over the caret's column and the
+    first column's cell beside its row, their text, else "No column header", "No row header"; outside a table "Not in a
+    table".
+  - Comments: the open comment thread at the caret, "Comment by Ada: …" (its first comment and its reply count); its
+    anchor, the commented text; else "No comment here".
+- **Show live edits** (Ctrl+Alt+Shift+R): a side panel **Live edits** listing, newest first, the words others add or
+  remove as they write, each with its author, read politely as they arrive; the panel keeps the last 20 (default).
+- **Who**: everyone who can read the document, Viewers included; nothing here changes the document.
 
 ## Activity
 
@@ -153,5 +192,5 @@ suggestions under D7); preferences and accessibility settings are each person's 
 suggestion taken), `TextDocumentSpellingCorrected` (corrected while typing), `TextDocumentAlwaysCorrect`,
 `TextDocumentDictionaryAdded`; `UI · Opened · TextDocumentWordCount`, `TextDocumentSpelling`,
 `TextDocumentCitations`; `UI · Toggled · TextDocumentWordCountWhileTypingOn`, `TextDocumentWordCountWhileTypingOff`,
-`TextDocumentSpellingSuggestionsOn`, `TextDocumentSpellingSuggestionsOff` (each before it is kept),
-`TextDocumentScreenReader`. Never text.
+`TextDocumentSpellingSuggestionsOn`, `TextDocumentSpellingSuggestionsOff`, `TextDocumentScreenReaderOn`,
+`TextDocumentScreenReaderOff` (each before it is kept). Never text.

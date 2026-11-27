@@ -93,7 +93,41 @@ function downloads(format: TextDocumentFormat): OfficeEntry[] {
   ];
 }
 
-export function textDocumentMenus(format: TextDocumentFormat): OfficeCatalogue {
+const verbalise = (id: string, label: string): OfficeItem =>
+  item(id, label, 'view', { shortcut: id, status: 'built' });
+
+// The Accessibility menu (tools.md "Accessibility settings"), after Help only while screen reader support is on; its
+// order is (default) until a capture of Google's. Show live edits comes with its own step.
+const ACCESSIBILITY_MENU: OfficeMenu = menu('accessibility', 'Accessibility', [
+  submenu('verbalize', 'Verbalize', [
+    verbalise('verbalize-selection', 'Verbalize selection'),
+    verbalise('verbalize-from-cursor-location', 'Verbalize from cursor location'),
+    verbalise('verbalize-cursor-location', 'Verbalize cursor location'),
+    verbalise('verbalize-selection-formatting', 'Verbalize selection formatting'),
+    verbalise('verbalize-word-count', 'Verbalize word count'),
+  ]),
+  submenu('verbalize-table', 'Table', [
+    verbalise('verbalize-table-cell-location', 'Verbalize table cell location'),
+    verbalise('verbalize-table-row-and-column-headers', 'Verbalize table row and column headers'),
+    verbalise('verbalize-table-row-header', 'Verbalize table row header'),
+    verbalise('verbalize-table-column-header', 'Verbalize table column header'),
+  ]),
+  submenu('verbalize-comments', 'Comments', [
+    verbalise('verbalize-comment', 'Verbalize comment'),
+    verbalise('verbalize-comment-anchor', 'Verbalize comment anchor'),
+  ]),
+  item('show-live-edits', 'Show live edits', 'view', { shortcut: 'show-live-edits' }),
+  SEPARATOR,
+  item('accessibility-settings', 'Accessibility settings', 'view', BUILT),
+]);
+
+/** What the menus depend on beyond the format: whether the person has screen reader support on. */
+export type TextDocumentMenuOptions = { readonly screenReader?: boolean };
+
+export function textDocumentMenus(
+  format: TextDocumentFormat,
+  { screenReader = false }: TextDocumentMenuOptions = {},
+): OfficeCatalogue {
   return [
     menu('file', 'File', [
       submenu('new', 'New', [
@@ -434,7 +468,11 @@ export function textDocumentMenus(format: TextDocumentFormat): OfficeCatalogue {
         keywords: ['autocorrect', 'substitutions'],
         status: 'built',
       }),
-      item('accessibility', 'Accessibility', 'view', { keywords: ['screen reader', 'braille'] }),
+      // tools.md "Accessibility settings": each person's own, Viewers too.
+      item('accessibility', 'Accessibility', 'view', {
+        keywords: ['screen reader', 'braille', 'magnifier'],
+        status: 'built',
+      }),
     ]),
     menu('extensions', 'Extensions', [
       item('agents', 'Agents', 'view', { keywords: ['mcp', 'cli'] }),
@@ -459,6 +497,7 @@ export function textDocumentMenus(format: TextDocumentFormat): OfficeCatalogue {
         status: 'built',
       }),
     ]),
+    ...(screenReader ? [ACCESSIBILITY_MENU] : []),
   ];
 }
 

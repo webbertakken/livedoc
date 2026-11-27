@@ -318,6 +318,9 @@ export type UserPreferences = {
   // Show spelling suggestions (docs/specs/034-text-documents/tools.md "Spelling and grammar"): misspelt words
   // underlined. Missing === on.
   spellingSuggestionsShown?: boolean;
+  // Screen reader support (docs/specs/034-text-documents/tools.md "Accessibility settings"): the Accessibility menu and
+  // what the verbalise commands say, in every text document. Missing === off.
+  screenReaderSupport?: boolean;
 };
 
 // How many excluded ids we keep. A document id is a 36-char UUID, so 200
