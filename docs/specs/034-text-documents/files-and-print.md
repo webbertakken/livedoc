@@ -52,7 +52,7 @@ A download is `GET /api/documents/:id/text-documents/:tabId/file?type=odt|fodt|d
 
 **The other format** asks first, as a spreadsheet does: **Download as Word?** (or **Download as OpenDocument?**) lists
 what the file cannot hold, as [Conversion](standard-mapping.md#conversion) words it, with **Download** and **Cancel**;
-with nothing lost it says so and still asks (default). The text document keeps its format.
+with nothing lost it says so and still asks (director, 2026-11-27). The text document keeps its format.
 
 ## Import report
 

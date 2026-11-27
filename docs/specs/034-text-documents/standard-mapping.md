@@ -274,7 +274,7 @@ shapes and text boxes, and constructs of newer versions of either standard.
 - **Downloading in the other format** writes a converted copy after the same list
   ([Downloading](files-and-print.md#downloading)); the text document keeps its format.
 - Shown in [Version history](review.md#version-history) as its author's change, as any edit is; no
-  [Timeline](../013-workspace/timeline.md) event, as a spreadsheet's conversion makes none (default).
+  [Timeline](../013-workspace/timeline.md) event, as a spreadsheet's conversion makes none (director, 2026-11-27).
   `Document · Changed · TextDocumentConverted`.
 
 ## Documented losses
