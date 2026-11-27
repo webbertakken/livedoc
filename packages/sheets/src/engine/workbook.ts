@@ -678,6 +678,21 @@ export class Workbook {
       : null;
   }
 
+  // Whether (r, c) is a header of a landed pivot table's output: a header row's cell (`column`) or a label column's
+  // below them (`row`), as the grid's screen reader support marks them (pivot-tables.md "Accessibility").
+  pivotHeaderAt(sheetId: string, r: number, c: number): 'column' | 'row' | null {
+    if (!this.spills.hasPivots()) return null;
+    const no = this.noAt(sheetId, r, c);
+    if (no === NO_CELL) return null;
+    this.value(sheetId, r, c);
+    const owner = this.spills.ownerAt(no) ?? no;
+    const arr = this.vals.get(owner);
+    if (!isPivotArray(arr)) return null;
+    const claim = this.spills.claimOf(owner)!;
+    if (r - claim.r1 < arr.head.rows) return 'column';
+    return c - claim.c1 < arr.head.cols ? 'row' : null;
+  }
+
   // Whether (r, c) is a value of a landed pivot table's output, whose details a double-click shows (D616).
   pivotValueCellAt(sheetId: string, r: number, c: number): boolean {
     return this.pivotValueOwner(sheetId, r, c) !== null;

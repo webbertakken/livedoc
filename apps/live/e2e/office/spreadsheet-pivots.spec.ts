@@ -20,10 +20,13 @@ async function select(page: Page, range: string) {
 const cell = (page: Page, name: string) =>
   page.getByRole('grid').getByRole('gridcell', { name, exact: true });
 
-// The middle of a cell as drawn: across from its column letter, level with its row number.
+// The middle of a cell as drawn: across from its column letter, level with its row number. The screen reader's mirror
+// marks a pivot table's headers with the same roles, so it is left out.
 async function cellCentre(page: Page, col: number, row: number) {
-  const letter = await page.locator(`[role="columnheader"][aria-colindex="${col}"]`).boundingBox();
-  const number = await page.locator(`[role="rowheader"][aria-rowindex="${row}"]`).boundingBox();
+  const drawn = (role: string, axis: string, n: number) =>
+    page.locator(`[role="${role}"][aria-${axis}index="${n}"]:not(.sr-only *)`).boundingBox();
+  const letter = await drawn('columnheader', 'col', col);
+  const number = await drawn('rowheader', 'row', row);
   return { x: letter!.x + letter!.width / 2, y: number!.y + number!.height / 2 };
 }
 
@@ -74,7 +77,13 @@ test('Insert › Pivot Table sums units by region on a new sheet, edited, refuse
     'SUM',
   );
   await expect(cell(page, 'B2 7')).toHaveCount(1);
-  await expect(cell(page, 'A4 Grand Total')).toHaveCount(1);
+  // Its labels and headers read as headers to a screen reader (pivot-tables.md "Accessibility").
+  await expect(
+    page.getByRole('grid').getByRole('rowheader', { name: 'A4 Grand Total', exact: true }),
+  ).toHaveCount(1);
+  await expect(
+    page.getByRole('grid').getByRole('columnheader', { name: 'B1 SUM of Units', exact: true }),
+  ).toHaveCount(1);
   await expect(cell(page, 'B4 10')).toHaveCount(1);
   await page.screenshot({
     path: test.info().outputPath('pivot-editor.png'),

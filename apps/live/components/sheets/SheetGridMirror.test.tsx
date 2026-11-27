@@ -52,6 +52,39 @@ describe('the mirror', () => {
     expect(a1.getAttribute('aria-selected')).toBe('true');
   });
 
+  it('marks a pivot table’s header rows as column headers and its labels as row headers', async () => {
+    const h = await mountGrid({
+      cells: { A1: 'Region', B1: 'Units', A2: 'East', B2: '5', A3: 'West', B3: '3' },
+      layout: {
+        objects: [
+          {
+            id: 'pivot01',
+            kind: 'pivot',
+            at: { r: 'row0', c: 'col3' },
+            source: { r1: 'row0', c1: 'col0', r2: 'row2', c2: 'col1' },
+            rows: [{ col: 'col0' }],
+            values: [{ col: 'col1', summary: 'SUM' }],
+          },
+        ],
+      },
+    });
+    const roleOf = (r: number, c: number) =>
+      mirror(h)
+        .querySelector(`[aria-rowindex="${r + 1}"] [aria-colindex="${c + 1}"]`)!
+        .getAttribute('role');
+    expect([roleOf(0, 3), roleOf(0, 4), roleOf(1, 3), roleOf(3, 3)]).toEqual([
+      'columnheader',
+      'columnheader',
+      'rowheader',
+      'rowheader',
+    ]);
+    expect([roleOf(1, 4), roleOf(0, 0), roleOf(4, 3)]).toEqual([
+      'gridcell',
+      'gridcell',
+      'gridcell',
+    ]);
+  });
+
   it('names a picture and a sparkline by what they are, as their values are empty text', async () => {
     const h = await mountGrid({
       cells: {
