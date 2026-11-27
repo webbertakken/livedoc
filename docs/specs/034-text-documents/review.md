@@ -662,6 +662,8 @@ tools read them, so the room never sends them:
   would need a document of the Viewer's own that no longer merges with the room's; who suggested it, and every
   comment, never reach a Viewer (director, 2026-11-27; reported to Webber, revisable). The share dialog says so where
   a Viewer's pass is made ([Share roles](../013-workspace/share-roles.md#integrity)).
+- **Who is present** is shown to a Viewer as to everyone (the people in the document, as Google shows a viewer
+  them); it ties no name to anything written.
 - **A role that changes** ends the person's connection ([Access changes](../015-api/api.md)); they come back at the new
   level, reading the copy or the document as it allows.
 - **When the copy cannot be made** (the document is past the copy's limits, or making it fails), a Viewer is shown

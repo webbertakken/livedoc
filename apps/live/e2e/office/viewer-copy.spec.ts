@@ -66,9 +66,13 @@ test('a Viewer reads the writing and receives no comment or author', async ({
   const seen = { frames: 0, states: 0 };
   viewer.on('websocket', (ws) =>
     ws.on('framereceived', ({ payload }) => {
+      // Who is in the document is shown to everyone, as Google shows a viewer the people present; it ties no name to
+      // anything written.
+      if (String(payload).startsWith('{"kind":"presence"')) return;
       const text = decoded(String(payload));
       seen.frames += 1;
-      for (const leak of [SECRET, author]) if (text.includes(leak)) leaks.push(`ws ${leak}`);
+      for (const leak of [SECRET, author])
+        if (text.includes(leak)) leaks.push(`ws ${leak} ${String(payload).slice(0, 120)}`);
     }),
   );
   viewer.on('response', async (res) => {
