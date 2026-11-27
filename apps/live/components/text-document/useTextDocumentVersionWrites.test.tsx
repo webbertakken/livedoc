@@ -14,12 +14,24 @@ import {
   VERSION_FAILED,
 } from './useTextDocumentVersionWrites';
 import { RESTORE_VERSION_TEXT } from './TextDocumentVersionDialogs';
+import { VERSION_COPY_FAILED } from '@/lib/text-document/text-document-version-copy';
 
-const api = vi.hoisted(() => ({ nameCurrent: vi.fn(), name: vi.fn(), restore: vi.fn() }));
+const api = vi.hoisted(() => ({
+  nameCurrent: vi.fn(),
+  name: vi.fn(),
+  restore: vi.fn(),
+  read: vi.fn(),
+  copy: vi.fn(),
+}));
 vi.mock('@/lib/api/text-document-versions', () => ({
   apiNameCurrentTextDocumentVersion: api.nameCurrent,
   apiNameTextDocumentVersion: api.name,
   apiRestoreTextDocumentVersion: api.restore,
+  apiReadTextDocumentVersion: api.read,
+}));
+vi.mock('@/lib/text-document/text-document-version-copy', async (actual) => ({
+  ...(await actual<typeof import('@/lib/text-document/text-document-version-copy')>()),
+  makeVersionCopy: api.copy,
 }));
 const tracked = vi.hoisted(() => [] as string[][]);
 vi.mock('@/lib/telemetry', () => ({ track: (...args: string[]) => tracked.push(args) }));
@@ -33,11 +45,15 @@ const full = () => new ApiError('text document version name', 409, 'named_versio
 let hooks: ReturnType<typeof useTextDocumentVersionWrites>;
 function Harness({
   local = null,
+  state = new Uint8Array([1]),
+  open = () => {},
   say,
   onNamed,
   onRestored,
 }: {
   local?: { note: string; hint: string } | null;
+  state?: Uint8Array | null;
+  open?: (id: string) => void;
   say: (status: string | null) => void;
   onNamed: () => void;
   onRestored: () => void;
@@ -49,6 +65,8 @@ function Harness({
     say,
     onNamed,
     onRestored,
+    copying: { documentName: 'Plan', format: 'ooxml', state: () => state },
+    open,
     now: () => new Date(2026, 10, 27, 9, 15).getTime(),
   });
   useLayoutEffect(() => {
@@ -57,14 +75,25 @@ function Harness({
   return <>{made.dialogs}</>;
 }
 
-function setUp(local: { note: string; hint: string } | null = null) {
+function setUp(
+  local: { note: string; hint: string } | null = null,
+  state: Uint8Array | null = new Uint8Array([1]),
+) {
   const said: (string | null)[] = [];
   const onNamed = vi.fn();
   const onRestored = vi.fn();
+  const open = vi.fn();
   render(
-    <Harness local={local} say={(s) => said.push(s)} onNamed={onNamed} onRestored={onRestored} />,
+    <Harness
+      local={local}
+      state={state}
+      open={open}
+      say={(s) => said.push(s)}
+      onNamed={onNamed}
+      onRestored={onRestored}
+    />,
   );
-  return { said, onNamed, onRestored };
+  return { said, onNamed, onRestored, open };
 }
 
 describe('useTextDocumentVersionWrites', () => {
@@ -155,5 +184,50 @@ describe('useTextDocumentVersionWrites', () => {
     });
     action.run();
     expect(screen.queryByRole('dialog')).toBeNull();
+  });
+
+  it('makes a copy of a version under the name given, opening it in a new tab', async () => {
+    api.read.mockReset().mockResolvedValue({ snapshot: 'c25hcA==' });
+    api.copy.mockReset().mockResolvedValue('NEW');
+    const { open } = setUp();
+    act(() => hooks.writes.copy('v1'));
+    const field = screen.getByRole('textbox', { name: 'Name' });
+    expect((field as HTMLInputElement).value).toBe('Copy of Plan');
+    fireEvent.change(field, { target: { value: '' } });
+    expect(screen.getByRole('button', { name: 'Make a copy' }).hasAttribute('disabled')).toBe(true);
+    fireEvent.change(field, { target: { value: 'Old plan' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Make a copy' }));
+    await waitFor(() => expect(open).toHaveBeenCalledWith('NEW'));
+    expect(api.read).toHaveBeenCalledWith(where, 'v1');
+    expect(api.copy).toHaveBeenCalledWith({
+      ownerId: 'me',
+      documentId: 'D',
+      format: 'ooxml',
+      state: new Uint8Array([1]),
+      snapshot: 'c25hcA==',
+      name: 'Old plan',
+    });
+    expect(screen.queryByRole('dialog')).toBeNull();
+  });
+
+  it('says a copy that could not be made in its dialog, which stays', async () => {
+    api.read.mockReset().mockRejectedValueOnce(new Error('404'));
+    api.copy.mockReset().mockResolvedValue(null);
+    const { open } = setUp();
+    act(() => hooks.writes.copy('v1'));
+    fireEvent.click(screen.getByRole('button', { name: 'Make a copy' }));
+    expect((await screen.findByRole('alert')).textContent).toBe(VERSION_COPY_FAILED);
+    api.read.mockResolvedValue({ snapshot: 'x' });
+    fireEvent.click(screen.getByRole('button', { name: 'Make a copy' }));
+    await waitFor(() => expect(api.copy).toHaveBeenCalled());
+    expect(screen.getByRole('alert').textContent).toBe(VERSION_COPY_FAILED);
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+    expect(screen.queryByRole('dialog')).toBeNull();
+    cleanup();
+    setUp(null, null);
+    act(() => hooks.writes.copy('v1'));
+    fireEvent.click(screen.getByRole('button', { name: 'Make a copy' }));
+    expect((await screen.findByRole('alert')).textContent).toBe(VERSION_COPY_FAILED);
+    expect(open).not.toHaveBeenCalled();
   });
 });

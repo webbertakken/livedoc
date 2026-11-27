@@ -83,3 +83,53 @@ export function RestoreVersionDialog({
     </OfficeDialog>
   );
 }
+
+/** A version's Make a copy: the copy's name, "Copy of <title>" to start with (default copy, after Google's). */
+export function VersionCopyDialog({
+  initial,
+  maxLength,
+  error,
+  busy,
+  onCopy,
+  onClose,
+}: {
+  initial: string;
+  maxLength: number;
+  /** A failure, said in the dialog; null when there is none. */
+  error: string | null;
+  busy: boolean;
+  onCopy: (name: string) => void;
+  onClose: () => void;
+}) {
+  const id = useId();
+  const [name, setName] = useState(initial);
+  return (
+    <OfficeDialog
+      open
+      onClose={onClose}
+      title="Copy document"
+      primary={{
+        label: 'Make a copy',
+        onPress: () => onCopy(name.trim()),
+        disabled: busy || !name.trim(),
+      }}
+    >
+      <label htmlFor={id} className="mb-1 block text-body">
+        Name
+      </label>
+      <input
+        id={id}
+        type="text"
+        value={name}
+        maxLength={maxLength}
+        onChange={(event) => setName(event.target.value)}
+        className="h-field w-full rounded-control border border-(--office-line) bg-transparent px-3 text-body outline-none focus-visible:ring-2 focus-visible:ring-(--office-focus)"
+      />
+      {error ? (
+        <p role="alert" className="mt-2 text-body text-(--office-ink)">
+          {error}
+        </p>
+      ) : null}
+    </OfficeDialog>
+  );
+}

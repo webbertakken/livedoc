@@ -169,3 +169,64 @@ test('names the current version, renames one in place, and restores it', async (
   await expect(page.locator(BODY)).toHaveText('First draft.');
   expectNoPageErrors(pageErrors);
 });
+
+test('goes between a version’s changes with the keys, and makes a copy of it', async ({
+  page,
+  pageErrors,
+  context,
+}) => {
+  test.setTimeout(120_000);
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto('/new?kind=text-document');
+  await expect(page.locator(READY)).toBeVisible();
+  await page.locator(BODY).click();
+  await page.keyboard.type('Kept words.');
+  await saved(page);
+  await (await officeMenuItem(page, ['File', 'Version history', 'Name current version'])).click();
+  const naming = page.getByRole('dialog', { name: 'Name current version' });
+  await naming.getByRole('textbox', { name: 'Version name' }).fill('Kept');
+  await naming.getByRole('button', { name: 'Save' }).click();
+  await expect(naming).toHaveCount(0);
+  await page.locator(BODY).click();
+  await page.locator(BODY).press('End');
+  await page.keyboard.type(' Added later.');
+  await saved(page);
+
+  await page.keyboard.down('Control');
+  await page.keyboard.down('Alt');
+  await page.keyboard.press('Shift+H');
+  await page.keyboard.up('Alt');
+  await page.keyboard.up('Control');
+  const mode = page.getByRole('dialog', { name: 'Version history' });
+  const list = mode.getByRole('listbox', { name: 'Versions' });
+  await expect(list).toBeFocused();
+  // The versions read before the keys move through them.
+  await expect(list.getByRole('option', { name: /^Kept/ })).toBeVisible();
+  await list.press('ArrowDown');
+  await expect(mode.locator(`${AT_VERSION} [data-ychange]`).first()).toBeVisible();
+
+  // ⌘⌥ N then R (Ctrl+Alt+N, R here): the first change ringed and said.
+  await page.keyboard.down('Control');
+  await page.keyboard.down('Alt');
+  await page.keyboard.press('KeyN');
+  await page.keyboard.press('KeyR');
+  await page.keyboard.up('Alt');
+  await page.keyboard.up('Control');
+  await expect(mode.locator('[data-version-change-current]')).toHaveCount(1);
+  await expect(mode.getByRole('status')).toHaveText(/^Change 1 of \d+$/);
+
+  // Make a copy: a new document holding the version, opened in a new tab.
+  await list.press('Shift+F10');
+  await page.getByRole('menuitem', { name: 'Make a copy' }).click();
+  const copying = page.getByRole('dialog', { name: 'Copy document' });
+  await expect(copying.getByRole('textbox', { name: 'Name' })).toHaveValue(/^Copy of /);
+  await copying.getByRole('textbox', { name: 'Name' }).fill('Kept copy');
+  await page.screenshot({ path: test.info().outputPath('version-copy.png') });
+  const opened = context.waitForEvent('page');
+  await copying.getByRole('button', { name: 'Make a copy' }).click();
+  const copy = await opened;
+  await expect(copy.locator(READY)).toBeVisible();
+  await expect(copy.locator(BODY)).toHaveText('Kept words.');
+  await expect(copy.getByRole('textbox', { name: 'Rename' })).toHaveValue('Kept copy');
+  expectNoPageErrors(pageErrors);
+});

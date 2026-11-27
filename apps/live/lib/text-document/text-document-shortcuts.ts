@@ -1169,7 +1169,7 @@ export const TEXT_DOCUMENT_SHORTCUTS: readonly ShortcutRow[] = [
     'Ctrl+Alt+N, R or Ctrl+Alt+K',
     'Ctrl+⌘+N, R',
     'Ctrl+Alt+N, R or Ctrl+Alt+K',
-    'specified',
+    'built',
   ),
   row(
     'move-to-previous-edit',
@@ -1178,7 +1178,7 @@ export const TEXT_DOCUMENT_SHORTCUTS: readonly ShortcutRow[] = [
     'Ctrl+Alt+P, R or Ctrl+Alt+J',
     'Ctrl+⌘+P, R',
     'Ctrl+Alt+P, R or Ctrl+Alt+J',
-    'specified',
+    'built',
   ),
   row(
     'move-to-next-tab',

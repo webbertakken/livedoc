@@ -226,8 +226,8 @@ The Accessibility menu shows only while screen reader support is on.
 | Move to previous bookmark                 | `Ctrl+Alt+P, B`               | `Ctrl+⌘+P, B`     | `Ctrl+Alt+P, B`               | specified                              |
 | Move to next formatting change            | `Ctrl+Alt+N, W`               | `Ctrl+⌘+N, W`     | `Ctrl+Alt+N, W`               | specified                              |
 | Move to previous formatting change        | `Ctrl+Alt+P, W`               | `Ctrl+⌘+P, W`     | `Ctrl+Alt+P, W`               | specified                              |
-| Move to next edit                         | `Ctrl+Alt+N, R or Ctrl+Alt+K` | `Ctrl+⌘+N, R`     | `Ctrl+Alt+N, R or Ctrl+Alt+K` | specified                              |
-| Move to previous edit                     | `Ctrl+Alt+P, R or Ctrl+Alt+J` | `Ctrl+⌘+P, R`     | `Ctrl+Alt+P, R or Ctrl+Alt+J` | specified                              |
+| Move to next edit                         | `Ctrl+Alt+N, R or Ctrl+Alt+K` | `Ctrl+⌘+N, R`     | `Ctrl+Alt+N, R or Ctrl+Alt+K` | built                                  |
+| Move to previous edit                     | `Ctrl+Alt+P, R or Ctrl+Alt+J` | `Ctrl+⌘+P, R`     | `Ctrl+Alt+P, R or Ctrl+Alt+J` | built                                  |
 | Move to next tab                          | `Ctrl+Shift+PgDn`             | —                 | —                             | built                                  |
 | Move to previous tab                      | `Ctrl+Shift+PgUp`             | —                 | —                             | built                                  |
 

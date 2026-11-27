@@ -1163,6 +1163,7 @@ export function TextDocumentSurface({
     tab: shownTab ?? FIRST_DOCUMENT_TAB_ID,
     format,
     onClosed: focusBody,
+    documentName,
     ...(commenter ? { author: { name: commenter.name, color: commenter.colour } } : {}),
   });
   // Edit > Undo, Redo and Select all, run by the menus and the shortcut layer (keyboard-shortcuts.md).

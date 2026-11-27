@@ -100,8 +100,8 @@ describe('versionGroups', () => {
 describe('versionMenuItems', () => {
   it('names Current version only, renames or unnames a named one, names and restores any other', () => {
     expect(versionMenuItems('current')).toEqual(['name']);
-    expect(versionMenuItems({ named: true })).toEqual(['rename', 'remove-name', 'restore']);
-    expect(versionMenuItems({ named: false })).toEqual(['name', 'restore']);
+    expect(versionMenuItems({ named: true })).toEqual(['rename', 'remove-name', 'restore', 'copy']);
+    expect(versionMenuItems({ named: false })).toEqual(['name', 'restore', 'copy']);
     expect(VERSION_MENU_LABELS.restore).toBe('Restore this version');
   });
 });

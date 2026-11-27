@@ -31,6 +31,8 @@ import {
 } from '@/lib/office/office-version-list';
 import { OfficeVersionMoreButton, OfficeVersionRowMenu } from './OfficeVersionRowMenu';
 import { OfficeVersionNameField } from './OfficeVersionNameField';
+import { currentOfficePlatform } from '@/lib/office/office-platform';
+import { createShortcutMatcher, type ShortcutKeys } from '@/lib/office/shortcut-matcher';
 
 const BackIcon = lucideGlyph(lucideArrowLeft, 20);
 
@@ -48,8 +50,16 @@ export type OfficeVersionWrites = {
   /** Names (or, with an empty name, unnames) a version; CURRENT_VERSION names the current one. */
   readonly name: (id: string, name: string) => void;
   readonly restore: (id: string) => void;
+  readonly copy: (id: string) => void;
   /** The longest name, in characters. */
   readonly nameMax: number;
+};
+
+/** The keys between what the shown version changed (⌘⌥ N then R, ⌘⌥ P then R), and going there. */
+export type OfficeVersionChanges = {
+  readonly next: ShortcutKeys;
+  readonly previous: ShortcutKeys;
+  readonly onStep: (forward: boolean) => void;
 };
 
 /** The Show changes check box: what the shown version changed, drawn or not. */
@@ -69,6 +79,8 @@ export function OfficeVersionHistory({
   onClose,
   showChanges = null,
   writes = null,
+  changes = null,
+  said = '',
   children,
 }: {
   /** The versions, newest first in any order; null while they load. */
@@ -85,6 +97,9 @@ export function OfficeVersionHistory({
   onClose: () => void;
   showChanges?: OfficeShowChanges | null;
   writes?: OfficeVersionWrites | null;
+  changes?: OfficeVersionChanges | null;
+  /** Said to a screen reader as it happens (a change gone to). */
+  said?: string;
   /** The kind's drawing of the shown version. */
   children: ReactNode;
 }) {
@@ -115,7 +130,32 @@ export function OfficeVersionHistory({
     document.getElementById(optionId(list, selected))?.scrollIntoView?.({ block: 'nearest' });
   }, [list, selected]);
 
+  // The keys between changes, read with the person's keyboard (office-shell.md "Shortcut layer").
+  const matcher = useMemo(
+    () =>
+      changes
+        ? createShortcutMatcher(
+            [
+              { id: 'next', keys: changes.next },
+              { id: 'previous', keys: changes.previous },
+            ],
+            currentOfficePlatform(),
+          )
+        : null,
+    [changes],
+  );
+  const onFrameKeyUp = (event: KeyboardEvent<HTMLDivElement>) => {
+    const match = matcher?.keyup(event.nativeEvent);
+    if (match) changes?.onStep(match.id === 'next');
+  };
   const onFrameKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    const match =
+      event.target instanceof HTMLInputElement ? null : matcher?.keydown(event.nativeEvent);
+    if (match) {
+      event.preventDefault();
+      if (match !== 'pending') changes?.onStep(match.id === 'next');
+      return;
+    }
     if (event.key !== 'Escape') return;
     event.preventDefault();
     event.stopPropagation();
@@ -133,7 +173,8 @@ export function OfficeVersionHistory({
     if (!writes) return;
     if (item === 'name' || item === 'rename') setNaming(id);
     else if (item === 'remove-name') writes.name(id, '');
-    else writes.restore(id);
+    else if (item === 'restore') writes.restore(id);
+    else writes.copy(id);
   };
   const openMenu = (id: string, anchor: DOMRect) => {
     if (id !== selected) onSelect(id);
@@ -169,6 +210,7 @@ export function OfficeVersionHistory({
       aria-modal="true"
       aria-label="Version history"
       onKeyDown={onFrameKeyDown}
+      onKeyUp={onFrameKeyUp}
       className="office-shell fixed inset-0 z-40 flex flex-col bg-(--office-ground) text-(--office-ink)"
       data-version-history=""
     >
@@ -191,11 +233,10 @@ export function OfficeVersionHistory({
           <h2 id={`${list}-title`} className="px-4 pt-4 pb-2 text-body font-medium">
             Version history
           </h2>
-          {status ? (
-            <p role="status" className="px-4 pb-2 text-(--office-muted)">
-              {status}
-            </p>
-          ) : null}
+          {/* A refusal or a read under way, shown; else what the keys went to, for a screen reader alone. */}
+          <p role="status" className={status ? 'px-4 pb-2 text-(--office-muted)' : 'sr-only'}>
+            {status ?? said}
+          </p>
           {failed ? (
             <div role="alert" className="flex flex-col items-start gap-2 px-4 pb-4">
               <p>{VERSIONS_FAILED}</p>

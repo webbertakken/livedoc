@@ -153,7 +153,7 @@ describe('OfficeVersionHistory', () => {
   });
 
   describe('naming and restoring (review.md "Version history")', () => {
-    const writesOf = () => ({ name: vi.fn(), restore: vi.fn(), nameMax: 100 });
+    const writesOf = () => ({ name: vi.fn(), restore: vi.fn(), copy: vi.fn(), nameMax: 100 });
     const actionsOf = () => screen.getByRole('menu').querySelectorAll('[role="menuitem"]');
     const labels = () => [...actionsOf()].map((i) => i.textContent);
 
@@ -165,16 +165,19 @@ describe('OfficeVersionHistory', () => {
       fireEvent.click(more[1]!);
       expect(selectedName()).toContain('Draft');
       expect(screen.getByRole('menu', { name: 'Actions for Draft' })).toBeTruthy();
-      expect(labels()).toEqual(['Rename', 'Remove name', 'Restore this version']);
+      expect(labels()).toEqual(['Rename', 'Remove name', 'Restore this version', 'Make a copy']);
       fireEvent.click(screen.getByRole('menuitem', { name: 'Remove name' }));
       expect(writes.name).toHaveBeenCalledWith('v2', '');
       expect(screen.queryByRole('menu')).toBeNull();
       const list = screen.getByRole('listbox');
       fireEvent.keyDown(list, { key: 'End' });
       fireEvent.keyDown(list, { key: 'F10', shiftKey: true });
-      expect(labels()).toEqual(['Name this version', 'Restore this version']);
+      expect(labels()).toEqual(['Name this version', 'Restore this version', 'Make a copy']);
       fireEvent.click(screen.getByRole('menuitem', { name: 'Restore this version' }));
       expect(writes.restore).toHaveBeenCalledWith('v1');
+      fireEvent.keyDown(list, { key: 'ContextMenu' });
+      fireEvent.click(screen.getByRole('menuitem', { name: 'Make a copy' }));
+      expect(writes.copy).toHaveBeenCalledWith('v1');
       fireEvent.keyDown(list, { key: 'Home' });
       fireEvent.keyDown(list, { key: 'ContextMenu' });
       expect(labels()).toEqual(['Name this version']);
@@ -258,5 +261,57 @@ describe('OfficeVersionHistory', () => {
     expect((box as HTMLInputElement).checked).toBe(true);
     fireEvent.click(box);
     expect(onChange).toHaveBeenCalledWith(false);
+  });
+
+  it('goes between changes with the sequence keys and their short forms, and says where it went', () => {
+    const onStep = vi.fn();
+    const changes = {
+      next: { pc: 'Ctrl+Alt+N, R or Ctrl+Alt+K', mac: 'Ctrl+⌘+N, R', chromeos: 'Ctrl+Alt+N, R' },
+      previous: {
+        pc: 'Ctrl+Alt+P, R or Ctrl+Alt+J',
+        mac: 'Ctrl+⌘+P, R',
+        chromeos: 'Ctrl+Alt+P, R',
+      },
+      onStep,
+    };
+    render(
+      <OfficeVersionHistory
+        versions={VERSIONS}
+        failed={false}
+        selected={CURRENT_VERSION}
+        now={now}
+        status={null}
+        onSelect={() => {}}
+        onRetry={() => {}}
+        onClose={() => {}}
+        changes={changes}
+        said="Change 1 of 2"
+      >
+        <input aria-label="elsewhere" />
+      </OfficeVersionHistory>,
+    );
+    const list = screen.getByRole('listbox');
+    const chord = { ctrlKey: true, altKey: true };
+    fireEvent.keyDown(list, { code: 'KeyN', key: 'n', ...chord });
+    fireEvent.keyDown(list, { code: 'KeyR', key: 'r', ...chord });
+    expect(onStep).toHaveBeenLastCalledWith(true);
+    fireEvent.keyDown(list, { code: 'KeyP', key: 'p', ...chord });
+    fireEvent.keyDown(list, { code: 'KeyR', key: 'r', ...chord });
+    expect(onStep).toHaveBeenLastCalledWith(false);
+    fireEvent.keyDown(list, { code: 'KeyK', key: 'k', ...chord });
+    fireEvent.keyUp(list, { code: 'ControlLeft', key: 'Control' });
+    expect(onStep).toHaveBeenCalledTimes(3);
+    // A press that is a sequence's start alone runs on letting go.
+    fireEvent.keyDown(list, { code: 'KeyN', key: 'n', ...chord });
+    fireEvent.keyUp(list, { code: 'AltLeft', key: 'Alt' });
+    expect(onStep).toHaveBeenCalledTimes(3);
+    // Typed into a field, the keys are the field's.
+    fireEvent.keyDown(screen.getByRole('textbox', { name: 'elsewhere' }), {
+      code: 'KeyK',
+      key: 'k',
+      ...chord,
+    });
+    expect(onStep).toHaveBeenCalledTimes(3);
+    expect(screen.getByRole('status').textContent).toBe('Change 1 of 2');
   });
 });
