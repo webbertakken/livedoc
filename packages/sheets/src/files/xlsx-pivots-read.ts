@@ -12,7 +12,8 @@ import {
   transitionalType,
   type XmlElement,
 } from '@livedoc/office-packages';
-import { parseRangeText } from '../address';
+import { parseRangeText, type GridRange } from '../address';
+import type { FileRangeName } from './file-names';
 import {
   pivotFingerprint,
   pivotSourceText,
@@ -22,7 +23,7 @@ import {
 } from './file-pivots';
 import type { FileAt, KeptContent, KeptPart } from './kept-content';
 import { heldPivotOfStandard } from './pivot-standard';
-import { readXlsxStandard } from './xlsx-pivot-standard';
+import { readXlsxStandard, type XlsxPivotPlace } from './xlsx-pivot-standard';
 import { LIVEDOC_SPREADSHEET_NS } from './validation-standard';
 import type { FileLoss, FileSheet } from './workbook-file';
 import { SPREADSHEETML_NS } from './xlsx-parts';
@@ -95,6 +96,30 @@ const PIVOT_CACHE = (relId: string) =>
   new RegExp(`<(?:[\\w.-]+:)?pivotCache\\b[^>]*?\\s[\\w.-]+:id="${relId}"[^>]*/>`);
 
 /**
+ * A pivot table source's table or named range by its name, case aside: its sheet and the range it covers, a table's
+ * without its total row (D619).
+ */
+export function sourcesByName(
+  sheets: readonly FileSheet[],
+  rangeNames: readonly FileRangeName[],
+): XlsxPivotPlace['named'] {
+  const found = new Map<string, { sheet: string; range: GridRange }>();
+  for (const n of rangeNames) {
+    const sheet = sheets[n.sheet];
+    const key = n.name.toLowerCase();
+    if (sheet && !found.has(key))
+      found.set(key, { sheet: sheet.name, range: { r1: n.r1, c1: n.c1, r2: n.r2, c2: n.c2 } });
+  }
+  for (const sheet of sheets)
+    for (const t of sheet.tables ?? [])
+      found.set(t.name.toLowerCase(), {
+        sheet: sheet.name,
+        range: { ...t.range, r2: t.range.r2 - (t.total ? 1 : 0) },
+      });
+  return (name) => found.get(name.toLowerCase()) ?? null;
+}
+
+/**
  * The sheets' pivot tables, and the kept content without them: each LiveDoc wrote and no app changed since by its
  * record (D607), any other from its standard form when the model holds it (D608); a record another app's change left
  * behind is named (`pivot_changed`, logged only), and a pivot table the model cannot hold stays kept, named
@@ -104,10 +129,12 @@ export function readXlsxPivots(
   sheets: readonly FileSheet[],
   kept: KeptContent<FileAt> | undefined,
   losses: FileLoss[],
+  rangeNames: readonly FileRangeName[] = [],
 ): { sheets: FileSheet[]; kept: KeptContent<FileAt> | undefined } {
   if (!kept) return { sheets: [...sheets], kept };
   const byName = new Map(kept.parts.map((p) => [p.name, p]));
   const names = sheets.map((s) => s.name);
+  const named = sourcesByName(sheets, rangeNames);
   const gone = new Set<string>();
   const goneRels = new Set<unknown>();
   const out = sheets.map((sheet, i) => {
@@ -132,7 +159,13 @@ export function readXlsxPivots(
       // Another app's pivot table, or one it changed, is read from its standard form when the model holds it (D608).
       const standard =
         !record && cachePart
-          ? heldPivotOfStandard(readXlsxStandard(text(table), text(cachePart), sheet.name, names))
+          ? heldPivotOfStandard(
+              readXlsxStandard(text(table), text(cachePart), {
+                own: sheet.name,
+                sheets: names,
+                named,
+              }),
+            )
           : null;
       if (record) {
         const { location } = read!.standard;

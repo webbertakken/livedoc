@@ -706,7 +706,9 @@ LibreOffice reads into its own pivot tables.
   **Another app's pivot table**, one without LiveDoc's record or whose record was passed over, is read from its standard
   form when the model holds every part of it, and is then the sheet's pivot table as one made here is (default, D608):
 
-- **XLSX**: the cache's source a range of a sheet the workbook holds (`worksheetSource` `ref` and `sheet`); each field
+- **XLSX**: the cache's source a range of a sheet the workbook holds (`worksheetSource` `ref` and `sheet`), or a
+  table or named range of the workbook by its `name` (case aside), read as the range it covers as the file arrives
+  (a table's without its total row), from then on the pivot table's own range (default, D619); each field
   of `rowFields`, `colFields` and `pageFields` a source column, by its place in the cache; `-2` among `rowFields`
   Values as rows. Each `dataField` a value: `subtotal` back to its summary (`count` COUNTA, `countNums` COUNT,
   `stdDev` STDEV, `stdDevp` STDEVP, the rest their own; none SUM), `showDataAs` `percentOfRow`, `percentOfCol` or
@@ -754,8 +756,8 @@ LibreOffice reads into its own pivot tables.
 - Read so, the cells the other app cached for its output (from its place to the end of its `location` or target) are not
   read as inputs: the engine works the output out again in LiveDoc's own layout and labels, which are Google Sheets'
   and may differ from the other app's in size and words (`Grand Total` for LibreOffice's `Total Result`).
-- **Kept as it came**: a pivot table whose source is not a range of a sheet the workbook holds (a named range, a table,
-  an external source or a consolidation), whose field LiveDoc cannot find (a source column by name, an item by its
+- **Kept as it came**: a pivot table whose source is not a range, table or named range the workbook holds (an
+  external source, a consolidation, a name of none), whose field LiveDoc cannot find (a source column by name, an item by its
   place), that groups a field in a way XLSX or ODF grouping does not read or has calculated items, whose Show As
   LiveDoc does not have (difference from, running total, index, and so on), or that the model refuses (past its bounds) stays
   the file's own: kept as it came, its output read as plain values, and named (`pivot_unread`, reported: "N pivot
@@ -1077,6 +1079,8 @@ The code cites each by its id.
   (default).
 - **D618** An ODF `table:data-pilot-groups` read as the grouping it says, as XLSX's are (D617): date levels, number
   intervals with `auto` bounds open, named groups of members (default).
+- **D619** An XLSX pivot table over a table or named range reads it as the range it covers on arrival, a table's
+  total row left out; LiveDoc's pivot table keeps that range, growing only as a range does (default).
 - **D295** A dropdown XLSX's list cannot say: a rule allowing any value, LiveDoc's rule beside it (default).
 - **D296** A standard rule read without LiveDoc's: the closest LiveDoc rule, one a rectangle; error messages and
   titles left out (default).

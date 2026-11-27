@@ -451,7 +451,7 @@ export async function readXlsx(
     book.losses,
   );
   // Its pivot tables LiveDoc wrote are its own again (standard-mapping.md "Pivot tables in the file").
-  const pivoted = readXlsxPivots(tabled.sheets, tabled.kept, book.losses);
+  const pivoted = readXlsxPivots(tabled.sheets, tabled.kept, book.losses, names);
   const kept = pivoted.kept;
   return {
     ok: true,

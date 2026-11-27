@@ -4,7 +4,7 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { parseXml, type XmlElement } from '@livedoc/office-packages';
+import { parseXml, readPackageEntries, writeZip, type XmlElement } from '@livedoc/office-packages';
 import { Workbook } from '../engine/workbook';
 import { isError } from '../formula/values';
 import type { SheetPivot } from '../objects/sheet-pivot';
@@ -14,10 +14,11 @@ import { importReportLine } from './import-report-copy';
 import { readOdsStandard } from './ods-pivot-standard';
 import { filePivotOfStandard, pivotHidesResolved, type StandardPivot } from './pivot-standard';
 import { readWorkbookFile } from './read-workbook-file';
-import { sheetsFromFile, type FileValue } from './workbook-file';
+import { sheetsFromFile, type FileSheet, type FileValue } from './workbook-file';
 import { writeWorkbook } from './write-workbook';
 import { WorkbookRecord } from '../workbook-record';
 import { readXlsxStandard, XLSX_DATA_FIELD } from './xlsx-pivot-standard';
+import { sourcesByName } from './xlsx-pivots-read';
 
 const CORPUS = join(import.meta.dirname, '..', '..', 'corpus');
 const ANSWERS = JSON.parse(
@@ -172,10 +173,14 @@ const order = (title: string) => Object.keys(ANSWERS).indexOf(title);
 
 describe("Excel's and LibreOffice's files read", () => {
   // Excel's: a pivot table hiding an item of its rows and a date of its columns, and one over a table, by its name.
-  it("reads Excel's pivot table with the items it hides, and keeps one over a table", async () => {
+  it("reads Excel's pivot tables with the items they hide, one over a table by its name (D619)", async () => {
     const book = await opened(corpus('excel/ExcelPivotTableSample.xlsx'));
-    expect(book.losses.filter((l) => l.k.startsWith('pivot'))).toEqual([
-      { k: 'pivot_unread', sheet: 'Tabelle3' },
+    expect(book.losses.filter((l) => l.k.startsWith('pivot'))).toEqual([]);
+    expect(book.grid('Tabelle3')).toEqual([
+      ['Field1', 'Summe von Field2'],
+      ['x', 11],
+      ['z', 33],
+      ['Grand Total', 44],
     ]);
     expect(book.grid('Tabelle2').slice(2)).toEqual([
       ['Summe von Field2', 'Field3'],
@@ -188,10 +193,10 @@ describe("Excel's and LibreOffice's files read", () => {
       { col: expect.any(String), cond: { values: ['a', 'c'] } },
       { col: expect.any(String), cond: { values: ['1-Jan', '3-Jan'] } },
     ]);
-    // Its caches' records go with the cache read; the kept pivot table keeps its own.
+    // Its caches' records go with the caches read.
     const parts = book.kept!.parts.map((p) => p.name);
     expect(parts).not.toContain('xl/pivotCache/pivotCacheRecords1.xml');
-    expect(parts).toContain('xl/pivotCache/pivotCacheRecords2.xml');
+    expect(parts).not.toContain('xl/pivotCache/pivotCacheRecords2.xml');
   });
 
   it.each(['ods', 'xlsx'])(
@@ -266,6 +271,25 @@ describe("LibreOffice's groupings read", () => {
     ]);
   });
 
+  // A kept pivot table's part linking out of the file keeps its own cache all the same.
+  it('keeps the cache of a kept pivot table whose part also links out', async () => {
+    const read = await readPackageEntries(corpus('libreoffice/PivotGroups-discrete.xlsx'));
+    if (!read.ok) throw new Error('unread');
+    const rels = 'xl/pivotTables/_rels/pivotTable1.xml.rels';
+    const linked = new TextDecoder()
+      .decode(read.entries.get(rels))
+      .replace(
+        '</Relationships>',
+        '<Relationship Id="rId9" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/hyperlink" Target="https://example.com/" TargetMode="External"/></Relationships>',
+      );
+    const parts = new Map(read.entries).set(rels, new TextEncoder().encode(linked));
+    const book = await opened(writeZip([...parts].map(([name, data]) => ({ name, data }))));
+    expect(book.losses).toContainEqual({ k: 'pivot_unread', sheet: 'Tabelle2' });
+    expect(book.kept!.parts.map((x) => x.name)).toContain(
+      'xl/pivotCache/pivotCacheDefinition1.xml',
+    );
+  });
+
   // LibreOffice's XLSX keeps a date grouping, but writes a custom group's field empty and number intervals as nothing.
   it('reads its XLSX saves as they say', async () => {
     const months = await groups('months', 'xlsx');
@@ -289,8 +313,11 @@ const FIELDS = (region = '<pivotField axis="axisRow"/>') =>
   `<pivotFields>${region}<pivotField dataField="1"/><pivotField/></pivotFields>`;
 const ROWS = '<rowFields><field x="0"/></rowFields>';
 const DATA = (attrs = '') => `<dataFields><dataField fld="1"${attrs}/></dataFields>`;
+// The workbook's one table, Sales, over Sales!A1:C4 (D619).
+const NAMED = (name: string) =>
+  name.toLowerCase() === 'sales' ? { sheet: 'Sales', range: { r1: 0, c1: 0, r2: 3, c2: 2 } } : null;
 const read = (table: string, cache = CACHE(), sheets = ['Sales', 'Report']) =>
-  readXlsxStandard(table, cache, 'Report', sheets);
+  readXlsxStandard(table, cache, { own: 'Report', sheets, named: NAMED });
 
 describe('the XLSX standard form read', () => {
   it('reads rows, a value and its place, its source on another sheet', () => {
@@ -306,7 +333,10 @@ describe('the XLSX standard form read', () => {
       valuesAsRows: false,
     });
     expect(read(TABLE(FIELDS() + ROWS), CACHE(), ['Report'])).toBeNull();
-    expect(readXlsxStandard(TABLE(''), CACHE(), 'Sales', ['Sales'])!.source.sheet).toBeNull();
+    expect(
+      readXlsxStandard(TABLE(''), CACHE(), { own: 'Sales', sheets: ['Sales'], named: NAMED })!
+        .source.sheet,
+    ).toBeNull();
   });
 
   it('maps every subtotal and Show As back, and keeps one it lacks', () => {
@@ -361,6 +391,35 @@ describe('the XLSX standard form read', () => {
         CACHE('<cacheField name="x" databaseField="0"/>'),
       ),
     ).toBeNull();
+  });
+
+  it('reads a source by a table or named range of the workbook, case aside (D619)', () => {
+    const p = read(TABLE(FIELDS() + ROWS + DATA()), CACHE('', '<worksheetSource name="SALES"/>'))!;
+    expect(p.source).toEqual({ sheet: 'Sales', range: { r1: 0, c1: 0, r2: 3, c2: 2 } });
+    expect(read(TABLE(''), CACHE('', '<worksheetSource name="Sales" ref="A1:C4"/>'))).toBeNull();
+  });
+
+  it('finds a table or named range by name, a table without its total row, a name first', () => {
+    const sheet = (name: string, tables: FileSheet['tables'] = []) =>
+      ({ name, rows: 9, cols: 9, cells: [], tables }) as unknown as FileSheet;
+    const named = sourcesByName(
+      [
+        sheet('Data', [
+          { name: 'Sales', range: { r1: 0, c1: 0, r2: 5, c2: 2 }, columns: [], total: true },
+          { name: 'Plain', range: { r1: 0, c1: 4, r2: 3, c2: 5 }, columns: [] },
+        ]),
+        sheet('Other'),
+      ],
+      [
+        { name: 'Rates', sheet: 1, r1: 1, c1: 1, r2: 4, c2: 2 },
+        { name: 'rates', sheet: 0, r1: 0, c1: 0, r2: 0, c2: 0 },
+        { name: 'Lost', sheet: 7, r1: 0, c1: 0, r2: 0, c2: 0 },
+      ],
+    );
+    expect(named('sales')).toEqual({ sheet: 'Data', range: { r1: 0, c1: 0, r2: 4, c2: 2 } });
+    expect(named('PLAIN')).toEqual({ sheet: 'Data', range: { r1: 0, c1: 4, r2: 3, c2: 5 } });
+    expect(named('Rates')).toEqual({ sheet: 'Other', range: { r1: 1, c1: 1, r2: 4, c2: 2 } });
+    expect(named('Lost')).toBeNull();
   });
 
   it('keeps a source not a range of the workbook, a grouped field, a calculated item', () => {

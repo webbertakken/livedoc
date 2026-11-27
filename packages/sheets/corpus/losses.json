@@ -45,13 +45,9 @@
     ]
   },
   "excel/ExcelPivotTableSample.xlsx": {
-    "read": {
-      "pivot_unread": 1
-    },
+    "read": {},
     "written": {},
-    "reread": {
-      "pivot_unread": 1
-    },
+    "reread": {},
     "converted": [
       "kept"
     ]
