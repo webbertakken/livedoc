@@ -193,6 +193,7 @@ describe('spreadsheetMenus', () => {
       // Data › Named Ranges and Named Functions: read by everyone (data-tools.md "Named ranges and named functions").
       'named-ranges',
       'named-functions',
+      'column-stats',
       'search-the-menus',
       'keyboard-shortcuts',
     ]);

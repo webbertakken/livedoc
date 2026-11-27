@@ -4,7 +4,8 @@
 every condition of Filter by Condition, and data validation (the Data Validation Rules panel, Insert › Checkbox,
 Insert › Dropdown, every criterion, kept in both file formats) and the Named Ranges panel are built; tables are built
 as the sheet's model, its writes and growth, and table references in formulas, without their menus and panel yet;
-Remove Duplicates, Trim Whitespace and Randomise Range are built; the rest is specified.
+data clean-up (Clean-up Suggestions, Remove Duplicates, Trim Whitespace), Split Text to Columns, Randomise Range and
+Column Stats are built; the rest is specified.
 
 Sorting, filtering, validation, names, protection, tables and clean-up in a [spreadsheet](spreadsheet.md), as
 Google Sheets' Data menu does. Its rows of the [parity matrix](parity-matrix.md) name this page.
@@ -309,11 +310,12 @@ admit the caller is refused whole with the protection's own words, as a sort is 
 
 ### Split Text to Columns
 
-- **Data › Split Text to Columns** splits one column's cells into the columns to their right, at once, by the
-  separator found (Detect Automatically), and shows a **Separator** chip under the range's last cell: **Detect
-  Automatically**, **Comma**, **Semicolon**, **Period**, **Space**, **Custom**; choosing one splits the original text
-  again, the earlier split undone first, in the one undo step. Custom opens a text field (`Custom separator`) that
-  splits as it is typed. The chip goes when the selection leaves the range, Escape is pressed or the sheet changes.
+- **Data › Split Text to Columns** splits the selected column's cells into the columns to their right, at once, by
+  the separator found (Detect Automatically), and shows a **Separator** chip under the range's last cell: **Detect
+  Automatically**, **Comma**, **Semicolon**, **Period**, **Space**, **Custom**. Choosing one splits the original text
+  again: rows it leaves whole get their text back and the earlier split's cells clear; each choice is a change of its
+  own, Undo stepping back through them (D468). Custom shows a text field (`Custom separator`) that splits on Enter.
+  The chip shows while the active cell stays in the range on that sheet; Escape in it or another split puts it away.
 - More than one column refuses with Google's words: `You cannot split data that spans more than one column.`
 - Detect Automatically splits at commas only, as Google's (`a;b` stays whole); a space after a comma goes with it
   (`a, b` becomes `a` and `b`) (D462). Space makes each space a separator (`a  b` gives `a`, an empty cell, `b`).
@@ -322,8 +324,9 @@ admit the caller is refused whole with the protection's own words, as a sort is 
   separator stays as it is.
 - The block to the right is written as wide as the most pieces a row has: shorter rows clear the rest of it. When that
   block holds anything, a dialog asks first: **Replace Data?**, `Splitting will replace data in the cells to the
-right.`, **Cancel** and **Replace** (D463). A block reaching past the sheet's last column adds the columns, as
-  typing past it does, up to the sheet's column limit, past which it refuses (`sheet_full`).
+right.`, **Cancel** and **Replace** (D463). A block reaching past the sheet's last column adds the columns, as a
+  paste does, up to the sheet's column limit, past which it refuses: `There is not enough room to split this data.`
+  A choice on the chip asks the same only for cells past the block the earlier split wrote.
 
 ### Randomise Range
 
@@ -343,7 +346,8 @@ right.`, **Cancel** and **Replace** (D463). A block reaching past the sheet's la
     mostly numbers, a histogram of 10 equal bins;
   - **Frequency**: the values and their counts, most frequent first, up to 20, with **Most Frequent** and **Least
     Frequent** to turn the order (D465).
-- It reads the column's values as shown (a formula's result), follows edits as they land, and changes nothing.
+- It follows the active column; the switcher moves to another until a different column is selected. It reads the
+  column's values as shown (a formula's result), follows edits as they land, and changes nothing.
 - An empty column says `This column is empty.`
 
 ### Clean-up Suggestions
@@ -424,7 +428,7 @@ right.`, **Cancel** and **Replace** (D463). A block reaching past the sheet's la
 - `[sheet] table refused` with the reason (`overlap`, `merge`, `banding`, `name`, `full`) when Convert to Table,
   Table Settings, a paste or a write cannot make or change a table (a paste's also with `paste`); `[sheet] table
 grew` with the rows it grew by.
-- `[sheet] duplicates removed` with the rows compared, the columns ticked, the rows removed and whether a header row
+- `[sheet] clean-up applied` with the suggestion's kind and count; `[sheet] duplicates removed` with the rows compared, the columns ticked, the rows removed and whether a header row
   was kept; `[sheet] whitespace trimmed` with the cells trimmed; `[sheet] text split` with the separator, the rows
   and the widest row's pieces; `[sheet] range randomised` with the rows; `[sheet] clean-up refused` with the tool
   and the reason (`columns`, `merge`, `protected`, `full`); `[sheet] clean-up suggested` with each kind's count
@@ -536,6 +540,9 @@ The code cites each by its id.
   spaces, numbers stored as text), a set-aside card staying aside until the panel opens again (default).
 - **D467** Who cleans up: an Editor; a Participant and a Viewer read Column Stats only, since each tool moves or
   rewrites cells and formulas as a sort does (default).
+- **D468** Each separator chosen on the chip is its own change (Undo steps back through them), splitting the text the
+  first split started from; Custom splits on Enter, not as typed, so a half-typed separator makes no change (default;
+  Google's chip is unmeasured, the API has no chip).
 - **D302** A named function's limits: a name up to 254 characters (Google's), up to 20 placeholders, a definition up
   to 2,000 characters, a description up to 1,000, an argument's description and example up to 200 each (default).
 - **D345** A protection's bounds: up to 100 a sheet, 50 exceptions a protected sheet, a description up to 200

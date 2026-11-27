@@ -42,6 +42,8 @@ import { useMergeDialog } from './useMergeDialog';
 import { useNumberFormatDialogs } from './useNumberFormatDialogs';
 import { useSortRangeDialog } from './useSortRangeDialog';
 import { useCleanUpTools } from './useCleanUpTools';
+import { useSplitText } from './useSplitText';
+import { SplitChipContext } from '@/components/sheets/sheet-split-chip-context';
 import { SheetFindBar } from '@/components/sheets/SheetFindBar';
 import { FindReplaceDialog } from './FindReplaceDialog';
 import { useFindReplace } from './find-replace-state';
@@ -72,7 +74,9 @@ export function SpreadsheetSheetParts({ bridge }: { bridge: SheetsBridge }) {
   const angleDialog = useCustomAngleDialog(actions);
   const sortDialog = useSortRangeDialog(actions);
   const cleanUp = useCleanUpTools();
+  const splitText = useSplitText();
   const cleanUpActions = cleanUp.actions;
+  const splitActions = splitText.actions;
   const findReplace = useFindReplace();
   const panels = useOfficePanels({
     kind: 'Spreadsheet',
@@ -163,6 +167,7 @@ export function SpreadsheetSheetParts({ bridge }: { bridge: SheetsBridge }) {
         },
       ),
       ...cleanUpActions,
+      ...splitActions,
       'table-column-menu': { run: () => columnMenu.current?.() },
       // Insert › Chart and the toolbar's (charts.md "Inserting"): an Editor's.
       ...(canInsertChart ? { 'insert-chart': { run: insertChart } } : {}),
@@ -178,6 +183,7 @@ export function SpreadsheetSheetParts({ bridge }: { bridge: SheetsBridge }) {
       reveal,
       c.canShape,
       cleanUpActions,
+      splitActions,
     ],
   );
   // Show Details on a pivot table's value, in its cell's context menu (pivot-tables.md "Details"): an Editor's.
@@ -226,28 +232,30 @@ export function SpreadsheetSheetParts({ bridge }: { bridge: SheetsBridge }) {
         <div className="flex min-w-0 flex-1 flex-col">
           <SpreadsheetFormulaBarRow actions={actions} input={input} />
           <div data-region="document" className="relative flex min-h-0 flex-1 flex-col">
-            <TableSettingsContext.Provider value={openTableSettings}>
-              <TableColumnMenuContext.Provider value={columnMenu}>
-                <SheetChartsContext.Provider value={charts.value}>
-                  <SheetPivotsContext.Provider value={c.canShape ? editPivot : null}>
-                    <SheetPivotDetailsContext.Provider
-                      value={c.canShape ? pivots.showDetails : null}
-                    >
-                      <SheetGrid
-                        elementId={`sheet-${c.sheet.id}`}
-                        actions={actions}
-                        input={input}
-                        pointRef={pointRef}
-                        peers={bridge.peers}
-                        zoom={zoom}
-                        surfaceKeys={surfaceKeys}
-                        fontFamily={DocumentFonts.stack(theme.font)}
-                      />
-                    </SheetPivotDetailsContext.Provider>
-                  </SheetPivotsContext.Provider>
-                </SheetChartsContext.Provider>
-              </TableColumnMenuContext.Provider>
-            </TableSettingsContext.Provider>
+            <SplitChipContext.Provider value={splitText.chip}>
+              <TableSettingsContext.Provider value={openTableSettings}>
+                <TableColumnMenuContext.Provider value={columnMenu}>
+                  <SheetChartsContext.Provider value={charts.value}>
+                    <SheetPivotsContext.Provider value={c.canShape ? editPivot : null}>
+                      <SheetPivotDetailsContext.Provider
+                        value={c.canShape ? pivots.showDetails : null}
+                      >
+                        <SheetGrid
+                          elementId={`sheet-${c.sheet.id}`}
+                          actions={actions}
+                          input={input}
+                          pointRef={pointRef}
+                          peers={bridge.peers}
+                          zoom={zoom}
+                          surfaceKeys={surfaceKeys}
+                          fontFamily={DocumentFonts.stack(theme.font)}
+                        />
+                      </SheetPivotDetailsContext.Provider>
+                    </SheetPivotsContext.Provider>
+                  </SheetChartsContext.Provider>
+                </TableColumnMenuContext.Provider>
+              </TableSettingsContext.Provider>
+            </SplitChipContext.Provider>
             {c.findOpen ? <SheetFindBar onMoreOptions={findReplace?.openWith} /> : null}
           </div>
         </div>
@@ -267,6 +275,7 @@ export function SpreadsheetSheetParts({ bridge }: { bridge: SheetsBridge }) {
       {mergeDialog.dialog}
       {sortDialog.dialog}
       {cleanUp.dialog}
+      {splitText.dialog}
       {pivots.dialog}
       {findReplace?.open ? <FindReplaceDialog state={findReplace} /> : null}
       <SheetBarSummary />

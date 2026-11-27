@@ -446,14 +446,14 @@ const DATA_MENU = menu('data', 'Data', [
   built('named-functions', 'Named Functions', 'view'),
   built('randomise-range', 'Randomise Range', 'edit'),
   SEPARATOR,
-  item('column-stats', 'Column Stats', 'view'),
+  built('column-stats', 'Column Stats', 'view'),
   built('data-validation', 'Data Validation', 'edit'),
   submenu('data-clean-up', 'Data Clean-up', [
-    item('clean-up-suggestions', 'Clean-up Suggestions', 'edit'),
+    built('clean-up-suggestions', 'Clean-up Suggestions', 'edit'),
     built('remove-duplicates', 'Remove Duplicates', 'edit'),
     built('trim-whitespace', 'Trim Whitespace', 'edit'),
   ]),
-  item('split-text-to-columns', 'Split Text to Columns', 'edit'),
+  built('split-text-to-columns', 'Split Text to Columns', 'edit'),
 ]);
 
 const TOOLS_MENU = menu('tools', 'Tools', [

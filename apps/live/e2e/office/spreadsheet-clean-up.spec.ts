@@ -95,3 +95,87 @@ test('Remove Duplicates, Trim Whitespace and Randomise Range clean the data, eac
   expect(await inputOf(page, 'A1')).toBe('Name');
   expectNoPageErrors(pageErrors);
 });
+
+test('Split Text to Columns splits at once, and the Separator chip splits the original again', async ({
+  page,
+  pageErrors,
+}) => {
+  test.setTimeout(120_000);
+  await page.setViewportSize({ width: 1280, height: 860 });
+  await page.goto('/new?kind=spreadsheet');
+  await page.waitForURL(/\/document\//);
+  await expect(page.locator(READY)).toBeVisible();
+  await typeInto(page, 'A1', 'Ada Lovelace, 1815');
+  await typeInto(page, 'A2', 'Alan Turing, 1912');
+
+  await select(page, 'A1:A2');
+  await (await officeMenuItem(page, ['Data', 'Split Text to Columns'])).click();
+  expect(await inputOf(page, 'B1')).toBe('1815');
+  expect(await inputOf(page, 'A2')).toBe('Alan Turing');
+
+  // Back in the range, the chip offers the separators; Space splits the original text at each space.
+  await select(page, 'A1:A2');
+  const chip = page.getByRole('combobox', { name: 'Separator:' });
+  await expect(chip).toHaveValue('detect');
+  await settle(page);
+  await page.screenshot({ path: test.info().outputPath('split-chip.png') });
+  await chip.selectOption({ label: 'Space' });
+  expect(await inputOf(page, 'B2')).toBe('Turing,');
+  expect(await inputOf(page, 'C2')).toBe('1912');
+
+  // Each choice is its own step: one undo is back at the comma split.
+  await select(page, 'A2');
+  await page.keyboard.press('Control+z');
+  expect(await inputOf(page, 'A2')).toBe('Alan Turing');
+  expect(await inputOf(page, 'C2')).toBe('');
+  expectNoPageErrors(pageErrors);
+});
+
+test('Clean-up Suggestions applies what it finds, and Column Stats reads the column', async ({
+  page,
+  pageErrors,
+}) => {
+  test.setTimeout(120_000);
+  await page.setViewportSize({ width: 1280, height: 860 });
+  await page.goto('/new?kind=spreadsheet');
+  await page.waitForURL(/\/document\//);
+  await expect(page.locator(READY)).toBeVisible();
+  const rows = [
+    ['Red', '4'],
+    ['Blue ', '2'],
+    ['Red', '4'],
+    ['Green', "'7"],
+  ];
+  for (const [i, [team, n]] of rows.entries()) {
+    await typeInto(page, `A${i + 1}`, team!);
+    await typeInto(page, `B${i + 1}`, n!);
+  }
+
+  await (await officeMenuItem(page, ['Data', 'Data Clean-up', 'Clean-up Suggestions'])).click();
+  const panel = page.getByRole('complementary', { name: 'Clean-up Suggestions' });
+  await expect(panel.getByText('1 duplicate row in A1:B4')).toBeVisible();
+  await expect(panel.getByText('1 cell with extra spaces in A1:B4')).toBeVisible();
+  await expect(panel.getByText('1 number stored as text in column B')).toBeVisible();
+  await settle(page);
+  await page.screenshot({ path: test.info().outputPath('clean-up-suggestions.png') });
+  await panel
+    .getByRole('listitem')
+    .filter({ hasText: 'Trim whitespace' })
+    .getByRole('button', { name: 'Apply' })
+    .click();
+  await expect(panel.getByText('Trim whitespace')).toBeHidden();
+  expect(await inputOf(page, 'A2')).toBe('Blue');
+
+  // Column Stats from the panel's foot, on column A.
+  await select(page, 'A1');
+  await panel.getByRole('button', { name: 'Column Stats' }).click();
+  const stats = page.getByRole('complementary', { name: 'Column Stats' });
+  await expect(stats.getByText('Column A')).toBeVisible();
+  await expect(stats.getByRole('definition').first()).toHaveText('4');
+  await expect(
+    stats.getByRole('region', { name: 'Frequency' }).getByRole('listitem').first(),
+  ).toHaveText('Red2');
+  await settle(page);
+  await page.screenshot({ path: test.info().outputPath('column-stats.png') });
+  expectNoPageErrors(pageErrors);
+});

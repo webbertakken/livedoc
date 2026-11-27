@@ -51,8 +51,8 @@ function withoutBorders(
 
 export type PasteResult = { edits: Edit[]; range: GridRange; truncated: boolean };
 
-// The rows and columns the paste needs added at the end, and the target box cut to the limits.
-function grow(
+// The rows and columns a paste (or a split) needs added at the end, and the target box cut to the limits.
+export function growGrid(
   wb: Workbook,
   sheet: Sheet,
   at: { r: number; c: number },
@@ -109,7 +109,7 @@ export function pasteClip(
   if (!sheet) return null;
   const turned = mode === 'transposed';
   const size = turned ? { rows: clip.cols, cols: clip.rows } : tiles(sel, clip.rows, clip.cols);
-  const g = grow(wb, sheet, { r: sel.r1, c: sel.c1 }, size.rows, size.cols, rand);
+  const g = growGrid(wb, sheet, { r: sel.r1, c: sel.c1 }, size.rows, size.cols, rand);
   const from = wb.ctxFor(clip.from.sheetId);
   const to = wb.ctxFor(sheetId);
   // The destination's layout after growing, so a formula shifted onto a new row encodes against it.
@@ -172,7 +172,7 @@ export function pasteCut(
   const src = wb.sheet(clip.from.sheetId);
   const dest = wb.sheet(sheetId);
   if (!src || !dest) return null;
-  const g = grow(wb, dest, at, clip.rows, clip.cols, rand);
+  const g = growGrid(wb, dest, at, clip.rows, clip.cols, rand);
   // Old ids -> new ids, cell by cell.
   const moved = new Map<string, { r: string; c: string }>();
   for (let i = 0; i < clip.rows; i++)
@@ -279,7 +279,7 @@ export function pasteExternal(
   // A loop, not a spread: a pasted file can have more rows than a spread call takes.
   const width = rows.reduce((w, r) => Math.max(w, r.length), 0);
   const size = turned ? { rows: rows.length, cols: width } : tiles(sel, rows.length, width);
-  const g = grow(
+  const g = growGrid(
     wb,
     sheet,
     { r: sel.r1, c: sel.c1 },

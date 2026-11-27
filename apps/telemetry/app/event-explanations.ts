@@ -960,6 +960,8 @@ export const EXACT: Readonly<Record<string, string>> = {
     'An editor removed duplicate rows, trimmed whitespace or applied a clean-up suggestion in a spreadsheet.',
   'Spreadsheet|Changed|Randomise':
     'An editor shuffled the rows of a range with Data › Randomise Range.',
+  'Spreadsheet|Changed|Split':
+    'An editor split a column’s text into the columns beside it with Data › Split Text to Columns.',
   'Spreadsheet|Unlocked|ImportAccess':
     'An editor allowed a spreadsheet’s IMPORTDATA, IMPORTFEED, IMPORTHTML and IMPORTXML formulas to fetch from the web.',
   'Pdf|Imported|Explorer':
