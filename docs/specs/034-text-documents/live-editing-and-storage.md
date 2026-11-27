@@ -278,13 +278,16 @@ visitor's copy) and a branch start with none, as Google's copies do (default).
 
 ### The api
 
-Every route is an Editor's (`403 level_too_low` for anyone else), on a text document tab of a LiveDoc document
-(`404 not_found` otherwise), under `/api/documents/:id/tabs/:tabId/versions`:
+Every route is an edit of the tab, refused as one is (`403`, or `404` for a link confined to another tab), on a
+text document tab (`404 text_document_not_found` otherwise), under `/api/documents/:id/text-documents/:tabId/versions`;
+the writes run on the room's write queue. A body that names the person (`{ name, color }`, as their presence shows them)
+only labels them: whose they are is the key the room makes.
 
 - `GET` lists the versions, newest first, each with its id, kind, name, time, who took it, what it was restored
   from, and its editors (key, name, colour).
 - `GET /:versionId` answers the version's snapshot and the one before it (state vector and whole delete set,
-  base64), so the browser draws the version and its changes from the state it holds.
+  base64), each Yjs client id's author, and the deletions each of its editors made, so the browser draws the version
+  and its changes, in each editor's colour, from the state it holds.
 - `POST` names the current version (`{ name }`); `PATCH /:versionId` names, renames or (an empty name) unnames one.
   A name past `TEXT_DOCUMENT_VERSION_NAME_MAX_CHARS` is `400 version_name_too_long`; a 41st named version
   `409 named_versions_full`.
