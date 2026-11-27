@@ -23,7 +23,7 @@ export function SheetPivotsLayer() {
         type="button"
         data-pivot-edit={out.id}
         aria-label="Edit pivot table"
-        className="pointer-events-auto absolute flex h-7 cursor-pointer items-center gap-1 rounded-control border border-(--office-line) bg-(--office-menu) px-2 text-body text-(--office-ink) shadow-sm hover:bg-(--office-hover) focus-visible:ring-2 focus-visible:ring-(--office-focus) focus-visible:outline-none"
+        className="pointer-events-auto absolute flex h-row cursor-pointer items-center gap-1 rounded-control border border-(--office-line) bg-(--office-menu) px-2 text-body text-(--office-ink) shadow-sm hover:bg-(--office-hover) focus-visible:ring-2 focus-visible:ring-(--office-focus) focus-visible:outline-none"
         style={{ left: box.x, top: box.y + box.h + BUTTON_GAP }}
         onPointerDown={(e) => e.stopPropagation()}
         onKeyDown={(e) => e.stopPropagation()}
