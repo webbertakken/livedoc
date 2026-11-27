@@ -48,7 +48,7 @@ describe('createSpellingCore', { timeout: 30_000 }, () => {
   });
 
   it('corrects only when it is sure: one right swap, else one suggestion one edit away', async () => {
-    const core = createSpellingCore(files);
+    const core = real;
     expect(await core.correct('nl', 'hius')).toBe('huis');
     expect(await core.correct('nl', 'Hius')).toBe('Huis');
     expect(await core.correct('fr', 'miason')).toBe('maison');
