@@ -30,6 +30,12 @@ import {
 } from '@/components/office/review/OfficeVersionHistory';
 import { TextDocumentVersionView } from './TextDocumentVersionView';
 import { track } from '@/lib/telemetry';
+import { TEXT_DOCUMENT_SHORTCUTS } from '@/lib/text-document/text-document-shortcuts';
+import {
+  changeAnnouncement,
+  stepVersionChange,
+} from '@/lib/text-document/text-document-version-changes';
+import type { OfficeVersionChanges } from '@/components/office/review/OfficeVersionHistory';
 import type { VersionAuthorLabel } from '@/lib/api/text-document-versions';
 import { useTextDocumentVersionWrites, VERSION_FAILED } from './useTextDocumentVersionWrites';
 
@@ -41,6 +47,15 @@ export const VERSION_HISTORY_LOCAL_HINT = 'Version history is kept for documents
 export { VERSION_FAILED };
 
 const NOBODY = versionAuthorship({ clients: {}, deletedBy: {} });
+
+/** Said when the keys find no change drawn (default copy). */
+export const NO_CHANGES_SHOWN = 'No changes shown';
+/** The registry rows of the keys between changes, answered inside the mode (review-surfaces.md "The keys"). */
+export const VERSION_CHANGE_KEY_ROWS = {
+  next: 'move-to-next-edit',
+  previous: 'move-to-previous-edit',
+} as const;
+const keysOf = (id: string) => TEXT_DOCUMENT_SHORTCUTS.find((row) => row.id === id)!.keys;
 
 /** The current state drawn as itself: nothing added or removed. */
 function currentDrawing(state: Uint8Array): VersionDrawing {
@@ -69,6 +84,7 @@ export function useTextDocumentVersionHistory({
   format,
   onClosed,
   author,
+  documentName,
   now = () => Date.now(),
 }: {
   where: TextDocumentScope;
@@ -81,6 +97,8 @@ export function useTextDocumentVersionHistory({
   onClosed: () => void;
   /** The person's name and colour, written with a name or a restore. */
   author?: VersionAuthorLabel;
+  /** The document's name: a copy of a version is "Copy of" it. */
+  documentName: string;
   now?: () => number;
 }): { actions: OfficeActions; mode: ReactNode; open: boolean } {
   const [open, setOpen] = useState(false);
@@ -90,6 +108,21 @@ export function useTextDocumentVersionHistory({
   const [status, setStatus] = useState<string | null>(null);
   // Show changes, on by default as Google's; kept while the mode is open.
   const [showChanges, setShowChanges] = useState(true);
+  // What the keys between changes last went to, for a screen reader.
+  const [said, setSaid] = useState('');
+  const changes = useMemo<OfficeVersionChanges>(
+    () => ({
+      next: keysOf(VERSION_CHANGE_KEY_ROWS.next),
+      previous: keysOf(VERSION_CHANGE_KEY_ROWS.previous),
+      onStep: (forward) => {
+        const drawn = document.querySelector('[data-version-history] [data-region="version"]');
+        const went = drawn ? stepVersionChange(drawn, forward) : null;
+        setSaid(went ? changeAnnouncement(went) : NO_CHANGES_SHOWN);
+        debugLog('[text-document] version change step', { forward, at: went?.index ?? null });
+      },
+    }),
+    [],
+  );
   // The newest ask wins: an answer to an older one is dropped.
   const asked = useRef(0);
   const { ownerId, documentId, tabId, shareCode } = where;
@@ -191,6 +224,7 @@ export function useTextDocumentVersionHistory({
     say: setStatus,
     onNamed: reloadList,
     onRestored: close,
+    copying: { documentName, format, state: () => opened.state },
     now,
   });
 
@@ -229,6 +263,8 @@ export function useTextDocumentVersionHistory({
           onRetry={load}
           onClose={close}
           writes={opened.state ? versionWrites.writes : null}
+          changes={changes}
+          said={said}
           showChanges={
             selected === CURRENT_VERSION ? null : { checked: showChanges, onChange: setShowChanges }
           }

@@ -2,7 +2,7 @@
 // My Documents when the person may not file there.
 import { describe, expect, it, vi } from 'vitest';
 import { ApiError } from './api/core';
-import { createBeside, EXPLICIT_ROOT } from './create-beside';
+import { createBeside, EXPLICIT_ROOT, placementOf } from './create-beside';
 
 const beside = { teamId: 'team', folderId: 'folder' };
 
@@ -27,5 +27,25 @@ describe('createBeside', () => {
     const create = vi.fn().mockRejectedValue(error);
     await expect(createBeside(create, beside)).rejects.toBe(error);
     expect(create).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('placementOf', () => {
+  it('reads where the source is filed, else the root', async () => {
+    expect(await placementOf(async () => ({ teamId: 't', folderId: 'f' }), 'me', 'D')).toEqual({
+      teamId: 't',
+      folderId: 'f',
+    });
+    expect(await placementOf(async () => ({}), 'me', 'D')).toEqual(EXPLICIT_ROOT);
+    expect(await placementOf(async () => null, 'me', 'D')).toEqual(EXPLICIT_ROOT);
+    expect(
+      await placementOf(
+        async () => {
+          throw new Error('offline');
+        },
+        'me',
+        'D',
+      ),
+    ).toEqual(EXPLICIT_ROOT);
   });
 });

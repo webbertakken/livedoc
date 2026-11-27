@@ -9,6 +9,7 @@ import type { TextDocumentVersionDto } from '@livedoc/api-schema';
 import { TextDocumentState } from '@livedoc/text-documents';
 import { base64OfBytes } from '@livedoc/text-documents/base64';
 import {
+  NO_CHANGES_SHOWN,
   SEE_VERSION_HISTORY,
   useTextDocumentVersionHistory,
   VERSION_FAILED,
@@ -74,6 +75,7 @@ function Harness({
     tab: 't.0',
     format: 'odf',
     onClosed,
+    documentName: 'Plan',
   });
   const action = history.actions[SEE_VERSION_HISTORY]!;
   return (
@@ -204,5 +206,21 @@ describe('useTextDocumentVersionHistory', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Restore' }));
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
     expect(onClosed).toHaveBeenCalled();
+  });
+
+  it('goes to the changes drawn with the keys, saying where it went', async () => {
+    render(<Harness />);
+    fireEvent.click(screen.getByRole('button', { name: 'See version history' }));
+    await waitFor(() => expect(body().textContent).toBe('First wordsLater words'));
+    const list = screen.getByRole('listbox');
+    const chord = { ctrlKey: true, altKey: true };
+    fireEvent.keyDown(list, { code: 'KeyK', key: 'k', ...chord });
+    fireEvent.keyUp(list, { code: 'ControlLeft', key: 'Control' });
+    expect(screen.getByRole('status').textContent).toBe(NO_CHANGES_SHOWN);
+    fireEvent.keyDown(list, { key: 'ArrowDown' });
+    await waitFor(() => expect(body().querySelector('[data-ychange="added"]')).not.toBeNull());
+    fireEvent.keyDown(list, { code: 'KeyK', key: 'k', ...chord });
+    fireEvent.keyUp(list, { code: 'ControlLeft', key: 'Control' });
+    expect(screen.getByRole('status').textContent).toMatch(/^Change 1 of \d+$/);
   });
 });

@@ -80,7 +80,10 @@ import { COMMENT_KEY_ACTIONS } from '@/components/text-document/useTextDocumentT
 import { SUGGESTION_KEY_ACTIONS } from '@/components/text-document/useTextDocumentSuggestionCards';
 import { REVIEW_SUGGESTED_EDITS } from '@/components/text-document/useTextDocumentReviewPanel';
 import { COMPARE_DOCUMENTS } from '@/components/text-document/useTextDocumentCompare';
-import { SEE_VERSION_HISTORY } from '@/components/text-document/useTextDocumentVersionHistory';
+import {
+  SEE_VERSION_HISTORY,
+  VERSION_CHANGE_KEY_ROWS,
+} from '@/components/text-document/useTextDocumentVersionHistory';
 import { NAME_CURRENT_VERSION } from '@/components/text-document/useTextDocumentVersionWrites';
 import { textDocumentUndoPlugins } from './text-document-undo';
 import { LINK_ITEM, OPEN_LINK } from './text-document-links';
@@ -247,6 +250,8 @@ describe('the text document menus', () => {
       COMMENTS_PANEL.item,
       // Between suggestions (useTextDocumentSuggestionCards).
       ...SUGGESTION_KEY_ACTIONS,
+      // Between a version's changes, inside the version history (useTextDocumentVersionHistory).
+      ...Object.values(VERSION_CHANGE_KEY_ROWS),
     ];
     expect(builtRows.sort()).toEqual(
       [...new Set([...builtItems, ...shellRows, ...keyRows])].sort(),

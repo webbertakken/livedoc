@@ -1104,3 +1104,9 @@ div.text-document-kept {
   outline-style: dashed;
   opacity: 0.6;
 }
+/* The change the keys went to (review.md "Version history"): ringed in the focus colour. */
+.text-document-version [data-version-change-current] {
+  outline: 2px solid var(--office-focus);
+  outline-offset: 2px;
+  border-radius: 2px;
+}

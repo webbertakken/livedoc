@@ -3,8 +3,10 @@
 // Naming and restoring a text document's versions (docs/specs/034-text-documents/review.md "Version history"): a name
 // given in place on a row or from File > Version history > Name current version, removed with an empty one; Restore
 // this version asked once, then the room reverts the document in one change by the restorer and the mode closes.
-// Refusals are said, nothing changed: in the panel, or in the Name current version dialog, which stays open.
+// Make a copy names the copy, then makes it from the version and opens it in a new browser tab. Refusals are said,
+// nothing changed: in the panel, or in the dialog that asked, which stays open.
 import { useCallback, useMemo, useState, type ReactNode } from 'react';
+import { NAME_MAX_LENGTH, truncateName, type TextDocumentFormat } from '@livedoc/document';
 import { TEXT_DOCUMENT_VERSION_NAME_MAX_CHARS } from '@livedoc/text-documents';
 import type { OfficeActions } from '@/lib/office/office-catalogue';
 import type { OfficeVersionWrites } from '@/components/office/review/OfficeVersionHistory';
@@ -14,13 +16,23 @@ import type { TextDocumentScope } from '@/lib/api/text-documents';
 import {
   apiNameCurrentTextDocumentVersion,
   apiNameTextDocumentVersion,
+  apiReadTextDocumentVersion,
   apiRestoreTextDocumentVersion,
   type VersionAuthorLabel,
 } from '@/lib/api/text-document-versions';
 import { versionTime } from '@/lib/office/office-version-list';
 import { debugLog } from '@/lib/debug-log';
 import { track } from '@/lib/telemetry';
-import { NameCurrentVersionDialog, RestoreVersionDialog } from './TextDocumentVersionDialogs';
+import {
+  makeVersionCopy,
+  VERSION_COPY_FAILED,
+  versionCopyName,
+} from '@/lib/text-document/text-document-version-copy';
+import {
+  NameCurrentVersionDialog,
+  RestoreVersionDialog,
+  VersionCopyDialog,
+} from './TextDocumentVersionDialogs';
 
 /** File > Version history > Name current version. */
 export const NAME_CURRENT_VERSION = 'name-current-version';
@@ -42,6 +54,8 @@ export function useTextDocumentVersionWrites({
   onNamed,
   onRestored,
   local: localNote,
+  copying,
+  open: openTab = (id) => window.open(`/document/${id}`, '_blank', 'noopener'),
   now = () => Date.now(),
 }: {
   where: TextDocumentScope;
@@ -55,10 +69,21 @@ export function useTextDocumentVersionWrites({
   onNamed: () => void;
   /** The document reverted: the mode closes. */
   onRestored: () => void;
+  /** What Make a copy is made from: the document's name and format, and the room's state once read. */
+  copying: {
+    readonly documentName: string;
+    readonly format: TextDocumentFormat;
+    readonly state: () => Uint8Array | null;
+  };
+  /** Shows a document in a new browser tab. */
+  open?: (documentId: string) => void;
   now?: () => number;
 }): { writes: OfficeVersionWrites; actions: OfficeActions; dialogs: ReactNode } {
   const [naming, setNaming] = useState<{ error: string | null; busy: boolean } | null>(null);
   const [restoring, setRestoring] = useState<{ id: string; busy: boolean } | null>(null);
+  const [copy, setCopy] = useState<{ id: string; error: string | null; busy: boolean } | null>(
+    null,
+  );
   const { ownerId, documentId, tabId, shareCode } = where;
   const scope = useMemo(
     () => ({ ownerId, documentId, tabId, shareCode }),
@@ -139,10 +164,46 @@ export function useTextDocumentVersionWrites({
     [write],
   );
 
+  const makeCopy = useCallback(
+    async (id: string, given: string) => {
+      setCopy({ id, error: null, busy: true });
+      const state = copying.state();
+      const made = state
+        ? await apiReadTextDocumentVersion(scope, id).then(
+            (read) =>
+              makeVersionCopy({
+                ownerId,
+                documentId,
+                format: copying.format,
+                state,
+                snapshot: read.snapshot,
+                name: given,
+              }),
+            (error: unknown) => {
+              debugLog('[text-document] version write failed', {
+                reason: 'copy',
+                id,
+                error: String(error),
+              });
+              return null;
+            },
+          )
+        : null;
+      if (!made) {
+        setCopy({ id, error: VERSION_COPY_FAILED, busy: false });
+        return;
+      }
+      setCopy(null);
+      openTab(made);
+    },
+    [copying, scope, ownerId, documentId, openTab],
+  );
+
   const writes = useMemo<OfficeVersionWrites>(
     () => ({
       name,
       restore: (id: string) => setRestoring({ id, busy: false }),
+      copy: (id: string) => setCopy({ id, error: null, busy: false }),
       nameMax: TEXT_DOCUMENT_VERSION_NAME_MAX_CHARS,
     }),
     [name],
@@ -167,6 +228,16 @@ export function useTextDocumentVersionWrites({
           busy={naming.busy}
           onSave={(given) => void nameCurrent(given)}
           onClose={() => setNaming(null)}
+        />
+      ) : null}
+      {copy ? (
+        <VersionCopyDialog
+          initial={truncateName(versionCopyName(copying.documentName))}
+          maxLength={NAME_MAX_LENGTH}
+          error={copy.error}
+          busy={copy.busy}
+          onCopy={(given) => void makeCopy(copy.id, given)}
+          onClose={() => setCopy(null)}
         />
       ) : null}
       {restoring ? (

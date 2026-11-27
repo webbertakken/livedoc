@@ -3,7 +3,7 @@
 // the person's own new text document beside the primary. Every refusal is named, nothing made.
 import type * as Y from 'yjs';
 import { tabKindOf, type TextDocumentFormat } from '@livedoc/document';
-import type { DocumentPlacement, LiveDoc } from '@livedoc/api-schema';
+import type { LiveDoc } from '@livedoc/api-schema';
 import {
   LiveSuggestions,
   SUGGESTION_AUTHOR_NAME_MAX,
@@ -15,7 +15,7 @@ import {
 import { apiCreateDocument, apiLoadDocument } from '@/lib/api/documents';
 import { apiLoadTextDocumentState } from '@/lib/api/text-documents';
 import { ApiError } from '@/lib/api/core';
-import { createBeside, EXPLICIT_ROOT } from '@/lib/create-beside';
+import { createBeside, placementOf } from '@/lib/create-beside';
 import { createIdsFor } from '@/lib/new-document/create-failure';
 import { debugLog } from '@/lib/debug-log';
 import { track } from '@/lib/telemetry';
@@ -112,18 +112,6 @@ async function readSelected(request: CompareRequest, api: CompareApi): Promise<R
   }
 }
 
-/** Where the primary is filed, for the comparison to sit beside it; the root when it cannot be read. */
-async function besidePrimary(request: CompareRequest, api: CompareApi): Promise<DocumentPlacement> {
-  try {
-    const primary = await api.loadDocument(request.ownerId, request.primary.documentId);
-    return primary
-      ? { teamId: primary.teamId ?? null, folderId: primary.folderId ?? null }
-      : EXPLICIT_ROOT;
-  } catch {
-    return EXPLICIT_ROOT;
-  }
-}
-
 const refused = (refusal: CompareRefusal): CompareOutcome => {
   debugLog(`[text-document] compare refused reason=${refusal}`);
   return { ok: false, refusal };
@@ -162,7 +150,7 @@ export async function makeComparison(
           folderId: place.folderId,
           textDocuments: [{ tabId, state }],
         }),
-      await besidePrimary(request, api),
+      await placementOf(api.loadDocument, request.ownerId, primary.documentId),
     );
   } catch (error) {
     debugLog('[text-document] compare store failed', { error: String(error) });
