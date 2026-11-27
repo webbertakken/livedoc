@@ -55,6 +55,16 @@ export const TEXT_SOURCES: readonly TextSource[] = [
     sha256: '0fac2374380621b22e6b50451057721a9c52935b02d16d106a9f04897f061d0e',
   },
   {
+    file: 'dictionary-nl-2.0.0-license.txt',
+    sources: ['https://unpkg.com/dictionary-nl@2.0.0/license'],
+    sha256: 'fd9e95c360245eab3c388885062820754785faa4123964994cfdecb950b71948',
+  },
+  {
+    file: 'dictionary-fr-3.0.0-license.txt',
+    sources: ['https://unpkg.com/dictionary-fr@3.0.0/license'],
+    sha256: '0c785aebc7aae8aa00b8163e9b3219a8785a9900b71e85475204e48a5651ced4',
+  },
+  {
     file: 'resvg-js-2.6.2-LICENSE.txt',
     sources: ['https://raw.githubusercontent.com/yisibl/resvg-js/v2.6.2/LICENSE'],
     sha256: '1f256ecad192880510e84ad60474eab7589218784b9a50bc7ceee34c2b91f1d5',

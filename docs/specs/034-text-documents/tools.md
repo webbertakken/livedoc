@@ -40,16 +40,35 @@ fetched 2026-11-27); the look is (default) until a capture of Google’s dialog.
 
 ## Spelling and grammar
 
-- Misspelt words are underlined by the browser's own check, at no cost, offline and self-hosted, with its suggestions
-  on right-click.
+- **One checker**: Hunspell dictionaries run by nspell (MIT) in a Web Worker, each loaded the first time text in its
+  language is checked, never on the main thread ([Spelling](../../research/docs-open-standard/spelling.md)).
+- **Dictionaries shipped**: Dutch (BSD or CC-BY) and French (MPL-2.0), each listed with its licence on the licences
+  page. German and Spanish (GPL) are not shipped (director, 2026-11-27).
+- **Which dictionary**: text's language is the document's (File > Language), else the browser's; any Dutch takes
+  Dutch, any French French. A run that carries its own language follows it.
+- **Underlines**: where a dictionary ships, LiveDoc draws its own wavy red underline under each misspelt word, and the
+  browser's own check is off for that text (no double underlines); text in any other language keeps the browser's own
+  check, underlines and right-click suggestions (director, 2026-11-27).
+- **Not checked**: words with a digit, an underscore, `@` or `/` in them, web and mail addresses, words in capitals
+  only, and code blocks. The word being typed is underlined once the caret leaves it.
+- **Right-click on a misspelt word**: the context menu opens with up to five suggestions, then **Add to dictionary** and
+  **Ignore**, above its usual items. Choosing a suggestion replaces the word, one undo step.
 - **Spelling and grammar check** (⌘⌥X, F7, the toolbar's button) opens a card at the top right walking each misspelling
-  with suggestions, **Accept**, **Ignore**, **Add to dictionary**, Next and Previous (⌘' and ⌘;), run on Hunspell
-  dictionaries with permissive licences, loaded per language on demand
-  ([Spelling](../../research/docs-open-standard/spelling.md)).
-- **Personal dictionary** (Tools > Spelling and grammar > Personal dictionary): stored with the account (in this
-  browser for a guest), shared by the person's documents.
+  with suggestions, **Accept**, **Ignore**, **Add to dictionary**, Next and Previous (⌘' and ⌘;). With none left, the
+  card says "No spelling suggestions". **Ignore** sets the word aside in this document until it is closed.
+- **Personal dictionary** (Tools > Spelling and grammar > Personal dictionary): per person, stored with the account
+  (in this browser for a guest), shared by all their text documents and, later, spreadsheets; words are checked as
+  written, up to 400 of them (the preferences' 16 KB), each up to 48 characters. A dialog lists, adds and removes
+  them; at the limit, **Add to dictionary** says "Your personal dictionary is full. Remove a word to add another."
+- **Who**: the underlines and the card show for everyone who can change the text (Editing or Suggesting); a Viewer sees
+  no underlines. Accepting in Suggesting makes a suggestion. The personal dictionary is the person's own, whatever
+  their role.
+- **Budgets**: a dictionary's load under 3 MB, the first check of a 50-page document within 1 s after its dictionary
+  loads, a keystroke's check off the main thread and within the existing input budgets.
+- Show spelling suggestions (Tools > Spelling and grammar): per person, on by default; off hides LiveDoc's underlines
+  and turns the browser's check off too.
 - **Grammar** needs a server: shown only where the host configures one (fork D5, ruled: none on docs.nu; a self-hoster may configure one).
-- Show spelling suggestions, show grammar suggestions: per person.
+- Show grammar suggestions: per person, present only where a grammar server is configured.
 - **Automatically correct spelling** (Preferences): a misspelt word with one suggestion the checker is sure of is
   corrected as the word ends, its own undo step, as a typing aid is.
 
@@ -104,11 +123,12 @@ Meet; Keep, Tasks, Contacts and Maps panels; Approvals. Their menu items are not
 
 ## Share roles
 
-Everyone may find, count words, look up words and open the outline; only Editors replace (a Participant replaces as
+Everyone may find, count words, look up words and open the outline; spelling shows to whoever can change the text; only Editors replace (a Participant replaces as
 suggestions under D7); preferences and accessibility settings are each person's own.
 
 ## Telemetry
 
-`Search · Used · TextDocumentFind`, `TextDocumentReplaceAll`; `UI · Opened · TextDocumentWordCount`,
-`TextDocumentSpelling`, `TextDocumentCitations`; `UI · Toggled · TextDocumentWordCountWhileTypingOn`,
-`TextDocumentWordCountWhileTypingOff` (before it is kept), `TextDocumentScreenReader`. Never text.
+`Search · Used · TextDocumentFind`, `TextDocumentReplaceAll`; `Document · Changed · TextDocumentSpellingAccepted` (a
+suggestion taken), `TextDocumentDictionaryAdded`; `UI · Opened · TextDocumentWordCount`, `TextDocumentSpelling`,
+`TextDocumentCitations`; `UI · Toggled · TextDocumentWordCountWhileTypingOn`, `TextDocumentWordCountWhileTypingOff`
+(before it is kept), `TextDocumentScreenReader`. Never text.
