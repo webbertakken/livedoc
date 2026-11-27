@@ -229,6 +229,11 @@ matches, with its menu path; Up and Down move, Enter runs it, Escape closes. Dim
   the change, rather than the one the editor last read.
 - This compares the page's selection with the one the editor last left on the page, never a time: the editor records
   the page's selection after each of its own updates, and a different one is the person's newer move.
+- **A key pressed just after the writing takes the focus counts.** Leaving a header or note, closing a dialog or
+  tabbing in gives the writing the focus, and Ctrl+Home (⌘↑) pressed straight after goes to the document's start.
+  ProseMirror takes a move to the start within 200 ms of a focus for the browser's own reset of the selection and puts
+  its old caret back; `patches/prosemirror-view@1.43.0.patch` lets that check act only when no key was pressed since
+  the focus, so a reset the browser makes is still undone and the person's key is not.
 
 ## Phone and tablet
 
