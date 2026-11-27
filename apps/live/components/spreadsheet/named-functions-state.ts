@@ -18,6 +18,8 @@ export type NamedFunctionsState = {
   functions: readonly NamedFunction[];
   // Saves the list whole as one undo step; false when the api refused it or could not be reached (toasted).
   save: (next: readonly NamedFunction[]) => Promise<boolean>;
+  // Whose spreadsheets Import Function lists, and the one open (never listed); null while there is none.
+  importer: { ownerId: string; documentId: string } | null;
 };
 
 const NONE: readonly NamedFunction[] = [];
@@ -25,6 +27,7 @@ const NONE: readonly NamedFunction[] = [];
 const NamedFunctionsContext = createContext<NamedFunctionsState>({
   functions: NONE,
   save: () => Promise.resolve(false),
+  importer: null,
 });
 
 export const NamedFunctionsProvider = NamedFunctionsContext.Provider;
@@ -73,5 +76,7 @@ export function useNamedFunctionsState(
     },
     [functions, put, host],
   );
-  return useMemo(() => ({ functions, save }), [functions, save]);
+  const { ownerId, documentId } = scope;
+  const importer = useMemo(() => ({ ownerId, documentId }), [ownerId, documentId]);
+  return useMemo(() => ({ functions, save, importer }), [functions, save, importer]);
 }

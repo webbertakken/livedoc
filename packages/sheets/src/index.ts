@@ -64,6 +64,7 @@ export * from './store-layout';
 export * from './range-names';
 export * from './named-functions';
 export * from './named-function-refs';
+export * from './named-function-import';
 export * from './validate';
 export * from './rules/rule-index';
 export * from './rules/rule-ranges';

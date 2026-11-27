@@ -1,13 +1,20 @@
 // A spreadsheet's workbook doors (docs/specs/029-sheets/files-and-print.md): its file, written by the api from the
 // sheets the room holds (in the other standard a converted copy), and its conversion; in this browser for an offline one.
 import type {
+  SheetDto,
   WorkbookConversionResponse,
+  WorkbookResponse,
   WorkbookConvertRequest,
   WorkbookFunctionsRequest,
   WorkbookSettingsRequest,
   WorkbookSettingsResponse,
 } from '@livedoc/api-schema';
-import type { NamedFunction, WorkbookFormat, WorkbookSettings } from '@livedoc/sheets';
+import type {
+  FunctionSource,
+  NamedFunction,
+  WorkbookFormat,
+  WorkbookSettings,
+} from '@livedoc/sheets';
 import { isOfflineId } from '../offline/offline-store';
 import { API_BASE, apiFetch, apiHeaders, expectOk, expectOkVoid } from './core';
 
@@ -121,4 +128,28 @@ export async function apiSaveWorkbookFunctions(
     },
   );
   return expectOk<WorkbookSettingsResponse>(res, 'save named functions');
+}
+
+/**
+ * Another spreadsheet's named functions and its sheets, for Import Function (data-tools.md "Named ranges and named
+ * functions"): read as opening it reads them, from this browser for one kept here.
+ */
+export async function apiFunctionSource(
+  ownerId: string,
+  documentId: string,
+): Promise<FunctionSource> {
+  const handles = (sheets: readonly SheetDto[]) =>
+    sheets.map((s) => ({ id: s.id, title: s.title, layout: s.layout }));
+  if (await isOfflineId(documentId)) {
+    const [record, sheets] = await Promise.all([
+      (await import('../offline/offline-store')).offlineGetRecord(documentId),
+      (await import('../offline/offline-sheets')).offlineFetchSheets(documentId, null),
+    ]);
+    return { functions: record?.workbook?.functions ?? [], sheets: handles(sheets) };
+  }
+  const res = await apiFetch(`${API_BASE}/documents/${encodeURIComponent(documentId)}/workbook`, {
+    headers: await apiHeaders(ownerId, { share: null }),
+  });
+  const { workbook, sheets } = await expectOk<WorkbookResponse>(res, 'named functions source');
+  return { functions: workbook.functions ?? [], sheets: handles(sheets) };
 }

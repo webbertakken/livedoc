@@ -128,3 +128,43 @@ test('keeps a cell reference in a definition, naming its sheet', async ({ page, 
   await page.screenshot({ path: test.info().outputPath('named-functions-reference.png') });
   expectNoPageErrors(pageErrors);
 });
+
+// Import Function: another spreadsheet of the person's, its functions ticked, a call left behind named.
+test('imports named functions from another spreadsheet', async ({ page, pageErrors }) => {
+  test.setTimeout(120_000);
+  await page.setViewportSize({ width: 1280, height: 860 });
+  await page.goto('/new?kind=spreadsheet');
+  await page.waitForURL(/\/document\//);
+  await expect(page.locator(READY)).toBeVisible();
+  await (await officeMenuItem(page, ['Data', 'Named Functions'])).click();
+  const panel = page.getByRole('complementary', { name: 'Named Functions' });
+  for (const [name, body] of [
+    ['twice', '=x*2'],
+    ['quad', '=TWICE(TWICE(x))'],
+  ]) {
+    await panel.getByRole('button', { name: 'Add New Function' }).click();
+    await panel.getByRole('textbox', { name: 'Function Name' }).fill(name!);
+    await panel.getByRole('button', { name: 'Add Argument' }).click();
+    await panel.getByRole('textbox', { name: 'Argument 1', exact: true }).fill('x');
+    await panel.getByRole('textbox', { name: 'Formula Definition' }).fill(body!);
+    await panel.getByRole('button', { name: 'Create', exact: true }).click();
+    await expect(panel.getByText(`${name!.toUpperCase()}(x)`)).toBeVisible();
+  }
+
+  await page.goto('/new?kind=spreadsheet');
+  await page.waitForURL(/\/document\//);
+  await expect(page.locator(READY)).toBeVisible();
+  // The panel stays open for the person from one spreadsheet to the next.
+  await panel.getByRole('button', { name: 'Import Function' }).click();
+  const dialog = page.getByRole('dialog');
+  await dialog.getByRole('list', { name: 'Your spreadsheets' }).getByRole('button').first().click();
+  await dialog.getByRole('checkbox', { name: 'QUAD(x)' }).check();
+  await expect(dialog.getByText('Calls TWICE, which is not imported')).toBeVisible();
+  await page.screenshot({ path: test.info().outputPath('named-functions-import.png') });
+  await dialog.getByRole('button', { name: 'Import All' }).click();
+  await expect(panel.getByText('QUAD(x)')).toBeVisible();
+  await expect(panel.getByText('TWICE(x)')).toBeVisible();
+  await typeIn(page, 'A1', '=QUAD(3)');
+  await expect(cell(page, 'A1 12')).toHaveCount(1);
+  expectNoPageErrors(pageErrors);
+});
