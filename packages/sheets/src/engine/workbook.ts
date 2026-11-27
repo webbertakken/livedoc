@@ -61,6 +61,22 @@ import {
 import { formulaPrecedents } from './precedents';
 import { sheetsCtxOf } from './sheets-ctx';
 import { SPILL_PAST_EDGE, Spills, spillBlockedBy } from './spills';
+import type { SheetPivot } from '../objects/sheet-pivot';
+import { pivotOutput } from '../pivot/pivot-output';
+import {
+  isPivotArray,
+  PIVOT_BLOCKED_BY,
+  PIVOT_NO_SOURCE,
+  PIVOT_OUTPUT_CELLS_MAX,
+  PIVOT_PAST_EDGE,
+  PIVOT_SOURCE_CELLS_MAX,
+  PIVOT_TOO_LARGE,
+  pivotArray,
+  pivotBox,
+  pivotSpecOf,
+  readPivotSource,
+} from '../pivot/pivot-resolve';
+import type { CellFormat } from '../sheet';
 import { ITERATION_OFF, Loops, sameIteration, type Iteration } from './loops';
 import { LoopRounds, type LoopCells } from './loop-rounds';
 
@@ -591,9 +607,47 @@ export class Workbook {
     return claim.r1 === r && claim.c1 === c ? null : { r: claim.r1, c: claim.c1 };
   }
 
-  // Whether a formula on the sheet may spill, so a cell with no input may still show a value.
+  // The number format a pivot table's output gives (r, c) (pivot-tables.md "In the grid", D602): its source column's,
+  // or a percentage; undefined for any other cell. A cell's own number format wins where it is drawn.
+  pivotFormatAt(sheetId: string, r: number, c: number): CellFormat | undefined {
+    this.value(sheetId, r, c);
+    const owner = this.spills.ownerAt(this.noAt(sheetId, r, c));
+    if (owner === undefined) return undefined;
+    const arr = this.vals.get(owner);
+    if (!isPivotArray(arr)) return undefined;
+    const claim = this.spills.claimOf(owner)!;
+    return arr.fmts[r - claim.r1]![c - claim.c1];
+  }
+
+  // A cell's format as its value is shown: its own, with a pivot table's number format where it sets none
+  // (pivot-tables.md "In the grid", D602).
+  shownFormat(
+    sheetId: string,
+    r: number,
+    c: number,
+    own: CellFormat | undefined,
+  ): CellFormat | undefined {
+    if (own?.nf || !this.spills.hasPivots()) return own;
+    const given = this.pivotFormatAt(sheetId, r, c);
+    return given ? { ...own, ...given } : own;
+  }
+
+  // Whether a formula or a pivot table on the sheet may spill, so a cell with no input may still show a value.
   maySpill(sheetId: string): boolean {
     return (this.spills.spillersIn(sheetId)?.size ?? 0) > 0;
+  }
+
+  // How far a sheet shows values (positions + 1): its inputs, and the arrays and pivot tables spilled past them.
+  shownExtent(sheetId: string): { rows: number; cols: number } {
+    const e = { ...this.extent(sheetId) };
+    for (const no of this.spills.spillersIn(sheetId) ?? []) {
+      this.value(sheetId, this.nos.rowOf(no), this.nos.colOf(no));
+      const claim = this.spills.claimOf(no);
+      if (!claim) continue;
+      e.rows = Math.max(e.rows, claim.r2 + 1);
+      e.cols = Math.max(e.cols, claim.c2 + 1);
+    }
+    return e;
   }
 
   // How far a sheet is filled (positions + 1).
@@ -779,17 +833,18 @@ export class Workbook {
       if ('s' in input) return input.s;
       if ('b' in input) return input.b;
     }
-    // Only a cell noted, or a formula, needs a number of its own.
+    // Only a cell noted, a formula or an empty pivot table anchor needs a number of its own.
     const sheetNo = this.nos.sheetNo(sheetId);
-    if (reader !== null || input) {
+    const anchor = !input && this.spills.pivotAt(this.nos.find(sheetNo, r, c)) !== undefined;
+    if (reader !== null || input || anchor) {
       const no = this.nos.intern(sheetNo, r, c);
       if (reader !== null) this.deps.noteCell(reader, no);
       if (input) {
         if ('n' in input) return input.n;
         if ('s' in input) return input.s;
         if ('b' in input) return input.b;
-        return this.compute(no);
       }
+      if (input || anchor) return this.compute(no);
     }
     return this.spilledAt(sheetId, sheetNo, r, c);
   }
@@ -852,7 +907,10 @@ export class Workbook {
     const col = this.nos.colOf(no);
     const sheet = this.sheets.get(sheetId);
     const input = this.inputAt(sheetId, row, col);
-    if (!sheet || !input || !('f' in input)) return null;
+    // An empty pivot table anchor works its output out; a filled one is its input (pivot-tables.md "In the grid").
+    const pivot = input ? undefined : this.spills.pivotAt(no);
+    const formula = input && 'f' in input ? input.f : null;
+    if (!sheet || (!formula && !pivot)) return null;
     this.deps.clear(no);
     this.volatileCells.delete(no);
     this.cardReaders.delete(no);
@@ -866,12 +924,14 @@ export class Workbook {
     const visit = this.loops.enter(no);
     let value: Value;
     try {
-      const ast = storedAst(input.f);
-      if (!ast) value = err('#ERROR!');
-      else {
-        const frame = cellFrame(this.frameSource, no, sheetId, row, col);
-        value = deref(evaluate(ast, input.f.r, frame), frame);
-      }
+      if (formula) {
+        const ast = storedAst(formula);
+        if (!ast) value = err('#ERROR!');
+        else {
+          const frame = cellFrame(this.frameSource, no, sheetId, row, col);
+          value = deref(evaluate(ast, formula.r, frame), frame);
+        }
+      } else value = this.pivotValue(no, sheet, pivot!);
     } finally {
       this.depth--;
       this.stack.pop();
@@ -885,6 +945,34 @@ export class Workbook {
     if (this.reads > RECALC_READS_MAX) this.overBudget.add(no);
     const loop = this.loops.leave(no, visit);
     return loop && loop.length > 0 ? this.closeLoop(loop) : value;
+  }
+
+  // A pivot table's output (pivot-tables.md "In the grid"): its source read (and noted as read) as it stands now,
+  // worked out, and held with its cells' formats; an error when its source is gone or it is too large; blank when it
+  // has nothing to show.
+  private pivotValue(no: CellNo, sheet: Sheet, pivot: SheetPivot): Value {
+    const box = pivotBox(pivot, {
+      own: sheet,
+      byId: (id) => this.sheets.get(id),
+      byTitle: (title) => {
+        const h = this.ctxFor(sheet.id).byTitle(title);
+        return h && this.sheets.get(h.id);
+      },
+    });
+    if (!box) return err('#REF!', PIVOT_NO_SOURCE);
+    const cells = (box.r2 - box.r1 + 1) * (box.c2 - box.c1 + 1);
+    if (cells > PIVOT_SOURCE_CELLS_MAX) return err('#REF!', PIVOT_TOO_LARGE);
+    const sourceId = box.sheet.id;
+    this.deps.noteRange(no, this.nos.sheetNo(sourceId), box.r1, box.c1, box.r2, box.c2);
+    if (!this.spend(cells)) return err('#NUM!', 'This sheet is too large to recalculate at once');
+    const read = readPivotSource(box, (r, c) => this.cellValue(sourceId, r, c, null), this.locale);
+    const out = pivotOutput(read.source, pivotSpecOf(pivot, box), this.locale);
+    console.debug(
+      `[sheets engine] pivot sheet=${sheet.id} pivot=${pivot.id} rows=${out.rows.length} cols=${out.width}`,
+    );
+    if (out.rows.every((row) => row.every((x) => x.v === null))) return null;
+    if (out.rows.length * out.width > PIVOT_OUTPUT_CELLS_MAX) return err('#REF!', PIVOT_TOO_LARGE);
+    return pivotArray(out, read.formats);
   }
 
   // A loop closed (its first cell first): with iterative calculation off each of its cells is the loop's #REF!; on, it
@@ -919,10 +1007,13 @@ export class Workbook {
     return `${sheet.id}|${cellKey(sheet.layout.rows[this.nos.rowOf(no)]!, sheet.layout.cols[this.nos.colOf(no)]!)}`;
   }
 
+  // A spill or a pivot table's output claims its rectangle (a pivot table's keeps even one cell, for its format), or
+  // is an error in its words when it cannot land.
   protected claim(no: CellNo, sheet: Sheet, row: number, col: number, value: ValueArray): Value {
+    const pivot = isPivotArray(value);
     const d = dims(value);
     if (d.rows === 0 || d.cols === 0) return err('#N/A', 'The result is empty');
-    if (d.rows === 1 && d.cols === 1) return scalarOf(value.rows[0]![0]!);
+    if (d.rows === 1 && d.cols === 1 && !pivot) return scalarOf(value.rows[0]![0]!);
     const sheetNo = this.nos.sheetNo(sheet.id);
     const claim = {
       sheetId: sheet.id,
@@ -934,9 +1025,9 @@ export class Workbook {
     // A spill reads its whole rectangle, so filling or emptying a cell in it re-works the spill.
     this.deps.noteRange(no, sheetNo, row, col, claim.r2, claim.c2);
     if (claim.r2 >= sheet.layout.rows.length || claim.c2 >= sheet.layout.cols.length)
-      return err('#REF!', SPILL_PAST_EDGE);
+      return err('#REF!', pivot ? PIVOT_PAST_EDGE : SPILL_PAST_EDGE);
     const blocker = this.spills.blocker(sheet, no, claim);
-    if (blocker) return err('#REF!', spillBlockedBy(blocker));
+    if (blocker) return err('#REF!', pivot ? PIVOT_BLOCKED_BY(blocker) : spillBlockedBy(blocker));
     const readers = new Set<CellNo>();
     for (const cell of this.spills.place(no, claim))
       if (cell !== no)

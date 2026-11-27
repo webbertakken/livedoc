@@ -133,7 +133,10 @@ describe('add_sheet in a spreadsheet, at its edges', () => {
     );
     expect(result).toMatchObject({ ok: true, title: 'Sales' });
     const sales = server.sheets.find((s) => s.title === 'Sales')!;
-    expect((sales.layout.objects ?? []).map((x) => x.type)).toEqual(['pie', 'column']);
+    expect((sales.layout.objects ?? []).map((x) => x.kind === 'chart' && x.type)).toEqual([
+      'pie',
+      'column',
+    ]);
     // And a design through change_sheet does the same.
     const blank = await addSheet(api, DOC_A, { title: 'Blank' }, 'mcp', seeded(3));
     expect(blank.ok).toBe(true);

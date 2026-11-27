@@ -280,6 +280,8 @@ In order of precedence, highest first; same as Google Sheets:
 - A spill blocked by a cell with an input shows `#REF!` in the formula's cell ("Array result was not expanded because
   it would overwrite data in B3.", Google's words); emptying the blocker lets it spill. One running past the grid
   shows `#REF!` too ("Array result was not expanded because it would run past the edge of the sheet.").
+- A pivot table's output claims its cells as a spill does ([Pivot tables](pivot-tables.md#in-the-grid)): a spill
+  reaching them is blocked, and one in its way blocks it.
 - A reference to a spilling cell followed by `#` (`=SUM(B2#)`) reads its whole spilled range.
 - Spilled cells are worked out, never stored: a CSV export and an agent read their values; an import or paste
   writes inputs only into cells it covers.

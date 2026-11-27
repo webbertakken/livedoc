@@ -129,7 +129,7 @@ describe('a chart’s every option, through change_sheet', () => {
     expect(missing.refusal?.message).toContain(`Its charts: ${chart!.id}`);
     // Every cell it read deleted: no data, and no range for clear_charts to match.
     await change(api, 'Models', [{ op: 'delete_cols', cols: 'A:C' }]);
-    expect(server.sheets[0]!.layout.objects![0]!.range).toBeUndefined();
+    expect((server.sheets[0]!.layout.objects![0] as SheetChart).range).toBeUndefined();
     const cleared = await change(api, 'Models', [{ op: 'clear_charts', range: 'A1:Z9' }]);
     expect(cleared.applied).toEqual(['cleared the charts reading A1:Z9 (none there)']);
   });

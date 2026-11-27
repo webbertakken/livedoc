@@ -120,7 +120,7 @@ export async function readSheet(
       cells.push(out);
     }
   }
-  const extent = wb.extent(id);
+  const extent = wb.shownExtent(id);
   const lastRow = start.r1 + read.rows.length;
   const note = cut
     ? `Stopped at ${cut}, the most one read answers with: read on with a range from ${cut}.`

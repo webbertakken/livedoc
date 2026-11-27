@@ -12648,6 +12648,132 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
     ],
     "type": "object"
   },
+  "PivotDateRule": {
+    "enum": [
+      "second",
+      "minute",
+      "hour",
+      "hourMinute",
+      "hourMinuteAmPm",
+      "dayOfWeek",
+      "dayOfYear",
+      "dayOfMonth",
+      "dayMonth",
+      "month",
+      "quarter",
+      "year",
+      "yearQuarter",
+      "yearMonth",
+      "yearMonthDay"
+    ],
+    "type": "string"
+  },
+  "PivotGrouping": {
+    "anyOf": [
+      {
+        "additionalProperties": false,
+        "properties": {
+          "k": {
+            "const": "date",
+            "type": "string"
+          },
+          "rule": {
+            "$ref": "#/components/schemas/PivotDateRule"
+          }
+        },
+        "required": [
+          "k",
+          "rule"
+        ],
+        "type": "object"
+      },
+      {
+        "additionalProperties": false,
+        "properties": {
+          "end": {
+            "type": "number"
+          },
+          "k": {
+            "const": "interval",
+            "type": "string"
+          },
+          "size": {
+            "type": "number"
+          },
+          "start": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "k",
+          "size"
+        ],
+        "type": "object"
+      },
+      {
+        "additionalProperties": false,
+        "properties": {
+          "groups": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "items": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                "name": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "name",
+                "items"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "k": {
+            "const": "custom",
+            "type": "string"
+          }
+        },
+        "required": [
+          "k",
+          "groups"
+        ],
+        "type": "object"
+      }
+    ]
+  },
+  "PivotShowAs": {
+    "enum": [
+      "row",
+      "column",
+      "total"
+    ],
+    "type": "string"
+  },
+  "PivotSummary": {
+    "enum": [
+      "SUM",
+      "COUNTA",
+      "COUNT",
+      "COUNTUNIQUE",
+      "AVERAGE",
+      "MAX",
+      "MIN",
+      "MEDIAN",
+      "PRODUCT",
+      "STDEV",
+      "STDEVP",
+      "VAR",
+      "VARP"
+    ],
+    "type": "string"
+  },
   "PlanBoardKind": {
     "enum": [
       "board",
@@ -16015,7 +16141,14 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
     "type": "string"
   },
   "SheetObject": {
-    "$ref": "#/components/schemas/SheetChart"
+    "anyOf": [
+      {
+        "$ref": "#/components/schemas/SheetChart"
+      },
+      {
+        "$ref": "#/components/schemas/SheetPivot"
+      }
+    ]
   },
   "SheetPerson": {
     "additionalProperties": false,
@@ -16034,6 +16167,154 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
       "id",
       "name",
       "color"
+    ],
+    "type": "object"
+  },
+  "SheetPivot": {
+    "additionalProperties": false,
+    "properties": {
+      "at": {
+        "additionalProperties": false,
+        "properties": {
+          "c": {
+            "type": "string"
+          },
+          "r": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "r",
+          "c"
+        ],
+        "type": "object"
+      },
+      "columns": {
+        "items": {
+          "$ref": "#/components/schemas/SheetPivotGroup"
+        },
+        "type": "array"
+      },
+      "filters": {
+        "items": {
+          "$ref": "#/components/schemas/SheetPivotFilter"
+        },
+        "type": "array"
+      },
+      "id": {
+        "type": "string"
+      },
+      "kind": {
+        "const": "pivot",
+        "type": "string"
+      },
+      "rows": {
+        "items": {
+          "$ref": "#/components/schemas/SheetPivotGroup"
+        },
+        "type": "array"
+      },
+      "source": {
+        "$ref": "#/components/schemas/RuleSource"
+      },
+      "values": {
+        "items": {
+          "$ref": "#/components/schemas/SheetPivotValue"
+        },
+        "type": "array"
+      },
+      "valuesAsRows": {
+        "const": true,
+        "type": "boolean"
+      }
+    },
+    "required": [
+      "id",
+      "kind",
+      "at"
+    ],
+    "type": "object"
+  },
+  "SheetPivotFilter": {
+    "additionalProperties": false,
+    "properties": {
+      "col": {
+        "type": "string"
+      },
+      "cond": {
+        "$ref": "#/components/schemas/FilterCondition"
+      }
+    },
+    "required": [
+      "col",
+      "cond"
+    ],
+    "type": "object"
+  },
+  "SheetPivotGroup": {
+    "additionalProperties": false,
+    "properties": {
+      "col": {
+        "type": "string"
+      },
+      "desc": {
+        "const": true,
+        "type": "boolean"
+      },
+      "grouping": {
+        "$ref": "#/components/schemas/PivotGrouping"
+      },
+      "repeat": {
+        "const": true,
+        "type": "boolean"
+      },
+      "sortBy": {
+        "additionalProperties": false,
+        "properties": {
+          "item": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "value": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "value"
+        ],
+        "type": "object"
+      },
+      "totals": {
+        "const": false,
+        "type": "boolean"
+      }
+    },
+    "required": [
+      "col"
+    ],
+    "type": "object"
+  },
+  "SheetPivotValue": {
+    "additionalProperties": false,
+    "properties": {
+      "col": {
+        "type": "string"
+      },
+      "name": {
+        "type": "string"
+      },
+      "showAs": {
+        "$ref": "#/components/schemas/PivotShowAs"
+      },
+      "summary": {
+        "$ref": "#/components/schemas/PivotSummary"
+      }
+    },
+    "required": [
+      "col",
+      "summary"
     ],
     "type": "object"
   },

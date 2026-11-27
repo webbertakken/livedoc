@@ -53,7 +53,13 @@ export function clipFromRange(
       rowCells.push(cell);
       if (cell?.input && 'f' in cell.input)
         formulas[`${r - range.r1},${c - range.c1}`] = renderFormula(cell.input.f, ctx);
-      rowValues.push(displayValue(wb.value(sheetId, r, c), cell?.format, wb.locale).text);
+      rowValues.push(
+        displayValue(
+          wb.value(sheetId, r, c),
+          wb.shownFormat(sheetId, r, c, cell?.format),
+          wb.locale,
+        ).text,
+      );
     }
     cells.push(rowCells);
     values.push(rowValues);

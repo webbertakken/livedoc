@@ -223,7 +223,8 @@ function layout(
   };
   const slots = spread(colRoot, C, spec.columns, true);
   const lines = spread(rowRoot, R, spec.rows, false);
-  const width = L + slots.length;
+  // As wide as its slots, and never narrower than its column groups' names (columns with no values have no slots).
+  const width = Math.max(L + slots.length, C > 0 ? L + C + (!vertical && V >= 2 ? 1 : 0) : 0);
   const rows: PivotOutCell[][] = [];
   const row = () => {
     const cells: PivotOutCell[] = Array.from({ length: width }, () => ({ v: null }));

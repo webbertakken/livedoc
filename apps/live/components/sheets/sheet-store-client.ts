@@ -31,7 +31,7 @@ import {
   sheetToJson,
   restoreShrunkFunctions,
   shrinkReadersOf,
-  shrinkRuleSourcesOf,
+  shrinkLayoutSourcesOf,
   splitWrite,
   undoReadsNow,
   uniqueSheetTitle,
@@ -856,8 +856,9 @@ export class SheetStore {
         if (named.has(id) || !this.inScope(entry.view, this.scopeOf(target.tabId))) continue;
         const cells = shrinkReadersOf(sheetId, target.layout, write.changes, entry.view.cells);
         if (cells.length) out.push({ sheetId: id, write: { kind: 'cells', cells } });
-        // A Dropdown from a Range reading the sheet shrinks with it (data-validation.md "Rules").
-        const changes = shrinkRuleSourcesOf(
+        // A Dropdown from a Range and a pivot table reading the sheet shrink with it (data-validation.md "Rules",
+        // pivot-tables.md "The model").
+        const changes = shrinkLayoutSourcesOf(
           sheetId,
           target.layout,
           write.changes,

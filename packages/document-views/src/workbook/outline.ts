@@ -11,7 +11,7 @@ import {
   posRangeOf,
   type IdRange,
   type SheetLayout,
-  type SheetObject,
+  type SheetChart,
   type WorkbookRecord,
 } from '@livedoc/sheets';
 import { fitLines, fitOf, type ViewLine, type ViewResult } from '../budget';
@@ -90,7 +90,7 @@ function a1Of(layout: SheetLayout, range: IdRange): string | null {
   return pos ? formatRange(pos) : null;
 }
 
-function chartJson(layout: SheetLayout, chart: SheetObject): WorkbookOutlineChartJson {
+function chartJson(layout: SheetLayout, chart: SheetChart): WorkbookOutlineChartJson {
   const ix = layoutIndex(layout);
   const lineCols = new Set(
     Object.entries(chart.series ?? {})
@@ -128,7 +128,7 @@ function sheetJson(sheet: WorkbookOutlineSheet, current: string): WorkbookOutlin
     rules: { validation: layout.rules?.length ?? 0, format: layout.formatRules?.length ?? 0 },
     bands: layout.bands?.length ?? 0,
     charts: (layout.objects ?? [])
-      .filter((x) => x.kind === 'chart')
+      .filter((x): x is SheetChart => x.kind === 'chart')
       .map((x) => chartJson(layout, x)),
   };
 }

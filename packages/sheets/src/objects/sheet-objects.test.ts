@@ -57,7 +57,7 @@ describe('what a chart may be', () => {
   it('refuses another id, a kind not built, unknown keys and anything past its bounds', () => {
     const no = (x: unknown) => expect(isSheetObject(x, 'chart01')).toBe(false);
     no(chart({ id: 'other1' }));
-    no({ ...chart(), kind: 'pivot' });
+    no({ ...chart(), kind: 'image' });
     no({ ...chart(), extra: 1 });
     no(chart({ width: 159 }));
     no(chart({ height: 2001 }));
@@ -91,7 +91,7 @@ describe('setting and removing a chart', () => {
     expect(one.sheet.layout.objects).toEqual([chart()]);
     const two = apply(one.sheet, set(chart({ id: 'chart02' })));
     const moved = apply(two.sheet, set(chart({ width: 500 })));
-    expect(moved.sheet.layout.objects!.map((x) => [x.id, x.width])).toEqual([
+    expect((moved.sheet.layout.objects as SheetChart[]).map((x) => [x.id, x.width])).toEqual([
       ['chart01', 500],
       ['chart02', 420],
     ]);
@@ -137,14 +137,14 @@ describe('deleting rows and columns under a chart', () => {
       ),
     ).sheet;
     const rows = apply(s0, { kind: 'layout', changes: [{ k: 'deleteRows', ids: [R(1), R(5)] }] });
-    const after = rows.sheet.layout.objects![0]!;
+    const after = rows.sheet.layout.objects![0] as SheetChart;
     expect(after.range).toEqual({ r1: R(0), c1: C(0), r2: R(4), c2: C(2) });
     expect(after.at.r).toBe(R(2));
     const cols = apply(rows.sheet, {
       kind: 'layout',
       changes: [{ k: 'deleteCols', ids: [C(1), C(4)] }],
     });
-    const x = cols.sheet.layout.objects![0]!;
+    const x = cols.sheet.layout.objects![0] as SheetChart;
     expect(x.series).toEqual({ [C(2)]: { line: true } });
     expect(x.at.c).toBe(C(5));
     const undone = apply(cols.sheet, inverseSheetWrite(rows.sheet, cols));
@@ -157,7 +157,7 @@ describe('deleting rows and columns under a chart', () => {
       set(chart({ at: { r: R(9), c: C(7), dx: 4, dy: 6 }, cols: [C(1)] })),
     ).sheet;
     const gone = apply(s0, { kind: 'layout', changes: [{ k: 'deleteCols', ids: [C(1), C(7)] }] });
-    const x = gone.sheet.layout.objects![0]!;
+    const x = gone.sheet.layout.objects![0] as SheetChart;
     expect(x.range).toBeUndefined();
     expect(x.cols).toBeUndefined();
     expect(x.at).toEqual({ r: R(9), c: C(6), dx: 4, dy: 6 });

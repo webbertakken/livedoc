@@ -120,10 +120,10 @@ instead, through the same doors (`read_document`, `livedoc tab view`, `?view=`),
   - `only` and `style` are refused on it (`invalid_value`): it has no elements. A link to one tab sees only its own
     sheet's line.
 
-- **`cells`** reads one sheet, the tab's: `range` an A1 cell or range (the used range when absent). One line per row
-  holding a non-empty cell, `<row> | <cell> | <cell>`, each cell its A1 address and its input, a text as a JSON
-  string, a number or boolean as typed, a formula with its `=` and `→ <what it shows>`; a value whose shown text
-  differs from its input (a format) adds `→ "<shown>"`:
+- **`cells`** reads one sheet, the tab's: `range` an A1 cell or range (when absent, the used range and the values
+  spills and pivot tables show past it). One line per row holding a non-empty cell, `<row> | <cell> | <cell>`, each
+  cell its A1 address and its input, a text as a JSON string, a number or boolean as typed, a formula with its `=`
+  and `→ <what it shows>`; a value whose shown text differs from its input (a format) adds `→ "<shown>"`:
 
   ```text
   sheet "Models" · cells A1:C3 of A1:F40

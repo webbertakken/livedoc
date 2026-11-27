@@ -1,7 +1,12 @@
 // A Dropdown from a Range on any sheet (docs/specs/029-sheets/data-validation.md "Rules"): read and written as text,
 // its options and line read from its sheet, kept when that sheet loses rows, and carried by title in a copy.
 import { describe, expect, it } from 'vitest';
-import { applySheetWrite, inverseSheetWrite, shrinkRuleSourcesOf, type SheetWrite } from '../store';
+import {
+  applySheetWrite,
+  inverseSheetWrite,
+  shrinkLayoutSourcesOf,
+  type SheetWrite,
+} from '../store';
 import { validateWrite } from '../validate';
 import { book } from '../testing/book';
 import { sheetCopyOf } from '../workbook/sheet-copy';
@@ -94,7 +99,7 @@ describe('a dropdown source on another sheet', () => {
   it('shrinks when its sheet loses rows, goes when they all go, and comes back with the undo', () => {
     const { one, lists, rule } = twoSheets();
     const del = (ids: string[]) =>
-      shrinkRuleSourcesOf(lists.id, lists.layout, [{ k: 'deleteRows', ids }], one.layout);
+      shrinkLayoutSourcesOf(lists.id, lists.layout, [{ k: 'deleteRows', ids }], one.layout);
     expect(del([one.layout.rows[0]!])).toEqual([]);
     const shrunk = del([lists.layout.rows[0]!]);
     expect(shrunk).toEqual([

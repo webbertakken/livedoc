@@ -234,4 +234,21 @@ describe('pivotOutput', () => {
         .slice(2, 5),
     ).toEqual([2024, 2025, 2026]);
   });
+
+  it('keeps every row as wide as the output, column groups with no values too', () => {
+    for (const values of [
+      [],
+      [
+        { col: 1, summary: 'SUM' as const },
+        { col: 1, summary: 'MAX' as const },
+      ],
+    ]) {
+      const out = pivotOutput(data, { rows: [], columns: [{ col: 0 }], values });
+      expect(out.rows.every((row) => row.length === out.width)).toBe(true);
+    }
+    expect(pivotOutput(data, { rows: [], columns: [{ col: 0 }], values: [] }).rows[0]).toEqual([
+      { v: null },
+      { v: 'Region' },
+    ]);
+  });
 });

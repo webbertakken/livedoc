@@ -173,7 +173,7 @@ function RegionCells({ region, ...p }: CellsProps & { region: Region }) {
           : null;
       const shown =
         formula === null
-          ? displayValue(value, cell?.format, locale)
+          ? displayValue(value, workbook.shownFormat(sheet.id, r, c, cell?.format), locale)
           : { text: formula, align: 'l' as const, kind: 'text' as const };
       // A met format rule's style draws over the cell's own.
       const met = fIndex

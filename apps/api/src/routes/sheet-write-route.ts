@@ -18,7 +18,7 @@ import {
   cellKey,
   cellsFromJson,
   shrinkReadersOf,
-  shrinkRuleSourcesOf,
+  shrinkLayoutSourcesOf,
   validateWrite,
   valuesOnly,
   writesFormats,
@@ -99,8 +99,9 @@ export async function shrinkReaders(
       .map(async (h) => {
         const cells = cellsFromJson(await readFormulaCells(ctx.env, documentId, h.id));
         const rewrites = shrinkReadersOf(head.id, head.layout, changes, cells);
-        // A Dropdown from a Range reading the sheet shrinks with it (data-validation.md "Rules").
-        const rules = shrinkRuleSourcesOf(head.id, head.layout, changes, h.layout);
+        // A Dropdown from a Range and a pivot table reading the sheet shrink with it (data-validation.md "Rules",
+        // pivot-tables.md "The model").
+        const rules = shrinkLayoutSourcesOf(head.id, head.layout, changes, h.layout);
         if (rewrites.length === 0 && rules.length === 0) return;
         const write: SheetWrite = rules.length
           ? { kind: 'layout', changes: rules, ...(rewrites.length ? { cells: rewrites } : {}) }

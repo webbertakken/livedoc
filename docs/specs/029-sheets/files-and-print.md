@@ -121,9 +121,10 @@ Every case of [Security](../../research/sheets-open-standard/security.md) is a t
   the dialog before the download runs (**Download** and **Cancel**); the download is a converted copy, and the
   workbook keeps its own format.
 - CSV and TSV are injection-safe, as today ([Sheet](sheet.md#csv)).
-- Built for CSV and TSV: the open sheet's every row and column up to its last filled cell, each value as shown,
-  written by the api (in this browser for a spreadsheet in This Browser) as `<spreadsheet> - <sheet>.csv` (or
-  `.tsv`), UTF-8; a TSV is a CSV with tabs for commas, quoted the same way, so it reads back whole (default, D118).
+- Built for CSV and TSV: the open sheet's every row and column up to its last filled cell or the last value a spill
+  or pivot table shows, each value as shown, written by the api (in this browser for a spreadsheet in This Browser) as
+  `<spreadsheet> - <sheet>.csv` (or `.tsv`), UTF-8; a TSV is a CSV with tabs for commas, quoted the same way, so it
+  reads back whole (default, D118).
 
 ## Converting
 
