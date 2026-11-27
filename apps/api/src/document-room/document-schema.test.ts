@@ -194,9 +194,20 @@ describe('the room schema', () => {
       INSERT INTO document_tabs (document_id, tab_id, order_index, added_at) VALUES ('d', 't', 0, 1);
       INSERT INTO image_refs (tab_id, image_id) VALUES ('t', 'i');
       INSERT INTO tab_stats (tab_id, mode, element_count, comment_count, data_bytes, written_at)
-        VALUES ('t', 'diagram', 0, 0, 2, 1);`);
+        VALUES ('t', 'diagram', 0, 0, 2, 1);
+      INSERT INTO text_document_versions (tab_id, seq, id, kind, taken_at, state_vector, deletions, editors,
+        deleted_by, bytes) VALUES ('t', 1, 'v', 'automatic', 1, x'00', x'00', '[]', '{}', 2);
+      INSERT INTO text_document_clients (tab_id, client, author, first_at) VALUES ('t', 7, 'k', 1);
+      INSERT INTO text_document_pending_deletions (tab_id, author, deletions) VALUES ('t', 'k', x'00');`);
     db.exec("DELETE FROM tabs WHERE id = 't'");
-    for (const t of ['document_tabs', 'image_refs', 'tab_stats']) {
+    const tables = [
+      'document_tabs',
+      'image_refs',
+      'tab_stats',
+      'text_document_versions',
+      'text_document_clients',
+    ];
+    for (const t of [...tables, 'text_document_pending_deletions']) {
       expect((db.prepare(`SELECT count(*) AS n FROM ${t}`).get() as { n: number }).n).toBe(0);
     }
   });
