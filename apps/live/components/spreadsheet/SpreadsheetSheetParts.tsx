@@ -53,7 +53,10 @@ import {
   TableSettingsContext,
 } from '@/components/sheets/tables/table-settings-context';
 import { useSpreadsheetCharts } from './charts/useSpreadsheetCharts';
-import { SheetPivotsContext } from '@/components/sheets/pivots/sheet-pivots';
+import {
+  SheetPivotDetailsContext,
+  SheetPivotsContext,
+} from '@/components/sheets/pivots/sheet-pivots';
 import { useSpreadsheetPivots } from './pivots/useSpreadsheetPivots';
 import { useSheetBarActionsContext } from './useSheetBarActions';
 
@@ -183,6 +186,9 @@ export function SpreadsheetSheetParts({ bridge }: { bridge: SheetsBridge }) {
       splitActions,
     ],
   );
+  // Show Details on a pivot table's value, in its cell's context menu (pivot-tables.md "Details"): an Editor's.
+  const { active } = c.selection;
+  const detailsHere = c.canShape && c.workbook.pivotValueCellAt(c.sheet.id, active.r, active.c);
   const office = useGridMenuBindings(
     actions,
     {
@@ -191,7 +197,12 @@ export function SpreadsheetSheetParts({ bridge }: { bridge: SheetsBridge }) {
       openCustomAngle: angleDialog.openCustomAngle,
       openSortRange: sortDialog.openSortRange,
     },
-    bandingActions,
+    detailsHere
+      ? {
+          ...bandingActions,
+          'show-pivot-details': { run: () => void pivots.showDetails(active.r, active.c) },
+        }
+      : bandingActions,
   );
   useCellGoogleFonts(c.sheet);
   const { focusGrid, canEdit } = c;
@@ -226,16 +237,20 @@ export function SpreadsheetSheetParts({ bridge }: { bridge: SheetsBridge }) {
                 <TableColumnMenuContext.Provider value={columnMenu}>
                   <SheetChartsContext.Provider value={charts.value}>
                     <SheetPivotsContext.Provider value={c.canShape ? editPivot : null}>
-                      <SheetGrid
-                        elementId={`sheet-${c.sheet.id}`}
-                        actions={actions}
-                        input={input}
-                        pointRef={pointRef}
-                        peers={bridge.peers}
-                        zoom={zoom}
-                        surfaceKeys={surfaceKeys}
-                        fontFamily={DocumentFonts.stack(theme.font)}
-                      />
+                      <SheetPivotDetailsContext.Provider
+                        value={c.canShape ? pivots.showDetails : null}
+                      >
+                        <SheetGrid
+                          elementId={`sheet-${c.sheet.id}`}
+                          actions={actions}
+                          input={input}
+                          pointRef={pointRef}
+                          peers={bridge.peers}
+                          zoom={zoom}
+                          surfaceKeys={surfaceKeys}
+                          fontFamily={DocumentFonts.stack(theme.font)}
+                        />
+                      </SheetPivotDetailsContext.Provider>
                     </SheetPivotsContext.Provider>
                   </SheetChartsContext.Provider>
                 </TableColumnMenuContext.Provider>

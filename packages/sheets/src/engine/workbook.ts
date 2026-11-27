@@ -62,7 +62,8 @@ import { formulaPrecedents } from './precedents';
 import { sheetsCtxOf } from './sheets-ctx';
 import { SPILL_PAST_EDGE, Spills, spillBlockedBy } from './spills';
 import type { SheetPivot } from '../objects/sheet-pivot';
-import { pivotOutput } from '../pivot/pivot-output';
+import { pivotDetailRows, pivotOutput } from '../pivot/pivot-output';
+import type { PivotDetails } from '../pivot/pivot-details';
 import { pivotCalc } from '../pivot/pivot-calc';
 import { compileTypedFormula } from '../typed-input';
 import {
@@ -75,6 +76,7 @@ import {
   PIVOT_TOO_LARGE,
   pivotArray,
   pivotBox,
+  pivotIndexCellAt,
   pivotSpecOf,
   readPivotSource,
   type PivotBox,
@@ -654,6 +656,63 @@ export class Workbook {
         ? { r1: claim.r1, c1: claim.c1, r2: claim.r2, c2: claim.c2 }
         : { r1: ar, c1: ac, r2: ar, c2: ac },
     };
+  }
+
+  // The landed pivot table whose output holds a value at (r, c), and where its output starts (pivot-tables.md "Details").
+  private pivotValueOwner(
+    sheetId: string,
+    r: number,
+    c: number,
+  ): { pivot: SheetPivot; r1: number; c1: number } | null {
+    if (!this.spills.hasPivots()) return null;
+    const no = this.noAt(sheetId, r, c);
+    if (no === NO_CELL) return null;
+    this.value(sheetId, r, c);
+    const owner = this.spills.ownerAt(no) ?? no;
+    const pivot = this.spills.pivotAt(owner);
+    const arr = this.vals.get(owner);
+    if (!pivot || !isPivotArray(arr)) return null;
+    const claim = this.spills.claimOf(owner)!;
+    return pivotIndexCellAt(arr, r - claim.r1, c - claim.c1)
+      ? { pivot, r1: claim.r1, c1: claim.c1 }
+      : null;
+  }
+
+  // Whether (r, c) is a value of a landed pivot table's output, whose details a double-click shows (D616).
+  pivotValueCellAt(sheetId: string, r: number, c: number): boolean {
+    return this.pivotValueOwner(sheetId, r, c) !== null;
+  }
+
+  // The source rows the value at (r, c) summarises, its header first, or null when it is no value or reaches none
+  // (pivot-tables.md "Details", D616). Works the output out once more, as it stands.
+  pivotDetailsAt(sheetId: string, r: number, c: number): PivotDetails | null {
+    const owner = this.pivotValueOwner(sheetId, r, c);
+    const sheet = this.sheets.get(sheetId);
+    const box = owner && sheet ? pivotBox(owner.pivot, this.pivotSheetsOf(sheet)) : null;
+    if (!owner || !box) return null;
+    const read = readPivotSource(box, (sr, sc) => this.value(box.sheet.id, sr, sc), this.locale);
+    const calc = pivotCalc(read.source, (text, scope) =>
+      this.workOutNamed(sheetId, owner.r1, owner.c1, text, scope),
+    );
+    const rows = pivotDetailRows(
+      read.source,
+      pivotSpecOf(owner.pivot, box),
+      { r: r - owner.r1, c: c - owner.c1 },
+      this.locale,
+      calc,
+    );
+    console.debug(
+      `[sheets engine] pivot details sheet=${sheetId} pivot=${owner.pivot.id} rows=${rows?.length ?? 0}`,
+    );
+    return rows
+      ? {
+          pivotId: owner.pivot.id,
+          sheetId: box.sheet.id,
+          rows: [box.r1, ...rows.map((i) => box.r1 + 1 + i)],
+          c1: box.c1,
+          c2: box.c2,
+        }
+      : null;
   }
 
   // A cell's format as its value is shown: its own, with a pivot table's number format where it sets none

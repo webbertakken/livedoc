@@ -5,6 +5,7 @@
 // layout write (D177). Where a sheet goes back is worked out when it goes back: after the nearest tab that was
 // before it and is still there. The changes land through a SheetBarBackend (sheet-bar-backend.ts).
 import { SheetName } from '@livedoc/sheets';
+import type { SheetFromFile } from '@livedoc/sheets/files';
 import type { ItemUndoStep } from '@/hooks/plan/item-undo-journal';
 import { debugLog } from '@/lib/debug-log';
 import {
@@ -24,9 +25,11 @@ export type SheetBarTabRef = { id: string; name: string };
 // Where Add Sheet puts a sheet: after the last one, or (Insert › Sheet, Shift+F11) after the open one (D170).
 export type SheetPlace = 'end' | 'afterOpen';
 
-// A sheet added by name (Create Pivot Table's `Pivot Table 1`), told where it landed once it is there.
+// A sheet added by name (Create Pivot Table's `Pivot Table 1`), told where it landed once it is there; born with its
+// cells when seeded (a pivot table value's details).
 export type SheetAddOpts = {
   name?: string;
+  seed?: SheetFromFile;
   onPlaced?: (ids: { tabId: string; sheetId: string }) => void;
 };
 
@@ -65,7 +68,14 @@ export type SheetBarDeps = {
 };
 
 // A sheet tab as the sheet bar put it in or took it out, and the tabs that were before it.
-type Placed = { tabId: string; sheetId: string; name: string; earlier: string[]; copyOf?: string };
+type Placed = {
+  tabId: string;
+  sheetId: string;
+  name: string;
+  earlier: string[];
+  copyOf?: string;
+  seed?: SheetFromFile;
+};
 
 function codeOf(e: unknown): string | null {
   const code = (e as { code?: unknown } | null)?.code;
@@ -85,6 +95,7 @@ export function sheetBarChanges(deps: SheetBarDeps): SheetBarChanges {
       name: p.name,
       after: landingAfter(deps.tabs(), p.earlier),
       ...(p.copyOf && !restore ? { copyOf: p.copyOf } : {}),
+      ...(p.seed && !restore ? { seed: p.seed } : {}),
       ...(restore ? { restore: true as const } : {}),
     });
   };
@@ -214,6 +225,7 @@ export function sheetBarChanges(deps: SheetBarDeps): SheetBarChanges {
           ...ids,
           name: opts.name ?? SheetName.next(tabs.map((t) => t.name)),
           earlier: tabs.slice(0, upTo).map((t) => t.id),
+          ...(opts.seed ? { seed: opts.seed } : {}),
         },
         'AddSheet',
         opts.onPlaced,
