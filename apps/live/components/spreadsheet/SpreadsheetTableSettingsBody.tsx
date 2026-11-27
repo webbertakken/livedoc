@@ -1,9 +1,9 @@
 'use client';
 
-// The Table Settings panel's body (docs/specs/029-sheets/data-tools.md "Tables"): the table the active cell is in, its
-// name, its range, each column's type, its total row and its look (the Alternating Colours panel on its banding), and
-// Select Table and Delete Table. Every change writes at once, one undo step each; read by everyone, changed by an
-// Editor alone.
+// The Table Settings panel's body (docs/specs/029-sheets/data-tools.md "Tables"): the settings of the table the active
+// cell is in, under its name: its range, each column's type, its total row and its look (the Alternating Colours panel
+// on its banding). What acts on the table (Rename, Select Table, Convert to Range, Delete Table) is the table menu's.
+// Every change writes at once, one undo step each; read by everyone, changed by an Editor alone.
 import { useEffect, useId, useState } from 'react';
 import { Button, Select, Switch, TextInput } from '@livedoc/ui';
 import {
@@ -12,7 +12,6 @@ import {
   parseRangeText,
   posRangeOf,
   tableColumnNames,
-  tableNameProblem,
   tableOverlaps,
   TABLE_COLUMN_TYPES,
   TABLE_REFUSAL_COPY,
@@ -59,41 +58,29 @@ export function SpreadsheetTableSettingsBody({
   const layout = c.sheet.layout;
   const p = table ? posRangeOf(layout, table) : null;
   const shownRange = p ? formatRange(p) : '';
-  const [name, setName] = useState(table?.name ?? '');
   const [range, setRange] = useState(shownRange);
-  const [why, setWhy] = useState<{ name?: string; range?: string }>({});
+  const [why, setWhy] = useState<string | null>(null);
   useEffect(() => {
-    setName(table?.name ?? '');
     setRange(shownRange);
-    setWhy({});
-  }, [table?.id, table?.name, shownRange]);
+    setWhy(null);
+  }, [table?.id, shownRange]);
 
   if (!table || !p)
     return <p className="text-supporting text-slate-500 dark:text-slate-400">{NO_TABLE}</p>;
   const editor = c.canShape;
-  const refuse = (field: 'name' | 'range', message: string) => {
-    debugLog('[sheet] table refused', { reason: field });
-    setWhy({ [field]: message });
-  };
-  const commitName = () => {
-    if (name.trim() === table.name) return;
-    const others = c.workbook
-      .sheetList()
-      .filter((s) => s.id !== c.sheet.id)
-      .map((s) => s.layout);
-    const problem = tableNameProblem(name, layout, { except: table.id, others });
-    if (problem) return refuse('name', problem);
-    actions.setTable({ ...table, name: name.trim() });
+  const refuse = (message: string) => {
+    debugLog('[sheet] table refused', { reason: 'range' });
+    setWhy(message);
   };
   const commitRange = () => {
     if (range.trim() === shownRange) return;
     const g = parseRangeText(range);
     const ids =
       g && g.r2 < layout.rows.length && g.c2 < layout.cols.length ? actions.rangeIds(g) : null;
-    if (!g || !ids) return refuse('range', TABLE_RANGE_UNREAD);
+    if (!g || !ids) return refuse(TABLE_RANGE_UNREAD);
     const next = { ...table, ...ids };
-    if (tableOverlaps(layout, next)) return refuse('range', TABLE_REFUSAL_COPY.overlap);
-    if (!isSheetTable(next, table.id, layout)) return refuse('range', TABLE_RANGE_UNREAD);
+    if (tableOverlaps(layout, next)) return refuse(TABLE_REFUSAL_COPY.overlap);
+    if (!isSheetTable(next, table.id, layout)) return refuse(TABLE_RANGE_UNREAD);
     if (actions.setTable(next)) actions.goTo(g);
   };
   const names = tableColumnNames(layout, table, (r, col) => cellText(c.sheet, r, col));
@@ -115,31 +102,7 @@ export function SpreadsheetTableSettingsBody({
   };
   return (
     <div className="flex flex-col gap-3">
-      <div className="flex flex-col gap-1">
-        <label htmlFor={`${id}-name`} className={label}>
-          Table Name
-        </label>
-        <TextInput
-          id={`${id}-name`}
-          value={name}
-          readOnly={!editor}
-          aria-invalid={why.name ? true : undefined}
-          aria-describedby={why.name ? `${id}-name-why` : undefined}
-          onChange={(e) => {
-            setWhy({});
-            setName(e.target.value);
-          }}
-          onBlur={commitName}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') commitName();
-          }}
-        />
-        {why.name ? (
-          <span id={`${id}-name-why`} role="alert" className={error}>
-            {why.name}
-          </span>
-        ) : null}
-      </div>
+      <p className="font-semibold">{table.name}</p>
       <div className="flex flex-col gap-1">
         <label htmlFor={`${id}-range`} className={label}>
           Range
@@ -148,10 +111,10 @@ export function SpreadsheetTableSettingsBody({
           id={`${id}-range`}
           value={range}
           readOnly={!editor}
-          aria-invalid={why.range ? true : undefined}
-          aria-describedby={why.range ? `${id}-range-why` : undefined}
+          aria-invalid={why ? true : undefined}
+          aria-describedby={why ? `${id}-range-why` : undefined}
           onChange={(e) => {
-            setWhy({});
+            setWhy(null);
             setRange(e.target.value);
           }}
           onBlur={commitRange}
@@ -159,9 +122,9 @@ export function SpreadsheetTableSettingsBody({
             if (e.key === 'Enter') commitRange();
           }}
         />
-        {why.range ? (
+        {why ? (
           <span id={`${id}-range-why`} role="alert" className={error}>
-            {why.range}
+            {why}
           </span>
         ) : null}
       </div>
@@ -201,43 +164,20 @@ export function SpreadsheetTableSettingsBody({
         />
         Total Row
       </label>
-      <div className="flex flex-wrap gap-2">
-        <Button variant="secondary" size="xs" onClick={() => actions.selectTable(table.id)}>
-          Select Table
-        </Button>
-        {editor ? (
-          <>
-            <Button
-              variant="secondary"
-              size="xs"
-              onClick={() => {
-                actions.selectTable(table.id);
-                onFormatting();
-              }}
-            >
-              Table Formatting
-            </Button>
-            <Button
-              variant="secondary"
-              size="xs"
-              onClick={() => {
-                if (actions.convertToRange(table.id)) onClose();
-              }}
-            >
-              Convert to Range
-            </Button>
-            <Button
-              variant="secondary"
-              size="xs"
-              onClick={() => {
-                if (actions.deleteTable(table.id)) onClose();
-              }}
-            >
-              Delete Table
-            </Button>
-          </>
-        ) : null}
-      </div>
+      {editor ? (
+        <div className="flex flex-wrap gap-2">
+          <Button
+            variant="secondary"
+            size="xs"
+            onClick={() => {
+              actions.selectTable(table.id);
+              onFormatting();
+            }}
+          >
+            Table Formatting
+          </Button>
+        </div>
+      ) : null}
       <div className="flex justify-end">
         <Button size="xs" onClick={onClose}>
           Done

@@ -31,22 +31,103 @@ function table(h: SheetHarness, r1 = 1, r2 = 2): SheetTable {
   return { id: 'tbl001', name: 'Sales', r1: rows[r1]!, c1: cols[1]!, r2: rows[r2]!, c2: cols[2]! };
 }
 
-describe('the tables layer', () => {
-  it('draws a chip a table, which puts the active cell in it and opens Table Settings', async () => {
-    const h = await harness();
-    const t = table(h);
-    act(() => {
-      h.store.write(SHEET_ID, { kind: 'layout', changes: [{ k: 'table', id: t.id, table: t }] });
-    });
-    const open = vi.fn();
-    renderSheet(h, () => (
+// A menu's item: a button, or an aria-disabled span when dimmed.
+const menuItem = (name: string) =>
+  screen
+    .getByText(name, { selector: 'button, [aria-disabled], button *, [aria-disabled] *' })
+    .closest('button, [aria-disabled]') as HTMLElement;
+const menuLabels = () =>
+  ['Table Settings', 'Rename', 'Select Table', 'Convert to Range', 'Delete Table'].filter((n) =>
+    screen.queryByText(n),
+  );
+
+function chips(h: SheetHarness, opts: { canShape?: boolean } = {}) {
+  const t = table(h);
+  act(() => {
+    h.store.write(SHEET_ID, { kind: 'layout', changes: [{ k: 'table', id: t.id, table: t }] });
+  });
+  const open = vi.fn();
+  renderSheet(
+    h,
+    () => (
       <TableSettingsContext.Provider value={open}>
         <SheetTablesLayer />
       </TableSettingsContext.Provider>
-    ));
-    fireEvent.click(screen.getByRole('button', { name: 'Sales table settings' }));
+    ),
+    { canShape: opts.canShape ?? true },
+  );
+  const chip = screen.getByRole('button', { name: 'Sales table menu' });
+  expect(chip.getAttribute('aria-haspopup')).toBe('dialog');
+  fireEvent.click(chip);
+  return { open, chip };
+}
+
+describe('the table chip and its menu', () => {
+  it("opens Google's table menu; Table Settings puts the active cell in the table and opens the panel", async () => {
+    const h = await harness();
+    const { open, chip } = chips(h);
+    expect(chip.getAttribute('aria-expanded')).toBe('true');
+    expect(menuLabels()).toEqual([
+      'Table Settings',
+      'Rename',
+      'Select Table',
+      'Convert to Range',
+      'Delete Table',
+    ]);
+    fireEvent.click(menuItem('Table Settings'));
     expect(open).toHaveBeenCalledWith('tbl001');
     expect(h.ctl().selection.active).toEqual({ r: 1, c: 1 });
+    expect(menuLabels()).toEqual([]);
+  });
+
+  it('renames in place on the chip, refusing a name taken in a toast, Escape leaving it', async () => {
+    const h = await harness();
+    chips(h);
+    fireEvent.click(menuItem('Rename'));
+    const field = screen.getByRole('textbox', { name: 'Rename Sales' });
+    fireEvent.change(field, { target: { value: 'Sales' } });
+    fireEvent.keyDown(field, { key: 'Escape' });
+    expect(screen.queryByRole('textbox', { name: 'Rename Sales' })).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Sales table menu' }));
+    fireEvent.click(menuItem('Rename'));
+    const again = screen.getByRole('textbox', { name: 'Rename Sales' });
+    fireEvent.change(again, { target: { value: '1x' } });
+    fireEvent.keyDown(again, { key: 'Enter' });
+    expect(h.toast).toHaveBeenCalledWith(expect.stringMatching(/start with a letter/));
+    expect(h.store.sheet(SHEET_ID)!.layout.tables![0]!.name).toBe('Sales');
+    fireEvent.click(screen.getByRole('button', { name: 'Sales table menu' }));
+    fireEvent.click(menuItem('Rename'));
+    const last = screen.getByRole('textbox', { name: 'Rename Sales' });
+    fireEvent.change(last, { target: { value: 'Q3 sales' } });
+    fireEvent.blur(last);
+    expect(h.store.sheet(SHEET_ID)!.layout.tables![0]!.name).toBe('Q3 sales');
+  });
+
+  it('selects the table, converts it to a range, and deletes it', async () => {
+    const h = await harness();
+    chips(h);
+    fireEvent.click(menuItem('Select Table'));
+    expect(h.ctl().selection.ranges[0]).toEqual({ r1: 1, c1: 1, r2: 2, c2: 2 });
+    fireEvent.click(screen.getByRole('button', { name: 'Sales table menu' }));
+    act(() => {
+      fireEvent.click(menuItem('Convert to Range'));
+    });
+    expect(h.store.sheet(SHEET_ID)!.layout.tables).toBeUndefined();
+    const g = await harness();
+    chips(g);
+    act(() => {
+      fireEvent.click(menuItem('Delete Table'));
+    });
+    expect(g.store.sheet(SHEET_ID)!.layout.tables).toBeUndefined();
+    expect(g.store.sheet(SHEET_ID)!.cells.size).toBe(0);
+  });
+
+  it("dims what changes the table for anyone but an Editor, as the panel's rules", async () => {
+    const h = await harness();
+    chips(h, { canShape: false });
+    for (const name of ['Rename', 'Convert to Range', 'Delete Table'])
+      expect(menuItem(name).getAttribute('aria-disabled')).toBe('true');
+    expect(menuItem('Select Table').getAttribute('aria-disabled')).toBeNull();
   });
 
   it('draws nothing without the panel to open, or without tables', async () => {
@@ -56,14 +137,14 @@ describe('the tables layer', () => {
         <SheetTablesLayer />
       </TableSettingsContext.Provider>
     ));
-    expect(screen.queryByRole('button', { name: /table settings/ })).toBeNull();
+    expect(screen.queryByRole('button', { name: /table menu/ })).toBeNull();
     cleanup();
     const t = table(h, 0, 1);
     act(() => {
       h.store.write(SHEET_ID, { kind: 'layout', changes: [{ k: 'table', id: t.id, table: t }] });
     });
     renderSheet(h, () => <SheetTablesLayer />);
-    expect(screen.queryByRole('button', { name: 'Sales table settings' })).toBeNull();
+    expect(screen.queryByRole('button', { name: /table menu/ })).toBeNull();
   });
 });
 

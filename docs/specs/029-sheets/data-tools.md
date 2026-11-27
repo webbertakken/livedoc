@@ -228,20 +228,23 @@ sheet's, seen by everyone, kept by row and column ids as a named range is.
   changed, its banding's footer on; refused while that row holds anything, is another table's or a protected range's
   ("Make room below the table for its total row"). Turning it off makes that row a data row again, its cells kept
   (D445).
-- **Table chip** (over the header row's first cell, on it when the header is the sheet's first row; everyone's): the
-  table's name and ▾; pressing it puts the active cell in the table and opens **Table Settings**, which holds what
-  Google's table menu does: Rename (Table Name), **Select Table**, **Convert to Range** (the table goes, its cells and
-  look kept as plain cells and a banding; formulas reading it read the same cells as plain ranges) and **Delete
-  Table** (its cells and look go); views per box 1 ([Filters, filter views and slicers](#filters-filter-views-and-slicers)).
+- **Table menu** (the Director's ruling, 2026-11-27, as Google's): a chip over the header row's first cell (on it when
+  the header is the sheet's first row) with the table's name and ▾, seen by everyone. Pressing it, or Enter or Space
+  on it, opens the menu, its items moved by the arrow keys: **Table Settings** (the active cell put in the table, the
+  panel opened), **Rename** (the name edited in place on the chip; Enter keeps it, Escape leaves it, a name the rules
+  refuse is said in a toast), **Select Table**, **Convert to Range** (the table goes, its cells and look kept as plain
+  cells and a banding; formulas reading it read the same cells as plain ranges, one undo step), **Delete Table** (its
+  cells and look go). Rename, Convert to Range and Delete Table are an Editor's, dimmed for anyone else; views join
+  the menu with box 1 ([Filters, filter views and slicers](#filters-filter-views-and-slicers)).
 - **Column menu** (a button on each header cell, Ctrl+Alt+\ on a cell of the table): **Edit Column Type** (the types
   as a list, a Dropdown's options as the dropdown rule's form), **Sort A to Z**, **Sort Z to A** (the data rows only,
   one undo step), **Insert 1 Column Left**, **Insert 1 Column Right**, **Delete Column**.
-- **Table Settings** panel (the office shell's right panel), on the table holding the active cell ("Select a cell in
-  a table to see its settings." outside one): **Table Name**, **Range** (an A1 range, the header row first; refused
-  as Convert to Table refuses, "Type a range like A1:D20, a header row and a data row at least"), **Column Types**
-  (each column's name and its type), **Total Row**, **Select Table**, **Table Formatting** (the table's banding in the
-  Alternating Colours panel), **Convert to Range**, **Delete Table**; **Done** and × close it. Every change writes at
-  once, one undo step each. A Participant or a Viewer reads it, its fields read-only and only Select Table offered.
+- **Table Settings** panel (the office shell's right panel), the settings of the table holding the active cell under
+  its name ("Select a cell in a table to see its settings." outside one): **Range** (an A1 range, the header row
+  first; refused as Convert to Table refuses, "Type a range like A1:D20, a header row and a data row at least"),
+  **Column Types** (each column's name and its type), **Total Row**, **Table Formatting** (the table's banding in the
+  Alternating Colours panel); **Done** and × close it. What acts on the table is the table menu's, never repeated
+  here. Every change writes at once, one undo step each; a Participant or a Viewer reads it, its fields read-only.
 - **Table references** in formulas ([Formulas](formulas.md#table-references)) read and follow the table.
 - **Files**: [Tables in the file](standard-mapping.md#tables-in-the-file).
 - Copies: a duplicated sheet's or copied sheet's tables are renamed to the next free names; a table's banding goes

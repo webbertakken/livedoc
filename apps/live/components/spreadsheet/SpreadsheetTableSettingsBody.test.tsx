@@ -1,9 +1,9 @@
 // @vitest-environment jsdom
-// data-tools.md "Tables": Table Settings on the table holding the active cell — its name, range, column types, total
-// row, Select Table, Convert to Range and Delete Table, each one write; read-only for anyone but an Editor.
-import { act, fireEvent, screen } from '@testing-library/react';
+// data-tools.md "Tables": Table Settings on the table holding the active cell — its range, column types, total row and
+// its look, each one write; read-only for anyone but an Editor. What acts on the table is the table menu's.
+import { fireEvent, screen } from '@testing-library/react';
 import { beforeAll, describe, expect, it, vi } from 'vitest';
-import { readTypedInput, renderFormula, TABLE_NAME_TAKEN, type SheetTable } from '@livedoc/sheets';
+import { readTypedInput, type SheetTable } from '@livedoc/sheets';
 import {
   makeSheet,
   renderSheet,
@@ -90,33 +90,6 @@ describe('the Table Settings panel', () => {
     expect(screen.getByText(NO_TABLE)).toBeTruthy();
   });
 
-  it('renames the table, refusing a name taken, and formulas follow', async () => {
-    const { h } = await withTable();
-    const { rows, cols } = h.store.sheet(SHEET_ID)!.layout;
-    h.store.write(SHEET_ID, {
-      kind: 'layout',
-      changes: [
-        {
-          k: 'name',
-          name: 'Rates',
-          range: { r1: rows[6]!, c1: cols[0]!, r2: rows[6]!, c2: cols[0]! },
-        },
-      ],
-    });
-    show(h);
-    commit('Table Name', 'rates');
-    expect(screen.getByRole('alert').textContent).toBe(TABLE_NAME_TAKEN);
-    expect(tableOf(h)?.name).toBe('Sales');
-    commit('Table Name', 'Q3 sales');
-    expect(tableOf(h)?.name).toBe('Q3 sales');
-    const formula = h.store.sheet(SHEET_ID)!.cells.get(`${rows[0]}:${cols[3]}`)!.input as {
-      f: never;
-    };
-    expect(renderFormula(formula.f, h.store.workbook('t1').ctxFor(SHEET_ID))).toBe(
-      '=SUM(Q3_sales[Amount])',
-    );
-  });
-
   it("changes the range, refusing one it cannot read, and sets a column's type", async () => {
     const { h } = await withTable();
     show(h);
@@ -130,38 +103,28 @@ describe('the Table Settings panel', () => {
     expect(tableOf(h)?.types).toBeUndefined();
   });
 
-  it('turns the total row on and off, selects the table, converts it to a range', async () => {
+  it('turns the total row on and off, opens Table Formatting on its banding, and closes on Done', async () => {
     const { h } = await withTable();
     const p = show(h);
+    expect(screen.getByText('Sales')).toBeTruthy();
     fireEvent.click(screen.getByRole('switch', { name: 'Total Row' }));
     expect(tableOf(h)?.total).toBe(true);
     fireEvent.click(screen.getByRole('switch', { name: 'Total Row' }));
     expect(tableOf(h)?.total).toBeUndefined();
-    fireEvent.click(screen.getByRole('button', { name: 'Select Table' }));
     fireEvent.click(screen.getByRole('button', { name: 'Table Formatting' }));
     expect(p.reveal).toHaveBeenCalledWith(expect.objectContaining({ id: 'alternating-colours' }));
-    act(() => {
-      fireEvent.click(screen.getByRole('button', { name: 'Convert to Range' }));
-    });
-    expect(tableOf(h)).toBeUndefined();
+    fireEvent.click(screen.getByRole('button', { name: 'Done' }));
     expect(p.close).toHaveBeenCalled();
-  });
-
-  it('deletes the table with its cells', async () => {
-    const { h } = await withTable();
-    show(h);
-    fireEvent.click(screen.getByRole('button', { name: 'Delete Table' }));
-    expect(tableOf(h)).toBeUndefined();
-    expect(h.store.sheet(SHEET_ID)!.cells.size).toBe(1);
-    expect(screen.queryByText('Sales')).toBeNull();
+    // What acts on the table is the table menu's.
+    for (const name of ['Select Table', 'Convert to Range', 'Delete Table'])
+      expect(screen.queryByRole('button', { name })).toBeNull();
   });
 
   it('is read-only for anyone but an Editor', async () => {
     const { h } = await withTable();
     show(h, { canShape: false });
-    expect(field('Table Name').readOnly).toBe(true);
+    expect(field('Range').readOnly).toBe(true);
     expect(screen.getByLabelText<HTMLSelectElement>('Amount type').disabled).toBe(true);
-    expect(screen.queryByRole('button', { name: 'Delete Table' })).toBeNull();
-    expect(screen.getByRole('button', { name: 'Select Table' })).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'Table Formatting' })).toBeNull();
   });
 });
