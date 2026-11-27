@@ -1353,6 +1353,15 @@ export const SPREADSHEET_CHARTS_ADDED = chart(
   { types: ['Column', 'Bar', 'Line', 'Area', 'Scatter', 'Pie', 'Doughnut'] },
 );
 
+// docs/specs/029-sheets/pivot-tables.md "Telemetry": a pivot table Create Pivot Table placed.
+export const SPREADSHEET_PIVOT_TABLES_ADDED = chart(
+  'Spreadsheet',
+  'Added',
+  'Spreadsheet Pivot Tables Added',
+  'An editor made a pivot table with Insert › Pivot Table.',
+  { types: ['PivotTable'] },
+);
+
 // docs/specs/029-sheets/data-tools.md "Named ranges and named functions": an Editor made, changed or removed a named
 // function in Data › Named Functions.
 export const SPREADSHEET_NAMED_FUNCTIONS = chart(
@@ -1367,7 +1376,7 @@ export const SPREADSHEETS: MetricStack = {
   stack: true,
   title: 'Spreadsheets',
   blurb:
-    'Spreadsheet documents on the open standards: made, opened from files, downloaded, converted, themed, imports allowed, charts added, named functions.',
+    'Spreadsheet documents on the open standards: made, opened from files, downloaded, converted, themed, imports allowed, charts and pivot tables added, named functions.',
   members: [
     SPREADSHEETS_CREATED,
     SPREADSHEETS_IMPORTED,
@@ -1376,6 +1385,7 @@ export const SPREADSHEETS: MetricStack = {
     SPREADSHEETS_THEMED,
     SPREADSHEETS_IMPORTS_ALLOWED,
     SPREADSHEET_CHARTS_ADDED,
+    SPREADSHEET_PIVOT_TABLES_ADDED,
     SPREADSHEET_NAMED_FUNCTIONS,
   ],
 };
