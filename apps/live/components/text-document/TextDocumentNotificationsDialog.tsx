@@ -65,7 +65,7 @@ export function TextDocumentNotificationsDialog({
       title="Notification settings"
       primary={{ label: 'OK', onPress: save, disabled }}
     >
-      <div className="flex flex-col gap-5 pt-1" aria-busy={step.kind === 'loading'}>
+      <div className="flex flex-col gap-6 pt-1" aria-busy={step.kind === 'loading'}>
         <NoticeSettingChoices setting={setting} disabled={disabled} onChange={setSetting} />
         {step.kind === 'unread' || (choosing && step.refusal) ? (
           <p role="alert" className="text-body text-red-700 dark:text-red-300">

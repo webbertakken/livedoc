@@ -92,7 +92,7 @@ export function NoticeLinkSettings() {
       <Eyebrow>{resolved.documentName || 'A text document'}</Eyebrow>
       <Heading>Notification Settings</Heading>
       <Body>What this document emails you about. A choice is saved as you make it.</Body>
-      <div className="mt-4 flex flex-col gap-5">
+      <div className="mt-4 flex flex-col gap-6">
         <NoticeSettingChoices
           setting={resolved.setting}
           disabled={saving === 'saving'}
