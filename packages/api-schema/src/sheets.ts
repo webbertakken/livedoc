@@ -97,6 +97,8 @@ export const SHEET_ERRORS = [
   'sheet_last_visible',
   // A write a protection does not admit (data-tools.md "Protected ranges"): `at` its id, `line` what it says.
   'protected',
+  // A value or formula typed into a pivot table (docs/specs/029-sheets/pivot-tables.md "Working with one", D612).
+  'pivot_cell',
 ] as const;
 export type SheetError = (typeof SHEET_ERRORS)[number];
 

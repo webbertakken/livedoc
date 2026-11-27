@@ -1008,3 +1008,33 @@ describe('deleting with the element', () => {
     expect(res.status).toBe(409);
   });
 });
+
+describe('pivot tables (docs/specs/029-sheets/pivot-tables.md "Working with one", D612)', () => {
+  it('refuses a value typed at a pivot table’s anchor, and lets a clear through', async () => {
+    await make();
+    const s = (await call<SheetsResponse>({ method: 'GET', path: '/sheets' })).body.sheets[0]!;
+    const [r0] = s.layout.rows;
+    const [c0, c1] = s.layout.cols;
+    const pivot = { id: 'pivot01', kind: 'pivot' as const, at: { r: r0!, c: c0! } };
+    expect(
+      (
+        await write('sheetA00', {
+          kind: 'layout',
+          changes: [{ k: 'object', id: 'pivot01', object: pivot }],
+        })
+      ).status,
+    ).toBe(200);
+    const typed = await write('sheetA00', {
+      kind: 'cells',
+      cells: [{ r: r0!, c: c0!, i: { n: 1 } }],
+    });
+    expect(typed.status).toBe(400);
+    expect(typed.body).toMatchObject({ error: 'pivot_cell', at: `${r0}:${c0}` });
+    expect((await write('sheetA00', { kind: 'cells', cells: [{ r: r0!, c: c0! }] })).status).toBe(
+      200,
+    );
+    expect(
+      (await write('sheetA00', { kind: 'cells', cells: [{ r: r0!, c: c1!, i: { n: 1 } }] })).status,
+    ).toBe(200);
+  });
+});
