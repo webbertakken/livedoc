@@ -17,6 +17,8 @@ import {
   type KeptPart,
 } from './kept-content';
 import { withSheetPrOwn } from './xlsx-lines';
+import { keptRunsText } from './xlsx-cell-text';
+import { SPREADSHEETML_NS } from './xlsx-parts';
 
 // ECMA-376 Part 1's order of the workbook's and the worksheet's children (CT_Workbook, CT_Worksheet).
 const WORKBOOK_ORDER = [
@@ -139,6 +141,8 @@ export class XlsxKeptWriter {
   private readonly kept: KeptContent | undefined;
   private readonly sheets: number;
   private readonly hidden: ReadonlySet<number>;
+  // The kept rich texts' children by cell (`sheet,r,c`), in file order.
+  private readonly runs = new Map<string, KeptItem<FileAt>[]>();
   /** Kept workbook names a named function took, at the last `workbookChildren`. */
   namesDropped = 0;
 
@@ -152,6 +156,11 @@ export class XlsxKeptWriter {
     this.items = this.kept?.items ?? [];
     this.sheets = sheets;
     this.hidden = hidden;
+    for (const item of this.items) {
+      if (item.place !== 'cell-text') continue;
+      const key = `${item.at.sheet},${item.at.r},${item.at.c}`;
+      this.runs.set(key, [...(this.runs.get(key) ?? []), item]);
+    }
   }
 
   /** The first sheet shown, by place. */
@@ -174,6 +183,17 @@ export class XlsxKeptWriter {
   /** Whether the workbook keeps a child of this name (its `bookViews`). */
   keepsWorkbookChild(local: string): boolean {
     return this.children('workbook').some((item) => keptLocalName(item.xml) === local);
+  }
+
+  /**
+   * A cell's kept rich text (D377): the text its runs read as and the runs, written within SpreadsheetML's default
+   * binding; null when it keeps none, or its runs do not parse.
+   */
+  cellText(sheet: number, r: number, c: number): { reads: string; xml: string } | null {
+    const runs = this.runs.get(`${sheet},${r},${c}`) ?? [];
+    const reads = runs.length ? keptRunsText(runs) : null;
+    if (reads === null) return null;
+    return { reads, xml: runs.map((run) => keptXmlWithin(run, { '': SPREADSHEETML_NS })).join('') };
   }
 
   private of(place: KeptItem<FileAt>['place'], sheet?: number): KeptItem<FileAt>[] {

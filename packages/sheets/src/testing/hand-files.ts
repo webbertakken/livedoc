@@ -26,11 +26,13 @@ export function xlsx(
     styles?: string;
     mediaType?: string;
     rels?: Relationship[];
+    // The worksheets' own namespace (a Strict file's), SpreadsheetML's when none.
+    ns?: string;
     // Each worksheet's children before and after its `sheetData`, by its place.
     around?: readonly { before?: string; after?: string }[];
   } = {},
 ): Uint8Array<ArrayBuffer> {
-  const ns = `xmlns="${SPREADSHEETML_NS}" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"`;
+  const ns = `xmlns="${options.ns ?? SPREADSHEETML_NS}" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"`;
   const parts: OoxmlPart[] = [
     {
       name: 'xl/workbook.xml',

@@ -643,6 +643,10 @@ each suite writes its own, so LibreOffice, Excel and Google Sheets open them as 
     linked to the file). LiveDoc reads their plain text into the cell and keeps the paragraphs whole; they are written
     in place of the cell's own while its text reads the same, and an edited text writes plain paragraphs, the marks
     going with the text they were on (default, D376).
+  - **Cell text** (XLSX): a cell's rich text (a shared or inline string of runs, each with its own font, size or
+    colour). LiveDoc reads its plain text into the cell and keeps the runs whole; they are written as the cell's
+    shared string while its text reads the same, and an edited text writes a plain one. A Strict file's runs are not
+    kept, but named with its other unread content (`kept_unread`, D108) (default, D377).
   - **Parts**: every package entry the reader does not read and the writer does not write: ODF's by path with its
     media type (`settings.xml`, `Pictures/`, `Object 1/`, `Basic/`); XLSX's with its content type and its
     relationships, each relationship kept on the workbook, sheet or package it came from with its id. Left out:
@@ -800,6 +804,8 @@ The code cites each by its id.
   reading one block of its own sheet and naming no part of its own; else the drawing is kept whole (default).
 - **D276** A read chart unchanged: its read sum (type, titles, legend, values, axis, alt, place, size, cells by
   position) equals the written one's; its kept chart part is then written in its place under a new name (default).
+- **D377** A cell's rich text runs (XLSX): kept whole while the cell's text reads the same, so its fonts and colours
+  survive a round trip; an edited text writes a plain string (default).
 - **D376** A cell's marked paragraphs (ODF): kept whole while the cell's text reads the same, so a link or a span
   survives a round trip; an edited text writes plain paragraphs (default).
 - **D375** A Table chart in a file: written in both formats as a Column chart of its series and labels, the original

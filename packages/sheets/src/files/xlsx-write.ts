@@ -54,22 +54,31 @@ const COMPUTED_VALUE = '="COMPUTED_VALUE"';
 
 /** Text, numbered in order of first use (standard-mapping.md "Values in XLSX"). */
 class SharedStrings {
+  // Each item's XML (its `si`'s children) by its number.
   private readonly ids = new Map<string, number>();
   private uses = 0;
 
+  // A plain text's number.
   id(text: string): number {
+    const space = /^\s|\s$|\n/.test(text) ? ' xml:space="preserve"' : '';
+    return this.item(`<t${space}>${escapeXmlText(toXstring(text))}</t>`);
+  }
+
+  // A kept rich text's number, its runs as the file wrote them (D377).
+  rich(runs: string): number {
+    return this.item(runs);
+  }
+
+  private item(xml: string): number {
     this.uses++;
-    const known = this.ids.get(text);
+    const known = this.ids.get(xml);
     if (known !== undefined) return known;
-    this.ids.set(text, this.ids.size);
+    this.ids.set(xml, this.ids.size);
     return this.ids.size - 1;
   }
 
   xml(): string {
-    const items = [...this.ids.keys()].map((text) => {
-      const space = /^\s|\s$|\n/.test(text) ? ' xml:space="preserve"' : '';
-      return `<si><t${space}>${escapeXmlText(toXstring(text))}</t></si>`;
-    });
+    const items = [...this.ids.keys()].map((xml) => `<si>${xml}</si>`);
     return `<sst xmlns="${SPREADSHEETML_NS}" count="${this.uses}" uniqueCount="${this.ids.size}">${items.join('')}</sst>`;
   }
 }
@@ -103,7 +112,12 @@ type CellWrite = { type?: string; formula?: string; array?: string; value?: stri
 
 // A value as a cell holds it: a number as is, text shared (a formula's inline) and cut to Excel's length (D89), an
 // error Excel knows as one (D82).
-function valueWrite(value: FileValue, inFormula: boolean, ctx: SheetContext): CellWrite {
+function valueWrite(
+  value: FileValue,
+  inFormula: boolean,
+  ctx: SheetContext,
+  at: { r: number; c: number },
+): CellWrite {
   const { strings } = ctx;
   switch (value.k) {
     case 'n':
@@ -118,15 +132,19 @@ function valueWrite(value: FileValue, inFormula: boolean, ctx: SheetContext): Ce
     case 's': {
       const text = cutXlsxText(value.v);
       if (text !== value.v) ctx.cut++;
-      return inFormula
-        ? { type: 'str', value: text }
-        : { type: 's', value: String(strings.id(text)) };
+      if (inFormula) return { type: 'str', value: text };
+      // A cell's kept rich text while its text reads the same; else its own (D377).
+      const kept = ctx.richText(at.r, at.c);
+      const id = kept?.reads === value.v ? strings.rich(kept.xml) : strings.id(text);
+      return { type: 's', value: String(id) };
     }
   }
 }
 
 type SheetContext = {
   strings: SharedStrings;
+  // A cell's kept rich text (D377).
+  richText: (r: number, c: number) => { reads: string; xml: string } | null;
   // Each formula as Excel holds it (D89).
   excel: Map<FileCell, XlsxFormula>;
   // The positions a wrapped formula's block caches (`"r,c"`).
@@ -139,12 +157,12 @@ type SheetContext = {
 function cellWrite(cell: FileCell, ctx: SheetContext): CellWrite | null {
   if (cell.value && ctx.computed.has(`${cell.r},${cell.c}`))
     return {
-      ...valueWrite(cell.value, true, ctx),
+      ...valueWrite(cell.value, true, ctx, cell),
       formula: dummyFunction(COMPUTED_VALUE, cachedLiteral(cell.value)),
     };
   const plan = cell.formula === undefined ? undefined : ctx.excel.get(cell)!;
   const inFormula = plan !== undefined && plan.k !== 'value';
-  const cached = cell.value ? valueWrite(cell.value, inFormula, ctx) : {};
+  const cached = cell.value ? valueWrite(cell.value, inFormula, ctx, cell) : {};
   if (!inFormula) return cell.value ? cached : null;
   if (plan.k === 'wrapped' || !cell.spans) return { ...cached, formula: plan.text };
   ctx.dynamic = true;
@@ -198,6 +216,7 @@ function worksheetXml(
     losses.push({ k: 'sheet_cut', sheet: sheet.name, rows: sheet.rows, cols: FILE_LAST_COL });
   const ctx: SheetContext = {
     strings,
+    richText: (r, c) => kept.cellText(index, r, c),
     excel: new Map(),
     computed: new Set(),
     dynamic: false,

@@ -262,6 +262,11 @@ export class XlsxKeeper {
         this.unread++;
   }
 
+  /** A cell's rich text, its string item's children as the file wrote them, kept on the cell (D377). */
+  cellText(runs: readonly { xml: string; ns: XmlBindings }[], at: FileAt): void {
+    for (const run of runs) this.items.push({ place: 'cell-text', xml: run.xml, ns: run.ns, at });
+  }
+
   /**
    * The styles part's differential formats and table styles (D110); none when it does not parse. The differential
    * formats are kept up to the last one kept content names (`content`): those only the read format rules named are

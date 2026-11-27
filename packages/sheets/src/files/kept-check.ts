@@ -47,6 +47,7 @@ const PLACES: Readonly<Record<KeptStandard, ReadonlySet<KeptPlace>>> = {
     'cell-attribute',
   ]),
   ooxml: new Set<KeptPlace>([
+    'cell-text',
     'workbook',
     'workbook-attribute',
     'stylesheet',

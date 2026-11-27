@@ -19,7 +19,7 @@ export type KeptStandard = 'odf' | 'ooxml';
  * `spreadsheet-before` / `-after` (the tables), `table-before` / `-after` (its columns and rows), `table-attribute`,
  * `cell` / `cell-after` (its paragraphs), `cell-text` (its paragraphs holding marked text), `cell-attribute`. OOXML: `workbook` and `workbook-attribute` (its root's),
  * `stylesheet` (`dxfs`, `tableStyles`), `sheet-attribute` (its `sheet` element's), `worksheet` and
- * `worksheet-attribute` (its root's).
+ * `worksheet-attribute` (its root's), `cell-text` (a cell's rich string item's children).
  */
 export const KEPT_PLACES = [
   'scripts',
