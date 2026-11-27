@@ -3,6 +3,7 @@
 import {
   TEXT_DOCUMENT_PICTURES_LEFT_OUT_HEADER,
   TEXT_DOCUMENT_STATE_VECTOR_HEADER,
+  TEXT_DOCUMENT_VIEWER_COPY_HEADER,
 } from '@livedoc/api-schema';
 import type { TextDocumentFileType } from '@livedoc/text-documents';
 import { base64OfBytes, bytesOfBase64 } from '@livedoc/text-documents/base64';
@@ -26,9 +27,21 @@ async function bytesOf(scope: TextDocumentScope, rest: string, what: string): Pr
   return res;
 }
 
-/** The text document's live state as one Yjs update. */
+// The Viewer copy each tab's state was last read from (live-editing-and-storage.md "A Viewer's copy"): a Viewer's
+// catch-up names it, so the room refuses one from a copy it has let go rather than doubling the writing.
+const viewerCopies = new Map<string, string>();
+const copyKey = (scope: TextDocumentScope) => `${scope.documentId}/${scope.tabId}`;
+
+function noteViewerCopy(scope: TextDocumentScope, res: Response): void {
+  const copy = res.headers.get(TEXT_DOCUMENT_VIEWER_COPY_HEADER);
+  if (copy) viewerCopies.set(copyKey(scope), copy);
+  else viewerCopies.delete(copyKey(scope));
+}
+
+/** The text document's live state as one Yjs update (a Viewer's: their copy). */
 export async function apiLoadTextDocumentState(scope: TextDocumentScope): Promise<Uint8Array> {
   const res = await bytesOf(scope, 'state', 'text document state');
+  noteViewerCopy(scope, res);
   return new Uint8Array(await res.arrayBuffer());
 }
 
@@ -44,8 +57,13 @@ export async function apiLoadTextDocumentStateSince(
   since: Uint8Array,
 ): Promise<TextDocumentStateSince> {
   const vector = base64OfBytes(since);
-  const query = vector.length <= SINCE_MAX_CHARS ? `?since=${encodeURIComponent(vector)}` : '';
+  const copy = viewerCopies.get(copyKey(scope));
+  const params = new URLSearchParams();
+  if (vector.length <= SINCE_MAX_CHARS) params.set('since', vector);
+  if (copy) params.set('copy', copy);
+  const query = params.size > 0 ? `?${params.toString()}` : '';
   const res = await bytesOf(scope, `state${query}`, 'text document state');
+  noteViewerCopy(scope, res);
   const header = res.headers.get(TEXT_DOCUMENT_STATE_VECTOR_HEADER);
   const stateVector = header ? bytesOfBase64(header) : null;
   if (!stateVector) throw new Error('text document state: no state vector');

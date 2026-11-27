@@ -299,7 +299,8 @@ only labels them: whose they are is the key the room makes.
 
 ## Search and the Explorer
 
-- Content search reads the search text the outbox pushes ([Content search](../013-workspace/content-search.md)).
+- Content search reads the search text the outbox pushes: the writing of every document tab and story, never its
+  comments, which a Viewer must not find it by ([What a Viewer receives](review.md#what-a-viewer-receives)) ([Content search](../013-workspace/content-search.md)).
 - The Explorer shows a text document with its glyph (a page with lines), the Kind chip **Text document**, its default
   folder key `kind:text-document`, and its first page as the thumbnail
   ([Kinds outside the canvas](../006-document/kinds-outside-the-canvas.md#the-explorer)).
@@ -313,6 +314,38 @@ level too low is refused whole, as every live tab kind's is
 ([Live state](../006-document/kinds-outside-the-canvas.md#live-state)): its sender alone hears
 `{ kind: 'text-document-refused', tabId, name: 'level_too_low' }`. Tests: the judge refuses each forbidden change, and the
 room refuses an update its judge asks Editing for.
+
+## A Viewer's copy
+
+A Viewer receives no comment thread and nothing of who suggested what
+([What a Viewer receives](review.md#what-a-viewer-receives)), so the room keeps, per text document tab, a **Viewer's
+copy** while it has Viewers (`ViewerCopy` in `@livedoc/text-documents`, `RoomViewerCopies` in the api):
+
+- **What it is**: a Yjs document written only by a client of the room's own, cloned from the real state type by type:
+  the writing of every document tab and story, and the document's maps, with the `threads` map left out and every
+  suggestion mark's author replaced by `{ key: 'viewer:<suggestion id>', name: 'Someone', colour: '#5f6368' }`
+  (default), made from the suggestion's id alone. No item, client id, comment key or author of the real state is in
+  it, so nothing of them can be read back from its bytes.
+- **How it follows**: each update the room stores is applied to a mirror of the real state; the types it changed are
+  copied over, and Viewers receive only what the copy gained, as the same `text-document` op with its `viewerCopy`
+  id. A Viewer never writes to it. A Viewer's catch-up replay gets the tab's `stale` in place of the real updates.
+- **Made** when a Viewer first reads a tab's state (the state door, on the room's write queue, so nothing stored falls
+  between the copy and the updates after it), from the stored state; **kept** in the room's SQLite as its own log of
+  updates, compacted into one row past `VIEWER_COPY_LOG_UPDATES`, so the room waking from hibernation takes the same
+  copy up again, under its own client id, and a Viewer's editor goes on merging with it; **let go** with its rows
+  when the room's last Viewer leaves.
+- **A copy's lineage**: a Viewer's editor holds the copy it read. A copy let go while Viewers are connected (it failed,
+  or it grew past its limits) ends their connections (`4007`, `viewer-copy-changed`); a catch-up whose state vector
+  names a client the current copy lacks is refused `409 viewer_copy_changed`, and the editor opens the tab again from
+  the new copy. Nothing from two copies ever meets in one editor.
+- **Doors**: the state door answers a Viewer from the copy, its id in `X-Viewer-Copy` beside `X-State-Vector`; the
+  file door writes a Viewer's file from a copy made for the download; a Viewer's copy of the whole document takes
+  each text document tab's state through a copy too. A copy that cannot be made answers `503
+viewer_copy_unavailable`, and the Viewer sees the error state, never the real document.
+- **What stays** is the stated limit: where suggestions are, their ids and times, and the text a pending one would add.
+- Tests: the copy equals the real state redacted after any sequence of edits, suggestions, accepts, rejects and
+  threads added and resolved, built at once or followed update by update, before and after it is taken up again; no
+  frame or state a Viewer receives holds a comment's text, key or an author's name or key; the stated limit is pinned.
 
 ## Limits
 
@@ -337,6 +370,11 @@ room refuses an update its judge asks Editing for.
 | `TEXT_DOCUMENT_VERSIONS_MAX_BYTES`     | 8 MB      | (default) A backstop: a tab's versions measure a few hundred KB near the character limit                                            |
 | `TEXT_DOCUMENT_NAMED_VERSIONS_MAX`     | 40        | Google's limit of named versions a document                                                                                         |
 | `TEXT_DOCUMENT_VERSION_NAME_MAX_CHARS` | 100       | (default) A name fits the panel's row in two lines                                                                                  |
+| `VIEWER_COPY_BUILD_BUDGET_MS`          | 1,000     | CPU to make a copy of the largest state: nine times the 111 ms measured on a 1.2 MB state with 1,600 suggestions                    |
+| `VIEWER_COPY_APPLY_BUDGET_MS`          | 25        | CPU to copy one update over: thirty times the slowest measured (0.84 ms)                                                            |
+| `VIEWER_COPY_STATE_MAX_BYTES`          | 1,900,000 | A copy past it is let go: about 60 MB of heap, and it compacts into one row under the row cap                                       |
+| `VIEWER_COPY_SOURCE_MAX_BYTES`         | 16 MB     | A stored state past it, history included, is not copied, before any of it is decoded                                                |
+| `VIEWER_COPY_LOG_UPDATES`              | 500       | (default) The copy's log compacts into one row past it, as the state's does                                                         |
 
 A refused edit names its limit; nothing is half applied.
 
@@ -357,5 +395,5 @@ A refused edit names its limit; nothing is half applied.
 
 Fingerprints, each with the document and tab ids and never text: `[text-document] persisted` (revision, bytes,
 chunks, ms), `[text-document] compacted`, `[text-document] digest` (characters, words, ms), `[text-document] merge-offline` (updates, bytes), `[text-document]
-edit-refused` (limit), `[text-document] branch-merged` (unmerged count), `[text-document] version-taken` (version, kind, trigger, bytes, ms), `[text-document] versions-thinned` (count, bytes), `[text-document] version-too-large` (bytes), `[text-document] version-failed` (error: a window's version not taken), `[text-document] version-named` (version), `[text-document] version-restored` (from, to, bytes, ms), `[text-document] author-conflict` (client), `[text-document] author-record-failed` (error); in the browser `[text-document] caught-up`
+edit-refused` (limit), `[text-document] branch-merged` (unmerged count), `[text-document] version-taken` (version, kind, trigger, bytes, ms), `[text-document] versions-thinned` (count, bytes), `[text-document] version-too-large` (bytes), `[text-document] version-failed` (error: a window's version not taken), `[text-document] version-named` (version), `[text-document] version-restored` (from, to, bytes, ms), `[text-document] author-conflict` (client), `[text-document] author-record-failed` (error), `[viewer-copy] built` (bytes, ms), `[viewer-copy] restored` (updates, ms), `[viewer-copy] compacted` (bytes), `[viewer-copy] dropped` (reason: idle, failed, too-large), `[viewer-copy] failed` (reason, closed Viewers), `[viewer-copy] refused` (since: another copy); in the browser `[text-document] caught-up`
 (bytes sent), `[text-document] sent-by-door` (bytes), `[text-document] local-copy saved|cleared|failed` (bytes).

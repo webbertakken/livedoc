@@ -105,6 +105,8 @@ const ACTIONS_SQL = `${SCOPE_CTES}
     JOIN visible v ON v.id = ca.document_id
    WHERE ca.status = 'open'
      AND (v.scope_tab_id IS NULL OR v.scope_tab_id = ca.tab_id)
+     -- A Viewer sees no comment of a text document (review.md "What a Viewer receives").
+     AND NOT (ca.anchor IS 'text' AND v.share_level IS 'view')
      AND (ca.assignee_user_id IN (SELECT id FROM me)
           OR ca.assigner_id IN (SELECT id FROM me)
           OR ca.assignee_member_id IN (SELECT id FROM my_members))
@@ -138,6 +140,8 @@ export const THREADS_SQL = `${SCOPE_CTES}
    WHERE ct.resolved = 0
      AND ct.tab_id <> '~cards'
      AND (v.scope_tab_id IS NULL OR v.scope_tab_id = ct.tab_id)
+     -- A Viewer sees no comment of a text document (review.md "What a Viewer receives").
+     AND NOT (ct.anchor IS 'text' AND v.share_level IS 'view')
      AND (v.owner_id = ?1
           OR EXISTS (SELECT 1 FROM json_each(ct.participant_ids) je
                       WHERE je.value IN (SELECT id FROM me))

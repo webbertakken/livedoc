@@ -594,3 +594,34 @@ export async function writeTextDocumentVersion(
     return { status: 503, body: null };
   }
 }
+
+/**
+ * Asks the document's room for a Viewer's read of a text document tab's state, answered from its Viewer copy
+ * (docs/specs/034-text-documents/live-editing-and-storage.md "A Viewer's copy"); the route has gated the read. Answers
+ * the room's response, or null when the room cannot be reached.
+ */
+export async function readViewerCopyState(
+  env: Env,
+  read: { documentId: string; tabId: string; since?: string; copy?: string },
+): Promise<Response | null> {
+  try {
+    return await roomFetch(
+      env,
+      read.documentId,
+      '/text-document-viewer-state',
+      {
+        method: 'POST',
+        body: JSON.stringify(read),
+        headers: { 'Content-Type': 'application/json' },
+      },
+      TEXT_DOCUMENT_DOOR_TIMEOUT_MS,
+    );
+  } catch (err) {
+    console.warn('[viewer-copy] state read did not reach the room', {
+      document: read.documentId,
+      tab: read.tabId,
+      error: err instanceof Error ? err.name : 'unknown',
+    });
+    return null;
+  }
+}

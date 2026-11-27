@@ -12,8 +12,9 @@ export type ShareDialogProps = {
   // per-tab picker (docs/specs/013-workspace/live-image-share.md) and the link scope pickers
   // (docs/specs/013-workspace/tab-scoped-share-links.md). The first entry is the default the cached
   // snapshot renders; picking another appends `?tab=<id>` to the image
-  // URL. Only `id` + `name` are read.
-  tabs: { id: string; name: string }[];
+  // URL. `kind` says which hold a text document, whose Viewers can read pending suggestions' text
+  // (docs/specs/034-text-documents/review.md "What a Viewer receives").
+  tabs: { id: string; name: string; kind?: string }[];
   // When non-null, the owner is signed in with an account and their display
   // name is dictated by their account — there's nothing to edit, so
   // the "Your name" row hides entirely (docs/specs/007-editor/live-app.md). Guests (null) get

@@ -46,6 +46,9 @@ const GATE_KEEPERS = [
   'src/pdf-documents/**',
   // Who may change a live tab, judged where it is stored (kinds-outside-the-canvas.md "The level an update asks").
   'src/live-tabs/room-live-tabs.ts',
+  // What a Viewer of a text document receives: no comment, no author (review.md "What a Viewer receives").
+  'src/text-documents/room-viewer-copies.ts',
+  'src/document-room/room-viewer-ops.ts',
   'src/routes/blob-door.ts',
   'src/routes/blob-store-routes.ts',
   'src/routes/blob-upload-routes.ts',

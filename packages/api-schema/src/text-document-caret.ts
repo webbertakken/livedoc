@@ -30,6 +30,10 @@ export function parseTextDocumentCaret(op: unknown): TextDocumentCaret | null {
  *  (docs/specs/034-text-documents/live-editing-and-storage.md "Reconnecting"). */
 export const TEXT_DOCUMENT_STATE_VECTOR_HEADER = 'X-State-Vector';
 
+/** The header a Viewer's state answer names its Viewer copy in, and a Viewer's catch-up names the copy it holds
+ *  (docs/specs/034-text-documents/live-editing-and-storage.md "A Viewer's copy"). */
+export const TEXT_DOCUMENT_VIEWER_COPY_HEADER = 'X-Viewer-Copy';
+
 /** The header a text document's file answer counts the pictures it left out in: media it could not read
  *  (docs/specs/034-text-documents/objects.md "Where the bytes live"). */
 export const TEXT_DOCUMENT_PICTURES_LEFT_OUT_HEADER = 'X-Pictures-Left-Out';

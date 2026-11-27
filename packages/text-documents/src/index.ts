@@ -23,6 +23,11 @@ export {
   TEXT_DOCUMENT_VERSIONS_MAX_BYTES,
   TEXT_DOCUMENT_NAMED_VERSIONS_MAX,
   TEXT_DOCUMENT_VERSION_NAME_MAX_CHARS,
+  VIEWER_COPY_APPLY_BUDGET_MS,
+  VIEWER_COPY_BUILD_BUDGET_MS,
+  VIEWER_COPY_SOURCE_MAX_BYTES,
+  VIEWER_COPY_LOG_UPDATES,
+  VIEWER_COPY_STATE_MAX_BYTES,
 } from './limits';
 export { textDocumentDigest, type TextDocumentDigest } from './digest';
 export {
@@ -390,3 +395,10 @@ export {
 } from './compare/compare-documents';
 export { VersionSnapshots } from './versions/version-snapshots';
 export { restoreUpdate, versionDocument } from './versions/version-restore';
+export {
+  anonymousAuthor,
+  ViewerCopy,
+  VIEWER_AUTHOR_COLOUR,
+  VIEWER_AUTHOR_KEY_PREFIX,
+  VIEWER_AUTHOR_NAME,
+} from './viewer/viewer-copy';

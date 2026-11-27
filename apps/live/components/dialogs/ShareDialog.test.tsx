@@ -228,3 +228,34 @@ describe('ShareDialog passes', () => {
     expect(props.onClose).toHaveBeenCalled();
   });
 });
+
+// docs/specs/007-editor/live-app.md; review.md "What a Viewer receives": a Viewer's pass on a text document says what
+// its browser may still hold.
+describe('ShareDialog, a Viewer pass on a text document', () => {
+  const LIMIT =
+    'People who can view may be able to see the text of pending suggestions with developer tools.';
+  const tabs = [
+    { id: 't1', name: 'Pricing' },
+    { id: 't2', name: 'Report', kind: 'text-document' },
+  ];
+
+  it('says the stated limit only while Viewer is chosen and the pass opens a text document', () => {
+    renderDialog({ tabs });
+    expect(screen.queryByText(LIMIT)).toBeNull();
+    fireEvent.click(screen.getByRole('radio', { name: /Viewer/ }));
+    expect(screen.getByText(LIMIT)).toBeTruthy();
+    // A pass that opens only the canvas tab holds no text document.
+    fireEvent.change(screen.getByLabelText('Tabs this link opens'), { target: { value: 't1' } });
+    expect(screen.queryByText(LIMIT)).toBeNull();
+    fireEvent.change(screen.getByLabelText('Tabs this link opens'), { target: { value: 't2' } });
+    expect(screen.getByText(LIMIT)).toBeTruthy();
+    fireEvent.click(screen.getByRole('radio', { name: /Participant/ }));
+    expect(screen.queryByText(LIMIT)).toBeNull();
+  });
+
+  it('says nothing of it on a document without a text document', () => {
+    renderDialog();
+    fireEvent.click(screen.getByRole('radio', { name: /Viewer/ }));
+    expect(screen.queryByText(LIMIT)).toBeNull();
+  });
+});

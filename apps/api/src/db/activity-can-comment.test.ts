@@ -125,3 +125,52 @@ describe('Activity: canComment', () => {
     expect(await canComment(db, 'reader')).toEqual([true]);
   });
 });
+
+// review.md "What a Viewer receives"; inbox.md §4: a text document's threads and assigned comments are never a Viewer's.
+describe("Activity: a text document's comments", () => {
+  async function textDocument(level: 'view' | 'participate' | null) {
+    const db = await seed();
+    if (level) await shareAt(db, level);
+    // The room's rows land first (the drain runs before a read), then become a text document's.
+    await readActivity(db.env, 'reader', { limit: 1 });
+    db.sql.prepare("UPDATE collab_threads SET anchor = 'text'").run();
+    insert(db.sql, 'collab_actions', {
+      document_id: 'D',
+      tab_id: 't1',
+      tab_name: 'Flow',
+      element_id: 'th1',
+      element_label: 'Checkout',
+      action_id: 'a1',
+      name: 'Check the totals',
+      description: '',
+      assignee_user_id: 'reader',
+      assignee_name: 'R',
+      assigner_id: 'owner',
+      assigner_name: 'Owner',
+      status: 'open',
+      created_at: T0,
+      updated_at: T0,
+      anchor: 'text',
+    });
+    return readActivity(db.env, 'reader', { limit: 10 });
+  }
+
+  it('lists none of them through a view link', async () => {
+    const read = await textDocument('view');
+    expect(read.threads).toEqual([]);
+    expect(read.actions).toEqual([]);
+  });
+
+  it('lists them through a participate link', async () => {
+    const read = await textDocument('participate');
+    expect(read.threads).toHaveLength(1);
+    expect(read.actions).toHaveLength(1);
+  });
+
+  it('lists the owner’s, whose level is no link’s', async () => {
+    const db = await seed();
+    await readActivity(db.env, 'owner', { limit: 1 });
+    db.sql.prepare("UPDATE collab_threads SET anchor = 'text'").run();
+    expect(await canComment(db, 'owner')).toEqual([true]);
+  });
+});

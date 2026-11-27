@@ -4,6 +4,11 @@ import { contentSearchStatements } from '../db/content-search';
 import { handleContentSearch } from './content-search-route';
 import { makeTestRouteContext } from './test-route-context';
 import type { Env } from '../types';
+import { Body, LiveThreads, TextDocumentState } from '@livedoc/text-documents';
+import { appendLiveTabUpdate } from '../live-tabs/live-tab-store';
+import { TEXT_DOCUMENT_LIVE_TAB } from '../text-documents/text-document-live-tab';
+import { handleDocuments } from './documents';
+import { createShareLink } from '../db/share';
 
 function setup(extra: Partial<Env> = {}) {
   const { env, sql } = sqliteD1(extra);
@@ -59,5 +64,60 @@ describe('GET /api/search/content', () => {
         )
       ).status,
     ).toBe(404);
+  });
+});
+
+// review.md "What a Viewer receives"; content-search.md "What is searched": a text document is found by its writing,
+// never by a comment's words, for a Viewer or an Editor.
+describe('GET /api/search/content, a text document with a comment', () => {
+  it('finds nothing by a comment’s unique word, for the owner or a Viewer, and the writing for both', async () => {
+    const { env, sql } = sqliteD1();
+    vi.spyOn(console, 'log').mockImplementation(() => {});
+    vi.spyOn(console, 'info').mockImplementation(() => {});
+    await handleDocuments(
+      makeTestRouteContext('POST', '/api/documents', {
+        env,
+        owner: 'me',
+        body: {
+          id: 'D',
+          name: 'Report',
+          tabs: [{ id: 't1', name: 'T', kind: 'text-document', elements: [] }],
+        },
+      }),
+    );
+    const doc = TextDocumentState.load([TextDocumentState.fromBody(Body.of('Quarterly results'))]);
+    LiveThreads.begin(
+      doc,
+      {
+        id: 'thread-1',
+        tab: 't.0',
+        ...LiveThreads.anchorFor(TextDocumentState.body(doc), 0, 1),
+        quote: 'Quarterly',
+        comment: {
+          id: 'c1',
+          text: 'Zanzibarquokka',
+          at: 1,
+          author: { key: 'k-me', name: 'Me', colour: '#123456' },
+        },
+      },
+      'test',
+    );
+    await appendLiveTabUpdate(env, TEXT_DOCUMENT_LIVE_TAB, 't1', TextDocumentState.encode(doc));
+    // A Viewer who visited through a live view link.
+    await createShareLink(env, 'D', 'VIEWCODE', 'view');
+    sql.exec("UPDATE documents SET shareable = 1 WHERE id = 'D'");
+    sql.exec(
+      "INSERT INTO shared_with (owner_id, document_id, role, level, last_seen) VALUES ('viewer', 'D', 'view', 'view', 1)",
+    );
+    const found = async (q: string, owner: string) =>
+      (
+        await (
+          await handleContentSearch(ctx(env, `/api/search/content?q=${q}`, owner))
+        ).json<{ matches: { documentId: string }[] }>()
+      ).matches.map((m) => m.documentId);
+    for (const reader of ['me', 'viewer']) {
+      expect(await found('Zanzibarquokka', reader)).toEqual([]);
+      expect(await found('Quarterly', reader), reader).toEqual(['D']);
+    }
   });
 });

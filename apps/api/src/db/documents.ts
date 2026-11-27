@@ -571,8 +571,10 @@ export async function copyDocument(
   // A copy by anyone but the source's owner: its comments keep only the copier's own author ids, as
   // the tab read serves them (redactCommentAuthorIds). An author id is a guest's credential.
   redactAuthorsFor: string | null = null,
+  // A Viewer's copy: its text documents carry no comment and no suggestion's author (review.md "What a Viewer receives").
+  viewer = false,
 ): Promise<DocumentDTO | null> {
-  const content = await documentRoom(env, sourceId).exportCopy(onlyTabId, redactAuthorsFor);
+  const content = await documentRoom(env, sourceId).exportCopy(onlyTabId, redactAuthorsFor, viewer);
   if (!content) return null;
   const now = Date.now();
   const images = [...new Set(content.tabs.flatMap((t) => imageRefIdsFromData(t.data)))];

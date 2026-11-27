@@ -66,10 +66,10 @@ describe('textDocumentDigest', () => {
   });
 });
 
-// review.md "How a comment is kept", live-editing-and-storage.md "Storage": the search text ends with every thread's
-// comments, open and resolved alike, in the threads' order; the counts stay the writing's.
+// review.md "What a Viewer receives", content-search.md "What is searched": the search text is the writing alone, never a
+// comment, which a Viewer must not find the document by; the counts stay the writing's.
 describe('textDocumentDigest with comment threads', () => {
-  it('searches every comment after the writing, counting the writing alone', () => {
+  it('searches the writing alone, never a comment, counting the writing alone', () => {
     const doc = stateOf('Quarterly results');
     const run = (TextDocumentState.body(doc).get(0) as Y.XmlElement).get(0) as Y.XmlText;
     const author = { key: 'k', name: 'Ada', colour: '#000' };
@@ -85,7 +85,7 @@ describe('textDocumentDigest with comment threads', () => {
     LiveThreads.reply(doc, 'first', { id: 'r', text: 'Thanks', at: 30, author }, 'me');
     LiveThreads.resolve(doc, 'later', true, 'me');
     const digest = textDocumentDigest(doc);
-    expect(digest.searchText).toBe('Quarterly results\nNice\nThanks\nCheck the totals');
+    expect(digest.searchText).toBe('Quarterly results');
     expect(digest.words).toBe(2);
   });
 

@@ -33,9 +33,11 @@ export type DocumentRoomClient = {
   hasTab(tabId: string): Promise<boolean>;
   placesImage(imageId: string, onlyTabId: string | null): Promise<boolean>;
   image(request: Request, identity: RouteIdentity): Promise<Response>;
+  // `viewer`: the copier is a Viewer, who takes a text document as a Viewer's copy (review.md "What a Viewer receives").
   exportCopy(
     onlyTabId: string | null,
     redactAuthorsFor: string | null,
+    viewer?: boolean,
   ): Promise<DocumentCopy | null>;
   importCopy(copy: DocumentCopy): Promise<ContentSummary>;
   item(itemId: string): Promise<Item | null>;
@@ -85,7 +87,8 @@ export function documentRoom(
     hasTab: (tabId) => room.hasTab(documentId, tabId),
     placesImage: (imageId, onlyTabId) => room.placesImage(documentId, imageId, onlyTabId),
     image: (request, identity) => room.image(documentId, request, identity),
-    exportCopy: (onlyTabId, redact) => room.exportCopy(documentId, onlyTabId, redact),
+    exportCopy: (onlyTabId, redact, viewer) =>
+      room.exportCopy(documentId, onlyTabId, redact, viewer),
     importCopy: (copy) => room.importCopy(documentId, copy),
     item: (itemId) => room.item(documentId, itemId),
     respondToForm: (request, identity) => room.respondToForm(documentId, request, identity),

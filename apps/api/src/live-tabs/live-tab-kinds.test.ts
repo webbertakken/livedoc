@@ -151,11 +151,16 @@ describe('a live tab kind of its own', () => {
     const db = sqliteD1();
     const { room, sequence } = await roomWith(db);
     expect(await room.acceptPosted('D', 'n1', bytes('abcdefgh'))).toBe('stored');
-    expect(sequence).toHaveBeenLastCalledWith('system', {
-      kind: 'test-notes',
-      tabId: 'n1',
-      stale: true,
-    });
+    expect(sequence).toHaveBeenLastCalledWith(
+      'system',
+      {
+        kind: 'test-notes',
+        tabId: 'n1',
+        stale: true,
+      },
+      undefined,
+      undefined,
+    );
     expect(await room.acceptPosted('D', 'c', bytes('ab'))).toBe('wrong-kind');
   });
 

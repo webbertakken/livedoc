@@ -54,6 +54,7 @@ export type DocumentRoomRpc = {
     documentId: string,
     onlyTabId: string | null,
     redactAuthorsFor: string | null,
+    viewer?: boolean,
   ): Promise<DocumentCopy | null>;
   importCopy(documentId: string, copy: DocumentCopy): Promise<ContentSummary>;
   // One card of the document, or null (a team mention's check of a card comment).
@@ -103,8 +104,8 @@ export function documentRpc(
       documentPlacesImage(env, documentId, imageId, onlyTabId),
     image: (documentId, request, identity) =>
       answerDocumentImage(documentRouteContext(env, request, identity, waitUntil), documentId),
-    exportCopy: (documentId, onlyTabId, redactAuthorsFor) =>
-      exportDocumentCopy(env, documentId, onlyTabId, redactAuthorsFor),
+    exportCopy: (documentId, onlyTabId, redactAuthorsFor, viewer) =>
+      exportDocumentCopy(env, documentId, onlyTabId, redactAuthorsFor, viewer),
     importCopy: (documentId, copy) => importDocumentCopy(env, documentId, copy),
     item: (documentId, itemId) => readItem(env, documentId, itemId),
     respondToForm: (_documentId, request, identity) =>

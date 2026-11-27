@@ -607,6 +607,25 @@ CREATE TABLE IF NOT EXISTS text_document_pending_deletions (
 );
 `;
 
+// A Viewer's copy of a text document tab (docs/specs/034-text-documents/live-editing-and-storage.md "A Viewer's copy"):
+// which copy it is and the client that writes it, and the copy's own updates, compacted into one row. Both go with their
+// tab, and with the room's last Viewer.
+const TEXT_DOCUMENT_VIEWER_COPY_STEP = `
+CREATE TABLE IF NOT EXISTS text_document_viewer_copies (
+  tab_id  TEXT    PRIMARY KEY REFERENCES tabs (id) ON DELETE CASCADE,
+  id      TEXT    NOT NULL,
+  client  INTEGER NOT NULL,
+  made_at INTEGER NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS text_document_viewer_copy_updates (
+  tab_id TEXT    NOT NULL REFERENCES tabs (id) ON DELETE CASCADE,
+  seq    INTEGER NOT NULL,
+  bytes  BLOB    NOT NULL,
+  PRIMARY KEY (tab_id, seq)
+);
+`;
+
 /** Every step the room's schema has taken, in order; a change appends one and never edits a shipped step. */
 export const DOCUMENT_SCHEMA_STEPS: readonly string[] = [
   STEP_1 + OUTBOX + SHARES,
@@ -628,6 +647,7 @@ export const DOCUMENT_SCHEMA_STEPS: readonly string[] = [
   SHEET_CHANGESETS_STEP,
   WORKBOOK_FUNCTIONS_STEP,
   TEXT_DOCUMENT_VERSIONS_STEP,
+  TEXT_DOCUMENT_VIEWER_COPY_STEP,
 ];
 
 export const DOCUMENT_SCHEMA_VERSION = DOCUMENT_SCHEMA_STEPS.length;

@@ -78,7 +78,7 @@ describe('RoomLiveTabs, for a text document', () => {
       ),
     ).toBe(true);
     expect(await storedUpdates(db.env, 't1')).toHaveLength(1);
-    expect(sequence).toHaveBeenCalledWith('p1', op, ws);
+    expect(sequence).toHaveBeenCalledWith('p1', op, ws, undefined);
     expect(sendTo).toHaveBeenCalledWith(ws, { kind: 'cursor', epoch: 'e', seq: 7, ref: 4 });
   });
 
@@ -163,11 +163,16 @@ describe('RoomLiveTabs, for a text document', () => {
     const update = TextDocumentState.fromBody(Body.of('Pasted'));
     expect(await room.acceptPosted('D', 't1', update)).toBe('stored');
     expect(await storedUpdates(db.env, 't1')).toHaveLength(1);
-    expect(sequence).toHaveBeenCalledWith('system', {
-      kind: 'text-document',
-      tabId: 't1',
-      update: base64OfBytes(update),
-    });
+    expect(sequence).toHaveBeenCalledWith(
+      'system',
+      {
+        kind: 'text-document',
+        tabId: 't1',
+        update: base64OfBytes(update),
+      },
+      undefined,
+      undefined,
+    );
   });
 
   it('folds a door update past a chunk into the chunks and tells everyone the tab is stale', async () => {
@@ -185,11 +190,16 @@ describe('RoomLiveTabs, for a text document', () => {
     expect(logged.n).toBe(0);
     const state = TextDocumentState.load(await storedUpdates(db.env, 't1'));
     expect(TextDocumentState.paragraphs(state)).toEqual(Body.of(big));
-    expect(sequence).toHaveBeenCalledWith('system', {
-      kind: 'text-document',
-      tabId: 't1',
-      stale: true,
-    });
+    expect(sequence).toHaveBeenCalledWith(
+      'system',
+      {
+        kind: 'text-document',
+        tabId: 't1',
+        stale: true,
+      },
+      undefined,
+      undefined,
+    );
   });
 
   it('relays a door update too large for a frame as stale, stored in the log', async () => {
@@ -202,11 +212,16 @@ describe('RoomLiveTabs, for a text document', () => {
       'stored',
     );
     expect(await storedUpdates(db.env, 't1')).toHaveLength(1);
-    expect(sequence).toHaveBeenCalledWith('system', {
-      kind: 'text-document',
-      tabId: 't1',
-      stale: true,
-    });
+    expect(sequence).toHaveBeenCalledWith(
+      'system',
+      {
+        kind: 'text-document',
+        tabId: 't1',
+        stale: true,
+      },
+      undefined,
+      undefined,
+    );
   });
 
   it('refuses a door update that does not decode or is for no text document', async () => {
@@ -576,11 +591,79 @@ describe('a text document update, once stored', () => {
     const update = TextDocumentState.fromBody(Body.of('Restored'));
     await room.storeAndRelay('D', 't1', update);
     expect(await storedUpdates(db.env, 't1')).toHaveLength(1);
-    expect(sequence).toHaveBeenCalledWith('system', {
-      kind: 'text-document',
-      tabId: 't1',
-      update: base64OfBytes(update),
-    });
+    expect(sequence).toHaveBeenCalledWith(
+      'system',
+      {
+        kind: 'text-document',
+        tabId: 't1',
+        update: base64OfBytes(update),
+      },
+      undefined,
+      undefined,
+    );
     expect(stored).not.toHaveBeenCalled();
+  });
+});
+
+// live-editing-and-storage.md "A Viewer's copy": the copy is made ready before each stored update and given it after,
+// and what it answers is sequenced for Viewers beside the op.
+describe("a text document update, for a Viewer's copy", () => {
+  async function watched(answer: unknown) {
+    const db = sqliteD1();
+    await roomWith(db);
+    const calls: string[] = [];
+    const sequence = vi.fn(() => 7);
+    const viewers = {
+      ready: vi.fn(async () => {
+        calls.push(`ready stored=${(await storedUpdates(db.env, 't1')).length}`);
+      }),
+      relay: vi.fn(async () => {
+        calls.push(`relay stored=${(await storedUpdates(db.env, 't1')).length}`);
+        return answer;
+      }),
+    };
+    const room = new RoomLiveTabs(TEXT_DOCUMENT_LIVE_TAB, {
+      env: db.env,
+      enqueue: (step) => step(),
+      sequence,
+      sendTo: vi.fn(),
+      position: () => ({ epoch: 'e' }),
+      viewers,
+    });
+    return { room, sequence, viewers, calls };
+  }
+  const editor = {
+    ws,
+    presenceId: 'p1',
+    documentId: 'D',
+    level: 'edit' as const,
+    adderKey: 'k1',
+  };
+
+  it('readies the copy before a frame is stored, and sequences its answer beside the frame', async () => {
+    const answer = { kind: 'text-document', tabId: 't1', update: 'AA==', viewerCopy: 'c1' };
+    const { room, sequence, viewers, calls } = await watched(answer);
+    const op = frame('t1', 'Typed');
+    await room.accept(editor, op);
+    expect(calls).toEqual(['ready stored=0', 'relay stored=1']);
+    expect(viewers.relay).toHaveBeenCalledWith(
+      { documentId: 'D', tabId: 't1' },
+      expect.any(Uint8Array),
+    );
+    expect(sequence).toHaveBeenCalledWith('p1', op, ws, answer);
+  });
+
+  it('sequences null for Viewers when the copy gains nothing, for the door and the room alike', async () => {
+    const { room, sequence, calls } = await watched(null);
+    await room.acceptPosted('D', 't1', TextDocumentState.fromBody(Body.of('Pasted')));
+    await room.storeAndRelay('D', 't1', TextDocumentState.fromBody(Body.of('Restored')));
+    expect(calls).toEqual(['ready stored=0', 'relay stored=1', 'ready stored=1', 'relay stored=2']);
+    expect(sequence.mock.calls.map((c) => (c as unknown[])[3])).toEqual([null, null]);
+  });
+
+  it('readies nothing for an update it refuses', async () => {
+    const { room, viewers } = await watched(null);
+    await room.accept({ ...editor, level: 'view' }, frame('t1', 'x'));
+    expect(viewers.ready).not.toHaveBeenCalled();
   });
 });
