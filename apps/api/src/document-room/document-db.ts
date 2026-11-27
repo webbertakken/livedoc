@@ -79,6 +79,28 @@ class DocumentStatement {
 
 /** A write through a read-only view (`DocumentDb.readOnly`): refused, nothing run. */
 export const DOCUMENT_READ_ONLY = 'document_read_only';
+export const DOCUMENT_READ_FAILED = 'document_read_failed';
+
+/**
+ * A read-only view's read that SQLite could not make (a table or column the room's schema lacks, a broken statement):
+ * logged by name and thrown, as D1 rejects a failed statement, so its caller can never take it for no rows.
+ */
+export class DocumentReadFailedError extends Error {
+  override readonly name = 'DocumentReadFailedError';
+  readonly statement: string;
+  constructor(statement: string) {
+    super(DOCUMENT_READ_FAILED);
+    this.statement = statement;
+  }
+}
+
+/** The tables a statement names, joined by `+`: what a log line says of it, never a bound value. */
+export function statementName(query: string): string {
+  const tables = [...query.matchAll(/\b(?:FROM|JOIN)\s+([A-Za-z_][A-Za-z0-9_]*)/gi)]
+    .map((m) => m[1]!)
+    .filter((name) => !/^json_(each|tree)$/i.test(name));
+  return [...new Set(tables)].join('+') || 'none';
+}
 
 const NO_HOOKS = { ensureSchema: () => {}, onWrite: () => {} };
 
@@ -95,8 +117,9 @@ export class DocumentDb {
 
   /**
    * A view that only reads (docs/specs/006-document/document-storage.md "Refreshing the summaries"): it never makes or
-   * upgrades the schema, never tells the room of a write, refuses any statement that may write, and reads a table an
-   * older schema lacks as empty, so reading a room through it leaves the room's storage as it was.
+   * upgrades the schema, never tells the room of a write, refuses any statement that may write, and fails a read SQLite
+   * cannot make (a table or column an older schema lacks) by name, logged, never as no rows; so reading a room through
+   * it leaves the room's storage as it was, and its caller reads only what is there to read (content-summary.ts).
    */
   static readOnly(sql: DocumentSql, hasSchema: () => boolean): DocumentDb {
     return new DocumentDb(sql, { ...NO_HOOKS, transaction: (fn) => fn(), hasSchema }, true);
@@ -111,7 +134,7 @@ export class DocumentDb {
     const writes = statements.some((s) => mayWrite(s.query));
     if (this.readOnlyView) {
       if (writes) throw new Error(DOCUMENT_READ_ONLY);
-      if (!this.hooks.hasSchema()) return statements.map(() => emptyResult());
+      if (!this.hooks.hasSchema()) return this.noSchema(statements.length);
       return statements.map((s) => this.readOne(s));
     }
     if (!writes && !this.hooks.hasSchema()) return statements.map(() => emptyResult());
@@ -133,7 +156,7 @@ export class DocumentDb {
   execute(statement: DocumentStatement): Result {
     if (this.readOnlyView) {
       if (mayWrite(statement.query)) throw new Error(DOCUMENT_READ_ONLY);
-      return this.hooks.hasSchema() ? this.readOne(statement) : emptyResult();
+      return this.hooks.hasSchema() ? this.readOne(statement) : this.noSchema(1)[0]!;
     }
     if (!mayWrite(statement.query) && !this.hooks.hasSchema()) return emptyResult();
     this.hooks.ensureSchema();
@@ -153,14 +176,22 @@ export class DocumentDb {
     return { results, success: true, meta: { changes } };
   }
 
-  // A read-only view's read: a table an older schema has not made yet holds no rows.
+  // A read-only view's read of a room never written: it holds no rows, said once per batch.
+  private noSchema(count: number): Result[] {
+    console.info(`[document-db] read-no-schema statements=${count}`);
+    return Array.from({ length: count }, () => emptyResult());
+  }
+
+  // A read-only view's read: what SQLite answers, or a failure by name (logged), never rows it could not read.
   private readOne(statement: DocumentStatement): Result {
     try {
       const results = this.sql.exec(statement.query, ...statement.args).toArray();
       return { results, success: true, meta: { changes: 0 } };
     } catch (error) {
-      if (error instanceof Error && /no such table/i.test(error.message)) return emptyResult();
-      throw error;
+      const message = error instanceof Error ? error.message : String(error);
+      const name = statementName(statement.query);
+      console.error(`[document-db] read-failed statement=${name} error=${message}`);
+      throw new DocumentReadFailedError(name);
     }
   }
 

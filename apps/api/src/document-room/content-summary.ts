@@ -9,29 +9,39 @@ import { documentStatsSql, readDocumentStats } from '../db/tab-stats';
 import type { DocumentEnv } from '../types';
 import { LIVE_TAB_KINDS } from '../live-tabs/live-tab-kinds';
 
-// A live tab holds content when its digest says so, whatever its kind (kinds-outside-the-canvas.md "Live state").
-const LIVE_TAB_HAS_CONTENT = LIVE_TAB_KINDS.map(
-  (k) =>
-    `       WHEN EXISTS (SELECT 1 FROM ${k.tables.digest} d WHERE d.tab_id = t.id AND d.has_content = 1) THEN 1\n`,
-).join('');
+type LiveTabKind = (typeof LIVE_TAB_KINDS)[number];
 
-// Every live tab's digest counts, of every kind, for the document's tabs.
-const LIVE_TAB_ROWS = LIVE_TAB_KINDS.map(
-  (k) => `SELECT d.tab_id, d.characters, d.state_bytes
+// A live tab holds content when its digest says so, whatever its kind (kinds-outside-the-canvas.md "Live state").
+const liveTabHasContent = (kinds: readonly LiveTabKind[]) =>
+  kinds
+    .map(
+      (k) =>
+        `       WHEN EXISTS (SELECT 1 FROM ${k.tables.digest} d WHERE d.tab_id = t.id AND d.has_content = 1) THEN 1\n`,
+    )
+    .join('');
+
+// Every live tab's digest counts, of every kind given, for the document's tabs; none without a kind.
+const liveTabRows = (kinds: readonly LiveTabKind[]) =>
+  kinds.length === 0
+    ? 'SELECT NULL AS tab_id, 0 AS characters, 0 AS state_bytes WHERE ?1 IS NULL AND 0'
+    : kinds
+        .map(
+          (k) => `SELECT d.tab_id, d.characters, d.state_bytes
          FROM ${k.tables.digest} d JOIN document_tabs dt ON dt.tab_id = d.tab_id
         WHERE dt.document_id = ?1`,
-).join('\n UNION ALL ');
+        )
+        .join('\n UNION ALL ');
 
 // A tab holds content (docs/specs/013-workspace/empty-document-cleanup.md): an element, an article, a form or a filled
 // dashboard slot, as `tabHoldsContent` (@livedoc/document) asks it of one tab in the editor. A body that is not JSON
 // fails safe as content. A CASE, so SQLite stops at the first match.
-const HAS_CONTENT = `CASE
+const hasContent = (kinds: readonly LiveTabKind[]) => `CASE
        WHEN NOT json_valid(t.data) THEN 1
        WHEN COALESCE(json_array_length(t.data, '$.elements'), 0) > 0 THEN 1
        WHEN EXISTS (SELECT 1 FROM json_each(t.data, '$.articles')) THEN 1
        WHEN json_type(t.data, '$.form') = 'object' THEN 1
        WHEN json_type(t.data, '$.blob') = 'text' THEN 1
-${LIVE_TAB_HAS_CONTENT}       WHEN EXISTS (SELECT 1 FROM json_each(t.data, '$.dashboard.rows') r, json_each(r.value, '$.slots') s
+${liveTabHasContent(kinds)}       WHEN EXISTS (SELECT 1 FROM json_each(t.data, '$.dashboard.rows') r, json_each(r.value, '$.slots') s
                      WHERE json_type(s.value, '$.content') = 'object') THEN 1
        ELSE 0
      END`;
@@ -50,13 +60,31 @@ type SheetTabRow = { tab_id: string; cells: number; bytes: number };
 // A live tab (a text document's): its characters and its stored state's bytes, as its last digest counted them.
 type LiveTabRow = { tab_id: string; characters: number; state_bytes: number };
 
+// The statements as a room of the current schema asks them, built once.
+const ALL_KINDS = {
+  hasContent: hasContent(LIVE_TAB_KINDS),
+  liveTabRows: liveTabRows(LIVE_TAB_KINDS),
+};
+
+/**
+ * The summary, from the room's own tables. Given the tables a room's storage holds (`tables`, read by a read-only
+ * view, whose schema may be behind), it asks only of those: a live tab kind whose digest table is not there yet has no
+ * tab, and no `sheets` or `workbook` table means no spreadsheet (document-storage.md "Refreshing the summaries").
+ */
 export async function contentSummaryOf(
   env: DocumentEnv,
   documentId: string,
+  tables?: ReadonlySet<string>,
 ): Promise<ContentSummary> {
+  const kinds = tables ? LIVE_TAB_KINDS.filter((k) => tables.has(k.tables.digest)) : null;
+  const sql = kinds
+    ? { hasContent: hasContent(kinds), liveTabRows: liveTabRows(kinds) }
+    : ALL_KINDS;
+  const spreadsheets = !tables || (tables.has('sheets') && tables.has('workbook'));
+  const none = env.DOCUMENT_DB.prepare('SELECT 1 WHERE 0');
   const [tabs, stats, sheetTabs, textDocumentTabs, workbook] = await env.DOCUMENT_DB.batch([
     env.DOCUMENT_DB.prepare(
-      `SELECT dt.tab_id, COALESCE(t.element_count, -1) AS element_count, ${HAS_CONTENT} AS has_content,
+      `SELECT dt.tab_id, COALESCE(t.element_count, -1) AS element_count, ${sql.hasContent} AS has_content,
               CASE WHEN json_valid(t.data) AND json_type(t.data, '$.blob') = 'text' THEN 1 ELSE 0 END AS holds_file,
               CASE WHEN json_valid(t.data) AND json_extract(t.data, '$.kind') = 'text-document' THEN 1 ELSE 0 END
                 AS text_document
@@ -66,14 +94,20 @@ export async function contentSummaryOf(
     ).bind(documentId),
     env.DOCUMENT_DB.prepare(`SELECT ${documentStatsSql('?1')}`).bind(documentId),
     // Only a spreadsheet's, and only sheets on a tab the document holds (a deleted tab's waits to expire).
-    env.DOCUMENT_DB.prepare(
-      `SELECT s.tab_id, SUM(s.cell_count) AS cells, SUM(s.cell_bytes) AS bytes
+    spreadsheets
+      ? env.DOCUMENT_DB.prepare(
+          `SELECT s.tab_id, SUM(s.cell_count) AS cells, SUM(s.cell_bytes) AS bytes
          FROM sheets s JOIN document_tabs dt ON dt.document_id = s.document_id AND dt.tab_id = s.tab_id
         WHERE s.document_id = ?1 AND EXISTS (SELECT 1 FROM workbook w WHERE w.document_id = ?1)
         GROUP BY s.tab_id`,
-    ).bind(documentId),
-    env.DOCUMENT_DB.prepare(LIVE_TAB_ROWS).bind(documentId),
-    env.DOCUMENT_DB.prepare('SELECT 1 AS y FROM workbook WHERE document_id = ?').bind(documentId),
+        ).bind(documentId)
+      : none,
+    env.DOCUMENT_DB.prepare(sql.liveTabRows).bind(documentId),
+    spreadsheets
+      ? env.DOCUMENT_DB.prepare('SELECT 1 AS y FROM workbook WHERE document_id = ?').bind(
+          documentId,
+        )
+      : none,
   ]);
   const rows = (tabs?.results ?? []) as TabCountRow[];
   const sheets = new Map(((sheetTabs?.results ?? []) as SheetTabRow[]).map((r) => [r.tab_id, r]));
