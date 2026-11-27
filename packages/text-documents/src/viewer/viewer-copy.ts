@@ -7,16 +7,11 @@
 // type, and Viewers receive only what the copy gained. A Viewer never writes, so the copy is theirs alone to read.
 // What stays, the stated limit: where suggestions are, their ids and times, and the text a pending one would add.
 import * as Y from 'yjs';
-import {
-  DELETION_MARK,
-  FORMAT_CHANGE_MARK,
-  INSERTION_MARK,
-  PARAGRAPH_FORMAT_CHANGE,
-  THREADS_MAP,
-} from '../live/live-names';
+import { THREADS_MAP } from '../live/live-names';
 import { BODY_FRAGMENT, TAB_FRAGMENT_PREFIX } from '../live/live-root';
 import { STORY_PREFIX } from '../live/live-stories';
 import { isObject } from '../live/live-suggestion-marks';
+import { TEXT_DOCUMENT_SEED_CLIENT, TextDocumentState } from '../text-document-state';
 import type { TextDocumentCommentAuthor } from '../live/live-threads';
 
 /** The prefix of an anonymous author's key; the rest is the suggestion's id. */
@@ -24,10 +19,6 @@ export const VIEWER_AUTHOR_KEY_PREFIX = 'viewer:';
 /** An anonymous author's name and colour: the same for every suggestion (default). */
 export const VIEWER_AUTHOR_NAME = 'Someone';
 export const VIEWER_AUTHOR_COLOUR = '#5f6368';
-
-/** The text marks and element attributes a suggestion's author rides on. */
-const TEXT_MARKS: readonly string[] = [INSERTION_MARK, DELETION_MARK, FORMAT_CHANGE_MARK];
-const ELEMENT_MARKS: readonly string[] = [...TEXT_MARKS, PARAGRAPH_FORMAT_CHANGE];
 
 /** The Yjs types a text document's state holds. */
 type Shared = Y.XmlFragment | Y.XmlElement | Y.XmlText | Y.Text | Y.Map<unknown> | Y.Array<unknown>;
@@ -56,10 +47,19 @@ export const anonymousAuthor = (suggestionId: string): TextDocumentCommentAuthor
   colour: VIEWER_AUTHOR_COLOUR,
 });
 
-/** A suggestion mark's value with its author anonymised; any other value as it is. */
+/**
+ * A value with every suggestion's author in it anonymised, at any depth: whatever carries an id and an author (a
+ * suggestion's mark, on whatever format, attribute or key it rides) is taken as a suggestion, so no key the copy does
+ * not know of can carry a name through.
+ */
 function anonymised(value: unknown): unknown {
-  if (!isObject(value) || typeof value.id !== 'string') return value;
-  return { ...value, author: anonymousAuthor(value.id) };
+  if (Array.isArray(value)) return value.map(anonymised);
+  if (!isObject(value)) return value;
+  const out: Record<string, unknown> = {};
+  for (const [key, inner] of Object.entries(value)) out[key] = anonymised(inner);
+  if (typeof value.id === 'string' && value.author !== undefined)
+    out.author = anonymousAuthor(value.id);
+  return out;
 }
 
 const isFragmentName = (name: string) =>
@@ -69,13 +69,9 @@ const isFragmentName = (name: string) =>
 function textAttributes(attributes: Record<string, unknown> | undefined) {
   if (!attributes) return undefined;
   const out: Record<string, unknown> = {};
-  for (const [key, value] of Object.entries(attributes))
-    out[key] = TEXT_MARKS.includes(key) ? anonymised(value) : value;
+  for (const [key, value] of Object.entries(attributes)) out[key] = anonymised(value);
   return out;
 }
-
-const elementAttribute = (name: string, value: unknown) =>
-  ELEMENT_MARKS.includes(name) ? anonymised(value) : value;
 
 /** A value as JSON with every object's keys sorted. */
 const canonical = (value: unknown): string =>
@@ -163,21 +159,91 @@ export class ViewerCopy {
   private readonly twins = new WeakMap<Shared, Shared>();
   private readonly owners = new WeakMap<Shared, Shared>();
 
-  private constructor(real: Y.Doc) {
+  private constructor(real: Y.Doc, kept?: Y.Doc) {
     this.real = real;
-    this.doc = new Y.Doc({ gc: true });
+    this.doc = kept ?? new Y.Doc({ gc: true });
+    if (kept) return;
+    // Every state stands on the seed, the copy too: its items are the same in both, so they are twins.
+    Y.applyUpdate(this.doc, TextDocumentState.seed());
+    this.linkSeed(real.getXmlFragment(BODY_FRAGMENT), this.doc.getXmlFragment(BODY_FRAGMENT));
     this.doc.transact(() => {
       for (const name of [...real.share.keys()]) this.root(name);
     });
+  }
+
+  /** The client the copy is written by: kept with the copy, so it can be taken up again. */
+  get client(): number {
+    return this.doc.clientID;
+  }
+
+  /**
+   * A copy taken up again from what it kept (its own updates) beside the real state, written on by the same client, so
+   * a Viewer's editor goes on merging with it; `caughtUp` is what it gained to read as the state now, or null. Throws
+   * when the kept copy's writing does not line up with the state's: it is no copy of it, and a new one must be made.
+   */
+  static restore(
+    updates: readonly Uint8Array[],
+    kept: readonly Uint8Array[],
+    client: number,
+  ): { copy: ViewerCopy; caughtUp: Uint8Array | null } {
+    const real = new Y.Doc({ gc: true });
+    real.transact(() => {
+      Y.applyUpdate(real, TextDocumentState.seed());
+      for (const update of updates) Y.applyUpdate(real, update);
+    });
+    const doc = new Y.Doc({ gc: true });
+    doc.transact(() => {
+      for (const update of kept) Y.applyUpdate(doc, update);
+    });
+    // Set after the kept updates: Yjs gives a document a new client when a remote update writes as its own.
+    doc.clientID = client;
+    const copy = new ViewerCopy(real, doc);
+    try {
+      for (const name of [...real.share.keys()]) {
+        if (name === THREADS_MAP) continue;
+        if (isFragmentName(name))
+          copy.linkExact(real.getXmlFragment(name), doc.getXmlFragment(name));
+        else copy.linkExact(real.getMap<unknown>(name), doc.getMap<unknown>(name));
+      }
+    } catch (error) {
+      copy.destroy();
+      throw error;
+    }
+    let caughtUp: Uint8Array | null = null;
+    const take = (written: Uint8Array) => {
+      caughtUp = written;
+    };
+    doc.on('update', take);
+    try {
+      doc.transact(() => {
+        for (const name of [...real.share.keys()])
+          if (!copy.twins.has(sharedOf(real.share.get(name))!)) copy.root(name);
+        copy.sync(everyType(real));
+      });
+    } finally {
+      doc.off('update', take);
+    }
+    return { copy, caughtUp };
   }
 
   /** A copy of the state, redacted. */
   static build(updates: readonly Uint8Array[]): ViewerCopy {
     const real = new Y.Doc({ gc: true });
     real.transact(() => {
+      Y.applyUpdate(real, TextDocumentState.seed());
       for (const update of updates) Y.applyUpdate(real, update);
     });
     return new ViewerCopy(real);
+  }
+
+  /** A state as a Viewer may hold it, made by a copy let go at once (a Viewer's file or document copy). */
+  static redacted(updates: readonly Uint8Array[]): Uint8Array {
+    const copy = ViewerCopy.build(updates);
+    try {
+      return copy.state();
+    } finally {
+      copy.destroy();
+    }
   }
 
   /** One stored update: applied to the mirror, its changes copied over; what the copy gained, or null for nothing. */
@@ -255,11 +321,6 @@ export class ViewerCopy {
       return n;
     };
     for (const type of [...changed].sort((a, b) => depth(a) - depth(b))) {
-      if (type._item === null && !this.twins.has(type)) {
-        const name = [...this.real.share].find(([, root]) => root === type)?.[0];
-        if (name !== undefined) this.root(name);
-        continue;
-      }
       // A type taken away goes with its parent's change.
       if (type._item?.deleted) continue;
       const twin = this.twins.get(type);
@@ -281,7 +342,7 @@ export class ViewerCopy {
     const want: Record<string, unknown> = real.getAttributes();
     const have: Record<string, unknown> = copy.getAttributes();
     for (const [name, value] of Object.entries(want)) {
-      const next = elementAttribute(name, value);
+      const next = anonymised(value);
       // Yjs types an attribute's value as a string; the live state keeps objects there.
       if (canonical(next) !== canonical(have[name])) copy.setAttribute(name, next as never);
     }
@@ -302,7 +363,8 @@ export class ViewerCopy {
       this.linkTree(type, sharedOf(copy.get(key)));
       return;
     }
-    if (!copy.has(key) || canonical(value) !== canonical(copy.get(key))) copy.set(key, value);
+    const next = anonymised(value);
+    if (!copy.has(key) || canonical(next) !== canonical(copy.get(key))) copy.set(key, next);
   }
 
   /** A list of children made to match: twins kept in order, what went taken out, what came cloned in. */
@@ -338,13 +400,13 @@ export class ViewerCopy {
 
   private syncArray(real: Y.Array<unknown>, copy: Y.Array<unknown>): void {
     const want = real.toArray();
-    if (canonical(want) === canonical(copy.toArray())) return;
+    if (canonical(anonymised(real.toJSON())) === canonical(copy.toJSON())) return;
     copy.delete(0, copy.length);
     copy.insert(
       0,
       want.map((v) => {
         const type = sharedOf(v);
-        return type ? this.cloneOf(type) : v;
+        return type ? this.cloneOf(type) : anonymised(v);
       }),
     );
     want.forEach((v, i) => {
@@ -370,7 +432,7 @@ export class ViewerCopy {
       const element = new Y.XmlElement(real.nodeName);
       const attributes: Record<string, unknown> = real.getAttributes();
       for (const [name, value] of Object.entries(attributes))
-        element.setAttribute(name, elementAttribute(name, value) as never);
+        element.setAttribute(name, anonymised(value) as never);
       const children = real.toArray().flatMap((c) => {
         const type = sharedOf(c);
         const clone = type ? this.cloneOf(type) : null;
@@ -383,7 +445,7 @@ export class ViewerCopy {
       const map = new Y.Map<unknown>();
       for (const [key, value] of real.entries()) {
         const type = sharedOf(value);
-        map.set(key, type ? this.cloneOf(type) : value);
+        map.set(key, type ? this.cloneOf(type) : anonymised(value));
       }
       return map;
     }
@@ -394,10 +456,55 @@ export class ViewerCopy {
         0,
         real.toArray().map((v) => {
           const type = sharedOf(v);
-          return type ? this.cloneOf(type) : v;
+          return type ? this.cloneOf(type) : anonymised(v);
         }),
       );
     return array;
+  }
+
+  /** The seed's items in a fragment of the copy, linked to the same items of the real state, all the way down. */
+  private linkSeed(real: Container, copy: Container): void {
+    const seeded = (type: unknown) =>
+      sharedOf(type)?._item?.id.client === TEXT_DOCUMENT_SEED_CLIENT ? sharedOf(type) : null;
+    const twins = real.toArray().map(seeded);
+    for (const child of copy.toArray().map(seeded)) {
+      const twin = twins.find((t) => t?._item?.id.clock === child?._item?.id.clock);
+      if (!child || !twin || twin.constructor !== child.constructor) continue;
+      this.link(twin, child);
+      if (twin instanceof Y.XmlElement) this.linkSeed(twin, child as Y.XmlElement);
+    }
+  }
+
+  /**
+   * A kept copy linked to the real state it was copied from, all the way down: the same kinds of type, element names
+   * and children, in order. Text and values may lag (the sync brings them up); a shape that differs throws.
+   */
+  private linkExact(real: Shared, copy: Shared): void {
+    const refuse = (): never => {
+      throw new Error('viewer copy does not line up with the state');
+    };
+    if (real.constructor !== copy.constructor) refuse();
+    this.link(real, copy);
+    if (real instanceof Y.XmlElement && (copy as Y.XmlElement).nodeName !== real.nodeName) refuse();
+    if (real instanceof Y.XmlFragment || real instanceof Y.Array) {
+      const want: unknown[] = real.toArray();
+      const have = (copy as Container | Y.Array<unknown>).toArray();
+      if (want.length !== have.length) refuse();
+      want.forEach((child, i) => {
+        const type = sharedOf(child);
+        if (!type) return;
+        const twin = sharedOf(have[i]);
+        if (!twin) refuse();
+        this.linkExact(type, twin!);
+      });
+    } else if (real instanceof Y.Map) {
+      for (const [key, value] of real.entries()) {
+        const type = sharedOf(value);
+        const twin = sharedOf((copy as Y.Map<unknown>).get(key));
+        // A type the copy lacks or holds as another kind is cloned in by the sync.
+        if (type && twin && twin.constructor === type.constructor) this.linkExact(type, twin);
+      }
+    }
   }
 
   /** A clone just placed, linked to its real twin all the way down. */
@@ -425,4 +532,27 @@ export class ViewerCopy {
       });
     }
   }
+}
+
+/** Every type of a document but its threads, roots first. */
+function everyType(doc: Y.Doc): Shared[] {
+  const out: Shared[] = [];
+  const walk = (type: Shared) => {
+    out.push(type);
+    const children =
+      type instanceof Y.Map
+        ? [...type.values()]
+        : type instanceof Y.XmlFragment || type instanceof Y.Array
+          ? type.toArray()
+          : [];
+    for (const child of children) {
+      const shared = sharedOf(child);
+      if (shared) walk(shared);
+    }
+  };
+  for (const name of [...doc.share.keys()]) {
+    if (name === THREADS_MAP) continue;
+    walk(isFragmentName(name) ? doc.getXmlFragment(name) : doc.getMap<unknown>(name));
+  }
+  return out;
 }

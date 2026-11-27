@@ -31,7 +31,8 @@ import {
 export type RoomLiveTabHooks = {
   env: DocumentEnv | undefined;
   enqueue: <T>(step: () => Promise<T>) => Promise<T>;
-  sequence: (from: string, op: unknown, except?: WebSocket) => number;
+  // `forViewers`: what Viewers receive in place of the op, where the kind keeps a Viewer's copy (null for nothing).
+  sequence: (from: string, op: unknown, except?: WebSocket, forViewers?: unknown) => number;
   sendTo: (ws: WebSocket, payload: ServerMessage) => void;
   position: () => { epoch: string };
   // The limits checked; the kind's unless a test sizes them.
@@ -43,6 +44,12 @@ export type RoomLiveTabHooks = {
     update: Uint8Array,
     author: { key: string | null; name: string | null; color: string | null },
   ) => Promise<void>;
+  // A Viewer's copy of the kind's tabs (docs/specs/034-text-documents/live-editing-and-storage.md "A Viewer's copy"):
+  // made ready before each update is stored, then given it, on the write queue; what it answers goes to Viewers.
+  viewers?: {
+    ready: (place: { documentId: string; tabId: string }) => Promise<void>;
+    relay: (place: { documentId: string; tabId: string }, update: Uint8Array) => Promise<unknown>;
+  };
 };
 
 export type LiveTabSender = {
@@ -152,6 +159,15 @@ export class RoomLiveTabs {
       `${kind.tag} level-refused document=${documentId} tab=${tabId} level=${level} asks=${asks}`,
     );
     return asks === 'not_your_mark' ? 'not-yours' : 'level';
+  }
+
+  /** What Viewers receive for a stored update: the copy's answer, or undefined for a kind that keeps no copy. */
+  private async forViewers(
+    place: { documentId: string; tabId: string },
+    update: Uint8Array,
+  ): Promise<unknown> {
+    const viewers = this.hooks.viewers;
+    return viewers ? ((await viewers.relay(place, update)) ?? null) : undefined;
   }
 
   /** One op from the room to one socket. */
@@ -281,9 +297,12 @@ export class RoomLiveTabs {
         return false;
       }
       const started = Date.now();
+      const place = { documentId, tabId: frame.tabId };
+      await this.hooks.viewers?.ready(place);
       const log = await appendLiveTabUpdate(env, kind, frame.tabId, update);
       await indexPlacedImages(env, kind, frame.tabId, update);
-      const seq = this.hooks.sequence(sender.presenceId, frame, sender.ws);
+      const forViewers = await this.forViewers(place, update);
+      const seq = this.hooks.sequence(sender.presenceId, frame, sender.ws, forViewers);
       const echo = isRoomOpRef(ref) ? { ref } : {};
       this.hooks.sendTo(sender.ws, {
         kind: 'cursor',
@@ -376,6 +395,8 @@ export class RoomLiveTabs {
     const env = this.hooks.env;
     if (!env) throw new Error(`${kind.tag} no store for a system update`);
     const started = Date.now();
+    const place = { documentId, tabId };
+    await this.hooks.viewers?.ready(place);
     const folded = update.byteLength > kind.sizes.chunkBytes;
     if (folded) await compactLiveTab(env, kind, tabId, update);
     else {
@@ -388,7 +409,7 @@ export class RoomLiveTabs {
       encoded.length <= kind.sizes.frameChars
         ? { kind: kind.frame, tabId, update: encoded }
         : { kind: kind.frame, tabId, stale: true as const };
-    this.hooks.sequence('system', op);
+    this.hooks.sequence('system', op, undefined, await this.forViewers(place, update));
     console.info(
       `${kind.tag} persisted document=${documentId} tab=${tabId} bytes=${update.byteLength} via=${via} folded=${folded} relay=${'stale' in op ? 'stale' : 'op'} ms=${Date.now() - started}`,
     );

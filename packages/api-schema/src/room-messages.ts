@@ -862,6 +862,11 @@ export const ACCESS_CHANGED_CLOSE = 4005;
 // the page turns read-only and does not reconnect.
 export const WORKBENCH_ENDED_CLOSE = 4006;
 
+// The close code for a Viewer whose copy of a text document the room let go (docs/specs/034-text-documents/
+// live-editing-and-storage.md "A Viewer's copy"): the editor reconnects as after any drop, and its catch-up, refused
+// `viewer_copy_changed`, opens the tab again from the new copy.
+export const VIEWER_COPY_CHANGED_CLOSE = 4007;
+
 // The room's keepalive (docs/specs/012-collaboration/realtime-conflict-resolution.md "Keepalive"): the client sends
 // the bare text ROOM_PING on an idle socket and the room answers ROOM_PONG without waking from hibernation
 // (setWebSocketAutoResponse). Plain text, never JSON, so neither side's message handler ever sees them as ops.

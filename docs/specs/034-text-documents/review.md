@@ -6,8 +6,8 @@ keyboard; people react to them, mention one another and assign a comment, a ment
 it names, and the Inbox lists the threads and assigned comments of those they concern. Suggestions are kept in the
 writing, travel in both formats' files as tracked changes and the room judges a Participant's; Editors and
 Participants suggest in Suggesting mode, from the writing, the menus and the toolbar; suggestion cards accept and
-reject one, the Suggested edits panel all at once, and Tools > Compare documents makes a comparison. Versions and
-notifications are still to come.
+reject one, the Suggested edits panel all at once, and Tools > Compare documents makes a comparison. The room
+sends a Viewer a copy without comments or suggestion authors. Versions and notifications are still to come.
 
 Comments, suggestions, version history, comparing documents and notifications in a [text document](text-document.md).
 The panels and threads are the shared [review surfaces](../012-collaboration/review-surfaces.md), built once for the
@@ -16,7 +16,11 @@ office kinds; this spec says what a text document puts in them.
 ## Editing modes
 
 - **Editing** (⌘⌥⇧Z): changes are made. **Suggesting** (⌘⌥⇧X): changes are made as suggestions. **Viewing**
-  (⌘⌥⇧C): read only, comments and suggestions hidden, as printed.
+  (⌘⌥⇧C): read only, comments and suggestions hidden: no margin, no cards, no suggestion colours, and every pending
+  suggestion drawn as not yet made (its insertion left out, its deletion kept), as Google's Viewing shows the
+  original (Google Docs community thread 167976156, 2022: "The View mode will not show suggested edits";
+  workspacetips.io: someone who can view sees suggested edits only once they are accepted) (director, 2026-11-27).
+  Print draws pending suggestions accepted instead ([Printing](files-and-print.md#printing)).
 - An editing mode is one person's, never shared, and starts at the most an access level allows: an Editor in
   Editing, a Participant in Suggesting (fork D7, ruled), a Viewer in Viewing.
 - The switch sits at the right of the title row ([Editing surface](editing-surface.md#the-title-row)); these are the
@@ -80,7 +84,8 @@ office kinds; this spec says what a text document puts in them.
 
 - **Opening**: the title row's Comment history (a speech bubble with lines, "Open comment history") or ⌘⌥⇧A
   (Ctrl+Alt+Shift+A elsewhere) opens the comments panel on the right, the shell's side panel, as Google's comment
-  history; either again closes it. Every session opens it: a Viewer reads it.
+  history; either again closes it. An Editor and a Participant open it; a Viewer has no comments, so no panel and no
+  Comment history ([What a Viewer receives](#what-a-viewer-receives)).
 - **Its head**: the title **Comments**, then two lists side by side: **All comments** or **For you**, and **All**,
   **Open** or **Resolved** (default: All comments, All; the panel's choices are kept while the document is open).
   A document with more than one document tab adds a third, **All tabs** or each tab by its name (default: All tabs).
@@ -480,8 +485,10 @@ the writing usable beside it (non-modal). Pressing the item again, its × ("Clos
   writing undone with one ⌘Z, made by the person who pressed it (director, 2026-11-26); the panel stays, its count
   "No suggested edits".
 - **Who may**: an Editor has everything; a Participant has the count, Previous and Next, the previews and **Reject
-  all mine**, rejecting only their own suggestions (shown only while they have any), never Accept all; a Viewer has
-  the count, Previous and Next and the previews (director, 2026-11-26). In Viewing, everyone has only those.
+  all mine**, rejecting only their own suggestions (shown only while they have any), never Accept all (director,
+  2026-11-26). A Viewer has no Suggested edits panel and no Review suggested edits: a Viewer sees no suggestions
+  (director, 2026-11-27, withdrawing the count and previews of 2026-11-26). In Viewing, an Editor and a Participant
+  have the count, Previous and Next and the previews only.
 - Telemetry: `Element · Changed · TextDocumentSuggestionAcceptedAll` and `…RejectedAll`, once per press; a
   Participant's Reject all mine counts as RejectedAll.
 
@@ -633,7 +640,32 @@ setting is not shown and the Inbox carries them. Nothing is sent to someone who 
 | --------------- | ----------------------------------- | -------------------------------------------------------------------------------- | ------------------------ |
 | **Editor**      | All                                 | Make, accept, reject, review all                                                 | See, name, restore, copy |
 | **Participant** | Add, reply, resolve, react, mention | Make (D7), reply, reject own (one or all mine); never accept; review and preview | None, Editors only       |
-| **Viewer**      | Read                                | Read (in Editing and Suggesting views), review and preview                       | None, as Google's Viewer |
+| **Viewer**      | None, as Google's Viewer            | None: drawn as not yet made, no cards or panels, as Google's Viewer              | None, as Google's Viewer |
+
+### What a Viewer receives
+
+A Viewer sees no comments and no suggestions, as someone Google lets only view (director, 2026-11-27). Hiding them in
+the browser alone would still send every thread, its text and its authors to the Viewer's browser, where developer
+tools read them, so the room never sends them:
+
+- **The room keeps a Viewer's copy** of each text document tab a Viewer reads: the writing and the document's maps
+  with every comment thread left out and every suggestion's author replaced by an anonymous one made from the
+  suggestion's id alone ("Someone", in grey), written by a client of the room's own
+  ([A Viewer's copy](live-editing-and-storage.md#a-viewers-copy)). A Viewer's connection, the state door, the file
+  door and a copy of the document a Viewer makes all answer from it; an Editor and a Participant get the document
+  itself.
+- **Nothing else carries them**: a Viewer gets no Inbox rows and no email for the document's comments, mentions or
+  assignments, and a text document's search text holds its writing, never its comments
+  ([Content search](../013-workspace/content-search.md#what-is-searched)).
+- **The stated limit**: a Viewer's copy still holds where suggestions are, their ids and times, and the text a pending
+  one would add; the Viewer's editor draws them as not yet made, but developer tools can read that text. Stripping it
+  would need a document of the Viewer's own that no longer merges with the room's; who suggested it, and every
+  comment, never reach a Viewer (director, 2026-11-27; reported to Webber, revisable). The share dialog says so where
+  a Viewer's pass is made ([Share roles](../013-workspace/share-roles.md#integrity)).
+- **A role that changes** ends the person's connection ([Access changes](../015-api/api.md)); they come back at the new
+  level, reading the copy or the document as it allows.
+- **When the copy cannot be made** (the document is past the copy's limits, or making it fails), a Viewer is shown
+  "This document can't be shown right now." with **Try Again**, never the document itself (default copy).
 
 ## Telemetry
 

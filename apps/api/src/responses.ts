@@ -16,6 +16,7 @@ import {
   FEATURE_OFF_ERROR,
   TEXT_DOCUMENT_PICTURES_LEFT_OUT_HEADER,
   TEXT_DOCUMENT_STATE_VECTOR_HEADER,
+  TEXT_DOCUMENT_VIEWER_COPY_HEADER,
 } from '@livedoc/api-schema';
 
 // CORS for the browser. Live app runs at the same hostname as the
@@ -41,7 +42,7 @@ export const CORS_HEADERS = {
   // The server release signal (docs/specs/016-platform/new-version-prompt.md, stale-builds.md), readable
   // by an editor on another origin (local dev, a self-host with a separate api host).
   // The tab revision as an ETag (docs/specs/024-agents/agent-changesets.md).
-  'Access-Control-Expose-Headers': `${DOCUMENT_FORMAT_HEADER}, ${BUILD_ID_HEADER}, ETag, ${TEXT_DOCUMENT_STATE_VECTOR_HEADER}, ${TEXT_DOCUMENT_PICTURES_LEFT_OUT_HEADER}, ${PDF_STORED_FILE_HEADER}, Content-Range, Accept-Ranges`,
+  'Access-Control-Expose-Headers': `${DOCUMENT_FORMAT_HEADER}, ${BUILD_ID_HEADER}, ETag, ${TEXT_DOCUMENT_STATE_VECTOR_HEADER}, ${TEXT_DOCUMENT_VIEWER_COPY_HEADER}, ${TEXT_DOCUMENT_PICTURES_LEFT_OUT_HEADER}, ${PDF_STORED_FILE_HEADER}, Content-Range, Accept-Ranges`,
 };
 
 // An answer is the caller's live state, so a browser asks again before reusing it unless the route

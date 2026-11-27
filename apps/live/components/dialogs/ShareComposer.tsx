@@ -13,12 +13,16 @@ import { ShareRolePicker } from './ShareRolePicker';
 // (docs/specs/013-workspace/share-roles.md), one card that unfolds the three roles, then the fine print: Opens (multi-tab only) and Valid, a sliding segmented control
 // ending in the Create Pass button (which also copies the new link). Owns the draft pass; the
 // dialog owns issuing it.
+// The stated limit of what a Viewer's browser holds (docs/specs/007-editor/live-app.md, the help line).
+export const VIEWER_SUGGESTION_TEXT_LIMIT =
+  'People who can view may be able to see the text of pending suggestions with developer tools.';
+
 export function ShareComposer({
   tabs,
   busy,
   onIssue,
 }: {
-  tabs: { id: string; name: string }[];
+  tabs: { id: string; name: string; kind?: string }[];
   busy: boolean;
   onIssue: (role: ShareRole, expiry: ShareLinkExpiry, tabId: string | null) => void;
 }) {
@@ -29,6 +33,9 @@ export function ShareComposer({
   // when there is more than one tab to choose between.
   const [scope, setScope] = useState('');
   const multiTab = tabs.length > 1;
+  // A Viewer's pass on a text document: its stated limit is said (review.md "What a Viewer receives").
+  const opened = multiTab && scope ? tabs.filter((t) => t.id === scope) : tabs;
+  const viewerLimit = role === 'view' && opened.some((t) => t.kind === 'text-document');
 
   // Arrow keys walk the lifetimes, wrapping, as in any radio group.
   const onLifetimeKey = (e: KeyboardEvent<HTMLButtonElement>) => {
@@ -131,6 +138,11 @@ export function ShareComposer({
             Create Pass
           </Button>
         </div>
+        {viewerLimit ? (
+          <p className="px-0.5 text-supporting text-slate-600 dark:text-slate-400">
+            {VIEWER_SUGGESTION_TEXT_LIMIT}
+          </p>
+        ) : null}
       </div>
     </section>
   );

@@ -611,6 +611,9 @@ live. Only then is the involvement test applied:
   link ([Tab-scoped share links](tab-scoped-share-links.md)) they see only the cards that tab's boards
   show: the card's board must be on the scoped tab and hold its status
   (or be an All Cards board).
+- a text document's threads and assigned comments (anchor `text`) are never a Viewer's: a document reached
+  through a `view` link lists none of them, as a Viewer sees no comments there
+  ([What a Viewer receives](../034-text-documents/review.md#what-a-viewer-receives)).
 
 That order is the security boundary: a name can never leak a row from
 a document the reader has lost access to, and it is what keeps the

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import * as Y from 'yjs';
 import { cpuBudgetMs, cpuNowMs } from '@livedoc/vitest-config/cpu-time';
-import { TextDocumentState } from '../text-document-state';
+import { TEXT_DOCUMENT_SEED_CLIENT, TextDocumentState } from '../text-document-state';
 import {
   VIEWER_COPY_APPLY_BUDGET_MS,
   VIEWER_COPY_BUILD_BUDGET_MS,
@@ -49,15 +49,16 @@ const sorted = (value: unknown): unknown =>
     ),
   );
 
-/** A suggestion's mark with its author made anonymous, as a Viewer's copy holds it; any other value as it is. */
+/** A value with every suggestion's author made anonymous, at any depth, as a Viewer's copy holds it. */
 function withAnonymousAuthor(value: unknown): unknown {
-  const mark =
-    typeof value === 'object' && value !== null
-      ? (value as { id?: unknown; author?: unknown })
-      : null;
-  return mark && typeof mark.id === 'string' && mark.author !== undefined
+  if (Array.isArray(value)) return value.map(withAnonymousAuthor);
+  if (typeof value !== 'object' || value === null) return value;
+  const mark = Object.fromEntries(
+    Object.entries(value).map(([k, v]) => [k, withAnonymousAuthor(v)]),
+  ) as { id?: unknown; author?: unknown };
+  return typeof mark.id === 'string' && mark.author !== undefined
     ? { ...mark, author: anonymousAuthor(mark.id) }
-    : value;
+    : mark;
 }
 
 /** Runs side by side with the same formatting joined: drawn, they are one stretch of text. */
@@ -118,7 +119,7 @@ function contentOf(doc: Y.Doc, redact: boolean): Json {
     if (name === THREADS_MAP) continue;
     if (name === 'body' || name.startsWith('tab:') || name.startsWith('story:'))
       out[name] = doc.getXmlFragment(name).toArray().map(node);
-    else out[name] = doc.getMap(name).toJSON();
+    else out[name] = anon(doc.getMap(name).toJSON());
   }
   // A root with nothing in it reads as none.
   for (const [k, v] of Object.entries(out))
@@ -134,7 +135,7 @@ function contentOf(doc: Y.Doc, redact: boolean): Json {
 function editing(seed: number) {
   const random = seeded(seed);
   const pick = <T>(list: readonly T[]): T => list[Math.floor(random() * list.length)]!;
-  const writers = [new Y.Doc({ gc: false }), new Y.Doc({ gc: false })];
+  const writers = [TextDocumentState.load(), TextDocumentState.load()];
   writers[0]!.clientID = 101;
   writers[1]!.clientID = 202;
   const stored: Uint8Array[] = [];
@@ -228,12 +229,21 @@ describe('ViewerCopy', () => {
       const { writers, stored, step } = editing(seed);
       for (let i = 0; i < 40; i += 1) step();
       // A Viewer joins partway: the copy built from what is stored, the Viewer reading its state.
-      const copy = ViewerCopy.build(stored);
+      let copy = ViewerCopy.build(stored);
+      const client = copy.client;
       const viewer = new Y.Doc();
       Y.applyUpdate(viewer, copy.state());
       const frames: Uint8Array[] = [copy.state()];
       // Then everything goes on while they watch: suggestions made, accepted and rejected, threads added and resolved.
       for (let i = 0; i < 160; i += 1) {
+        if (i === 80) {
+          // The room is evicted while the Viewer watches: the copy is taken up again from what it kept, under its own
+          // client, with nothing to catch up.
+          copy.destroy();
+          const restored = ViewerCopy.restore(stored, frames, client);
+          expect(restored.caughtUp).toBeNull();
+          copy = restored.copy;
+        }
         const before = stored.length;
         step();
         for (const update of stored.slice(before)) {
@@ -258,16 +268,82 @@ describe('ViewerCopy', () => {
       const text = new TextDecoder('latin1').decode(Y.mergeUpdates(frames));
       for (const leak of [THREAD_WORDS, 'thread-', ...PEOPLE.flatMap((p) => [p.key, p.name])])
         expect(text, leak).not.toContain(leak);
+      // The seed's items are every state's; the rest are the copy's own.
       const clients = new Set(
-        Y.decodeUpdate(Y.encodeStateAsUpdate(viewer)).structs.map((s) => s.id.client),
+        Y.decodeUpdate(Y.encodeStateAsUpdate(viewer))
+          .structs.map((s) => s.id.client)
+          .filter((c) => c !== TEXT_DOCUMENT_SEED_CLIENT),
       );
-      expect([...clients]).toEqual([copy.doc.clientID]);
+      expect([...clients]).toEqual([client]);
+      expect(copy.client).toBe(client);
       copy.destroy();
     },
   );
 
+  it('takes a copy up again with nothing to catch up when it kept everything', () => {
+    const { stored, step } = editing(7);
+    for (let i = 0; i < 30; i += 1) step();
+    const copy = ViewerCopy.build(stored);
+    const kept = [copy.state()];
+    const restored = ViewerCopy.restore(stored, kept, copy.client);
+    expect(restored.caughtUp).toBeNull();
+    expect(contentOf(restored.copy.doc, false)).toEqual(contentOf(copy.doc, false));
+    // Writes after it go on under the kept client, past what it kept.
+    const before = stored.length;
+    while (stored.length === before) step();
+    const gained = restored.copy.apply(stored.at(-1)!);
+    if (gained)
+      for (const s of Y.decodeUpdate(gained).structs) expect(s.id.client).toBe(copy.client);
+    copy.destroy();
+    restored.copy.destroy();
+  });
+
+  it('catches a copy taken up again up with writing it never copied over', () => {
+    const real = TextDocumentState.load();
+    const p = new Y.XmlElement('paragraph');
+    p.insert(0, [new Y.XmlText()]);
+    real.getXmlFragment('body').insert(0, [p]);
+    (p.get(0) as Y.XmlText).insert(0, 'Hello');
+    const copy = ViewerCopy.build([Y.encodeStateAsUpdate(real)]);
+    const kept = [copy.state()];
+    const viewer = new Y.Doc();
+    Y.applyUpdate(viewer, copy.state());
+    // Stored, but the room was gone before the copy took it.
+    (p.get(0) as Y.XmlText).insert(5, ' world', {
+      insertion: { id: 's1', at: 1, author: PEOPLE[1] },
+    });
+    real.getMap(THREADS_MAP).set('thread-9', THREAD_WORDS);
+    const restored = ViewerCopy.restore([Y.encodeStateAsUpdate(real)], kept, copy.client);
+    expect(restored.caughtUp).not.toBeNull();
+    Y.applyUpdate(viewer, restored.caughtUp!);
+    expect(contentOf(viewer, false)).toEqual(contentOf(real, true));
+    const bytes = new TextDecoder('latin1').decode(restored.caughtUp!);
+    for (const leak of [THREAD_WORDS, PEOPLE[1]!.name, PEOPLE[1]!.key])
+      expect(bytes, leak).not.toContain(leak);
+    copy.destroy();
+    restored.copy.destroy();
+  });
+
+  it('refuses to take up a copy whose writing no longer lines up with the state', () => {
+    const real = TextDocumentState.load();
+    real.getXmlFragment('body').insert(0, [new Y.XmlElement('paragraph')]);
+    const copy = ViewerCopy.build([Y.encodeStateAsUpdate(real)]);
+    const kept = [copy.state()];
+    real.getXmlFragment('body').insert(0, [new Y.XmlElement('heading')]);
+    // A kept copy of one paragraph against a state of two is no copy of it.
+    expect(() => ViewerCopy.restore([Y.encodeStateAsUpdate(real)], kept, copy.client)).toThrow(
+      /viewer copy does not line up/,
+    );
+    const other = TextDocumentState.load();
+    other.getXmlFragment('body').insert(0, [new Y.XmlElement('heading')]);
+    expect(() => ViewerCopy.restore([Y.encodeStateAsUpdate(other)], kept, copy.client)).toThrow(
+      /viewer copy does not line up/,
+    );
+    copy.destroy();
+  });
+
   it('pins the stated limit: a pending suggestion’s text reaches the Viewer, nothing of its author does', () => {
-    const real = new Y.Doc({ gc: false });
+    const real = TextDocumentState.load();
     const p = new Y.XmlElement('paragraph');
     p.insert(0, [new Y.XmlText()]);
     real.getXmlFragment('body').insert(0, [p]);
@@ -296,7 +372,7 @@ describe('ViewerCopy', () => {
   });
 
   it('gives nothing for an update that changes only a thread', () => {
-    const real = new Y.Doc({ gc: false });
+    const real = TextDocumentState.load();
     real.getXmlFragment('body').insert(0, [new Y.XmlElement('paragraph')]);
     const copy = ViewerCopy.build([Y.encodeStateAsUpdate(real)]);
     const before = Y.encodeStateVector(real);
@@ -308,7 +384,7 @@ describe('ViewerCopy', () => {
 
 describe('ViewerCopy on a large document', () => {
   it('builds and copies updates over within its budgets', () => {
-    const real = new Y.Doc({ gc: false });
+    const real = TextDocumentState.load();
     const body = real.getXmlFragment('body');
     const author = PEOPLE[0]!;
     real.transact(() => {
@@ -339,6 +415,140 @@ describe('ViewerCopy on a large document', () => {
       slowest = Math.max(slowest, cpuNowMs() - started);
     }
     expect(slowest).toBeLessThan(cpuBudgetMs(VIEWER_COPY_APPLY_BUDGET_MS));
+    copy.destroy();
+  });
+});
+
+describe('ViewerCopy over every kind of type', () => {
+  it('follows maps, arrays, texts and elements as they change, made or taken up again', () => {
+    const real = TextDocumentState.load();
+    const stored: Uint8Array[] = [];
+    const change = (work: () => void) => {
+      const before = Y.encodeStateVector(real);
+      real.transact(work);
+      stored.push(Y.encodeStateAsUpdate(real, before));
+      return stored.at(-1)!;
+    };
+    const mark = (id: string) => ({ id, at: 1, author: PEOPLE[0] });
+    const doc = real.getMap<unknown>('document');
+    const body = real.getXmlFragment('body');
+    change(() => {
+      const nested = new Y.Map<unknown>();
+      nested.set('a', 1);
+      const list = new Y.Array<unknown>();
+      const item = new Y.Map<unknown>();
+      item.set('x', 1);
+      list.insert(0, [1, item]);
+      nested.set('list', list);
+      const text = new Y.Text();
+      text.insert(0, 'hi');
+      nested.set('text', text);
+      doc.set('nested', nested);
+      const outer = new Y.XmlElement('table');
+      const cell = new Y.XmlElement('cell');
+      const run = new Y.XmlText();
+      cell.insert(0, [run]);
+      outer.insert(0, [cell]);
+      outer.setAttribute('formatChange', mark('p1') as never);
+      outer.setAttribute('rowSuggestions', [{ kept: mark('r1') }] as never);
+      doc.set('somewhereNew', { nested: mark('m1') });
+      body.insert(0, [outer]);
+      run.insert(0, 'Cell', { deletion: mark('d1') });
+    });
+    let copy = ViewerCopy.build(stored);
+    const frames = [copy.state()];
+    const client = copy.client;
+    const expectSame = () => {
+      expect(contentOf(copy.doc, false)).toEqual(contentOf(real, true));
+      const viewer = new Y.Doc();
+      for (const frame of frames) Y.applyUpdate(viewer, frame);
+      expect(contentOf(viewer, false)).toEqual(contentOf(real, true));
+    };
+    const step = (work: () => void) => {
+      const gained = copy.apply(change(work));
+      if (gained) frames.push(gained);
+      expectSame();
+    };
+    expectSame();
+    const nested = doc.get('nested') as Y.Map<unknown>;
+    const list = nested.get('list') as Y.Array<unknown>;
+    const table = body.get(0) as Y.XmlElement;
+    step(() => nested.set('a', 2));
+    step(() => nested.delete('a'));
+    step(() => list.push([3]));
+    step(() => (list.get(1) as Y.Map<unknown>).set('x', 2));
+    step(() => (nested.get('text') as Y.Text).insert(2, ' there'));
+    step(() => nested.set('text', 'plain now'));
+    step(() => table.removeAttribute('formatChange'));
+    step(() => table.setAttribute('style', 'Grid'));
+    step(() => {
+      const cell = new Y.XmlElement('cell');
+      cell.insert(0, [new Y.XmlText('More')]);
+      table.insert(1, [cell]);
+    });
+    step(() => table.delete(0, 1));
+    step(() => real.getMap<unknown>('lists').set('l1', { kind: 'bullet' }));
+    step(() => real.getXmlFragment('story:n1').insert(0, [new Y.XmlElement('paragraph')]));
+    // Taken up again, it goes on under its own client.
+    copy.destroy();
+    const restored = ViewerCopy.restore(stored, frames, client);
+    expect(restored.caughtUp).toBeNull();
+    copy = restored.copy;
+    step(() => list.delete(0, 1));
+    step(() => body.delete(0, 1));
+    expect(copy.client).toBe(client);
+    copy.destroy();
+  });
+
+  it('refuses to take up a copy whose types differ from the state’s', () => {
+    const real = TextDocumentState.load();
+    real.getMap<unknown>('document').set('nested', new Y.Map());
+    real.getXmlFragment('body').insert(0, [new Y.XmlElement('heading')]);
+    const copy = ViewerCopy.build([Y.encodeStateAsUpdate(real)]);
+    const kept = [copy.state()];
+    const other = TextDocumentState.load();
+    other.getMap<unknown>('document').set('nested', new Y.Array());
+    other.getXmlFragment('body').insert(0, [new Y.XmlText('x')]);
+    expect(() => ViewerCopy.restore([Y.encodeStateAsUpdate(other)], kept, copy.client)).toThrow(
+      /viewer copy does not line up/,
+    );
+    copy.destroy();
+  });
+
+  it('makes a redacted state at once and lets the copy go', () => {
+    const real = TextDocumentState.load();
+    real.getMap(THREADS_MAP).set('thread-1', THREAD_WORDS);
+    const state = ViewerCopy.redacted([Y.encodeStateAsUpdate(real)]);
+    expect(new TextDecoder('latin1').decode(state)).not.toContain(THREAD_WORDS);
+  });
+});
+
+describe('ViewerCopy, what a change may hold', () => {
+  it('copies an object in a line, a key set and taken back at once, and a text changed as it goes', () => {
+    const real = TextDocumentState.load();
+    const body = real.getXmlFragment('body');
+    const text = new Y.XmlText();
+    const para = new Y.XmlElement('paragraph');
+    para.insert(0, [text]);
+    body.insert(0, [para]);
+    text.insert(0, 'Before after');
+    text.insertEmbed(6, { equation: 'x^2' }, { insertion: { id: 'e1', at: 1, author: PEOPLE[1] } });
+    const copy = ViewerCopy.build([Y.encodeStateAsUpdate(real)]);
+    const apply = (work: () => void) => {
+      const before = Y.encodeStateVector(real);
+      real.transact(work);
+      return copy.apply(Y.encodeStateAsUpdate(real, before));
+    };
+    apply(() => {
+      real.getMap<unknown>('document').set('fleeting', 1);
+      real.getMap<unknown>('document').delete('fleeting');
+    });
+    // A paragraph whose text changes as it is taken away goes with its parent.
+    apply(() => {
+      text.insert(0, 'x');
+      body.delete(0, 1);
+    });
+    expect(contentOf(copy.doc, false)).toEqual(contentOf(real, true));
     copy.destroy();
   });
 });

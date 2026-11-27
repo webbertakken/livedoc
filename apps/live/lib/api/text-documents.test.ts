@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   apiDownloadTextDocument,
+  apiLoadTextDocumentState,
   apiLoadTextDocumentStateSince,
   apiPostTextDocumentUpdate,
 } from './text-documents';
@@ -35,6 +36,34 @@ describe('apiLoadTextDocumentStateSince', () => {
     );
     await apiLoadTextDocumentStateSince(scope, new Uint8Array(4_000));
     expect(new URL(String(fetch.mock.calls[0]![0]), 'https://x.test').search).toBe('');
+  });
+
+  // live-editing-and-storage.md "A Viewer's copy": a Viewer's catch-up names the copy its state was read from.
+  it('names the Viewer copy the state was read from, with or without the vector', async () => {
+    const fetch = stub(
+      async () =>
+        new Response(Uint8Array.of(1), {
+          headers: { 'X-State-Vector': 'AA==', 'X-Viewer-Copy': 'copy-1' },
+        }),
+    );
+    const viewers = { ...scope, tabId: 't9' };
+    await apiLoadTextDocumentState(viewers);
+    await apiLoadTextDocumentStateSince(viewers, Uint8Array.of(1, 2));
+    await apiLoadTextDocumentStateSince(viewers, new Uint8Array(4_000));
+    const sent = fetch.mock.calls.map((c) => new URL(String(c[0]), 'https://x.test').searchParams);
+    expect(sent[1]!.get('copy')).toBe('copy-1');
+    expect(sent[1]!.get('since')).toBe('AQI=');
+    expect(sent[2]!.get('copy')).toBe('copy-1');
+    expect(sent[2]!.has('since')).toBe(false);
+    // Read again as no Viewer (the level raised), the copy is forgotten.
+    stub(async () => new Response(Uint8Array.of(1), { headers: { 'X-State-Vector': 'AA==' } }));
+    await apiLoadTextDocumentState(viewers);
+    const after = stub(
+      async () => new Response(Uint8Array.of(1), { headers: { 'X-State-Vector': 'AA==' } }),
+    );
+    await apiLoadTextDocumentStateSince(viewers, Uint8Array.of(1));
+    const query = new URL(String(after.mock.calls[0]![0]), 'https://x.test').searchParams;
+    expect(query.has('copy')).toBe(false);
   });
 
   it('refuses an answer without the state’s vector', async () => {

@@ -6,6 +6,7 @@
 // upgrade. The largest resource: every sub-path
 // under a document id lives here.
 
+import { parseStoredLevel } from '@livedoc/api-schema';
 import { sharePasswordOk } from '../auth/share-access';
 import { roomUnavailable } from '../document-room/document-route';
 import { capStoredName } from '../names';
@@ -56,7 +57,8 @@ export async function handleDocumentCopy(ctx: RouteContext): Promise<Response> {
       // Either way a tab-scoped visitor (docs/specs/013-workspace/tab-scoped-share-links.md) copies their tab
       // only: the share-code leg carries the link's scope, the shared_with
       // leg the scope recorded on their last visit.
-      let scope: { tabScope: string | null } | null = await gateGrant(
+      // What the copier reaches the source at: a Viewer copies a text document without its comments or authors.
+      let scope: { tabScope: string | null; role: string } | null = await gateGrant(
         ctx,
         id,
         source.ownerId,
@@ -67,7 +69,7 @@ export async function handleDocumentCopy(ctx: RouteContext): Promise<Response> {
         // A past visit is no way round the document's share password
         // (docs/specs/013-workspace/share-password.md): it must be given here as on every share-link read.
         if (sharedRow && (await sharePasswordOk(env, id, sharePasswordOf(request))))
-          scope = { tabScope: sharedRow.tabId };
+          scope = { tabScope: sharedRow.tabId, role: sharedRow.role };
       }
       if (!scope) return forbidden();
       // A body is optional here, and a JSON `null` is as good as none.
@@ -91,6 +93,7 @@ export async function handleDocumentCopy(ctx: RouteContext): Promise<Response> {
           scope.tabScope,
           // Anyone but the owner copies the comments as the tab read serves them to them.
           owner === source.ownerId ? null : owner,
+          parseStoredLevel(scope.role) === 'view',
         );
       } catch (error) {
         // The files the copy would hold do not fit what is left of the copier's file storage

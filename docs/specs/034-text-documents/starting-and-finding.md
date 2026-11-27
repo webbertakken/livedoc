@@ -26,7 +26,8 @@ dark ([Templates](../007-editor/templates-by-mode.md)). The Project Brief templa
 
 - The Explorer's **Kind** chip has **Text document**; its default folder key is `kind:text-document`
   ([Default folders](../013-workspace/default-folders.md)).
-- Content search finds text in its body, headers, footers, footnotes and comments.
+- Content search finds text in its body, headers, footers and footnotes; never in its comments, which a Viewer must
+  not find it by ([What a Viewer receives](review.md#what-a-viewer-receives)) (following box 6's ruling, 2026-11-27).
 - Its row shows the first page as a thumbnail and its format in the Details view.
 
 ## Telemetry

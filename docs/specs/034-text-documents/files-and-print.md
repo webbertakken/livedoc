@@ -71,7 +71,8 @@ and show **Load picture** for an Editor.
 - **Print** (⌘P, the toolbar): the browser's print of the laid-out pages, at their paper size, with headers, footers
   and page numbers, and without comments, suggestion colours (suggestions printed as they would be accepted, as
   Google prints them) or the editor's chrome.
-- **Print preview** (File): the pages as printed, in Viewing mode, with **Print** and **Close**.
+- **Print preview** (File): the pages as printed, with **Print** and **Close**: it follows Print, pending suggestions
+  drawn accepted, never Viewing, which draws them not yet made (director, 2026-11-27).
 
 ## Make a copy
 

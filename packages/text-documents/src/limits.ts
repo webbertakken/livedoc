@@ -59,8 +59,11 @@ export const VIEWER_COPY_BUILD_BUDGET_MS = 1000;
 export const VIEWER_COPY_APPLY_BUDGET_MS = 25;
 /**
  * A copy whose own state passes this is let go (a Viewer sees the error state): about 60 MB of heap at the measure,
- * half a Durable Object's 128 MB. Safe range 1 to 3 MB.
+ * half a Durable Object's 128 MB, and the copy compacts into one row under the room's row cap. Safe range 1 MB to
+ * the chunk's bytes.
  */
-export const VIEWER_COPY_STATE_MAX_BYTES = 2 * 1024 * 1024;
+export const VIEWER_COPY_STATE_MAX_BYTES = TEXT_DOCUMENT_CHUNK_BYTES;
+/** (default) The copy's kept log is compacted into one row past this many updates, as the state's log is. */
+export const VIEWER_COPY_LOG_UPDATES = 500;
 /** A stored state past this (history included) is not copied at all, before any is decoded. Safe range 8 to 32 MB. */
 export const VIEWER_COPY_SOURCE_MAX_BYTES = 16 * 1024 * 1024;

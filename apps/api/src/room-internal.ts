@@ -2,11 +2,23 @@
 // Durable Object after a privileged action. Not exposed publicly: the worker stubs the DO via
 // `env.DOCUMENT_ROOM.get(...).fetch(...)`, which never traverses Cloudflare's edge, so these paths are implicitly
 // internal and their bodies trusted. Every other request is a WebSocket upgrade, which the room answers itself.
-import { parseStoredLevel, type AccessLevel } from '@livedoc/api-schema';
+import {
+  parseStoredLevel,
+  TEXT_DOCUMENT_STATE_VECTOR_HEADER,
+  TEXT_DOCUMENT_VIEWER_COPY_HEADER,
+  type AccessLevel,
+} from '@livedoc/api-schema';
+import { base64OfBytes } from '@livedoc/text-documents';
 import { opForTheWire } from '@livedoc/document';
 import { parseAccessCloseMatch, type AccessCloseMatch } from './room-access';
 import type { PostedOutcome } from './live-tabs/room-live-tabs';
 import type { VersionWrite, VersionWriteError } from './text-documents/room-text-document-versions';
+import {
+  parseViewerCopyRead,
+  type ViewerCopyPlace,
+  type ViewerCopyReader,
+  type ViewerCopyState,
+} from './text-documents/room-viewer-copies';
 import {
   parseTextDocumentVersionWrite,
   type TextDocumentVersionWriteRequest,
@@ -35,6 +47,7 @@ export type InternalRoom = {
     sent: { level: AccessLevel; on?: string; adderKey?: string | null },
   ) => Promise<PostedOutcome>;
   writeTextDocumentVersion: (write: TextDocumentVersionWriteRequest) => Promise<VersionWrite>;
+  readViewerCopy: (place: ViewerCopyPlace, reader?: ViewerCopyReader) => Promise<ViewerCopyState>;
 };
 
 // What a text document's version write answers (live-editing-and-storage.md "The api").
@@ -157,6 +170,26 @@ export async function answerInternal(
     return result.ok
       ? Response.json({ version: result.version })
       : Response.json({ error: result.error }, { status: VERSION_ERROR_STATUS[result.error] });
+  }
+  // Internal: a Viewer's read of a text document tab's state (live-editing-and-storage.md "A Viewer's copy"), gated by
+  // its route as a read at the Viewer's level: answered from the tab's Viewer copy, on the write queue.
+  if (request.method === 'POST' && url.pathname === '/text-document-viewer-state') {
+    const read = parseViewerCopyRead(await readBody(request));
+    if (!read) return new Response('bad viewer state read', { status: 400 });
+    const answer = await room.readViewerCopy(read.place, read.reader);
+    if (!answer.ok)
+      return Response.json(
+        { error: answer.error },
+        { status: answer.error === 'viewer_copy_changed' ? 409 : 503 },
+      );
+    return new Response(answer.state.slice().buffer, {
+      status: 200,
+      headers: {
+        'Content-Type': 'application/octet-stream',
+        [TEXT_DOCUMENT_STATE_VECTOR_HEADER]: base64OfBytes(answer.vector),
+        [TEXT_DOCUMENT_VIEWER_COPY_HEADER]: answer.id,
+      },
+    });
   }
   if (request.method === 'POST' && url.pathname === '/mutation') {
     const op = (await readBody(request))?.op;

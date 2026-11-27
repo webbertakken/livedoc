@@ -51,7 +51,6 @@ export function textDocumentDigest(doc: Y.Doc): TextDocumentDigest {
       ...liveStoryIds(doc).flatMap((id) =>
         TextDocumentState.storyParagraphs(doc, id).map((p) => p.text),
       ),
-      ...threads.flatMap((thread) => thread.comments.map((c) => c.text)),
     ].join('\n'),
     imageIds: TextDocumentState.galleryImages(doc),
     collab: textDocumentCollabRows(threads, null),

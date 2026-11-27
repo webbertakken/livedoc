@@ -41,6 +41,7 @@ import {
 import { debugLog } from '@/lib/debug-log';
 import { openRoomYjs } from '@/lib/text-document/room-yjs-provider';
 import { TextDocumentCopies } from '@/lib/text-document/text-document-copies';
+import { openingFailure, resettingOnCopyChange } from '@/lib/text-document/viewer-copy-reading';
 import { paintFormatPlugin } from '@/lib/text-document/text-document-paint-format';
 import { clipboardPlugin } from '@/lib/text-document/text-document-clipboard';
 import { footnoteClipboard } from '@/lib/text-document/text-document-footnote-clipboard';
@@ -267,6 +268,8 @@ export function TextDocumentSurface({
   // Collaborators' carets in this tab's writing (live-editing-and-storage.md "Presence"), drawn by the editor.
   const peers = useTextDocumentPeers(scope.tabId);
   const [state, setState] = useState<SurfaceState>('loading');
+  // What a failed opening says: a Viewer whose copy cannot be made is told so (review.md "What a Viewer receives").
+  const [failure, setFailure] = useState('');
   const [attempt, setAttempt] = useState(0);
   const [limitReached, setLimitReached] = useState<TextDocumentLimit | null>(null);
   const clipboardLeftOut = useRef<(count: number) => void>(() => {});
@@ -418,7 +421,15 @@ export function TextDocumentSurface({
           sequence: (op) => live.current.sequence(op),
           post: (update) => apiPostTextDocumentUpdate(where, update),
           loadState: () => apiLoadTextDocumentState(where),
-          loadSince: (vector) => apiLoadTextDocumentStateSince(where, vector),
+          // A Viewer whose copy the room let go opens the tab again from the new one (viewer-copy-reading.ts).
+          loadSince: resettingOnCopyChange(
+            (vector) => apiLoadTextDocumentStateSince(where, vector),
+            () => {
+              debugLog('[text-document] viewer copy changed', { documentId, tabId });
+              setState('loading');
+              setAttempt((n) => n + 1);
+            },
+          ),
           copies: TextDocumentCopies,
         });
     opening
@@ -691,6 +702,7 @@ export function TextDocumentSurface({
       })
       .catch((error: unknown) => {
         if (cancelled) return;
+        setFailure(openingFailure(error));
         setState('failed');
         debugLog('[text-document] surface failed', { documentId, tabId, error: String(error) });
       });
@@ -1402,7 +1414,7 @@ export function TextDocumentSurface({
                 role="alert"
                 className="mx-auto mt-16 max-w-sm text-center text-body text-slate-700 dark:text-slate-200"
               >
-                <p>This text document could not be opened.</p>
+                <p>{failure}</p>
                 <Button
                   className="mt-3"
                   onClick={() => {

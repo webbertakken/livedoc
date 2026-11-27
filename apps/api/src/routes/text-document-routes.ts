@@ -16,12 +16,14 @@ import {
 import {
   TEXT_DOCUMENT_PICTURES_LEFT_OUT_HEADER,
   TEXT_DOCUMENT_STATE_VECTOR_HEADER,
+  TEXT_DOCUMENT_VIEWER_COPY_HEADER,
 } from '@livedoc/api-schema';
+import { viewerStateOf } from '../text-documents/room-viewer-copies';
 import { galleryMediaRead } from '../text-documents/gallery-media';
 import { getDocumentMeta } from '../db';
 import { downloadFileName } from '@livedoc/office-packages';
 import { CORS_HEADERS, json } from '../responses';
-import { postLiveTabUpdate } from '../room-client';
+import { postLiveTabUpdate, readViewerCopyState } from '../room-client';
 import { readLiveTabState } from '../live-tabs/live-tab-store';
 import { TEXT_DOCUMENT_LIVE_TAB } from '../text-documents/text-document-live-tab';
 import { storedTextDocumentTab } from '../text-documents/text-document-store';
@@ -74,8 +76,13 @@ export async function handleTextDocumentRoutes(
   const tab = await storedTextDocumentTab(env, documentId, tabId);
   if (!tab) return notTextDocument();
   const started = Date.now();
-  const state = await readLiveTabState(env, TEXT_DOCUMENT_LIVE_TAB, tabId);
-  if (segments[5] === 'state') return stateResponse(ctx, state, started);
+  // A Viewer reads a copy without comments or authors (review.md "What a Viewer receives").
+  const viewer = grant.role === 'view';
+  if (viewer && segments[5] === 'state') return viewerStateResponse(ctx, started);
+  const stored = await readLiveTabState(env, TEXT_DOCUMENT_LIVE_TAB, tabId);
+  if (segments[5] === 'state') return stateResponse(ctx, stored, started);
+  const state = viewer ? viewerStateOf(stored, { documentId, tabId }) : stored;
+  if (!state) return viewerCopyUnavailable();
   const type = ctx.url.searchParams.get('type') ?? 'odt';
   if (!isTextDocumentFileType(type)) return json({ error: 'file_type_unknown' }, { status: 400 });
   // Conversion is a person's choice (File > Convert); until it is built, only the document's own format leaves.
@@ -101,6 +108,42 @@ export async function handleTextDocumentRoutes(
     [TEXT_DOCUMENT_PICTURES_LEFT_OUT_HEADER]: String(read.unavailable.length),
   });
 }
+
+// A Viewer's state, answered by the room from the tab's Viewer copy (live-editing-and-storage.md "A Viewer's copy"): with
+// `since` (or alone, when the vector rides no URL) a reader names the copy it holds (`copy`), and one from another copy
+// is refused 409 `viewer_copy_changed`.
+async function viewerStateResponse(ctx: DocumentRouteContext, started: number): Promise<Response> {
+  const documentId = ctx.segments[2]!;
+  const tabId = ctx.segments[4]!;
+  const copy = ctx.url.searchParams.get('copy');
+  const since = ctx.url.searchParams.get('since');
+  if (since !== null) {
+    const vector = bytesOfBase64(since);
+    if (!vector || !TextDocumentState.isStateVector(vector))
+      return json({ error: 'state_vector_invalid' }, { status: 400 });
+  }
+  const answer = await readViewerCopyState(ctx.env, {
+    documentId,
+    tabId,
+    ...(since === null ? {} : { since }),
+    ...(copy === null ? {} : { copy }),
+  });
+  if (!answer) return json({ error: 'room_unavailable' }, { status: 503 });
+  if (answer.status === 409) return json({ error: 'viewer_copy_changed' }, { status: 409 });
+  if (answer.status !== 200) return viewerCopyUnavailable();
+  const body = new Uint8Array(await answer.arrayBuffer());
+  console.info(
+    `[text-document] opened document=${documentId} tab=${tabId} bytes=${body.byteLength} since=${since !== null} viewer=true ms=${Date.now() - started}`,
+  );
+  return bytesResponse(body, {
+    'Content-Type': 'application/octet-stream',
+    [TEXT_DOCUMENT_STATE_VECTOR_HEADER]:
+      answer.headers.get(TEXT_DOCUMENT_STATE_VECTOR_HEADER) ?? '',
+    [TEXT_DOCUMENT_VIEWER_COPY_HEADER]: answer.headers.get(TEXT_DOCUMENT_VIEWER_COPY_HEADER) ?? '',
+  });
+}
+
+const viewerCopyUnavailable = () => json({ error: 'viewer_copy_unavailable' }, { status: 503 });
 
 // The state, or with `since` (a reader's state vector, base64) only what it holds beyond it: a catch-up's answer
 // ("Reconnecting"). Either way the state's own vector rides `X-State-Vector`, so the reader can send what it lacks.

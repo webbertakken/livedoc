@@ -3,7 +3,7 @@ import { sqliteD1 } from '../test-sqlite-d1';
 import { remapTabDataLinks } from '../document-room/document-content';
 import { copyDocument } from './documents';
 import { upsertTab } from './tabs';
-import { Body, TextDocumentState } from '@livedoc/text-documents';
+import { Body, LiveThreads, TextDocumentState, ViewerCopy } from '@livedoc/text-documents';
 import { appendLiveTabUpdate, readLiveTabState } from '../live-tabs/live-tab-store';
 import { TEXT_DOCUMENT_LIVE_TAB } from '../text-documents/text-document-live-tab';
 
@@ -121,6 +121,70 @@ describe('copyDocument', () => {
     expect(TextDocumentState.paragraphs(TextDocumentState.load([state]))).toEqual(
       Body.of('Kept in the copy'),
     );
+  });
+
+  // review.md "What a Viewer receives": a Viewer's copy takes a text document without comments or authors.
+  it('copies a text document as a Viewer may hold it, for a Viewer', async () => {
+    const db = await source();
+    await upsertTab(
+      db.env,
+      'd1',
+      { id: 't3', name: 'Notes', kind: 'text-document', format: 'odf', elements: [] } as never,
+      2,
+    );
+    const doc = TextDocumentState.load([TextDocumentState.fromBody(Body.of('Kept in the copy'))]);
+    LiveThreads.begin(
+      doc,
+      {
+        id: 'thread-1',
+        tab: 't.0',
+        ...LiveThreads.anchorFor(TextDocumentState.body(doc), 0, 1),
+        quote: 'Kept',
+        comment: {
+          id: 'c1',
+          text: 'Confidential remark',
+          at: 1,
+          author: { key: 'k-ada', name: 'Ada Secretname', colour: '#123456' },
+        },
+      },
+      'test',
+    );
+    await appendLiveTabUpdate(db.env, TEXT_DOCUMENT_LIVE_TAB, 't3', TextDocumentState.encode(doc));
+    vi.spyOn(console, 'info').mockImplementation(() => {});
+    await copyDocument(db.env, 'd1', 'd2', 'me', 'Copy', null, 'me', true);
+    const copied = tabsOf(db, 'd2').find((t) => t.name === 'Notes')!;
+    const state = await readLiveTabState(db.env, TEXT_DOCUMENT_LIVE_TAB, copied.id);
+    const bytes = new TextDecoder('latin1').decode(state);
+    for (const leak of ['Confidential', 'Ada Secretname', 'k-ada'])
+      expect(bytes).not.toContain(leak);
+    expect(TextDocumentState.paragraphs(TextDocumentState.load([state]))).toEqual(
+      Body.of('Kept in the copy'),
+    );
+    vi.restoreAllMocks();
+  });
+
+  it("refuses a Viewer's copy whose text document cannot be copied so", async () => {
+    const db = await source();
+    await upsertTab(
+      db.env,
+      'd1',
+      { id: 't3', name: 'Notes', kind: 'text-document', format: 'odf', elements: [] } as never,
+      2,
+    );
+    await appendLiveTabUpdate(
+      db.env,
+      TEXT_DOCUMENT_LIVE_TAB,
+      't3',
+      TextDocumentState.fromBody(Body.of('x')),
+    );
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    vi.spyOn(ViewerCopy, 'redacted').mockImplementationOnce(() => {
+      throw new Error('broken');
+    });
+    await expect(copyDocument(db.env, 'd1', 'd2', 'me', 'Copy', null, 'me', true)).rejects.toThrow(
+      'viewer_copy_unavailable',
+    );
+    vi.restoreAllMocks();
   });
 
   it('takes the new row back when the import fails, leaving the source whole', async () => {

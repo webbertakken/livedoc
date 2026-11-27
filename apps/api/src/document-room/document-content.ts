@@ -21,6 +21,8 @@ import { rowToTabSummary, type TabRow } from '../tab-row';
 import type { DocumentEnv, TabSummaryDTO } from '../types';
 import { liveTabKindOfTab } from '../live-tabs/live-tab-kinds';
 import { chunkStatements, readLiveTabState } from '../live-tabs/live-tab-store';
+import { TEXT_DOCUMENT_LIVE_TAB } from '../text-documents/text-document-live-tab';
+import { viewerStateOf } from '../text-documents/room-viewer-copies';
 import { contentSummaryOf } from './content-summary';
 
 // What a document read takes from the room: its tabs in order (no body), its slide deck and its item type
@@ -143,6 +145,7 @@ export async function exportDocumentCopy(
   documentId: string,
   onlyTabId: string | null,
   redactAuthorsFor: string | null,
+  viewer = false,
 ): Promise<DocumentCopy | null> {
   const db = env.DOCUMENT_DB;
   const tabRows = (
@@ -236,7 +239,7 @@ export async function exportDocumentCopy(
   );
   const copiedSheets = new Set(((sheets?.results ?? []) as Row[]).map((s) => String(s.id)));
   return {
-    liveStates,
+    liveStates: viewer ? liveStates.map((s) => asViewersState(s, tabs, documentId)) : liveStates,
     kept: keptOfSheets(await readKept(env, documentId), copiedSheets),
     itemTypes: doc?.item_types ?? null,
     itemsRev: doc?.items_rev ?? 0,
@@ -440,4 +443,18 @@ export async function importDocumentCopy(
   }
   await db.batch(stmts);
   return contentSummaryOf(env, documentId);
+}
+
+// A live tab's state as a Viewer may take it (docs/specs/034-text-documents/review.md "What a Viewer receives"): a
+// text document's without comments or suggestions' authors. One that cannot be copied so fails the whole copy, never
+// hands the Viewer the document itself.
+function asViewersState(
+  live: { tabId: string; state: Uint8Array },
+  tabs: readonly { id: string; kind: string | null }[],
+  documentId: string,
+): { tabId: string; state: Uint8Array } {
+  if (tabs.find((t) => t.id === live.tabId)?.kind !== TEXT_DOCUMENT_LIVE_TAB.tabKind) return live;
+  const state = viewerStateOf(live.state, { documentId, tabId: live.tabId });
+  if (!state) throw new Error('viewer_copy_unavailable');
+  return { tabId: live.tabId, state };
 }

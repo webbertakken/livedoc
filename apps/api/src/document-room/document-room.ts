@@ -16,6 +16,7 @@ import {
   ROOM_PING,
   ROOM_PONG,
   roomIsFull,
+  VIEWER_COPY_CHANGED_CLOSE,
   type AccessLevel,
 } from '@livedoc/api-schema';
 import { opForTheWire, stampCommentAuthor } from '@livedoc/document';
@@ -56,6 +57,13 @@ import {
   applyTextDocumentVersionWrite,
   type TextDocumentVersionWriteRequest,
 } from '../text-documents/text-document-version-write';
+import {
+  RoomViewerCopies,
+  type ViewerCopyPlace,
+  type ViewerCopyReader,
+  type ViewerCopyState,
+} from '../text-documents/room-viewer-copies';
+import { viewerOpOf, type ViewerOps } from './room-viewer-ops';
 import { getTab } from '../db/tabs';
 import { tabShowsEveryCard } from '@livedoc/items';
 import { RoomScopedStructure } from '../room-scoped-structure';
@@ -234,6 +242,11 @@ export class DocumentRoom extends DurableObject<Env | undefined> {
   private readonly liveTabs: ReadonlyMap<string, RoomLiveTabs>;
   // The text document tabs' versions (live-editing-and-storage.md "Versions"); none in a room without storage.
   private readonly textDocumentVersions: RoomTextDocumentVersions | null;
+  // The text document tabs' Viewer copies (live-editing-and-storage.md "A Viewer's copy"); none without storage.
+  private readonly viewerCopies: RoomViewerCopies | null;
+  // What Viewers receive in place of each sequenced op (room-viewer-ops.ts), and which sockets are a Viewer's.
+  private readonly viewerOps: ViewerOps = new WeakMap();
+  private readonly viewerSockets = new WeakMap<WebSocket, boolean>();
   // The same, by the op kind a kind's replacement is asked with.
   private readonly liveTabReplacements: ReadonlyMap<string, RoomLiveTabs>;
   // The document's content in this room's SQLite (room-content.ts).
@@ -271,18 +284,41 @@ export class DocumentRoom extends DurableObject<Env | undefined> {
         })
       : null;
     const versions = this.textDocumentVersions;
+    this.viewerCopies = roomEnv
+      ? new RoomViewerCopies({
+          env: roomEnv,
+          storedUpdates: (tabId) => storedUpdates(roomEnv, TEXT_DOCUMENT_LIVE_TAB, tabId),
+          hasViewers: (leaving) =>
+            this.state.getWebSockets().some((ws) => ws !== leaving && this.isViewer(ws)),
+          closeViewers: () =>
+            this.closeSockets((ws) =>
+              this.isViewer(ws) ? [VIEWER_COPY_CHANGED_CLOSE, 'viewer-copy-changed'] : null,
+            ),
+        })
+      : null;
+    const viewers = this.viewerCopies;
     this.liveTabs = new Map(
       LIVE_TAB_KINDS.map((kind) => [
         kind.frame,
         new RoomLiveTabs(kind, {
           env: roomEnv,
           enqueue: (step) => this.queueTabWrite(step),
-          sequence: (from, op, except) => this.sequenceMutation(from, op, except),
+          sequence: (from, op, except, forViewers) =>
+            this.sequenceMutation(from, op, except, forViewers),
           sendTo: (ws, payload) => this.sendTo(ws, payload),
           position: () => ({ epoch: this.epoch }),
           // Who wrote what, for a text document's versions.
           ...(versions && kind === TEXT_DOCUMENT_LIVE_TAB
             ? { stored: (place, update, author) => versions.stored(place, update, author) }
+            : {}),
+          // What a Viewer receives of a text document.
+          ...(viewers && kind === TEXT_DOCUMENT_LIVE_TAB
+            ? {
+                viewers: {
+                  ready: (place) => viewers.ready(place),
+                  relay: (place, update) => viewers.relay(place, update),
+                },
+              }
             : {}),
         }),
       ]),
@@ -311,6 +347,7 @@ export class DocumentRoom extends DurableObject<Env | undefined> {
         (await this.liveTabs.get(frame)?.acceptPosted(documentId, tabId, update, sent)) ??
         'wrong-kind',
       writeTextDocumentVersion: (write) => this.writeTextDocumentVersion(write),
+      readViewerCopy: (place, reader) => this.readViewerCopy(place, reader),
     };
     this.baton = new RoomFacilitator({
       storage: state.storage,
@@ -654,9 +691,11 @@ export class DocumentRoom extends DurableObject<Env | undefined> {
     drawingOf: DrawingOf,
   ): string | null {
     if (payload.kind !== 'op') return serialized;
+    // A Viewer receives a text document's copy, never the document (room-viewer-ops.ts).
+    const seen = this.isViewer(ws) ? viewerOpOf(payload.op, this.viewerOps, 'drop') : payload.op;
+    if (seen === null) return null;
     const scope = this.scopeOf(ws);
-    if (scope === null) return serialized;
-    const op = opForScope(payload.op, scope, drawingOf);
+    const op = scope === null ? seen : opForScope(seen, scope, drawingOf);
     if (op === null) return null;
     return op === payload.op ? serialized : JSON.stringify({ ...payload, op });
   }
@@ -674,6 +713,16 @@ export class DocumentRoom extends DurableObject<Env | undefined> {
   private drawingReader(): DrawingOf {
     return storedDrawingOf(this.content.tabStore());
   }
+  // Whether a socket is a Viewer's: its server-verified level, an unknown one read as a Viewer's (share-roles.md I2).
+  // Fixed for the life of the session (a changed level closes it), so read once per socket.
+  private isViewer(ws: WebSocket): boolean {
+    const known = this.viewerSockets.get(ws);
+    if (known !== undefined) return known;
+    const viewer = parseStoredLevel(this.readSession(ws)?.verifiedRole) === 'view';
+    this.viewerSockets.set(ws, viewer);
+    return viewer;
+  }
+
   private scopeOf(ws: WebSocket): string | null {
     if (this.scopes.has(ws)) return this.scopes.get(ws) ?? null;
     const scope = this.readSession(ws)?.tabScope ?? null;
@@ -749,7 +798,15 @@ export class DocumentRoom extends DurableObject<Env | undefined> {
   // Put a mutation into the ordered stream: a seq, the catch-up log, every
   // socket but the sender's, and the ledger. One path for a peer's op and for
   // one the worker made (docs/specs/012-collaboration/collab-race-hardening.md), so the two can't drift. Returns the seq.
-  private sequenceMutation(from: string, op: unknown, except?: WebSocket): number {
+  // `forViewers`: what Viewers receive in place of the op (room-viewer-ops.ts), where the op is a text document's.
+  private sequenceMutation(
+    from: string,
+    op: unknown,
+    except?: WebSocket,
+    forViewers?: unknown,
+  ): number {
+    if (forViewers !== undefined && typeof op === 'object' && op !== null)
+      this.viewerOps.set(op, forViewers);
     const seq = ++this.seq;
     this.persistOrder();
     this.opLog.push({ seq, from, op });
@@ -770,6 +827,17 @@ export class DocumentRoom extends DurableObject<Env | undefined> {
     const versions = this.textDocumentVersions;
     if (!versions) return Promise.resolve({ ok: false, error: 'version_not_found' });
     return this.queueTabWrite(() => applyTextDocumentVersionWrite(versions, write));
+  }
+
+  // A Viewer's read of a text document tab's state, from its Viewer copy, on the write queue so no stored update is
+  // midway (live-editing-and-storage.md "A Viewer's copy").
+  private readViewerCopy(
+    place: ViewerCopyPlace,
+    reader?: ViewerCopyReader,
+  ): Promise<ViewerCopyState> {
+    const copies = this.viewerCopies;
+    if (!copies) return Promise.resolve({ ok: false, error: 'viewer_copy_unavailable' });
+    return this.queueTabWrite(() => copies.state(place, reader));
   }
 
   // One step on the tab write queue (SR2), after every step before it. A failed step must not wedge
@@ -1062,16 +1130,17 @@ export class DocumentRoom extends DurableObject<Env | undefined> {
       { epoch, lastSeq },
       { epoch: this.epoch, seq: this.seq, opLog: this.opLog },
     );
-    // A tab-scoped session replays its own tab and its drawing tabs only, like the live relay.
+    // A tab-scoped session replays its own tab and its drawing tabs only, like the live relay; a Viewer its text
+    // documents' copies, or their tabs' `stale` where the copy's ops are gone.
     const scope = this.scopeOf(ws);
+    const viewer = this.isViewer(ws);
     const drawingOf = this.drawingReader();
-    const visible =
-      scope === null
-        ? ops
-        : ops.flatMap((o) => {
-            const op = opForScope(o.op, scope, drawingOf);
-            return op === null ? [] : [{ ...o, op }];
-          });
+    const visible = ops.flatMap((o) => {
+      const seen = viewer ? viewerOpOf(o.op, this.viewerOps, 'stale') : o.op;
+      const op = seen === null || scope === null ? seen : opForScope(seen, scope, drawingOf);
+      if (op === null) return [];
+      return [op === o.op ? o : { ...o, op }];
+    });
     const payload: ServerMessage = {
       kind: 'catchup',
       epoch: this.epoch,
@@ -1235,6 +1304,10 @@ export class DocumentRoom extends DurableObject<Env | undefined> {
   private dropSession(ws: WebSocket): void {
     this.opRates.delete(ws);
     const leaving = this.readSession(ws);
+    // The last Viewer leaving lets the Viewer copies go, on the write queue so no stored update is midway.
+    const copies = this.viewerCopies;
+    if (copies && this.isViewer(ws))
+      void this.queueTabWrite(() => copies.dropIdle(leaving?.documentId ?? null, ws));
     // A follower leaving is one fewer for the person they followed.
     if (leaving?.following) this.sendFollowers(leaving.following, ws);
     const presenceId = leaving?.presence?.id;
@@ -1371,8 +1444,14 @@ export class DocumentRoom extends DurableObject<Env | undefined> {
     documentId: string,
     onlyTabId: string | null,
     redactAuthorsFor: string | null,
+    viewer = false,
   ): Promise<DocumentCopy | null> {
-    return (await this.content.rpc(documentId)).exportCopy(documentId, onlyTabId, redactAuthorsFor);
+    return (await this.content.rpc(documentId)).exportCopy(
+      documentId,
+      onlyTabId,
+      redactAuthorsFor,
+      viewer,
+    );
   }
 
   async importCopy(documentId: string, copy: DocumentCopy): Promise<ContentSummary> {

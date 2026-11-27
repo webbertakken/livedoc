@@ -113,12 +113,15 @@ export function testDocumentRoom(
   kv: Map<string, unknown>;
   // Every key-value and alarm write the room asked of its storage, the same value again included.
   storageWrites: () => number;
+  // The sockets the room accepted (acceptSession), as the runtime lists them; a test removes one that closed.
+  sockets: WebSocket[];
   // The storage itself, so a test can make one of its calls fail as the runtime's may.
   storage: Pick<DurableObjectStorage, 'setAlarm' | 'deleteAlarm' | 'getAlarm'>;
 } {
   const sql = new DatabaseSync(':memory:');
   sql.exec('PRAGMA foreign_keys = ON');
   const kv = new Map<string, unknown>();
+  const sockets: WebSocket[] = [];
   let alarm: number | null = null;
   let writes = 0;
   let gate: Promise<unknown> = Promise.resolve();
@@ -189,11 +192,13 @@ export function testDocumentRoom(
       gate = run.catch(() => undefined);
       return run;
     },
-    getWebSockets: () => [],
-    acceptWebSocket: () => {},
+    getWebSockets: () => [...sockets],
+    // A socket the room accepts is listed until a test takes it away, as the runtime lists a live one.
+    acceptWebSocket: (ws: WebSocket) => void sockets.push(ws),
   } as unknown as DurableObjectState;
   return {
     room: new DocumentRoom(state, env),
+    sockets,
     sql,
     alarms: () => alarm,
     kv,

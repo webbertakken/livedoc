@@ -26,6 +26,7 @@ export {
   VIEWER_COPY_APPLY_BUDGET_MS,
   VIEWER_COPY_BUILD_BUDGET_MS,
   VIEWER_COPY_SOURCE_MAX_BYTES,
+  VIEWER_COPY_LOG_UPDATES,
   VIEWER_COPY_STATE_MAX_BYTES,
 } from './limits';
 export { textDocumentDigest, type TextDocumentDigest } from './digest';
