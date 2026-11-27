@@ -41,7 +41,6 @@ export type FileFunction = {
 /** The most characters Excel keeps in a defined name's comment (Excel's Name Manager). */
 export const EXCEL_NAME_COMMENT_MAX = 255;
 
-
 /** The workbook's named functions as a file holds them, each definition written against `ctx`'s sheets. */
 export function fileFunctionsOf(list: readonly NamedFunction[], ctx: SheetsCtx): FileFunction[] {
   return list.map((fn) => ({

@@ -362,9 +362,9 @@ export async function readXlsx(
   };
   keeper?.workbook(parsed, pkg.mainPart, listed, placed, (name, kept, scoped) => {
     const own = attributeOf(name, '', 'name');
-    if (!own || isExcelOwnName(name)) return false;
+    if (!own || isExcelOwnName(own, name)) return false;
     const fn = scoped ? null : readXlsxFunction(name, kept);
-    const range = scoped || fn ? null : xlsxRangeName(name, sheetAt, kept);
+    const range = scoped || fn ? null : xlsxRangeName(own, name, sheetAt, kept);
     if (fn) functions.push(fn);
     if (range) names.push(range);
     if (fn || range) return true;

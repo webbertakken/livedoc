@@ -124,28 +124,28 @@ export function withOdsNames(
   let dropped = 0;
   const children = holders.flatMap((i) =>
     [...after[i]!.matchAll(CHILD)].flatMap((m) => {
-      const name = CHILD_NAME.exec(m[0])?.[1]?.toUpperCase() ?? '';
-      if (!named.has(name)) return [m[0]];
+      // A kept name without its name never gives way.
+      const name = CHILD_NAME.exec(m[0]);
+      if (!name || !named.has(name[1]!.toUpperCase())) return [m[0]];
       dropped++;
       return [];
     }),
   );
   const first = holders[0];
   const opening = first === undefined ? null : HOLDER.exec(after[first]!)!;
-  const tag = opening?.[1] ?? 'table:named-expressions';
+  const [tag, attributes] = opening ? [opening[1]!, opening[2]!] : ['table:named-expressions', ''];
   const inner = [...children, ...own];
   // A holder the file left empty stays as it was.
   const merged = inner.length
-    ? [`<${tag}${opening?.[2] ?? ''}>${inner.join('')}</${tag}>`]
-    : [`<${tag}${opening?.[2] ?? ''}/>`];
+    ? [`<${tag}${attributes}>${inner.join('')}</${tag}>`]
+    : [`<${tag}${attributes}/>`];
   const rest = after.filter((_, i) => !holders.includes(i));
   const at = first ?? 0;
   return { xml: [...rest.slice(0, at), ...merged, ...rest.slice(at)], dropped };
 }
 
-/** Whether a defined name is Excel's own (`_xlnm.Print_Area`) or hidden: kept, never a person's name (D343). */
-export function isExcelOwnName(name: XmlElement): boolean {
-  const own = attributeOf(name, '', 'name') ?? '';
+/** Whether a defined name (`own`) is Excel's own (`_xlnm.Print_Area`) or hidden: kept, never a person's name (D343). */
+export function isExcelOwnName(own: string, name: XmlElement): boolean {
   const hidden = attributeOf(name, '', 'hidden');
   return own.toLowerCase().startsWith('_xlnm.') || hidden === '1' || hidden === 'true';
 }
@@ -156,9 +156,8 @@ function oneRectangle(text: string): { sheet: string; range: FileRange } | null 
   if (!parsed.ok || parsed.ast.k !== 'ref') return null;
   const ref = parsed.ast.ref;
   if (ref.sheet === undefined || ref.r1 === undefined || ref.c1 === undefined) return null;
+  // Whole columns and rows have no first row or column; an open-ended range (`A2:A`) and a spill no last one.
   if (ref.open || ref.spill) return null;
-  const twoParts = ref.r2 !== undefined || ref.c2 !== undefined;
-  if (twoParts && (ref.r2 === undefined || ref.c2 === undefined)) return null;
   const r2 = ref.r2 ?? ref.r1;
   const c2 = ref.c2 ?? ref.c1;
   return {
@@ -173,18 +172,18 @@ function oneRectangle(text: string): { sheet: string; range: FileRange } | null 
 }
 
 /**
- * A workbook's defined name as a named range, when it names one cell or rectangle of one of the file's sheets
- * (`sheetAt` finds a sheet's place by its name); else null.
+ * A workbook's defined name (`own`) as a named range, when it names one cell or rectangle of one of the file's
+ * sheets (`sheetAt` finds a sheet's place by its name); else null.
  */
 export function xlsxRangeName(
+  own: string,
   name: XmlElement,
   sheetAt: (title: string) => number | undefined,
   kept: KeptItem<FileAt>,
 ): FileRangeName | null {
-  const own = attributeOf(name, '', 'name');
-  const read = own ? oneRectangle(textContent(name)) : null;
+  const read = oneRectangle(textContent(name));
   const sheet = read ? sheetAt(read.sheet) : undefined;
-  if (!own || !read || sheet === undefined) return null;
+  if (!read || sheet === undefined) return null;
   return { name: own, sheet, ...read.range, kept };
 }
 

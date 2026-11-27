@@ -128,10 +128,23 @@ describe('named ranges written', () => {
   it('writes each as a table:named-range in ODF, after the tables', async () => {
     const xml = await odsContent(writeWorkbook([data, totals], record, 'Book', 'ods').data);
     expect(xml).toContain(
-      '</table:table><table:named-expressions>' +
+      '</table:table>\n<table:named-expressions>' +
         '<table:named-range table:name="Total" table:base-cell-address="$\'My data\'.$A$1" table:cell-range-address="$\'My data\'.$A$1:.$B$4"/>' +
         '<table:named-range table:name="Rate" table:base-cell-address="$\'My data\'.$C$3" table:cell-range-address="$\'My data\'.$C$3"/>',
     );
+  });
+
+  it('leaves out a name whose cells are gone', () => {
+    const gone = sheetNamed('sheetGone1', 'Gone', []);
+    const named = {
+      ...gone,
+      layout: {
+        ...gone.layout,
+        names: [{ name: 'Lost', r1: 'nope', c1: 'nope', r2: 'nope', c2: 'nope' }],
+      },
+    };
+    const read = writeWorkbook([named], record, 'Book', 'xlsx');
+    expect(read.losses).toEqual([]);
   });
 
   it('writes a name on two sheets once, the first in tab order, and leaves out one Excel refuses', () => {
@@ -205,6 +218,8 @@ describe('XLSX names read', () => {
       '<definedName name="Rate">0.2</definedName>',
       '<definedName name="Two">Data!$A$1,Data!$B$2</definedName>',
       '<definedName name="Col">Data!$A:$A</definedName>',
+      '<definedName name="Open">Data!A2:A</definedName>',
+      '<definedName name="Spill">Data!A1#</definedName>',
       '<definedName name="Gone">#REF!</definedName>',
       '<definedName name="Away">Elsewhere!$A$1</definedName>',
       '<definedName name="Mine" localSheetId="0">Data!$B$1</definedName>',
@@ -217,19 +232,21 @@ describe('XLSX names read', () => {
     const read = await ok(readXlsx(excelWithNames(...names)));
     expect(read.file.names).toBeUndefined();
     expect(read.losses).toEqual([
-      { k: 'name_unread', name: 'Mine' },
-      { k: 'function_unread', name: 'Local' },
       { k: 'name_unread', name: 'Rate' },
       { k: 'name_unread', name: 'Two' },
       { k: 'name_unread', name: 'Col' },
+      { k: 'name_unread', name: 'Open' },
+      { k: 'name_unread', name: 'Spill' },
       { k: 'name_unread', name: 'Gone' },
       { k: 'name_unread', name: 'Away' },
+      { k: 'name_unread', name: 'Mine' },
+      { k: 'function_unread', name: 'Local' },
     ]);
     expect(read.file.kept!.items.filter((i) => i.xml.startsWith('<definedName'))).toHaveLength(
       names.length,
     );
     expect(importReport(read.losses).map(importReportLine)).toEqual([
-      '6 named ranges LiveDoc cannot read are kept for the file: Mine, Rate, Two and more',
+      '8 named ranges LiveDoc cannot read are kept for the file: Rate, Two, Col and more',
       '1 named function LiveDoc cannot read is kept for Excel: Local',
     ]);
   });
@@ -293,13 +310,16 @@ describe('ODF names read', () => {
       '<table:named-range table:name="Total" table:base-cell-address="$Data.$A$1" table:cell-range-address="$Data.$A$1:.$B$3"/>' +
       '<table:named-expression table:name="Rate" table:base-cell-address="$Data.$A$1" table:expression="of:=0.2"/>' +
       '<table:named-range table:name="Away" table:base-cell-address="$Data.$A$1" table:cell-range-address="$Nope.$A$1"/>' +
+      '<table:named-range table:name="Nowhere"/>' +
+      '<table:named-range table:cell-range-address="$Data.$A$1"/>' +
       '</table:named-expressions>';
     const own =
-      '<table:named-expressions><table:named-range table:name="Mine" table:base-cell-address="$Data.$A$1" table:cell-range-address="$Data.$C$1"/></table:named-expressions>';
+      '<table:named-expressions><table:named-range/><table:named-range table:name="Mine" table:base-cell-address="$Data.$A$1" table:cell-range-address="$Data.$C$1"/></table:named-expressions>';
     const read = await ok(readOds(odfWithNames(after, own)));
     expect(read.losses).toEqual([
       { k: 'name_unread', name: 'Rate' },
       { k: 'name_unread', name: 'Away' },
+      { k: 'name_unread', name: 'Nowhere' },
       { k: 'name_unread', name: 'Mine' },
     ]);
     const made = sheetsFromFile(read.file, 'en-GB', rand);
@@ -307,7 +327,8 @@ describe('ODF names read', () => {
     const xml = await odsContent(writeOds({ ...read.file, kept: read.file.kept }, 'Book').data);
     expect(xml).toContain('table:name="Rate"');
     expect(xml).toContain('table:name="Away"');
-    expect(xml).not.toContain('table:name="Total"');
+    // Total is the model's now, written once by LiveDoc.
+    expect(xml.split('table:name="Total"')).toHaveLength(2);
   });
 
   it('keeps a refused name in a holder of its own, written back in the one holder', async () => {
@@ -347,6 +368,17 @@ describe('ODF names read', () => {
       dropped: 0,
     });
     expect(withOdsNames(['<x/>'], [], new Set())).toEqual({ xml: ['<x/>'], dropped: 0 });
+    // A kept name without its name never gives way.
+    expect(
+      withOdsNames(
+        ['<table:named-expressions><table:named-range/></table:named-expressions>'],
+        [],
+        new Set(['']),
+      ),
+    ).toEqual({
+      xml: ['<table:named-expressions><table:named-range/></table:named-expressions>'],
+      dropped: 0,
+    });
   });
 
   it('counts a kept name a named range takes in an ODF write', async () => {

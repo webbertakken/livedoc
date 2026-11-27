@@ -1,3 +1,7 @@
+import { mkdtempSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { libreOfficeConvert } from '@livedoc/office-packages/libreoffice';
 import type { Page } from '@playwright/test';
 import { expect, expectNoPageErrors, test } from '../fixtures';
 import { officeMenuItem } from './office-menus';
@@ -74,3 +78,66 @@ test('names a range in the panel, goes to it from another sheet, and moves it th
   await expect(panel.getByRole('button', { name: 'Go To Amounts' })).not.toContainText('Sheet2');
   expectNoPageErrors(pageErrors);
 });
+
+// Named ranges in files (standard-mapping.md "Named ranges in the file"): a name leaves as the workbook's name in XLSX
+// and ODF; LibreOffice works a formula reading it out afresh, saves the file again, and the name comes back here.
+for (const [item, dialog, filter, name] of [
+  ['Microsoft Excel (.xlsx)', true, 'xlsx:Calc MS Excel 2007 XML', 'Names in Excel.xlsx'],
+  ['OpenDocument (.ods)', false, 'ods:calc8', 'Names in Calc.ods'],
+] as const)
+  test(`a named range leaves as ${name.split('.').pop()}, works in LibreOffice and comes back`, async ({
+    page,
+    pageErrors,
+  }) => {
+    test.setTimeout(120_000);
+    await page.setViewportSize({ width: 1280, height: 860 });
+    await page.goto('/new?kind=spreadsheet');
+    await page.waitForURL(/\/document\//);
+    await expect(page.locator(READY)).toBeVisible();
+    await typeIn(page, 'A1', '2');
+    await typeIn(page, 'A2', '3');
+    await typeIn(page, 'A3', '4');
+    await select(page, 'A1:A3');
+    await nameBox(page).fill('Total');
+    await nameBox(page).press('Enter');
+    await typeIn(page, 'B1', '=SUM(Total)');
+    await expect(page.getByRole('grid').getByRole('gridcell', { name: 'B1 9' })).toHaveCount(1);
+
+    const [download] = await Promise.all([
+      page.waitForEvent('download'),
+      (async () => {
+        await (await officeMenuItem(page, ['File', 'Download', item])).click();
+        if (dialog)
+          await page
+            .getByRole('dialog', { name: /Download as/ })
+            .getByRole('button', { name: 'Download' })
+            .click();
+      })(),
+    ]);
+    const dir = mkdtempSync(join(tmpdir(), 'named-ranges-'));
+    const ours = join(dir, `Ours.${name.split('.').pop()}`);
+    await download.saveAs(ours);
+
+    // LibreOffice works the formula out afresh from the name, never trusting the cached value.
+    const csv = libreOfficeConvert(ours, 'csv', { recalculate: true }).toString('utf8').trim();
+    expect(csv.split(/\r?\n/)[0]).toBe('2,9');
+    const saved = join(dir, name);
+    writeFileSync(saved, libreOfficeConvert(ours, filter, { recalculate: true }));
+
+    const before = page.url();
+    const [chooser] = await Promise.all([
+      page.waitForEvent('filechooser'),
+      (await officeMenuItem(page, ['File', 'Open'])).click(),
+    ]);
+    await chooser.setFiles(saved);
+    await page.waitForURL((url) => url.href !== before);
+    await expect(page.locator(READY)).toBeVisible();
+    await expect(page.getByRole('grid').getByRole('gridcell', { name: 'B1 9' })).toHaveCount(1);
+    await (await officeMenuItem(page, ['Data', 'Named Ranges'])).click();
+    const panel = page.getByRole('complementary', { name: 'Named Ranges' });
+    await expect(panel.getByRole('button', { name: 'Go To Total' })).toContainText('A1:A3');
+    await page.screenshot({
+      path: test.info().outputPath(`named-ranges-from-${name.split('.').pop()}.png`),
+    });
+    expectNoPageErrors(pageErrors);
+  });
