@@ -1,7 +1,7 @@
 // Pivot tables in ODF, written (docs/specs/029-sheets/standard-mapping.md "Pivot tables in the file", D604 to D606):
 // one `table:data-pilot-table` a pivot table in the spreadsheet's one `table:data-pilot-tables`, its fields as
 // LibreOffice reads them, LiveDoc's record and the standard form's fingerprint in `livedoc:` attributes.
-import { escapeXmlAttribute } from '@livedoc/office-packages';
+import { ODF_NS, escapeXmlAttribute } from '@livedoc/office-packages';
 import { columnLetters, type GridRange } from '../address';
 import type { PivotShowAs, PivotSummary } from '../pivot/pivot-spec';
 import {
@@ -106,7 +106,8 @@ function levelXml(
   return `<table:data-pilot-level table:show-empty="false">${subtotals}${members}${sort}</table:data-pilot-level>`;
 }
 
-// The member a page field names as selected, as ODF asks one: the first its filter shows (its first when none does).
+// The member a page field names as selected, as ODF asks one: the first its filter shows (its first when none does);
+// LibreOffice's `loext:ignore-selected-page` beside it has LibreOffice read the members, not that one alone.
 function selectedPage(p: FilePivot, col: number): string {
   const items = p.items[col]!;
   const shown = valueFilters(p.fields).get(col);
@@ -126,7 +127,7 @@ function grandTotal(p: FilePivot): string {
 export function odsDataPilotXml(p: FilePivot, name: string, sheet: string): string {
   const names = pivotFieldNames(p);
   const field = (col: number, orientation: string, inner: string) =>
-    `<table:data-pilot-field${attr('table:source-field-name', names[col]!)}${attr('table:orientation', orientation)}${orientation === 'page' ? attr('table:selected-page', selectedPage(p, col)) : ''}>${inner}</table:data-pilot-field>`;
+    `<table:data-pilot-field${attr('table:source-field-name', names[col]!)}${attr('table:orientation', orientation)}${orientation === 'page' ? attr('table:selected-page', selectedPage(p, col)) + ' loext:ignore-selected-page="true"' : ''}>${inner}</table:data-pilot-field>`;
   const { rows = [], columns = [], values = [] } = p.fields;
   const data = values.flatMap((v, i) => {
     const fn = odsFunction(v);
@@ -145,7 +146,7 @@ export function odsDataPilotXml(p: FilePivot, name: string, sheet: string): stri
       : '';
   const standard = odsPivotStandard(p, sheet);
   return [
-    `<table:data-pilot-table xmlns:livedoc="${LIVEDOC_SPREADSHEET_NS}"${attr('table:name', name)}${attr('table:target-range-address', odfRangeAddress(sheet, standard.location))}${grandTotal(p)}`,
+    `<table:data-pilot-table xmlns:livedoc="${LIVEDOC_SPREADSHEET_NS}" xmlns:loext="${ODF_NS.loext}"${attr('table:name', name)}${attr('table:target-range-address', odfRangeAddress(sheet, standard.location))}${grandTotal(p)}`,
     `${attr('livedoc:pivot', pivotRecordText(p))}${attr('livedoc:pivot-fingerprint', pivotFingerprint(standard))}>`,
     `<table:source-cell-range${attr('table:cell-range-address', odfRangeAddress(p.source.sheet ?? sheet, p.source.range))}/>`,
     ...rows.map((g, i) => field(g.col, 'row', levelXml(p, g.col, g, subtotalsOf(rows, i)))),

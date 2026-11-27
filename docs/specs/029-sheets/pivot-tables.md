@@ -2,8 +2,9 @@
 
 **Status: built in part** (plan 0020 Phase 11): the model ([The model](#the-model)), how a pivot table's output is
 worked out from its source, calculated fields and formula filters too ([The output](#the-output)), proven against all
-of Google Sheets' answers in the grid ([In the grid](#in-the-grid)), `GETPIVOTDATA`, and written to both formats and
-read back ([Standard mapping](standard-mapping.md#pivot-tables-in-the-file)); the rest specified.
+of Google Sheets' answers in the grid ([In the grid](#in-the-grid)), `GETPIVOTDATA`, written to both formats and read
+back, and other apps' read from their standard forms ([Standard mapping](standard-mapping.md#pivot-tables-in-the-file));
+the rest specified.
 
 Pivot tables in a [spreadsheet](spreadsheet.md), as Google Sheets makes them. Research:
 [Charts and pivots](../../research/sheets-open-standard/charts-and-pivots.md). Evidence: twenty pivot tables Google

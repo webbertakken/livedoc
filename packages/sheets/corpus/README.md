@@ -17,5 +17,8 @@ other. `CORPUS_UPDATE=1` writes it afresh, to be read in review.
   makes `pivot-tables`, `pivot-answers.json` (each case's pivot table through the Sheets API, its output read back,
   as an export leaves most pivot tables' cells empty) and `getpivotdata-answers.json` (each `GETPIVOTDATA_PROBES`
   formula's answer, typed on a sheet of its own).
+- `excel/ExcelPivotTableSample.xlsx` holds Excel's own pivot tables (one hiding items of its rows and columns, one over
+  a table by its name) and `libreoffice/ExcelPivotTableSample.ods` and `.xlsx` LibreOffice's saves of them: the evidence
+  for reading other apps' pivot tables (`src/files/pivot-standard.test.ts`).
 - Apache POI's files are its test data, distributed under the Apache License 2.0
   (<https://www.apache.org/licenses/LICENSE-2.0>); see `NOTICE`.

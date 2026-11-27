@@ -1,7 +1,7 @@
-// Pivot tables in XLSX, read back (docs/specs/029-sheets/standard-mapping.md "Pivot tables in the file", D607): a
+// Pivot tables in XLSX, read (docs/specs/029-sheets/standard-mapping.md "Pivot tables in the file", D607 to D609): a
 // sheet's kept pivot table part holding LiveDoc's record, whose fingerprint is its standard form's as read, is the
-// sheet's pivot table again; its part, its cache and their relationships leave the kept content. Any other pivot table
-// stays the file's own, as it came.
+// sheet's pivot table again; any other is read from its standard form when the model holds it. Either way its part,
+// its cache and their relationships leave the kept content; one the model cannot hold stays the file's own, as it came.
 import {
   RELATIONSHIP_TYPES,
   attributeOf,
@@ -21,6 +21,8 @@ import {
   type PivotStandard,
 } from './file-pivots';
 import type { FileAt, KeptContent, KeptPart } from './kept-content';
+import { heldPivotOfStandard } from './pivot-standard';
+import { readXlsxStandard } from './xlsx-pivot-standard';
 import { LIVEDOC_SPREADSHEET_NS } from './validation-standard';
 import type { FileLoss, FileSheet } from './workbook-file';
 import { SPREADSHEETML_NS } from './xlsx-parts';
@@ -93,8 +95,10 @@ const PIVOT_CACHE = (relId: string) =>
   new RegExp(`<(?:[\\w.-]+:)?pivotCache\\b[^>]*?\\s[\\w.-]+:id="${relId}"[^>]*/>`);
 
 /**
- * The sheets' pivot tables LiveDoc wrote and no app changed since (D607), and the kept content without them; a
- * record another app's change left behind is named (`pivot_changed`, logged only).
+ * The sheets' pivot tables, and the kept content without them: each LiveDoc wrote and no app changed since by its
+ * record (D607), any other from its standard form when the model holds it (D608); a record another app's change left
+ * behind is named (`pivot_changed`, logged only), and a pivot table the model cannot hold stays kept, named
+ * (`pivot_unread`, D609).
  */
 export function readXlsxPivots(
   sheets: readonly FileSheet[],
@@ -103,6 +107,7 @@ export function readXlsxPivots(
 ): { sheets: FileSheet[]; kept: KeptContent<FileAt> | undefined } {
   if (!kept) return { sheets: [...sheets], kept };
   const byName = new Map(kept.parts.map((p) => [p.name, p]));
+  const names = sheets.map((s) => s.name);
   const gone = new Set<string>();
   const goneRels = new Set<unknown>();
   const out = sheets.map((sheet, i) => {
@@ -111,29 +116,39 @@ export function readXlsxPivots(
       if (rel.from !== 'sheet' || rel.at.sheet !== i || rel.external) continue;
       if (transitionalType(rel.type) !== RELATIONSHIP_TYPES.pivotTable) continue;
       const table = byName.get(rel.target.replace(/^\//, ''));
-      const cacheRel = table?.rels.find(
+      if (!table) continue;
+      const cacheRel = table.rels.find(
         (r) => transitionalType(r.type) === RELATIONSHIP_TYPES.pivotCacheDefinition && !r.external,
       );
-      const cacheName = cacheRel && resolvePartName(table!.name, cacheRel.target);
+      const cacheName = cacheRel && resolvePartName(table.name, cacheRel.target);
       const cachePart = cacheName ? byName.get(cacheName) : undefined;
       const cache = cachePart && readXlsxCache(text(cachePart));
-      const read = cache && readXlsxPivotTable(text(table!), cache);
-      if (!read) continue;
+      const read = cache && readXlsxPivotTable(text(table), cache);
       const record =
-        read.fingerprint === pivotFingerprint(read.standard) ? readPivotRecord(read.record) : null;
-      if (!record) {
-        losses.push({ k: 'pivot_changed', sheet: sheet.name });
+        read && read.fingerprint === pivotFingerprint(read.standard)
+          ? readPivotRecord(read.record)
+          : null;
+      if (read && !record) losses.push({ k: 'pivot_changed', sheet: sheet.name });
+      // Another app's pivot table, or one it changed, is read from its standard form when the model holds it (D608).
+      const standard =
+        !record && cachePart
+          ? heldPivotOfStandard(readXlsxStandard(text(table), text(cachePart), sheet.name, names))
+          : null;
+      if (record) {
+        const { location } = read!.standard;
+        pivots.push({
+          ...record,
+          headers: [],
+          items: [],
+          output: { rows: location.r2 - location.r1 + 1, cols: location.c2 - location.c1 + 1 },
+        });
+      } else if (standard) pivots.push(standard);
+      else {
+        losses.push({ k: 'pivot_unread', sheet: sheet.name });
         continue;
       }
-      const { location } = read.standard;
-      pivots.push({
-        ...record,
-        headers: [],
-        items: [],
-        output: { rows: location.r2 - location.r1 + 1, cols: location.c2 - location.c1 + 1 },
-      });
       goneRels.add(rel);
-      gone.add(table!.name);
+      gone.add(table.name);
       gone.add(cacheName!);
     }
     return pivots.length ? { ...sheet, pivots } : sheet;
@@ -147,6 +162,13 @@ export function readXlsxPivots(
         if (name && transitionalType(r.type) === RELATIONSHIP_TYPES.pivotCacheDefinition)
           gone.delete(name);
       }
+  // A cache that goes takes its own parts (Excel's records) with it.
+  for (const name of [...gone])
+    for (const r of byName.get(name)!.rels) {
+      const own = r.external ? undefined : resolvePartName(name, r.target);
+      if (own && transitionalType(r.type) !== RELATIONSHIP_TYPES.pivotCacheDefinition)
+        gone.add(own);
+    }
   const cacheRels = kept.relationships.filter(
     (r) => r.from === 'workbook' && gone.has(r.target.replace(/^\//, '')),
   );

@@ -25,7 +25,8 @@ import {
   sheetPivotOf,
   type FilePivotFields,
 } from './file-pivots';
-import { parseOdfRange, readOdsDataPilot } from './ods-pivots-read';
+import { readOdsDataPilot } from './ods-pivots-read';
+import { parseOdfRange } from './ods-pivot-standard';
 import { withDataPilots } from './ods-pivots';
 import { readXlsxCache, readXlsxPivotTable } from './xlsx-pivots-read';
 import { withPivotCaches } from './xlsx-kept-write';
@@ -101,6 +102,9 @@ async function entries(bytes: Uint8Array): Promise<Map<string, string>> {
 const zipped = (files: Map<string, string>) =>
   writeZip([...files].map(([name, text]) => ({ name, data: new TextEncoder().encode(text) })));
 
+// The id of a row of onePivot's sheet, by its place.
+const onePivotRow = (r: number) => onePivot()[0]!.layout.rows[r]!;
+
 // A workbook of one pivot table, on its source's sheet.
 function onePivot(
   change?: (p: SheetPivot) => SheetPivot,
@@ -124,7 +128,7 @@ function onePivot(
 }
 
 describe('a pivot table another app changed', () => {
-  it('stays the XLSX file’s own, its output read as values', async () => {
+  it('is read from its XLSX standard form, its output worked out again', async () => {
     const files = await entries(writeWorkbook(onePivot(), record, 'P', 'xlsx').data);
     const table = files.get('xl/pivotTables/pivotTable1.xml')!;
     files.set(
@@ -132,27 +136,68 @@ describe('a pivot table another app changed', () => {
       table.replace('<location ref="E1:F4"', '<location ref="E1:F5"'),
     );
     const again = await reopened(zipped(files));
-    expect(again.losses).toContainEqual({ k: 'pivot_changed', sheet: 'Data' });
-    expect(pivotsOf(again.sheets)).toEqual([]);
-    expect(again.kept?.parts.map((p) => p.name).sort()).toEqual([
-      'xl/pivotCache/pivotCacheDefinition1.xml',
-      'xl/pivotTables/pivotTable1.xml',
-    ]);
-    expect(again.sheets[0]!.cells.size).toBe(6 + 8);
-    // Written back to its format as it came, beside nothing of LiveDoc's own.
-    const back = await entries(writeWorkbook(again.sheets, record, 'P', 'xlsx', again.kept).data);
-    expect(back.get('xl/workbook.xml')).toMatch(
-      /<pivotCaches><pivotCache cacheId="0" r:id="rId\d+"\/><\/pivotCaches>/,
+    expect(again.losses).toEqual([{ k: 'pivot_changed', sheet: 'Data' }]);
+    expect(workbookFileFor(again.sheets, record).sheets[0]!.pivots).toEqual(
+      workbookFileFor(onePivot(), record).sheets[0]!.pivots,
     );
+    expect(again.kept).toBeUndefined();
+    // The other app's output, a row longer, is the engine's to work out again.
+    expect(again.sheets[0]!.cells.size).toBe(6);
   });
 
-  it('stays the ODF file’s own, its data pilot table kept', async () => {
+  it('is read from its ODF standard form', async () => {
     const flat = new TextDecoder().decode(writeWorkbook(onePivot(), record, 'P', 'fods').data);
     const changed = flat.replace("'Data'.E1:'Data'.F4", "'Data'.E1:'Data'.F5");
     const again = await reopened(new TextEncoder().encode(changed));
-    expect(again.losses).toContainEqual({ k: 'pivot_changed', sheet: 'Data' });
+    expect(again.losses).toEqual([{ k: 'pivot_changed', sheet: 'Data' }]);
+    expect(workbookFileFor(again.sheets, record).sheets[0]!.pivots).toEqual(
+      workbookFileFor(onePivot(), record).sheets[0]!.pivots,
+    );
+    expect(again.kept).toBeUndefined();
+  });
+
+  it('matches the members it hides to its own sheet’s cells as they show, a blank and an error hidden too', async () => {
+    const sheets = onePivot(
+      (p) => ({
+        ...p,
+        source: { ...p.source!, r2: onePivotRow(4) },
+        filters: [{ col: p.rows![0]!.col, cond: { values: ['West'] } }],
+      }),
+      { A4: '=NA()', B4: '5', B5: '6' },
+    );
+    const flat = new TextDecoder().decode(writeWorkbook(sheets, record, 'P', 'fods').data);
+    // Another app's data pilot table and pivot table part: no record of LiveDoc's.
+    const theirs = flat.replace(/ livedoc:pivot="[^"]*"/, '');
+    const files = await entries(writeWorkbook(sheets, record, 'P', 'xlsx').data);
+    const table = files.get('xl/pivotTables/pivotTable1.xml')!;
+    files.set('xl/pivotTables/pivotTable1.xml', table.replace(/<extLst>.*<\/extLst>/, ''));
+    for (const data of [new TextEncoder().encode(theirs), zipped(files)]) {
+      const again = await reopened(data);
+      expect(again.losses).toEqual([]);
+      expect(pivotsOf(again.sheets)[0]!.filters).toEqual([
+        { col: expect.any(String), cond: { values: ['West'] } },
+      ]);
+    }
+  });
+
+  it.each([
+    [/ table:target-range-address="[^"]*"/, 'LiveDocPivot1'],
+    [/ table:(?:target-range-address|name)="[^"]*"/g, ''],
+  ])('keeps a data pilot table with no place, named by what it has', async (drop, sheet) => {
+    const flat = new TextDecoder().decode(writeWorkbook(onePivot(), record, 'P', 'fods').data);
+    const pilot = /<table:data-pilot-table [^>]*>/.exec(flat)![0];
+    const again = await reopened(
+      new TextEncoder().encode(flat.replace(pilot, pilot.replace(drop, ''))),
+    );
+    expect(again.losses).toEqual([{ k: 'pivot_unread', sheet }]);
     expect(pivotsOf(again.sheets)).toEqual([]);
-    expect(again.kept?.items.some((i) => i.xml.includes('data-pilot-table '))).toBe(true);
+  });
+
+  it('passes over a pivot table part the file does not hold', async () => {
+    const files = await entries(writeWorkbook(onePivot(), record, 'P', 'xlsx').data);
+    files.delete('xl/pivotTables/pivotTable1.xml');
+    const again = await reopened(zipped(files));
+    expect(pivotsOf(again.sheets)).toEqual([]);
   });
 
   it('passes over a record that does not read, though its fingerprint holds', async () => {
@@ -193,12 +238,15 @@ describe('pivot tables beside the file’s own', () => {
       );
       const written = writeWorkbook(sheets, record, 'Mixed', format, opened.kept);
       const again = await reopened(written.data);
-      expect(pivotsOf(again.sheets)).toHaveLength(1);
+      expect(pivotsOf(again.sheets)).toHaveLength(pivotsOf(opened.sheets).length + 1);
       expect(again.kept?.items.some((i) => /pivotCaches|data-pilot-tables/.test(i.xml))).toBe(true);
       if (format === 'xlsx') {
         const files = await entries(written.data);
-        expect(files.get('xl/workbook.xml')).toContain('<pivotCache cacheId="9" r:id=');
-        expect(files.has('xl/pivotTables/pivotTable35.xml')).toBe(true);
+        // Google's six kept beside the ones read and LiveDoc's own.
+        const tables = [...files.keys()].filter((n) =>
+          /^xl\/pivotTables\/pivotTable\d+\.xml$/.test(n),
+        );
+        expect(tables).toHaveLength(6 + pivotsOf(again.sheets).length);
       } else {
         const files = await entries(written.data);
         expect(files.get('content.xml')!.match(/<table:data-pilot-tables>/g)).toHaveLength(1);
@@ -430,7 +478,9 @@ describe('the standard forms', () => {
       })),
     );
     expect(table).toContain('<dataField name="Middle" fld="1" baseField="0" baseItem="0"/>');
-    expect(table).toContain('rowGrandTotals="0"');
+    // As Google Sheets writes them and LibreOffice reads them: a column group's totals off hides the columns' grand total.
+    expect(table).toContain('colGrandTotals="0"');
+    expect(table).not.toContain('rowGrandTotals');
     expect(fods).toContain('table:grand-total="row"');
     expect(fods).toContain('table:function="median"');
   });
@@ -479,7 +529,9 @@ describe('the standard forms', () => {
       rows: [],
     }));
     const fods = new TextDecoder().decode(writeWorkbook(sheets, record, 'P', 'fods').data);
-    expect(fods).toContain('table:orientation="page" table:selected-page=""');
+    expect(fods).toContain(
+      'table:orientation="page" table:selected-page="" loext:ignore-selected-page="true"',
+    );
   });
 
   it('refuses a pivot table its record holds but the model cannot', () => {
@@ -597,13 +649,13 @@ describe('reading another app’s pivot table parts', () => {
     expect(pivotsOf(again.sheets)).toHaveLength(2);
   });
 
-  it('keeps a data pilot table on a sheet the file does not have', async () => {
+  it('keeps a data pilot table on a sheet the file does not have, named', async () => {
     const flat = new TextDecoder().decode(writeWorkbook(onePivot(), record, 'P', 'fods').data);
     const again = await reopened(
       new TextEncoder().encode(flat.replaceAll("'Data'.E1:'Data'.F4", "'Gone'.E1:'Gone'.F4")),
     );
     expect(pivotsOf(again.sheets)).toEqual([]);
-    expect(again.losses).toEqual([]);
+    expect(again.losses).toEqual([{ k: 'pivot_unread', sheet: 'Gone' }]);
   });
 
   it('puts LiveDoc’s data pilot tables where ODF orders them', () => {

@@ -147,6 +147,11 @@ export function importReportLine(loss: ReportedLoss): string {
         `${counted(count, 'pivot table whose source data was deleted is', 'pivot tables whose source data was deleted are')} left out`,
         { ...loss, count: loss.names.length },
       );
+    case 'pivot_unread':
+      return named(
+        `${counted(count, 'pivot table LiveDoc cannot work out is', 'pivot tables LiveDoc cannot work out are')} kept as the file holds them`,
+        { ...loss, count: loss.names.length },
+      );
     case 'sheet_renamed':
       return `${counted(count, 'sheet name is', 'sheet names are')} changed to fit: ${renamed(loss.names)}`;
   }

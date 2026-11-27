@@ -29,7 +29,9 @@ import {
   type SheetHandle,
   type SheetsCtx,
 } from '../formula/stored';
-import { isArray, scalarOf, type ErrorCode, type Scalar } from '../formula/values';
+import { err, isArray, scalarOf, type ErrorCode, type Scalar } from '../formula/values';
+import { displayValue } from '../number-format';
+import { pivotHidesResolved } from './pivot-standard';
 import type { Workbook } from '../engine/workbook';
 import { cellText } from '../engine/sheets-ctx';
 import { sameTableName, type CellText } from '../tables/table';
@@ -190,9 +192,11 @@ export type FileLoss =
   | { k: 'tables_changed'; sheet: string }
   | { k: 'table_unread'; sheet: string; name: string }
   // Pivot tables (standard-mapping.md "Pivot tables in the file"): one with no source, left out of a write; LiveDoc's
-  // record beside a standard form another app changed since, the pivot table kept as the file's own (D607, logged).
+  // record beside a standard form another app changed since, the standard form read instead (D607, logged); another
+  // app's the model cannot hold, kept as the file's own (D609, reported).
   | { k: 'pivot_unwritten'; sheet: string }
-  | { k: 'pivot_changed'; sheet: string };
+  | { k: 'pivot_changed'; sheet: string }
+  | { k: 'pivot_unread'; sheet: string };
 
 export function fileValueOf(value: Scalar): FileValue | undefined {
   if (value === null) return undefined;
@@ -470,6 +474,29 @@ function headerText(m: Made): CellText {
   return (r, c) => text.get(`${r},${c}`);
 }
 
+// A pivot table read from another app's standard form, its hidden items matched to its source's cells as they show.
+function hidesResolved(
+  p: FilePivot,
+  own: FileSheet,
+  sheets: readonly FileSheet[],
+  formats: FormatsRead,
+  locale: string,
+): FilePivot {
+  if (!p.hides) return p;
+  // The readers name only sheets the file holds.
+  const source = p.source.sheet === null ? own : sheets.find((s) => s.name === p.source.sheet)!;
+  const cells = new Map(source.cells.map((cell) => [`${cell.r},${cell.c}`, cell]));
+  const cellAt = (r: number, c: number) => cells.get(`${r},${c}`)?.value ?? null;
+  return pivotHidesResolved(p, cellAt, (r, c) => {
+    const cell = cells.get(`${r},${c}`);
+    const v = cell?.value;
+    if (!v) return '';
+    const read = cell.format === undefined ? undefined : formats(cell.format);
+    const format = read?.ok ? read.format : undefined;
+    return displayValue(v.k === 'e' ? err(v.v) : v.v, format, locale).text;
+  });
+}
+
 // Each sheet's grid: at least a new sheet's, within a sheet's limits and the room every earlier sheet left in the
 // workbook (its rows and grid cells, files-and-print.md "A file sent in parts"). A sheet with no row left, and every
 // sheet after it, is cut.
@@ -609,7 +636,7 @@ export function sheetsFromFile(
     const rules = validationRulesFromFile(m.file.validations, m.layout, ctx, m.title, rand, losses);
     const charts = sheetChartsFromFile(m.file.charts, m.layout, rand);
     const pivots = sheetPivotsFromFile(
-      m.file.pivots,
+      m.file.pivots?.map((p) => hidesResolved(p, m.file, file.sheets, formats, locale)),
       m.layout,
       ctx,
       rand,

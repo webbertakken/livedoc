@@ -33,7 +33,9 @@ import { VALIDATIONS, WRITTEN_CONSTRUCTS } from './written-constructs';
 import { ByteBudget, listZip, readZipEntry } from '@livedoc/office-packages';
 import { PIVOT_CASES } from '../../corpus/pivot-cases';
 import { casesInTheGrid } from '../testing/pivot-cases-book';
-import { workbookFileOf } from '../files/workbook-file';
+import { sheetsFromFile, workbookFileOf } from '../files/workbook-file';
+import { sheetFromJson } from '../sheet-json';
+import { Workbook } from '../engine/workbook';
 import { pivotSimplified } from '../files/file-pivots';
 
 const OUT = mkdtempSync(join(tmpdir(), 'livedoc-sheets-written-'));
@@ -235,8 +237,10 @@ describe('pivot tables other apps read', () => {
     new Set(cells.flatMap((c) => (c.value?.k === 'n' ? [Math.round(c.value.v * 1e9) / 1e9] : [])));
 
   it('pivots.ods, pivots.fods and pivots.xlsx against their schemas', async () => {
-    await validateOdfPackage(writeOds(file, 'pivots').data, join(OUT, 'pivots-ods'), ODF_OWN);
-    validateFlatOdf(writeFlatOds(file, 'pivots').data, join(OUT, 'pivots-fods'), ODF_OWN);
+    // LibreOffice's `loext:ignore-selected-page` on page fields: extended conformance.
+    const foreign = new Set([...ODF_OWN, ...ODF_FOREIGN]);
+    await validateOdfPackage(writeOds(file, 'pivots').data, join(OUT, 'pivots-ods'), foreign);
+    validateFlatOdf(writeFlatOds(file, 'pivots').data, join(OUT, 'pivots-fods'), foreign);
     await validateOoxmlPackage(writeXlsx(file, 'pivots').data, join(OUT, 'pivots-xlsx'));
   });
 
@@ -261,6 +265,88 @@ describe('pivot tables other apps read', () => {
         const theirs = numbers(read.file.sheets.find((s) => s.name === sheet.name)!.cells);
         for (const n of numbers(last)) expect(theirs.has(n), `${sheet.name} ${n}`).toBe(true);
       }
+    },
+    180_000,
+  );
+});
+
+// The cases LibreOffice's saves say whole: its ODS leaves out sorting by a value, grouping, filters by condition or
+// formula, calculated fields and Repeat Row Labels; its XLSX Show As, grand totals and sorting too.
+const WHOLE_AFTER_LIBREOFFICE = {
+  ods: [
+    'Rows',
+    'Rows and columns',
+    'Two levels',
+    'Percent of row',
+    'Percent of column',
+    'Percent of total',
+    'No totals, filtered',
+    'Values as rows',
+    'Columns only',
+    'Two values, columns',
+    'Two column levels',
+    'Group limit',
+    'Descending labels',
+  ],
+  xlsx: [
+    'Rows',
+    'Rows and columns',
+    'Two levels',
+    'Values as rows',
+    'Columns only',
+    'Two values, columns',
+    'Two column levels',
+    'Group limit',
+  ],
+};
+
+describe('pivot tables LibreOffice saved', () => {
+  it.each(['ods', 'xlsx'] as const)(
+    'reads its own .%s of ours back from the standard form, as LiveDoc works them out',
+    async (type) => {
+      const b = casesInTheGrid();
+      const path = join(OUT, `pivots-lo-own-source.${type}`);
+      writeFileSync(
+        path,
+        type === 'ods'
+          ? writeOds(workbookFileOf(b.wb, b.sheets, 'en-US'), 'p').data
+          : writeXlsx(workbookFileOf(b.wb, b.sheets, 'en-US'), 'p').data,
+      );
+      const saved = libreOfficeConvert(path, type);
+      const read = await readWorkbookFile(new Uint8Array(saved), 'en-US');
+      if (!read.ok) throw new Error(read.rejection);
+      const made = sheetsFromFile(read.file, 'en-US');
+      const sheets = made.sheets.map((s, i) =>
+        sheetFromJson({
+          ...s,
+          tabId: `t${i}`,
+          rev: 0,
+          createdAt: i,
+          updatedAt: i,
+          updatedBy: { id: 'x', name: 'x', color: '#000000' },
+        }),
+      );
+      const wb = new Workbook({
+        sheets,
+        locale: 'en-US',
+        now: () => 46303.5,
+        rand: () => 0.5,
+        cards: null,
+      });
+      const grid = (w: Workbook, list: readonly { id: string; title: string }[], title: string) => {
+        const sheet = list.find((x) => x.title === title)!;
+        const { rows, cols } = w.shownExtent(sheet.id);
+        return Array.from({ length: rows }, (_, r) =>
+          Array.from({ length: cols }, (_, c) => w.value(sheet.id, r, c)),
+        );
+      };
+      const equal = PIVOT_CASES.filter(
+        ({ title }) =>
+          JSON.stringify(grid(wb, sheets, title)) === JSON.stringify(grid(b.wb, b.sheets, title)),
+      ).map((c) => c.title);
+      // LibreOffice keeps no record of LiveDoc's: every pivot table is read from its standard form.
+      expect([...read.losses, ...made.losses].filter((l) => l.k.startsWith('pivot'))).toEqual([]);
+      expect(equal).toEqual(WHOLE_AFTER_LIBREOFFICE[type]);
     },
     180_000,
   );
