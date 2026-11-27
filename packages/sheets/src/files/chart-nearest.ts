@@ -14,7 +14,14 @@ import { fileChartSum, type FileChart } from './file-charts';
 /** A chart type a file holds: every type built but those written as their nearest. */
 export type HeldChartType = Exclude<
   SheetChartType,
-  'stepped-area' | 'histogram' | 'waterfall' | 'treemap' | 'gauge' | 'scorecard' | 'timeline'
+  | 'stepped-area'
+  | 'histogram'
+  | 'waterfall'
+  | 'treemap'
+  | 'gauge'
+  | 'scorecard'
+  | 'timeline'
+  | 'table'
 >;
 export type HeldSeriesType = Exclude<SheetComboSeriesType, 'stepped-area'>;
 export type HeldFileChart = Omit<FileChart, 'type' | 'series'> & {
@@ -51,6 +58,8 @@ const NEAREST_TYPE: Readonly<Record<SheetChartType, HeldChartType>> = {
   scorecard: 'column',
   // A timeline is a line over dates; its dates are written as the line chart's labels (D373).
   timeline: 'line',
+  // No format holds a table chart; a column per series shows the same numbers (D375).
+  table: 'column',
   combo: 'combo',
 };
 const NEAREST_SERIES_TYPE: Readonly<Record<SheetComboSeriesType, HeldSeriesType>> = {

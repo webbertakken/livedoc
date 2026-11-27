@@ -25,6 +25,7 @@ export const SHEET_CHART_TYPES = [
   'gauge',
   'scorecard',
   'timeline',
+  'table',
   'combo',
 ] as const;
 export type SheetChartType = (typeof SHEET_CHART_TYPES)[number];

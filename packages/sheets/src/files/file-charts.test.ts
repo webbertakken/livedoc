@@ -308,9 +308,10 @@ async function entriesOf(bytes: Uint8Array<ArrayBuffer>): Promise<Map<string, st
 describe('writeXlsx with charts', () => {
   it('adds a drawing part with its chart parts, related from the worksheet', async () => {
     const out = writeXlsx(CHARTS, 'charts');
-    // The Stepped Area chart, the Combo of a stepped area series, the Histogram, the Waterfall, the Treemap, the Gauge, the Scorecard and the Timeline are written as their nearest type.
+    // The Stepped Area chart, the Combo of a stepped area series, the Histogram, the Waterfall, the Treemap, the Gauge, the Scorecard, the Timeline and the Table are written as their nearest type.
     const nearest = { k: 'chart_nearest_type', sheet: CHARTS.sheets[0]!.name };
     expect(out.losses).toEqual([
+      nearest,
       nearest,
       nearest,
       nearest,
@@ -345,6 +346,7 @@ describe('writeXlsx with charts', () => {
       'xl/charts/chart26.xml',
       'xl/charts/chart27.xml',
       'xl/charts/chart28.xml',
+      'xl/charts/chart29.xml',
       'xl/charts/chart3.xml',
       'xl/charts/chart4.xml',
       'xl/charts/chart5.xml',

@@ -324,6 +324,8 @@ function chartSheet(): FileSheet {
     { ...base(types.length + 20, 'scorecard'), id: 'chart_scorecard' },
     // Timeline (D373): written as a line chart of its series, its original kept.
     { ...base(types.length + 21, 'timeline'), id: 'chart_timeline' },
+    // Table (D375): written as a column chart of its series, its original kept.
+    { ...base(types.length + 22, 'table'), id: 'chart_table' },
   );
   return { ...sheet("Costs' sheet", cells, 140, 8), charts };
 }
