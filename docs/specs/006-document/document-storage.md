@@ -93,6 +93,17 @@ admin routes.
   `[summary-refresh] dry <documentId> changed=<0|1> textDocument=<0|1>`. A failed check is named as
   `[summary-refresh] failed <documentId> <reason>` and tried again after an hour. The switch goes back off, a change
   of its own, once the counts are in.
+- **What changed** (director, 2026-11-26): each check also records which of the summary's fields differ, by name
+  (`v`, `tabs`, `firstTabCount`, `tabCounts`, `stats`, `stats.mode`, `stats.elements`, `stats.comments`,
+  `stats.bytes`, `hasContent`, `spreadsheet`, `textDocument`; `order` when every value is the same but the text is
+  not; `other` when a key none of these names differs; `missing` with no stored summary; `unparseable` with one that is not JSON), `hasContent` before and after, and
+  the numeric differences (tabs, first tab's count, elements, comments, bytes, and how many tabs' counts differ). Never
+  a tab's id, a name or any text. The log line adds `fields=<names>`. The pass that first records them starts from an
+  emptied table, still `dry`.
+- **Content never lost by the refresh**: the run writes no summary that turns `hasContent` from true to false, since
+  that would offer a document to the empty clean-up. Such a document is skipped, recorded as skipped
+  (`has_content_lost`), logged as `[summary-refresh] skipped <documentId> has_content_lost`, and never tried again.
+  A false-to-true flip is written.
 - **A read that writes nothing** (director, 2026-11-26): a room asked for its summary reads its SQLite through a
   read-only view, which takes no schema step (a table an older schema lacks reads as empty), refuses any write and
   tells the room of none, so no upkeep or compaction is armed. It skips the handover and the move: a room whose
@@ -105,7 +116,9 @@ admin routes.
 - **The operator's read**: `scripts/summary-refresh.ts report (--local | --remote) [--run]` in `apps/api` reads those
   rows through wrangler, never writing. It prints for its environment the documents, how many are checked, would
   change, would gain `textDocument` and are written, how long the pass took (first check to last), and every failure
-  with its reason. It exits non-zero until every document is checked (dry) or written (`--run`) and none failed.
+  with its reason. Then how many documents each field differs in, with each numeric field's range of differences,
+  every `hasContent` flip by document id and direction, and every document skipped. A skipped document counts as
+  settled. It exits non-zero until every document is checked (dry) or written (`--run`) and none failed.
 - **No way back is kept**: a summary is derived from the room, which still holds everything it is made from; the
   next push writes the same again.
 - **Afterwards**: `summary_refreshes` is the run's record until the run is complete; the change that removes the
