@@ -5,6 +5,7 @@
 import type { Node as PmNode } from 'prosemirror-model';
 import { NodeSelection, TextSelection, type EditorState } from 'prosemirror-state';
 import type { EditorView } from 'prosemirror-view';
+import { ySyncPluginKey } from 'y-prosemirror';
 import * as Y from 'yjs';
 import type { TextDocumentFormat } from '@livedoc/document';
 import { FOOTNOTE, storyFragment, TEXT_PROPERTY_MARK_OF } from '@livedoc/text-documents';
@@ -39,13 +40,18 @@ export function insertFootnote(
   const type = state.schema.nodes[FOOTNOTE];
   const { $to } = state.selection;
   if (!type || !$to.parent.inlineContent) return null;
-  const story = makeNoteStory(doc, format);
-  const props = caretTextProps(state);
-  const mark = type.create({ story, props: Object.keys(props).length > 0 ? props : null });
-  const tr = state.tr.insert($to.pos, mark);
-  tr.setSelection(TextSelection.create(tr.doc, $to.pos + mark.nodeSize)).scrollIntoView();
+  let story = '';
   startUndoStep(view);
-  view.dispatch(tr);
+  // The note and its mark as one change of the live state, so a Participant's is judged whole (review.md "Headers,
+  // footers and notes"); under the sync's own origin, so the body's undo takes the mark back.
+  doc.transact(() => {
+    story = makeNoteStory(doc, format);
+    const props = caretTextProps(state);
+    const mark = type.create({ story, props: Object.keys(props).length > 0 ? props : null });
+    const tr = state.tr.insert($to.pos, mark);
+    tr.setSelection(TextSelection.create(tr.doc, $to.pos + mark.nodeSize)).scrollIntoView();
+    view.dispatch(tr);
+  }, ySyncPluginKey);
   startUndoStep(view);
   return story;
 }

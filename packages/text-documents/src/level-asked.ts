@@ -29,7 +29,7 @@ import {
 import { liveTabIds } from './live/live-tabs';
 import { liveStoryIds, STORY_PREFIX } from './live/live-stories';
 import { liveMediaOf } from './live/live-read';
-import { INSERTION_MARK, MEDIA_MAP, PICTURE } from './live/live-names';
+import { FOOTNOTE, INSERTION_MARK, MEDIA_MAP, PICTURE } from './live/live-names';
 import { TextDocumentState } from './text-document-state';
 
 /** The least level an update needs, or that it stands on changes the stored state lacks and cannot be judged. */
@@ -195,9 +195,16 @@ function ownSuggestions(
   adderKey: string,
 ): boolean {
   const before = TextDocumentState.load(stored);
+  const known = new Set(liveStoryIds(before).map((id) => `${STORY_PREFIX}${id}`));
   for (const root of roots) {
     const now = after.getXmlFragment(root);
     if (!LiveSuggestions.ownMarksWellFormed(now, adderKey)) return false;
+    // A note new in the update, named only by the sender's own suggested footnotes, is theirs whole: what is left with
+    // their suggestions rejected is its empty paragraphs (review.md "Headers, footers and notes").
+    if (root.startsWith(STORY_PREFIX) && !known.has(root)) {
+      if (!ownNewNote(after, root.slice(STORY_PREFIX.length), now, adderKey)) return false;
+      continue;
+    }
     if (
       LiveSuggestions.ownRejected(before.getXmlFragment(root), adderKey) !==
       LiveSuggestions.ownRejected(now, adderKey)
@@ -206,6 +213,50 @@ function ownSuggestions(
   }
   const count = LiveSuggestions.count(after);
   return count <= TEXT_DOCUMENT_SUGGESTIONS_MAX || count <= LiveSuggestions.count(before);
+}
+
+/**
+ * The empty writing: what a new note may leave once its author's suggestions are rejected. Made on first use, never as
+ * the module loads: a Y.Doc draws a random client id, which a Worker refuses in its global scope.
+ */
+let emptyNote: readonly string[] | null = null;
+function emptyNoteWritings(): readonly string[] {
+  if (emptyNote) return emptyNote;
+  const doc = new Y.Doc();
+  const fragment = doc.getXmlFragment('note');
+  const paragraph = new Y.XmlElement('paragraph');
+  paragraph.insert(0, [new Y.XmlText()]);
+  fragment.insert(0, [paragraph]);
+  emptyNote = [
+    LiveSuggestions.ownRejected(doc.getXmlFragment('none'), ''),
+    LiveSuggestions.ownRejected(fragment, ''),
+  ];
+  return emptyNote;
+}
+
+/** Whether a note new in the update is named only by the sender's own suggested footnotes and holds only theirs. */
+function ownNewNote(doc: Y.Doc, story: string, note: Y.XmlFragment, adderKey: string): boolean {
+  const marks = liveTabIds(doc).flatMap(
+    (tab) =>
+      [
+        ...doc
+          .getXmlFragment(tabFragmentName(tab))
+          .createTreeWalker(
+            (n) =>
+              n instanceof Y.XmlElement &&
+              n.nodeName === FOOTNOTE &&
+              n.getAttribute('story') === story,
+          ),
+      ] as Y.XmlElement[],
+  );
+  if (marks.length === 0) return false;
+  if (
+    !marks.every((m) =>
+      LiveSuggestions.isOwnMark(m.getAttribute(INSERTION_MARK) as unknown, adderKey),
+    )
+  )
+    return false;
+  return emptyNoteWritings().includes(LiveSuggestions.ownRejected(note, adderKey));
 }
 
 /** The media keys the pictures of the sender's own suggested insertion name, in the bodies. */

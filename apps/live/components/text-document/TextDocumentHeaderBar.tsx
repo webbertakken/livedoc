@@ -3,11 +3,15 @@
 // holds Header format, Page numbers and Remove header. A toolbar reached from the header with Alt+F10 and left back
 // to it with Escape.
 import { useState, type KeyboardEvent, type RefObject } from 'react';
-import { ChevronDownIcon } from '@livedoc/ui';
+import { ChevronDownIcon, Tooltip } from '@livedoc/ui';
 import type { HeaderFooterKind } from '@livedoc/text-documents';
 import { noShortcuts, type OfficeActions, type OfficeEntry } from '@/lib/office/office-catalogue';
 import { OfficeMenuPanel } from '@/components/office/OfficeMenuPanel';
 import { OfficePopup } from '@/components/office/OfficePopup';
+import {
+  NOT_YET_SUGGESTED_HINT,
+  NOT_YET_SUGGESTED_NOTE,
+} from '@/lib/text-document/text-document-modes';
 
 /** The Options menu's entries. */
 export function headerOptionsEntries(kind: HeaderFooterKind): readonly OfficeEntry[] {
@@ -43,6 +47,11 @@ export type TextDocumentHeaderBarProps = {
   /** Escape: back into the header or footer. */
   onBack: () => void;
   toolbar: RefObject<HTMLDivElement | null>;
+  /**
+   * While suggesting, its settings are kept beside the writing: dimmed "Editing only", saying why (review.md "Headers,
+   * footers and notes").
+   */
+  settingsOff?: boolean;
 };
 
 const CONTROL =
@@ -60,14 +69,41 @@ export function TextDocumentHeaderBar({
   onPageNumbers,
   onBack,
   toolbar,
+  settingsOff = false,
 }: TextDocumentHeaderBarProps) {
   const [trigger, setTrigger] = useState<HTMLButtonElement | null>(null);
   const [open, setOpen] = useState(false);
   const label = kind === 'header' ? 'Header options' : 'Footer options';
-  const actions: OfficeActions = {
-    [`${kind}-format`]: { run: onFormat },
-    [`${kind}-page-numbers`]: { run: onPageNumbers },
-    [`remove-${kind}`]: { run: onRemove, disabled: linked },
+  const off = {
+    run: () => {},
+    disabled: true,
+    note: NOT_YET_SUGGESTED_NOTE,
+    hint: NOT_YET_SUGGESTED_HINT,
+  };
+  const actions: OfficeActions = settingsOff
+    ? { [`${kind}-format`]: off, [`${kind}-page-numbers`]: off, [`remove-${kind}`]: off }
+    : {
+        [`${kind}-format`]: { run: onFormat },
+        [`${kind}-page-numbers`]: { run: onPageNumbers },
+        [`remove-${kind}`]: { run: onRemove, disabled: linked },
+      };
+  // A setting's checkbox: dimmed while suggesting, its hint on hover.
+  const setting = (name: string, checked: boolean, onChange: () => void) => {
+    const box = (
+      <label className={`${CONTROL} ${settingsOff ? 'opacity-60' : ''}`}>
+        <input
+          type="checkbox"
+          className="size-icon-row accent-(--office-primary)"
+          checked={checked}
+          disabled={settingsOff}
+          onChange={() => {
+            if (!settingsOff) onChange();
+          }}
+        />
+        {name}
+      </label>
+    );
+    return settingsOff ? <Tooltip label={NOT_YET_SUGGESTED_HINT}>{box}</Tooltip> : box;
   };
   // Arrows move along the bar; Escape goes back into the writing.
   const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
@@ -97,26 +133,8 @@ export function TextDocumentHeaderBar({
       }`}
       style={{ paddingLeft: 'inherit' }}
     >
-      <label className={CONTROL}>
-        <input
-          type="checkbox"
-          className="size-icon-row accent-(--office-primary)"
-          checked={differentFirst}
-          onChange={onFirst}
-        />
-        Different first page
-      </label>
-      {later ? (
-        <label className={CONTROL}>
-          <input
-            type="checkbox"
-            className="size-icon-row accent-(--office-primary)"
-            checked={linked}
-            onChange={onLink}
-          />
-          Link to previous
-        </label>
-      ) : null}
+      {setting('Different first page', differentFirst, onFirst)}
+      {later ? setting('Link to previous', linked, onLink) : null}
       <button
         ref={setTrigger}
         type="button"

@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import * as Y from 'yjs';
 import { Styles, storyFragment, TextDocumentState } from '@livedoc/text-documents';
 import { STORY_CLASS, StorySource } from './text-document-story-sources';
+import type { SuggestingDispatch } from './text-document-suggesting-dispatch';
 
 const formatting = { styles: Styles.builtIn('odf'), defaults: Styles.defaults() };
 
@@ -18,7 +19,7 @@ function storyDoc(text: string) {
 
 const settle = () => new Promise((resolve) => setTimeout(resolve, 0));
 
-function source(doc: Y.Doc, onLaid = vi.fn(), drawsEmpty = false) {
+function source(doc: Y.Doc, onLaid = vi.fn(), drawsEmpty = false, suggesting?: SuggestingDispatch) {
   const container = document.createElement('div');
   document.body.append(container);
   const made = new StorySource({
@@ -34,6 +35,7 @@ function source(doc: Y.Doc, onLaid = vi.fn(), drawsEmpty = false) {
     onLaid,
     drawsEmpty,
     gallery: { gallery: async () => null, release: () => {} },
+    ...(suggesting ? { suggesting } : {}),
   });
   return { made, container, onLaid };
 }
@@ -176,5 +178,35 @@ describe('StorySource', () => {
     expect(container.children).toHaveLength(0);
     expect(made.view.isDestroyed).toBe(true);
     await settle();
+  });
+
+  // review.md "Headers, footers and notes": while suggesting, what is typed in a story is a suggestion.
+  it('turns typing into the suggester’s insertion, in the story’s own fragment', () => {
+    const made: string[] = [];
+    const suggesting: SuggestingDispatch = {
+      suggester: () => ({
+        key: 'k-ada',
+        name: 'Ada',
+        colour: '#0284c7',
+        now: 10,
+        newId: () => 's1',
+      }),
+      onRefused: () => {},
+      onMade: (ids) => made.push(...ids),
+    };
+    const doc = storyDoc('Header');
+    const { made: story } = source(doc, vi.fn(), false, suggesting);
+    story.view.dispatch(story.view.state.tr.insertText(' new', 7));
+    expect(made).toEqual(['s1']);
+    const run = (storyFragment(doc, 's').get(0) as Y.XmlElement).get(0) as Y.XmlText;
+    expect(run.toDelta()).toEqual([
+      { insert: 'Header' },
+      {
+        insert: ' new',
+        attributes: {
+          insertion: { id: 's1', at: 10, author: { key: 'k-ada', name: 'Ada', colour: '#0284c7' } },
+        },
+      },
+    ]);
   });
 });

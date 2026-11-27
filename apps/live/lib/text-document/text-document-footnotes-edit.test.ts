@@ -77,6 +77,21 @@ describe('makeNoteStory', () => {
 });
 
 describe('insertFootnote', () => {
+  // review.md "Headers, footers and notes": the note and its mark reach the room as one change, so a Participant's is
+  // judged whole, and the body's undo still takes the mark back.
+  it('puts the note and its mark in as one change of the live state, undone in one step', () => {
+    caret(6);
+    let updates = 0;
+    doc.on('update', () => (updates += 1));
+    const story = insertFootnote(view, doc, 'odf');
+    expect(updates).toBe(1);
+    expect(storyFragment(doc, story!).length).toBe(1);
+    expect(said()).toBe('Hello[1] world');
+    const undo = yUndoPluginKey.getState(view.state)!.undoManager;
+    undo.undo();
+    expect(said()).toBe('Hello world');
+  });
+
   it('puts the mark at the caret, the caret after it, naming a new note', () => {
     caret(6);
     const story = insertFootnote(view, doc, 'odf');

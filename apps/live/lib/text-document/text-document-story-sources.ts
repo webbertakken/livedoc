@@ -3,7 +3,7 @@
 // hidden place at the width it is drawn at, so its paragraph styles, lists and tab stops lay out as the body's. Each
 // page draws a copy of it, painted again when it changes; its height tells the layout how far it pushes the body. To
 // edit it ("Editing headers and footers") the source itself moves into the page's editing box and takes edits there.
-import { EditorState, Plugin, Selection } from 'prosemirror-state';
+import { EditorState, Plugin, Selection, type Transaction } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
 import { ySyncPlugin } from 'y-prosemirror';
 import type * as Y from 'yjs';
@@ -12,6 +12,10 @@ import { PICTURE, storyFragment, TextDocumentState } from '@livedoc/text-documen
 import { debugLog } from '@/lib/debug-log';
 import { documentTextStyle } from '@/lib/document-fonts/document-text-style';
 import type { TextFormatting } from './text-document-formatting';
+import {
+  dispatchWithSuggesting,
+  type SuggestingDispatch,
+} from './text-document-suggesting-dispatch';
 import { listMarkersPlugin } from './text-document-list-markers';
 import { subscribeLists } from './text-document-live-lists';
 import { paragraphBoxesPlugin } from './text-document-paragraph-boxes';
@@ -48,6 +52,11 @@ export type StorySourceInput = {
   readonly drawsEmpty?: boolean;
   /** Where its pictures' gallery images are read from (objects.md "Where the bytes live"). */
   readonly gallery: GalleryPictures;
+  /**
+   * How its changes are applied around suggesting (review.md "Headers, footers and notes"): while the person suggests,
+   * as suggestions, as the body's are; none applies each as it comes.
+   */
+  readonly suggesting?: SuggestingDispatch;
 };
 
 /** Draws nothing: one paragraph with no content, or none. */
@@ -80,6 +89,7 @@ export class StorySource {
     this.#host.style.width = `${input.width}px`;
     input.container.append(this.#host);
     const changed = new Plugin({ view: () => ({ update: () => this.#schedule() }) });
+    const suggesting = input.suggesting;
     this.view = new EditorView(this.#host, {
       state: EditorState.create({
         schema: textDocumentSchema,
@@ -106,6 +116,14 @@ export class StorySource {
         }),
       },
       editable: () => this.#editing,
+      // Called with the view as `this`: it may dispatch while it is still being made.
+      ...(suggesting
+        ? {
+            dispatchTransaction(this: EditorView, tr: Transaction) {
+              dispatchWithSuggesting(this, tr, suggesting);
+            },
+          }
+        : {}),
       attributes: () => ({
         class: `${STORY_CLASS} whitespace-pre-wrap break-words outline-none`,
         ...(this.#editing

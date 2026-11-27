@@ -54,6 +54,12 @@ type Props = {
   ground?: readonly string[];
 };
 
+// An axis's label in a readout: its title up to its first " (", so a unit or a note in brackets stays on the axis; the
+// fallback for an axis with no title (pie-chart.md "A scatter point's readout").
+function axisLabel(title: string | undefined, fallback: string): string {
+  return title?.split(' (')[0]!.trim() || fallback;
+}
+
 // A Radar chart draws around a centre (pie-chart.md "Radar"), a Bubble chart its sized circles ("Bubble"), a Candlestick or
 // OHLC chart its prices ("Candlestick and OHLC"); every other
 // line chart its lines and points on its two axes.
@@ -119,10 +125,16 @@ function PlotLineChartView({ element, fontFamily, textColor, palette, ground }: 
       : m.points[hover.s]?.[hover.i]
     : null;
   const hoveredValue = hover ? chartValue(series[hover.s]?.values[hover.i]) : null;
-  // A named scatter point reads by its name, its value and its x, whatever series it is in (pie-chart.md "Scatter's
-  // point names").
-  const pointName =
-    hover && chartTypeOf(element) === 'scatter' ? element.linePointNames?.[hover.i] : undefined;
+  // A scatter point's readout (pie-chart.md "A scatter point's readout", "Scatter's point names"): headed by its name,
+  // else its series', then its value and its x, each against its axis's label.
+  const scatterLines =
+    hover && chartTypeOf(element) === 'scatter'
+      ? [
+          element.linePointNames?.[hover.i] || (series[hover.s]?.name ?? ''),
+          `${axisLabel(element.chartAxisTitles?.y, 'y')}: ${hoveredValue}`,
+          `${axisLabel(element.chartAxisTitles?.x, 'x')}: ${categories[hover.i]}`,
+        ]
+      : null;
 
   const group = useChartAnim(element, `${plotX0 + plotW / 2}px ${plotY0 + plotH / 2}px`);
   const legendItems = combo ? comboKeyItems(series) : lineKeyItems(series, lineVariantOf(element));
@@ -143,8 +155,8 @@ function PlotLineChartView({ element, fontFamily, textColor, palette, ground }: 
           <ChartReadout
             leftPct={(hovered.x / w) * 100}
             topPct={(hovered.y / h) * 100}
-            {...(pointName
-              ? { text: `${pointName}, ${hoveredValue}, ${categories[hover.i]}` }
+            {...(scatterLines
+              ? { lines: scatterLines }
               : {
                   label: `${categories[hover.i] ?? ''} · ${series[hover.s]?.name ?? ''}`,
                   value: hoveredValue,
