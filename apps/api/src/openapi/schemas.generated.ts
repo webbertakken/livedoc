@@ -10808,6 +10808,12 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
           "type": "string"
         },
         "type": "array"
+      },
+      "refs": {
+        "items": {
+          "$ref": "#/components/schemas/StoredRef"
+        },
+        "type": "array"
       }
     },
     "required": [

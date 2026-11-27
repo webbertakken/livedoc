@@ -15,6 +15,7 @@ import {
   SPREADSHEET_THEMES,
 } from '@livedoc/sheets';
 import { ApiError } from '@/lib/api/core';
+import type { FunctionsChange } from './functions-shrink';
 import { setApiErrorReporter } from '@/lib/api/error-report';
 import {
   SheetStore,
@@ -123,7 +124,7 @@ function store(
     pushUndo: (s: unknown) => void;
     wait: (ms: number) => Promise<void>;
     functions: readonly NamedFunction[];
-    functionsShrunk: (functions: readonly NamedFunction[]) => void;
+    changeFunctions: (change: FunctionsChange) => void;
   }> = {},
 ) {
   return new SheetStore({
@@ -135,7 +136,7 @@ function store(
     api: api,
     ...(extra.wait ? { wait: extra.wait } : {}),
     ...(extra.functions ? { functions: extra.functions } : {}),
-    ...(extra.functionsShrunk ? { functionsShrunk: extra.functionsShrunk } : {}),
+    ...(extra.changeFunctions ? { changeFunctions: extra.changeFunctions } : {}),
   });
 }
 
@@ -910,18 +911,55 @@ describe('validation rules in the store (docs/specs/029-sheets/data-validation.m
     expect(sum()).toBe(6);
     expect(src()).toEqual(range);
   });
-  it('hands on the named functions a deletion shrinks, and nothing for one that shrinks none', async () => {
+  // D301 as ruled: the deletion's undo step carries the definitions it shrank.
+  function shrinking() {
     const srv = server(initial());
     const { rows, cols } = srv.sheet.layout;
     const ref = { s: 'sheet0001', r1: rows[0]!, c1: cols[0]!, r2: rows[2]!, c2: cols[0]!, a: 15 };
     const picked: NamedFunction = { name: 'PICKED', params: [], body: '=SUM(@0)', refs: [ref] };
-    const shrunk: (readonly NamedFunction[])[] = [];
-    const s = store(srv.api, { functions: [picked], functionsShrunk: (f) => shrunk.push(f) });
+    const shrunk: NamedFunction = { ...picked, refs: [{ ...ref, r1: rows[1]! }] };
+    const kept = { list: [picked] as readonly NamedFunction[] };
+    const steps: { undo: () => void; redo: () => void }[] = [];
+    const s = store(srv.api, {
+      functions: [picked],
+      changeFunctions: (change) => void (kept.list = change(kept.list) ?? kept.list),
+      pushUndo: (st) => steps.push(st as never),
+    });
+    const del = () =>
+      s.write('sheet0001', { kind: 'layout', changes: [{ k: 'deleteRows', ids: [rows[0]!] }] });
+    return { s, rows, cols, picked, shrunk, kept, steps, del };
+  }
+  it('shrinks the named functions a deletion reaches; undo puts them back, redo shrinks again', async () => {
+    const { s, picked, shrunk, kept, steps, del } = shrinking();
     await s.loadTab('t1');
-    s.write('sheet0001', { kind: 'layout', changes: [{ k: 'deleteRows', ids: [rows[0]!] }] });
-    expect(shrunk).toEqual([[{ ...picked, refs: [{ ...ref, r1: rows[1] }] }]]);
+    del();
+    expect(kept.list).toEqual([shrunk]);
+    steps[0]!.undo();
+    await s.settle();
+    await flush();
+    expect(kept.list).toEqual([picked]);
+    steps[0]!.redo();
+    expect(kept.list).toEqual([shrunk]);
+  });
+  it('leaves a definition someone edited after the deletion when it is undone', async () => {
+    const { s, shrunk, kept, steps, del } = shrinking();
+    await s.loadTab('t1');
+    del();
+    const theirs = { ...shrunk, description: 'Theirs' };
+    kept.list = [theirs];
+    steps[0]!.undo();
+    await s.settle();
+    await flush();
+    expect(kept.list).toEqual([theirs]);
+  });
+  it('changes no named function for a deletion none reads', async () => {
+    const { s, cols, kept, steps } = shrinking();
+    await s.loadTab('t1');
+    const before = kept.list;
     s.write('sheet0001', { kind: 'layout', changes: [{ k: 'deleteCols', ids: [cols[1]!] }] });
-    expect(shrunk).toHaveLength(1);
+    steps[0]!.undo();
+    await s.settle();
+    expect(kept.list).toBe(before);
   });
   it('words a refusal without a line as the store does', () => {
     expect(writeRefusalMessage({ error: 'rules_full' })).toBe(

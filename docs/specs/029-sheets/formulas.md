@@ -170,7 +170,7 @@ settings"). A Plan Sheet has none of its own: it reads as the viewer's browser d
   open is saved, and shown again, as `Sheet1!$A$1`, whichever sheet calls the function (D301, ruled 2026-11-26).
   It is held as a formula's references are, by its sheet's, rows' and columns' ids, so it follows that sheet's
   renames and its rows and columns inserted or moved; rows or columns deleted inside a range shrink it, as a range
-  read from another sheet shrinks ("Other sheets"); a cell deleted, or a range all deleted, is `#REF!`, and so is
+  read from another sheet shrinks ("Other sheets"), and undoing the deletion puts the range back; a cell deleted, or a range all deleted, is `#REF!`, and so is
   every reference once its sheet is deleted.
 - Changing or removing a named function works every formula out again; a call to one removed is `#NAME?` ("Unknown
   function CONTAINS"), as any unknown function is.
@@ -1653,6 +1653,7 @@ The code cites each by its id.
   calling itself without end stops before the browser's own stack does (default).
 - **D301** A cell reference in a named function's definition: Kept as Google keeps it, an absolute reference to its
   sheet adjusted as a formula's are (ruled by the Director, 2026-11-26: a refusal would turn files' LAMBDA names into
-  errors). A range shrunk by a deletion stays shrunk when the deletion is undone, as the definition is the
-  workbook's, not the sheet's (default).
+  errors). Undo is the deletion's exact inverse (ruled by the Director, 2026-11-27): the deletion's undo step carries
+  the definitions it shrank, named functions' and named ranges' alike, so undo puts each back as it was and redo
+  shrinks it again; a definition someone else changed after the deletion keeps their change, as a cell's undo does.
 - The imports' defaults, D61 to D66 and D72 to D74, are kept in [Imports from the web](imports.md#defaults).

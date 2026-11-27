@@ -2,13 +2,15 @@
 import { describe, expect, it } from 'vitest';
 import { book } from './testing/book';
 import { compileTypedFormula } from './typed-input';
-import { applySheetWrite } from './store';
+import { applySheetWrite, inverseSheetWrite } from './store';
 import type { LayoutChange } from './store-layout';
 import type { Sheet } from './sheet';
 import {
   definitionOf,
   definitionText,
+  restoreShrunkFunctions,
   shrinkNamedFunctions,
+  shrunkFunctions,
   withDefinition,
   withTypedDefinition,
 } from './named-function-refs';
@@ -32,6 +34,8 @@ function defined(name: string, params: string[], typed: string, on = 'Sheet1') {
 }
 
 const by = (b: ReturnType<typeof book>, title: string) => b.sheets.find((s) => s.title === title)!;
+
+const at = { now: 1, by: { id: '', name: '', color: '#000000' } };
 
 function relayout(b: ReturnType<typeof book>, sheet: Sheet, changes: LayoutChange[]): Sheet {
   const { sheet: next } = applySheetWrite(
@@ -116,11 +120,22 @@ describe('rows deleted inside a definition’s range', () => {
     const sheet = by(b, 'Sheet1');
     const changes: LayoutChange[] = [{ k: 'deleteRows', ids: [sheet.layout.rows[4]!] }];
     const shrunk = shrinkNamedFunctions(sheet.id, sheet.layout, changes, [b.fn])!;
+    const deleted = applySheetWrite(sheet, { kind: 'layout', changes }, at);
     const next = relayout(b, sheet, changes);
     expect(definitionText(shrunk[0]!, b.wb.ctxFor(next.id))).toBe('=SUM(Sheet1!$A$1:$A$4)');
     b.wb.setFunctions(shrunk);
     // J20 is J19 now.
     expect(b.v('J19')).toBe(10);
+    // Undo: the row comes back with its id, the definition as it was; the result is as before.
+    const back = applySheetWrite(next, inverseSheetWrite(sheet, deleted), at).sheet;
+    b.sheets[b.sheets.indexOf(next)] = back;
+    b.wb.updateSheet(back);
+    expect(back.layout.rows).toEqual(sheet.layout.rows);
+    b.wb.setFunctions(restoreShrunkFunctions(shrunk, shrunkFunctions([b.fn], shrunk))!);
+    expect(definitionText(b.wb.functionList()[0]!, b.wb.ctxFor(next.id))).toBe(
+      '=SUM(Sheet1!$A$1:$A$5)',
+    );
+    expect(b.v('J20')).toBe(15);
   });
 
   it('leave the list alone when no definition reads the sheet', () => {
@@ -151,5 +166,29 @@ describe('a definition as stored', () => {
     const unreadable = { field: 'definition', message: "That formula can't be read" };
     expect(namedFunctionProblem({ name: 'X', params: [], body: '=@1' }, [])).toEqual(unreadable);
     expect(namedFunctionProblem({ name: 'X', params: [], body: '=A1+1' }, [])).toEqual(unreadable);
+  });
+});
+
+describe('the undo of a deletion’s shrink', () => {
+  const ref = { s: 'sheet0xx', r1: 'r1', c1: 'c1', r2: 'r3', c2: 'c1', a: 15 };
+  const was: NamedFunction = { name: 'PICKED', params: [], body: '=SUM(@0)', refs: [ref] };
+  const left: NamedFunction = { ...was, refs: [{ ...ref, r1: 'r2' }] };
+  const other: NamedFunction = { name: 'TWICE', params: ['x'], body: '=x*2' };
+
+  it('knows each function the deletion shrank', () => {
+    expect(shrunkFunctions([was, other], [left, other])).toEqual([{ was, left }]);
+  });
+
+  it('puts back a function as the deletion left it, in its place', () => {
+    expect(restoreShrunkFunctions([left, other], [{ was, left }])).toEqual([was, other]);
+    // Read afresh from the wire: the same by what it holds.
+    const read = JSON.parse(JSON.stringify(left)) as NamedFunction;
+    expect(restoreShrunkFunctions([read], [{ was, left }])).toEqual([was]);
+  });
+
+  it('leaves someone’s later edit or removal, as the undo of cells does', () => {
+    const edited = { ...left, description: 'Theirs' };
+    expect(restoreShrunkFunctions([edited, other], [{ was, left }])).toBeNull();
+    expect(restoreShrunkFunctions([other], [{ was, left }])).toBeNull();
   });
 });

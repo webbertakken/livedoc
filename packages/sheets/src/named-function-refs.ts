@@ -84,3 +84,56 @@ export function shrinkNamedFunctions(
   if (changed.size === 0) return null;
   return list.map((fn, i) => (changed.has(i) ? defined(fn, formulas.get(i)!) : fn));
 }
+
+/** A named function a deletion shrank: as it was, and as the deletion left it. */
+export type ShrunkFunction = { readonly was: NamedFunction; readonly left: NamedFunction };
+
+/** The functions of `before` that differ in `after` (by place), each as it was and as it was left. */
+export function shrunkFunctions(
+  before: readonly NamedFunction[],
+  after: readonly NamedFunction[],
+): ShrunkFunction[] {
+  return before.flatMap((was, i) => {
+    const left = after[i];
+    return left && left !== was ? [{ was, left }] : [];
+  });
+}
+
+const sameFunction = (a: NamedFunction, b: NamedFunction) =>
+  JSON.stringify(a) === JSON.stringify(b);
+
+/**
+ * The undo of a deletion's shrink (D301): each function still as the deletion left it is put back as it was; one
+ * changed or removed since is someone's later edit, and is left. Null when none is put back.
+ */
+export function restoreShrunkFunctions(
+  current: readonly NamedFunction[],
+  shrunk: readonly ShrunkFunction[],
+): NamedFunction[] | null {
+  let restored = false;
+  const next = current.map((fn) => {
+    const hit = shrunk.find((x) => sameFunction(x.left, fn));
+    if (!hit) return fn;
+    restored = true;
+    return hit.was;
+  });
+  return restored ? next : null;
+}
+
+/** A layout write as it lands on its sheet: the sheet, its layout before, and the changes. */
+export type LayoutStep = {
+  readonly sheetId: string;
+  readonly before: SheetLayout;
+  readonly changes: readonly LayoutChange[];
+};
+
+/** The functions after each step's deletions shrink them, in order; null when none changed. */
+export function shrinkNamedFunctionsBy(
+  steps: readonly LayoutStep[],
+  list: readonly NamedFunction[],
+): NamedFunction[] | null {
+  let out: NamedFunction[] | null = null;
+  for (const step of steps)
+    out = shrinkNamedFunctions(step.sheetId, step.before, step.changes, out ?? list) ?? out;
+  return out;
+}

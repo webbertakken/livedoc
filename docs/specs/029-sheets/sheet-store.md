@@ -130,7 +130,7 @@ Built in the api; the sheet bar and File › Settings call it with the grid surf
 
 - **Named functions**: the workbook row's `functions`, saved whole (`PUT /workbook/functions`: each checked by the
   rules of [Data tools](data-tools.md#named-ranges-and-named-functions), else `functions_invalid`; more than 100,
-  `functions_full`), sent live to everyone on the spreadsheet. A definition's references are stored by ids, each naming its sheet ([Formulas](formulas.md#named-functions), D301); rows or columns deleted inside a range one reads shrink it as the api stores the deletion, and save and send the list again (in This Browser, the browser does).
+  `functions_full`), sent live to everyone on the spreadsheet. A definition's references are stored by ids, each naming its sheet ([Formulas](formulas.md#named-functions), D301); rows or columns deleted inside a range one reads shrink it: the person's browser saves the shrunk list with the deletion and the list as it was with its undo (D301), and the api shrinks it for a deletion made by any other writer.
 - **Add a sheet**: a sheet tab and its sheet made as one, after the tab named, first when the name is empty (an undone
   delete of the first sheet), or last when none is.
 - A new sheet takes the name given, by the sheet name's rules, or `Sheet<n>`, n the first number from the sheets'
