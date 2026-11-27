@@ -1,6 +1,8 @@
 import type { Page } from '@playwright/test';
-import { expect, expectNoPageErrors, test } from '../fixtures';
+import { expect, expectNoPageErrors, pageOwnerHeaders, test } from '../fixtures';
 import { officeMenuItem } from './office-menus';
+
+const apiBase = process.env.NEXT_PUBLIC_API_BASE ?? '/api';
 
 // The sheet bar (plan 0020 Phase 8 box 8; docs/specs/029-sheets/spreadsheet.md "Sheets in the sheet bar"): add,
 // rename, duplicate and delete a sheet, each one undo step, through the workbook routes.
@@ -223,7 +225,18 @@ test('colours and hides sheets, shown again from All Sheets and View', async ({
   await expect(page.getByRole('dialog', { name: 'All Sheets' })).toBeVisible();
   await page.keyboard.press('Escape');
 
-  // The colour and the hiding are the server's: a reload keeps both.
+  // The colour and the hiding are the server's: a reload keeps both, once the hiding is stored.
+  const id = new URL(page.url()).pathname.split('/')[2]!;
+  const headers = await pageOwnerHeaders(page, { Origin: new URL(page.url()).origin });
+  await expect
+    .poll(async () => {
+      const res = await page.request.get(`${apiBase}/documents/${id}/sheets?all=1`, { headers });
+      const { sheets: stored } = (await res.json()) as {
+        sheets: { title: string; layout: { hidden?: true } }[];
+      };
+      return stored.find((s) => s.title === 'Sheet2')?.layout.hidden === true;
+    })
+    .toBe(true);
   await page.reload();
   await expect(page.locator(READY)).toBeVisible();
   await expect.poll(() => tabNames(page)).toEqual(['Sheet1']);

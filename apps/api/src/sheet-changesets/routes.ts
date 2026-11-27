@@ -58,11 +58,8 @@ export async function submitSheetChangeset(
     if (!values) return forbidden();
     writes = values;
   }
-  const [by, author, who] = await Promise.all([
-    writer(ctx, caller.owner),
-    authorOf(ctx, caller.owner),
-    protectionCallerOf(ctx, caller, caller.owner),
-  ]);
+  const [by, author] = await Promise.all([writer(ctx, caller.owner), authorOf(ctx, caller.owner)]);
+  const who = () => protectionCallerOf(ctx, caller, caller.owner);
   const result = await storeSheetChangeset({
     ctx,
     documentId,
@@ -171,15 +168,13 @@ export async function revertSheetChangeset(
     };
     return json(body);
   }
-  const [by, author, who] = await Promise.all([
-    writer(ctx, owner),
-    authorOf(ctx, owner),
+  const [by, author] = await Promise.all([writer(ctx, owner), authorOf(ctx, owner)]);
+  const who = () =>
     protectionCallerOf(
       ctx,
       { documentId: document.id, ownerId: document.ownerId, teamId: document.teamId },
       owner,
-    ),
-  ]);
+    );
   const scope = await tabScopeOf(ctx, document);
   const result = await storeSheetChangeset({
     ctx,
