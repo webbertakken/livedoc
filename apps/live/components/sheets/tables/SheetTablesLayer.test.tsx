@@ -37,12 +37,12 @@ const menuItem = (name: string) =>
     .getByText(name, { selector: 'button, [aria-disabled], button *, [aria-disabled] *' })
     .closest('button, [aria-disabled]') as HTMLElement;
 const menuLabels = () =>
-  ['Table Settings', 'Rename', 'Select Table', 'Convert to Range', 'Delete Table'].filter((n) =>
-    screen.queryByText(n),
+  ['Table Settings', 'Rename', 'Select Table', 'Filter', 'Convert to Range', 'Delete Table'].filter(
+    (n) => screen.queryByText(n),
   );
 
-function chips(h: SheetHarness, opts: { canShape?: boolean } = {}) {
-  const t = table(h);
+function chips(h: SheetHarness, opts: { canShape?: boolean; filter?: SheetTable['filter'] } = {}) {
+  const t = { ...table(h), ...(opts.filter ? { filter: opts.filter } : {}) };
   act(() => {
     h.store.write(SHEET_ID, { kind: 'layout', changes: [{ k: 'table', id: t.id, table: t }] });
   });
@@ -71,6 +71,7 @@ describe('the table chip and its menu', () => {
       'Table Settings',
       'Rename',
       'Select Table',
+      'Filter',
       'Convert to Range',
       'Delete Table',
     ]);
@@ -125,9 +126,45 @@ describe('the table chip and its menu', () => {
   it("dims what changes the table for anyone but an Editor, as the panel's rules", async () => {
     const h = await harness();
     chips(h, { canShape: false });
-    for (const name of ['Rename', 'Convert to Range', 'Delete Table'])
+    for (const name of ['Rename', 'Filter', 'Convert to Range', 'Delete Table'])
       expect(menuItem(name).getAttribute('aria-disabled')).toBe('true');
     expect(menuItem('Select Table').getAttribute('aria-disabled')).toBeNull();
+  });
+
+  // data-tools.md "A table's filter" (D481, D482): the menu's Filter turns it on and off, ticked while on; while on,
+  // each header button is its column's filter button, its menu setting that column alone, Column Menu its way back.
+  it('turns the table’s own filter on and off, ticked while on', async () => {
+    const h = await harness();
+    chips(h);
+    expect(screen.getByRole('button', { name: 'Item column menu' })).toBeTruthy();
+    fireEvent.click(menuItem('Filter'));
+    const t = () => h.store.sheet(SHEET_ID)!.layout.tables![0]!;
+    expect(t().filter).toEqual({});
+    fireEvent.click(screen.getByRole('button', { name: 'Sales table menu' }));
+    expect(menuItem('Filter').textContent).toContain('✓');
+    expect(menuItem('Filter').getAttribute('aria-pressed')).toBe('true');
+    fireEvent.click(menuItem('Filter'));
+    expect(t().filter).toBeUndefined();
+  });
+
+  it('filters a column from its header button, and opens the column menu from there', async () => {
+    const h = await harness();
+    chips(h, { filter: {} });
+    const button = screen.getByRole('button', { name: 'Amount filter' });
+    expect(button.hasAttribute('data-filtered')).toBe(false);
+    fireEvent.click(button);
+    expect(screen.getByText('Filter by Values')).toBeTruthy();
+    fireEvent.click(screen.getByRole('checkbox', { name: /1/ }));
+    fireEvent.click(screen.getByRole('button', { name: /OK/ }));
+    const { cols } = h.store.sheet(SHEET_ID)!.layout;
+    expect(h.store.sheet(SHEET_ID)!.layout.tables![0]!.filter).toEqual({
+      [cols[2]!]: { values: [] },
+    });
+    const filtered = screen.getByRole('button', { name: 'Amount filter' });
+    expect(filtered.hasAttribute('data-filtered')).toBe(true);
+    fireEvent.click(filtered);
+    fireEvent.click(menuItem('Column Menu'));
+    expect(screen.getByText('Edit Column Type')).toBeTruthy();
   });
 
   it('draws nothing without the panel to open, or without tables', async () => {
