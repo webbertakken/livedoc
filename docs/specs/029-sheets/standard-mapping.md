@@ -747,7 +747,9 @@ LibreOffice reads into its own pivot tables.
   **Another app's pivot table**, one without LiveDoc's record or whose record was passed over, is read from its standard
   form when the model holds every part of it, and is then the sheet's pivot table as one made here is (default, D608):
 
-- **XLSX**: the cache's source a range of a sheet the workbook holds (`worksheetSource` `ref` and `sheet`); each field
+- **XLSX**: the cache's source a range of a sheet the workbook holds (`worksheetSource` `ref` and `sheet`), or a
+  table or named range of the workbook by its `name` (case aside), read as the range it covers as the file arrives
+  (a table's without its total row), from then on the pivot table's own range (default, D619); each field
   of `rowFields`, `colFields` and `pageFields` a source column, by its place in the cache; `-2` among `rowFields`
   Values as rows. Each `dataField` a value: `subtotal` back to its summary (`count` COUNTA, `countNums` COUNT,
   `stdDev` STDEV, `stdDevp` STDEVP, the rest their own; none SUM), `showDataAs` `percentOfRow`, `percentOfCol` or
@@ -771,6 +773,13 @@ LibreOffice reads into its own pivot tables.
   text is a custom group of those items, as shown; an item in a group of its own name stays itself. A grouping
   field with hidden items, on the page fields, under a sort by a column item, or a date `groupInterval` other than
   1 is kept as it came.
+- **ODF grouping** (default, D618): a `table:data-pilot-field` holding `table:data-pilot-groups` groups its column in
+  place, or, when the groups name a `table:source-field-name`, groups that column as a field of its own. A
+  `table:grouped-by` (`seconds` to `years`, its `table:step` 0 or 1) is the date rule XLSX's level of that name
+  reads as; without one, `table:step` is the intervals' size and `table:start` and `table:end` their bounds (`auto`
+  or absent: open); each `table:data-pilot-group` is a custom group of its `table:data-pilot-group-member`s by name,
+  a group of only its own name's member left itself. A grouping on the page or data fields, one with hidden members,
+  or any other is kept as it came.
 - **ODF**: the `table:source-cell-range` a range of a sheet the workbook holds; each `table:data-pilot-field` a source
   column by `table:source-field-name` (the first header of that name) on its `table:orientation`; the data layout
   field on rows Values as rows. A data field's `table:function` back to its summary (`count` COUNTA, `countnums`
@@ -788,10 +797,10 @@ LibreOffice reads into its own pivot tables.
 - Read so, the cells the other app cached for its output (from its place to the end of its `location` or target) are not
   read as inputs: the engine works the output out again in LiveDoc's own layout and labels, which are Google Sheets'
   and may differ from the other app's in size and words (`Grand Total` for LibreOffice's `Total Result`).
-- **Kept as it came**: a pivot table whose source is not a range of a sheet the workbook holds (a named range, a table,
-  an external source or a consolidation), whose field LiveDoc cannot find (a source column by name, an item by its
-  place), that groups a field in a way XLSX grouping does not read (or by `table:data-pilot-groups`) or has
-  calculated items, whose Show As LiveDoc does not have (difference from, running total, index, and so on), or that the model refuses (past its bounds) stays
+- **Kept as it came**: a pivot table whose source is not a range, table or named range the workbook holds (an
+  external source, a consolidation, a name of none), whose field LiveDoc cannot find (a source column by name, an item by its
+  place), that groups a field in a way XLSX or ODF grouping does not read or has calculated items, whose Show As
+  LiveDoc does not have (difference from, running total, index, and so on), or that the model refuses (past its bounds) stays
   the file's own: kept as it came, its output read as plain values, and named (`pivot_unread`, reported: "N pivot
   tables LiveDoc cannot work out are kept as the file holds them", one "is kept as the file holds it") (default, D609).
 - Google Sheets' exports say less than Google's pivot tables (`corpus/google/pivot-tables.xlsx`, `.ods`): its XLSX
@@ -801,7 +810,8 @@ LibreOffice reads into its own pivot tables.
   calculated fields, Custom summaries, filters by condition and formula, every grouping (the field left out, or named
   `Product2` for custom groups: kept), sorting by a value in a column item, an inner group's Show Totals off, and
   Repeat Row Labels. LibreOffice's own saves keep no record of LiveDoc's: its ODS leaves out what Google's ODS does
-  and sorting by a value; its XLSX also Show As, grand totals off and sorting. A case read from any of them works out
+  and sorting by a value; its XLSX also Show As, grand totals off, sorting, custom groups (an empty field: kept) and
+  number intervals (written ungrouped); its ODS keeps every grouping (`corpus/libreoffice/PivotGroups-*`, D618). A case read from any of them works out
   what its file says, so it equals Google's answer only where the file says the whole case (default, D610).
 
 - A pivot table whose source was deleted has no standard form: it is left out, named (`pivot_unwritten`); one whose
@@ -1108,6 +1118,10 @@ The code cites each by its id.
 - **D617** An XLSX `fieldGroup` read as the grouping it says: its date levels (Second to Year, but the multi-level ones)
   as date rules, its number ranges as intervals, its discrete items as custom groups; a date range's bounds not read
   (default).
+- **D618** An ODF `table:data-pilot-groups` read as the grouping it says, as XLSX's are (D617): date levels, number
+  intervals with `auto` bounds open, named groups of members (default).
+- **D619** An XLSX pivot table over a table or named range reads it as the range it covers on arrival, a table's
+  total row left out; LiveDoc's pivot table keeps that range, growing only as a range does (default).
 - **D295** A dropdown XLSX's list cannot say: a rule allowing any value, LiveDoc's rule beside it (default).
 - **D296** A standard rule read without LiveDoc's: the closest LiveDoc rule, one a rectangle; error messages and
   titles left out (default).
