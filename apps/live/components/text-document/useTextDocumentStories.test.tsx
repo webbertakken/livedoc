@@ -13,7 +13,11 @@ import { refreshPages } from '@/lib/text-document/pagination/pagination-plugin';
 import type { PageGeometry } from '@/lib/text-document/pagination/pagination-draw';
 import { textDocumentSchema } from '@/lib/text-document/text-document-schema';
 import { TextDocumentSheets } from './TextDocumentSheets';
-import { storiesWanted, useTextDocumentStories } from './useTextDocumentStories';
+import {
+  storiesWanted,
+  useTextDocumentStories,
+  type TextDocumentStories,
+} from './useTextDocumentStories';
 import { TextDocumentEndNotes } from './TextDocumentEndNotes';
 import { TextDocumentPageNotes } from './TextDocumentPageNotes';
 import type { PageNote } from '@/lib/text-document/pagination/pagination-notes';
@@ -67,10 +71,12 @@ function Harness({
   pages,
   heights,
   endNotes = [],
+  onStories,
 }: {
   pages: PageGeometry[] | null;
   heights: Map<string, number>;
   endNotes?: PageNote[];
+  onStories?: (stories: TextDocumentStories) => void;
 }) {
   const liveDoc = useRef<Y.Doc | null>(doc);
   const held = useRef(heights);
@@ -83,6 +89,7 @@ function Harness({
     endNotes,
     gallery: { gallery: async () => null, release: () => {} },
   });
+  onStories?.(stories);
   return (
     <div data-page-format="pages">
       <TextDocumentSheets pages={pages} shadow storyHost={stories.host} />
@@ -243,5 +250,99 @@ describe('footnotes drawn', () => {
   it('draws nothing without notes', () => {
     const { container } = render(<TextDocumentEndNotes notes={[]} />);
     expect(container.childNodes).toHaveLength(0);
+  });
+});
+
+// review.md "Suggestion cards", "In a header, footer or note": the stories' writing read for their cards, headers and
+// footers before notes; a card's top beside the drawn copy on the first page, or beside the one being edited.
+describe('the stories read for their suggestion cards', () => {
+  const note = (id: string, width = 300): PageNote => ({
+    story: id,
+    key: `${id}@${width}`,
+    number: 1,
+    left: 40,
+    width,
+  });
+  // Three pages showing the header, a note on the second: the first page's copy drawn lowest on screen here, so the
+  // least top, not the order in the page, is what is read as the first page.
+  const pages = [
+    { width: 400, height: 500, header: place('h') },
+    { width: 400, height: 500, header: place('h'), notes: [note('f')] },
+    { width: 400, height: 500, header: place('h', 200) },
+  ];
+
+  async function mount() {
+    let stories: TextDocumentStories | null = null;
+    const utils = render(
+      <Harness pages={pages} heights={new Map()} onStories={(s) => (stories = s)} />,
+    );
+    await settle();
+    return { ...utils, stories: stories! };
+  }
+
+  it('reads each story once, headers and footers before notes', async () => {
+    const { stories } = await mount();
+    const read = stories.writings();
+    expect(read.map((w) => [w.story, w.kind])).toEqual([
+      ['h', 'header'],
+      ['f', 'footnote'],
+    ]);
+    expect(read[0]!.doc.textContent).toBe('Header');
+  });
+
+  it('tells its listeners when a story changes', async () => {
+    const { stories } = await mount();
+    const told = vi.fn();
+    const stop = stories.subscribe(told);
+    const text = (storyFragment(doc, 'h').get(0) as Y.XmlElement).get(0) as Y.XmlText;
+    act(() => text.insert(6, ' two'));
+    await settle();
+    expect(told).toHaveBeenCalled();
+    expect(stories.writings()[0]!.doc.textContent).toBe('Header two');
+    stop();
+    told.mockClear();
+    act(() => text.insert(0, 'A '));
+    await settle();
+    expect(told).not.toHaveBeenCalled();
+  });
+
+  it('places a position beside the first page’s copy, offset as in its source', async () => {
+    const { container, stories } = await mount();
+    const copies = [...container.querySelectorAll<HTMLElement>('[data-page-story="header"]')].map(
+      (box) => box.firstElementChild as HTMLElement,
+    );
+    const tops = [900, 300, 600];
+    vi.spyOn(EditorView.prototype, 'coordsAtPos').mockReturnValue({
+      top: 1012,
+      bottom: 0,
+      left: 0,
+      right: 0,
+    });
+    vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (
+      this: HTMLElement,
+    ) {
+      return { top: this.closest('[data-story-source]') ? 1000 : 0 } as DOMRect;
+    });
+    // Each copy's own top, over the prototype's spy.
+    copies.forEach((copy, i) => {
+      copy.getBoundingClientRect = () => ({ top: tops[i] }) as DOMRect;
+    });
+    // The second page's copy is highest: 300 plus the position's 12 below its source's top.
+    expect(stories.topOf('h', 2)).toBe(312);
+    expect(stories.topOf('nobody', 2)).toBeNull();
+  });
+
+  it('places a position in the one being edited by its own editor', async () => {
+    const { stories } = await mount();
+    const source = stories.hold('h@300', { story: 'h', width: 300, kind: 'header' })!;
+    source.edit(document.body.appendChild(document.createElement('div')));
+    vi.spyOn(source.view, 'coordsAtPos').mockReturnValue({
+      top: 77,
+      bottom: 0,
+      left: 0,
+      right: 0,
+    });
+    expect(stories.topOf('h', 2)).toBe(77);
+    expect(stories.writings()[0]!.doc).toBe(source.view.state.doc);
   });
 });

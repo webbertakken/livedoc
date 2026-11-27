@@ -62,7 +62,37 @@ export type TextDocumentStories = {
   readonly release: (key: string) => void;
   /** Paints every box drawing `key` again: one drawn anew, as a page's own box back after its story was edited. */
   readonly repaint: (key: string) => void;
+  /**
+   * Each story's writing once, for its suggestion cards (review.md "Suggestion cards"): headers and footers before
+   * notes, each in the pages' order; the one being edited read from its own editor.
+   */
+  readonly writings: () => readonly StoryWritingShown[];
+  /** Calls `listener` after any box is painted or a source made or let go; gives back the call that stops it. */
+  readonly subscribe: (listener: () => void) => () => void;
+  /**
+   * Where a position of a story's writing is on screen (its client top), or null where none is drawn: in the one being
+   * edited, beside the page it is edited on, else beside the copy highest on screen, the first page showing it.
+   */
+  readonly topOf: (story: string, pos: number) => number | null;
+  /** Scrolls the first page's copy of a story into view; false where none is drawn. */
+  readonly reveal: (story: string) => boolean;
 };
+
+/** A story's writing as the pages draw it, for its cards. */
+export type StoryWritingShown = {
+  readonly story: string;
+  readonly kind: WantedStory['kind'];
+  readonly doc: EditorView['state']['doc'];
+};
+
+/** A position's client top in a source's own editor, or null where it cannot say. */
+function topIn(source: StorySource, pos: number): number | null {
+  try {
+    return source.view.coordsAtPos(Math.min(pos, source.view.state.doc.content.size)).top;
+  } catch {
+    return null;
+  }
+}
 
 export function useTextDocumentStories(input: {
   readonly view: EditorView | null;
@@ -84,6 +114,12 @@ export function useTextDocumentStories(input: {
   const { view, liveDoc, format, pages, heights } = input;
   const host = useRef<HTMLDivElement | null>(null);
   const sources = useRef(new Map<string, StorySource>());
+  // What each source was made as, by its key, and who is told of their changes.
+  const madeAs = useRef(new Map<string, WantedStory>());
+  const listeners = useRef(new Set<() => void>());
+  const tell = useCallback(() => {
+    for (const listener of listeners.current) listener();
+  }, []);
   const held = useRef(new Set<string>());
   const { endNotes } = input;
   const wanted = useMemo(() => storiesWanted(pages, endNotes), [pages, endNotes]);
@@ -107,22 +143,26 @@ export function useTextDocumentStories(input: {
   });
 
   // Each box drawing `key`, painted with its source's writing, or emptied.
-  const paint = useCallback((key: string) => {
-    const source = sources.current.get(key);
-    // The pages' boxes and the notes under the writing: everything on the page.
-    const scope = host.current?.closest(STORY_SCOPE) ?? host.current?.parentElement;
-    const boxes = scope?.querySelectorAll<HTMLElement>(
-      `[${STORY_KEY_ATTRIBUTE}="${CSS.escape(key)}"]`,
-    );
-    for (const box of boxes ?? [])
-      if (source && !source.empty) {
-        const copy = source.copy();
-        fillFields(copy, numbersOfBox(box));
-        const number = box.getAttribute(NOTE_BOX_NUMBER_ATTRIBUTE);
-        if (number) numberNote(copy, number);
-        box.replaceChildren(copy);
-      } else box.replaceChildren();
-  }, []);
+  const paint = useCallback(
+    (key: string) => {
+      const source = sources.current.get(key);
+      // The pages' boxes and the notes under the writing: everything on the page.
+      const scope = host.current?.closest(STORY_SCOPE) ?? host.current?.parentElement;
+      const boxes = scope?.querySelectorAll<HTMLElement>(
+        `[${STORY_KEY_ATTRIBUTE}="${CSS.escape(key)}"]`,
+      );
+      for (const box of boxes ?? [])
+        if (source && !source.empty) {
+          const copy = source.copy();
+          fillFields(copy, numbersOfBox(box));
+          const number = box.getAttribute(NOTE_BOX_NUMBER_ATTRIBUTE);
+          if (number) numberNote(copy, number);
+          box.replaceChildren(copy);
+        } else box.replaceChildren();
+      tell();
+    },
+    [tell],
+  );
 
   const make = useCallback(
     (key: string, { story, width, kind }: WantedStory): StorySource | undefined => {
@@ -157,6 +197,7 @@ export function useTextDocumentStories(input: {
       });
       source.subscribe(() => paint(key));
       sources.current.set(key, source);
+      madeAs.current.set(key, { story, width, kind });
       return source;
     },
     [liveDoc, heights, paint],
@@ -165,11 +206,13 @@ export function useTextDocumentStories(input: {
   // Another editor or document: every source goes with the one it was made for, before any is made for the next.
   useLayoutEffect(() => {
     const made = sources.current;
+    const kinds = madeAs.current;
     const kept = heights.current;
     const holding = held.current;
     return () => {
       for (const source of made.values()) source.destroy();
       made.clear();
+      kinds.clear();
       kept.clear();
       holding.clear();
     };
@@ -183,6 +226,7 @@ export function useTextDocumentStories(input: {
       if (!wanted.has(key) && !held.current.has(key)) {
         source.destroy();
         made.delete(key);
+        madeAs.current.delete(key);
         // A height gone moves the pages it pushed.
         moved = heights.current.delete(key) || moved;
       }
@@ -191,6 +235,79 @@ export function useTextDocumentStories(input: {
     // The pages drawn anew: every box painted.
     for (const key of wanted.keys()) paint(key);
   }, [view, wanted, heights, make, paint]);
+
+  // Each source of a story, by its key.
+  const sourcesOf = useCallback(
+    (story: string) =>
+      [...sources.current].filter(([key]) => madeAs.current.get(key)?.story === story),
+    [],
+  );
+  // The copy of a story highest on screen (the first page showing it), with the source it was copied from.
+  const firstCopy = useCallback(
+    (story: string) => {
+      const scope = host.current?.closest(STORY_SCOPE) ?? host.current?.parentElement;
+      let first: { copy: Element; top: number; source: StorySource } | null = null;
+      for (const [key, source] of sourcesOf(story))
+        for (const box of scope?.querySelectorAll(
+          `[${STORY_KEY_ATTRIBUTE}="${CSS.escape(key)}"]`,
+        ) ?? []) {
+          const copy = box.firstElementChild;
+          if (!copy) continue;
+          const top = copy.getBoundingClientRect().top;
+          if (!first || top < first.top) first = { copy, top, source };
+        }
+      return first;
+    },
+    [sourcesOf],
+  );
+
+  const writings = useCallback((): StoryWritingShown[] => {
+    const order = [...drawn.current.keys()];
+    const rank = (key: string) => {
+      const at = order.indexOf(key);
+      return at < 0 ? order.length : at;
+    };
+    const ranked = [...sources.current]
+      .flatMap(([key, source]) => {
+        const as = madeAs.current.get(key);
+        return as ? [{ key, source, as }] : [];
+      })
+      .sort(
+        (a, b) =>
+          Number(a.as.kind === 'footnote') - Number(b.as.kind === 'footnote') ||
+          rank(a.key) - rank(b.key),
+      );
+    const read = new Map<string, StoryWritingShown>();
+    for (const { source, as } of ranked) {
+      const was = read.get(as.story);
+      if (!was || source.editing)
+        read.set(as.story, { story: as.story, kind: as.kind, doc: source.view.state.doc });
+    }
+    return [...read.values()];
+  }, []);
+
+  const topOf = useCallback(
+    (story: string, pos: number): number | null => {
+      const edited = sourcesOf(story).find(([, source]) => source.editing)?.[1];
+      if (edited) return topIn(edited, pos);
+      const first = firstCopy(story);
+      if (!first) return null;
+      const at = topIn(first.source, pos);
+      return at === null
+        ? null
+        : first.top + at - first.source.view.dom.getBoundingClientRect().top;
+    },
+    [sourcesOf, firstCopy],
+  );
+
+  const reveal = useCallback(
+    (story: string) => {
+      const first = firstCopy(story);
+      first?.copy.scrollIntoView?.({ block: 'center' });
+      return first !== null;
+    },
+    [firstCopy],
+  );
 
   const hostRef = useCallback((element: HTMLDivElement | null) => {
     host.current = element;
@@ -208,11 +325,20 @@ export function useTextDocumentStories(input: {
         if (!source || drawn.current.has(key)) return;
         source.destroy();
         sources.current.delete(key);
+        madeAs.current.delete(key);
         heights.current.delete(key);
+        tell();
         if (making.current.view) refreshPages(making.current.view);
       },
       repaint: paint,
+      writings,
+      subscribe: (listener: () => void) => {
+        listeners.current.add(listener);
+        return () => listeners.current.delete(listener);
+      },
+      topOf,
+      reveal,
     }),
-    [hostRef, make, heights, paint],
+    [hostRef, make, heights, paint, writings, topOf, reveal, tell],
   );
 }

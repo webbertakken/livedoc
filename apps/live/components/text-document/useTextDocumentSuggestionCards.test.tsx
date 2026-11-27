@@ -4,13 +4,15 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { EditorState } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
 import { ySyncPlugin } from 'y-prosemirror';
-import { LiveSuggestions, TextDocumentState } from '@livedoc/text-documents';
+import * as Y from 'yjs';
+import { LiveSuggestions, storyFragment, TextDocumentState } from '@livedoc/text-documents';
 import { track } from '@/lib/telemetry';
 import { textDocumentSchema as schema } from '@/lib/text-document/text-document-schema';
 import { textDocumentUndoPlugins } from '@/lib/text-document/text-document-undo';
 import type { SuggestionRights } from '@/lib/text-document/text-document-suggestion-cards';
 import {
   MOVE_TO_NEXT_SUGGESTION,
+  STORY_NOT_DRAWN,
   SUGGESTION_GONE,
   useTextDocumentSuggestionCards,
 } from './useTextDocumentSuggestionCards';
@@ -210,6 +212,121 @@ describe('useTextDocumentSuggestionCards, going and settling', () => {
     });
     expect(say).toHaveBeenCalledWith(SUGGESTION_GONE);
     expect(result.current.selected).toBeNull();
+    vi.useRealTimers();
+    w.view.destroy();
+  });
+});
+
+// review.md "In a header, footer or note", "Going to a story's suggestion": a story's cards after the body's, read
+// again when a story changes; going to one opens its story, else shows its copy; a header no page draws is said so.
+describe('useTextDocumentSuggestionCards, in stories', () => {
+  const headerDoc = (id: string) =>
+    schema.nodes.doc!.create(null, [
+      schema.nodes.paragraph!.create(null, [
+        schema.text('Head', [schema.marks.insertion!.create({ id, at: 2, author: ADA })]),
+      ]),
+    ]);
+
+  function storiesOf(docs: { story: string; doc: ReturnType<typeof headerDoc> }[]) {
+    const listeners = new Set<() => void>();
+    return {
+      writings: vi.fn(() => docs),
+      subscribe: (listener: () => void) => {
+        listeners.add(listener);
+        return () => listeners.delete(listener);
+      },
+      open: vi.fn(() => true),
+      reveal: vi.fn(() => true),
+      changed: () => listeners.forEach((l) => l()),
+      docs,
+    };
+  }
+
+  it('reads a story’s cards after the body’s, and again when the story changes', async () => {
+    const w = await writing();
+    const stories = storiesOf([{ story: 'h', doc: headerDoc('h1') }]);
+    const { result } = renderHook(() =>
+      useTextDocumentSuggestionCards({
+        view: w.view,
+        doc: { current: w.doc },
+        ready: true,
+        rights: { accepts: true, ownKey: null },
+        subscribe: w.subscribe,
+        stories,
+      }),
+    );
+    expect(result.current.cards.map((c) => [c.id, c.story])).toEqual([
+      ['s1', undefined],
+      ['s2', undefined],
+      ['h1', 'h'],
+    ]);
+    stories.docs.push({ story: 'n', doc: headerDoc('n1') });
+    act(() => stories.changed());
+    expect(result.current.cards.map((c) => c.id)).toEqual(['s1', 's2', 'h1', 'n1']);
+    w.view.destroy();
+  });
+
+  it('opens a story’s suggestion gone to, or shows its copy where it cannot be opened', async () => {
+    vi.useFakeTimers({ toFake: ['requestAnimationFrame', 'cancelAnimationFrame'] });
+    const w = await writing();
+    const stories = storiesOf([{ story: 'h', doc: headerDoc('h1') }]);
+    const { result } = renderHook(() =>
+      useTextDocumentSuggestionCards({
+        view: w.view,
+        doc: { current: w.doc },
+        ready: true,
+        rights: { accepts: true, ownKey: null },
+        subscribe: w.subscribe,
+        tab: 't.0',
+        stories,
+      }),
+    );
+    act(() => result.current.go('h1', 't.0'));
+    act(() => {
+      vi.advanceTimersByTime(20);
+    });
+    expect(stories.open).toHaveBeenCalledWith('h');
+    expect(stories.reveal).not.toHaveBeenCalled();
+    expect(result.current.selected).toBe('h1');
+    expect(result.current.focusRequest?.id).toBe('suggestion:h1');
+    stories.open.mockReturnValue(false);
+    act(() => result.current.select('s2'));
+    act(() => result.current.step(true));
+    expect(result.current.selected).toBe('h1');
+    expect(stories.reveal).toHaveBeenCalledWith('h');
+    vi.useRealTimers();
+    w.view.destroy();
+  });
+
+  it('says a header’s suggestion no page draws is shown on pages only', async () => {
+    vi.useFakeTimers({ toFake: ['requestAnimationFrame', 'cancelAnimationFrame'] });
+    const w = await writing();
+    TextDocumentState.setFirstHeaders(w.doc, 'odf', { header: { default: { story: 'h' } } });
+    const text = new Y.XmlText();
+    text.insert(0, 'Head', { insertion: { id: 'h1', at: 2, author: ADA } });
+    const paragraph = new Y.XmlElement('paragraph');
+    paragraph.insert(0, [text]);
+    storyFragment(w.doc, 'h').insert(0, [paragraph]);
+    expect(LiveSuggestions.read(w.doc).find((s) => s.id === 'h1')?.story).toBe('h');
+    const say = vi.fn();
+    const none = storiesOf([]);
+    const { result } = renderHook(() =>
+      useTextDocumentSuggestionCards({
+        view: w.view,
+        doc: { current: w.doc },
+        ready: true,
+        rights: { accepts: true, ownKey: null },
+        subscribe: w.subscribe,
+        tab: 't.0',
+        say,
+        stories: none,
+      }),
+    );
+    act(() => result.current.go('h1', 't.0'));
+    act(() => {
+      vi.advanceTimersByTime(2000);
+    });
+    expect(say).toHaveBeenCalledWith(STORY_NOT_DRAWN);
     vi.useRealTimers();
     w.view.destroy();
   });

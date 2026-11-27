@@ -118,6 +118,25 @@ export function useTextDocumentPageStories(input: {
   });
   const { enter } = editing;
   const edited = editing.editing;
+  // Going to a story's suggestion (review.md "Going to a story's suggestion"): its header or footer entered on the
+  // first page showing it, or its note; false where the person cannot, or nothing draws it.
+  const { enter: enterNote } = notes;
+  const open = useCallback(
+    (story: string): boolean => {
+      if (!enters) return false;
+      const page = pages?.findIndex((p) => p.header?.story === story || p.footer?.story === story);
+      if (pages && page !== undefined && page >= 0) {
+        enter(pages[page]!.header?.story === story ? 'header' : 'footer', page);
+        return true;
+      }
+      const noted =
+        pages?.some((p) => p.notes?.some((n) => n.story === story)) ||
+        endNotes.some((n) => n.story === story);
+      if (noted) enterNote(story);
+      return noted === true;
+    },
+    [enters, pages, endNotes, enter, enterNote],
+  );
   // Headers and footers options, from Format and from the bar.
   const options = useTextDocumentHeaderOptions({
     view,
@@ -181,6 +200,9 @@ export function useTextDocumentPageStories(input: {
   );
   return {
     storyHost: stories.host,
+    /** The stories drawn, read for their suggestion cards. */
+    stories,
+    open,
     ...editing,
     onDoubleClick,
     bar,

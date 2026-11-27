@@ -316,6 +316,43 @@ describe('useTextDocumentPageStories', () => {
 });
 
 // "The bar": Different first page, Link to previous and Remove, each entering the page's header again after.
+// review.md "Going to a story's suggestion": its header, footer or note opened on the first page showing it.
+describe('opening a story for its suggestion', () => {
+  const note = { story: 'n', key: 'n@300', number: 1, left: 40, width: 300 };
+  const withBoth = () => pagesWith({ header: shown('h'), notes: [note] });
+
+  it('enters a header on the first page showing it, and a note', async () => {
+    storyFragment(doc, 'n').insert(0, [new Y.XmlElement('paragraph')]);
+    const seen: { current: Seen | null } = { current: null };
+    render(<Harness pages={withBoth()} seen={watch(seen)} />);
+    await settle();
+    let opened = false;
+    act(() => {
+      opened = seen.current!.open('h');
+    });
+    await settle();
+    expect(opened).toBe(true);
+    expect(seen.current!.editing).toMatchObject({ kind: 'header', page: 0, story: 'h' });
+    act(() => {
+      opened = seen.current!.open('n');
+    });
+    await settle();
+    expect(opened).toBe(true);
+    expect(seen.current!.note?.story).toBe('n');
+  });
+
+  it('opens nothing no page draws, nor for a person who cannot write there', async () => {
+    const seen: { current: Seen | null } = { current: null };
+    const { rerender } = render(<Harness pages={withBoth()} seen={watch(seen)} />);
+    await settle();
+    expect(seen.current!.open('nobody')).toBe(false);
+    rerender(<Harness pages={withBoth()} writes={false} seen={watch(seen)} />);
+    await settle();
+    expect(seen.current!.open('h')).toBe(false);
+    expect(seen.current!.editing).toBeNull();
+  });
+});
+
 describe('the bar’s changes', () => {
   const written = (id: string, text: string) => {
     const paragraph = new Y.XmlElement('paragraph');

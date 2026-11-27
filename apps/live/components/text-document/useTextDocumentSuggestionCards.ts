@@ -4,7 +4,8 @@
 // tab shown read off the writing as it changes, the one selected, Accept and Reject as the person's rights allow (each
 // one change of the writing, undone with ⌘Z, the room judging a Participant's), and Move to next and previous
 // suggestion from the selected card or the caret. A press on a suggestion's row in the comments panel goes to its
-// card, showing its document tab first where it is another.
+// card, showing its document tab first where it is another. A header's, footer's or note's suggestions have their cards
+// after the body's (review.md "In a header, footer or note"); going to one opens its story.
 import { useCallback, useEffect, useMemo, useState, type RefObject } from 'react';
 import type { EditorView } from 'prosemirror-view';
 import type * as Y from 'yjs';
@@ -14,8 +15,10 @@ import { track } from '@/lib/telemetry';
 import type { OfficeActions } from '@/lib/office/office-catalogue';
 import {
   cardOffers,
+  storyCards,
   suggestionBeside,
   suggestionCards,
+  type StoryWriting,
   type SuggestionCard,
   type SuggestionRights,
 } from '@/lib/text-document/text-document-suggestion-cards';
@@ -24,6 +27,20 @@ import { GO_FRAMES_MAX, type CardFocusRequest } from './useTextDocumentThreadKey
 
 /** What the status line says when a suggestion's row goes nowhere (review.md, (default)). */
 export const SUGGESTION_GONE = 'This suggestion is gone';
+/** What it says when a header's or footer's suggestion is gone to where no page draws one (review.md, (default)). */
+export const STORY_NOT_DRAWN = 'This suggestion is in a header or footer, shown on pages only';
+
+/** The stories drawn on the tab shown, as the cards read and go to them (useTextDocumentPageStories). */
+export type SuggestionStories = {
+  /** Each story's writing once, in the cards' order. */
+  readonly writings: () => readonly StoryWriting[];
+  /** Told when a story's writing or the stories drawn changed. */
+  readonly subscribe: (listener: () => void) => () => void;
+  /** Opens a story to be written in; false where the person cannot or nothing draws it. */
+  readonly open: (story: string) => boolean;
+  /** Scrolls its first page's copy into view. */
+  readonly reveal: (story: string) => boolean;
+};
 
 /** The shortcuts bound here under their rows' ids (keyboard-shortcuts.md "Comments and footnotes"). */
 export const MOVE_TO_NEXT_SUGGESTION = 'move-to-next-suggestion';
@@ -52,8 +69,9 @@ export function useTextDocumentSuggestionCards({
   onSettled,
   say,
   textWidth,
+  stories = null,
 }: {
-  /** The body's editor: suggestions are in the body alone. */
+  /** The body's editor. */
   view: EditorView | null;
   doc: RefObject<Y.Doc | null>;
   ready: boolean;
@@ -71,6 +89,8 @@ export function useTextDocumentSuggestionCards({
   say?: (text: string) => void;
   /** The text's width in points: a table a column accepted makes wider is fitted to it (review.md "Rows and columns"). */
   textWidth?: number;
+  /** The headers, footers and notes drawn, whose suggestions' cards follow the body's; none where none are. */
+  stories?: SuggestionStories | null;
 }) {
   const [cards, setCards] = useState<readonly SuggestionCard[]>([]);
   const [chosen, setChosen] = useState<string | null>(null);
@@ -86,11 +106,19 @@ export function useTextDocumentSuggestionCards({
   useEffect(() => {
     if (!view) return;
     const read = () => {
-      if (!view.isDestroyed) setCards(suggestionCards(view.state.doc));
+      if (view.isDestroyed) return;
+      const body = suggestionCards(view.state.doc);
+      const more = stories ? storyCards(stories.writings(), new Set(body.map((c) => c.id))) : [];
+      setCards(more.length > 0 ? [...body, ...more] : body);
     };
     read();
-    return subscribe(read);
-  }, [view, subscribe]);
+    const stopBody = subscribe(read);
+    const stopStories = stories?.subscribe(read);
+    return () => {
+      stopBody();
+      stopStories?.();
+    };
+  }, [view, subscribe, stories]);
 
   // A selected suggestion that is gone (settled, by anyone) is let go.
   const selected = chosen !== null && cards.some((c) => c.id === chosen) ? chosen : null;
@@ -127,11 +155,15 @@ export function useTextDocumentSuggestionCards({
     (id: string) => {
       const card = cards.find((c) => c.id === id);
       if (!card || !view || view.isDestroyed) return;
-      scrollToPos(view, card.from);
+      if (card.story === undefined) scrollToPos(view, card.from);
+      // A story's: opened where the person writes there, its card then beside the page it is edited on; else its
+      // first page's copy shown.
+      else if (!stories?.open(card.story)) stories?.reveal(card.story);
+      debugLog('[text-document] suggestion land', { suggestion: id, story: card.story ?? null });
       setSelected(id);
       setFocusRequest((was) => ({ id: `suggestion:${id}`, n: (was?.n ?? 0) + 1 }));
     },
-    [cards, view, setSelected],
+    [cards, view, setSelected, stories],
   );
 
   // A go waiting for its tab's writing: landed once its card is read, else said gone after GO_FRAMES_MAX frames.
@@ -158,12 +190,21 @@ export function useTextDocumentSuggestionCards({
         frame = requestAnimationFrame(wait);
         return;
       }
-      debugLog('[text-document] suggestion go', { suggestion: pending.id, found: false });
-      say?.(SUGGESTION_GONE);
+      // A header's or footer's, where no page draws one (pageless, a phone): said so, not gone.
+      const doc = docRef.current;
+      const story = doc
+        ? LiveSuggestions.read(doc).find((s) => s.id === pending.id)?.story
+        : undefined;
+      debugLog('[text-document] suggestion go', {
+        suggestion: pending.id,
+        found: false,
+        story: story ?? null,
+      });
+      say?.(story === undefined ? SUGGESTION_GONE : STORY_NOT_DRAWN);
       setPending(null);
     });
     return () => cancelAnimationFrame(frame);
-  }, [pending, tab, cards, land, say]);
+  }, [pending, tab, cards, land, say, docRef]);
 
   const step = useCallback(
     (forward: boolean) => {

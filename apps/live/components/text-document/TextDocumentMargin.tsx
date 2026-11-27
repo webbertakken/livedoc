@@ -5,7 +5,8 @@
 // the selected one level with its text; a draft's card where Add comment opened it; Add comment beside a selection of
 // the body. While cards are shown and the window is wide enough the page moves left to make room; narrower, the column
 // lies over the page's right edge. On a phone there is no column: the selected thread opens as a sheet at the bottom.
-// Suggestion cards (review.md "Suggestion cards") stand in the same column, stacked with the threads'.
+// Suggestion cards (review.md "Suggestion cards") stand in the same column, stacked with the threads'; a header's,
+// footer's or note's level with its text as the page draws it (review.md "In a header, footer or note").
 import { useCallback, useEffect, useRef, useState, type ReactNode, type RefObject } from 'react';
 import type { EditorView } from 'prosemirror-view';
 import { lucideMessageSquarePlus } from '@livedoc/icons/lucide';
@@ -62,6 +63,7 @@ export function TextDocumentMargin({
   subscribe,
   subscribeCaret,
   suggestions = null,
+  storyTop,
   children,
 }: {
   view: EditorView | null;
@@ -75,6 +77,8 @@ export function TextDocumentMargin({
   subscribeCaret: (listener: () => void) => () => void;
   /** The suggestions' cards, beside the threads'; none where the surface has none. */
   suggestions?: TextDocumentSuggestionCards | null;
+  /** Where a position of a story's writing is drawn (its client top), or null where it is not. */
+  storyTop?: (story: string, pos: number) => number | null;
   children: ReactNode;
 }) {
   const wrapper = useRef<HTMLDivElement | null>(null);
@@ -128,7 +132,8 @@ export function TextDocumentMargin({
     }
     for (const c of suggestionCards) {
       const id = `${SUGGESTION}${c.id}`;
-      const top = topOf(c.from);
+      const drawn = c.story === undefined ? null : (storyTop?.(c.story, c.from) ?? null);
+      const top = c.story === undefined ? topOf(c.from) : drawn === null ? null : drawn - frame.top;
       if (top !== null) wanted.push({ id, top, height: height(id) });
     }
     wanted.sort((a, b) => a.top - b.top);
@@ -151,7 +156,7 @@ export function TextDocumentMargin({
       sheet,
       slides: new Set(was.tops.keys()),
     }));
-  }, [view, shown, suggestionCards, draft, raised, cards, commenter]);
+  }, [view, shown, suggestionCards, draft, raised, cards, commenter, storyTop]);
 
   // Measured again after any change that moves a card: the writing, the selection, the threads, a resize.
   const measureNow = useRef(measure);
