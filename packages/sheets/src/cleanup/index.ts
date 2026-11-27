@@ -3,3 +3,5 @@ export * from './remove-duplicates';
 export * from './trim-whitespace';
 export * from './randomise-range';
 export * from './split-text';
+export * from './column-stats';
+export * from './clean-up-suggestions';

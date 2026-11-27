@@ -345,7 +345,8 @@ right.`, **Cancel** and **Replace** (D463). A block reaching past the sheet's la
     mostly numbers, a histogram of 10 equal bins;
   - **Frequency**: the values and their counts, most frequent first, up to 20, with **Most Frequent** and **Least
     Frequent** to turn the order (D465).
-- It reads the column's values as shown (a formula's result), follows edits as they land, and changes nothing.
+- It follows the active column; the switcher moves to another until a different column is selected. It reads the
+  column's values as shown (a formula's result), follows edits as they land, and changes nothing.
 - An empty column says `This column is empty.`
 
 ### Clean-up Suggestions

@@ -91,6 +91,23 @@ export const PIVOT_EDITOR_PANEL: OfficePanelSpec = {
   editorsOnly: true,
 };
 
+// Column Stats (data-tools.md "Column Stats"): read by everyone, changing nothing.
+export const COLUMN_STATS_PANEL: OfficePanelSpec = {
+  id: 'column-stats',
+  title: 'Column Stats',
+  side: 'right',
+  item: 'column-stats',
+};
+
+// Clean-up Suggestions (data-tools.md "Clean-up Suggestions"): an Editor's, as each Apply writes (D467).
+export const CLEAN_UP_SUGGESTIONS_PANEL: OfficePanelSpec = {
+  id: 'clean-up-suggestions',
+  title: 'Clean-up Suggestions',
+  side: 'right',
+  item: 'clean-up-suggestions',
+  editorsOnly: true,
+};
+
 export const SPREADSHEET_PANELS: readonly OfficePanelSpec[] = [
   CONDITIONAL_FORMAT_RULES_PANEL,
   ALTERNATING_COLOURS_PANEL,
@@ -102,6 +119,8 @@ export const SPREADSHEET_PANELS: readonly OfficePanelSpec[] = [
   TABLE_SETTINGS_PANEL,
   CHART_EDITOR_PANEL,
   PIVOT_EDITOR_PANEL,
+  COLUMN_STATS_PANEL,
+  CLEAN_UP_SUGGESTIONS_PANEL,
 ];
 
 /**

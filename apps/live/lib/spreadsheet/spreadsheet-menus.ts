@@ -446,10 +446,10 @@ const DATA_MENU = menu('data', 'Data', [
   built('named-functions', 'Named Functions', 'view'),
   built('randomise-range', 'Randomise Range', 'edit'),
   SEPARATOR,
-  item('column-stats', 'Column Stats', 'view'),
+  built('column-stats', 'Column Stats', 'view'),
   built('data-validation', 'Data Validation', 'edit'),
   submenu('data-clean-up', 'Data Clean-up', [
-    item('clean-up-suggestions', 'Clean-up Suggestions', 'edit'),
+    built('clean-up-suggestions', 'Clean-up Suggestions', 'edit'),
     built('remove-duplicates', 'Remove Duplicates', 'edit'),
     built('trim-whitespace', 'Trim Whitespace', 'edit'),
   ]),

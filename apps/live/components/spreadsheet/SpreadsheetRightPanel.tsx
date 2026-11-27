@@ -23,6 +23,8 @@ import {
   NAMED_FUNCTIONS_PANEL,
   NAMED_RANGES_PANEL,
   PIVOT_EDITOR_PANEL,
+  COLUMN_STATS_PANEL,
+  CLEAN_UP_SUGGESTIONS_PANEL,
   PROTECTION_PANEL,
   SPREADSHEET_PANELS,
   TABLE_SETTINGS_PANEL,
@@ -32,6 +34,8 @@ import { SpreadsheetTableSettingsBody } from './SpreadsheetTableSettingsBody';
 import type { SheetChart, SheetPivot } from '@livedoc/sheets';
 import { PivotEditorBody } from './pivots/PivotEditorBody';
 import { ChartEditorBody } from './charts/ChartEditorBody';
+import { SpreadsheetColumnStatsBody } from './SpreadsheetColumnStatsBody';
+import { SpreadsheetCleanUpSuggestionsBody } from './SpreadsheetCleanUpSuggestionsBody';
 
 export function SpreadsheetRightPanel({
   panels,
@@ -103,6 +107,12 @@ export function SpreadsheetRightPanel({
             actions={actions}
             onFormatting={() => panels.reveal(ALTERNATING_COLOURS_PANEL)}
             onClose={close}
+          />
+        ) : spec.id === COLUMN_STATS_PANEL.id ? (
+          <SpreadsheetColumnStatsBody />
+        ) : spec.id === CLEAN_UP_SUGGESTIONS_PANEL.id ? (
+          <SpreadsheetCleanUpSuggestionsBody
+            onColumnStats={() => panels.reveal(COLUMN_STATS_PANEL)}
           />
         ) : spec.id === NAMED_FUNCTIONS_PANEL.id ? (
           <SpreadsheetNamedFunctionsBody />
