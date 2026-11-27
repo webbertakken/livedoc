@@ -23,6 +23,10 @@ import { WORKBOOK_COLS_NEW, WORKBOOK_ROWS_NEW, workbookSheetLayout } from '../wo
 import { formatCodeOf, formatFromCode } from './number-format-code';
 import { cellStyleOf, type CellStyle } from './cell-style';
 import { storedKept } from './kept-anchors';
+import { fileFunctionsOf, functionsFromFile, type FileFunction } from './file-functions';
+import { fileNamesOf, namesFromFile, type FileRangeName } from './file-names';
+import type { FileAt, KeptItem } from './kept-content';
+import type { NamedFunction } from '../named-functions';
 import { fileLinesOf, layoutFromLines, type FileLines } from './file-lines';
 import type { KeptContent, StoredAt } from './kept-content';
 import { bandingRules } from '../rules/bandings';
@@ -72,10 +76,18 @@ export type FileSheet = {
 };
 
 /**
- * A workbook as a file holds it, what it holds that the model does not (standard-mapping.md "Unknown content"), and
- * its theme ("The theme in the file"); absent, Standard.
+ * A workbook as a file holds it, what it holds that the model does not (standard-mapping.md "Unknown content"), its
+ * theme ("The theme in the file"; absent, Standard), its named functions ("Named functions in the file") and its named
+ * ranges.
  */
-export type WorkbookFile = { sheets: FileSheet[]; kept?: KeptContent; theme?: SpreadsheetTheme };
+export type WorkbookFile = {
+  sheets: FileSheet[];
+  kept?: KeptContent;
+  theme?: SpreadsheetTheme;
+  functions?: FileFunction[];
+  // Its named ranges, each on its sheet by place ("Named ranges in the file").
+  names?: FileRangeName[];
+};
 
 /** A file read: its sheets and what could not be carried, or the package's named rejection. */
 export type FileRead = { ok: true; file: WorkbookFile; losses: FileLoss[] } | PackageRefusal;
@@ -125,7 +137,17 @@ export type FileLoss =
   // A chart of a type no format holds, written as the nearest one that does, its original kept for LiveDoc (D290).
   | { k: 'chart_nearest_type'; sheet: string }
   // Formulas calling a function the spreadsheet's meaning and the format's standard answer differently (D100).
-  | { k: 'answers_differ'; count: number; functions: string[] };
+  | { k: 'answers_differ'; count: number; functions: string[] }
+  // Named functions (standard-mapping.md "Named functions in the file"): one LiveDoc cannot hold, kept as it came
+  // (D342); one a file leaves out (all in ODF, a name Excel refuses); one whose description or argument help is cut
+  // (D340).
+  | { k: 'function_unread'; name: string }
+  | { k: 'function_unwritten'; name: string }
+  | { k: 'function_cut'; name: string }
+  // Named ranges (standard-mapping.md "Named ranges in the file"): one LiveDoc cannot read, kept as it came (D343); one
+  // a write leaves out, a name twice or one Excel refuses (D344).
+  | { k: 'name_unread'; name: string }
+  | { k: 'name_unwritten'; name: string };
 
 function fileValueOf(value: Scalar): FileValue | undefined {
   if (value === null) return undefined;
@@ -236,7 +258,23 @@ export function workbookFileOf(
       };
     }),
     ...(engine.theme === STANDARD_THEME ? {} : { theme: engine.theme }),
+    ...functionsOf(engine, sheets),
+    ...namesOf(sheets),
   };
+}
+
+// The workbook's named ranges, each on its sheet by place.
+function namesOf(sheets: readonly Sheet[]): { names?: FileRangeName[] } {
+  const names = fileNamesOf(sheets);
+  return names.length ? { names } : {};
+}
+
+// The named functions the engine works out, each definition against the workbook's sheets.
+function functionsOf(engine: Workbook, sheets: readonly Sheet[]): { functions?: FileFunction[] } {
+  const list = engine.functionList();
+  const first = sheets[0];
+  if (list.length === 0 || !first) return {};
+  return { functions: fileFunctionsOf(list, engine.ctxFor(first.id)) };
 }
 
 // The cells of a spilled block but its own that show a value, each holding the value spilled there.
@@ -276,11 +314,15 @@ export type SheetFromFile = {
   cells: { r: string; c: string; i?: CellInput; f?: CellFormat }[];
 };
 
-/** The sheets a file makes, what it could not carry, and its kept content anchored to them by id. */
+/**
+ * The sheets a file makes, what it could not carry, its kept content anchored to them by id, and its named functions
+ * read against them.
+ */
 export type SheetsFromFile = {
   sheets: SheetFromFile[];
   losses: FileLoss[];
   kept?: KeptContent<StoredAt>;
+  functions?: NamedFunction[];
 };
 
 function literalInput(value: FileValue): CellInput | null {
@@ -389,6 +431,19 @@ function madeSheets(file: WorkbookFile, rand: Rand, losses: FileLoss[]): Made[] 
   return made;
 }
 
+// The kept content with what LiveDoc read but could not hold, kept as it came; an ODF item sits after the tables.
+function keptWith(
+  kept: KeptContent | undefined,
+  refused: readonly KeptItem<FileAt>[],
+): KeptContent | undefined {
+  if (refused.length === 0) return kept;
+  const standard = refused[0]!.place === 'spreadsheet-after' ? 'odf' : 'ooxml';
+  return {
+    ...(kept ?? { standard, parts: [], relationships: [] }),
+    items: [...(kept?.items ?? []), ...refused],
+  };
+}
+
 /**
  * The sheets a file makes (a spreadsheet opened from it): each its grid (at least a new sheet's, at most what the
  * workbook's limits leave) and its cells, formulas compiled against the file's own sheets. A cell or a sheet past the
@@ -403,6 +458,13 @@ export function sheetsFromFile(
 ): SheetsFromFile {
   const losses: FileLoss[] = [];
   const made = madeSheets(file, rand, losses);
+  // The file's names on the sheets they cover; one LiveDoc cannot hold is kept as it came (D343).
+  const named = namesFromFile(
+    file.names,
+    made.map((m) => m.layout),
+    losses,
+  );
+  for (const [at, names] of named.names) made[at]!.layout = { ...made[at]!.layout, names };
   const formats = formatsRead(locale);
   const joined: Joined = new Map();
   const handles: SheetHandle[] = made.map((m) => ({
@@ -453,9 +515,15 @@ export function sheetsFromFile(
     };
     return { id: m.id, title: m.title, layout, cells };
   });
-  if (!file.kept) return { sheets, losses };
+  // A named function's reference naming no sheet names the first (D342); one LiveDoc cannot hold is kept as it came.
+  const read = handles[0]
+    ? functionsFromFile(file.functions, { own: handles[0], byTitle, byId }, losses)
+    : { functions: [], refused: [] };
+  const functions = read.functions.length ? { functions: read.functions } : {};
+  const kept = keptWith(file.kept, [...named.refused, ...read.refused]);
+  if (!kept) return { sheets, losses, ...functions };
   // Kept content on a sheet, row or column the workbook's limits cut goes with it, counted.
-  const stored = storedKept(file.kept, made);
+  const stored = storedKept(kept, made);
   if (stored.dropped > 0) losses.push({ k: 'kept_dropped', count: stored.dropped });
-  return { sheets, losses, kept: stored.kept };
+  return { sheets, losses, kept: stored.kept, ...functions };
 }

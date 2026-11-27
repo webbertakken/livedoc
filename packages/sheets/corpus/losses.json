@@ -16,9 +16,13 @@
     ]
   },
   "excel/55406_Conditional_formatting_sample.xlsx": {
-    "read": {},
+    "read": {
+      "name_unread": 21
+    },
     "written": {},
-    "reread": {},
+    "reread": {
+      "name_unread": 21
+    },
     "converted": [
       "kept"
     ]
@@ -41,9 +45,13 @@
     ]
   },
   "excel/ExcelTables.xlsx": {
-    "read": {},
+    "read": {
+      "name_unread": 1
+    },
     "written": {},
-    "reread": {},
+    "reread": {
+      "name_unread": 1
+    },
     "converted": [
       "kept"
     ]
@@ -105,9 +113,13 @@
     ]
   },
   "excel/shared_formulas.xlsx": {
-    "read": {},
+    "read": {
+      "name_unread": 63
+    },
     "written": {},
-    "reread": {},
+    "reread": {
+      "name_unread": 63
+    },
     "converted": [
       "kept"
     ]
@@ -144,10 +156,13 @@
   },
   "libreoffice/55406_Conditional_formatting_sample.ods": {
     "read": {
-      "entries_dropped": 1
+      "entries_dropped": 1,
+      "name_unread": 21
     },
     "written": {},
-    "reread": {},
+    "reread": {
+      "name_unread": 21
+    },
     "converted": [
       "kept"
     ]
@@ -185,10 +200,13 @@
   },
   "libreoffice/ExcelTables.ods": {
     "read": {
-      "entries_dropped": 1
+      "entries_dropped": 1,
+      "name_unread": 1
     },
     "written": {},
-    "reread": {},
+    "reread": {
+      "name_unread": 1
+    },
     "converted": [
       "kept"
     ]
@@ -284,18 +302,25 @@
   "libreoffice/shared_formulas.ods": {
     "read": {
       "entries_dropped": 1,
-      "formats_cut": 1
+      "formats_cut": 1,
+      "name_unread": 63
     },
     "written": {},
-    "reread": {},
+    "reread": {
+      "name_unread": 63
+    },
     "converted": [
       "kept"
     ]
   },
   "libreoffice/shared_formulas.xlsx": {
-    "read": {},
+    "read": {
+      "name_unread": 63
+    },
     "written": {},
-    "reread": {},
+    "reread": {
+      "name_unread": 63
+    },
     "converted": [
       "kept"
     ]

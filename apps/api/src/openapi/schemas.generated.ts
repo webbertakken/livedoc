@@ -2660,6 +2660,46 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
             type: 'number',
           },
           k: {
+            const: 'functions_left',
+            type: 'string',
+          },
+          names: {
+            items: {
+              type: 'string',
+            },
+            type: 'array',
+          },
+        },
+        required: ['k', 'count', 'names'],
+        type: 'object',
+      },
+      {
+        additionalProperties: false,
+        properties: {
+          count: {
+            type: 'number',
+          },
+          k: {
+            const: 'names_left',
+            type: 'string',
+          },
+          names: {
+            items: {
+              type: 'string',
+            },
+            type: 'array',
+          },
+        },
+        required: ['k', 'count', 'names'],
+        type: 'object',
+      },
+      {
+        additionalProperties: false,
+        properties: {
+          count: {
+            type: 'number',
+          },
+          k: {
             const: 'sheet_renamed',
             type: 'string',
           },

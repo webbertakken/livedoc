@@ -712,6 +712,7 @@ coloured in one theme reads in the other (`@livedoc/document` `cellColours`):
 - Deleting every row or every column a range covers removes its name; Clear Sheet removes them all. A copied Sheet
   element keeps its names (they are its own); a sheet duplicated in a spreadsheet leaves them behind, so its formulas
   read the original's ranges, as Google's (default, D298).
+- Files carry them both ways, as names of the workbook ([Named ranges in the file](standard-mapping.md#named-ranges-in-the-file)).
 - In a spreadsheet, names are made and changed in **Data › Named Ranges** ([Data tools](data-tools.md#named-ranges-and-named-functions)).
 - Telemetry: `Sheet · Changed · Name`.
 

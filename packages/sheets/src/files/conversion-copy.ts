@@ -77,6 +77,10 @@ const SIMPLIFIED_WORDS: Record<SimplifiedFeature, string> = {
 export function conversionLine(loss: ConversionLoss, to: WorkbookFormat): string {
   const one = loss.count === 1;
   switch (loss.k) {
+    case 'functions_left':
+      return `${one ? '1 named function is' : `${loss.count} named functions are`} left out: ${named(loss.names, 'and')}`;
+    case 'names_left':
+      return `${one ? '1 named range is' : `${loss.count} named ranges are`} left out, as Excel refuses ${one ? 'its name' : 'their names'}: ${named(loss.names, 'and')}`;
     case 'sheet_renamed': {
       const renames = loss.names.map((r) => `${quoted(r.from)} becomes ${quoted(r.to)}`);
       const what = one ? '1 sheet name is' : `${loss.count} sheet names are`;

@@ -25,7 +25,7 @@ const SHEET = 'book1Sheet';
 const SHAPES =
   '<table:shapes><draw:frame draw:name="pic"><draw:image xlink:href="Pictures/cat.png" xlink:type="simple"/></draw:frame></table:shapes>';
 const NAMES =
-  '<table:named-expressions><table:named-range table:name="Total" table:base-cell-address="$Sheet1.$A$1" table:cell-range-address="$Sheet1.$A$1"/></table:named-expressions>';
+  '<table:named-expressions><table:named-expression table:name="Rate" table:base-cell-address="$Sheet1.$A$1" table:expression="of:=0.2"/></table:named-expressions>';
 
 function odfKept(more: Partial<KeptContent<StoredAt>> = {}): KeptContent<StoredAt> {
   return {

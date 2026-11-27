@@ -71,6 +71,9 @@ const WRITTEN_ENTRIES: ReadonlySet<string> = new Set([
 export const isWrittenOdfEntry = (name: string): boolean => WRITTEN_ENTRIES.has(name);
 
 /** Kept items as a reader gathers them, with the parsed entry their XML is sliced from. */
+// The spreadsheet's holders whose children LiveDoc reads: validation rules and names.
+const READ_HOLDERS = new Set(['content-validations', 'named-expressions']);
+
 export class OdsKeeper {
   readonly items: KeptItem<FileAt>[] = [];
   /** Cells whose kept content was left out for repeating past `KEPT_REPEAT_MAX` (D105). */
@@ -103,7 +106,8 @@ export class OdsKeeper {
 
   /**
    * The spreadsheet's children but its tables and calculation settings, before or after the tables; its validation
-   * rules but those `read` names (a `table:content-validations` all read is not kept).
+   * rules and names but those `read` names (a `table:content-validations` or `table:named-expressions` all read is
+   * not kept).
    */
   spreadsheet(spreadsheet: XmlElement, read: ReadonlySet<XmlElement> = new Set()): void {
     let tables = false;
@@ -112,7 +116,7 @@ export class OdsKeeper {
       tables ||= isTable;
       if (isTable || (child.uri === TABLE && child.local === 'calculation-settings')) continue;
       const place = tables ? 'spreadsheet-after' : 'spreadsheet-before';
-      if (child.uri === TABLE && child.local === 'content-validations')
+      if (child.uri === TABLE && READ_HOLDERS.has(child.local))
         this.withoutRead(place, child, read);
       else this.element(place, child);
     }

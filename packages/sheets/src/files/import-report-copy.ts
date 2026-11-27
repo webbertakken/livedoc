@@ -50,6 +50,16 @@ export function importReportLine(loss: ReportedLoss): string {
         `${counted(count, 'formula', 'formulas')} LiveDoc cannot read ${verb(count, 'keeps only its last value', 'keep only their last values')}`,
         loss,
       );
+    case 'name_unread':
+      return named(
+        `${counted(count, 'named range', 'named ranges')} LiveDoc cannot read ${verb(count, 'is', 'are')} kept for the file`,
+        loss,
+      );
+    case 'function_unread':
+      return named(
+        `${counted(count, 'named function', 'named functions')} LiveDoc cannot read ${verb(count, 'is', 'are')} kept for Excel`,
+        loss,
+      );
     case 'formula_unwritten':
       return named(`${counted(count, 'formula is', 'formulas are')} written as values only`, loss);
     case 'text_cut':

@@ -1,7 +1,7 @@
 // The references of a named function's definition (docs/specs/029-sheets/formulas.md "Named functions", D301): kept as
 // a formula's are, by sheet, row and column ids, each naming its sheet and absolute, so the definition reads the same
 // cells whichever sheet calls it. Shown sheet-qualified; shrunk by deletions through the path formulas use.
-import type { SheetsCtx } from './formula/stored';
+import { renderFormula, type SheetsCtx } from './formula/stored';
 import type { NamedFunction } from './named-functions';
 import type { SheetLayout, StoredFormula, StoredRef } from './sheet';
 import { shrinkFormulasReading } from './store';
@@ -48,6 +48,11 @@ export function withDefinition(
  */
 export function definitionText(fn: NamedFunction, ctx: SheetsCtx, locale = 'en-GB'): string {
   return formulaAsTyped(definitionOf(fn), { ...ctx, own: NO_SHEET }, locale);
+}
+
+/** The definition as a file writes it (`=SUM(Sheet1!$A$1:$A$9)`), each reference with its sheet; a dead one `#REF!`. */
+export function definitionFormula(fn: NamedFunction, ctx: SheetsCtx): string {
+  return renderFormula(definitionOf(fn), { ...ctx, own: NO_SHEET });
 }
 
 /**

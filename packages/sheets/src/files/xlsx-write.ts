@@ -36,6 +36,8 @@ import { XlsxStyles } from './xlsx-styles';
 import { xlsxFormatRulesXml } from './xlsx-format-rules';
 import { xlsxValidationsXml } from './xlsx-validation';
 import { xlsxThemeXml } from './xlsx-theme';
+import { xlsxFunctionNames } from './file-functions';
+import { namesToWrite, xlsxNameXml } from './file-names';
 import { themeOf } from '../themes/spreadsheet-theme';
 import type {
   FileCell,
@@ -294,6 +296,7 @@ function workbookXml(
   sheetsOf: readonly { name: string; hidden: boolean }[],
   ids: readonly string[],
   kept: XlsxKeptWriter,
+  functions: ReturnType<typeof definedNames>,
 ): string {
   const sheets = sheetsOf.map(
     ({ name, hidden }, i) =>
@@ -310,10 +313,27 @@ function workbookXml(
   return [
     XML_DECLARATION,
     `<workbook xmlns="${SPREADSHEETML_NS}" xmlns:r="${OFFICE_RELATIONSHIPS_NS}"${kept.rootAttributes('workbook', OWN_NS)}>`,
-    ...kept.workbookChildren(own, kept.rootBindings('workbook', OWN_NS)),
+    ...kept.workbookChildren(own, kept.rootBindings('workbook', OWN_NS), functions),
     '</workbook>',
     '',
   ].join('\n');
+}
+
+// The workbook's own defined names as XML, and the names they take (upper case): its named ranges, then its named
+// functions (standard-mapping.md "Named ranges in the file", "Named functions in the file").
+function definedNames(
+  file: WorkbookFile,
+  renamed: ReadonlyMap<string, string>,
+  losses: FileLoss[],
+): { names: string[]; taken: Set<string> } {
+  const titles = file.sheets.map((s) => renamed.get(s.name) ?? s.name);
+  const ranges = namesToWrite(file.names, true, losses);
+  const taken = new Set(ranges.map((n) => n.name.toUpperCase()));
+  const functions = xlsxFunctionNames(file.functions, renamed, losses, taken);
+  return {
+    names: [...ranges.map((n) => xlsxNameXml(n, titles)), ...functions.names],
+    taken: new Set([...taken, ...functions.taken]),
+  };
 }
 
 /** The workbook as an XLSX file: Excel's workbook, a worksheet per sheet, shared strings and one cell style. */
@@ -348,6 +368,8 @@ export function writeXlsx(file: WorkbookFile, title: string): FileWritten<Uint8A
       data: encode(written.xml),
     };
   });
+  // The workbook's names: its named ranges, then its named functions as named LAMBDAs, each name once (D344).
+  const functions = definedNames(file, renamed, losses);
   const names = file.sheets.map((s) => ({
     name: renamed.get(s.name) ?? s.name,
     hidden: s.hidden === true,
@@ -375,7 +397,7 @@ export function writeXlsx(file: WorkbookFile, title: string): FileWritten<Uint8A
     {
       name: 'xl/workbook.xml',
       contentType: OOXML_CONTENT_TYPES.spreadsheet,
-      data: encode(workbookXml(names, sheetIds, kept)),
+      data: encode(workbookXml(names, sheetIds, kept, functions)),
     },
     ...sheetParts,
     xmlPart('xl/styles.xml', OOXML_CONTENT_TYPES.spreadsheetStyles, styles.xml()),
@@ -421,6 +443,8 @@ export function writeXlsx(file: WorkbookFile, title: string): FileWritten<Uint8A
     ...drawn.relationships,
     ...keptParts.relationships,
   ]);
+  // A kept workbook name a named function took is dropped, and counted (D341).
+  if (kept.namesDropped > 0) losses.push({ k: 'kept_dropped', count: kept.namesDropped });
   return { data: writeOoxmlPackage([...parts, ...keptParts.parts], relationships), losses };
 }
 

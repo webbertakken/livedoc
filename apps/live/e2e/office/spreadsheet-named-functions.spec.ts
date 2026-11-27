@@ -1,3 +1,6 @@
+import { mkdtempSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import type { Page } from '@playwright/test';
 import { expect, expectNoPageErrors, test } from '../fixtures';
 import { officeMenuItem } from './office-menus';
@@ -166,5 +169,71 @@ test('imports named functions from another spreadsheet', async ({ page, pageErro
   await expect(panel.getByText('TWICE(x)')).toBeVisible();
   await typeIn(page, 'A1', '=QUAD(3)');
   await expect(cell(page, 'A1 12')).toHaveCount(1);
+  expectNoPageErrors(pageErrors);
+});
+
+// Named functions in files (standard-mapping.md "Named functions in the file"): a function leaves as an Excel named
+// LAMBDA, comes back from the file whole, and converting to OpenDocument says first that it is left out.
+test('leaves as Excel and comes back; OpenDocument says it leaves them out', async ({
+  page,
+  pageErrors,
+}) => {
+  test.setTimeout(120_000);
+  await page.setViewportSize({ width: 1280, height: 860 });
+  await page.goto('/new?kind=spreadsheet');
+  await page.waitForURL(/\/document\//);
+  await expect(page.locator(READY)).toBeVisible();
+  await typeIn(page, 'A1', '0.2');
+  await (await officeMenuItem(page, ['Data', 'Named Functions'])).click();
+  const panel = page.getByRole('complementary', { name: 'Named Functions' });
+  await panel.getByRole('button', { name: 'Add New Function' }).click();
+  await panel.getByRole('textbox', { name: 'Function Name' }).fill('with_tax');
+  await panel.getByRole('textbox', { name: 'Function Description' }).fill('The price with tax');
+  await panel.getByRole('button', { name: 'Add Argument' }).click();
+  await panel.getByRole('textbox', { name: 'Argument 1', exact: true }).fill('price');
+  await panel.getByRole('textbox', { name: 'Formula Definition' }).fill('=price*(1+A1)');
+  await panel.getByRole('button', { name: 'Create', exact: true }).click();
+  await expect(panel.getByText('WITH_TAX(price)')).toBeVisible();
+  await typeIn(page, 'B1', '=WITH_TAX(100)');
+  await expect(cell(page, 'B1 120')).toHaveCount(1);
+
+  const [download] = await Promise.all([
+    page.waitForEvent('download'),
+    (async () => {
+      await (await officeMenuItem(page, ['File', 'Download', 'Microsoft Excel (.xlsx)'])).click();
+      const asked = page.getByRole('dialog', { name: 'Download as Excel?' });
+      await expect(asked).not.toContainText('named function');
+      await asked.getByRole('button', { name: 'Download' }).click();
+    })(),
+  ]);
+  const dir = mkdtempSync(join(tmpdir(), 'named-functions-'));
+  const saved = join(dir, 'Taxes.xlsx');
+  await download.saveAs(saved);
+
+  const before = page.url();
+  const [chooser] = await Promise.all([
+    page.waitForEvent('filechooser'),
+    (await officeMenuItem(page, ['File', 'Open'])).click(),
+  ]);
+  await chooser.setFiles(saved);
+  await page.waitForURL((url) => url.href !== before);
+  await expect(page.locator(READY)).toBeVisible();
+  await expect(cell(page, 'B1 120')).toHaveCount(1);
+  await expect(panel.getByText('WITH_TAX(price)')).toBeVisible();
+  await expect(panel.getByText('The price with tax')).toBeVisible();
+  await panel.getByRole('button', { name: 'Edit WITH_TAX' }).click();
+  await expect(panel.getByRole('textbox', { name: 'Formula Definition' })).toHaveValue(
+    '=price*(1+Sheet1!$A$1)',
+  );
+  await panel.getByRole('button', { name: 'Cancel', exact: true }).click();
+  await page.screenshot({ path: test.info().outputPath('named-functions-from-excel.png') });
+
+  await (await officeMenuItem(page, ['File', 'Convert to OpenDocument (.ods)'])).click();
+  const convert = page.getByRole('dialog', { name: 'Convert to OpenDocument?' });
+  await expect(convert.getByRole('listitem').first()).toHaveText(
+    '1 named function is left out: WITH_TAX',
+  );
+  await page.screenshot({ path: test.info().outputPath('named-functions-to-ods.png') });
+  await convert.getByRole('button', { name: 'Cancel' }).click();
   expectNoPageErrors(pageErrors);
 });

@@ -28,6 +28,7 @@ import { odsDefaultCellStyles } from './ods-cell-style';
 import { themedFormat, themeOf, type SpreadsheetTheme } from '../themes/spreadsheet-theme';
 import { OdsAxisOut } from './ods-lines';
 import { OdsChartObjects } from './ods-charts';
+import { namesToWrite, odsNameXml, withOdsNames } from './file-names';
 import { toOpenFormula } from './open-formula';
 import type {
   FileCell,
@@ -357,6 +358,8 @@ function bodyXml(
     tableXml(sheet, i, { losses, styles, kept, theme, charts, validations: validations.cells }),
   );
   const commonXml = commonStyles(theme.font, [...keptCommon, ...styles.conditionalStyles()]);
+  // OpenFormula has no LAMBDA, so an ODF file holds no named functions (standard-mapping.md "Named functions in the file").
+  for (const fn of file.functions ?? []) losses.push({ k: 'function_unwritten', name: fn.name });
   const body = [
     ...kept.workbook('scripts'),
     ...(flat ? commonXml : []),
@@ -367,11 +370,25 @@ function bodyXml(
     CALCULATION_SETTINGS,
     ...withValidations(keptAfter, validations.elements),
     ...tables,
-    ...kept.workbook('spreadsheet-after'),
+    ...namesAfterTables(file, kept, losses),
     '</office:spreadsheet>',
     '</office:body>',
   ];
   return { body, common: commonXml, charts };
+}
+
+// The kept content after the tables, the named ranges in its one `table:named-expressions` after the kept names; a
+// kept name a named range takes is dropped, counted (standard-mapping.md "Named ranges in the file", D344).
+function namesAfterTables(file: WorkbookFile, kept: OdsKeptWriter, losses: FileLoss[]): string[] {
+  const titles = file.sheets.map((s) => s.name);
+  const names = namesToWrite(file.names, false, losses);
+  const out = withOdsNames(
+    kept.workbook('spreadsheet-after'),
+    names.map((name) => odsNameXml(name, titles)),
+    new Set(names.map((n) => n.name.toUpperCase())),
+  );
+  if (out.dropped > 0) losses.push({ k: 'kept_dropped', count: out.dropped });
+  return out.xml;
 }
 
 // The namespaces a root declares: `calcext` too when a sheet has format rules, a drawing's and a chart's when one has charts.

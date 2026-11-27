@@ -146,18 +146,20 @@ export const WorkbookRecord = {
   meaningOf: (format: WorkbookFormat): FileMeaning => (format === 'xlsx' ? 'ooxml' : 'openformula'),
 
   /**
-   * A new spreadsheet's record opened from a file: the file's format, that format's meaning and the file's theme
-   * (standard-mapping.md "The theme in the file").
+   * A new spreadsheet's record opened from a file: the file's format, that format's meaning, the file's theme
+   * (standard-mapping.md "The theme in the file") and its named functions ("Named functions in the file").
    */
   opened: (
     made: WorkbookRecord,
     format: WorkbookFormat,
     theme?: SpreadsheetTheme,
+    functions?: readonly NamedFunction[],
   ): WorkbookRecord => ({
     ...made,
     format,
     meaning: WorkbookRecord.meaningOf(format),
     ...(theme ? { settings: { ...made.settings, theme } } : {}),
+    ...(functions?.length ? { functions } : {}),
   }),
 
   /**

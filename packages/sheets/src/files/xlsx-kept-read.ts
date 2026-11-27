@@ -117,6 +117,12 @@ const onlyOwn = (element: XmlElement) =>
   isSheetPr(element) && element.attributes.length === 0 && childElements(element).every(sheetPrOwn);
 
 /** Kept content as the XLSX reader gathers it, part by part. */
+/**
+ * Whether a defined name is read into the model, and so not kept: `kept` is it as the file wrote it, `scoped` whether
+ * it is one sheet's (`localSheetId`).
+ */
+export type Claim = (name: XmlElement, kept: KeptItem<FileAt>, scoped: boolean) => boolean;
+
 export class XlsxKeeper {
   readonly items: KeptItem<FileAt>[] = [];
   readonly relationships: KeptRelationship<FileAt>[] = [];
@@ -142,6 +148,12 @@ export class XlsxKeeper {
     }
     const kept = keptXmlOf(parsed, element);
     this.items.push({ place, xml: without(parsed, element, kept.xml, read), ns: kept.ns, at });
+  }
+
+  // Whether `claim` reads a defined name into the model (a named range or function), so it is not kept.
+  private claimed(parsed: XmlParsed, name: XmlElement, claim: Claim, scoped: boolean): boolean {
+    const kept = keptXmlOf(parsed, name);
+    return claim(name, { place: 'workbook', xml: kept.xml, ns: kept.ns, at: {} }, scoped);
   }
 
   // A root's attributes but its namespace declarations; `mc:Ignorable` with the bindings of the prefixes it names.
@@ -185,6 +197,7 @@ export class XlsxKeeper {
     part: string,
     sheets: readonly XmlElement[],
     read: ReadonlyMap<number, number>,
+    claim: Claim,
   ): void {
     this.keepRelationships('', 'package', {}, new Set());
     // The sheets' relationships are LiveDoc's to write (its `sheets`), whatever kind of sheet each names.
@@ -201,7 +214,8 @@ export class XlsxKeeper {
         const local = attributeOf(name, '', 'localSheetId');
         const sheet = local === undefined ? undefined : read.get(Number(local));
         if (local !== undefined && sheet === undefined) this.unread++;
-        else this.element('workbook', parsed, name, sheet === undefined ? {} : { sheet }, ids);
+        else if (!this.claimed(parsed, name, claim, sheet !== undefined))
+          this.element('workbook', parsed, name, sheet === undefined ? {} : { sheet }, ids);
       }
     }
   }

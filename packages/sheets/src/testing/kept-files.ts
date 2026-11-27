@@ -18,7 +18,7 @@ export const VALIDATIONS =
   '<table:content-validations><table:content-validation table:name="val1" table:condition="of:cell-content-is-whole-number()"/></table:content-validations>';
 export const TRACKED = '<table:tracked-changes table:track-changes="false"/>';
 export const NAMES =
-  '<table:named-expressions><table:named-range table:name="Total" table:base-cell-address="$Sheet1.$A$1" table:cell-range-address="$Sheet1.$A$1"/></table:named-expressions>';
+  '<table:named-expressions><table:named-expression table:name="Rate" table:base-cell-address="$Sheet1.$A$1" table:expression="of:=0.2"/></table:named-expressions>';
 export const SHAPES =
   '<table:shapes><draw:frame draw:style-name="gr1" svg:width="2cm" svg:height="1cm" svg:x="1cm" svg:y="1cm"><draw:image xlink:href="Pictures/cat.png" xlink:type="simple" xlink:show="embed" xlink:actuate="onLoad"/></draw:frame></table:shapes>';
 export const FORMATS =
@@ -59,7 +59,7 @@ export const X14AC = 'http://schemas.microsoft.com/office/spreadsheetml/2009/9/a
 
 export const REVISION = '<xr:revisionPtr revIDLastSave="0" documentId="13_ncr"/>';
 export const BOOK_VIEWS = '<bookViews><workbookView activeTab="2" firstSheet="1"/></bookViews>';
-export const GLOBAL_NAME = '<definedName name="Total">Data!$A$1</definedName>';
+export const GLOBAL_NAME = '<definedName name="Rate">0.2</definedName>';
 export const LOCAL_NAME = '<definedName name="Mine" localSheetId="2">Data!$B$1</definedName>';
 export const CHART_NAME = '<definedName name="Lost" localSheetId="1">Data!$C$1</definedName>';
 export const CALC = '<calcPr calcId="191029"/>';

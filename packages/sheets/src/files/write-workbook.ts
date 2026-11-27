@@ -15,7 +15,7 @@ import { writeXlsx } from './xlsx-write';
 
 export type WrittenWorkbook = { data: Uint8Array<ArrayBuffer>; losses: FileLoss[] };
 
-/** The engine a file is written from: the sheets with the workbook's settings, meaning and theme. */
+/** The engine a file is written from: the sheets with the workbook's settings, meaning, theme and named functions. */
 export function workbookEngine(sheets: readonly Sheet[], record: WorkbookRecord): Workbook {
   const wb = new Workbook({
     sheets: [...sheets],
@@ -24,6 +24,7 @@ export function workbookEngine(sheets: readonly Sheet[], record: WorkbookRecord)
     ...(record.meaning ? { meaning: record.meaning } : {}),
     limits: SheetLimits.spreadsheet,
     iteration: record.settings.iterate,
+    ...(record.functions ? { functions: record.functions } : {}),
   });
   if (record.settings.theme) wb.setTheme(record.settings.theme);
   return wb;
