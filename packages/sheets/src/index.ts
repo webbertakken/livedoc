@@ -67,6 +67,7 @@ export * from './protection-list';
 export * from './tables/table';
 export * from './tables/table-ref';
 export * from './tables/table-store';
+export * from './tables/table-commands';
 export * from './named-functions';
 export * from './named-function-refs';
 export * from './named-function-import';
@@ -150,3 +151,4 @@ export {
 export * from './changesets/after-image';
 export * from './changesets/sheet-changeset';
 export * from './changesets/sheet-revert';
+export { cellText } from './engine/sheets-ctx';

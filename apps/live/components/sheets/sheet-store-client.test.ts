@@ -204,6 +204,30 @@ describe('the sheet store client', () => {
     expect(srv.sheet.cells.size).toBe(1);
   });
 
+  // data-tools.md "Tables": a value typed in the row below a table grows it, one undo taking both back.
+  it('grows a table by a value typed below it, and one undo takes the value and the growth back', async () => {
+    const steps: { undo: () => void }[] = [];
+    const b = store(srv.api, { pushUndo: (st) => steps.push(st as never) });
+    await b.loadTab('t1');
+    const table = {
+      id: 'tbl001',
+      name: 'Sales',
+      r1: rows[0]!,
+      c1: cols[0]!,
+      r2: rows[1]!,
+      c2: cols[1]!,
+    };
+    b.write('sheet0001', { kind: 'layout', changes: [{ k: 'table', id: 'tbl001', table }] });
+    b.write('sheet0001', set(2, 1, 7));
+    await b.settle();
+    expect(srv.sheet.layout.tables).toEqual([{ ...table, r2: rows[2] }]);
+    for (const op of srv.drain()) b.receive(op);
+    steps.pop()!.undo();
+    await b.settle();
+    expect(srv.sheet.layout.tables).toEqual([table]);
+    expect(b.workbook('t1').value('sheet0001', 2, 1)).toBeNull();
+  });
+
   it('shows a write at once, sends writes in order, and converges with others', async () => {
     srv.hold(true);
     s.write('sheet0001', set(0, 0, 1));

@@ -310,7 +310,7 @@ const INSERT_MENU = menu('insert', 'Insert', [
   ]),
   built('insert-sheet', 'Sheet', 'edit', { shortcut: 'insert-new-sheet' }),
   SEPARATOR,
-  item('insert-table', 'Table', 'edit'),
+  built('insert-table', 'Table', 'edit'),
   item('insert-timeline', 'Timeline', 'edit'),
   built('insert-chart', 'Chart', 'edit'),
   item('insert-pivot-table', 'Pivot Table', 'edit'),
@@ -416,7 +416,7 @@ const formatMenu = (locale: string | null, recentCodes: readonly string[]) =>
       built('unmerge', 'Unmerge', 'edit'),
     ]),
     SEPARATOR,
-    item('convert-to-table', 'Convert to Table', 'edit', {
+    built('convert-to-table', 'Convert to Table', 'edit', {
       shortcut: 'convert-range-to-table',
     }),
     built('conditional-formatting', 'Conditional Formatting', 'edit', { checkable: 'checkbox' }),

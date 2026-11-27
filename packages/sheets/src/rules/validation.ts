@@ -18,6 +18,7 @@ import type { Workbook } from '../engine/workbook';
 import { DROPDOWN_OPTIONS_MAX } from '../limits';
 import { isEmail, isUrl } from '../text-checks';
 import { firstRuleAt, ruleIndex } from './rule-index';
+import { tableRuleAt } from '../tables/table-rules';
 
 // A Date rule's dates: 31 December 1899 to 31 December 9999 (data-validation.md "What each rule allows").
 const DATE_SERIAL_MIN = 1;
@@ -54,11 +55,11 @@ export type CheckedCell = { r?: number; c?: number; shown?: string };
 
 const EMPTY: readonly ValidationRule[] = [];
 
-// The validation rule covering a cell, or null.
+// The validation rule covering a cell, or null: the sheet's own, else its table column's type (data-tools.md "Tables").
 export function validationRuleAt(layout: SheetLayout, r: number, c: number): ValidationRule | null {
   const list = layout.rules;
-  if (!list?.length) return null;
-  return firstRuleAt(ruleIndex(layout, list ?? EMPTY), r, c);
+  const own = list?.length ? firstRuleAt(ruleIndex(layout, list ?? EMPTY), r, c) : null;
+  return own ?? tableRuleAt(layout, r, c);
 }
 
 // A checkbox cell's value: true or false, null when empty, undefined for anything else.

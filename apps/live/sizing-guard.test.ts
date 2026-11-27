@@ -119,6 +119,7 @@ const SIZING_EXCEPTIONS = [
   'components/sheets/SheetHeaders.tsx',
   'components/sheets/SheetOutlineBar.tsx',
   'components/sheets/SheetSelectionLayer.tsx',
+  'components/sheets/tables/SheetTablesLayer.tsx',
   // A form as respondents see it (D237).
   'components/forms/QuestionControl.tsx',
   'components/forms/QuestionView.tsx',

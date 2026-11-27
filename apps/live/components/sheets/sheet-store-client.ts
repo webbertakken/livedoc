@@ -37,6 +37,7 @@ import {
   uniqueSheetTitle,
   validateWrite,
   writeForRules,
+  withTableGrowth,
   type Sheet,
   type SheetJson,
   type SheetLayout,
@@ -752,7 +753,10 @@ export class SheetStore {
       const entry = this.entries.get(sheetId);
       if (!entry) return 'write_invalid';
       // What is typed or pasted takes its cell's rule: `done` is saved as the option `Done` (data-validation.md).
-      const write = checked ? writeForRules(entry.view.layout, asMade) : asMade;
+      // A value typed in the row below a table grows it, in the same write: one undo takes both (data-tools.md "Tables").
+      const write = checked
+        ? withTableGrowth(entry.view.layout, writeForRules(entry.view.layout, asMade))
+        : asMade;
       const parts = splitWrite(write);
       let state = states.get(sheetId) ?? entry.view;
       // A Dropdown from a Range's options are worked out here, from the tab's workbook (the api cannot).

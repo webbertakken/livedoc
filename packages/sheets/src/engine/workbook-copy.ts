@@ -41,10 +41,17 @@ export class WorkbookCopy extends Workbook {
     this.version++;
   }
 
+  // A value typed in (not a formula, nor in a formula's spill) is its input, here at once: it never waits, even when
+  // the Worker's answer for it was dropped by a layout change that came after.
   override isStale(sheetId: string, r: number, c: number): boolean {
     if (this.stale.size === 0) return false;
     const at = this.nos.find(this.nos.sheetNo(sheetId), r, c);
-    return this.stale.has(this.spills.ownerAt(at) ?? at);
+    const owner = this.spills.ownerAt(at);
+    if (owner === undefined) {
+      const input = this.inputAt(sheetId, r, c);
+      if (!input || !('f' in input)) return false;
+    }
+    return this.stale.has(owner ?? at);
   }
 
   protected override worksOutHere(): boolean {

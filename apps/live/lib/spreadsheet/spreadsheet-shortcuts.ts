@@ -163,7 +163,7 @@ export const SPREADSHEET_SHORTCUTS: readonly ShortcutRow[] = [
     'Ctrl+Alt+T',
     '⌘+Option+T',
     'Alt+Shift+T',
-    'specified',
+    'built',
   ),
   // Format cells
   row('bold', 'Format cells', 'Bold', 'Ctrl+B', '⌘+B or ⌘+2 or Ctrl+2', 'Ctrl+B', 'built'),
