@@ -12,7 +12,7 @@ import {
   type SheetHarness,
   type SheetParts,
 } from '@/components/sheets/sheet-ui-test-utils';
-import { SheetTablesLayer } from './SheetTablesLayer';
+import { FILTER_PAUSED, SheetTablesLayer } from './SheetTablesLayer';
 import { TableSettingsContext } from './table-settings-context';
 
 vi.mock('@/lib/debug-log', () => ({ debugLog: vi.fn() }));
@@ -165,6 +165,40 @@ describe('the table chip and its menu', () => {
     fireEvent.click(filtered);
     fireEvent.click(menuItem('Column Menu'));
     expect(screen.getByText('Edit Column Type')).toBeTruthy();
+  });
+
+  // D482: while a filter view is open the table's filter is paused, its buttons quiet and leading to the column menu;
+  // leaving the view restores it exactly, and pausing never writes the table's stored filter.
+  it('pauses a table’s filter while a filter view is open, its stored filter untouched', async () => {
+    const h = await harness();
+    const { rows, cols } = h.store.sheet(SHEET_ID)!.layout;
+    const stored = { [cols[2]!]: { values: ['1'] } };
+    chips(h, { filter: stored });
+    const rev = h.store.sheet(SHEET_ID)!.rev;
+    act(() =>
+      h.ctl().filterViews.openTemporary({
+        id: 'view01',
+        title: 'Temporary Filter 1',
+        r1: rows[1]!,
+        c1: cols[1]!,
+        r2: rows[2]!,
+        c2: cols[2]!,
+        conds: {},
+      }),
+    );
+    const paused = screen.getByRole('button', {
+      name: 'Amount column menu, filter paused while a filter view is open',
+    });
+    expect(paused.hasAttribute('data-paused')).toBe(true);
+    expect(paused.hasAttribute('data-filtered')).toBe(false);
+    expect(paused.getAttribute('title')).toBe(FILTER_PAUSED);
+    fireEvent.click(paused);
+    expect(screen.getByText('Edit Column Type')).toBeTruthy();
+    act(() => h.ctl().filterViews.close());
+    const back = screen.getByRole('button', { name: 'Amount filter' });
+    expect(back.hasAttribute('data-filtered')).toBe(true);
+    expect(h.store.sheet(SHEET_ID)!.layout.tables![0]!.filter).toEqual(stored);
+    expect(h.store.sheet(SHEET_ID)!.rev).toBe(rev);
   });
 
   it('draws nothing without the panel to open, or without tables', async () => {

@@ -103,8 +103,10 @@ Google Sheets' Data menu does. Its rows of the [parity matrix](parity-matrix.md)
     by everyone opening it after (D473); a temporary view only for its maker.
   - The view's **Sort A to Z** and **Sort Z to A** order the rows drawn for its opener alone and are kept with the
     view; cells never move, for anyone (Google's: "filter or sort a spreadsheet you don't have edit access to").
-  - While a view is open neither the sheet's filter nor a table's is drawn: the view's conditions alone hide rows,
-    and a table's column buttons open its column menu; closing the view draws the filters again (D482). Formulas
+  - While a view is open neither the sheet's filter nor a table's is drawn: the view's conditions alone hide rows.
+    A table's filter is **paused**, never changed: its column buttons are drawn faded with "Filter paused while a
+    filter view is open" (their name and tooltip) and open its column menu; closing the view draws every filter again
+    exactly as stored (D482). Formulas
     (SUBTOTAL among them), charts and the status bar's figures read the sheet's filter and the tables' filters, never
     a view, as their values are everyone's (measured: SUBTOTAL(109) unchanged under a filter view, D469).
   - **Links**: while a saved view is open the address carries `?fview=<sheet id>.<view id>`; an address naming one
@@ -547,8 +549,10 @@ The code cites each by its id.
   rulings, 2026-11-27); on at Convert to Table, as Excel's (default); dropped by Convert to Range, as Excel's; a
   sheet's filter over exactly a new table's rows becoming its filter; the refusals' words and the dimmed item's note
   (default).
-- **D482** While a filter view is open, the tables' filters are not drawn either, the view alone hiding rows, as the
-  sheet's filter is not (default; Google's view over a table unmeasured).
+- **D482** While a filter view is open, the tables' filters are paused, the view alone hiding rows, as the sheet's
+  filter is not drawn (the Director's ruling, 2026-11-27); their buttons drawn paused (the Director's) in the words
+  above (default). Google's is unmeasurable through the API: `setBasicFilter` with a `tableId` fails and a view's
+  rows are per viewer (`plans/assets/0020/research/google-table-view-probe.ts`).
 - **D441** Convert to Table's guessed column types: a type when every filled data cell is that type, else Text; a
   column with none filled None, as Google guesses (default).
 - **D442** A table's look: the alternating colours banding over it, the table's own, in the first default style; it

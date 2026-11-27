@@ -29,6 +29,8 @@ import { TableColumnMenuContext, TableSettingsContext } from './table-settings-c
 import { TableColumnMenu } from './TableColumnMenu';
 
 const CHIP_HEIGHT = 20;
+/** A table's filter button while a filter view is open in its place (data-tools.md, D482). */
+export const FILTER_PAUSED = 'Filter paused while a filter view is open';
 const COLUMN_BUTTON = 16;
 
 type MenuAt = { tableId: string; x: number; y: number };
@@ -125,13 +127,23 @@ export function SheetTablesLayer() {
           if (r.w < COLUMN_BUTTON * 2) return null;
           const filters = filtering(t);
           const filtered = filters && !!t.filter![colId];
+          // Paused while a view is open: drawn quiet, opening the column menu; its filter is never touched (D482).
+          const paused = !!t.filter && !filters;
           return (
             <button
               key={`${t.id}:${colId}`}
               type="button"
               data-table-column={`${t.id}:${colId}`}
               data-filtered={filtered ? '' : undefined}
-              aria-label={filters ? `${columnName} filter` : `${columnName} column menu`}
+              data-paused={paused ? '' : undefined}
+              title={paused ? FILTER_PAUSED : undefined}
+              aria-label={
+                filters
+                  ? `${columnName} filter`
+                  : paused
+                    ? `${columnName} column menu, ${FILTER_PAUSED.toLowerCase()}`
+                    : `${columnName} column menu`
+              }
               aria-haspopup="dialog"
               aria-expanded={[columnMenu, filterMenu].some(
                 (m) => m?.tableId === t.id && m.colId === colId,
@@ -157,7 +169,15 @@ export function SheetTablesLayer() {
                 })
               }
             >
-              {filtered ? <FilterIcon /> : <span aria-hidden>▾</span>}
+              {filtered ? (
+                <FilterIcon />
+              ) : paused ? (
+                <span aria-hidden className="opacity-50">
+                  <FilterIcon />
+                </span>
+              ) : (
+                <span aria-hidden>▾</span>
+              )}
             </button>
           );
         });
