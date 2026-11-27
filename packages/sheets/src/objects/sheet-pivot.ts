@@ -1,4 +1,4 @@
-// A pivot table as its sheet keeps it (docs/specs/029-sheets/pivot-tables.md "The model", D378, D502): one of the
+// A pivot table as its sheet keeps it (docs/specs/029-sheets/pivot-tables.md "The model", D378, D601): one of the
 // sheet's objects, its place a cell by ids, its source a range of any sheet by ids, and its groups, values and filters
 // by their source column's id. What a deletion does to one, on its own sheet or on its source's.
 import { isAxisId, isSheetId } from '../ids';
@@ -240,7 +240,7 @@ function pivotSourceAfter(
 }
 
 /**
- * The pivot table after rows or columns of its own sheet, laid out as `before`, are deleted (D502): gone with its
+ * The pivot table after rows or columns of its own sheet, laid out as `before`, are deleted (D601): gone with its
  * anchor's row or column; its source shrunk when it is on this sheet (another sheet's is that sheet's to shrink,
  * shrinkPivotSourcesOf).
  */
@@ -258,7 +258,7 @@ export function pivotAfterDelete(
 /**
  * The layout changes a reader sheet's pivot tables need when `changes` land on sheet `targetId`, laid out as
  * `before`: each pivot table reading that sheet has its source shrunk and its gone columns' fields dropped, as a
- * formula's range into it shrinks (D502). Linear in the reader's objects.
+ * formula's range into it shrinks (D601). Linear in the reader's objects.
  */
 export function shrinkPivotSourcesOf(
   targetId: string,

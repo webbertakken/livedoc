@@ -1,4 +1,4 @@
-// docs/specs/029-sheets/pivot-tables.md "In the grid" (D503): the engine places a pivot table's output in its sheet as
+// docs/specs/029-sheets/pivot-tables.md "In the grid" (D602): the engine places a pivot table's output in its sheet as
 // it places a spilled array, from its source as it reads now, with its numbers' formats.
 import { describe, expect, it } from 'vitest';
 import { book } from '../testing/book';

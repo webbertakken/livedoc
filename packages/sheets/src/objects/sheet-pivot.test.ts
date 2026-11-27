@@ -1,4 +1,4 @@
-// docs/specs/029-sheets/pivot-tables.md "The model" (D378, D502): what a pivot table may be as its sheet keeps it, and
+// docs/specs/029-sheets/pivot-tables.md "The model" (D378, D601): what a pivot table may be as its sheet keeps it, and
 // what deleting rows and columns does to one, on its own sheet and on its source's.
 import { describe, expect, it } from 'vitest';
 import { applySheetWrite, inverseSheetWrite, type SheetWrite } from '../store';

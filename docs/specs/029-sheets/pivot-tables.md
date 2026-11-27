@@ -28,17 +28,17 @@ A pivot table is one of its sheet's **objects** ([Sheet store](sheet-store.md#in
 the sheet's layout beside its charts, set whole by its id or removed, one undo step a change (default, D378).
 
 - **Place**: the cell its output starts at, by row and column ids; the output grows right and down from it. Deleting
-  that cell's row or column deletes the pivot table, as Google Sheets does (default, D502).
+  that cell's row or column deletes the pivot table, as Google Sheets does (default, D601).
 - **Source**: a range of any sheet of the workbook, by that sheet's id (none: its own sheet) and row and column ids;
   its first row is the header, which names the columns. Rows and columns inserted inside it widen it, as a chart's
   range does; deleted ones shrink it, on its own sheet and on another alike, as a formula's range into that sheet
-  shrinks; every cell of it deleted leaves no source (D502).
+  shrinks; every cell of it deleted leaves no source (D601).
 - **Fields**: each row group, column group, value and filter names its source column by the column's id, so it
   follows the column when columns move, and is dropped when the column is deleted; a group sorted by a value dropped
-  so sorts by its items again (D502).
+  so sorts by its items again (D601).
 - **Bounds**: up to 100 pivot tables and charts together a sheet (the objects' cap); up to 20 row groups, 20 column
   groups, 40 values and 40 filters; a filter's values and a custom group's items as a filter's are; names up to 200
-  characters. A change past them is refused as any malformed layout write is (default, D502).
+  characters. A change past them is refused as any malformed layout write is (default, D601).
 - **Rows** and **Columns**: groups, outermost first; each with its order (ascending or descending), an optional
   value to sort by (a value's place among Values, its order then the group's), **Show Totals** (on), **Repeat Row
   Labels** (off; rows only), and an optional grouping (below).
@@ -78,7 +78,7 @@ Google Sheets' answer for the evidence's cases):
 - **Calculated fields**: summarised by SUM (or any summary), each source column name in the formula (quoted, as
   `'Units'`) reads that column's summary over the cell's rows, so `='Units'*'Price'` over a group is the group's
   units times the group's prices; summarised by Custom, a name reads the column's values over the cell's rows as an
-  array (default, D501).
+  array (default, D600).
 - **Cells**: a cell no source row reaches is blank; one only blank cells reach holds its summary (SUM 0).
 - **Show As**: % of Row divides each cell by its row's grand total, % of Column by its column's, % of Grand Total by
   the grand total; shown as a percentage.
@@ -100,7 +100,7 @@ Google Sheets' answer for the evidence's cases):
 ## In the grid
 
 The engine places a pivot table's output in its sheet as it places a spilled array ([Formulas](formulas.md), "Arrays
-and spills"), from the source's values and shown texts as they read now (default, D503):
+and spills"), from the source's values and shown texts as they read now (default, D602):
 
 - **Cells**: the output fills a rectangle from its place, right and down; each of its cells reads as its value to
   formulas, filters, charts, the cells view and images, as a spilled cell does. Its anchor cell is the pivot table's;
@@ -165,9 +165,9 @@ The output is ordinary cells to the grid's screen reader support, with its heade
   a deleted one's fields, as a chart's series do (default).
 - **D379** The output's layout, labels, order, totals and summaries as Google Sheets' answers for the evidence's
   twenty cases (default).
-- **D501** A calculated field summarised by SUM reads each named column's summary over the cell's rows; by Custom,
+- **D600** A calculated field summarised by SUM reads each named column's summary over the cell's rows; by Custom,
   the column's values as an array, as Google Sheets does (default).
-- **D502** A pivot table goes with its anchor cell's row or column; its source shrinks with deleted rows and columns on
+- **D601** A pivot table goes with its anchor cell's row or column; its source shrinks with deleted rows and columns on
   any sheet, as a formula's range does, and its fields go with their columns (default).
-- **D503** The output lands in the grid as a spilled array does, blocked by filled cells (`#REF!`, "Results would
+- **D602** The output lands in the grid as a spilled array does, blocked by filled cells (`#REF!`, "Results would
   overwrite B3"), its numbers in their source column's number format and Show As values as percentages (default).
