@@ -148,6 +148,10 @@ import { TextDocumentTitleRow } from './TextDocumentTitleRow';
 import { TextDocumentRuler } from './TextDocumentRuler';
 import { sheetsFrame, TextDocumentSheets } from './TextDocumentSheets';
 import { useTextDocumentPageStories } from './useTextDocumentPageStories';
+import {
+  keepUnreadSelection,
+  pageSelectionPlugin,
+} from '@/lib/text-document/text-document-page-selection';
 import { useTextDocumentColumns } from './useTextDocumentColumns';
 import { breaksPlugin, sectionSetupAt } from '@/lib/text-document/text-document-breaks';
 import { horizontalLineActions } from '@/lib/text-document/text-document-horizontal-line';
@@ -470,6 +474,9 @@ export function TextDocumentSurface({
         const pluginsFor = (body: Y.XmlFragment): Plugin[] => [
           // y-prosemirror types its plugin as any.
           ySyncPlugin(body) as Plugin,
+          // The page's selection as the editor last left it, to tell the person's newer move (editing-surface.md
+          // "The caret").
+          pageSelectionPlugin(),
           // The emoji colon list takes Up, Down, Enter, Tab and Escape while it is shown, before any keymap.
           emojiColonPlugin,
           // The equation being written takes the keys inside its box, before any keymap (objects.md "Equations in
@@ -625,8 +632,9 @@ export function TextDocumentSurface({
           state: stateFor(firstTab),
           editable: () => live.current.textWrites,
           // Edits rewritten as suggestions while suggesting (review.md "While suggesting").
+          // A change made on its own keeps the caret the person just moved (editing-surface.md "The caret").
           dispatchTransaction(this: EditorView, tr) {
-            dispatchWithSuggesting(this, tr, {
+            dispatchWithSuggesting(this, keepUnreadSelection(this, tr), {
               ...live.current.suggesting,
               alongside: pastedMedia,
             });
