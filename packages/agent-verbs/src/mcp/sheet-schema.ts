@@ -25,6 +25,7 @@ import {
   SHEET_CHART_LEGENDS,
   SHEET_CHART_STACKS,
   SHEET_CHART_TEXT_MAX,
+  PIVOT_SUMMARIES,
 } from '@livedoc/sheets';
 import {
   CHART_PALETTES,
@@ -287,6 +288,24 @@ const scalePoint = z.object({
   type: z.enum(['min', 'max', 'number', 'percent', 'percentile']),
   value: z.number().optional().describe('For number, percent and percentile.'),
 });
+
+const pivotGroup = z.union([
+  z.string(),
+  z.object({
+    column: z.string().describe('A column name (or letter).'),
+    order: z.enum(['asc', 'desc']).optional(),
+    sortBy: z
+      .string()
+      .optional()
+      .describe('Sort by a value, by its label ("SUM of Units"); by the items by default.'),
+    totals: z.boolean().optional().describe('Show totals (on by default).'),
+    repeat: z.boolean().optional().describe('Repeat row labels (rows only).'),
+  }),
+]);
+const pivotShowAs = z
+  .enum(['row', 'column', 'total'])
+  .optional()
+  .describe('A percentage of its row, column or the grand total.');
 
 const sheetChange = z.discriminatedUnion('op', [
   z.object({
@@ -603,6 +622,82 @@ const sheetChange = z.discriminatedUnion('op', [
       .describe(
         'A spreadsheet only: only the chart of this id (read_sheet lists them), the rest kept; never with range.',
       ),
+  }),
+  z.object({
+    op: z
+      .literal('pivot')
+      .describe(
+        'A spreadsheet only: a pivot table summarising a range, its output worked out live from the range (read like any cells; typing into it is refused).',
+      ),
+    range: rangeArg.describe(
+      'Its source: a header row naming the columns, then data rows ("A1:F25", "Data!A1:F25").',
+    ),
+    at: z
+      .string()
+      .optional()
+      .describe(
+        'The cell of this sheet its output starts at; a column clear right of the range by default.',
+      ),
+    rows: z
+      .array(pivotGroup)
+      .optional()
+      .describe(
+        'Row groups, outermost first: a column name, or {column, order, sortBy, totals, repeat}.',
+      ),
+    columns: z.array(pivotGroup).optional().describe('Column groups, outermost first, as rows.'),
+    values: z
+      .array(
+        z.union([
+          z.object({
+            column: z.string().describe('A column name (or letter).'),
+            summarise: z
+              .enum(PIVOT_SUMMARIES)
+              .optional()
+              .describe('SUM for a column of numbers, else COUNTA, by default.'),
+            showAs: pivotShowAs,
+            name: z.string().optional().describe('Its label; "SUM of Units" by default.'),
+          }),
+          z.object({
+            formula: z
+              .string()
+              .describe("A calculated field over column names: \"='Units'*'Price'\"."),
+            name: z.string().describe('Its label.'),
+            summarise: z.enum([...PIVOT_SUMMARIES, 'CUSTOM']).optional(),
+            showAs: pivotShowAs,
+          }),
+        ]),
+      )
+      .optional()
+      .describe('Values summarised in each cell.'),
+    filters: z
+      .array(
+        z.union([
+          z.object({
+            column: z.string(),
+            show: z.array(z.string()).describe('Only rows whose cell shows one of these.'),
+          }),
+          z.object({
+            column: z.string(),
+            formula: z.string().describe('"=Units>8": rows it holds for.'),
+          }),
+        ]),
+      )
+      .optional(),
+    valuesAsRows: z.boolean().optional().describe('Values laid out as rows (columns by default).'),
+    replace: z
+      .string()
+      .optional()
+      .describe(
+        'The id of one of the sheet’s pivot tables (read_sheet lists them) this one takes the place of.',
+      ),
+  }),
+  z.object({
+    op: z
+      .literal('clear_pivots')
+      .describe(
+        'A spreadsheet only: take off the pivot table of an id, or every one of the sheet’s.',
+      ),
+    id: z.string().optional(),
   }),
   z.object({
     op: z

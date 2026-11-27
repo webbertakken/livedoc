@@ -358,12 +358,18 @@ second scale (line, area, stepped-area and combo charts).
 read_sheet lists the charts with their ids; chart {..., replace: "<id>"} rewrites one in place,
 clear_charts {id: "<id>"} takes one off, clear_charts {} all. add_sheet {title, after} adds a sheet after another.
 
+A pivot table summarises a range live; its output reads as cells, not typed over:
+  pivot {range: "Data!A1:F99", at: "H1", rows: ["Region"], columns: ["Year"],
+         values: [{column: "Units"}], filters: [{column: "Rep", show: ["Ann"]}]}
+Columns by name; a value sums numbers, else counts (summarise: "AVERAGE").
+read_sheet lists them; replace: "<id>" rewrites one, clear_pivots {id} drops it.
+
 Read back with read_sheet: each cell's input, the value worked out, what it shows. Cheaper:
-read_document on any of its tabs outlines the workbook (sheets, used ranges, rules, charts);
+read_document on any of its tabs outlines the workbook (sheets, used ranges, rules, charts, pivots);
 view "cells" {range: "A1:D40"} prints the sheet a row a line, a formula with what it shows.
 
 The file: livedoc spreadsheet download <doc> [--format xlsx|ods|fods|csv|tsv] [--sheet <name>]
-writes it with its charts. Change its format with convert_spreadsheet {to: "xlsx"} (or
+writes it with its charts and pivot tables. Change its format with convert_spreadsheet {to: "xlsx"} (or
 livedoc spreadsheet convert <doc> xlsx); check: true only lists what Excel cannot hold.`,
   },
 } as const;

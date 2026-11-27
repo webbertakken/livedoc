@@ -1,6 +1,6 @@
 // The workbook outline (docs/specs/024-agents/document-views.md "A spreadsheet's views"): a spreadsheet's header,
 // then a line per sheet in tab order, the tab asked for marked, each followed by its parts (named ranges, rule
-// counts, alternating colours, charts). It reads no cell: a sheet's used range comes from the ids of the rows and
+// counts, alternating colours, charts, pivot tables). It reads no cell: a sheet's used range comes from the ids of the rows and
 // columns holding a cell, which the caller reads without the cells themselves.
 import type { ViewDoor } from '@livedoc/api-schema';
 import {
@@ -12,6 +12,7 @@ import {
   type IdRange,
   type SheetLayout,
   type SheetChart,
+  type SheetPivot,
   type WorkbookRecord,
 } from '@livedoc/sheets';
 import { fitLines, fitOf, type ViewLine, type ViewResult } from '../budget';
@@ -46,6 +47,16 @@ export type WorkbookOutlineChartJson = {
   lines?: string[];
 };
 
+export type WorkbookOutlinePivotJson = {
+  id: string;
+  range: string | null;
+  at: string;
+  // The fields' source columns by letter, values by their summary: rows=A cols=C values=SUM(D).
+  rows: string[];
+  columns: string[];
+  values: string[];
+};
+
 export type WorkbookOutlineSheetJson = {
   title: string;
   tabId: string;
@@ -60,6 +71,7 @@ export type WorkbookOutlineSheetJson = {
   rules: { validation: number; format: number };
   bands: number;
   charts: WorkbookOutlineChartJson[];
+  pivots: WorkbookOutlinePivotJson[];
 };
 
 export type WorkbookOutlineJson = {
@@ -112,7 +124,46 @@ function chartJson(layout: SheetLayout, chart: SheetChart): WorkbookOutlineChart
   };
 }
 
-function sheetJson(sheet: WorkbookOutlineSheet, current: string): WorkbookOutlineSheetJson {
+// A pivot table without reading a cell: its source by A1 (another sheet's by its title), its fields by column letter.
+function pivotJson(
+  layout: SheetLayout,
+  pivot: SheetPivot,
+  sheets: readonly WorkbookOutlineSheet[],
+): WorkbookOutlinePivotJson {
+  const ix = layoutIndex(layout);
+  const src = pivot.source;
+  const home =
+    src?.s !== undefined
+      ? sheets.find((x) => x.id === src.s)
+      : src?.st !== undefined
+        ? sheets.find((x) => x.title.toLowerCase() === src.st!.toLowerCase())
+        : undefined;
+  const elsewhere = src?.s !== undefined || src?.st !== undefined;
+  const srcLayout = home?.layout ?? layout;
+  const letter = (col: string) => {
+    const c = layoutIndex(srcLayout).colPos.get(col);
+    return c === undefined ? '?' : columnLetters(c);
+  };
+  const a1 = src && (home || !elsewhere) ? a1Of(srcLayout, src) : null;
+  const r = ix.rowPos.get(pivot.at.r);
+  const c = ix.colPos.get(pivot.at.c);
+  return {
+    id: pivot.id,
+    range: a1 && (home ? `${jsonString(home.title)}!${a1}` : a1),
+    at: r === undefined || c === undefined ? '#REF!' : formatA1(r, c),
+    rows: (pivot.rows ?? []).map((g) => letter(g.col)),
+    columns: (pivot.columns ?? []).map((g) => letter(g.col)),
+    values: (pivot.values ?? []).map((v) =>
+      v.formula === undefined ? `${v.summary}(${letter(v.col)})` : v.name,
+    ),
+  };
+}
+
+function sheetJson(
+  sheet: WorkbookOutlineSheet,
+  current: string,
+  sheets: readonly WorkbookOutlineSheet[],
+): WorkbookOutlineSheetJson {
   const { layout } = sheet;
   return {
     title: sheet.title,
@@ -130,6 +181,9 @@ function sheetJson(sheet: WorkbookOutlineSheet, current: string): WorkbookOutlin
     charts: (layout.objects ?? [])
       .filter((x): x is SheetChart => x.kind === 'chart')
       .map((x) => chartJson(layout, x)),
+    pivots: (layout.objects ?? [])
+      .filter((x): x is SheetPivot => x.kind === 'pivot')
+      .map((x) => pivotJson(layout, x, sheets)),
   };
 }
 
@@ -160,6 +214,13 @@ function partLines(s: WorkbookOutlineSheetJson): string[] {
     if (chart.lines) bits.push(`lines=${chart.lines.join(',')}`);
     lines.push(bits.join(' '));
   }
+  for (const p of s.pivots) {
+    const bits = [`  pivot ${p.id} ${p.range ?? 'no data'} at ${p.at}`];
+    if (p.rows.length) bits.push(`rows=${p.rows.join(',')}`);
+    if (p.columns.length) bits.push(`cols=${p.columns.join(',')}`);
+    if (p.values.length) bits.push(`values=${p.values.join(',')}`);
+    lines.push(bits.join(' '));
+  }
   return lines;
 }
 
@@ -168,7 +229,7 @@ export function workbookOutlineView(
   opts: { budget?: number; door?: ViewDoor } = {},
 ): ViewResult<WorkbookOutlineJson> {
   const { workbook } = input;
-  const sheets = input.sheets.map((s) => sheetJson(s, input.current));
+  const sheets = input.sheets.map((s) => sheetJson(s, input.current, input.sheets));
   const header = [
     `spreadsheet ${jsonString(input.name)}`,
     workbook.format,

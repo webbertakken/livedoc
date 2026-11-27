@@ -153,6 +153,66 @@ describe('workbookOutlineView', () => {
     expect(text).toContain('  names "Gone range"=#REF!');
   });
 
+  // pivot-tables.md "The model": a pivot table's line, by its source, anchor and fields' columns.
+  it('lists pivot tables by source, anchor and fields, another sheet’s source by its title', () => {
+    const pivots: Sheet = {
+      ...hidden,
+      layout: {
+        ...hidden.layout,
+        objects: [
+          {
+            kind: 'pivot',
+            id: 'pivot01',
+            at: { r: hidden.layout.rows[0]!, c: hidden.layout.cols[0]! },
+            source: { r1: rows[0]!, c1: cols[0]!, r2: rows[2]!, c2: cols[2]!, s: models.id },
+            rows: [{ col: cols[0]! }],
+            columns: [{ col: cols[1]! }],
+            values: [
+              { col: cols[2]!, summary: 'SUM' },
+              { formula: '=Cost*2', summary: 'SUM', name: 'Double' },
+              { col: 'gone', summary: 'COUNTA' },
+            ],
+          },
+          {
+            kind: 'pivot',
+            id: 'pivot02',
+            at: { r: 'gone', c: hidden.layout.cols[0]! },
+            source: { r1: rows[0]!, c1: cols[0]!, r2: rows[2]!, c2: cols[0]!, st: 'models' },
+          },
+          {
+            kind: 'pivot',
+            id: 'pivot03',
+            at: { r: hidden.layout.rows[1]!, c: hidden.layout.cols[1]! },
+            source: { r1: rows[0]!, c1: cols[0]!, r2: rows[2]!, c2: cols[0]!, st: 'Gone' },
+          },
+          {
+            kind: 'pivot',
+            id: 'pivot04',
+            at: { r: hidden.layout.rows[1]!, c: hidden.layout.cols[2]! },
+            source: {
+              r1: hidden.layout.rows[0]!,
+              c1: hidden.layout.cols[0]!,
+              r2: hidden.layout.rows[1]!,
+              c2: hidden.layout.cols[0]!,
+            },
+          },
+        ],
+      },
+    };
+    const view = workbookOutlineView({
+      name: 'P',
+      workbook: book,
+      sheets: [outlineSheet(models), outlineSheet(pivots)],
+      current: 'x',
+    });
+    expect(view.text.split('\n').slice(-4)).toEqual([
+      '  pivot pivot01 "Models"!A1:C3 at A1 rows=A cols=B values=SUM(C),Double,COUNTA(?)',
+      '  pivot pivot02 "Models"!A1:A3 at #REF!',
+      '  pivot pivot03 no data at B2',
+      '  pivot pivot04 A1:A2 at C2',
+    ]);
+  });
+
   it('ignores used ids no longer in the layout', () => {
     const sheet = {
       ...outlineSheet(notes),

@@ -4,8 +4,8 @@
 worked out from its source, calculated fields and formula filters too ([The output](#the-output)), proven against all
 of Google Sheets' answers in the grid ([In the grid](#in-the-grid)), `GETPIVOTDATA`, written to both formats and read
 back, other apps' read from their standard forms ([Standard mapping](standard-mapping.md#pivot-tables-in-the-file)),
-and making and editing one in the grid ([Making one](#making-one), [Pivot Table Editor](#pivot-table-editor), [Working
-with one](#working-with-one)); the rest specified.
+making and editing one in the grid ([Making one](#making-one), [Pivot Table Editor](#pivot-table-editor), [Working
+with one](#working-with-one)), and by agents ([Agents](#agents)); the rest specified.
 
 Pivot tables in a [spreadsheet](spreadsheet.md), as Google Sheets makes them. Research:
 [Charts and pivots](../../research/sheets-open-standard/charts-and-pivots.md). Evidence: twenty pivot tables Google
@@ -193,6 +193,29 @@ Region`): each of the first three columns holding text below the header as the r
 - The output refreshes when the source changes; a source grown past its range is read when the range was whole
   columns.
 
+## Agents
+
+An agent makes and reads a spreadsheet's pivot tables through `change_sheet` and `read_sheet` (default, D615):
+
+- **`pivot`** `{range, at, rows, columns, values, filters, valuesAsRows, replace}`: one pivot table set whole, in the
+  changeset with the changes around it. `range` is A1, another sheet's by its name (`Data!A1:F99`); `at` a cell of the
+  sheet, by default a column clear right of a range on the same sheet, else A1. Fields name their source columns by
+  header text, case aside, or by letter. A group is a name or `{column, order, sortBy, totals, repeat}`, `sortBy` a
+  value by its label (`SUM of Units`); a value is `{column, summarise, showAs, name}` (SUM for numbers, else COUNTA,
+  D611) or a calculated field `{formula, name, summarise, showAs}`; a filter `{column, show}` (the items shown, as the
+  source shows them) or `{column, formula}`. `replace` names a pivot table of the sheet to rewrite under its id.
+- **`clear_pivots`** `{id}`: one pivot table taken off, or every one of the sheet's.
+- **Refusals**, each naming what would do: a range that does not read, or with no data row (`range_invalid`); a
+  column the header lacks, listing the columns (`column_not_found`); a calculated field not starting `=`
+  (`formula_invalid`); a `sortBy` naming no value, listing them (`write_invalid`); an id the sheet lacks, listing its
+  pivot tables (`pivot_not_found`); a value set into the output or the anchor (`pivot_cell`, D612); on a Plan Sheet
+  (`not_spreadsheet`).
+- **`read_sheet`** lists `pivots`: each id, anchor, source range, output range (none until it lands) and fields by
+  their columns' names and value labels.
+- **The outline** (`read_document` on a spreadsheet tab) gives a line a pivot table, without reading a cell:
+  `pivot <id> Data!A1:F99 at A1 rows=A cols=C values=SUM(D)`.
+- Help text: the `spreadsheet` guide topic teaches it within its 1,200-token budget (CLI49).
+
 ## Who may do what
 
 - **Editor** makes and changes pivot tables: Insert › Pivot Table, the editor, Edit, Delete.
@@ -236,3 +259,5 @@ and each pivot table removed, as a chart's changes are counted.
 - **D613** Create with New Sheet is two undo steps (the pivot table, then the sheet); Delete over a whole output removes
   its pivot table (default).
 - **D614** Suggested pivots are a text column by a number column summed, up to three (default).
+- **D615** An agent's pivot table names its columns by header text or letter, lands a column clear right of its range
+  on the same sheet (else at A1), and filters by the items as the source shows them (default).
