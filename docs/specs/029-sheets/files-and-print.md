@@ -69,6 +69,8 @@ format it arrived in ([Standard mapping](standard-mapping.md)).
     1 sheet: Data" ([Limits](#limits)).
   - **Formulas**: "4 formulas LiveDoc cannot read keep only their last values: Data!B2, Data!B3 and Data!C9" (a
     reference to another workbook, a table's structured reference).
+  - **Named functions**: "1 named function LiveDoc cannot read is kept for Excel: TOOLONG"
+    ([Named functions in the file](standard-mapping.md#named-functions-in-the-file)).
   - **Text**: "1 cell's text is cut to 50,000 characters".
   - **What may run**: "The file's macros are removed and never run"; "The file's digital signature is removed, as
     LiveDoc changes what it signed"; "2 embedded objects are left out".
@@ -130,6 +132,8 @@ Every case of [Security](../../research/sheets-open-standard/security.md) is a t
 - The dialog, **Convert to Excel?** (or **Download as Excel?**, and the same for OpenDocument), lists what the new
   format's file cannot hold that the old one could, one line a kind, counted, with up to three names
   (default, D88):
+  - **Named functions**, first: "2 named functions are left out: CONTAINS and TWICE", as an OpenDocument file holds
+    none ([Named functions in the file](standard-mapping.md#named-functions-in-the-file)).
   - **Sheet names**: "2 sheet names are cut to Excel's 31 characters: “Quarterly results for the northern…” becomes
     “Quarterly results for the north”".
   - **Formulas other apps cannot calculate**: "3 formulas keep only their last values in Excel, which has no

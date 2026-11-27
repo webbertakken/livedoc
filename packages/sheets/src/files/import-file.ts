@@ -93,7 +93,7 @@ async function readFile(
   const fromFile = sheetsFromFile(read.file, made.settings.locale);
   fromFile.losses.unshift(...read.losses);
   return {
-    record: WorkbookRecord.opened(made, read.format, read.file.theme),
+    record: WorkbookRecord.opened(made, read.format, read.file.theme, fromFile.functions),
     imported: read.format,
     made: fromFile,
   };

@@ -34,7 +34,7 @@ native; a file keeps the format it arrived in). Research: [The standard](../../r
 | Array and spilled formulas                            | `table:number-matrix-columns-spanned` and `-rows-spanned`                                                                   | `f@t="array"`, `@ref`; dynamic arrays with their metadata                      |
 | Merges                                                | `table:number-columns-spanned`, `-rows-spanned`, covered cells                                                              | `mergeCells`                                                                   |
 | Cell styles and number formats                        | Automatic and named `style:style` (`table-cell`), data styles (`number:number-style`, `number:date-style`, ...)             | `xl/styles.xml`: `numFmts`, `fonts`, `fills`, `borders`, `cellXfs`             |
-| Named ranges, named functions                         | `table:named-range`, `table:named-expression`                                                                               | `definedNames`                                                                 |
+| Named ranges, named functions                         | `table:named-range`, `table:named-expression`; no named functions                                                           | `definedNames`; named functions as `LAMBDA` names                              |
 | Validation                                            | `table:content-validation`, LiveDoc's rule in `livedoc:` attributes                                                         | `dataValidations`, LiveDoc's rule in an `extLst` `ext`                         |
 | Conditional formats                                   | `calcext:conditional-formats` (LibreOffice's extension namespace)                                                           | `conditionalFormatting`                                                        |
 | Filters, filter views                                 | `table:database-range` with `table:filter`                                                                                  | `autoFilter`; filter views have no XLSX form (Unknown content)                 |
@@ -326,6 +326,34 @@ The table is the contract the readers and writers are tested against, one test p
   another rule already holds, a formula LiveDoc cannot read, past `VALIDATION_RULES_MAX` or `FORMAT_RULE_RANGES_MAX`
   rectangles) stays the file's own: kept as it came, without the rules read beside it; a read rule the grid cannot
   hold is named at its top-left cell (`validation_rule_unread`).
+
+## Named functions in the file
+
+- **XLSX**: each [named function](formulas.md#named-functions) is a workbook's defined name, as Excel keeps a named
+  `LAMBDA`: `<definedName name="CONTAINS" comment="…">_xlfn.LAMBDA(_xlpm.search_query,_xlpm.search_range,…)</definedName>`,
+  in the workbook's one `definedNames` after the kept ones. Its definition is in Excel's grammar
+  ([Excel's grammar in detail](#excels-grammar-in-detail)), each reference with its sheet and absolute
+  (`Sheet1!$A$1`), its placeholders `_xlpm.` first; its description is the `comment`.
+- What the file cannot hold of one is left out and the write names it (logged, `function_cut`): a description
+  past Excel's 255 characters is cut to them, and argument descriptions and examples have no place (default, D340).
+- A definition Excel's grammar cannot hold (a Google-only function, an array literal of more than constants) is
+  written by S5's convention inside its `LAMBDA`
+  (`_xlfn.LAMBDA(_xlpm.x,IFERROR(__xludf.DUMMYFUNCTION("TWICE(x)"),""))`): LiveDoc reads it back whole, and Excel
+  gives an empty value. A name Excel refuses (`R`, `C`) is left out and the write names it
+  (`function_unwritten`) (default, D340).
+- A kept workbook defined name of a named function's name gives way to it: dropped at the write and counted
+  (`kept_dropped`), as a workbook holds a name once (default, D341).
+- **Read**: a workbook's defined name (no `localSheetId`) whose formula is a `LAMBDA` of placeholders and a
+  definition is a named function: its name in capitals, its placeholders as written, its description the
+  `comment`, its definition read as a cell's formula is, against the file's sheets; a reference naming no sheet
+  names the first. It is then the model's, no longer kept.
+- One LiveDoc cannot hold (a name or a placeholder the [rules](data-tools.md#named-ranges-and-named-functions)
+  refuse, more than 20 placeholders, a definition past 2,000 characters, one past the 100th) stays the file's own:
+  kept as it came, and the read names it (`function_unread`): "1 named function LiveDoc cannot read is kept for
+  Excel: TOOLONG". A sheet's `LAMBDA` name (`localSheetId`) stays kept with its sheet (default, D342).
+- **ODF**: OpenFormula has no `LAMBDA`, and LibreOffice no named functions, so an ODF file holds none: an `.ods` or
+  `.fods` write leaves each out and names it (logged, `function_unwritten`), and converting to OpenDocument lists
+  them first ([Converting](files-and-print.md#converting)). A file's `table:named-expression` stays kept.
 
 ## Rows and columns in the file
 
@@ -715,6 +743,13 @@ The code cites each by its id.
   LiveDoc's namespace (the Director's ruling, 2026-11-26).
 - **D294** A LiveDoc rule beside a standard rule changed since: the standard rule wins, LiveDoc's dropped and logged
   (the Director's ruling, 2026-11-26).
+- **D340** A named function in XLSX: a workbook's `LAMBDA` defined name, the description its `comment` cut to Excel's
+  255 characters, argument descriptions and examples left out (`function_cut`); a definition Excel cannot hold wrapped
+  by S5 inside the `LAMBDA`; a name Excel refuses left out (`function_unwritten`) (default).
+- **D341** A kept defined name of a named function's name at an XLSX write: Dropped and counted (`kept_dropped`), the
+  named function written (default).
+- **D342** A file's `LAMBDA` name LiveDoc cannot hold: Kept as it came and named (`function_unread`); a sheet's
+  `LAMBDA` name kept with its sheet (default).
 - **D295** A dropdown XLSX's list cannot say: a rule allowing any value, LiveDoc's rule beside it (default).
 - **D296** A standard rule read without LiveDoc's: the closest LiveDoc rule, one a rectangle; error messages and
   titles left out (default).

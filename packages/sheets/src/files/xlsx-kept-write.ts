@@ -129,11 +129,16 @@ export function mergedChild(kept: string, own: string | null): string {
 const SHEET_INDEX_IN_VIEW = /\s(activeTab|firstSheet)="(\d+)"/g;
 
 /** XLSX kept content laid out for the writer. */
+// A kept defined name's name, upper case.
+const nameOf = (xml: string): string => (/\sname="([^"]*)"/.exec(xml)?.[1] ?? '').toUpperCase();
+
 export class XlsxKeptWriter {
   private readonly items: KeptItem<FileAt>[];
   private readonly kept: KeptContent | undefined;
   private readonly sheets: number;
   private readonly hidden: ReadonlySet<number>;
+  /** Kept workbook names a named function took, at the last `workbookChildren`. */
+  namesDropped = 0;
 
   // `hidden`: the sheets, by place, the file hides.
   constructor(
@@ -202,12 +207,31 @@ export class XlsxKeptWriter {
     );
   }
 
-  /** The workbook's children: LiveDoc's own and the kept ones, defined names in one `definedNames`. */
-  workbookChildren(own: readonly OwnChild[], rootNs: XmlBindings): string[] {
+  /**
+   * The workbook's children: LiveDoc's own and the kept ones, defined names in one `definedNames`, the named
+   * functions' (`functions`) after the kept ones. A kept workbook name a function takes gives way to it, counted in
+   * `namesDropped` (D341).
+   */
+  workbookChildren(
+    own: readonly OwnChild[],
+    rootNs: XmlBindings,
+    functions: { names: readonly string[]; taken: ReadonlySet<string> } = {
+      names: [],
+      taken: new Set(),
+    },
+  ): string[] {
     const kept: string[] = [];
     const names: string[] = [];
     for (const item of this.children('workbook')) {
       const xml = keptXmlWithin(item, rootNs);
+      if (
+        keptLocalName(xml) === 'definedName' &&
+        item.at.sheet === undefined &&
+        functions.taken.has(nameOf(xml))
+      ) {
+        this.namesDropped++;
+        continue;
+      }
       if (keptLocalName(xml) !== 'definedName')
         kept.push(
           xml.replace(SHEET_INDEX_IN_VIEW, (m, attr: string, n: string) =>
@@ -224,6 +248,7 @@ export class XlsxKeptWriter {
             : xml.replace(/\blocalSheetId="\d+"/, `localSheetId="${item.at.sheet}"`),
         );
     }
+    names.push(...functions.names);
     if (names.length > 0) kept.push(`<definedNames>${names.join('')}</definedNames>`);
     return inOrder(WORKBOOK_ORDER, kept, own);
   }

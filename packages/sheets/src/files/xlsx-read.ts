@@ -37,6 +37,7 @@ import {
   type XlsxCellStyle,
 } from './xlsx-styles';
 import { readXlsxTheme } from './xlsx-theme';
+import { readXlsxFunction, type FileFunction } from './file-functions';
 import { STANDARD_THEME } from '../themes/spreadsheet-theme';
 import {
   DATE1904_OFFSET,
@@ -350,7 +351,13 @@ export async function readXlsx(
       ...(validations.rules.length ? { validations: validations.rules } : {}),
     });
   }
-  keeper?.workbook(parsed, pkg.mainPart, listed, placed);
+  // A workbook's named LAMBDA is a named function, no longer kept (standard-mapping.md "Named functions in the file").
+  const functions: FileFunction[] = [];
+  keeper?.workbook(parsed, pkg.mainPart, listed, placed, (name, kept) => {
+    const fn = readXlsxFunction(name, kept);
+    if (fn) functions.push(fn);
+    return fn !== null;
+  });
   keeper?.styles(stylesXml);
   const unread = strictUnread + (keeper?.unread ?? 0);
   if (unread > 0) book.losses.push({ k: 'kept_unread', count: unread });
@@ -364,6 +371,7 @@ export async function readXlsx(
       sheets: charted.sheets,
       ...(kept ? { kept } : {}),
       ...(fileTheme && fileTheme !== STANDARD_THEME ? { theme: fileTheme } : {}),
+      ...(functions.length ? { functions } : {}),
     },
     losses: book.losses,
   };
