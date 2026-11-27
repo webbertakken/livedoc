@@ -6,7 +6,7 @@ import { cellKey, type Sheet } from '../sheet';
 import { sameTableName } from '../tables/table';
 import type { SheetHandle, SheetsCtx } from '../formula/stored';
 
-// A cell's text as entered (a table header's name, D383): a text's own, a number's or a boolean's as typed; none for
+// A cell's text as entered (a table header's name, D443): a text's own, a number's or a boolean's as typed; none for
 // an empty cell or a formula.
 export function cellText(sheet: Sheet, r: string, c: string): string | undefined {
   const input = sheet.cells.get(cellKey(r, c))?.input;

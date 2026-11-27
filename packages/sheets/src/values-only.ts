@@ -18,7 +18,7 @@ export function writesFormats(write: SheetWrite): boolean {
 /** A cells write with every format change taken out; null when nothing but formats was in it. Any other write is
  *  returned as it is (a Participant may not send one at all, which the callers refuse on their own). */
 export function valuesOnly(write: SheetWrite): SheetWrite | null {
-  // A Participant's table growth (D388): its cells' formats go, its changes are judged on their own.
+  // A Participant's table growth (D448): its cells' formats go, its changes are judged on their own.
   if (write.kind === 'layout' && Array.isArray(write.cells))
     return { ...write, cells: valuesOf(write.cells) };
   if (write.kind !== 'cells' || !Array.isArray(write.cells)) return write;

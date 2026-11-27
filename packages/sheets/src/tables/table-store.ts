@@ -127,7 +127,7 @@ function tableShrinkBacks(layout: SheetLayout, cells: readonly CellChange[]): La
 }
 
 /**
- * Whether a layout write is a Participant's (D388): its changes exactly the growth its own cells make, or, on an
+ * Whether a layout write is a Participant's (D448): its changes exactly the growth its own cells make, or, on an
  * undo, exactly that growth taken back; never a rename, a column, a type or a total row, never more than one row.
  */
 export function isParticipantTableWrite(

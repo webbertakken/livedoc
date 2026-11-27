@@ -296,7 +296,7 @@ describe('access', () => {
 });
 
 describe('a Participant (docs/specs/013-workspace/share-roles.md)', () => {
-  // data-tools.md "Tables", D388: a value typed below a table grows it by that one row, and only that.
+  // data-tools.md "Tables", D448: a value typed below a table grows it by that one row, and only that.
   it('grows a table by the row their value lands in, never more, nor into a protected range', async () => {
     await make();
     const s = (await call<SheetsResponse>({ method: 'GET', path: '/sheets' })).body.sheets[0]!;

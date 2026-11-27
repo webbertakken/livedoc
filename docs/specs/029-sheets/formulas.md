@@ -158,7 +158,7 @@ settings"). A Plan Sheet has none of its own: it reads as the viewer's browser d
     (`Table1[[#ALL],[Amount]:[Tax]]`);
   - Excel's **this row**: `Table1[@Amount]`, `Table1[[#This Row],[Amount]]`, and inside the table `[@Amount]` and
     `[@[Unit price]]`, the column's cell on the formula's own row; on a row that is not one of its data rows, `#VALUE!`.
-    Google reads no this-row reference; LiveDoc reads it so a file's formulas keep working (D386).
+    Google reads no this-row reference; LiveDoc reads it so a file's formulas keep working (D446).
 - Names and specifiers are not case sensitive; spaces around them are left out (`Table1[ [#ALL],[Amount] ]`). A
   column name holding `[`, `]`, `#` or `'` writes it after a `'` (`Table1['#Sold]`), and one holding a space or a
   symbol inside its own brackets in a longer reference (`Table1[[#ALL],[Unit price]]`), as Excel's.

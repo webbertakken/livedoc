@@ -138,7 +138,7 @@ export async function writeSheet(
   if (!read) return sheetRejected('write_invalid');
   let edits: boolean | undefined;
   const callerEdits = async () => (edits ??= await sheetCallerEdits(ctx, caller));
-  // But a table's growth by the value typed below it, judged once the sheet is read (data-tools.md D388).
+  // But a table's growth by the value typed below it, judged once the sheet is read (data-tools.md D448).
   const growthOnly = read.write.kind !== 'cells' && !(await callerEdits());
   if (growthOnly && read.write.kind !== 'layout') return forbidden();
   // And a cell's value, never its format (docs/specs/029-sheets/sheet.md "Who may do what"): a Participant's
@@ -170,7 +170,7 @@ export async function storeSheetWrite(
   // Who writes, to the sheet's protections (data-tools.md "Protected ranges"); a function is asked only of a sheet
   // holding protections, so a write to any other costs no gate.
   caller: ProtectionCaller | (() => Promise<ProtectionCaller>),
-  // A Participant's layout write: only a table's growth by its own value, or that growth undone (D388).
+  // A Participant's layout write: only a table's growth by its own value, or that growth undone (D448).
   opts: { growthOnly?: boolean } = {},
 ): Promise<Response> {
   const write = body.write;

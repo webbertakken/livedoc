@@ -480,7 +480,7 @@ The table is the contract the readers and writers are tested against, one test p
   standard form is read, the record dropped (an ODF formula changed elsewhere keeps its plain range), and the read
   names it (`tables_changed`, logged, never reported), as D294.
 - **Read without LiveDoc's record**: each XLSX table part and each ODF database range with a header row is a table,
-  its columns None (D387); one LiveDoc cannot hold (overlapping another, past 50 a sheet, a name the rules refuse,
+  its columns None (D447); one LiveDoc cannot hold (overlapping another, past 50 a sheet, a name the rules refuse,
   no header row, ODF's sheet-local `table:database-range` named `__Anonymous_Sheet_DB__N`, which is a filter) is kept
   as the file wrote it, written back to its format, and named (`table_unread`).
 

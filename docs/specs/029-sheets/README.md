@@ -6,6 +6,16 @@ A **spreadsheet** is a document type of its own: a workbook of sheets, native to
 XML, looking and working as Google Sheets does. It is specified and being built (plan 0020); until it ships, the
 **Plan Sheet** (a Sheet element filling a Plan tab, its cells in the document's sheet store) is what LiveDoc has.
 
+## Default ids
+
+Several lanes write defaults here at once, so each takes ids from its own block; ids below D440 were given before
+blocks were. `apps/help/lib/docs-ledgers.test.ts` fails a default outside every block, blocks that overlap, and two
+defaults of one id anywhere under this folder.
+
+- **D440-D599**: the sheets and PDF lane (plans 0020 and 0022).
+- **D600-D699**: the session building plan 0020's Phases 11 and 15 (charts, agents).
+- From D700: not yet given; the director allocates a block on request, written here as a line of its own first.
+
 ## The spreadsheet
 
 - ./spreadsheet.md - when working on the spreadsheet document: what it is and holds, its domain language, the workbook shape, sheets in the sheet bar, roles, limits
