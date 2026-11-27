@@ -248,7 +248,8 @@ export function candidatePaths(
     // Path position `length - 1` is segments[length] (segments[0] is `api`).
     const options = [PARAM, ...(vocabulary.get(length) ?? [])];
     frontier = frontier.flatMap((prefix) => options.map((option) => [...prefix, option]));
-    out.push(...frontier);
+    // One by one: a layer this large passed as arguments runs the stack out.
+    for (const path of frontier) out.push(path);
   }
   return out;
 }

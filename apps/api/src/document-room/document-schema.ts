@@ -566,6 +566,47 @@ const WORKBOOK_FUNCTIONS_STEP = `
 ALTER TABLE workbook ADD COLUMN functions TEXT;
 `;
 
+// A text document tab's versions (docs/specs/034-text-documents/live-editing-and-storage.md "Versions"): each its state
+// vector and the deletions it adds over the version before it; who wrote with each Yjs client id; and the deletions
+// each author made since the last version, which the next version takes. All go with their tab.
+const TEXT_DOCUMENT_VERSIONS_STEP = `
+CREATE TABLE IF NOT EXISTS text_document_versions (
+  tab_id         TEXT    NOT NULL REFERENCES tabs (id) ON DELETE CASCADE,
+  seq            INTEGER NOT NULL,
+  id             TEXT    NOT NULL UNIQUE,
+  kind           TEXT    NOT NULL,
+  name           TEXT,
+  taken_at       INTEGER NOT NULL,
+  taken_by       TEXT,
+  taken_by_name  TEXT,
+  taken_by_color TEXT,
+  restored_from  TEXT,
+  state_vector   BLOB    NOT NULL,
+  deletions      BLOB    NOT NULL,
+  editors        TEXT    NOT NULL,
+  deleted_by     TEXT    NOT NULL,
+  bytes          INTEGER NOT NULL,
+  PRIMARY KEY (tab_id, seq)
+);
+
+CREATE TABLE IF NOT EXISTS text_document_clients (
+  tab_id   TEXT    NOT NULL REFERENCES tabs (id) ON DELETE CASCADE,
+  client   INTEGER NOT NULL,
+  author   TEXT    NOT NULL,
+  name     TEXT,
+  color    TEXT,
+  first_at INTEGER NOT NULL,
+  PRIMARY KEY (tab_id, client)
+);
+
+CREATE TABLE IF NOT EXISTS text_document_pending_deletions (
+  tab_id    TEXT NOT NULL REFERENCES tabs (id) ON DELETE CASCADE,
+  author    TEXT NOT NULL,
+  deletions BLOB NOT NULL,
+  PRIMARY KEY (tab_id, author)
+);
+`;
+
 /** Every step the room's schema has taken, in order; a change appends one and never edits a shipped step. */
 export const DOCUMENT_SCHEMA_STEPS: readonly string[] = [
   STEP_1 + OUTBOX + SHARES,
@@ -586,6 +627,7 @@ export const DOCUMENT_SCHEMA_STEPS: readonly string[] = [
   TAB_DRAWING_OF_STEP,
   SHEET_CHANGESETS_STEP,
   WORKBOOK_FUNCTIONS_STEP,
+  TEXT_DOCUMENT_VERSIONS_STEP,
 ];
 
 export const DOCUMENT_SCHEMA_VERSION = DOCUMENT_SCHEMA_STEPS.length;

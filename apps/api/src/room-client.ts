@@ -23,6 +23,7 @@ import type {
 } from '@livedoc/api-schema';
 import { documentRoom } from './document-room/document-client';
 import type { Env } from './types';
+import type { TextDocumentVersionWriteRequest } from './text-documents/text-document-version-write';
 
 // The worker's calls into a document's realtime room (docs/specs/012-collaboration/collab-race-hardening.md): reading its
 // collaboration ledger to merge a save, and handing it a change the api made.
@@ -560,4 +561,36 @@ export async function relayWorkbook(
   op: WorkbookRoomOp,
 ): Promise<void> {
   await broadcastOp(env, documentId, op, 'workbook', true);
+}
+
+/**
+ * Asks the document's room to name or restore a text document's version, on its write queue
+ * (docs/specs/034-text-documents/live-editing-and-storage.md "The api"); the route has gated it. Answers the room's
+ * status and body; 503 when the room cannot be reached.
+ */
+export async function writeTextDocumentVersion(
+  env: Env,
+  write: TextDocumentVersionWriteRequest,
+): Promise<{ status: number; body: unknown }> {
+  try {
+    const res = await roomFetch(
+      env,
+      write.documentId,
+      '/text-document-version',
+      {
+        method: 'POST',
+        body: JSON.stringify(write),
+        headers: { 'Content-Type': 'application/json' },
+      },
+      TEXT_DOCUMENT_DOOR_TIMEOUT_MS,
+    );
+    return { status: res.status, body: await res.json().catch(() => null) };
+  } catch (err) {
+    console.warn('[text-document] version-write did not reach the room', {
+      document: write.documentId,
+      tab: write.tabId,
+      error: err instanceof Error ? err.name : 'unknown',
+    });
+    return { status: 503, body: null };
+  }
 }

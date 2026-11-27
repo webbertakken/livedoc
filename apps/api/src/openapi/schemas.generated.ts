@@ -18137,6 +18137,154 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
     ],
     "type": "string"
   },
+  "TextDocumentVersionDto": {
+    "additionalProperties": false,
+    "properties": {
+      "editors": {
+        "items": {
+          "$ref": "#/components/schemas/VersionEditorDto"
+        },
+        "type": "array"
+      },
+      "id": {
+        "type": "string"
+      },
+      "kind": {
+        "enum": [
+          "automatic",
+          "named"
+        ],
+        "type": "string"
+      },
+      "name": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "restoredFrom": {
+        "description": "The version a restore brought back, for one taken after a restore.",
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "takenAt": {
+        "type": "number"
+      },
+      "takenBy": {
+        "anyOf": [
+          {
+            "$ref": "#/components/schemas/VersionEditorDto"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "description": "The namer or restorer; null for an automatic version."
+      }
+    },
+    "required": [
+      "id",
+      "kind",
+      "name",
+      "takenAt",
+      "takenBy",
+      "restoredFrom",
+      "editors"
+    ],
+    "type": "object"
+  },
+  "TextDocumentVersionListDto": {
+    "additionalProperties": false,
+    "properties": {
+      "versions": {
+        "items": {
+          "$ref": "#/components/schemas/TextDocumentVersionDto"
+        },
+        "type": "array"
+      }
+    },
+    "required": [
+      "versions"
+    ],
+    "type": "object"
+  },
+  "TextDocumentVersionNameBody": {
+    "additionalProperties": false,
+    "description": "The body that names a version or the current one; `author` labels the person, never says whose they are.",
+    "properties": {
+      "author": {
+        "additionalProperties": false,
+        "properties": {
+          "color": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "name": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "name"
+    ],
+    "type": "object"
+  },
+  "TextDocumentVersionReadDto": {
+    "additionalProperties": false,
+    "description": "One version, its snapshot and the one before it (Yjs snapshots, base64), and who wrote what in it.",
+    "properties": {
+      "clients": {
+        "additionalProperties": {
+          "$ref": "#/components/schemas/VersionEditorDto"
+        },
+        "description": "Each Yjs client id's author.",
+        "type": "object"
+      },
+      "deletedBy": {
+        "additionalProperties": {
+          "type": "string"
+        },
+        "description": "The deletions each editor made in it, by key (a Yjs snapshot holding them, base64).",
+        "type": "object"
+      },
+      "previous": {
+        "type": "string"
+      },
+      "snapshot": {
+        "type": "string"
+      },
+      "version": {
+        "$ref": "#/components/schemas/TextDocumentVersionDto"
+      }
+    },
+    "required": [
+      "version",
+      "snapshot",
+      "previous",
+      "clients",
+      "deletedBy"
+    ],
+    "type": "object"
+  },
+  "TextDocumentVersionWriteDto": {
+    "additionalProperties": false,
+    "description": "What a name or restore answers: the version as it now stands.",
+    "properties": {
+      "version": {
+        "$ref": "#/components/schemas/TextDocumentVersionDto"
+      }
+    },
+    "required": [
+      "version"
+    ],
+    "type": "object"
+  },
   "TextElement": {
     "additionalProperties": false,
     "properties": {
@@ -18691,6 +18839,36 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
       "is",
       "r1",
       "r2"
+    ],
+    "type": "object"
+  },
+  "VersionEditorDto": {
+    "additionalProperties": false,
+    "description": "Who wrote: their adder key on the document (null: unrecorded), with the name and colour they wrote under.",
+    "properties": {
+      "color": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "key": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "name": {
+        "type": [
+          "string",
+          "null"
+        ]
+      }
+    },
+    "required": [
+      "key",
+      "name",
+      "color"
     ],
     "type": "object"
   },

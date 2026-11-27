@@ -211,9 +211,91 @@ differently, main's stands and the branch's is kept as a comment, "Not merged fr
   thumbnail's freshness follow the writing, an edit late by one drain (default).
 - **The Trash**: a text document in the Trash keeps its state; restoring it brings it back whole, and a purge removes
   its state with its tabs ([Trash](../013-workspace/trash.md)).
-- <a id="versions"></a>**Versions** are Yjs snapshots (state vector and delete set) with names, kept in the room; the
-  CRDT keeps deleted items while any version needs them (garbage collection off, compacted by snapshot), so any
-  version renders without a stored copy ([Review](review.md#version-history)).
+- **Versions** are kept in the room, beside the state ([Versions](#versions)).
+
+## Versions
+
+<a id="versions"></a>A text document tab's versions ([Review](review.md#version-history)) are kept in its room, beside
+its state, and go with the tab: the Trash keeps them, a purge removes them. A copy (Make a copy, Duplicate, a
+visitor's copy) and a branch start with none, as Google's copies do (default).
+
+- **A version** is a Yjs snapshot of the tab's state, stored as two parts: its **state vector** (what the state held,
+  client by client) and its **deletions**, the delete set it adds over the version before it. A version reads as its
+  state vector with the union of its deletions and every earlier kept version's. Garbage collection is off in the room
+  and every browser, so every deleted item stays in the state and any version is drawn from the state alone, with no
+  stored copy of it.
+- Each version also holds its kind (automatic or named), its name, when it was taken, who took it (the restorer, the
+  namer; none for an automatic one), the version it was restored from, if any, and its **editors**.
+- **What it costs**, measured on a seeded document near the character limit (951,238 characters, 18,375
+  paragraphs, written in 120 sessions of 1,000 edits, about a third of them deletions): the state is 4.43 MB with
+  every deleted item kept and 4.13 MB without, so keeping them costs about 7%; a whole snapshot grows with every
+  deletion ever made, to 100 KB (6.1 MB for 120 of them), so a version keeps only the deletions it adds: 1.9 KB on
+  average, 2.7 KB at most, 224 KB for all 120. Reading the newest of them whole takes 7 ms, and equals its whole
+  snapshot.
+- The deletions of all versions together never exceed the state's own delete set, so a tab's versions grow by their
+  state vectors (a few bytes per writer each) and stay far under its state; they are rows in the room, not files,
+  so they count toward neither the state's limit nor the owner's file allowance
+  ([Blob store](../006-document/blob-store.md)); their own caps bound them.
+
+### Taking a version
+
+- An **automatic** version is taken on the room's write queue, right after storing the update that ends a window:
+  `TEXT_DOCUMENT_VERSION_EVERY_MS` since the window's first update, or `TEXT_DOCUMENT_VERSION_EVERY_UPDATES` updates
+  in it. The window lives in the room's memory, so an edit writes nothing more; a room woken anew starts one at its
+  first update. A quiet tab takes no version, and none is ever missing: the history's **Current version** is the
+  state itself.
+- A **named** version: naming the current version names the newest version when no update was stored since it, else
+  takes a version of now with the name; naming an automatic one makes it named. A named version is kept forever.
+- **Thinning**, each time a version is taken: automatic versions older than `TEXT_DOCUMENT_VERSION_KEEP_ALL_DAYS`
+  keep the newest of each UTC day; then, while the tab holds more than `TEXT_DOCUMENT_AUTO_VERSIONS_MAX` automatic
+  versions or its versions pass `TEXT_DOCUMENT_VERSIONS_MAX_BYTES`, the oldest automatic one goes. Named ones never go.
+  A version that goes hands its deletions and editors to the next kept version, so every kept one still reads whole.
+- A version whose deletions would pass the room's row (`TEXT_DOCUMENT_CHUNK_BYTES`) is not taken, and one that would
+  pass it by taking a thinned version's is kept rather than thinned; each logs `[text-document] version-too-large`.
+
+### Who changed what
+
+- The room records, per tab, each Yjs client id an update writes with, under its sender's adder key and the name and
+  colour their session presents, as a comment's author is kept ([How a comment is kept](review.md#how-a-comment-is-kept)):
+  the key says whose without saying who, guests and share-link people alike. The first sender of a client id keeps
+  it; another key's update with it is stored and logged `[text-document] author-conflict`.
+- It records the deletions each sender's updates make, per key, until the next version takes them.
+- A version's **editors** are the keys whose client ids wrote between it and the version before it, and those whose
+  deletions it holds. A sender without an adder key, and an update posted by the door without one, are recorded as
+  none: an unrecorded editor, drawn in the neutral grey.
+- The record is written after the update is stored, outside its transaction: writing it never delays, refuses or
+  fails an edit. A failed write is logged `[text-document] author-record-failed` and its edits read as unrecorded.
+
+### Restoring a version
+
+- The room takes an automatic version of now, then applies **one change by the restorer**, as one update on the
+  write queue, relayed as any other: content written since the version is deleted, content the version holds that
+  was deleted since is written again where it stood, and content unchanged since stays, in the document's content
+  (its tabs, stories, styles, lists, pictures and settings), never in its comment threads.
+- An update stored after the restore read the state stays on top of it: someone typing during a restore keeps
+  their later edits.
+- It then takes a version of the result, by the restorer, restored from the chosen one.
+
+### The api
+
+Every route is an edit of the tab, refused as one is (`403`, or `404` for a link confined to another tab), on a
+text document tab (`404 text_document_not_found` otherwise), under `/api/documents/:id/text-documents/:tabId/versions`;
+the writes run on the room's write queue. A body that names the person (`{ name, color }`, as their presence shows them)
+only labels them: whose they are is the key the room makes.
+
+- `GET` lists the versions, newest first, each with its id, kind, name, time, who took it, what it was restored
+  from, and its editors (key, name, colour).
+- `GET /:versionId` answers the version's snapshot and the one before it (state vector and whole delete set,
+  base64), each Yjs client id's author, and the deletions each of its editors made, so the browser draws the version
+  and its changes, in each editor's colour, from the state it holds.
+- `POST` names the current version (`{ name }`); `PUT /:versionId` names, renames or (an empty name) unnames one.
+  A name past `TEXT_DOCUMENT_VERSION_NAME_MAX_CHARS` is `400 version_name_too_long`; a 41st named version
+  `409 named_versions_full`.
+- `POST /:versionId` restores it (posting to a version makes it current again) and answers the version of the
+  result.
+- **Make a copy** reads the version in the browser and creates the copy as a Duplicate does
+  ([Copies](#copies)), its state the version's content as a fresh update.
+- A version that is not the tab's is `404 version_not_found`.
 
 ## Search and the Explorer
 
@@ -234,20 +316,27 @@ room refuses an update its judge asks Editing for.
 
 ## Limits
 
-| Constant                         | Value     | Why                                                                                                                                                |
-| -------------------------------- | --------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `TEXT_DOCUMENT_CHUNK_BYTES`      | 1,900,000 | Under the room's 2,000,000-byte row cap with room for the row's other columns                                                                      |
-| `TEXT_DOCUMENT_LOG_BYTES`        | 4,000,000 | (default) Compaction keeps the log to a couple of chunks                                                                                           |
-| `TEXT_DOCUMENT_LOG_UPDATES`      | 500       | (default) A log of keystrokes merges in about 10 ms at 500 updates, 0.3 s at 5,000 and 5 s at 20,000                                               |
-| `TEXT_DOCUMENT_MAX_STATE_BYTES`  | 64 MB     | (default) The encoded state with its history; past it, versions older than 30 days are thinned first, then edits refused with `document_too_large` |
-| `TEXT_DOCUMENT_CARET_MAX_CHARS`  | 256       | (default) A relative position's base64 is a few dozen characters; anything longer is no caret                                                      |
-| `TEXT_DOCUMENT_CARET_FRESH_MS`   | 1,500     | (default) As long as an article's caret shows its name                                                                                             |
-| `TEXT_DOCUMENT_WORDS_PER_PAGE`   | 500       | (default) A page of 11 pt Arial at single spacing, for counts that need no layout                                                                  |
-| A frame of edits                 | 256 KB    | The room's message cap                                                                                                                             |
-| `TEXT_DOCUMENT_FRAME_CHARS`      | 200,000   | The most base64 one `text-document` op carries: inside the room's 256 KB message cap with room for the envelope                                    |
-| `TEXT_DOCUMENT_UPDATE_MAX_BYTES` | 8 MB      | The api's body cap; an update sent by the door past it is refused `update_too_large` and stays in the local copy                                   |
-| `TEXT_DOCUMENT_LOCAL_SAVE_MS`    | 500       | (default) As long as Google groups typing for undo; an edit the room confirms sooner is never written                                              |
-| `TEXT_DOCUMENT_UNDO_GROUP_MS`    | 500       | Typing within it is one undo step, as Google groups it                                                                                             |
+| Constant                               | Value     | Why                                                                                                                                 |
+| -------------------------------------- | --------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `TEXT_DOCUMENT_CHUNK_BYTES`            | 1,900,000 | Under the room's 2,000,000-byte row cap with room for the row's other columns                                                       |
+| `TEXT_DOCUMENT_LOG_BYTES`              | 4,000,000 | (default) Compaction keeps the log to a couple of chunks                                                                            |
+| `TEXT_DOCUMENT_LOG_UPDATES`            | 500       | (default) A log of keystrokes merges in about 10 ms at 500 updates, 0.3 s at 5,000 and 5 s at 20,000                                |
+| `TEXT_DOCUMENT_MAX_STATE_BYTES`        | 64 MB     | (default) The encoded state with every deleted item kept (versions need them); past it, edits are refused with `document_too_large` |
+| `TEXT_DOCUMENT_CARET_MAX_CHARS`        | 256       | (default) A relative position's base64 is a few dozen characters; anything longer is no caret                                       |
+| `TEXT_DOCUMENT_CARET_FRESH_MS`         | 1,500     | (default) As long as an article's caret shows its name                                                                              |
+| `TEXT_DOCUMENT_WORDS_PER_PAGE`         | 500       | (default) A page of 11 pt Arial at single spacing, for counts that need no layout                                                   |
+| A frame of edits                       | 256 KB    | The room's message cap                                                                                                              |
+| `TEXT_DOCUMENT_FRAME_CHARS`            | 200,000   | The most base64 one `text-document` op carries: inside the room's 256 KB message cap with room for the envelope                     |
+| `TEXT_DOCUMENT_UPDATE_MAX_BYTES`       | 8 MB      | The api's body cap; an update sent by the door past it is refused `update_too_large` and stays in the local copy                    |
+| `TEXT_DOCUMENT_LOCAL_SAVE_MS`          | 500       | (default) As long as Google groups typing for undo; an edit the room confirms sooner is never written                               |
+| `TEXT_DOCUMENT_UNDO_GROUP_MS`          | 500       | Typing within it is one undo step, as Google groups it                                                                              |
+| `TEXT_DOCUMENT_VERSION_EVERY_MS`       | 1,800,000 | (default) Google's 30 minutes of edits                                                                                              |
+| `TEXT_DOCUMENT_VERSION_EVERY_UPDATES`  | 1,000     | (default) A burst of edits gets a version before its 30 minutes are up                                                              |
+| `TEXT_DOCUMENT_VERSION_KEEP_ALL_DAYS`  | 30        | (default) After it, one automatic version a day                                                                                     |
+| `TEXT_DOCUMENT_AUTO_VERSIONS_MAX`      | 1,000     | (default) 30 days of non-stop editing takes 1,440; about 2 KB each, 2 MB at the cap                                                 |
+| `TEXT_DOCUMENT_VERSIONS_MAX_BYTES`     | 8 MB      | (default) A backstop: a tab's versions measure a few hundred KB near the character limit                                            |
+| `TEXT_DOCUMENT_NAMED_VERSIONS_MAX`     | 40        | Google's limit of named versions a document                                                                                         |
+| `TEXT_DOCUMENT_VERSION_NAME_MAX_CHARS` | 100       | (default) A name fits the panel's row in two lines                                                                                  |
 
 A refused edit names its limit; nothing is half applied.
 
@@ -262,11 +351,11 @@ A refused edit names its limit; nothing is half applied.
 - The editor refuses typing or a paste that would pass `TEXT_DOCUMENT_MAX_CHARS` itself, before anything is sent, and
   says, as a status beside the title: "This text document has reached its limit of 1,020,000 characters." A refusal from
   the room says the same, or "This text document has reached its size limit." for the state's.
-- Thinning old versions to make room comes with versions ([Review](review.md#version-history)).
+- Versions never make room: thinning them frees their own rows, never the state's deleted items ([Versions](#versions)).
 
 ## Observability
 
 Fingerprints, each with the document and tab ids and never text: `[text-document] persisted` (revision, bytes,
 chunks, ms), `[text-document] compacted`, `[text-document] digest` (characters, words, ms), `[text-document] merge-offline` (updates, bytes), `[text-document]
-edit-refused` (limit), `[text-document] branch-merged` (unmerged count); in the browser `[text-document] caught-up`
+edit-refused` (limit), `[text-document] branch-merged` (unmerged count), `[text-document] version-taken` (version, kind, trigger, bytes, ms), `[text-document] versions-thinned` (count, bytes), `[text-document] version-too-large` (bytes), `[text-document] version-failed` (error: a window's version not taken), `[text-document] version-named` (version), `[text-document] version-restored` (from, to, bytes, ms), `[text-document] author-conflict` (client), `[text-document] author-record-failed` (error); in the browser `[text-document] caught-up`
 (bytes sent), `[text-document] sent-by-door` (bytes), `[text-document] local-copy saved|cleared|failed` (bytes).

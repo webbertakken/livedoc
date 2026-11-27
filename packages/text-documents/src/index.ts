@@ -16,6 +16,13 @@ export {
   TEXT_DOCUMENT_UNDO_GROUP_MS,
   TEXT_DOCUMENT_UPDATE_MAX_BYTES,
   TEXT_DOCUMENT_WORDS_PER_PAGE,
+  TEXT_DOCUMENT_VERSION_EVERY_MS,
+  TEXT_DOCUMENT_VERSION_EVERY_UPDATES,
+  TEXT_DOCUMENT_VERSION_KEEP_ALL_DAYS,
+  TEXT_DOCUMENT_AUTO_VERSIONS_MAX,
+  TEXT_DOCUMENT_VERSIONS_MAX_BYTES,
+  TEXT_DOCUMENT_NAMED_VERSIONS_MAX,
+  TEXT_DOCUMENT_VERSION_NAME_MAX_CHARS,
 } from './limits';
 export { textDocumentDigest, type TextDocumentDigest } from './digest';
 export {
@@ -381,3 +388,5 @@ export {
   type ComparisonRefusal,
   type ComparisonResult,
 } from './compare/compare-documents';
+export { VersionSnapshots } from './versions/version-snapshots';
+export { restoreUpdate, versionDocument } from './versions/version-restore';

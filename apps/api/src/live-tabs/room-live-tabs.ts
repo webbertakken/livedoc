@@ -36,6 +36,13 @@ export type RoomLiveTabHooks = {
   position: () => { epoch: string };
   // The limits checked; the kind's unless a test sizes them.
   caps?: LiveTabCaps;
+  // Told of each update stored from a socket or the door, after it is relayed, on the write queue: who wrote it
+  // (live-editing-and-storage.md "Who changed what"). Never told by storeAndRelay alone.
+  stored?: (
+    place: { documentId: string; tabId: string },
+    update: Uint8Array,
+    author: { key: string | null; name: string | null; color: string | null },
+  ) => Promise<void>;
 };
 
 export type LiveTabSender = {
@@ -47,6 +54,8 @@ export type LiveTabSender = {
   // The adder key its ticket carries (share-roles.md "Integrity"), none without an identity: what a kind's judge reads
   // as the sender's own.
   adderKey: string | null;
+  // The name and colour its presence shows: they label what it writes, never say whose it is.
+  author?: { name: string | null; color: string | null };
 };
 
 type LiveTabFrame = { kind: string; tabId: string; update: string; on?: string };
@@ -291,6 +300,11 @@ export class RoomLiveTabs {
           `${kind.tag} compacted document=${documentId} tab=${frame.tabId} chunks=${chunks}`,
         );
       }
+      await this.hooks.stored?.({ documentId, tabId: frame.tabId }, update, {
+        key: sender.adderKey,
+        name: sender.author?.name ?? null,
+        color: sender.author?.color ?? null,
+      });
       return true;
     });
   }
@@ -337,25 +351,47 @@ export class RoomLiveTabs {
         this.refusedEdit(documentId, tabId, limit);
         return limit;
       }
-      const started = Date.now();
-      const folded = update.byteLength > kind.sizes.chunkBytes;
-      if (folded) await compactLiveTab(env, kind, tabId, update);
-      else {
-        const log = await appendLiveTabUpdate(env, kind, tabId, update);
-        if (compactionDue(kind, log)) await compactLiveTab(env, kind, tabId);
-      }
-      await indexPlacedImages(env, kind, tabId, update);
-      const encoded = base64OfBytes(update);
-      const op =
-        encoded.length <= kind.sizes.frameChars
-          ? { kind: kind.frame, tabId, update: encoded }
-          : { kind: kind.frame, tabId, stale: true as const };
-      this.hooks.sequence('system', op);
-      console.info(
-        `${kind.tag} persisted document=${documentId} tab=${tabId} bytes=${update.byteLength} via=door folded=${folded} relay=${'stale' in op ? 'stale' : 'op'} ms=${Date.now() - started}`,
-      );
+      await this.storeAndRelay(documentId, tabId, update, 'door');
+      await this.hooks.stored?.({ documentId, tabId }, update, {
+        key: adderKey,
+        name: null,
+        color: null,
+      });
       return 'stored';
     });
+  }
+
+  /**
+   * Stores one update the room itself makes or a route has judged, folding one no log row could hold into the chunks,
+   * and relays it from the system, as an op when it fits a frame, else as the tab's `stale`. Runs on the write queue
+   * its caller is already on; never tells the `stored` hook.
+   */
+  async storeAndRelay(
+    documentId: string,
+    tabId: string,
+    update: Uint8Array,
+    via: 'door' | 'room' = 'room',
+  ): Promise<void> {
+    const { kind } = this;
+    const env = this.hooks.env;
+    if (!env) throw new Error(`${kind.tag} no store for a system update`);
+    const started = Date.now();
+    const folded = update.byteLength > kind.sizes.chunkBytes;
+    if (folded) await compactLiveTab(env, kind, tabId, update);
+    else {
+      const log = await appendLiveTabUpdate(env, kind, tabId, update);
+      if (compactionDue(kind, log)) await compactLiveTab(env, kind, tabId);
+    }
+    await indexPlacedImages(env, kind, tabId, update);
+    const encoded = base64OfBytes(update);
+    const op =
+      encoded.length <= kind.sizes.frameChars
+        ? { kind: kind.frame, tabId, update: encoded }
+        : { kind: kind.frame, tabId, stale: true as const };
+    this.hooks.sequence('system', op);
+    console.info(
+      `${kind.tag} persisted document=${documentId} tab=${tabId} bytes=${update.byteLength} via=${via} folded=${folded} relay=${'stale' in op ? 'stale' : 'op'} ms=${Date.now() - started}`,
+    );
   }
 }
 
