@@ -4,8 +4,9 @@ import { solidPng } from './office-pictures';
 
 // Objects and breaks while suggesting (docs/specs/034-text-documents/review.md "While suggesting": Objects in a line,
 // Breaks and lines, Not yet): an Editor in Suggesting puts in a page break, an equation and a horizontal line, each a
-// card of its own kind; rejecting the line takes it away; a new drawing is dimmed, "Editing only". A Participant's horizontal
-// line reaches the Editor as a card, and so does their picture, drawn from its media for the Editor, who accepts it.
+// card of its own kind; rejecting the line takes it away; a new drawing runs for the Editor ("Drawings"). A
+// Participant's horizontal line reaches the Editor as a card, and so does their picture, drawn from its media for the
+// Editor, who accepts it; their Insert > Drawing > New is dimmed, "Editing only".
 
 const BODY = '[role="textbox"][aria-label="Document body"]';
 const READY = '[data-text-document-surface="ready"]';
@@ -66,11 +67,9 @@ test('objects and breaks are suggested, each with its card', async ({
   await expect(body.locator(':scope > p')).toHaveCount(paragraphs);
   await expect(page.locator(CARD).filter({ hasText: 'Add: Page break' })).toHaveCount(1);
 
-  // A new drawing cannot be suggested yet: dimmed, saying where it runs.
+  // An Editor's new drawing is suggested (review.md "Drawings"): Insert > Drawing > New runs.
   const drawing = await officeMenuItem(page, ['Insert', 'Drawing', 'New']);
-  await expect(drawing).toHaveAttribute('aria-disabled', 'true');
-  await expect(drawing).toContainText('Editing only');
-  await expect(drawing).toHaveAccessibleDescription(/An Editor changes it in Editing/);
+  await expect(drawing).not.toHaveAttribute('aria-disabled', 'true');
   await page.keyboard.press('Escape');
   await page.keyboard.press('Escape');
 
@@ -104,6 +103,14 @@ test('objects and breaks are suggested, each with its card', async ({
   await expect(page.locator(CARD).filter({ hasText: 'Add: Horizontal line' })).toHaveCount(1, {
     timeout: 15_000,
   });
+  // A Participant adds no drawing (a drawing is a tab): dimmed, saying an Editor adds one.
+  const peerDrawing = await officeMenuItem(peer, ['Insert', 'Drawing', 'New']);
+  await expect(peerDrawing).toHaveAttribute('aria-disabled', 'true');
+  await expect(peerDrawing).toContainText('Editing only');
+  await expect(peerDrawing).toHaveAccessibleDescription(/An Editor adds a drawing in Editing/);
+  await peer.keyboard.press('Escape');
+  await peer.keyboard.press('Escape');
+
   // The room kept it: it survives the Participant's reload.
   await peer.reload();
   await expect(peer.locator(READY)).toBeVisible();

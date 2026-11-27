@@ -2,11 +2,16 @@
 // where it goes, kept in this browser's session from Insert > Drawing > New until Save and close, by its drawing tab;
 // and the picture Save and close made, held here until its text document's surface places it.
 
-/** Where a drawing goes: its text document tab, the document tab inside it, and the caret as a relative position. */
+/**
+ * Where a drawing goes: its text document tab, the document tab inside it, and the caret as a relative position; while
+ * suggesting, the drawing tab whose picture at `anchor` it is a copy of, to be suggested in its place (review.md
+ * "Drawings").
+ */
 export type DrawingWhere = {
   readonly textDocumentTabId: string;
   readonly documentTab: string;
   readonly anchor: string | null;
+  readonly replaces?: string;
 };
 
 /** A drawing's picture: its PNG, and its gallery id (null where the document keeps its bytes). */

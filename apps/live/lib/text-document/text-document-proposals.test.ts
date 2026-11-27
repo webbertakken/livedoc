@@ -4,13 +4,7 @@ import { catalogueItems, type OfficeActions } from '@/lib/office/office-catalogu
 import { levelInMode, proposalsInMode } from '@/lib/office/office-mode';
 import { officeItemLevels, proposalActions } from '@/lib/office/office-proposals';
 import { textDocumentMenus, textDocumentTextContextMenu } from './text-document-menus';
-import {
-  NOT_YET_SUGGESTED,
-  NOT_YET_SUGGESTED_HINT,
-  notYetSuggestedActions,
-  SUGGESTING_PROPOSALS,
-  TEXT_DOCUMENT_MODES,
-} from './text-document-modes';
+import { SUGGESTING_PROPOSALS, TEXT_DOCUMENT_MODES } from './text-document-modes';
 import { TEXT_DOCUMENT_TOOLBAR } from './text-document-toolbar';
 
 // The guard (docs/specs/034-text-documents/review.md "While suggesting", "A Participant"; office-shell.md "Modes"): a
@@ -96,23 +90,6 @@ describe('a Participant’s actions in Suggesting', () => {
     ]);
     expect(SUGGESTING_PROPOSALS.filter((id) => !built.has(id))).toEqual([]);
     expect(new Set(SUGGESTING_PROPOSALS).size).toBe(SUGGESTING_PROPOSALS.length);
-  });
-
-  it('dims what cannot be suggested yet, built items an Editor alone changes, saying where they run', () => {
-    const built = new Set(
-      catalogueItems(textDocumentMenus('odf'))
-        .filter(({ item }) => item.status === 'built')
-        .map(({ item }) => item.id),
-    );
-    expect(NOT_YET_SUGGESTED.filter((id) => !built.has(id))).toEqual([]);
-    expect(NOT_YET_SUGGESTED.filter((id) => SUGGESTING_PROPOSALS.includes(id))).toEqual([]);
-    for (const action of Object.values(notYetSuggestedActions())) {
-      expect(action).toMatchObject({
-        disabled: true,
-        note: 'Editing only',
-        hint: NOT_YET_SUGGESTED_HINT,
-      });
-    }
   });
 
   it('leaves an Editor in Suggesting drawn at their own level, unnarrowed', () => {

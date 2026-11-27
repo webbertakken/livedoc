@@ -82,6 +82,9 @@ while a hide-cursors vote is open.
 - **Drawn** as a caret in their colour on the page, the selection behind it tinted in that colour, and their name above
   the caret for `TEXT_DOCUMENT_CARET_FRESH_MS` after it moves (default); a caret that no longer resolves (its
   characters deleted) is not drawn. Someone who leaves the document takes their caret with them.
+- **One's own selection** follows others' changes: an object one has selected that someone else's change (or a
+  suggestion settled) takes away leaves a caret where it was, never an error (`patches/y-prosemirror@1.3.7.patch`
+  restores a node selection only where a selectable node still stands).
 
 ## Undo
 

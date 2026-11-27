@@ -1,5 +1,5 @@
 diff --git a/src/plugins/sync-plugin.js b/src/plugins/sync-plugin.js
-index dccfb76918c8c70fe5a5b12372cdabcc9d8c58dd..4a136d60b9e9dac947a37c97d8b72cfc8d47f4e3 100644
+index dccfb76918c8c70fe5a5b12372cdabcc9d8c58dd..14d90aa089aaf2453f8b10fe08019c9d21f0fbd9 100644
 --- a/src/plugins/sync-plugin.js
 +++ b/src/plugins/sync-plugin.js
 @@ -195,7 +195,7 @@ export const ySyncPlugin = (yXmlFragment, {
@@ -43,7 +43,23 @@ index dccfb76918c8c70fe5a5b12372cdabcc9d8c58dd..4a136d60b9e9dac947a37c97d8b72cfc
                })
              }
            }
-@@ -332,8 +340,14 @@ export class ProsemirrorBinding {
+@@ -257,7 +265,14 @@ const restoreRelativeSelection = (tr, relSel, binding) => {
+         relSel.anchor,
+         binding.mapping
+       )
+-      tr.setSelection(NodeSelection.create(tr.doc, anchor))
++      // The selected node may be gone (someone else's change took it away): a node selection only where a selectable
++      // node still stands, else a caret where it was.
++      const node = anchor === null ? null : tr.doc.nodeAt(anchor)
++      if (node !== null && !node.isText && NodeSelection.isSelectable(node)) {
++        tr.setSelection(NodeSelection.create(tr.doc, anchor))
++      } else if (anchor !== null) {
++        tr.setSelection(TextSelection.near(tr.doc.resolve(anchor)))
++      }
+     } else {
+       const anchor = relativePositionToAbsolutePosition(
+         binding.doc,
+@@ -332,8 +347,14 @@ export class ProsemirrorBinding {
       * current selection as relative positions in the Yjs model
       */
      this.beforeTransactionSelection = null
@@ -59,7 +75,7 @@ index dccfb76918c8c70fe5a5b12372cdabcc9d8c58dd..4a136d60b9e9dac947a37c97d8b72cfc
          this.beforeTransactionSelection = getRelativeSelection(
            this,
            this.prosemirrorView.state
-@@ -648,10 +662,12 @@ export class ProsemirrorBinding {
+@@ -648,10 +669,12 @@ export class ProsemirrorBinding {
    _prosemirrorChanged (doc) {
      this.doc.transact(() => {
        updateYFragment(this.doc, this.type, doc, this)

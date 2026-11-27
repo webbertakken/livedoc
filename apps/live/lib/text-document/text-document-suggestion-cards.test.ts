@@ -314,6 +314,27 @@ describe('cardPartsOf', () => {
     ]);
   });
 
+  it('reads a drawing put in as Add: Drawing, and one replaced in one suggestion as Replace: Drawing', () => {
+    const drawing = (kind: 'insertion' | 'deletion') =>
+      ({ kind, text: 'picture', element: 'drawing' }) as const;
+    expect(cardLines(cardPartsOf([drawing('insertion')]))).toEqual(['Add: Drawing']);
+    expect(cardLines(cardPartsOf([drawing('deletion'), drawing('insertion')]))).toEqual([
+      'Replace: Drawing',
+    ]);
+  });
+
+  it('reads a drawing’s picture in the writing as a drawing', () => {
+    const picture = (attrs: Record<string, unknown>) =>
+      schema.nodes.picture!.create({ media: 'm1', ...attrs });
+    const doc = docOf(
+      p([
+        picture({ drawing: 'd-old', deletion: mark('s1') }),
+        picture({ drawing: 'd-new', insertion: mark('s1') }),
+      ]),
+    );
+    expect(suggestionCards(doc).map((c) => c.lines)).toEqual([['Replace: Drawing']]);
+  });
+
   it('reads a format part with no names as Text formatting', () => {
     expect(cardLines(cardPartsOf([{ kind: 'format', text: 'x' }]))).toEqual([
       'Format: Text formatting',

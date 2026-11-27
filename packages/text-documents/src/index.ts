@@ -339,6 +339,7 @@ export {
 } from './live/live-thread-index';
 export {
   DELETION_MARK,
+  DRAWING_ELEMENT,
   FORMAT_CHANGE_MARK,
   INSERTION_MARK,
   isSuggestionMark,

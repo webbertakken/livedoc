@@ -1,7 +1,7 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { setSessionSharePassword } from '@/lib/api-client';
 import { ensureIconCatalogs } from '@/lib/icon-registry';
 import { EDITOR_SURFACE_CODE } from '@/lib/editor-deferred-code';
@@ -26,6 +26,7 @@ import { LoadErrorCard } from '@/components/chrome/LoadErrorCard';
 import { CustomThemeProvider } from '@/components/primitives/CustomThemeProvider';
 import { ShapeLibraryProvider } from '@/components/primitives/ShapeLibraryProvider';
 import { DocumentTagsProvider } from '@/components/tags/DocumentTagsProvider';
+import { OfficeModeMemoryContext, type OfficeModeMemory } from '@/lib/office/office-mode-memory';
 import { LocalMovePrompt } from '@/components/dialogs/LocalMovePrompt';
 import { EditorContext } from './EditorContext';
 import { EditorView } from './EditorView';
@@ -95,6 +96,12 @@ export default function LivePage({ surface = 'app' }: { surface?: EditorSurface 
     if (!state.documentId) return;
     return () => requestDriveFlush();
   }, [state.documentId]);
+  // The modes chosen on its office surfaces, kept while this document is open; another document starts afresh.
+  const modeMemory = useMemo<OfficeModeMemory>(() => new Map(), []);
+  useEffect(() => {
+    if (!state.documentId) return;
+    return () => modeMemory.clear();
+  }, [state.documentId, modeMemory]);
   // An access change just reloaded us (lib/access-notice.ts): taken once, on mount, so a refusal can say why. The
   // first page after the eject always takes it, whatever it shows (the editor, a password prompt, a refusal).
   const [accessEnded] = useState(() => takeAccessEnded());
@@ -271,7 +278,10 @@ export default function LivePage({ surface = 'app' }: { surface?: EditorSurface 
             {/* The reader's tags for the Explorer panel's rows and menus (docs/specs/013-workspace/tags.md), loaded
                 the first time one of them shows, so opening a document costs no extra request. */}
             <DocumentTagsProvider ownerId={ownerId} lazy>
-              <EditorView />
+              {/* Each person's mode on an office surface, kept while this document is open (review.md "Editing modes"). */}
+              <OfficeModeMemoryContext.Provider value={modeMemory}>
+                <EditorView />
+              </OfficeModeMemoryContext.Provider>
             </DocumentTagsProvider>
           </ShapeLibraryProvider>
         </MentionContext.Provider>

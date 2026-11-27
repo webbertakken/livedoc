@@ -1,9 +1,12 @@
 // @vitest-environment jsdom
 // docs/specs/034-text-documents/performance.md "A keystroke's frame": a local edit works out no selection in the live
 // state (y-prosemirror, as patched in patches/), and a peer's edit still keeps the caret on the text it was beside.
+// live-editing-and-storage.md "The binding": a change from the live state that takes away the object a person has
+// selected leaves them a caret where it was, never an error (the patch restores a node selection only where a
+// selectable node still stands).
 import { describe, expect, it } from 'vitest';
 import * as Y from 'yjs';
-import { EditorState, TextSelection } from 'prosemirror-state';
+import { EditorState, NodeSelection, TextSelection } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
 import { ySyncPlugin, ySyncPluginKey } from 'y-prosemirror';
 import { TextDocumentState } from '@livedoc/text-documents';
@@ -58,3 +61,43 @@ function peerBody(peer: Y.Doc, here: Y.Doc): Y.XmlFragment {
     if ((type as unknown) === body) return peer.getXmlFragment(name);
   throw new Error('no body');
 }
+
+/** A view bound to a fresh live state, with "ab" and a picture at `at` (2: between the letters; 3: at the end). */
+async function boundWithPicture(at: number) {
+  const doc = TextDocumentState.load();
+  const view = new EditorView(document.createElement('div'), {
+    state: EditorState.create({
+      schema: textDocumentSchema,
+      plugins: [ySyncPlugin(TextDocumentState.body(doc))],
+    }),
+  });
+  // The binding takes the editor over once its first render has run.
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  const picture = textDocumentSchema.nodes.picture!.create({ media: 'm1', width: 10, height: 10 });
+  view.dispatch(view.state.tr.insertText('ab', 1).insert(at, picture));
+  view.dispatch(view.state.tr.setSelection(NodeSelection.create(view.state.doc, at)));
+  expect(view.state.selection).toBeInstanceOf(NodeSelection);
+  return { doc, view };
+}
+
+/** The live state's first paragraph's picture taken away, as another person's change. */
+function takePictureAway(doc: Y.Doc) {
+  const paragraph = TextDocumentState.body(doc).get(0) as Y.XmlElement;
+  const index = paragraph.toArray().findIndex((n) => n instanceof Y.XmlElement);
+  doc.transact(() => paragraph.delete(index, 1), 'elsewhere');
+}
+
+describe('a selected object taken away by the live state', () => {
+  for (const [where, at] of [
+    ['between letters', 2],
+    ['at the paragraph’s end', 3],
+  ] as const)
+    it(`leaves a caret where it was, ${where}`, async () => {
+      const { doc, view } = await boundWithPicture(at);
+      expect(() => takePictureAway(doc)).not.toThrow();
+      expect(view.state.doc.textContent).toBe('ab');
+      expect(view.state.selection).toBeInstanceOf(TextSelection);
+      expect(view.state.selection.from).toBe(at);
+      view.destroy();
+    });
+});

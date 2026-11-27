@@ -357,6 +357,8 @@ worked on in the canvas editor. The rules below are LiveDoc's own where Google's
   copy of the tab, so an edit never changes a drawing elsewhere. The copy is a new drawing tab of this text document,
   named as a new drawing is, its elements copied with fresh ids; the picture names it from then on, as its own undo
   step `(default)`. An Editor's alone: anyone else opens the drawing as it is.
+- **While suggesting**: a drawing put in is a suggested insertion, and one changed is a suggested replacement on a
+  copy of its drawing tab, Reject leaving no drawing tab behind ([Review](review.md#while-suggesting), "Drawings").
 - **Insert > Drawing > From LiveDoc** lists the person's documents and places one of their tabs as a linked drawing
   ([Linked objects](#linked-objects)); it makes no drawing tab.
 
