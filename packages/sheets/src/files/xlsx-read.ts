@@ -29,6 +29,8 @@ import { readXlsxCharts } from './xlsx-charts-read';
 import { allRead, WORKBOOK_READ, WORKSHEET_READ, XlsxKeeper } from './xlsx-kept-read';
 import { readXlsxDxfs, readXlsxFormatRules } from './xlsx-format-rules';
 import { readXlsxValidations } from './xlsx-validation';
+import { readXlsxProtection } from './xlsx-protection';
+import { protectionsFound } from './file-protections';
 import { readThemeColours } from './xlsx-colours';
 import {
   dateStyles,
@@ -208,8 +210,15 @@ function cellFormat(
   return style.number.code ?? undefined;
 }
 
-// `ruled`: a format rule's style says more than a style holds, named with the cells' (D104).
-function readSheet(name: string, root: XmlElement, book: Book, ruled: boolean): FileSheet {
+// `ruled`: a format rule's style says more than a style holds, named with the cells' (D104). On a sheet that is not
+// `guarded` (protected), a style that is not locked says more too.
+function readSheet(
+  name: string,
+  root: XmlElement,
+  book: Book,
+  ruled: boolean,
+  guarded: boolean,
+): FileSheet {
   const cells: FileCell[] = [];
   const shared = new Map<string, Shared>();
   const cache = new Set<string>();
@@ -236,7 +245,7 @@ function readSheet(name: string, root: XmlElement, book: Book, ruled: boolean): 
         continue;
       }
       const s = Number(attributeOf(cell, '', 's') ?? 0);
-      styled ||= book.styles[s]?.lost ?? false;
+      styled ||= (book.styles[s]?.lost ?? false) || (!guarded && book.styles[s]?.unlocked === true);
       const read = cellFormula(cell, at, shared, book, name);
       const value = cellValue(cell, book);
       const format = cellFormat(cell, book, name, at);
@@ -337,19 +346,25 @@ export async function readXlsx(
     const validations = readXlsxValidations(worksheet.root, ns);
     for (const { r, c } of validations.changed)
       book.losses.push({ k: 'validation_rule_changed', sheet: name, r, c });
-    const read = new Set([...rules.read, ...validations.read]);
+    // Its protection (standard-mapping.md "Protection in the file").
+    const protection = readXlsxProtection(worksheet.root, ns, (s) => styles[s]?.unlocked === true);
+    const found = protectionsFound(protection);
+    if (found.changed) book.losses.push({ k: 'protection_changed', sheet: name });
+    if (protection.cut) book.losses.push({ k: 'protection_cut', sheet: name });
+    const read = new Set([...rules.read, ...validations.read, ...protection.read]);
     keeper?.sheetEntry(sheet, sheets.length);
     keeper?.worksheet(worksheet, part!, sheets.length, read);
     strictUnread += keeper
       ? 0
       : unreadChildren(worksheet.root, WORKSHEET_READ) -
         childElements(worksheet.root).filter((e) => allRead(e, read)).length;
-    const cells = readSheet(name, worksheet.root, book, rules.styled);
+    const cells = readSheet(name, worksheet.root, book, rules.styled, protection.protected);
     sheets.push({
       ...cells,
       ...readXlsxTabLook(sheet, worksheet.root, ns),
       ...(rules.rules.length ? { formatRules: rules.rules } : {}),
       ...(validations.rules.length ? { validations: validations.rules } : {}),
+      ...(found.protections ? { protections: found.protections } : {}),
     });
   }
   // The workbook's names: a named LAMBDA is a named function, a cell or rectangle a named range, no longer kept; any

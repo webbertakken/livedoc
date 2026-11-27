@@ -9,6 +9,16 @@ import type { LayoutChange } from './store-layout';
 /** Who writes where a protection stands: anyone after a warning, Editors (and the owner), or the owner alone. */
 export type ProtectionPermission = 'warn' | 'editors' | 'owner';
 
+/**
+ * What a protected sheet's file held that LiveDoc has no form for, as the file wrote it: its password hash and Excel's
+ * allowances, by their attribute names (standard-mapping.md "Protection in the file", D351). Never shown nor checked;
+ * written back only to a file of its `standard`.
+ */
+export type ProtectionKept = {
+  readonly standard: 'ooxml' | 'odf';
+  readonly attributes: Readonly<Record<string, string>>;
+};
+
 /** A protection of a range (`range`), or of its whole sheet (no `range`) but its `except` ranges. */
 export type Protection = {
   readonly id: string;
@@ -16,6 +26,8 @@ export type Protection = {
   readonly except?: readonly IdRange[];
   readonly description?: string;
   readonly can: ProtectionPermission;
+  // A protected sheet's, from the file it was read from.
+  readonly kept?: ProtectionKept;
 };
 
 /** Who is writing: the spreadsheet's owner, an Editor (owner included), or neither (a Participant). */
@@ -27,6 +39,42 @@ export const PROTECTION_EXCEPTIONS_MAX = 50;
 export const PROTECTION_DESCRIPTION_MAX = 200;
 
 const PERMISSIONS: readonly ProtectionPermission[] = ['warn', 'editors', 'owner'];
+
+/** The attributes a file's protection keeps, by standard: SpreadsheetML's `sheetProtection`, ODF's `table:table`. */
+export const PROTECTION_KEPT_ATTRIBUTES: Readonly<
+  Record<ProtectionKept['standard'], ReadonlySet<string>>
+> = {
+  ooxml: new Set([
+    'password',
+    'algorithmName',
+    'hashValue',
+    'saltValue',
+    'spinCount',
+    'objects',
+    'scenarios',
+    'formatCells',
+    'formatColumns',
+    'formatRows',
+    'insertColumns',
+    'insertRows',
+    'insertHyperlinks',
+    'deleteColumns',
+    'deleteRows',
+    'selectLockedCells',
+    'sort',
+    'autoFilter',
+    'pivotTables',
+    'selectUnlockedCells',
+  ]),
+  odf: new Set([
+    'table:protection-key',
+    'table:protection-key-digest-algorithm',
+    'loext:protection-key-digest-algorithm-2',
+  ]),
+};
+
+/** The longest kept attribute value: a SHA-512 hash and its salt are far shorter. */
+export const PROTECTION_KEPT_VALUE_MAX = 1024;
 
 export const Protection = {
   /** Whether the protection lets this caller write where it stands. */
@@ -218,6 +266,21 @@ function isRangeOn(raw: unknown, layout: SheetLayout): raw is IdRange {
   );
 }
 
+// What a file's protection held, each attribute one its standard keeps.
+function isProtectionKept(raw: unknown): raw is ProtectionKept {
+  if (typeof raw !== 'object' || raw === null) return false;
+  const k = raw as Partial<ProtectionKept>;
+  const names =
+    k.standard === 'ooxml' || k.standard === 'odf' ? PROTECTION_KEPT_ATTRIBUTES[k.standard] : null;
+  const attributes = k.attributes;
+  if (!names || typeof attributes !== 'object' || attributes === null || Array.isArray(attributes))
+    return false;
+  return Object.entries(attributes).every(
+    ([name, value]) =>
+      names.has(name) && typeof value === 'string' && value.length <= PROTECTION_KEPT_VALUE_MAX,
+  );
+}
+
 /** Whether a write's protection is well made for id `id`, its cells on the sheet (D345). */
 export function isProtection(raw: unknown, id: string, layout: SheetLayout): raw is Protection {
   if (typeof raw !== 'object' || raw === null) return false;
@@ -226,7 +289,9 @@ export function isProtection(raw: unknown, id: string, layout: SheetLayout): raw
   if (p.description !== undefined)
     if (typeof p.description !== 'string' || p.description.length > PROTECTION_DESCRIPTION_MAX)
       return false;
-  if (p.range !== undefined) return isRangeOn(p.range, layout) && p.except === undefined;
+  if (p.range !== undefined)
+    return isRangeOn(p.range, layout) && p.except === undefined && p.kept === undefined;
+  if (p.kept !== undefined && !isProtectionKept(p.kept)) return false;
   if (p.except === undefined) return true;
   return (
     Array.isArray(p.except) &&

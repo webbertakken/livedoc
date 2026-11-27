@@ -96,6 +96,10 @@ describe('the import report’s copy', () => {
         '2 data validation rules LiveDoc cannot read are left out: Data!A2 and Data!B2',
       ],
       [
+        { k: 'protection_cut', count: 2, names: ['Data', 'Totals'] },
+        '2 protected sheets free more than 50 ranges; the rest stay protected: Data and Totals',
+      ],
+      [
         { k: 'sizes_cut', count: 1, names: ['Data'] },
         'Row heights and column widths past the most a sheet holds are left out of 1 sheet: Data',
       ],

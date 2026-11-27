@@ -106,7 +106,7 @@ function inOrder(
 }
 
 // The worksheet's children the schema allows once: LiveDoc's own go inside a kept one, after its children.
-const MERGED: ReadonlySet<string> = new Set(['dataValidations', 'extLst']);
+const MERGED: ReadonlySet<string> = new Set(['protectedRanges', 'dataValidations', 'extLst']);
 const VALIDATION = /<(?:[\w.-]+:)?dataValidation[\s/>]/g;
 
 // A kept child with LiveDoc's own of the same name inside it, after its children; a `dataValidations`' count made its

@@ -1,6 +1,7 @@
 // What the import report says (docs/specs/029-sheets/files-and-print.md "The import report", D120): a line a kind,
 // counted, naming up to three; the words a person reads for each of the read's losses.
 import { WORKBOOK_INPUT_MAX, WORKBOOK_SHEETS_MAX } from '../workbook/workbook-limits';
+import { PROTECTION_EXCEPTIONS_MAX } from '../protection';
 import { FILE_READ_CELLS_MAX } from './file-read-limits';
 import type { FileOpenRejection } from './import-file';
 import type { ReportedLoss, SheetRename } from './import-report';
@@ -107,6 +108,11 @@ export function importReportLine(loss: ReportedLoss): string {
     case 'validation_rule_unread':
       return named(
         `${counted(count, 'data validation rule', 'data validation rules')} LiveDoc cannot read ${verb(count, 'is', 'are')} left out`,
+        loss,
+      );
+    case 'protection_cut':
+      return named(
+        `${counted(count, 'protected sheet frees', 'protected sheets free')} more than ${PROTECTION_EXCEPTIONS_MAX} ranges; the rest stay protected`,
         loss,
       );
     case 'sizes_cut':

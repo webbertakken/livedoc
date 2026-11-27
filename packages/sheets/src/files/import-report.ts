@@ -32,6 +32,7 @@ export const REPORTED_KINDS = [
   'styles_unread',
   'format_rule_unread',
   'validation_rule_unread',
+  'protection_cut',
   'sizes_cut',
   'charts_unwritten',
   'chart_rewritten',
@@ -67,6 +68,9 @@ function entriesOf(loss: FileLoss): Entry[] {
       return [[loss.k, 1, cellName(loss.sheet, loss.r, loss.c)]];
     // The other app's change is read as it left it: logged with the read's losses, never reported (D294).
     case 'validation_rule_changed':
+    case 'protection_changed':
+    // A protection the grid cannot hold: logged with the read's losses; its cells stay as the sheet's others.
+    case 'protection_unread':
       return [];
     case 'sheet_cut':
     case 'cells_cut':
@@ -74,6 +78,7 @@ function entriesOf(loss: FileLoss): Entry[] {
     case 'formats_cut':
     case 'styles_unread':
     case 'sizes_cut':
+    case 'protection_cut':
     case 'charts_unwritten':
     case 'chart_rewritten':
     case 'chart_nearest_type':

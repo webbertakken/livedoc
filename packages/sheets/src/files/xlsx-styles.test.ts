@@ -50,7 +50,8 @@ describe('readCellStyles', () => {
       '<a:lt2><a:srgbClr val="EEECE1"/></a:lt2><a:accent1><a:srgbClr val="4F81BD"/></a:accent1></a:clrScheme></a:themeElements></a:theme>';
     expect(readCellStyles(xml, 'en-GB', theme)).toEqual([
       { number: { code: null }, lost: false },
-      { number: { code: null }, style: { fc: 'theme:accent1' }, lost: true },
+      // Not locked: free of its sheet's protection, never a loss of its own.
+      { number: { code: null }, style: { fc: 'theme:accent1' }, lost: false, unlocked: true },
       { number: { code: null }, style: { fc: '#a7c0de' }, lost: false },
     ]);
   });

@@ -175,7 +175,7 @@ display style (Chip, Arrow, Plain Text) with option colours. Dropdowns and tick 
 - A duplicated sheet, and a sheet copied to another spreadsheet, leave their protections behind, as named ranges are
   (default, D348). `CELL("protect", A1)` is 1 for a cell any protection covers, a warning one too, 0 otherwise
   ([Formulas](formulas.md), D42).
-- **Files** (built with plan 0020 Phase 10 box 3, its file slice): a file's protection, a password
+- **Files** ([Protection in the file](standard-mapping.md#protection-in-the-file)): a file's protection, a password
   hash with it or not, is read as protection with no password: LiveDoc never asks for a password nor checks one, and
   the owner (or an Editor, as the permission admits) may remove it. A hash LiveDoc read is written back to a file of
   its own format; LiveDoc never writes one it did not read. Converting and downloading to the other format list it.

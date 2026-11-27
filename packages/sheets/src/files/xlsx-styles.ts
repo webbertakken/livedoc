@@ -96,9 +96,15 @@ export type XlsxNumberFormat = { code: string | null } | { unknown: true };
 
 /**
  * A cell style: its number format, the rest of its look as a cell's style (none for LiveDoc's defaults), and whether
- * it says more than the model holds (`styles_unread`, D104).
+ * it says more than the model holds (`styles_unread`, D104); `unlocked` when it is not locked, so free of its sheet's
+ * protection (standard-mapping.md "Protection in the file").
  */
-export type XlsxCellStyle = { number: XlsxNumberFormat; style?: CellStyle; lost: boolean };
+export type XlsxCellStyle = {
+  number: XlsxNumberFormat;
+  style?: CellStyle;
+  lost: boolean;
+  unlocked?: true;
+};
 
 /**
  * Each cell style (`cellXfs` entry) of `xl/styles.xml`'s text, in order, its colours from the theme's; none when the
@@ -127,12 +133,13 @@ export function readCellStyles(
     const id = Number(attributeOf(xf, '', 'numFmtId') ?? 0);
     const code = codes.get(id) ?? xlsxBuiltinCode(id, locale);
     const number: XlsxNumberFormat = code === undefined ? { unknown: true } : { code };
-    const { style, lost } = xlsxCellStyleOf(xf, stylesheet);
-    if (!style) return { number, lost };
+    const { style, lost, unlocked } = xlsxCellStyleOf(xf, stylesheet);
+    const free = unlocked ? { unlocked } : {};
+    if (!style) return { number, lost, ...free };
     const key = cellStyleKey(style);
     const shared = looks.get(key) ?? style;
     looks.set(key, shared);
-    return { number, style: shared, lost };
+    return { number, style: shared, lost, ...free };
   });
 }
 

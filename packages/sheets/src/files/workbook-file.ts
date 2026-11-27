@@ -25,6 +25,7 @@ import { cellStyleOf, type CellStyle } from './cell-style';
 import { storedKept } from './kept-anchors';
 import { fileFunctionsOf, functionsFromFile, type FileFunction } from './file-functions';
 import { fileNamesOf, namesFromFile, type FileRangeName } from './file-names';
+import { fileProtectionsOf, protectionsFromFile, type FileProtection } from './file-protections';
 import type { FileAt, KeptItem } from './kept-content';
 import type { NamedFunction } from '../named-functions';
 import { fileLinesOf, layoutFromLines, type FileLines } from './file-lines';
@@ -73,6 +74,8 @@ export type FileSheet = {
   validations?: FileValidationRule[];
   // Its charts in paint order (standard-mapping.md "Charts in the file").
   charts?: FileChart[];
+  // Its protections in its order (standard-mapping.md "Protection in the file").
+  protections?: FileProtection[];
 };
 
 /**
@@ -147,7 +150,13 @@ export type FileLoss =
   // Named ranges (standard-mapping.md "Named ranges in the file"): one LiveDoc cannot read, kept as it came (D343); one
   // a write leaves out, a name twice or one Excel refuses (D344).
   | { k: 'name_unread'; name: string }
-  | { k: 'name_unwritten'; name: string };
+  | { k: 'name_unwritten'; name: string }
+  // Protections (standard-mapping.md "Protection in the file"): LiveDoc's record beside a standard form another app
+  // changed since, the standard form read (D349, logged only); one the grid cannot hold (logged only); a protected
+  // sheet's free ranges past 50, the rest left protected (D352).
+  | { k: 'protection_changed'; sheet: string }
+  | { k: 'protection_unread'; sheet: string }
+  | { k: 'protection_cut'; sheet: string };
 
 function fileValueOf(value: Scalar): FileValue | undefined {
   if (value === null) return undefined;
@@ -244,6 +253,7 @@ export function workbookFileOf(
       const formatRules = all.length ? all : undefined;
       const validations = fileValidationRulesOf(sheet.layout, ctx);
       const charts = fileChartsOf(engine, sheet, locale);
+      const protections = fileProtectionsOf(sheet.layout);
       return {
         name: sheet.title,
         rows: sheet.layout.rows.length,
@@ -255,6 +265,7 @@ export function workbookFileOf(
         ...(formatRules ? { formatRules } : {}),
         ...(validations ? { validations } : {}),
         ...(charts.length ? { charts } : {}),
+        ...(protections ? { protections } : {}),
       };
     }),
     ...(engine.theme === STANDARD_THEME ? {} : { theme: engine.theme }),
@@ -507,8 +518,10 @@ export function sheetsFromFile(
     );
     const rules = validationRulesFromFile(m.file.validations, m.layout, ctx, m.title, rand, losses);
     const objects = sheetChartsFromFile(m.file.charts, m.layout, rand);
+    const protections = protectionsFromFile(m.file.protections, m.layout, m.title, rand, losses);
     const layout = {
       ...m.layout,
+      ...(protections ? { protections } : {}),
       ...(rules ? { rules } : {}),
       ...(formatRules ? { formatRules } : {}),
       ...(objects.length ? { objects } : {}),
