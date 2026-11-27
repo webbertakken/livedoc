@@ -1,4 +1,4 @@
-// docs/specs/009-elements/pie-chart.md "Chart types", "Timeline" (D347): points placed by date along a time axis, a
+// docs/specs/009-elements/pie-chart.md "Chart types", "Timeline" (D372): points placed by date along a time axis, a
 // line per series in date order broken at a gap, no markers, round date labels, the value range fitted.
 import { describe, expect, it } from 'vitest';
 import {

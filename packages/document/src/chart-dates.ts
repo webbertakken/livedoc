@@ -1,4 +1,4 @@
-// Dates in a chart's categories (docs/specs/009-elements/pie-chart.md "Timeline", D347): a Timeline places each point
+// Dates in a chart's categories (docs/specs/009-elements/pie-chart.md "Timeline", D372): a Timeline places each point
 // by its category read as an ISO date (or date and time) in UTC; a sheet's dated label column reaches the chart as ISO
 // text written from the cells' serial numbers. Light and pure: chart-source imports it.
 

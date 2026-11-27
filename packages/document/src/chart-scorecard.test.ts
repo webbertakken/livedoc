@@ -1,4 +1,4 @@
-// docs/specs/009-elements/pie-chart.md "Chart types", "Scorecard" (D345): the first series summed as the key value,
+// docs/specs/009-elements/pie-chart.md "Chart types", "Scorecard" (D370): the first series summed as the key value,
 // written large, its name under it, and its change from the second series' sum under that, green over, red under.
 import { describe, expect, it } from 'vitest';
 import {

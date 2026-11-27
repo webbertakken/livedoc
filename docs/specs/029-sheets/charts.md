@@ -64,7 +64,7 @@ Column, Stacked Column, 100% Stacked Column, Bar, Stacked Bar, 100% Stacked Bar,
 Scatter, Bubble, Histogram, Candlestick, OHLC, Waterfall, Treemap, Geo (regions, markers), Gauge, Scorecard, Radar,
 Organisational, Timeline, Table, Annotated Timeline. A type a format cannot hold is written as the nearest it can,
 with the original kept for LiveDoc, and the loss listed ([Written as the nearest type](standard-mapping.md#charts-in-the-file),
-D290): Stepped Area is written as Area, a Bubble chart with no sizes as Scatter, a Histogram or a Waterfall as Column (D325, D327), a Treemap as Pie (D329), a Gauge as Bar (D331), a Scorecard as Column (D346), and a Timeline as Line (D348).
+D290): Stepped Area is written as Area, a Bubble chart with no sizes as Scatter, a Histogram or a Waterfall as Column (D325, D327), a Treemap as Pie (D329), a Gauge as Bar (D331), a Scorecard as Column (D371), and a Timeline as Line (D373).
 
 ## Inserting
 

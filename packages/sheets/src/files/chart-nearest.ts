@@ -47,9 +47,9 @@ const NEAREST_TYPE: Readonly<Record<SheetChartType, HeldChartType>> = {
   treemap: 'pie',
   // No format holds a gauge; a bar per dial reads each value against the others (D331).
   gauge: 'bar',
-  // No format holds a scorecard; a column per series shows the key value beside its baseline (D346).
+  // No format holds a scorecard; a column per series shows the key value beside its baseline (D371).
   scorecard: 'column',
-  // A timeline is a line over dates; its dates are written as the line chart's labels (D348).
+  // A timeline is a line over dates; its dates are written as the line chart's labels (D373).
   timeline: 'line',
   combo: 'combo',
 };

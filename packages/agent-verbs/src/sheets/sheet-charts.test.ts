@@ -246,7 +246,7 @@ describe('chart elements', () => {
     expect(el!.lineSeries!.length).toBeGreaterThan(0);
   });
 
-  it('draw a timeline (D347)', () => {
+  it('draw a timeline (D372)', () => {
     const { wb, sheet } = book();
     const built = buildChartChange(wb, sheet.id, { op: 'chart', type: 'timeline', range: 'A1:B3' });
     if (!built.ok) throw new Error(built.message);
@@ -259,7 +259,7 @@ describe('chart elements', () => {
     expect(el).toMatchObject({ shape: 'line-chart', chartVariant: 'timeline' });
   });
 
-  it('draw a scorecard (D345)', () => {
+  it('draw a scorecard (D370)', () => {
     const { wb, sheet } = book();
     const built = buildChartChange(wb, sheet.id, {
       op: 'chart',

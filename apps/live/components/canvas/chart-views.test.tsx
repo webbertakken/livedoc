@@ -291,7 +291,7 @@ describe('chart views', () => {
     expect(bare.container.textContent).toContain('Subtotal');
   });
 
-  it('places a timeline’s points by date, unmarked, and reads a point’s date (Timeline, D347)', () => {
+  it('places a timeline’s points by date, unmarked, and reads a point’s date (Timeline, D372)', () => {
     const { container } = render(
       <LineChartView
         element={el('line-chart', {
@@ -309,7 +309,7 @@ describe('chart views', () => {
     expect(container.textContent).toContain('Feb 1, 2018 · Expenses');
   });
 
-  it('writes a scorecard’s key value, its name and its change, and nothing for no value (Scorecard, D345)', () => {
+  it('writes a scorecard’s key value, its name and its change, and nothing for no value (Scorecard, D370)', () => {
     const { container } = render(
       <LineChartView
         element={el('line-chart', {

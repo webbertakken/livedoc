@@ -1,4 +1,4 @@
-// Timeline charts (docs/specs/009-elements/pie-chart.md "Timeline", D347): a line chart whose categories are dates,
+// Timeline charts (docs/specs/009-elements/pie-chart.md "Timeline", D372): a line chart whose categories are dates,
 // each point placed along a time axis by its date. Laid out as a scatter of the dates' times (so the value range fits
 // the values), each series' line redrawn in date order and broken at a gap, no markers, and the axis labelled at round
 // dates. With no category a date it is spaced evenly as a Line chart. Laid out once for both renderers. Pure.

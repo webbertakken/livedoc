@@ -282,7 +282,7 @@ Chart" and a screen reader hears "Column chart", as the palette's tile says, nev
   - No legend, no axis and no readout take room: the chart writes its numbers. Show Values changes nothing.
   - Series past the second, stacking, Smooth Line, the right-hand axis and a series' line are ignored and kept.
     Google's percentage comparison, its own colours, scale factor and number formats, and aggregations other than Sum
-    are not built (default, D345).
+    are not built (default, D370).
 - **Timeline** (Google Sheets' Timeline chart): a line chart whose categories are dates, each point placed along a
   time axis by its date rather than evenly.
   - A category reads as a date when it is an ISO date (`2018-01-31`) or date and time (`2018-01-31T09:30`), in UTC.
@@ -296,7 +296,7 @@ Chart" and a screen reader hears "Column chart", as the palette's tile says, nev
   - A point's readout reads `date · series: value`, its date written `Feb 8, 2018` (and its time when it has one);
     Show Values and the legend are a Line chart's.
   - Google's zoom control and range buttons, its title and note columns (annotations) and its value axis on the right
-    are not built; stacking, Smooth Line, the right-hand axis and a series' line are ignored and kept (default, D347).
+    are not built; stacking, Smooth Line, the right-hand axis and a series' line are ignored and kept (default, D372).
 - **Combo** (Google Sheets' Combo chart): a line chart's data (`lineSeries` over `lineCategories`), each series drawn
   as its own **series type**: Column, Line, Area or Stepped Area (`LineSeries.type`). A series with no type of its own takes the
   default: the first half of the series, rounded up, are columns and the rest lines, so two series are a column and a
@@ -538,11 +538,11 @@ The code cites each by its id.
   a column chart's, the range fitted as a scatter's; a body 60% of its slot and at most 24 px, falling filled and rising
   hollow; OHLC ticks half the body wide; every mark the first series' colour, no legend keys; a gap where any price
   is missing; series past the fourth ignored; stacking, smoothing, the right axis and lines ignored (default).
-- **D347** Timeline: ISO dates (and times) in UTC, a sheet's dated label column read as dates; a line per series in
+- **D372** Timeline: ISO dates (and times) in UTC, a sheet's dated label column read as dates; a line per series in
   date order, no markers, broken at a gap; the value range fitted as Scatter's; round date labels at most one per 80 px;
   categories that are no date not drawn, none a date spaced evenly; Google's zoom, annotations and right-hand axis not
   built (default).
-- **D345** Scorecard: the first series' sum written bold, as large as fits (12 to 64 px, 40% of the plot's height),
+- **D370** Scorecard: the first series' sum written bold, as large as fits (12 to 64 px, 40% of the plot's height),
   its name under it; a second series' sum the baseline, the change under the name, ▲ green (#188038) over, ▼ red
   (#d93025) under, 0 in the text colour; numbers in full, thousands separated, up to two decimals; no legend, axis or
   readout; Show Values ignored; Google's percentage comparison, colours, scale factor, number formats and other

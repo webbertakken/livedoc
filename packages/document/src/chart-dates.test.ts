@@ -1,4 +1,4 @@
-// docs/specs/009-elements/pie-chart.md "Timeline" (D347): a category is a date when it is ISO, in UTC; a sheet's dated
+// docs/specs/009-elements/pie-chart.md "Timeline" (D372): a category is a date when it is ISO, in UTC; a sheet's dated
 // label column is read as ISO dates from its serial numbers.
 import { describe, expect, it } from 'vitest';
 import { isoDateTime, serialDateText, utcTime } from './chart-dates';

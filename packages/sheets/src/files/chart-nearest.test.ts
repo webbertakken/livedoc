@@ -403,7 +403,7 @@ describe('a Gauge chart in both formats', () => {
   });
 });
 
-// D346: a Scorecard chart is written as a Column chart of its series, restored on reading.
+// D371: a Scorecard chart is written as a Column chart of its series, restored on reading.
 describe('a Scorecard chart in both formats', () => {
   it('is written as a Column chart and read back as a Scorecard', async () => {
     const sheet = charted({ type: 'scorecard' });
@@ -419,7 +419,7 @@ describe('a Scorecard chart in both formats', () => {
   });
 });
 
-// D348: a Timeline chart is written as a Line chart of its series, restored on reading.
+// D373: a Timeline chart is written as a Line chart of its series, restored on reading.
 describe('a Timeline chart in both formats', () => {
   it('is written as a Line chart and read back as a Timeline', async () => {
     const sheet = charted({ type: 'timeline' });

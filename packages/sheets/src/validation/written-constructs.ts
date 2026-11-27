@@ -304,9 +304,9 @@ function chartSheet(): FileSheet {
     { ...base(types.length + 18, 'treemap'), id: 'chart_treemap' },
     // Gauge (D331): written as a bar chart of its values, its original kept.
     { ...base(types.length + 19, 'gauge'), id: 'chart_gauge' },
-    // Scorecard (D346): written as a column chart of its series, its original kept.
+    // Scorecard (D371): written as a column chart of its series, its original kept.
     { ...base(types.length + 20, 'scorecard'), id: 'chart_scorecard' },
-    // Timeline (D348): written as a line chart of its series, its original kept.
+    // Timeline (D373): written as a line chart of its series, its original kept.
     { ...base(types.length + 21, 'timeline'), id: 'chart_timeline' },
   );
   return { ...sheet("Costs' sheet", cells, 140, 8), charts };
