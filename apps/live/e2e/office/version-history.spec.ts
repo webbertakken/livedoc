@@ -230,3 +230,79 @@ test('goes between a version’s changes with the keys, and makes a copy of it',
   await expect(copy.getByRole('textbox', { name: 'Rename' })).toHaveValue('Kept copy');
   expectNoPageErrors(pageErrors);
 });
+
+test('opens version history from the last edit, and a restore keeps a collaborator’s later typing', async ({
+  page,
+  pageErrors,
+  browser,
+  baseURL,
+}) => {
+  test.setTimeout(180_000);
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto('/new?kind=text-document');
+  await expect(page.locator(READY)).toBeVisible();
+  const body = page.locator(BODY);
+  await body.click();
+  await page.keyboard.type('Agreed text.');
+  await saved(page);
+  await (await officeMenuItem(page, ['File', 'Version history', 'Name current version'])).click();
+  const naming = page.getByRole('dialog', { name: 'Name current version' });
+  await naming.getByRole('textbox', { name: 'Version name' }).fill('Agreed');
+  await naming.getByRole('button', { name: 'Save' }).click();
+  await expect(naming).toHaveCount(0);
+  await body.click();
+  await body.press('End');
+  await page.keyboard.type(' Draft idea.');
+  await saved(page);
+
+  // An Editor on a share link, typing in the document.
+  const id = new URL(page.url()).pathname.split('/')[2]!;
+  const headers = await pageOwnerHeaders(page, { Origin: new URL(baseURL!).origin });
+  const share = await page.request.post(`${apiBase}/documents/${id}/share`, {
+    headers,
+    data: { role: 'edit' },
+  });
+  const code = ((await share.json()) as { link: { code: string } }).link.code;
+  const ctx = await browser.newContext({
+    baseURL,
+    colorScheme: 'dark',
+    viewport: { width: 1440, height: 900 },
+  });
+  const peer = await ctx.newPage();
+  await peer.goto(`/document/shared?s=${code}`);
+  const join = peer.getByRole('button', { name: /^join$/i });
+  await expect(join.or(peer.locator(READY))).toBeVisible({ timeout: 30_000 });
+  if (await join.isVisible()) await join.click();
+  await expect(peer.locator(READY)).toBeVisible();
+  await expect(peer.locator(BODY)).toHaveText('Agreed text. Draft idea.');
+
+  // The save status's details say the last edit, which opens the history.
+  await page.locator('[data-save-status]').first().click();
+  const lastEdit = page.getByRole('button', { name: /^Last edit was just now by / });
+  await expect(lastEdit).toBeVisible();
+  await page.screenshot({ path: test.info().outputPath('last-edit.png') });
+  await lastEdit.click();
+  const mode = page.getByRole('dialog', { name: 'Version history' });
+  const list = mode.getByRole('listbox', { name: 'Versions' });
+  await expect(list.getByRole('option', { name: /^Agreed/ })).toBeVisible();
+  await list.focus();
+  await list.press('ArrowDown');
+  await expect(mode.getByRole('heading', { level: 1 })).toHaveText('Agreed');
+
+  // The collaborator keeps typing while the restore happens; their later words stay on top of it.
+  await list.press('Shift+F10');
+  await page.getByRole('menuitem', { name: 'Restore this version' }).click();
+  await page
+    .getByRole('dialog', { name: 'Restore this version?' })
+    .getByRole('button', { name: 'Restore' })
+    .click();
+  await expect(mode).toHaveCount(0);
+  await expect(body).toHaveText('Agreed text.');
+  await expect(peer.locator(BODY)).toHaveText('Agreed text.');
+  await peer.locator(BODY).click();
+  await peer.locator(BODY).press('End');
+  await peer.keyboard.type(' Later.');
+  await expect(body).toHaveText('Agreed text. Later.');
+  await ctx.close();
+  expectNoPageErrors(pageErrors);
+});

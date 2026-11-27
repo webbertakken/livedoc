@@ -18793,6 +18793,23 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
     ],
     "type": "string"
   },
+  "TextDocumentLastEditDto": {
+    "additionalProperties": false,
+    "description": "When the tab's newest update was stored, and who sent it (an unrecorded sender: key, name and colour null).",
+    "properties": {
+      "at": {
+        "type": "number"
+      },
+      "editor": {
+        "$ref": "#/components/schemas/VersionEditorDto"
+      }
+    },
+    "required": [
+      "at",
+      "editor"
+    ],
+    "type": "object"
+  },
   "TextDocumentVersionDto": {
     "additionalProperties": false,
     "properties": {
@@ -18853,7 +18870,18 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
   },
   "TextDocumentVersionListDto": {
     "additionalProperties": false,
+    "description": "The versions, newest first, and the tab's last edit (null before any).",
     "properties": {
+      "lastEdit": {
+        "anyOf": [
+          {
+            "$ref": "#/components/schemas/TextDocumentLastEditDto"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
       "versions": {
         "items": {
           "$ref": "#/components/schemas/TextDocumentVersionDto"
@@ -18862,7 +18890,8 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
       }
     },
     "required": [
-      "versions"
+      "versions",
+      "lastEdit"
     ],
     "type": "object"
   },

@@ -263,6 +263,8 @@ visitor's copy) and a branch start with none, as Google's copies do (default).
 - A version's **editors** are the keys whose client ids wrote between it and the version before it, and those whose
   deletions it holds. A sender without an adder key, and an update posted by the door without one, are recorded as
   none: an unrecorded editor, drawn in the neutral grey.
+- The tab's **last edit** is kept too: when the newest update was stored and its sender (key, name and colour as
+  above; none for a sender without a key), one row per tab, replaced with each update.
 - The record is written after the update is stored, outside its transaction: writing it never delays, refuses or
   fails an edit. A failed write is logged `[text-document] author-record-failed` and its edits read as unrecorded.
 
@@ -284,7 +286,8 @@ the writes run on the room's write queue. A body that names the person (`{ name,
 only labels them: whose they are is the key the room makes.
 
 - `GET` lists the versions, newest first, each with its id, kind, name, time, who took it, what it was restored
-  from, and its editors (key, name, colour).
+  from, and its editors (key, name, colour); and the tab's **last edit**, when it was stored and who sent it, or
+  none before any edit.
 - `GET /:versionId` answers the version's snapshot and the one before it (state vector and whole delete set,
   base64), each Yjs client id's author, and the deletions each of its editors made, so the browser draws the version
   and its changes, in each editor's colour, from the state it holds.

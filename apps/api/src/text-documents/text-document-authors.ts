@@ -2,7 +2,7 @@
 // what"): each Yjs client id an update writes with, under its sender's adder key and the name and colour they wrote
 // under, the first sender keeping it; and the deletions each sender made since the last version, which the next version
 // takes. Written after the update is stored, never in its way: the caller logs a failure and the edit stands.
-import type { VersionEditorDto } from '@livedoc/api-schema';
+import type { TextDocumentLastEditDto, VersionEditorDto } from '@livedoc/api-schema';
 import { VersionSnapshots } from '@livedoc/text-documents';
 import { fromBlob, toBlob } from '../db/blob';
 import type { DocumentEnv } from '../types';
@@ -49,8 +49,16 @@ export class TextDocumentAuthors {
     author: VersionAuthor,
   ): Promise<void> {
     const { key } = author;
-    if (key === null) return;
     const { tabId } = where;
+    // The tab's last edit, whoever sent it.
+    await this.env.DOCUMENT_DB.prepare(
+      `INSERT INTO text_document_last_edits (tab_id, at, author, name, color) VALUES (?, ?, ?, ?, ?)
+       ON CONFLICT (tab_id) DO UPDATE SET at = excluded.at, author = excluded.author, name = excluded.name,
+         color = excluded.color`,
+    )
+      .bind(tabId, this.now(), key, author.name, author.color)
+      .run();
+    if (key === null) return;
     const { clients, deletions } = VersionSnapshots.writtenBy(update);
     const known = await this.knownOf(tabId);
     const db = this.env.DOCUMENT_DB;
@@ -95,6 +103,18 @@ export class TextDocumentAuthors {
     }
     if (statements.length > 0) await db.batch(statements);
     for (const client of clients) if (!known.has(client)) known.set(client, key);
+  }
+
+  /** When the tab's newest update was stored and who sent it; null before any. */
+  async lastEdit(tabId: string): Promise<TextDocumentLastEditDto | null> {
+    const row = await this.env.DOCUMENT_DB.prepare(
+      'SELECT at, author, name, color FROM text_document_last_edits WHERE tab_id = ?',
+    )
+      .bind(tabId)
+      .first<{ at: number; author: string | null; name: string | null; color: string | null }>();
+    return row
+      ? { at: row.at, editor: { key: row.author, name: row.name, color: row.color } }
+      : null;
   }
 
   /** Every client id's author, by client id. */
