@@ -277,7 +277,7 @@ export const TEXT_DOCUMENT_CONVERTED = chart(
   'Document',
   'Changed',
   'Text Documents Converted',
-  'An Editor converted a text document between OpenDocument and Word from File > Convert.',
+  'An Editor converted a text document to the other file format (ODF or Word) from File > Convert.',
   { types: ['TextDocumentConverted'], rising: 'neutral' },
 );
 
