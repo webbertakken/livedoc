@@ -18,6 +18,7 @@ import {
 } from './text-document-paragraph-styles';
 import { BORDERS_ITEM, LINE_SPACING_ENTRIES } from './text-document-paragraph-actions';
 import { PAGE_NUMBER_PRESETS } from './text-document-page-numbers';
+import { SPELLING_SUGGESTIONS_MAX } from '@/lib/spelling/spelling-checker';
 import { BUILDING_BLOCKS } from './text-document-building-blocks';
 import { CODE_BLOCK_ITEMS } from './text-document-code-blocks';
 
@@ -454,6 +455,16 @@ export function textDocumentMenus(format: TextDocumentFormat): OfficeCatalogue {
 // it alone offers. Suggest edits is for whoever may suggest, never a Viewer.
 export function textDocumentTextContextMenu(catalogue: OfficeCatalogue): OfficeEntry[] {
   return contextEntries(catalogue, [
+    // On a misspelt word, first (tools.md "Spelling and grammar"): its suggestions, each labelled by its binding.
+    ...Array.from({ length: SPELLING_SUGGESTIONS_MAX }, (_, i) =>
+      item(`spelling-suggestion-${i + 1}`, 'Suggestion', 'edit', { contextual: true, ...BUILT }),
+    ),
+    item('spelling-add-to-dictionary', 'Add to personal dictionary', 'edit', {
+      contextual: true,
+      ...BUILT,
+    }),
+    item('spelling-ignore', 'Ignore', 'edit', { contextual: true, ...BUILT }),
+    SEPARATOR,
     'cut',
     'copy',
     'paste',

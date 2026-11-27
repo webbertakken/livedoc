@@ -58,7 +58,8 @@ import { listKeysPlugin } from '@/lib/text-document/text-document-list-actions';
 import { tableKeysPlugin } from '@/lib/text-document/text-document-tables';
 import { useTextDocumentTables } from '@/lib/text-document/useTextDocumentTables';
 import { useTextDocumentBuildingBlocks } from '@/lib/text-document/useTextDocumentBuildingBlocks';
-import { codeBlockKeysPlugin } from '@/lib/text-document/text-document-code-blocks';
+import { codeBlockKeysPlugin, codeBlockOf } from '@/lib/text-document/text-document-code-blocks';
+import { spellingPlugin } from '@/lib/text-document/text-document-spelling';
 import { codeHighlightPlugin } from '@/lib/text-document/text-document-code-highlight-plugin';
 import { indentUnit } from '@/lib/text-document/indent-units';
 import {
@@ -153,6 +154,7 @@ import {
   pageSelectionPlugin,
 } from '@/lib/text-document/text-document-page-selection';
 import { useTextDocumentWordCount } from './useTextDocumentWordCount';
+import { useTextDocumentSpelling } from './useTextDocumentSpelling';
 import { useTextDocumentColumns } from './useTextDocumentColumns';
 import { breaksPlugin, sectionSetupAt } from '@/lib/text-document/text-document-breaks';
 import { horizontalLineActions } from '@/lib/text-document/text-document-horizontal-line';
@@ -347,6 +349,12 @@ export function TextDocumentSurface({
   const suggests = suggestsMode && !preview.previewing;
   const textWrites = writes || suggests;
   const listWrites = writes || (suggests && canEdit);
+  // Spelling (tools.md "Spelling and grammar"): what the writing's check reads, and the context menu on a misspelt word.
+  const spelling = useTextDocumentSpelling({
+    view: editorView,
+    textWrites,
+    ownerId: scope.ownerId,
+  });
   const suggesting = useTextDocumentSuggesting({ suggests, commenter });
   // A Participant in Suggesting sees an Editor's menus, with only what can be suggested running (office-shell.md "Modes").
   const proposals = useMemo(() => proposalsInMode(TEXT_DOCUMENT_MODES, level, mode), [level, mode]);
@@ -514,6 +522,11 @@ export function TextDocumentSurface({
           textDocumentLimitPlugin({ onRefused: () => setLimitReached('characters') }),
           // Several stretches selected at once (text-and-paragraphs.md "Selection").
           stretchesPlugin(),
+          // LiveDoc's own underlines where a dictionary ships, the browser's check elsewhere; code blocks never.
+          spellingPlugin({
+            ...spelling.source,
+            skipped: (block) => codeBlockOf(block, readFormatting().styles) !== undefined,
+          }),
           // The typing aids: smart quotes, substitutions, links, capitals, lists.
           typingAidsPlugin({
             read: () => typingAids.current(),
@@ -676,7 +689,6 @@ export function TextDocumentSurface({
             class: 'text-document-body whitespace-pre-wrap break-words outline-none',
             // The document's default family and size (fonts.md "Substitution").
             style: documentTextStyle(TextDocumentState.defaults(doc, live.current.format).text),
-            spellcheck: 'true',
           }),
         });
         editor.current = view;
@@ -742,6 +754,7 @@ export function TextDocumentSurface({
     drawsDrawings,
     drawingHosts,
     bindBody,
+    spelling.source,
   ]);
 
   useEffect(() => {
@@ -1229,6 +1242,7 @@ export function TextDocumentSurface({
       ...versionHistory.actions,
       ...notifications.actions,
       ...wordCount.actions,
+      ...spelling.actions,
       ...links.actions,
       ...bookmarks.actions,
       ...headingLinks.actions,
@@ -1253,6 +1267,7 @@ export function TextDocumentSurface({
       versionHistory.actions,
       notifications.actions,
       wordCount.actions,
+      spelling.actions,
       links.actions,
       bookmarks.actions,
       headingLinks.actions,
@@ -1390,6 +1405,7 @@ export function TextDocumentSurface({
       {clipboard.notice}
       {suggesting.notice}
       {pictures.notice}
+      {spelling.notice}
       {equationToolbar.shown && bodyInserts && state === 'ready' && editorView ? (
         <TextDocumentEquationToolbar
           onNew={() => newEquationFromToolbar(editorView)}

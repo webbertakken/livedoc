@@ -17,6 +17,17 @@
  * the phone breakpoint up the writing sits inside the page's own margins, centred in the pages' width; below it the
  * page keeps its 24 px sides.
  */
+/*
+ * A misspelt word (tools.md "Spelling and grammar"): a wavy red underline under it, Google's red on light paper and a
+ * lighter red on dark paper (default until a capture), drawn beside any underline the text has.
+ */
+.text-document-misspelt {
+  text-decoration-line: underline;
+  text-decoration-style: wavy;
+  text-decoration-color: light-dark(#d93025, #f28b82);
+  text-decoration-skip-ink: none;
+  text-underline-offset: 2px;
+}
 @media (width >= 40rem) {
   .text-document-page {
     padding: var(--page-top) calc((var(--pages-width) - var(--page-width)) / 2 + var(--page-right))

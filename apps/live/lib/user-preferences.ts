@@ -312,6 +312,9 @@ export type UserPreferences = {
   // Word count while typing (docs/specs/034-text-documents/tools.md "Word count"): the count box at the bottom left of a
   // text document’s writing. Missing === off.
   textDocumentWordCountWhileTyping?: boolean;
+  // The personal dictionary (docs/specs/034-text-documents/tools.md "Spelling and grammar"): words the spelling check
+  // takes as written, shared by every kind that checks spelling. Read through PersonalDictionary.parse.
+  personalDictionary?: unknown;
 };
 
 // How many excluded ids we keep. A document id is a 36-char UUID, so 200
