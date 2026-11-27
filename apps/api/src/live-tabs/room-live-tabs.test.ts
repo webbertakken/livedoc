@@ -516,6 +516,36 @@ describe('a text document update, once stored', () => {
     });
   });
 
+  it('tells the keeper of a sender whose presence shows no name or colour', async () => {
+    const { room, stored } = await heard();
+    const sender = {
+      ws,
+      presenceId: 'p1',
+      documentId: 'D',
+      level: 'edit' as const,
+      adderKey: 'k1',
+    };
+    await room.accept(sender, frame('t1', 'Typed'));
+    expect(stored).toHaveBeenCalledWith({ documentId: 'D', tabId: 't1' }, expect.any(Uint8Array), {
+      key: 'k1',
+      name: null,
+      color: null,
+    });
+  });
+
+  it('refuses to store the room’s own update where the room has no storage', async () => {
+    const room = new RoomLiveTabs(TEXT_DOCUMENT_LIVE_TAB, {
+      env: undefined,
+      enqueue: (step) => step(),
+      sequence: vi.fn(() => 7),
+      sendTo: vi.fn(),
+      position: () => ({ epoch: 'e' }),
+    });
+    await expect(
+      room.storeAndRelay('D', 't1', TextDocumentState.fromBody(Body.of('x'))),
+    ).rejects.toThrow(/no store/);
+  });
+
   it('tells the keeper nothing of a refused update', async () => {
     const { room, stored } = await heard();
     const sender = {
