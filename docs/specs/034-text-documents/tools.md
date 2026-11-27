@@ -1,6 +1,7 @@
 # Tools
 
-**Status: being built.** Word count is built; the other parts below are still to come.
+**Status: being built.** Word count, spelling (Dutch and French, with the card, the personal dictionary and automatic
+correction) and Preferences are built; the other parts below are still to come.
 
 Find and replace, word count, spelling and grammar, the dictionary, citations, preferences, accessibility settings,
 language and activity in a [text document](text-document.md), and what fork C3 (ruled: core only) leaves out.
