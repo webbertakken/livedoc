@@ -25,7 +25,7 @@ export function OfficeVersionMoreButton({ onOpen }: { onOpen: (anchor: DOMRect) 
         event.stopPropagation();
         onOpen(event.currentTarget.getBoundingClientRect());
       }}
-      className="flex size-8 shrink-0 items-center justify-center rounded-full text-(--office-ink) outline-none touch-target hover:bg-(--office-hover)"
+      className="relative flex size-field shrink-0 items-center justify-center rounded-full text-(--office-ink) outline-none touch-target hover:bg-(--office-hover)"
     >
       <MoreIcon />
     </button>

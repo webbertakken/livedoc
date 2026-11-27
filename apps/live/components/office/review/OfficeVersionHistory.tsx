@@ -290,7 +290,7 @@ export function OfficeVersionHistory({
                 type="checkbox"
                 checked={showChanges.checked}
                 onChange={(event) => showChanges.onChange(event.target.checked)}
-                className="size-4 accent-(--office-focus)"
+                className="size-icon-row accent-(--office-focus)"
               />
               Show changes
             </label>
