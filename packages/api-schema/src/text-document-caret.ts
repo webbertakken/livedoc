@@ -37,3 +37,7 @@ export const TEXT_DOCUMENT_VIEWER_COPY_HEADER = 'X-Viewer-Copy';
 /** The header a text document's file answer counts the pictures it left out in: media it could not read
  *  (docs/specs/034-text-documents/objects.md "Where the bytes live"). */
 export const TEXT_DOCUMENT_PICTURES_LEFT_OUT_HEADER = 'X-Pictures-Left-Out';
+
+/** The header a text document's file answer counts its conversion's losses in: 0 for the document's own format, else
+ *  the count of everything a converted copy could not hold (docs/specs/034-text-documents/files-and-print.md "Downloading"). */
+export const TEXT_DOCUMENT_CONVERSION_LOSSES_HEADER = 'X-Conversion-Losses';

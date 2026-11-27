@@ -75,7 +75,6 @@ test('a recoloured and adjusted picture is drawn so, and leaves as it came', asy
     media: { red: { mediaType: 'image/png', bytes: new Uint8Array(RED) } },
   };
   const written = writeTextDocumentFile(document, 'docx');
-  if (!written.ok) throw new Error(written.rejection);
   const file = test.info().outputPath('Recoloured.docx');
   writeFileSync(file, written.bytes);
 
@@ -136,7 +135,6 @@ test('a picture is recoloured and adjusted from Image options', async ({ page, p
     media: { red: { mediaType: 'image/png', bytes: new Uint8Array(RED) } },
   };
   const written = writeTextDocumentFile(document, 'odt');
-  if (!written.ok) throw new Error(written.rejection);
   const file = test.info().outputPath('Plain.odt');
   writeFileSync(file, written.bytes);
 

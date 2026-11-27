@@ -70,7 +70,6 @@ describe('conversion', () => {
     ]);
     const converted = convertTextDocument(padded, 'ooxml').document;
     const written = writeTextDocumentFile(converted, 'docx');
-    if (!written.ok) throw new Error(written.rejection);
     const read = await readTextDocumentFile(written.bytes);
     if (!read.ok) throw new Error(read.rejection);
     expect(modelOf(read.document)).toEqual(modelOf(converted));
@@ -105,7 +104,7 @@ describe('conversion', () => {
         expect(document.format).toBe(to);
         expect(document.source).toBeUndefined();
         const written = writeTextDocumentFile(document, type);
-        const read = written.ok ? await readTextDocumentFile(written.bytes) : undefined;
+        const read = await readTextDocumentFile(written.bytes);
         expect(read?.ok && modelOf(read.document)).toEqual(modelOf(document));
       });
 
@@ -125,7 +124,7 @@ describe('conversion', () => {
     expect(document.body.some((b) => b.type === 'kept')).toBe(false);
     expect(JSON.stringify(document)).not.toContain('"kept"');
     const written = writeTextDocumentFile(document, 'docx');
-    expect(written.ok && (await readTextDocumentFile(written.bytes)).ok).toBe(true);
+    expect((await readTextDocumentFile(written.bytes)).ok).toBe(true);
   });
 
   // page-layout.md "Page numbers": a continuous section's start at has no page of its own in an OpenDocument file.

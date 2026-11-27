@@ -89,8 +89,17 @@ export function syncText(
   const added = want.slice(start, want.length - end);
   if (removed === 0 && added.length === 0) return;
   const delta: { retain?: number; delete?: number; insert?: unknown; attributes?: object }[] = [];
-  if (start > 0) delta.push({ retain: start });
-  if (removed > 0) delta.push({ delete: removed });
+  const lead = lengthOf(have.slice(0, start));
+  const had = have.slice(start, have.length - end);
+  // The same characters formatted otherwise are formatted in place: what anchors on them (a comment) holds.
+  if (sameContent(had, added)) {
+    if (lead > 0) delta.push({ retain: lead });
+    delta.push(...formatting(had, added));
+    target.applyDelta(delta, { sanitize: false });
+    return;
+  }
+  if (lead > 0) delta.push({ retain: lead });
+  if (removed > 0) delta.push({ delete: lengthOf(had) });
   // Each inserted unit carries its whole formatting, nulls for what it lacks, so nothing leaks in from beside it.
   let before = have[start - 1]?.attributes ?? {};
   for (const run of unitRuns(added)) {
@@ -101,6 +110,42 @@ export function syncText(
     before = run.attributes ?? {};
   }
   target.applyDelta(delta, { sanitize: false });
+}
+
+/** How long units are in the text's own measure (UTF-16 code units; an object is one). */
+const lengthOf = (units: readonly Unit[]): number =>
+  units.reduce((sum, u) => sum + (typeof u.insert === 'string' ? u.insert.length : 1), 0);
+
+/** Whether two stretches hold the same characters and objects, whatever their formatting. */
+const sameContent = (a: readonly Unit[], b: readonly Unit[]): boolean =>
+  a.length === b.length &&
+  a.every((u, i) =>
+    typeof u.insert === 'string'
+      ? u.insert === b[i]!.insert
+      : canonical(u.insert) === canonical(b[i]!.insert),
+  );
+
+/** The retains that format `had` as `want`, unit for unit: a unit already formatted so is only retained. */
+function formatting(
+  had: readonly Unit[],
+  want: readonly Unit[],
+): { retain: number; attributes?: object }[] {
+  const out: { retain: number; attributes?: Record<string, unknown>; key: string }[] = [];
+  had.forEach((unit, i) => {
+    const wanted = want[i]!;
+    let attributes: Record<string, unknown> | undefined;
+    if (unit.marks !== wanted.marks) {
+      attributes = {};
+      for (const key of Object.keys(unit.attributes ?? {})) attributes[key] = null;
+      Object.assign(attributes, wanted.attributes ?? {});
+    }
+    const key = attributes ? canonical(attributes) : '';
+    const length = typeof unit.insert === 'string' ? unit.insert.length : 1;
+    const last = out.at(-1);
+    if (last && last.key === key) last.retain += length;
+    else out.push({ retain: length, ...(attributes ? { attributes } : {}), key });
+  });
+  return out.map(({ key: _, ...op }) => op);
 }
 
 type Node = Y.XmlElement | Y.XmlText;
@@ -130,22 +175,14 @@ function syncAttributes(source: Y.XmlElement, target: Y.XmlElement): void {
   for (const name of Object.keys(have)) if (!(name in want)) target.removeAttribute(name);
 }
 
-/** One node made to read as another where both are texts or elements of one name; false where they cannot. */
-function syncNode(source: Node, target: Node, keys: WeakMap<Node, string>): boolean {
+/** One node made to read as another of its kind: two texts, or two elements of one name. */
+function syncNode(source: Node, target: Node, keys: WeakMap<Node, string>): void {
   if (source instanceof Y.XmlText && target instanceof Y.XmlText) {
     syncText(source, target);
-    return true;
+    return;
   }
-  if (
-    source instanceof Y.XmlElement &&
-    target instanceof Y.XmlElement &&
-    source.nodeName === target.nodeName
-  ) {
-    syncAttributes(source, target);
-    syncChildren(source, target, keys);
-    return true;
-  }
-  return false;
+  syncAttributes(source as Y.XmlElement, target as Y.XmlElement);
+  syncChildren(source as Y.XmlElement, target as Y.XmlElement, keys);
 }
 
 function syncChildren(source: Container, target: Container, keys: WeakMap<Node, string>): void {
@@ -161,25 +198,94 @@ function syncChildren(source: Container, target: Container, keys: WeakMap<Node, 
     same(want[want.length - 1 - end]!, have[have.length - 1 - end]!)
   )
     end += 1;
-  // The differing middles, matched pairwise from their start where they can be; the rest taken out or cloned in.
+  // The differing middles, aligned by node name (a block the other side lacks is taken out or cloned in, the rest
+  // made to read alike in place, so what anchors on them holds); past ALIGN_CELLS_MAX, matched pairwise from the start.
   const wanted = want.slice(start, want.length - end);
   const had = have.slice(start, have.length - end);
   let index = start;
+  for (const step of alignment(wanted, had, keys)) {
+    if (step.kind === 'same') {
+      syncNode(step.want, step.have, keys);
+      index += 1;
+    } else if (step.kind === 'out') target.delete(index, 1);
+    else {
+      target.insert(index, [step.want.clone()]);
+      index += 1;
+    }
+  }
+}
+
+/** The most cells the alignment of two differing middles may weigh: past it, they are matched pairwise. */
+export const ALIGN_CELLS_MAX = 4_000_000;
+
+type Step =
+  | { kind: 'same'; want: Node; have: Node }
+  | { kind: 'out'; have: Node }
+  | { kind: 'in'; want: Node };
+
+const nameOf = (node: Node) => (node instanceof Y.XmlText ? '#text' : node.nodeName);
+
+/** Steps that turn `had` into `wanted`: the longest run of nodes alike by name kept, preferring equal content. */
+function alignment(
+  wanted: readonly Node[],
+  had: readonly Node[],
+  keys: WeakMap<Node, string>,
+): Step[] {
+  const n = wanted.length;
+  const m = had.length;
+  if (n * m > ALIGN_CELLS_MAX) return pairwise(wanted, had);
+  // weight[i][j]: the best score aligning wanted[i..] with had[j..]; a pair alike by name scores 2, by content 3.
+  const width = m + 1;
+  const weight = new Uint32Array((n + 1) * width);
+  const score = (i: number, j: number) =>
+    nameOf(wanted[i]!) !== nameOf(had[j]!)
+      ? 0
+      : keyOf(wanted[i]!, keys) === keyOf(had[j]!, keys)
+        ? 3
+        : 2;
+  for (let i = n - 1; i >= 0; i -= 1)
+    for (let j = m - 1; j >= 0; j -= 1) {
+      const pair = score(i, j);
+      weight[i * width + j] = Math.max(
+        pair > 0 ? pair + weight[(i + 1) * width + j + 1]! : 0,
+        weight[(i + 1) * width + j]!,
+        weight[i * width + j + 1]!,
+      );
+    }
+  const steps: Step[] = [];
+  let i = 0;
+  let j = 0;
+  while (i < n || j < m) {
+    const pair = i < n && j < m ? score(i, j) : 0;
+    if (pair > 0 && weight[i * width + j] === pair + weight[(i + 1) * width + j + 1]!) {
+      steps.push({ kind: 'same', want: wanted[i]!, have: had[j]! });
+      i += 1;
+      j += 1;
+    } else if (j < m && (i === n || weight[i * width + j] === weight[i * width + j + 1]!)) {
+      steps.push({ kind: 'out', have: had[j]! });
+      j += 1;
+    } else {
+      steps.push({ kind: 'in', want: wanted[i]! });
+      i += 1;
+    }
+  }
+  return steps;
+}
+
+/** The middles matched pairwise from their start while their names agree; the rest taken out, then cloned in. */
+function pairwise(wanted: readonly Node[], had: readonly Node[]): Step[] {
   let pairs = 0;
   while (
     pairs < wanted.length &&
     pairs < had.length &&
-    syncNode(wanted[pairs]!, had[pairs]!, keys)
-  ) {
+    nameOf(wanted[pairs]!) === nameOf(had[pairs]!)
+  )
     pairs += 1;
-    index += 1;
-  }
-  if (had.length > pairs) target.delete(index, had.length - pairs);
-  if (wanted.length > pairs)
-    target.insert(
-      index,
-      wanted.slice(pairs).map((n) => n.clone()),
-    );
+  return [
+    ...wanted.slice(0, pairs).map((want, k): Step => ({ kind: 'same', want, have: had[k]! })),
+    ...had.slice(pairs).map((have): Step => ({ kind: 'out', have })),
+    ...wanted.slice(pairs).map((want): Step => ({ kind: 'in', want })),
+  ];
 }
 
 /** Makes `target` read as `source` by the least change, in the caller's transaction. */

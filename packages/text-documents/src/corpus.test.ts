@@ -69,8 +69,7 @@ describe('the corpus', () => {
       if (!read.ok) return;
       expect({ structure: structure(read.document), report: read.report }).toMatchSnapshot();
       const written = writeTextDocumentFile(read.document, read.fileType);
-      expect(written.ok).toBe(true);
-      if (!written.ok) return;
+      expect(written.losses).toEqual([]);
       const again = await readTextDocumentFile(written.bytes);
       const a = again.ok ? wholeOf(again.document) : 'refused';
       const b = wholeOf(read.document);

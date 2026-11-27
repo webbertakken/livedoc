@@ -1,6 +1,7 @@
 // A text document's file written in this browser (docs/specs/034-text-documents/live-editing-and-storage.md "A text
 // document in This Browser"): what the file route writes from the room's state, written here from the live one, for
-// a text document no room holds. Named after the document, in the format it is held in.
+// a text document no room holds. Named after the document; a file of the other format is a converted copy
+// (standard-mapping.md "Conversion").
 import type * as Y from 'yjs';
 import type { TextDocumentFormat } from '@livedoc/document';
 import type { TextDocumentFileType } from '@livedoc/text-documents';
@@ -27,7 +28,7 @@ export async function textDocumentFileOf(
   file: {
     format: TextDocumentFormat;
     name: string;
-    // The file asked for: the format's own (an OpenDocument one may be flat); another format's is a conversion.
+    // The file asked for: the format's own (an OpenDocument one may be flat), or the other format's converted copy.
     type?: TextDocumentFileType;
     // A gallery media's bytes (objects.md "Where the bytes live"): a picture it cannot read is left out.
     readImage?: (imageId: string) => Promise<Uint8Array | undefined>;
@@ -37,8 +38,6 @@ export async function textDocumentFileOf(
 ): Promise<WrittenTextDocumentFile> {
   const { format, name, readImage = async () => undefined } = file;
   const type = file.type ?? (format === 'ooxml' ? 'docx' : 'odt');
-  if ((type === 'docx') !== (format === 'ooxml'))
-    throw new Error('text document file refused: format_not_native');
   const live = TextDocumentState.document(doc, format);
   // The fresh PNGs hold their bytes, so the gallery is not asked for them.
   const drawn = file.drawn?.size ? await DrawingPictures.redrawn(live, file.drawn) : live;
@@ -50,7 +49,6 @@ export async function textDocumentFileOf(
     { ...read.document, metadata: { ...live.metadata, title: name } },
     type,
   );
-  if (!written.ok) throw new Error(`text document file refused: ${written.rejection}`);
   return {
     blob: new Blob([written.bytes.slice().buffer], { type: MEDIA_TYPES[type] }),
     fileName: downloadFileName(name, type, 'Untitled'),

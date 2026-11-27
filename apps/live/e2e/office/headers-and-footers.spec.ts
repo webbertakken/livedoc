@@ -37,7 +37,6 @@ function wordFile(path: string) {
     },
   };
   const written = writeTextDocumentFile(headed, 'docx');
-  if (!written.ok) throw new Error(written.rejection);
   writeFileSync(path, written.bytes);
 }
 

@@ -73,6 +73,12 @@ export const ROLE_IDS: Record<'odf' | 'ooxml', Record<StyleRole, string>> = {
   },
 };
 
+/** The role a built-in style's id names, in either format. */
+const roleOfBuiltInId = (id: string): StyleRole | undefined =>
+  (Object.keys(ROLE_IDS.odf) as StyleRole[]).find(
+    (role) => ROLE_IDS.odf[role] === id || ROLE_IDS.ooxml[role] === id,
+  );
+
 const ROLE_NAMES: Record<StyleRole, string> = {
   normal: 'Normal text',
   title: 'Title',
@@ -154,8 +160,18 @@ export const Styles = {
     },
     text: { font: 'Arial', size: 11 },
   }),
-  byId: (styles: readonly Style[], id: string | undefined): Style | undefined =>
-    id === undefined ? undefined : styles.find((s) => s.id === id),
+  /**
+   * The style with this id; else, for a built-in style's id in either format, the style with that role: a paragraph
+   * written under the other format while a conversion arrived still reads as its heading (standard-mapping.md
+   * "Conversion").
+   */
+  byId: (styles: readonly Style[], id: string | undefined): Style | undefined => {
+    if (id === undefined) return undefined;
+    const own = styles.find((s) => s.id === id);
+    if (own) return own;
+    const role = roleOfBuiltInId(id);
+    return role ? styles.find((s) => s.role === role) : undefined;
+  },
   /** The id of the style with this role, if the document has one. */
   idOfRole: (styles: readonly Style[], role: StyleRole): string | undefined =>
     styles.find((s) => s.role === role)?.id,

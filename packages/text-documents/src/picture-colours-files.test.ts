@@ -21,7 +21,6 @@ const read = async (bytes: Uint8Array) => {
 };
 const write = (document: TextDocument, type: TextDocumentFileType) => {
   const written = writeTextDocumentFile(document, type);
-  if (!written.ok) throw new Error(written.rejection);
   return written.bytes;
 };
 const inlinesOf = (document: TextDocument): Inline[] =>

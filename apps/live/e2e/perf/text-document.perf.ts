@@ -37,7 +37,6 @@ function longDocument(): string {
     i % 2 ? '' : `${i / 2 + 1}. ${PARAGRAPH}`,
   );
   const written = writeTextDocumentFile(TextDocument.fromTexts(texts, { title: 'Long' }), 'fodt');
-  if (!written.ok) throw new Error(written.rejection);
   const path = join(mkdtempSync(join(tmpdir(), 'livedoc-long-')), 'Long.fodt');
   writeFileSync(path, written.bytes);
   return path;

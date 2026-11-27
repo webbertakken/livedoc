@@ -270,6 +270,15 @@ export {
   type TextDocumentWrite,
 } from './files';
 export { conversionLosses, convertTextDocument, type ConversionLoss } from './convert';
+export {
+  CONVERSION_LINES,
+  CONVERSION_NAMES_SHOWN,
+  conversionLead,
+  conversionLines,
+  conversionTitle,
+  formatName,
+  type ConversionPurpose,
+} from './conversion-copy';
 export { isSafeLink, type DroppedReason, type ImportReport, type ReportItem } from './report';
 export {
   BODY_BLOCKS,

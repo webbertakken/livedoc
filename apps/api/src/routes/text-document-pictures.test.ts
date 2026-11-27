@@ -84,7 +84,6 @@ async function wordFileWith(...pictures: Uint8Array[]): Promise<Uint8Array> {
     ),
   };
   const written = writeTextDocumentFile(document, 'docx');
-  if (!written.ok) throw new Error('fixture');
   return written.bytes;
 }
 

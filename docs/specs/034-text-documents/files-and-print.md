@@ -1,6 +1,7 @@
 # Files and print
 
-**Status: specified.** Nothing is built.
+**Status: partly built.** Built: Open (a `.odt`, `.fodt` or `.docx` from the computer), Download in the
+OpenDocument and Word formats, conversion. The rest is specified.
 
 Opening, importing, downloading, printing, copying, sharing, emailing and trashing a [text document](text-document.md).
 Both ODF and OOXML are native (fork C1, ruled): a file keeps the format it arrived in.
@@ -45,8 +46,13 @@ Each download is named after the document. A Viewer may download unless the owne
 Download as PDF offers "Keep in LiveDoc as a PDF document", which stores the written PDF beside its source as a
 [PDF document](../035-pdf-documents/files-print-and-sync.md#other-kinds-meeting-a-pdf); every kind's PDF is written by
 the repository's one PDF writer.
-A download is `GET /api/documents/:id/text-documents/:tabId/file?type=odt|fodt|docx`, written from the live state:
-`400 file_type_unknown` for any other type, `409 format_not_native` for the other format until conversion is built.
+A download is `GET /api/documents/:id/text-documents/:tabId/file?type=odt|fodt|docx`, written from the live state
+(`400 file_type_unknown` for any other type); the other format is a converted copy, its losses counted in the
+`X-Conversion-Losses` header.
+
+**The other format** asks first, as a spreadsheet does: **Download as Word?** (or **Download as OpenDocument?**) lists
+what the file cannot hold, as [Conversion](standard-mapping.md#conversion) words it, with **Download** and **Cancel**;
+with nothing lost it says so and still asks (default). The text document keeps its format.
 
 ## Import report
 

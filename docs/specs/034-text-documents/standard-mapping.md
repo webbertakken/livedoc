@@ -259,13 +259,23 @@ shapes and text boxes, and constructs of newer versions of either standard.
 
 ## Conversion
 
-- **Only by a person's choice**: File > Convert to Word format, or Convert to OpenDocument format, for an Editor.
-- **Losses first.** The dialog lists what the other format cannot hold before anything changes: kept content (by
-  name and count) and each construct of [Documented losses](#documented-losses) present in this document. **Convert**
-  runs it as one undo step; **Cancel** leaves it.
-- **Downloading in the other format** writes a converted copy with the same losses listed in the download's report;
-  the text document keeps its format.
-- Recorded on the document's [timeline](../013-workspace/timeline.md); `Document · Changed · TextDocumentConverted`.
+- **Only by a person's choice**: File > Convert to Word format, or Convert to OpenDocument, for an Editor in any
+  editing mode (it changes no writing a suggestion could hold).
+- **Losses first.** The dialog, **Convert to Word?** (or **Convert to OpenDocument?**), lists what the other format
+  cannot hold before anything changes: kept content (by name and count) and each construct of
+  [Documented losses](#documented-losses) present in this document, one line a kind; with none, "Everything in this
+  document fits the Word format." **Convert** runs it; **Cancel** leaves it.
+- **One undo step.** Undo puts the format and everything the conversion changed back, kept content included, and
+  leaves what others wrote since; Redo converts again.
+- **Where it runs**: in the browser holding the document, so a document in This Browser converts offline. The
+  writing is made to read as the converted document by the least change (comment anchors on unchanged text hold),
+  then the tab's format changes. A style id of the other format's built-in styles reads as that style, so a paragraph
+  someone wrote between the two reads as its heading (default).
+- **Downloading in the other format** writes a converted copy after the same list
+  ([Downloading](files-and-print.md#downloading)); the text document keeps its format.
+- Shown in [Version history](review.md#version-history) as its author's change, as any edit is; no
+  [Timeline](../013-workspace/timeline.md) event, as a spreadsheet's conversion makes none (default).
+  `Document · Changed · TextDocumentConverted`.
 
 ## Documented losses
 

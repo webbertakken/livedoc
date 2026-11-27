@@ -41,7 +41,6 @@ describe('a content control in ODF', () => {
     );
     if (!read.ok) throw new Error(read.rejection);
     const written = writeTextDocumentFile(read.document, 'fodt');
-    if (!written.ok) throw new Error(written.rejection);
     expect(new TextDecoder().decode(written.bytes)).toContain('loext:dropdown="true"');
   });
 });
@@ -61,7 +60,6 @@ describe('a content control in OOXML', () => {
       ' ok',
     ]);
     const written = writeTextDocumentFile(read.document, 'docx');
-    if (!written.ok) throw new Error(written.rejection);
     const again = await first(written.bytes);
     expect(shape(again.inlines)).toEqual(['Due ', '[Nov 24]', ' ok']);
   });

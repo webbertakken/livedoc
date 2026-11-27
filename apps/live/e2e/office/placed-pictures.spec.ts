@@ -92,7 +92,6 @@ test('placed pictures are drawn at their place, the text kept clear as each wrap
     media: { green: { mediaType: 'image/png', bytes: new Uint8Array(GREEN) } },
   };
   const written = writeTextDocumentFile(made, 'docx');
-  if (!written.ok) throw new Error(written.rejection);
   const file = test.info().outputPath('Placed.docx');
   writeFileSync(file, written.bytes);
 
