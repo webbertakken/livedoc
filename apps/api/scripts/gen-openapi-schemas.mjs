@@ -65,6 +65,7 @@ export const ROOT_TYPES = [
   'WorkbookSheetRenameRequest',
   'WorkbookSheetRenameResponse',
   'WorkbookSettingsRequest',
+  'WorkbookFunctionsRequest',
   'WorkbookConnectRequest',
   'WorkbookSettingsResponse',
   'WorkbookConversionResponse',

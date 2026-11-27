@@ -4,7 +4,8 @@
 import type { StoredRef } from '../sheet';
 import type { Node } from '../formula/ast';
 import { deref, lift, tooBig, UNCALLED_LAMBDA, type Thunk } from '../formula/fn';
-import { callLambda } from '../formula/lambda';
+import { budgetCalls, callLambda, plural } from '../formula/lambda';
+import { NAMED_FUNCTION_DEPTH_MAX, type NamedFunctionDef } from '../named-functions';
 import { liftedCall } from '../formula/lifted-parameters';
 import { FUNCTIONS } from '../formula/registry';
 import { resolveRef } from '../formula/stored';
@@ -111,6 +112,32 @@ function thunk(node: Node | null, refs: readonly StoredRef[], f: Frame): Thunk {
   });
 }
 
+export const NAMED_FUNCTION_TOO_DEEP = 'This named function calls itself too deeply';
+
+// A named function called by its name: its count of values checked, one call spent from the budget, as a LAMBDA's.
+function callNamed(def: NamedFunctionDef, values: readonly EvalValue[], f: Frame): EvalValue {
+  if (values.length !== def.params.length)
+    return err(
+      '#N/A',
+      `Wrong number of arguments to ${def.name}. Expected exactly ${plural(def.params.length)}, but got ${plural(values.length)}.`,
+    );
+  return budgetCalls(f, 1) ?? applyNamed(def, values, f);
+}
+
+// A named function's definition worked out with its placeholders as the values given (formulas.md "Named functions"):
+// the caller's LET and LAMBDA names unseen, nested at most NAMED_FUNCTION_DEPTH_MAX.
+function applyNamed(def: NamedFunctionDef, values: readonly EvalValue[], f: Frame): EvalValue {
+  const depth = f.fnDepth ?? 0;
+  if (depth >= NAMED_FUNCTION_DEPTH_MAX) return err('#NUM!', NAMED_FUNCTION_TOO_DEEP);
+  const scope = new Map(def.params.map((p, i) => [p, values[i]!]));
+  return evaluate(def.ast, [], { ...f, scope, fnDepth: depth + 1 });
+}
+
+// A named function named without brackets, handed to a helper: a LAMBDA of its placeholders, whose callers count it.
+function namedLambda(def: NamedFunctionDef, f: Frame): EvalValue {
+  return { lambda: { params: def.params, apply: (values) => applyNamed(def, values, f) } };
+}
+
 export function evaluate(node: Node, refs: readonly StoredRef[], f: Frame): EvalValue {
   switch (node.k) {
     case 'num':
@@ -127,7 +154,9 @@ export function evaluate(node: Node, refs: readonly StoredRef[], f: Frame): Eval
       if (bound !== undefined) return bound;
       const pos = f.ctx.name?.(node.v);
       const range = pos ? posToRange(pos, f) : null;
-      return range ? { ref: range } : err('#NAME?', `Unknown name ${node.v}`);
+      if (range) return { ref: range };
+      const named = f.ctx.fn?.(node.v);
+      return named ? namedLambda(named, f) : err('#NAME?', `Unknown name ${node.v}`);
     }
     case 'stored': {
       const ref = refs[node.i];
@@ -192,8 +221,15 @@ export function evaluate(node: Node, refs: readonly StoredRef[], f: Frame): Eval
           f,
         );
       const def = FUNCTIONS[node.name];
-      if (!def || !Object.prototype.hasOwnProperty.call(FUNCTIONS, node.name))
-        return err('#NAME?', `Unknown function ${node.name}`);
+      if (!def || !Object.prototype.hasOwnProperty.call(FUNCTIONS, node.name)) {
+        const named = f.ctx.fn?.(node.name);
+        if (!named) return err('#NAME?', `Unknown function ${node.name}`);
+        return callNamed(
+          named,
+          node.args.map((a) => (a ? evaluate(a, refs, f) : null)),
+          f,
+        );
+      }
       const n = node.args.length;
       if (n < def.min || n > def.max) {
         const expected =

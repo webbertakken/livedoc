@@ -154,6 +154,34 @@ describe('the cell editor', () => {
     expect(bold?.textContent).toContain(',');
   });
 
+  // data-tools.md "Named ranges and named functions": the spreadsheet's own functions are offered and helped.
+  it('offers a named function and shows its description and its argument’s details', () => {
+    h.store.workbook('t1').setFunctions([
+      {
+        name: 'TWICE_IT',
+        params: ['x', 'y'],
+        body: '=x*2',
+        description: 'Doubles it',
+        hints: [null, { description: 'Ignored', example: '4' }],
+      },
+      { name: 'TWICE_NOT', params: [], body: '=2' },
+    ]);
+    show(h);
+    act(() => actions.startEdit('type', '='));
+    fireEvent.change(editor(), { target: { value: '=twice', selectionStart: 6 } });
+    expect(screen.getAllByRole('option').map((o) => o.textContent)).toEqual([
+      'TWICE_ITDoubles it',
+      'TWICE_NOTNamed function',
+    ]);
+    fireEvent.change(editor(), { target: { value: '=TWICE_IT(1, ', selectionStart: 12 } });
+    const note = screen.getByRole('note');
+    expect(note.textContent).toBe('TWICE_IT(x, y)Doubles ity: IgnoredExample: 4');
+    const bold = [...note.querySelectorAll('span')].find((s) => s.style.fontWeight === '700');
+    expect(bold?.textContent).toBe(', y');
+    fireEvent.change(editor(), { target: { value: '=TWICE_NOT(', selectionStart: 11 } });
+    expect(screen.getByRole('note').textContent).toBe('TWICE_NOT()');
+  });
+
   it('underlines what cannot be read and says why, until the draft changes', () => {
     show(h);
     act(() => actions.startEdit('type', '=SUM(1,'));

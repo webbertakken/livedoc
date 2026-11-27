@@ -148,6 +148,31 @@ settings"). A Plan Sheet has none of its own: it reads as the viewer's browser d
   whose cells are all deleted loses its name, and formulas using it read `#NAME?`.
 - A name in a formula is kept as typed; renaming or removing a name does not rewrite formulas.
 
+### Named functions
+
+- A **named function** is a spreadsheet's own function, made in Data › Named Functions
+  ([Data tools](data-tools.md#named-ranges-and-named-functions)): a name, its argument placeholders and a definition
+  formula reading them by name. With `CONTAINS(search_query, search_range)` defined as
+  `=NOT(ISERROR(MATCH(search_query, search_range, 0)))`, `=CONTAINS(B3, B3:B14)` works out the definition with
+  `search_query` read as `B3` and `search_range` as `B3:B14`. Every sheet of the spreadsheet may call it; a Plan
+  Sheet has none.
+- An argument is passed as it is worked out: a range stays a range, a value a value, a `LAMBDA` a `LAMBDA`. Inside
+  the definition a placeholder hides a named range of its name, as a `LET` name does; the caller's `LET` and
+  `LAMBDA` names are not seen.
+- Called with another count of values it is `#N/A` ("Wrong number of arguments to CONTAINS. Expected exactly 2
+  arguments, but got 1 argument."). Handed to a helper without brackets (`=MAP(A1:A9, DOUBLE)`), it is applied as a
+  `LAMBDA` of its placeholders.
+- A definition may call other named functions, and itself: each call counts against the recalculation budget as a
+  `LAMBDA`'s does, and calls nested deeper than 100 are `#NUM!` ("This named function calls itself too deeply")
+  (default, D300).
+- A definition reads cells through its placeholders and named ranges; until named functions come from files, a
+  reference of its own (`A1`, `Sheet2!B:B`) is refused when it is saved ("Pass the cell as an argument, or use a
+  named range"). Then, as Google's, a reference in a definition is kept as an absolute reference to its sheet,
+  follows that sheet's renames and its rows and columns inserted or deleted as a formula's references do, and is
+  `#REF!` once its sheet is deleted (D301, ruled 2026-11-26).
+- Changing or removing a named function works every formula out again; a call to one removed is `#NAME?` ("Unknown
+  function CONTAINS"), as any unknown function is.
+
 ### Plan cards
 
 Four functions read the document's [items](../026-plan/items.md) (its cards), every live card (not archived, not in
@@ -1622,4 +1647,9 @@ The code cites each by its id.
   units and may cut a character in two (`LEFT("😀a", 1)` is the emoji); `LEN` counts as the meaning does (default).
 - **D103** ACCRINT past the first interest date in bases 1 to 3: The securities' day count, as Google's there follows
   no day count found (measured: 213.5 days of a 214-day span at Actual/365) (default).
+- **D300** How deep named functions call each other: 100 calls deep, past which the formula is `#NUM!`, so a definition
+  calling itself without end stops before the browser's own stack does (default).
+- **D301** A cell reference in a named function's definition: Refused until named functions are read from files, then
+  kept as Google keeps it, an absolute reference to its sheet adjusted as a formula's are (ruled by the Director,
+  2026-11-26: a refusal for good would turn files' LAMBDA names into errors).
 - The imports' defaults, D61 to D66 and D72 to D74, are kept in [Imports from the web](imports.md#defaults).

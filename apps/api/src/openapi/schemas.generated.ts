@@ -10780,6 +10780,58 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
     ],
     "type": "string"
   },
+  "NamedFunction": {
+    "additionalProperties": false,
+    "properties": {
+      "body": {
+        "type": "string"
+      },
+      "description": {
+        "type": "string"
+      },
+      "hints": {
+        "items": {
+          "anyOf": [
+            {
+              "$ref": "#/components/schemas/NamedFunctionHint"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "type": "array"
+      },
+      "name": {
+        "type": "string"
+      },
+      "params": {
+        "items": {
+          "type": "string"
+        },
+        "type": "array"
+      }
+    },
+    "required": [
+      "name",
+      "params",
+      "body"
+    ],
+    "type": "object"
+  },
+  "NamedFunctionHint": {
+    "additionalProperties": false,
+    "description": "An argument's description and example, as the function help shows them.",
+    "properties": {
+      "description": {
+        "type": "string"
+      },
+      "example": {
+        "type": "string"
+      }
+    },
+    "type": "object"
+  },
   "NoteCrop": {
     "additionalProperties": false,
     "properties": {
@@ -19480,6 +19532,21 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
     ],
     "type": "string"
   },
+  "WorkbookFunctionsRequest": {
+    "additionalProperties": false,
+    "properties": {
+      "functions": {
+        "items": {
+          "$ref": "#/components/schemas/NamedFunction"
+        },
+        "type": "array"
+      }
+    },
+    "required": [
+      "functions"
+    ],
+    "type": "object"
+  },
   "WorkbookKeptDto": {
     "additionalProperties": false,
     "description": "Kept content as it travels: the POST body, and GET's `kept`.",
@@ -19576,6 +19643,12 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
     "properties": {
       "format": {
         "$ref": "#/components/schemas/WorkbookFormat"
+      },
+      "functions": {
+        "items": {
+          "$ref": "#/components/schemas/NamedFunction"
+        },
+        "type": "array"
       },
       "importsAllowed": {
         "const": true,

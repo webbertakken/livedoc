@@ -79,6 +79,17 @@ describe('formula assist', () => {
     expect(s2.names.at(-1)).toBe('Summary');
     expect(acceptFunction('=sum', s2, 4, 'SUM')).toEqual({ draft: '=SUM(', caret: 5 });
   });
+  // formulas.md "Named functions": the spreadsheet's own after the built-in ones, before the named ranges.
+  it('suggests the named functions, and knows the argument the caret is in one', () => {
+    const m = functionMatches('=con', 4, 20, ['Contacts'], ['CONTAINS', 'TWICE'])!;
+    expect(m.names.slice(-2)).toEqual(['CONTAINS', 'Contacts']);
+    expect(m.names.slice(0, -2).every((n) => n.startsWith('CON'))).toBe(true);
+    expect(functionMatches('=twi', 4, 8, [], ['CONTAINS', 'TWICE'])!.names).toEqual(['TWICE']);
+    expect(acceptFunction('=con', m, 4, 'CONTAINS')).toEqual({ draft: '=CONTAINS(', caret: 10 });
+    const named = new Set(['MY_FN']);
+    expect(argumentAt('=my_fn(1, ', 10, ',', named)).toEqual({ name: 'MY_FN', index: 1 });
+    expect(argumentAt('=my_fn(1, ', 10, ',')).toBeNull();
+  });
   it('knows the argument the caret is in', () => {
     expect(argumentAt('=IF(A1>2, SUM(1,', 16, ',')).toEqual({ name: 'SUM', index: 1 });
     expect(argumentAt('=IF(A1>2, SUM(1,2), ', 20, ',')).toEqual({ name: 'IF', index: 2 });

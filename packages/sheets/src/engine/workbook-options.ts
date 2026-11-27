@@ -6,6 +6,7 @@ import type { ImportAccess } from '../imports/import-request';
 import type { SheetLimits } from '../sheet-limits';
 import type { Sheet } from '../sheet';
 import type { Iteration } from './loops';
+import type { NamedFunction } from '../named-functions';
 
 export type WorkbookOptions = {
   sheets: readonly Sheet[];
@@ -26,6 +27,8 @@ export type WorkbookOptions = {
   arrays?: ArrayDialect;
   // Iterative calculation (settings.md "Calculation"); off by default.
   iteration?: Iteration;
+  // A spreadsheet's named functions (formulas.md "Named functions"); absent, none.
+  functions?: readonly NamedFunction[];
   // Note each formula value forgotten, for takeForgotten (the Worker's engine, sending what changed).
   trackForgotten?: boolean;
   // An editor's engine fetches imports (imports.md), access allowed or not; absent, imports read their refusal.

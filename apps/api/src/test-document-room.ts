@@ -113,6 +113,8 @@ export function testDocumentRoom(
   kv: Map<string, unknown>;
   // Every key-value and alarm write the room asked of its storage, the same value again included.
   storageWrites: () => number;
+  // The storage itself, so a test can make one of its calls fail as the runtime's may.
+  storage: Pick<DurableObjectStorage, 'setAlarm' | 'deleteAlarm' | 'getAlarm'>;
 } {
   const sql = new DatabaseSync(':memory:');
   sql.exec('PRAGMA foreign_keys = ON');
@@ -197,6 +199,7 @@ export function testDocumentRoom(
     kv,
     wake: () => new DocumentRoom(state, env),
     storageWrites: () => writes,
+    storage,
   };
 }
 

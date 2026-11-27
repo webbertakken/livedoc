@@ -5,6 +5,7 @@ import type { FileMeaning } from './formula/meaning';
 import { readTheme, type SpreadsheetTheme } from './themes/spreadsheet-theme';
 import type { Rand } from './ids';
 import { emptyLayout, type SheetLayout } from './sheet';
+import { readNamedFunctions, type NamedFunction } from './named-functions';
 
 /** The native file format a workbook keeps (standard-mapping.md): ODF as a package or flat, or OOXML. */
 export const WORKBOOK_FORMATS = ['ods', 'fods', 'xlsx'] as const;
@@ -67,6 +68,8 @@ export type WorkbookRecord = {
   // The spreadsheets its IMPORTRANGEs may read, connected by an Editor (formulas.md "Connecting two spreadsheets"):
   // for good, never on a copy; absent when none.
   readonly rangeSources?: readonly string[];
+  // Its named functions (formulas.md "Named functions"), in name order; absent when none.
+  readonly functions?: readonly NamedFunction[];
 };
 
 /** The sources a workbook keeps at most, and an id's longest (the api's bound on a document id). */
@@ -180,7 +183,7 @@ export const WorkbookRecord = {
   /** A record from the wire or the room, or null when any part of it is not one. */
   read: (raw: unknown): WorkbookRecord | null => {
     if (typeof raw !== 'object' || raw === null) return null;
-    const { format, settings, importsAllowed, rangeSources, meaning } = raw as Record<
+    const { format, settings, importsAllowed, rangeSources, meaning, functions } = raw as Record<
       string,
       unknown
     >;
@@ -190,12 +193,15 @@ export const WorkbookRecord = {
     if (!read) return null;
     const sources = rangeSources === undefined ? undefined : readRangeSources(rangeSources);
     if (sources === null) return null;
+    const fns = functions === undefined ? undefined : readNamedFunctions(functions);
+    if (fns === null) return null;
     return {
       format,
       settings: read,
       ...(meaning === undefined ? {} : { meaning }),
       ...(importsAllowed === true ? { importsAllowed } : {}),
       ...(sources ? { rangeSources: sources } : {}),
+      ...(fns && fns.length > 0 ? { functions: fns } : {}),
     };
   },
 } as const;

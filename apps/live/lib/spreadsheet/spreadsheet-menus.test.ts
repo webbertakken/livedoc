@@ -184,8 +184,9 @@ describe('spreadsheetMenus', () => {
       'collapse-all-column-groups',
       ...ZOOM_ITEMS.map((i) => i.id),
       'full-screen',
-      // Data › Named Ranges: read by everyone (data-tools.md "Named ranges and named functions").
+      // Data › Named Ranges and Named Functions: read by everyone (data-tools.md "Named ranges and named functions").
       'named-ranges',
+      'named-functions',
       'search-the-menus',
       'keyboard-shortcuts',
     ]);

@@ -1,6 +1,12 @@
 // The workbook row of a spreadsheet's room (docs/specs/029-sheets/sheet-store.md "In a spreadsheet"): its file format
 // and settings. Present exactly when the document is a spreadsheet.
-import { WorkbookRecord, type WorkbookFormat, type WorkbookSettings } from '@livedoc/sheets';
+import {
+  readNamedFunctions,
+  WorkbookRecord,
+  type NamedFunction,
+  type WorkbookFormat,
+  type WorkbookSettings,
+} from '@livedoc/sheets';
 import type { DocumentEnv } from '../types';
 
 export type WorkbookRow = {
@@ -11,10 +17,13 @@ export type WorkbookRow = {
   range_sources?: string | null;
   // The file's meaning ('ooxml', 'openformula'), or null for Google's (formulas.md, the file's meaning; D101).
   meaning?: string | null;
+  // The named functions as a JSON array, or null for none (formulas.md "Named functions").
+  functions?: string | null;
 };
 
 /** The row's columns a record is read from. */
-export const WORKBOOK_COLUMNS = 'format, settings, imports_allowed, range_sources, meaning';
+export const WORKBOOK_COLUMNS =
+  'format, settings, imports_allowed, range_sources, meaning, functions';
 
 function rangeSourcesOf(documentId: string, text: string | null | undefined): string[] | undefined {
   if (!text) return undefined;
@@ -27,6 +36,23 @@ function rangeSourcesOf(documentId: string, text: string | null | undefined): st
   const sources = WorkbookRecord.readRangeSources(raw);
   if (!sources) console.warn('[workbook] unreadable range sources', { documentId });
   return sources ?? undefined;
+}
+
+// Named functions that do not read are dropped, as none, and logged: the rest of the workbook still opens.
+function functionsOf(
+  documentId: string,
+  text: string | null | undefined,
+): NamedFunction[] | undefined {
+  if (!text) return undefined;
+  let raw: unknown;
+  try {
+    raw = JSON.parse(text);
+  } catch {
+    raw = null;
+  }
+  const functions = readNamedFunctions(raw);
+  if (!functions) console.warn('[workbook] functions unread', { documentId });
+  return functions && functions.length > 0 ? functions : undefined;
 }
 
 // A meaning the record cannot read is Google's, as a spreadsheet's before its meaning was kept (D101), and logged.
@@ -51,12 +77,14 @@ export function workbookFromRow(
   }
   const rangeSources = rangeSourcesOf(documentId, row.range_sources);
   const meaning = meaningOf(documentId, row.meaning);
+  const functions = functionsOf(documentId, row.functions);
   const record = WorkbookRecord.read({
     format: row.format,
     settings,
     importsAllowed: row.imports_allowed === 1,
     ...(rangeSources ? { rangeSources } : {}),
     ...(meaning ? { meaning } : {}),
+    ...(functions ? { functions } : {}),
   });
   if (!record) console.warn('[workbook] unreadable row', { documentId });
   return record;
@@ -82,14 +110,15 @@ export function insertWorkbookStatement(
   now: number,
 ): D1PreparedStatement {
   return env.DOCUMENT_DB.prepare(
-    `INSERT INTO workbook (document_id, format, settings, meaning, rev, created_at, updated_at)
-     VALUES (?, ?, ?, ?, 0, ?, ?)
+    `INSERT INTO workbook (document_id, format, settings, meaning, functions, rev, created_at, updated_at)
+     VALUES (?, ?, ?, ?, ?, 0, ?, ?)
      ON CONFLICT (document_id) DO NOTHING`,
   ).bind(
     documentId,
     record.format,
     JSON.stringify(record.settings),
     record.meaning ?? null,
+    record.functions ? JSON.stringify(record.functions) : null,
     now,
     now,
   );
@@ -139,6 +168,26 @@ export async function saveWorkbookSettings(
     .bind(JSON.stringify(settings), now, documentId)
     .first<{ rev: number }>();
   return row?.rev ?? null;
+}
+
+/**
+ * A spreadsheet's named functions saved whole (sheet-store.md "Changing the workbook", D303): its record as it now
+ * stands and the row's new rev, or null when the document is no spreadsheet. None is saved as null.
+ */
+export async function saveWorkbookFunctions(
+  env: DocumentEnv,
+  documentId: string,
+  functions: readonly NamedFunction[],
+  now: number,
+): Promise<{ workbook: WorkbookRecord; rev: number } | null> {
+  const row = await env.DOCUMENT_DB.prepare(
+    `UPDATE workbook SET functions = ?, rev = rev + 1, updated_at = ? WHERE document_id = ?
+     RETURNING ${WORKBOOK_COLUMNS}, rev`,
+  )
+    .bind(functions.length > 0 ? JSON.stringify(functions) : null, now, documentId)
+    .first<WorkbookRow & { rev: number }>();
+  const workbook = workbookFromRow(documentId, row ?? undefined);
+  return row && workbook ? { workbook, rev: row.rev } : null;
 }
 
 /**

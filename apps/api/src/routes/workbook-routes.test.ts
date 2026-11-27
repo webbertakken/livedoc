@@ -127,6 +127,21 @@ describe('making a spreadsheet', () => {
     expect(copy.document.workbook?.meaning).toBe('ooxml');
   });
 
+  // formulas.md "Named functions": a spreadsheet made with them (synced from This Browser, a .livedoc file) keeps
+  // them, as do its copies.
+  it('keeps its named functions, made and copied', async () => {
+    const functions = [{ name: 'TWICE', params: ['x'], body: '=x*2' }];
+    await call({ path: '', body: spreadsheet({ workbook: { ...record, functions } }) });
+    const read = await (await call({ method: 'GET', path: '/book1' })).json<DocumentResponse>();
+    expect(read.document.workbook?.functions).toEqual(functions);
+    const res = await call({ path: '/book1/copy', body: {} });
+    const { document: copied } = await res.json<{ document: { id: string } }>();
+    const copy = await (
+      await call({ method: 'GET', path: `/${copied.id}` })
+    ).json<DocumentResponse>();
+    expect(copy.document.workbook?.functions).toEqual(functions);
+  });
+
   it('reads no workbook for any other document', async () => {
     await call({
       path: '',

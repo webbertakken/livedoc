@@ -1,8 +1,8 @@
 // The spreadsheet's side panels (docs/specs/004-interface-design/office-shell.md "Side panels"), on the right and an
 // Editor's: Conditional Format Rules (docs/specs/029-sheets/conditional-formatting.md "In a spreadsheet", D213) and
 // Alternating Colours (formatting.md "Alternating colours"), Themes ("Themes") and Data Validation Rules
-// (data-validation.md "In a spreadsheet"); and Named Ranges, everyone's (data-tools.md "Named ranges and named
-// functions").
+// (data-validation.md "In a spreadsheet"); and Named Ranges and Named Functions, everyone's (data-tools.md "Named
+// ranges and named functions").
 import type { OfficeActions } from '@/lib/office/office-catalogue';
 import type { OfficePanelSpec } from '@/lib/office/office-panels';
 
@@ -46,6 +46,14 @@ export const NAMED_RANGES_PANEL: OfficePanelSpec = {
   item: 'named-ranges',
 };
 
+// Read by everyone; changed by an Editor alone, inside it.
+export const NAMED_FUNCTIONS_PANEL: OfficePanelSpec = {
+  id: 'named-functions',
+  title: 'Named Functions',
+  side: 'right',
+  item: 'named-functions',
+};
+
 // The Chart Editor (docs/specs/029-sheets/charts.md "Chart Editor"): opened from a chart, never from a menu item of
 // its own, so its item is bound to nothing.
 export const CHART_EDITOR_PANEL: OfficePanelSpec = {
@@ -62,6 +70,7 @@ export const SPREADSHEET_PANELS: readonly OfficePanelSpec[] = [
   THEMES_PANEL,
   DATA_VALIDATION_PANEL,
   NAMED_RANGES_PANEL,
+  NAMED_FUNCTIONS_PANEL,
   CHART_EDITOR_PANEL,
 ];
 

@@ -3,7 +3,8 @@
 // The spreadsheet's right side panel (docs/specs/004-interface-design/office-shell.md "Side panels"): Conditional Format
 // Rules (docs/specs/029-sheets/conditional-formatting.md "In a spreadsheet", D213), the Plan Sheet popover's rule list
 // and form, Alternating Colours (formatting.md "Alternating colours") or Themes ("Themes"), in the shell's resizable
-// frame, following the selection while it is open; and Named Ranges (data-tools.md "Named ranges and named functions").
+// frame, following the selection while it is open; and Named Ranges and Named Functions (data-tools.md "Named ranges
+// and named functions").
 import { OfficePanel } from '@/components/office/OfficePanel';
 import { SheetBandingsBody } from '@/components/sheets/rules/SheetBandings';
 import { SheetFormatRulesBody } from '@/components/sheets/rules/SheetFormatRules';
@@ -12,10 +13,12 @@ import type { OfficePanelsState } from '@/lib/office/useOfficePanels';
 import { SpreadsheetThemesBody } from './SpreadsheetThemesBody';
 import { SpreadsheetValidationRulesBody } from './SpreadsheetValidationRulesBody';
 import { SpreadsheetNamedRangesBody } from './SpreadsheetNamedRangesBody';
+import { SpreadsheetNamedFunctionsBody } from './SpreadsheetNamedFunctionsBody';
 import {
   ALTERNATING_COLOURS_PANEL,
   CHART_EDITOR_PANEL,
   DATA_VALIDATION_PANEL,
+  NAMED_FUNCTIONS_PANEL,
   NAMED_RANGES_PANEL,
   SPREADSHEET_PANELS,
   THEMES_PANEL,
@@ -70,6 +73,8 @@ export function SpreadsheetRightPanel({
             actions={actions}
             startAdding={named.startAdding}
           />
+        ) : spec.id === NAMED_FUNCTIONS_PANEL.id ? (
+          <SpreadsheetNamedFunctionsBody />
         ) : spec.id === THEMES_PANEL.id ? (
           <SpreadsheetThemesBody />
         ) : spec.id === ALTERNATING_COLOURS_PANEL.id ? (
