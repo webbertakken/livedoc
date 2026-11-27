@@ -22,6 +22,7 @@ import {
   upkeepAfterWrite,
 } from './room-upkeep';
 import { allShares, drainShares } from './tab-shares';
+import { alarmPart, clearOwed, noteOwed, reportOverdue } from './room-alarm';
 import type { ServerTiming } from '../server-timing';
 import type { DocumentEnv, Env } from '../types';
 
@@ -232,11 +233,16 @@ export class RoomContent {
     return due.length > 0 ? Math.min(...due) : null;
   }
 
-  // From the room's alarm: each drain that is due.
+  // From the room's alarm: each drain that is due, each whatever the one before it threw (R4).
   async alarm(now: number): Promise<void> {
-    await this.drainD1(now);
-    await this.sendShares(now);
-    await this.upkeep(now);
+    await alarmPart(this.documentId, 'drain', () => this.drainD1(now));
+    await alarmPart(this.documentId, 'shares', () => this.sendShares(now));
+    await alarmPart(this.documentId, 'upkeep', () => this.upkeep(now));
+  }
+
+  /** The room's document, for its logs; null before it holds one. */
+  get boundId(): string | null {
+    return this.documentId;
   }
 
   // At most once per UPKEEP_INTERVAL_MS (its last run recorded before it starts, so its own writes schedule no
@@ -273,6 +279,8 @@ export class RoomContent {
     const env = this.env;
     const documentId = this.documentId;
     if (!env || !documentId || !this.schemaReady) return;
+    const kv = this.state.storage.kv;
+    reportOverdue(kv, documentId, this.owedKeys(), now);
     this.draining = true;
     try {
       const result = await drainOutbox(env, documentId);
@@ -286,9 +294,11 @@ export class RoomContent {
       this.draining = false;
     }
     // A key written while the drain ran goes next time.
-    if (this.flushAt === null && this.owesD1()) {
+    const owes = this.owesD1();
+    if (this.flushAt === null && owes) {
       this.flushAt = nextFlushAt(Date.now(), this.lastFlushAt);
     }
+    if (!owes) clearOwed(kv);
   }
 
   // Send the other holders of its shared tabs what they are owed. A failed send retries a minute later; messages
@@ -357,6 +367,11 @@ export class RoomContent {
     this.lastFlushAt = 0;
   }
 
+  private owedKeys(): number {
+    const sql = this.state.storage.sql;
+    return Number(sql.exec('SELECT COUNT(*) AS n FROM outbox').toArray()[0]?.n ?? 0);
+  }
+
   private owesD1(): boolean {
     const sql = this.state.storage.sql;
     return sql.exec('SELECT 1 FROM outbox LIMIT 1').toArray().length > 0;
@@ -386,7 +401,9 @@ export class RoomContent {
   private noteWrite(): void {
     if (!this.schemaReady) return;
     let armed = false;
-    if (!this.draining && this.flushAt === null && this.owesD1()) {
+    const owes = !this.draining && this.owesD1();
+    if (owes) noteOwed(this.state.storage.kv, Date.now());
+    if (owes && this.flushAt === null) {
       this.flushAt = nextFlushAt(Date.now(), this.lastFlushAt);
       armed = true;
     }
@@ -402,7 +419,9 @@ export class RoomContent {
       );
       armed = true;
     }
-    if (armed) this.hooks.armAlarm();
+    // Every write asks for the alarm, not only one that set a deadline: an alarm the storage refused is set again here
+    // (R4). Unchanged, it writes nothing.
+    if (armed || this.deadline() !== null) this.hooks.armAlarm();
   }
 }
 

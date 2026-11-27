@@ -57,6 +57,7 @@ import { RoomFacilitator } from '../room-facilitator';
 
 import { writeQaAction, type QaWriteRequest } from '../qa-board-write';
 import { RoomContent, RoomIdMismatchError, RoomNotReadyError } from './room-content';
+import { alarmPart } from './room-alarm';
 import type { MoveOutcome } from './content-move';
 import type { DocumentRoomRpc } from './document-rpc';
 import type { Item } from '@livedoc/items';
@@ -1140,21 +1141,32 @@ export class DocumentRoom extends DurableObject<Env | undefined> {
     const at = deadlines.length === 0 ? null : Math.min(...deadlines);
     if (at === this.armedAt) return;
     this.armedAt = at;
-    if (at === null) void this.state.storage.deleteAlarm();
-    else void this.state.storage.setAlarm(at);
+    const asked = at === null ? this.state.storage.deleteAlarm() : this.state.storage.setAlarm(at);
+    // Refused, it is not held: the next write or wake asks again (R4).
+    void asked.catch((error: unknown) => {
+      if (this.armedAt === at) this.armedAt = undefined;
+      console.error(`[room-alarm] arm failed id=${this.content.boundId ?? 'unbound'}`, error);
+    });
   }
 
   /** Agent entries past their expiry go; then the grace clock ran out (or did not, if they came back). */
+  // Each part runs whatever another threw, and the next alarm is set whatever failed (document-storage.md R4).
   override async alarm(): Promise<void> {
     this.wake.take();
     // A fired alarm is spent: none is set until this sets the next.
     this.armedAt = null;
-    const expired = await this.agents.sweep();
-    for (const r of expired) agentPresenceLog('expired', r);
-    if (expired.length > 0) this.broadcastPresence();
-    this.baton.alarm();
-    await this.content.alarm(Date.now());
-    this.armAlarm();
+    const id = this.content.boundId;
+    try {
+      await alarmPart(id, 'agents', async () => {
+        const expired = await this.agents.sweep();
+        for (const r of expired) agentPresenceLog('expired', r);
+        if (expired.length > 0) this.broadcastPresence();
+      });
+      await alarmPart(id, 'baton', () => this.baton.alarm());
+      await this.content.alarm(Date.now());
+    } finally {
+      this.armAlarm();
+    }
   }
 
   // Internal: an agent presence write from the worker (room-agent-presence.ts). Same trust argument as /broadcast.
