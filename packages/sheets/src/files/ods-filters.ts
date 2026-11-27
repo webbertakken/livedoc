@@ -10,13 +10,8 @@ import {
   type XmlElement,
 } from '@livedoc/office-packages';
 import { formatA1, type GridRange } from '../address';
-import {
-  filterFingerprint,
-  filterRecordText,
-  filtersFound,
-  type FileFilter,
-  type FileFilterColumn,
-} from './file-filters';
+import { type FileFilter, type FileFilterColumn } from './file-filters';
+import { filterFingerprint, filterRecordText, filtersFound } from './filter-record';
 import type { StandardColumn, StandardOp, StandardTest } from './filter-standard';
 import { LIVEDOC_SPREADSHEET_NS } from './validation-standard';
 import type { FileLoss, FileSheet } from './workbook-file';

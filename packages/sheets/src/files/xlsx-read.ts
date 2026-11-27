@@ -41,7 +41,7 @@ import {
   readXlsxWorkbookViews,
   withXlsxFilters,
   type XlsxFiltersRead,
-} from './xlsx-filters';
+} from './xlsx-filters-read';
 import { protectionsFound } from './file-protections';
 import { readThemeColours } from './xlsx-colours';
 import {

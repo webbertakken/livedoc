@@ -13,7 +13,8 @@ import { importReportLine } from './import-report-copy';
 import { sheetsFromFile, type FileRead } from './workbook-file';
 import { writeWorkbook } from './write-workbook';
 import { readXlsx } from './xlsx-read';
-import { filterViewGuid, readXlsxFilterColumn, xlsxFilterColumnXml } from './xlsx-filters';
+import { filterViewGuid, xlsxFilterColumnXml } from './xlsx-filters';
+import { readXlsxFilterColumn } from './xlsx-filters-read';
 import { parseXml } from '@livedoc/office-packages';
 import { SPREADSHEETML_NS } from './xlsx-parts';
 

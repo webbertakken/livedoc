@@ -3,14 +3,8 @@
 import { describe, expect, it } from 'vitest';
 import { book, gridLayout } from '../testing/book';
 import type { SheetLayout } from '../sheet';
-import {
-  fileFiltersOf,
-  filterRecordText,
-  filtersFound,
-  filtersFromFile,
-  readFilterRecord,
-  type FileFilterView,
-} from './file-filters';
+import { fileFiltersOf, filtersFromFile, type FileFilterView } from './file-filters';
+import { filterRecordText, filtersFound, readFilterRecord } from './filter-record';
 import type { FileLoss } from './workbook-file';
 
 let n = 3;
