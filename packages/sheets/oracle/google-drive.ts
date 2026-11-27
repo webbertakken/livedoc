@@ -31,6 +31,8 @@ export type OracleDrive = {
   setLocale(id: string, locale: string, timeZone: string): Promise<void>;
   /** Sends Sheets API batchUpdate requests to a sheet (the corpus's smart chips). */
   update(id: string, requests: readonly unknown[]): Promise<void>;
+  /** Each A1 range's values as Google works them out: numbers and dates as numbers (the corpus's pivot tables). */
+  values(id: string, ranges: readonly string[]): Promise<unknown[][][]>;
   exportAs(id: string, mimeType: string): Promise<Uint8Array<ArrayBuffer>>;
   remove(id: string): Promise<void>;
 };
@@ -109,6 +111,19 @@ export function oracleDrive(
     },
     async update(id, requests) {
       await batchUpdate('update', id, requests);
+    },
+    async values(id, ranges) {
+      const query = new URLSearchParams([
+        ...ranges.map((range) => ['ranges', range]),
+        ['valueRenderOption', 'UNFORMATTED_VALUE'],
+        ['dateTimeRenderOption', 'SERIAL_NUMBER'],
+      ]).toString();
+      const res = await call(
+        'values',
+        `${SHEETS_API}/v4/spreadsheets/${id}/values:batchGet?${query}`,
+      );
+      const { valueRanges } = (await res.json()) as { valueRanges?: { values?: unknown[][] }[] };
+      return ranges.map((_, i) => valueRanges?.[i]?.values ?? []);
     },
     async exportAs(id, mimeType) {
       const query = new URLSearchParams({ mimeType }).toString();

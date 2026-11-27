@@ -61,3 +61,14 @@ export function updateSpreadsheet(file: FakeFile, body: unknown): Response {
   }
   return jsonResponse(200, { spreadsheetId: file.id, replies: requests.map(() => ({})) });
 }
+
+/** `GET /v4/spreadsheets/{id}/values:batchGet?ranges=…`: each range's values as the file holds them, none when unset. */
+export function batchGetValues(file: FakeFile, ranges: readonly string[]): Response {
+  if (file.mimeType !== GOOGLE_SHEET_MIME)
+    return driveError(400, 'badRequest', 'This operation is not supported for this document');
+  if (ranges.length === 0) return driveError(400, 'badRequest', 'ranges is required');
+  const valueRanges = ranges.map((range) =>
+    file.values[range] ? { range, values: file.values[range] } : { range },
+  );
+  return jsonResponse(200, { spreadsheetId: file.id, valueRanges });
+}

@@ -11,12 +11,12 @@
 //   - `fields` is honoured; `q` supports what the mirror sends.
 //   - `user*` methods act as the person in Drive's own UI.
 //   - Google files: an upload converted to a Google type, `files.export` through the test's `convert`, and the
-//     Sheets API's `updateSpreadsheetProperties` (google-files.ts).
+//     Sheets API's `updateSpreadsheetProperties` and `values:batchGet` (google-files.ts).
 //   - `fail` injects errors; `requests` records every call.
 
 import { DriveStore, FOLDER_MIME, type FakeFile, type StoreOptions } from './drive-store';
 import { parseFields, pickFields } from './fields';
-import { exportFile, updateSpreadsheet, type Convert } from './google-files';
+import { batchGetValues, exportFile, updateSpreadsheet, type Convert } from './google-files';
 import { parseMultipartRelated } from './multipart';
 import { compileQuery } from './query';
 import { CORS, driveError, jsonResponse } from './responses';
@@ -506,6 +506,13 @@ export class FakeGoogle {
       const file = this.visible(user, sheetMatch[1]!);
       if (!file) return driveError(404, 'notFound', 'Requested entity was not found.');
       return updateSpreadsheet(file, await request.json());
+    }
+
+    const valuesMatch = /^\/v4\/spreadsheets\/([^/:]+)\/values:batchGet$/.exec(path);
+    if (valuesMatch && method === 'GET') {
+      const file = this.visible(user, valuesMatch[1]!);
+      if (!file) return driveError(404, 'notFound', 'Requested entity was not found.');
+      return batchGetValues(file, url.searchParams.getAll('ranges'));
     }
 
     const uploadMatch = /^\/upload\/drive\/v3\/files(?:\/([^/]+))?$/.exec(path);

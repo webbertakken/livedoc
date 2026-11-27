@@ -13,6 +13,7 @@ import { writeXlsx } from '../src/files/xlsx-write';
 import { googleDrive } from '../oracle/google-access.ts';
 import { ODS_MIME, XLSX_MIME } from '../oracle/google-drive.ts';
 import { CORPUS, GOOGLE_FUNCTIONS, POI_COMMIT, SMART_CHIPS } from './corpus-files';
+import { PIVOT_CASES, PIVOT_SOURCE_HEADER, PIVOT_SOURCE_ROWS } from './pivot-cases';
 
 const ROOT = import.meta.dirname;
 const SOURCE = process.env.CORPUS_SOURCE ?? 'libreoffice';
@@ -113,9 +114,92 @@ async function googleChips(): Promise<void> {
   }
 }
 
+// Google's pivot tables (pivot-tables.md): the source written to a sheet of its own, then each case's pivot table on a
+// sheet of its own at A1, one request each so a case Google refuses is named and the rest still made; exported in both
+// formats.
+async function googlePivots(): Promise<void> {
+  const drive = await googleDrive();
+  const id = await drive.uploadAsSheet(
+    'LiveDoc corpus pivot-tables',
+    writeXlsx(SMART_CHIPS, 'Pivots').data,
+    XLSX_MIME,
+  );
+  const SOURCE_ID = 2000;
+  const cell = (v: string | number | null) =>
+    v === null
+      ? {}
+      : typeof v === 'number'
+        ? { userEnteredValue: { numberValue: v } }
+        : { userEnteredValue: { stringValue: v } };
+  try {
+    await drive.update(id, [
+      { addSheet: { properties: { sheetId: SOURCE_ID, title: 'Sales' } } },
+      {
+        updateCells: {
+          start: { sheetId: SOURCE_ID, rowIndex: 0, columnIndex: 0 },
+          rows: [PIVOT_SOURCE_HEADER, ...PIVOT_SOURCE_ROWS].map((row) => ({
+            values: row.map(cell),
+          })),
+          fields: 'userEnteredValue',
+        },
+      },
+      {
+        repeatCell: {
+          range: { sheetId: SOURCE_ID, startColumnIndex: 2, endColumnIndex: 3, startRowIndex: 1 },
+          cell: { userEnteredFormat: { numberFormat: { type: 'DATE', pattern: 'yyyy-mm-dd' } } },
+          fields: 'userEnteredFormat.numberFormat',
+        },
+      },
+    ]);
+    const source = {
+      sheetId: SOURCE_ID,
+      startRowIndex: 0,
+      endRowIndex: PIVOT_SOURCE_ROWS.length + 1,
+      startColumnIndex: 0,
+      endColumnIndex: PIVOT_SOURCE_HEADER.length,
+    };
+    const made: string[] = [];
+    for (const [i, { title, pivot }] of PIVOT_CASES.entries()) {
+      const sheetId = 3000 + i;
+      try {
+        await drive.update(id, [
+          { addSheet: { properties: { sheetId, title } } },
+          {
+            updateCells: {
+              start: { sheetId, rowIndex: 0, columnIndex: 0 },
+              rows: [{ values: [{ pivotTable: { source, ...pivot } }] }],
+              fields: 'pivotTable',
+            },
+          },
+        ]);
+        made.push(title);
+        console.info(`[sheets corpus] pivot "${title}" made`);
+      } catch (e) {
+        console.error(`[sheets corpus] pivot "${title}" refused: ${(e as Error).message}`);
+      }
+    }
+    // Each case's output as Google works it out (an export alone leaves most of them empty).
+    const values = await drive.values(
+      id,
+      made.map((title) => `'${title}'!A1:Z60`),
+    );
+    const answers = Object.fromEntries(made.map((title, i) => [title, values[i]]));
+    write(
+      'google',
+      'pivot-answers.json',
+      new TextEncoder().encode(`${JSON.stringify(answers, null, 1)}\n`),
+    );
+    write('google', 'pivot-tables.xlsx', await drive.exportAs(id, XLSX_MIME));
+    write('google', 'pivot-tables.ods', await drive.exportAs(id, ODS_MIME));
+  } finally {
+    await drive.remove(id);
+  }
+}
+
 it(`makes the corpus's ${SOURCE} files`, async () => {
   if (SOURCE === 'excel') await excel();
   else if (SOURCE === 'google') await google();
   else if (SOURCE === 'google-chips') await googleChips();
+  else if (SOURCE === 'google-pivots') await googlePivots();
   else libreOffice();
 });

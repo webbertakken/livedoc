@@ -63,6 +63,24 @@ describe('oracleDrive', () => {
     expect(err).toMatchObject({ call: 'update', status: 400 });
   });
 
+  it('reads ranges of values, none for a range Google answers empty', async () => {
+    const { fake, drive } = setup();
+    const id = await drive.uploadAsSheet('Pivots', BYTES, XLSX_MIME);
+    fake.get(id)!.values["'Rows'!A1:B2"] = [
+      ['Region', 'SUM of Units'],
+      ['East', 3],
+    ];
+    expect(await drive.values(id, ["'Rows'!A1:B2", 'Other!A1'])).toEqual([
+      [
+        ['Region', 'SUM of Units'],
+        ['East', 3],
+      ],
+      [],
+    ]);
+    const err = await failure(drive.values('nope', ['A1']));
+    expect(err).toMatchObject({ call: 'values', status: 404 });
+  });
+
   it('logs each upload and delete by its file id alone', async () => {
     const { drive, logs } = setup();
     const id = await drive.uploadAsSheet('Oracle Math', BYTES, XLSX_MIME);

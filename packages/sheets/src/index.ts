@@ -134,6 +134,8 @@ export type { Frame, RangeRef, EvalValue } from './engine/frame';
 export { valuesOnly, writesFormats } from './values-only';
 export * from './migration/sheet-migration-plan';
 export * from './objects/sheet-objects';
+export * from './pivot/pivot-spec';
+export { pivotOutput } from './pivot/pivot-output';
 export * from './changesets/after-image';
 export * from './changesets/sheet-changeset';
 export * from './changesets/sheet-revert';

@@ -138,6 +138,42 @@ describe('the Sheets API', () => {
     expect((await batch('nope', { requests: [props] })).status).toBe(404);
     expect((await batch(sheet.id, { requests: [props] })).status).toBe(200);
   });
+
+  it('answers the values a test set, by range, and refuses what it does not model', async () => {
+    const { fake, upload } = setup();
+    const sheet = await upload(GOOGLE_SHEET_MIME, BINARY);
+    const plain = await upload(XLSX_MIME, BINARY);
+    fake.get(sheet.id)!.values["'Rows'!A1:B2"] = [
+      ['Region', 'SUM of Units'],
+      ['East', 3],
+    ];
+    const sheets = (id: string, query: string) =>
+      fake.fetch(`https://sheets.googleapis.com/v4/spreadsheets/${id}/values:batchGet${query}`, {
+        headers: { Authorization: `Bearer ${fake.issueAccessToken('me')}` },
+      });
+    const q = `?ranges=${encodeURIComponent("'Rows'!A1:B2")}&ranges=Other!A1`;
+    expect(await (await sheets(sheet.id, q)).json()).toEqual({
+      spreadsheetId: sheet.id,
+      valueRanges: [
+        {
+          range: "'Rows'!A1:B2",
+          values: [
+            ['Region', 'SUM of Units'],
+            ['East', 3],
+          ],
+        },
+        { range: 'Other!A1' },
+      ],
+    });
+    expect((await sheets(sheet.id, '')).status).toBe(400);
+    expect((await sheets(plain.id, q)).status).toBe(400);
+    expect((await sheets('nope', q)).status).toBe(404);
+    const post = await fake.fetch(
+      `https://sheets.googleapis.com/v4/spreadsheets/${sheet.id}/values:batchGet${q}`,
+      { method: 'POST', headers: { Authorization: `Bearer ${fake.issueAccessToken('me')}` } },
+    );
+    expect(post.status).toBe(404);
+  });
 });
 
 describe('routes', () => {
