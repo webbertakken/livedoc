@@ -268,6 +268,14 @@ export const EXACT: Readonly<Record<string, string>> = {
   'Document|Created|Offline': 'A brand-new document was created.',
   'Document|Created|TextDocumentCompare':
     'Someone compared two text documents from Tools > Compare documents, making a new document of suggestions.',
+  'Document|Changed|TextDocumentSpellingAccepted':
+    'Someone replaced a misspelt word in a text document with one of its suggestions, from the context menu (never the word).',
+  'Document|Changed|TextDocumentSpellingCorrected':
+    'A misspelt word in a text document was corrected automatically as it was typed (never the word).',
+  'Document|Changed|TextDocumentAlwaysCorrect':
+    'Someone chose Always correct to on a misspelt word in a text document, adding a substitution (never the word).',
+  'Document|Changed|TextDocumentDictionaryAdded':
+    'Someone added a word to their personal dictionary from a text document, so the spelling check takes it (never the word).',
   'Document|Changed|TextDocumentVersionNamed':
     'An Editor named a version of a text document, in its version history or from File > Version history > Name current version.',
   'Document|Changed|TextDocumentVersionRestored':
@@ -1128,6 +1136,22 @@ export const EXACT: Readonly<Record<string, string>> = {
   'Pdf|Zoomed|Out': 'Someone zoomed out of a PDF document by a step.',
   'Pdf|Toggled|Layer.Shown':
     'Someone showed a PDF layer for themselves, in a PDF document’s Layers panel.',
+  'UI|Opened|TextDocumentWordCount':
+    "Someone opened a text document's word count from Tools > Word count or its shortcut (never the counts).",
+  'UI|Toggled|TextDocumentWordCountWhileTypingOn':
+    "Someone turned on a text document's word count while typing, the small count at the writing's bottom left.",
+  'UI|Toggled|TextDocumentWordCountWhileTypingOff':
+    "Someone turned off a text document's word count while typing.",
+  'UI|Opened|TextDocumentSpelling':
+    "Someone opened a text document's Spelling and grammar card from Tools, the toolbar or its shortcut (never the words).",
+  'UI|Toggled|TextDocumentSpellingSuggestionsOn':
+    'Someone turned on Show spelling suggestions in a text document: misspelt words are underlined again.',
+  'UI|Toggled|TextDocumentSpellingSuggestionsOff':
+    'Someone turned off Show spelling suggestions in a text document: no misspelt word is underlined.',
+  'UI|Toggled|TextDocumentScreenReaderOn':
+    'Someone turned on screen reader support in a text document, from Tools > Accessibility or its shortcut: the Accessibility menu shows.',
+  'UI|Toggled|TextDocumentScreenReaderOff':
+    'Someone turned off screen reader support in a text document: the Accessibility menu goes.',
   'Pdf|Toggled|DarkPagesOn':
     'Someone turned on Dark pages: PDF pages shown dark for them alone, in the dark colour scheme.',
   'Pdf|Toggled|DarkPagesOff': 'Someone turned off Dark pages: PDF pages shown as the file says.',

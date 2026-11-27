@@ -129,6 +129,11 @@ export function syncTextDocumentPeople(
   if (changed) emitPeers();
 }
 
+/** A person in the room by their presence id: their name and colour, or null once they have left. */
+export function textDocumentPersonOf(id: string): { name: string; color: string } | null {
+  return people.get(id) ?? null;
+}
+
 /** The room closed: nobody's caret stays. */
 export function resetTextDocumentPeers(): void {
   for (const id of [...carets.keys()]) forget(id);

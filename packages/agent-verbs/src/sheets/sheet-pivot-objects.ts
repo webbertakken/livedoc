@@ -15,6 +15,8 @@ import {
   sourceFromText,
   type PivotCalcSummary,
   type PivotColumn,
+  type PivotDateRule,
+  type PivotGrouping,
   type PivotShowAs,
   type PivotSummary,
   type Rand,
@@ -30,9 +32,22 @@ import {
 } from '@livedoc/sheets';
 import type { SheetRefusal } from './sheet-state';
 
+/** A group's grouping: a date rule by name, number intervals, or custom groups of items as the source shows them. */
+export type PivotGroupingArg =
+  | PivotDateRule
+  | { size: number; start?: number; end?: number }
+  | { groups: { name: string; items: string[] }[] };
+
 export type PivotGroupArg =
   | string
-  | { column: string; order?: 'asc' | 'desc'; sortBy?: string; totals?: boolean; repeat?: boolean };
+  | {
+      column: string;
+      order?: 'asc' | 'desc';
+      sortBy?: string;
+      totals?: boolean;
+      repeat?: boolean;
+      grouping?: PivotGroupingArg;
+    };
 
 export type PivotValueArg =
   | { column: string; summarise?: PivotSummary; showAs?: PivotShowAs; name?: string }
@@ -83,6 +98,47 @@ function columnOf(columns: readonly PivotColumn[], letters: readonly string[], n
 function valueLabel(v: SheetPivotValue, nameOf: (col: string) => string): string {
   if (v.formula !== undefined) return v.name;
   return v.name ?? `${v.summary} of ${nameOf(v.col)}`;
+}
+
+// The model's grouping for an agent's, or why the output cannot use it (pivot-tables.md "Agents", D620).
+function groupingOf(arg: PivotGroupingArg): PivotGrouping | string {
+  if (typeof arg === 'string') return { k: 'date', rule: arg };
+  if ('size' in arg) {
+    if (!(arg.size > 0)) return `its size is ${arg.size}; a size is above 0.`;
+    if (arg.start !== undefined && arg.end !== undefined && arg.start >= arg.end)
+      return `its start ${arg.start} is not below its end ${arg.end}.`;
+    return {
+      k: 'interval',
+      size: arg.size,
+      ...(arg.start !== undefined ? { start: arg.start } : {}),
+      ...(arg.end !== undefined ? { end: arg.end } : {}),
+    };
+  }
+  const names = new Set<string>();
+  const items = new Set<string>();
+  for (const g of arg.groups) {
+    if (!g.name || g.items.length === 0) return 'each custom group has a name and items.';
+    const name = g.name.toLowerCase();
+    if (names.has(name)) return `two custom groups are named "${g.name}".`;
+    names.add(name);
+    for (const item of g.items) {
+      if (items.has(item)) return `"${item}" is in two custom groups.`;
+      items.add(item);
+    }
+  }
+  return { k: 'custom', groups: arg.groups };
+}
+
+// A model grouping as an agent gives it.
+function groupingArg(g: PivotGrouping): PivotGroupingArg {
+  if (g.k === 'date') return g.rule;
+  if (g.k === 'custom')
+    return { groups: g.groups.map((x) => ({ name: x.name, items: [...x.items] })) };
+  return {
+    size: g.size,
+    ...(g.start !== undefined ? { start: g.start } : {}),
+    ...(g.end !== undefined ? { end: g.end } : {}),
+  };
 }
 
 /** The layout write a `pivot` change makes, its id and the line saying what it did; refused with what to fix. */
@@ -178,12 +234,16 @@ export function buildPivotChange(
           );
         sortBy = { value: i };
       }
+      const grouping = arg.grouping === undefined ? undefined : groupingOf(arg.grouping);
+      if (typeof grouping === 'string')
+        return refuse('write_invalid', `Grouping ${col.name}: ${grouping}`);
       out.push({
         col: col.col,
         ...(arg.order === 'desc' ? { desc: true as const } : {}),
         ...(sortBy ? { sortBy } : {}),
         ...(arg.totals === false ? { totals: false as const } : {}),
         ...(arg.repeat ? { repeat: true as const } : {}),
+        ...(grouping ? { grouping } : {}),
       });
     }
     return out;
@@ -257,14 +317,23 @@ function landed(wb: Workbook, sheetId: string, g: GridRange): boolean {
   return v !== null && !isError(v);
 }
 
+type PivotGroupRead = {
+  column: string;
+  order?: 'desc';
+  sortBy?: string;
+  totals?: false;
+  repeat?: true;
+  grouping?: PivotGroupingArg;
+};
+
 /** A pivot table as read_sheet answers it: in A1, its fields by their columns' names. */
 export type PivotRead = {
   id: string;
   at: string;
   range: string | null;
   output: string | null;
-  rows?: { column: string; order?: 'desc'; sortBy?: string; totals?: false; repeat?: true }[];
-  columns?: { column: string; order?: 'desc'; sortBy?: string; totals?: false }[];
+  rows?: PivotGroupRead[];
+  columns?: Omit<PivotGroupRead, 'repeat'>[];
   values?: {
     column?: string;
     formula?: string;
@@ -298,6 +367,7 @@ export function pivotsRead(wb: Workbook, sheetId: string): PivotRead[] {
       ...(g.sortBy ? { sortBy: labels[g.sortBy.value]! } : {}),
       ...(g.totals === false ? { totals: false as const } : {}),
       ...(g.repeat ? { repeat: true as const } : {}),
+      ...(g.grouping ? { grouping: groupingArg(g.grouping) } : {}),
     });
     return [
       {

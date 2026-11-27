@@ -23,6 +23,16 @@ import { liveTabSaveFacts, type SaveFactsSource } from './live-tab-save-status';
 
 /** The origin a room update is applied with, so the provider never echoes it. */
 export const ROOM_ORIGIN = Symbol('room');
+/** A room update's transaction meta: the presence id of whoever sent it, where the room said (tools.md "Show live edits"). */
+export const ROOM_SENDER = 'livedoc:room-sender';
+
+/** Applies a room update as one transaction from the room, naming its sender in the transaction's meta. */
+export function applyRoomUpdate(doc: Y.Doc, update: Uint8Array, from: string | undefined): void {
+  doc.transact((tr) => {
+    if (from) tr.meta.set(ROOM_SENDER, from);
+    Y.applyUpdate(doc, update, ROOM_ORIGIN);
+  }, ROOM_ORIGIN);
+}
 /** The origin a local copy left behind is merged with: sent by the catch-up, never as an edit of its own. */
 export const COPY_ORIGIN = Symbol('local-copy');
 
@@ -145,9 +155,9 @@ export async function openLiveTabRoom<Frame extends string>(
     for (const update of learnt.splice(0)) Y.applyUpdate(room, update);
     return room;
   };
-  const offUpdate = bus.onUpdate(tabId, (update) => {
+  const offUpdate = bus.onUpdate(tabId, (update, from) => {
     roomHolds(update);
-    if (doc) Y.applyUpdate(doc, update, ROOM_ORIGIN);
+    if (doc) applyRoomUpdate(doc, update, from);
     else early.push(update);
   });
   const offConnection = bus.onConnection((open) => {

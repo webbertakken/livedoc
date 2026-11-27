@@ -198,6 +198,98 @@ describe('a pivot table built for an agent', () => {
   });
 });
 
+describe('a pivot group’s grouping for an agent', () => {
+  const objectOf = (built: ReturnType<typeof buildPivotChange>) => {
+    if (!built.ok) throw new Error(built.message);
+    return (built.writes[0] as { changes: { object: SheetPivot }[] }).changes[0]!.object;
+  };
+  const go = (grouping: unknown, column = 'Units') => {
+    const { wb, data } = workbook();
+    const built = buildPivotChange(
+      wb,
+      data.id,
+      { op: 'pivot', range: 'A1:C4', rows: [{ column, grouping } as never] },
+      rand,
+    );
+    return { built, wb, data };
+  };
+
+  it('groups by a date rule, number intervals or custom groups, as the model holds them', () => {
+    expect(objectOf(go('yearMonth').built).rows![0]!.grouping).toEqual({
+      k: 'date',
+      rule: 'yearMonth',
+    });
+    expect(objectOf(go({ size: 5 }).built).rows![0]!.grouping).toEqual({
+      k: 'interval',
+      size: 5,
+    });
+    expect(objectOf(go({ size: 2, start: 0, end: 6 }).built).rows![0]!.grouping).toEqual({
+      k: 'interval',
+      size: 2,
+      start: 0,
+      end: 6,
+    });
+    const groups = [{ name: 'Coasts', items: ['East', 'West'] }];
+    expect(objectOf(go({ groups }, 'Region').built).rows![0]!.grouping).toEqual({
+      k: 'custom',
+      groups,
+    });
+  });
+
+  it('lands its output grouped', () => {
+    const { built, wb, data } = go({ size: 5 });
+    wb.updateSheet({ ...data, layout: { ...data.layout, objects: [objectOf(built)] } });
+    const shown = [0, 1, 2, 3].map((r) => wb.value(data.id, r, 4));
+    expect(shown).toEqual(['Grouped Units', '0 - 4', '5 - 9', 'Grand Total']);
+  });
+
+  it('refuses a grouping the output cannot use, saying why', () => {
+    for (const bad of [
+      { size: 0 },
+      { size: -1 },
+      { size: 2, start: 4, end: 4 },
+      { groups: [{ name: '', items: ['East'] }] },
+      { groups: [{ name: 'A', items: [] }] },
+      {
+        groups: [
+          { name: 'A', items: ['East'] },
+          { name: 'a', items: ['West'] },
+        ],
+      },
+      {
+        groups: [
+          { name: 'A', items: ['East'] },
+          { name: 'B', items: ['East'] },
+        ],
+      },
+    ])
+      expect(go(bad, 'Region').built).toMatchObject({
+        code: 'write_invalid',
+        message: expect.stringMatching(/^Grouping Region: /),
+      });
+  });
+
+  it('is read back as it was given', () => {
+    const { built, wb, data } = go(
+      { groups: [{ name: 'Coasts', items: ['East', 'West'] }] },
+      'Region',
+    );
+    const date = { ...objectOf(go('month').built), id: 'pivot02' };
+    const interval = { ...objectOf(go({ size: 2, start: 0, end: 6 }).built), id: 'pivot03' };
+    const open = { ...objectOf(go({ size: 5 }).built), id: 'pivot04' };
+    wb.updateSheet({
+      ...data,
+      layout: { ...data.layout, objects: [objectOf(built), date, interval, open] },
+    });
+    expect(pivotsRead(wb, data.id).map((x) => x.rows![0])).toEqual([
+      { column: 'Region', grouping: { groups: [{ name: 'Coasts', items: ['East', 'West'] }] } },
+      { column: 'Units', grouping: 'month' },
+      { column: 'Units', grouping: { size: 2, start: 0, end: 6 } },
+      { column: 'Units', grouping: { size: 5 } },
+    ]);
+  });
+});
+
 describe('a pivot table as read_sheet answers it', () => {
   it('answers its source, place, output and fields by name', () => {
     const { wb, data, rep } = workbook();

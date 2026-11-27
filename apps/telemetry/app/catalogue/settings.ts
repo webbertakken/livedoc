@@ -146,6 +146,27 @@ export const APPEARANCE_SETTINGS = settingsStack('Appearance Settings', 'How the
     'Names beside the bottom-right buttons\u2019 icons on a wide desktop.',
   ),
   toggle(
+    'UI',
+    'TextDocumentWordCountWhileTypingOn',
+    'TextDocumentWordCountWhileTypingOff',
+    'Word Count While Typing',
+    'A text document\u2019s word count shown at the bottom left while typing, from Tools > Word count.',
+  ),
+  toggle(
+    'UI',
+    'TextDocumentSpellingSuggestionsOn',
+    'TextDocumentSpellingSuggestionsOff',
+    'Spelling Suggestions',
+    'Misspelt words underlined in a text document, from Tools > Spelling and grammar > Show spelling suggestions.',
+  ),
+  toggle(
+    'UI',
+    'TextDocumentScreenReaderOn',
+    'TextDocumentScreenReaderOff',
+    'Screen Reader Support',
+    'Screen reader support in a text document, from Tools > Accessibility or its shortcut: the Accessibility menu and what it says.',
+  ),
+  toggle(
     'Pdf',
     'DarkPagesOn',
     'DarkPagesOff',

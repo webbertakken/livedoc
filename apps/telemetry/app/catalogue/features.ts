@@ -1864,6 +1864,21 @@ export const LOCAL_MOVE_OFFERED = opened(
 
 OPENED_HOMES.push(PALETTE_GROUPS_OPENED.typeIn!);
 
+// Tools > Word count opened in a text document (docs/specs/034-text-documents/tools.md "Word count"); never the counts.
+export const TEXT_DOCUMENT_WORD_COUNT = opened(
+  'Text Document Word Count',
+  "Someone opened a text document's word count from Tools > Word count or its shortcut.",
+  (t) => t === 'TextDocumentWordCount',
+);
+
+// Tools > Spelling and grammar check's card opened in a text document (docs/specs/034-text-documents/tools.md "Spelling
+// and grammar"); never the words.
+export const TEXT_DOCUMENT_SPELLING = opened(
+  'Text Document Spelling Check',
+  "Someone opened a text document's Spelling and grammar card from Tools, the toolbar or its shortcut.",
+  (t) => t === 'TextDocumentSpelling',
+);
+
 // A text document's menus opened from its menu bar (docs/specs/004-interface-design/office-shell.md "Telemetry"):
 // File, Edit, View and the rest, by name.
 export const TEXT_DOCUMENT_MENUS_OPENED = opened(
@@ -1960,6 +1975,8 @@ export const PANELS_OPENED: MetricStack = {
     MIND_OUTLINE_OPENED,
     ACTION_SIGN_IN_NUDGE,
     TEXT_DOCUMENT_MENUS_OPENED,
+    TEXT_DOCUMENT_WORD_COUNT,
+    TEXT_DOCUMENT_SPELLING,
     SPREADSHEET_MENUS_OPENED,
     TEXT_DOCUMENT_PANELS_OPENED,
     SPREADSHEET_PANELS_OPENED,

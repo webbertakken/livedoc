@@ -272,6 +272,39 @@ export const TEXT_DOCUMENT_VERSION_RESTORED = chart(
   { types: ['TextDocumentVersionRestored'], rising: 'neutral' },
 );
 
+// Spelling in a text document (docs/specs/034-text-documents/tools.md "Spelling and grammar"): never the word.
+export const TEXT_DOCUMENT_SPELLING_ACCEPTED = chart(
+  'Document',
+  'Changed',
+  'Spelling Suggestions Taken',
+  'Someone replaced a misspelt word in a text document with one of its suggestions.',
+  { types: ['TextDocumentSpellingAccepted'], rising: 'good' },
+);
+
+export const TEXT_DOCUMENT_SPELLING_CORRECTED = chart(
+  'Document',
+  'Changed',
+  'Spelling Corrected While Typing',
+  'A misspelt word in a text document was corrected automatically as it was typed.',
+  { types: ['TextDocumentSpellingCorrected'], rising: 'good' },
+);
+
+export const TEXT_DOCUMENT_ALWAYS_CORRECT = chart(
+  'Document',
+  'Changed',
+  'Always Correct To Chosen',
+  'Someone chose Always correct to on a misspelt word in a text document.',
+  { types: ['TextDocumentAlwaysCorrect'], rising: 'good' },
+);
+
+export const TEXT_DOCUMENT_DICTIONARY_ADDED = chart(
+  'Document',
+  'Changed',
+  'Words Added To Dictionaries',
+  'Someone added a word to their personal dictionary from a text document.',
+  { types: ['TextDocumentDictionaryAdded'], rising: 'good' },
+);
+
 // A text document's notification setting saved (docs/specs/034-text-documents/review.md "Notifications"): the two
 // choices as one type, never who or which document.
 export const TEXT_DOCUMENT_NOTICES_CHOSEN = chart(
@@ -375,6 +408,10 @@ export const DOCUMENT_ACTIONS: MetricStack = {
     TEXT_DOCUMENT_VERSION_NAMED,
     TEXT_DOCUMENT_VERSION_RESTORED,
     TEXT_DOCUMENT_NOTICES_CHOSEN,
+    TEXT_DOCUMENT_SPELLING_ACCEPTED,
+    TEXT_DOCUMENT_DICTIONARY_ADDED,
+    TEXT_DOCUMENT_SPELLING_CORRECTED,
+    TEXT_DOCUMENT_ALWAYS_CORRECT,
     NEW_DOCUMENT_BACKED_OUT,
   ],
   headline: [DOCUMENTS_CREATED, DOCUMENTS_RENAMED, DOCUMENTS_DELETED, DOCUMENTS_DUPLICATED],

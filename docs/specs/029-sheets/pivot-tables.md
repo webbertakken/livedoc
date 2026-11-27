@@ -244,18 +244,24 @@ An agent makes and reads a spreadsheet's pivot tables through `change_sheet` and
 - **`pivot`** `{range, at, rows, columns, values, filters, valuesAsRows, replace}`: one pivot table set whole, in the
   changeset with the changes around it. `range` is A1, another sheet's by its name (`Data!A1:F99`); `at` a cell of the
   sheet, by default a column clear right of a range on the same sheet, else A1. Fields name their source columns by
-  header text, case aside, or by letter. A group is a name or `{column, order, sortBy, totals, repeat}`, `sortBy` a
-  value by its label (`SUM of Units`); a value is `{column, summarise, showAs, name}` (SUM for numbers, else COUNTA,
+  header text, case aside, or by letter. A group is a name or `{column, order, sortBy, totals, repeat, grouping}`,
+  `sortBy` a value by its label (`SUM of Units`); a value is `{column, summarise, showAs, name}` (SUM for numbers, else COUNTA,
   D611) or a calculated field `{formula, name, summarise, showAs}`; a filter `{column, show}` (the items shown, as the
   source shows them) or `{column, formula}`. `replace` names a pivot table of the sheet to rewrite under its id.
+- **`grouping`** on a group ([The output](#the-output), "Grouping"; default, D620): a date rule by name, as
+  Google's `dateTimeRule` types in camel case (`second`, `minute`, `hour`, `hourMinute`, `hourMinuteAmPm`,
+  `dayOfWeek`, `dayOfYear`, `dayOfMonth`, `dayMonth`, `month`, `quarter`, `year`, `yearQuarter`, `yearMonth`,
+  `yearMonthDay`); number intervals `{size, start, end}` (start and end optional); or custom groups
+  `{groups: [{name, items}]}`, the items as the source shows them.
 - **`clear_pivots`** `{id}`: one pivot table taken off, or every one of the sheet's.
 - **Refusals**, each naming what would do: a range that does not read, or with no data row (`range_invalid`); a
   column the header lacks, listing the columns (`column_not_found`); a calculated field not starting `=`
   (`formula_invalid`); a `sortBy` naming no value, listing them (`write_invalid`); an id the sheet lacks, listing its
-  pivot tables (`pivot_not_found`); a value set into the output or the anchor (`pivot_cell`, D612); on a Plan Sheet
+  pivot tables (`pivot_not_found`); a grouping whose size is not above 0, whose start is not below its end, or
+  whose custom groups share a name or an item, or hold a group without a name or items (`write_invalid`); a value set into the output or the anchor (`pivot_cell`, D612); on a Plan Sheet
   (`not_spreadsheet`).
 - **`read_sheet`** lists `pivots`: each id, anchor, source range, output range (none until it lands) and fields by
-  their columns' names and value labels.
+  their columns' names and value labels, a group's grouping as `grouping` takes it.
 - **The outline** (`read_document` on a spreadsheet tab) gives a line a pivot table, without reading a cell:
   `pivot <id> Data!A1:F99 at A1 rows=A cols=C values=SUM(D)`.
 - Help text: the `spreadsheet` guide topic teaches it within its 1,200-token budget (CLI49).
@@ -307,6 +313,9 @@ details are shown.
 - **D614** Suggested pivots are a text column by a number column summed, up to three (default).
 - **D615** An agent's pivot table names its columns by header text or letter, lands a column clear right of its range
   on the same sheet (else at A1), and filters by the items as the source shows them (default).
+- **D620** An agent groups a pivot group by a date rule's camel-case name, `{size, start, end}` or
+  `{groups: [{name, items}]}`, custom items as the source shows them; groups sharing a name or an item are refused
+  (default).
 - **D616** A value's details are a new sheet named `Details1` (the first number free) after the open one, holding the
   source's header and the rows the value summarises as values with their formats, one undo step (default).
 - **D621** Grouping in the grid is the output's context menu's, on an item cell: a date group on a number shown as a

@@ -8,13 +8,15 @@
 import { bytesOfBase64 } from '@livedoc/text-documents/base64';
 import { debugLog } from '@/lib/debug-log';
 
-type UpdateListener = (update: Uint8Array) => void;
+// `from`: the presence id of whoever sent it, where the room said.
+type UpdateListener = (update: Uint8Array, from?: string) => void;
 // `tabId`: the one tab to catch up (its `stale` op), or null for every tab (the room's re-hydrate).
 type ResyncListener = (tabId: string | null) => void;
 type ConnectionListener = (connected: boolean) => void;
 
 /** What a live tab kind's op from the room carries: an update, or that the tab's state must be read again. */
-export type LiveTabDelivery = { tabId: string; update: string } | { tabId: string; stale: true };
+export type LiveTabDelivery =
+  { tabId: string; update: string; from?: string } | { tabId: string; stale: true };
 
 const connections = new Set<ConnectionListener>();
 const rehydrates = new Set<() => void>();
@@ -91,7 +93,7 @@ export function liveTabBus<Limit extends string>(tag: string): LiveTabBus<Limit>
         debugLog(`${tag} update dropped: not base64`);
         return;
       }
-      for (const listener of updates.get(op.tabId) ?? []) listener(update);
+      for (const listener of updates.get(op.tabId) ?? []) listener(update, op.from);
     },
     onResync(listener) {
       resyncs.add(listener);

@@ -15,6 +15,7 @@ import type { TextDocumentCommentsPanel } from './useTextDocumentCommentsPanel';
 import {
   COMMENTS_PANEL,
   IMAGE_OPTIONS_PANEL,
+  LIVE_EDITS_PANEL,
   LINE_NUMBERS_PANEL,
   TABLE_OF_CONTENTS_PANEL,
   TABLE_PROPERTIES_PANEL,
@@ -39,6 +40,8 @@ import type { ContentsChange } from '@/lib/text-document/text-document-contents-
 import type { LineNumbersChoice } from '@/lib/text-document/text-document-line-numbers';
 import { TextDocumentLineNumbersPanel } from './TextDocumentLineNumbersPanel';
 import { TextDocumentWatermarkPanel } from './TextDocumentWatermarkPanel';
+import { TextDocumentLiveEditsPanel } from './TextDocumentLiveEditsPanel';
+import type { LiveEdit } from '@/lib/text-document/text-document-live-edits';
 import type { LineNumbersState } from './useTextDocumentLineNumbers';
 
 // How a comment is added, said in the comments panel when there are none (review.md, default copy).
@@ -53,6 +56,7 @@ export function TextDocumentRightPanel({
   imageOptions,
   contents,
   comments,
+  liveEdits,
 }: {
   panels: OfficePanelsState;
   lineNumbers: {
@@ -84,6 +88,7 @@ export function TextDocumentRightPanel({
     go: (id: string) => void;
     reopen: (id: string) => void;
   };
+  liveEdits: { entries: readonly LiveEdit[]; said: string };
 }) {
   const spec = [
     LINE_NUMBERS_PANEL,
@@ -92,6 +97,7 @@ export function TextDocumentRightPanel({
     IMAGE_OPTIONS_PANEL,
     TABLE_OF_CONTENTS_PANEL,
     COMMENTS_PANEL,
+    LIVE_EDITS_PANEL,
   ].find((p) => p.id === panels.open.right);
   if (!spec) return null;
   return (
@@ -103,7 +109,9 @@ export function TextDocumentRightPanel({
       onClose={() => panels.close('right')}
       focusNonce={panels.focusNonce}
     >
-      {spec === COMMENTS_PANEL ? (
+      {spec === LIVE_EDITS_PANEL ? (
+        <TextDocumentLiveEditsPanel entries={liveEdits.entries} said={liveEdits.said} />
+      ) : spec === COMMENTS_PANEL ? (
         <OfficeCommentsPanel
           rows={comments.rows}
           groups={comments.groups}

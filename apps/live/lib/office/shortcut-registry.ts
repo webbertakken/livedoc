@@ -6,8 +6,9 @@ import { formatShortcut, parseShortcut, type OfficePlatform } from './shortcut-n
 import { everyWordStarts } from './word-match';
 
 // `browser`: the key is left to the browser, as Google leaves it. `surface`: the kind's surface hears the key itself,
-// so the layer never runs it. `leftOut`: its function is a Google service (C3).
-export type ShortcutStatus = 'specified' | 'built' | 'surface' | 'browser' | 'leftOut';
+// so the layer never runs it. `leftOut`: its function is a Google service (C3). `native`: what it turns on, LiveDoc's
+// page does without it (braille support: the page is text), so nothing binds it.
+export type ShortcutStatus = 'specified' | 'built' | 'surface' | 'browser' | 'leftOut' | 'native';
 
 export type ShortcutRow = {
   id: string;
@@ -49,7 +50,7 @@ export function shortcutListing(
   const groups = new Map<string, ListedShortcut[]>();
   let count = 0;
   for (const row of rows) {
-    if (row.status === 'leftOut') continue;
+    if (row.status === 'leftOut' || row.status === 'native') continue;
     if (!everyWordStarts(query, `${row.action} ${row.group}`)) continue;
     const ways = waysOn(row, where);
     if (ways.length === 0) continue;
