@@ -17,7 +17,7 @@ export type KeptStandard = 'odf' | 'ooxml';
  * Where a kept item sat. ODF: `scripts`, `styles` (an automatic style kept drawings and notes name), `common-styles`
  * (a named cell style a kept format rule names), `settings`,
  * `spreadsheet-before` / `-after` (the tables), `table-before` / `-after` (its columns and rows), `table-attribute`,
- * `cell` / `cell-after` (its paragraphs), `cell-attribute`. OOXML: `workbook` and `workbook-attribute` (its root's),
+ * `cell` / `cell-after` (its paragraphs), `cell-text` (its paragraphs holding marked text), `cell-attribute`. OOXML: `workbook` and `workbook-attribute` (its root's),
  * `stylesheet` (`dxfs`, `tableStyles`), `sheet-attribute` (its `sheet` element's), `worksheet` and
  * `worksheet-attribute` (its root's).
  */
@@ -33,6 +33,7 @@ export const KEPT_PLACES = [
   'table-attribute',
   'cell',
   'cell-after',
+  'cell-text',
   'cell-attribute',
   'workbook',
   'workbook-attribute',

@@ -52,6 +52,17 @@ describe('oracleDrive', () => {
     expect(fake.get(id)).toBeUndefined();
   });
 
+  it('sends Sheets API requests to a sheet, naming a refusal', async () => {
+    const { fake, drive } = setup();
+    const id = await drive.uploadAsSheet('Chips', BYTES, XLSX_MIME);
+    await drive.update(id, [
+      { updateSpreadsheetProperties: { properties: { locale: 'en_GB' }, fields: 'locale' } },
+    ]);
+    expect(fake.get(id)!.properties).toMatchObject({ locale: 'en_GB' });
+    const err = await failure(drive.update(id, [{ addSheet: {} }]));
+    expect(err).toMatchObject({ call: 'update', status: 400 });
+  });
+
   it('logs each upload and delete by its file id alone', async () => {
     const { drive, logs } = setup();
     const id = await drive.uploadAsSheet('Oracle Math', BYTES, XLSX_MIME);

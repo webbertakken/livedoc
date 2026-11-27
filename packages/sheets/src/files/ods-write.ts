@@ -169,7 +169,10 @@ function cellXml(cell: FileCell, out: Out, rule: string | undefined, isOpen: boo
   ];
   // Kept content stays on its cell: its attributes, and its children before and after the paragraphs.
   const kept = out.kept.cell(out.index, cell.r, cell.c);
-  const body = cell.value ? paragraphs(shownText(cell.value)) : '';
+  const shown = cell.value ? shownText(cell.value) : null;
+  // A cell's kept marked paragraphs (a link, a span) while its text reads the same; else its own (D376).
+  const body =
+    shown === null ? '' : kept?.text?.reads === shown ? kept.text.xml() : paragraphs(shown);
   // LiveDoc's rule over a cell names it, in place of a kept one's.
   const keptAttributes = kept?.attributes ?? '';
   const ruled = rule === undefined ? keptAttributes : keptAttributes.replace(VALIDATION_NAME, '');

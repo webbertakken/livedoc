@@ -24,6 +24,7 @@ import { ERROR_CODES, type ErrorCode } from '../formula/values';
 import { FILE_READ_CELLS_MAX } from './file-read-limits';
 import { KEPT_REPEAT_MAX, type FileAt, type KeptItem, type KeptPart } from './kept-content';
 import { readOdsCharts } from './ods-charts-read';
+import { cellText } from './ods-cell-text';
 import { keptOdfParts, keptSettings, OdsKeeper } from './ods-kept-read';
 import { odsLineStyles, readOdsLines, type OdsLineStyles } from './ods-lines';
 import { odsTabLooks, type OdsTabLook } from './ods-tab-look';
@@ -46,7 +47,7 @@ const {
   sheets: SHEETS_MAX,
 } = SheetLimits.spreadsheet;
 
-const { office: OFFICE, table: TABLE, text: TEXT, calcext: CALCEXT } = ODF_NS;
+const { office: OFFICE, table: TABLE, calcext: CALCEXT } = ODF_NS;
 const ERRORS: readonly string[] = ERROR_CODES;
 
 const is = (node: XmlNode, uri: string, local: string): node is XmlElement =>
@@ -55,27 +56,6 @@ const is = (node: XmlNode, uri: string, local: string): node is XmlElement =>
 function repeatOf(element: XmlElement, axis: 'rows' | 'columns'): number {
   const n = Number(attributeOf(element, TABLE, `number-${axis}-repeated`) ?? '1');
   return Number.isInteger(n) && n > 0 ? n : 1;
-}
-
-// A cell's text as ODF holds it: its paragraphs as lines, with spaces, tabs and line breaks spelled out.
-function inlineText(node: XmlNode): string {
-  if (typeof node === 'string') return node;
-  if (node.uri === TEXT && node.local === 's') {
-    const n = Number(attributeOf(node, TEXT, 'c') ?? '1');
-    return ' '.repeat(Number.isInteger(n) && n > 0 ? Math.min(n, 1_000) : 1);
-  }
-  if (node.uri === TEXT && node.local === 'tab') return '\t';
-  if (node.uri === TEXT && node.local === 'line-break') return '\n';
-  // Annotations hold a comment's text, not the cell's.
-  if (node.uri === OFFICE && node.local === 'annotation') return '';
-  return node.children.map(inlineText).join('');
-}
-
-function cellText(cell: XmlElement): string {
-  return childElements(cell)
-    .filter((c) => c.uri === TEXT && c.local === 'p')
-    .map(inlineText)
-    .join('\n');
 }
 
 const ISO_DATE = /^(-?\d{4,})-(\d{2})-(\d{2})(?:T(\d{2}):(\d{2}):(\d{2}(?:\.\d+)?))?/;

@@ -1,6 +1,7 @@
 // ODF's kept content, read (docs/specs/029-sheets/standard-mapping.md "Unknown content"): each element and attribute
 // the ODF reader does not read, kept as the file wrote it, by where it sat; and the package entries it does not read.
 import { isOdsProtectionAttribute } from './ods-protection';
+import { cellParagraphs, isMarkedParagraph } from './ods-cell-text';
 import {
   attributeOf,
   childElement,
@@ -206,15 +207,22 @@ export class OdsKeeper {
 
   /**
    * A cell's kept content, one item each, anchored at no cell yet (the caller places them): its children but its
-   * paragraphs, before or after them, and its attributes but those the reader reads (a validation rule's name among
-   * them when `ruled` says its rule is read). Empty when it keeps nothing.
+   * paragraphs, before or after them, its paragraphs when one holds marked text (D376), and its attributes but those
+   * the reader reads (a validation rule's name among them when `ruled` says its rule is read). Empty when it keeps
+   * nothing.
    */
   cell(cell: XmlElement, ruled: (name: string) => boolean = () => false): KeptItem<FileAt>[] {
     const out: KeptItem<FileAt>[] = [];
     let text = false;
+    // Paragraphs holding marked text (a link, a span) are kept whole, read as the cell's text too (D376).
+    const marked = cellParagraphs(cell).some(isMarkedParagraph);
     for (const child of childElements(cell)) {
       const paragraph = child.uri === TEXT && child.local === 'p';
       text ||= paragraph;
+      if (paragraph && marked) {
+        const kept = keptXmlOf(this.parsed, child);
+        out.push({ place: 'cell-text', xml: kept.xml, ns: kept.ns, at: {} });
+      }
       if (paragraph) continue;
       const kept = keptXmlOf(this.parsed, child);
       out.push({ place: text ? 'cell-after' : 'cell', xml: kept.xml, ns: kept.ns, at: {} });

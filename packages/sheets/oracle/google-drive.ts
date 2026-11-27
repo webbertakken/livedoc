@@ -29,6 +29,8 @@ export type OracleDrive = {
   /** Uploads a workbook converted to a Google Sheet; its Drive id. */
   uploadAsSheet(name: string, bytes: Uint8Array, mimeType: string): Promise<string>;
   setLocale(id: string, locale: string, timeZone: string): Promise<void>;
+  /** Sends Sheets API batchUpdate requests to a sheet (the corpus's smart chips). */
+  update(id: string, requests: readonly unknown[]): Promise<void>;
   exportAs(id: string, mimeType: string): Promise<Uint8Array<ArrayBuffer>>;
   remove(id: string): Promise<void>;
 };
@@ -62,6 +64,13 @@ export function oracleDrive(
       await sleep(delay);
     }
   };
+  const batchUpdate = async (name: string, id: string, requests: readonly unknown[]) => {
+    await call(name, `${SHEETS_API}/v4/spreadsheets/${id}:batchUpdate`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ requests }),
+    });
+  };
   return {
     async uploadAsSheet(name, bytes, mimeType) {
       const head = new TextEncoder().encode(
@@ -89,20 +98,17 @@ export function oracleDrive(
       return id;
     },
     async setLocale(id, locale, timeZone) {
-      await call('locale', `${SHEETS_API}/v4/spreadsheets/${id}:batchUpdate`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          requests: [
-            {
-              updateSpreadsheetProperties: {
-                properties: { locale, timeZone },
-                fields: 'locale,timeZone',
-              },
-            },
-          ],
-        }),
-      });
+      await batchUpdate('locale', id, [
+        {
+          updateSpreadsheetProperties: {
+            properties: { locale, timeZone },
+            fields: 'locale,timeZone',
+          },
+        },
+      ]);
+    },
+    async update(id, requests) {
+      await batchUpdate('update', id, requests);
     },
     async exportAs(id, mimeType) {
       const query = new URLSearchParams({ mimeType }).toString();

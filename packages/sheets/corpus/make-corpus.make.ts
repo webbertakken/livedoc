@@ -1,7 +1,8 @@
 // Makes the corpus of other suites' files (docs/specs/029-sheets/standard-mapping.md "The corpus", D119). Run by
 // `pnpm --filter @livedoc/sheets corpus:make` with CORPUS_SOURCE=excel (Apache POI's test data, at a pinned commit),
 // libreoffice (each Excel file saved by LibreOffice; SOFFICE names it) or google (through the oracle's Drive, with the
-// token oracle:google:consent saved). Never in CI's unit run.
+// token oracle:google:consent saved); google-chips makes Google's smart chips the same way (docs/specs/029-sheets/
+// inserted-objects.md "Smart chips"). Never in CI's unit run.
 import { execFileSync } from 'node:child_process';
 import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -11,7 +12,7 @@ import { it } from 'vitest';
 import { writeXlsx } from '../src/files/xlsx-write';
 import { googleDrive } from '../oracle/google-access.ts';
 import { ODS_MIME, XLSX_MIME } from '../oracle/google-drive.ts';
-import { CORPUS, GOOGLE_FUNCTIONS, POI_COMMIT } from './corpus-files';
+import { CORPUS, GOOGLE_FUNCTIONS, POI_COMMIT, SMART_CHIPS } from './corpus-files';
 
 const ROOT = import.meta.dirname;
 const SOURCE = process.env.CORPUS_SOURCE ?? 'libreoffice';
@@ -66,8 +67,55 @@ async function google(): Promise<void> {
   }
 }
 
+// Google's smart chips (C3: left out, kept as their text): a sheet added with a person chip and a file chip, which
+// only Google can make, exported in both formats.
+async function googleChips(): Promise<void> {
+  const drive = await googleDrive();
+  const id = await drive.uploadAsSheet(
+    'LiveDoc corpus smart-chips',
+    writeXlsx(SMART_CHIPS, 'Chips').data,
+    XLSX_MIME,
+  );
+  try {
+    const chip = (text: string, chip: unknown) => ({
+      userEnteredValue: { stringValue: text },
+      chipRuns: [{ startIndex: text.indexOf('@'), chip }],
+    });
+    await drive.update(id, [
+      { addSheet: { properties: { sheetId: 1000, title: 'Chips' } } },
+      {
+        updateCells: {
+          start: { sheetId: 1000, rowIndex: 0, columnIndex: 0 },
+          rows: [
+            {
+              values: [
+                { userEnteredValue: { stringValue: 'Owner' } },
+                { userEnteredValue: { stringValue: 'Spec' } },
+              ],
+            },
+            {
+              values: [
+                chip('@', { personProperties: { email: 'ada@example.com' } }),
+                chip('See @', {
+                  richLinkProperties: { uri: `https://docs.google.com/spreadsheets/d/${id}/edit` },
+                }),
+              ],
+            },
+          ],
+          fields: 'userEnteredValue,chipRuns',
+        },
+      },
+    ]);
+    write('google', 'smart-chips.xlsx', await drive.exportAs(id, XLSX_MIME));
+    write('google', 'smart-chips.ods', await drive.exportAs(id, ODS_MIME));
+  } finally {
+    await drive.remove(id);
+  }
+}
+
 it(`makes the corpus's ${SOURCE} files`, async () => {
   if (SOURCE === 'excel') await excel();
   else if (SOURCE === 'google') await google();
+  else if (SOURCE === 'google-chips') await googleChips();
   else libreOffice();
 });

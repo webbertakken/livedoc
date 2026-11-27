@@ -46,7 +46,9 @@ their own pages: [Charts](charts.md), [Pivot tables](pivot-tables.md)). Its rows
 ## Smart chips
 
 Left out (C3): no Insert › Smart Chips, no `@` menu of chips. A chip in an arriving file is kept and shown as its
-text, and written back as it came.
+text, and written back as it came: Google Sheets exports a person chip as its email linked to `mailto:`, a file chip as
+its title linked to the file, and LiveDoc keeps the link in both formats (XLSX's hyperlinks, ODF's marked cell text,
+[Unknown content](standard-mapping.md#unknown-content), D376).
 
 ## Who may do what
 

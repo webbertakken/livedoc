@@ -2,6 +2,7 @@
 // it sat, untouched, its namespaces declared on the root unless the root binds its prefix otherwise; a kept entry
 // while it is still reached (D109's other half: a file of the other standard never sees it).
 import { isOdsProtectionAttribute } from './ods-protection';
+import { keptParagraphsText } from './ods-cell-text';
 import { keptXmlWithin, type OdfEntry, type XmlBindings } from '@livedoc/office-packages';
 import {
   keptLocalName,
@@ -33,7 +34,13 @@ export function declarations(ns: XmlBindings, own: XmlBindings): string {
     .join('');
 }
 
-export type OdsCellKept = { attributes: string; before: string; after: string };
+export type OdsCellKept = {
+  attributes: string;
+  before: string;
+  after: string;
+  // Its paragraphs holding marked text, for a cell whose text still reads `reads` (D376).
+  text?: { reads: string; xml: () => string };
+};
 
 /** ODF kept content laid out for the writer: by place, sheet and cell, with the root's extra namespaces. */
 // Whether a kept attribute (`table:protected="true"`) is one of a table's protection's.
@@ -138,11 +145,15 @@ export class OdsKeptWriter {
     const attributes = this.items('cell-attribute', at);
     const before = this.items('cell', at);
     const after = this.items('cell-after', at);
-    if (attributes.length + before.length + after.length === 0) return null;
+    const text = this.items('cell-text', at);
+    if (attributes.length + before.length + after.length + text.length === 0) return null;
+    const reads = text.length ? keptParagraphsText(text) : null;
     return {
       attributes: this.attributes(attributes),
       before: this.elements(before).join(''),
       after: this.elements(after).join(''),
+      // Written only when the writer takes them, so a cell edited since leaves them unwritten.
+      ...(reads === null ? {} : { text: { reads, xml: () => this.elements(text).join('') } }),
     };
   }
 

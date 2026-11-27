@@ -638,6 +638,11 @@ each suite writes its own, so LibreOffice, Excel and Google Sheets open them as 
     attributes but those the reader reads (its value, type, formula, style, repeats and array spans), so a merge or a
     validation stays on its cell. A repeated cell keeps them on each of its cells up to 1,000 cells; past that they
     are not kept and the read names them (`kept_cut`) (default, D105).
+  - **Cell text** (ODF): a cell's paragraphs, when one holds marked text (a link, a span: anything but text, spaces,
+    tabs and line breaks), as a smart chip Google Sheets exports does (its email linked to `mailto:`, a file's title
+    linked to the file). LiveDoc reads their plain text into the cell and keeps the paragraphs whole; they are written
+    in place of the cell's own while its text reads the same, and an edited text writes plain paragraphs, the marks
+    going with the text they were on (default, D376).
   - **Parts**: every package entry the reader does not read and the writer does not write: ODF's by path with its
     media type (`settings.xml`, `Pictures/`, `Object 1/`, `Basic/`); XLSX's with its content type and its
     relationships, each relationship kept on the workbook, sheet or package it came from with its id. Left out:
@@ -795,6 +800,8 @@ The code cites each by its id.
   reading one block of its own sheet and naming no part of its own; else the drawing is kept whole (default).
 - **D276** A read chart unchanged: its read sum (type, titles, legend, values, axis, alt, place, size, cells by
   position) equals the written one's; its kept chart part is then written in its place under a new name (default).
+- **D376** A cell's marked paragraphs (ODF): kept whole while the cell's text reads the same, so a link or a span
+  survives a round trip; an edited text writes plain paragraphs (default).
 - **D375** A Table chart in a file: written in both formats as a Column chart of its series and labels, the original
   kept (D290) (default).
 - **D373** A Timeline chart in a file: written in both formats as a Line chart of its series and labels, the original
