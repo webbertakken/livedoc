@@ -7,6 +7,7 @@ import { SHEET_COLS_NEW, SHEET_ROWS_NEW, SHEET_TITLE_MAX } from './limits';
 import { CellMap } from './cells/cell-map';
 import type { Rotation } from './text/rotation';
 import type { SheetObject } from './objects/sheet-objects';
+import type { SheetFilterView } from './filter-views';
 
 // A reference in a stored formula, by ids. Absent corner ids mean a whole column (no
 // rows) or a whole row (no columns).
@@ -218,6 +219,8 @@ export type SheetLayout = {
   frozenCols?: number;
   merges?: IdRange[];
   filter?: SheetFilter;
+  // Filter views (docs/specs/029-sheets/data-tools.md "Filters, filter views and slicers"), each by id.
+  filterViews?: SheetFilterView[];
   // The sheet's own look, from the Sheet's settings (docs/specs/029-sheets/sheet.md "Sheet Settings"); absent is the
   // default: gridlines and headers shown, lines COLUMN_WIDTH_NEW wide and ROW_HEIGHT_NEW tall unless sized.
   showGrid?: false;

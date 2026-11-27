@@ -40,6 +40,7 @@ export * from './csv';
 export * from './text-decoding';
 export * from './sheet-text';
 export * from './filter';
+export * from './filter-views';
 export * from './filter-colours';
 export * from './filter-reads';
 export * from './find';

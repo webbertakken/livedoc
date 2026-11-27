@@ -7,6 +7,7 @@ import { layoutIndex } from './layout';
 import { formulaReadsSheet, mapFormulaRefs } from './formula/stored';
 import { applyLayoutChange, shrinkRange, type LayoutChange } from './store-layout';
 import { shrinkPivotSourcesOf } from './objects/sheet-pivot';
+import { filterViewOf } from './filter-views';
 import { idRangeOf, inverseDelete } from './store-inverse-delete';
 import { sameName } from './range-names';
 import {
@@ -430,6 +431,8 @@ function inverseLayout(before: SheetLayout, ch: LayoutChange, now: SheetLayout):
       return [{ k: 'band', id: ch.id, band: before.bands?.find((x) => x.id === ch.id) ?? null }];
     case 'table':
       return [{ k: 'table', id: ch.id, table: before.tables?.find((x) => x.id === ch.id) ?? null }];
+    case 'fview':
+      return [{ k: 'fview', id: ch.id, view: filterViewOf(before, ch.id) }];
     case 'protection':
       return [
         {

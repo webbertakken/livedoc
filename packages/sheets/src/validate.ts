@@ -44,6 +44,7 @@ import { applyLayoutChange, type LayoutChange } from './store-layout';
 import { rangeNameProblem } from './range-names';
 import { isSheetTable, tableOverlaps, TABLES_MAX } from './tables/table';
 import { isFilterCondition } from './filter';
+import { FILTER_VIEWS_MAX, isSheetFilterView } from './filter-views';
 import { SheetLimits } from './sheet-limits';
 import { WORKBOOK_COLS_MAX } from './workbook/workbook-limits';
 import {
@@ -321,6 +322,14 @@ function layoutChangeProblem(ch: LayoutChange, layout: SheetLayout): Validation 
         !tableOverlaps(layout, ch.table)
         ? OK
         : no('write_invalid');
+    }
+    case 'fview': {
+      if (typeof ch.id !== 'string' || !isAxisId(ch.id)) return no('filter_invalid');
+      if (ch.view === null) return OK;
+      const others = (layout.filterViews ?? []).filter((x) => x.id !== ch.id).length;
+      return others < FILTER_VIEWS_MAX && isSheetFilterView(ch.view, ch.id, refsOk)
+        ? OK
+        : no('filter_invalid');
     }
     case 'band':
       return typeof ch.id === 'string' &&

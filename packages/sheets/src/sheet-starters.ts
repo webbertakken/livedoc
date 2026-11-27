@@ -303,6 +303,7 @@ export function resetSheetWrite(sheet: Sheet): SheetWrite {
   if (layout.frozenRows || layout.frozenCols) changes.push({ k: 'freeze', rows: 0, cols: 0 });
   if (layout.merges?.length) changes.push({ k: 'merges', merges: [] });
   if (layout.filter) changes.push({ k: 'filter', filter: null });
+  for (const x of layout.filterViews ?? []) changes.push({ k: 'fview', id: x.id, view: null });
   for (const t of layout.cardTables ?? []) changes.push({ k: 'cardTable', id: t.id, table: null });
   for (const x of layout.names ?? []) changes.push({ k: 'name', name: x.name, range: null });
   for (const x of layout.rules ?? []) changes.push({ k: 'vrule', id: x.id, rule: null });
