@@ -87,6 +87,7 @@ fetched 2026-11-27); the look is (default) until a capture of Google’s dialog.
   Sure means exactly one swap of two neighbouring letters spelt right, else exactly one suggestion one edit away. A
   word with a capital after its first letter, a personal or ignored word, and code are never corrected; the word keeps
   its first letter's case. The correction lands only if the word is still as typed when the check answers.
+  It acts in the body; headers, footers and footnotes are checked and underlined but not corrected (default).
 - **Always correct to ‹suggestion›** (the context menu on a misspelt word, Google's, help 12022089): the word replaced
   by its first suggestion now, and the pair added to the person's substitutions (Preferences > Substitutions), so it is
   corrected as typed from then on; at the substitutions' limit it says so. Its place in the menu is (default).
