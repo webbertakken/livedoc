@@ -60,3 +60,59 @@ describe('the images a one-tab link reaches', () => {
     expect(await documentPlacesImage(env, 'D', 'b', 'w')).toBe(false);
   });
 });
+
+// docs/specs/009-elements/images.md "A sheet's references" (D624): the images over cells a sheet's layout places,
+// kept by the room's triggers on every write of the layout, read with the tabs' references.
+describe('a sheet’s images', () => {
+  const layout = (...ids: string[]) =>
+    JSON.stringify({
+      objects: [
+        ...ids.map((imageId, i) => ({ id: `img${i}`, kind: 'image', imageId })),
+        { id: 'chart1', kind: 'chart', imageId: 'not-an-image' },
+      ],
+    });
+  function sheetRow(sql: DatabaseSync, id: string, tabId: string, data: string) {
+    sql
+      .prepare(
+        `INSERT INTO sheets (document_id, id, tab_id, title, layout, rev, created_at, updated_at, updated_by)
+         VALUES ('D', ?, ?, ?, ?, 0, 0, 0, '{}')`,
+      )
+      .run(id, tabId, id, data);
+  }
+  const outboxImages = (sql: DatabaseSync) =>
+    sql.prepare(`SELECT COUNT(*) AS n FROM outbox WHERE kind = 'images'`).get() as { n: number };
+
+  it('places what a new sheet’s layout holds, gallery ids alone, and follows each write of it', async () => {
+    const { env, sql } = sqliteD1();
+    tabRow(sql, 't1', '{}');
+    tabRow(sql, 't2', '{}');
+    sql.exec(`INSERT INTO image_refs (tab_id, image_id) VALUES ('t1', 'a')`);
+    sql.exec(`DELETE FROM outbox`);
+    sheetRow(sql, 's1', 't2', layout('b', 'c', 'b', 'data:image/png;base64,AA', 'x'.repeat(129)));
+    expect(await documentImageIds(env, 'D')).toEqual(['a', 'b', 'c']);
+    expect(outboxImages(sql).n).toBe(1);
+    expect(await documentPlacesImage(env, 'D', 'b', 't2')).toBe(true);
+    expect(await documentPlacesImage(env, 'D', 'b', 't1')).toBe(false);
+    sql.prepare(`UPDATE sheets SET layout = ? WHERE id = 's1'`).run(layout('c', 'd'));
+    expect(await documentImageIds(env, 'D')).toEqual(['a', 'c', 'd']);
+    // A write of something else leaves them as they are.
+    sql.exec(`UPDATE sheets SET title = 'T' WHERE id = 's1'`);
+    expect(await documentImageIds(env, 'D')).toEqual(['a', 'c', 'd']);
+    // A layout that is not JSON, or holds no objects, places none.
+    sql.exec(`UPDATE sheets SET layout = 'not json' WHERE id = 's1'`);
+    expect(await documentImageIds(env, 'D')).toEqual(['a']);
+    sql.prepare(`UPDATE sheets SET layout = ? WHERE id = 's1'`).run(layout('e'));
+    sql.exec(`UPDATE sheets SET layout = '{}' WHERE id = 's1'`);
+    expect(await documentImageIds(env, 'D')).toEqual(['a']);
+  });
+
+  it('goes with its sheet', async () => {
+    const { env, sql } = sqliteD1();
+    tabRow(sql, 't1', '{}');
+    sheetRow(sql, 's1', 't1', layout('b'));
+    sql.exec(`DELETE FROM outbox`);
+    sql.exec(`DELETE FROM sheets WHERE id = 's1'`);
+    expect(await documentImageIds(env, 'D')).toEqual([]);
+    expect(outboxImages(sql).n).toBe(1);
+  });
+});

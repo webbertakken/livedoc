@@ -660,6 +660,59 @@ CREATE TABLE IF NOT EXISTS text_document_notice_deletions (
 );
 `;
 
+// A sheet's images over cells (docs/specs/009-elements/images.md "A sheet's references", D624): the gallery images its
+// layout's objects of kind image place, kept by triggers on every insert of a sheet and every write of its layout, so
+// no writer can leave them behind; they go with their sheet. `placed_images` reads them with the tabs' references by
+// tab, and the outbox pushes the document's set when they change.
+const SHEET_IMAGES_OF = (row: string) => `SELECT DISTINCT o.value ->> 'imageId' AS image_id
+    FROM json_each(CASE WHEN json_valid(${row}.layout) THEN ${row}.layout ELSE '{}' END, '$.objects') o
+   WHERE o.value ->> 'kind' = 'image'
+     AND typeof(o.value ->> 'imageId') = 'text'
+     AND length(o.value ->> 'imageId') BETWEEN 1 AND 128
+     AND substr(o.value ->> 'imageId', 1, 5) <> 'data:'`;
+const SHEET_IMAGE_REFS_STEP = `
+CREATE TABLE IF NOT EXISTS sheet_image_refs (
+  document_id TEXT NOT NULL,
+  sheet_id    TEXT NOT NULL,
+  image_id    TEXT NOT NULL,
+  PRIMARY KEY (document_id, sheet_id, image_id),
+  FOREIGN KEY (document_id, sheet_id) REFERENCES sheets (document_id, id) ON DELETE CASCADE
+) WITHOUT ROWID;
+CREATE INDEX IF NOT EXISTS sheet_image_refs_image_idx ON sheet_image_refs (image_id);
+
+CREATE VIEW IF NOT EXISTS placed_images AS
+  SELECT tab_id, image_id FROM image_refs
+  UNION ALL
+  SELECT s.tab_id, r.image_id FROM sheet_image_refs r
+    JOIN sheets s ON s.document_id = r.document_id AND s.id = r.sheet_id;
+
+CREATE TRIGGER IF NOT EXISTS sheet_image_refs_on_insert AFTER INSERT ON sheets
+BEGIN
+  INSERT OR IGNORE INTO sheet_image_refs (document_id, sheet_id, image_id)
+    SELECT NEW.document_id, NEW.id, image_id FROM (${SHEET_IMAGES_OF('NEW')});
+END;
+
+CREATE TRIGGER IF NOT EXISTS sheet_image_refs_on_layout AFTER UPDATE OF layout ON sheets
+BEGIN
+  DELETE FROM sheet_image_refs
+   WHERE document_id = NEW.document_id AND sheet_id = NEW.id
+     AND image_id NOT IN (${SHEET_IMAGES_OF('NEW')});
+  INSERT OR IGNORE INTO sheet_image_refs (document_id, sheet_id, image_id)
+    SELECT NEW.document_id, NEW.id, image_id FROM (${SHEET_IMAGES_OF('NEW')});
+END;
+
+${outboxTrigger(
+  'outbox_sheet_image_insert',
+  'AFTER INSERT ON sheet_image_refs',
+  "SELECT NEW.document_id, 'images', ''",
+)}
+${outboxTrigger(
+  'outbox_sheet_image_delete',
+  'AFTER DELETE ON sheet_image_refs',
+  "SELECT OLD.document_id, 'images', ''",
+)}
+`;
+
 /** Every step the room's schema has taken, in order; a change appends one and never edits a shipped step. */
 export const DOCUMENT_SCHEMA_STEPS: readonly string[] = [
   STEP_1 + OUTBOX + SHARES,
@@ -684,6 +737,7 @@ export const DOCUMENT_SCHEMA_STEPS: readonly string[] = [
   TEXT_DOCUMENT_VIEWER_COPY_STEP,
   TEXT_DOCUMENT_LAST_EDIT_STEP,
   TEXT_DOCUMENT_NOTICE_STEP,
+  SHEET_IMAGE_REFS_STEP,
 ];
 
 export const DOCUMENT_SCHEMA_VERSION = DOCUMENT_SCHEMA_STEPS.length;
