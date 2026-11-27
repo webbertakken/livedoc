@@ -230,12 +230,15 @@ Chart" and a screen reader hears "Column chart", as the palette's tile says, nev
 - **Scatter's x**: when every category reads as a number (`12`, `-3.5`, `1,200`), each point sits at its number on
   an x-axis running from the least to the greatest (widened by 1 when they are all equal), labelled at five evenly
   spaced values; otherwise the categories are evenly spaced, as Line's are, and labelled as Line's. A category left
-  empty has no x: its points are not drawn, and it does not stop the others reading as numbers. Its readout reads
-  `x · series: y`.
+  empty has no x: its points are not drawn, and it does not stop the others reading as numbers.
+- **A scatter point's readout** is a line naming the point, then a line per number, each `label: number`
+  (operator, 2026-11-26): its value against the vertical axis's label, then its x against the horizontal axis's.
+  An axis's label is its axis title up to its first ` (`, so a unit or a note in brackets stays on the axis; an axis
+  with no title is labelled `y` or `x` (default).
 - **Scatter's point names**: a scatter chart may name its points, one name per category (`linePointNames`); a named
-  point's readout reads `name, y, x`, its name, its value and its x, whatever series it is in (operator,
-  2026-11-26), so a point drawn on a line series (a frontier over the others) still says whose it is. A point with
-  an empty name reads as an unnamed one.
+  point's readout is headed by its name, whatever series it is in (operator, 2026-11-26), so a point drawn on a line
+  series (a frontier over the others) still says whose it is. A point with no name, or an empty one, is headed by its
+  series' name.
 - **Scatter's value range** fits its values, as Google Sheets' does: from a round value under the least to one over the
   greatest, with zero in it only when the values cross it, so points far from zero spread over the plot rather than
   sit squeezed at its top over an empty band. Values all equal widen by half a unit either way. Line, Area, Column
@@ -407,7 +410,7 @@ The code cites each by its id.
 - **D102** Minimum rows in the menu / dialog editors: Remove is disabled at one row (slices, categories, series,
   checklist rows) (default).
 - **D106** Readout copy: `label: value` (blank label shows an em dash glyph); line `category · series: value` (default);
-  a named scatter point `name, y, x` (operator, 2026-11-26).
+  a scatter point a heading line, then `label: number` a line (operator, 2026-11-26).
 - **D107** Key strip when too small: Not rendered below 48 px wide (side) or 18 px tall (band) (default).
 - **D281** Several series on a column or bar chart: side by side in a group taking 80% of its category's share, each
   bar an equal part of it and at most 48 px thick, the category named under (beside) its group; one series draws as

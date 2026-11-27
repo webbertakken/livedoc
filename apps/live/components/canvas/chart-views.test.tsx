@@ -11,6 +11,10 @@ import { PieChartView } from './PieChartView';
 const el = (kind: 'pie-chart' | 'bar-chart' | 'line-chart', extra: Partial<ShapeElement> = {}) =>
   ({ ...createShape(kind, 0, 0), width: 260, height: 220, ...extra }) as ShapeElement;
 
+// The hover readout's lines, in order.
+const readoutLines = (c: HTMLElement) =>
+  [...c.querySelector('[data-chart-readout]')!.children].map((line) => line.textContent);
+
 describe('chart views', () => {
   it('draws Show Axis as the export does: ticks up a column or line chart, along a bar chart, right in colour', () => {
     const series = [
@@ -307,11 +311,13 @@ describe('chart views', () => {
     );
     fireEvent.pointerEnter(dots[1]!);
     fireEvent.pointerMove(dots[1]!);
-    expect(scatter.textContent).toContain('5 · Y');
+    // pie-chart.md "A scatter point's readout": a heading, then `label: number` a line; no axis title reads y and x.
+    expect(readoutLines(scatter)).toEqual(['Y', 'y: 4', 'x: 5']);
   });
 
-  // pie-chart.md "Scatter's point names": a named point reads `name, y, x`, whatever series it is in.
-  it('reads a named scatter point by its name, its value and its x, on a line series too', () => {
+  // pie-chart.md "Scatter's point names": a named point is headed by its name, whatever series it is in; its numbers
+  // are labelled by the axis titles, a bracketed note left on the axis.
+  it('heads a named scatter point by its name, then its value and its x by their axes, on a line series too', () => {
     const named = (linePointNames?: string[]) =>
       render(
         <LineChartView
@@ -322,6 +328,10 @@ describe('chart views', () => {
               { name: 'Ranks 11 to 25', values: [76.2, null] },
               { name: 'Pareto frontier', values: [76.2, 83.4], line: true },
             ],
+            chartAxisTitles: {
+              x: 'Blended cost ($ per million tokens, 3 input : 1 output)',
+              y: 'Coding index (weighted percentiles, 0 to 100)',
+            },
             ...(linePointNames ? { linePointNames } : {}),
           })}
           textColor="#000"
@@ -330,12 +340,19 @@ describe('chart views', () => {
     const scatter = named(['Claude Haiku 5.5', '']);
     const dots = scatter.querySelectorAll('circle');
     fireEvent.pointerEnter(dots[1]!);
-    expect(scatter.textContent).toContain('Claude Haiku 5.5, 76.2, 0.2');
-    expect(scatter.textContent).not.toContain('Pareto frontier:');
+    expect(readoutLines(scatter)).toEqual([
+      'Claude Haiku 5.5',
+      'Coding index: 76.2',
+      'Blended cost: 0.2',
+    ]);
     fireEvent.pointerLeave(dots[1]!);
-    // A point with an empty name reads as an unnamed one.
+    // A point with an empty name is headed by its series' name.
     fireEvent.pointerEnter(dots[2]!);
-    expect(scatter.textContent).toContain('1.5 · Pareto frontier: 83.4');
+    expect(readoutLines(scatter)).toEqual([
+      'Pareto frontier',
+      'Coding index: 83.4',
+      'Blended cost: 1.5',
+    ]);
   });
 
   // pie-chart.md "A scatter series drawn as a line": its points joined in order of x, a line in its key.
