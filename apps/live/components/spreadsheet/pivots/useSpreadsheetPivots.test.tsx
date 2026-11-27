@@ -39,7 +39,6 @@ async function setup(opts: { otherTitles?: string[] } = {}) {
   let clear: (what: 'inputs' | 'formats' | 'all') => void = () => {};
   renderSheet(h, ({ c, actions }) => {
     clear = actions.clear;
-    // oxlint-disable-next-line react/rules-of-hooks -- the harness calls this render function as a component
     const p = useSpreadsheetPivots(c, bar, onEdit);
     return (
       <SheetPivotsContext.Provider value={onEdit}>
