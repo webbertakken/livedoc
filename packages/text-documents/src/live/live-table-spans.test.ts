@@ -177,7 +177,12 @@ describe('a merged cell grown by one’s own suggested row, read with one’s su
   it('reads a column that grew a merged cell, its width with it, as the table before', () => {
     const before = tableDoc([
       { cells: [{ text: 'W', cs: 2, widths: [100, 100] }] },
-      { cells: [{ text: 'A', widths: [100] }, { text: 'B', widths: [100] }] },
+      {
+        cells: [
+          { text: 'A', widths: [100] },
+          { text: 'B', widths: [100] },
+        ],
+      },
     ]);
     const after = tableDoc([
       { cells: [{ text: 'W', cs: 3, widths: [100, 80, 100] }] },
