@@ -385,7 +385,11 @@ each suite writes its own, so LibreOffice, Excel and Google Sheets open them as 
   Bubble with its sizes (XLSX `c:bubbleChart` on two value axes, each series its `c:xVal`, `c:yVal` and the size
   column as `c:bubbleSize`, `c:bubbleScale` 100 and no negative bubbles; ODF `chart:bubble`, each series' values the
   size column and its two `chart:domain` children the y column and then the x column, as ODF 1.3 Part 3 §11.13 orders
-  them) (default, D321), its stacking on a Column, Bar or Area chart (XLSX `grouping` `stacked` or `percentStacked`, bars with
+  them) (default, D321), Candlestick and OHLC as stock charts (XLSX `c:stockChart` of its open, high, low and close
+  series in that order, or high, low and close, with high-low lines, a Candlestick's up-down bars, an OHLC's open and
+  close series marked by dashes, and no line joining a series; ODF `chart:stock`, its series in ODF's order of opening,
+  minimum, maximum and closing values, or minimum, maximum and closing, as ODF 1.3 Part 3 §19.15 orders them, a
+  Candlestick saying `chart:japanese-candle-stick="true"`) (default, D323), its stacking on a Column, Bar or Area chart (XLSX `grouping` `stacked` or `percentStacked`, bars with
   `overlap` 100; ODF `chart:stacked` or `chart:percentage` on the plot area) (default, D283), a Line chart's smoothing (XLSX `c:smooth` on
   each series; ODF `chart:interpolation="cubic-spline"` on the plot area) (default, D285), a Combo chart's series
   types (XLSX: one plot area holding a clustered `c:barChart` of its column series, a `c:lineChart` of its line
@@ -430,7 +434,9 @@ each suite writes its own, so LibreOffice, Excel and Google Sheets open them as 
   any of ODF's units. A Bubble chart is read from XLSX's `c:bubbleChart` (not 3-D) whose series share one x column
   and one size column, the size column after every y column in the block, and from ODF's `chart:bubble` whose
   series' values are one size column and whose two domains are each series' y column and the shared x column
-  (D321). A series reads its cells by `chart:values-cell-range-address`, its name by
+  (D321). A stock chart is read from XLSX's `c:stockChart` of three or four series (four with up-down bars a
+  Candlestick, else OHLC) and from ODF's `chart:stock` (a Japanese candlestick of four series a Candlestick, else
+  OHLC; with volume not read), its series put back in the open, high, low, close order (D323). A series reads its cells by `chart:values-cell-range-address`, its name by
   `chart:label-cell-address`, a scatter's x by the first series' `chart:domain` (a later series has none or the
   same), the labels by the x axis's `chart:categories`. The look is read from the chart document's automatic styles:
   a bar chart by `chart:vertical`; stacking by `chart:stacked` and `chart:percentage` on a bar or area chart; a line chart's
@@ -454,7 +460,10 @@ each suite writes its own, so LibreOffice, Excel and Google Sheets open them as 
   written to a flat file, or a flat file's to a package, is written from the model and named (default, D278).
 - **Written as the nearest type**: a chart no format holds is written as the nearest one it does, which every suite
   draws: a Stepped Area chart as an Area chart of the same stacking, a Combo chart's stepped area series as area
-  series, and a Bubble chart of one series (no sizes, so no format's bubble) as a Scatter chart (D321). The file also keeps the **original** for LiveDoc, a record of what the nearest type lost: its type, on a
+  series, a Bubble chart of one series (no sizes, so no format's bubble) as a Scatter chart (D321), a Candlestick chart
+  of three series as OHLC, a Candlestick or OHLC chart of fewer than three series or more than four as a Line chart,
+  and in ODF an OHLC chart of four series as a Candlestick, as no suite draws ODF's open and close ticks (LibreOffice
+  24.2 draws them wrongly) (D323). The file also keeps the **original** for LiveDoc, a record of what the nearest type lost: its type, on a
   Combo chart each series' type in series order, and the sum the written chart reads back as (as "Kept while
   unchanged" sums it), as JSON (`{"type":"stepped-area","sum":"0a1b2c3d"}`,
   `{"type":"combo","series":["column","stepped-area"],"sum":"…"}`). It travels with the chart, in the chart's own
@@ -655,6 +664,12 @@ The code cites each by its id.
   reading one block of its own sheet and naming no part of its own; else the drawing is kept whole (default).
 - **D276** A read chart unchanged: its read sum (type, titles, legend, values, axis, alt, place, size, cells by
   position) equals the written one's; its kept chart part is then written in its place under a new name (default).
+- **D323** Candlestick and OHLC in a file: XLSX `c:stockChart` (`c:hiLowLines`; a Candlestick's `c:upDownBars`, gap
+  width 150; an OHLC's open and close series marked `dash`; series lines not drawn) on a category and a value axis;
+  ODF `chart:stock` with its series in ODF's order (open, minimum, maximum, close), a Candlestick's plot
+  `chart:japanese-candle-stick="true"`; read back from either into the open, high, low, close order; a three-series
+  Candlestick written as OHLC, another count as Line, and in ODF a four-series OHLC as a Candlestick (LibreOffice draws
+  no ODF open and close ticks), the original kept (D290) (default).
 - **D321** A Bubble chart in a file: XLSX `c:bubbleChart` (`varyColors` 0, each series `c:xVal`, `c:yVal`,
   `c:bubbleSize` of the shared size column and `c:bubble3D` 0; `c:bubbleScale` 100, `c:showNegBubbles` 0; two
   `c:valAx`); ODF `chart:class="chart:bubble"`, each series' `chart:values-cell-range-address` the size column and its

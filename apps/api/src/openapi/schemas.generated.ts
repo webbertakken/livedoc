@@ -2865,6 +2865,8 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
       "bubble",
       "doughnut",
       "radar",
+      "candlestick",
+      "ohlc",
       "combo"
     ],
     "type": "string"
@@ -15352,6 +15354,8 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
       "pie",
       "doughnut",
       "radar",
+      "candlestick",
+      "ohlc",
       "combo"
     ],
     "type": "string"

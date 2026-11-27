@@ -117,6 +117,26 @@ async function read(data: Uint8Array | string) {
 }
 
 describe('reading ODF charts', () => {
+  // D323: a four-series OHLC is written as a Candlestick, its original in the object's meta.xml, read back as OHLC.
+  it('reads a four-series OHLC it wrote back as OHLC, in a package and a flat file', async () => {
+    const sheet = models();
+    const { rows, cols } = sheet.layout;
+    const ohlc = chartOn(sheet, {
+      type: 'ohlc',
+      range: { r1: rows[0]!, c1: cols[0]!, r2: rows[3]!, c2: cols[4]! },
+      series: {},
+    });
+    const file = fileOf(withCharts(sheet, [ohlc]));
+    expect(file.sheets[0]!.charts![0]!.series).toHaveLength(4);
+    const want = fileChartSum(file.sheets[0]!.charts![0]!);
+    for (const written of [writeOds(file, 'charts').data, writeFlatOds(file, 'charts').data]) {
+      const got = await read(written);
+      const [chart] = got.file.sheets[0]!.charts!;
+      expect(chart!.type).toBe('ohlc');
+      expect(fileChartSum(chart!)).toBe(want);
+    }
+  });
+
   it('reads a chart it wrote in a package back to the same chart, keeping its document', async () => {
     const sheet = withCharts(models(), [chartOn(models())]);
     const got = await read(writeOds(fileOf(sheet), 'charts').data);

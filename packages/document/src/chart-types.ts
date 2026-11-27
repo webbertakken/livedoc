@@ -14,6 +14,8 @@ export const CHART_TYPES = [
   'pie',
   'doughnut',
   'radar',
+  'candlestick',
+  'ohlc',
   'combo',
 ] as const;
 export type ChartType = (typeof CHART_TYPES)[number];
@@ -26,6 +28,8 @@ export const CHART_VARIANTS = [
   'bubble',
   'doughnut',
   'radar',
+  'candlestick',
+  'ohlc',
   'combo',
 ] as const;
 export type ChartVariant = (typeof CHART_VARIANTS)[number];
@@ -44,6 +48,8 @@ const SHAPES: Record<ChartType, { shape: ChartKind; chartVariant?: ChartVariant 
   pie: { shape: 'pie-chart' },
   doughnut: { shape: 'pie-chart', chartVariant: 'doughnut' },
   radar: { shape: 'line-chart', chartVariant: 'radar' },
+  candlestick: { shape: 'line-chart', chartVariant: 'candlestick' },
+  ohlc: { shape: 'line-chart', chartVariant: 'ohlc' },
   combo: { shape: 'line-chart', chartVariant: 'combo' },
 };
 
@@ -59,6 +65,8 @@ export const CHART_TYPE_LABELS: Record<ChartType, string> = {
   pie: 'Pie',
   doughnut: 'Doughnut',
   radar: 'Radar',
+  candlestick: 'Candlestick',
+  ohlc: 'OHLC',
   combo: 'Combo',
 };
 

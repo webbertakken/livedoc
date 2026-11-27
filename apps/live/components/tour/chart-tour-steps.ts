@@ -6,7 +6,7 @@ import type { TourStepOf } from './tour-step';
 import { elementSelector } from '@/lib/canvas-selectors';
 
 // The Chart tour (docs/specs/007-editor/element-tours.md "The Chart tour"), on a selected data chart of any of the
-// eleven types: how it reads, a mark's readout, Grow previewed on it, its menu, and for a line, area or scatter chart its
+// thirteen types: how it reads, a mark's readout, Grow previewed on it, its menu, and for a line, area or scatter chart its
 // Chart Data dialog, opened by the tour, where each step rings a real control. Done closes the dialog with the tour.
 
 type Step = TourStepOf<ElementTourApi>;
@@ -29,10 +29,12 @@ const MARKS: Record<ChartType, [one: string, many: string]> = {
   pie: ['slice', 'slices'],
   doughnut: ['slice', 'slices'],
   radar: ['point', 'points'],
+  candlestick: ['candle', 'candles'],
+  ohlc: ['bar', 'bars'],
   combo: ['mark', 'marks'],
 };
 
-// A line, area, stepped area, scatter, bubble, radar or combo chart's numbers are a grid, edited in the Chart Data dialog.
+// A line, area, stepped area, scatter, bubble, radar, candlestick, OHLC or combo chart's numbers are a grid, edited in the Chart Data dialog.
 const editsInDialog = (ctx: ChartTourContext) =>
   !ctx.fromSheet &&
   (ctx.type === 'line' ||
@@ -41,6 +43,8 @@ const editsInDialog = (ctx: ChartTourContext) =>
     ctx.type === 'scatter' ||
     ctx.type === 'bubble' ||
     ctx.type === 'radar' ||
+    ctx.type === 'candlestick' ||
+    ctx.type === 'ohlc' ||
     ctx.type === 'combo');
 
 // A step inside the Chart Data dialog: opens it (again, if it was closed); the engine waits for its control and

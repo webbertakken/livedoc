@@ -40,7 +40,7 @@ import {
 } from './file-charts';
 import { chartRestored } from './chart-nearest';
 import { lineAtPx } from './file-lines';
-import { ODS_CHART_ORIGINAL } from './ods-charts';
+import { ODS_CHART_ORIGINAL, odfSeriesOrder } from './ods-charts';
 import type { FileAt, KeptContent, KeptItem, KeptPart } from './kept-content';
 import type { FileSheet } from './workbook-file';
 
@@ -65,6 +65,7 @@ const CLASSES: Readonly<Record<string, SheetChartType>> = {
   circle: 'pie',
   ring: 'doughnut',
   radar: 'radar',
+  stock: 'ohlc',
 };
 
 // The classes a Combo chart's series take (D287).
@@ -234,7 +235,24 @@ export function readOdsChartDocument(root: XmlElement, sheetName: string): Read 
   const smooth = curves && props(plot, 'chart', 'interpolation') === 'cubic-spline';
   const vertical = props(plot, 'chart', 'vertical') === 'true';
   if (combo && vertical) return null;
-  const type: SheetChartType = combo ? 'combo' : kind === 'bar' && vertical ? 'bar' : CLASSES[kind];
+  // A stock chart of four series drawing its open and close as bars is a Candlestick, else OHLC (D323); one with volume
+  // is not built.
+  const stock = kind === 'stock';
+  const sers = kids(plot, CHART, 'series');
+  if (
+    stock &&
+    (props(plot, 'chart', 'stock-with-volume') === 'true' || sers.length < 3 || sers.length > 4)
+  )
+    return null;
+  const candle =
+    stock && sers.length === 4 && props(plot, 'chart', 'japanese-candle-stick') === 'true';
+  const type: SheetChartType = combo
+    ? 'combo'
+    : candle
+      ? 'candlestick'
+      : kind === 'bar' && vertical
+        ? 'bar'
+        : CLASSES[kind];
   const stack =
     stacks && props(plot, 'chart', 'percentage') === 'true'
       ? ('percent' as const)
@@ -312,6 +330,12 @@ export function readOdsChartDocument(root: XmlElement, sheetName: string): Read 
     });
   }
   if (scatter && !x) return null;
+  // A stock chart's series back in the open, high, low, close order the model holds (D323).
+  if (stock) {
+    const order = odfSeriesOrder({ type, series });
+    const read = [...series];
+    order.forEach((from, k) => (series[from] = read[k]!));
+  }
   const categories = xAxis && childElement(xAxis, CHART, 'categories');
   const labels = categories ? own(attributeOf(categories, TABLE, 'cell-range-address')) : null;
   if (categories && !labels) return null;
@@ -513,6 +537,7 @@ function chartOf(
       ...(alt && alt !== read.title ? { alt: alt.slice(0, SHEET_CHART_ALT_MAX) } : {}),
     },
     original,
+    'odf',
   );
   const z = Number(attributeOf(frame, DRAW, 'z-index') ?? NaN);
   return {

@@ -23,6 +23,8 @@ import { isRadarChart } from './chart-radar';
 import { svgRadarChart } from './svg-render-radar';
 import { isBubbleChart } from './chart-bubble';
 import { svgBubbleChart } from './svg-render-bubble';
+import { isStockChart } from './chart-stock';
+import { svgStockChart } from './svg-render-stock';
 import { svgSankey } from './svg-render-sankey';
 import { isSankeyShape } from './sankey-wire';
 import { svgProgressBar, svgProgressRing, svgRating } from './svg-render-data';
@@ -116,7 +118,9 @@ export function svgElementBody(
       ? svgRadarChart(el, labelColor, chartPalette, fontFamily, chartGround)
       : isBubbleChart(el)
         ? svgBubbleChart(el, labelColor, chartPalette, fontFamily, chartGround)
-        : svgLineChart(el, labelColor, chartPalette, fontFamily, chartGround);
+        : isStockChart(el)
+          ? svgStockChart(el, labelColor, chartPalette, fontFamily, chartGround)
+          : svgLineChart(el, labelColor, chartPalette, fontFamily, chartGround);
   if (isSankeyShape(el.shape))
     return svgSankey(el, labelColor, chartPalette, fontFamily, chartGround);
   // The empty track is the element's OWN fill, else the paper's default track,
