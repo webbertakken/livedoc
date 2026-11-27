@@ -3,7 +3,7 @@
 import { describe, expect, it } from 'vitest';
 import { book } from '../testing/book';
 import { SHEET_COLS_MAX } from '../limits';
-import { applySheetWrite, type SheetWrite } from '../store';
+import { applySheetWrite } from '../store';
 import { splitOrigin, splitPieces, splitTextToColumns, type SplitSeparator } from './split-text';
 
 // A seeded source, so new column ids differ.
@@ -23,7 +23,7 @@ function run(
   const done = splitTextToColumns(b.wb, b.sheets[0]!.id, range, sep, seeded(), origin ?? undefined);
   if (!done || 'refused' in done) throw new Error('refused');
   if (done.write) {
-    const r = applySheetWrite(b.sheets[0]!, done.write as SheetWrite, ctx);
+    const r = applySheetWrite(b.sheets[0]!, done.write, ctx);
     b.sheets[0] = r.sheet;
     b.wb.updateSheet(r.sheet, done.write.kind === 'cells' ? r.touched : undefined);
   }
