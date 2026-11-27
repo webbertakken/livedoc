@@ -409,8 +409,10 @@ export function useSheetActions() {
         const w = toggleFilter(c.workbook, c.sheet.id, primary(c), c.grid);
         if (w) c.write(w, 'Filter');
       },
+      // In the open filter view when there is one (useFilterViews), else the sheet's filter.
       setFilter: (colId: string, cond: FilterCondition | null) => {
-        c.write(setFilterCondition(colId, cond), 'Filter');
+        if (c.filterViews.open) c.filterViews.setCondition(colId, cond);
+        else c.write(setFilterCondition(colId, cond), 'Filter');
       },
       // Insert Chart: the selection (or the data around the cell) as a chart in the Sheet, beside it, in view.
       insertChart: (type: ChartType) => {

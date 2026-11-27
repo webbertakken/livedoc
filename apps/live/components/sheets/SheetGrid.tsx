@@ -267,8 +267,10 @@ export function SheetGrid({
     [c.sheet.layout.formatRules, c.rules.formatPreview],
   );
 
+  // The filter drawn: the open filter view's in the sheet filter's place (useFilterViews).
+  const drawnFilter = c.filterViews.drawn;
   const filter = useMemo(() => {
-    const f = c.sheet.layout.filter;
+    const f = drawnFilter;
     const p = f ? posRangeOf(c.sheet.layout, f) : null;
     if (!f || !p) return null;
     const cols = [];
@@ -277,7 +279,7 @@ export function SheetGrid({
       cols.push({ c: col, colId, active: !!f.conds[colId] });
     }
     return { r: p.r1, cols };
-  }, [c.sheet.layout]);
+  }, [c.sheet.layout, drawnFilter]);
   // The header cells that show a filter button keep room for it (SheetCells); a stable object, so the memoised cells
   // draw again only when the filter changes.
   const filterHead = useMemo(

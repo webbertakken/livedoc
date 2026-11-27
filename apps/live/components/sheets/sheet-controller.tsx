@@ -29,6 +29,7 @@ import type { SheetStore } from './sheet-store-client';
 import { geometryOf, mergeAt, type Geometry } from './sheet-geometry';
 import { useFollowLayout } from './useFollowLayout';
 import { useSheetFolds } from './useSheetFolds';
+import { useFilterViews, type FilterViews } from './useFilterViews';
 import { useSheetRulesState, type SheetRulesState } from './rules/useSheetRulesState';
 import type { Grid } from '@livedoc/sheets';
 import type { SheetChangeKind } from '@livedoc/api-schema';
@@ -70,6 +71,8 @@ export type SheetController = {
   viewLayout: SheetLayout;
   // A Participant's or a Viewer's collapse or expand, kept for this session only (useSheetFolds).
   foldForSelf: (changes: readonly FoldChange[]) => void;
+  // The filter view open for this person and the filter drawn (useFilterViews).
+  filterViews: FilterViews;
   grid: Grid;
   palette: PlanPalette;
   interactive: boolean;
@@ -257,10 +260,20 @@ export function useSheetControllerState(opts: {
     toast: opts.toast,
     takeOwnLayout,
   });
-  // Rows the filter hides are drawn at no height; worked out again whenever a value may have changed.
+  // The filter view this person has open, drawn in the sheet filter's place; its writes are the sheet's.
+  const viewWrite = useLatest((w: SheetWrite) => write(w, 'Filter'));
+  const filterViews = useFilterViews({
+    sheetId: sheet.id,
+    layout: sheet.layout,
+    write: useCallback((w: SheetWrite) => viewWrite.current(w), [viewWrite]),
+    toast: opts.toast,
+    canShape: opts.canShape ?? opts.canEdit,
+  });
+  const drawnFilter = filterViews.drawn;
+  // Rows the drawn filter hides are drawn at no height; worked out again whenever a value may have changed.
   const filtered = useMemo(
-    () => (sheet.layout.filter ? filteredOutRows(workbook, sheet.id) : new Set<string>()),
-    [workbook, sheet.id, sheet.layout.filter, version], // oxlint-disable-line react/exhaustive-deps
+    () => (drawnFilter ? filteredOutRows(workbook, sheet.id, drawnFilter) : new Set<string>()),
+    [workbook, sheet.id, drawnFilter, version], // oxlint-disable-line react/exhaustive-deps
   );
   // How tall each row is drawn: a sized row its size, every other row what its text needs (sheet.md "Row height").
   // Worked out again whenever a value may have changed; the same function while no height did, so the geometry and
@@ -351,6 +364,7 @@ export function useSheetControllerState(opts: {
     geometry,
     viewLayout,
     foldForSelf,
+    filterViews,
     grid,
     selection,
     setSelection,

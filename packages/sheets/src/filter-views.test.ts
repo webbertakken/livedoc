@@ -13,6 +13,8 @@ import { applyLayoutChange } from './store-layout';
 import { inverseLayoutChanges } from './store';
 import { validateWrite } from './validate';
 import { book } from './testing/book';
+import { columnValueCounts, filteredOutRows } from './filter';
+import { columnColours } from './filter-colours';
 import { idRangeOf } from './layout';
 import type { Grid } from './selection';
 
@@ -141,10 +143,18 @@ describe('the fview layout change', () => {
     const layout = wb.sheets[0]!.layout;
     const set = applyLayoutChange(layout, { k: 'fview', id: 'fvaa', view: view() });
     expect(set.filterViews).toEqual([view()]);
-    const renamed = applyLayoutChange(set, { k: 'fview', id: 'fvaa', view: view({ title: 'Big' }) });
+    const renamed = applyLayoutChange(set, {
+      k: 'fview',
+      id: 'fvaa',
+      view: view({ title: 'Big' }),
+    });
     expect(renamed.filterViews?.map((x) => x.title)).toEqual(['Big']);
     expect(
-      inverseLayoutChanges(set, [{ k: 'fview', id: 'fvaa', view: view({ title: 'Big' }) }], renamed),
+      inverseLayoutChanges(
+        set,
+        [{ k: 'fview', id: 'fvaa', view: view({ title: 'Big' }) }],
+        renamed,
+      ),
     ).toEqual([{ k: 'fview', id: 'fvaa', view: view() }]);
     const gone = applyLayoutChange(renamed, { k: 'fview', id: 'fvaa', view: null });
     expect(gone.filterViews).toBeUndefined();
@@ -184,5 +194,30 @@ describe('the fview layout change', () => {
     const full = { ...sheet, layout };
     expect(validateWrite(full, write(view({ id: 'fvnew' }), 'fvnew')).ok).toBe(false);
     expect(validateWrite(full, write(view({ id: 'fv0x', title: 'B' }), 'fv0x')).ok).toBe(true);
+  });
+});
+
+describe('a view drawn in place of the filter', () => {
+  it('hides, counts and colours by the view given, the sheet filter left aside', () => {
+    const b = book({ S: { A1: 'Fruit', B1: 'Count', A2: 'apple', B2: '3', A3: 'pear', B3: '8' } });
+    const sheet = b.sheets[0]!;
+    const filter = {
+      ...idRangeOf(sheet.layout, 0, 0, 2, 1)!,
+      conds: { s0c1: { op: 'gt' as const, a: '5' } },
+    };
+    const withFilter = {
+      ...sheet,
+      layout: applyLayoutChange(sheet.layout, { k: 'filter', filter }),
+    };
+    b.wb.updateSheet(withFilter, []);
+    expect([...filteredOutRows(b.wb, sheet.id)]).toEqual(['s0r1']);
+    const v = view({ r2: 's0r2', conds: { s0c0: { values: ['apple'] } } });
+    expect([...filteredOutRows(b.wb, sheet.id, v)]).toEqual(['s0r2']);
+    expect(columnValueCounts(b.wb, sheet.id, 's0c0', v).map((x) => x.text)).toEqual([
+      'apple',
+      'pear',
+    ]);
+    expect(columnColours(b.wb, sheet.id, 's0c0', 'bg', v)).toEqual([]);
+    expect([...filteredOutRows(b.wb, sheet.id, null)]).toEqual([]);
   });
 });

@@ -7,6 +7,7 @@ import { formatRuleStyle } from './rules/format-rules';
 import { resolveColour } from './themes/spreadsheet-theme';
 import { cellKey } from './sheet';
 import type { Workbook } from './engine/workbook';
+import type { DrawnFilter } from './filter';
 
 export type FilterColourKey = 'bg' | 'fc';
 
@@ -49,9 +50,11 @@ export function columnColours(
   sheetId: string,
   colId: string,
   key: FilterColourKey,
+  // The filter drawn (a view open in the sheet's place); the sheet's when absent.
+  drawn?: DrawnFilter | null,
 ): string[] {
   const sheet = wb.sheet(sheetId);
-  const filter = sheet?.layout.filter;
+  const filter = drawn === undefined ? sheet?.layout.filter : drawn;
   if (!sheet || !filter) return [];
   const box = posRangeOf(sheet.layout, filter);
   const c = layoutIndex(sheet.layout).colPos.get(colId);
