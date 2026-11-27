@@ -313,11 +313,11 @@ details are shown.
 - **D614** Suggested pivots are a text column by a number column summed, up to three (default).
 - **D615** An agent's pivot table names its columns by header text or letter, lands a column clear right of its range
   on the same sheet (else at A1), and filters by the items as the source shows them (default).
+- **D616** A value's details are a new sheet named `Details1` (the first number free) after the open one, holding the
+  source's header and the rows the value summarises as values with their formats, one undo step (default).
 - **D620** An agent groups a pivot group by a date rule's camel-case name, `{size, start, end}` or
   `{groups: [{name, items}]}`, custom items as the source shows them; groups sharing a name or an item are refused
   (default).
-- **D616** A value's details are a new sheet named `Details1` (the first number free) after the open one, holding the
-  source's header and the rows the value summarises as values with their formats, one undo step (default).
 - **D621** Grouping in the grid is the output's context menu's, on an item cell: a date group on a number shown as a
   date or time, a group rule on any other number (its minimum and maximum at first the column's lowest and highest
   kept numbers), a custom group of two or more selected items named `Group 1` (the first number free), and Ungroup on
