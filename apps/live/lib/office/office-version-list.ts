@@ -118,3 +118,19 @@ export function versionGroups(
   }
   return groups;
 }
+
+/** What a version's ⋮ menu offers (review-surfaces.md "Version history"). */
+export type VersionMenuItem = 'name' | 'rename' | 'remove-name' | 'restore';
+
+export const VERSION_MENU_LABELS: Readonly<Record<VersionMenuItem, string>> = {
+  name: 'Name this version',
+  rename: 'Rename',
+  'remove-name': 'Remove name',
+  restore: 'Restore this version',
+};
+
+/** A row's menu: Current version is named only; a named one renamed or unnamed; any other restored. */
+export function versionMenuItems(row: { readonly named: boolean } | 'current'): VersionMenuItem[] {
+  if (row === 'current') return ['name'];
+  return row.named ? ['rename', 'remove-name', 'restore'] : ['name', 'restore'];
+}

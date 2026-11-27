@@ -268,9 +268,15 @@ export const EXACT: Readonly<Record<string, string>> = {
   'Document|Created|Offline': 'A brand-new document was created.',
   'Document|Created|TextDocumentCompare':
     'Someone compared two text documents from Tools > Compare documents, making a new document of suggestions.',
+  'Document|Changed|TextDocumentVersionNamed':
+    'An Editor named a version of a text document, in its version history or from File > Version history > Name current version.',
+  'Document|Changed|TextDocumentVersionRestored':
+    'An Editor restored a text document to one of its versions from the version history.',
   'Document|Deleted|': 'A document was deleted.',
   'Document|Duplicated|': 'A document was duplicated into a new one.',
   'Document|Duplicated|Copy': 'A document was duplicated into a new one.',
+  'Document|Opened|TextDocumentVersionHistory':
+    'An Editor opened a text document’s version history (File > Version history > See version history, or its keys).',
   'Document|Joined|Edit':
     'Someone came into a document through an edit-role share link. Counted once per person per document, not on every revisit.',
   'Document|Joined|Participate':
@@ -2822,6 +2828,8 @@ export const BY_ACTION: Readonly<Record<string, string>> = {
   'Comment|Mentioned': 'A comment was sent that @-mentioned at least one teammate.',
   'Comment|Resolved': 'A comment thread was marked resolved.',
   'Comment|Unresolved': 'A resolved comment thread was reopened.',
+  'Document|Changed':
+    'Someone changed something about a document as a whole, such as its versions.',
   'Document|Created': 'A brand-new document was created.',
   'Document|Deleted': 'A document was deleted.',
   'Document|Exported': 'Someone exported a tab, a selection or a page to a file or the clipboard.',
@@ -2831,6 +2839,7 @@ export const BY_ACTION: Readonly<Record<string, string>> = {
   'Document|Loaded':
     'A document was opened, counted on every open (including a page refresh and the first open of a document just created).',
   'Document|Moved': 'A document was moved into (or out of) a folder.',
+  'Document|Opened': 'Someone opened a part of a document, such as its version history.',
   'Document|Redone': 'Someone hit Redo on a document edit.',
   'Document|Removed':
     "Someone removed something from a document's sharing, such as revoking a share link.",

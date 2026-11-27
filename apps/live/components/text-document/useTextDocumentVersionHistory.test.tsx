@@ -19,11 +19,17 @@ const api = vi.hoisted(() => ({
   list: vi.fn(),
   read: vi.fn(),
   state: vi.fn(),
+  name: vi.fn(),
+  restore: vi.fn(),
 }));
 vi.mock('@/lib/api/text-document-versions', () => ({
   apiListTextDocumentVersions: api.list,
   apiReadTextDocumentVersion: api.read,
+  apiNameTextDocumentVersion: api.name,
+  apiRestoreTextDocumentVersion: api.restore,
 }));
+const tracked = vi.hoisted(() => [] as string[][]);
+vi.mock('@/lib/telemetry', () => ({ track: (...args: string[]) => tracked.push(args) }));
 vi.mock('@/lib/api/text-documents', () => ({ apiLoadTextDocumentState: api.state }));
 
 afterEach(cleanup);
@@ -160,5 +166,43 @@ describe('useTextDocumentVersionHistory', () => {
     fireEvent.click(screen.getByRole('button', { name: 'See version history' }));
     fireEvent.keyDown(screen.getByRole('listbox'), { key: 'ArrowDown' });
     expect(api.read).not.toHaveBeenCalled();
+  });
+
+  it('counts an opening, draws changes or not as Show changes says, names in place and restores', async () => {
+    tracked.splice(0);
+    api.name.mockReset().mockResolvedValue({});
+    api.restore.mockReset().mockResolvedValue({});
+    const onClosed = vi.fn();
+    render(<Harness onClosed={onClosed} />);
+    fireEvent.click(screen.getByRole('button', { name: 'See version history' }));
+    expect(tracked).toEqual([['Document', 'Opened', 'TextDocumentVersionHistory']]);
+    await waitFor(() => expect(body().textContent).toBe('First wordsLater words'));
+    expect(screen.queryByRole('checkbox', { name: 'Show changes' })).toBeNull();
+    fireEvent.keyDown(screen.getByRole('listbox'), { key: 'ArrowDown' });
+    await waitFor(() => expect(body().querySelector('[data-ychange="added"]')).not.toBeNull());
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Show changes' }));
+    await waitFor(() => expect(body().querySelector('[data-ychange]')).toBeNull());
+    expect(body().textContent).toBe('First words');
+
+    // Rename in place: the list read again.
+    fireEvent.keyDown(screen.getByRole('listbox'), { key: 'ContextMenu' });
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Rename' }));
+    const field = screen.getByRole('textbox', { name: 'Version name' });
+    fireEvent.change(field, { target: { value: 'Draft two' } });
+    fireEvent.keyDown(field, { key: 'Enter' });
+    await waitFor(() => expect(api.list).toHaveBeenCalledTimes(2));
+    expect(api.name).toHaveBeenCalledWith(where, 'v1', 'Draft two', undefined);
+
+    // A list that cannot be read again says so.
+    api.list.mockRejectedValueOnce(new Error('503'));
+    fireEvent.keyDown(screen.getByRole('listbox'), { key: 'ContextMenu' });
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Remove name' }));
+    expect((await screen.findByRole('status')).textContent).toBe(VERSION_FAILED);
+
+    fireEvent.keyDown(screen.getByRole('listbox'), { key: 'ContextMenu' });
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Restore this version' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Restore' }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    expect(onClosed).toHaveBeenCalled();
   });
 });
