@@ -5,6 +5,7 @@
 // them, largest first. Pure; `ox` / `oy` shift every point.
 import type { ChartRect } from './chart-frame';
 import { lineMarks, type LineMarks } from './chart-marks';
+import { axisReadoutLabel } from './chart-titles';
 import { chartTypeOf } from './chart-types';
 import { shortNumber, type ChartValueLabel } from './chart-values';
 import { chartValue, type LineSeries } from './data-shapes';
@@ -122,22 +123,23 @@ export function bubbleNames(m: BubbleMarks, names: readonly string[] | undefined
 }
 
 /**
- * A bubble's readout: `name, y, x, size` when its point is named, else `x · series: y, size`; with no sizes, the size
- * is left out.
+ * A bubble's readout, a line each (pie-chart.md "Bubble", "A scatter point's readout"): its name, else its series', then
+ * its value and its x against their axes' labels, then its size against the size series' name (none with no sizes).
  */
 export function bubbleReadout(
   categories: readonly string[],
   series: readonly LineSeries[],
   names: readonly string[] | undefined,
-  s: number,
-  i: number,
-): string {
+  titles: { x?: string; y?: string } | undefined,
+  at: { s: number; i: number },
+): string[] {
   const { drawn, sizes } = bubbleSeriesOf(series);
-  const y = chartValue(drawn[s]?.values[i]);
+  const { s, i } = at;
   const size = sizes ? chartValue(sizes.values[i]) : null;
-  const tail = size === null ? '' : `, ${size}`;
-  const name = names?.[i];
-  return name
-    ? `${name}, ${y}, ${categories[i] ?? ''}${tail}`
-    : `${categories[i] ?? ''} · ${drawn[s]?.name ?? ''}: ${y}${tail}`;
+  return [
+    names?.[i] || (drawn[s]?.name ?? ''),
+    `${axisReadoutLabel(titles?.y, 'y')}: ${chartValue(drawn[s]?.values[i])}`,
+    `${axisReadoutLabel(titles?.x, 'x')}: ${categories[i] ?? ''}`,
+    ...(sizes && size !== null ? [`${sizes.name || 'size'}: ${size}`] : []),
+  ];
 }

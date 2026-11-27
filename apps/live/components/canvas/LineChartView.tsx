@@ -26,6 +26,7 @@ import {
   comboMarks,
   comboValueLabels,
   isComboChart,
+  axisReadoutLabel,
   isBubbleChart,
   isStockChart,
   isRadarChart,
@@ -53,12 +54,6 @@ type Props = {
   // What the chart sits on (chartPageGrounds): its series drawn adapted to it.
   ground?: readonly string[];
 };
-
-// An axis's label in a readout: its title up to its first " (", so a unit or a note in brackets stays on the axis; the
-// fallback for an axis with no title (pie-chart.md "A scatter point's readout").
-function axisLabel(title: string | undefined, fallback: string): string {
-  return title?.split(' (')[0]!.trim() || fallback;
-}
 
 // A Radar chart draws around a centre (pie-chart.md "Radar"), a Bubble chart its sized circles ("Bubble"), a Candlestick or
 // OHLC chart its prices ("Candlestick and OHLC"); every other
@@ -131,8 +126,8 @@ function PlotLineChartView({ element, fontFamily, textColor, palette, ground }: 
     hover && chartTypeOf(element) === 'scatter'
       ? [
           element.linePointNames?.[hover.i] || (series[hover.s]?.name ?? ''),
-          `${axisLabel(element.chartAxisTitles?.y, 'y')}: ${hoveredValue}`,
-          `${axisLabel(element.chartAxisTitles?.x, 'x')}: ${categories[hover.i]}`,
+          `${axisReadoutLabel(element.chartAxisTitles?.y, 'y')}: ${hoveredValue}`,
+          `${axisReadoutLabel(element.chartAxisTitles?.x, 'x')}: ${categories[hover.i]}`,
         ]
       : null;
 
