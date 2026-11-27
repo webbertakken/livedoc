@@ -187,11 +187,10 @@ describe('the table chip and its menu', () => {
       }),
     );
     const paused = screen.getByRole('button', {
-      name: 'Amount column menu, filter paused while a filter view is open',
+      name: `Amount column menu, ${FILTER_PAUSED.toLowerCase()}`,
     });
     expect(paused.hasAttribute('data-paused')).toBe(true);
     expect(paused.hasAttribute('data-filtered')).toBe(false);
-    expect(paused.getAttribute('title')).toBe(FILTER_PAUSED);
     fireEvent.click(paused);
     expect(screen.getByText('Edit Column Type')).toBeTruthy();
     act(() => h.ctl().filterViews.close());

@@ -16,6 +16,7 @@ import {
   tableNameProblem,
   type SheetTable,
 } from '@livedoc/sheets';
+import { Tooltip } from '@livedoc/ui';
 import { ContextMenu, ContextMenuDivider } from '@/components/palette/ContextMenu';
 import { MenuActionRow, MenuHeader } from '@/components/primitives/PortalMenu';
 import { debugLog } from '@/lib/debug-log';
@@ -130,55 +131,55 @@ export function SheetTablesLayer() {
           // Paused while a view is open: drawn quiet, opening the column menu; its filter is never touched (D482).
           const paused = !!t.filter && !filters;
           return (
-            <button
-              key={`${t.id}:${colId}`}
-              type="button"
-              data-table-column={`${t.id}:${colId}`}
-              data-filtered={filtered ? '' : undefined}
-              data-paused={paused ? '' : undefined}
-              title={paused ? FILTER_PAUSED : undefined}
-              aria-label={
-                filters
-                  ? `${columnName} filter`
-                  : paused
-                    ? `${columnName} column menu, ${FILTER_PAUSED.toLowerCase()}`
-                    : `${columnName} column menu`
-              }
-              aria-haspopup="dialog"
-              aria-expanded={[columnMenu, filterMenu].some(
-                (m) => m?.tableId === t.id && m.colId === colId,
-              )}
-              className="pointer-events-auto absolute flex items-center justify-center rounded text-xs opacity-70 hover:opacity-100 focus-visible:opacity-100"
-              style={{
-                left: r.x + r.w - COLUMN_BUTTON - 2,
-                top: r.y + (r.h - COLUMN_BUTTON) / 2,
-                width: COLUMN_BUTTON,
-                height: COLUMN_BUTTON,
-                // A filtered column's button filled, as the sheet's filter's.
-                ...(filtered
-                  ? { backgroundColor: c.palette.focus, color: '#ffffff', opacity: 1 }
-                  : { color: c.palette.text }),
-              }}
-              onPointerDown={(e) => e.stopPropagation()}
-              onKeyDown={(e) => e.stopPropagation()}
-              onClick={(e) =>
-                (filters ? setFilterMenu : setColumnMenu)({
-                  tableId: t.id,
-                  colId,
-                  ...below(e.currentTarget),
-                })
-              }
-            >
-              {filtered ? (
-                <FilterIcon />
-              ) : paused ? (
-                <span aria-hidden className="opacity-50">
+            <Tooltip key={`${t.id}:${colId}`} label={paused ? FILTER_PAUSED : ''}>
+              <button
+                type="button"
+                data-table-column={`${t.id}:${colId}`}
+                data-filtered={filtered ? '' : undefined}
+                data-paused={paused ? '' : undefined}
+                aria-label={
+                  filters
+                    ? `${columnName} filter`
+                    : paused
+                      ? `${columnName} column menu, ${FILTER_PAUSED.toLowerCase()}`
+                      : `${columnName} column menu`
+                }
+                aria-haspopup="dialog"
+                aria-expanded={[columnMenu, filterMenu].some(
+                  (m) => m?.tableId === t.id && m.colId === colId,
+                )}
+                className="pointer-events-auto absolute flex items-center justify-center rounded text-xs opacity-70 hover:opacity-100 focus-visible:opacity-100"
+                style={{
+                  left: r.x + r.w - COLUMN_BUTTON - 2,
+                  top: r.y + (r.h - COLUMN_BUTTON) / 2,
+                  width: COLUMN_BUTTON,
+                  height: COLUMN_BUTTON,
+                  // A filtered column's button filled, as the sheet's filter's.
+                  ...(filtered
+                    ? { backgroundColor: c.palette.focus, color: '#ffffff', opacity: 1 }
+                    : { color: c.palette.text }),
+                }}
+                onPointerDown={(e) => e.stopPropagation()}
+                onKeyDown={(e) => e.stopPropagation()}
+                onClick={(e) =>
+                  (filters ? setFilterMenu : setColumnMenu)({
+                    tableId: t.id,
+                    colId,
+                    ...below(e.currentTarget),
+                  })
+                }
+              >
+                {filtered ? (
                   <FilterIcon />
-                </span>
-              ) : (
-                <span aria-hidden>▾</span>
-              )}
-            </button>
+                ) : paused ? (
+                  <span aria-hidden className="opacity-50">
+                    <FilterIcon />
+                  </span>
+                ) : (
+                  <span aria-hidden>▾</span>
+                )}
+              </button>
+            </Tooltip>
           );
         });
       })}
