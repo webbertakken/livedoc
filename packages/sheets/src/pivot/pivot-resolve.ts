@@ -146,6 +146,23 @@ export function isPivotArray(v: Value | undefined): v is PivotArray {
   return isArray(v) && 'fmts' in v;
 }
 
+// Each output's value cells by place, made the first time one is asked for.
+const valueCells = new WeakMap<PivotArray, Map<string, PivotIndex['cells'][number]>>();
+
+/** The value cell at (r, c) of an output (relative to its anchor), or undefined for any other cell. */
+export function pivotIndexCellAt(
+  arr: PivotArray,
+  r: number,
+  c: number,
+): PivotIndex['cells'][number] | undefined {
+  let byPlace = valueCells.get(arr);
+  if (!byPlace) {
+    byPlace = new Map(arr.index.cells.map((x) => [`${x.r},${x.c}`, x]));
+    valueCells.set(arr, byPlace);
+  }
+  return byPlace.get(`${r},${c}`);
+}
+
 const PERCENT: CellFormat = { nf: 'percent', dp: 2 };
 
 /** The output as cells for the grid: values, and formats from its source columns' or as percentages. */

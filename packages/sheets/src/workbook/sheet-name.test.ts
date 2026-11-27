@@ -86,3 +86,12 @@ describe('SheetName.next', () => {
     expect(SheetName.next([])).toBe('Sheet1');
   });
 });
+
+// pivot-tables.md "Making one" (`Pivot Table 1`) and "Details" (`Details1`, D616): the first number free.
+describe('SheetName.numbered', () => {
+  it('numbers a base with a space, or with none', () => {
+    expect(SheetName.numbered('Pivot Table', ['pivot table 1'])).toBe('Pivot Table 2');
+    expect(SheetName.numbered('Details', ['Details1', 'Details 2'], '')).toBe('Details2');
+    expect(SheetName.numbered('Details', [], '')).toBe('Details1');
+  });
+});

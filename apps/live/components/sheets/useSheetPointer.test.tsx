@@ -5,6 +5,7 @@
 import { act, fireEvent, screen } from '@testing-library/react';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { clearPointingTarget, setPointingTarget } from './sheet-pointing';
+import { SheetPivotDetailsContext } from './pivots/sheet-pivots';
 import { COL_HEADER_PX, ROW_HEADER_PX } from './sheet-geometry';
 import { cellPoint, gridScrolls, installGridDom, mountGrid } from './sheet-grid-test-utils';
 
@@ -583,6 +584,23 @@ describe('menus and the double-click', () => {
     const viewer = await mountGrid({ canEdit: false });
     fireEvent.doubleClick(viewer.viewport, cellPoint(0, 0));
     expect(viewer.called('startEdit')).toEqual([]);
+  });
+
+  // pivot-tables.md "Details" (D616): a pivot table's value shows its details instead.
+  it('a double-click on a pivot table value shows its details rather than editing', async () => {
+    const details = vi.fn((r: number) => r === 2);
+    const h = await mountGrid({
+      wrap: (grid) => (
+        <SheetPivotDetailsContext.Provider value={details}>
+          {grid}
+        </SheetPivotDetailsContext.Provider>
+      ),
+    });
+    fireEvent.doubleClick(h.viewport, cellPoint(2, 1));
+    expect(details).toHaveBeenLastCalledWith(2, 1);
+    expect(h.called('startEdit')).toEqual([]);
+    fireEvent.doubleClick(h.viewport, cellPoint(3, 1));
+    expect(h.called('startEdit')).toEqual([['cell']]);
   });
 });
 

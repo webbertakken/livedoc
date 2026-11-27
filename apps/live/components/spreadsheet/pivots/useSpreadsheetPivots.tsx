@@ -3,9 +3,16 @@
 // A spreadsheet's pivot tables made and changed (docs/specs/029-sheets/pivot-tables.md "Making one", "Pivot Table
 // Editor"): Insert › Pivot Table's dialog, Create placing a pivot table on a new sheet or at a cell of any sheet, and
 // the editor's changes written whole, each one undo step. A pivot table bound for another sheet waits until that
-// sheet is open, then lands there and the editor opens on it.
+// sheet is open, then lands there and the editor opens on it. A value's details go on a new sheet ("Details").
 import { useCallback, useEffect, useState, type ReactNode } from 'react';
-import { makeAxisIds, SheetName, type Sheet, type SheetPivot } from '@livedoc/sheets';
+import {
+  makeAxisIds,
+  PIVOT_DETAILS_BASE,
+  pivotDetailsSheet,
+  SheetName,
+  type Sheet,
+  type SheetPivot,
+} from '@livedoc/sheets';
 import type { SheetController } from '@/components/sheets/sheet-controller';
 import { debugLog } from '@/lib/debug-log';
 import { track } from '@/lib/telemetry';
@@ -36,6 +43,8 @@ export function useSpreadsheetPivots(
   dialog: ReactNode;
   // A pivot table set whole (the editor's changes), one undo step.
   change: (next: SheetPivot) => void;
+  // The details of the value at (r, c) on a new sheet (pivot-tables.md "Details", D616); false when it is no value.
+  showDetails: (r: number, c: number) => boolean;
 } {
   const [start, setStart] = useState<string | null>(null);
   const { write, sheet, canShape } = c;
@@ -106,6 +115,28 @@ export function useSpreadsheetPivots(
     [write, sheet.id],
   );
 
+  const showDetails = useCallback(
+    (r: number, col: number) => {
+      const details = canShape && bar ? c.workbook.pivotDetailsAt(sheet.id, r, col) : null;
+      if (!details || !bar) return false;
+      const name = SheetName.numbered(
+        PIVOT_DETAILS_BASE,
+        c.workbook.sheetList().map((s) => s.title),
+        '',
+      );
+      bar.add('afterOpen', {
+        name,
+        seed: pivotDetailsSheet(c.workbook, details, { id: sheet.id, title: name }),
+      });
+      debugLog(
+        `[sheet-pivots] details sheet=${sheet.id} pivot=${details.pivotId} rows=${details.rows.length - 1}`,
+      );
+      track('Spreadsheet', 'Added', 'PivotDetails');
+      return true;
+    },
+    [canShape, bar, c.workbook, sheet.id],
+  );
+
   const dialog =
     start === null ? null : (
       <CreatePivotTableDialog
@@ -117,5 +148,5 @@ export function useSpreadsheetPivots(
         onClose={close}
       />
     );
-  return { openCreate, dialog, change };
+  return { openCreate, dialog, change, showDetails };
 }

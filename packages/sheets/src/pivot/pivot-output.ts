@@ -86,6 +86,34 @@ export function pivotOutput(
   locale = 'en-US',
   calc: PivotCalc = NO_CALC,
 ): PivotOutput {
+  return worked(source, spec, locale, calc, null).out;
+}
+
+/**
+ * The source rows (by index below the header, ascending) the value at `want` of the output summarises
+ * (pivot-tables.md "Details", D616); null for any other cell of the output, or a value no row reaches.
+ */
+export function pivotDetailRows(
+  source: PivotSource,
+  spec: PivotSpec,
+  want: { r: number; c: number },
+  locale = 'en-US',
+  calc: PivotCalc = NO_CALC,
+): number[] | null {
+  const found = worked(source, spec, locale, calc, want).found;
+  return found?.length ? [...found] : null;
+}
+
+// A place in the output and the rows its value summarises, once the layout reaches it.
+type Want = { r: number; c: number } | null;
+
+function worked(
+  source: PivotSource,
+  spec: PivotSpec,
+  locale: string,
+  calc: PivotCalc,
+  want: Want,
+): { out: PivotOutput; found: readonly number[] | null } {
   const at = (r: number, c: number): PivotCell => source.rows[r]?.[c] ?? BLANK;
   // The rows every filter keeps.
   const filters = (spec.filters ?? []).map((f) => {
@@ -198,7 +226,7 @@ export function pivotOutput(
   sort(rowRoot, spec.rows, colRoot, true);
   sort(colRoot, spec.columns, rowRoot, false);
 
-  return layout(source, spec, rowRoot, colRoot, cellOf);
+  return layout(source, spec, rowRoot, colRoot, { cellOf, rowsOf, want });
 }
 
 type Slot = { node: PivotNode; v: number | null; total: boolean };
@@ -209,8 +237,14 @@ function layout(
   spec: PivotSpec,
   rowRoot: PivotNode,
   colRoot: PivotNode,
-  cellOf: (rn: PivotNode, cn: PivotNode, vi: number) => PivotOutCell,
-): PivotOutput {
+  cells: {
+    cellOf: (rn: PivotNode, cn: PivotNode, vi: number) => PivotOutCell;
+    rowsOf: (rn: PivotNode, cn: PivotNode) => readonly number[];
+    want: Want;
+  },
+): { out: PivotOutput; found: readonly number[] | null } {
+  const { cellOf, rowsOf, want } = cells;
+  let found: readonly number[] | null = null;
   const R = spec.rows.length;
   const C = spec.columns.length;
   const V = spec.values.length;
@@ -343,6 +377,7 @@ function layout(
         r: rows.length - 1,
         c: L + i,
       });
+      if (want?.r === rows.length - 1 && want.c === L + i) found = rowsOf(line.node, s.node);
     });
   }
   const index: PivotIndex = {
@@ -353,5 +388,5 @@ function layout(
     keys: [...spec.rows, ...spec.columns].map((g) => groupHeader(g, nameOf(g.col))),
     cells: indexed,
   };
-  return { rows, width, index };
+  return { out: { rows, width, index }, found };
 }

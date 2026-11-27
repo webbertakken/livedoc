@@ -69,9 +69,9 @@ function fit(raw: string, taken: readonly string[]): string {
   }
 }
 
-/** `<base> <n>`, n the first from one not taken (Create Pivot Table's `Pivot Table 1`, pivot-tables.md "Making one"). */
-function numbered(base: string, taken: readonly string[]): string {
-  for (let n = 1; ; n++) if (!isTaken(`${base} ${n}`, taken)) return `${base} ${n}`;
+/** `<base><gap><n>`, n the first from one not taken (`Pivot Table 1`, `Details1`: pivot-tables.md "Making one", "Details"). */
+function numbered(base: string, taken: readonly string[], gap = ' '): string {
+  for (let n = 1; ; n++) if (!isTaken(`${base}${gap}${n}`, taken)) return `${base}${gap}${n}`;
 }
 
 export const SheetName = { check, fit, next, numbered } as const;

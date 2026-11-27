@@ -38,6 +38,7 @@ import { TOUCH_GRIP_HIT_PX, useSheetTouch } from './useSheetTouch';
 import { useSheetTouchLink } from './useSheetTouchLink';
 import { sheetPointerMenu } from './sheet-pointer-menu';
 import { endDrag, linesWith, type Drag } from './sheet-drag-end';
+import { useSheetPivotDetails } from './pivots/sheet-pivots';
 
 const DRAG_START_PX = 4;
 const AUTOSCROLL_EDGE_PX = 24;
@@ -67,6 +68,7 @@ export function useSheetPointer(
     | null
   >(null);
   const [hover, setHover] = useState<{ r: number; c: number } | null>(null);
+  const pivotDetails = useSheetPivotDetails();
   const pointer = useRef({ x: 0, y: 0 });
   const timer = useRef<ReturnType<typeof setInterval> | null>(null);
   // The window's listeners during a drag: stable functions that call this render's handlers.
@@ -477,6 +479,8 @@ export function useSheetPointer(
       return;
     }
     const h = hitAt(x, y);
+    // A pivot table's value shows its details rather than an edit (pivot-tables.md "Details").
+    if (h.kind === 'cell' && pivotDetails?.(h.r, h.c)) return;
     if (h.kind === 'cell' && cc.canEdit) actions.startEdit('cell');
     if ((h.kind === 'col' || h.kind === 'row') && h.edge && cc.canEdit) {
       const axis = h.kind === 'col' ? 'c' : 'r';
