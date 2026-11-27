@@ -38,6 +38,7 @@ import { forbidden, json } from '../responses';
 import { relayTabRename } from '../room-client';
 import { axisWriteStatements } from '../db/sheet-axes';
 import { readCellWriteHead } from '../db/sheet-cell-head';
+import { shrinkFunctionsReading } from './workbook-functions-route';
 import { tabLookProblem } from './workbook-shown-sheets';
 import { capsProblem, deletes, gridProblem, titleProblem } from './sheet-write-checks';
 import { readBody, type DocumentRouteContext } from './context';
@@ -81,6 +82,9 @@ export async function shrinkReaders(
   // The tab whose sheets read one another, or undefined for a spreadsheet's whole workbook.
   scope: string | undefined,
 ): Promise<void> {
+  // A spreadsheet's named functions read any of its sheets (formulas.md "Named functions").
+  if (scope === undefined)
+    await shrinkFunctionsReading(ctx, documentId, head.id, head.layout, changes);
   const heads = await listSheetHeads(ctx.env, documentId, scope);
   await Promise.all(
     heads

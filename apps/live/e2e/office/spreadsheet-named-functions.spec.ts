@@ -89,3 +89,42 @@ test('creates a named function, calls it from a cell, edits it and undoes the ed
   await expect(cell(page, 'B1 #NAME?')).toHaveCount(1);
   expectNoPageErrors(pageErrors);
 });
+
+// D301: a reference in a definition is saved naming its sheet, absolute; it reads that cell from any cell and follows
+// rows inserted above it.
+test('keeps a cell reference in a definition, naming its sheet', async ({ page, pageErrors }) => {
+  test.setTimeout(120_000);
+  await page.setViewportSize({ width: 1280, height: 860 });
+  await page.goto('/new?kind=spreadsheet');
+  await page.waitForURL(/\/document\//);
+  await expect(page.locator(READY)).toBeVisible();
+
+  await typeIn(page, 'A1', '0.2');
+  await (await officeMenuItem(page, ['Data', 'Named Functions'])).click();
+  const panel = page.getByRole('complementary', { name: 'Named Functions' });
+  await panel.getByRole('button', { name: 'Add New Function' }).click();
+  await panel.getByRole('textbox', { name: 'Function Name' }).fill('with_tax');
+  await panel.getByRole('button', { name: 'Add Argument' }).click();
+  await panel.getByRole('textbox', { name: 'Argument 1', exact: true }).fill('price');
+  await panel.getByRole('textbox', { name: 'Formula Definition' }).fill('=price*(1+A1)');
+  await panel.getByRole('button', { name: 'Create', exact: true }).click();
+  await expect(panel.getByText('WITH_TAX(price)')).toBeVisible();
+
+  await typeIn(page, 'C5', '=WITH_TAX(100)');
+  await expect(cell(page, 'C5 120')).toHaveCount(1);
+
+  // A row inserted above A1: the definition reads A2 now, as Sheet1!$A$2.
+  await select(page, 'A1');
+  await page.keyboard.press('Shift+F10');
+  await page
+    .getByRole('menu', { name: 'Context menu' })
+    .getByRole('menuitem', { name: 'Insert 1 Row Above' })
+    .click();
+  await expect(cell(page, 'C6 120')).toHaveCount(1);
+  await panel.getByRole('button', { name: 'Edit WITH_TAX' }).click();
+  await expect(panel.getByRole('textbox', { name: 'Formula Definition' })).toHaveValue(
+    '=price*(1+Sheet1!$A$2)',
+  );
+  await page.screenshot({ path: test.info().outputPath('named-functions-reference.png') });
+  expectNoPageErrors(pageErrors);
+});

@@ -19,6 +19,7 @@ import type { BoxedElement, Element } from '@livedoc/document';
 import type { SheetsScope } from '@/lib/api/sheets';
 import type { ItemUndoStep } from '@/hooks/plan/item-undo-journal';
 import { useLatest } from '@/hooks/ui/useLatest';
+import type { FunctionsChange } from '@/components/sheets/functions-shrink';
 
 export type SheetPeer = { id: string; name: string; color: string };
 
@@ -43,6 +44,8 @@ export type SheetsBridge = {
   iteration?: Iteration;
   // A spreadsheet's named functions (formulas.md "Named functions"); absent, none.
   functions?: readonly NamedFunction[];
+  // Saves the named functions a layout change of this person's rewrites (D301): a deletion's shrink, undo and redo.
+  changeFunctions?: (change: FunctionsChange) => void;
   // A spreadsheet's Recalculation (settings.md "Calculation"); absent, on change.
   recalc?: WorkbookRecalc;
   // Whether a spreadsheet's imports may fetch (imports.md "Allow access", "A spreadsheet in This Browser"); absent
@@ -106,6 +109,7 @@ export function useSheetsBridge(opts: {
   oneWorkbook: boolean;
   iteration?: Iteration;
   functions?: readonly NamedFunction[];
+  changeFunctions?: (change: FunctionsChange) => void;
   recalc?: WorkbookRecalc;
   importAccess?: ImportAccess;
   rangeSources?: readonly string[];
@@ -153,6 +157,7 @@ export function useSheetsBridge(opts: {
     oneWorkbook,
     iteration,
     functions,
+    changeFunctions,
     recalc,
     importAccess,
     rangeSources,
@@ -171,6 +176,7 @@ export function useSheetsBridge(opts: {
       oneWorkbook,
       ...(iteration ? { iteration } : {}),
       ...(functions ? { functions } : {}),
+      ...(changeFunctions ? { changeFunctions } : {}),
       ...(recalc ? { recalc } : {}),
       ...(importAccess !== undefined ? { importAccess } : {}),
       ...(rangeSources ? { rangeSources } : {}),
@@ -201,6 +207,7 @@ export function useSheetsBridge(opts: {
       oneWorkbook,
       iteration,
       functions,
+      changeFunctions,
       recalc,
       importAccess,
       rangeSources,

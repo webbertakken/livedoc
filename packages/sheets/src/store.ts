@@ -105,11 +105,28 @@ export function shrinkReadersOf(
   const formulas = new Map<string, StoredFormula>();
   for (const [key, cell] of cells) {
     const input = cell.input;
-    if (input && 'f' in input && formulaReadsSheet(input.f, '', targetId))
-      formulas.set(key, input.f);
+    if (input && 'f' in input) formulas.set(key, input.f);
   }
-  if (formulas.size === 0) return [];
-  const changed = new Set<string>();
+  return [...shrinkFormulasReading(targetId, before, changes, formulas)].map((key) => {
+    const { r, c } = splitCellKey(key);
+    return { r, c, i: { f: formulas.get(key)! } };
+  });
+}
+
+/**
+ * The one path a deletion on sheet `targetId` (laid out as `before`) shrinks the ranges other formulas hold into it:
+ * a reading sheet's cells (shrinkReadersOf) and the workbook's named functions (named-function-refs.ts) alike. Each
+ * formula of `formulas` reading that sheet is rewritten in place; the keys of those rewritten are returned.
+ */
+export function shrinkFormulasReading<K>(
+  targetId: string,
+  before: SheetLayout,
+  changes: readonly LayoutChange[],
+  formulas: Map<K, StoredFormula>,
+): Set<K> {
+  for (const [key, f] of formulas) if (!formulaReadsSheet(f, '', targetId)) formulas.delete(key);
+  const changed = new Set<K>();
+  if (formulas.size === 0) return changed;
   let layout = before;
   for (const ch of changes) {
     const was = layout;
@@ -128,10 +145,7 @@ export function shrinkReadersOf(
       changed.add(key);
     }
   }
-  return [...changed].map((key) => {
-    const { r, c } = splitCellKey(key);
-    return { r, c, i: { f: formulas.get(key)! } };
-  });
+  return changed;
 }
 
 /**

@@ -4,6 +4,7 @@ import { isColour, validFormatPatch, validFormat } from './format';
 import { isAxisId, isSheetId } from './ids';
 import { OUTLINE_DEPTH_MAX } from './limits';
 import { storedAst } from './formula/stored';
+import { isStoredRef } from './formula/stored-ref-shape';
 import { tokenize } from './formula/tokens';
 import {
   FORMULA_MAX,
@@ -50,7 +51,6 @@ import {
   type IdRange,
   type Sheet,
   type SheetLayout,
-  type StoredRef,
 } from './sheet';
 
 export type SheetRejection =
@@ -80,47 +80,6 @@ const no = (error: SheetRejection, at?: string): Validation => ({
   ...(at ? { at } : {}),
 });
 const OK: Validation = { ok: true };
-
-function isStoredRef(v: unknown): v is StoredRef {
-  if (typeof v !== 'object' || v === null || Array.isArray(v)) return false;
-  const r = v as Record<string, unknown>;
-  for (const [k, x] of Object.entries(r)) {
-    switch (k) {
-      case 's':
-        if (!isSheetId(x)) return false;
-        break;
-      case 'st':
-        if (typeof x !== 'string' || x.length === 0 || x.length > SHEET_TITLE_MAX) return false;
-        break;
-      case 'r1':
-      case 'c1':
-      case 'r2':
-      case 'c2':
-        if (!isAxisId(x)) return false;
-        break;
-      case 'a':
-        if (!Number.isInteger(x) || (x as number) < 0 || (x as number) > 15) return false;
-        break;
-      case 'open':
-        if (x !== 'r' && x !== 'c') return false;
-        break;
-      case 'spill':
-        if (x !== true) return false;
-        break;
-      case 'p':
-        if (
-          !Array.isArray(x) ||
-          x.length !== 4 ||
-          !x.every((n) => Number.isInteger(n) && n >= -1 && n < 1e6)
-        )
-          return false;
-        break;
-      default:
-        return false;
-    }
-  }
-  return true;
-}
 
 export function validInput(v: unknown): v is CellInput {
   if (typeof v !== 'object' || v === null || Array.isArray(v)) return false;

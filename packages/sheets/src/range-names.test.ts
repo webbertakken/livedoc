@@ -1,6 +1,6 @@
 // Named ranges (docs/specs/029-sheets/sheet.md "Named ranges", formulas.md "Named ranges").
 import { describe, expect, it } from 'vitest';
-import { applySheetWrite, inverseSheetWrite, type SheetWrite } from './store';
+import { applySheetWrite, inverseLayoutChanges, inverseSheetWrite, type SheetWrite } from './store';
 import {
   layoutForCopy,
   namedRangeWrites,
@@ -84,6 +84,27 @@ describe('setting and removing a name', () => {
       { name: 'Block', r1: R(2), c1: C(0), r2: R(3), c2: C(1) },
     ]);
     expect(del.back.layout.names).toEqual(s.layout.names);
+  });
+
+  it('shrinks again on redo, and its undo leaves a name someone set after the deletion', () => {
+    const s = apply(base(), name('Block', 1, 0, 3, 1)).sheet;
+    const deletion: SheetWrite = { kind: 'layout', changes: [{ k: 'deleteRows', ids: [R(1)] }] };
+    const del = apply(s, deletion);
+    const applied = del.applied as Extract<SheetWrite, { kind: 'layout' }>;
+    const undone = apply(del.sheet, {
+      kind: 'layout',
+      changes: inverseLayoutChanges(s.layout, applied.changes, del.sheet.layout),
+    }).sheet;
+    expect(undone.layout.names).toEqual(s.layout.names);
+    // Redo: the deletion made again shrinks it again.
+    expect(apply(undone, deletion).sheet.layout.names).toEqual(del.sheet.layout.names);
+    // Someone re-points Block after the deletion: the undo leaves theirs.
+    const theirs = apply(del.sheet, name('Block', 5, 2)).sheet;
+    const later = apply(theirs, {
+      kind: 'layout',
+      changes: inverseLayoutChanges(s.layout, applied.changes, theirs.layout),
+    }).sheet;
+    expect(later.layout.names).toEqual(theirs.layout.names);
   });
 
   it('accepts the undo of a deletion that took a named range\u2019s corner, or all of it', () => {
