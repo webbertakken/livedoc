@@ -342,17 +342,14 @@ A chart is the sheet's own, reading its range live, its top-left on the cell at 
   chart {type: "scatter", range: "B1:D40", at: "F2", title, xAxisTitle, yAxisTitle,
          lines: ["Pareto"], axis: true}
 A scatter's first column of numbers is its x; lines draws those series as lines, by name.
-type: "stepped-area" draws each value as a flat step across its category (files hold it as an area chart);
-type: "radar" draws each series as a closed line round a spoke per category;
-type: "bubble" reads as a scatter, its last value column sizing every point's bubble (names, x, y..., size);
-type: "candlestick" or "ohlc" reads labels, then open, high, low, close columns (or high, low, close);
-type: "histogram" counts the value columns' values into equal buckets, a column per bucket (files hold it as a column chart);
-type: "waterfall" draws the first value column as changes to a running total, a Subtotal column last;
-type: "treemap" tiles the plot, a tile per label sized by its value (files hold it as a pie chart);
-type: "gauge" draws a dial per label, its needle at the value (files hold it as a bar chart);
-type: "scorecard" writes the first value column’s sum large, its change from the second’s under it (files hold a column chart);
-type: "timeline" places each point by its date (a date label column, or ISO dates) along a time axis (files hold a line chart);
-type: "table" writes the data as a table, a row per label and a column per value column (files hold a column chart).
+type: "stepped-area": a flat step per category; "radar": a closed line round a spoke per category;
+"bubble": a scatter whose last value column sizes the bubbles (names, x, y..., size);
+"candlestick" or "ohlc": labels, then open, high, low, close columns (or high, low, close);
+"histogram": the values counted into equal buckets; "waterfall": the first column as changes, a Subtotal last;
+"treemap": a tile per label sized by its value; "gauge": a dial per label;
+"scorecard": the first column’s sum large, its change from the second’s under it;
+"timeline": each point by its date (a date label column, or ISO dates); "table": the data as a table.
+Files hold the types they lack as the nearest they have; LiveDoc reads them back as they were.
 stack: "stacked" or "percent" stacks a column, bar, area or stepped-area chart's series (100% as shares);
 smooth: true curves a line chart's lines.
 type: "combo" draws each series as columns, a line, an area or a stepped area: seriesTypes {"Margin": "line"}
