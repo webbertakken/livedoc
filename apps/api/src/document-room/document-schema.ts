@@ -640,7 +640,8 @@ CREATE TABLE IF NOT EXISTS text_document_last_edits (
 
 // A text document tab's notification window (docs/specs/034-text-documents/review.md "Notifications", Batches): opened
 // by the first update stored in it, holding what the tab read just before it: its comments' ids and its state (a
-// state vector and deletions), so the email sent when the window ends says only what is new. Gone once sent.
+// state vector and deletions), and who deleted what while it is open, so the email sent when the window ends says
+// only what is new and whose it is. Gone once sent.
 const TEXT_DOCUMENT_NOTICE_STEP = `
 CREATE TABLE IF NOT EXISTS text_document_notice_baselines (
   tab_id       TEXT    PRIMARY KEY REFERENCES tabs (id) ON DELETE CASCADE,
@@ -648,6 +649,14 @@ CREATE TABLE IF NOT EXISTS text_document_notice_baselines (
   comment_ids  TEXT    NOT NULL,
   state_vector BLOB    NOT NULL,
   deletions    BLOB    NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS text_document_notice_deletions (
+  tab_id    TEXT NOT NULL REFERENCES tabs (id) ON DELETE CASCADE,
+  author    TEXT NOT NULL,
+  name      TEXT,
+  deletions BLOB NOT NULL,
+  PRIMARY KEY (tab_id, author)
 );
 `;
 

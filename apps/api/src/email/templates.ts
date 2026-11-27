@@ -73,6 +73,8 @@ export type EmailKind =
   | 'ActionAssigned'
   | 'Mentioned'
   | 'TextDocumentComments'
+  | 'TextDocumentEdits'
+  | 'TextDocumentCommentsAndEdits'
   | 'FormResponse'
   | 'FormSuspended'
   | 'TokenExpiring'

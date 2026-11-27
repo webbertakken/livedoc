@@ -127,6 +127,18 @@ export const TEXT_DOCUMENT_COMMENT_EMAILS = email(
   'Someone was emailed the new comments of a text document, as its Notification settings ask. At most one per document in a 15-minute window.',
 );
 
+export const TEXT_DOCUMENT_EDIT_EMAILS = email(
+  'TextDocumentEdits',
+  'Text Document Change Emails',
+  'Someone was emailed what others added to or removed from a text document, as its Notification settings ask. At most one per document in a 15-minute window.',
+);
+
+export const TEXT_DOCUMENT_COMMENT_AND_EDIT_EMAILS = email(
+  'TextDocumentCommentsAndEdits',
+  'Text Document Comment and Change Emails',
+  'Someone was emailed both the new comments of a text document and what others changed in it, in one email. At most one per document in a 15-minute window.',
+);
+
 // docs/specs/030-forms/forms.md "Hearing about responses".
 export const FORM_RESPONSE_EMAILS = email(
   'FormResponse',
@@ -188,6 +200,8 @@ export const EMAIL_KIND_METRICS: readonly Metric[] = [
   ACTION_EMAILS,
   MENTION_EMAILS,
   TEXT_DOCUMENT_COMMENT_EMAILS,
+  TEXT_DOCUMENT_EDIT_EMAILS,
+  TEXT_DOCUMENT_COMMENT_AND_EDIT_EMAILS,
   FORM_RESPONSE_EMAILS,
   FORM_SUSPENDED_EMAILS,
   TOKEN_EXPIRING_EMAILS,

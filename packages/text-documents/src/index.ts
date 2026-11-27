@@ -401,6 +401,12 @@ export {
 export { VersionSnapshots } from './versions/version-snapshots';
 export { restoreUpdate, versionDocument } from './versions/version-restore';
 export {
+  NoticeChanges,
+  type NoticeBaseline,
+  type NoticeChange,
+  type NoticeChangeAuthors,
+} from './notices/notice-changes';
+export {
   anonymousAuthor,
   ViewerCopy,
   VIEWER_AUTHOR_COLOUR,
