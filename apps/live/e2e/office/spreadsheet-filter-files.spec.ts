@@ -196,6 +196,24 @@ test('two tables and the sheet each filter their own rows, and keep them through
   await page.screenshot({ path: test.info().outputPath('table-filters-table-menu.png') });
   await page.keyboard.press('Escape');
 
+  // A filter view open: the tables' filters pause (D482), their buttons faded; closing it restores them.
+  await select(page, 'G2');
+  await (await officeMenuItem(page, ['Data', 'Create Filter View'])).click();
+  const bar = page.getByRole('toolbar', { name: 'Filter view' });
+  await expect(bar).toBeVisible();
+  await expect(page.locator('[data-table-column][data-paused]')).toHaveCount(4);
+  await expect(
+    page.getByRole('button', {
+      name: /^Fruit column menu, filter paused while a filter view is open$/,
+    }),
+  ).toBeVisible();
+  await expect(shown(page, 'plum')).toHaveCount(1);
+  await settle(page);
+  await page.screenshot({ path: test.info().outputPath('table-filters-paused.png') });
+  await bar.getByRole('button', { name: 'Close Filter View' }).click();
+  await expect(page.locator('[data-table-column][data-filtered]')).toHaveCount(2);
+  await expect(shown(page, 'plum')).toHaveCount(0);
+
   // The Excel file, saved again by LibreOffice in its own format, opens with the same rows filtered.
   await (await officeMenuItem(page, ['File', 'Download', 'Microsoft Excel (.xlsx)'])).click();
   const ask = page.getByRole('dialog', { name: 'Download as Excel?' });
