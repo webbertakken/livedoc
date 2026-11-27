@@ -746,6 +746,7 @@ export * from './chart-bubble';
 export * from './chart-stock';
 export * from './chart-histogram';
 export * from './chart-waterfall';
+export * from './chart-treemap';
 export * from './chart-axis';
 export * from './chart-values';
 export * from './chart-source';

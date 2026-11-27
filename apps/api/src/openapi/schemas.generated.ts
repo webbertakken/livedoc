@@ -2869,6 +2869,7 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
       "ohlc",
       "histogram",
       "waterfall",
+      "treemap",
       "combo"
     ],
     "type": "string"
@@ -15466,6 +15467,7 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
       "ohlc",
       "histogram",
       "waterfall",
+      "treemap",
       "combo"
     ],
     "type": "string"

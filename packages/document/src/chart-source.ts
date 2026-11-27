@@ -131,7 +131,12 @@ const numbered = (categories: readonly string[]) => categories.every((c, i) => c
 // takes that column as its x (docs/specs/009-elements/pie-chart.md "Charts drawn from a sheet").
 export function chartFieldsFromTable(el: ChartFields, t: ChartTable): SliceFields | LineFields {
   if (el.shape === 'line-chart') return lineFieldsFromTable(el, t);
-  const first = t.series[0]?.values ?? [];
+  // A treemap reads its first column holding a number, past Google's text Parent column (pie-chart.md "Treemap").
+  const sized =
+    chartTypeOf(el) === 'treemap'
+      ? t.series.find((s) => s.values.some((v) => v !== null))
+      : undefined;
+  const first = (sized ?? t.series[0])?.values ?? [];
   const slices: SliceFields = {
     pieSlices: t.categories.map((label, i) => {
       const color = el.pieSlices?.[i]?.color;
