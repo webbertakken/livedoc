@@ -88,6 +88,12 @@ const MARKS: Record<ChartType, React.ReactNode> = {
       <path d="M7 17v-5h3v5M10 17V7h3v10M13 17v-7h3v7M16 17v-3h3v3" />
     </>
   ),
+  treemap: (
+    <>
+      <rect x="3" y="4" width="18" height="16" />
+      <path d="M12 4v16M12 13h9M16.5 13v7" />
+    </>
+  ),
   waterfall: (
     <>
       <path d={AXES} />

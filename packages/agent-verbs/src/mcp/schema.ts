@@ -92,6 +92,7 @@ const CONTENT_KINDS =
   '"candlestick" and "ohlc" read the series as open, high, low and close (or high, low, close) per category; ' +
   '"histogram" counts every series’ values into equal buckets and draws a column per bucket (the categories only name the values); ' +
   '"waterfall" draws the first series as changes to a running total, each a floating column, a Subtotal column last; ' +
+  'on "pie-chart" "treemap" tiles the plot with the slices, each tile’s area in proportion to its value; ' +
   '"combo" draws each series as columns, a line, an area or a stepped area, by its "type" ("column", "line", "area" or "stepped-area"; ' +
   'by default the first half of the series columns, the rest lines); on "pie-chart" "doughnut" opens the middle. "chartValues": true prints each mark\'s ' +
   "number on the chart (a pie's as percentages when its values add up to 100; a column chart also " +

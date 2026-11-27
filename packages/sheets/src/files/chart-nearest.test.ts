@@ -372,3 +372,17 @@ describe('a Waterfall chart in both formats', () => {
     );
   });
 });
+
+// D329: a Treemap chart is written as a Pie chart of the same shares, restored on reading.
+describe('a Treemap chart in both formats', () => {
+  it('is written as a Pie chart and read back as a Treemap', async () => {
+    const sheet = charted({ type: 'treemap' });
+    const xlsx = writeXlsx(fileOf(sheet), 't');
+    expect(xlsx.losses).toEqual([{ k: 'chart_nearest_type', sheet: 'Sales' }]);
+    expect((await entries(xlsx.data)).get('xl/charts/chart1.xml')).toContain('<c:pieChart>');
+    expect((await readBack(xlsx.data, true)).sheets[0]!.charts![0]!.type).toBe('treemap');
+    expect((await readBack(writeOds(fileOf(sheet), 't').data)).sheets[0]!.charts![0]!.type).toBe(
+      'treemap',
+    );
+  });
+});

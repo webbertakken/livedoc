@@ -14,6 +14,7 @@ import {
   legendFontPx,
   pieMarks,
   pieValueLabels,
+  isTreemapChart,
   chartValue,
   type ShapeElement,
 } from '@livedoc/document';
@@ -22,8 +23,26 @@ import { useChartAnim, chartFrame } from '@/lib/chart';
 import { useChartHover } from '@/hooks/canvas/useChartHover';
 import { ChartReadout } from '@/components/primitives/ChartReadout';
 import { ChartSurface } from '@/components/primitives/ChartSurface';
+import { TreemapChartView } from './TreemapChartView';
 
-export function PieChartView({
+type Props = {
+  element: ShapeElement;
+  fontFamily?: string;
+  textColor: string;
+  palette?: readonly string[];
+  ground?: readonly string[];
+};
+
+// A Treemap draws its slices as tiles (pie-chart.md "Treemap"); a pie or doughnut its wedges.
+export function PieChartView(props: Props) {
+  return isTreemapChart(props.element) ? (
+    <TreemapChartView {...props} />
+  ) : (
+    <WedgeChartView {...props} />
+  );
+}
+
+function WedgeChartView({
   element,
   fontFamily,
   textColor,

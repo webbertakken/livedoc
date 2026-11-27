@@ -814,7 +814,7 @@ then, what ships:
 
 ## Charts
 
-- **Insert Chart** makes a chart of any of the fifteen chart types (Column, Bar, Line, Area, Stepped Area, Scatter, Bubble, Pie, Doughnut, Radar, Candlestick, OHLC, Histogram, Waterfall, Combo;
+- **Insert Chart** makes a chart of any of the sixteen chart types (Column, Bar, Line, Area, Stepped Area, Scatter, Bubble, Pie, Doughnut, Radar, Candlestick, OHLC, Histogram, Waterfall, Treemap, Combo;
   [Chart types](../009-elements/pie-chart.md#chart-types)) from the sheet's cells: the toolbar's **Data** category
   (its **Insert Chart** menu) and the cell menu's **Chart** category. It reads the selection; a single cell reads the block of data around it (a spreadsheet's current
   region). A single empty cell with nothing around it says "Select the cells to chart first".
