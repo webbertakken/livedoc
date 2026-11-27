@@ -2,7 +2,7 @@
 import { describe, expect, it } from 'vitest';
 import { parseFormula } from '../formula/parse';
 import { tokenize } from '../formula/tokens';
-import { formatTableRef, parseTableRef, TableArea } from './table-ref';
+import { formatExcelTableRef, formatTableRef, parseTableRef, TableArea } from './table-ref';
 
 const { headers: H, data: D, totals: T, thisRow: R } = TableArea;
 
@@ -112,6 +112,31 @@ describe('formatTableRef', () => {
     for (const [cols, area, text] of cases) {
       expect(formatTableRef('Sales', cols, area)).toBe(text);
       if (text !== 'Sales') expect(parseTableRef(text)).toEqual({ table: 'Sales', cols, area });
+    }
+  });
+});
+
+describe('formatExcelTableRef', () => {
+  it("writes each reference in Excel's file form, which reads back the same", () => {
+    const cases: [readonly [string, string] | null, number, string][] = [
+      [null, D, 'Sales[]'],
+      [['Amount', 'Amount'], D, 'Sales[Amount]'],
+      [['Amount', 'Tax'], D, 'Sales[[Amount]:[Tax]]'],
+      [null, H | D | T, 'Sales[#All]'],
+      [null, H, 'Sales[#Headers]'],
+      [null, T, 'Sales[#Totals]'],
+      [null, H | D, 'Sales[[#Headers],[#Data]]'],
+      [['Amount', 'Amount'], H | D | T, 'Sales[[#All],[Amount]]'],
+      [['Amount', 'Tax'], D | T, 'Sales[[#Data],[#Totals],[Amount]:[Tax]]'],
+      [['Amount', 'Amount'], R, 'Sales[[#This Row],[Amount]]'],
+      [['Unit price', 'Unit price'], R, 'Sales[[#This Row],[Unit price]]'],
+      [['A', 'B'], R, 'Sales[[#This Row],[A]:[B]]'],
+      [null, R, 'Sales[#This Row]'],
+      [['#Sold', '#Sold'], D, "Sales['#Sold]"],
+    ];
+    for (const [cols, area, text] of cases) {
+      expect(formatExcelTableRef('Sales', cols, area)).toBe(text);
+      expect(parseTableRef(text)).toEqual({ table: 'Sales', cols, area });
     }
   });
 });

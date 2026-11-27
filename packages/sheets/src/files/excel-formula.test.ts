@@ -58,6 +58,39 @@ describe('toExcelFormula', () => {
   });
 });
 
+describe('table references in XLSX', () => {
+  const tables = new Set(['SALES', 'MY_SALES']);
+
+  it("writes each in Excel's file form, the table alone as Sales[]", () => {
+    expect(toExcelFormula('=SUM(Sales[Amount])', new Map(), tables)).toBe('SUM(Sales[Amount])');
+    expect(toExcelFormula('=Sales[@Amount]*2', new Map(), tables)).toBe(
+      'Sales[[#This Row],[Amount]]*2',
+    );
+    expect(toExcelFormula('=Sales[@[Unit price]]', new Map(), tables)).toBe(
+      'Sales[[#This Row],[Unit price]]',
+    );
+    expect(toExcelFormula('=COUNTA(Sales[#ALL])', new Map(), tables)).toBe('COUNTA(Sales[#All])');
+    expect(toExcelFormula('=ROWS(sales)+ROWS(My_Sales)', new Map(), tables)).toBe(
+      'ROWS(sales[])+ROWS(My_Sales[])',
+    );
+  });
+
+  it('leaves a name that is no table, a LET name and a function of a table name alone', () => {
+    expect(toExcelFormula('=Rate*2', new Map(), tables)).toBe('Rate*2');
+    expect(toExcelFormula('=LET(sales,2,sales)', new Map(), tables)).toBe(
+      '_xlfn.LET(_xlpm.sales,2,_xlpm.sales)',
+    );
+  });
+
+  it("reads Excel's file form, Google's this row and the table alone back", () => {
+    expect(fromExcelFormula('Sales[[#This Row],[Amount]]*2')).toBe(
+      '=Sales[[#This Row],[Amount]]*2',
+    );
+    expect(fromExcelFormula('Sales[@Amount]*2')).toBe('=Sales[@Amount]*2');
+    expect(fromExcelFormula('ROWS(Sales[])')).toBe('=ROWS(Sales[])');
+  });
+});
+
 describe('S5 in XLSX', () => {
   it('wraps the whole formula with its cached value, as Google Sheets writes it', () => {
     expect(dummyFunction('=SPLIT("a,b", ",")', 'a')).toBe(

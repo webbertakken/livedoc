@@ -28,6 +28,8 @@ import {
 } from '../formula/stored';
 import { isArray, scalarOf, type ErrorCode, type Scalar } from '../formula/values';
 import type { Workbook } from '../engine/workbook';
+import { cellText } from '../engine/sheets-ctx';
+import { sameTableName, type CellText } from '../tables/table';
 import { SheetLimits } from '../sheet-limits';
 import { isColour } from '../format';
 import { SheetName } from '../workbook/sheet-name';
@@ -38,6 +40,7 @@ import { storedKept } from './kept-anchors';
 import { fileFunctionsOf, functionsFromFile, type FileFunction } from './file-functions';
 import { fileNamesOf, namesFromFile, type FileRangeName } from './file-names';
 import { fileProtectionsOf, protectionsFromFile, type FileProtection } from './file-protections';
+import { fileTablesOf, tablesFromFile, type FileTable } from './file-tables';
 import type { FileAt, KeptItem } from './kept-content';
 import type { NamedFunction } from '../named-functions';
 import { fileLinesOf, layoutFromLines, type FileLines } from './file-lines';
@@ -88,6 +91,8 @@ export type FileSheet = {
   charts?: FileChart[];
   // Its protections in its order (standard-mapping.md "Protection in the file").
   protections?: FileProtection[];
+  // Its tables in order (standard-mapping.md "Tables in the file").
+  tables?: FileTable[];
   // Its pivot tables in object order (standard-mapping.md "Pivot tables in the file"); read back, their records.
   pivots?: FilePivot[];
   // Its pivot tables no file can hold (a source deleted), left out (D607).
@@ -173,6 +178,11 @@ export type FileLoss =
   | { k: 'protection_changed'; sheet: string }
   | { k: 'protection_unread'; sheet: string }
   | { k: 'protection_cut'; sheet: string }
+  // Tables (standard-mapping.md "Tables in the file"): LiveDoc's record beside a standard form another app changed
+  // since, the standard form read (logged only); one LiveDoc cannot hold, left as plain cells (kept for the file when
+  // its reader kept it).
+  | { k: 'tables_changed'; sheet: string }
+  | { k: 'table_unread'; sheet: string; name: string }
   // Pivot tables (standard-mapping.md "Pivot tables in the file"): one with no source, left out of a write; LiveDoc's
   // record beside a standard form another app changed since, the pivot table kept as the file's own (D607, logged).
   | { k: 'pivot_unwritten'; sheet: string }
@@ -274,6 +284,7 @@ export function workbookFileOf(
       const validations = fileValidationRulesOf(sheet.layout, ctx);
       const charts = fileChartsOf(engine, sheet, locale);
       const protections = fileProtectionsOf(sheet.layout);
+      const tables = fileTablesOf(sheet.layout, (r, c) => cellText(sheet, r, c));
       // Its pivot tables, and the cells their outputs cache (D604).
       const pivoted = filePivotsOf(engine, sheet, sheets, locale);
       cells.push(...pivoted.cells);
@@ -289,6 +300,7 @@ export function workbookFileOf(
         ...(validations ? { validations } : {}),
         ...(charts.length ? { charts } : {}),
         ...(protections ? { protections } : {}),
+        ...(tables ? { tables } : {}),
         ...(pivoted.pivots.length ? { pivots: pivoted.pivots } : {}),
         ...(pivoted.unwritten ? { pivotsLeft: pivoted.unwritten } : {}),
       };
@@ -425,6 +437,21 @@ function numberFormatOf(
 
 type Made = { file: FileSheet; id: string; title: string; layout: SheetLayout };
 
+// A sheet's tables' header cells' text as entered (their column names, D443), by row and column id.
+function headerText(m: Made): CellText {
+  const rows = new Set((m.file.tables ?? []).map((t) => t.range.r1));
+  const text = new Map<string, string>();
+  if (rows.size === 0) return () => undefined;
+  for (const cell of m.file.cells) {
+    if (!rows.has(cell.r) || cell.formula !== undefined || !cell.value) continue;
+    const v = cell.value;
+    if (v.k === 'e') continue;
+    const shown = v.k === 'b' ? (v.v ? 'TRUE' : 'FALSE') : String(v.v);
+    text.set(`${m.layout.rows[cell.r]},${m.layout.cols[cell.c]}`, shown);
+  }
+  return (r, c) => text.get(`${r},${c}`);
+}
+
 // Each sheet's grid: at least a new sheet's, within a sheet's limits and the room every earlier sheet left in the
 // workbook (its rows and grid cells, files-and-print.md "A file sent in parts"). A sheet with no row left, and every
 // sheet after it, is cut.
@@ -501,12 +528,21 @@ export function sheetsFromFile(
     losses,
   );
   for (const [at, names] of named.names) made[at]!.layout = { ...made[at]!.layout, names };
+  // The file's tables on their sheets before any formula is read, so a formula reads them (D447).
+  const texts = made.map((m) => headerText(m));
+  made.forEach((m, i) => {
+    const others = made.filter((o) => o !== m).map((o) => o.layout);
+    const making = { sheet: m.title, rand, losses, text: texts[i]!, others };
+    const tables = tablesFromFile(m.file.tables, m.layout, making);
+    if (tables) m.layout = { ...m.layout, tables };
+  });
   const formats = formatsRead(locale);
   const joined: Joined = new Map();
-  const handles: SheetHandle[] = made.map((m) => ({
+  const handles: SheetHandle[] = made.map((m, i) => ({
     id: m.id,
     title: m.title,
     layout: m.layout,
+    text: texts[i]!,
   }));
   const byTitle = (title: string) => {
     const lower = title.toLowerCase();
@@ -514,7 +550,15 @@ export function sheetsFromFile(
   };
   const byId = (id: string) => handles.find((h) => h.id === id);
   const sheets = made.map((m, i): SheetFromFile => {
-    const ctx: SheetsCtx = { own: handles[i]!, byTitle, byId };
+    const own = handles[i]!;
+    const table = (name: string) => {
+      for (const h of [own, ...handles.filter((x) => x !== own)]) {
+        const found = h.layout.tables?.find((t) => sameTableName(t.name, name));
+        if (found) return { sheet: h, table: found };
+      }
+      return null;
+    };
+    const ctx: SheetsCtx = { own, byTitle, byId, table };
     const cells: SheetFromFile['cells'] = [];
     const cache = blockCachePositions(m.file.cells);
     // A read pivot table's output is the engine's to work out again (D607).
@@ -526,7 +570,7 @@ export function sheetsFromFile(
       if (r === undefined || c === undefined) continue;
       let input: CellInput | null = null;
       if (cell.formula !== undefined) {
-        const compiled = compileFormula(cell.formula, ctx);
+        const compiled = compileFormula(cell.formula, { ...ctx, here: cell });
         // A table reference naming no table the file holds is unread: its value stays as the file had it.
         if (compiled.ok && !readsUnknownTable(compiled.formula)) input = { f: compiled.formula };
         else losses.push({ k: 'formula_unread', sheet: m.title, r: cell.r, c: cell.c });

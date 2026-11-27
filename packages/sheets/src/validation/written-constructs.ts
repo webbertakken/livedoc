@@ -165,6 +165,37 @@ export const WRITTEN_CONSTRUCTS: Readonly<Record<string, WorkbookFile>> = {
       },
     ],
   },
+  // standard-mapping.md "Tables in the file": a table with a total row, formulas reading it, cached as 0 so another
+  // suite's values are its own.
+  tables: {
+    sheets: [
+      {
+        ...sheet('Sales sheet', [
+          { r: 0, c: 0, value: { k: 's', v: 'Item' } },
+          { r: 0, c: 1, value: { k: 's', v: 'Amount' } },
+          { r: 0, c: 3, formula: '=SUM(Sales[Amount])', value: { k: 'n', v: 0 } },
+          { r: 1, c: 0, value: { k: 's', v: 'pen' } },
+          { r: 1, c: 1, value: { k: 'n', v: 3 } },
+          { r: 1, c: 3, formula: '=Sales[@Amount]*2', value: { k: 'n', v: 0 } },
+          { r: 2, c: 0, value: { k: 's', v: 'ink' } },
+          { r: 2, c: 1, value: { k: 'n', v: 1 } },
+          { r: 2, c: 3, formula: '=ROWS(Sales)', value: { k: 'n', v: 0 } },
+          { r: 3, c: 0, value: { k: 's', v: 'Total' } },
+          { r: 3, c: 1, formula: '=SUBTOTAL(109,Sales[Amount])', value: { k: 'n', v: 0 } },
+          { r: 3, c: 3, formula: '=COUNTA(Sales[#ALL])', value: { k: 'n', v: 0 } },
+        ]),
+        tables: [
+          {
+            name: 'Sales',
+            range: { r1: 0, c1: 0, r2: 3, c2: 1 },
+            columns: ['Item', 'Amount'],
+            types: { Amount: 'number' },
+            total: true,
+          },
+        ],
+      },
+    ],
+  },
   validation: {
     sheets: [
       {

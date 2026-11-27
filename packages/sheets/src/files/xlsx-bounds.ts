@@ -19,13 +19,17 @@ export function cachedLiteral(value: FileValue | undefined): CachedLiteral | und
   return value.k === 'e' ? { e: value.v } : value.v;
 }
 
-/** A formula as Excel holds it, its sheet names as `renamed` maps them, its cached value inside a wrapping. */
+/**
+ * A formula as Excel holds it, its sheet names as `renamed` maps them, the names of `tables` (upper case) as tables,
+ * its cached value inside a wrapping.
+ */
 export function xlsxFormula(
   formula: string,
   value: FileValue | undefined,
   renamed: ReadonlyMap<string, string> = new Map(),
+  tables: ReadonlySet<string> = new Set(),
 ): XlsxFormula {
-  const excel = toExcelFormula(formula, renamed);
+  const excel = toExcelFormula(formula, renamed, tables);
   if (excel !== null)
     return excel.length <= XLSX_FORMULA_MAX ? { k: 'excel', text: excel } : { k: 'value' };
   const wrapped = dummyFunction(formula, cachedLiteral(value));

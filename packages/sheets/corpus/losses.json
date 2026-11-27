@@ -125,9 +125,7 @@
     ]
   },
   "excel/table-sample.xlsx": {
-    "read": {
-      "formula_unread": 12
-    },
+    "read": {},
     "written": {},
     "reread": {},
     "converted": [
