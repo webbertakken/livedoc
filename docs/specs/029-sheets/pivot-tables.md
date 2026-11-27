@@ -175,8 +175,8 @@ Region`): each of the first three columns holding text below the header as the r
     With a value, the Values heading shows **Values As** (Columns, Rows).
   - Filters: **Status**, "Showing all items" or "Showing 3 items", over a list of the column's items as the source
     shows them (a blank `(Blanks)`), each a tick box, with **Select All** and **Clear**; an item unticked is hidden.
-- A calculated field shows its name and Summarise By; an entry's custom name, its grouping, a filter by condition and
-  a filter by formula stay as they are while other options change (they arrive from files and agents).
+- A calculated field shows its name and Summarise By; an entry's custom name, its grouping (set in the grid: [Grouping in the grid](#grouping-in-the-grid)), a filter by condition and a
+  filter by formula stay as they are while other options change (they arrive from files and agents).
 - Keyboard: every control is reached by Tab; Add's list moves with the arrow keys, picks with Enter and closes with
   Escape; Escape in the panel returns the keys to the grid.
 - A pivot table deleted while the editor is open says "This pivot table is no longer on the sheet."
@@ -193,6 +193,32 @@ Region`): each of the first three columns holding text below the header as the r
 - A double-click on a value shows the source rows it summarises on a sheet of their own ([Details](#details)).
 - The output refreshes when the source changes; a source grown past its range is read when the range was whole
   columns.
+
+## Grouping in the grid
+
+An Editor groups a row or column group's items from the output's cells, as Google Sheets does: each a contextual item of
+the cell's context menu, drawn only where it applies, each one undo step that rewrites the pivot table (default, D621).
+
+- **An item cell**: a cell of the output naming one of a row or column group's items (never a header, a total, the Grand
+  Total or a value). The items below are drawn on an item cell alone, the group's by the cell's place.
+- **Create Pivot Date Group** (a submenu): on an item whose value is a number shown as a date or time (its source
+  column's date, time or date-time format). Its entries are the date rules by their names in "The output"
+  (Second, Minute, Hour, Hour-Minute, Hour-Minute (12 Hour), Day of the Week, Day of the Year, Day of the Month,
+  Day-Month, Month, Quarter, Year, Year-Quarter, Year-Month, Year-Month-Day); picking one groups the group by it,
+  in the place of any grouping it had.
+- **Create Pivot Group Rule**: on an item whose value is a number not shown as a date or time. It opens the **Pivot
+  Group Rule** dialog: **Minimum Value** and **Maximum Value** (at first the lowest and highest numbers of the
+  group's column among the rows kept; either may be emptied, an open end), **Interval Size** (empty at first),
+  **Cancel** and **OK**. Refusals under their field, the dialog kept open: "Enter a number above 0" (size), "Enter a
+  number" (minimum or maximum), "The minimum must be below the maximum". OK groups the group by intervals, in the place of any grouping it had.
+- **Create Pivot Group**: on a selection holding two or more item cells of one group (and no other cell of the
+  output), a group not grouped by dates or intervals. It gathers their items into a custom group named `Group 1` (the first number free among the group's custom
+  groups); an item that is a custom group already brings its items into the new one and that group goes; the group's
+  other custom groups stay. Its items are the source's cells as they show.
+- **Ungroup Pivot Items**: on an item that a grouping made (a custom group's name, a date rule's or an interval's
+  item). A custom group goes, its items themselves again (the last one gone, the grouping goes); a date or interval
+  grouping goes whole.
+- A Participant or a Viewer sees none of them.
 
 ## Details
 
@@ -236,7 +262,7 @@ An agent makes and reads a spreadsheet's pivot tables through `change_sheet` and
 
 ## Who may do what
 
-- **Editor** makes and changes pivot tables: Insert › Pivot Table, the editor, Edit, Delete; a value's details are a
+- **Editor** makes and changes pivot tables: Insert › Pivot Table, the editor, Edit, Delete, grouping in the grid; a value's details are a
   sheet of the spreadsheet, saved as any sheet is.
 - **Participant** and **Viewer** read them and their details sheets (a Viewer's details are their own, not saved);
   they see no Edit button, and Insert › Pivot Table is not theirs (dimmed, as Insert › Chart).
@@ -256,7 +282,7 @@ An agent makes and reads a spreadsheet's pivot tables through `change_sheet` and
 
 ## Telemetry
 
-`Spreadsheet · Added · PivotTable` when Create places one; `Sheet · Changed · PivotTable` for each change in the editor
+`Spreadsheet · Added · PivotTable` when Create places one; `Sheet · Changed · PivotTable` for each change in the editor or by grouping in the grid
 and each pivot table removed, as a chart's changes are counted; `Spreadsheet · Added · PivotDetails` when a value's
 details are shown.
 
@@ -283,3 +309,7 @@ details are shown.
   on the same sheet (else at A1), and filters by the items as the source shows them (default).
 - **D616** A value's details are a new sheet named `Details1` (the first number free) after the open one, holding the
   source's header and the rows the value summarises as values with their formats, one undo step (default).
+- **D621** Grouping in the grid is the output's context menu's, on an item cell: a date group on a number shown as a
+  date or time, a group rule on any other number (its minimum and maximum at first the column's lowest and highest
+  kept numbers), a custom group of two or more selected items named `Group 1` (the first number free), and Ungroup on
+  an item a grouping made (default).
