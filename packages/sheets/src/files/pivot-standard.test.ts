@@ -422,9 +422,7 @@ describe('the XLSX standard form read', () => {
     });
 
     it('reads a source column whose fieldGroup only names its parent as ungrouped', () => {
-      const cache = CACHE(
-        DERIVED('<rangePr groupBy="years"/>').replace('base="2"', 'base="2"'),
-      ).replace(
+      const cache = CACHE(DERIVED('<rangePr groupBy="years"/>')).replace(
         '<cacheField name="Price"/>',
         '<cacheField name="Price"><fieldGroup par="3"/></cacheField>',
       );
