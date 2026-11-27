@@ -52,7 +52,7 @@ Visitor-edit endpoints (`PUT /api/documents/:id/tabs/:tabId`) still also accept 
 
 ## Endpoints
 
-All JSON unless stated. CORS allows any origin (the live app is same-origin via the router; this is mostly a dev convenience). Routes are dispatched in `apps/api/src/index.ts`, a thin switch over `segments[1]` with 40 resource segments; each owns a `handle<Resource>(ctx)` module under `apps/api/src/routes/` that implements every method and sub-path it handles. Read the dispatcher for the surface, then the matching route module for the authoritative behaviour. The machine-readable reference is `GET /api/openapi.json` ([API documentation (OpenAPI)](api-documentation.md)).
+All JSON unless stated. CORS allows any origin (the live app is same-origin via the router; this is mostly a dev convenience). Routes are dispatched in `apps/api/src/index.ts`, a thin switch over `segments[1]` with 41 resource segments; each owns a `handle<Resource>(ctx)` module under `apps/api/src/routes/` that implements every method and sub-path it handles. Read the dispatcher for the surface, then the matching route module for the authoritative behaviour. The machine-readable reference is `GET /api/openapi.json` ([API documentation (OpenAPI)](api-documentation.md)).
 
 | Segment              | Route module                     | Behaviour lives in                                                                                     |
 | -------------------- | -------------------------------- | ------------------------------------------------------------------------------------------------------ |
@@ -88,6 +88,7 @@ All JSON unless stated. CORS allows any origin (the live app is same-origin via 
 | `trash`              | `trash.ts`                       | [Trash](../013-workspace/trash.md)                                                                     |
 | `timeline`           | `timeline.ts`                    | [Timeline](../013-workspace/timeline.md)                                                               |
 | `activity`           | `activity.ts`                    | [Inbox](../013-workspace/inbox.md)                                                                     |
+| `notification-links` | `notice-link-routes.ts`          | [Text document notifications](../034-text-documents/review.md#notifications): an email’s signed link   |
 | `home`               | `home.ts`                        | [Explorer Home](../013-workspace/explorer-home.md)                                                     |
 | `search`             | `content-search-route.ts`        | [Content search](../013-workspace/content-search.md)                                                   |
 | `preferences`        | `preferences.ts`                 | this spec, below; [User preferences](../007-editor/user-preferences.md)                                |
