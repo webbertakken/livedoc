@@ -6,8 +6,8 @@ import type { GridRange } from '../address';
 import type { Workbook } from '../engine/workbook';
 import { growGrid } from '../commands-paste';
 import type { Rand } from '../ids';
-import { cellKey } from '../sheet';
-import { scalarOf } from '../formula/values';
+import { cellKey, type CellInput } from '../sheet';
+import { scalarOf, type Scalar } from '../formula/values';
 import { readTypedInput } from '../typed-input';
 import type { CellChange, SheetWrite } from '../store';
 
@@ -100,12 +100,36 @@ function piecesOf(value: unknown, sep: SplitSeparator): string[] | null {
   return sep.kind === 'detect' ? pieces.map((p, i) => (i ? p.replace(/^ +/, '') : p)) : pieces;
 }
 
+// What a split started from, so another separator splits the original text again (the chip): each row's input and
+// value as they were, and how wide the block the last split wrote.
+export type SplitOrigin = {
+  inputs: readonly (CellInput | null)[];
+  values: readonly Scalar[];
+  width: number;
+};
+
+export function splitOrigin(wb: Workbook, sheetId: string, range: GridRange): SplitOrigin | null {
+  const sheet = wb.sheet(sheetId);
+  if (!sheet) return null;
+  const inputs: (CellInput | null)[] = [];
+  const values: Scalar[] = [];
+  const colId = sheet.layout.cols[range.c1]!;
+  for (let r = range.r1; r <= range.r2; r++) {
+    inputs.push(sheet.cells.get(cellKey(sheet.layout.rows[r]!, colId))?.input ?? null);
+    values.push(scalarOf(wb.value(sheetId, r, range.c1)));
+  }
+  return { inputs, values, width: 1 };
+}
+
 export function splitTextToColumns(
   wb: Workbook,
   sheetId: string,
   range: GridRange,
   sep: SplitSeparator,
   rand: Rand = Math.random,
+  // A split again from its origin: rows the separator leaves whole get their input back, and the last split's block
+  // is cleared as far as it reached.
+  origin?: SplitOrigin,
 ): TextSplit | SplitRefusal | null {
   const sheet = wb.sheet(sheetId);
   if (!sheet) return null;
@@ -114,13 +138,15 @@ export function splitTextToColumns(
   const split = new Map<number, string[]>();
   let width = 1;
   for (let r = range.r1; r <= range.r2; r++) {
-    const pieces = piecesOf(scalarOf(wb.value(sheetId, r, col)), sep);
+    const value = origin ? origin.values[r - range.r1] : scalarOf(wb.value(sheetId, r, col));
+    const pieces = piecesOf(value, sep);
     if (!pieces) continue;
     split.set(r, pieces);
     width = Math.max(width, pieces.length);
   }
-  if (width < 2) return { write: null, rows: 0, width: 1, overwrites: false };
-  const g = growGrid(wb, sheet, { r: range.r1, c: col }, range.r2 - range.r1 + 1, width, rand);
+  const reach = Math.max(width, origin?.width ?? 1);
+  if (reach < 2) return { write: null, rows: 0, width: 1, overwrites: false };
+  const g = growGrid(wb, sheet, { r: range.r1, c: col }, range.r2 - range.r1 + 1, reach, rand);
   if (g.truncated) return { refused: 'full' };
   const ctx = wb.ctxFor(sheetId);
   const cells: CellChange[] = [];
@@ -128,18 +154,23 @@ export function splitTextToColumns(
   for (let r = range.r1; r <= range.r2; r++) {
     const pieces = split.get(r);
     const rowId = g.rowIds[r]!;
-    for (let j = pieces ? 0 : 1; j < width; j++) {
+    if (!pieces && origin)
+      cells.push({ r: rowId, c: g.colIds[col]!, i: origin.inputs[r - range.r1] ?? null });
+    for (let j = pieces ? 0 : 1; j < reach; j++) {
       const colId = g.colIds[col + j]!;
       const piece = pieces?.[j] ?? '';
-      if (j > 0 && sheet.cells.get(cellKey(rowId, colId))) overwrites = true;
+      const held = !!sheet.cells.get(cellKey(rowId, colId));
+      if (j >= (origin?.width ?? 1) && held) overwrites = true;
       const read = piece === '' ? null : readTypedInput(piece, wb.locale, ctx);
       const input = read?.kind === 'value' ? read.input : null;
-      if (!input && !sheet.cells.get(cellKey(rowId, colId))) continue;
+      if (!input && !held) continue;
       cells.push({ r: rowId, c: colId, i: input });
     }
   }
-  const write: SheetWrite = g.changes.length
+  const write: SheetWrite | null = g.changes.length
     ? { kind: 'layout', changes: g.changes, cells }
-    : { kind: 'cells', cells };
+    : cells.length
+      ? { kind: 'cells', cells }
+      : null;
   return { write, rows: split.size, width, overwrites };
 }

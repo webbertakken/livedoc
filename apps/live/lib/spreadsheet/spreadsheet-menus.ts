@@ -453,7 +453,7 @@ const DATA_MENU = menu('data', 'Data', [
     built('remove-duplicates', 'Remove Duplicates', 'edit'),
     built('trim-whitespace', 'Trim Whitespace', 'edit'),
   ]),
-  item('split-text-to-columns', 'Split Text to Columns', 'edit'),
+  built('split-text-to-columns', 'Split Text to Columns', 'edit'),
 ]);
 
 const TOOLS_MENU = menu('tools', 'Tools', [

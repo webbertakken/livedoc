@@ -14,6 +14,7 @@ import { invalidWhy } from './rules/sheet-rule-hover';
 import { SheetTouchLinkChip } from './SheetTouchLinkChip';
 import { previewFormatRules } from './rules/useSheetRulesState';
 import { SheetSmartFillLayer } from './SheetSmartFillLayer';
+import { SheetSplitChip } from './SheetSplitChip';
 import { SheetCellComments } from './SheetCellComments';
 import {
   useContext,
@@ -419,6 +420,8 @@ export function SheetGrid({
               <SheetRuleLayer actions={actions} />
               <SheetCellComments hover={pointer.hover} />
               <SheetSmartFillLayer window={window} actions={actions} />
+              {/* A split's Separator chip (data-tools.md "Split Text to Columns"), a spreadsheet's. */}
+              <SheetSplitChip />
               {/* The charts that sit in this Sheet, over its cells (sheet.md "Charts"). */}
               <SheetChartsLayer fontFamily={fontFamily} />
               {/* A fill's target, or where a block dragged by its border lands (grid-and-editing.md "Fill and move"). */}

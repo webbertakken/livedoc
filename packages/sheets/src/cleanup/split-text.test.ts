@@ -2,14 +2,25 @@
 // plans/assets/0020/research/google-cleanup-probe.out.txt).
 import { describe, expect, it } from 'vitest';
 import { book } from '../testing/book';
+import { SHEET_COLS_MAX } from '../limits';
 import { applySheetWrite, type SheetWrite } from '../store';
-import { splitPieces, splitTextToColumns, type SplitSeparator } from './split-text';
+import { splitOrigin, splitPieces, splitTextToColumns, type SplitSeparator } from './split-text';
 
+// A seeded source, so new column ids differ.
+const seeded = () => {
+  let x = 3;
+  return () => ((x = (x * 16807) % 2147483647) - 1) / 2147483646;
+};
 const ctx = { now: 1, by: { id: '', name: '', color: '#000000' } };
 const col = (r1: number, r2: number, c = 0) => ({ r1, c1: c, r2, c2: c });
 
-function run(b: ReturnType<typeof book>, range: ReturnType<typeof col>, sep: SplitSeparator) {
-  const done = splitTextToColumns(b.wb, b.sheets[0]!.id, range, sep, () => 0.5);
+function run(
+  b: ReturnType<typeof book>,
+  range: ReturnType<typeof col>,
+  sep: SplitSeparator,
+  origin?: ReturnType<typeof splitOrigin>,
+) {
+  const done = splitTextToColumns(b.wb, b.sheets[0]!.id, range, sep, seeded(), origin ?? undefined);
   if (!done || 'refused' in done) throw new Error('refused');
   if (done.write) {
     const r = applySheetWrite(b.sheets[0]!, done.write as SheetWrite, ctx);
@@ -110,5 +121,34 @@ describe('splitTextToColumns', () => {
     const done = run(b, col(0, 0, 11), { kind: 'comma' });
     expect(done.write?.kind).toBe('layout');
     expect(b.sheets[0]!.layout.cols).toHaveLength(14);
+    const full = book({ A1: 'x' }, { cols: SHEET_COLS_MAX });
+    const last = SHEET_COLS_MAX - 1;
+    const sheet = full.sheets[0]!;
+    sheet.cells.set(`${sheet.layout.rows[0]}:${sheet.layout.cols[last]}`, { input: { s: 'a,b' } });
+    full.wb.updateSheet(sheet);
+    expect(
+      splitTextToColumns(full.wb, sheet.id, col(0, 0, last), { kind: 'comma' }, seeded()),
+    ).toEqual({
+      refused: 'full',
+    });
+  });
+
+  it('splits the original text again from its origin, putting back rows left whole and clearing the old block', () => {
+    const b = book({ A1: 'a,b;c', A2: 'x,y,z', A3: 'p;q' });
+    const range = col(0, 2);
+    const origin = splitOrigin(b.wb, b.sheets[0]!.id, range)!;
+    const first = run(b, range, { kind: 'comma' });
+    expect(rows(b, 3, 'ABC')).toEqual([
+      ['a', 'b;c', null],
+      ['x', 'y', 'z'],
+      ['p;q', null, null],
+    ]);
+    run(b, range, { kind: 'semicolon' }, { ...origin, width: first.width });
+    expect(rows(b, 3, 'ABC')).toEqual([
+      ['a,b', 'c', null],
+      ['x,y,z', null, null],
+      ['p', 'q', null],
+    ]);
+    expect(splitOrigin(b.wb, 'nope', range)).toBeNull();
   });
 });

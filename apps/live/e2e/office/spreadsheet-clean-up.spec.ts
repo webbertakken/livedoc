@@ -95,3 +95,38 @@ test('Remove Duplicates, Trim Whitespace and Randomise Range clean the data, eac
   expect(await inputOf(page, 'A1')).toBe('Name');
   expectNoPageErrors(pageErrors);
 });
+
+test('Split Text to Columns splits at once, and the Separator chip splits the original again', async ({
+  page,
+  pageErrors,
+}) => {
+  test.setTimeout(120_000);
+  await page.setViewportSize({ width: 1280, height: 860 });
+  await page.goto('/new?kind=spreadsheet');
+  await page.waitForURL(/\/document\//);
+  await expect(page.locator(READY)).toBeVisible();
+  await typeInto(page, 'A1', 'Ada Lovelace, 1815');
+  await typeInto(page, 'A2', 'Alan Turing, 1912');
+
+  await select(page, 'A1:A2');
+  await (await officeMenuItem(page, ['Data', 'Split Text to Columns'])).click();
+  expect(await inputOf(page, 'B1')).toBe('1815');
+  expect(await inputOf(page, 'A2')).toBe('Alan Turing');
+
+  // Back in the range, the chip offers the separators; Space splits the original text at each space.
+  await select(page, 'A1:A2');
+  const chip = page.getByRole('combobox', { name: 'Separator:' });
+  await expect(chip).toHaveValue('detect');
+  await settle(page);
+  await page.screenshot({ path: test.info().outputPath('split-chip.png') });
+  await chip.selectOption({ label: 'Space' });
+  expect(await inputOf(page, 'B2')).toBe('Turing,');
+  expect(await inputOf(page, 'C2')).toBe('1912');
+
+  // Each choice is its own step: one undo is back at the comma split.
+  await select(page, 'A2');
+  await page.keyboard.press('Control+z');
+  expect(await inputOf(page, 'A2')).toBe('Alan Turing');
+  expect(await inputOf(page, 'C2')).toBe('');
+  expectNoPageErrors(pageErrors);
+});

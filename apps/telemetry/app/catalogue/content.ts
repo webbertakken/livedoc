@@ -1381,13 +1381,13 @@ export const SPREADSHEET_REPLACED = chart(
   { types: ['Replace'] },
 );
 
-// docs/specs/029-sheets/data-tools.md "Clean-up, split, randomise, stats": an Editor cleaned up or shuffled.
+// docs/specs/029-sheets/data-tools.md "Clean-up, split, randomise, stats": an Editor cleaned up, shuffled or split.
 export const SPREADSHEET_CLEANED = chart(
   'Spreadsheet',
   'Changed',
   'Spreadsheet Data Clean-up',
-  'An editor removed duplicates, trimmed whitespace, applied a clean-up suggestion or randomised a range.',
-  { types: ['Cleanup', 'Randomise'] },
+  'An editor removed duplicates, trimmed whitespace, applied a clean-up suggestion, randomised a range or split text to columns.',
+  { types: ['Cleanup', 'Randomise', 'Split'] },
 );
 
 export const SPREADSHEETS: MetricStack = {
