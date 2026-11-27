@@ -9,7 +9,7 @@ import type { Sheet } from '../sheet';
 import { WorkbookRecord, type WorkbookFormat } from '../workbook-record';
 import { FILE_LAST_COL } from './a1-text';
 import { GOOGLE_ONLY_FUNCTIONS } from './odf-function-names';
-import { toOpenFormula } from './open-formula';
+import { odsFormulaOf } from './ods-tables';
 import type { FileCell, WorkbookFile } from './workbook-file';
 import { fileKept } from './kept-anchors';
 import { simplifiedElsewhere, type SimplifiedFeature } from './file-validation';
@@ -92,7 +92,7 @@ export function formulaFate(
     const plan = xlsxFormula(cell.formula, cell.value).k;
     return plan === 'excel' ? 'native' : plan === 'wrapped' ? 'uncalculated' : 'unwritten';
   }
-  if (toOpenFormula(cell.formula) === null) return 'unwritten';
+  if (odsFormulaOf(cell) === null) return 'unwritten';
   return lackingFunctions(cell.formula, format).length > 0 ? 'uncalculated' : 'native';
 }
 

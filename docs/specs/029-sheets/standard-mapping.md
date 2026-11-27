@@ -478,15 +478,16 @@ The table is the contract the readers and writers are tested against, one test p
   type), `opts` (a Dropdown column's name to its options, as a dropdown rule's) and `total`; in ODF also `refs`, each
   formula cell (A1) whose formula reads a table, with that formula in Google's syntax.
 - Its fingerprint is the CRC-32 (8 lower-case hex digits) of the standard form as written: each table's name and
-  range a line (and in ODF each `refs` cell's formula as written, a line). **Read**, the record is taken when its
-  fingerprint is the standard form's as read; else another app changed the tables or those formulas since, so the
-  standard form is read, the record dropped (an ODF formula changed elsewhere keeps its plain range), and the read
-  names it (`tables_changed`, logged, never reported), as D294.
+  range a line (and in ODF each `refs` cell's place and its formula as read back from what is written, a line).
+  **Read**, the record is taken when its fingerprint is the standard form's as read; else another app changed the
+  tables or those formulas since, so the standard form is read, the record dropped (every ODF formula then keeps its
+  plain range), and the read names it (`tables_changed`, logged, never reported), as D294.
 - **Read without LiveDoc's record**: each XLSX table part and each ODF database range with a header row is a table,
   its columns None (D447); one LiveDoc cannot hold (overlapping another, past 50 a sheet, a name the rules refuse,
-  no header row, ODF's sheet-local `table:database-range` named `__Anonymous_Sheet_DB__N`, which is a filter) is kept
-  as the file wrote it, written back to its format, and named (`table_unread`, reported); a table the grid cannot
-  hold once its sheet is cut stays plain cells, named too.
+  no header row, a range over no sheet the file holds) is kept as the file wrote it, written back to its format, and
+  named (`table_unread`, reported); a table the grid cannot hold once its sheet is cut stays plain cells, named too.
+  ODF's sheet-local `table:database-range` named `__Anonymous_Sheet_DB__N` is an autofilter, not a table: kept as
+  it came, not named.
 
 ## Rows and columns in the file
 

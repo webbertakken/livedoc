@@ -165,21 +165,30 @@ describe('protection other apps enforce', () => {
 // standard-mapping.md "Tables in the file": LibreOffice reads the table LiveDoc writes, works out every formula reading
 // it (the cached values are 0), and saves the table again as its own.
 describe('tables other apps read', () => {
-  it('LibreOffice computes the table references of the .xlsx it opens, and keeps the table', async () => {
+  it('LibreOffice computes the table references of the .xlsx and .fods it opens, and keeps the table', async () => {
     const file = WRITTEN_CONSTRUCTS.tables!;
-    const path = join(OUT, 'tables-other.xlsx');
-    writeFileSync(path, writeXlsx(file, 't').data);
-    const saved = libreOfficeConvert(path, 'xlsx:Calc MS Excel 2007 XML', { recalculate: true });
-    const read = await readWorkbookFile(new Uint8Array(saved));
-    if (!read.ok) throw new Error(read.rejection);
-    const [sheet] = read.file.sheets;
-    const at = (r: number, c: number) => sheet!.cells.find((x) => x.r === r && x.c === c)?.value;
-    expect([at(0, 3), at(1, 3), at(2, 3), at(3, 1), at(3, 3)]).toEqual(
-      [4, 6, 2, 4, 8].map((v) => ({ k: 'n', v })),
-    );
-    expect(sheet!.tables?.map((t) => [t.name, t.range])).toEqual([
-      ['Sales', { r1: 0, c1: 0, r2: 3, c2: 1 }],
-    ]);
+    for (const [type, target] of [
+      ['fods', 'ods'],
+      ['xlsx', 'xlsx:Calc MS Excel 2007 XML'],
+    ] as const) {
+      const path = join(OUT, `tables-other.${type}`);
+      writeFileSync(
+        path,
+        type === 'fods' ? writeFlatOds(file, 't').data : writeXlsx(file, 't').data,
+      );
+      const saved = libreOfficeConvert(path, target, { recalculate: true });
+      const read = await readWorkbookFile(new Uint8Array(saved));
+      if (!read.ok) throw new Error(`${type}: ${read.rejection}`);
+      const [sheet] = read.file.sheets;
+      const at = (r: number, c: number) => sheet!.cells.find((x) => x.r === r && x.c === c)?.value;
+      expect([at(0, 3), at(1, 3), at(2, 3), at(3, 1), at(3, 3)], type).toEqual(
+        [4, 6, 2, 4, 8].map((v) => ({ k: 'n', v })),
+      );
+      expect(
+        sheet!.tables?.map((t) => [t.name, t.range]),
+        type,
+      ).toEqual([['Sales', { r1: 0, c1: 0, r2: 3, c2: 1 }]]);
+    }
   }, 120_000);
 });
 

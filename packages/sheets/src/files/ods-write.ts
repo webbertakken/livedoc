@@ -30,7 +30,12 @@ import { themedFormat, themeOf, type SpreadsheetTheme } from '../themes/spreadsh
 import { OdsAxisOut } from './ods-lines';
 import { OdsChartObjects } from './ods-charts';
 import { namesToWrite, odsNameXml, withOdsNames } from './file-names';
-import { toOpenFormula } from './open-formula';
+import {
+  odsDatabaseRanges,
+  odsFormulaOf,
+  odsTableRecordAttributes,
+  withDatabaseRanges,
+} from './ods-tables';
 import {
   isOpenAt,
   odsProtectionAttributes,
@@ -155,7 +160,7 @@ const ruleAttribute = (name: string | undefined) =>
   name === undefined ? '' : ` table:content-validation-name="${escapeXmlAttribute(name)}"`;
 
 function cellXml(cell: FileCell, out: Out, rule: string | undefined, isOpen: boolean): string {
-  const formula = cell.formula === undefined ? null : toOpenFormula(cell.formula);
+  const formula = odsFormulaOf(cell);
   if (cell.formula !== undefined && formula === null)
     out.losses.push({ k: 'formula_unwritten', sheet: out.sheet, r: cell.r, c: cell.c });
   const attrs = [
@@ -311,8 +316,11 @@ function tableXml(sheet: FileSheet, index: number, out: Omit<Out, 'sheet' | 'ind
       : [emptyRows(starts[i + 1]! - from, cols, attrs, rules, opens, sheetOut)];
     return { from, xml };
   });
+  const guarded = odsProtectionAttributes(sheet.protections);
+  // Its tables' record beside its protections' (standard-mapping.md "Tables in the file").
+  const tabled = odsTableRecordAttributes(sheet, guarded !== '');
   return [
-    `<table:table table:name="${escapeXmlAttribute(sheet.name)}"${tableStyleAttribute(sheet, out.styles)}${odsProtectionAttributes(sheet.protections)}${kept.tableAttributes(index, standardProtectionOf(sheet.protections) !== undefined)}>`,
+    `<table:table table:name="${escapeXmlAttribute(sheet.name)}"${tableStyleAttribute(sheet, out.styles)}${guarded}${tabled}${kept.tableAttributes(index, standardProtectionOf(sheet.protections) !== undefined)}>`,
     ...before,
     ...columnsXml(cols, colAxis),
     ...rowAxis.nest(runs, 'table-row-group'),
@@ -426,7 +434,8 @@ function namesAfterTables(file: WorkbookFile, kept: OdsKeptWriter, losses: FileL
     new Set(names.map((n) => n.name.toUpperCase())),
   );
   if (out.dropped > 0) losses.push({ k: 'kept_dropped', count: out.dropped });
-  return out.xml;
+  // The tables as database ranges, after the names (standard-mapping.md "Tables in the file").
+  return withDatabaseRanges(out.xml, odsDatabaseRanges(file));
 }
 
 // The kept content after the tables with the workbook's pivot tables in its one `table:data-pilot-tables`
