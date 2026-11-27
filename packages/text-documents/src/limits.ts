@@ -49,3 +49,18 @@ export const TEXT_DOCUMENT_VERSIONS_MAX_BYTES = 8 * 1024 * 1024;
 export const TEXT_DOCUMENT_NAMED_VERSIONS_MAX = 40;
 /** (default) A version's name fits the panel's row in two lines. */
 export const TEXT_DOCUMENT_VERSION_NAME_MAX_CHARS = 100;
+
+// A Viewer's copy (live-editing-and-storage.md "A Viewer's copy"). Measured 2026-11-27 on a 1.2 MB state (3,000
+// paragraphs, 1,600 suggestions): built in 111 ms, each update copied over in 0.07 ms (p50), 0.84 ms at most, about
+// 37 MB of heap for the mirror and the copy together.
+/** CPU to build a copy of the largest state it is built for: nine times the measure. Safe range 250 to 2,000. */
+export const VIEWER_COPY_BUILD_BUDGET_MS = 1000;
+/** CPU to copy one update over: thirty times the slowest measured. Safe range 5 to 100. */
+export const VIEWER_COPY_APPLY_BUDGET_MS = 25;
+/**
+ * A copy whose own state passes this is let go (a Viewer sees the error state): about 60 MB of heap at the measure,
+ * half a Durable Object's 128 MB. Safe range 1 to 3 MB.
+ */
+export const VIEWER_COPY_STATE_MAX_BYTES = 2 * 1024 * 1024;
+/** A stored state past this (history included) is not copied at all, before any is decoded. Safe range 8 to 32 MB. */
+export const VIEWER_COPY_SOURCE_MAX_BYTES = 16 * 1024 * 1024;
