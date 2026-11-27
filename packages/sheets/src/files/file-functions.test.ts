@@ -131,7 +131,7 @@ describe('named functions written to XLSX', () => {
 
   it('drops a kept workbook name a named function takes, counted, and keeps a sheet’s', async () => {
     const other = fileWithNames(
-      '<definedName name="Twice">Data!$A$1</definedName>',
+      '<definedName name="Twice">Data!$A$1,Data!$A$3</definedName>',
       '<definedName name="TWICE" localSheetId="0">Data!$B$1</definedName>',
       '<definedName>Data!$C$1</definedName>',
     );
@@ -142,7 +142,7 @@ describe('named functions written to XLSX', () => {
     };
     const written = writeXlsx(file, 'Book');
     const xml = await workbookPart(written.data);
-    expect(xml).not.toContain('Data!$A$1');
+    expect(xml).not.toContain('Data!$A$1,Data!$A$3');
     expect(xml).toContain('<definedName name="TWICE" localSheetId="0">Data!$B$1</definedName>');
     expect(xml).toContain('<definedName>Data!$C$1</definedName>');
     expect(xml).toContain('_xlfn.LAMBDA(_xlpm.x,_xlpm.x*2)');
@@ -221,7 +221,7 @@ describe('named functions read from XLSX', () => {
 
   it('keeps a defined name that is no LAMBDA of placeholders, and a sheet’s LAMBDA', async () => {
     const names = [
-      '<definedName name="Total">Data!$A$1</definedName>',
+      '<definedName name="Rate">0.2</definedName>',
       '<definedName name="CALL">_xlfn.LAMBDA(_xlpm.x,_xlpm.x)(1)</definedName>',
       '<definedName name="ODD">_xlfn.LAMBDA(1,2)</definedName>',
       '<definedName name="EMPTY">_xlfn.LAMBDA()</definedName>',

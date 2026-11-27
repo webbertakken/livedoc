@@ -34,6 +34,10 @@ describe('the import report’s copy', () => {
         '1 formula LiveDoc cannot read keeps only its last value: Data!B2',
       ],
       [
+        { k: 'name_unread', count: 1, names: ['Rate'] },
+        '1 named range LiveDoc cannot read is kept for the file: Rate',
+      ],
+      [
         { k: 'function_unread', count: 2, names: ['SUM', 'MAX'] },
         '2 named functions LiveDoc cannot read are kept for Excel: SUM and MAX',
       ],
