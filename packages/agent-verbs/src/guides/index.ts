@@ -321,12 +321,12 @@ A lane plan changes lanes and keeps time; arranging changes time and keeps lanes
     summary: 'make a spreadsheet, fill and shape its sheets, chart them, read them back',
     text: `Spreadsheets
 
-A spreadsheet is a document of sheets, each a tab, as in Google Sheets; it is kept in ODF.
+A spreadsheet is a document of sheets, each a tab, kept in ODF.
 Make one with its sheets named in order, the first filled from a CSV file:
 
   livedoc spreadsheet new "Model values" Models Pareto --csv models.csv
 
-Or open a file as one, as File > Open does (ods, fods, xlsx, csv, tsv; kept in its format):
+Or open a file as one (ods, fods, xlsx, csv, tsv; kept in its format):
 
   livedoc spreadsheet import budget.xlsx [--name "Budget"]
 
@@ -334,11 +334,11 @@ Over MCP: create_spreadsheet {name, sheets: [{name, rows}]}. Cells are read as t
 a number stays a number, "1/2" is a date (send text as a formula, ="1/2"), a leading = a
 formula, which may read another sheet (=Models!B2). An empty cell is no value: a chart gaps it.
 
-Shape a sheet with change_sheet, changes in order, each seeing what the ones before left:
+Shape a sheet with change_sheet, changes applied in order:
   set {at, rows}  format {range, format}  merge {range}  freeze {rows}  filter {range}
   resize {cols, fit: true}  validate {range, rule: {type: "checkbox"}}  move {after}  hide {hidden}
 
-A chart is the sheet's own, reading its range live, its top-left on the cell at names:
+A chart reads its range live, its top-left at the cell at names:
   chart {type: "scatter", range: "B1:D40", at: "F2", title, xAxisTitle, yAxisTitle,
          lines: ["Pareto"], axis: true}
 A scatter's first column of numbers is its x; lines draws those series as lines, by name.
@@ -349,7 +349,7 @@ type: "stepped-area": a flat step per category; "radar": a closed line round a s
 "treemap": a tile per label sized by its value; "gauge": a dial per label;
 "scorecard": the first column’s sum large, its change from the second’s under it;
 "timeline": each point by its date (a date label column, or ISO dates); "table": the data as a table.
-Files hold the types they lack as the nearest they have; LiveDoc reads them back as they were.
+Files hold a type they lack as their nearest; LiveDoc reads it back as it was.
 stack: "stacked" or "percent" stacks a column, bar, area or stepped-area chart's series (100% as shares);
 smooth: true curves a line chart's lines.
 type: "combo" draws each series as columns, a line, an area or a stepped area: seriesTypes {"Margin": "line"}
@@ -359,12 +359,13 @@ read_sheet lists the charts with their ids; chart {..., replace: "<id>"} rewrite
 clear_charts {id: "<id>"} takes one off, clear_charts {} all. add_sheet {title, after} adds a sheet after another.
 
 A pivot table summarises a range live; its output reads as cells, not typed over:
-  pivot {range: "Data!A1:F99", at: "H1", rows: ["Region"], columns: ["Year"],
+  pivot {range: "Data!A1:F99", at: "H1", rows: ["Region"], columns: [{column: "Date", grouping: "year"}],
          values: [{column: "Units"}], filters: [{column: "Rep", show: ["Ann"]}]}
-Columns by name; a value sums numbers, else counts (summarise: "AVERAGE").
+Columns by name; a value sums numbers, else counts (summarise: "AVERAGE"). grouping: a date
+rule ("month", "yearMonth"), {size: 10} intervals, or {groups: [{name, items}]}.
 read_sheet lists them; replace: "<id>" rewrites one, clear_pivots {id} drops it.
 
-Read back with read_sheet: each cell's input, the value worked out, what it shows. Cheaper:
+read_sheet reads back each cell's input, value and what it shows. Cheaper:
 read_document on any of its tabs outlines the workbook (sheets, used ranges, rules, charts, pivots);
 view "cells" {range: "A1:D40"} prints the sheet a row a line, a formula with what it shows.
 

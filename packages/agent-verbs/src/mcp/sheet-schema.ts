@@ -25,6 +25,7 @@ import {
   SHEET_CHART_LEGENDS,
   SHEET_CHART_STACKS,
   SHEET_CHART_TEXT_MAX,
+  PIVOT_DATE_RULES,
   PIVOT_SUMMARIES,
 } from '@livedoc/sheets';
 import {
@@ -300,6 +301,19 @@ const pivotGroup = z.union([
       .describe('Sort by a value, by its label ("SUM of Units"); by the items by default.'),
     totals: z.boolean().optional().describe('Show totals (on by default).'),
     repeat: z.boolean().optional().describe('Repeat row labels (rows only).'),
+    grouping: z
+      .union([
+        z.enum(PIVOT_DATE_RULES).describe('Dates grouped by a rule ("month", "yearMonth").'),
+        z
+          .object({ size: z.number(), start: z.number().optional(), end: z.number().optional() })
+          .describe('Numbers grouped in intervals of a size ("0 - 4").'),
+        z
+          .object({
+            groups: z.array(z.object({ name: z.string(), items: z.array(z.string()) })),
+          })
+          .describe('Items gathered into named groups, items as the source shows them.'),
+      ])
+      .optional(),
   }),
 ]);
 const pivotShowAs = z
@@ -642,7 +656,7 @@ const sheetChange = z.discriminatedUnion('op', [
       .array(pivotGroup)
       .optional()
       .describe(
-        'Row groups, outermost first: a column name, or {column, order, sortBy, totals, repeat}.',
+        'Row groups, outermost first: a column name, or {column, order, sortBy, totals, repeat, grouping}.',
       ),
     columns: z.array(pivotGroup).optional().describe('Column groups, outermost first, as rows.'),
     values: z
