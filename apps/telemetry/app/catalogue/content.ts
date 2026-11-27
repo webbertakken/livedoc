@@ -1363,6 +1363,16 @@ export const SPREADSHEET_PIVOT_TABLES_ADDED = chart(
   { types: ['PivotTable', 'PivotDetails'] },
 );
 
+// docs/specs/029-sheets/data-tools.md "Filters, filter views and slicers": a filter view made, saved (an Editor's) or
+// temporary (a Participant's or a Viewer's).
+export const SPREADSHEET_FILTER_VIEWS_ADDED = chart(
+  'Spreadsheet',
+  'Added',
+  'Spreadsheet Filter Views Added',
+  'Someone made a filter view of a spreadsheet: saved for everyone, or temporary and their own.',
+  { types: ['FilterView', 'TemporaryFilterView'] },
+);
+
 // docs/specs/029-sheets/data-tools.md "Named ranges and named functions": an Editor made, changed or removed a named
 // function in Data › Named Functions.
 export const SPREADSHEET_NAMED_FUNCTIONS = chart(
@@ -1395,7 +1405,7 @@ export const SPREADSHEETS: MetricStack = {
   stack: true,
   title: 'Spreadsheets',
   blurb:
-    'Spreadsheet documents on the open standards: made, opened from files, downloaded, converted, themed, imports allowed, charts and pivot tables added, named functions, Replace All, data clean-up.',
+    'Spreadsheet documents on the open standards: made, opened from files, downloaded, converted, themed, imports allowed, charts, pivot tables and filter views added, named functions, Replace All, data clean-up.',
   members: [
     SPREADSHEETS_CREATED,
     SPREADSHEETS_IMPORTED,
@@ -1405,6 +1415,7 @@ export const SPREADSHEETS: MetricStack = {
     SPREADSHEETS_IMPORTS_ALLOWED,
     SPREADSHEET_CHARTS_ADDED,
     SPREADSHEET_PIVOT_TABLES_ADDED,
+    SPREADSHEET_FILTER_VIEWS_ADDED,
     SPREADSHEET_NAMED_FUNCTIONS,
     SPREADSHEET_REPLACED,
     SPREADSHEET_CLEANED,

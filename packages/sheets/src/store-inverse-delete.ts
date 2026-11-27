@@ -182,6 +182,12 @@ function restoreRules(before: SheetLayout, after: SheetLayout, now: SheetLayout)
     const cur = now.tables?.find((r) => r.id === x.id);
     if (left ? cur && same(cur, left) : !cur) out.push({ k: 'table', id: x.id, table: x });
   }
+  for (const x of before.filterViews ?? []) {
+    const left = after.filterViews?.find((r) => r.id === x.id);
+    if (left && same(left, x)) continue;
+    const cur = now.filterViews?.find((r) => r.id === x.id);
+    if (left ? cur && same(cur, left) : !cur) out.push({ k: 'fview', id: x.id, view: x });
+  }
   for (const x of before.bands ?? []) {
     const left = after.bands?.find((r) => r.id === x.id);
     if (left && same(left, x)) continue;

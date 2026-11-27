@@ -35,22 +35,25 @@ export function FilterMenu({
   onClose: () => void;
 }) {
   const c = useSheetController();
-  const current = c.sheet.layout.filter?.conds[colId];
+  // The filter drawn: an open filter view's in the sheet filter's place.
+  const drawn = c.filterViews.drawn;
+  const inView = !!c.filterViews.open;
+  const current = drawn?.conds[colId];
   const values = useMemo(
-    () => columnValueCounts(c.workbook, c.sheet.id, colId),
+    () => columnValueCounts(c.workbook, c.sheet.id, colId, drawn),
     // Counted again whenever a value may have changed (`version`).
-    [c.workbook, c.sheet.id, colId, c.version], // oxlint-disable-line react/exhaustive-deps
+    [c.workbook, c.sheet.id, colId, drawn, c.version], // oxlint-disable-line react/exhaustive-deps
   );
   const [kept, setKept] = useState<Set<string>>(
     () => new Set(current?.values ?? values.map((v) => v.text)),
   );
   const colours = useMemo(
     () => ({
-      bg: columnColours(c.workbook, c.sheet.id, colId, 'bg'),
-      fc: columnColours(c.workbook, c.sheet.id, colId, 'fc'),
+      bg: columnColours(c.workbook, c.sheet.id, colId, 'bg', drawn),
+      fc: columnColours(c.workbook, c.sheet.id, colId, 'fc', drawn),
     }),
     // Read again whenever a value or a format may have changed (`version`).
-    [c.workbook, c.sheet.id, colId, c.version], // oxlint-disable-line react/exhaustive-deps
+    [c.workbook, c.sheet.id, colId, drawn, c.version], // oxlint-disable-line react/exhaustive-deps
   );
   const [colour, setColour] = useState<FilterColour | null>(current?.colour ?? null);
   const [search, setSearch] = useState('');
@@ -82,23 +85,28 @@ export function FilterMenu({
   const field = 'h-field w-full rounded-control border bg-transparent px-2 text-body outline-none';
   return (
     <ContextMenu position={at} label="Filter column" onClose={onClose}>
-      <MenuActionRow
-        label="Sort A to Z"
-        icon={<SortIcon />}
-        onClick={() => {
-          actions.sortFilter(colId, true);
-          onClose();
-        }}
-      />
-      <MenuActionRow
-        label="Sort Z to A"
-        icon={<SortIcon />}
-        onClick={() => {
-          actions.sortFilter(colId, false);
-          onClose();
-        }}
-      />
-      <ContextMenuDivider />
+      {/* A filter view's own sort orders only what its opener sees: the drawn order (data-tools.md). */}
+      {inView ? null : (
+        <>
+          <MenuActionRow
+            label="Sort A to Z"
+            icon={<SortIcon />}
+            onClick={() => {
+              actions.sortFilter(colId, true);
+              onClose();
+            }}
+          />
+          <MenuActionRow
+            label="Sort Z to A"
+            icon={<SortIcon />}
+            onClick={() => {
+              actions.sortFilter(colId, false);
+              onClose();
+            }}
+          />
+          <ContextMenuDivider />
+        </>
+      )}
       {/* As wide as the menu, never wider: a wider panel spilled its fields, counts and OK past the menu's edge. */}
       <div className="w-full min-w-0 px-3 py-1.5 text-body" onKeyDown={(e) => e.stopPropagation()}>
         <FilterByColour colours={colours} value={colour} onChange={setColour} />

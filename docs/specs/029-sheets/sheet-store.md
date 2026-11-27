@@ -98,7 +98,7 @@ by viewport, the limits, the workbook's doors, offline and copies; in Phase 7, u
     sheet not the workbook's (`kept_anchor_invalid`); content of the other standard than what is stored
     (`kept_standard_mismatch`); past D113's sizes (`kept_too_large`).
   - Read whole by anyone who may read the spreadsheet (Take offline reads it), never on a tab-scoped link.
-- **Objects**: charts, pivot tables, images, drawings, slicers, filter views, tables and timelines, kept in their
+- **Objects**: charts, pivot tables, images, drawings, slicers and timelines (tables and filter views in lists of their own), kept in their
   sheet's layout (`objects`, in paint order), each set whole or removed by its id with a layout write, as validation
   rules are; so they load, copy, go offline, undo and stay live as the layout does. Built for charts
   ([Charts](charts.md#the-model)); up to 100 a sheet.

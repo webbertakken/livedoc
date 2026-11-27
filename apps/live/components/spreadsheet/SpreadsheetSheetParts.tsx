@@ -45,6 +45,11 @@ import { useCleanUpTools } from './useCleanUpTools';
 import { useSplitText } from './useSplitText';
 import { SplitChipContext } from '@/components/sheets/sheet-split-chip-context';
 import { SheetFindBar } from '@/components/sheets/SheetFindBar';
+import { SheetFilterViewBar } from '@/components/sheets/SheetFilterViewBar';
+import { useFilterViewActions } from '@/components/sheets/useFilterViewActions';
+import { useFilterViewAddress } from '@/components/sheets/useFilterViewAddress';
+import { filterViewMenuActions } from '@/components/sheets/filter-view-menu';
+import { useLatest } from '@/hooks/ui/useLatest';
 import { FindReplaceDialog } from './FindReplaceDialog';
 import { useFindReplace } from './find-replace-state';
 import { SheetChartsContext } from '@/components/sheets/sheet-charts-context';
@@ -77,6 +82,20 @@ export function SpreadsheetSheetParts({ bridge }: { bridge: SheetsBridge }) {
   const splitText = useSplitText();
   const cleanUpActions = cleanUp.actions;
   const splitActions = splitText.actions;
+  // Filter views (data-tools.md "Filters, filter views and slicers"): the view bar's and Data's items.
+  const viewActions = useFilterViewActions(c);
+  useFilterViewAddress(c);
+  const latestViewActions = useLatest(viewActions);
+  const filterViewMenu = useMemo(
+    () =>
+      filterViewMenuActions(
+        c.sheet.layout,
+        c.filterViews.open,
+        c.canShape,
+        () => latestViewActions.current,
+      ),
+    [c.sheet.layout, c.filterViews.open, c.canShape, latestViewActions],
+  );
   const findReplace = useFindReplace();
   const panels = useOfficePanels({
     kind: 'Spreadsheet',
@@ -168,6 +187,7 @@ export function SpreadsheetSheetParts({ bridge }: { bridge: SheetsBridge }) {
       ),
       ...cleanUpActions,
       ...splitActions,
+      ...filterViewMenu,
       'table-column-menu': { run: () => columnMenu.current?.() },
       // Insert › Chart and the toolbar's (charts.md "Inserting"): an Editor's.
       ...(canInsertChart ? { 'insert-chart': { run: insertChart } } : {}),
@@ -184,6 +204,7 @@ export function SpreadsheetSheetParts({ bridge }: { bridge: SheetsBridge }) {
       c.canShape,
       cleanUpActions,
       splitActions,
+      filterViewMenu,
     ],
   );
   // Show Details on a pivot table's value, in its cell's context menu (pivot-tables.md "Details"): an Editor's.
@@ -232,6 +253,7 @@ export function SpreadsheetSheetParts({ bridge }: { bridge: SheetsBridge }) {
         <div className="flex min-w-0 flex-1 flex-col">
           <SpreadsheetFormulaBarRow actions={actions} input={input} />
           <div data-region="document" className="relative flex min-h-0 flex-1 flex-col">
+            <SheetFilterViewBar actions={viewActions} />
             <SplitChipContext.Provider value={splitText.chip}>
               <TableSettingsContext.Provider value={openTableSettings}>
                 <TableColumnMenuContext.Provider value={columnMenu}>

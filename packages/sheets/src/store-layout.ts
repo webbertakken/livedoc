@@ -5,6 +5,7 @@
 import type { Protection } from './protection';
 import type { SheetTable } from './tables/table';
 import { tablesAfterDelete } from './tables/table-store';
+import { filterViewsAfterDelete, filterViewsWith, type SheetFilterView } from './filter-views';
 import { mapFormulaRefs } from './formula/stored';
 import { insertIds, layoutIndex, moveIds } from './layout';
 import type {
@@ -46,6 +47,9 @@ export type LayoutChange =
   | { k: 'merges'; merges: IdRange[] }
   | { k: 'filter'; filter: SheetFilter | null }
   | { k: 'filterCond'; col: string; cond: FilterCondition | null }
+  // A filter view set whole (in place, else last) or removed (null), by id (data-tools.md "Filters, filter views and
+  // slicers").
+  | { k: 'fview'; id: string; view: SheetFilterView | null }
   // The sheet's look (Sheet Settings): each key given is set; a size of null goes back to the default.
   | {
       k: 'options';
@@ -255,6 +259,10 @@ export function applyLayoutChange(layout: SheetLayout, ch: LayoutChange): SheetL
           next.filter = { ...range, conds };
         }
       }
+      if (layout.filterViews?.length)
+        next.filterViews = filterViewsAfterDelete(layout.filterViews, goneCols, (x) =>
+          shrinkRange(x, layout, goneRows, goneCols),
+        );
       // Named ranges shrink as merges do; one whose cells all went loses its name.
       if (layout.names?.length) {
         const names = layout.names.flatMap((x) => {
@@ -440,6 +448,8 @@ export function applyLayoutChange(layout: SheetLayout, ch: LayoutChange): SheetL
     }
     case 'object':
       return clean({ ...layout, objects: objectsWith(layout.objects, ch.id, ch.object) });
+    case 'fview':
+      return clean({ ...layout, filterViews: filterViewsWith(layout.filterViews, ch.id, ch.view) });
     case 'frule': {
       const list = layout.formatRules ?? [];
       const at = list.findIndex((x) => x.id === ch.id);

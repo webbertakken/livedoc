@@ -7169,6 +7169,23 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
     },
     "type": "object"
   },
+  "FilterViewSortKey": {
+    "additionalProperties": false,
+    "description": "One key of a view's sort: a column by id, Z to A when `desc`.",
+    "properties": {
+      "c": {
+        "type": "string"
+      },
+      "desc": {
+        "const": true,
+        "type": "boolean"
+      }
+    },
+    "required": [
+      "c"
+    ],
+    "type": "object"
+  },
   "FindField": {
     "enum": [
       "label",
@@ -10118,6 +10135,34 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
           "k",
           "col",
           "cond"
+        ],
+        "type": "object"
+      },
+      {
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "k": {
+            "const": "fview",
+            "type": "string"
+          },
+          "view": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SheetFilterView"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "k",
+          "id",
+          "view"
         ],
         "type": "object"
       },
@@ -15952,6 +15997,51 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
     ],
     "type": "object"
   },
+  "SheetFilterView": {
+    "additionalProperties": false,
+    "properties": {
+      "c1": {
+        "type": "string"
+      },
+      "c2": {
+        "type": "string"
+      },
+      "conds": {
+        "additionalProperties": {
+          "$ref": "#/components/schemas/FilterCondition"
+        },
+        "type": "object"
+      },
+      "id": {
+        "type": "string"
+      },
+      "r1": {
+        "type": "string"
+      },
+      "r2": {
+        "type": "string"
+      },
+      "sort": {
+        "items": {
+          "$ref": "#/components/schemas/FilterViewSortKey"
+        },
+        "type": "array"
+      },
+      "title": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "c1",
+      "c2",
+      "conds",
+      "id",
+      "r1",
+      "r2",
+      "title"
+    ],
+    "type": "object"
+  },
   "SheetJson": {
     "additionalProperties": false,
     "properties": {
@@ -16057,6 +16147,12 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
       },
       "filter": {
         "$ref": "#/components/schemas/SheetFilter"
+      },
+      "filterViews": {
+        "items": {
+          "$ref": "#/components/schemas/SheetFilterView"
+        },
+        "type": "array"
       },
       "formatRules": {
         "items": {

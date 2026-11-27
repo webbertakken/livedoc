@@ -37,7 +37,7 @@ native; a file keeps the format it arrived in). Research: [The standard](../../r
 | Named ranges, named functions                         | `table:named-range` ([below](#named-ranges-in-the-file)), `table:named-expression`; no named functions                      | `definedNames`; named functions as `LAMBDA` names                              |
 | Validation                                            | `table:content-validation`, LiveDoc's rule in `livedoc:` attributes                                                         | `dataValidations`, LiveDoc's rule in an `extLst` `ext`                         |
 | Conditional formats                                   | `calcext:conditional-formats` (LibreOffice's extension namespace)                                                           | `conditionalFormatting`                                                        |
-| Filters, filter views                                 | `table:database-range` with `table:filter`                                                                                  | `autoFilter`; filter views have no XLSX form (Unknown content)                 |
+| Filters ([below](#filters-in-the-file))               | `table:database-range` with `table:filter`; no filter views nor slicers                                                     | `autoFilter`; views as `customSheetView`; LiveDoc's record                     |
 | Protection ([below](#protection-in-the-file))         | `table:protected`, `style:cell-protect`; LiveDoc's record in `livedoc:` attributes                                          | `sheetProtection`, `protectedRanges`; LiveDoc's record in an `extLst` `ext`    |
 | Comments and notes                                    | `office:annotation` in the cell                                                                                             | `xl/comments*.xml` (notes), threaded comments parts                            |
 | Charts                                                | `draw:frame` › `draw:object` holding a chart document (inline in `.fods`)                                                   | DrawingML chart parts through `xl/drawings`                                    |
@@ -486,8 +486,49 @@ The table is the contract the readers and writers are tested against, one test p
   its columns None (D447); one LiveDoc cannot hold (overlapping another, past 50 a sheet, a name the rules refuse,
   no header row, a range over no sheet the file holds) is kept as the file wrote it, written back to its format, and
   named (`table_unread`, reported); a table the grid cannot hold once its sheet is cut stays plain cells, named too.
-  ODF's sheet-local `table:database-range` named `__Anonymous_Sheet_DB__N` is an autofilter, not a table: kept as
-  it came, not named.
+  ODF's sheet-local `table:database-range` named `__Anonymous_Sheet_DB__N` is an autofilter, not a table: the sheet's
+  filter ([Filters in the file](#filters-in-the-file)).
+
+## Filters in the file
+
+- The sheet's filter, its filter views and its slicers are written and read through one mapping of a column's
+  condition (`FilterCondition`, [Data tools](data-tools.md#filters-filter-views-and-slicers)) to each format's
+  filter form, with **LiveDoc's record** beside it for what that form cannot say, as tables are (D293, D294).
+- **XLSX filter**: the worksheet's `autoFilter` (`ref` the filter's range), one `filterColumn` a filtered column
+  (`colId` its place in the range): kept values as `filters` › `filter val` (the blank as `filters blank="1"`); a
+  condition as `customFilters` (`and="1"` for Is Between, two `customFilter`s; Is Not Between two joined by or; the
+  text conditions as Excel's wildcards, `*x*`, `x*`, `*x`, Does Not Contain `notEqual` `*x*`); a date period as
+  `dynamicFilter` (`today`, `tomorrow`, `yesterday`; the past week, month and year as the two days they span);
+  every row the filter hides written `hidden="1"`, as Excel draws a file's filter from its rows (read back, a hidden row the filter hides is the filter's, not a hidden line); and Excel's hidden
+  `_xlnm._FilterDatabase` name for the sheet, its range. Filter by Colour and Custom Formula Is have no form there
+  but LiveDoc's record.
+- **XLSX filter views**, as Google writes them (`plans/assets/0020/research/google-filter-view-export.md`): each a
+  `customSheetView` (`guid` from the view's id, `filter="1"`, `showAutoFilter="1"`) holding an `autoFilter` as the
+  filter's and the view's sort as its `sortState` (`sortCondition`, `descending="1"` for Z to A); a hidden
+  `Z_<guid>_.wvu.FilterData` name with its range; and a `customWorkbookView` named the view's name.
+- **ODF filter**: LibreOffice's own form, the sheet-local `table:database-range` named `__Anonymous_Sheet_DB__N`
+  (`table:display-filter-buttons="true"`) with `table:filter` › `table:filter-and` › `table:filter-condition`
+  (`table:field-number`, `table:operator`, `table:value`, `table:data-type`; kept values as `table:filter-set-item`s),
+  as Google writes the same; read back as the sheet's filter, never a table, and never named in the import report
+  (Director, 2026-11-27).
+- **ODF** has no filter views nor slicers: written to ODS they are left out, listed first in the Download and Convert
+  dialog ("2 filter views are left out", "1 slicer is left out"); Google's ODS keeps only each view's range as a
+  `Z_…_.wvu.FilterData` name, which LiveDoc neither writes nor reads as a view.
+- **XLSX slicers**: LiveDoc's record, and Excel's table slicer (`slicers`, `slicerCaches`, a drawing anchor) when
+  the slicer's range is a table's exactly. No table is made for one (Google makes a `Table_1`; a table the person
+  never made would change their workbook, Director 2026-11-27); a slicer over another range is listed in the Download
+  and Convert dialog: "1 slicer is not seen by Excel".
+- **LiveDoc's record**: one JSON object, `filter` (range as A1 text and conditions by column letter), `views` (each its
+  name, range, conditions and sort) and `slicers`; in XLSX `livedoc:filters` (`record`, `fingerprint`) in the
+  worksheet's LiveDoc `ext`, in ODF the `table:table`'s `livedoc:filters` and `livedoc:filters-fingerprint`. Its
+  fingerprint is the CRC-32 of the standard form as written (the filter's range and each column's form a line, each
+  view's the same); read, the record is taken when the fingerprint is the standard form's as read, else the standard
+  form is read and the record dropped (`filters_changed`, logged, never reported), as D294.
+- **Read without LiveDoc's record**: an `autoFilter` or anonymous database range is the sheet's filter, each column's
+  form read back into its condition; a form LiveDoc has no condition for (`top10`, `colorFilter`, `iconFilter`, an
+  `and` of other operators) leaves that column unfiltered and is named (`filter_unread`, reported). Each
+  `customSheetView` holding an `autoFilter` is a filter view, named by its `customWorkbookView` (`Filter N` without
+  one); one without an `autoFilter` is Excel's custom view, kept as unknown content.
 
 ## Rows and columns in the file
 

@@ -31,6 +31,9 @@ import { SheetTablesLayer } from './tables/SheetTablesLayer';
 import { SheetPivotsLayer } from './pivots/SheetPivotsLayer';
 import { SheetCells } from './SheetCells';
 import { SheetHeaders } from './SheetHeaders';
+
+// A filter view's header look: Google's dark grey, light numbers (8.7:1).
+const FILTER_VIEW_HEADERS = { column: '#3c4043', muted: '#e8eaed', cardBorder: '#5f6368' } as const;
 import { SheetOutlineBar } from './SheetOutlineBar';
 import { SheetSelectionLayer, type Outline } from './SheetSelectionLayer';
 import { SheetCellEditor } from './SheetCellEditor';
@@ -267,8 +270,17 @@ export function SheetGrid({
     [c.sheet.layout.formatRules, c.rules.formatPreview],
   );
 
+  // The filter drawn: the open filter view's in the sheet filter's place (useFilterViews).
+  const drawnFilter = c.filterViews.drawn;
+  // While a filter view is open its row numbers and column letters are drawn dark, so a view is never mistaken for
+  // the sheet (data-tools.md "The view bar").
+  const viewOpen = !!c.filterViews.open;
+  const headerPalette = useMemo(
+    () => (viewOpen ? { ...c.palette, ...FILTER_VIEW_HEADERS } : c.palette),
+    [viewOpen, c.palette],
+  );
   const filter = useMemo(() => {
-    const f = c.sheet.layout.filter;
+    const f = drawnFilter;
     const p = f ? posRangeOf(c.sheet.layout, f) : null;
     if (!f || !p) return null;
     const cols = [];
@@ -277,7 +289,7 @@ export function SheetGrid({
       cols.push({ c: col, colId, active: !!f.conds[colId] });
     }
     return { r: p.r1, cols };
-  }, [c.sheet.layout]);
+  }, [c.sheet.layout, drawnFilter]);
   // The header cells that show a filter button keep room for it (SheetCells); a stable object, so the memoised cells
   // draw again only when the filter changes.
   const filterHead = useMemo(
@@ -471,7 +483,7 @@ export function SheetGrid({
               geometry={c.geometry}
               window={window}
               scroll={c.scroll}
-              palette={c.palette}
+              palette={headerPalette}
               selection={c.interactive ? c.selection : null}
               view={c.view}
               onUnhide={

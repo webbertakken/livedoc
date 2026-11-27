@@ -166,6 +166,9 @@ Every case of [Security](../../research/sheets-open-standard/security.md) is a t
     summaries, calculated fields, sorting by a value, grouping, filters by condition, filters by formula, repeated row
     labels), as both formats carry the standard form beside LiveDoc's record
     ([Pivot tables in the file](standard-mapping.md#pivot-tables-in-the-file), D606). "in other apps" for OpenDocument.
+  - **Filter views and slicers**, to OpenDocument: "2 filter views and 1 slicer are left out", as an OpenDocument
+    file holds neither ([Filters in the file](standard-mapping.md#filters-in-the-file)).
+    To Excel, a slicer over a range that is not a table: "1 slicer is not seen by Excel", kept in LiveDoc's record.
   - **File passwords**: "1 protected sheet leaves its file password behind", a password hash read from a file of the
     other format, which a file of this one cannot carry (D351).
   - **Kept from the file**: "4 things kept from the OpenDocument file stay behind: drawings, notes and named ranges",

@@ -188,6 +188,8 @@ describe('spreadsheetMenus', () => {
       'collapse-all-column-groups',
       ...ZOOM_ITEMS.map((i) => i.id),
       'full-screen',
+      // Data › Create Filter View: anyone's, temporary for a Viewer (data-tools.md "Filters, filter views and slicers").
+      'create-filter-view',
       // Data › Protect Sheets and Ranges: its list read by everyone (data-tools.md "Protected ranges").
       'protect-sheets-and-ranges',
       // Data › Named Ranges and Named Functions: read by everyone (data-tools.md "Named ranges and named functions").
@@ -289,5 +291,22 @@ describe('the Number menu\u2019s recently used', () => {
     const none = numberEntries([]);
     const end = none.findIndex((e) => e.kind === 'item' && e.id === 'number-duration');
     expect(none[end + 2]).toMatchObject({ id: 'custom-currency' });
+  });
+});
+
+describe('Data › Change View', () => {
+  const dataOf = (views: readonly string[] | null) =>
+    spreadsheetMenus('xlsx', 'en-GB', [], views).find((m) => m.id === 'data')!;
+  it('lists the sheet’s views, then Close View and Save as Filter View, only while there is one or a filter', () => {
+    expect(JSON.stringify(dataOf(null))).not.toContain('change-view');
+    const ids = catalogueItems([dataOf(['Big', 'Small'])])
+      .filter(({ path }) => path.includes('Change View'))
+      .map(({ item }) => `${item.id}:${item.label}`);
+    expect(ids).toEqual([
+      'filter-view-0:Big',
+      'filter-view-1:Small',
+      'close-filter-view:Close View',
+      'save-as-filter-view:Save as Filter View',
+    ]);
   });
 });

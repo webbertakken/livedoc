@@ -10,6 +10,7 @@ import {
   type DatePeriod,
   type FilterColour,
   type FilterCondition,
+  type IdRange,
   type Sheet,
   type StoredFormula,
 } from './sheet';
@@ -243,9 +244,16 @@ export type FilterReads = {
   ) => boolean;
 };
 
-export function filterTest(sheet: Sheet, reads: FilterReads): FilterTest | null {
+// The filter drawn: the sheet's, or a filter view open in its place (data-tools.md "Filters, filter views and
+// slicers"); null for none. Formulas read the sheet's alone.
+export type DrawnFilter = IdRange & { conds: Record<string, FilterCondition> };
+
+export function filterTest(
+  sheet: Sheet,
+  reads: FilterReads,
+  filter: DrawnFilter | null | undefined = sheet.layout.filter,
+): FilterTest | null {
   const { locale } = reads;
-  const filter = sheet.layout.filter;
   if (!filter) return null;
   const box = posRangeOf(sheet.layout, filter);
   if (!box) return null;
@@ -274,11 +282,21 @@ export function filterTest(sheet: Sheet, reads: FilterReads): FilterTest | null 
   };
 }
 
-// The row ids the sheet's filter hides (its header row never).
-export function filteredOutRows(wb: Workbook, sheetId: string): Set<string> {
+// The row ids the drawn filter hides (its header row never): the sheet's unless another is given.
+export function filteredOutRows(
+  wb: Workbook,
+  sheetId: string,
+  filter?: DrawnFilter | null,
+): Set<string> {
   const out = new Set<string>();
   const sheet = wb.sheet(sheetId);
-  const test = sheet && filterTest(sheet, workbookFilterReads(wb, sheetId));
+  const test =
+    sheet &&
+    filterTest(
+      sheet,
+      workbookFilterReads(wb, sheetId),
+      filter === undefined ? sheet.layout.filter : filter,
+    );
   if (!sheet || !test) return out;
   const read = (r: number, c: number): Value => wb.value(sheetId, r, c);
   sheet.layout.rows.forEach((rowId, r) => {
@@ -292,9 +310,10 @@ export function columnValueCounts(
   wb: Workbook,
   sheetId: string,
   colId: string,
+  drawn?: DrawnFilter | null,
 ): { text: string; count: number }[] {
   const sheet = wb.sheet(sheetId);
-  const filter = sheet?.layout.filter;
+  const filter = drawn === undefined ? sheet?.layout.filter : drawn;
   if (!sheet || !filter) return [];
   const box = posRangeOf(sheet.layout, filter);
   const c = layoutIndex(sheet.layout).colPos.get(colId);

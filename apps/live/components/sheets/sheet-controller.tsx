@@ -29,6 +29,7 @@ import type { SheetStore } from './sheet-store-client';
 import { geometryOf, mergeAt, type Geometry } from './sheet-geometry';
 import { useFollowLayout } from './useFollowLayout';
 import { useSheetFolds } from './useSheetFolds';
+import { useFilterViews, type FilterViews } from './useFilterViews';
 import { useSheetRulesState, type SheetRulesState } from './rules/useSheetRulesState';
 import type { Grid } from '@livedoc/sheets';
 import type { SheetChangeKind } from '@livedoc/api-schema';
@@ -70,6 +71,8 @@ export type SheetController = {
   viewLayout: SheetLayout;
   // A Participant's or a Viewer's collapse or expand, kept for this session only (useSheetFolds).
   foldForSelf: (changes: readonly FoldChange[]) => void;
+  // The filter view open for this person and the filter drawn (useFilterViews).
+  filterViews: FilterViews;
   grid: Grid;
   palette: PlanPalette;
   interactive: boolean;
@@ -257,40 +260,9 @@ export function useSheetControllerState(opts: {
     toast: opts.toast,
     takeOwnLayout,
   });
-  // Rows the filter hides are drawn at no height; worked out again whenever a value may have changed.
-  const filtered = useMemo(
-    () => (sheet.layout.filter ? filteredOutRows(workbook, sheet.id) : new Set<string>()),
-    [workbook, sheet.id, sheet.layout.filter, version], // oxlint-disable-line react/exhaustive-deps
-  );
-  // How tall each row is drawn: a sized row its size, every other row what its text needs (sheet.md "Row height").
-  // Worked out again whenever a value may have changed; the same function while no height did, so the geometry and
-  // all that hangs on it stand.
-  const heightOf = useMemo(
-    () => rowHeights(workbook, sheet.id, opts.font),
-    [workbook, sheet, opts.font, version], // oxlint-disable-line react/exhaustive-deps
-  );
   // A Participant writes cells and never the shape (docs/specs/013-workspace/share-roles.md); the server refuses
   // it too, so it is held back here rather than shown and taken away.
   const canShape = opts.canShape ?? opts.canEdit;
-  const { viewLayout, foldForSelf } = useSheetFolds(sheet.id, sheet.layout, canShape);
-  const geometry = useMemo(
-    () => geometryOf(viewLayout, filtered, heightOf),
-    [viewLayout, filtered, heightOf],
-  );
-  const grid = useMemo<Grid>(() => {
-    const ix = { rows: sheet.layout.rows.length, cols: sheet.layout.cols.length };
-    return {
-      rows: ix.rows,
-      cols: ix.cols,
-      hiddenRow: geometry.hiddenRow,
-      hiddenCol: geometry.hiddenCol,
-      filled: (r, c) => {
-        const v = workbook.value(sheet.id, r, c);
-        return v !== null && v !== '';
-      },
-      mergeAt: (r, c) => mergeAt(geometry, r, c),
-    };
-  }, [sheet.layout, geometry, workbook, sheet.id]);
   const shapeRefused = useLatest(() => {
     opts.toast(SHAPE_REFUSED);
     return false;
@@ -316,6 +288,47 @@ export function useSheetControllerState(opts: {
     },
     [store, sheet.id, onWrote, canShape, shapeRefused, formatRefused],
   );
+  // The filter view this person has open, drawn in the sheet filter's place; its writes are the sheet's.
+  const viewWrite = useCallback((w: SheetWrite) => write(w, 'Filter'), [write]);
+  const filterViews = useFilterViews({
+    sheetId: sheet.id,
+    layout: sheet.layout,
+    write: viewWrite,
+    toast: opts.toast,
+    canShape,
+  });
+  const drawnFilter = filterViews.drawn;
+  // Rows the drawn filter hides are drawn at no height; worked out again whenever a value may have changed.
+  const filtered = useMemo(
+    () => (drawnFilter ? filteredOutRows(workbook, sheet.id, drawnFilter) : new Set<string>()),
+    [workbook, sheet.id, drawnFilter, version], // oxlint-disable-line react/exhaustive-deps
+  );
+  // How tall each row is drawn: a sized row its size, every other row what its text needs (sheet.md "Row height").
+  // Worked out again whenever a value may have changed; the same function while no height did, so the geometry and
+  // all that hangs on it stand.
+  const heightOf = useMemo(
+    () => rowHeights(workbook, sheet.id, opts.font),
+    [workbook, sheet, opts.font, version], // oxlint-disable-line react/exhaustive-deps
+  );
+  const { viewLayout, foldForSelf } = useSheetFolds(sheet.id, sheet.layout, canShape);
+  const geometry = useMemo(
+    () => geometryOf(viewLayout, filtered, heightOf),
+    [viewLayout, filtered, heightOf],
+  );
+  const grid = useMemo<Grid>(() => {
+    const ix = { rows: sheet.layout.rows.length, cols: sheet.layout.cols.length };
+    return {
+      rows: ix.rows,
+      cols: ix.cols,
+      hiddenRow: geometry.hiddenRow,
+      hiddenCol: geometry.hiddenCol,
+      filled: (r, c) => {
+        const v = workbook.value(sheet.id, r, c);
+        return v !== null && v !== '';
+      },
+      mergeAt: (r, c) => mergeAt(geometry, r, c),
+    };
+  }, [sheet.layout, geometry, workbook, sheet.id]);
   // Writes to several sheets as one change, one undo step (Insert Cells, a cut other sheets' formulas follow).
   const writeAll = useCallback(
     (
@@ -351,6 +364,7 @@ export function useSheetControllerState(opts: {
     geometry,
     viewLayout,
     foldForSelf,
+    filterViews,
     grid,
     selection,
     setSelection,

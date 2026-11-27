@@ -23,6 +23,7 @@ export const NO_GRID_OFFICE: GridOffice = {
   actions: {},
   colours: null,
   recentCodes: [],
+  filterViews: null,
   fontSize: null,
   setFontSize: () => {},
   fontFamily: null,
@@ -39,7 +40,7 @@ const coloursSignature = (colours: OfficeColours | null) =>
     : '';
 
 const signatureOf = (office: GridOffice) =>
-  `${bindingsSignature(office.actions)}#${office.fontSize ?? ''}#${office.fontFamily ?? ''}#${office.borders ? `${office.borders.colour} ${office.borders.line}` : ''}#${office.recentCodes.join('\n')}#${coloursSignature(office.colours)}`;
+  `${bindingsSignature(office.actions)}#${office.fontSize ?? ''}#${office.fontFamily ?? ''}#${office.borders ? `${office.borders.colour} ${office.borders.line}` : ''}#${office.recentCodes.join('\n')}#${office.filterViews?.join('\n') ?? '-'}#${coloursSignature(office.colours)}`;
 
 export function createOfficeBindingsChannel(): OfficeBindingsChannel {
   let latest: GridOffice = NO_GRID_OFFICE;
@@ -51,6 +52,7 @@ export function createOfficeBindingsChannel(): OfficeBindingsChannel {
     actions,
     colours,
     recentCodes,
+    filterViews,
     fontSize,
     fontFamily,
     borders,
@@ -75,6 +77,7 @@ export function createOfficeBindingsChannel(): OfficeBindingsChannel {
         )
       : null,
     recentCodes,
+    filterViews,
     fontSize,
     setFontSize: (pt) => latest.setFontSize(pt),
     fontFamily,
