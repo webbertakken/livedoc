@@ -22,7 +22,7 @@ describe('valuesOnly', () => {
     });
   });
 
-  it("drops the formats of a table growth's cells, its changes left to be judged (D388)", () => {
+  it("drops the formats of a table growth's cells, its changes left to be judged (D448)", () => {
     const changes = [{ k: 'freeze', rows: 1 }];
     const write = {
       kind: 'layout',

@@ -322,7 +322,7 @@ describe('growth', () => {
   });
 });
 
-describe("a Participant's table write (D388)", () => {
+describe("a Participant's table write (D448)", () => {
   const value = { r: 's0r4', c: 's0c1', i: { s: 'new' } };
   const grown = { ...T, r2: 's0r4' };
   const bandGrown = { ...BAND, r2: 's0r4' };

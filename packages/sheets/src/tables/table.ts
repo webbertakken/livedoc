@@ -42,11 +42,11 @@ export type SheetTable = IdRange & {
   opts?: Record<string, DropdownOption[]>;
   // Its last row is its total row.
   total?: true;
-  // The alternating colours banding that draws it, by id (D382).
+  // The alternating colours banding that draws it, by id (D442).
   band?: string;
 };
 
-/** The most tables a sheet holds (D380) and a table name's length (Google's). */
+/** The most tables a sheet holds (D440) and a table name's length (Google's). */
 export const TABLES_MAX = 50;
 export const TABLE_NAME_MAX = 255;
 
@@ -112,7 +112,7 @@ export function tableAt(layout: SheetLayout, r: number, c: number): SheetTable |
 export type CellText = (r: string, c: string) => string | undefined;
 
 /**
- * A table's column names in place order (D383): each header's text as entered, trimmed; a blank or formula header
+ * A table's column names in place order (D443): each header's text as entered, trimmed; a blank or formula header
  * `Column N`; a name an earlier column has, case aside, numbered from 2 until free, as Excel's.
  */
 export function tableColumnNames(layout: SheetLayout, table: SheetTable, text: CellText): string[] {
