@@ -209,7 +209,14 @@ describe('the sheet store client', () => {
     const steps: { undo: () => void }[] = [];
     const b = store(srv.api, { pushUndo: (st) => steps.push(st as never) });
     await b.loadTab('t1');
-    const table = { id: 'tbl001', name: 'Sales', r1: rows[0]!, c1: cols[0]!, r2: rows[1]!, c2: cols[1]! };
+    const table = {
+      id: 'tbl001',
+      name: 'Sales',
+      r1: rows[0]!,
+      c1: cols[0]!,
+      r2: rows[1]!,
+      c2: cols[1]!,
+    };
     b.write('sheet0001', { kind: 'layout', changes: [{ k: 'table', id: 'tbl001', table }] });
     b.write('sheet0001', set(2, 1, 7));
     await b.settle();
