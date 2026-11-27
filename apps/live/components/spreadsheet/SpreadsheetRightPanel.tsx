@@ -22,19 +22,22 @@ import {
   DATA_VALIDATION_PANEL,
   NAMED_FUNCTIONS_PANEL,
   NAMED_RANGES_PANEL,
+  PIVOT_EDITOR_PANEL,
   PROTECTION_PANEL,
   SPREADSHEET_PANELS,
   TABLE_SETTINGS_PANEL,
   THEMES_PANEL,
 } from '@/lib/spreadsheet/spreadsheet-panels';
 import { SpreadsheetTableSettingsBody } from './SpreadsheetTableSettingsBody';
-import type { SheetChart } from '@livedoc/sheets';
+import type { SheetChart, SheetPivot } from '@livedoc/sheets';
+import { PivotEditorBody } from './pivots/PivotEditorBody';
 import { ChartEditorBody } from './charts/ChartEditorBody';
 
 export function SpreadsheetRightPanel({
   panels,
   actions,
   chart,
+  pivot,
   validation = { nonce: 0, startNew: false },
   named = { nonce: 0, startAdding: false },
   protection = { nonce: 0, start: null },
@@ -43,6 +46,8 @@ export function SpreadsheetRightPanel({
   actions: SheetActions;
   // The chart the Chart Editor edits, and how a change of it is written.
   chart?: { id: string | null; change: (next: SheetChart) => void };
+  // The pivot table the Pivot Table Editor edits, and how a change of it is written.
+  pivot?: { id: string | null; change: (next: SheetPivot) => void };
   // How Data Validation Rules was last opened: a new Dropdown (Insert › Dropdown) or the active cell's rule.
   validation?: { nonce: number; startNew: boolean };
   // How Named Ranges was last opened: on Add a Range (Define Named Range) or as it opens (D299).
@@ -63,7 +68,13 @@ export function SpreadsheetRightPanel({
       focusNonce={panels.focusNonce}
     >
       <div className="flex flex-col gap-3 p-3 text-body">
-        {spec.id === CHART_EDITOR_PANEL.id ? (
+        {spec.id === PIVOT_EDITOR_PANEL.id ? (
+          <PivotEditorBody
+            pivotId={pivot?.id ?? null}
+            onChange={(next) => pivot?.change(next)}
+            onClose={close}
+          />
+        ) : spec.id === CHART_EDITOR_PANEL.id ? (
           <ChartEditorBody
             chartId={chart?.id ?? null}
             onChange={(next) => chart?.change(next)}

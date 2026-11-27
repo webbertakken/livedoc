@@ -4,6 +4,8 @@
 // "Formatting", "Rows and columns", "Sort", "Filter", "Freeze"), built from the engine's command builders and sent
 // through the controller's write. One place, so a toolbar button and its shortcut can never differ.
 import { chartRangeOf, chartSizeOf, newChartAnchor, NOTHING_TO_CHART } from './sheet-charts';
+import { pivotsCoveredBy } from './pivots/sheet-pivots';
+import { debugLog } from '@/lib/debug-log';
 import { useMemo } from 'react';
 import { acceptSmartFill, offerSmartFill } from './sheet-smart-fill';
 import type { ChartType } from '@livedoc/document';
@@ -211,6 +213,22 @@ export function useSheetActions() {
       // ---- Clearing and formats ----
       clear: (what: 'inputs' | 'formats' | 'all') => {
         const w = clearRanges(c.sheet, ranges(), what);
+        // A selection covering a pivot table's whole output removes it with the clear, one step (pivot-tables.md
+        // "Working with one", D613).
+        const pivots =
+          what !== 'formats' && c.canShape ? pivotsCoveredBy(c.workbook, c.sheet, ranges()) : [];
+        if (pivots.length && w.kind === 'cells') {
+          const ok = c.write(
+            {
+              kind: 'layout',
+              changes: pivots.map((id) => ({ k: 'object' as const, id, object: null })),
+              cells: w.cells,
+            },
+            'PivotTable',
+          );
+          debugLog(`[sheet-pivots] removed sheet=${c.sheet.id} pivots=${pivots.length} ok=${ok}`);
+          return;
+        }
         // Clear Formatting with nothing to clear says so, rather than meet the press with silence (Delete on an
         // empty cell stays quiet).
         if (w.kind === 'cells' && w.cells.length === 0) {

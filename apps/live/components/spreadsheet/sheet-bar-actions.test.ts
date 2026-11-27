@@ -108,6 +108,18 @@ describe('adding a sheet', () => {
     expect(s.put.mock.calls[1]![0].after).toBe('t2');
   });
 
+  // pivot-tables.md "Making one": Create's new sheet is named for its pivot table, and told once it is there.
+  it('adds a sheet by a given name and says where it landed once it is there', async () => {
+    const s = setup();
+    const placed = vi.fn();
+    const ids = s.changes.add('afterOpen', { name: 'Pivot Table 1', onPlaced: placed });
+    expect(ids).toEqual({ tabId: 'new1', sheetId: 'sheetNew1' });
+    expect(placed).not.toHaveBeenCalled();
+    await settle();
+    expect(s.put.mock.calls[0]![0]).toMatchObject({ name: 'Pivot Table 1', after: 't1' });
+    expect(placed).toHaveBeenCalledWith({ tabId: 'new1', sheetId: 'sheetNew1' });
+  });
+
   it('undoes by taking the sheet out and redoes by putting it back with its ids', async () => {
     const s = setup();
     s.changes.add('end');

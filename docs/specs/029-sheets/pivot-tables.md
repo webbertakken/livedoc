@@ -213,8 +213,8 @@ Region`): each of the first three columns holding text below the header as the r
 
 ## Telemetry
 
-`Spreadsheet · Added · PivotTable` when Create places one; `Spreadsheet · Changed · PivotTable` for each change in
-the editor and each pivot table removed.
+`Spreadsheet · Added · PivotTable` when Create places one; `Sheet · Changed · PivotTable` for each change in the editor
+and each pivot table removed, as a chart's changes are counted.
 
 ## Defaults
 

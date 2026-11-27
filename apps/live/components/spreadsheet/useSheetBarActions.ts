@@ -124,7 +124,7 @@ export function useSheetBarActions({
   const changes = useMemo<SheetBarChanges>(() => {
     const now = () => (made.current ??= sheetBarChanges(depsOf(latest, pending)));
     return {
-      add: (place) => now().add(place),
+      add: (place, opts) => now().add(place, opts),
       duplicate: (id) => now().duplicate(id),
       rename: (id, name) => now().rename(id, name),
       remove: (id) => now().remove(id),
