@@ -146,9 +146,13 @@ describe('a text document opened from a file', () => {
     const download = await call(db, 'GET', '/api/documents/D/text-documents/t1/file?type=docx');
     expect(download.status).toBe(200);
     expect(await bodyOfFile(download)).toEqual(Body.of('Word', 'file'));
-    expect((await call(db, 'GET', '/api/documents/D/text-documents/t1/file?type=odt')).status).toBe(
-      409,
-    );
+    // The other format is a converted copy; the tab stays OOXML.
+    const odt = await call(db, 'GET', '/api/documents/D/text-documents/t1/file?type=odt');
+    expect(odt.status).toBe(200);
+    const read = await readTextDocumentFile(new Uint8Array(await odt.arrayBuffer()));
+    expect(read.ok && read.document.format).toBe('odf');
+    const again = await call(db, 'GET', '/api/documents/D/text-documents/t1/file?type=docx');
+    expect(await bodyOfFile(again)).toEqual(Body.of('Word', 'file'));
   });
 
   it('refuses a Word file for a tab held in ODF, never changing its format', async () => {

@@ -2,8 +2,10 @@
 
 // The text document's title row (docs/specs/034-text-documents/editing-surface.md "The title row", "The menu bar"):
 // the office shell's, filled with the text document's menus and shortcuts. Download writes the file in the format the
-// text document is held in (text-document.md "The format it is in"); the editor's own items come from the surface.
+// text document is held in (text-document.md "The format it is in"), or a converted copy after the conversion dialog
+// (standard-mapping.md "Conversion"); the editor's own items come from the surface.
 import { useMemo, useState, type RefObject } from 'react';
+import { useTextDocumentConversion } from './useTextDocumentConversion';
 import type { OfficeProposals } from '@/lib/office/office-mode';
 import type * as Y from 'yjs';
 import type { AccessLevel } from '@livedoc/api-schema';
@@ -48,10 +50,7 @@ const DOWNLOADS: Record<TextDocumentFileType, { item: string; telemetry: string 
   docx: { item: 'download-docx', telemetry: 'TextDocumentDocx' },
 };
 
-const NATIVE: Record<TextDocumentFormat, readonly TextDocumentFileType[]> = {
-  odf: ['odt', 'fodt'],
-  ooxml: ['docx'],
-};
+const FILE_TYPES: readonly TextDocumentFileType[] = ['docx', 'odt', 'fodt'];
 
 const OPEN_ACCEPT =
   '.odt,.fodt,.docx,application/vnd.oasis.opendocument.text,application/vnd.openxmlformats-officedocument.wordprocessingml.document';
@@ -79,6 +78,7 @@ export function TextDocumentTitleRow({
   caret = null,
   proposals = null,
   screenReader = false,
+  conversion = null,
 }: {
   scope: TextDocumentScope;
   documentName: string;
@@ -111,6 +111,12 @@ export function TextDocumentTitleRow({
   proposals?: OfficeProposals | null;
   // Screen reader support is on: the Accessibility menu shows (tools.md "Accessibility settings").
   screenReader?: boolean;
+  // The body's undo manager and the tab's format, for File > Convert (standard-mapping.md "Conversion"); a converted
+  // download needs neither.
+  conversion?: {
+    undoManager: () => Y.UndoManager | null;
+    setFormat: ((format: TextDocumentFormat) => void) | null;
+  } | null;
 }) {
   const [problem, setProblem] = useState<string | null>(null);
   const catalogue = useMemo(
@@ -129,38 +135,50 @@ export function TextDocumentTitleRow({
     [catalogue, caret],
   );
 
+  // A file in the document's own format, or the other's converted copy once the dialog is confirmed.
+  const download = async (type: TextDocumentFileType) => {
+    setProblem(null);
+    try {
+      const here = localDoc?.() ?? null;
+      if (localDoc && !here) throw new Error('text document not loaded');
+      const { blob, fileName, leftOut } = await textDocumentDownload({
+        file: { format, name: documentName, type },
+        localDoc: here,
+        liveDoc: liveDoc?.() ?? null,
+        draw: drawDrawing,
+        // A picture whose media is in the gallery is read back from it (objects.md "Where the bytes live").
+        readImage: (imageId) =>
+          apiFetchImageBytes(scope.ownerId, imageId, {
+            documentId: scope.documentId,
+            shareCode: scope.shareCode,
+          }),
+        fromApi: () => apiDownloadTextDocument(scope, type),
+      });
+      downloadBlob(blob, fileName);
+      if (leftOut > 0) setProblem(leftOutNotice(leftOut));
+      track('Document', 'Exported', DOWNLOADS[type].telemetry);
+    } catch (error) {
+      setProblem('The file could not be downloaded. Try again.');
+      debugLog('[text-document] download failed', { type, error: String(error) });
+    }
+  };
+  const converting = useTextDocumentConversion({
+    format,
+    doc: () => localDoc?.() ?? liveDoc?.() ?? null,
+    undoManager: () => conversion?.undoManager() ?? null,
+    setFormat: conversion?.setFormat ?? null,
+    download,
+    setProblem,
+  });
+
+  const { download: downloadAs, convert } = converting;
   const actions = useMemo(() => {
-    const download = async (type: TextDocumentFileType) => {
-      setProblem(null);
-      try {
-        const here = localDoc?.() ?? null;
-        if (localDoc && !here) throw new Error('text document not loaded');
-        const { blob, fileName, leftOut } = await textDocumentDownload({
-          file: { format, name: documentName, type },
-          localDoc: here,
-          liveDoc: liveDoc?.() ?? null,
-          draw: drawDrawing,
-          // A picture whose media is in the gallery is read back from it (objects.md "Where the bytes live").
-          readImage: (imageId) =>
-            apiFetchImageBytes(scope.ownerId, imageId, {
-              documentId: scope.documentId,
-              shareCode: scope.shareCode,
-            }),
-          fromApi: () => apiDownloadTextDocument(scope, type),
-        });
-        downloadBlob(blob, fileName);
-        if (leftOut > 0) setProblem(leftOutNotice(leftOut));
-        track('Document', 'Exported', DOWNLOADS[type].telemetry);
-      } catch (error) {
-        setProblem('The file could not be downloaded. Try again.');
-        debugLog('[text-document] download failed', { type, error: String(error) });
-      }
-    };
     const out: Record<string, OfficeActions[string]> = { ...editorActions };
-    for (const type of NATIVE[format])
-      out[DOWNLOADS[type].item] = { run: () => void download(type) };
+    for (const type of FILE_TYPES) out[DOWNLOADS[type].item] = { run: () => downloadAs(type) };
+    if (convert)
+      out[format === 'odf' ? 'convert-to-word' : 'convert-to-opendocument'] = { run: convert };
     return out;
-  }, [editorActions, format, documentName, localDoc, liveDoc, drawDrawing, scope]);
+  }, [editorActions, format, downloadAs, convert]);
 
   const opening = useMemo(
     () => ({
@@ -177,33 +195,36 @@ export function TextDocumentTitleRow({
   );
 
   return (
-    <OfficeTitleRow
-      name={documentName || 'Untitled document'}
-      format={FORMATS[format].badge}
-      formatTitle={FORMATS[format].title}
-      problem={problem}
-      catalogue={catalogue}
-      level={level}
-      actions={actions}
-      shortcuts={TEXT_DOCUMENT_SHORTCUTS}
-      keyScope={keyScope}
-      opening={opening}
-      telemetryKind="TextDocument"
-      chrome={chrome}
-      tabId={scope.tabId}
-      onFollow={onFollow}
-      saveStatus={saveStatus}
-      toolbar={TEXT_DOCUMENT_TOOLBAR}
-      zoom={zoom}
-      fontSize={fontSize}
-      fontFamily={fontFamily}
-      colours={colours}
-      choices={choices}
-      refresh={refresh}
-      mode={mode}
-      contextMenu={contextMenu}
-      commentHistoryItem={COMMENTS_PANEL.item}
-      proposals={proposals}
-    />
+    <>
+      <OfficeTitleRow
+        name={documentName || 'Untitled document'}
+        format={FORMATS[format].badge}
+        formatTitle={FORMATS[format].title}
+        problem={problem}
+        catalogue={catalogue}
+        level={level}
+        actions={actions}
+        shortcuts={TEXT_DOCUMENT_SHORTCUTS}
+        keyScope={keyScope}
+        opening={opening}
+        telemetryKind="TextDocument"
+        chrome={chrome}
+        tabId={scope.tabId}
+        onFollow={onFollow}
+        saveStatus={saveStatus}
+        toolbar={TEXT_DOCUMENT_TOOLBAR}
+        zoom={zoom}
+        fontSize={fontSize}
+        fontFamily={fontFamily}
+        colours={colours}
+        choices={choices}
+        refresh={refresh}
+        mode={mode}
+        contextMenu={contextMenu}
+        commentHistoryItem={COMMENTS_PANEL.item}
+        proposals={proposals}
+      />
+      {converting.dialog}
+    </>
   );
 }

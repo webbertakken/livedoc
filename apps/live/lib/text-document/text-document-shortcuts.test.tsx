@@ -114,7 +114,11 @@ vi.mock('@/lib/telemetry', () => ({ track: vi.fn() }));
 Range.prototype.getClientRects = () => [] as unknown as DOMRectList;
 Range.prototype.getBoundingClientRect = () => new DOMRect();
 
-const DOWNLOADS = { odf: ['download-odt', 'download-fodt'], ooxml: ['download-docx'] } as const;
+// File > Download in every format and File > Convert (useTextDocumentConversion), bound by the title row.
+const FILES = {
+  odf: ['download-docx', 'download-odt', 'download-fodt', 'convert-to-word'],
+  ooxml: ['download-docx', 'download-odt', 'download-fodt', 'convert-to-opendocument'],
+} as const;
 
 // docs/specs/004-interface-design/office-shell.md "Menus as data": the text document's catalogue has no faults.
 describe('the text document menus', () => {
@@ -176,7 +180,7 @@ describe('the text document menus', () => {
         PAGE_COUNT_ITEM,
         PAGE_NUMBERS_MORE_ITEM,
         PAGE_NUMBERS_OPTIONS_ITEM,
-        ...DOWNLOADS[format],
+        ...FILES[format],
         // Format > Text (text-document-format-actions), bound by the surface.
         ...TEXT_DOCUMENT_FORMAT_ITEMS,
         // Format > Paragraph styles and its Options (text-document-paragraph-styles), bound by the surface.

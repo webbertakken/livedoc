@@ -1,10 +1,7 @@
 'use client';
 
-// The conversion dialog (docs/specs/029-sheets/files-and-print.md "Converting", D88): what the other format's file
-// cannot hold, listed before a conversion or a converted download runs, with Convert (or Download) and Cancel.
-import { Button } from '@livedoc/ui';
-import { Dialog } from '@/components/dialogs/Dialog';
-import { DialogFooter } from '@/components/dialogs/DialogFooter';
+// A spreadsheet's conversion dialog (docs/specs/029-sheets/files-and-print.md "Converting", D88): its state worded in
+// the spreadsheet's copy, drawn by the office shell's dialog.
 import {
   CONVERSION_CHECK_FAILED,
   conversionChecking,
@@ -12,9 +9,29 @@ import {
   conversionLine,
   conversionTitle,
 } from '@livedoc/sheets/files';
+import {
+  OfficeConversionDialog,
+  type OfficeConversionView,
+} from '@/components/office/OfficeConversionDialog';
 import type { ConversionState } from './useWorkbookConversion';
 
-const TITLE_ID = 'conversion-dialog-title';
+function viewOf(state: ConversionState): OfficeConversionView | null {
+  if (state.k === 'closed') return null;
+  const { purpose, to } = state;
+  const title = conversionTitle(purpose, to);
+  const action = purpose === 'convert' ? 'Convert' : 'Download';
+  if (state.k === 'checking')
+    return { phase: 'checking', title, action, message: conversionChecking(to) };
+  if (state.k === 'failed')
+    return { phase: 'failed', title, action, message: CONVERSION_CHECK_FAILED };
+  return {
+    phase: state.k,
+    title,
+    action,
+    lead: conversionLead(to, state.losses),
+    lines: state.losses.map((loss) => conversionLine(loss, to)),
+  };
+}
 
 export function ConversionDialog({
   state,
@@ -27,54 +44,12 @@ export function ConversionDialog({
   onRetry: () => void;
   onCancel: () => void;
 }) {
-  if (state.k === 'closed') return null;
-  const { purpose, to } = state;
-  const action = purpose === 'convert' ? 'Convert' : 'Download';
   return (
-    <Dialog open onClose={onCancel} titleId={TITLE_ID}>
-      <div
-        data-conversion-dialog={state.k}
-        className="border-b border-slate-100 px-6 pt-6 pb-4 dark:border-slate-800"
-      >
-        <h2 id={TITLE_ID} className="text-dialog-title text-slate-900 dark:text-slate-50">
-          {conversionTitle(purpose, to)}
-        </h2>
-        <div className="mt-2 text-body text-slate-600 dark:text-slate-300">
-          {state.k === 'checking' ? <p role="status">{conversionChecking(to)}</p> : null}
-          {state.k === 'failed' ? <p role="alert">{CONVERSION_CHECK_FAILED}</p> : null}
-          {state.k === 'listed' || state.k === 'running' ? (
-            <>
-              <p>{conversionLead(to, state.losses)}</p>
-              {state.losses.length > 0 ? (
-                <ul className="mt-2 list-disc space-y-1 pl-4 [overflow-wrap:anywhere]">
-                  {state.losses.map((loss) => (
-                    <li key={loss.k}>{conversionLine(loss, to)}</li>
-                  ))}
-                </ul>
-              ) : null}
-            </>
-          ) : null}
-        </div>
-      </div>
-      <DialogFooter>
-        <Button variant="secondary" onClick={onCancel}>
-          Cancel
-        </Button>
-        {state.k === 'failed' ? (
-          <Button variant="primary" onClick={onRetry}>
-            Try Again
-          </Button>
-        ) : (
-          <Button
-            variant="primary"
-            disabled={state.k !== 'listed'}
-            aria-busy={state.k === 'running'}
-            onClick={onConfirm}
-          >
-            {action}
-          </Button>
-        )}
-      </DialogFooter>
-    </Dialog>
+    <OfficeConversionDialog
+      view={viewOf(state)}
+      onConfirm={onConfirm}
+      onRetry={onRetry}
+      onCancel={onCancel}
+    />
   );
 }

@@ -77,13 +77,12 @@ const BUILDING_BLOCK_ENTRIES: OfficeEntry[] = [
   ),
 ];
 
-// A text document downloads in its own format; the other format's file is a converted copy, built with conversion.
-function downloads(format: TextDocumentFormat): OfficeEntry[] {
-  const odf = format === 'odf' ? BUILT : {};
+// A text document downloads in its own format, or the other format's converted copy after the conversion dialog.
+function downloads(): OfficeEntry[] {
   return [
-    item('download-docx', 'Microsoft Word (.docx)', 'view', format === 'ooxml' ? BUILT : {}),
-    item('download-odt', 'OpenDocument format (.odt)', 'view', odf),
-    item('download-fodt', 'OpenDocument flat file (.fodt)', 'view', odf),
+    item('download-docx', 'Microsoft Word (.docx)', 'view', BUILT),
+    item('download-odt', 'OpenDocument format (.odt)', 'view', BUILT),
+    item('download-fodt', 'OpenDocument flat file (.fodt)', 'view', BUILT),
     item('download-rtf', 'Rich Text Format (.rtf)', 'view'),
     item('download-pdf', 'PDF document (.pdf)', 'view'),
     item('download-txt', 'Plain Text (.txt)', 'view'),
@@ -141,11 +140,15 @@ export function textDocumentMenus(
       item('make-a-copy', 'Make a copy', 'view'),
       SEPARATOR,
       submenu('share', 'Share', [item('share-with-others', 'Share with others', 'edit', BUILT)]),
-      submenu('download', 'Download', downloads(format)),
+      submenu('download', 'Download', downloads()),
       format === 'odf'
-        ? item('convert-to-word', 'Convert to Word format', 'edit', { keywords: ['docx', 'ooxml'] })
+        ? item('convert-to-word', 'Convert to Word format', 'edit', {
+            keywords: ['docx', 'ooxml'],
+            status: 'built',
+          })
         : item('convert-to-opendocument', 'Convert to OpenDocument', 'edit', {
             keywords: ['odt', 'odf'],
+            status: 'built',
           }),
       SEPARATOR,
       item('rename', 'Rename', 'edit', BUILT),

@@ -268,6 +268,8 @@ export const EXACT: Readonly<Record<string, string>> = {
   'Document|Created|Offline': 'A brand-new document was created.',
   'Document|Created|TextDocumentCompare':
     'Someone compared two text documents from Tools > Compare documents, making a new document of suggestions.',
+  'Document|Changed|TextDocumentConverted':
+    'An Editor converted a text document to the other format from File > Convert, after the list of what it cannot hold.',
   'Document|Changed|TextDocumentSpellingAccepted':
     'Someone replaced a misspelt word in a text document with one of its suggestions, from the context menu (never the word).',
   'Document|Changed|TextDocumentSpellingCorrected':
