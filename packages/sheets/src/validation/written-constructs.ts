@@ -300,6 +300,8 @@ function chartSheet(): FileSheet {
     { ...base(types.length + 16, 'histogram'), id: 'chart_histogram' },
     // Waterfall (D327): written as a column chart of its changes, its original kept.
     { ...base(types.length + 17, 'waterfall'), id: 'chart_waterfall' },
+    // Treemap (D329): written as a pie chart of its first series, its original kept.
+    { ...base(types.length + 18, 'treemap'), id: 'chart_treemap' },
   );
   return { ...sheet("Costs' sheet", cells, 140, 8), charts };
 }

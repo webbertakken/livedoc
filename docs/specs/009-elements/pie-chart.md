@@ -98,7 +98,7 @@ ChartAxis`); a series on the right shows "(right)" after its name in the Data su
 
 ## Chart types
 
-A **chart type** is how a chart draws its data, named as Google Sheets names it. Fifteen ship; each is a chart kind
+A **chart type** is how a chart draws its data, named as Google Sheets names it. Sixteen ship; each is a chart kind
 (the stored `shape`) and, for all but the first of its kind, a `chartVariant`:
 
 A chart is **named by its type** wherever the editor names an element: the selection badge says "Selected Column
@@ -122,6 +122,7 @@ Chart" and a screen reader hears "Column chart", as the palette's tile says, nev
 | Combo        | `line-chart`   | `combo`        | Each series as columns, a line, an area or a stepped area over one set of categories (below)  |
 | Pie          | `pie-chart`    | (none)         | Wedges clockwise from twelve o'clock                                                          |
 | Doughnut     | `pie-chart`    | `doughnut`     | Pie's wedges with the middle open: a ring whose hole is 55% of its radius                     |
+| Treemap      | `pie-chart`    | `treemap`      | Pie's slices as tiles filling the plot, each's area in proportion to its value (below)        |
 
 - A chart with no `chartVariant`, or one its kind does not take, draws as its kind's first type, so every chart
   made before chart types draws as it did.
@@ -246,6 +247,16 @@ Chart" and a screen reader hears "Column chart", as the palette's tile says, nev
   - Series past the first are ignored and kept, as are stacking, Smooth Line, the right-hand axis and a scatter
     series' line. Google's Use First Value as Subtotal, custom subtotals, stacked series and connector settings are
     not built: the first value is a change and connectors always show (default, D326).
+- **Treemap** (Google Sheets' Treemap chart, Excel's Treemap): a pie chart's slices drawn as tiles.
+  - The tiles fill the plot, each's area in proportion to its value over the whole, laid out squarified (largest
+    first, each row along the shorter side of what is left, so tiles stay near square), with a 1 px gap between.
+  - Each tile is in its slice's colour, as a wedge would be; its name sits in its top-left corner, in the ink that
+    reads on its colour, and with Show Values its value under it, each only when the tile holds it (a name that
+    does not fit hides its value too). The legend keys the slices, as a pie's does.
+  - A tile's readout is a wedge's.
+  - From a sheet it reads its labels and the first value column holding a number, so Google's ID, Parent, Size
+    layout draws its sizes (its text Parent column has no number). The tiles are one level: the parents are not
+    read, nor Google's colour column, its levels or its drill-down (default, D328).
 - **Combo** (Google Sheets' Combo chart): a line chart's data (`lineSeries` over `lineCategories`), each series drawn
   as its own **series type**: Column, Line, Area or Stepped Area (`LineSeries.type`). A series with no type of its own takes the
   default: the first half of the series, rounded up, are columns and the rest lines, so two series are a column and a
@@ -279,6 +290,7 @@ Chart" and a screen reader hears "Column chart", as the palette's tile says, nev
     at all, no Subtotal is drawn.
   - **Column** and **Bar**: no column (bar) in its slot; the slot and a column's name under the plot stay.
   - **Pie** and **Doughnut**: no wedge; the others share the whole; the category stays in the legend.
+  - **Treemap**: no tile (nor for zero or below); the others share the plot; the category stays in the legend.
   - Every type: no value draws no value label (Show Values) and no readout (there is no mark to hover), and
     takes no part in the value range or Show Axis's ticks. A series with no value at all keeps its place in the
     legend and draws nothing. Changing type carries no value across as no value.
@@ -299,7 +311,7 @@ Chart" and a screen reader hears "Column chart", as the palette's tile says, nev
   sit squeezed at its top over an empty band. Values all equal widen by half a unit either way. Line, Area, Column
   and Bar keep zero in range: a line's rise and an area or bar's size read against it.
 - **The Chart Type section** opens first in the chart's Tools flyout, closed until opened (as every section is): a
-  grid of fifteen tiles, each the type's glyph over its name, the chart's own type pressed. Hovering a tile previews
+  grid of sixteen tiles, each the type's glyph over its name, the chart's own type pressed. Hovering a tile previews
   nothing; picking one changes the chart, one undo step, `Element · Changed · ChartType`.
 - **Changing type** keeps the chart's size, style, palette, legend and animation. Within a kind it only sets
   `chartVariant`. Across kinds it moves the data: a pie or bar chart's slices become one series named **Series 1**
@@ -453,7 +465,7 @@ paints no box; `LegendView` draws the card from the element's fill + stroke, and
 
 ## Element tour
 
-The **Chart tour** is on the actions group's **Start Chart Tour** button while a data chart (any of the fifteen chart types) is selected, once its kind is opted in to (Settings › Tours › Show Me), for an Editor on an unlocked element, and walks through it on the element
+The **Chart tour** is on the actions group's **Start Chart Tour** button while a data chart (any of the sixteen chart types) is selected, once its kind is opted in to (Settings › Tours › Show Me), for an Editor on an unlocked element, and walks through it on the element
 itself ([Element tours](../007-editor/element-tours.md) "The Chart tour").
 
 ## Defaults
@@ -482,6 +494,9 @@ The code cites each by its id.
   a column chart's, the range fitted as a scatter's; a body 60% of its slot and at most 24 px, falling filled and rising
   hollow; OHLC ticks half the body wide; every mark the first series' colour, no legend keys; a gap where any price
   is missing; series past the fourth ignored; stacking, smoothing, the right axis and lines ignored (default).
+- **D328** Treemap: a pie's slices as squarified tiles, largest first, a 1 px gap; names and Show Values inside when
+  they fit; from a sheet the first value column holding a number; one level, Google's parents, colour column, levels
+  and drill-down not read (default).
 - **D326** Waterfall: the first series as changes from zero; rises in the series' colour, falls red, a grey Subtotal column of the end total last; level connectors between drawn columns; keys Increase, Decrease,
   Subtotal; a gap leaves the total as it was; other series, stacking, smoothing, the right axis and lines ignored;
   Google's first-value subtotal, custom subtotals and stacked series not built (default).

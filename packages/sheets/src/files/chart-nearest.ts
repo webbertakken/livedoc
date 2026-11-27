@@ -12,7 +12,10 @@ import {
 import { fileChartSum, type FileChart } from './file-charts';
 
 /** A chart type a file holds: every type built but those written as their nearest. */
-export type HeldChartType = Exclude<SheetChartType, 'stepped-area' | 'histogram' | 'waterfall'>;
+export type HeldChartType = Exclude<
+  SheetChartType,
+  'stepped-area' | 'histogram' | 'waterfall' | 'treemap'
+>;
 export type HeldSeriesType = Exclude<SheetComboSeriesType, 'stepped-area'>;
 export type HeldFileChart = Omit<FileChart, 'type' | 'series'> & {
   type: HeldChartType;
@@ -40,6 +43,8 @@ const NEAREST_TYPE: Readonly<Record<SheetChartType, HeldChartType>> = {
   histogram: 'column',
   // Excel's waterfall is a `cx:chart` part as well (D327).
   waterfall: 'column',
+  // Excel's treemap is a `cx:chart` part too; a pie shows the same shares of a whole (D329).
+  treemap: 'pie',
   combo: 'combo',
 };
 const NEAREST_SERIES_TYPE: Readonly<Record<SheetComboSeriesType, HeldSeriesType>> = {

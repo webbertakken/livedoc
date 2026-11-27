@@ -291,6 +291,29 @@ describe('chart views', () => {
     expect(bare.container.textContent).toContain('Subtotal');
   });
 
+  it('draws a treemap’s tiles with names inside, and reads a hovered tile (Treemap, D328)', () => {
+    const { container } = render(
+      <PieChartView
+        element={el('pie-chart', {
+          chartVariant: 'treemap',
+          pieSlices: [
+            { label: 'Europe', value: 40, color: '#aa3300' },
+            { label: 'Asia', value: 60 },
+            { label: 'None', value: null },
+          ],
+        })}
+        textColor="#000"
+      />,
+    );
+    const tile = container.querySelector('rect[fill="#aa3300"]')!;
+    expect(tile).toBeTruthy();
+    expect(container.querySelectorAll('path')).toHaveLength(0);
+    const texts = [...container.querySelectorAll('text')].map((t) => t.textContent);
+    expect(texts).toContain('Asia');
+    fireEvent.pointerEnter(tile);
+    expect(container.textContent).toContain('40');
+  });
+
   it('draws a smooth line chart’s lines as curves (Smooth Line, D284)', () => {
     const { container } = render(
       <LineChartView element={el('line-chart', { chartSmooth: true })} textColor="#000" />,

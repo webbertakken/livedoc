@@ -61,7 +61,7 @@ describe('what a chart may be', () => {
     no({ ...chart(), extra: 1 });
     no(chart({ width: 159 }));
     no(chart({ height: 2001 }));
-    no({ ...chart(), type: 'treemap' });
+    no({ ...chart(), type: 'gantt' });
     no(chart({ at: { r: 'X', c: C(0), dx: 0, dy: 0 } }));
     no(chart({ at: { r: R(0), c: C(0), dx: -1, dy: 0 } }));
     no(chart({ cols: [] }));

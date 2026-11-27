@@ -21,6 +21,7 @@ export const SHEET_CHART_TYPES = [
   'ohlc',
   'histogram',
   'waterfall',
+  'treemap',
   'combo',
 ] as const;
 export type SheetChartType = (typeof SHEET_CHART_TYPES)[number];

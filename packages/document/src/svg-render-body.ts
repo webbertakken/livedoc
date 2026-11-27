@@ -28,6 +28,8 @@ import { svgStockChart } from './svg-render-stock';
 import { histogramColumns, isHistogramChart } from './chart-histogram';
 import { isWaterfallChart } from './chart-waterfall';
 import { svgWaterfallChart } from './svg-render-waterfall';
+import { isTreemapChart } from './chart-treemap';
+import { svgTreemapChart } from './svg-render-treemap';
 import { svgSankey } from './svg-render-sankey';
 import { isSankeyShape } from './sankey-wire';
 import { svgProgressBar, svgProgressRing, svgRating } from './svg-render-data';
@@ -113,7 +115,9 @@ export function svgElementBody(
   if (el.type !== 'shape') return '';
   const { labelColor, fontFamily, stroke, fill, chartPalette, chartGround, label } = o;
   if (isPieShape(el.shape))
-    return svgPieChart(el, labelColor, chartPalette, fontFamily, chartGround);
+    return isTreemapChart(el)
+      ? svgTreemapChart(el, labelColor, chartPalette, fontFamily, chartGround)
+      : svgPieChart(el, labelColor, chartPalette, fontFamily, chartGround);
   if (isBarShape(el.shape))
     return svgBarChart(el, labelColor, chartPalette, fontFamily, chartGround);
   if (isLineShape(el.shape))

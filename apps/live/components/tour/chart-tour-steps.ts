@@ -6,7 +6,7 @@ import type { TourStepOf } from './tour-step';
 import { elementSelector } from '@/lib/canvas-selectors';
 
 // The Chart tour (docs/specs/007-editor/element-tours.md "The Chart tour"), on a selected data chart of any of the
-// fifteen types: how it reads, a mark's readout, Grow previewed on it, its menu, and for a line, area or scatter chart its
+// sixteen types: how it reads, a mark's readout, Grow previewed on it, its menu, and for a line, area or scatter chart its
 // Chart Data dialog, opened by the tour, where each step rings a real control. Done closes the dialog with the tour.
 
 type Step = TourStepOf<ElementTourApi>;
@@ -33,6 +33,7 @@ const MARKS: Record<ChartType, [one: string, many: string]> = {
   ohlc: ['bar', 'bars'],
   histogram: ['column', 'columns'],
   waterfall: ['column', 'columns'],
+  treemap: ['tile', 'tiles'],
   combo: ['mark', 'marks'],
 };
 
