@@ -69,7 +69,16 @@ function readTablePart(xml: string): KeptTable['table'] {
   };
 }
 
-const TABLE_PART = /<(?:[\w.-]+:)?tablePart\b[^>]*?\s(?:[\w.-]+:)?id="([^"]*)"[^>]*\/>/g;
+// A `tablePart` element; its relationship id is read from its attributes one by one.
+const TABLE_PART = /<(?:[\w.-]+:)?tablePart\b[^>]*>/g;
+const REL_ID = /^(?:[\w.-]+:)?id="([^"]*)"/;
+
+// A `tablePart`'s relationship id; empty when it names none.
+const relIdOf = (tag: string): string =>
+  tag
+    .split(/\s/)
+    .map((attribute) => REL_ID.exec(attribute)?.[1])
+    .find((id) => id !== undefined) ?? '';
 
 /** A file's kept table parts, each sheet's in its `tableParts`' order. */
 export function keptTables(kept: KeptContent | undefined): KeptTable[] {
@@ -79,7 +88,8 @@ export function keptTables(kept: KeptContent | undefined): KeptTable[] {
   for (const item of kept.items) {
     if (item.place !== 'worksheet' || keptLocalName(item.xml) !== 'tableParts') continue;
     const sheet = item.at.sheet!;
-    for (const [, relId] of item.xml.matchAll(TABLE_PART)) {
+    for (const [tag] of item.xml.matchAll(TABLE_PART)) {
+      const relId = relIdOf(tag);
       const rel = kept.relationships.find(
         (r) => r.from === 'sheet' && r.at.sheet === sheet && r.id === relId && !r.external,
       );
@@ -87,7 +97,7 @@ export function keptTables(kept: KeptContent | undefined): KeptTable[] {
       if (!rel || !part) continue;
       out.push({
         sheet,
-        relId: relId!,
+        relId,
         part: part.name,
         table: part.rels.length ? null : readTablePart(decode(part.data)),
       });
@@ -107,8 +117,8 @@ export function keptWithoutTables(
   const items = kept.items.flatMap((item) => {
     if (item.place !== 'worksheet' || keptLocalName(item.xml) !== 'tableParts') return [item];
     let left = 0;
-    const xml = item.xml.replace(TABLE_PART, (m, id: string) => {
-      if (goes(item.at.sheet, id)) return '';
+    const xml = item.xml.replace(TABLE_PART, (m) => {
+      if (goes(item.at.sheet, relIdOf(m))) return '';
       left++;
       return m;
     });
