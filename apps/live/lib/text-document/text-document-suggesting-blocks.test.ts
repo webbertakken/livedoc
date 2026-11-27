@@ -25,7 +25,7 @@ import {
   suggest,
   table,
 } from './text-document-suggesting.test-kit';
-import { insertRows } from './text-document-table-edits';
+import { insertRows } from './text-document-table-insert';
 import { insertSectionBreak } from './text-document-breaks';
 
 /** Each text node's text and its insertion's id, in order. */

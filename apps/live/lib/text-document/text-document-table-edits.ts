@@ -1,10 +1,9 @@
-// Reshaping a table (docs/specs/034-text-documents/tables.md "Working in a table"): rows and columns inserted like the
-// caret's, deleted, distributed; cells merged and unmerged; the table deleted. Columns' widths stay on every cell
-// (`colwidth`), the table keeping its width where the spec says so. Each is one command, one undo step.
+// Reshaping a table (docs/specs/034-text-documents/tables.md "Working in a table"): rows and columns deleted (put in by
+// text-document-table-insert.ts), distributed; cells merged and unmerged; the table deleted. Columns' widths stay on
+// every cell (`colwidth`), the table keeping its width where the spec says so. Each is one command, one undo step.
 import type { Node as PmNode } from 'prosemirror-model';
 import type { Command, EditorState, Transaction } from 'prosemirror-state';
 import {
-  addColumn,
   CellSelection,
   deleteColumn,
   deleteRow,
@@ -16,13 +15,10 @@ import {
   TableMap,
   type TableRect,
 } from 'prosemirror-tables';
-import {
-  TEXT_DOCUMENT_TABLE_MAX_COLUMNS,
-  TEXT_DOCUMENT_TABLE_MAX_ROWS,
-} from '@livedoc/text-documents';
 import { columnWidths } from './text-document-table-dom';
 
-const round = (value: number) => Math.round(value * 100) / 100;
+/** A width or height in points, to two decimals as stored. */
+export const roundPoints = (value: number) => Math.round(value * 100) / 100;
 
 /**
  * Set on a transaction that moves, sorts, distributes, merges or splits a table's rows, columns or cells: while
@@ -35,7 +31,7 @@ export const TABLE_RESHAPE_META = 'textDocumentTableReshape';
 export const reshaping = (tr: Transaction): Transaction => tr.setMeta(TABLE_RESHAPE_META, true);
 
 /** The table at the caret, as `prosemirror-tables` reads it; null outside a table. */
-const rectOf = (state: EditorState): TableRect | null =>
+export const rectOf = (state: EditorState): TableRect | null =>
   isInTable(state) ? selectedRect(state) : null;
 
 /** Every cell's `colwidth` set from `widths`, one per grid column, in the transaction's table at `tableStart`. */
@@ -54,165 +50,43 @@ export function setColumnWidths(
     const { left, right } = map.findCell(pos);
     tr.setNodeMarkup(tableStart + pos, null, {
       ...cell.attrs,
-      colwidth: widths.slice(left, right).map(round),
+      colwidth: widths.slice(left, right).map(roundPoints),
     });
   }
 }
 
-/** The `count` new columns from grid column `index`: each of their own cells `width` wide, no other cell touched. */
-function newColumnWidths(
-  tr: Transaction,
-  tableStart: number,
-  index: number,
-  count: number,
-  width: number,
-): void {
-  const table = tr.doc.nodeAt(tableStart - 1)!;
-  const map = TableMap.get(table);
-  for (let row = 0; row < map.height; row++)
-    for (let column = index; column < index + count; column++) {
-      const pos = map.map[row * map.width + column]!;
-      const cell = table.nodeAt(pos)!;
-      if ((cell.attrs.colspan as number) > 1) continue;
-      tr.setNodeMarkup(tableStart + pos, null, { ...cell.attrs, colwidth: [round(width)] });
-    }
-}
+/**
+ * Set on a transaction deleting a table's rows or columns: which, as grid indices `[from, to)`, so that while suggesting
+ * they are marked, or one's own taken away, from the table as it stood (review.md "Across merged cells").
+ */
+export const TABLE_PARTS_META = 'textDocumentTableParts';
 
-/** The widths scaled so they sum to `total`. */
-const scaledTo = (widths: readonly number[], total: number): number[] => {
-  const sum = widths.reduce((a, b) => a + b, 0);
-  return sum > 0 ? widths.map((w) => (w * total) / sum) : widths.map(() => total / widths.length);
+/** The rows or columns a deletion takes, in the table starting at `tableStart`. */
+export type TablePartsDeleted = {
+  axis: 'rows' | 'columns';
+  tableStart: number;
+  from: number;
+  to: number;
 };
 
-/** A new row at grid row `index`, like row `like`: its cells' columns, lines and shading, empty, one row high. */
-function insertRowAt(tr: Transaction, tableStart: number, index: number, like: number): void {
-  const table = tr.doc.nodeAt(tableStart - 1)!;
-  const map = TableMap.get(table);
-  const { width, height } = map;
-  const cells: PmNode[] = [];
-  const grown = new Set<number>();
-  let previous = -1;
-  for (let col = 0; col < width; col++) {
-    // A cell spanning down across the place grows by the row.
-    if (index > 0 && index < height) {
-      const above = map.map[(index - 1) * width + col]!;
-      if (above === map.map[index * width + col]) {
-        if (!grown.has(above)) {
-          grown.add(above);
-          const cell = table.nodeAt(above)!;
-          tr.setNodeMarkup(tableStart + above, null, {
-            ...cell.attrs,
-            rowspan: (cell.attrs.rowspan as number) + 1,
-          });
-        }
-        previous = -1;
-        continue;
-      }
-    }
-    const pos = map.map[like * width + col]!;
-    const source = table.nodeAt(pos)!;
-    const last = cells[cells.length - 1];
-    if (pos === previous && last) {
-      const attrs = last.attrs as { colspan: number; colwidth: number[] | null };
-      const widths = columnWidths(table);
-      cells[cells.length - 1] = last.type.create(
-        {
-          ...attrs,
-          colspan: attrs.colspan + 1,
-          colwidth: [...(attrs.colwidth ?? []), widths[col]!],
-        },
-        last.content,
-      );
-      continue;
-    }
-    previous = pos;
-    const own = (source.attrs.colwidth as number[] | null)?.[col - map.findCell(pos).left];
-    cells.push(
-      source.type.create(
-        { ...source.attrs, colspan: 1, rowspan: 1, colwidth: own === undefined ? null : [own] },
-        source.type.schema.nodes.paragraph!.create(source.firstChild?.attrs ?? null),
-      ),
-    );
-  }
-  // The row goes before grid row `index`'s row node, or at the table's end.
-  let at = tableStart;
-  for (let r = 0; r < index; r++) at += table.child(r).nodeSize;
-  const likeRow = table.child(Math.min(like, table.childCount - 1));
-  tr.insert(at, likeRow.type.create({ ...likeRow.attrs, height: null, heightRule: null }, cells));
-}
-
-/** Insert rows above the caret's or the selection's first row, or below its last; as many as it spans. */
-export const insertRows =
-  (side: 'above' | 'below'): Command =>
-  (state, dispatch) => {
-    const rect = rectOf(state);
-    if (!rect) return false;
-    const count = rect.bottom - rect.top;
-    if (rect.map.height + count > TEXT_DOCUMENT_TABLE_MAX_ROWS) return false;
-    if (dispatch) {
-      const tr = state.tr;
-      const like = side === 'above' ? rect.top : rect.bottom - 1;
-      const index = side === 'above' ? rect.top : rect.bottom;
-      // Each like the row it is beside; every insert at the same place pushes the earlier ones on.
-      for (let i = 0; i < count; i++)
-        insertRowAt(tr, rect.tableStart, index, side === 'above' ? like + i : like);
-      dispatch(tr.scrollIntoView());
-    }
-    return true;
-  };
-
-/**
- * Insert columns left of the caret's or the selection's first column, or right of its last; the table keeps its width,
- * or, with `keepWidths` (while suggesting), grows by the new columns, each its neighbour's width, no other cell
- * changed, so rejecting them gives the table back as it was (review.md "Rows and columns").
- */
-export const insertColumns =
-  (side: 'left' | 'right', { keepWidths = false }: { keepWidths?: boolean } = {}): Command =>
-  (state, dispatch) => {
-    const rect = rectOf(state);
-    if (!rect) return false;
-    const count = rect.right - rect.left;
-    if (rect.map.width + count > TEXT_DOCUMENT_TABLE_MAX_COLUMNS) return false;
-    if (dispatch) {
-      const tr = state.tr;
-      const before = columnWidths(rect.table);
-      const total = before.reduce((a, b) => a + b, 0);
-      const like = side === 'left' ? rect.left : rect.right - 1;
-      const index = side === 'left' ? rect.left : rect.right;
-      const widths = [...before];
-      for (let i = 0; i < count; i++) {
-        const table = tr.doc.nodeAt(rect.tableStart - 1)!;
-        const map = TableMap.get(table);
-        addColumn(tr, { ...rect, table, map }, index);
-        // The new cells take the like column's lines and shading.
-        const after = tr.doc.nodeAt(rect.tableStart - 1)!;
-        const next = TableMap.get(after);
-        const source = side === 'left' ? like + 1 + i : like;
-        for (let row = 0; row < next.height; row++) {
-          const pos = next.map[row * next.width + index]!;
-          const cell = after.nodeAt(pos)!;
-          if ((cell.attrs.colspan as number) > 1) continue;
-          const from = after.nodeAt(next.map[row * next.width + source]!)!;
-          tr.setNodeMarkup(rect.tableStart + pos, null, {
-            ...cell.attrs,
-            props: from.attrs.props as unknown,
-          });
-        }
-        widths.splice(index, 0, before[like]!);
-      }
-      if (keepWidths) newColumnWidths(tr, rect.tableStart, index, count, before[like]!);
-      else setColumnWidths(tr, rect.tableStart, scaledTo(widths, total));
-      dispatch(tr.scrollIntoView());
-    }
-    return true;
-  };
+const partsOf = (
+  rect: TableRect,
+  axis: TablePartsDeleted['axis'],
+  from: number,
+  to: number,
+): TablePartsDeleted => ({ axis, tableStart: rect.tableStart, from, to });
 
 /** Delete the rows the caret or selection spans; every row deletes the table. */
 export const deleteRows: Command = (state, dispatch) => {
   const rect = rectOf(state);
   if (!rect) return false;
   if (rect.top === 0 && rect.bottom === rect.map.height) return deleteTable(state, dispatch);
-  return deleteRow(state, dispatch);
+  return deleteRow(
+    state,
+    dispatch &&
+      ((tr) =>
+        dispatch(tr.setMeta(TABLE_PARTS_META, partsOf(rect, 'rows', rect.top, rect.bottom)))),
+  );
 };
 
 /** Delete the columns the caret or selection spans, the others keeping their widths; every column deletes the table. */
@@ -220,7 +94,12 @@ export const deleteColumns: Command = (state, dispatch) => {
   const rect = rectOf(state);
   if (!rect) return false;
   if (rect.left === 0 && rect.right === rect.map.width) return deleteTable(state, dispatch);
-  return deleteColumn(state, dispatch);
+  return deleteColumn(
+    state,
+    dispatch &&
+      ((tr) =>
+        dispatch(tr.setMeta(TABLE_PARTS_META, partsOf(rect, 'columns', rect.left, rect.right)))),
+  );
 };
 
 /** Delete the table the caret is in. */
@@ -272,7 +151,11 @@ export const distributeRows =
       const tr = state.tr;
       for (const pos of positions) {
         const row = state.doc.nodeAt(pos)!;
-        tr.setNodeMarkup(pos, null, { ...row.attrs, height: round(tallest), heightRule: null });
+        tr.setNodeMarkup(pos, null, {
+          ...row.attrs,
+          height: roundPoints(tallest),
+          heightRule: null,
+        });
       }
       dispatch(reshaping(tr));
     }

@@ -174,6 +174,25 @@ describe('a merged cell grown by one’s own suggested row, read with one’s su
     expect(read(after.doc)).toBe(read(before.doc));
   });
 
+  it('reads a column that grew a merged cell, its width with it, as the table before', () => {
+    const before = tableDoc([
+      { cells: [{ text: 'W', cs: 2, widths: [100, 100] }] },
+      { cells: [{ text: 'A', widths: [100] }, { text: 'B', widths: [100] }] },
+    ]);
+    const after = tableDoc([
+      { cells: [{ text: 'W', cs: 3, widths: [100, 80, 100] }] },
+      {
+        cells: [
+          { text: 'A', widths: [100] },
+          { text: '', widths: [80], ins: 'c1' },
+          { text: 'B', widths: [100] },
+        ],
+      },
+    ]);
+    const read = (doc: Y.Doc) => LiveSuggestions.ownRejected(doc.getXmlFragment('body'), ADA.key);
+    expect(read(after.doc)).toBe(read(before.doc));
+  });
+
   it('still tells a merged cell someone else changed', () => {
     const before = tableDoc([
       { cells: [{ text: 'A', rs: 2 }, { text: 'B' }] },

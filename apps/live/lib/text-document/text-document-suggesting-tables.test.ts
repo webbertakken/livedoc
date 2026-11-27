@@ -1,7 +1,8 @@
 // docs/specs/034-text-documents/review.md "While suggesting" (Rows and columns, Not yet): a row or column added is the
 // person's insertion of it, its cells' writing unmarked; one deleted is marked and stays (one's own taken away); rows
-// added one after another are one suggestion; a new column takes its neighbour's width, the others keeping theirs; a
-// row or column a merged cell crosses, and reshaping anyone else's table, are not yet (director, 2026-11-26).
+// added one after another are one suggestion; a new column takes its neighbour's width, the others keeping theirs;
+// across merged cells (director, 2026-11-26) a row or column put in grows the merged cell, one deleted leaves it until
+// Accept, one's own taken away shrinks it back; reshaping anyone else's table is not yet.
 import { describe, expect, it } from 'vitest';
 import { TextSelection, type EditorState } from 'prosemirror-state';
 import type { Node as PmNode } from 'prosemirror-model';
@@ -20,7 +21,8 @@ import {
   suggest,
   table,
 } from './text-document-suggesting.test-kit';
-import { deleteColumns, deleteRows, insertColumns, insertRows } from './text-document-table-edits';
+import { deleteColumns, deleteRows, setColumnWidths } from './text-document-table-edits';
+import { insertColumns, insertRows } from './text-document-table-insert';
 import { moveRows } from './text-document-table-move';
 
 /** The state with the caret in the given cell (row, column) of the first table. */
@@ -75,6 +77,19 @@ const widths = (state: EditorState) => {
     const w: number[] = [];
     row.forEach((cell) => w.push(...((cell.attrs.colwidth as number[] | null) ?? [])));
     out.push(w);
+  });
+  return out;
+};
+
+/** Each row's cells' spans, as `rows×columns`. */
+const spans = (state: EditorState) => {
+  const out: string[][] = [];
+  blockOf(state, 'table')!.forEach((row) => {
+    const cells: string[] = [];
+    row.forEach((cell) =>
+      cells.push(`${String(cell.attrs.rowspan)}×${String(cell.attrs.colspan)}`),
+    );
+    out.push(cells);
   });
   return out;
 };
@@ -163,25 +178,119 @@ describe('suggestTransaction on rows and columns', () => {
     expect(textMarks(bens)).toEqual(['his:insertion:b1']);
   });
 
-  it('refuses a row or column a merged cell crosses: not yet', () => {
-    const down = inCell(withTable(mergedDown()), 0, 1);
-    expect(suggestTransaction(down, commanded(down, deleteRows), as(ADA))).toEqual({
+  it('grows a merged cell over a row put in through it, as part of the row', () => {
+    const state = inCell(withTable(mergedDown()), 0, 1);
+    const next = suggest(state, commanded(state, insertRows('below')));
+    expect(shape(next)).toEqual(['.: . .', '+s1: .', '.: .']);
+    expect(spans(next)).toEqual([['3×1', '1×1'], ['1×1'], ['1×1']]);
+  });
+
+  it('grows a merged cell over a column put in through it, by the column’s width', () => {
+    const state = inCell(withTable(mergedAcross()), 1, 0);
+    const next = suggest(state, commanded(state, insertColumns('right', { keepWidths: true })));
+    expect(shape(next)).toEqual(['.: .', '.: . +s1 .']);
+    expect(spans(next)).toEqual([['1×3'], ['1×1', '1×1', '1×1']]);
+    expect(widths(next)).toEqual([
+      [100, 100, 100],
+      [100, 100, 100],
+    ]);
+  });
+
+  it('marks a row a merged cell crosses deleted, the merged cell staying', () => {
+    const state = inCell(withTable(mergedDown()), 1, 0);
+    const next = suggest(state, commanded(state, deleteRows));
+    expect(shape(next)).toEqual(['.: . .', '-s1: .']);
+    expect(spans(next)).toEqual([['2×1', '1×1'], ['1×1']]);
+  });
+
+  it('marks a row a merged cell starts in deleted, nothing moving', () => {
+    const state = inCell(withTable(mergedDown()), 0, 1);
+    const next = suggest(state, commanded(state, deleteRows));
+    expect(shape(next)).toEqual(['-s1: . .', '.: .']);
+    expect(spans(next)).toEqual([['2×1', '1×1'], ['1×1']]);
+  });
+
+  it('marks a column a merged cell crosses deleted, the merged cell staying', () => {
+    const state = inCell(withTable(mergedAcross()), 1, 0);
+    const next = suggest(state, commanded(state, deleteColumns));
+    expect(shape(next)).toEqual(['.: .', '.: -s1 .']);
+    expect(spans(next)).toEqual([['1×2'], ['1×1', '1×1']]);
+  });
+
+  it('takes one’s own row away through a merged cell, shrinking it back', () => {
+    const state = inCell(withTable(mergedDown()), 0, 1);
+    const grown = inCell(suggest(state, commanded(state, insertRows('below'))), 1, 0);
+    const next = suggest(grown, commanded(grown, deleteRows));
+    expect(shape(next)).toEqual(['.: . .', '.: .']);
+    expect(spans(next)).toEqual([['2×1', '1×1'], ['1×1']]);
+  });
+
+  it('takes one’s own column away through a merged cell, its width with it', () => {
+    const state = inCell(withTable(mergedAcross()), 1, 0);
+    const grown = inCell(
+      suggest(state, commanded(state, insertColumns('right', { keepWidths: true }))),
+      1,
+      1,
+    );
+    const next = suggest(grown, commanded(grown, deleteColumns));
+    expect(shape(next)).toEqual(['.: .', '.: . .']);
+    expect(spans(next)).toEqual([['1×2'], ['1×1', '1×1']]);
+    expect(widths(next)).toEqual([
+      [100, 100],
+      [100, 100],
+    ]);
+  });
+
+  it('marks a column deleted through one’s own row, that row’s cell too', () => {
+    const state = inCell(withTable(), 0, 0);
+    const added = inCell(suggest(state, commanded(state, insertRows('below'))), 0, 1);
+    const next = suggest(added, commanded(added, deleteColumns), as(ADA, 's2'));
+    expect(shape(next)).toEqual(['.: . -s2', '+s1: . -s2', '.: . -s2']);
+  });
+
+  it('takes one’s own column away through one’s own row', () => {
+    const state = inCell(withTable(), 0, 0);
+    const column = inCell(
+      suggest(state, commanded(state, insertColumns('right', { keepWidths: true }))),
+      0,
+      0,
+    );
+    const row = inCell(suggest(column, commanded(column, insertRows('below'))), 0, 1);
+    expect(shape(row)).toEqual(['.: . +s1 .', '+s1: . . .', '.: . +s1 .']);
+    const next = suggest(row, commanded(row, deleteColumns));
+    expect(shape(next)).toEqual(['.: . .', '+s1: . .', '.: . .']);
+  });
+
+  it('refuses deleting a column partly one’s own: not yet', () => {
+    const state = inCell(withTable(), 0, 0);
+    const column = inCell(
+      suggest(state, commanded(state, insertColumns('right', { keepWidths: true }))),
+      0,
+      0,
+    );
+    const row = inCell(
+      suggest(column, commanded(column, insertRows('below')), as(BEN, 'b1')),
+      0,
+      1,
+    );
+    expect(shape(row)).toEqual(['.: . +s1 .', '+b1: . . .', '.: . +s1 .']);
+    expect(suggestTransaction(row, commanded(row, deleteColumns), as(ADA))).toEqual({
       refused: 'structure',
     });
-    expect(suggestTransaction(down, commanded(down, insertRows('below')), as(ADA))).toEqual({
-      refused: 'structure',
-    });
-    const across = inCell(withTable(mergedAcross()), 1, 0);
-    expect(suggestTransaction(across, commanded(across, deleteColumns), as(ADA))).toEqual({
-      refused: 'structure',
-    });
-    expect(
-      suggestTransaction(
-        across,
-        commanded(across, insertColumns('right', { keepWidths: true })),
-        as(ADA),
-      ),
-    ).toEqual({ refused: 'structure' });
+  });
+
+  it('refuses changing only the widths of anyone else’s table', () => {
+    const state = inCell(withTable(), 0, 0);
+    const tr = state.tr;
+    setColumnWidths(tr, 4, [150, 50]);
+    expect(suggestTransaction(state, tr, as(ADA))).toEqual({ refused: 'structure' });
+  });
+
+  it('puts a row in beside a suggested row in Editing without its suggestion', () => {
+    const suggested = inCell(withTable(), 0, 0);
+    const added = inCell(suggest(suggested, commanded(suggested, insertRows('below'))), 1, 0);
+    const plain = added.apply(commanded(added, insertRows('below')));
+    expect(shape(plain)).toEqual(['.: . .', '+s1: . .', '.: . .', '.: . .']);
   });
 
   it('refuses moving rows in anyone else’s table, and moves them plainly in one’s own', () => {

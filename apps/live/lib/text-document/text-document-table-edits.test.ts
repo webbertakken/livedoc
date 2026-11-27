@@ -12,8 +12,6 @@ import {
   deleteWholeTable,
   distributeColumns,
   distributeRows,
-  insertColumns,
-  insertRows,
   mergeTableCells,
   unmergeTableCell,
   compareCells,
@@ -21,6 +19,7 @@ import {
   pinHeaderRows,
   sortTable,
 } from './text-document-table-edits';
+import { insertColumns, insertRows } from './text-document-table-insert';
 
 const SHADE = { background: '#ff0000' };
 

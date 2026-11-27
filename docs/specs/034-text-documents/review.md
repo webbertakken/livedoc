@@ -292,11 +292,14 @@ office kinds; this spec says what a text document puts in them.
   table grows (it may run past the margin while suggested) and Reject gives back the table as it was; Accept fits a
   table wider than the text back to the text width, as an Editor's plain change (director, 2026-11-26).
 - **Across merged cells** (director, 2026-11-26): a row or column put in where a merged cell crosses it grows that
-  cell over it as part of the suggestion, as Insert grows it in Editing; Reject takes the row or column away and the
-  merged cell shrinks back exactly. A row or column a merged cell crosses suggested deleted leaves the merged cell as
+  cell over it as part of the suggestion, as Insert grows it in Editing, a column's width added to the merged cell's
+  own; Reject takes the row or column away and the merged cell shrinks back exactly. A row or column a merged cell crosses suggested deleted leaves the merged cell as
   it is until Accept, which takes the row or column away and shrinks the merged cell over the rest; a merged cell
   that starts in a deleted row starts in the next row, keeping its writing. Nothing of the merge is kept beside the
-  suggestion: taking a row or column away always shrinks what crosses it by one, as Delete row does in Editing.
+  suggestion: taking a row or column away always shrinks what crosses it by one, as Delete row does in Editing. One's
+  own suggested row or column deleted goes at once, shrinking what crosses it; anyone else's column deleted marks its
+  cell in one's own suggested row with it. A column partly one's own (one's own
+  cells beside cells someone else's suggested row put in) says "This can't be suggested yet." when deleted (default).
 - **Not yet**: merging, splitting, moving, sorting and
   distributing the rows and columns of a table not one's own suggested table (default); updating a table of contents
   not one's own suggested one, drawings, and what is kept beside the writing (page setup, a header's or footer's
