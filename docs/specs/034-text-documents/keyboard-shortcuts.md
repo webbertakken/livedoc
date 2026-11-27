@@ -255,7 +255,7 @@ The Accessibility menu shows only while screen reader support is on.
 | ------------------------------------- | -------------------------- | -------------------------- | ---------------------------- | ------------- |
 | Open revision history                 | `Ctrl+Alt+Shift+H`         | `⌘+Option+Shift+H`         | `Ctrl+Alt+Shift+H`           | built         |
 | Open Explore tool                     | `Ctrl+Alt+Shift+I`         | `⌘+Option+Shift+I`         | `Ctrl+Alt+Shift+I`           | left out (C3) |
-| Open spelling and grammar             | `Ctrl+Alt+X or F7`         | `⌘+Option+X or Fn+F7`      | —                            | specified     |
+| Open spelling and grammar             | `Ctrl+Alt+X or F7`         | `⌘+Option+X or Fn+F7`      | —                            | built         |
 | Open dictionary                       | `Ctrl+Shift+Y`             | `⌘+Shift+Y`                | `Ctrl+Shift+Y`               | specified     |
 | Word count                            | `Ctrl+Shift+C`             | `⌘+Shift+C`                | `Ctrl+Shift+C`               | built         |
 | Show non-printing characters          | `Ctrl+Shift+P`             | `⌘+Shift+P`                | `Ctrl+Shift+P`               | built         |
@@ -265,8 +265,8 @@ The Accessibility menu shows only while screen reader support is on.
 | Page down                             | `PgDn`                     | `Fn+Down`                  | `Alt+Down`                   | specified     |
 | Move to the beginning of the document | —                          | —                          | `Ctrl+Search+Left`           | specified     |
 | Move to the end of the document       | —                          | `⌘+Down`                   | `Ctrl+Search+Right`          | specified     |
-| Move to next misspelling              | `Ctrl+'`                   | `⌘+'`                      | `Ctrl+'`                     | specified     |
-| Move to previous misspelling          | `Ctrl+;`                   | `⌘+;`                      | `Ctrl+;`                     | specified     |
+| Move to next misspelling              | `Ctrl+'`                   | `⌘+'`                      | `Ctrl+'`                     | built         |
+| Move to previous misspelling          | `Ctrl+;`                   | `⌘+;`                      | `Ctrl+;`                     | built         |
 | Insert or move to header              | `Ctrl+Alt+O, H`            | `Ctrl+⌘+O, H`              | `Ctrl+Alt+O, H`              | built         |
 | Insert or move to footer              | `Ctrl+Alt+O, F`            | `Ctrl+⌘+O, F`              | `Ctrl+Alt+O, F`              | built         |
 | Move focus to popup                   | `Ctrl+Alt+E, P`            | `Ctrl+⌘+E, P`              | `Ctrl+Alt+E, P`              | specified     |

@@ -155,6 +155,7 @@ import {
 } from '@/lib/text-document/text-document-page-selection';
 import { useTextDocumentWordCount } from './useTextDocumentWordCount';
 import { useTextDocumentSpelling } from './useTextDocumentSpelling';
+import { useTextDocumentSpellingSource } from './useTextDocumentSpellingSource';
 import { useTextDocumentColumns } from './useTextDocumentColumns';
 import { breaksPlugin, sectionSetupAt } from '@/lib/text-document/text-document-breaks';
 import { horizontalLineActions } from '@/lib/text-document/text-document-horizontal-line';
@@ -349,12 +350,8 @@ export function TextDocumentSurface({
   const suggests = suggestsMode && !preview.previewing;
   const textWrites = writes || suggests;
   const listWrites = writes || (suggests && canEdit);
-  // Spelling (tools.md "Spelling and grammar"): what the writing's check reads, and the context menu on a misspelt word.
-  const spelling = useTextDocumentSpelling({
-    view: editorView,
-    textWrites,
-    ownerId: scope.ownerId,
-  });
+  // Spelling (tools.md "Spelling and grammar"): what the body's, the headers' and the notes' checks read.
+  const spellingSource = useTextDocumentSpellingSource({ textWrites });
   const suggesting = useTextDocumentSuggesting({ suggests, commenter });
   // A Participant in Suggesting sees an Editor's menus, with only what can be suggested running (office-shell.md "Modes").
   const proposals = useMemo(() => proposalsInMode(TEXT_DOCUMENT_MODES, level, mode), [level, mode]);
@@ -524,7 +521,7 @@ export function TextDocumentSurface({
           stretchesPlugin(),
           // LiveDoc's own underlines where a dictionary ships, the browser's check elsewhere; code blocks never.
           spellingPlugin({
-            ...spelling.source,
+            ...spellingSource.source,
             skipped: (block) => codeBlockOf(block, readFormatting().styles) !== undefined,
           }),
           // The typing aids: smart quotes, substitutions, links, capitals, lists.
@@ -754,7 +751,7 @@ export function TextDocumentSurface({
     drawsDrawings,
     drawingHosts,
     bindBody,
-    spelling.source,
+    spellingSource.source,
   ]);
 
   useEffect(() => {
@@ -831,8 +828,17 @@ export function TextDocumentSurface({
     caretSection: page.caret.index,
     gallery,
     drawnDoc: preview.drawn,
+    spelling: spellingSource.source,
   });
   const { activeView } = headers;
+  // The context menu on a misspelt word, Tools > Spelling and grammar and the misspelling keys (tools.md).
+  const spelling = useTextDocumentSpelling({
+    spelling: spellingSource,
+    view: editorView,
+    activeView,
+    textWrites,
+    ownerId: scope.ownerId,
+  });
   // Edit > Cut, Copy, Paste (text-and-paragraphs.md "Clipboard"); the editor's plugin tells it of a paste's losses.
   const clipboard = useTextDocumentClipboard(activeView, textWrites);
   // Tools > Preferences (tools.md "Preferences"); the writing reads the aids it keeps.
@@ -1461,6 +1467,8 @@ export function TextDocumentSurface({
             <TextDocumentReviewPanel {...reviewPanel.props} />
           ) : null}
           {compare.dialog}
+          {state === 'ready' ? spelling.card : null}
+          {spelling.dialog}
           {state === 'ready' ? wordCount.box : null}
           {state === 'ready' ? wordCount.dialog : null}
           <div

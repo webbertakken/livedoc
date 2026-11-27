@@ -19,6 +19,8 @@ import { TextDocumentState } from '@livedoc/text-documents';
 import type { PageGeometry } from '@/lib/text-document/pagination/pagination-draw';
 import { pageAtPoint } from '@/lib/text-document/pagination/pagination-headers';
 import { storyEditingPlugins } from '@/lib/text-document/text-document-story-editing';
+import { codeBlockOf } from '@/lib/text-document/text-document-code-blocks';
+import { spellingPlugin, type SpellingSource } from '@/lib/text-document/text-document-spelling';
 import { TextDocumentHeaderBar } from './TextDocumentHeaderBar';
 import { useTextDocumentHeaderEditing } from './useTextDocumentHeaderEditing';
 import { useTextDocumentHeaderOptions } from './useTextDocumentHeaderOptions';
@@ -57,6 +59,8 @@ export function useTextDocumentPageStories(input: {
   readonly gallery: GalleryPictures;
   /** The settled writing the stories are drawn from, where the body draws one (useTextDocumentReviewPreview). */
   readonly drawnDoc?: Y.Doc | null;
+  /** What their spelling checks read (tools.md "Spelling and grammar"): checked and underlined as the body is. */
+  readonly spelling?: SpellingSource;
 }) {
   const { view, liveDoc, format, pages, writes, heights, caret, caretSection, gallery } = input;
   const suggests = input.suggests ?? false;
@@ -64,19 +68,31 @@ export function useTextDocumentPageStories(input: {
   const endNotes = input.endNotes ?? NO_NOTES;
   const leave = useRef(() => {});
   const toolbar = useRef<HTMLDivElement | null>(null);
+  const { spelling } = input;
   const plugins = useCallback(() => {
     const doc = liveDoc.current;
     if (!doc) return [];
-    return storyEditingPlugins({
-      caret,
-      readFormatting: () => ({
-        styles: TextDocumentState.styles(doc, format),
-        defaults: TextDocumentState.defaults(doc, format),
-      }),
-      leave: () => leave.current(),
-      toBar: () => toolbar.current?.querySelector<HTMLElement>('input, button')?.focus(),
+    const readFormatting = () => ({
+      styles: TextDocumentState.styles(doc, format),
+      defaults: TextDocumentState.defaults(doc, format),
     });
-  }, [liveDoc, format, caret]);
+    return [
+      ...storyEditingPlugins({
+        caret,
+        readFormatting,
+        leave: () => leave.current(),
+        toBar: () => toolbar.current?.querySelector<HTMLElement>('input, button')?.focus(),
+      }),
+      ...(spelling
+        ? [
+            spellingPlugin({
+              ...spelling,
+              skipped: (block) => codeBlockOf(block, readFormatting().styles) !== undefined,
+            }),
+          ]
+        : []),
+    ];
+  }, [liveDoc, format, caret, spelling]);
   const stories = useTextDocumentStories({
     view,
     liveDoc,

@@ -96,6 +96,7 @@ export const TEXT_DOCUMENT_TOOLBAR: OfficeToolbar = [
       icon('print', 'Print', 'edit', lucidePrinter, { shortcut: 'print' }),
       icon('spelling-and-grammar', 'Spelling and grammar check', 'edit', lucideSpellCheck, {
         shortcut: 'open-spelling-and-grammar',
+        built: true,
       }),
       icon('paint-format', 'Paint format', 'edit', lucidePaintRoller, {
         toggle: true,

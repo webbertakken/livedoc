@@ -1138,6 +1138,12 @@ export const EXACT: Readonly<Record<string, string>> = {
     "Someone turned on a text document's word count while typing, the small count at the writing's bottom left.",
   'UI|Toggled|TextDocumentWordCountWhileTypingOff':
     "Someone turned off a text document's word count while typing.",
+  'UI|Opened|TextDocumentSpelling':
+    "Someone opened a text document's Spelling and grammar card from Tools, the toolbar or its shortcut (never the words).",
+  'UI|Toggled|TextDocumentSpellingSuggestionsOn':
+    'Someone turned on Show spelling suggestions in a text document: misspelt words are underlined again.',
+  'UI|Toggled|TextDocumentSpellingSuggestionsOff':
+    'Someone turned off Show spelling suggestions in a text document: no misspelt word is underlined.',
   'Pdf|Toggled|DarkPagesOn':
     'Someone turned on Dark pages: PDF pages shown dark for them alone, in the dark colour scheme.',
   'Pdf|Toggled|DarkPagesOff': 'Someone turned off Dark pages: PDF pages shown as the file says.',
