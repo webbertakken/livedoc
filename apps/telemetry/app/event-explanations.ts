@@ -942,6 +942,8 @@ export const EXACT: Readonly<Record<string, string>> = {
     'An editor connected the spreadsheets a spreadsheet’s IMPORTRANGE formulas read, for good.',
   'Spreadsheet|Changed|NamedFunction':
     'An editor made, changed or removed a named function in a spreadsheet’s Data › Named Functions panel.',
+  'Spreadsheet|Changed|Replace':
+    'Someone replaced every match of a search in a spreadsheet with Edit › Find and Replace’s Replace All.',
   'Spreadsheet|Unlocked|ImportAccess':
     'An editor allowed a spreadsheet’s IMPORTDATA, IMPORTFEED, IMPORTHTML and IMPORTXML formulas to fetch from the web.',
   'Pdf|Imported|Explorer':

@@ -1352,11 +1352,20 @@ export const SPREADSHEET_NAMED_FUNCTIONS = chart(
   { types: ['NamedFunction'] },
 );
 
+// docs/specs/029-sheets/data-tools.md "Find and replace": a Replace All that changed cells.
+export const SPREADSHEET_REPLACED = chart(
+  'Spreadsheet',
+  'Changed',
+  'Spreadsheet Replace All',
+  'Someone replaced every match of a search in a spreadsheet with Find and Replace.',
+  { types: ['Replace'] },
+);
+
 export const SPREADSHEETS: MetricStack = {
   stack: true,
   title: 'Spreadsheets',
   blurb:
-    'Spreadsheet documents on the open standards: made, opened from files, downloaded, converted, themed, imports allowed, charts added, named functions.',
+    'Spreadsheet documents on the open standards: made, opened from files, downloaded, converted, themed, imports allowed, charts added, named functions, Replace All.',
   members: [
     SPREADSHEETS_CREATED,
     SPREADSHEETS_IMPORTED,
@@ -1366,6 +1375,7 @@ export const SPREADSHEETS: MetricStack = {
     SPREADSHEETS_IMPORTS_ALLOWED,
     SPREADSHEET_CHARTS_ADDED,
     SPREADSHEET_NAMED_FUNCTIONS,
+    SPREADSHEET_REPLACED,
   ],
 };
 
