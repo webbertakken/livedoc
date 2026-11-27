@@ -3115,6 +3115,41 @@ export const ROUTE_MANIFEST: RouteSpec[] = [
     responseSchema: 'TeamInviteDecline',
     statuses: [200, 404, 409, 429],
   },
+  // A text document email's signed settings link (docs/specs/034-text-documents/review.md "Notifications").
+  {
+    method: 'GET',
+    path: '/notification-links/{token}',
+    segment: 'notification-links',
+    tag: 'Text documents',
+    summary:
+      "Read the document name and the notification setting a text document email's signed link names. No sign-in; never writes. 404 link_not_found (a bad token, a gone document, or email not configured).",
+    auth: 'public',
+    responseSchema: 'NoticeLinkDto',
+    statuses: [200, 404, 429],
+  },
+  {
+    method: 'PUT',
+    path: '/notification-links/{token}',
+    segment: 'notification-links',
+    tag: 'Text documents',
+    summary:
+      'Keep the notification setting the signed link names, for that person and document alone. No sign-in. 400 invalid_setting; 404 link_not_found.',
+    auth: 'public',
+    requestSchema: 'NoticeSettingDto',
+    responseSchema: 'NoticeLinkDto',
+    statuses: [200, 400, 404, 429],
+  },
+  {
+    method: 'POST',
+    path: '/notification-links/{token}',
+    segment: 'notification-links',
+    tag: 'Text documents',
+    summary:
+      "One-click unsubscribe (RFC 8058, List-Unsubscribe-Post): sets both of the signed link's settings to none. No sign-in. 404 link_not_found.",
+    auth: 'public',
+    responseSchema: 'NoticeLinkDto',
+    statuses: [200, 404, 429],
+  },
   {
     method: 'POST',
     path: '/teams/invite-link/{token}/join',

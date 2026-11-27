@@ -10,3 +10,11 @@ CREATE TABLE text_document_notice_settings (
   updated_at   INTEGER NOT NULL,
   PRIMARY KEY (document_id, owner_id)
 );
+
+-- Each text document email sent, by recipient, for the hourly cap (TEXT_DOCUMENT_NOTICE_EMAILS_PER_HOUR): when, and to
+-- whom, never what. The daily sweep drops rows past the hour they count in.
+CREATE TABLE text_document_notice_sends (
+  owner_id  TEXT    NOT NULL,
+  sent_at   INTEGER NOT NULL
+);
+CREATE INDEX text_document_notice_sends_owner ON text_document_notice_sends (owner_id, sent_at);

@@ -109,7 +109,9 @@ export type Env = {
   // Per-network limiter for a form link's reads and responses (docs/specs/030-forms/forms.md "Abuse and limits").
   FORM_RATE_LIMITER?: { limit: (input: { key: string }) => Promise<{ success: boolean }> };
   // Per-network limiter for an invite email's Decline link (docs/specs/013-workspace/teams.md "Declining from the
-  // email"), keyed `invite-decline:<address range>`: open doors, so the owner-keyed limiter cannot key them.
+  // email"), keyed `invite-decline:<address range>`, and a text document email's settings link
+  // (docs/specs/034-text-documents/review.md "Notifications"), keyed `notice-link:<address range>`: open doors, so
+  // the owner-keyed limiter cannot key them.
   // Optional: absent (self-host) → "allow".
   TEAM_INVITE_RATE_LIMITER?: { limit: (input: { key: string }) => Promise<{ success: boolean }> };
   // Telemetry on/off switch (docs/specs/017-telemetry/telemetry.md). Authoritative: gates both

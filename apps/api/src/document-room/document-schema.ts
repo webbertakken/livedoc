@@ -638,6 +638,19 @@ CREATE TABLE IF NOT EXISTS text_document_last_edits (
 );
 `;
 
+// A text document tab's notification window (docs/specs/034-text-documents/review.md "Notifications", Batches): opened
+// by the first update stored in it, holding what the tab read just before it: its comments' ids and its state (a
+// state vector and deletions), so the email sent when the window ends says only what is new. Gone once sent.
+const TEXT_DOCUMENT_NOTICE_STEP = `
+CREATE TABLE IF NOT EXISTS text_document_notice_baselines (
+  tab_id       TEXT    PRIMARY KEY REFERENCES tabs (id) ON DELETE CASCADE,
+  since        INTEGER NOT NULL,
+  comment_ids  TEXT    NOT NULL,
+  state_vector BLOB    NOT NULL,
+  deletions    BLOB    NOT NULL
+);
+`;
+
 /** Every step the room's schema has taken, in order; a change appends one and never edits a shipped step. */
 export const DOCUMENT_SCHEMA_STEPS: readonly string[] = [
   STEP_1 + OUTBOX + SHARES,
@@ -661,6 +674,7 @@ export const DOCUMENT_SCHEMA_STEPS: readonly string[] = [
   TEXT_DOCUMENT_VERSIONS_STEP,
   TEXT_DOCUMENT_VIEWER_COPY_STEP,
   TEXT_DOCUMENT_LAST_EDIT_STEP,
+  TEXT_DOCUMENT_NOTICE_STEP,
 ];
 
 export const DOCUMENT_SCHEMA_VERSION = DOCUMENT_SCHEMA_STEPS.length;

@@ -11066,6 +11066,23 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
     ],
     "type": "string"
   },
+  "NoticeLinkDto": {
+    "additionalProperties": false,
+    "description": "What an email's signed settings link opens: GET, PUT and POST /api/notification-links/<token>.",
+    "properties": {
+      "documentName": {
+        "type": "string"
+      },
+      "setting": {
+        "$ref": "#/components/schemas/NoticeSettingDto"
+      }
+    },
+    "required": [
+      "documentName",
+      "setting"
+    ],
+    "type": "object"
+  },
   "NoticeSettingDto": {
     "additionalProperties": false,
     "description": "The setting: GET and PUT /api/documents/<id>/notification-settings.",

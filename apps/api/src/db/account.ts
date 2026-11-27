@@ -111,10 +111,12 @@ export async function deleteAccount(
   // no row carrying their flags.
   await env.DB.prepare('DELETE FROM user_preferences WHERE owner_id = ?').bind(ownerId).run();
   // text_document_notice_settings (docs/specs/034-text-documents/review.md "Notifications"): their settings on
-  // others' documents go too (their own documents' went with them).
-  await env.DB.prepare('DELETE FROM text_document_notice_settings WHERE owner_id = ?')
-    .bind(ownerId)
-    .run();
+  // others' documents go too (their own documents' went with them), and the count of emails sent them.
+  await env.DB.batch(
+    ['text_document_notice_settings', 'text_document_notice_sends'].map((table) =>
+      env.DB.prepare(`DELETE FROM ${table} WHERE owner_id = ?`).bind(ownerId),
+    ),
+  );
   // custom_themes (docs/specs/011-theme/custom-themes.md): this owner's saved themes go too.
   await env.DB.prepare('DELETE FROM custom_themes WHERE owner_id = ?').bind(ownerId).run();
   // custom_stamps (docs/specs/035-pdf-documents/custom-stamps.md): this owner's stamps go too.

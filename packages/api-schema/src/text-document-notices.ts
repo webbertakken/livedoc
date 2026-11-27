@@ -39,3 +39,6 @@ const EDIT_TYPES: Record<NoticeEditChoice, string> = {
 export function noticeSettingType(setting: NoticeSettingDto): string {
   return COMMENT_TYPES[setting.comments] + EDIT_TYPES[setting.edits];
 }
+
+/** What an email's signed settings link opens: GET, PUT and POST /api/notification-links/<token>. */
+export type NoticeLinkDto = { documentName: string; setting: NoticeSettingDto };

@@ -67,3 +67,17 @@ export const VIEWER_COPY_STATE_MAX_BYTES = TEXT_DOCUMENT_CHUNK_BYTES;
 export const VIEWER_COPY_LOG_UPDATES = 500;
 /** A stored state past this (history included) is not copied at all, before any is decoded. Safe range 8 to 32 MB. */
 export const VIEWER_COPY_SOURCE_MAX_BYTES = 16 * 1024 * 1024;
+
+// Notifications (docs/specs/034-text-documents/review.md "Notifications").
+/** (default) A document's batching window: the product's other notification throttles' 15 minutes (comment, join and
+ *  form emails); Google's help names none. Safe range 5 to 60 minutes. */
+export const TEXT_DOCUMENT_NOTICE_WINDOW_MS = 15 * 60 * 1000;
+/** (default) Text document emails to one person in an hour, across documents: one a window over four busy
+ *  documents, and a ceiling on a scripted flood. Safe range 4 to 60. */
+export const TEXT_DOCUMENT_NOTICE_EMAILS_PER_HOUR = 12;
+/** (default) Changes an edits email shows before "and N more changes": one scroll on a phone. Safe range 5 to 50. */
+export const TEXT_DOCUMENT_NOTICE_EXCERPTS_MAX = 20;
+/** (default) A comment's quoted stretch in an email, one line. Safe range 60 to 200. */
+export const TEXT_DOCUMENT_NOTICE_QUOTE_CHARS = 120;
+/** (default) A change's writing in an edits email: the assignment email's action-name cut. Safe range 100 to 400. */
+export const TEXT_DOCUMENT_NOTICE_CHANGE_CHARS = 200;
