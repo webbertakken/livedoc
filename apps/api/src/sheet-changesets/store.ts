@@ -159,7 +159,7 @@ export async function storeSheetChangeset(args: StoreArgs): Promise<SheetChanges
         ...(line ? { line } : {}),
       });
     }
-    // An agent is never asked a warning: it writes, and the room says so (D346).
+    // An agent is never asked a warning: it writes, and the room says so (D353).
     if (plan.warned.length > 0)
       console.info('[sheets] protection.warned', { documentId, sheetId, protections: plan.warned });
     if (!plan.changes) {

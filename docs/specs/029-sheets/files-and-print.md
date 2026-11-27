@@ -71,6 +71,8 @@ format it arrived in ([Standard mapping](standard-mapping.md)).
     reference to another workbook, a table's structured reference).
   - **Named ranges**: "2 named ranges LiveDoc cannot read are kept for the file: Rate and Mine"
     ([Named ranges in the file](standard-mapping.md#named-ranges-in-the-file)).
+  - **Protection**: "1 protected sheet frees more than 50 ranges; the rest stay protected: Data"
+    ([Protection in the file](standard-mapping.md#protection-in-the-file)).
   - **Named functions**: "1 named function LiveDoc cannot read is kept for Excel: TOOLONG"
     ([Named functions in the file](standard-mapping.md#named-functions-in-the-file)).
   - **Text**: "1 cell's text is cut to 50,000 characters".
@@ -152,6 +154,13 @@ Every case of [Security](../../research/sheets-open-standard/security.md) is a t
     colours, chips and arrows, multiple selections and checkboxes", counted by rule, naming what is lost in this
     order; listed on every conversion and download to the other format, as both formats carry the same standard rule
     ([Validation in the file](standard-mapping.md#validation-in-the-file)). "in other apps" for OpenDocument.
+  - **Protections other apps hold more simply**: "2 protections work more simply in Excel: protected ranges and
+    warnings", counted by protection, naming what is lost in this order (protected ranges, warnings, and in
+    OpenDocument a protected sheet's exceptions); listed on every conversion and download to the other format, as
+    validation rules are ([Protection in the file](standard-mapping.md#protection-in-the-file)). "in other apps" for
+    OpenDocument.
+  - **File passwords**: "1 protected sheet leaves its file password behind", a password hash read from a file of the
+    other format, which a file of this one cannot carry (D351).
   - **Kept from the file**: "4 things kept from the OpenDocument file stay behind: drawings, notes and named ranges",
     the kept content ([Standard mapping](standard-mapping.md#unknown-content)) counted by element, named by kind, the
     three most common first; it stays with the spreadsheet, and converting back writes it again (D109).

@@ -247,7 +247,7 @@ export class SheetStore {
   // ranges"): a spreadsheet's surface sets them; a Plan Sheet's leaves them to the room.
   private protectionCaller: ProtectionCaller | null = null;
   private warnHost: ProtectionWarnHost | null = null;
-  // The warning protections this person went on past, for the rest of their visit (D346).
+  // The warning protections this person went on past, for the rest of their visit (D353).
   private readonly warnedPast = new Set<string>();
 
   /** Who this person is to the protections, as the surface set it; null when none did (a Plan Sheet). */

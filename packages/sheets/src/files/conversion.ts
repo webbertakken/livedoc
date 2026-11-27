@@ -25,6 +25,7 @@ import { XLSX_TEXT_MAX, xlsxFormula } from './xlsx-bounds';
 import { xlsxLacks } from './xlsx-function-names';
 import { excelNames } from './xlsx-write';
 import { excelRefuses } from './file-names';
+import { protectionsElsewhere, type ProtectionSimplified } from './file-protections';
 
 /** What a formula becomes in a format's file: calculated there, kept for LiveDoc but not calculated, or a value. */
 export type FormulaFate = 'native' | 'uncalculated' | 'unwritten';
@@ -47,6 +48,10 @@ export type ConversionLoss =
   | { k: 'answers_differ'; count: number; functions: string[] }
   // Validation rules other apps hold more simply (standard-mapping.md "Validation in the file"), and what they lose.
   | { k: 'validation_simplified'; count: number; features: SimplifiedFeature[] }
+  // Protections other apps hold more simply, and file passwords the new format cannot carry (standard-mapping.md
+  // "Protection in the file", D351).
+  | { k: 'protections_simplified'; count: number; features: ProtectionSimplified[] }
+  | { k: 'protection_passwords_left'; count: number }
   // What was kept from the file, which a file of the other standard leaves behind (standard-mapping.md "Unknown
   // content"): counted, its kinds the most common first.
   | { k: 'kept'; count: number; kinds: KeptKind[] };
@@ -147,6 +152,14 @@ export function conversionLosses(
   if (differ.count > 0) losses.push({ k: 'answers_differ', ...differ });
   const simpler = simplifiedElsewhere(file.sheets.flatMap((s) => s.validations ?? []));
   if (simpler.count > 0) losses.push({ k: 'validation_simplified', ...simpler });
+  const guarded = protectionsElsewhere(
+    file.sheets.flatMap((s) => s.protections ?? []),
+    keptStandardOf(to),
+  );
+  if (guarded.count > 0)
+    losses.push({ k: 'protections_simplified', count: guarded.count, features: guarded.features });
+  if (guarded.passwords > 0)
+    losses.push({ k: 'protection_passwords_left', count: guarded.passwords });
   const kept =
     file.kept && file.kept.standard !== keptStandardOf(to) ? keptKinds(file.kept.items) : null;
   if (kept && kept.count > 0) losses.push({ k: 'kept', ...kept });

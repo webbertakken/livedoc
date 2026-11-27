@@ -252,6 +252,7 @@ export class XlsxKeeper {
       if (
         !(child.uri === SPREADSHEETML_NS && WORKSHEET_READ.has(child.local)) &&
         !onlyOwn(child) &&
+        !read.has(child) &&
         !allRead(child, read)
       )
         this.element('worksheet', parsed, child, { sheet }, ids, read);

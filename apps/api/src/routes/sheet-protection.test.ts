@@ -1,4 +1,4 @@
-// docs/specs/029-sheets/data-tools.md "Protected ranges" (D346 to D348): the room refuses every write a protection does
+// docs/specs/029-sheets/data-tools.md "Protected ranges" (D347, D348, D353): the room refuses every write a protection does
 // not admit, whatever door it comes through: the write route, a raw changeset, a rename, a deletion; a warning never
 // stops an agent; a duplicate leaves its protections behind.
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';

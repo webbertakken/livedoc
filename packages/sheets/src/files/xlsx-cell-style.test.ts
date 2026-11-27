@@ -79,7 +79,7 @@ describe('xlsxCellStyleOf', () => {
 
   it('leaves out what the model cannot hold and says so', () => {
     expect(xfOf(3)).toEqual({ style: { ro: 45 }, lost: true });
-    expect(xfOf(4)).toEqual({ style: { u: true, fs: 400, va: 'b' }, lost: true });
+    expect(xfOf(4)).toEqual({ style: { u: true, fs: 400, va: 'b' }, lost: true, unlocked: true });
     expect(xfOf(5)).toEqual({ style: { ha: 'l', va: 'b' }, lost: true });
   });
 });

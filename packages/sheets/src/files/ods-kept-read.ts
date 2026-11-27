@@ -1,5 +1,6 @@
 // ODF's kept content, read (docs/specs/029-sheets/standard-mapping.md "Unknown content"): each element and attribute
 // the ODF reader does not read, kept as the file wrote it, by where it sat; and the package entries it does not read.
+import { isOdsProtectionAttribute } from './ods-protection';
 import {
   attributeOf,
   childElement,
@@ -151,8 +152,9 @@ export class OdsKeeper {
     }
     for (const attribute of table.attributes) {
       if (
-        attribute.uri === TABLE &&
-        (attribute.local === 'name' || attribute.local === 'style-name')
+        (attribute.uri === TABLE &&
+          (attribute.local === 'name' || attribute.local === 'style-name')) ||
+        isOdsProtectionAttribute(attribute)
       )
         continue;
       this.items.push({

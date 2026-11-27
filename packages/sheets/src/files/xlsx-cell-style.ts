@@ -120,11 +120,10 @@ function rotationOf(value: string): Rotation | null | undefined {
   return undefined;
 }
 const PROTECTION_DEFAULTS: Readonly<Record<string, readonly string[]>> = {
-  locked: ['1', 'true'],
   hidden: ['0', 'false'],
 };
 
-type Read = { style: CellStyle; lost: boolean };
+type Read = { style: CellStyle; lost: boolean; unlocked?: true };
 
 // A cell's colour: its theme colour by name in a file with a theme (untinted), else the colour it draws (D218).
 const colourOf = (element: XmlElement | undefined, drawn: string, sheet: XlsxStylesheet) =>
@@ -212,7 +211,10 @@ function readAlignment(alignment: XmlElement | undefined, read: Read) {
   }
 }
 
+// Not locked: free of its sheet's protection (standard-mapping.md "Protection in the file"); a hidden formula is lost.
 function readProtection(protection: XmlElement | undefined, read: Read) {
+  const locked = protection && attributeOf(protection, '', 'locked');
+  if (locked !== undefined && !['1', 'true'].includes(locked)) read.unlocked = true;
   for (const [name, plain] of Object.entries(PROTECTION_DEFAULTS)) {
     const value = protection && attributeOf(protection, '', name);
     if (value !== undefined && !plain.includes(value)) read.lost = true;
@@ -226,7 +228,7 @@ function readProtection(protection: XmlElement | undefined, read: Read) {
 export function xlsxCellStyleOf(
   xf: XmlElement,
   sheet: XlsxStylesheet,
-): { style?: CellStyle; lost: boolean } {
+): { style?: CellStyle; lost: boolean; unlocked?: true } {
   const read: Read = { style: {}, lost: false };
   const index = (name: string) => Number(attributeOf(xf, '', name) ?? 0);
   readFont(sheet.fonts[index('fontId')], sheet, read);
@@ -238,9 +240,10 @@ export function xlsxCellStyleOf(
   // Anything else an entry holds (an extension list) is more than the model reads.
   if ([...parts.keys()].some((local) => local !== 'alignment' && local !== 'protection'))
     read.lost = true;
+  const unlocked = read.unlocked ? { unlocked: true as const } : {};
   return Object.keys(read.style).length > 0
-    ? { style: read.style, lost: read.lost }
-    : { lost: read.lost };
+    ? { style: read.style, lost: read.lost, ...unlocked }
+    : { lost: read.lost, ...unlocked };
 }
 
 const WRITE_BORDERS: Readonly<Record<BorderStyle, readonly string[]>> = {

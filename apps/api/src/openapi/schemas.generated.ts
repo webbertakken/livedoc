@@ -3458,6 +3458,47 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
           "count": {
             "type": "number"
           },
+          "features": {
+            "items": {
+              "$ref": "#/components/schemas/ProtectionSimplified"
+            },
+            "type": "array"
+          },
+          "k": {
+            "const": "protections_simplified",
+            "type": "string"
+          }
+        },
+        "required": [
+          "k",
+          "count",
+          "features"
+        ],
+        "type": "object"
+      },
+      {
+        "additionalProperties": false,
+        "properties": {
+          "count": {
+            "type": "number"
+          },
+          "k": {
+            "const": "protection_passwords_left",
+            "type": "string"
+          }
+        },
+        "required": [
+          "k",
+          "count"
+        ],
+        "type": "object"
+      },
+      {
+        "additionalProperties": false,
+        "properties": {
+          "count": {
+            "type": "number"
+          },
           "k": {
             "const": "kept",
             "type": "string"
@@ -13118,6 +13159,9 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
       "id": {
         "type": "string"
       },
+      "kept": {
+        "$ref": "#/components/schemas/ProtectionKept"
+      },
       "range": {
         "$ref": "#/components/schemas/IdRange"
       }
@@ -13128,12 +13172,44 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
     ],
     "type": "object"
   },
+  "ProtectionKept": {
+    "additionalProperties": false,
+    "description": "What a protected sheet's file held that LiveDoc has no form for, as the file wrote it: its password hash and Excel's allowances, by their attribute names (standard-mapping.md \"Protection in the file\", D351). Never shown nor checked; written back only to a file of its `standard`.",
+    "properties": {
+      "attributes": {
+        "additionalProperties": {
+          "type": "string"
+        },
+        "type": "object"
+      },
+      "standard": {
+        "enum": [
+          "ooxml",
+          "odf"
+        ],
+        "type": "string"
+      }
+    },
+    "required": [
+      "standard",
+      "attributes"
+    ],
+    "type": "object"
+  },
   "ProtectionPermission": {
     "description": "Who writes where a protection stands: anyone after a warning, Editors (and the owner), or the owner alone.",
     "enum": [
       "warn",
       "editors",
       "owner"
+    ],
+    "type": "string"
+  },
+  "ProtectionSimplified": {
+    "enum": [
+      "ranges",
+      "warnings",
+      "exceptions"
     ],
     "type": "string"
   },

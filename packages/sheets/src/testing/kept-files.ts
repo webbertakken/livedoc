@@ -44,7 +44,7 @@ export function odfFlatWithKept(cells = ''): string {
     `office:mimetype="application/vnd.oasis.opendocument.spreadsheet">${SETTINGS}${SCRIPTS}` +
     `<office:automatic-styles>${GRAPHIC}${PARAGRAPH}${CELL_STYLE}</office:automatic-styles>` +
     `<office:body><office:spreadsheet>${TRACKED}<table:calculation-settings/>${VALIDATIONS}` +
-    `<table:table table:name="Sheet1" table:style-name="ta1" table:protected="true">${SHAPES}` +
+    `<table:table table:name="Sheet1" table:style-name="ta1" table:print="false">${SHAPES}` +
     '<table:table-column table:number-columns-repeated="3"/><text:soft-page-break/>' +
     `<table:table-row><table:table-cell table:number-columns-spanned="2" table:content-validation-name="val1" office:value-type="float" office:value="1">${NOTE}<text:p>1</text:p><draw:frame draw:name="after"/></table:table-cell>` +
     `<table:covered-table-cell/><table:table-cell calcext:value-type="float" office:value-type="float" office:value="2"><text:p>2</text:p></table:table-cell></table:table-row>` +

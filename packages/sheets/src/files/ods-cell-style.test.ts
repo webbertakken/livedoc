@@ -87,7 +87,7 @@ describe('odsCellLooks', () => {
       lost: true,
     });
     expect(looks.of('ce4')).toEqual({ style: { ff: 'Liberation Sans', va: 'b' }, lost: true });
-    expect(looks.of('ce5')).toEqual({ style: { fs: 7, va: 'b' }, lost: true });
+    expect(looks.of('ce5')).toEqual({ style: { fs: 7, va: 'b' }, lost: true, frees: true });
     expect(looks.of('ce6')).toEqual({
       style: {
         ff: 'Liberation Sans',

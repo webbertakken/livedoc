@@ -1212,7 +1212,7 @@ describe('a spreadsheet’s store', () => {
   });
 });
 
-// docs/specs/029-sheets/data-tools.md "Protected ranges" (D346): the store refuses at once what a protection would
+// docs/specs/029-sheets/data-tools.md "Protected ranges" (D353): the store refuses at once what a protection would
 // refuse in the room, and holds a change under a warning one until the person goes on, once a visit.
 describe('protections in the store', () => {
   const guarded = (can: Protection['can']): SheetJson => {

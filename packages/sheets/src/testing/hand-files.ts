@@ -26,6 +26,8 @@ export function xlsx(
     styles?: string;
     mediaType?: string;
     rels?: Relationship[];
+    // Each worksheet's children before and after its `sheetData`, by its place.
+    around?: readonly { before?: string; after?: string }[];
   } = {},
 ): Uint8Array<ArrayBuffer> {
   const ns = `xmlns="${SPREADSHEETML_NS}" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"`;
@@ -41,7 +43,9 @@ export function xlsx(
     ...sheets.map((xml, i) => ({
       name: `xl/worksheets/sheet${i + 1}.xml`,
       contentType: OOXML_CONTENT_TYPES.worksheet,
-      data: encode(`<worksheet ${ns}><sheetData>${xml}</sheetData></worksheet>`),
+      data: encode(
+        `<worksheet ${ns}>${options.around?.[i]?.before ?? ''}<sheetData>${xml}</sheetData>${options.around?.[i]?.after ?? ''}</worksheet>`,
+      ),
     })),
   ];
   const rels: Relationship[] =
@@ -76,11 +80,17 @@ export function xlsx(
   );
 }
 
-// A flat document as another maker writes one: styles in office:styles and automatic ones, defaults on lines.
-export function flatOds(styles: string, automatic: string, table: string): Uint8Array<ArrayBuffer> {
+// A flat document as another maker writes one: styles in office:styles and automatic ones, defaults on lines; its
+// table's attributes beside its name.
+export function flatOds(
+  styles: string,
+  automatic: string,
+  table: string,
+  tableAttributes = '',
+): Uint8Array<ArrayBuffer> {
   return encode(
     `<?xml version="1.0"?><office:document ${ODF_NAMESPACES} office:mimetype="application/vnd.oasis.opendocument.spreadsheet">` +
       `<office:styles>${styles}</office:styles><office:automatic-styles>${automatic}</office:automatic-styles>` +
-      `<office:body><office:spreadsheet><table:table table:name="S">${table}</table:table></office:spreadsheet></office:body></office:document>`,
+      `<office:body><office:spreadsheet><table:table table:name="S"${tableAttributes}>${table}</table:table></office:spreadsheet></office:body></office:document>`,
   );
 }

@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-// data-tools.md "Protected ranges" (D346): the surface tells the store who this person is to the protections, and asks
+// data-tools.md "Protected ranges" (D353): the surface tells the store who this person is to the protections, and asks
 // through Show a Warning's dialog: OK writes the change, Cancel leaves it.
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';

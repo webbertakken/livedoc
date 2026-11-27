@@ -1,4 +1,4 @@
-// docs/specs/029-sheets/data-tools.md "Protected ranges" (D345 to D347): what a protection admits, and which writes
+// docs/specs/029-sheets/data-tools.md "Protected ranges" (D345, D347): what a protection admits, and which writes
 // it refuses, for every kind of write the room takes.
 import { describe, expect, it } from 'vitest';
 import { applySheetWrite, inverseSheetWrite, type SheetWrite } from './store';
@@ -279,6 +279,33 @@ describe('isProtection', () => {
       { ...guard, range: 'A1' },
     ])
       expect(isProtection(bad, 'p1', base), JSON.stringify(bad)?.slice(0, 60)).toBe(false);
+  });
+
+  it('takes what a protected sheet’s file held, by its format’s own attribute names', () => {
+    const xlsx = { standard: 'ooxml', attributes: { password: 'CC1A', formatCells: '0' } };
+    const ods = {
+      standard: 'odf',
+      attributes: {
+        'table:protection-key': 'k=',
+        'table:protection-key-digest-algorithm': 'http://www.w3.org/2000/09/xmldsig#sha256',
+      },
+    };
+    expect(isProtection({ ...sheetGuard, kept: xlsx }, 'p2', base)).toBe(true);
+    expect(isProtection({ ...sheetGuard, kept: ods }, 'p2', base)).toBe(true);
+    for (const kept of [
+      null,
+      'CC1A',
+      { standard: 'pdf', attributes: {} },
+      { standard: 'ooxml', attributes: { sheet: '1' } },
+      { standard: 'ooxml', attributes: { 'table:protection-key': 'k' } },
+      { standard: 'odf', attributes: { password: 'CC1A' } },
+      { standard: 'ooxml', attributes: { password: 3 } },
+      { standard: 'ooxml', attributes: { hashValue: 'h'.repeat(1025) } },
+      { standard: 'ooxml', attributes: [] },
+    ])
+      expect(isProtection({ ...sheetGuard, kept }, 'p2', base), JSON.stringify(kept)).toBe(false);
+    // A range's protection never holds a file's: only a protected sheet is read with one.
+    expect(isProtection({ ...guard, kept: xlsx }, 'p1', base)).toBe(false);
   });
 });
 

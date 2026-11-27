@@ -38,7 +38,7 @@ native; a file keeps the format it arrived in). Research: [The standard](../../r
 | Validation                                            | `table:content-validation`, LiveDoc's rule in `livedoc:` attributes                                                         | `dataValidations`, LiveDoc's rule in an `extLst` `ext`                         |
 | Conditional formats                                   | `calcext:conditional-formats` (LibreOffice's extension namespace)                                                           | `conditionalFormatting`                                                        |
 | Filters, filter views                                 | `table:database-range` with `table:filter`                                                                                  | `autoFilter`; filter views have no XLSX form (Unknown content)                 |
-| Protection                                            | `table:protected` and protection keys                                                                                       | `sheetProtection`, `protectedRanges`                                           |
+| Protection ([below](#protection-in-the-file))         | `table:protected`, `style:cell-protect`; LiveDoc's record in `livedoc:` attributes                                          | `sheetProtection`, `protectedRanges`; LiveDoc's record in an `extLst` `ext`    |
 | Comments and notes                                    | `office:annotation` in the cell                                                                                             | `xl/comments*.xml` (notes), threaded comments parts                            |
 | Charts                                                | `draw:frame` › `draw:object` holding a chart document (inline in `.fods`)                                                   | DrawingML chart parts through `xl/drawings`                                    |
 | Pivot tables                                          | `table:data-pilot-table`                                                                                                    | pivot cache definition, records and table parts                                |
@@ -386,6 +386,62 @@ The table is the contract the readers and writers are tested against, one test p
   `.fods` write leaves each out and names it (logged, `function_unwritten`), and converting to OpenDocument lists
   them first ([Converting](files-and-print.md#converting)). A file's `table:named-expression` stays kept.
 
+## Protection in the file
+
+- A sheet's [protections](data-tools.md#protected-ranges) are written and read both ways, as validation rules are
+  (D293): the **standard form** each format's apps enforce (a protected sheet, and the cells it leaves free), and
+  **LiveDoc's record** beside it, exact, which LiveDoc reads back (default, D349). Google Sheets writes no protection
+  to either format (`plans/assets/0020/research/google-protection-export.md`), so the standard form follows Excel and
+  LibreOffice.
+- **XLSX standard form**: a sheet's protection admitting Editors or the owner alone is the worksheet's
+  `sheetProtection sheet="1" objects="1" scenarios="1"`; each of its exceptions a `protectedRange` without a password
+  (`sqref` its cells, `name` `LiveDocException1`, ...), cells anyone may edit while the sheet is protected, in the
+  worksheet's one `protectedRanges` after the kept ones.
+- **ODF standard form**: the same protection is its `table:table`'s `table:protected="true"`. ODF frees cells only by
+  their cell styles (`style:cell-protect`), so its exceptions are left out of the standard form: LibreOffice guards
+  them with the sheet, stricter, never looser (default, D350).
+- **No standard form**: neither suite guards a range alone, nor warns, nor tells Editors from the owner. A range's
+  protection and a protection that shows a warning are in LiveDoc's record only; Editors Only and Only the Owner are
+  one protected sheet there.
+- **LiveDoc's record**: a sheet's protections in its order as JSON, each its `range` or its `except` as A1 text
+  (`A1:B4`), `can`, and `d` its description; in XLSX one `livedoc:protections` (`record`, `fingerprint`) in the
+  worksheet's LiveDoc `ext` (the validation rules' one), in ODF the `table:table`'s `livedoc:protections` and
+  `livedoc:protections-fingerprint` attributes, LiveDoc's namespace.
+- Its fingerprint is the CRC-32 (8 lower-case hex digits) of the standard form as written: whether the sheet is
+  protected, then each free range's cells (XLSX's password-less `protectedRange` `sqref`s; ODF's none), each a line.
+  **Read**, the record is taken when its fingerprint is the standard form's as read; else another app changed the
+  protection since, so the standard form is read, the record dropped, and the read names it (`protection_changed`,
+  logged, never reported), as D294.
+- **Read without LiveDoc's record** (another app's file, or a changed one), each protected sheet is a sheet's
+  protection, **Only the Owner** (the Director's ruling, 2026-11-27):
+  - **XLSX**: a `sheetProtection` whose `sheet` is `1` or `true`. Free of it: each `protectedRange` without a
+    password or a security descriptor, and the cells whose style is not locked (`protection locked="0"`, in the
+    cell's, its row's or its column's style). A `sheetProtection` that protects nothing is left out, logged.
+  - **ODF**: a `table:table` with `table:protected="true"`. Free of it: the cells whose style's `style:cell-protect`
+    is `none` or `formula-hidden` (the cell's, its row's or its column's default cell style).
+  - Free cells are made into rectangles, each row's runs, then a run over consecutive rows once; past 50 (D345) the
+    rest stay under the sheet's protection, never freed, and the read names the sheet (`protection_cut`): "1
+    protected sheet frees more than 50 ranges; the rest stay protected: Data".
+  - An unlocked cell style on a sheet that is not protected says nothing LiveDoc holds (`styles_unread`, D104).
+- **Kept, not read**: a `protectedRange` with a password or a security descriptor (Excel frees its cells to those who
+  know it, so they stay under the sheet's protection in LiveDoc), any `protectedRange` of a sheet that is not
+  protected, the workbook's `workbookProtection` and ODF's `table:structure-protected` (its structure), and
+  LibreOffice's options (`loext:table-protection`): the file's own, written back to its format
+  ([Unknown content](#unknown-content)) (default, D352).
+- **The file's password**: what a protected sheet held that LiveDoc has no form for, its password hash (XLSX's
+  `password`, or `algorithmName`, `hashValue`, `saltValue` and `spinCount`; ODF's `table:protection-key`,
+  `table:protection-key-digest-algorithm` and `loext:protection-key-digest-algorithm-2`) and Excel's allowances
+  (`formatCells`, `sort`, ...), is kept on the sheet's protection as the file wrote it (default, D351):
+  - LiveDoc never asks for a password nor checks one; the owner removes the protection as any other (D347), and
+    `CELL("protect")` reads it as any other.
+  - It is written back only to a file of its own format, on that sheet's protection, while the protection admits
+    Editors or the owner alone; LiveDoc never writes a hash it did not read, nor one into the other format.
+  - Editing the protection keeps it; removing it, making it a range's, or moving it to another sheet leaves it behind.
+- **What another app loses**, listed by converting and downloading to the other format
+  ([Converting](files-and-print.md#converting), `protections_simplified`, counted by protection): a range's
+  protection, a warning, and (in OpenDocument) a protected sheet's exceptions; and a file password the other format
+  cannot carry (`protection_passwords_left`): "1 protected sheet leaves its file password behind".
+
 ## Rows and columns in the file
 
 - A line's own size, whether it is hidden by hand, its group depth, the collapsed groups, the side their controls sit
@@ -551,7 +607,7 @@ each suite writes its own, so LibreOffice, Excel and Google Sheets open them as 
   view in XLSX that only ODF could hold) is kept with the workbook as the file's own XML, by where it sat, and written
   back untouched to the same format. Built in `@livedoc/sheets/files` (`KeptContent`).
 - Every construct the mappings above do not read yet is kept until its mapping is built (charts and pictures, notes
-  and comments, merges, names LiveDoc cannot read, validation and format rules, filters, protections; XLSX's print settings), as
+  and comments, merges, names LiveDoc cannot read, validation and format rules, filters, protections LiveDoc does not read; XLSX's print settings), as
   text documents keep theirs. Styles are not kept: a cell's style is read as [Cell styles in the file](#cell-styles-in-the-file)
   maps it, and what it says beyond that, a row's or column's style over its empty cells, and ODF's `styles.xml`
   (its page layouts, so its print settings, and the named styles a format rule applies) are left out; a file's read
@@ -789,6 +845,16 @@ The code cites each by its id.
 - **D343** What a file's names LiveDoc reads: one cell or rectangle of a sheet, named by the workbook, read as a named
   range; one of a sheet, of a constant, a formula, several areas, whole lines, another workbook or `#REF!`, or one the
   rules refuse, kept and named (`name_unread`); built-in and hidden names kept, not named (default).
+- **D349** Protections in a file: the standard form each suite enforces (a protected sheet, its free ranges) and
+  LiveDoc's exact record beside it, fingerprinted, as validation rules (D293, D294) (default).
+- **D350** A protected sheet's exceptions in ODF: left out of the standard form, as ODF frees cells only by cell styles,
+  so LibreOffice guards them too (stricter, never looser); LiveDoc's record keeps them (default).
+- **D351** A file's protection password: its hash and Excel's allowances kept on the sheet's protection, written back
+  only to its own format while that protection admits Editors or the owner; never asked for, checked or invented
+  (the Director's ruling, 2026-11-27).
+- **D352** A file's protection LiveDoc does not read (a password-protected `protectedRange`, one of an unprotected
+  sheet, the workbook's structure, LibreOffice's options): kept as the file's own; free cells past 50 stay protected,
+  named (`protection_cut`) (default).
 - **D344** One name twice at a write: a named range before a kept name of the workbook (dropped, `kept_dropped`) and
   before a named function (`function_unwritten`); a name on two sheets written once, from the first in tab order, the
   other named (`name_unwritten`); a kept sheet's name beside it (default).

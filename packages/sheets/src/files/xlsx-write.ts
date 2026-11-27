@@ -35,6 +35,7 @@ import { xlsxTabColor } from './xlsx-tab-look';
 import { XlsxStyles } from './xlsx-styles';
 import { xlsxFormatRulesXml } from './xlsx-format-rules';
 import { xlsxValidationsXml } from './xlsx-validation';
+import { liveDocExtXml, xlsxProtectionXml } from './xlsx-protection';
 import { xlsxThemeXml } from './xlsx-theme';
 import { xlsxFunctionNames } from './file-functions';
 import { namesToWrite, xlsxNameXml } from './file-names';
@@ -235,6 +236,9 @@ function worksheetXml(
       )}`
     : 'A1';
   const validations = xlsxValidationsXml(sheet.validations, renamed);
+  // Its protection (standard-mapping.md "Protection in the file"), its record in LiveDoc's one `ext`.
+  const protection = xlsxProtectionXml(sheet.protections);
+  const ext = liveDocExtXml(validations.ext, protection.record);
   const own = [
     { name: 'dimension', xml: `<dimension ref="${extent}"/>` },
     ...(shape ? [{ name: 'sheetFormatPr', xml: shape.sheetFormatPr }] : []),
@@ -243,6 +247,7 @@ function worksheetXml(
       name: 'sheetData',
       xml: lines.length > 0 ? ['<sheetData>', ...lines, '</sheetData>'].join('\n') : '<sheetData/>',
     },
+    ...protection.own,
     // Format rules after the kept ones' priorities, so a kept rule draws first (D215).
     ...xlsxFormatRulesXml(
       sheet.formatRules,
@@ -260,8 +265,8 @@ function worksheetXml(
       : []),
     // Its charts, through its drawing part (standard-mapping.md "Charts in the file").
     ...(drawingRelId ? [{ name: 'drawing', xml: `<drawing r:id="${drawingRelId}"/>` }] : []),
-    // LiveDoc's exact validation rules (standard-mapping.md "Validation in the file").
-    ...(validations.ext ? [{ name: 'extLst', xml: `<extLst>${validations.ext}</extLst>` }] : []),
+    // LiveDoc's exact validation rules and protections ("Validation in the file", "Protection in the file").
+    ...(ext ? [{ name: 'extLst', xml: `<extLst>${ext}</extLst>` }] : []),
   ];
   const rootNs = kept.rootBindings('worksheet', OWN_NS, index);
   const xml = [

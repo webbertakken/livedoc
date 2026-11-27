@@ -1,3 +1,7 @@
+import { mkdtempSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { libreOfficeConvert } from '@livedoc/office-packages/libreoffice';
 import type { Browser, Page } from '@playwright/test';
 import { expect, expectNoPageErrors, pageOwnerHeaders, test } from '../fixtures';
 import { officeMenuItem } from './office-menus';
@@ -138,5 +142,57 @@ test('Protect Sheet on a tab opens the panel on that sheet, and CELL reads it', 
   // The owner still writes there.
   await typeIn(page, 'A1', '3');
   await expect(cell(page, 'A1 3')).toHaveCount(1);
+  expectNoPageErrors(pageErrors);
+});
+
+// docs/specs/029-sheets/standard-mapping.md "Protection in the file": a protected sheet LibreOffice saved as Excel opens
+// protected Only the Owner, its unprotected cell left open; a Participant is refused on the sheet, never in that cell.
+const PROTECTED_FODS = `<?xml version="1.0" encoding="UTF-8"?>
+<office:document xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0" xmlns:style="urn:oasis:names:tc:opendocument:xmlns:style:1.0" xmlns:table="urn:oasis:names:tc:opendocument:xmlns:table:1.0" xmlns:text="urn:oasis:names:tc:opendocument:xmlns:text:1.0" office:version="1.3" office:mimetype="application/vnd.oasis.opendocument.spreadsheet">
+<office:automatic-styles><style:style style:name="ce1" style:family="table-cell"><style:table-cell-properties style:cell-protect="none"/></style:style></office:automatic-styles>
+<office:body><office:spreadsheet><table:table table:name="Ledger" table:protected="true"><table:table-column table:number-columns-repeated="3"/>
+<table:table-row><table:table-cell office:value-type="string"><text:p>Total</text:p></table:table-cell><table:table-cell table:style-name="ce1" office:value-type="float" office:value="5"><text:p>5</text:p></table:table-cell><table:table-cell/></table:table-row>
+</table:table></office:spreadsheet></office:body></office:document>`;
+
+test('a protected sheet from an Excel file opens Only the Owner, its open cell left open', async ({
+  page,
+  browser,
+  baseURL,
+  pageErrors,
+}) => {
+  test.setTimeout(180_000);
+  await page.setViewportSize({ width: 1280, height: 860 });
+  const dir = mkdtempSync(join(tmpdir(), 'protected-'));
+  const fods = join(dir, 'Ledger.fods');
+  writeFileSync(fods, PROTECTED_FODS);
+  const xlsx = join(dir, 'Ledger.xlsx');
+  writeFileSync(xlsx, libreOfficeConvert(fods, 'xlsx:Calc MS Excel 2007 XML'));
+
+  await page.goto('/new?kind=spreadsheet');
+  await page.waitForURL(/\/document\//);
+  await expect(page.locator(READY)).toBeVisible();
+  const before = page.url();
+  const open = await officeMenuItem(page, ['File', 'Open']);
+  const [chooser] = await Promise.all([page.waitForEvent('filechooser'), open.click()]);
+  await chooser.setFiles(xlsx);
+  await page.waitForURL((url) => url.href !== before);
+  await expect(page.locator(READY)).toBeVisible();
+  await expect(cell(page, 'B1 5')).toHaveCount(1);
+
+  await (await officeMenuItem(page, ['Data', 'Protect Sheets and Ranges'])).click();
+  const panel = page.getByRole('complementary', { name: 'Protected Sheets and Ranges' });
+  await expect(panel.getByRole('button', { name: 'Go To Ledger' })).toContainText('Owner');
+  await page.screenshot({ path: test.info().outputPath('protection-from-file.png') });
+
+  const peer = await participantOn(page, browser, baseURL!);
+  await typeIn(peer, 'A2', '9');
+  await expect(
+    peer.getByText('This sheet is protected: only the owner can change it.').first(),
+  ).toBeVisible();
+  await expect(cell(peer, 'A2 9')).toHaveCount(0);
+  await typeIn(peer, 'B1', '6');
+  await expect(cell(peer, 'B1 6')).toHaveCount(1);
+  await expect(cell(page, 'B1 6')).toHaveCount(1, { timeout: 15_000 });
+  await peer.screenshot({ path: test.info().outputPath('protection-from-file-peer.png') });
   expectNoPageErrors(pageErrors);
 });
