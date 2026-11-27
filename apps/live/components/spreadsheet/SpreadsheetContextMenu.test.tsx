@@ -42,6 +42,7 @@ function Menus({ actions }: { actions: SheetActions }) {
       'conditional-formatting': { run: vi.fn(), checked: false },
       'data-validation': { run: vi.fn(), checked: false },
       'convert-to-table': { run: vi.fn() },
+      'column-stats': { run: vi.fn() },
     },
   );
   return <SpreadsheetGridMenus actions={actions} bound={office.actions} />;

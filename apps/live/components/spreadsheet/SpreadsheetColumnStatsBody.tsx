@@ -115,7 +115,7 @@ export function SpreadsheetColumnStatsBody() {
                   <span className="truncate">{b.text}</span>
                   <span
                     aria-hidden="true"
-                    className="h-3 rounded-sm bg-(--office-primary)"
+                    className="h-icon-chevron rounded-control bg-(--office-primary)"
                     style={{ width: `${(b.count / top) * 100}%` }}
                   />
                   <span className="tabular-nums">{figure(b.count)}</span>

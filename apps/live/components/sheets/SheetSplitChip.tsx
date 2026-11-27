@@ -62,7 +62,7 @@ function SplitChipBody({ split, chip }: { split: SplitChipValue; chip: SplitChip
           <span style={{ color: c.palette.muted }}>Separator:</span>
           <span className="relative inline-flex">
             <select
-              className="h-chip cursor-pointer appearance-none rounded-control bg-transparent pr-5 pl-1 outline-none focus-visible:ring-2 focus-visible:ring-(--office-focus)"
+              className="h-chip cursor-pointer appearance-none rounded-control bg-transparent pr-6 pl-1 outline-none focus-visible:ring-2 focus-visible:ring-(--office-focus)"
               value={shown}
               onChange={(e) => {
                 const next = e.target.value as SeparatorChoice;
