@@ -1,5 +1,5 @@
 // A pivot table as its sheet keeps it (objects/sheet-pivot.ts), resolved for the engine (docs/specs/029-sheets/
-// pivot-tables.md "In the grid", D382): its source's sheet and positions, its fields by their column's place in the
+// pivot-tables.md "In the grid", D503): its source's sheet and positions, its fields by their column's place in the
 // source, its source read as values and shown texts, and its output's cells with the number formats they show in.
 import { layoutIndex } from '../layout';
 import { displayValue } from '../number-format';

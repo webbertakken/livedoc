@@ -153,7 +153,7 @@ export function shrinkFormulasReading<K>(
  * The changes a reader sheet's layout needs when `changes` land on sheet `targetId`, laid out as `before`: each
  * Dropdown from a Range reading that sheet shrinks as a formula's range into it does, and goes when its cells all go
  * (data-validation.md "Rules"); each pivot table reading it shrinks its source and drops its gone columns' fields
- * (pivot-tables.md "The model", D381). Linear in the reader's rules and objects.
+ * (pivot-tables.md "The model", D502). Linear in the reader's rules and objects.
  */
 export function shrinkLayoutSourcesOf(
   targetId: string,

@@ -607,7 +607,7 @@ export class Workbook {
     return claim.r1 === r && claim.c1 === c ? null : { r: claim.r1, c: claim.c1 };
   }
 
-  // The number format a pivot table's output gives (r, c) (pivot-tables.md "In the grid", D382): its source column's,
+  // The number format a pivot table's output gives (r, c) (pivot-tables.md "In the grid", D503): its source column's,
   // or a percentage; undefined for any other cell. A cell's own number format wins where it is drawn.
   pivotFormatAt(sheetId: string, r: number, c: number): CellFormat | undefined {
     this.value(sheetId, r, c);
@@ -620,7 +620,7 @@ export class Workbook {
   }
 
   // A cell's format as its value is shown: its own, with a pivot table's number format where it sets none
-  // (pivot-tables.md "In the grid", D382).
+  // (pivot-tables.md "In the grid", D503).
   shownFormat(
     sheetId: string,
     r: number,
