@@ -221,6 +221,15 @@ matches, with its menu path; Up and Down move, Enter runs it, Escape closes. Dim
 - Every shortcut of Google's list, for each platform, is a row of [Keyboard shortcuts](keyboard-shortcuts.md), read by the
   menus, the tooltips and the dialog. The browser's own shortcuts are never taken where Google does not take them.
 
+## The caret
+
+- **A change that arrives while the caret moves never puts it back.** The browser moves the caret for a key (Ctrl+Home,
+  the arrows) and tells the editor a moment later. A change that edits the document in that moment without placing a
+  caret of its own (a collaborator's edit, a field brought up to date) keeps the caret the page shows, mapped through
+  the change, rather than the one the editor last read.
+- This compares the page's selection with the one the editor last left on the page, never a time: the editor records
+  the page's selection after each of its own updates, and a different one is the person's newer move.
+
 ## Phone and tablet
 
 The shell's [phone and tablet layouts](../004-interface-design/office-shell.md#phone-and-tablet). On a phone the pages
