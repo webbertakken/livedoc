@@ -152,6 +152,26 @@ describe('filters in ODF', () => {
   });
 });
 
+describe('a filter view’s range in another app’s ODF', () => {
+  it('keeps Google’s and LibreOffice’s Z_…_.wvu.FilterData name quietly, never a named range', async () => {
+    const name = 'Z_00006862_7635_7176_0000_000000000000_.wvu.FilterData';
+    const read = await ok(
+      readOds(
+        encode(
+          `<?xml version="1.0"?><office:document ${ODF_NAMESPACES} office:mimetype="application/vnd.oasis.opendocument.spreadsheet"><office:body><office:spreadsheet>` +
+            '<table:table table:name="S"><table:table-row><table:table-cell office:value-type="string"><text:p>x</text:p></table:table-cell></table:table-row></table:table>' +
+            `<table:named-expressions><table:named-range table:name="${name}" table:base-cell-address="$S.$A$1" table:cell-range-address="$S.$A$1:.$A$1"/></table:named-expressions>` +
+            '</office:spreadsheet></office:body></office:document>',
+        ),
+      ),
+    );
+    expect(read.losses).toEqual([]);
+    expect(read.file.names).toBeUndefined();
+    expect(read.file.kept!.items.map((i) => i.xml).join('')).toContain(name);
+    expect(sheetsFromFile(read.file, 'en-GB', rand).losses).toEqual([]);
+  });
+});
+
 describe('a table’s filter in ODF', () => {
   it('writes it in the table’s own database range and reads it back as the sheet’s filter (D481)', async () => {
     const [sheet] = itemSheets({ s0c1: { op: 'gt', a: '2' } });

@@ -13,13 +13,9 @@ import { filteredFromHidden } from './file-lines';
 import { filtersFound } from './filter-record';
 import type { StandardColumn, StandardOp, StandardTest } from './filter-standard';
 import { LIVEDOC_SPREADSHEET_NS } from './validation-standard';
-import { FILTER_DATABASE_NAME, xlsxHeld } from './xlsx-filters';
+import { FILTER_DATABASE_NAME, VIEW_NAME, xlsxHeld } from './xlsx-filters';
 import { readSqref } from './xlsx-format-rules';
 import type { FileLoss, FileSheet } from './workbook-file';
-
-// A filter view's range, by its `guid` (Google's and Excel's form).
-const VIEW_NAME =
-  /^Z_([0-9A-F]{8})_([0-9A-F]{4})_([0-9A-F]{4})_([0-9A-F]{4})_([0-9A-F]{12})_\.wvu\.FilterData$/i;
 
 const READ_OPERATOR: Record<string, StandardOp> = {
   equal: 'eq',

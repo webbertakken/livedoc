@@ -93,6 +93,8 @@ test('a filter leaves in an Excel file, comes back through LibreOffice, and its 
   await page.waitForURL((url) => !url.pathname.includes(id));
   await expect(page.locator(READY)).toBeVisible();
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Fruit from LibreOffice');
+  // LibreOffice keeps the view's range as a name of its own: kept quietly, so nothing is reported.
+  await expect(page.getByRole('dialog', { name: 'Opened “Fruit from LibreOffice”' })).toHaveCount(0);
   await expect(shown(page, 'pear')).toHaveCount(1);
   await expect(shown(page, 'plum')).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'Filter column 1' })).toBeVisible();

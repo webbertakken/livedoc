@@ -11,6 +11,10 @@ import { filterFingerprint, filterRecordText } from './filter-record';
 import type { StandardColumn, StandardOp, StandardTest } from './filter-standard';
 import type { FileSheet } from './workbook-file';
 
+/** A filter view's range name, by its `guid` (Google's and Excel's form). */
+export const VIEW_NAME =
+  /^Z_([0-9A-F]{8})_([0-9A-F]{4})_([0-9A-F]{4})_([0-9A-F]{4})_([0-9A-F]{12})_\.wvu\.FilterData$/i;
+
 /** Excel's own name for a sheet's filter range. */
 export const FILTER_DATABASE_NAME = '_xlnm._FilterDatabase';
 
