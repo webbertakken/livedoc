@@ -199,13 +199,12 @@ export function protectionsFromFile(
 }
 
 /** What another app holds less of a protection, in the order the conversion dialog names them. */
-export const PROTECTION_SIMPLIFIED = ['ranges', 'warnings', 'exceptions'] as const;
+export const PROTECTION_SIMPLIFIED = ['ranges', 'warnings'] as const;
 export type ProtectionSimplified = (typeof PROTECTION_SIMPLIFIED)[number];
 
 /**
- * The protections another app holds more simply (standard-mapping.md "Protection in the file"): a range's, a
- * warning, and in `odf` a protected sheet's exceptions; and those whose file password the other standard's file
- * cannot carry.
+ * The protections another app holds more simply (standard-mapping.md "Protection in the file"): a range's and a
+ * warning; and those whose file password the other standard's file cannot carry.
  */
 export function protectionsElsewhere(
   list: readonly FileProtection[],
@@ -217,7 +216,6 @@ export function protectionsElsewhere(
     const lost: ProtectionSimplified[] = [];
     if (p.range) lost.push('ranges');
     if (p.can === 'warn') lost.push('warnings');
-    if (to === 'odf' && !p.range && p.can !== 'warn' && p.except?.length) lost.push('exceptions');
     for (const f of lost) all.add(f);
     if (lost.length) count++;
   }

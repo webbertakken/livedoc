@@ -4,7 +4,8 @@
 import { readOoxmlPackage } from '@livedoc/office-packages';
 import { describe, expect, it } from 'vitest';
 import type { Protection } from '../protection';
-import { emptyLayout, emptySheet, type Sheet } from '../sheet';
+import { CellMap } from '../cells/cell-map';
+import { cellKey, emptyLayout, emptySheet, type Sheet } from '../sheet';
 import { flatOds, xlsx } from '../testing/hand-files';
 import { WorkbookRecord } from '../workbook-record';
 import {
@@ -341,14 +342,20 @@ describe('protections in ODF', () => {
     { can: 'editors', range: [0, 2, 1, 3] },
   ]);
 
-  it('writes a protected sheet as table:protected, its exceptions in LiveDoc’s record only, and reads every one back', async () => {
+  it('writes a protected sheet as table:protected, its exceptions’ cells naming an open style, and reads every one back', async () => {
     const written = writeWorkbook([owner], record, 'Book', 'fods');
     expect(written.losses).toEqual([]);
     const xml = decode(written.data);
     expect(xml).toMatch(
       /<table:table table:name="Data"[^>]* table:protected="true" xmlns:livedoc="[^"]+" livedoc:protections="\[\{&quot;except&quot;:\[&quot;A2:A3&quot;\]/,
     );
-    expect(xml).not.toContain('cell-protect');
+    expect(xml).toContain(
+      '<style:style style:name="ce-open" style:family="table-cell" style:parent-style-name="Default"><style:table-cell-properties style:cell-protect="none"/></style:style>',
+    );
+    // A2:A3, two rows of one open cell then the rest.
+    expect(xml).toContain(
+      '<table:table-row table:style-name="ro1" table:number-rows-repeated="2"><table:table-cell table:style-name="ce-open"/><table:table-cell table:number-columns-repeated="5"/></table:table-row>',
+    );
     for (const format of ['ods', 'fods'] as const) {
       const read = await ok(readOds(writeWorkbook([owner], record, 'Book', format).data));
       expect(read.losses).toEqual([]);
@@ -450,11 +457,11 @@ describe('converting protections', () => {
   it('lists what other apps hold more simply, and a file password the new format cannot carry', () => {
     const toOds = workbookConversion([guarded], { ...record, format: 'xlsx' }, 'ods');
     expect(toOds.losses).toEqual([
-      { k: 'protections_simplified', count: 3, features: ['ranges', 'warnings', 'exceptions'] },
+      { k: 'protections_simplified', count: 2, features: ['ranges', 'warnings'] },
       { k: 'protection_passwords_left', count: 1 },
     ]);
     expect(toOds.losses.map((l) => conversionLine(l, 'ods'))).toEqual([
-      '3 protections work more simply in other apps: protected ranges, warnings and cells left open on protected sheets',
+      '2 protections work more simply in other apps: protected ranges and warnings',
       '1 protected sheet leaves its file password behind',
     ]);
     const toXlsx = workbookConversion([guarded], record, 'xlsx');
@@ -469,6 +476,122 @@ describe('converting protections', () => {
     ).toBe('1 protection works more simply in Excel: warnings');
     expect(conversionLine({ k: 'protection_passwords_left', count: 2 }, 'xlsx')).toBe(
       '2 protected sheets leave their file passwords behind',
+    );
+  });
+});
+
+describe('open cells in ODF', () => {
+  it('derives one open variant a style its open cells use, leaving the shared style as it is', async () => {
+    const layout = emptyLayout(rand, 4, 3);
+    const bold = { b: true as const };
+    const protections = [
+      {
+        id: 'prot1',
+        can: 'owner' as const,
+        except: [
+          { r1: layout.rows[0]!, c1: layout.cols[0]!, r2: layout.rows[0]!, c2: layout.cols[0]! },
+        ],
+      },
+    ];
+    const sheet = {
+      ...emptySheet({
+        id: 'Data',
+        tabId: 'Data',
+        title: 'Data',
+        layout: { ...layout, protections },
+      }),
+      cells: CellMap.from([
+        [cellKey(layout.rows[0]!, layout.cols[0]!), { input: { s: 'open' }, format: bold }],
+        [cellKey(layout.rows[1]!, layout.cols[0]!), { input: { s: 'shut' }, format: bold }],
+      ]),
+    };
+    const xml = decode(writeWorkbook([sheet], record, 'Book', 'fods').data);
+    expect(xml).toMatch(
+      /<style:style style:name="ce1"[^>]*><style:text-properties fo:font-weight="bold"\/><\/style:style>/,
+    );
+    expect(xml).toMatch(
+      /<style:style style:name="ce1-open"[^>]*><style:table-cell-properties style:cell-protect="none"\/><style:text-properties fo:font-weight="bold"\/><\/style:style>/,
+    );
+    expect(xml).toContain(
+      '<table:table-cell table:style-name="ce1-open" office:value-type="string"',
+    );
+    expect(xml).toContain('<table:table-cell table:style-name="ce1" office:value-type="string"');
+  });
+
+  // The most a whole-column exception of a 1,000-row sheet adds to its content.xml: one cell element a run of rows,
+  // never one a cell (the Director's ruling, D350).
+  const WHOLE_COLUMN_OPEN_BYTES_MAX = 600;
+
+  it('writes a whole-column exception as repeated rows, its file barely larger', async () => {
+    const plain = sheetProtected('Data', [{ can: 'owner' }]);
+    const opened = sheetProtected('Data', [{ can: 'owner', except: [[0, 1, 7, 1]] }]);
+    const tall = (s: Sheet) => {
+      const layout = emptyLayout(rand, 1000, 6);
+      const ids = (r: number, c: number) => ({ r: layout.rows[r]!, c: layout.cols[c]! });
+      const p = s.layout.protections![0]!;
+      const except = p.except
+        ? [{ r1: ids(0, 1).r, c1: ids(0, 1).c, r2: ids(999, 1).r, c2: ids(999, 1).c }]
+        : undefined;
+      return {
+        ...s,
+        layout: { ...layout, protections: [{ ...p, ...(except ? { except } : {}) }] },
+      };
+    };
+    const sizeOf = (s: Sheet) => writeWorkbook([tall(s)], record, 'Book', 'fods').data.length;
+    expect(sizeOf(opened) - sizeOf(plain)).toBeLessThan(WHOLE_COLUMN_OPEN_BYTES_MAX);
+    const read = await ok(readOds(writeWorkbook([tall(opened)], record, 'Book', 'fods').data));
+    expect(read.losses).toEqual([]);
+    expect(read.file.sheets[0]!.protections![0]!.except).toEqual([
+      { r1: 0, c1: 1, r2: 999, c2: 1 },
+    ]);
+  });
+
+  it('reads the open cells back as the exceptions when another app dropped LiveDoc’s record', async () => {
+    const written = decode(
+      writeWorkbook(
+        [
+          sheetProtected('Data', [
+            {
+              can: 'editors',
+              except: [
+                [1, 0, 2, 0],
+                [1, 1, 2, 1],
+                [5, 3, 5, 4],
+              ],
+            },
+          ]),
+        ],
+        record,
+        'Book',
+        'fods',
+      ).data,
+    ).replace(/ livedoc:protections(-fingerprint)?="[^"]*"/g, '');
+    const read = await ok(readOds(new TextEncoder().encode(written)));
+    expect(read.file.sheets[0]!.protections).toEqual([
+      {
+        can: 'owner',
+        except: [
+          { r1: 1, c1: 0, r2: 2, c2: 1 },
+          { r1: 5, c1: 3, r2: 5, c2: 4 },
+        ],
+      },
+    ]);
+  });
+
+  it('keeps LiveDoc’s record while the open cells read as they were written, adjacent exceptions joined', async () => {
+    const touching = sheetProtected('Data', [
+      {
+        can: 'editors',
+        except: [
+          [1, 0, 2, 0],
+          [1, 1, 2, 1],
+        ],
+      },
+    ]);
+    const read = await ok(readOds(writeWorkbook([touching], record, 'Book', 'fods').data));
+    expect(read.losses).toEqual([]);
+    expect(placesOf(sheetsFromFile(read.file, 'en-GB', rand).sheets[0]!)).toEqual(
+      placesOf(touching),
     );
   });
 });

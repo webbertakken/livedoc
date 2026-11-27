@@ -120,7 +120,7 @@ describe('every written spreadsheet validates against its format’s schema', ()
 });
 
 // standard-mapping.md "Protection in the file": LibreOffice guards the sheet LiveDoc protects, and saves it again
-// protected; in XLSX it keeps the ranges the sheet leaves open.
+// protected with the cells it leaves open, in both formats.
 describe('protection other apps enforce', () => {
   it('LibreOffice keeps the protected sheet of the .fods and .xlsx it opens and saves', async () => {
     const file = WRITTEN_CONSTRUCTS.protection!;
@@ -137,13 +137,13 @@ describe('protection other apps enforce', () => {
       if (!read.ok) throw new Error(`${type}: ${read.rejection}`);
       const [locked, open] = read.file.sheets;
       expect(locked!.protections?.[0], type).toMatchObject({ can: 'owner' });
-      if (type === 'xlsx')
-        expect(locked!.protections?.[0]?.except, type).toContainEqual({
-          r1: 1,
-          c1: 0,
-          r2: 2,
-          c2: 0,
-        });
+      // The exception's cells stay open: Excel's protected range, LibreOffice's unprotected cell style.
+      expect(locked!.protections?.[0]?.except, type).toContainEqual({
+        r1: 1,
+        c1: 0,
+        r2: 2,
+        c2: 0,
+      });
       expect(open!.protections, type).toBeUndefined();
     }
   }, 120_000);

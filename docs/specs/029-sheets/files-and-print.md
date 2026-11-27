@@ -155,8 +155,7 @@ Every case of [Security](../../research/sheets-open-standard/security.md) is a t
     order; listed on every conversion and download to the other format, as both formats carry the same standard rule
     ([Validation in the file](standard-mapping.md#validation-in-the-file)). "in other apps" for OpenDocument.
   - **Protections other apps hold more simply**: "2 protections work more simply in Excel: protected ranges and
-    warnings", counted by protection, naming what is lost in this order (protected ranges, warnings, and in
-    OpenDocument a protected sheet's exceptions); listed on every conversion and download to the other format, as
+    warnings", counted by protection, naming what is lost in this order (protected ranges, warnings); listed on every conversion and download to the other format, as
     validation rules are ([Protection in the file](standard-mapping.md#protection-in-the-file)). "in other apps" for
     OpenDocument.
   - **File passwords**: "1 protected sheet leaves its file password behind", a password hash read from a file of the
