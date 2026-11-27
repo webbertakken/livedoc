@@ -99,7 +99,7 @@ describe('offlineWorkbookFile', () => {
 // standard-mapping.md "Unknown content" (D109): the record's kept content goes into a file of its standard only.
 describe('an offline spreadsheet’s kept content', () => {
   const NAMES =
-    '<table:named-expressions><table:named-range table:name="T" table:base-cell-address="$S.$A$1" table:cell-range-address="$S.$A$1"/></table:named-expressions>';
+    '<table:named-expressions><table:named-expression table:name="T" table:base-cell-address="$S.$A$1" table:expression="of:=1"/></table:named-expressions>';
   const kept = {
     standard: 'odf' as const,
     items: [

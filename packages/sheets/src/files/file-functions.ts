@@ -20,6 +20,7 @@ import {
   unwrapDummyFunction,
 } from './excel-formula';
 import type { FileAt, KeptItem } from './kept-content';
+import { excelRefuses } from './file-names';
 import type { FileLoss } from './workbook-file';
 import { XLSX_FORMULA_MAX } from './xlsx-bounds';
 import { XLSX_FUTURE_PREFIX, XLSX_PARAMETER_PREFIX } from './xlsx-function-names';
@@ -39,9 +40,6 @@ export type FileFunction = {
 
 /** The most characters Excel keeps in a defined name's comment (Excel's Name Manager). */
 export const EXCEL_NAME_COMMENT_MAX = 255;
-
-// Names Excel refuses as defined names, as they read as its R1C1 row and column.
-const EXCEL_REFUSED_NAME = /^[RC]$/i;
 
 /** The workbook's named functions as a file holds them, each definition written against `ctx`'s sheets. */
 export function fileFunctionsOf(list: readonly NamedFunction[], ctx: SheetsCtx): FileFunction[] {
@@ -65,18 +63,23 @@ export function excelLambda(fn: FileFunction, renamed: ReadonlyMap<string, strin
 
 /**
  * The named functions' defined names, as `definedName` XML, and the names they take (upper case); what Excel cannot
- * hold of each is named in `losses` (D340).
+ * hold of each is named in `losses` (D340), and so is one a named range already takes (`reserved`, D344).
  */
 export function xlsxFunctionNames(
   functions: readonly FileFunction[] | undefined,
   renamed: ReadonlyMap<string, string>,
   losses: FileLoss[],
+  reserved: ReadonlySet<string> = new Set(),
 ): { names: string[]; taken: Set<string> } {
   const names: string[] = [];
   const taken = new Set<string>();
   for (const fn of functions ?? []) {
     const lambda = excelLambda(fn, renamed);
-    if (EXCEL_REFUSED_NAME.test(fn.name) || lambda.length > XLSX_FORMULA_MAX) {
+    if (
+      excelRefuses(fn.name) ||
+      reserved.has(fn.name.toUpperCase()) ||
+      lambda.length > XLSX_FORMULA_MAX
+    ) {
       losses.push({ k: 'function_unwritten', name: fn.name });
       continue;
     }

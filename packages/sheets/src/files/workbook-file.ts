@@ -24,6 +24,8 @@ import { formatCodeOf, formatFromCode } from './number-format-code';
 import { cellStyleOf, type CellStyle } from './cell-style';
 import { storedKept } from './kept-anchors';
 import { fileFunctionsOf, functionsFromFile, type FileFunction } from './file-functions';
+import { fileNamesOf, namesFromFile, type FileRangeName } from './file-names';
+import type { FileAt, KeptItem } from './kept-content';
 import type { NamedFunction } from '../named-functions';
 import { fileLinesOf, layoutFromLines, type FileLines } from './file-lines';
 import type { KeptContent, StoredAt } from './kept-content';
@@ -75,13 +77,16 @@ export type FileSheet = {
 
 /**
  * A workbook as a file holds it, what it holds that the model does not (standard-mapping.md "Unknown content"), its
- * theme ("The theme in the file"; absent, Standard) and its named functions ("Named functions in the file").
+ * theme ("The theme in the file"; absent, Standard), its named functions ("Named functions in the file") and its named
+ * ranges.
  */
 export type WorkbookFile = {
   sheets: FileSheet[];
   kept?: KeptContent;
   theme?: SpreadsheetTheme;
   functions?: FileFunction[];
+  // Its named ranges, each on its sheet by place ("Named ranges in the file").
+  names?: FileRangeName[];
 };
 
 /** A file read: its sheets and what could not be carried, or the package's named rejection. */
@@ -138,7 +143,11 @@ export type FileLoss =
   // (D340).
   | { k: 'function_unread'; name: string }
   | { k: 'function_unwritten'; name: string }
-  | { k: 'function_cut'; name: string };
+  | { k: 'function_cut'; name: string }
+  // Named ranges (standard-mapping.md "Named ranges in the file"): one LiveDoc cannot read, kept as it came (D343); one
+  // a write leaves out, a name twice or one Excel refuses (D344).
+  | { k: 'name_unread'; name: string }
+  | { k: 'name_unwritten'; name: string };
 
 function fileValueOf(value: Scalar): FileValue | undefined {
   if (value === null) return undefined;
@@ -250,7 +259,14 @@ export function workbookFileOf(
     }),
     ...(engine.theme === STANDARD_THEME ? {} : { theme: engine.theme }),
     ...functionsOf(engine, sheets),
+    ...namesOf(sheets),
   };
+}
+
+// The workbook's named ranges, each on its sheet by place.
+function namesOf(sheets: readonly Sheet[]): { names?: FileRangeName[] } {
+  const names = fileNamesOf(sheets);
+  return names.length ? { names } : {};
 }
 
 // The named functions the engine works out, each definition against the workbook's sheets.
@@ -415,6 +431,19 @@ function madeSheets(file: WorkbookFile, rand: Rand, losses: FileLoss[]): Made[] 
   return made;
 }
 
+// The kept content with what LiveDoc read but could not hold, kept as it came; an ODF item sits after the tables.
+function keptWith(
+  kept: KeptContent | undefined,
+  refused: readonly KeptItem<FileAt>[],
+): KeptContent | undefined {
+  if (refused.length === 0) return kept;
+  const standard = refused[0]!.place === 'spreadsheet-after' ? 'odf' : 'ooxml';
+  return {
+    ...(kept ?? { standard, parts: [], relationships: [] }),
+    items: [...(kept?.items ?? []), ...refused],
+  };
+}
+
 /**
  * The sheets a file makes (a spreadsheet opened from it): each its grid (at least a new sheet's, at most what the
  * workbook's limits leave) and its cells, formulas compiled against the file's own sheets. A cell or a sheet past the
@@ -429,6 +458,13 @@ export function sheetsFromFile(
 ): SheetsFromFile {
   const losses: FileLoss[] = [];
   const made = madeSheets(file, rand, losses);
+  // The file's names on the sheets they cover; one LiveDoc cannot hold is kept as it came (D343).
+  const named = namesFromFile(
+    file.names,
+    made.map((m) => m.layout),
+    losses,
+  );
+  for (const [at, names] of named.names) made[at]!.layout = { ...made[at]!.layout, names };
   const formats = formatsRead(locale);
   const joined: Joined = new Map();
   const handles: SheetHandle[] = made.map((m) => ({
@@ -484,13 +520,7 @@ export function sheetsFromFile(
     ? functionsFromFile(file.functions, { own: handles[0], byTitle, byId }, losses)
     : { functions: [], refused: [] };
   const functions = read.functions.length ? { functions: read.functions } : {};
-  const kept: KeptContent | undefined =
-    read.refused.length > 0
-      ? {
-          ...(file.kept ?? { standard: 'ooxml', parts: [], relationships: [] }),
-          items: [...(file.kept?.items ?? []), ...read.refused],
-        }
-      : file.kept;
+  const kept = keptWith(file.kept, [...named.refused, ...read.refused]);
   if (!kept) return { sheets, losses, ...functions };
   // Kept content on a sheet, row or column the workbook's limits cut goes with it, counted.
   const stored = storedKept(kept, made);

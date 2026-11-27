@@ -34,7 +34,7 @@ native; a file keeps the format it arrived in). Research: [The standard](../../r
 | Array and spilled formulas                            | `table:number-matrix-columns-spanned` and `-rows-spanned`                                                                   | `f@t="array"`, `@ref`; dynamic arrays with their metadata                      |
 | Merges                                                | `table:number-columns-spanned`, `-rows-spanned`, covered cells                                                              | `mergeCells`                                                                   |
 | Cell styles and number formats                        | Automatic and named `style:style` (`table-cell`), data styles (`number:number-style`, `number:date-style`, ...)             | `xl/styles.xml`: `numFmts`, `fonts`, `fills`, `borders`, `cellXfs`             |
-| Named ranges, named functions                         | `table:named-range`, `table:named-expression`; no named functions                                                           | `definedNames`; named functions as `LAMBDA` names                              |
+| Named ranges, named functions                         | `table:named-range` ([below](#named-ranges-in-the-file)), `table:named-expression`; no named functions                      | `definedNames`; named functions as `LAMBDA` names                              |
 | Validation                                            | `table:content-validation`, LiveDoc's rule in `livedoc:` attributes                                                         | `dataValidations`, LiveDoc's rule in an `extLst` `ext`                         |
 | Conditional formats                                   | `calcext:conditional-formats` (LibreOffice's extension namespace)                                                           | `conditionalFormatting`                                                        |
 | Filters, filter views                                 | `table:database-range` with `table:filter`                                                                                  | `autoFilter`; filter views have no XLSX form (Unknown content)                 |
@@ -327,7 +327,38 @@ The table is the contract the readers and writers are tested against, one test p
   rectangles) stays the file's own: kept as it came, without the rules read beside it; a read rule the grid cannot
   hold is named at its top-left cell (`validation_rule_unread`).
 
-## Named functions in the file
+## Named ranges in the file
+
+- Each [named range](sheet.md#named-ranges) is a name of the workbook, as Google Sheets writes it, its cells with
+  their sheet and absolute:
+  - **XLSX**: a `definedName` without `localSheetId` (`<definedName name="Total">'My data'!$A$1:$B$4</definedName>`),
+    in the workbook's one `definedNames`, after the kept ones and before the named functions.
+  - **ODF**: a `table:named-range` (`table:name`, `table:base-cell-address` its top-left cell,
+    `table:cell-range-address` `$'My data'.$A$1:.$B$4`) in the spreadsheet's one `table:named-expressions`,
+    after the kept ones.
+- **Read**: a name of the workbook (XLSX without `localSheetId`, ODF in the spreadsheet's `table:named-expressions`)
+  whose range is one cell or one rectangle on one of the file's sheets is a named range on that sheet, its name as
+  written; it is then the model's, no longer kept.
+- **Kept and named** (`name_unread`, "2 named ranges LiveDoc cannot read are kept for the file: Rate and Mine"),
+  as the file wrote them and written back to its format (default, D343):
+  - a name of one sheet: XLSX's `localSheetId`, an ODF table's own `table:named-expressions`, as LiveDoc's names
+    belong to the workbook;
+  - a name of a constant or a formula (`0.2`, ODF's `table:named-expression`), of several areas, of whole columns
+    or rows, of another workbook's cells, or `#REF!`;
+  - a name the [rules](sheet.md#named-ranges) refuse (its shape, one reading as a cell, one a name before it took,
+    case aside, past 100 a sheet), and one whose cells the workbook's limits cut.
+- **Kept, not named**: Excel's built-in names (`_xlnm.Print_Area`, `_xlnm.Print_Titles`, `_xlnm._FilterDatabase`,
+  any `_xlnm.` name) and hidden names (`hidden="1"`, which Excel and Google keep for themselves). They are the
+  print settings and filters they belong to, kept with them, and no name a person gave (default, D343).
+- **One name once.** A file holds a name once in a scope, so at a write (default, D344):
+  - a named range and a kept name of the workbook of one name, case aside (a name the file held that LiveDoc could
+    not read, then one an Editor made): the named range is written, the kept one dropped and counted
+    (`kept_dropped`), as a named function takes a kept name's place (D341);
+  - a named range and a named function of one name: the named range is written, the function left out and named
+    (`function_unwritten`);
+  - one name on two sheets (D297): the first in tab order is written, the other left out and named
+    (`name_unwritten`); so is a name Excel refuses (`R`, `C`) in XLSX;
+  - a kept name of one sheet keeps its own scope beside a named range of its name, in both formats.
 
 - **XLSX**: each [named function](formulas.md#named-functions) is a workbook's defined name, as Excel keeps a named
   `LAMBDA`: `<definedName name="CONTAINS" comment="…">_xlfn.LAMBDA(_xlpm.search_query,_xlpm.search_range,…)</definedName>`,
@@ -350,7 +381,7 @@ The table is the contract the readers and writers are tested against, one test p
 - One LiveDoc cannot hold (a name or a placeholder the [rules](data-tools.md#named-ranges-and-named-functions)
   refuse, more than 20 placeholders, a definition past 2,000 characters, one past the 100th) stays the file's own:
   kept as it came, and the read names it (`function_unread`): "1 named function LiveDoc cannot read is kept for
-  Excel: TOOLONG". A sheet's `LAMBDA` name (`localSheetId`) stays kept with its sheet (default, D342).
+  Excel: TOOLONG". A sheet's `LAMBDA` name (`localSheetId`) stays kept with its sheet, named the same way (default, D342).
 - **ODF**: OpenFormula has no `LAMBDA`, and LibreOffice no named functions, so an ODF file holds none: an `.ods` or
   `.fods` write leaves each out and names it (logged, `function_unwritten`), and converting to OpenDocument lists
   them first ([Converting](files-and-print.md#converting)). A file's `table:named-expression` stays kept.
@@ -516,7 +547,7 @@ each suite writes its own, so LibreOffice, Excel and Google Sheets open them as 
   view in XLSX that only ODF could hold) is kept with the workbook as the file's own XML, by where it sat, and written
   back untouched to the same format. Built in `@livedoc/sheets/files` (`KeptContent`).
 - Every construct the mappings above do not read yet is kept until its mapping is built (charts and pictures, notes
-  and comments, merges, named ranges, validation and format rules, filters, protections; XLSX's print settings), as
+  and comments, merges, names LiveDoc cannot read, validation and format rules, filters, protections; XLSX's print settings), as
   text documents keep theirs. Styles are not kept: a cell's style is read as [Cell styles in the file](#cell-styles-in-the-file)
   maps it, and what it says beyond that, a row's or column's style over its empty cells, and ODF's `styles.xml`
   (its page layouts, so its print settings, and the named styles a format rule applies) are left out; a file's read
@@ -743,13 +774,19 @@ The code cites each by its id.
   LiveDoc's namespace (the Director's ruling, 2026-11-26).
 - **D294** A LiveDoc rule beside a standard rule changed since: the standard rule wins, LiveDoc's dropped and logged
   (the Director's ruling, 2026-11-26).
+- **D343** What a file's names LiveDoc reads: one cell or rectangle of a sheet, named by the workbook, read as a named
+  range; one of a sheet, of a constant, a formula, several areas, whole lines, another workbook or `#REF!`, or one the
+  rules refuse, kept and named (`name_unread`); built-in and hidden names kept, not named (default).
+- **D344** One name twice at a write: a named range before a kept name of the workbook (dropped, `kept_dropped`) and
+  before a named function (`function_unwritten`); a name on two sheets written once, from the first in tab order, the
+  other named (`name_unwritten`); a kept sheet's name beside it (default).
 - **D340** A named function in XLSX: a workbook's `LAMBDA` defined name, the description its `comment` cut to Excel's
   255 characters, argument descriptions and examples left out (`function_cut`); a definition Excel cannot hold wrapped
   by S5 inside the `LAMBDA`; a name Excel refuses left out (`function_unwritten`) (default).
 - **D341** A kept defined name of a named function's name at an XLSX write: Dropped and counted (`kept_dropped`), the
   named function written (default).
 - **D342** A file's `LAMBDA` name LiveDoc cannot hold: Kept as it came and named (`function_unread`); a sheet's
-  `LAMBDA` name kept with its sheet (default).
+  `LAMBDA` name kept with its sheet and named (default).
 - **D295** A dropdown XLSX's list cannot say: a rule allowing any value, LiveDoc's rule beside it (default).
 - **D296** A standard rule read without LiveDoc's: the closest LiveDoc rule, one a rectangle; error messages and
   titles left out (default).

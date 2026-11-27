@@ -24,6 +24,7 @@ import { answersDiffering, workbookFileFor } from './write-workbook';
 import { XLSX_TEXT_MAX, xlsxFormula } from './xlsx-bounds';
 import { xlsxLacks } from './xlsx-function-names';
 import { excelNames } from './xlsx-write';
+import { excelRefuses } from './file-names';
 
 /** What a formula becomes in a format's file: calculated there, kept for LiveDoc but not calculated, or a value. */
 export type FormulaFate = 'native' | 'uncalculated' | 'unwritten';
@@ -34,6 +35,8 @@ const RANK: Readonly<Record<FormulaFate, number>> = { native: 0, uncalculated: 1
 export type ConversionLoss =
   // Named functions an OpenDocument file cannot hold (standard-mapping.md "Named functions in the file"), listed first.
   | { k: 'functions_left'; count: number; names: string[] }
+  // Named ranges Excel refuses (standard-mapping.md "Named ranges in the file", D344).
+  | { k: 'names_left'; count: number; names: string[] }
   | { k: 'sheet_renamed'; count: number; names: { from: string; to: string }[] }
   // `functions`: the functions the new format's apps lack, none when the reason is another (an array literal).
   | { k: 'formula_uncalculated'; count: number; functions: string[] }
@@ -128,6 +131,8 @@ export function conversionLosses(
   const functions = isXlsx(to) ? [] : (file.functions ?? []).map((fn) => fn.name);
   if (functions.length > 0)
     losses.push({ k: 'functions_left', count: functions.length, names: functions });
+  const refused = isXlsx(to) ? (file.names ?? []).map((n) => n.name).filter(excelRefuses) : [];
+  if (refused.length > 0) losses.push({ k: 'names_left', count: refused.length, names: refused });
   if (names.length > 0) losses.push({ k: 'sheet_renamed', count: names.length, names });
   if (tally.uncalculated > 0)
     losses.push({

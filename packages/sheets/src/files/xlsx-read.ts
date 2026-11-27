@@ -38,6 +38,7 @@ import {
 } from './xlsx-styles';
 import { readXlsxTheme } from './xlsx-theme';
 import { readXlsxFunction, type FileFunction } from './file-functions';
+import { isExcelOwnName, xlsxRangeName, type FileRangeName } from './file-names';
 import { STANDARD_THEME } from '../themes/spreadsheet-theme';
 import {
   DATE1904_OFFSET,
@@ -351,12 +352,25 @@ export async function readXlsx(
       ...(validations.rules.length ? { validations: validations.rules } : {}),
     });
   }
-  // A workbook's named LAMBDA is a named function, no longer kept (standard-mapping.md "Named functions in the file").
+  // The workbook's names: a named LAMBDA is a named function, a cell or rectangle a named range, no longer kept; any
+  // other a person gave is kept and named (standard-mapping.md "Named ranges in the file", "Named functions in the file").
   const functions: FileFunction[] = [];
-  keeper?.workbook(parsed, pkg.mainPart, listed, placed, (name, kept) => {
-    const fn = readXlsxFunction(name, kept);
+  const names: FileRangeName[] = [];
+  const sheetAt = (title: string) => {
+    const at = sheets.findIndex((s) => s.name.toLowerCase() === title.toLowerCase());
+    return at < 0 ? undefined : at;
+  };
+  keeper?.workbook(parsed, pkg.mainPart, listed, placed, (name, kept, scoped) => {
+    const own = attributeOf(name, '', 'name');
+    if (!own || isExcelOwnName(own, name)) return false;
+    const fn = scoped ? null : readXlsxFunction(name, kept);
+    const range = scoped || fn ? null : xlsxRangeName(own, name, sheetAt, kept);
     if (fn) functions.push(fn);
-    return fn !== null;
+    if (range) names.push(range);
+    if (fn || range) return true;
+    const lambda = /^\s*_xlfn\.LAMBDA\(/i.test(textContent(name));
+    book.losses.push({ k: lambda ? 'function_unread' : 'name_unread', name: own });
+    return false;
   });
   keeper?.styles(stylesXml);
   const unread = strictUnread + (keeper?.unread ?? 0);
@@ -372,6 +386,7 @@ export async function readXlsx(
       ...(kept ? { kept } : {}),
       ...(fileTheme && fileTheme !== STANDARD_THEME ? { theme: fileTheme } : {}),
       ...(functions.length ? { functions } : {}),
+      ...(names.length ? { names } : {}),
     },
     losses: book.losses,
   };

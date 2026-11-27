@@ -30,6 +30,7 @@ import { odsTabLooks, type OdsTabLook } from './ods-tab-look';
 import { WORKBOOK_COLS_NEW, WORKBOOK_ROWS_NEW } from '../workbook-record';
 import { odsCellFormats, type OdsCellFormats } from './ods-styles';
 import { readOdsFormatRules, unreadStyleNames } from './ods-format-rules';
+import { readOdsNames } from './file-names';
 import { OdsValidationCells, readOdsValidations, type OdsValidationsRead } from './ods-validation';
 import { odsCellLooks, type OdsCellLooks } from './ods-cell-style';
 import { fromOpenFormula } from './open-formula';
@@ -392,8 +393,15 @@ function readBody(
   const budget: Budget = { cells: 0 };
   const ruleStyles = new Set<string>();
   const validations = readOdsValidations(spreadsheet);
+  // The workbook's names (standard-mapping.md "Named ranges in the file"), each by its sheet's place.
+  const titles = tables.slice(0, SHEETS_MAX).map((t) => attributeOf(t, TABLE, 'name') ?? '');
+  const named = readOdsNames(parsed, spreadsheet, (title) => {
+    const at = titles.indexOf(title);
+    return at < 0 ? undefined : at;
+  });
+  for (const name of named.unread) losses.push({ k: 'name_unread', name });
   keeper.root(root);
-  keeper.spreadsheet(spreadsheet, validations.read);
+  keeper.spreadsheet(spreadsheet, new Set([...validations.read, ...named.read]));
   const book: Book = {
     losses,
     budget,
@@ -411,8 +419,9 @@ function readBody(
   // The common styles kept format rules name go with them (a flat file's are its own).
   if (ruleStyles.size > 0) keeper.commonStyles(stylesParsed ?? parsed, ruleStyles);
   // A file that keeps nothing reads as the model alone.
+  const names = named.names.length ? { names: named.names } : {};
   if (keeper.items.length === 0 && parts.length === 0)
-    return { ok: true, file: { sheets }, losses };
+    return { ok: true, file: { sheets, ...names }, losses };
   // The charts of kept drawings that qualify are the sheets' own (standard-mapping.md "Charts in the file").
   const charted = readOdsCharts(sheets, {
     standard: 'odf',
@@ -420,7 +429,7 @@ function readBody(
     parts,
     relationships: [],
   });
-  return { ok: true, file: { sheets: charted.sheets, kept: charted.kept! }, losses };
+  return { ok: true, file: { sheets: charted.sheets, kept: charted.kept!, ...names }, losses };
 }
 
 /** An `.ods` or `.fods` file's sheets, or the package's named rejection; `budgets` the package's (tests pass smaller). */
