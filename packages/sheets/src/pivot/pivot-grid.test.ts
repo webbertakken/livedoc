@@ -9,7 +9,7 @@ import { cellKey } from '../sheet';
 import { readRange } from '../a1-io';
 import { clipFromRange } from '../clipboard';
 import { shownRows } from '../sheet-text';
-import { renderWindow } from '../engine/render';
+import { renderWindow, sheetContentSize } from '../engine/render';
 import {
   PIVOT_BLOCKED_BY,
   PIVOT_NO_SOURCE,
@@ -279,6 +279,9 @@ describe('a pivot table in the grid', () => {
     expect(clipFromRange(wb, report.id, { r1: 1, c1: 1, r2: 1, c2: 1 })!.values).toEqual([
       ['€7.00'],
     ]);
+    const whole = readRange(wb, report.id);
+    expect(whole.ok && whole.range).toBe('A1:B4');
+    expect(sheetContentSize(wb, report.id)).not.toBeNull();
     const image = renderWindow(wb, report.id, { width: 400, height: 200 }, 'en-GB')!;
     expect(image.cells.find((x) => x.r === 1 && x.c === 1)!.text).toBe('€7.00');
     // A cell's own number format wins; its other formats keep the pivot table's number format.

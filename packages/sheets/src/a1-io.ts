@@ -24,7 +24,8 @@ function plainValue(v: Scalar): Scalar {
   return isError(v) ? `${v.e}` : v;
 }
 
-// A range (A1 text; the filled range when omitted), at most AGENT_READ_CELLS_MAX cells, row by row.
+// A range (A1 text; the filled range, spills and pivot tables too, when omitted), at most AGENT_READ_CELLS_MAX cells,
+// row by row.
 export function readRange(wb: Workbook, sheetId: string, rangeText?: string): RangeRead {
   const sheet = wb.sheet(sheetId);
   if (!sheet) return { ok: false, error: 'sheet_not_found' };
@@ -33,7 +34,7 @@ export function readRange(wb: Workbook, sheetId: string, rangeText?: string): Ra
     range = parseRangeText(rangeText);
     if (!range) return { ok: false, error: 'range_invalid' };
   } else {
-    const ext = wb.extent(sheetId);
+    const ext = wb.shownExtent(sheetId);
     range = { r1: 0, c1: 0, r2: Math.max(0, ext.rows - 1), c2: Math.max(0, ext.cols - 1) };
   }
   range = {

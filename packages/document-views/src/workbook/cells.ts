@@ -70,7 +70,7 @@ export function sheetCellsView(
   if (!read.ok)
     return { ok: false, message: `range takes an A1 cell or range, like A1:D20: "${input.range}"` };
   const start = parseRangeText(read.range)!;
-  const extent = wb.extent(sheetId);
+  const extent = wb.shownExtent(sheetId);
   // The last row the range asked reaches: the used range's when none was named.
   const end = input.range ? parseRangeText(input.range)!.r2 : extent.rows - 1;
   const used =

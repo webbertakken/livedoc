@@ -248,8 +248,9 @@ export function renderWindow(
 }
 
 // The grid a sheet's cells fill, in px (docs/specs/029-sheets/sheet.md "Exports and images"): its visible rows and
-// columns through the last that holds an input, a fill, a border or a merge, and one more of each so the grid reads
-// as going on; null for a sheet with nothing in it. A Sheet tab's image grows its Sheet to this, as the tab shows it.
+// columns through the last that holds an input, a fill, a border, a merge or a spilled or pivot table value, and one
+// more of each so the grid reads as going on; null for a sheet with nothing in it. A Sheet tab's image grows its Sheet
+// to this, as the tab shows it.
 export function sheetContentSize(
   wb: Workbook,
   sheetId: string,
@@ -274,6 +275,9 @@ export function sheetContentSize(
     lastRow = Math.max(lastRow, p.r2);
     lastCol = Math.max(lastCol, p.c2);
   }
+  const shown = wb.shownExtent(sheetId);
+  lastRow = Math.max(lastRow, shown.rows - 1);
+  lastCol = Math.max(lastCol, shown.cols - 1);
   if (lastRow < 0) return null;
   const span = (
     ids: readonly string[],
