@@ -7,12 +7,14 @@ import { execFileSync } from 'node:child_process';
 import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { readPackageEntries, writeZip } from '@livedoc/office-packages';
 import { libreOfficeConvert } from '@livedoc/office-packages/libreoffice';
 import { it } from 'vitest';
 import { writeXlsx } from '../src/files/xlsx-write';
 import { googleDrive } from '../oracle/google-access.ts';
 import { ODS_MIME, XLSX_MIME } from '../oracle/google-drive.ts';
 import { CORPUS, GOOGLE_FUNCTIONS, POI_COMMIT, SMART_CHIPS } from './corpus-files';
+import { pivotGroupVariants } from './pivot-group-variants';
 import {
   GETPIVOTDATA_PROBES,
   PIVOT_CASES,
@@ -48,6 +50,32 @@ function libreOffice(): void {
     // Saved as Excel by LibreOffice: a copy of its own first, so the name it writes is the file's.
     const dir = mkdtempSync(join(tmpdir(), 'sheets-corpus-'));
     const own = join(dir, `${base}.ods`);
+    writeFileSync(own, readFileSync(join(ROOT, 'libreoffice', `${base}.ods`)));
+    write('libreoffice', `${base}.xlsx`, libreOfficeConvert(own, 'xlsx'));
+  }
+}
+
+// Excel's pivot table sample grouped three ways (pivot-group-variants.ts), each saved by LibreOffice as ODS, and that
+// ODS saved by it as XLSX: its own forms of a grouping (D617, D618).
+async function libreOfficeGroups(): Promise<void> {
+  const read = await readPackageEntries(
+    readFileSync(join(ROOT, 'excel', 'ExcelPivotTableSample.xlsx')),
+  );
+  if (!read.ok) throw new Error('[sheets corpus] ExcelPivotTableSample.xlsx does not read');
+  const text = (name: string) => new TextDecoder().decode(read.entries.get(name));
+  const cache = 'xl/pivotCache/pivotCacheDefinition1.xml';
+  const table = 'xl/pivotTables/pivotTable1.xml';
+  const dir = mkdtempSync(join(tmpdir(), 'sheets-corpus-groups-'));
+  for (const [name, v] of Object.entries(pivotGroupVariants(text(cache), text(table)))) {
+    const parts = new Map(read.entries);
+    parts.set(cache, new TextEncoder().encode(v.cache));
+    parts.set(table, new TextEncoder().encode(v.table));
+    const base = `PivotGroups-${name}`;
+    const made = join(dir, `${base}.xlsx`);
+    writeFileSync(made, writeZip([...parts].map(([n, data]) => ({ name: n, data }))));
+    write('libreoffice', `${base}.ods`, libreOfficeConvert(made, 'ods'));
+    const own = join(dir, 'again', `${base}.ods`);
+    mkdirSync(join(dir, 'again'), { recursive: true });
     writeFileSync(own, readFileSync(join(ROOT, 'libreoffice', `${base}.ods`)));
     write('libreoffice', `${base}.xlsx`, libreOfficeConvert(own, 'xlsx'));
   }
@@ -232,5 +260,6 @@ it(`makes the corpus's ${SOURCE} files`, async () => {
   else if (SOURCE === 'google') await google();
   else if (SOURCE === 'google-chips') await googleChips();
   else if (SOURCE === 'google-pivots') await googlePivots();
+  else if (SOURCE === 'libreoffice-groups') await libreOfficeGroups();
   else libreOffice();
 });
