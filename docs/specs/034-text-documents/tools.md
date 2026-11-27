@@ -1,8 +1,8 @@
 # Tools
 
 **Status: being built.** Word count, spelling (Dutch and French, with the card, the personal dictionary and automatic
-correction), Preferences and screen reader support with the Accessibility menu are built; the other parts below are still
-to come.
+correction), Preferences, screen reader support with the Accessibility menu, and Show live edits are built; the
+other parts below are still to come.
 
 Find and replace, word count, spelling and grammar, the dictionary, citations, preferences, accessibility settings,
 language and activity in a [text document](text-document.md), and what fork C3 (ruled: core only) leaves out.
@@ -168,7 +168,10 @@ Accessibility menu's order are (default) until a capture of Google's.
   - Comments: the open comment thread at the caret, "Comment by Ada: …" (its first comment and its reply count); its
     anchor, the commented text; else "No comment here".
 - **Show live edits** (Ctrl+Alt+Shift+R): a side panel **Live edits** listing, newest first, the words others add or
-  remove as they write, each with its author, read politely as they arrive; the panel keeps the last 20 (default).
+  remove as they write, each with its author as the room named the sender ("Someone" where it named none who is still
+  here), from when the panel opens until it closes; an author's changes 2 seconds apart or less join one entry, and the
+  newest is read politely once its author pauses that long; the panel keeps the last 20, and 200 characters of what
+  each added and removed (each (default)).
 - **Who**: everyone who can read the document, Viewers included; nothing here changes the document.
 
 ## Activity

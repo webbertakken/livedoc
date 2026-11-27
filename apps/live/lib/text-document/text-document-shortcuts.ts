@@ -961,7 +961,7 @@ export const TEXT_DOCUMENT_SHORTCUTS: readonly ShortcutRow[] = [
     'Ctrl+Alt+Shift+R',
     '⌘+Option+Shift+R',
     'Ctrl+Alt+Shift+R',
-    'specified',
+    'built',
   ),
   row(
     'verbalize-comment',

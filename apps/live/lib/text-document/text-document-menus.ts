@@ -97,7 +97,7 @@ const verbalise = (id: string, label: string): OfficeItem =>
   item(id, label, 'view', { shortcut: id, status: 'built' });
 
 // The Accessibility menu (tools.md "Accessibility settings"), after Help only while screen reader support is on; its
-// order is (default) until a capture of Google's. Show live edits comes with its own step.
+// order is (default) until a capture of Google's.
 const ACCESSIBILITY_MENU: OfficeMenu = menu('accessibility', 'Accessibility', [
   submenu('verbalize', 'Verbalize', [
     verbalise('verbalize-selection', 'Verbalize selection'),
@@ -116,7 +116,10 @@ const ACCESSIBILITY_MENU: OfficeMenu = menu('accessibility', 'Accessibility', [
     verbalise('verbalize-comment', 'Verbalize comment'),
     verbalise('verbalize-comment-anchor', 'Verbalize comment anchor'),
   ]),
-  item('show-live-edits', 'Show live edits', 'view', { shortcut: 'show-live-edits' }),
+  item('show-live-edits', 'Show live edits', 'view', {
+    shortcut: 'show-live-edits',
+    status: 'built',
+  }),
   SEPARATOR,
   item('accessibility-settings', 'Accessibility settings', 'view', BUILT),
 ]);

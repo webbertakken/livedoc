@@ -199,7 +199,7 @@ The Accessibility menu shows only while screen reader support is on.
 | Verbalize table cell location          | `Ctrl+Alt+Shift+T, N`       | `Ctrl+⌘+Shift+T, N` | `Ctrl+Alt+Shift+T, N`       | built (`useTextDocumentScreenReader.test.tsx`) |
 | Verbalize table row header             | `Ctrl+Alt+Shift+T, R`       | `Ctrl+⌘+Shift+T, R` | `Ctrl+Alt+Shift+T, R`       | built (`useTextDocumentScreenReader.test.tsx`) |
 | Verbalize table column header          | `Ctrl+Alt+Shift+T, C`       | `Ctrl+⌘+Shift+T, C` | `Ctrl+Alt+Shift+T, C`       | built (`useTextDocumentScreenReader.test.tsx`) |
-| Show live edits                        | `Ctrl+Alt+Shift+R`          | `⌘+Option+Shift+R`  | `Ctrl+Alt+Shift+R`          | specified                                      |
+| Show live edits                        | `Ctrl+Alt+Shift+R`          | `⌘+Option+Shift+R`  | `Ctrl+Alt+Shift+R`          | built (`useTextDocumentLiveEdits.test.tsx`)    |
 | Verbalize comment                      | `Ctrl+Alt+A, C`             | `Ctrl+⌘+A, C`       | `Ctrl+Alt+A, C`             | built (`useTextDocumentScreenReader.test.tsx`) |
 | Verbalize comment anchor               | `Ctrl+Alt+A, A`             | `Ctrl+⌘+A, A`       | `Ctrl+Alt+A, A`             | built (`useTextDocumentScreenReader.test.tsx`) |
 | Verbalize selection formatting         | `Ctrl+Alt+A, S`             | `Ctrl+⌘+A, S`       | `Ctrl+Alt+A, S`             | built (`useTextDocumentScreenReader.test.tsx`) |
