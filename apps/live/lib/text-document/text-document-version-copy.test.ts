@@ -24,7 +24,9 @@ function versioned() {
 }
 
 const bodyText = (state: Uint8Array) =>
-  String(TextDocumentState.body(TextDocumentState.load([state])).toJSON()).replace(/<[^>]+>/g, '');
+  TextDocumentState.paragraphs(TextDocumentState.load([state]))
+    .map((p) => p.text)
+    .join('\n');
 
 function fakeApi(create: VersionCopyApi['create'] = vi.fn().mockResolvedValue({})) {
   return {
