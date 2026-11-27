@@ -53,6 +53,7 @@ function bound(
     },
     sheet: { id: 's1', layout: sheetLayout, cells },
     viewLayout: sheetLayout,
+    filterViews: { open: null },
   };
   const channel = createOfficeBindingsChannel();
   const wrapper = ({ children }: { children: ReactNode }) => (

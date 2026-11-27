@@ -36,7 +36,7 @@ function BarField({
   };
   const id = `filter-view-${label.toLowerCase()}`;
   return (
-    <label className="flex min-w-0 items-center gap-1.5">
+    <label className="flex min-w-0 items-center gap-1">
       <span className="shrink-0 text-supporting text-white/80">{label}</span>
       <span className="relative flex min-w-0 flex-col">
         <input
