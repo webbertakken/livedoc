@@ -41,9 +41,7 @@ export function parseOdfRange(text: string): { sheet: string; range: GridRange }
 }
 
 /** A data pilot table's standard form, its sheet, and LiveDoc's record beside it; null when it holds no record. */
-export function readOdsDataPilot(
-  table: XmlElement,
-): {
+export function readOdsDataPilot(table: XmlElement): {
   sheet: string;
   standard: PivotStandard;
   pages: number;
