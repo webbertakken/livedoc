@@ -31,7 +31,14 @@ export function sheetCopyOf(
   const carried = (f: StoredFormula) =>
     mapFormulaRefs(f, (ref) => (ref.s === undefined ? ref : refByTitle(ref, ctx)));
   const input = (i: CellInput): CellInput => ('f' in i ? { f: carried(i.f) } : i);
-  const { names: _names, cardTables: _cards, hidden: _hidden, ...layout } = sheet.layout;
+  // Its protections stay behind, as its names do (data-tools.md "Protected ranges", D348).
+  const {
+    names: _names,
+    cardTables: _cards,
+    hidden: _hidden,
+    protections: _protections,
+    ...layout
+  } = sheet.layout;
   return {
     id: to.id,
     title: to.title,

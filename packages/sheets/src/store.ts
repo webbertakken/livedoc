@@ -414,6 +414,14 @@ function inverseLayout(before: SheetLayout, ch: LayoutChange, now: SheetLayout):
       return [{ k: 'vrule', id: ch.id, rule: before.rules?.find((x) => x.id === ch.id) ?? null }];
     case 'band':
       return [{ k: 'band', id: ch.id, band: before.bands?.find((x) => x.id === ch.id) ?? null }];
+    case 'protection':
+      return [
+        {
+          k: 'protection',
+          id: ch.id,
+          protection: before.protections?.find((x) => x.id === ch.id) ?? null,
+        },
+      ];
     case 'object':
       return [
         { k: 'object', id: ch.id, object: before.objects?.find((x) => x.id === ch.id) ?? null },

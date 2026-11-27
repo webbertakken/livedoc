@@ -95,6 +95,8 @@ export const SHEET_ERRORS = [
   'workbook_full',
   // A delete or a hide of the only sheet a spreadsheet has left to show (spreadsheet.md "Sheets in the sheet bar").
   'sheet_last_visible',
+  // A write a protection does not admit (data-tools.md "Protected ranges"): `at` its id, `line` what it says.
+  'protected',
 ] as const;
 export type SheetError = (typeof SHEET_ERRORS)[number];
 

@@ -124,12 +124,63 @@ display style (Chip, Arrow, Plain Text) with option colours. Dropdowns and tick 
 
 ## Protected ranges
 
-- **Protect Sheets and Ranges** panel: a range or a sheet (with **Except Certain Cells**), a description, and
-  permissions: **Show a Warning When Editing This Range** or **Restrict Who Can Edit**: only the owner, only the
-  Editors chosen, or as another range.
-- Protection binds to share roles: a protected range is editable only by the people named on it among those whose
-  role may edit; a Participant may write into a protected range only if named.
-- A protected range shows hatched with View › Show › Protected Ranges.
+- A **protection** guards a range of a sheet, or a whole sheet (with **Except Certain Cells**: up to 50 ranges left
+  open), from writes by those it does not admit. It is kept on its sheet by row and column ids, as a named range is, so
+  it grows with rows and columns inserted inside it (by those it admits) and follows moves; a sheet may hold up to 100
+  (default, D345).
+- Its **permission** is one of three, bound to [share roles](../013-workspace/share-roles.md) (the Director's ruling,
+  2026-11-27):
+  - **Show a Warning When Editing This Range**: everyone who may write may write there, after a warning.
+  - **Only the Owner**: only the spreadsheet's owner writes there.
+  - **Editors Only**: Editors and the owner write there; a Participant never does, though it may write elsewhere.
+- **Named people are a gap, by reason**: Google's Restrict Who Can Edit names people by their accounts; LiveDoc shares
+  by role, through links, never by person, and its room is never told who a guest is. Naming people waits for
+  per-person sharing ([Parity matrix](parity-matrix.md)).
+- **Protect Sheets and Ranges** panel (Data › Protect Sheets and Ranges; a range's and a header's context menu
+  **Protect Range**, a sheet tab's **Protect Sheet**), for everyone:
+  - The list: each protection by its description, else its range (`Sheet1!A1:B4`) or its sheet (`Sheet1`), with its
+    permission's short name (**Warning**, **Owner**, **Editors**), in sheet order then position; a click selects it.
+    Empty: "No protected sheets or ranges." (an Editor's: "Nothing is protected yet."). Participants and Viewers read
+    it.
+  - **Add a Sheet or Range** (an Editor): **Range** or **Sheet** tabs; Range takes the selection, Sheet the active
+    sheet with **Except Certain Cells** (a list of ranges, **Add Another Range**); **Description** (up to 200
+    characters); **Set Permissions**, then the three choices as radio buttons, **Done** and **Cancel**. A range that
+    cannot be read says "That range can't be read".
+  - **Edit** and **Remove** (trash, "Remove this protection?" with **Remove** and **Cancel**): an Editor, on a
+    protection that admits them (an Only the Owner one is the owner's alone). Each change is one undo step.
+- **The warning** (Show a Warning): "Heads up! You're trying to edit part of this sheet that shouldn't be changed
+  accidentally. Edit anyway?" with **Cancel** and **OK**; OK lets the person write there for the rest of their visit
+  to the spreadsheet (until they reload or leave it), one range at a time, as Google's (default, D346). Cancel leaves
+  the cells as they were. An agent's changeset is never asked: it lands, and the room logs it
+  (`[sheets] protection.warned`).
+- **Refused**: a write a protection does not admit is refused whole by the room with `protected` (403) and "This
+  range is protected: only the owner can change it." (or "only Editors can"), shown as a toast; the grid puts the
+  cells back. The hatching never decides: the room does, for every write path (default, D347):
+  - cell writes: typing, clearing, paste of every kind, fill, drag, sort of a range, find and replace, a dropdown or
+    tick box, a form's response row (written as the form's owner, so admitted);
+  - a protected range: a cell's value or format in it; rows or columns inserted between its first and last, or any of
+    its rows or columns deleted, moved or sorted (a sort reorders rows); a merge, validation rule, format rule or
+    alternating colours over any of its cells;
+  - a protected sheet: every write to it but cell writes inside its exceptions: its rows, columns, title, rules,
+    merges, frozen lines, filters, charts; deleting or hiding it;
+  - a filter's own view (its conditions hide rows, change no cell) is anyone's who may filter; sorting from a
+    filter's menu is a sort;
+  - agent changesets (planned writes, checked one by one, the whole changeset refused at the first), and File ›
+    Import's locations into this spreadsheet as they are built (Replace Spreadsheet, Replace Current Sheet, Append,
+    Replace Data at Selected Cell).
+- **Show › Protected Ranges** (View, on by default, the viewer's own) hatches every protected range and sheet the
+  viewer may not write freely (a warning one included), with diagonal lines in the theme's secondary text colour at 25%
+  opacity, under the selection, never the cells' text.
+- A duplicated sheet, and a sheet copied to another spreadsheet, leave their protections behind, as named ranges are
+  (default, D348). `CELL("protect", A1)` is 1 for a cell any protection covers, a warning one too, 0 otherwise
+  ([Formulas](formulas.md), D42).
+- **Files** (built with plan 0020 Phase 10 box 3, its file slice): a file's protection, a password
+  hash with it or not, is read as protection with no password: LiveDoc never asks for a password nor checks one, and
+  the owner (or an Editor, as the permission admits) may remove it. A hash LiveDoc read is written back to a file of
+  its own format; LiveDoc never writes one it did not read. Converting and downloading to the other format list it.
+- Share roles: Editor adds, edits and removes protections that admit them; Participant writes only where admitted
+  (never under Editors Only or Only the Owner); Viewer reads the panel and the hatching. Telemetry:
+  `Spreadsheet · Changed · Protection` with the permission (`Warning`, `Owner`, `Editors`).
 
 ## Tables
 
@@ -192,6 +243,15 @@ The code cites each by its id.
 
 - **D302** A named function's limits: a name up to 254 characters (Google's), up to 20 placeholders, a definition up
   to 2,000 characters, a description up to 1,000, an argument's description and example up to 200 each (default).
+- **D345** A protection's bounds: up to 100 a sheet, 50 exceptions a protected sheet, a description up to 200
+  characters; kept by row and column ids as a named range is (default).
+- **D346** How long Show a Warning's OK holds: for that range, until the person reloads or leaves the spreadsheet, as
+  Google's "for the rest of this session"; an agent's changeset is never asked, only logged (default).
+- **D347** What a protection refuses: every write to its cells or their formats, rows or columns inserted inside it,
+  its rows or columns deleted, moved or sorted, merges and rules over it; a protected sheet every write but cells in
+  its exceptions; a filter's conditions pass, its sort does not (default).
+- **D348** A protected sheet duplicated or copied: the copy is unprotected, as named ranges stay behind (D298)
+  (default).
 - **D303** Two Editors saving named functions at once: The list is saved whole and the later save stands, as File ›
   Settings' do (default).
 - **D299** Where the Named Ranges panel opens: On the list; on Add a Range for an Editor while the workbook has no

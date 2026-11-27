@@ -307,4 +307,12 @@ describe("the workbook's names", () => {
     expect(layoutForCopy(a.layout, true).rows).toBe(a.layout.rows);
     expect(layoutForCopy(a.layout, false)).toBe(a.layout);
   });
+
+  // data-tools.md "Protected ranges" (D348): a copy leaves its protections behind, in a spreadsheet or not.
+  it('leaves a copied sheet’s protections behind', () => {
+    const [a] = makeSheets({ Sheet1: { A1: '1' } });
+    const guarded = { ...a!.layout, protections: [{ id: 'p1', can: 'warn' as const }] };
+    expect(layoutForCopy(guarded, true).protections).toBeUndefined();
+    expect(layoutForCopy({ ...guarded, names: [] }, false)).toEqual({ ...a!.layout, names: [] });
+  });
 });

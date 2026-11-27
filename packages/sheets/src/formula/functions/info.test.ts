@@ -107,9 +107,27 @@ describe('CELL', () => {
     expect(at('=CELL("contents")')).toMatchObject({ e: '#REF!' });
   });
 
-  it('answers a file name and protection as a LiveDoc document has them', () => {
+  it('answers a file name as a LiveDoc document has it, and protection by the sheet’s (D42)', () => {
     expect(at('=CELL("filename", A1)')).toBe('');
     expect(at('=CELL("protect", A1)')).toBe(0);
+    const b = book({ 'Sheet 1': { J20: '=CELL("protect", A1)', J21: '=CELL("protect", B5)' } });
+    const { layout } = b.sheets[0]!;
+    // A warning protection over A1 still protects it.
+    Object.assign(layout, {
+      protections: [
+        {
+          id: 'p1',
+          can: 'warn',
+          range: {
+            r1: layout.rows[0]!,
+            c1: layout.cols[0]!,
+            r2: layout.rows[1]!,
+            c2: layout.cols[0]!,
+          },
+        },
+      ],
+    });
+    expect([b.v('J20'), b.v('J21')]).toEqual([1, 0]);
   });
 
   it('refuses what it cannot tell', () => {

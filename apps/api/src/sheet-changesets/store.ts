@@ -11,6 +11,7 @@ import {
   SheetLimits,
   cellsFromJson,
   planSheetChangeset,
+  type ProtectionCaller,
   type SheetPerson,
   type SheetWrite,
 } from '@livedoc/sheets';
@@ -57,6 +58,8 @@ export type StoreArgs = {
   frontDoor: FrontDoor;
   // A revert's: the changeset it reverts, its writes stored as an undo is (never refused by validation rules).
   revertOf: string | null;
+  // Who writes, to the sheet's protections (data-tools.md "Protected ranges").
+  caller: ProtectionCaller;
 };
 
 const refusal = (status: number, body: Record<string, unknown>): SheetChangesetResult => ({
@@ -134,17 +137,24 @@ export async function storeSheetChangeset(args: StoreArgs): Promise<SheetChanges
       now,
       by: args.by,
       check: { checkRules: args.revertOf === null, limits },
+      caller: args.caller,
     });
     if (!plan.ok) {
       sheetChangesetLog('refused', { ...where, error: plan.error, index: plan.index });
       const { error, index, at, line } = plan;
-      return refusal(error === 'sheet_too_large' ? 413 : 400, {
+      if (error === 'protected')
+        console.info('[sheets] protection.refused', { documentId, protection: at, index });
+      const status = error === 'sheet_too_large' ? 413 : error === 'protected' ? 403 : 400;
+      return refusal(status, {
         error,
         index,
         ...(at ? { at } : {}),
         ...(line ? { line } : {}),
       });
     }
+    // An agent is never asked a warning: it writes, and the room says so (D346).
+    if (plan.warned.length > 0)
+      console.info('[sheets] protection.warned', { documentId, sheetId, protections: plan.warned });
     if (!plan.changes) {
       sheetChangesetLog('nothing', where);
       return { status: 200, body: { changeset: null, rev: head.rev, applied: [] } };

@@ -1,5 +1,6 @@
 // Validation of writes and new sheets: the api runs it on every write
 // before storing, against the sheet as stored; the editor runs it before sending, so a refusal is said at once.
+import { isProtection, PROTECTIONS_MAX } from './protection';
 import { isColour, validFormatPatch, validFormat } from './format';
 import { isAxisId, isSheetId } from './ids';
 import { OUTLINE_DEPTH_MAX } from './limits';
@@ -69,7 +70,9 @@ export type SheetRejection =
   | 'value_invalid'
   | 'rules_full'
   // A sheet past its objects' limit (charts.md "The model").
-  | 'objects_full';
+  | 'objects_full'
+  // A write a protection does not admit (data-tools.md "Protected ranges").
+  | 'protected';
 
 export type Validation =
   { ok: true } | { ok: false; error: SheetRejection; at?: string; line?: string };
@@ -298,6 +301,14 @@ function layoutChangeProblem(ch: LayoutChange, layout: SheetLayout): Validation 
         (ch.rule === null || isFormatRule(ch.rule, ch.id, layout, refsOk))
         ? OK
         : no('write_invalid');
+    case 'protection': {
+      if (typeof ch.id !== 'string' || !isAxisId(ch.id)) return no('write_invalid');
+      if (ch.protection === null) return OK;
+      const others = (layout.protections ?? []).filter((p) => p.id !== ch.id).length;
+      return others < PROTECTIONS_MAX && isProtection(ch.protection, ch.id, layout)
+        ? OK
+        : no('write_invalid');
+    }
     case 'band':
       return typeof ch.id === 'string' &&
         isAxisId(ch.id) &&

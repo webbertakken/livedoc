@@ -104,9 +104,10 @@ export function namedRangeWrites(edit: NamedRangeEdit): { sheetId: string; write
   ];
 }
 
-// A copied sheet's layout: in a spreadsheet its names stay with the original, being the workbook's (D298).
+// A copied sheet's layout: in a spreadsheet its names stay with the original, being the workbook's (D298); its
+// protections stay behind always (data-tools.md "Protected ranges", D348).
 export function layoutForCopy(layout: SheetLayout, inSpreadsheet: boolean): SheetLayout {
-  if (!inSpreadsheet || !layout.names) return layout;
-  const { names: _names, ...rest } = layout;
-  return rest;
+  if (!layout.protections && (!inSpreadsheet || !layout.names)) return layout;
+  const { names, protections: _protections, ...rest } = layout;
+  return inSpreadsheet || !names ? rest : { ...rest, names };
 }

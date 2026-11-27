@@ -126,6 +126,51 @@ describe('a cell write against the rows it reads', () => {
     expect((await kit.write('book', text(rows[1]!))).status).toBe(200);
   });
 
+  // data-tools.md "Protected ranges": the rows a protection and its sheet's exceptions start and end on are read, so a
+  // cell is known inside one or not on a sheet of a million rows.
+  it('refuses a Participant’s value inside a protected range, and not one outside it', async () => {
+    kit.sql.sql.exec(
+      "INSERT INTO share_links (code, document_id, role, level, tab_id, created_at) VALUES ('PART', 'book', 'view', 'participate', NULL, 1);",
+    );
+    const protection = {
+      id: 'prot01',
+      range: { r1: rows[2]!, c1: cols[0]!, r2: rows[6]!, c2: cols[0]! },
+      can: 'editors' as const,
+    };
+    await kit.write('book', {
+      kind: 'layout',
+      changes: [{ k: 'protection', id: 'prot01', protection }],
+    });
+    const head = await readCellWriteHead(kit.sql.env, 'book', 'bookSheet', cellsAt(rows[4]!));
+    expect(head!.layout.rows).toEqual([rows[0], rows[2], rows[4], rows[6]]);
+    const asParticipant = (r: string) =>
+      kit.call({
+        path: '/book/sheets/bookSheet/writes',
+        body: { write: cellsAt(r) },
+        owner: 'p',
+        code: 'PART',
+      });
+    expect((await asParticipant(rows[5]!)).status).toBe(403);
+    expect((await asParticipant(rows[7]!)).status).toBe(200);
+    // A protected sheet's exceptions are read the same way.
+    await kit.write('book', {
+      kind: 'layout',
+      changes: [
+        {
+          k: 'protection',
+          id: 'prot02',
+          protection: {
+            id: 'prot02',
+            can: 'editors',
+            except: [{ r1: rows[8]!, c1: cols[0]!, r2: rows[9]!, c2: cols[0]! }],
+          },
+        },
+      ],
+    });
+    expect((await asParticipant(rows[9]!)).status).toBe(200);
+    expect((await asParticipant(rows[7]!)).status).toBe(403);
+  });
+
   it('still refuses a cell write of the wrong shape by name', async () => {
     const odd = { kind: 'cells', cells: 'x' } as unknown as SheetWrite;
     expect((await kit.write('book', odd)).status).toBe(400);
