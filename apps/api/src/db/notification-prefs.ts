@@ -19,6 +19,8 @@ type NotificationPrefs = {
   notifyActionAssigned: boolean;
   notifyMentions: boolean;
   notifyFormResponses: boolean;
+  // Comments and edits in text documents, as each one's Notification settings choose (034 review.md).
+  notifyTextDocuments: boolean;
 };
 
 const DEFAULTS: NotificationPrefs = {
@@ -30,6 +32,7 @@ const DEFAULTS: NotificationPrefs = {
   notifyActionAssigned: true,
   notifyMentions: true,
   notifyFormResponses: true,
+  notifyTextDocuments: true,
 };
 
 // One SELECT + JSON.parse. Reads only the two notification keys; every other
@@ -56,6 +59,7 @@ export async function getNotificationPrefs(env: Env, ownerId: string): Promise<N
       notifyActionAssigned: blob.notifyActionAssigned !== false,
       notifyMentions: blob.notifyMentions !== false,
       notifyFormResponses: blob.notifyFormResponses !== false,
+      notifyTextDocuments: blob.notifyTextDocuments !== false,
     };
   } catch {
     return DEFAULTS;

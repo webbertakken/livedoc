@@ -26,6 +26,7 @@ import { handleTabRender } from './tab-render-route';
 import { handleItemRoutes } from './item-routes';
 import { handleSheetRoutes } from './sheet-routes';
 import { handleTextDocumentRoutes } from './text-document-routes';
+import { handleTextDocumentNoticeRoutes } from './text-document-notice-routes';
 import { handleTextDocumentVersionRoutes } from './text-document-version-routes';
 import { handlePdfDocumentRoutes } from './pdf-document-routes';
 import { handleDocumentFileRoutes } from './document-file-routes';
@@ -224,6 +225,9 @@ export async function handleDocumentSubresources(
   // Its versions (live-editing-and-storage.md "Versions").
   const versions = await handleTextDocumentVersionRoutes(ctx);
   if (versions) return versions;
+  // A person's notification setting (review.md "Notifications").
+  const notices = await handleTextDocumentNoticeRoutes(ctx);
+  if (notices) return notices;
   // A PDF document's live changes (docs/specs/035-pdf-documents/live-editing-and-storage.md "Storage").
   const pdfDocument = await handlePdfDocumentRoutes(ctx);
   if (pdfDocument) return pdfDocument;

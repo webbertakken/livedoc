@@ -52,6 +52,7 @@ const allowAll = {
   notifyActionAssigned: true,
   notifyMentions: true,
   notifyFormResponses: true,
+  notifyTextDocuments: true,
 };
 
 afterEach(() => vi.clearAllMocks());

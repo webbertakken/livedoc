@@ -60,8 +60,9 @@ for (const [segment, byPosition] of vocabulary) {
 // (2026-11-22); 230,830 with a spreadsheet's move door, raised on purpose (2026-11-24); 253,861 with its named
 // functions' door, raised on purpose (2026-11-26); 263,362 with a text document's versions, one word and no deeper
 // (restore is a POST on the version, not a level below it, which would have made it 320,562), raised on purpose
-// (2026-11-27).
-const PROBE_PATHS_MAX = 270_000;
+// (2026-11-27); 277,149 with a document's notification settings, one word at the document's level, raised on
+// purpose (2026-11-27).
+const PROBE_PATHS_MAX = 285_000;
 // The hook's timeout only bounds a hung probe, so it follows the work: about 0.02 ms a dispatch on a developer's
 // machine (12 s for 563,080), and CI's shared runners under coverage up to thirty times that.
 const PROBE_MS_PER_DISPATCH = 0.02;

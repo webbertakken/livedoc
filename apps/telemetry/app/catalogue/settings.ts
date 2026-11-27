@@ -303,6 +303,13 @@ export const NOTIFICATION_SETTINGS = settingsStack(
     ),
     toggle(
       'UI',
+      'NotifyTextDocumentsOn',
+      'NotifyTextDocumentsOff',
+      'Comments and Edits in Text Documents',
+      'Every text document notification email, account-wide.',
+    ),
+    toggle(
+      'UI',
       'NotifyTipsOn',
       'NotifyTipsOff',
       'Tips and Check-Ins',

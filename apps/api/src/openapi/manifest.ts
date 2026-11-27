@@ -1023,6 +1023,32 @@ export const ROUTE_MANIFEST: RouteSpec[] = [
     responseSchema: 'TextDocumentVersionWriteDto',
     statuses: [200, 401, 403, 404, 410, 503],
   },
+  // A person's notification setting for a document (docs/specs/034-text-documents/review.md "Notifications").
+  {
+    method: 'GET',
+    path: '/documents/{id}/notification-settings',
+    segment: 'documents',
+    tag: 'Text documents',
+    summary:
+      "The caller's notification setting for the document: comments all, for-you or none, edits added-or-removed or none; the defaults (for-you, none) when they chose none. Only a signed-in account (403 account_required), only where email is configured (404 email_off); Participant access (403 for a Viewer).",
+    auth: 'session',
+    tokenUsable: true,
+    responseSchema: 'NoticeSettingDto',
+    statuses: [200, 401, 403, 404, 410],
+  },
+  {
+    method: 'PUT',
+    path: '/documents/{id}/notification-settings',
+    segment: 'documents',
+    tag: 'Text documents',
+    summary:
+      "Keeps the caller's notification setting for the document, replacing any before it. 400 invalid_setting. Only a signed-in account (403 account_required), only where email is configured (404 email_off); Participant access (403 for a Viewer).",
+    auth: 'session',
+    tokenUsable: true,
+    requestSchema: 'NoticeSettingDto',
+    responseSchema: 'NoticeSettingDto',
+    statuses: [200, 400, 401, 403, 404, 410],
+  },
   // A PDF document's live changes (docs/specs/035-pdf-documents/live-editing-and-storage.md "Storage").
   {
     method: 'GET',

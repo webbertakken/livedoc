@@ -48,6 +48,8 @@ import { footnoteClipboard } from '@/lib/text-document/text-document-footnote-cl
 import { stretchesPlugin } from '@/lib/text-document/text-document-stretches';
 import { typingAidsPlugin } from '@/lib/text-document/text-document-typing-aids-plugin';
 import { TypingAids } from '@/lib/text-document/text-document-typing-aids';
+import { useCapabilities } from '@/hooks/persistence/useCapabilities';
+import { useTextDocumentNotifications } from './useTextDocumentNotifications';
 import { useTextDocumentPreferences } from './useTextDocumentPreferences';
 import { useTextDocumentPageSetup } from './useTextDocumentPageSetup';
 import { useTextDocumentClipboard } from './useTextDocumentClipboard';
@@ -1157,6 +1159,14 @@ export function TextDocumentSurface({
   });
   // File > Version history (review.md "Version history"): the shell's mode over the whole window.
   const focusBody = useCallback(() => focusWriting(editor.current), []);
+  // Tools > Notification settings (review.md "Notifications"): a signed-in account's, on a stored document, where
+  // email is configured.
+  const { emailEnabled } = useCapabilities();
+  const notifications = useTextDocumentNotifications({
+    place: { ownerId, documentId, shareCode },
+    offered: emailEnabled && !local && (mentions?.selfUserId ?? null) !== null,
+    onClosed: focusBody,
+  });
   const versionHistory = useTextDocumentVersionHistory({
     where: scope,
     local,
@@ -1196,6 +1206,7 @@ export function TextDocumentSurface({
       ...reviewActions,
       ...compare.actions,
       ...versionHistory.actions,
+      ...notifications.actions,
       ...links.actions,
       ...bookmarks.actions,
       ...headingLinks.actions,
@@ -1218,6 +1229,7 @@ export function TextDocumentSurface({
       reviewActions,
       compare.actions,
       versionHistory.actions,
+      notifications.actions,
       links.actions,
       bookmarks.actions,
       headingLinks.actions,
@@ -1326,6 +1338,7 @@ export function TextDocumentSurface({
       {pictures.dialog}
       {pictureEditing.dialog}
       {preferences.dialog}
+      {notifications.dialog}
       {page.dialog}
       {columns.dialog}
       {headers.optionsDialog}

@@ -86,6 +86,9 @@ const DOCUMENT_SCOPE: Record<string, Decision> = {
   'GET /documents/{id}/text-documents/{tabId}/versions/{versionId}': 'allow',
   'PUT /documents/{id}/text-documents/{tabId}/versions/{versionId}': 'allow',
   'POST /documents/{id}/text-documents/{tabId}/versions/{versionId}': 'allow',
+  // The person's notification setting (review.md "Notifications").
+  'GET /documents/{id}/notification-settings': 'allow',
+  'PUT /documents/{id}/notification-settings': 'allow',
   // A PDF document: its live changes and the stored file it holds.
   'GET /documents/{id}/pdf-documents/{tabId}/state': 'allow',
   'POST /documents/{id}/pdf-documents/{tabId}/updates': 'allow',

@@ -11051,6 +11051,38 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
     ],
     "type": "object"
   },
+  "NoticeCommentChoice": {
+    "enum": [
+      "all",
+      "for-you",
+      "none"
+    ],
+    "type": "string"
+  },
+  "NoticeEditChoice": {
+    "enum": [
+      "added-or-removed",
+      "none"
+    ],
+    "type": "string"
+  },
+  "NoticeSettingDto": {
+    "additionalProperties": false,
+    "description": "The setting: GET and PUT /api/documents/<id>/notification-settings.",
+    "properties": {
+      "comments": {
+        "$ref": "#/components/schemas/NoticeCommentChoice"
+      },
+      "edits": {
+        "$ref": "#/components/schemas/NoticeEditChoice"
+      }
+    },
+    "required": [
+      "comments",
+      "edits"
+    ],
+    "type": "object"
+  },
   "NumOp": {
     "enum": [
       "between",

@@ -19,6 +19,9 @@ import {
   ALL_CTA_SOURCES,
   ALL_TIMING_TYPES,
   LEVEL_TELEMETRY_TYPE,
+  NOTICE_COMMENT_CHOICES,
+  NOTICE_EDIT_CHOICES,
+  noticeSettingType,
   PLACEMENT_DEFAULT_KEYS,
   SHEET_CHANGE_KINDS,
   pascalToken,
@@ -503,6 +506,14 @@ export const COMPUTED_EMITTERS: Record<string, ComputedValues> = {
   'apps/live/components/text-document/useTextDocumentPictures.tsx Element·Added': {
     values: ['Upload', 'Gallery', 'Search', 'Paste', 'Drop'].map(
       (from) => `TextDocumentImage${from}`,
+    ),
+  },
+  // A text document's notification setting saved (docs/specs/034-text-documents/review.md "Notifications").
+  'apps/live/components/text-document/useTextDocumentNotifications.tsx Document·Changed': {
+    values: NOTICE_COMMENT_CHOICES.flatMap((comments) =>
+      NOTICE_EDIT_CHOICES.map(
+        (edits) => `TextDocumentNotices${noticeSettingType({ comments, edits })}`,
+      ),
     ),
   },
   // A person's view of a PDF document (docs/specs/035-pdf-documents/reading-surface.md "Telemetry"): the page display,

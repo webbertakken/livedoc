@@ -8,7 +8,7 @@ writing, travel in both formats' files as tracked changes and the room judges a 
 Participants suggest in Suggesting mode, from the writing, the menus and the toolbar; suggestion cards accept and
 reject one, the Suggested edits panel all at once, and Tools > Compare documents makes a comparison. The room
 sends a Viewer a copy without comments or suggestion authors, and Viewing draws the writing as a Viewer sees it.
-Versions and notifications are still to come.
+Version history names, restores and copies versions; notifications are still to come.
 
 Comments, suggestions, version history, comparing documents and notifications in a [text document](text-document.md).
 The panels and threads are the shared [review surfaces](../012-collaboration/review-surfaces.md), built once for the
@@ -641,9 +641,88 @@ their limits are in [Live editing and storage](live-editing-and-storage.md#versi
 
 ## Notifications
 
-Tools > Notification settings: comments (all, only yours and mentions, none) and edits (a daily digest or none),
-sent by email where the host has email configured ([Profile and email notifications](../014-identity/profile-and-email-notifications.md)); where it is not, the
-setting is not shown and the Inbox carries them. Nothing is sent to someone who cannot open the document.
+Comments and edits reach people by email, chosen per document per person, as Google Docs' Tools > Notification
+settings ([Google Docs Editors Help 91588](https://support.google.com/docs/answer/91588), fetched 2026-11-27;
+director, 2026-11-27). Only where the host has email configured
+([Transactional email](../014-identity/transactional-email.md)); where it is not, nothing is offered or sent and the
+[Inbox](../013-workspace/inbox.md#27-text-document-threads) carries the threads.
+
+### The setting
+
+- **Tools > Notification settings** opens a dialog, **Notification settings**, of two groups, each a radio group:
+  - **Comments**: **All comments** (every new comment), **Comments for you** (default; comments in a thread the
+    person started, commented in, is mentioned in or is assigned), **None** (no comment email from this document).
+  - **Edits**: **Added or removed content** (writing anyone else added or removed), **None** (default).
+  - **Cancel** and **OK**; OK saves both and closes; a save that fails says "Your notification settings couldn't be
+    saved. Try again." in the dialog, which stays (default copy).
+- **Per document, per person**: the setting is the person's for this document alone, kept on the server by account,
+  never in the file; a person with no setting has the defaults.
+- **Who is offered it**: a signed-in account with an email, at Editor or Participant level, on a host with email
+  configured. Elsewhere the menu item is absent: a guest has no address, and a Viewer is never emailed (below).
+- **The account-wide switch**: Settings > Notifications > Email gains **Comments and Edits in Text Documents**
+  (`notifyTextDocuments`, on by default, [Account settings](../014-identity/profile-and-email-notifications.md#3-email-notification-preferences));
+  off, no text document emails this person, whatever each document's setting says.
+
+### Who is emailed
+
+- **Accounts with an email only**, never a guest; never the person whose comment or change it is.
+- **Editors and Participants only**: a Viewer is never emailed, whatever their setting; the level is read when the
+  email is sent, so a person lowered to Viewer stops at once, with anything held for them dropped.
+- **Someone who can no longer open the document** (their link revoked or expired, the document in the Trash, gone
+  from the team) is emailed nothing.
+
+### Batches
+
+- **One email per document per person per window**: the first comment or change a person is to hear of opens a
+  window of `TEXT_DOCUMENT_NOTICE_WINDOW_MS` (15 minutes, default: the product's other notification throttles' window;
+  Google's help names none); everything that follows inside it joins the same email, sent when it ends.
+- **What drops out**: a comment deleted, or its thread resolved, before the email is sent is left out; a batch with
+  nothing left sends nothing.
+- **An hourly cap per person**: at most `TEXT_DOCUMENT_NOTICE_EMAILS_PER_HOUR` (12, default) of these emails to one
+  person in an hour, across documents; an email over the cap is not sent, the log names it, and the Inbox still
+  lists its threads (default).
+- **Mentions and assignments**: a comment that mentions or assigns someone emails them at once, as
+  [Mentions](#mentions) and [Assigning](#assigning) say, and is not repeated in their batch. A person whose
+  Comments setting for the document is **None** gets neither (Google's "Never receive emails about comments for that
+  file"), nor does one with the account-wide switch off.
+
+### The comments email
+
+- **Subject**: "New comments in <document>" (default copy).
+- **Each comment**, oldest first: its author's name, the quoted stretch it is on (cut to 120 characters with an
+  ellipsis), its text, and **Open** to the thread (landing on it as the Inbox's Open does); replies are grouped under
+  their thread.
+- **Comments for you** carries the comments of the threads that involve the person; **All comments** every new one.
+
+### The edits email
+
+- **What it carries**: only writing applied in the window, direct edits and accepted suggestions; never a pending
+  suggestion, comment text or thread data, and never the person's own changes.
+- **Each change**: who made it, and the writing added or removed (as Compare documents finds it,
+  [Compare documents](#compare-documents)), each cut to 200 characters with an ellipsis (default).
+- **An excerpt cap**: at most `TEXT_DOCUMENT_NOTICE_EXCERPTS_MAX` (20, default) changes are shown, then
+  "and N more changes" and **Open the document**, as Google's "email notifications may not display all the changes".
+- **Comments and edits together**: a person to hear of both gets one email, comments first, subject
+  "New comments and changes in <document>" (default copy); edits alone read "Changes in <document>".
+
+### In every email
+
+- **Notification settings**: a signed link that opens this document's two settings for this person, changed with one
+  click and saved without signing in; the link is signed for the person and the document alone, so it changes
+  nothing else.
+- **Turn off all text document emails**: the account-wide switch, at `/explorer?settings=notifications`.
+- **One-click unsubscribe**: the `List-Unsubscribe` and `List-Unsubscribe-Post` headers (RFC 8058) set this
+  document's two settings to None for this person.
+- The footer and the privacy notes the other notification emails carry
+  ([Transactional email](../014-identity/transactional-email.md)).
+
+### Telemetry
+
+- `Document · Changed · TextDocumentNotices<Comments><Edits>` when a person saves the dialog, the two choices as
+  one type (`TextDocumentNoticesForYouNone`, ...), never who or which document.
+- `Email · Sent · TextDocumentComments`, `TextDocumentEdits` or `TextDocumentCommentsAndEdits` per email sent, as
+  every email is counted ([Transactional email](../014-identity/transactional-email.md)), and
+  `Comment · Notified · One`, `TwoToFive` or `SixPlus`, its count of comments.
 
 ## Share roles
 

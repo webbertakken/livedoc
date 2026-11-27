@@ -32,7 +32,7 @@ retired and its three parts redistributed:
   this yours**: keep your documents and settings on every device; choose the name and colour collaborators
   see on your cursor; share with your team, and get an email when someone comments. Then **Sign In** and
   **Create Account**, returning to Settings. The rows that cannot apply to a guest are absent, not empty.
-- **Email notifications** are the six rows in **Notifications > Email**
+- **Email notifications** are the rows in **Notifications > Email**
   (§3). Absent unless Resend is configured AND the reader is signed in, since
   a guest has no address to send to.
 - **Delete account** is the `deleteAccount` row in **Account > Danger Zone**.
@@ -107,6 +107,8 @@ notifyDocumentJoin?: boolean;     // someone first opens one of my shared docume
 notifyInviteResponse?: boolean;  // someone accepts/declines a team invite I (an admin) sent
 notifyMentions?: boolean;        // a teammate @-mentions me in a comment (docs/specs/012-collaboration/comment-mentions.md)
 notifyFormResponses?: boolean;   // someone fills in one of my forms (docs/specs/030-forms/forms.md)
+notifyTextDocuments?: boolean;   // comments and edits in text documents, as each one's Notification settings choose
+                                 // (docs/specs/034-text-documents/review.md#notifications); off, none are sent
 ```
 
 Both **default on** (undefined === true): the user asked to be told, so the

@@ -82,6 +82,8 @@ const OWNER_COLUMNS: OwnerColumn[] = [
   // Mention and action-assigned email claims (docs/specs/012-collaboration/comment-mentions.md "The email"):
   // only a joined team member sends them.
   { table: 'notify_email_claims', column: 'sender_id', migrate: { kind: 'account-only' } },
+  // A text document's notification setting (docs/specs/034-text-documents/review.md "Notifications"): accounts only.
+  { table: 'text_document_notice_settings', column: 'owner_id', migrate: { kind: 'account-only' } },
   { table: 'team_members', column: 'user_id', migrate: { kind: 'account-only' } },
   // Google Drive mirror (docs/specs/022-drive-mirror/drive-mirror.md): signed-in only.
   { table: 'drive_connections', column: 'owner_id', migrate: { kind: 'account-only' } },
@@ -282,6 +284,14 @@ function seedAccountOnly(sql: DatabaseSync, id: string, peer: string) {
   });
   insert(sql, 'email_lifecycle', { owner_id: id, email: `${id}@example.com`, created_at: T0 });
   insert(sql, 'notify_email_claims', { claim_key: `claim-${id}`, sender_id: id, created_at: T0 });
+  // On the document its peer owns (d-other), so only the account's own deletion takes it.
+  insert(sql, 'text_document_notice_settings', {
+    document_id: 'd-other',
+    owner_id: id,
+    comments: 'all',
+    edits: 'none',
+    updated_at: T0,
+  });
   insert(sql, 'drive_connections', { owner_id: id, status: 'connected', connected_at: T0 });
   insert(sql, 'drive_items', {
     owner_id: id,
