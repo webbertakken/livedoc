@@ -958,7 +958,8 @@ export const EXACT: Readonly<Record<string, string>> = {
     'Someone replaced every match of a search in a spreadsheet with Edit › Find and Replace’s Replace All.',
   'Spreadsheet|Changed|Cleanup':
     'An editor removed duplicate rows, trimmed whitespace or applied a clean-up suggestion in a spreadsheet.',
-  'Spreadsheet|Changed|Randomise': 'An editor shuffled the rows of a range with Data › Randomise Range.',
+  'Spreadsheet|Changed|Randomise':
+    'An editor shuffled the rows of a range with Data › Randomise Range.',
   'Spreadsheet|Unlocked|ImportAccess':
     'An editor allowed a spreadsheet’s IMPORTDATA, IMPORTFEED, IMPORTHTML and IMPORTXML formulas to fetch from the web.',
   'Pdf|Imported|Explorer':
