@@ -118,6 +118,31 @@ describe('suggested rows and columns, written and read back', () => {
       expect(tables(back).map(cellTexts)).toEqual(EXPECTED_TEXTS);
     });
 
+  // review.md "Across merged cells": a merged cell crossing suggested rows keeps its span through the files.
+  for (const [format, type] of [
+    ['odf', 'fodt'],
+    ['odf', 'odt'],
+    ['ooxml', 'docx'],
+  ] as const)
+    it(`keeps a merged cell crossing suggested rows in .${type}`, async () => {
+      const document = CONSTRUCTS.suggestedRows!(format);
+      const [first, ...rest] = document.body;
+      const table = first as Table;
+      // A1 merged down over the inserted row and the deleted one: their first cells are covered.
+      const merged: Table = {
+        ...table,
+        rows: table.rows.map((row, r): TableRow =>
+          r === 0
+            ? { ...row, cells: [{ ...row.cells[0]!, rowSpan: 3 }, ...row.cells.slice(1)] }
+            : { ...row, cells: row.cells.slice(1) },
+        ),
+      };
+      const back = (await read(write({ ...document, body: [merged, ...rest] }, type))).document;
+      const read0 = tables(back)[0]!;
+      expect(read0.rows.map((r) => r.cells.map((c) => c.rowSpan ?? 1))).toEqual([[3, 1], [1], [1]]);
+      expect(marksOf(back)[0]!.rows).toEqual(marksOf(document)[0]!.rows);
+    });
+
   it('writes Word’s forms: a row’s change in its properties, a column’s in each cell’s', async () => {
     const xml = await documentXml(write(CONSTRUCTS.suggestedRows!('ooxml'), 'docx'));
     expect(xml).toMatch(/<w:trPr><w:ins [^>]*livedoc:id="sRow"[^>]*\/><\/w:trPr>/);

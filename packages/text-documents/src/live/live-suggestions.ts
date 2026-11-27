@@ -11,11 +11,13 @@ import {
   PARAGRAPH,
   PARAGRAPH_FORMAT_CHANGE,
   SUGGESTION_MARKS,
+  TABLE,
   TABLE_CELL,
   TABLE_HEADER,
 } from './live-names';
 import { liveWritings } from './live-stories';
 import { fitTableWidth } from './live-table-fit';
+import { shrinkCrossingSpans } from './live-table-spans';
 import {
   deltaOf,
   elementsOf,
@@ -331,6 +333,8 @@ function settleChildren(
         parent.delete(index, 1);
       continue;
     }
+    // A merged cell crossing a row or column this settling takes away shrinks first, read on the whole grid.
+    if (node.nodeName === TABLE) shrinkCrossingSpans(node, (part) => takenAway(part, ids, accept));
     if (!inParagraph) settleChildren(node, ids, accept, false, widened);
     const inserted = marksOf(node.getAttribute(INSERTION_MARK), ids);
     const deleted = marksOf(node.getAttribute(DELETION_MARK), ids);

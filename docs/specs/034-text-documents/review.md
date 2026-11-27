@@ -291,7 +291,13 @@ office kinds; this spec says what a text document puts in them.
   anyone else's is their own suggestion. A new column takes its neighbour's width and the others keep theirs, so the
   table grows (it may run past the margin while suggested) and Reject gives back the table as it was; Accept fits a
   table wider than the text back to the text width, as an Editor's plain change (director, 2026-11-26).
-- **Not yet**: a row or column a merged cell crosses (director, 2026-11-26); merging, splitting, moving, sorting and
+- **Across merged cells** (director, 2026-11-26): a row or column put in where a merged cell crosses it grows that
+  cell over it as part of the suggestion, as Insert grows it in Editing; Reject takes the row or column away and the
+  merged cell shrinks back exactly. A row or column a merged cell crosses suggested deleted leaves the merged cell as
+  it is until Accept, which takes the row or column away and shrinks the merged cell over the rest; a merged cell
+  that starts in a deleted row starts in the next row, keeping its writing. Nothing of the merge is kept beside the
+  suggestion: taking a row or column away always shrinks what crosses it by one, as Delete row does in Editing.
+- **Not yet**: merging, splitting, moving, sorting and
   distributing the rows and columns of a table not one's own suggested table (default); updating a table of contents
   not one's own suggested one, drawings, and what is kept beside the writing (page setup, a header's or footer's
   settings, document tabs, styles, list definitions), say "This can't be suggested yet." (default) and change nothing.
@@ -390,7 +396,8 @@ office kinds; this spec says what a text document puts in them.
   - a whole block (a table, a section break, a table of contents), a table's row and a table's cell (a column is
     its cells) carry an insertion or a deletion; what is inside them carries only its own suggestions, never theirs.
     Rejecting an inserted row or cell, or accepting a deleted one, takes it away; a table left with no rows goes,
-    as does a row left with no cells.
+    as does a row left with no cells. A merged cell crossing a row or column taken away shrinks by one; one starting
+    in a row taken away starts in the next.
 - **What each part holds**: its suggestion's id, its author (their adder key, name and colour, as a comment's author:
   [How a comment is kept](#how-a-comment-is-kept)) and when it was made. A suggestion is every part with one id,
   across stretches and paragraphs: one person's adjacent changes share an id, so they read and are accepted as one.
