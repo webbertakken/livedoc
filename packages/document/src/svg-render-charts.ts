@@ -214,6 +214,32 @@ export function svgPieChart(
   );
 }
 
+/**
+ * A column or bar chart's value axis and baseline (pie-chart.md "Show Axis"): a faint gridline at each tick and its
+ * label, under a column chart's left side or a bar chart's bottom, and the zero line. A waterfall's too.
+ */
+export function svgBarAxis(
+  barM: Pick<BarMarks, 'axis' | 'baseline'>,
+  horizontal: boolean,
+  textColor: string,
+  fontFamily?: string,
+): { axis: string; baseline: string } {
+  const b = barM.baseline;
+  const font = ` font-family="${xmlEscape(fontFamily ?? EXPORT_DEFAULT_FONT)}"`;
+  const [s0, s1] = barM.axis.span;
+  const axis = barM.axis.ticks
+    .map((t) =>
+      horizontal
+        ? `<path d="M ${r2(t.at)} ${r2(s0)} L ${r2(t.at)} ${r2(s1)}" stroke="${AXIS_FAINT}" stroke-width="1"/>` +
+          `<text x="${r2(t.at)}" y="${r2(s1 + AXIS_TICK_GAP + AXIS_TICK_FONT_PX)}" text-anchor="middle"${font} font-size="${AXIS_TICK_FONT_PX}" fill="${xmlEscape(textColor)}">${xmlEscape(t.text)}</text>`
+        : `<path d="M ${r2(s0)} ${r2(t.at)} L ${r2(s1)} ${r2(t.at)}" stroke="${AXIS_FAINT}" stroke-width="1"/>` +
+          `<text x="${r2(s0 - AXIS_TICK_GAP)}" y="${r2(t.at + AXIS_TICK_FONT_PX / 3)}" text-anchor="end"${font} font-size="${AXIS_TICK_FONT_PX}" fill="${xmlEscape(textColor)}">${xmlEscape(t.text)}</text>`,
+    )
+    .join('');
+  const baseline = `<path d="M ${r2(b.x1)} ${r2(b.y1)} L ${r2(b.x2)} ${r2(b.y2)}" stroke="${AXIS}" stroke-width="1"/>`;
+  return { axis, baseline };
+}
+
 /** A column chart (or, horizontal, a bar chart): a baseline and one bar per value, plus the key. */
 export function svgBarChart(
   el: Chart,
@@ -239,20 +265,7 @@ export function svgBarChart(
       )
     : null;
   const barM = groups ?? barMarks(area, data, horizontal, el.x, el.y, el.chartAxis === true);
-  const { baseline: b } = barM;
-  const font = ` font-family="${xmlEscape(fontFamily ?? EXPORT_DEFAULT_FONT)}"`;
-  // Show Axis: a faint gridline at each tick and its label, under a column chart's left side or a bar chart's bottom.
-  const [s0, s1] = barM.axis.span;
-  const axis = barM.axis.ticks
-    .map((t) =>
-      horizontal
-        ? `<path d="M ${r2(t.at)} ${r2(s0)} L ${r2(t.at)} ${r2(s1)}" stroke="${AXIS_FAINT}" stroke-width="1"/>` +
-          `<text x="${r2(t.at)}" y="${r2(s1 + AXIS_TICK_GAP + AXIS_TICK_FONT_PX)}" text-anchor="middle"${font} font-size="${AXIS_TICK_FONT_PX}" fill="${xmlEscape(textColor)}">${xmlEscape(t.text)}</text>`
-        : `<path d="M ${r2(s0)} ${r2(t.at)} L ${r2(s1)} ${r2(t.at)}" stroke="${AXIS_FAINT}" stroke-width="1"/>` +
-          `<text x="${r2(s0 - AXIS_TICK_GAP)}" y="${r2(t.at + AXIS_TICK_FONT_PX / 3)}" text-anchor="end"${font} font-size="${AXIS_TICK_FONT_PX}" fill="${xmlEscape(textColor)}">${xmlEscape(t.text)}</text>`,
-    )
-    .join('');
-  const baseline = `<path d="M ${r2(b.x1)} ${r2(b.y1)} L ${r2(b.x2)} ${r2(b.y2)}" stroke="${AXIS}" stroke-width="1"/>`;
+  const { axis, baseline } = svgBarAxis(barM, horizontal, textColor, fontFamily);
   // No value draws no bar (pie-chart.md "No value is a gap"); several series take their series' colours (D281).
   const rect = (bar: BarRect | null, fill: string) =>
     bar
