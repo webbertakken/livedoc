@@ -15,7 +15,7 @@ import {
   TABLE_NAME_TAKEN,
   type SheetTable,
 } from './table';
-import { tableGrowth, withTableGrowth } from './table-store';
+import { isParticipantTableWrite, tableGrowth, withTableGrowth } from './table-store';
 
 const T: SheetTable = {
   id: 'tbl001',
@@ -319,5 +319,107 @@ describe('growth', () => {
     expect(withTableGrowth(l, title)).toBe(title);
     const noCells = { kind: 'layout' as const, changes: [] };
     expect(withTableGrowth(l, noCells)).toBe(noCells);
+  });
+});
+
+describe("a Participant's table write (D388)", () => {
+  const value = { r: 's0r4', c: 's0c1', i: { s: 'new' } };
+  const grown = { ...T, r2: 's0r4' };
+  const bandGrown = { ...BAND, r2: 's0r4' };
+  const write = (changes: unknown[], cells: unknown[] = [value]) =>
+    ({ kind: 'layout', changes, cells }) as SheetWrite;
+
+  it('is exactly the growth its own value makes, its keys in any order', () => {
+    const reordered = Object.fromEntries(Object.entries(grown).reverse());
+    expect(
+      isParticipantTableWrite(
+        layout(),
+        write([
+          { k: 'band', id: 'bnd001', band: bandGrown },
+          { table: reordered, id: 'tbl001', k: 'table' },
+        ]),
+        false,
+      ),
+    ).toBe(true);
+  });
+
+  it('refuses anything more or other: two rows, a rename, a type, a total row, a column, or a part left out', () => {
+    const l = layout();
+    const band = { k: 'band', id: 'bnd001', band: bandGrown };
+    for (const changes of [
+      [{ k: 'table', id: 'tbl001', table: { ...T, r2: 's0r5' } }, band],
+      [{ k: 'table', id: 'tbl001', table: { ...grown, name: 'Mine' } }, band],
+      [{ k: 'table', id: 'tbl001', table: { ...grown, types: { s0c1: 'text' } } }, band],
+      [{ k: 'table', id: 'tbl001', table: { ...grown, total: true } }, band],
+      [{ k: 'table', id: 'tbl001', table: { ...grown, c2: 's0c3' } }, band],
+      [{ k: 'table', id: 'tbl001', table: grown }],
+      [{ k: 'table', id: 'tbl001', table: grown }, band, { k: 'freeze', rows: 1 }],
+    ])
+      expect(isParticipantTableWrite(l, write(changes), false), JSON.stringify(changes)).toBe(
+        false,
+      );
+    expect(isParticipantTableWrite(l, write([]), false)).toBe(false);
+    expect(isParticipantTableWrite(l, { kind: 'cells', cells: [value] }, false)).toBe(false);
+    expect(isParticipantTableWrite(l, { kind: 'layout', changes: 'x' } as never, false)).toBe(
+      false,
+    );
+  });
+
+  it('never grows into a protected range below', () => {
+    const guarded = layout({
+      protections: [
+        { id: 'prt001', can: 'editors', range: { r1: 's0r4', c1: 's0c2', r2: 's0r4', c2: 's0c2' } },
+      ],
+    });
+    const changes = [
+      { k: 'table', id: 'tbl001', table: grown },
+      { k: 'band', id: 'bnd001', band: bandGrown },
+    ];
+    expect(isParticipantTableWrite(guarded, write(changes), false)).toBe(false);
+  });
+
+  it('takes a growth back only as an undo clearing a value in the row it gives up', () => {
+    const l = layout({ tables: [grown], bands: [bandGrown] });
+    const back = [
+      { k: 'table', id: 'tbl001', table: T },
+      { k: 'band', id: 'bnd001', band: BAND },
+    ];
+    const cleared = [{ r: 's0r4', c: 's0c1', i: null }];
+    expect(isParticipantTableWrite(l, write(back, cleared), true)).toBe(true);
+    expect(isParticipantTableWrite(l, write(back, cleared), false)).toBe(false);
+    expect(isParticipantTableWrite(l, write(back, [{ r: 's0r4', c: 's0c4', i: null }]), true)).toBe(
+      false,
+    );
+    expect(isParticipantTableWrite(l, write(back, [{ r: 's0r3', c: 's0c1', i: null }]), true)).toBe(
+      false,
+    );
+    const short = layout({ tables: [{ ...T, r2: 's0r1' }], bands: undefined });
+    expect(
+      isParticipantTableWrite(
+        short,
+        write(
+          [{ k: 'table', id: 'tbl001', table: { ...T, r2: 's0r0' } }],
+          [{ r: 's0r1', c: 's0c1', i: null }],
+        ),
+        true,
+      ),
+    ).toBe(false);
+    const totalled = layout({ tables: [{ ...grown, total: true }], bands: undefined });
+    expect(
+      isParticipantTableWrite(
+        totalled,
+        write([{ k: 'table', id: 'tbl001', table: { ...T, total: true } }], cleared),
+        true,
+      ),
+    ).toBe(false);
+    const unbanded = layout({ tables: [{ ...grown, band: undefined }], bands: undefined });
+    const { band: _b, ...plain } = T;
+    expect(
+      isParticipantTableWrite(
+        unbanded,
+        write([{ k: 'table', id: 'tbl001', table: { ...plain, band: undefined } }], cleared),
+        true,
+      ),
+    ).toBe(true);
   });
 });

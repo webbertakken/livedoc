@@ -311,7 +311,12 @@ The code cites each by its id.
   working (the Director's ruling, 2026-11-27).
 - **D387** A table read from another app's file: its columns None, its look the file's own cell formats (default).
 - **D388** Growth by a Participant's value: the value and the growth are one change, as anyone's; a Participant
-  changes no other part of a table (default).
+  changes no other part of a table (the Director's ruling, 2026-11-27). Why: adding a row of data is the commonest
+  thing a Participant does with a table; the growth is the consequence of their value, not a reshape they chose, and
+  it undoes with it. Two limits keep "never reshape" true: growth only ever adds the one row the value sits in (never
+  a rename, a column, a type or the total row), and never crosses into a protected range. The room judges a
+  Participant's layout write as exactly the growth its own cells make, or that growth taken back by their undo
+  clearing a value in the row it gives up; anything else is refused (403, `[sheets] sheet.table_growth.refused`).
 - **D302** A named function's limits: a name up to 254 characters (Google's), up to 20 placeholders, a definition up
   to 2,000 characters, a description up to 1,000, an argument's description and example up to 200 each (default).
 - **D345** A protection's bounds: up to 100 a sheet, 50 exceptions a protected sheet, a description up to 200
