@@ -16,6 +16,7 @@ import {
   takeDrawing,
 } from '@/lib/text-document/text-document-drawing-pending';
 import type { PicturePlacing } from '@/lib/text-document/text-document-picture-place';
+import { anchorOf } from '@/lib/text-document/text-document-relative-positions';
 
 const { track } = vi.hoisted(() => ({ track: vi.fn() }));
 vi.mock('@/lib/telemetry', () => ({ track }));
@@ -36,10 +37,22 @@ function setup(
     create?: () => string | null;
     // The drawings the writing's pictures name, after its text.
     pictures?: string[];
+    // Suggesting in the body, as this key (review.md "Drawings").
+    suggester?: { key: string } | null;
+    // The pictures' own attributes, by index.
+    attrs?: Record<number, Record<string, unknown>>;
+    // What drawing a drawing tab now draws.
+    drawn?: Uint8Array | null;
   } = {},
 ) {
-  const pictures = (options.pictures ?? []).map((drawing) =>
-    schema.nodes[PICTURE]!.create({ media: 'old', width: 60, height: 60, drawing }),
+  const pictures = (options.pictures ?? []).map((drawing, i) =>
+    schema.nodes[PICTURE]!.create({
+      media: 'old',
+      width: 60,
+      height: 60,
+      drawing,
+      ...options.attrs?.[i],
+    }),
   );
   const doc = schema.node('doc', null, [
     schema.nodes.paragraph!.create(null, [schema.text('Hello'), ...pictures]),
@@ -65,7 +78,7 @@ function setup(
     ids: () => [],
     someoneIn: () => false,
     remove: vi.fn(),
-    draw: async () => null,
+    draw: vi.fn(async (_id: string) => options.drawn ?? null),
   };
   const create = options.create ?? vi.fn(() => 'd1');
   const hook = renderHook(() =>
@@ -78,6 +91,7 @@ function setup(
       placing,
       create,
       drawingTabs,
+      suggester: options.suggester ?? null,
     }),
   );
   return { hook, view, showTab, create, liveDoc, openDrawing, drawingTabs };
@@ -227,5 +241,99 @@ describe('useTextDocumentDrawings', () => {
     drawingReady('d1', { bytes: PNG, stored: null });
     setup();
     expect(drawingPending('d1')).not.toBeNull();
+  });
+
+  // review.md "Drawings": while suggesting, an Editor's drawing is changed on a copy, suggested in its place.
+  describe('while suggesting', () => {
+    const ADA = { key: 'k-ada' };
+
+    it('opens a copy of anyone else’s drawing, the picture still naming the old one', () => {
+      const { hook, view, openDrawing, drawingTabs } = setup({ pictures: ['d1'], suggester: ADA });
+      hook.result.current.open!('d1', 6);
+      expect(drawingTabs.copy).toHaveBeenCalledWith('d1', 'w');
+      expect(view.state.doc.nodeAt(6)!.attrs.drawing).toBe('d1');
+      expect(openDrawing).toHaveBeenCalledWith('copy');
+      expect(drawingPending('copy')).toMatchObject({ textDocumentTabId: 'w', replaces: 'd1' });
+      takeDrawing('copy');
+    });
+
+    it('opens one’s own suggested drawing itself, as part of its suggestion', () => {
+      const { hook, openDrawing, drawingTabs } = setup({
+        pictures: ['d1'],
+        suggester: ADA,
+        attrs: {
+          0: { insertion: { id: 's1', at: 1, author: { ...ADA, name: 'Ada', colour: '#000' } } },
+        },
+      });
+      hook.result.current.open!('d1', 6);
+      expect(drawingTabs.copy).not.toHaveBeenCalled();
+      expect(openDrawing).toHaveBeenCalledWith('d1');
+      expect(drawingPending('d1')?.replaces).toBeUndefined();
+    });
+
+    it('opens nothing when no copy could be made', () => {
+      const { hook, openDrawing, drawingTabs } = setup({ pictures: ['d1'], suggester: ADA });
+      drawingTabs.copy.mockReturnValue(null);
+      hook.result.current.open!('d1', 6);
+      expect(openDrawing).not.toHaveBeenCalled();
+      expect(drawingPending('d1')).toBeNull();
+    });
+
+    it('puts the copy’s picture in the old one’s place, its width kept, once it is changed', async () => {
+      const { view: first } = setup({ pictures: ['d1'] });
+      const anchor = anchorOf(first.state, 6);
+      putDrawingPending('copy', {
+        textDocumentTabId: 'w',
+        documentTab: 't.0',
+        anchor,
+        replaces: 'd1',
+      });
+      drawingReady('copy', { bytes: PNG, stored: null });
+      const { view, drawingTabs } = setup({
+        pictures: ['d1'],
+        suggester: ADA,
+        drawn: new Uint8Array([1]),
+      });
+      await waitFor(() => expect(drawingPending('copy')).toBeNull());
+      expect(drawingTabs.draw).toHaveBeenCalledWith('d1');
+      expect(view.state.doc.nodeAt(6)!.attrs).toMatchObject({
+        drawing: 'copy',
+        width: 60,
+        height: 30,
+      });
+      expect(drawingTabs.remove).not.toHaveBeenCalled();
+      expect(track).toHaveBeenCalledWith('Element', 'Changed', 'TextDocumentImageDrawing');
+    });
+
+    it('suggests nothing and removes the copy when the drawing is unchanged', async () => {
+      const { view: first } = setup({ pictures: ['d1'] });
+      const anchor = anchorOf(first.state, 6);
+      putDrawingPending('copy', {
+        textDocumentTabId: 'w',
+        documentTab: 't.0',
+        anchor,
+        replaces: 'd1',
+      });
+      drawingReady('copy', { bytes: PNG, stored: null });
+      const { view, drawingTabs } = setup({ pictures: ['d1'], suggester: ADA, drawn: PNG.slice() });
+      await waitFor(() => expect(drawingTabs.remove).toHaveBeenCalledWith(['copy']));
+      expect(view.state.doc.nodeAt(6)!.attrs.drawing).toBe('d1');
+      expect(drawingPending('copy')).toBeNull();
+    });
+
+    it('dims Insert’s drawing for a Participant, saying an Editor adds one', () => {
+      const { hook } = setup({ canEdit: false, suggester: { key: 'k-ben' } });
+      expect(hook.result.current.actions[DRAWING_NEW_ITEM]).toMatchObject({
+        disabled: true,
+        note: 'Editing only',
+        hint: 'An Editor adds a drawing in Editing.',
+      });
+    });
+
+    it('starts a drawing for an Editor while suggesting', () => {
+      const { hook, create } = setup({ suggester: ADA });
+      hook.result.current.actions[DRAWING_NEW_ITEM]!.run();
+      expect(create).toHaveBeenCalledTimes(1);
+    });
   });
 });

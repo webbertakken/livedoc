@@ -117,10 +117,7 @@ import { useTextDocumentSaveStatus } from '@/lib/text-document/useTextDocumentSa
 import { useTextDocumentZoom } from '@/lib/text-document/useTextDocumentZoom';
 import { levelInMode, proposalsInMode } from '@/lib/office/office-mode';
 import { useOfficeMode } from '@/lib/office/useOfficeMode';
-import {
-  notYetSuggestedActions,
-  TEXT_DOCUMENT_MODES,
-} from '@/lib/text-document/text-document-modes';
+import { TEXT_DOCUMENT_MODES } from '@/lib/text-document/text-document-modes';
 import { OfficePanel, OfficePanelLayout } from '@/components/office/OfficePanel';
 import { TextDocumentRightPanel } from './TextDocumentRightPanel';
 import { useTextDocumentWatermark } from './useTextDocumentWatermark';
@@ -317,7 +314,7 @@ export function TextDocumentSurface({
     mode,
     choice: modeChoice,
     actions: modeActions,
-  } = useOfficeMode(level, TEXT_DOCUMENT_MODES, 'TextDocumentMode');
+  } = useOfficeMode(level, TEXT_DOCUMENT_MODES, 'TextDocumentMode', scope.tabId);
   // Previewing the writing settled (review.md "Reviewing suggestions"), the body shows a copy: it takes no edits.
   const preview = useTextDocumentReviewPreview({
     doc: liveDoc,
@@ -1038,11 +1035,19 @@ export function TextDocumentSurface({
   useLayoutEffect(() => {
     takePictureFiles.current = pictures.take;
   });
-  // Insert > Drawing > New, and a drawing placed once made (objects.md "Drawings").
+  // Who suggests in the body, for drawings put in or changed while suggesting (review.md "Drawings").
+  const commenterKey = commenter?.key ?? null;
+  const drawingSuggester = useMemo(
+    () => (bodySuggests && commenterKey ? { key: commenterKey } : null),
+    [bodySuggests, commenterKey],
+  );
+  // Insert > Drawing > New, and a drawing placed once made (objects.md "Drawings"): an Editor's, suggested while
+  // suggesting.
   const drawings = useTextDocumentDrawings({
     view: editorView,
     tabId: scope.tabId,
-    canEdit: bodyWrites,
+    canEdit: bodyWrites || (bodySuggests && canEdit),
+    suggester: drawingSuggester,
     shownTab,
     showTab,
     placing: pictures.placing,
@@ -1062,9 +1067,10 @@ export function TextDocumentSurface({
     showTab,
   });
   // Drawings no picture names, removed once its writing has loaded (objects.md "Deleting").
+  // An Editor's, in any mode: a suggestion is settled in Suggesting too (review.md "Drawings").
   useTextDocumentDrawingOrphans({
     ready: state === 'ready',
-    canEdit: bodyWrites,
+    canEdit,
     tabId: scope.tabId,
     liveDoc,
     drawingTabs,
@@ -1164,11 +1170,8 @@ export function TextDocumentSurface({
       ...pictureSize.actions,
       ...tableProperties.actions,
       ...headers.actions,
-      // What cannot be suggested yet, dimmed and saying where it runs (review.md "Not yet").
-      ...(mode === 'suggesting' ? notYetSuggestedActions() : {}),
     }),
     [
-      mode,
       breakActions,
       lineActions,
       tabs.actions,

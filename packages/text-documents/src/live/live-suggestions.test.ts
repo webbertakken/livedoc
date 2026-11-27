@@ -8,6 +8,8 @@ import type { Table } from '../model/tables';
 import { TextDocument } from '../model/text-document';
 import { writeLiveDocument } from './live-write';
 import { readLiveDocument } from './live-read';
+import { liveGalleryImages } from './live-media';
+import { MEDIA_MAP } from './live-names';
 import {
   DELETION_MARK,
   FORMAT_CHANGE_MARK,
@@ -142,6 +144,56 @@ describe('LiveSuggestions.read', () => {
       ['s4', [{ kind: 'block-insertion', text: 'table', element: 'table' }]],
     ]);
     expect(LiveSuggestions.count(doc)).toBe(4);
+  });
+
+  it('reads a picture showing a drawing as a drawing, in a replacement’s two parts', () => {
+    const { doc } = written({
+      runs: ['one'],
+      atom: { media: 'm1', drawing: 'd-old', [DELETION_MARK]: mark('s1') },
+    });
+    const paragraph = doc.getXmlFragment('body').get(0) as Y.XmlElement;
+    const picture = new Y.XmlElement('picture');
+    picture.setAttribute('media', 'm2');
+    picture.setAttribute('drawing', 'd-new');
+    picture.setAttribute(INSERTION_MARK, mark('s1') as unknown as string);
+    paragraph.push([picture]);
+    expect(LiveSuggestions.read(doc)[0]!.parts).toEqual([
+      { kind: 'deletion', text: 'picture', element: 'drawing' },
+      { kind: 'insertion', text: 'picture', element: 'drawing' },
+    ]);
+  });
+
+  // review.md "Drawings": a rejected drawing's PNG is named by nothing, so its push drops the reference and the daily
+  // image sweep (images.md "Retention") reclaims it; one another picture still shows stays referenced, never swept.
+  it('drops a rejected drawing’s gallery image from the references, keeping one another picture shows', () => {
+    const { doc } = written({
+      runs: ['one'],
+      atom: { media: 'kept', drawing: 'd-old', [DELETION_MARK]: mark('s1') },
+    });
+    const paragraph = doc.getXmlFragment('body').get(0) as Y.XmlElement;
+    for (const [media, drawing, id] of [
+      ['copy', 'd-copy', 's1'],
+      ['shared', 'd-other', 's2'],
+    ] as const) {
+      const picture = new Y.XmlElement('picture');
+      picture.setAttribute('media', media);
+      picture.setAttribute('drawing', drawing);
+      picture.setAttribute(INSERTION_MARK, mark(id) as unknown as string);
+      paragraph.push([picture]);
+    }
+    const plain = new Y.XmlElement('picture');
+    plain.setAttribute('media', 'shared-plain');
+    paragraph.push([plain]);
+    const media = doc.getMap<unknown>(MEDIA_MAP);
+    media.set('kept', { mediaType: 'image/png', image: 'img-old' });
+    media.set('copy', { mediaType: 'image/png', image: 'img-copy' });
+    // The same bytes deduplicated: one gallery image behind two pictures.
+    media.set('shared', { mediaType: 'image/png', image: 'img-shared' });
+    media.set('shared-plain', { mediaType: 'image/png', image: 'img-shared' });
+    expect(liveGalleryImages(doc).sort()).toEqual(['img-copy', 'img-old', 'img-shared']);
+    expect(LiveSuggestions.reject(doc, 's1', 'test')).toBe(true);
+    expect(LiveSuggestions.reject(doc, 's2', 'test')).toBe(true);
+    expect(liveGalleryImages(doc).sort()).toEqual(['img-old', 'img-shared']);
   });
 
   it('never merges an object into the text beside it', () => {

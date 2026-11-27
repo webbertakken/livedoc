@@ -10,6 +10,7 @@ import {
   INSERTION_MARK,
   PARAGRAPH,
   PARAGRAPH_FORMAT_CHANGE,
+  PICTURE,
   SUGGESTION_MARKS,
   TABLE,
   TABLE_CELL,
@@ -59,13 +60,22 @@ export type SuggestionPartKind =
   | 'block-insertion'
   | 'block-deletion';
 
+/** What a picture that shows a drawing reads as in a suggestion's part (review.md "Drawings"). */
+export const DRAWING_ELEMENT = 'drawing';
+
+/** An object's or a block's name in a suggestion's part: its element's, a drawing's picture a drawing. */
+function elementOf(node: Y.XmlElement): string {
+  const drawing = node.nodeName === PICTURE ? node.getAttribute('drawing') : undefined;
+  return typeof drawing === 'string' && drawing ? DRAWING_ELEMENT : node.nodeName;
+}
+
 /** One stretch or element of a suggestion: its kind, its text (an object's or a block's: its element's name). */
 export type SuggestionPart = {
   readonly kind: SuggestionPartKind;
   readonly text: string;
   /** A format part: the text formatting attributes it changed, as its marks' `before` name them. */
   readonly changed?: readonly string[];
-  /** An object's or a block's part: its element's name. */
+  /** An object's or a block's part: its element's name, `drawing` for a picture that shows a drawing. */
   readonly element?: string;
   /** A break part: the break its paragraph starts with, where it is more than a paragraph break. */
   readonly breakKind?: SuggestedBreakKind;
@@ -189,17 +199,18 @@ function read(doc: Y.Doc): TextDocumentSuggestion[] {
         last = null;
         continue;
       }
+      const element = elementOf(node);
       add(
         node.getAttribute(INSERTION_MARK),
         inParagraph ? 'insertion' : 'block-insertion',
         name,
-        name,
+        element,
       );
       add(
         node.getAttribute(DELETION_MARK),
         inParagraph ? 'deletion' : 'block-deletion',
         name,
-        name,
+        element,
       );
       if (!inParagraph) {
         last = null;

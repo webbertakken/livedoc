@@ -3,7 +3,7 @@
 // its crop dropped, as Replace image does; the first one selected.
 import type { Node as PmNode } from 'prosemirror-model';
 import { NodeSelection, type Command } from 'prosemirror-state';
-import { PICTURE } from '@livedoc/text-documents';
+import { DELETION_MARK, INSERTION_MARK, PICTURE } from '@livedoc/text-documents';
 
 const round3 = (n: number) => Math.round(n * 1000) / 1000 + 0;
 
@@ -26,6 +26,20 @@ export function drawingPicturesIn(doc: PmNode, drawingTabId: string): number[] {
   return found;
 }
 
+/** A drawing's picture's attributes with its new PNG: its width kept, its height the drawing's shape, its crop dropped. */
+function refreshed(
+  attrs: Readonly<Record<string, unknown>>,
+  media: { key: string; pixels: { width: number; height: number } },
+): Record<string, unknown> {
+  const width = typeof attrs.width === 'number' ? attrs.width : 0;
+  return {
+    ...attrs,
+    media: media.key,
+    height: round3((width * media.pixels.height) / media.pixels.width),
+    crop: null,
+  };
+}
+
 /** Puts a drawing's new picture in every picture naming it; false where none does. */
 export const refreshDrawingPictures =
   (
@@ -38,13 +52,7 @@ export const refreshDrawingPictures =
     const tr = state.tr;
     for (const pos of at) {
       const node = tr.doc.nodeAt(pos)!;
-      const width = typeof node.attrs.width === 'number' ? node.attrs.width : 0;
-      tr.setNodeMarkup(pos, undefined, {
-        ...node.attrs,
-        media: media.key,
-        height: round3((width * media.pixels.height) / media.pixels.width),
-        crop: null,
-      });
+      tr.setNodeMarkup(pos, undefined, refreshed(node.attrs, media));
     }
     tr.setSelection(NodeSelection.create(tr.doc, at[0]!));
     dispatch?.(tr);
@@ -58,5 +66,34 @@ export const repointDrawingPicture =
     const node = state.doc.nodeAt(pos);
     if (!node || drawingOfPicture(node) !== from) return false;
     dispatch?.(state.tr.setNodeMarkup(pos, undefined, { ...node.attrs, drawing: to }));
+    return true;
+  };
+
+/**
+ * The picture at `pos`, naming drawing `from`, replaced by its copy `to`'s new picture, as the picture was otherwise
+ * (review.md "Drawings"): while suggesting, the rewrite makes it the old picture's deletion and the new one's insertion,
+ * one suggestion. False where the picture there names another drawing, or the PNG has no size.
+ */
+export const replaceDrawingPicture =
+  (
+    pos: number,
+    from: string,
+    to: string,
+    media: { key: string; pixels: { width: number; height: number } },
+  ): Command =>
+  (state, dispatch) => {
+    const node = state.doc.nodeAt(pos);
+    if (!node || drawingOfPicture(node) !== from) return false;
+    if (media.pixels.width <= 0 || media.pixels.height <= 0) return false;
+    const attrs = {
+      ...refreshed(node.attrs, media),
+      drawing: to,
+      [INSERTION_MARK]: null,
+      [DELETION_MARK]: null,
+    };
+    // Taken out, then put in where it was: never one object replaced in place, which a suggestion cannot take. While
+    // suggesting the old one stays, marked, and the new one lands after it.
+    const tr = state.tr.delete(pos, pos + 1).insert(pos, node.type.create(attrs));
+    dispatch?.(tr.setSelection(NodeSelection.create(tr.doc, pos)));
     return true;
   };

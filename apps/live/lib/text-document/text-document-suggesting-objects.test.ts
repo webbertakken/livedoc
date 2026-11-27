@@ -12,6 +12,7 @@ import { insertPicture } from './text-document-picture-insert';
 import { insertEquation } from './text-document-equation-insert';
 import { insertPageBreak, insertColumnBreak } from './text-document-breaks';
 import { insertHorizontalLine } from './text-document-horizontal-line';
+import { replaceDrawingPicture } from './text-document-drawing-pictures';
 
 const ADA = { key: 'k-ada', name: 'Ada', colour: '#0284c7' };
 const BEN = { key: 'k-ben', name: 'Ben', colour: '#16a34a' };
@@ -49,6 +50,42 @@ function suggest(state: EditorState, tr: Transaction) {
 const idOf = (value: unknown) => (value as { id?: string } | null)?.id;
 
 describe('suggestTransaction on objects in a line', () => {
+  // review.md "Drawings": Save and close on a copy suggests the drawing's replacement.
+  it('suggests a drawing’s replacement: the old picture deleted, the copy’s put in after it, one suggestion', () => {
+    const old = schema.nodes.picture!.create({ media: 'm1', width: 60, height: 60, drawing: 'd1' });
+    const state = stateWith([p('a', old, 'b')], 1);
+    const media = { key: 'm2', pixels: { width: 200, height: 100 } };
+    const next = suggest(state, commanded(state, replaceDrawingPicture(2, 'd1', 'd2', media)));
+    const line = next.doc.firstChild!;
+    const pictures = [line.child(1), line.child(2)];
+    expect(pictures.map((n): unknown[] => [n.attrs.drawing, n.attrs.media])).toEqual([
+      ['d1', 'm1'],
+      ['d2', 'm2'],
+    ]);
+    expect(idOf(pictures[0]!.attrs.deletion)).toBe('s1');
+    expect(idOf(pictures[1]!.attrs.insertion)).toBe('s1');
+    expect(pictures[1]!.attrs.height).toBe(30);
+  });
+
+  it('puts a second replacement of a drawing already suggested deleted in after it, only', () => {
+    const old = schema.nodes.picture!.create({
+      media: 'm1',
+      width: 60,
+      height: 60,
+      drawing: 'd1',
+      deletion: mark('b1', BEN),
+    });
+    const state = stateWith([p('a', old, 'b')], 1);
+    const media = { key: 'm3', pixels: { width: 60, height: 60 } };
+    const next = suggest(state, commanded(state, replaceDrawingPicture(2, 'd1', 'd3', media)));
+    const line = next.doc.firstChild!;
+    expect(idOf(line.child(1).attrs.deletion)).toBe('b1');
+    expect([line.child(2).attrs.drawing, idOf(line.child(2).attrs.insertion)]).toEqual([
+      'd3',
+      's1',
+    ]);
+  });
+
   it('puts a picture in as the person’s insertion and leaves it selected', () => {
     const state = stateWith([p('ab')], 2);
     const next = suggest(

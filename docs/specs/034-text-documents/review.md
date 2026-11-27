@@ -25,7 +25,8 @@ office kinds; this spec says what a text document puts in them.
   only; a mode the level does not allow is not listed. Suggesting shows a Participant an Editor's menus and toolbar,
   its changes being proposals the room judges, with only what can be suggested running
   ([While suggesting](#while-suggesting)).
-- The mode is kept while the document is open, never stored: each open starts at the level's mode `(default)`.
+- The mode is kept while the document is open, never stored: each open starts at the level's mode `(default)`; a
+  drawing opened and closed, or another tab shown and back, finds the mode as it was left.
 - Telemetry: `UI · Changed · TextDocumentMode` when a person changes it.
 
 ## Comments
@@ -279,12 +280,14 @@ office kinds; this spec says what a text document puts in them.
   after it, one suggestion, its card saying "Replace: Drawing". Save and close with the drawing unchanged suggests
   nothing and removes the copy (default). **Accept** keeps the new picture and its drawing tab and takes away the old
   picture and, where no other picture names it, its drawing tab; **Reject** takes away the new picture and its drawing
-  tab with all it holds, so no drawing tab is left behind; its PNG, then named by nothing, goes with the daily
-  [image sweep](../009-elements/images.md) (default). Two people's replacements of one drawing are two suggestions,
+  tab with all it holds, so no drawing tab is left behind; its PNG, then named by no picture, is no reference any more
+  and goes with the daily [image sweep](../009-elements/images.md#retention-unused-image-cleanup) like any image no document places, a
+  gallery's too, while a PNG another picture still shows (the same bytes, stored once) stays (director, 2026-11-27). Two people's replacements of one drawing are two suggestions,
   each on its own copy: the old picture's deletion is the first one's, the other's card saying "Add: Drawing"
-  (default). One's own suggested drawing is opened and changed plainly, part of its suggestion. A Participant, who adds
-  no tabs, has Insert's Drawing dimmed with the note "Editing only" and the hint "An Editor adds a drawing in
-  Editing.", and opens a drawing as it is (default).
+  (default). One's own suggested drawing is opened and changed plainly, part of its suggestion. **A Participant's drawing
+  suggestions are left out** (director, 2026-11-27), a known gap with its reason: a drawing is a drawing tab and a
+  Participant adds no tabs, so Insert's Drawing is dimmed for them with the note "Editing only" and the hint "An Editor
+  adds a drawing in Editing.", and a drawing opens for them as it is.
 - **Whole blocks**: a **table** (Insert > Table), a **section break** (Insert > Break) or a **table of contents**
   (Insert > Table of contents) put in while suggesting is a suggested insertion of the whole block, its card saying
   "Add: Table" ("Add: Section break", "Add: Table of contents"); a paragraph split to make room for it, and the

@@ -5,6 +5,7 @@
 import type { Mark, Node as PmNode } from 'prosemirror-model';
 import {
   DELETION_MARK,
+  DRAWING_ELEMENT,
   FORMAT_CHANGE_MARK,
   INSERTION_MARK,
   PARAGRAPH_FORMAT_CHANGE,
@@ -73,6 +74,8 @@ const OTHER_FORMAT = 'Text formatting';
 /** An object's or a block's name on a card; anything else is an Object. */
 const OBJECT_LABELS: Readonly<Record<string, string>> = {
   picture: 'Picture',
+  // A picture that shows a drawing (review.md "Drawings").
+  [DRAWING_ELEMENT]: 'Drawing',
   equation: 'Equation',
   footnote: 'Footnote',
   field: 'Field',
@@ -121,12 +124,14 @@ export function cardLines(parts: readonly CardPart[]): string[] {
     lines.push(`Format: ${[...known, ...(other ? [OTHER_FORMAT] : [])].join(', ')}`);
   }
 
-  for (const [kind, verb] of [
-    ['object-insertion', 'Add'],
-    ['object-deletion', 'Delete'],
-  ] as const)
-    for (const name of uniqueNames(parts.flatMap((p) => (p.kind === kind ? [p.name] : []))))
-      lines.push(`${verb}: ${name}`);
+  // An object taken out and one of its kind put in, in one suggestion, is its replacement (a drawing changed).
+  const objects = (kind: 'object-insertion' | 'object-deletion') =>
+    uniqueNames(parts.flatMap((p) => (p.kind === kind ? [p.name] : [])));
+  const added = objects('object-insertion');
+  const taken = objects('object-deletion');
+  for (const name of taken) if (added.includes(name)) lines.push(`Replace: ${name}`);
+  for (const name of added) if (!taken.includes(name)) lines.push(`Add: ${name}`);
+  for (const name of taken) if (!added.includes(name)) lines.push(`Delete: ${name}`);
   const breaks = parts.flatMap((p) => (p.kind === 'break' ? [p.breakKind] : []));
   for (const [kind, label] of BREAK_LABELS) if (breaks.includes(kind)) lines.push(`Add: ${label}`);
   if (breaks.includes(undefined)) lines.push('Add: Paragraph break');
@@ -152,7 +157,12 @@ const markOf = (marks: readonly Mark[], name: string) =>
 /** An object's or a block's name on a card, by its element's name. */
 export const objectLabel = (name: string): string => OBJECT_LABELS[name] ?? OTHER_OBJECT;
 
-const objectName = (node: PmNode) => objectLabel(node.type.name);
+const objectName = (node: PmNode) =>
+  objectLabel(
+    node.type.name === 'picture' && typeof node.attrs.drawing === 'string' && node.attrs.drawing
+      ? DRAWING_ELEMENT
+      : node.type.name,
+  );
 
 /** The live state's parts of a suggestion (LiveSuggestions.read) as a card's, for the comments panel's rows. */
 export function cardPartsOf(parts: readonly SuggestionPart[]): CardPart[] {
