@@ -1,7 +1,7 @@
 # Review surfaces
 
-**Status: being built.** Comment threads and the comments panel are built for the text document; version history
-and the mode switch are still to come.
+**Status: built.** Comment threads, the comments panel, version history and the editing mode switch are built for
+the text document; the spreadsheet and the PDF document plug into the same components.
 
 The surfaces the office kinds share for review: comment threads anchored to a range, the comments panel, version
 history, and the editing mode switch. Built once for the [text document](../034-text-documents/text-document.md), the
@@ -43,11 +43,14 @@ plugs its own rendering in later. The shell owns:
   one's colour and their name) and, for one from a restore, "Restored from …"; **Only show named versions**;
   **Show changes**; and each version's menu (Name this version, Rename, Remove name, Restore this version, Make a
   copy), each item offered as the kind allows.
-- **The keys**: ⌘⌥⇧H opens it; ⌘⌥ N then R and ⌘⌥ P then R go to the next and previous change; Escape and Back
-  leave it, on the current version. Arrow keys move through the list, Enter shows a version (a listbox).
+- **The keys**: ⌘⌥⇧H opens it; Ctrl+Alt+N then R (or Ctrl+Alt+K) and Ctrl+Alt+P then R (or Ctrl+Alt+J), Ctrl+⌘ on a
+  Mac, go to the next and previous change ([Keyboard shortcuts](../034-text-documents/keyboard-shortcuts.md));
+  Escape and Back leave it, on the current version. Arrow keys move through the list, Enter shows a version (a listbox).
 - **Who**: as each kind's review spec says; the shell renders only what the session's `can` allows.
 
-The kind supplies the versions (list, read, name, restore, copy), the rendering of a version and of its changes;
+Built once (`components/office/review/OfficeVersionHistory.tsx`, its rows and menus pure in
+`lib/office/office-version-list.ts`). The kind supplies the versions (list, read, name, restore, copy), the rendering
+of a version and of its changes;
 a text document's are in [Review](../034-text-documents/review.md#version-history) and
 [Live editing and storage](../034-text-documents/live-editing-and-storage.md#versions); a PDF document's version is
 a stored file and a point in its live changes ([Saving](../035-pdf-documents/saving.md#previous-versions-and-version-history)).
@@ -58,7 +61,7 @@ Editing, Suggesting, Viewing: a menu in the title row, per person, starting at t
 allows. A kind without suggestions (the spreadsheet, where Google has none) offers Editing and Viewing only. A PDF
 document declares its own three: Reviewing, Editing and Viewing
 ([Editing modes](../035-pdf-documents/editing-modes.md)). The switch itself is the office shell's
-([Modes](../004-interface-design/office-shell.md#modes)).
+([Modes](../004-interface-design/office-shell.md#modes)), built once (`components/office/OfficeModeSwitch.tsx`).
 
 ## Share roles
 

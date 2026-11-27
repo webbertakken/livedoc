@@ -1,6 +1,6 @@
 # Review
 
-**Status: being built.** Comment threads are kept beside the writing, travel in both formats' files, and the room
+**Status: built.** Comment threads are kept beside the writing, travel in both formats' files, and the room
 judges a Participant's; they are drawn and added in the margin, listed in the comments panel and reached from the
 keyboard; people react to them, mention one another and assign a comment, a mention or an assignment emailing whom
 it names, and the Inbox lists the threads and assigned comments of those they concern. Suggestions are kept in the
@@ -8,7 +8,8 @@ writing, travel in both formats' files as tracked changes and the room judges a 
 Participants suggest in Suggesting mode, from the writing, the menus and the toolbar; suggestion cards accept and
 reject one, the Suggested edits panel all at once, and Tools > Compare documents makes a comparison. The room
 sends a Viewer a copy without comments or suggestion authors, and Viewing draws the writing as a Viewer sees it.
-Version history names, restores and copies versions; notifications are still to come.
+Version history names, restores, copies and compares versions and says the last edit; where email is configured,
+each person's Notification settings email them a document's new comments and others' changes, batched.
 
 Comments, suggestions, version history, comparing documents and notifications in a [text document](text-document.md).
 The panels and threads are the shared [review surfaces](../012-collaboration/review-surfaces.md), built once for the
