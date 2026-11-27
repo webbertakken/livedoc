@@ -95,6 +95,7 @@ const CONTENT_KINDS =
   'on "pie-chart" "treemap" tiles the plot with the slices, each tile’s area in proportion to its value; ' +
   'on "pie-chart" "gauge" draws a dial per slice on one shared scale from zero; ' +
   '"scorecard" writes the first series’ sum large, and its change from the second series’ sum (green over, red under); ' +
+  '"timeline" places each point along a time axis by its category read as an ISO date (2018-01-31 or 2018-01-31T09:30); ' +
   '"combo" draws each series as columns, a line, an area or a stepped area, by its "type" ("column", "line", "area" or "stepped-area"; ' +
   'by default the first half of the series columns, the rest lines); on "pie-chart" "doughnut" opens the middle. "chartValues": true prints each mark\'s ' +
   "number on the chart (a pie's as percentages when its values add up to 100; a column chart also " +

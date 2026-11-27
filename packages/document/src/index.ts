@@ -749,6 +749,8 @@ export * from './chart-waterfall';
 export * from './chart-treemap';
 export * from './chart-gauge';
 export * from './chart-scorecard';
+export * from './chart-timeline';
+export * from './chart-dates';
 export { scorecardChangeInk } from './svg-render-scorecard';
 export * from './chart-axis';
 export * from './chart-values';

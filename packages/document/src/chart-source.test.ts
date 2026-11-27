@@ -78,6 +78,16 @@ describe('a chart drawn from a sheet range', () => {
     });
   });
 
+  it('reads a Timeline’s dated label column as ISO dates (pie-chart.md "Timeline")', () => {
+    const dated = { ...table, categories: ['01/01/2018', 'soon'], serials: [43101.5, null] };
+    expect(
+      chartFieldsFromTable({ shape: 'line-chart', chartVariant: 'timeline' }, dated),
+    ).toMatchObject({ lineCategories: ['2018-01-01T12:00', 'soon'] });
+    expect(chartFieldsFromTable({ shape: 'line-chart' }, dated)).toMatchObject({
+      lineCategories: ['01/01/2018', 'soon'],
+    });
+  });
+
   it('names a scatter chart’s points by a column of text, the next its x (pie-chart.md "Scatter\'s point names")', () => {
     const scatter = { shape: 'line-chart', chartVariant: 'scatter' };
     const named = {

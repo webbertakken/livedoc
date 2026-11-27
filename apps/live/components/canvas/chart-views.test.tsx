@@ -291,6 +291,24 @@ describe('chart views', () => {
     expect(bare.container.textContent).toContain('Subtotal');
   });
 
+  it('places a timeline’s points by date, unmarked, and reads a point’s date (Timeline, D347)', () => {
+    const { container } = render(
+      <LineChartView
+        element={el('line-chart', {
+          chartVariant: 'timeline',
+          lineCategories: ['2018-01-01', '2018-02-01', '2018-03-01'],
+          lineSeries: [{ name: 'Expenses', values: [300, 320, 200], color: '#aa3300' }],
+        })}
+        textColor="#000"
+      />,
+    );
+    expect(container.querySelector('path[stroke="#aa3300"]')).not.toBeNull();
+    expect(container.querySelector('circle[fill="#aa3300"]')).toBeNull();
+    expect(container.textContent).toContain('Feb 2018');
+    fireEvent.pointerEnter(container.querySelectorAll('circle[fill="transparent"]')[1]!);
+    expect(container.textContent).toContain('Feb 1, 2018 · Expenses');
+  });
+
   it('writes a scorecard’s key value, its name and its change, and nothing for no value (Scorecard, D345)', () => {
     const { container } = render(
       <LineChartView

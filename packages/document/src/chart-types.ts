@@ -21,6 +21,7 @@ export const CHART_TYPES = [
   'treemap',
   'gauge',
   'scorecard',
+  'timeline',
   'combo',
 ] as const;
 export type ChartType = (typeof CHART_TYPES)[number];
@@ -40,6 +41,7 @@ export const CHART_VARIANTS = [
   'treemap',
   'gauge',
   'scorecard',
+  'timeline',
   'combo',
 ] as const;
 export type ChartVariant = (typeof CHART_VARIANTS)[number];
@@ -65,6 +67,7 @@ const SHAPES: Record<ChartType, { shape: ChartKind; chartVariant?: ChartVariant 
   treemap: { shape: 'pie-chart', chartVariant: 'treemap' },
   gauge: { shape: 'pie-chart', chartVariant: 'gauge' },
   scorecard: { shape: 'line-chart', chartVariant: 'scorecard' },
+  timeline: { shape: 'line-chart', chartVariant: 'timeline' },
   combo: { shape: 'line-chart', chartVariant: 'combo' },
 };
 
@@ -87,6 +90,7 @@ export const CHART_TYPE_LABELS: Record<ChartType, string> = {
   treemap: 'Treemap',
   gauge: 'Gauge',
   scorecard: 'Scorecard',
+  timeline: 'Timeline',
   combo: 'Combo',
 };
 

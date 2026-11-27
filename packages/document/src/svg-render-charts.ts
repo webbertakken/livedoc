@@ -43,6 +43,7 @@ import { pointsMarked } from './chart-stepped';
 import { chartTypeOf, lineVariantOf } from './chart-types';
 import { chartStackOf } from './chart-stack';
 import { comboKeyItems, comboMarks, comboValueLabels, isComboChart } from './chart-combo';
+import { isTimelineChart, timelineMarks } from './chart-timeline';
 import { LINE_DEFAULT_CATEGORIES, LINE_DEFAULT_SERIES, type ChartKeyItem } from './data-shapes';
 import type { BoxedElement } from './index';
 import { legendFontPx } from './label-font';
@@ -381,8 +382,13 @@ export function svgLineChart(
         el.chartSmooth === true,
       )
     : null;
+  // A Timeline places its points by date (pie-chart.md "Timeline").
+  const timeline = isTimelineChart(el)
+    ? timelineMarks(area, categories, series, el.x, el.y, el.chartAxis === true)
+    : null;
   const m =
     combo ??
+    timeline ??
     lineMarks(
       area,
       categories,

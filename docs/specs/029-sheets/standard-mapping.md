@@ -527,7 +527,8 @@ each suite writes its own, so LibreOffice, Excel and Google Sheets open them as 
   Waterfall chart as a Column chart of its changes, as it is (Excel's waterfall is a `cx:chart` too) (D327),
   and a Treemap chart as a Pie chart of the same slices, the same shares of a whole (D329),
   and a Gauge chart, which no format holds, as a Bar chart of its values (D331),
-  and a Scorecard chart, which no format holds either, as a Column chart of its series (D346). The file also keeps the **original** for LiveDoc, a record of what the nearest type lost: its type, on a
+  and a Scorecard chart, which no format holds either, as a Column chart of its series (D346),
+  and a Timeline chart as a Line chart of its series over its dates (D348). The file also keeps the **original** for LiveDoc, a record of what the nearest type lost: its type, on a
   Combo chart each series' type in series order, and the sum the written chart reads back as (as "Kept while
   unchanged" sums it), as JSON (`{"type":"stepped-area","sum":"0a1b2c3d"}`,
   `{"type":"combo","series":["column","stepped-area"],"sum":"…"}`). It travels with the chart, in the chart's own
@@ -728,6 +729,8 @@ The code cites each by its id.
   reading one block of its own sheet and naming no part of its own; else the drawing is kept whole (default).
 - **D276** A read chart unchanged: its read sum (type, titles, legend, values, axis, alt, place, size, cells by
   position) equals the written one's; its kept chart part is then written in its place under a new name (default).
+- **D348** A Timeline chart in a file: written in both formats as a Line chart of its series and labels, the original
+  kept (D290) (default).
 - **D346** A Scorecard chart in a file: written in both formats as a Column chart of its series and labels, the
   original kept (D290) (default).
 - **D331** A Gauge chart in a file: written in both formats as a Bar chart of its series and labels, the original kept

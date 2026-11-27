@@ -24,6 +24,7 @@ export const SHEET_CHART_TYPES = [
   'treemap',
   'gauge',
   'scorecard',
+  'timeline',
   'combo',
 ] as const;
 export type SheetChartType = (typeof SHEET_CHART_TYPES)[number];

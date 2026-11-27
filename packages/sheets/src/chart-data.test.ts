@@ -99,6 +99,20 @@ describe('a chart from a range', () => {
       numbered: false,
       named: false,
     });
+    // pie-chart.md "Timeline": a dated label column carries its serials; a gap in it none.
+    const days = setup({
+      A1: 'Day',
+      B1: 'Index',
+      A2: '01/01/2018',
+      B2: '40',
+      A3: 'soon',
+      B3: '41',
+    });
+    expect(sheetChartTable(days.b.wb, days.link(0, 0, 2, 1), 'en-GB')!.serials).toEqual([
+      43101,
+      null,
+    ]);
+    expect(sheetChartTable(b.wb, link(0, 0, 2, 2), 'en-GB')).not.toHaveProperty('serials');
     const counted = setup({ A1: 'Cost', B1: 'Index', A2: '1', B2: '40' });
     expect(sheetChartTable(counted.b.wb, counted.link(0, 0, 1, 1), 'en-GB')!.named).toBe(false);
     expect(emptyChartTable().named).toBe(false);
