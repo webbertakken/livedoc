@@ -94,11 +94,60 @@ test('a filter leaves in an Excel file, comes back through LibreOffice, and its 
   await expect(page.locator(READY)).toBeVisible();
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Fruit from LibreOffice');
   // LibreOffice keeps the view's range as a name of its own: kept quietly, so nothing is reported.
-  await expect(page.getByRole('dialog', { name: 'Opened “Fruit from LibreOffice”' })).toHaveCount(0);
+  await expect(page.getByRole('dialog', { name: 'Opened “Fruit from LibreOffice”' })).toHaveCount(
+    0,
+  );
   await expect(shown(page, 'pear')).toHaveCount(1);
   await expect(shown(page, 'plum')).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'Filter column 1' })).toBeVisible();
   await settle(page);
   await page.screenshot({ path: test.info().outputPath('filter-files-from-libreoffice.png') });
+  expectNoPageErrors(pageErrors);
+});
+
+// data-tools.md "A table's filter" (D481): Create a Filter is dimmed over part of a table, saying why; inside the
+// table it makes the table's own filter, over its header and data rows.
+test('Create a Filter over part of a table is dimmed, and inside it makes the table’s filter', async ({
+  page,
+  pageErrors,
+}) => {
+  test.setTimeout(120_000);
+  await page.setViewportSize({ width: 1280, height: 860 });
+  await page.goto('/new?kind=spreadsheet');
+  await page.waitForURL(/\/document\//);
+  await expect(page.locator(READY)).toBeVisible();
+  for (const [cell, text] of [
+    ['A1', 'Fruit'],
+    ['B1', 'Count'],
+    ['A2', 'apple'],
+    ['B2', '3'],
+    ['A3', 'plum'],
+    ['B3', '1'],
+  ] as const)
+    await typeInto(page, cell, text);
+  await select(page, 'A2');
+  await (await officeMenuItem(page, ['Format', 'Convert to Table'])).click();
+  await expect(page.getByRole('button', { name: 'Table1 table menu' })).toBeVisible();
+  await page.keyboard.press('Escape');
+
+  // A range reaching past the table: the item is dimmed with its note.
+  await select(page, 'A1:D3');
+  await page
+    .getByRole('menubar', { name: 'Menu bar' })
+    .getByRole('menuitem', { name: 'Data' })
+    .click();
+  const item = page.getByRole('menuitem', { name: /^Create a Filter/ });
+  await expect(item).toBeDisabled();
+  await expect(item).toContainText('Overlaps Table1');
+  await settle(page);
+  await page.screenshot({ path: test.info().outputPath('filter-files-table-dimmed.png') });
+  await page.keyboard.press('Escape');
+
+  // Inside the table: the table's filter, its buttons on the table's header.
+  await select(page, 'B2');
+  await (await officeMenuItem(page, ['Data', 'Create a Filter'])).click();
+  await expect(page.getByRole('button', { name: 'Filter column 1' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Filter column 2' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Filter column 3' })).toHaveCount(0);
   expectNoPageErrors(pageErrors);
 });
