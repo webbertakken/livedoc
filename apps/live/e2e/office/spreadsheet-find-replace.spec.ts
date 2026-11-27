@@ -52,7 +52,7 @@ test('Find and Replace finds across sheets and replaces every match in one step'
   // Ctrl+F's bar, then More Options: the dialog on the bar's text.
   await page.keyboard.press('Control+f');
   const bar = page.getByRole('search', { name: 'Find in sheet' });
-  await bar.getByLabel('Find').fill('apple');
+  await bar.getByLabel('Find', { exact: true }).fill('apple');
   await bar.getByRole('button', { name: 'More Options' }).click();
   const dialog = page.getByRole('dialog', { name: 'Find and Replace' });
   await expect(dialog).toBeVisible();

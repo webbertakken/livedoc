@@ -313,8 +313,8 @@ sheet's, seen by everyone, kept by row and column ids as a named range is.
   Google counts; with none, `No results for "a"`. Values are checked against the sheets' validation
   ([Where values are checked](data-validation.md#where-values-are-checked)).
 - An Editor finds and replaces; a Participant replaces values only (Also Search Within Formulas finds, never
-  replaces), cells under a protection that does not admit them left as they are and counted after the line
-  (`2 protected cells were left as they were`, D458); a Viewer's dialog has Find and Done only.
+  replaces); anyone's cells under a protection that does not admit them are left as they are and counted after the
+  line (`2 protected cells were left as they were`, D458); a Viewer's dialog has Find and Done only.
 
 ## Who may do what
 
@@ -414,9 +414,9 @@ The code cites each by its id.
 - **D457** Find's order and words: row by row from the active cell, the open sheet then the sheet bar's order,
   hidden sheets passed over, looping at the end; "No more results, looping around" and `No results for "x"`
   (default; the Sheets API has no Find to measure).
-- **D458** Replace by a Participant: values only, never a formula's text; cells under a protection that does not admit
-  the person are left and counted, so a Replace All still replaces the rest, as typing would refuse them one by one
-  (default).
+- **D458** Replace and who may write: a Participant replaces values only, never a formula's text; anyone's cells under a
+  protection that does not admit them are left and counted, so a Replace All still replaces the rest, as typing would
+  refuse them one by one (default).
 - **D459** Also Search Within Links: finds a cell by its link's address, a `HYPERLINK`'s worked out; the address
   changes only as formula text, under Also Search Within Formulas, as Google's `findReplace` changed
   `http://a.example` only with `includeFormulas` (the same probe; default for finding).
