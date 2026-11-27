@@ -404,7 +404,7 @@ describe('protections in ODF', () => {
     const again = decode(
       writeWorkbook(asSheets(made), { ...record, format: 'fods' }, 'Book', 'fods', made.kept).data,
     );
-    expect(again).toContain(` table:protected="true"${KEY.replace(' loext:', ' loext:')}`);
+    expect(again).toContain(` table:protected="true"${KEY}`);
     const excel = await worksheetOf(
       writeWorkbook(asSheets(made), record, 'Book', 'xlsx', made.kept).data,
     );
