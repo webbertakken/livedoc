@@ -210,26 +210,27 @@ describe('a pivot table another app changed', () => {
 });
 
 describe('pivot tables beside the file’s own', () => {
-  const google = (ext: string) =>
-    readFileSync(join(import.meta.dirname, '..', '..', 'corpus', 'google', `pivot-tables.${ext}`));
+  const corpus = (path: string) =>
+    readFileSync(join(import.meta.dirname, '..', '..', 'corpus', path));
 
+  // Excel's sample keeps its pivot table over a table (by the table's name); Google's ODS its custom groups.
   it.each([
-    ['xlsx', 'xlsx'],
-    ['ods', 'ods'],
+    ['excel/ExcelPivotTableSample.xlsx', 'xlsx', 'Tabelle1', 'Tabelle2', 3, 2],
+    ['google/pivot-tables.ods', 'ods', 'Sales', 'Plain', 24, 5],
   ] as const)(
-    'writes LiveDoc’s pivot table beside Google’s kept ones in %s',
-    async (ext, format) => {
-      const opened = await reopened(new Uint8Array(google(ext)));
-      const sales = opened.sheets.find((s) => s.title === 'Sales')!;
-      const plain = opened.sheets.find((s) => s.title === 'Plain')!;
+    'writes LiveDoc’s pivot table beside the kept ones of %s',
+    async (path, format, data, onto, lastRow, lastCol) => {
+      const opened = await reopened(new Uint8Array(corpus(path)));
+      const sales = opened.sheets.find((s) => s.title === data)!;
+      const plain = opened.sheets.find((s) => s.title === onto)!;
       const { rows, cols } = sales.layout;
       const ours: SheetPivot = {
         id: 'ours01',
         kind: 'pivot',
         at: { r: plain.layout.rows[40]!, c: plain.layout.cols[10]! },
-        source: { r1: rows[0]!, c1: cols[0]!, r2: rows[24]!, c2: cols[5]!, s: sales.id },
-        rows: [{ col: cols[5]! }],
-        values: [{ col: cols[3]!, summary: 'COUNT' }],
+        source: { r1: rows[0]!, c1: cols[0]!, r2: rows[lastRow]!, c2: cols[lastCol]!, s: sales.id },
+        rows: [{ col: cols[0]! }],
+        values: [{ col: cols[1]!, summary: 'COUNT' }],
       };
       const sheets = opened.sheets.map((s) =>
         s === plain
@@ -242,11 +243,11 @@ describe('pivot tables beside the file’s own', () => {
       expect(again.kept?.items.some((i) => /pivotCaches|data-pilot-tables/.test(i.xml))).toBe(true);
       if (format === 'xlsx') {
         const files = await entries(written.data);
-        // Google's six kept beside the ones read and LiveDoc's own.
+        // Excel's one kept beside the one read and LiveDoc's own.
         const tables = [...files.keys()].filter((n) =>
           /^xl\/pivotTables\/pivotTable\d+\.xml$/.test(n),
         );
-        expect(tables).toHaveLength(6 + pivotsOf(again.sheets).length);
+        expect(tables).toHaveLength(1 + pivotsOf(again.sheets).length);
       } else {
         const files = await entries(written.data);
         expect(files.get('content.xml')!.match(/<table:data-pilot-tables>/g)).toHaveLength(1);

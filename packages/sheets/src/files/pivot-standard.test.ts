@@ -93,9 +93,10 @@ describe("Google Sheets' exports read", () => {
   it.each([
     [
       'xlsx',
-      [...WHOLE, 'Sort by column item'],
-      // Grouped by a `fieldGroup` LiveDoc does not read yet.
+      // Its groupings by `fieldGroup` read too (D617).
       [
+        ...WHOLE,
+        'Sort by column item',
         'By quarter',
         'Custom groups',
         'By year',
@@ -103,6 +104,7 @@ describe("Google Sheets' exports read", () => {
         'By day-month',
         'Price intervals',
       ],
+      [],
     ],
     // Its groupings are left out of the ODS, but for a custom group's field named on its own.
     ['ods', WHOLE, ['Custom groups']],
@@ -136,11 +138,23 @@ describe("Google Sheets' exports read", () => {
   });
 
   it('names what it keeps in the import report', async () => {
-    const book = await opened(corpus('google/pivot-tables.xlsx'));
+    const book = await opened(corpus('google/pivot-tables.ods'));
     const line = importReport(book.losses).find((l) => l.k === 'pivot_unread')!;
     expect(importReportLine(line)).toBe(
-      '6 pivot tables LiveDoc cannot work out are kept as the file holds them: By quarter, Custom groups and By year',
+      '1 pivot table LiveDoc cannot work out is kept as the file holds it: Custom groups',
     );
+  });
+
+  it('reads its groupings by fieldGroup into the model (D617)', async () => {
+    const book = await opened(corpus('google/pivot-tables.xlsx'));
+    const grouping = (title: string) => book.pivotOf(title)!.rows![0]!.grouping;
+    expect(grouping('By quarter')).toEqual({ k: 'date', rule: 'quarter' });
+    expect(grouping('By day-month')).toEqual({ k: 'date', rule: 'dayMonth' });
+    expect(grouping('Price intervals')).toEqual({ k: 'interval', size: 1, start: 0, end: 4 });
+    expect(grouping('Custom groups')).toEqual({
+      k: 'custom',
+      groups: [{ name: 'Pome', items: ['Apples', 'Pears'] }],
+    });
   });
 
   it('writes a read pivot table with its own record, read back the same', async () => {
@@ -303,11 +317,13 @@ describe('the XLSX standard form read', () => {
       ),
     ).toBeNull();
     expect(read(TABLE('', '', 'nonsense'))).toBeNull();
-    // Too few fields for its source, or a source column grouped in place.
+    // Too few fields for its source, or a source column on an axis grouped in a way it does not read.
     expect(read(TABLE(''), CACHE().replace('<cacheField name="Price"/>', ''))).toBeNull();
     expect(
       read(
-        TABLE(''),
+        TABLE(
+          '<pivotFields><pivotField/><pivotField/><pivotField axis="axisRow"/></pivotFields><rowFields><field x="2"/></rowFields>',
+        ),
         CACHE().replace(
           '<cacheField name="Price"/>',
           '<cacheField name="Price"><fieldGroup/></cacheField>',
@@ -317,6 +333,144 @@ describe('the XLSX standard form read', () => {
     // An axis field past the source's columns.
     expect(read(TABLE('<rowFields><field x="3"/></rowFields>'))).toBeNull();
     expect(read(TABLE('<pageFields><pageField fld="-1"/></pageFields>'))).toBeNull();
+  });
+
+  // standard-mapping.md "Pivot tables in the file", XLSX grouping (D617).
+  describe('grouping', () => {
+    const DERIVED = (group: string, attrs = '') =>
+      `<cacheField name="g" databaseField="0"><fieldGroup base="2"${attrs}>${group}</fieldGroup></cacheField>`;
+    const ON_ROWS = (items = '') =>
+      `<pivotFields><pivotField/><pivotField dataField="1"/><pivotField/><pivotField axis="axisRow">${items}</pivotField></pivotFields><rowFields><field x="3"/></rowFields>${DATA()}`;
+    const groupingOf = (table: string, cache: string) =>
+      read(TABLE(table), cache)?.rows[0]?.grouping;
+
+    it('reads each date level of a derived field, its bounds left unread', () => {
+      const levels = ['seconds', 'minutes', 'hours', 'days', 'months', 'quarters', 'years'];
+      expect(
+        levels.map((by) =>
+          groupingOf(
+            ON_ROWS(),
+            CACHE(
+              DERIVED(
+                `<rangePr groupBy="${by}" startDate="2025-01-01T00:00:00" endDate="2025-02-01T00:00:00"/>`,
+              ),
+            ),
+          ),
+        ),
+      ).toEqual(
+        ['second', 'minute', 'hour', 'dayMonth', 'month', 'quarter', 'year'].map((rule) => ({
+          k: 'date',
+          rule,
+        })),
+      );
+      expect(
+        read(TABLE(ON_ROWS()), CACHE(DERIVED('<rangePr groupBy="months"/>')))!.rows[0]!.col,
+      ).toBe(2);
+    });
+
+    it('reads number intervals, on a column of its own or in place', () => {
+      expect(
+        groupingOf(
+          ON_ROWS(),
+          CACHE(
+            DERIVED(
+              '<rangePr autoStart="0" autoEnd="0" startNum="1" endNum="9" groupInterval="2"/>',
+            ),
+          ),
+        ),
+      ).toEqual({ k: 'interval', size: 2, start: 1, end: 9 });
+      expect(groupingOf(ON_ROWS(), CACHE(DERIVED('<rangePr autoEnd="0" endNum="4"/>')))).toEqual({
+        k: 'interval',
+        size: 1,
+        end: 4,
+      });
+      expect(
+        groupingOf(ON_ROWS(), CACHE(DERIVED('<rangePr groupBy="range" autoStart="0"/>'))),
+      ).toEqual({
+        k: 'interval',
+        size: 1,
+        start: 0,
+      });
+      const inPlace = CACHE().replace(
+        '<cacheField name="Price"/>',
+        '<cacheField name="Price"><fieldGroup><rangePr groupInterval="5"/></fieldGroup></cacheField>',
+      );
+      const table = `<pivotFields><pivotField/><pivotField dataField="1"/><pivotField axis="axisRow"/></pivotFields><rowFields><field x="2"/></rowFields>${DATA()}`;
+      expect(groupingOf(table, inPlace)).toEqual({ k: 'interval', size: 5 });
+    });
+
+    it('reads discrete items as custom groups, an item alone in its own name left itself', () => {
+      const cache = CACHE(
+        '<cacheField name="g" databaseField="0"><fieldGroup base="0"><discretePr><x v="0"/><x v="1"/><x v="0"/><x v="2"/><x v="3"/><x v="2"/></discretePr><groupItems><s v="Mixed"/><s v=""/><s v="Two"/><s v="#N/A"/></groupItems></fieldGroup></cacheField>',
+      );
+      expect(groupingOf(ON_ROWS(), cache)).toEqual({
+        k: 'custom',
+        groups: [
+          { name: 'Mixed', items: ['East', 'TRUE'] },
+          { name: 'Two', items: ['#N/A', '2'] },
+          { name: '#N/A', items: ['45672'] },
+        ],
+      });
+      expect(read(TABLE(ON_ROWS()), cache)!.rows[0]!.col).toBe(0);
+    });
+
+    it('reads a custom grouping of items each in its own name as no grouping', () => {
+      const cache = CACHE(
+        '<cacheField name="g" databaseField="0"><fieldGroup base="0"><discretePr><x v="0"/></discretePr><groupItems><s v="East"/></groupItems></fieldGroup></cacheField>',
+      );
+      expect(read(TABLE(ON_ROWS()), cache)!.rows).toEqual([{ col: 0, subtotals: true }]);
+    });
+
+    it('reads a source column whose fieldGroup only names its parent as ungrouped', () => {
+      const cache = CACHE(
+        DERIVED('<rangePr groupBy="years"/>').replace('base="2"', 'base="2"'),
+      ).replace(
+        '<cacheField name="Price"/>',
+        '<cacheField name="Price"><fieldGroup par="3"/></cacheField>',
+      );
+      const onPrice = `<pivotFields><pivotField/><pivotField dataField="1"/><pivotField axis="axisRow"/></pivotFields><rowFields><field x="2"/></rowFields>${DATA()}`;
+      expect(read(TABLE(onPrice), cache)!.rows).toEqual([{ col: 2, subtotals: true }]);
+    });
+
+    it('keeps a grouping it does not read', () => {
+      const keeps = [
+        [ON_ROWS(), CACHE(DERIVED('<rangePr groupBy="days" groupInterval="7"/>'))],
+        [ON_ROWS(), CACHE(DERIVED('<rangePr groupBy="weeks"/>'))],
+        [ON_ROWS(), CACHE(DERIVED('<rangePr groupInterval="0"/>'))],
+        [ON_ROWS(), CACHE(DERIVED('<rangePr groupBy="years"/>', ' par="4"'))],
+        [ON_ROWS(), CACHE(DERIVED('<rangePr groupBy="years"/>').replace('base="2"', 'base="7"'))],
+        [ON_ROWS(), CACHE(DERIVED(''))],
+        [
+          ON_ROWS('<items><item x="0" h="1"/></items>'),
+          CACHE(DERIVED('<rangePr groupBy="years"/>')),
+        ],
+        [
+          ON_ROWS(),
+          CACHE(
+            '<cacheField name="g" databaseField="0"><fieldGroup base="0"><discretePr><x v="9"/></discretePr><groupItems/></fieldGroup></cacheField>',
+          ),
+        ],
+        [
+          ON_ROWS(),
+          CACHE(
+            '<cacheField name="g" databaseField="0"><fieldGroup base="0"><discretePr><x v="0"/></discretePr></fieldGroup></cacheField>',
+          ),
+        ],
+        [
+          // Sorted by a value in an item of a grouped column field.
+          `<pivotFields><pivotField axis="axisRow"><autoSortScope><pivotArea><references count="2"><reference field="4294967294"><x v="0"/></reference><reference field="3"><x v="0"/></reference></references></pivotArea></autoSortScope></pivotField><pivotField dataField="1"/><pivotField/><pivotField axis="axisCol"/></pivotFields><rowFields><field x="0"/></rowFields><colFields><field x="3"/></colFields>${DATA()}`,
+          CACHE(DERIVED('<rangePr groupBy="years"/>')),
+        ],
+        [
+          `<pivotFields><pivotField/><pivotField dataField="1"/><pivotField/><pivotField axis="axisPage"/></pivotFields><pageFields><pageField fld="3"/></pageFields>${DATA()}`,
+          CACHE(DERIVED('<rangePr groupBy="years"/>')),
+        ],
+      ] as const;
+      expect(keeps.map(([table, cache]) => read(TABLE(table), cache))).toEqual(
+        keeps.map(() => null),
+      );
+      expect(read(TABLE(ON_ROWS()), CACHE(DERIVED('<rangePr groupBy="years"/>')))).not.toBeNull();
+    });
   });
 
   it('reads order, totals, grand totals, page fields and Values as rows', () => {
