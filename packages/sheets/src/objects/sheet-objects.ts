@@ -1,10 +1,14 @@
 // A sheet's objects (docs/specs/029-sheets/charts.md "The model", sheet-store.md "Objects"): what floats over its
 // cells, kept in its layout in paint order, each set whole or removed by its id with a layout write. Charts are the
-// first kind built, then pivot tables (sheet-pivot.ts); images, drawings, slicers and timelines join the union as they are built.
+// first kind built, then pivot tables (sheet-pivot.ts) and images over cells (sheet-image.ts); drawings, slicers and
+// timelines join the union as they are built.
 import { isAxisId } from '../ids';
 import type { IdRange } from '../sheet';
-import { inRange, isIdRange, isRecord, onlyKeys, textUpTo } from './object-checks';
+import { inRange, isAnchor, isIdRange, isRecord, onlyKeys, textUpTo } from './object-checks';
+import { isSheetImage, type SheetImage } from './sheet-image';
 import { isSheetPivot, type SheetPivot } from './sheet-pivot';
+
+export { OBJECT_OFFSET_MAX } from './object-checks';
 
 // The chart types a spreadsheet's chart draws as (charts.md "Chart types", those built), named as
 // @livedoc/document CHART_TYPES names them; restated, as this package never imports that one (a test keeps them equal).
@@ -101,13 +105,11 @@ export type SheetChart = {
 /** A read chart's kept file XML: the kept part's name and the sum of the chart it was read as. */
 export type SheetChartKept = { part: string; sum: string };
 
-export type SheetObject = SheetChart | SheetPivot;
+export type SheetObject = SheetChart | SheetPivot | SheetImage;
 
 export const SHEET_OBJECTS_MAX = 100;
 export const SHEET_CHART_SIZE_MIN = { width: 160, height: 120 } as const;
 export const SHEET_CHART_SIZE_MAX = 2000;
-// The farthest an anchor's offset reaches into its cell: a column or a row is never wider than this.
-export const OBJECT_OFFSET_MAX = 2000;
 export const SHEET_CHART_TEXT_MAX = 200;
 export const SHEET_CHART_ALT_MAX = 1000;
 // The series cap and a label column (chart-data CHART_SERIES_MAX + 1).
@@ -140,17 +142,6 @@ const CHART_KEYS = [
   'series',
   'kept',
 ] as const;
-
-function isAnchor(x: unknown): x is CellAnchor {
-  return (
-    isRecord(x) &&
-    onlyKeys(x, ['r', 'c', 'dx', 'dy']) &&
-    isAxisId(x.r) &&
-    isAxisId(x.c) &&
-    inRange(x.dx, 0, OBJECT_OFFSET_MAX) &&
-    inRange(x.dy, 0, OBJECT_OFFSET_MAX)
-  );
-}
 
 function isSeriesLook(x: unknown): x is SheetChartSeriesLook {
   return (
@@ -213,6 +204,7 @@ function isSheetChart(x: Record<string, unknown>): boolean {
 export function isSheetObject(x: unknown, id: string): x is SheetObject {
   if (!isRecord(x) || x.id !== id || !isAxisId(id)) return false;
   if (x.kind === 'pivot') return isSheetPivot(x);
+  if (x.kind === 'image') return isSheetImage(x);
   return x.kind === 'chart' && isSheetChart(x);
 }
 
