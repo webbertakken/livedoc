@@ -81,6 +81,15 @@ import { SUGGESTION_KEY_ACTIONS } from '@/components/text-document/useTextDocume
 import { REVIEW_SUGGESTED_EDITS } from '@/components/text-document/useTextDocumentReviewPanel';
 import { COMPARE_DOCUMENTS } from '@/components/text-document/useTextDocumentCompare';
 import { WORD_COUNT_ITEM } from '@/components/text-document/useTextDocumentWordCount';
+import {
+  MISSPELLING_KEY_ACTIONS,
+  PERSONAL_DICTIONARY_ITEM,
+  SPELLING_ADD_ITEM,
+  SPELLING_CHECK_ITEM,
+  SPELLING_IGNORE_ITEM,
+  SPELLING_SHOW_ITEM,
+  SPELLING_SUGGESTION_ITEMS,
+} from '@/components/text-document/useTextDocumentSpelling';
 import { NOTIFICATION_SETTINGS_ITEM } from '@/components/text-document/useTextDocumentNotifications';
 import {
   SEE_VERSION_HISTORY,
@@ -206,6 +215,13 @@ describe('the text document menus', () => {
         COMPARE_DOCUMENTS,
         // Tools > Word count (useTextDocumentWordCount), bound by the surface.
         WORD_COUNT_ITEM,
+        // Tools > Spelling and grammar and the context menu on a misspelt word (useTextDocumentSpelling).
+        SPELLING_CHECK_ITEM,
+        SPELLING_SHOW_ITEM,
+        PERSONAL_DICTIONARY_ITEM,
+        SPELLING_ADD_ITEM,
+        SPELLING_IGNORE_ITEM,
+        ...SPELLING_SUGGESTION_ITEMS,
         // Tools > Notification settings (useTextDocumentNotifications), bound by the surface where it applies.
         NOTIFICATION_SETTINGS_ITEM,
         // File > Version history > See version history (useTextDocumentVersionHistory), bound by the surface.
@@ -258,6 +274,8 @@ describe('the text document menus', () => {
       ...SUGGESTION_KEY_ACTIONS,
       // Between a version's changes, inside the version history (useTextDocumentVersionHistory).
       ...Object.values(VERSION_CHANGE_KEY_ROWS),
+      // The next and previous misspelling (useTextDocumentSpelling).
+      ...Object.values(MISSPELLING_KEY_ACTIONS),
     ];
     expect(builtRows.sort()).toEqual(
       [...new Set([...builtItems, ...shellRows, ...keyRows])].sort(),

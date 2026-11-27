@@ -1342,7 +1342,7 @@ export const TEXT_DOCUMENT_SHORTCUTS: readonly ShortcutRow[] = [
     'Ctrl+Alt+X or F7',
     '⌘+Option+X or Fn+F7',
     '—',
-    'specified',
+    'built',
   ),
   row(
     'open-dictionary',
@@ -1424,7 +1424,7 @@ export const TEXT_DOCUMENT_SHORTCUTS: readonly ShortcutRow[] = [
     "Ctrl+'",
     "⌘+'",
     "Ctrl+'",
-    'specified',
+    'built',
   ),
   row(
     'move-to-previous-misspelling',
@@ -1433,7 +1433,7 @@ export const TEXT_DOCUMENT_SHORTCUTS: readonly ShortcutRow[] = [
     'Ctrl+;',
     '⌘+;',
     'Ctrl+;',
-    'specified',
+    'built',
   ),
   row(
     'insert-or-move-to-header',

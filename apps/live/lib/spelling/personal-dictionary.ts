@@ -13,6 +13,9 @@ export const PERSONAL_DICTIONARY_MAX = 400;
 /** The longest word kept (safe 32..64): the spelling check reads none longer. */
 export const PERSONAL_WORD_MAX = 48;
 
+/** What adding a word says when the dictionary is full (tools.md "Spelling and grammar"). */
+export const DICTIONARY_FULL = 'Your personal dictionary is full. Remove a word to add another.';
+
 export type PersonalDictionary = { readonly words: readonly string[] };
 export type PersonalDictionaryRefusal = 'full' | 'invalid' | 'present';
 

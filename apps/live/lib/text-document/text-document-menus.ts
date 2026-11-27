@@ -403,9 +403,20 @@ export function textDocumentMenus(format: TextDocumentFormat): OfficeCatalogue {
       }),
     ]),
     menu('tools', 'Tools', [
-      item('spelling-and-grammar', 'Spelling and grammar', 'edit', {
-        shortcut: 'open-spelling-and-grammar',
-      }),
+      // tools.md "Spelling and grammar", in Google's order; Show grammar suggestions only with a grammar server (D5).
+      submenu('spelling', 'Spelling and grammar', [
+        item('spelling-and-grammar', 'Spelling and grammar check', 'edit', {
+          shortcut: 'open-spelling-and-grammar',
+          status: 'built',
+        }),
+        item('spelling-show', 'Show spelling suggestions', 'edit', {
+          checkable: 'checkbox',
+          status: 'built',
+        }),
+        SEPARATOR,
+        // The personal dictionary is the person's own, whatever their role.
+        item('spelling-personal-dictionary', 'Personal dictionary', 'view', { status: 'built' }),
+      ]),
       // tools.md "Word count": anyone who reads the document counts it.
       item('word-count', 'Word count', 'view', { shortcut: 'word-count', status: 'built' }),
       // review.md "Reviewing suggestions": anyone reviews; what they may settle is their role's.
@@ -459,7 +470,10 @@ export function textDocumentTextContextMenu(catalogue: OfficeCatalogue): OfficeE
     ...Array.from({ length: SPELLING_SUGGESTIONS_MAX }, (_, i) =>
       item(`spelling-suggestion-${i + 1}`, 'Suggestion', 'edit', { contextual: true, ...BUILT }),
     ),
-    item('spelling-add-to-dictionary', 'Add to personal dictionary', 'edit', { contextual: true, ...BUILT }),
+    item('spelling-add-to-dictionary', 'Add to personal dictionary', 'edit', {
+      contextual: true,
+      ...BUILT,
+    }),
     item('spelling-ignore', 'Ignore', 'edit', { contextual: true, ...BUILT }),
     SEPARATOR,
     'cut',

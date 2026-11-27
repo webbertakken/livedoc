@@ -29,6 +29,11 @@ export type SpellingSource = {
   skipped?: (block: PmNode) => boolean;
   /** Told what each read found, after it is shown (the context menu fetches their suggestions ahead). */
   onFound?: (misspelt: readonly Misspelling[]) => void;
+  /**
+   * Calls `listener` when every paragraph must be read again (the personal dictionary or whether misspellings show
+   * changed); returns how to stop.
+   */
+  subscribe?: (listener: () => void) => () => void;
 };
 
 type Range = { readonly from: number; readonly to: number };
@@ -55,7 +60,8 @@ type SpellingMeta =
       misspelt: readonly Misspelling[];
       held: Range | null;
     }
-  | { kind: 'ignore'; word: string };
+  | { kind: 'ignore'; word: string }
+  | { kind: 'drop'; word: string };
 
 export const spellingKey = new PluginKey<SpellingState>('text-document-spelling');
 
@@ -211,16 +217,24 @@ function applyFound(
 
 function applyMeta(value: SpellingState, meta: SpellingMeta, doc: PmNode): SpellingState {
   switch (meta.kind) {
+    // The underlines stay until the read replaces them, paragraph by paragraph.
     case 'rescan':
       return {
         ...value,
-        decorations: DecorationSet.empty,
         dirty: [{ from: 0, to: doc.content.size }],
       };
     case 'scan-started':
       return { ...value, dirty: [], since: new Mapping() };
     case 'found':
       return applyFound(value, meta, doc);
+    case 'drop': {
+      const gone = value.decorations.find(
+        undefined,
+        undefined,
+        (spec: { word?: unknown }) => spec.word === meta.word,
+      );
+      return { ...value, decorations: value.decorations.remove(gone) };
+    }
     case 'ignore': {
       const ignored = new Set(value.ignored).add(meta.word);
       const gone = value.decorations.find(
@@ -357,6 +371,9 @@ function spellingScanner(view: EditorView, source: SpellingSource) {
   };
 
   schedule();
+  const stop = source.subscribe?.(() => {
+    if (!destroyed) rescanSpelling(view);
+  });
   return {
     update: (v: EditorView, prev: EditorState) => {
       const before = spellingKey.getState(prev);
@@ -366,6 +383,7 @@ function spellingScanner(view: EditorView, source: SpellingSource) {
     },
     destroy: () => {
       destroyed = true;
+      stop?.();
       if (timer !== null) clearTimeout(timer);
     },
   };
@@ -381,6 +399,35 @@ export const ignoreMisspelling = (view: EditorView, word: string): void => {
   view.dispatch(
     view.state.tr.setMeta(spellingKey, { kind: 'ignore', word } satisfies SpellingMeta),
   );
+};
+
+const misspellingOf = (d: Decoration): Misspelling => {
+  const spec = d.spec as { word: string; language: SpellingLanguage };
+  return { from: d.from, to: d.to, word: spec.word, language: spec.language };
+};
+
+/** Every misspelling shown, in reading order. */
+export const misspellings = (state: EditorState): Misspelling[] =>
+  (spellingKey.getState(state)?.decorations.find() ?? [])
+    .map(misspellingOf)
+    .sort((a, b) => a.from - b.from);
+
+/**
+ * The next misspelling after the selection (`1`) or the previous one before it (`-1`), wrapping at either end; null with
+ * none (tools.md "Next and previous misspelling").
+ */
+export function nearMisspelling(state: EditorState, direction: 1 | -1): Misspelling | null {
+  const all = misspellings(state);
+  if (all.length === 0) return null;
+  const { from, to } = state.selection;
+  if (direction === 1)
+    return all.find((m) => m.from >= to && !(m.from === from && m.to === to)) ?? all[0]!;
+  return all.findLast((m) => m.to <= from && !(m.from === from && m.to === to)) ?? all.at(-1)!;
+}
+
+/** Takes `word`'s underlines away now (it was just added to the personal dictionary); the re-read follows. */
+export const dropMisspelling = (view: EditorView, word: string): void => {
+  view.dispatch(view.state.tr.setMeta(spellingKey, { kind: 'drop', word } satisfies SpellingMeta));
 };
 
 /** The misspelling at `pos`, if any. */

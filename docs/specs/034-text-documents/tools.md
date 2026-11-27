@@ -54,13 +54,25 @@ fetched 2026-11-27); the look is (default) until a capture of Google’s dialog.
 - **Right-click on a misspelt word**: the context menu opens with up to five suggestions, then **Add to personal
   dictionary** (Google's words, help 57859) and **Ignore**, above its usual items. Choosing a suggestion replaces the
   word, one undo step.
-- **Spelling and grammar check** (⌘⌥X, F7, the toolbar's button) opens a card at the top right walking each misspelling
-  with suggestions, **Accept**, **Ignore**, **Add to dictionary**, Next and Previous (⌘' and ⌘;). With none left, the
-  card says "No spelling suggestions". **Ignore** sets the word aside in this document until it is closed.
+- **Tools > Spelling and grammar**, in Google's order: Spelling and grammar check, Show spelling suggestions, then
+  Personal dictionary (Show grammar suggestions only where a grammar server is configured).
+- **Spelling and grammar check** (⌘⌥X, F7, the toolbar's button) opens a card at the top right of the writing, beside
+  it rather than over it, walking the body's misspellings from the caret: the word selected in the writing, "Change
+  ‹word› to" with up to five suggestions to choose from, **Accept**, **Ignore**, **Add to personal dictionary**,
+  Previous and Next; each of the first three moves on to the next. With none left the card says "No spelling
+  suggestions"; a word with none says "No suggestions" and cannot be accepted. Escape or Close returns to the writing.
+  Its look and copy are (default) until a capture. **Ignore** sets the word aside in this document until it is closed.
+- **Next and previous misspelling** (⌘' and ⌘;): select the next or previous misspelt word, wrapping at either end,
+  without the card.
+- **Headers, footers and footnotes** are checked and underlined as the body is, with the same context menu while one is
+  being edited.
 - **Personal dictionary** (Tools > Spelling and grammar > Personal dictionary): per person, stored with the account
   (in this browser for a guest), shared by all their text documents and, later, spreadsheets; words are checked as
-  written, up to 400 of them (the preferences' 16 KB), each up to 48 characters. A dialog lists, adds and removes
-  them; at the limit, adding a word says "Your personal dictionary is full. Remove a word to add another."
+  written, up to 400 of them (the preferences' 16 KB), each up to 48 characters. Its dialog has a field and **Add**,
+  then the words in alphabetical order, each with a remove button; a change is kept at once. At the limit, adding a
+  word says "Your personal dictionary is full. Remove a word to add another."; a word with a space or past 48
+  characters, "Enter one word, without spaces, up to 48 characters."; a word already there, "That word is already in
+  your dictionary." With none, the dialog says "No words yet" (default).
 - **Who**: the underlines and the card show for everyone who can change the text (Editing or Suggesting); a Viewer sees
   no underlines. Accepting in Suggesting makes a suggestion. The personal dictionary is the person's own, whatever
   their role.
@@ -131,5 +143,6 @@ suggestions under D7); preferences and accessibility settings are each person's 
 
 `Search · Used · TextDocumentFind`, `TextDocumentReplaceAll`; `Document · Changed · TextDocumentSpellingAccepted` (a
 suggestion taken), `TextDocumentDictionaryAdded`; `UI · Opened · TextDocumentWordCount`, `TextDocumentSpelling`,
-`TextDocumentCitations`; `UI · Toggled · TextDocumentWordCountWhileTypingOn`, `TextDocumentWordCountWhileTypingOff`
-(before it is kept), `TextDocumentScreenReader`. Never text.
+`TextDocumentCitations`; `UI · Toggled · TextDocumentWordCountWhileTypingOn`, `TextDocumentWordCountWhileTypingOff`,
+`TextDocumentSpellingSuggestionsOn`, `TextDocumentSpellingSuggestionsOff` (each before it is kept),
+`TextDocumentScreenReader`. Never text.

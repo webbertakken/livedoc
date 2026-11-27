@@ -11,6 +11,8 @@ import {
   ignoreMisspelling,
   MISSPELT_CLASS,
   misspellingAt,
+  misspellings,
+  nearMisspelling,
   rescanSpelling,
   SPELLING_IDLE_MS,
   spellingPlugin,
@@ -215,6 +217,54 @@ describe('spellingPlugin', () => {
     release();
     await vi.advanceTimersByTimeAsync(0);
     expect(dispatch).not.toHaveBeenCalled();
+  });
+
+  it('reads every paragraph again when its source tells it to, and stops listening when gone', async () => {
+    const listeners = new Set<() => void>();
+    const personal = { d: PersonalDictionary.empty() };
+    const { view } = editorOf(docOf(paragraph(s.text('teh'))), {
+      personal: () => personal.d,
+      subscribe: (listener) => {
+        listeners.add(listener);
+        return () => listeners.delete(listener);
+      },
+    });
+    await pause();
+    expect(underlined(view)).toEqual(['teh']);
+    personal.d = PersonalDictionary.parse(['teh']);
+    listeners.forEach((l) => l());
+    await pause();
+    expect(underlined(view)).toEqual([]);
+    view.destroy();
+    expect(listeners.size).toBe(0);
+  });
+
+  it('lists the misspellings in order and finds the next and the previous, wrapping', async () => {
+    const { view } = editorOf(
+      docOf(paragraph(s.text('teh cat mta')), paragraph(s.text('sat hte'))),
+    );
+    await pause();
+    const words = (list: readonly { word: string }[]) => list.map((m) => m.word);
+    expect(words(misspellings(view.state))).toEqual(['teh', 'mta', 'hte']);
+    const select = (from: number, to = from) =>
+      view.dispatch(view.state.tr.setSelection(TextSelection.create(view.state.doc, from, to)));
+    select(5);
+    expect(nearMisspelling(view.state, 1)?.word).toBe('mta');
+    expect(nearMisspelling(view.state, -1)?.word).toBe('teh');
+    // A selected misspelling steps past itself.
+    select(9, 12);
+    expect(nearMisspelling(view.state, 1)?.word).toBe('hte');
+    expect(nearMisspelling(view.state, -1)?.word).toBe('teh');
+    select(1, 4);
+    expect(nearMisspelling(view.state, -1)?.word).toBe('hte');
+    select(18, 21);
+    expect(nearMisspelling(view.state, 1)?.word).toBe('teh');
+  });
+
+  it('finds no misspelling where there is none', () => {
+    const { view } = editorOf(docOf(paragraph(s.text('cat'))));
+    expect(misspellings(view.state)).toEqual([]);
+    expect(nearMisspelling(view.state, 1)).toBeNull();
   });
 
   it('tells what each read found', async () => {

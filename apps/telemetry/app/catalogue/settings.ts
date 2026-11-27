@@ -153,6 +153,13 @@ export const APPEARANCE_SETTINGS = settingsStack('Appearance Settings', 'How the
     'A text document\u2019s word count shown at the bottom left while typing, from Tools > Word count.',
   ),
   toggle(
+    'UI',
+    'TextDocumentSpellingSuggestionsOn',
+    'TextDocumentSpellingSuggestionsOff',
+    'Spelling Suggestions',
+    'Misspelt words underlined in a text document, from Tools > Spelling and grammar > Show spelling suggestions.',
+  ),
+  toggle(
     'Pdf',
     'DarkPagesOn',
     'DarkPagesOff',
