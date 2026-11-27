@@ -265,6 +265,32 @@ describe('chart views', () => {
     expect(container.textContent).toContain('0–10 · Length: 2');
   });
 
+  it('draws a waterfall of floating columns, connectors and a subtotal, and reads one (Waterfall, D326)', () => {
+    const { container } = render(
+      <LineChartView
+        element={el('line-chart', {
+          chartVariant: 'waterfall',
+          chartValues: true,
+          chartAxis: true,
+          lineCategories: ['Income', 'Wages', 'Tax'],
+          lineSeries: [{ name: 'Cash', values: [220, -87.5, null], color: '#aa3300' }],
+        })}
+        textColor="#000"
+      />,
+    );
+    const rises = container.querySelectorAll('rect[fill="#aa3300"]');
+    expect(rises).toHaveLength(1);
+    expect(container.querySelectorAll('line[stroke="#94a3b8"]')).toHaveLength(2);
+    const texts = [...container.querySelectorAll('text')].map((t) => t.textContent);
+    for (const t of ['Subtotal', '-87.5', '132.5']) expect(texts).toContain(t);
+    fireEvent.pointerEnter(rises[0]!);
+    expect(container.textContent).toContain('Income · Cash: 220');
+    const bare = render(
+      <LineChartView element={el('line-chart', { chartVariant: 'waterfall' })} textColor="#000" />,
+    );
+    expect(bare.container.textContent).toContain('Subtotal');
+  });
+
   it('draws a smooth line chart’s lines as curves (Smooth Line, D284)', () => {
     const { container } = render(
       <LineChartView element={el('line-chart', { chartSmooth: true })} textColor="#000" />,

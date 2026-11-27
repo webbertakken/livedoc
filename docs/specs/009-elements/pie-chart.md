@@ -98,7 +98,7 @@ ChartAxis`); a series on the right shows "(right)" after its name in the Data su
 
 ## Chart types
 
-A **chart type** is how a chart draws its data, named as Google Sheets names it. Fourteen ship; each is a chart kind
+A **chart type** is how a chart draws its data, named as Google Sheets names it. Fifteen ship; each is a chart kind
 (the stored `shape`) and, for all but the first of its kind, a `chartVariant`:
 
 A chart is **named by its type** wherever the editor names an element: the selection badge says "Selected Column
@@ -118,6 +118,7 @@ Chart" and a screen reader hears "Column chart", as the palette's tile says, nev
 | Candlestick  | `line-chart`   | `candlestick`  | Per category a wick from low to high and a body from open to close (below)                    |
 | OHLC         | `line-chart`   | `ohlc`         | Per category a line from low to high, the open a tick to its left, the close to its right     |
 | Histogram    | `line-chart`   | `histogram`    | Each series' values counted into equal buckets, a column per bucket and series (below)        |
+| Waterfall    | `line-chart`   | `waterfall`    | The first series as changes to a running total, each a floating column, a subtotal last       |
 | Combo        | `line-chart`   | `combo`        | Each series as columns, a line, an area or a stepped area over one set of categories (below)  |
 | Pie          | `pie-chart`    | (none)         | Wedges clockwise from twelve o'clock                                                          |
 | Doughnut     | `pie-chart`    | `doughnut`     | Pie's wedges with the middle open: a ring whose hole is 55% of its radius                     |
@@ -231,6 +232,20 @@ Chart" and a screen reader hears "Column chart", as the palette's tile says, nev
   - Google's item dividers, bucket size and outlier percentile are not built: the columns are solid and the buckets
     always found as above. Stacking, Smooth Line, the right-hand axis and a scatter series' line are ignored and kept
     (default, D324).
+- **Waterfall** (Google Sheets' Waterfall chart, Excel's Waterfall): a line chart's first series read as changes to a
+  running total, from zero.
+  - Each category is a slot, as a column chart's is, named under it. Its value is a column floating from the total
+    before it to the total after it: a rise (zero or more) in the series' colour (its own, else the palette's first),
+    a fall in red (#d93025). Last comes a **Subtotal** column, the end total standing on zero, in grey (#80868b); both
+    keep 3:1 against a white ground.
+  - A thin grey connector runs level from each column's end (the total after it) to the next column drawn.
+  - The value range holds zero and every total along the way; Show Axis as a column chart's. The legend keys
+    **Increase**, **Decrease** and **Subtotal**.
+  - A column's readout reads `category · series: change`, the Subtotal's `Subtotal: total`; Show Values prints each
+    column's change past its end (a fall's under it) and the Subtotal's total.
+  - Series past the first are ignored and kept, as are stacking, Smooth Line, the right-hand axis and a scatter
+    series' line. Google's Use First Value as Subtotal, custom subtotals, stacked series and connector settings are
+    not built: the first value is a change and connectors always show (default, D326).
 - **Combo** (Google Sheets' Combo chart): a line chart's data (`lineSeries` over `lineCategories`), each series drawn
   as its own **series type**: Column, Line, Area or Stepped Area (`LineSeries.type`). A series with no type of its own takes the
   default: the first half of the series, rounded up, are columns and the rest lines, so two series are a column and a
@@ -260,6 +275,8 @@ Chart" and a screen reader hears "Column chart", as the palette's tile says, nev
   - **Radar**: no point on that spoke; the line breaks on either side of it.
   - **Candlestick** and **OHLC**: no mark in a slot missing any of its prices.
   - **Histogram**: the value is not counted; a bucket counting nothing draws no column.
+  - **Waterfall**: no column in its slot; the total runs on unchanged and the connector passes over it. With no value
+    at all, no Subtotal is drawn.
   - **Column** and **Bar**: no column (bar) in its slot; the slot and a column's name under the plot stay.
   - **Pie** and **Doughnut**: no wedge; the others share the whole; the category stays in the legend.
   - Every type: no value draws no value label (Show Values) and no readout (there is no mark to hover), and
@@ -282,7 +299,7 @@ Chart" and a screen reader hears "Column chart", as the palette's tile says, nev
   sit squeezed at its top over an empty band. Values all equal widen by half a unit either way. Line, Area, Column
   and Bar keep zero in range: a line's rise and an area or bar's size read against it.
 - **The Chart Type section** opens first in the chart's Tools flyout, closed until opened (as every section is): a
-  grid of fourteen tiles, each the type's glyph over its name, the chart's own type pressed. Hovering a tile previews
+  grid of fifteen tiles, each the type's glyph over its name, the chart's own type pressed. Hovering a tile previews
   nothing; picking one changes the chart, one undo step, `Element · Changed · ChartType`.
 - **Changing type** keeps the chart's size, style, palette, legend and animation. Within a kind it only sets
   `chartVariant`. Across kinds it moves the data: a pie or bar chart's slices become one series named **Series 1**
@@ -436,7 +453,7 @@ paints no box; `LegendView` draws the card from the element's fill + stroke, and
 
 ## Element tour
 
-The **Chart tour** is on the actions group's **Start Chart Tour** button while a data chart (any of the fourteen chart types) is selected, once its kind is opted in to (Settings › Tours › Show Me), for an Editor on an unlocked element, and walks through it on the element
+The **Chart tour** is on the actions group's **Start Chart Tour** button while a data chart (any of the fifteen chart types) is selected, once its kind is opted in to (Settings › Tours › Show Me), for an Editor on an unlocked element, and walks through it on the element
 itself ([Element tours](../007-editor/element-tours.md) "The Chart tour").
 
 ## Defaults
@@ -465,6 +482,9 @@ The code cites each by its id.
   a column chart's, the range fitted as a scatter's; a body 60% of its slot and at most 24 px, falling filled and rising
   hollow; OHLC ticks half the body wide; every mark the first series' colour, no legend keys; a gap where any price
   is missing; series past the fourth ignored; stacking, smoothing, the right axis and lines ignored (default).
+- **D326** Waterfall: the first series as changes from zero; rises in the series' colour, falls red, a grey Subtotal column of the end total last; level connectors between drawn columns; keys Increase, Decrease,
+  Subtotal; a gap leaves the total as it was; other series, stacking, smoothing, the right axis and lines ignored;
+  Google's first-value subtotal, custom subtotals and stacked series not built (default).
 - **D324** Histogram: every series values to count, the categories naming items; buckets shared by every series,
   their number the square root of the values' count rounded up, their size the span over that rounded up to 1, 2, 2.5
   or 5 times a power of ten, starting at a multiple of it; drawn as a column chart of the counts, one per series

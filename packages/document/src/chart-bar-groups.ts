@@ -51,49 +51,93 @@ export function barGroupMarks(
   showAxis = false,
   stack: ChartStack | null = null,
 ): BarGroupMarks {
-  const n = Math.max(1, categories.length);
   // Where each bar starts and ends along the value axis: from zero, or (stacked) from the end of the one below it.
   const stacked = stack ? stackedValues(series, categories.length, stack, true) : null;
-  const span0 = (j: number, i: number): [number, number] | null => {
-    if (stacked) {
-      const end = stacked.ends[j]![i] ?? null;
-      return end === null ? null : [stacked.starts[j]![i]!, end];
-    }
-    const v = chartValue(series[j]!.values[i]);
-    return v === null ? null : [0, v];
-  };
+  const spans = series.map((s, j) =>
+    categories.map((_c, i): BarSpan => {
+      if (stacked) {
+        const end = stacked.ends[j]![i] ?? null;
+        return end === null ? null : [stacked.starts[j]![i]!, end];
+      }
+      const v = chartValue(s.values[i]);
+      return v === null ? null : [0, v];
+    }),
+  );
+  const marks = barSpanMarks(area, categories, spans, {
+    horizontal,
+    ox,
+    oy,
+    showAxis,
+    oneBar: stacked !== null,
+    percentTicks: stack === 'percent',
+  });
+  return { ...marks, stack };
+}
+
+/** A bar from one value to another along the value axis; null for none. */
+export type BarSpan = readonly [from: number, to: number] | null;
+
+export type BarSpanLayout = {
+  horizontal: boolean;
+  ox?: number;
+  oy?: number;
+  showAxis?: boolean;
+  // One bar to a category, every series' span drawn in its place, square-cornered (a stack, a waterfall).
+  oneBar?: boolean;
+  // The value axis's ticks read percents (100% stacking).
+  percentTicks?: boolean;
+};
+
+/**
+ * Bars laid out from their spans, by series then category: each category a slot, its bars side by side in it (or one
+ * bar, `oneBar`), the value range holding zero and every span's ends; the axis, the baseline at zero and the names.
+ * The one layout of a column or bar chart's several series, a stack's segments and a waterfall's floating columns.
+ */
+export function barSpanMarks(
+  area: ChartRect,
+  categories: readonly string[],
+  spans: readonly (readonly BarSpan[])[],
+  {
+    horizontal,
+    ox = 0,
+    oy = 0,
+    showAxis = false,
+    oneBar = false,
+    percentTicks = false,
+  }: BarSpanLayout,
+): Omit<BarGroupMarks, 'stack'> {
+  const n = Math.max(1, categories.length);
+  const span0 = (j: number, i: number): BarSpan => spans[j]![i] ?? null;
   let lo = 0;
   let hi = 0;
-  series.forEach((_, j) => {
-    for (let i = 0; i < categories.length; i++) {
-      const end = span0(j, i)?.[1];
-      if (end === undefined) continue;
-      if (end < lo) lo = end;
-      if (end > hi) hi = end;
+  for (const row of spans)
+    for (const span of row) {
+      if (!span) continue;
+      lo = Math.min(lo, span[0], span[1]);
+      hi = Math.max(hi, span[0], span[1]);
     }
-  });
   if (hi === lo) hi = lo + 1;
   const scaled = showAxis ? axisScale(lo, hi) : null;
   // 100%'s ticks read percents.
   const scale =
-    scaled && stack === 'percent'
+    scaled && percentTicks
       ? { ...scaled, ticks: scaled.ticks.map((t) => ({ ...t, text: `${t.text}%` })) }
       : scaled;
   const minVal = scale ? scale.min : lo;
   const span = (scale ? scale.max : hi) - minVal;
   const at = (v: number) => (v - minVal) / span;
   // Stacked, a category holds one bar.
-  const k = stacked ? 1 : Math.max(1, series.length);
+  const k = oneBar ? 1 : Math.max(1, spans.length);
   // A bar's place in its category's slot: the group centred in it, each bar an equal part.
   const place = (slot: number, i: number, j: number, from: number) => {
     const thick = Math.min((slot * BAR_GROUP_SHARE) / k, BAR_THICK_MAX);
     const start = from + slot * (i + 0.5) - (thick * k) / 2;
-    return { start: start + thick * (stacked ? 0 : j), thick };
+    return { start: start + thick * (oneBar ? 0 : j), thick };
   };
   // A stacked segment is square-cornered, so a stack reads as one bar.
-  const corner = (thick: number) => (stacked ? 0 : Math.min(3, thick / 4));
+  const corner = (thick: number) => (oneBar ? 0 : Math.min(3, thick / 4));
   const barsOf = (draw: (from: number, to: number, i: number, j: number) => BarRect) =>
-    series.map((_, j) =>
+    spans.map((_, j) =>
       categories.map((_c, i) => {
         const ends = span0(j, i);
         return ends === null ? null : draw(ends[0], ends[1], i, j);
@@ -140,7 +184,6 @@ export function barGroupMarks(
         anchor: 'end' as const,
         category: true,
       })),
-      stack,
     };
   }
   const padX = Math.min(20, area.w * 0.08);
@@ -183,7 +226,6 @@ export function barGroupMarks(
       anchor: 'middle' as const,
       category: true,
     })),
-    stack,
   };
 }
 

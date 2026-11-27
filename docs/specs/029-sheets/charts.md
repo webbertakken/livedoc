@@ -37,7 +37,7 @@ and two changing one chart resolve to the last write. Each change is one undo st
   ([Scatter's point names](../009-elements/pie-chart.md#chart-types)); on a bubble chart of two or more series the
   last is the bubbles' sizes ([Bubble](../009-elements/pie-chart.md#chart-types), D320). Deleting rows or columns inside
   the range shrinks it; deleting all of it leaves the chart with no data, drawn as "No data".
-- **Type**: one of [Chart types](#chart-types) built: Column, Bar, Line, Area, Stepped Area, Scatter, Bubble, Pie, Doughnut, Radar, Candlestick, OHLC, Histogram and Combo. A Column
+- **Type**: one of [Chart types](#chart-types) built: Column, Bar, Line, Area, Stepped Area, Scatter, Bubble, Pie, Doughnut, Radar, Candlestick, OHLC, Histogram, Waterfall and Combo. A Column
   or Bar chart draws every series of its range side by side, as Google's does
   ([Several series](../009-elements/pie-chart.md#chart-types), D281).
 - **Stacking**: a Column, Bar, Area or Stepped Area chart stacks its series, Standard or 100%, or none (Google's Setup ›
@@ -64,7 +64,7 @@ Column, Stacked Column, 100% Stacked Column, Bar, Stacked Bar, 100% Stacked Bar,
 Scatter, Bubble, Histogram, Candlestick, OHLC, Waterfall, Treemap, Geo (regions, markers), Gauge, Scorecard, Radar,
 Organisational, Timeline, Table, Annotated Timeline. A type a format cannot hold is written as the nearest it can,
 with the original kept for LiveDoc, and the loss listed ([Written as the nearest type](standard-mapping.md#charts-in-the-file),
-D290): Stepped Area is written as Area, a Bubble chart with no sizes as Scatter, and a Histogram as Column (D325).
+D290): Stepped Area is written as Area, a Bubble chart with no sizes as Scatter, and a Histogram or a Waterfall as Column (D325, D327).
 
 ## Inserting
 

@@ -356,3 +356,19 @@ describe('a Histogram chart in both formats', () => {
     ).toBe('histogram');
   });
 });
+
+// D327: a Waterfall chart is written as a Column chart of its changes, restored on reading.
+describe('a Waterfall chart in both formats', () => {
+  it('is written as a Column chart of its changes and read back as a Waterfall', async () => {
+    const sheet = charted({ type: 'waterfall' });
+    const xlsx = writeXlsx(fileOf(sheet), 'w');
+    expect(xlsx.losses).toEqual([{ k: 'chart_nearest_type', sheet: 'Sales' }]);
+    expect((await entries(xlsx.data)).get('xl/charts/chart1.xml')).toContain(
+      '<c:barDir val="col"/>',
+    );
+    expect((await readBack(xlsx.data, true)).sheets[0]!.charts![0]!.type).toBe('waterfall');
+    expect((await readBack(writeOds(fileOf(sheet), 'w').data)).sheets[0]!.charts![0]!.type).toBe(
+      'waterfall',
+    );
+  });
+});

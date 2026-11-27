@@ -12,7 +12,7 @@ import {
 import { fileChartSum, type FileChart } from './file-charts';
 
 /** A chart type a file holds: every type built but those written as their nearest. */
-export type HeldChartType = Exclude<SheetChartType, 'stepped-area' | 'histogram'>;
+export type HeldChartType = Exclude<SheetChartType, 'stepped-area' | 'histogram' | 'waterfall'>;
 export type HeldSeriesType = Exclude<SheetComboSeriesType, 'stepped-area'>;
 export type HeldFileChart = Omit<FileChart, 'type' | 'series'> & {
   type: HeldChartType;
@@ -38,6 +38,8 @@ const NEAREST_TYPE: Readonly<Record<SheetChartType, HeldChartType>> = {
   ohlc: 'ohlc',
   // Excel's own histogram is a `cx:chart` part no other suite reads; ODF has none (D325).
   histogram: 'column',
+  // Excel's waterfall is a `cx:chart` part as well (D327).
+  waterfall: 'column',
   combo: 'combo',
 };
 const NEAREST_SERIES_TYPE: Readonly<Record<SheetComboSeriesType, HeldSeriesType>> = {
