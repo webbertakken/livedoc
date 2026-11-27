@@ -1,0 +1,48 @@
+import { ArticleLayout } from '@/components/ArticleLayout';
+import { helpMetadata } from '@/lib/seo';
+
+export const metadata = helpMetadata({
+  title: 'Pivot Tables',
+  description:
+    'Summarise a spreadsheet range with a pivot table: make one, then pick its rows, columns, values and filters in the Pivot Table Editor.',
+  path: '/help/canvas/plan-tabs/pivot-tables/',
+});
+
+<ArticleLayout
+  title="Pivot Tables"
+  description="Summarise a range in a few clicks: totals, counts and averages by any of its columns."
+  categoryTitle="Canvas"
+  categorySlug="canvas/plan-tabs"
+>
+
+A pivot table reads a range of a spreadsheet, its first row naming the columns, and writes a summary of it into the cells from one corner. It works as it does in Google Sheets, and it travels in the file: Excel and LibreOffice open it as a pivot table too.
+
+## Making One
+
+1. Click a cell in your data, or select the range.
+2. Choose **Insert › Pivot Table**.
+3. Check the **Data Range**, then choose **New Sheet** (a sheet called _Pivot Table 1_) or **Existing Sheet** and type the cell it starts at, like `Sheet1!H1`.
+4. Click **Create**. The **Pivot Table Editor** opens beside the grid.
+
+## The Pivot Table Editor
+
+- **Rows** and **Columns**: click **Add** and pick a column. Each item of it gets a row (or a column) of its own. Set its **Order**, **Sort By** a value, **Show Totals** and, for rows, **Repeat Row Labels**.
+- **Values**: the numbers to summarise. A column of numbers is summed; any other is counted. Change **Summarise By** (SUM, COUNTA, AVERAGE, MAX and more) and **Show As** a percentage of its row, column or the grand total. With values, **Values As** lays them out as columns or rows.
+- **Filters**: untick the items to hide; **Select All** and **Clear** tick or untick them all.
+- **Suggested**: one click sets up a ready-made summary, such as _SUM of Units for each Region_.
+- **Range**: type a new range to read; fields of columns it leaves out go.
+
+Every change shows in the grid at once, and **Undo** takes it back.
+
+## Working With One
+
+- Select a cell of the pivot table and click **Edit** under it to open the editor again.
+- Its cells are worked out from the data: typing into them says _You can't edit a pivot table's cells_. Change the data instead, and the pivot table follows.
+- To remove it, select all of its cells and press **Delete**.
+- Formulas can read it like any cell, or by name with `GETPIVOTDATA`.
+
+## Who Can Do What
+
+Editors make and change pivot tables. Participants and viewers see them, but not the **Edit** button or **Insert › Pivot Table**.
+
+</ArticleLayout>
