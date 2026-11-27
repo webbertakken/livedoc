@@ -296,6 +296,8 @@ function chartSheet(): FileSheet {
       id: 'chart_ohlc',
       series: [series(1, 'Cost'), series(2, 'Index'), series(1, 'Cost'), series(2, 'Index')],
     },
+    // Histogram (D325): written as a column chart of the values it counts, its original kept.
+    { ...base(types.length + 16, 'histogram'), id: 'chart_histogram' },
   );
   return { ...sheet("Costs' sheet", cells, 140, 8), charts };
 }

@@ -16,6 +16,7 @@ export const CHART_TYPES = [
   'radar',
   'candlestick',
   'ohlc',
+  'histogram',
   'combo',
 ] as const;
 export type ChartType = (typeof CHART_TYPES)[number];
@@ -30,6 +31,7 @@ export const CHART_VARIANTS = [
   'radar',
   'candlestick',
   'ohlc',
+  'histogram',
   'combo',
 ] as const;
 export type ChartVariant = (typeof CHART_VARIANTS)[number];
@@ -50,6 +52,7 @@ const SHAPES: Record<ChartType, { shape: ChartKind; chartVariant?: ChartVariant 
   radar: { shape: 'line-chart', chartVariant: 'radar' },
   candlestick: { shape: 'line-chart', chartVariant: 'candlestick' },
   ohlc: { shape: 'line-chart', chartVariant: 'ohlc' },
+  histogram: { shape: 'line-chart', chartVariant: 'histogram' },
   combo: { shape: 'line-chart', chartVariant: 'combo' },
 };
 
@@ -67,6 +70,7 @@ export const CHART_TYPE_LABELS: Record<ChartType, string> = {
   radar: 'Radar',
   candlestick: 'Candlestick',
   ohlc: 'OHLC',
+  histogram: 'Histogram',
   combo: 'Combo',
 };
 

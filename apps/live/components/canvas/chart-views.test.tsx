@@ -245,6 +245,26 @@ describe('chart views', () => {
     expect(ohlc.container.querySelectorAll('path[stroke="#aa3300"]')).toHaveLength(2);
   });
 
+  it('draws a histogram as columns of its counts per bucket, and reads a hovered column (Histogram, D324)', () => {
+    const { container } = render(
+      <LineChartView
+        element={el('line-chart', {
+          chartVariant: 'histogram',
+          lineCategories: ['T. rex', 'Raptor', 'Compy'],
+          lineSeries: [{ name: 'Length', values: [12, 2, 1], color: '#aa3300' }],
+        })}
+        textColor="#000"
+      />,
+    );
+    const columns = container.querySelectorAll('rect[fill="#aa3300"]');
+    expect(columns).toHaveLength(2);
+    const texts = [...container.querySelectorAll('text')].map((t) => t.textContent);
+    for (const t of ['0–10', '10–20']) expect(texts).toContain(t);
+    expect(container.textContent).not.toContain('T. rex');
+    fireEvent.pointerEnter(columns[0]!);
+    expect(container.textContent).toContain('0–10 · Length: 2');
+  });
+
   it('draws a smooth line chart’s lines as curves (Smooth Line, D284)', () => {
     const { container } = render(
       <LineChartView element={el('line-chart', { chartSmooth: true })} textColor="#000" />,

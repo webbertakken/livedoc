@@ -329,3 +329,30 @@ describe('the write’s report', () => {
     );
   });
 });
+
+// D325: a Histogram chart is written in both formats as a Column chart of the values it counts, restored on reading.
+describe('a Histogram chart in both formats', () => {
+  it('is written as a Column chart of its values and read back as a Histogram', async () => {
+    const sheet = charted({ type: 'histogram', stack: 'stacked' });
+    const chart = chartOf(sheet);
+    expect(chart.stack).toBeUndefined();
+    expect(nearestFileChart(chart, 'odf').chart.type).toBe('column');
+    const xlsx = writeXlsx(fileOf(sheet), 'h');
+    expect(xlsx.losses).toEqual([{ k: 'chart_nearest_type', sheet: 'Sales' }]);
+    const xml = (await entries(xlsx.data)).get('xl/charts/chart1.xml')!;
+    expect(xml).toContain('<c:barDir val="col"/>');
+    expect((await readBack(xlsx.data, true)).sheets[0]!.charts![0]!.type).toBe('histogram');
+    const ods = writeOds(fileOf(sheet), 'h');
+    expect((await entries(ods.data)).get('Object 1/content.xml')).toContain(
+      'chart:class="chart:bar"',
+    );
+    const file = await readBack(ods.data);
+    expect(file.sheets[0]!.charts![0]!.type).toBe('histogram');
+    expect(
+      sheetsFromFile(file, AGENT_LOCALE, seeded(9)).sheets[0]!.layout.objects![0],
+    ).toMatchObject({ type: 'histogram' });
+    expect(
+      (await readBack(writeFlatOds(fileOf(sheet), 'h').data)).sheets[0]!.charts![0]!.type,
+    ).toBe('histogram');
+  });
+});

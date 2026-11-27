@@ -228,6 +228,24 @@ describe('chart elements', () => {
     }
   });
 
+  it('draw a histogram, its value columns the values it counts (D324)', () => {
+    const { wb, sheet } = book();
+    const built = buildChartChange(wb, sheet.id, {
+      op: 'chart',
+      type: 'histogram',
+      range: 'A1:C3',
+    });
+    if (!built.ok) throw new Error(built.message);
+    const [el] = sheetChartElements(
+      wb,
+      { x: 0, y: 0, width: 960, height: 560 },
+      sheet.id,
+      built.charts,
+    );
+    expect(el).toMatchObject({ shape: 'line-chart', chartVariant: 'histogram' });
+    expect(el!.lineSeries!.length).toBeGreaterThan(0);
+  });
+
   it('draw a bubble chart, which joins no lines (D320)', () => {
     const { wb, sheet } = book();
     const built = buildChartChange(wb, sheet.id, { op: 'chart', type: 'bubble', range: 'A1:C3' });

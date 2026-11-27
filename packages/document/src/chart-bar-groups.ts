@@ -20,9 +20,17 @@ const NAME_FONT_PX = 9;
 const NAME_GLYPH_PX = 5;
 const NAME_GAP = 4;
 
-/** Whether a chart draws its series side by side: a column or bar chart holding two or more (D281). */
-export const isBarGroupChart = (el: { shape: string; lineSeries?: readonly LineSeries[] }) =>
-  el.shape === 'bar-chart' && (el.lineSeries?.length ?? 0) >= 2;
+/**
+ * Whether a chart draws its series side by side: a column or bar chart holding two or more (D281), or a histogram's
+ * columns of any number (chart-histogram.ts `histogramColumns`, D324), which name their series in the legend.
+ */
+export const isBarGroupChart = (el: {
+  shape: string;
+  chartVariant?: unknown;
+  lineSeries?: readonly LineSeries[];
+}) =>
+  el.shape === 'bar-chart' &&
+  ((el.lineSeries?.length ?? 0) >= 2 || el.chartVariant === 'histogram');
 
 export type BarGroupMarks = Omit<BarMarks, 'bars'> & {
   // By series, then category: null where the series has no value there.

@@ -1,6 +1,6 @@
 'use client';
 
-// Line, Area, Stepped Area, Scatter, Bubble, Radar, Candlestick, OHLC and Combo charts (docs/specs/009-elements/pie-chart.md "Chart types"): a 2-D chart — shared x-axis `lineCategories` and one or
+// Line, Area, Stepped Area, Scatter, Bubble, Radar, Candlestick, OHLC, Histogram and Combo charts (docs/specs/009-elements/pie-chart.md "Chart types"): a 2-D chart — shared x-axis `lineCategories` and one or
 // more named `lineSeries`, each drawn as a polyline with point markers in the
 // theme palette, with an optional legend listing the series. Data is edited as
 // a grid (or imported from CSV) via the Data menu. Reuses the chart-family
@@ -30,6 +30,8 @@ import {
   isBubbleChart,
   isStockChart,
   isRadarChart,
+  histogramColumns,
+  isHistogramChart,
   pointsMarked,
   type ShapeElement,
 } from '@livedoc/document';
@@ -42,6 +44,7 @@ import { ChartValues } from '@/components/primitives/ChartValues';
 import { RadarChartView } from './RadarChartView';
 import { BubbleChartView } from './BubbleChartView';
 import { StockChartView } from './StockChartView';
+import { BarGroupChartView } from './BarGroupChartView';
 
 // How far from a step's middle the pointer reads it.
 const STEP_HOVER_PX = 6;
@@ -56,11 +59,13 @@ type Props = {
 };
 
 // A Radar chart draws around a centre (pie-chart.md "Radar"), a Bubble chart its sized circles ("Bubble"), a Candlestick or
-// OHLC chart its prices ("Candlestick and OHLC"); every other
+// OHLC chart its prices ("Candlestick and OHLC"), a Histogram the column chart of its counts ("Histogram"); every other
 // line chart its lines and points on its two axes.
 export function LineChartView(props: Props) {
   if (isBubbleChart(props.element)) return <BubbleChartView {...props} />;
   if (isStockChart(props.element)) return <StockChartView {...props} />;
+  if (isHistogramChart(props.element))
+    return <BarGroupChartView {...props} element={histogramColumns(props.element)} />;
   return isRadarChart(props.element) ? (
     <RadarChartView {...props} />
   ) : (
