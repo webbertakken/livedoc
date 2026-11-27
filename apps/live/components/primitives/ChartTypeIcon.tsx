@@ -47,6 +47,14 @@ const MARKS: Record<ChartType, React.ReactNode> = {
       <circle cx="18" cy="7" r="1.2" fill="currentColor" />
     </>
   ),
+  bubble: (
+    <>
+      <path d={AXES} />
+      <circle cx="9" cy="14" r="2.5" fill="currentColor" fillOpacity={0.25} />
+      <circle cx="16" cy="9" r="3.5" fill="currentColor" fillOpacity={0.25} />
+      <circle cx="15" cy="16" r="1.3" fill="currentColor" fillOpacity={0.25} />
+    </>
+  ),
   pie: <Prims prims={lucideChartPie} />,
   doughnut: (
     <>

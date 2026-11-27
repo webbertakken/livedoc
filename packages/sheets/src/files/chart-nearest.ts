@@ -30,6 +30,7 @@ const NEAREST_TYPE: Readonly<Record<SheetChartType, HeldChartType>> = {
   area: 'area',
   'stepped-area': 'area',
   scatter: 'scatter',
+  bubble: 'bubble',
   pie: 'pie',
   doughnut: 'doughnut',
   radar: 'radar',
@@ -52,7 +53,8 @@ export function nearestFileChart(chart: FileChart): {
 } {
   const held: HeldFileChart = {
     ...chart,
-    type: NEAREST_TYPE[chart.type],
+    // A Bubble chart with no sizes is no format's bubble: a scatter (D321).
+    type: chart.type === 'bubble' && !chart.sizes ? 'scatter' : NEAREST_TYPE[chart.type],
     series: chart.series.map(({ type, ...s }) =>
       type ? { ...s, type: NEAREST_SERIES_TYPE[type] } : s,
     ),

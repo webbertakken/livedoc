@@ -2,6 +2,7 @@
 // suggestion; rejecting every one reads as the primary, accepting every one as the selected; bounded.
 import { describe, expect, it } from 'vitest';
 import * as Y from 'yjs';
+import { cpuBudgetMs, cpuNowMs } from '@livedoc/vitest-config/cpu-time';
 import type { Block, Inline, Paragraph, Run } from '../model/blocks';
 import type { Table, TableRow } from '../model/tables';
 import type { TextProps } from '../model/props';
@@ -373,13 +374,14 @@ describe('TextDocumentComparison.compare', () => {
       ).join(' ');
     const pages = (change: boolean) =>
       Array.from({ length: 1_500 }, (_, p) => para(`${p} ${words(45, change)}`));
-    const started = performance.now();
+    // CPU time, not the wall clock: a busy runner's wait for a core is not the comparison's cost.
+    const started = cpuNowMs();
     const result = TextDocumentComparison.compare(doc(...pages(false)), doc(...pages(true)), {
       name: NAME,
       at: AT,
       comments: false,
     });
-    expect(performance.now() - started).toBeLessThan(TEXT_DOCUMENT_COMPARE_BUDGET_MS);
+    expect(cpuNowMs() - started).toBeLessThan(cpuBudgetMs(TEXT_DOCUMENT_COMPARE_BUDGET_MS));
     expect(result.ok).toBe(true);
   });
 
@@ -388,13 +390,14 @@ describe('TextDocumentComparison.compare', () => {
       Array.from({ length: 1_500 }, (_, p) =>
         para(Array.from({ length: 45 }, (_, k) => `${side}${p}x${k}`).join(' ')),
       );
-    const started = performance.now();
+    // CPU time, not the wall clock: a busy runner's wait for a core is not the comparison's cost.
+    const started = cpuNowMs();
     const result = TextDocumentComparison.compare(doc(...pages('a')), doc(...pages('b')), {
       name: NAME,
       at: AT,
       comments: false,
     });
-    expect(performance.now() - started).toBeLessThan(TEXT_DOCUMENT_COMPARE_BUDGET_MS);
+    expect(cpuNowMs() - started).toBeLessThan(cpuBudgetMs(TEXT_DOCUMENT_COMPARE_BUDGET_MS));
     expect(result.ok).toBe(true);
   });
 });

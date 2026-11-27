@@ -146,6 +146,13 @@ admin routes.
   At most 6 D1 writes are in flight at once.
 - **Retried.** A drain that fails keeps every key it did not push and tries again a minute later.
   A key written again during a drain stays for the next one.
+- **Never stranded** (issue #802): while the outbox owes D1, the room holds an alarm. A part of the alarm that fails
+  (agent presence, the baton, the drain, the shares, upkeep) is logged as `[room-alarm] failed id=<documentId>
+part=<part>` and the others still run; the next alarm is set whatever failed. An alarm the storage refused to set is
+  logged as `[room-alarm] arm failed id=<documentId>` and set again at the room's next write or wake. The room
+  keeps when its outbox first came to owe D1; a drain of an outbox owed for over 10 minutes (`OUTBOX_OVERDUE_MS`,
+  (default)) is logged as `[outbox] overdue id=<documentId> keys=<n> age=<minutes>m`, whether D1 was down or the room
+  lay without an alarm until a wake. A wake drains what is owed at once.
 - **What a drain pushes**: the content summary and `saved_at` to `documents`; per changed tab, its comment threads and
   actions for the Inbox, its cards assigned to someone, its search text, and the blobs it holds where its kind holds
   any; the document's whole set of placed images. A tab that has gone takes its rows and its tab-scoped share
@@ -195,6 +202,8 @@ The invariants and edge cases the code and its tests cite by id.
   documented route).
 - **R1** schema on first write only: `document-schema.test.ts`, `document-db.test.ts`.
 - **R3** every write path keys the outbox: `document-outbox-keys.test.ts`, one case per table.
+- **R4** a room owing D1 always holds an alarm: after any part of its alarm fails, after the storage refuses an alarm,
+  and across a wake (`room-alarm.test.ts`).
 
 ## Defaults
 

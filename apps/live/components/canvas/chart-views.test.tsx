@@ -172,6 +172,40 @@ describe('chart views', () => {
     expect(container.textContent).toContain('Range · Model: 5');
   });
 
+  it('draws a bubble chart’s sized circles, a name inside, values, and reads a hovered bubble (Bubble, D320)', () => {
+    const { container } = render(
+      <LineChartView
+        element={el('line-chart', {
+          width: 400,
+          height: 300,
+          chartVariant: 'bubble',
+          chartAxis: true,
+          chartValues: true,
+          lineCategories: ['1', '2', '3'],
+          linePointNames: ['Big', 'S', 'Gone'],
+          lineSeries: [
+            { name: 'Score', values: [3, 4, 5], color: '#aa3300' },
+            { name: 'Speed', values: [100, 1, null] },
+          ],
+        })}
+        textColor="#000"
+      />,
+    );
+    // No bubble where the size has no value; the largest drawn first.
+    const bubbles = container.querySelectorAll('circle[fill="#aa3300"]');
+    expect(bubbles).toHaveLength(2);
+    expect(Number(bubbles[0]!.getAttribute('r'))).toBeGreaterThan(
+      Number(bubbles[1]!.getAttribute('r')),
+    );
+    const texts = [...container.querySelectorAll('text')].map((t) => t.textContent);
+    for (const t of ['Big', '3', '4']) expect(texts).toContain(t);
+    // The sizes have no key.
+    expect(container.textContent).toContain('Score');
+    expect(container.textContent).not.toContain('Speed');
+    fireEvent.pointerEnter(bubbles[1]!);
+    expect(container.textContent).toContain('S, 4, 2, 1');
+  });
+
   it('draws a smooth line chart’s lines as curves (Smooth Line, D284)', () => {
     const { container } = render(
       <LineChartView element={el('line-chart', { chartSmooth: true })} textColor="#000" />,
