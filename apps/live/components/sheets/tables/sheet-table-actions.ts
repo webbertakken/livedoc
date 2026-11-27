@@ -1,15 +1,20 @@
 // What a Sheet's tables do (docs/specs/029-sheets/data-tools.md "Tables"): Convert to Table over the selection, a
-// table's settings written whole, Select Table and Delete Table; each through the controller's write, one undo step,
-// an Editor's. Spread into useSheetActions.
+// table's settings written whole, Select Table and Delete Table, and the column menu's sort, insert and delete; each
+// through the controller's write, one undo step, an Editor's. Spread into useSheetActions.
 import {
   columnTypeWrite,
   convertToRangeWrites,
   convertToTable,
+  deleteAxis,
+  layoutIndex,
   posRangeOf,
   tableAt,
+  tableColumnInsertWrite,
+  tableSortWrite,
   TABLE_REFUSAL_COPY,
   totalRowWrite,
   type CellChange,
+  type DropdownOption,
   type GridRange,
   type LayoutChange,
   type SheetTable,
@@ -87,10 +92,34 @@ export function sheetTableActions(c: SheetController) {
       }
       return c.write(made.write, 'Table');
     },
-    // A column's type (Table Settings, the column menu): with its cells' format, a Dropdown's options its values.
-    setColumnType(id: string, colId: string, type: TableColumnType | null): boolean {
-      const write = columnTypeWrite(c.workbook, c.sheet.id, id, colId, type);
+    // A column's type (Table Settings, the column menu): with its cells' format; a Dropdown's options those given,
+    // else its values.
+    setColumnType(
+      id: string,
+      colId: string,
+      type: TableColumnType | null,
+      options?: readonly DropdownOption[],
+    ): boolean {
+      const write = columnTypeWrite(c.workbook, c.sheet.id, id, colId, type, options);
       return !!write && c.write(write, 'Table');
+    },
+    // The column menu's Sort A to Z / Z to A: the table's data rows by the column; a merge's refusal toasted.
+    sortTableColumn(id: string, colId: string, ascending: boolean): void {
+      const w = tableSortWrite(c.workbook, c.sheet.id, id, colId, ascending);
+      if (w && 'refused' in w) return c.toast(w.refused);
+      if (w && c.write(w, 'Sort')) c.announce(ascending ? 'Sorted A to Z' : 'Sorted Z to A');
+    },
+    // The column menu's Insert 1 Column Left / Right: joining the table beside its edge columns (D450).
+    insertTableColumn(id: string, colId: string, side: 'before' | 'after'): void {
+      const room = c.workbook.room(c.sheet.id);
+      const w = tableColumnInsertWrite(c.sheet, id, colId, side, room);
+      if (w && c.write(w, 'Columns')) c.announce('1 column inserted');
+    },
+    // The column menu's Delete Sheet Column: the whole sheet column, the table shrinking with it.
+    deleteTableColumn(colId: string): void {
+      const at = layoutIndex(layout()).colPos.get(colId);
+      const w = at === undefined ? null : deleteAxis(c.sheet, 'c', at, at);
+      if (w && c.write(w, 'Columns')) c.announce('1 column deleted');
     },
     // Select Table: its cells selected, the header row's first cell active.
     selectTable(id: string): void {

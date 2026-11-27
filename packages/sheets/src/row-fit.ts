@@ -8,7 +8,7 @@ import { baseRowHeight, colWidth, layoutIndex, posRangeOf } from './layout';
 import { AXIS_SIZE_MAX, ROW_HEIGHT_NEW } from './limits';
 import { displayValue } from './number-format';
 import { ruleIndex, rulesAt } from './rules/rule-index';
-import { validationRuleAt } from './rules/validation';
+import { hasValidation, validationRuleAt } from './rules/validation';
 import { cellKey, type CellFormat, type FormatRule, type Sheet, type SheetLayout } from './sheet';
 import { fontPx, lineHeightPx, textWidth } from './text/text-measure';
 import { turnedBox, turnedLines } from './text/rotation';
@@ -113,7 +113,7 @@ type Place = { layout: SheetLayout; facts: LayoutFacts; r: number; c: number; wi
 
 // The width a cell's text breaks in: its box less its padding and what is kept at its right.
 function textRoom({ layout, facts, r, c, width }: Place): number {
-  const rule = layout.rules?.length ? validationRuleAt(layout, r, c) : null;
+  const rule = hasValidation(layout) ? validationRuleAt(layout, r, c) : null;
   const arrow = (rule?.is === 'list' || rule?.is === 'range') && rule.show === 'arrow';
   const dropdown = arrow || facts.tableCols.has(layout.cols[c]!) ? DROPDOWN_ROOM_PX : 0;
   const head = facts.filterHead;
@@ -123,7 +123,7 @@ function textRoom({ layout, facts, r, c, width }: Place): number {
 
 // A cell whose value a validation rule draws as a chip or a checkbox: one line, whatever it holds.
 function drawnAsControl({ layout, r, c }: Place): boolean {
-  const rule = layout.rules?.length ? validationRuleAt(layout, r, c) : null;
+  const rule = hasValidation(layout) ? validationRuleAt(layout, r, c) : null;
   return rule?.is === 'check' || ((rule?.is === 'list' || rule?.is === 'range') && !rule.show);
 }
 

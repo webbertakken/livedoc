@@ -3,7 +3,12 @@
 // room; one in This Browser in the editor itself, its tabs changed quietly (the sheet bar's own undo step holds the
 // change) and its sheets through the sheet store, which keeps them in its record.
 import type { Tab } from '@livedoc/document';
-import { layoutForCopy, sheetToJson, workbookSheetLayout } from '@livedoc/sheets';
+import {
+  layoutForCopy,
+  sheetToJson,
+  withFreeTableNames,
+  workbookSheetLayout,
+} from '@livedoc/sheets';
 import {
   apiAddWorkbookSheet,
   apiDeleteWorkbookSheet,
@@ -58,7 +63,10 @@ export function cloudSheetBar(scope: WorkbookScope, settle: () => Promise<void>)
   };
 }
 
-type OfflineStore = Pick<SheetStore, 'create' | 'release' | 'restoreReleased' | 'sheet'>;
+type OfflineStore = Pick<
+  SheetStore,
+  'create' | 'release' | 'restoreReleased' | 'sheet' | 'layoutsOn'
+>;
 
 export function offlineSheetBar(
   store: OfflineStore,
@@ -94,11 +102,14 @@ export function offlineSheetBar(
             title: name,
             ...(copyOf ? { copyOf } : { layout: workbookSheetLayout() }),
           },
-          // The workbook's named ranges stay with the original (sheet.md D298).
+          // The workbook's named ranges stay with the original (sheet.md D298); its tables take free names (D451).
           source
             ? {
                 ...sheetToJson(source),
-                layout: layoutForCopy(source.layout, true),
+                layout: withFreeTableNames(
+                  layoutForCopy(source.layout, true),
+                  store.layoutsOn(source.tabId),
+                ),
                 id: sheetId,
                 tabId,
                 title: name,

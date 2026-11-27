@@ -10,6 +10,7 @@ import {
   type SheetJson,
   type SheetLayout,
   type SheetPerson,
+  type SheetTable,
 } from '@livedoc/sheets';
 import type { DocumentEnv } from '../types';
 import { sheetNoteUnreferencedStatement } from './sheet-refs';
@@ -492,15 +493,28 @@ export function copySheetStatements(
   to: { id: string; tabId: string; title: string; by: SheetPerson },
   now: number,
   inSpreadsheet: boolean,
+  // The copy's tables, renamed free of the workbook's (data-tools.md "Tables" "Copies", D451); none: as the source's.
+  tables?: readonly SheetTable[],
 ): D1PreparedStatement[] {
-  const layout = inSpreadsheet
+  const kept = inSpreadsheet
     ? `json_remove(layout, '$.names', '$.protections')`
     : `json_remove(layout, '$.protections')`;
+  const layout = tables ? `json_set(${kept}, '$.tables', json(?))` : kept;
   return [
     env.DOCUMENT_DB.prepare(
       `INSERT INTO sheets (document_id, id, tab_id, title, layout, rev, cell_count, cell_bytes, created_at, updated_at, updated_by)
        SELECT document_id, ?, ?, ?, ${layout}, 0, cell_count, cell_bytes, ?, ?, ? FROM sheets WHERE document_id = ? AND id = ?`,
-    ).bind(to.id, to.tabId, to.title, now, now, JSON.stringify(to.by), documentId, fromId),
+    ).bind(
+      to.id,
+      to.tabId,
+      to.title,
+      ...(tables ? [JSON.stringify(tables)] : []),
+      now,
+      now,
+      JSON.stringify(to.by),
+      documentId,
+      fromId,
+    ),
     env.DOCUMENT_DB.prepare(
       `INSERT INTO sheet_cells (document_id, sheet_id, row_id, col_id, input, format, style_id)
        SELECT document_id, ?, row_id, col_id, input, format, style_id FROM sheet_cells WHERE document_id = ? AND sheet_id = ?`,

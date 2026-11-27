@@ -478,6 +478,14 @@ export class SheetStore {
       .map((e) => e.view.title);
   }
 
+  // The layouts of the sheets in the tab's scope: whose table names a copy's must not take (data-tools.md D451).
+  layoutsOn(tabId: string): SheetLayout[] {
+    const scope = this.scopeOf(tabId);
+    return [...this.entries.values()]
+      .filter((e) => this.inScope(e.view, scope))
+      .map((e) => e.view.layout);
+  }
+
   // Plan cards for the card functions, as the page holds them: the Worker reads them as the engine does.
   setCards(cards: CardData | null): void {
     if (cards === this.cards) return;

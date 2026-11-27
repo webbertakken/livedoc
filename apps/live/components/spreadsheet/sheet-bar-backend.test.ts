@@ -78,6 +78,7 @@ function offline(answer: 'made' | 'refused' = 'made') {
       return true;
     }),
     sheet: vi.fn((id: string) => (id === source.id ? sheetFromJson(source) : undefined)),
+    layoutsOn: vi.fn((_tabId: string) => [source.layout]),
   };
   const bar = offlineSheetBar(store, (map) => (tabs = map(tabs)));
   return { bar, store, names: () => tabs.map((t) => t.name) };
@@ -116,6 +117,27 @@ describe('offlineSheetBar', () => {
     );
     await o.bar.put({ ...entry, copyOf: 'sheetOne1' });
     expect(o.store.create.mock.calls[0]![1]!.layout.names).toBeUndefined();
+  });
+
+  // data-tools.md "Tables" "Copies" (D451): a copy's tables take the next free names in the workbook.
+  it("renames a copy's tables free of the workbook's", async () => {
+    const o = offline();
+    const [r1, r2] = source.layout.rows;
+    const [c1, c2] = source.layout.cols;
+    const held = {
+      ...source,
+      layout: {
+        ...source.layout,
+        tables: [{ id: 'tbl001', name: 'Sales', r1: r1!, c1: c1!, r2: r2!, c2: c2! }],
+      },
+    };
+    o.store.sheet.mockReturnValue(sheetFromJson(held));
+    o.store.layoutsOn.mockReturnValue([held.layout]);
+    await o.bar.put({ ...entry, copyOf: 'sheetOne1' });
+    expect(o.store.layoutsOn).toHaveBeenCalledWith('t1');
+    expect(o.store.create.mock.calls[0]![1]!.layout.tables).toEqual([
+      { ...held.layout.tables[0], name: 'Sales_2' },
+    ]);
   });
 
   it('refuses a copy of a sheet it does not hold, taking the tab back out', async () => {

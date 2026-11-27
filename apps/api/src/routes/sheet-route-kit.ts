@@ -2,7 +2,7 @@
 // confined to, the refusals, the writer, and the room relay (docs/specs/029-sheets/sheet-store.md "Who may do
 // what", "Live for everyone").
 import type { SheetError, SheetsRoomOp, WorkbookError } from '@livedoc/api-schema';
-import { SheetLimits, type SheetLayout } from '@livedoc/sheets';
+import { SheetLimits, tablesForCopy, type SheetLayout, type SheetTable } from '@livedoc/sheets';
 import { getDocumentMeta } from '../db';
 import { gridsWith, workbookGrids } from '../db/sheet-grids';
 import { json } from '../responses';
@@ -82,6 +82,19 @@ export async function newGridProblem(
   if (!refusal) return null;
   console.info('[workbook] refused', { error: refusal });
   return sheetRejected(refusal, 413);
+}
+
+/** A copied sheet's tables renamed free of its workbook's (data-tools.md D451); undefined when it holds none. */
+export function copiedTables(
+  layout: SheetLayout,
+  workbook: readonly { layout: SheetLayout }[],
+): SheetTable[] | undefined {
+  return layout.tables?.length
+    ? tablesForCopy(
+        layout.tables,
+        workbook.map((h) => h.layout),
+      )
+    : undefined;
 }
 
 export const sheetNotFound = () => sheetRejected('sheet_not_found', 404);

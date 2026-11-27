@@ -122,7 +122,9 @@ describe('the spreadsheet shortcut layer', () => {
     'opens each menu by its Alt key on %s',
     (platform) => {
       const { surface } = renderOn(platform);
-      for (const row of BUILT.filter((r) => r.id.endsWith('-menu'))) {
+      // The menu bar's menus; the table column menu opens on a table (SheetTablesLayer.test.tsx).
+      const menuBar = BUILT.filter((r) => r.id.endsWith('-menu') && r.id !== 'table-column-menu');
+      for (const row of menuBar) {
         // jsdom is not Chrome: the other browsers' way.
         const way = parseShortcut(row.keys[platform]).find((w) => w.browser !== 'chrome')!;
         act(() => {

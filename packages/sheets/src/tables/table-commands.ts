@@ -262,10 +262,45 @@ const TYPE_FORMATS: Partial<Record<TableColumnType, NumberFormatKind>> = {
   dateTime: 'datetime',
 };
 
+// A column's values from row `r1` to `r2` as a dropdown's options: as they read, once each (case aside), in order.
+function valuesAsOptions(wb: Workbook, sheetId: string, r1: number, r2: number, c: number) {
+  const options: DropdownOption[] = [];
+  const seen = new Set<string>();
+  for (let r = r1; r <= r2 && options.length < DROPDOWN_OPTIONS_MAX; r++) {
+    const v = wb.value(sheetId, r, c);
+    const text =
+      v === null || typeof v === 'object' ? '' : String(v).trim().slice(0, DROPDOWN_OPTION_MAX);
+    if (!text || seen.has(text.toLowerCase())) continue;
+    seen.add(text.toLowerCase());
+    options.push({ v: text });
+  }
+  return options;
+}
+
+/**
+ * A Dropdown column's options as Edit Column Type opens them (data-tools.md "Tables" "Column menu"): its own, else its
+ * data cells' values as they read (D449). Empty for a column not in the table.
+ */
+export function tableColumnOptions(
+  wb: Workbook,
+  sheetId: string,
+  tableId: string,
+  colId: string,
+): DropdownOption[] {
+  const sheet = wb.sheet(sheetId);
+  const table = sheet?.layout.tables?.find((t) => t.id === tableId);
+  const p = table && sheet && posRangeOf(sheet.layout, table);
+  const c = sheet && layoutIndex(sheet.layout).colPos.get(colId);
+  if (!table || !p || c === undefined || c < p.c1 || c > p.c2) return [];
+  const own = table.opts?.[colId];
+  if (own?.length) return own;
+  return valuesAsOptions(wb, sheetId, p.r1 + 1, table.total ? p.r2 - 1 : p.r2, c);
+}
+
 /**
  * A column's type set (data-tools.md "Tables"): the table's types, and its data cells' number format for a Number,
- * Percent, Currency, Date, Time or Date Time column; a Dropdown's options the column's values as they read, once
- * each, in their order (D449). One write.
+ * Percent, Currency, Date, Time or Date Time column; a Dropdown's options those given (the column menu's form), else
+ * the column's values as they read, once each, in their order (D449). One write.
  */
 export function columnTypeWrite(
   wb: Workbook,
@@ -273,6 +308,7 @@ export function columnTypeWrite(
   tableId: string,
   colId: string,
   type: TableColumnType | null,
+  given?: readonly DropdownOption[],
 ): SheetWrite | null {
   const sheet = wb.sheet(sheetId);
   const table = sheet?.layout.tables?.find((t) => t.id === tableId);
@@ -285,18 +321,12 @@ export function columnTypeWrite(
   const { types: _types, opts: _opts, ...rest } = table;
   const nextTypes = type ? { ...types, [colId]: type } : types;
   const lastData = table.total ? p.r2 - 1 : p.r2;
-  const options: DropdownOption[] = [];
-  if (type === 'dropdown') {
-    const seen = new Set<string>();
-    for (let r = p.r1 + 1; r <= lastData && options.length < DROPDOWN_OPTIONS_MAX; r++) {
-      const v = wb.value(sheetId, r, c);
-      const text =
-        v === null || typeof v === 'object' ? '' : String(v).trim().slice(0, DROPDOWN_OPTION_MAX);
-      if (!text || seen.has(text.toLowerCase())) continue;
-      seen.add(text.toLowerCase());
-      options.push({ v: text });
-    }
-  }
+  const options: DropdownOption[] =
+    type !== 'dropdown'
+      ? []
+      : given
+        ? [...given]
+        : valuesAsOptions(wb, sheetId, p.r1 + 1, lastData, c);
   const nextOpts = options.length ? { ...opts, [colId]: options } : opts;
   const next: SheetTable = {
     ...rest,

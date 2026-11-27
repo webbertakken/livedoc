@@ -1,7 +1,7 @@
 // Typing in a dropdown cell (docs/specs/029-sheets/data-validation.md "Using a dropdown"): the options matching what
 // is typed, those starting with it first, then those holding it, case aside; at most DROPDOWN_ASSIST_MAX. With Allow
 // Multiple Selections, the part after the last comma is matched, and each option's value keeps the parts before it.
-import { rangeOptions, validationRuleAt, type Workbook } from '@livedoc/sheets';
+import { hasValidation, rangeOptions, validationRuleAt, type Workbook } from '@livedoc/sheets';
 
 // An option shown under the editor, and the cell's text it saves.
 export type DropdownMatch = { label: string; value: string };
@@ -15,7 +15,7 @@ export function dropdownMatches(
   draft: string,
 ): DropdownMatch[] | null {
   const sheet = wb.sheet(sheetId);
-  if (!sheet || draft.startsWith('=') || !sheet.layout.rules?.length) return null;
+  if (!sheet || draft.startsWith('=') || !hasValidation(sheet.layout)) return null;
   const rule = validationRuleAt(sheet.layout, at.r, at.c);
   if (!rule || (rule.is !== 'list' && rule.is !== 'range')) return null;
   const comma = rule.multi ? draft.lastIndexOf(',') : -1;

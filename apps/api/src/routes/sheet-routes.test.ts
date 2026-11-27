@@ -204,6 +204,28 @@ describe('creating and listing sheets', () => {
         .status,
     ).toBe(404);
   });
+  // data-tools.md "Tables" "Copies" (D451): a copy's tables take the next free names on its tab.
+  it("renames a copy's tables free of its tab's", async () => {
+    await make();
+    const s = (await call<SheetsResponse>({ method: 'GET', path: '/sheets' })).body.sheets[0]!;
+    const [r1, r2] = s.layout.rows;
+    const table = {
+      id: 'tbl001',
+      name: 'Sales',
+      r1: r1!,
+      c1: s.layout.cols[0]!,
+      r2: r2!,
+      c2: s.layout.cols[0]!,
+    };
+    sql.sql
+      .prepare("UPDATE sheets SET layout = json_set(layout, '$.tables', json(?)) WHERE id = ?")
+      .run(JSON.stringify([table]), 'sheetA00');
+    const copy = await call<SheetResponse>({
+      path: '/sheets',
+      body: { id: 'sheetC00', tabId: 't1', title: 'Budget (copy)', copyOf: 'sheetA00' },
+    });
+    expect(copy.body.sheet.layout.tables).toEqual([{ ...table, name: 'Sales_2' }]);
+  });
   it('caps the sheets of a document', async () => {
     for (let i = 0; i < 200; i++)
       sql.sql

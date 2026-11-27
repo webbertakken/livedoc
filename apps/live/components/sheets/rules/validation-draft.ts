@@ -15,6 +15,7 @@ import {
   parseLocaleNumber,
   posRangeOf,
   serialFromIso,
+  type DropdownOption,
   type GridRange,
   type RuleSettings,
   type RuleSource,
@@ -222,6 +223,17 @@ export function draftOf(
   };
 }
 
+// A dropdown's options as drafted, trimmed, the empty ones left out; or why they cannot be (none, or a repeat).
+export function dropdownOptionsOf(
+  drafted: readonly Option[],
+): { ok: true; opts: DropdownOption[] } | { ok: false; why: string } {
+  const opts = drafted.map((o) => ({ v: o.v.trim(), c: o.c })).filter((o) => o.v);
+  if (!opts.length) return { ok: false, why: 'Add at least one option' };
+  if (new Set(opts.map((o) => o.v.toLowerCase())).size !== opts.length)
+    return { ok: false, why: 'Each option must be different' };
+  return { ok: true, opts: opts.map((o) => (o.c ? { v: o.v, c: o.c } : { v: o.v })) };
+}
+
 // The draft as a rule's settings, or why it cannot be one.
 export function settingsOf(
   d: Draft,
@@ -253,15 +265,13 @@ export function settingsOf(
       return { ok: true, settings: { is: 'formula', fx, ...extra } };
     }
     case 'list': {
-      const opts = d.opts.map((o) => ({ v: o.v.trim(), c: o.c })).filter((o) => o.v);
-      if (!opts.length) return { ok: false, why: 'Add at least one option' };
-      if (new Set(opts.map((o) => o.v.toLowerCase())).size !== opts.length)
-        return { ok: false, why: 'Each option must be different' };
+      const opts = dropdownOptionsOf(d.opts);
+      if (!opts.ok) return opts;
       return {
         ok: true,
         settings: {
           is: 'list',
-          opts: opts.map((o) => (o.c ? { v: o.v, c: o.c } : { v: o.v })),
+          opts: opts.opts,
           ...(d.show === 'chip' ? {} : { show: d.show }),
           ...(d.multi ? { multi: true as const } : {}),
           ...extra,

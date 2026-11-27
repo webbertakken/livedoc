@@ -783,7 +783,7 @@ export const SPREADSHEET_SHORTCUTS: readonly ShortcutRow[] = [
     'Ctrl+Alt+\\',
     '⌘+Option+\\',
     'Ctrl+Alt+\\',
-    'specified',
+    'built',
   ),
   // Rows and columns
   row(

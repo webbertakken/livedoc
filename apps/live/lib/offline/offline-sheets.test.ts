@@ -330,6 +330,27 @@ describe('an offline spreadsheet', () => {
     expect(plan.layout.names).toEqual(names);
   });
 
+  // data-tools.md "Tables" "Copies" (D451): a sheet landing in a workbook takes table names free of its others'.
+  it("renames a copy's tables, and a carried-in sheet's, free of the workbook's", async () => {
+    const tables = [
+      { id: 'tbl001', name: 'Sales', r1: 'aaaa', c1: 'cccc', r2: 'bbbb', c2: 'cccc' },
+    ];
+    const held = { ...stored('sheetAAAA', 't1', 'One'), layout: { ...layout, tables } };
+    await offlinePutRecord(book([held]));
+    const copy = await offlineCreateSheet(
+      'd1',
+      { id: 'sheetCOPY', tabId: 't2', title: 'Two', copyOf: 'sheetAAAA' },
+      ME,
+    );
+    expect(copy.layout.tables).toEqual([{ ...tables[0], name: 'Sales_2' }]);
+    const carried = await offlineCreateSheet(
+      'd1',
+      { id: 'sheetSEED', tabId: 't3', title: 'Three', layout: held.layout },
+      ME,
+    );
+    expect(carried.layout.tables).toEqual([{ ...tables[0], name: 'Sales_3' }]);
+  });
+
   it('names a new sheet by the workbook, case aside, and by the name rules', async () => {
     await offlinePutRecord(book([stored('sheetAAAA', 't1', 'Costs')]));
     await expect(

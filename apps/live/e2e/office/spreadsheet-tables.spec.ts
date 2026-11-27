@@ -111,3 +111,57 @@ test('Convert to Table, a table reference, growth and its undo, the total row', 
   await page.screenshot({ path: test.info().outputPath('table-chips.png') });
   expectNoPageErrors(pageErrors);
 });
+
+// The column menu (data-tools.md "Tables" "Column menu"): a header cell's ▾ sorts the data rows; Ctrl+Alt+\ opens the
+// active cell's column's menu, whose Edit Column Type makes it a Dropdown with its options in the rule's form.
+test('the column menu sorts, and makes a Dropdown column by Ctrl+Alt+\\', async ({
+  page,
+  pageErrors,
+}) => {
+  test.setTimeout(180_000);
+  await page.setViewportSize({ width: 1280, height: 860 });
+  await page.goto('/new?kind=spreadsheet');
+  await page.waitForURL(/\/document\//);
+  await expect(page.locator(READY)).toBeVisible();
+  for (const [ref, text] of [
+    ['A1', 'Item'],
+    ['B1', 'Amount'],
+    ['A2', 'pen'],
+    ['B2', '3'],
+    ['A3', 'ink'],
+    ['B3', '1'],
+    ['A4', 'cap'],
+    ['B4', '2'],
+  ] as const)
+    await typeIn(page, ref, text);
+  await select(page, 'A2');
+  await page.keyboard.press('Control+Alt+t');
+  const panel = page.getByRole('complementary', { name: 'Table Settings' });
+  await panel.getByRole('button', { name: 'Done' }).click();
+
+  await page.getByRole('button', { name: 'Amount column menu' }).click();
+  const amount = page.getByRole('dialog', { name: 'Amount column menu' });
+  await page.screenshot({ path: test.info().outputPath('table-column-menu.png') });
+  await amount.getByRole('button', { name: 'Sort A to Z' }).click();
+  await expect(cell(page, 'A2 ink')).toBeVisible();
+  await expect(cell(page, 'A4 pen')).toBeVisible();
+  await expect(cell(page, 'A1 Item')).toBeVisible();
+
+  await select(page, 'A3');
+  await page.getByRole('grid').focus();
+  await page.keyboard.press('Control+Alt+Backslash');
+  const item = page.getByRole('dialog', { name: 'Item column menu' });
+  await item.getByRole('button', { name: 'Edit Column Type' }).click();
+  await item.getByRole('button', { name: 'Dropdown' }).click();
+  await expect(item.getByRole('textbox', { name: 'Option 1' })).toHaveValue('ink');
+  await item.getByRole('button', { name: 'Add Another Option' }).click();
+  await item.getByRole('textbox', { name: 'Option 4' }).fill('nib');
+  await page.screenshot({ path: test.info().outputPath('table-column-dropdown.png') });
+  await item.getByRole('button', { name: 'Done' }).click();
+  await expect(item).toHaveCount(0);
+  await page.getByRole('button', { name: 'Table1 table menu' }).click();
+  await tableMenu(page, 'Table1').getByRole('button', { name: 'Table Settings' }).click();
+  await expect(panel.getByRole('combobox', { name: 'Item type' })).toHaveValue('dropdown');
+  await page.screenshot({ path: test.info().outputPath('table-column-chips.png') });
+  expectNoPageErrors(pageErrors);
+});

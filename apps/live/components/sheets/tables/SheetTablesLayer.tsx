@@ -3,9 +3,17 @@
 // Each table's chip over the grid and its table menu (docs/specs/029-sheets/data-tools.md "Tables"): the table's name
 // above its header row's first cell (on it, when the header is the sheet's first row). Pressing it, or Enter or Space
 // on it, opens the menu: Table Settings, Rename (the name in place on the chip), Select Table, Convert to Range and
-// Delete Table, as Google's table menu. Everyone sees it; what changes the table is an Editor's, dimmed for others.
-import { useContext, useState } from 'react';
-import { posRangeOf, tableNameProblem, type SheetTable } from '@livedoc/sheets';
+// Delete Table, as Google's table menu. Each header cell holds its column's ▾ button, opening the column menu (also
+// Ctrl+Alt+\ on a cell of the table). Everyone sees them; what changes the table is an Editor's, dimmed for others.
+import { useContext, useEffect, useRef, useState } from 'react';
+import {
+  cellText,
+  posRangeOf,
+  tableAt,
+  tableColumnNames,
+  tableNameProblem,
+  type SheetTable,
+} from '@livedoc/sheets';
 import { ContextMenu, ContextMenuDivider } from '@/components/palette/ContextMenu';
 import { MenuActionRow, MenuHeader } from '@/components/primitives/PortalMenu';
 import { debugLog } from '@/lib/debug-log';
@@ -13,11 +21,20 @@ import { Glyph } from '../SheetCellMenu';
 import { useSheetController } from '../sheet-controller';
 import { rectOf } from '../SheetSelectionLayer';
 import { useSheetActions } from '../useSheetActions';
-import { TableSettingsContext } from './table-settings-context';
+import { TableColumnMenuContext, TableSettingsContext } from './table-settings-context';
+import { TableColumnMenu } from './TableColumnMenu';
 
 const CHIP_HEIGHT = 20;
+const COLUMN_BUTTON = 16;
 
 type MenuAt = { tableId: string; x: number; y: number };
+type ColumnMenuAt = MenuAt & { colId: string };
+
+// Where a menu opens: under the button that opened it.
+const below = (el: Element) => {
+  const box = el.getBoundingClientRect();
+  return { x: box.left, y: box.bottom };
+};
 
 export function SheetTablesLayer() {
   const c = useSheetController();
@@ -25,6 +42,25 @@ export function SheetTablesLayer() {
   const open = useContext(TableSettingsContext);
   const [menu, setMenu] = useState<MenuAt | null>(null);
   const [renaming, setRenaming] = useState<string | null>(null);
+  const [columnMenu, setColumnMenu] = useState<ColumnMenuAt | null>(null);
+  const root = useRef<HTMLDivElement | null>(null);
+  const openerRef = useContext(TableColumnMenuContext);
+  // Ctrl+Alt+\: the active cell's column's menu, under its header's button.
+  useEffect(() => {
+    if (!openerRef) return;
+    openerRef.current = () => {
+      const { active } = c.selectionNow();
+      const t = tableAt(c.sheet.layout, active.r, active.c);
+      const colId = c.sheet.layout.cols[active.c];
+      const button =
+        t && colId ? root.current?.querySelector(`[data-table-column="${t.id}:${colId}"]`) : null;
+      if (!t || !colId || !button) return;
+      setColumnMenu({ tableId: t.id, colId, ...below(button) });
+    };
+    return () => {
+      openerRef.current = null;
+    };
+  });
   const tables = c.sheet.layout.tables;
   if (!open || !tables?.length) return null;
   const editor = c.canShape;
@@ -53,12 +89,57 @@ export function SheetTablesLayer() {
     actions.setTable({ ...t, name: name.trim() });
   };
   const shown = menu && tables.find((t) => t.id === menu.tableId);
+  const columnTable = columnMenu && tables.find((t) => t.id === columnMenu.tableId);
+  const namesOf = (t: SheetTable) =>
+    tableColumnNames(c.sheet.layout, t, (r, col) => cellText(c.sheet, r, col));
+  const columnName = (t: SheetTable, colId: string) => {
+    const p = posRangeOf(c.sheet.layout, t);
+    const at = c.sheet.layout.cols.indexOf(colId);
+    return (p && namesOf(t)[at - p.c1]) ?? colId;
+  };
   const run = (fn: () => void) => () => {
     setMenu(null);
     fn();
   };
   return (
-    <div data-sheet-tables="" className="pointer-events-none absolute inset-0">
+    <div ref={root} data-sheet-tables="" className="pointer-events-none absolute inset-0">
+      {tables.map((t) => {
+        const p = posRangeOf(c.sheet.layout, t);
+        if (!p) return null;
+        const names = namesOf(t);
+        return names.map((columnName, i) => {
+          const colId = c.sheet.layout.cols[p.c1 + i]!;
+          const r = rectOf(
+            c.geometry,
+            { r1: p.r1, c1: p.c1 + i, r2: p.r1, c2: p.c1 + i },
+            c.scroll,
+          );
+          if (r.w < COLUMN_BUTTON * 2) return null;
+          return (
+            <button
+              key={`${t.id}:${colId}`}
+              type="button"
+              data-table-column={`${t.id}:${colId}`}
+              aria-label={`${columnName} column menu`}
+              aria-haspopup="dialog"
+              aria-expanded={columnMenu?.tableId === t.id && columnMenu.colId === colId}
+              className="pointer-events-auto absolute flex items-center justify-center rounded text-xs opacity-70 hover:opacity-100 focus-visible:opacity-100"
+              style={{
+                left: r.x + r.w - COLUMN_BUTTON - 2,
+                top: r.y + (r.h - COLUMN_BUTTON) / 2,
+                width: COLUMN_BUTTON,
+                height: COLUMN_BUTTON,
+                color: c.palette.text,
+              }}
+              onPointerDown={(e) => e.stopPropagation()}
+              onKeyDown={(e) => e.stopPropagation()}
+              onClick={(e) => setColumnMenu({ tableId: t.id, colId, ...below(e.currentTarget) })}
+            >
+              <span aria-hidden>▾</span>
+            </button>
+          );
+        });
+      })}
       {tables.map((t) => {
         const p = posRangeOf(c.sheet.layout, t);
         if (!p) return null;
@@ -102,10 +183,7 @@ export function SheetTablesLayer() {
             style={style}
             onPointerDown={(e) => e.stopPropagation()}
             onKeyDown={(e) => e.stopPropagation()}
-            onClick={(e) => {
-              const box = e.currentTarget.getBoundingClientRect();
-              setMenu({ tableId: t.id, x: box.left, y: box.bottom });
-            }}
+            onClick={(e) => setMenu({ tableId: t.id, ...below(e.currentTarget) })}
           >
             {t.name}
             <span aria-hidden>▾</span>
@@ -152,6 +230,15 @@ export function SheetTablesLayer() {
             onClick={run(() => actions.deleteTable(shown.id))}
           />
         </ContextMenu>
+      ) : null}
+      {columnMenu && columnTable ? (
+        <TableColumnMenu
+          table={columnTable}
+          colId={columnMenu.colId}
+          name={columnName(columnTable, columnMenu.colId)}
+          position={{ x: columnMenu.x, y: columnMenu.y }}
+          onClose={() => setColumnMenu(null)}
+        />
       ) : null}
     </div>
   );

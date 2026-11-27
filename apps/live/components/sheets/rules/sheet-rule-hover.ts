@@ -4,6 +4,7 @@ import {
   cellKey,
   displayValue,
   ruleMessage,
+  hasValidation,
   validationRuleAt,
   valueInvalid,
   workbookRuleChecks,
@@ -12,7 +13,7 @@ import type { SheetController } from '../sheet-controller';
 
 export function invalidWhy(c: SheetController, r: number, col: number): string | null {
   const layout = c.sheet.layout;
-  if (!layout.rules?.length) return null;
+  if (!hasValidation(layout)) return null;
   const rule = validationRuleAt(layout, r, col);
   if (!rule) return null;
   const value = c.workbook.value(c.sheet.id, r, col);

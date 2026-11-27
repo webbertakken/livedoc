@@ -17,6 +17,7 @@ import {
   makeSheetId,
   sheetFromJson,
   validateSheetCreate,
+  withFreeTableNames,
   type SheetCellJson,
   type SheetJson,
   type SheetLayout,
@@ -38,6 +39,7 @@ import { json, methodNotAllowed, noContent } from '../responses';
 import { readBody, type DocumentRouteContext } from './context';
 import { writer } from './item-route-kit';
 import {
+  copiedTables,
   newGridProblem,
   relaySheet,
   sheetCaller,
@@ -137,6 +139,8 @@ async function makeSheet(
   // A spreadsheet's sheets take the workbook's limits (spreadsheet.md "Limits"), a Plan Sheet its own.
   const spreadsheet = await isSpreadsheet(ctx.env, documentId);
   const limits = SheetLimits.of(spreadsheet);
+  // The sheets whose table names a new one's must not take: a spreadsheet's all, a Plan Sheet's its tab's.
+  const workbookHeads = async () => (spreadsheet ? listSheetHeads(ctx.env, documentId) : heads);
   if (totals.sheets >= limits.sheets) return sheetRejected('sheets_full', 413);
   const now = Date.now();
   if (create.copyOf) {
@@ -154,6 +158,7 @@ async function makeSheet(
         { id, tabId: create.tabId, title: create.title, by },
         now,
         spreadsheet,
+        copiedTables(source.layout, await workbookHeads()),
       ),
     );
   } else {
@@ -161,7 +166,13 @@ async function makeSheet(
       id,
       tabId: create.tabId,
       title: create.title,
-      layout: create.layout ?? emptyLayout(),
+      // A sheet carried in takes table names free of its workbook's (data-tools.md D451).
+      layout: create.layout
+        ? withFreeTableNames(
+            create.layout,
+            (await workbookHeads()).map((h) => h.layout),
+          )
+        : emptyLayout(),
       cells: create.cells ?? [],
       rev: 0,
       createdAt: now,

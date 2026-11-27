@@ -17,6 +17,7 @@ import {
   cellKey,
   displayValue,
   landingOf,
+  hasValidation,
   validationRuleAt,
   type GridRange,
 } from '@livedoc/sheets';
@@ -122,7 +123,7 @@ export function useSheetPointer(
   // What a press on a cell hits of its validation rule's drawing (a box, a chip, an arrow), if anything.
   const ruleAtPress = (r: number, col: number, x: number, y: number) => {
     const cc = latest.current;
-    if (!cc.sheet.layout.rules?.length) return null;
+    if (!hasValidation(cc.sheet.layout)) return null;
     const rule = validationRuleAt(cc.sheet.layout, r, col);
     if (!rule) return null;
     const g = cc.geometry;
