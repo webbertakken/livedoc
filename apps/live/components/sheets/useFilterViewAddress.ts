@@ -14,7 +14,7 @@ export function useFilterViewAddress(c: SheetController): void {
   const landed = useRef(false);
   // On landing: the view the address names, when it is this sheet's.
   useEffect(() => {
-    if (landed.current || typeof window === 'undefined') return;
+    if (landed.current) return;
     landed.current = true;
     const named = filterViewOfSearch(window.location.search);
     if (!named || named.sheetId !== sheetId) return;
@@ -30,7 +30,7 @@ export function useFilterViewAddress(c: SheetController): void {
   const savedId = filterViews.open && !filterViews.temporary ? filterViews.open.id : null;
   // Kept in step with the open saved view, once landed.
   useEffect(() => {
-    if (!landed.current || typeof window === 'undefined') return;
+    if (!landed.current) return;
     const named = filterViewOfSearch(window.location.search);
     const now = named?.sheetId === sheetId ? named.viewId : null;
     if (now === savedId || (!savedId && named && named.sheetId !== sheetId)) return;
