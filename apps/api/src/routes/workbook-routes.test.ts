@@ -468,4 +468,38 @@ describe('the sheets of one spreadsheet', () => {
       f: { r: [{ s: 'sheetBk1', r1: layout.rows[4], r2: layout.rows[5] }] },
     });
   });
+
+  it('shrinks a range a named function reads when its first row is deleted', async () => {
+    const ref = {
+      s: 'sheetBk1',
+      r1: layout.rows[3],
+      c1: layout.cols[0],
+      r2: layout.rows[5],
+      c2: layout.cols[0],
+      a: 15,
+    };
+    const plain = { name: 'TWICE', params: ['x'], body: '=x*2' };
+    const functions = [{ name: 'PICKED', params: [], body: '=SUM(@0)', refs: [ref] }, plain];
+    sql.sql.exec(`UPDATE workbook SET functions = '${JSON.stringify(functions)}'`);
+    const res = await write('sheetBk1', {
+      kind: 'layout',
+      changes: [{ k: 'deleteRows', ids: [layout.rows[3]] }],
+    });
+    expect(res.status).toBe(200);
+    const row = sql.sql.prepare('SELECT functions FROM workbook').get() as { functions: string };
+    expect(JSON.parse(row.functions)).toEqual([
+      { ...functions[0], refs: [{ ...ref, r1: layout.rows[4] }] },
+      plain,
+    ]);
+  });
+
+  it('leaves the named functions alone when none reads the rows deleted', async () => {
+    const functions = [{ name: 'TWICE', params: ['x'], body: '=x*2' }];
+    sql.sql.exec(`UPDATE workbook SET functions = '${JSON.stringify(functions)}', rev = 4`);
+    await write('sheetBk1', {
+      kind: 'layout',
+      changes: [{ k: 'deleteRows', ids: [layout.rows[3]] }],
+    });
+    expect(sql.sql.prepare('SELECT rev FROM workbook').get()).toEqual({ rev: 4 });
+  });
 });

@@ -9,6 +9,7 @@ import {
   type Sheet,
   type SheetJson,
   type SheetWrite,
+  type NamedFunction,
   CellMap,
   SheetLimits,
   SPREADSHEET_THEMES,
@@ -121,6 +122,8 @@ function store(
     toast: (m: string) => void;
     pushUndo: (s: unknown) => void;
     wait: (ms: number) => Promise<void>;
+    functions: readonly NamedFunction[];
+    functionsShrunk: (functions: readonly NamedFunction[]) => void;
   }> = {},
 ) {
   return new SheetStore({
@@ -131,6 +134,8 @@ function store(
     toast: extra.toast ?? (() => {}),
     api: api,
     ...(extra.wait ? { wait: extra.wait } : {}),
+    ...(extra.functions ? { functions: extra.functions } : {}),
+    ...(extra.functionsShrunk ? { functionsShrunk: extra.functionsShrunk } : {}),
   });
 }
 
@@ -904,6 +909,19 @@ describe('validation rules in the store (docs/specs/029-sheets/data-validation.m
     await two.settle();
     expect(sum()).toBe(6);
     expect(src()).toEqual(range);
+  });
+  it('hands on the named functions a deletion shrinks, and nothing for one that shrinks none', async () => {
+    const srv = server(initial());
+    const { rows, cols } = srv.sheet.layout;
+    const ref = { s: 'sheet0001', r1: rows[0]!, c1: cols[0]!, r2: rows[2]!, c2: cols[0]!, a: 15 };
+    const picked: NamedFunction = { name: 'PICKED', params: [], body: '=SUM(@0)', refs: [ref] };
+    const shrunk: (readonly NamedFunction[])[] = [];
+    const s = store(srv.api, { functions: [picked], functionsShrunk: (f) => shrunk.push(f) });
+    await s.loadTab('t1');
+    s.write('sheet0001', { kind: 'layout', changes: [{ k: 'deleteRows', ids: [rows[0]!] }] });
+    expect(shrunk).toEqual([[{ ...picked, refs: [{ ...ref, r1: rows[1] }] }]]);
+    s.write('sheet0001', { kind: 'layout', changes: [{ k: 'deleteCols', ids: [cols[1]!] }] });
+    expect(shrunk).toHaveLength(1);
   });
   it('words a refusal without a line as the store does', () => {
     expect(writeRefusalMessage({ error: 'rules_full' })).toBe(

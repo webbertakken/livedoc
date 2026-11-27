@@ -33,6 +33,8 @@ export function SpreadsheetNamedFunctionsBody() {
         key={editing === 'new' ? 'new' : editing.name}
         existing={existing}
         others={existing ? NamedFunction.without(functions, existing.name) : functions}
+        ctx={c.workbook.ctxFor(c.sheet.id)}
+        locale={c.locale}
         onSave={(fn) => save(NamedFunction.put(functions, fn, existing?.name))}
         onClose={back}
       />

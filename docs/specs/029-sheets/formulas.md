@@ -165,11 +165,13 @@ settings"). A Plan Sheet has none of its own: it reads as the viewer's browser d
 - A definition may call other named functions, and itself: each call counts against the recalculation budget as a
   `LAMBDA`'s does, and calls nested deeper than 100 are `#NUM!` ("This named function calls itself too deeply")
   (default, D300).
-- A definition reads cells through its placeholders and named ranges; until named functions come from files, a
-  reference of its own (`A1`, `Sheet2!B:B`) is refused when it is saved ("Pass the cell as an argument, or use a
-  named range"). Then, as Google's, a reference in a definition is kept as an absolute reference to its sheet,
-  follows that sheet's renames and its rows and columns inserted or deleted as a formula's references do, and is
-  `#REF!` once its sheet is deleted (D301, ruled 2026-11-26).
+- A definition reads cells through its placeholders, named ranges and references of its own (`A1`, `Sheet2!B:B`).
+  As Google's, a reference in a definition is kept as an absolute reference to its sheet: `A1` typed while Sheet1 is
+  open is saved, and shown again, as `Sheet1!$A$1`, whichever sheet calls the function (D301, ruled 2026-11-26).
+  It is held as a formula's references are, by its sheet's, rows' and columns' ids, so it follows that sheet's
+  renames and its rows and columns inserted or moved; rows or columns deleted inside a range shrink it, as a range
+  read from another sheet shrinks ("Other sheets"); a cell deleted, or a range all deleted, is `#REF!`, and so is
+  every reference once its sheet is deleted.
 - Changing or removing a named function works every formula out again; a call to one removed is `#NAME?` ("Unknown
   function CONTAINS"), as any unknown function is.
 
@@ -1649,7 +1651,8 @@ The code cites each by its id.
   no day count found (measured: 213.5 days of a 214-day span at Actual/365) (default).
 - **D300** How deep named functions call each other: 100 calls deep, past which the formula is `#NUM!`, so a definition
   calling itself without end stops before the browser's own stack does (default).
-- **D301** A cell reference in a named function's definition: Refused until named functions are read from files, then
-  kept as Google keeps it, an absolute reference to its sheet adjusted as a formula's are (ruled by the Director,
-  2026-11-26: a refusal for good would turn files' LAMBDA names into errors).
+- **D301** A cell reference in a named function's definition: Kept as Google keeps it, an absolute reference to its
+  sheet adjusted as a formula's are (ruled by the Director, 2026-11-26: a refusal would turn files' LAMBDA names into
+  errors). A range shrunk by a deletion stays shrunk when the deletion is undone, as the definition is the
+  workbook's, not the sheet's (default).
 - The imports' defaults, D61 to D66 and D72 to D74, are kept in [Imports from the web](imports.md#defaults).

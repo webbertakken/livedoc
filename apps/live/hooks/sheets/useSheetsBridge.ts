@@ -43,6 +43,8 @@ export type SheetsBridge = {
   iteration?: Iteration;
   // A spreadsheet's named functions (formulas.md "Named functions"); absent, none.
   functions?: readonly NamedFunction[];
+  // A This Browser spreadsheet's named functions shrunk by this person's deletion, to save (D301); absent, the api's.
+  functionsShrunk?: (functions: readonly NamedFunction[]) => void;
   // A spreadsheet's Recalculation (settings.md "Calculation"); absent, on change.
   recalc?: WorkbookRecalc;
   // Whether a spreadsheet's imports may fetch (imports.md "Allow access", "A spreadsheet in This Browser"); absent
@@ -106,6 +108,7 @@ export function useSheetsBridge(opts: {
   oneWorkbook: boolean;
   iteration?: Iteration;
   functions?: readonly NamedFunction[];
+  functionsShrunk?: (functions: readonly NamedFunction[]) => void;
   recalc?: WorkbookRecalc;
   importAccess?: ImportAccess;
   rangeSources?: readonly string[];
@@ -153,6 +156,7 @@ export function useSheetsBridge(opts: {
     oneWorkbook,
     iteration,
     functions,
+    functionsShrunk,
     recalc,
     importAccess,
     rangeSources,
@@ -171,6 +175,7 @@ export function useSheetsBridge(opts: {
       oneWorkbook,
       ...(iteration ? { iteration } : {}),
       ...(functions ? { functions } : {}),
+      ...(functionsShrunk ? { functionsShrunk } : {}),
       ...(recalc ? { recalc } : {}),
       ...(importAccess !== undefined ? { importAccess } : {}),
       ...(rangeSources ? { rangeSources } : {}),
@@ -201,6 +206,7 @@ export function useSheetsBridge(opts: {
       oneWorkbook,
       iteration,
       functions,
+      functionsShrunk,
       recalc,
       importAccess,
       rangeSources,

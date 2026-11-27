@@ -29,6 +29,7 @@ import {
   mergeSheetChange,
   sheetFromJson,
   sheetToJson,
+  shrinkNamedFunctions,
   shrinkReadersOf,
   shrinkRuleSourcesOf,
   splitWrite,
@@ -97,6 +98,8 @@ type SheetStoreDeps = {
   iteration?: Iteration;
   // A spreadsheet's named functions (formulas.md "Named functions"); absent, none.
   functions?: readonly NamedFunction[];
+  // Rows or columns this person deleted shrank ranges the named functions read (D301): the list to save.
+  functionsShrunk?: (functions: readonly NamedFunction[]) => void;
   // A spreadsheet's Recalculation (settings.md "Calculation"): how often volatile formulas tick; absent, on change.
   recalc?: WorkbookRecalc;
   self: () => SheetPerson | null;
@@ -679,6 +682,7 @@ export class SheetStore {
     }
     // An undo or redo replays writes that already carry their readers' rewrites.
     const edits = opts.undo ? asMadeEdits : this.withReaders(asMadeEdits);
+    const functions = opts.undo ? null : this.functionsAfter(asMadeEdits);
     const now = Date.now();
     const states = new Map<string, Sheet>();
     const plan: { sheetId: string; write: SheetWrite; parts: SheetWrite[] }[] = [];
@@ -752,8 +756,28 @@ export class SheetStore {
         },
       });
     }
+    if (functions) {
+      debugLog('[sheets] named functions shrunk', { count: functions.length });
+      this.deps.functionsShrunk?.(functions);
+    }
     this.notify();
     return null;
+  }
+
+  // The named functions after rows or columns deleted shrink the ranges their definitions read (formulas.md "Named
+  // functions"), as other sheets' formulas' ranges shrink; null when none changed.
+  private functionsAfter(
+    edits: readonly { sheetId: string; write: SheetWrite }[],
+  ): NamedFunction[] | null {
+    let list: readonly NamedFunction[] = this.deps.functions ?? [];
+    let changed = false;
+    for (const { sheetId, write } of edits) {
+      const target = this.entries.get(sheetId)?.view;
+      if (write.kind !== 'layout' || !target || list.length === 0) continue;
+      const next = shrinkNamedFunctions(sheetId, target.layout, write.changes, list);
+      if (next) [list, changed] = [next, true];
+    }
+    return changed ? [...list] : null;
   }
 
   // Rows or columns deleted from a sheet shrink the ranges into it held by the tab's other loaded sheets (formulas.md
@@ -977,6 +1001,7 @@ export function sheetStoreOf(bridge: SheetsBridge): SheetStore {
     oneWorkbook: bridge.oneWorkbook,
     ...(bridge.iteration ? { iteration: bridge.iteration } : {}),
     ...(bridge.functions ? { functions: bridge.functions } : {}),
+    ...(bridge.functionsShrunk ? { functionsShrunk: bridge.functionsShrunk } : {}),
     ...(bridge.recalc ? { recalc: bridge.recalc } : {}),
     ...(bridge.importAccess !== undefined ? { importAccess: bridge.importAccess } : {}),
     ...(bridge.rangeSources ? { rangeSources: bridge.rangeSources } : {}),

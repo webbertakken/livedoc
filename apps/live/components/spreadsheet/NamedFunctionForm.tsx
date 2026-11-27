@@ -3,7 +3,8 @@
 // The Named Functions panel's form (docs/specs/029-sheets/data-tools.md "Named ranges and named functions"): a name,
 // its description, its argument placeholders and the formula defining it; under Argument Details, closed until
 // opened, each placeholder's description and example. Create (Update when editing) saves the workbook's list whole as
-// one undo step; a field the rules refuse says why under it.
+// one undo step; a field the rules refuse says why under it. The definition is read on the sheet open, in its
+// locale, each reference saved naming its sheet (formulas.md "Named functions", D301).
 import { useId, useRef, useState } from 'react';
 import { Button, CloseIcon, TextArea, TextInput } from '@livedoc/ui';
 import {
@@ -12,8 +13,11 @@ import {
   NAMED_FUNCTION_NAME_MAX,
   NAMED_FUNCTION_PARAMS_MAX,
   NamedFunction,
+  definitionText,
   namedFunctionProblem,
+  withTypedDefinition,
   type NamedFunctionProblem,
+  type SheetsCtx,
 } from '@livedoc/sheets';
 import { debugLog } from '@/lib/debug-log';
 import { track } from '@/lib/telemetry';
@@ -40,6 +44,8 @@ function argumentsOf(fn: NamedFunction | undefined): Argument[] {
 export function NamedFunctionForm({
   existing,
   others,
+  ctx,
+  locale,
   onSave,
   onClose,
 }: {
@@ -47,6 +53,9 @@ export function NamedFunctionForm({
   existing: NamedFunction | undefined;
   // The workbook's other named functions, the edited one left out.
   others: readonly NamedFunction[];
+  // The sheet open, whose cells a reference naming no sheet reads, and the locale the definition is typed in.
+  ctx: SheetsCtx;
+  locale: string;
   // Saves the function (its old name for an edit); false when it was not saved.
   onSave: (fn: NamedFunction) => Promise<boolean>;
   onClose: () => void;
@@ -56,7 +65,7 @@ export function NamedFunctionForm({
   const [description, setDescription] = useState(existing?.description ?? '');
   const [args, setArgs] = useState<Argument[]>(() => argumentsOf(existing));
   const nextKey = useRef(args.length);
-  const [body, setBody] = useState(existing?.body ?? '=');
+  const [body, setBody] = useState(() => (existing ? definitionText(existing, ctx, locale) : '='));
   const [details, setDetails] = useState(false);
   const [why, setWhy] = useState<NamedFunctionProblem | null>(null);
   const [saving, setSaving] = useState(false);
@@ -73,13 +82,14 @@ export function NamedFunctionForm({
   };
 
   const done = async () => {
-    const fn = NamedFunction.normalised({
+    const fields = NamedFunction.normalised({
       name,
       params: args.map((a) => a.name),
-      body,
+      body: '',
       description,
       hints: args.map((a) => ({ description: a.description, example: a.example })),
     });
+    const fn = withTypedDefinition(fields, body, ctx, locale);
     const problem = namedFunctionProblem(fn, others);
     if (problem) {
       debugLog('[workbook] named function refused', { field: problem.field });

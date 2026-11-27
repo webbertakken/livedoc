@@ -40,6 +40,7 @@ import { useItemUndo } from '@/hooks/plan/useItemUndo';
 import { useSheetCsvDrop } from '@/hooks/sheets/useSheetCsvDrop';
 import { useSheetChartInertIds } from '@/hooks/sheets/useSheetChartInertIds';
 import { useSheetsBridge, type SheetsBridge } from '@/hooks/sheets/useSheetsBridge';
+import { useOfflineFunctionsShrink } from '@/hooks/sheets/useOfflineFunctionsShrink';
 import { tabNamedForSheet } from '@/lib/tab-named-plan';
 import { useBoardDeleteGuard } from '@/hooks/plan/useBoardDeleteGuard';
 import { chainDeleteGuards } from '@/lib/delete-guards';
@@ -1310,6 +1311,11 @@ export function useEditorState(opts: { surface?: EditorSurface } = {}) {
   const sheetsPlaceRef = useRef<SheetsBridge['placeElement'] | null>(null);
   // A spreadsheet in This Browser fetches nothing until it is synced (docs/specs/029-sheets/imports.md).
   const documentOffline = useIsOfflineDocument(documentId ?? null);
+  const functionsShrunk = useOfflineFunctionsShrink(
+    { ownerId: selfParticipant.id, documentId: documentId ?? '', shareCode: sessionShareCode },
+    documentOffline,
+    setDocumentWorkbook,
+  );
   const sheets = useSheetsBridge({
     documentId: documentId ?? '',
     ownerId: selfParticipant.id,
@@ -1322,6 +1328,7 @@ export function useEditorState(opts: { surface?: EditorSurface } = {}) {
           ...(persistence.documentWorkbook.functions
             ? { functions: persistence.documentWorkbook.functions }
             : {}),
+          ...(functionsShrunk ? { functionsShrunk } : {}),
           recalc: persistence.documentWorkbook.settings.recalc,
           locale: persistence.documentWorkbook.settings.locale,
           timeZone: persistence.documentWorkbook.settings.timeZone,

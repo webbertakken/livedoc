@@ -1,10 +1,12 @@
 // Named functions (docs/specs/029-sheets/formulas.md "Named functions", data-tools.md "Named ranges and named
 // functions"): a spreadsheet's own functions, kept on its workbook row. What one may be, how it is saved, and the
 // list as the panel shows it. The engine compiles each definition once (engine/workbook.ts).
-import { refsOf, type Node } from './formula/ast';
+import { childrenOf, refsOf, type Node } from './formula/ast';
 import { parseFormula } from './formula/parse';
 import { FUNCTIONS } from './formula/registry';
+import { isStoredRef } from './formula/stored-ref-shape';
 import { CELL_LIKE } from './range-names';
+import type { StoredRef } from './sheet';
 
 // The bounds (D302): Google's name length; the rest LiveDoc's.
 export const NAMED_FUNCTION_NAME_MAX = 254;
@@ -24,8 +26,10 @@ export type NamedFunction = {
   readonly name: string;
   // The argument placeholders, as typed.
   readonly params: readonly string[];
-  // The definition, `=` first.
+  // The definition, `=` first: a stored template, each reference of its own an `@n` into `refs` (D301).
   readonly body: string;
+  // The definition's references, each naming its sheet, absolute (named-function-refs.ts). Absent when it has none.
+  readonly refs?: readonly StoredRef[];
   readonly description?: string;
   // By placeholder index; null where a placeholder has none. Absent when none has one.
   readonly hints?: readonly (NamedFunctionHint | null)[];
@@ -41,7 +45,6 @@ export type NamedFunctionProblem = {
 
 export const NAMED_FUNCTION_TAKEN = 'Another named function is called that';
 export const NAMED_FUNCTION_UNREADABLE = "That formula can't be read";
-export const NAMED_FUNCTION_REFERENCE = 'Pass the cell as an argument, or use a named range';
 
 const IDENTIFIER = /^[A-Za-z_][A-Za-z0-9_]*$/;
 const sameName = (a: string, b: string) => a.toUpperCase() === b.toUpperCase();
@@ -95,13 +98,19 @@ function argumentProblem(fn: NamedFunction): NamedFunctionProblem | null {
   return null;
 }
 
-function definitionProblem(body: string): string | null {
-  if (body.length > NAMED_FUNCTION_BODY_MAX)
+// Whether every `@n` of a template names one of `count` references.
+function storedWithin(node: Node, count: number): boolean {
+  if (node.k === 'stored') return node.i < count;
+  return childrenOf(node).every((child) => storedWithin(child, count));
+}
+
+function definitionProblem(fn: NamedFunction): string | null {
+  if (fn.body.length > NAMED_FUNCTION_BODY_MAX)
     return `A definition holds up to ${NAMED_FUNCTION_BODY_MAX} characters`;
-  const parsed = parseFormula(body);
-  if (!parsed.ok) return NAMED_FUNCTION_UNREADABLE;
-  // D301: a definition reads cells through its placeholders and named ranges.
-  return refsOf(parsed.ast).length > 0 ? NAMED_FUNCTION_REFERENCE : null;
+  const parsed = parseFormula(fn.body, true);
+  // A reference is stored by ids (`@n`), never as typed A1.
+  if (!parsed.ok || refsOf(parsed.ast).length > 0) return NAMED_FUNCTION_UNREADABLE;
+  return storedWithin(parsed.ast, fn.refs?.length ?? 0) ? null : NAMED_FUNCTION_UNREADABLE;
 }
 
 /**
@@ -121,7 +130,7 @@ export function namedFunctionProblem(
     };
   const argument = argumentProblem(fn);
   if (argument) return argument;
-  const definition = definitionProblem(fn.body);
+  const definition = definitionProblem(fn);
   return definition ? { field: 'definition', message: definition } : null;
 }
 
@@ -143,6 +152,7 @@ export const NamedFunction = {
       name: fn.name.trim().toUpperCase(),
       params: fn.params.map((p) => p.trim()),
       body: body.startsWith('=') ? body : `=${body}`,
+      ...(fn.refs?.length ? { refs: fn.refs } : {}),
       ...(description ? { description } : {}),
       ...(hints.length > 0 ? { hints } : {}),
     };
@@ -187,8 +197,10 @@ function readHint(raw: unknown): NamedFunctionHint | null | undefined {
 
 function readOne(raw: unknown): NamedFunction | null {
   if (typeof raw !== 'object' || raw === null) return null;
-  const { name, params, body, description, hints } = raw as Record<string, unknown>;
+  const { name, params, body, refs, description, hints } = raw as Record<string, unknown>;
   if (typeof name !== 'string' || typeof body !== 'string' || !optionalText(description))
+    return null;
+  if (refs !== undefined && (!Array.isArray(refs) || refs.length === 0 || !refs.every(isStoredRef)))
     return null;
   if (!Array.isArray(params) || !params.every((p): p is string => typeof p === 'string'))
     return null;
@@ -203,16 +215,21 @@ function readOne(raw: unknown): NamedFunction | null {
     name,
     params,
     body,
+    ...(refs === undefined ? {} : { refs }),
     ...(description === undefined ? {} : { description }),
     ...(read ? { hints: read } : {}),
   };
 }
 
-/** A named function as the engine calls it: its placeholders in capitals (as scope names are) and its definition read. */
+/**
+ * A named function as the engine calls it: its placeholders in capitals (as scope names are), its definition read
+ * and the references its `@n` name.
+ */
 export type NamedFunctionDef = {
   readonly name: string;
   readonly params: readonly string[];
   readonly ast: Node;
+  readonly refs: readonly StoredRef[];
 };
 
 /** The engine's functions by name: each definition read once; one that cannot be read is left out (its calls #NAME?). */
@@ -221,10 +238,11 @@ export function compileNamedFunctions(
 ): ReadonlyMap<string, NamedFunctionDef> {
   const defs = new Map<string, NamedFunctionDef>();
   for (const fn of list) {
-    const parsed = parseFormula(fn.body);
+    const parsed = parseFormula(fn.body, true);
     if (!parsed.ok) continue;
     const name = fn.name.toUpperCase();
-    defs.set(name, { name, params: fn.params.map((p) => p.toUpperCase()), ast: parsed.ast });
+    const params = fn.params.map((p) => p.toUpperCase());
+    defs.set(name, { name, params, ast: parsed.ast, refs: fn.refs ?? [] });
   }
   return defs;
 }

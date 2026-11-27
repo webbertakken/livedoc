@@ -130,7 +130,7 @@ function applyNamed(def: NamedFunctionDef, values: readonly EvalValue[], f: Fram
   const depth = f.fnDepth ?? 0;
   if (depth >= NAMED_FUNCTION_DEPTH_MAX) return err('#NUM!', NAMED_FUNCTION_TOO_DEEP);
   const scope = new Map(def.params.map((p, i) => [p, values[i]!]));
-  return evaluate(def.ast, [], { ...f, scope, fnDepth: depth + 1 });
+  return evaluate(def.ast, def.refs, { ...f, scope, fnDepth: depth + 1 });
 }
 
 // A named function named without brackets, handed to a helper: a LAMBDA of its placeholders, whose callers count it.

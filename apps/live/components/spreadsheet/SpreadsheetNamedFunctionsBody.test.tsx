@@ -8,6 +8,7 @@ import { WorkbookRecord, type NamedFunction } from '@livedoc/sheets';
 import {
   makeSheet,
   renderSheet,
+  SHEET_ID,
   stubResizeObserver,
   type SheetHarness,
 } from '@/components/sheets/sheet-ui-test-utils';
@@ -158,11 +159,9 @@ describe('the Named Functions panel', () => {
     await act(async () => fireEvent.click(screen.getByRole('button', { name: 'Create' })));
     expect(screen.getByRole('alert').textContent).toBe('That reads as a cell reference');
     type('Argument 1', 'x');
-    type('Formula Definition', '=x*A1');
+    type('Formula Definition', '=x*(');
     await act(async () => fireEvent.click(screen.getByRole('button', { name: 'Create' })));
-    expect(screen.getByRole('alert').textContent).toBe(
-      'Pass the cell as an argument, or use a named range',
-    );
+    expect(screen.getByRole('alert').textContent).toBe("That formula can't be read");
     type('Function Description', 'd'.repeat(1_001));
     await act(async () => fireEvent.click(screen.getByRole('button', { name: 'Create' })));
     expect(screen.getByRole('alert').textContent).toMatch(/A description holds up to/);
@@ -178,6 +177,28 @@ describe('the Named Functions panel', () => {
     await act(async () => fireEvent.click(screen.getByRole('button', { name: 'Update' })));
     expect(saves).toEqual([[CONTAINS, { ...TWICE, name: 'DOUBLE', body: '=x+x' }]]);
     expect(track).toHaveBeenCalledWith('Spreadsheet', 'Changed', 'NamedFunction');
+  });
+
+  it('saves a reference naming the sheet open, absolute, and shows it so', async () => {
+    const h = await makeSheet();
+    const sheet = h.store.sheet(SHEET_ID)!;
+    expect(sheet.title).toBe('Sheet 1');
+    const saves = show(h, []);
+    fireEvent.click(screen.getByRole('button', { name: 'Add New Function' }));
+    type('Function Name', 'scaled');
+    fireEvent.click(screen.getByRole('button', { name: 'Add Argument' }));
+    type('Argument 1', 'x');
+    type('Formula Definition', '=x*B2');
+    await act(async () => fireEvent.click(screen.getByRole('button', { name: 'Create' })));
+    const saved = saves[0]![0]!;
+    expect(saved.body).toBe('=x*@0');
+    expect(saved.refs).toEqual([
+      { s: SHEET_ID, r1: sheet.layout.rows[1], c1: sheet.layout.cols[1], a: 15 },
+    ]);
+    fireEvent.click(screen.getByRole('button', { name: 'Edit SCALED' }));
+    expect(screen.getByLabelText<HTMLTextAreaElement>('Formula Definition').value).toBe(
+      "=x*'Sheet 1'!$B$2",
+    );
   });
 
   it('keeps the form open when the save does not land, and Cancel goes back', async () => {

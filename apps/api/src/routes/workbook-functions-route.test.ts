@@ -60,7 +60,8 @@ describe('saving the named functions', () => {
     ['a list that is not one', { functions: 'x' }],
     ['a built-in function’s name', { functions: [{ ...CONTAINS, name: 'SUM' }] }],
     ['a name not in capitals', { functions: [{ ...CONTAINS, name: 'contains' }] }],
-    ['a reference in a definition', { functions: [{ ...CONTAINS, body: '=A1' }] }],
+    ['an A1 reference not stored', { functions: [{ ...CONTAINS, body: '=A1' }] }],
+    ['a reference not well made', { functions: [{ ...CONTAINS, body: '=@0', refs: [{ q: 1 }] }] }],
     ['two of one name', { functions: [CONTAINS, CONTAINS] }],
   ])('refuses %s', async (_, body) => {
     const res = await save(body);

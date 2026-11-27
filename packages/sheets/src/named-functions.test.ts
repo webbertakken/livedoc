@@ -89,17 +89,12 @@ describe('namedFunctionProblem', () => {
     });
   });
 
-  it('refuses a definition that cannot be read, holds a reference, or is too long', () => {
+  it('refuses a definition that cannot be read, or is too long', () => {
     expect(namedFunctionProblem(fn({ body: '=SUM(' }), [])).toEqual({
       field: 'definition',
       message: "That formula can't be read",
     });
     expect(namedFunctionProblem(fn({ body: '' }), [])?.message).toBe("That formula can't be read");
-    for (const body of ['=A1+search_query', "=SUM('Sheet 2'!B:B)", '=search_range+1:1'])
-      expect(namedFunctionProblem(fn({ body }), [])).toEqual({
-        field: 'definition',
-        message: 'Pass the cell as an argument, or use a named range',
-      });
     expect(
       namedFunctionProblem(fn({ body: `="${'x'.repeat(NAMED_FUNCTION_BODY_MAX)}"` }), []),
     ).toEqual({
