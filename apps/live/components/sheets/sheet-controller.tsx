@@ -137,6 +137,8 @@ export type SheetController = {
   // Taking the charts anchored in this Sheet off its tab (Clear Sheet): `redo` takes them, `undo` puts them back.
   // Null when it has none, or they are not this tab's to change (a Dashboard slot showing another tab's Sheet).
   chartsRemoval?: () => ItemUndoStep | null;
+  // A spreadsheet's Find and Replace dialog (data-tools.md "Find and replace"); a Plan Sheet has none.
+  openFindReplace?: () => void;
 };
 
 const SheetControllerContext = createContext<SheetController | null>(null);
@@ -199,6 +201,8 @@ export function useSheetControllerState(opts: {
   chartsRemoval?: () => ItemUndoStep | null;
   // After this person's own write to this sheet lands locally (card tables push it to the cards).
   onWrote?: (before: Sheet, write: SheetWrite) => void;
+  // A spreadsheet's Find and Replace dialog, which Ctrl+H opens in place of the Find bar's Replace row.
+  openFindReplace?: () => void;
 }): SheetController {
   const { store, sheet, workbook, version } = opts;
   const onWrote = useLatest(opts.onWrote);

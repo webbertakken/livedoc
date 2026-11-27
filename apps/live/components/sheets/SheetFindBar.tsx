@@ -5,7 +5,13 @@
 // Replace and Replace All in inputs only. Escape closes it.
 import { Button, Tooltip } from '@livedoc/ui';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { findMatches, replaceAll, type FindOptions } from '@livedoc/sheets';
+import {
+  findMatches,
+  findPattern,
+  replaceMatches,
+  type FindOptions,
+  type GridRange,
+} from '@livedoc/sheets';
 import { track } from '@/lib/telemetry';
 import { useSheetController } from './sheet-controller';
 import { useSheetActions } from './useSheetActions';
@@ -14,7 +20,8 @@ import { HEADER_PX } from './SheetHeader';
 const stop = (e: { stopPropagation: () => void }) => e.stopPropagation();
 const FIND_HIGHLIGHTS_MAX = 2_000;
 
-export function SheetFindBar() {
+// `onMoreOptions`: a spreadsheet's Find and Replace, opened on the bar's text (data-tools.md "Find and replace").
+export function SheetFindBar({ onMoreOptions }: { onMoreOptions?: (query: string) => void } = {}) {
   const c = useSheetController();
   const actions = useSheetActions();
   const [query, setQuery] = useState('');
@@ -23,15 +30,22 @@ export function SheetFindBar() {
   // The match shown, once Enter or an arrow has gone to one (the first Enter goes to the first match).
   const [at, setAt] = useState<number | null>(null);
   const input = useRef<HTMLInputElement | null>(null);
-  const replace = c.findOpen === 'replace';
+  const replacing = c.findOpen === 'replace';
   useEffect(() => {
     track('Sheet', 'Opened', 'Find');
     input.current?.focus();
   }, []);
+  const pattern = useMemo(() => findPattern(query, opts), [query, opts]);
+  const place = useMemo(() => ({ sheetId: c.sheet.id }), [c.sheet.id]);
+  const rights = { formulas: c.canShape, caller: c.store.protection() };
+  const replace = (places: { sheetId: string; within?: GridRange }[]) =>
+    pattern && !('refused' in pattern)
+      ? replaceMatches(c.workbook, places, pattern, by, rights)
+      : null;
   const matches = useMemo(
-    () => findMatches(c.workbook, c.sheet.id, query, opts),
+    () => (pattern && !('refused' in pattern) ? findMatches(c.workbook, place, pattern) : []),
     // Found again whenever a value may have changed (`version`), not only when the query does.
-    [c.workbook, c.sheet.id, query, opts, c.version], // oxlint-disable-line react/exhaustive-deps
+    [c.workbook, place, pattern, c.version], // oxlint-disable-line react/exhaustive-deps
   );
   // Every match is highlighted while Find is open (the first FIND_HIGHLIGHTS_MAX of them).
   const { setFindHits } = c;
@@ -124,6 +138,21 @@ export function SheetFindBar() {
             ↓
           </button>
         </Tooltip>
+        {onMoreOptions ? (
+          <Tooltip label="More Options">
+            <button
+              type="button"
+              aria-label="More Options"
+              className="size-field shrink-0 cursor-pointer rounded-control hover:bg-black/5"
+              onClick={() => {
+                c.setFindOpen(null);
+                onMoreOptions(query);
+              }}
+            >
+              ⋮
+            </button>
+          </Tooltip>
+        ) : null}
         <Tooltip label="Close Find">
           <button
             type="button"
@@ -135,7 +164,7 @@ export function SheetFindBar() {
           </button>
         </Tooltip>
       </div>
-      {replace ? (
+      {replacing ? (
         <div className="mt-1.5 flex items-center gap-2">
           <input
             aria-label="Replace with"
@@ -151,13 +180,10 @@ export function SheetFindBar() {
             onClick={() => {
               const m = at === null ? undefined : matches[at];
               if (!m) return step(1);
-              const r = replaceAll(c.workbook, c.sheet.id, query, by, opts);
-              const one = r.cells.find(
-                (ch) => ch.r === c.sheet.layout.rows[m.r] && ch.c === c.sheet.layout.cols[m.c],
-              );
+              const one = replace([{ ...place, within: { r1: m.r, c1: m.c, r2: m.r, c2: m.c } }]);
               // A match only in a value worked out by a formula has nothing typed to replace: on to the next one.
-              if (!one) return step(1);
-              c.write({ kind: 'cells', cells: [one] }, 'Replace');
+              if (!one?.edits.length) return step(1);
+              c.writeAll(one.edits, 'Replace');
               // On to the next match: in the list as it will be once this one no longer matches, at the same place.
               const rest = matches.filter((x) => x !== m);
               if (!rest.length) return setAt(null);
@@ -173,9 +199,10 @@ export function SheetFindBar() {
             size="sm"
 
             onClick={() => {
-              const r = replaceAll(c.workbook, c.sheet.id, query, by, opts);
-              if (r.count) c.write({ kind: 'cells', cells: r.cells }, 'Replace');
-              c.notify(`Replaced ${r.count} cell${r.count === 1 ? '' : 's'}`);
+              const r = replace([place]);
+              if (r?.edits.length) c.writeAll(r.edits, 'Replace');
+              const n = r?.cells ?? 0;
+              c.notify(`Replaced ${n} cell${n === 1 ? '' : 's'}`);
             }}
           >
             Replace All

@@ -41,6 +41,9 @@ import { useGridMenuBindings } from './useGridMenuBindings';
 import { useMergeDialog } from './useMergeDialog';
 import { useNumberFormatDialogs } from './useNumberFormatDialogs';
 import { useSortRangeDialog } from './useSortRangeDialog';
+import { SheetFindBar } from '@/components/sheets/SheetFindBar';
+import { FindReplaceDialog } from './FindReplaceDialog';
+import { useFindReplace } from './find-replace-state';
 import { SheetChartsContext } from '@/components/sheets/sheet-charts-context';
 import {
   TableColumnMenuContext,
@@ -64,6 +67,7 @@ export function SpreadsheetSheetParts({ bridge }: { bridge: SheetsBridge }) {
   const mergeDialog = useMergeDialog(actions);
   const angleDialog = useCustomAngleDialog(actions);
   const sortDialog = useSortRangeDialog(actions);
+  const findReplace = useFindReplace();
   const panels = useOfficePanels({
     kind: 'Spreadsheet',
     panels: SPREADSHEET_PANELS,
@@ -216,6 +220,7 @@ export function SpreadsheetSheetParts({ bridge }: { bridge: SheetsBridge }) {
                 </SheetChartsContext.Provider>
               </TableColumnMenuContext.Provider>
             </TableSettingsContext.Provider>
+            {c.findOpen ? <SheetFindBar onMoreOptions={findReplace?.openWith} /> : null}
           </div>
         </div>
         <SpreadsheetRightPanel
@@ -234,6 +239,7 @@ export function SpreadsheetSheetParts({ bridge }: { bridge: SheetsBridge }) {
       {mergeDialog.dialog}
       {sortDialog.dialog}
       {pivots.dialog}
+      {findReplace?.open ? <FindReplaceDialog state={findReplace} /> : null}
       <SheetBarSummary />
     </div>
   );

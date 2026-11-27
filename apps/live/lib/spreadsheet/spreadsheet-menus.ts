@@ -233,7 +233,7 @@ const EDIT_MENU = menu('edit', 'Edit', [
     built('delete-cells-shift-left', 'Cells and Shift Left', 'edit'),
   ]),
   SEPARATOR,
-  item('find-and-replace', 'Find and Replace', 'view', {
+  built('find-and-replace', 'Find and Replace', 'view', {
     keywords: ['search'],
     shortcut: 'find-and-replace',
   }),

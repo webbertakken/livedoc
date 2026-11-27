@@ -43,6 +43,7 @@ export * from './filter';
 export * from './filter-colours';
 export * from './filter-reads';
 export * from './find';
+export * from './edit-text';
 export * from './clipboard';
 export * from './clipboard-html';
 export * from './clipboard-read';

@@ -177,6 +177,8 @@ describe('spreadsheetMenus', () => {
       ...DOWNLOAD_ITEMS.map((i) => i.id),
       ...SHEET_DOWNLOAD_ITEMS.map((i) => i.id),
       'copy',
+      // Edit › Find and Replace: a Viewer's finds only (data-tools.md "Find and replace").
+      'find-and-replace',
       'show-formulas',
       // View › Show › Protected Ranges: the person's own view (data-tools.md "Protected ranges").
       'show-protected-ranges',

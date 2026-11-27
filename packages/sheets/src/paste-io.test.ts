@@ -6,7 +6,7 @@ import { clipToHtml } from './clipboard-html';
 import { readPastedHtml } from './clipboard-read';
 import { pasteClip, pasteCut, pasteExternal } from './commands-paste';
 import { readRange, writeRows } from './a1-io';
-import { findMatches, replaceAll } from './find';
+import { findMatches, findPattern, replaceMatches, type FindOptions } from './find';
 import { columnValueCounts, conditionMatches, filteredOutRows } from './filter';
 import { renderWindow } from './engine/render';
 import { inputAsText, readTypedInput } from './typed-input';
@@ -291,33 +291,49 @@ describe('find, filter and render', () => {
   it('finds values and formulas, and replaces all', () => {
     const b = book({ A1: 'Apple pie', A2: 'apple', B1: '=CONCAT("app", "le")', B2: '42' });
     const id = b.sheets[0]!.id;
-    expect(findMatches(b.wb, id, 'apple')).toEqual([
+    const place = { sheetId: id };
+    const search = (q: string, opts: FindOptions = {}) => {
+      const p = findPattern(q, opts);
+      return p && !('refused' in p) ? findMatches(b.wb, place, p) : [];
+    };
+    const replace = (q: string, by: string, opts: FindOptions = {}) => {
+      const p = findPattern(q, opts);
+      if (!p || 'refused' in p) throw new Error('no pattern');
+      return replaceMatches(b.wb, [place], p, by, { formulas: true, caller: null });
+    };
+    expect(search('apple')).toEqual([
       { r: 0, c: 0 },
       { r: 0, c: 1 },
       { r: 1, c: 0 },
     ]);
-    expect(findMatches(b.wb, id, 'apple', { matchCase: true })).toEqual([
+    expect(search('apple', { matchCase: true })).toEqual([
       { r: 0, c: 1 },
       { r: 1, c: 0 },
     ]);
-    expect(findMatches(b.wb, id, 'apple', { entireCell: true })).toEqual([
+    expect(search('apple', { entireCell: true })).toEqual([
       { r: 0, c: 1 },
       { r: 1, c: 0 },
     ]);
-    expect(findMatches(b.wb, id, 'CONCAT', { inFormulas: true })).toEqual([{ r: 0, c: 1 }]);
-    expect(findMatches(b.wb, id, '')).toEqual([]);
-    const r = replaceAll(b.wb, id, 'apple', 'pear');
-    expect(r.count).toBe(2);
-    apply(b, id, { kind: 'cells', cells: r.cells });
+    expect(search('CONCAT', { inFormulas: true })).toEqual([{ r: 0, c: 1 }]);
+    expect(search('')).toEqual([]);
+    const r = replace('apple', 'pear');
+    expect(r.cells).toBe(2);
+    apply(b, id, r.edits[0]!.write);
     expect([b.v('A1'), b.v('A2'), b.v('B1')]).toEqual(['pear pie', 'pear', 'apple']);
-    const f = replaceAll(b.wb, id, '"app"', '"gr"', { inFormulas: true });
-    apply(b, id, { kind: 'cells', cells: f.cells });
+    const f = replace('"app"', '"gr"', { inFormulas: true });
+    apply(b, id, f.edits[0]!.write);
     expect(b.v('B1')).toBe('grle');
-    expect(replaceAll(b.wb, id, '42', '', { entireCell: true }).cells[0]!.i).toBeNull();
-    expect(replaceAll(b.wb, id, 'x', 'y').count).toBe(0);
-    expect(replaceAll(b.wb, id, '', 'y').count).toBe(0);
-    expect(replaceAll(b.wb, 'nope', 'x', 'y').count).toBe(0);
-    expect(replaceAll(b.wb, id, 'CONCAT', 'CONCAT(', { inFormulas: true }).count).toBe(0);
+    const cleared = replace('42', '', { entireCell: true }).edits[0]!.write;
+    expect(cleared.kind === 'cells' && cleared.cells[0]!.i).toBeNull();
+    expect(replace('x', 'y').cells).toBe(0);
+    expect(findPattern('', {})).toBeNull();
+    const p = findPattern('x', {})!;
+    if ('refused' in p) throw new Error('refused');
+    expect(
+      replaceMatches(b.wb, [{ sheetId: 'nope' }], p, 'y', { formulas: true, caller: null }).cells,
+    ).toBe(0);
+    // A formula the replace would break is left as it was.
+    expect(replace('CONCAT', 'CONCAT(', { inFormulas: true }).cells).toBe(0);
   });
   it('filters rows by values and conditions', () => {
     const b = book({
