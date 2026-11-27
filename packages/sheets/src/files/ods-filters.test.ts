@@ -159,7 +159,7 @@ describe('a filter view’s range in another app’s ODF', () => {
       readOds(
         encode(
           `<?xml version="1.0"?><office:document ${ODF_NAMESPACES} office:mimetype="application/vnd.oasis.opendocument.spreadsheet"><office:body><office:spreadsheet>` +
-            '<table:table table:name="S"><table:table-row><table:table-cell office:value-type="string"><text:p>x</text:p></table:table-cell></table:table-row></table:table>' +
+            `<table:table table:name="S"><table:table-row><table:table-cell office:value-type="string"><text:p>x</text:p></table:table-cell></table:table-row><table:named-expressions><table:named-range table:name="${name.replace('6862', '6863')}" table:base-cell-address="$S.$A$1" table:cell-range-address="$S.$A$1:.$A$1" table:range-usable-as="hidden"/></table:named-expressions></table:table>` +
             `<table:named-expressions><table:named-range table:name="${name}" table:base-cell-address="$S.$A$1" table:cell-range-address="$S.$A$1:.$A$1"/></table:named-expressions>` +
             '</office:spreadsheet></office:body></office:document>',
         ),

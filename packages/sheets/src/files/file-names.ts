@@ -235,7 +235,11 @@ export function readOdsNames(
   }
   for (const table of childElements(spreadsheet))
     if (table.uri === TABLE && table.local === 'table')
-      out.unread.push(...namesIn(childElement(table, TABLE, 'named-expressions')));
+      out.unread.push(
+        ...namesIn(childElement(table, TABLE, 'named-expressions')).filter(
+          (n) => !VIEW_NAME.test(n),
+        ),
+      );
   return out;
 }
 
