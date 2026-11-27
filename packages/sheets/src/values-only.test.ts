@@ -22,6 +22,22 @@ describe('valuesOnly', () => {
     });
   });
 
+  it("drops the formats of a table growth's cells, its changes left to be judged (D388)", () => {
+    const changes = [{ k: 'freeze', rows: 1 }];
+    const write = {
+      kind: 'layout',
+      changes,
+      cells: [{ r: 'r', c: 'c', i: { n: 1 }, f: { b: true } }],
+    };
+    expect(valuesOnly(write as never)).toEqual({
+      kind: 'layout',
+      changes,
+      cells: [{ r: 'r', c: 'c', i: { n: 1 } }],
+    });
+    const bare = { kind: 'layout', changes } as never;
+    expect(valuesOnly(bare)).toBe(bare);
+  });
+
   it('is null for a write of formats alone, and leaves other writes as they are', () => {
     expect(
       valuesOnly({ kind: 'cells', cells: [{ r: 'r', c: 'c', f: { i: true } }] } as never),

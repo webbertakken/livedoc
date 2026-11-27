@@ -19,6 +19,9 @@ export function isStoredRef(v: unknown): v is StoredRef {
       case 'c1':
       case 'r2':
       case 'c2':
+      case 't':
+      case 'tc1':
+      case 'tc2':
         if (!isAxisId(x)) return false;
         break;
       case 'a':
@@ -26,6 +29,9 @@ export function isStoredRef(v: unknown): v is StoredRef {
         break;
       case 'open':
         if (x !== 'r' && x !== 'c') return false;
+        break;
+      case 'ta':
+        if (!Number.isInteger(x) || (x as number) < 1 || (x as number) > 15) return false;
         break;
       case 'spill':
         if (x !== true) return false;
@@ -42,5 +48,11 @@ export function isStoredRef(v: unknown): v is StoredRef {
         return false;
     }
   }
-  return true;
+  // A table reference names its table and nothing of a cell reference's.
+  if (r.t !== undefined)
+    return (
+      (r.tc2 === undefined || r.tc1 !== undefined) &&
+      ['r1', 'c1', 'r2', 'c2', 'a', 'open', 'spill', 'st', 'p'].every((k) => r[k] === undefined)
+    );
+  return r.tc1 === undefined && r.tc2 === undefined && r.ta === undefined;
 }

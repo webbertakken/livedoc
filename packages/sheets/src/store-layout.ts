@@ -3,6 +3,8 @@
 // never needs a position someone else may have moved: ids that are gone are skipped, an `after` that is gone lands
 // at the end.
 import type { Protection } from './protection';
+import type { SheetTable } from './tables/table';
+import { tablesAfterDelete } from './tables/table-store';
 import { mapFormulaRefs } from './formula/stored';
 import { insertIds, layoutIndex, moveIds } from './layout';
 import type {
@@ -64,6 +66,8 @@ export type LayoutChange =
   | { k: 'vrule'; id: string; rule: ValidationRule | null }
   // A protection set (in place, else appended) or removed (null), by id (data-tools.md "Protected ranges").
   | { k: 'protection'; id: string; protection: Protection | null }
+  // A table set (in place, else appended) or removed (null), by id (data-tools.md "Tables").
+  | { k: 'table'; id: string; table: SheetTable | null }
   // Alternating colours: set (made or replaced in place) or removed.
   | { k: 'band'; id: string; band: Banding | null }
   // A format rule set (in place, else inserted at `at`, else appended) or removed (null), by id
@@ -273,6 +277,11 @@ export function applyLayoutChange(layout: SheetLayout, ch: LayoutChange): SheetL
         });
         next.protections = protections.length ? protections : undefined;
       }
+      // Tables shrink as named ranges do; one losing its header row or every data row goes.
+      if (layout.tables?.length)
+        next.tables = tablesAfterDelete(layout, goneRows, goneCols, (x) =>
+          shrinkRange(x, layout, goneRows, goneCols),
+        );
       // Validation and format rules shrink as named ranges do; a rule whose cells (or a range dropdown's source)
       // all went is dropped.
       if (layout.rules?.length) {
@@ -406,6 +415,17 @@ export function applyLayoutChange(layout: SheetLayout, ch: LayoutChange): SheetL
             ? list.map((x, i) => (i === at ? ch.protection! : x))
             : [...list, ch.protection];
       return clean({ ...layout, protections: next.length ? next : undefined });
+    }
+    case 'table': {
+      const list = layout.tables ?? [];
+      const at = list.findIndex((x) => x.id === ch.id);
+      const next =
+        ch.table === null
+          ? list.filter((x) => x.id !== ch.id)
+          : at >= 0
+            ? list.map((x, i) => (i === at ? ch.table! : x))
+            : [...list, ch.table];
+      return clean({ ...layout, tables: next.length ? next : undefined });
     }
     case 'band': {
       const list = layout.bands ?? [];

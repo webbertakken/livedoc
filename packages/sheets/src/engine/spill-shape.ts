@@ -5,6 +5,7 @@
 import type { Node } from '../formula/ast';
 import { LIFTED_PARAMETERS } from '../formula/lifted-parameters';
 import type { StoredRef } from '../sheet';
+import { TableArea } from '../tables/table-ref';
 
 const SCALAR_RESULT = new Set([
   'SPARKLINE',
@@ -169,6 +170,9 @@ const ARRAY_RESULT = new Set([
 function refIsRange(ref: StoredRef | undefined): boolean {
   if (!ref) return false;
   if (ref.spill || ref.open) return true;
+  // A table reference is a range but this row of one column (`[@Amount]`).
+  if (ref.t !== undefined)
+    return !(ref.ta === TableArea.thisRow && ref.tc1 !== undefined && ref.tc2 === undefined);
   if (ref.st !== undefined) {
     const p = ref.p ?? [-1, -1, -1, -1];
     return p[0] < 0 || p[1] < 0 || p[2] >= 0 || p[3] >= 0;
@@ -187,6 +191,8 @@ export function maySpill(node: Node, refs: readonly StoredRef[]): boolean {
   switch (node.k) {
     case 'stored':
       return refIsRange(refs[node.i]);
+    case 'table':
+      return !(node.spec.area === TableArea.thisRow && node.spec.cols?.[0] === node.spec.cols?.[1]);
     case 'ref':
     case 'range':
     case 'isect':

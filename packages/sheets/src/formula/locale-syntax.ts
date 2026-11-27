@@ -3,6 +3,7 @@
 // and commas; these two turn typed text into it and stored text back. Reading typed text keeps every character in its
 // place (each swap is one character for one), so a refusal's offset and the editor's reference colours stay true.
 import { localeSeparators } from '../input';
+import { tableBracketLength } from './tokens';
 
 /** `point`: decimals `1.5`, `,` between arguments and columns. `comma`: decimals `1,5`, `;` and `\` (D78). */
 export type FormulaSyntax = 'point' | 'comma';
@@ -58,6 +59,13 @@ function walk(
   while (i < text.length) {
     const ch = text[i]!;
     let j = i + 1;
+    // A table reference's brackets pass whole: their commas and column names are no locale's (`Sales[[#ALL],[Q 1.5]]`).
+    const bracket = ch === '[' ? tableBracketLength(text, i) : 0;
+    if (bracket > 0) {
+      out += text.slice(i, i + bracket);
+      i += bracket;
+      continue;
+    }
     if (ch === '"' || ch === "'") {
       while (j < text.length && !(text[j] === ch && text[j + 1] !== ch))
         j += text[j] === ch ? 2 : 1;

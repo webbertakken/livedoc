@@ -2,8 +2,9 @@
 
 **Status: partly built.** Sort Sheet, Sort Range with its Advanced Range Sorting Options, Create a Filter, Filter by Colour,
 every condition of Filter by Condition, and data validation (the Data Validation Rules panel, Insert › Checkbox,
-Insert › Dropdown, every criterion, kept in both file formats) and the Named Ranges panel are built; the rest is
-specified.
+Insert › Dropdown, every criterion, kept in both file formats) and the Named Ranges panel are built; tables are built
+as the sheet's model, its writes and growth, and table references in formulas, without their menus and panel yet; the
+rest is specified.
 
 Sorting, filtering, validation, names, protection, tables and clean-up in a [spreadsheet](spreadsheet.md), as
 Google Sheets' Data menu does. Its rows of the [parity matrix](parity-matrix.md) name this page.
@@ -185,11 +186,61 @@ display style (Chip, Arrow, Plain Text) with option colours. Dropdowns and tick 
 
 ## Tables
 
-- **Convert to Table** (Format menu or Ctrl+Alt+T): a range becomes a named table with a header row, a column type per
-  column (Text, Number, Percent, Currency, Date, Time, Date Time, Dropdown, Checkbox; People and smart chip types are
-  left out, C3), alternating colours, a filter, and a total row on request.
-- **Table references** in formulas: `Table1[Column]`, `Table1[#ALL]`, `Table1[#HEADERS]`, `Table1[#TOTALS]`, read and
-  written as both formats hold them.
+A **table** gives a range a name, a header row, a type per column and a look, as Google Sheets' tables do. It is the
+sheet's, seen by everyone, kept by row and column ids as a named range is.
+
+- **Convert to Table** (Format › Convert to Table, the cell and column header menus, Ctrl+Alt+T; Insert › Table on an
+  empty selection), an Editor's alone: the selection (the data region around the active cell when it is one cell,
+  as Create a Filter takes it) becomes a table at once, one change, one undo step:
+  - its first row the **header row**, the rest its **data rows** (at least one: a one-row selection takes the row
+    below as its first data row);
+  - named **Table1**, **Table2**, ... (the first free in the workbook);
+  - each column's type guessed from its data cells: Number, Percent, Currency, Date, Time, Date Time or Checkbox when
+    every filled one is that, else Text; a column with no filled cell **None** (D381);
+  - its look an [alternating colours](formatting.md#alternating-colours) banding over the table, the table's own, in
+    the first default style, the header on, the footer on with a total row (D382);
+  - then the **Table Settings** panel opens on it.
+  - Refused, with a toast and nothing changed: a range touching another table ("Tables can't overlap"), holding a
+    merge ("Unmerge cells before making a table"), touching a banding not wholly inside it ("Alternating colours
+    can't overlap"; one wholly inside is replaced by the table's), or past the sheet's 50 tables (D380).
+- **Names**: a table's name is 1 to 255 characters of letters, digits, underscores and spaces, not starting with a
+  digit, not TRUE or FALSE, not reading as a cell (`A1`, `R1C1`); unique among the workbook's tables and named ranges,
+  case aside and a space read as an underscore (Google's rules). Formulas write it with underscores (`Project_roadmap`).
+- **Columns**: a column's name is its header cell's text as entered (a number's as typed), trimmed; a blank or a
+  formula header reads **Column N** (N its place in the table), and a name an earlier column already has, case aside,
+  takes the smallest number from 2 that frees it (`Amount2`), as Excel's (D383).
+- **Column types**: None, Text, Number, Percent, Currency, Date, Time, Date Time, Dropdown (its options, as a
+  dropdown rule's) and Checkbox; People and the smart chip types are left out (C3).
+  - Number, Percent, Currency, Date, Time and Date Time give the column's data cells their number format when set;
+    Dropdown and Checkbox draw their cells as a dropdown's chips and a tick box, as validation draws them, without a
+    rule of their own.
+  - A data cell whose value is not its column's type (text in a Number column, an option not in a Dropdown's) is
+    **flagged and kept**, as Google's: its value stays, a warning triangle marks it and its hover card says
+    "Expected a number" (a date, a time, a date and time, one of the options, a tick box value). An empty cell and an
+    error are never flagged (D384).
+- **Growth**: a value typed (or pasted) into the row directly below a table, inside its columns, grows the table by
+  that row, as Google's; the growth and the value are one change, so one undo takes both back. A table never grows
+  over a row holding a protected range or another table's cells, nor while it has a total row (the row below a total
+  row is outside it). Rows inserted inside a table join it; deleted rows and columns shrink it, and a table whose
+  header row or every data row is deleted goes.
+- **Total row** (Table Settings): the table's last row becomes its footer, `Total` in its first column and
+  `=SUBTOTAL(109, Table1[Column])` under each Number, Percent or Currency column, ordinary cells that may be changed;
+  turning it off makes that row a data row again, its cells kept (D385).
+- **Table menu** (a chip over the header row's first cell: the table's name and a menu): **Rename** (the name in
+  place), **Table Settings**, **Select Table**, **Convert to Range** (the table goes, its cells and look kept as plain
+  cells and a banding; formulas reading it read the same cells as plain ranges), **Delete Table** (its cells and
+  look go); views per box 1 ([Filters, filter views and slicers](#filters-filter-views-and-slicers)).
+- **Column menu** (a button on each header cell, Ctrl+Alt+\ on a cell of the table): **Edit Column Type** (the types
+  as a list, a Dropdown's options as the dropdown rule's form), **Sort A to Z**, **Sort Z to A** (the data rows only,
+  one undo step), **Insert 1 Column Left**, **Insert 1 Column Right**, **Delete Column**.
+- **Table Settings** panel (the office shell's right panel): **Table Name**, **Range** (an A1 range, the header row
+  first; refused as Convert to Table refuses), each column's **Type**, **Total Row**, and **Table Formatting** (the
+  table's banding in the Alternating Colours panel); **Done** and × close it. Every change writes at once, one undo
+  step each.
+- **Table references** in formulas ([Formulas](formulas.md#table-references)) read and follow the table.
+- **Files**: [Tables in the file](standard-mapping.md#tables-in-the-file).
+- Copies: a duplicated sheet's or copied sheet's tables are renamed to the next free names; a table's banding goes
+  with it; Clear Sheet leaves the tables, their cells cleared.
 
 ## Clean-up, split, randomise, stats
 
@@ -212,7 +263,7 @@ display style (Chip, Arrow, Plain Text) with option colours. Dropdowns and tick 
 
 - **Editor**: everything here.
 - **Participant**: sort and filter only through filter views of their own; writes values through validation; picks
-  from dropdowns and ticks tick boxes; finds; never replaces formulas or protected cells unless named.
+  from dropdowns and ticks tick boxes; grows a table by a value typed below it (D388), changing nothing else of it; finds; never replaces formulas or protected cells unless named.
 - **Viewer**: finds, uses filter views of their own, reads named ranges and goes to them.
 
 ## Observability
@@ -225,11 +276,13 @@ display style (Chip, Arrow, Plain Text) with option colours. Dropdowns and tick 
   or cannot reach is toasted and the form stays open.
 - `[workbook] named range moved` when a name's range moves to another sheet, and `[workbook] named range refused`
   with the reason (`name`, `range`) when Done cannot save.
+- `[sheet] table refused` with the reason (`overlap`, `merge`, `banding`, `name`, `full`) when Convert to Table,
+  Table Settings or a write cannot make or change a table; `[sheet] table grew` with the rows it grew by.
 
 ## Errors and limits
 
-- Up to 200 validation rules, 100 format rules, 100 named ranges, 100 named functions, 50 filter views and 50 slicers
-  a sheet; past one, a named rejection (`rules_full`, `names_full`, ...).
+- Up to 200 validation rules, 100 format rules, 100 named ranges, 100 named functions, 50 filter views, 50 slicers
+  and 50 tables a sheet; past one, a named rejection (`rules_full`, `names_full`, ...).
 - A replace touching more than the write limit is split, one undo step.
 
 ## Telemetry
@@ -242,6 +295,28 @@ display style (Chip, Arrow, Plain Text) with option colours. Dropdowns and tick 
 Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
 The code cites each by its id.
 
+- **D380** A sheet's tables: up to 50, as filter views and slicers, a table up to the sheet's columns wide; past it,
+  `tables_full` (default).
+- **D381** Convert to Table's guessed column types: a type when every filled data cell is that type, else Text; a
+  column with none filled None, as Google guesses (default).
+- **D382** A table's look: the alternating colours banding over it, the table's own, in the first default style; it
+  grows, shrinks and goes with the table, and Table Formatting edits it (default).
+- **D383** A table's column names: the header's text as entered, a blank or formula header `Column N`, a repeat
+  numbered from 2, as Excel's; the header cell is never rewritten (default).
+- **D384** A wrong type in a table column: flagged and kept, as Google's; empty cells and errors are never flagged
+  (the Director's ruling, 2026-11-27).
+- **D385** A total row: the table's last row, `Total` and `SUBTOTAL(109, ...)` under its number columns, as Excel's
+  total row; its cells ordinary cells (default).
+- **D386** This-row references (`[@Amount]`): read and computed, though Google reads none, so a file's formulas keep
+  working (the Director's ruling, 2026-11-27).
+- **D387** A table read from another app's file: its columns None, its look the file's own cell formats (default).
+- **D388** Growth by a Participant's value: the value and the growth are one change, as anyone's; a Participant
+  changes no other part of a table (the Director's ruling, 2026-11-27). Why: adding a row of data is the commonest
+  thing a Participant does with a table; the growth is the consequence of their value, not a reshape they chose, and
+  it undoes with it. Two limits keep "never reshape" true: growth only ever adds the one row the value sits in (never
+  a rename, a column, a type or the total row), and never crosses into a protected range. The room judges a
+  Participant's layout write as exactly the growth its own cells make, or that growth taken back by their undo
+  clearing a value in the row it gives up; anything else is refused (403, `[sheets] sheet.table_growth.refused`).
 - **D302** A named function's limits: a name up to 254 characters (Google's), up to 20 placeholders, a definition up
   to 2,000 characters, a description up to 1,000, an argument's description and example up to 200 each (default).
 - **D345** A protection's bounds: up to 100 a sheet, 50 exceptions a protected sheet, a description up to 200

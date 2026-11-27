@@ -24,6 +24,8 @@ function show(n: Node): string {
       return `name:${n.v}`;
     case 'stored':
       return `@${n.i}`;
+    case 'table':
+      return `table(${n.spec.table ?? ''}|${n.spec.cols?.join(':') ?? ''}|${n.spec.area})`;
     case 'ref': {
       const r = n.ref;
       return `ref(${r.sheet ? `${r.sheet}!` : ''}${[r.r1, r.c1, r.r2, r.c2].map((x) => x ?? '_').join(',')}${r.a ? ` a${r.a}` : ''}${r.open ? ` open${r.open}` : ''}${r.spill ? ' #' : ''})`;

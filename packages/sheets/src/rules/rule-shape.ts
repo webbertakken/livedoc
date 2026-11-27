@@ -117,7 +117,8 @@ function sourceOk(v: unknown, layout: SheetLayout): boolean {
   return isAxisId(v.r1) && isAxisId(v.r2) && isAxisId(v.c1) && isAxisId(v.c2);
 }
 
-function optionsOk(v: unknown): boolean {
+/** Whether `v` is a dropdown's options: each named once (case aside), each colour well made. */
+export function dropdownOptionsOk(v: unknown): boolean {
   if (!Array.isArray(v) || v.length === 0 || v.length > DROPDOWN_OPTIONS_MAX) return false;
   const seen = new Set<string>();
   for (const o of v) {
@@ -170,7 +171,7 @@ export function isValidationRule(
   const noOperands = v.op === undefined && v.a === undefined && v.b === undefined;
   switch (v.is) {
     case 'list':
-      return optionsOk(v.opts) && noOperands;
+      return dropdownOptionsOk(v.opts) && noOperands;
     case 'range':
       return sourceOk(v.src, layout) && noOperands;
     case 'check':
