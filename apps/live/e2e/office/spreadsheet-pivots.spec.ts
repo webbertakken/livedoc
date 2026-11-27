@@ -97,7 +97,13 @@ test('Insert › Pivot Table sums units by region on a new sheet, edited, refuse
     'SUM',
   );
   await expect(cell(page, 'B2 7')).toHaveCount(1);
-  await expect(cell(page, 'A4 Grand Total')).toHaveCount(1);
+  // Its labels and headers read as headers to a screen reader (pivot-tables.md "Accessibility").
+  await expect(
+    page.getByRole('grid').getByRole('rowheader', { name: 'A4 Grand Total', exact: true }),
+  ).toHaveCount(1);
+  await expect(
+    page.getByRole('grid').getByRole('columnheader', { name: 'B1 SUM of Units', exact: true }),
+  ).toHaveCount(1);
   await expect(cell(page, 'B4 10')).toHaveCount(1);
   await page.screenshot({
     path: test.info().outputPath('pivot-editor.png'),
