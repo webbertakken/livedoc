@@ -98,9 +98,11 @@ describe('text document version routes', () => {
     expect(list.versions.map((v) => v.id)).toEqual([version.id]);
   });
 
-  it('lists the tab\'s last edit: when, and who sent it, recorded or not', async () => {
+  it("lists the tab's last edit: when, and who sent it, recorded or not", async () => {
     await type('Draft');
-    const list = await (await call('GET', BASE)).json<{ lastEdit: { at: number; editor: object } }>();
+    const list = await (
+      await call('GET', BASE)
+    ).json<{ lastEdit: { at: number; editor: object } }>();
     expect(list.lastEdit.editor).toEqual({ key: 'k', name: 'Ada', color: '#1a73e8' });
     expect(list.lastEdit.at).toEqual(expect.any(Number));
     const update = TextDocumentState.fromBody(Body.of('More'));
