@@ -1,6 +1,6 @@
 'use client';
 
-// Show a Warning's dialog (docs/specs/029-sheets/data-tools.md "Protected ranges", D346): asked before this person's
+// Show a Warning's dialog (docs/specs/029-sheets/data-tools.md "Protected ranges", D353): asked before this person's
 // first change under a warning protection; OK writes it and lets them on past that range for the rest of their visit,
 // Cancel leaves the cells as they were.
 import { Button } from '@livedoc/ui';

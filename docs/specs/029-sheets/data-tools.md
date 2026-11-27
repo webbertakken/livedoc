@@ -151,7 +151,7 @@ display style (Chip, Arrow, Plain Text) with option colours. Dropdowns and tick 
     protection that admits them (an Only the Owner one is the owner's alone). Each change is one undo step.
 - **The warning** (Show a Warning): "Heads up! You're trying to edit part of this sheet that shouldn't be changed
   accidentally. Edit anyway?" with **Cancel** and **OK**; OK lets the person write there for the rest of their visit
-  to the spreadsheet (until they reload or leave it), one range at a time, as Google's (default, D346). Cancel leaves
+  to the spreadsheet (until they reload or leave it), one range at a time, as Google's (default, D353). Cancel leaves
   the cells as they were. An agent's changeset is never asked: it lands, and the room logs it
   (`[sheets] protection.warned`).
 - **Refused**: a write a protection does not admit is refused whole by the room with `protected` (403) and "This
@@ -247,7 +247,7 @@ The code cites each by its id.
 - **D345** A protection's bounds: up to 100 a sheet, 50 exceptions a protected sheet, a description up to 200
   characters; kept by row and column ids as a named range is; a new one's permission Editors Only, as Only the Owner
   would shut out the Editor making it (default).
-- **D346** How long Show a Warning's OK holds: for that range, until the person reloads or leaves the spreadsheet, as
+- **D353** How long Show a Warning's OK holds: for that range, until the person reloads or leaves the spreadsheet, as
   Google's "for the rest of this session"; an agent's changeset is never asked, only logged (default).
 - **D347** What a protection refuses: every write to its cells or their formats, rows or columns inserted inside it,
   its rows or columns deleted, moved or sorted, merges and rules over it; a protected sheet every write but cells in

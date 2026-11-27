@@ -1,4 +1,4 @@
-// Protected sheets and ranges (docs/specs/029-sheets/data-tools.md "Protected ranges", D345 to D347): a protection
+// Protected sheets and ranges (docs/specs/029-sheets/data-tools.md "Protected ranges", D345, D347): a protection
 // guards a range, or a whole sheet but its exceptions, from writes by those its permission does not admit. The room
 // asks `protectionRefusal` of every write; the grid asks the same, and `protectionsTouched` for its warnings.
 import { layoutIndex, posRangeOf } from './layout';

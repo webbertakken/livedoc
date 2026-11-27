@@ -1,4 +1,4 @@
-// docs/specs/029-sheets/data-tools.md "Protected ranges" (D345 to D347): what a protection admits, and which writes
+// docs/specs/029-sheets/data-tools.md "Protected ranges" (D345, D347): what a protection admits, and which writes
 // it refuses, for every kind of write the room takes.
 import { describe, expect, it } from 'vitest';
 import { applySheetWrite, inverseSheetWrite, type SheetWrite } from './store';
