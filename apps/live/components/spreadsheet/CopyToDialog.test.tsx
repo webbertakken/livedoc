@@ -4,7 +4,8 @@ import { act, fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import type { DocumentSummary } from '@livedoc/api-schema';
 import { apiListDocuments } from '@/lib/api/documents';
-import { CopyToDialog, copyTargets } from './CopyToDialog';
+import { CopyToDialog } from './CopyToDialog';
+import { copyTargets } from './SpreadsheetPickList';
 
 vi.mock('@/lib/api/documents', () => ({ apiListDocuments: vi.fn() }));
 

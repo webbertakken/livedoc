@@ -28,10 +28,15 @@ import {
 
 vi.mock('@/lib/debug-log', () => ({ debugLog: vi.fn() }));
 vi.mock('@/lib/telemetry', () => ({ track: vi.fn() }));
-vi.mock('@/lib/api/workbook', () => ({ apiSaveWorkbookFunctions: vi.fn() }));
+vi.mock('@/lib/api/workbook', () => ({
+  apiSaveWorkbookFunctions: vi.fn(),
+  apiFunctionSource: vi.fn(),
+}));
+vi.mock('@/lib/api/documents', () => ({ apiListDocuments: vi.fn() }));
+const { apiListDocuments } = await import('@/lib/api/documents');
 const { debugLog } = await import('@/lib/debug-log');
 const { track } = await import('@/lib/telemetry');
-const { apiSaveWorkbookFunctions } = await import('@/lib/api/workbook');
+const { apiSaveWorkbookFunctions, apiFunctionSource } = await import('@/lib/api/workbook');
 
 beforeAll(stubResizeObserver);
 beforeEach(() => vi.clearAllMocks());
@@ -72,6 +77,7 @@ function show(
         setFunctions(next);
         return true;
       },
+      importer: { ownerId: 'o', documentId: 'here' },
     };
     return <NamedFunctionsProvider value={state}>{children}</NamedFunctionsProvider>;
   }
@@ -210,6 +216,26 @@ describe('the Named Functions panel', () => {
     expect(screen.getByRole('button', { name: 'Edit TWICE' })).toBeTruthy();
   });
 
+  it('imports the functions ticked in another spreadsheet, a namesake taking the old one’s place', async () => {
+    vi.mocked(apiListDocuments).mockResolvedValue([
+      { id: 'b1', name: 'Budget', spreadsheet: true } as never,
+    ]);
+    const theirs = { ...TWICE, body: '=x+x' };
+    vi.mocked(apiFunctionSource).mockResolvedValue({ functions: [theirs, CONTAINS], sheets: [] });
+    const saves = show(await makeSheet(), [TWICE]);
+    fireEvent.click(screen.getByRole('button', { name: 'Import Function' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Budget' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Import All' }));
+    await waitFor(() => expect(saves).toEqual([[CONTAINS, theirs]]));
+    expect(screen.queryByRole('dialog')).toBeNull();
+    expect(track).toHaveBeenCalledWith('Spreadsheet', 'Changed', 'NamedFunction');
+  });
+
+  it('offers no Import Function to a reader', async () => {
+    show(await makeSheet(), [], { canShape: false });
+    expect(screen.queryByRole('button', { name: 'Import Function' })).toBeNull();
+  });
+
   it('removes a function', async () => {
     const saves = show(await makeSheet(), [CONTAINS, TWICE]);
     await act(async () => fireEvent.click(screen.getByRole('button', { name: 'Remove CONTAINS' })));
@@ -253,6 +279,7 @@ describe('useNamedFunctionsState', () => {
     vi.mocked(apiSaveWorkbookFunctions).mockResolvedValue({ workbook: saved, rev: 1 });
     const { view, onWorkbook, host } = hook([CONTAINS]);
     expect(view.result.current.functions).toEqual([CONTAINS]);
+    expect(view.result.current.importer).toEqual({ ownerId: 'o', documentId: 'd1' });
     expect(await view.result.current.save([TWICE])).toBe(true);
     expect(apiSaveWorkbookFunctions).toHaveBeenCalledWith(scope, [TWICE]);
     expect(onWorkbook).toHaveBeenCalledWith(saved);

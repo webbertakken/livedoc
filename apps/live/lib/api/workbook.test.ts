@@ -6,12 +6,22 @@ import { isOfflineId } from '../offline/offline-store';
 import {
   apiConvertWorkbook,
   apiDownloadWorkbook,
+  apiFunctionSource,
   apiSaveWorkbookFunctions,
   apiSaveWorkbookSettings,
   apiWorkbookConversion,
 } from './workbook';
 
-vi.mock('../offline/offline-store', () => ({ isOfflineId: vi.fn(async () => false) }));
+vi.mock('../offline/offline-store', () => ({
+  isOfflineId: vi.fn(async () => false),
+  offlineGetRecord: vi.fn(async () => ({ workbook: { functions: [TWICE_SOURCE] } })),
+}));
+vi.mock('../offline/offline-sheets', () => ({
+  offlineFetchSheets: vi.fn(async () => [
+    { id: 'sheetHere', title: 'Here', layout: { rows: [], cols: [] }, cells: [] },
+  ]),
+}));
+const TWICE_SOURCE = { name: 'TWICE', params: ['x'], body: '=x*2' };
 vi.mock('../offline/offline-workbook-file', () => ({
   offlineWorkbookFile: vi.fn(async () => ({ blob: new Blob(['x']), fileName: 'Here.ods' })),
 }));
@@ -160,6 +170,41 @@ describe('apiSaveWorkbookFunctions', () => {
     expect(await apiSaveWorkbookFunctions(scope, functions)).toEqual({
       workbook: 'offline',
       rev: 0,
+    });
+  });
+});
+
+describe('apiFunctionSource', () => {
+  const layout = { rows: ['r1'], cols: ['c1'] };
+
+  it('reads another spreadsheet’s named functions and sheets as opening it does', async () => {
+    const workbook = { ...record, functions: [TWICE_SOURCE] };
+    const f = reply({
+      workbook,
+      sheets: [{ id: 'sheetA', title: 'Rates', layout, cells: [], cellCount: 0, rowsLoaded: 1 }],
+    });
+    vi.stubGlobal('fetch', f);
+    expect(await apiFunctionSource('o', 'd 2')).toEqual({
+      functions: [TWICE_SOURCE],
+      sheets: [{ id: 'sheetA', title: 'Rates', layout }],
+    });
+    expect(new URL(f.mock.calls[0]![0], 'https://x.test').pathname).toBe(
+      '/api/documents/d%202/workbook',
+    );
+  });
+
+  it('reads none from a spreadsheet without, and fails when the api does', async () => {
+    vi.stubGlobal('fetch', reply({ workbook: record, sheets: [] }));
+    expect(await apiFunctionSource('o', 'd 2')).toEqual({ functions: [], sheets: [] });
+    vi.stubGlobal('fetch', reply({ error: 'forbidden' }, 403));
+    await expect(apiFunctionSource('o', 'd 2')).rejects.toThrow();
+  });
+
+  it('reads one kept in this browser from this browser', async () => {
+    vi.mocked(isOfflineId).mockResolvedValue(true);
+    expect(await apiFunctionSource('o', 'local1')).toEqual({
+      functions: [TWICE_SOURCE],
+      sheets: [{ id: 'sheetHere', title: 'Here', layout: { rows: [], cols: [] } }],
     });
   });
 });

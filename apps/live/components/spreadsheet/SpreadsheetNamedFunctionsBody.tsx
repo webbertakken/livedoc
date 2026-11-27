@@ -2,12 +2,13 @@
 
 // Data › Named Functions' side panel (docs/specs/029-sheets/data-tools.md "Named ranges and named functions"), for
 // everyone: the workbook's named functions in name order, each its call and description; an Editor's rows Edit and
-// Remove, and Add New Function under the list. Each change saves the list whole, one undo step.
+// Remove, and Add New Function and Import Function under the list. Each change saves the list whole, one undo step.
 import { useState } from 'react';
 import { PencilIcon, TrashIcon } from '@livedoc/ui';
-import { NamedFunction } from '@livedoc/sheets';
+import { NamedFunction, withImported } from '@livedoc/sheets';
 import { useSheetController } from '@/components/sheets/sheet-controller';
 import { track } from '@/lib/telemetry';
+import { ImportFunctionDialog } from './ImportFunctionDialog';
 import { NamedFunctionForm } from './NamedFunctionForm';
 import { useNamedFunctions } from './named-functions-state';
 
@@ -17,14 +18,17 @@ export const NO_FUNCTIONS_YET = 'No named functions yet.';
 // What the form is open on: a function (by its name), a new one, or nothing (the list).
 type Editing = { name: string } | 'new' | null;
 
+const LINK_BUTTON =
+  'min-h-row cursor-pointer rounded-control px-1 font-medium text-(--office-primary) hover:underline focus-visible:ring-2 focus-visible:ring-(--office-focus) focus-visible:outline-none';
 const ROW_BUTTON =
   'flex size-chip shrink-0 cursor-pointer items-center justify-center rounded-control text-(--office-icon) hover:bg-(--office-hover) focus-visible:ring-2 focus-visible:ring-(--office-focus) focus-visible:outline-none';
 
 export function SpreadsheetNamedFunctionsBody() {
   const c = useSheetController();
-  const { functions, save } = useNamedFunctions();
+  const { functions, save, importer } = useNamedFunctions();
   const listed = NamedFunction.sorted(functions);
   const [editing, setEditing] = useState<Editing>(null);
+  const [importing, setImporting] = useState(false);
   const back = () => setEditing(null);
   if (editing && c.canShape) {
     const existing = editing === 'new' ? undefined : NamedFunction.find(functions, editing.name);
@@ -90,13 +94,29 @@ export function SpreadsheetNamedFunctionsBody() {
         </p>
       )}
       {c.canShape ? (
-        <button
-          type="button"
-          className="mr-auto min-h-row cursor-pointer rounded-control px-1 font-medium text-(--office-primary) hover:underline focus-visible:ring-2 focus-visible:ring-(--office-focus) focus-visible:outline-none"
-          onClick={() => setEditing('new')}
-        >
-          Add New Function
-        </button>
+        <div className="flex flex-wrap gap-x-3">
+          <button type="button" className={LINK_BUTTON} onClick={() => setEditing('new')}>
+            Add New Function
+          </button>
+          {importer ? (
+            <button type="button" className={LINK_BUTTON} onClick={() => setImporting(true)}>
+              Import Function
+            </button>
+          ) : null}
+        </div>
+      ) : null}
+      {importing && importer ? (
+        <ImportFunctionDialog
+          ownerId={importer.ownerId}
+          currentId={importer.documentId}
+          here={functions}
+          onImport={(picked, source) => {
+            setImporting(false);
+            track('Spreadsheet', 'Changed', 'NamedFunction');
+            void save(withImported(functions, picked, source, c.workbook.ctxFor(c.sheet.id)));
+          }}
+          onClose={() => setImporting(false)}
+        />
       ) : null}
     </>
   );

@@ -106,9 +106,17 @@ display style (Chip, Arrow, Plain Text) with option colours. Dropdowns and tick 
     saved whole, so two Editors saving at once keep the later save (D303).
   - Formulas offer the workbook's named functions with the built-in ones as they are typed, with their description and
     each argument's description and example in the function help.
-  - **Import Function** opens a picker of the spreadsheets the person may read, then that spreadsheet's named functions
-    with a tick each and **Import All**; **Import** adds them, one undo step, a function of a name already here taking
-    its place, as Google's; one calling another named function not imported says so beside it.
+  - **Import Function** opens a picker of the person's other spreadsheets, as Copy To's lists them (newest first,
+    searched by name; [Spreadsheet](spreadsheet.md#sheets-in-the-sheet-bar), D183), then that spreadsheet's named
+    functions in name order, each its call and description and a tick, with **Import All** and **Import** (the ticked
+    ones; none ticked, it is dimmed) and **Back** to the picker. Loading says "Loading its named functions…", one
+    with none "That spreadsheet has no named functions.", a failed read "Its named functions could not be read."
+    with **Try Again**.
+  - Importing adds them as one save, one undo step; a function of a name already here takes its place, as Google's.
+    A ticked function calling another of that spreadsheet's named functions that is neither ticked nor here says so
+    beside it ("Calls TAX, which is not imported"), and imports all the same (its call reads `#NAME?` until it is).
+  - A reference in an imported definition reads the sheet of its name here, `#REF!` while there is none, as a sheet
+    copied to another spreadsheet does (D184).
   - A Participant or Viewer reads the list; with none, "No named functions."; an Editor's empty list says "No named
     functions yet."
 
