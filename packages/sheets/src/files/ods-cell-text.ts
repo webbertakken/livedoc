@@ -46,7 +46,9 @@ export function isMarkedParagraph(paragraph: XmlElement): boolean {
 }
 
 /** The text kept paragraphs read as, as the cell's would; null when one does not parse. */
-export function keptParagraphsText(items: readonly { xml: string; ns: XmlBindings }[]): string | null {
+export function keptParagraphsText(
+  items: readonly { xml: string; ns: XmlBindings }[],
+): string | null {
   const lines: string[] = [];
   for (const item of items) {
     const parsed = parseXml(keptXmlWithin(item, {}));
