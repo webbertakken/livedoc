@@ -80,6 +80,7 @@ import { COMMENT_KEY_ACTIONS } from '@/components/text-document/useTextDocumentT
 import { SUGGESTION_KEY_ACTIONS } from '@/components/text-document/useTextDocumentSuggestionCards';
 import { REVIEW_SUGGESTED_EDITS } from '@/components/text-document/useTextDocumentReviewPanel';
 import { COMPARE_DOCUMENTS } from '@/components/text-document/useTextDocumentCompare';
+import { WORD_COUNT_ITEM } from '@/components/text-document/useTextDocumentWordCount';
 import { NOTIFICATION_SETTINGS_ITEM } from '@/components/text-document/useTextDocumentNotifications';
 import {
   SEE_VERSION_HISTORY,
@@ -203,6 +204,8 @@ describe('the text document menus', () => {
         REVIEW_SUGGESTED_EDITS,
         // Tools > Compare documents (useTextDocumentCompare), bound by the surface.
         COMPARE_DOCUMENTS,
+        // Tools > Word count (useTextDocumentWordCount), bound by the surface.
+        WORD_COUNT_ITEM,
         // Tools > Notification settings (useTextDocumentNotifications), bound by the surface where it applies.
         NOTIFICATION_SETTINGS_ITEM,
         // File > Version history > See version history (useTextDocumentVersionHistory), bound by the surface.

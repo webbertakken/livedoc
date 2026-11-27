@@ -257,7 +257,7 @@ The Accessibility menu shows only while screen reader support is on.
 | Open Explore tool                     | `Ctrl+Alt+Shift+I`         | `⌘+Option+Shift+I`         | `Ctrl+Alt+Shift+I`           | left out (C3) |
 | Open spelling and grammar             | `Ctrl+Alt+X or F7`         | `⌘+Option+X or Fn+F7`      | —                            | specified     |
 | Open dictionary                       | `Ctrl+Shift+Y`             | `⌘+Shift+Y`                | `Ctrl+Shift+Y`               | specified     |
-| Word count                            | `Ctrl+Shift+C`             | `⌘+Shift+C`                | `Ctrl+Shift+C`               | specified     |
+| Word count                            | `Ctrl+Shift+C`             | `⌘+Shift+C`                | `Ctrl+Shift+C`               | built         |
 | Show non-printing characters          | `Ctrl+Shift+P`             | `⌘+Shift+P`                | `Ctrl+Shift+P`               | built         |
 | Start voice typing                    | `Ctrl+Shift+S`             | `⌘+Shift+S`                | `Ctrl+Shift+S`               | left out (C3) |
 | Go to side panel                      | `Ctrl+Alt+. or Ctrl+Alt+,` | `⌘+Option+. or ⌘+Option+,` | `Alt+Shift+. or Alt+Shift+,` | specified     |

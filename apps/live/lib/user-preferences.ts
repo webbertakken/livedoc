@@ -309,6 +309,9 @@ export type UserPreferences = {
   // A text document's default page setup (docs/specs/034-text-documents/page-layout.md "Page setup"): sides,
   // orientation, margins and colour in points. Read through PageSetup.parse.
   textDocumentPageSetup?: Record<string, unknown>;
+  // Word count while typing (docs/specs/034-text-documents/tools.md "Word count"): the count box at the bottom left of a
+  // text document’s writing. Missing === off.
+  textDocumentWordCountWhileTyping?: boolean;
 };
 
 // How many excluded ids we keep. A document id is a 36-char UUID, so 200
