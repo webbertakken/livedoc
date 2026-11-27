@@ -105,8 +105,13 @@ admin routes.
   (`has_content_lost`), logged as `[summary-refresh] skipped <documentId> has_content_lost`, and never tried again.
   A false-to-true flip is written.
 - **A read that writes nothing** (director, 2026-11-26): a room asked for its summary reads its SQLite through a
-  read-only view, which takes no schema step (a table an older schema lacks reads as empty), refuses any write and
-  tells the room of none, so no upkeep or compaction is armed. It skips the handover and the move: a room whose
+  read-only view, which takes no schema step, refuses any write and tells the room of none, so no upkeep or
+  compaction is armed. A room whose schema is behind lacks the newer tables: the summary asks only of the tables the
+  room holds, a live tab kind whose digest table is not there yet having no tab and no sheets table meaning no
+  spreadsheet (director, 2026-11-27: the second production dry pass read such rooms' tabs as none). A read the view
+  cannot make is never taken for no rows: it fails by name (`DocumentReadFailedError`), logged as `[document-db]
+read-failed statement=<the tables it names> error=<SQLite's message>`, and the document is recorded failed with that
+  name; a room never written (no schema) reads as empty, logged `[document-db] read-no-schema`. It skips the handover and the move: a room whose
   content has not moved is refused, a named failure. A room's wake sets no alarm it already holds, and a batch of
   reads arms nothing. A wake's clean-up of agent presence already past its expiry is the only write it may still make.
 - **The run**: while the switch is `run`, each minute up to 25 documents not written yet are asked the same, and a

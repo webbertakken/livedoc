@@ -1,6 +1,7 @@
 import type { DatabaseSync } from 'node:sqlite';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { NETWORK_T0, roomNetwork, tabSeed } from '../test-room-network';
+import { LIVE_TAB_KINDS } from '../live-tabs/live-tab-kinds';
 import { CONTENT_MOVE_KEY } from './content-move';
 import { FLUSH_IDLE_MS } from './room-content';
 
@@ -34,10 +35,10 @@ function dump(sql: DatabaseSync): string {
 }
 
 // A room holding a created document, its outbox drained and its upkeep run, as an idle document's room is.
-async function quietRoom() {
+async function quietRoom(label?: string) {
   const net = roomNetwork(['A']);
   const handle = net.room('A');
-  await handle.room.create('A', tabSeed([{ id: 't', name: 'Board' }]));
+  await handle.room.create('A', tabSeed([{ id: 't', name: 'Board', label }]));
   vi.setSystemTime(NETWORK_T0 + FLUSH_IDLE_MS + 1);
   await handle.room.alarm();
   await handle.room.alarm();
@@ -71,6 +72,36 @@ describe('a room read for the summaries’ refresh', () => {
     expect((await room.contentSummary('A')).tabs).toBe(1);
     expect(storageWrites()).toBe(writes);
     expect(dump(sql)).toBe(rows);
+  });
+
+  it('reads a room whose schema predates the live tabs’ digests truly: no live tab of those kinds', async () => {
+    const { sql, wake, storageWrites } = await quietRoom('Hello');
+    const fresh = await wake().contentSummary('A');
+    for (const kind of LIVE_TAB_KINDS) sql.exec(`DROP TABLE ${kind.tables.digest}`);
+    sql.exec('UPDATE _document_schema SET version = version - 1');
+    const rows = dump(sql);
+    const writes = storageWrites();
+    const room = wake();
+    await settled();
+    const behind = await room.contentSummary('A');
+    expect(behind).toMatchObject({ tabs: 1, hasContent: true });
+    expect(behind).toEqual(fresh);
+    expect(storageWrites()).toBe(writes);
+    expect(dump(sql)).toBe(rows);
+  });
+
+  it('fails a read it cannot make by name and logs it, never answering empty', async () => {
+    const { sql, wake } = await quietRoom('Hello');
+    sql.exec('ALTER TABLE tabs RENAME COLUMN data TO body');
+    const errors = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const room = wake();
+    await settled();
+    await expect(room.contentSummary('A')).rejects.toMatchObject({
+      name: 'DocumentReadFailedError',
+    });
+    expect(errors).toHaveBeenCalledWith(
+      expect.stringMatching(/^\[document-db\] read-failed statement=\S+ error=.*no such column/),
+    );
   });
 
   it('refuses a room whose content has not moved, moving nothing', async () => {

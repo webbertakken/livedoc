@@ -118,12 +118,30 @@ describe('DocumentDb.readOnly', () => {
     expect(raw.prepare('SELECT id FROM t').all()).toEqual([{ id: 'a' }]);
   });
 
-  it('reads a table an older schema lacks as empty, and a room with none as empty', async () => {
-    expect(await readOnly(true).db.prepare('SELECT x FROM missing').all()).toMatchObject({
-      results: [],
+  it('fails a read it cannot make by name, logging the tables it names and the error, alone and in a batch', async () => {
+    const errors = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const { db } = readOnly(true);
+    await expect(db.prepare('SELECT x FROM missing JOIN t ON 1').all()).rejects.toMatchObject({
+      name: 'DocumentReadFailedError',
+      message: 'document_read_failed',
     });
+    await expect(
+      db.batch([db.prepare('SELECT id FROM t'), db.prepare('SELECT x FROM missing')]),
+    ).rejects.toMatchObject({
+      name: 'DocumentReadFailedError',
+    });
+    expect(errors).toHaveBeenCalledWith(
+      '[document-db] read-failed statement=missing+t error=no such table: missing',
+    );
+    errors.mockRestore();
+  });
+
+  it('reads a room with no schema as empty, saying so', async () => {
+    const info = vi.spyOn(console, 'info').mockImplementation(() => {});
     expect(await readOnly(false).db.prepare('SELECT id FROM t').all()).toMatchObject({
       results: [],
     });
+    expect(info).toHaveBeenCalledWith('[document-db] read-no-schema statements=1');
+    info.mockRestore();
   });
 });

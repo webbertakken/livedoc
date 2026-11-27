@@ -149,7 +149,8 @@ export class RoomContent {
 
   // The content summary as the room would push it, read without writing (docs/specs/006-document/document-storage.md
   // "Refreshing the summaries"): through a read-only view, so no schema step, no move, no handover and no write noted.
-  // A room whose content has not moved yet has nothing of its own to read: refused by name.
+  // A room whose content has not moved yet has nothing of its own to read: refused by name. A read it cannot make
+  // fails by name (DocumentReadFailedError), which the sweep records as that document's failure.
   async summaryWithoutWriting(documentId: string): Promise<ContentSummary> {
     this.bind(documentId);
     const env = this.env;
@@ -158,7 +159,14 @@ export class RoomContent {
     const kv = this.state.storage.kv;
     if (!this.moved && !(kv && storedMove(kv))) throw new RoomNotReadyError(documentId, 'move');
     const view = DocumentDb.readOnly(sql, () => hasDocumentSchema((q) => sql.exec(q)));
-    return contentSummaryOf({ ...env, DOCUMENT_DB: view.asD1() }, documentId);
+    // A room whose schema is behind lacks the newer tables: the summary asks only of the ones it holds.
+    const tables = new Set(
+      sql
+        .exec<{ name: string }>("SELECT name FROM sqlite_master WHERE type = 'table'")
+        .toArray()
+        .map((row) => row.name),
+    );
+    return contentSummaryOf({ ...env, DOCUMENT_DB: view.asD1() }, documentId, tables);
   }
 
   // The move gate (docs/specs/006-document/document-storage-move.md, M1): before any content is served,
