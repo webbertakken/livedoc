@@ -348,7 +348,8 @@ type: "bubble" reads as a scatter, its last value column sizing every point's bu
 type: "candlestick" or "ohlc" reads labels, then open, high, low, close columns (or high, low, close);
 type: "histogram" counts the value columns' values into equal buckets, a column per bucket (files hold it as a column chart);
 type: "waterfall" draws the first value column as changes to a running total, a Subtotal column last;
-type: "treemap" tiles the plot, a tile per label sized by its value (files hold it as a pie chart).
+type: "treemap" tiles the plot, a tile per label sized by its value (files hold it as a pie chart);
+type: "gauge" draws a dial per label, its needle at the value (files hold it as a bar chart).
 stack: "stacked" or "percent" stacks a column, bar, area or stepped-area chart's series (100% as shares);
 smooth: true curves a line chart's lines.
 type: "combo" draws each series as columns, a line, an area or a stepped area: seriesTypes {"Margin": "line"}

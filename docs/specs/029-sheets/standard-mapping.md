@@ -525,7 +525,8 @@ each suite writes its own, so LibreOffice, Excel and Google Sheets open them as 
   24.2 draws them wrongly) (D323), and a Histogram chart as a Column chart of the values it counts, its series and
   labels as they are (Excel's own histogram is a `cx:chart` part no other suite reads, and ODF has none) (D325), and a
   Waterfall chart as a Column chart of its changes, as it is (Excel's waterfall is a `cx:chart` too) (D327),
-  and a Treemap chart as a Pie chart of the same slices, the same shares of a whole (D329). The file also keeps the **original** for LiveDoc, a record of what the nearest type lost: its type, on a
+  and a Treemap chart as a Pie chart of the same slices, the same shares of a whole (D329),
+  and a Gauge chart, which no format holds, as a Bar chart of its values (D331). The file also keeps the **original** for LiveDoc, a record of what the nearest type lost: its type, on a
   Combo chart each series' type in series order, and the sum the written chart reads back as (as "Kept while
   unchanged" sums it), as JSON (`{"type":"stepped-area","sum":"0a1b2c3d"}`,
   `{"type":"combo","series":["column","stepped-area"],"sum":"…"}`). It travels with the chart, in the chart's own
@@ -726,6 +727,8 @@ The code cites each by its id.
   reading one block of its own sheet and naming no part of its own; else the drawing is kept whole (default).
 - **D276** A read chart unchanged: its read sum (type, titles, legend, values, axis, alt, place, size, cells by
   position) equals the written one's; its kept chart part is then written in its place under a new name (default).
+- **D331** A Gauge chart in a file: written in both formats as a Bar chart of its series and labels, the original kept
+  (D290) (default).
 - **D329** A Treemap chart in a file: written in both formats as a Pie chart of its series and labels, the original kept
   (D290); Excel's `cx:chart` treemap neither written nor read (default).
 - **D327** A Waterfall chart in a file: written in both formats as a Column chart of its series and labels (the changes,

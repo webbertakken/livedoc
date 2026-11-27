@@ -30,6 +30,8 @@ import { isWaterfallChart } from './chart-waterfall';
 import { svgWaterfallChart } from './svg-render-waterfall';
 import { isTreemapChart } from './chart-treemap';
 import { svgTreemapChart } from './svg-render-treemap';
+import { isGaugeChart } from './chart-gauge';
+import { svgGaugeChart } from './svg-render-gauge';
 import { svgSankey } from './svg-render-sankey';
 import { isSankeyShape } from './sankey-wire';
 import { svgProgressBar, svgProgressRing, svgRating } from './svg-render-data';
@@ -117,7 +119,9 @@ export function svgElementBody(
   if (isPieShape(el.shape))
     return isTreemapChart(el)
       ? svgTreemapChart(el, labelColor, chartPalette, fontFamily, chartGround)
-      : svgPieChart(el, labelColor, chartPalette, fontFamily, chartGround);
+      : isGaugeChart(el)
+        ? svgGaugeChart(el, labelColor, chartPalette, fontFamily, chartGround)
+        : svgPieChart(el, labelColor, chartPalette, fontFamily, chartGround);
   if (isBarShape(el.shape))
     return svgBarChart(el, labelColor, chartPalette, fontFamily, chartGround);
   if (isLineShape(el.shape))

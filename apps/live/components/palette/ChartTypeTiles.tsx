@@ -1,6 +1,6 @@
 'use client';
 
-// The Chart Type section's tiles (docs/specs/009-elements/pie-chart.md "Chart types"): the sixteen types, each its
+// The Chart Type section's tiles (docs/specs/009-elements/pie-chart.md "Chart types"): the seventeen types, each its
 // glyph over its name, the chart's own pressed. A pick changes the chart; hovering previews nothing.
 import { CHART_TYPE_LABELS, CHART_TYPES, type ChartType } from '@livedoc/document';
 import { SizeButton } from '@/components/palette/palette-controls';
