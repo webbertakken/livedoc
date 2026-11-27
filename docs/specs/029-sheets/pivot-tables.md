@@ -133,31 +133,78 @@ and spills"), from the source's values and shown texts as they read now (default
 
 ## Making one
 
-- **Insert › Pivot Table**: Data Range (the selection or the data region), Insert To: **New Sheet** (the default,
-  "Pivot Table 1") or **Existing Sheet** (a cell); **Create** opens the Pivot Table Editor.
+- **Insert › Pivot Table**, an Editor's, opens the **Create Pivot Table** dialog:
+  - **Data Range**: the selection, or the data region around the active cell when one cell is selected (as Insert ›
+    Chart picks it), written with its sheet's name (`Sheet1!A1:F25`); editable.
+  - **Insert To**: **New Sheet** (the default) or **Existing Sheet**, which shows a **Location** field, empty at first
+    (placeholder `Sheet1!H1`), naming the cell the output starts at.
+  - **Cancel** and **Create**. Escape cancels; Enter in a field creates.
+  - Refusals, said under the field, the dialog kept open: a range that does not read, "Type a range like
+    Sheet1!A1:F25"; a range of one row, "The range needs a header row and a row of data"; a location that does not
+    read, "Type a cell like Sheet1!H1".
+- **Create** with New Sheet adds a sheet named `Pivot Table 1` (the first number free) after the open sheet, places
+  the pivot table at its A1 and opens it; with Existing Sheet it places the pivot table at the location and opens
+  that sheet. Either way the **Pivot Table Editor** opens on it, and the new pivot table, having no fields yet, leaves
+  its anchor blank. A new sheet and its pivot table are two undo steps, the pivot table's first (default, D613).
 - `GETPIVOTDATA(value_name, any_pivot_table_cell, [original_column, …])` reads it ([Formulas](formulas.md),
   "Lookup", D603).
 
 ## Pivot Table Editor
 
-A side panel: the range (editable), **Suggested** pivots, then Rows, Columns, Values and Filters, each with **Add**
-listing the source columns, and each entry's options as above. Changes recalculate the output at once.
+A side panel on the right ([Office shell](../004-interface-design/office-shell.md), "Side panels"), an Editor's, titled
+**Pivot Table Editor**, open on one pivot table. Each change writes the pivot table at once, one undo step, and its
+output is worked out again.
+
+- **Range**: the source as `Sheet1!A1:F25`, read when the field is left or Enter is pressed; one that does not read
+  says "Type a range like Sheet1!A1:F25" and the source stays. Fields whose columns the new range leaves out are
+  dropped, as a deleted column's are (D601).
+- **Suggested**: up to three ready-made pivot tables over the source, each named as it reads (`SUM of Units for each
+Region`): each of the first three columns holding text below the header as the row group, the first column holding
+  numbers summed; picking one replaces the pivot table's fields (default, D614). None when the source has no such pair.
+- **Rows**, **Columns**, **Values** and **Filters**, in that order: each a heading with an **Add** button, then its
+  entries in order. Add opens a list of the source's columns by their header text (a blank header by its column's
+  letter, `Column C`); Rows and Columns list only the columns in neither; picking one adds an entry at the end.
+- Each entry shows its column's name and **Remove** (×, "Remove Region"), then its options:
+  - Rows and Columns: **Order** (Ascending, Descending), **Sort By** (the column itself, or a value by its name),
+    **Show Totals** (on), and on Rows **Repeat Row Labels** (off).
+  - Values: **Summarise By** (SUM, COUNTA, COUNT, COUNTUNIQUE, AVERAGE, MAX, MIN, MEDIAN, PRODUCT, STDEV, STDEVP,
+    VAR, VARP) and **Show As** (Default, % of Row, % of Column, % of Grand Total). A new value of a column whose
+    cells below the header hold a number summarises by SUM, else by COUNTA, as Google Sheets does (default, D611).
+    With a value, the Values heading shows **Values As** (Columns, Rows).
+  - Filters: **Status**, "Showing all items" or "Showing 3 items", over a list of the column's items as the source
+    shows them (a blank `(Blanks)`), each a tick box, with **Select All** and **Clear**; an item unticked is hidden.
+- A calculated field shows its name and Summarise By; an entry's custom name, its grouping, a filter by condition and
+  a filter by formula stay as they are while other options change (they arrive from files and agents).
+- Keyboard: every control is reached by Tab; Add's list moves with the arrow keys, picks with Enter and closes with
+  Escape; Escape in the panel returns the keys to the grid.
+- A pivot table deleted while the editor is open says "This pivot table is no longer on the sheet."
 
 ## Working with one
 
-- A cell of the output selected shows **Edit** beside it to reopen the editor.
+- A selected cell of the output, or the anchor, shows an **Edit** button under the output's first column, below its
+  last row; it opens the Pivot Table Editor. An Editor's alone.
+- Typing, pasting or filling into the output's cells or the anchor is refused: "You can't edit a pivot table's
+  cells". The room refuses a value or formula at a pivot table's anchor; the editor and an agent's changes, which work
+  the output out, refuse the rest of its cells too (default, D612). Clearing them writes nothing and is not refused.
+- **Delete** (or Backspace) over a selection covering a pivot table's whole output removes the pivot table, one undo
+  step, as Google Sheets does (default, D613).
 - A double-click on a value shows its source rows on a new sheet ("Details for …").
 - The output refreshes when the source changes; a source grown past its range is read when the range was whole
   columns.
 
 ## Who may do what
 
-- **Editor** makes and changes pivot tables; **Participant** and **Viewer** read them and their details sheets
-  (a Viewer's details are their own, not saved).
+- **Editor** makes and changes pivot tables: Insert › Pivot Table, the editor, Edit, Delete.
+- **Participant** and **Viewer** read them and their details sheets (a Viewer's details are their own, not saved);
+  they see no Edit button, and Insert › Pivot Table is not theirs (dimmed, as Insert › Chart).
 
 ## Accessibility
 
-The output is ordinary cells to the grid's screen reader support, with its header rows and columns marked as headers.
+- The output is ordinary cells to the grid's screen reader support, with its header rows and columns marked as headers.
+- Create Pivot Table is a modal dialog: focus starts in Data Range, Tab stays inside, Escape closes it and returns the
+  keys to the grid; a refusal is an alert tied to its field.
+- The editor's sections are groups named by their headings; each entry is a group named by its column; Remove names
+  what it removes; the Edit button reads "Edit pivot table".
 
 ## Errors and limits
 
@@ -166,7 +213,8 @@ The output is ordinary cells to the grid's screen reader support, with its heade
 
 ## Telemetry
 
-`Spreadsheet · Inserted · PivotTable`; `Spreadsheet · Changed · PivotTable`.
+`Spreadsheet · Added · PivotTable` when Create places one; `Spreadsheet · Changed · PivotTable` for each change in
+the editor and each pivot table removed.
 
 ## Defaults
 
@@ -181,3 +229,9 @@ The output is ordinary cells to the grid's screen reader support, with its heade
   any sheet, as a formula's range does, and its fields go with their columns (default).
 - **D602** The output lands in the grid as a spilled array does, blocked by filled cells (`#REF!`, "Results would
   overwrite B3"), its numbers in their source column's number format and Show As values as percentages (default).
+- **D611** A new value of a column holding a number below its header summarises by SUM, else by COUNTA (default).
+- **D612** Typing into a pivot table is refused: at its anchor by the room, which keeps no workbook, and at every cell
+  of its output by the editor and agents' changes, which work it out (default).
+- **D613** Create with New Sheet is two undo steps (the pivot table, then the sheet); Delete over a whole output removes
+  its pivot table (default).
+- **D614** Suggested pivots are a text column by a number column summed, up to three (default).

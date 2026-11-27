@@ -7,7 +7,7 @@ import type { CardSource } from '../cards';
 import { STANDARD_THEME, type SpreadsheetTheme } from '../themes/spreadsheet-theme';
 import { workbookClock, type ArrayDialect, type WorkbookOptions } from './workbook-options';
 import { SheetLimits, type GridSize } from '../sheet-limits';
-import { formatA1 } from '../address';
+import { formatA1, type GridRange } from '../address';
 import { workbookFilterReads } from '../filter-reads';
 import { layoutIndex } from '../layout';
 import { RECALC_READS_MAX } from '../limits';
@@ -77,7 +77,10 @@ import {
   pivotBox,
   pivotSpecOf,
   readPivotSource,
+  type PivotBox,
+  type PivotSheets,
 } from '../pivot/pivot-resolve';
+import type { PivotSource } from '../pivot/pivot-spec';
 import type { CellFormat } from '../sheet';
 import { ITERATION_OFF, Loops, sameIteration, type Iteration } from './loops';
 import { LoopRounds, type LoopCells } from './loop-rounds';
@@ -630,6 +633,29 @@ export class Workbook {
     return arr.fmts[r - claim.r1]![c - claim.c1];
   }
 
+  // The pivot table whose anchor or landed output holds (r, c), and the rectangle it fills (its anchor alone while it is
+  // blocked or its anchor holds an input), or null (pivot-tables.md "Working with one", D612).
+  pivotOutputAt(sheetId: string, r: number, c: number): { id: string; rect: GridRange } | null {
+    if (!this.spills.hasPivots()) return null;
+    const no = this.noAt(sheetId, r, c);
+    if (no === NO_CELL) return null;
+    this.value(sheetId, r, c);
+    const owner = this.spills.ownerAt(no) ?? no;
+    const pivot = this.spills.pivotAt(owner);
+    if (!pivot) return null;
+    const landed = isPivotArray(this.vals.get(owner));
+    if (owner !== no && !landed) return null;
+    const ar = this.nos.rowOf(owner);
+    const ac = this.nos.colOf(owner);
+    const claim = landed ? this.spills.claimOf(owner) : undefined;
+    return {
+      id: pivot.id,
+      rect: claim
+        ? { r1: claim.r1, c1: claim.c1, r2: claim.r2, c2: claim.c2 }
+        : { r1: ar, c1: ac, r2: ar, c2: ac },
+    };
+  }
+
   // A cell's format as its value is shown: its own, with a pivot table's number format where it sets none
   // (pivot-tables.md "In the grid", D602).
   shownFormat(
@@ -961,15 +987,32 @@ export class Workbook {
   // A pivot table's output (pivot-tables.md "In the grid"): its source read (and noted as read) as it stands now,
   // worked out, and held with its cells' formats; an error when its source is gone or it is too large; blank when it
   // has nothing to show.
-  private pivotValue(no: CellNo, sheet: Sheet, pivot: SheetPivot): Value {
-    const box = pivotBox(pivot, {
+  // The sheets a pivot table on `sheet` may read: its own, and the workbook's by id and by title.
+  private pivotSheetsOf(sheet: Sheet): PivotSheets {
+    return {
       own: sheet,
       byId: (id) => this.sheets.get(id),
       byTitle: (title) => {
         const h = this.ctxFor(sheet.id).byTitle(title);
         return h && this.sheets.get(h.id);
       },
-    });
+    };
+  }
+
+  /**
+   * A pivot table's source as the Pivot Table Editor reads it (pivot-tables.md "Pivot Table Editor"): where it sits,
+   * and its header and rows as values and shown texts; null when its sheet or cells are gone.
+   */
+  pivotSourceOf(sheetId: string, pivot: SheetPivot): { box: PivotBox; source: PivotSource } | null {
+    const sheet = this.sheets.get(sheetId);
+    const box = sheet ? pivotBox(pivot, this.pivotSheetsOf(sheet)) : null;
+    if (!box) return null;
+    const read = readPivotSource(box, (r, c) => this.value(box.sheet.id, r, c), this.locale);
+    return { box, source: read.source };
+  }
+
+  private pivotValue(no: CellNo, sheet: Sheet, pivot: SheetPivot): Value {
+    const box = pivotBox(pivot, this.pivotSheetsOf(sheet));
     if (!box) return err('#REF!', PIVOT_NO_SOURCE);
     const cells = (box.r2 - box.r1 + 1) * (box.c2 - box.c1 + 1);
     if (cells > PIVOT_SOURCE_CELLS_MAX) return err('#REF!', PIVOT_TOO_LARGE);

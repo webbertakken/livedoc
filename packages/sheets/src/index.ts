@@ -142,6 +142,7 @@ export * from './objects/sheet-objects';
 export * from './objects/sheet-pivot';
 export * from './pivot/pivot-spec';
 export { pivotOutput } from './pivot/pivot-output';
+export * from './pivot/pivot-edit';
 export {
   PIVOT_BLOCKED_BY,
   PIVOT_NO_SOURCE,

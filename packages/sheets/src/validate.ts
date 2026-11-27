@@ -73,7 +73,9 @@ export type SheetRejection =
   // A sheet past its objects' limit (charts.md "The model").
   | 'objects_full'
   // A write a protection does not admit (data-tools.md "Protected ranges").
-  | 'protected';
+  | 'protected'
+  // A value or formula typed into a pivot table's anchor or output (pivot-tables.md "Working with one", D612).
+  | 'pivot_cell';
 
 export type Validation =
   { ok: true } | { ok: false; error: SheetRejection; at?: string; line?: string };
@@ -413,6 +415,8 @@ export type WriteCheck = {
   // The sheet a Dropdown from a Range reads, so a refusal names it (Sheet2!A2:A20).
   sourceOf?: RuleCtx['sourceOf'];
   limits?: SheetLimits;
+  // Whether a pivot table's output holds (r, c), from a workbook that works it out (D612); the api checks anchors alone.
+  pivotCellAt?: (r: number, c: number) => boolean;
 };
 
 // The first written value a Reject rule refuses, on the sheet as the write leaves it.
@@ -441,6 +445,28 @@ function rulesProblem(after: Sheet, write: SheetWrite, opts: WriteCheck): Valida
         at: `${ch.r}:${ch.c}`,
         line: ruleMessage(rule, ctx),
       };
+  }
+  return OK;
+}
+
+// The first value or formula a write types into a pivot table: at an anchor of the sheet as the write leaves it, or in
+// an output the caller works out (pivot-tables.md "Working with one", D612). A clear types nothing.
+function pivotProblem(after: Sheet, write: SheetWrite, opts: WriteCheck): Validation {
+  if (write.kind === 'title' || !write.cells?.length) return OK;
+  const anchors = new Set(
+    (after.layout.objects ?? []).flatMap((x) =>
+      x.kind === 'pivot' ? [`${x.at.r}:${x.at.c}`] : [],
+    ),
+  );
+  if (anchors.size === 0) return OK;
+  const ix = opts.pivotCellAt ? layoutIndex(after.layout) : null;
+  for (const ch of write.cells) {
+    if (!ch.i) continue;
+    const key = `${ch.r}:${ch.c}`;
+    if (anchors.has(key)) return no('pivot_cell', key);
+    const r = ix?.rowPos.get(ch.r);
+    const c = ix?.colPos.get(ch.c);
+    if (r !== undefined && c !== undefined && opts.pivotCellAt!(r, c)) return no('pivot_cell', key);
   }
   return OK;
 }
@@ -487,6 +513,8 @@ export function validateWrite(sheet: Sheet, write: SheetWrite, opts: WriteCheck 
   if (opts.checkRules !== false) {
     const v = rulesProblem(after, write, opts);
     if (!v.ok) return v;
+    const p = pivotProblem(after, write, opts);
+    if (!p.ok) return p;
   }
   const more =
     (after.layout.rules?.length ?? 0) > (sheet.layout.rules?.length ?? 0) ||
