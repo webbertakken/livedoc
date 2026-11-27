@@ -42,6 +42,7 @@ import { posRangeOf } from './layout';
 import { applySheetWrite, type CellChange, type SheetWrite } from './store';
 import { applyLayoutChange, type LayoutChange } from './store-layout';
 import { rangeNameProblem } from './range-names';
+import { isSheetTable, tableOverlaps, TABLES_MAX } from './tables/table';
 import { isFilterCondition } from './filter';
 import { SheetLimits } from './sheet-limits';
 import { WORKBOOK_COLS_MAX } from './workbook/workbook-limits';
@@ -309,6 +310,16 @@ function layoutChangeProblem(ch: LayoutChange, layout: SheetLayout): Validation 
         ? OK
         : no('write_invalid');
     }
+    case 'table': {
+      if (typeof ch.id !== 'string' || !isAxisId(ch.id)) return no('write_invalid');
+      if (ch.table === null) return OK;
+      const others = (layout.tables ?? []).filter((t) => t.id !== ch.id).length;
+      return others < TABLES_MAX &&
+        isSheetTable(ch.table, ch.id, layout) &&
+        !tableOverlaps(layout, ch.table)
+        ? OK
+        : no('write_invalid');
+    }
     case 'band':
       return typeof ch.id === 'string' &&
         isAxisId(ch.id) &&
@@ -533,6 +544,19 @@ export function validateSheetCreate(
           [x.r1, x.r2].every((id) => layout.rows.includes(id)) &&
           [x.c1, x.c2].every((id) => layout.cols.includes(id)),
       ))
+  )
+    return no('write_invalid');
+  // Tables a seed carries (a copied sheet's), held to what a write may set.
+  const sheetTables = layout.tables;
+  if (
+    sheetTables !== undefined &&
+    (!Array.isArray(sheetTables) ||
+      sheetTables.length > TABLES_MAX ||
+      !sheetTables.every((t, i) => {
+        const id = (t as { id?: string })?.id ?? '';
+        const before = { ...layout, tables: sheetTables.slice(0, i) };
+        return isSheetTable(t, id, before) && !tableOverlaps(before, t);
+      }))
   )
     return no('write_invalid');
   // Rules a seed carries (a copied sheet's), held to what a write may set.

@@ -18,6 +18,7 @@ export type TokenKind =
   | 'rbrace'
   | 'hash' // the spill suffix: `B2#`
   | 'stored' // `@n`, only in stored templates
+  | 'table' // a table reference: `Table1[Amount]`, `[@Amount]`
   | 'ws'
   | 'bad'; // a character no token starts with
 
@@ -31,6 +32,23 @@ function readError(text: string, i: number): ErrorCode | null {
   const rest = text.slice(i).toUpperCase();
   for (const code of ERROR_CODES) if (rest.startsWith(code)) return code;
   return null;
+}
+
+/** The length of a bracket group starting at `at` (nested once, escapes honoured), or 0 when it never closes. */
+export function tableBracketLength(text: string, at: number): number {
+  let depth = 0;
+  for (let i = at; i < text.length; i++) {
+    const ch = text[i]!;
+    if (ch === "'") i++;
+    else if (ch === '[') {
+      depth++;
+      if (depth > 2) return 0;
+    } else if (ch === ']') {
+      depth--;
+      if (depth === 0) return i + 1 - at;
+    }
+  }
+  return 0;
 }
 
 // Tokens of a formula's body (the text after its `=`), with offsets relative to `base`.
@@ -131,13 +149,26 @@ export function tokenize(text: string, base = 0, allowStored = false): Token[] {
       i++;
       while (i < text.length && IDENT_PART.test(text[i]!)) i++;
       const word = text.slice(start, i);
-      if (text[i] === '!') {
+      const bracket = text[i] === '[' ? tableBracketLength(text, i) : 0;
+      if (bracket > 0) {
+        i += bracket;
+        push('table', text.slice(start, i), start, i);
+      } else if (text[i] === '!') {
         i++;
         push('sheet', word, start, i);
       } else {
         push('ident', word, start, i);
       }
       continue;
+    }
+    // A table reference without its table's name (`[@Amount]`), read inside the table.
+    if (ch === '[') {
+      const bracket = tableBracketLength(text, i);
+      if (bracket > 0) {
+        i += bracket;
+        push('table', text.slice(start, i), start, i);
+        continue;
+      }
     }
     const op = OPS.find((o) => text.startsWith(o, i));
     if (op) {

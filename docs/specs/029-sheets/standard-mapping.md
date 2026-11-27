@@ -451,6 +451,39 @@ The table is the contract the readers and writers are tested against, one test p
   protection and a warning; and a file password the other format
   cannot carry (`protection_passwords_left`): "1 protected sheet leaves its file password behind".
 
+## Tables in the file
+
+- A sheet's [tables](data-tools.md#tables) are written and read both ways, as validation rules are (D293): the
+  **standard form** each format's apps read, and **LiveDoc's record** beside it, exact, which LiveDoc reads back.
+- **XLSX standard form**: a table part (`xl/tables/tableN.xml`, `table` with `id`, `name` and `displayName` the
+  formula name, `ref` its range, `headerRowCount="1"`, `totalsRowCount="1"` with a total row, an `autoFilter` over it
+  without one), one `tableColumn` a column (`id`, `name` its column name), linked from the worksheet's `tableParts`
+  by its relationship; its style `TableStyleLight1` with `showRowStripes="1"`, as the table's banding is written as
+  format rules already ([Alternating colours](formatting.md#alternating-colours)).
+- **XLSX formulas** write table references in Excel's grammar: `Table1[Amount]`, `Table1[#All]`, `Table1[#Headers]`,
+  `Table1[#Totals]`, `Table1[#Data]`, and this row as `Table1[[#This Row],[Amount]]` (Excel's file form of `[@Amount]`);
+  read, `[@Amount]` and the bare `[Amount]` of a formula inside its table are read too.
+- **ODF standard form**: a `table:database-range` in the spreadsheet's one `table:database-ranges` (`table:name` the
+  formula name, `table:target-range-address` its range with its sheet, `table:contains-header="true"`,
+  `table:display-filter-buttons="true"`), as LibreOffice writes a database range.
+- **OpenFormula** has no table reference a cell's formula keeps (LibreOffice reads `Table1[Amount]` only as it types
+  it), so in an ODF file each is written as the plain absolute range it reads (`[.$B$2:.$B$9]`), which every app
+  computes; LiveDoc's record restores the table references on read.
+- **LiveDoc's record**: in XLSX one `livedoc:tables` (`record`, `fingerprint`) in the worksheet's LiveDoc `ext`; in ODF
+  the `table:table`'s `livedoc:tables` and `livedoc:tables-fingerprint` attributes; LiveDoc's namespace. It holds the
+  sheet's tables in order as JSON, each its `name`, `range` as A1 text, `types` (column name to type, Dropdown
+  options as a dropdown rule's `opts`) and `total`; in ODF also `refs`, each formula cell (A1) whose formula reads a
+  table, with that formula in Google's syntax.
+- Its fingerprint is the CRC-32 (8 lower-case hex digits) of the standard form as written: each table's name and
+  range a line (and in ODF each `refs` cell's formula as written, a line). **Read**, the record is taken when its
+  fingerprint is the standard form's as read; else another app changed the tables or those formulas since, so the
+  standard form is read, the record dropped (an ODF formula changed elsewhere keeps its plain range), and the read
+  names it (`tables_changed`, logged, never reported), as D294.
+- **Read without LiveDoc's record**: each XLSX table part and each ODF database range with a header row is a table,
+  its columns None (D387); one LiveDoc cannot hold (overlapping another, past 50 a sheet, a name the rules refuse,
+  no header row, ODF's sheet-local `table:database-range` named `__Anonymous_Sheet_DB__N`, which is a filter) is kept
+  as the file wrote it, written back to its format, and named (`table_unread`).
+
 ## Rows and columns in the file
 
 - A line's own size, whether it is hidden by hand, its group depth, the collapsed groups, the side their controls sit

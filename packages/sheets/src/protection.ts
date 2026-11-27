@@ -131,6 +131,11 @@ function rangesOf(layout: SheetLayout, ch: LayoutChange): IdRange[] {
       return [...(ch.rule ? [ch.rule] : []), ...(layout.rules ?? []).filter((x) => x.id === ch.id)];
     case 'band':
       return [...(ch.band ? [ch.band] : []), ...(layout.bands ?? []).filter((x) => x.id === ch.id)];
+    case 'table':
+      return [
+        ...(ch.table ? [ch.table] : []),
+        ...(layout.tables ?? []).filter((x) => x.id === ch.id),
+      ];
     case 'frule':
       return [ch.rule, ...(layout.formatRules ?? []).filter((x) => x.id === ch.id)].flatMap((x) =>
         x ? [x, ...(x.also ?? [])] : [],

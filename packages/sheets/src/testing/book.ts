@@ -9,6 +9,7 @@ import type { FormulaMeaning } from '../formula/meaning';
 import { cellKey, type Sheet, type SheetLayout } from '../sheet';
 import { readTypedInput } from '../typed-input';
 import type { NamedFunction } from '../named-functions';
+import type { SheetTable } from '../tables/table';
 
 export function gridLayout(tag: string, rows = 30, cols = 12): SheetLayout {
   return {
@@ -22,14 +23,23 @@ type BookSpec = Record<string, Record<string, string>>;
 // Inputs typed as a person in `locale` (en-GB by default) types them.
 export function makeSheets(
   spec: BookSpec,
-  opts: { rows?: number; cols?: number; locale?: string } = {},
+  opts: {
+    rows?: number;
+    cols?: number;
+    locale?: string;
+    // Tables by sheet title, on the sheet before its formulas are read.
+    tables?: Record<string, SheetTable[]>;
+  } = {},
 ): Sheet[] {
   const locale = opts.locale ?? 'en-GB';
   const sheets: Sheet[] = Object.keys(spec).map((title, i) => ({
     id: `sheet${i}xx`,
     tabId: 'tab',
     title,
-    layout: gridLayout(`s${i}`, opts.rows, opts.cols),
+    layout: {
+      ...gridLayout(`s${i}`, opts.rows, opts.cols),
+      ...(opts.tables?.[title] ? { tables: opts.tables[title] } : {}),
+    },
     cells: new CellMap(),
     rev: 0,
     createdAt: i,
@@ -42,7 +52,7 @@ export function makeSheets(
     const cells = spec[Object.keys(spec)[i]!]!;
     for (const [a1, text] of Object.entries(cells)) {
       const pos = parseA1(a1)!;
-      const read = readTypedInput(text, locale, wb.ctxFor(sheet.id));
+      const read = readTypedInput(text, locale, { ...wb.ctxFor(sheet.id), here: pos });
       if (read.kind === 'invalid') throw new Error(`${a1}: ${text} → ${read.reason}`);
       if (read.kind === 'clear') continue;
       sheet.cells.set(cellKey(sheet.layout.rows[pos.r]!, sheet.layout.cols[pos.c]!), {
@@ -75,6 +85,7 @@ export function book(
     meaning?: FormulaMeaning;
     imports?: { access: ImportAccess };
     functions?: readonly NamedFunction[];
+    tables?: Record<string, SheetTable[]>;
   } = {},
 ) {
   const full: BookSpec = Object.values(spec).every((v) => typeof v === 'string')

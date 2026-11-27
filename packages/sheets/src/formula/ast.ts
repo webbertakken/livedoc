@@ -1,5 +1,6 @@
 // The formula syntax tree. A typed formula's references are positional
 // (`ref`); a stored template's are indexes into its StoredRef list (`stored`).
+import type { TableSpec } from '../tables/table-ref';
 import type { ErrorCode } from './values';
 
 // A reference as typed: zero-based positions; absent rows mean whole columns, absent columns whole rows.
@@ -27,7 +28,10 @@ export type Node =
   | { k: 'err'; v: ErrorCode }
   | { k: 'ref'; ref: A1Ref }
   | { k: 'stored'; i: number }
-  | { k: 'name'; v: string }
+  // `start` and `end`: where it was in the source, as a reference's.
+  | { k: 'name'; v: string; start?: number; end?: number }
+  // A table reference kept as typed (formulas.md "Table references"): one naming no table yet, read by name.
+  | { k: 'table'; spec: TableSpec; start: number; end: number }
   | { k: 'neg'; a: Node }
   | { k: 'pos'; a: Node }
   | { k: 'pct'; a: Node }
@@ -75,6 +79,33 @@ export function refsOf(node: Node): A1Ref[] {
 function collectRefs(node: Node, out: A1Ref[]): A1Ref[] {
   if (node.k === 'ref') out.push(node.ref);
   for (const child of childrenOf(node)) collectRefs(child, out);
+  return out;
+}
+
+// Every table reference kept as typed in a tree, in source order.
+export function tableRefsOf(node: Node, out: Extract<Node, { k: 'table' }>[] = []) {
+  if (node.k === 'table') out.push(node);
+  for (const child of childrenOf(node)) tableRefsOf(child, out);
+  return out;
+}
+
+// The names a tree's LET and LAMBDA calls declare (upper case): a name of theirs is never a table's.
+export function declaredNamesOf(node: Node, out: Set<string> = new Set()): Set<string> {
+  if (node.k === 'call' && (node.name === 'LET' || node.name === 'LAMBDA')) {
+    const last = node.args.length - 1;
+    node.args.forEach((a, i) => {
+      if (a?.k === 'name' && i < last && (node.name === 'LAMBDA' || i % 2 === 0)) out.add(a.v);
+    });
+  }
+  for (const child of childrenOf(node)) declaredNamesOf(child, out);
+  return out;
+}
+
+// Every name in a tree with its place in the source, in source order.
+export function namesOf(node: Node, out: { v: string; start: number; end: number }[] = []) {
+  if (node.k === 'name' && node.start !== undefined && node.end !== undefined)
+    out.push({ v: node.v, start: node.start, end: node.end });
+  for (const child of childrenOf(node)) namesOf(child, out);
   return out;
 }
 

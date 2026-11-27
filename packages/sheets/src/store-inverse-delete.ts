@@ -176,6 +176,12 @@ function restoreRules(before: SheetLayout, after: SheetLayout, now: SheetLayout)
     const cur = now.formatRules?.find((r) => r.id === x.id);
     if (left ? cur && same(cur, left) : !cur) out.push({ k: 'frule', id: x.id, rule: x, at });
   });
+  for (const x of before.tables ?? []) {
+    const left = after.tables?.find((r) => r.id === x.id);
+    if (left && same(left, x)) continue;
+    const cur = now.tables?.find((r) => r.id === x.id);
+    if (left ? cur && same(cur, left) : !cur) out.push({ k: 'table', id: x.id, table: x });
+  }
   for (const x of before.bands ?? []) {
     const left = after.bands?.find((r) => r.id === x.id);
     if (left && same(left, x)) continue;

@@ -3,6 +3,7 @@
 import { columnIndex } from '../address';
 import { FORMULA_DEPTH_MAX, FORMULA_MAX } from '../limits';
 import type { A1Ref, BinaryOp, Node } from './ast';
+import { parseTableRef } from '../tables/table-ref';
 import { tokenize, type Token } from './tokens';
 import type { ErrorCode } from './values';
 
@@ -41,7 +42,7 @@ const REFERENCE_START: ReadonlySet<Token['k']> = new Set(['ident', 'sheet', 'sto
 // Whether a node may give a reference: a reference, a name, a reference operator, or a call (INDEX, OFFSET, ...
 // give references; any other call's value is refused where a reference goes when it is worked out).
 function givesReference(n: Node): boolean {
-  return ['ref', 'stored', 'name', 'range', 'isect', 'union', 'call'].includes(n.k);
+  return ['ref', 'stored', 'name', 'table', 'range', 'isect', 'union', 'call'].includes(n.k);
 }
 
 // Thrown from anywhere in the descent and caught once, in parseFormula, which answers it as a refusal.
@@ -326,11 +327,16 @@ class Parser {
         return { k: 'err', v: t.v as ErrorCode };
       case 'stored':
         return { k: 'stored', i: Number(t.v) };
+      case 'table': {
+        const spec = parseTableRef(t.v);
+        if (!spec) throw new Fail('bad_reference', t.start);
+        return { k: 'table', spec, start: t.start, end: t.end };
+      }
       case 'ident': {
         const upper = t.v.toUpperCase();
         if (upper === 'TRUE' || upper === 'FALSE') return { k: 'bool', v: upper === 'TRUE' };
         if (!NAME_RE.test(t.v)) throw new Fail('bad_reference', t.start);
-        return { k: 'name', v: upper };
+        return { k: 'name', v: upper, start: t.start, end: t.end };
       }
       case 'lparen': {
         const items = [this.expr()];
