@@ -101,7 +101,7 @@ describe('the sheet toolbar', () => {
     show(h);
     act(() => h.select('A1:A2'));
     open('Insert Chart');
-    // The ten chart types, each its glyph and name (docs/specs/009-elements/pie-chart.md "Chart types").
+    // The eleven chart types, each its glyph and name (docs/specs/009-elements/pie-chart.md "Chart types").
     for (const name of [
       'Column',
       'Bar',
@@ -109,6 +109,7 @@ describe('the sheet toolbar', () => {
       'Area',
       'Stepped Area',
       'Scatter',
+      'Bubble',
       'Pie',
       'Doughnut',
       'Radar',

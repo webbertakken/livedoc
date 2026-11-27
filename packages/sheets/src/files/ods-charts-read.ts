@@ -33,6 +33,7 @@ import { SheetLimits } from '../sheet-limits';
 import {
   fileChartSum,
   isOneBlock,
+  sizedBlock,
   type FileChart,
   type FileChartSeries,
   type FileRange,
@@ -60,6 +61,7 @@ const CLASSES: Readonly<Record<string, SheetChartType>> = {
   line: 'line',
   area: 'area',
   scatter: 'scatter',
+  bubble: 'bubble',
   circle: 'pie',
   ring: 'doughnut',
   radar: 'radar',
@@ -240,7 +242,8 @@ export function readOdsChartDocument(root: XmlElement, sheetName: string): Read 
         ? ('stacked' as const)
         : null;
   const round = type === 'pie' || type === 'doughnut';
-  const scatter = type === 'scatter';
+  const bubble = type === 'bubble';
+  const scatter = type === 'scatter' || bubble;
   const own = (address: string | undefined): FileRange | null => {
     const read = address === undefined ? null : parseOdfRef(address);
     return read && read.sheet.toLowerCase() === sheetName.toLowerCase() ? read.range : null;
@@ -267,6 +270,8 @@ export function readOdsChartDocument(root: XmlElement, sheetName: string): Read 
   const yAxis = axisOf('y');
   const series: FileChartSeries[] = [];
   let x: FileRange | null = null;
+  // A bubble chart's sizes: every series' values, one column shared (D321).
+  let sizes: FileRange | null = null;
   for (const [i, ser] of kids(plot, CHART, 'series').entries()) {
     const own_ = classOf(ser);
     if (!combo && own_ !== undefined && own_ !== kind && !(kind === 'ring' && own_ === 'circle'))
@@ -275,16 +280,24 @@ export function readOdsChartDocument(root: XmlElement, sheetName: string): Read 
     const axis = attributeOf(ser, CHART, 'attached-axis');
     const right = axis === 'secondary-y' && rightAxis;
     if ((axis && axis !== 'primary-y' && !right) || unbuilt(ser, props)) return null;
-    const values = own(attributeOf(ser, CHART, 'values-cell-range-address'));
-    if (!values) return null;
+    const read = own(attributeOf(ser, CHART, 'values-cell-range-address'));
+    if (!read) return null;
     const labelAddress = attributeOf(ser, CHART, 'label-cell-address');
     const name = labelAddress === undefined ? null : own(labelAddress);
     if (labelAddress !== undefined && (!name || name.r1 !== name.r2 || name.c1 !== name.c2))
       return null;
-    const domains = kids(ser, CHART, 'domain');
-    if (domains.length > (scatter ? 1 : 0)) return null;
-    const domain = domains[0] && own(attributeOf(domains[0], TABLE, 'cell-range-address'));
-    if (domains[0] && !domain) return null;
+    const domains = kids(ser, CHART, 'domain').map((d) =>
+      own(attributeOf(d, TABLE, 'cell-range-address')),
+    );
+    if (domains.some((d) => !d)) return null;
+    // A bubble series' values are its sizes, its domains its y and then its x (ODF 1.3 Part 3 §11.13, D321).
+    if (bubble) {
+      if (domains.length !== 2 || (sizes && JSON.stringify(sizes) !== JSON.stringify(read)))
+        return null;
+      sizes = read;
+    } else if (domains.length > (scatter ? 1 : 0)) return null;
+    const values = bubble ? domains.shift()! : read;
+    const domain = domains[0];
     // A scatter's x is its first series' domain; a later series names none or the same.
     if (i === 0) x = domain ?? null;
     else if (domain && JSON.stringify(domain) !== JSON.stringify(x)) return null;
@@ -302,7 +315,7 @@ export function readOdsChartDocument(root: XmlElement, sheetName: string): Read 
   const categories = xAxis && childElement(xAxis, CHART, 'categories');
   const labels = categories ? own(attributeOf(categories, TABLE, 'cell-range-address')) : null;
   if (categories && !labels) return null;
-  if (!isOneBlock(series, scatter ? x : labels)) return null;
+  if (!isOneBlock(sizedBlock(series, sizes), scatter ? x : labels)) return null;
   const labelNumber = (ser: XmlElement) =>
     props(ser, 'chart', 'data-label-number') ?? props(plot, 'chart', 'data-label-number');
   const legend = childElement(chart, CHART, 'legend');
@@ -331,6 +344,7 @@ export function readOdsChartDocument(root: XmlElement, sheetName: string): Read 
     labels: labels && !scatter ? { range: labels, cached: [] } : null,
     x: scatter ? { range: x!, cached: [] } : null,
     series,
+    ...(sizes ? { sizes: { range: sizes, cached: [] } } : {}),
   };
 }
 

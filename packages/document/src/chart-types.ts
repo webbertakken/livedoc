@@ -10,6 +10,7 @@ export const CHART_TYPES = [
   'area',
   'stepped-area',
   'scatter',
+  'bubble',
   'pie',
   'doughnut',
   'radar',
@@ -22,6 +23,7 @@ export const CHART_VARIANTS = [
   'area',
   'stepped-area',
   'scatter',
+  'bubble',
   'doughnut',
   'radar',
   'combo',
@@ -38,6 +40,7 @@ const SHAPES: Record<ChartType, { shape: ChartKind; chartVariant?: ChartVariant 
   area: { shape: 'line-chart', chartVariant: 'area' },
   'stepped-area': { shape: 'line-chart', chartVariant: 'stepped-area' },
   scatter: { shape: 'line-chart', chartVariant: 'scatter' },
+  bubble: { shape: 'line-chart', chartVariant: 'bubble' },
   pie: { shape: 'pie-chart' },
   doughnut: { shape: 'pie-chart', chartVariant: 'doughnut' },
   radar: { shape: 'line-chart', chartVariant: 'radar' },
@@ -52,11 +55,18 @@ export const CHART_TYPE_LABELS: Record<ChartType, string> = {
   area: 'Area',
   'stepped-area': 'Stepped Area',
   scatter: 'Scatter',
+  bubble: 'Bubble',
   pie: 'Pie',
   doughnut: 'Doughnut',
   radar: 'Radar',
   combo: 'Combo',
 };
+
+// The types whose x is read from numbers, and whose first text column names their points (pie-chart.md "Scatter's
+// x", "Bubble").
+export function readsXFromNumbers(type: ChartType | null): boolean {
+  return type === 'scatter' || type === 'bubble';
+}
 
 export function isChartType(v: unknown): v is ChartType {
   return (CHART_TYPES as readonly unknown[]).includes(v);

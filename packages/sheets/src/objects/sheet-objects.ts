@@ -13,6 +13,7 @@ export const SHEET_CHART_TYPES = [
   'area',
   'stepped-area',
   'scatter',
+  'bubble',
   'pie',
   'doughnut',
   'radar',

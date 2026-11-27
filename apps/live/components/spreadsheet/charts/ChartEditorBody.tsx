@@ -6,7 +6,12 @@
 // text writes when it is left or Enter is pressed.
 import { useId, useState } from 'react';
 import { Button, Select, Switch, TextInput } from '@livedoc/ui';
-import { CHART_PALETTES, CHART_TYPE_LABELS, lineFieldsFromTable } from '@livedoc/document';
+import {
+  CHART_PALETTES,
+  CHART_TYPE_LABELS,
+  lineFieldsFromTable,
+  readsXFromNumbers,
+} from '@livedoc/document';
 import {
   AGENT_LOCALE,
   formatRange,
@@ -160,14 +165,16 @@ export function ChartEditorBody({
         AGENT_LOCALE,
       )
     : null;
-  // The series drawn, as the chart code reads them: a scatter's first column of numbers is its x, no series.
+  // The series drawn, as the chart code reads them: a scatter's or bubble's first column of numbers is its x, no series.
   const drawn = table
     ? lineFieldsFromTable({ shape: 'line-chart', chartVariant: 'scatter' }, table).lineSeries.length
     : 0;
   const series =
-    chart.type === 'scatter' && table
+    readsXFromNumbers(chart.type) && table
       ? table.series.slice(table.series.length - drawn)
       : (table?.series ?? []);
+  // A bubble chart's last of two or more series sizes its bubbles (pie-chart.md "Bubble").
+  const sizes = chart.type === 'bubble' && series.length >= 2 ? series.at(-1)!.col : null;
   const look = (col: string): SheetChartSeriesLook => chart.series?.[col] ?? {};
   const setLook = (col: string, next: SheetChartSeriesLook) => {
     const all = { ...chart.series };
@@ -249,7 +256,10 @@ export function ChartEditorBody({
               <span className="text-supporting text-slate-600 dark:text-slate-300">Series</span>
               {series.map((s) => (
                 <div key={s.col} className="flex items-center justify-between gap-2">
-                  <span className="truncate">{s.name}</span>
+                  <span className="truncate">
+                    {s.name}
+                    {s.col === sizes ? ' (size)' : ''}
+                  </span>
                   {chart.type === 'scatter' ? (
                     <span className="flex items-center gap-2 text-supporting">
                       <Switch

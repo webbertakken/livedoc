@@ -3,8 +3,8 @@
 Data charts are elements whose marks are sized by value, in a categorical
 palette, with an optional legend. The palette holds them in its own top-level **Data**
 category ([Palette top-level categories and bands](../010-palette/palette-top-level-categories.md)):
-**Pie**, **Column**, and **Line**, built so more chart kinds slot in beside them. Each draws as one of seven
-**chart types** (Chart types, below): Column, Bar, Line, Area, Scatter, Pie and Doughnut. They share the
+**Pie**, **Column**, and **Line**, built so more chart kinds slot in beside them. Each draws as one of the
+**chart types** (Chart types, below). They share the
 animation set, legend toggle, and context-menu categories; pie + bar also share
 the same 1-D data model, while the line chart carries a 2-D dataset (see Model).
 
@@ -98,7 +98,7 @@ ChartAxis`); a series on the right shows "(right)" after its name in the Data su
 
 ## Chart types
 
-A **chart type** is how a chart draws its data, named as Google Sheets names it. Ten ship; each is a chart kind
+A **chart type** is how a chart draws its data, named as Google Sheets names it. Eleven ship; each is a chart kind
 (the stored `shape`) and, for all but the first of its kind, a `chartVariant`:
 
 A chart is **named by its type** wherever the editor names an element: the selection badge says "Selected Column
@@ -112,6 +112,7 @@ Chart" and a screen reader hears "Column chart", as the palette's tile says, nev
 | Line         | `line-chart`   | (none)         | A line with point markers per series                                                          |
 | Area         | `line-chart`   | `area`         | Line's lines, each with the area between it and zero filled in its colour at 25%, overlapping |
 | Scatter      | `line-chart`   | `scatter`      | A point per category per series, no lines, at x = the category read as a number (below)       |
+| Bubble       | `line-chart`   | `bubble`       | Scatter's points as circles, each sized by its value in the last series (below)               |
 | Stepped Area | `line-chart`   | `stepped-area` | Each series a flat step across each category's slot, filled to zero as Area's (below)         |
 | Radar        | `line-chart`   | `radar`        | Each series a closed line through its points on spokes, one spoke per category (below)        |
 | Combo        | `line-chart`   | `combo`        | Each series as columns, a line, an area or a stepped area over one set of categories (below)  |
@@ -177,6 +178,23 @@ Chart" and a screen reader hears "Column chart", as the palette's tile says, nev
   - A faint web is always drawn: the spokes and a ring through their ends; with Show Axis a ring at each tick, its
     value on the twelve o'clock spoke. The readout and Show Values sit at the points.
   - Stacking, Smooth Line and the right-hand axis are ignored and kept (default, D291).
+- **Bubble** (Google Sheets' Bubble chart, Excel's Bubble): a scatter chart's data, each point a circle sized by a
+  value.
+  - Its x, its point names and its value ranges are a scatter's (Scatter's x, point names and value range, below).
+  - With two or more series, the **last series is the sizes**: each category's value in it sizes that category's
+    bubble in every other series, and it draws no bubbles of its own nor a key in the legend; with one series every
+    bubble is one size, half the largest. This is Excel's order (x, y, size) and Google's (its size column last).
+  - A bubble's area is in proportion to its size: its radius the largest's times the square root of its size over
+    the largest size. The largest radius is a tenth of the plot's shorter side, from 6 to 30 px, and the plot is drawn
+    in by it on every side so no bubble hangs past the axes. A size of no value, zero or below draws no bubble.
+  - Each bubble is filled in its series' colour at 60% with a 1 px edge of it, the largest drawn first so a small
+    one is never hidden under a large one. A named point's name is written in its bubble, in the ink that reads on
+    its colour, when it fits; a bubble too small for its name shows it in its readout only.
+  - A bubble's readout reads `name, y, x, size` when named, else `x · series: y, size`. Show Values prints its y over
+    its top edge.
+  - Google's colour group column (a text column between the y and the size) is not read: such a column is a series
+    of no values. Stacking, Smooth Line, the right-hand axis and a scatter series' line are ignored and kept (default,
+    D320).
 - **Combo** (Google Sheets' Combo chart): a line chart's data (`lineSeries` over `lineCategories`), each series drawn
   as its own **series type**: Column, Line, Area or Stepped Area (`LineSeries.type`). A series with no type of its own takes the
   default: the first half of the series, rounded up, are columns and the rest lines, so two series are a column and a
@@ -202,6 +220,7 @@ Chart" and a screen reader hears "Column chart", as the palette's tile says, nev
   - **Area**: the area breaks with the line; each run fills down to zero on its own.
   - **Stepped Area**: no step in its slot; each run of steps fills down to zero on its own.
   - **Scatter**: no point for that series at that x.
+  - **Bubble**: no bubble for that series at that x, nor for any series where its size has no value.
   - **Radar**: no point on that spoke; the line breaks on either side of it.
   - **Column** and **Bar**: no column (bar) in its slot; the slot and a column's name under the plot stay.
   - **Pie** and **Doughnut**: no wedge; the others share the whole; the category stays in the legend.
@@ -225,7 +244,7 @@ Chart" and a screen reader hears "Column chart", as the palette's tile says, nev
   sit squeezed at its top over an empty band. Values all equal widen by half a unit either way. Line, Area, Column
   and Bar keep zero in range: a line's rise and an area or bar's size read against it.
 - **The Chart Type section** opens first in the chart's Tools flyout, closed until opened (as every section is): a
-  grid of ten tiles, each the type's glyph over its name, the chart's own type pressed. Hovering a tile previews
+  grid of eleven tiles, each the type's glyph over its name, the chart's own type pressed. Hovering a tile previews
   nothing; picking one changes the chart, one undo step, `Element · Changed · ChartType`.
 - **Changing type** keeps the chart's size, style, palette, legend and animation. Within a kind it only sets
   `chartVariant`. Across kinds it moves the data: a pie or bar chart's slices become one series named **Series 1**
@@ -309,9 +328,9 @@ context-menu category. New chart kinds reuse it under the same Data palette cate
 
 A chart may carry `chartSource` (a sheet and a range of it): its data is then read live from that Sheet's cells and
 the element's own data is the last read ([Sheet charts](../029-sheets/sheet.md#charts)). Its Data menu offers
-**Unlink From Sheet** in place of the data editor. A Scatter chart from a Sheet whose first column holds numbers (so
+**Unlink From Sheet** in place of the data editor. A Scatter or Bubble chart from a Sheet whose first column holds numbers (so
 the read numbers its categories `1, 2, …` and makes that column a series) takes that column as its x and the other
-columns as its series, as a spreadsheet's scatter chart does. A Scatter chart from a Sheet whose first column holds
+columns as its series, as a spreadsheet's scatter chart does. A Scatter or Bubble chart from a Sheet whose first column holds
 text (not dates) beside two or more columns of numbers names its points by that column and takes the next column as
 its x, the rest as its series (operator, 2026-11-26). A Column or Bar chart from a Sheet reads every series: one
 draws as its slices, two or more side by side (Chart types, "Several series"). Each read keeps what its series carry beyond their
@@ -379,7 +398,7 @@ paints no box; `LegendView` draws the card from the element's fill + stroke, and
 
 ## Element tour
 
-The **Chart tour** is on the actions group's **Start Chart Tour** button while a data chart (any of the ten chart types) is selected, once its kind is opted in to (Settings › Tours › Show Me), for an Editor on an unlocked element, and walks through it on the element
+The **Chart tour** is on the actions group's **Start Chart Tour** button while a data chart (any of the eleven chart types) is selected, once its kind is opted in to (Settings › Tours › Show Me), for an Editor on an unlocked element, and walks through it on the element
 itself ([Element tours](../007-editor/element-tours.md) "The Chart tour").
 
 ## Defaults
@@ -404,6 +423,11 @@ The code cites each by its id.
 - **D289** Stepped Area: steps span their category's slot, risers on the shared edges, no markers, filled to zero at
   25%; stacked as Stacked Area; unstacked, the right axis as an area's; a Combo's stepped area series likewise
   (default).
+- **D320** Bubble: the last of two or more series the sizes (Excel's x, y, size; Google's size column last), every
+  other series' bubbles sized by it, one series one size at half the largest; area in proportion to size, the largest
+  radius a tenth of the plot's shorter side from 6 to 30 px, the plot drawn in by it; no bubble for a size of no
+  value or not above zero; fill at 60% with a 1 px edge, largest first; names inside when they fit; Google's group
+  column not read; stacking, smoothing, the right axis and lines ignored (default).
 - **D291** Radar: spokes clockwise from twelve o'clock, the centre the range's least value (zero unless a value is
   below it), closed lines with markers and no fill, a gap breaking the line on both sides, a web of spokes and an outer
   ring always, rings and tick values with Show Axis; stacking, smoothing and the right axis ignored (default).
