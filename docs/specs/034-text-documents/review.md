@@ -540,8 +540,14 @@ document and rejecting them all as the primary, as Google's
   couldn't be made. Try again.") (default copy).
 - **Pictures** come as they are in each document; a drawing comes as its picture, its drawing tab staying with its
   own document (default).
-- **Versions**: comparing with one of this document's versions comes with [Version history](#version-history)
-  (director, 2026-11-26).
+- **Versions** (director, 2026-11-26): an Editor of a document stored in LiveDoc chooses what to compare against,
+  **Another document** (first, chosen) or **A version of this document** (default copy and layout), as only an
+  Editor sees [Version history](#version-history); the second lists this document's versions newest first, each by
+  its name or its day and time, one to be chosen (loading, "This document has no versions yet." and a failed list with
+  **Try again** each say so). The selected side is the version as it read, its suggestions left out as either side's;
+  a version keeps no comments, so the comments box is not shown; the comparison is named "Comparison of <primary> and
+  <the version's name, or its day and time>". A version that cannot be read says "That document couldn't be read.
+  Try again." (default copy).
 - Telemetry: `Document · Created · TextDocumentCompare` once a comparison is stored; the log line
   `[text-document] compared suggestions=<n> leftOut=<n> ms=<n>`, or `[text-document] compare refused reason=<r>`.
 

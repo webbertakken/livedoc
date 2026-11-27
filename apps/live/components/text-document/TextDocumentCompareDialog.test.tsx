@@ -142,3 +142,79 @@ describe('TextDocumentCompareDialog', () => {
     expect(await screen.findByText('You have no other text documents yet.')).toBeTruthy();
   });
 });
+
+// review.md "The dialog" (Versions): an Editor compares against one of this document's versions.
+describe('TextDocumentCompareDialog against a version', () => {
+  const now = () => new Date(2026, 10, 27, 12).getTime();
+  const VERSIONS = [
+    {
+      id: 'v1',
+      kind: 'automatic' as const,
+      name: null,
+      takenAt: new Date(2026, 10, 27, 9, 5).getTime(),
+      restoredFrom: null,
+      editors: [],
+    },
+    {
+      id: 'v2',
+      kind: 'named' as const,
+      name: 'Draft',
+      takenAt: new Date(2026, 10, 27, 10).getTime(),
+      restoredFrom: null,
+      editors: [],
+    },
+  ];
+
+  function drawWith(versions: () => Promise<typeof VERSIONS>) {
+    vi.mocked(apiListDocuments).mockResolvedValueOnce(DOCUMENTS);
+    const onCompare = vi.fn().mockResolvedValue({ ok: false, refusal: 'unreadable' });
+    render(
+      <TextDocumentCompareDialog
+        ownerId="me"
+        currentId="here"
+        documentName="This one"
+        defaultName="Ada"
+        onCompare={onCompare}
+        onOpen={() => {}}
+        onClose={() => {}}
+        versions={versions}
+        now={now}
+      />,
+    );
+    return onCompare;
+  }
+
+  it('lists the versions newest first, without the comments box, and compares against the one chosen', async () => {
+    const onCompare = drawWith(async () => VERSIONS);
+    expect(screen.getByRole('radio', { name: 'Another document' })).toHaveProperty('checked', true);
+    fireEvent.click(screen.getByRole('radio', { name: 'A version of this document' }));
+    expect(screen.getByRole('status').textContent).toBe('Loading this document’s versions…');
+    const draft = await screen.findByRole('radio', { name: 'Draft' });
+    const labels = screen
+      .getByRole('group', { name: 'This document’s versions' })
+      .querySelectorAll('label');
+    expect([...labels].map((l) => l.textContent)).toEqual(['Draft', 'Today, 09:05']);
+    expect(screen.queryByRole('checkbox')).toBeNull();
+    expect(screen.getByRole('button', { name: 'Compare' }).hasAttribute('disabled')).toBe(true);
+    fireEvent.click(draft);
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Compare' }));
+    });
+    expect(onCompare).toHaveBeenCalledWith({
+      selected: { id: 'v2', name: 'Draft', version: true },
+      name: 'Ada',
+      comments: false,
+    });
+    expect(screen.getByRole('alert').textContent).toBe(
+      "That document couldn't be read. Try again.",
+    );
+  });
+
+  it('says when there are none, and offers to try again when they cannot be listed', async () => {
+    const versions = vi.fn().mockRejectedValueOnce(new Error('503')).mockResolvedValueOnce([]);
+    drawWith(versions);
+    fireEvent.click(screen.getByRole('radio', { name: 'A version of this document' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Try again' }));
+    expect(await screen.findByText('This document has no versions yet.')).toBeTruthy();
+  });
+});

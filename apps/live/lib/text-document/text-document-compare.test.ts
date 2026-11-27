@@ -10,6 +10,7 @@ import {
   Paragraph,
   TextDocument,
   TextDocumentState,
+  base64OfBytes,
   bytesOfBase64,
   type Block,
 } from '@livedoc/text-documents';
@@ -55,13 +56,14 @@ function api(overrides: Partial<CompareApi> = {}): CompareApi & { created: unkno
     create: vi.fn(async (_owner: string, request: unknown) => {
       created.push(request);
     }),
+    readVersion: vi.fn().mockRejectedValue(new Error('no versions here')),
     ...overrides,
   };
 }
 
 const request = (doc = docOf('The quick fox.')) => ({
   ownerId: 'me',
-  primary: { documentId: 'pri', name: 'Mine', format: 'odf' as const, doc },
+  primary: { documentId: 'pri', tabId: 'tab-p', name: 'Mine', format: 'odf' as const, doc },
   selected: { id: 'sel', name: 'Other' },
   name: 'Ada',
   comments: false,
@@ -183,5 +185,48 @@ describe('comparison names', () => {
     expect(attribution('  ')).toBe('Guest');
     expect(attribution(' Ada ')).toBe('Ada');
     expect(attribution('x'.repeat(150))).toHaveLength(100);
+  });
+});
+
+// review.md "The dialog" (Versions): one of the primary's versions as the selected side.
+describe('makeComparison against a version', () => {
+  /** The room's state of the primary, with a snapshot of it when it read `then`. */
+  function versioned(then: string, now: string) {
+    const doc = TextDocumentState.load();
+    TextDocumentState.replaceBody(doc, [{ text: then }]);
+    const snapshot = base64OfBytes(Y.encodeSnapshot(Y.snapshot(doc)));
+    TextDocumentState.replaceBody(doc, [{ text: now }]);
+    return { state: Y.encodeStateAsUpdate(doc), snapshot };
+  }
+
+  it('compares the writing now with the version as it read, named for it', async () => {
+    const { state, snapshot } = versioned('The old fox.', 'The quick fox.');
+    const fake = api({
+      loadState: vi.fn(async () => state),
+      readVersion: vi.fn(async () => ({ snapshot }) as never),
+    });
+    const outcome = await makeComparison(
+      { ...request(), selected: { id: 'v1', name: 'Draft', version: true } },
+      fake,
+    );
+    expect(outcome).toMatchObject({ ok: true });
+    expect(fake.readVersion).toHaveBeenCalledWith(
+      { ownerId: 'me', documentId: 'pri', tabId: 'tab-p', shareCode: null },
+      'v1',
+    );
+    const made = fake.created[0] as { name: string };
+    expect(made.name).toBe('Comparison of Mine and Draft');
+    expect(createdReading(made, true)).toBe('The old fox.');
+    expect(createdReading(made, false)).toBe('The quick fox.');
+  });
+
+  it('says a version it cannot read is unreadable', async () => {
+    const versionOf = {
+      ...request(),
+      selected: { id: 'v1', name: 'Draft', version: true as const },
+    };
+    expect(await makeComparison(versionOf, api())).toEqual({ ok: false, refusal: 'unreadable' });
+    const bad = api({ readVersion: vi.fn(async () => ({ snapshot: '%%%' }) as never) });
+    expect(await makeComparison(versionOf, bad)).toEqual({ ok: false, refusal: 'unreadable' });
   });
 });
