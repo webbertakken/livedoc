@@ -35,7 +35,8 @@ export function ImportReportDialog({ documentId }: { documentId: string }) {
         </h2>
         <div className="mt-2 text-body text-slate-600 dark:text-slate-300">
           <p>{IMPORT_REPORT_LEAD}</p>
-          <ul className="mt-2 list-disc space-y-1 pl-4">
+          {/* A long name (a file's own range name) wraps rather than running past the dialog. */}
+          <ul className="mt-2 list-disc space-y-1 pl-4 [overflow-wrap:anywhere]">
             {report.lines.map((line) => (
               <li key={line}>{line}</li>
             ))}

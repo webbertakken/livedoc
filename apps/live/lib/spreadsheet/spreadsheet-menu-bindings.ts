@@ -104,6 +104,8 @@ export type GridMenuPort = {
   frozenCols: number;
   showGrid: boolean;
   filtered: boolean;
+  // Why Create a Filter cannot run here (a range over part of a table, D481), or null.
+  filterNote?: string | null;
   outline: Record<Axis, GridMenuOutline>;
   // The active cell's link (a HYPERLINK), or null.
   link: string | null;
@@ -257,6 +259,7 @@ function shapeBindings(port: GridMenuPort): Record<string, OfficeAction> {
     'create-a-filter': run(act.toggleFilter, {
       checked: port.filtered,
       ...(port.filtered ? { label: 'Remove Filter' } : {}),
+      ...(!port.filtered && port.filterNote ? { disabled: true, note: port.filterNote } : {}),
     }),
     // The toolbar's own (surface.md "Toolbar"): decimals, and the font size a point at a time (D128).
     'decrease-decimal-places': run(() => act.decimals(-1)),

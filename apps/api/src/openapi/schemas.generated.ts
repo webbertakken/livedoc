@@ -3525,6 +3525,23 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
             "type": "number"
           },
           "k": {
+            "const": "filter_views_left",
+            "type": "string"
+          }
+        },
+        "required": [
+          "k",
+          "count"
+        ],
+        "type": "object"
+      },
+      {
+        "additionalProperties": false,
+        "properties": {
+          "count": {
+            "type": "number"
+          },
+          "k": {
             "const": "kept",
             "type": "string"
           },

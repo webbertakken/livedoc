@@ -18,6 +18,8 @@ const REFUSALS: Partial<Record<string, string>> = {
   protected: 'Those cells are protected',
   // A value typed into a pivot table (pivot-tables.md "Working with one", D612).
   pivot_cell: "You can't edit a pivot table's cells",
+  // A filter over part of a table, or a table over part of the filter (data-tools.md, D481).
+  filter_overlaps_table: "A filter over a table filters the table's cells only",
 };
 
 // A spreadsheet's own words where its limits differ (spreadsheet.md "Limits").

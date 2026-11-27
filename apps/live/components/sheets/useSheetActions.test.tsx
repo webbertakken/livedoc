@@ -135,6 +135,7 @@ async function rich(
   const pending = () => new Promise<never>(() => {});
   const initial = { ...json(), layout: emptyLayout(rand, opts.rows ?? 6, opts.cols ?? 4) };
   const announce = vi.fn();
+  const toast = vi.fn();
   const store = new SheetStore({
     scope: { documentId: 'd1', ownerId: 'o', shareCode: null, tabId: null },
     self: () => by,
@@ -161,7 +162,7 @@ async function rich(
       maximised: false,
       locale: 'en-GB',
       announce,
-      toast: () => {},
+      toast,
       notify: () => {},
     });
     current = c;
@@ -188,7 +189,7 @@ async function rich(
     run((a) => a.startEdit('type', text));
     return run((a) => a.commitEdit('none')) as { ok: boolean };
   };
-  return { store, view, run, select, sheet, cell, value, typeAt, announce };
+  return { store, view, run, select, sheet, cell, value, typeAt, announce, toast };
 }
 
 const ID = 'sheet0001';
@@ -551,6 +552,29 @@ describe('sort, filter, freeze, dates', () => {
     expect(h.sheet().layout.filter?.conds[col]).toEqual({ values: ['x'] });
     h.run((a) => a.toggleFilter());
     expect(h.sheet().layout.filter).toBeUndefined();
+  });
+
+  // data-tools.md "A table's filter" (D481): inside a table, the table's filter; over part of one, refused.
+  it('makes a table’s filter inside it, and refuses a filter over part of it', async () => {
+    const h = await rich();
+    h.typeAt(0, 0, 'Head');
+    h.typeAt(1, 0, 'x');
+    h.select(0, 0, 1, 0);
+    h.run((a) => a.convertToTable());
+    expect(h.sheet().layout.tables).toHaveLength(1);
+    h.select(0, 0, 2, 1);
+    h.run((a) => a.toggleFilter());
+    expect(h.sheet().layout.filter).toBeUndefined();
+    expect(h.toast).toHaveBeenLastCalledWith("This range overlaps Table1: use the table's filter");
+    h.select(1, 0);
+    h.run((a) => a.toggleFilter());
+    const { rows, cols } = h.sheet().layout;
+    expect(h.sheet().layout.filter).toMatchObject({
+      r1: rows[0],
+      c1: cols[0],
+      r2: rows[1],
+      c2: cols[0],
+    });
   });
 
   it('freezes within the limits and the grid', async () => {

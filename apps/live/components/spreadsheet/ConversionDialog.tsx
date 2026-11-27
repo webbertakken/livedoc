@@ -46,7 +46,7 @@ export function ConversionDialog({
             <>
               <p>{conversionLead(to, state.losses)}</p>
               {state.losses.length > 0 ? (
-                <ul className="mt-2 list-disc space-y-1 pl-4">
+                <ul className="mt-2 list-disc space-y-1 pl-4 [overflow-wrap:anywhere]">
                   {state.losses.map((loss) => (
                     <li key={loss.k}>{conversionLine(loss, to)}</li>
                   ))}

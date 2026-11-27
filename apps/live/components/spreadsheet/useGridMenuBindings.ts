@@ -11,7 +11,14 @@ import {
 } from '@/lib/spreadsheet/spreadsheet-menu-bindings';
 import { useMemo } from 'react';
 import type { OfficeActions } from '@/lib/office/office-catalogue';
-import { unmergeRange, type MergeMode } from '@livedoc/sheets';
+import {
+  filterRangeFor,
+  unmergeRange,
+  type Grid,
+  type GridRange,
+  type MergeMode,
+  type SheetLayout,
+} from '@livedoc/sheets';
 import { openHyperlink } from '@/lib/open-hyperlink';
 import { recentFormatCodes } from '@/lib/spreadsheet/recent-formats';
 import { useSheetController } from '@/components/sheets/sheet-controller';
@@ -24,6 +31,13 @@ import { useFindReplace } from './find-replace-state';
 import { changeViewTitles } from '@/components/sheets/filter-view-menu';
 
 /** The dialogs the open sheet hosts that its menu items open, and the merge that asks first (useMergeDialog). */
+// Why Create a Filter is dimmed: its range would overlap a table other than as its filter (data-tools.md, D481).
+function createFilterNote(layout: SheetLayout, range: GridRange, grid: Grid): string | null {
+  if (layout.filter || !layout.tables?.length) return null;
+  const plan = filterRangeFor(layout, range, grid);
+  return 'note' in plan ? plan.note : null;
+}
+
 export type GridDialogs = {
   openCustomFormat: () => void;
   openCustomCurrency: () => void;
@@ -61,6 +75,7 @@ export function useGridMenuBindings(
     frozenCols: layout.frozenCols ?? 0,
     showGrid: layout.showGrid !== false,
     filtered: !!layout.filter,
+    filterNote: createFilterNote(layout, range, c.grid),
     outline: gridMenuOutline(c.viewLayout, range),
     link,
     recentCodes,

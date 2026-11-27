@@ -42,8 +42,9 @@ import { posRangeOf } from './layout';
 import { applySheetWrite, type CellChange, type SheetWrite } from './store';
 import { applyLayoutChange, type LayoutChange } from './store-layout';
 import { rangeNameProblem } from './range-names';
-import { isSheetTable, tableOverlaps, TABLES_MAX } from './tables/table';
+import { isSheetTable, tableOverlaps, TABLES_MAX, type SheetTable } from './tables/table';
 import { isFilterCondition } from './filter';
+import { isTableFilter, storedFilterClashes } from './tables/table-filter';
 import { FILTER_VIEWS_MAX, isSheetFilterView } from './filter-views';
 import { SheetLimits } from './sheet-limits';
 import { WORKBOOK_COLS_MAX } from './workbook/workbook-limits';
@@ -76,7 +77,9 @@ export type SheetRejection =
   // A write a protection does not admit (data-tools.md "Protected ranges").
   | 'protected'
   // A value or formula typed into a pivot table's anchor or output (pivot-tables.md "Working with one", D612).
-  | 'pivot_cell';
+  | 'pivot_cell'
+  // The sheet's filter over part of a table, or a table over part of the filter (data-tools.md, D481).
+  | 'filter_overlaps_table';
 
 export type Validation =
   { ok: true } | { ok: false; error: SheetRejection; at?: string; line?: string };
@@ -87,6 +90,25 @@ const no = (error: SheetRejection, at?: string): Validation => ({
   ...(at ? { at } : {}),
 });
 const OK: Validation = { ok: true };
+
+// A filter set over part of a table it did not already overlap so (D481); one stored before the rule stays (D480).
+function newClash(layout: SheetLayout, filter: IdRange): boolean {
+  const was = new Set(storedFilterClashes(layout, layout.filter).map((t) => t.id));
+  return storedFilterClashes(layout, filter).some((t) => !was.has(t.id));
+}
+
+// A table set over part of the sheet's filter, unless it already was, or the filter was its filter and follows it.
+function tableClash(layout: SheetLayout, table: SheetTable): boolean {
+  const f = layout.filter;
+  const box = f ? posRangeOf(layout, f) : null;
+  if (!box) return false;
+  const old = layout.tables?.find((t) => t.id === table.id);
+  if (old && isTableFilter(layout, old, box)) return false;
+  const was = storedFilterClashes(layout, f).some((t) => t.id === table.id);
+  const tables = [...(layout.tables ?? []).filter((t) => t.id !== table.id), table];
+  const now = storedFilterClashes({ ...layout, tables }, f).some((t) => t.id === table.id);
+  return now && !was;
+}
 
 export function validInput(v: unknown): v is CellInput {
   if (typeof v !== 'object' || v === null || Array.isArray(v)) return false;
@@ -285,7 +307,9 @@ function layoutChangeProblem(ch: LayoutChange, layout: SheetLayout): Validation 
         Object.entries(conds).every(
           ([col, cond]) => isAxisId(col) && isFilterCondition(cond, refsOk),
         )
-        ? OK
+        ? newClash(layout, ch.filter)
+          ? no('filter_overlaps_table')
+          : OK
         : no('filter_invalid');
     }
     case 'filterCond':
@@ -320,7 +344,9 @@ function layoutChangeProblem(ch: LayoutChange, layout: SheetLayout): Validation 
       return others < TABLES_MAX &&
         isSheetTable(ch.table, ch.id, layout) &&
         !tableOverlaps(layout, ch.table)
-        ? OK
+        ? tableClash(layout, ch.table)
+          ? no('filter_overlaps_table')
+          : OK
         : no('write_invalid');
     }
     case 'fview': {

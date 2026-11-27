@@ -144,7 +144,7 @@ function lineAttributes(
     const line = axis.lines.get(p);
     const attrs = [
       sized(line?.size ?? -1),
-      line?.hidden || folded.has(p) ? ' hidden="1"' : '',
+      line?.hidden || line?.filtered || folded.has(p) ? ' hidden="1"' : '',
       line?.depth ? ` outlineLevel="${line.depth}"` : '',
       controls.has(p) ? ' collapsed="1"' : '',
     ].join('');

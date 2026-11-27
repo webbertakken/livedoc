@@ -99,6 +99,8 @@ export const SHEET_ERRORS = [
   'protected',
   // A value or formula typed into a pivot table (docs/specs/029-sheets/pivot-tables.md "Working with one", D612).
   'pivot_cell',
+  // The sheet's filter over part of a table, or a table over part of the filter (data-tools.md, D481).
+  'filter_overlaps_table',
 ] as const;
 export type SheetError = (typeof SHEET_ERRORS)[number];
 
