@@ -1,7 +1,8 @@
 # Pivot tables
 
-**Status: built in part** (plan 0020 Phase 11): how a pivot table's output is worked out from its source
-([The output](#the-output)), proven against Google Sheets' own answers; the rest specified.
+**Status: built in part** (plan 0020 Phase 11): the model ([The model](#the-model)), how a pivot table's output is
+worked out from its source ([The output](#the-output)), proven against Google Sheets' own answers, and the output in
+the grid ([In the grid](#in-the-grid)); the rest specified.
 
 Pivot tables in a [spreadsheet](spreadsheet.md), as Google Sheets makes them. Research:
 [Charts and pivots](../../research/sheets-open-standard/charts-and-pivots.md). Evidence: twenty pivot tables Google
@@ -26,11 +27,18 @@ Sheets made over one source, their output as Google works it out (`packages/shee
 A pivot table is one of its sheet's **objects** ([Sheet store](sheet-store.md#in-a-spreadsheet), "Objects"), kept in
 the sheet's layout beside its charts, set whole by its id or removed, one undo step a change (default, D378).
 
-- **Place**: the cell its output starts at, by row and column ids; the output grows right and down from it.
-- **Source**: a range of any sheet of the workbook, by that sheet's id and row and column ids; its first row is the
-  header, which names the columns. Rows and columns inserted inside it widen it, as a chart's range does.
+- **Place**: the cell its output starts at, by row and column ids; the output grows right and down from it. Deleting
+  that cell's row or column deletes the pivot table, as Google Sheets does (default, D381).
+- **Source**: a range of any sheet of the workbook, by that sheet's id (none: its own sheet) and row and column ids;
+  its first row is the header, which names the columns. Rows and columns inserted inside it widen it, as a chart's
+  range does; deleted ones shrink it, on its own sheet and on another alike, as a formula's range into that sheet
+  shrinks; every cell of it deleted leaves no source (D381).
 - **Fields**: each row group, column group, value and filter names its source column by the column's id, so it
-  follows the column when columns move, and is dropped when the column is deleted.
+  follows the column when columns move, and is dropped when the column is deleted; a group sorted by a value dropped
+  so sorts by its items again (D381).
+- **Bounds**: up to 100 pivot tables and charts together a sheet (the objects' cap); up to 20 row groups, 20 column
+  groups, 40 values and 40 filters; a filter's values and a custom group's items as a filter's are; names up to 200
+  characters. A change past them is refused as any malformed layout write is (default, D381).
 - **Rows** and **Columns**: groups, outermost first; each with its order (ascending or descending), an optional
   value to sort by (a value's place among Values, its order then the group's), **Show Totals** (on), **Repeat Row
   Labels** (off; rows only), and an optional grouping (below).
@@ -89,6 +97,32 @@ Google Sheets' answer for the evidence's cases):
 - **Columns only**: the first column blank in the header rows, then a row per value named in the first column.
 - **Values as rows**: a `Values` column after the row groups, each row item a row per value.
 
+## In the grid
+
+The engine places a pivot table's output in its sheet as it places a spilled array ([Formulas](formulas.md), "Arrays
+and spills"), from the source's values and shown texts as they read now (default, D382):
+
+- **Cells**: the output fills a rectangle from its place, right and down; each of its cells reads as its value to
+  formulas, filters, charts, the cells view and images, as a spilled cell does. Its anchor cell is the pivot table's;
+  the others are claimed while the output lands.
+- **Recalculation**: any change to a source cell, its format, or the source's rows and columns works the output out
+  again, and every formula reading the output with it.
+- **Blocked**: a filled cell in the rectangle (not the anchor), or another spill's or pivot table's cell, keeps the
+  output from landing: the anchor shows `#REF!` with "Results would overwrite B3" (its first such cell, row by row),
+  and the rest stays empty; emptying it lets the output land.
+- **Past the edge**: an output running past the sheet's last row or column shows `#REF!` at the anchor with "Results
+  would run past the edge of the sheet".
+- **No source**: a source whose sheet or every cell was deleted shows `#REF!` at the anchor with "The pivot table's
+  source data was deleted".
+- **Empty**: a pivot table with nothing to show (no fields) leaves its anchor blank.
+- **The anchor filled**: a value or formula in the anchor cell stands, and the pivot table is not drawn until the cell
+  is emptied (people and agents cannot type there: [Working with one](#working-with-one)).
+- **Formats**: a value summarised by SUM, AVERAGE, MAX, MIN or MEDIAN reads in its source column's number format (the
+  first cell below the header that has one), a Show As value as a percentage with two decimals, as Google Sheets
+  shows them; a cell's own number format, set by a person, wins.
+- **Loops**: a source that reads the pivot table's own output is read as it stands when the output is worked out;
+  it never hangs the engine.
+
 ## Making one
 
 - **Insert › Pivot Table**: Data Range (the selection or the data region), Insert To: **New Sheet** (the default,
@@ -133,3 +167,7 @@ The output is ordinary cells to the grid's screen reader support, with its heade
   twenty cases (default).
 - **D380** A calculated field summarised by SUM reads each named column's summary over the cell's rows; by Custom,
   the column's values as an array, as Google Sheets does (default).
+- **D381** A pivot table goes with its anchor cell's row or column; its source shrinks with deleted rows and columns on
+  any sheet, as a formula's range does, and its fields go with their columns (default).
+- **D382** The output lands in the grid as a spilled array does, blocked by filled cells (`#REF!`, "Results would
+  overwrite B3"), its numbers in their source column's number format and Show As values as percentages (default).

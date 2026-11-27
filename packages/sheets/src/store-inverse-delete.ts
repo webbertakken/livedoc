@@ -188,12 +188,13 @@ function restoreRules(before: SheetLayout, after: SheetLayout, now: SheetLayout)
     const cur = now.bands?.find((r) => r.id === x.id);
     if (left ? cur && same(cur, left) : !cur) out.push({ k: 'band', id: x.id, band: x });
   }
-  // An object never goes with a deletion: each one it changed is put back as it was, unless someone changed it since.
+  // Each object it changed is put back as it was, unless someone changed it since; one it took (a pivot table with its
+  // anchor) comes back unless one of its id has been set since.
   for (const x of before.objects ?? []) {
     const left = after.objects?.find((o) => o.id === x.id);
-    if (!left || same(left, x)) continue;
+    if (left && same(left, x)) continue;
     const cur = now.objects?.find((o) => o.id === x.id);
-    if (cur && same(cur, left)) out.push({ k: 'object', id: x.id, object: x });
+    if (left ? cur && same(cur, left) : !cur) out.push({ k: 'object', id: x.id, object: x });
   }
   return out;
 }

@@ -7,6 +7,8 @@ import { layoutIndex } from '../layout';
 import { cellKey, type CellInput, type Sheet } from '../sheet';
 import type { CellNo, CellNumbers } from './cell-numbers';
 import { maySpill } from './spill-shape';
+import type { SheetPivot } from '../objects/sheet-pivot';
+import { pivotAnchorsOf } from '../pivot/pivot-resolve';
 
 /** The rectangle a spilling formula fills, its own cell at the top left. */
 export type Claim = { sheetId: string; r1: number; c1: number; r2: number; c2: number };
@@ -28,6 +30,8 @@ export class Spills {
   private readonly owners = new Map<CellNo, CellNo>();
   private readonly spillers = new Map<string, Set<CellNo>>();
   private readonly ready = new Set<string>();
+  // Pivot tables by their anchor cell (pivot-tables.md "In the grid"): each spills its output as a formula does.
+  private readonly pivots = new Map<CellNo, SheetPivot>();
 
   private readonly nos: CellNumbers;
 
@@ -35,9 +39,15 @@ export class Spills {
     this.nos = nos;
   }
 
-  /** Index every formula of the sheets that may spill. */
+  /** Index every formula of the sheets that may spill, and every pivot table. */
   indexAll(sheets: Iterable<Sheet>): void {
-    for (const sheet of sheets)
+    for (const sheet of sheets) {
+      const sheetNo = this.nos.sheetNo(sheet.id);
+      for (const { r, c, pivot } of pivotAnchorsOf(sheet)) {
+        const no = this.nos.intern(sheetNo, r, c);
+        this.pivots.set(no, pivot);
+        this.spillersOf(sheet.id).add(no);
+      }
       for (const [key, cell] of sheet.cells) {
         if (!inputMaySpill(cell.input)) continue;
         const ix = layoutIndex(sheet.layout);
@@ -45,13 +55,24 @@ export class Spills {
         const r = ix.rowPos.get(key.slice(0, colon));
         const c = ix.colPos.get(key.slice(colon + 1));
         if (r !== undefined && c !== undefined)
-          this.spillersOf(sheet.id).add(this.nos.intern(this.nos.sheetNo(sheet.id), r, c));
+          this.spillersOf(sheet.id).add(this.nos.intern(sheetNo, r, c));
       }
+    }
   }
 
-  /** A cell of a sheet changed: index it as a spiller or not. */
+  /** Whether any sheet holds a pivot table. */
+  hasPivots(): boolean {
+    return this.pivots.size > 0;
+  }
+
+  /** The pivot table anchored at a cell. */
+  pivotAt(no: CellNo): SheetPivot | undefined {
+    return this.pivots.get(no);
+  }
+
+  /** A cell of a sheet changed: index it as a spiller or not (a pivot table's anchor stays one). */
   index(sheet: Sheet, key: string, no: CellNo): void {
-    if (inputMaySpill(sheet.cells.get(key)?.input)) {
+    if (inputMaySpill(sheet.cells.get(key)?.input) || this.pivots.has(no)) {
       this.spillersOf(sheet.id).add(no);
       this.ready.delete(sheet.id);
     } else {

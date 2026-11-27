@@ -1,8 +1,10 @@
 // A sheet's objects (docs/specs/029-sheets/charts.md "The model", sheet-store.md "Objects"): what floats over its
 // cells, kept in its layout in paint order, each set whole or removed by its id with a layout write. Charts are the
-// one kind built; pivot tables, images, drawings, slicers and timelines join the union as they are built.
+// first kind built, then pivot tables (sheet-pivot.ts); images, drawings, slicers and timelines join the union as they are built.
 import { isAxisId } from '../ids';
 import type { IdRange } from '../sheet';
+import { inRange, isIdRange, isRecord, onlyKeys, textUpTo } from './object-checks';
+import { isSheetPivot, type SheetPivot } from './sheet-pivot';
 
 // The chart types a spreadsheet's chart draws as (charts.md "Chart types", those built), named as
 // @livedoc/document CHART_TYPES names them; restated, as this package never imports that one (a test keeps them equal).
@@ -99,7 +101,7 @@ export type SheetChart = {
 /** A read chart's kept file XML: the kept part's name and the sum of the chart it was read as. */
 export type SheetChartKept = { part: string; sum: string };
 
-export type SheetObject = SheetChart;
+export type SheetObject = SheetChart | SheetPivot;
 
 export const SHEET_OBJECTS_MAX = 100;
 export const SHEET_CHART_SIZE_MIN = { width: 160, height: 120 } as const;
@@ -115,14 +117,6 @@ const PALETTE_ID_MAX = 40;
 const HEX = /^#[0-9a-f]{6}$/;
 const KEPT_SUM = /^[0-9a-f]{8}$/;
 export const SHEET_CHART_KEPT_PART_MAX = 200;
-const isRecord = (x: unknown): x is Record<string, unknown> =>
-  typeof x === 'object' && x !== null && !Array.isArray(x);
-const onlyKeys = (x: Record<string, unknown>, keys: readonly string[]) =>
-  Object.keys(x).every((k) => keys.includes(k));
-const inRange = (n: unknown, lo: number, hi: number) =>
-  typeof n === 'number' && Number.isFinite(n) && n >= lo && n <= hi;
-const textUpTo = (x: unknown, max: number) =>
-  x === undefined || (typeof x === 'string' && x.length <= max);
 
 const CHART_KEYS = [
   'id',
@@ -155,12 +149,6 @@ function isAnchor(x: unknown): x is CellAnchor {
     isAxisId(x.c) &&
     inRange(x.dx, 0, OBJECT_OFFSET_MAX) &&
     inRange(x.dy, 0, OBJECT_OFFSET_MAX)
-  );
-}
-
-function isIdRange(x: unknown): x is IdRange {
-  return (
-    isRecord(x) && onlyKeys(x, ['r1', 'c1', 'r2', 'c2']) && [x.r1, x.c1, x.r2, x.c2].every(isAxisId)
   );
 }
 
@@ -224,6 +212,7 @@ function isSheetChart(x: Record<string, unknown>): boolean {
 // Whether a value is an object of this id: one of the kinds built, whole and within its bounds.
 export function isSheetObject(x: unknown, id: string): x is SheetObject {
   if (!isRecord(x) || x.id !== id || !isAxisId(id)) return false;
+  if (x.kind === 'pivot') return isSheetPivot(x);
   return x.kind === 'chart' && isSheetChart(x);
 }
 

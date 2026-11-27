@@ -6,6 +6,7 @@ import { FORMAT_KEYS, mergeFormat, type FormatPatch } from './format';
 import { layoutIndex } from './layout';
 import { formulaReadsSheet, mapFormulaRefs } from './formula/stored';
 import { applyLayoutChange, shrinkRange, type LayoutChange } from './store-layout';
+import { shrinkPivotSourcesOf } from './objects/sheet-pivot';
 import { idRangeOf, inverseDelete } from './store-inverse-delete';
 import { sameName } from './range-names';
 import {
@@ -149,11 +150,24 @@ export function shrinkFormulasReading<K>(
 }
 
 /**
- * The rule changes a reader sheet's layout needs when `changes` land on sheet `targetId`, laid out as `before`: each
+ * The changes a reader sheet's layout needs when `changes` land on sheet `targetId`, laid out as `before`: each
  * Dropdown from a Range reading that sheet shrinks as a formula's range into it does, and goes when its cells all go
- * (data-validation.md "Rules"). Linear in the reader's rules.
+ * (data-validation.md "Rules"); each pivot table reading it shrinks its source and drops its gone columns' fields
+ * (pivot-tables.md "The model", D381). Linear in the reader's rules and objects.
  */
-export function shrinkRuleSourcesOf(
+export function shrinkLayoutSourcesOf(
+  targetId: string,
+  before: SheetLayout,
+  changes: readonly LayoutChange[],
+  reader: SheetLayout,
+): LayoutChange[] {
+  return [
+    ...shrinkRuleSourcesOf(targetId, before, changes, reader),
+    ...shrinkPivotSourcesOf(targetId, before, changes, reader),
+  ];
+}
+
+function shrinkRuleSourcesOf(
   targetId: string,
   before: SheetLayout,
   changes: readonly LayoutChange[],

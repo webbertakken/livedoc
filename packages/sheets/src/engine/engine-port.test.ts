@@ -395,3 +395,61 @@ describe('imports in the Worker', () => {
     expect(wire.toHost).toEqual([]);
   });
 });
+
+describe('a pivot table in the page’s copy', () => {
+  it('shows the output the Worker works out, with its formats, and follows a source change', () => {
+    const sheets = makeSheets(
+      {
+        Data: { A1: 'Region', B1: 'Units', A2: 'East', B2: '£5', A3: 'West', B3: '3' },
+        Report: { C1: '=B2+1' },
+        S: { A1: 'x' },
+      },
+      { rows: 6, cols: 4 },
+    );
+    const [data, report, filled] = sheets as [Sheet, Sheet, Sheet];
+    report.layout = {
+      ...report.layout,
+      objects: [
+        {
+          id: 'pivot01',
+          kind: 'pivot',
+          at: { r: report.layout.rows[0]!, c: report.layout.cols[0]! },
+          source: {
+            r1: data.layout.rows[0]!,
+            c1: data.layout.cols[0]!,
+            r2: data.layout.rows[2]!,
+            c2: data.layout.cols[1]!,
+            s: data.id,
+          },
+          rows: [{ col: data.layout.cols[0]! }],
+          values: [{ col: data.layout.cols[1]!, summary: 'SUM' }],
+        },
+      ],
+    };
+    // A filled anchor elsewhere is no anchor to work out.
+    filled.layout = {
+      ...filled.layout,
+      objects: [
+        {
+          id: 'pivot02',
+          kind: 'pivot',
+          at: { r: filled.layout.rows[0]!, c: filled.layout.cols[0]! },
+        },
+      ],
+    };
+    const { deliver, port, set, v } = joined(sheets);
+    deliver();
+    expect([v(0, 0, 1), v(0, 1, 1), v(1, 1, 1), v(3, 1, 1), v(0, 2, 1)]).toEqual([
+      'Region',
+      'SUM of Units',
+      5,
+      8,
+      6,
+    ]);
+    expect(port.copy.pivotFormatAt(report.id, 1, 1)).toMatchObject({ nf: 'currency' });
+    expect(v(0, 0, 2)).toBe('x');
+    set('B2', '7');
+    deliver();
+    expect([v(1, 1, 1), v(0, 2, 1)]).toEqual([7, 8]);
+  });
+});

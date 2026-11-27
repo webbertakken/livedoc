@@ -658,6 +658,38 @@ describe('writes', () => {
     await write('sheetA00', { kind: 'layout', changes: [{ k: 'deleteRows', ids: [r1!, r2!] }] });
     expect(await rulesOfB()).toBeUndefined();
   });
+  it('shrinks a pivot table reading the sheet whose rows go (pivot-tables.md "The model")', async () => {
+    const s = await sheet();
+    await make({ id: 'sheetB00', title: 'Report', layout: layout() });
+    const b = (await call<SheetsResponse>({ method: 'GET', path: '/sheets' })).body.sheets.find(
+      (x) => x.id === 'sheetB00',
+    )!;
+    const [r0, r1, r2] = s.layout.rows;
+    const [c0, c1] = s.layout.cols;
+    const source = { s: 'sheetA00', r1: r0!, c1: c0!, r2: r2!, c2: c1! };
+    const pivot = {
+      id: 'pivot01',
+      kind: 'pivot' as const,
+      at: { r: b.layout.rows[0]!, c: b.layout.cols[0]! },
+      source,
+      rows: [{ col: c0! }],
+      values: [{ col: c1!, summary: 'SUM' as const }],
+    };
+    const set = await write('sheetB00', {
+      kind: 'layout',
+      changes: [{ k: 'object', id: pivot.id, object: pivot }],
+    });
+    expect(set.status).toBe(200);
+    await write('sheetA00', { kind: 'layout', changes: [{ k: 'deleteRows', ids: [r2!] }] });
+    const objectsOfB = async () =>
+      (await call<SheetsResponse>({ method: 'GET', path: '/sheets' })).body.sheets.find(
+        (x) => x.id === 'sheetB00',
+      )!.layout.objects;
+    expect(await objectsOfB()).toEqual([{ ...pivot, source: { ...source, r2: r1! } }]);
+    await write('sheetA00', { kind: 'layout', changes: [{ k: 'deleteCols', ids: [c0!] }] });
+    const { rows: _rows, ...left } = pivot;
+    expect(await objectsOfB()).toEqual([{ ...left, source: { ...source, r2: r1!, c1: c1! } }]);
+  });
   it('renames, refusing a taken title', async () => {
     await sheet();
     await make({ id: 'sheetB00', title: 'Costs' });

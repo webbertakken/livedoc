@@ -124,3 +124,29 @@ describe('sheetCopyOf', () => {
     expect(formatted.layout.formatRules).toEqual([rule]);
   });
 });
+
+describe('sheetCopyOf, pivot tables', () => {
+  it('carries a pivot table reading another sheet by that sheet’s title, its own and charts as they are', () => {
+    const sheets = makeSheets({ Report: {}, Data: {} }, { rows: 3, cols: 3 });
+    const [report, data] = sheets as [Sheet, Sheet];
+    const range = {
+      r1: data.layout.rows[0]!,
+      c1: data.layout.cols[0]!,
+      r2: data.layout.rows[2]!,
+      c2: data.layout.cols[2]!,
+    };
+    const at = { r: report.layout.rows[0]!, c: report.layout.cols[0]! };
+    const reading = { id: 'pivot1', kind: 'pivot' as const, at, source: { ...range, s: data.id } };
+    const own = { id: 'pivot2', kind: 'pivot' as const, at, source: { ...range } };
+    const gone = { id: 'pivot3', kind: 'pivot' as const, at, source: { ...range, s: 'sheet9xx' } };
+    const bare = { id: 'pivot4', kind: 'pivot' as const, at };
+    report.layout = { ...report.layout, objects: [reading, own, gone, bare] };
+    const copy = sheetCopyOf(report, ctxOf(sheets, report), { id: 'copy1', title: 'R' });
+    expect(copy.layout.objects).toEqual([
+      { ...reading, source: { ...range, st: 'Data' } },
+      own,
+      gone,
+      bare,
+    ]);
+  });
+});

@@ -55,7 +55,7 @@ export function readRange(wb: Workbook, sheetId: string, rangeText?: string): Ra
       row.push({
         input: inputAsText(cell?.input, ctx, wb.locale),
         value: plainValue(value as Scalar),
-        display: displayValue(value, cell?.format, wb.locale).text,
+        display: displayValue(value, wb.shownFormat(sheetId, r, c, cell?.format), wb.locale).text,
       });
     }
     rows.push(row);

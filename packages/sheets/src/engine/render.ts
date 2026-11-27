@@ -142,7 +142,7 @@ export function renderWindow(
       if (covered.has(`${r},${c}`)) continue;
       const cell = sheet.cells.get(cellKey(layout.rows[r]!, layout.cols[c]!));
       const value = wb.value(sheetId, r, c);
-      const own: CellFormat = cell?.format ?? {};
+      const own: CellFormat = wb.shownFormat(sheetId, r, c, cell?.format) ?? {};
       let shown = displayValue(value, own, locale);
       // A met format rule's style draws over the cell's own (conditional-formatting.md).
       const style = layout.formatRules?.length

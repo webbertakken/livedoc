@@ -19,7 +19,8 @@ vi.mock('@/hooks/ui/useDocumentColours', () => ({ useDocumentColours: () => [] }
 beforeAll(stubResizeObserver);
 afterEach(cleanup);
 
-const chartOf = (h: SheetHarness) => h.store.sheet(SHEET_ID)!.layout.objects?.[0];
+const chartOf = (h: SheetHarness) =>
+  h.store.sheet(SHEET_ID)!.layout.objects?.[0] as SheetChart | undefined;
 
 async function open(type: SheetChart['type'] = 'scatter') {
   const h = await makeSheet({

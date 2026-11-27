@@ -5,6 +5,7 @@
 import { mapFormulaRefs, refByTitle, type SheetsCtx } from '../formula/stored';
 import type { CellInput, Sheet, SheetLayout, StoredFormula, ValidationRule } from '../sheet';
 import { cellToJson, type SheetCellJson } from '../sheet-json';
+import type { SheetObject } from '../objects/sheet-objects';
 
 // A validation rule carried out of its spreadsheet: its formula as a cell's is, and a range on another of its
 // sheets by that sheet's title, read where it lands.
@@ -18,6 +19,15 @@ function carriedRule(
   const at = ctx.byId(rule.src.s);
   const { s: _s, ...corners } = rule.src;
   return { ...rule, ...fx, src: at ? { ...corners, st: at.title } : rule.src };
+}
+
+// A pivot table carried out of its spreadsheet: a source on another of its sheets by that sheet's title, as a range
+// dropdown's is (pivot-tables.md "The model").
+function carriedObject(object: SheetObject, ctx: SheetsCtx): SheetObject {
+  if (object.kind !== 'pivot' || object.source?.s === undefined) return object;
+  const at = ctx.byId(object.source.s);
+  const { s: _s, ...corners } = object.source;
+  return at ? { ...object, source: { ...corners, st: at.title } } : object;
 }
 
 export type SheetCopy = { id: string; title: string; layout: SheetLayout; cells: SheetCellJson[] };
@@ -48,6 +58,7 @@ export function sheetCopyOf(
         ? { formatRules: layout.formatRules.map((x) => (x.fx ? { ...x, fx: carried(x.fx) } : x)) }
         : {}),
       ...(layout.rules ? { rules: layout.rules.map((x) => carriedRule(x, ctx, carried)) } : {}),
+      ...(layout.objects ? { objects: layout.objects.map((x) => carriedObject(x, ctx)) } : {}),
     },
     cells: [...sheet.cells].map(([key, cell]) => {
       const json = cellToJson(key, cell);

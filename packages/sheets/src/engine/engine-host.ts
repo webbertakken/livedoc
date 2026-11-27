@@ -8,6 +8,7 @@ import { sheetFromJson } from '../sheet-json';
 import { SheetLimits } from '../sheet-limits';
 import type { CellValue, EngineIn, EngineOut } from './engine-protocol';
 import { Workbook, type CellAt } from './workbook';
+import { pivotAnchorsOf } from '../pivot/pivot-resolve';
 
 export class EngineHost {
   private wb: Workbook | null = null;
@@ -128,9 +129,13 @@ export class EngineHost {
   }
 }
 
+// Every formula cell and every pivot table's anchor (pivot-tables.md "In the grid"): what a fresh start works out.
 function everyFormula(sheets: readonly Sheet[]): CellAt[] {
   const out: CellAt[] = [];
   for (const sheet of sheets) {
+    for (const { r, c } of pivotAnchorsOf(sheet))
+      if (!sheet.cells.get(cellKey(sheet.layout.rows[r]!, sheet.layout.cols[c]!))?.input)
+        out.push({ sheetId: sheet.id, r, c });
     const ix = layoutIndex(sheet.layout);
     for (const [key, cell] of sheet.cells) {
       if (!cell.input || !('f' in cell.input)) continue;
