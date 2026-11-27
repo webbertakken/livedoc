@@ -58,7 +58,9 @@ import { listKeysPlugin } from '@/lib/text-document/text-document-list-actions';
 import { tableKeysPlugin } from '@/lib/text-document/text-document-tables';
 import { useTextDocumentTables } from '@/lib/text-document/useTextDocumentTables';
 import { useTextDocumentBuildingBlocks } from '@/lib/text-document/useTextDocumentBuildingBlocks';
-import { codeBlockKeysPlugin } from '@/lib/text-document/text-document-code-blocks';
+import { codeBlockKeysPlugin, codeBlockOf } from '@/lib/text-document/text-document-code-blocks';
+import { spellingPlugin } from '@/lib/text-document/text-document-spelling';
+import { autocorrectPlugin } from '@/lib/text-document/text-document-autocorrect';
 import { codeHighlightPlugin } from '@/lib/text-document/text-document-code-highlight-plugin';
 import { indentUnit } from '@/lib/text-document/indent-units';
 import {
@@ -133,6 +135,7 @@ import { useOfficePanels } from '@/lib/office/useOfficePanels';
 import { createTextDocumentChanges } from '@/lib/text-document/text-document-changes';
 import {
   COMMENTS_PANEL,
+  LIVE_EDITS_PANEL,
   IMAGE_OPTIONS_PANEL,
   OUTLINE_PANEL,
   TABLE_OF_CONTENTS_PANEL,
@@ -152,6 +155,11 @@ import {
   keepUnreadSelection,
   pageSelectionPlugin,
 } from '@/lib/text-document/text-document-page-selection';
+import { useTextDocumentWordCount } from './useTextDocumentWordCount';
+import { useTextDocumentScreenReader } from './useTextDocumentScreenReader';
+import { useTextDocumentLiveEdits } from './useTextDocumentLiveEdits';
+import { useTextDocumentSpelling } from './useTextDocumentSpelling';
+import { useTextDocumentSpellingSource } from './useTextDocumentSpellingSource';
 import { useTextDocumentColumns } from './useTextDocumentColumns';
 import { breaksPlugin, sectionSetupAt } from '@/lib/text-document/text-document-breaks';
 import { horizontalLineActions } from '@/lib/text-document/text-document-horizontal-line';
@@ -182,6 +190,7 @@ import { TextDocumentEquationToolbar } from './TextDocumentEquationToolbar';
 import { placedPicturesPlugin } from '@/lib/text-document/text-document-picture-placed-plugin';
 import { useTextDocumentBreaks } from '@/lib/text-document/useTextDocumentBreaks';
 import {
+  pageIndexAt,
   paginationPlugin,
   relayoutPages,
   type PageGeometry,
@@ -346,6 +355,8 @@ export function TextDocumentSurface({
   const suggests = suggestsMode && !preview.previewing;
   const textWrites = writes || suggests;
   const listWrites = writes || (suggests && canEdit);
+  // Spelling (tools.md "Spelling and grammar"): what the body's, the headers' and the notes' checks read.
+  const spellingSource = useTextDocumentSpellingSource({ textWrites });
   const suggesting = useTextDocumentSuggesting({ suggests, commenter });
   // A Participant in Suggesting sees an Editor's menus, with only what can be suggested running (office-shell.md "Modes").
   const proposals = useMemo(() => proposalsInMode(TEXT_DOCUMENT_MODES, level, mode), [level, mode]);
@@ -513,6 +524,19 @@ export function TextDocumentSurface({
           textDocumentLimitPlugin({ onRefused: () => setLimitReached('characters') }),
           // Several stretches selected at once (text-and-paragraphs.md "Selection").
           stretchesPlugin(),
+          // LiveDoc's own underlines where a dictionary ships, the browser's check elsewhere; code blocks never.
+          spellingPlugin({
+            ...spellingSource.source,
+            skipped: (block) => codeBlockOf(block, readFormatting().styles) !== undefined,
+          }),
+          // Automatically correct spelling, seeing each word end before the typing aids take the key (tools.md).
+          autocorrectPlugin({
+            source: {
+              ...spellingSource.source,
+              skipped: (block) => codeBlockOf(block, readFormatting().styles) !== undefined,
+            },
+            enabled: () => typingAids.current().spelling,
+          }),
           // The typing aids: smart quotes, substitutions, links, capitals, lists.
           typingAidsPlugin({
             read: () => typingAids.current(),
@@ -675,7 +699,6 @@ export function TextDocumentSurface({
             class: 'text-document-body whitespace-pre-wrap break-words outline-none',
             // The document's default family and size (fonts.md "Substitution").
             style: documentTextStyle(TextDocumentState.defaults(doc, live.current.format).text),
-            spellcheck: 'true',
           }),
         });
         editor.current = view;
@@ -741,6 +764,7 @@ export function TextDocumentSurface({
     drawsDrawings,
     drawingHosts,
     bindBody,
+    spellingSource.source,
   ]);
 
   useEffect(() => {
@@ -817,8 +841,17 @@ export function TextDocumentSurface({
     caretSection: page.caret.index,
     gallery,
     drawnDoc: preview.drawn,
+    spelling: spellingSource.source,
   });
   const { activeView } = headers;
+  // The context menu on a misspelt word, Tools > Spelling and grammar and the misspelling keys (tools.md).
+  const spelling = useTextDocumentSpelling({
+    spelling: spellingSource,
+    view: editorView,
+    activeView,
+    textWrites,
+    ownerId: scope.ownerId,
+  });
   // Edit > Cut, Copy, Paste (text-and-paragraphs.md "Clipboard"); the editor's plugin tells it of a paste's losses.
   const clipboard = useTextDocumentClipboard(activeView, textWrites);
   // Tools > Preferences (tools.md "Preferences"); the writing reads the aids it keeps.
@@ -1178,6 +1211,37 @@ export function TextDocumentSurface({
     offered: emailEnabled && !local && (mentions?.selfUserId ?? null) !== null,
     onClosed: focusBody,
   });
+  // Tools > Word count and the count while typing (tools.md "Word count").
+  const wordCount = useTextDocumentWordCount({
+    view: editorView,
+    activeView,
+    subscribe: changes.subscribe,
+    subscribeCaret: changes.subscribeCaret,
+    pages: paginated && state === 'ready' ? pageList.length : null,
+    ownerId,
+  });
+  // Screen reader support and the Accessibility menu (tools.md "Accessibility settings").
+  const pagesLaidOut = paginated && state === 'ready' ? pageList.length : null;
+  const screenReader = useTextDocumentScreenReader({
+    view: editorView,
+    activeView,
+    liveDoc,
+    format,
+    pageAt: useCallback(
+      (pos: number) =>
+        editorView && pagesLaidOut !== null
+          ? { page: pageIndexAt(editorView, pos) + 1, pages: pagesLaidOut }
+          : null,
+      [editorView, pagesLaidOut],
+    ),
+    threads,
+    ownerId,
+  });
+  // Accessibility > Show live edits (tools.md "Accessibility settings"), read while its panel is open.
+  const liveEdits = useTextDocumentLiveEdits({
+    view: editorView,
+    open: panels.open.right === LIVE_EDITS_PANEL.id,
+  });
   const versionHistory = useTextDocumentVersionHistory({
     where: scope,
     local,
@@ -1218,6 +1282,9 @@ export function TextDocumentSurface({
       ...compare.actions,
       ...versionHistory.actions,
       ...notifications.actions,
+      ...wordCount.actions,
+      ...screenReader.actions,
+      ...spelling.actions,
       ...links.actions,
       ...bookmarks.actions,
       ...headingLinks.actions,
@@ -1241,6 +1308,9 @@ export function TextDocumentSurface({
       compare.actions,
       versionHistory.actions,
       notifications.actions,
+      wordCount.actions,
+      screenReader.actions,
+      spelling.actions,
       links.actions,
       bookmarks.actions,
       headingLinks.actions,
@@ -1339,6 +1409,7 @@ export function TextDocumentSurface({
         colours={formatting.colours}
         choices={choices}
         refresh={changes.subscribeCaret}
+        screenReader={screenReader.on}
         onFollow={(personId) =>
           editorView ? scrollToTextDocumentPeer(editorView, personId) : false
         }
@@ -1378,6 +1449,7 @@ export function TextDocumentSurface({
       {clipboard.notice}
       {suggesting.notice}
       {pictures.notice}
+      {spelling.notice}
       {equationToolbar.shown && bodyInserts && state === 'ready' && editorView ? (
         <TextDocumentEquationToolbar
           onNew={() => newEquationFromToolbar(editorView)}
@@ -1405,6 +1477,7 @@ export function TextDocumentSurface({
         right={
           <TextDocumentRightPanel
             panels={panels}
+            liveEdits={liveEdits}
             lineNumbers={lineNumbers}
             watermark={watermark}
             tableProperties={{ ...tableProperties, unit: lengthUnit }}
@@ -1433,6 +1506,12 @@ export function TextDocumentSurface({
             <TextDocumentReviewPanel {...reviewPanel.props} />
           ) : null}
           {compare.dialog}
+          {state === 'ready' ? spelling.card : null}
+          {spelling.dialog}
+          {state === 'ready' ? wordCount.box : null}
+          {state === 'ready' ? wordCount.dialog : null}
+          {screenReader.dialog}
+          {screenReader.region}
           <div
             ref={scroller}
             data-region="document"

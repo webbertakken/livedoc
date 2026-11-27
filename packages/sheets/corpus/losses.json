@@ -45,13 +45,9 @@
     ]
   },
   "excel/ExcelPivotTableSample.xlsx": {
-    "read": {
-      "pivot_unread": 1
-    },
+    "read": {},
     "written": {},
-    "reread": {
-      "pivot_unread": 1
-    },
+    "reread": {},
     "converted": [
       "kept"
     ]
@@ -267,6 +263,68 @@
     "reread": {},
     "converted": [
       "kept"
+    ]
+  },
+  "libreoffice/PivotGroups-discrete.ods": {
+    "read": {
+      "entries_dropped": 1
+    },
+    "written": {},
+    "reread": {},
+    "converted": [
+      "kept",
+      "pivots_simplified"
+    ]
+  },
+  "libreoffice/PivotGroups-discrete.xlsx": {
+    "read": {
+      "pivot_unread": 1
+    },
+    "written": {},
+    "reread": {
+      "pivot_unread": 1
+    },
+    "converted": [
+      "kept"
+    ]
+  },
+  "libreoffice/PivotGroups-intervals.ods": {
+    "read": {
+      "entries_dropped": 1
+    },
+    "written": {},
+    "reread": {},
+    "converted": [
+      "kept",
+      "pivots_simplified"
+    ]
+  },
+  "libreoffice/PivotGroups-intervals.xlsx": {
+    "read": {},
+    "written": {},
+    "reread": {},
+    "converted": [
+      "kept"
+    ]
+  },
+  "libreoffice/PivotGroups-months.ods": {
+    "read": {
+      "entries_dropped": 1
+    },
+    "written": {},
+    "reread": {},
+    "converted": [
+      "kept",
+      "pivots_simplified"
+    ]
+  },
+  "libreoffice/PivotGroups-months.xlsx": {
+    "read": {},
+    "written": {},
+    "reread": {},
+    "converted": [
+      "kept",
+      "pivots_simplified"
     ]
   },
   "libreoffice/SampleSS.ods": {

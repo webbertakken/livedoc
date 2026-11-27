@@ -1,6 +1,8 @@
 # Tools
 
-**Status: specified.** Nothing is built.
+**Status: being built.** Word count, spelling (Dutch and French, with the card, the personal dictionary and automatic
+correction), Preferences, screen reader support with the Accessibility menu, and Show live edits are built; the
+other parts below are still to come.
 
 Find and replace, word count, spelling and grammar, the dictionary, citations, preferences, accessibility settings,
 language and activity in a [text document](text-document.md), and what fork C3 (ruled: core only) leaves out.
@@ -19,26 +21,78 @@ language and activity in a [text document](text-document.md), and what fork C3 (
 
 ## Word count
 
-- ⌘⇧C opens the dialog: pages, words, characters, characters excluding spaces, of the document or the selection;
-  **Display word count while typing** shows a floating box at the bottom left (words; a press cycles pages, characters,
-  characters excluding spaces).
-- Counts follow Google's rules: words split at white space and punctuation that separates words; footnotes, headers and
-  footers not counted (assumed: Google's; confirmed with the captures).
+As Google Docs’ Tools > Word count ([Google Docs Editors Help 39003](https://support.google.com/docs/answer/39003?hl=en),
+fetched 2026-11-27); the look is (default) until a capture of Google’s dialog.
+
+- **The dialog**: Tools > Word count and ⌘⇧C open an office dialog **Word count**: rows **Pages**, **Words**,
+  **Characters**, **Characters excluding spaces**, each with its count; with a selection, each reads "12 of 340" (the
+  selection’s of the document’s), Pages always the document’s. Pages shows only where pages are laid out (not
+  pageless, not on a phone) (default). Under the rows the checkbox **Display word count while typing**; **OK** closes.
+- **While typing**: with the checkbox on, a small box at the bottom left of the writing shows "340 words" ("12 of 340
+  words" with a selection), kept current as anyone writes; a press on it cycles words, characters, characters
+  excluding spaces, then pages where laid out (default). The checkbox is the person’s own, kept with their account,
+  else this browser, for every text document (default).
+- **What counts**: the current document tab’s body, tables included; headers, footers and footnotes are not counted
+  unless selected (help 39003: "Unless you select a section of the document, word count applies to everything except
+  headers, footers, and footnotes"). Words are the browser’s word segmentation (`Intl.Segmenter`, word-like
+  segments), so white space and punctuation that separates words split them, "don’t" stays one word and a CJK run
+  counts its words (default); characters are what a reader sees as one character (grapheme clusters), paragraph breaks
+  not counted, and pictures, equations and footnote marks count nothing (default).
+- **Who**: everyone who can read the document, Viewers included.
 
 ## Spelling and grammar
 
-- Misspelt words are underlined by the browser's own check, at no cost, offline and self-hosted, with its suggestions
-  on right-click.
-- **Spelling and grammar check** (⌘⌥X, F7, the toolbar's button) opens a card at the top right walking each misspelling
-  with suggestions, **Accept**, **Ignore**, **Add to dictionary**, Next and Previous (⌘' and ⌘;), run on Hunspell
-  dictionaries with permissive licences, loaded per language on demand
-  ([Spelling](../../research/docs-open-standard/spelling.md)).
-- **Personal dictionary** (Tools > Spelling and grammar > Personal dictionary): stored with the account (in this
-  browser for a guest), shared by the person's documents.
+- **One checker**: Hunspell dictionaries run by nspell (MIT) in a Web Worker, each loaded the first time text in its
+  language is checked, never on the main thread ([Spelling](../../research/docs-open-standard/spelling.md)).
+- **Dictionaries shipped**: Dutch (BSD or CC-BY) and French (MPL-2.0), each listed with its licence on the licences
+  page. German and Spanish (GPL) are not shipped (director, 2026-11-27).
+- **Which dictionary**: text's language is the document's (File > Language), else the browser's; any Dutch takes
+  Dutch, any French French. A run that carries its own language follows it.
+- **Underlines**: where a dictionary ships, LiveDoc draws its own wavy red underline under each misspelt word, and the
+  browser's own check is off for that text (no double underlines); text in any other language keeps the browser's own
+  check, underlines and right-click suggestions (director, 2026-11-27).
+- **Not checked**: words with a digit, an underscore, `@` or `/` in them, web and mail addresses, words in capitals
+  only, and code blocks. The word being typed is underlined once the caret leaves it.
+- **Right-click on a misspelt word**: the context menu opens with up to five suggestions, then **Add to personal
+  dictionary** (Google's words, help 57859) and **Ignore**, above its usual items. Choosing a suggestion replaces the
+  word, one undo step.
+- **Tools > Spelling and grammar**, in Google's order: Spelling and grammar check, Show spelling suggestions, then
+  Personal dictionary (Show grammar suggestions only where a grammar server is configured).
+- **Spelling and grammar check** (⌘⌥X, F7, the toolbar's button) opens a card at the top right of the writing, beside
+  it rather than over it, walking the body's misspellings from the caret: the word selected in the writing, "Change
+  ‹word› to" with up to five suggestions to choose from, **Accept**, **Ignore**, **Add to personal dictionary**,
+  Previous and Next; each of the first three moves on to the next. With none left the card says "No spelling
+  suggestions"; a word with none says "No suggestions" and cannot be accepted. Escape or Close returns to the writing.
+  Its look and copy are (default) until a capture. **Ignore** sets the word aside in this document until it is closed.
+- **Next and previous misspelling** (⌘' and ⌘;): select the next or previous misspelt word, wrapping at either end,
+  without the card.
+- **Headers, footers and footnotes** are checked and underlined as the body is, with the same context menu while one is
+  being edited.
+- **Personal dictionary** (Tools > Spelling and grammar > Personal dictionary): per person, stored with the account
+  (in this browser for a guest), shared by all their text documents and, later, spreadsheets; words are checked as
+  written, up to 400 of them (the preferences' 16 KB), each up to 48 characters. Its dialog has a field and **Add**,
+  then the words in alphabetical order, each with a remove button; a change is kept at once. At the limit, adding a
+  word says "Your personal dictionary is full. Remove a word to add another."; a word with a space or past 48
+  characters, "Enter one word, without spaces, up to 48 characters."; a word already there, "That word is already in
+  your dictionary." With none, the dialog says "No words yet" (default).
+- **Who**: the underlines and the card show for everyone who can change the text (Editing or Suggesting); a Viewer sees
+  no underlines. Accepting in Suggesting makes a suggestion. The personal dictionary is the person's own, whatever
+  their role.
+- **Budgets**: a dictionary's load under 3 MB, the first check of a 50-page document within 1 s after its dictionary
+  loads, a keystroke's check off the main thread and within the existing input budgets.
+- Show spelling suggestions (Tools > Spelling and grammar): per person, on by default; off hides LiveDoc's underlines
+  and turns the browser's check off too.
 - **Grammar** needs a server: shown only where the host configures one (fork D5, ruled: none on docs.nu; a self-hoster may configure one).
-- Show spelling suggestions, show grammar suggestions: per person.
-- **Automatically correct spelling** (Preferences): a misspelt word with one suggestion the checker is sure of is
-  corrected as the word ends, its own undo step, as a typing aid is.
+- Show grammar suggestions: per person, present only where a grammar server is configured.
+- **Automatically correct spelling** (Preferences, on by default as Google's): a misspelt word with one correction the
+  checker is sure of is corrected as the word ends (a space, punctuation, Enter), its own undo step, as a typing aid is.
+  Sure means exactly one swap of two neighbouring letters spelt right, else exactly one suggestion one edit away. A
+  word with a capital after its first letter, a personal or ignored word, and code are never corrected; the word keeps
+  its first letter's case. The correction lands only if the word is still as typed when the check answers.
+  It acts in the body; headers, footers and footnotes are checked and underlined but not corrected (default).
+- **Always correct to ‹suggestion›** (the context menu on a misspelt word, Google's, help 12022089): the word replaced
+  by its first suggestion now, and the pair added to the person's substitutions (Preferences > Substitutions), so it is
+  corrected as typed from then on; at the substitutions' limit it says so. Its place in the menu is (default).
 
 ## Dictionary
 
@@ -75,9 +129,50 @@ Cancel and OK; nothing changes until OK. Per person, kept with their account, el
 
 ## Accessibility settings
 
-Tools > Accessibility: **Turn on screen reader support** (⌘⌥Z): the editor announces edits, formatting and position, and
-the Accessibility menu appears with Google's verbalise commands (⌘⌥ A then X, R, L, F, …); **Turn on braille support**;
-**Show spelling suggestions in the dictionary panel**. Per person.
+As Google Docs' Tools > Accessibility ([Google Docs Editors Help 6282736](https://support.google.com/docs/answer/6282736)
+and [15931224](https://support.google.com/docs/answer/15931224), fetched 2026-11-27); the dialog's look and the
+Accessibility menu's order are (default) until a capture of Google's.
+
+- **The dialog**: Tools > Accessibility opens an office dialog **Accessibility settings**: the checkbox **Turn on screen
+  reader support**, then the sentence "Braille displays and screen magnifiers follow LiveDoc’s text directly; nothing to
+  turn on.", focusable and read in the tab order, then **OK**, which closes. The checkbox acts as it is ticked.
+- **Braille and magnifiers** (director, 2026-11-27): Google's **Turn on braille support** and **Turn on screen magnifier
+  support** exist because its page is drawn; LiveDoc's page is editable text, which braille displays, their cursor
+  routing and screen magnifiers follow without a switch. Neither switch is shown, never dimmed (a disabled checkbox is
+  skipped or read as unavailable); Ctrl+Alt+H stays unbound.
+- **Screen reader support**: ⌘⌥Z (Ctrl+Alt+Z, Alt+Shift+~) or the checkbox turns it on or off anywhere in the
+  document, and a polite live region says "Screen reader support enabled" or "Screen reader support disabled"
+  (Google's words). It is each person's own, kept with their account, else this browser, for every text document; off
+  until turned on. Typing, the caret and the selection are read by the screen reader from the page itself.
+- **The Accessibility menu** shows after Help only while screen reader support is on (Alt+A, Ctrl+Option+A):
+  **Verbalize** (Verbalize selection, Verbalize from cursor location, Verbalize cursor location, Verbalize selection
+  formatting, Verbalize word count); **Table** (Verbalize table cell location, Verbalize table row and column headers,
+  Verbalize table row header, Verbalize table column header); **Comments** (Verbalize comment, Verbalize comment
+  anchor); **Show live edits**; then **Accessibility settings**. Their keys are those of [Keyboard
+  shortcuts](keyboard-shortcuts.md#screen-reader), heard only while screen reader support is on.
+- **What each says**, through the same live region, never shown (each (default) until Google's words are captured):
+  - Verbalize selection: the selected text, else "Nothing selected".
+  - Verbalize from cursor location: the text from the caret to the end of its paragraph and the paragraphs after it, up
+    to 1,000 characters, cut at a word.
+  - Verbalize cursor location (and Announce cursor location): "Page 2 of 5" where pages are laid out, then the
+    paragraph's style ("Heading 1", "Normal text"), "List item, level 2" in a list, and "Table, row 2, column 3" in a
+    table, joined by ", ".
+  - Verbalize selection formatting (and Announce formatting at cursor location): the font, the size in points, then
+    each of bold, italic, underline, strikethrough, superscript and subscript that is on, a link "Link to
+    example.com", and the alignment ("Left aligned"); a part that differs across the selection is "Mixed font",
+    "Mixed size".
+  - Verbalize word count: "340 words", or "12 of 340 words selected".
+  - Table: "Row 2, column 3 of 4 rows and 3 columns"; headers are the first row's cell over the caret's column and the
+    first column's cell beside its row, their text, else "No column header", "No row header"; outside a table "Not in a
+    table".
+  - Comments: the open comment thread at the caret, "Comment by Ada: …" (its first comment and its reply count); its
+    anchor, the commented text; else "No comment here".
+- **Show live edits** (Ctrl+Alt+Shift+R): a side panel **Live edits** listing, newest first, the words others add or
+  remove as they write, each with its author as the room named the sender ("Someone" where it named none who is still
+  here), from when the panel opens until it closes; an author's changes 2 seconds apart or less join one entry, and the
+  newest is read politely once its author pauses that long; the panel keeps the last 20, and 200 characters of what
+  each added and removed (each (default)).
+- **Who**: everyone who can read the document, Viewers included; nothing here changes the document.
 
 ## Activity
 
@@ -91,10 +186,14 @@ Meet; Keep, Tasks, Contacts and Maps panels; Approvals. Their menu items are not
 
 ## Share roles
 
-Everyone may find, count words, look up words and open the outline; only Editors replace (a Participant replaces as
+Everyone may find, count words, look up words and open the outline; spelling shows to whoever can change the text; only Editors replace (a Participant replaces as
 suggestions under D7); preferences and accessibility settings are each person's own.
 
 ## Telemetry
 
-`Search · Used · TextDocumentFind`, `TextDocumentReplaceAll`; `UI · Opened · TextDocumentWordCount`,
-`TextDocumentSpelling`, `TextDocumentCitations`; `UI · Toggled · TextDocumentScreenReader`. Never text.
+`Search · Used · TextDocumentFind`, `TextDocumentReplaceAll`; `Document · Changed · TextDocumentSpellingAccepted` (a
+suggestion taken), `TextDocumentSpellingCorrected` (corrected while typing), `TextDocumentAlwaysCorrect`,
+`TextDocumentDictionaryAdded`; `UI · Opened · TextDocumentWordCount`, `TextDocumentSpelling`,
+`TextDocumentCitations`; `UI · Toggled · TextDocumentWordCountWhileTypingOn`, `TextDocumentWordCountWhileTypingOff`,
+`TextDocumentSpellingSuggestionsOn`, `TextDocumentSpellingSuggestionsOff`, `TextDocumentScreenReaderOn`,
+`TextDocumentScreenReaderOff` (each before it is kept). Never text.

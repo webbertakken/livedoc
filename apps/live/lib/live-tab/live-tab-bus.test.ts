@@ -32,6 +32,16 @@ describe('liveTabBus', () => {
     expect(pdfRefusals).toHaveBeenCalledTimes(1);
   });
 
+  it('passes on who sent an update, where the room named them', () => {
+    const bus = liveTabBus<'characters'>('[three]');
+    const heard = vi.fn<(update: Uint8Array, from?: string) => void>();
+    const stop = bus.onUpdate('t1', heard);
+    bus.deliver({ tabId: 't1', update: 'AAA=', from: 'p1' });
+    bus.deliver({ tabId: 't1', update: 'AAA=' });
+    expect(heard.mock.calls.map((call) => call[1])).toEqual(['p1', undefined]);
+    stop();
+  });
+
   it("asks one tab's surface to catch up when its state went stale, and every kind's on a re-hydrate", () => {
     const text = liveTabBus('[one]');
     const pdf = liveTabBus('[two]');

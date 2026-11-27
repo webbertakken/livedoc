@@ -17,6 +17,9 @@ const BINARY_ASSET_EXTENSIONS: ReadonlySet<string> = new Set([
   'otf',
   'woff',
   'woff2',
+  // Hunspell dictionaries, data the spelling check fetches (third-party-licences.md "What counts as shipped").
+  'aff',
+  'dic',
 ]);
 
 export type AppBundle = { app: AppId; sources: string[]; assets: string[] };

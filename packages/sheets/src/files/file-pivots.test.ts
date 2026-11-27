@@ -213,9 +213,9 @@ describe('pivot tables beside the file’s own', () => {
   const corpus = (path: string) =>
     readFileSync(join(import.meta.dirname, '..', '..', 'corpus', path));
 
-  // Excel's sample keeps its pivot table over a table (by the table's name); Google's ODS its custom groups.
+  // LibreOffice's XLSX of a custom group keeps its pivot table (an empty field); Google's ODS its custom groups.
   it.each([
-    ['excel/ExcelPivotTableSample.xlsx', 'xlsx', 'Tabelle1', 'Tabelle2', 3, 2],
+    ['libreoffice/PivotGroups-discrete.xlsx', 'xlsx', 'Tabelle1', 'Tabelle2', 3, 2],
     ['google/pivot-tables.ods', 'ods', 'Sales', 'Plain', 24, 5],
   ] as const)(
     'writes LiveDoc’s pivot table beside the kept ones of %s',
@@ -243,7 +243,7 @@ describe('pivot tables beside the file’s own', () => {
       expect(again.kept?.items.some((i) => /pivotCaches|data-pilot-tables/.test(i.xml))).toBe(true);
       if (format === 'xlsx') {
         const files = await entries(written.data);
-        // Excel's one kept beside the one read and LiveDoc's own.
+        // LibreOffice's one kept beside the one read and LiveDoc's own.
         const tables = [...files.keys()].filter((n) =>
           /^xl\/pivotTables\/pivotTable\d+\.xml$/.test(n),
         );

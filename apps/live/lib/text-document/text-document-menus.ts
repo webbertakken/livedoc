@@ -18,6 +18,7 @@ import {
 } from './text-document-paragraph-styles';
 import { BORDERS_ITEM, LINE_SPACING_ENTRIES } from './text-document-paragraph-actions';
 import { PAGE_NUMBER_PRESETS } from './text-document-page-numbers';
+import { SPELLING_SUGGESTIONS_MAX } from '@/lib/spelling/spelling-checker';
 import { BUILDING_BLOCKS } from './text-document-building-blocks';
 import { CODE_BLOCK_ITEMS } from './text-document-code-blocks';
 
@@ -92,7 +93,44 @@ function downloads(format: TextDocumentFormat): OfficeEntry[] {
   ];
 }
 
-export function textDocumentMenus(format: TextDocumentFormat): OfficeCatalogue {
+const verbalise = (id: string, label: string): OfficeItem =>
+  item(id, label, 'view', { shortcut: id, status: 'built' });
+
+// The Accessibility menu (tools.md "Accessibility settings"), after Help only while screen reader support is on; its
+// order is (default) until a capture of Google's.
+const ACCESSIBILITY_MENU: OfficeMenu = menu('accessibility', 'Accessibility', [
+  submenu('verbalize', 'Verbalize', [
+    verbalise('verbalize-selection', 'Verbalize selection'),
+    verbalise('verbalize-from-cursor-location', 'Verbalize from cursor location'),
+    verbalise('verbalize-cursor-location', 'Verbalize cursor location'),
+    verbalise('verbalize-selection-formatting', 'Verbalize selection formatting'),
+    verbalise('verbalize-word-count', 'Verbalize word count'),
+  ]),
+  submenu('verbalize-table', 'Table', [
+    verbalise('verbalize-table-cell-location', 'Verbalize table cell location'),
+    verbalise('verbalize-table-row-and-column-headers', 'Verbalize table row and column headers'),
+    verbalise('verbalize-table-row-header', 'Verbalize table row header'),
+    verbalise('verbalize-table-column-header', 'Verbalize table column header'),
+  ]),
+  submenu('verbalize-comments', 'Comments', [
+    verbalise('verbalize-comment', 'Verbalize comment'),
+    verbalise('verbalize-comment-anchor', 'Verbalize comment anchor'),
+  ]),
+  item('show-live-edits', 'Show live edits', 'view', {
+    shortcut: 'show-live-edits',
+    status: 'built',
+  }),
+  SEPARATOR,
+  item('accessibility-settings', 'Accessibility settings', 'view', BUILT),
+]);
+
+/** What the menus depend on beyond the format: whether the person has screen reader support on. */
+export type TextDocumentMenuOptions = { readonly screenReader?: boolean };
+
+export function textDocumentMenus(
+  format: TextDocumentFormat,
+  { screenReader = false }: TextDocumentMenuOptions = {},
+): OfficeCatalogue {
   return [
     menu('file', 'File', [
       submenu('new', 'New', [
@@ -402,10 +440,22 @@ export function textDocumentMenus(format: TextDocumentFormat): OfficeCatalogue {
       }),
     ]),
     menu('tools', 'Tools', [
-      item('spelling-and-grammar', 'Spelling and grammar', 'edit', {
-        shortcut: 'open-spelling-and-grammar',
-      }),
-      item('word-count', 'Word count', 'view', { shortcut: 'word-count' }),
+      // tools.md "Spelling and grammar", in Google's order; Show grammar suggestions only with a grammar server (D5).
+      submenu('spelling', 'Spelling and grammar', [
+        item('spelling-and-grammar', 'Spelling and grammar check', 'edit', {
+          shortcut: 'open-spelling-and-grammar',
+          status: 'built',
+        }),
+        item('spelling-show', 'Show spelling suggestions', 'edit', {
+          checkable: 'checkbox',
+          status: 'built',
+        }),
+        SEPARATOR,
+        // The personal dictionary is the person's own, whatever their role.
+        item('spelling-personal-dictionary', 'Personal dictionary', 'view', { status: 'built' }),
+      ]),
+      // tools.md "Word count": anyone who reads the document counts it.
+      item('word-count', 'Word count', 'view', { shortcut: 'word-count', status: 'built' }),
       // review.md "Reviewing suggestions": anyone reviews; what they may settle is their role's.
       item('review-suggested-edits', 'Review suggested edits', 'view', {
         shortcut: 'review-suggested-edits',
@@ -421,7 +471,11 @@ export function textDocumentMenus(format: TextDocumentFormat): OfficeCatalogue {
         keywords: ['autocorrect', 'substitutions'],
         status: 'built',
       }),
-      item('accessibility', 'Accessibility', 'view', { keywords: ['screen reader', 'braille'] }),
+      // tools.md "Accessibility settings": each person's own, Viewers too.
+      item('accessibility', 'Accessibility', 'view', {
+        keywords: ['screen reader', 'braille', 'magnifier'],
+        status: 'built',
+      }),
     ]),
     menu('extensions', 'Extensions', [
       item('agents', 'Agents', 'view', { keywords: ['mcp', 'cli'] }),
@@ -446,6 +500,7 @@ export function textDocumentMenus(format: TextDocumentFormat): OfficeCatalogue {
         status: 'built',
       }),
     ]),
+    ...(screenReader ? [ACCESSIBILITY_MENU] : []),
   ];
 }
 
@@ -453,6 +508,18 @@ export function textDocumentMenus(format: TextDocumentFormat): OfficeCatalogue {
 // it alone offers. Suggest edits is for whoever may suggest, never a Viewer.
 export function textDocumentTextContextMenu(catalogue: OfficeCatalogue): OfficeEntry[] {
   return contextEntries(catalogue, [
+    // On a misspelt word, first (tools.md "Spelling and grammar"): its suggestions, each labelled by its binding.
+    ...Array.from({ length: SPELLING_SUGGESTIONS_MAX }, (_, i) =>
+      item(`spelling-suggestion-${i + 1}`, 'Suggestion', 'edit', { contextual: true, ...BUILT }),
+    ),
+    // Google's Always correct to (help 12022089); its place is (default).
+    item('spelling-always-correct', 'Always correct to', 'edit', { contextual: true, ...BUILT }),
+    item('spelling-add-to-dictionary', 'Add to personal dictionary', 'edit', {
+      contextual: true,
+      ...BUILT,
+    }),
+    item('spelling-ignore', 'Ignore', 'edit', { contextual: true, ...BUILT }),
+    SEPARATOR,
     'cut',
     'copy',
     'paste',

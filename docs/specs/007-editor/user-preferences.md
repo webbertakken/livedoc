@@ -314,6 +314,9 @@ type UserPreferences = {
   // A text document's default page setup (../034-text-documents/page-layout.md "Page setup"): sides, orientation,
   // margins and colour in points, as Set as default kept them. Validated on read (PageSetup.parse), never trimmed.
   textDocumentPageSetup?: Record<string, unknown>;
+  // Word count while typing (../034-text-documents/tools.md "Word count"): the small count box at the bottom left of a
+  // text document’s writing. Missing: off.
+  textDocumentWordCountWhileTyping?: boolean;
   // DEAD (../004-interface-design/colour-picker.md "Custom colours"): Custom colours are kept with the document's tabs, not per user.
   // Nothing reads or writes this; it stays because it is already stored.
   customSwatches?: string[];
@@ -513,6 +516,7 @@ Missing key === undefined === default behaviour. Concretely:
 - `powerUserOfferShown` undefined → the offer may still be made, once its
   thresholds are met.
 - `pdfDarkPages` undefined → on: in the dark scheme a PDF's pages show dark until the person turns it off. Emits `Pdf`/`Toggled`/`DarkPages{On,Off}` when flipped.
+- `textDocumentWordCountWhileTyping` undefined → off: no count box while typing. Emits `UI`/`Toggled`/`TextDocumentWordCountWhileTyping{On,Off}` when flipped.
 - `pdfStampIdentity` undefined → no identity: a dynamic stamp keeps its two lines. Emits `Pdf`/`Changed`/`StampIdentity.<Field>` when a field is kept.
 
 Empty (or missing entirely) localStorage entry, AND no row in

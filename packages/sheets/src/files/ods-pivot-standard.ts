@@ -9,7 +9,7 @@ import {
   type XmlElement,
 } from '@livedoc/office-packages';
 import { columnIndex, type GridRange } from '../address';
-import type { PivotShowAs, PivotSummary } from '../pivot/pivot-spec';
+import type { PivotDateRule, PivotGrouping, PivotShowAs, PivotSummary } from '../pivot/pivot-spec';
 import { pivotFieldNames } from './file-pivots';
 import type { FilePivotHides, StandardGroup, StandardPivot, StandardValue } from './pivot-standard';
 
@@ -61,8 +61,63 @@ const t = (e: XmlElement, name: string) => attributeOf(e, TABLE, name);
 const child = (e: XmlElement | undefined, local: string) =>
   e ? childElement(e, TABLE, local) : undefined;
 
+// A `table:grouped-by` back to its date rule (D618), as XLSX's date levels read (D617).
+const DATE_LEVEL: Readonly<Record<string, PivotDateRule>> = {
+  seconds: 'second',
+  minutes: 'minute',
+  hours: 'hour',
+  days: 'dayMonth',
+  months: 'month',
+  quarters: 'quarter',
+  years: 'year',
+};
+
+// A bound of a number grouping: undefined when `auto` or absent, NaN for one that does not read.
+const boundOf = (text: string | undefined) =>
+  text === undefined || text === 'auto' ? undefined : Number(text);
+
+/**
+ * The grouping a `table:data-pilot-groups` says (D618): a date level, number intervals, or named groups of members
+ * by their text; a custom grouping of no real group reads as none; null for one LiveDoc does not read.
+ */
+function groupingOf(groups: XmlElement): PivotGrouping | null {
+  const by = t(groups, 'grouped-by');
+  const step = Number(t(groups, 'step') ?? 0);
+  if (by !== undefined) {
+    const rule = DATE_LEVEL[by];
+    return rule && (step === 0 || step === 1) ? { k: 'date', rule } : null;
+  }
+  const named = childElements(groups).filter(
+    (g) => g.local === 'data-pilot-group' && g.uri === TABLE,
+  );
+  if (t(groups, 'source-field-name') !== undefined) {
+    const list = named.map((g) => ({
+      name: t(g, 'name') ?? '',
+      items: childElements(g)
+        .filter((m) => m.local === 'data-pilot-group-member' && m.uri === TABLE)
+        .map((m) => t(m, 'name') ?? ''),
+    }));
+    return {
+      k: 'custom',
+      groups: list.filter(
+        (x) => x.items.length && !(x.items.length === 1 && x.items[0] === x.name),
+      ),
+    };
+  }
+  const start = boundOf(t(groups, 'start'));
+  const end = boundOf(t(groups, 'end'));
+  if (!(step > 0) || Number.isNaN(start) || Number.isNaN(end)) return null;
+  return {
+    k: 'interval',
+    size: step,
+    ...(start !== undefined ? { start } : {}),
+    ...(end !== undefined ? { end } : {}),
+  };
+}
+
 type Field = {
   col: number;
+  grouping?: PivotGrouping;
   orientation: string;
   level: XmlElement | undefined;
   element: XmlElement;
@@ -88,6 +143,7 @@ function groupOf(
     f.level !== undefined && attributeOf(f.level, ODF_NS.calcext, 'repeat-item-labels') === 'true';
   return {
     col: f.col,
+    ...(f.grouping ? { grouping: f.grouping } : {}),
     ...(desc ? { desc: true } : {}),
     subtotals: subtotals === undefined || childElements(subtotals).length > 0,
     ...(repeat && f.orientation === 'row' ? { repeat: true } : {}),
@@ -97,7 +153,7 @@ function groupOf(
 
 /**
  * A data pilot table's standard form, its source's header texts by `headersOf`; null when the model cannot hold it (a
- * source not a range of the workbook, a field it cannot find, a grouping, a Show As LiveDoc lacks).
+ * source not a range of the workbook, a field it cannot find, a grouping it does not read, a Show As LiveDoc lacks).
  */
 export function readOdsStandard(
   table: XmlElement,
@@ -125,9 +181,21 @@ export function readOdsStandard(
       continue;
     }
     if (orientation === 'hidden') continue;
-    const at = col(t(element, 'source-field-name') ?? '');
-    if (at === undefined || child(element, 'data-pilot-groups')) return null;
-    fields.push({ col: at, orientation, level: child(element, 'data-pilot-level'), element });
+    // A grouped field (D618): a field of its own grouping the column its groups name, or the column grouped in place.
+    const grouped = child(element, 'data-pilot-groups');
+    const base = grouped && t(grouped, 'source-field-name');
+    const at = col(base ?? t(element, 'source-field-name') ?? '');
+    const grouping = grouped ? groupingOf(grouped) : undefined;
+    if (at === undefined || grouping === null) return null;
+    if (grouping && (orientation === 'data' || orientation === 'page')) return null;
+    const real = grouping && !(grouping.k === 'custom' && !grouping.groups.length);
+    fields.push({
+      col: at,
+      ...(real ? { grouping } : {}),
+      orientation,
+      level: child(element, 'data-pilot-level'),
+      element,
+    });
   }
   const values: StandardValue[] = [];
   for (const f of fields.filter((x) => x.orientation === 'data')) {
@@ -156,6 +224,8 @@ export function readOdsStandard(
     const hidden = childElements(members).filter(
       (m) => m.local === 'data-pilot-member' && t(m, 'display') === 'false',
     );
+    // A grouped field's members are its groups' items, which no filter by values says.
+    if (f.grouping && hidden.length) return null;
     hides.push({ col: f.col, hides: hidden.map((m) => ({ shown: t(m, 'name') ?? '' })) });
   }
   const grand = t(table, 'grand-total') ?? 'both';

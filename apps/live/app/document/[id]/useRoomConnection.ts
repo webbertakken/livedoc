@@ -524,7 +524,7 @@ export function useRoomConnection(opts: {
       } else if (op.kind === 'text-document') {
         // A text document's update (docs/specs/034-text-documents/live-editing-and-storage.md): its surface, when
         // open, merges it; the room has already stored it, so a surface opened later loads it.
-        TextDocumentBus.deliver(op);
+        TextDocumentBus.deliver('update' in op ? { ...op, from } : op);
       } else if (op.kind === 'text-document-refused') {
         // An edit of ours the room refused whole ("Refused edits"): that tab's surface says which limit. A refusal
         // for the level reaches no surface: a text document's sends nothing below an Editor.

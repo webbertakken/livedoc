@@ -28,7 +28,25 @@ const TFJS_CARRIER = '@tensorflow/tfjs-backend-wasm (WebAssembly)';
 
 const text = (file: string): TextRef[] => [{ label: 'LICENSE', file }];
 
+// The spelling check's Hunspell dictionaries (docs/specs/034-text-documents/tools.md "Spelling and grammar"): each
+// package's .aff and .dic, emitted by the editor as hashed files the spelling worker fetches. They ship together, so
+// any of them names them all.
+const DICTIONARY_FILES = /^index\.[\w-]+\.(aff|dic)$/;
+const DICTIONARY_CARRIER = 'Spelling dictionaries (Hunspell)';
+const dictionary = (id: string, name: string, version: string, licence: string): EmbeddedWork => ({
+  id: `dictionary-${id}`,
+  name,
+  version,
+  licence,
+  carrier: DICTIONARY_CARRIER,
+  homepage: `https://github.com/wooorm/dictionaries/tree/main/dictionaries/${id}`,
+  trigger: { assets: DICTIONARY_FILES },
+  texts: [{ label: 'license', file: `dictionary-${id}-${version}-license.txt` }],
+});
+
 export const EMBEDDED_WORKS: readonly EmbeddedWork[] = [
+  dictionary('nl', 'Dutch dictionary', '2.0.0', '(BSD-3-Clause OR CC-BY-3.0)'),
+  dictionary('fr', 'French dictionary', '3.0.0', 'MPL-2.0'),
   // The TensorFlow.js WASM backend, built from tfjs-v4.22.0's WORKSPACE.
   {
     id: 'xnnpack',

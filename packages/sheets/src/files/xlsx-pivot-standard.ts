@@ -2,7 +2,7 @@
 // tables in the file", D608, D609): a pivot table part and its cache definition, as Excel, LibreOffice and Google Sheets
 // write them, in the model's terms; null for one the model cannot hold, which stays the file's own.
 import { attributeOf, childElements, parseXml, type XmlElement } from '@livedoc/office-packages';
-import { parseRangeText } from '../address';
+import { parseRangeText, type GridRange } from '../address';
 import type { PivotDateRule, PivotGrouping, PivotShowAs, PivotSummary } from '../pivot/pivot-spec';
 import { isoDateSerial } from './ods-read';
 import {
@@ -143,14 +143,25 @@ function groupingOf(
   };
 }
 
-type Cache = { sheet: string; ref: string; fields: CacheField[] };
+// Its source: a range of a sheet, or a table or named range by its name.
+type Cache = { source: { sheet: string; ref: string } | { name: string }; fields: CacheField[] };
+
+/** Where a pivot table sits: its own sheet's name, the workbook's, and its tables and named ranges by name (D619). */
+export type XlsxPivotPlace = {
+  own: string;
+  sheets: readonly string[];
+  named: (name: string) => { sheet: string; range: GridRange } | null;
+};
 
 function readCache(root: XmlElement): Cache | null {
   const source = kid(root, 'cacheSource');
   const ws = kid(source, 'worksheetSource');
   const ref = ws && at(ws, 'ref');
   const sheet = ws && at(ws, 'sheet');
-  if (!source || (at(source, 'type') ?? 'worksheet') !== 'worksheet' || !ref || !sheet) return null;
+  const name = ws && at(ws, 'name');
+  if (!source || (at(source, 'type') ?? 'worksheet') !== 'worksheet') return null;
+  const from = ref && sheet ? { sheet, ref } : name && !ref ? { name } : null;
+  if (!from) return null;
   const fields = kids(kid(root, 'cacheFields'), 'cacheField').map((f): CacheField => {
     const shared = kid(f, 'sharedItems');
     const formula = at(f, 'formula');
@@ -162,7 +173,7 @@ function readCache(root: XmlElement): Cache | null {
       items: shared ? childElements(shared).map(itemValue) : [],
     };
   });
-  return { sheet, ref, fields };
+  return { source: from, fields };
 }
 
 type PivotField = {
@@ -198,18 +209,23 @@ const fieldList = (e: XmlElement | undefined, local: string, attr: string) =>
 export function readXlsxStandard(
   tableXml: string,
   cacheXml: string,
-  own: string,
-  sheets: readonly string[],
+  place: XlsxPivotPlace,
 ): StandardPivot | null {
+  const { own, sheets } = place;
   const table = parseXml(tableXml);
   const cacheRead = parseXml(cacheXml);
   if (!table.ok || !cacheRead.ok) return null;
   const root = table.root;
   const cache = readCache(cacheRead.root);
-  const range = cache && parseRangeText(cache.ref);
-  const place = kid(root, 'location');
-  const location = place ? parseRangeText(at(place, 'ref') ?? '') : null;
-  if (!cache || !range || !location || !sheets.includes(cache.sheet)) return null;
+  const from =
+    cache &&
+    ('name' in cache.source
+      ? place.named(cache.source.name)
+      : { sheet: cache.source.sheet, range: parseRangeText(cache.source.ref) });
+  const range = from?.range;
+  const spot = kid(root, 'location');
+  const location = spot ? parseRangeText(at(spot, 'ref') ?? '') : null;
+  if (!cache || !from || !range || !location || !sheets.includes(from.sheet)) return null;
   if (kid(root, 'calculatedItems')) return null;
   const width = range.c2 - range.c1 + 1;
   const fields = cache.fields;
@@ -296,7 +312,7 @@ export function readXlsxStandard(
   return {
     at: { r: top, c: location.c1 },
     output: { rows: location.r2 - top + 1, cols: location.c2 - location.c1 + 1 },
-    source: { sheet: cache.sheet === own ? null : cache.sheet, range },
+    source: { sheet: from.sheet === own ? null : from.sheet, range },
     headers: fields.slice(0, width).map((f) => f.name),
     rows: rows as StandardGroup[],
     columns: columns as StandardGroup[],

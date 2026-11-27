@@ -669,7 +669,7 @@ export const TEXT_DOCUMENT_SHORTCUTS: readonly ShortcutRow[] = [
     'Alt+A (Chrome) or Alt+Shift+A (other browsers)',
     'Ctrl+Option+A',
     'Alt+A',
-    'specified',
+    'built',
   ),
   row(
     'input-tools-menu',
@@ -871,7 +871,7 @@ export const TEXT_DOCUMENT_SHORTCUTS: readonly ShortcutRow[] = [
     'Ctrl+Alt+Z or Alt+Shift+~',
     '⌘+Option+Z',
     'Ctrl+Alt+Z or Alt+Shift+~',
-    'specified',
+    'built',
   ),
   row(
     'enable-braille-support',
@@ -880,7 +880,7 @@ export const TEXT_DOCUMENT_SHORTCUTS: readonly ShortcutRow[] = [
     'Ctrl+Alt+H',
     '⌘+Option+H',
     'Ctrl+Alt+H',
-    'specified',
+    'native',
   ),
   row(
     'verbalize-selection',
@@ -889,7 +889,7 @@ export const TEXT_DOCUMENT_SHORTCUTS: readonly ShortcutRow[] = [
     'Ctrl+Alt+A, X',
     'Ctrl+⌘+A, X',
     'Ctrl+Alt+A, X',
-    'specified',
+    'built',
   ),
   row(
     'verbalize-from-cursor-location',
@@ -898,7 +898,7 @@ export const TEXT_DOCUMENT_SHORTCUTS: readonly ShortcutRow[] = [
     'Ctrl+Alt+A, R',
     'Ctrl+⌘+A, R',
     'Ctrl+Alt+A, R',
-    'specified',
+    'built',
   ),
   row(
     'announce-cursor-location',
@@ -907,7 +907,7 @@ export const TEXT_DOCUMENT_SHORTCUTS: readonly ShortcutRow[] = [
     'Ctrl+Alt+A, L',
     'Ctrl+⌘+A, L',
     'Ctrl+Alt+A, L',
-    'specified',
+    'built',
   ),
   row(
     'announce-formatting-at-cursor-location',
@@ -916,7 +916,7 @@ export const TEXT_DOCUMENT_SHORTCUTS: readonly ShortcutRow[] = [
     'Ctrl+Alt+A, F',
     'Ctrl+⌘+A, F',
     'Ctrl+Alt+A, F',
-    'specified',
+    'built',
   ),
   row(
     'verbalize-table-row-and-column-headers',
@@ -925,7 +925,7 @@ export const TEXT_DOCUMENT_SHORTCUTS: readonly ShortcutRow[] = [
     'Ctrl+Alt+Shift+T, H',
     'Ctrl+⌘+Shift+T, H',
     'Ctrl+Alt+Shift+T, H',
-    'specified',
+    'built',
   ),
   row(
     'verbalize-table-cell-location',
@@ -934,7 +934,7 @@ export const TEXT_DOCUMENT_SHORTCUTS: readonly ShortcutRow[] = [
     'Ctrl+Alt+Shift+T, N',
     'Ctrl+⌘+Shift+T, N',
     'Ctrl+Alt+Shift+T, N',
-    'specified',
+    'built',
   ),
   row(
     'verbalize-table-row-header',
@@ -943,7 +943,7 @@ export const TEXT_DOCUMENT_SHORTCUTS: readonly ShortcutRow[] = [
     'Ctrl+Alt+Shift+T, R',
     'Ctrl+⌘+Shift+T, R',
     'Ctrl+Alt+Shift+T, R',
-    'specified',
+    'built',
   ),
   row(
     'verbalize-table-column-header',
@@ -952,7 +952,7 @@ export const TEXT_DOCUMENT_SHORTCUTS: readonly ShortcutRow[] = [
     'Ctrl+Alt+Shift+T, C',
     'Ctrl+⌘+Shift+T, C',
     'Ctrl+Alt+Shift+T, C',
-    'specified',
+    'built',
   ),
   row(
     'show-live-edits',
@@ -961,7 +961,7 @@ export const TEXT_DOCUMENT_SHORTCUTS: readonly ShortcutRow[] = [
     'Ctrl+Alt+Shift+R',
     '⌘+Option+Shift+R',
     'Ctrl+Alt+Shift+R',
-    'specified',
+    'built',
   ),
   row(
     'verbalize-comment',
@@ -970,7 +970,7 @@ export const TEXT_DOCUMENT_SHORTCUTS: readonly ShortcutRow[] = [
     'Ctrl+Alt+A, C',
     'Ctrl+⌘+A, C',
     'Ctrl+Alt+A, C',
-    'specified',
+    'built',
   ),
   row(
     'verbalize-comment-anchor',
@@ -979,7 +979,7 @@ export const TEXT_DOCUMENT_SHORTCUTS: readonly ShortcutRow[] = [
     'Ctrl+Alt+A, A',
     'Ctrl+⌘+A, A',
     'Ctrl+Alt+A, A',
-    'specified',
+    'built',
   ),
   row(
     'verbalize-selection-formatting',
@@ -988,7 +988,7 @@ export const TEXT_DOCUMENT_SHORTCUTS: readonly ShortcutRow[] = [
     'Ctrl+Alt+A, S',
     'Ctrl+⌘+A, S',
     'Ctrl+Alt+A, S',
-    'specified',
+    'built',
   ),
   row(
     'verbalize-cursor-location',
@@ -997,7 +997,7 @@ export const TEXT_DOCUMENT_SHORTCUTS: readonly ShortcutRow[] = [
     'Ctrl+Alt+Shift+A, L',
     'Ctrl+⌘+A, L',
     'Ctrl+Alt+Shift+A, L',
-    'specified',
+    'built',
   ),
   row(
     'verbalize-word-count',
@@ -1006,7 +1006,7 @@ export const TEXT_DOCUMENT_SHORTCUTS: readonly ShortcutRow[] = [
     'Ctrl+Alt+Shift+A, W',
     'Ctrl+⌘+A, W',
     'Ctrl+Alt+Shift+A, W',
-    'specified',
+    'built',
   ),
   // Document navigation
   row(
@@ -1342,7 +1342,7 @@ export const TEXT_DOCUMENT_SHORTCUTS: readonly ShortcutRow[] = [
     'Ctrl+Alt+X or F7',
     '⌘+Option+X or Fn+F7',
     '—',
-    'specified',
+    'built',
   ),
   row(
     'open-dictionary',
@@ -1360,7 +1360,7 @@ export const TEXT_DOCUMENT_SHORTCUTS: readonly ShortcutRow[] = [
     'Ctrl+Shift+C',
     '⌘+Shift+C',
     'Ctrl+Shift+C',
-    'specified',
+    'built',
   ),
   row(
     'show-non-printing-characters',
@@ -1424,7 +1424,7 @@ export const TEXT_DOCUMENT_SHORTCUTS: readonly ShortcutRow[] = [
     "Ctrl+'",
     "⌘+'",
     "Ctrl+'",
-    'specified',
+    'built',
   ),
   row(
     'move-to-previous-misspelling',
@@ -1433,7 +1433,7 @@ export const TEXT_DOCUMENT_SHORTCUTS: readonly ShortcutRow[] = [
     'Ctrl+;',
     '⌘+;',
     'Ctrl+;',
-    'specified',
+    'built',
   ),
   row(
     'insert-or-move-to-header',

@@ -16,15 +16,15 @@ import {
   type TypingAidSwitch,
 } from '@/lib/text-document/text-document-typing-aids';
 
-// Google's General options in its order (tools.md "Preferences"): a switch for each one built, the rest dimmed until
-// their feature is; Show Smart Reply suggestions is an assistant's, left out (C3).
-const GENERAL: readonly (readonly [TypingAidSwitch | null, string])[] = [
+// Google's General options in its order (tools.md "Preferences"), a switch each; Show Smart Reply suggestions is an
+// assistant's, left out (C3).
+const GENERAL: readonly (readonly [TypingAidSwitch, string])[] = [
   ['capitalise', 'Automatically capitalise words'],
   ['smartQuotes', 'Use smart quotes'],
   ['links', 'Automatically detect links'],
   ['lists', 'Automatically detect lists'],
   ['markdown', 'Enable Markdown'],
-  [null, 'Automatically correct spelling'],
+  ['spelling', 'Automatically correct spelling'],
   ['linkDetails', 'Show link details'],
   ['emojiColon', 'Insert emoji using the colon character'],
 ];
@@ -93,38 +93,17 @@ export function TextDocumentPreferencesDialog({
       <OfficeDialogTabs id={id} label="Preferences" tabs={TABS} value={tab} onChange={setTab} />
       {tab === 'general' ? (
         <div {...officeTabPanel(id, 'general')} className="flex flex-col gap-3">
-          {GENERAL.map(([key, label], i) =>
-            key ? (
-              <label key={key} className="flex items-center gap-3 text-body">
-                <input
-                  type="checkbox"
-                  className={CHECKBOX}
-                  checked={draft[key]}
-                  onChange={(e) => setDraft((d) => ({ ...d, [key]: e.target.checked }))}
-                />
-                {label}
-              </label>
-            ) : (
-              <div key={label} className="flex flex-col gap-0.5">
-                <label className="flex items-center gap-3 text-body opacity-60">
-                  <input
-                    type="checkbox"
-                    className={CHECKBOX}
-                    disabled
-                    aria-describedby={`${id}-soon-${i}`}
-                  />
-                  {label}
-                </label>
-                <span
-                  id={`${id}-soon-${i}`}
-                  style={UNDER_CHECKBOX}
-                  className="text-supporting text-(--office-muted)"
-                >
-                  Coming soon
-                </span>
-              </div>
-            ),
-          )}
+          {GENERAL.map(([key, label]) => (
+            <label key={key} className="flex items-center gap-3 text-body">
+              <input
+                type="checkbox"
+                className={CHECKBOX}
+                checked={draft[key]}
+                onChange={(e) => setDraft((d) => ({ ...d, [key]: e.target.checked }))}
+              />
+              {label}
+            </label>
+          ))}
         </div>
       ) : (
         <div {...officeTabPanel(id, 'substitutions')} className="flex min-h-0 flex-col gap-3">

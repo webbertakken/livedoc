@@ -19,6 +19,9 @@ other. `CORPUS_UPDATE=1` writes it afresh, to be read in review.
   formula's answer, typed on a sheet of its own).
 - `excel/ExcelPivotTableSample.xlsx` holds Excel's own pivot tables (one hiding items of its rows and columns, one over
   a table by its name) and `libreoffice/ExcelPivotTableSample.ods` and `.xlsx` LibreOffice's saves of them: the evidence
-  for reading other apps' pivot tables (`src/files/pivot-standard.test.ts`).
+  for reading other apps' pivot tables (`src/files/pivot-standard.test.ts`). `libreoffice/PivotGroups-*.ods` and
+  `.xlsx` are LibreOffice's saves of that sample grouped three ways (`pivot-group-variants.ts`: a date column by
+  month, a named group, number intervals), made with `CORPUS_SOURCE=libreoffice-groups`: the evidence for reading
+  groupings (D617, D618).
 - Apache POI's files are its test data, distributed under the Apache License 2.0
   (<https://www.apache.org/licenses/LICENSE-2.0>); see `NOTICE`.

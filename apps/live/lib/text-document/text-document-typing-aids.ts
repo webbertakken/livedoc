@@ -20,6 +20,8 @@ export type TypingAids = {
   readonly emojiColon: boolean;
   /** Show link details: the card at the caret in a link (links-and-navigation.md "Links"). */
   readonly linkDetails: boolean;
+  /** Automatically correct spelling (tools.md "Spelling and grammar"). */
+  readonly spelling: boolean;
   /** Automatic substitution: the list below on at all. */
   readonly substitution: boolean;
   readonly pairs: readonly Substitution[];
@@ -33,6 +35,7 @@ export const TYPING_AID_SWITCHES = [
   'markdown',
   'emojiColon',
   'linkDetails',
+  'spelling',
 ] as const;
 export type TypingAidSwitch = (typeof TYPING_AID_SWITCHES)[number];
 
@@ -93,6 +96,7 @@ const DEFAULT_ON: Record<TypingAidSwitch, boolean> = {
   markdown: false,
   emojiColon: true,
   linkDetails: true,
+  spelling: true,
 };
 
 const DEFAULT_PAIRS = new Map(DEFAULT_SUBSTITUTIONS);
