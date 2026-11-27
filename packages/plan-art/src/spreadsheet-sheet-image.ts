@@ -7,7 +7,9 @@ import {
   SHEET_HEADER_H,
   SHEET_ROW_HEAD_W,
   createShape,
+  planPalette,
   type Element,
+  type ShapeElement,
   type SheetRenderModel,
   type Tab,
 } from '@livedoc/document';
@@ -30,6 +32,21 @@ export const SHEET_PREVIEW_MAX = 4000;
 const EMPTY_WINDOW = { width: 400, height: 200 };
 // The room kept round a chart at the window's edge.
 const EDGE = 24;
+
+// The card a chart sits on, as the spreadsheet draws it over its cells (SheetChartsLayer's card): the light paper's
+// surface and border. A chart draws only its marks, so without it the grid's lines showed through.
+function chartCard(chart: SheetChart, x: number, y: number): ShapeElement {
+  const paper = planPalette('light');
+  return {
+    ...createShape('square', x, y),
+    id: `card-${chart.id}`,
+    width: chart.width,
+    height: chart.height,
+    fillColor: paper.surface,
+    strokeColor: paper.border,
+    strokeWidth: 'thin',
+  };
+}
 
 export type SpreadsheetSheetImage = {
   // The sheet laid out as a Plan Sheet tab: its Sheet, then its charts.
@@ -122,7 +139,9 @@ export function spreadsheetSheetImage(
         )
       : null;
     const el = sheetChartElement(chart, sheetId, table, at);
-    drawn.push({ ...el, x: left + at.x, y: top + at.y });
+    const x = left + at.x;
+    const y = top + at.y;
+    drawn.push(chartCard(chart, x, y), { ...el, x, y });
   }
   return {
     tab: { id: tab.id, name: tab.name, kind: 'sheet', elements: [frame, ...drawn] },

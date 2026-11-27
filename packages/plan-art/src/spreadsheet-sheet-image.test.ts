@@ -10,6 +10,7 @@ import {
   type Sheet,
   type SheetChart,
 } from '@livedoc/sheets';
+import { planPalette, type ShapeElement } from '@livedoc/document';
 import { SHEET_PREVIEW_MAX, spreadsheetSheetImage } from './spreadsheet-sheet-image';
 
 const rows = Array.from({ length: 30 }, (_, i) => `row${String(i).padStart(3, '0')}`);
@@ -51,7 +52,13 @@ describe('spreadsheetSheetImage', () => {
   it('frames the whole sheet and its charts as a Sheet tab, charts at their cells', () => {
     const wb = bookWith(data, [chart('c1', 0, 3), chart('c2', 0, 4, { range: undefined })]);
     const image = spreadsheetSheetImage(wb, 'sheetA', tab)!;
-    const [frame, ...charts] = image.tab.elements as { x: number; y: number; width: number }[];
+    const [frame, ...rest] = image.tab.elements as {
+      id: string;
+      x: number;
+      y: number;
+      width: number;
+    }[];
+    const charts = rest.filter((e) => !e.id.startsWith('card-'));
     expect(image.tab).toMatchObject({ id: 'tabA', name: 'Costs', kind: 'sheet' });
     expect((frame as unknown as { planSheet: unknown }).planSheet).toEqual({ sheetId: 'sheetA' });
     expect(charts).toHaveLength(2);
@@ -63,6 +70,26 @@ describe('spreadsheetSheetImage', () => {
     expect(model.cells.some((c) => c.text === '99')).toBe(true);
   });
 
+  it('sits each chart on its card, as the spreadsheet draws it, just behind it', () => {
+    const wb = bookWith(data, [chart('c1', 0, 3)]);
+    const [, card, drawn] = spreadsheetSheetImage(wb, 'sheetA', tab)!.tab
+      .elements as ShapeElement[];
+    const paper = planPalette('light');
+    expect(card).toMatchObject({
+      id: 'card-c1',
+      shape: 'square',
+      x: drawn!.x,
+      y: drawn!.y,
+      width: 300,
+      height: 200,
+      fillColor: paper.surface,
+      strokeColor: paper.border,
+      strokeWidth: 'thin',
+    });
+    expect(card!.label ?? '').toBe('');
+    expect(drawn!.id).toBe('c1');
+  });
+
   it('draws a range from its top-left, leaving out charts before or past it', () => {
     const wb = bookWith(data, [chart('before', 0, 0), chart('inside', 9, 5), chart('past', 29, 7)]);
     const image = spreadsheetSheetImage(wb, 'sheetA', tab, {
@@ -71,7 +98,11 @@ describe('spreadsheetSheetImage', () => {
     const model = image.sheets.get('sheetA')!;
     expect(model.rowLabels[0]).toBe('10');
     expect(model.colLabels[0]).toBe('F');
-    expect(image.tab.elements.map((e) => e.id)).toEqual(['preview-sheetA', 'inside']);
+    expect(image.tab.elements.map((e) => e.id)).toEqual([
+      'preview-sheetA',
+      'card-inside',
+      'inside',
+    ]);
   });
 
   it('shows a few rows of an empty sheet, keeps within the image limit, and answers null for no sheet', () => {
@@ -115,6 +146,7 @@ describe('spreadsheetSheetImage', () => {
     ]);
     expect(spreadsheetSheetImage(whole, 'sheetA', tab)!.tab.elements.map((e) => e.id)).toEqual([
       'preview-sheetA',
+      'card-cols',
       'cols',
     ]);
   });
