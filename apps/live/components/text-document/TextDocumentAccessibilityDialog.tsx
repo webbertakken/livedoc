@@ -32,7 +32,7 @@ export function TextDocumentAccessibilityDialog({
         {/* Focusable so Tab reaches it and a screen reader reads it in turn; it does nothing on a press. */}
         <p
           tabIndex={0}
-          className="rounded text-body text-(--office-muted) focus-visible:outline-2 focus-visible:outline-(--office-primary)"
+          className="rounded-control text-body text-(--office-muted) focus-visible:outline-2 focus-visible:outline-(--office-primary)"
         >
           {NATIVE_SUPPORT_SENTENCE}
         </p>
