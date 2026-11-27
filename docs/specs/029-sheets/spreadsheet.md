@@ -141,8 +141,8 @@ tab's menu holds:
 - Once copied, a dialog says so, with **Open Spreadsheet** opening it in a new browser tab (default, D185).
 - Copy To is everyone's who may read the sheet: it changes nothing here, and a download carries the same; the copy
   lands only where the person may edit (default, D186).
-- **Protect Sheet** waits for protected sheets and ranges ([Data tools](data-tools.md#protected-ranges), plan 0020
-  Phase 10) and **View Comments** for comments (Phase 11): both stay in their places, dimmed.
+- **Protect Sheet** opens Protect Sheets and Ranges on its Sheet tab ([Data tools](data-tools.md#protected-ranges));
+  **View Comments** waits for comments (Phase 11), in its place, dimmed.
 - Each is one undo step on the person's one timeline ([Undo](grid-and-editing.md#undo)) and is sent live to everyone
   on the workbook: undoing an add or a duplicate deletes the sheet, kept, and redoing puts it back with its ids;
   undoing a delete puts the sheet back with its ids where it was; undoing a move puts it back after the sheet it
