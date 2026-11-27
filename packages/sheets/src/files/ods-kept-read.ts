@@ -1,6 +1,7 @@
 // ODF's kept content, read (docs/specs/029-sheets/standard-mapping.md "Unknown content"): each element and attribute
 // the ODF reader does not read, kept as the file wrote it, by where it sat; and the package entries it does not read.
 import { isOdsProtectionAttribute } from './ods-protection';
+import { isOdsTableRecordAttribute } from './ods-tables';
 import { cellParagraphs, isMarkedParagraph } from './ods-cell-text';
 import {
   attributeOf,
@@ -74,7 +75,7 @@ export const isWrittenOdfEntry = (name: string): boolean => WRITTEN_ENTRIES.has(
 
 /** Kept items as a reader gathers them, with the parsed entry their XML is sliced from. */
 // The spreadsheet's holders whose children LiveDoc reads: validation rules and names.
-const READ_HOLDERS = new Set(['content-validations', 'named-expressions']);
+const READ_HOLDERS = new Set(['content-validations', 'named-expressions', 'database-ranges']);
 
 export class OdsKeeper {
   readonly items: KeptItem<FileAt>[] = [];
@@ -155,7 +156,8 @@ export class OdsKeeper {
       if (
         (attribute.uri === TABLE &&
           (attribute.local === 'name' || attribute.local === 'style-name')) ||
-        isOdsProtectionAttribute(attribute)
+        isOdsProtectionAttribute(attribute) ||
+        isOdsTableRecordAttribute(attribute)
       )
         continue;
       this.items.push({

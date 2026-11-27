@@ -17,12 +17,15 @@ import {
   type CellInput,
   type Sheet,
   type SheetLayout,
+  type StoredFormula,
 } from '../sheet';
 import { makeSheetId, type Rand } from '../ids';
 import {
   compileFormula,
+  mapFormulaRefs,
   readsUnknownTable,
   renderFormula,
+  tableRefAsRange,
   type SheetHandle,
   type SheetsCtx,
 } from '../formula/stored';
@@ -71,6 +74,9 @@ export type FileCell = {
   format?: string;
   // Its style beyond the number format (standard-mapping.md "Cell styles in the file"); none for the default.
   style?: CellStyle;
+  // A formula reading a table, with each table reference as the plain absolute range it reads now, for a format
+  // without them (OpenFormula, standard-mapping.md "Tables in the file").
+  plain?: string;
 };
 
 export type FileSheet = {
@@ -268,6 +274,8 @@ export function workbookFileOf(
         const value = shownValue(engine, sheet.id, r, c);
         if ('f' in cell.input) {
           out.formula = renderFormula(cell.input.f, ctx);
+          const plain = plainFormula(cell.input.f, ctx, r);
+          if (plain !== null) out.plain = plain;
           const spans = spilledBlock(engine, sheet.id, r, c);
           if (spans) {
             out.spans = spans;
@@ -309,6 +317,16 @@ export function workbookFileOf(
     ...functionsOf(engine, sheets),
     ...namesOf(sheets),
   };
+}
+
+// A formula's text with its table references as the plain absolute ranges they read from row `r`; null when it reads
+// no table.
+function plainFormula(f: StoredFormula, ctx: SheetsCtx, r: number): string | null {
+  if (!f.r.some((ref) => ref.t !== undefined)) return null;
+  const plain = mapFormulaRefs(f, (ref) =>
+    ref.t === undefined ? ref : tableRefAsRange(ref, ctx, r),
+  );
+  return renderFormula(plain, ctx);
 }
 
 // The workbook's named ranges, each on its sheet by place.

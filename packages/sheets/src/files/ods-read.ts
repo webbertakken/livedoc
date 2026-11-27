@@ -36,6 +36,7 @@ import { readOdsNames } from './file-names';
 import { OdsValidationCells, readOdsValidations, type OdsValidationsRead } from './ods-validation';
 import { odsCellLooks, type OdsCellLooks } from './ods-cell-style';
 import { fromOpenFormula } from './open-formula';
+import { readOdsDatabaseRanges, readOdsTableRecord, withOdsTables } from './ods-tables';
 import { OdsFreeCells, readOdsTableProtection, type OdsRowCell } from './ods-protection';
 import { protectionsFound } from './file-protections';
 import type { FileCell, FileLoss, FileRead, FileSheet, FileValue } from './workbook-file';
@@ -400,8 +401,15 @@ function readBody(
     return at < 0 ? undefined : at;
   });
   for (const name of named.unread) losses.push({ k: 'name_unread', name });
+  // Its database ranges LiveDoc holds as tables (standard-mapping.md "Tables in the file").
+  const databases = readOdsDatabaseRanges(
+    spreadsheet,
+    titles,
+    named.names.map((n) => n.name),
+    losses,
+  );
   keeper.root(root);
-  keeper.spreadsheet(spreadsheet, new Set([...validations.read, ...named.read]));
+  keeper.spreadsheet(spreadsheet, new Set([...validations.read, ...named.read, ...databases.read]));
   const book: Book = {
     losses,
     budget,
@@ -413,7 +421,11 @@ function readBody(
     ruleStyles,
     validations: validations.byName,
   };
-  const tableSheets = tables.slice(0, SHEETS_MAX).map((t, i) => readTable(t, i, book));
+  const tableSheets = tables
+    .slice(0, SHEETS_MAX)
+    .map((t, i) =>
+      withOdsTables(readTable(t, i, book), databases.standard[i]!, readOdsTableRecord(t), losses),
+    );
   if (tables.length > SHEETS_MAX)
     losses.push({ k: 'sheets_cut', kept: SHEETS_MAX, had: tables.length });
   // The common styles kept format rules name go with them (a flat file's are its own).
