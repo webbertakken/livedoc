@@ -5,13 +5,12 @@ import { officeMenuItem } from './office-menus';
 // Rows and columns while suggesting (docs/specs/034-text-documents/review.md "Rows and columns", "Not yet", "Suggestion
 // cards"): an Editor in Suggesting adds a row ("Add: Row") and deletes a column ("Delete: Column", its cells struck
 // through, staying); a column added grows the table, Reject gives it back as it was and Accept fits it to the text
-// (director, 2026-11-26); a column a merged cell crosses is not yet; a Participant's row reaches the Editor, who
-// accepts it.
+// (director, 2026-11-26); a column put in through a merged cell grows it, Reject shrinking it back ("Across merged
+// cells"); a Participant's row reaches the Editor, who accepts it.
 
 const BODY = '[role="textbox"][aria-label="Document body"]';
 const READY = '[data-text-document-surface="ready"]';
 const CARD = '[data-suggestion-card]';
-const NOT_YET = 'This can’t be suggested yet.';
 const apiBase = process.env.NEXT_PUBLIC_API_BASE ?? '/api';
 
 test.use({ colorScheme: 'dark' });
@@ -54,7 +53,7 @@ async function settle(page: Page, line: string, verb: 'Accept' | 'Reject') {
   await expect(card).toHaveCount(0);
 }
 
-test('rows and columns are suggested, settled, fitted, and refused where a merged cell crosses', async ({
+test('rows and columns are suggested, settled, fitted, and grow a merged cell they cross', async ({
   page,
   browser,
   baseURL,
@@ -91,9 +90,12 @@ test('rows and columns are suggested, settled, fitted, and refused where a merge
   await suggesting(page);
   const cell = (text: string) => table.locator('td', { hasText: text });
 
-  // A column a merged cell crosses: not yet.
+  // A column a merged cell crosses grows it; Reject shrinks it back.
   await tableItem(page, merged.locator('td').nth(1), 'Insert column right');
-  await expect(page.getByText(NOT_YET)).toBeVisible();
+  await expect(merged.locator('td[colspan="3"]')).toHaveCount(1);
+  await expect(merged.locator('tr').nth(1).locator('td')).toHaveCount(3);
+  await settle(page, 'Add: Column', 'Reject');
+  await expect(merged.locator('td[colspan="2"]')).toHaveCount(1);
   await expect(merged.locator('tr').nth(1).locator('td')).toHaveCount(2);
 
   // A row added: its card, its cells outlined.

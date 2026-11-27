@@ -12,13 +12,12 @@ import {
   deleteWholeTable,
   distributeColumns,
   distributeRows,
-  insertColumns,
-  insertRows,
   mergeTableCells,
   pinHeaderRows,
   sortTable,
   unmergeTableCell,
 } from './text-document-table-edits';
+import { insertColumns, insertRows } from './text-document-table-insert';
 import { isInTable, selectedRect } from 'prosemirror-tables';
 import { moveColumns, moveRows } from './text-document-table-move';
 import { startUndoStep } from './text-document-undo';

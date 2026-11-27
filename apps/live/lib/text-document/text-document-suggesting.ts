@@ -33,10 +33,12 @@ import {
 } from './text-document-suggesting-blocks';
 import {
   crossed,
+  deleteTableParts,
   insideOwnPart,
   isTableParts,
   ownPartChange,
   reshapesOthers,
+  spanGrowth,
 } from './text-document-suggesting-tables';
 import {
   loneObject,
@@ -44,6 +46,7 @@ import {
   PARAGRAPH_FORMAT_ATTRIBUTES,
   paragraphMarkup,
 } from './text-document-suggesting-steps';
+import { TABLE_PARTS_META, type TablePartsDeleted } from './text-document-table-edits';
 
 /** Who suggests: their key, name and colour, the time, and a fresh id for a new suggestion. */
 export type Suggester = {
@@ -175,12 +178,12 @@ class Rewriter {
         else if (!node.attrs[DELETION_MARK]) actions.push({ pos, kind: 'block', node });
         return false;
       }
-      // A whole row or cell of a table not wholly covered: suggested deleted (one's own taken away), unless a merged
-      // cell crosses it (not yet).
+      // A whole row or cell of a table not wholly covered: suggested deleted, merged cells crossing it staying; one's
+      // own taken away, unless a merged cell crosses it (not yet).
       if (isTablePart(node) && pos >= from && pos + node.nodeSize <= to) {
-        if (crossed(doc, pos, node)) refused = 'structure';
-        else if (isOwn(node.attrs[INSERTION_MARK], this.who.key))
-          actions.push({ pos, kind: 'remove', to: pos + node.nodeSize });
+        const own = isOwn(node.attrs[INSERTION_MARK], this.who.key);
+        if (own && crossed(doc, pos, node)) refused = 'structure';
+        else if (own) actions.push({ pos, kind: 'remove', to: pos + node.nodeSize });
         else if (!node.attrs[DELETION_MARK]) {
           actions.push({ pos, kind: 'block', node });
           this.partDeleted = true;
@@ -355,7 +358,17 @@ export function suggestTransaction(
   let ownObjectsOnly = true;
   // Moving, sorting, distributing, merging or splitting anyone else's table: not yet.
   if (reshapesOthers(tr, who.key)) return { refused: 'structure' };
-  for (const [i, step] of tr.steps.entries()) {
+  // Rows or columns deleted by the table's commands: marked, or one's own taken away, from the table as it stood.
+  const parts = tr.getMeta(TABLE_PARTS_META) as TablePartsDeleted | undefined;
+  if (parts) {
+    const refused = deleteTableParts(state, parts, out, who.key, (from, to) =>
+      rewriter.base(from, to),
+    );
+    if (refused) return { refused };
+    rewriter.partDeleted = true;
+    ownObjectsOnly = false;
+  }
+  for (const [i, step] of parts ? [] : tr.steps.entries()) {
     const doc = tr.docs[i]!;
     const at = out.steps.length;
     const map = (pos: number, assoc = 1) => into.map(pos, assoc);
@@ -363,7 +376,9 @@ export function suggestTransaction(
     // Inside one's own suggested block, any change is plainly part of it; so is writing in one's own suggested row or
     // cell, and a change to the look of a row or cell one's own suggestion put in.
     const ownBlock = insideOwnBlock(step, doc, who.key) || insideOwnPart(step, doc, who.key);
-    const ownPart = ownBlock ? null : ownPartChange(step, into, out, who.key);
+    const ownPart = ownBlock
+      ? null
+      : (ownPartChange(step, into, out, who.key) ?? spanGrowth(step, doc, into, out));
     const markup = ownBlock ? null : paragraphMarkup(step, doc);
     const object = markup || ownBlock ? null : objectChange(step, doc);
     if (!object && !ownBlock) ownObjectsOnly = false;
