@@ -31,8 +31,9 @@ import { readSqref } from './xlsx-format-rules';
 import { SPREADSHEETML_NS } from './xlsx-parts';
 import { LIVEDOC_SPREADSHEET_NS } from './validation-standard';
 import type { FileCell, FileLoss, FileSheet } from './workbook-file';
-import type { FileFilter } from './file-filters';
-import { filterOverTables, tableDataRange, xlsxAutoFilterXml } from './xlsx-filters';
+import type { FileFilterColumn } from './file-filters';
+import { filteredFromHidden } from './file-lines';
+import { tableDataRange, xlsxAutoFilterXml, xlsxHeld } from './xlsx-filters';
 import { autoFilterOf } from './xlsx-filters-read';
 
 /** The table style LiveDoc names: its look is the table's banding, written as format rules. */
@@ -46,7 +47,7 @@ type KeptTable = {
   relId: string;
   part: string;
   // Its table as read; null when it does not read as one LiveDoc could hold (it reaches other parts, say).
-  table: (TableCandidate & { columns: string[]; id: number; filter?: FileFilter }) | null;
+  table: (TableCandidate & { columns: string[]; id: number; filter?: FileFilterColumn[] }) | null;
 };
 
 // A table part read: its name, cells, header and total rows and column names; null when it is not one.
@@ -62,10 +63,9 @@ function readTablePart(xml: string): KeptTable['table'] {
   const columns = (holder ? childElements(holder) : [])
     .filter((e) => e.local === 'tableColumn')
     .map((e) => attributeOf(e, '', 'name') ?? '');
-  // Its `autoFilter` with a `filterColumn`: the sheet's filter over the table (D481).
+  // Its `autoFilter`: the table's own filter, on (D481), its columns by place in the sheet.
   const auto = childElement(root, SPREADSHEETML_NS, 'autoFilter');
-  const read = auto && autoFilterOf(auto, SPREADSHEETML_NS);
-  const filter = read && read.cols.length ? { range: read.range, cols: read.cols } : undefined;
+  const filter = auto ? (autoFilterOf(auto, SPREADSHEETML_NS)?.cols ?? []) : undefined;
   return {
     name,
     range: ranges[0]!,
@@ -158,10 +158,7 @@ export function readXlsxTables(
 ): {
   sheets: FileSheet[];
   kept: KeptContent<FileAt> | undefined;
-  // By sheet, the filter its first table part holding one holds (D481); another's columns named `filter_unread`.
-  filters: (FileFilter | undefined)[];
 } {
-  const filters: (FileFilter | undefined)[] = sheets.map(() => undefined);
   const all = keptTables(kept);
   const bySheet = sheets.map((_, i) => all.filter((t) => t.sheet === i));
   const held = heldTables(
@@ -188,18 +185,26 @@ export function readXlsxTables(
       }
       taken.push(t);
       const { name, range, columns, total, filter } = t.table;
-      if (filter && !filters[i]) filters[i] = filter;
-      else if (filter)
-        for (const x of filter.cols)
-          losses.push({ k: 'filter_unread', sheet: sheet.name, r: filter.range.r1, c: x.c });
-      standard.push({ name, range, columns, ...(total ? { total: true as const } : {}) });
+      standard.push({
+        name,
+        range,
+        columns,
+        ...(total ? { total: true as const } : {}),
+        ...(filter ? { filter } : {}),
+      });
     });
     const record = records[i];
-    const found = tablesFound({ standard, ...(record ? { record } : {}) });
+    const found = tablesFound({ standard, ...(record ? { record } : {}), held: xlsxHeld });
     if (found.changed) losses.push({ k: 'tables_changed', sheet: sheet.name });
-    return found.tables.length ? { ...sheet, tables: found.tables } : sheet;
+    if (!found.tables.length) return sheet;
+    // The rows a table's filter with a condition hides are its filter's, not hidden lines (D478).
+    const filtered = found.tables.filter((t) => t.filter?.length).map(tableDataRange);
+    const lines = filtered.length
+      ? filteredFromHidden(sheet.lines, (p) => filtered.some((g) => p > g.r1 && p <= g.r2))
+      : sheet.lines;
+    return { ...sheet, ...(lines ? { lines } : {}), tables: found.tables };
   });
-  return { sheets: out, kept: kept && keptWithoutTables(kept, taken), filters };
+  return { sheets: out, kept: kept && keptWithoutTables(kept, taken) };
 }
 
 /**
@@ -276,19 +281,17 @@ export function withTextHeaders(sheet: FileSheet): FileCell[] {
   return out;
 }
 
-// A table part's XML: its cells, header row, total row, filter over all but the total row, columns and style.
-function tableXml(t: FileTable, id: number, filter: FileFilter | undefined): string {
+// A table part's XML: its cells, header row, total row, its own filter while on over all but the total row (D481),
+// columns and style.
+function tableXml(t: FileTable, id: number): string {
   const name = escapeXmlAttribute(tableFormulaName(t.name));
-  const data = tableDataRange(t);
-  // The sheet's filter over exactly this table is the table's own (standard-mapping.md "Filters in the file", D481).
-  const own = filter && filterOverTables(filter.range, [t]) === 'table' ? filter : undefined;
   const columns = t.columns
     .map((c, i) => `<tableColumn id="${i + 1}" name="${escapeXmlAttribute(c)}"/>`)
     .join('');
   return [
     `<table xmlns="${SPREADSHEETML_NS}" id="${id}" name="${name}" displayName="${name}" ref="${formatRange(t.range)}"`,
     ` headerRowCount="1"${t.total ? ' totalsRowCount="1"' : ''}>`,
-    own ? xlsxAutoFilterXml(data, own.cols) : `<autoFilter ref="${formatRange(data)}"/>`,
+    t.filter ? xlsxAutoFilterXml(tableDataRange(t), t.filter) : '',
     `<tableColumns count="${t.columns.length}">${columns}</tableColumns>`,
     `<tableStyleInfo name="${XLSX_TABLE_STYLE}" showFirstColumn="0" showLastColumn="0" showRowStripes="1"`,
     ' showColumnStripes="0"/></table>',
@@ -330,7 +333,7 @@ export function xlsxTableParts(
       out.parts.push({
         name,
         contentType: OOXML_CONTENT_TYPES.table,
-        data: new TextEncoder().encode(`${XML_DECLARATION}\n${tableXml(t, ++id, sheet.filter)}\n`),
+        data: new TextEncoder().encode(`${XML_DECLARATION}\n${tableXml(t, ++id)}\n`),
       });
       rels.push({
         id: nextId(),
@@ -338,7 +341,7 @@ export function xlsxTableParts(
         target: `../tables/table${n}.xml`,
       });
     }
-    const fingerprint = tableFingerprint(tables);
+    const fingerprint = tableFingerprint(tables, xlsxHeld);
     out.sheets.push({
       tableParts: `<tableParts count="${rels.length}">${rels.map((r) => `<tablePart r:id="${r.id}"/>`).join('')}</tableParts>`,
       rels,

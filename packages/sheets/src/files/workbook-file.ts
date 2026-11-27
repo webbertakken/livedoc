@@ -46,6 +46,7 @@ import { fileFunctionsOf, functionsFromFile, type FileFunction } from './file-fu
 import { fileNamesOf, namesFromFile, type FileRangeName } from './file-names';
 import { fileProtectionsOf, protectionsFromFile, type FileProtection } from './file-protections';
 import { fileTablesOf, tablesFromFile, type FileTable } from './file-tables';
+import { tableFiltersFromFile } from './file-table-filters';
 import type { FileAt, KeptItem } from './kept-content';
 import type { NamedFunction } from '../named-functions';
 import { fileLinesOf, layoutFromLines, withFilteredRows, type FileLines } from './file-lines';
@@ -313,15 +314,18 @@ export function workbookFileOf(
       const validations = fileValidationRulesOf(sheet.layout, ctx);
       const charts = fileChartsOf(engine, sheet, locale);
       const protections = fileProtectionsOf(sheet.layout);
-      const tables = fileTablesOf(sheet.layout, (r, c) => cellText(sheet, r, c));
+      const dates = { locale: engine.locale, today: engine.today() };
+      const tables = fileTablesOf(sheet.layout, (r, c) => cellText(sheet, r, c), { ctx, dates });
       // Its pivot tables, and the cells their outputs cache (D604).
       const pivoted = filePivotsOf(engine, sheet, sheets, locale);
       cells.push(...pivoted.cells);
       // Its filter and views; the rows its filter hides marked on its lines (standard-mapping.md "Filters in the file").
-      const filters = fileFiltersOf(sheet.layout, new Set(sheet.layout.hiddenRows ?? []), ctx, {
-        locale: engine.locale,
-        today: engine.today(),
-      });
+      const filters = fileFiltersOf(
+        sheet.layout,
+        new Set(sheet.layout.hiddenRows ?? []),
+        ctx,
+        dates,
+      );
       const filtered = [...filteredOutRows(engine, sheet.id)].flatMap((id) => {
         const r = index.rowPos.get(id);
         return r === undefined ? [] : [r];
@@ -673,9 +677,13 @@ export function sheetsFromFile(
     if (pivots.refused > 0) losses.push({ k: 'pivot_changed', sheet: m.title });
     const objects = [...charts, ...pivots.pivots];
     const protections = protectionsFromFile(m.file.protections, m.layout, m.title, rand, losses);
-    const filters = filtersFromFile(m.file, m.layout, { sheet: m.title, rand, losses, ctx });
+    const making = { sheet: m.title, rand, losses, ctx };
+    const filters = filtersFromFile(m.file, m.layout, making);
+    // Each table's own filter's conditions, read now the sheet's formulas can be (D481).
+    const tables = tableFiltersFromFile(m.file.tables, m.layout, making);
     const layout = {
       ...m.layout,
+      ...(tables ? { tables } : {}),
       ...filters,
       ...(protections ? { protections } : {}),
       ...(rules ? { rules } : {}),

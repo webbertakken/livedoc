@@ -6,7 +6,8 @@ import { isAxisId } from '../ids';
 import { layoutIndex, posRangeOf } from '../layout';
 import { CELL_LIKE, sameName } from '../range-names';
 import { dropdownOptionsOk } from '../rules/rule-shape';
-import type { DropdownOption, IdRange, SheetLayout } from '../sheet';
+import { isFilterCondition } from '../filter';
+import type { DropdownOption, FilterCondition, IdRange, SheetLayout } from '../sheet';
 
 /** A column's type; a column with none is None (data-tools.md "Tables"). */
 export type TableColumnType =
@@ -44,6 +45,9 @@ export type SheetTable = IdRange & {
   total?: true;
   // The alternating colours banding that draws it, by id (D442).
   band?: string;
+  // Its own filter while on (data-tools.md "A table's filter", D481): each filtered column's condition by column id,
+  // over its header and data rows; absent while off.
+  filter?: Record<string, FilterCondition>;
 };
 
 /** The most tables a sheet holds (D440) and a table name's length (Google's). */
@@ -174,13 +178,33 @@ export function tableOverlaps(layout: SheetLayout, table: IdRange & { id: string
   });
 }
 
-const KEYS = new Set(['id', 'name', 'r1', 'c1', 'r2', 'c2', 'types', 'opts', 'total', 'band']);
+const KEYS = new Set([
+  'id',
+  'name',
+  'r1',
+  'c1',
+  'r2',
+  'c2',
+  'types',
+  'opts',
+  'total',
+  'band',
+  'filter',
+]);
 
 const isRecord = (v: unknown): v is Record<string, unknown> =>
   typeof v === 'object' && v !== null && !Array.isArray(v);
 
-/** Whether `v` is a table a write may store on this layout, with the id it names (the sheet's own rules only). */
-export function isSheetTable(v: unknown, id: string, layout: SheetLayout): v is SheetTable {
+/**
+ * Whether `v` is a table a write may store on this layout, with the id it names (the sheet's own rules only); `refsOk`
+ * checks a filter's Custom Formula Is references, as a write's are.
+ */
+export function isSheetTable(
+  v: unknown,
+  id: string,
+  layout: SheetLayout,
+  refsOk?: (refs: unknown[]) => boolean,
+): v is SheetTable {
   if (!isRecord(v) || v.id !== id || !isAxisId(id)) return false;
   if (!Object.keys(v).every((k) => KEYS.has(k))) return false;
   if (typeof v.name !== 'string' || tableNameProblem(v.name, layout, { except: id }) !== null)
@@ -206,6 +230,11 @@ export function isSheetTable(v: unknown, id: string, layout: SheetLayout): v is 
     const types: Record<string, unknown> = v.types ?? {};
     for (const [c, opts] of Object.entries(v.opts))
       if (types[c] !== 'dropdown' || !dropdownOptionsOk(opts)) return false;
+  }
+  if (v.filter !== undefined) {
+    if (!isRecord(v.filter)) return false;
+    for (const [c, cond] of Object.entries(v.filter))
+      if (!inside(c) || !isFilterCondition(cond, refsOk)) return false;
   }
   return (v.total === undefined || v.total === true) && (v.band === undefined || isAxisId(v.band));
 }

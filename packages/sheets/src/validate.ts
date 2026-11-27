@@ -44,7 +44,7 @@ import { applyLayoutChange, type LayoutChange } from './store-layout';
 import { rangeNameProblem } from './range-names';
 import { isSheetTable, tableOverlaps, TABLES_MAX, type SheetTable } from './tables/table';
 import { isFilterCondition } from './filter';
-import { isTableFilter, storedFilterClashes } from './tables/table-filter';
+import { storedFilterClashes } from './tables/table-filter';
 import { FILTER_VIEWS_MAX, isSheetFilterView } from './filter-views';
 import { SheetLimits } from './sheet-limits';
 import { WORKBOOK_COLS_MAX } from './workbook/workbook-limits';
@@ -91,19 +91,16 @@ const no = (error: SheetRejection, at?: string): Validation => ({
 });
 const OK: Validation = { ok: true };
 
-// A filter set over part of a table it did not already overlap so (D481); one stored before the rule stays (D480).
+// The sheet's filter set over a table it did not already overlap (D481); one stored before the rule stays (D480).
 function newClash(layout: SheetLayout, filter: IdRange): boolean {
   const was = new Set(storedFilterClashes(layout, layout.filter).map((t) => t.id));
   return storedFilterClashes(layout, filter).some((t) => !was.has(t.id));
 }
 
-// A table set over part of the sheet's filter, unless it already was, or the filter was its filter and follows it.
+// A table set over any of the sheet's filter's cells, unless it already was (D480, D481).
 function tableClash(layout: SheetLayout, table: SheetTable): boolean {
   const f = layout.filter;
-  const box = f ? posRangeOf(layout, f) : null;
-  if (!box) return false;
-  const old = layout.tables?.find((t) => t.id === table.id);
-  if (old && isTableFilter(layout, old, box)) return false;
+  if (!f) return false;
   const was = storedFilterClashes(layout, f).some((t) => t.id === table.id);
   const tables = [...(layout.tables ?? []).filter((t) => t.id !== table.id), table];
   const now = storedFilterClashes({ ...layout, tables }, f).some((t) => t.id === table.id);
@@ -316,6 +313,19 @@ function layoutChangeProblem(ch: LayoutChange, layout: SheetLayout): Validation 
       return isAxisId(ch.col) && (ch.cond === null || isFilterCondition(ch.cond, refsOk))
         ? OK
         : no('filter_invalid');
+    case 'tfilterCond': {
+      // A column of a table whose filter is on (data-tools.md "A table's filter").
+      const table = layout.tables?.find((t) => t.id === ch.id);
+      const p = table?.filter && posRangeOf(layout, table);
+      const c = layoutIndex(layout).colPos.get(ch.col);
+      return p &&
+        c !== undefined &&
+        c >= p.c1 &&
+        c <= p.c2 &&
+        (ch.cond === null || isFilterCondition(ch.cond, refsOk))
+        ? OK
+        : no('filter_invalid');
+    }
     case 'vrule':
       return typeof ch.id === 'string' &&
         isAxisId(ch.id) &&
@@ -342,7 +352,7 @@ function layoutChangeProblem(ch: LayoutChange, layout: SheetLayout): Validation 
       if (ch.table === null) return OK;
       const others = (layout.tables ?? []).filter((t) => t.id !== ch.id).length;
       return others < TABLES_MAX &&
-        isSheetTable(ch.table, ch.id, layout) &&
+        isSheetTable(ch.table, ch.id, layout, refsOk) &&
         !tableOverlaps(layout, ch.table)
         ? tableClash(layout, ch.table)
           ? no('filter_overlaps_table')

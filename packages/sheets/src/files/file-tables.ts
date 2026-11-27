@@ -22,6 +22,15 @@ import {
   type SheetTable,
   type TableColumnType,
 } from '../tables/table';
+import type { SheetsCtx } from '../formula/stored';
+import type { FileFilterColumn, FileFilterCondition, StandardIn } from './file-filters';
+import {
+  fileTableFilterOf,
+  readRecordedTableFilter,
+  recordedTableFilter,
+  tableFilterLines,
+  tableFilterWithRecord,
+} from './file-table-filters';
 import { validationFingerprint } from './validation-standard';
 import type { FileLoss } from './workbook-file';
 
@@ -34,10 +43,19 @@ export type FileTable = {
   // A Dropdown column's options, by its name.
   opts?: Record<string, DropdownOption[]>;
   total?: true;
+  // Its own filter while on: its columns by place, as the sheet's filter's (D481).
+  filter?: FileFilterColumn[];
 };
 
-/** A sheet's tables as a file holds them, in order; one whose cells are gone is left out. */
-export function fileTablesOf(layout: SheetLayout, text: CellText): FileTable[] | undefined {
+/**
+ * A sheet's tables as a file holds them, in order; one whose cells are gone is left out. `filters` renders a filter's
+ * Custom Formula Is and counts its dates.
+ */
+export function fileTablesOf(
+  layout: SheetLayout,
+  text: CellText,
+  filters: { ctx: SheetsCtx; dates: { locale: string; today: number } },
+): FileTable[] | undefined {
   const out: FileTable[] = [];
   for (const table of layout.tables ?? []) {
     const p = tableBox(layout, table);
@@ -53,6 +71,7 @@ export function fileTablesOf(layout: SheetLayout, text: CellText): FileTable[] |
     };
     const types = byName(table.types);
     const opts = byName(table.opts);
+    const filter = fileTableFilterOf(layout, table, filters.ctx, filters.dates);
     out.push({
       name: table.name,
       range: p,
@@ -60,6 +79,7 @@ export function fileTablesOf(layout: SheetLayout, text: CellText): FileTable[] |
       ...(types ? { types } : {}),
       ...(opts ? { opts } : {}),
       ...(table.total ? { total: true as const } : {}),
+      ...(filter ? { filter } : {}),
     });
   }
   return out.length ? out : undefined;
@@ -67,7 +87,9 @@ export function fileTablesOf(layout: SheetLayout, text: CellText): FileTable[] |
 
 /** LiveDoc's record of a sheet's tables: each table but its columns, and (ODF) the formulas that read them by cell. */
 export type TableRecord = {
-  tables: Omit<FileTable, 'columns'>[];
+  tables: (Omit<FileTable, 'columns' | 'filter'> & {
+    filter?: Record<string, FileFilterCondition>;
+  })[];
   refs?: Record<string, string>;
 };
 
@@ -76,13 +98,17 @@ export function tableRecordText(
   tables: readonly FileTable[],
   refs?: Readonly<Record<string, string>>,
 ): string {
-  const recorded = tables.map((t) => ({
-    name: t.name,
-    range: formatRange(t.range),
-    ...(t.types ? { types: t.types } : {}),
-    ...(t.opts ? { opts: t.opts } : {}),
-    ...(t.total ? { total: true } : {}),
-  }));
+  const recorded = tables.map((t) => {
+    const filter = recordedTableFilter(t);
+    return {
+      name: t.name,
+      range: formatRange(t.range),
+      ...(t.types ? { types: t.types } : {}),
+      ...(t.opts ? { opts: t.opts } : {}),
+      ...(t.total ? { total: true } : {}),
+      ...(filter ? { filter } : {}),
+    };
+  });
   return JSON.stringify({
     tables: recorded,
     ...(refs && Object.keys(refs).length ? { refs } : {}),
@@ -114,6 +140,9 @@ function recordedOf(raw: unknown): TableRecord['tables'][number] | null {
     if (raw.total !== true) return null;
     out.total = true;
   }
+  const filter = readRecordedTableFilter(raw.filter, range);
+  if (filter === null) return null;
+  if (filter) out.filter = filter;
   return out;
 }
 
@@ -138,15 +167,19 @@ export function readTableRecord(text: string): TableRecord | null {
 }
 
 /**
- * The fingerprint of a standard form: each table's formula name and range, a line, then (ODF) each recorded formula
- * cell's line as written.
+ * The fingerprint of a standard form (`held` how the format holds a filter's column): each table's formula name and
+ * range, a line, then its filter's filtered columns' lines, then (ODF) each recorded formula cell's line as written.
  */
 export const tableFingerprint = (
-  tables: readonly { name: string; range: GridRange }[],
+  tables: readonly { name: string; range: GridRange; filter?: FileFilterColumn[] }[],
+  held: StandardIn,
   refs: readonly string[] = [],
 ): string =>
   validationFingerprint([
-    ...tables.map((t) => `${tableFormulaName(t.name)} ${formatRange(t.range)}`),
+    ...tables.flatMap((t) => [
+      `${tableFormulaName(t.name)} ${formatRange(t.range)}`,
+      ...tableFilterLines(t, held),
+    ]),
     ...refs,
   ]);
 
@@ -154,6 +187,8 @@ export const tableFingerprint = (
 export type TablesFound = {
   standard: FileTable[];
   record?: { text: string; fingerprint: string | undefined };
+  // How the format holds a filter's column.
+  held: StandardIn;
   // A recorded formula cell's line (ODF) as the file holds it now; null when it holds no formula there.
   refLine?: (a1: string) => string | null;
 };
@@ -172,10 +207,16 @@ export function tablesFound(found: TablesFound): {
   if (record && record.tables.length === found.standard.length) {
     const cells = Object.keys(record.refs ?? {});
     const lines = cells.map((at) => found.refLine?.(at) ?? null);
-    const now = lines.every((l) => l !== null) ? tableFingerprint(found.standard, lines) : null;
+    const now = lines.every((l) => l !== null)
+      ? tableFingerprint(found.standard, found.held, lines)
+      : null;
     if (now !== null && now === found.record!.fingerprint)
       return {
-        tables: record.tables.map((t, i) => ({ ...t, columns: found.standard[i]!.columns })),
+        tables: record.tables.map(({ filter: recorded, ...t }, i) => {
+          const standard = found.standard[i]!;
+          const filter = tableFilterWithRecord(standard, recorded);
+          return { ...t, columns: standard.columns, ...(filter ? { filter } : {}) };
+        }),
         ...(record.refs ? { refs: record.refs } : {}),
         changed: false,
       };
@@ -274,6 +315,8 @@ function madeTable(
     name: t.name,
     ...box,
     ...(t.total ? { total: true as const } : {}),
+    // On, its conditions read once the sheet's formulas can be (tableFiltersFromFile).
+    ...(t.filter ? { filter: {} } : {}),
   };
   const types: Record<string, TableColumnType> = {};
   const opts: Record<string, DropdownOption[]> = {};

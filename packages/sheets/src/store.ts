@@ -460,6 +460,13 @@ function inverseLayout(before: SheetLayout, ch: LayoutChange, now: SheetLayout):
       return before.filter
         ? [{ k: 'filterCond', col: ch.col, cond: before.filter.conds[ch.col] ?? null }]
         : [{ k: 'filter', filter: null }];
+    case 'tfilterCond': {
+      // Undone alone, as it was made, so another's condition on another column stays.
+      const filter = before.tables?.find((t) => t.id === ch.id)?.filter;
+      return filter
+        ? [{ k: 'tfilterCond', id: ch.id, col: ch.col, cond: filter[ch.col] ?? null }]
+        : [];
+    }
   }
 }
 

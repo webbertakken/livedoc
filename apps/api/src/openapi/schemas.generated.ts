@@ -10158,6 +10158,38 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
       {
         "additionalProperties": false,
         "properties": {
+          "col": {
+            "type": "string"
+          },
+          "cond": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/FilterCondition"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "id": {
+            "type": "string"
+          },
+          "k": {
+            "const": "tfilterCond",
+            "type": "string"
+          }
+        },
+        "required": [
+          "k",
+          "id",
+          "col",
+          "cond"
+        ],
+        "type": "object"
+      },
+      {
+        "additionalProperties": false,
+        "properties": {
           "id": {
             "type": "string"
           },
@@ -16659,6 +16691,12 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
       },
       "c2": {
         "type": "string"
+      },
+      "filter": {
+        "additionalProperties": {
+          "$ref": "#/components/schemas/FilterCondition"
+        },
+        "type": "object"
       },
       "id": {
         "type": "string"

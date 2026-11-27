@@ -35,6 +35,8 @@ const SALES: SheetTable = {
   c2: 's0c1',
   total: true,
   types: { s0c1: 'number' },
+  // Its own filter on, no column filtered, as Convert to Table makes it (D481).
+  filter: {},
 };
 const sheetsWithSales = () =>
   makeSheets(

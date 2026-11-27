@@ -15,6 +15,13 @@ import {
   type FileTable,
 } from './file-tables';
 import type { FileLoss } from './workbook-file';
+import { xlsxHeld as held } from './xlsx-filters';
+import { book } from '../testing/book';
+
+const FILTERS = (() => {
+  const b = book({});
+  return { ctx: b.wb.ctxFor(b.sheets[0]!.id), dates: { locale: 'en-GB', today: 46000 } };
+})();
 
 let n = 11;
 const rand = () => (n = (n * 16807) % 2147483647) / 2147483647;
@@ -63,7 +70,7 @@ describe('a sheet’s tables as a file holds them', () => {
       r === layout.rows[1]
         ? ({ [item]: 'Item', [amount]: 'Amount' } as Record<string, string>)[c]
         : undefined;
-    expect(fileTablesOf(layout, text)).toEqual([
+    expect(fileTablesOf(layout, text, FILTERS)).toEqual([
       {
         name: 'My Sales',
         range: { r1: 1, c1: 1, r2: 5, c2: 3 },
@@ -73,7 +80,7 @@ describe('a sheet’s tables as a file holds them', () => {
         total: true,
       },
     ]);
-    expect(fileTablesOf(emptyLayout(rand, 3, 3), () => undefined)).toBeUndefined();
+    expect(fileTablesOf(emptyLayout(rand, 3, 3), () => undefined, FILTERS)).toBeUndefined();
   });
 });
 
@@ -113,17 +120,20 @@ describe('LiveDoc’s record of tables', () => {
     const recorded = { ...sales, name: 'Sales', types: { Item: 'text' as const } };
     const record = {
       text: tableRecordText([recorded]),
-      fingerprint: tableFingerprint([recorded]),
+      fingerprint: tableFingerprint([recorded], held),
     };
     const standard = [{ ...sales, columns: ['Item', 'Amount', 'Note'] }];
-    expect(tablesFound({ standard, record })).toEqual({
+    expect(tablesFound({ standard, record, held })).toEqual({
       tables: [{ ...recorded, columns: ['Item', 'Amount', 'Note'] }],
       changed: false,
     });
     // Another app moved the table: the standard form is read, the record dropped and named.
     const moved = [{ ...sales, range: { ...sales.range, r2: 9 } }];
-    expect(tablesFound({ standard: moved, record })).toEqual({ tables: moved, changed: true });
-    expect(tablesFound({ standard: moved })).toEqual({ tables: moved, changed: false });
+    expect(tablesFound({ standard: moved, record, held })).toEqual({
+      tables: moved,
+      changed: true,
+    });
+    expect(tablesFound({ standard: moved, held })).toEqual({ tables: moved, changed: false });
   });
 
   it('restores the formulas it recorded while each reads as written (ODF)', () => {
@@ -131,13 +141,18 @@ describe('LiveDoc’s record of tables', () => {
     const lines = { E2: 'E2 of:=[.$B$2]*2' } as Record<string, string>;
     const record = {
       text: tableRecordText([sales], refs),
-      fingerprint: tableFingerprint([sales], [lines.E2!]),
+      fingerprint: tableFingerprint([sales], held, [lines.E2!]),
     };
-    const kept = tablesFound({ standard: [sales], record, refLine: (at) => lines[at] ?? null });
+    const kept = tablesFound({
+      standard: [sales],
+      record,
+      held,
+      refLine: (at) => lines[at] ?? null,
+    });
     expect(kept).toEqual({ tables: [{ ...sales }], refs, changed: false });
-    const edited = tablesFound({ standard: [sales], record, refLine: () => 'E2 of:=1' });
+    const edited = tablesFound({ standard: [sales], record, held, refLine: () => 'E2 of:=1' });
     expect(edited).toEqual({ tables: [sales], changed: true });
-    const gone = tablesFound({ standard: [sales], record, refLine: () => null });
+    const gone = tablesFound({ standard: [sales], record, held, refLine: () => null });
     expect(gone.changed).toBe(true);
   });
 });

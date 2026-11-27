@@ -35,10 +35,12 @@ export function tablesAfterDelete(
     let rows = 0;
     for (let r = p.r1; r <= p.r2; r++) if (!goneRows.has(before.rows[r]!)) rows++;
     if (rows < (total ? 3 : 2)) return [];
-    const { types: _t, opts: _o, total: _total, ...rest } = t;
+    const { types: _t, opts: _o, total: _total, filter: _f, ...rest } = t;
     const keep = (id: string) => !goneCols.has(id) && ix.colPos.has(id);
     const types = pick(t.types, keep);
     const opts = pick(t.opts, keep);
+    // A deleted column's filter condition goes with it; the filter stays on.
+    const filter = t.filter && (pick(t.filter, keep) ?? {});
     return [
       {
         ...rest,
@@ -46,6 +48,7 @@ export function tablesAfterDelete(
         ...(types ? { types } : {}),
         ...(opts ? { opts } : {}),
         ...(total ? { total: true as const } : {}),
+        ...(filter ? { filter } : {}),
       },
     ];
   });

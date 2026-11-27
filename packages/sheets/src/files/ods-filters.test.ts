@@ -14,6 +14,7 @@ import { sheetsFromFile, type FileRead } from './workbook-file';
 import { writeWorkbook } from './write-workbook';
 import { workbookConversion } from './conversion';
 import { conversionLine } from './conversion-copy';
+import { filtersByPlace, twoTablesAndAFilter } from '../testing/table-filters';
 
 let n = 11;
 const rand = () => (n = (n * 16807) % 2147483647) / 2147483647;
@@ -173,23 +174,45 @@ describe('a filter view’s range in another app’s ODF', () => {
 });
 
 describe('a table’s filter in ODF', () => {
-  it('writes it in the table’s own database range and reads it back as the sheet’s filter (D481)', async () => {
-    const [sheet] = itemSheets({ s0c1: { op: 'gt', a: '2' } });
-    const table = { id: 'tbl001', name: 'Items', r1: 's0r0', c1: 's0c0', r2: 's0r3', c2: 's0c1' };
-    const sheets = [{ ...sheet!, layout: { ...sheet!.layout, tables: [table], filterViews: [] } }];
+  it('writes each table’s own in its database range beside the sheet’s, and reads them back (D481)', async () => {
+    const sheets = twoTablesAndAFilter();
     const text = decode(writeWorkbook(sheets, ods, 'Book', 'fods').data);
     expect(text).toContain(
-      `<table:database-range table:name="Items" table:target-range-address="'Data'.A1:'Data'.B4" table:contains-header="true" table:display-filter-buttons="true"><table:filter><table:filter-condition table:field-number="1" table:operator="&gt;" table:value="2"/></table:filter></table:database-range>`,
+      `<table:database-range table:name="Table1" table:target-range-address="'Data'.A1:'Data'.B4" table:contains-header="true" table:display-filter-buttons="true"><table:filter><table:filter-condition table:field-number="1" table:operator="=" table:value="2"><table:filter-set-item table:value="2"/></table:filter-condition></table:filter></table:database-range>`,
     );
-    expect(text).not.toContain('__Anonymous_Sheet_DB__');
-    for (const bytes of [text, text.replace(/ livedoc:filters="[^"]*"/, '')]) {
-      const read = await ok(readOds(encode(bytes)));
-      const [back] = opened(sheetsFromFile(read.file, 'en-GB', rand));
-      expect(byPlace(back!.layout, back!.layout.filter!.conds)).toEqual({
-        1: { op: 'gt', a: '2' },
-      });
-      expect(back!.layout.tables?.map((t) => t.name)).toEqual(['Items']);
-    }
+    expect(text).toContain(
+      `<table:database-range table:name="Table2" table:target-range-address="'Data'.D1:'Data'.E4" table:contains-header="true" table:display-filter-buttons="true"><table:filter><table:filter-condition table:field-number="0" table:operator="=" table:value="b">`,
+    );
+    expect(text).toContain(
+      `table:name="__Anonymous_Sheet_DB__0" table:target-range-address="'Data'.H1:'Data'.H4"`,
+    );
+    expect(text.match(/<table:table-row[^>]*table:visibility="filter"/g)).toHaveLength(2);
+    const want = filtersByPlace(sheets[0]!.layout);
+    const read = await ok(readOds(encode(text)));
+    const [back] = opened(sheetsFromFile(read.file, 'en-GB', rand));
+    expect(filtersByPlace(back!.layout)).toEqual(want);
+    // Without LiveDoc's records, LibreOffice's own forms read back the same, the colour apart.
+    const bare = text.replace(/ livedoc:(filters|tables)(-fingerprint)?="[^"]*"/g, '');
+    const [plain] = opened(sheetsFromFile((await ok(readOds(encode(bare)))).file, 'en-GB', rand));
+    expect(filtersByPlace(plain!.layout)).toEqual({
+      sheet: want.sheet,
+      tables: [
+        ['Table1', { 1: { values: ['2'] } }],
+        ['Table2', { 3: { values: ['b'] } }],
+      ],
+    });
+  });
+
+  it('writes a table whose filter is off without buttons, and reads it back off', async () => {
+    const [sheet] = twoTablesAndAFilter();
+    const { filter: _f, ...off } = sheet!.layout.tables![1]!;
+    const layout = { ...sheet!.layout, tables: [sheet!.layout.tables![0]!, off] };
+    const text = decode(writeWorkbook([{ ...sheet!, layout }], ods, 'Book', 'fods').data);
+    expect(text).toContain(
+      `<table:database-range table:name="Table2" table:target-range-address="'Data'.D1:'Data'.E4" table:contains-header="true"/>`,
+    );
+    const [back] = opened(sheetsFromFile((await ok(readOds(encode(text)))).file, 'en-GB', rand));
+    expect(back!.layout.tables!.map((t) => t.filter !== undefined)).toEqual([true, false]);
   });
 });
 

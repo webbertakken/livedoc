@@ -15,8 +15,6 @@ import { filterFingerprint, filterRecordText, filtersFound } from './filter-reco
 import type { StandardColumn, StandardOp, StandardTest } from './filter-standard';
 import { LIVEDOC_SPREADSHEET_NS } from './validation-standard';
 import type { FileLoss, FileSheet } from './workbook-file';
-import type { FileTable } from './file-tables';
-import { filterOverTables } from './xlsx-filters';
 
 const { table: TABLE } = ODF_NS;
 
@@ -79,17 +77,17 @@ const quoted = (sheet: string) => `'${sheet.replace(/'/g, "''")}'`;
 /** A sheet's filter as LibreOffice's anonymous database range (`index` its sheet's place); none without one. */
 export function odsFilterRange(sheet: FileSheet, index: number): string | null {
   const f = sheet.filter;
-  if (!f || odsFilterTable(sheet)) return null;
+  if (!f) return null;
   const at = quoted(sheet.name);
   const range = `${at}.${formatA1(f.range.r1, f.range.c1)}:${at}.${formatA1(f.range.r2, f.range.c2)}`;
-  const filter = odsFilterXml(f, f.range.c1);
+  const filter = odsFilterXml(f.cols, f.range.c1);
   const open = `<table:database-range table:name="__Anonymous_Sheet_DB__${index}" table:target-range-address="${escapeXmlAttribute(range)}" table:display-filter-buttons="true"`;
   return filter ? `${open}>${filter}</table:database-range>` : `${open}/>`;
 }
 
 /** A filter's `table:filter`, each column's place counted from `c1`; empty when no column has a form. */
-export function odsFilterXml(f: FileFilter, c1: number): string {
-  const conditions = f.cols.flatMap((x) => {
+export function odsFilterXml(cols: readonly FileFilterColumn[], c1: number): string {
+  const conditions = cols.flatMap((x) => {
     const std = x.std && odsHeld(x.std);
     return std ? columnConditions(x.c - c1, std) : [];
   });
@@ -100,24 +98,13 @@ export function odsFilterXml(f: FileFilter, c1: number): string {
       : `<table:filter><table:filter-and>${conditions.join('')}</table:filter-and></table:filter>`;
 }
 
-/** The table whose filter the sheet's filter is (D481): its `table:filter` goes in the table's database range. */
-export function odsFilterTable(sheet: FileSheet): FileTable | undefined {
-  const f = sheet.filter;
-  const tables = sheet.tables ?? [];
-  if (!f || filterOverTables(f.range, tables) !== 'table') return undefined;
-  return tables.find((t) => filterOverTables(f.range, [t]) === 'table');
-}
-
 /** A sheet's record of its filter as `table:table` attributes (`declared` when LiveDoc's namespace is already). */
 export function odsFilterRecordAttributes(sheet: FileSheet, declared: boolean): string {
   if (!sheet.filter) return '';
-  // A table's filter reads back over its database range, the table's rows.
-  const table = odsFilterTable(sheet);
-  const standard = table ? { ...sheet.filter, range: table.range } : sheet.filter;
   return (
     (declared ? '' : ` xmlns:livedoc="${LIVEDOC_SPREADSHEET_NS}"`) +
     ` livedoc:filters="${escapeXmlAttribute(filterRecordText(sheet.filter))}"` +
-    ` livedoc:filters-fingerprint="${filterFingerprint(standard, [], odsHeld)}"`
+    ` livedoc:filters-fingerprint="${filterFingerprint(sheet.filter, [], odsHeld)}"`
   );
 }
 

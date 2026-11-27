@@ -25,7 +25,6 @@ import { ruleRectangles } from './rules/rule-ranges';
 import { applyOutlineChange, outlineAfterDelete, outlineInPlace } from './outline-store';
 import { objectsWith, type SheetObject } from './objects/sheet-objects';
 import { objectsAfterDelete } from './objects/objects-after-delete';
-import { filterFollowing } from './tables/table-filter';
 
 export type Axis = 'r' | 'c';
 
@@ -48,6 +47,8 @@ export type LayoutChange =
   | { k: 'merges'; merges: IdRange[] }
   | { k: 'filter'; filter: SheetFilter | null }
   | { k: 'filterCond'; col: string; cond: FilterCondition | null }
+  // A table's filter's condition for one column (data-tools.md "A table's filter"), while its filter is on.
+  | { k: 'tfilterCond'; id: string; col: string; cond: FilterCondition | null }
   // A filter view set whole (in place, else last) or removed (null), by id (data-tools.md "Filters, filter views and
   // slicers").
   | { k: 'fview'; id: string; view: SheetFilterView | null }
@@ -434,9 +435,7 @@ export function applyLayoutChange(layout: SheetLayout, ch: LayoutChange): SheetL
           : at >= 0
             ? list.map((x, i) => (i === at ? ch.table! : x))
             : [...list, ch.table];
-      // A table's filter follows its table (data-tools.md, D481).
-      const filter = filterFollowing(layout, list[at], ch.table);
-      return clean({ ...layout, tables: next.length ? next : undefined, filter });
+      return clean({ ...layout, tables: next.length ? next : undefined });
     }
     case 'band': {
       const list = layout.bands ?? [];
@@ -533,6 +532,17 @@ export function applyLayoutChange(layout: SheetLayout, ch: LayoutChange): SheetL
       if (ch.cond === null) delete conds[ch.col];
       else conds[ch.col] = ch.cond;
       return { ...layout, filter: { ...layout.filter, conds } };
+    }
+    case 'tfilterCond': {
+      const table = layout.tables?.find((t) => t.id === ch.id);
+      if (!table?.filter) return layout;
+      const filter = { ...table.filter };
+      if (ch.cond === null) delete filter[ch.col];
+      else filter[ch.col] = ch.cond;
+      return {
+        ...layout,
+        tables: layout.tables!.map((t) => (t === table ? { ...t, filter } : t)),
+      };
     }
   }
 }

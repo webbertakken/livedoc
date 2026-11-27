@@ -45,7 +45,8 @@ export type StandardIn = (std: StandardColumn) => StandardColumn | null;
 
 type Placed = { range: GridRange; colPos: ReadonlyMap<string, number> };
 
-function columnsOf(
+/** A filter's conditions as a file holds them: each column in `placed.range` by its place, in order. */
+export function fileFilterColumnsOf(
   conds: Readonly<Record<string, FilterCondition>>,
   placed: Placed,
   ctx: SheetsCtx,
@@ -87,7 +88,7 @@ export function fileFiltersOf(
   const f = layout.filter;
   const range = f && rangeOf(f);
   if (f && range) {
-    const cols = columnsOf(f.conds, { range, colPos }, ctx, dates);
+    const cols = fileFilterColumnsOf(f.conds, { range, colPos }, ctx, dates);
     const byHand: number[] = [];
     for (let r = range.r1 + 1; r <= range.r2; r++) if (hidden.has(layout.rows[r]!)) byHand.push(r);
     out.filter = { range, cols, ...(byHand.length ? { hidden: byHand } : {}) };
@@ -104,7 +105,7 @@ export function fileFiltersOf(
         name: v.title,
         key: v.id,
         range: at,
-        cols: columnsOf(v.conds, { range: at, colPos }, ctx, dates),
+        cols: fileFilterColumnsOf(v.conds, { range: at, colPos }, ctx, dates),
         ...(sort.length ? { sort } : {}),
       },
     ];
@@ -115,7 +116,9 @@ export function fileFiltersOf(
 
 // ------------------------------------------------------------------------------------------------ the file's to model
 
-type Making = { sheet: string; rand: Rand; losses: FileLoss[]; ctx: SheetsCtx };
+/** What a file's filters are made with: the sheet's name, its id maker, the read's losses, its formulas' context. */
+export type FilterMaking = { sheet: string; rand: Rand; losses: FileLoss[]; ctx: SheetsCtx };
+type Making = FilterMaking;
 
 // A column's condition as the sheet holds it: the record's, else the standard column's; null when it has none.
 function conditionOf(x: FileFilterColumn, ctx: SheetsCtx): FilterCondition | null {
@@ -128,8 +131,8 @@ function conditionOf(x: FileFilterColumn, ctx: SheetsCtx): FilterCondition | nul
   return isFilterCondition(made) ? made : null;
 }
 
-// Each column's condition by column id; a column LiveDoc cannot read is named at its header (`filter_unread`).
-function condsOf(
+/** Each column's condition by column id; a column LiveDoc cannot read is named at its header (`filter_unread`). */
+export function filterCondsOf(
   cols: readonly FileFilterColumn[],
   range: GridRange,
   layout: SheetLayout,
@@ -171,7 +174,7 @@ export function filtersFromFile(
   const range = f && onGrid(f.range, layout);
   if (f && range) {
     const ids = idRangeOf(layout, range.r1, range.c1, range.r2, range.c2)!;
-    out.filter = { ...ids, conds: condsOf(f.cols, range, layout, making) };
+    out.filter = { ...ids, conds: filterCondsOf(f.cols, range, layout, making) };
     // One over part of a table stays, as D480's fallback, logged once.
     if (storedFilterClashes(layout, ids).length > 0)
       making.losses.push({ k: 'filter_beside_table', sheet: making.sheet });
@@ -201,7 +204,7 @@ export function filtersFromFile(
       id: id!,
       title: title.slice(0, FILTER_VIEW_TITLE_MAX),
       ...idRangeOf(layout, at.r1, at.c1, at.r2, at.c2)!,
-      conds: condsOf(v.cols, at, layout, making),
+      conds: filterCondsOf(v.cols, at, layout, making),
       ...(sort.length ? { sort } : {}),
     });
   }
