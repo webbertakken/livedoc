@@ -159,13 +159,15 @@ export function pasteClip(
 }
 
 // Cut cells pasted: they move (no shift), their old place empties, and every formula on the tab that read a moved
-// cell (or a range wholly inside the moved block) reads it at its new place.
+// cell (or a range wholly inside the moved block) reads it at its new place; one reading a table in `tablesMoved`
+// (moving with the cut, D454) reads its columns where they land, on this sheet.
 export function pasteCut(
   wb: Workbook,
   sheetId: string,
   at: { r: number; c: number },
   clip: SheetClip,
   rand: Rand = Math.random,
+  tablesMoved: ReadonlySet<string> = new Set(),
 ): PasteResult | null {
   const src = wb.sheet(clip.from.sheetId);
   const dest = wb.sheet(sheetId);
@@ -179,8 +181,25 @@ export function pasteCut(
       const b = { r: g.rowIds[at.r + i], c: g.colIds[at.c + j] };
       if (a.r && a.c && b.r && b.c) moved.set(cellKey(a.r, a.c), { r: b.r, c: b.c });
     }
+  // Old column ids -> new, for a moving table's column references.
+  const colMoved = new Map<string, string>();
+  for (let j = 0; j < clip.cols; j++) {
+    const a = src.layout.cols[clip.from.c + j];
+    const b = g.colIds[at.c + j];
+    if (a && b) colMoved.set(a, b);
+  }
   const follow = (ref: StoredRef, ownId: string): StoredRef => {
     const target = ref.s ?? (ref.st === undefined ? ownId : undefined);
+    if (ref.t !== undefined) {
+      if (target !== clip.from.sheetId || !tablesMoved.has(ref.t)) return ref;
+      const out: StoredRef = { ...ref };
+      if (ref.tc1 !== undefined) out.tc1 = colMoved.get(ref.tc1) ?? ref.tc1;
+      if (ref.tc2 !== undefined) out.tc2 = colMoved.get(ref.tc2) ?? ref.tc2;
+      if (sheetId === clip.from.sheetId) return out;
+      if (sheetId === ownId) delete out.s;
+      else out.s = sheetId;
+      return out;
+    }
     if (target !== clip.from.sheetId || ref.r1 === undefined || ref.c1 === undefined) return ref;
     const a = moved.get(cellKey(ref.r1, ref.c1));
     const isRange = ref.r2 !== undefined || ref.c2 !== undefined;
