@@ -70,7 +70,8 @@ export function typeInto(
   const ids = sheet && idsAt(sheet, pos.r, pos.c);
   if (!sheet || !ids) return null;
   const format = sheet.cells.get(cellKey(ids.r, ids.c))?.format;
-  const read = readTypedInput(text, wb.locale, wb.ctxFor(sheetId), format?.nf === 'text');
+  const ctx = { ...wb.ctxFor(sheetId), here: pos };
+  const read = readTypedInput(text, wb.locale, ctx, format?.nf === 'text');
   if (read.kind === 'invalid') return { ok: false, read };
   const change: CellChange = { ...ids, i: read.kind === 'clear' ? null : read.input };
   if (read.kind === 'value' && read.hint && (!format?.nf || format.nf === 'auto'))

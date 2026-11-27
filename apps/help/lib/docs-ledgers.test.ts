@@ -56,7 +56,77 @@ function defaultIds(category: string): string[] {
     });
 }
 
+// The categories whose defaults several lanes write at once: every `- **D22**` line in any of their files, Defaults
+// section or not, so a default written anywhere else still clashes.
+const SHARED_LEDGERS = ['029-sheets', '035-pdf-documents'];
+const DEFAULT_LINE = /^- \*\*(D\d+)\*\* /gm;
+
+function defaultLines(category: string): string[] {
+  return readdirSync(join(SPECS, category))
+    .filter((entry) => entry.endsWith('.md'))
+    .flatMap((entry) => {
+      const text = readFileSync(join(SPECS, category, entry), 'utf8');
+      return [...text.matchAll(DEFAULT_LINE)].map((m) => m[1]!);
+    });
+}
+
+// A category README's blocks of default ids, one lane each: `- **D440-D599**: ...`.
+const BLOCK = /^- \*\*D(\d+)-D(\d+)\*\*/gm;
+// Ids below it were given before blocks were (029-sheets README "Default ids").
+const FIRST_BLOCKED = 440;
+
+function blocksOf(readme: string): [number, number][] {
+  return [...readme.matchAll(BLOCK)].map((m) => [Number(m[1]), Number(m[2])]);
+}
+
+/** The ids at or past FIRST_BLOCKED in no block, and the blocks that overlap another. */
+function blockProblems(ids: readonly string[], blocks: readonly [number, number][]): string[] {
+  const out: string[] = [];
+  for (const id of ids) {
+    const n = Number(id.slice(1));
+    if (n >= FIRST_BLOCKED && !blocks.some(([a, b]) => n >= a && n <= b))
+      out.push(`${id} is in no block`);
+  }
+  blocks.forEach(([a, b], i) => {
+    if (a > b) out.push(`D${a}-D${b} runs backwards`);
+    for (const [c, d] of blocks.slice(i + 1))
+      if (a <= d && c <= b) out.push(`D${a}-D${b} overlaps D${c}-D${d}`);
+  });
+  return out;
+}
+
 describe('docs ledgers and indexes', () => {
+  it('give every default line of the shared ledgers its own id, wherever in the category it is', () => {
+    expect(
+      SHARED_LEDGERS.flatMap((c) => duplicates(defaultLines(c)).map((d) => `${c}: ${d}`)),
+    ).toEqual([]);
+  });
+
+  it("keep each new 029-sheets default inside a lane's block, the blocks apart", () => {
+    const readme = readFileSync(join(SPECS, '029-sheets', 'README.md'), 'utf8');
+    const blocks = blocksOf(readme);
+    expect(blocks.length).toBeGreaterThan(1);
+    expect(blockProblems(defaultLines('029-sheets'), blocks)).toEqual([]);
+  });
+
+  it('finds an id outside every block, and blocks that overlap or run backwards', () => {
+    expect(blocksOf('- **D440-D599**: a\n- **D600-D699**: b')).toEqual([
+      [440, 599],
+      [600, 699],
+    ]);
+    expect(blockProblems(['D12', 'D450', 'D700'], [[440, 599]])).toEqual(['D700 is in no block']);
+    expect(
+      blockProblems(
+        [],
+        [
+          [440, 599],
+          [500, 650],
+          [9, 1],
+        ],
+      ),
+    ).toEqual(['D440-D599 overlaps D500-D650', 'D9-D1 runs backwards']);
+  });
+
   it('give every default in a spec category its own id', () => {
     expect(categories().flatMap((c) => duplicates(defaultIds(c)).map((d) => `${c}: ${d}`))).toEqual(
       [],

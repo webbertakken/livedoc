@@ -1,6 +1,7 @@
 // The sheet model (docs/specs/029-sheets/sheet-store.md "What a sheet is").
 // Cells are keyed by row id and column id, never by position: a row's place is only its index in the layout.
 import type { Protection } from './protection';
+import type { SheetTable } from './tables/table';
 import { makeAxisIds, type Rand } from './ids';
 import { SHEET_COLS_NEW, SHEET_ROWS_NEW, SHEET_TITLE_MAX } from './limits';
 import { CellMap } from './cells/cell-map';
@@ -26,6 +27,13 @@ export type StoredRef = {
   // A reference to a sheet by title (`st`) keeps positions, as there was no layout to take ids from:
   // [r1, c1, r2, c2], -1 where a part is absent.
   p?: [number, number, number, number];
+  // A table reference (formulas.md "Table references"): the table by id (on sheet `s`, else the formula's own), its
+  // columns from `tc1` to `tc2` (absent: every column; `tc1` alone: one), and its parts (TableArea bits; absent:
+  // the data rows).
+  t?: string;
+  tc1?: string;
+  tc2?: string;
+  ta?: number;
 };
 
 // A formula as stored: its text with each reference replaced by `@<index>` into `r`.
@@ -229,6 +237,8 @@ export type SheetLayout = {
   names?: RangeName[];
   // Protected ranges and the protected sheet (data-tools.md "Protected ranges"), each by id.
   protections?: Protection[];
+  // Tables (data-tools.md "Tables"), none overlapping another.
+  tables?: SheetTable[];
   // Validation rules and format rules (data-validation.md, conditional-formatting.md); format rules in list order.
   rules?: ValidationRule[];
   formatRules?: FormatRule[];

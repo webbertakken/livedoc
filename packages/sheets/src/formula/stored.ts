@@ -8,10 +8,25 @@ import type { SheetLayout, StoredFormula, StoredRef } from '../sheet';
 import type { A1Ref, Node } from './ast';
 import type { NamedFunctionDef } from '../named-functions';
 import { parseFormula, type ParseFailure } from './parse';
-import { refsOf } from './ast';
+import { declaredNamesOf, namesOf, refsOf, tableRefsOf } from './ast';
+import {
+  tableAt,
+  tableColumnNames,
+  tableFormulaName,
+  type CellText,
+  type SheetTable,
+} from '../tables/table';
+import {
+  formatTableRef,
+  tableAreaCols,
+  tableAreaRows,
+  TableArea,
+  type TableSpec,
+} from '../tables/table-ref';
 import { tokenize } from './tokens';
 
-export type SheetHandle = { id: string; title: string; layout: SheetLayout };
+// `text`: a cell's text as entered, for a table's column names (none: every column is `Column N`).
+export type SheetHandle = { id: string; title: string; layout: SheetLayout; text?: CellText };
 
 // Where a formula lives and the sheets it can name (the tab's).
 export type SheetsCtx = {
@@ -22,6 +37,12 @@ export type SheetsCtx = {
   name?(name: string): PosRef | null;
   // A named function by name (formulas.md "Named functions"): the spreadsheet's, null when it has none of that name.
   fn?(name: string): NamedFunctionDef | null;
+  // A table by name as formulas write it (formulas.md "Table references"): the formula's own sheet's, else the first
+  // other sheet's; null when none has it.
+  table?(name: string): { sheet: SheetHandle; table: SheetTable } | null;
+  // The formula's own cell (positions), when known: a table reference naming no table (`[@Amount]`) reads the table
+  // holding it.
+  here?: { r: number; c: number };
   // The characters a typed input may hold: the sheet's kind's (SheetLimits), a Plan Sheet's by default.
   inputMax?: number;
 };
@@ -108,7 +129,8 @@ function encodeRef(pos: PosRef, ctx: SheetsCtx): StoredRef | null {
 // Ids to positions in the target's current layout; null when the reference reads #REF! (its sheet is gone or a
 // cell it names was deleted). A range with one corner gone is null too: deleting rows shrinks ranges in the
 // write itself (store.ts), so a stored range never keeps a dead corner on its own sheet.
-export function resolveRef(ref: StoredRef, ctx: SheetsCtx): PosRef | null {
+export function resolveRef(ref: StoredRef, ctx: SheetsCtx, row?: number): PosRef | null {
+  if (ref.t !== undefined) return resolveTableRef(ref, ctx, row);
   const base = {
     a: ref.a ?? 0,
     ...(ref.open ? { open: ref.open } : {}),
@@ -144,6 +166,89 @@ export function resolveRef(ref: StoredRef, ctx: SheetsCtx): PosRef | null {
   return out;
 }
 
+// The sheet and table a table reference reads, or null when either is gone.
+function tableHome(
+  ref: StoredRef,
+  ctx: SheetsCtx,
+): { sheet: SheetHandle; table: SheetTable } | null {
+  const sheet = ref.s === undefined || ref.s === ctx.own.id ? ctx.own : ctx.byId(ref.s);
+  const table = sheet?.layout.tables?.find((t) => t.id === ref.t);
+  return sheet && table ? { sheet, table } : null;
+}
+
+// A table reference's cells (formulas.md "Table references"), absolute; `row` the formula's own, for this row.
+// Null when it reads none (#REF!, or #VALUE! for this row off the table's data rows).
+function resolveTableRef(ref: StoredRef, ctx: SheetsCtx, row?: number): PosRef | null {
+  const home = tableHome(ref, ctx);
+  if (!home) return null;
+  const { layout } = home.sheet;
+  const area = ref.ta ?? TableArea.data;
+  const rows = tableAreaRows(layout, home.table, area, row);
+  const cols = tableAreaCols(layout, home.table, ref.tc1, ref.tc2);
+  if (!rows || !cols) return null;
+  const sheet = home.sheet.id === ctx.own.id ? null : { id: home.sheet.id };
+  if (rows.r1 === rows.r2 && cols.c1 === cols.c2 && area === TableArea.thisRow)
+    return { sheet, r1: rows.r1, c1: cols.c1, a: 3 };
+  return { sheet, r1: rows.r1, c1: cols.c1, r2: rows.r2, c2: cols.c2, a: 15 };
+}
+
+/** Why a table reference reads no cells: this row off the table's data rows is #VALUE!, anything else #REF!. */
+export function tableRefError(ref: StoredRef, ctx: SheetsCtx): '#VALUE!' | '#REF!' {
+  return ref.ta === TableArea.thisRow && tableHome(ref, ctx) ? '#VALUE!' : '#REF!';
+}
+
+/**
+ * A table reference as typed to its stored form, by the table's and its columns' ids; `at` the formula's cell, for
+ * a reference naming no table (`[@Amount]`). Null when no table or column of those names is there.
+ */
+export function encodeTableSpec(
+  spec: TableSpec,
+  ctx: SheetsCtx,
+  at?: { r: number; c: number },
+): StoredRef | null {
+  let home: { sheet: SheetHandle; table: SheetTable } | null = null;
+  if (spec.table !== null) home = ctx.table?.(spec.table) ?? null;
+  else if (at) {
+    const table = tableAt(ctx.own.layout, at.r, at.c);
+    home = table && { sheet: ctx.own, table };
+  }
+  if (!home) return null;
+  const out: StoredRef = { t: home.table.id };
+  if (home.sheet.id !== ctx.own.id) out.s = home.sheet.id;
+  if (spec.area !== TableArea.data) out.ta = spec.area;
+  if (!spec.cols) return out;
+  const { layout } = home.sheet;
+  const names = tableColumnNames(layout, home.table, home.sheet.text ?? (() => undefined));
+  const first = tableAreaCols(layout, home.table)!.c1;
+  const idOf = (name: string) => {
+    const i = names.findIndex((n) => n.toLowerCase() === name.toLowerCase());
+    return i < 0 ? undefined : layout.cols[first + i];
+  };
+  const c1 = idOf(spec.cols[0]);
+  const c2 = idOf(spec.cols[1]);
+  if (c1 === undefined || c2 === undefined) return null;
+  out.tc1 = c1;
+  if (c2 !== c1) out.tc2 = c2;
+  return out;
+}
+
+// A table reference's text from the table's and its columns' names now; null when the table or a column is gone.
+function formatStoredTableRef(ref: StoredRef, ctx: SheetsCtx): string | null {
+  const home = tableHome(ref, ctx);
+  if (!home) return null;
+  const { layout } = home.sheet;
+  const name = tableFormulaName(home.table.name);
+  const area = ref.ta ?? TableArea.data;
+  if (ref.tc1 === undefined) return formatTableRef(name, null, area);
+  const cols = tableAreaCols(layout, home.table, ref.tc1, ref.tc2);
+  if (!cols) return null;
+  const all = tableAreaCols(layout, home.table)!;
+  const names = tableColumnNames(layout, home.table, home.sheet.text ?? (() => undefined));
+  const ix = layoutIndex(layout);
+  const nameOf = (id: string) => names[ix.colPos.get(id)! - all.c1]!;
+  return formatTableRef(name, [nameOf(ref.tc1), nameOf(ref.tc2 ?? ref.tc1)], area);
+}
+
 function partText(r: number | undefined, c: number | undefined, absR: boolean, absC: boolean) {
   return `${c === undefined ? '' : `${absC ? '$' : ''}${columnLetters(c)}`}${
     r === undefined ? '' : `${absR ? '$' : ''}${r + 1}`
@@ -169,24 +274,46 @@ type CompileResult =
   { ok: true; formula: StoredFormula; ast: Node } | { ok: false; reason: ParseFailure; at: number };
 
 // A typed formula (`=...`) to its stored form, against the tab's sheets.
+// A table's name alone (`=ROWS(Sales)`), its data rows: each name in a tree a table of the workbook has, but a LET or
+// LAMBDA name.
+function tableNamesOf(ast: Node, ctx: SheetsCtx) {
+  if (!ctx.table) return [];
+  const declared = declaredNamesOf(ast);
+  return namesOf(ast)
+    .filter((x) => !declared.has(x.v) && ctx.table!(x.v))
+    .map((x) => ({
+      start: x.start,
+      end: x.end,
+      spec: { table: x.v, cols: null, area: TableArea.data },
+    }));
+}
+
 export function compileFormula(text: string, ctx: SheetsCtx): CompileResult {
   const parsed = parseFormula(text);
   if (!parsed.ok) return parsed;
-  const refs = refsOf(parsed.ast);
+  const refs = [
+    ...refsOf(parsed.ast).map((ref) => ({ start: ref.start, end: ref.end, ref })),
+    ...tableRefsOf(parsed.ast).map((x) => ({ start: x.start, end: x.end, spec: x.spec })),
+    ...tableNamesOf(parsed.ast, ctx),
+  ].sort((x, y) => x.start - y.start);
   const body = text.startsWith('=') ? 1 : 0;
   let t = '';
   let at = body;
   const r: StoredRef[] = [];
-  for (const ref of refs) {
-    t += text.slice(at, ref.start);
-    const stored = encodeRef(a1ToPos(ref, ctx), ctx);
+  for (const item of refs) {
+    t += text.slice(at, item.start);
+    // A table reference naming no table there is kept as typed, read by name when one is.
+    const stored =
+      'spec' in item
+        ? encodeTableSpec(item.spec, ctx, ctx.here)
+        : encodeRef(a1ToPos(item.ref, ctx), ctx);
     if (stored) {
       t += `@${r.length}`;
       r.push(stored);
     } else {
-      t += REF_ERROR;
+      t += 'spec' in item ? text.slice(item.start, item.end) : REF_ERROR;
     }
-    at = ref.end;
+    at = item.end;
   }
   t += text.slice(at);
   return { ok: true, formula: { t, r }, ast: parsed.ast };
@@ -198,6 +325,10 @@ export function renderFormula(stored: StoredFormula, ctx: SheetsCtx): string {
   for (const tok of tokenize(stored.t, 0, true)) {
     if (tok.k === 'stored') {
       const ref = stored.r[Number(tok.v)];
+      if (ref?.t !== undefined) {
+        out += formatStoredTableRef(ref, ctx) ?? REF_ERROR;
+        continue;
+      }
       const pos = ref ? resolveRef(ref, ctx) : null;
       out += pos ? formatPosRef(pos, ctx) : REF_ERROR;
     } else {
@@ -205,6 +336,11 @@ export function renderFormula(stored: StoredFormula, ctx: SheetsCtx): string {
     }
   }
   return out;
+}
+
+/** Whether a stored formula keeps a table reference as typed: one naming no table there when it was read. */
+export function readsUnknownTable(stored: StoredFormula): boolean {
+  return tokenize(stored.t, 0, true).some((tok) => tok.k === 'table');
 }
 
 // Trees by template text: a formula's shape (docs/specs/029-sheets/performance.md "Held in memory"). Formulas of
@@ -277,6 +413,13 @@ export function shiftForCopy(
   to: SheetsCtx = from,
 ): StoredFormula {
   return mapFormulaRefs(stored, (ref) => {
+    // A table reference reads the same table wherever the formula goes.
+    if (ref.t !== undefined) {
+      const { s: _s, ...rest } = ref;
+      const s = ref.s ?? from.own.id;
+      if (s === to.own.id) return ref.s === undefined ? ref : rest;
+      return ref.s === undefined ? { ...rest, s } : ref;
+    }
     const pos = resolveRef(ref, from);
     if (!pos) return null;
     const a = pos.a;

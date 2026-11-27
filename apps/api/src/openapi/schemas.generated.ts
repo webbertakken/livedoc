@@ -10255,6 +10255,34 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
       {
         "additionalProperties": false,
         "properties": {
+          "id": {
+            "type": "string"
+          },
+          "k": {
+            "const": "table",
+            "type": "string"
+          },
+          "table": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SheetTable"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "k",
+          "id",
+          "table"
+        ],
+        "type": "object"
+      },
+      {
+        "additionalProperties": false,
+        "properties": {
           "band": {
             "anyOf": [
               {
@@ -15905,6 +15933,12 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
       },
       "tabColour": {
         "type": "string"
+      },
+      "tables": {
+        "items": {
+          "$ref": "#/components/schemas/SheetTable"
+        },
+        "type": "array"
       }
     },
     "required": [
@@ -16060,6 +16094,60 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
       "reverted",
       "kept",
       "lint"
+    ],
+    "type": "object"
+  },
+  "SheetTable": {
+    "additionalProperties": false,
+    "properties": {
+      "band": {
+        "type": "string"
+      },
+      "c1": {
+        "type": "string"
+      },
+      "c2": {
+        "type": "string"
+      },
+      "id": {
+        "type": "string"
+      },
+      "name": {
+        "type": "string"
+      },
+      "opts": {
+        "additionalProperties": {
+          "items": {
+            "$ref": "#/components/schemas/DropdownOption"
+          },
+          "type": "array"
+        },
+        "type": "object"
+      },
+      "r1": {
+        "type": "string"
+      },
+      "r2": {
+        "type": "string"
+      },
+      "total": {
+        "const": true,
+        "type": "boolean"
+      },
+      "types": {
+        "additionalProperties": {
+          "$ref": "#/components/schemas/TableColumnType"
+        },
+        "type": "object"
+      }
+    },
+    "required": [
+      "c1",
+      "c2",
+      "id",
+      "name",
+      "r1",
+      "r2"
     ],
     "type": "object"
   },
@@ -16711,6 +16799,18 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
         "type": "boolean"
       },
       "st": {
+        "type": "string"
+      },
+      "t": {
+        "type": "string"
+      },
+      "ta": {
+        "type": "number"
+      },
+      "tc1": {
+        "type": "string"
+      },
+      "tc2": {
         "type": "string"
       }
     },
@@ -17463,6 +17563,21 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
       }
     },
     "type": "object"
+  },
+  "TableColumnType": {
+    "description": "A column's type; a column with none is None (data-tools.md \"Tables\").",
+    "enum": [
+      "text",
+      "number",
+      "percent",
+      "currency",
+      "date",
+      "time",
+      "dateTime",
+      "dropdown",
+      "checkbox"
+    ],
+    "type": "string"
   },
   "TableElement": {
     "additionalProperties": false,

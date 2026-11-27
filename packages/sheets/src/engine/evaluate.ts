@@ -8,7 +8,8 @@ import { budgetCalls, callLambda, plural } from '../formula/lambda';
 import { NAMED_FUNCTION_DEPTH_MAX, type NamedFunctionDef } from '../named-functions';
 import { liftedCall } from '../formula/lifted-parameters';
 import { FUNCTIONS } from '../formula/registry';
-import { resolveRef } from '../formula/stored';
+import { encodeTableSpec, resolveRef, tableRefError } from '../formula/stored';
+import { TableArea } from '../tables/table-ref';
 import { arrayFrame, implicit, posToRange, rectangleOf } from './refs';
 import { err, isArray, isError, type Value } from '../formula/values';
 import { binaryOperation, unaryOperation, type UnaryOperator } from '../formula/operators';
@@ -155,18 +156,32 @@ export function evaluate(node: Node, refs: readonly StoredRef[], f: Frame): Eval
       const pos = f.ctx.name?.(node.v);
       const range = pos ? posToRange(pos, f) : null;
       if (range) return { ref: range };
+      // A table's name alone, typed before the table was made: its data rows.
+      const table = encodeTableSpec({ table: node.v, cols: null, area: TableArea.data }, f.ctx);
+      const rows = table && resolveRef(table, f.ctx);
+      const read = rows ? posToRange(rows, f) : null;
+      if (read) return { ref: read };
       const named = f.ctx.fn?.(node.v);
       return named ? namedLambda(named, f) : err('#NAME?', `Unknown name ${node.v}`);
     }
     case 'stored': {
       const ref = refs[node.i];
-      const pos = ref ? resolveRef(ref, f.ctx) : null;
+      const pos = ref ? resolveRef(ref, f.ctx, f.row) : null;
       const range = pos ? posToRange(pos, f) : null;
       if (range) return { ref: range };
+      if (ref?.t !== undefined) return err(tableRefError(ref, f.ctx));
       // A sheet named by a title no sheet has: Google's words (formulas.md "Other sheets").
       return pos?.sheet && 'title' in pos.sheet
         ? err('#REF!', `Unresolved sheet name '${pos.sheet.title}'.`)
         : err('#REF!');
+    }
+    // A table reference kept as typed, its table read by name now (formulas.md "Table references").
+    case 'table': {
+      const ref = encodeTableSpec(node.spec, f.ctx, { r: f.row, c: f.col });
+      if (!ref) return err('#REF!', `Unknown table ${node.spec.table ?? ''}`.trimEnd());
+      const pos = resolveRef(ref, f.ctx, f.row);
+      const range = pos ? posToRange(pos, f) : null;
+      return range ? { ref: range } : err(tableRefError(ref, f.ctx));
     }
     // A typed A1 reference never reaches evaluation: stored templates hold `@n` (INDIRECT reads A1 itself).
     case 'ref':

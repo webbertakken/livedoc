@@ -13,7 +13,13 @@ import {
   type SheetLayout,
 } from '../sheet';
 import { makeSheetId, type Rand } from '../ids';
-import { compileFormula, renderFormula, type SheetHandle, type SheetsCtx } from '../formula/stored';
+import {
+  compileFormula,
+  readsUnknownTable,
+  renderFormula,
+  type SheetHandle,
+  type SheetsCtx,
+} from '../formula/stored';
 import { isArray, scalarOf, type ErrorCode, type Scalar } from '../formula/values';
 import type { Workbook } from '../engine/workbook';
 import { SheetLimits } from '../sheet-limits';
@@ -500,7 +506,8 @@ export function sheetsFromFile(
       let input: CellInput | null = null;
       if (cell.formula !== undefined) {
         const compiled = compileFormula(cell.formula, ctx);
-        if (compiled.ok) input = { f: compiled.formula };
+        // A table reference naming no table the file holds is unread: its value stays as the file had it.
+        if (compiled.ok && !readsUnknownTable(compiled.formula)) input = { f: compiled.formula };
         else losses.push({ k: 'formula_unread', sheet: m.title, r: cell.r, c: cell.c });
       }
       input ??= cell.value ? literalInput(cell.value) : null;

@@ -18,16 +18,24 @@ export function writesFormats(write: SheetWrite): boolean {
 /** A cells write with every format change taken out; null when nothing but formats was in it. Any other write is
  *  returned as it is (a Participant may not send one at all, which the callers refuse on their own). */
 export function valuesOnly(write: SheetWrite): SheetWrite | null {
+  // A Participant's table growth (D448): its cells' formats go, its changes are judged on their own.
+  if (write.kind === 'layout' && Array.isArray(write.cells))
+    return { ...write, cells: valuesOf(write.cells) };
   if (write.kind !== 'cells' || !Array.isArray(write.cells)) return write;
+  const cells = valuesOf(write.cells);
+  return cells.length ? { kind: 'cells', cells } : null;
+}
+
+function valuesOf(sent: readonly CellChange[]): CellChange[] {
   const cells: CellChange[] = [];
-  for (const sent of write.cells) {
+  for (const one of sent) {
     // Kept as sent, so validateWrite refuses the write rather than this quietly mending it.
-    if (!isChange(sent)) {
-      cells.push(sent);
+    if (!isChange(one)) {
+      cells.push(one);
       continue;
     }
-    const { f: _format, ...change } = sent;
+    const { f: _format, ...change } = one;
     if (change.i !== undefined) cells.push(change);
   }
-  return cells.length ? { kind: 'cells', cells } : null;
+  return cells;
 }

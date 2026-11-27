@@ -148,6 +148,28 @@ settings"). A Plan Sheet has none of its own: it reads as the viewer's browser d
   whose cells are all deleted loses its name, and formulas using it read `#NAME?`.
 - A name in a formula is kept as typed; renaming or removing a name does not rewrite formulas.
 
+### Table references
+
+- A [table](data-tools.md#tables) is read by its name and its columns' names, in Google's and Excel's grammar:
+  - `Table1` and `Table1[#DATA]`: its data rows; `Table1[Amount]`: a column's data cells;
+    `Table1[[Amount]:[Tax]]`: the columns from one to the other;
+  - `Table1[#ALL]`, `Table1[#HEADERS]`, `Table1[#TOTALS]`: the whole table, its header row, its total row;
+    `Table1[[#HEADERS],[#DATA]]` and `Table1[[#DATA],[#TOTALS]]` join neighbouring parts; any of them with columns
+    (`Table1[[#ALL],[Amount]:[Tax]]`);
+  - Excel's **this row**: `Table1[@Amount]`, `Table1[[#This Row],[Amount]]`, and inside the table `[@Amount]` and
+    `[@[Unit price]]`, the column's cell on the formula's own row; on a row that is not one of its data rows, `#VALUE!`.
+    Google reads no this-row reference; LiveDoc reads it so a file's formulas keep working (D446).
+- Names and specifiers are not case sensitive; spaces around them are left out (`Table1[ [#ALL],[Amount] ]`). A
+  column name holding `[`, `]`, `#` or `'` writes it after a `'` (`Table1['#Sold]`), and one holding a space or a
+  symbol inside its own brackets in a longer reference (`Table1[[#ALL],[Unit price]]`), as Excel's.
+- A table reference is stored by the table and its columns, not their names nor places: renaming the table or a
+  column's header rewrites every formula reading it; rows the table grows by are read at once; copying or filling the
+  formula keeps reading the same table and columns. A reference whose table or column is deleted is `#REF!`.
+- A reference naming no table of the workbook (`Sales[Amount]` before Sales is made) is kept as typed and read by name
+  until one is: `#REF!` "Unknown table Sales" meanwhile. `Table1[#TOTALS]` of a table with no total row is `#REF!`.
+- **Convert to Range** rewrites every formula reading the table as the plain absolute range it reads
+  (`Table1[Amount]` as `$B$2:$B$9`), one undo step with it.
+
 ### Named functions
 
 - A **named function** is a spreadsheet's own function, made in Data › Named Functions

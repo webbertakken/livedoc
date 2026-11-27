@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { sentJson } from '@livedoc/vitest-config/sent-request';
 import type { SheetResponse, SheetsResponse, SheetWriteResponse } from '@livedoc/api-schema';
-import { emptyLayout, type SheetWrite } from '@livedoc/sheets';
+import { emptyLayout, type CellChange, type SheetWrite } from '@livedoc/sheets';
 import { sqliteD1, type SqliteD1 } from '../test-sqlite-d1';
 import * as db from '../db';
 import * as cellHead from '../db/sheet-cell-head';
@@ -296,6 +296,66 @@ describe('access', () => {
 });
 
 describe('a Participant (docs/specs/013-workspace/share-roles.md)', () => {
+  // data-tools.md "Tables", D448: a value typed below a table grows it by that one row, and only that.
+  it('grows a table by the row their value lands in, never more, nor into a protected range', async () => {
+    await make();
+    const s = (await call<SheetsResponse>({ method: 'GET', path: '/sheets' })).body.sheets[0]!;
+    const as = { owner: 'p', code: 'PART' };
+    const { rows: r, cols: c } = s.layout;
+    const table = { id: 'tbl001', name: 'Sales', r1: r[0]!, c1: c[0]!, r2: r[2]!, c2: c[1]! };
+    const made = await write('sheetA00', {
+      kind: 'layout',
+      changes: [{ k: 'table', id: 'tbl001', table }],
+    });
+    expect(made.status).toBe(200);
+    const value = { r: r[3]!, c: c[0]!, i: { s: 'pen' } };
+    const grow = (t: object, cells: CellChange[] = [value]): SheetWrite => ({
+      kind: 'layout',
+      changes: [{ k: 'table', id: 'tbl001', table: t as typeof table }],
+      cells,
+    });
+    const tableNow = async () =>
+      (await call<SheetsResponse>({ method: 'GET', path: '/sheets' })).body.sheets[0]!.layout
+        .tables;
+    // Forged: two rows, a rename, a total row, a column more, or a growth with no value of theirs.
+    for (const forged of [
+      grow({ ...table, r2: r[4]! }),
+      grow({ ...table, r2: r[3]!, name: 'Mine' }),
+      grow({ ...table, r2: r[3]!, total: true }),
+      grow({ ...table, r2: r[3]!, c2: c[2]! }),
+      grow({ ...table, r2: r[3]!, types: { [c[0]!]: 'text' } }),
+      grow({ ...table, r2: r[3]! }, []),
+      grow({ ...table, r2: r[3]! }, [{ r: r[3]!, c: c[2]!, i: { s: 'beside' } }]),
+      { kind: 'layout', changes: [{ k: 'table', id: 'tbl001', table: null }] } as SheetWrite,
+    ])
+      expect((await write('sheetA00', forged, {}, as)).status, JSON.stringify(forged)).toBe(403);
+    expect(await tableNow()).toEqual([table]);
+    // Their value and its growth land as one write; their undo takes both back, and only as an undo.
+    expect((await write('sheetA00', grow({ ...table, r2: r[3]! }), {}, as)).status).toBe(200);
+    expect(await tableNow()).toEqual([{ ...table, r2: r[3]! }]);
+    const back = grow(table, [{ r: r[3]!, c: c[0]!, i: null }]);
+    expect((await write('sheetA00', back, {}, as)).status).toBe(403);
+    expect((await write('sheetA00', back, { undo: true }, as)).status).toBe(200);
+    expect(await tableNow()).toEqual([table]);
+    // A protected range below is never swallowed: a growth over it is refused, the value alone lands outside.
+    const guard = {
+      id: 'prt001',
+      can: 'editors' as const,
+      range: { r1: r[3]!, c1: c[1]!, r2: r[3]!, c2: c[1]! },
+    };
+    expect(
+      (
+        await write('sheetA00', {
+          kind: 'layout',
+          changes: [{ k: 'protection', id: 'prt001', protection: guard }],
+        })
+      ).status,
+    ).toBe(200);
+    expect((await write('sheetA00', grow({ ...table, r2: r[3]! }), {}, as)).status).toBe(403);
+    expect((await write('sheetA00', { kind: 'cells', cells: [value] }, {}, as)).status).toBe(200);
+    expect(await tableNow()).toEqual([table]);
+  });
+
   it("writes cells, never the Sheet's shape, its title, or the Sheet itself", async () => {
     await make();
     const s = (await call<SheetsResponse>({ method: 'GET', path: '/sheets' })).body.sheets[0]!;

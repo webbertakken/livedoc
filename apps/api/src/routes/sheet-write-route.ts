@@ -4,7 +4,12 @@
 // formulas a deletion shrinks), stored in one batch guarded by the sheet's rev (retried on a lost race), answered
 // with the stored state of every cell it touched, and relayed in order.
 
-import { PROTECTION_SYSTEM, protectionRefusal, type ProtectionCaller } from '@livedoc/sheets';
+import {
+  isParticipantTableWrite,
+  PROTECTION_SYSTEM,
+  protectionRefusal,
+  type ProtectionCaller,
+} from '@livedoc/sheets';
 import { protectedRefusal, protectionCallerOf } from './sheet-protection';
 import type { SheetWriteRequest, SheetWriteResponse } from '@livedoc/api-schema';
 import {
@@ -131,11 +136,15 @@ export async function writeSheet(
   if (caller instanceof Response) return caller;
   const read = readWrite(await readBody(ctx));
   if (!read) return sheetRejected('write_invalid');
-  if (read.write.kind !== 'cells' && !(await sheetCallerEdits(ctx, caller))) return forbidden();
+  let edits: boolean | undefined;
+  const callerEdits = async () => (edits ??= await sheetCallerEdits(ctx, caller));
+  // But a table's growth by the value typed below it, judged once the sheet is read (data-tools.md D448).
+  const growthOnly = read.write.kind !== 'cells' && !(await callerEdits());
+  if (growthOnly && read.write.kind !== 'layout') return forbidden();
   // And a cell's value, never its format (docs/specs/029-sheets/sheet.md "Who may do what"): a Participant's
   // write lands as its values, and one of formats alone is refused. Only a write carrying formats asks the gate.
   let body = read;
-  if (writesFormats(read.write) && !(await sheetCallerEdits(ctx, caller))) {
+  if (writesFormats(read.write) && !(await callerEdits())) {
     const values = valuesOnly(read.write);
     if (!values) return forbidden();
     body = { ...read, write: values };
@@ -143,7 +152,9 @@ export async function writeSheet(
   const by = await writer(ctx, caller.owner);
   // Who the caller is to the sheet's protections is asked only of a sheet that holds any.
   const who = () => protectionCallerOf(ctx, caller, caller.owner);
-  return storeSheetWrite(ctx, documentId, sheetId, body, by, caller.scopeTab ?? null, who);
+  return storeSheetWrite(ctx, documentId, sheetId, body, by, caller.scopeTab ?? null, who, {
+    growthOnly,
+  });
 }
 
 // A checked write stored (docs/specs/029-sheets/sheet-store.md "Changing a sheet"): validated and applied by the engine,
@@ -159,6 +170,8 @@ export async function storeSheetWrite(
   // Who writes, to the sheet's protections (data-tools.md "Protected ranges"); a function is asked only of a sheet
   // holding protections, so a write to any other costs no gate.
   caller: ProtectionCaller | (() => Promise<ProtectionCaller>),
+  // A Participant's layout write: only a table's growth by its own value, or that growth undone (D448).
+  opts: { growthOnly?: boolean } = {},
 ): Promise<Response> {
   const write = body.write;
   for (let attempt = 0; attempt < SHEET_WRITE_RETRIES; attempt++) {
@@ -168,6 +181,18 @@ export async function storeSheetWrite(
         ? await readCellWriteHead(ctx.env, documentId, sheetId, write)
         : await readSheetHead(ctx.env, documentId, sheetId);
     if (!head || (scopeTab && head.tabId !== scopeTab)) return sheetNotFound();
+    if (opts.growthOnly) {
+      let grows: boolean;
+      try {
+        grows = isParticipantTableWrite(head.layout, write, !!body.undo);
+      } catch {
+        return sheetRejected('write_invalid');
+      }
+      if (!grows) {
+        console.warn('[sheets] sheet.table_growth.refused', { sheetId, undo: !!body.undo });
+        return forbidden();
+      }
+    }
     // A spreadsheet's sheets are one workbook: their titles are its tabs' names, unique in it, and their formulas read
     // across it (docs/specs/029-sheets/spreadsheet.md "The workbook shape"); a Plan Sheet's are its tab's.
     const spreadsheet = await isSpreadsheet(ctx.env, documentId);
