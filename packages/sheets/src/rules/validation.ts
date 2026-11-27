@@ -56,6 +56,11 @@ export type CheckedCell = { r?: number; c?: number; shown?: string };
 const EMPTY: readonly ValidationRule[] = [];
 
 // The validation rule covering a cell, or null: the sheet's own, else its table column's type (data-tools.md "Tables").
+/** Whether any cell of the layout may have a rule: one of its own, or a typed table column's (data-tools.md D444). */
+export function hasValidation(layout: SheetLayout): boolean {
+  return !!layout.rules?.length || !!layout.tables?.some((t) => t.types);
+}
+
 export function validationRuleAt(layout: SheetLayout, r: number, c: number): ValidationRule | null {
   const list = layout.rules;
   const own = list?.length ? firstRuleAt(ruleIndex(layout, list ?? EMPTY), r, c) : null;
@@ -432,7 +437,7 @@ export function rangeOptions(
 // A cells write with each input as its cell's rule takes it (a dropdown option in its own spelling, a checkbox's 1 or
 // 0 as TRUE or FALSE). The same write when no rule changes anything.
 export function writeForRules(layout: SheetLayout, write: SheetWrite): SheetWrite {
-  if (write.kind === 'title' || !write.cells?.length || !layout.rules?.length) return write;
+  if (write.kind === 'title' || !write.cells?.length || !hasValidation(layout)) return write;
   const ix = layoutIndex(layout);
   let changed = false;
   const cells = write.cells.map((ch) => {

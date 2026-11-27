@@ -248,8 +248,8 @@ sheet's, seen by everyone, kept by row and column ids as a named range is.
     one undo step.
   - **Insert 1 Column Left**, **Insert 1 Column Right**: a sheet column beside it, as the column header's menu
     inserts; one beside the table's first or last column joins the table, one undo step (D450).
-  - **Delete Column**: the sheet column, as the column header's menu deletes; the table shrinks, and goes with its
-    last column.
+  - **Delete Sheet Column**: the whole sheet column, as the column header's menu deletes, named so because cells
+    beside the table in that column go with it; the table shrinks, and goes with its last column (D450).
   - Every item is an Editor's, dimmed for anyone else, as the table menu's are; the menu's items move by the arrow
     keys, Escape closing it.
 - **Table Settings** panel (the office shell's right panel), the settings of the table holding the active cell under
@@ -260,10 +260,11 @@ sheet's, seen by everyone, kept by row and column ids as a named range is.
   here. Every change writes at once, one undo step each; a Participant or a Viewer reads it, its fields read-only.
 - **Table references** in formulas ([Formulas](formulas.md#table-references)) read and follow the table.
 - **Files**: [Tables in the file](standard-mapping.md#tables-in-the-file).
-- Copies: a duplicated sheet's or copied sheet's tables are renamed to the next free names, each its own name (a
-  number it ends in left off) with the smallest number from 2 that frees it in the workbook (`Sales2`, `Table2`,
-  D451); formulas in the copy reading its tables
-  read the copy's; a table's banding goes with it; Clear Sheet leaves the tables, their cells cleared.
+- Copies: a duplicated sheet's or copied sheet's tables are renamed to the next free names, as Google's: each its own
+  name, an underscore and the smallest number from 2 that frees it in the workbook (`Sales_2`, `Sales_3`, D451);
+  formulas in the copy reading its tables read the copy's; a table's banding goes with it; Clear Sheet leaves the
+  tables, their cells cleared. A table's whole range copied and pasted elsewhere makes a new table there, named the
+  first free `TableN`, as Google's paste does (D451).
 
 ## Clean-up, split, randomise, stats
 
@@ -343,12 +344,18 @@ The code cites each by its id.
 - **D449** A column made Dropdown: its options are its data cells' values as they read, once each (case aside), in
   their order, up to a dropdown's 500 (default).
 - **D450** The column menu's Insert 1 Column Left and Right insert a whole sheet column, as the column header's menu
-  does; one beside the table's first or last column joins the table, as Google's; Delete Column deletes the sheet
-  column (default).
-- **D451** A copied table's name: its own name, a number it ends in left off, with the smallest number from 2 that
-  frees it among the workbook's tables and named ranges (`Sales` to `Sales2`, `Table1` to `Table2`), as D443
-  numbers a repeated column name; an underscore before the number when the name would read as a cell
-  (`Plan_2`) (default).
+  does, one beside the table's first or last column joining the table; Delete Sheet Column deletes the whole sheet
+  column, its label saying so, so nobody loses cells beside the table by surprise (LiveDoc's own; the Director's
+  ruling, 2026-11-27). Evidence: Google's help ("Use tables in Google Sheets") names the column menu but not what its
+  insert and delete reach, and the Sheets API has no table-column request: a table's own cells deleted or inserted
+  with `deleteRange`/`insertRange` (shifting columns) shrink or widen the table (an inserted column reads
+  `Column 1`) and shift the cells beside it in those rows (`plans/assets/0020/research/google-table-probe.ts`,
+  2026-11-27).
+- **D451** A copied table's name, as Google's: its own name, an underscore and the smallest number from 2 that frees it
+  among the workbook's tables and named ranges (`Sales` to `Sales_2`, then `Sales_3`); a table's whole range pasted
+  elsewhere makes a new table named the first free `TableN`. Evidence: the Sheets API's `duplicateSheet` of a sheet
+  holding `Sales` twice gave `Sales_2` and `Sales_3`; `copyPaste` of the table's range gave `Table1`
+  (`plans/assets/0020/research/google-table-probe.ts`, 2026-11-27).
 - **D302** A named function's limits: a name up to 254 characters (Google's), up to 20 placeholders, a definition up
   to 2,000 characters, a description up to 1,000, an argument's description and example up to 200 each (default).
 - **D345** A protection's bounds: up to 100 a sheet, 50 exceptions a protected sheet, a description up to 200

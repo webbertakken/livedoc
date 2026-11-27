@@ -80,6 +80,33 @@ describe('drawing', () => {
     );
     expect(red.length).toBe(1);
   });
+  // data-tools.md "Tables" (D444): a typed table column draws as its rule would, on a sheet holding no rule of its own.
+  it("draws a table's Dropdown and Checkbox columns, and flags a wrong type, with no sheet rules", async () => {
+    const h = await mount({
+      layout: {
+        tables: [
+          {
+            id: 'tbl001',
+            name: 'Sales',
+            r1: 'row0',
+            c1: 'col1',
+            r2: 'row3',
+            c2: 'col3',
+            types: { col1: 'checkbox', col2: 'dropdown', col3: 'number' },
+            opts: { col2: [{ v: 'Doing', c: '#fde68a' }, { v: 'Done' }] },
+          },
+        ],
+      },
+      cells: { B1: 'Done?', C1: 'State', D1: 'Count', B2: 'TRUE', C2: 'Doing', D2: 'many' },
+    });
+    const coloured = [...h.container.querySelectorAll<HTMLElement>('.rounded-full')].filter(
+      (el) => el.style.backgroundColor === 'rgb(253, 230, 138)',
+    );
+    expect(coloured.length).toBe(1);
+    expect(h.container.querySelectorAll('.rounded-\\[3px\\]').length).toBeGreaterThan(0);
+    fireEvent.pointerMove(h.viewport, cellPoint(1, 3));
+    expect(screen.getByText(/Expected a number/)).toBeTruthy();
+  });
   it('says why on hovering an invalid value', async () => {
     const h = await mount();
     fireEvent.pointerMove(h.viewport, cellPoint(2, 2));

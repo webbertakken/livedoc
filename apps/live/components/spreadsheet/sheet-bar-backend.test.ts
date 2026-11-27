@@ -136,7 +136,7 @@ describe('offlineSheetBar', () => {
     await o.bar.put({ ...entry, copyOf: 'sheetOne1' });
     expect(o.store.layoutsOn).toHaveBeenCalledWith('t1');
     expect(o.store.create.mock.calls[0]![1]!.layout.tables).toEqual([
-      { ...held.layout.tables[0], name: 'Sales2' },
+      { ...held.layout.tables[0], name: 'Sales_2' },
     ]);
   });
 

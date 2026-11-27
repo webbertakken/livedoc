@@ -342,13 +342,13 @@ describe('an offline spreadsheet', () => {
       { id: 'sheetCOPY', tabId: 't2', title: 'Two', copyOf: 'sheetAAAA' },
       ME,
     );
-    expect(copy.layout.tables).toEqual([{ ...tables[0], name: 'Sales2' }]);
+    expect(copy.layout.tables).toEqual([{ ...tables[0], name: 'Sales_2' }]);
     const carried = await offlineCreateSheet(
       'd1',
       { id: 'sheetSEED', tabId: 't3', title: 'Three', layout: held.layout },
       ME,
     );
-    expect(carried.layout.tables).toEqual([{ ...tables[0], name: 'Sales3' }]);
+    expect(carried.layout.tables).toEqual([{ ...tables[0], name: 'Sales_3' }]);
   });
 
   it('names a new sheet by the workbook, case aside, and by the name rules', async () => {

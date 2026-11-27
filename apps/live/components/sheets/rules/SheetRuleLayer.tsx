@@ -7,7 +7,7 @@
 import { lazy, Suspense, useState } from 'react';
 import { Tooltip, lucideGlyph } from '@livedoc/ui';
 import { lucideChevronDown } from '@livedoc/icons/lucide';
-import { cellKey, displayValue, formatA1, validationRuleAt } from '@livedoc/sheets';
+import { cellKey, displayValue, formatA1, hasValidation, validationRuleAt } from '@livedoc/sheets';
 import { cellBox, mergeAt } from '../sheet-geometry';
 import { useSheetController } from '../sheet-controller';
 import type { SheetActions } from '../useSheetActions';
@@ -37,7 +37,7 @@ export function SheetRuleLayer({ actions }: { actions: SheetActions }) {
   const { active } = c.selection;
   const g = c.geometry;
   const box = cellBox(g, active.r, active.c, c.scroll, mergeAt(g, active.r, active.c));
-  const rule = c.sheet.layout.rules?.length
+  const rule = hasValidation(c.sheet.layout)
     ? validationRuleAt(c.sheet.layout, active.r, active.c)
     : null;
   const plainArrow =

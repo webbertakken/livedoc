@@ -215,12 +215,12 @@ describe('duplicating a sheet', () => {
       .prepare("UPDATE sheets SET layout = json_set(layout, '$.tables', json(?)) WHERE id = ?")
       .run(JSON.stringify(tables), 'book1Sheet');
     const first = await (await add({ copyOf: 'book1Sheet' })).json<WorkbookSheetAddResponse>();
-    expect(first.sheet.layout.tables).toEqual([{ ...tables[0], name: 'Sales2' }]);
+    expect(first.sheet.layout.tables).toEqual([{ ...tables[0], name: 'Sales_2' }]);
     expect(first.sheet.layout.rows).toEqual(kit.layout.rows);
     const seeded = await (
       await add({ seed: { layout: { ...kit.layout, tables }, cells: [] } })
     ).json<WorkbookSheetAddResponse>();
-    expect(seeded.sheet.layout.tables).toEqual([{ ...tables[0], name: 'Sales3' }]);
+    expect(seeded.sheet.layout.tables).toEqual([{ ...tables[0], name: 'Sales_3' }]);
   });
 
   it('takes the name, the place and the ids it is given', async () => {

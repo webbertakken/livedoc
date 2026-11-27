@@ -159,6 +159,9 @@ test('the column menu sorts, and makes a Dropdown column by Ctrl+Alt+\\', async 
   await page.screenshot({ path: test.info().outputPath('table-column-dropdown.png') });
   await item.getByRole('button', { name: 'Done' }).click();
   await expect(item).toHaveCount(0);
+  await page.getByRole('button', { name: 'Table1 table menu' }).click();
+  await tableMenu(page, 'Table1').getByRole('button', { name: 'Table Settings' }).click();
+  await expect(panel.getByRole('combobox', { name: 'Item type' })).toHaveValue('dropdown');
   await page.screenshot({ path: test.info().outputPath('table-column-chips.png') });
   expectNoPageErrors(pageErrors);
 });

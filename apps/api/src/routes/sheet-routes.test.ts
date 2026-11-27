@@ -224,7 +224,7 @@ describe('creating and listing sheets', () => {
       path: '/sheets',
       body: { id: 'sheetC00', tabId: 't1', title: 'Budget (copy)', copyOf: 'sheetA00' },
     });
-    expect(copy.body.sheet.layout.tables).toEqual([{ ...table, name: 'Sales2' }]);
+    expect(copy.body.sheet.layout.tables).toEqual([{ ...table, name: 'Sales_2' }]);
   });
   it('caps the sheets of a document', async () => {
     for (let i = 0; i < 200; i++)

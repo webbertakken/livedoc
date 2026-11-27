@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 // data-tools.md "Tables" "Column menu": each header cell's ▾ button (and Ctrl+Alt+\ on a cell of the table) opens its
 // column's menu: Edit Column Type (a Dropdown's options in the rule's form), Sort A to Z and Z to A over the data rows,
-// Insert 1 Column Left and Right (joining the table at its edges, D450), Delete Column; an Editor's alone.
+// Insert 1 Column Left and Right (joining the table at its edges, D450), Delete Sheet Column; an Editor's alone.
 import { act, fireEvent, screen } from '@testing-library/react';
 import { beforeAll, describe, expect, it, vi } from 'vitest';
 import type { SheetTable } from '@livedoc/sheets';
@@ -45,7 +45,7 @@ const MAIN = [
   'Sort Z to A',
   'Insert 1 Column Left',
   'Insert 1 Column Right',
-  'Delete Column',
+  'Delete Sheet Column',
 ];
 
 async function withTable(opts: { canShape?: boolean } = {}) {
@@ -122,7 +122,7 @@ describe('the table column menu', () => {
     pick('Insert 1 Column Right');
     expect([at(table()?.c1), at(table()?.c2)]).toEqual([1, 4]);
     open('Amount');
-    pick('Delete Column');
+    pick('Delete Sheet Column');
     expect([at(table()?.c1), at(table()?.c2)]).toEqual([1, 3]);
     expect(h.value('C2')).toBe('Item');
   });

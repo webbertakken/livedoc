@@ -9,7 +9,7 @@ import { cellKey, type Border, type CellFormat } from '../sheet';
 import { Workbook } from './workbook';
 import type { CardSource } from '../cards';
 import { sheetFromJson, type SheetJson } from '../sheet-json';
-import { checkState, optionFor, validationRuleAt } from '../rules/validation';
+import { checkState, hasValidation, optionFor, validationRuleAt } from '../rules/validation';
 import { formatRuleStyle } from '../rules/format-rules';
 import { bandingFillAt } from '../rules/bandings';
 import { resolveColour, themedFormat } from '../themes/spreadsheet-theme';
@@ -154,7 +154,7 @@ export function renderWindow(
       // Theme colours drawn in the workbook's theme (formatting.md "Themes").
       const f: CellFormat = themedFormat(band ? { ...met, bg: band } : met, wb.theme)!;
       // A checkbox draws as a box, a chip on its option's colour (data-validation.md "Drawing").
-      const rule = layout.rules?.length ? validationRuleAt(layout, r, c) : null;
+      const rule = hasValidation(layout) ? validationRuleAt(layout, r, c) : null;
       const scalar = isArray(value) ? scalarOf(value) : value;
       let chip: { color?: string } | undefined;
       if (rule?.is === 'check') {

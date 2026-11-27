@@ -115,7 +115,7 @@ export function sheetTableActions(c: SheetController) {
       const w = tableColumnInsertWrite(c.sheet, id, colId, side, room);
       if (w && c.write(w, 'Columns')) c.announce('1 column inserted');
     },
-    // The column menu's Delete Column: the sheet column, the table shrinking with it.
+    // The column menu's Delete Sheet Column: the whole sheet column, the table shrinking with it.
     deleteTableColumn(colId: string): void {
       const at = layoutIndex(layout()).colPos.get(colId);
       const w = at === undefined ? null : deleteAxis(c.sheet, 'c', at, at);

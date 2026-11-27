@@ -2,7 +2,7 @@
 
 // A table column's menu (docs/specs/029-sheets/data-tools.md "Tables" "Column menu"), under the column's name: Edit
 // Column Type (the types as a list, the column's own ticked; Dropdown opens the dropdown rule's options form), Sort A
-// to Z and Z to A (the data rows), Insert 1 Column Left and Right, and Delete Column. Every item is an Editor's,
+// to Z and Z to A (the data rows), Insert 1 Column Left and Right, and Delete Sheet Column (D450). Every item is an Editor's,
 // dimmed for anyone else, as the table menu's are.
 import { useEffect, useRef, useState } from 'react';
 import { Button } from '@livedoc/ui';
@@ -105,7 +105,7 @@ export function TableColumnMenu({
               onClick={run(() => actions.insertTableColumn(table.id, colId, 'after'))}
             />
             <MenuActionRow
-              label="Delete Column"
+              label="Delete Sheet Column"
               icon={<Glyph t="−" />}
               disabled={!editor}
               onClick={run(() => actions.deleteTableColumn(colId))}

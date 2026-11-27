@@ -22,6 +22,7 @@ import {
   validationFormulaAllows,
   ruleIndex,
   rulesAt,
+  hasValidation,
   validationRuleAt,
   type Border,
   type CellFormat,
@@ -153,7 +154,7 @@ function RegionCells({ region, ...p }: CellsProps & { region: Region }) {
     },
     formulaAllows: validationFormulaAllows(workbook, sheet.id),
   };
-  const hasRules = !!sheet.layout.rules?.length;
+  const hasRules = hasValidation(sheet.layout);
   const hasBands = !!sheet.layout.bands?.length;
   for (let r = region.r1; r <= region.r2; r++) {
     if (g.hiddenRow(r)) continue;
