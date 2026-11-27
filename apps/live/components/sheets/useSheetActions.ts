@@ -72,6 +72,7 @@ import { useSheetController, type SheetController } from './sheet-controller';
 import { freezeLimit } from './sheet-freeze';
 import { fontPx, roughWidth } from './SheetCells';
 import { sheetRuleActions } from './rules/sheet-rule-actions';
+import { sheetTableActions } from './tables/sheet-table-actions';
 import { sheetOutlineActions } from './sheet-outline-actions';
 
 type EditResult = { ok: true } | { ok: false; message: string; at: number };
@@ -458,6 +459,8 @@ export function useSheetActions() {
       // ---- Rules: dropdowns, checkboxes, validation and format rules, Paint Format ----
       ...sheetRuleActions(c),
       ...sheetOutlineActions(c),
+      // ---- Tables (data-tools.md "Tables") ----
+      ...sheetTableActions(c),
     };
   }, [c]);
 }

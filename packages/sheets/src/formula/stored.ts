@@ -192,6 +192,15 @@ function resolveTableRef(ref: StoredRef, ctx: SheetsCtx, row?: number): PosRef |
   return { sheet, r1: rows.r1, c1: cols.c1, r2: rows.r2, c2: cols.c2, a: 15 };
 }
 
+/**
+ * A table reference as the plain absolute range it reads now (Convert to Range, data-tools.md "Tables"); `row` the
+ * formula's own, for this row. Null when it reads none (it becomes #REF!).
+ */
+export function tableRefAsRange(ref: StoredRef, ctx: SheetsCtx, row?: number): StoredRef | null {
+  const pos = resolveTableRef(ref, ctx, row);
+  return pos ? encodeRef(pos, ctx) : null;
+}
+
 /** Why a table reference reads no cells: this row off the table's data rows is #VALUE!, anything else #REF!. */
 export function tableRefError(ref: StoredRef, ctx: SheetsCtx): '#VALUE!' | '#REF!' {
   return ref.ta === TableArea.thisRow && tableHome(ref, ctx) ? '#VALUE!' : '#REF!';

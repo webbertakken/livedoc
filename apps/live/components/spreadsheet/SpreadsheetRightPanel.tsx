@@ -24,8 +24,10 @@ import {
   NAMED_RANGES_PANEL,
   PROTECTION_PANEL,
   SPREADSHEET_PANELS,
+  TABLE_SETTINGS_PANEL,
   THEMES_PANEL,
 } from '@/lib/spreadsheet/spreadsheet-panels';
+import { SpreadsheetTableSettingsBody } from './SpreadsheetTableSettingsBody';
 import type { SheetChart } from '@livedoc/sheets';
 import { ChartEditorBody } from './charts/ChartEditorBody';
 
@@ -84,6 +86,12 @@ export function SpreadsheetRightPanel({
             key={protection.nonce}
             actions={actions}
             start={protection.start}
+          />
+        ) : spec.id === TABLE_SETTINGS_PANEL.id ? (
+          <SpreadsheetTableSettingsBody
+            actions={actions}
+            onFormatting={() => panels.reveal(ALTERNATING_COLOURS_PANEL)}
+            onClose={close}
           />
         ) : spec.id === NAMED_FUNCTIONS_PANEL.id ? (
           <SpreadsheetNamedFunctionsBody />

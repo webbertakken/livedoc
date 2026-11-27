@@ -62,6 +62,15 @@ export const PROTECTION_PANEL: OfficePanelSpec = {
   item: 'protect-sheets-and-ranges',
 };
 
+// Table Settings (data-tools.md "Tables"): opened by Convert to Table and the table menu, never from a menu item of its
+// own, so its item is bound to nothing; read by everyone, changed by an Editor alone, inside it.
+export const TABLE_SETTINGS_PANEL: OfficePanelSpec = {
+  id: 'table-settings',
+  title: 'Table Settings',
+  side: 'right',
+  item: 'table-settings',
+};
+
 // The Chart Editor (docs/specs/029-sheets/charts.md "Chart Editor"): opened from a chart, never from a menu item of
 // its own, so its item is bound to nothing.
 export const CHART_EDITOR_PANEL: OfficePanelSpec = {
@@ -80,8 +89,24 @@ export const SPREADSHEET_PANELS: readonly OfficePanelSpec[] = [
   NAMED_RANGES_PANEL,
   NAMED_FUNCTIONS_PANEL,
   PROTECTION_PANEL,
+  TABLE_SETTINGS_PANEL,
   CHART_EDITOR_PANEL,
 ];
+
+/**
+ * Format › Convert to Table, Insert › Table, the cell and column menus' and Ctrl+Alt+T (data-tools.md "Tables"): an
+ * Editor's; the table made over the selection, then Table Settings open on it.
+ */
+export function withTablePanel(
+  bound: OfficeActions,
+  opts: { convert: () => boolean; reveal: () => void; canShape: boolean },
+): OfficeActions {
+  if (!opts.canShape) return bound;
+  const run = () => {
+    if (opts.convert()) opts.reveal();
+  };
+  return { ...bound, 'convert-to-table': { run }, 'insert-table': { run } };
+}
 
 /**
  * Format › Alternating Colours: opening the panel over a selection with no banding makes one there at once, in the

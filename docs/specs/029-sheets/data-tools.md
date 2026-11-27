@@ -223,20 +223,25 @@ sheet's, seen by everyone, kept by row and column ids as a named range is.
   over a row holding a protected range or another table's cells, nor while it has a total row (the row below a total
   row is outside it). Rows inserted inside a table join it; deleted rows and columns shrink it, and a table whose
   header row or every data row is deleted goes.
-- **Total row** (Table Settings): the table's last row becomes its footer, `Total` in its first column and
-  `=SUBTOTAL(109, Table1[Column])` under each Number, Percent or Currency column, ordinary cells that may be changed;
-  turning it off makes that row a data row again, its cells kept (D445).
-- **Table menu** (a chip over the header row's first cell: the table's name and a menu): **Rename** (the name in
-  place), **Table Settings**, **Select Table**, **Convert to Range** (the table goes, its cells and look kept as plain
-  cells and a banding; formulas reading it read the same cells as plain ranges), **Delete Table** (its cells and
-  look go); views per box 1 ([Filters, filter views and slicers](#filters-filter-views-and-slicers)).
+- **Total row** (Table Settings): the row below joins the table as its total row, as Excel's, `Total` in its first
+  column and `=SUBTOTAL(109, Table1[Column])` under each Number, Percent or Currency column, ordinary cells that may be
+  changed, its banding's footer on; refused while that row holds anything, is another table's or a protected range's
+  ("Make room below the table for its total row"). Turning it off makes that row a data row again, its cells kept
+  (D445).
+- **Table chip** (over the header row's first cell, on it when the header is the sheet's first row; everyone's): the
+  table's name and ▾; pressing it puts the active cell in the table and opens **Table Settings**, which holds what
+  Google's table menu does: Rename (Table Name), **Select Table**, **Convert to Range** (the table goes, its cells and
+  look kept as plain cells and a banding; formulas reading it read the same cells as plain ranges) and **Delete
+  Table** (its cells and look go); views per box 1 ([Filters, filter views and slicers](#filters-filter-views-and-slicers)).
 - **Column menu** (a button on each header cell, Ctrl+Alt+\ on a cell of the table): **Edit Column Type** (the types
   as a list, a Dropdown's options as the dropdown rule's form), **Sort A to Z**, **Sort Z to A** (the data rows only,
   one undo step), **Insert 1 Column Left**, **Insert 1 Column Right**, **Delete Column**.
-- **Table Settings** panel (the office shell's right panel): **Table Name**, **Range** (an A1 range, the header row
-  first; refused as Convert to Table refuses), each column's **Type**, **Total Row**, and **Table Formatting** (the
-  table's banding in the Alternating Colours panel); **Done** and × close it. Every change writes at once, one undo
-  step each.
+- **Table Settings** panel (the office shell's right panel), on the table holding the active cell ("Select a cell in
+  a table to see its settings." outside one): **Table Name**, **Range** (an A1 range, the header row first; refused
+  as Convert to Table refuses, "Type a range like A1:D20, a header row and a data row at least"), **Column Types**
+  (each column's name and its type), **Total Row**, **Select Table**, **Table Formatting** (the table's banding in the
+  Alternating Colours panel), **Convert to Range**, **Delete Table**; **Done** and × close it. Every change writes at
+  once, one undo step each. A Participant or a Viewer reads it, its fields read-only and only Select Table offered.
 - **Table references** in formulas ([Formulas](formulas.md#table-references)) read and follow the table.
 - **Files**: [Tables in the file](standard-mapping.md#tables-in-the-file).
 - Copies: a duplicated sheet's or copied sheet's tables are renamed to the next free names; a table's banding goes
@@ -305,8 +310,8 @@ The code cites each by its id.
   numbered from 2, as Excel's; the header cell is never rewritten (default).
 - **D444** A wrong type in a table column: flagged and kept, as Google's; empty cells and errors are never flagged
   (the Director's ruling, 2026-11-27).
-- **D445** A total row: the table's last row, `Total` and `SUBTOTAL(109, ...)` under its number columns, as Excel's
-  total row; its cells ordinary cells (default).
+- **D445** A total row: the row below the table joins it, `Total` and `SUBTOTAL(109, ...)` under its number columns,
+  as Excel's total row; its cells ordinary cells (default).
 - **D446** This-row references (`[@Amount]`): read and computed, though Google reads none, so a file's formulas keep
   working (the Director's ruling, 2026-11-27).
 - **D447** A table read from another app's file: its columns None, its look the file's own cell formats (default).

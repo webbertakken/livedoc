@@ -18,7 +18,9 @@ import {
   NAMED_RANGES_PANEL,
   PROTECTION_PANEL,
   SPREADSHEET_PANELS,
+  TABLE_SETTINGS_PANEL,
   withBandingOnOpen,
+  withTablePanel,
   withNamedRangesPanel,
   withProtectionPanel,
   withValidationPanel,
@@ -39,6 +41,7 @@ import { useMergeDialog } from './useMergeDialog';
 import { useNumberFormatDialogs } from './useNumberFormatDialogs';
 import { useSortRangeDialog } from './useSortRangeDialog';
 import { SheetChartsContext } from '@/components/sheets/sheet-charts-context';
+import { TableSettingsContext } from '@/components/sheets/tables/table-settings-context';
 import { useSpreadsheetCharts } from './charts/useSpreadsheetCharts';
 
 export function SpreadsheetSheetParts({ bridge }: { bridge: SheetsBridge }) {
@@ -92,31 +95,40 @@ export function SpreadsheetSheetParts({ bridge }: { bridge: SheetsBridge }) {
     });
     return () => protectSheet.listen(null);
   }, [protectSheet, c.canShape, c.workbook, reveal]);
+  // A table's chip on the grid opens Table Settings on it (data-tools.md "Tables").
+  const openTableSettings = useCallback(() => reveal(TABLE_SETTINGS_PANEL), [reveal]);
   const charts = useSpreadsheetCharts(c, c.canShape ? editChart : undefined);
   const { insertChart } = charts;
   const canInsertChart = c.canShape;
   const bandingActions = useMemo(
     () => ({
-      ...withProtectionPanel(
-        withNamedRangesPanel(
-          withValidationPanel(
-            withBandingOnOpen(panelActions, () => actions.addBanding()),
+      ...withTablePanel(
+        withProtectionPanel(
+          withNamedRangesPanel(
+            withValidationPanel(
+              withBandingOnOpen(panelActions, () => actions.addBanding()),
+              {
+                addCheckbox: () => actions.addCheckbox(),
+                opened: (startNew) => setValidation((v) => ({ nonce: v.nonce + 1, startNew })),
+                reveal: () => reveal(DATA_VALIDATION_PANEL),
+              },
+            ),
             {
-              addCheckbox: () => actions.addCheckbox(),
-              opened: (startNew) => setValidation((v) => ({ nonce: v.nonce + 1, startNew })),
-              reveal: () => reveal(DATA_VALIDATION_PANEL),
+              opened: (startAdding) => setNamed((v) => ({ nonce: v.nonce + 1, startAdding })),
+              reveal: () => reveal(NAMED_RANGES_PANEL),
+              canShape: c.canShape,
             },
           ),
           {
-            opened: (startAdding) => setNamed((v) => ({ nonce: v.nonce + 1, startAdding })),
-            reveal: () => reveal(NAMED_RANGES_PANEL),
+            opened: (start) =>
+              setProtection((v) => ({ nonce: v.nonce + 1, start: start ? { what: start } : null })),
+            reveal: () => reveal(PROTECTION_PANEL),
             canShape: c.canShape,
           },
         ),
         {
-          opened: (start) =>
-            setProtection((v) => ({ nonce: v.nonce + 1, start: start ? { what: start } : null })),
-          reveal: () => reveal(PROTECTION_PANEL),
+          convert: () => actions.convertToTable() !== null,
+          reveal: () => reveal(TABLE_SETTINGS_PANEL),
           canShape: c.canShape,
         },
       ),
@@ -163,18 +175,20 @@ export function SpreadsheetSheetParts({ bridge }: { bridge: SheetsBridge }) {
         <div className="flex min-w-0 flex-1 flex-col">
           <SpreadsheetFormulaBarRow actions={actions} input={input} />
           <div data-region="document" className="relative flex min-h-0 flex-1 flex-col">
-            <SheetChartsContext.Provider value={charts.value}>
-              <SheetGrid
-                elementId={`sheet-${c.sheet.id}`}
-                actions={actions}
-                input={input}
-                pointRef={pointRef}
-                peers={bridge.peers}
-                zoom={zoom}
-                surfaceKeys={surfaceKeys}
-                fontFamily={DocumentFonts.stack(theme.font)}
-              />
-            </SheetChartsContext.Provider>
+            <TableSettingsContext.Provider value={openTableSettings}>
+              <SheetChartsContext.Provider value={charts.value}>
+                <SheetGrid
+                  elementId={`sheet-${c.sheet.id}`}
+                  actions={actions}
+                  input={input}
+                  pointRef={pointRef}
+                  peers={bridge.peers}
+                  zoom={zoom}
+                  surfaceKeys={surfaceKeys}
+                  fontFamily={DocumentFonts.stack(theme.font)}
+                />
+              </SheetChartsContext.Provider>
+            </TableSettingsContext.Provider>
           </div>
         </div>
         <SpreadsheetRightPanel

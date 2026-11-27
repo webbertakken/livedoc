@@ -58,7 +58,7 @@ leaves it); `left out (C3)` (its function is a Google service, [Parity matrix](p
 | Select input tools             | `Ctrl+Alt+Shift+K`             | `⌘+Option+Shift+K`           | `Ctrl+Alt+Shift+K`       | specified                                               |
 | Tool finder                    | `Alt+/`                        | `Option+/`                   | `Alt+/`                  | built (`spreadsheet-shortcuts.test.tsx`)                |
 | Rename sheet                   | `Alt+1`                        | —                            | —                        | the surface's (`spreadsheet-surface-shortcuts.test.ts`) |
-| Convert range to table         | `Ctrl+Alt+T`                   | `⌘+Option+T`                 | `Alt+Shift+T`            | specified                                               |
+| Convert range to table         | `Ctrl+Alt+T`                   | `⌘+Option+T`                 | `Alt+Shift+T`            | built (`spreadsheet-tables.spec.ts`)                    |
 
 ## Format cells
 

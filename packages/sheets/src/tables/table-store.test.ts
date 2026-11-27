@@ -423,3 +423,16 @@ describe("a Participant's table write (D448)", () => {
     ).toBe(true);
   });
 });
+
+describe('growth beside a write of the table itself', () => {
+  it('grows nothing of a table the write sets (a total row added)', () => {
+    const l = layout();
+    const totalled = { ...T, r2: 's0r4', total: true as const };
+    const write: SheetWrite = {
+      kind: 'layout',
+      changes: [{ k: 'table', id: 'tbl001', table: totalled }],
+      cells: [{ r: 's0r4', c: 's0c0', i: { s: 'Total' } }],
+    };
+    expect(withTableGrowth(l, write)).toBe(write);
+  });
+});

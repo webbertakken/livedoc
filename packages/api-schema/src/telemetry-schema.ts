@@ -598,6 +598,8 @@ export const SHEET_CHANGE_KINDS = [
   'Chart',
   // A protected sheet or range made, changed or removed (docs/specs/029-sheets/data-tools.md "Protected ranges").
   'Protection',
+  // A table made, changed or removed (docs/specs/029-sheets/data-tools.md "Tables").
+  'Table',
   'Resize',
   'Hide',
   'Group',

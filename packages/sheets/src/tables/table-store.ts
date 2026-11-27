@@ -86,11 +86,20 @@ export function tableGrowth(layout: SheetLayout, cells: readonly CellChange[]): 
   return out;
 }
 
-/** A write with the growth its cells make, as one write (one undo step); the write itself when it makes none. */
+/**
+ * A write with the growth its cells make, as one write (one undo step); the write itself when it makes none. A table
+ * the write sets itself (a total row added, a range typed) is the write's to shape, so it grows nothing of it.
+ */
 export function withTableGrowth(layout: SheetLayout, write: SheetWrite): SheetWrite {
   if (write.kind === 'title') return write;
   const cells = write.cells ?? [];
-  const growth = tableGrowth(layout, cells);
+  const own = new Set(
+    write.kind === 'layout' ? write.changes.flatMap((ch) => (ch.k === 'table' ? [ch.id] : [])) : [],
+  );
+  const set = own.size
+    ? { ...layout, tables: layout.tables?.filter((t) => !own.has(t.id)) }
+    : layout;
+  const growth = tableGrowth(set, cells);
   if (!growth.length) return write;
   if (write.kind === 'cells') return { kind: 'layout', changes: growth, cells };
   return { ...write, changes: [...write.changes, ...growth] };
