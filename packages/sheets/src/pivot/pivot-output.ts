@@ -331,6 +331,7 @@ function layout(
     if (twoValuesAcross) row();
     lastHeader = rows[rows.length - 1]!;
   }
+  const head = { rows: rows.length, cols: L };
   spec.rows.forEach((g, i) => (lastHeader[i] = { v: groupHeader(g, nameOf(g.col)) }));
   if (vertical) lastHeader[R] = { v: 'Values' };
   if (C === 0 || twoValuesAcross)
@@ -388,5 +389,5 @@ function layout(
     keys: [...spec.rows, ...spec.columns].map((g) => groupHeader(g, nameOf(g.col))),
     cells: indexed,
   };
-  return { out: { rows, width, index }, found };
+  return { out: { rows, width, index, head }, found };
 }

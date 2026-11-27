@@ -252,3 +252,37 @@ describe('pivotOutput', () => {
     ]);
   });
 });
+
+describe('the output’s header cells', () => {
+  const src = source(
+    ['Region', 'Year', 'Units'],
+    [
+      ['East', 2024, 5],
+      ['West', 2025, 3],
+    ],
+  );
+  const head = (spec: Partial<PivotSpec>) =>
+    pivotOutput(src, { rows: [], columns: [], values: [], ...spec }).head;
+  const units = { col: 2, summary: 'SUM' } as const;
+
+  it('counts the header rows above the values and the label columns left of them', () => {
+    expect(head({ rows: [{ col: 0 }], values: [units] })).toEqual({ rows: 1, cols: 1 });
+    expect(head({ rows: [{ col: 0 }, { col: 1 }], values: [units] })).toEqual({ rows: 1, cols: 2 });
+    expect(head({ rows: [{ col: 0 }], columns: [{ col: 1 }], values: [units] })).toEqual({
+      rows: 2,
+      cols: 1,
+    });
+    expect(
+      head({
+        rows: [{ col: 0 }],
+        columns: [{ col: 1 }],
+        values: [units, { ...units, summary: 'MAX' }],
+      }),
+    ).toEqual({ rows: 3, cols: 1 });
+    expect(head({ rows: [{ col: 0 }], values: [units], valuesAsRows: true })).toEqual({
+      rows: 1,
+      cols: 2,
+    });
+    expect(head({ columns: [{ col: 1 }], values: [units] })).toEqual({ rows: 2, cols: 1 });
+  });
+});
