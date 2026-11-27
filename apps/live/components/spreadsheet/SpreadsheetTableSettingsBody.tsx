@@ -13,32 +13,21 @@ import {
   posRangeOf,
   tableColumnNames,
   tableOverlaps,
-  TABLE_COLUMN_TYPES,
   TABLE_REFUSAL_COPY,
   isSheetTable,
   type SheetTable,
   type TableColumnType,
 } from '@livedoc/sheets';
 import { useSheetController } from '@/components/sheets/sheet-controller';
+import {
+  COLUMN_TYPE_CHOICES,
+  COLUMN_TYPE_LABELS,
+} from '@/components/sheets/tables/table-column-types';
 import type { SheetActions } from '@/components/sheets/useSheetActions';
 import { debugLog } from '@/lib/debug-log';
 
 export const NO_TABLE = 'Select a cell in a table to see its settings.';
 export const TABLE_RANGE_UNREAD = 'Type a range like A1:D20, a header row and a data row at least';
-
-/** Each column type's words, None first (data-tools.md "Tables"). */
-export const COLUMN_TYPE_LABELS: Readonly<Record<TableColumnType | 'none', string>> = {
-  none: 'None',
-  text: 'Text',
-  number: 'Number',
-  percent: 'Percent',
-  currency: 'Currency',
-  date: 'Date',
-  time: 'Time',
-  dateTime: 'Date Time',
-  dropdown: 'Dropdown',
-  checkbox: 'Checkbox',
-};
 
 const label = 'text-supporting text-slate-600 dark:text-slate-300';
 const error = 'text-supporting text-red-700 dark:text-red-300';
@@ -154,7 +143,7 @@ function TableSettingsFields({
                 disabled={!editor}
                 onChange={(e) => setType(col, e.target.value as TableColumnType | 'none')}
               >
-                {(['none', ...TABLE_COLUMN_TYPES] as const).map((t) => (
+                {COLUMN_TYPE_CHOICES.map((t) => (
                   <option key={t} value={t}>
                     {COLUMN_TYPE_LABELS[t]}
                   </option>

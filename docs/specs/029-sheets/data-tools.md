@@ -238,9 +238,20 @@ sheet's, seen by everyone, kept by row and column ids as a named range is.
   cells and a banding; formulas reading it read the same cells as plain ranges, one undo step), **Delete Table** (its
   cells and look go). Rename, Convert to Range and Delete Table are an Editor's, dimmed for anyone else; views join
   the menu with box 1 ([Filters, filter views and slicers](#filters-filter-views-and-slicers)).
-- **Column menu** (a button on each header cell, Ctrl+Alt+\ on a cell of the table): **Edit Column Type** (the types
-  as a list, a Dropdown's options as the dropdown rule's form), **Sort A to Z**, **Sort Z to A** (the data rows only,
-  one undo step), **Insert 1 Column Left**, **Insert 1 Column Right**, **Delete Column**.
+- **Column menu** (a ▾ button at the right end of each header cell, seen by everyone, reached by Tab as the chip is;
+  Ctrl+Alt+\ on a cell of the table opens the active cell's column's), under the column's name:
+  - **Edit Column Type**: the types as a list, None first, the column's own ticked; choosing one sets it at once.
+    Dropdown opens the dropdown rule's options form on the column's options (its values as they read when it has
+    none, D449): each option's text and colour, reordered, removed, added; **Done** sets the type with them, refusing
+    none or a repeat as the rule's form does, and **Cancel** goes back to the list.
+  - **Sort A to Z**, **Sort Z to A**: the table's data rows by the column, the header and total rows staying put,
+    one undo step.
+  - **Insert 1 Column Left**, **Insert 1 Column Right**: a sheet column beside it, as the column header's menu
+    inserts; one beside the table's first or last column joins the table, one undo step (D450).
+  - **Delete Column**: the sheet column, as the column header's menu deletes; the table shrinks, and goes with its
+    last column.
+  - Every item is an Editor's, dimmed for anyone else, as the table menu's are; the menu's items move by the arrow
+    keys, Escape closing it.
 - **Table Settings** panel (the office shell's right panel), the settings of the table holding the active cell under
   its name ("Select a cell in a table to see its settings." outside one): **Range** (an A1 range, the header row
   first; refused as Convert to Table refuses, "Type a range like A1:D20, a header row and a data row at least"),
@@ -249,8 +260,10 @@ sheet's, seen by everyone, kept by row and column ids as a named range is.
   here. Every change writes at once, one undo step each; a Participant or a Viewer reads it, its fields read-only.
 - **Table references** in formulas ([Formulas](formulas.md#table-references)) read and follow the table.
 - **Files**: [Tables in the file](standard-mapping.md#tables-in-the-file).
-- Copies: a duplicated sheet's or copied sheet's tables are renamed to the next free names; a table's banding goes
-  with it; Clear Sheet leaves the tables, their cells cleared.
+- Copies: a duplicated sheet's or copied sheet's tables are renamed to the next free names, each its own name (a
+  number it ends in left off) with the smallest number from 2 that frees it in the workbook (`Sales2`, `Table2`,
+  D451); formulas in the copy reading its tables
+  read the copy's; a table's banding goes with it; Clear Sheet leaves the tables, their cells cleared.
 
 ## Clean-up, split, randomise, stats
 
@@ -329,6 +342,13 @@ The code cites each by its id.
   clearing a value in the row it gives up; anything else is refused (403, `[sheets] sheet.table_growth.refused`).
 - **D449** A column made Dropdown: its options are its data cells' values as they read, once each (case aside), in
   their order, up to a dropdown's 500 (default).
+- **D450** The column menu's Insert 1 Column Left and Right insert a whole sheet column, as the column header's menu
+  does; one beside the table's first or last column joins the table, as Google's; Delete Column deletes the sheet
+  column (default).
+- **D451** A copied table's name: its own name, a number it ends in left off, with the smallest number from 2 that
+  frees it among the workbook's tables and named ranges (`Sales` to `Sales2`, `Table1` to `Table2`), as D443
+  numbers a repeated column name; an underscore before the number when the name would read as a cell
+  (`Plan_2`) (default).
 - **D302** A named function's limits: a name up to 254 characters (Google's), up to 20 placeholders, a definition up
   to 2,000 characters, a description up to 1,000, an argument's description and example up to 200 each (default).
 - **D345** A protection's bounds: up to 100 a sheet, 50 exceptions a protected sheet, a description up to 200

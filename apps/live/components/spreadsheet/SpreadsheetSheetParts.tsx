@@ -3,7 +3,7 @@
 // The open sheet's parts (docs/specs/029-sheets/surface.md): the formula bar, the grid, the right side panel beside them
 // (office-shell.md "Side panels"), the grid's menus and dialogs and the sheet bar's summary, all on the open sheet's
 // controller.
-import { useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { DocumentFonts } from '@livedoc/document';
 import { useSheetController } from '@/components/sheets/sheet-controller';
 import { SheetGrid } from '@/components/sheets/SheetGrid';
@@ -41,7 +41,10 @@ import { useMergeDialog } from './useMergeDialog';
 import { useNumberFormatDialogs } from './useNumberFormatDialogs';
 import { useSortRangeDialog } from './useSortRangeDialog';
 import { SheetChartsContext } from '@/components/sheets/sheet-charts-context';
-import { TableSettingsContext } from '@/components/sheets/tables/table-settings-context';
+import {
+  TableColumnMenuContext,
+  TableSettingsContext,
+} from '@/components/sheets/tables/table-settings-context';
 import { useSpreadsheetCharts } from './charts/useSpreadsheetCharts';
 
 export function SpreadsheetSheetParts({ bridge }: { bridge: SheetsBridge }) {
@@ -97,6 +100,8 @@ export function SpreadsheetSheetParts({ bridge }: { bridge: SheetsBridge }) {
   }, [protectSheet, c.canShape, c.workbook, reveal]);
   // A table's chip on the grid opens Table Settings on it (data-tools.md "Tables").
   const openTableSettings = useCallback(() => reveal(TABLE_SETTINGS_PANEL), [reveal]);
+  // Ctrl+Alt+\ opens the active cell's table column menu, which the grid's tables layer draws (data-tools.md "Tables").
+  const columnMenu = useRef<(() => void) | null>(null);
   const charts = useSpreadsheetCharts(c, c.canShape ? editChart : undefined);
   const { insertChart } = charts;
   const canInsertChart = c.canShape;
@@ -132,6 +137,7 @@ export function SpreadsheetSheetParts({ bridge }: { bridge: SheetsBridge }) {
           canShape: c.canShape,
         },
       ),
+      'table-column-menu': { run: () => columnMenu.current?.() },
       // Insert › Chart and the toolbar's (charts.md "Inserting"): an Editor's.
       ...(canInsertChart ? { 'insert-chart': { run: insertChart } } : {}),
     }),
@@ -176,18 +182,20 @@ export function SpreadsheetSheetParts({ bridge }: { bridge: SheetsBridge }) {
           <SpreadsheetFormulaBarRow actions={actions} input={input} />
           <div data-region="document" className="relative flex min-h-0 flex-1 flex-col">
             <TableSettingsContext.Provider value={openTableSettings}>
-              <SheetChartsContext.Provider value={charts.value}>
-                <SheetGrid
-                  elementId={`sheet-${c.sheet.id}`}
-                  actions={actions}
-                  input={input}
-                  pointRef={pointRef}
-                  peers={bridge.peers}
-                  zoom={zoom}
-                  surfaceKeys={surfaceKeys}
-                  fontFamily={DocumentFonts.stack(theme.font)}
-                />
-              </SheetChartsContext.Provider>
+              <TableColumnMenuContext.Provider value={columnMenu}>
+                <SheetChartsContext.Provider value={charts.value}>
+                  <SheetGrid
+                    elementId={`sheet-${c.sheet.id}`}
+                    actions={actions}
+                    input={input}
+                    pointRef={pointRef}
+                    peers={bridge.peers}
+                    zoom={zoom}
+                    surfaceKeys={surfaceKeys}
+                    fontFamily={DocumentFonts.stack(theme.font)}
+                  />
+                </SheetChartsContext.Provider>
+              </TableColumnMenuContext.Provider>
             </TableSettingsContext.Provider>
           </div>
         </div>

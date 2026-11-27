@@ -20,6 +20,7 @@ import {
   SheetLimits,
   SheetName,
   workbookSheetLayout,
+  withFreeTableNames,
   isSheetId,
   makeSheetId,
   type SheetJson,
@@ -43,6 +44,7 @@ import { relayDocumentMeta } from '../room-client';
 import { readBody, type DocumentRouteContext } from './context';
 import { writer } from './item-route-kit';
 import {
+  copiedTables,
   newGridProblem,
   relaySheet,
   sheetCaller,
@@ -146,6 +148,7 @@ async function addSheet(ctx: DocumentRouteContext, documentId: string): Promise<
         { id, tabId, title: name, by },
         now,
         true,
+        copiedTables(source.layout, live),
       ),
     ]);
     return added(ctx, documentId, tab, id, orderIndex, started, 'copied');
@@ -154,7 +157,13 @@ async function addSheet(ctx: DocumentRouteContext, documentId: string): Promise<
     id: add.sheetId ?? makeSheetId(),
     tabId,
     title: name,
-    layout: add.seed?.layout ?? workbookSheetLayout(),
+    // A sheet carried in takes table names free of the workbook's (data-tools.md D451).
+    layout: add.seed?.layout
+      ? withFreeTableNames(
+          add.seed.layout,
+          live.map((h) => h.layout),
+        )
+      : workbookSheetLayout(),
     cells: add.seed?.cells ?? [],
     rev: 0,
     createdAt: now,

@@ -150,7 +150,7 @@ leaves it); `left out (C3)` (its function is a Google service, [Parity matrix](p
 | Accessibility menu                     | `Alt+A (Chrome) or Alt+Shift+A (other browsers)` | `Ctrl+Option+A`          | `Alt+A`                     | specified                                               |
 | Sheet menu                             | `Alt+Shift+S`                                    | `Option+Shift+S`         | `Ctrl+Shift+S`              | specified                                               |
 | Context menu                           | `Ctrl+Shift+\ or Shift+F10`                      | `⌘+Shift+\ or Shift+F10` | `Ctrl+Shift+\ or Shift+F10` | the surface's (`spreadsheet-surface-shortcuts.test.ts`) |
-| Table column menu                      | `Ctrl+Alt+\`                                     | `⌘+Option+\`             | `Ctrl+Alt+\`                | specified                                               |
+| Table column menu                      | `Ctrl+Alt+\`                                     | `⌘+Option+\`             | `Ctrl+Alt+\`                | built (`SheetTablesLayer.test.tsx`)                     |
 
 ## Rows and columns
 

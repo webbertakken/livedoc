@@ -199,6 +199,30 @@ describe('duplicating a sheet', () => {
     expect((JSON.parse(kept.layout) as { names?: unknown }).names).toEqual(names);
   });
 
+  // data-tools.md "Tables" "Copies" (D451): a copy's tables, and a carried-in sheet's, take the next free names.
+  it("renames a copy's tables, and a seed's, free of the workbook's", async () => {
+    const tables = [
+      {
+        id: 'tbl001',
+        name: 'Sales',
+        r1: kit.layout.rows[0]!,
+        c1: kit.layout.cols[0]!,
+        r2: kit.layout.rows[1]!,
+        c2: kit.layout.cols[0]!,
+      },
+    ];
+    kit.sql.sql
+      .prepare("UPDATE sheets SET layout = json_set(layout, '$.tables', json(?)) WHERE id = ?")
+      .run(JSON.stringify(tables), 'book1Sheet');
+    const first = await (await add({ copyOf: 'book1Sheet' })).json<WorkbookSheetAddResponse>();
+    expect(first.sheet.layout.tables).toEqual([{ ...tables[0], name: 'Sales2' }]);
+    expect(first.sheet.layout.rows).toEqual(kit.layout.rows);
+    const seeded = await (
+      await add({ seed: { layout: { ...kit.layout, tables }, cells: [] } })
+    ).json<WorkbookSheetAddResponse>();
+    expect(seeded.sheet.layout.tables).toEqual([{ ...tables[0], name: 'Sales3' }]);
+  });
+
   it('takes the name, the place and the ids it is given', async () => {
     const res = await add({
       copyOf: 'book1Sheet',

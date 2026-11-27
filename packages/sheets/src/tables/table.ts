@@ -94,6 +94,42 @@ export function nextTableName(layouts: readonly SheetLayout[]): string {
   }
 }
 
+/**
+ * A copied sheet's tables renamed (data-tools.md "Tables" "Copies", D451): each its own name, a number it ends in left
+ * off, with the smallest number from 2 free among `layouts` (the workbook it lands in) and the names given before it;
+ * an underscore before the number when the name would read as a cell (`Plan_2`).
+ */
+export function tablesForCopy(
+  tables: readonly SheetTable[],
+  layouts: readonly SheetLayout[],
+): SheetTable[] {
+  const named: SheetLayout[] = [...layouts];
+  return tables.map((t) => {
+    const base = t.name.trim().replace(/[0-9]+$/, '') || 'Table';
+    const free = (name: string) => named.every((l) => tableNameProblem(name, l) === null);
+    let name = '';
+    for (let n = 2; !free(name); n++) {
+      const digits = String(n);
+      name = base.slice(0, TABLE_NAME_MAX - digits.length) + digits;
+      if (CELL_LIKE.test(tableFormulaName(name)))
+        name = `${base.slice(0, TABLE_NAME_MAX - digits.length - 1)}_${digits}`;
+    }
+    const copy = { ...t, name };
+    named.push({ rows: [], cols: [], tables: [copy] });
+    return copy;
+  });
+}
+
+/** A copied sheet's layout with its tables renamed free of `layouts` (D451); the layout itself when it has none. */
+export function withFreeTableNames(
+  layout: SheetLayout,
+  layouts: readonly SheetLayout[],
+): SheetLayout {
+  return layout.tables?.length
+    ? { ...layout, tables: tablesForCopy(layout.tables, layouts) }
+    : layout;
+}
+
 /** A table's cells as positions, or null when a corner is gone. */
 export function tableBox(layout: SheetLayout, table: IdRange) {
   return posRangeOf(layout, table);

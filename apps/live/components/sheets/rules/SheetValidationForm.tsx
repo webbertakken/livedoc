@@ -7,7 +7,6 @@
 import { useState } from 'react';
 import { Button, Select, TextInput, DateInput } from '@livedoc/ui';
 import {
-  DROPDOWN_OPTIONS_MAX,
   DROPDOWN_OPTION_MAX,
   FORMAT_RULE_FORMULA_MAX,
   VALIDATION_HELP_MAX,
@@ -15,23 +14,19 @@ import {
   type ValidationKind,
   type ValidationRule,
 } from '@livedoc/sheets';
+import { SheetDropdownOptions } from './SheetDropdownOptions';
 import { OptionRows } from '@/components/plan/OptionRows';
-import { ColourSwatchButton } from '@/components/colour/ColourSwatchButton';
-import { noColour } from '@/components/colour/colour-options';
 import { useSheetController } from '../sheet-controller';
 import type { SheetActions } from '../useSheetActions';
 import {
   KINDS,
   OPS,
   OPTION_COLOURS,
-  OPTION_GROUPS,
   SHOWS,
   draftEnv,
   draftOf,
-  nextKey,
   settingsOf,
   type Draft,
-  type Option,
 } from './validation-draft';
 
 const label = 'block text-supporting text-slate-500 dark:text-slate-400';
@@ -54,19 +49,9 @@ export function SheetValidationForm({
   const [d, setD] = useState<Draft>(() => draftOf(c, existing, palette));
   const [why, setWhy] = useState<string | null>(null);
   const [advanced, setAdvanced] = useState(!!(existing?.warn || existing?.help));
-  const [dragFrom, setDragFrom] = useState<number | null>(null);
   const set = (patch: Partial<Draft>) => {
     setWhy(null);
     setD((x) => ({ ...x, ...patch }));
-  };
-  const setOpt = (key: number, patch: Partial<Option>) =>
-    set({ opts: d.opts.map((o) => (o.key === key ? { ...o, ...patch } : o)) });
-  const addOptAfter = (key?: number) => {
-    if (d.opts.length >= DROPDOWN_OPTIONS_MAX) return;
-    const at = key === undefined ? d.opts.length : d.opts.findIndex((o) => o.key === key) + 1;
-    const next = [...d.opts];
-    next.splice(at, 0, { key: nextKey(), v: '', c: palette[d.opts.length % palette.length] });
-    set({ opts: next });
   };
   const done = () => {
     const g = parseRangeText(d.range);
@@ -123,69 +108,7 @@ export function SheetValidationForm({
         </Select>
       </div>
       {d.is === 'list' ? (
-        <div className="flex flex-col gap-2" role="list" aria-label="Options">
-          {d.opts.map((o, i) => (
-            <div
-              key={o.key}
-              role="listitem"
-              className="flex items-center gap-2"
-              draggable={false}
-              onDragOver={(e) => dragFrom !== null && e.preventDefault()}
-              onDrop={() => {
-                if (dragFrom === null || dragFrom === i) return;
-                const next = [...d.opts];
-                const [moved] = next.splice(dragFrom, 1);
-                next.splice(i, 0, moved!);
-                setDragFrom(null);
-                set({ opts: next });
-              }}
-            >
-              <span
-                aria-hidden
-                draggable
-                onDragStart={() => setDragFrom(i)}
-                onDragEnd={() => setDragFrom(null)}
-                className="cursor-grab select-none px-0.5 text-slate-400"
-              >
-                ⋮⋮
-              </span>
-              <ColourSwatchButton
-                label={`Colour for ${o.v || `Option ${i + 1}`}`}
-                swatch={o.c ?? 'transparent'}
-                none={!o.c}
-                value={o.c ?? 'none'}
-                leading={[noColour('none', 'No Colour')]}
-                standard={OPTION_GROUPS}
-                onPick={(id) => setOpt(o.key, { c: id === 'none' ? undefined : id.toLowerCase() })}
-              />
-              <TextInput
-                aria-label={`Option ${i + 1}`}
-                className="min-w-0 flex-1"
-                maxLength={DROPDOWN_OPTION_MAX}
-                value={o.v}
-                placeholder={`Option ${i + 1}`}
-                onChange={(e) => setOpt(o.key, { v: e.target.value })}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault();
-                    addOptAfter(o.key);
-                  }
-                }}
-              />
-              <Button
-                variant="ghost"
-                size="xs"
-                aria-label={`Remove ${o.v || `Option ${i + 1}`}`}
-                onClick={() => set({ opts: d.opts.filter((x) => x.key !== o.key) })}
-              >
-                ✕
-              </Button>
-            </div>
-          ))}
-          <Button variant="secondary" size="xs" onClick={() => addOptAfter()}>
-            Add Another Option
-          </Button>
-        </div>
+        <SheetDropdownOptions opts={d.opts} onChange={(opts) => set({ opts })} />
       ) : null}
       {d.is === 'check' ? (
         <div className="flex flex-col gap-2">

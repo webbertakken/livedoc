@@ -20,6 +20,7 @@ import {
   sheetFromJson,
   layoutForCopy,
   sheetToJson,
+  withFreeTableNames,
   validateSheetCreate,
   validateWrite,
   type SheetJson,
@@ -126,10 +127,14 @@ export async function offlineCreateSheet(
         id,
         tabId: create.tabId,
         title: create.title,
-        // A spreadsheet's copy leaves its named ranges with the original (sheet.md D298).
-        layout: source
-          ? layoutForCopy(source.layout, spreadsheet)
-          : (create.layout ?? emptyLayout()),
+        // A spreadsheet's copy leaves its named ranges with the original (sheet.md D298); a sheet landing here
+        // takes table names free of its workbook's (data-tools.md D451).
+        layout: withFreeTableNames(
+          source ? layoutForCopy(source.layout, spreadsheet) : (create.layout ?? emptyLayout()),
+          (spreadsheet ? onTabs : sheets.filter((s) => s.tabId === create.tabId)).map(
+            (s) => s.layout,
+          ),
+        ),
         cells: source?.cells ?? create.cells ?? [],
         rev: 0,
         createdAt: now,
