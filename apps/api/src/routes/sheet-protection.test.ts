@@ -27,7 +27,10 @@ const guard = (can: Protection['can'], range = true): Protection => ({
   can,
 });
 const protect = async (p: Protection) => {
-  const res = await write({ kind: 'layout', changes: [{ k: 'protection', id: p.id, protection: p }] });
+  const res = await write({
+    kind: 'layout',
+    changes: [{ k: 'protection', id: p.id, protection: p }],
+  });
   expect(res.status, await res.clone().text()).toBe(200);
 };
 const inputAt = async (r: number, c: number) =>
