@@ -82,8 +82,14 @@ fetched 2026-11-27); the look is (default) until a capture of Google’s dialog.
   and turns the browser's check off too.
 - **Grammar** needs a server: shown only where the host configures one (fork D5, ruled: none on docs.nu; a self-hoster may configure one).
 - Show grammar suggestions: per person, present only where a grammar server is configured.
-- **Automatically correct spelling** (Preferences): a misspelt word with one suggestion the checker is sure of is
-  corrected as the word ends, its own undo step, as a typing aid is.
+- **Automatically correct spelling** (Preferences, on by default as Google's): a misspelt word with one correction the
+  checker is sure of is corrected as the word ends (a space, punctuation, Enter), its own undo step, as a typing aid is.
+  Sure means exactly one swap of two neighbouring letters spelt right, else exactly one suggestion one edit away. A
+  word with a capital after its first letter, a personal or ignored word, and code are never corrected; the word keeps
+  its first letter's case. The correction lands only if the word is still as typed when the check answers.
+- **Always correct to ‹suggestion›** (the context menu on a misspelt word, Google's, help 12022089): the word replaced
+  by its first suggestion now, and the pair added to the person's substitutions (Preferences > Substitutions), so it is
+  corrected as typed from then on; at the substitutions' limit it says so. Its place in the menu is (default).
 
 ## Dictionary
 
@@ -142,7 +148,8 @@ suggestions under D7); preferences and accessibility settings are each person's 
 ## Telemetry
 
 `Search · Used · TextDocumentFind`, `TextDocumentReplaceAll`; `Document · Changed · TextDocumentSpellingAccepted` (a
-suggestion taken), `TextDocumentDictionaryAdded`; `UI · Opened · TextDocumentWordCount`, `TextDocumentSpelling`,
+suggestion taken), `TextDocumentSpellingCorrected` (corrected while typing), `TextDocumentAlwaysCorrect`,
+`TextDocumentDictionaryAdded`; `UI · Opened · TextDocumentWordCount`, `TextDocumentSpelling`,
 `TextDocumentCitations`; `UI · Toggled · TextDocumentWordCountWhileTypingOn`, `TextDocumentWordCountWhileTypingOff`,
 `TextDocumentSpellingSuggestionsOn`, `TextDocumentSpellingSuggestionsOff` (each before it is kept),
 `TextDocumentScreenReader`. Never text.

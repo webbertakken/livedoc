@@ -38,6 +38,7 @@ function fakeChecker() {
       return new Set(words.filter((w) => !KNOWN.has(w)));
     },
     known: () => undefined,
+    correct: () => Promise.resolve(null),
     suggest: () => Promise.resolve([]),
   };
   const release = () => gate.waiting.splice(0).forEach((r) => r());

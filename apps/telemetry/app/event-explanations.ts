@@ -270,6 +270,10 @@ export const EXACT: Readonly<Record<string, string>> = {
     'Someone compared two text documents from Tools > Compare documents, making a new document of suggestions.',
   'Document|Changed|TextDocumentSpellingAccepted':
     'Someone replaced a misspelt word in a text document with one of its suggestions, from the context menu (never the word).',
+  'Document|Changed|TextDocumentSpellingCorrected':
+    'A misspelt word in a text document was corrected automatically as it was typed (never the word).',
+  'Document|Changed|TextDocumentAlwaysCorrect':
+    'Someone chose Always correct to on a misspelt word in a text document, adding a substitution (never the word).',
   'Document|Changed|TextDocumentDictionaryAdded':
     'Someone added a word to their personal dictionary from a text document, so the spelling check takes it (never the word).',
   'Document|Changed|TextDocumentVersionNamed':

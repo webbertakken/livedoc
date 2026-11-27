@@ -23,16 +23,18 @@ const core = createSpellingCore(async (language: SpellingLanguage) => {
 });
 
 scope.addEventListener('message', ({ data }) => {
-  const answer =
+  const answer: Promise<SpellingResponse> =
     data.kind === 'check'
       ? core
           .check(data.language, data.words)
-          .then((misspelt): SpellingResponse => ({ id: data.id, kind: 'checked', misspelt }))
-      : core.suggest(data.language, data.word, data.most).then((suggestions): SpellingResponse => ({
-          id: data.id,
-          kind: 'suggested',
-          suggestions,
-        }));
+          .then((misspelt) => ({ id: data.id, kind: 'checked', misspelt }))
+      : data.kind === 'suggest'
+        ? core
+            .suggest(data.language, data.word, data.most)
+            .then((suggestions) => ({ id: data.id, kind: 'suggested', suggestions }))
+        : core
+            .correct(data.language, data.word)
+            .then((correction) => ({ id: data.id, kind: 'corrected', correction }));
   void answer
     .catch((err: unknown): SpellingResponse => ({
       id: data.id,

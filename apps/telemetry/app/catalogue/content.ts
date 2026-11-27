@@ -281,6 +281,22 @@ export const TEXT_DOCUMENT_SPELLING_ACCEPTED = chart(
   { types: ['TextDocumentSpellingAccepted'], rising: 'good' },
 );
 
+export const TEXT_DOCUMENT_SPELLING_CORRECTED = chart(
+  'Document',
+  'Changed',
+  'Spelling Corrected While Typing',
+  'A misspelt word in a text document was corrected automatically as it was typed.',
+  { types: ['TextDocumentSpellingCorrected'], rising: 'good' },
+);
+
+export const TEXT_DOCUMENT_ALWAYS_CORRECT = chart(
+  'Document',
+  'Changed',
+  'Always Correct To Chosen',
+  'Someone chose Always correct to on a misspelt word in a text document.',
+  { types: ['TextDocumentAlwaysCorrect'], rising: 'good' },
+);
+
 export const TEXT_DOCUMENT_DICTIONARY_ADDED = chart(
   'Document',
   'Changed',
@@ -394,6 +410,8 @@ export const DOCUMENT_ACTIONS: MetricStack = {
     TEXT_DOCUMENT_NOTICES_CHOSEN,
     TEXT_DOCUMENT_SPELLING_ACCEPTED,
     TEXT_DOCUMENT_DICTIONARY_ADDED,
+    TEXT_DOCUMENT_SPELLING_CORRECTED,
+    TEXT_DOCUMENT_ALWAYS_CORRECT,
     NEW_DOCUMENT_BACKED_OUT,
   ],
   headline: [DOCUMENTS_CREATED, DOCUMENTS_RENAMED, DOCUMENTS_DELETED, DOCUMENTS_DUPLICATED],

@@ -60,6 +60,7 @@ import { useTextDocumentTables } from '@/lib/text-document/useTextDocumentTables
 import { useTextDocumentBuildingBlocks } from '@/lib/text-document/useTextDocumentBuildingBlocks';
 import { codeBlockKeysPlugin, codeBlockOf } from '@/lib/text-document/text-document-code-blocks';
 import { spellingPlugin } from '@/lib/text-document/text-document-spelling';
+import { autocorrectPlugin } from '@/lib/text-document/text-document-autocorrect';
 import { codeHighlightPlugin } from '@/lib/text-document/text-document-code-highlight-plugin';
 import { indentUnit } from '@/lib/text-document/indent-units';
 import {
@@ -523,6 +524,14 @@ export function TextDocumentSurface({
           spellingPlugin({
             ...spellingSource.source,
             skipped: (block) => codeBlockOf(block, readFormatting().styles) !== undefined,
+          }),
+          // Automatically correct spelling, seeing each word end before the typing aids take the key (tools.md).
+          autocorrectPlugin({
+            source: {
+              ...spellingSource.source,
+              skipped: (block) => codeBlockOf(block, readFormatting().styles) !== undefined,
+            },
+            enabled: () => typingAids.current().spelling,
           }),
           // The typing aids: smart quotes, substitutions, links, capitals, lists.
           typingAidsPlugin({

@@ -18,7 +18,13 @@ function fakeWorker() {
               kind: 'checked',
               misspelt: request.words.filter((w) => !['the', 'cat'].includes(w)),
             }
-          : { id: request.id, kind: 'suggested', suggestions: ['the'].slice(0, request.most) };
+          : request.kind === 'suggest'
+            ? { id: request.id, kind: 'suggested', suggestions: ['the'].slice(0, request.most) }
+            : {
+                id: request.id,
+                kind: 'corrected',
+                correction: request.word === 'teh' ? 'the' : null,
+              };
       queueMicrotask(() => listener({ data: answer } as MessageEvent<SpellingResponse>));
     },
     addEventListener: (_, fn) => (listener = fn),
@@ -83,6 +89,16 @@ describe('createSpellingChecker', () => {
     expect(seen).toHaveLength(1);
   });
 
+  it('corrects, keeping each word’s answer', async () => {
+    const { worker, seen } = fakeWorker();
+    const checker = createSpellingChecker(() => worker);
+    expect(await checker.correct('nl', 'teh')).toBe('the');
+    expect(await checker.correct('nl', 'teh')).toBe('the');
+    expect(await checker.correct('nl', 'xyz')).toBeNull();
+    expect(await checker.correct('nl', 'xyz')).toBeNull();
+    expect(seen).toHaveLength(2);
+  });
+
   it('underlines nothing and suggests nothing when the worker fails, then asks again', async () => {
     const { worker, state } = fakeWorker();
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
@@ -90,6 +106,7 @@ describe('createSpellingChecker', () => {
     state.failing = true;
     expect(await checker.check('nl', ['teh'])).toEqual(new Set());
     expect(await checker.suggest('nl', 'teh')).toEqual([]);
+    expect(await checker.correct('nl', 'teh')).toBeNull();
     expect(warn).toHaveBeenCalledWith('[spelling] check failed', {
       error: 'load-failed',
       detail: 'nl: offline',

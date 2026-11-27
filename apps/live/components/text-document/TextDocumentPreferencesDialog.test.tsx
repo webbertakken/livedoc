@@ -64,7 +64,7 @@ describe('TextDocumentPreferencesDialog', () => {
 
   // tools.md "Preferences": Google's General options in Google's order; Smart Reply left out (C3); an option whose
   // feature is not built yet dimmed, "Coming soon" under it.
-  it("lists Google's General options in its order, those not built yet dimmed", () => {
+  it("lists Google's General options in its order, each a switch", () => {
     open();
     expect(
       screen
@@ -80,11 +80,12 @@ describe('TextDocumentPreferencesDialog', () => {
       'Show link details',
       'Insert emoji using the colon character',
     ]);
-    for (const name of ['Automatically correct spelling']) {
-      const soon = screen.getByRole<HTMLInputElement>('checkbox', { name: new RegExp(`^${name}`) });
-      expect(soon.disabled).toBe(true);
-      expect(soon.getAttribute('aria-describedby')).not.toBeNull();
-    }
+    // Automatically correct spelling is on as Google's is.
+    const spelling = screen.getByRole<HTMLInputElement>('checkbox', {
+      name: /^Automatically correct spelling$/,
+    });
+    expect(spelling.disabled).toBe(false);
+    expect(spelling.checked).toBe(true);
     expect(screen.queryByText(/Smart Reply/)).toBeNull();
   });
 
