@@ -351,7 +351,8 @@ type: "waterfall" draws the first value column as changes to a running total, a 
 type: "treemap" tiles the plot, a tile per label sized by its value (files hold it as a pie chart);
 type: "gauge" draws a dial per label, its needle at the value (files hold it as a bar chart);
 type: "scorecard" writes the first value column’s sum large, its change from the second’s under it (files hold a column chart);
-type: "timeline" places each point by its date (a date label column, or ISO dates) along a time axis (files hold a line chart).
+type: "timeline" places each point by its date (a date label column, or ISO dates) along a time axis (files hold a line chart);
+type: "table" writes the data as a table, a row per label and a column per value column (files hold a column chart).
 stack: "stacked" or "percent" stacks a column, bar, area or stepped-area chart's series (100% as shares);
 smooth: true curves a line chart's lines.
 type: "combo" draws each series as columns, a line, an area or a stepped area: seriesTypes {"Margin": "line"}

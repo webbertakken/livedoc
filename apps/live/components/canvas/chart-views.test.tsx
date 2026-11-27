@@ -291,6 +291,34 @@ describe('chart views', () => {
     expect(bare.container.textContent).toContain('Subtotal');
   });
 
+  it('writes a table’s header, cells and bands (Table, D374)', () => {
+    const { container } = render(
+      <LineChartView
+        element={el('line-chart', {
+          chartVariant: 'table',
+          chartAxisTitles: { x: 'Region' },
+          lineCategories: ['North', 'South'],
+          lineSeries: [{ name: 'Sales', values: [1200, null] }],
+        })}
+        textColor="#000"
+      />,
+    );
+    const texts = [...container.querySelectorAll('text')].map((t) => t.textContent);
+    expect(texts).toEqual(expect.arrayContaining(['Region', 'Sales', 'North', '1,200', 'South']));
+    expect(container.querySelectorAll('rect[fill="#f1f5f9"]')).toHaveLength(1);
+    const bare = render(
+      <LineChartView
+        element={el('line-chart', {
+          chartVariant: 'table',
+          lineCategories: undefined,
+          lineSeries: undefined,
+        })}
+        textColor="#000"
+      />,
+    );
+    expect(bare.container.querySelector('text[font-weight="600"]')).not.toBeNull();
+  });
+
   it('places a timeline’s points by date, unmarked, and reads a point’s date (Timeline, D372)', () => {
     const { container } = render(
       <LineChartView

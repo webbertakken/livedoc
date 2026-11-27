@@ -2873,6 +2873,7 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
       "gauge",
       "scorecard",
       "timeline",
+      "table",
       "combo"
     ],
     "type": "string"
@@ -15540,6 +15541,7 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
       "gauge",
       "scorecard",
       "timeline",
+      "table",
       "combo"
     ],
     "type": "string"

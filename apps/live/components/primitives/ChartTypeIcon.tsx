@@ -88,6 +88,12 @@ const MARKS: Record<ChartType, React.ReactNode> = {
       <path d="M7 17v-5h3v5M10 17V7h3v10M13 17v-7h3v7M16 17v-3h3v3" />
     </>
   ),
+  table: (
+    <>
+      <rect x="3" y="4" width="18" height="16" rx="1" />
+      <path d="M3 9h18M3 14h18M10 4v16" />
+    </>
+  ),
   timeline: (
     <>
       <path d={AXES} />

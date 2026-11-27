@@ -246,6 +246,19 @@ describe('chart elements', () => {
     expect(el!.lineSeries!.length).toBeGreaterThan(0);
   });
 
+  it('draw a table (D374)', () => {
+    const { wb, sheet } = book();
+    const built = buildChartChange(wb, sheet.id, { op: 'chart', type: 'table', range: 'A1:B3' });
+    if (!built.ok) throw new Error(built.message);
+    const [el] = sheetChartElements(
+      wb,
+      { x: 0, y: 0, width: 960, height: 560 },
+      sheet.id,
+      built.charts,
+    );
+    expect(el).toMatchObject({ shape: 'line-chart', chartVariant: 'table' });
+  });
+
   it('draw a timeline (D372)', () => {
     const { wb, sheet } = book();
     const built = buildChartChange(wb, sheet.id, { op: 'chart', type: 'timeline', range: 'A1:B3' });

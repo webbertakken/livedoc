@@ -100,7 +100,7 @@ export const SHAPE_KEYWORDS: Partial<Record<ShapeKind, string>> = {
   'pie-chart': 'donut doughnut ring share split proportion chart treemap tiles gauge dial meter',
   'bar-chart': 'column bar horizontal histogram chart graph',
   'line-chart':
-    'trend series graph chart plot area scatter xy bubble radar candlestick ohlc stock histogram distribution waterfall bridge scorecard kpi metric total timeline dates time',
+    'trend series graph chart plot area scatter xy bubble radar candlestick ohlc stock histogram distribution waterfall bridge scorecard kpi metric total timeline dates time table grid',
   'code-block': 'code snippet syntax monospace program',
   checklist: 'todo tasks tick checkbox list',
   // Sankey (docs/specs/009-elements/sankey.md): what people call it, and what they draw with it.

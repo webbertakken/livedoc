@@ -98,7 +98,7 @@ ChartAxis`); a series on the right shows "(right)" after its name in the Data su
 
 ## Chart types
 
-A **chart type** is how a chart draws its data, named as Google Sheets names it. Nineteen ship; each is a chart kind
+A **chart type** is how a chart draws its data, named as Google Sheets names it. Twenty ship; each is a chart kind
 (the stored `shape`) and, for all but the first of its kind, a `chartVariant`:
 
 A chart is **named by its type** wherever the editor names an element: the selection badge says "Selected Column
@@ -121,6 +121,7 @@ Chart" and a screen reader hears "Column chart", as the palette's tile says, nev
 | Waterfall    | `line-chart`   | `waterfall`    | The first series as changes to a running total, each a floating column, a subtotal last       |
 | Scorecard    | `line-chart`   | `scorecard`    | The first series' sum written large, its change from the second series' sum under it (below)  |
 | Timeline     | `line-chart`   | `timeline`     | Each series a line through its points, each placed along a time axis by its date (below)      |
+| Table        | `line-chart`   | `table`        | The data as a table: a row per category, a column per series (below)                          |
 | Combo        | `line-chart`   | `combo`        | Each series as columns, a line, an area or a stepped area over one set of categories (below)  |
 | Pie          | `pie-chart`    | (none)         | Wedges clockwise from twelve o'clock                                                          |
 | Doughnut     | `pie-chart`    | `doughnut`     | Pie's wedges with the middle open: a ring whose hole is 55% of its radius                     |
@@ -297,6 +298,19 @@ Chart" and a screen reader hears "Column chart", as the palette's tile says, nev
     Show Values and the legend are a Line chart's.
   - Google's zoom control and range buttons, its title and note columns (annotations) and its value axis on the right
     are not built; stacking, Smooth Line, the right-hand axis and a series' line are ignored and kept (default, D372).
+- **Table** (Google Sheets' Table chart): a line chart's data written as a table: a header row, then a row per
+  category, the category in the first column and each series' value in a column of its own.
+  - The header names the series, bold over a line; the first column's header is the horizontal axis title, else empty,
+    which is then not drawn under the table; the vertical axis title is not drawn.
+  - Categories are left-aligned, values right-aligned, written in full with thousands separators and up to two
+    decimals (as Scorecard writes them); rows alternate a faint band (#f1f5f9 behind every second row), the text in
+    the chart's text colour.
+  - Columns share the width by their longest text, the first at least a quarter of it; text too long for its column
+    is cut with an ellipsis. Rows are 1.8 times the value size tall.
+  - Rows that do not fit are left out, the last row that fits saying how many more there are (`+ 12 more rows`).
+  - No legend, axis or readout take room. Show Values changes nothing.
+  - Google's sorting, paging, row numbers and colours of its own are not built; stacking, Smooth Line, the right-hand
+    axis and a series' line are ignored and kept (default, D374).
 - **Combo** (Google Sheets' Combo chart): a line chart's data (`lineSeries` over `lineCategories`), each series drawn
   as its own **series type**: Column, Line, Area or Stepped Area (`LineSeries.type`). A series with no type of its own takes the
   default: the first half of the series, rounded up, are columns and the rest lines, so two series are a column and a
@@ -326,6 +340,7 @@ Chart" and a screen reader hears "Column chart", as the palette's tile says, nev
   - **Radar**: no point on that spoke; the line breaks on either side of it.
   - **Candlestick** and **OHLC**: no mark in a slot missing any of its prices.
   - **Histogram**: the value is not counted; a bucket counting nothing draws no column.
+  - **Table**: an empty cell.
   - **Timeline**: no point; the line breaks on either side of it.
   - **Scorecard**: the value is not summed; a key value with no value at all writes no number and no change, its
     name alone; a baseline with no value at all writes no change.
@@ -355,7 +370,7 @@ Chart" and a screen reader hears "Column chart", as the palette's tile says, nev
   sit squeezed at its top over an empty band. Values all equal widen by half a unit either way. Line, Area, Column
   and Bar keep zero in range: a line's rise and an area or bar's size read against it.
 - **The Chart Type section** opens first in the chart's Tools flyout, closed until opened (as every section is): a
-  grid of nineteen tiles, each the type's glyph over its name, the chart's own type pressed. Hovering a tile previews
+  grid of twenty tiles, each the type's glyph over its name, the chart's own type pressed. Hovering a tile previews
   nothing; picking one changes the chart, one undo step, `Element · Changed · ChartType`.
 - **Changing type** keeps the chart's size, style, palette, legend and animation. Within a kind it only sets
   `chartVariant`. Across kinds it moves the data: a pie or bar chart's slices become one series named **Series 1**
@@ -509,7 +524,7 @@ paints no box; `LegendView` draws the card from the element's fill + stroke, and
 
 ## Element tour
 
-The **Chart tour** is on the actions group's **Start Chart Tour** button while a data chart (any of the nineteen chart types) is selected, once its kind is opted in to (Settings › Tours › Show Me), for an Editor on an unlocked element, and walks through it on the element
+The **Chart tour** is on the actions group's **Start Chart Tour** button while a data chart (any of the twenty chart types) is selected, once its kind is opted in to (Settings › Tours › Show Me), for an Editor on an unlocked element, and walks through it on the element
 itself ([Element tours](../007-editor/element-tours.md) "The Chart tour").
 
 ## Defaults
@@ -538,6 +553,10 @@ The code cites each by its id.
   a column chart's, the range fitted as a scatter's; a body 60% of its slot and at most 24 px, falling filled and rising
   hollow; OHLC ticks half the body wide; every mark the first series' colour, no legend keys; a gap where any price
   is missing; series past the fourth ignored; stacking, smoothing, the right axis and lines ignored (default).
+- **D374** Table: a header row of the series names (the first the horizontal axis title), a row per category,
+  categories left and values right, numbers as Scorecard's; a faint band on every second row; column widths by their
+  longest text, the first at least a quarter; rows 1.8 times the value size; rows past the plot left out and counted
+  in the last; no legend, axis or readout; Google's sorting, paging, row numbers and colours not built (default).
 - **D372** Timeline: ISO dates (and times) in UTC, a sheet's dated label column read as dates; a line per series in
   date order, no markers, broken at a gap; the value range fitted as Scatter's; round date labels at most one per 80 px;
   categories that are no date not drawn, none a date spaced evenly; Google's zoom, annotations and right-hand axis not
