@@ -133,10 +133,23 @@ export type PivotIndex = {
 /** The output's header rows (above the values) and label columns (left of them), its headers to a screen reader. */
 export type PivotHead = { rows: number; cols: number };
 
-/** The output, row by row, every row as wide as the widest, what GETPIVOTDATA reads of it, and its headers. */
+/** An item as grouping it reads it: its label, the source cell as it shows (a cell's own item), what made it. */
+export type PivotItemRef = { label: Scalar; shown?: string; made?: 'rule' | 'custom' };
+
+/** An output's cell naming a row or column group's item (relative to its anchor), by the group's place. */
+export type PivotItemCell = {
+  r: number;
+  c: number;
+  axis: 'rows' | 'columns';
+  depth: number;
+  item: PivotItemRef;
+};
+
+/** The output, row by row, every row as wide as the widest, what GETPIVOTDATA reads of it, its headers and items. */
 export type PivotOutput = {
   rows: PivotOutCell[][];
   width: number;
   index: PivotIndex;
   head: PivotHead;
+  items: PivotItemCell[];
 };

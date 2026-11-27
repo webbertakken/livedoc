@@ -6,7 +6,8 @@ import { officeMenuItem } from './office-menus';
 // Table Editor", "Working with one"): Insert › Pivot Table makes one on a new sheet from the data round the active
 // cell, the editor adds a row group and a value and the output lands; typing into it is refused; Edit reopens the
 // editor; Delete over the whole output removes it and Undo brings it back; a double-click on a value shows its source
-// rows on a new sheet, Details1 ("Details", D616), which Undo takes away.
+// rows on a new sheet, Details1 ("Details", D616), which Undo takes away. Right-clicking items groups them ("Grouping in
+// the grid", D621).
 
 const READY = '[data-spreadsheet-surface="ready"]';
 
@@ -30,11 +31,8 @@ async function cellCentre(page: Page, col: number, row: number) {
   return { x: letter!.x + letter!.width / 2, y: number!.y + number!.height / 2 };
 }
 
-test('Insert › Pivot Table sums units by region on a new sheet, edited, refused, removed and undone', async ({
-  page,
-  pageErrors,
-}) => {
-  test.setTimeout(120_000);
+// A new spreadsheet holding Region and Units in A1:B4.
+async function withData(page: Page) {
   await page.setViewportSize({ width: 1280, height: 860 });
   await page.goto('/new?kind=spreadsheet');
   await page.waitForURL(/\/document\//);
@@ -53,6 +51,31 @@ test('Insert › Pivot Table sums units by region on a new sheet, edited, refuse
     await page.keyboard.type(text);
     await page.keyboard.press('Enter');
   }
+}
+
+// Region rows summing Units on Pivot Table 1, the editor left open.
+async function pivotByRegion(page: Page) {
+  await select(page, 'A2');
+  await (await officeMenuItem(page, ['Insert', 'Pivot Table'])).click();
+  await page
+    .getByRole('dialog', { name: 'Create Pivot Table' })
+    .getByRole('button', { name: 'Create' })
+    .click();
+  const editor = page.getByRole('complementary', { name: 'Pivot Table Editor' });
+  await editor.getByRole('button', { name: 'Add Rows' }).click();
+  await page.getByRole('menuitem', { name: 'Region' }).click();
+  await editor.getByRole('button', { name: 'Add Values' }).click();
+  await page.getByRole('menuitem', { name: 'Units' }).click();
+  await expect(cell(page, 'B2 7')).toHaveCount(1);
+  return editor;
+}
+
+test('Insert › Pivot Table sums units by region on a new sheet, edited, refused, removed and undone', async ({
+  page,
+  pageErrors,
+}) => {
+  test.setTimeout(120_000);
+  await withData(page);
   await select(page, 'A2');
   await (await officeMenuItem(page, ['Insert', 'Pivot Table'])).click();
   const dialog = page.getByRole('dialog', { name: 'Create Pivot Table' });
@@ -134,6 +157,46 @@ test('Insert › Pivot Table sums units by region on a new sheet, edited, refuse
   });
   await page.keyboard.press('ControlOrMeta+z');
   await expect(details).toHaveCount(0);
+
+  expectNoPageErrors(pageErrors);
+});
+
+test('right-clicking items gathers them into Group 1, and Ungroup Pivot Items takes it apart', async ({
+  page,
+  pageErrors,
+}) => {
+  test.setTimeout(120_000);
+  await withData(page);
+  const editor = await pivotByRegion(page);
+  await editor.getByRole('button', { name: 'Done' }).click();
+  const label = (name: string) =>
+    page.getByRole('grid').getByRole('rowheader', { name, exact: true });
+
+  // East and West selected, then right-clicked: Create Pivot Group gathers them.
+  await select(page, 'A2:A3');
+  const east = await cellCentre(page, 1, 2);
+  await page.mouse.click(east.x, east.y, { button: 'right' });
+  const group = page.getByRole('menuitem', { name: 'Create Pivot Group', exact: true });
+  await expect(group).toBeVisible();
+  await expect(page.getByRole('menuitem', { name: 'Create Pivot Group Rule' })).toHaveCount(0);
+  await page.screenshot({
+    path: test.info().outputPath('pivot-group-menu.png'),
+    animations: 'disabled',
+  });
+  await group.click();
+  await expect(label('A2 Group 1')).toHaveCount(1);
+  await expect(cell(page, 'B2 10')).toHaveCount(1);
+  await page.screenshot({
+    path: test.info().outputPath('pivot-grouped.png'),
+    animations: 'disabled',
+  });
+
+  // Group 1 right-clicked: Ungroup Pivot Items brings East and West back.
+  await select(page, 'A2');
+  await page.mouse.click(east.x, east.y, { button: 'right' });
+  await page.getByRole('menuitem', { name: 'Ungroup Pivot Items' }).click();
+  await expect(label('A2 East')).toHaveCount(1);
+  await expect(label('A3 West')).toHaveCount(1);
 
   expectNoPageErrors(pageErrors);
 });

@@ -23,10 +23,32 @@ const PASTE_SPECIAL = {
 };
 
 describe('SPREADSHEET_CONTEXT_MENUS', () => {
-  it("draws a cell's menu as Google's, Open Link and Show Details heading it", () => {
+  it("draws a cell's menu as Google's, Open Link and a pivot table's items heading it", () => {
     expect(words(SPREADSHEET_CONTEXT_MENUS.cell)).toEqual([
       'Open Link',
       'Show Details',
+      {
+        'Create Pivot Date Group': [
+          'Second',
+          'Minute',
+          'Hour',
+          'Hour-Minute',
+          'Hour-Minute (12 Hour)',
+          'Day of the Week',
+          'Day of the Year',
+          'Day of the Month',
+          'Day-Month',
+          'Month',
+          'Quarter',
+          'Year',
+          'Year-Quarter',
+          'Year-Month',
+          'Year-Month-Day',
+        ],
+      },
+      'Create Pivot Group Rule',
+      'Create Pivot Group',
+      'Ungroup Pivot Items',
       '|',
       'Cut',
       'Copy',

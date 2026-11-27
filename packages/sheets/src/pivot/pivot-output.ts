@@ -7,6 +7,7 @@ import { compareItems, groupHeader, itemMaker, type PivotItem } from './pivot-it
 import { summarise } from './pivot-summary';
 import type {
   PivotIndex,
+  PivotItemCell,
   PivotCalc,
   PivotCell,
   PivotGroupSpec,
@@ -231,6 +232,24 @@ function worked(
 
 type Slot = { node: PivotNode; v: number | null; total: boolean };
 
+// An item's cell, carrying what grouping it from the grid reads (pivot-tables.md "Grouping in the grid").
+function itemCell(
+  r: number,
+  c: number,
+  axis: PivotItemCell['axis'],
+  depth: number,
+  n: PivotNode,
+): PivotItemCell {
+  const { label, shown, made } = n.item!;
+  return {
+    r,
+    c,
+    axis,
+    depth,
+    item: { label, ...(shown !== undefined ? { shown } : {}), ...(made ? { made } : {}) },
+  };
+}
+
 // The output's cells: header rows, then a line per row item (and total), a column per column item (and total).
 function layout(
   source: PivotSource,
@@ -294,6 +313,7 @@ function layout(
     return cells;
   };
   const twoValuesAcross = !vertical && V >= 2;
+  const items: PivotItemCell[] = [];
 
   // The header rows.
   let lastHeader: PivotOutCell[];
@@ -306,11 +326,13 @@ function layout(
     if (twoValuesAcross) first[L + C] = { v: 'Values' };
     for (let d = 1; d <= C; d++) {
       const cells = row();
+      const r = rows.length - 1;
       let previous: string | null = null;
       slots.forEach((s, i) => {
         const p = path(s.node);
         let key: string | null = null;
         let cell: PivotOutCell = { v: null };
+        let item: PivotNode | null = null;
         if (s.node === colRoot) {
           if (d === 1) [key, cell] = ['grand', { v: 'Grand Total' }];
         } else if (!s.total || d < s.node.depth) {
@@ -320,11 +342,15 @@ function layout(
             .map((x) => x.item!.key)
             .join('\u0000')}`;
           cell = { v: n.item!.label, ...(n.item!.fmt ? { fmt: n.item!.fmt } : {}) };
+          item = n;
         } else if (d === s.node.depth) {
           key = `${d}:total:${p.map((x) => x.item!.key).join('\u0000')}`;
           cell = { v: `${labelText(s.node.item!)} Total` };
         }
-        if (key !== null && key !== previous) cells[L + i] = cell;
+        if (key !== null && key !== previous) {
+          cells[L + i] = cell;
+          if (item) items.push(itemCell(r, L + i, 'columns', d - 1, item));
+        }
         previous = key;
       });
     }
@@ -362,8 +388,10 @@ function layout(
       const p = path(line.node);
       p.forEach((n, i) => {
         // An item's label on its first line (a new item is always a first value's), or on each when repeated.
-        if (n !== previous[i] || spec.rows[i]!.repeat)
+        if (n !== previous[i] || spec.rows[i]!.repeat) {
           cells[i] = { v: n.item!.label, ...(n.item!.fmt ? { fmt: n.item!.fmt } : {}) };
+          items.push(itemCell(rows.length - 1, i, 'rows', i, n));
+        }
       });
       previous = p;
     } else if (!vertical && V === 1 && C > 0) cells[0] = { v: valueName(0) };
@@ -389,5 +417,5 @@ function layout(
     keys: [...spec.rows, ...spec.columns].map((g) => groupHeader(g, nameOf(g.col))),
     cells: indexed,
   };
-  return { out: { rows, width, index, head }, found };
+  return { out: { rows, width, index, head, items }, found };
 }

@@ -79,6 +79,10 @@ export type OfficeActions = Readonly<Record<string, OfficeAction | undefined>>;
 // An item with the menus it sits in ("Format", "Text").
 export type FoundItem = { item: OfficeItem; path: readonly string[] };
 
+// Whether a filtered list kept every entry as it was: then the original stands (a submenu trimmed is a new entry).
+const unchanged = (kept: readonly OfficeEntry[], all: readonly OfficeEntry[]) =>
+  kept.length === all.length && kept.every((e, i) => e === all[i]);
+
 // Shown: at or below the session's level, and, once built, bound for this session (the binding is its permission).
 type Shown = (item: OfficeItem) => boolean;
 
@@ -90,7 +94,7 @@ function visibleEntries(entries: readonly OfficeEntry[], shown: Shown): OfficeEn
     } else if (entry.kind === 'submenu') {
       const inner = visibleEntries(entry.entries, shown);
       if (inner.length > 0)
-        kept.push(inner.length === entry.entries.length ? entry : { ...entry, entries: inner });
+        kept.push(unchanged(inner, entry.entries) ? entry : { ...entry, entries: inner });
     } else if (kept.length > 0 && kept[kept.length - 1]!.kind !== 'separator') {
       kept.push(entry);
     }
@@ -111,7 +115,7 @@ export function visibleMenus(
   return catalogue.flatMap((menu) => {
     const entries = visibleEntries(menu.entries, shown);
     if (entries.length === 0) return [];
-    return [entries.length === menu.entries.length ? menu : { ...menu, entries }];
+    return [unchanged(entries, menu.entries) ? menu : { ...menu, entries }];
   });
 }
 
@@ -123,13 +127,22 @@ function itemsOf(entries: readonly OfficeEntry[], path: readonly string[]): Foun
   });
 }
 
-/** A context menu's entries as it opens: a contextual item only while its binding can run, no separator left astray. */
+/**
+ * A context menu's entries as it opens: a contextual item only while its binding can run, a submenu only while it
+ * holds an entry, no separator left astray.
+ */
 export function contextualEntries(
   entries: readonly OfficeEntry[],
   actions: OfficeActions,
 ): OfficeEntry[] {
   const kept: OfficeEntry[] = [];
   for (const entry of entries) {
+    if (entry.kind === 'submenu') {
+      const inner = contextualEntries(entry.entries, actions);
+      if (inner.length > 0)
+        kept.push(unchanged(inner, entry.entries) ? entry : { ...entry, entries: inner });
+      continue;
+    }
     const action = entry.kind === 'item' ? actions[entry.id] : undefined;
     if (entry.kind === 'item' && entry.contextual && (!action || action.disabled)) continue;
     if (entry.kind === 'separator' && (kept.length === 0 || kept.at(-1)!.kind === 'separator'))

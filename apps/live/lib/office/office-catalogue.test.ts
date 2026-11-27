@@ -264,6 +264,67 @@ describe('contextEntries', () => {
     ]);
     expect(labels({})).toEqual(['copy-doc', 'separator', 'rename']);
   });
+
+  it('draws a submenu of contextual items only with the ones that can run, and none when none can', () => {
+    const entries = contextEntries(CATALOGUE, [
+      'copy-doc',
+      {
+        kind: 'submenu',
+        id: 'more',
+        label: 'More',
+        entries: [
+          { id: 'download-odt', contextual: true },
+          { id: 'rename', contextual: true },
+        ],
+      },
+    ]);
+    const shown = (actions: Parameters<typeof contextualEntries>[1]) =>
+      contextualEntries(entries, actions).map((e) =>
+        e.kind === 'submenu'
+          ? `${e.id}:${e.entries.map((x) => (x.kind === 'item' ? x.id : '')).join()}`
+          : e.kind === 'item'
+            ? e.id
+            : e.kind,
+      );
+    expect(shown({ rename: { run: () => {} } })).toEqual(['copy-doc', 'more:rename']);
+    expect(shown({})).toEqual(['copy-doc']);
+    expect(shown({ rename: { run: () => {} }, 'download-odt': { run: () => {} } })).toEqual([
+      'copy-doc',
+      'more:download-odt,rename',
+    ]);
+  });
+});
+
+describe('a level’s view of a submenu', () => {
+  it('keeps the items a level sees, and gives a context menu’s item a level of its own', () => {
+    const item = (id: string, level: 'view' | 'edit') =>
+      ({ kind: 'item', id, label: id, level, status: 'built' }) as const;
+    const [menu] = visibleMenus(
+      [
+        {
+          id: 'm',
+          label: 'M',
+          entries: [
+            {
+              kind: 'submenu',
+              id: 's',
+              label: 'S',
+              entries: [item('a', 'view'), item('b', 'edit')],
+            },
+          ],
+        },
+      ],
+      'view',
+    );
+    const sub = menu!.entries[0]!;
+    expect(
+      sub.kind === 'submenu' && sub.entries.map((e) => (e.kind === 'item' ? e.id : '')),
+    ).toEqual(['a']);
+    expect(contextEntries(CATALOGUE, [{ id: 'copy-doc', level: 'edit' }])[0]).toMatchObject({
+      id: 'copy-doc',
+      level: 'edit',
+    });
+  });
 });
 
 describe('noShortcuts', () => {

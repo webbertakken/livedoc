@@ -8,6 +8,8 @@ import {
   type OfficeEntry,
   type OfficeItem,
 } from '@/lib/office/office-catalogue';
+import { PIVOT_DATE_RULES } from '@livedoc/sheets';
+import { PIVOT_DATE_RULE_LABELS, pivotDateGroupId } from './pivot-grouping-menu';
 import { SPREADSHEET_GRID_MENUS } from './spreadsheet-menus';
 
 /** What a context menu opens on. */
@@ -61,11 +63,28 @@ const lineItems = (axis: 'rows' | 'columns', noun: string): ContextEntrySpec[] =
   own(`resize-${axis}`, `Resize ${noun}`, 'edit', 'built'),
 ];
 
+// A pivot table's item grouped from its cell, each drawn only where it applies (pivot-tables.md "Grouping in the grid").
+const pivotItem = (id: string, label: string): ContextEntrySpec => ({
+  ...own(id, label, 'edit', 'built'),
+  contextual: true,
+});
+const PIVOT_GROUPING: readonly ContextEntrySpec[] = [
+  submenu(
+    'pivot-date-group',
+    'Create Pivot Date Group',
+    PIVOT_DATE_RULES.map((rule) => pivotItem(pivotDateGroupId(rule), PIVOT_DATE_RULE_LABELS[rule])),
+  ),
+  pivotItem('pivot-group-rule', 'Create Pivot Group Rule'),
+  pivotItem('pivot-group', 'Create Pivot Group'),
+  pivotItem('pivot-ungroup', 'Ungroup Pivot Items'),
+];
+
 const CELL: readonly ContextEntrySpec[] = [
   // The active cell's link, for anyone, drawn only while it holds one (D189).
   { ...own('open-link', 'Open Link', 'view', 'built'), contextual: true },
   // A pivot table value's source rows on a sheet of their own, drawn only on such a value (pivot-tables.md "Details").
   { ...own('show-pivot-details', 'Show Details', 'edit', 'built'), contextual: true },
+  ...PIVOT_GROUPING,
   SEPARATOR,
   ...CLIPBOARD,
   SEPARATOR,

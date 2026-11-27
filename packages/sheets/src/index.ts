@@ -149,12 +149,14 @@ export * from './pivot/pivot-spec';
 export { pivotDetailRows, pivotOutput } from './pivot/pivot-output';
 export * from './pivot/pivot-details';
 export * from './pivot/pivot-edit';
+export * from './pivot/pivot-grouping-edit';
 export {
   PIVOT_BLOCKED_BY,
   PIVOT_NO_SOURCE,
   PIVOT_PAST_EDGE,
   PIVOT_TOO_LARGE,
   type PivotArray,
+  type PivotItemPlace,
 } from './pivot/pivot-resolve';
 export * from './changesets/after-image';
 export * from './changesets/sheet-changeset';
