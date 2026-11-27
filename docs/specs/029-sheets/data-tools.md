@@ -4,7 +4,8 @@
 every condition of Filter by Condition, and data validation (the Data Validation Rules panel, Insert › Checkbox,
 Insert › Dropdown, every criterion, kept in both file formats) and the Named Ranges panel are built; tables are built
 as the sheet's model, its writes and growth, and table references in formulas, without their menus and panel yet;
-Remove Duplicates, Trim Whitespace, Randomise Range and Split Text to Columns are built; the rest is specified.
+data clean-up (Clean-up Suggestions, Remove Duplicates, Trim Whitespace), Split Text to Columns, Randomise Range and
+Column Stats are built; the rest is specified.
 
 Sorting, filtering, validation, names, protection, tables and clean-up in a [spreadsheet](spreadsheet.md), as
 Google Sheets' Data menu does. Its rows of the [parity matrix](parity-matrix.md) name this page.
@@ -427,7 +428,7 @@ right.`, **Cancel** and **Replace** (D463). A block reaching past the sheet's la
 - `[sheet] table refused` with the reason (`overlap`, `merge`, `banding`, `name`, `full`) when Convert to Table,
   Table Settings, a paste or a write cannot make or change a table (a paste's also with `paste`); `[sheet] table
 grew` with the rows it grew by.
-- `[sheet] duplicates removed` with the rows compared, the columns ticked, the rows removed and whether a header row
+- `[sheet] clean-up applied` with the suggestion's kind and count; `[sheet] duplicates removed` with the rows compared, the columns ticked, the rows removed and whether a header row
   was kept; `[sheet] whitespace trimmed` with the cells trimmed; `[sheet] text split` with the separator, the rows
   and the widest row's pieces; `[sheet] range randomised` with the rows; `[sheet] clean-up refused` with the tool
   and the reason (`columns`, `merge`, `protected`, `full`); `[sheet] clean-up suggested` with each kind's count

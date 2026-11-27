@@ -130,3 +130,52 @@ test('Split Text to Columns splits at once, and the Separator chip splits the or
   expect(await inputOf(page, 'C2')).toBe('');
   expectNoPageErrors(pageErrors);
 });
+
+test('Clean-up Suggestions applies what it finds, and Column Stats reads the column', async ({
+  page,
+  pageErrors,
+}) => {
+  test.setTimeout(120_000);
+  await page.setViewportSize({ width: 1280, height: 860 });
+  await page.goto('/new?kind=spreadsheet');
+  await page.waitForURL(/\/document\//);
+  await expect(page.locator(READY)).toBeVisible();
+  const rows = [
+    ['Red', '4'],
+    ['Blue ', '2'],
+    ['Red', '4'],
+    ['Green', "'7"],
+  ];
+  for (const [i, [team, n]] of rows.entries()) {
+    await typeInto(page, `A${i + 1}`, team!);
+    await typeInto(page, `B${i + 1}`, n!);
+  }
+
+  await (await officeMenuItem(page, ['Data', 'Data Clean-up', 'Clean-up Suggestions'])).click();
+  const panel = page.getByRole('complementary', { name: 'Clean-up Suggestions' });
+  await expect(panel.getByText('1 duplicate row in A1:B4')).toBeVisible();
+  await expect(panel.getByText('1 cell with extra spaces in A1:B4')).toBeVisible();
+  await expect(panel.getByText('1 number stored as text in column B')).toBeVisible();
+  await settle(page);
+  await page.screenshot({ path: test.info().outputPath('clean-up-suggestions.png') });
+  await panel
+    .getByRole('listitem')
+    .filter({ hasText: 'Trim whitespace' })
+    .getByRole('button', { name: 'Apply' })
+    .click();
+  await expect(panel.getByText('Trim whitespace')).toBeHidden();
+  expect(await inputOf(page, 'A2')).toBe('Blue');
+
+  // Column Stats from the panel's foot, on column A.
+  await select(page, 'A1');
+  await panel.getByRole('button', { name: 'Column Stats' }).click();
+  const stats = page.getByRole('complementary', { name: 'Column Stats' });
+  await expect(stats.getByText('Column A')).toBeVisible();
+  await expect(stats.getByRole('definition').first()).toHaveText('4');
+  await expect(
+    stats.getByRole('region', { name: 'Frequency' }).getByRole('listitem').first(),
+  ).toHaveText('Red2');
+  await settle(page);
+  await page.screenshot({ path: test.info().outputPath('column-stats.png') });
+  expectNoPageErrors(pageErrors);
+});
