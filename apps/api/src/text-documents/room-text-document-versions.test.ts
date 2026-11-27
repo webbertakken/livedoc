@@ -48,6 +48,8 @@ async function room(caps: Partial<VersionCaps> = {}) {
   });
   // A person's browser: one live document, each edit stored by the room and then told to the keeper.
   const browser = TextDocumentState.load();
+  // A fixed client id: a version's bytes hold it, so sizes compared across rooms must not draw it at random.
+  browser.clientID = 424_242;
   const edit = async (change: (doc: typeof browser) => void, author = ADA) => {
     const before = TextDocumentState.stateVectorOf(TextDocumentState.encode(browser));
     change(browser);
