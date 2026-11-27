@@ -1071,3 +1071,36 @@ div.text-document-kept {
     display: none;
   }
 }
+/*
+ * A version drawn (docs/specs/034-text-documents/review.md "Version history", Show changes): its paper, and what it
+ * added (underlined, tinted) or removed (struck through) in its editor's colour, --ychange-colour, the neutral grey
+ * where none was recorded. The ink stays the paper's, so contrast holds whatever the editor's colour.
+ */
+.text-document-version {
+  --pages-width: var(--page-width);
+  background: var(--page-colour, light-dark(#ffffff, #1e1f20));
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.2);
+}
+.text-document-version [data-ychange] {
+  --ychange: var(--ychange-colour, #5f6368);
+  text-decoration-color: var(--ychange);
+  text-decoration-thickness: 2px;
+}
+/* Inline stretches tinted; a block is told by its text's marks, an object by its outline. */
+.text-document-version [data-ychange='added'] {
+  text-decoration-line: underline;
+}
+.text-document-version span[data-ychange='added'] {
+  background-color: color-mix(in srgb, var(--ychange) 18%, transparent);
+}
+.text-document-version [data-ychange='removed'] {
+  text-decoration-line: line-through;
+}
+.text-document-version [data-ychange]:is(.text-document-picture, table, hr, math) {
+  outline: 2px solid var(--ychange);
+  outline-offset: 1px;
+}
+.text-document-version [data-ychange='removed']:is(.text-document-picture, table, hr, math) {
+  outline-style: dashed;
+  opacity: 0.6;
+}

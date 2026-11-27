@@ -71,6 +71,7 @@ import { useTextDocumentCharacterDialogs } from './useTextDocumentCharacterDialo
 import { TextDocumentMargin } from './TextDocumentMargin';
 import { useTextDocumentReview } from './useTextDocumentReview';
 import { useTextDocumentCompare } from './useTextDocumentCompare';
+import { useTextDocumentVersionHistory } from './useTextDocumentVersionHistory';
 import type { TextDocumentSurfaceProps } from './text-document-surface-props';
 import { useTextDocumentReviewPreview } from './useTextDocumentReviewPreview';
 import { TextDocumentReviewPanel } from './TextDocumentReviewPanel';
@@ -1129,6 +1130,15 @@ export function TextDocumentSurface({
     local,
     defaultName: commenter?.name ?? '',
   });
+  // File > Version history (review.md "Version history"): the shell's mode over the whole window.
+  const focusBody = useCallback(() => editor.current?.focus(), []);
+  const versionHistory = useTextDocumentVersionHistory({
+    where: scope,
+    local,
+    tab: shownTab ?? FIRST_DOCUMENT_TAB_ID,
+    format,
+    onClosed: focusBody,
+  });
   // Edit > Undo, Redo and Select all, run by the menus and the shortcut layer (keyboard-shortcuts.md).
   const editorActions = useMemo(
     () => ({
@@ -1158,6 +1168,7 @@ export function TextDocumentSurface({
       ...characterDialogs.actions,
       ...reviewActions,
       ...compare.actions,
+      ...versionHistory.actions,
       ...links.actions,
       ...bookmarks.actions,
       ...headingLinks.actions,
@@ -1179,6 +1190,7 @@ export function TextDocumentSurface({
       characterDialogs.actions,
       reviewActions,
       compare.actions,
+      versionHistory.actions,
       links.actions,
       bookmarks.actions,
       headingLinks.actions,
@@ -1275,6 +1287,7 @@ export function TextDocumentSurface({
           editorView ? scrollToTextDocumentPeer(editorView, personId) : false
         }
       />
+      {versionHistory.mode}
       {paragraphs.dialog}
       {clipboard.dialog}
       {pictures.dialog}

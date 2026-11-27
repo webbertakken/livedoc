@@ -118,6 +118,7 @@ export function textDocumentMenus(format: TextDocumentFormat): OfficeCatalogue {
         item('name-current-version', 'Name current version', 'edit'),
         item('see-version-history', 'See version history', 'edit', {
           shortcut: 'open-revision-history',
+          status: 'built',
         }),
       ]),
       item('make-available-offline', 'Make available offline', 'edit', {

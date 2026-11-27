@@ -1324,7 +1324,7 @@ export const TEXT_DOCUMENT_SHORTCUTS: readonly ShortcutRow[] = [
     'Ctrl+Alt+Shift+H',
     '⌘+Option+Shift+H',
     'Ctrl+Alt+Shift+H',
-    'specified',
+    'built',
   ),
   row(
     'open-explore-tool',

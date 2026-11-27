@@ -253,7 +253,7 @@ The Accessibility menu shows only while screen reader support is on.
 
 | Action                                | PC                         | Mac                        | ChromeOS                     | Status        |
 | ------------------------------------- | -------------------------- | -------------------------- | ---------------------------- | ------------- |
-| Open revision history                 | `Ctrl+Alt+Shift+H`         | `⌘+Option+Shift+H`         | `Ctrl+Alt+Shift+H`           | specified     |
+| Open revision history                 | `Ctrl+Alt+Shift+H`         | `⌘+Option+Shift+H`         | `Ctrl+Alt+Shift+H`           | built         |
 | Open Explore tool                     | `Ctrl+Alt+Shift+I`         | `⌘+Option+Shift+I`         | `Ctrl+Alt+Shift+I`           | left out (C3) |
 | Open spelling and grammar             | `Ctrl+Alt+X or F7`         | `⌘+Option+X or Fn+F7`      | —                            | specified     |
 | Open dictionary                       | `Ctrl+Shift+Y`             | `⌘+Shift+Y`                | `Ctrl+Shift+Y`               | specified     |
