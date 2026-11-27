@@ -291,6 +291,29 @@ describe('chart views', () => {
     expect(bare.container.textContent).toContain('Subtotal');
   });
 
+  it('draws a gauge’s dials with needles, values and labels, and reads a hovered dial (Gauge, D330)', () => {
+    const { container } = render(
+      <PieChartView
+        element={el('pie-chart', {
+          chartVariant: 'gauge',
+          pieSlices: [
+            { label: '2017', value: 52, color: '#aa3300' },
+            { label: '2018', value: 36 },
+            { label: 'None', value: null },
+          ],
+        })}
+        textColor="#000"
+      />,
+    );
+    expect(container.querySelectorAll('path[stroke="#aa3300"]')).toHaveLength(1);
+    expect(container.querySelectorAll('line')).toHaveLength(2);
+    const texts = [...container.querySelectorAll('text')].map((t) => t.textContent);
+    for (const t of ['52', '2018', 'None']) expect(texts).toContain(t);
+    const dial = container.querySelector('circle[fill="transparent"]')!.parentElement!;
+    fireEvent.pointerEnter(dial);
+    expect(container.textContent).toContain('2017');
+  });
+
   it('draws a treemap’s tiles with names inside, and reads a hovered tile (Treemap, D328)', () => {
     const { container } = render(
       <PieChartView

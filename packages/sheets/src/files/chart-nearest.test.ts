@@ -386,3 +386,19 @@ describe('a Treemap chart in both formats', () => {
     );
   });
 });
+
+// D331: a Gauge chart is written as a Bar chart of its values, restored on reading.
+describe('a Gauge chart in both formats', () => {
+  it('is written as a Bar chart and read back as a Gauge', async () => {
+    const sheet = charted({ type: 'gauge' });
+    const xlsx = writeXlsx(fileOf(sheet), 'g');
+    expect(xlsx.losses).toEqual([{ k: 'chart_nearest_type', sheet: 'Sales' }]);
+    expect((await entries(xlsx.data)).get('xl/charts/chart1.xml')).toContain(
+      '<c:barDir val="bar"/>',
+    );
+    expect((await readBack(xlsx.data, true)).sheets[0]!.charts![0]!.type).toBe('gauge');
+    expect((await readBack(writeOds(fileOf(sheet), 'g').data)).sheets[0]!.charts![0]!.type).toBe(
+      'gauge',
+    );
+  });
+});
