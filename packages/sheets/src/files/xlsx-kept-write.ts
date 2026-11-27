@@ -108,21 +108,31 @@ function inOrder(
 }
 
 // The worksheet's children the schema allows once: LiveDoc's own go inside a kept one, after its children.
-const MERGED: ReadonlySet<string> = new Set(['protectedRanges', 'dataValidations', 'extLst']);
-const VALIDATION = /<(?:[\w.-]+:)?dataValidation[\s/>]/g;
+const MERGED: ReadonlySet<string> = new Set([
+  'protectedRanges',
+  'dataValidations',
+  'tableParts',
+  'extLst',
+]);
+// The children a merged child counts, by its name.
+const COUNTED: Readonly<Record<string, RegExp>> = {
+  dataValidations: /<(?:[\w.-]+:)?dataValidation[\s/>]/g,
+  tableParts: /<(?:[\w.-]+:)?tablePart[\s/>]/g,
+};
 // The worksheet's children LiveDoc's own replaces, kept or not.
 const REPLACED: ReadonlySet<string> = new Set(['sheetProtection']);
 
-// A kept child with LiveDoc's own of the same name inside it, after its children; a `dataValidations`' count made its
-// rules' again.
+// A kept child with LiveDoc's own of the same name inside it, after its children; a `dataValidations`' or a
+// `tableParts`' count made its children's again.
 export function mergedChild(kept: string, own: string | null): string {
   const inner = own === null ? '' : own.replace(/^<[^>]*>/, '').replace(/<\/[^>]+>$/, '');
   const name = /^<([\w.:-]+)/.exec(kept)![1]!;
   const xml = kept.endsWith('/>')
     ? `${kept.slice(0, -2)}>${inner}</${name}>`
     : kept.slice(0, kept.lastIndexOf('</')) + inner + kept.slice(kept.lastIndexOf('</'));
-  if (keptLocalName(xml) !== 'dataValidations') return xml;
-  const count = [...xml.matchAll(VALIDATION)].length;
+  const counted = COUNTED[keptLocalName(xml)];
+  if (!counted) return xml;
+  const count = [...xml.matchAll(counted)].length;
   const open = xml.indexOf('>');
   const head = xml.slice(0, open).replace(/\s+count="[^"]*"/, '');
   return `${head} count="${count}"${xml.slice(open)}`;

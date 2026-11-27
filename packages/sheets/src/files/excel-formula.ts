@@ -5,6 +5,7 @@
 import { callsOf, childrenOf, refsOf, type Node } from '../formula/ast';
 import { parseFormula } from '../formula/parse';
 import { tokenize, type Token } from '../formula/tokens';
+import { formatExcelTableRef, parseTableRef } from '../tables/table-ref';
 import { a1Text, FILE_LAST_COL } from './a1-text';
 import { reopenRanges } from './formula-text-shift';
 import {
@@ -50,11 +51,13 @@ function nextSolid(tokens: readonly Token[], from: number): Token | undefined {
  * A formula as typed (`=SEQUENCE(3)`) in Excel's grammar, without its `=` (`_xlfn.SEQUENCE(3)`), its sheet names
  * as `renamed` maps them; null when Excel's grammar cannot hold it (it does not parse, calls a function Excel lacks,
  * holds an array literal of more than constants (D83), or names a column past `XFD` (D89)): such a formula is
- * written by `dummyFunction`.
+ * written by `dummyFunction`. A table reference is written in Excel's file form, a name of `tables` (the workbook's
+ * tables' formula names, upper case) alone as the whole table's (standard-mapping.md "Tables in the file").
  */
 export function toExcelFormula(
   formula: string,
   renamed: ReadonlyMap<string, string> = new Map(),
+  tables: ReadonlySet<string> = new Set(),
 ): string | null {
   const parsed = parseFormula(formula);
   if (!parsed.ok) return null;
@@ -81,12 +84,20 @@ export function toExcelFormula(
     if (tok.k === 'ident' && parameters.has(tok.v.toUpperCase()))
       out += `${XLSX_PARAMETER_PREFIX}${tok.v}`;
     else if (called) out += xlsxFunctionName(tok.v);
+    else if (tok.k === 'ident' && tables.has(tok.v.toUpperCase())) out += `${tok.v}[]`;
+    else if (tok.k === 'table') out += excelTableRef(tok.v);
     // Excel holds 255 characters a string literal: a longer one is joined from pieces, bracketed as one value.
     else if (tok.k === 'str' && tok.v.length > EXCEL_STRING_LITERAL_MAX)
       out += `(${stringLiterals(tok.v)})`;
     else out += formula.slice(tok.start, tok.end);
   }
   return out;
+}
+
+// A table reference as Excel's file writes it; one naming no table (`[@Amount]` inside it) as typed.
+function excelTableRef(text: string): string {
+  const spec = parseTableRef(text);
+  return spec?.table ? formatExcelTableRef(spec.table, spec.cols, spec.area) : text;
 }
 
 /** A cached value as an Excel literal, for S5's wrapping: a number, a quoted text, a boolean, or an error. */

@@ -56,6 +56,11 @@ export function importReportLine(loss: ReportedLoss): string {
         `${counted(count, 'named range', 'named ranges')} LiveDoc cannot read ${verb(count, 'is', 'are')} kept for the file`,
         loss,
       );
+    case 'table_unread':
+      return named(
+        `${counted(count, 'table', 'tables')} LiveDoc cannot read ${verb(count, 'stays plain cells', 'stay plain cells')}`,
+        loss,
+      );
     case 'function_unread':
       return named(
         `${counted(count, 'named function', 'named functions')} LiveDoc cannot read ${verb(count, 'is', 'are')} kept for Excel`,

@@ -178,6 +178,42 @@ export function formatTableRef(
   return `${name}[${[...items, colText].join(',')}]`;
 }
 
+const EXCEL_SPECIAL_TEXT: Readonly<Record<number, string>> = {
+  [ALL]: '#All',
+  [TableArea.data]: '#Data',
+  [TableArea.headers]: '#Headers',
+  [TableArea.totals]: '#Totals',
+  [TableArea.thisRow]: '#This Row',
+};
+
+/**
+ * A table reference in Excel's file form (standard-mapping.md "Tables in the file"): this row as `[#This Row]`, the
+ * table alone as `Sales[]`, parts as Excel writes them (`#All`); it reads back as the same reference.
+ */
+export function formatExcelTableRef(
+  name: string,
+  cols: readonly [string, string] | null,
+  area: number,
+): string {
+  const colText =
+    cols &&
+    (cols[0] === cols[1]
+      ? `[${escapeColumn(cols[0])}]`
+      : `[${escapeColumn(cols[0])}]:[${escapeColumn(cols[1])}]`);
+  if (area === TableArea.data) {
+    if (!cols) return `${name}[]`;
+    return cols[0] === cols[1] ? `${name}${colText}` : `${name}[${colText}]`;
+  }
+  const one = EXCEL_SPECIAL_TEXT[area];
+  const items = one
+    ? [`[${one}]`]
+    : [TableArea.headers, TableArea.data, TableArea.totals]
+        .filter((bit) => area & bit)
+        .map((bit) => `[${EXCEL_SPECIAL_TEXT[bit]}]`);
+  if (!cols) return items.length === 1 ? `${name}${items[0]}` : `${name}[${items.join(',')}]`;
+  return `${name}[${[...items, colText].join(',')}]`;
+}
+
 /** The rows a table's parts cover (positions), or null when it has none of them (`#TOTALS` with no total row). */
 export function tableAreaRows(
   layout: SheetLayout,

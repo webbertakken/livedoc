@@ -459,10 +459,13 @@ The table is the contract the readers and writers are tested against, one test p
   formula name, `ref` its range, `headerRowCount="1"`, `totalsRowCount="1"` with a total row, an `autoFilter` over it
   without one), one `tableColumn` a column (`id`, `name` its column name), linked from the worksheet's `tableParts`
   by its relationship; its style `TableStyleLight1` with `showRowStripes="1"`, as the table's banding is written as
-  format rules already ([Alternating colours](formatting.md#alternating-colours)).
+  format rules already ([Alternating colours](formatting.md#alternating-colours)). Each header cell is written as its
+  column's name, text, as Excel holds a header (D452). Its `id` is past every kept table's; a kept table of an own
+  table's name gives way to it (D453).
 - **XLSX formulas** write table references in Excel's grammar: `Table1[Amount]`, `Table1[#All]`, `Table1[#Headers]`,
-  `Table1[#Totals]`, `Table1[#Data]`, and this row as `Table1[[#This Row],[Amount]]` (Excel's file form of `[@Amount]`);
-  read, `[@Amount]` and the bare `[Amount]` of a formula inside its table are read too.
+  `Table1[#Totals]`, `Table1[#Data]`, this row as `Table1[[#This Row],[Amount]]` (Excel's file form of `[@Amount]`)
+  and the table alone as `Table1[]` (as Google writes it); read, `[@Amount]` and the bare `[Amount]` of a formula
+  inside its table are read too.
 - **ODF standard form**: a `table:database-range` in the spreadsheet's one `table:database-ranges` (`table:name` the
   formula name, `table:target-range-address` its range with its sheet, `table:contains-header="true"`,
   `table:display-filter-buttons="true"`), as LibreOffice writes a database range.
@@ -470,10 +473,10 @@ The table is the contract the readers and writers are tested against, one test p
   it), so in an ODF file each is written as the plain absolute range it reads (`[.$B$2:.$B$9]`), which every app
   computes; LiveDoc's record restores the table references on read.
 - **LiveDoc's record**: in XLSX one `livedoc:tables` (`record`, `fingerprint`) in the worksheet's LiveDoc `ext`; in ODF
-  the `table:table`'s `livedoc:tables` and `livedoc:tables-fingerprint` attributes; LiveDoc's namespace. It holds the
-  sheet's tables in order as JSON, each its `name`, `range` as A1 text, `types` (column name to type, Dropdown
-  options as a dropdown rule's `opts`) and `total`; in ODF also `refs`, each formula cell (A1) whose formula reads a
-  table, with that formula in Google's syntax.
+  the `table:table`'s `livedoc:tables` and `livedoc:tables-fingerprint` attributes; LiveDoc's namespace. It is one
+  JSON object: `tables`, the sheet's tables in order, each its `name`, `range` as A1 text, `types` (column name to
+  type), `opts` (a Dropdown column's name to its options, as a dropdown rule's) and `total`; in ODF also `refs`, each
+  formula cell (A1) whose formula reads a table, with that formula in Google's syntax.
 - Its fingerprint is the CRC-32 (8 lower-case hex digits) of the standard form as written: each table's name and
   range a line (and in ODF each `refs` cell's formula as written, a line). **Read**, the record is taken when its
   fingerprint is the standard form's as read; else another app changed the tables or those formulas since, so the
@@ -482,7 +485,8 @@ The table is the contract the readers and writers are tested against, one test p
 - **Read without LiveDoc's record**: each XLSX table part and each ODF database range with a header row is a table,
   its columns None (D447); one LiveDoc cannot hold (overlapping another, past 50 a sheet, a name the rules refuse,
   no header row, ODF's sheet-local `table:database-range` named `__Anonymous_Sheet_DB__N`, which is a filter) is kept
-  as the file wrote it, written back to its format, and named (`table_unread`).
+  as the file wrote it, written back to its format, and named (`table_unread`, reported); a table the grid cannot
+  hold once its sheet is cut stays plain cells, named too.
 
 ## Rows and columns in the file
 
@@ -1016,6 +1020,11 @@ The code cites each by its id.
 - **D351** A file's protection password: its hash and Excel's allowances kept on the sheet's protection, written back
   only to its own format while that protection admits Editors or the owner; never asked for, checked or invented
   (the Director's ruling, 2026-11-27).
+- **D452** A table's header cells in XLSX: written as their column names, text (a blank header `Column N`, a number
+  its text), as Excel holds a table's header and Google's export writes it
+  (`plans/assets/0020/research/google-table-export.md`) (default).
+- **D453** A kept table at an XLSX write named as one of the sheets' own tables (by Excel's rules, case aside): dropped
+  and counted (`kept_dropped`), the own table written, as D341 (default).
 - **D352** A file's protection LiveDoc does not read (a password-protected `protectedRange`, one of an unprotected
   sheet, the workbook's structure, LibreOffice's options): kept as the file's own; free cells past 50 stay protected,
   named (`protection_cut`) (default).
