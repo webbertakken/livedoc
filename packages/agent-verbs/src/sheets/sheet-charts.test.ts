@@ -246,6 +246,19 @@ describe('chart elements', () => {
     expect(el!.lineSeries!.length).toBeGreaterThan(0);
   });
 
+  it('draw a gauge (D330)', () => {
+    const { wb, sheet } = book();
+    const built = buildChartChange(wb, sheet.id, { op: 'chart', type: 'gauge', range: 'A1:B3' });
+    if (!built.ok) throw new Error(built.message);
+    const [el] = sheetChartElements(
+      wb,
+      { x: 0, y: 0, width: 960, height: 560 },
+      sheet.id,
+      built.charts,
+    );
+    expect(el).toMatchObject({ shape: 'pie-chart', chartVariant: 'gauge' });
+  });
+
   it('draw a treemap (D328)', () => {
     const { wb, sheet } = book();
     const built = buildChartChange(wb, sheet.id, { op: 'chart', type: 'treemap', range: 'A1:B3' });

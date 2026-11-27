@@ -15,6 +15,7 @@ import {
   pieMarks,
   pieValueLabels,
   isTreemapChart,
+  isGaugeChart,
   chartValue,
   type ShapeElement,
 } from '@livedoc/document';
@@ -24,6 +25,7 @@ import { useChartHover } from '@/hooks/canvas/useChartHover';
 import { ChartReadout } from '@/components/primitives/ChartReadout';
 import { ChartSurface } from '@/components/primitives/ChartSurface';
 import { TreemapChartView } from './TreemapChartView';
+import { GaugeChartView } from './GaugeChartView';
 
 type Props = {
   element: ShapeElement;
@@ -33,8 +35,9 @@ type Props = {
   ground?: readonly string[];
 };
 
-// A Treemap draws its slices as tiles (pie-chart.md "Treemap"); a pie or doughnut its wedges.
+// A Treemap draws its slices as tiles (pie-chart.md "Treemap"), a Gauge as dials ("Gauge"); a pie or doughnut its wedges.
 export function PieChartView(props: Props) {
+  if (isGaugeChart(props.element)) return <GaugeChartView {...props} />;
   return isTreemapChart(props.element) ? (
     <TreemapChartView {...props} />
   ) : (

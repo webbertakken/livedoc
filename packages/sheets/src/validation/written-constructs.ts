@@ -302,6 +302,8 @@ function chartSheet(): FileSheet {
     { ...base(types.length + 17, 'waterfall'), id: 'chart_waterfall' },
     // Treemap (D329): written as a pie chart of its first series, its original kept.
     { ...base(types.length + 18, 'treemap'), id: 'chart_treemap' },
+    // Gauge (D331): written as a bar chart of its values, its original kept.
+    { ...base(types.length + 19, 'gauge'), id: 'chart_gauge' },
   );
   return { ...sheet("Costs' sheet", cells, 140, 8), charts };
 }

@@ -97,7 +97,7 @@ export const SHAPE_KEYWORDS: Partial<Record<ShapeKind, string>> = {
   'timeline-rail': 'timeline roadmap milestones track history plan dates schedule',
   rating: 'stars score review out of five',
   legend: 'key colour code swatch label caption guide colour key',
-  'pie-chart': 'donut doughnut ring share split proportion chart treemap tiles',
+  'pie-chart': 'donut doughnut ring share split proportion chart treemap tiles gauge dial meter',
   'bar-chart': 'column bar horizontal histogram chart graph',
   'line-chart':
     'trend series graph chart plot area scatter xy bubble radar candlestick ohlc stock histogram distribution waterfall bridge',

@@ -101,7 +101,7 @@ describe('the sheet toolbar', () => {
     show(h);
     act(() => h.select('A1:A2'));
     open('Insert Chart');
-    // The sixteen chart types, each its glyph and name (docs/specs/009-elements/pie-chart.md "Chart types").
+    // The seventeen chart types, each its glyph and name (docs/specs/009-elements/pie-chart.md "Chart types").
     for (const name of [
       'Column',
       'Bar',
@@ -118,6 +118,7 @@ describe('the sheet toolbar', () => {
       'Histogram',
       'Waterfall',
       'Treemap',
+      'Gauge',
       'Combo',
     ])
       expect(row(`${name} Chart`)).toBeTruthy();
