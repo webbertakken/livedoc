@@ -5,7 +5,8 @@ import type { SpellingLanguage } from './spelling-languages';
 /** A question for the worker, before it is given its id. */
 export type SpellingAsk =
   | { kind: 'check'; language: SpellingLanguage; words: readonly string[] }
-  | { kind: 'suggest'; language: SpellingLanguage; word: string; most: number };
+  | { kind: 'suggest'; language: SpellingLanguage; word: string; most: number }
+  | { kind: 'correct'; language: SpellingLanguage; word: string };
 
 export type SpellingRequest = SpellingAsk & { id: number };
 
@@ -14,4 +15,5 @@ export type SpellingFailure = 'load-failed';
 export type SpellingResponse =
   | { id: number; kind: 'checked'; misspelt: readonly string[] }
   | { id: number; kind: 'suggested'; suggestions: readonly string[] }
+  | { id: number; kind: 'corrected'; correction: string | null }
   | { id: number; kind: 'failed'; error: SpellingFailure; detail: string };

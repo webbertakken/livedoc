@@ -41,6 +41,15 @@ describe('the spelling worker', () => {
     });
   });
 
+  it('answers a correction it is sure of', async () => {
+    const { send } = await startWorker(fromDisk);
+    expect(await send({ id: 4, kind: 'correct', language: 'nl', word: 'hius' })).toEqual({
+      id: 4,
+      kind: 'corrected',
+      correction: 'huis',
+    });
+  });
+
   it('says a dictionary failed to load, with the language', async () => {
     const { send } = await startWorker(() => Promise.resolve(new Response('', { status: 404 })));
     expect(

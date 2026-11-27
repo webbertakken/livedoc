@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it, vi } from 'vitest';
-import { createSpellingCore } from './spelling-core';
+import { createSpellingCore, oneEditApart } from './spelling-core';
 import type { SpellingLanguage } from './spelling-languages';
 
 const PACKAGES: Record<SpellingLanguage, string> = {
@@ -47,10 +47,38 @@ describe('createSpellingCore', { timeout: 30_000 }, () => {
     expect(await core.suggest('nl', 'fietss', 1)).toEqual(['fiets']);
   });
 
+  it('corrects only when it is sure: one right swap, else one suggestion one edit away', async () => {
+    const core = real;
+    expect(await core.correct('nl', 'hius')).toBe('huis');
+    expect(await core.correct('nl', 'Hius')).toBe('Huis');
+    expect(await core.correct('fr', 'miason')).toBe('maison');
+    // Two near suggestions ("fiets", "fietst"): not sure.
+    expect(await core.correct('nl', 'fietss')).toBeNull();
+    // Spelt right, nothing near, a capital inside: never.
+    expect(await core.correct('nl', 'huis')).toBeNull();
+    expect(await core.correct('nl', 'xqzvw')).toBeNull();
+    expect(await core.correct('nl', 'hIus')).toBeNull();
+  });
+
   it('tries a failed load again on the next request', async () => {
     const load = vi.fn().mockRejectedValueOnce(new Error('offline')).mockImplementation(tiny);
     const core = createSpellingCore(load);
     await expect(core.check('nl', ['hius'])).rejects.toThrow('offline');
     expect(await core.check('nl', ['hius'])).toEqual(['hius']);
+  });
+});
+
+describe('oneEditApart', () => {
+  it.each([
+    ['huis', 'hius', true],
+    ['huis', 'huiz', true],
+    ['huis', 'huiss', true],
+    ['huis', 'hus', true],
+    ['huis', 'huis', false],
+    ['huis', 'hsiu', false],
+    ['huis', 'huisje', false],
+    ['fiets', 'fietst', true],
+  ])('%s and %s: %s', (a, b, apart) => {
+    expect(oneEditApart(a, b)).toBe(apart);
   });
 });

@@ -29,6 +29,14 @@ import {
 import { startUndoStep } from '@/lib/text-document/text-document-undo';
 import { TextDocumentPersonalDictionaryDialog } from './TextDocumentPersonalDictionaryDialog';
 import { TextDocumentSpellingCard } from './TextDocumentSpellingCard';
+import { TOO_MANY_SUBSTITUTIONS } from './TextDocumentPreferencesDialog';
+import {
+  isKeepable,
+  readTypingAids,
+  saveTypingAids,
+  SUBSTITUTIONS_OWN_MAX,
+  TypingAids,
+} from '@/lib/text-document/text-document-typing-aids';
 import {
   readSpellingShown,
   suggestionKey,
@@ -43,6 +51,7 @@ export const SPELLING_SUGGESTION_ITEMS = Array.from(
   (_, i) => `spelling-suggestion-${i + 1}`,
 );
 export const SPELLING_ADD_ITEM = 'spelling-add-to-dictionary';
+export const SPELLING_ALWAYS_ITEM = 'spelling-always-correct';
 export const SPELLING_IGNORE_ITEM = 'spelling-ignore';
 /** Tools > Spelling and grammar's items: the card (also the toolbar's button and ⌘⌥X), the switch, the dialog. */
 export const SPELLING_CHECK_ITEM = 'spelling-and-grammar';
@@ -126,7 +135,6 @@ export function useTextDocumentSpelling({
       startUndoStep(where);
       where.dispatch(where.state.tr.insertText(word, m.from, m.to).scrollIntoView());
       startUndoStep(where);
-      track('Document', 'Changed', 'TextDocumentSpellingAccepted');
     };
 
     // The card on `m` (or on none left): the word selected in the writing, its suggestions fetched.
@@ -181,6 +189,7 @@ export function useTextDocumentSpelling({
         const word = offered()[n];
         if (!m || word === undefined) return;
         replaceWith(active, m, word);
+        track('Document', 'Changed', 'TextDocumentSpellingAccepted');
         focusWriting(active);
         debugLog('[spelling] suggestion taken', { place: n + 1, of: offered().length });
       },
@@ -203,6 +212,37 @@ export function useTextDocumentSpelling({
     return {
       ...tools,
       ...Object.fromEntries(SPELLING_SUGGESTION_ITEMS.map((id, n) => [id, suggestion(n)])),
+      // Google's Always correct to: the first suggestion now, and a substitution from then on.
+      [SPELLING_ALWAYS_ITEM]: {
+        run: () => {
+          const m = here();
+          const first = offered()[0];
+          if (!m || first === undefined || !isKeepable(m.word, first)) return;
+          const aids = readTypingAids();
+          if (TypingAids.ownCount(aids) >= SUBSTITUTIONS_OWN_MAX) {
+            setNotice(TOO_MANY_SUBSTITUTIONS);
+            focusWriting(active);
+            return;
+          }
+          replaceWith(active, m, first);
+          track('Document', 'Changed', 'TextDocumentAlwaysCorrect');
+          const pairs = aids.pairs.filter((p) => p.replace !== m.word);
+          saveTypingAids(
+            { ...aids, pairs: [{ replace: m.word, with: first, on: true }, ...pairs] },
+            ownerId,
+          );
+          focusWriting(active);
+        },
+        get label() {
+          const first = offered()[0];
+          return first === undefined ? undefined : `Always correct to “${first}”`;
+        },
+        get disabled() {
+          const m = here();
+          const first = offered()[0];
+          return !m || first === undefined || !isKeepable(m.word, first);
+        },
+      },
       [SPELLING_ADD_ITEM]: {
         run: () => {
           const m = here();
@@ -254,6 +294,7 @@ export function useTextDocumentSpelling({
         onAccept={(word) => {
           if (!card.misspelling) return;
           replaceWith(view, card.misspelling, word);
+          track('Document', 'Changed', 'TextDocumentSpellingAccepted');
           step(1);
         }}
         onIgnore={() => {

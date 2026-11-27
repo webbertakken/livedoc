@@ -7,11 +7,19 @@ import { officeMenuItem } from './office-menus';
 
 const BODY = '[role="textbox"][aria-label="Document body"]';
 const MISSPELT = '.text-document-misspelt';
+// Preferences > Automatically correct spelling off, before the page reads its preferences.
+const TYPED_AS_IS = () =>
+  localStorage.setItem(
+    'livedoc:user-preferences:v1',
+    JSON.stringify({ textDocumentTypingAids: { off: ['spelling'] } }),
+  );
 
 test.use({ colorScheme: 'dark' });
 
 test.describe('in Dutch', () => {
   test.use({ locale: 'nl-NL' });
+  // Automatic correction off, so each misspelling stays as typed.
+  test.beforeEach(({ page }) => page.addInitScript(TYPED_AS_IS));
 
   test('underlines a misspelt word and fixes it from the context menu', async ({
     page,
@@ -62,6 +70,8 @@ test.describe('in Dutch', () => {
 
 test.describe('the card, the keys, the dictionary and a header, in Dutch', () => {
   test.use({ locale: 'nl-NL' });
+  // Automatic correction off, so each misspelling stays as typed.
+  test.beforeEach(({ page }) => page.addInitScript(TYPED_AS_IS));
 
   test('walks the misspellings, steps with the keys, and keeps the dictionary', async ({
     page,
@@ -135,6 +145,28 @@ test.describe('the card, the keys, the dictionary and a header, in Dutch', () =>
       await officeMenuItem(page, ['Tools', 'Spelling and grammar', 'Show spelling suggestions'])
     ).click();
     await expect(page.locator(MISSPELT)).toHaveCount(0);
+    expectNoPageErrors(pageErrors);
+  });
+});
+
+test.describe('automatic correction, in Dutch', () => {
+  test.use({ locale: 'nl-NL' });
+
+  test('corrects a word it is sure of as the word ends, and Undo takes it back', async ({
+    page,
+    pageErrors,
+  }) => {
+    await page.goto('/new?kind=text-document');
+    await expect(page.locator('[data-text-document-surface="ready"]')).toBeVisible();
+    const body = page.locator(BODY);
+    await body.click();
+    await page.keyboard.type('Een hius ');
+    await expect(body).toHaveText('Een huis ');
+    await page.keyboard.press('Control+z');
+    await expect(body).toHaveText('Een hius ');
+    // Not sure ("fiets" or "fietst"): left as typed, underlined.
+    await page.keyboard.type('fietss ');
+    await expect(body.locator(MISSPELT)).toHaveText(['hius', 'fietss']);
     expectNoPageErrors(pageErrors);
   });
 });

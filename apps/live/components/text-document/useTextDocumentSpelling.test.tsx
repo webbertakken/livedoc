@@ -25,6 +25,7 @@ import {
 } from '@/lib/text-document/text-document-spelling';
 import {
   SPELLING_ADD_ITEM,
+  SPELLING_ALWAYS_ITEM,
   SPELLING_IGNORE_ITEM,
   SPELLING_SUGGESTION_ITEMS,
   MISSPELLING_KEY_ACTIONS,
@@ -35,6 +36,13 @@ import {
   useTextDocumentSpelling,
 } from './useTextDocumentSpelling';
 import { useTextDocumentSpellingSource } from './useTextDocumentSpellingSource';
+import { TOO_MANY_SUBSTITUTIONS } from './TextDocumentPreferencesDialog';
+import {
+  readTypingAids,
+  saveTypingAids,
+  SUBSTITUTIONS_OWN_MAX,
+  TypingAids,
+} from '@/lib/text-document/text-document-typing-aids';
 
 // docs/specs/034-text-documents/tools.md "Spelling and grammar": the context menu on a misspelt word.
 
@@ -47,6 +55,7 @@ const checker: SpellingChecker = {
   check: (_, words) => Promise.resolve(new Set(words.filter((w) => !KNOWN.has(w)))),
   known: () => undefined,
   suggest: (_, word) => Promise.resolve(word === 'teh' ? ['the', 'tea', 'ten'] : []),
+  correct: () => Promise.resolve(null),
 };
 
 // The editors' own hosts, taken away after each test (Testing Library unmounts its own).
@@ -78,7 +87,7 @@ const caretAt = (view: EditorView, pos: number) =>
 const menuLabels = (hook: ReturnType<typeof setUp>['hook']) => {
   const actions = hook.result.current.actions;
   return contextualEntries(textDocumentTextContextMenu(textDocumentMenus('ooxml')), actions)
-    .slice(0, 6)
+    .slice(0, 7)
     .map((e) => (e.kind === 'item' ? (actions[e.id]?.label ?? e.label) : '|'));
 };
 const settle = () => act(() => vi.advanceTimersByTimeAsync(SPELLING_IDLE_MS));
@@ -107,6 +116,7 @@ describe('useTextDocumentSpelling', () => {
       'the',
       'tea',
       'ten',
+      'Always correct to “the”',
       'Add to personal dictionary',
       'Ignore',
       '|',
@@ -149,12 +159,46 @@ describe('useTextDocumentSpelling', () => {
     expect(readPersonalDictionary().words).toHaveLength(PERSONAL_DICTIONARY_MAX);
   });
 
+  it('always corrects the word to its first suggestion from then on', async () => {
+    const { hook, view } = setUp('cat teh');
+    await settle();
+    caretAt(view, 6);
+    act(() => hook.result.current.actions[SPELLING_ALWAYS_ITEM]!.run());
+    expect(view.state.doc.textContent).toBe('cat the');
+    expect(readTypingAids().pairs[0]).toEqual({ replace: 'teh', with: 'the', on: true });
+    expect(track).toHaveBeenCalledWith('Document', 'Changed', 'TextDocumentAlwaysCorrect');
+  });
+
+  it('says so when the substitutions are full, changing nothing', async () => {
+    const own = Array.from({ length: SUBSTITUTIONS_OWN_MAX }, (_, i) => ({
+      replace: `w${i}`,
+      with: `v${i}`,
+      on: true,
+    }));
+    saveTypingAids(
+      { ...TypingAids.defaults(), pairs: [...own, ...TypingAids.defaults().pairs] },
+      null,
+    );
+    const { hook, view } = setUp('cat teh');
+    await settle();
+    caretAt(view, 6);
+    act(() => hook.result.current.actions[SPELLING_ALWAYS_ITEM]!.run());
+    expect(view.state.doc.textContent).toBe('cat teh');
+    const { container } = render(<>{hook.result.current.notice}</>);
+    expect(container.textContent).toBe(TOO_MANY_SUBSTITUTIONS);
+  });
+
   it('does nothing off a misspelt word', async () => {
     const { hook, view } = setUp('cat teh');
     await settle();
     caretAt(view, 2);
     const { actions } = hook.result.current;
-    for (const id of [SPELLING_SUGGESTION_ITEMS[0]!, SPELLING_ADD_ITEM, SPELLING_IGNORE_ITEM]) {
+    for (const id of [
+      SPELLING_SUGGESTION_ITEMS[0]!,
+      SPELLING_ALWAYS_ITEM,
+      SPELLING_ADD_ITEM,
+      SPELLING_IGNORE_ITEM,
+    ]) {
       expect(actions[id]!.disabled, id).toBe(true);
       act(() => actions[id]!.run());
     }

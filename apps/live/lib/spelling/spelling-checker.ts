@@ -20,6 +20,8 @@ export type SpellingChecker = {
   known: (language: SpellingLanguage, word: string) => boolean | undefined;
   /** Up to SPELLING_SUGGESTIONS_MAX suggestions; none when the check fails. */
   suggest: (language: SpellingLanguage, word: string) => Promise<readonly string[]>;
+  /** The correction the checker is sure of, or null; null too when the check fails. */
+  correct: (language: SpellingLanguage, word: string) => Promise<string | null>;
 };
 
 const newWorker = (): SpellingWorker =>
@@ -33,6 +35,7 @@ export function createSpellingChecker(
   const waiting = new Map<number, (response: SpellingResponse) => void>();
   const verdicts = new Map<SpellingLanguage, Map<string, boolean>>();
   const suggestions = new Map<string, readonly string[]>();
+  const corrections = new Map<string, string | null>();
 
   const ask = (request: SpellingAsk): Promise<SpellingResponse | null> => {
     if (worker === undefined) {
@@ -99,6 +102,14 @@ export function createSpellingChecker(
       if (response?.kind !== 'suggested') return [];
       suggestions.set(key, response.suggestions);
       return response.suggestions;
+    },
+    correct: async (language, word) => {
+      const key = `${language}\u0000${word}`;
+      if (corrections.has(key)) return corrections.get(key)!;
+      const response = await ask({ kind: 'correct', language, word });
+      if (response?.kind !== 'corrected') return null;
+      corrections.set(key, response.correction);
+      return response.correction;
     },
   };
 }
