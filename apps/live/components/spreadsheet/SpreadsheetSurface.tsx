@@ -53,6 +53,7 @@ import {
   useSpreadsheetThemeState,
 } from './spreadsheet-theme-context';
 import { NamedFunctionsProvider, useNamedFunctionsState } from './named-functions-state';
+import { FindReplaceContext, useFindReplace, useFindReplaceState } from './find-replace-state';
 
 export function SpreadsheetSurface({
   scope,
@@ -105,6 +106,10 @@ export function SpreadsheetSurface({
   const shown = useMemo(() => shownTabs(tabs, hidden, tabId), [tabs, hidden, tabId]);
   // Alt+Up and Alt+Down in the grid: the previous and next sheet shown, none past either end (D181).
   const stepSheet = useSheetStep(shown, tabId, onSelectTab);
+  // Find and Replace, open across sheets: Find steps through the shown tabs, Replace All reaches every one.
+  const allTabIds = useMemo(() => tabs.map((t) => t.id), [tabs]);
+  const shownTabIds = useMemo(() => shown.map((t) => t.id), [shown]);
+  const findReplace = useFindReplaceState(shownTabIds, allTabIds);
   // The sheet bar's changes, from the sheet bar, its tabs' menus and the menus (spreadsheet.md).
   // Copy To, everyone's who may read the sheets (spreadsheet.md D186).
   const copyTo = useSheetCopyTo(bridge, workbook);
@@ -162,17 +167,19 @@ export function SpreadsheetSurface({
                           <ShowFormulasContext.Provider value={formulas.shown}>
                             <ShowProtectedContext.Provider value={protectedShown.shown}>
                               <SpreadsheetFullScreenProvider value={fullScreen}>
-                                {bridge ? (
-                                  <OpenSheet
-                                    bridge={bridge}
-                                    tabId={tabId}
-                                    onSelectTab={onSelectTab}
-                                    sync={sync}
-                                    onWorkbook={onWorkbook}
-                                  />
-                                ) : (
-                                  <Status state="loading" />
-                                )}
+                                <FindReplaceContext.Provider value={findReplace}>
+                                  {bridge ? (
+                                    <OpenSheet
+                                      bridge={bridge}
+                                      tabId={tabId}
+                                      onSelectTab={onSelectTab}
+                                      sync={sync}
+                                      onWorkbook={onWorkbook}
+                                    />
+                                  ) : (
+                                    <Status state="loading" />
+                                  )}
+                                </FindReplaceContext.Provider>
                               </SpreadsheetFullScreenProvider>
                             </ShowProtectedContext.Provider>
                           </ShowFormulasContext.Provider>
@@ -294,6 +301,7 @@ function SheetWorkspace({
   onWorkbook: ((workbook: WorkbookRecord) => void) | undefined;
 }) {
   const palette = planPalette(useCanvasSurface());
+  const findReplace = useFindReplace();
   const [announcement, setAnnouncement] = useState('');
   const images = useSheetImageLoader(bridge.scope, bridge.importAccess === 'allowed');
   const { sheet, workbook } = useMemo(
@@ -320,6 +328,7 @@ function SheetWorkspace({
     announce: setAnnouncement,
     toast: bridge.toast,
     notify: bridge.notify,
+    ...(findReplace ? { openFindReplace: () => findReplace.openWith() } : {}),
   });
   // The web's bar: Sync Document in This Browser (where IMPORTRANGE waits too), else Allow Access until allowed.
   const importBar =

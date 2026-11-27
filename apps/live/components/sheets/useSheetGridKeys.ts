@@ -175,6 +175,7 @@ export function useSheetGridKeys({
       case 'numberFormat':
         return c.canEdit ? actions.numberFormat(cmd.nf) : undefined;
       case 'find':
+        if (cmd.replace && c.openFindReplace) return c.openFindReplace();
         return c.setFindOpen(cmd.replace && c.canEdit ? 'replace' : 'find');
       case 'menu':
         return c.setMenu({ kind: 'cell', ...activeCellPoint() });
