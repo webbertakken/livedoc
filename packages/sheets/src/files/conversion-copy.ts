@@ -152,6 +152,8 @@ export function conversionLine(loss: ConversionLoss, to: WorkbookFormat): string
         words.length > 1 ? `${words.slice(0, -1).join(', ')} and ${words.at(-1)!}` : words[0]!;
       return `${what} more simply in ${where}, without ${list}`;
     }
+    case 'filter_views_left':
+      return one ? '1 filter view is left out' : `${loss.count} filter views are left out`;
     case 'protection_passwords_left':
       return one
         ? '1 protected sheet leaves its file password behind'

@@ -22,14 +22,13 @@ import {
   type TableCandidate,
 } from './file-tables';
 import { parseOdfRef } from './ods-charts-read';
+import { ANONYMOUS_RANGE, odsFilterRange, readOdsFilter } from './ods-filters';
+import type { FileFilter } from './file-filters';
 import { fromOpenFormula, toOpenFormula } from './open-formula';
 import { LIVEDOC_SPREADSHEET_NS } from './validation-standard';
 import type { FileCell, FileLoss, FileSheet, WorkbookFile } from './workbook-file';
 
 const { table: TABLE } = ODF_NS;
-
-/** LibreOffice's name for a sheet's own unnamed database range: an autofilter's, a filter LiveDoc keeps as it came. */
-const ANONYMOUS = /^__Anonymous_Sheet_DB__\d+$/;
 
 /** The formula text an ODF cell holds for a file cell: its plain form when it reads a table. */
 export const odsFormulaOf = (cell: FileCell): string | null =>
@@ -75,19 +74,22 @@ export const isOdsTableRecordAttribute = (a: { uri: string; local: string }): bo
 
 const quoted = (sheet: string) => `'${sheet.replace(/'/g, "''")}'`;
 
-/** The workbook's tables as `table:database-range`s, by their sheets' names. */
+/** The workbook's tables as `table:database-range`s, by their sheets' names, then each sheet's filter. */
 export function odsDatabaseRanges(file: WorkbookFile): string[] {
-  return file.sheets.flatMap((sheet) =>
-    (sheet.tables ?? []).map((t) => {
-      const at = quoted(sheet.name);
-      const range = `${at}.${formatA1(t.range.r1, t.range.c1)}:${at}.${formatA1(t.range.r2, t.range.c2)}`;
-      return (
-        `<table:database-range table:name="${escapeXmlAttribute(tableFormulaName(t.name))}"` +
-        ` table:target-range-address="${escapeXmlAttribute(range)}" table:contains-header="true"` +
-        ` table:display-filter-buttons="true"/>`
-      );
-    }),
-  );
+  const filters = file.sheets.flatMap((sheet, i) => odsFilterRange(sheet, i) ?? []);
+  return file.sheets
+    .flatMap((sheet) =>
+      (sheet.tables ?? []).map((t) => {
+        const at = quoted(sheet.name);
+        const range = `${at}.${formatA1(t.range.r1, t.range.c1)}:${at}.${formatA1(t.range.r2, t.range.c2)}`;
+        return (
+          `<table:database-range table:name="${escapeXmlAttribute(tableFormulaName(t.name))}"` +
+          ` table:target-range-address="${escapeXmlAttribute(range)}" table:contains-header="true"` +
+          ` table:display-filter-buttons="true"/>`
+        );
+      }),
+    )
+    .concat(filters);
 }
 
 const HOLDER = /^<([\w.-]+:database-ranges)\b([^>]*?)(\/?)>/;
@@ -119,12 +121,14 @@ export type OdsTablesRead = {
   read: Set<XmlElement>;
   // By sheet (its place in `titles`), its tables' standard form in order.
   standard: FileTable[][];
+  // By sheet, its filter's standard form: its unnamed database range (standard-mapping.md "Filters in the file").
+  filters: (FileFilter | undefined)[];
 };
 
 /**
  * The spreadsheet's database ranges LiveDoc holds as tables (`titles` the sheets read, `names` the workbook's named
  * ranges): one with a header over one sheet's cells, of a name the rules take; any other is named (`table_unread`)
- * and stays kept, but a sheet's own unnamed one, an autofilter's, which stays kept as the filter it is.
+ * and stays kept, but a sheet's own unnamed one, an autofilter's, which is the sheet's filter.
  */
 export function readOdsDatabaseRanges(
   spreadsheet: XmlElement,
@@ -134,12 +138,21 @@ export function readOdsDatabaseRanges(
 ): OdsTablesRead {
   const holder = childElement(spreadsheet, TABLE, 'database-ranges');
   const found: { element: XmlElement; sheet: number; candidate: TableCandidate }[] = [];
+  const filters: OdsTablesRead['filters'] = titles.map(() => undefined);
+  const filtered = new Set<XmlElement>();
   for (const element of holder ? childElements(holder) : []) {
     if (element.uri !== TABLE || element.local !== 'database-range') continue;
     const name = attributeOf(element, TABLE, 'name') ?? '';
-    if (ANONYMOUS.test(name)) continue;
     const ref = parseOdfRef(attributeOf(element, TABLE, 'target-range-address') ?? '');
     const sheet = ref ? titles.indexOf(ref.sheet) : -1;
+    if (ANONYMOUS_RANGE.test(name)) {
+      // One a sheet; another on a sheet already filtered, or on none, stays the file's own.
+      if (!ref || sheet < 0 || filters[sheet]) continue;
+      const filter = childElement(element, TABLE, 'filter');
+      filters[sheet] = { range: ref.range, cols: filter ? readOdsFilter(filter, ref.range) : [] };
+      filtered.add(element);
+      continue;
+    }
     if (!ref || sheet < 0) {
       losses.push({ k: 'table_unread', sheet: ref?.sheet ?? '', name });
       continue;
@@ -152,7 +165,7 @@ export function readOdsDatabaseRanges(
     bySheet.map((list) => list.map((f) => f.candidate)),
     names,
   );
-  const out: OdsTablesRead = { read: new Set(), standard: titles.map(() => []) };
+  const out: OdsTablesRead = { read: filtered, standard: titles.map(() => []), filters };
   bySheet.forEach((list, i) =>
     list.forEach((f, at) => {
       if (!held[i]![at]) {

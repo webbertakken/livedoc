@@ -45,6 +45,7 @@ import { XlsxStyles } from './xlsx-styles';
 import { xlsxFormatRulesXml } from './xlsx-format-rules';
 import { xlsxValidationsXml } from './xlsx-validation';
 import { liveDocExtXml, xlsxProtectionXml } from './xlsx-protection';
+import { xlsxFiltersOut, type XlsxFiltersOut } from './xlsx-filters';
 import { xlsxThemeXml } from './xlsx-theme';
 import { xlsxFunctionNames } from './file-functions';
 import { namesToWrite, xlsxNameXml } from './file-names';
@@ -208,8 +209,13 @@ function cellXml(cell: FileCell, write: CellWrite, style: number): string {
 // The bindings every root LiveDoc writes declares: SpreadsheetML's, and relationships' as `r`.
 const OWN_NS = { '': SPREADSHEETML_NS, r: OFFICE_RELATIONSHIPS_NS };
 
-// What the workbook's other parts give a worksheet: its drawing's relationship, its tables' `tableParts` and record.
-type SheetParts = { drawingRelId: string | null; tables: XlsxTableParts['sheets'][number] };
+// What the workbook's other parts give a worksheet: its drawing's relationship, its tables' `tableParts` and record,
+// its filter's and views' children and record.
+type SheetParts = {
+  drawingRelId: string | null;
+  tables: XlsxTableParts['sheets'][number];
+  filters: XlsxFiltersOut;
+};
 
 function worksheetXml(
   sheet: FileSheet,
@@ -278,7 +284,12 @@ function worksheetXml(
   const validations = xlsxValidationsXml(sheet.validations, renamed);
   // Its protection (standard-mapping.md "Protection in the file"), its record in LiveDoc's one `ext`.
   const protection = xlsxProtectionXml(sheet.protections);
-  const ext = liveDocExtXml(validations.ext, protection.record, parts.tables?.record ?? null);
+  const ext = liveDocExtXml(
+    validations.ext,
+    protection.record,
+    parts.tables?.record ?? null,
+    parts.filters.record,
+  );
   const own = [
     { name: 'dimension', xml: `<dimension ref="${extent}"/>` },
     ...(shape ? [{ name: 'sheetFormatPr', xml: shape.sheetFormatPr }] : []),
@@ -288,6 +299,8 @@ function worksheetXml(
       xml: lines.length > 0 ? ['<sheetData>', ...lines, '</sheetData>'].join('\n') : '<sheetData/>',
     },
     ...protection.own,
+    // Its filter and filter views (standard-mapping.md "Filters in the file").
+    ...parts.filters.own,
     // Format rules after the kept ones' priorities, so a kept rule draws first (D215).
     ...xlsxFormatRulesXml(
       sheet.formatRules,
@@ -345,6 +358,7 @@ function workbookXml(
   kept: XlsxKeptWriter,
   functions: ReturnType<typeof definedNames>,
   pivotCaches: readonly string[],
+  views: readonly string[],
 ): string {
   const sheets = sheetsOf.map(
     ({ name, hidden }, i) =>
@@ -361,7 +375,13 @@ function workbookXml(
   return [
     XML_DECLARATION,
     `<workbook xmlns="${SPREADSHEETML_NS}" xmlns:r="${OFFICE_RELATIONSHIPS_NS}"${kept.rootAttributes('workbook', OWN_NS)}>`,
-    ...kept.workbookChildren(own, kept.rootBindings('workbook', OWN_NS), functions, pivotCaches),
+    ...kept.workbookChildren(
+      own,
+      kept.rootBindings('workbook', OWN_NS),
+      functions,
+      pivotCaches,
+      views,
+    ),
     '</workbook>',
     '',
   ].join('\n');
@@ -413,10 +433,14 @@ export function writeXlsx(file: WorkbookFile, title: string): FileWritten<Uint8A
   const tabled = xlsxTableParts(file.sheets, beside.kept, keptParts.parts, (i) =>
     ownIds(sheetRels(i)),
   );
+  const filters = file.sheets.map((sheet, i) =>
+    xlsxFiltersOut(sheet, i, renamed.get(sheet.name) ?? sheet.name),
+  );
   const sheetParts = file.sheets.map((sheet, i): OoxmlPart => {
     const written = worksheetXml(sheet, i, { strings, styles, kept, tables }, renamed, losses, {
       drawingRelId: drawn.sheets[i]?.relId ?? null,
       tables: tabled.sheets[i] ?? null,
+      filters: filters[i]!,
     });
     dynamic ||= written.dynamic;
     return {
@@ -426,7 +450,9 @@ export function writeXlsx(file: WorkbookFile, title: string): FileWritten<Uint8A
     };
   });
   // The workbook's names: its named ranges, then its named functions as named LAMBDAs, each name once (D344).
-  const functions = definedNames(file, renamed, losses);
+  const defined = definedNames(file, renamed, losses);
+  // The filters' names after the workbook's own (standard-mapping.md "Filters in the file").
+  const functions = { ...defined, names: [...defined.names, ...filters.flatMap((f) => f.names)] };
   const names = file.sheets.map((s) => ({
     name: renamed.get(s.name) ?? s.name,
     hidden: s.hidden === true,
@@ -460,7 +486,16 @@ export function writeXlsx(file: WorkbookFile, title: string): FileWritten<Uint8A
     {
       name: 'xl/workbook.xml',
       contentType: OOXML_CONTENT_TYPES.spreadsheet,
-      data: encode(workbookXml(names, sheetIds, kept, functions, pivoted.caches.entries)),
+      data: encode(
+        workbookXml(
+          names,
+          sheetIds,
+          kept,
+          functions,
+          pivoted.caches.entries,
+          filters.flatMap((f) => f.views),
+        ),
+      ),
     },
     ...sheetParts,
     xmlPart('xl/styles.xml', OOXML_CONTENT_TYPES.spreadsheetStyles, styles.xml()),

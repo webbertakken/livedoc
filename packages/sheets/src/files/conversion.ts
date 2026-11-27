@@ -55,6 +55,8 @@ export type ConversionLoss =
   | { k: 'protection_passwords_left'; count: number }
   // Pivot tables other apps hold more simply (standard-mapping.md "Pivot tables in the file", D606), and what they lose.
   | { k: 'pivots_simplified'; count: number; features: PivotSimplified[] }
+  // Filter views an OpenDocument file cannot hold (standard-mapping.md "Filters in the file").
+  | { k: 'filter_views_left'; count: number }
   // What was kept from the file, which a file of the other standard leaves behind (standard-mapping.md "Unknown
   // content"): counted, its kinds the most common first.
   | { k: 'kept'; count: number; kinds: KeptKind[] };
@@ -165,6 +167,8 @@ export function conversionLosses(
     losses.push({ k: 'protection_passwords_left', count: guarded.passwords });
   const pivots = pivotsElsewhere(file, isXlsx(to) ? 'xlsx' : 'odf');
   if (pivots.count > 0) losses.push({ k: 'pivots_simplified', ...pivots });
+  const views = isXlsx(to) ? 0 : file.sheets.reduce((n, s) => n + (s.filterViews?.length ?? 0), 0);
+  if (views > 0) losses.push({ k: 'filter_views_left', count: views });
   const kept =
     file.kept && file.kept.standard !== keptStandardOf(to) ? keptKinds(file.kept.items) : null;
   if (kept && kept.count > 0) losses.push({ k: 'kept', ...kept });

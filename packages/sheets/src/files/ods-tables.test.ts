@@ -118,7 +118,7 @@ describe('tables in ODF', () => {
     expect(made.sheets[0]!.layout.tables?.[0]?.types).toBeUndefined();
   });
 
-  it('reads another app’s database range as a table, keeps a headless one and an autofilter’s', async () => {
+  it('reads another app’s database range as a table, keeps a headless one, an autofilter’s the filter', async () => {
     const read = await ok(
       readOds(
         encode(
@@ -139,13 +139,18 @@ describe('tables in ODF', () => {
     ]);
     const kept = read.file.kept!.items.find((i) => i.xml.includes('database-ranges'))!.xml;
     expect(kept).toContain('table:name="Raw"');
-    expect(kept).toContain('__Anonymous_Sheet_DB__0');
+    // The autofilter's is the sheet's filter (standard-mapping.md "Filters in the file"), not kept.
+    expect(kept).not.toContain('__Anonymous_Sheet_DB__0');
+    expect(read.file.sheets[0]!.filter).toEqual({
+      range: { r1: 0, c1: 4, r2: 1, c2: 4 },
+      cols: [],
+    });
     expect(kept).not.toContain('table:name="Items"');
     const made = sheetsFromFile(read.file, 'en-GB', rand);
     expect(made.sheets[0]!.layout.tables?.map((t) => t.name)).toEqual(['Items']);
   });
 
-  it('writes an autofilter’s anonymous range back with its filter conditions, beside its own tables', async () => {
+  it('reads an autofilter’s anonymous range as the filter and writes it back beside its own tables', async () => {
     const autofilter =
       '<table:database-range table:name="__Anonymous_Sheet_DB__0" table:target-range-address="S.A1:S.A3" table:display-filter-buttons="true">' +
       '<table:filter><table:filter-condition table:field-number="0" table:value="pen" table:operator="="/></table:filter>' +
@@ -184,12 +189,19 @@ describe('tables in ODF', () => {
         made.kept,
       );
       expect(out.losses, format).toEqual([]);
+      const text = new TextDecoder().decode(out.data);
+      if (format === 'fods')
+        expect(text).toContain(
+          `<table:database-range table:name="__Anonymous_Sheet_DB__0" table:target-range-address="'S'.A1:'S'.A3" table:display-filter-buttons="true"><table:filter><table:filter-condition table:field-number="0" table:operator="=" table:value="pen"/></table:filter></table:database-range>`,
+        );
       const again = await ok(readOds(out.data));
-      const kept = again.file.kept!.items.find((i) => i.xml.includes('database-ranges'))!.xml;
-      expect(kept, format).toContain('table:name="__Anonymous_Sheet_DB__0"');
-      expect(kept, format).toContain(
-        '<table:filter><table:filter-condition table:field-number="0" table:value="pen" table:operator="="/></table:filter>',
+      expect(again.losses, format).toEqual([]);
+      expect(again.file.kept?.items.some((i) => i.xml.includes('Anonymous')) ?? false, format).toBe(
+        false,
       );
+      expect(again.file.sheets[0]!.filter?.cols, format).toEqual([
+        { c: 0, cond: { op: 'eq', a: 'pen' }, std: { tests: [{ op: 'eq', v: 'pen' }] } },
+      ]);
       expect(
         again.file.sheets[0]!.tables?.map((t) => t.name),
         format,

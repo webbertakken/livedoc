@@ -48,6 +48,7 @@ describe('readOdsLines', () => {
     expect(lines.r).toEqual({
       lines: new Map([
         [0, { hidden: true }],
+        [1, { filtered: true }],
         [2, { depth: 1 }],
         [3, { hidden: true, depth: 2 }],
       ]),

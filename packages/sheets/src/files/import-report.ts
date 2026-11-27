@@ -18,6 +18,7 @@ export const REPORTED_KINDS = [
   'formula_unread',
   'name_unread',
   'table_unread',
+  'filter_unread',
   'function_unread',
   'formula_unwritten',
   'text_cut',
@@ -69,11 +70,16 @@ function entriesOf(loss: FileLoss): Entry[] {
     case 'format_rule_unread':
     case 'validation_rule_unread':
       return [[loss.k, 1, cellName(loss.sheet, loss.r, loss.c)]];
+    case 'filter_unread':
+      return [['filter_unread', 1, cellName(loss.sheet, loss.r, loss.c)]];
+    case 'filter_view_unread':
+      return [['filter_unread', 1, loss.name]];
     // The other app's change is read as it left it (D294, D349), and a protection the grid cannot hold leaves its cells
     // as the sheet's others: logged with the read's losses, never reported.
     case 'validation_rule_changed':
     case 'protection_changed':
     case 'tables_changed':
+    case 'filters_changed':
     case 'protection_unread':
     case 'pivot_changed':
       return [];
