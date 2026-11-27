@@ -1128,6 +1128,12 @@ export const EXACT: Readonly<Record<string, string>> = {
   'Pdf|Zoomed|Out': 'Someone zoomed out of a PDF document by a step.',
   'Pdf|Toggled|Layer.Shown':
     'Someone showed a PDF layer for themselves, in a PDF document’s Layers panel.',
+  'UI|Opened|TextDocumentWordCount':
+    "Someone opened a text document's word count from Tools > Word count or its shortcut (never the counts).",
+  'UI|Toggled|TextDocumentWordCountWhileTypingOn':
+    "Someone turned on a text document's word count while typing, the small count at the writing's bottom left.",
+  'UI|Toggled|TextDocumentWordCountWhileTypingOff':
+    "Someone turned off a text document's word count while typing.",
   'Pdf|Toggled|DarkPagesOn':
     'Someone turned on Dark pages: PDF pages shown dark for them alone, in the dark colour scheme.',
   'Pdf|Toggled|DarkPagesOff': 'Someone turned off Dark pages: PDF pages shown as the file says.',

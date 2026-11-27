@@ -152,6 +152,7 @@ import {
   keepUnreadSelection,
   pageSelectionPlugin,
 } from '@/lib/text-document/text-document-page-selection';
+import { useTextDocumentWordCount } from './useTextDocumentWordCount';
 import { useTextDocumentColumns } from './useTextDocumentColumns';
 import { breaksPlugin, sectionSetupAt } from '@/lib/text-document/text-document-breaks';
 import { horizontalLineActions } from '@/lib/text-document/text-document-horizontal-line';
@@ -1178,6 +1179,15 @@ export function TextDocumentSurface({
     offered: emailEnabled && !local && (mentions?.selfUserId ?? null) !== null,
     onClosed: focusBody,
   });
+  // Tools > Word count and the count while typing (tools.md "Word count").
+  const wordCount = useTextDocumentWordCount({
+    view: editorView,
+    activeView,
+    subscribe: changes.subscribe,
+    subscribeCaret: changes.subscribeCaret,
+    pages: paginated && state === 'ready' ? pageList.length : null,
+    ownerId,
+  });
   const versionHistory = useTextDocumentVersionHistory({
     where: scope,
     local,
@@ -1218,6 +1228,7 @@ export function TextDocumentSurface({
       ...compare.actions,
       ...versionHistory.actions,
       ...notifications.actions,
+      ...wordCount.actions,
       ...links.actions,
       ...bookmarks.actions,
       ...headingLinks.actions,
@@ -1241,6 +1252,7 @@ export function TextDocumentSurface({
       compare.actions,
       versionHistory.actions,
       notifications.actions,
+      wordCount.actions,
       links.actions,
       bookmarks.actions,
       headingLinks.actions,
@@ -1433,6 +1445,8 @@ export function TextDocumentSurface({
             <TextDocumentReviewPanel {...reviewPanel.props} />
           ) : null}
           {compare.dialog}
+          {state === 'ready' ? wordCount.box : null}
+          {state === 'ready' ? wordCount.dialog : null}
           <div
             ref={scroller}
             data-region="document"

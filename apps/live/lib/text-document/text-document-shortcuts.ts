@@ -1360,7 +1360,7 @@ export const TEXT_DOCUMENT_SHORTCUTS: readonly ShortcutRow[] = [
     'Ctrl+Shift+C',
     '⌘+Shift+C',
     'Ctrl+Shift+C',
-    'specified',
+    'built',
   ),
   row(
     'show-non-printing-characters',

@@ -146,6 +146,13 @@ export const APPEARANCE_SETTINGS = settingsStack('Appearance Settings', 'How the
     'Names beside the bottom-right buttons\u2019 icons on a wide desktop.',
   ),
   toggle(
+    'UI',
+    'TextDocumentWordCountWhileTypingOn',
+    'TextDocumentWordCountWhileTypingOff',
+    'Word Count While Typing',
+    'A text document\u2019s word count shown at the bottom left while typing, from Tools > Word count.',
+  ),
+  toggle(
     'Pdf',
     'DarkPagesOn',
     'DarkPagesOff',

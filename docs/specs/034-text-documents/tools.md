@@ -1,6 +1,6 @@
 # Tools
 
-**Status: specified.** Nothing is built.
+**Status: being built.** Word count is built; the other parts below are still to come.
 
 Find and replace, word count, spelling and grammar, the dictionary, citations, preferences, accessibility settings,
 language and activity in a [text document](text-document.md), and what fork C3 (ruled: core only) leaves out.
@@ -19,11 +19,24 @@ language and activity in a [text document](text-document.md), and what fork C3 (
 
 ## Word count
 
-- ⌘⇧C opens the dialog: pages, words, characters, characters excluding spaces, of the document or the selection;
-  **Display word count while typing** shows a floating box at the bottom left (words; a press cycles pages, characters,
-  characters excluding spaces).
-- Counts follow Google's rules: words split at white space and punctuation that separates words; footnotes, headers and
-  footers not counted (assumed: Google's; confirmed with the captures).
+As Google Docs’ Tools > Word count ([Google Docs Editors Help 39003](https://support.google.com/docs/answer/39003?hl=en),
+fetched 2026-11-27); the look is (default) until a capture of Google’s dialog.
+
+- **The dialog**: Tools > Word count and ⌘⇧C open an office dialog **Word count**: rows **Pages**, **Words**,
+  **Characters**, **Characters excluding spaces**, each with its count; with a selection, each reads "12 of 340" (the
+  selection’s of the document’s), Pages always the document’s. Pages shows only where pages are laid out (not
+  pageless, not on a phone) (default). Under the rows the checkbox **Display word count while typing**; **OK** closes.
+- **While typing**: with the checkbox on, a small box at the bottom left of the writing shows "340 words" ("12 of 340
+  words" with a selection), kept current as anyone writes; a press on it cycles words, characters, characters
+  excluding spaces, then pages where laid out (default). The checkbox is the person’s own, kept with their account,
+  else this browser, for every text document (default).
+- **What counts**: the current document tab’s body, tables included; headers, footers and footnotes are not counted
+  unless selected (help 39003: "Unless you select a section of the document, word count applies to everything except
+  headers, footers, and footnotes"). Words are the browser’s word segmentation (`Intl.Segmenter`, word-like
+  segments), so white space and punctuation that separates words split them, "don’t" stays one word and a CJK run
+  counts its words (default); characters are what a reader sees as one character (grapheme clusters), paragraph breaks
+  not counted, and pictures, equations and footnote marks count nothing (default).
+- **Who**: everyone who can read the document, Viewers included.
 
 ## Spelling and grammar
 
@@ -97,4 +110,5 @@ suggestions under D7); preferences and accessibility settings are each person's 
 ## Telemetry
 
 `Search · Used · TextDocumentFind`, `TextDocumentReplaceAll`; `UI · Opened · TextDocumentWordCount`,
-`TextDocumentSpelling`, `TextDocumentCitations`; `UI · Toggled · TextDocumentScreenReader`. Never text.
+`TextDocumentSpelling`, `TextDocumentCitations`; `UI · Toggled · TextDocumentWordCountWhileTypingOn`,
+`TextDocumentWordCountWhileTypingOff` (before it is kept), `TextDocumentScreenReader`. Never text.

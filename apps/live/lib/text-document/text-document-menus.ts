@@ -405,7 +405,8 @@ export function textDocumentMenus(format: TextDocumentFormat): OfficeCatalogue {
       item('spelling-and-grammar', 'Spelling and grammar', 'edit', {
         shortcut: 'open-spelling-and-grammar',
       }),
-      item('word-count', 'Word count', 'view', { shortcut: 'word-count' }),
+      // tools.md "Word count": anyone who reads the document counts it.
+      item('word-count', 'Word count', 'view', { shortcut: 'word-count', status: 'built' }),
       // review.md "Reviewing suggestions": anyone reviews; what they may settle is their role's.
       item('review-suggested-edits', 'Review suggested edits', 'view', {
         shortcut: 'review-suggested-edits',
