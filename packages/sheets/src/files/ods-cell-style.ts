@@ -2,6 +2,7 @@
 // file"): a `table-cell` style read through its parents to the default style, property by property, as a cell's style
 // against LiveDoc's defaults (D203, D204, D206); and the properties an automatic cell style is written with, over the
 // default cell style LiveDoc writes (Arial 10 pt, middle).
+import { cellProtectFrees } from './ods-protection';
 import {
   attributeOf,
   childElement,
@@ -39,7 +40,8 @@ export const odsDefaultCellStyles = (font: string = FILE_DEFAULT_FONT): string[]
 export const ODS_DEFAULT_CELL_STYLES = odsDefaultCellStyles();
 
 /** A cell style's look: the cell's style (none for LiveDoc's defaults) and whether it says more than the model holds. */
-export type OdsLook = { style?: CellStyle; lost: boolean };
+// `frees`: its cells are free of their sheet's protection (standard-mapping.md "Protection in the file").
+export type OdsLook = { style?: CellStyle; lost: boolean; frees?: true };
 
 /** The look of each cell style by name; none names the file's default (its "Default" style, else its default style). */
 export type OdsCellLooks = {
@@ -123,7 +125,7 @@ const firstFamily = (list: string) =>
     .trim()
     .replace(/^(['"])(.*)\1$/, '$2');
 
-type Read = { style: CellStyle; lost: boolean };
+type Read = { style: CellStyle; lost: boolean; frees?: true };
 
 function readText(
   p: Properties,
@@ -236,10 +238,13 @@ function readCell(p: Properties, read: Read, absent: string) {
   if (
     said('shrink-to-fit', ['false']) ||
     said('diagonal-bl-tr', ['none']) ||
-    said('diagonal-tl-br', ['none']) ||
-    said('cell-protect', ['protected'])
+    said('diagonal-tl-br', ['none'])
   )
     read.lost = true;
+  // Unprotected cells are free of their sheet's protection; a hidden formula is more than the model holds.
+  const protect = p.get(CELL(STYLE, 'cell-protect'));
+  if (cellProtectFrees(protect)) read.frees = true;
+  if (/formula-hidden|hidden-and-protected/.test(protect ?? '')) read.lost = true;
 }
 
 // What reading a look needs of the file: its font faces, its default ink, and what an absent vertical alignment is.
@@ -250,9 +255,10 @@ function lookOf(p: Properties, file: FileLook): OdsLook {
   readText(p, file.faces, file.ink, read);
   readParagraph(p, read);
   readCell(p, read, file.absent);
+  const frees = read.frees ? { frees: true as const } : {};
   return Object.keys(read.style).length > 0
-    ? { style: read.style, lost: read.lost }
-    : { lost: read.lost };
+    ? { style: read.style, lost: read.lost, ...frees }
+    : { lost: read.lost, ...frees };
 }
 
 /** Every cell style's look among a file's style containers (content and styles), through its parents. */
@@ -315,7 +321,7 @@ export function odsCellLooks(roots: readonly XmlElement[]): OdsCellLooks {
     const known = looks.get(memo);
     if (known) return known;
     const look = lookOf(at === undefined ? defaults : propertiesOf(at, new Set()), file);
-    const sameKey = `${cellStyleKey(look.style)}#${look.lost}`;
+    const sameKey = `${cellStyleKey(look.style)}#${look.lost}#${look.frees === true}`;
     const one = shared.get(sameKey) ?? look;
     shared.set(sameKey, one);
     looks.set(memo, one);

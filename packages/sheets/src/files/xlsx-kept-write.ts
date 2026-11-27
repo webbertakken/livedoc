@@ -108,6 +108,8 @@ function inOrder(
 // The worksheet's children the schema allows once: LiveDoc's own go inside a kept one, after its children.
 const MERGED: ReadonlySet<string> = new Set(['protectedRanges', 'dataValidations', 'extLst']);
 const VALIDATION = /<(?:[\w.-]+:)?dataValidation[\s/>]/g;
+// The worksheet's children LiveDoc's own replaces, kept or not.
+const REPLACED: ReadonlySet<string> = new Set(['sheetProtection']);
 
 // A kept child with LiveDoc's own of the same name inside it, after its children; a `dataValidations`' count made its
 // rules' again.
@@ -280,7 +282,12 @@ export class XlsxKeptWriter {
   ): string[] {
     let placed = sheetPrOwn === null;
     const merged = new Set<string>();
-    const kept = this.of('worksheet', sheet).map((item) => {
+    // A kept child LiveDoc writes its own of (a `sheetProtection` kept before LiveDoc read protections) gives way to it.
+    const replaced = new Set(own.filter((child) => REPLACED.has(child.name)).map((c) => c.name));
+    const items = this.of('worksheet', sheet).filter(
+      (item) => !replaced.has(keptLocalName(keptXmlWithin(item, rootNs))),
+    );
+    const kept = items.map((item) => {
       const xml = keptXmlWithin(item, rootNs);
       const local = keptLocalName(xml);
       if (MERGED.has(local) && !merged.has(local)) {

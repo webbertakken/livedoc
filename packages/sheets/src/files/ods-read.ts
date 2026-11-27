@@ -34,6 +34,8 @@ import { readOdsNames } from './file-names';
 import { OdsValidationCells, readOdsValidations, type OdsValidationsRead } from './ods-validation';
 import { odsCellLooks, type OdsCellLooks } from './ods-cell-style';
 import { fromOpenFormula } from './open-formula';
+import { OdsFreeCells, readOdsTableProtection, type OdsRowCell } from './ods-protection';
+import { protectionsFound } from './file-protections';
 import type { FileCell, FileLoss, FileRead, FileSheet, FileValue } from './workbook-file';
 
 // A file is read up to a workbook's limits (files-and-print.md "A file sent in parts"): past them it is cut, and said.
@@ -253,12 +255,21 @@ function readTable(table: XmlElement, index: number, book: Book): FileSheet {
   const extent = { rows: 0, cols: 0 };
   const sheet: Sheet = { name, losses, formats, approximated: new Set(), cut: { formats: false } };
   const columns = columnStyles(table);
+  // Its protection (standard-mapping.md "Protection in the file"): a protected table's free cells, row by row.
+  const guard = readOdsTableProtection(table);
+  const free = guard.protected
+    ? new OdsFreeCells(columns, (s) => looks.of(s).frees === true)
+    : null;
+  const freesUnread = (style: string | undefined) =>
+    !guard.protected && looks.of(style).frees === true;
   const ruled = new OdsValidationCells(book.validations);
   const cells: FileCell[] = [];
   let cut = false;
   let cellsCut = false;
   // A sheet naming a style that says more than the model holds is named (D104).
-  let styled = rules.styled || columns.some((style) => style !== undefined && looks.of(style).lost);
+  let styled =
+    rules.styled ||
+    columns.some((style) => style !== undefined && (looks.of(style).lost || freesUnread(style)));
   let r = 0;
   for (const row of rowsOf(table)) {
     const rowRepeat = repeatOf(row, 'rows');
@@ -266,10 +277,12 @@ function readTable(table: XmlElement, index: number, book: Book): FileSheet {
     let c = 0;
     const rowCells: FileCell[] = [];
     const rowKept: RowKept[] = [];
+    const rowFree: OdsRowCell[] = [];
     for (const cell of childElements(row)) {
       const isCell = is(cell, TABLE, 'table-cell') || is(cell, TABLE, 'covered-table-cell');
       if (!isCell) continue;
       const colRepeat = repeatOf(cell, 'columns');
+      rowFree.push({ c, n: colRepeat, own: attributeOf(cell, TABLE, 'style-name') });
       const kept = keeper.cell(cell, (rule) => ruled.has(rule));
       if (r < ROWS_MAX && c < COLS_MAX)
         ruled.add(attributeOf(cell, TABLE, 'content-validation-name'), {
@@ -283,7 +296,7 @@ function readTable(table: XmlElement, index: number, book: Book): FileSheet {
       const value = cellValue(cell);
       const own = attributeOf(cell, TABLE, 'style-name');
       const named = own ?? rowStyle;
-      styled ||= named !== undefined && looks.of(named).lost;
+      styled ||= named !== undefined && (looks.of(named).lost || freesUnread(named));
       const content = formulaText !== undefined || value !== undefined;
       // An empty cell keeps its own style's format and look (where it differs from the file's default) over a few
       // cells; a whole line's is past what the grid holds (D94).
@@ -338,6 +351,7 @@ function readTable(table: XmlElement, index: number, book: Book): FileSheet {
       }
     }
     keepRow(rowKept, r, rowRepeat, index, keeper, extent);
+    free?.row(r, rowRepeat, rowStyle, rowFree);
     r += rowRepeat;
   }
   // The sheet is as big as what it holds, its kept cells too: ODF repeats empty rows and columns to its grid's end.
@@ -348,6 +362,10 @@ function readTable(table: XmlElement, index: number, book: Book): FileSheet {
   for (const at of validations.changed)
     losses.push({ k: 'validation_rule_changed', sheet: name, ...at });
   if (cellsCut) losses.push({ k: 'cells_cut', sheet: name });
+  const freed = free?.rectangles() ?? { free: [], cut: false };
+  if (freed.cut) losses.push({ k: 'protection_cut', sheet: name });
+  const found = protectionsFound({ ...guard, free: freed.free });
+  if (found.changed) losses.push({ k: 'protection_changed', sheet: name });
   if (styled) losses.push({ k: 'styles_unread', sheet: name });
   if (keeper.cut > cutBefore)
     losses.push({ k: 'kept_cut', sheet: name, cells: keeper.cut - cutBefore });
@@ -367,6 +385,7 @@ function readTable(table: XmlElement, index: number, book: Book): FileSheet {
     ...book.tabLooks(attributeOf(table, TABLE, 'style-name')),
     ...(rules.rules.length ? { formatRules: rules.rules } : {}),
     ...(validations.rules.length ? { validations: validations.rules } : {}),
+    ...(found.protections ? { protections: found.protections } : {}),
   };
 }
 

@@ -1,5 +1,6 @@
 // The conversion dialog's words (docs/specs/029-sheets/files-and-print.md "Converting", D88): its title, and one line
 // a loss, counted, naming up to three sheets or functions. Pure, so every line is tested without React.
+import type { ProtectionSimplified } from './file-protections';
 import type { WorkbookFormat } from '../workbook-record';
 import type { ConversionLoss } from './conversion';
 import type { KeptKind } from './kept-content';
@@ -73,6 +74,12 @@ const SIMPLIFIED_WORDS: Record<SimplifiedFeature, string> = {
   checkboxes: 'checkboxes',
 };
 
+const PROTECTION_WORDS: Record<ProtectionSimplified, string> = {
+  ranges: 'protected ranges',
+  warnings: 'warnings',
+  exceptions: 'cells left open on protected sheets',
+};
+
 /** One loss as the dialog lists it. */
 export function conversionLine(loss: ConversionLoss, to: WorkbookFormat): string {
   const one = loss.count === 1;
@@ -117,6 +124,18 @@ export function conversionLine(loss: ConversionLoss, to: WorkbookFormat): string
         words.length > 1 ? `${words.slice(0, -1).join(', ')} and ${words.at(-1)!}` : words[0]!;
       return `${what} more simply in ${where}: ${list}`;
     }
+    case 'protections_simplified': {
+      const what = one ? '1 protection works' : `${loss.count} protections work`;
+      const where = to === 'xlsx' ? 'Excel' : 'other apps';
+      const words = loss.features.map((f) => PROTECTION_WORDS[f]);
+      const list =
+        words.length > 1 ? `${words.slice(0, -1).join(', ')} and ${words.at(-1)!}` : words[0]!;
+      return `${what} more simply in ${where}: ${list}`;
+    }
+    case 'protection_passwords_left':
+      return one
+        ? '1 protected sheet leaves its file password behind'
+        : `${loss.count} protected sheets leave their file passwords behind`;
     // The kept content stays with the spreadsheet in its own format, so it is the other format's file's (D109).
     case 'kept': {
       const from = to === 'xlsx' ? 'OpenDocument' : 'Excel';

@@ -5,7 +5,7 @@ import { readOoxmlPackage } from '@livedoc/office-packages';
 import { describe, expect, it } from 'vitest';
 import type { Protection } from '../protection';
 import { emptyLayout, emptySheet, type Sheet } from '../sheet';
-import { xlsx } from '../testing/hand-files';
+import { flatOds, xlsx } from '../testing/hand-files';
 import { WorkbookRecord } from '../workbook-record';
 import {
   fileProtectionsOf,
@@ -20,6 +20,9 @@ import { importReportLine } from './import-report-copy';
 import { sheetsFromFile, type FileRead } from './workbook-file';
 import { writeWorkbook } from './write-workbook';
 import { readXlsx } from './xlsx-read';
+import { readOds } from './ods-read';
+import { workbookConversion } from './conversion';
+import { conversionLine } from './conversion-copy';
 
 let n = 7;
 const rand = () => (n = (n * 16807) % 2147483647) / 2147483647;
@@ -49,11 +52,11 @@ function sheetProtected(title: string, given: Given[]): Sheet {
     r2: layout.rows[r2]!,
     c2: layout.cols[c2]!,
   });
-  const protections: Protection[] = given.map((g, i) => ({
-    ...g,
+  const protections: Protection[] = given.map(({ range, except, ...rest }, i) => ({
+    ...rest,
     id: `prot${i + 1}`,
-    ...(g.range ? { range: ids(g.range) } : {}),
-    ...(g.except ? { except: g.except.map(ids) } : {}),
+    ...(range ? { range: ids(range) } : {}),
+    ...(except ? { except: except.map(ids) } : {}),
   }));
   return emptySheet({ id: title, tabId: title, title, layout: { ...layout, protections } });
 }
@@ -63,7 +66,7 @@ const asSheets = (made: ReturnType<typeof sheetsFromFile>) =>
   made.sheets.map((s) => emptySheet({ id: s.id, tabId: s.id, title: s.title, layout: s.layout }));
 
 // Each protection made, its cells by place, its id left out.
-const placesOf = (sheet: Sheet) => fileProtectionsOf(sheet.layout);
+const placesOf = (sheet: Pick<Sheet, 'layout'>) => fileProtectionsOf(sheet.layout);
 
 describe('free cells as rectangles', () => {
   it('lays a row’s own cells over its base runs', () => {
@@ -329,5 +332,143 @@ describe('protections in XLSX', () => {
     expect(importReport(read.losses).map(importReportLine)).toEqual([
       '1 protected sheet frees more than 50 ranges; the rest stay protected: S1',
     ]);
+  });
+});
+
+describe('protections in ODF', () => {
+  const owner = sheetProtected('Data', [
+    { can: 'owner', description: 'Inputs', except: [[1, 0, 2, 0]] },
+    { can: 'editors', range: [0, 2, 1, 3] },
+  ]);
+
+  it('writes a protected sheet as table:protected, its exceptions in LiveDoc’s record only, and reads every one back', async () => {
+    const written = writeWorkbook([owner], record, 'Book', 'fods');
+    expect(written.losses).toEqual([]);
+    const xml = decode(written.data);
+    expect(xml).toMatch(
+      /<table:table table:name="Data"[^>]* table:protected="true" xmlns:livedoc="[^"]+" livedoc:protections="\[\{&quot;except&quot;:\[&quot;A2:A3&quot;\]/,
+    );
+    expect(xml).not.toContain('cell-protect');
+    for (const format of ['ods', 'fods'] as const) {
+      const read = await ok(readOds(writeWorkbook([owner], record, 'Book', format).data));
+      expect(read.losses).toEqual([]);
+      const made = sheetsFromFile(read.file, 'en-GB', rand);
+      expect(made.kept).toBeUndefined();
+      expect(placesOf(made.sheets[0]!)).toEqual(placesOf(owner));
+    }
+  });
+
+  // LibreOffice's file: style ce1 unprotected, ce2 protected; column C (ce1) and row 4 (ce1) free but where ce2 says.
+  const AUTOMATIC =
+    '<style:style style:name="ce1" style:family="table-cell"><style:table-cell-properties style:cell-protect="none"/></style:style>' +
+    '<style:style style:name="ce2" style:family="table-cell"><style:table-cell-properties style:cell-protect="protected"/></style:style>';
+  const TABLE =
+    '<loext:table-protection loext:select-protected-cells="true" loext:select-unprotected-cells="true"/>' +
+    '<table:table-column table:number-columns-repeated="2"/><table:table-column table:default-cell-style-name="ce1"/>' +
+    '<table:table-column table:number-columns-repeated="3"/>' +
+    '<table:table-row><table:table-cell table:style-name="ce1"/><table:table-cell table:number-columns-repeated="5"/></table:table-row>' +
+    '<table:table-row table:number-rows-repeated="2"><table:table-cell table:number-columns-repeated="2"/><table:table-cell table:style-name="ce2"/><table:table-cell table:number-columns-repeated="3"/></table:table-row>' +
+    '<table:table-row table:default-cell-style-name="ce1"><table:table-cell table:number-columns-repeated="4"/><table:table-cell table:style-name="ce2"/><table:table-cell/></table:table-row>';
+  const KEY =
+    ' table:protection-key="AAAAAAAAAAAAAAAAAAAAAAAAAAA=" table:protection-key-digest-algorithm="http://docs.oasis-open.org/office/ns/table/legacy-hash-excel"' +
+    ' loext:protection-key-digest-algorithm-2="http://www.w3.org/2000/09/xmldsig#sha1"';
+
+  it('reads another app’s protected table as Only the Owner, freeing its unprotected cells, its key kept', async () => {
+    const read = await ok(readOds(flatOds('', AUTOMATIC, TABLE, ` table:protected="true"${KEY}`)));
+    expect(read.losses).toEqual([]);
+    expect(read.file.sheets[0]!.protections).toEqual([
+      {
+        can: 'owner',
+        except: [
+          { r1: 0, c1: 0, r2: 0, c2: 0 },
+          { r1: 0, c1: 2, r2: 0, c2: 2 },
+          { r1: 3, c1: 0, r2: 3, c2: 3 },
+          { r1: 3, c1: 5, r2: 3, c2: 18277 },
+        ],
+        kept: {
+          standard: 'odf',
+          attributes: {
+            'table:protection-key': 'AAAAAAAAAAAAAAAAAAAAAAAAAAA=',
+            'table:protection-key-digest-algorithm':
+              'http://docs.oasis-open.org/office/ns/table/legacy-hash-excel',
+            'loext:protection-key-digest-algorithm-2': 'http://www.w3.org/2000/09/xmldsig#sha1',
+          },
+        },
+      },
+    ]);
+    // LibreOffice's options stay the file's own; the protection's attributes do not.
+    expect(read.file.kept?.items.map((i) => i.xml)).toEqual([
+      '<loext:table-protection loext:select-protected-cells="true" loext:select-unprotected-cells="true"/>',
+    ]);
+    const made = sheetsFromFile(read.file, 'en-GB', rand);
+    const again = decode(
+      writeWorkbook(asSheets(made), { ...record, format: 'fods' }, 'Book', 'fods', made.kept).data,
+    );
+    expect(again).toContain(` table:protected="true"${KEY.replace(' loext:', ' loext:')}`);
+    const excel = await worksheetOf(
+      writeWorkbook(asSheets(made), record, 'Book', 'xlsx', made.kept).data,
+    );
+    expect(excel).toContain('<sheetProtection sheet="1" objects="1" scenarios="1"/>');
+    expect(excel).not.toContain('AAAAAAAA');
+  });
+
+  it('names an unprotected cell style on a table that is not protected, and reads no protection', async () => {
+    const read = await ok(readOds(flatOds('', AUTOMATIC, TABLE)));
+    expect(read.file.sheets[0]!.protections).toBeUndefined();
+    expect(read.losses).toEqual([{ k: 'styles_unread', sheet: 'S' }]);
+  });
+
+  it('reads the standard form when another app changed it since LiveDoc wrote its record', async () => {
+    const record =
+      ' livedoc:protections="[{&quot;range&quot;:&quot;A1&quot;,&quot;can&quot;:&quot;warn&quot;}]" livedoc:protections-fingerprint="00000000"';
+    const read = await ok(
+      readOds(
+        flatOds(
+          '',
+          '',
+          '',
+          ` table:protected="true" xmlns:livedoc="urn:livedoc:xmlns:spreadsheet:1.0"${record}`,
+        ),
+      ),
+    );
+    expect(read.losses).toEqual([{ k: 'protection_changed', sheet: 'S' }]);
+    expect(read.file.sheets[0]!.protections).toEqual([{ can: 'owner' }]);
+  });
+});
+
+describe('converting protections', () => {
+  const guarded = sheetProtected('Data', [
+    {
+      can: 'owner',
+      except: [[1, 0, 2, 0]],
+      kept: { standard: 'ooxml', attributes: { password: 'CC1A' } },
+    },
+    { can: 'editors', range: [0, 2, 1, 3] },
+    { can: 'warn', range: [5, 0, 5, 0] },
+  ]);
+
+  it('lists what other apps hold more simply, and a file password the new format cannot carry', () => {
+    const toOds = workbookConversion([guarded], { ...record, format: 'xlsx' }, 'ods');
+    expect(toOds.losses).toEqual([
+      { k: 'protections_simplified', count: 3, features: ['ranges', 'warnings', 'exceptions'] },
+      { k: 'protection_passwords_left', count: 1 },
+    ]);
+    expect(toOds.losses.map((l) => conversionLine(l, 'ods'))).toEqual([
+      '3 protections work more simply in other apps: protected ranges, warnings and cells left open on protected sheets',
+      '1 protected sheet leaves its file password behind',
+    ]);
+    const toXlsx = workbookConversion([guarded], record, 'xlsx');
+    expect(toXlsx.losses).toEqual([
+      { k: 'protections_simplified', count: 2, features: ['ranges', 'warnings'] },
+    ]);
+    expect(conversionLine(toXlsx.losses[0]!, 'xlsx')).toBe(
+      '2 protections work more simply in Excel: protected ranges and warnings',
+    );
+    expect(
+      conversionLine({ k: 'protections_simplified', count: 1, features: ['warnings'] }, 'xlsx'),
+    ).toBe('1 protection works more simply in Excel: warnings');
+    expect(conversionLine({ k: 'protection_passwords_left', count: 2 }, 'xlsx')).toBe(
+      '2 protected sheets leave their file passwords behind',
+    );
   });
 });

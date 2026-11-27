@@ -49,7 +49,7 @@ describe('ODF kept content', () => {
         `spreadsheet-after@,,:${NAMES}`,
         `table-before@0,,:${SHAPES}`,
         `table-after@0,,:${FORMATS}`,
-        'table-attribute@0,,:table:protected="true"',
+        'table-attribute@0,,:table:print="false"',
         `cell@0,0,0:${NOTE}`,
         'cell-after@0,0,0:<draw:frame draw:name="after"/>',
         'cell-attribute@0,0,0:table:number-columns-spanned="2"',

@@ -198,6 +198,33 @@ export function protectionsFromFile(
   return out.length ? out : undefined;
 }
 
+/** What another app holds less of a protection, in the order the conversion dialog names them. */
+export const PROTECTION_SIMPLIFIED = ['ranges', 'warnings', 'exceptions'] as const;
+export type ProtectionSimplified = (typeof PROTECTION_SIMPLIFIED)[number];
+
+/**
+ * The protections another app holds more simply (standard-mapping.md "Protection in the file"): a range's, a
+ * warning, and in `odf` a protected sheet's exceptions; and those whose file password the other standard's file
+ * cannot carry.
+ */
+export function protectionsElsewhere(
+  list: readonly FileProtection[],
+  to: ProtectionKept['standard'],
+): { count: number; features: ProtectionSimplified[]; passwords: number } {
+  const all = new Set<ProtectionSimplified>();
+  let count = 0;
+  for (const p of list) {
+    const lost: ProtectionSimplified[] = [];
+    if (p.range) lost.push('ranges');
+    if (p.can === 'warn') lost.push('warnings');
+    if (to === 'odf' && !p.range && p.can !== 'warn' && p.except?.length) lost.push('exceptions');
+    for (const f of lost) all.add(f);
+    if (lost.length) count++;
+  }
+  const passwords = list.filter((p) => p.kept && p.kept.standard !== to).length;
+  return { count, features: PROTECTION_SIMPLIFIED.filter((f) => all.has(f)), passwords };
+}
+
 /** A row's free columns, as runs of first and last column. */
 export type FreeRun = readonly [number, number];
 

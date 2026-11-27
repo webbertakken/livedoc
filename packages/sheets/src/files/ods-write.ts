@@ -30,6 +30,8 @@ import { OdsAxisOut } from './ods-lines';
 import { OdsChartObjects } from './ods-charts';
 import { namesToWrite, odsNameXml, withOdsNames } from './file-names';
 import { toOpenFormula } from './open-formula';
+import { odsProtectionAttributes } from './ods-protection';
+import { standardProtectionOf } from './file-protections';
 import type {
   FileCell,
   FileLoss,
@@ -274,7 +276,7 @@ function tableXml(sheet: FileSheet, index: number, out: Omit<Out, 'sheet' | 'ind
     return { from, xml };
   });
   return [
-    `<table:table table:name="${escapeXmlAttribute(sheet.name)}"${tableStyleAttribute(sheet, out.styles)}${kept.tableAttributes(index)}>`,
+    `<table:table table:name="${escapeXmlAttribute(sheet.name)}"${tableStyleAttribute(sheet, out.styles)}${odsProtectionAttributes(sheet.protections)}${kept.tableAttributes(index, standardProtectionOf(sheet.protections) !== undefined)}>`,
     ...before,
     ...columnsXml(cols, colAxis),
     ...rowAxis.nest(runs, 'table-row-group'),

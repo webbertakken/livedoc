@@ -110,7 +110,9 @@ export function ProtectionForm({
         if (!at || at.sheetId !== sheetId) return refuse({ except: i });
         except.push(at.ids);
       }
-      protection = { ...base, ...(except.length ? { except } : {}) };
+      // A file's password stays on its sheet's protection while it guards that sheet (standard-mapping.md D351).
+      const kept = was?.kept && existing?.sheetId === sheetId ? { kept: was.kept } : {};
+      protection = { ...base, ...(except.length ? { except } : {}), ...kept };
     }
     const edit = {
       ...(existing ? { was: { sheetId: existing.sheetId, id: existing.protection.id } } : {}),

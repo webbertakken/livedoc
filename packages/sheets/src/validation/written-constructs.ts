@@ -149,6 +149,22 @@ export const WRITTEN_CONSTRUCTS: Readonly<Record<string, WorkbookFile>> = {
     ],
   },
   charts: { sheets: [chartSheet()] },
+  // standard-mapping.md "Protection in the file": a protected sheet with its exceptions, a range's and a warning.
+  protection: {
+    sheets: [
+      {
+        ...sheet('Locked', [{ r: 0, c: 0, value: { k: 's', v: 'Input' } }]),
+        protections: [
+          { can: 'owner', description: 'Totals', except: [{ r1: 1, c1: 0, r2: 2, c2: 0 }] },
+          { can: 'warn', range: { r1: 4, c1: 1, r2: 4, c2: 2 } },
+        ],
+      },
+      {
+        ...sheet('Open', [{ r: 0, c: 0, value: { k: 'n', v: 1 } }]),
+        protections: [{ can: 'editors', range: { r1: 0, c1: 0, r2: 1, c2: 1 } }],
+      },
+    ],
+  },
   validation: {
     sheets: [
       {

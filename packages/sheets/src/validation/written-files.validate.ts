@@ -119,6 +119,36 @@ describe('every written spreadsheet validates against its format’s schema', ()
   }
 });
 
+// standard-mapping.md "Protection in the file": LibreOffice guards the sheet LiveDoc protects, and saves it again
+// protected; in XLSX it keeps the ranges the sheet leaves open.
+describe('protection other apps enforce', () => {
+  it('LibreOffice keeps the protected sheet of the .fods and .xlsx it opens and saves', async () => {
+    const file = WRITTEN_CONSTRUCTS.protection!;
+    for (const [type, target] of [
+      ['fods', 'ods'],
+      ['xlsx', 'xlsx:Calc MS Excel 2007 XML'],
+    ] as const) {
+      const path = join(OUT, `protection-other.${type}`);
+      writeFileSync(
+        path,
+        type === 'fods' ? writeFlatOds(file, 'p').data : writeXlsx(file, 'p').data,
+      );
+      const read = await readWorkbookFile(new Uint8Array(libreOfficeConvert(path, target)));
+      if (!read.ok) throw new Error(`${type}: ${read.rejection}`);
+      const [locked, open] = read.file.sheets;
+      expect(locked!.protections?.[0], type).toMatchObject({ can: 'owner' });
+      if (type === 'xlsx')
+        expect(locked!.protections?.[0]?.except, type).toContainEqual({
+          r1: 1,
+          c1: 0,
+          r2: 2,
+          c2: 0,
+        });
+      expect(open!.protections, type).toBeUndefined();
+    }
+  }, 120_000);
+});
+
 // standard-mapping.md "Validation in the file": LibreOffice checks the standard rule LiveDoc writes beside its own, and
 // saves it again as its own rule (a checkbox a TRUE, FALSE list; Text Is Exactly a custom formula).
 describe('validation rules other apps check', () => {

@@ -80,11 +80,17 @@ export function xlsx(
   );
 }
 
-// A flat document as another maker writes one: styles in office:styles and automatic ones, defaults on lines.
-export function flatOds(styles: string, automatic: string, table: string): Uint8Array<ArrayBuffer> {
+// A flat document as another maker writes one: styles in office:styles and automatic ones, defaults on lines; its
+// table's attributes beside its name.
+export function flatOds(
+  styles: string,
+  automatic: string,
+  table: string,
+  tableAttributes = '',
+): Uint8Array<ArrayBuffer> {
   return encode(
     `<?xml version="1.0"?><office:document ${ODF_NAMESPACES} office:mimetype="application/vnd.oasis.opendocument.spreadsheet">` +
       `<office:styles>${styles}</office:styles><office:automatic-styles>${automatic}</office:automatic-styles>` +
-      `<office:body><office:spreadsheet><table:table table:name="S">${table}</table:table></office:spreadsheet></office:body></office:document>`,
+      `<office:body><office:spreadsheet><table:table table:name="S"${tableAttributes}>${table}</table:table></office:spreadsheet></office:body></office:document>`,
   );
 }

@@ -9,7 +9,6 @@ import {
   type XmlAttribute,
   type XmlElement,
 } from '@livedoc/office-packages';
-import { COLS_MAX, ROWS_MAX } from '../limits';
 import { PROTECTION_KEPT_ATTRIBUTES, type ProtectionKept } from '../protection';
 import {
   freeRectangles,
@@ -22,9 +21,12 @@ import {
   type FreeRun,
   type ProtectionFound,
 } from './file-protections';
+import { SheetLimits } from '../sheet-limits';
 import { LIVEDOC_SPREADSHEET_NS } from './validation-standard';
 
 const { table: TABLE, loext: LOEXT } = ODF_NS;
+// A file is read up to a spreadsheet's grid, as its cells are.
+const { rows: ROWS_MAX, cols: COLS_MAX } = SheetLimits.spreadsheet;
 const PREFIXES: Readonly<Record<string, string>> = { table: TABLE, loext: LOEXT };
 
 // A kept attribute's qualified name (`table:protection-key`) by its namespace and local name.

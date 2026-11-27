@@ -144,6 +144,27 @@ describe('the Protected Sheets and Ranges panel', () => {
     expect(protectionsOf(h)).toBeUndefined();
   });
 
+  it('keeps a file’s password on a sheet’s protection edited, and leaves it behind when it becomes a range’s', async () => {
+    const h = await makeSheet();
+    const kept = { standard: 'ooxml' as const, attributes: { password: 'CC1A' } };
+    protect(h, SHEET_ID, { id: 'prot01', can: 'owner', kept });
+    h.store.setProtection({ owner: true, editor: true }, null);
+    show(h);
+    fireEvent.click(screen.getByRole('button', { name: 'Edit Sheet 1' }));
+    fireEvent.change(screen.getByLabelText('Description'), { target: { value: 'From Excel' } });
+    done();
+    expect(protectionsOf(h)![0]).toEqual({
+      id: 'prot01',
+      can: 'owner',
+      description: 'From Excel',
+      kept,
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Edit From Excel' }));
+    fireEvent.click(screen.getByRole('radio', { name: 'Range' }));
+    done();
+    expect(protectionsOf(h)![0]!.kept).toBeUndefined();
+  });
+
   it('keeps an Editor from editing a protection that does not admit them', async () => {
     const h = await makeSheet();
     protect(h, SHEET_ID, { id: 'prot01', can: 'owner' });

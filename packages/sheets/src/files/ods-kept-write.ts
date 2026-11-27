@@ -1,6 +1,7 @@
 // ODF's kept content, written back (docs/specs/029-sheets/standard-mapping.md "Unknown content"): each kept item where
 // it sat, untouched, its namespaces declared on the root unless the root binds its prefix otherwise; a kept entry
 // while it is still reached (D109's other half: a file of the other standard never sees it).
+import { isOdsProtectionAttribute } from './ods-protection';
 import { keptXmlWithin, type OdfEntry, type XmlBindings } from '@livedoc/office-packages';
 import {
   keptLocalName,
@@ -35,6 +36,13 @@ export function declarations(ns: XmlBindings, own: XmlBindings): string {
 export type OdsCellKept = { attributes: string; before: string; after: string };
 
 /** ODF kept content laid out for the writer: by place, sheet and cell, with the root's extra namespaces. */
+// Whether a kept attribute (`table:protected="true"`) is one of a table's protection's.
+function isKeptProtection(item: KeptItem<FileAt>): boolean {
+  const name = /^([\w.-]+):([\w.-]+)=/.exec(item.xml);
+  const uri = name && item.ns[name[1]!];
+  return !!uri && isOdsProtectionAttribute({ uri, local: name[2]!, prefix: name[1]!, value: '' });
+}
+
 export class OdsKeptWriter {
   private readonly byPlace = new Map<string, KeptItem<FileAt>[]>();
   private readonly cellPositions = new Map<number, Map<string, { r: number; c: number }>>();
@@ -112,8 +120,11 @@ export class OdsKeptWriter {
     return this.elements(this.items(place, { sheet }));
   }
 
-  tableAttributes(sheet: number): string {
-    return this.attributes(this.items('table-attribute', { sheet }));
+  // A table's kept attributes; with `guarded` (LiveDoc writes the sheet's protection) none of a protection's, which a
+  // spreadsheet opened before LiveDoc read protections may keep (standard-mapping.md "Protection in the file").
+  tableAttributes(sheet: number, guarded = false): string {
+    const items = this.items('table-attribute', { sheet });
+    return this.attributes(guarded ? items.filter((item) => !isKeptProtection(item)) : items);
   }
 
   /** The cells of a sheet that keep content, so the writer writes each, empty or not. */
