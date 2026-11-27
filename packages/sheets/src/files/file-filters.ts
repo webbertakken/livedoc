@@ -13,6 +13,7 @@ import { compileFormula, renderFormula, type SheetsCtx } from '../formula/stored
 import { makeAxisIds, type Rand } from '../ids';
 import { idRangeOf } from '../layout';
 import type { FilterCondition, SheetFilter, SheetLayout } from '../sheet';
+import { storedFilterClashes } from '../tables/table-filter';
 import { conditionOfStandard, standardColumnOf, type StandardColumn } from './filter-standard';
 import type { FileLoss } from './workbook-file';
 
@@ -171,6 +172,9 @@ export function filtersFromFile(
   if (f && range) {
     const ids = idRangeOf(layout, range.r1, range.c1, range.r2, range.c2)!;
     out.filter = { ...ids, conds: condsOf(f.cols, range, layout, making) };
+    // One over part of a table stays, as D480's fallback, logged once.
+    if (storedFilterClashes(layout, ids).length > 0)
+      making.losses.push({ k: 'filter_beside_table', sheet: making.sheet });
   } else if (f)
     // A filter starting past the grid the workbook's limits leave is named at its first cell.
     making.losses.push({ k: 'filter_unread', sheet: making.sheet, r: f.range.r1, c: f.range.c1 });

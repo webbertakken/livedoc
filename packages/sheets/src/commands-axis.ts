@@ -5,7 +5,14 @@ import { makeAxisIds, type Rand } from './ids';
 import { idRangeOf, layoutIndex, posRangeOf } from './layout';
 import { depthsOf } from './outline';
 import type { GridSize } from './sheet-limits';
-import type { FilterCondition, Sheet } from './sheet';
+import type { FilterCondition, Sheet, SheetLayout } from './sheet';
+import {
+  filterClashes,
+  filterOverlapsTable,
+  filterOverlapsTableNote,
+  tableFilterBox,
+  tableHolding,
+} from './tables/table-filter';
 import { sortedOrder, type SortKey } from './sort';
 import { scalarOf } from './formula/values';
 import type { LayoutChange, SheetWrite } from './store';
@@ -214,18 +221,40 @@ export function sortRange(
   return rearrangeRows(wb, sheetId, range, r1, order);
 }
 
-// Filter on (over the filled block around the selection, or the selection when it is more than one cell) or off.
+/**
+ * The range Create a Filter takes (the filled block around the selection, or the selection when it is more than one
+ * cell; a table's header and data rows when the selection lies inside it, D481), or why it is refused: the range
+ * overlaps a table other than as its filter.
+ */
+export function filterRangeFor(
+  layout: SheetLayout,
+  sel: GridRange,
+  grid: Grid,
+): { box: GridRange } | { refused: string; note: string } {
+  const inside = tableHolding(layout, sel);
+  const own = inside && tableFilterBox(layout, inside);
+  if (own) return { box: own };
+  const single = sel.r1 === sel.r2 && sel.c1 === sel.c2;
+  const box = single ? currentRegion({ r: sel.r1, c: sel.c1 }, grid) : sel;
+  const [clash] = filterClashes(layout, box);
+  return clash
+    ? { refused: filterOverlapsTable(clash.name), note: filterOverlapsTableNote(clash.name) }
+    : { box };
+}
+
+// Filter on (over filterRangeFor's range) or off; a refusal said rather than written.
 export function toggleFilter(
   wb: Workbook,
   sheetId: string,
   sel: GridRange,
   grid: Grid,
-): SheetWrite | null {
+): SheetWrite | { refused: string } | null {
   const sheet = wb.sheet(sheetId);
   if (!sheet) return null;
   if (sheet.layout.filter) return { kind: 'layout', changes: [{ k: 'filter', filter: null }] };
-  const single = sel.r1 === sel.r2 && sel.c1 === sel.c2;
-  const box = single ? currentRegion({ r: sel.r1, c: sel.c1 }, grid) : sel;
+  const range = filterRangeFor(sheet.layout, sel, grid);
+  if ('refused' in range) return { refused: range.refused };
+  const { box } = range;
   const ids = idRangeOf(sheet.layout, box.r1, box.c1, box.r2, box.c2);
   return ids ? { kind: 'layout', changes: [{ k: 'filter', filter: { ...ids, conds: {} } }] } : null;
 }

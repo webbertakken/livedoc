@@ -25,6 +25,7 @@ import { ruleRectangles } from './rules/rule-ranges';
 import { applyOutlineChange, outlineAfterDelete, outlineInPlace } from './outline-store';
 import { objectsWith, type SheetObject } from './objects/sheet-objects';
 import { objectsAfterDelete } from './objects/objects-after-delete';
+import { filterFollowing } from './tables/table-filter';
 
 export type Axis = 'r' | 'c';
 
@@ -433,7 +434,9 @@ export function applyLayoutChange(layout: SheetLayout, ch: LayoutChange): SheetL
           : at >= 0
             ? list.map((x, i) => (i === at ? ch.table! : x))
             : [...list, ch.table];
-      return clean({ ...layout, tables: next.length ? next : undefined });
+      // A table's filter follows its table (data-tools.md, D481).
+      const filter = filterFollowing(layout, list[at], ch.table);
+      return clean({ ...layout, tables: next.length ? next : undefined, filter });
     }
     case 'band': {
       const list = layout.bands ?? [];

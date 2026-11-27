@@ -80,6 +80,7 @@ function entriesOf(loss: FileLoss): Entry[] {
     case 'protection_changed':
     case 'tables_changed':
     case 'filters_changed':
+    case 'filter_beside_table':
     case 'protection_unread':
     case 'pivot_changed':
       return [];

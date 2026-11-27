@@ -407,7 +407,11 @@ export function useSheetActions() {
       },
       toggleFilter: () => {
         const w = toggleFilter(c.workbook, c.sheet.id, primary(c), c.grid);
-        if (w) c.write(w, 'Filter');
+        // Over part of a table, refused with the way to its own filter (data-tools.md, D481).
+        if (w && 'refused' in w) {
+          debugLog('[sheet] filter refused', { reason: 'filter_overlaps_table' });
+          c.toast(w.refused);
+        } else if (w) c.write(w, 'Filter');
       },
       // In the open filter view when there is one (useFilterViews), else the sheet's filter.
       setFilter: (colId: string, cond: FilterCondition | null) => {

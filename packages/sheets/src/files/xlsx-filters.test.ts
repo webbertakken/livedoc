@@ -248,24 +248,51 @@ describe('filters in XLSX', () => {
     );
   });
 
-  it('keeps a filter over a table’s cells in LiveDoc’s record alone, as Excel refuses the overlap', async () => {
+  it('writes a table’s filter in its table part, and reads it back as the sheet’s filter (D481)', async () => {
     const [plain] = itemSheets();
     const table = { id: 'tbl001', name: 'Items', r1: 's0r0', c1: 's0c0', r2: 's0r5', c2: 's0c2' };
     const sheets = [{ ...plain!, layout: { ...plain!.layout, tables: [table], filterViews: [] } }];
     const written = writeWorkbook(sheets, record, 'Book', 'xlsx');
     const pkg = await partsOf(written.data);
     const xml = decode(pkg.parts.get('xl/worksheets/sheet1.xml')!);
+    expect(written.losses).toEqual([]);
     expect(xml).not.toContain('<autoFilter');
     expect(decode(pkg.parts.get('xl/workbook.xml')!)).not.toContain('_FilterDatabase');
+    expect(decode(pkg.parts.get('xl/tables/table1.xml')!)).toContain(
+      '<autoFilter ref="A1:C6"><filterColumn colId="0"><filters blank="1">',
+    );
     expect(xml).toMatch(/<row r="5" hidden="1">/);
     const read = await ok(readXlsx(written.data));
     expect(read.losses).toEqual([]);
+    // Without LiveDoc's record, Excel's own table filter reads back the same.
+    const bare = await changed(written.data, 'xl/worksheets/sheet1.xml', (x) =>
+      x.replace(/<livedoc:filters [^>]*\/>/, ''),
+    );
+    const plain2 = await ok(readXlsx(bare));
+    expect(plain2.file.sheets[0]!.filter?.cols.map((x) => x.c)).toEqual([0, 1, 2]);
     const [sheet] = opened(sheetsFromFile(read.file, 'en-GB', rand));
     const layout = sheet!.layout;
     expect(byPlace(layout, layout.filter!.conds)).toEqual(
       byPlace(sheets[0]!.layout, sheets[0]!.layout.filter!.conds),
     );
     expect(layout.hiddenRows).toEqual([layout.rows[2]]);
+  });
+
+  it('keeps a filter over part of a table in LiveDoc’s record alone, logged (D480)', async () => {
+    const [plain] = itemSheets();
+    const table = { id: 'tbl001', name: 'Items', r1: 's0r0', c1: 's0c0', r2: 's0r5', c2: 's0c1' };
+    const sheets = [{ ...plain!, layout: { ...plain!.layout, tables: [table], filterViews: [] } }];
+    const written = writeWorkbook(sheets, record, 'Book', 'xlsx');
+    expect(written.losses).toEqual([{ k: 'filter_beside_table', sheet: 'Data' }]);
+    expect(importReport(written.losses)).toEqual([]);
+    const pkg = await partsOf(written.data);
+    expect(decode(pkg.parts.get('xl/worksheets/sheet1.xml')!)).not.toContain('<autoFilter');
+    expect(decode(pkg.parts.get('xl/tables/table1.xml')!)).toContain('<autoFilter ref="A1:B6"/>');
+    const read = await ok(readXlsx(written.data));
+    const made = sheetsFromFile(read.file, 'en-GB', rand);
+    expect(made.losses).toEqual([{ k: 'filter_beside_table', sheet: 'Data' }]);
+    const [sheet] = opened(made);
+    expect(Object.keys(sheet!.layout.filter!.conds)).toHaveLength(3);
   });
 
   it('reads Excel’s own wildcard, blank and day forms', () => {

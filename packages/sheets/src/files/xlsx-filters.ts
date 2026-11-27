@@ -132,26 +132,48 @@ export type XlsxFiltersOut = {
   record: string | null;
   names: string[];
   views: string[];
+  // A filter over part of a table, kept in the record alone (D480).
+  beside: boolean;
 };
 
-/** A sheet's filter and filter views as XLSX (`index` its place, `title` its name as written). */
-export function xlsxFiltersOut(sheet: FileSheet, index: number, title: string): XlsxFiltersOut {
-  const out: XlsxFiltersOut = { own: [], record: null, names: [], views: [] };
-  const filter = sheet.filter && inExcel(sheet.filter.range);
-  const views = (sheet.filterViews ?? []).flatMap((v) => {
-    const range = inExcel(v.range);
-    return range ? [{ ...v, range }] : [];
-  });
-  // Excel refuses a sheet's `autoFilter` over a table's cells: such a filter is LiveDoc's record's alone.
-  const beside = (sheet.tables ?? []).some(
+/** A table's header and data rows: the range its table part's `autoFilter` holds. */
+export const tableDataRange = (t: { range: GridRange; total?: true }): GridRange => ({
+  ...t.range,
+  r2: t.total ? t.range.r2 - 1 : t.range.r2,
+});
+
+const sameRange = (a: GridRange, b: GridRange) =>
+  a.r1 === b.r1 && a.c1 === b.c1 && a.r2 === b.r2 && a.c2 === b.c2;
+
+/** How a filter lies over a sheet's tables: on none, as one's filter (`table`), or over part of one (`beside`). */
+export function filterOverTables(
+  filter: GridRange,
+  tables: readonly { range: GridRange; total?: true }[],
+): 'none' | 'table' | 'beside' {
+  const met = tables.filter(
     (t) =>
-      filter &&
       t.range.r1 <= filter.r2 &&
       filter.r1 <= t.range.r2 &&
       t.range.c1 <= filter.c2 &&
       filter.c1 <= t.range.c2,
   );
-  const standardFilter = beside ? null : filter;
+  if (met.length === 0) return 'none';
+  return met.length === 1 && sameRange(tableDataRange(met[0]!), filter) ? 'table' : 'beside';
+}
+
+/** A sheet's filter and filter views as XLSX (`index` its place, `title` its name as written). */
+export function xlsxFiltersOut(sheet: FileSheet, index: number, title: string): XlsxFiltersOut {
+  const out: XlsxFiltersOut = { own: [], record: null, names: [], views: [], beside: false };
+  const filter = sheet.filter && inExcel(sheet.filter.range);
+  const views = (sheet.filterViews ?? []).flatMap((v) => {
+    const range = inExcel(v.range);
+    return range ? [{ ...v, range }] : [];
+  });
+  // A table's filter is its table part's (xlsx-tables.ts, D481); Excel refuses a sheet's `autoFilter` over a table's
+  // cells, so a filter overlapping one another way is LiveDoc's record's alone (D480).
+  const over = filter ? filterOverTables(filter, sheet.tables ?? []) : 'none';
+  out.beside = over === 'beside';
+  const standardFilter = over === 'none' ? filter : null;
   if (standardFilter) {
     out.own.push({
       name: 'autoFilter',
@@ -179,9 +201,8 @@ export function xlsxFiltersOut(sheet: FileSheet, index: number, title: string): 
     });
   }
   if (filter || views.length) {
-    const standard = standardFilter
-      ? { range: standardFilter, cols: sheet.filter!.cols }
-      : undefined;
+    const standard =
+      filter && over !== 'beside' ? { range: filter, cols: sheet.filter!.cols } : undefined;
     const text = filterRecordText(filter ? { ...sheet.filter!, range: filter } : undefined, views);
     const fingerprint = filterFingerprint(standard, views, xlsxHeld);
     out.record = `<livedoc:filters record="${escapeXmlAttribute(text)}" fingerprint="${fingerprint}"/>`;

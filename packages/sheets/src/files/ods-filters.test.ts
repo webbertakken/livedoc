@@ -152,6 +152,27 @@ describe('filters in ODF', () => {
   });
 });
 
+describe('a table’s filter in ODF', () => {
+  it('writes it in the table’s own database range and reads it back as the sheet’s filter (D481)', async () => {
+    const [sheet] = itemSheets({ s0c1: { op: 'gt', a: '2' } });
+    const table = { id: 'tbl001', name: 'Items', r1: 's0r0', c1: 's0c0', r2: 's0r3', c2: 's0c1' };
+    const sheets = [{ ...sheet!, layout: { ...sheet!.layout, tables: [table], filterViews: [] } }];
+    const text = decode(writeWorkbook(sheets, ods, 'Book', 'fods').data);
+    expect(text).toContain(
+      `<table:database-range table:name="Items" table:target-range-address="'Data'.A1:'Data'.B4" table:contains-header="true" table:display-filter-buttons="true"><table:filter><table:filter-condition table:field-number="1" table:operator="&gt;" table:value="2"/></table:filter></table:database-range>`,
+    );
+    expect(text).not.toContain('__Anonymous_Sheet_DB__');
+    for (const bytes of [text, text.replace(/ livedoc:filters="[^"]*"/, '')]) {
+      const read = await ok(readOds(encode(bytes)));
+      const [back] = opened(sheetsFromFile(read.file, 'en-GB', rand));
+      expect(byPlace(back!.layout, back!.layout.filter!.conds)).toEqual({
+        1: { op: 'gt', a: '2' },
+      });
+      expect(back!.layout.tables?.map((t) => t.name)).toEqual(['Items']);
+    }
+  });
+});
+
 describe('converting a spreadsheet with filter views', () => {
   it('lists the views an OpenDocument file leaves out, and none for Excel', () => {
     const xlsx = WorkbookRecord.opened(ods, 'xlsx', undefined);

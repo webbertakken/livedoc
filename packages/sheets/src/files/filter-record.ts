@@ -199,7 +199,8 @@ export function filtersFound(
     });
   };
   const filter = read.filter && {
-    range: standard.filter?.range ?? read.filter.range,
+    // The record's range: a table's filter reads back over the table's rows, its total row too.
+    range: read.filter.range,
     cols: withConds(standard.filter?.cols ?? [], read.filter.conds),
     ...(read.filter.hidden.length ? { hidden: read.filter.hidden } : {}),
   };

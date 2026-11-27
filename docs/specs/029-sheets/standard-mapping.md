@@ -513,9 +513,12 @@ The table is the contract the readers and writers are tested against, one test p
   every row the filter hides written `hidden="1"`, as Excel draws a file's filter from its rows; and Excel's hidden
   `_xlnm._FilterDatabase` name for the sheet, its range. A text in a wildcard form escapes Excel's `*`, `?` and
   `~` with `~`. Read back, a hidden row of a filter with a condition, under its header, is the filter's, not a
-  hidden line, as Excel holds them (D478); LiveDoc's record lists the rows there hidden by hand (`hidden`). Excel
-  refuses a sheet's `autoFilter` over a table's cells, so a filter overlapping a table is written in LiveDoc's record
-  alone, its rows still hidden (D480).
+  hidden line, as Excel holds them (D478); LiveDoc's record lists the rows there hidden by hand (`hidden`). A
+  table's filter (data-tools.md, D481) is its table part's own `autoFilter` (its `filterColumn`s, the part's
+  `ref` its header and data rows), as Excel holds a table's, and a table part's `autoFilter` with a
+  `filterColumn` is read back as the sheet's filter over that table (the first such table's; another's columns
+  named `filter_unread`). Excel refuses a sheet's `autoFilter` over a table's cells, so a filter still overlapping a
+  table another way (D480) is written in LiveDoc's record alone, its rows still hidden.
 - **XLSX filter views**, as Google writes them (`plans/assets/0020/research/google-filter-view-export.md`): each a
   `customSheetView` (`guid` made of the sheet's place and the view's id, D479, `filter="1"`, `showAutoFilter="1"`)
   holding an `autoFilter` as the
@@ -531,6 +534,8 @@ The table is the contract the readers and writers are tested against, one test p
   list joined by and, so Is Not Between has no ODF form but LiveDoc's record (measured with LibreOffice 2026-11-27,
   `plans/assets/0020/research/libreoffice-filter-proof.md`). The rows the filter hides are
   `table:visibility="filter"`, LibreOffice's own, read back as the filter's, never hidden lines.
+  A table's filter (D481) is the `table:filter` of the table's own `table:database-range`, as LibreOffice holds a
+  database range's filter, read back as the sheet's filter over that table.
 - **ODF** has no filter views nor slicers: written to ODS they are left out, listed in the Download and Convert
   dialog ("2 filter views are left out", "1 slicer is left out"); Google's ODS keeps only each view's range as a
   `Z_…_.wvu.FilterData` name, which LiveDoc neither writes nor reads as a view.
@@ -1106,8 +1111,10 @@ The code cites each by its id.
   shows again every row a condition keeps; in ODF only `table:visibility="filter"`, LibreOffice's own (default).
 - **D479** A filter view's `guid` in XLSX: the sheet's place (four hex digits) and the view's id in hex, padded, so
   it is the same at every write and unique in the workbook (default).
-- **D480** A sheet's filter over a table's cells in XLSX: LiveDoc's record alone, no `autoFilter` nor
-  `_xlnm._FilterDatabase`, as Excel repairs a file whose sheet filter overlaps a table (default).
+- **D480** The fallback for a filter that already overlaps a table other than as its filter (stored before D481, or
+  read from an OpenDocument file): it stays, its conditions still editable; in XLSX it is LiveDoc's record alone, no
+  `autoFilter` nor `_xlnm._FilterDatabase` (Excel repairs a file whose sheet filter overlaps a table), its rows still
+  hidden; logged once a read or write (`filter_beside_table`), never reported (the Director's ruling, 2026-11-27).
 - **D453** A kept table at an XLSX write named as one of the sheets' own tables (by Excel's rules, case aside): dropped
   and counted (`kept_dropped`), the own table written, as D341 (default).
 - **D352** A file's protection LiveDoc does not read (a password-protected `protectedRange`, one of an unprotected

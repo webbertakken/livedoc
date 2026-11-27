@@ -463,9 +463,6 @@ export async function readXlsx(
     },
     workbookViews.read,
   );
-  sheets.forEach((sheet, i) => {
-    sheets[i] = withXlsxFilters(sheet, filterReads[i]!, workbookViews.names, book.losses);
-  });
   keeper?.styles(stylesXml);
   const unread = strictUnread + (keeper?.unread ?? 0);
   if (unread > 0) book.losses.push({ k: 'kept_unread', count: unread });
@@ -480,8 +477,19 @@ export async function readXlsx(
     names.map((n) => n.name),
     book.losses,
   );
+  // Each sheet's filter and views ("Filters in the file"): a table's filter its table part's (D481).
+  const filtered = tabled.sheets.map((sheet, i) => {
+    const read = filterReads[i]!;
+    const filter = read.filter ?? tabled.filters[i];
+    return withXlsxFilters(
+      sheet,
+      { ...read, ...(filter ? { filter } : {}) },
+      workbookViews.names,
+      book.losses,
+    );
+  });
   // Its pivot tables LiveDoc wrote are its own again (standard-mapping.md "Pivot tables in the file").
-  const pivoted = readXlsxPivots(tabled.sheets, tabled.kept, book.losses);
+  const pivoted = readXlsxPivots(filtered, tabled.kept, book.losses);
   const kept = pivoted.kept;
   return {
     ok: true,

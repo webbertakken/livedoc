@@ -22,7 +22,13 @@ import {
   type TableCandidate,
 } from './file-tables';
 import { parseOdfRef } from './ods-charts-read';
-import { ANONYMOUS_RANGE, odsFilterRange, readOdsFilter } from './ods-filters';
+import {
+  ANONYMOUS_RANGE,
+  odsFilterRange,
+  odsFilterTable,
+  odsFilterXml,
+  readOdsFilter,
+} from './ods-filters';
 import type { FileFilter } from './file-filters';
 import { fromOpenFormula, toOpenFormula } from './open-formula';
 import { LIVEDOC_SPREADSHEET_NS } from './validation-standard';
@@ -82,11 +88,14 @@ export function odsDatabaseRanges(file: WorkbookFile): string[] {
       (sheet.tables ?? []).map((t) => {
         const at = quoted(sheet.name);
         const range = `${at}.${formatA1(t.range.r1, t.range.c1)}:${at}.${formatA1(t.range.r2, t.range.c2)}`;
-        return (
+        // The sheet's filter over exactly this table is the table's own (D481).
+        const filter =
+          sheet.filter && odsFilterTable(sheet) === t ? odsFilterXml(sheet.filter, t.range.c1) : '';
+        const open =
           `<table:database-range table:name="${escapeXmlAttribute(tableFormulaName(t.name))}"` +
           ` table:target-range-address="${escapeXmlAttribute(range)}" table:contains-header="true"` +
-          ` table:display-filter-buttons="true"/>`
-        );
+          ` table:display-filter-buttons="true"`;
+        return filter ? `${open}>${filter}</table:database-range>` : `${open}/>`;
       }),
     )
     .concat(filters);
@@ -174,6 +183,10 @@ export function readOdsDatabaseRanges(
       }
       out.read.add(f.element);
       out.standard[i]!.push({ name: f.candidate.name, range: f.candidate.range, columns: [] });
+      // A table's own `table:filter` is the sheet's filter over it (D481), unless the sheet has another.
+      const filter = childElement(f.element, TABLE, 'filter');
+      if (filter && !filters[i])
+        filters[i] = { range: f.candidate.range, cols: readOdsFilter(filter, f.candidate.range) };
     }),
   );
   return out;

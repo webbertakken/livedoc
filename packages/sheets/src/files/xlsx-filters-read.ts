@@ -104,7 +104,7 @@ const ref = (text: string | undefined): GridRange | null => {
 };
 
 // An `autoFilter` read: its range and columns (one LiveDoc cannot read has no standard column), and its sort.
-function autoFilterOf(
+export function autoFilterOf(
   element: XmlElement,
   ns: string,
 ): { range: GridRange; cols: FileFilterColumn[]; sort?: FileFilterView['sort'] } | null {

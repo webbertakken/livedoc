@@ -205,6 +205,8 @@ export type FileLoss =
   | { k: 'filter_unread'; sheet: string; r: number; c: number }
   | { k: 'filter_view_unread'; sheet: string; name: string }
   | { k: 'filters_changed'; sheet: string }
+  // A filter over part of a table (D480), kept as it is: logged once a read or a write, never reported.
+  | { k: 'filter_beside_table'; sheet: string }
   | { k: 'table_unread'; sheet: string; name: string }
   // Pivot tables (standard-mapping.md "Pivot tables in the file"): one with no source, left out of a write; LiveDoc's
   // record beside a standard form another app changed since, the standard form read instead (D607, logged); another

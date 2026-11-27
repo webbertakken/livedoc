@@ -436,6 +436,10 @@ export function writeXlsx(file: WorkbookFile, title: string): FileWritten<Uint8A
   const filters = file.sheets.map((sheet, i) =>
     xlsxFiltersOut(sheet, i, renamed.get(sheet.name) ?? sheet.name),
   );
+  // A filter over part of a table is its record's alone (D480): logged with the write's losses, never reported.
+  file.sheets.forEach((sheet, i) => {
+    if (filters[i]!.beside) losses.push({ k: 'filter_beside_table', sheet: sheet.name });
+  });
   const sheetParts = file.sheets.map((sheet, i): OoxmlPart => {
     const written = worksheetXml(sheet, i, { strings, styles, kept, tables }, renamed, losses, {
       drawingRelId: drawn.sheets[i]?.relId ?? null,
