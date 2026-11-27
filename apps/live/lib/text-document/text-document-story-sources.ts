@@ -31,6 +31,11 @@ export const STORY_CLASS = 'text-document-story';
 
 export type StorySourceInput = {
   readonly doc: Y.Doc;
+  /**
+   * Where its writing is read from, where that is another document than `doc`: the writing settled (review.md
+   * "Editing modes", Viewing; "Reviewing suggestions", Preview). Its styles, lists and pictures stay `doc`'s.
+   */
+  readonly drawnDoc?: Y.Doc | null;
   readonly format: TextDocumentFormat;
   readonly story: string;
   /** Its key: the story at its width (`storyKey`). */
@@ -94,7 +99,7 @@ export class StorySource {
       state: EditorState.create({
         schema: textDocumentSchema,
         plugins: [
-          ySyncPlugin(storyFragment(doc, input.story)),
+          ySyncPlugin(storyFragment(input.drawnDoc ?? doc, input.story)),
           paragraphBoxesPlugin(input.readFormatting),
           tabStopsPlugin(input.readFormatting),
           listMarkersPlugin(

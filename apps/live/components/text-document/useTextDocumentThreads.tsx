@@ -40,6 +40,8 @@ export const NOTHING_TO_COMMENT_ON = 'Select some text to comment on';
 /** What it says once the document holds the most threads, or a thread the most comments. */
 export const COMMENTS_FULL = 'This document holds the most comments it can';
 
+const NO_STRETCHES: readonly ThreadStretch[] = [];
+
 /** A draft: the stretch Add comment took, kept by its anchors until it is sent or dropped. */
 export type ThreadDraft = {
   readonly from: number;
@@ -59,6 +61,7 @@ export function useTextDocumentThreads({
   subscribe,
   onMentioned,
   onAssigned,
+  hidden = false,
 }: {
   /** The body's editor: comments are on the body alone. */
   view: EditorView | null;
@@ -76,11 +79,15 @@ export function useTextDocumentThreads({
   onMentioned?: (text: string, mentions: readonly CommentMention[]) => void;
   /** A draft or reply that assigns the thread was added: ask for the assignee's email (review.md "Assigning"). */
   onAssigned?: (text: string, assignee: CommentMention) => void;
+  /** Comments are not shown (Viewing, review.md "Editing modes"): no highlight, no card, nothing selected or drafted. */
+  hidden?: boolean;
 }) {
   const [threads, setThreads] = useState<readonly TextDocumentThread[]>([]);
-  const [stretches, setStretches] = useState<readonly ThreadStretch[]>([]);
+  const [found, setStretches] = useState<readonly ThreadStretch[]>([]);
+  const stretches = hidden ? NO_STRETCHES : found;
   const [chosen, setSelected] = useState<string | null>(null);
-  const [draft, setDraft] = useState<ThreadDraft | null>(null);
+  const [drafted, setDraft] = useState<ThreadDraft | null>(null);
+  const draft = hidden ? null : drafted;
   const [said, setSaid] = useState('');
 
   // The threads, read again whenever any of them changes, by anyone.
@@ -96,18 +103,20 @@ export function useTextDocumentThreads({
 
   // Each open thread's stretch, found again as the writing or the threads change.
   useEffect(() => {
-    if (!view) return;
+    if (!view || hidden) return;
     const find = () => {
       if (view.isDestroyed) return;
       setStretches(threadStretches(view.state, threads));
     };
     find();
     return subscribe(find);
-  }, [view, threads, subscribe]);
+  }, [view, threads, subscribe, hidden]);
 
   // A selected thread that is gone, or resolved, is let go.
   const selected =
-    chosen !== null && threads.some((t) => t.id === chosen && !t.resolved) ? chosen : null;
+    !hidden && chosen !== null && threads.some((t) => t.id === chosen && !t.resolved)
+      ? chosen
+      : null;
 
   // The highlight shows what is held here.
   useEffect(() => {

@@ -55,6 +55,8 @@ export function useTextDocumentPageStories(input: {
   readonly caretSection: number;
   /** Where its stories' pictures' gallery images are read from. */
   readonly gallery: GalleryPictures;
+  /** The settled writing the stories are drawn from, where the body draws one (useTextDocumentReviewPreview). */
+  readonly drawnDoc?: Y.Doc | null;
 }) {
   const { view, liveDoc, format, pages, writes, heights, caret, caretSection, gallery } = input;
   const suggests = input.suggests ?? false;
@@ -84,6 +86,7 @@ export function useTextDocumentPageStories(input: {
     plugins,
     endNotes,
     gallery,
+    drawnDoc: input.drawnDoc ?? null,
     ...(input.suggesting ? { suggesting: input.suggesting } : {}),
   });
   const leaveNote = useRef(() => {});

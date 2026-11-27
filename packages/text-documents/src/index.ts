@@ -402,3 +402,5 @@ export {
   VIEWER_AUTHOR_KEY_PREFIX,
   VIEWER_AUTHOR_NAME,
 } from './viewer/viewer-copy';
+export { syncWriting } from './live/writing-sync';
+export { SettledWriting } from './live/settled-writing';

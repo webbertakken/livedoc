@@ -2,7 +2,7 @@
 // outline on the left (links-and-navigation.md "The outline"); on the right Line numbers (page-layout.md "Line
 // numbers"), Watermark (page-layout.md "Watermark"), Table properties (tables.md) and Image options (objects.md
 // "Working with a picture") and Table of contents (links-and-navigation.md), an Editor's all; and Comments
-// (review.md), everyone's. Version history joins with review.
+// (review.md), where review is shown. Version history joins with review.
 import type { OfficePanelSpec } from '@/lib/office/office-panels';
 
 export const OUTLINE_PANEL: OfficePanelSpec = {
@@ -48,13 +48,15 @@ export const IMAGE_OPTIONS_PANEL: OfficePanelSpec = {
   editorsOnly: true,
 };
 
-// The comments panel, comment history (review.md "The comments panel"): every session's, a Viewer reading it. Its item is
-// the shortcut row's id, so ⌘⌥⇧A opens it, and the title row's Comment history runs it.
+// The comments panel, comment history (review.md "The comments panel"): an Editor's and a Participant's, never a
+// Viewer's and never in Viewing (review.md "Editing modes"). Its item is the shortcut row's id, so ⌘⌥⇧A opens it, and
+// the title row's Comment history runs it.
 export const COMMENTS_PANEL: OfficePanelSpec = {
   id: 'comments',
   title: 'Comments',
   side: 'right',
   item: 'open-comment-history',
+  review: true,
 };
 
 // The selected table of contents' options (links-and-navigation.md "Table of contents"): from its bar.

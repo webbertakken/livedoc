@@ -111,6 +111,40 @@ describe('useTextDocumentThreads', () => {
     expect(tracked).toEqual([['Comment', 'Added', 'TextDocument']]);
   });
 
+  it('shows no thread while comments are hidden, and shows them again as they were (review.md "Editing modes")', async () => {
+    const at = await editor();
+    at.view.dispatch(
+      at.view.state.tr.setSelection(TextSelection.create(at.view.state.doc, 11, 18)),
+    );
+    const docRef = { current: at.doc };
+    const { result, rerender } = renderHook(
+      ({ hidden }) =>
+        useTextDocumentThreads({
+          view: at.view,
+          activeView: at.view,
+          doc: docRef,
+          ready: true,
+          tab: 't.0',
+          commenter: ADA,
+          subscribe: noSubscribe,
+          hidden,
+        }),
+      { initialProps: { hidden: false } },
+    );
+    act(() => result.current.actions[COMMENT_ITEM]!.run());
+    act(() => result.current.send('Is this final?'));
+    const id = result.current.selected;
+    expect(id).not.toBeNull();
+    rerender({ hidden: true });
+    expect(result.current.stretches).toEqual([]);
+    expect(result.current.selected).toBeNull();
+    expect(threadHighlightKey.getState(at.view.state)?.stretches).toEqual([]);
+    rerender({ hidden: false });
+    expect(result.current.stretches).toHaveLength(1);
+    expect(result.current.selected).toBe(id);
+    expect(threadHighlightKey.getState(at.view.state)?.stretches).toHaveLength(1);
+  });
+
   it('comments on the word at the caret, and says so when there is nothing to comment on', async () => {
     const at = await editor('quarterly  results');
     at.view.dispatch(at.view.state.tr.setSelection(TextSelection.create(at.view.state.doc, 3)));

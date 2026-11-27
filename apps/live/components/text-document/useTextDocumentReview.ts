@@ -45,6 +45,7 @@ export function useTextDocumentReview({
   textWidth,
   preview,
   stories = null,
+  shown = true,
 }: {
   /** The body's editor, and the editor with the caret. */
   view: EditorView | null;
@@ -76,6 +77,11 @@ export function useTextDocumentReview({
   };
   /** The headers, footers and notes drawn, whose suggestions have cards too; none while previewing. */
   stories?: SuggestionStories | null;
+  /**
+   * Comments and suggestions are shown: false in Viewing (review.md "Editing modes"), where no thread, card or review
+   * panel is drawn or offered; a panel left open is open again on leaving it.
+   */
+  shown?: boolean;
 }) {
   // Comment threads in the margin, added on the body's writing (review.md "Threads in the margin").
   const threads = useTextDocumentThreads({
@@ -88,6 +94,7 @@ export function useTextDocumentReview({
     subscribe,
     onMentioned,
     onAssigned,
+    hidden: !shown,
   });
   // Going to a thread and the keys between them (review.md "The comments panel", "Keys on a selected comment").
   const threadKeys = useTextDocumentThreadKeys({ view, threads, tab, showTab });
@@ -139,8 +146,15 @@ export function useTextDocumentReview({
   });
 
   const actions: OfficeActions = useMemo(
-    () => ({ ...threads.actions, ...threadKeys.actions, ...suggestions.actions, ...panel.actions }),
-    [threads.actions, threadKeys.actions, suggestions.actions, panel.actions],
+    () =>
+      shown
+        ? { ...threads.actions, ...threadKeys.actions, ...suggestions.actions, ...panel.actions }
+        : {},
+    [shown, threads.actions, threadKeys.actions, suggestions.actions, panel.actions],
+  );
+  const shownPanel = useMemo(
+    () => (shown || !panel.open ? panel : { ...panel, open: false }),
+    [shown, panel],
   );
 
   // A press on a panel's row: a suggestion's goes to its card, on its tab; a thread's to its thread.
@@ -156,5 +170,5 @@ export function useTextDocumentReview({
     [rows, tab, goToSuggestion, goToThread],
   );
 
-  return { threads, threadKeys, commentsPanel, suggestions, panel, actions, go };
+  return { threads, threadKeys, commentsPanel, suggestions, panel: shownPanel, actions, go };
 }

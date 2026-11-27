@@ -11,6 +11,7 @@ import { THREADS_MAP } from '../live/live-names';
 import { BODY_FRAGMENT, TAB_FRAGMENT_PREFIX } from '../live/live-root';
 import { STORY_PREFIX } from '../live/live-stories';
 import { isObject } from '../live/live-suggestion-marks';
+import { canonical, syncText, textUnits, unitRuns } from '../live/writing-sync';
 import { TEXT_DOCUMENT_SEED_CLIENT, TextDocumentState } from '../text-document-state';
 import type { TextDocumentCommentAuthor } from '../live/live-threads';
 
@@ -32,13 +33,6 @@ const sharedOf = (value: unknown): Shared | null =>
     ? (value as Shared)
     : null;
 type Container = Y.XmlFragment | Y.XmlElement;
-type Unit = {
-  insert: unknown;
-  attributes: Record<string, unknown> | undefined;
-  marks: string;
-  key: string;
-};
-type Run = { insert: unknown; attributes: Record<string, unknown> | undefined };
 
 /** The anonymous author of one suggestion: its id is all it is made from. */
 export const anonymousAuthor = (suggestionId: string): TextDocumentCommentAuthor => ({
@@ -71,83 +65,6 @@ function textAttributes(attributes: Record<string, unknown> | undefined) {
   const out: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(attributes)) out[key] = anonymised(value);
   return out;
-}
-
-/** A value as JSON with every object's keys sorted. */
-const canonical = (value: unknown): string =>
-  JSON.stringify(value, (_key, v: unknown) =>
-    isObject(v) ? Object.fromEntries(Object.entries(v).sort(([a], [b]) => (a < b ? -1 : 1))) : v,
-  );
-
-/** A text's content as units (a character, or an object in a line), its formatting redacted, comparable by key. */
-function unitsOf(text: Y.XmlText | Y.Text): Unit[] {
-  const units: Unit[] = [];
-  for (const op of text.toDelta() as { insert: unknown; attributes?: Record<string, unknown> }[]) {
-    const attributes = textAttributes(op.attributes);
-    // Compared by content, whatever order the keys came in.
-    const marks = attributes ? canonical(attributes) : '';
-    if (typeof op.insert === 'string') {
-      for (const char of op.insert)
-        units.push({ insert: char, attributes, marks, key: `${char}\u0000${marks}` });
-    } else {
-      units.push({
-        insert: op.insert,
-        attributes,
-        marks,
-        key: `\u0001${JSON.stringify(op.insert)}\u0000${marks}`,
-      });
-    }
-  }
-  return units;
-}
-
-/** Units joined back into runs: characters side by side with the same formatting are one insert. */
-function runsOf(units: readonly Unit[]): Run[] {
-  const runs: (Run & { marks: string })[] = [];
-  for (const unit of units) {
-    const last = runs.at(-1);
-    if (
-      last &&
-      typeof last.insert === 'string' &&
-      typeof unit.insert === 'string' &&
-      last.marks === unit.marks
-    )
-      last.insert += unit.insert;
-    else runs.push({ insert: unit.insert, attributes: unit.attributes, marks: unit.marks });
-  }
-  return runs.map(({ insert, attributes }) => ({ insert, attributes }));
-}
-
-/** What makes `copy` read as `real`: the stretch between their common start and end, replaced. */
-function syncText(real: Y.XmlText | Y.Text, copy: Y.XmlText | Y.Text): void {
-  const want = unitsOf(real);
-  const have = unitsOf(copy);
-  let start = 0;
-  while (start < want.length && start < have.length && want[start]!.key === have[start]!.key)
-    start += 1;
-  let end = 0;
-  while (
-    end < want.length - start &&
-    end < have.length - start &&
-    want[want.length - 1 - end]!.key === have[have.length - 1 - end]!.key
-  )
-    end += 1;
-  const removed = have.length - start - end;
-  const added = want.slice(start, want.length - end);
-  if (removed === 0 && added.length === 0) return;
-  const delta: { retain?: number; delete?: number; insert?: unknown; attributes?: object }[] = [];
-  if (start > 0) delta.push({ retain: start });
-  if (removed > 0) delta.push({ delete: removed });
-  // Each inserted unit carries its whole formatting, nulls for what it lacks, so nothing leaks in from beside it.
-  let before = have[start - 1]?.attributes ?? {};
-  for (const run of runsOf(added)) {
-    const attributes: Record<string, unknown> = {};
-    for (const key of Object.keys(before)) attributes[key] = null;
-    Object.assign(attributes, run.attributes ?? {});
-    delta.push({ insert: run.insert, attributes });
-    before = run.attributes ?? {};
-  }
-  copy.applyDelta(delta, { sanitize: false });
 }
 
 export class ViewerCopy {
@@ -332,8 +249,10 @@ export class ViewerCopy {
       if (type._item?.deleted) continue;
       const twin = this.twins.get(type);
       if (!twin || twin._item?.deleted) continue;
-      if (type instanceof Y.XmlText && twin instanceof Y.XmlText) syncText(type, twin);
-      else if (type instanceof Y.Text && twin instanceof Y.Text) syncText(type, twin);
+      if (type instanceof Y.XmlText && twin instanceof Y.XmlText)
+        syncText(type, twin, textAttributes);
+      else if (type instanceof Y.Text && twin instanceof Y.Text)
+        syncText(type, twin, textAttributes);
       else if (type instanceof Y.XmlElement && twin instanceof Y.XmlElement) {
         this.syncAttributes(type, twin);
         this.syncChildren(type, twin);
@@ -427,7 +346,7 @@ export class ViewerCopy {
     if (real instanceof Y.XmlText || real instanceof Y.Text) {
       const text = real instanceof Y.XmlText ? new Y.XmlText() : new Y.Text();
       text.applyDelta(
-        runsOf(unitsOf(real)).map((u) => ({
+        unitRuns(textUnits(real, textAttributes)).map((u) => ({
           insert: u.insert,
           ...(u.attributes ? { attributes: u.attributes } : {}),
         })),

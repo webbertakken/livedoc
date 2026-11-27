@@ -13,6 +13,8 @@ export type OfficePanelSpec = {
   alsoItems?: readonly string[];
   // Offered only to a session that writes (an Editor): for the others its item is not bound and it is not drawn.
   editorsOnly?: true;
+  // Offered only where review is shown (a text document's comments): never to a Viewer, never in Viewing.
+  review?: true;
 };
 
 export const OFFICE_PANEL_WIDTH = { initial: 360, min: 280, max: 560, step: 16 } as const;
