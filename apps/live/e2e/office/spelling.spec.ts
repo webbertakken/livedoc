@@ -107,7 +107,8 @@ test.describe('the card, the keys, the dictionary and a header, in Dutch', () =>
     await expect(body).toContainText('Een fiets en');
     await expect(card).toContainText('Change hius to');
     await card.getByRole('button', { name: /^Add to personal dictionary$/ }).click();
-    await expect(body.locator(MISSPELT)).toHaveCount(0);
+    // Gone everywhere: the body's at once, the header's with its re-read.
+    await expect(page.locator(MISSPELT)).toHaveCount(0);
     await expect(card.getByRole('status')).toHaveText('No spelling suggestions');
     await page.keyboard.press('Escape');
     await expect(card).toHaveCount(0);
@@ -119,6 +120,10 @@ test.describe('the card, the keys, the dictionary and a header, in Dutch', () =>
     ).click();
     const dialog = page.getByRole('dialog', { name: 'Personal dictionary' });
     await expect(dialog.getByRole('listitem')).toHaveText(['hius']);
+    // Shot once the dialog has finished fading in.
+    await dialog.evaluate((el) =>
+      Promise.all(el.getAnimations({ subtree: true }).map((x) => x.finished)),
+    );
     await page.screenshot({ path: test.info().outputPath('personal-dictionary.png') });
     await dialog.getByRole('button', { name: 'Remove hius' }).click();
     await expect(dialog.getByText('No words yet')).toBeVisible();
