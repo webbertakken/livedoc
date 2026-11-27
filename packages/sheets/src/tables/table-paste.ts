@@ -182,10 +182,10 @@ export function tableLandingChanges(
     const ids = { r1, c1, r2, c2 };
     const cols = axes.cols.slice(box.c1, box.c2 + 1);
     const types = Object.fromEntries(
-      cols.flatMap((c, j) => (clip.types[j] ? [[c, clip.types[j]!]] : [])),
+      cols.flatMap((c, j) => (clip.types[j] ? [[c, clip.types[j]]] : [])),
     );
     const opts = Object.fromEntries(
-      cols.flatMap((c, j) => (clip.opts[j] ? [[c, clip.opts[j]!]] : [])),
+      cols.flatMap((c, j) => (clip.opts[j] ? [[c, clip.opts[j]]] : [])),
     );
     const id = moving ? moving.id : makeAxisIds(1, rand, tableIds)[0]!;
     tableIds.add(id);
