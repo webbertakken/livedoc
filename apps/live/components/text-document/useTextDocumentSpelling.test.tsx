@@ -87,7 +87,7 @@ describe('useTextDocumentSpelling', () => {
     const { hook, view } = setUp('cat teh');
     await settle();
     caretAt(view, 6);
-    expect(menuLabels(hook)).toEqual(['the', 'tea', 'ten', 'Add to dictionary', 'Ignore', '|']);
+    expect(menuLabels(hook)).toEqual(['the', 'tea', 'ten', 'Add to personal dictionary', 'Ignore', '|']);
     caretAt(view, 2);
     expect(menuLabels(hook)[0]).toBe('Cut');
   });

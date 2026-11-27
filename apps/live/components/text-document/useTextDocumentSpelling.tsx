@@ -2,7 +2,7 @@
 
 // Spelling in a text document (docs/specs/034-text-documents/tools.md "Spelling and grammar"): what the writing's
 // spelling plugin reads (the checker, the language, the personal dictionary, whether misspellings show), and the context
-// menu's suggestions, Add to dictionary and Ignore on a misspelt word.
+// menu's suggestions, Add to personal dictionary and Ignore on a misspelt word.
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import type { EditorView } from 'prosemirror-view';
 import type { OfficeAction, OfficeActions } from '@/lib/office/office-catalogue';

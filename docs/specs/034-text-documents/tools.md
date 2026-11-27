@@ -51,15 +51,16 @@ fetched 2026-11-27); the look is (default) until a capture of Google’s dialog.
   check, underlines and right-click suggestions (director, 2026-11-27).
 - **Not checked**: words with a digit, an underscore, `@` or `/` in them, web and mail addresses, words in capitals
   only, and code blocks. The word being typed is underlined once the caret leaves it.
-- **Right-click on a misspelt word**: the context menu opens with up to five suggestions, then **Add to dictionary** and
-  **Ignore**, above its usual items. Choosing a suggestion replaces the word, one undo step.
+- **Right-click on a misspelt word**: the context menu opens with up to five suggestions, then **Add to personal
+  dictionary** (Google's words, help 57859) and **Ignore**, above its usual items. Choosing a suggestion replaces the
+  word, one undo step.
 - **Spelling and grammar check** (⌘⌥X, F7, the toolbar's button) opens a card at the top right walking each misspelling
   with suggestions, **Accept**, **Ignore**, **Add to dictionary**, Next and Previous (⌘' and ⌘;). With none left, the
   card says "No spelling suggestions". **Ignore** sets the word aside in this document until it is closed.
 - **Personal dictionary** (Tools > Spelling and grammar > Personal dictionary): per person, stored with the account
   (in this browser for a guest), shared by all their text documents and, later, spreadsheets; words are checked as
   written, up to 400 of them (the preferences' 16 KB), each up to 48 characters. A dialog lists, adds and removes
-  them; at the limit, **Add to dictionary** says "Your personal dictionary is full. Remove a word to add another."
+  them; at the limit, adding a word says "Your personal dictionary is full. Remove a word to add another."
 - **Who**: the underlines and the card show for everyone who can change the text (Editing or Suggesting); a Viewer sees
   no underlines. Accepting in Suggesting makes a suggestion. The personal dictionary is the person's own, whatever
   their role.

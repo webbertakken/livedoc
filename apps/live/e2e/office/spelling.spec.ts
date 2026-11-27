@@ -2,7 +2,7 @@ import { expect, expectNoPageErrors, test } from '../fixtures';
 
 // Spelling (docs/specs/034-text-documents/tools.md "Spelling and grammar"): where LiveDoc ships the language's
 // dictionary it underlines misspelt words itself and the browser's own check is off; a right-click on one offers its
-// suggestions, Add to dictionary and Ignore; elsewhere the browser's own check stays on and LiveDoc draws nothing.
+// suggestions, Add to personal dictionary and Ignore; elsewhere the browser's own check stays on and LiveDoc draws nothing.
 
 const BODY = '[role="textbox"][aria-label="Document body"]';
 const MISSPELT = '.text-document-misspelt';
@@ -46,7 +46,7 @@ test.describe('in Dutch', () => {
       .locator(MISSPELT)
       .filter({ hasText: /^Livedocisch$/ })
       .click({ button: 'right' });
-    await menu.getByRole('menuitem', { name: /^Add to dictionary/ }).click();
+    await menu.getByRole('menuitem', { name: /^Add to personal dictionary/ }).click();
     await expect(body.locator(MISSPELT).filter({ hasText: /^Livedocisch$/ })).toHaveCount(0);
 
     await body.locator(MISSPELT).first().click({ button: 'right' });

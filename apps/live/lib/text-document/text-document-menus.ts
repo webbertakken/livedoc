@@ -459,7 +459,7 @@ export function textDocumentTextContextMenu(catalogue: OfficeCatalogue): OfficeE
     ...Array.from({ length: SPELLING_SUGGESTIONS_MAX }, (_, i) =>
       item(`spelling-suggestion-${i + 1}`, 'Suggestion', 'edit', { contextual: true, ...BUILT }),
     ),
-    item('spelling-add-to-dictionary', 'Add to dictionary', 'edit', { contextual: true, ...BUILT }),
+    item('spelling-add-to-dictionary', 'Add to personal dictionary', 'edit', { contextual: true, ...BUILT }),
     item('spelling-ignore', 'Ignore', 'edit', { contextual: true, ...BUILT }),
     SEPARATOR,
     'cut',
