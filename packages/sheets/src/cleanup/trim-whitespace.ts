@@ -7,12 +7,17 @@ import { cellKey } from '../sheet';
 import type { CellChange, SheetWrite } from '../store';
 
 // A space at a text's end: a Unicode space separator, never a no-break one (U+00A0, U+202F).
-const END_SPACE =
-  /^[\u0020\u1680\u2000-\u200a\u205f\u3000]+|[\u0020\u1680\u2000-\u200a\u205f\u3000]+$/g;
+const END_SPACES = new Set([' ', '\u1680', '\u205f', '\u3000']);
+const isEndSpace = (ch: string) => END_SPACES.has(ch) || (ch >= '\u2000' && ch <= '\u200a');
 const INNER_RUN = / {2,}/g;
 
+// Trimmed by walking in from each end, linear in the text however many spaces it holds.
 export function trimmedText(text: string): string {
-  return text.replace(END_SPACE, '').replace(INNER_RUN, ' ');
+  let from = 0;
+  let to = text.length;
+  while (from < to && isEndSpace(text[from]!)) from++;
+  while (to > from && isEndSpace(text[to - 1]!)) to--;
+  return text.slice(from, to).replace(INNER_RUN, ' ');
 }
 
 export type WhitespaceTrimmed = { write: SheetWrite | null; trimmed: number };
