@@ -397,9 +397,17 @@ The table is the contract the readers and writers are tested against, one test p
   `sheetProtection sheet="1" objects="1" scenarios="1"`; each of its exceptions a `protectedRange` without a password
   (`sqref` its cells, `name` `LiveDocException1`, ...), cells anyone may edit while the sheet is protected, in the
   worksheet's one `protectedRanges` after the kept ones.
-- **ODF standard form**: the same protection is its `table:table`'s `table:protected="true"`. ODF frees cells only by
-  their cell styles (`style:cell-protect`), so its exceptions are left out of the standard form: LibreOffice guards
-  them with the sheet, stricter, never looser (default, D350).
+- **ODF standard form**: the same protection is its `table:table`'s `table:protected="true"`; ODF frees cells by their
+  cell styles, as LibreOffice writes an unlocked cell, so each cell of its exceptions names a style with
+  `style:cell-protect="none"` (the Director's ruling, 2026-11-27, D350):
+  - one open variant of each style the exception cells use (`ce3-open`, and `ce-open` for a cell of no style of its
+    own), the same properties and `style:cell-protect="none"`; the style other cells share is never touched;
+  - empty cells of an exception are written as repeated cells naming the open style, its rows a run of repeated rows,
+    so an exception over a whole column holds one cell element a run of rows, never one a cell.
+  - Evidence (`written-files.validate.ts`): LibreOffice opens the written `.fods` and `.xlsx` and saves them again with
+    the sheet protected, the exception's cells open and every other cell locked. LibreOffice copies no XML through a
+    save; it writes the protection and the cell styles again from its own model, so the re-saved file shows its model
+    holds those cells unlocked, which is what its editing check reads.
 - **No standard form**: neither suite guards a range alone, nor warns, nor tells Editors from the owner. A range's
   protection and a protection that shows a warning are in LiveDoc's record only; Editors Only and Only the Owner are
   one protected sheet there.
@@ -408,7 +416,8 @@ The table is the contract the readers and writers are tested against, one test p
   worksheet's LiveDoc `ext` (the validation rules' one), in ODF the `table:table`'s `livedoc:protections` and
   `livedoc:protections-fingerprint` attributes, LiveDoc's namespace.
 - Its fingerprint is the CRC-32 (8 lower-case hex digits) of the standard form as written: whether the sheet is
-  protected, then each free range's cells (XLSX's password-less `protectedRange` `sqref`s; ODF's none), each a line.
+  protected, then each free range's cells, each a line: XLSX's password-less `protectedRange` `sqref`s as written; ODF's
+  open cells as the reader makes them into rectangles (each row's runs, a run carried over consecutive rows).
   **Read**, the record is taken when its fingerprint is the standard form's as read; else another app changed the
   protection since, so the standard form is read, the record dropped, and the read names it (`protection_changed`,
   logged, never reported), as D294.
@@ -439,7 +448,7 @@ The table is the contract the readers and writers are tested against, one test p
   - Editing the protection keeps it; removing it, making it a range's, or moving it to another sheet leaves it behind.
 - **What another app loses**, listed by converting and downloading to the other format
   ([Converting](files-and-print.md#converting), `protections_simplified`, counted by protection): a range's
-  protection, a warning, and (in OpenDocument) a protected sheet's exceptions; and a file password the other format
+  protection and a warning; and a file password the other format
   cannot carry (`protection_passwords_left`): "1 protected sheet leaves its file password behind".
 
 ## Rows and columns in the file
@@ -850,8 +859,8 @@ The code cites each by its id.
   rules refuse, kept and named (`name_unread`); built-in and hidden names kept, not named (default).
 - **D349** Protections in a file: the standard form each suite enforces (a protected sheet, its free ranges) and
   LiveDoc's exact record beside it, fingerprinted, as validation rules (D293, D294) (default).
-- **D350** A protected sheet's exceptions in ODF: left out of the standard form, as ODF frees cells only by cell styles,
-  so LibreOffice guards them too (stricter, never looser); LiveDoc's record keeps them (default).
+- **D350** A protected sheet's exceptions in ODF: each cell names an open variant of its style
+  (`style:cell-protect="none"`), the shared style untouched, empty cells repeated (the Director's ruling, 2026-11-27).
 - **D351** A file's protection password: its hash and Excel's allowances kept on the sheet's protection, written back
   only to its own format while that protection admits Editors or the owner; never asked for, checked or invented
   (the Director's ruling, 2026-11-27).

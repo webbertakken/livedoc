@@ -77,7 +77,6 @@ const SIMPLIFIED_WORDS: Record<SimplifiedFeature, string> = {
 const PROTECTION_WORDS: Record<ProtectionSimplified, string> = {
   ranges: 'protected ranges',
   warnings: 'warnings',
-  exceptions: 'cells left open on protected sheets',
 };
 
 /** One loss as the dialog lists it. */

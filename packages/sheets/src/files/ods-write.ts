@@ -30,7 +30,14 @@ import { OdsAxisOut } from './ods-lines';
 import { OdsChartObjects } from './ods-charts';
 import { namesToWrite, odsNameXml, withOdsNames } from './file-names';
 import { toOpenFormula } from './open-formula';
-import { odsProtectionAttributes } from './ods-protection';
+import {
+  isOpenAt,
+  odsProtectionAttributes,
+  openRanges,
+  openRuns,
+  openRunsAt,
+} from './ods-protection';
+import type { FreeRun } from './file-protections';
 import { standardProtectionOf } from './file-protections';
 import type {
   FileCell,
@@ -88,12 +95,14 @@ type Out = {
   validations: OdsValidationsOut['cells'];
 };
 
-// A cell's style, its number format's and its look's; a format ODF cannot say is named, the cell written without it.
-function styleAttribute(cell: FileCell, out: Out): string[] {
-  if (cell.format === undefined && !cell.style) return [];
+// A cell's style, its number format's and its look's, its open variant in a protected sheet's exception (D350); a
+// format ODF cannot say is named, the cell written without it.
+function styleAttribute(cell: FileCell, out: Out, open: boolean): string[] {
+  if (cell.format === undefined && !cell.style && !open) return [];
   const { name, unwritten } = out.styles.cellStyle(
     cell.format,
     themedFormat(cell.style, out.theme),
+    open,
   );
   if (unwritten) out.losses.push({ k: 'format_unwritten', sheet: out.sheet, r: cell.r, c: cell.c });
   return name ? [`table:style-name="${name}"`] : [];
@@ -144,12 +153,12 @@ const VALIDATION_NAME = /\s(?:[\w.-]+:)?content-validation-name="[^"]*"/;
 const ruleAttribute = (name: string | undefined) =>
   name === undefined ? '' : ` table:content-validation-name="${escapeXmlAttribute(name)}"`;
 
-function cellXml(cell: FileCell, out: Out, rule: string | undefined): string {
+function cellXml(cell: FileCell, out: Out, rule: string | undefined, isOpen: boolean): string {
   const formula = cell.formula === undefined ? null : toOpenFormula(cell.formula);
   if (cell.formula !== undefined && formula === null)
     out.losses.push({ k: 'formula_unwritten', sheet: out.sheet, r: cell.r, c: cell.c });
   const attrs = [
-    ...styleAttribute(cell, out),
+    ...styleAttribute(cell, out, isOpen),
     ...(formula ? [`table:formula="${escapeXmlAttribute(formula)}"`] : []),
     ...(formula && cell.spans
       ? [
@@ -172,11 +181,21 @@ function cellXml(cell: FileCell, out: Out, rule: string | undefined): string {
 const repeated = (axis: 'columns' | 'rows', n: number) =>
   n > 1 ? ` table:number-${axis}-repeated="${n}"` : '';
 
-// Empty cells from column `from` to `to` (exclusive), split where the validation rules over them change.
-function emptyCells(rules: RowRules, from: number, to: number): string[] {
-  return ruledRuns(rules, from, to).map(
-    ({ n, name }) => `<table:table-cell${repeated('columns', n)}${ruleAttribute(name)}/>`,
-  );
+// Empty cells from column `from` to `to` (exclusive), split where the validation rules or the open runs over them
+// change; an open run names the open style (D350).
+function emptyCells(
+  rules: RowRules,
+  opens: readonly FreeRun[],
+  from: number,
+  to: number,
+  out: Out,
+): string[] {
+  return openRuns(ruledRuns(rules, from, to), opens, from).map(({ n, name, open }) => {
+    const style = open
+      ? ` table:style-name="${out.styles.cellStyle(undefined, undefined, true).name}"`
+      : '';
+    return `<table:table-cell${repeated('columns', n)}${style}${ruleAttribute(name)}/>`;
+  });
 }
 
 function rowXml(
@@ -185,21 +204,29 @@ function rowXml(
   out: Out,
   attrs: string,
   rules: RowRules,
+  opens: readonly FreeRun[],
 ): string[] {
   const lines = [`<table:table-row${attrs}>`];
   let at = 0;
   for (const cell of cells) {
-    if (cell.c > at) lines.push(...emptyCells(rules, at, cell.c));
-    lines.push(cellXml(cell, out, ruleAt(rules, cell.c)));
+    if (cell.c > at) lines.push(...emptyCells(rules, opens, at, cell.c, out));
+    lines.push(cellXml(cell, out, ruleAt(rules, cell.c), isOpenAt(opens, cell.c)));
     at = cell.c + 1;
   }
-  if (cols > at) lines.push(...emptyCells(rules, at, cols));
+  if (cols > at) lines.push(...emptyCells(rules, opens, at, cols, out));
   lines.push('</table:table-row>');
   return lines;
 }
 
-function emptyRows(n: number, cols: number, attrs: string, rules: RowRules): string {
-  return `<table:table-row${attrs}${repeated('rows', n)}>${emptyCells(rules, 0, cols).join('')}</table:table-row>`;
+function emptyRows(
+  n: number,
+  cols: number,
+  attrs: string,
+  rules: RowRules,
+  opens: readonly FreeRun[],
+  out: Out,
+): string {
+  return `<table:table-row${attrs}${repeated('rows', n)}>${emptyCells(rules, opens, 0, cols, out).join('')}</table:table-row>`;
 }
 
 // Where runs of lines start: 0, each line with something of its own and the one after it, and the end.
@@ -255,15 +282,19 @@ function tableXml(sheet: FileSheet, index: number, out: Omit<Out, 'sheet' | 'ind
   // A row with cells is a run of its own; rows between are runs of empty rows, split where their attributes change.
   // Each validation rule's first row and the row after its last start runs too, so a run's rows share their rules.
   const ruled = out.validations[index] ?? [];
+  // The cells a protected sheet leaves open, written with open styles (standard-mapping.md "Protection in the file").
+  const open = openRanges(sheet.protections);
   const starts = runStarts(rowCount, [
     ...rowAxis.breaks(),
     ...[...rows.keys()].flatMap((r) => [r, r + 1]),
     ...ruled.flatMap((x) => [x.range.r1, x.range.r2 + 1]),
+    ...open.flatMap((g) => [g.r1, g.r2 + 1]),
   ]);
   const runs = starts.slice(0, -1).map((from, i) => {
     const { attrs } = rowAxis.at(from);
     const cells = rows.get(from);
     const rules = rowRules(ruled, from);
+    const opens = openRunsAt(open, from);
     const xml = cells
       ? rowXml(
           cells.sort((a, b) => a.c - b.c),
@@ -271,8 +302,9 @@ function tableXml(sheet: FileSheet, index: number, out: Omit<Out, 'sheet' | 'ind
           sheetOut,
           attrs,
           rules,
+          opens,
         )
-      : [emptyRows(starts[i + 1]! - from, cols, attrs, rules)];
+      : [emptyRows(starts[i + 1]! - from, cols, attrs, rules, opens, sheetOut)];
     return { from, xml };
   });
   return [

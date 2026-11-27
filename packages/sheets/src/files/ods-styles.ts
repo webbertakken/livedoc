@@ -39,17 +39,23 @@ export class OdsStyles {
     return xml ? name : null;
   }
 
-  /** The cell style for a code and a look: `ce1`, ... in order of first use. */
-  cellStyle(code: string | undefined, style?: CellStyle): OdsCellStyle {
-    const key = `${code ?? ''}\u0000${cellStyleKey(style)}`;
+  /**
+   * The cell style for a code and a look: `ce1`, ... in order of first use. `open`: its variant free of the sheet's
+   * protection, named after it (`ce3-open`, `ce-open` for none), the style itself untouched (D350).
+   */
+  cellStyle(code: string | undefined, style?: CellStyle, open = false): OdsCellStyle {
+    const key = `${code ?? ''}\u0000${cellStyleKey(style)}${open ? '\u0000open' : ''}`;
     const known = this.cells.get(key);
     if (known) return known;
+    const base = open ? this.cellStyle(code, style) : null;
     const data = code === undefined ? null : this.dataStyle(code);
     const unwritten = code !== undefined && data === null;
-    const properties = odsStyleProperties(style);
+    const properties = odsStyleProperties(style, open);
     let name: string | null = null;
     if (data || properties) {
-      name = `ce${[...this.cells.values()].filter((c) => c.name).length + 1}`;
+      name = base
+        ? `${base.name ?? 'ce'}-open`
+        : `ce${[...this.cells.values()].filter((c) => c.name && !c.name.endsWith('-open')).length + 1}`;
       const dataAttribute = data ? ` style:data-style-name="${data}"` : '';
       this.xml.push(
         properties

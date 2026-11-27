@@ -343,10 +343,14 @@ const DOUBLE_LINES = '0.0071in 0.0102in 0.0071in';
 const WRITE_HORIZONTAL = { l: 'start', c: 'center', r: 'end' } as const;
 const WRITE_VERTICAL = { t: 'top', m: 'middle', b: 'bottom' } as const;
 
-/** The properties an automatic cell style says of a look, over LiveDoc's default cell style; nothing for none. */
-export function odsStyleProperties(style: CellStyle | undefined): string {
-  if (!style) return '';
+/**
+ * The properties an automatic cell style says of a look, over LiveDoc's default cell style; nothing for none. `open`:
+ * its cells are free of their sheet's protection (standard-mapping.md "Protection in the file", D350).
+ */
+export function odsStyleProperties(style: CellStyle | undefined, open = false): string {
+  if (!style) return open ? '<style:table-cell-properties style:cell-protect="none"/>' : '';
   const cell: string[] = [];
+  if (open) cell.push('style:cell-protect="none"');
   if (style.bg) cell.push(`fo:background-color="${style.bg}"`);
   for (const [side, k] of SIDES) {
     const b = style[k];

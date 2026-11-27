@@ -10,6 +10,7 @@ import {
   type XmlElement,
 } from '@livedoc/office-packages';
 import { PROTECTION_KEPT_ATTRIBUTES, type ProtectionKept } from '../protection';
+import type { GridRange } from '../address';
 import {
   freeRectangles,
   freeRunsOf,
@@ -153,6 +154,74 @@ export class OdsFreeCells {
   }
 }
 
+/** The cells a sheet's standard protection leaves open: its exceptions; none when it has none (D350). */
+export const openRanges = (list: readonly FileProtection[] | undefined): readonly GridRange[] =>
+  standardProtectionOf(list)?.except ?? [];
+
+/** The open columns of row `r`, as sorted runs, joined where they meet or overlap. */
+export function openRunsAt(open: readonly GridRange[], r: number): FreeRun[] {
+  const runs = open
+    .filter((g) => g.r1 <= r && r <= g.r2)
+    .map((g) => [g.c1, g.c2] as [number, number])
+    .sort((a, b) => a[0] - b[0]);
+  const out: [number, number][] = [];
+  for (const [a, b] of runs) {
+    const last = out.at(-1);
+    if (last && a <= last[1] + 1) last[1] = Math.max(last[1], b);
+    else out.push([a, b]);
+  }
+  return out;
+}
+
+/** Whether column `c` is open in a row's runs. */
+export const isOpenAt = (opens: readonly FreeRun[], c: number): boolean =>
+  opens.some(([a, b]) => a <= c && c <= b);
+
+/**
+ * Runs of empty cells from column `from`, each its count and validation rule's name, split further where the open runs
+ * start and end; each says whether it is open.
+ */
+export function openRuns(
+  runs: readonly { n: number; name?: string }[],
+  opens: readonly FreeRun[],
+  from: number,
+): { n: number; name?: string; open: boolean }[] {
+  const out: { n: number; name?: string; open: boolean }[] = [];
+  let at = from;
+  for (const run of runs) {
+    const end = at + run.n;
+    const cuts = new Set([at, end]);
+    for (const [a, b] of opens) {
+      if (a > at && a < end) cuts.add(a);
+      if (b + 1 > at && b + 1 < end) cuts.add(b + 1);
+    }
+    const stops = [...cuts].sort((x, y) => x - y);
+    for (let i = 0; i < stops.length - 1; i++) {
+      const piece = {
+        n: stops[i + 1]! - stops[i]!,
+        ...(run.name === undefined ? {} : { name: run.name }),
+        open: isOpenAt(opens, stops[i]!),
+      };
+      const last = out.at(-1);
+      if (last && last.name === piece.name && last.open === piece.open) last.n += piece.n;
+      else out.push(piece);
+    }
+    at = end;
+  }
+  return out;
+}
+
+/** The open ranges as the ODF reader makes them back into rectangles: what the fingerprint names (D349). */
+function openRectangles(open: readonly GridRange[]): GridRange[] {
+  const stops = [...new Set(open.flatMap((g) => [g.r1, g.r2 + 1]))].sort((a, b) => a - b);
+  const rows: FreeRows[] = [];
+  for (let i = 0; i < stops.length - 1; i++) {
+    const runs = openRunsAt(open, stops[i]!);
+    if (runs.length) rows.push({ r1: stops[i]!, r2: stops[i + 1]! - 1, runs });
+  }
+  return freeRectangles(rows, Number.MAX_SAFE_INTEGER).free;
+}
+
 /**
  * A sheet's protections as a `table:table`'s attributes: `table:protected` (with what an ODF file's protection kept,
  * D351) for its standard protection, and LiveDoc's record; no free cells (D350). Each prefix declared on it.
@@ -162,12 +231,13 @@ export function odsProtectionAttributes(list: readonly FileProtection[] | undefi
   const standard = standardProtectionOf(list);
   const kept = standard?.kept?.standard === 'odf' ? standard.kept.attributes : {};
   const loext = Object.keys(kept).some((name) => name.startsWith('loext:'));
+  const open = openRectangles(standard?.except ?? []);
   return [
     ...(standard ? [' table:protected="true"'] : []),
     ...Object.entries(kept).map(([name, value]) => ` ${name}="${escapeXmlAttribute(value)}"`),
     ...(loext ? [` xmlns:loext="${LOEXT}"`] : []),
     ` xmlns:livedoc="${LIVEDOC_SPREADSHEET_NS}"`,
     ` livedoc:protections="${escapeXmlAttribute(protectionRecordText(list))}"`,
-    ` livedoc:protections-fingerprint="${protectionFingerprint(standard !== undefined, [])}"`,
+    ` livedoc:protections-fingerprint="${protectionFingerprint(standard !== undefined, open)}"`,
   ].join('');
 }
