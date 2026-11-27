@@ -20,8 +20,8 @@ import { TEXT_DOCUMENT_TOOLBAR } from './text-document-toolbar';
 // What only an Editor changes: kept beside the writing, structure, or the document itself.
 const EDITOR_ONLY = [
   /^page-setup$/,
-  /^header$/,
-  /^footer$/,
+  // Insert's Header and Footer open the section's to suggest in; putting one in, a section's setting, is refused in
+  // their hook for a Participant (review.md "Headers, footers and notes").
   /^headers-and-footers-options$/,
   /^page-numbers/,
   /^page-count$/,
@@ -41,7 +41,6 @@ const EDITOR_ONLY = [
   /^drawing-/,
   /^building-block-/,
   /^code-block-/,
-  /^footnote$/,
   /^watermark$/,
   /^line-numbers$/,
   /^preferences$/,

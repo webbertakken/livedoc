@@ -79,4 +79,36 @@ describe('textDocumentLevelAsked on suggestions in stories', () => {
       ),
     ).toBe('edit');
   });
+
+  // review.md "Headers, footers and notes": Insert > Footnote while suggesting, the note and its mark in one update.
+  describe('a footnote put in while suggesting', () => {
+    const addNote = (doc: Y.Doc, author = ADA, written = '') => {
+      const body = doc.getXmlFragment('body');
+      const paragraph = body.get(0) as Y.XmlElement;
+      const footnote = new Y.XmlElement(FOOTNOTE);
+      footnote.setAttribute('story', 'n9');
+      footnote.setAttribute('insertion', mark('a-note', author) as unknown as string);
+      paragraphOf(storyFragment(doc, 'n9'), '');
+      paragraph.push([footnote]);
+      if (written)
+        runOf(storyFragment(doc, 'n9')).insert(0, written, { insertion: mark('a-text') });
+    };
+
+    it('lets a Participant put in a note whose mark is their own suggestion, and write in it', () => {
+      expect(askedOn((doc) => doc.transact(() => addNote(doc)))).toBe('participate');
+      expect(askedOn((doc) => doc.transact(() => addNote(doc, ADA, 'why')))).toBe('participate');
+    });
+
+    it('asks for Editing for a new note named by a plain mark or another’s, or written in plainly', () => {
+      expect(askedOn((doc) => doc.transact(() => addNote(doc, BEN)))).toBe('edit');
+      expect(
+        askedOn((doc) =>
+          doc.transact(() => {
+            addNote(doc);
+            runOf(storyFragment(doc, 'n9')).insert(0, 'plain');
+          }),
+        ),
+      ).toBe('edit');
+    });
+  });
 });

@@ -75,4 +75,22 @@ describe('TextDocumentHeaderBar', () => {
     fireEvent.click(remove);
     expect(onRemove).not.toHaveBeenCalled();
   });
+
+  // review.md "Headers, footers and notes": while suggesting, the bar's settings are dimmed, saying why.
+  it('dims its settings while suggesting, running none', () => {
+    const handlers = bar({ later: true, settingsOff: true });
+    const first = screen.getByRole<HTMLInputElement>('checkbox', { name: 'Different first page' });
+    const link = screen.getByRole<HTMLInputElement>('checkbox', { name: 'Link to previous' });
+    expect(first.disabled && link.disabled).toBe(true);
+    fireEvent.click(first);
+    fireEvent.click(screen.getByRole('button', { name: 'Options' }));
+    const remove = screen.getByRole('menuitem', { name: /Remove footer/ });
+    expect(remove.getAttribute('aria-disabled')).toBe('true');
+    expect(remove.textContent).toContain('Editing only');
+    fireEvent.click(remove);
+    fireEvent.click(screen.getByRole('menuitem', { name: /Footer format/ }));
+    expect(handlers.onFirst).not.toHaveBeenCalled();
+    expect(handlers.onRemove).not.toHaveBeenCalled();
+    expect(handlers.onFormat).not.toHaveBeenCalled();
+  });
 });

@@ -30,6 +30,10 @@ export const SUGGESTING_PROPOSALS: readonly string[] = [
   'page-break',
   'column-break',
   'bookmark',
+  // Headers, footers and notes written in as suggestions (review.md "Headers, footers and notes")
+  'footnote',
+  'header',
+  'footer',
   // Insert: whole blocks (review.md "Whole blocks")
   'table-grid',
   'section-break-next-page',
@@ -98,7 +102,7 @@ export const SUGGESTING_PROPOSALS: readonly string[] = [
 
 // What writes beside the writing and cannot be suggested yet (review.md "While suggesting", "Not yet"): dimmed while
 // suggesting, for an Editor too, saying where it runs.
-export const NOT_YET_SUGGESTED: readonly string[] = ['drawing-new', 'footnote', 'header', 'footer'];
+export const NOT_YET_SUGGESTED: readonly string[] = ['drawing-new'];
 export const NOT_YET_SUGGESTED_NOTE = 'Editing only';
 export const NOT_YET_SUGGESTED_HINT =
   "This can't be suggested yet. An Editor changes it in Editing.";

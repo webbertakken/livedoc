@@ -8,6 +8,7 @@ import type * as Y from 'yjs';
 import type { TextDocumentFormat } from '@livedoc/document';
 import type { HeaderFooterKind, HeaderFooterSlot, LiveHeaders } from '@livedoc/text-documents';
 import type { OfficeActions } from '@/lib/office/office-catalogue';
+import { NOT_YET_SUGGESTED_NOTE } from '@/lib/text-document/text-document-modes';
 import { debugLog } from '@/lib/debug-log';
 import { track } from '@/lib/telemetry';
 import type { PageGeometry } from '@/lib/text-document/pagination/pagination-draw';
@@ -71,31 +72,43 @@ export function useTextDocumentHeaderEditing(input: {
   readonly format: TextDocumentFormat;
   readonly pages: readonly PageGeometry[] | null;
   readonly writes: boolean;
+  /** Suggesting (review.md "Headers, footers and notes"): one is entered and written in as suggestions. */
+  readonly suggests?: boolean;
+  /**
+   * May put one in or take an empty one out, both its section's settings: an Editor, in Editing or Suggesting; never a
+   * Participant (review.md "Headers, footers and notes").
+   */
+  readonly makes?: boolean;
   readonly stories: TextDocumentStories;
+  /** The section the body's caret is in: what its page shows decides Insert's items. */
+  readonly caretSection?: number;
   /** Leaves a footnote being edited, before a header or footer is entered (page-layout.md "Footnotes"). */
   readonly leaveOthers?: () => void;
 }): TextDocumentHeaderEditing {
   const { view, liveDoc, format, pages, writes, stories } = input;
+  const suggests = input.suggests ?? false;
+  const makes = input.makes ?? writes;
+  const enters = writes || suggests;
   const leaveOthers = useRef(input.leaveOthers);
   const [entered, setEntered] = useState<StoryEditing | null>(null);
   // Still on a page that shows headers, and still the person's to edit.
-  const editing = entered && writes && pages?.[entered.page]?.place !== undefined ? entered : null;
+  const editing = entered && enters && pages?.[entered.page]?.place !== undefined ? entered : null;
   const source = useRef<StorySource | null>(null);
   const box = useRef<HTMLDivElement | null>(null);
-  const latest = useRef({ view, pages, writes, format, stories, entered });
+  const latest = useRef({ view, pages, writes, enters, makes, format, stories, entered });
   useLayoutEffect(() => {
-    latest.current = { view, pages, writes, format, stories, entered };
+    latest.current = { view, pages, writes, enters, makes, format, stories, entered };
     leaveOthers.current = input.leaveOthers;
   });
 
   // Back to its hidden place; an empty own one taken out of its section.
   const stop = useCallback(
     (was: StoryEditing) => {
-      const { view: body, format: kept, stories: held } = latest.current;
+      const { view: body, format: kept, stories: held, makes: may } = latest.current;
       const doc = liveDoc.current;
       source.current?.stopEditing();
       source.current = null;
-      if (body && doc && removeIfEmpty(body, doc, kept, { index: was.section, ...was }))
+      if (may && body && doc && removeIfEmpty(body, doc, kept, { index: was.section, ...was }))
         track('Tab', 'Changed', 'TextDocumentHeaderFooter');
       held.release(was.key);
       debugLog('[text-document] header footer', {
@@ -118,7 +131,14 @@ export function useTextDocumentHeaderEditing(input: {
 
   const enter = useCallback(
     (kind: HeaderFooterKind, at?: number) => {
-      const { view: body, pages: laid, writes: can, format: kept, stories: held } = latest.current;
+      const {
+        view: body,
+        pages: laid,
+        enters: can,
+        makes: may,
+        format: kept,
+        stories: held,
+      } = latest.current;
       const doc = liveDoc.current;
       if (!body || !doc || !can || !laid) return;
       const page = at ?? pageIndexAt(body, body.state.selection.head);
@@ -138,6 +158,10 @@ export function useTextDocumentHeaderEditing(input: {
       );
       const { slot } = now;
       let story = now.story;
+      if (!story && !may) {
+        debugLog('[text-document] header footer', { section, kind, slot, change: 'refused' });
+        return;
+      }
       if (!story) {
         story = makeStory(doc);
         setLiveHeaders(
@@ -193,9 +217,10 @@ export function useTextDocumentHeaderEditing(input: {
         doc: Y.Doc,
       ) => LiveHeaders | undefined,
     ) => {
-      const { view: body, format: kept } = latest.current;
+      const { view: body, format: kept, writes: settles } = latest.current;
       const doc = liveDoc.current;
-      if (!body || !doc) return;
+      // Its settings are an Editor's in Editing (review.md "Headers, footers and notes").
+      if (!body || !doc || !settles) return;
       changeAround((was) => {
         setLiveHeaders(
           body,
@@ -285,13 +310,43 @@ export function useTextDocumentHeaderEditing(input: {
   }, []);
 
   const laidOut = (pages?.length ?? 0) > 0;
+  const caretSection = input.caretSection ?? 0;
   const actions = useMemo((): OfficeActions => {
-    if (!writes || !view) return {};
-    return {
-      [HEADER_ITEM]: { run: () => enter('header'), disabled: !laidOut },
-      [FOOTER_ITEM]: { run: () => enter('footer'), disabled: !laidOut },
+    if (!enters || !view) return {};
+    // Where the caret's page shows none, putting one in is its section's setting: an Editor's (review.md "Headers,
+    // footers and notes").
+    const item = (kind: HeaderFooterKind) => {
+      const doc = liveDoc.current;
+      // The caret's page, else the first page of the caret's section.
+      const atCaret = pageIndexAt(view, view.state.selection.head);
+      const page =
+        pages?.[atCaret]?.section === caretSection
+          ? atCaret
+          : (pages?.findIndex((p) => p.section === caretSection) ?? -1);
+      const shown = page >= 0 ? pages?.[page] : undefined;
+      const none =
+        !makes &&
+        doc !== null &&
+        shown?.section !== undefined &&
+        !shownStory(
+          doc,
+          kind,
+          shown.section,
+          shown.first === true,
+          page + 1,
+          shownSectionHeaders(view, doc),
+        ).story;
+      return none
+        ? {
+            run: () => {},
+            disabled: true,
+            note: NOT_YET_SUGGESTED_NOTE,
+            hint: `An Editor adds a ${kind} in Editing.`,
+          }
+        : { run: () => enter(kind), disabled: !laidOut };
     };
-  }, [writes, view, enter, laidOut]);
+    return { [HEADER_ITEM]: item('header'), [FOOTER_ITEM]: item('footer') };
+  }, [enters, makes, view, enter, laidOut, pages, liveDoc, caretSection]);
 
   return {
     editing,

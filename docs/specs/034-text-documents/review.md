@@ -293,11 +293,21 @@ office kinds; this spec says what a text document puts in them.
   table wider than the text back to the text width, as an Editor's plain change (director, 2026-11-26).
 - **Not yet**: a row or column a merged cell crosses (director, 2026-11-26); merging, splitting, moving, sorting and
   distributing the rows and columns of a table not one's own suggested table (default); updating a table of contents
-  not one's own suggested one, footnotes and drawings, and what is kept beside the writing (page setup, headers and footers, document tabs,
-  styles, list definitions), say "This can't be suggested yet." (default) and change nothing. Insert's Footnote,
-  Drawing, Header and Footer are dimmed while suggesting with the note "Editing only" and the hint "This can't be
-  suggested yet. An Editor changes it in Editing." (default); the others are absent or dimmed as the menus draw
-  them.
+  not one's own suggested one, drawings, and what is kept beside the writing (page setup, a header's or footer's
+  settings, document tabs, styles, list definitions), say "This can't be suggested yet." (default) and change nothing.
+  Insert's Drawing is dimmed while suggesting with the note "Editing only" and the hint "This can't be suggested yet.
+  An Editor changes it in Editing." (default); the others are absent or dimmed as the menus draw them.
+- **Headers, footers and notes** (director, 2026-11-26): while suggesting, one is opened and written in as in
+  Editing, and what is typed, deleted or formatted there is a suggestion, as in the body. Insert > Header (Footer)
+  opens the section's header (footer); where it has none, an Editor's puts one in, plain, its writing then suggested,
+  and a Participant's is dimmed with the hint "An Editor adds a header in Editing." ("…a footer…") (director,
+  2026-11-26). Google's help ([Use headers, footers, page numbers & footnotes](https://support.google.com/docs/answer/86629))
+  does not say whether a suggester may add one; LiveDoc keeps it an Editor's because a header is a section's setting,
+  kept beside the writing, where no suggestion is. The
+  header bar's Different first page, Link to previous, Remove, Options and Page numbers are its settings: dimmed while
+  suggesting with the note "Editing only" and the not-yet hint (director, 2026-11-26). Insert > Footnote puts in a footnote whose
+  mark is an object's insertion ("Add: Footnote"); what is typed in its note is suggested as in any note, and rejecting
+  the mark takes the note away with it, its suggestions too (default).
 - **Pasting** inserts as typing does; what is pasted from suggested text arrives plain in Editing.
 - **Undo** takes back one's own suggestions step by step, as any edit.
 - The refusal lines show for 5 seconds (`SUGGESTING_NOTICE_MS`, (default)) in the status band.
@@ -387,9 +397,10 @@ office kinds; this spec says what a text document puts in them.
   there as in the body (director, 2026-11-26). A story's suggestion belongs to the tab that shows it: a header's or
   footer's, the first tab whose sections name it; a note's, the tab whose body holds its mark. It is read, counted,
   previewed, accepted and rejected with the tab's, by Accept all and Reject all too, after the tab's body, headers
-  before notes. While suggesting, the header, footer and note editors read as they do in Viewing (default).
+  before notes.
 - **The room judges a Participant's update** (fork D7): it is theirs when the writing (each body and each story
-  touched, a story judged as a body is), read with the sender's own
+  touched, a story judged as a body is; a note new in the update, named only by the sender's own suggested
+  footnote marks, is theirs whole), read with the sender's own
   suggestions rejected, is the same before and after, so it adds, changes or withdraws only the sender's own
   suggestions, never anyone's writing or anyone else's suggestion; anything else asks for Editing and is refused
   whole. A picture's media is theirs to add when each entry is new (none already held is changed), reads as media,
