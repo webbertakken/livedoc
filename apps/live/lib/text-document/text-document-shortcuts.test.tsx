@@ -81,6 +81,12 @@ import { SUGGESTION_KEY_ACTIONS } from '@/components/text-document/useTextDocume
 import { REVIEW_SUGGESTED_EDITS } from '@/components/text-document/useTextDocumentReviewPanel';
 import { COMPARE_DOCUMENTS } from '@/components/text-document/useTextDocumentCompare';
 import { WORD_COUNT_ITEM } from '@/components/text-document/useTextDocumentWordCount';
+import { VERBALISE_ITEMS } from '@/components/text-document/useTextDocumentScreenReader';
+import {
+  ACCESSIBILITY_ITEM,
+  ACCESSIBILITY_SETTINGS_ITEM,
+  SCREEN_READER_KEY,
+} from '@/lib/text-document/text-document-screen-reader';
 import {
   MISSPELLING_KEY_ACTIONS,
   PERSONAL_DICTIONARY_ITEM,
@@ -228,9 +234,14 @@ describe('the text document menus', () => {
         SEE_VERSION_HISTORY,
         // File > Version history > Name current version (useTextDocumentVersionWrites), bound by the surface.
         NAME_CURRENT_VERSION,
+        // Tools > Accessibility and the Accessibility menu (useTextDocumentScreenReader), bound by the surface.
+        ACCESSIBILITY_ITEM,
+        ACCESSIBILITY_SETTINGS_ITEM,
+        ...Object.values(VERBALISE_ITEMS),
       ];
       expect(
-        catalogueFaults(textDocumentMenus(format), {
+        // With screen reader support on, so the Accessibility menu is among the menus.
+        catalogueFaults(textDocumentMenus(format, { screenReader: true }), {
           bound,
           shortcuts: TEXT_DOCUMENT_SHORTCUTS.map((r) => r.id),
         }),
@@ -239,7 +250,7 @@ describe('the text document menus', () => {
   );
 
   it('says built for exactly the keyboard-shortcuts rows whose item is built', () => {
-    const builtItems = catalogueItems(textDocumentMenus('odf'))
+    const builtItems = catalogueItems(textDocumentMenus('odf', { screenReader: true }))
       .map(({ item }) => item)
       .filter((item) => item.status === 'built' && item.shortcut)
       .map((item) => item.shortcut!)
@@ -248,7 +259,9 @@ describe('the text document menus', () => {
     const shellRows = [
       'tool-finder',
       'context-right-click-menu',
-      ...['file', 'edit', 'view', 'insert', 'format', 'tools', 'help'].map((m) => `${m}-menu`),
+      ...['file', 'edit', 'view', 'insert', 'format', 'tools', 'help', 'accessibility'].map(
+        (m) => `${m}-menu`,
+      ),
     ];
     const builtRows = TEXT_DOCUMENT_SHORTCUTS.filter((r) => r.status === 'built').map((r) => r.id);
     // Rows no item names, bound by their own id (office-shell.md "Shortcut layer").
@@ -276,6 +289,10 @@ describe('the text document menus', () => {
       ...Object.values(VERSION_CHANGE_KEY_ROWS),
       // The next and previous misspelling (useTextDocumentSpelling).
       ...Object.values(MISSPELLING_KEY_ACTIONS),
+      // Screen reader support, and the two announce rows no item names (useTextDocumentScreenReader).
+      SCREEN_READER_KEY,
+      VERBALISE_ITEMS.announceCursorLocation,
+      VERBALISE_ITEMS.announceFormatting,
     ];
     expect(builtRows.sort()).toEqual(
       [...new Set([...builtItems, ...shellRows, ...keyRows])].sort(),

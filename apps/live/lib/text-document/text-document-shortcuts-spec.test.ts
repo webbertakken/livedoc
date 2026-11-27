@@ -13,6 +13,7 @@ const STATUS: Record<string, ShortcutStatus> = {
   specified: 'specified',
   "the browser's": 'browser',
   'left out (C3)': 'leftOut',
+  'not needed': 'native',
 };
 
 // The spec's tables, row by row: group, action, the three platforms' keys, the status.

@@ -1142,6 +1142,10 @@ export const EXACT: Readonly<Record<string, string>> = {
     'Someone turned on Show spelling suggestions in a text document: misspelt words are underlined again.',
   'UI|Toggled|TextDocumentSpellingSuggestionsOff':
     'Someone turned off Show spelling suggestions in a text document: no misspelt word is underlined.',
+  'UI|Toggled|TextDocumentScreenReaderOn':
+    'Someone turned on screen reader support in a text document, from Tools > Accessibility or its shortcut: the Accessibility menu shows.',
+  'UI|Toggled|TextDocumentScreenReaderOff':
+    'Someone turned off screen reader support in a text document: the Accessibility menu goes.',
   'Pdf|Toggled|DarkPagesOn':
     'Someone turned on Dark pages: PDF pages shown dark for them alone, in the dark colour scheme.',
   'Pdf|Toggled|DarkPagesOff': 'Someone turned off Dark pages: PDF pages shown as the file says.',

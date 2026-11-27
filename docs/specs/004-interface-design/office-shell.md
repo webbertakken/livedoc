@@ -264,7 +264,7 @@ The kind's registry, shown: ⌘/ (Ctrl+/ elsewhere) or Help > Keyboard shortcuts
   opens, and under it every row of the registry by group, in the registry's order, each group under its heading.
 - Each row shows its action, then every way to give it on this platform and browser, in the platform's notation,
   joined by "or" (a way that holds only in another browser is not shown).
-- A row with no way on this platform, or left out (C3), is not listed. A row left to the browser is listed: its keys
+- A row with no way on this platform, left out (C3), or not needed (what it turns on the page does without), is not listed. A row left to the browser is listed: its keys
   work. A row not yet built is listed dimmed, with **Coming soon** after its action, until its phase lands.
 - Typing filters it: a row is shown when every word typed starts a word of its action or its group's name; a group
   left with no row is not shown. With nothing shown it reads **No shortcuts match “…”**. How many rows show is

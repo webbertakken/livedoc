@@ -155,6 +155,7 @@ import {
   pageSelectionPlugin,
 } from '@/lib/text-document/text-document-page-selection';
 import { useTextDocumentWordCount } from './useTextDocumentWordCount';
+import { useTextDocumentScreenReader } from './useTextDocumentScreenReader';
 import { useTextDocumentSpelling } from './useTextDocumentSpelling';
 import { useTextDocumentSpellingSource } from './useTextDocumentSpellingSource';
 import { useTextDocumentColumns } from './useTextDocumentColumns';
@@ -187,6 +188,7 @@ import { TextDocumentEquationToolbar } from './TextDocumentEquationToolbar';
 import { placedPicturesPlugin } from '@/lib/text-document/text-document-picture-placed-plugin';
 import { useTextDocumentBreaks } from '@/lib/text-document/useTextDocumentBreaks';
 import {
+  pageIndexAt,
   paginationPlugin,
   relayoutPages,
   type PageGeometry,
@@ -1216,6 +1218,23 @@ export function TextDocumentSurface({
     pages: paginated && state === 'ready' ? pageList.length : null,
     ownerId,
   });
+  // Screen reader support and the Accessibility menu (tools.md "Accessibility settings").
+  const pagesLaidOut = paginated && state === 'ready' ? pageList.length : null;
+  const screenReader = useTextDocumentScreenReader({
+    view: editorView,
+    activeView,
+    liveDoc,
+    format,
+    pageAt: useCallback(
+      (pos: number) =>
+        editorView && pagesLaidOut !== null
+          ? { page: pageIndexAt(editorView, pos) + 1, pages: pagesLaidOut }
+          : null,
+      [editorView, pagesLaidOut],
+    ),
+    threads,
+    ownerId,
+  });
   const versionHistory = useTextDocumentVersionHistory({
     where: scope,
     local,
@@ -1257,6 +1276,7 @@ export function TextDocumentSurface({
       ...versionHistory.actions,
       ...notifications.actions,
       ...wordCount.actions,
+      ...screenReader.actions,
       ...spelling.actions,
       ...links.actions,
       ...bookmarks.actions,
@@ -1282,6 +1302,7 @@ export function TextDocumentSurface({
       versionHistory.actions,
       notifications.actions,
       wordCount.actions,
+      screenReader.actions,
       spelling.actions,
       links.actions,
       bookmarks.actions,
@@ -1381,6 +1402,7 @@ export function TextDocumentSurface({
         colours={formatting.colours}
         choices={choices}
         refresh={changes.subscribeCaret}
+        screenReader={screenReader.on}
         onFollow={(personId) =>
           editorView ? scrollToTextDocumentPeer(editorView, personId) : false
         }
@@ -1480,6 +1502,8 @@ export function TextDocumentSurface({
           {spelling.dialog}
           {state === 'ready' ? wordCount.box : null}
           {state === 'ready' ? wordCount.dialog : null}
+          {screenReader.dialog}
+          {screenReader.region}
           <div
             ref={scroller}
             data-region="document"

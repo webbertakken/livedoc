@@ -26,7 +26,8 @@ the [dialog](../004-interface-design/office-shell.md#keyboard-shortcuts-dialog) 
 
 Statuses: `specified`, `built (<test>)`, `on a comment (<test>)` (built, heard by a selected comment's card itself, never
 by the writing, [Review](review.md#keys-on-a-selected-comment)), `the browser's` (the key is left to the browser, as Google leaves it),
-`left out (C3)` (its function is a Google service, [Tools](tools.md#google-only-services)).
+`left out (C3)` (its function is a Google service, [Tools](tools.md#google-only-services)), `not needed` (what it turns on,
+LiveDoc's page does without it: braille support, [Tools](tools.md#accessibility-settings)).
 
 ## Common actions
 
@@ -138,20 +139,20 @@ row stands for both.
 
 ## Menus
 
-| Action                           | PC                                               | Mac                      | ChromeOS                    | Status                               |
-| -------------------------------- | ------------------------------------------------ | ------------------------ | --------------------------- | ------------------------------------ |
-| Context (right-click) menu       | `Ctrl+Shift+X or Ctrl+Shift+\ or Shift+F10`      | `⌘+Shift+\ or Shift+F10` | `Ctrl+Shift+X or Shift+F10` | built (`OfficeContextMenu.test.tsx`) |
-| File menu                        | `Alt+F (Chrome) or Alt+Shift+F (other browsers)` | `Ctrl+Option+F`          | `Alt+F`                     | built (`OfficeMenuBar.test.tsx`)     |
-| Edit menu                        | `Alt+E (Chrome) or Alt+Shift+E (other browsers)` | `Ctrl+Option+E`          | `Alt+E`                     | built (`OfficeMenuBar.test.tsx`)     |
-| View menu                        | `Alt+V (Chrome) or Alt+Shift+V (other browsers)` | `Ctrl+Option+V`          | `Alt+V`                     | built (`OfficeMenuBar.test.tsx`)     |
-| Insert menu                      | `Alt+I (Chrome) or Alt+Shift+I (other browsers)` | `Ctrl+Option+I`          | `Alt+I`                     | built (`OfficeMenuBar.test.tsx`)     |
-| Format menu                      | `Alt+O (Chrome) or Alt+Shift+O (other browsers)` | `Ctrl+Option+O`          | `Alt+O`                     | built (`OfficeMenuBar.test.tsx`)     |
-| Tools menu                       | `Alt+T (Chrome) or Alt+Shift+T (other browsers)` | `Ctrl+Option+T`          | `Alt+T`                     | built (`OfficeMenuBar.test.tsx`)     |
-| Help menu                        | `Alt+H (Chrome) or Alt+Shift+H (other browsers)` | `Ctrl+Option+H`          | `Alt+H`                     | built (`OfficeMenuBar.test.tsx`)     |
-| Accessibility menu               | `Alt+A (Chrome) or Alt+Shift+A (other browsers)` | `Ctrl+Option+A`          | `Alt+A`                     | specified                            |
-| Input Tools menu                 | `Ctrl+Alt+Shift+K`                               | `⌘+Option+Shift+K`       | `Ctrl+Alt+Shift+K`          | left out (C3)                        |
-| Toggle input controls            | —                                                | `⌘+Shift+K`              | —                           | left out (C3)                        |
-| Show your browser's context menu | `Shift+right-click`                              | `Shift+right-click`      | `Shift+right-click`         | the browser's                        |
+| Action                           | PC                                               | Mac                      | ChromeOS                    | Status                                         |
+| -------------------------------- | ------------------------------------------------ | ------------------------ | --------------------------- | ---------------------------------------------- |
+| Context (right-click) menu       | `Ctrl+Shift+X or Ctrl+Shift+\ or Shift+F10`      | `⌘+Shift+\ or Shift+F10` | `Ctrl+Shift+X or Shift+F10` | built (`OfficeContextMenu.test.tsx`)           |
+| File menu                        | `Alt+F (Chrome) or Alt+Shift+F (other browsers)` | `Ctrl+Option+F`          | `Alt+F`                     | built (`OfficeMenuBar.test.tsx`)               |
+| Edit menu                        | `Alt+E (Chrome) or Alt+Shift+E (other browsers)` | `Ctrl+Option+E`          | `Alt+E`                     | built (`OfficeMenuBar.test.tsx`)               |
+| View menu                        | `Alt+V (Chrome) or Alt+Shift+V (other browsers)` | `Ctrl+Option+V`          | `Alt+V`                     | built (`OfficeMenuBar.test.tsx`)               |
+| Insert menu                      | `Alt+I (Chrome) or Alt+Shift+I (other browsers)` | `Ctrl+Option+I`          | `Alt+I`                     | built (`OfficeMenuBar.test.tsx`)               |
+| Format menu                      | `Alt+O (Chrome) or Alt+Shift+O (other browsers)` | `Ctrl+Option+O`          | `Alt+O`                     | built (`OfficeMenuBar.test.tsx`)               |
+| Tools menu                       | `Alt+T (Chrome) or Alt+Shift+T (other browsers)` | `Ctrl+Option+T`          | `Alt+T`                     | built (`OfficeMenuBar.test.tsx`)               |
+| Help menu                        | `Alt+H (Chrome) or Alt+Shift+H (other browsers)` | `Ctrl+Option+H`          | `Alt+H`                     | built (`OfficeMenuBar.test.tsx`)               |
+| Accessibility menu               | `Alt+A (Chrome) or Alt+Shift+A (other browsers)` | `Ctrl+Option+A`          | `Alt+A`                     | built (`useTextDocumentScreenReader.test.tsx`) |
+| Input Tools menu                 | `Ctrl+Alt+Shift+K`                               | `⌘+Option+Shift+K`       | `Ctrl+Alt+Shift+K`          | left out (C3)                                  |
+| Toggle input controls            | —                                                | `⌘+Shift+K`              | —                           | left out (C3)                                  |
+| Show your browser's context menu | `Shift+right-click`                              | `Shift+right-click`      | `Shift+right-click`         | the browser's                                  |
 
 The Accessibility menu shows only while screen reader support is on.
 
@@ -186,24 +187,24 @@ The Accessibility menu shows only while screen reader support is on.
 
 ## Screen reader
 
-| Action                                 | PC                          | Mac                 | ChromeOS                    | Status    |
-| -------------------------------------- | --------------------------- | ------------------- | --------------------------- | --------- |
-| Enable screen reader support           | `Ctrl+Alt+Z or Alt+Shift+~` | `⌘+Option+Z`        | `Ctrl+Alt+Z or Alt+Shift+~` | specified |
-| Enable braille support                 | `Ctrl+Alt+H`                | `⌘+Option+H`        | `Ctrl+Alt+H`                | specified |
-| Verbalize selection                    | `Ctrl+Alt+A, X`             | `Ctrl+⌘+A, X`       | `Ctrl+Alt+A, X`             | specified |
-| Verbalize from cursor location         | `Ctrl+Alt+A, R`             | `Ctrl+⌘+A, R`       | `Ctrl+Alt+A, R`             | specified |
-| Announce cursor location               | `Ctrl+Alt+A, L`             | `Ctrl+⌘+A, L`       | `Ctrl+Alt+A, L`             | specified |
-| Announce formatting at cursor location | `Ctrl+Alt+A, F`             | `Ctrl+⌘+A, F`       | `Ctrl+Alt+A, F`             | specified |
-| Verbalize table row and column headers | `Ctrl+Alt+Shift+T, H`       | `Ctrl+⌘+Shift+T, H` | `Ctrl+Alt+Shift+T, H`       | specified |
-| Verbalize table cell location          | `Ctrl+Alt+Shift+T, N`       | `Ctrl+⌘+Shift+T, N` | `Ctrl+Alt+Shift+T, N`       | specified |
-| Verbalize table row header             | `Ctrl+Alt+Shift+T, R`       | `Ctrl+⌘+Shift+T, R` | `Ctrl+Alt+Shift+T, R`       | specified |
-| Verbalize table column header          | `Ctrl+Alt+Shift+T, C`       | `Ctrl+⌘+Shift+T, C` | `Ctrl+Alt+Shift+T, C`       | specified |
-| Show live edits                        | `Ctrl+Alt+Shift+R`          | `⌘+Option+Shift+R`  | `Ctrl+Alt+Shift+R`          | specified |
-| Verbalize comment                      | `Ctrl+Alt+A, C`             | `Ctrl+⌘+A, C`       | `Ctrl+Alt+A, C`             | specified |
-| Verbalize comment anchor               | `Ctrl+Alt+A, A`             | `Ctrl+⌘+A, A`       | `Ctrl+Alt+A, A`             | specified |
-| Verbalize selection formatting         | `Ctrl+Alt+A, S`             | `Ctrl+⌘+A, S`       | `Ctrl+Alt+A, S`             | specified |
-| Verbalize cursor location              | `Ctrl+Alt+Shift+A, L`       | `Ctrl+⌘+A, L`       | `Ctrl+Alt+Shift+A, L`       | specified |
-| Verbalize word count                   | `Ctrl+Alt+Shift+A, W`       | `Ctrl+⌘+A, W`       | `Ctrl+Alt+Shift+A, W`       | specified |
+| Action                                 | PC                          | Mac                 | ChromeOS                    | Status                                         |
+| -------------------------------------- | --------------------------- | ------------------- | --------------------------- | ---------------------------------------------- |
+| Enable screen reader support           | `Ctrl+Alt+Z or Alt+Shift+~` | `⌘+Option+Z`        | `Ctrl+Alt+Z or Alt+Shift+~` | built (`useTextDocumentScreenReader.test.tsx`) |
+| Enable braille support                 | `Ctrl+Alt+H`                | `⌘+Option+H`        | `Ctrl+Alt+H`                | not needed                                     |
+| Verbalize selection                    | `Ctrl+Alt+A, X`             | `Ctrl+⌘+A, X`       | `Ctrl+Alt+A, X`             | built (`useTextDocumentScreenReader.test.tsx`) |
+| Verbalize from cursor location         | `Ctrl+Alt+A, R`             | `Ctrl+⌘+A, R`       | `Ctrl+Alt+A, R`             | built (`useTextDocumentScreenReader.test.tsx`) |
+| Announce cursor location               | `Ctrl+Alt+A, L`             | `Ctrl+⌘+A, L`       | `Ctrl+Alt+A, L`             | built (`useTextDocumentScreenReader.test.tsx`) |
+| Announce formatting at cursor location | `Ctrl+Alt+A, F`             | `Ctrl+⌘+A, F`       | `Ctrl+Alt+A, F`             | built (`useTextDocumentScreenReader.test.tsx`) |
+| Verbalize table row and column headers | `Ctrl+Alt+Shift+T, H`       | `Ctrl+⌘+Shift+T, H` | `Ctrl+Alt+Shift+T, H`       | built (`useTextDocumentScreenReader.test.tsx`) |
+| Verbalize table cell location          | `Ctrl+Alt+Shift+T, N`       | `Ctrl+⌘+Shift+T, N` | `Ctrl+Alt+Shift+T, N`       | built (`useTextDocumentScreenReader.test.tsx`) |
+| Verbalize table row header             | `Ctrl+Alt+Shift+T, R`       | `Ctrl+⌘+Shift+T, R` | `Ctrl+Alt+Shift+T, R`       | built (`useTextDocumentScreenReader.test.tsx`) |
+| Verbalize table column header          | `Ctrl+Alt+Shift+T, C`       | `Ctrl+⌘+Shift+T, C` | `Ctrl+Alt+Shift+T, C`       | built (`useTextDocumentScreenReader.test.tsx`) |
+| Show live edits                        | `Ctrl+Alt+Shift+R`          | `⌘+Option+Shift+R`  | `Ctrl+Alt+Shift+R`          | specified                                      |
+| Verbalize comment                      | `Ctrl+Alt+A, C`             | `Ctrl+⌘+A, C`       | `Ctrl+Alt+A, C`             | built (`useTextDocumentScreenReader.test.tsx`) |
+| Verbalize comment anchor               | `Ctrl+Alt+A, A`             | `Ctrl+⌘+A, A`       | `Ctrl+Alt+A, A`             | built (`useTextDocumentScreenReader.test.tsx`) |
+| Verbalize selection formatting         | `Ctrl+Alt+A, S`             | `Ctrl+⌘+A, S`       | `Ctrl+Alt+A, S`             | built (`useTextDocumentScreenReader.test.tsx`) |
+| Verbalize cursor location              | `Ctrl+Alt+Shift+A, L`       | `Ctrl+⌘+A, L`       | `Ctrl+Alt+Shift+A, L`       | built (`useTextDocumentScreenReader.test.tsx`) |
+| Verbalize word count                   | `Ctrl+Alt+Shift+A, W`       | `Ctrl+⌘+A, W`       | `Ctrl+Alt+Shift+A, W`       | built (`useTextDocumentScreenReader.test.tsx`) |
 
 ## Document navigation
 

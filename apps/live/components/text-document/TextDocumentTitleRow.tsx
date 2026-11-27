@@ -78,6 +78,7 @@ export function TextDocumentTitleRow({
   mode = null,
   caret = null,
   proposals = null,
+  screenReader = false,
 }: {
   scope: TextDocumentScope;
   documentName: string;
@@ -108,9 +109,14 @@ export function TextDocumentTitleRow({
   caret?: { point: () => Point | null; place: (point: Point) => void } | null;
   // Suggesting drawn above a Participant's level: what can be suggested runs above it (review.md "While suggesting").
   proposals?: OfficeProposals | null;
+  // Screen reader support is on: the Accessibility menu shows (tools.md "Accessibility settings").
+  screenReader?: boolean;
 }) {
   const [problem, setProblem] = useState<string | null>(null);
-  const catalogue = useMemo(() => textDocumentMenus(format), [format]);
+  const catalogue = useMemo(
+    () => textDocumentMenus(format, { screenReader }),
+    [format, screenReader],
+  );
   const contextMenu = useMemo(
     () =>
       caret
