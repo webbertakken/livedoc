@@ -36,6 +36,7 @@ import {
   odsTableRecordAttributes,
   withDatabaseRanges,
 } from './ods-tables';
+import { odsFilterRecordAttributes } from './ods-filters';
 import {
   isOpenAt,
   odsProtectionAttributes,
@@ -319,8 +320,10 @@ function tableXml(sheet: FileSheet, index: number, out: Omit<Out, 'sheet' | 'ind
   const guarded = odsProtectionAttributes(sheet.protections);
   // Its tables' record beside its protections' (standard-mapping.md "Tables in the file").
   const tabled = odsTableRecordAttributes(sheet, guarded !== '');
+  // Its filter's record (standard-mapping.md "Filters in the file").
+  const filtered = odsFilterRecordAttributes(sheet, guarded !== '' || tabled !== '');
   return [
-    `<table:table table:name="${escapeXmlAttribute(sheet.name)}"${tableStyleAttribute(sheet, out.styles)}${guarded}${tabled}${kept.tableAttributes(index, standardProtectionOf(sheet.protections) !== undefined)}>`,
+    `<table:table table:name="${escapeXmlAttribute(sheet.name)}"${tableStyleAttribute(sheet, out.styles)}${guarded}${tabled}${filtered}${kept.tableAttributes(index, standardProtectionOf(sheet.protections) !== undefined)}>`,
     ...before,
     ...columnsXml(cols, colAxis),
     ...rowAxis.nest(runs, 'table-row-group'),

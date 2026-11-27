@@ -48,7 +48,14 @@ import { fileProtectionsOf, protectionsFromFile, type FileProtection } from './f
 import { fileTablesOf, tablesFromFile, type FileTable } from './file-tables';
 import type { FileAt, KeptItem } from './kept-content';
 import type { NamedFunction } from '../named-functions';
-import { fileLinesOf, layoutFromLines, type FileLines } from './file-lines';
+import { fileLinesOf, layoutFromLines, withFilteredRows, type FileLines } from './file-lines';
+import {
+  fileFiltersOf,
+  filtersFromFile,
+  type FileFilter,
+  type FileFilterView,
+} from './file-filters';
+import { filteredOutRows } from '../filter';
 import type { KeptContent, StoredAt } from './kept-content';
 import { bandingRules } from '../rules/bandings';
 import { STANDARD_THEME, type SpreadsheetTheme } from '../themes/spreadsheet-theme';
@@ -105,6 +112,9 @@ export type FileSheet = {
   pivots?: FilePivot[];
   // Its pivot tables no file can hold (a source deleted), left out (D607).
   pivotsLeft?: number;
+  // Its filter and filter views (standard-mapping.md "Filters in the file").
+  filter?: FileFilter;
+  filterViews?: FileFilterView[];
 };
 
 /**
@@ -190,6 +200,13 @@ export type FileLoss =
   // since, the standard form read (logged only); one LiveDoc cannot hold, left as plain cells (kept for the file when
   // its reader kept it).
   | { k: 'tables_changed'; sheet: string }
+  // Filters (standard-mapping.md "Filters in the file"): a column whose form LiveDoc has no condition for, named at
+  // its header; a view past the most a sheet holds, by its name; LiveDoc's record dropped for the standard form.
+  | { k: 'filter_unread'; sheet: string; r: number; c: number }
+  | { k: 'filter_view_unread'; sheet: string; name: string }
+  | { k: 'filters_changed'; sheet: string }
+  // A filter over part of a table (D480), kept as it is: logged once a read or a write, never reported.
+  | { k: 'filter_beside_table'; sheet: string }
   | { k: 'table_unread'; sheet: string; name: string }
   // Pivot tables (standard-mapping.md "Pivot tables in the file"): one with no source, left out of a write; LiveDoc's
   // record beside a standard form another app changed since, the standard form read instead (D607, logged); another
@@ -300,12 +317,22 @@ export function workbookFileOf(
       // Its pivot tables, and the cells their outputs cache (D604).
       const pivoted = filePivotsOf(engine, sheet, sheets, locale);
       cells.push(...pivoted.cells);
+      // Its filter and views; the rows its filter hides marked on its lines (standard-mapping.md "Filters in the file").
+      const filters = fileFiltersOf(sheet.layout, new Set(sheet.layout.hiddenRows ?? []), ctx, {
+        locale: engine.locale,
+        today: engine.today(),
+      });
+      const filtered = [...filteredOutRows(engine, sheet.id)].flatMap((id) => {
+        const r = index.rowPos.get(id);
+        return r === undefined ? [] : [r];
+      });
+      const lines = withFilteredRows(fileLinesOf(sheet.layout), filtered);
       return {
         name: sheet.title,
         rows: sheet.layout.rows.length,
         cols: sheet.layout.cols.length,
         cells: inOrder(cells),
-        lines: fileLinesOf(sheet.layout),
+        lines,
         ...(sheet.layout.tabColour ? { tabColour: sheet.layout.tabColour } : {}),
         ...(sheet.layout.hidden ? { hidden: true as const } : {}),
         ...(formatRules ? { formatRules } : {}),
@@ -315,6 +342,7 @@ export function workbookFileOf(
         ...(tables ? { tables } : {}),
         ...(pivoted.pivots.length ? { pivots: pivoted.pivots } : {}),
         ...(pivoted.unwritten ? { pivotsLeft: pivoted.unwritten } : {}),
+        ...filters,
       };
     }),
     ...(engine.theme === STANDARD_THEME ? {} : { theme: engine.theme }),
@@ -645,8 +673,10 @@ export function sheetsFromFile(
     if (pivots.refused > 0) losses.push({ k: 'pivot_changed', sheet: m.title });
     const objects = [...charts, ...pivots.pivots];
     const protections = protectionsFromFile(m.file.protections, m.layout, m.title, rand, losses);
+    const filters = filtersFromFile(m.file, m.layout, { sheet: m.title, rand, losses, ctx });
     const layout = {
       ...m.layout,
+      ...filters,
       ...(protections ? { protections } : {}),
       ...(rules ? { rules } : {}),
       ...(formatRules ? { formatRules } : {}),

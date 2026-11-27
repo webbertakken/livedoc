@@ -29,7 +29,7 @@ import { readOdsDataPilot } from './ods-pivots-read';
 import { parseOdfRange } from './ods-pivot-standard';
 import { withDataPilots } from './ods-pivots';
 import { readXlsxCache, readXlsxPivotTable } from './xlsx-pivots-read';
-import { withPivotCaches } from './xlsx-kept-write';
+import { withinKept } from './xlsx-kept-write';
 
 const record = WorkbookRecord.create({ locale: 'en-US', timeZone: 'UTC' });
 const BY = { id: 'x', name: 'x', color: '#000000' };
@@ -667,6 +667,9 @@ describe('reading another app’s pivot table parts', () => {
       '<table:data-pilot-tables><p/></table:data-pilot-tables>',
       '<table:dde-links/>',
     ]);
-    expect(withPivotCaches([], [])).toEqual([]);
+    expect(withinKept([], 'pivotCaches', [])).toEqual([]);
+    expect(withinKept(['<x:pivotCaches/>'], 'pivotCaches', ['<p/>'])).toEqual([
+      '<x:pivotCaches><p/></x:pivotCaches>',
+    ]);
   });
 });

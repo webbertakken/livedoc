@@ -25,6 +25,8 @@ export const SHEET_REFUSAL_WORDS: Readonly<Record<SheetError, string>> = {
   objects_full: 'a sheet holds up to 100 charts.',
   pivot_cell:
     "you can't edit a pivot table's cells: change the pivot table, or write outside its output.",
+  filter_overlaps_table:
+    "a sheet's filter over a table covers exactly its header and data rows (the table's filter): filter the table's cells only, or remove the filter first.",
   tab_not_found: 'no such tab in this document.',
   sheet_name_invalid:
     "a sheet's name is 1 to 100 characters, never ' at either end, and none of [ ] * ? / \\ :.",

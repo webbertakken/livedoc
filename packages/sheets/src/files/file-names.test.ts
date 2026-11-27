@@ -242,8 +242,9 @@ describe('XLSX names read', () => {
       { k: 'name_unread', name: 'Mine' },
       { k: 'function_unread', name: 'Local' },
     ]);
+    // Excel's filter range is LiveDoc's to write again (standard-mapping.md "Filters in the file"): never kept.
     expect(read.file.kept!.items.filter((i) => i.xml.startsWith('<definedName'))).toHaveLength(
-      names.length,
+      names.length - 1,
     );
     expect(importReport(read.losses).map(importReportLine)).toEqual([
       '8 named ranges LiveDoc cannot read are kept for the file: Rate, Two, Col and more',

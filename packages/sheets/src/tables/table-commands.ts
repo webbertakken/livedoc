@@ -1,6 +1,7 @@
 // Convert to Table (docs/specs/029-sheets/data-tools.md "Tables"): the selection, or the data around the active cell,
 // made a table at once with its banding, its columns' types guessed (D441); refused, with a named reason, over another
 // table, a merge, a banding reaching outside it, or past a sheet's tables.
+import { TABLE_OVERLAPS_FILTER } from './table-filter';
 import type { Workbook } from '../engine/workbook';
 import { makeAxisIds } from '../ids';
 import { idRangeOf, layoutIndex, posRangeOf } from '../layout';
@@ -32,7 +33,7 @@ import {
   type TableColumnType,
 } from './table';
 
-export type TableRefusal = 'overlap' | 'merge' | 'banding' | 'full';
+export type TableRefusal = 'overlap' | 'merge' | 'banding' | 'full' | 'filter';
 
 /** What Convert to Table says when it cannot make one (data-tools.md "Tables"). */
 export const TABLE_REFUSAL_COPY: Readonly<Record<TableRefusal, string>> = {
@@ -40,6 +41,7 @@ export const TABLE_REFUSAL_COPY: Readonly<Record<TableRefusal, string>> = {
   merge: 'Unmerge cells before making a table',
   banding: "Alternating colours can't overlap",
   full: `A sheet holds up to ${TABLES_MAX} tables`,
+  filter: TABLE_OVERLAPS_FILTER,
 };
 
 export type ConvertToTable =
@@ -124,6 +126,14 @@ export function convertToTable(
     })
   )
     return { ok: false, reason: 'overlap' };
+  // The sheet's filter may be over exactly the new table, becoming its filter, and nowhere else on it (D481).
+  const filter = layout.filter && at(layout.filter);
+  if (
+    filter &&
+    meets(filter, box) &&
+    !(filter.r1 === box.r1 && filter.c1 === box.c1 && filter.r2 === box.r2 && filter.c2 === box.c2)
+  )
+    return { ok: false, reason: 'filter' };
   if (
     (layout.merges ?? []).some((m) => {
       const p = at(m);

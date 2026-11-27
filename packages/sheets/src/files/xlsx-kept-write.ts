@@ -109,6 +109,7 @@ function inOrder(
 
 // The worksheet's children the schema allows once: LiveDoc's own go inside a kept one, after its children.
 const MERGED: ReadonlySet<string> = new Set([
+  'customSheetViews',
   'protectedRanges',
   'dataValidations',
   'tableParts',
@@ -120,7 +121,7 @@ const COUNTED: Readonly<Record<string, RegExp>> = {
   tableParts: /<(?:[\w.-]+:)?tablePart[\s/>]/g,
 };
 // The worksheet's children LiveDoc's own replaces, kept or not.
-const REPLACED: ReadonlySet<string> = new Set(['sheetProtection']);
+const REPLACED: ReadonlySet<string> = new Set(['sheetProtection', 'autoFilter']);
 
 // A kept child with LiveDoc's own of the same name inside it, after its children; a `dataValidations`' or a
 // `tableParts`' count made its children's again.
@@ -254,6 +255,8 @@ export class XlsxKeptWriter {
     // LiveDoc's own `pivotCache` entries, after the kept ones in one `pivotCaches` (standard-mapping.md "Pivot tables
     // in the file").
     pivotCaches: readonly string[] = [],
+    // LiveDoc's own `customWorkbookView`s, its filter views' names, after the kept ones in one `customWorkbookViews`.
+    views: readonly string[] = [],
   ): string[] {
     const kept: string[] = [];
     const names: string[] = [];
@@ -285,7 +288,12 @@ export class XlsxKeptWriter {
     }
     names.push(...functions.names);
     if (names.length > 0) kept.push(`<definedNames>${names.join('')}</definedNames>`);
-    return inOrder(WORKBOOK_ORDER, withPivotCaches(kept, pivotCaches), own);
+    const held = withinKept(
+      withinKept(kept, 'pivotCaches', pivotCaches),
+      'customWorkbookViews',
+      views,
+    );
+    return inOrder(WORKBOOK_ORDER, held, own);
   }
 
   /** The highest `cacheId` a kept `pivotCaches` holds (-1 for none), so LiveDoc's own caches follow it. */
@@ -392,13 +400,16 @@ export class XlsxKeptWriter {
 
 /** Relationship ids for LiveDoc's own relationships of a part: `rId1`, `rId2`, ... none a kept one has. */
 /** Kept workbook children with LiveDoc's own pivot caches in the kept `pivotCaches`, after its own, or in one of theirs. */
-export function withPivotCaches(kept: readonly string[], own: readonly string[]): string[] {
+/** Kept workbook children with LiveDoc's own entries inside the kept holder of `name`, after its children, else one of their own. */
+export function withinKept(
+  kept: readonly string[],
+  name: string,
+  own: readonly string[],
+): string[] {
   if (own.length === 0) return [...kept];
-  const at = kept.findIndex((xml) => keptLocalName(xml) === 'pivotCaches');
-  if (at < 0) return [...kept, `<pivotCaches>${own.join('')}</pivotCaches>`];
-  const holder = kept[at]!;
-  const close = holder.lastIndexOf('</');
-  return kept.with(at, holder.slice(0, close) + own.join('') + holder.slice(close));
+  const at = kept.findIndex((xml) => keptLocalName(xml) === name);
+  if (at < 0) return [...kept, `<${name}>${own.join('')}</${name}>`];
+  return kept.with(at, mergedChild(kept[at]!, `<${name}>${own.join('')}</${name}>`));
 }
 
 export function ownIds(kept: readonly Relationship[]): () => string {

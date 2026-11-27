@@ -363,6 +363,11 @@ describe('gridMenuBindings', () => {
     expect(gridMenuBindings(port({ filtered: true }))['create-a-filter']!.label).toBe(
       'Remove Filter',
     );
+    // Over part of a table, dimmed with why (data-tools.md, D481); a filter on the sheet can still be removed.
+    const near = gridMenuBindings(port({ filterNote: 'Overlaps Table1' }))['create-a-filter']!;
+    expect([near.disabled, near.note]).toEqual([true, 'Overlaps Table1']);
+    const on = gridMenuBindings(port({ filtered: true, filterNote: 'Overlaps Table1' }));
+    expect(on['create-a-filter']!.disabled).toBeUndefined();
   });
 
   // data-tools.md "Sort": an Editor's, as every sort is.

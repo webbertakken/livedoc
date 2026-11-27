@@ -230,6 +230,8 @@ export class XlsxKeeper {
     sheets: readonly XmlElement[],
     read: ReadonlyMap<number, number>,
     claim: Claim,
+    // The workbook's elements LiveDoc reads (its filter views' `customWorkbookView`s), so not kept.
+    held: ReadonlySet<XmlElement> = new Set(),
   ): void {
     this.keepRelationships('', 'package', {}, new Set());
     // The sheets' relationships are LiveDoc's to write (its `sheets`), whatever kind of sheet each names.
@@ -239,7 +241,7 @@ export class XlsxKeeper {
     for (const child of childElements(parsed.root)) {
       if (child.uri === SPREADSHEETML_NS && WORKBOOK_READ.has(child.local)) continue;
       if (child.uri !== SPREADSHEETML_NS || child.local !== 'definedNames') {
-        this.element('workbook', parsed, child, {}, ids);
+        if (!allRead(child, held)) this.element('workbook', parsed, child, {}, ids, held);
         continue;
       }
       for (const name of childElements(child)) {
