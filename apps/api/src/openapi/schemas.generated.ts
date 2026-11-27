@@ -13208,8 +13208,7 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
   "ProtectionSimplified": {
     "enum": [
       "ranges",
-      "warnings",
-      "exceptions"
+      "warnings"
     ],
     "type": "string"
   },
