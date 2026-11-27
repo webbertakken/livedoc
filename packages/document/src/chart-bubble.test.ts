@@ -116,14 +116,29 @@ describe('bubble names and readouts', () => {
     expect(bubbleNames(m, ['', 'B']).map((n) => n.text)).toEqual(['B']);
   });
 
-  it('reads name, y, x, size when named, else x · series: y, size', () => {
+  it('reads as a scatter point a line each, its size last against the size series’ name', () => {
     const series = [S('Score', [40, 70]), S('Speed', [90, null])];
-    expect(bubbleReadout(['1', '15'], series, ['Haiku', 'Opus'], 0, 0)).toBe('Haiku, 40, 1, 90');
-    expect(bubbleReadout(['1', '15'], series, undefined, 0, 0)).toBe('1 · Score: 40, 90');
-    expect(bubbleReadout(['1', '15'], series, ['Haiku', ''], 0, 1)).toBe('15 · Score: 70');
-    expect(bubbleReadout(['1'], [S('Y', [5])], undefined, 0, 0)).toBe('1 · Y: 5');
-    expect(bubbleReadout([], [], undefined, 0, 0)).toBe(' · : null');
-    expect(bubbleReadout([], series, ['Haiku'], 0, 0)).toBe('Haiku, 40, , 90');
+    const titles = { x: 'Cost ($/M)', y: 'Coding index' };
+    expect(bubbleReadout(['1', '15'], series, ['Haiku', 'Opus'], titles, { s: 0, i: 0 })).toEqual([
+      'Haiku',
+      'Coding index: 40',
+      'Cost: 1',
+      'Speed: 90',
+    ]);
+    // Unnamed, untitled, no size there: the series heads it, the axes read y and x, no size line.
+    expect(bubbleReadout(['1', '15'], series, ['Haiku', ''], undefined, { s: 0, i: 1 })).toEqual([
+      'Score',
+      'y: 70',
+      'x: 15',
+    ]);
+    expect(bubbleReadout(['1'], [S('Y', [5])], undefined, undefined, { s: 0, i: 0 })).toEqual([
+      'Y',
+      'y: 5',
+      'x: 1',
+    ]);
+    expect(
+      bubbleReadout([], [S('A', [1]), S('', [2])], undefined, undefined, { s: 3, i: 0 }),
+    ).toEqual(['', 'y: null', 'x: ', 'size: 2']);
   });
 });
 

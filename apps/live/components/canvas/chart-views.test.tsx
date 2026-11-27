@@ -207,7 +207,7 @@ describe('chart views', () => {
     expect(container.textContent).toContain('Score');
     expect(container.textContent).not.toContain('Speed');
     fireEvent.pointerEnter(bubbles[1]!);
-    expect(container.textContent).toContain('S, 4, 2, 1');
+    expect(container.textContent).toContain('Sy: 4x: 2Speed: 1');
   });
 
   it('draws candlesticks, a falling one filled, OHLC ticks, and reads a hovered mark (Candlestick and OHLC, D322)', () => {

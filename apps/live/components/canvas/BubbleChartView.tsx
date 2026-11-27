@@ -2,8 +2,8 @@
 
 // A Bubble chart (docs/specs/009-elements/pie-chart.md "Bubble", D320): a scatter's axes, each point a circle whose
 // area is in proportion to its size (the last of two or more series), filled at 60%, largest first, names inside
-// where they fit, from the marks the export draws too (bubbleMarks). A bubble's readout reads `name, y, x, size` when
-// named, else `x · series: y, size`.
+// where they fit, from the marks the export draws too (bubbleMarks). A bubble's readout is a scatter point's, its size
+// on a last line.
 import {
   BUBBLE_FILL_OPACITY,
   BUBBLE_NAME_FONT_PX,
@@ -71,7 +71,13 @@ export function BubbleChartView({
           <ChartReadout
             leftPct={(hovered.x / w) * 100}
             topPct={(hovered.y / h) * 100}
-            text={bubbleReadout(categories, series, element.linePointNames, hover.s, hover.i)}
+            lines={bubbleReadout(
+              categories,
+              series,
+              element.linePointNames,
+              element.chartAxisTitles,
+              hover,
+            )}
           />
         ) : null
       }

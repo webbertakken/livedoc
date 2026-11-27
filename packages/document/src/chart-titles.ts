@@ -74,3 +74,11 @@ export function chartTitles(
     });
   return { area: plot, texts };
 }
+
+/**
+ * An axis's label in a readout: its title up to its first " (", so a unit or a note in brackets stays on the axis; the
+ * fallback for an axis with no title (pie-chart.md "A scatter point's readout").
+ */
+export function axisReadoutLabel(title: string | undefined, fallback: string): string {
+  return title?.split(' (')[0]!.trim() || fallback;
+}

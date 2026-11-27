@@ -192,8 +192,8 @@ Chart" and a screen reader hears "Column chart", as the palette's tile says, nev
   - Each bubble is filled in its series' colour at 60% with a 1 px edge of it, the largest drawn first so a small
     one is never hidden under a large one. A named point's name is written in its bubble, in the ink that reads on
     its colour, when it fits; a bubble too small for its name shows it in its readout only.
-  - A bubble's readout reads `name, y, x, size` when named, else `x · series: y, size`. Show Values prints its y over
-    its top edge.
+  - A bubble's readout is a scatter point's (A scatter point's readout, below) with its size on a last line, against
+    the size series' name (`Speed: 90`); with no sizes, none. Show Values prints its y over its top edge.
   - Google's colour group column (a text column between the y and the size) is not read: such a column is a series
     of no values. Stacking, Smooth Line, the right-hand axis and a scatter series' line are ignored and kept (default,
     D320).
