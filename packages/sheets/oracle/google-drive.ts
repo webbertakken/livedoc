@@ -118,7 +118,10 @@ export function oracleDrive(
         ['valueRenderOption', 'UNFORMATTED_VALUE'],
         ['dateTimeRenderOption', 'SERIAL_NUMBER'],
       ]).toString();
-      const res = await call('values', `${SHEETS_API}/v4/spreadsheets/${id}/values:batchGet?${query}`);
+      const res = await call(
+        'values',
+        `${SHEETS_API}/v4/spreadsheets/${id}/values:batchGet?${query}`,
+      );
       const { valueRanges } = (await res.json()) as { valueRanges?: { values?: unknown[][] }[] };
       return ranges.map((_, i) => valueRanges?.[i]?.values ?? []);
     },

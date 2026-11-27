@@ -143,7 +143,10 @@ describe('the Sheets API', () => {
     const { fake, upload } = setup();
     const sheet = await upload(GOOGLE_SHEET_MIME, BINARY);
     const plain = await upload(XLSX_MIME, BINARY);
-    fake.get(sheet.id)!.values["'Rows'!A1:B2"] = [['Region', 'SUM of Units'], ['East', 3]];
+    fake.get(sheet.id)!.values["'Rows'!A1:B2"] = [
+      ['Region', 'SUM of Units'],
+      ['East', 3],
+    ];
     const sheets = (id: string, query: string) =>
       fake.fetch(`https://sheets.googleapis.com/v4/spreadsheets/${id}/values:batchGet${query}`, {
         headers: { Authorization: `Bearer ${fake.issueAccessToken('me')}` },
@@ -152,7 +155,13 @@ describe('the Sheets API', () => {
     expect(await (await sheets(sheet.id, q)).json()).toEqual({
       spreadsheetId: sheet.id,
       valueRanges: [
-        { range: "'Rows'!A1:B2", values: [['Region', 'SUM of Units'], ['East', 3]] },
+        {
+          range: "'Rows'!A1:B2",
+          values: [
+            ['Region', 'SUM of Units'],
+            ['East', 3],
+          ],
+        },
         { range: 'Other!A1' },
       ],
     });

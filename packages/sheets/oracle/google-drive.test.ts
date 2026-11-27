@@ -66,9 +66,15 @@ describe('oracleDrive', () => {
   it('reads ranges of values, none for a range Google answers empty', async () => {
     const { fake, drive } = setup();
     const id = await drive.uploadAsSheet('Pivots', BYTES, XLSX_MIME);
-    fake.get(id)!.values["'Rows'!A1:B2"] = [['Region', 'SUM of Units'], ['East', 3]];
+    fake.get(id)!.values["'Rows'!A1:B2"] = [
+      ['Region', 'SUM of Units'],
+      ['East', 3],
+    ];
     expect(await drive.values(id, ["'Rows'!A1:B2", 'Other!A1'])).toEqual([
-      [['Region', 'SUM of Units'], ['East', 3]],
+      [
+        ['Region', 'SUM of Units'],
+        ['East', 3],
+      ],
       [],
     ]);
     const err = await failure(drive.values('nope', ['A1']));
