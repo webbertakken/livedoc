@@ -66,10 +66,10 @@ function entriesOf(loss: FileLoss): Entry[] {
     case 'format_rule_unread':
     case 'validation_rule_unread':
       return [[loss.k, 1, cellName(loss.sheet, loss.r, loss.c)]];
-    // The other app's change is read as it left it: logged with the read's losses, never reported (D294).
+    // The other app's change is read as it left it (D294, D349), and a protection the grid cannot hold leaves its cells
+    // as the sheet's others: logged with the read's losses, never reported.
     case 'validation_rule_changed':
     case 'protection_changed':
-    // A protection the grid cannot hold: logged with the read's losses; its cells stay as the sheet's others.
     case 'protection_unread':
       return [];
     case 'sheet_cut':
