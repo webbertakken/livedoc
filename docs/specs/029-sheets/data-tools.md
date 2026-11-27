@@ -213,7 +213,9 @@ sheet's, seen by everyone, kept by row and column ids as a named range is.
   dropdown rule's) and Checkbox; People and the smart chip types are left out (C3).
   - Number, Percent, Currency, Date, Time and Date Time give the column's data cells their number format when set;
     Dropdown and Checkbox draw their cells as a dropdown's chips and a tick box, as validation draws them, without a
-    rule of their own.
+    rule of their own. A column made Dropdown offers its values as they read, once each, in their order (D449).
+  - The type's rule is the table's, never a rule of the sheet's: a rule the sheet holds over the same cells comes
+    first, and the type's grows, shrinks and goes with the table.
   - A data cell whose value is not its column's type (text in a Number column, an option not in a Dropdown's) is
     **flagged and kept**, as Google's: its value stays, a warning triangle marks it and its hover card says
     "Expected a number" (a date, a time, a date and time, one of the options, a tick box value). An empty cell and an
@@ -325,6 +327,8 @@ The code cites each by its id.
   a rename, a column, a type or the total row), and never crosses into a protected range. The room judges a
   Participant's layout write as exactly the growth its own cells make, or that growth taken back by their undo
   clearing a value in the row it gives up; anything else is refused (403, `[sheets] sheet.table_growth.refused`).
+- **D449** A column made Dropdown: its options are its data cells' values as they read, once each (case aside), in
+  their order, up to a dropdown's 500 (default).
 - **D302** A named function's limits: a name up to 254 characters (Google's), up to 20 placeholders, a definition up
   to 2,000 characters, a description up to 1,000, an argument's description and example up to 200 each (default).
 - **D345** A protection's bounds: up to 100 a sheet, 50 exceptions a protected sheet, a description up to 200
