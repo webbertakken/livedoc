@@ -428,5 +428,23 @@
       "answers_differ",
       "kept"
     ]
+  },
+  "google/smart-chips.ods": {
+    "read": {
+      "entries_dropped": 1
+    },
+    "written": {},
+    "reread": {},
+    "converted": [
+      "kept"
+    ]
+  },
+  "google/smart-chips.xlsx": {
+    "read": {},
+    "written": {},
+    "reread": {},
+    "converted": [
+      "kept"
+    ]
   }
 }

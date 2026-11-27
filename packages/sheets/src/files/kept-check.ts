@@ -43,6 +43,7 @@ const PLACES: Readonly<Record<KeptStandard, ReadonlySet<KeptPlace>>> = {
     'table-attribute',
     'cell',
     'cell-after',
+    'cell-text',
     'cell-attribute',
   ]),
   ooxml: new Set<KeptPlace>([

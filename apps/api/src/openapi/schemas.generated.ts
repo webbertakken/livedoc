@@ -9556,6 +9556,7 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
       "table-attribute",
       "cell",
       "cell-after",
+      "cell-text",
       "cell-attribute",
       "workbook",
       "workbook-attribute",

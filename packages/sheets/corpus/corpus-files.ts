@@ -61,3 +61,10 @@ export const GOOGLE_FUNCTIONS: WorkbookFile = {
     },
   ],
 };
+
+// The plain sheet Google's smart chips are added beside (make-corpus.make.ts, CORPUS_SOURCE=google-chips).
+export const SMART_CHIPS: WorkbookFile = {
+  sheets: [
+    { name: 'Plain', rows: 1, cols: 1, cells: [{ r: 0, c: 0, value: { k: 's', v: 'Plain' } }] },
+  ],
+};

@@ -183,6 +183,7 @@ describe('googleAnswers', () => {
   it('joins a failed delete to the failure it follows', async () => {
     const failing: OracleDrive = {
       uploadAsSheet: async () => 'id1',
+      update: async () => {},
       setLocale: async () => {
         throw new Error('locale answered 400');
       },
