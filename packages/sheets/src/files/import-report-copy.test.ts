@@ -16,6 +16,14 @@ describe('the import report’s copy', () => {
     const cases: [ReportedLoss, string][] = [
       [{ k: 'sheets_cut', count: 3, names: [] }, '3 sheets past the 200th are left out'],
       [{ k: 'sheets_cut', count: 1, names: [] }, '1 sheet past the 200th is left out'],
+      [
+        { k: 'pivot_unread', count: 2, names: ['A', 'B'] },
+        '2 pivot tables LiveDoc cannot work out are kept as the file holds them: A and B',
+      ],
+      [
+        { k: 'pivot_unread', count: 1, names: ['A'] },
+        '1 pivot table LiveDoc cannot work out is kept as the file holds it: A',
+      ],
       [{ k: 'sheet_unread', count: 1, names: ['Chart1'] }, '1 chart sheet is left out: Chart1'],
       [
         { k: 'sheet_cut', count: 1, names: ['Data'] },

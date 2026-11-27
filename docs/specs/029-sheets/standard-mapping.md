@@ -719,6 +719,17 @@ LibreOffice reads into its own pivot tables.
   group's and `colGrandTotals="0"` the outermost column group's, as they are written. Items hidden (`h="1"`) on any
   axis are a filter by values showing the column's other items. Its place is the `location`'s first cell, moved up by
   its page fields and one row more when it has page fields (row 1 at most).
+- **XLSX grouping** (default, D617): an axis field that is a `cacheField` of no source column (`databaseField="0"`)
+  whose `fieldGroup` names a source column by `base` (and no `par` of its own) groups that column, as does a
+  source column's own `fieldGroup` holding a `rangePr` or `discretePr`; a `par` alone groups nothing. A `rangePr`
+  `groupBy` of `seconds`, `minutes`, `hours`, `days`, `months`, `quarters` or `years` (its `groupInterval` 1)
+  is the date rule Second, Minute, Hour, Day-Month, Month, Quarter or Year, its `startDate` and `endDate` not read;
+  `groupBy` `range` (or none) is number intervals of size `groupInterval` (1 when absent), starting at `startNum`
+  (0 when absent) and ending at `endNum` unless `autoStart` or `autoEnd` is on (on when absent). A `discretePr`
+  maps each of the base column's items to a `groupItems` name: each name with an item other than one of its own
+  text is a custom group of those items, as shown; an item in a group of its own name stays itself. A grouping
+  field with hidden items, on the page fields, under a sort by a column item, or a date `groupInterval` other than
+  1 is kept as it came.
 - **ODF**: the `table:source-cell-range` a range of a sheet the workbook holds; each `table:data-pilot-field` a source
   column by `table:source-field-name` (the first header of that name) on its `table:orientation`; the data layout
   field on rows Values as rows. A data field's `table:function` back to its summary (`count` COUNTA, `countnums`
@@ -738,14 +749,14 @@ LibreOffice reads into its own pivot tables.
   and may differ from the other app's in size and words (`Grand Total` for LibreOffice's `Total Result`).
 - **Kept as it came**: a pivot table whose source is not a range of a sheet the workbook holds (a named range, a table,
   an external source or a consolidation), whose field LiveDoc cannot find (a source column by name, an item by its
-  place), that groups a field (`fieldGroup`, `table:data-pilot-groups`) or has calculated items, whose Show As LiveDoc
-  does not have (difference from, running total, index, and so on), or that the model refuses (past its bounds) stays
+  place), that groups a field in a way XLSX grouping does not read (or by `table:data-pilot-groups`) or has
+  calculated items, whose Show As LiveDoc does not have (difference from, running total, index, and so on), or that the model refuses (past its bounds) stays
   the file's own: kept as it came, its output read as plain values, and named (`pivot_unread`, reported: "N pivot
-  tables LiveDoc cannot work out are kept as values") (default, D609).
+  tables LiveDoc cannot work out are kept as the file holds them", one "is kept as the file holds it") (default, D609).
 - Google Sheets' exports say less than Google's pivot tables (`corpus/google/pivot-tables.xlsx`, `.ods`): its XLSX
   leaves out Repeat Row Labels, filters by condition and by formula, a Custom summary (written SUM) and the groupings it
   has no `fieldGroup` for (the date rules but Quarter, Year, Month and Day-Month, and number intervals over a column of
-  mixed values: written ungrouped), and groups the rest (kept, D609); its ODS, as LibreOffice computes it, leaves out
+  mixed values: written ungrouped), and groups the rest (read, D617); its ODS, as LibreOffice computes it, leaves out
   calculated fields, Custom summaries, filters by condition and formula, every grouping (the field left out, or named
   `Product2` for custom groups: kept), sorting by a value in a column item, an inner group's Show Totals off, and
   Repeat Row Labels. LibreOffice's own saves keep no record of LiveDoc's: its ODS leaves out what Google's ODS does
@@ -1052,6 +1063,9 @@ The code cites each by its id.
 - **D609** One whose source, fields, grouping or Show As the model cannot hold: kept as it came, its output as values,
   named (`pivot_unread`) (default).
 - **D610** Google Sheets' exports read as they say, each case equal to Google's answer where its file says it whole
+  (default).
+- **D617** An XLSX `fieldGroup` read as the grouping it says: its date levels (Second to Year, but the multi-level ones)
+  as date rules, its number ranges as intervals, its discrete items as custom groups; a date range's bounds not read
   (default).
 - **D295** A dropdown XLSX's list cannot say: a rule allowing any value, LiveDoc's rule beside it (default).
 - **D296** A standard rule read without LiveDoc's: the closest LiveDoc rule, one a rectangle; error messages and

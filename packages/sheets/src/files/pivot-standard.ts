@@ -3,7 +3,7 @@
 // model's terms. A field's subtotals turn the next group's Show Totals off, the inverse of `subtotalsOf`; a filter's
 // hidden items are matched to the source's cells when the sheets are made, as only then their shown texts are known.
 import type { GridRange } from '../address';
-import type { PivotShowAs, PivotSummary } from '../pivot/pivot-spec';
+import type { PivotGrouping, PivotShowAs, PivotSummary } from '../pivot/pivot-spec';
 import {
   modelHoldsFields,
   type FilePivot,
@@ -21,6 +21,7 @@ export type FilePivotHides = { col: number; hides: PivotHidden[] };
 /** A row or column field as a standard form says it, by its column's place in the source. */
 export type StandardGroup = {
   col: number;
+  grouping?: PivotGrouping;
   desc?: boolean;
   // Whether the field shows its items' subtotals (the next group's Show Totals).
   subtotals: boolean;
@@ -61,6 +62,7 @@ function groupsOf(list: readonly StandardGroup[], grand: boolean): FilePivotGrou
     const totals = i === 0 ? grand : list[i - 1]!.subtotals;
     return {
       col: g.col,
+      ...(g.grouping ? { grouping: g.grouping } : {}),
       ...(g.desc ? { desc: true as const } : {}),
       ...(g.sortBy ? { sortBy: g.sortBy } : {}),
       ...(totals ? {} : { totals: false as const }),

@@ -472,13 +472,9 @@
     ]
   },
   "google/pivot-tables.xlsx": {
-    "read": {
-      "pivot_unread": 6
-    },
+    "read": {},
     "written": {},
-    "reread": {
-      "pivot_unread": 6
-    },
+    "reread": {},
     "converted": [
       "kept",
       "pivots_simplified"

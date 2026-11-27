@@ -3,14 +3,15 @@
 // write them, in the model's terms; null for one the model cannot hold, which stays the file's own.
 import { attributeOf, childElements, parseXml, type XmlElement } from '@livedoc/office-packages';
 import { parseRangeText } from '../address';
-import type { PivotShowAs, PivotSummary } from '../pivot/pivot-spec';
+import type { PivotDateRule, PivotGrouping, PivotShowAs, PivotSummary } from '../pivot/pivot-spec';
 import { isoDateSerial } from './ods-read';
-import type {
-  FilePivotHides,
-  PivotHidden,
-  StandardGroup,
-  StandardPivot,
-  StandardValue,
+import {
+  plainText,
+  type FilePivotHides,
+  type PivotHidden,
+  type StandardGroup,
+  type StandardPivot,
+  type StandardValue,
 } from './pivot-standard';
 import type { FileValue } from './workbook-file';
 
@@ -75,9 +76,72 @@ type CacheField = {
   name: string;
   formula?: string;
   database: boolean;
-  grouped: boolean;
+  group?: XmlElement;
   items: (FileValue | null | undefined)[];
 };
+
+// A `rangePr`'s date level back to its date rule (D617); the levels LiveDoc has no one rule for are left out.
+const DATE_LEVEL: Readonly<Record<string, PivotDateRule>> = {
+  seconds: 'second',
+  minutes: 'minute',
+  hours: 'hour',
+  days: 'dayMonth',
+  months: 'month',
+  quarters: 'quarter',
+  years: 'year',
+};
+
+// A number of a `rangePr`, or undefined where it is automatic.
+const bound = (range: XmlElement, auto: string, num: string) =>
+  off(at(range, auto)) ? Number(at(range, num) ?? 0) : undefined;
+
+/**
+ * The grouping a `fieldGroup` says over its base column's shared `items`: null for one LiveDoc does not read; a custom
+ * grouping with no groups when every item is in a group of its own name (D617).
+ */
+function groupingOf(
+  g: XmlElement,
+  items: readonly (FileValue | null | undefined)[],
+): PivotGrouping | null {
+  const range = kid(g, 'rangePr');
+  if (range) {
+    const by = at(range, 'groupBy') ?? 'range';
+    const size = Number(at(range, 'groupInterval') ?? 1);
+    if (by !== 'range') {
+      const rule = DATE_LEVEL[by];
+      return rule && size === 1 ? { k: 'date', rule } : null;
+    }
+    const start = bound(range, 'autoStart', 'startNum');
+    const end = bound(range, 'autoEnd', 'endNum');
+    if (!(size > 0) || Number.isNaN(start) || Number.isNaN(end)) return null;
+    return {
+      k: 'interval',
+      size,
+      ...(start !== undefined ? { start } : {}),
+      ...(end !== undefined ? { end } : {}),
+    };
+  }
+  const discrete = kid(g, 'discretePr');
+  if (!discrete) return null;
+  const listed = kid(g, 'groupItems');
+  const groups = (listed ? childElements(listed) : []).map((e) => ({
+    name: plainText(itemValue(e)),
+    items: [] as string[],
+  }));
+  const xs = kids(discrete, 'x').map((x) => Number(at(x, 'v')));
+  for (const [i, x] of xs.entries()) {
+    const group = groups[x];
+    const item = items[i];
+    if (!group || item === undefined) return null;
+    group.items.push(plainText(item));
+  }
+  return {
+    k: 'custom',
+    groups: groups.filter(
+      (x) => x.items.length && !(x.items.length === 1 && x.items[0] === x.name),
+    ),
+  };
+}
 
 type Cache = { sheet: string; ref: string; fields: CacheField[] };
 
@@ -94,7 +158,7 @@ function readCache(root: XmlElement): Cache | null {
       name: at(f, 'name') ?? '',
       ...(formula !== undefined ? { formula } : {}),
       database: !off(at(f, 'databaseField')),
-      grouped: kid(f, 'fieldGroup') !== undefined,
+      ...(kid(f, 'fieldGroup') ? { group: kid(f, 'fieldGroup') } : {}),
       items: shared ? childElements(shared).map(itemValue) : [],
     };
   });
@@ -128,7 +192,7 @@ const fieldList = (e: XmlElement | undefined, local: string, attr: string) =>
 
 /**
  * A pivot table part's standard form over its cache, on sheet `own` of a workbook of `sheets`; null when the model
- * cannot hold it (a source not a range of the workbook, a grouped field, a calculated item, a Show As LiveDoc lacks,
+ * cannot hold it (a source not a range of the workbook, a grouping it does not read, a calculated item, a Show As LiveDoc lacks,
  * an item it cannot find).
  */
 export function readXlsxStandard(
@@ -149,17 +213,37 @@ export function readXlsxStandard(
   if (kid(root, 'calculatedItems')) return null;
   const width = range.c2 - range.c1 + 1;
   const fields = cache.fields;
-  if (fields.length < width || fields.slice(0, width).some((f) => !f.database || f.grouped))
-    return null;
+  if (fields.length < width || fields.slice(0, width).some((f) => !f.database)) return null;
+  // An axis field's source column and its grouping (D617): a derived field groups its `base`, a source column may be
+  // grouped in place; a `par` alone groups nothing. Null for one LiveDoc does not read.
+  const axisOf = (f: number): { col: number; grouping?: PivotGrouping } | null => {
+    const field = fields[f];
+    const g = field?.group;
+    if (!field || (f >= width && (field.database || !g))) return null;
+    if (!g) return { col: f };
+    const ranged = kid(g, 'rangePr') ?? kid(g, 'discretePr');
+    const par = at(g, 'par') !== undefined;
+    if (f < width && !ranged) return par ? { col: f } : null;
+    const base = Number(at(g, 'base') ?? f);
+    if (par || !(base >= 0 && base < width) || (f < width && base !== f)) return null;
+    const grouping = groupingOf(g, fields[base]!.items);
+    if (!grouping) return null;
+    return grouping.k === 'custom' && !grouping.groups.length
+      ? { col: base }
+      : { col: base, grouping };
+  };
   const pivotFields = kids(kid(root, 'pivotFields'), 'pivotField').map(readPivotField);
   const rowFields = fieldList(kid(root, 'rowFields'), 'field', 'x');
   const colFields = fieldList(kid(root, 'colFields'), 'field', 'x');
   const pageFields = fieldList(kid(root, 'pageFields'), 'pageField', 'fld');
   const axisFields = [...rowFields, ...colFields].filter((x) => x !== -2);
-  if ([...axisFields, ...pageFields].some((x) => !(x >= 0 && x < width))) return null;
+  const axes = new Map(axisFields.map((f) => [f, axisOf(f)]));
+  if ([...axes.values()].includes(null)) return null;
+  if (pageFields.some((x) => !(x >= 0 && x < width) || axisOf(x)?.grouping)) return null;
+  const groupedAt = (f: number) => axes.get(f)?.grouping !== undefined;
   // A field's item by its place in the field's list: its shared item's value.
   const itemAt = (f: number, i: number): FileValue | null | undefined => {
-    const item = pivotFields[f]?.items[i];
+    const item = groupedAt(f) ? undefined : pivotFields[f]?.items[i];
     return item ? fields[f]!.items[item.x] : undefined;
   };
   const hides: FilePivotHides[] = [];
@@ -167,11 +251,11 @@ export function readXlsxStandard(
     const list: PivotHidden[] = [];
     for (const item of pivotFields[f]?.items ?? []) {
       if (!item.hidden) continue;
-      const v = fields[f]!.items[item.x];
+      const v = groupedAt(f) ? undefined : fields[f]!.items[item.x];
       if (v === undefined) return null;
       list.push({ v });
     }
-    hides.push({ col: f, hides: list });
+    hides.push({ col: axes.get(f)?.col ?? f, hides: list });
   }
   const values: StandardValue[] = [];
   for (const d of kids(kid(root, 'dataFields'), 'dataField')) {
@@ -179,7 +263,7 @@ export function readXlsxStandard(
     const summary = SUMMARY[at(d, 'subtotal') ?? 'sum'];
     const showAs = SHOW_AS[at(d, 'showDataAs') ?? 'normal'];
     const field = fields[fld];
-    if (!field || !summary || showAs === undefined || field.grouped) return null;
+    if (!field || !summary || showAs === undefined) return null;
     const label = at(d, 'name');
     const common = {
       summary,
@@ -195,8 +279,10 @@ export function readXlsxStandard(
     const pf = pivotFields[f];
     const sortBy = pf?.scope ? sortScope(pf.scope, colFields, itemAt) : undefined;
     if (sortBy === null) return null;
+    const { col, grouping } = axes.get(f)!;
     return {
-      col: f,
+      col,
+      ...(grouping ? { grouping } : {}),
       ...(pf?.desc ? { desc: true } : {}),
       subtotals: pf?.subtotals ?? true,
       ...(sortBy ? { sortBy } : {}),

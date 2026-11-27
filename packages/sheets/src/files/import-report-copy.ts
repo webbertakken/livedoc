@@ -149,7 +149,7 @@ export function importReportLine(loss: ReportedLoss): string {
       );
     case 'pivot_unread':
       return named(
-        `${counted(count, 'pivot table LiveDoc cannot work out is', 'pivot tables LiveDoc cannot work out are')} kept as the file holds them`,
+        `${counted(count, 'pivot table LiveDoc cannot work out is', 'pivot tables LiveDoc cannot work out are')} kept as the file holds ${count === 1 ? 'it' : 'them'}`,
         { ...loss, count: loss.names.length },
       );
     case 'sheet_renamed':
