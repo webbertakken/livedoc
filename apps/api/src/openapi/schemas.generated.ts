@@ -3500,6 +3500,30 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
           "count": {
             "type": "number"
           },
+          "features": {
+            "items": {
+              "$ref": "#/components/schemas/PivotSimplified"
+            },
+            "type": "array"
+          },
+          "k": {
+            "const": "pivots_simplified",
+            "type": "string"
+          }
+        },
+        "required": [
+          "k",
+          "count",
+          "features"
+        ],
+        "type": "object"
+      },
+      {
+        "additionalProperties": false,
+        "properties": {
+          "count": {
+            "type": "number"
+          },
           "k": {
             "const": "kept",
             "type": "string"
@@ -12764,6 +12788,20 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
       "row",
       "column",
       "total"
+    ],
+    "type": "string"
+  },
+  "PivotSimplified": {
+    "description": "Why another app's pivot table works more simply than LiveDoc's (D606).",
+    "enum": [
+      "summary",
+      "custom-summary",
+      "calculated-field",
+      "sort-by-value",
+      "grouping",
+      "filter-by-condition",
+      "filter-by-formula",
+      "repeat-labels"
     ],
     "type": "string"
   },

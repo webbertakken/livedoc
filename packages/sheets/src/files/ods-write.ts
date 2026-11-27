@@ -2,6 +2,7 @@
 // keeps it"): `office:spreadsheet` with a `table:table` per sheet, each cell its value type and value, its formula in
 // OpenFormula beside its cached value. One cell a line, attributes in a fixed order, so the same workbook gives the
 // same bytes and a changed value is a one-line diff ("The flat form").
+import { keptPilotNames, odsDataPilots, withDataPilots } from './ods-pivots';
 import {
   escapeXmlAttribute,
   escapeXmlText,
@@ -407,7 +408,7 @@ function bodyXml(
     CALCULATION_SETTINGS,
     ...withValidations(keptAfter, validations.elements),
     ...tables,
-    ...namesAfterTables(file, kept, losses),
+    ...pilotsAfterTables(file, namesAfterTables(file, kept, losses)),
     '</office:spreadsheet>',
     '</office:body>',
   ];
@@ -426,6 +427,12 @@ function namesAfterTables(file: WorkbookFile, kept: OdsKeptWriter, losses: FileL
   );
   if (out.dropped > 0) losses.push({ k: 'kept_dropped', count: out.dropped });
   return out.xml;
+}
+
+// The kept content after the tables with the workbook's pivot tables in its one `table:data-pilot-tables`
+// (standard-mapping.md "Pivot tables in the file").
+function pilotsAfterTables(file: WorkbookFile, after: readonly string[]): string[] {
+  return withDataPilots(after, odsDataPilots(file.sheets, keptPilotNames(after)));
 }
 
 // The namespaces a root declares: `calcext` too when a sheet has format rules, a drawing's and a chart's when one has charts.

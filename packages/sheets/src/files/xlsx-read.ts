@@ -29,6 +29,7 @@ import { isoDateSerial } from './ods-read';
 import { FILE_READ_CELLS_MAX } from './file-read-limits';
 import type { FileCell, FileLoss, FileRead, FileSheet, FileValue } from './workbook-file';
 import { readXlsxCharts } from './xlsx-charts-read';
+import { readXlsxPivots } from './xlsx-pivots-read';
 import { allRead, WORKBOOK_READ, WORKSHEET_READ, XlsxKeeper } from './xlsx-kept-read';
 import { readXlsxDxfs, readXlsxFormatRules } from './xlsx-format-rules';
 import { readXlsxValidations } from './xlsx-validation';
@@ -437,11 +438,13 @@ export async function readXlsx(
   if (pkg.dropped.length > 0) book.losses.push({ k: 'entries_dropped', entries: [...pkg.dropped] });
   // The charts of a kept drawing that qualifies are the sheets' own (standard-mapping.md "Charts in the file").
   const charted = readXlsxCharts(sheets, keeper?.content());
-  const kept = charted.kept;
+  // Its pivot tables LiveDoc wrote are its own again (standard-mapping.md "Pivot tables in the file").
+  const pivoted = readXlsxPivots(charted.sheets, charted.kept, book.losses);
+  const kept = pivoted.kept;
   return {
     ok: true,
     file: {
-      sheets: charted.sheets,
+      sheets: pivoted.sheets,
       ...(kept ? { kept } : {}),
       ...(fileTheme && fileTheme !== STANDARD_THEME ? { theme: fileTheme } : {}),
       ...(functions.length ? { functions } : {}),

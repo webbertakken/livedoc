@@ -3,6 +3,12 @@
 // the model (cells by row and column id, formulas by id references) and each format's reader and writer, so neither
 // format ever sees an id and the model never sees a format.
 import { fileChartsOf, sheetChartsFromFile, type FileChart } from './file-charts';
+import {
+  filePivotsOf,
+  pivotCachePositions,
+  sheetPivotsFromFile,
+  type FilePivot,
+} from './file-pivots';
 import type { PackageRefusal } from '@livedoc/office-packages';
 import { layoutIndex } from '../layout';
 import {
@@ -82,6 +88,10 @@ export type FileSheet = {
   charts?: FileChart[];
   // Its protections in its order (standard-mapping.md "Protection in the file").
   protections?: FileProtection[];
+  // Its pivot tables in object order (standard-mapping.md "Pivot tables in the file"); read back, their records.
+  pivots?: FilePivot[];
+  // Its pivot tables no file can hold (a source deleted), left out (D607).
+  pivotsLeft?: number;
 };
 
 /**
@@ -162,9 +172,13 @@ export type FileLoss =
   // sheet's free ranges past 50, the rest left protected (D352).
   | { k: 'protection_changed'; sheet: string }
   | { k: 'protection_unread'; sheet: string }
-  | { k: 'protection_cut'; sheet: string };
+  | { k: 'protection_cut'; sheet: string }
+  // Pivot tables (standard-mapping.md "Pivot tables in the file"): one with no source, left out of a write; LiveDoc's
+  // record beside a standard form another app changed since, the pivot table kept as the file's own (D607, logged).
+  | { k: 'pivot_unwritten'; sheet: string }
+  | { k: 'pivot_changed'; sheet: string };
 
-function fileValueOf(value: Scalar): FileValue | undefined {
+export function fileValueOf(value: Scalar): FileValue | undefined {
   if (value === null) return undefined;
   if (typeof value === 'number') return { k: 'n', v: value };
   if (typeof value === 'string') return { k: 's', v: value };
@@ -260,6 +274,9 @@ export function workbookFileOf(
       const validations = fileValidationRulesOf(sheet.layout, ctx);
       const charts = fileChartsOf(engine, sheet, locale);
       const protections = fileProtectionsOf(sheet.layout);
+      // Its pivot tables, and the cells their outputs cache (D604).
+      const pivoted = filePivotsOf(engine, sheet, sheets, locale);
+      cells.push(...pivoted.cells);
       return {
         name: sheet.title,
         rows: sheet.layout.rows.length,
@@ -272,6 +289,8 @@ export function workbookFileOf(
         ...(validations ? { validations } : {}),
         ...(charts.length ? { charts } : {}),
         ...(protections ? { protections } : {}),
+        ...(pivoted.pivots.length ? { pivots: pivoted.pivots } : {}),
+        ...(pivoted.unwritten ? { pivotsLeft: pivoted.unwritten } : {}),
       };
     }),
     ...(engine.theme === STANDARD_THEME ? {} : { theme: engine.theme }),
@@ -498,8 +517,10 @@ export function sheetsFromFile(
     const ctx: SheetsCtx = { own: handles[i]!, byTitle, byId };
     const cells: SheetFromFile['cells'] = [];
     const cache = blockCachePositions(m.file.cells);
+    // A read pivot table's output is the engine's to work out again (D607).
+    const pivotCache = pivotCachePositions(m.file.pivots);
     for (const cell of m.file.cells) {
-      if (cache.has(`${cell.r},${cell.c}`)) continue;
+      if (cache.has(`${cell.r},${cell.c}`) || pivotCache.has(`${cell.r},${cell.c}`)) continue;
       const r = m.layout.rows[cell.r];
       const c = m.layout.cols[cell.c];
       if (r === undefined || c === undefined) continue;
@@ -524,7 +545,16 @@ export function sheetsFromFile(
       losses,
     );
     const rules = validationRulesFromFile(m.file.validations, m.layout, ctx, m.title, rand, losses);
-    const objects = sheetChartsFromFile(m.file.charts, m.layout, rand);
+    const charts = sheetChartsFromFile(m.file.charts, m.layout, rand);
+    const pivots = sheetPivotsFromFile(
+      m.file.pivots,
+      m.layout,
+      ctx,
+      rand,
+      new Set(charts.map((x) => x.id)),
+    );
+    if (pivots.refused > 0) losses.push({ k: 'pivot_changed', sheet: m.title });
+    const objects = [...charts, ...pivots.pivots];
     const protections = protectionsFromFile(m.file.protections, m.layout, m.title, rand, losses);
     const layout = {
       ...m.layout,

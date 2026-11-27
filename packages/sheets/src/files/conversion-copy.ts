@@ -1,5 +1,6 @@
 // The conversion dialog's words (docs/specs/029-sheets/files-and-print.md "Converting", D88): its title, and one line
 // a loss, counted, naming up to three sheets or functions. Pure, so every line is tested without React.
+import type { PivotSimplified } from './file-pivots';
 import type { ProtectionSimplified } from './file-protections';
 import type { WorkbookFormat } from '../workbook-record';
 import type { ConversionLoss } from './conversion';
@@ -74,6 +75,18 @@ const SIMPLIFIED_WORDS: Record<SimplifiedFeature, string> = {
   checkboxes: 'checkboxes',
 };
 
+// What a person calls what another app loses of a pivot table (standard-mapping.md "Pivot tables in the file").
+const PIVOT_WORDS: Record<PivotSimplified, string> = {
+  summary: 'summaries it has no function for',
+  'custom-summary': 'custom summaries',
+  'calculated-field': 'calculated fields',
+  'sort-by-value': 'sorting by a value',
+  grouping: 'grouping',
+  'filter-by-condition': 'filters by condition',
+  'filter-by-formula': 'filters by formula',
+  'repeat-labels': 'repeated row labels',
+};
+
 const PROTECTION_WORDS: Record<ProtectionSimplified, string> = {
   ranges: 'protected ranges',
   warnings: 'warnings',
@@ -130,6 +143,14 @@ export function conversionLine(loss: ConversionLoss, to: WorkbookFormat): string
       const list =
         words.length > 1 ? `${words.slice(0, -1).join(', ')} and ${words.at(-1)!}` : words[0]!;
       return `${what} more simply in ${where}: ${list}`;
+    }
+    case 'pivots_simplified': {
+      const what = one ? '1 pivot table works' : `${loss.count} pivot tables work`;
+      const where = to === 'xlsx' ? 'Excel' : 'other apps';
+      const words = loss.features.map((f) => PIVOT_WORDS[f]);
+      const list =
+        words.length > 1 ? `${words.slice(0, -1).join(', ')} and ${words.at(-1)!}` : words[0]!;
+      return `${what} more simply in ${where}, without ${list}`;
     }
     case 'protection_passwords_left':
       return one

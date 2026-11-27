@@ -37,6 +37,7 @@ export const REPORTED_KINDS = [
   'charts_unwritten',
   'chart_rewritten',
   'chart_nearest_type',
+  'pivot_unwritten',
   'sheet_renamed',
 ] as const;
 
@@ -71,6 +72,7 @@ function entriesOf(loss: FileLoss): Entry[] {
     case 'validation_rule_changed':
     case 'protection_changed':
     case 'protection_unread':
+    case 'pivot_changed':
       return [];
     case 'sheet_cut':
     case 'cells_cut':
@@ -82,6 +84,7 @@ function entriesOf(loss: FileLoss): Entry[] {
     case 'charts_unwritten':
     case 'chart_rewritten':
     case 'chart_nearest_type':
+    case 'pivot_unwritten':
       return [[loss.k, 1, loss.sheet]];
     case 'sheets_cut':
       return [['sheets_cut', loss.had - loss.kept]];

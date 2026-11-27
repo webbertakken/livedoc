@@ -56,6 +56,11 @@ export const OOXML_SCHEMAS: readonly (readonly [RegExp, string])[] = [
   [/^xl\/theme\/theme\d+\.xml$/, 'ooxml/DrawingML_Theme.rnc'],
   [/^xl\/drawings\/drawing\d+\.xml$/, 'ooxml/SpreadsheetML_Drawing.rnc'],
   [/^xl\/charts\/chart\d+\.xml$/, 'ooxml/DrawingML_Chart.rnc'],
+  [/^xl\/pivotTables\/pivotTable\d+\.xml$/, 'ooxml/SpreadsheetML_Pivot_Table.rnc'],
+  [
+    /^xl\/pivotCache\/pivotCacheDefinition\d+\.xml$/,
+    'ooxml/SpreadsheetML_Pivot_Table_Cache_Definition.rnc',
+  ],
 ];
 
 const escape = (s: string) =>
