@@ -61,14 +61,33 @@ export type PivotGroupSpec = {
 
 export type PivotShowAs = 'row' | 'column' | 'total';
 
-export type PivotValueSpec = {
-  col: number;
-  summary: PivotSummary;
-  showAs?: PivotShowAs;
-  name?: string;
-};
+// A calculated field's summary: one of the summaries, each column name in its formula reading that summary over the
+// cell's rows, or Custom, each name reading the rows' values as an array (pivot-tables.md "The output", D600).
+export type PivotCalcSummary = PivotSummary | 'CUSTOM';
 
-export type PivotFilterSpec = { col: number; cond: FilterCondition };
+/** A value: a source column summarised, or a calculated field (`formula`, over the source's column names). */
+export type PivotValueSpec =
+  | { col: number; summary: PivotSummary; showAs?: PivotShowAs; name?: string; formula?: undefined }
+  | {
+      formula: string;
+      summary: PivotCalcSummary;
+      showAs?: PivotShowAs;
+      name?: string;
+      col?: undefined;
+    };
+
+/** A filter by values or a condition, or by a formula over the source's column names, true to keep a row. */
+export type PivotFilterSpec =
+  | { col: number; cond: FilterCondition; formula?: undefined }
+  | { col: number; formula: string; cond?: undefined };
+
+/** What a pivot table's formulas are worked out by (the engine's, pivot-calc.ts). */
+export type PivotCalc = {
+  /** A calculated field over source `rows`. */
+  field(formula: string, summary: PivotCalcSummary, rows: readonly number[]): Scalar;
+  /** Whether a filter's formula holds for source row `row`. */
+  holds(formula: string, row: number): boolean;
+};
 
 export type PivotSpec = {
   rows: readonly PivotGroupSpec[];

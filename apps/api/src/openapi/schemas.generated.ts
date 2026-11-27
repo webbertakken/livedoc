@@ -12648,6 +12648,17 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
     ],
     "type": "object"
   },
+  "PivotCalcSummary": {
+    "anyOf": [
+      {
+        "$ref": "#/components/schemas/PivotSummary"
+      },
+      {
+        "const": "CUSTOM",
+        "type": "string"
+      }
+    ]
+  },
   "PivotDateRule": {
     "enum": [
       "second",
@@ -16236,20 +16247,46 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
     "type": "object"
   },
   "SheetPivotFilter": {
-    "additionalProperties": false,
-    "properties": {
-      "col": {
-        "type": "string"
+    "anyOf": [
+      {
+        "additionalProperties": false,
+        "properties": {
+          "col": {
+            "type": "string"
+          },
+          "cond": {
+            "$ref": "#/components/schemas/FilterCondition"
+          },
+          "formula": {
+            "not": {}
+          }
+        },
+        "required": [
+          "col",
+          "cond"
+        ],
+        "type": "object"
       },
-      "cond": {
-        "$ref": "#/components/schemas/FilterCondition"
+      {
+        "additionalProperties": false,
+        "properties": {
+          "col": {
+            "type": "string"
+          },
+          "cond": {
+            "not": {}
+          },
+          "formula": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "col",
+          "formula"
+        ],
+        "type": "object"
       }
-    },
-    "required": [
-      "col",
-      "cond"
-    ],
-    "type": "object"
+    ]
   },
   "SheetPivotGroup": {
     "additionalProperties": false,
@@ -16297,26 +16334,59 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
     "type": "object"
   },
   "SheetPivotValue": {
-    "additionalProperties": false,
-    "properties": {
-      "col": {
-        "type": "string"
+    "anyOf": [
+      {
+        "additionalProperties": false,
+        "properties": {
+          "col": {
+            "type": "string"
+          },
+          "formula": {
+            "not": {}
+          },
+          "name": {
+            "type": "string"
+          },
+          "showAs": {
+            "$ref": "#/components/schemas/PivotShowAs"
+          },
+          "summary": {
+            "$ref": "#/components/schemas/PivotSummary"
+          }
+        },
+        "required": [
+          "col",
+          "summary"
+        ],
+        "type": "object"
       },
-      "name": {
-        "type": "string"
-      },
-      "showAs": {
-        "$ref": "#/components/schemas/PivotShowAs"
-      },
-      "summary": {
-        "$ref": "#/components/schemas/PivotSummary"
+      {
+        "additionalProperties": false,
+        "properties": {
+          "col": {
+            "not": {}
+          },
+          "formula": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "showAs": {
+            "$ref": "#/components/schemas/PivotShowAs"
+          },
+          "summary": {
+            "$ref": "#/components/schemas/PivotCalcSummary"
+          }
+        },
+        "required": [
+          "formula",
+          "summary",
+          "name"
+        ],
+        "type": "object"
       }
-    },
-    "required": [
-      "col",
-      "summary"
-    ],
-    "type": "object"
+    ]
   },
   "SheetResponse": {
     "additionalProperties": false,

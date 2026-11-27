@@ -6,6 +6,7 @@ import { err, isError, type Scalar } from '../formula/values';
 import { compareItems, groupHeader, itemMaker, type PivotItem } from './pivot-items';
 import { summarise } from './pivot-summary';
 import type {
+  PivotCalc,
   PivotCell,
   PivotGroupSpec,
   PivotOutCell,
@@ -68,17 +69,34 @@ function path(n: PivotNode): PivotNode[] {
 const labelText = (item: PivotItem): string =>
   isError(item.label) ? item.label.e : String(item.label);
 
-/** The output of `spec` over `source`, its filters' conditions read in `locale`. */
-export function pivotOutput(source: PivotSource, spec: PivotSpec, locale = 'en-US'): PivotOutput {
+// Without an engine a pivot table's formulas cannot be worked out.
+const NO_CALC: PivotCalc = {
+  field: () => err('#ERROR!', 'Formulas are worked out by the engine'),
+  holds: () => false,
+};
+
+/**
+ * The output of `spec` over `source`, its filters' conditions read in `locale`, its calculated fields and filter
+ * formulas worked out by `calc`.
+ */
+export function pivotOutput(
+  source: PivotSource,
+  spec: PivotSpec,
+  locale = 'en-US',
+  calc: PivotCalc = NO_CALC,
+): PivotOutput {
   const at = (r: number, c: number): PivotCell => source.rows[r]?.[c] ?? BLANK;
   // The rows every filter keeps.
-  const filters = (spec.filters ?? []).map((f) => ({
-    col: f.col,
-    test: conditionMatcher(f.cond, locale),
-  }));
+  const filters = (spec.filters ?? []).map((f) => {
+    if (f.formula !== undefined) {
+      const formula = f.formula;
+      return (r: number) => calc.holds(formula, r);
+    }
+    const test = conditionMatcher(f.cond, locale);
+    return (r: number) => test(at(r, f.col).v, at(r, f.col).shown);
+  });
   const kept: number[] = [];
-  for (let r = 0; r < source.rows.length; r++)
-    if (filters.every((f) => f.test(at(r, f.col).v, at(r, f.col).shown))) kept.push(r);
+  for (let r = 0; r < source.rows.length; r++) if (filters.every((f) => f(r))) kept.push(r);
 
   const makers = (groups: readonly PivotGroupSpec[]) =>
     groups.map((g) => {
@@ -106,6 +124,7 @@ export function pivotOutput(source: PivotSource, spec: PivotSpec, locale = 'en-U
 
   const summaryOf = (rows: readonly number[], vi: number): Scalar => {
     const value = spec.values[vi]!;
+    if (value.formula !== undefined) return calc.field(value.formula, value.summary, rows);
     return summarise(
       value.summary,
       rows.map((r) => at(r, value.col).v),
@@ -119,7 +138,9 @@ export function pivotOutput(source: PivotSource, spec: PivotSpec, locale = 'en-U
     const value = spec.values[vi]!;
     const v = summaryOf(rows, vi);
     if (!value.showAs)
-      return IN_COLUMN_FORMAT.has(value.summary) && typeof v === 'number'
+      return value.formula === undefined &&
+        IN_COLUMN_FORMAT.has(value.summary) &&
+        typeof v === 'number'
         ? { v, fmt: { col: value.col } }
         : { v };
     const [r, c] =
@@ -197,6 +218,12 @@ function layout(
   const nameOf = (col: number) => source.header[col] ?? '';
   const valueName = (vi: number) => {
     const v = spec.values[vi]!;
+    // A calculated field without a name is named as Google names a new one.
+    if (v.formula !== undefined)
+      return (
+        v.name ??
+        `Calculated Field ${spec.values.slice(0, vi + 1).filter((x) => x.formula !== undefined).length}`
+      );
     return v.name ?? `${v.summary} of ${nameOf(v.col)}`;
   };
   const shows = (groups: readonly PivotGroupSpec[], depth: number) =>

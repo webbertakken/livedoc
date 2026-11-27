@@ -23,6 +23,16 @@ export type ValueArray = { rows: Value[][] };
 export type Scalar = number | string | boolean | null | SheetError;
 export type Value = Scalar | ValueArray;
 
+/**
+ * A column's values that read as a range would (a pivot table's column in its formulas, pivot-tables.md "The output"):
+ * whole where an array is taken, its first value where one value goes.
+ */
+export type ColumnValues = ValueArray & { readsAsRange: true };
+
+export function isColumnValues(v: unknown): v is ColumnValues {
+  return typeof v === 'object' && v !== null && 'readsAsRange' in v;
+}
+
 // A card function before the cards have arrived: drawn as "Loading…", never an error.
 export const PENDING: SheetError = { e: '#N/A', why: 'pending' };
 

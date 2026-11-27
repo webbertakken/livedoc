@@ -5,7 +5,12 @@ import { isAxisId, isSheetId } from '../ids';
 import { INPUT_MAX, SHEET_ROWS_MAX } from '../limits';
 import { isFilterCondition } from '../filter';
 import { PIVOT_DATE_RULES, PIVOT_SUMMARIES } from '../pivot/pivot-spec';
-import type { PivotGrouping, PivotShowAs, PivotSummary } from '../pivot/pivot-spec';
+import type {
+  PivotCalcSummary,
+  PivotGrouping,
+  PivotShowAs,
+  PivotSummary,
+} from '../pivot/pivot-spec';
 import type { FilterCondition, RuleSource, SheetLayout } from '../sheet';
 import { applyLayoutChange, shrinkRange, type LayoutChange } from '../store-layout';
 import { inRange, isIdRange, isRecord, onlyKeys, textUpTo } from './object-checks';
@@ -22,15 +27,23 @@ export type SheetPivotGroup = {
   grouping?: PivotGrouping;
 };
 
-export type SheetPivotValue = {
-  col: string;
-  summary: PivotSummary;
-  showAs?: PivotShowAs;
-  name?: string;
-};
+// A source column summarised, or a calculated field: a formula over the source's column names, summarised by a summary
+// or Custom, and named (D600).
+export type SheetPivotValue =
+  | { col: string; summary: PivotSummary; showAs?: PivotShowAs; name?: string; formula?: undefined }
+  | {
+      formula: string;
+      summary: PivotCalcSummary;
+      showAs?: PivotShowAs;
+      name: string;
+      col?: undefined;
+    };
 
-// A filter by values (`cond.values`) or by one condition of Filter by Condition's list.
-export type SheetPivotFilter = { col: string; cond: FilterCondition };
+// A filter by values (`cond.values`), by one condition of Filter by Condition's list, or by a formula over the
+// source's column names (`formula`), on its column.
+export type SheetPivotFilter =
+  | { col: string; cond: FilterCondition; formula?: undefined }
+  | { col: string; formula: string; cond?: undefined };
 
 export type SheetPivot = {
   id: string;
@@ -122,24 +135,33 @@ function isGroup(x: unknown, values: number): x is SheetPivotGroup {
   );
 }
 
+// A pivot table's formula: `=` first, no longer than a cell's input.
+const isFormula = (x: unknown) =>
+  typeof x === 'string' && x.startsWith('=') && x.length <= INPUT_MAX;
+
 function isValue(x: unknown): x is SheetPivotValue {
+  if (!isRecord(x) || !onlyKeys(x, ['col', 'formula', 'summary', 'showAs', 'name'])) return false;
+  const calculated = x.formula !== undefined;
   return (
-    isRecord(x) &&
-    onlyKeys(x, ['col', 'summary', 'showAs', 'name']) &&
-    isAxisId(x.col) &&
-    (PIVOT_SUMMARIES as readonly unknown[]).includes(x.summary) &&
+    (calculated
+      ? x.col === undefined &&
+        isFormula(x.formula) &&
+        (x.summary === 'CUSTOM' || (PIVOT_SUMMARIES as readonly unknown[]).includes(x.summary)) &&
+        x.name !== undefined
+      : isAxisId(x.col) && (PIVOT_SUMMARIES as readonly unknown[]).includes(x.summary)) &&
     (x.showAs === undefined || SHOW_AS.includes(x.showAs)) &&
     (x.name === undefined || (typeof x.name === 'string' && x.name.length > 0)) &&
     textUpTo(x.name, PIVOT_NAME_MAX)
   );
 }
 
-// A filter by values or by a condition; custom formulas and colours are not a pivot table's (yet).
+// A filter by values, by a condition, or by a formula; a sheet filter's own custom formulas and colours are not a
+// pivot table's.
 function isFilter(x: unknown): x is SheetPivotFilter {
+  if (!isRecord(x) || !isAxisId(x.col)) return false;
+  if (x.formula !== undefined) return onlyKeys(x, ['col', 'formula']) && isFormula(x.formula);
   return (
-    isRecord(x) &&
     onlyKeys(x, ['col', 'cond']) &&
-    isAxisId(x.col) &&
     isRecord(x.cond) &&
     x.cond.op !== 'formula' &&
     x.cond.colour === undefined &&
@@ -186,10 +208,12 @@ const some = <T>(key: string, list: T[] | undefined) => (list?.length ? { [key]:
  */
 export function pivotWithout(pivot: SheetPivot, gone: ReadonlySet<string>): SheetPivot {
   const fields = [pivot.rows, pivot.columns, pivot.values, pivot.filters];
-  if (!fields.some((list) => list?.some((x) => gone.has(x.col)))) return pivot;
+  // A calculated field has no column of its own: it stays.
+  const goes = (x: { col?: string }) => x.col !== undefined && gone.has(x.col);
+  if (!fields.some((list) => list?.some(goes))) return pivot;
   const place = new Map<number, number>();
   const values = (pivot.values ?? []).filter((v, i) => {
-    if (gone.has(v.col)) return false;
+    if (goes(v)) return false;
     place.set(i, place.size);
     return true;
   });

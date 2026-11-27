@@ -63,6 +63,8 @@ import { sheetsCtxOf } from './sheets-ctx';
 import { SPILL_PAST_EDGE, Spills, spillBlockedBy } from './spills';
 import type { SheetPivot } from '../objects/sheet-pivot';
 import { pivotOutput } from '../pivot/pivot-output';
+import { pivotCalc } from '../pivot/pivot-calc';
+import { compileTypedFormula } from '../typed-input';
 import {
   isPivotArray,
   PIVOT_BLOCKED_BY,
@@ -966,13 +968,37 @@ export class Workbook {
     this.deps.noteRange(no, this.nos.sheetNo(sourceId), box.r1, box.c1, box.r2, box.c2);
     if (!this.spend(cells)) return err('#NUM!', 'This sheet is too large to recalculate at once');
     const read = readPivotSource(box, (r, c) => this.cellValue(sourceId, r, c, null), this.locale);
-    const out = pivotOutput(read.source, pivotSpecOf(pivot, box), this.locale);
+    const calc = pivotCalc(read.source, (text, scope) =>
+      this.workOutNamed(sheet.id, this.nos.rowOf(no), this.nos.colOf(no), text, scope),
+    );
+    const out = pivotOutput(read.source, pivotSpecOf(pivot, box), this.locale, calc);
     console.debug(
       `[sheets engine] pivot sheet=${sheet.id} pivot=${pivot.id} rows=${out.rows.length} cols=${out.width}`,
     );
     if (out.rows.every((row) => row.every((x) => x.v === null))) return null;
     if (out.rows.length * out.width > PIVOT_OUTPUT_CELLS_MAX) return err('#REF!', PIVOT_TOO_LARGE);
     return pivotArray(out, read.formats);
+  }
+
+  // A pivot table's formula (pivot-calc.ts), typed in the spreadsheet's locale, worked out as if it sat in (r, c) with
+  // its column names bound, keeping no value and no dependency; #ERROR! when it cannot be read.
+  private workOutNamed(
+    sheetId: string,
+    r: number,
+    c: number,
+    text: string,
+    scope: ReadonlyMap<string, Value>,
+  ): Scalar {
+    const compiled = compileTypedFormula(text, this.locale, this.ctxFor(sheetId));
+    const ast = compiled.ok ? storedAst(compiled.formula) : null;
+    if (!compiled.ok || !ast) return err('#ERROR!', 'Formula parse error.');
+    return scalarCell(
+      this.readAside(() => {
+        const frame = cellFrame(this.frameSource, NO_CELL, sheetId, r, c);
+        frame.scope = scope;
+        return scalarCell(deref(evaluate(ast, compiled.formula.r, frame), frame));
+      }),
+    );
   }
 
   // A loop closed (its first cell first): with iterative calculation off each of its cells is the loop's #REF!; on, it

@@ -1,8 +1,8 @@
 # Pivot tables
 
 **Status: built in part** (plan 0020 Phase 11): the model ([The model](#the-model)), how a pivot table's output is
-worked out from its source ([The output](#the-output)), proven against Google Sheets' own answers, and the output in
-the grid ([In the grid](#in-the-grid)); the rest specified.
+worked out from its source, calculated fields and formula filters too ([The output](#the-output)), proven against all
+of Google Sheets' answers in the grid ([In the grid](#in-the-grid)); the rest specified.
 
 Pivot tables in a [spreadsheet](spreadsheet.md), as Google Sheets makes them. Research:
 [Charts and pivots](../../research/sheets-open-standard/charts-and-pivots.md). Evidence: twenty pivot tables Google
@@ -44,8 +44,8 @@ the sheet's layout beside its charts, set whole by its id or removed, one undo s
   Labels** (off; rows only), and an optional grouping (below).
 - **Values**: each a source column or a **calculated field** (a name and a formula), its summary, its **Show As**,
   and an optional name; **Values as** columns (the default) or rows.
-- **Filters**: each a source column with the values it shows (the rest hidden) or one condition of
-  [Filter by Condition](data-tools.md)'s list.
+- **Filters**: each a source column with the values it shows (the rest hidden), one condition of
+  [Filter by Condition](data-tools.md)'s list, or a custom formula over the source's column names (`=Units>8`).
 
 ## The output
 
@@ -78,7 +78,13 @@ Google Sheets' answer for the evidence's cases):
 - **Calculated fields**: summarised by SUM (or any summary), each source column name in the formula (quoted, as
   `'Units'`) reads that column's summary over the cell's rows, so `='Units'*'Price'` over a group is the group's
   units times the group's prices; summarised by Custom, a name reads the column's values over the cell's rows as an
-  array (default, D600).
+  array (default, D600). The array reads as a range would: whole where a function or ARRAYFORMULA takes an array,
+  its first value where one value goes (`=SUM(Units*Price)` multiplies the first row's), as Google Sheets reads it.
+  A name is quoted (`'Unit price'`, a quote inside doubled) or bare when it reads as a name (`Units`), case aside;
+  a field without a name is named `Calculated Field 1`, `2` and so on; a formula that cannot be read shows
+  `#ERROR!` ("Formula parse error."); a formula's errors propagate (`'n/a'*2` is `#VALUE!`).
+- **Filter by formula**: worked out for each source row, each column name reading that row's value; a row is kept
+  when it answers TRUE or a number other than zero (an error or text keeps none).
 - **Cells**: a cell no source row reaches is blank; one only blank cells reach holds its summary (SUM 0).
 - **Show As**: % of Row divides each cell by its row's grand total, % of Column by its column's, % of Grand Total by
   the grand total; shown as a percentage.
@@ -166,7 +172,8 @@ The output is ordinary cells to the grid's screen reader support, with its heade
 - **D379** The output's layout, labels, order, totals and summaries as Google Sheets' answers for the evidence's
   twenty cases (default).
 - **D600** A calculated field summarised by SUM reads each named column's summary over the cell's rows; by Custom,
-  the column's values as an array, as Google Sheets does (default).
+  the column's values as an array read as a range, as Google Sheets does; a filter's formula reads each row's own
+  values (default).
 - **D601** A pivot table goes with its anchor cell's row or column; its source shrinks with deleted rows and columns on
   any sheet, as a formula's range does, and its fields go with their columns (default).
 - **D602** The output lands in the grid as a spilled array does, blocked by filled cells (`#REF!`, "Results would
