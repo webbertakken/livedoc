@@ -1,5 +1,5 @@
-// A text document's window closes (docs/specs/034-text-documents/review.md "Notifications"): the comments new in it
-// go, one email per person, to those whose setting asks for them and who may still comment on or edit the document,
+// A text document's window closes (docs/specs/034-text-documents/review.md "Notifications"): the comments new in it and
+// the writing applied in it go, one email per person, to those whose setting asks for them and who may still comment on or edit the document,
 // each read now, so a person lowered to Viewer or whose link has gone hears nothing. Best effort: every person
 // skipped is logged with why, and nothing here throws past its caller's catch.
 import { DEFAULT_NOTICE_SETTING, levelAtLeast, type NoticeSettingDto } from '@livedoc/api-schema';
@@ -19,27 +19,44 @@ import {
 import { noticeSettingsOf } from '../db/text-document-notice-settings';
 import { keyOwners } from '../document-room/collab-key-owners';
 import { emailEnabled, sendEmail } from '../email/client';
-import { textDocumentCommentsEmail } from '../email/text-document-notice-email';
+import { textDocumentNoticeEmail } from '../email/text-document-notice-email';
 import { reportServerEvent } from '../server-telemetry';
 import type { DocumentEnv } from '../types';
 import {
   commentCountBucket,
   commentsFor,
+  editsFor,
   newCommentsSince,
   noticeCandidates,
   noticeComments,
+  noticeEdits,
   noticeKeys,
+  type EditNotice,
   type NoticeComment,
+  type NoticeEdit,
 } from './notice-batches';
 
-/** One tab's window: the comment ids it held as the window opened. */
-export type NoticeWindow = { readonly tabId: string; readonly commentIds: readonly string[] };
+export type { EditNotice } from './notice-batches';
+
+/** One tab's window: what it held as the window opened (its comment ids, its state), and who deleted what in it. */
+export type NoticeWindow = {
+  readonly tabId: string;
+  readonly commentIds: readonly string[];
+  readonly baseline: { readonly stateVector: Uint8Array; readonly deletions: Uint8Array };
+  readonly deleters: readonly {
+    readonly key: string;
+    readonly name: string | null;
+    readonly deletions: Uint8Array;
+  }[];
+};
 
 export type NoticeSendDeps = {
   readonly env: DocumentEnv;
   readonly documentId: string;
   /** The tab's threads as they read now. */
   readonly threadsOf: (tabId: string) => Promise<TextDocumentThread[]>;
+  /** The writing applied in a window, in place order. */
+  readonly changesOf: (window: NoticeWindow) => Promise<EditNotice[]>;
   readonly now: number;
 };
 
@@ -77,8 +94,14 @@ export async function sendNoticeBatches(
       ),
     )
   ).flat();
-  if (raw.length === 0) {
-    log(`batch doc=${documentId} comments=0`);
+  const settings = await noticeSettingsOf(env, documentId);
+  // The writing is read only when someone asked for it: reading it walks each tab whole.
+  const editsAsked = settings.some((s) => s.edits === 'added-or-removed');
+  const changes = editsAsked
+    ? (await Promise.all(windows.map((w) => deps.changesOf(w)))).flat()
+    : [];
+  if (raw.length === 0 && changes.length === 0) {
+    log(`batch doc=${documentId} comments=0 changes=0`);
     return 0;
   }
   const meta = await getDocumentMeta(env, documentId);
@@ -86,19 +109,28 @@ export async function sendNoticeBatches(
     log(`batch doc=${documentId} skipped reason=document-gone`);
     return 0;
   }
-  const keyed = await keyOwners(env, documentId, noticeKeys(raw));
+  const keys = noticeKeys(raw);
+  for (const change of changes) if (change.authorKey) keys.add(change.authorKey);
+  const keyed = await keyOwners(env, documentId, keys);
   const accounts = await accountsOfIdentities(env, [...new Set(keyed.values())]);
   const owners = new Map([...keyed].map(([key, id]) => [key, accounts.get(id) ?? id]));
   const notices = noticeComments(raw, owners);
-  const settings = await noticeSettingsOf(env, documentId);
+  const edits = noticeEdits(changes, owners);
   const settingOf = new Map(settings.map((s) => [s.ownerId, s as NoticeSettingDto]));
-  const candidates = noticeCandidates(notices, settings);
-  log(`batch doc=${documentId} comments=${notices.length} candidates=${candidates.length}`);
+  const candidates = new Set(noticeCandidates(notices, settings));
+  if (edits.length > 0)
+    for (const s of settings) if (s.edits === 'added-or-removed') candidates.add(s.ownerId);
+  log(
+    `batch doc=${documentId} comments=${notices.length} changes=${edits.length} candidates=${candidates.size}`,
+  );
   let sent = 0;
-  for (const personId of candidates) {
+  for (const personId of [...candidates].sort()) {
     const setting = settingOf.get(personId) ?? DEFAULT_NOTICE_SETTING;
-    const asked = commentsFor(personId, setting, notices);
-    if (asked.length === 0) continue;
+    const asked = {
+      comments: commentsFor(personId, setting, notices),
+      edits: editsFor(personId, setting, edits),
+    };
+    if (asked.comments.length === 0 && asked.edits.length === 0) continue;
     const outcome = await emailPerson(deps, personId, asked, meta.name);
     if (outcome === 'sent') sent += 1;
     else log(`skipped doc=${documentId} reason=${outcome}`);
@@ -109,30 +141,35 @@ export async function sendNoticeBatches(
 async function emailPerson(
   deps: NoticeSendDeps,
   personId: string,
-  asked: readonly NoticeComment[],
+  asked: { readonly comments: readonly NoticeComment[]; readonly edits: readonly NoticeEdit[] },
   documentName: string,
 ): Promise<SkipReason | 'sent' | 'failed'> {
   const { env, documentId, now } = deps;
   const found = await reachFor(deps, personId);
   if ('skip' in found) return found.skip;
   const { scopeTabId, shareCode } = found.reach;
-  const comments = scopeTabId === null ? asked : asked.filter((c) => c.tabId === scopeTabId);
-  if (comments.length === 0) return 'no-access';
+  const inScope = <T extends { readonly tabId: string }>(list: readonly T[]) =>
+    scopeTabId === null ? list : list.filter((item) => item.tabId === scopeTabId);
+  const comments = inScope(asked.comments);
+  const edits = inScope(asked.edits);
+  if (comments.length === 0 && edits.length === 0) return 'no-access';
   const to = await getOwnerEmail(env, personId);
   if (!to) return 'no-email';
   if (!(await claimNoticeEmail(env, personId, now, TEXT_DOCUMENT_NOTICE_EMAILS_PER_HOUR)))
     return 'cap';
   const settingsToken = await noticeLinkToken(env, { ownerId: personId, documentId });
-  const { oneClickUrl, ...email } = textDocumentCommentsEmail(env, {
+  const { oneClickUrl, ...email } = textDocumentNoticeEmail(env, {
     documentId,
     documentName,
     shareCode,
     settingsToken,
     comments,
+    changes: edits,
   });
   const { sent } = await sendEmail(env, { ...email, to, oneClickUrl });
   if (!sent) return 'failed';
-  await reportServerEvent(env, 'Comment', 'Notified', commentCountBucket(comments.length));
-  log(`sent doc=${documentId} comments=${comments.length}`);
+  if (comments.length > 0)
+    await reportServerEvent(env, 'Comment', 'Notified', commentCountBucket(comments.length));
+  log(`sent doc=${documentId} comments=${comments.length} changes=${edits.length}`);
   return 'sent';
 }

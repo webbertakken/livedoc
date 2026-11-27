@@ -705,8 +705,12 @@ director, 2026-11-27). Only where the host has email configured
 
 - **What it carries**: only writing applied in the window, direct edits and accepted suggestions; never a pending
   suggestion, comment text or thread data, and never the person's own changes.
-- **Each change**: who made it, and the writing added or removed (as Compare documents finds it,
-  [Compare documents](#compare-documents)), each cut to 200 characters with an ellipsis (default).
+- **Each change**: who made it, and the writing added or removed, read as version history reads a version ([Who
+  changed what](live-editing-and-storage.md#who-changed-what)): an addition is its writer's (an accepted suggestion its
+  suggester's), a removal its remover's (an accepted deletion whoever accepted it), "Someone" where no one was recorded;
+  one person's writing runs on across paragraphs as one change, never from one part of the document (the body, a header,
+  a note) into the next; a picture or an equation reads "a picture" or "an equation" (default copy); each cut to 200
+  characters with an ellipsis (default).
 - **An excerpt cap**: at most `TEXT_DOCUMENT_NOTICE_EXCERPTS_MAX` (20, default) changes are shown, then
   "and N more changes" and **Open the document**, as Google's "email notifications may not display all the changes".
 - **Comments and edits together**: a person to hear of both gets one email, comments first, subject

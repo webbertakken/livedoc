@@ -1,9 +1,14 @@
-// A text document's notification email (docs/specs/034-text-documents/review.md "Notifications", The comments email; In
-// every email): one person's new comments of one document's window, grouped by thread, each with its author, the
-// stretch it is on and its text, and a link to the thread; the signed link to this document's settings and the
+// A text document's notification email (docs/specs/034-text-documents/review.md "Notifications", The comments email;
+// The edits email; In every email): one person's new comments of one document's window, grouped by thread, each with
+// its author, the stretch it is on and its text, and a link to the thread; then the writing others added or removed,
+// each change with who made it, at most TEXT_DOCUMENT_NOTICE_EXCERPTS_MAX of them; the signed link to this document's settings and the
 // account-wide switch. Everything anyone wrote is escaped; nothing goes to someone who cannot comment on or edit it.
 import { cutAtWord } from '@livedoc/document';
-import { TEXT_DOCUMENT_NOTICE_QUOTE_CHARS } from '@livedoc/text-documents';
+import {
+  TEXT_DOCUMENT_NOTICE_CHANGE_CHARS,
+  TEXT_DOCUMENT_NOTICE_EXCERPTS_MAX,
+  TEXT_DOCUMENT_NOTICE_QUOTE_CHARS,
+} from '@livedoc/text-documents';
 import type { Env } from '../types';
 import { appBaseUrl } from './client';
 import {
@@ -24,6 +29,13 @@ export type NoticeEmailComment = {
   readonly text: string;
 };
 
+/** One change as the email says it: who made it (null: no one recorded) and the writing. */
+export type NoticeEmailChange = {
+  readonly kind: 'added' | 'removed';
+  readonly text: string;
+  readonly authorName: string | null;
+};
+
 export type NoticeEmailInput = {
   readonly documentId: string;
   readonly documentName: string;
@@ -31,6 +43,8 @@ export type NoticeEmailInput = {
   readonly shareCode: string | null;
   /** Oldest first. */
   readonly comments: readonly NoticeEmailComment[];
+  /** In place order; empty when the person asked for no edits. */
+  readonly changes: readonly NoticeEmailChange[];
   /** The signed settings link's door (`/api/notification-links/<token>`), null on a host that signs nothing. */
   readonly settingsToken: string | null;
 };
@@ -76,7 +90,48 @@ function threadBlock(base: string, input: NoticeEmailInput, thread: NoticeEmailC
   return `${quote}${lines}${open}`;
 }
 
-export function textDocumentCommentsEmail(env: Env, input: NoticeEmailInput): NoticeEmail {
+function changeLine(change: NoticeEmailChange): string {
+  const who = escapeHtml(change.authorName?.trim() || 'Someone');
+  const text = escapeHtml(
+    cutAtWord(change.text.replace(/\s+/g, ' '), TEXT_DOCUMENT_NOTICE_CHANGE_CHARS),
+  );
+  return `<span style="color:${MUTED}"><strong>${who}</strong> ${change.kind}: “${text}”</span>`;
+}
+
+/** The changes shown, and the line saying how many more there are. */
+function changePoints(changes: readonly NoticeEmailChange[]): string[] {
+  const shown = changes.slice(0, TEXT_DOCUMENT_NOTICE_EXCERPTS_MAX).map(changeLine);
+  const more = changes.length - shown.length;
+  return more > 0
+    ? [
+        ...shown,
+        `<span style="color:${MUTED}">and ${more} more ${more === 1 ? 'change' : 'changes'}</span>`,
+      ]
+    : shown;
+}
+
+const counted = (n: number, one: string, many: string) => (n === 1 ? one : `${n} ${many}`);
+
+/** What the email is: its kind for the telemetry, its subject before the name, and its heading. */
+function emailOf(comments: number, changes: number) {
+  const commentsSaid = counted(comments, 'A new comment', 'new comments');
+  const changesSaid = counted(changes, 'A change', 'changes');
+  if (changes === 0)
+    return {
+      kind: 'TextDocumentComments',
+      subject: 'New comments in',
+      heading: commentsSaid,
+    } as const;
+  if (comments === 0)
+    return { kind: 'TextDocumentEdits', subject: 'Changes in', heading: changesSaid } as const;
+  return {
+    kind: 'TextDocumentCommentsAndEdits',
+    subject: 'New comments and changes in',
+    heading: `${commentsSaid} and ${changesSaid.charAt(0).toLowerCase()}${changesSaid.slice(1)}`,
+  } as const;
+}
+
+export function textDocumentNoticeEmail(env: Env, input: NoticeEmailInput): NoticeEmail {
   const base = appBaseUrl(env);
   const name = input.documentName.trim();
   const docHtml = name ? escapeHtml(name) : 'a text document';
@@ -85,18 +140,21 @@ export function textDocumentCommentsEmail(env: Env, input: NoticeEmailInput): No
   const settingsPage = input.settingsToken
     ? `${base}/notification-settings?token=${encodeURIComponent(input.settingsToken)}`
     : null;
-  const count = input.comments.length;
+  const what = emailOf(input.comments.length, input.changes.length);
   const settings = settingsPage
     ? `<a href="${settingsPage}" style="color:#2563eb;text-decoration:underline">Notification settings</a> changes what this document emails you. `
     : '';
   const footer = `You’re receiving this because of your notification settings for ${docHtml}. ${settings}<a href="${profilePath(env)}" style="color:#2563eb;text-decoration:underline">Turn off all text document emails</a> in Settings.`;
   return {
-    kind: 'TextDocumentComments',
-    subject: `New comments in ${docText}`,
+    kind: what.kind,
+    subject: `${what.subject} ${docText}`,
     html: shell(env, {
-      heading: count === 1 ? 'A new comment' : `${count} new comments`,
+      heading: what.heading,
       intro: `In <strong>${docHtml}</strong>:`,
-      points: byThread(input.comments).map((thread) => threadBlock(base, input, thread)),
+      points: [
+        ...byThread(input.comments).map((thread) => threadBlock(base, input, thread)),
+        ...changePoints(input.changes),
+      ],
       ctaText: 'Open the document',
       ctaHref: `${base}/document/${encodeURIComponent(input.documentId)}${query}`,
       footer,

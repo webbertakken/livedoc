@@ -319,9 +319,15 @@ export class DocumentRoom extends DurableObject<Env | undefined> {
             this.sequenceMutation(from, op, except, forViewers),
           sendTo: (ws, payload) => this.sendTo(ws, payload),
           position: () => ({ epoch: this.epoch }),
-          // Who wrote what, for a text document's versions.
-          ...(versions && kind === TEXT_DOCUMENT_LIVE_TAB
-            ? { stored: (place, update, author) => versions.stored(place, update, author) }
+          // Who wrote what, for a text document's versions and its notification window's removals.
+          ...((versions || notices) && kind === TEXT_DOCUMENT_LIVE_TAB
+            ? {
+                stored: async (place, update, author) => {
+                  // The notices keeper never throws, so a versions failure still leaves the removal told.
+                  await notices?.stored(place, update, author);
+                  await versions?.stored(place, update, author);
+                },
+              }
             : {}),
           // A text document's notification window, opened before an update is stored.
           ...(notices && kind === TEXT_DOCUMENT_LIVE_TAB

@@ -10,7 +10,7 @@ import { createShareLink } from '../db/share';
 import { recordSharedAccess } from '../db/shared';
 import { writeNoticeSetting } from '../db/text-document-notice-settings';
 import { sqliteD1, type SqliteD1 } from '../test-sqlite-d1';
-import { sendNoticeBatches } from './text-document-notice-send';
+import { sendNoticeBatches, type NoticeSendDeps } from './text-document-notice-send';
 
 // docs/specs/034-text-documents/review.md "Notifications" (Who is emailed; Batches; The comments email): read at the
 // send, a Viewer never, a person lowered to Viewer at once, guests never, the cap per person.
@@ -65,11 +65,31 @@ async function threads(
   return LiveThreads.read(doc);
 }
 
+const changesOf = vi.fn<NoticeSendDeps['changesOf']>(async () => []);
+
 async function send(read: TextDocumentThread[], before = ['c0']) {
   return sendNoticeBatches(
-    { env: db.env, documentId: 'D', threadsOf: async () => read, now: Date.now() },
-    [{ tabId: 'td', commentIds: before }],
+    { env: db.env, documentId: 'D', threadsOf: async () => read, changesOf, now: Date.now() },
+    [
+      {
+        tabId: 'td',
+        commentIds: before,
+        baseline: { stateVector: new Uint8Array(), deletions: new Uint8Array() },
+        deleters: [],
+      },
+    ],
   );
+}
+
+/** A change by `who` (null: no one recorded), as the room reads it. */
+async function change(who: string | null, text: string, kind: 'added' | 'removed' = 'added') {
+  return {
+    tabId: 'td',
+    kind,
+    text,
+    authorKey: who ? await adderKeyFor('D', who) : null,
+    authorName: who,
+  };
 }
 
 beforeEach(async () => {
@@ -108,6 +128,8 @@ beforeEach(async () => {
     }),
   );
   info.mockClear();
+  changesOf.mockReset();
+  changesOf.mockResolvedValue([]);
 });
 
 describe('a closed window’s emails', () => {
@@ -207,5 +229,76 @@ describe('a closed window’s emails', () => {
     const error = vi.spyOn(console, 'error').mockImplementation(() => {});
     expect(await send(await threads(['owner', 'pat']))).toBe(0);
     error.mockRestore();
+  });
+});
+
+describe('a closed window’s edits', () => {
+  it('are read only when someone asked for them', async () => {
+    expect(await send(await threads(['owner', 'pat']), ['c0', 'c1'])).toBe(0);
+    expect(changesOf).not.toHaveBeenCalled();
+    expect(info).toHaveBeenCalledWith('[text-document-notices] batch doc=D comments=0 changes=0');
+  });
+
+  it('tell those who asked of others’ changes, never their own, and never a Viewer', async () => {
+    await writeNoticeSetting(
+      db.env,
+      'D',
+      'pat',
+      { comments: 'none', edits: 'added-or-removed' },
+      T,
+    );
+    await writeNoticeSetting(
+      db.env,
+      'D',
+      'owner',
+      { comments: 'none', edits: 'added-or-removed' },
+      T,
+    );
+    await writeNoticeSetting(
+      db.env,
+      'D',
+      'vic',
+      { comments: 'none', edits: 'added-or-removed' },
+      T,
+    );
+    changesOf.mockResolvedValue([
+      await change('owner', 'A new line'),
+      await change(null, 'Old', 'removed'),
+    ]);
+    expect(await send(await threads(['owner']), ['c0'])).toBe(2);
+    const byTo = new Map(sent.map((m) => [m.to, m]));
+    expect(byTo.get('pat@x.test')!.subject).toBe('Changes in Plan');
+    expect(byTo.get('pat@x.test')!.html).toContain('<strong>owner</strong> added: “A new line”');
+    expect(byTo.get('pat@x.test')!.html).toContain('<strong>Someone</strong> removed: “Old”');
+    expect(byTo.get('owner@x.test')!.html).not.toContain('A new line');
+    expect(byTo.get('owner@x.test')!.html).toContain('Old');
+    expect(byTo.has('vic@x.test')).toBe(false);
+  });
+
+  it('go with the comments in one email', async () => {
+    await writeNoticeSetting(
+      db.env,
+      'D',
+      'owner',
+      { comments: 'for-you', edits: 'added-or-removed' },
+      T,
+    );
+    changesOf.mockResolvedValue([await change('pat', 'Their words')]);
+    expect(await send(await threads(['owner', 'pat']))).toBe(1);
+    expect(sent.map((m) => m.subject)).toEqual(['New comments and changes in Plan']);
+    expect(info).toHaveBeenCalledWith('[text-document-notices] sent doc=D comments=1 changes=1');
+  });
+
+  it('send nothing to someone whose only changes are their own', async () => {
+    await writeNoticeSetting(
+      db.env,
+      'D',
+      'owner',
+      { comments: 'none', edits: 'added-or-removed' },
+      T,
+    );
+    changesOf.mockResolvedValue([await change('owner', 'Mine')]);
+    expect(await send(await threads(['owner']))).toBe(0);
+    expect(sent).toEqual([]);
   });
 });

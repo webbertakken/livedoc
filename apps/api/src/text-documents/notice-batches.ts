@@ -123,3 +123,37 @@ export function commentCountBucket(count: number): 'One' | 'TwoToFive' | 'SixPlu
   if (count <= 1) return 'One';
   return count <= 5 ? 'TwoToFive' : 'SixPlus';
 }
+
+/** A change applied in a window, as the room reads it: its tab, added or removed, its writing, and its author's key
+ *  and name (null: no one was recorded). */
+export type EditNotice = {
+  readonly tabId: string;
+  readonly kind: 'added' | 'removed';
+  readonly text: string;
+  readonly authorKey: string | null;
+  readonly authorName: string | null;
+};
+
+/** A change with its author's key turned into an account (null: no one the document knows, never anyone's own). */
+export type NoticeEdit = EditNotice & { readonly authorId: string | null };
+
+/** The changes with their authors' keys turned into accounts through `owners`. */
+export function noticeEdits(
+  edits: readonly EditNotice[],
+  owners: ReadonlyMap<string, string>,
+): NoticeEdit[] {
+  return edits.map((edit) => ({
+    ...edit,
+    authorId: edit.authorKey ? (owners.get(edit.authorKey) ?? null) : null,
+  }));
+}
+
+/** The changes one person's setting asks for, in place order: never their own. */
+export function editsFor(
+  personId: string,
+  setting: NoticeSettingDto,
+  edits: readonly NoticeEdit[],
+): NoticeEdit[] {
+  if (setting.edits === 'none') return [];
+  return edits.filter((edit) => edit.authorId !== personId);
+}

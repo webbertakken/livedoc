@@ -1,5 +1,10 @@
 import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest';
-import { LiveThreads, TextDocumentState, type TextDocumentComment } from '@livedoc/text-documents';
+import {
+  LiveThreads,
+  TextDocumentState,
+  VersionSnapshots,
+  type TextDocumentComment,
+} from '@livedoc/text-documents';
 import { sqliteD1, type SqliteD1 } from '../test-sqlite-d1';
 import {
   NOTICE_WINDOW_ENDS_KEY,
@@ -69,6 +74,9 @@ function keeper(overrides: Partial<RoomNoticesDeps> = {}) {
   });
 }
 
+const deletionRows = () =>
+  db.sql.prepare('SELECT author, name FROM text_document_notice_deletions').all();
+
 const baselines = () =>
   db.sql.prepare('SELECT tab_id, since, comment_ids FROM text_document_notice_baselines').all();
 
@@ -118,7 +126,14 @@ describe('a text document’s notification window', () => {
     await notices.alarm(T + WINDOW);
     expect(send).toHaveBeenCalledTimes(1);
     const [deps, windows] = send.mock.calls[0]!;
-    expect(windows).toEqual([{ tabId: 'td', commentIds: ['c0'] }]);
+    expect(windows).toEqual([
+      {
+        tabId: 'td',
+        commentIds: ['c0'],
+        baseline: { stateVector: expect.any(Uint8Array), deletions: expect.any(Uint8Array) },
+        deleters: [],
+      },
+    ]);
     expect(deps.documentId).toBe('D');
     expect((await deps.threadsOf('td')).flatMap((t) => t.comments.map((c) => c.id))).toEqual([
       'c0',
@@ -152,5 +167,65 @@ describe('a text document’s notification window', () => {
     const notices = keeper({ kv: () => undefined });
     await notices.ready(place);
     expect(notices.deadline()).toBeNull();
+  });
+
+  it('keeps each sender’s deletions while a window is open, and hands them to the send', async () => {
+    const ann = { key: 'ka', name: 'Ann', color: '#111' };
+    const notices = keeper();
+    const doc = TextDocumentState.load(updates);
+    doc.clientID = 77;
+    const written: Uint8Array[] = [];
+    doc.on('update', (u: Uint8Array) => written.push(u));
+    TextDocumentState.body(doc).delete(0, 1);
+    const deleting = written.at(-1)!;
+    // An update that deletes nothing: no structs, an empty delete set.
+    const inserting = Uint8Array.of(0, 0);
+    // No window yet: nothing kept.
+    await notices.stored(place, deleting, ann);
+    expect(deletionRows()).toEqual([]);
+    await notices.ready(place);
+    // No key, or nothing deleted: nothing kept.
+    await notices.stored(place, deleting, { ...ann, key: null });
+    await notices.stored(place, inserting, ann);
+    expect(deletionRows()).toEqual([]);
+    await notices.stored(place, deleting, ann);
+    await notices.stored(place, deleting, { ...ann, name: 'Ann B' });
+    expect(deletionRows()).toEqual([{ author: 'ka', name: 'Ann B' }]);
+
+    updates = [...updates, ...written];
+    db.sql
+      .prepare(
+        'INSERT INTO text_document_clients (tab_id, client, author, name, color, first_at) VALUES (?, ?, ?, ?, ?, ?)',
+      )
+      .run('td', 77, 'ka', 'Ann', '#111', T);
+    await notices.alarm(T + WINDOW);
+    const [deps, windows] = send.mock.calls[0]!;
+    expect(windows[0]!.deleters).toEqual([
+      { key: 'ka', name: 'Ann B', deletions: expect.any(Uint8Array) },
+    ]);
+    expect(VersionSnapshots.decodeDeletions(windows[0]!.deleters[0]!.deletions).clients.size).toBe(
+      1,
+    );
+    expect(await deps.changesOf(windows[0]!)).toEqual([
+      {
+        tabId: 'td',
+        kind: 'removed',
+        text: 'Quarterly results',
+        authorKey: 'ka',
+        authorName: 'Ann',
+      },
+    ]);
+    expect(deletionRows()).toEqual([]);
+  });
+
+  it('keeps nothing where email is not configured, and never stands in an edit’s way', async () => {
+    db.env.RESEND_API_KEY = undefined;
+    await keeper().stored(place, withThread(['c0']), { key: 'k', name: null, color: null });
+    expect(deletionRows()).toEqual([]);
+    db.env.RESEND_API_KEY = 're_test';
+    await keeper().stored(place, Uint8Array.of(9, 9, 9), { key: 'k', name: null, color: null });
+    expect(warn).toHaveBeenCalledWith(
+      expect.stringMatching(/^\[text-document-notices\] deletions failed doc=D tab=td error=/),
+    );
   });
 });
