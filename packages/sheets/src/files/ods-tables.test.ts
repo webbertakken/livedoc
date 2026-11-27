@@ -145,6 +145,58 @@ describe('tables in ODF', () => {
     expect(made.sheets[0]!.layout.tables?.map((t) => t.name)).toEqual(['Items']);
   });
 
+  it('writes an autofilter’s anonymous range back with its filter conditions, beside its own tables', async () => {
+    const autofilter =
+      '<table:database-range table:name="__Anonymous_Sheet_DB__0" table:target-range-address="S.A1:S.A3" table:display-filter-buttons="true">' +
+      '<table:filter><table:filter-condition table:field-number="0" table:value="pen" table:operator="="/></table:filter>' +
+      '</table:database-range>';
+    const read = await ok(
+      readOds(
+        encode(
+          `<?xml version="1.0"?><office:document ${ODF_NAMESPACES} office:mimetype="application/vnd.oasis.opendocument.spreadsheet"><office:body><office:spreadsheet>` +
+            '<table:table table:name="S"><table:table-row><table:table-cell office:value-type="string"><text:p>Item</text:p></table:table-cell></table:table-row>' +
+            '<table:table-row><table:table-cell office:value-type="string"><text:p>pen</text:p></table:table-cell></table:table-row>' +
+            '<table:table-row><table:table-cell office:value-type="string"><text:p>ink</text:p></table:table-cell></table:table-row></table:table>' +
+            `<table:database-ranges>${autofilter}</table:database-ranges></office:spreadsheet></office:body></office:document>`,
+        ),
+      ),
+    );
+    // Not a loss: the filter stays the file's own.
+    expect(read.losses).toEqual([]);
+    const made = sheetsFromFile(read.file, 'en-GB', rand);
+    const [sheet] = opened(made);
+    const layout = sheet!.layout;
+    const own: SheetTable = {
+      id: 'tbl123',
+      name: 'Mine',
+      r1: layout.rows[0]!,
+      c1: layout.cols[3]!,
+      r2: layout.rows[2]!,
+      c2: layout.cols[3]!,
+    };
+    const odsRecord = WorkbookRecord.opened(record, 'ods', undefined);
+    for (const format of ['ods', 'fods'] as const) {
+      const out = writeWorkbook(
+        [{ ...sheet!, layout: { ...layout, tables: [own] } }],
+        odsRecord,
+        'Book',
+        format,
+        made.kept,
+      );
+      expect(out.losses, format).toEqual([]);
+      const again = await ok(readOds(out.data));
+      const kept = again.file.kept!.items.find((i) => i.xml.includes('database-ranges'))!.xml;
+      expect(kept, format).toContain('table:name="__Anonymous_Sheet_DB__0"');
+      expect(kept, format).toContain(
+        '<table:filter><table:filter-condition table:field-number="0" table:value="pen" table:operator="="/></table:filter>',
+      );
+      expect(
+        again.file.sheets[0]!.tables?.map((t) => t.name),
+        format,
+      ).toEqual(['Mine']);
+    }
+  });
+
   it('places its own database ranges in the kept holder, else after the names', () => {
     const own = ['<table:database-range table:name="T"/>'];
     expect(withDatabaseRanges(['<x:named-expressions/>', '<x:other/>'], own)).toEqual([
