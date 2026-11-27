@@ -263,8 +263,14 @@ sheet's, seen by everyone, kept by row and column ids as a named range is.
 - Copies: a duplicated sheet's or copied sheet's tables are renamed to the next free names, as Google's: each its own
   name, an underscore and the smallest number from 2 that frees it in the workbook (`Sales_2`, `Sales_3`, D451);
   formulas in the copy reading its tables read the copy's; a table's banding goes with it; Clear Sheet leaves the
-  tables, their cells cleared. A table's whole range copied and pasted elsewhere makes a new table there, named the
-  first free `TableN`, as Google's paste does (D451).
+  tables, their cells cleared.
+- Pasted tables: an Editor's plain paste (Paste, Ctrl+V; never Paste Special) of copied or cut cells holding a table's
+  header row makes a new table where they land, as Google's paste does (D454): the table's copied columns, from its
+  header row to the last copied row of it, with their types, dropdown options and banding colours, its total row when
+  its last row was copied, named the first free `TableN` (D451); several tables copied make one each. A copy of a
+  table's data rows alone makes none; a cut leaves its table where it was, its cells emptied. A new table that would
+  overlap a table, cross a merge or an alternating colours range, start in the row directly below a table (which
+  grows it) or pass a sheet's 50 is not made, the cells still pasted.
 
 ## Clean-up, split, randomise, stats
 
@@ -278,16 +284,44 @@ sheet's, seen by everyone, kept by row and column ids as a named range is.
 
 ## Find and replace
 
-- Ctrl+F finds in the sheet (a bar over the grid); Ctrl+H opens **Find and Replace**: find, replace with, search
-  (All Sheets, This Sheet, Specific Range), Match Case, Match Entire Cell Contents, Search Using Regular Expressions,
-  Also Search Within Formulas, Also Search Within Links; **Find**, **Replace**, **Replace All** ("Replaced N
-  instances of …"), **Done**. Regular expressions are bounded as formulas' are.
+- **Ctrl+F** opens the **Find** bar on the open sheet, a Plan Sheet's ([Find](sheet.md#find)), with **More Options**
+  (⋮) opening Find and Replace on what it holds.
+- **Ctrl+H** (⌘+Shift+H on a Mac) and **Edit › Find and Replace** open the **Find and Replace** dialog: **Find**,
+  **Replace With**, **Search** (**All Sheets**, **This Sheet**, **Specific Range**, the last with a range field holding
+  the selection, as `Sheet1!A1:D10`), **Match Case**, **Match Entire Cell Contents**, **Search Using Regular
+  Expressions**, **Also Search Within Formulas**, **Also Search Within Links**; **Find**, **Replace**, **Replace All**
+  and **Done** (Escape too). It stays open as sheets change, and keeps what was typed while the spreadsheet is open.
+- What matches, as Google's (D455):
+  - Case aside unless Match Case, a regular expression too.
+  - Find looks in what a cell shows; with Also Search Within Formulas, in a formula's text too; with Also Search
+    Within Links, in a link's address (a `HYPERLINK`'s, D459).
+  - Match Entire Cell Contents: the whole text must match (a regular expression whole: `a+` matches `aaa`, never
+    `banana`), and the whole is replaced.
+  - Regular expressions are RE2's, as `REGEXMATCH` reads them, bounded as formulas' are; in Replace With `$0` is
+    the match, `$1` on its groups, `$$` a dollar sign, a backslash plain text (D456). A pattern RE2 refuses says
+    "Enter a valid regular expression" under Find, and Find, Replace and Replace All dim.
+- Replace changes what a cell holds, as its edit text (a number as `101`, a date as typed), read again as typed: `101`
+  with each 1 replaced by 2 is the number 202, text replaced by `42` the number 42. A formula changes only with Also
+  Search Within Formulas, in its text; a formula's result is never replaced, so Replace passes over a match only in
+  one.
+- **Find** goes to the next match after the active cell, row by row, the open sheet first, then (All Sheets) the next
+  in the sheet bar's order, hidden sheets passed over; past the last it starts again at the first, saying "No more
+  results, looping around"; with none, `No results for "pen"` (D457).
+- **Replace** replaces in the match it is on and goes to the next; with none found yet it finds first.
+- **Replace All** replaces every match the search reaches, hidden sheets too, as Google's does, as one change and one
+  undo step across sheets, and says `Replaced 12 instances of "a" with "X"`, counting each match in each cell as
+  Google counts; with none, `No results for "a"`. Values are checked against the sheets' validation
+  ([Where values are checked](data-validation.md#where-values-are-checked)).
+- An Editor finds and replaces; a Participant replaces values only (Also Search Within Formulas finds, never
+  replaces), cells under a protection that does not admit them left as they are and counted after the line
+  (`2 protected cells were left as they were`, D458); a Viewer's dialog has Find and Done only.
 
 ## Who may do what
 
 - **Editor**: everything here.
 - **Participant**: sort and filter only through filter views of their own; writes values through validation; picks
-  from dropdowns and ticks tick boxes; grows a table by a value typed below it (D448), changing nothing else of it; finds; never replaces formulas or protected cells unless named.
+  from dropdowns and ticks tick boxes; grows a table by a value typed below it (D448), changing nothing else of it;
+  finds; replaces values, never formulas, and never in cells a protection keeps from them (D458).
 - **Viewer**: finds, uses filter views of their own, reads named ranges and goes to them.
 
 ## Observability
@@ -301,7 +335,10 @@ sheet's, seen by everyone, kept by row and column ids as a named range is.
 - `[workbook] named range moved` when a name's range moves to another sheet, and `[workbook] named range refused`
   with the reason (`name`, `range`) when Done cannot save.
 - `[sheet] table refused` with the reason (`overlap`, `merge`, `banding`, `name`, `full`) when Convert to Table,
-  Table Settings or a write cannot make or change a table; `[sheet] table grew` with the rows it grew by.
+  Table Settings, a paste or a write cannot make or change a table (a paste's also with `paste`); `[sheet] table
+grew` with the rows it grew by.
+- `[workbook] find replaced` with the instances, cells and sheets changed, the protected cells left and whether a
+  regular expression searched (never the text); `[workbook] find refused` with the reason (`regex`, `costly`).
 
 ## Errors and limits
 
@@ -356,6 +393,33 @@ The code cites each by its id.
   elsewhere makes a new table named the first free `TableN`. Evidence: the Sheets API's `duplicateSheet` of a sheet
   holding `Sales` twice gave `Sales_2` and `Sales_3`; `copyPaste` of the table's range gave `Table1`
   (`plans/assets/0020/research/google-table-probe.ts`, 2026-11-27).
+- **D454** Which pastes make a table, as Google's: a plain paste of cells holding a table's header row, over the
+  table's copied columns from its header to the last copied row, types, dropdown options, banding and total row kept;
+  data rows alone, Paste Special's items and a paste onto a table make none; a cut makes one and leaves its own. Evidence:
+  the Sheets API's `copyPaste` of `Sales` A1:B4: whole, A1:B2, A1:A4, A1:B1 and A1:C4 each made the next
+  `TableN` over the table's part, types and banding kept; A2:B3 and B2 made none; `PASTE_VALUES`, `PASTE_FORMAT`,
+  `PASTE_FORMULA`, `TRANSPOSE` and `PASTE_NO_BORDERS` made none; onto A2 it grew `Sales`; `cutPaste` made `Table3`
+  and left `Sales` (`plans/assets/0020/research/google-table-paste-probe.ts`, 2026-11-27). Not measured, LiveDoc's own:
+  a paste starting in the row directly below a table grows it and makes none, and a paste repeated over a larger
+  selection makes one table, at its first copy (default).
+- **D455** What Find and Replace matches, as Google's: case aside unless Match Case, regular expressions too; Replace in
+  the cell's edit text read again as typed (a number stays a number, a date moves by its text); formulas only with
+  Also Search Within Formulas; Match Entire Cell Contents whole cells; Replace All counts matches, not cells; All
+  Sheets reaches hidden sheets. Evidence: the Sheets API's `findReplace` on a probe workbook (`101` to `202`,
+  `2024-01-05` to `1999-01-05`, `="a"&"b"` untouched without `includeFormulas`, `a` over six cells counted 12
+  occurrences, a hidden sheet replaced) (`plans/assets/0020/research/google-find-replace-probe.ts`, 2026-11-27).
+- **D456** Replace With's grammar under regular expressions, as Google's: `$0` the match, `$1` on its groups, `$$` a
+  dollar sign, a backslash and any other `$` plain text. Evidence: `(an)` replaced by `<$0|\1|$$>` gave
+  `<an|\1|$>` (the same probe). A `$` and a number past the pattern's groups is plain text (default).
+- **D457** Find's order and words: row by row from the active cell, the open sheet then the sheet bar's order,
+  hidden sheets passed over, looping at the end; "No more results, looping around" and `No results for "x"`
+  (default; the Sheets API has no Find to measure).
+- **D458** Replace by a Participant: values only, never a formula's text; cells under a protection that does not admit
+  the person are left and counted, so a Replace All still replaces the rest, as typing would refuse them one by one
+  (default).
+- **D459** Also Search Within Links: finds a cell by its link's address, a `HYPERLINK`'s worked out; the address
+  changes only as formula text, under Also Search Within Formulas, as Google's `findReplace` changed
+  `http://a.example` only with `includeFormulas` (the same probe; default for finding).
 - **D302** A named function's limits: a name up to 254 characters (Google's), up to 20 placeholders, a definition up
   to 2,000 characters, a description up to 1,000, an argument's description and example up to 200 each (default).
 - **D345** A protection's bounds: up to 100 a sheet, 50 exceptions a protected sheet, a description up to 200

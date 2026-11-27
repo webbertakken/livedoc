@@ -20,6 +20,7 @@ import { useSheetClipboard } from '@/components/sheets/useSheetClipboard';
 import { usePublishedBindings } from './office-bindings-channel';
 import { useBorderLine } from './border-line-context';
 import { useSheetBarActionsContext } from './useSheetBarActions';
+import { useFindReplace } from './find-replace-state';
 
 /** The dialogs the open sheet hosts that its menu items open, and the merge that asks first (useMergeDialog). */
 export type GridDialogs = {
@@ -84,9 +85,16 @@ export function useGridMenuBindings(
       openSortRange: dialogs.openSortRange,
     },
   });
+  // Edit › Find and Replace, anyone's: a Viewer's dialog finds only (data-tools.md "Find and replace").
+  const findReplace = useFindReplace();
   const published = {
     ...office,
-    actions: { ...office.actions, ...sheetBarBindings(bar), ...panelActions },
+    actions: {
+      ...office.actions,
+      ...sheetBarBindings(bar),
+      ...panelActions,
+      ...(findReplace ? { 'find-and-replace': { run: () => findReplace.openWith() } } : {}),
+    },
   };
   usePublishedBindings(published);
   return published;
