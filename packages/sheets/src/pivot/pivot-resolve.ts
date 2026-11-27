@@ -11,6 +11,7 @@ import type {
   PivotCell,
   PivotFormat,
   PivotGroupSpec,
+  PivotIndex,
   PivotOutput,
   PivotSource,
   PivotSpec,
@@ -139,7 +140,7 @@ export function readPivotSource(
 }
 
 /** An output as the engine holds it: its values, and beside them each cell's number format, if it takes one. */
-export type PivotArray = ValueArray & { fmts: (CellFormat | undefined)[][] };
+export type PivotArray = ValueArray & { fmts: (CellFormat | undefined)[][]; index: PivotIndex };
 
 export function isPivotArray(v: Value | undefined): v is PivotArray {
   return isArray(v) && 'fmts' in v;
@@ -157,6 +158,7 @@ export function pivotArray(
   return {
     rows: output.rows.map((row) => row.map((x) => x.v)),
     fmts: output.rows.map((row) => row.map((x) => formatOf(x.fmt))),
+    index: output.index,
   };
 }
 

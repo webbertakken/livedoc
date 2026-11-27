@@ -7,11 +7,15 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { isoFromSerial } from '../dates';
 import type { FilterCondition } from '../sheet';
-import { PIVOT_CASES, PIVOT_SOURCE_HEADER, PIVOT_SOURCE_ROWS } from '../../corpus/pivot-cases';
+import {
+  GETPIVOTDATA_PROBES,
+  PIVOT_CASES,
+  PIVOT_SOURCE_HEADER,
+  PIVOT_SOURCE_ROWS,
+} from '../../corpus/pivot-cases';
 import { pivotOutput } from './pivot-output';
 import { book } from '../testing/book';
 import { isError } from '../formula/values';
-import type { Sheet } from '../sheet';
 import type {
   SheetPivot,
   SheetPivotFilter,
@@ -209,8 +213,9 @@ describe('pivotOutput against Google Sheets', () => {
   );
 });
 
-// The source as a sheet (Sales, the dates formatted as dates) and the pivot table as Report's object, by column id.
-function inTheGrid(spec: PivotSpec): unknown[][] {
+// The source as a sheet (Sales, the dates formatted as dates), each case a sheet of its own titled as Google's, its
+// pivot table that sheet's object by column id, and the GETPIVOTDATA probes, one a row, on Probes.
+function casesInTheGrid() {
   const data: Record<string, string> = {};
   const letter = (c: number) => String.fromCharCode(65 + c);
   PIVOT_SOURCE_HEADER.forEach((v, c) => (data[`${letter(c)}1`] = v));
@@ -220,11 +225,16 @@ function inTheGrid(spec: PivotSpec): unknown[][] {
         data[`${letter(c)}${r + 2}`] = c === 2 ? isoFromSerial(v as number) : String(v);
     }),
   );
+  const probes = Object.fromEntries(GETPIVOTDATA_PROBES.map((p, i) => [`A${i + 1}`, p]));
   const b = book(
-    { Sales: data, Report: {} },
-    { rows: 40, cols: 30, locale: 'en-US', arrays: 'google' },
+    {
+      Sales: data,
+      ...Object.fromEntries(PIVOT_CASES.map(({ title }) => [title, {}])),
+      Probes: probes,
+    },
+    { rows: 50, cols: 30, locale: 'en-US', arrays: 'google' },
   );
-  const [sales, report] = b.sheets as [Sheet, Sheet];
+  const sales = b.sheets[0]!;
   const id = (col: number) => sales.layout.cols[col]!;
   const group = ({ col, ...g }: PivotGroupSpec): SheetPivotGroup => ({
     col: id(col),
@@ -238,46 +248,80 @@ function inTheGrid(spec: PivotSpec): unknown[][] {
       : {}),
     ...(g.grouping ? { grouping: g.grouping } : {}),
   });
-  const pivot: SheetPivot = {
-    id: 'pivot01',
-    kind: 'pivot',
-    at: { r: report.layout.rows[0]!, c: report.layout.cols[0]! },
-    source: {
-      r1: sales.layout.rows[0]!,
-      c1: id(0),
-      r2: sales.layout.rows[PIVOT_SOURCE_ROWS.length]!,
-      c2: id(5),
-      s: sales.id,
-    },
-    rows: spec.rows.map(group),
-    columns: spec.columns.map(group),
-    values: spec.values.map((v): SheetPivotValue =>
-      v.formula === undefined ? { ...v, col: id(v.col) } : { ...v, name: v.name! },
-    ),
-    filters: (spec.filters ?? []).map((f): SheetPivotFilter =>
-      f.formula === undefined
-        ? { col: id(f.col), cond: f.cond }
-        : { col: id(f.col), formula: f.formula },
-    ),
-    ...(spec.valuesAsRows ? { valuesAsRows: true } : {}),
+  PIVOT_CASES.forEach(({ pivot }, i) => {
+    const spec = specOf(pivot);
+    const report = b.sheets[i + 1]!;
+    const object: SheetPivot = {
+      id: 'pivot01',
+      kind: 'pivot',
+      at: { r: report.layout.rows[0]!, c: report.layout.cols[0]! },
+      source: {
+        r1: sales.layout.rows[0]!,
+        c1: id(0),
+        r2: sales.layout.rows[PIVOT_SOURCE_ROWS.length]!,
+        c2: id(5),
+        s: sales.id,
+      },
+      rows: spec.rows.map(group),
+      columns: spec.columns.map(group),
+      values: spec.values.map((v): SheetPivotValue =>
+        v.formula === undefined ? { ...v, col: id(v.col) } : { ...v, name: v.name! },
+      ),
+      filters: (spec.filters ?? []).map((f): SheetPivotFilter =>
+        f.formula === undefined
+          ? { col: id(f.col), cond: f.cond }
+          : { col: id(f.col), formula: f.formula },
+      ),
+      ...(spec.valuesAsRows ? { valuesAsRows: true } : {}),
+    };
+    const next = { ...report, layout: { ...report.layout, objects: [object] } };
+    b.sheets[i + 1] = next;
+    b.wb.updateSheet(next);
+  });
+  const grid = (title: string) => {
+    const sheet = b.sheets.find((x) => x.title === title)!;
+    const { rows, cols } = b.wb.shownExtent(sheet.id);
+    return Array.from({ length: rows }, (_, r) =>
+      Array.from({ length: cols }, (_, c) => ({ v: b.wb.value(sheet.id, r, c) })),
+    );
   };
-  const next = { ...report, layout: { ...report.layout, objects: [pivot] } };
-  b.wb.updateSheet(next);
-  const { rows, cols } = b.wb.shownExtent(report.id);
-  return Array.from({ length: rows }, (_, r) =>
-    Array.from({ length: cols }, (_, c) => ({ v: b.wb.value(report.id, r, c) })),
-  );
+  return { ...b, grid };
 }
 
 describe('pivot tables in the grid against Google Sheets', () => {
   const cases = PIVOT_CASES.filter(({ title }) => ANSWERS[title]);
+  const made = casesInTheGrid();
   it('covers every case Google made', () => {
     expect(cases.length).toBe(Object.keys(ANSWERS).length);
   });
-  it.each(cases.map((c) => [c.title, c.pivot] as const))(
+  it.each(cases.map((c) => [c.title] as const))(
     'lays out "%s" in a sheet as Google does',
-    (title, pivot) => {
-      close(asGoogle(inTheGrid(specOf(pivot)) as { v: unknown }[][]), ANSWERS[title]!);
+    (title) => {
+      close(asGoogle(made.grid(title)), ANSWERS[title]!);
+    },
+  );
+});
+
+const PROBED = JSON.parse(
+  readFileSync(
+    join(import.meta.dirname, '..', '..', 'corpus', 'google', 'getpivotdata-answers.json'),
+    'utf8',
+  ),
+) as Record<string, unknown>;
+
+describe('GETPIVOTDATA against Google Sheets', () => {
+  const made = casesInTheGrid();
+  it('covers every probe Google answered', () => {
+    expect(Object.keys(PROBED)).toEqual([...GETPIVOTDATA_PROBES]);
+  });
+  it.each(GETPIVOTDATA_PROBES.map((p, i) => [p, i] as const))(
+    'answers %s as Google does',
+    (probe, i) => {
+      const ours = made.v(`A${i + 1}`, 'Probes');
+      close([[ours]], [[PROBED[probe]]]);
+      // GETPIVOTDATA's own refusals in Google's words.
+      const answer = PROBED[probe];
+      if (isError(ours) && ours.e === '#REF!') expect(`${ours.e} (${ours.why})`).toBe(answer);
     },
   );
 });

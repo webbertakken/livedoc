@@ -6,6 +6,7 @@ import { err, isError, type Scalar } from '../formula/values';
 import { compareItems, groupHeader, itemMaker, type PivotItem } from './pivot-items';
 import { summarise } from './pivot-summary';
 import type {
+  PivotIndex,
   PivotCalc,
   PivotCell,
   PivotGroupSpec,
@@ -303,6 +304,14 @@ function layout(
       if (s.v !== null) lastHeader[L + i] = { v: valueName(s.v) };
     });
 
+  // Each item a node summarises, by its group's header, outermost first.
+  const pairsOf = (n: PivotNode, groups: readonly PivotGroupSpec[]) =>
+    path(n).map((x, d) => {
+      const g = groups[d]!;
+      return [groupHeader(g, nameOf(g.col)), labelText(x.item!)] as const;
+    });
+  const indexed: PivotIndex['cells'][number][] = [];
+
   // The lines.
   let previous: PivotNode[] = [];
   for (const line of lines) {
@@ -326,8 +335,23 @@ function layout(
     if (vertical && line.v !== null) cells[R] = { v: valueName(line.v) };
     slots.forEach((s, i) => {
       // A line carries its value when values are rows, a slot when they are columns.
-      cells[L + i] = cellOf(line.node, s.node, (line.v ?? s.v)!);
+      const vi = (line.v ?? s.v)!;
+      cells[L + i] = cellOf(line.node, s.node, vi);
+      indexed.push({
+        v: vi,
+        pairs: [...pairsOf(line.node, spec.rows), ...pairsOf(s.node, spec.columns)],
+        r: rows.length - 1,
+        c: L + i,
+      });
     });
   }
-  return { rows, width };
+  const index: PivotIndex = {
+    values: spec.values.map((v, vi) => ({
+      name: valueName(vi),
+      ...(v.formula === undefined ? { col: nameOf(v.col) } : {}),
+    })),
+    keys: [...spec.rows, ...spec.columns].map((g) => groupHeader(g, nameOf(g.col))),
+    cells: indexed,
+  };
+  return { rows, width, index };
 }

@@ -114,4 +114,21 @@ export type PivotFormat = 'percent' | { col: number };
 export type PivotOutCell = { v: Scalar; fmt?: PivotFormat };
 
 /** The output, row by row, every row as wide as the widest. */
-export type PivotOutput = { rows: PivotOutCell[][]; width: number };
+/**
+ * What GETPIVOTDATA reads of an output (formulas.md "Lookup"): each value's name and its source column's; the groups'
+ * headers; and each value cell, by its place in the output, with the groups' items it summarises, outermost first (a
+ * total names fewer, the Grand Total none).
+ */
+export type PivotIndex = {
+  values: readonly { name: string; col?: string }[];
+  keys: readonly string[];
+  cells: readonly {
+    v: number;
+    pairs: readonly (readonly [string, string])[];
+    r: number;
+    c: number;
+  }[];
+};
+
+/** The output, row by row, every row as wide as the widest, and what GETPIVOTDATA reads of it. */
+export type PivotOutput = { rows: PivotOutCell[][]; width: number; index: PivotIndex };
