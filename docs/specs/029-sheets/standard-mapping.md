@@ -514,8 +514,10 @@ The table is the contract the readers and writers are tested against, one test p
 - **ODF** has no filter views nor slicers: written to ODS they are left out, listed first in the Download and Convert
   dialog ("2 filter views are left out", "1 slicer is left out"); Google's ODS keeps only each view's range as a
   `Z_…_.wvu.FilterData` name, which LiveDoc neither writes nor reads as a view.
-- **XLSX slicers**: LiveDoc's record alone, and Excel's table slicer (`slicers`, `slicerCaches`, a drawing anchor)
-  when the slicer's range is a table's exactly, as Google writes a slicer (over the `Table_1` it makes for it).
+- **XLSX slicers**: LiveDoc's record, and Excel's table slicer (`slicers`, `slicerCaches`, a drawing anchor) when
+  the slicer's range is a table's exactly. No table is made for one (Google makes a `Table_1`; a table the person
+  never made would change their workbook, Director 2026-11-27); a slicer over another range is listed in the Download
+  and Convert dialog: "1 slicer is not seen by Excel".
 - **LiveDoc's record**: one JSON object, `filter` (range as A1 text and conditions by column letter), `views` (each its
   name, range, conditions and sort) and `slicers`; in XLSX `livedoc:filters` (`record`, `fingerprint`) in the
   worksheet's LiveDoc `ext`, in ODF the `table:table`'s `livedoc:filters` and `livedoc:filters-fingerprint`. Its

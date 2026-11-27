@@ -111,6 +111,11 @@ Google Sheets' Data menu does. Its rows of the [parity matrix](parity-matrix.md)
   that groups its rows under a column's values, each group a header row drawn with the value and its count, collapsed
   and expanded by its opener alone; named and kept as a filter view is (its range the table's), so Change View lists
   it and a link opens it. Cells never move (the order is drawn, as a view's sort).
+- **The drawn order** (Director, 2026-11-27): a view's sort and a group by view draw rows in an order of their own
+  through one mapping between stored rows and drawn rows, for the view's opener alone. Selecting, typing, copying,
+  pasting and filling in such a view land on the stored rows drawn there; another person's inserts and deletes keep
+  the mapping true. A group's header row is drawn only: never stored, never selected as data, passed over by copy,
+  paste and fill.
 - **One mapping**: the filter, filter views and slicers share one condition model (`FilterCondition`) and one reader
   and writer to each format's filter form, so a condition reads and writes the same wherever it sits
   ([Filters in the file](standard-mapping.md#filters-in-the-file)).
