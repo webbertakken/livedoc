@@ -1,4 +1,4 @@
-// Scorecard charts (docs/specs/009-elements/pie-chart.md "Scorecard", D345): a line chart's first series summed as
+// Scorecard charts (docs/specs/009-elements/pie-chart.md "Scorecard", D370): a line chart's first series summed as
 // its key value, written large in the middle of the plot with the series' name under it; a second series summed as
 // the baseline, the key value's change from it written under the name, green over, red under. Laid out once for both
 // renderers. Pure.

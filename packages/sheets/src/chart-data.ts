@@ -25,6 +25,8 @@ export type SheetChartTable = {
   // One per value column, its name from the header row (or its column letter), its column's id; null where a cell
   // holds no number.
   series: { name: string; col: string; values: (number | null)[] }[];
+  // A label column of dates: each row's date serial, null where its cell holds none (pie-chart.md "Timeline").
+  serials?: (number | null)[];
   // Where it was read from, by position: the header row and label column when the range has them, the rows of data
   // in order, and each series' column (a file's chart names these cells, standard-mapping.md "Charts in the file").
   at: { header: number | null; labels: number | null; rows: number[]; cols: number[] };
@@ -106,6 +108,14 @@ export function sheetChartTable(
     numbered: !labelled,
     named:
       labelled && !body.some((r) => dated(r, cols[0]!)) && body.some((r) => isText(r, cols[0]!)),
+    ...(labelled && body.some((r) => dated(r, cols[0]!))
+      ? {
+          serials: body.map((r) => {
+            const v = value(r, cols[0]!);
+            return isNumber(v) ? v : null;
+          }),
+        }
+      : {}),
     series: charted.map((c) => ({
       name: (headed ? text(rows[0]!, c) : '') || `Column ${columnLetters(c)}`,
       col: layout.cols[c]!,

@@ -6,6 +6,7 @@ import { PLAN_SHEET_ID_PATTERN } from './element-types';
 import { chartValue, type LineSeries, type PieSlice } from './data-shapes';
 import { chartTypeOf, readsXFromNumbers } from './chart-types';
 import { isComboSeriesType } from './chart-combo-types';
+import { serialDateText } from './chart-dates';
 
 export type ChartSource = {
   sheetId: string;
@@ -26,6 +27,8 @@ type ChartTable = {
   // Whether the label column holds text, naming a scatter's points (pie-chart.md "Scatter's point names").
   named?: boolean;
   series: { name: string; values: (number | null)[] }[];
+  // A label column of dates: each row's date serial (null for a cell holding none), so a Timeline reads its dates.
+  serials?: (number | null)[];
 };
 
 // A sheet's row or column id (@livedoc/sheets AXIS_ID_PATTERN, repeated so this package never imports it).
@@ -182,9 +185,13 @@ export function lineFieldsFromTable(el: ChartFields, t: ChartTable): LineFields 
   const named = scatterX && t.named === true;
   const xFromFirst = named || (scatterX && (t.numbered ?? numbered(t.categories)));
   // An empty x cell is an empty category: no x, so its points are not drawn.
+  // A Timeline reads a dated label column as ISO dates, whatever its format shows (pie-chart.md "Timeline").
+  const dated = chartTypeOf(el) === 'timeline' && t.serials;
   const categories = xFromFirst
     ? t.series[0]!.values.map((x) => (x === null ? '' : String(x)))
-    : t.categories;
+    : dated
+      ? t.serials!.map((s, i) => (s === null ? t.categories[i]! : serialDateText(s)))
+      : t.categories;
   const series = xFromFirst ? t.series.slice(1) : t.series;
   return {
     lineCategories: categories,

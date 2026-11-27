@@ -2872,6 +2872,7 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
       "treemap",
       "gauge",
       "scorecard",
+      "timeline",
       "combo"
     ],
     "type": "string"
@@ -15538,6 +15539,7 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
       "treemap",
       "gauge",
       "scorecard",
+      "timeline",
       "combo"
     ],
     "type": "string"

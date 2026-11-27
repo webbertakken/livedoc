@@ -1,4 +1,4 @@
-// Scorecard charts in the headless render (docs/specs/009-elements/pie-chart.md "Scorecard", D345): the key value large
+// Scorecard charts in the headless render (docs/specs/009-elements/pie-chart.md "Scorecard", D370): the key value large
 // and bold, its name under it, the change from the baseline under that in green or red, from the marks the canvas
 // draws too (chart-scorecard.ts).
 import { chartFrame } from './chart-frame';

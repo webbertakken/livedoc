@@ -403,7 +403,7 @@ describe('a Gauge chart in both formats', () => {
   });
 });
 
-// D346: a Scorecard chart is written as a Column chart of its series, restored on reading.
+// D371: a Scorecard chart is written as a Column chart of its series, restored on reading.
 describe('a Scorecard chart in both formats', () => {
   it('is written as a Column chart and read back as a Scorecard', async () => {
     const sheet = charted({ type: 'scorecard' });
@@ -415,6 +415,20 @@ describe('a Scorecard chart in both formats', () => {
     expect((await readBack(xlsx.data, true)).sheets[0]!.charts![0]!.type).toBe('scorecard');
     expect((await readBack(writeOds(fileOf(sheet), 's').data)).sheets[0]!.charts![0]!.type).toBe(
       'scorecard',
+    );
+  });
+});
+
+// D373: a Timeline chart is written as a Line chart of its series, restored on reading.
+describe('a Timeline chart in both formats', () => {
+  it('is written as a Line chart and read back as a Timeline', async () => {
+    const sheet = charted({ type: 'timeline' });
+    const xlsx = writeXlsx(fileOf(sheet), 't');
+    expect(xlsx.losses).toEqual([{ k: 'chart_nearest_type', sheet: 'Sales' }]);
+    expect((await entries(xlsx.data)).get('xl/charts/chart1.xml')).toContain('<c:lineChart>');
+    expect((await readBack(xlsx.data, true)).sheets[0]!.charts![0]!.type).toBe('timeline');
+    expect((await readBack(writeOds(fileOf(sheet), 't').data)).sheets[0]!.charts![0]!.type).toBe(
+      'timeline',
     );
   });
 });

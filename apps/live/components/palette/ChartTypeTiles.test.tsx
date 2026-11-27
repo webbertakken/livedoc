@@ -4,7 +4,7 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import { ChartTypeTiles } from './ChartTypeTiles';
 
 describe('ChartTypeTiles (docs/specs/009-elements/pie-chart.md "Chart types")', () => {
-  it('offers the eighteen types, the chart’s own pressed, and picks one', () => {
+  it('offers the nineteen types, the chart’s own pressed, and picks one', () => {
     const onSet = vi.fn();
     render(<ChartTypeTiles current="doughnut" onSet={onSet} />);
     const tiles = screen.getAllByRole('button');
@@ -26,6 +26,7 @@ describe('ChartTypeTiles (docs/specs/009-elements/pie-chart.md "Chart types")', 
       'Treemap',
       'Gauge',
       'Scorecard',
+      'Timeline',
       'Combo',
     ]);
     expect(screen.getByRole('button', { name: 'Doughnut' }).getAttribute('aria-pressed')).toBe(

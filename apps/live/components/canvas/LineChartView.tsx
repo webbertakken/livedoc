@@ -1,6 +1,6 @@
 'use client';
 
-// Line, Area, Stepped Area, Scatter, Bubble, Radar, Candlestick, OHLC, Histogram, Waterfall, Scorecard and Combo charts (docs/specs/009-elements/pie-chart.md "Chart types"): a 2-D chart — shared x-axis `lineCategories` and one or
+// Line, Area, Stepped Area, Scatter, Bubble, Radar, Candlestick, OHLC, Histogram, Waterfall, Scorecard, Timeline and Combo charts (docs/specs/009-elements/pie-chart.md "Chart types"): a 2-D chart — shared x-axis `lineCategories` and one or
 // more named `lineSeries`, each drawn as a polyline with point markers in the
 // theme palette, with an optional legend listing the series. Data is edited as
 // a grid (or imported from CSV) via the Data menu. Reuses the chart-family
@@ -34,6 +34,10 @@ import {
   isHistogramChart,
   isWaterfallChart,
   isScorecardChart,
+  isTimelineChart,
+  timelineMarks,
+  isoDateTime,
+  timelineDateText,
   pointsMarked,
   type ShapeElement,
 } from '@livedoc/document';
@@ -102,9 +106,14 @@ function PlotLineChartView({ element, fontFamily, textColor, palette, ground }: 
         element.chartSmooth === true,
       )
     : null;
+  // A Timeline places its points by date (pie-chart.md "Timeline").
+  const timeline = isTimelineChart(element)
+    ? timelineMarks(area, categories, series, 0, 0, element.chartAxis === true)
+    : null;
   // Line, Area or Scatter, laid out by the marks the export draws too.
   const m =
     combo ??
+    timeline ??
     lineMarks(
       area,
       categories,
@@ -142,6 +151,12 @@ function PlotLineChartView({ element, fontFamily, textColor, palette, ground }: 
         ]
       : null;
 
+  // A Timeline's readout writes its date as a date (pie-chart.md "Timeline").
+  const categoryText = (c: string) => {
+    const t = timeline ? isoDateTime(c) : null;
+    return t === null ? c : timelineDateText(t);
+  };
+
   const group = useChartAnim(element, `${plotX0 + plotW / 2}px ${plotY0 + plotH / 2}px`);
   const legendItems = combo ? comboKeyItems(series) : lineKeyItems(series, lineVariantOf(element));
 
@@ -164,7 +179,7 @@ function PlotLineChartView({ element, fontFamily, textColor, palette, ground }: 
             {...(scatterLines
               ? { lines: scatterLines }
               : {
-                  label: `${categories[hover.i] ?? ''} · ${series[hover.s]?.name ?? ''}`,
+                  label: `${categoryText(categories[hover.i] ?? '')} · ${series[hover.s]?.name ?? ''}`,
                   value: hoveredValue,
                 })}
           />

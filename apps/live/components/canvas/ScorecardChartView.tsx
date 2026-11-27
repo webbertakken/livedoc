@@ -1,6 +1,6 @@
 'use client';
 
-// A Scorecard chart (docs/specs/009-elements/pie-chart.md "Scorecard", D345): the first series' sum written large, its
+// A Scorecard chart (docs/specs/009-elements/pie-chart.md "Scorecard", D370): the first series' sum written large, its
 // name under it, and its change from the second series' sum under that, green over and red under. No legend and no
 // readout: the chart writes its numbers. Laid out by the marks the export draws too (`scorecardMarks`).
 
