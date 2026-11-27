@@ -4,7 +4,7 @@
 // cell is in, under its name: its range, each column's type, its total row and its look (the Alternating Colours panel
 // on its banding). What acts on the table (Rename, Select Table, Convert to Range, Delete Table) is the table menu's.
 // Every change writes at once, one undo step each; read by everyone, changed by an Editor alone.
-import { useEffect, useId, useState } from 'react';
+import { useId, useState } from 'react';
 import { Button, Select, Switch, TextInput } from '@livedoc/ui';
 import {
   cellText,
@@ -16,6 +16,7 @@ import {
   TABLE_COLUMN_TYPES,
   TABLE_REFUSAL_COPY,
   isSheetTable,
+  type SheetTable,
   type TableColumnType,
 } from '@livedoc/sheets';
 import { useSheetController } from '@/components/sheets/sheet-controller';
@@ -53,20 +54,43 @@ export function SpreadsheetTableSettingsBody({
   onClose: () => void;
 }) {
   const c = useSheetController();
-  const id = useId();
   const table = actions.activeTable();
-  const layout = c.sheet.layout;
-  const p = table ? posRangeOf(layout, table) : null;
-  const shownRange = p ? formatRange(p) : '';
-  const [range, setRange] = useState(shownRange);
-  const [why, setWhy] = useState<string | null>(null);
-  useEffect(() => {
-    setRange(shownRange);
-    setWhy(null);
-  }, [table?.id, shownRange]);
-
+  const p = table ? posRangeOf(c.sheet.layout, table) : null;
   if (!table || !p)
     return <p className="text-supporting text-slate-500 dark:text-slate-400">{NO_TABLE}</p>;
+  // A new table or a range changed elsewhere starts the fields afresh.
+  const shownRange = formatRange(p);
+  return (
+    <TableSettingsFields
+      key={`${table.id}:${shownRange}`}
+      table={table}
+      shownRange={shownRange}
+      actions={actions}
+      onFormatting={onFormatting}
+      onClose={onClose}
+    />
+  );
+}
+
+function TableSettingsFields({
+  table,
+  shownRange,
+  actions,
+  onFormatting,
+  onClose,
+}: {
+  table: SheetTable;
+  shownRange: string;
+  actions: SheetActions;
+  onFormatting: () => void;
+  onClose: () => void;
+}) {
+  const c = useSheetController();
+  const id = useId();
+  const layout = c.sheet.layout;
+  const p = posRangeOf(layout, table)!;
+  const [range, setRange] = useState(shownRange);
+  const [why, setWhy] = useState<string | null>(null);
   const editor = c.canShape;
   const refuse = (message: string) => {
     debugLog('[sheet] table refused', { reason: 'range' });

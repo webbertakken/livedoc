@@ -48,7 +48,7 @@ function gridOf(sheet: Sheet): Grid {
     hiddenCol: () => false,
     filled: (r, c) => sheet.cells.has(cellKey(sheet.layout.rows[r]!, sheet.layout.cols[c]!)),
     mergeAt: () => null,
-  } as Grid;
+  };
 }
 const rand = () => 0.25;
 const range = (r1: number, c1: number, r2: number, c2: number) => ({ r1, c1, r2, c2 });
