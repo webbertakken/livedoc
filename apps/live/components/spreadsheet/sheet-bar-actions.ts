@@ -24,8 +24,15 @@ export type SheetBarTabRef = { id: string; name: string };
 // Where Add Sheet puts a sheet: after the last one, or (Insert › Sheet, Shift+F11) after the open one (D170).
 export type SheetPlace = 'end' | 'afterOpen';
 
+// A sheet added by name (Create Pivot Table's `Pivot Table 1`), told where it landed once it is there.
+export type SheetAddOpts = {
+  name?: string;
+  onPlaced?: (ids: { tabId: string; sheetId: string }) => void;
+};
+
 export type SheetBarChanges = {
-  add: (place: SheetPlace) => void;
+  // The new sheet's ids, before it lands.
+  add: (place: SheetPlace, opts?: SheetAddOpts) => { tabId: string; sheetId: string };
   duplicate: (tabId: string) => void;
   // Whether the sheet now has the name (true for an unchanged one); a refused name says why.
   rename: (tabId: string, name: string) => boolean;
@@ -121,12 +128,17 @@ export function sheetBarChanges(deps: SheetBarDeps): SheetBarChanges {
     return true;
   };
 
-  const placeNew = (p: Placed, kind: 'AddSheet' | 'DuplicateSheet') => {
+  const placeNew = (
+    p: Placed,
+    kind: 'AddSheet' | 'DuplicateSheet',
+    onPlaced?: SheetAddOpts['onPlaced'],
+  ) => {
     put(p, false).then(
       () => {
         debugLog(`[workbook] sheet bar ${kind}`, { tabId: p.tabId, sheetId: p.sheetId });
         track('Sheet', 'Changed', kind);
         deps.open(p.tabId);
+        onPlaced?.({ tabId: p.tabId, sheetId: p.sheetId });
         deps.pushUndo({
           undo: () => replay('undo add', () => take(p)),
           redo: () => replay('redo add', () => put(p, true)),
@@ -192,18 +204,21 @@ export function sheetBarChanges(deps: SheetBarDeps): SheetBarChanges {
       )
         deps.open(tabId);
     },
-    add: (place) => {
+    add: (place, opts = {}) => {
       const tabs = deps.tabs();
       const open = tabs.findIndex((t) => t.id === deps.openTabId());
       const upTo = place === 'end' || open < 0 ? tabs.length : open + 1;
+      const ids = deps.newIds();
       placeNew(
         {
-          ...deps.newIds(),
-          name: SheetName.next(tabs.map((t) => t.name)),
+          ...ids,
+          name: opts.name ?? SheetName.next(tabs.map((t) => t.name)),
           earlier: tabs.slice(0, upTo).map((t) => t.id),
         },
         'AddSheet',
+        opts.onPlaced,
       );
+      return ids;
     },
     duplicate: (tabId) => {
       const tabs = deps.tabs();

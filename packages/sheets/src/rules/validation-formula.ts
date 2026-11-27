@@ -1,5 +1,5 @@
 // The checks only a workbook can make (data-validation.md "Where values are checked"): a Dropdown from a Range's
-// options and a Custom Formula Is rule's answer, both formulas' results. The editor makes them; the api, which keeps
+// options and a Custom Formula Is rule's answer, both formulas' results, and a pivot table's output. The editor makes them; the api, which keeps
 // no workbook, lets those rules through.
 import type { Workbook } from '../engine/workbook';
 import { formulaAnswerMet, movedFormula } from './moved-formula';
@@ -20,12 +20,16 @@ export function validationFormulaAllows(wb: Workbook, sheetId: string): FormulaA
   };
 }
 
-// The workbook's checks for a sheet's rules, spread into a RuleCtx or a WriteCheck.
+// The workbook's checks for a sheet's writes, spread into a RuleCtx or a WriteCheck: its rules', and where its pivot
+// tables' output lies (pivot-tables.md "Working with one", D612).
 export function workbookRuleChecks(
   wb: Workbook,
   sheetId: string,
-): Required<Pick<RuleCtx, 'rangeValues' | 'formulaAllows' | 'sourceOf'>> {
+): Required<Pick<RuleCtx, 'rangeValues' | 'formulaAllows' | 'sourceOf'>> & {
+  pivotCellAt: (r: number, c: number) => boolean;
+} {
   return {
+    pivotCellAt: (r, c) => wb.pivotOutputAt(sheetId, r, c) !== null,
     sourceOf: (src) => sourceSheetOf(wb.ctxFor(sheetId), src),
     rangeValues: (rule) => rangeOptions(wb, sheetId, rule),
     formulaAllows: validationFormulaAllows(wb, sheetId),

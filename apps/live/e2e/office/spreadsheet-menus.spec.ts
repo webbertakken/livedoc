@@ -78,8 +78,8 @@ test('the menus run what the grid does, and dim what is still to come', async ({
   expect(await inputOf(page, 'A3')).toBe('Total');
 
   // A row not built yet is drawn, dimmed.
-  const pivot = await officeMenuItem(page, ['Insert', 'Pivot Table']);
-  await expect(pivot).toHaveAttribute('aria-disabled', 'true');
+  const timeline = await officeMenuItem(page, ['Insert', 'Timeline']);
+  await expect(timeline).toHaveAttribute('aria-disabled', 'true');
   await page.keyboard.press('Escape');
 
   // The toolbar (surface.md "Toolbar"): Bold pressed from it ticks the menu's Bold, and a size typed in its field.

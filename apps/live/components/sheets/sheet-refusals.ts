@@ -16,6 +16,8 @@ const REFUSALS: Partial<Record<string, string>> = {
   sheet_loading: 'This sheet is still loading',
   // Someone protected the cells while the change was on its way (data-tools.md "Protected ranges").
   protected: 'Those cells are protected',
+  // A value typed into a pivot table (pivot-tables.md "Working with one", D612).
+  pivot_cell: "You can't edit a pivot table's cells",
 };
 
 // A spreadsheet's own words where its limits differ (spreadsheet.md "Limits").

@@ -27,6 +27,7 @@ import { displayValue, isError, posRangeOf, single } from '@livedoc/sheets';
 import { useSheetController } from './sheet-controller';
 import { SheetProtectionLayer } from './SheetProtectionLayer';
 import { SheetTablesLayer } from './tables/SheetTablesLayer';
+import { SheetPivotsLayer } from './pivots/SheetPivotsLayer';
 import { SheetCells } from './SheetCells';
 import { SheetHeaders } from './SheetHeaders';
 import { SheetOutlineBar } from './SheetOutlineBar';
@@ -396,6 +397,7 @@ export function SheetGrid({
               />
               <SheetProtectionLayer />
               <SheetTablesLayer />
+              <SheetPivotsLayer />
               {c.interactive ? (
                 <SheetSelectionLayer
                   geometry={c.geometry}

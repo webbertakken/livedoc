@@ -567,6 +567,14 @@ export const FEATURE_ICONS: Record<string, ReactNode> = {
       <path d="M15 9.5c-1.2 1.2-1.8 2.6-1.8 4.5s.6 3.3 1.8 4.5M19 9.5c1.2 1.2 1.8 2.6 1.8 4.5s-.6 3.3-1.8 4.5" />
     </Glyph>
   ),
+  // Long rows folded into a short summary: a pivot table.
+  'pivot-tables': (
+    <Glyph>
+      <path d="M3 4.5h7M3 8h7M3 11.5h7M3 15h7M3 18.5h7" />
+      <path d="M11.5 11.5h4.5M14 9l2.5 2.5L14 14" />
+      <rect x="17.5" y="7" width="4" height="9" rx="0.8" />
+    </Glyph>
+  ),
   // A page with a title and a bar chart: the poster an infographic becomes.
   'pages-mode': (
     <Glyph>
