@@ -289,6 +289,7 @@ const WORKBENCH_ROUTES: readonly RouteShape[] = [
   shape('GET,POST', 'documents/:doc/workbook/conversion'),
   shape('GET,POST', 'documents/:doc/workbook/kept'),
   shape('PUT', 'documents/:doc/workbook/settings'),
+  shape('PUT', 'documents/:doc/workbook/functions'),
   shape('POST', 'documents/:doc/workbook/sheets'),
   shape('DELETE', 'documents/:doc/workbook/sheets/:p'),
   shape('POST', 'documents/:doc/workbook/sheets/:p/rename'),

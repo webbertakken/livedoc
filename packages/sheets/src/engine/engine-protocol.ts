@@ -7,6 +7,7 @@ import type { Value } from '../formula/values';
 import type { ImportAccess, ImportAnswer, ImportAsk } from '../imports/import-request';
 import type { SheetCellJson, SheetJson } from '../sheet-json';
 import type { Iteration } from './loops';
+import type { NamedFunction } from '../named-functions';
 import type { ImportFamily } from './import-book';
 
 export type EngineLimits = 'plan' | 'spreadsheet';
@@ -26,6 +27,8 @@ export type EngineIn =
       // A spreadsheet's imports (imports.md): fetched by the page, access allowed, not yet, or not while it is saved
       // only in this browser; absent, none are fetched.
       imports?: ImportAccess;
+      // A spreadsheet's named functions (formulas.md "Named functions"); absent, none.
+      functions?: NamedFunction[];
     }
   // A sheet's cells changed: each named cell as it is now (no input and no format: emptied).
   | { t: 'cells'; rev: number; sheetId: string; cells: SheetCellJson[] }
@@ -35,6 +38,7 @@ export type EngineIn =
   // The sheets' order changed (a spreadsheet's tabs moved): SHEET counts them so.
   | { t: 'order'; rev: number; sheetIds: string[] }
   | { t: 'iteration'; rev: number; iteration: Iteration }
+  | { t: 'functions'; rev: number; functions: NamedFunction[] }
   | { t: 'tick'; rev: number }
   // An import's answer, for the ask of that key.
   | { t: 'imported'; rev: number; key: string; answer: ImportAnswer }

@@ -22,6 +22,7 @@ import { cellColours, isLightColor, resolveFontStack } from '@livedoc/document';
 import { sheetFontStack } from '@/lib/spreadsheet/spreadsheet-fonts';
 import { fontPx } from './SheetCells';
 import { useFunctionHelpHidden } from './function-help-pref';
+import { NamedFunctionHint } from './NamedFunctionHint';
 import type { FormulaInput } from './useFormulaInput';
 
 // The draft with each reference wrapped in its colour, for the overlay (and the formula bar).
@@ -61,7 +62,10 @@ export function FunctionAssist({
   // The hint is written as the locale writes formulas (formulas.md "Locale").
   const syntax = formulaSyntaxOf(c.locale);
   const separator = argumentSeparatorOf(syntax);
-  const arg = argumentAt(draft, input.caret, separator);
+  // The spreadsheet's named functions are helped as the built-in ones are (formulas.md "Named functions").
+  const named = c.workbook.functionList();
+  const arg = argumentAt(draft, input.caret, separator, new Set(named.map((f) => f.name)));
+  const namedOf = (name: string) => named.find((f) => f.name === name);
   const helpHidden = useFunctionHelpHidden();
   // A dropdown cell's options matching the typing (data-validation.md "Using a dropdown").
   if (input.options)
@@ -121,12 +125,19 @@ export function FunctionAssist({
           >
             <span data-function-name>{name}</span>
             <span className="ml-2" style={{ color: c.palette.muted }}>
-              {input.matches!.ranges.has(name) ? 'Named range' : FUNCTION_DOCS[name]?.summary}
+              {input.matches!.ranges.has(name)
+                ? 'Named range'
+                : (FUNCTION_DOCS[name]?.summary ?? namedOf(name)?.description ?? 'Named function')}
             </span>
           </li>
         ))}
       </ul>
     );
+  const ownFn = arg && !Object.prototype.hasOwnProperty.call(FUNCTION_DOCS, arg.name);
+  if (arg && ownFn && !helpHidden) {
+    const fn = namedOf(arg.name);
+    return fn ? <NamedFunctionHint fn={fn} index={arg.index} separator={separator} /> : null;
+  }
   if (arg && !helpHidden) {
     const doc = FUNCTION_DOCS[arg.name]!;
     const slot = argumentSlot(arg.name, arg.index);

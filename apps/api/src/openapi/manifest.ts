@@ -1146,6 +1146,19 @@ export const ROUTE_MANIFEST: RouteSpec[] = [
     responseSchema: 'WorkbookSettingsResponse',
     statuses: [200, 400, 401, 403, 404, 410],
   },
+  {
+    method: 'PUT',
+    path: '/documents/{id}/workbook/functions',
+    segment: 'documents',
+    tag: 'Spreadsheets',
+    summary:
+      "Save a spreadsheet's named functions whole, as Data › Named Functions does: each a name in capitals (not a built-in function's), its argument placeholders, a definition reading cells only through them and named ranges, a description and argument hints. The later of two saves stands. Sent live to everyone on it. 400 functions_invalid; 413 functions_full past 100; 404 workbook_not_found when the document is no spreadsheet. Edit access; never on a tab-scoped link.",
+    auth: 'guest-or-session',
+    tokenUsable: true,
+    requestSchema: 'WorkbookFunctionsRequest',
+    responseSchema: 'WorkbookSettingsResponse',
+    statuses: [200, 400, 401, 403, 404, 410, 413],
+  },
   // A spreadsheet's imports from the web (docs/specs/029-sheets/imports.md), and IMPORTRANGE's reads of other
   // spreadsheets (formulas.md "Other workbooks").
   {

@@ -15,6 +15,7 @@ import {
   ITERATION_OFF,
   sameIteration,
   type Iteration,
+  type NamedFunction,
   type WorkbookRecalc,
   Workbook,
   EnginePort,
@@ -94,6 +95,8 @@ type SheetStoreDeps = {
   oneWorkbook?: boolean;
   // A spreadsheet's iterative calculation (settings.md "Calculation"); absent, off.
   iteration?: Iteration;
+  // A spreadsheet's named functions (formulas.md "Named functions"); absent, none.
+  functions?: readonly NamedFunction[];
   // A spreadsheet's Recalculation (settings.md "Calculation"): how often volatile formulas tick; absent, on change.
   recalc?: WorkbookRecalc;
   self: () => SheetPerson | null;
@@ -233,6 +236,8 @@ export class SheetStore {
     const rescoped = (deps.oneWorkbook ?? false) !== (this.deps.oneWorkbook ?? false);
     const iteration = deps.iteration ?? ITERATION_OFF;
     const reiterated = !sameIteration(iteration, this.deps.iteration ?? ITERATION_OFF);
+    const functions = deps.functions ?? NO_FUNCTIONS;
+    const refunctioned = !sameFunctions(functions, this.deps.functions ?? NO_FUNCTIONS);
     // A new locale, time zone or meaning (any peer's Save Settings or conversion, an agent's): every value is worked
     // out again in it.
     const relocated =
@@ -244,6 +249,12 @@ export class SheetStore {
     // Saved settings arrived (any peer's Save Settings): every engine works its values out afresh.
     if (reiterated && !rescoped && !relocated) {
       for (const port of this.ports.values()) port.setIteration(iteration);
+      this.notify();
+    }
+    // Named functions saved (anyone's Create, Update, Remove or undo): every engine works its formulas out again.
+    if (refunctioned && !rescoped && !relocated) {
+      debugLog('[sheets] named functions', { count: functions.length });
+      for (const port of this.ports.values()) port.setFunctions(functions);
       this.notify();
     }
     // The document turned out a spreadsheet (its workbook row arrived): the engines and loads were scoped by tab.
@@ -341,6 +352,7 @@ export class SheetStore {
         ...(this.deps.meaning ? { meaning: this.deps.meaning } : {}),
         limits: SheetLimits.of(this.deps.oneWorkbook ?? false),
         iteration: this.deps.iteration ?? ITERATION_OFF,
+        ...(this.deps.functions ? { functions: this.deps.functions } : {}),
         send: (msg) => link.send({ scope, msg }),
         ...(access
           ? { imports: { access, ask: (asks: ImportAsk[]) => this.imports.take(scope, asks) } }
@@ -950,6 +962,13 @@ export class SheetStore {
 
 const STORES = new Map<string, SheetStore>();
 
+const NO_FUNCTIONS: readonly NamedFunction[] = [];
+
+// Whether two lists of named functions are the same: each read afresh from the wire, so compared by what they hold.
+function sameFunctions(a: readonly NamedFunction[], b: readonly NamedFunction[]): boolean {
+  return a === b || JSON.stringify(a) === JSON.stringify(b);
+}
+
 // The store of a document, made on first use and kept for the session.
 // The document's sheet store, as the sheets bridge describes it (a Sheet and a chart drawn from one share it).
 export function sheetStoreOf(bridge: SheetsBridge): SheetStore {
@@ -957,6 +976,7 @@ export function sheetStoreOf(bridge: SheetsBridge): SheetStore {
     scope: bridge.scope,
     oneWorkbook: bridge.oneWorkbook,
     ...(bridge.iteration ? { iteration: bridge.iteration } : {}),
+    ...(bridge.functions ? { functions: bridge.functions } : {}),
     ...(bridge.recalc ? { recalc: bridge.recalc } : {}),
     ...(bridge.importAccess !== undefined ? { importAccess: bridge.importAccess } : {}),
     ...(bridge.rangeSources ? { rangeSources: bridge.rangeSources } : {}),

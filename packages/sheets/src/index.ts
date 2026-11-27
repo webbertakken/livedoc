@@ -62,6 +62,7 @@ export * from './text-patterns';
 export * from './store';
 export * from './store-layout';
 export * from './range-names';
+export * from './named-functions';
 export * from './validate';
 export * from './rules/rule-index';
 export * from './rules/rule-ranges';

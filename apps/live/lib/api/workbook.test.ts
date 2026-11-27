@@ -6,6 +6,7 @@ import { isOfflineId } from '../offline/offline-store';
 import {
   apiConvertWorkbook,
   apiDownloadWorkbook,
+  apiSaveWorkbookFunctions,
   apiSaveWorkbookSettings,
   apiWorkbookConversion,
 } from './workbook';
@@ -16,6 +17,9 @@ vi.mock('../offline/offline-workbook-file', () => ({
 }));
 vi.mock('../offline/offline-workbook-settings', () => ({
   offlineSaveWorkbookSettings: vi.fn(async () => ({ workbook: 'offline', rev: 0 })),
+}));
+vi.mock('../offline/offline-workbook-functions', () => ({
+  offlineSaveWorkbookFunctions: vi.fn(async () => ({ workbook: 'offline', rev: 0 })),
 }));
 vi.mock('../offline/offline-workbook-conversion', () => ({
   offlineWorkbookConversion: vi.fn(async (_: string, to: string) => ({
@@ -137,6 +141,23 @@ describe('apiSaveWorkbookSettings', () => {
     expect(JSON.parse(f.mock.calls[0]![1]!.body as string)).toEqual({ settings: record.settings });
     vi.mocked(isOfflineId).mockResolvedValue(true);
     expect(await apiSaveWorkbookSettings(scope, record.settings)).toEqual({
+      workbook: 'offline',
+      rev: 0,
+    });
+  });
+});
+
+describe('apiSaveWorkbookFunctions', () => {
+  it('puts the functions and reads the record back, or saves them in this browser', async () => {
+    const functions = [{ name: 'TWICE', params: ['x'], body: '=x*2' }];
+    const f = reply({ workbook: { ...record, functions }, rev: 3 });
+    vi.stubGlobal('fetch', f);
+    expect((await apiSaveWorkbookFunctions(scope, functions)).rev).toBe(3);
+    expect(f.mock.calls[0]![0]).toContain('/documents/d%201/workbook/functions');
+    expect(f.mock.calls[0]![1]!.method).toBe('PUT');
+    expect(JSON.parse(f.mock.calls[0]![1]!.body as string)).toEqual({ functions });
+    vi.mocked(isOfflineId).mockResolvedValue(true);
+    expect(await apiSaveWorkbookFunctions(scope, functions)).toEqual({
       workbook: 'offline',
       rev: 0,
     });

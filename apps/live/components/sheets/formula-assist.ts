@@ -132,12 +132,14 @@ export function cycleAbsolute(
 }
 
 // The function names the word before the caret starts (case ignored), when it is a function position; then the
-// sheet's named ranges it starts (sheet.md "Named ranges"), listed in `ranges` too, as given.
+// spreadsheet's named functions it starts (formulas.md "Named functions"); then the sheet's named ranges it starts
+// (sheet.md "Named ranges"), listed in `ranges` too, as given.
 export function functionMatches(
   draft: string,
   caret: number,
   limit = 8,
   rangeNames: readonly string[] = [],
+  namedFunctions: readonly string[] = [],
 ): { word: string; start: number; names: string[]; ranges: ReadonlySet<string> } | null {
   if (!draft.startsWith('=')) return null;
   const before = draft.slice(0, caret);
@@ -151,8 +153,9 @@ export function functionMatches(
   // A named range typed in full is done, even one that is also a function's name (Rate, RATE): Enter commits.
   if (rangeNames.some((n) => n.toUpperCase() === word)) return null;
   const fns = FUNCTION_NAMES.filter((n) => n.startsWith(word));
+  const named = namedFunctions.filter((n) => n.startsWith(word));
   const ranges = rangeNames.filter((n) => n.toUpperCase().startsWith(word));
-  const names = [...fns, ...ranges].slice(0, limit);
+  const names = [...fns, ...named, ...ranges].slice(0, limit);
   return names.length
     ? { word, start: caret - m[2]!.length, names, ranges: new Set(ranges) }
     : null;
@@ -171,11 +174,13 @@ export function acceptFunction(
 }
 
 // The function call the caret is inside and which argument (0-based), for the hint card: arguments split by the
-// locale's separator (`,`, or `;` where decimals take a comma: formulas.md "Locale"), never inside braces.
+// locale's separator (`,`, or `;` where decimals take a comma: formulas.md "Locale"), never inside braces. A
+// call of one of `namedFunctions` (formulas.md "Named functions") counts as a built-in one's does.
 export function argumentAt(
   draft: string,
   caret: number,
   separator: ',' | ';',
+  namedFunctions: ReadonlySet<string> = new Set(),
 ): { name: string; index: number } | null {
   if (!draft.startsWith('=')) return null;
   const stack: { name: string | null; commas: number }[] = [];
@@ -185,7 +190,7 @@ export function argumentAt(
     if (ch === '"') inString = !inString;
     if (inString) continue;
     if (ch === '(') {
-      const m = /([A-Za-z][A-Za-z0-9.]*)$/.exec(draft.slice(0, i));
+      const m = /([A-Za-z_][A-Za-z0-9._]*)$/.exec(draft.slice(0, i));
       stack.push({ name: m ? m[1]!.toUpperCase() : null, commas: 0 });
     } else if (ch === '{') stack.push({ name: null, commas: 0 });
     else if (ch === ')' || ch === '}') stack.pop();
@@ -193,7 +198,10 @@ export function argumentAt(
   }
   for (let k = stack.length - 1; k >= 0; k--) {
     const s = stack[k]!;
-    if (s.name && Object.prototype.hasOwnProperty.call(FUNCTION_DOCS, s.name))
+    if (
+      s.name &&
+      (Object.prototype.hasOwnProperty.call(FUNCTION_DOCS, s.name) || namedFunctions.has(s.name))
+    )
       return { name: s.name, index: s.commas };
   }
   return null;

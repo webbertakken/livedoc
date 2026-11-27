@@ -12,12 +12,17 @@ import { Workbook } from './workbook';
 import { ITERATION_OFF } from './loops';
 import { SheetLimits } from '../sheet-limits';
 import { sheetToJson } from '../sheet-json';
+import type { NamedFunction } from '../named-functions';
 import { IMPORT_WORDS, type ImportAccess, type ImportAsk } from '../imports/import-request';
 
 type EnginePortImports = { access: ImportAccess; ask: (asks: ImportAsk[]) => void };
 type Wire = { toHost: EngineIn[]; toPage: EngineOut[] };
 
-function joined(sheets: Sheet[], imports?: EnginePortImports) {
+function joined(
+  sheets: Sheet[],
+  imports?: EnginePortImports,
+  functions?: readonly NamedFunction[],
+) {
   const wire: Wire = { toHost: [], toPage: [] };
   const host = new EngineHost((out) => wire.toPage.push(out));
   const port = new EnginePort({
@@ -25,6 +30,7 @@ function joined(sheets: Sheet[], imports?: EnginePortImports) {
     locale: 'en-GB',
     send: (m) => wire.toHost.push(m),
     ...(imports ? { imports } : {}),
+    ...(functions ? { functions } : {}),
   });
   port.start();
   // Deliver what each side sent: the page's messages first, then the Worker's answers part by part.
@@ -182,6 +188,39 @@ describe('the page’s copy of the Worker’s values', () => {
     const rule = compileFormula('=A2*2', port.copy.ctxFor(one.id));
     if (!rule.ok) throw new Error('rule');
     expect(port.copy.evaluateAt(one.id, 0, 3, rule.formula)).toBe(40);
+  });
+});
+
+// formulas.md "Named functions": the spreadsheet's functions reach the Worker with its sheets, and each change after.
+describe('named functions in the Worker', () => {
+  it('loads them and works every formula out again as they change', () => {
+    const twice = { name: 'TWICE', params: ['x'], body: '=x*2' };
+    const { deliver, port, wire, v } = joined(
+      makeSheets({ S: { A1: '3', A2: '=TWICE(A1)' } }),
+      undefined,
+      [twice],
+    );
+    expect(wire.toHost[0]).toMatchObject({ t: 'load', functions: [twice] });
+    deliver();
+    expect(v(1, 0)).toBe(6);
+    const thrice = { ...twice, body: '=x*3' };
+    port.setFunctions([thrice]);
+    expect(wire.toHost.at(-1)).toEqual({
+      t: 'functions',
+      rev: expect.any(Number),
+      functions: [thrice],
+    });
+    expect(port.copy.functionList()).toEqual([thrice]);
+    deliver();
+    expect(v(1, 0)).toBe(9);
+    port.setFunctions([]);
+    deliver();
+    expect(v(1, 0)).toMatchObject({ e: '#NAME?' });
+  });
+
+  it('sends none for a workbook without them', () => {
+    const { wire } = joined(makeSheets({ S: { A1: '1' } }));
+    expect(wire.toHost[0]).not.toHaveProperty('functions');
   });
 });
 

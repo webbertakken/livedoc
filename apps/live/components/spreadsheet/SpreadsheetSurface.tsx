@@ -49,6 +49,7 @@ import {
   useSpreadsheetTheme,
   useSpreadsheetThemeState,
 } from './spreadsheet-theme-context';
+import { NamedFunctionsProvider, useNamedFunctionsState } from './named-functions-state';
 
 export function SpreadsheetSurface({
   scope,
@@ -103,6 +104,8 @@ export function SpreadsheetSurface({
   const copyTo = useSheetCopyTo(bridge, workbook);
   // The workbook's theme, which its cells' theme colours draw in (formatting.md "Themes").
   const theme = useSpreadsheetThemeState(scope, workbook, onWorkbook);
+  // The workbook's named functions (data-tools.md "Named ranges and named functions").
+  const namedFunctions = useNamedFunctionsState(scope, workbook, onWorkbook, bridge);
   const sheetBar = useSheetBarActions({
     bridge,
     scope,
@@ -140,45 +143,47 @@ export function SpreadsheetSurface({
         />
       </div>
       <SpreadsheetThemeProvider value={theme}>
-        <SheetBarActionsContext.Provider value={sheetBar}>
-          <OfficeBindingsContext.Provider value={channel}>
-            <BorderLineContext.Provider value={borderLine}>
-              <SummarySlotContext.Provider value={summarySlot}>
-                <SpreadsheetZoomProvider value={scale}>
-                  <SheetStepContext.Provider value={stepSheet}>
-                    <SurfaceRedoContext.Provider value={history?.redo ?? null}>
-                      <ShowFormulasContext.Provider value={formulas.shown}>
-                        <SpreadsheetFullScreenProvider value={fullScreen}>
-                          {bridge ? (
-                            <OpenSheet
-                              bridge={bridge}
-                              tabId={tabId}
-                              onSelectTab={onSelectTab}
-                              sync={sync}
-                              onWorkbook={onWorkbook}
-                            />
-                          ) : (
-                            <Status state="loading" />
-                          )}
-                        </SpreadsheetFullScreenProvider>
-                      </ShowFormulasContext.Provider>
-                    </SurfaceRedoContext.Provider>
-                  </SheetStepContext.Provider>
-                </SpreadsheetZoomProvider>
-              </SummarySlotContext.Provider>
-            </BorderLineContext.Provider>
-          </OfficeBindingsContext.Provider>
-          <SheetBar
-            tabs={tabs}
-            activeId={tabId}
-            onSelect={onSelectTab}
-            peers={sheetBarPeers}
-            summarySlot={setSummarySlot}
-            actions={bridge ? sheetBar : null}
-            looks={looks}
-            copyTo={copyTo}
-          />
-        </SheetBarActionsContext.Provider>
+        <NamedFunctionsProvider value={namedFunctions}>
+          <SheetBarActionsContext.Provider value={sheetBar}>
+            <OfficeBindingsContext.Provider value={channel}>
+              <BorderLineContext.Provider value={borderLine}>
+                <SummarySlotContext.Provider value={summarySlot}>
+                  <SpreadsheetZoomProvider value={scale}>
+                    <SheetStepContext.Provider value={stepSheet}>
+                      <SurfaceRedoContext.Provider value={history?.redo ?? null}>
+                        <ShowFormulasContext.Provider value={formulas.shown}>
+                          <SpreadsheetFullScreenProvider value={fullScreen}>
+                            {bridge ? (
+                              <OpenSheet
+                                bridge={bridge}
+                                tabId={tabId}
+                                onSelectTab={onSelectTab}
+                                sync={sync}
+                                onWorkbook={onWorkbook}
+                              />
+                            ) : (
+                              <Status state="loading" />
+                            )}
+                          </SpreadsheetFullScreenProvider>
+                        </ShowFormulasContext.Provider>
+                      </SurfaceRedoContext.Provider>
+                    </SheetStepContext.Provider>
+                  </SpreadsheetZoomProvider>
+                </SummarySlotContext.Provider>
+              </BorderLineContext.Provider>
+            </OfficeBindingsContext.Provider>
+            <SheetBar
+              tabs={tabs}
+              activeId={tabId}
+              onSelect={onSelectTab}
+              peers={sheetBarPeers}
+              summarySlot={setSummarySlot}
+              actions={bridge ? sheetBar : null}
+              looks={looks}
+              copyTo={copyTo}
+            />
+          </SheetBarActionsContext.Provider>
+        </NamedFunctionsProvider>
       </SpreadsheetThemeProvider>
       <ImportReportDialog documentId={scope.documentId} />
     </section>

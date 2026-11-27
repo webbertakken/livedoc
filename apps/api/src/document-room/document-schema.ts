@@ -560,6 +560,12 @@ CREATE TABLE IF NOT EXISTS sheet_changeset_parts (
 );
 `;
 
+// A spreadsheet's named functions (docs/specs/029-sheets/formulas.md "Named functions"): a JSON array saved whole by
+// Editors; null for none.
+const WORKBOOK_FUNCTIONS_STEP = `
+ALTER TABLE workbook ADD COLUMN functions TEXT;
+`;
+
 /** Every step the room's schema has taken, in order; a change appends one and never edits a shipped step. */
 export const DOCUMENT_SCHEMA_STEPS: readonly string[] = [
   STEP_1 + OUTBOX + SHARES,
@@ -579,6 +585,7 @@ export const DOCUMENT_SCHEMA_STEPS: readonly string[] = [
   WORKBOOK_KEPT_STEP,
   TAB_DRAWING_OF_STEP,
   SHEET_CHANGESETS_STEP,
+  WORKBOOK_FUNCTIONS_STEP,
 ];
 
 export const DOCUMENT_SCHEMA_VERSION = DOCUMENT_SCHEMA_STEPS.length;

@@ -932,6 +932,8 @@ export const EXACT: Readonly<Record<string, string>> = {
   'Spreadsheet|Imported|Xlsx': 'Someone opened an Excel file as a new spreadsheet.',
   'Spreadsheet|Unlocked|RangeAccess':
     'An editor connected the spreadsheets a spreadsheet’s IMPORTRANGE formulas read, for good.',
+  'Spreadsheet|Changed|NamedFunction':
+    'An editor made, changed or removed a named function in a spreadsheet’s Data › Named Functions panel.',
   'Spreadsheet|Unlocked|ImportAccess':
     'An editor allowed a spreadsheet’s IMPORTDATA, IMPORTFEED, IMPORTHTML and IMPORTXML formulas to fetch from the web.',
   'Pdf|Imported|Explorer':

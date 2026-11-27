@@ -8,6 +8,7 @@ import type { Iteration } from '../engine/loops';
 import type { FormulaMeaning } from '../formula/meaning';
 import { cellKey, type Sheet, type SheetLayout } from '../sheet';
 import { readTypedInput } from '../typed-input';
+import type { NamedFunction } from '../named-functions';
 
 export function gridLayout(tag: string, rows = 30, cols = 12): SheetLayout {
   return {
@@ -73,6 +74,7 @@ export function book(
     locale?: string;
     meaning?: FormulaMeaning;
     imports?: { access: ImportAccess };
+    functions?: readonly NamedFunction[];
   } = {},
 ) {
   const full: BookSpec = Object.values(spec).every((v) => typeof v === 'string')
@@ -89,6 +91,7 @@ export function book(
     ...(opts.arrays ? { arrays: opts.arrays } : {}),
     ...(opts.iteration ? { iteration: opts.iteration } : {}),
     ...(opts.imports ? { imports: opts.imports } : {}),
+    ...(opts.functions ? { functions: opts.functions } : {}),
   });
   const at = (a1: string, title = Object.keys(full)[0]!) => {
     const sheet = sheets.find((s) => s.title === title)!;

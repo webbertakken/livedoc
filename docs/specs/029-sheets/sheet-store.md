@@ -128,13 +128,16 @@ by viewport, the limits, the workbook's doors, offline and copies; in Phase 7, u
 
 Built in the api; the sheet bar and File › Settings call it with the grid surface (plan 0020 Phase 8).
 
+- **Named functions**: the workbook row's `functions`, saved whole (`PUT /workbook/functions`: each checked by the
+  rules of [Data tools](data-tools.md#named-ranges-and-named-functions), else `functions_invalid`; more than 100,
+  `functions_full`), sent live to everyone on the spreadsheet.
 - **Add a sheet**: a sheet tab and its sheet made as one, after the tab named, first when the name is empty (an undone
   delete of the first sheet), or last when none is.
 - A new sheet takes the name given, by the sheet name's rules, or `Sheet<n>`, n the first number from the sheets'
   count plus one that no sheet has (default); it holds 1,000 rows by 26 columns, as a new spreadsheet's (default).
 - A sheet added may name its tab and sheet ids (an undo, a sync), a taken one refused (`sheet_exists`).
 - **Duplicate a sheet**: an add naming the live sheet it copies (`copyOf`, else `sheet_not_found`): its layout and
-  cells copied whole, after the sheet copied unless `after` names a tab, named "Copy of <name>" by the sheet name's
+  cells copied whole but for its named ranges (D298), after the sheet copied unless `after` names a tab, named "Copy of <name>" by the sheet name's
   rules unless a name is given ([Spreadsheet](spreadsheet.md#sheets-in-the-sheet-bar), D171); the workbook's cells
   and grid limits as any add's.
 - **Copy a sheet in**: an add carrying its sheet whole (`seed`: its layout and the cells one request carries, the rest
@@ -292,7 +295,7 @@ Sheets follow the document's access ([Auth and guest access](../014-identity/aut
 ## Copies and exports
 
 - **Duplicate** copies the sheet store with the document (same ids), and a spreadsheet's workbook row with it, so a
-  copy of a spreadsheet is a spreadsheet; its kept content comes too.
+  copy of a spreadsheet is a spreadsheet, its named functions with it; its kept content comes too.
 - A `.livedoc` file (the Drive mirror's) carries the workbook row beside the sheets, optional and additive, and a
   copy imported from one is a spreadsheet.
 - **Duplicate Tab** copies the tab's sheets as new sheets on the new tab (new ids, `(copy)` titles kept unique

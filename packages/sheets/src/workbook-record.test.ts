@@ -81,6 +81,18 @@ describe('WorkbookRecord', () => {
       expect(WorkbookRecord.read({ ...made, rangeSources: bad })).toBeNull();
   });
 
+  it('keeps its named functions (formulas.md "Named functions"), none as absent', () => {
+    const functions = [{ name: 'TWICE', params: ['x'], body: '=x*2' }];
+    expect(WorkbookRecord.read({ ...made, functions })).toEqual({ ...made, functions });
+    expect(WorkbookRecord.read({ ...made, functions: [] })).toEqual(made);
+    for (const bad of [
+      'x',
+      [{ name: 'SUM', params: [], body: '=1' }],
+      [{ ...functions[0], body: '=A1' }],
+    ])
+      expect(WorkbookRecord.read({ ...made, functions: bad })).toBeNull();
+  });
+
   it.each([
     ['nothing', null],
     ['a string', 'ods'],
