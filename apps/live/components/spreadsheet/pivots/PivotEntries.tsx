@@ -186,9 +186,7 @@ export function PivotValueEntry({
           <Select
             aria-label={`${name} Summarise By`}
             value={value.summary}
-            onChange={(e) =>
-              onChange({ ...value, summary: e.target.value as PivotSummary })
-            }
+            onChange={(e) => onChange({ ...value, summary: e.target.value as PivotSummary })}
           >
             {summaries.map((s) => (
               <option key={s} value={s}>

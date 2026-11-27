@@ -27,9 +27,7 @@ afterEach(cleanup);
 
 const DATA = { A1: 'Region', B1: 'Units', A2: 'East', B2: '5', A3: 'West', B3: '3' };
 const pivotsOf = (h: SheetHarness, sheetId = SHEET_ID) =>
-  (h.store.sheet(sheetId)?.layout.objects ?? []).filter(
-    (x): x is SheetPivot => x.kind === 'pivot',
-  );
+  (h.store.sheet(sheetId)?.layout.objects ?? []).filter((x): x is SheetPivot => x.kind === 'pivot');
 
 async function setup(opts: { otherTitles?: string[] } = {}) {
   const h = await makeSheet({ rows: 10, cols: 8, cells: DATA, ...opts });
@@ -155,7 +153,9 @@ describe('a pivot table in the grid', () => {
     let ok = true;
     act(() => {
       const { rows, cols } = h.store.sheet(SHEET_ID)!.layout;
-      ok = h.ctl().write({ kind: 'cells', cells: [{ r: rows[1]!, c: cols[4]!, i: { n: 9 } }] }, 'Edit');
+      ok = h
+        .ctl()
+        .write({ kind: 'cells', cells: [{ r: rows[1]!, c: cols[4]!, i: { n: 9 } }] }, 'Cell');
     });
     expect(ok).toBe(false);
     expect(h.toast).toHaveBeenCalledWith("You can't edit a pivot table's cells");

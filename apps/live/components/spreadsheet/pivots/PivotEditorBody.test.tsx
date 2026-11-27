@@ -40,10 +40,12 @@ async function open(fields: Partial<SheetPivot> = {}) {
   });
   const onClose = vi.fn();
   const write = (next: SheetPivot | null) =>
-    h.ctl().write(
-      { kind: 'layout', changes: [{ k: 'object', id: 'pivot1', object: next }] },
-      'PivotTable',
-    );
+    h
+      .ctl()
+      .write(
+        { kind: 'layout', changes: [{ k: 'object', id: 'pivot1', object: next }] },
+        'PivotTable',
+      );
   renderSheet(h, () => (
     <PivotEditorBody pivotId="pivot1" onChange={(next) => write(next)} onClose={onClose} />
   ));
