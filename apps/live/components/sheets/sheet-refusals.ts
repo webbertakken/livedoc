@@ -14,6 +14,8 @@ const REFUSALS: Partial<Record<string, string>> = {
   rules_full: 'This sheet holds the most rules it can',
   objects_full: 'This sheet holds the most charts it can',
   sheet_loading: 'This sheet is still loading',
+  // Someone protected the cells while the change was on its way (data-tools.md "Protected ranges").
+  protected: 'Those cells are protected',
 };
 
 // A spreadsheet's own words where its limits differ (spreadsheet.md "Limits").

@@ -1349,6 +1349,7 @@ export function useEditorState(opts: { surface?: EditorSurface } = {}) {
     // A Participant writes cells; only an Editor shapes the Sheet (docs/specs/013-workspace/share-roles.md).
     canEdit: participant.can.sheetCells,
     canShape: canEdit,
+    isOwner: realtime.isOwner,
     peers: livePresence,
     pushUndo: itemUndo.push,
     toast: (message) => toast.error(message),

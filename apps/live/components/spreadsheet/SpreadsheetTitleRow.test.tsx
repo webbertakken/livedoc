@@ -12,6 +12,7 @@ import { createOfficeBindingsChannel } from './office-bindings-channel';
 import { SpreadsheetTitleRow, spreadsheetLevel } from './SpreadsheetTitleRow';
 import { useSpreadsheetZoom } from './spreadsheet-zoom';
 import { useShowFormulas } from '@/components/sheets/show-formulas';
+import { useShowProtected } from '@/components/sheets/show-protected';
 
 vi.mock('@/lib/telemetry', () => ({ track: vi.fn() }));
 vi.mock('@/lib/download-blob', () => ({ downloadBlob: vi.fn() }));
@@ -43,6 +44,7 @@ function Row({
   const [pushed] = useState(() => vi.fn());
   const { zoom } = useSpreadsheetZoom();
   const formulas = useShowFormulas();
+  const protectedRanges = useShowProtected();
   return (
     <div ref={root}>
       <SpreadsheetTitleRow
@@ -56,6 +58,7 @@ function Row({
         channel={channel}
         zoom={zoom}
         formulas={formulas}
+        protectedRanges={protectedRanges}
         onFullScreen={fullScreen}
         keyScope={root}
         onWorkbook={undefined}

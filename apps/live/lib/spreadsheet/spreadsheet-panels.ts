@@ -54,6 +54,14 @@ export const NAMED_FUNCTIONS_PANEL: OfficePanelSpec = {
   item: 'named-functions',
 };
 
+// Read by everyone; changed by an Editor alone, inside it (data-tools.md "Protected ranges").
+export const PROTECTION_PANEL: OfficePanelSpec = {
+  id: 'protected-ranges',
+  title: 'Protected Sheets and Ranges',
+  side: 'right',
+  item: 'protect-sheets-and-ranges',
+};
+
 // The Chart Editor (docs/specs/029-sheets/charts.md "Chart Editor"): opened from a chart, never from a menu item of
 // its own, so its item is bound to nothing.
 export const CHART_EDITOR_PANEL: OfficePanelSpec = {
@@ -71,6 +79,7 @@ export const SPREADSHEET_PANELS: readonly OfficePanelSpec[] = [
   DATA_VALIDATION_PANEL,
   NAMED_RANGES_PANEL,
   NAMED_FUNCTIONS_PANEL,
+  PROTECTION_PANEL,
   CHART_EDITOR_PANEL,
 ];
 
@@ -150,6 +159,40 @@ export function withNamedRangesPanel(
           'define-named-range': {
             run: () => {
               opts.opened(true);
+              opts.reveal();
+            },
+          },
+        }
+      : {}),
+  };
+}
+
+/**
+ * Data › Protect Sheets and Ranges and the cell and header menus' Protect Range (data-tools.md "Protected ranges"):
+ * the panel's item notes it opens as asked (its list); Protect Range, an Editor's, opens it on a new range over the
+ * selection.
+ */
+export function withProtectionPanel(
+  bound: OfficeActions,
+  opts: { opened: (start: 'range' | null) => void; reveal: () => void; canShape: boolean },
+): OfficeActions {
+  const item = PROTECTION_PANEL.item;
+  const open = bound[item];
+  if (!open) return bound;
+  return {
+    ...bound,
+    [item]: {
+      ...open,
+      run: () => {
+        if (!open.checked) opts.opened(null);
+        open.run();
+      },
+    },
+    ...(opts.canShape
+      ? {
+          'protect-range': {
+            run: () => {
+              opts.opened('range');
               opts.reveal();
             },
           },

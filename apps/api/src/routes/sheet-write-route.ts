@@ -140,10 +140,9 @@ export async function writeSheet(
     if (!values) return forbidden();
     body = { ...read, write: values };
   }
-  const [by, who] = await Promise.all([
-    writer(ctx, caller.owner),
-    protectionCallerOf(ctx, caller, caller.owner),
-  ]);
+  const by = await writer(ctx, caller.owner);
+  // Who the caller is to the sheet's protections is asked only of a sheet that holds any.
+  const who = () => protectionCallerOf(ctx, caller, caller.owner);
   return storeSheetWrite(ctx, documentId, sheetId, body, by, caller.scopeTab ?? null, who);
 }
 
@@ -157,8 +156,9 @@ export async function storeSheetWrite(
   body: SheetWriteRequest,
   by: SheetPerson,
   scopeTab: string | null,
-  // Who writes, to the sheet's protections (data-tools.md "Protected ranges").
-  caller: ProtectionCaller,
+  // Who writes, to the sheet's protections (data-tools.md "Protected ranges"); a function is asked only of a sheet
+  // holding protections, so a write to any other costs no gate.
+  caller: ProtectionCaller | (() => Promise<ProtectionCaller>),
 ): Promise<Response> {
   const write = body.write;
   for (let attempt = 0; attempt < SHEET_WRITE_RETRIES; attempt++) {
@@ -176,13 +176,16 @@ export async function storeSheetWrite(
     const look = await tabLookProblem(ctx, documentId, sheetId, write, spreadsheet);
     if (look) return look;
     // A protection the caller is not admitted by refuses the whole write; the grid's hatching never decides (D347).
-    let refused;
-    try {
-      refused = protectionRefusal(head.layout, write, caller);
-    } catch {
-      return sheetRejected('write_invalid');
+    if (head.layout.protections?.length) {
+      const who = typeof caller === 'function' ? await caller() : caller;
+      let refused;
+      try {
+        refused = protectionRefusal(head.layout, write, who);
+      } catch {
+        return sheetRejected('write_invalid');
+      }
+      if (refused) return protectedRefusal(refused, documentId);
     }
-    if (refused) return protectedRefusal(refused, documentId);
     if (write.kind === 'title') {
       const titled = await titleProblem(ctx, documentId, sheetId, write.title, spreadsheet, scope);
       if (titled) return titled;

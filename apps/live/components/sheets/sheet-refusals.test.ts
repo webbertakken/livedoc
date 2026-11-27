@@ -23,6 +23,6 @@ describe('writeRefusalMessage', () => {
   it('says a protection’s refusal as the room words it', () => {
     const line = 'This range is protected: only Editors can change it.';
     expect(writeRefusalMessage({ error: 'protected', at: 'prot01', line })).toBe(line);
-    expect(writeRefusalMessage({ error: 'protected' })).toBe("Couldn't save that change");
+    expect(writeRefusalMessage({ error: 'protected' })).toBe('Those cells are protected');
   });
 });

@@ -48,6 +48,9 @@ import {
   type ImportAsk,
   type FileMeaning,
   type SpreadsheetTheme,
+  Protection,
+  protectionsTouched,
+  type ProtectionCaller,
 } from '@livedoc/sheets';
 import { functionsShrinkOf, type FunctionsChange } from './functions-shrink';
 import { sheetRefusalMessage, writeRefusalMessage } from './sheet-refusals';
@@ -143,8 +146,12 @@ export type CreateOpts = { onRefused?: (code: string | null) => boolean; onCreat
 type Inverse = { sheetId: string; write: SheetWrite; before?: SheetLayout; applied?: SheetWrite };
 type Entry = { confirmed: Sheet; pending: Pending[]; view: Sheet };
 export type TabStatus = 'loading' | 'ready' | 'error';
-// Why the store refused a write: the engine's reasons, or a sheet still loading rows the write reaches.
-export type StoreRejection = SheetRejection | 'sheet_loading';
+// Why the store refused a write: the engine's reasons, a sheet still loading rows the write reaches, or a protection's
+// warning waiting on the person (the write lands if they go on).
+export type StoreRejection = SheetRejection | 'sheet_loading' | 'protection_warning';
+
+/** Asks before a write under warning protections (data-tools.md "Protected ranges"): `proceed` writes it. */
+export type ProtectionWarnHost = (protections: readonly Protection[], proceed: () => void) => void;
 
 const NOBODY: SheetPerson = { id: '', name: 'Someone', color: '#94a3b8' };
 export const SHEET_REFETCH_DEBOUNCE_MS = 400;
@@ -234,6 +241,56 @@ export class SheetStore {
     subscribeOfflineIds((id) => {
       if (id === this.deps.scope.documentId) this.resync();
     });
+  }
+
+  // Who writes, to the sheets' protections, and who asks before a write under a warning one (data-tools.md "Protected
+  // ranges"): a spreadsheet's surface sets them; a Plan Sheet's leaves them to the room.
+  private protectionCaller: ProtectionCaller | null = null;
+  private warnHost: ProtectionWarnHost | null = null;
+  // The warning protections this person went on past, for the rest of their visit (D346).
+  private readonly warnedPast = new Set<string>();
+
+  /** Who this person is to the protections, as the surface set it; null when none did (a Plan Sheet). */
+  protection(): ProtectionCaller | null {
+    return this.protectionCaller;
+  }
+
+  setProtection(caller: ProtectionCaller | null, warnHost: ProtectionWarnHost | null): void {
+    this.protectionCaller = caller;
+    this.warnHost = warnHost;
+  }
+
+  // A protection's say on a change, before anything is applied: refused (toasted) when one does not admit this person,
+  // held while one warns and they have not gone on past it, else null. Quiet system writes and undo pass unasked
+  // (the room still decides undo).
+  private protectionGate(
+    edits: readonly { sheetId: string; write: SheetWrite }[],
+    opts: WriteOpts,
+    again: () => void,
+  ): StoreRejection | null {
+    const caller = this.protectionCaller;
+    if (!caller || opts.unchecked || opts.undoable === false) return null;
+    const warning: Protection[] = [];
+    for (const { sheetId, write } of edits) {
+      const layout = this.entries.get(sheetId)?.view.layout;
+      if (!layout?.protections) continue;
+      const touched = protectionsTouched(layout, write);
+      const refused = touched.find((p) => !Protection.admits(p, caller));
+      if (refused) {
+        debugLog('[sheets] protection.refused', { protection: refused.id, can: refused.can });
+        this.deps.toast(Protection.refusalLine(refused));
+        return 'protected';
+      }
+      warning.push(...touched.filter((p) => p.can === 'warn' && !this.warnedPast.has(p.id)));
+    }
+    if (warning.length === 0 || !this.warnHost) return null;
+    debugLog('[sheets] protection.warning', { protections: warning.map((p) => p.id) });
+    this.warnHost(warning, () => {
+      for (const p of warning) this.warnedPast.add(p.id);
+      debugLog('[sheets] protection.warned', { protections: warning.map((p) => p.id) });
+      again();
+    });
+    return 'protection_warning';
   }
 
   // The editor's latest identity, toasts and undo (they change across renders; the store lives for the session).
@@ -682,6 +739,8 @@ export class SheetStore {
       this.deps.toast(sheetRefusalMessage('sheet_loading'));
       return 'sheet_loading';
     }
+    const guarded = this.protectionGate(asMadeEdits, opts, () => this.writeAll(asMadeEdits, opts));
+    if (guarded) return guarded;
     // An undo or redo replays writes that already carry their readers' rewrites.
     const edits = opts.undo ? asMadeEdits : this.withReaders(asMadeEdits);
     const shrink = opts.undo ? null : this.functionsShrink(asMadeEdits);

@@ -6,6 +6,7 @@ import { emptyLayout, emptySheet, type IdRange, type SheetLayout } from './sheet
 import {
   Protection,
   isProtection,
+  protectedBoxes,
   protectionRefusal,
   protectionsAt,
   protectionsTouched,
@@ -278,5 +279,50 @@ describe('isProtection', () => {
       { ...guard, range: 'A1' },
     ])
       expect(isProtection(bad, 'p1', base), JSON.stringify(bad)?.slice(0, 60)).toBe(false);
+  });
+});
+
+describe('protectedBoxes', () => {
+  it('gives the boxes to hatch: ranges the viewer may not write freely, and a sheet less its exceptions', () => {
+    const warn = { ...guard, id: 'p3', can: 'warn' as const, range: range(8, 4, 9, 5) };
+    const layout = withGuards(guard, warn);
+    expect(protectedBoxes(layout, editor)).toEqual([{ r1: 8, c1: 4, r2: 9, c2: 5 }]);
+    expect(protectedBoxes(layout, participant)).toEqual([
+      { r1: 2, c1: 1, r2: 4, c2: 2 },
+      { r1: 8, c1: 4, r2: 9, c2: 5 },
+    ]);
+    // A sheet less its exception: the top row is open, two rows inside it the middle columns too.
+    const sheet = withGuards({
+      id: 'p2',
+      can: 'owner',
+      except: [range(0, 0, 0, 5), range(4, 2, 5, 3)],
+    });
+    expect(protectedBoxes(sheet, owner)).toEqual([]);
+    expect(protectedBoxes(sheet, editor)).toEqual([
+      { r1: 1, c1: 0, r2: 3, c2: 5 },
+      { r1: 6, c1: 0, r2: 9, c2: 5 },
+      { r1: 4, c1: 0, r2: 5, c2: 1 },
+      { r1: 4, c1: 4, r2: 5, c2: 5 },
+    ]);
+    expect(
+      protectedBoxes(withGuards({ ...guard, range: { ...guard.range!, r1: 'gone' } }), participant),
+    ).toEqual([]);
+    expect(protectedBoxes(base, participant)).toEqual([]);
+    // An exception over every cell leaves nothing; one whose cells are gone takes nothing away.
+    const open = (x: IdRange[]) => withGuards({ id: 'p6', can: 'editors', except: x });
+    expect(protectedBoxes(open([range(0, 0, 9, 5)]), participant)).toEqual([]);
+    expect(protectedBoxes(open([{ ...range(0, 0, 0, 0), r1: 'gone' }]), participant)).toEqual([
+      { r1: 0, c1: 0, r2: 9, c2: 5 },
+    ]);
+    expect(protectedBoxes(withGuards({ id: 'p7', can: 'owner' }), editor)).toEqual([
+      { r1: 0, c1: 0, r2: 9, c2: 5 },
+    ]);
+    expect(protectedBoxes(open([range(0, 0, 0, 0), range(9, 5, 9, 5)]), participant)).toHaveLength(
+      3,
+    );
+    expect(protectedBoxes(open([range(9, 5, 9, 5)]), participant)).toEqual([
+      { r1: 0, c1: 0, r2: 8, c2: 5 },
+      { r1: 9, c1: 0, r2: 9, c2: 4 },
+    ]);
   });
 });

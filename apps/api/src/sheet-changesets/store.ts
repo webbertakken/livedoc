@@ -11,6 +11,7 @@ import {
   SheetLimits,
   cellsFromJson,
   planSheetChangeset,
+  PROTECTION_SYSTEM,
   type ProtectionCaller,
   type SheetPerson,
   type SheetWrite,
@@ -58,8 +59,9 @@ export type StoreArgs = {
   frontDoor: FrontDoor;
   // A revert's: the changeset it reverts, its writes stored as an undo is (never refused by validation rules).
   revertOf: string | null;
-  // Who writes, to the sheet's protections (data-tools.md "Protected ranges").
-  caller: ProtectionCaller;
+  // Who writes, to the sheet's protections (data-tools.md "Protected ranges"): asked only when the sheet holds any or
+  // the changeset adds one.
+  caller: () => Promise<ProtectionCaller>;
 };
 
 const refusal = (status: number, body: Record<string, unknown>): SheetChangesetResult => ({
@@ -132,12 +134,17 @@ export async function storeSheetChangeset(args: StoreArgs): Promise<SheetChanges
       }
     }
     const light = { ...head, cells: await cellsFor(ctx, documentId, sheetId, writes) };
+    const guarded =
+      !!head.layout.protections?.length ||
+      writes.some((w) => w.kind === 'layout' && w.changes.some((ch) => ch.k === 'protection'));
+    // With none to meet, every write passes as the room's own would.
+    const caller = guarded ? await args.caller() : PROTECTION_SYSTEM;
     const now = Date.now();
     const plan = planSheetChangeset(light, writes, {
       now,
       by: args.by,
       check: { checkRules: args.revertOf === null, limits },
-      caller: args.caller,
+      caller,
     });
     if (!plan.ok) {
       sheetChangesetLog('refused', { ...where, error: plan.error, index: plan.index });

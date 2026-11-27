@@ -1,3 +1,4 @@
+import type { Protection } from '@livedoc/sheets';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   applySheetWrite,
@@ -1208,5 +1209,70 @@ describe('a spreadsheet’s store', () => {
     await store.loadTab('tabB');
     expect(fetchSheets).toHaveBeenCalledWith(expect.anything(), { tabId: 'tabB' });
     expect(store.titlesOn('tabB')).toEqual(['Costs']);
+  });
+});
+
+// docs/specs/029-sheets/data-tools.md "Protected ranges" (D346): the store refuses at once what a protection would
+// refuse in the room, and holds a change under a warning one until the person goes on, once a visit.
+describe('protections in the store', () => {
+  const guarded = (can: Protection['can']): SheetJson => {
+    const sheet = initial();
+    const range = {
+      r1: sheet.layout.rows[0]!,
+      c1: sheet.layout.cols[0]!,
+      r2: sheet.layout.rows[1]!,
+      c2: sheet.layout.cols[0]!,
+    };
+    return { ...sheet, layout: { ...sheet.layout, protections: [{ id: 'prot01', range, can }] } };
+  };
+  const setAt = (srv: ReturnType<typeof server>, r: number, n: number): SheetWrite => ({
+    kind: 'cells',
+    cells: [{ r: srv.sheet.layout.rows[r]!, c: srv.sheet.layout.cols[0]!, i: { n } }],
+  });
+
+  it('refuses a change a protection does not admit, saying why, and leaves the room to decide without a caller', async () => {
+    const srv = server(guarded('editors'));
+    const toasts: string[] = [];
+    const s = store(srv.api, { toast: (m) => toasts.push(m) });
+    await s.loadTab('t1');
+    s.setProtection({ owner: false, editor: false }, null);
+    expect(s.write('sheet0001', setAt(srv, 0, 1))).toBe('protected');
+    expect(toasts).toEqual(['This range is protected: only Editors can change it.']);
+    expect(s.write('sheet0001', setAt(srv, 3, 1))).toBeNull();
+    s.setProtection({ owner: false, editor: true }, null);
+    expect(s.write('sheet0001', setAt(srv, 0, 1))).toBeNull();
+    s.setProtection(null, null);
+    expect(s.write('sheet0001', setAt(srv, 1, 1))).toBeNull();
+  });
+
+  it('asks before a change under a warning one, writes it on OK, and asks no more for that range', async () => {
+    const srv = server(guarded('warn'));
+    const s = store(srv.api);
+    await s.loadTab('t1');
+    const asked: (() => void)[] = [];
+    s.setProtection({ owner: false, editor: false }, (protections, proceed) => {
+      expect(protections.map((p) => p.id)).toEqual(['prot01']);
+      asked.push(proceed);
+    });
+    expect(s.write('sheet0001', setAt(srv, 0, 7))).toBe('protection_warning');
+    expect(s.workbook('t1').value('sheet0001', 0, 0)).toBeNull();
+    asked[0]!();
+    expect(s.workbook('t1').value('sheet0001', 0, 0)).toBe(7);
+    expect(s.write('sheet0001', setAt(srv, 1, 8))).toBeNull();
+    expect(asked).toHaveLength(1);
+    // Without a host, nothing asks.
+    const other = store(server(guarded('warn')).api);
+    await other.loadTab('t1');
+    other.setProtection({ owner: false, editor: false }, null);
+    expect(other.write('sheet0001', setAt(srv, 0, 1))).toBeNull();
+  });
+
+  it('never asks or refuses an undo, a redo or a quiet write: the room decides those', async () => {
+    const srv = server(guarded('owner'));
+    const s = store(srv.api);
+    await s.loadTab('t1');
+    s.setProtection({ owner: false, editor: true }, null);
+    expect(s.write('sheet0001', setAt(srv, 0, 1), { unchecked: true })).toBeNull();
+    expect(s.write('sheet0001', setAt(srv, 0, 2), { undoable: false })).toBeNull();
   });
 });

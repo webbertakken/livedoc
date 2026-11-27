@@ -14,12 +14,15 @@ import { SpreadsheetThemesBody } from './SpreadsheetThemesBody';
 import { SpreadsheetValidationRulesBody } from './SpreadsheetValidationRulesBody';
 import { SpreadsheetNamedRangesBody } from './SpreadsheetNamedRangesBody';
 import { SpreadsheetNamedFunctionsBody } from './SpreadsheetNamedFunctionsBody';
+import { SpreadsheetProtectionBody } from './SpreadsheetProtectionBody';
+import type { ProtectionStart } from './ProtectionForm';
 import {
   ALTERNATING_COLOURS_PANEL,
   CHART_EDITOR_PANEL,
   DATA_VALIDATION_PANEL,
   NAMED_FUNCTIONS_PANEL,
   NAMED_RANGES_PANEL,
+  PROTECTION_PANEL,
   SPREADSHEET_PANELS,
   THEMES_PANEL,
 } from '@/lib/spreadsheet/spreadsheet-panels';
@@ -32,6 +35,7 @@ export function SpreadsheetRightPanel({
   chart,
   validation = { nonce: 0, startNew: false },
   named = { nonce: 0, startAdding: false },
+  protection = { nonce: 0, start: null },
 }: {
   panels: OfficePanelsState;
   actions: SheetActions;
@@ -41,6 +45,8 @@ export function SpreadsheetRightPanel({
   validation?: { nonce: number; startNew: boolean };
   // How Named Ranges was last opened: on Add a Range (Define Named Range) or as it opens (D299).
   named?: { nonce: number; startAdding: boolean };
+  // How Protected Sheets and Ranges was last opened: on a new range or sheet (Protect Range, Protect Sheet) or its list.
+  protection?: { nonce: number; start: ProtectionStart | null };
 }) {
   const spec = SPREADSHEET_PANELS.find((p) => p.id === panels.open.right);
   if (!spec) return null;
@@ -72,6 +78,12 @@ export function SpreadsheetRightPanel({
             key={named.nonce}
             actions={actions}
             startAdding={named.startAdding}
+          />
+        ) : spec.id === PROTECTION_PANEL.id ? (
+          <SpreadsheetProtectionBody
+            key={protection.nonce}
+            actions={actions}
+            start={protection.start}
           />
         ) : spec.id === NAMED_FUNCTIONS_PANEL.id ? (
           <SpreadsheetNamedFunctionsBody />

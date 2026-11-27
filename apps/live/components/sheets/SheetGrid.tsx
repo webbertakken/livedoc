@@ -25,6 +25,7 @@ import {
 } from 'react';
 import { displayValue, isError, posRangeOf, single } from '@livedoc/sheets';
 import { useSheetController } from './sheet-controller';
+import { SheetProtectionLayer } from './SheetProtectionLayer';
 import { SheetCells } from './SheetCells';
 import { SheetHeaders } from './SheetHeaders';
 import { SheetOutlineBar } from './SheetOutlineBar';
@@ -392,6 +393,7 @@ export function SheetGrid({
                 fontFamily={fontFamily}
                 showFormulas={showFormulas}
               />
+              <SheetProtectionLayer />
               {c.interactive ? (
                 <SheetSelectionLayer
                   geometry={c.geometry}
