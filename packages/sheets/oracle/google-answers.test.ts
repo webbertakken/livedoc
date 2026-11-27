@@ -184,6 +184,7 @@ describe('googleAnswers', () => {
     const failing: OracleDrive = {
       uploadAsSheet: async () => 'id1',
       update: async () => {},
+      values: async () => [],
       setLocale: async () => {
         throw new Error('locale answered 400');
       },

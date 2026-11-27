@@ -24,6 +24,8 @@ export type FakeFile = {
   bytes: Uint8Array | null;
   // A Google Sheet's spreadsheet properties (`locale`, `timeZone`), as the Sheets API set them.
   properties: Record<string, string>;
+  // A Google Sheet's values by A1 range, as `values:batchGet` answers them; a test sets them.
+  values: Record<string, unknown[][]>;
   md5Checksum: string | null;
   headRevisionId: string | null;
   version: number;
@@ -118,6 +120,7 @@ export class DriveStore {
       content,
       bytes: input.bytes ?? null,
       properties: {},
+      values: {},
       md5Checksum: isFolder ? null : md5(input.bytes ?? content),
       headRevisionId: isFolder ? null : `rev${++this.revCounter}`,
       version: 1,
