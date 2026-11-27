@@ -9,6 +9,7 @@ import type { TextDocumentFormat } from '@livedoc/document';
 import type { OfficeActions } from '@/lib/office/office-catalogue';
 import { makeComparison, type CompareOutcome } from '@/lib/text-document/text-document-compare';
 import { TextDocumentCompareDialog, type CompareChoice } from './TextDocumentCompareDialog';
+import { apiListTextDocumentVersions } from '@/lib/api/text-document-versions';
 
 /** The Tools item. */
 export const COMPARE_DOCUMENTS = 'compare-documents';
@@ -19,15 +20,21 @@ export const COMPARE_LOCAL_HINT = 'Comparing needs a document stored in LiveDoc.
 export function useTextDocumentCompare({
   ownerId,
   documentId,
+  tabId,
+  shareCode = null,
   documentName,
   format,
   liveDoc,
   local,
   defaultName,
+  versions: seesVersions = false,
   open: openTab = (documentId) => window.open(`/document/${documentId}`, '_blank', 'noopener'),
 }: {
   ownerId: string;
   documentId: string;
+  /** The text document tab, whose versions an Editor may compare against. */
+  tabId: string;
+  shareCode?: string | null;
   documentName: string;
   format: TextDocumentFormat;
   /** The writing as it is now. */
@@ -36,6 +43,8 @@ export function useTextDocumentCompare({
   local: boolean;
   /** The person's commenting name, the attribution's first value. */
   defaultName: string;
+  /** The person sees version history (an Editor): the dialog offers this document's versions too. */
+  versions?: boolean;
   /** Shows a document in a new browser tab. */
   open?: (documentId: string) => void;
 }): { actions: OfficeActions; dialog: ReactNode } {
@@ -54,14 +63,19 @@ export function useTextDocumentCompare({
       if (!doc) return { ok: false, refusal: 'unreadable' };
       return makeComparison({
         ownerId,
-        primary: { documentId, name: documentName, format, doc },
+        primary: { documentId, tabId, name: documentName, format, doc },
         selected: choice.selected,
         name: choice.name,
         comments: choice.comments,
         at: Date.now(),
       });
     },
-    [ownerId, documentId, documentName, format, liveDoc],
+    [ownerId, documentId, tabId, documentName, format, liveDoc],
+  );
+  // This document's versions, read when the person turns to them.
+  const listVersions = useCallback(
+    () => apiListTextDocumentVersions({ ownerId, documentId, tabId, shareCode }),
+    [ownerId, documentId, tabId, shareCode],
   );
   const dialog = shown ? (
     <TextDocumentCompareDialog
@@ -72,6 +86,7 @@ export function useTextDocumentCompare({
       onCompare={compare}
       onOpen={openTab}
       onClose={() => setShown(false)}
+      versions={seesVersions && !local ? listVersions : null}
     />
   ) : null;
   return { actions, dialog };

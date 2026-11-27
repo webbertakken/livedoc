@@ -10,10 +10,13 @@ import {
   TextDocumentComparison,
   TextDocumentState,
   base64OfBytes,
+  versionDocument,
   type TextDocument,
 } from '@livedoc/text-documents';
 import { apiCreateDocument, apiLoadDocument } from '@/lib/api/documents';
 import { apiLoadTextDocumentState } from '@/lib/api/text-documents';
+import { apiReadTextDocumentVersion } from '@/lib/api/text-document-versions';
+import { bytesOfBase64 } from '@livedoc/text-documents/base64';
 import { ApiError } from '@/lib/api/core';
 import { createBeside, placementOf } from '@/lib/create-beside';
 import { createIdsFor } from '@/lib/new-document/create-failure';
@@ -50,21 +53,30 @@ export type CompareApi = {
     shareCode: null;
   }) => Promise<Uint8Array>;
   create: (ownerId: string, request: Parameters<typeof apiCreateDocument>[1]) => Promise<unknown>;
+  /** One of the primary's versions, whose snapshot the room's state is read at. */
+  readVersion: typeof apiReadTextDocumentVersion;
 };
 
 const COMPARE_API: CompareApi = {
   loadDocument: apiLoadDocument,
   loadState: apiLoadTextDocumentState,
   create: apiCreateDocument,
+  readVersion: apiReadTextDocumentVersion,
 };
 
 export type CompareRequest = {
   /** Who compares: the comparison is theirs. */
   ownerId: string;
   /** The document open here, its writing as it is now. */
-  primary: { documentId: string; name: string; format: TextDocumentFormat; doc: Y.Doc };
-  /** The person's own text document it is compared against. */
-  selected: { id: string; name: string };
+  primary: {
+    documentId: string;
+    tabId: string;
+    name: string;
+    format: TextDocumentFormat;
+    doc: Y.Doc;
+  };
+  /** The person's own text document it is compared against, or one of the primary's versions (by its id). */
+  selected: { id: string; name: string; version?: true };
   /** Who the differences are attributed to, as the field holds it. */
   name: string;
   /** Whether the selected document's comments come with it. */
@@ -91,9 +103,27 @@ const asWritten = (doc: Y.Doc, format: TextDocumentFormat): TextDocument =>
 
 type Read<T> = { ok: true; value: T } | { ok: false; refusal: CompareRefusal };
 
+/** One of the primary's versions as it read (review.md "The dialog", Versions); any failure unreadable. */
+async function readVersion(request: CompareRequest, api: CompareApi): Promise<Read<TextDocument>> {
+  const { ownerId, primary, selected } = request;
+  const scope = { ownerId, documentId: primary.documentId, tabId: primary.tabId, shareCode: null };
+  try {
+    const [read, state] = await Promise.all([
+      api.readVersion(scope, selected.id),
+      api.loadState(scope),
+    ]);
+    const snapshot = bytesOfBase64(read.snapshot);
+    if (!snapshot) return { ok: false, refusal: 'unreadable' };
+    return { ok: true, value: asWritten(versionDocument([state], snapshot), primary.format) };
+  } catch {
+    return { ok: false, refusal: 'unreadable' };
+  }
+}
+
 /** The selected document's writing, read as the person. */
 async function readSelected(request: CompareRequest, api: CompareApi): Promise<Read<TextDocument>> {
   const { ownerId, selected } = request;
+  if (selected.version) return readVersion(request, api);
   try {
     const document = await api.loadDocument(ownerId, selected.id);
     if (!document) return { ok: false, refusal: 'not-copyable' };

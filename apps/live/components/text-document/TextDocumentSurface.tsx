@@ -1149,6 +1149,9 @@ export function TextDocumentSurface({
   const compare = useTextDocumentCompare({
     ownerId,
     documentId,
+    tabId,
+    shareCode,
+    versions: canEdit,
     documentName,
     format,
     liveDoc,
