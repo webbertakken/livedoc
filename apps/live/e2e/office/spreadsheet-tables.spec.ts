@@ -79,6 +79,12 @@ test('Convert to Table, a table reference, growth and its undo, the total row', 
   await expect(cell(page, 'A5 Total')).toBeVisible();
   await expect(cell(page, 'B5 3')).toBeVisible();
   await page.screenshot({ path: test.info().outputPath('table-total.png') });
+  // Every value settled: none left faded, waiting on the engine.
+  await expect(page.locator('[data-sheet-waiting]')).toHaveCount(0);
+  await expect(panel.getByRole('switch', { name: 'Total Row' })).toHaveAttribute(
+    'aria-checked',
+    'true',
+  );
 
   // Ctrl+Alt+T converts the data around another cell; the chip opens its settings.
   await panel.getByRole('button', { name: 'Done' }).click();
@@ -93,8 +99,12 @@ test('Convert to Table, a table reference, growth and its undo, the total row', 
   const chip = page.getByRole('button', { name: 'Sales table menu' });
   await chip.focus();
   await page.keyboard.press('Enter');
-  await expect(tableMenu(page, 'Sales').getByRole('button', { name: 'Delete Table' })).toBeVisible();
-  await expect(tableMenu(page, 'Sales').getByRole('button', { name: 'Table Settings' })).toBeFocused();
+  await expect(
+    tableMenu(page, 'Sales').getByRole('button', { name: 'Delete Table' }),
+  ).toBeVisible();
+  await expect(
+    tableMenu(page, 'Sales').getByRole('button', { name: 'Table Settings' }),
+  ).toBeFocused();
   await page.screenshot({ path: test.info().outputPath('table-menu.png') });
   await page.keyboard.press('Enter');
   await expect(panel.getByText('Sales', { exact: true })).toBeVisible();

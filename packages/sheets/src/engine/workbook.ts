@@ -691,7 +691,7 @@ export class Workbook {
     return [...out].map((no) => this.cellAt(no));
   }
 
-  private inputAt(sheetId: string, r: number, c: number): CellInput | undefined {
+  protected inputAt(sheetId: string, r: number, c: number): CellInput | undefined {
     const sheet = this.sheets.get(sheetId);
     const rowId = sheet?.layout.rows[r];
     const colId = sheet?.layout.cols[c];
