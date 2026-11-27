@@ -45,6 +45,19 @@ describe('VersionSnapshots', () => {
     });
   });
 
+  it('keeps and reads versions as bytes, as the room does', () => {
+    const { doc, snapshots } = written(5);
+    const kept: Uint8Array[] = [];
+    const state = Y.encodeStateAsUpdate(doc);
+    const { stateVector, deletions } = VersionSnapshots.stateOf(state);
+    kept.push(VersionSnapshots.addedBytes(deletions, kept));
+    const read = Y.decodeSnapshot(VersionSnapshots.encodedSnapshotOf(stateVector, kept));
+    expect(Y.equalSnapshots(read, snapshots[4]!)).toBe(true);
+    expect(VersionSnapshots.encodedSnapshotOf(null, [])).toEqual(Y.encodeSnapshot(Y.emptySnapshot));
+    const all = VersionSnapshots.decodeDeletions(VersionSnapshots.unionBytes(kept));
+    expect(Y.equalDeleteSets(all, snapshots[4]!.ds)).toBe(true);
+  });
+
   it('subtracts ranges that overlap part of a range', () => {
     const a = Y.createDeleteSet();
     a.clients.set(1, [deleteRange(0, 10)]);
@@ -70,6 +83,17 @@ describe('VersionSnapshots', () => {
     doc.clientID = 42;
     doc.getText('t').insert(0, 'hello');
     expect(VersionSnapshots.clientsOf(Y.encodeStateAsUpdate(doc))).toEqual([42]);
+  });
+
+  it('reads what an update writes and deletes at once', () => {
+    const doc = new Y.Doc({ gc: false });
+    doc.clientID = 9;
+    doc.getText('t').insert(0, 'hello');
+    const before = Y.encodeStateVector(doc);
+    doc.getText('t').delete(0, 2);
+    const written = VersionSnapshots.writtenBy(Y.encodeStateAsUpdate(doc, before));
+    expect(written.clients).toEqual([]);
+    expect(written.deletions.clients.get(9)).toEqual([{ clock: 0, len: 2 }]);
   });
 
   it('names the clients that wrote between two state vectors', () => {

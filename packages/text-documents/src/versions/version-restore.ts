@@ -29,8 +29,9 @@ function writtenSince(version: Y.Snapshot, now: Y.Snapshot): DeleteSet {
  */
 export function restoreUpdate(
   stateUpdates: readonly Uint8Array[],
-  version: Y.Snapshot,
+  encodedVersion: Uint8Array,
 ): Uint8Array | null {
+  const version = Y.decodeSnapshot(encodedVersion);
   const doc = TextDocumentState.load(stateUpdates);
   const now = Y.snapshot(doc);
   const step: UndoStep = {
@@ -50,4 +51,15 @@ export function restoreUpdate(
   undo.destroy();
   doc.destroy();
   return update;
+}
+
+/** The document as it read at a version (an encoded snapshot), drawn from a state that holds it; read-only. */
+export function versionDocument(
+  stateUpdates: readonly Uint8Array[],
+  encodedVersion: Uint8Array,
+): Y.Doc {
+  return Y.createDocFromSnapshot(
+    TextDocumentState.load(stateUpdates),
+    Y.decodeSnapshot(encodedVersion),
+  );
 }

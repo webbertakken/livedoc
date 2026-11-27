@@ -389,4 +389,4 @@ export {
   type ComparisonResult,
 } from './compare/compare-documents';
 export { VersionSnapshots } from './versions/version-snapshots';
-export { restoreUpdate } from './versions/version-restore';
+export { restoreUpdate, versionDocument } from './versions/version-restore';

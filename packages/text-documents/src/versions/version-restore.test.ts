@@ -2,7 +2,7 @@ import * as Y from 'yjs';
 import { describe, expect, it } from 'vitest';
 import { THREADS_MAP } from '../live/live-names';
 import { TextDocumentState } from '../text-document-state';
-import { restoreUpdate, STACK_ITEM_FIELDS } from './version-restore';
+import { restoreUpdate, STACK_ITEM_FIELDS, versionDocument } from './version-restore';
 
 const textOf = (doc: Y.Doc) => TextDocumentState.paragraphs(doc).map((p) => p.text);
 
@@ -28,9 +28,10 @@ function start(): Uint8Array {
   });
 }
 
-const snapshotOf = (state: Uint8Array) => Y.snapshot(TextDocumentState.load([state]));
+const snapshotOf = (state: Uint8Array) =>
+  Y.encodeSnapshot(Y.snapshot(TextDocumentState.load([state])));
 
-function restored(state: Uint8Array, version: Y.Snapshot): Y.Doc {
+function restored(state: Uint8Array, version: Uint8Array): Y.Doc {
   const update = restoreUpdate([state], version);
   expect(update).not.toBeNull();
   return TextDocumentState.load([state, update!]);
@@ -114,5 +115,18 @@ describe('restoreUpdate', () => {
     const um = new Y.UndoManager(text);
     text.insert(0, 'x');
     expect(Object.keys(um.undoStack[0]!).sort()).toEqual([...STACK_ITEM_FIELDS].sort());
+  });
+});
+
+describe('versionDocument', () => {
+  it('reads the document as it stood at the version', () => {
+    const v1 = start();
+    const version = snapshotOf(v1);
+    const later = edited(v1, (doc) => TextDocumentState.body(doc).delete(0, 2));
+    expect(textOf(versionDocument([later], version))).toEqual([
+      'First line',
+      'Second line',
+      'Third line',
+    ]);
   });
 });

@@ -76,10 +76,43 @@ export const VersionSnapshots = {
   /** The whole snapshot of a version: its state vector, and its own deletions with every earlier kept version's. */
   snapshotOf: (stateVector: Uint8Array, deletions: readonly DeleteSet[]): Y.Snapshot =>
     Y.createSnapshot(VersionSnapshots.union(deletions), decodedStateVector(stateVector)),
+  /** A version read whole, encoded: its state vector with every kept deletion up to it; the empty snapshot for none. */
+  encodedSnapshotOf: (
+    stateVector: Uint8Array | null,
+    deletions: readonly Uint8Array[],
+  ): Uint8Array =>
+    stateVector === null
+      ? Y.encodeSnapshot(Y.emptySnapshot)
+      : Y.encodeSnapshot(
+          VersionSnapshots.snapshotOf(stateVector, deletions.map(VersionSnapshots.decodeDeletions)),
+        ),
+  /** A state's own state vector and every deletion it holds, encoded as a version keeps them. */
+  stateOf: (state: Uint8Array): { stateVector: Uint8Array; deletions: Uint8Array } => ({
+    stateVector: Y.encodeStateVectorFromUpdate(state),
+    deletions: VersionSnapshots.encodeDeletions(Y.decodeUpdate(state).ds),
+  }),
+  /** The deletions of 'state' no kept version holds yet, encoded. */
+  addedBytes: (stateDeletions: Uint8Array, earlier: readonly Uint8Array[]): Uint8Array =>
+    VersionSnapshots.encodeDeletions(
+      VersionSnapshots.added(
+        VersionSnapshots.decodeDeletions(stateDeletions),
+        earlier.map(VersionSnapshots.decodeDeletions),
+      ),
+    ),
+  /** Encoded deletions merged, encoded. */
+  unionBytes: (list: readonly Uint8Array[]): Uint8Array =>
+    VersionSnapshots.encodeDeletions(
+      VersionSnapshots.union(list.map(VersionSnapshots.decodeDeletions)),
+    ),
   /** The clients an update's items are written by, each once, in order. */
   clientsOf: (update: Uint8Array): number[] => [
     ...new Set(Y.decodeUpdate(update).structs.map((struct) => struct.id.client)),
   ],
+  /** What an update writes, read once: the clients its items are written by, and what it deletes. */
+  writtenBy: (update: Uint8Array): { clients: number[]; deletions: DeleteSet } => {
+    const { structs, ds } = Y.decodeUpdate(update);
+    return { clients: [...new Set(structs.map((struct) => struct.id.client))], deletions: ds };
+  },
   /** The clients whose writing grew from one state vector to the next. */
   advanced: (before: Uint8Array, after: Uint8Array): number[] => {
     const was = decodedStateVector(before);
