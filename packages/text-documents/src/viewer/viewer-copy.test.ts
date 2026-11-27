@@ -171,8 +171,12 @@ function editing(seed: number) {
         return;
       }
       const p = pick(paragraphs);
-      const text = p.toArray().find((c): c is Y.XmlText => c instanceof Y.XmlText);
-      if (!text) return;
+      let text = p.toArray().find((c): c is Y.XmlText => c instanceof Y.XmlText);
+      // A paragraph with no text yet (the seed's) is written in as the editor does: a text made in it.
+      if (!text) {
+        text = new Y.XmlText();
+        p.insert(0, [text]);
+      }
       const at = Math.floor(random() * (text.length + 1));
       if (kind < 0.35) text.insert(at, `w${n++} `, random() < 0.5 ? { insertion: mark() } : {});
       else if (kind < 0.45 && text.length > 2) text.delete(Math.min(at, text.length - 1), 1);
@@ -550,5 +554,29 @@ describe('ViewerCopy, what a change may hold', () => {
     });
     expect(contentOf(copy.doc, false)).toEqual(contentOf(real, true));
     copy.destroy();
+  });
+});
+
+describe('ViewerCopy over the seed', () => {
+  it('copies what was typed into the seed’s paragraph, built at once or as it goes', () => {
+    const real = TextDocumentState.load();
+    real.clientID = 77;
+    const before = Y.encodeStateVector(real);
+    const paragraph = TextDocumentState.body(real).get(0) as Y.XmlElement;
+    const text = new Y.XmlText();
+    paragraph.insert(0, [text]);
+    text.insert(0, 'Hello there');
+    const typed = Y.encodeStateAsUpdate(real, before);
+    // Built at once: the Viewer reads the writing once.
+    const built = ViewerCopy.build([typed]);
+    const read = (state: Uint8Array) =>
+      TextDocumentState.paragraphs(TextDocumentState.load([state])).map((p) => p.text);
+    expect(read(built.state())).toEqual(['Hello there']);
+    // As it goes, from a copy made before the typing.
+    const early = ViewerCopy.build([]);
+    const gained = early.apply(typed)!;
+    expect(read(Y.mergeUpdates([early.state(), gained]))).toEqual(['Hello there']);
+    built.destroy();
+    early.destroy();
   });
 });

@@ -165,9 +165,16 @@ export class ViewerCopy {
     if (kept) return;
     // Every state stands on the seed, the copy too: its items are the same in both, so they are twins.
     Y.applyUpdate(this.doc, TextDocumentState.seed());
-    this.linkSeed(real.getXmlFragment(BODY_FRAGMENT), this.doc.getXmlFragment(BODY_FRAGMENT));
+    const seeded: Shared[] = [];
+    this.linkSeed(
+      real.getXmlFragment(BODY_FRAGMENT),
+      this.doc.getXmlFragment(BODY_FRAGMENT),
+      seeded,
+    );
     this.doc.transact(() => {
       for (const name of [...real.share.keys()]) this.root(name);
+      // The seed's twins were never cloned: what the state wrote in them is copied over now.
+      this.sync(seeded);
     });
   }
 
@@ -463,7 +470,7 @@ export class ViewerCopy {
   }
 
   /** The seed's items in a fragment of the copy, linked to the same items of the real state, all the way down. */
-  private linkSeed(real: Container, copy: Container): void {
+  private linkSeed(real: Container, copy: Container, linked: Shared[]): void {
     const seeded = (type: unknown) =>
       sharedOf(type)?._item?.id.client === TEXT_DOCUMENT_SEED_CLIENT ? sharedOf(type) : null;
     const twins = real.toArray().map(seeded);
@@ -471,7 +478,8 @@ export class ViewerCopy {
       const twin = twins.find((t) => t?._item?.id.clock === child?._item?.id.clock);
       if (!child || !twin || twin.constructor !== child.constructor) continue;
       this.link(twin, child);
-      if (twin instanceof Y.XmlElement) this.linkSeed(twin, child as Y.XmlElement);
+      linked.push(twin);
+      if (twin instanceof Y.XmlElement) this.linkSeed(twin, child as Y.XmlElement, linked);
     }
   }
 

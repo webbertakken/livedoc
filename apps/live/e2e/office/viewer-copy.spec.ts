@@ -36,11 +36,12 @@ test('a Viewer reads the writing and receives no comment or author', async ({
   for (let i = 0; i < 9; i += 1) await page.keyboard.press('Shift+ArrowRight');
   await (await officeMenuItem(page, ['Insert', 'Comment'])).click();
   const draft = page.getByRole('group', { name: 'New comment' });
+  await expect(draft.getByRole('textbox', { name: 'Add a comment' })).toBeFocused();
   await page.keyboard.type(SECRET);
   await draft.getByRole('button', { name: 'Comment' }).click();
   await expect(page.locator('[data-thread-card]:not([data-thread-card="draft"])')).toHaveCount(1);
   // Whose comment it is, as the comments panel names them.
-  await page.keyboard.press('Control+Alt+Shift+KeyA');
+  await page.getByRole('button', { name: 'Open comment history' }).click();
   const row = page
     .getByRole('complementary', { name: 'Comments' })
     .getByRole('button', { name: /^Go to comment by / });
@@ -90,13 +91,23 @@ test('a Viewer reads the writing and receives no comment or author', async ({
   await page.keyboard.type(' Margins grew.');
   await expect(viewerBody).toContainText('Margins grew.', { timeout: 15_000 });
   await page.keyboard.press('Shift+Home');
-  await page.keyboard.press('Control+Alt+KeyM');
+  await page.keyboard.down('Control');
+  await page.keyboard.down('Alt');
+  await page.keyboard.press('KeyM');
+  await page.keyboard.up('Alt');
+  await page.keyboard.up('Control');
+  await expect(
+    page
+      .getByRole('group', { name: 'New comment' })
+      .getByRole('textbox', { name: 'Add a comment' }),
+  ).toBeFocused();
   await page.keyboard.type(`${SECRET} again`);
   await page
     .getByRole('group', { name: 'New comment' })
     .getByRole('button', { name: 'Comment' })
     .click();
-  await page.keyboard.press('End');
+  await body.click();
+  await page.keyboard.press('Control+End');
   await page.keyboard.type(' Done.');
   await expect(viewerBody).toContainText('Done.', { timeout: 15_000 });
   await expect(viewer.locator('[data-thread-card]')).toHaveCount(0);
