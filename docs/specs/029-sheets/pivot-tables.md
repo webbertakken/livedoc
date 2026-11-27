@@ -133,7 +133,8 @@ and spills"), from the source's values and shown texts as they read now (default
 
 - **Insert › Pivot Table**: Data Range (the selection or the data region), Insert To: **New Sheet** (the default,
   "Pivot Table 1") or **Existing Sheet** (a cell); **Create** opens the Pivot Table Editor.
-- `GETPIVOTDATA(value_name, any_pivot_table_cell, [original_column, …])` reads it.
+- `GETPIVOTDATA(value_name, any_pivot_table_cell, [original_column, …])` reads it ([Formulas](formulas.md),
+  "Lookup", D603).
 
 ## Pivot Table Editor
 

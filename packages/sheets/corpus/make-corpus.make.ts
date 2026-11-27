@@ -13,7 +13,12 @@ import { writeXlsx } from '../src/files/xlsx-write';
 import { googleDrive } from '../oracle/google-access.ts';
 import { ODS_MIME, XLSX_MIME } from '../oracle/google-drive.ts';
 import { CORPUS, GOOGLE_FUNCTIONS, POI_COMMIT, SMART_CHIPS } from './corpus-files';
-import { PIVOT_CASES, PIVOT_SOURCE_HEADER, PIVOT_SOURCE_ROWS } from './pivot-cases';
+import {
+  GETPIVOTDATA_PROBES,
+  PIVOT_CASES,
+  PIVOT_SOURCE_HEADER,
+  PIVOT_SOURCE_ROWS,
+} from './pivot-cases';
 
 const ROOT = import.meta.dirname;
 const SOURCE = process.env.CORPUS_SOURCE ?? 'libreoffice';
@@ -184,6 +189,32 @@ async function googlePivots(): Promise<void> {
       made.map((title) => `'${title}'!A1:Z60`),
     );
     const answers = Object.fromEntries(made.map((title, i) => [title, values[i]]));
+    // GETPIVOTDATA's probes, one a row on a sheet of their own, read back as Google works them out.
+    const PROBES_ID = 2500;
+    await drive.update(id, [
+      { addSheet: { properties: { sheetId: PROBES_ID, title: 'Probes' } } },
+      {
+        updateCells: {
+          start: { sheetId: PROBES_ID, rowIndex: 0, columnIndex: 0 },
+          rows: GETPIVOTDATA_PROBES.map((formula) => ({
+            values: [{ userEnteredValue: { formulaValue: formula } }],
+          })),
+          fields: 'userEnteredValue',
+        },
+      },
+    ]);
+    const [probed] = await drive.values(id, [`'Probes'!A1:A${GETPIVOTDATA_PROBES.length}`]);
+    write(
+      'google',
+      'getpivotdata-answers.json',
+      new TextEncoder().encode(
+        `${JSON.stringify(
+          Object.fromEntries(GETPIVOTDATA_PROBES.map((p, i) => [p, probed?.[i]?.[0] ?? ''])),
+          null,
+          1,
+        )}\n`,
+      ),
+    );
     write(
       'google',
       'pivot-answers.json',

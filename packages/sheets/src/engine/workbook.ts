@@ -196,6 +196,15 @@ export class Workbook {
       cell: (s, r, c, reader) => this.cellValue(s, r, c, reader),
       noAt: (s, r, c) => this.noAt(s, r, c),
       claimOf: (owner) => this.spills.claimOf(owner),
+      pivotAt: (s, r, c, reader) => {
+        // Reading the cell works its pivot table out, and notes it.
+        this.cellValue(s, r, c, reader);
+        const owner = this.spills.ownerAt(this.noAt(s, r, c));
+        const out = owner === undefined ? undefined : this.vals.get(owner);
+        if (!isPivotArray(out)) return null;
+        const claim = this.spills.claimOf(owner!)!;
+        return { out, r1: claim.r1, c1: claim.c1 };
+      },
       readersOf: (at) => this.readersOf(at),
       noteRange: (reader, range) =>
         this.deps.noteRange(

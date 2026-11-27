@@ -509,7 +509,18 @@ out (`IMPOWER("5+2i", 3)` is exactly `65+142i`), any other in polar form; `IMSQR
 - `SHEETS([reference])` counts the spreadsheet's sheets, hidden ones too, or the sheets a reference spans.
 
 **Lookup**: `VLOOKUP`, `HLOOKUP`, `XLOOKUP`, `LOOKUP`, `INDEX`, `MATCH`, `XMATCH`, `CHOOSE`, `ROW`, `ROWS`, `COLUMN`,
-`COLUMNS`, `OFFSET`, `INDIRECT`, `ADDRESS`, `SHEET`, `FORMULATEXT`, `MULTIPLE.OPERATIONS`.
+`COLUMNS`, `OFFSET`, `INDIRECT`, `ADDRESS`, `SHEET`, `FORMULATEXT`, `MULTIPLE.OPERATIONS`, `GETPIVOTDATA`.
+
+- `GETPIVOTDATA` reads the pivot table whose output covers its second argument ([Pivot tables](pivot-tables.md)), as
+  Google Sheets does (D603): its value named by the first (case aside; the value's name or its source column's, and any
+  name when it has one value), at the items of the column and item pairs after it. A pair's column is its group's
+  header as shown (`Date - Year-Month`, `Grouped Units`), case and all; an item is matched case aside; naming fewer
+  groups reads their total, none the Grand Total, a total the output does not show is not found. Each refusal is
+  `#REF!` in Google's words: pairs incomplete ("Field key and values should come in pairs of key and value for
+  function GETPIVOTDATA"), no pivot table there ("Target range is not in a pivot table for function GETPIVOTDATA,
+  parameter 2."), an unknown column ("Field key [Rep] not found in pivot table for function GETPIVOTDATA"), an
+  unknown value ("Data field not found in pivot table for function GETPIVOTDATA, parameter 1.") and items with no
+  value ("Field combination not found in pivot table for function GETPIVOTDATA").
 
 - `INDIRECT` reads an A1 text, or an R1C1 text when `is_A1_notation` is FALSE (`R2C3`, `R[-1]C[2]` from its own
   cell, `R2` a row, `C3` a column), on its own sheet or another of the spreadsheet named before `!`.
@@ -1105,7 +1116,7 @@ OpenFormula functions Google lacks, and LiveDoc's four card functions (sources a
 | `GCD`                 | Math        | `GCD(value1, value2)`                                                                                          | Google      | `GCD`                            | built                                                         |
 | `GEOMEAN`             | Statistical | `GEOMEAN(value1, value2)`                                                                                      | Google      | `GEOMEAN`                        | built                                                         |
 | `GESTEP`              | Engineering | `GESTEP(value, [step])`                                                                                        | Google      | `GESTEP`                         | built                                                         |
-| `GETPIVOTDATA`        | Lookup      | `GETPIVOTDATA(value_name, any_pivot_table_cell, [original_column, ...], [pivot_item, ...]`                     | Google      | `GETPIVOTDATA`                   | planned                                                       |
+| `GETPIVOTDATA`        | Lookup      | `GETPIVOTDATA(value_name, any_pivot_table_cell, [original_column, ...], [pivot_item, ...]`                     | Google      | `GETPIVOTDATA`                   | built                                                         |
 | `GOOGLEFINANCE`       | Google      | `GOOGLEFINANCE(ticker, [attribute], [start_date], [end_date\|num_days], [interval])`                           | Google      | S5                               | left out (C3)                                                 |
 | `GOOGLETRANSLATE`     | Google      | `GOOGLETRANSLATE(text, [source_language], [target_language])`                                                  | Google      | S5                               | left out (C3)                                                 |
 | `GROWTH`              | Array       | `GROWTH(known_data_y, [known_data_x], [new_data_x], [b])`                                                      | Google      | `GROWTH`                         | built                                                         |
@@ -1680,4 +1691,6 @@ The code cites each by its id.
   errors). Undo is the deletion's exact inverse (ruled by the Director, 2026-11-27): the deletion's undo step carries
   the definitions it shrank, named functions' and named ranges' alike, so undo puts each back as it was and redo
   shrinks it again; a definition someone else changed after the deletion keeps their change, as a cell's undo does.
+- **D603** GETPIVOTDATA reads as Google Sheets does: a value by its name or its column's (any name with one value),
+  columns by their headers as shown, items case aside, and Google's words for each refusal (default).
 - The imports' defaults, D61 to D66 and D72 to D74, are kept in [Imports from the web](imports.md#defaults).

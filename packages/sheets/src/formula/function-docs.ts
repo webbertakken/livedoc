@@ -880,6 +880,11 @@ export const FUNCTION_DOCS: Readonly<Record<string, FunctionDoc>> = {
     'Finds a key in the first column and gives a value from its row',
     '=VLOOKUP(A2, D2:F20, 3, FALSE)',
   ),
+  GETPIVOTDATA: D(
+    'value_name, any_pivot_table_cell, [original_column, pivot_item, ...]',
+    "Gives a value of a pivot table by its name and its groups' items",
+    '=GETPIVOTDATA("SUM of Units", A1, "Region", "East")',
+  ),
   HLOOKUP: D(
     'key, range, row, [is_sorted]',
     'Finds a key in the first row and gives a value from its column',

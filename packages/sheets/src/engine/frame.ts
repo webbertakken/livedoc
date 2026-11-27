@@ -2,6 +2,7 @@
 // "Workbook
 // and recalculation"). The workbook provides it; functions never reach the workbook itself.
 import type { CardSource } from '../cards';
+import type { PivotArray } from '../pivot/pivot-resolve';
 import type { ImportAccess, ImportRequest } from '../imports/import-request';
 import type { ImportRead } from './import-book';
 import type { FormulaMeaning } from '../formula/meaning';
@@ -87,6 +88,12 @@ export type Frame = {
   formulaText(sheetId: string, r: number, c: number): string | null;
   // The grid size of a sheet.
   grid(sheetId: string): { rows: number; cols: number } | undefined;
+  // The pivot table whose output covers a cell, and its output's top-left; null when none does (GETPIVOTDATA).
+  pivotAt(
+    sheetId: string,
+    r: number,
+    c: number,
+  ): { out: PivotArray; r1: number; c1: number } | null;
   // The rectangle a spilling formula fills, for `B2#`; null when it does not spill.
   spillOf(sheetId: string, r: number, c: number): RangeRef | null;
   // Note a read of a whole range, for dependencies (cells read one by one note themselves).

@@ -236,6 +236,9 @@ describe('the catalogue against the corpus', () => {
       // A volatile function (NOW, RAND) is held by its own unit tests, never an oracle's answer: no two runs agree.
       .filter((r) => MEASURED_CATEGORIES.includes(r.category) && !measured.has(r.name))
       .filter((r) => !FUNCTIONS[r.name]?.volatile)
+      // GETPIVOTDATA reads a pivot table, which no oracle case can hold: it is measured against Google's answers to its
+      // probes over the pivot corpus (pivot/pivot-google.test.ts, corpus/google/getpivotdata-answers.json).
+      .filter((r) => r.name !== 'GETPIVOTDATA')
       .map((r) => `${r.category} ${r.name}`);
     expect(unmeasured).toEqual([]);
   });

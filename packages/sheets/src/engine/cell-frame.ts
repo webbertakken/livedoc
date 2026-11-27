@@ -2,6 +2,7 @@
 // (its `reader`; NO_CELL keeps nothing). The workbook gives its parts once, as a FrameSource.
 import { protectionsAt } from '../protection';
 import type { CardSource } from '../cards';
+import type { PivotArray } from '../pivot/pivot-resolve';
 import type { FormulaMeaning } from '../formula/meaning';
 import type { ImportAccess, ImportRequest } from '../imports/import-request';
 import type { ImportRead } from './import-book';
@@ -38,6 +39,13 @@ export type FrameSource = {
   // A cell's number, given on first sight; NO_CELL off its sheet's grid.
   noAt(sheetId: string, r: number, c: number): CellNo;
   claimOf(owner: CellNo): RangeRef | undefined;
+  // The pivot table output covering a cell, the read noted for `reader`.
+  pivotAt(
+    sheetId: string,
+    r: number,
+    c: number,
+    reader: CellNo,
+  ): { out: PivotArray; r1: number; c1: number } | null;
   // The formula cells that read a cell, by its value or through a range.
   readersOf(at: CellAt): CellAt[];
   noteRange(reader: CellNo, range: RangeRef): void;
@@ -123,6 +131,7 @@ export function cellFrame(
       const sh = src.sheet(s);
       return sh ? { rows: sh.layout.rows.length, cols: sh.layout.cols.length } : undefined;
     },
+    pivotAt: (s, r, c) => src.pivotAt(s, r, c, reader),
     spillOf: (s, r, c): RangeRef | null => {
       const owner = src.noAt(s, r, c);
       if (owner === NO_CELL) return null;
