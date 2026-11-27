@@ -1,4 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
+import { VIEWER_AUTHOR_COLOUR } from '@livedoc/text-documents';
+import { PARTICIPANT_COLORS } from '@/lib/identity';
 import { ApiError } from '@/lib/api/core';
 import {
   isViewerCopyUnavailable,
@@ -43,5 +45,14 @@ describe('openingFailure', () => {
     expect(openingFailure(unavailable)).toBe(VIEWER_COPY_UNAVAILABLE_COPY);
     expect(VIEWER_COPY_UNAVAILABLE_COPY).toBe("This document can't be shown right now.");
     expect(openingFailure(new Error('offline'))).toBe('This text document could not be opened.');
+  });
+});
+
+// review.md "What a Viewer receives": every anonymous author has one grey, which no person present wears.
+describe('an anonymous author’s colour', () => {
+  it('is none of the presence colours', () => {
+    expect(PARTICIPANT_COLORS.map((c) => c.toLowerCase())).not.toContain(
+      VIEWER_AUTHOR_COLOUR.toLowerCase(),
+    );
   });
 });

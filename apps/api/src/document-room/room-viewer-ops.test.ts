@@ -29,6 +29,12 @@ describe('viewerOpOf', () => {
     expect(viewerOpOf({ kind: 'text-document', update: 'x' }, ops, 'stale')).toBeNull();
   });
 
+  it('withholds every caret', () => {
+    const caret = { kind: 'text-document-caret', tabId: 't1', anchor: 'AQID', head: 'AQID' };
+    expect(viewerOpOf(caret, new WeakMap(), 'drop')).toBeNull();
+    expect(viewerOpOf(caret, new WeakMap(), 'stale')).toBeNull();
+  });
+
   it('passes a tab’s stale and every other op as they are', () => {
     const ops: ViewerOps = new WeakMap();
     const stale = { kind: 'text-document', tabId: 't1', stale: true };

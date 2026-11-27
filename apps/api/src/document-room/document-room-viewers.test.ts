@@ -288,3 +288,37 @@ describe('DocumentRoom, a Viewer of a text document', () => {
     expect(read.status).toBe(400);
   });
 });
+
+// review.md "What a Viewer receives": a Viewer sees who is present, never where anyone's caret is, and no anonymous
+// author's colour is anyone's.
+describe('DocumentRoom, what a Viewer sees of the people present', () => {
+  it('sends a Viewer no caret, an Editor every one', async () => {
+    const { handle, join, send, viewerState } = await setup();
+    const ada = join('edit', 'Ada');
+    const other = join('edit', 'Bo');
+    const viewer = join('view', 'Vi');
+    await send(ada, adasFrame('One'));
+    await viewerState();
+    viewer.sent.length = 0;
+    other.sent.length = 0;
+    const caret = { kind: 'text-document-caret', tabId: 't1', anchor: 'AQID', head: 'AQID' };
+    handle.room.webSocketMessage(ada.ws, JSON.stringify({ kind: 'op', op: caret }));
+    await new Promise((r) => setTimeout(r, 0));
+    const carets = (socket: Fake) =>
+      socket.sent.filter((raw) => raw.includes('"text-document-caret"')).length;
+    expect(carets(other)).toBe(1);
+    expect(carets(viewer)).toBe(0);
+  });
+
+  it('gives a suggestion’s anonymous author a colour that is not its author’s', async () => {
+    const { join, send, viewerState } = await setup();
+    const ada = join('edit', 'Ada');
+    const viewer = join('view', 'Vi');
+    await viewerState();
+    await send(ada, adasFrame('One'));
+    const state = latin1(new Uint8Array(await (await viewerState()).arrayBuffer()));
+    expect(state).toContain('#5f6368');
+    expect(state).not.toContain(ADA.colour);
+    expect(received(viewer)).not.toContain(ADA.colour);
+  });
+});

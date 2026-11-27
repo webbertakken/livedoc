@@ -663,7 +663,10 @@ tools read them, so the room never sends them:
   comment, never reach a Viewer (director, 2026-11-27; reported to Webber, revisable). The share dialog says so where
   a Viewer's pass is made ([Share roles](../013-workspace/share-roles.md#integrity)).
 - **Who is present** is shown to a Viewer as to everyone (the people in the document, as Google shows a viewer
-  them); it ties no name to anything written.
+  them); it ties no name to anything written. A Viewer receives no one's caret or selection: Google's Viewing mode
+  shows no cursors, a viewer's own included ([webapps.stackexchange 78284](https://webapps.stackexchange.com/questions/78284)),
+  and a caret beside a suggestion as it appears would say whose it is (director, 2026-11-27). Every anonymous author
+  has the same grey (`#5f6368`), outside the presence colours, so no colour matches a person.
 - **A role that changes** ends the person's connection ([Access changes](../015-api/api.md)); they come back at the new
   level, reading the copy or the document as it allows.
 - **When the copy cannot be made** (the document is past the copy's limits, or making it fails), a Viewer is shown

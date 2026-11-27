@@ -71,6 +71,8 @@ test('a Viewer reads the writing and receives no comment or author', async ({
       if (String(payload).startsWith('{"kind":"presence"')) return;
       const text = decoded(String(payload));
       seen.frames += 1;
+      // No one's caret: Google's Viewing mode shows none.
+      if (text.includes('"text-document-caret"')) leaks.push('ws caret');
       for (const leak of [SECRET, author])
         if (text.includes(leak)) leaks.push(`ws ${leak} ${String(payload).slice(0, 120)}`);
     }),
