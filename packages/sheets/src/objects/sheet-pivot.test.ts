@@ -64,6 +64,15 @@ describe('what a pivot table may be', () => {
         valuesAsRows: true,
       }),
     );
+    yes(
+      pivot({
+        values: [
+          { formula: "='Units'*'Price'", summary: 'SUM', name: 'Revenue' },
+          { formula: '=COUNT(Units)', summary: 'CUSTOM', name: 'Counted', showAs: 'total' },
+        ],
+        filters: [{ col: C(2), formula: '=Units>8' }],
+      }),
+    );
   });
 
   it('refuses unknown keys, a malformed place or source, empty lists and anything past its bounds', () => {
@@ -130,6 +139,12 @@ describe('what a pivot table may be', () => {
     value({ col: C(0), summary: 'SUM', other: 1 });
     value({ col: 'X', summary: 'SUM' });
     value(null);
+    value({ formula: '=1', summary: 'SUM' });
+    value({ formula: '1', summary: 'SUM', name: 'N' });
+    value({ formula: '=1', summary: 'NOPE', name: 'N' });
+    value({ formula: '=1', summary: 'SUM', name: 'N', col: C(0) });
+    value({ formula: '=' + 'x'.repeat(10_000), summary: 'SUM', name: 'N' });
+    value({ col: C(0), summary: 'CUSTOM' });
     const filter = (f: unknown) => no(pivot({ filters: [f as never] }));
     filter({ col: C(0), cond: { op: 'formula', fx: { t: 'TRUE', r: [] } } });
     filter({ col: C(0), cond: { colour: { key: 'bg', is: '#ffffff' } } });
@@ -137,6 +152,8 @@ describe('what a pivot table may be', () => {
     filter({ col: C(0), cond: null });
     filter({ col: C(0), cond: {}, other: 1 });
     filter({ col: 'X', cond: {} });
+    filter({ col: C(0), formula: 'x' });
+    filter({ col: C(0), formula: '=1', cond: {} });
   });
 
   it('counts toward the objects cap with charts', () => {
@@ -181,6 +198,16 @@ describe('pivotWithout', () => {
     expect(out.filters).toEqual([{ col: C(2), cond: {} }]);
     const noValues = pivot({ values: undefined, rows: [{ col: C(1) }, { col: C(0) }] });
     expect(pivotWithout(noValues, new Set([C(1)])).rows).toEqual([{ col: C(0) }]);
+    const calc = pivot({
+      values: [
+        { formula: '=1', summary: 'SUM', name: 'One' },
+        { col: C(1), summary: 'SUM' },
+      ],
+      filters: [{ col: C(1), formula: '=TRUE' }],
+    });
+    const left = pivotWithout(calc, new Set([C(1)]));
+    expect(left.values).toEqual([{ formula: '=1', summary: 'SUM', name: 'One' }]);
+    expect(left.filters).toBeUndefined();
     const bare = pivotWithout(out, new Set([C(0), C(2), C(3)]));
     expect(bare).toEqual({ id: 'pivot01', kind: 'pivot', at: p.at, source: p.source });
   });

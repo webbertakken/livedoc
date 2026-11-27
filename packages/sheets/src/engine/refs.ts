@@ -2,7 +2,7 @@
 // typed as A1 text (INDIRECT), to the positions it reads on its sheet.
 import type { A1Ref } from '../formula/ast';
 import { posRefOf, type PosRef } from '../formula/stored';
-import { err, type SheetError } from '../formula/values';
+import { err, isColumnValues, type SheetError } from '../formula/values';
 import { isRef, type EvalValue, type Frame, type RangeRef } from './frame';
 
 // A resolved reference as a rectangle on its sheet: whole columns and rows, and open ends, run to the filled
@@ -76,8 +76,11 @@ const NO_INTERSECTION = 'An array value could not be found';
 
 // A range where one value goes, outside an array context (formulas.md "Arrays and spills"): the one cell of it in the
 // formula's row (a range one column wide) or column (one row high); none is #VALUE!. Anything else is as it was.
+// A pivot table's column read as values (pivot-calc.ts) is a range to Google: where one value goes, its first.
 export function implicit(v: EvalValue, f: Frame): EvalValue {
-  return f.arrays ? v : intersected(v, f);
+  if (f.arrays) return v;
+  if (isColumnValues(v)) return v.rows[0]?.[0] ?? null;
+  return intersected(v, f);
 }
 
 /** A range met by the formula's own row or column, also in an array context; any other value as it is. */

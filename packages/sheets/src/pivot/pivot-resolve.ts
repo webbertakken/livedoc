@@ -71,7 +71,9 @@ export function pivotSpecOf(pivot: SheetPivot, box: PivotBox): PivotSpec {
     ...(pivot.values ?? []),
     ...(pivot.filters ?? []),
   ];
-  const outside = new Set(fields.map((x) => x.col).filter((id) => !place.has(id)));
+  const outside = new Set(
+    fields.flatMap((x) => (x.col === undefined || place.has(x.col) ? [] : [x.col])),
+  );
   const kept = pivotWithout(pivot, outside);
   const group = ({ col, ...g }: NonNullable<SheetPivot['rows']>[number]): PivotGroupSpec => ({
     ...g,
@@ -80,8 +82,14 @@ export function pivotSpecOf(pivot: SheetPivot, box: PivotBox): PivotSpec {
   return {
     rows: (kept.rows ?? []).map(group),
     columns: (kept.columns ?? []).map(group),
-    values: (kept.values ?? []).map((v) => ({ ...v, col: place.get(v.col)! })),
-    filters: (kept.filters ?? []).map((f) => ({ col: place.get(f.col)!, cond: f.cond })),
+    values: (kept.values ?? []).map((v) =>
+      v.formula === undefined ? { ...v, col: place.get(v.col)! } : v,
+    ),
+    filters: (kept.filters ?? []).map((f) =>
+      f.formula === undefined
+        ? { col: place.get(f.col)!, cond: f.cond }
+        : { col: place.get(f.col)!, formula: f.formula },
+    ),
     ...(kept.valuesAsRows ? { valuesAsRows: true } : {}),
   };
 }
