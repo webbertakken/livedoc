@@ -404,6 +404,10 @@ The table is the contract the readers and writers are tested against, one test p
     own), the same properties and `style:cell-protect="none"`; the style other cells share is never touched;
   - empty cells of an exception are written as repeated cells naming the open style, its rows a run of repeated rows,
     so an exception over a whole column holds one cell element a run of rows, never one a cell.
+  - Evidence (`written-files.validate.ts`): LibreOffice opens the written `.fods` and `.xlsx` and saves them again with
+    the sheet protected, the exception's cells open and every other cell locked. LibreOffice copies no XML through a
+    save; it writes the protection and the cell styles again from its own model, so the re-saved file shows its model
+    holds those cells unlocked, which is what its editing check reads.
 - **No standard form**: neither suite guards a range alone, nor warns, nor tells Editors from the owner. A range's
   protection and a protection that shows a warning are in LiveDoc's record only; Editors Only and Only the Owner are
   one protected sheet there.
