@@ -288,10 +288,11 @@ only labels them: whose they are is the key the room makes.
 - `GET /:versionId` answers the version's snapshot and the one before it (state vector and whole delete set,
   base64), each Yjs client id's author, and the deletions each of its editors made, so the browser draws the version
   and its changes, in each editor's colour, from the state it holds.
-- `POST` names the current version (`{ name }`); `PATCH /:versionId` names, renames or (an empty name) unnames one.
+- `POST` names the current version (`{ name }`); `PUT /:versionId` names, renames or (an empty name) unnames one.
   A name past `TEXT_DOCUMENT_VERSION_NAME_MAX_CHARS` is `400 version_name_too_long`; a 41st named version
   `409 named_versions_full`.
-- `POST /:versionId/restore` restores it and answers the version of the result.
+- `POST /:versionId` restores it (posting to a version makes it current again) and answers the version of the
+  result.
 - **Make a copy** reads the version in the browser and creates the copy as a Duplicate does
   ([Copies](#copies)), its state the version's content as a fresh update.
 - A version that is not the tab's is `404 version_not_found`.
@@ -356,5 +357,5 @@ A refused edit names its limit; nothing is half applied.
 
 Fingerprints, each with the document and tab ids and never text: `[text-document] persisted` (revision, bytes,
 chunks, ms), `[text-document] compacted`, `[text-document] digest` (characters, words, ms), `[text-document] merge-offline` (updates, bytes), `[text-document]
-edit-refused` (limit), `[text-document] branch-merged` (unmerged count), `[text-document] version-taken` (version, kind, trigger, bytes, ms), `[text-document] versions-thinned` (count, bytes), `[text-document] version-too-large` (bytes), `[text-document] version-named` (version), `[text-document] version-restored` (from, to, bytes, ms), `[text-document] author-conflict` (client), `[text-document] author-record-failed` (error); in the browser `[text-document] caught-up`
+edit-refused` (limit), `[text-document] branch-merged` (unmerged count), `[text-document] version-taken` (version, kind, trigger, bytes, ms), `[text-document] versions-thinned` (count, bytes), `[text-document] version-too-large` (bytes), `[text-document] version-failed` (error: a window's version not taken), `[text-document] version-named` (version), `[text-document] version-restored` (from, to, bytes, ms), `[text-document] author-conflict` (client), `[text-document] author-record-failed` (error); in the browser `[text-document] caught-up`
 (bytes sent), `[text-document] sent-by-door` (bytes), `[text-document] local-copy saved|cleared|failed` (bytes).

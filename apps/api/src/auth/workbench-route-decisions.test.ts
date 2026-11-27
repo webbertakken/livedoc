@@ -80,6 +80,12 @@ const DOCUMENT_SCOPE: Record<string, Decision> = {
   'GET /documents/{id}/text-documents/{tabId}/state': 'allow',
   'GET /documents/{id}/text-documents/{tabId}/file': 'allow',
   'POST /documents/{id}/text-documents/{tabId}/updates': 'allow',
+  // Its versions: the editor's version history.
+  'GET /documents/{id}/text-documents/{tabId}/versions': 'allow',
+  'POST /documents/{id}/text-documents/{tabId}/versions': 'allow',
+  'GET /documents/{id}/text-documents/{tabId}/versions/{versionId}': 'allow',
+  'PUT /documents/{id}/text-documents/{tabId}/versions/{versionId}': 'allow',
+  'POST /documents/{id}/text-documents/{tabId}/versions/{versionId}': 'allow',
   // A PDF document: its live changes and the stored file it holds.
   'GET /documents/{id}/pdf-documents/{tabId}/state': 'allow',
   'POST /documents/{id}/pdf-documents/{tabId}/updates': 'allow',

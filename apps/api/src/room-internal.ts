@@ -6,6 +6,11 @@ import { parseStoredLevel, type AccessLevel } from '@livedoc/api-schema';
 import { opForTheWire } from '@livedoc/document';
 import { parseAccessCloseMatch, type AccessCloseMatch } from './room-access';
 import type { PostedOutcome } from './live-tabs/room-live-tabs';
+import type { VersionWrite, VersionWriteError } from './text-documents/room-text-document-versions';
+import {
+  parseTextDocumentVersionWrite,
+  type TextDocumentVersionWriteRequest,
+} from './text-documents/text-document-version-write';
 
 /** The room's surface the internal endpoints act on. */
 export type InternalRoom = {
@@ -29,6 +34,13 @@ export type InternalRoom = {
     update: Uint8Array,
     sent: { level: AccessLevel; on?: string; adderKey?: string | null },
   ) => Promise<PostedOutcome>;
+  writeTextDocumentVersion: (write: TextDocumentVersionWriteRequest) => Promise<VersionWrite>;
+};
+
+// What a text document's version write answers (live-editing-and-storage.md "The api").
+const VERSION_ERROR_STATUS: Record<VersionWriteError, number> = {
+  version_not_found: 404,
+  named_versions_full: 409,
 };
 
 // What the door's route answers for each outcome of a live tab's update (text-document-routes.ts).
@@ -135,6 +147,16 @@ export async function answerInternal(
     if (outcome === 'not-yours')
       return Response.json({ name: 'not_your_mark' }, { status: POSTED_STATUS[outcome] });
     return new Response(null, { status: POSTED_STATUS[outcome] });
+  }
+  // Internal: naming or restoring a text document's version (live-editing-and-storage.md "The api"), already gated
+  // by its route as an edit of the tab: run on the room's write queue.
+  if (request.method === 'POST' && url.pathname === '/text-document-version') {
+    const write = parseTextDocumentVersionWrite(await readBody(request));
+    if (!write) return new Response('bad version write', { status: 400 });
+    const result = await room.writeTextDocumentVersion(write);
+    return result.ok
+      ? Response.json({ version: result.version })
+      : Response.json({ error: result.error }, { status: VERSION_ERROR_STATUS[result.error] });
   }
   if (request.method === 'POST' && url.pathname === '/mutation') {
     const op = (await readBody(request))?.op;

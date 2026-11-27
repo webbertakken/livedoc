@@ -960,6 +960,69 @@ export const ROUTE_MANIFEST: RouteSpec[] = [
     requestSchema: { type: 'string', format: 'binary' },
     statuses: [204, 400, 401, 403, 404, 410, 413, 503],
   },
+  // A text document's versions (docs/specs/034-text-documents/live-editing-and-storage.md "Versions").
+  {
+    method: 'GET',
+    path: '/documents/{id}/text-documents/{tabId}/versions',
+    segment: 'documents',
+    tag: 'Text documents',
+    summary:
+      "A text document tab's versions, newest first: automatic and named, each with who took it, what it was restored from and its editors. Edit access: Editors only (403 for a Participant or Viewer; 404 for a link confined to another tab); 404 text_document_not_found.",
+    auth: 'guest-or-session',
+    tokenUsable: true,
+    responseSchema: 'TextDocumentVersionListDto',
+    statuses: [200, 401, 403, 404, 410],
+  },
+  {
+    method: 'POST',
+    path: '/documents/{id}/text-documents/{tabId}/versions',
+    segment: 'documents',
+    tag: 'Text documents',
+    summary:
+      'Names the current version: the newest version when nothing changed since it, else a version of now. 400 version_name_invalid or version_name_too_long; 409 named_versions_full; 503 room_unavailable. Edit access: Editors only (403 for a Participant or Viewer; 404 for a link confined to another tab); 404 text_document_not_found.',
+    auth: 'guest-or-session',
+    tokenUsable: true,
+    requestSchema: 'TextDocumentVersionNameBody',
+    responseSchema: 'TextDocumentVersionWriteDto',
+    statuses: [200, 400, 401, 403, 404, 409, 410, 503],
+  },
+  {
+    method: 'GET',
+    path: '/documents/{id}/text-documents/{tabId}/versions/{versionId}',
+    segment: 'documents',
+    tag: 'Text documents',
+    summary:
+      "One version read whole: its Yjs snapshot and the one before it (base64), each Yjs client id's author, and the deletions each editor made in it. 404 version_not_found. Edit access: Editors only (403 for a Participant or Viewer; 404 for a link confined to another tab); 404 text_document_not_found.",
+    auth: 'guest-or-session',
+    tokenUsable: true,
+    responseSchema: 'TextDocumentVersionReadDto',
+    statuses: [200, 401, 403, 404, 410],
+  },
+  {
+    method: 'PUT',
+    path: '/documents/{id}/text-documents/{tabId}/versions/{versionId}',
+    segment: 'documents',
+    tag: 'Text documents',
+    summary:
+      'Names, renames or (an empty name) unnames one version. 400 version_name_invalid or version_name_too_long; 404 version_not_found; 409 named_versions_full; 503 room_unavailable. Edit access: Editors only (403 for a Participant or Viewer; 404 for a link confined to another tab); 404 text_document_not_found.',
+    auth: 'guest-or-session',
+    tokenUsable: true,
+    requestSchema: 'TextDocumentVersionNameBody',
+    responseSchema: 'TextDocumentVersionWriteDto',
+    statuses: [200, 400, 401, 403, 404, 409, 410, 503],
+  },
+  {
+    method: 'POST',
+    path: '/documents/{id}/text-documents/{tabId}/versions/{versionId}',
+    segment: 'documents',
+    tag: 'Text documents',
+    summary:
+      'Restores a version (posting to a version makes it current again): a version of now is kept first, then one change by the restorer makes the document read as it (comment threads untouched), and the version of the result is answered. 404 version_not_found; 503 room_unavailable. Edit access: Editors only (403 for a Participant or Viewer; 404 for a link confined to another tab); 404 text_document_not_found.',
+    auth: 'guest-or-session',
+    tokenUsable: true,
+    responseSchema: 'TextDocumentVersionWriteDto',
+    statuses: [200, 401, 403, 404, 410, 503],
+  },
   // A PDF document's live changes (docs/specs/035-pdf-documents/live-editing-and-storage.md "Storage").
   {
     method: 'GET',

@@ -297,6 +297,9 @@ const WORKBENCH_ROUTES: readonly RouteShape[] = [
   shape('GET', 'documents/:doc/text-documents/:p/state'),
   shape('GET', 'documents/:doc/text-documents/:p/file'),
   shape('POST', 'documents/:doc/text-documents/:p/updates'),
+  // Its versions: the editor's version history (live-editing-and-storage.md "Versions").
+  shape('GET,POST', 'documents/:doc/text-documents/:p/versions'),
+  shape('GET,PUT,POST', 'documents/:doc/text-documents/:p/versions/:p'),
   shape('GET', 'documents/:doc/pdf-documents/:p/state'),
   shape('POST', 'documents/:doc/pdf-documents/:p/updates'),
   shape('GET', 'documents/:doc/files/:p'),

@@ -46,6 +46,16 @@ import { recheckAdmittedLink } from '../room-link-recheck';
 import { gateClientOp } from '../room-op-gate';
 import { LIVE_TAB_KINDS } from '../live-tabs/live-tab-kinds';
 import { RoomLiveTabs } from '../live-tabs/room-live-tabs';
+import { storedUpdates } from '../live-tabs/live-tab-store';
+import { TEXT_DOCUMENT_LIVE_TAB } from '../text-documents/text-document-live-tab';
+import {
+  RoomTextDocumentVersions,
+  type VersionWrite,
+} from '../text-documents/room-text-document-versions';
+import {
+  applyTextDocumentVersionWrite,
+  type TextDocumentVersionWriteRequest,
+} from '../text-documents/text-document-version-write';
 import { getTab } from '../db/tabs';
 import { tabShowsEveryCard } from '@livedoc/items';
 import { RoomScopedStructure } from '../room-scoped-structure';
@@ -222,6 +232,8 @@ export class DocumentRoom extends DurableObject<Env | undefined> {
   // A text document's edits: stored by the room before they are relayed (room-text-documents.ts).
   // Each live tab kind's edits, by its frame's op kind (kinds-outside-the-canvas.md "Live state").
   private readonly liveTabs: ReadonlyMap<string, RoomLiveTabs>;
+  // The text document tabs' versions (live-editing-and-storage.md "Versions"); none in a room without storage.
+  private readonly textDocumentVersions: RoomTextDocumentVersions | null;
   // The same, by the op kind a kind's replacement is asked with.
   private readonly liveTabReplacements: ReadonlyMap<string, RoomLiveTabs>;
   // The document's content in this room's SQLite (room-content.ts).
@@ -247,15 +259,31 @@ export class DocumentRoom extends DurableObject<Env | undefined> {
       position: () => ({ epoch: this.epoch, seq: this.seq }),
       readLedger: (tabId) => this.ledger.read(tabId),
     });
+    const roomEnv = this.content.env;
+    this.textDocumentVersions = roomEnv
+      ? new RoomTextDocumentVersions({
+          env: roomEnv,
+          storedUpdates: (tabId) => storedUpdates(roomEnv, TEXT_DOCUMENT_LIVE_TAB, tabId),
+          storeUpdate: (place, update) =>
+            this.liveTabs
+              .get(TEXT_DOCUMENT_LIVE_TAB.frame)!
+              .storeAndRelay(place.documentId, place.tabId, update),
+        })
+      : null;
+    const versions = this.textDocumentVersions;
     this.liveTabs = new Map(
       LIVE_TAB_KINDS.map((kind) => [
         kind.frame,
         new RoomLiveTabs(kind, {
-          env: this.content.env,
+          env: roomEnv,
           enqueue: (step) => this.queueTabWrite(step),
           sequence: (from, op, except) => this.sequenceMutation(from, op, except),
           sendTo: (ws, payload) => this.sendTo(ws, payload),
           position: () => ({ epoch: this.epoch }),
+          // Who wrote what, for a text document's versions.
+          ...(versions && kind === TEXT_DOCUMENT_LIVE_TAB
+            ? { stored: (place, update, author) => versions.stored(place, update, author) }
+            : {}),
         }),
       ]),
     );
@@ -282,6 +310,7 @@ export class DocumentRoom extends DurableObject<Env | undefined> {
       acceptPostedLiveTab: async (frame, documentId, tabId, update, sent) =>
         (await this.liveTabs.get(frame)?.acceptPosted(documentId, tabId, update, sent)) ??
         'wrong-kind',
+      writeTextDocumentVersion: (write) => this.writeTextDocumentVersion(write),
     };
     this.baton = new RoomFacilitator({
       storage: state.storage,
@@ -736,6 +765,13 @@ export class DocumentRoom extends DurableObject<Env | undefined> {
     this.broadcast({ kind: 'op', from: 'system', op });
   }
 
+  // A text document version's write the api asked for (live-editing-and-storage.md "The api"), on the write queue.
+  private writeTextDocumentVersion(write: TextDocumentVersionWriteRequest): Promise<VersionWrite> {
+    const versions = this.textDocumentVersions;
+    if (!versions) return Promise.resolve({ ok: false, error: 'version_not_found' });
+    return this.queueTabWrite(() => applyTextDocumentVersionWrite(versions, write));
+  }
+
   // One step on the tab write queue (SR2), after every step before it. A failed step must not wedge
   // every write after it.
   private queueTabWrite<T>(step: () => Promise<T>): Promise<T> {
@@ -894,6 +930,7 @@ export class DocumentRoom extends DurableObject<Env | undefined> {
           documentId: session.documentId ?? null,
           level: gate.level,
           adderKey: session.adderKey ?? null,
+          author: { name: sender.name || null, color: sender.color || null },
         };
         const frames = this.liveTabs.get(opKind);
         if (frames) void frames.accept(from, msg.op, msg.ref);

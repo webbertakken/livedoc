@@ -20,6 +20,9 @@ export type TextDocumentVersionDto = {
   editors: VersionEditorDto[];
 };
 
+/** What a name or restore answers: the version as it now stands. */
+export type TextDocumentVersionWriteDto = { version: TextDocumentVersionDto };
+
 export type TextDocumentVersionListDto = { versions: TextDocumentVersionDto[] };
 
 /** One version, its snapshot and the one before it (Yjs snapshots, base64), and who wrote what in it. */

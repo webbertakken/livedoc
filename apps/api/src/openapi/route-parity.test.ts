@@ -58,8 +58,10 @@ for (const [segment, byPosition] of vocabulary) {
 // The work is held, not the time: a cross past this is a sweep grown by a new deep word, raised on purpose or the
 // probe pruned. 178,407 paths with a PDF document's doors, the blob store's read and the kept content's door
 // (2026-11-22); 230,830 with a spreadsheet's move door, raised on purpose (2026-11-24); 253,861 with its named
-// functions' door, raised on purpose (2026-11-26).
-const PROBE_PATHS_MAX = 260_000;
+// functions' door, raised on purpose (2026-11-26); 263,362 with a text document's versions, one word and no deeper
+// (restore is a POST on the version, not a level below it, which would have made it 320,562), raised on purpose
+// (2026-11-27).
+const PROBE_PATHS_MAX = 270_000;
 // The hook's timeout only bounds a hung probe, so it follows the work: about 0.02 ms a dispatch on a developer's
 // machine (12 s for 563,080), and CI's shared runners under coverage up to thirty times that.
 const PROBE_MS_PER_DISPATCH = 0.02;

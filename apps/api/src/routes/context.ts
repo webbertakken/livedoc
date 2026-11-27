@@ -334,18 +334,37 @@ export async function deniedOnTab(
   return grant ? notFound() : forbidden();
 }
 
-// The refusal for a Participant door (docs/specs/013-workspace/share-roles.md): no grant, 403; a grant confined
-// to another tab, 404, as deniedOnTab; a grant whose level is below Participant (a Viewer), 403.
-export async function deniedParticipate(
+// The refusal for a door that asks a level (docs/specs/013-workspace/share-roles.md): no grant, 403; a grant confined
+// to another tab, 404, as deniedOnTab; a grant whose level is below the one asked, 403.
+async function deniedBelow(
+  ctx: RouteContext,
+  liveDoc: { id: string; ownerId: string; teamId: string | null },
+  tabId: string | undefined,
+  asked: 'participation' | 'edit',
+): Promise<Response> {
+  const grant = await gateGrant(ctx, liveDoc.id, liveDoc.ownerId, liveDoc.teamId);
+  if (grant && !(await isTabInScope(ctx.env, liveDoc.id, grant.tabScope, tabId))) return notFound();
+  if (grant) console.info(`[access-levels] ${asked} refused`, { documentId: liveDoc.id, tabId });
+  return forbidden();
+}
+
+// The refusal for a Participant door: a Viewer's grant is below it.
+export function deniedParticipate(
   ctx: RouteContext,
   liveDoc: { id: string; ownerId: string; teamId: string | null },
   tabId?: string,
 ): Promise<Response> {
-  const grant = await gateGrant(ctx, liveDoc.id, liveDoc.ownerId, liveDoc.teamId);
-  if (grant && !(await isTabInScope(ctx.env, liveDoc.id, grant.tabScope, tabId))) return notFound();
-  if (grant)
-    console.info('[access-levels] participation refused', { documentId: liveDoc.id, tabId });
-  return forbidden();
+  return deniedBelow(ctx, liveDoc, tabId, 'participation');
+}
+
+// The refusal for an Editor's door on a tab (a text document's versions): a Participant's or a Viewer's grant is
+// below it.
+export function deniedEdit(
+  ctx: RouteContext,
+  liveDoc: { id: string; ownerId: string; teamId: string | null },
+  tabId: string,
+): Promise<Response> {
+  return deniedBelow(ctx, liveDoc, tabId, 'edit');
 }
 
 // A body whose every field is optional: the JSON object, or `{}` for an absent or empty body and for any JSON value

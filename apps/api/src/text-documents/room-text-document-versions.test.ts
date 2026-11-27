@@ -154,6 +154,37 @@ describe('RoomTextDocumentVersions', () => {
     warn.mockRestore();
   });
 
+  it('thins a day older than the days kept whole to its newest version, the rest still read whole', async () => {
+    const info = vi.spyOn(console, 'info').mockImplementation(() => {});
+    const r = await room({ everyUpdates: 1 });
+    await r.type('a');
+    r.tick(60_000);
+    await r.type('b');
+    r.tick(31 * 86_400_000);
+    await r.type('c');
+    const rows = await r.rows();
+    expect(rows.map((v) => v.id)).toEqual(['v2', 'v3']);
+    expect(await textAt(r, 'v2')).toEqual(['b']);
+    expect(await textAt(r, 'v3')).toEqual(['c']);
+    expect(info).toHaveBeenCalledWith(expect.stringContaining('[text-document] versions-thinned'));
+    info.mockRestore();
+  });
+
+  it('keeps a version rather than hand it on past the row cap', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    // Each version alone fits the cap; the two together do not.
+    const r = await room({ everyUpdates: 1 });
+    await r.type('a');
+    await r.type('b');
+    const cap = Math.max(...(await r.rows()).map((v) => v.bytes));
+    const capped = await room({ everyUpdates: 1, autoMax: 1, rowBytes: cap });
+    await capped.type('a');
+    await capped.type('b');
+    expect((await capped.rows()).map((v) => v.id)).toEqual(['v1', 'v2']);
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('[text-document] version-too-large'));
+    warn.mockRestore();
+  });
+
   describe('naming', () => {
     it('names the newest version when nothing changed since it', async () => {
       const r = await room({ everyUpdates: 1 });

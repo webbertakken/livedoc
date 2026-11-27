@@ -477,3 +477,80 @@ describe('the role gate on text document edits', () => {
     });
   });
 });
+
+// docs/specs/034-text-documents/live-editing-and-storage.md "Who changed what": the keeper hears of each stored update.
+describe('a text document update, once stored', () => {
+  async function heard() {
+    const db = sqliteD1();
+    // The document and its text document tab, as the other tests make them.
+    await roomWith(db);
+    const stored = vi.fn(async () => {});
+    const sequence = vi.fn(() => 7);
+    const room = new RoomLiveTabs(TEXT_DOCUMENT_LIVE_TAB, {
+      env: db.env,
+      enqueue: (step) => step(),
+      sequence,
+      sendTo: vi.fn(),
+      position: () => ({ epoch: 'e' }),
+      stored,
+    });
+    return { db, room, stored, sequence };
+  }
+
+  it('tells the keeper its sender, with the name and colour they write under', async () => {
+    const { room, stored } = await heard();
+    const op = frame('t1', 'Typed');
+    const sender = {
+      ws,
+      presenceId: 'p1',
+      documentId: 'D',
+      level: 'edit' as const,
+      adderKey: 'k1',
+      author: { name: 'Ada', color: '#1a73e8' },
+    };
+    await room.accept(sender, op);
+    expect(stored).toHaveBeenCalledWith({ documentId: 'D', tabId: 't1' }, expect.any(Uint8Array), {
+      key: 'k1',
+      name: 'Ada',
+      color: '#1a73e8',
+    });
+  });
+
+  it('tells the keeper nothing of a refused update', async () => {
+    const { room, stored } = await heard();
+    const sender = {
+      ws,
+      presenceId: 'p1',
+      documentId: 'D',
+      level: 'view' as const,
+      adderKey: null,
+    };
+    await room.accept(sender, frame('t1', 'x'));
+    expect(stored).not.toHaveBeenCalled();
+  });
+
+  it('tells the keeper of a door update by its sender’s key alone', async () => {
+    const { room, stored } = await heard();
+    await room.acceptPosted('D', 't1', TextDocumentState.fromBody(Body.of('Pasted')), {
+      adderKey: 'k2',
+    });
+    expect(stored).toHaveBeenCalledWith({ documentId: 'D', tabId: 't1' }, expect.any(Uint8Array), {
+      key: 'k2',
+      name: null,
+      color: null,
+    });
+  });
+
+  it('stores and relays the room’s own update without telling the keeper', async () => {
+    const { db, room, stored, sequence } = await heard();
+    const update = TextDocumentState.fromBody(Body.of('Restored'));
+    await room.storeAndRelay('D', 't1', update);
+    expect(await storedUpdates(db.env, 't1')).toHaveLength(1);
+    expect(sequence).toHaveBeenCalledWith('system', {
+      kind: 'text-document',
+      tabId: 't1',
+      update: base64OfBytes(update),
+    });
+    expect(stored).not.toHaveBeenCalled();
+  });
+});
