@@ -112,7 +112,7 @@ function TableSettingsFields({
     actions.setColumnType(table.id, col, type === 'none' ? null : type);
   return (
     <div className="flex flex-col gap-3">
-      <p className="font-semibold">{table.name}</p>
+      <h2 className="text-body text-slate-900 dark:text-slate-100">{table.name}</h2>
       <div className="flex flex-col gap-1">
         <label htmlFor={`${id}-range`} className={label}>
           Range
