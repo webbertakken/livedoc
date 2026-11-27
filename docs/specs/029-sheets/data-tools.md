@@ -5,7 +5,7 @@ every condition of Filter by Condition, and data validation (the Data Validation
 Insert › Dropdown, every criterion, kept in both file formats) and the Named Ranges panel are built; tables are built
 as the sheet's model, its writes and growth, and table references in formulas, without their menus and panel yet;
 data clean-up (Clean-up Suggestions, Remove Duplicates, Trim Whitespace), Split Text to Columns, Randomise Range and
-Column Stats are built; the rest is specified.
+Column Stats are built; filter views, slicers and group by views are specified; the rest is specified.
 
 Sorting, filtering, validation, names, protection, tables and clean-up in a [spreadsheet](spreadsheet.md), as
 Google Sheets' Data menu does. Its rows of the [parity matrix](parity-matrix.md) name this page.
@@ -55,13 +55,65 @@ Google Sheets' Data menu does. Its rows of the [parity matrix](parity-matrix.md)
     other row with its relative references moved by that row's offset, keeping the rows where it is TRUE or a non-zero
     number (an error or a text keeps none); OK with a formula it cannot read says "That formula can't be read" under
     the field and stays open. It meets the values ticked and the colour as well.
-- **Filter views**: **Create Filter View** makes a named filter that changes only the viewer's view; others see it
-  in Data › Filter Views and may open it. **Save as Filter View**, **Duplicate**, **Rename**, **Delete**; a link opens
-  one. A Viewer may make temporary filter views of their own, as Google's.
-- **Slicers**: a floating control over the grid filtering a range by one column (values or condition), Editors place
-  it; it filters for everyone.
-- **Group by view** (Data › Create Group by View, tables only): groups a table's rows by a column, collapsed and
-  expanded per viewer.
+- **Filter views** (Google's, [measured](#defaults), D469): a filter view is a named filter of the sheet's that changes
+  only what the person who opens it sees. It holds a range, each column's condition (the filter's: values, condition,
+  colour) and a sort (columns in order, each A to Z or Z to A). The sheet keeps its views in its layout (`filterViews`,
+  each set whole or removed by its id, up to 50, D440), so everyone's **Change View** lists them; which one is open is
+  each person's own, never sent.
+  - **Data › Create Filter View**: a view over the filter's range with the filter's conditions when the sheet has a
+    filter, else over the filled range around the selection as Create a Filter takes it, with none; named `Filter N`,
+    the smallest N free among the sheet's views, and opened at once (D470). An Editor's is saved, one undo step. A
+    Participant's or a Viewer's is **temporary**: theirs alone, named `Temporary Filter N`, gone when they close it
+    or leave, never saved or sent (Google's for view access; a Participant writes cells, never the shape, D471).
+  - **Data › Change View** (shown while the sheet has a view or a filter): the sheet's views in the order made, the
+    open one ticked, pressing one opens it; **Close View** when one is open; **Save as Filter View** (an Editor's, with
+    the filter on): a saved view holding the filter's range and conditions, opened; the filter stays.
+  - **The view bar**, above the grid while a view is open (the row numbers and column letters drawn dark, as Google's,
+    so a view is never mistaken for the sheet): **Name** (an Editor's field; Enter or leaving it renames, one undo
+    step; an empty name says "Name the filter view" under it and keeps the old), **Range** (an Editor's field, read as
+    Create a Filter's range; one it cannot read says "Type a range like A1:D20", the old kept), **Duplicate** (a saved
+    copy, `Copy of <name>`, opened, D472), **Delete** (an Editor's: the view goes, one undo step, the sheet shown as
+    it was) and **Close** (×, Escape on the bar). A temporary view's bar has no Delete, and its fields are its maker's
+    to change, never saved.
+  - The open view's header row carries the filter buttons, its column menu the filter's (Sort A to Z, Sort Z to A,
+    Filter by Colour, Condition, Values). OK changes the view: an Editor's saved view as a write, one undo step, seen
+    by everyone opening it after (D473); a temporary view only for its maker.
+  - The view's **Sort A to Z** and **Sort Z to A** order the rows drawn for its opener alone and are kept with the
+    view; cells never move, for anyone (Google's: "filter or sort a spreadsheet you don't have edit access to").
+  - While a view is open the sheet's filter is not drawn: the view's conditions alone hide rows; closing it draws the
+    filter again. Formulas (SUBTOTAL among them), charts and the status bar's figures read the sheet's filter, never
+    a view, as their values are everyone's (measured: SUBTOTAL(109) unchanged under a filter view, D469).
+  - **Links**: while a saved view is open the address carries `?fview=<sheet id>.<view id>`; an address naming one
+    opens its sheet with it open. One since deleted opens the spreadsheet as it is and says "That filter view was deleted"; the same
+    words close a view someone else deletes while it is open (D474). A temporary view changes no address.
+  - Rows and columns inserted or deleted move and shrink a view's range as the filter's; a view whose range is all
+    deleted goes. A duplicated or copied sheet carries its views; Clear Sheet removes them.
+- **Slicers** (Google's, [measured](#defaults), D475): a slicer is a control floating over the grid that filters a
+  range by one of its columns, for charts as well as cells.
+  - **Data › Add a Slicer** (an Editor's): a slicer over the filter's range, else the filled range around the selection,
+    on the active column when it is in the range, else the range's first; placed at the top right of the cells in view,
+    200 by 40 px (Google's API default width, D476), selected, the **Slicer** panel open on it.
+  - The **Slicer** panel (the office shell's right panel; an Editor's fields, read-only for anyone else): **Data
+    Range**, **Column** (the range's header names, as Advanced Range Sorting offers them), **Title** (empty shows the
+    column's name), **Apply to Pivot Tables** (ticked, Google's default). Each change writes at once, one undo step.
+  - It is moved, resized, copied and deleted as a chart is ([Charts](charts.md)), by an Editor; others may not move it.
+  - It shows its title and what it keeps: `All`, `3 of 5` for values, or the condition's words (`Greater than 2`).
+    Pressing it (or Enter on it) opens **Filter by Condition** and **Filter by Values** for its column, the filter
+    menu's, with OK and Cancel.
+  - **Anyone** may change a slicer's filter; it is theirs alone, as Google's ("changes are only visible to you"), until
+    an Editor's **Set Current Filters as Default** (the slicer's ⋮ menu) saves it for everyone, one undo step. On
+    opening the spreadsheet, a slicer filters by its default. **Reset to Default** drops one's own.
+  - A row of the range is drawn only when the sheet's filter (or the open view) and every slicer over it keep it.
+  - Slicers filter charts and pivot tables whose data is the same range (Apply to Pivot Tables), for that person, and
+    never formulas: SUBTOTAL reads the sheet's filter alone (Google's note, and measured, D475).
+  - Up to 50 a sheet (D440), within the sheet's 100 objects.
+- **Group by view** (Data › Create Group by View, and the table menu's **Group By**; tables only): a view of a table
+  that groups its rows under a column's values, each group a header row drawn with the value and its count, collapsed
+  and expanded by its opener alone; named and kept as a filter view is (its range the table's), so Change View lists
+  it and a link opens it. Cells never move (the order is drawn, as a view's sort).
+- **One mapping**: the filter, filter views and slicers share one condition model (`FilterCondition`) and one reader
+  and writer to each format's filter form, so a condition reads and writes the same wherever it sits
+  ([Filters in the file](standard-mapping.md#filters-in-the-file)).
 
 ## Data validation
 
@@ -543,6 +595,27 @@ The code cites each by its id.
 - **D468** Each separator chosen on the chip is its own change (Undo steps back through them), splitting the text the
   first split started from; Custom splits on Enter, not as typed, so a half-typed separator makes no change (default;
   Google's chip is unmeasured, the API has no chip).
+- **D469** Filter views as Google's, measured with the Sheets API (`plans/assets/0020/research/google-filter-view-probe.ts`,
+  `google-slicer-subtotal-probe.ts` and its `.out.txt`, 2026-11-27): a view keeps a title, a range, conditions by
+  column and sort keys; SUBTOTAL(109) over the counts read 26 under a filter hiding one row and 29 (the plain sum)
+  under a filter view and a slicer hiding rows; Google's help: an applied view only its opener sees, edit access to
+  save one, view access a temporary one.
+- **D470** Create Filter View's range and name: the filter's range and conditions, else the filled range around the
+  selection; `Filter N`, the smallest free (default; Google names a file's unnamed view `Filter 1`, the probe).
+- **D471** A Participant's filter views are temporary, as a Viewer's, since a view is the sheet's shape; named
+  `Temporary Filter N` (default).
+- **D472** Duplicate's name: `Copy of <name>`, cut to the name's limit (default; unmeasured).
+- **D473** An Editor's change to an open saved view is saved as it is made, one undo step each, as Google's help says
+  ("Your filter view changes are automatically saved"); a view's name up to 100 characters (default).
+- **D474** A view's link: `?fview=<sheet id>.<view id>` (a copied sheet's views keep their ids) beside the tab's
+  `#t=`; a deleted view opens the spreadsheet as it is with "That filter view was deleted", the words that also close
+  a view deleted by someone else (default).
+- **D475** Slicers as Google's help ("Filter charts and tables with Slicers": one column each, private changes until
+  Set Current Filters as Default, never formulas) and the API (`plans/assets/0020/research/google-slicer-probe.ts`
+  and its `.out.txt`): a slicer keeps a data range, a column, its default criteria, a title, Apply to Pivot Tables and
+  an anchor with a size; SUBTOTAL unchanged under one.
+- **D476** A new slicer: 200 by 40 px at the top right of the cells in view (default; 200 px is the width the probe
+  set, Google's own unmeasured).
 - **D302** A named function's limits: a name up to 254 characters (Google's), up to 20 placeholders, a definition up
   to 2,000 characters, a description up to 1,000, an argument's description and example up to 200 each (default).
 - **D345** A protection's bounds: up to 100 a sheet, 50 exceptions a protected sheet, a description up to 200
