@@ -23,11 +23,16 @@ export function FilterByCondition({
   draft,
   problem,
   onChange,
+  periods = true,
+  formulaPlaceholder = '=A2>5',
 }: {
   draft: ConditionDraft;
   // Why the typed formula cannot be read, after OK.
   problem: string | null;
   onChange: (next: ConditionDraft) => void;
+  // Whether a date condition offers periods from today (a pivot table's filter takes an exact date alone).
+  periods?: boolean;
+  formulaPlaceholder?: string;
 }) {
   const c = useSheetController();
   const problemId = useId();
@@ -53,7 +58,7 @@ export function FilterByCondition({
           </option>
         ))}
       </select>
-      {isDateOp(draft.op) ? (
+      {periods && isDateOp(draft.op) ? (
         <select
           aria-label="Date"
           className={`${FIELD} mt-1`}
@@ -93,7 +98,7 @@ export function FilterByCondition({
         <>
           <input
             aria-label="Formula"
-            placeholder="=A2>5"
+            placeholder={formulaPlaceholder}
             spellCheck={false}
             autoComplete="off"
             aria-invalid={problem !== null}

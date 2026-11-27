@@ -7,6 +7,7 @@ import { useId, useState } from 'react';
 import { Button, Select, TextInput } from '@livedoc/ui';
 import {
   pivotAdd,
+  pivotAddCalculated,
   pivotColumns,
   pivotFilterItems,
   pivotRemove,
@@ -204,6 +205,14 @@ export function PivotEditorBody({
                 section={title}
                 columns={addable(area)}
                 onPick={(column) => onChange(pivotAdd(pivot, area, column))}
+                {...(area === 'values'
+                  ? {
+                      extra: {
+                        label: 'Calculated Field',
+                        onPick: () => onChange(pivotAddCalculated(pivot, valueNames)),
+                      },
+                    }
+                  : {})}
               />
             </span>
           </div>

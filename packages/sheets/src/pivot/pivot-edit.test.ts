@@ -7,6 +7,7 @@ import type { Sheet } from '../sheet';
 import {
   PIVOT_BLANK_ITEM,
   pivotAdd,
+  pivotAddCalculated,
   pivotColumns,
   pivotFilterItems,
   pivotFilterStatus,
@@ -133,6 +134,16 @@ describe('adding and removing fields', () => {
       { col: units!.col, summary: 'SUM' },
       { col: region!.col, summary: 'COUNTUNIQUE' },
     ]);
+  });
+});
+
+describe('a calculated field added', () => {
+  it('starts as =0 summed, named Calculated Field N, the first number free (D622)', () => {
+    const { pivot } = setup();
+    const one = pivotAddCalculated(pivot, ['SUM of Units']);
+    expect(one.values).toEqual([{ formula: '=0', summary: 'SUM', name: 'Calculated Field 1' }]);
+    const two = pivotAddCalculated(one, ['Calculated Field 1', 'calculated field 2']);
+    expect(two.values![1]).toMatchObject({ name: 'Calculated Field 3' });
   });
 });
 

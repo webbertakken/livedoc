@@ -97,6 +97,17 @@ function sortAfter(group: SheetPivotGroup, gone: number): SheetPivotGroup {
   return by.value === gone ? rest : { ...rest, sortBy: { ...by, value: by.value - 1 } };
 }
 
+/** The Values list's Calculated Field: `=0` summed, named `Calculated Field N`, the first number free of `taken` (D622). */
+export function pivotAddCalculated(pivot: SheetPivot, taken: readonly string[]): SheetPivot {
+  const names = new Set(taken.map((x) => x.toLowerCase()));
+  let n = 1;
+  while (names.has(`calculated field ${n}`)) n++;
+  return withList(pivot, 'values', [
+    ...listOf(pivot, 'values'),
+    { formula: '=0', summary: 'SUM', name: `Calculated Field ${n}` },
+  ]);
+}
+
 /** The entry at `index` removed; a value's removal remaps the groups' sorts by value, as a deleted column's does. */
 export function pivotRemove<A extends PivotArea>(
   pivot: SheetPivot,
