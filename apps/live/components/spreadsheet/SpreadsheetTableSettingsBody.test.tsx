@@ -99,6 +99,10 @@ describe('the Table Settings panel', () => {
     expect(tableOf(h)?.r2).toBe(h.store.sheet(SHEET_ID)!.layout.rows[4]);
     fireEvent.change(screen.getByLabelText('Amount type'), { target: { value: 'currency' } });
     expect(tableOf(h)?.types).toEqual({ [tableOf(h)!.c2]: 'currency' });
+    const { rows, cols } = h.store.sheet(SHEET_ID)!.layout;
+    expect(h.store.sheet(SHEET_ID)!.cells.get(`${rows[1]}:${cols[1]}`)?.format).toMatchObject({
+      nf: 'currency',
+    });
     fireEvent.change(screen.getByLabelText('Amount type'), { target: { value: 'none' } });
     expect(tableOf(h)?.types).toBeUndefined();
   });

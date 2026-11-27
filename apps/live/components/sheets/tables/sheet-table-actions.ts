@@ -2,6 +2,7 @@
 // table's settings written whole, Select Table and Delete Table; each through the controller's write, one undo step,
 // an Editor's. Spread into useSheetActions.
 import {
+  columnTypeWrite,
   convertToRangeWrites,
   convertToTable,
   posRangeOf,
@@ -12,6 +13,7 @@ import {
   type GridRange,
   type LayoutChange,
   type SheetTable,
+  type TableColumnType,
 } from '@livedoc/sheets';
 import { debugLog } from '@/lib/debug-log';
 import type { SheetController } from '../sheet-controller';
@@ -84,6 +86,11 @@ export function sheetTableActions(c: SheetController) {
         return false;
       }
       return c.write(made.write, 'Table');
+    },
+    // A column's type (Table Settings, the column menu): with its cells' format, a Dropdown's options its values.
+    setColumnType(id: string, colId: string, type: TableColumnType | null): boolean {
+      const write = columnTypeWrite(c.workbook, c.sheet.id, id, colId, type);
+      return !!write && c.write(write, 'Table');
     },
     // Select Table: its cells selected, the header row's first cell active.
     selectTable(id: string): void {

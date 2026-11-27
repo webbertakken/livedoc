@@ -84,22 +84,8 @@ export function SpreadsheetTableSettingsBody({
     if (actions.setTable(next)) actions.goTo(g);
   };
   const names = tableColumnNames(layout, table, (r, col) => cellText(c.sheet, r, col));
-  const setType = (col: string, type: TableColumnType | 'none') => {
-    const { [col]: _was, ...types } = table.types ?? {};
-    const { [col]: _opts, ...opts } = table.opts ?? {};
-    const { types: _t, opts: _o, ...rest } = table;
-    const nextTypes = type === 'none' ? types : { ...types, [col]: type };
-    actions.setTable({
-      ...rest,
-      ...(Object.keys(nextTypes).length ? { types: nextTypes } : {}),
-      // A Dropdown keeps its options; another type drops them.
-      ...(type === 'dropdown' && table.opts?.[col]
-        ? { opts: { ...opts, [col]: table.opts[col]! } }
-        : Object.keys(opts).length
-          ? { opts }
-          : {}),
-    });
-  };
+  const setType = (col: string, type: TableColumnType | 'none') =>
+    actions.setColumnType(table.id, col, type === 'none' ? null : type);
   return (
     <div className="flex flex-col gap-3">
       <p className="font-semibold">{table.name}</p>

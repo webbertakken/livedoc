@@ -6,7 +6,15 @@ import { makeAxisIds } from '../ids';
 import { idRangeOf, layoutIndex, posRangeOf } from '../layout';
 import { newBanding } from '../rules/bandings';
 import { currentRegion, type Grid } from '../selection';
-import { cellKey, splitCellKey, type NumberFormatKind, type Sheet, type StoredRef } from '../sheet';
+import {
+  cellKey,
+  splitCellKey,
+  type DropdownOption,
+  type NumberFormatKind,
+  type Sheet,
+  type StoredRef,
+} from '../sheet';
+import { DROPDOWN_OPTION_MAX, DROPDOWN_OPTIONS_MAX } from '../limits';
 import type { GridRange } from '../address';
 import type { CellChange, SheetWrite } from '../store';
 import { cellText } from '../engine/sheets-ctx';
@@ -243,4 +251,66 @@ export function convertToRangeWrites(
     else if (cells.length) out.push({ sheetId: sheet.id, write: { kind: 'cells', cells } });
   }
   return out;
+}
+
+const TYPE_FORMATS: Partial<Record<TableColumnType, NumberFormatKind>> = {
+  number: 'number',
+  percent: 'percent',
+  currency: 'currency',
+  date: 'date',
+  time: 'time',
+  dateTime: 'datetime',
+};
+
+/**
+ * A column's type set (data-tools.md "Tables"): the table's types, and its data cells' number format for a Number,
+ * Percent, Currency, Date, Time or Date Time column; a Dropdown's options the column's values as they read, once
+ * each, in their order (D449). One write.
+ */
+export function columnTypeWrite(
+  wb: Workbook,
+  sheetId: string,
+  tableId: string,
+  colId: string,
+  type: TableColumnType | null,
+): SheetWrite | null {
+  const sheet = wb.sheet(sheetId);
+  const table = sheet?.layout.tables?.find((t) => t.id === tableId);
+  const p = table && sheet && posRangeOf(sheet.layout, table);
+  const c = sheet && layoutIndex(sheet.layout).colPos.get(colId);
+  if (!sheet || !table || !p || c === undefined || c < p.c1 || c > p.c2) return null;
+  const { layout } = sheet;
+  const { [colId]: _t, ...types } = table.types ?? {};
+  const { [colId]: _o, ...opts } = table.opts ?? {};
+  const { types: _types, opts: _opts, ...rest } = table;
+  const nextTypes = type ? { ...types, [colId]: type } : types;
+  const lastData = table.total ? p.r2 - 1 : p.r2;
+  const options: DropdownOption[] = [];
+  if (type === 'dropdown') {
+    const seen = new Set<string>();
+    for (let r = p.r1 + 1; r <= lastData && options.length < DROPDOWN_OPTIONS_MAX; r++) {
+      const v = wb.value(sheetId, r, c);
+      const text =
+        v === null || typeof v === 'object' ? '' : String(v).trim().slice(0, DROPDOWN_OPTION_MAX);
+      if (!text || seen.has(text.toLowerCase())) continue;
+      seen.add(text.toLowerCase());
+      options.push({ v: text });
+    }
+  }
+  const nextOpts = options.length ? { ...opts, [colId]: options } : opts;
+  const next: SheetTable = {
+    ...rest,
+    ...(Object.keys(nextTypes).length ? { types: nextTypes } : {}),
+    ...(Object.keys(nextOpts).length ? { opts: nextOpts } : {}),
+  };
+  const nf = type ? TYPE_FORMATS[type] : undefined;
+  const cells: CellChange[] = [];
+  if (nf)
+    for (let r = p.r1 + 1; r <= lastData; r++)
+      cells.push({ r: layout.rows[r]!, c: colId, f: { nf } });
+  return {
+    kind: 'layout',
+    changes: [{ k: 'table', id: table.id, table: next }],
+    ...(cells.length ? { cells } : {}),
+  };
 }
