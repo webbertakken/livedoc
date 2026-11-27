@@ -387,7 +387,8 @@ The code cites each by its id.
   frontmatter `name` is `livedoc`, else exit 1 (default).
 - **CLI53** How `api` reads its path: Relative to the api base, a leading `/api` dropped; an absolute URL, or a `PUT` of
   a tab, is exit 2; the body printed as sent, the status on stderr when not 2xx (default).
-- **CLI54** How large the package may grow: 8 MiB unpacked, checked by the build test (default).
+- **CLI54** How large the package may grow: 8 MiB unpacked, checked by the build test; the bundle's syntax is shortened,
+  its lines and names kept so a stack trace still reads (default).
 - **CLI55** How Node-only verbs sit in an isomorphic catalogue: Declared in `@livedoc/agent-verbs` with `local: true`
   and no `run`; `apps/cli` supplies the handler; a test fails on a local verb without one (default).
 - **CLI56** How the dashboard shows `Cli·Used`: A `CLI Commands` stack in Connections, one chart per CLI verb, beside

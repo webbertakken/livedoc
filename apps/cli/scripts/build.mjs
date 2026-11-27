@@ -28,6 +28,8 @@ const result = await build({
   target: 'node22',
   // bin.ts carries the shebang; esbuild keeps it on the first line. The notices travel in THIRD_PARTY_LICENSES.
   legalComments: 'none',
+  // Syntax shortened, lines and names kept, so a stack trace still reads (CLI54).
+  minifySyntax: true,
   metafile: true,
   // Metafile paths are relative to this directory.
   absWorkingDir: app,

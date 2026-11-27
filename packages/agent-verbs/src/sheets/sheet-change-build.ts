@@ -40,6 +40,7 @@ import { buildShapeChange, type SheetShapeChange } from './sheet-shape-change';
 import { buildDesign, type SheetDesignInput } from './sheet-design';
 import { buildChartChange, type SheetChartChange, type SheetChartOut } from './sheet-charts';
 import { chartClearWrite, chartObjectWrite, chartsClearWrite } from './sheet-chart-objects';
+import { buildPivotChange, pivotsClearWrite, type SheetPivotChange } from './sheet-pivot-objects';
 import { plural } from '@livedoc/document';
 
 // How a cell looks, in words; null clears that part (false clears a flag).
@@ -82,6 +83,9 @@ export type SheetChange =
   | { op: 'design'; design: SheetDesignInput }
   | SheetChartChange
   | { op: 'clear_charts'; range?: string; id?: string }
+  // A spreadsheet's pivot tables (pivot-tables.md "The model"): one set whole, or taken off.
+  | SheetPivotChange
+  | { op: 'clear_pivots'; id?: string }
   // A spreadsheet's sheet tab (sheet-store.md "Built for agents in a spreadsheet"): moved after a sheet (first for
   // null), hidden or shown.
   | { op: 'move'; after: string | null }
@@ -212,6 +216,15 @@ export function buildSheetChange(
         writeForRules(sheet.layout, made.write),
         workbookRuleChecks(wb, sheetId),
       );
+      if (!check.ok && check.error === 'pivot_cell') {
+        const ix = layoutIndex(sheet.layout);
+        const { r, c } = splitCellKey(check.at!);
+        const where = formatA1(ix.rowPos.get(r)!, ix.colPos.get(c)!);
+        return refuse(
+          'pivot_cell',
+          `${where} is in a pivot table's output, worked out from its source: change the source or the pivot table (read_sheet lists them), or write outside it.`,
+        );
+      }
       if (!check.ok && check.error === 'value_invalid') {
         const ix = layoutIndex(sheet.layout);
         // A refused value always names its cell, on this sheet.
@@ -413,6 +426,20 @@ export function buildSheetChange(
           : { ok: true, writes: [], line: `cleared ${what} (none there)` };
       }
       return { ok: true, writes: [], line: `cleared ${what}`, clearCharts: range };
+    }
+    case 'pivot':
+      if (!context.spreadsheet) return notSpreadsheet('pivot');
+      return buildPivotChange(wb, sheetId, change, rand);
+    case 'clear_pivots': {
+      if (!context.spreadsheet) return notSpreadsheet('clear_pivots');
+      const cleared = pivotsClearWrite(sheet.layout, change.id);
+      if (!cleared.ok) return cleared;
+      const what = change.id ? `the pivot table ${change.id}` : 'the sheet’s pivot tables';
+      return {
+        ok: true,
+        writes: cleared.write ? [cleared.write] : [],
+        line: `cleared ${what} (${cleared.count || 'none there'})`,
+      };
     }
     case 'move': {
       if (!context.spreadsheet) return notSpreadsheet('move');
