@@ -71,6 +71,8 @@ format it arrived in ([Standard mapping](standard-mapping.md)).
     reference to another workbook, a table's structured reference).
   - **Named ranges**: "2 named ranges LiveDoc cannot read are kept for the file: Rate and Mine"
     ([Named ranges in the file](standard-mapping.md#named-ranges-in-the-file)).
+  - **Tables**: "1 table LiveDoc cannot read stays plain cells: Sales"
+    ([Tables in the file](standard-mapping.md#tables-in-the-file)).
   - **Protection**: "1 protected sheet frees more than 50 ranges; the rest stay protected: Data"
     ([Protection in the file](standard-mapping.md#protection-in-the-file)).
   - **Named functions**: "1 named function LiveDoc cannot read is kept for Excel: TOOLONG"

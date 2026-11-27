@@ -32,7 +32,8 @@ import { readXlsxCharts } from './xlsx-charts-read';
 import { allRead, WORKBOOK_READ, WORKSHEET_READ, XlsxKeeper } from './xlsx-kept-read';
 import { readXlsxDxfs, readXlsxFormatRules } from './xlsx-format-rules';
 import { readXlsxValidations } from './xlsx-validation';
-import { readXlsxProtection } from './xlsx-protection';
+import { liveDocExtOf, readXlsxProtection } from './xlsx-protection';
+import { readXlsxTableRecord, readXlsxTables } from './xlsx-tables';
 import { protectionsFound } from './file-protections';
 import { readThemeColours } from './xlsx-colours';
 import {
@@ -355,6 +356,8 @@ export async function readXlsx(
   const keeper = ns === STRICT_NS ? null : new XlsxKeeper(pkg);
   let strictUnread = ns === STRICT_NS ? unreadChildren(parsed.root, WORKBOOK_READ) : 0;
   const placed = new Map<number, number>();
+  // Each sheet's record of its tables (standard-mapping.md "Tables in the file"), by its place in `sheets`.
+  const tableRecords: ReturnType<typeof readXlsxTableRecord>[] = [];
   for (const [at, sheet] of listed.entries()) {
     const name = attributeOf(sheet, '', 'name') ?? '';
     const rel = rels.find((r) => r.id === attributeOf(sheet, relsNs, 'id'));
@@ -384,6 +387,7 @@ export async function readXlsx(
     if (found.changed) book.losses.push({ k: 'protection_changed', sheet: name });
     if (protection.cut) book.losses.push({ k: 'protection_cut', sheet: name });
     const read = new Set([...rules.read, ...validations.read, ...protection.read]);
+    tableRecords.push(readXlsxTableRecord(liveDocExtOf(worksheet.root, ns)));
     keeper?.sheetEntry(sheet, sheets.length);
     keeper?.worksheet(worksheet, part!, sheets.length, read);
     strictUnread += keeper
@@ -437,11 +441,19 @@ export async function readXlsx(
   if (pkg.dropped.length > 0) book.losses.push({ k: 'entries_dropped', entries: [...pkg.dropped] });
   // The charts of a kept drawing that qualifies are the sheets' own (standard-mapping.md "Charts in the file").
   const charted = readXlsxCharts(sheets, keeper?.content());
-  const kept = charted.kept;
+  // The tables of its kept table parts LiveDoc holds are the sheets' own ("Tables in the file").
+  const tabled = readXlsxTables(
+    charted.sheets,
+    charted.kept,
+    tableRecords,
+    names.map((n) => n.name),
+    book.losses,
+  );
+  const kept = tabled.kept;
   return {
     ok: true,
     file: {
-      sheets: charted.sheets,
+      sheets: tabled.sheets,
       ...(kept ? { kept } : {}),
       ...(fileTheme && fileTheme !== STANDARD_THEME ? { theme: fileTheme } : {}),
       ...(functions.length ? { functions } : {}),

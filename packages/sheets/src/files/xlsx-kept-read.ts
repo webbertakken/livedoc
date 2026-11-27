@@ -16,6 +16,7 @@ import {
 } from '@livedoc/office-packages';
 import {
   keptAttribute,
+  keptLocalName,
   type FileAt,
   type KeptContent,
   type KeptItem,
@@ -111,6 +112,37 @@ export const allRead = (element: XmlElement, read: ReadonlySet<XmlElement>): boo
 
 // One differential format of a kept `dxfs` (none nests another).
 const DXF = /<(?:[\w.-]+:)?dxf\b[^>]*?(?:\/>|>[\s\S]*?<\/(?:[\w.-]+:)?dxf>)/g;
+
+// The last differential format kept items (but a `dxfs`) or parts name by id; -1 for none.
+function lastDxfNamed(items: readonly KeptItem<unknown>[], parts: readonly KeptPart[]): number {
+  const texts = [
+    ...items.filter((i) => keptLocalName(i.xml) !== 'dxfs').map((i) => i.xml),
+    ...parts.map((p) => new TextDecoder().decode(p.data)),
+  ];
+  let last = -1;
+  for (const text of texts)
+    for (const m of text.matchAll(/[dD]xfId="(\d+)"/g)) last = Math.max(last, Number(m[1]));
+  return last;
+}
+
+// A `dxfs` cut to its formats up to `last`; null when it keeps none.
+function dxfsNamed(xml: string, last: number): string | null {
+  const each = [...xml.matchAll(DXF)].slice(0, last + 1).map((m) => m[0]);
+  if (each.length === 0) return null;
+  const prefix = /^<((?:[\w.-]+:)?)/.exec(xml)![1]!;
+  return `<${prefix}dxfs count="${each.length}">${each.join('')}</${prefix}dxfs>`;
+}
+
+/** Kept content with its `dxfs` cut to the formats what else it keeps still names (after some of it is read). */
+export function withDxfsNamed(kept: KeptContent<FileAt>): KeptContent<FileAt> {
+  const last = lastDxfNamed(kept.items, kept.parts);
+  const items = kept.items.flatMap((item) => {
+    if (item.place !== 'stylesheet' || keptLocalName(item.xml) !== 'dxfs') return [item];
+    const xml = dxfsNamed(item.xml, last);
+    return xml === null ? [] : [{ ...item, xml }];
+  });
+  return { ...kept, items };
+}
 
 // A `sheetPr` holding nothing but what LiveDoc writes: nothing left to keep.
 const onlyOwn = (element: XmlElement) =>
@@ -288,19 +320,9 @@ export class XlsxKeeper {
   // The kept differential formats up to the last one kept items or parts name by id; none when none is named.
   private keepDxfs(parts: readonly KeptPart[]): void {
     if (!this.dxfs) return;
-    const texts = [
-      ...this.items.map((i) => i.xml),
-      ...parts.map((p) => new TextDecoder().decode(p.data)),
-    ];
-    let last = -1;
-    for (const text of texts)
-      for (const m of text.matchAll(/[dD]xfId="(\d+)"/g)) last = Math.max(last, Number(m[1]));
     const { at, xml, ns } = this.dxfs;
-    const each = [...xml.matchAll(DXF)].slice(0, last + 1).map((m) => m[0]);
-    if (each.length === 0) return;
-    const prefix = /^<((?:[\w.-]+:)?)/.exec(xml)![1]!;
-    const kept = `<${prefix}dxfs count="${each.length}">${each.join('')}</${prefix}dxfs>`;
-    this.items.splice(at, 0, { place: 'stylesheet', xml: kept, ns, at: {} });
+    const kept = dxfsNamed(xml, lastDxfNamed(this.items, parts));
+    if (kept !== null) this.items.splice(at, 0, { place: 'stylesheet', xml: kept, ns, at: {} });
   }
 
   /** Every part a kept relationship reaches, through the parts' own relationships, with theirs kept on each. */

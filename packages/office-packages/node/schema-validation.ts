@@ -56,6 +56,7 @@ export const OOXML_SCHEMAS: readonly (readonly [RegExp, string])[] = [
   [/^xl\/theme\/theme\d+\.xml$/, 'ooxml/DrawingML_Theme.rnc'],
   [/^xl\/drawings\/drawing\d+\.xml$/, 'ooxml/SpreadsheetML_Drawing.rnc'],
   [/^xl\/charts\/chart\d+\.xml$/, 'ooxml/DrawingML_Chart.rnc'],
+  [/^xl\/tables\/table\d+\.xml$/, 'ooxml/SpreadsheetML_Table_Definitions.rnc'],
 ];
 
 const escape = (s: string) =>

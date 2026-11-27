@@ -202,9 +202,13 @@ export function xlsxProtectionXml(
   };
 }
 
-/** The worksheet's one LiveDoc `ext`: the validation rules' (if any) with the protections' record inside it. */
-export function liveDocExtXml(validations: string | null, record: string | null): string | null {
-  if (record === null) return validations;
+/** The worksheet's one LiveDoc `ext`: the validation rules' (if any) with the other records (protections', tables') inside it. */
+export function liveDocExtXml(
+  validations: string | null,
+  ...records: (string | null)[]
+): string | null {
+  const record = records.filter((r) => r !== null).join('');
+  if (record === '') return validations;
   if (validations === null)
     return `<ext uri="${LIVEDOC_SPREADSHEET_NS}" xmlns:livedoc="${LIVEDOC_SPREADSHEET_NS}">${record}</ext>`;
   const end = validations.lastIndexOf('</ext>');

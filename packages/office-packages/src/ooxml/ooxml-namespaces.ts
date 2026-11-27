@@ -41,6 +41,7 @@ export const RELATIONSHIP_TYPES = {
   sheetMetadata: `${TRANSITIONAL_RELS}/sheetMetadata`,
   drawing: `${TRANSITIONAL_RELS}/drawing`,
   chart: `${TRANSITIONAL_RELS}/chart`,
+  table: `${TRANSITIONAL_RELS}/table`,
 } as const;
 
 /** A relationship type with Strict's namespace read as Transitional's. */
@@ -76,4 +77,5 @@ export const OOXML_CONTENT_TYPES = {
   sheetMetadata: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheetMetadata+xml',
   drawing: 'application/vnd.openxmlformats-officedocument.drawing+xml',
   chart: 'application/vnd.openxmlformats-officedocument.drawingml.chart+xml',
+  table: 'application/vnd.openxmlformats-officedocument.spreadsheetml.table+xml',
 } as const;

@@ -31,6 +31,14 @@ import {
 import { cachedLiteral, cutXlsxText, xlsxFormula, type XlsxFormula } from './xlsx-bounds';
 import { ownIds, XlsxKeptWriter } from './xlsx-kept-write';
 import { xlsxChartParts } from './xlsx-chart-parts';
+import {
+  keptBesideOwnTables,
+  withTextHeaders,
+  xlsxTableParts,
+  xlsxTablesOf,
+  type XlsxTableParts,
+} from './xlsx-tables';
+import { tableFormulaName } from '../tables/table';
 import { xlsxTabColor } from './xlsx-tab-look';
 import { XlsxStyles } from './xlsx-styles';
 import { xlsxFormatRulesXml } from './xlsx-format-rules';
@@ -199,20 +207,32 @@ function cellXml(cell: FileCell, write: CellWrite, style: number): string {
 // The bindings every root LiveDoc writes declares: SpreadsheetML's, and relationships' as `r`.
 const OWN_NS = { '': SPREADSHEETML_NS, r: OFFICE_RELATIONSHIPS_NS };
 
+// What the workbook's other parts give a worksheet: its drawing's relationship, its tables' `tableParts` and record.
+type SheetParts = { drawingRelId: string | null; tables: XlsxTableParts['sheets'][number] };
+
 function worksheetXml(
   sheet: FileSheet,
   index: number,
-  book: { strings: SharedStrings; styles: XlsxStyles; kept: XlsxKeptWriter },
+  book: {
+    strings: SharedStrings;
+    styles: XlsxStyles;
+    kept: XlsxKeptWriter;
+    // The workbook's tables' formula names, upper case.
+    tables: ReadonlySet<string>;
+  },
   renamed: ReadonlyMap<string, string>,
   losses: FileLoss[],
-  drawingRelId: string | null,
+  parts: SheetParts,
 ): { xml: string; dynamic: boolean } {
   const { strings, styles, kept } = book;
+  const { drawingRelId } = parts;
+  // A table's header cells hold its column names (D452).
+  const cells = withTextHeaders(sheet);
   // Cells past Excel's last column are left out, and the cut named (D89).
-  const ordered = sheet.cells
+  const ordered = cells
     .filter((cell) => cell.c < FILE_LAST_COL)
     .sort((a, b) => a.r - b.r || a.c - b.c);
-  if (ordered.length < sheet.cells.length)
+  if (ordered.length < cells.length)
     losses.push({ k: 'sheet_cut', sheet: sheet.name, rows: sheet.rows, cols: FILE_LAST_COL });
   const ctx: SheetContext = {
     strings,
@@ -225,7 +245,7 @@ function worksheetXml(
   // Every formula first, so each wrapped block's other cells know they cache it, whatever their order.
   for (const cell of ordered) {
     if (cell.formula === undefined) continue;
-    const plan = xlsxFormula(cell.formula, cell.value, renamed);
+    const plan = xlsxFormula(cell.formula, cell.value, renamed, book.tables);
     ctx.excel.set(cell, plan);
     if (plan.k === 'value')
       losses.push({ k: 'formula_unwritten', sheet: sheet.name, r: cell.r, c: cell.c });
@@ -257,7 +277,7 @@ function worksheetXml(
   const validations = xlsxValidationsXml(sheet.validations, renamed);
   // Its protection (standard-mapping.md "Protection in the file"), its record in LiveDoc's one `ext`.
   const protection = xlsxProtectionXml(sheet.protections);
-  const ext = liveDocExtXml(validations.ext, protection.record);
+  const ext = liveDocExtXml(validations.ext, protection.record, parts.tables?.record ?? null);
   const own = [
     { name: 'dimension', xml: `<dimension ref="${extent}"/>` },
     ...(shape ? [{ name: 'sheetFormatPr', xml: shape.sheetFormatPr }] : []),
@@ -284,7 +304,9 @@ function worksheetXml(
       : []),
     // Its charts, through its drawing part (standard-mapping.md "Charts in the file").
     ...(drawingRelId ? [{ name: 'drawing', xml: `<drawing r:id="${drawingRelId}"/>` }] : []),
-    // LiveDoc's exact validation rules and protections ("Validation in the file", "Protection in the file").
+    // Its tables, through their table parts (standard-mapping.md "Tables in the file").
+    ...(parts.tables ? [{ name: 'tableParts', xml: parts.tables.tableParts }] : []),
+    // LiveDoc's exact validation rules, protections and tables ("Validation in the file", "Protection in the file").
     ...(ext ? [{ name: 'extLst', xml: `<extLst>${ext}</extLst>` }] : []),
   ];
   const rootNs = kept.rootBindings('worksheet', OWN_NS, index);
@@ -365,9 +387,15 @@ export function writeXlsx(file: WorkbookFile, title: string): FileWritten<Uint8A
   const losses: FileLoss[] = [];
   const renamed = excelNames(file.sheets, losses);
   const strings = new SharedStrings();
+  // The workbook's tables; a kept table of one's name gives way to it (D453).
+  const tables = new Set(
+    file.sheets.flatMap((s) => xlsxTablesOf(s).map((t) => tableFormulaName(t.name).toUpperCase())),
+  );
+  const beside = keptBesideOwnTables(file.kept, tables);
+  if (beside.dropped > 0) losses.push({ k: 'kept_dropped', count: beside.dropped });
   // What the file kept goes back where it sat, its relationships with their ids (standard-mapping.md "Unknown content").
   const kept = new XlsxKeptWriter(
-    file.kept,
+    beside.kept,
     file.sheets.length,
     new Set(file.sheets.flatMap((s, i) => (s.hidden ? [i] : []))),
   );
@@ -376,15 +404,18 @@ export function writeXlsx(file: WorkbookFile, title: string): FileWritten<Uint8A
   let dynamic = false;
   const keptParts = kept.parts();
   const drawn = xlsxChartParts(file.sheets, kept, keptParts.parts, renamed, losses);
+  const sheetRels = (i: number) => [
+    ...kept.relationships('sheet', i),
+    ...(drawn.sheets[i]?.rels ?? []),
+  ];
+  const tabled = xlsxTableParts(file.sheets, beside.kept, keptParts.parts, (i) =>
+    ownIds(sheetRels(i)),
+  );
   const sheetParts = file.sheets.map((sheet, i): OoxmlPart => {
-    const written = worksheetXml(
-      sheet,
-      i,
-      { strings, styles, kept },
-      renamed,
-      losses,
-      drawn.sheets[i]?.relId ?? null,
-    );
+    const written = worksheetXml(sheet, i, { strings, styles, kept, tables }, renamed, losses, {
+      drawingRelId: drawn.sheets[i]?.relId ?? null,
+      tables: tabled.sheets[i] ?? null,
+    });
     dynamic ||= written.dynamic;
     return {
       name: `xl/worksheets/sheet${i + 1}.xml`,
@@ -429,6 +460,7 @@ export function writeXlsx(file: WorkbookFile, title: string): FileWritten<Uint8A
     // The workbook's theme (standard-mapping.md "The theme in the file").
     xmlPart('xl/theme/theme1.xml', OOXML_CONTENT_TYPES.theme, xlsxThemeXml(theme)),
     ...drawn.parts,
+    ...tabled.parts,
     ...(dynamic
       ? [xmlPart('xl/metadata.xml', OOXML_CONTENT_TYPES.sheetMetadata, DYNAMIC_ARRAY_METADATA_XML)]
       : []),
@@ -462,7 +494,7 @@ export function writeXlsx(file: WorkbookFile, title: string): FileWritten<Uint8A
     ['xl/workbook.xml', [...workbookRels, ...keptWorkbookRels]],
     ...sheetParts.map((part, i): [string, Relationship[]] => [
       part.name,
-      [...kept.relationships('sheet', i), ...(drawn.sheets[i]?.rels ?? [])],
+      [...sheetRels(i), ...(tabled.sheets[i]?.rels ?? [])],
     ]),
     ...drawn.relationships,
     ...keptParts.relationships,
