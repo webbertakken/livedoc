@@ -264,4 +264,8 @@ const nodes: Record<string, NodeSpec> = {
   text: { group: 'inline' },
 };
 
+// The specs themselves, which the version view's schema extends (review.md "Version history").
+export const TEXT_DOCUMENT_NODE_SPECS: Readonly<Record<string, NodeSpec>> = nodes;
+export const TEXT_DOCUMENT_MARK_SPECS: Readonly<Record<string, MarkSpec>> = marks;
+
 export const textDocumentSchema = new Schema({ nodes, marks });
