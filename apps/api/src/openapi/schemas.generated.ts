@@ -18473,6 +18473,7 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
       "Resolved",
       "Unresolved",
       "Mentioned",
+      "Notified",
       "Imported",
       "Aligned",
       "Undone",

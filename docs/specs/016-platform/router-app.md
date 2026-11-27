@@ -8,17 +8,17 @@ A small Cloudflare Worker that fronts the apex domain (`docs.nu`) and routes URL
 
 ## Routing table
 
-| Path                                                                                                                                                         | Forwards to                      |
-| ------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------- |
-| `/api`, `/api/*`                                                                                                                                             | api worker (`apps/api`)          |
-| `/telemetry`, `/telemetry/*`                                                                                                                                 | telemetry app (`apps/telemetry`) |
-| `/help`, `/help/*`                                                                                                                                           | help app (`apps/help`), stripped |
-| `/live/*` (the live app's `_next` assets only)                                                                                                               | live app (`apps/live`), stripped |
-| `/` (the front door: the live worker sends it on to Home, [Explorer Home](../013-workspace/explorer-home.md#route))                                          | live app (`apps/live`), as-is    |
-| live page routes: `/document/*`, `/explorer/*`, `/form/*`, `/new`, `/join`, `/sign-in`, `/get-started`, `/embed`, `/oauth/*`, `/report-a-bug/*`, `/icon.svg` | live app (`apps/live`), as-is    |
-| a marketing page's address from before `/about` (`/faq`, `/ai`, `/features/*`, `/alternatives/*`, `/security`, `/status`, `/licences`, `/privacy`, `/terms`) | 308 redirect to `/about/<path>`  |
-| a help category segment with no `/help` prefix (`/canvas/*`, `/policies/*`, ...)                                                                             | 308 redirect to `/help/<path>`   |
-| `/about`, `/about/*`, and everything else                                                                                                                    | marketing app (`apps/marketing`) |
+| Path                                                                                                                                                                                   | Forwards to                      |
+| -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------- |
+| `/api`, `/api/*`                                                                                                                                                                       | api worker (`apps/api`)          |
+| `/telemetry`, `/telemetry/*`                                                                                                                                                           | telemetry app (`apps/telemetry`) |
+| `/help`, `/help/*`                                                                                                                                                                     | help app (`apps/help`), stripped |
+| `/live/*` (the live app's `_next` assets only)                                                                                                                                         | live app (`apps/live`), stripped |
+| `/` (the front door: the live worker sends it on to Home, [Explorer Home](../013-workspace/explorer-home.md#route))                                                                    | live app (`apps/live`), as-is    |
+| live page routes: `/document/*`, `/explorer/*`, `/form/*`, `/new`, `/join`, `/sign-in`, `/get-started`, `/embed`, `/oauth/*`, `/report-a-bug/*`, `/notification-settings`, `/icon.svg` | live app (`apps/live`), as-is    |
+| a marketing page's address from before `/about` (`/faq`, `/ai`, `/features/*`, `/alternatives/*`, `/security`, `/status`, `/licences`, `/privacy`, `/terms`)                           | 308 redirect to `/about/<path>`  |
+| a help category segment with no `/help` prefix (`/canvas/*`, `/policies/*`, ...)                                                                                                       | 308 redirect to `/help/<path>`   |
+| `/about`, `/about/*`, and everything else                                                                                                                                              | marketing app (`apps/marketing`) |
 
 The live app serves at **clean URLs** — there's no `/live` prefix in the address bar. The product is the front door ([Purpose](../001-project-vision/purpose.md#the-product-comes-first)): `/` belongs to the live app. Marketing's pages all live under `/about` (`/about`, `/about/faq`, `/about/features/<slug>`, ...), and marketing owns every other first segment too (its `/_next` assets, `/robots.txt`, `/sitemap.xml`, its not-found page). The live app's route segments don't overlap any of them, so the router selects the live app by matching its known first segments (`LIVE_ROUTE_SEGMENTS`, exported from `@livedoc/api-schema` so the telemetry dashboard's per-app page-view split, [Page view telemetry](../017-telemetry/page-view-telemetry.md), reads the same list) and forwards those **as-is** (no strip — the live worker's `out/` files are already prefix-free).
 

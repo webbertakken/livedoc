@@ -684,14 +684,15 @@ director, 2026-11-27). Only where the host has email configured
 - **Mentions and assignments**: a comment that mentions or assigns someone emails them at once, as
   [Mentions](#mentions) and [Assigning](#assigning) say, and is not repeated in their batch. A person whose
   Comments setting for the document is **None** gets neither (Google's "Never receive emails about comments for that
-  file"), nor does one with the account-wide switch off.
+  file"); their own switches (Someone Mentions Me, Someone Assigns Me an Action) govern them as everywhere
+  else.
 
 ### The comments email
 
 - **Subject**: "New comments in <document>" (default copy).
 - **Each comment**, oldest first: its author's name, the quoted stretch it is on (cut to 120 characters with an
-  ellipsis), its text, and **Open** to the thread (landing on it as the Inbox's Open does); replies are grouped under
-  their thread.
+  ellipsis), its text (cut to about 280 characters, as a mention email's), and **Open** to the thread (landing on
+  it as the Inbox's Open does); replies are grouped under their thread.
 - **Comments for you** carries the comments of the threads that involve the person; **All comments** every new one.
 
 ### The edits email

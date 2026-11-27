@@ -234,6 +234,9 @@ export const TELEMETRY_ACTIONS = [
   'Unresolved',
   // Comment (docs/specs/012-collaboration/comment-mentions.md): a comment was sent with at least one @-mention.
   'Mentioned',
+  // Comment (docs/specs/034-text-documents/review.md "Notifications"): a text document email went, typed by its count
+  // of comments ('One', 'TwoToFive', 'SixPlus'); written by the api worker, never who or which document.
+  'Notified',
   'Imported',
   'Aligned',
   'Undone',

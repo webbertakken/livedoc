@@ -19,6 +19,9 @@ export const LIVE_ROUTE_SEGMENTS: ReadonlySet<string> = new Set([
   'get-started',
   'join',
   'new',
+  // A text document email's settings link, /notification-settings (docs/specs/034-text-documents/review.md
+  // "Notifications").
+  'notification-settings',
   'oauth',
   // Report a Bug's own page and a filed screenshot's (docs/specs/016-platform/bug-reports.md).
   'report-a-bug',

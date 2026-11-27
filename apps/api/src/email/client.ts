@@ -48,7 +48,22 @@ type EmailMessage = {
   // a native unsubscribe affordance (we point it at the profile page rather than
   // a one-click POST endpoint, by design — docs/specs/014-identity/transactional-email.md).
   unsubscribeUrl?: string;
+  // RFC 8058 one-click unsubscribe: an https URL that a POST of `List-Unsubscribe=One-Click` turns this email off
+  // at. Sent as the List-Unsubscribe header in place of `unsubscribeUrl`, with List-Unsubscribe-Post
+  // (docs/specs/034-text-documents/review.md "Notifications", In every email).
+  oneClickUrl?: string | null;
 };
+
+function unsubscribeHeaders(msg: EmailMessage): { headers?: Record<string, string> } {
+  if (msg.oneClickUrl)
+    return {
+      headers: {
+        'List-Unsubscribe': `<${msg.oneClickUrl}>`,
+        'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+      },
+    };
+  return msg.unsubscribeUrl ? { headers: { 'List-Unsubscribe': `<${msg.unsubscribeUrl}>` } } : {};
+}
 
 // Best-effort send: logs and counts a failure, never throws.
 export async function sendEmail(env: Env, msg: EmailMessage): Promise<{ sent: boolean }> {
@@ -66,7 +81,7 @@ export async function sendEmailNow(env: Env, msg: EmailMessage): Promise<SendOut
     subject: msg.subject,
     html: msg.html,
     ...(msg.text ? { text: msg.text } : {}),
-    ...(msg.unsubscribeUrl ? { headers: { 'List-Unsubscribe': `<${msg.unsubscribeUrl}>` } } : {}),
+    ...unsubscribeHeaders(msg),
   });
   // One anonymous telemetry row per outcome (docs/specs/017-telemetry/telemetry.md), written server-side
   // because nothing about an email reaches a browser. reportServerEvent gates on TELEMETRY_ENABLED and swallows

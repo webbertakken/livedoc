@@ -12,6 +12,7 @@ vi.mock('../db', () => ({
   claimNotifyEmail: vi.fn(),
   claimFormEmail: vi.fn(),
 }));
+vi.mock('../db/text-document-notice-settings', () => ({ readNoticeSetting: vi.fn() }));
 vi.mock('./client', async (importOriginal) => ({
   ...(await importOriginal<typeof import('./client')>()),
   sendEmail: vi.fn(),
@@ -27,6 +28,7 @@ import {
   getNotificationPrefs,
   getOwnerEmail,
 } from '../db';
+import { readNoticeSetting } from '../db/text-document-notice-settings';
 import { sendEmail } from './client';
 import { actionAssignedEmail, commentNotificationEmail, formResponseEmail } from './templates';
 import {
@@ -56,6 +58,9 @@ const allowAll = {
 };
 
 afterEach(() => vi.clearAllMocks());
+beforeEach(() =>
+  vi.mocked(readNoticeSetting).mockResolvedValue({ comments: 'for-you', edits: 'none' }),
+);
 
 describe('commentNotificationEmail', () => {
   it('names the commenter + document, links to the document, omits comment text', () => {
@@ -218,6 +223,15 @@ describe('notifyActionAssigned (docs/specs/012-collaboration/assigned-actions.md
     expect(vi.mocked(sendEmail).mock.calls[0]![1].to).toBe('assignee@x.com');
   });
 
+  it('skips when the assignee set the document’s comments to None (034 review.md "Notifications")', async () => {
+    vi.mocked(getOwnerEmail).mockResolvedValue('assignee@x.com');
+    vi.mocked(getNotificationPrefs).mockResolvedValue(allowAll);
+    vi.mocked(readNoticeSetting).mockResolvedValue({ comments: 'none', edits: 'none' });
+    await notifyActionAssigned(env, input);
+    expect(readNoticeSetting).toHaveBeenCalledWith(env, 'd1', 'u2');
+    expect(sendEmail).not.toHaveBeenCalled();
+  });
+
   it('falls back to the team-member invite address when no lifecycle row exists', async () => {
     vi.mocked(getOwnerEmail).mockResolvedValue(null);
     vi.mocked(getNotificationPrefs).mockResolvedValue(allowAll);
@@ -291,6 +305,14 @@ describe('notifyMentioned (docs/specs/012-collaboration/comment-mentions.md)', (
 
   it('does nothing when email is off', async () => {
     await notifyMentioned({} as Env, input);
+    expect(sendEmail).not.toHaveBeenCalled();
+  });
+
+  it('skips when the recipient set the document’s comments to None (034 review.md "Notifications")', async () => {
+    vi.mocked(getOwnerEmail).mockResolvedValue('priya@x.com');
+    vi.mocked(getNotificationPrefs).mockResolvedValue(allowAll);
+    vi.mocked(readNoticeSetting).mockResolvedValue({ comments: 'none', edits: 'added-or-removed' });
+    await notifyMentioned(env, input);
     expect(sendEmail).not.toHaveBeenCalled();
   });
 

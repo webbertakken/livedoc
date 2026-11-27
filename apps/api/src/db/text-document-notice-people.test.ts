@@ -41,6 +41,7 @@ describe('how someone reaches the document now', () => {
     expect(await noticeReachOf(env, 'D', 'owner', Date.now())).toEqual({
       level: 'edit',
       scopeTabId: null,
+      shareCode: null,
     });
   });
 
@@ -56,9 +57,18 @@ describe('how someone reaches the document now', () => {
     expect(await noticeReachOf(env, 'D', 'pat', now)).toEqual({
       level: 'participate',
       scopeTabId: null,
+      shareCode: 'PART',
     });
-    expect(await noticeReachOf(env, 'D', 'vic', now)).toEqual({ level: 'view', scopeTabId: null });
-    expect(await noticeReachOf(env, 'D', 'tab', now)).toEqual({ level: 'edit', scopeTabId: 't1' });
+    expect(await noticeReachOf(env, 'D', 'vic', now)).toEqual({
+      level: 'view',
+      scopeTabId: null,
+      shareCode: 'VIEW',
+    });
+    expect(await noticeReachOf(env, 'D', 'tab', now)).toEqual({
+      level: 'edit',
+      scopeTabId: 't1',
+      shareCode: 'TAB1',
+    });
   });
 
   it('is nothing once their link is lowered to view, gone, or the document is in the Trash', async () => {

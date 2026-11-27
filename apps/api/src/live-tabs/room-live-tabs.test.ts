@@ -667,3 +667,32 @@ describe("a text document update, for a Viewer's copy", () => {
     expect(viewers.ready).not.toHaveBeenCalled();
   });
 });
+
+// review.md "Notifications" (Batches): a tab's notification window is opened before an update is stored, from a socket,
+// the door and the room alike, so it notes what the tab held just before.
+describe('a text document update, for its notification window', () => {
+  it('tells the window before each update is stored', async () => {
+    const db = sqliteD1();
+    await roomWith(db);
+    const calls: string[] = [];
+    const notices = {
+      ready: vi.fn(async (place: { documentId: string; tabId: string }) => {
+        calls.push(`${place.tabId} stored=${(await storedUpdates(db.env, 't1')).length}`);
+      }),
+    };
+    const room = new RoomLiveTabs(TEXT_DOCUMENT_LIVE_TAB, {
+      env: db.env,
+      enqueue: (step) => step(),
+      sequence: vi.fn(() => 1),
+      sendTo: vi.fn(),
+      position: () => ({ epoch: 'e' }),
+      notices,
+    });
+    await room.accept(
+      { ws, presenceId: 'p1', documentId: 'D', level: 'edit', adderKey: 'k1' },
+      frame('t1', 'Typed'),
+    );
+    await room.storeAndRelay('D', 't1', TextDocumentState.fromBody(Body.of('Restored')));
+    expect(calls).toEqual(['t1 stored=0', 't1 stored=1']);
+  });
+});

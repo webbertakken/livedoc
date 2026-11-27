@@ -2,60 +2,18 @@
 
 // Tools > Notification settings (docs/specs/034-text-documents/review.md "Notifications"): what this person hears of
 // this document by email, comments and edits, as Google Docs' dialog. Read when it opens; nothing is kept until OK.
-import { useEffect, useId, useState } from 'react';
-import type { NoticeCommentChoice, NoticeEditChoice, NoticeSettingDto } from '@livedoc/api-schema';
+import { useEffect, useState } from 'react';
+import type { NoticeSettingDto } from '@livedoc/api-schema';
+import { NoticeSettingChoices } from '@/components/notifications/NoticeSettingChoices';
 import { OfficeDialog } from '@/components/office/OfficeDialog';
 
 export const NOTICE_LOAD_FAILED = 'Your notification settings couldn’t be loaded. Try again.';
 export const NOTICE_SAVE_FAILED = 'Your notification settings couldn’t be saved. Try again.';
 
-const COMMENT_CHOICES: readonly { value: NoticeCommentChoice; label: string }[] = [
-  { value: 'all', label: 'All comments' },
-  { value: 'for-you', label: 'Comments for you' },
-  { value: 'none', label: 'None' },
-];
-const EDIT_CHOICES: readonly { value: NoticeEditChoice; label: string }[] = [
-  { value: 'added-or-removed', label: 'Added or removed content' },
-  { value: 'none', label: 'None' },
-];
-
 type Step =
   | { readonly kind: 'loading' }
   | { readonly kind: 'unread' }
   | { readonly kind: 'choosing'; readonly refusal: string | null; readonly saving: boolean };
-
-function ChoiceGroup<T extends string>({
-  legend,
-  choices,
-  chosen,
-  disabled,
-  onChoose,
-}: {
-  legend: string;
-  choices: readonly { value: T; label: string }[];
-  chosen: T;
-  disabled: boolean;
-  onChoose: (value: T) => void;
-}) {
-  const name = useId();
-  return (
-    <fieldset className="flex flex-col gap-3" disabled={disabled}>
-      <legend className="pb-2 text-body font-medium">{legend}</legend>
-      {choices.map(({ value, label }) => (
-        <label key={value} className="flex items-center gap-3 text-body">
-          <input
-            type="radio"
-            name={name}
-            className="size-icon-row shrink-0 accent-(--office-primary)"
-            checked={chosen === value}
-            onChange={() => onChoose(value)}
-          />
-          {label}
-        </label>
-      ))}
-    </fieldset>
-  );
-}
 
 export function TextDocumentNotificationsDialog({
   read,
@@ -108,20 +66,7 @@ export function TextDocumentNotificationsDialog({
       primary={{ label: 'OK', onPress: save, disabled }}
     >
       <div className="flex flex-col gap-5 pt-1" aria-busy={step.kind === 'loading'}>
-        <ChoiceGroup
-          legend="Comments"
-          choices={COMMENT_CHOICES}
-          chosen={setting.comments}
-          disabled={disabled}
-          onChoose={(comments) => setSetting((s) => ({ ...s, comments }))}
-        />
-        <ChoiceGroup
-          legend="Edits"
-          choices={EDIT_CHOICES}
-          chosen={setting.edits}
-          disabled={disabled}
-          onChoose={(edits) => setSetting((s) => ({ ...s, edits }))}
-        />
+        <NoticeSettingChoices setting={setting} disabled={disabled} onChange={setSetting} />
         {step.kind === 'unread' || (choosing && step.refusal) ? (
           <p role="alert" className="text-body text-red-700 dark:text-red-300">
             {step.kind === 'unread' ? NOTICE_LOAD_FAILED : step.refusal}

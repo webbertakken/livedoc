@@ -45,12 +45,11 @@ describe('notice links', () => {
   it('refuse a signed payload that names no person and document', async () => {
     // Signed with the real key through the public door, then the payload swapped for each malformed one and signed
     // again is impossible from outside; so the shapes are checked by signing them the way the module does.
-    const { webcrypto } = await import('node:crypto');
     const enc = new TextEncoder();
-    const ikm = await webcrypto.subtle.importKey('raw', enc.encode('s'.repeat(40)), 'HKDF', false, [
+    const ikm = await crypto.subtle.importKey('raw', enc.encode('s'.repeat(40)), 'HKDF', false, [
       'deriveKey',
     ]);
-    const key = await webcrypto.subtle.deriveKey(
+    const key = await crypto.subtle.deriveKey(
       {
         name: 'HKDF',
         hash: 'SHA-256',
@@ -63,7 +62,7 @@ describe('notice links', () => {
       ['sign'],
     );
     const signed = async (payload: string) =>
-      `${payload}.${bytesToBase64Url(await webcrypto.subtle.sign('HMAC', key, enc.encode(`notices:${payload}`)))}`;
+      `${payload}.${bytesToBase64Url(await crypto.subtle.sign('HMAC', key, enc.encode(`notices:${payload}`)))}`;
     for (const payload of [
       payloadOf({ ownerId: 'ada' }),
       payloadOf(['ada']),

@@ -5,8 +5,13 @@ import { parseStoredLevel, type AccessLevel } from '@livedoc/api-schema';
 import type { Env } from '../types';
 import { VISIBLE_DOCUMENTS_CTES } from './document-visibility';
 
-/** How a person reaches a document now: their level, and the one tab their link opens (null: every tab). */
-export type NoticeReach = { readonly level: AccessLevel; readonly scopeTabId: string | null };
+/** How a person reaches a document now: their level, the one tab their link opens (null: every tab), and the link
+ *  itself (null for their own or their team's), which their email's links carry. */
+export type NoticeReach = {
+  readonly level: AccessLevel;
+  readonly scopeTabId: string | null;
+  readonly shareCode: string | null;
+};
 
 /** How `ownerId` reaches the document now, as their own Explorer would list it; null when they cannot open it. */
 export async function noticeReachOf(
@@ -17,12 +22,20 @@ export async function noticeReachOf(
 ): Promise<NoticeReach | null> {
   const row = await env.DB.prepare(
     `WITH ${VISIBLE_DOCUMENTS_CTES}
-     SELECT share_level, scope_tab_id FROM visible WHERE id = ?3 LIMIT 1`,
+     SELECT share_level, scope_tab_id, share_code FROM visible WHERE id = ?3 LIMIT 1`,
   )
     .bind(ownerId, now, documentId)
-    .first<{ share_level: string | null; scope_tab_id: string | null }>();
+    .first<{
+      share_level: string | null;
+      scope_tab_id: string | null;
+      share_code: string | null;
+    }>();
   if (!row) return null;
-  return { level: parseStoredLevel(row.share_level), scopeTabId: row.scope_tab_id };
+  return {
+    level: parseStoredLevel(row.share_level),
+    scopeTabId: row.scope_tab_id,
+    shareCode: row.share_code,
+  };
 }
 
 /** Each identity's account: an identity an account was once (a guest id it took over) as that account. */

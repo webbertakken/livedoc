@@ -35,7 +35,7 @@ const ACCOUNT_FOOTER =
 
 // docs/specs/014-identity/transactional-email.md: footer for an opt-out notification email, the reason plus a link to
 // the settings where the recipient can turn the category off in one click.
-function manageNotificationsFooter(env: Env, reason: string): string {
+export function manageNotificationsFooter(env: Env, reason: string): string {
   const href = profilePath(env);
   return `${reason} <a href="${href}" style="color:${BRAND};text-decoration:underline">Manage your notifications</a> to turn these off.`;
 }
@@ -72,6 +72,7 @@ export type EmailKind =
   | 'CommentNotification'
   | 'ActionAssigned'
   | 'Mentioned'
+  | 'TextDocumentComments'
   | 'FormResponse'
   | 'FormSuspended'
   | 'TokenExpiring'
@@ -89,12 +90,12 @@ export type RenderedEmail = {
 
 // Where every opt-out category can be turned off: the Settings dialog's
 // Notifications category, deep-linked (docs/specs/007-editor/user-preferences.md). Used by both the footer link
-// and the List-Unsubscribe header (docs/specs/014-identity/transactional-email.md). Module-private: only the
-// templates in this file build URLs with it.
+// and the List-Unsubscribe header (docs/specs/014-identity/transactional-email.md). Only the email templates build
+// URLs with it (this file and text-document-notice-email.ts).
 //
 // The old `/explorer/profile` URL still redirects here, which matters because
 // every email already sent carries it and an unsubscribe link cannot rot.
-function profilePath(env: Env): string {
+export function profilePath(env: Env): string {
   return `${appBaseUrl(env)}/explorer?settings=notifications`;
 }
 

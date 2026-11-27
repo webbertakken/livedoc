@@ -19,6 +19,7 @@ import {
   getOwnerEmail,
   listTeamAdminUserIds,
 } from '../db';
+import { readNoticeSetting } from '../db/text-document-notice-settings';
 import type { Env } from '../types';
 import { emailEnabled, sendEmail } from './client';
 
@@ -83,6 +84,13 @@ async function claimTeamNotifyEmail(
 }
 
 // docs/specs/012-collaboration/assigned-actions.md: a teammate assigned the recipient an action on a document element.
+// A text document's Comments setting of None (docs/specs/034-text-documents/review.md "Notifications") stops every
+// comment email of that document, a mention's and an assignment's too, as Google's "Never receive emails about comments
+// for that file". Only a text document holds a setting, so any other document reads the default and is never silenced.
+async function commentsSilenced(env: Env, documentId: string, userId: string): Promise<boolean> {
+  return (await readNoticeSetting(env, documentId, userId)).comments === 'none';
+}
+
 // Fired by the notify-action route AFTER it has verified both parties are
 // joined members of the same team and resolved every string server-side.
 // Opt-out (notifyActionAssigned). The assignee's address prefers their
@@ -115,6 +123,7 @@ export async function notifyActionAssigned(
   if (input.assigneeUserId) {
     const prefs = await getNotificationPrefs(env, input.assigneeUserId);
     if (!prefs.notifyActionAssigned) return;
+    if (await commentsSilenced(env, input.document.id, input.assigneeUserId)) return;
   }
   const claimed = await claimTeamNotifyEmail(env, input.assignerUserId, [
     'action',
@@ -165,6 +174,7 @@ export async function notifyMentioned(
   if (input.recipientUserId) {
     const prefs = await getNotificationPrefs(env, input.recipientUserId);
     if (!prefs.notifyMentions) return;
+    if (await commentsSilenced(env, input.document.id, input.recipientUserId)) return;
   }
   const claimed = await claimTeamNotifyEmail(env, input.authorUserId, [
     'mention',

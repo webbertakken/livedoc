@@ -2844,6 +2844,8 @@ export const BY_ACTION: Readonly<Record<string, string>> = {
   'Comment|Deleted': 'A comment was removed from a thread.',
   'Comment|Opened': 'Someone opened the comment popover on an element.',
   'Comment|Mentioned': 'A comment was sent that @-mentioned at least one teammate.',
+  'Comment|Notified':
+    'A text document emailed someone its new comments, as their Notification settings ask. The type says whether it held one comment, two to five, or six or more; it never says who or which document.',
   'Comment|Resolved': 'A comment thread was marked resolved.',
   'Comment|Unresolved': 'A resolved comment thread was reopened.',
   'Document|Changed':
