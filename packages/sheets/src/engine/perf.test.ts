@@ -92,8 +92,16 @@ function bigSheet(): Sheet {
   return sheet;
 }
 
+function workOut(sheet: Sheet): void {
+  const wb = new Workbook({ sheets: [sheet], locale: 'en' });
+  for (let r = 0; r < 10_000; r++) for (let c = 0; c < 5; c++) wb.value(sheet.id, r, c);
+}
+
 describe('performance', () => {
   it('holds under 160 bytes for each formula it has worked out', () => {
+    // The same work once before, thrown away: the code it compiles (and, under coverage, the counters v8 keeps for
+    // it) is held once, whatever the formulas, so only the formulas' own bytes are measured below.
+    workOut(bigSheet());
     const sheet = bigSheet();
     const wb = new Workbook({ sheets: [sheet], locale: 'en' });
     // The layout's index is the sheet's, built for the grid too: not the engine's to count.

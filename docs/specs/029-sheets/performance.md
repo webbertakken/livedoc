@@ -103,12 +103,14 @@ beside them; a read of one cell is an edge on two linked lists, a read of a rang
 
 | Measure (the 50,000-cell sheet above, Node)     | Budget    | Before (string keys) | Measured (2026-11-20) |
 | ----------------------------------------------- | --------- | -------------------- | --------------------- |
-| Held by the engine for each formula worked out  | 160 bytes | 766 bytes            | 147 bytes             |
+| Held by the engine for each formula worked out  | 160 bytes | 766 bytes            | 126 to 128 bytes      |
 | Working out every cell, CPU, uninstrumented     | 400 ms    | 196 to 202 ms        | 152 to 174 ms         |
 | The page's copy of the values, for each formula | 64 bytes  | (none)               | 50 to 53 bytes        |
 
 `packages/sheets/src/engine/perf.test.ts` holds the bytes everywhere, the copy's too (a value, its cell's number and
-its place in the lookup table). Most of the engine's (128 of 147) are typed columns grown by doubling, so a sheet
+its place in the lookup table). The engine's are measured after the same work once, thrown away: the code it compiles
+and the counters coverage keeps for that code are held once, not by each formula, and counted in they made the figure
+drift with the run (147 to 161 bytes); measured so, it reads the same with and without coverage. Most of the engine's are typed columns grown by doubling, so a sheet
 whose cells just pass a power of two holds up to twice what it uses (inferred).
 
 A long chain worked out again holds the page up for no longer than a frame or two, as the engine runs in a Web
