@@ -23,7 +23,14 @@ export type TextDocumentVersionDto = {
 /** What a name or restore answers: the version as it now stands. */
 export type TextDocumentVersionWriteDto = { version: TextDocumentVersionDto };
 
-export type TextDocumentVersionListDto = { versions: TextDocumentVersionDto[] };
+/** When the tab's newest update was stored, and who sent it (an unrecorded sender: key, name and colour null). */
+export type TextDocumentLastEditDto = { at: number; editor: VersionEditorDto };
+
+/** The versions, newest first, and the tab's last edit (null before any). */
+export type TextDocumentVersionListDto = {
+  versions: TextDocumentVersionDto[];
+  lastEdit: TextDocumentLastEditDto | null;
+};
 
 /** One version, its snapshot and the one before it (Yjs snapshots, base64), and who wrote what in it. */
 export type TextDocumentVersionReadDto = {

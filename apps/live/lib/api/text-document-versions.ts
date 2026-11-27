@@ -1,6 +1,7 @@
 // A text document's versions (docs/specs/034-text-documents/live-editing-and-storage.md "The api"): the list, one read
 // whole with the one before it, naming the current one or any, and restoring one. Editors only; the room refuses others.
 import type {
+  TextDocumentLastEditDto,
   TextDocumentVersionDto,
   TextDocumentVersionListDto,
   TextDocumentVersionReadDto,
@@ -100,4 +101,16 @@ export async function apiRestoreTextDocumentVersion(
     author ? { author } : {},
   );
   return answer.version;
+}
+
+/** The tab's last edit, when and by whom; null before any. */
+export async function apiReadTextDocumentLastEdit(
+  scope: TextDocumentScope,
+): Promise<TextDocumentLastEditDto | null> {
+  const list = await call<TextDocumentVersionListDto>(
+    scope,
+    versions(scope),
+    'text document versions',
+  );
+  return list.lastEdit;
 }

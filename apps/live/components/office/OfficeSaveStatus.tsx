@@ -16,7 +16,13 @@ import {
 
 const ANNOUNCED: readonly OfficeSaveStatus[] = ['offline', 'failed'];
 
-export function OfficeSaveStatusButton({ status }: { status: OfficeSaveStatus }) {
+export function OfficeSaveStatusButton({
+  status,
+  details,
+}: {
+  status: OfficeSaveStatus;
+  details?: OfficeSaveStatusSource['details'];
+}) {
   const [open, setOpen] = useState(false);
   const box = useRef<HTMLDivElement>(null);
   useClickOutside(box, () => setOpen(false), open);
@@ -51,6 +57,7 @@ export function OfficeSaveStatusButton({ status }: { status: OfficeSaveStatus })
         <div className="absolute top-full left-0 z-30 mt-1 w-72 rounded-menu bg-(--office-menu) px-4 py-3 text-body text-(--office-ink) shadow-lg">
           <p className={failed ? 'text-(--office-error)' : undefined}>{words}</p>
           <p className="mt-1 text-(--office-muted)">{meaning}</p>
+          {details?.(() => setOpen(false))}
         </div>
       ) : null}
     </div>
@@ -81,5 +88,5 @@ export function OfficeSaveStatusShown({ source }: { source: OfficeSaveStatusSour
     [source],
   );
   const status = useSyncExternalStore(subscribe, source.get, NONE);
-  return status ? <OfficeSaveStatusButton status={status} /> : null;
+  return status ? <OfficeSaveStatusButton status={status} details={source.details} /> : null;
 }

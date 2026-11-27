@@ -57,7 +57,8 @@ export async function handleTextDocumentVersionRoutes(
 
   if (request.method === 'GET' && segments.length === 6) {
     const rows = await versionRows(env, tabId);
-    const list: TextDocumentVersionListDto = { versions: rows.reverse().map(versionDto) };
+    const lastEdit = await new TextDocumentAuthors(env, Date.now).lastEdit(tabId);
+    const list: TextDocumentVersionListDto = { versions: rows.reverse().map(versionDto), lastEdit };
     return json(list);
   }
   if (request.method === 'GET' && segments.length === 7) {

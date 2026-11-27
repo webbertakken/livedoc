@@ -82,7 +82,7 @@ beforeEach(async () => {
 
 describe('text document version routes', () => {
   it('lists none, then names the current version and lists it', async () => {
-    expect(await (await call('GET', BASE)).json()).toEqual({ versions: [] });
+    expect(await (await call('GET', BASE)).json()).toEqual({ versions: [], lastEdit: null });
     await type('Draft');
     const named = await call('POST', BASE, {
       name: ' First draft ',
@@ -96,6 +96,22 @@ describe('text document version routes', () => {
     });
     const list = await (await call('GET', BASE)).json<{ versions: { id: string }[] }>();
     expect(list.versions.map((v) => v.id)).toEqual([version.id]);
+  });
+
+  it('lists the tab\'s last edit: when, and who sent it, recorded or not', async () => {
+    await type('Draft');
+    const list = await (await call('GET', BASE)).json<{ lastEdit: { at: number; editor: object } }>();
+    expect(list.lastEdit.editor).toEqual({ key: 'k', name: 'Ada', color: '#1a73e8' });
+    expect(list.lastEdit.at).toEqual(expect.any(Number));
+    const update = TextDocumentState.fromBody(Body.of('More'));
+    await appendLiveTabUpdate(db.env, TEXT_DOCUMENT_LIVE_TAB, 't1', update);
+    await versions.stored({ documentId: 'D', tabId: 't1' }, update, {
+      key: null,
+      name: null,
+      color: null,
+    });
+    const after = await (await call('GET', BASE)).json<{ lastEdit: { editor: object } }>();
+    expect(after.lastEdit.editor).toEqual({ key: null, name: null, color: null });
   });
 
   it('reads one version whole, with the one before it and who wrote with each client', async () => {

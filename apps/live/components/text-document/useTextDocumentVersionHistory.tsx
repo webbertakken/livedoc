@@ -29,6 +29,7 @@ import {
   OfficeVersionHistory,
 } from '@/components/office/review/OfficeVersionHistory';
 import { TextDocumentVersionView } from './TextDocumentVersionView';
+import { TextDocumentLastEdit } from './TextDocumentLastEdit';
 import { track } from '@/lib/telemetry';
 import { TEXT_DOCUMENT_SHORTCUTS } from '@/lib/text-document/text-document-shortcuts';
 import {
@@ -100,7 +101,13 @@ export function useTextDocumentVersionHistory({
   /** The document's name: a copy of a version is "Copy of" it. */
   documentName: string;
   now?: () => number;
-}): { actions: OfficeActions; mode: ReactNode; open: boolean } {
+}): {
+  actions: OfficeActions;
+  mode: ReactNode;
+  open: boolean;
+  /** The save status's "Last edit was …", which opens the mode; none in This Browser. */
+  saveDetails: ((close: () => void) => ReactNode) | undefined;
+} {
   const [open, setOpen] = useState(false);
   const [opened, setOpened] = useState<Opened>({ versions: null, state: null, failed: false });
   const [selected, setSelected] = useState(CURRENT_VERSION);
@@ -228,6 +235,13 @@ export function useTextDocumentVersionHistory({
     now,
   });
 
+  const openHistory = useCallback(() => {
+    track('Document', 'Opened', 'TextDocumentVersionHistory');
+    setOpen(true);
+    setShowChanges(true);
+    load();
+  }, [load]);
+
   const actions = useMemo<OfficeActions>(
     () => ({
       [SEE_VERSION_HISTORY]: local
@@ -237,17 +251,10 @@ export function useTextDocumentVersionHistory({
             note: VERSION_HISTORY_LOCAL_NOTE,
             hint: VERSION_HISTORY_LOCAL_HINT,
           }
-        : {
-            run: () => {
-              track('Document', 'Opened', 'TextDocumentVersionHistory');
-              setOpen(true);
-              setShowChanges(true);
-              load();
-            },
-          },
+        : { run: openHistory },
       ...versionWrites.actions,
     }),
-    [local, load, versionWrites.actions],
+    [local, openHistory, versionWrites.actions],
   );
 
   // Drawn outside the surface, so the editor's shortcut layer never hears the keys pressed in it.
@@ -288,5 +295,20 @@ export function useTextDocumentVersionHistory({
       {versionWrites.dialogs}
     </>
   );
-  return { actions, mode, open };
+  const saveDetails = useMemo(
+    () =>
+      local
+        ? undefined
+        : (close: () => void) => (
+            <TextDocumentLastEdit
+              where={where}
+              onOpen={() => {
+                close();
+                openHistory();
+              }}
+            />
+          ),
+    [local, openHistory, where],
+  );
+  return { actions, mode, open, saveDetails };
 }

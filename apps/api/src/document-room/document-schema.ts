@@ -626,6 +626,18 @@ CREATE TABLE IF NOT EXISTS text_document_viewer_copy_updates (
 );
 `;
 
+// A text document tab's last edit (docs/specs/034-text-documents/live-editing-and-storage.md "Who changed what"): when its
+// newest update was stored and who sent it, one row a tab, going with it.
+const TEXT_DOCUMENT_LAST_EDIT_STEP = `
+CREATE TABLE IF NOT EXISTS text_document_last_edits (
+  tab_id TEXT    PRIMARY KEY REFERENCES tabs (id) ON DELETE CASCADE,
+  at     INTEGER NOT NULL,
+  author TEXT,
+  name   TEXT,
+  color  TEXT
+);
+`;
+
 /** Every step the room's schema has taken, in order; a change appends one and never edits a shipped step. */
 export const DOCUMENT_SCHEMA_STEPS: readonly string[] = [
   STEP_1 + OUTBOX + SHARES,
@@ -648,6 +660,7 @@ export const DOCUMENT_SCHEMA_STEPS: readonly string[] = [
   WORKBOOK_FUNCTIONS_STEP,
   TEXT_DOCUMENT_VERSIONS_STEP,
   TEXT_DOCUMENT_VIEWER_COPY_STEP,
+  TEXT_DOCUMENT_LAST_EDIT_STEP,
 ];
 
 export const DOCUMENT_SCHEMA_VERSION = DOCUMENT_SCHEMA_STEPS.length;

@@ -1,5 +1,7 @@
 // The office title row's save status (docs/specs/034-text-documents/editing-surface.md "The title row"): one of five,
 // reported by the kind, drawn by the shell with its words and what they mean.
+import type { ReactNode } from 'react';
+
 export type OfficeSaveStatus = 'saving' | 'saved' | 'this-browser' | 'offline' | 'failed';
 
 export const OFFICE_SAVE_STATUS: Record<OfficeSaveStatus, { words: string; meaning: string }> = {
@@ -32,4 +34,6 @@ export const isUnsettled = (status: OfficeSaveStatus): boolean =>
 export type OfficeSaveStatusSource = {
   get: () => OfficeSaveStatus | null;
   subscribe: (listener: () => void) => () => void;
+  /** More the kind says in the details, drawn while they are open (a text document's last edit); `close` shuts them. */
+  details?: (close: () => void) => ReactNode;
 };

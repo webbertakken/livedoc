@@ -1274,6 +1274,12 @@ export function TextDocumentSurface({
     [editorView],
   );
 
+  // The save status's details say the last edit, which opens version history (editing-surface.md "The title row").
+  const { saveDetails } = versionHistory;
+  const shownSaveStatus = useMemo(
+    () => (saveDetails && saveStatus ? { ...saveStatus, details: saveDetails } : saveStatus),
+    [saveStatus, saveDetails],
+  );
   // A mode change re-reads whether the writing is editable.
   useEffect(() => {
     if (editorView && !editorView.isDestroyed) editorView.setProps({});
@@ -1303,7 +1309,7 @@ export function TextDocumentSurface({
         drawDrawing={drawingTabs?.draw ?? null}
         chrome={chrome}
         // A session that may not edit saves nothing, so shows no save status.
-        saveStatus={canEdit ? saveStatus : null}
+        saveStatus={canEdit ? shownSaveStatus : null}
         zoom={zoom}
         fontSize={formatting.fontSize}
         fontFamily={formatting.fontFamily}

@@ -49,4 +49,20 @@ describe('OfficeSaveStatusButton', () => {
     fireEvent.keyDown(document, { key: 'Escape' });
     expect(screen.queryByText(OFFICE_SAVE_STATUS.offline.meaning)).toBeNull();
   });
+
+  it('adds what the kind says to its details, which that can close', () => {
+    render(
+      <OfficeSaveStatusButton
+        status="saved"
+        details={(close) => (
+          <button type="button" onClick={close}>
+            Last edit was just now by Ada
+          </button>
+        )}
+      />,
+    );
+    fireEvent.click(screen.getByRole('button', { name: OFFICE_SAVE_STATUS.saved.words }));
+    fireEvent.click(screen.getByRole('button', { name: 'Last edit was just now by Ada' }));
+    expect(screen.queryByText(OFFICE_SAVE_STATUS.saved.meaning)).toBeNull();
+  });
 });

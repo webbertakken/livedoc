@@ -71,8 +71,10 @@ The document's canvas chrome (palette, mode switch, minimap, zoom controls) is n
   A change of status is drawn after the frame it happens in, the status alone, so a keystroke's frame never waits on
   it ([Performance](performance.md)).
 
-- **Last edit**: none in the title row (Google moved it into File > Version history); once version history is built,
-  the save status's details show "Last edit was <time> by <name>", which opens it.
+- **Last edit**: none in the title row (Google moved it into File > Version history); for an Editor of a document
+  stored in LiveDoc, the save status's details add "Last edit was 5 minutes ago by Ada" ("… by Someone" for an
+  unrecorded sender; "just now" under a minute), read as the details open, a link that opens version
+  history (default copy). It says nothing until it is read, and nothing when it cannot be.
 - **Comment history** (a speech bubble with lines, "Open comment history", ⌘⌥⇧A): opens and closes the comments
   panel ([Review](review.md#the-comments-panel)), pressed while it is open; it stands first, before Settings (default).
 - **Editing mode switch**: a pill with the mode's glyph and name, "Editing" (pencil), "Suggesting" (pencil with a
