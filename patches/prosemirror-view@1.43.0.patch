@@ -1,0 +1,47 @@
+prosemirror-view 1.43.0: a key-driven move to the document's start, made within 200 ms of the editor taking focus, is
+kept rather than taken for the browser's reset of the selection on focus.
+
+Upstream, DOMObserver.flush restores the state's selection when, within 200 ms of focus, the DOM caret lands at the
+document's start with no click or touch in the last 300 ms. It does not look at keys, so Ctrl+Home (Cmd+Up) pressed
+just after focusing (leaving a header or note, closing a dialog) is undone. The one added condition,
+`view.input.lastKeyCodeTime <= view.input.lastFocus`, lets the check act only when no key was pressed since the focus.
+See docs/specs/034-text-documents/editing-surface.md "The caret" and apps/live/e2e/office/caret-after-focus.spec.ts.
+Unchanged on upstream master at ca4c78e9b5; drop this patch once an upgrade carries the same condition.
+
+diff --git a/dist/index.cjs b/dist/index.cjs
+index d01e986706fcf0f2440e484fa3ce32b08530a4d8..a8cdc2165b323f6cf89b906e0d38d2a042ef3179 100644
+--- a/dist/index.cjs
++++ b/dist/index.cjs
+@@ -5043,7 +5043,7 @@ var DOMObserver = function () {
+         }
+       }
+       var newSel = null;
+-      if (from < 0 && selChange && view.domSel.active && view.input.lastFocus > Date.now() - 200 && Math.max(view.input.lastTouch, view.input.lastClick.time) < Date.now() - 300 && selectionCollapsed(view.domSel.range) && (newSel = selectionFromDOM(view, view.domSel.range)) && newSel.eq(prosemirrorState.Selection.near(view.state.doc.resolve(0), 1))) {
++      if (from < 0 && selChange && view.domSel.active && view.input.lastFocus > Date.now() - 200 && view.input.lastKeyCodeTime <= view.input.lastFocus && Math.max(view.input.lastTouch, view.input.lastClick.time) < Date.now() - 300 && selectionCollapsed(view.domSel.range) && (newSel = selectionFromDOM(view, view.domSel.range)) && newSel.eq(prosemirrorState.Selection.near(view.state.doc.resolve(0), 1))) {
+         view.input.lastFocus = 0;
+         view.domSel.sync();
+         view.scrollToSelection();
+diff --git a/dist/index.js b/dist/index.js
+index 2d9187e8940bdd6f91fecd0b81bfad9f7bacc390..86c0d509908b6a790541038b74dae72a26dec146 100644
+--- a/dist/index.js
++++ b/dist/index.js
+@@ -5386,6 +5386,7 @@ class DOMObserver {
+         // start of the document after focus, restore the selection from
+         // the state
+         if (from < 0 && selChange && view.domSel.active && view.input.lastFocus > Date.now() - 200 &&
++            view.input.lastKeyCodeTime <= view.input.lastFocus &&
+             Math.max(view.input.lastTouch, view.input.lastClick.time) < Date.now() - 300 &&
+             selectionCollapsed(view.domSel.range) && (newSel = selectionFromDOM(view, view.domSel.range)) &&
+             newSel.eq(Selection.near(view.state.doc.resolve(0), 1))) {
+diff --git a/src/domobserver.ts b/src/domobserver.ts
+index ac0508fbf3738c237505b633fd6add0da489cfad..3c4b38934de47db477ad731b5c6472bea00bb900 100644
+--- a/src/domobserver.ts
++++ b/src/domobserver.ts
+@@ -160,6 +160,7 @@ export class DOMObserver {
+     // start of the document after focus, restore the selection from
+     // the state
+     if (from < 0 && selChange && view.domSel.active && view.input.lastFocus > Date.now() - 200 &&
++        view.input.lastKeyCodeTime <= view.input.lastFocus &&
+         Math.max(view.input.lastTouch, view.input.lastClick.time) < Date.now() - 300 &&
+         selectionCollapsed(view.domSel.range) && (newSel = selectionFromDOM(view, view.domSel.range)) &&
+         newSel.eq(Selection.near(view.state.doc.resolve(0), 1))) {
