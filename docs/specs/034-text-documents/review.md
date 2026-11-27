@@ -270,6 +270,21 @@ office kinds; this spec says what a text document puts in them.
   gallery is off) is written in the same change as the picture, so no one ever holds a picture without its media.
   A Participant's picture is stored in their own gallery and served to the document while their share link lasts
   ([Images](../009-elements/images.md)), as on a canvas.
+- **Drawings** (director, 2026-11-26; Google's help says nothing of a drawing changed while suggesting, so this is
+  LiveDoc's own ruling): an Editor's **Insert > Drawing > New** while suggesting places the drawing as their suggested
+  insertion of its picture, its card saying "Add: Drawing". Opening a drawing's picture while suggesting first copies
+  its drawing tab, as [One drawing, one picture](objects.md#inserting-and-editing) copies one, the picture still naming
+  the old tab, and opens the copy, so the drawing stays as it is for everyone else; **Save and close** then suggests
+  its replacement: the old picture suggested deleted and the copy's picture, the old one's width, suggested inserted
+  after it, one suggestion, its card saying "Replace: Drawing". Save and close with the drawing unchanged suggests
+  nothing and removes the copy (default). **Accept** keeps the new picture and its drawing tab and takes away the old
+  picture and, where no other picture names it, its drawing tab; **Reject** takes away the new picture and its drawing
+  tab with all it holds, so no drawing tab is left behind; its PNG, then named by nothing, goes with the daily
+  [image sweep](../009-elements/images.md) (default). Two people's replacements of one drawing are two suggestions,
+  each on its own copy: the old picture's deletion is the first one's, the other's card saying "Add: Drawing"
+  (default). One's own suggested drawing is opened and changed plainly, part of its suggestion. A Participant, who adds
+  no tabs, has Insert's Drawing dimmed with the note "Editing only" and the hint "An Editor adds a drawing in
+  Editing.", and opens a drawing as it is (default).
 - **Whole blocks**: a **table** (Insert > Table), a **section break** (Insert > Break) or a **table of contents**
   (Insert > Table of contents) put in while suggesting is a suggested insertion of the whole block, its card saying
   "Add: Table" ("Add: Section break", "Add: Table of contents"); a paragraph split to make room for it, and the
@@ -302,10 +317,9 @@ office kinds; this spec says what a text document puts in them.
   cells beside cells someone else's suggested row put in) says "This can't be suggested yet." when deleted (default).
 - **Not yet**: merging, splitting, moving, sorting and
   distributing the rows and columns of a table not one's own suggested table (default); updating a table of contents
-  not one's own suggested one, drawings, and what is kept beside the writing (page setup, a header's or footer's
+  not one's own suggested one, and what is kept beside the writing (page setup, a header's or footer's
   settings, document tabs, styles, list definitions), say "This can't be suggested yet." (default) and change nothing.
-  Insert's Drawing is dimmed while suggesting with the note "Editing only" and the hint "This can't be suggested yet.
-  An Editor changes it in Editing." (default); the others are absent or dimmed as the menus draw them.
+  They are absent or dimmed as the menus draw them.
 - **Headers, footers and notes** (director, 2026-11-26): while suggesting, one is opened and written in as in
   Editing, and what is typed, deleted or formatted there is a suggestion, as in the body. Insert > Header (Footer)
   opens the section's header (footer); where it has none, an Editor's puts one in, plain, its writing then suggested,
