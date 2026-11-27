@@ -357,6 +357,8 @@ function bodyXml(
     tableXml(sheet, i, { losses, styles, kept, theme, charts, validations: validations.cells }),
   );
   const commonXml = commonStyles(theme.font, [...keptCommon, ...styles.conditionalStyles()]);
+  // OpenFormula has no LAMBDA, so an ODF file holds no named functions (standard-mapping.md "Named functions in the file").
+  for (const fn of file.functions ?? []) losses.push({ k: 'function_unwritten', name: fn.name });
   const body = [
     ...kept.workbook('scripts'),
     ...(flat ? commonXml : []),

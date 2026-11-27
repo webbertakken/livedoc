@@ -16,6 +16,7 @@ export const REPORTED_KINDS = [
   'sheet_cut',
   'cells_cut',
   'formula_unread',
+  'function_unread',
   'formula_unwritten',
   'text_cut',
   'macros',
@@ -78,6 +79,12 @@ function entriesOf(loss: FileLoss): Entry[] {
       return [[loss.k, 1, loss.sheet]];
     case 'sheets_cut':
       return [['sheets_cut', loss.had - loss.kept]];
+    case 'function_unread':
+      return [['function_unread', 1, loss.name]];
+    // What a write leaves out of a named function: logged with the write's losses, never a read's.
+    case 'function_unwritten':
+    case 'function_cut':
+      return [];
     case 'sheet_renamed':
       return [['sheet_renamed', 1, { from: loss.from, to: loss.to }]];
     case 'text_cut':

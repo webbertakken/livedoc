@@ -144,6 +144,16 @@ export class XlsxKeeper {
     this.items.push({ place, xml: without(parsed, element, kept.xml, read), ns: kept.ns, at });
   }
 
+  // Whether `claim` reads a workbook's defined name into the model (a named function), so it is not kept.
+  private claimed(
+    parsed: XmlParsed,
+    name: XmlElement,
+    claim: (name: XmlElement, kept: KeptItem<FileAt>) => boolean,
+  ): boolean {
+    const kept = keptXmlOf(parsed, name);
+    return claim(name, { place: 'workbook', xml: kept.xml, ns: kept.ns, at: {} });
+  }
+
   // A root's attributes but its namespace declarations; `mc:Ignorable` with the bindings of the prefixes it names.
   private rootAttributes(place: KeptPlace, root: XmlElement, at: FileAt) {
     for (const attribute of root.attributes) {
@@ -185,6 +195,7 @@ export class XlsxKeeper {
     part: string,
     sheets: readonly XmlElement[],
     read: ReadonlyMap<number, number>,
+    claim: (name: XmlElement, kept: KeptItem<FileAt>) => boolean,
   ): void {
     this.keepRelationships('', 'package', {}, new Set());
     // The sheets' relationships are LiveDoc's to write (its `sheets`), whatever kind of sheet each names.
@@ -201,7 +212,8 @@ export class XlsxKeeper {
         const local = attributeOf(name, '', 'localSheetId');
         const sheet = local === undefined ? undefined : read.get(Number(local));
         if (local !== undefined && sheet === undefined) this.unread++;
-        else this.element('workbook', parsed, name, sheet === undefined ? {} : { sheet }, ids);
+        else if (local !== undefined || !this.claimed(parsed, name, claim))
+          this.element('workbook', parsed, name, sheet === undefined ? {} : { sheet }, ids);
       }
     }
   }

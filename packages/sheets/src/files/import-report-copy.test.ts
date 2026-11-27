@@ -33,6 +33,10 @@ describe('the import report’s copy', () => {
         { k: 'formula_unread', count: 1, names: ['Data!B2'] },
         '1 formula LiveDoc cannot read keeps only its last value: Data!B2',
       ],
+      [
+        { k: 'function_unread', count: 2, names: ['SUM', 'MAX'] },
+        '2 named functions LiveDoc cannot read are kept for Excel: SUM and MAX',
+      ],
       [{ k: 'formula_unwritten', count: 2, names: [] }, '2 formulas are written as values only'],
       [{ k: 'text_cut', count: 1, names: ['Data'] }, '1 cell’s text is cut to 50,000 characters'],
       [{ k: 'text_cut', count: 4, names: ['Data'] }, '4 cells’ text is cut to 50,000 characters'],

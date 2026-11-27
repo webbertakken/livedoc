@@ -36,6 +36,7 @@ import { XlsxStyles } from './xlsx-styles';
 import { xlsxFormatRulesXml } from './xlsx-format-rules';
 import { xlsxValidationsXml } from './xlsx-validation';
 import { xlsxThemeXml } from './xlsx-theme';
+import { xlsxFunctionNames } from './file-functions';
 import { themeOf } from '../themes/spreadsheet-theme';
 import type {
   FileCell,
@@ -294,6 +295,7 @@ function workbookXml(
   sheetsOf: readonly { name: string; hidden: boolean }[],
   ids: readonly string[],
   kept: XlsxKeptWriter,
+  functions: ReturnType<typeof xlsxFunctionNames>,
 ): string {
   const sheets = sheetsOf.map(
     ({ name, hidden }, i) =>
@@ -310,7 +312,7 @@ function workbookXml(
   return [
     XML_DECLARATION,
     `<workbook xmlns="${SPREADSHEETML_NS}" xmlns:r="${OFFICE_RELATIONSHIPS_NS}"${kept.rootAttributes('workbook', OWN_NS)}>`,
-    ...kept.workbookChildren(own, kept.rootBindings('workbook', OWN_NS)),
+    ...kept.workbookChildren(own, kept.rootBindings('workbook', OWN_NS), functions),
     '</workbook>',
     '',
   ].join('\n');
@@ -348,6 +350,8 @@ export function writeXlsx(file: WorkbookFile, title: string): FileWritten<Uint8A
       data: encode(written.xml),
     };
   });
+  // The named functions as named LAMBDAs (standard-mapping.md "Named functions in the file").
+  const functions = xlsxFunctionNames(file.functions, renamed, losses);
   const names = file.sheets.map((s) => ({
     name: renamed.get(s.name) ?? s.name,
     hidden: s.hidden === true,
@@ -375,7 +379,7 @@ export function writeXlsx(file: WorkbookFile, title: string): FileWritten<Uint8A
     {
       name: 'xl/workbook.xml',
       contentType: OOXML_CONTENT_TYPES.spreadsheet,
-      data: encode(workbookXml(names, sheetIds, kept)),
+      data: encode(workbookXml(names, sheetIds, kept, functions)),
     },
     ...sheetParts,
     xmlPart('xl/styles.xml', OOXML_CONTENT_TYPES.spreadsheetStyles, styles.xml()),
@@ -421,6 +425,8 @@ export function writeXlsx(file: WorkbookFile, title: string): FileWritten<Uint8A
     ...drawn.relationships,
     ...keptParts.relationships,
   ]);
+  // A kept workbook name a named function took is dropped, and counted (D325).
+  if (kept.namesDropped > 0) losses.push({ k: 'kept_dropped', count: kept.namesDropped });
   return { data: writeOoxmlPackage([...parts, ...keptParts.parts], relationships), losses };
 }
 
