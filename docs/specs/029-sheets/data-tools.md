@@ -119,6 +119,8 @@ display style (Chip, Arrow, Plain Text) with option colours. Dropdowns and tick 
     copied to another spreadsheet does (D184).
   - A Participant or Viewer reads the list; with none, "No named functions."; an Editor's empty list says "No named
     functions yet."
+  - Excel files carry them as named `LAMBDA`s both ways; an OpenDocument file holds none, which converting and
+    downloading say first ([Named functions in the file](standard-mapping.md#named-functions-in-the-file)).
 
 ## Protected ranges
 
