@@ -16059,6 +16059,48 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
     ],
     "type": "object"
   },
+  "SheetImage": {
+    "additionalProperties": false,
+    "properties": {
+      "alt": {
+        "type": "string"
+      },
+      "at": {
+        "$ref": "#/components/schemas/CellAnchor"
+      },
+      "height": {
+        "type": "number"
+      },
+      "id": {
+        "type": "string"
+      },
+      "imageId": {
+        "type": "string"
+      },
+      "kind": {
+        "const": "image",
+        "type": "string"
+      },
+      "naturalHeight": {
+        "type": "number"
+      },
+      "naturalWidth": {
+        "type": "number"
+      },
+      "width": {
+        "type": "number"
+      }
+    },
+    "required": [
+      "id",
+      "kind",
+      "at",
+      "width",
+      "height",
+      "imageId"
+    ],
+    "type": "object"
+  },
   "SheetJson": {
     "additionalProperties": false,
     "properties": {
@@ -16358,6 +16400,9 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
       },
       {
         "$ref": "#/components/schemas/SheetPivot"
+      },
+      {
+        "$ref": "#/components/schemas/SheetImage"
       }
     ]
   },

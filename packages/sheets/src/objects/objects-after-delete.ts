@@ -1,7 +1,8 @@
 // A sheet's objects after rows or columns are deleted (docs/specs/029-sheets/charts.md "The model"; pivot tables:
 // pivot-tables.md "The model", sheet-pivot.ts): a chart's range
 // shrinks to what is left of it (none left: no data), its picked columns and series looks lose the gone columns, and
-// an anchor on a gone row or column moves to the one that takes its place (the next, else the one before).
+// an anchor on a gone row or column moves to the one that takes its place (the next, else the one before), a chart's
+// and an image's alike.
 import type { SheetLayout } from '../sheet';
 import { shrinkRange } from '../store-layout';
 import type { CellAnchor, SheetChart, SheetObject } from './sheet-objects';
@@ -58,6 +59,7 @@ export function objectsAfterDelete(
 ): SheetObject[] | undefined {
   const objects = before.objects!.flatMap((x): SheetObject[] => {
     if (x.kind === 'chart') return [chartAfter(x, before, goneRows, goneCols)];
+    if (x.kind === 'image') return [{ ...x, at: anchorAfter(x.at, before, goneRows, goneCols) }];
     const pivot = pivotAfterDelete(x, before, goneRows, goneCols);
     return pivot ? [pivot] : [];
   });

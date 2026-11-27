@@ -43,10 +43,11 @@ export function imageRefAddStatements(
 
 // ---------- Readers ---------------------------------------------------
 
-// Every image the document places, on any of its tabs: the set its outbox pushes to D1.
+// Every image the document places, on any of its tabs (their bodies' and their sheets', `placed_images`): the set its
+// outbox pushes to D1.
 export async function documentImageIds(env: DocumentEnv, documentId: string): Promise<string[]> {
   const { results } = await env.DOCUMENT_DB.prepare(
-    `SELECT DISTINCT r.image_id FROM document_tabs dt JOIN image_refs r ON r.tab_id = dt.tab_id
+    `SELECT DISTINCT r.image_id FROM document_tabs dt JOIN placed_images r ON r.tab_id = dt.tab_id
       WHERE dt.document_id = ? ORDER BY r.image_id`,
   )
     .bind(documentId)
@@ -65,7 +66,7 @@ export async function documentPlacesImage(
 ): Promise<boolean> {
   const row = await env.DOCUMENT_DB.prepare(
     `SELECT 1 AS present FROM document_tabs dt
-       JOIN image_refs r ON r.tab_id = dt.tab_id AND r.image_id = ?1
+       JOIN placed_images r ON r.tab_id = dt.tab_id AND r.image_id = ?1
       WHERE dt.document_id = ?2${
         onlyTabId === null
           ? ''

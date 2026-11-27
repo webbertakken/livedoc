@@ -1,6 +1,6 @@
 # Inserted objects
 
-**Status: specified.** Nothing is built.
+**Status: specified.** Insert › Checkbox and Insert › Dropdown are built (as data validation); the rest is specified.
 
 What the Insert menu puts into a [spreadsheet](spreadsheet.md) besides cells, charts and pivot tables (those have
 their own pages: [Charts](charts.md), [Pivot tables](pivot-tables.md)). Its rows of the
@@ -8,13 +8,57 @@ their own pages: [Charts](charts.md), [Pivot tables](pivot-tables.md)). Its rows
 
 ## Images
 
-- **Insert Image › In Cell**: the image fills the cell, kept in proportion, moving and sorting with it; `IMAGE()` does
-  the same from an address (S4; [Imports from the web](imports.md#image)).
-- **Insert Image › Over Cells**: a floating image anchored at a cell's corner with an offset, moved and resized by an
-  Editor; its menu: Edit (crop, replace), Alt Text, Place Image in Selected Cell, Delete.
+### Images over cells
+
+An image floats over the cells as a chart does, one of its sheet's objects ([Sheet store](sheet-store.md#in-a-spreadsheet),
+"Objects"), set whole by its id or removed, one undo step a change (default, D623).
+
+- **The model**: its place (a [cell anchor](charts.md#the-model): the cell its top-left corner is in, by row and column
+  ids, and the px into it), its width and height (px at 100%, 16 to 4,000 each), the gallery image it shows
+  ([Images](../009-elements/images.md), an `imageId`), the picture's natural width and height when known, and its alt
+  text (up to 1,000 characters). It counts toward the sheet's 100 objects with its charts and pivot tables.
+- **Insert Image › Insert Image over Cells**, an Editor's, opens the editor's image picker (Upload, Gallery, Search,
+  [Image picker modal](../009-elements/images.md#image-picker-modal)); the picked picture lands with its top-left at
+  the active cell's, at its natural size scaled down, kept in proportion, to fit 600 by 400 px, and is selected. Where
+  image storage is not set up the item is dimmed, its hint "Image uploads aren't enabled on this deployment".
+- **Selected** by a click: an outline with eight handles. Dragged, it moves, its anchor landing on the cell under its
+  new top-left; a corner handle resizes it in proportion (an edge handle stretches it); Delete or Backspace removes
+  it; Escape returns the keys to the grid. Moving and resizing are one undo step each, as a chart's are.
+- **Its menu** (the ⋮ button on the selected image, and a right-click on it): **Alt Text** (a dialog: Title and
+  Description as Google's; LiveDoc keeps one text, the description, its title folded in), **Replace Image** (the
+  picker; the new picture keeps the box's width, its height following its proportion), **Delete**. Google's Edit
+  Image (crop, recolour) and Assign Script are left out (crop: later; scripts: C3); **Place Image in Selected Cell**
+  joins when [images in a cell](#images-in-a-cell) are built.
+- **Drawn** from the image's bytes (`/api/images/<id>?d=<document>`), at the grid's zoom, under frozen panes as a
+  chart is; a picture that cannot be drawn shows the editor's broken-image state sized to the box
+  ([Images](../009-elements/images.md), "Placeholder rendering").
+- **Rows and columns**: it follows its anchor cell when rows and columns are inserted, deleted, moved, hidden or
+  resized, as a chart does; deleting its anchor cell's row or column moves it to the nearest remaining one, as a
+  chart's anchor does.
+- **Where its bytes live**: in the gallery of whoever uploaded it, never in the sheet. A sheet's images are references
+  of its document ([Images](../009-elements/images.md#reference-index), "A sheet's references"), served to everyone the
+  document is shared with under the [placement grant](../009-elements/images.md#placement-grants) rule.
+- **In the file** ([Standard mapping](standard-mapping.md), "Images"): written as the format's picture over cells, its
+  bytes in the package (ODF `draw:frame` › `draw:image` in `Pictures/`, its anchor cell and offset; XLSX a
+  `xdr:pic` in the sheet's drawing, its bytes in `xl/media`, a one-cell anchor), its alt text as the description;
+  read back as an image over cells, its bytes stored in the gallery of whoever opens the file through the
+  [Import image pipeline](../020-import-export/import-image-pipeline.md) (a picture past the caps stays kept in the
+  file and is named by the read).
+- **Agents**: `change_sheet` `image {imageId, at, width, height, alt, replace}` places one of the caller's gallery
+  pictures (`list_images`), refused for an id the gallery lacks as the MCP refuses it on a canvas
+  (`image_not_found`); `clear_images {id}`; `read_sheet` and the outline list them with their ids, places, sizes and
+  alt text; the image view of a spreadsheet tab draws them.
+
+### Images in a cell
+
+- **Insert Image › Insert Image in Cell**: the image fills the cell, kept in proportion, moving and sorting with it;
+  `IMAGE()` does the same from an address (S4; [Imports from the web](imports.md#image)).
+- Both formats keep it (ODF a `draw:frame` anchored to the cell; XLSX in-cell images as rich values).
+
+### Images, both
+
 - Upload, a link, or the gallery of the person's images ([Images](../009-elements/images.md)); camera and Drive are
   left out (Google's services, C3).
-- Both formats keep both kinds (ODF `draw:image`; XLSX pictures, in-cell images as rich values).
 
 ## Drawings
 
@@ -58,15 +102,20 @@ its title linked to the file, and LiveDoc keeps the link in both formats (XLSX's
 
 ## Accessibility
 
-- Every image and drawing carries alt text (asked for on insert, editable); a timeline is navigable by its cards
+- Every image and drawing carries alt text (editable through Alt Text; an image without it is announced as "Image"); a timeline is navigable by its cards
   with the arrow keys, each announced with its title and dates.
 
 ## Errors and limits
 
 - An image up to 50 MB and 25 million pixels (Google's limit, assumed); larger is refused ("This image is too large").
-- Up to 1,000 floating objects a sheet.
+- Up to 100 objects a sheet (images, charts and pivot tables together, the objects' cap).
 
 ## Telemetry
 
 `Spreadsheet · Inserted · <Kind>` (`ImageInCell`, `ImageOverCells`, `Drawing`, `Link`, `Checkbox`, `Dropdown`,
 `Emoji`, `Timeline`).
+
+## Defaults
+
+- **D623** An image over cells is one of its sheet's objects, placed at the active cell at its natural size scaled to
+  fit 600 by 400 px, moved and resized as a chart is, its bytes in the uploader's gallery (default).
