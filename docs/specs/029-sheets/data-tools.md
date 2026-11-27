@@ -350,7 +350,8 @@ sheet's, seen by everyone, kept by row and column ids as a named range is.
 - Copies: a duplicated sheet's or copied sheet's tables are renamed to the next free names, as Google's: each its own
   name, an underscore and the smallest number from 2 that frees it in the workbook (`Sales_2`, `Sales_3`, D451);
   formulas in the copy reading its tables read the copy's; a table's banding goes with it; Clear Sheet leaves the
-  tables, their cells cleared.
+  tables, their cells cleared. A sheet carried in (a file opened, a sheet copied to another spreadsheet) keeps each
+  table's name while it is free there, numbered as a copy's only when taken.
 - Pasted tables: an Editor's plain paste (Paste, Ctrl+V; never Paste Special) of copied cells holding a table's header
   row makes a new table where they land, as Google's paste does (D454): the table's copied columns, from its header
   row to the last copied row of it, with their types, dropdown options and banding colours, its total row when its

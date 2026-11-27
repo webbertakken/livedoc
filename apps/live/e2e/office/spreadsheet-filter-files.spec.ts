@@ -197,8 +197,13 @@ test('two tables and the sheet each filter their own rows, and keep them through
   await page.keyboard.press('Escape');
 
   // The Excel file, saved again by LibreOffice in its own format, opens with the same rows filtered.
-  const download = await officeMenuItem(page, ['File', 'Download', 'Microsoft Excel (.xlsx)']);
-  const [file] = await Promise.all([page.waitForEvent('download'), download.click()]);
+  await (await officeMenuItem(page, ['File', 'Download', 'Microsoft Excel (.xlsx)'])).click();
+  const ask = page.getByRole('dialog', { name: 'Download as Excel?' });
+  await expect(ask).toContainText('Everything in this spreadsheet fits the Excel format.');
+  const [file] = await Promise.all([
+    page.waitForEvent('download'),
+    ask.getByRole('button', { name: 'Download' }).click(),
+  ]);
   const dir = mkdtempSync(join(tmpdir(), 'spreadsheet-table-filters-'));
   const xlsx = join(dir, 'Tables.xlsx');
   await file.saveAs(xlsx);

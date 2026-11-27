@@ -111,7 +111,8 @@ export function tablesForCopy(
   return tables.map((t) => {
     const base = t.name.trim();
     const free = (name: string) => named.every((l) => tableNameProblem(name, l) === null);
-    let name = '';
+    // A name free where it lands is kept (a file's sheet carried into a new workbook); a taken one numbered.
+    let name = base;
     for (let n = 2; !free(name); n++) {
       const digits = String(n);
       name = `${base.slice(0, TABLE_NAME_MAX - digits.length - 1)}_${digits}`;
