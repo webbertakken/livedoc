@@ -192,6 +192,9 @@ export type UserPreferences = {
   notifyMentions?: boolean;
   // "Someone fills in one of my forms" (docs/specs/030-forms/forms.md "Hearing about responses").
   notifyFormResponses?: boolean;
+  // "Comments and edits in text documents", as each one's Notification settings choose
+  // (docs/specs/034-text-documents/review.md "Notifications").
+  notifyTextDocuments?: boolean;
   // "Show my profile picture" (docs/specs/014-identity/profile-picture.md §4): whether signed-in
   // collaborators see this account's picture. Missing = SHOW_PROFILE_PICTURE_DEFAULT. The owner
   // always sees their own picture whatever this says.

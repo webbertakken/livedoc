@@ -27,6 +27,7 @@ describe('getNotificationPrefs (docs/specs/014-identity/profile-and-email-notifi
       notifyActionAssigned: true,
       notifyMentions: true,
       notifyFormResponses: true,
+      notifyTextDocuments: true,
     });
   });
 
@@ -41,6 +42,7 @@ describe('getNotificationPrefs (docs/specs/014-identity/profile-and-email-notifi
       notifyActionAssigned: true,
       notifyMentions: true,
       notifyFormResponses: true,
+      notifyTextDocuments: true,
     });
   });
 
@@ -58,6 +60,7 @@ describe('getNotificationPrefs (docs/specs/014-identity/profile-and-email-notifi
       notifyActionAssigned: true,
       notifyMentions: true,
       notifyFormResponses: true,
+      notifyTextDocuments: true,
     });
   });
 
@@ -72,12 +75,18 @@ describe('getNotificationPrefs (docs/specs/014-identity/profile-and-email-notifi
       notifyActionAssigned: true,
       notifyMentions: true,
       notifyFormResponses: true,
+      notifyTextDocuments: true,
     });
   });
 
   it('reads an explicit form responses opt-out (docs/specs/030-forms/forms.md)', async () => {
     const prefs = await getNotificationPrefs(envWithPrefsRow('{"notifyFormResponses":false}'), 'u');
     expect(prefs.notifyFormResponses).toBe(false);
+  });
+
+  it('reads the text documents switch off (docs/specs/034-text-documents/review.md)', async () => {
+    const prefs = await getNotificationPrefs(envWithPrefsRow('{"notifyTextDocuments":false}'), 'u');
+    expect(prefs.notifyTextDocuments).toBe(false);
   });
 
   it('reads an explicit mention opt-out (docs/specs/012-collaboration/comment-mentions.md)', async () => {

@@ -120,6 +120,13 @@ export const MENTION_EMAILS = email(
   'A teammate was emailed because someone @-mentioned them in a comment.',
 );
 
+// docs/specs/034-text-documents/review.md "Notifications".
+export const TEXT_DOCUMENT_COMMENT_EMAILS = email(
+  'TextDocumentComments',
+  'Text Document Comment Emails',
+  'Someone was emailed the new comments of a text document, as its Notification settings ask. At most one per document in a 15-minute window.',
+);
+
 // docs/specs/030-forms/forms.md "Hearing about responses".
 export const FORM_RESPONSE_EMAILS = email(
   'FormResponse',
@@ -180,6 +187,7 @@ export const EMAIL_KIND_METRICS: readonly Metric[] = [
   COMMENT_EMAILS,
   ACTION_EMAILS,
   MENTION_EMAILS,
+  TEXT_DOCUMENT_COMMENT_EMAILS,
   FORM_RESPONSE_EMAILS,
   FORM_SUSPENDED_EMAILS,
   TOKEN_EXPIRING_EMAILS,

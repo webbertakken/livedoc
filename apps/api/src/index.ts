@@ -10,11 +10,13 @@ import { getAccountSession } from './auth/session-token';
 import { requireAccount } from './auth/account-gate';
 import { handleAuth } from './routes/auth';
 import { handlePreviewOutbox } from './routes/preview-outbox';
+import { handleNoticeLink } from './routes/notice-link-routes';
 import { deleteExpiredIdentityRows, deleteOldOutboxMail } from './db/identity';
 import { runLifecycleSweep } from './email/lifecycle';
 import { runTokenExpirySweep } from './email/token-expiry';
 import { runTeamInviteSweep } from './email/team-invite-reminders';
 import { NOTIFY_EMAIL_DEDUPE_MS } from './email/notifications';
+import { deleteOldNoticeSends } from './db/text-document-notice-people';
 import { runTimelineExpirySweep } from './timeline';
 import { runImageRetention } from './image-refs/retention';
 import {
@@ -333,9 +335,12 @@ async function routeApiRequest(
   // An invite email's Decline link (docs/specs/013-workspace/teams.md "Declining from the email"): open, so
   // limited per network, reads and declines on one key, apart from everyone's document writes.
   const isInviteDecline = segments[1] === 'teams' && segments[2] === 'invite-decline';
-  if (isInviteDecline && env.TEAM_INVITE_RATE_LIMITER) {
+  // A text document email's signed settings link (docs/specs/034-text-documents/review.md "Notifications") is the
+  // same kind of open door, limited on the same limiter under a key of its own.
+  const isNoticeLink = segments[1] === 'notification-links';
+  if ((isInviteDecline || isNoticeLink) && env.TEAM_INVITE_RATE_LIMITER) {
     const ok = await env.TEAM_INVITE_RATE_LIMITER.limit({
-      key: `invite-decline:${clientNetwork(clientIp(request))}`,
+      key: `${isNoticeLink ? 'notice-link' : 'invite-decline'}:${clientNetwork(clientIp(request))}`,
     });
     if (!ok.success) return rateLimited();
   }
@@ -344,7 +349,8 @@ async function routeApiRequest(
     url.pathname !== '/api/events' &&
     !isRoomTicketMint &&
     !isFormRequest &&
-    !isInviteDecline
+    !isInviteDecline &&
+    !isNoticeLink
   ) {
     // A token request rate-limits on the TOKEN id (docs/specs/015-api/public-api-and-tokens.md §3.5), so a
     // runaway integration is throttled independently of the owner's
@@ -453,6 +459,8 @@ async function routeApiRequest(
       return await handleShapeLibraries(ctx);
     case 'teams':
       return await handleTeams(ctx);
+    case 'notification-links':
+      return segments.length === 3 ? await handleNoticeLink(ctx, segments[2]!) : notFound();
     case 'tokens':
       return await handleTokens(ctx);
     case 'oauth':
@@ -585,6 +593,16 @@ const worker = {
         now - NOTIFY_EMAIL_DEDUPE_MS,
         deleteOldNotifyEmailClaims,
       );
+      // docs/specs/034-text-documents/review.md "Notifications": a text document email past its hour counts against
+      // nothing.
+      scheduleSweep(
+        ctx,
+        env,
+        'text_document_notice_sends',
+        'rows',
+        now - HOUR_MS,
+        deleteOldNoticeSends,
+      );
       // docs/specs/014-identity/transactional-email.md: send any due onboarding emails (welcome catch-up + week 1 / 2).
       // No-op when RESEND_API_KEY is unset.
       ctx.waitUntil(
@@ -714,6 +732,9 @@ const OUTBOX_RETENTION_MS = 86_400_000;
 
 // A day in ms: how long a bug report window is kept (docs/specs/016-platform/bug-reports.md).
 const DAY_MS = 86_400_000;
+
+// An hour in ms: how long a text document email counts against its recipient's cap (TEXT_DOCUMENT_NOTICE_EMAILS_PER_HOUR).
+const HOUR_MS = 3_600_000;
 
 // 60 days in ms. The /telemetry dashboard's longest window is
 // "Last 30 days", so anything past 60 days is dead storage (twice

@@ -272,6 +272,16 @@ export const TEXT_DOCUMENT_VERSION_RESTORED = chart(
   { types: ['TextDocumentVersionRestored'], rising: 'neutral' },
 );
 
+// A text document's notification setting saved (docs/specs/034-text-documents/review.md "Notifications"): the two
+// choices as one type, never who or which document.
+export const TEXT_DOCUMENT_NOTICES_CHOSEN = chart(
+  'Document',
+  'Changed',
+  'Notification Settings Chosen',
+  'Someone saved a text document’s Tools > Notification settings: which comments and edits it emails them about.',
+  { typeIn: (t) => t?.startsWith('TextDocumentNotices') ?? false, rising: 'neutral' },
+);
+
 export const OFFLINE_MODE: MetricStack = {
   stack: true,
   title: 'Offline Mode',
@@ -364,6 +374,7 @@ export const DOCUMENT_ACTIONS: MetricStack = {
     TEXT_DOCUMENT_VERSION_HISTORY_OPENED,
     TEXT_DOCUMENT_VERSION_NAMED,
     TEXT_DOCUMENT_VERSION_RESTORED,
+    TEXT_DOCUMENT_NOTICES_CHOSEN,
     NEW_DOCUMENT_BACKED_OUT,
   ],
   headline: [DOCUMENTS_CREATED, DOCUMENTS_RENAMED, DOCUMENTS_DELETED, DOCUMENTS_DUPLICATED],

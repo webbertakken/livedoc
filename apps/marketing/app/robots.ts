@@ -38,6 +38,7 @@ export default function robots(): MetadataRoute.Robots {
         '/explorer/',
         '/new',
         '/join',
+        '/notification-settings',
         '/oauth/',
         '/sign-in',
         '/get-started',

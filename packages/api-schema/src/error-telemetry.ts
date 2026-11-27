@@ -130,6 +130,8 @@ export const API_ROUTE_RESOURCES: ReadonlySet<string> = new Set([
   'custom-stamps',
   'shape-libraries',
   'teams',
+  // A text document email's settings link (docs/specs/034-text-documents/review.md "Notifications").
+  'notification-links',
   'tokens',
   'oauth',
   'account',

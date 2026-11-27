@@ -272,6 +272,18 @@ export const EXACT: Readonly<Record<string, string>> = {
     'An Editor named a version of a text document, in its version history or from File > Version history > Name current version.',
   'Document|Changed|TextDocumentVersionRestored':
     'An Editor restored a text document to one of its versions from the version history.',
+  'Document|Changed|TextDocumentNoticesAllAddedOrRemoved':
+    'Someone set a text document to email them about every new comment and added or removed content, in Tools > Notification settings.',
+  'Document|Changed|TextDocumentNoticesAllNone':
+    'Someone set a text document to email them about every new comment and no edits, in Tools > Notification settings.',
+  'Document|Changed|TextDocumentNoticesForYouAddedOrRemoved':
+    'Someone set a text document to email them about comments for them and added or removed content, in Tools > Notification settings.',
+  'Document|Changed|TextDocumentNoticesForYouNone':
+    'Someone set a text document to email them about comments for them and no edits, in Tools > Notification settings.',
+  'Document|Changed|TextDocumentNoticesNoneAddedOrRemoved':
+    'Someone set a text document to email them about no comments and added or removed content, in Tools > Notification settings.',
+  'Document|Changed|TextDocumentNoticesNoneNone':
+    'Someone set a text document to email them about no comments and no edits, in Tools > Notification settings.',
   'Document|Deleted|': 'A document was deleted.',
   'Document|Duplicated|': 'A document was duplicated into a new one.',
   'Document|Duplicated|Copy': 'A document was duplicated into a new one.',
@@ -2121,6 +2133,10 @@ export const EXACT: Readonly<Record<string, string>> = {
     'Someone turned off the email they get when somebody fills in one of their forms.',
   'UI|Toggled|NotifyFormResponsesOn':
     'Someone turned back on the email they get when somebody fills in one of their forms.',
+  'UI|Toggled|NotifyTextDocumentsOff':
+    'Someone turned off every email about comments and changes in text documents, in Settings > Notifications.',
+  'UI|Toggled|NotifyTextDocumentsOn':
+    'Someone turned back on the emails about comments and changes in text documents, in Settings > Notifications.',
   'UI|Toggled|NotifyMentionsOff':
     'Someone turned off the email that arrives when a teammate @-mentions them in a comment, in Settings > Notifications.',
   'UI|Toggled|NotifyMentionsOn':
@@ -2828,6 +2844,8 @@ export const BY_ACTION: Readonly<Record<string, string>> = {
   'Comment|Deleted': 'A comment was removed from a thread.',
   'Comment|Opened': 'Someone opened the comment popover on an element.',
   'Comment|Mentioned': 'A comment was sent that @-mentioned at least one teammate.',
+  'Comment|Notified':
+    'A text document emailed someone its new comments, as their Notification settings ask. The type says whether it held one comment, two to five, or six or more; it never says who or which document.',
   'Comment|Resolved': 'A comment thread was marked resolved.',
   'Comment|Unresolved': 'A resolved comment thread was reopened.',
   'Document|Changed':

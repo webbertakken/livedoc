@@ -50,6 +50,9 @@ export type RoomLiveTabHooks = {
     ready: (place: { documentId: string; tabId: string }) => Promise<void>;
     relay: (place: { documentId: string; tabId: string }, update: Uint8Array) => Promise<unknown>;
   };
+  // A text document's notification window (docs/specs/034-text-documents/review.md "Notifications"): told before each
+  // update is stored, on the write queue, so it notes what the tab held before the window's first. Never throws.
+  notices?: { ready: (place: { documentId: string; tabId: string }) => Promise<void> };
 };
 
 export type LiveTabSender = {
@@ -299,6 +302,7 @@ export class RoomLiveTabs {
       const started = Date.now();
       const place = { documentId, tabId: frame.tabId };
       await this.hooks.viewers?.ready(place);
+      await this.hooks.notices?.ready(place);
       const log = await appendLiveTabUpdate(env, kind, frame.tabId, update);
       await indexPlacedImages(env, kind, frame.tabId, update);
       const forViewers = await this.forViewers(place, update);
@@ -397,6 +401,7 @@ export class RoomLiveTabs {
     const started = Date.now();
     const place = { documentId, tabId };
     await this.hooks.viewers?.ready(place);
+    await this.hooks.notices?.ready(place);
     const folded = update.byteLength > kind.sizes.chunkBytes;
     if (folded) await compactLiveTab(env, kind, tabId, update);
     else {

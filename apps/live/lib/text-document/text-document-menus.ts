@@ -415,7 +415,8 @@ export function textDocumentMenus(format: TextDocumentFormat): OfficeCatalogue {
       item('compare-documents', 'Compare documents', 'view', { status: 'built' }),
       item('line-numbers', 'Line numbers', 'edit', { checkable: 'checkbox', status: 'built' }),
       SEPARATOR,
-      item('notification-settings', 'Notification settings', 'participate'),
+      // review.md "Notifications": a signed-in Editor's or Participant's, where email is configured.
+      item('notification-settings', 'Notification settings', 'participate', { status: 'built' }),
       item('preferences', 'Preferences', 'edit', {
         keywords: ['autocorrect', 'substitutions'],
         status: 'built',

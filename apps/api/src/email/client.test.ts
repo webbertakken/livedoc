@@ -79,6 +79,31 @@ describe('sendEmail', () => {
     });
   });
 
+  it('names where to unsubscribe, one-click (RFC 8058) where the email has a door for it', async () => {
+    const f = vi.fn().mockResolvedValue(new Response('{}', { status: 200 }));
+    vi.stubGlobal('fetch', f);
+    const email = { kind: 'Welcome', to: 'a@b.com', subject: 's', html: 'h' } as const;
+    await sendEmail(withKey, { ...email, unsubscribeUrl: 'https://x/settings' });
+    await sendEmail(withKey, {
+      ...email,
+      unsubscribeUrl: 'https://x/settings',
+      oneClickUrl: 'https://x/api/off',
+    });
+    await sendEmail(withKey, email);
+    const headers = f.mock.calls.map(
+      (call) =>
+        (JSON.parse((call[1] as RequestInit).body as string) as { headers?: unknown }).headers,
+    );
+    expect(headers).toEqual([
+      { 'List-Unsubscribe': '<https://x/settings>' },
+      {
+        'List-Unsubscribe': '<https://x/api/off>',
+        'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+      },
+      undefined,
+    ]);
+  });
+
   it('honours an EMAIL_FROM override', async () => {
     const f = vi.fn().mockResolvedValue(new Response('{}', { status: 200 }));
     vi.stubGlobal('fetch', f);

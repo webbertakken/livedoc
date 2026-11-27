@@ -53,6 +53,7 @@ import {
   RoomTextDocumentVersions,
   type VersionWrite,
 } from '../text-documents/room-text-document-versions';
+import { RoomTextDocumentNotices } from '../text-documents/room-text-document-notices';
 import {
   applyTextDocumentVersionWrite,
   type TextDocumentVersionWriteRequest,
@@ -242,6 +243,8 @@ export class DocumentRoom extends DurableObject<Env | undefined> {
   private readonly liveTabs: ReadonlyMap<string, RoomLiveTabs>;
   // The text document tabs' versions (live-editing-and-storage.md "Versions"); none in a room without storage.
   private readonly textDocumentVersions: RoomTextDocumentVersions | null;
+  // Their notification windows (review.md "Notifications"); none in a room without storage.
+  private readonly textDocumentNotices: RoomTextDocumentNotices | null;
   // The text document tabs' Viewer copies (live-editing-and-storage.md "A Viewer's copy"); none without storage.
   private readonly viewerCopies: RoomViewerCopies | null;
   // What Viewers receive in place of each sequenced op (room-viewer-ops.ts), and which sockets are a Viewer's.
@@ -284,6 +287,15 @@ export class DocumentRoom extends DurableObject<Env | undefined> {
         })
       : null;
     const versions = this.textDocumentVersions;
+    this.textDocumentNotices = roomEnv
+      ? new RoomTextDocumentNotices({
+          env: roomEnv,
+          kv: () => this.state.storage.kv,
+          documentId: () => this.content.boundId,
+          storedUpdates: (tabId) => storedUpdates(roomEnv, TEXT_DOCUMENT_LIVE_TAB, tabId),
+        })
+      : null;
+    const notices = this.textDocumentNotices;
     this.viewerCopies = roomEnv
       ? new RoomViewerCopies({
           env: roomEnv,
@@ -310,6 +322,17 @@ export class DocumentRoom extends DurableObject<Env | undefined> {
           // Who wrote what, for a text document's versions.
           ...(versions && kind === TEXT_DOCUMENT_LIVE_TAB
             ? { stored: (place, update, author) => versions.stored(place, update, author) }
+            : {}),
+          // A text document's notification window, opened before an update is stored.
+          ...(notices && kind === TEXT_DOCUMENT_LIVE_TAB
+            ? {
+                notices: {
+                  ready: async (place: { documentId: string; tabId: string }) => {
+                    await notices.ready(place);
+                    this.armAlarm();
+                  },
+                },
+              }
             : {}),
           // What a Viewer receives of a text document.
           ...(viewers && kind === TEXT_DOCUMENT_LIVE_TAB
@@ -1243,6 +1266,7 @@ export class DocumentRoom extends DurableObject<Env | undefined> {
       this.baton.deadline(),
       this.agents.nextExpiry() ?? undefined,
       this.content.deadline() ?? undefined,
+      this.textDocumentNotices?.deadline() ?? undefined,
     ].filter((d): d is number => d !== undefined);
     const at = deadlines.length === 0 ? null : Math.min(...deadlines);
     if (at === this.armedAt) return;
@@ -1269,6 +1293,7 @@ export class DocumentRoom extends DurableObject<Env | undefined> {
         if (expired.length > 0) this.broadcastPresence();
       });
       await alarmPart(id, 'baton', () => this.baton.alarm());
+      await alarmPart(id, 'notices', () => this.textDocumentNotices?.alarm(Date.now()));
       await this.content.alarm(Date.now());
     } finally {
       this.armAlarm();

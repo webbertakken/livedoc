@@ -102,6 +102,7 @@ type EmailKey =
   | 'notifyActionAssigned'
   | 'notifyMentions'
   | 'notifyFormResponses'
+  | 'notifyTextDocuments'
   | 'notifyTips'
   | 'notifyMilestones';
 
@@ -1786,6 +1787,13 @@ export const SETTINGS_CATEGORIES: SettingsCategorySpec[] = [
         label: 'Someone Fills In My Form',
         description:
           'Someone responds to a form in a document you own (at most one email every 15 minutes per form).',
+      }),
+      emailSwitch('notifyTextDocuments', {
+        event: { category: 'UI', on: 'NotifyTextDocumentsOn', off: 'NotifyTextDocumentsOff' },
+        keywords: 'email text document comment edit change notification batch',
+        label: 'Comments and Edits in Text Documents',
+        description:
+          'Emails about comments and changes in text documents, as each document’s Notification settings choose.',
       }),
       emailSwitch('notifyActionAssigned', {
         event: { category: 'UI', on: 'NotifyActionAssignedOn', off: 'NotifyActionAssignedOff' },

@@ -723,6 +723,7 @@ export * from './drag-preview';
 export * from './article-caret';
 export * from './text-document-caret';
 export * from './text-document-versions';
+export * from './text-document-notices';
 export * from './pdf-document';
 export * from './pdf-presence';
 export * from './pdf-draft';

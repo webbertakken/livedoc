@@ -315,6 +315,16 @@ export const COMMENTS_MENTIONED: Metric = {
   blurb: 'A comment was sent that @-mentioned at least one teammate.',
 };
 
+// docs/specs/034-text-documents/review.md "Notifications": a text document email, by its count of comments.
+export const COMMENTS_NOTIFIED: Metric = {
+  category: 'Comment',
+  action: 'Notified',
+  allTypes: true,
+  title: 'Comment Emails, by Size',
+  blurb:
+    'A text document emailed someone its new comments: one, two to five, or six or more in one email.',
+};
+
 export const TEAMS_CREATED: Metric = {
   category: 'Team',
   action: 'Created',
@@ -553,6 +563,7 @@ export const DISCUSSION: MetricStack = {
     COMMENT_POPOVERS_OPENED,
     COMMENTS_RESOLVED,
     COMMENTS_MENTIONED,
+    COMMENTS_NOTIFIED,
     COMMENTS_REOPENED,
     COMMENTS_DELETED,
   ],

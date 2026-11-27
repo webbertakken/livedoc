@@ -19,6 +19,9 @@ import {
   ALL_CTA_SOURCES,
   ALL_TIMING_TYPES,
   LEVEL_TELEMETRY_TYPE,
+  NOTICE_COMMENT_CHOICES,
+  NOTICE_EDIT_CHOICES,
+  noticeSettingType,
   PLACEMENT_DEFAULT_KEYS,
   SHEET_CHANGE_KINDS,
   pascalToken,
@@ -442,6 +445,10 @@ export const COMPUTED_EMITTERS: Record<string, ComputedValues> = {
   'apps/api/src/routes/share.ts Document·Joined': { values: Object.values(LEVEL_TELEMETRY_TYPE) },
   // The api worker.
   'apps/api/src/email/client.ts Email·Sent': { values: EMAIL_KINDS },
+  // A text document email's count of comments (docs/specs/034-text-documents/review.md "Notifications").
+  'apps/api/src/text-documents/text-document-notice-send.ts Comment·Notified': {
+    values: ['One', 'TwoToFive', 'SixPlus'],
+  },
   'apps/api/src/email/client.ts Error·Api': {
     values: ['Http500.SendEmail', 'Http429.SendEmail'],
     open: 'Http<status>.SendEmail, any status Resend answers',
@@ -503,6 +510,22 @@ export const COMPUTED_EMITTERS: Record<string, ComputedValues> = {
   'apps/live/components/text-document/useTextDocumentPictures.tsx Element·Added': {
     values: ['Upload', 'Gallery', 'Search', 'Paste', 'Drop'].map(
       (from) => `TextDocumentImage${from}`,
+    ),
+  },
+  // A text document's notification setting saved (docs/specs/034-text-documents/review.md "Notifications").
+  'apps/live/components/text-document/useTextDocumentNotifications.tsx Document·Changed': {
+    values: NOTICE_COMMENT_CHOICES.flatMap((comments) =>
+      NOTICE_EDIT_CHOICES.map(
+        (edits) => `TextDocumentNotices${noticeSettingType({ comments, edits })}`,
+      ),
+    ),
+  },
+  // The same choice, made through an email's settings link.
+  'apps/live/components/notifications/NoticeLinkSettings.tsx Document·Changed': {
+    values: NOTICE_COMMENT_CHOICES.flatMap((comments) =>
+      NOTICE_EDIT_CHOICES.map(
+        (edits) => `TextDocumentNotices${noticeSettingType({ comments, edits })}`,
+      ),
     ),
   },
   // A person's view of a PDF document (docs/specs/035-pdf-documents/reading-surface.md "Telemetry"): the page display,
