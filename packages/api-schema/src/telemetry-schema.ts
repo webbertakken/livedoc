@@ -615,6 +615,9 @@ export const SHEET_CHANGE_KINDS = [
   'HideSheet',
   'ShowSheet',
   'CopySheet',
+  // Data clean-up and Randomise Range (docs/specs/029-sheets/data-tools.md "Clean-up, split, randomise, stats").
+  'Cleanup',
+  'Randomise',
 ] as const;
 export type SheetChangeKind = (typeof SHEET_CHANGE_KINDS)[number];
 

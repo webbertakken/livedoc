@@ -1372,11 +1372,20 @@ export const SPREADSHEET_REPLACED = chart(
   { types: ['Replace'] },
 );
 
+// docs/specs/029-sheets/data-tools.md "Clean-up, split, randomise, stats": an Editor cleaned up or shuffled.
+export const SPREADSHEET_CLEANED = chart(
+  'Spreadsheet',
+  'Changed',
+  'Spreadsheet Data Clean-up',
+  'An editor removed duplicates, trimmed whitespace, applied a clean-up suggestion or randomised a range.',
+  { types: ['Cleanup', 'Randomise'] },
+);
+
 export const SPREADSHEETS: MetricStack = {
   stack: true,
   title: 'Spreadsheets',
   blurb:
-    'Spreadsheet documents on the open standards: made, opened from files, downloaded, converted, themed, imports allowed, charts added, named functions, Replace All.',
+    'Spreadsheet documents on the open standards: made, opened from files, downloaded, converted, themed, imports allowed, charts added, named functions, Replace All, data clean-up.',
   members: [
     SPREADSHEETS_CREATED,
     SPREADSHEETS_IMPORTED,
@@ -1387,6 +1396,7 @@ export const SPREADSHEETS: MetricStack = {
     SPREADSHEET_CHARTS_ADDED,
     SPREADSHEET_NAMED_FUNCTIONS,
     SPREADSHEET_REPLACED,
+    SPREADSHEET_CLEANED,
   ],
 };
 

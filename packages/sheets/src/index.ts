@@ -71,6 +71,7 @@ export * from './tables/table-store';
 export * from './tables/table-commands';
 export * from './tables/table-column-commands';
 export * from './tables/table-paste';
+export * from './cleanup';
 export * from './named-functions';
 export * from './named-function-refs';
 export * from './named-function-import';

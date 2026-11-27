@@ -40,6 +40,7 @@ import { useGridMenuBindings } from './useGridMenuBindings';
 import { useMergeDialog } from './useMergeDialog';
 import { useNumberFormatDialogs } from './useNumberFormatDialogs';
 import { useSortRangeDialog } from './useSortRangeDialog';
+import { useCleanUpTools } from './useCleanUpTools';
 import { SheetFindBar } from '@/components/sheets/SheetFindBar';
 import { FindReplaceDialog } from './FindReplaceDialog';
 import { useFindReplace } from './find-replace-state';
@@ -63,6 +64,8 @@ export function SpreadsheetSheetParts({ bridge }: { bridge: SheetsBridge }) {
   const mergeDialog = useMergeDialog(actions);
   const angleDialog = useCustomAngleDialog(actions);
   const sortDialog = useSortRangeDialog(actions);
+  const cleanUp = useCleanUpTools();
+  const cleanUpActions = cleanUp.actions;
   const findReplace = useFindReplace();
   const panels = useOfficePanels({
     kind: 'Spreadsheet',
@@ -141,11 +144,12 @@ export function SpreadsheetSheetParts({ bridge }: { bridge: SheetsBridge }) {
           canShape: c.canShape,
         },
       ),
+      ...cleanUpActions,
       'table-column-menu': { run: () => columnMenu.current?.() },
       // Insert › Chart and the toolbar's (charts.md "Inserting"): an Editor's.
       ...(canInsertChart ? { 'insert-chart': { run: insertChart } } : {}),
     }),
-    [panelActions, actions, canInsertChart, insertChart, reveal, c.canShape],
+    [panelActions, actions, canInsertChart, insertChart, reveal, c.canShape, cleanUpActions],
   );
   const office = useGridMenuBindings(
     actions,
@@ -218,6 +222,7 @@ export function SpreadsheetSheetParts({ bridge }: { bridge: SheetsBridge }) {
       {angleDialog.dialog}
       {mergeDialog.dialog}
       {sortDialog.dialog}
+      {cleanUp.dialog}
       {findReplace?.open ? <FindReplaceDialog state={findReplace} /> : null}
       <SheetBarSummary />
     </div>

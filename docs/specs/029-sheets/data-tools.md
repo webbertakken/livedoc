@@ -3,8 +3,8 @@
 **Status: partly built.** Sort Sheet, Sort Range with its Advanced Range Sorting Options, Create a Filter, Filter by Colour,
 every condition of Filter by Condition, and data validation (the Data Validation Rules panel, Insert › Checkbox,
 Insert › Dropdown, every criterion, kept in both file formats) and the Named Ranges panel are built; tables are built
-as the sheet's model, its writes and growth, and table references in formulas, without their menus and panel yet; the
-rest is specified.
+as the sheet's model, its writes and growth, and table references in formulas, without their menus and panel yet;
+Remove Duplicates, Trim Whitespace and Randomise Range are built; the rest is specified.
 
 Sorting, filtering, validation, names, protection, tables and clean-up in a [spreadsheet](spreadsheet.md), as
 Google Sheets' Data menu does. Its rows of the [parity matrix](parity-matrix.md) name this page.
@@ -278,13 +278,94 @@ sheet's, seen by everyone, kept by row and column ids as a named range is.
 
 ## Clean-up, split, randomise, stats
 
-- **Clean-up Suggestions** panel: duplicates, extra spaces, inconsistent formats it finds, each with **Apply**.
-- **Remove Duplicates**: columns to compare, "Data has header row"; then "N duplicate rows found and removed".
-- **Trim Whitespace**: "N cells trimmed".
-- **Split Text to Columns**: splits the selection by a detected separator, with a chip to choose Comma, Semicolon,
-  Period, Space, Custom.
-- **Randomise Range**: shuffles the rows of a range.
-- **Column Stats** panel: a column's counts, sum, average, distribution chart and frequent values.
+Data › Data Clean-up, Data › Split Text to Columns, Data › Randomise Range and Data › Column Stats, as Google's
+(measured with the Sheets API, `plans/assets/0020/research/google-cleanup-probe.ts`, 2026-11-27, D460). Each works on
+the selection's last range (the active range), one change and one undo step; a range under a protection that does not
+admit the caller is refused whole with the protection's own words, as a sort is (D347).
+
+### Remove Duplicates
+
+- **Data › Data Clean-up › Remove Duplicates** opens a dialog titled **Remove Duplicates**: `Selected range: A1:C10`,
+  **Data has header row** (unticked at first, as Google's), **Columns to analyse**
+  with **Select All** and one tick box a column, `Column A` or, with a header row, `Column A - Name`; **Cancel** and
+  **Remove Duplicates** (dimmed while no column is ticked).
+- One cell selected: the range is the filled block around it, as Create a Filter's.
+- Rows compare by the ticked columns' values, as Google's: text case aside (`A` is `a`), a number by its value
+  whether typed or worked out (`1`, `=0+1`), spaces counting (`a ` is not `a`), an empty cell equal to an empty cell,
+  so blank rows are duplicates of each other; the first row of each set is kept.
+- The kept rows move up inside the range in their order and the rows left at its foot are cleared (values, formulas
+  and formats); cells beside the range never move. A formula moving up is shifted with its row, as Sort Range's.
+- Then the dialog says `3 duplicate rows found and removed. 7 unique rows remain.` (singular `1 duplicate row`, none
+  `No duplicate rows found.`) with **OK**.
+- A merge across the range's rows refuses, as Sort Range does.
+
+### Trim Whitespace
+
+- **Data › Data Clean-up › Trim Whitespace** trims every cell of the range that holds typed text, as Google's: spaces
+  at either end go, runs of spaces inside become one, other Unicode spaces at the ends go too (an em space), a
+  no-break space, a tab and a line break inside are kept, a formula is left as it is, and text stays text (`' 7 `
+  becomes the text `7`, never the number).
+- A toast says `3 cells trimmed` (`1 cell trimmed`, none `No whitespace to trim`) (D461).
+
+### Split Text to Columns
+
+- **Data › Split Text to Columns** splits one column's cells into the columns to their right, at once, by the
+  separator found (Detect Automatically), and shows a **Separator** chip under the range's last cell: **Detect
+  Automatically**, **Comma**, **Semicolon**, **Period**, **Space**, **Custom**; choosing one splits the original text
+  again, the earlier split undone first, in the one undo step. Custom opens a text field (`Custom separator`) that
+  splits as it is typed. The chip goes when the selection leaves the range, Escape is pressed or the sheet changes.
+- More than one column refuses with Google's words: `You cannot split data that spans more than one column.`
+- Detect Automatically splits at commas only, as Google's (`a;b` stays whole); a space after a comma goes with it
+  (`a, b` becomes `a` and `b`) (D462). Space makes each space a separator (`a  b` gives `a`, an empty cell, `b`).
+- A piece in double quotes keeps its separators (`"x,y"` gives `x,y`); each piece is read as if typed (`1` a number,
+  `2024-01-05` a date); a formula is split by its value and replaced by the pieces; a number or a cell with no
+  separator stays as it is.
+- The block to the right is written as wide as the most pieces a row has: shorter rows clear the rest of it. When that
+  block holds anything, a dialog asks first: **Replace Data?**, `Splitting will replace data in the cells to the
+right.`, **Cancel** and **Replace** (D463). A block reaching past the sheet's last column adds the columns, as
+  typing past it does, up to the sheet's column limit, past which it refuses (`sheet_full`).
+
+### Randomise Range
+
+- **Data › Randomise Range** (and the cell and column context menus' View More Actions) shuffles the range's rows,
+  each row's cells moving together, inside the range only, as Google's: a one-column range shuffles that column.
+- A range of fewer than two rows changes nothing; a merge across its rows refuses, as Sort Range does.
+- The shuffle draws from `crypto.getRandomValues`, so every order is equally likely (D464).
+
+### Column Stats
+
+- **Data › Column Stats** (and the context menus) opens the **Column Stats** panel on the right for the active
+  column: a column switcher (`Column B`, with the header's text beside it; previous and next buttons), **Ignore
+  rows** (header rows left out, a stepper from 0, starting at the sheet's frozen rows), then:
+  - **Count** (cells filled), **Empty**, **Unique** (case aside, as Remove Duplicates compares);
+  - for a column holding numbers: **Sum**, **Average**, **Median**, **Min**, **Max**, over its numbers only;
+  - **Distribution**: a bar chart of the most frequent values (up to 10 bars, the rest as `Other`), or, for a column
+    mostly numbers, a histogram of 10 equal bins;
+  - **Frequency**: the values and their counts, most frequent first, up to 20, with **Most Frequent** and **Least
+    Frequent** to turn the order (D465).
+- It reads the column's values as shown (a formula's result), follows edits as they land, and changes nothing.
+- An empty column says `This column is empty.`
+
+### Clean-up Suggestions
+
+- **Data › Data Clean-up › Clean-up Suggestions** opens the **Clean-up Suggestions** panel on the right over the open
+  sheet's used range below its frozen rows: one card a kind found, each with what it found, **Apply** and a ×
+  to set it aside until the panel next opens (D466):
+  - `Remove duplicates`: `3 duplicate rows in A1:C10`; Apply runs Remove Duplicates over that range, every column
+    compared.
+  - `Trim whitespace`: `5 cells with extra spaces in A1:C10`; Apply runs Trim Whitespace over it.
+  - `Inconsistent number format`: `4 numbers stored as text in column B`, for a column whose filled cells are mostly
+    numbers yet some hold a number as text; Apply reads those as typed (they become numbers).
+- With nothing found: `No suggestions right now. Your data looks clean.` The panel follows edits as they land.
+- A link at the foot, **Column Stats**, opens that panel.
+
+### Limits and words
+
+- Each works within the sheet's limits ([Sheet store](sheet-store.md)); a write past them is refused with its named
+  rejection, nothing changed.
+- Remove Duplicates compares up to the sheet's cells (50,000), keyed by a string per row, linear in the range.
+- Column Stats and Clean-up Suggestions read at most the used range, recomputed once a change lands, never per
+  keystroke.
 
 ## Find and replace
 
@@ -325,8 +406,10 @@ sheet's, seen by everyone, kept by row and column ids as a named range is.
 - **Editor**: everything here.
 - **Participant**: sort and filter only through filter views of their own; writes values through validation; picks
   from dropdowns and ticks tick boxes; grows a table by a value typed below it (D448), changing nothing else of it;
-  finds; replaces values, never formulas, and never in cells a protection keeps from them (D458).
-- **Viewer**: finds, uses filter views of their own, reads named ranges and goes to them.
+  finds; replaces values, never formulas, and never in cells a protection keeps from them (D458); reads Column Stats.
+  Remove Duplicates, Trim Whitespace, Split Text to Columns, Randomise Range and Clean-up Suggestions are an
+  Editor's, as they move or rewrite cells and formulas (D467).
+- **Viewer**: finds, uses filter views of their own, reads named ranges and goes to them, reads Column Stats.
 
 ## Observability
 
@@ -341,6 +424,11 @@ sheet's, seen by everyone, kept by row and column ids as a named range is.
 - `[sheet] table refused` with the reason (`overlap`, `merge`, `banding`, `name`, `full`) when Convert to Table,
   Table Settings, a paste or a write cannot make or change a table (a paste's also with `paste`); `[sheet] table
 grew` with the rows it grew by.
+- `[sheet] duplicates removed` with the rows compared, the columns ticked, the rows removed and whether a header row
+  was kept; `[sheet] whitespace trimmed` with the cells trimmed; `[sheet] text split` with the separator, the rows
+  and the widest row's pieces; `[sheet] range randomised` with the rows; `[sheet] clean-up refused` with the tool
+  and the reason (`columns`, `merge`, `protected`, `full`); `[sheet] clean-up suggested` with each kind's count
+  when the panel opens.
 - `[workbook] find replaced` with the instances, cells and sheets changed, the protected cells left and whether a
   regular expression searched (never the text); `[workbook] find refused` with the reason (`regex`, `costly`).
 
@@ -353,7 +441,8 @@ grew` with the rows it grew by.
 ## Telemetry
 
 `Spreadsheet · Changed · <Kind>`: `Sort`, `Filter`, `FilterView`, `Slicer`, `Validation`, `NamedRange`,
-`NamedFunction`, `Table`, `Cleanup`, `Split`, `Randomise`, `Replace`; `Spreadsheet · Opened · Find`.
+`NamedFunction`, `Table`, `Cleanup` (Remove Duplicates, Trim Whitespace, a suggestion applied), `Split`,
+`Randomise`, `Replace`; `Spreadsheet · Opened · Find`.
 
 ## Defaults
 
@@ -428,6 +517,25 @@ The code cites each by its id.
 - **D459** Also Search Within Links: finds a cell by its link's address, a `HYPERLINK`'s worked out; the address
   changes only as formula text, under Also Search Within Formulas, as Google's `findReplace` changed
   `http://a.example` only with `includeFormulas` (the same probe; default for finding).
+- **D460** Data clean-up, split and randomise as Google's, measured with the Sheets API's `deleteDuplicates`,
+  `trimWhitespace`, `textToColumns` and `randomizeRange` (`plans/assets/0020/research/google-cleanup-probe.ts` and
+  its `.out.txt`, 2026-11-27): duplicates removed 5 of `a,1 A,1 a␠,1 a,'1 a,=0+1 blank blank a,1 b,2`, leaving
+  `a,1 a␠,1 blank b,2`, a cell beside the range unmoved; trim changed 4 of 8 cells, keeping a no-break space, a
+  tab, a line break inside and a formula; split refused two columns in Google's words, kept quotes, typed a date,
+  cleared a shorter row's cell; randomise moved rows whole inside the range.
+- **D461** Trim Whitespace's words: a toast, `3 cells trimmed`, `1 cell trimmed`, `No whitespace to trim`
+  (default; the API answers a count only).
+- **D462** Detect Automatically splits at commas only, a space after a comma going with it, as the probe gave
+  (`a, b` to `a`, `b`); Comma, Semicolon, Period and Custom keep a piece's spaces (default for those four).
+- **D463** Split Text to Columns asks before it writes over cells to the right (**Replace Data?**), as no change in
+  LiveDoc loses data unasked; the API writes over them (default).
+- **D464** Randomise Range draws from `crypto.getRandomValues` (Fisher-Yates), every order equally likely (default).
+- **D465** Column Stats' figures, chart and list sizes: up to 10 bars (the rest `Other`), 10 histogram bins, 20
+  frequent values, a column mostly numbers when more than half its filled cells are (default).
+- **D466** Clean-up Suggestions looks over the used range below the frozen rows, three kinds (duplicates, extra
+  spaces, numbers stored as text), a set-aside card staying aside until the panel opens again (default).
+- **D467** Who cleans up: an Editor; a Participant and a Viewer read Column Stats only, since each tool moves or
+  rewrites cells and formulas as a sort does (default).
 - **D302** A named function's limits: a name up to 254 characters (Google's), up to 20 placeholders, a definition up
   to 2,000 characters, a description up to 1,000, an argument's description and example up to 200 each (default).
 - **D345** A protection's bounds: up to 100 a sheet, 50 exceptions a protected sheet, a description up to 200

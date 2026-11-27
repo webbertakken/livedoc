@@ -5,13 +5,13 @@ import { makeAxisIds, type Rand } from './ids';
 import { idRangeOf, layoutIndex, posRangeOf } from './layout';
 import { depthsOf } from './outline';
 import type { GridSize } from './sheet-limits';
-import { cellKey, type FilterCondition, type Sheet } from './sheet';
+import type { FilterCondition, Sheet } from './sheet';
 import { sortedOrder, type SortKey } from './sort';
-import { shiftForCopy } from './formula/stored';
 import { scalarOf } from './formula/values';
-import type { CellChange, LayoutChange, SheetWrite } from './store';
+import type { LayoutChange, SheetWrite } from './store';
 import type { Workbook } from './engine/workbook';
 import { currentRegion, type Grid } from './selection';
+import { rearrangeRows } from './cleanup/range-rows';
 import {
   MERGE_SORT_REFUSAL,
   mergeMoveRefusal,
@@ -211,28 +211,7 @@ export function sortRange(
   if (sortSplitsMerge(sheet.layout, r1, range.r2, range.c1, range.c2))
     return { refused: MERGE_SORT_REFUSAL };
   const order = sortedOrder(count, (i, c) => scalarOf(wb.value(sheetId, r1 + i, c)), keys);
-  const ctx = wb.ctxFor(sheetId);
-  const cells: CellChange[] = [];
-  for (let k = 0; k < count; k++) {
-    const fromRow = r1 + order[k]!;
-    const toRow = r1 + k;
-    if (fromRow === toRow) continue;
-    for (let c = range.c1; c <= range.c2; c++) {
-      const src = sheet.cells.get(cellKey(sheet.layout.rows[fromRow]!, sheet.layout.cols[c]!));
-      const input = src?.input;
-      const i =
-        input && 'f' in input
-          ? { f: shiftForCopy(input.f, toRow - fromRow, 0, ctx) }
-          : (input ?? null);
-      cells.push({
-        r: sheet.layout.rows[toRow]!,
-        c: sheet.layout.cols[c]!,
-        i,
-        f: src?.format ?? null,
-      });
-    }
-  }
-  return cells.length ? { kind: 'cells', cells } : null;
+  return rearrangeRows(wb, sheetId, range, r1, order);
 }
 
 // Filter on (over the filled block around the selection, or the selection when it is more than one cell) or off.

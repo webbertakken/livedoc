@@ -444,14 +444,14 @@ const DATA_MENU = menu('data', 'Data', [
   built('protect-sheets-and-ranges', 'Protect Sheets and Ranges', 'view'),
   built('named-ranges', 'Named Ranges', 'view'),
   built('named-functions', 'Named Functions', 'view'),
-  item('randomise-range', 'Randomise Range', 'edit'),
+  built('randomise-range', 'Randomise Range', 'edit'),
   SEPARATOR,
   item('column-stats', 'Column Stats', 'view'),
   built('data-validation', 'Data Validation', 'edit'),
   submenu('data-clean-up', 'Data Clean-up', [
     item('clean-up-suggestions', 'Clean-up Suggestions', 'edit'),
-    item('remove-duplicates', 'Remove Duplicates', 'edit'),
-    item('trim-whitespace', 'Trim Whitespace', 'edit'),
+    built('remove-duplicates', 'Remove Duplicates', 'edit'),
+    built('trim-whitespace', 'Trim Whitespace', 'edit'),
   ]),
   item('split-text-to-columns', 'Split Text to Columns', 'edit'),
 ]);
