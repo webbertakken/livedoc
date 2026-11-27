@@ -135,6 +135,7 @@ import { useOfficePanels } from '@/lib/office/useOfficePanels';
 import { createTextDocumentChanges } from '@/lib/text-document/text-document-changes';
 import {
   COMMENTS_PANEL,
+  LIVE_EDITS_PANEL,
   IMAGE_OPTIONS_PANEL,
   OUTLINE_PANEL,
   TABLE_OF_CONTENTS_PANEL,
@@ -156,6 +157,7 @@ import {
 } from '@/lib/text-document/text-document-page-selection';
 import { useTextDocumentWordCount } from './useTextDocumentWordCount';
 import { useTextDocumentScreenReader } from './useTextDocumentScreenReader';
+import { useTextDocumentLiveEdits } from './useTextDocumentLiveEdits';
 import { useTextDocumentSpelling } from './useTextDocumentSpelling';
 import { useTextDocumentSpellingSource } from './useTextDocumentSpellingSource';
 import { useTextDocumentColumns } from './useTextDocumentColumns';
@@ -1235,6 +1237,11 @@ export function TextDocumentSurface({
     threads,
     ownerId,
   });
+  // Accessibility > Show live edits (tools.md "Accessibility settings"), read while its panel is open.
+  const liveEdits = useTextDocumentLiveEdits({
+    view: editorView,
+    open: panels.open.right === LIVE_EDITS_PANEL.id,
+  });
   const versionHistory = useTextDocumentVersionHistory({
     where: scope,
     local,
@@ -1470,6 +1477,7 @@ export function TextDocumentSurface({
         right={
           <TextDocumentRightPanel
             panels={panels}
+            liveEdits={liveEdits}
             lineNumbers={lineNumbers}
             watermark={watermark}
             tableProperties={{ ...tableProperties, unit: lengthUnit }}

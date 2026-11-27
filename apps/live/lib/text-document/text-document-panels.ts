@@ -68,6 +68,14 @@ export const TABLE_OF_CONTENTS_PANEL: OfficePanelSpec = {
   editorsOnly: true,
 };
 
+// Accessibility > Show live edits (tools.md "Accessibility settings"): anyone who reads the document.
+export const LIVE_EDITS_PANEL: OfficePanelSpec = {
+  id: 'live-edits',
+  title: 'Live edits',
+  side: 'right',
+  item: 'show-live-edits',
+};
+
 export const TEXT_DOCUMENT_PANELS: readonly OfficePanelSpec[] = [
   OUTLINE_PANEL,
   LINE_NUMBERS_PANEL,
@@ -76,4 +84,5 @@ export const TEXT_DOCUMENT_PANELS: readonly OfficePanelSpec[] = [
   IMAGE_OPTIONS_PANEL,
   TABLE_OF_CONTENTS_PANEL,
   COMMENTS_PANEL,
+  LIVE_EDITS_PANEL,
 ];
