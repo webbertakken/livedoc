@@ -1353,13 +1353,14 @@ export const SPREADSHEET_CHARTS_ADDED = chart(
   { types: ['Column', 'Bar', 'Line', 'Area', 'Scatter', 'Pie', 'Doughnut'] },
 );
 
-// docs/specs/029-sheets/pivot-tables.md "Telemetry": a pivot table Create Pivot Table placed.
+// docs/specs/029-sheets/pivot-tables.md "Telemetry": a pivot table Create Pivot Table placed, and a value's details
+// shown on a sheet of their own.
 export const SPREADSHEET_PIVOT_TABLES_ADDED = chart(
   'Spreadsheet',
   'Added',
   'Spreadsheet Pivot Tables Added',
-  'An editor made a pivot table with Insert › Pivot Table.',
-  { types: ['PivotTable'] },
+  "An editor made a pivot table with Insert › Pivot Table, or showed a value's details on a new sheet.",
+  { types: ['PivotTable', 'PivotDetails'] },
 );
 
 // docs/specs/029-sheets/data-tools.md "Named ranges and named functions": an Editor made, changed or removed a named

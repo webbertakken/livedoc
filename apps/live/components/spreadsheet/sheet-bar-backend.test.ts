@@ -9,6 +9,7 @@ import {
   apiMoveWorkbookSheet,
 } from '@/lib/api/workbook-sheets';
 import type { CreateOpts } from '@/components/sheets/sheet-store-client';
+import { sendFileParts } from '@/lib/spreadsheet/send-file-parts';
 import { cloudSheetBar, offlineSheetBar } from './sheet-bar-backend';
 
 vi.mock('@/lib/api/workbook-sheets', () => ({
@@ -16,9 +17,18 @@ vi.mock('@/lib/api/workbook-sheets', () => ({
   apiAddWorkbookSheet: vi.fn(async () => ({})),
   apiDeleteWorkbookSheet: vi.fn(async () => {}),
 }));
+vi.mock('@/lib/spreadsheet/send-file-parts', () => ({ sendFileParts: vi.fn(async () => {}) }));
 
 const scope = { documentId: 'd1', ownerId: 'o', shareCode: null };
 const entry = { tabId: 't2', sheetId: 'sheetTwo1', name: 'Sheet2', after: 't1' };
+// A pivot table value's details (pivot-tables.md "Details"): a sheet born with its cells.
+const seedLayout = emptyLayout(Math.random, 3, 2);
+const seed = {
+  id: 'ignored',
+  title: 'ignored',
+  layout: seedLayout,
+  cells: [{ r: seedLayout.rows[0]!, c: seedLayout.cols[0]!, i: { s: 'Region' } }],
+};
 
 describe('cloudSheetBar', () => {
   it('adds through the workbook route, first when it follows no tab', async () => {
@@ -39,6 +49,37 @@ describe('cloudSheetBar', () => {
       after: '',
       copyOf: 'sheetOne1',
     });
+  });
+
+  it('adds a seeded sheet with its cells, the rest sent as writes', async () => {
+    const bar = cloudSheetBar(scope, async () => {});
+    await bar.put({ ...entry, name: 'Details1', seed });
+    expect(apiAddWorkbookSheet).toHaveBeenLastCalledWith(scope, {
+      tabId: 't2',
+      sheetId: 'sheetTwo1',
+      after: 't1',
+      name: 'Details1',
+      seed: { layout: expect.objectContaining({ rows: seedLayout.rows }), cells: seed.cells },
+    });
+    expect(sendFileParts).toHaveBeenLastCalledWith(
+      { ...scope, tabId: null },
+      expect.objectContaining({ parts: [] }),
+      expect.any(Function),
+    );
+    vi.mocked(sendFileParts).mock.lastCall![2](1);
+    // First when it follows no tab; a redo puts the kept sheet back, its cells with it.
+    await bar.put({ ...entry, after: null, seed });
+    expect(vi.mocked(apiAddWorkbookSheet).mock.lastCall![1]).toMatchObject({ after: '' });
+    await bar.put({ ...entry, restore: true, seed });
+    expect(vi.mocked(apiAddWorkbookSheet).mock.lastCall![1]).not.toHaveProperty('seed');
+  });
+
+  it('takes a seeded sheet back out when a later part is refused', async () => {
+    const bar = cloudSheetBar(scope, async () => {});
+    vi.mocked(sendFileParts).mockRejectedValueOnce(new Error('workbook_full'));
+    vi.mocked(apiDeleteWorkbookSheet).mockRejectedValueOnce(new Error('offline'));
+    await expect(bar.put({ ...entry, seed })).rejects.toThrow('workbook_full');
+    expect(apiDeleteWorkbookSheet).toHaveBeenLastCalledWith(scope, 'sheetTwo1');
   });
 
   it('puts a kept sheet back under its own name, and deletes by the sheet', async () => {
@@ -93,6 +134,18 @@ describe('offlineSheetBar', () => {
     expect(create).toMatchObject({ id: 'sheetTwo1', tabId: 't2', title: 'Sheet2' });
     expect((create as { layout: { colWidth: number } }).layout.colWidth).toBe(100);
     expect(seed).toBeUndefined();
+  });
+
+  it('makes a seeded sheet with its layout and cells', async () => {
+    const o = offline();
+    await o.bar.put({ ...entry, name: 'Details1', seed });
+    expect(o.store.create.mock.calls[0]![0]).toEqual({
+      id: 'sheetTwo1',
+      tabId: 't2',
+      title: 'Details1',
+      layout: seedLayout,
+      cells: seed.cells,
+    });
   });
 
   it('copies a sheet it holds, seeded with its layout and cells', async () => {

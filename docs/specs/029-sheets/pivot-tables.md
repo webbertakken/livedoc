@@ -5,7 +5,8 @@ worked out from its source, calculated fields and formula filters too ([The outp
 of Google Sheets' answers in the grid ([In the grid](#in-the-grid)), `GETPIVOTDATA`, written to both formats and read
 back, other apps' read from their standard forms ([Standard mapping](standard-mapping.md#pivot-tables-in-the-file)),
 making and editing one in the grid ([Making one](#making-one), [Pivot Table Editor](#pivot-table-editor), [Working
-with one](#working-with-one)), and by agents ([Agents](#agents)); the rest specified.
+with one](#working-with-one)), a value's details on a sheet of their own for an Editor ([Details](#details)), and by
+agents ([Agents](#agents)); the rest specified.
 
 Pivot tables in a [spreadsheet](spreadsheet.md), as Google Sheets makes them. Research:
 [Charts and pivots](../../research/sheets-open-standard/charts-and-pivots.md). Evidence: twenty pivot tables Google
@@ -189,9 +190,26 @@ Region`): each of the first three columns holding text below the header as the r
   the output out, refuse the rest of its cells too (default, D612). Clearing them writes nothing and is not refused.
 - **Delete** (or Backspace) over a selection covering a pivot table's whole output removes the pivot table, one undo
   step, as Google Sheets does (default, D613).
-- A double-click on a value shows its source rows on a new sheet ("Details for …").
+- A double-click on a value shows the source rows it summarises on a sheet of their own ([Details](#details)).
 - The output refreshes when the source changes; a source grown past its range is read when the range was whole
   columns.
+
+## Details
+
+A value's source rows, shown on a sheet of their own, as Google Sheets shows them (default, D616):
+
+- **Showing them**: a double-click on a value of a landed output (an item's, a total's or the Grand Total's), or
+  **Show Details** in that cell's context menu, drawn only on such a cell. Any other cell of the output (a header, a
+  label, a value no source row reaches) keeps its double-click and shows none.
+- **The sheet**: added after the open sheet and opened, named `Details1` (the first number free: `Details2`, and so
+  on; Google Sheets' name for it). It holds the source's header row, then every source row the value summarises: the
+  rows every filter keeps whose items are the value's row and column items (a total's, every row of what it totals;
+  the Grand Total's, every row kept), in the source's order, across the source's columns.
+- **Its cells**: each the source cell's value as it reads now (a formula's answer, never its formula; an error as its
+  text, `#N/A`), with the source cell's formats; a blank cell stays blank. Nothing links it to the pivot table
+  afterwards: it is a sheet like any other.
+- **Undo**: the sheet and its cells are one step; Undo takes the sheet away.
+- **Refusals**: a sheet the workbook has no room for is refused as Add Sheet's is, with its words.
 
 ## Agents
 
@@ -218,7 +236,8 @@ An agent makes and reads a spreadsheet's pivot tables through `change_sheet` and
 
 ## Who may do what
 
-- **Editor** makes and changes pivot tables: Insert › Pivot Table, the editor, Edit, Delete.
+- **Editor** makes and changes pivot tables: Insert › Pivot Table, the editor, Edit, Delete; a value's details are a
+  sheet of the spreadsheet, saved as any sheet is.
 - **Participant** and **Viewer** read them and their details sheets (a Viewer's details are their own, not saved);
   they see no Edit button, and Insert › Pivot Table is not theirs (dimmed, as Insert › Chart).
 
@@ -238,7 +257,8 @@ An agent makes and reads a spreadsheet's pivot tables through `change_sheet` and
 ## Telemetry
 
 `Spreadsheet · Added · PivotTable` when Create places one; `Sheet · Changed · PivotTable` for each change in the editor
-and each pivot table removed, as a chart's changes are counted.
+and each pivot table removed, as a chart's changes are counted; `Spreadsheet · Added · PivotDetails` when a value's
+details are shown.
 
 ## Defaults
 
@@ -261,3 +281,5 @@ and each pivot table removed, as a chart's changes are counted.
 - **D614** Suggested pivots are a text column by a number column summed, up to three (default).
 - **D615** An agent's pivot table names its columns by header text or letter, lands a column clear right of its range
   on the same sheet (else at A1), and filters by the items as the source shows them (default).
+- **D616** A value's details are a new sheet named `Details1` (the first number free) after the open one, holding the
+  source's header and the rows the value summarises as values with their formats, one undo step (default).

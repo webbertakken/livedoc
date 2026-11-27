@@ -37,9 +37,11 @@ async function setup(opts: { otherTitles?: string[] } = {}) {
   };
   const onEdit = vi.fn();
   let clear: (what: 'inputs' | 'formats' | 'all') => void = () => {};
+  let showDetails: (r: number, c: number) => boolean = () => false;
   renderSheet(h, ({ c, actions }) => {
     clear = actions.clear;
     const p = useSpreadsheetPivots(c, bar, onEdit);
+    showDetails = p.showDetails;
     return (
       <SheetPivotsContext.Provider value={onEdit}>
         <button type="button" onClick={p.openCreate}>
@@ -50,7 +52,13 @@ async function setup(opts: { otherTitles?: string[] } = {}) {
       </SheetPivotsContext.Provider>
     );
   });
-  return { h, bar, onEdit, clear: (what: 'inputs' | 'formats' | 'all') => clear(what) };
+  return {
+    h,
+    bar,
+    onEdit,
+    clear: (what: 'inputs' | 'formats' | 'all') => clear(what),
+    showDetails: (r: number, c: number) => showDetails(r, c),
+  };
 }
 
 const dialog = () => screen.getByRole('dialog', { name: 'Create Pivot Table' });
@@ -183,6 +191,37 @@ describe('a pivot table in the grid', () => {
     act(() => h.select('E3'));
     fireEvent.click(screen.getByRole('button', { name: 'Edit pivot table' }));
     expect(onEdit).toHaveBeenCalledWith(pivot.id);
+  });
+
+  // pivot-tables.md "Details" (D616): the output at D1 reads Region / SUM of Units, East 5, West 3, Grand Total 8.
+  it('adds Details1 after the open sheet, holding the header and the rows the value summarises', async () => {
+    const { h, bar, showDetails } = await placed();
+    expect(h.value('E2')).toBe(5);
+    let shown = false;
+    act(() => {
+      shown = showDetails(1, 4);
+    });
+    expect(shown).toBe(true);
+    const [place, opts] = bar.add.mock.calls[0]! as unknown as [
+      string,
+      { name: string; seed: { cells: { i?: unknown }[] } },
+    ];
+    expect(place).toBe('afterOpen');
+    expect(opts.name).toBe('Details1');
+    expect(opts.seed.cells.map((x) => x.i)).toEqual([
+      { s: 'Region' },
+      { s: 'Units' },
+      { s: 'East' },
+      { n: 5 },
+    ]);
+    expect(track).toHaveBeenCalledWith('Spreadsheet', 'Added', 'PivotDetails');
+  });
+
+  it('shows none for a header or a cell outside the output', async () => {
+    const { bar, showDetails } = await placed();
+    expect(showDetails(0, 3)).toBe(false);
+    expect(showDetails(7, 7)).toBe(false);
+    expect(bar.add).not.toHaveBeenCalled();
   });
 });
 

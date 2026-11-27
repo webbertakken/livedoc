@@ -120,6 +120,21 @@ describe('adding a sheet', () => {
     expect(placed).toHaveBeenCalledWith({ tabId: 'new1', sheetId: 'sheetNew1' });
   });
 
+  // pivot-tables.md "Details" (D616): a sheet born with its cells; its redo puts the kept sheet back, cells and all.
+  it('adds a seeded sheet, and redoes it as the kept sheet', async () => {
+    const s = setup();
+    const seed = { id: 'd', title: 'Details1', layout: { rows: ['r'], cols: ['c'] }, cells: [] };
+    s.changes.add('afterOpen', { name: 'Details1', seed });
+    await settle();
+    expect(s.put.mock.calls[0]![0]).toMatchObject({ name: 'Details1', seed });
+    s.steps[0]!.undo();
+    await settle();
+    s.steps[0]!.redo();
+    await settle();
+    expect(s.put.mock.calls[1]![0]).toMatchObject({ restore: true });
+    expect(s.put.mock.calls[1]![0]).not.toHaveProperty('seed');
+  });
+
   it('undoes by taking the sheet out and redoes by putting it back with its ids', async () => {
     const s = setup();
     s.changes.add('end');

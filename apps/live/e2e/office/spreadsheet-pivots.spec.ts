@@ -5,7 +5,8 @@ import { officeMenuItem } from './office-menus';
 // A spreadsheet's pivot tables (plan 0020 Phase 11 box 2; docs/specs/029-sheets/pivot-tables.md "Making one", "Pivot
 // Table Editor", "Working with one"): Insert › Pivot Table makes one on a new sheet from the data round the active
 // cell, the editor adds a row group and a value and the output lands; typing into it is refused; Edit reopens the
-// editor; Delete over the whole output removes it and Undo brings it back.
+// editor; Delete over the whole output removes it and Undo brings it back; a double-click on a value shows its source
+// rows on a new sheet, Details1 ("Details", D616), which Undo takes away.
 
 const READY = '[data-spreadsheet-surface="ready"]';
 
@@ -18,6 +19,13 @@ async function select(page: Page, range: string) {
 // A cell as the grid names it to a screen reader: its address, then what it shows.
 const cell = (page: Page, name: string) =>
   page.getByRole('grid').getByRole('gridcell', { name, exact: true });
+
+// The middle of a cell as drawn: across from its column letter, level with its row number.
+async function cellCentre(page: Page, col: number, row: number) {
+  const letter = await page.locator(`[role="columnheader"][aria-colindex="${col}"]`).boundingBox();
+  const number = await page.locator(`[role="rowheader"][aria-rowindex="${row}"]`).boundingBox();
+  return { x: letter!.x + letter!.width / 2, y: number!.y + number!.height / 2 };
+}
 
 test('Insert › Pivot Table sums units by region on a new sheet, edited, refused, removed and undone', async ({
   page,
@@ -100,6 +108,23 @@ test('Insert › Pivot Table sums units by region on a new sheet, edited, refuse
   await expect(cell(page, 'B4 10')).toHaveCount(0);
   await page.keyboard.press('ControlOrMeta+z');
   await expect(cell(page, 'B4 10')).toHaveCount(1);
+
+  // A double-click on East's 7 shows East's two rows on Details1; Undo takes the sheet away.
+  const east = await cellCentre(page, 2, 2);
+  await page.mouse.dblclick(east.x, east.y);
+  const details = page.getByRole('tab', { name: /Details1/ });
+  await expect(details).toBeVisible();
+  await expect(cell(page, 'A1 Region')).toHaveCount(1);
+  await expect(cell(page, 'B2 5')).toHaveCount(1);
+  await expect(cell(page, 'A3 East')).toHaveCount(1);
+  await expect(cell(page, 'B3 2')).toHaveCount(1);
+  await expect(cell(page, 'A4 West')).toHaveCount(0);
+  await page.screenshot({
+    path: test.info().outputPath('pivot-details.png'),
+    animations: 'disabled',
+  });
+  await page.keyboard.press('ControlOrMeta+z');
+  await expect(details).toHaveCount(0);
 
   expectNoPageErrors(pageErrors);
 });

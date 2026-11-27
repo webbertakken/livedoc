@@ -23,9 +23,10 @@ const PASTE_SPECIAL = {
 };
 
 describe('SPREADSHEET_CONTEXT_MENUS', () => {
-  it("draws a cell's menu as Google's, Open Link heading it", () => {
+  it("draws a cell's menu as Google's, Open Link and Show Details heading it", () => {
     expect(words(SPREADSHEET_CONTEXT_MENUS.cell)).toEqual([
       'Open Link',
+      'Show Details',
       '|',
       'Cut',
       'Copy',
@@ -144,6 +145,11 @@ describe('SPREADSHEET_CONTEXT_MENUS', () => {
     expect(items.find((e) => e.id === 'open-link')).toMatchObject({
       contextual: true,
       level: 'view',
+    });
+    expect(items.find((e) => e.id === 'show-pivot-details')).toMatchObject({
+      label: 'Show Details',
+      contextual: true,
+      level: 'edit',
     });
     expect(items.find((e) => e.id === 'create-a-filter')).not.toHaveProperty('checkable');
   });

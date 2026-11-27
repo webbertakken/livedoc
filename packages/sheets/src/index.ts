@@ -143,7 +143,8 @@ export * from './migration/sheet-migration-plan';
 export * from './objects/sheet-objects';
 export * from './objects/sheet-pivot';
 export * from './pivot/pivot-spec';
-export { pivotOutput } from './pivot/pivot-output';
+export { pivotDetailRows, pivotOutput } from './pivot/pivot-output';
+export * from './pivot/pivot-details';
 export * from './pivot/pivot-edit';
 export {
   PIVOT_BLOCKED_BY,
