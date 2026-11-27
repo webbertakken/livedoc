@@ -187,14 +187,14 @@ describe('a Bubble chart with no header row', () => {
 describe('a Bubble chart with no sizes', () => {
   it('is written as a Scatter chart with its original, and read back as a Bubble chart (D290)', () => {
     const chart = chartOf(models(), 2);
-    const { chart: held, original } = nearestFileChart(chart);
+    const { chart: held, original } = nearestFileChart(chart, 'xlsx');
     expect(held.type).toBe('scatter');
     expect(original).toEqual({ type: 'bubble', sum: fileChartSum(held as FileChart) });
     const xml = xlsxChartXml('Models', chart);
     expect(xml).toContain('<c:scatterChart>');
     const read = readXlsxChartXml(xml, 'Models')!;
-    expect(chartRestored(placed(read, chart), read.original).type).toBe('bubble');
+    expect(chartRestored(placed(read, chart), read.original, 'xlsx').type).toBe('bubble');
     // Sized, it is a bubble chart of its own.
-    expect(nearestFileChart(chartOf(models(), 3)).original).toBeNull();
+    expect(nearestFileChart(chartOf(models(), 3), 'xlsx').original).toBeNull();
   });
 });

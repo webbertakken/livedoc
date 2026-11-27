@@ -71,7 +71,7 @@ export function xlsxChartParts(
     const chartRels: Relationship[] = charts.map((chart, n) => {
       const part = `chart${nextOf('charts', 'chart')}.xml`;
       // A type no format holds is written as the nearest, and named (D290).
-      if (nearestFileChart(chart).original)
+      if (nearestFileChart(chart, 'xlsx').original)
         losses.push({ k: 'chart_nearest_type', sheet: sheet.name });
       out.parts.push({
         name: `xl/charts/${part}`,

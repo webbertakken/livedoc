@@ -76,6 +76,10 @@ function seriesLook(chart: HeldFileChart, s: FileChartSeries): string {
     case 'line':
     case 'radar':
       return fill ? `<c:spPr><a:ln w="28575">${fill}</a:ln></c:spPr>` : '';
+    case 'candlestick':
+    case 'ohlc':
+      // No line joins a price series; an OHLC's open and close are dashes, its colour on its marker (D323).
+      return `<c:spPr><a:ln w="19050"><a:noFill/></a:ln></c:spPr><c:marker>${val('symbol', stockMarker(chart, s))}${fill ? `<c:spPr>${fill}</c:spPr>` : ''}</c:marker>`;
     case 'scatter':
       return s.line
         ? `<c:spPr><a:ln w="28575">${fill}</a:ln></c:spPr>`
@@ -85,6 +89,14 @@ function seriesLook(chart: HeldFileChart, s: FileChartSeries): string {
     default:
       return fill ? `<c:spPr>${fill}</c:spPr>` : '';
   }
+}
+
+// An OHLC chart's open and close series are dashes beside its high-low line; every other stock series none (D323).
+function stockMarker(chart: HeldFileChart, s: FileChartSeries): 'dash' | 'none' {
+  if (chart.type !== 'ohlc') return 'none';
+  const at = chart.series.findIndex((x) => x.values === s.values);
+  const four = chart.series.length === 4;
+  return (four && at === 0) || at === chart.series.length - 1 ? 'dash' : 'none';
 }
 
 function seriesXml(sheet: string, chart: HeldFileChart, s: FileChartSeries, i: number): string {
@@ -181,6 +193,18 @@ function groupXml(
     case 'bubble':
       // Flat bubbles sized by area at 100%, none for a size below zero (D321).
       return `<c:bubbleChart>${val('varyColors', 0)}${series}${labels}${val('bubbleScale', 100)}${val('showNegBubbles', 0)}${axisIds(ids)}</c:bubbleChart>`;
+    case 'candlestick':
+    case 'ohlc': {
+      // High-low lines in the price's colour; a Candlestick's bodies as up-down bars, a fall filled (D323).
+      const color = chart.series[0]?.color;
+      const ink = color ? `<a:solidFill>${rgb(color)}</a:solidFill>` : '';
+      const line = ink ? `<c:spPr><a:ln w="19050">${ink}</a:ln></c:spPr>` : '';
+      const bars =
+        chart.type === 'candlestick'
+          ? `<c:upDownBars>${val('gapWidth', 150)}<c:upBars>${ink ? `<c:spPr><a:noFill/><a:ln w="19050">${ink}</a:ln></c:spPr>` : ''}</c:upBars><c:downBars>${ink ? `<c:spPr>${ink}<a:ln w="19050">${ink}</a:ln></c:spPr>` : ''}</c:downBars></c:upDownBars>`
+          : '';
+      return `<c:stockChart>${series}${labels}<c:hiLowLines>${line}</c:hiLowLines>${bars}${axisIds(ids)}</c:stockChart>`;
+    }
     case 'pie':
       return `<c:pieChart>${val('varyColors', 1)}${series}${labels}${val('firstSliceAng', 0)}</c:pieChart>`;
     case 'doughnut':
@@ -233,7 +257,7 @@ function axesXml(chart: HeldFileChart): string {
  * nearest that does, its original in LiveDoc's extension (D290).
  */
 export function xlsxChartXml(sheet: string, own: FileChart): string {
-  const { chart, original } = nearestFileChart(own);
+  const { chart, original } = nearestFileChart(own, 'xlsx');
   const legend =
     chart.legend === 'none'
       ? ''

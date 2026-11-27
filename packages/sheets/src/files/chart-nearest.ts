@@ -34,6 +34,8 @@ const NEAREST_TYPE: Readonly<Record<SheetChartType, HeldChartType>> = {
   pie: 'pie',
   doughnut: 'doughnut',
   radar: 'radar',
+  candlestick: 'candlestick',
+  ohlc: 'ohlc',
   combo: 'combo',
 };
 const NEAREST_SERIES_TYPE: Readonly<Record<SheetComboSeriesType, HeldSeriesType>> = {
@@ -43,18 +45,37 @@ const NEAREST_SERIES_TYPE: Readonly<Record<SheetComboSeriesType, HeldSeriesType>
   'stepped-area': 'area',
 };
 
+/** The file format a chart is written to: its nearest type may differ between them (D323). */
+export type ChartFileForm = 'xlsx' | 'odf';
+
+// The type a file holds for `chart`: by type (NEAREST_TYPE), but a Bubble chart with no sizes is no format's bubble, a
+// scatter (D321); a stock chart holds three or four series, a Candlestick four; ODF's four-series OHLC (ticks) is drawn
+// by no suite, so it is written as a Candlestick (D323).
+function heldType(chart: FileChart, form: ChartFileForm): HeldChartType {
+  if (chart.type === 'bubble' && !chart.sizes) return 'scatter';
+  if (chart.type === 'candlestick' || chart.type === 'ohlc') {
+    const n = chart.series.length;
+    if (n < 3 || n > 4) return 'line';
+    if (n === 3) return 'ohlc';
+    if (form === 'odf') return 'candlestick';
+  }
+  return NEAREST_TYPE[chart.type];
+}
+
 /** A record's text past this is never read: thirteen series types and a sum fit many times over. */
 export const CHART_ORIGINAL_TEXT_MAX = 2_000;
 
 /** The chart a file holds for `chart`, and the original it keeps for LiveDoc when the two differ (else null). */
-export function nearestFileChart(chart: FileChart): {
+export function nearestFileChart(
+  chart: FileChart,
+  form: ChartFileForm,
+): {
   chart: HeldFileChart;
   original: ChartOriginal | null;
 } {
   const held: HeldFileChart = {
     ...chart,
-    // A Bubble chart with no sizes is no format's bubble: a scatter (D321).
-    type: chart.type === 'bubble' && !chart.sizes ? 'scatter' : NEAREST_TYPE[chart.type],
+    type: heldType(chart, form),
     series: chart.series.map(({ type, ...s }) =>
       type ? { ...s, type: NEAREST_SERIES_TYPE[type] } : s,
     ),
@@ -93,7 +114,11 @@ function parsed(text: string): unknown {
  * The chart a file's chart is read as: its original, when the record kept beside it parses, names a built type (and on
  * a Combo chart a series type for each series), and the chart still sums as it was written; else the chart as read.
  */
-export function chartRestored(read: FileChart, text: string | undefined): FileChart {
+export function chartRestored(
+  read: FileChart,
+  text: string | undefined,
+  form: ChartFileForm,
+): FileChart {
   if (text === undefined || text.length > CHART_ORIGINAL_TEXT_MAX) return read;
   const record = parsed(text) as Partial<Record<keyof ChartOriginal, unknown>> | null;
   if (!record || typeof record !== 'object' || !isType(record.type)) return read;
@@ -110,6 +135,6 @@ export function chartRestored(read: FileChart, text: string | undefined): FileCh
     series: read.series.map((s, i) => (series ? { ...s, type: series[i] } : s)),
   };
   // The original must be one this chart is the nearest type of.
-  const back = nearestFileChart(restored);
+  const back = nearestFileChart(restored, form);
   return back.original && fileChartSum(back.chart) === record.sum ? restored : read;
 }

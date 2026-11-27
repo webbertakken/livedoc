@@ -13,7 +13,7 @@ export function LineChartAxis({
   rightColor,
   textColor,
   fontFamily,
-}: Ink & { marks: LineMarks; rightColor: string }) {
+}: Ink & { marks: Pick<LineMarks, 'plot' | 'axis'>; rightColor: string }) {
   const { x, w } = marks.plot;
   return (
     <g aria-hidden="true">

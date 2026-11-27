@@ -129,7 +129,7 @@ const designFormat = z
 const chartType = z
   .enum(CHART_TYPES)
   .describe(
-    'pie and doughnut draw one series (the first value column); column, bar, line, area, stepped-area, radar and scatter draw every value column; stepped-area draws each value as a flat step across its category; radar draws each series as a closed line round spokes, one per category; bubble reads as scatter, its last value column the bubble sizes (a text first column names them); combo draws each as columns, a line, an area or a stepped area (seriesTypes).',
+    'pie and doughnut draw one series (the first value column); column, bar, line, area, stepped-area, radar and scatter draw every value column; stepped-area draws each value as a flat step across its category; radar draws each series as a closed line round spokes, one per category; bubble reads as scatter, its last value column the bubble sizes (a text first column names them); candlestick and ohlc read labels then open, high, low, close columns (or high, low, close); combo draws each as columns, a line, an area or a stepped area (seriesTypes).',
   );
 
 const chartPalette = z

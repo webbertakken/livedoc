@@ -109,7 +109,7 @@ async function readBack(data: Uint8Array | string, xlsx = false): Promise<Workbo
 describe('nearestFileChart', () => {
   it('writes a Stepped Area chart as an Area chart of the same stacking, keeping the original', () => {
     const chart = chartOf(charted({ stack: 'stacked' }));
-    const { chart: held, original } = nearestFileChart(chart);
+    const { chart: held, original } = nearestFileChart(chart, 'xlsx');
     expect(held.type).toBe('area');
     expect(held.stack).toBe('stacked');
     expect(original).toEqual({ type: 'stepped-area', sum: fileChartSum(held as FileChart) });
@@ -130,7 +130,7 @@ describe('nearestFileChart', () => {
         ],
       },
     });
-    const { chart: held, original } = nearestFileChart(chart);
+    const { chart: held, original } = nearestFileChart(chart, 'xlsx');
     expect(held.series.map((s) => s.type)).toEqual(['column', 'area']);
     expect(original).toEqual({
       type: 'combo',
@@ -141,30 +141,30 @@ describe('nearestFileChart', () => {
 
   it('keeps nothing for a type a file holds', () => {
     const chart = chartOf(charted({ type: 'area' }));
-    expect(nearestFileChart(chart)).toEqual({ chart, original: null });
+    expect(nearestFileChart(chart, 'xlsx')).toEqual({ chart, original: null });
     const combo = chartOf(charted({ type: 'combo' }));
-    expect(nearestFileChart(combo).original).toBeNull();
+    expect(nearestFileChart(combo, 'xlsx').original).toBeNull();
   });
 });
 
 describe('chartRestored', () => {
   const chart = chartOf(charted({}));
-  const { chart: held, original } = nearestFileChart(chart);
+  const { chart: held, original } = nearestFileChart(chart, 'xlsx');
   const read = held as FileChart;
   const text = chartOriginalText(original!);
 
   it('reads the original back while the chart sums as written', () => {
-    expect(chartRestored(read, text)).toEqual(chart);
+    expect(chartRestored(read, text, 'xlsx')).toEqual(chart);
   });
 
   it('passes over a record that is missing, too long, unreadable or not a record', () => {
     for (const bad of [undefined, 'x'.repeat(CHART_ORIGINAL_TEXT_MAX + 1), '{', 'null', '7', '[]'])
-      expect(chartRestored(read, bad)).toBe(read);
+      expect(chartRestored(read, bad, 'xlsx')).toBe(read);
   });
 
   it('passes over a record of an unknown type, or once the chart changed elsewhere', () => {
-    expect(chartRestored(read, JSON.stringify({ ...original, type: 'radar' }))).toBe(read);
-    expect(chartRestored({ ...read, title: 'Changed' }, text)).toEqual({
+    expect(chartRestored(read, JSON.stringify({ ...original, type: 'radar' }), 'xlsx')).toBe(read);
+    expect(chartRestored({ ...read, title: 'Changed' }, text, 'xlsx')).toEqual({
       ...read,
       title: 'Changed',
     });
@@ -172,11 +172,11 @@ describe('chartRestored', () => {
 
   it('passes over a record naming a type the chart is not the nearest of', () => {
     const line = JSON.stringify({ type: 'line', sum: fileChartSum(read) });
-    expect(chartRestored(read, line)).toBe(read);
+    expect(chartRestored(read, line, 'xlsx')).toBe(read);
     // A record naming the type the chart is restores nothing.
-    expect(chartRestored(read, JSON.stringify({ type: 'area', sum: fileChartSum(read) }))).toBe(
-      read,
-    );
+    expect(
+      chartRestored(read, JSON.stringify({ type: 'area', sum: fileChartSum(read) }), 'xlsx'),
+    ).toBe(read);
   });
 
   it('passes over a Combo record whose series types do not fit', () => {
@@ -187,11 +187,14 @@ describe('chartRestored', () => {
     };
     const sum = fileChartSum(combo);
     for (const series of [undefined, 'area', ['area'], ['area', 'pie']])
-      expect(chartRestored(combo, JSON.stringify({ type: 'combo', series, sum }))).toBe(combo);
+      expect(chartRestored(combo, JSON.stringify({ type: 'combo', series, sum }), 'xlsx')).toBe(
+        combo,
+      );
     expect(
       chartRestored(
         combo,
         JSON.stringify({ type: 'combo', series: ['stepped-area', 'area'], sum }),
+        'xlsx',
       ).series.map((s) => s.type),
     ).toEqual(['stepped-area', 'area']);
   });
@@ -226,7 +229,7 @@ describe('a Stepped Area chart in XLSX', () => {
       'xl/charts/chart1.xml',
     )!;
     expect(readXlsxChartXml(xml, 'Sales')!.original).toBe(
-      JSON.stringify(nearestFileChart(chartOf(charted({}))).original),
+      JSON.stringify(nearestFileChart(chartOf(charted({})), 'xlsx').original),
     );
     const none = xml.replace(/<c:extLst>.*<\/c:extLst>/, '');
     expect(readXlsxChartXml(none, 'Sales')).not.toHaveProperty('original');

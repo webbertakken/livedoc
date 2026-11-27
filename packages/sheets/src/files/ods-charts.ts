@@ -36,6 +36,8 @@ const CHART_CLASS: Record<HeldChartType, string> = {
   pie: 'chart:circle',
   doughnut: 'chart:ring',
   radar: 'chart:radar',
+  candlestick: 'chart:stock',
+  ohlc: 'chart:stock',
   // A Combo chart is a bar chart whose series name their own classes (D287).
   combo: 'chart:bar',
 };
@@ -112,6 +114,19 @@ function seriesStyle(chart: HeldFileChart, s: FileChartSeries, name: string): st
   return `<style:style style:name="${name}" style:family="chart">${chartProps.length ? `<style:chart-properties ${chartProps.join(' ')}/>` : ''}${graphic.length ? `<style:graphic-properties ${graphic.join(' ')}/>` : ''}</style:style>`;
 }
 
+/**
+ * The chart's series in the order its ODF chart reads them: a stock chart's opening, minimum, maximum and closing values
+ * (minimum, maximum, closing with three; ODF 1.3 Part 3 §19.15) from the open, high, low, close it holds (D323); any
+ * other chart's as they are.
+ */
+export function odfSeriesOrder(chart: { type: string; series: readonly unknown[] }): number[] {
+  const n = chart.series.length;
+  // A stock chart holds three or four series (D323).
+  if (chart.type === 'candlestick' || chart.type === 'ohlc')
+    return n === 4 ? [0, 2, 1, 3] : [1, 0, 2];
+  return Array.from({ length: n }, (_s, i) => i);
+}
+
 /** The name of the user-defined property a chart object's metadata keeps its original in (D290). */
 export const ODS_CHART_ORIGINAL = 'LiveDoc chart';
 
@@ -121,7 +136,7 @@ const originalMeta = (original: ChartOriginal) =>
 
 /** A package's chart object's `meta.xml`, for a chart written as its nearest type; none for another (D290). */
 export function odsChartMeta(chart: FileChart): string | null {
-  const { original } = nearestFileChart(chart);
+  const { original } = nearestFileChart(chart, 'odf');
   if (!original) return null;
   const ns = (['office', 'meta'] as const).map((p) => `xmlns:${p}="${ODF_NS[p]}"`).join(' ');
   return `<office:document-meta ${ns} office:version="${ODF_VERSION}">${originalMeta(original)}</office:document-meta>`;
@@ -136,7 +151,7 @@ export function odsChartContent(
   own: FileChart,
   root: 'document-content' | 'document',
 ): string {
-  const { chart, original } = nearestFileChart(own);
+  const { chart, original } = nearestFileChart(own, 'odf');
   const styles: string[] = [];
   const style = (xml: string | null, name: string) => {
     if (!xml) return '';
@@ -151,6 +166,8 @@ export function odsChartContent(
     ...(chart.stack === 'percent' ? ['chart:percentage="true"'] : []),
     // A smooth line (D285).
     ...(chart.smooth ? ['chart:interpolation="cubic-spline"'] : []),
+    // A Candlestick's open and close as bars (D323).
+    ...(chart.type === 'candlestick' ? ['chart:japanese-candle-stick="true"'] : []),
   ];
   const plotStyle = style(
     plotProps.length
@@ -171,7 +188,8 @@ export function odsChartContent(
         '<style:style style:name="hidden-axis" style:family="chart"><style:chart-properties chart:display-label="false"/><style:graphic-properties draw:stroke="none"/></style:style>',
         'hidden-axis',
       );
-  const series = chart.series.map((s, i) => {
+  const series = odfSeriesOrder(chart).map((i) => {
+    const s = chart.series[i]!;
     const own = style(seriesStyle(chart, s, `series${i + 1}`), `series${i + 1}`);
     const label = s.nameAt
       ? ` chart:label-cell-address="${escapeXmlAttribute(cellOf(sheet, s.nameAt.r, s.nameAt.c))}"`
@@ -270,7 +288,8 @@ export class OdsChartObjects {
     const objects = charts.map((chart) => {
       const own = this.keptDocument(sheet, chart);
       // A type no format holds is written as the nearest, and named (D290).
-      if (nearestFileChart(chart).original) this.losses.push({ k: 'chart_nearest_type', sheet });
+      if (nearestFileChart(chart, 'odf').original)
+        this.losses.push({ k: 'chart_nearest_type', sheet });
       if (this.flat)
         return {
           inline: own

@@ -280,6 +280,22 @@ function chartSheet(): FileSheet {
       series: [series(2, 'Index', { color: '#e8710a' })],
       sizes: { range: values(2), cached: rows.map((row) => row[2]) },
     },
+    // Candlestick and OHLC (D323): stock charts of four price series (the two columns, twice).
+    {
+      ...base(types.length + 14, 'candlestick'),
+      id: 'chart_candlestick',
+      series: [
+        series(1, 'Cost', { color: '#1a73e8' }),
+        series(2, 'Index'),
+        series(1, 'Cost'),
+        series(2, 'Index'),
+      ],
+    },
+    {
+      ...base(types.length + 15, 'ohlc'),
+      id: 'chart_ohlc',
+      series: [series(1, 'Cost'), series(2, 'Index'), series(1, 'Cost'), series(2, 'Index')],
+    },
   );
   return { ...sheet("Costs' sheet", cells, 140, 8), charts };
 }

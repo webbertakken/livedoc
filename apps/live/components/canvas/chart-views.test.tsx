@@ -210,6 +210,41 @@ describe('chart views', () => {
     expect(container.textContent).toContain('S, 4, 2, 1');
   });
 
+  it('draws candlesticks, a falling one filled, OHLC ticks, and reads a hovered mark (Candlestick and OHLC, D322)', () => {
+    const data = {
+      lineCategories: ['Mon', 'Tue', 'Wed'],
+      lineSeries: [
+        { name: 'Open', values: [20, 50, 45], color: '#aa3300' },
+        { name: 'High', values: [70, 66, null] },
+        { name: 'Low', values: [15, 25, 30] },
+        { name: 'Close', values: [50, 45, 62] },
+      ],
+    };
+    const { container } = render(
+      <LineChartView
+        element={el('line-chart', { chartVariant: 'candlestick', chartValues: true, ...data })}
+        textColor="#000"
+      />,
+    );
+    // Two candles (Wed misses its high): one hollow, one filled.
+    const bodies = container.querySelectorAll('rect[stroke="#aa3300"]');
+    expect(bodies).toHaveLength(2);
+    expect([...bodies].map((b) => b.getAttribute('fill'))).toEqual(['none', '#aa3300']);
+    const texts = [...container.querySelectorAll('text')].map((t) => t.textContent);
+    for (const t of ['Mon', '50', '45']) expect(texts).toContain(t);
+    expect(container.textContent).not.toContain('Open');
+    fireEvent.pointerEnter(container.querySelector('g[style*="pointer-events"]')!);
+    expect(container.textContent).toContain('Mon · Open 20, High 70, Low 15, Close 50');
+    const ohlc = render(
+      <LineChartView
+        element={el('line-chart', { chartVariant: 'ohlc', ...data })}
+        textColor="#000"
+      />,
+    );
+    expect(ohlc.container.querySelectorAll('rect[stroke="#aa3300"]')).toHaveLength(0);
+    expect(ohlc.container.querySelectorAll('path[stroke="#aa3300"]')).toHaveLength(2);
+  });
+
   it('draws a smooth line chart’s lines as curves (Smooth Line, D284)', () => {
     const { container } = render(
       <LineChartView element={el('line-chart', { chartSmooth: true })} textColor="#000" />,

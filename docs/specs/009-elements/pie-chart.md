@@ -98,7 +98,7 @@ ChartAxis`); a series on the right shows "(right)" after its name in the Data su
 
 ## Chart types
 
-A **chart type** is how a chart draws its data, named as Google Sheets names it. Eleven ship; each is a chart kind
+A **chart type** is how a chart draws its data, named as Google Sheets names it. Thirteen ship; each is a chart kind
 (the stored `shape`) and, for all but the first of its kind, a `chartVariant`:
 
 A chart is **named by its type** wherever the editor names an element: the selection badge says "Selected Column
@@ -115,6 +115,8 @@ Chart" and a screen reader hears "Column chart", as the palette's tile says, nev
 | Bubble       | `line-chart`   | `bubble`       | Scatter's points as circles, each sized by its value in the last series (below)               |
 | Stepped Area | `line-chart`   | `stepped-area` | Each series a flat step across each category's slot, filled to zero as Area's (below)         |
 | Radar        | `line-chart`   | `radar`        | Each series a closed line through its points on spokes, one spoke per category (below)        |
+| Candlestick  | `line-chart`   | `candlestick`  | Per category a wick from low to high and a body from open to close (below)                    |
+| OHLC         | `line-chart`   | `ohlc`         | Per category a line from low to high, the open a tick to its left, the close to its right     |
 | Combo        | `line-chart`   | `combo`        | Each series as columns, a line, an area or a stepped area over one set of categories (below)  |
 | Pie          | `pie-chart`    | (none)         | Wedges clockwise from twelve o'clock                                                          |
 | Doughnut     | `pie-chart`    | `doughnut`     | Pie's wedges with the middle open: a ring whose hole is 55% of its radius                     |
@@ -195,6 +197,24 @@ Chart" and a screen reader hears "Column chart", as the palette's tile says, nev
   - Google's colour group column (a text column between the y and the size) is not read: such a column is a series
     of no values. Stacking, Smooth Line, the right-hand axis and a scatter series' line are ignored and kept (default,
     D320).
+- **Candlestick** and **OHLC** (Google Sheets' Candlestick and OHLC charts, Excel's Stock charts): a line chart's
+  data read as prices.
+  - Per category, the first four series are its open, high, low and close, in that order (Google's and Excel's column
+    order); with three series they are its high, low and close (high-low-close, no open).
+  - The categories are slots, as a column chart's are, each named under its slot; the value range fits the values as
+    a scatter chart's does (round values either side, zero only when they cross it); Show Axis as a line chart's.
+  - **Candlestick**: a wick from low to high up the slot's middle and a body from open to close, 60% of the slot wide
+    and at most 24 px; a falling body (its close below its open) is filled, a rising one hollow, edged; an open equal
+    to its close is a flat line. With three series it draws as OHLC does.
+  - **OHLC**: a line from low to high up the slot's middle, the open a tick to its left and the close a tick to its
+    right, each half the candle body's width; with three series no open tick.
+  - Every mark takes the first series' colour (its own, else the palette's first); the legend keys nothing, the
+    series being one price, not several to tell apart.
+  - A category missing any of its values draws nothing there (a gap). Series past the fourth are ignored and kept;
+    with fewer than three nothing is drawn.
+  - A mark's readout reads `category · Open o, High h, Low l, Close c` (no Open with three series); Show Values
+    prints the close to the right of its mark.
+  - Stacking, Smooth Line, the right-hand axis and a scatter series' line are ignored and kept (default, D322).
 - **Combo** (Google Sheets' Combo chart): a line chart's data (`lineSeries` over `lineCategories`), each series drawn
   as its own **series type**: Column, Line, Area or Stepped Area (`LineSeries.type`). A series with no type of its own takes the
   default: the first half of the series, rounded up, are columns and the rest lines, so two series are a column and a
@@ -222,6 +242,7 @@ Chart" and a screen reader hears "Column chart", as the palette's tile says, nev
   - **Scatter**: no point for that series at that x.
   - **Bubble**: no bubble for that series at that x, nor for any series where its size has no value.
   - **Radar**: no point on that spoke; the line breaks on either side of it.
+  - **Candlestick** and **OHLC**: no mark in a slot missing any of its prices.
   - **Column** and **Bar**: no column (bar) in its slot; the slot and a column's name under the plot stay.
   - **Pie** and **Doughnut**: no wedge; the others share the whole; the category stays in the legend.
   - Every type: no value draws no value label (Show Values) and no readout (there is no mark to hover), and
@@ -244,7 +265,7 @@ Chart" and a screen reader hears "Column chart", as the palette's tile says, nev
   sit squeezed at its top over an empty band. Values all equal widen by half a unit either way. Line, Area, Column
   and Bar keep zero in range: a line's rise and an area or bar's size read against it.
 - **The Chart Type section** opens first in the chart's Tools flyout, closed until opened (as every section is): a
-  grid of eleven tiles, each the type's glyph over its name, the chart's own type pressed. Hovering a tile previews
+  grid of thirteen tiles, each the type's glyph over its name, the chart's own type pressed. Hovering a tile previews
   nothing; picking one changes the chart, one undo step, `Element · Changed · ChartType`.
 - **Changing type** keeps the chart's size, style, palette, legend and animation. Within a kind it only sets
   `chartVariant`. Across kinds it moves the data: a pie or bar chart's slices become one series named **Series 1**
@@ -398,7 +419,7 @@ paints no box; `LegendView` draws the card from the element's fill + stroke, and
 
 ## Element tour
 
-The **Chart tour** is on the actions group's **Start Chart Tour** button while a data chart (any of the eleven chart types) is selected, once its kind is opted in to (Settings › Tours › Show Me), for an Editor on an unlocked element, and walks through it on the element
+The **Chart tour** is on the actions group's **Start Chart Tour** button while a data chart (any of the thirteen chart types) is selected, once its kind is opted in to (Settings › Tours › Show Me), for an Editor on an unlocked element, and walks through it on the element
 itself ([Element tours](../007-editor/element-tours.md) "The Chart tour").
 
 ## Defaults
@@ -423,6 +444,10 @@ The code cites each by its id.
 - **D289** Stepped Area: steps span their category's slot, risers on the shared edges, no markers, filled to zero at
   25%; stacked as Stacked Area; unstacked, the right axis as an area's; a Combo's stepped area series likewise
   (default).
+- **D322** Candlestick and OHLC: open, high, low, close in column order (high, low, close with three series); slots as
+  a column chart's, the range fitted as a scatter's; a body 60% of its slot and at most 24 px, falling filled and rising
+  hollow; OHLC ticks half the body wide; every mark the first series' colour, no legend keys; a gap where any price
+  is missing; series past the fourth ignored; stacking, smoothing, the right axis and lines ignored (default).
 - **D320** Bubble: the last of two or more series the sizes (Excel's x, y, size; Google's size column last), every
   other series' bubbles sized by it, one series one size at half the largest; area in proportion to size, the largest
   radius a tenth of the plot's shorter side from 6 to 30 px, the plot drawn in by it; no bubble for a size of no

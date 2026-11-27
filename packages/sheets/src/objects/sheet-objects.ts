@@ -17,6 +17,8 @@ export const SHEET_CHART_TYPES = [
   'pie',
   'doughnut',
   'radar',
+  'candlestick',
+  'ohlc',
   'combo',
 ] as const;
 export type SheetChartType = (typeof SHEET_CHART_TYPES)[number];

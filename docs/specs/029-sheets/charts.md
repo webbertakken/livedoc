@@ -37,7 +37,7 @@ and two changing one chart resolve to the last write. Each change is one undo st
   ([Scatter's point names](../009-elements/pie-chart.md#chart-types)); on a bubble chart of two or more series the
   last is the bubbles' sizes ([Bubble](../009-elements/pie-chart.md#chart-types), D320). Deleting rows or columns inside
   the range shrinks it; deleting all of it leaves the chart with no data, drawn as "No data".
-- **Type**: one of [Chart types](#chart-types) built: Column, Bar, Line, Area, Stepped Area, Scatter, Bubble, Pie, Doughnut, Radar and Combo. A Column
+- **Type**: one of [Chart types](#chart-types) built: Column, Bar, Line, Area, Stepped Area, Scatter, Bubble, Pie, Doughnut, Radar, Candlestick, OHLC and Combo. A Column
   or Bar chart draws every series of its range side by side, as Google's does
   ([Several series](../009-elements/pie-chart.md#chart-types), D281).
 - **Stacking**: a Column, Bar, Area or Stepped Area chart stacks its series, Standard or 100%, or none (Google's Setup ›

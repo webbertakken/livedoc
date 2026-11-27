@@ -69,6 +69,19 @@ const MARKS: Record<ChartType, React.ReactNode> = {
       <path d="M12 8l4 3.2-1.6 4.6H9.6L8 11.2Z" fill="currentColor" fillOpacity={0.25} />
     </>
   ),
+  candlestick: (
+    <>
+      <path d="M8 4v16M16 6v13" />
+      <rect x="6" y="8" width="4" height="7" fill="currentColor" />
+      <rect x="14" y="9" width="4" height="6" />
+    </>
+  ),
+  ohlc: (
+    <>
+      <path d="M8 4v16M5.5 13H8M8 7h2.5" />
+      <path d="M16 6v13M13.5 9H16M16 16h2.5" />
+    </>
+  ),
   combo: (
     <>
       <path d={AXES} />

@@ -194,6 +194,12 @@ function groupType(group: XmlElement): { type: SheetChartType; stack?: SheetChar
       return isOn(c(group, 'bubble3D')) || cs(group, 'ser').some((ser) => isOn(c(ser, 'bubble3D')))
         ? null
         : { type: 'bubble' };
+    case 'stockChart': {
+      // Three or four price series; four with up-down bars a Candlestick, else OHLC (D323).
+      const n = cs(group, 'ser').length;
+      if (n < 3 || n > 4) return null;
+      return { type: n === 4 && c(group, 'upDownBars') ? 'candlestick' : 'ohlc' };
+    }
     case 'radarChart':
       // A filled radar is not built (D292).
       return valOf(c(group, 'radarStyle')) === 'filled' ? null : { type: 'radar' };
@@ -233,6 +239,12 @@ function lookOf(type: SheetChartType, ser: XmlElement): Pick<FileChartSeries, 'c
     case 'line':
     case 'radar': {
       const color = colour(ln);
+      return color ? { color } : {};
+    }
+    case 'candlestick':
+    case 'ohlc': {
+      // A price series' colour is on its marker (D323).
+      const color = colour(c(c(ser, 'marker'), 'spPr'));
       return color ? { color } : {};
     }
     case 'scatter': {
@@ -439,6 +451,7 @@ function drawingCharts(
         ...(descr && descr !== read.title ? { alt: descr.slice(0, SHEET_CHART_ALT_MAX) } : {}),
       },
       original,
+      'xlsx',
     );
     charts.push({ ...chart, kept: { part: name!, sum: fileChartSum(chart) } });
   }

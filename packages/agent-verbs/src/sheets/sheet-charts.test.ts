@@ -213,6 +213,21 @@ describe('chart elements', () => {
     expect(mixed!.lineSeries!.map((s) => s.type)).toEqual([undefined, 'stepped-area']);
   });
 
+  it('draw candlestick and OHLC charts (D322)', () => {
+    const { wb, sheet } = book();
+    for (const type of ['candlestick', 'ohlc'] as const) {
+      const built = buildChartChange(wb, sheet.id, { op: 'chart', type, range: 'A1:E6' });
+      if (!built.ok) throw new Error(built.message);
+      const [el] = sheetChartElements(
+        wb,
+        { x: 0, y: 0, width: 960, height: 560 },
+        sheet.id,
+        built.charts,
+      );
+      expect(el).toMatchObject({ shape: 'line-chart', chartVariant: type });
+    }
+  });
+
   it('draw a bubble chart, which joins no lines (D320)', () => {
     const { wb, sheet } = book();
     const built = buildChartChange(wb, sheet.id, { op: 'chart', type: 'bubble', range: 'A1:C3' });
