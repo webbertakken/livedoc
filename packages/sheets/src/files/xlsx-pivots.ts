@@ -190,7 +190,7 @@ export function xlsxPivotTableXml(
   const outerCols = columns[0]?.totals === false;
   const standard = xlsxPivotStandard(p, sheet);
   return [
-    `<pivotTableDefinition xmlns="${SPREADSHEETML_NS}"${attr('name', name)}${attr('cacheId', cacheId)}${attr('dataCaption', 'Values')}${outerCols ? attr('rowGrandTotals', 0) : ''}${outerRows ? attr('colGrandTotals', 0) : ''}${attr('compact', 0)}${attr('compactData', 0)}${attr('outline', 0)}>`,
+    `<pivotTableDefinition xmlns="${SPREADSHEETML_NS}"${attr('name', name)}${attr('cacheId', cacheId)}${attr('dataCaption', 'Values')}${outerRows ? attr('rowGrandTotals', 0) : ''}${outerCols ? attr('colGrandTotals', 0) : ''}${attr('compact', 0)}${attr('compactData', 0)}${attr('outline', 0)}>`,
     `<location${attr('ref', formatRange(location))}${attr('firstHeaderRow', 1)}${attr('firstDataRow', 1 + colFields.length)}${attr('firstDataCol', rowFields.length)}${pages.length ? attr('rowPageCount', pages.length) + attr('colPageCount', 1) : ''}/>`,
     `<pivotFields${attr('count', fields.length)}>${fields.join('')}</pivotFields>`,
     list('rowFields', rowFields),

@@ -1,6 +1,7 @@
-// Pivot tables in ODF, read back (docs/specs/029-sheets/standard-mapping.md "Pivot tables in the file", D607): a data
+// Pivot tables in ODF, read (docs/specs/029-sheets/standard-mapping.md "Pivot tables in the file", D607 to D609): a data
 // pilot table holding LiveDoc's record, whose fingerprint is its standard form's as read, is its sheet's pivot table
-// again and leaves the kept `table:data-pilot-tables`; any other stays the file's own, as it came.
+// again; any other is read from its standard form when the model holds it. Either leaves the kept
+// `table:data-pilot-tables`; one the model cannot hold stays the file's own, as it came.
 import {
   attributeOf,
   childElement,
@@ -8,7 +9,6 @@ import {
   type XmlElement,
   type XmlParsed,
 } from '@livedoc/office-packages';
-import { columnIndex, type GridRange } from '../address';
 import {
   pivotFingerprint,
   pivotSourceText,
@@ -16,29 +16,14 @@ import {
   type FilePivot,
   type PivotStandard,
 } from './file-pivots';
+import type { GridRange } from '../address';
+import { heldPivotOfStandard, plainText } from './pivot-standard';
+import { parseOdfRange, readOdsStandard } from './ods-pivot-standard';
 import type { FileAt, KeptItem } from './kept-content';
 import { LIVEDOC_SPREADSHEET_NS } from './validation-standard';
 import type { FileLoss, FileSheet } from './workbook-file';
 
 const TABLE = 'urn:oasis:names:tc:opendocument:xmlns:table:1.0';
-
-// One end of an ODF range address: its sheet (quotes undone; none when left out), column and row.
-const END = /^(?:(?:'((?:[^']|'')*)'|([^.']*))\.)?\$?([A-Za-z]{1,3})\$?(\d+)$/;
-
-/** An ODF range address (`'Sales'.A1:'Sales'.F25`, `Sales.$A$1:.$F$25`): its sheet and its cells; null for another. */
-export function parseOdfRange(text: string): { sheet: string; range: GridRange } | null {
-  const [from, to] = text.split(':');
-  const a = from ? END.exec(from) : null;
-  const b = to ? END.exec(to) : null;
-  const sheet = a && (a[1] !== undefined ? a[1].replace(/''/g, "'") : a[2]);
-  if (!a || !b || !sheet) return null;
-  const r1 = Number(a[4]) - 1;
-  const r2 = Number(b[4]) - 1;
-  const c1 = columnIndex(a[3]!.toUpperCase());
-  const c2 = columnIndex(b[3]!.toUpperCase());
-  if (r1 < 0 || r2 < r1 || c2 < c1) return null;
-  return { sheet, range: { r1, c1, r2, c2 } };
-}
 
 /** A data pilot table's standard form, its sheet, and LiveDoc's record beside it; null when it holds no record. */
 export function readOdsDataPilot(table: XmlElement): {
@@ -79,10 +64,20 @@ export function readOdsDataPilot(table: XmlElement): {
   };
 }
 
+// A source's header texts: each cell of its first row as its value reads, blank for none.
+function headerTexts(sheet: FileSheet, range: GridRange): string[] {
+  const out = Array.from({ length: range.c2 - range.c1 + 1 }, () => '');
+  for (const cell of sheet.cells)
+    if (cell.r === range.r1 && cell.c >= range.c1 && cell.c <= range.c2)
+      out[cell.c - range.c1] = plainText(cell.value);
+  return out;
+}
+
 /**
- * The sheets' pivot tables LiveDoc wrote and no app changed since (D607), and the kept items without them: each read
- * one leaves the kept `table:data-pilot-tables`, which goes when none is left. A record another app's change left
- * behind is named (`pivot_changed`, logged only).
+ * The sheets' pivot tables, and the kept items without them: each LiveDoc wrote and no app changed since by its
+ * record (D607), any other from its standard form when the model holds it (D608); each read one leaves the kept
+ * `table:data-pilot-tables`, which goes when none is left. A record another app's change left behind is named
+ * (`pivot_changed`, logged only), and a pivot table the model cannot hold stays kept, named (`pivot_unread`, D609).
  */
 export function readOdsPivots(
   parsed: XmlParsed,
@@ -95,29 +90,44 @@ export function readOdsPivots(
   if (!holder) return { sheets: [...sheets], items: [...items] };
   const found = new Map<number, FilePivot[]>();
   const read: string[] = [];
+  const names = sheets.map((s) => s.name);
+  const add = (at: number, p: FilePivot) => found.set(at, [...(found.get(at) ?? []), p]);
   for (const table of childElements(holder)) {
-    const pilot = table.local === 'data-pilot-table' ? readOdsDataPilot(table) : null;
-    const at = pilot ? sheets.findIndex((s) => s.name === pilot.sheet) : -1;
-    if (!pilot || at < 0) continue;
+    if (table.local !== 'data-pilot-table' || table.uri !== TABLE) continue;
+    const pilot = readOdsDataPilot(table);
+    const at = pilot ? names.indexOf(pilot.sheet) : -1;
     const record =
-      pilot.fingerprint === pivotFingerprint(pilot.standard) ? readPivotRecord(pilot.record) : null;
-    if (!record) {
-      losses.push({ k: 'pivot_changed', sheet: pilot.sheet });
-      continue;
-    }
-    const { location } = pilot.standard;
-    found.set(at, [
-      ...(found.get(at) ?? []),
-      {
+      pilot && at >= 0 && pilot.fingerprint === pivotFingerprint(pilot.standard)
+        ? readPivotRecord(pilot.record)
+        : null;
+    if (pilot && at >= 0 && !record) losses.push({ k: 'pivot_changed', sheet: pilot.sheet });
+    if (record) {
+      const { location } = pilot!.standard;
+      add(at, {
         ...record,
         headers: [],
         items: [],
         output: {
-          rows: location.r2 - location.r1 + 1 - (pilot.pages ? pilot.pages + 1 : 0),
+          rows: location.r2 - location.r1 + 1 - (pilot!.pages ? pilot!.pages + 1 : 0),
           cols: location.c2 - location.c1 + 1,
         },
-      },
-    ]);
+      });
+    } else {
+      // Another app's pivot table, or one it changed, is read from its standard form when the model holds it (D608).
+      const standard = readOdsStandard(table, names, (name, range) =>
+        headerTexts(sheets[names.indexOf(name)]!, range),
+      );
+      const held = heldPivotOfStandard(standard);
+      if (!standard || !held) {
+        const target = parseOdfRange(attributeOf(table, TABLE, 'target-range-address') ?? '');
+        losses.push({
+          k: 'pivot_unread',
+          sheet: target?.sheet ?? attributeOf(table, TABLE, 'name') ?? '',
+        });
+        continue;
+      }
+      add(names.indexOf(standard.sheet), held);
+    }
     read.push(parsed.source.slice(table.start, table.end));
   }
   if (read.length === 0) return { sheets: [...sheets], items: [...items] };

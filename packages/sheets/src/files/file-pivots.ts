@@ -29,6 +29,7 @@ import { quoteSheet, type SheetsCtx } from '../formula/stored';
 import { fileValueOf, type FileCell, type FileValue } from './workbook-file';
 import { formatCodeOf } from './number-format-code';
 import { validationFingerprint } from './validation-standard';
+import type { FilePivotHides } from './pivot-standard';
 
 /** A source column's item: its value (null for a blank cell) and its text as shown. */
 export type PivotItem = { v: FileValue | null; shown: string };
@@ -63,6 +64,8 @@ export type FilePivot = {
   items: (PivotItem[] | undefined)[];
   // The size of its output (its anchor alone when it shows none).
   output: { rows: number; cols: number };
+  // Read from another app's standard form: the items its filters by values hide, matched when the sheets are made.
+  hides?: FilePivotHides[];
 };
 
 /** What the standard form of a format holds of a pivot table: its output's place, its source, and its fields. */
@@ -244,6 +247,42 @@ export function readPivotRecord(text: string): PivotRecord | null {
   };
 }
 
+// A pivot table of the model: its fields on its source's column ids `cols` by place (a calculated field names none);
+// null when a field names a column outside them, or the model refuses it (a malformed option, past its bounds).
+function pivotOnColumns(
+  f: FilePivotFields,
+  cols: readonly string[],
+  base: Pick<SheetPivot, 'id' | 'at' | 'source'>,
+): SheetPivot | null {
+  const list = (items: unknown): unknown[] | null | undefined => {
+    if (items === undefined) return undefined;
+    if (!Array.isArray(items)) return null;
+    const out = items.map((x: unknown) => {
+      if (typeof x !== 'object' || x === null) return null;
+      const field = x as { col?: unknown };
+      if (field.col === undefined) return x;
+      const col = typeof field.col === 'number' ? cols[field.col] : undefined;
+      return col === undefined ? null : { ...field, col };
+    });
+    return out.some((x) => x === null) ? null : out;
+  };
+  const rows = list(f.rows);
+  const columns = list(f.columns);
+  const values = list(f.values);
+  const filters = list(f.filters);
+  if (rows === null || columns === null || values === null || filters === null) return null;
+  const pivot = {
+    ...base,
+    kind: 'pivot',
+    ...(rows ? { rows } : {}),
+    ...(columns ? { columns } : {}),
+    ...(values ? { values } : {}),
+    ...(filters ? { filters } : {}),
+    ...(f.valuesAsRows !== undefined ? { valuesAsRows: f.valuesAsRows } : {}),
+  };
+  return isSheetObject(pivot, base.id) ? pivot : null;
+}
+
 /**
  * The model's pivot table of a file's: on `layout`'s cells, its source by `ctx`'s sheets; null when its place or
  * source is not there, or the model refuses it (a field outside the source, a malformed option).
@@ -262,37 +301,17 @@ export function sheetPivotOf(
     p.source.range.c1,
     p.source.range.c2 + 1,
   );
-  // A field on a column by its place; a calculated field names none.
-  const list = (items: unknown): unknown[] | null | undefined => {
-    if (items === undefined) return undefined;
-    if (!Array.isArray(items)) return null;
-    const out = items.map((x: unknown) => {
-      if (typeof x !== 'object' || x === null) return null;
-      const field = x as { col?: unknown };
-      if (field.col === undefined) return x;
-      const col = typeof field.col === 'number' ? cols[field.col] : undefined;
-      return col === undefined ? null : { ...field, col };
-    });
-    return out.some((x) => x === null) ? null : out;
-  };
-  const f = p.fields;
-  const rows = list(f.rows);
-  const columns = list(f.columns);
-  const values = list(f.values);
-  const filters = list(f.filters);
-  if (rows === null || columns === null || values === null || filters === null) return null;
-  const pivot = {
-    id,
-    kind: 'pivot',
-    at: { r, c },
-    source,
-    ...(rows ? { rows } : {}),
-    ...(columns ? { columns } : {}),
-    ...(values ? { values } : {}),
-    ...(filters ? { filters } : {}),
-    ...(f.valuesAsRows !== undefined ? { valuesAsRows: f.valuesAsRows } : {}),
-  };
-  return isSheetObject(pivot, id) ? (pivot as SheetPivot) : null;
+  return pivotOnColumns(p.fields, cols, { id, at: { r, c }, source });
+}
+
+/** Whether the model holds a pivot table of `fields` over a source `width` columns wide (its options, its bounds). */
+export function modelHoldsFields(fields: FilePivotFields, width: number): boolean {
+  const cols = Array.from({ length: width }, (_, i) => `c${String(i).padStart(5, '0')}`);
+  const source = { r1: 'r00000', c1: 'c00000', r2: 'r00001', c2: cols[width - 1]! };
+  return (
+    pivotOnColumns(fields, cols, { id: 'p00000', at: { r: 'r00000', c: 'c00000' }, source }) !==
+    null
+  );
 }
 
 /** A sheet's pivot tables read from its file, each a new id; one the model refuses is left out, counted. */

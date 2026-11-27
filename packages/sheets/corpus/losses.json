@@ -44,6 +44,18 @@
       "kept"
     ]
   },
+  "excel/ExcelPivotTableSample.xlsx": {
+    "read": {
+      "pivot_unread": 1
+    },
+    "written": {},
+    "reread": {
+      "pivot_unread": 1
+    },
+    "converted": [
+      "kept"
+    ]
+  },
   "excel/ExcelTables.xlsx": {
     "read": {
       "name_unread": 1
@@ -192,6 +204,24 @@
       "entries_dropped": 1,
       "formats_cut": 1
     },
+    "written": {},
+    "reread": {},
+    "converted": [
+      "kept"
+    ]
+  },
+  "libreoffice/ExcelPivotTableSample.ods": {
+    "read": {
+      "entries_dropped": 1
+    },
+    "written": {},
+    "reread": {},
+    "converted": [
+      "kept"
+    ]
+  },
+  "libreoffice/ExcelPivotTableSample.xlsx": {
+    "read": {},
     "written": {},
     "reread": {},
     "converted": [
@@ -431,20 +461,29 @@
   },
   "google/pivot-tables.ods": {
     "read": {
-      "entries_dropped": 1
+      "entries_dropped": 1,
+      "pivot_unread": 1
     },
     "written": {},
-    "reread": {},
+    "reread": {
+      "pivot_unread": 1
+    },
     "converted": [
-      "kept"
+      "kept",
+      "pivots_simplified"
     ]
   },
   "google/pivot-tables.xlsx": {
-    "read": {},
+    "read": {
+      "pivot_unread": 6
+    },
     "written": {},
-    "reread": {},
+    "reread": {
+      "pivot_unread": 6
+    },
     "converted": [
-      "kept"
+      "kept",
+      "pivots_simplified"
     ]
   },
   "google/smart-chips.ods": {

@@ -662,15 +662,17 @@ LibreOffice reads into its own pivot tables.
   page fields out above it, one `pivotField` a cache field (its `axis`, `dataField`, `items`, `sortType`,
   `defaultSubtotal="0"` when its totals are off), `rowFields`, `colFields` (`-2`, the values, last, or in
   `rowFields` with Values as rows, when there are two or more), `pageFields` (a filter's column, its hidden items
-  `h="1"`), `dataFields` (`name`, `fld`, `subtotal`, `showDataAs`), `rowGrandTotals`/`colGrandTotals` off when the
-  outermost group's totals are, and the style `PivotStyleLight16`. A calculated field is a `cacheField` with its
+  `h="1"`), `dataFields` (`name`, `fld`, `subtotal`, `showDataAs`), `rowGrandTotals` off when the outermost row group's
+  totals are and `colGrandTotals` when the outermost column group's are (as Google Sheets writes them and LibreOffice
+  reads them), and the style `PivotStyleLight16`. A calculated field is a `cacheField` with its
   `formula` (without `=`) and `databaseField="0"`.
 - **ODF standard form**: one `table:data-pilot-table` a pivot table in the spreadsheet's one
   `table:data-pilot-tables` (after the kept ones), named `LiveDocPivot1`, ... (a name a kept one holds skipped):
   `table:target-range-address` the output (page fields' rows above it, as LibreOffice lays them out),
   `table:source-cell-range`, and one `table:data-pilot-field` a field (`table:source-field-name` its header,
-  `table:orientation` `row`, `column`, `data` or `page`, `table:function` on a data field), each row, column and page
-  field with a `table:data-pilot-level` holding its subtotals (none when its totals are off), its members (a filtered
+  `table:orientation` `row`, `column`, `data` or `page`, `table:function` on a data field; a page field its
+  `table:selected-page`, which ODF asks for, the first item it shows, and LibreOffice's `loext:ignore-selected-page="true"`
+  so LibreOffice reads its members rather than that item alone), each row, column and page field with a `table:data-pilot-level` holding its subtotals (none when its totals are off), its members (a filtered
   value `table:display="false"`) and its sort (`table:sort-mode="name"`, `table:order`); a Show As value its
   `table:data-pilot-field-reference` (`row-percentage`, `column-percentage`, `total-percentage`); with two or more
   values the data layout field (`table:is-data-layout-field="true"`) on columns, or rows with Values as rows; and
@@ -694,8 +696,57 @@ LibreOffice reads into its own pivot tables.
   fingerprint is the standard form's as read; then the pivot table, its parts and its cache leave the kept content,
   and its output's cached cells are not read as inputs, as the engine works them out again (as a spilled block's,
   [Arrays in the file](#arrays-in-the-file)). A record whose fingerprint differs (another app changed the pivot
-  table) or that does not read is passed over (`pivot_changed`, logged, never reported), and the pivot table stays the
-  file's own: kept as it came, its output read as plain values (default, D607).
+  table) or that does not read is passed over (`pivot_changed`, logged, never reported), and the pivot table is read as
+  another app's is, below (default, D607).
+  **Another app's pivot table**, one without LiveDoc's record or whose record was passed over, is read from its standard
+  form when the model holds every part of it, and is then the sheet's pivot table as one made here is (default, D608):
+
+- **XLSX**: the cache's source a range of a sheet the workbook holds (`worksheetSource` `ref` and `sheet`); each field
+  of `rowFields`, `colFields` and `pageFields` a source column, by its place in the cache; `-2` among `rowFields`
+  Values as rows. Each `dataField` a value: `subtotal` back to its summary (`count` COUNTA, `countNums` COUNT,
+  `stdDev` STDEV, `stdDevp` STDEVP, the rest their own; none SUM), `showDataAs` `percentOfRow`, `percentOfCol` or
+  `percentOfTotal` its Show As (`normal` none), and its `name` the value's name when it is not LiveDoc's own label
+  (`SUM of Units`). A data field on a `cacheField` with a `formula` is a calculated field of that field's name, its
+  formula with `=` before it, summarised by SUM, as Excel works one out.
+- An axis field's `sortType` `descending` sorts descending, any other ascending; its `autoSortScope` naming a data
+  field (`4294967294`) sorts by that value, in the column items its other references name, outermost first. A
+  field's `defaultSubtotal="0"` turns the next group's Show Totals off, `rowGrandTotals="0"` the outermost row
+  group's and `colGrandTotals="0"` the outermost column group's, as they are written. Items hidden (`h="1"`) on any
+  axis are a filter by values showing the column's other items. Its place is the `location`'s first cell, moved up by
+  its page fields and one row more when it has page fields (row 1 at most).
+- **ODF**: the `table:source-cell-range` a range of a sheet the workbook holds; each `table:data-pilot-field` a source
+  column by `table:source-field-name` (the first header of that name) on its `table:orientation`; the data layout
+  field on rows Values as rows. A data field's `table:function` back to its summary (`count` COUNTA, `countnums`
+  COUNT, `auto` SUM, the rest their own, `median` MEDIAN), its `table:data-pilot-field-reference` `row-percentage`,
+  `column-percentage` or `total-percentage` its Show As (`none` none), and its `tableooo:display-name` its name
+  when it is not LiveDoc's own label. A level's `table:data-pilot-sort-info` gives its order (`table:sort-mode="data"`
+  sorts by the first value of `table:data-field`'s column, `name` by item, any other ascending); a level with no
+  subtotals turns the next group's Show Totals off, and `table:grand-total` the outermost groups' as written; a row
+  level's `calcext:repeat-item-labels="true"` is Repeat Row Labels; members `table:display="false"` are a filter by
+  values showing the column's other items, a member named by the item's text as shown; a page field's
+  `table:selected-page` is not read, as LibreOffice reads Google Sheets' exports. Its place is the target's first
+  cell, where LibreOffice puts the page fields.
+- A page field that hides no item is no filter. A filter's hidden items are matched to the source's cells by value
+  (XLSX) or by their text as shown (ODF), and the filter shows the shown texts of the rest.
+- Read so, the cells the other app cached for its output (from its place to the end of its `location` or target) are not
+  read as inputs: the engine works the output out again in LiveDoc's own layout and labels, which are Google Sheets'
+  and may differ from the other app's in size and words (`Grand Total` for LibreOffice's `Total Result`).
+- **Kept as it came**: a pivot table whose source is not a range of a sheet the workbook holds (a named range, a table,
+  an external source or a consolidation), whose field LiveDoc cannot find (a source column by name, an item by its
+  place), that groups a field (`fieldGroup`, `table:data-pilot-groups`) or has calculated items, whose Show As LiveDoc
+  does not have (difference from, running total, index, and so on), or that the model refuses (past its bounds) stays
+  the file's own: kept as it came, its output read as plain values, and named (`pivot_unread`, reported: "N pivot
+  tables LiveDoc cannot work out are kept as values") (default, D609).
+- Google Sheets' exports say less than Google's pivot tables (`corpus/google/pivot-tables.xlsx`, `.ods`): its XLSX
+  leaves out Repeat Row Labels, filters by condition and by formula, a Custom summary (written SUM) and the groupings it
+  has no `fieldGroup` for (the date rules but Quarter, Year, Month and Day-Month, and number intervals over a column of
+  mixed values: written ungrouped), and groups the rest (kept, D609); its ODS, as LibreOffice computes it, leaves out
+  calculated fields, Custom summaries, filters by condition and formula, every grouping (the field left out, or named
+  `Product2` for custom groups: kept), sorting by a value in a column item, an inner group's Show Totals off, and
+  Repeat Row Labels. LibreOffice's own saves keep no record of LiveDoc's: its ODS leaves out what Google's ODS does
+  and sorting by a value; its XLSX also Show As, grand totals off and sorting. A case read from any of them works out
+  what its file says, so it equals Google's answer only where the file says the whole case (default, D610).
+
 - A pivot table whose source was deleted has no standard form: it is left out, named (`pivot_unwritten`); one whose
   output is blocked or too large is written with its anchor cell as its output (default, D607).
 
@@ -984,8 +1035,14 @@ The code cites each by its id.
   standard form, the record keeping it (default).
 - **D606** What the standard form does not say is listed on converting (`pivots_simplified`), and its XLSX cache is
   not refreshed on load (default).
-- **D607** A record is read while its fingerprint holds, else the pivot table stays the file's own; a pivot table with
-  no source is left out of the file, named (default).
+- **D607** A record is read while its fingerprint holds, else the pivot table is read as another app's (D608); a pivot
+  table with no source is left out of the file, named (default).
+- **D608** Another app's pivot table read from its standard form, every part mapped back onto the model, its output
+  worked out again in LiveDoc's layout (default).
+- **D609** One whose source, fields, grouping or Show As the model cannot hold: kept as it came, its output as values,
+  named (`pivot_unread`) (default).
+- **D610** Google Sheets' exports read as they say, each case equal to Google's answer where its file says it whole
+  (default).
 - **D295** A dropdown XLSX's list cannot say: a rule allowing any value, LiveDoc's rule beside it (default).
 - **D296** A standard rule read without LiveDoc's: the closest LiveDoc rule, one a rectangle; error messages and
   titles left out (default).

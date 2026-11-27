@@ -14,6 +14,7 @@ export const CORPUS = {
     'comments.xlsx',
     'DataValidations-49244.xlsx',
     'DateFormatTests.xlsx',
+    'ExcelPivotTableSample.xlsx',
     'ExcelTables.xlsx',
     'Formatting.xlsx',
     'NumberFormatTests.xlsx',
@@ -27,6 +28,7 @@ export const CORPUS = {
   libreofficeXlsx: [
     'comments.xlsx',
     'DataValidations-49244.xlsx',
+    'ExcelPivotTableSample.xlsx',
     'NumberFormatTests.xlsx',
     'shared_formulas.xlsx',
   ],
