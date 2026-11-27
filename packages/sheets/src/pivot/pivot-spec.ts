@@ -130,5 +130,13 @@ export type PivotIndex = {
   }[];
 };
 
-/** The output, row by row, every row as wide as the widest, and what GETPIVOTDATA reads of it. */
-export type PivotOutput = { rows: PivotOutCell[][]; width: number; index: PivotIndex };
+/** The output's header rows (above the values) and label columns (left of them), its headers to a screen reader. */
+export type PivotHead = { rows: number; cols: number };
+
+/** The output, row by row, every row as wide as the widest, what GETPIVOTDATA reads of it, and its headers. */
+export type PivotOutput = {
+  rows: PivotOutCell[][];
+  width: number;
+  index: PivotIndex;
+  head: PivotHead;
+};

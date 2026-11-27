@@ -4,7 +4,8 @@
 // and headers are a picture to it, so the cells in view are mirrored here as rows of cells with their indexes, the
 // row number as each row's header, the frozen lines first. The active cell is always in it, scrolled away or not:
 // it is what the grid's aria-activedescendant names. Memoised on what it reads, so a scroll within the window or a
-// paint of the drawn cells costs it nothing.
+// paint of the drawn cells costs it nothing. A pivot table's header rows and labels are headers (pivot-tables.md
+// "Accessibility").
 import { memo } from 'react';
 import { formatA1, type Sheet, type Workbook } from '@livedoc/sheets';
 import { mergeAt, type Geometry } from './sheet-geometry';
@@ -58,13 +59,14 @@ function SheetGridMirrorInner(p: Props) {
           {cols.map((c) => {
             const active = r === p.activeR && c === p.activeC;
             const merge = mergeAt(g, r, c);
+            const header = p.workbook.pivotHeaderAt(p.sheet.id, r, c);
             // A merge once, at its top-left; the active cell always, so focus names a cell that is there.
             if (!active && merge && (merge.r1 !== r || merge.c1 !== c)) return null;
             return (
               <span
                 key={c}
                 id={active ? mirrorCellId(p.elementId, r, c) : undefined}
-                role="gridcell"
+                role={header ? `${header}header` : 'gridcell'}
                 aria-colindex={c + 1}
                 aria-selected={active || undefined}
               >

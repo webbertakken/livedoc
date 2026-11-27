@@ -268,6 +268,34 @@ describe('a pivot table in the grid', () => {
     expect(wb.pivotOutputAt(report.id, 1, 0)).toBeNull();
   });
 
+  it('answers no pivot table on a workbook without one', () => {
+    const { wb, sheets } = book({ Data: DATA }, { rows: 8, cols: 6 });
+    const id = sheets[0]!.id;
+    expect(wb.pivotOutputAt(id, 0, 0)).toBeNull();
+    expect(wb.pivotHeaderAt(id, 0, 0)).toBeNull();
+    expect(wb.pivotValueCellAt(id, 0, 0)).toBe(false);
+  });
+
+  it('marks its header rows as column headers and its labels as row headers', () => {
+    const { wb, report, set } = withPivot(() => ({}));
+    const at = (r: number, c: number) => wb.pivotHeaderAt(report.id, r, c);
+    expect([at(0, 0), at(0, 1), at(1, 0), at(3, 0), at(1, 1), at(3, 1)]).toEqual([
+      'column',
+      'column',
+      'row',
+      'row',
+      null,
+      null,
+    ]);
+    expect(at(4, 0)).toBeNull();
+    expect(wb.pivotHeaderAt('nosheet', 0, 0)).toBeNull();
+    set('E1', '={1;2}', 'Report');
+    expect(at(1, 4)).toBeNull();
+    // Blocked: nothing landed, nothing marked.
+    set('B3', 'x', 'Report');
+    expect(at(0, 0)).toBeNull();
+  });
+
   it('refuses a value typed into its output through the workbook’s checks', () => {
     const { wb, report } = withPivot(() => ({}));
     const typed = (r: number, c: number) =>

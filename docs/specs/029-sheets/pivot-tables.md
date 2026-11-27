@@ -5,7 +5,7 @@ worked out from its source, calculated fields and formula filters too ([The outp
 of Google Sheets' answers in the grid ([In the grid](#in-the-grid)), `GETPIVOTDATA`, written to both formats and read
 back, other apps' read from their standard forms ([Standard mapping](standard-mapping.md#pivot-tables-in-the-file)),
 making and editing one in the grid ([Making one](#making-one), [Pivot Table Editor](#pivot-table-editor), [Working
-with one](#working-with-one)), a value's details on a sheet of their own for an Editor ([Details](#details)), and by
+with one](#working-with-one)), its header rows and labels marked as headers to a screen reader ([Accessibility](#accessibility)), a value's details on a sheet of their own for an Editor ([Details](#details)), and by
 agents ([Agents](#agents)); the rest specified.
 
 Pivot tables in a [spreadsheet](spreadsheet.md), as Google Sheets makes them. Research:
