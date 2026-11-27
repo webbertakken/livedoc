@@ -5,6 +5,8 @@ import {
   versionDay,
   versionGroups,
   versionLabel,
+  VERSION_MENU_LABELS,
+  versionMenuItems,
 } from './office-version-list';
 
 // docs/specs/012-collaboration/review-surfaces.md "Version history": newest first, grouped by day (Today, Yesterday,
@@ -91,5 +93,15 @@ describe('versionGroups', () => {
   it('labels a version by its name, else its day and time', () => {
     expect(versionLabel(versions[1]!, now)).toBe('Draft');
     expect(versionLabel(versions[3]!, now)).toBe('20 November, 10:00');
+  });
+});
+
+// review.md "Version history": a version's menu, Google's.
+describe('versionMenuItems', () => {
+  it('names Current version only, renames or unnames a named one, names and restores any other', () => {
+    expect(versionMenuItems('current')).toEqual(['name']);
+    expect(versionMenuItems({ named: true })).toEqual(['rename', 'remove-name', 'restore']);
+    expect(versionMenuItems({ named: false })).toEqual(['name', 'restore']);
+    expect(VERSION_MENU_LABELS.restore).toBe('Restore this version');
   });
 });

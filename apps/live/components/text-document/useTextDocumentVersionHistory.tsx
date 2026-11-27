@@ -3,7 +3,8 @@
 // File > Version history > See version history (docs/specs/034-text-documents/review.md "Version history"): for an
 // Editor of a document stored in LiveDoc, the shell's version-history mode over the whole window, the versions listed
 // and the chosen one drawn read only with what it changed. In This Browser there is no room and no versions, so the
-// item is dimmed and says why. The live editor stays bound beneath it, so leaving is instant.
+// item is dimmed and says why. The live editor stays bound beneath it, so leaving is instant. Show changes draws what
+// the shown version changed, or not; naming and restoring are useTextDocumentVersionWrites'.
 import { useCallback, useMemo, useRef, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import * as Y from 'yjs';
@@ -28,14 +29,16 @@ import {
   OfficeVersionHistory,
 } from '@/components/office/review/OfficeVersionHistory';
 import { TextDocumentVersionView } from './TextDocumentVersionView';
+import { track } from '@/lib/telemetry';
+import type { VersionAuthorLabel } from '@/lib/api/text-document-versions';
+import { useTextDocumentVersionWrites, VERSION_FAILED } from './useTextDocumentVersionWrites';
 
 /** The File menu's item. */
 export const SEE_VERSION_HISTORY = 'see-version-history';
 /** What a dimmed See version history says in This Browser (review.md "Version history", (default)). */
 export const VERSION_HISTORY_LOCAL_NOTE = 'LiveDoc only';
 export const VERSION_HISTORY_LOCAL_HINT = 'Version history is kept for documents saved in LiveDoc.';
-/** A version that could not be read (default copy). */
-export const VERSION_FAILED = 'That didn’t work. Try again.';
+export { VERSION_FAILED };
 
 const NOBODY = versionAuthorship({ clients: {}, deletedBy: {} });
 
@@ -65,6 +68,7 @@ export function useTextDocumentVersionHistory({
   tab,
   format,
   onClosed,
+  author,
   now = () => Date.now(),
 }: {
   where: TextDocumentScope;
@@ -75,6 +79,8 @@ export function useTextDocumentVersionHistory({
   format: TextDocumentFormat;
   /** The mode left: the writing takes the keyboard again. */
   onClosed: () => void;
+  /** The person's name and colour, written with a name or a restore. */
+  author?: VersionAuthorLabel;
   now?: () => number;
 }): { actions: OfficeActions; mode: ReactNode; open: boolean } {
   const [open, setOpen] = useState(false);
@@ -82,6 +88,8 @@ export function useTextDocumentVersionHistory({
   const [selected, setSelected] = useState(CURRENT_VERSION);
   const [drawing, setDrawing] = useState<VersionDrawing | null>(null);
   const [status, setStatus] = useState<string | null>(null);
+  // Show changes, on by default as Google's; kept while the mode is open.
+  const [showChanges, setShowChanges] = useState(true);
   // The newest ask wins: an answer to an older one is dropped.
   const asked = useRef(0);
   const { ownerId, documentId, tabId, shareCode } = where;
@@ -109,6 +117,20 @@ export function useTextDocumentVersionHistory({
         setOpened({ versions: null, state: null, failed: true });
         debugLog('[text-document] version history failed', {
           reason: 'load',
+          error: String(error),
+        });
+      },
+    );
+  }, [ownerId, documentId, tabId, shareCode]);
+
+  // A name given or removed: the list read again, the version shown kept.
+  const reloadList = useCallback(() => {
+    apiListTextDocumentVersions({ ownerId, documentId, tabId, shareCode }).then(
+      (versions) => setOpened((was) => (was.state ? { ...was, versions } : was)),
+      (error: unknown) => {
+        setStatus(VERSION_FAILED);
+        debugLog('[text-document] version history failed', {
+          reason: 'list',
           error: String(error),
         });
       },
@@ -162,6 +184,16 @@ export function useTextDocumentVersionHistory({
     [opened.state, ownerId, documentId, tabId, shareCode],
   );
 
+  const versionWrites = useTextDocumentVersionWrites({
+    where,
+    local: local ? { note: VERSION_HISTORY_LOCAL_NOTE, hint: VERSION_HISTORY_LOCAL_HINT } : null,
+    author,
+    say: setStatus,
+    onNamed: reloadList,
+    onRestored: close,
+    now,
+  });
+
   const actions = useMemo<OfficeActions>(
     () => ({
       [SEE_VERSION_HISTORY]: local
@@ -173,16 +205,19 @@ export function useTextDocumentVersionHistory({
           }
         : {
             run: () => {
+              track('Document', 'Opened', 'TextDocumentVersionHistory');
               setOpen(true);
+              setShowChanges(true);
               load();
             },
           },
+      ...versionWrites.actions,
     }),
-    [local, load],
+    [local, load, versionWrites.actions],
   );
 
   // Drawn outside the surface, so the editor's shortcut layer never hears the keys pressed in it.
-  const mode = open
+  const history = open
     ? createPortal(
         <OfficeVersionHistory
           versions={opened.versions}
@@ -193,12 +228,16 @@ export function useTextDocumentVersionHistory({
           onSelect={select}
           onRetry={load}
           onClose={close}
+          writes={opened.state ? versionWrites.writes : null}
+          showChanges={
+            selected === CURRENT_VERSION ? null : { checked: showChanges, onChange: setShowChanges }
+          }
         >
           {opened.state && drawing ? (
             <TextDocumentVersionView
               state={opened.state}
               tab={tab}
-              drawing={drawing}
+              drawing={{ ...drawing, showChanges: drawing.showChanges && showChanges }}
               format={format}
               where={{ ownerId, documentId, shareCode }}
             />
@@ -207,5 +246,11 @@ export function useTextDocumentVersionHistory({
         document.body,
       )
     : null;
+  const mode = (
+    <>
+      {history}
+      {versionWrites.dialogs}
+    </>
+  );
   return { actions, mode, open };
 }

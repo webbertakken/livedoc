@@ -81,6 +81,7 @@ import { SUGGESTION_KEY_ACTIONS } from '@/components/text-document/useTextDocume
 import { REVIEW_SUGGESTED_EDITS } from '@/components/text-document/useTextDocumentReviewPanel';
 import { COMPARE_DOCUMENTS } from '@/components/text-document/useTextDocumentCompare';
 import { SEE_VERSION_HISTORY } from '@/components/text-document/useTextDocumentVersionHistory';
+import { NAME_CURRENT_VERSION } from '@/components/text-document/useTextDocumentVersionWrites';
 import { textDocumentUndoPlugins } from './text-document-undo';
 import { LINK_ITEM, OPEN_LINK } from './text-document-links';
 import { BOOKMARK_ITEM } from './text-document-bookmarks';
@@ -200,6 +201,8 @@ describe('the text document menus', () => {
         COMPARE_DOCUMENTS,
         // File > Version history > See version history (useTextDocumentVersionHistory), bound by the surface.
         SEE_VERSION_HISTORY,
+        // File > Version history > Name current version (useTextDocumentVersionWrites), bound by the surface.
+        NAME_CURRENT_VERSION,
       ];
       expect(
         catalogueFaults(textDocumentMenus(format), {

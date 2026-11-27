@@ -115,7 +115,7 @@ export function textDocumentMenus(format: TextDocumentFormat): OfficeCatalogue {
       item('move-to-trash', 'Move to trash', 'edit', { keywords: ['delete'] }),
       SEPARATOR,
       submenu('version-history', 'Version history', [
-        item('name-current-version', 'Name current version', 'edit'),
+        item('name-current-version', 'Name current version', 'edit', { status: 'built' }),
         item('see-version-history', 'See version history', 'edit', {
           shortcut: 'open-revision-history',
           status: 'built',

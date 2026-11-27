@@ -8,6 +8,8 @@ import type { OfficeVersion } from '@/lib/office/office-version-list';
 import {
   CURRENT_VERSION,
   OfficeVersionHistory,
+  type OfficeShowChanges,
+  type OfficeVersionWrites,
   VERSIONS_FAILED,
   VERSIONS_LOADING,
 } from './OfficeVersionHistory';
@@ -39,11 +41,15 @@ function Harness({
   failed = false,
   onClose = () => {},
   onRetry = () => {},
+  writes = null,
+  showChanges = null,
 }: {
   versions?: OfficeVersion[] | null;
   failed?: boolean;
   onClose?: () => void;
   onRetry?: () => void;
+  writes?: OfficeVersionWrites | null;
+  showChanges?: OfficeShowChanges | null;
 }) {
   const [selected, setSelected] = useState(CURRENT_VERSION);
   return (
@@ -56,6 +62,8 @@ function Harness({
       onSelect={setSelected}
       onRetry={onRetry}
       onClose={onClose}
+      writes={writes}
+      showChanges={showChanges}
     >
       <p>drawn {selected}</p>
     </OfficeVersionHistory>
@@ -142,5 +150,113 @@ describe('OfficeVersionHistory', () => {
     );
     expect(screen.getByRole('status').textContent).toBe('That didn’t work. Try again.');
     fireEvent.keyDown(screen.getByRole('listbox'), { key: 'ArrowDown' });
+  });
+
+  describe('naming and restoring (review.md "Version history")', () => {
+    const writesOf = () => ({ name: vi.fn(), restore: vi.fn(), nameMax: 100 });
+    const actionsOf = () => screen.getByRole('menu').querySelectorAll('[role="menuitem"]');
+    const labels = () => [...actionsOf()].map((i) => i.textContent);
+
+    it('opens a row’s menu from its ⋮ or Shift+F10, with what that row offers', () => {
+      const writes = writesOf();
+      render(<Harness writes={writes} />);
+      const more = document.querySelectorAll<HTMLElement>('[data-version-actions]');
+      expect(more).toHaveLength(3);
+      fireEvent.click(more[1]!);
+      expect(selectedName()).toContain('Draft');
+      expect(screen.getByRole('menu', { name: 'Actions for Draft' })).toBeTruthy();
+      expect(labels()).toEqual(['Rename', 'Remove name', 'Restore this version']);
+      fireEvent.click(screen.getByRole('menuitem', { name: 'Remove name' }));
+      expect(writes.name).toHaveBeenCalledWith('v2', '');
+      expect(screen.queryByRole('menu')).toBeNull();
+      const list = screen.getByRole('listbox');
+      fireEvent.keyDown(list, { key: 'End' });
+      fireEvent.keyDown(list, { key: 'F10', shiftKey: true });
+      expect(labels()).toEqual(['Name this version', 'Restore this version']);
+      fireEvent.click(screen.getByRole('menuitem', { name: 'Restore this version' }));
+      expect(writes.restore).toHaveBeenCalledWith('v1');
+      fireEvent.keyDown(list, { key: 'Home' });
+      fireEvent.keyDown(list, { key: 'ContextMenu' });
+      expect(labels()).toEqual(['Name this version']);
+    });
+
+    it('names in place: Enter keeps, pressing elsewhere keeps, Escape leaves, the frame staying open', () => {
+      const writes = writesOf();
+      const onClose = vi.fn();
+      render(<Harness writes={writes} onClose={onClose} />);
+      const list = screen.getByRole('listbox');
+      fireEvent.keyDown(list, { key: 'ContextMenu' });
+      fireEvent.click(screen.getByRole('menuitem', { name: 'Name this version' }));
+      const field = screen.getByRole('textbox', { name: 'Version name' });
+      expect(document.activeElement).toBe(field);
+      expect(field.getAttribute('placeholder')).toBe('09:00');
+      fireEvent.change(field, { target: { value: '  Final  ' } });
+      fireEvent.keyDown(field, { key: 'Enter' });
+      expect(writes.name).toHaveBeenCalledWith(CURRENT_VERSION, 'Final');
+      expect(document.activeElement).toBe(list);
+
+      fireEvent.keyDown(list, { key: 'ArrowDown' });
+      fireEvent.keyDown(list, { key: 'ContextMenu' });
+      fireEvent.click(screen.getByRole('menuitem', { name: 'Rename' }));
+      const rename = screen.getByRole('textbox', { name: 'Version name' });
+      expect((rename as HTMLInputElement).value).toBe('Draft');
+      fireEvent.keyDown(rename, { key: 'Escape' });
+      expect(onClose).not.toHaveBeenCalled();
+      expect(screen.queryByRole('textbox')).toBeNull();
+
+      fireEvent.keyDown(list, { key: 'ContextMenu' });
+      fireEvent.click(screen.getByRole('menuitem', { name: 'Rename' }));
+      const again = screen.getByRole('textbox', { name: 'Version name' });
+      fireEvent.change(again, { target: { value: 'Draft two' } });
+      fireEvent.blur(again);
+      expect(writes.name).toHaveBeenLastCalledWith('v2', 'Draft two');
+
+      // Kept unchanged, nothing is written; an empty name on Current version names nothing.
+      writes.name.mockClear();
+      fireEvent.keyDown(list, { key: 'ContextMenu' });
+      fireEvent.click(screen.getByRole('menuitem', { name: 'Rename' }));
+      fireEvent.keyDown(screen.getByRole('textbox'), { key: 'Enter' });
+      fireEvent.keyDown(list, { key: 'Home' });
+      fireEvent.keyDown(list, { key: 'ContextMenu' });
+      fireEvent.click(screen.getByRole('menuitem', { name: 'Name this version' }));
+      fireEvent.keyDown(screen.getByRole('textbox'), { key: 'Escape' });
+      fireEvent.keyDown(list, { key: 'ContextMenu' });
+      fireEvent.click(screen.getByRole('menuitem', { name: 'Name this version' }));
+      fireEvent.keyDown(screen.getByRole('textbox'), { key: 'Enter' });
+      fireEvent.keyDown(list, { key: 'End' });
+      fireEvent.keyDown(list, { key: 'ContextMenu' });
+      fireEvent.click(screen.getByRole('menuitem', { name: 'Name this version' }));
+      expect(screen.getByRole('textbox').getAttribute('placeholder')).toBe('14:05');
+      fireEvent.keyDown(screen.getByRole('textbox'), { key: 'Escape' });
+      expect(writes.name).not.toHaveBeenCalled();
+    });
+
+    it('closes a row’s menu on a press elsewhere, and offers none without writes', () => {
+      render(<Harness writes={writesOf()} />);
+      fireEvent.click(document.querySelectorAll<HTMLElement>('[data-version-actions]')[0]!);
+      expect(screen.getByRole('menu')).toBeTruthy();
+      fireEvent.pointerDown(document.body);
+      fireEvent.mouseDown(document.body);
+      expect(screen.queryByRole('menu')).toBeNull();
+      cleanup();
+      render(<Harness />);
+      expect(document.querySelectorAll('[data-version-actions]')).toHaveLength(0);
+      fireEvent.keyDown(screen.getByRole('listbox'), { key: 'ContextMenu' });
+      expect(screen.queryByRole('menu')).toBeNull();
+    });
+  });
+
+  it('shows the named versions alone, and says whether changes are shown', () => {
+    const onChange = vi.fn();
+    render(<Harness showChanges={{ checked: true, onChange }} />);
+    fireEvent.click(screen.getByRole('switch', { name: 'Only show named versions' }));
+    expect(screen.getAllByRole('option').map((o) => o.textContent)).toEqual([
+      'Current version',
+      'Draft08:30Ada',
+    ]);
+    const box = screen.getByRole('checkbox', { name: 'Show changes' });
+    expect((box as HTMLInputElement).checked).toBe(true);
+    fireEvent.click(box);
+    expect(onChange).toHaveBeenCalledWith(false);
   });
 });

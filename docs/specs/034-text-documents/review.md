@@ -613,12 +613,12 @@ their limits are in [Live editing and storage](live-editing-and-storage.md#versi
   went unrecorded is drawn in the neutral grey of a file's author (default). ⌘⌥ N then R and ⌘⌥ P then R go to the
   next and previous change.
 - **Name current version** (File > Version history): a dialog "Name current version", a field (the time as its
-  placeholder), **Cancel** and **Save**; it names the newest version when nothing changed since it, else takes a
-  version of now and names it.
+  placeholder), **Cancel** and **Save**, which waits for a name (default); it names the newest version when nothing changed since it, else takes a
+  version of now and names it. A refusal is said in the dialog, which stays open (default).
 - **A version's menu** (⋮ on its row): **Name this version** (or **Rename**, and **Remove name**, on a named one),
   **Restore this version** and **Make a copy**; Current version has Name this version only (Google's).
   - A name is at most `TEXT_DOCUMENT_VERSION_NAME_MAX_CHARS` characters, typed in place on the row, Enter keeps it,
-    Escape leaves it; an empty name removes it. A named version is kept forever; one whose name is removed is an
+    and so does pressing elsewhere (default), Escape leaves it; an empty name removes it. A named version is kept forever; one whose name is removed is an
     automatic one again, thinned as they are.
   - At most `TEXT_DOCUMENT_NAMED_VERSIONS_MAX` (40) named versions a text document, as Google's: naming one more is
     refused with "You can name up to 40 versions. Remove a name to name this one." (default copy).

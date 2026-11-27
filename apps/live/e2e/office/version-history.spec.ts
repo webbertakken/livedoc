@@ -1,5 +1,6 @@
 import { expect, expectNoPageErrors, pageOwnerHeaders, test } from '../fixtures';
 import { seedOfflineDocuments } from '../offline-seed';
+import { officeMenuItem } from './office-menus';
 
 // File > Version history > See version history (docs/specs/034-text-documents/review.md "Version history";
 // review-surfaces.md "Version history"): ⌘⌥⇧H opens the mode over the whole window on the current version; a named
@@ -106,4 +107,65 @@ test('dims See version history in This Browser, saying why', async ({ page }) =>
     'aria-disabled',
     'true',
   );
+});
+
+test('names the current version, renames one in place, and restores it', async ({
+  page,
+  pageErrors,
+}) => {
+  test.setTimeout(120_000);
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto('/new?kind=text-document');
+  await expect(page.locator(READY)).toBeVisible();
+  await page.locator(BODY).click();
+  await page.keyboard.type('First draft.');
+  await saved(page);
+
+  // File > Version history > Name current version.
+  await (await officeMenuItem(page, ['File', 'Version history', 'Name current version'])).click();
+  const naming = page.getByRole('dialog', { name: 'Name current version' });
+  await expect(naming.getByRole('button', { name: 'Save' })).toBeDisabled();
+  await naming.getByRole('textbox', { name: 'Version name' }).fill('Draft one');
+  await naming.getByRole('button', { name: 'Save' }).click();
+  await expect(naming).toHaveCount(0);
+
+  await page.locator(BODY).click();
+  await page.locator(BODY).press('End');
+  await page.keyboard.type(' Second thoughts.');
+  await saved(page);
+
+  await page.keyboard.down('Control');
+  await page.keyboard.down('Alt');
+  await page.keyboard.press('Shift+H');
+  await page.keyboard.up('Alt');
+  await page.keyboard.up('Control');
+  const mode = page.getByRole('dialog', { name: 'Version history' });
+  const list = mode.getByRole('listbox', { name: 'Versions' });
+  await expect(list).toBeFocused();
+  await mode.getByRole('switch', { name: 'Only show named versions' }).click();
+  await expect(list.getByRole('option')).toHaveCount(2);
+  await list.focus();
+  await list.press('ArrowDown');
+  await expect(mode.getByRole('heading', { level: 1 })).toHaveText('Draft one');
+  await expect(mode.getByRole('checkbox', { name: 'Show changes' })).toBeChecked();
+
+  // Rename in place from the row's menu.
+  await list.press('Shift+F10');
+  await expect(page.getByRole('menu', { name: 'Actions for Draft one' })).toBeVisible();
+  await page.screenshot({ path: test.info().outputPath('version-menu.png') });
+  await page.getByRole('menuitem', { name: 'Rename' }).click();
+  const field = mode.getByRole('textbox', { name: 'Version name' });
+  await field.fill('Draft 1');
+  await field.press('Enter');
+  await expect(mode.getByRole('heading', { level: 1 })).toHaveText('Draft 1');
+
+  // Restore it: asked once, then the document reads as it did and the mode closes.
+  await list.press('Shift+F10');
+  await page.getByRole('menuitem', { name: 'Restore this version' }).click();
+  const restore = page.getByRole('dialog', { name: 'Restore this version?' });
+  await page.screenshot({ path: test.info().outputPath('version-restore.png') });
+  await restore.getByRole('button', { name: 'Restore' }).click();
+  await expect(mode).toHaveCount(0);
+  await expect(page.locator(BODY)).toHaveText('First draft.');
+  expectNoPageErrors(pageErrors);
 });

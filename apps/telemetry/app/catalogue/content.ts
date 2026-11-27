@@ -245,6 +245,32 @@ export const TEXT_DOCUMENT_COMPARED = chart(
   { types: ['TextDocumentCompare'], rising: 'good' },
 );
 
+// A text document's version history (docs/specs/034-text-documents/review.md "Version history"): opened, a version
+// named, a version restored. Editors only.
+export const TEXT_DOCUMENT_VERSION_HISTORY_OPENED = chart(
+  'Document',
+  'Opened',
+  'Version History Opened',
+  'An Editor opened a text document’s version history, from File or its keys.',
+  { types: ['TextDocumentVersionHistory'], rising: 'good' },
+);
+
+export const TEXT_DOCUMENT_VERSION_NAMED = chart(
+  'Document',
+  'Changed',
+  'Versions Named',
+  'An Editor named a version of a text document, in the history or from File > Name current version.',
+  { types: ['TextDocumentVersionNamed'], rising: 'good' },
+);
+
+export const TEXT_DOCUMENT_VERSION_RESTORED = chart(
+  'Document',
+  'Changed',
+  'Versions Restored',
+  'An Editor restored a text document to an earlier version; the document read as that version in one change.',
+  { types: ['TextDocumentVersionRestored'], rising: 'neutral' },
+);
+
 export const OFFLINE_MODE: MetricStack = {
   stack: true,
   title: 'Offline Mode',
@@ -322,7 +348,7 @@ export const DOCUMENT_ACTIONS: MetricStack = {
   stack: true,
   title: 'Document Actions',
   blurb:
-    'Documents opened, made, renamed, deleted and duplicated, and how new ones were started: Start Blank, a template link, in This Browser, or a comparison of two text documents (those four are part of Documents Created), and how often the wizard was backed out of with Escape.',
+    'Documents opened, made, renamed, deleted and duplicated, and how new ones were started: Start Blank, a template link, in This Browser, or a comparison of two text documents (those four are part of Documents Created), how often the wizard was backed out of with Escape, and text documents’ version history: opened, versions named and restored.',
   members: [
     DOCUMENTS_LOADED,
     DOCUMENTS_CREATED,
@@ -334,6 +360,9 @@ export const DOCUMENT_ACTIONS: MetricStack = {
     NEW_DOCUMENT_MENU,
     CREATED_OFFLINE,
     TEXT_DOCUMENT_COMPARED,
+    TEXT_DOCUMENT_VERSION_HISTORY_OPENED,
+    TEXT_DOCUMENT_VERSION_NAMED,
+    TEXT_DOCUMENT_VERSION_RESTORED,
     NEW_DOCUMENT_BACKED_OUT,
   ],
   headline: [DOCUMENTS_CREATED, DOCUMENTS_RENAMED, DOCUMENTS_DELETED, DOCUMENTS_DUPLICATED],
