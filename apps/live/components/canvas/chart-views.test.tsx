@@ -291,6 +291,48 @@ describe('chart views', () => {
     expect(bare.container.textContent).toContain('Subtotal');
   });
 
+  it('writes a scorecard’s key value, its name and its change, and nothing for no value (Scorecard, D345)', () => {
+    const { container } = render(
+      <LineChartView
+        element={el('line-chart', {
+          chartVariant: 'scorecard',
+          lineCategories: ['Apr', 'May'],
+          lineSeries: [
+            { name: 'Revenue', values: [1500, 2250] },
+            { name: 'Before', values: [2500, 2000] },
+          ],
+        })}
+        textColor="#000"
+      />,
+    );
+    const texts = [...container.querySelectorAll('text')].map((t) => t.textContent);
+    expect(texts).toEqual(expect.arrayContaining(['3,750', 'Revenue', '▼ 750']));
+    expect(container.querySelector('text[fill="#d93025"]')).not.toBeNull();
+    const level = render(
+      <LineChartView
+        element={el('line-chart', {
+          chartVariant: 'scorecard',
+          lineSeries: [
+            { name: 'Empty', values: [null] },
+            { name: 'Before', values: [1] },
+          ],
+        })}
+        textColor="#000"
+      />,
+    );
+    expect([...level.container.querySelectorAll('text')].map((t) => t.textContent)).toContain(
+      'Empty',
+    );
+    expect(level.container.querySelector('text[font-weight="700"]')).toBeNull();
+    const bare = render(
+      <LineChartView
+        element={el('line-chart', { chartVariant: 'scorecard', lineSeries: undefined })}
+        textColor="#000"
+      />,
+    );
+    expect(bare.container.querySelector('text[font-weight="700"]')).not.toBeNull();
+  });
+
   it('draws a gauge’s dials with needles, values and labels, and reads a hovered dial (Gauge, D330)', () => {
     const { container } = render(
       <PieChartView

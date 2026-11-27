@@ -88,6 +88,13 @@ const MARKS: Record<ChartType, React.ReactNode> = {
       <path d="M7 17v-5h3v5M10 17V7h3v10M13 17v-7h3v7M16 17v-3h3v3" />
     </>
   ),
+  scorecard: (
+    <>
+      <rect x="3" y="5" width="18" height="14" rx="2" />
+      <path d="M7 10h10M7 15h4" />
+      <path d="m14 16 1.5-2 1.5 2z" />
+    </>
+  ),
   gauge: (
     <>
       <path d="M5 17a7.5 7.5 0 1 1 14 0" />

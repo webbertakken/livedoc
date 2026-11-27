@@ -98,7 +98,7 @@ ChartAxis`); a series on the right shows "(right)" after its name in the Data su
 
 ## Chart types
 
-A **chart type** is how a chart draws its data, named as Google Sheets names it. Seventeen ship; each is a chart kind
+A **chart type** is how a chart draws its data, named as Google Sheets names it. Eighteen ship; each is a chart kind
 (the stored `shape`) and, for all but the first of its kind, a `chartVariant`:
 
 A chart is **named by its type** wherever the editor names an element: the selection badge says "Selected Column
@@ -119,6 +119,7 @@ Chart" and a screen reader hears "Column chart", as the palette's tile says, nev
 | OHLC         | `line-chart`   | `ohlc`         | Per category a line from low to high, the open a tick to its left, the close to its right     |
 | Histogram    | `line-chart`   | `histogram`    | Each series' values counted into equal buckets, a column per bucket and series (below)        |
 | Waterfall    | `line-chart`   | `waterfall`    | The first series as changes to a running total, each a floating column, a subtotal last       |
+| Scorecard    | `line-chart`   | `scorecard`    | The first series' sum written large, its change from the second series' sum under it (below)  |
 | Combo        | `line-chart`   | `combo`        | Each series as columns, a line, an area or a stepped area over one set of categories (below)  |
 | Pie          | `pie-chart`    | (none)         | Wedges clockwise from twelve o'clock                                                          |
 | Doughnut     | `pie-chart`    | `doughnut`     | Pie's wedges with the middle open: a ring whose hole is 55% of its radius                     |
@@ -269,6 +270,18 @@ Chart" and a screen reader hears "Column chart", as the palette's tile says, nev
   - No legend takes room: each dial names itself. A dial's readout is a wedge's; Show Values changes nothing, the
     value always being written.
   - Google's gauge ranges (green, yellow and red bands) and its own minimum and maximum are not built (default, D330).
+- **Scorecard** (Google Sheets' Scorecard chart): a line chart's first series summed as its **key value**, written
+  large in the middle of the plot, bold, with the series' name under it.
+  - The sum is Google's Sum aggregation: a range of many cells adds them up, one cell is itself.
+  - A second series, when there is one, is the **baseline**, summed likewise. Under the name the key value's change
+    from it is written: `▲ 500` in green (#188038) when the key value is over the baseline, `▼ 500` in red
+    (#d93025) when under it, `0` in the chart's text colour when they are equal; each held to 4.5:1 on its ground.
+  - Numbers are written in full with thousands separators and up to two decimals (`12,345.67`); the key value is as
+    large as fits the plot's width and 40% of its height, from 12 to 64 px.
+  - No legend, no axis and no readout take room: the chart writes its numbers. Show Values changes nothing.
+  - Series past the second, stacking, Smooth Line, the right-hand axis and a series' line are ignored and kept.
+    Google's percentage comparison, its own colours, scale factor and number formats, and aggregations other than Sum
+    are not built (default, D345).
 - **Combo** (Google Sheets' Combo chart): a line chart's data (`lineSeries` over `lineCategories`), each series drawn
   as its own **series type**: Column, Line, Area or Stepped Area (`LineSeries.type`). A series with no type of its own takes the
   default: the first half of the series, rounded up, are columns and the rest lines, so two series are a column and a
@@ -298,6 +311,8 @@ Chart" and a screen reader hears "Column chart", as the palette's tile says, nev
   - **Radar**: no point on that spoke; the line breaks on either side of it.
   - **Candlestick** and **OHLC**: no mark in a slot missing any of its prices.
   - **Histogram**: the value is not counted; a bucket counting nothing draws no column.
+  - **Scorecard**: the value is not summed; a key value with no value at all writes no number and no change, its
+    name alone; a baseline with no value at all writes no change.
   - **Waterfall**: no column in its slot; the total runs on unchanged and the connector passes over it. With no value
     at all, no Subtotal is drawn.
   - **Column** and **Bar**: no column (bar) in its slot; the slot and a column's name under the plot stay.
@@ -324,7 +339,7 @@ Chart" and a screen reader hears "Column chart", as the palette's tile says, nev
   sit squeezed at its top over an empty band. Values all equal widen by half a unit either way. Line, Area, Column
   and Bar keep zero in range: a line's rise and an area or bar's size read against it.
 - **The Chart Type section** opens first in the chart's Tools flyout, closed until opened (as every section is): a
-  grid of seventeen tiles, each the type's glyph over its name, the chart's own type pressed. Hovering a tile previews
+  grid of eighteen tiles, each the type's glyph over its name, the chart's own type pressed. Hovering a tile previews
   nothing; picking one changes the chart, one undo step, `Element · Changed · ChartType`.
 - **Changing type** keeps the chart's size, style, palette, legend and animation. Within a kind it only sets
   `chartVariant`. Across kinds it moves the data: a pie or bar chart's slices become one series named **Series 1**
@@ -478,7 +493,7 @@ paints no box; `LegendView` draws the card from the element's fill + stroke, and
 
 ## Element tour
 
-The **Chart tour** is on the actions group's **Start Chart Tour** button while a data chart (any of the seventeen chart types) is selected, once its kind is opted in to (Settings › Tours › Show Me), for an Editor on an unlocked element, and walks through it on the element
+The **Chart tour** is on the actions group's **Start Chart Tour** button while a data chart (any of the eighteen chart types) is selected, once its kind is opted in to (Settings › Tours › Show Me), for an Editor on an unlocked element, and walks through it on the element
 itself ([Element tours](../007-editor/element-tours.md) "The Chart tour").
 
 ## Defaults
@@ -507,6 +522,11 @@ The code cites each by its id.
   a column chart's, the range fitted as a scatter's; a body 60% of its slot and at most 24 px, falling filled and rising
   hollow; OHLC ticks half the body wide; every mark the first series' colour, no legend keys; a gap where any price
   is missing; series past the fourth ignored; stacking, smoothing, the right axis and lines ignored (default).
+- **D345** Scorecard: the first series' sum written bold, as large as fits (12 to 64 px, 40% of the plot's height),
+  its name under it; a second series' sum the baseline, the change under the name, ▲ green (#188038) over, ▼ red
+  (#d93025) under, 0 in the text colour; numbers in full, thousands separated, up to two decimals; no legend, axis or
+  readout; Show Values ignored; Google's percentage comparison, colours, scale factor, number formats and other
+  aggregations not built (default).
 - **D330** Gauge: a dial per slice in the grid of largest squares, a 240° arc, the value's stretch in the slice's colour,
   a needle, the value bold inside, the label under it, the ends at the arc's ends; one scale from zero (or the least
   below it) to a round value at or over the greatest; no legend; Show Values ignored; Google's ranges and own minimum

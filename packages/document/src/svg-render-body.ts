@@ -28,6 +28,8 @@ import { svgStockChart } from './svg-render-stock';
 import { histogramColumns, isHistogramChart } from './chart-histogram';
 import { isWaterfallChart } from './chart-waterfall';
 import { svgWaterfallChart } from './svg-render-waterfall';
+import { isScorecardChart } from './chart-scorecard';
+import { svgScorecardChart } from './svg-render-scorecard';
 import { isTreemapChart } from './chart-treemap';
 import { svgTreemapChart } from './svg-render-treemap';
 import { isGaugeChart } from './chart-gauge';
@@ -124,6 +126,8 @@ export function svgElementBody(
         : svgPieChart(el, labelColor, chartPalette, fontFamily, chartGround);
   if (isBarShape(el.shape))
     return svgBarChart(el, labelColor, chartPalette, fontFamily, chartGround);
+  if (isLineShape(el.shape) && isScorecardChart(el))
+    return svgScorecardChart(el, labelColor, fontFamily, chartGround);
   if (isLineShape(el.shape))
     return isRadarChart(el)
       ? svgRadarChart(el, labelColor, chartPalette, fontFamily, chartGround)

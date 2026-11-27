@@ -246,6 +246,24 @@ describe('chart elements', () => {
     expect(el!.lineSeries!.length).toBeGreaterThan(0);
   });
 
+  it('draw a scorecard (D345)', () => {
+    const { wb, sheet } = book();
+    const built = buildChartChange(wb, sheet.id, {
+      op: 'chart',
+      type: 'scorecard',
+      range: 'A1:C3',
+    });
+    if (!built.ok) throw new Error(built.message);
+    const [el] = sheetChartElements(
+      wb,
+      { x: 0, y: 0, width: 960, height: 560 },
+      sheet.id,
+      built.charts,
+    );
+    expect(el).toMatchObject({ shape: 'line-chart', chartVariant: 'scorecard' });
+    expect(el!.lineSeries!.length).toBeGreaterThan(0);
+  });
+
   it('draw a gauge (D330)', () => {
     const { wb, sheet } = book();
     const built = buildChartChange(wb, sheet.id, { op: 'chart', type: 'gauge', range: 'A1:B3' });

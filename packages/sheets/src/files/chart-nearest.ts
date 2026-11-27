@@ -14,7 +14,7 @@ import { fileChartSum, type FileChart } from './file-charts';
 /** A chart type a file holds: every type built but those written as their nearest. */
 export type HeldChartType = Exclude<
   SheetChartType,
-  'stepped-area' | 'histogram' | 'waterfall' | 'treemap' | 'gauge'
+  'stepped-area' | 'histogram' | 'waterfall' | 'treemap' | 'gauge' | 'scorecard'
 >;
 export type HeldSeriesType = Exclude<SheetComboSeriesType, 'stepped-area'>;
 export type HeldFileChart = Omit<FileChart, 'type' | 'series'> & {
@@ -47,6 +47,8 @@ const NEAREST_TYPE: Readonly<Record<SheetChartType, HeldChartType>> = {
   treemap: 'pie',
   // No format holds a gauge; a bar per dial reads each value against the others (D331).
   gauge: 'bar',
+  // No format holds a scorecard; a column per series shows the key value beside its baseline (D346).
+  scorecard: 'column',
   combo: 'combo',
 };
 const NEAREST_SERIES_TYPE: Readonly<Record<SheetComboSeriesType, HeldSeriesType>> = {

@@ -2871,6 +2871,7 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
       "waterfall",
       "treemap",
       "gauge",
+      "scorecard",
       "combo"
     ],
     "type": "string"
@@ -15470,6 +15471,7 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
       "waterfall",
       "treemap",
       "gauge",
+      "scorecard",
       "combo"
     ],
     "type": "string"
