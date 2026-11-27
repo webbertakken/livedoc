@@ -69,6 +69,8 @@ format it arrived in ([Standard mapping](standard-mapping.md)).
     1 sheet: Data" ([Limits](#limits)).
   - **Formulas**: "4 formulas LiveDoc cannot read keep only their last values: Data!B2, Data!B3 and Data!C9" (a
     reference to another workbook, a table's structured reference).
+  - **Named ranges**: "2 named ranges LiveDoc cannot read are kept for the file: Rate and Mine"
+    ([Named ranges in the file](standard-mapping.md#named-ranges-in-the-file)).
   - **Named functions**: "1 named function LiveDoc cannot read is kept for Excel: TOOLONG"
     ([Named functions in the file](standard-mapping.md#named-functions-in-the-file)).
   - **Text**: "1 cell's text is cut to 50,000 characters".
