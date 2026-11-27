@@ -7,7 +7,8 @@ it names, and the Inbox lists the threads and assigned comments of those they co
 writing, travel in both formats' files as tracked changes and the room judges a Participant's; Editors and
 Participants suggest in Suggesting mode, from the writing, the menus and the toolbar; suggestion cards accept and
 reject one, the Suggested edits panel all at once, and Tools > Compare documents makes a comparison. The room
-sends a Viewer a copy without comments or suggestion authors. Versions and notifications are still to come.
+sends a Viewer a copy without comments or suggestion authors, and Viewing draws the writing as a Viewer sees it.
+Versions and notifications are still to come.
 
 Comments, suggestions, version history, comparing documents and notifications in a [text document](text-document.md).
 The panels and threads are the shared [review surfaces](../012-collaboration/review-surfaces.md), built once for the
@@ -21,6 +22,14 @@ office kinds; this spec says what a text document puts in them.
   original (Google Docs community thread 167976156, 2022: "The View mode will not show suggested edits";
   workspacetips.io: someone who can view sees suggested edits only once they are accepted) (director, 2026-11-27).
   Print draws pending suggestions accepted instead ([Printing](files-and-print.md#printing)).
+- **Viewing draws what a Viewer sees**, whoever chooses it (director, 2026-11-27): the body, headers, footers and
+  notes read as if every pending suggestion were rejected, followed as others change the document; no comment
+  highlights, no margin, no Add comment, and no one's caret or selection, as Google's Viewing draws no cursors
+  ([webapps.stackexchange 78284](https://webapps.stackexchange.com/questions/78284)). Comment history, the comments
+  panel, Review suggested edits and the Suggested edits panel are not offered in Viewing, as a Viewer has none; a
+  panel left open is closed while Viewing and open again on leaving it, and the margin's threads and cards come back
+  as they were. A document with no pending suggestion is drawn from the writing itself; one with any, from a copy
+  settled that way, made again only when a suggestion is settled or taken back (default).
 - An editing mode is one person's, never shared, and starts at the most an access level allows: an Editor in
   Editing, a Participant in Suggesting (fork D7, ruled), a Viewer in Viewing.
 - The switch sits at the right of the title row ([Editing surface](editing-surface.md#the-title-row)); these are the
@@ -487,8 +496,8 @@ the writing usable beside it (non-modal). Pressing the item again, its × ("Clos
 - **Who may**: an Editor has everything; a Participant has the count, Previous and Next, the previews and **Reject
   all mine**, rejecting only their own suggestions (shown only while they have any), never Accept all (director,
   2026-11-26). A Viewer has no Suggested edits panel and no Review suggested edits: a Viewer sees no suggestions
-  (director, 2026-11-27, withdrawing the count and previews of 2026-11-26). In Viewing, an Editor and a Participant
-  have the count, Previous and Next and the previews only.
+  (director, 2026-11-27, withdrawing the count and previews of 2026-11-26). In Viewing no one has them, as Viewing
+  draws what a Viewer sees ([Editing modes](#editing-modes)).
 - Telemetry: `Element · Changed · TextDocumentSuggestionAcceptedAll` and `…RejectedAll`, once per press; a
   Participant's Reject all mine counts as RejectedAll.
 

@@ -110,8 +110,11 @@ export function useTextDocumentStories(input: {
   readonly gallery: GalleryPictures;
   /** How a source's changes are applied around suggesting (review.md "Headers, footers and notes"). */
   readonly suggesting?: SuggestingDispatch;
+  /** The settled writing the stories are drawn from, where the body draws one (useTextDocumentReviewPreview). */
+  readonly drawnDoc?: Y.Doc | null;
 }): TextDocumentStories {
   const { view, liveDoc, format, pages, heights } = input;
+  const drawnDoc = input.drawnDoc ?? null;
   const host = useRef<HTMLDivElement | null>(null);
   const sources = useRef(new Map<string, StorySource>());
   // What each source was made as, by its key, and who is told of their changes.
@@ -174,6 +177,7 @@ export function useTextDocumentStories(input: {
       if (!body || !doc || !container) return undefined;
       const source = new StorySource({
         doc,
+        drawnDoc,
         format: madeFormat,
         story,
         key,
@@ -200,10 +204,11 @@ export function useTextDocumentStories(input: {
       madeAs.current.set(key, { story, width, kind });
       return source;
     },
-    [liveDoc, heights, paint],
+    [liveDoc, drawnDoc, heights, paint],
   );
 
-  // Another editor or document: every source goes with the one it was made for, before any is made for the next.
+  // Another editor or document, or the writing drawn from another (settled, or live again): every source goes with the
+  // one it was made for, before any is made for the next.
   useLayoutEffect(() => {
     const made = sources.current;
     const kinds = madeAs.current;
@@ -216,7 +221,7 @@ export function useTextDocumentStories(input: {
       kept.clear();
       holding.clear();
     };
-  }, [view, format, heights]);
+  }, [view, format, heights, drawnDoc]);
 
   useLayoutEffect(() => {
     drawn.current = wanted;

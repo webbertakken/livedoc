@@ -2,7 +2,7 @@
 
 // The office shell's panels for one kind (docs/specs/004-interface-design/office-shell.md "Side panels"): which are open,
 // remembered per kind, the right panel's width, remembered for every kind, and the menu items that open them.
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { debugLog } from '@/lib/debug-log';
 import { track } from '@/lib/telemetry';
 import type { OfficeActions } from './office-catalogue';
@@ -40,6 +40,7 @@ export function useOfficePanels({
   panels,
   onFocusDocument,
   writes = true,
+  reviews = true,
 }: {
   // `TextDocument`: `UI · Opened · TextDocumentPanel<Title>`, and where its open panels are kept.
   kind: 'TextDocument' | 'PdfDocument' | 'Spreadsheet';
@@ -48,20 +49,41 @@ export function useOfficePanels({
   onFocusDocument: () => void;
   // The session writes: an Editor's panels are offered (office-shell.md "Side panels").
   writes?: boolean;
+  // Comments and suggestions are shown (not Viewing, not a Viewer): a review panel is offered.
+  reviews?: boolean;
 }): OfficePanelsState {
   const [stored, setOpen] = useState<OpenPanels>(() => readOpenPanels(kind, panels));
   const [focusNonce, setFocusNonce] = useState(0);
   const [width, setWidth] = useState(readOfficePanelWidth);
   // A panel the session is not offered is shown closed, still remembered open for when it is.
+  const offers = useCallback(
+    (panel: OfficePanelSpec | undefined) =>
+      (writes || !panel?.editorsOnly) && (reviews || !panel?.review),
+    [writes, reviews],
+  );
   const offered = useCallback(
-    (id: string | null) =>
-      id !== null && (writes || !panels.find((p) => p.id === id)?.editorsOnly) ? id : null,
-    [panels, writes],
+    (id: string | null) => (id !== null && offers(panels.find((p) => p.id === id)) ? id : null),
+    [panels, offers],
   );
   const open = useMemo(
     (): OpenPanels => ({ left: offered(stored.left), right: offered(stored.right) }),
     [offered, stored],
   );
+
+  // A panel no longer offered (a mode changed) goes with whatever focus it held: the document takes the keyboard back,
+  // so the person's keys still reach the surface.
+  const shownBefore = useRef(open);
+  useEffect(() => {
+    const was = shownBefore.current;
+    shownBefore.current = open;
+    const hid = (['left', 'right'] as const).some(
+      (side) => was[side] !== null && open[side] === null && stored[side] === was[side],
+    );
+    if (!hid) return;
+    const lost = document.activeElement === null || document.activeElement === document.body;
+    debugLog('[office] panel hidden', { lost });
+    if (lost) onFocusDocument();
+  }, [open, stored, onFocusDocument]);
 
   const change = useCallback(
     (next: OpenPanels) => {
@@ -93,7 +115,7 @@ export function useOfficePanels({
   const actions = useMemo(() => {
     const out: Record<string, OfficeActions[string]> = {};
     for (const panel of panels) {
-      if (panel.editorsOnly && !writes) continue;
+      if (!offers(panel)) continue;
       const isOpen = open[panel.side] === panel.id;
       const toggle = {
         checked: isOpen,
@@ -102,7 +124,7 @@ export function useOfficePanels({
       for (const item of [panel.item, ...(panel.alsoItems ?? [])]) out[item] = toggle;
     }
     return out;
-  }, [panels, open, close, openPanel, writes]);
+  }, [panels, open, close, openPanel, offers]);
 
   const reveal = useCallback(
     (panel: OfficePanelSpec) => {

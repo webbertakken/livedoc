@@ -17,19 +17,22 @@ const PANELS: OfficePanelSpec[] = [
     alsoItems: ['show-tabs-and-outlines'],
   },
   { id: 'numbers', title: 'Line numbers', side: 'right', item: 'line-numbers', editorsOnly: true },
+  { id: 'comments', title: 'Comments', side: 'right', item: 'open-comment-history', review: true },
 ];
 
 function panels(writes = true) {
   const onFocusDocument = vi.fn();
+  const initialProps: { writes: boolean; reviews?: boolean } = { writes };
   const hook = renderHook(
-    (props: { writes: boolean }) =>
+    (props: { writes: boolean; reviews?: boolean }) =>
       useOfficePanels({
         kind: 'TextDocument',
         panels: PANELS,
         onFocusDocument,
         writes: props.writes,
+        ...(props.reviews === undefined ? {} : { reviews: props.reviews }),
       }),
-    { initialProps: { writes } },
+    { initialProps },
   );
   return { hook, onFocusDocument };
 }
@@ -116,6 +119,19 @@ describe('useOfficePanels', () => {
     expect(hook.result.current.open.right).toBeNull();
     hook.rerender({ writes: true });
     expect(hook.result.current.open.right).toBe('numbers');
+  });
+
+  it('offers a review panel only where review is shown, open again where it was left open', () => {
+    const { hook, onFocusDocument } = panels();
+    act(() => hook.result.current.actions['open-comment-history']!.run());
+    expect(hook.result.current.open.right).toBe('comments');
+    hook.rerender({ writes: false, reviews: false });
+    expect(hook.result.current.actions['open-comment-history']).toBeUndefined();
+    expect(hook.result.current.open.right).toBeNull();
+    // The focus it held is given back to the document.
+    expect(onFocusDocument).toHaveBeenCalledTimes(1);
+    hook.rerender({ writes: true, reviews: true });
+    expect(hook.result.current.open.right).toBe('comments');
   });
 
   it('keeps the width once a resize is done', () => {

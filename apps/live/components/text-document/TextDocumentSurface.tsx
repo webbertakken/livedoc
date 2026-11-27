@@ -103,9 +103,11 @@ import {
   offlineTextDocumentState,
 } from '@/lib/offline/offline-text-documents';
 import { textDocumentSchema } from '@/lib/text-document/text-document-schema';
+import { focusWriting } from '@/lib/text-document/text-document-focus';
 import {
   setLocalTextDocumentCaret,
   useTextDocumentPeers,
+  type TextDocumentPeer,
 } from '@/lib/text-document/text-document-carets-store';
 import {
   scrollToTextDocumentPeer,
@@ -232,6 +234,7 @@ type SurfaceState = 'loading' | 'ready' | 'failed';
 
 const NO_DOCUMENTS: readonly LinkDocument[] = [];
 const NO_DRAWING = () => false;
+const NO_PEERS: readonly TextDocumentPeer[] = [];
 
 export function TextDocumentSurface({
   scope,
@@ -319,10 +322,15 @@ export function TextDocumentSurface({
     choice: modeChoice,
     actions: modeActions,
   } = useOfficeMode(level, TEXT_DOCUMENT_MODES, 'TextDocumentMode', scope.tabId);
-  // Previewing the writing settled (review.md "Reviewing suggestions"), the body shows a copy: it takes no edits.
+  // Viewing draws what a Viewer sees (review.md "Editing modes"): no comment, card or review panel, no one's caret, and
+  // every pending suggestion rejected.
+  const reviews = mode !== 'viewing';
+  // Previewing the writing settled (review.md "Reviewing suggestions"), or Viewing, the body shows a copy: it takes no
+  // edits.
   const preview = useTextDocumentReviewPreview({
     doc: liveDoc,
     tab: shownTab ?? FIRST_DOCUMENT_TAB_ID,
+    viewing: !reviews,
   });
   const { bindBody } = preview;
   const writes = canEdit && mode === 'editing' && !preview.previewing;
@@ -340,8 +348,9 @@ export function TextDocumentSurface({
   const panels = useOfficePanels({
     kind: 'TextDocument',
     panels: TEXT_DOCUMENT_PANELS,
-    onFocusDocument: () => editor.current?.focus(),
+    onFocusDocument: () => focusWriting(editor.current),
     writes,
+    reviews,
   });
   const live = useRef({
     sequence,
@@ -725,8 +734,10 @@ export function TextDocumentSurface({
   ]);
 
   useEffect(() => {
-    if (state === 'ready' && editor.current) setTextDocumentPeers(editor.current, peers);
-  }, [peers, state]);
+    // Viewing draws no one's caret, as Google's (review.md "What a Viewer receives").
+    if (state === 'ready' && editor.current)
+      setTextDocumentPeers(editor.current, reviews ? peers : NO_PEERS);
+  }, [peers, state, reviews]);
 
   // The page drawn at its setup, and the ruler that sets its margins, indents and tab stops (editing-surface.md
   // "The ruler", page-layout.md "Page setup").
@@ -795,6 +806,7 @@ export function TextDocumentSurface({
     caret: changes.plugin,
     caretSection: page.caret.index,
     gallery,
+    drawnDoc: preview.drawn,
   });
   const { activeView } = headers;
   // Edit > Cut, Copy, Paste (text-and-paragraphs.md "Clipboard"); the editor's plugin tells it of a paste's losses.
@@ -957,7 +969,7 @@ export function TextDocumentSurface({
   const { stories: drawnStories, open: openStory } = headers;
   const suggestionStories = useMemo(
     () =>
-      preview.previewing
+      preview.previewing || !reviews
         ? null
         : {
             writings: drawnStories.writings,
@@ -965,7 +977,7 @@ export function TextDocumentSurface({
             reveal: drawnStories.reveal,
             open: openStory,
           },
-    [preview.previewing, drawnStories, openStory],
+    [preview.previewing, reviews, drawnStories, openStory],
   );
   const suggestionRights = useMemo(
     () => ({
@@ -990,8 +1002,8 @@ export function TextDocumentSurface({
     tab: shownTab ?? FIRST_DOCUMENT_TAB_ID,
     tabs: tabs.list,
     showTab: tabs.show,
-    // No one comments while previewing: a thread would anchor in the copy.
-    commenter: preview.previewing ? null : commenter,
+    // No one comments while previewing (a thread would anchor in the copy) or in Viewing.
+    commenter: preview.previewing || !reviews ? null : commenter,
     rights: suggestionRights,
     panelOpen: panels.open.right === COMMENTS_PANEL.id,
     arrival,
@@ -1001,6 +1013,7 @@ export function TextDocumentSurface({
     textWidth: Columns.width(page.caret.section.setup),
     preview,
     stories: suggestionStories,
+    shown: reviews,
   });
   useEffect(() => {
     selectThreadRef.current = threads.select;
@@ -1143,7 +1156,7 @@ export function TextDocumentSurface({
     defaultName: commenter?.name ?? '',
   });
   // File > Version history (review.md "Version history"): the shell's mode over the whole window.
-  const focusBody = useCallback(() => editor.current?.focus(), []);
+  const focusBody = useCallback(() => focusWriting(editor.current), []);
   const versionHistory = useTextDocumentVersionHistory({
     where: scope,
     local,
@@ -1434,7 +1447,7 @@ export function TextDocumentSurface({
               keys={threadKeys}
               suggestions={suggestions}
               storyTop={drawnStories.topOf}
-              commenter={commenter}
+              commenter={reviews ? commenter : null}
               subscribe={changes.subscribe}
               subscribeCaret={changes.subscribeCaret}
             >

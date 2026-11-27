@@ -228,8 +228,9 @@ panel's frame; the kind fills its body.
 - Whether a panel is open is per person, remembered in this browser per kind (`livedoc:v2:office-panels`)
   `(default)`, so a person who keeps the outline open finds it open in every document of the kind.
 - The menu item that opens a panel is an on/off check, checked while it is open; choosing it again closes it.
-- A kind may offer a panel to some sessions only (an Editor's): for the others its item is not bound and the panel is
-  not drawn, even where this browser remembers it open.
+- A kind may offer a panel to some sessions only (an Editor's), or only where review is shown (a text document's
+  comments: never to a Viewer, never in Viewing): elsewhere its item is not bound and the panel is not drawn, even
+  where this browser remembers it open, and it is drawn again where it is offered.
 - On a phone a panel covers the pages, full width, over them; its × or Escape closes it.
 - Panels appear without sliding: the shell's chrome never animates its layout.
 
