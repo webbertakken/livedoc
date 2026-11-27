@@ -31,6 +31,8 @@ test.describe('in Dutch', () => {
     await body.locator(MISSPELT).nth(1).click({ button: 'right' });
     const menu = page.getByRole('menu', { name: 'Context menu' });
     await expect(menu.getByRole('menuitem').first()).toHaveText(/^huis/);
+    // Shot once the menu has finished fading in.
+    await menu.evaluate((el) => Promise.all(el.getAnimations({ subtree: true }).map((x) => x.finished)));
     await page.screenshot({ path: test.info().outputPath('spelling-context-menu.png') });
     await menu.getByRole('menuitem').first().click();
     await expect(body).toContainText('het huis is mooi');
