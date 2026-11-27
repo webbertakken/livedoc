@@ -63,6 +63,7 @@ import {
   SheetPivotsContext,
 } from '@/components/sheets/pivots/sheet-pivots';
 import { useSpreadsheetPivots } from './pivots/useSpreadsheetPivots';
+import { usePivotGrouping } from './pivots/usePivotGrouping';
 import { useSheetBarActionsContext } from './useSheetBarActions';
 
 export function SpreadsheetSheetParts({ bridge }: { bridge: SheetsBridge }) {
@@ -124,6 +125,7 @@ export function SpreadsheetSheetParts({ bridge }: { bridge: SheetsBridge }) {
     [reveal],
   );
   const pivots = useSpreadsheetPivots(c, useSheetBarActionsContext(), editPivot);
+  const grouping = usePivotGrouping(c, pivots.change);
   const { openCreate: insertPivot } = pivots;
   // How Data Validation Rules was last opened (SpreadsheetRightPanel).
   const [validation, setValidation] = useState({ nonce: 0, startNew: false });
@@ -218,12 +220,14 @@ export function SpreadsheetSheetParts({ bridge }: { bridge: SheetsBridge }) {
       openCustomAngle: angleDialog.openCustomAngle,
       openSortRange: sortDialog.openSortRange,
     },
-    detailsHere
-      ? {
-          ...bandingActions,
-          'show-pivot-details': { run: () => void pivots.showDetails(active.r, active.c) },
-        }
-      : bandingActions,
+    {
+      ...bandingActions,
+      // Grouping a pivot table's items from its cells (pivot-tables.md "Grouping in the grid"): an Editor's.
+      ...grouping.actions,
+      ...(detailsHere
+        ? { 'show-pivot-details': { run: () => void pivots.showDetails(active.r, active.c) } }
+        : {}),
+    },
   );
   useCellGoogleFonts(c.sheet);
   const { focusGrid, canEdit } = c;
@@ -299,6 +303,7 @@ export function SpreadsheetSheetParts({ bridge }: { bridge: SheetsBridge }) {
       {cleanUp.dialog}
       {splitText.dialog}
       {pivots.dialog}
+      {grouping.dialog}
       {findReplace?.open ? <FindReplaceDialog state={findReplace} /> : null}
       <SheetBarSummary />
     </div>

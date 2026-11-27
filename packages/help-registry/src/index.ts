@@ -1690,7 +1690,7 @@ export const articles: Article[] = [
     title: 'Pivot Tables',
     description: 'Summarise a spreadsheet range by its columns: rows, columns, values and filters.',
     keywords:
-      'pivot table pivot tables pivottable summary summarise summarize group by totals subtotals count sum average report crosstab cross tab data pilot datapilot rows columns values filters insert pivot table editor getpivotdata show details drill down source rows spreadsheet',
+      'pivot table pivot tables pivottable summary summarise summarize group by totals subtotals count sum average report crosstab cross tab data pilot datapilot rows columns values filters insert pivot table editor getpivotdata show details drill down source rows spreadsheet group grouping date group intervals bins buckets ungroup',
     category: 'Canvas',
     categorySlug: 'canvas/plan-tabs',
     parentSlug: 'plan-tabs',

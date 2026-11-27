@@ -13,6 +13,10 @@ export type PivotItem = {
   order: number | string;
   label: Scalar;
   fmt?: PivotFormat;
+  /** A cell's own item: the source cell as it shows, which a custom group names it by. */
+  shown?: string;
+  /** An item a grouping made: a date rule's or an interval's (`rule`), or a custom group's. */
+  made?: 'rule' | 'custom';
 };
 
 const MONTH_SHORT = MONTH_NAMES.map((m) => m.slice(0, 3));
@@ -85,11 +89,13 @@ function dateItem(serial: number, rule: PivotDateRule): [string, number] {
 // A cell's own item: its value, ranked by kind.
 function plainItem(cell: PivotCell, col: number): PivotItem {
   const v = cell.v;
-  if (typeof v === 'number') return { key: `n${v}`, rank: 1, order: v, label: v, fmt: { col } };
-  if (typeof v === 'boolean') return { key: `b${v}`, rank: 3, order: Number(v), label: v };
-  if (isError(v)) return { key: `e${v.e}`, rank: 4, order: v.e, label: v };
+  const shown = cell.shown;
+  if (typeof v === 'number')
+    return { key: `n${v}`, rank: 1, order: v, label: v, fmt: { col }, shown };
+  if (typeof v === 'boolean') return { key: `b${v}`, rank: 3, order: Number(v), label: v, shown };
+  if (isError(v)) return { key: `e${v.e}`, rank: 4, order: v.e, label: v, shown };
   const text = v ?? '';
-  return { key: `s${text}`, rank: 2, order: text.toLowerCase(), label: text };
+  return { key: `s${text}`, rank: 2, order: text.toLowerCase(), label: text, shown };
 }
 
 const grouped = (label: string, order: number): PivotItem => ({
@@ -97,6 +103,7 @@ const grouped = (label: string, order: number): PivotItem => ({
   rank: 0,
   order,
   label,
+  made: 'rule',
 });
 
 /**
@@ -122,7 +129,7 @@ export function itemMaker(
       const name = named.get(cell.shown);
       return name === undefined
         ? plainItem(cell, group.col)
-        : { key: `s${name}`, rank: 2, order: name.toLowerCase(), label: name };
+        : { key: `s${name}`, rank: 2, order: name.toLowerCase(), label: name, made: 'custom' };
     };
   }
   // Number intervals: whole labels (`0 - 4`) when the size and every number are whole.

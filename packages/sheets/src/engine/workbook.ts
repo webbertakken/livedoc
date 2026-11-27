@@ -77,9 +77,11 @@ import {
   pivotArray,
   pivotBox,
   pivotIndexCellAt,
+  pivotItemPlace,
   pivotSpecOf,
   readPivotSource,
   type PivotBox,
+  type PivotItemPlace,
   type PivotSheets,
 } from '../pivot/pivot-resolve';
 import type { PivotSource } from '../pivot/pivot-spec';
@@ -691,6 +693,26 @@ export class Workbook {
     const claim = this.spills.claimOf(owner)!;
     if (r - claim.r1 < arr.head.rows) return 'column';
     return c - claim.c1 < arr.head.cols ? 'row' : null;
+  }
+
+  // The landed pivot table's item cell at (r, c), which grouping in the grid reads (pivot-tables.md "Grouping in the
+  // grid", D621), or null for any other cell.
+  pivotItemAt(
+    sheetId: string,
+    r: number,
+    c: number,
+  ): (PivotItemPlace & { pivotId: string }) | null {
+    if (!this.spills.hasPivots()) return null;
+    const no = this.noAt(sheetId, r, c);
+    if (no === NO_CELL) return null;
+    this.value(sheetId, r, c);
+    const owner = this.spills.ownerAt(no) ?? no;
+    const pivot = this.spills.pivotAt(owner);
+    const arr = this.vals.get(owner);
+    if (!pivot || !isPivotArray(arr)) return null;
+    const claim = this.spills.claimOf(owner)!;
+    const place = pivotItemPlace(arr, r - claim.r1, c - claim.c1);
+    return place && { pivotId: pivot.id, ...place };
   }
 
   // Whether (r, c) is a value of a landed pivot table's output, whose details a double-click shows (D616).

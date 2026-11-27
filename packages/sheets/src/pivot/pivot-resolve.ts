@@ -2,6 +2,7 @@
 // pivot-tables.md "In the grid", D602): its source's sheet and positions, its fields by their column's place in the
 // source, its source read as values and shown texts, and its output's cells with the number formats they show in.
 import { layoutIndex } from '../layout';
+import { isDateSection } from '../format-codes';
 import { displayValue } from '../number-format';
 import type { SheetPivot } from '../objects/sheet-pivot';
 import { pivotWithout } from '../objects/sheet-pivot';
@@ -12,6 +13,8 @@ import type {
   PivotFormat,
   PivotGroupSpec,
   PivotHead,
+  PivotItemCell,
+  PivotItemRef,
   PivotIndex,
   PivotOutput,
   PivotSource,
@@ -145,6 +148,7 @@ export type PivotArray = ValueArray & {
   fmts: (CellFormat | undefined)[][];
   index: PivotIndex;
   head: PivotHead;
+  items: PivotItemCell[];
 };
 
 export function isPivotArray(v: Value | undefined): v is PivotArray {
@@ -168,6 +172,46 @@ export function pivotIndexCellAt(
   return byPlace.get(`${r},${c}`);
 }
 
+// Each output's item cells by place, made the first time one is asked for.
+const itemCells = new WeakMap<PivotArray, Map<string, PivotItemCell>>();
+
+/** An item cell of an output as grouping it from the grid reads it (pivot-tables.md "Grouping in the grid"). */
+export type PivotItemPlace = PivotItemRef & {
+  axis: PivotItemCell['axis'];
+  depth: number;
+  /** A number shown as a date or time. */
+  date: boolean;
+  /** The lowest and highest of its group's items that are numbers, or null for none. */
+  numbers: { min: number; max: number } | null;
+};
+
+const shownAsDate = (f: CellFormat | undefined) =>
+  f?.nf === 'date' ||
+  f?.nf === 'time' ||
+  f?.nf === 'datetime' ||
+  (f?.nf === 'custom' && isDateSection((f.nc ?? '').split(';')[0]!));
+
+/** The item cell at (r, c) of an output (relative to its anchor), or null for any other cell. */
+export function pivotItemPlace(arr: PivotArray, r: number, c: number): PivotItemPlace | null {
+  let byPlace = itemCells.get(arr);
+  if (!byPlace) {
+    byPlace = new Map(arr.items.map((x) => [`${x.r},${x.c}`, x]));
+    itemCells.set(arr, byPlace);
+  }
+  const cell = byPlace.get(`${r},${c}`);
+  if (!cell) return null;
+  const numbers = arr.items
+    .filter((x) => x.axis === cell.axis && x.depth === cell.depth)
+    .flatMap((x) => (typeof x.item.label === 'number' ? [x.item.label] : []));
+  return {
+    ...cell.item,
+    axis: cell.axis,
+    depth: cell.depth,
+    date: typeof cell.item.label === 'number' && shownAsDate(arr.fmts[r]![c]),
+    numbers: numbers.length ? { min: Math.min(...numbers), max: Math.max(...numbers) } : null,
+  };
+}
+
 const PERCENT: CellFormat = { nf: 'percent', dp: 2 };
 
 /** The output as cells for the grid: values, and formats from its source columns' or as percentages. */
@@ -182,6 +226,7 @@ export function pivotArray(
     fmts: output.rows.map((row) => row.map((x) => formatOf(x.fmt))),
     index: output.index,
     head: output.head,
+    items: output.items,
   };
 }
 
