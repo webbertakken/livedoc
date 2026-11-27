@@ -573,17 +573,53 @@ document and rejecting them all as the primary, as Google's
 
 ## Version history
 
-- File > Version history > See version history (⌘⌥⇧H): the document is shown read-only at the chosen version with
-  the panel at the right: versions by date, grouped by day, each with its editors; **Only show named versions**; the
-  current version first.
-- **Show changes**: edits since the previous version tinted in each editor's colour; ⌘⌥ N then R / P then R step
-  through them.
-- **Name current version** (File > Version history), or a version's menu: Name this version, Restore this version,
-  Make a copy.
-- **Restore this version** makes a new version equal to it; nothing is lost.
-- Automatic versions are taken after every 30 minutes of edits or 1,000 edit operations, whichever first
-  (`TEXT_DOCUMENT_VERSION_EVERY`, (default)); named ones are kept forever, automatic ones thinned after 30 days to one
-  per day ([Live editing and storage](live-editing-and-storage.md#versions)).
+A text document keeps its versions in its room, as Google's does
+([Find what's changed in a file](https://support.google.com/docs/answer/190843)); how they are stored, what they cost and
+their limits are in [Live editing and storage](live-editing-and-storage.md#versions).
+
+- **Who**: Editors alone, as Google's version history asks edit access; a Participant and a Viewer see no Version
+  history in File, and its key does nothing ([Share roles](#share-roles)). A document in **This Browser** has no
+  room and keeps no versions: File > Version history is dimmed with "Version history is kept for documents saved in
+  LiveDoc." (default copy).
+- **A version** is the whole text document as it stood at one moment: every document tab, its headers, footers,
+  notes, styles and suggestions; never its comments, which stay as they are, made since or not (Google's).
+- **Taken automatically** after every 30 minutes of edits or 1,000 stored edits, whichever comes first
+  (`TEXT_DOCUMENT_VERSION_EVERY_MS`, `TEXT_DOCUMENT_VERSION_EVERY_UPDATES`, (default)); **named** by an Editor.
+- **Opening**: File > Version history > See version history (⌘⌥⇧H), or the save status's "Last edit was …": the
+  shell's version-history mode ([Review surfaces](../012-collaboration/review-surfaces.md#version-history)), the
+  document drawn read-only at the chosen version, no comments, its suggestions as they stood, and the panel at the right.
+- **The panel**, titled **Version history**: **Current version** first, then every version newest first, grouped by
+  day ("Today", "Yesterday", then the date), each with its time (or its name above it, bold), and its editors, a
+  coloured dot and the name each wrote under; a version from a restore reads "Restored from <its name or time>"
+  under its time. **Only show named versions** (a switch) hides the automatic ones (Google's).
+- **Show changes** (a check box, on by default as Google's): what the chosen version changed since the version
+  before it, each editor's insertions in their colour and deletions struck through in it; a deletion whose deleter
+  went unrecorded is drawn in the neutral grey of a file's author (default). ⌘⌥ N then R and ⌘⌥ P then R go to the
+  next and previous change.
+- **Name current version** (File > Version history): a dialog "Name current version", a field (the time as its
+  placeholder), **Cancel** and **Save**; it names the newest version when nothing changed since it, else takes a
+  version of now and names it.
+- **A version's menu** (⋮ on its row): **Name this version** (or **Rename**, and **Remove name**, on a named one),
+  **Restore this version** and **Make a copy**; Current version has Name this version only (Google's).
+  - A name is at most `TEXT_DOCUMENT_VERSION_NAME_MAX_CHARS` characters, typed in place on the row, Enter keeps it,
+    Escape leaves it; an empty name removes it. A named version is kept forever; one whose name is removed is an
+    automatic one again, thinned as they are.
+  - At most `TEXT_DOCUMENT_NAMED_VERSIONS_MAX` (40) named versions a text document, as Google's: naming one more is
+    refused with "You can name up to 40 versions. Remove a name to name this one." (default copy).
+  - **Restore this version** asks "Restore this version?" with "Your current document will revert to this version.
+    You can always restore the current version later.", **Cancel** and **Restore** (default copy, after Google's). The room first takes
+    an automatic version of now, then makes the document read as the chosen version in **one change by the
+    restorer**: what was written since is deleted, what was deleted since is written again, what is unchanged stays,
+    so a comment on unchanged text keeps its anchor. Someone typing while it happens keeps their later edits on top
+    of it; nothing is lost. The history then shows a version of the result, by the restorer, "Restored from …";
+    the mode closes and the restorer is back on the current version.
+  - **Make a copy**: a dialog, "Copy document" (default copy, after Google's), a **Name** field ("Copy of <title>"), **Cancel** and
+    **Make a copy**: a new text document holding the version as it reads, in this one's format and place, with no
+    history, versions or comments (default), opened in a new browser tab.
+- **Back** (the arrow at the top left) or Escape leaves the mode, on the current version.
+- **Refusals**, said as a status in the panel, nothing changed: the history cannot be read ("Version history
+  couldn't be loaded. Try again."), a version cannot be read, named or restored ("That didn't work. Try again.")
+  (default copy).
 
 ## Notifications
 
@@ -596,7 +632,7 @@ setting is not shown and the Inbox carries them. Nothing is sent to someone who 
 | Role            | Comments                            | Suggestions                                                                      | Versions                 |
 | --------------- | ----------------------------------- | -------------------------------------------------------------------------------- | ------------------------ |
 | **Editor**      | All                                 | Make, accept, reject, review all                                                 | See, name, restore, copy |
-| **Participant** | Add, reply, resolve, react, mention | Make (D7), reply, reject own (one or all mine); never accept; review and preview | See (as a Viewer does)   |
+| **Participant** | Add, reply, resolve, react, mention | Make (D7), reply, reject own (one or all mine); never accept; review and preview | None, Editors only       |
 | **Viewer**      | Read                                | Read (in Editing and Suggesting views), review and preview                       | None, as Google's Viewer |
 
 ## Telemetry
