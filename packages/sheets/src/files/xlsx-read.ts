@@ -6,6 +6,7 @@ import {
   attributeOf,
   childElement,
   childElements,
+  keptXmlOf,
   OOXML_CONTENT_TYPES,
   PACKAGE_BUDGETS,
   parseXml,
@@ -16,7 +17,9 @@ import {
   textContent,
   type OoxmlPackage,
   type PackageBudgets,
+  type XmlBindings,
   type XmlElement,
+  type XmlParsed,
 } from '@livedoc/office-packages';
 import { SheetLimits } from '../sheet-limits';
 import { ERROR_CODES, type ErrorCode } from '../formula/values';
@@ -52,6 +55,7 @@ import {
 } from './xlsx-parts';
 import { readXlsxLines } from './xlsx-lines';
 import { readXlsxTabLook } from './xlsx-tab-look';
+import { isRichItem, itemText } from './xlsx-cell-text';
 
 // A file is read up to a workbook's limits (files-and-print.md "A file sent in parts"): past them it is cut, and said.
 const {
@@ -77,9 +81,18 @@ const SPREADSHEET_TYPES: ReadonlySet<string> = new Set([
   OOXML_CONTENT_TYPES.macroSpreadsheet,
 ]);
 
+// A rich string item's children as the file wrote them (D377).
+type Runs = readonly { xml: string; ns: XmlBindings }[];
+
+// A rich string item's children, kept; null when it is plain.
+const runsOf = (parsed: XmlParsed, item: XmlElement, ns: string): Runs | null =>
+  isRichItem(item, ns) ? childElements(item).map((child) => keptXmlOf(parsed, child)) : null;
+
 type Book = {
   ns: string;
   strings: readonly string[];
+  // The shared strings' runs, by index, of those that are rich.
+  runs: ReadonlyMap<number, Runs>;
   styles: readonly XlsxCellStyle[];
   dates: ReadonlySet<number>;
   date1904: boolean;
@@ -95,23 +108,37 @@ const text = (pkg: OoxmlPackage, part: string | undefined): string | undefined =
 const children = (element: XmlElement | undefined, ns: string, local: string): XmlElement[] =>
   element ? childElements(element).filter((e) => e.uri === ns && e.local === local) : [];
 
-// A string item's text: its own `t`, or its runs' `t`s; phonetic guides are not its text.
-function itemText(item: XmlElement, ns: string): string {
-  const own = childElement(item, ns, 't');
-  const runs = children(item, ns, 'r').map((r) => childElement(r, ns, 't'));
-  return fromXstring([own, ...runs].map((t) => (t ? textContent(t) : '')).join(''));
-}
-
-function sharedStrings(pkg: OoxmlPackage, part: string | undefined, ns: string): string[] {
+// The shared strings' texts, and the runs of those that are rich.
+function sharedStrings(
+  pkg: OoxmlPackage,
+  part: string | undefined,
+  ns: string,
+): Pick<Book, 'strings' | 'runs'> {
   const xml = text(pkg, part);
   const parsed = xml === undefined ? undefined : parseXml(xml, part);
-  return parsed?.ok ? children(parsed.root, ns, 'si').map((si) => itemText(si, ns)) : [];
+  const runs = new Map<number, Runs>();
+  if (!parsed?.ok) return { strings: [], runs };
+  const items = children(parsed.root, ns, 'si');
+  for (const [i, si] of items.entries()) {
+    const kept = runsOf(parsed, si, ns);
+    if (kept) runs.set(i, kept);
+  }
+  return { strings: items.map((si) => itemText(si, ns)), runs };
 }
 
 function inlineValue(cell: XmlElement, ns: string): FileValue | undefined {
   const is = childElement(cell, ns, 'is');
   const inline = is ? itemText(is, ns) : '';
   return inline ? { k: 's', v: inline } : undefined;
+}
+
+// A string cell's runs, when its text is rich (D377): its shared string's, or its inline string's.
+function cellRuns(cell: XmlElement, parsed: XmlParsed, book: Book): Runs | null {
+  const type = attributeOf(cell, '', 't');
+  // An inline string cell holding text has its `is`.
+  if (type === 'inlineStr') return runsOf(parsed, childElement(cell, book.ns, 'is')!, book.ns);
+  const v = type === 's' ? childElement(cell, book.ns, 'v') : undefined;
+  return v ? (book.runs.get(Number(textContent(v))) ?? null) : null;
 }
 
 function cellValue(cell: XmlElement, book: Book): FileValue | undefined {
@@ -214,11 +241,13 @@ function cellFormat(
 // `guarded` (protected), a style that is not locked says more too.
 function readSheet(
   name: string,
-  root: XmlElement,
+  parsed: XmlParsed,
   book: Book,
   ruled: boolean,
   guarded: boolean,
+  keepRuns: (at: { r: number; c: number }, runs: Runs) => void,
 ): FileSheet {
+  const root = parsed.root;
   const cells: FileCell[] = [];
   const shared = new Map<string, Shared>();
   const cache = new Set<string>();
@@ -260,6 +289,9 @@ function readSheet(
       if (read.formula !== undefined) out.formula = read.formula;
       if (read.spans) out.spans = read.spans;
       if (value) out.value = value;
+      const runs =
+        value?.k === 's' && read.formula === undefined ? cellRuns(cell, parsed, book) : null;
+      if (runs) keepRuns(at, runs);
       cells.push(out);
       book.budget.cells++;
     }
@@ -310,7 +342,7 @@ export async function readXlsx(
   const theme = readThemeColours(themeXml);
   const book: Book = {
     ns,
-    strings: sharedStrings(pkg, partOf(RELATIONSHIP_TYPES.sharedStrings), ns),
+    ...sharedStrings(pkg, partOf(RELATIONSHIP_TYPES.sharedStrings), ns),
     styles,
     dates: dateStyles(styles),
     date1904,
@@ -358,7 +390,19 @@ export async function readXlsx(
       ? 0
       : unreadChildren(worksheet.root, WORKSHEET_READ) -
         childElements(worksheet.root).filter((e) => allRead(e, read)).length;
-    const cells = readSheet(name, worksheet.root, book, rules.styled, protection.protected);
+    const index = sheets.length;
+    // A cell's rich text is kept on its cell (D377); a Strict file's is named with its other unread content (D108).
+    const cells = readSheet(
+      name,
+      worksheet,
+      book,
+      rules.styled,
+      protection.protected,
+      (at, runs) => {
+        if (keeper) keeper.cellText(runs, { sheet: index, ...at });
+        else strictUnread++;
+      },
+    );
     sheets.push({
       ...cells,
       ...readXlsxTabLook(sheet, worksheet.root, ns),
