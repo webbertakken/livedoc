@@ -42,12 +42,18 @@ export function planThinning(
     if (row.kind === 'automatic' && row.takenAt < cutoff)
       newestOfDay.set(Math.floor(row.takenAt / DAY_MS), row);
   for (const row of ordered)
-    if (thinnable(row) && row.takenAt < cutoff && newestOfDay.get(Math.floor(row.takenAt / DAY_MS)) !== row)
+    if (
+      thinnable(row) &&
+      row.takenAt < cutoff &&
+      newestOfDay.get(Math.floor(row.takenAt / DAY_MS)) !== row
+    )
       goes.add(row.id);
 
   // Past either cap, the oldest automatic versions go.
   let autos = ordered.filter((row) => row.kind === 'automatic' && !goes.has(row.id)).length;
   let bytes = ordered.reduce((n, row) => n + row.bytes - (goes.has(row.id) ? row.ownBytes : 0), 0);
+  for (const row of ordered) {
+    if (autos <= caps.autoMax && bytes <= caps.maxBytes) break;
     if (!thinnable(row) || goes.has(row.id)) continue;
     goes.add(row.id);
     autos -= 1;
