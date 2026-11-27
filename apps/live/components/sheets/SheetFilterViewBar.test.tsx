@@ -202,6 +202,22 @@ describe('filter views', () => {
     expect(filterViewOf(h.ctl().sheet.layout, 'fvaa')!.conds).toEqual({});
   });
 
+  it('puts a field back on Escape, and makes no view over an empty block', async () => {
+    const h = await makeSheet({ cells: CELLS });
+    renderSheet(h, (p) => <Host {...p} />, { at: 'A2' });
+    click('create-filter-view');
+    const name = screen.getByRole('textbox', { name: 'Name' });
+    fireEvent.change(name, { target: { value: 'Draft' } });
+    fireEvent.keyDown(name, { key: 'Escape' });
+    expect(name).toHaveProperty('value', 'Filter 1');
+    expect(screen.getByRole('toolbar', { name: 'Filter view' })).toBeTruthy();
+    fireEvent.keyDown(screen.getByRole('toolbar', { name: 'Filter view' }), { key: 'Escape' });
+    act(() => h.select('E8'));
+    click('create-filter-view');
+    // A lone empty cell is a block of its own, so a view is made over it.
+    expect(views(h).map((v) => v.title)).toEqual(['Filter 1', 'Filter 2']);
+  });
+
   it('closes a view someone else deleted, saying so', async () => {
     const h = await makeSheet({ cells: CELLS });
     renderSheet(h, (p) => <Host {...p} />, { at: 'A2' });
