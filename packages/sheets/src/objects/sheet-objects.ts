@@ -23,6 +23,7 @@ export const SHEET_CHART_TYPES = [
   'waterfall',
   'treemap',
   'gauge',
+  'scorecard',
   'combo',
 ] as const;
 export type SheetChartType = (typeof SHEET_CHART_TYPES)[number];

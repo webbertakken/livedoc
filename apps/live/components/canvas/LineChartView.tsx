@@ -1,6 +1,6 @@
 'use client';
 
-// Line, Area, Stepped Area, Scatter, Bubble, Radar, Candlestick, OHLC, Histogram, Waterfall and Combo charts (docs/specs/009-elements/pie-chart.md "Chart types"): a 2-D chart — shared x-axis `lineCategories` and one or
+// Line, Area, Stepped Area, Scatter, Bubble, Radar, Candlestick, OHLC, Histogram, Waterfall, Scorecard and Combo charts (docs/specs/009-elements/pie-chart.md "Chart types"): a 2-D chart — shared x-axis `lineCategories` and one or
 // more named `lineSeries`, each drawn as a polyline with point markers in the
 // theme palette, with an optional legend listing the series. Data is edited as
 // a grid (or imported from CSV) via the Data menu. Reuses the chart-family
@@ -33,6 +33,7 @@ import {
   histogramColumns,
   isHistogramChart,
   isWaterfallChart,
+  isScorecardChart,
   pointsMarked,
   type ShapeElement,
 } from '@livedoc/document';
@@ -47,6 +48,7 @@ import { BubbleChartView } from './BubbleChartView';
 import { StockChartView } from './StockChartView';
 import { BarGroupChartView } from './BarGroupChartView';
 import { WaterfallChartView } from './WaterfallChartView';
+import { ScorecardChartView } from './ScorecardChartView';
 
 // How far from a step's middle the pointer reads it.
 const STEP_HOVER_PX = 6;
@@ -61,7 +63,7 @@ type Props = {
 };
 
 // A Radar chart draws around a centre (pie-chart.md "Radar"), a Bubble chart its sized circles ("Bubble"), a Candlestick or
-// OHLC chart its prices ("Candlestick and OHLC"), a Histogram the column chart of its counts ("Histogram"), a Waterfall its running total ("Waterfall"); every other
+// OHLC chart its prices ("Candlestick and OHLC"), a Histogram the column chart of its counts ("Histogram"), a Waterfall its running total ("Waterfall"), a Scorecard its numbers ("Scorecard"); every other
 // line chart its lines and points on its two axes.
 export function LineChartView(props: Props) {
   if (isBubbleChart(props.element)) return <BubbleChartView {...props} />;
@@ -69,6 +71,7 @@ export function LineChartView(props: Props) {
   if (isHistogramChart(props.element))
     return <BarGroupChartView {...props} element={histogramColumns(props.element)} />;
   if (isWaterfallChart(props.element)) return <WaterfallChartView {...props} />;
+  if (isScorecardChart(props.element)) return <ScorecardChartView {...props} />;
   return isRadarChart(props.element) ? (
     <RadarChartView {...props} />
   ) : (

@@ -402,3 +402,19 @@ describe('a Gauge chart in both formats', () => {
     );
   });
 });
+
+// D346: a Scorecard chart is written as a Column chart of its series, restored on reading.
+describe('a Scorecard chart in both formats', () => {
+  it('is written as a Column chart and read back as a Scorecard', async () => {
+    const sheet = charted({ type: 'scorecard' });
+    const xlsx = writeXlsx(fileOf(sheet), 's');
+    expect(xlsx.losses).toEqual([{ k: 'chart_nearest_type', sheet: 'Sales' }]);
+    expect((await entries(xlsx.data)).get('xl/charts/chart1.xml')).toContain(
+      '<c:barDir val="col"/>',
+    );
+    expect((await readBack(xlsx.data, true)).sheets[0]!.charts![0]!.type).toBe('scorecard');
+    expect((await readBack(writeOds(fileOf(sheet), 's').data)).sheets[0]!.charts![0]!.type).toBe(
+      'scorecard',
+    );
+  });
+});
