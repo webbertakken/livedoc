@@ -9,7 +9,11 @@ import {
   PARAGRAPH,
   PARAGRAPH_FORMAT_CHANGE,
   SUGGESTION_MARKS,
+  TABLE,
 } from './live-names';
+import { crossingSpans, spanAttribute, type SpanChange } from './live-table-spans';
+
+const NO_SPANS: ReadonlyMap<Y.XmlElement, SpanChange> = new Map();
 import {
   deltaOf,
   elementsOf,
@@ -93,6 +97,9 @@ function plainChildren(
   parent: Y.XmlFragment | Y.XmlElement,
   key: string,
   inParagraph: boolean,
+  // A table's merged cells as they read once the person's own rows and cells are rejected (review.md "Across merged
+  // cells"): a merged cell their row grew reads as before it.
+  spans: ReadonlyMap<Y.XmlElement, SpanChange> = NO_SPANS,
 ): PlainNode[] {
   const out: PlainNode[] = [];
   for (const node of elementsOf(parent)) {
@@ -114,7 +121,20 @@ function plainChildren(
         else attributes[name] = value;
       }
     }
-    const children = plainChildren(node, key, inParagraph || paragraph);
+    const change = spans.get(node);
+    if (change) {
+      for (const name of ['rowspan', 'colspan'] as const) {
+        const value = spanAttribute(change[name]);
+        if (value === undefined) delete attributes[name];
+        else attributes[name] = value;
+      }
+      if (change.colwidth) attributes.colwidth = change.colwidth;
+    }
+    const inner =
+      node.nodeName === TABLE
+        ? crossingSpans(node, (part) => ownBy(part.getAttribute(INSERTION_MARK), key)).changes
+        : spans;
+    const children = plainChildren(node, key, inParagraph || paragraph, inner);
     if (paragraph && ownBy(attributes[INSERTION_MARK], key)) {
       delete attributes[INSERTION_MARK];
       const previous = out.at(-1);
