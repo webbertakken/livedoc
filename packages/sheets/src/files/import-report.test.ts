@@ -53,6 +53,8 @@ describe('importReport', () => {
       { k: 'charts_unwritten', sheet: 'Data' },
       { k: 'chart_rewritten', sheet: 'Data' },
       { k: 'chart_nearest_type', sheet: 'Data' },
+      { k: 'pivot_unwritten', sheet: 'Data' },
+      { k: 'pivot_changed', sheet: 'Data' },
       { k: 'sheets_cut', kept: 200, had: 203 },
     ];
     const report = importReport(losses);
@@ -84,6 +86,7 @@ describe('importReport', () => {
       { k: 'charts_unwritten', count: 1, names: ['Data'] },
       { k: 'chart_rewritten', count: 1, names: ['Data'] },
       { k: 'chart_nearest_type', count: 1, names: ['Data'] },
+      { k: 'pivot_unwritten', count: 1, names: ['Data'] },
       { k: 'sheet_renamed', count: 1, names: [{ from: 'Data', to: 'Data (2)' }] },
     ]);
   });

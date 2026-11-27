@@ -241,6 +241,9 @@ export class XlsxKeptWriter {
       names: [],
       taken: new Set(),
     },
+    // LiveDoc's own `pivotCache` entries, after the kept ones in one `pivotCaches` (standard-mapping.md "Pivot tables
+    // in the file").
+    pivotCaches: readonly string[] = [],
   ): string[] {
     const kept: string[] = [];
     const names: string[] = [];
@@ -272,7 +275,16 @@ export class XlsxKeptWriter {
     }
     names.push(...functions.names);
     if (names.length > 0) kept.push(`<definedNames>${names.join('')}</definedNames>`);
-    return inOrder(WORKBOOK_ORDER, kept, own);
+    return inOrder(WORKBOOK_ORDER, withPivotCaches(kept, pivotCaches), own);
+  }
+
+  /** The highest `cacheId` a kept `pivotCaches` holds (-1 for none), so LiveDoc's own caches follow it. */
+  pivotCacheIdMax(): number {
+    let max = -1;
+    for (const item of this.children('workbook'))
+      if (keptLocalName(item.xml) === 'pivotCaches')
+        for (const m of item.xml.matchAll(/\scacheId="(\d+)"/g)) max = Math.max(max, Number(m[1]));
+    return max;
   }
 
   /** The highest priority a sheet's kept format rules hold (0 for none), so LiveDoc's own follow them. */
@@ -369,6 +381,16 @@ export class XlsxKeptWriter {
 }
 
 /** Relationship ids for LiveDoc's own relationships of a part: `rId1`, `rId2`, ... none a kept one has. */
+/** Kept workbook children with LiveDoc's own pivot caches in the kept `pivotCaches`, after its own, or in one of theirs. */
+export function withPivotCaches(kept: readonly string[], own: readonly string[]): string[] {
+  if (own.length === 0) return [...kept];
+  const at = kept.findIndex((xml) => keptLocalName(xml) === 'pivotCaches');
+  if (at < 0) return [...kept, `<pivotCaches>${own.join('')}</pivotCaches>`];
+  const holder = kept[at]!;
+  const close = holder.lastIndexOf('</');
+  return kept.with(at, holder.slice(0, close) + own.join('') + holder.slice(close));
+}
+
 export function ownIds(kept: readonly Relationship[]): () => string {
   const taken = new Set(kept.map((r) => r.id));
   let n = 0;

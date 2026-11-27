@@ -41,7 +41,7 @@ native; a file keeps the format it arrived in). Research: [The standard](../../r
 | Protection ([below](#protection-in-the-file))         | `table:protected`, `style:cell-protect`; LiveDoc's record in `livedoc:` attributes                                          | `sheetProtection`, `protectedRanges`; LiveDoc's record in an `extLst` `ext`    |
 | Comments and notes                                    | `office:annotation` in the cell                                                                                             | `xl/comments*.xml` (notes), threaded comments parts                            |
 | Charts                                                | `draw:frame` › `draw:object` holding a chart document (inline in `.fods`)                                                   | DrawingML chart parts through `xl/drawings`                                    |
-| Pivot tables                                          | `table:data-pilot-table`                                                                                                    | pivot cache definition, records and table parts                                |
+| Pivot tables ([below](#pivot-tables-in-the-file))     | `table:data-pilot-table`; LiveDoc's record in `livedoc:` attributes                                                         | pivot cache definition and table parts; LiveDoc's record in an `extLst` `ext`  |
 | Images                                                | `draw:frame` › `draw:image` (`Pictures/`)                                                                                   | `xl/media`, DrawingML pictures; in-cell images as rich values                  |
 | Settings: locale, time zone, recalculation, iteration | `table:calculation-settings` (`table:iteration`), meta and settings                                                         | `calcPr` (`iterate`, `iterateCount`, `iterateDelta`, `calcMode`)               |
 
@@ -644,6 +644,61 @@ each suite writes its own, so LibreOffice, Excel and Google Sheets open them as 
     loss is never silent; a kept chart whose original is restored writes its kept XML as any other (default, D290).
 - Any other chart stays kept content.
 
+## Pivot tables in the file
+
+A sheet's [pivot tables](pivot-tables.md) are written both ways, as validation rules are (D293): the **standard form**
+each format's apps read and refresh, **LiveDoc's record** beside it, exact, which LiveDoc reads back, and the
+**output's cells** cached as plain values in their number formats, so an app that does not refresh shows what LiveDoc
+showed (default, D604). The evidence is Google Sheets' own export (`corpus/google/pivot-tables.xlsx`, `.ods`), which
+LibreOffice reads into its own pivot tables.
+
+- **XLSX standard form**, shaped as Google Sheets exports one: per pivot table a pivot cache definition
+  (`xl/pivotCache/pivotCacheDefinitionN.xml`: `cacheSource type="worksheet"` with `worksheetSource` `ref` and
+  `sheet`, one `cacheField` a source column named by its header, its `sharedItems` the column's distinct values in
+  source order when the column is a row, column or filter field, `refreshOnLoad="1"` while the standard form says the
+  whole pivot table, no records), listed in the workbook's one `pivotCaches` (after the kept ones, `cacheId` past
+  theirs); and a pivot table part (`xl/pivotTables/pivotTableN.xml`) linked from its worksheet: tabular
+  (`compact="0" outline="0"`), its `location` the output, moved down by its page fields and one more row as Excel lays
+  page fields out above it, one `pivotField` a cache field (its `axis`, `dataField`, `items`, `sortType`,
+  `defaultSubtotal="0"` when its totals are off), `rowFields`, `colFields` (`-2`, the values, last, or in
+  `rowFields` with Values as rows, when there are two or more), `pageFields` (a filter's column, its hidden items
+  `h="1"`), `dataFields` (`name`, `fld`, `subtotal`, `showDataAs`), `rowGrandTotals`/`colGrandTotals` off when the
+  outermost group's totals are, and the style `PivotStyleLight16`. A calculated field is a `cacheField` with its
+  `formula` (without `=`) and `databaseField="0"`.
+- **ODF standard form**: one `table:data-pilot-table` a pivot table in the spreadsheet's one
+  `table:data-pilot-tables` (after the kept ones), named `LiveDocPivot1`, ... (a name a kept one holds skipped):
+  `table:target-range-address` the output (page fields' rows above it, as LibreOffice lays them out),
+  `table:source-cell-range`, and one `table:data-pilot-field` a field (`table:source-field-name` its header,
+  `table:orientation` `row`, `column`, `data` or `page`, `table:function` on a data field), each row, column and page
+  field with a `table:data-pilot-level` holding its subtotals (none when its totals are off), its members (a filtered
+  value `table:display="false"`) and its sort (`table:sort-mode="name"`, `table:order`); a Show As value its
+  `table:data-pilot-field-reference` (`row-percentage`, `column-percentage`, `total-percentage`); with two or more
+  values the data layout field (`table:is-data-layout-field="true"`) on columns, or rows with Values as rows; and
+  `table:grand-total` `none`, `row`, `column` or `both` from the outermost groups' totals.
+- **Summaries**: SUM `sum`, COUNTA XLSX `count` and ODF `count`, COUNT `countNums` and `countnums`, AVERAGE, MAX, MIN,
+  PRODUCT, STDEV, STDEVP, VAR, VARP each its own; MEDIAN ODF `median`, which LibreOffice reads; MEDIAN in XLSX and
+  COUNTUNIQUE in both have none, so the standard form writes `sum` (default, D605).
+- **What other apps lose**, as the standard form cannot say it or LiveDoc does not write it there yet: a summary the
+  format lacks (D605), a Custom summary, a calculated field in ODF (left out of the standard form), sort by a value
+  (written sorted by item), grouping (written ungrouped), a filter by condition or by formula (written unfiltered),
+  and Repeat Row Labels in XLSX. Such a pivot table's XLSX cache is written without `refreshOnLoad`, so Excel shows the
+  cached output until someone refreshes it. Converting lists them ([Converting](files-and-print.md#converting),
+  `pivots_simplified`), counted by pivot table (default, D606).
+- **LiveDoc's record**: in XLSX one `livedoc:pivot` (`record`, `fingerprint`) in an `ext` of the pivot table part's
+  `extLst`, LiveDoc's namespace; in ODF the `table:data-pilot-table`'s `livedoc:pivot` and `livedoc:pivot-fingerprint`
+  attributes. It is the pivot table as JSON: `at` (A1), `source` (A1, its sheet named when another), `rows` and
+  `columns` (each `col`, its column's place in the source from 0, and the group's options), `values`, `filters` and
+  `valuesAsRows`, as the model holds them ([The model](pivot-tables.md#the-model)).
+- Its fingerprint is the CRC-32 (8 lower-case hex digits) of the standard form as written: the output's place, the
+  source, then each field's orientation, header and function, a line each. **Read**, the record is taken when its
+  fingerprint is the standard form's as read; then the pivot table, its parts and its cache leave the kept content,
+  and its output's cached cells are not read as inputs, as the engine works them out again (as a spilled block's,
+  [Arrays in the file](#arrays-in-the-file)). A record whose fingerprint differs (another app changed the pivot
+  table) or that does not read is passed over (`pivot_changed`, logged, never reported), and the pivot table stays the
+  file's own: kept as it came, its output read as plain values (default, D607).
+- A pivot table whose source was deleted has no standard form: it is left out, named (`pivot_unwritten`); one whose
+  output is blocked or too large is written with its anchor cell as its output (default, D607).
+
 ## Unknown content
 
 - Whatever a file holds that the model does not (an embedded chart, a format's own setting, a smart chip, a filter
@@ -923,6 +978,14 @@ The code cites each by its id.
   named function written (default).
 - **D342** A file's `LAMBDA` name LiveDoc cannot hold: Kept as it came and named (`function_unread`); a sheet's
   `LAMBDA` name kept with its sheet and named (default).
+- **D604** A pivot table in a file: the standard form, LiveDoc's exact record beside it, and its output's cells cached
+  as values, as Google Sheets exports one (default).
+- **D605** A summary a format has no function for (MEDIAN in XLSX, COUNTUNIQUE in both) is written `sum` in the
+  standard form, the record keeping it (default).
+- **D606** What the standard form does not say is listed on converting (`pivots_simplified`), and its XLSX cache is
+  not refreshed on load (default).
+- **D607** A record is read while its fingerprint holds, else the pivot table stays the file's own; a pivot table with
+  no source is left out of the file, named (default).
 - **D295** A dropdown XLSX's list cannot say: a rule allowing any value, LiveDoc's rule beside it (default).
 - **D296** A standard rule read without LiveDoc's: the closest LiveDoc rule, one a rectangle; error messages and
   titles left out (default).

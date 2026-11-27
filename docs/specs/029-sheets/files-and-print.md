@@ -159,6 +159,11 @@ Every case of [Security](../../research/sheets-open-standard/security.md) is a t
     warnings", counted by protection, naming what is lost in this order (protected ranges, warnings); listed on every conversion and download to the other format, as
     validation rules are ([Protection in the file](standard-mapping.md#protection-in-the-file)). "in other apps" for
     OpenDocument.
+  - **Pivot tables other apps hold more simply**: "2 pivot tables work more simply in Excel, without custom summaries
+    and grouping", counted by pivot table, naming what is lost in this order (summaries it has no function for, custom
+    summaries, calculated fields, sorting by a value, grouping, filters by condition, filters by formula, repeated row
+    labels), as both formats carry the standard form beside LiveDoc's record
+    ([Pivot tables in the file](standard-mapping.md#pivot-tables-in-the-file), D606). "in other apps" for OpenDocument.
   - **File passwords**: "1 protected sheet leaves its file password behind", a password hash read from a file of the
     other format, which a file of this one cannot carry (D351).
   - **Kept from the file**: "4 things kept from the OpenDocument file stay behind: drawings, notes and named ranges",

@@ -137,6 +137,11 @@ export function importReportLine(loss: ReportedLoss): string {
         // Its names are the sheets, not the charts it counts.
         { ...loss, count: loss.names.length },
       );
+    case 'pivot_unwritten':
+      return named(
+        `${counted(count, 'pivot table whose source data was deleted is', 'pivot tables whose source data was deleted are')} left out`,
+        { ...loss, count: loss.names.length },
+      );
     case 'sheet_renamed':
       return `${counted(count, 'sheet name is', 'sheet names are')} changed to fit: ${renamed(loss.names)}`;
   }
