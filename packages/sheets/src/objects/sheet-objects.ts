@@ -20,6 +20,7 @@ export const SHEET_CHART_TYPES = [
   'candlestick',
   'ohlc',
   'histogram',
+  'waterfall',
   'combo',
 ] as const;
 export type SheetChartType = (typeof SHEET_CHART_TYPES)[number];

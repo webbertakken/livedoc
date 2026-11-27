@@ -2868,6 +2868,7 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
       "candlestick",
       "ohlc",
       "histogram",
+      "waterfall",
       "combo"
     ],
     "type": "string"
@@ -15416,6 +15417,7 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
       "candlestick",
       "ohlc",
       "histogram",
+      "waterfall",
       "combo"
     ],
     "type": "string"

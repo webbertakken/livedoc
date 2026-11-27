@@ -346,7 +346,8 @@ type: "stepped-area" draws each value as a flat step across its category (files 
 type: "radar" draws each series as a closed line round a spoke per category;
 type: "bubble" reads as a scatter, its last value column sizing every point's bubble (names, x, y..., size);
 type: "candlestick" or "ohlc" reads labels, then open, high, low, close columns (or high, low, close);
-type: "histogram" counts the value columns' values into equal buckets, a column per bucket (files hold it as a column chart).
+type: "histogram" counts the value columns' values into equal buckets, a column per bucket (files hold it as a column chart);
+type: "waterfall" draws the first value column as changes to a running total, a Subtotal column last.
 stack: "stacked" or "percent" stacks a column, bar, area or stepped-area chart's series (100% as shares);
 smooth: true curves a line chart's lines.
 type: "combo" draws each series as columns, a line, an area or a stepped area: seriesTypes {"Margin": "line"}

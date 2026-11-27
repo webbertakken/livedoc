@@ -88,6 +88,12 @@ const MARKS: Record<ChartType, React.ReactNode> = {
       <path d="M7 17v-5h3v5M10 17V7h3v10M13 17v-7h3v7M16 17v-3h3v3" />
     </>
   ),
+  waterfall: (
+    <>
+      <path d={AXES} />
+      <path d="M6 17v-6h3v6ZM10 11V6h3v5ZM14 6v4h3V6ZM18 17v-7h2v7Z" />
+    </>
+  ),
   combo: (
     <>
       <path d={AXES} />
