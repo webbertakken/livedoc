@@ -599,6 +599,8 @@ export const SHEET_CHANGE_KINDS = [
   'Banding',
   // A spreadsheet's charts (docs/specs/029-sheets/charts.md "The model").
   'Chart',
+  // A pivot table changed or removed (docs/specs/029-sheets/pivot-tables.md "Telemetry").
+  'PivotTable',
   // A protected sheet or range made, changed or removed (docs/specs/029-sheets/data-tools.md "Protected ranges").
   'Protection',
   // A table made, changed or removed (docs/specs/029-sheets/data-tools.md "Tables").

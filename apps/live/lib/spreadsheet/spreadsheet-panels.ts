@@ -81,6 +81,16 @@ export const CHART_EDITOR_PANEL: OfficePanelSpec = {
   editorsOnly: true,
 };
 
+// The Pivot Table Editor (docs/specs/029-sheets/pivot-tables.md "Pivot Table Editor"): opened by Create Pivot Table and
+// a pivot table's Edit button, never from a menu item of its own, so its item is bound to nothing.
+export const PIVOT_EDITOR_PANEL: OfficePanelSpec = {
+  id: 'pivot-table-editor',
+  title: 'Pivot Table Editor',
+  side: 'right',
+  item: 'edit-pivot-table',
+  editorsOnly: true,
+};
+
 export const SPREADSHEET_PANELS: readonly OfficePanelSpec[] = [
   CONDITIONAL_FORMAT_RULES_PANEL,
   ALTERNATING_COLOURS_PANEL,
@@ -91,6 +101,7 @@ export const SPREADSHEET_PANELS: readonly OfficePanelSpec[] = [
   PROTECTION_PANEL,
   TABLE_SETTINGS_PANEL,
   CHART_EDITOR_PANEL,
+  PIVOT_EDITOR_PANEL,
 ];
 
 /**

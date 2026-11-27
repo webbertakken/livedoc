@@ -54,6 +54,14 @@ export class WorkbookCopy extends Workbook {
     return this.stale.has(owner ?? at);
   }
 
+  // Whether a cell's value is worked out at all: a formula's, or a pivot table's at its empty anchor. A value held for
+  // any other (a pivot table removed, its anchor emptied of a formula) is dropped, never shown stale.
+  private worksOut(sheetId: string, r: number, c: number): boolean {
+    const input = this.inputAt(sheetId, r, c);
+    if (input) return 'f' in input;
+    return this.spills.pivotAt(this.noAt(sheetId, r, c)) !== undefined;
+  }
+
   protected override worksOutHere(): boolean {
     return false;
   }
@@ -82,7 +90,7 @@ export class WorkbookCopy extends Workbook {
       const ix = layoutIndex(this.sheets.get(x.sheetId)!.layout);
       const r = ix.rowPos.get(x.rowId);
       const c = ix.colPos.get(x.colId);
-      if (r === undefined || c === undefined) continue;
+      if (r === undefined || c === undefined || !this.worksOut(x.sheetId, r, c)) continue;
       this.acceptValue(x.sheetId, r, c, x.value);
       this.stale.add(this.noAt(x.sheetId, r, c));
     }

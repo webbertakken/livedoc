@@ -16,6 +16,7 @@ import {
   CHART_EDITOR_PANEL,
   DATA_VALIDATION_PANEL,
   NAMED_RANGES_PANEL,
+  PIVOT_EDITOR_PANEL,
   PROTECTION_PANEL,
   SPREADSHEET_PANELS,
   TABLE_SETTINGS_PANEL,
@@ -50,6 +51,9 @@ import {
   TableSettingsContext,
 } from '@/components/sheets/tables/table-settings-context';
 import { useSpreadsheetCharts } from './charts/useSpreadsheetCharts';
+import { SheetPivotsContext } from '@/components/sheets/pivots/sheet-pivots';
+import { useSpreadsheetPivots } from './pivots/useSpreadsheetPivots';
+import { useSheetBarActionsContext } from './useSheetBarActions';
 
 export function SpreadsheetSheetParts({ bridge }: { bridge: SheetsBridge }) {
   const actions = useSheetActions();
@@ -84,6 +88,17 @@ export function SpreadsheetSheetParts({ bridge }: { bridge: SheetsBridge }) {
     },
     [reveal],
   );
+  // The pivot table the Pivot Table Editor is open on (pivot-tables.md "Pivot Table Editor").
+  const [editingPivot, setEditingPivot] = useState<string | null>(null);
+  const editPivot = useCallback(
+    (id: string) => {
+      setEditingPivot(id);
+      reveal(PIVOT_EDITOR_PANEL);
+    },
+    [reveal],
+  );
+  const pivots = useSpreadsheetPivots(c, useSheetBarActionsContext(), editPivot);
+  const { openCreate: insertPivot } = pivots;
   // How Data Validation Rules was last opened (SpreadsheetRightPanel).
   const [validation, setValidation] = useState({ nonce: 0, startNew: false });
   // How Named Ranges was last opened (SpreadsheetRightPanel).
@@ -148,8 +163,19 @@ export function SpreadsheetSheetParts({ bridge }: { bridge: SheetsBridge }) {
       'table-column-menu': { run: () => columnMenu.current?.() },
       // Insert › Chart and the toolbar's (charts.md "Inserting"): an Editor's.
       ...(canInsertChart ? { 'insert-chart': { run: insertChart } } : {}),
+      // Insert › Pivot Table (pivot-tables.md "Making one"): an Editor's.
+      ...(c.canShape ? { 'insert-pivot-table': { run: insertPivot } } : {}),
     }),
-    [panelActions, actions, canInsertChart, insertChart, reveal, c.canShape, cleanUpActions],
+    [
+      panelActions,
+      actions,
+      canInsertChart,
+      insertChart,
+      insertPivot,
+      reveal,
+      c.canShape,
+      cleanUpActions,
+    ],
   );
   const office = useGridMenuBindings(
     actions,
@@ -192,16 +218,18 @@ export function SpreadsheetSheetParts({ bridge }: { bridge: SheetsBridge }) {
             <TableSettingsContext.Provider value={openTableSettings}>
               <TableColumnMenuContext.Provider value={columnMenu}>
                 <SheetChartsContext.Provider value={charts.value}>
-                  <SheetGrid
-                    elementId={`sheet-${c.sheet.id}`}
-                    actions={actions}
-                    input={input}
-                    pointRef={pointRef}
-                    peers={bridge.peers}
-                    zoom={zoom}
-                    surfaceKeys={surfaceKeys}
-                    fontFamily={DocumentFonts.stack(theme.font)}
-                  />
+                  <SheetPivotsContext.Provider value={c.canShape ? editPivot : null}>
+                    <SheetGrid
+                      elementId={`sheet-${c.sheet.id}`}
+                      actions={actions}
+                      input={input}
+                      pointRef={pointRef}
+                      peers={bridge.peers}
+                      zoom={zoom}
+                      surfaceKeys={surfaceKeys}
+                      fontFamily={DocumentFonts.stack(theme.font)}
+                    />
+                  </SheetPivotsContext.Provider>
                 </SheetChartsContext.Provider>
               </TableColumnMenuContext.Provider>
             </TableSettingsContext.Provider>
@@ -212,6 +240,7 @@ export function SpreadsheetSheetParts({ bridge }: { bridge: SheetsBridge }) {
           panels={panels}
           actions={actions}
           chart={{ id: editingChart, change: charts.change }}
+          pivot={{ id: editingPivot, change: pivots.change }}
           validation={validation}
           named={named}
           protection={protection}
@@ -223,6 +252,7 @@ export function SpreadsheetSheetParts({ bridge }: { bridge: SheetsBridge }) {
       {mergeDialog.dialog}
       {sortDialog.dialog}
       {cleanUp.dialog}
+      {pivots.dialog}
       {findReplace?.open ? <FindReplaceDialog state={findReplace} /> : null}
       <SheetBarSummary />
     </div>

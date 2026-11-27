@@ -403,3 +403,70 @@ describe("a spreadsheet's sheet", () => {
     });
   });
 });
+
+// pivot-tables.md "Working with one" (D612): a value or formula typed into a pivot table is refused; at its anchor by
+// the layout alone, across its output where the caller works the output out.
+describe('validateWrite and pivot tables', () => {
+  const withPivot = (): Sheet => {
+    const s = base();
+    return {
+      ...s,
+      layout: {
+        ...s.layout,
+        objects: [
+          {
+            id: 'chart01',
+            kind: 'chart',
+            at: { r: R(2), c: C(1), dx: 0, dy: 0 },
+            width: 300,
+            height: 200,
+            type: 'column',
+          },
+          { id: 'pivot01', kind: 'pivot', at: { r: R(2), c: C(1) } },
+        ],
+      },
+    };
+  };
+  const typed = (r: number, c: number, i: unknown = { n: 1 }) => ({
+    kind: 'cells',
+    cells: [{ r: R(r), c: C(c), i }],
+  });
+  const refused = { ok: false, error: 'pivot_cell', at: `${R(2)}:${C(1)}` };
+
+  it('refuses an input at an anchor, and lets a clear or an unchecked write through', () => {
+    expect(v(typed(2, 1), withPivot())).toEqual(refused);
+    expect(v(typed(2, 1, { s: 'x' }), withPivot())).toMatchObject({ error: 'pivot_cell' });
+    expect(v(typed(2, 1, null), withPivot())).toEqual({ ok: true });
+    expect(v(typed(2, 2), withPivot())).toEqual({ ok: true });
+    expect(
+      v({ kind: 'layout', changes: [{ k: 'size', axis: 'c', ids: [C(0)], px: 50 }] }, withPivot()),
+    ).toEqual({ ok: true });
+    expect(v(typed(2, 1))).toEqual({ ok: true });
+    expect(validateWrite(withPivot(), typed(2, 1) as SheetWrite, { checkRules: false })).toEqual({
+      ok: true,
+    });
+  });
+
+  it('refuses an input where the caller says the output lies', () => {
+    const pivotCellAt = (r: number, c: number) => r >= 2 && r <= 3 && c >= 1 && c <= 2;
+    const check = (w: unknown) => validateWrite(withPivot(), w as SheetWrite, { pivotCellAt });
+    expect(check(typed(3, 2))).toEqual({ ok: false, error: 'pivot_cell', at: `${R(3)}:${C(2)}` });
+    expect(check(typed(4, 2))).toEqual({ ok: true });
+    expect(check(typed(3, 2, null))).toEqual({ ok: true });
+  });
+
+  it('refuses a pivot table placed over its own anchor’s input in one write', () => {
+    const w = {
+      kind: 'layout',
+      changes: [
+        {
+          k: 'object',
+          id: 'pivot02',
+          object: { id: 'pivot02', kind: 'pivot', at: { r: R(0), c: C(2) } },
+        },
+      ],
+      cells: [{ r: R(0), c: C(2), i: { n: 2 } }],
+    };
+    expect(v(w)).toEqual({ ok: false, error: 'pivot_cell', at: `${R(0)}:${C(2)}` });
+  });
+});

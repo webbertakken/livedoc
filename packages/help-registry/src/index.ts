@@ -1686,6 +1686,16 @@ export const articles: Article[] = [
     parentSlug: 'plan-tabs',
   },
   {
+    slug: 'pivot-tables',
+    title: 'Pivot Tables',
+    description: 'Summarise a spreadsheet range by its columns: rows, columns, values and filters.',
+    keywords:
+      'pivot table pivot tables pivottable summary summarise summarize group by totals subtotals count sum average report crosstab cross tab data pilot datapilot rows columns values filters insert pivot table editor getpivotdata spreadsheet',
+    category: 'Canvas',
+    categorySlug: 'canvas/plan-tabs',
+    parentSlug: 'plan-tabs',
+  },
+  {
     slug: 'visualisations',
     title: 'Charts of Your Cards',
     description: 'Visualisation tabs: a Gantt chart, calendars and more, live from every card.',

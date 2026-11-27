@@ -451,5 +451,11 @@ describe('a pivot table in the page’s copy', () => {
     set('B2', '7');
     deliver();
     expect([v(1, 1, 1), v(0, 2, 1)]).toEqual([7, 8]);
+    // Removed (pivot-tables.md "Working with one", D613): its output goes from the copy at once, never held stale.
+    const shown = port.copy.sheetList()[1]!;
+    port.updateSheet({ ...shown, layout: { ...shown.layout, objects: [] } });
+    expect([v(0, 0, 1), v(1, 1, 1)]).toEqual([null, null]);
+    deliver();
+    expect([v(0, 0, 1), v(1, 1, 1), v(0, 2, 1)]).toEqual([null, null, 1]);
   });
 });

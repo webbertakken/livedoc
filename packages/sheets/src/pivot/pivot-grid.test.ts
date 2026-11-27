@@ -7,6 +7,8 @@ import type { SheetPivot } from '../objects/sheet-pivot';
 import type { Sheet } from '../sheet';
 import { cellKey } from '../sheet';
 import { readRange } from '../a1-io';
+import { validateWrite } from '../validate';
+import { workbookRuleChecks } from '../rules/validation-formula';
 import { clipFromRange } from '../clipboard';
 import { shownRows } from '../sheet-text';
 import { renderWindow, sheetContentSize } from '../engine/render';
@@ -246,6 +248,46 @@ describe('a pivot table in the grid', () => {
     );
     expect(['Name', null, 0]).toContain(v('D1', 'Report'));
     expect(v('A1', 'Report')).toBe('Name');
+  });
+
+  // pivot-tables.md "Working with one" (D612): what the Edit button, Delete and the typing refusal read.
+  it('names the pivot table whose anchor or landed output holds a cell, and its rectangle', () => {
+    const { wb, report, set } = withPivot(() => ({}));
+    const rect = { r1: 0, c1: 0, r2: 3, c2: 1 };
+    expect(wb.pivotOutputAt(report.id, 0, 0)).toEqual({ id: 'pivot01', rect });
+    expect(wb.pivotOutputAt(report.id, 3, 1)).toEqual({ id: 'pivot01', rect });
+    expect(wb.pivotOutputAt(report.id, 4, 0)).toBeNull();
+    expect(wb.pivotOutputAt(report.id, 0, 2)).toBeNull();
+    expect(wb.pivotOutputAt('nosheet', 0, 0)).toBeNull();
+    // Blocked: only its anchor is its own.
+    set('B3', 'x', 'Report');
+    expect(wb.pivotOutputAt(report.id, 0, 0)).toEqual({
+      id: 'pivot01',
+      rect: { r1: 0, c1: 0, r2: 0, c2: 0 },
+    });
+    expect(wb.pivotOutputAt(report.id, 1, 0)).toBeNull();
+  });
+
+  it('refuses a value typed into its output through the workbook’s checks', () => {
+    const { wb, report } = withPivot(() => ({}));
+    const typed = (r: number, c: number) =>
+      validateWrite(
+        report,
+        {
+          kind: 'cells',
+          cells: [{ r: report.layout.rows[r]!, c: report.layout.cols[c]!, i: { n: 1 } }],
+        },
+        workbookRuleChecks(wb, report.id),
+      );
+    expect(typed(2, 1)).toMatchObject({ ok: false, error: 'pivot_cell' });
+    expect(typed(5, 1)).toEqual({ ok: true });
+  });
+
+  it('names no pivot table for a formula’s spill', () => {
+    const { wb, report } = withPivot(() => ({}), { E1: '=SEQUENCE(3)' });
+    expect(wb.value(report.id, 1, 4)).toBe(2);
+    expect(wb.pivotOutputAt(report.id, 1, 4)).toBeNull();
+    expect(wb.pivotOutputAt(report.id, 0, 4)).toBeNull();
   });
 
   it('is found at its anchor, unless its anchor is off the grid', () => {
