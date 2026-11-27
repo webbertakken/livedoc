@@ -89,7 +89,11 @@ export function useSheetClipboard() {
       const at = primary();
       // An Editor's plain paste carries the copied cells' rules (D155); a Participant's lands as values.
       if (mode === 'all' && c.canShape) {
-        apply(c, pasteWithRules(c.workbook, c.sheet.id, at, clip));
+        const pasted = pasteWithRules(c.workbook, c.sheet.id, at, clip);
+        // A table the paste could not set down (data-tools.md "Tables", D454): the cells still land.
+        for (const reason of pasted?.tablesRefused ?? [])
+          debugLog('[sheet] table refused', { reason, by: 'paste' });
+        apply(c, pasted);
         if (clip.cut) {
           lastClip = null;
           c.setMarquee(null);

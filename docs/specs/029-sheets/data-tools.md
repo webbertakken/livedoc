@@ -264,13 +264,17 @@ sheet's, seen by everyone, kept by row and column ids as a named range is.
   name, an underscore and the smallest number from 2 that frees it in the workbook (`Sales_2`, `Sales_3`, D451);
   formulas in the copy reading its tables read the copy's; a table's banding goes with it; Clear Sheet leaves the
   tables, their cells cleared.
-- Pasted tables: an Editor's plain paste (Paste, Ctrl+V; never Paste Special) of copied or cut cells holding a table's
-  header row makes a new table where they land, as Google's paste does (D454): the table's copied columns, from its
-  header row to the last copied row of it, with their types, dropdown options and banding colours, its total row when
-  its last row was copied, named the first free `TableN` (D451); several tables copied make one each. A copy of a
-  table's data rows alone makes none; a cut leaves its table where it was, its cells emptied. A new table that would
-  overlap a table, cross a merge or an alternating colours range, start in the row directly below a table (which
-  grows it) or pass a sheet's 50 is not made, the cells still pasted.
+- Pasted tables: an Editor's plain paste (Paste, Ctrl+V; never Paste Special) of copied cells holding a table's header
+  row makes a new table where they land, as Google's paste does (D454): the table's copied columns, from its header
+  row to the last copied row of it, with their types, dropdown options and banding colours, its total row when its
+  last row was copied, named the first free `TableN` (D451); several tables copied make one each. A copy of a
+  table's data rows alone makes none.
+- A cut of a whole table moves it, as Excel's (D454): its id, name, types, total row and banding go with its cells,
+  so formulas reading it read it where it lands, on this sheet or another; one undo puts it back. A cut of part of a
+  table moves cells only, the table keeping its range.
+- A new or moved table that would overlap a table, cross a merge or an alternating colours range, start in the row
+  directly below a table (which grows it) or pass a sheet's 50 is not set down, the cells still pasted; a moved one
+  stays where it was.
 
 ## Clean-up, split, randomise, stats
 
@@ -393,15 +397,19 @@ The code cites each by its id.
   elsewhere makes a new table named the first free `TableN`. Evidence: the Sheets API's `duplicateSheet` of a sheet
   holding `Sales` twice gave `Sales_2` and `Sales_3`; `copyPaste` of the table's range gave `Table1`
   (`plans/assets/0020/research/google-table-probe.ts`, 2026-11-27).
-- **D454** Which pastes make a table, as Google's: a plain paste of cells holding a table's header row, over the
-  table's copied columns from its header to the last copied row, types, dropdown options, banding and total row kept;
-  data rows alone, Paste Special's items and a paste onto a table make none; a cut makes one and leaves its own. Evidence:
-  the Sheets API's `copyPaste` of `Sales` A1:B4: whole, A1:B2, A1:A4, A1:B1 and A1:C4 each made the next
+- **D454** Which pastes make or move a table. A copy, as Google's: a plain paste of cells holding a table's header row
+  makes the next `TableN` over the table's copied columns from its header to the last copied row, types, dropdown
+  options, banding and total row kept; data rows alone, Paste Special's items and a paste onto a table make none.
+  Evidence: the Sheets API's `copyPaste` of `Sales` A1:B4: whole, A1:B2, A1:A4, A1:B1 and A1:C4 each made the next
   `TableN` over the table's part, types and banding kept; A2:B3 and B2 made none; `PASTE_VALUES`, `PASTE_FORMAT`,
-  `PASTE_FORMULA`, `TRANSPOSE` and `PASTE_NO_BORDERS` made none; onto A2 it grew `Sales`; `cutPaste` made `Table3`
-  and left `Sales` (`plans/assets/0020/research/google-table-paste-probe.ts`, 2026-11-27). Not measured, LiveDoc's own:
-  a paste starting in the row directly below a table grows it and makes none, and a paste repeated over a larger
-  selection makes one table, at its first copy (default).
+  `PASTE_FORMULA`, `TRANSPOSE` and `PASTE_NO_BORDERS` made none; onto A2 it grew `Sales`
+  (`plans/assets/0020/research/google-table-paste-probe.ts`, 2026-11-27). A cut, LiveDoc's own (the Director's
+  ruling, 2026-11-27): a whole table moves, as Excel's, since a person who cuts expects it to leave and an emptied
+  table left behind would point every `Table1[Col]` at blanks; a part moves cells only. The API's `cutPaste` made a
+  new `Table3` and left `Sales` emptied, but it is a range operation, not what the editor does; Google's editor is
+  unverified, and a capture that differs reopens this. Not measured, LiveDoc's own: a paste starting in the row
+  directly below a table grows it and makes none, and a paste repeated over a larger selection sets its tables down
+  once, at its first copy (default).
 - **D455** What Find and Replace matches, as Google's: case aside unless Match Case, regular expressions too; Replace in
   the cell's edit text read again as typed (a number stays a number, a date moves by its text); formulas only with
   Also Search Within Formulas; Match Entire Cell Contents whole cells; Replace All counts matches, not cells; All

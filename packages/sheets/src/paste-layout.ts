@@ -13,6 +13,14 @@ import type { LayoutChange } from './store';
 import type { Workbook } from './engine/workbook';
 import type { SheetClip } from './clipboard';
 import { pasteClip, pasteCut, type PasteMode, type PasteResult } from './commands-paste';
+import {
+  clipTablesOf,
+  tableLandingChanges,
+  tableLandings,
+  tablesMoved,
+  type ClipTable,
+} from './tables/table-paste';
+import type { TableRefusal } from './tables/table-commands';
 
 type Place = { i1: number; j1: number; i2: number; j2: number };
 
@@ -29,6 +37,8 @@ export type ClipLayout = {
   // Each copied column's width, in px.
   widths: number[];
   rules: { f: ClipRule<FormatRule>[]; v: ClipRule<ValidationRule>[] };
+  // The tables whose header row the copy holds (tables/table-paste.ts); absent from a clip made before them.
+  tables?: ClipTable[];
 };
 
 export type LayoutPasteMode = 'widths' | 'formatRules' | 'validation';
@@ -79,6 +89,7 @@ export function clipLayoutOf(layout: SheetLayout, range: GridRange): ClipLayout 
       f: clipRules(layout, layout.formatRules, range),
       v: clipRules(layout, layout.rules, range),
     },
+    ...((t) => (t.length ? { tables: t } : {}))(clipTablesOf(layout, range)),
   };
 }
 
@@ -178,20 +189,50 @@ export function cutRuleRemovals(layout: SheetLayout, range: GridRange): LayoutCh
   ];
 }
 
-/** A plain paste of the sheet's own cells with their rules (D155): the cells moved (a cut) or copied, the copied
- *  rules set again over them, and a cut's rules wholly over its cells taken from their old place; one change. */
+// The destination's axes once a paste's own edits have grown it (rows and columns only ever added at the end).
+function grownAxes(wb: Workbook, sheetId: string, edits: PasteResult['edits']) {
+  const layout = wb.sheet(sheetId)!.layout;
+  const rows = [...layout.rows];
+  const cols = [...layout.cols];
+  for (const e of edits)
+    if (e.sheetId === sheetId && e.write.kind === 'layout')
+      for (const ch of e.write.changes) {
+        if (ch.k === 'insertRows') rows.push(...ch.ids);
+        if (ch.k === 'insertCols') cols.push(...ch.ids);
+      }
+  return { rows, cols };
+}
+
+/** A plain paste of the sheet's own cells with their rules and tables (D155, D454): the cells moved (a cut) or
+ *  copied, the copied rules set again over them, a cut's rules wholly over its cells taken from their old place, a
+ *  copy's tables made again and a cut's whole tables moved; one change. `tablesRefused`: tables not set down. */
 export function pasteWithRules(
   wb: Workbook,
   sheetId: string,
   sel: GridRange,
   clip: SheetClip,
   rand: Rand = Math.random,
-): PasteResult | null {
+): (PasteResult & { tablesRefused: TableRefusal[] }) | null {
+  const dest = wb.sheet(sheetId);
+  if (!dest) return null;
+  const room = wb.room(sheetId);
+  const at = { r: sel.r1, c: sel.c1 };
+  const { landings, refused } = tableLandings(wb, sheetId, at, clip, {
+    rows: dest.layout.rows.length + room.rows,
+    cols: dest.layout.cols.length + room.cols,
+  });
   const cells = clip.cut
-    ? pasteCut(wb, sheetId, { r: sel.r1, c: sel.c1 }, clip, rand)
+    ? pasteCut(wb, sheetId, at, clip, rand, tablesMoved(landings))
     : pasteClip(wb, sheetId, sel, clip, 'all', rand);
   if (!cells) return null;
-  const at = { r: sel.r1, c: sel.c1 };
+  const tables = tableLandingChanges(
+    wb,
+    sheetId,
+    clip.from.sheetId,
+    landings,
+    grownAxes(wb, sheetId, cells.edits),
+    rand,
+  );
   const rules = (['formatRules', 'validation'] as const).flatMap(
     (mode) => pasteClipLayout(wb, sheetId, at, clip, mode, rand)?.edits ?? [],
   );
@@ -205,9 +246,21 @@ export function pasteWithRules(
           c2: clip.from.c + clip.cols - 1,
         })
       : [];
-  // Removals first, so a rule set again where it was is the one kept.
-  const removing = removals.length
-    ? [{ sheetId: clip.from.sheetId, write: { kind: 'layout' as const, changes: removals } }]
+  // Removals first, so a rule set again where it was is the one kept; a table after its cells.
+  const removing = [...removals, ...tables.source].length
+    ? [
+        {
+          sheetId: clip.from.sheetId,
+          write: { kind: 'layout' as const, changes: [...removals, ...tables.source] },
+        },
+      ]
     : [];
-  return { ...cells, edits: [...removing, ...cells.edits, ...rules] };
+  const setting = tables.dest.length
+    ? [{ sheetId, write: { kind: 'layout' as const, changes: tables.dest } }]
+    : [];
+  return {
+    ...cells,
+    edits: [...removing, ...cells.edits, ...rules, ...setting],
+    tablesRefused: refused,
+  };
 }
