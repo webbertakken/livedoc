@@ -366,7 +366,6 @@ export function MenuActionButton({
     <button
       type="button"
       {...itemProps}
-      {...pressed}
       onClick={onClick}
       className="inline-flex min-h-row w-full cursor-pointer items-center pointer-coarse:min-h-11 justify-center gap-2 rounded-control border border-slate-200 bg-white px-2 text-body text-slate-700 transition hover:border-brand-300 hover:bg-brand-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:border-brand-500/60 dark:hover:bg-brand-500/15"
     >
