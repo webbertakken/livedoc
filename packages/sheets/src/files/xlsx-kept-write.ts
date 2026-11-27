@@ -210,7 +210,7 @@ export class XlsxKeptWriter {
   /**
    * The workbook's children: LiveDoc's own and the kept ones, defined names in one `definedNames`, the named
    * functions' (`functions`) after the kept ones. A kept workbook name a function takes gives way to it, counted in
-   * `namesDropped` (D325).
+   * `namesDropped` (D341).
    */
   workbookChildren(
     own: readonly OwnChild[],

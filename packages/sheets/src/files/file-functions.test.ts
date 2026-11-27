@@ -1,4 +1,4 @@
-// docs/specs/029-sheets/standard-mapping.md "Named functions in the file" (D324 to D326): XLSX holds each named
+// docs/specs/029-sheets/standard-mapping.md "Named functions in the file" (D340 to D342): XLSX holds each named
 // function as a workbook's named LAMBDA both ways; ODF holds none, which its writes and conversions name.
 import { readOoxmlPackage } from '@livedoc/office-packages';
 import { describe, expect, it } from 'vitest';

@@ -134,8 +134,8 @@ export type FileLoss =
   // Formulas calling a function the spreadsheet's meaning and the format's standard answer differently (D100).
   | { k: 'answers_differ'; count: number; functions: string[] }
   // Named functions (standard-mapping.md "Named functions in the file"): one LiveDoc cannot hold, kept as it came
-  // (D326); one a file leaves out (all in ODF, a name Excel refuses); one whose description or argument help is cut
-  // (D324).
+  // (D342); one a file leaves out (all in ODF, a name Excel refuses); one whose description or argument help is cut
+  // (D340).
   | { k: 'function_unread'; name: string }
   | { k: 'function_unwritten'; name: string }
   | { k: 'function_cut'; name: string };
@@ -479,7 +479,7 @@ export function sheetsFromFile(
     };
     return { id: m.id, title: m.title, layout, cells };
   });
-  // A named function's reference naming no sheet names the first (D326); one LiveDoc cannot hold is kept as it came.
+  // A named function's reference naming no sheet names the first (D342); one LiveDoc cannot hold is kept as it came.
   const read = handles[0]
     ? functionsFromFile(file.functions, { own: handles[0], byTitle, byId }, losses)
     : { functions: [], refused: [] };

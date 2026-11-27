@@ -335,14 +335,14 @@ The table is the contract the readers and writers are tested against, one test p
   ([Excel's grammar in detail](#excels-grammar-in-detail)), each reference with its sheet and absolute
   (`Sheet1!$A$1`), its placeholders `_xlpm.` first; its description is the `comment`.
 - What the file cannot hold of one is left out and the write names it (logged, `function_cut`): a description
-  past Excel's 255 characters is cut to them, and argument descriptions and examples have no place (default, D324).
+  past Excel's 255 characters is cut to them, and argument descriptions and examples have no place (default, D340).
 - A definition Excel's grammar cannot hold (a Google-only function, an array literal of more than constants) is
   written by S5's convention inside its `LAMBDA`
   (`_xlfn.LAMBDA(_xlpm.x,IFERROR(__xludf.DUMMYFUNCTION("TWICE(x)"),""))`): LiveDoc reads it back whole, and Excel
   gives an empty value. A name Excel refuses (`R`, `C`) is left out and the write names it
-  (`function_unwritten`) (default, D324).
+  (`function_unwritten`) (default, D340).
 - A kept workbook defined name of a named function's name gives way to it: dropped at the write and counted
-  (`kept_dropped`), as a workbook holds a name once (default, D325).
+  (`kept_dropped`), as a workbook holds a name once (default, D341).
 - **Read**: a workbook's defined name (no `localSheetId`) whose formula is a `LAMBDA` of placeholders and a
   definition is a named function: its name in capitals, its placeholders as written, its description the
   `comment`, its definition read as a cell's formula is, against the file's sheets; a reference naming no sheet
@@ -350,7 +350,7 @@ The table is the contract the readers and writers are tested against, one test p
 - One LiveDoc cannot hold (a name or a placeholder the [rules](data-tools.md#named-ranges-and-named-functions)
   refuse, more than 20 placeholders, a definition past 2,000 characters, one past the 100th) stays the file's own:
   kept as it came, and the read names it (`function_unread`): "1 named function LiveDoc cannot read is kept for
-  Excel: TOOLONG". A sheet's `LAMBDA` name (`localSheetId`) stays kept with its sheet (default, D326).
+  Excel: TOOLONG". A sheet's `LAMBDA` name (`localSheetId`) stays kept with its sheet (default, D342).
 - **ODF**: OpenFormula has no `LAMBDA`, and LibreOffice no named functions, so an ODF file holds none: an `.ods` or
   `.fods` write leaves each out and names it (logged, `function_unwritten`), and converting to OpenDocument lists
   them first ([Converting](files-and-print.md#converting)). A file's `table:named-expression` stays kept.
@@ -736,12 +736,12 @@ The code cites each by its id.
   LiveDoc's namespace (the Director's ruling, 2026-11-26).
 - **D294** A LiveDoc rule beside a standard rule changed since: the standard rule wins, LiveDoc's dropped and logged
   (the Director's ruling, 2026-11-26).
-- **D324** A named function in XLSX: a workbook's `LAMBDA` defined name, the description its `comment` cut to Excel's
+- **D340** A named function in XLSX: a workbook's `LAMBDA` defined name, the description its `comment` cut to Excel's
   255 characters, argument descriptions and examples left out (`function_cut`); a definition Excel cannot hold wrapped
   by S5 inside the `LAMBDA`; a name Excel refuses left out (`function_unwritten`) (default).
-- **D325** A kept defined name of a named function's name at an XLSX write: Dropped and counted (`kept_dropped`), the
+- **D341** A kept defined name of a named function's name at an XLSX write: Dropped and counted (`kept_dropped`), the
   named function written (default).
-- **D326** A file's `LAMBDA` name LiveDoc cannot hold: Kept as it came and named (`function_unread`); a sheet's
+- **D342** A file's `LAMBDA` name LiveDoc cannot hold: Kept as it came and named (`function_unread`); a sheet's
   `LAMBDA` name kept with its sheet (default).
 - **D295** A dropdown XLSX's list cannot say: a rule allowing any value, LiveDoc's rule beside it (default).
 - **D296** A standard rule read without LiveDoc's: the closest LiveDoc rule, one a rectangle; error messages and

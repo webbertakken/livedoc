@@ -425,7 +425,7 @@ export function writeXlsx(file: WorkbookFile, title: string): FileWritten<Uint8A
     ...drawn.relationships,
     ...keptParts.relationships,
   ]);
-  // A kept workbook name a named function took is dropped, and counted (D325).
+  // A kept workbook name a named function took is dropped, and counted (D341).
   if (kept.namesDropped > 0) losses.push({ k: 'kept_dropped', count: kept.namesDropped });
   return { data: writeOoxmlPackage([...parts, ...keptParts.parts], relationships), losses };
 }

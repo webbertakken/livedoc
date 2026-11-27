@@ -1,4 +1,4 @@
-// Named functions in a file (docs/specs/029-sheets/standard-mapping.md "Named functions in the file", D324 to D326):
+// Named functions in a file (docs/specs/029-sheets/standard-mapping.md "Named functions in the file", D340 to D342):
 // XLSX holds each as a workbook's named `LAMBDA`, its description the defined name's `comment`; ODF holds none.
 // Read, a `LAMBDA` name LiveDoc cannot hold goes back to the kept content, as it came.
 import {
@@ -65,7 +65,7 @@ export function excelLambda(fn: FileFunction, renamed: ReadonlyMap<string, strin
 
 /**
  * The named functions' defined names, as `definedName` XML, and the names they take (upper case); what Excel cannot
- * hold of each is named in `losses` (D324).
+ * hold of each is named in `losses` (D340).
  */
 export function xlsxFunctionNames(
   functions: readonly FileFunction[] | undefined,
