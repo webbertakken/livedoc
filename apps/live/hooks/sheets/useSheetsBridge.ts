@@ -59,6 +59,9 @@ export type SheetsBridge = {
   // Cells (Editor and Participant), and the Sheet's shape (Editor), docs/specs/013-workspace/share-roles.md.
   canEdit: boolean;
   canShape: boolean;
+  // The document is this person's own: what Only the Owner protections admit (data-tools.md "Protected ranges");
+  // absent, not.
+  isOwner?: boolean;
   // How numbers, dates and formulas read and show (formulas.md "Locale"): a spreadsheet's own, else this browser's.
   locale: string;
   // A spreadsheet's time zone (formulas.md "Locale"): the wall clock NOW and TODAY read; absent, this browser's.
@@ -121,6 +124,8 @@ export function useSheetsBridge(opts: {
   canEdit: boolean;
   // Absent: as canEdit.
   canShape?: boolean;
+  // Absent: not the owner.
+  isOwner?: boolean;
   peers: readonly SheetPeer[];
   pushUndo: (step: ItemUndoStep) => void;
   toast: (message: string) => void;
@@ -170,6 +175,7 @@ export function useSheetsBridge(opts: {
     activeTabId,
   } = opts;
   const canShape = opts.canShape ?? canEdit;
+  const isOwner = opts.isOwner ?? false;
   const bridge = useMemo<SheetsBridge>(
     () => ({
       scope: { documentId, ownerId, shareCode, tabId: tabScope },
@@ -184,6 +190,7 @@ export function useSheetsBridge(opts: {
       self,
       canEdit,
       canShape,
+      isOwner,
       locale: locale ?? browserLocale(),
       ...(timeZone ? { timeZone } : {}),
       ...(meaning ? { meaning } : {}),
@@ -218,6 +225,7 @@ export function useSheetsBridge(opts: {
       self,
       canEdit,
       canShape,
+      isOwner,
       peers,
       pushUndo,
       toast,

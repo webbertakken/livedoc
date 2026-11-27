@@ -170,6 +170,42 @@ export function protectionRefusal(
   return protectionsTouched(layout, write).find((p) => !Protection.admits(p, caller)) ?? null;
 }
 
+// `box` less `hole`: the boxes left above, below, left and right of it (none when the hole covers it).
+function subtract(box: Box, hole: Box): Box[] {
+  if (!meets(box, hole)) return [box];
+  const out: Box[] = [];
+  if (hole.r1 > box.r1) out.push({ ...box, r2: hole.r1 - 1 });
+  if (hole.r2 < box.r2) out.push({ ...box, r1: hole.r2 + 1 });
+  const r1 = Math.max(box.r1, hole.r1);
+  const r2 = Math.min(box.r2, hole.r2);
+  if (hole.c1 > box.c1) out.push({ r1, c1: box.c1, r2, c2: hole.c1 - 1 });
+  if (hole.c2 < box.c2) out.push({ r1, c1: hole.c2 + 1, r2, c2: box.c2 });
+  return out;
+}
+
+/**
+ * The boxes View › Show › Protected Ranges hatches for this viewer, by place: each protection it may not write freely
+ * (a warning one too), a protected sheet less its exceptions.
+ */
+export function protectedBoxes(layout: SheetLayout, viewer: ProtectionCaller): Box[] {
+  const all: Box = { r1: 0, c1: 0, r2: layout.rows.length - 1, c2: layout.cols.length - 1 };
+  return (layout.protections ?? [])
+    .filter((p) => p.can === 'warn' || !Protection.admits(p, viewer))
+    .flatMap((p) => {
+      if (p.range) {
+        const box = posRangeOf(layout, p.range);
+        return box ? [box] : [];
+      }
+      return (p.except ?? []).reduce<Box[]>(
+        (boxes, x) => {
+          const hole = posRangeOf(layout, x);
+          return hole ? boxes.flatMap((b) => subtract(b, hole)) : boxes;
+        },
+        [all],
+      );
+    });
+}
+
 // A range of cells on the sheet.
 function isRangeOn(raw: unknown, layout: SheetLayout): raw is IdRange {
   if (typeof raw !== 'object' || raw === null) return false;

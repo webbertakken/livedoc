@@ -46,6 +46,7 @@ function Row({
         channel={channel}
         zoom={zoom}
         formulas={formulas}
+        protectedRanges={{ shown: true, toggle: () => {} }}
         onFullScreen={vi.fn()}
         keyScope={root}
         onWorkbook={undefined}

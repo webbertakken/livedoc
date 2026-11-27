@@ -12,6 +12,7 @@ import { useEditorLines } from '@/components/chrome/lines/editor-lines-context';
 import { OfficeTitleRow } from '@/components/office/OfficeTitleRow';
 import type { OfficeZoom } from '@/components/office/OfficeZoomField';
 import type { ShowFormulas } from '@/components/sheets/show-formulas';
+import type { ShowProtected } from '@/components/sheets/show-protected';
 import type { OfficeActions } from '@/lib/office/office-catalogue';
 import type { WorkbookScope } from '@/lib/api/workbook';
 import { apiDownloadWorkbook, type DownloadFormat } from '@/lib/api/workbook';
@@ -88,6 +89,7 @@ export function SpreadsheetTitleRow({
   channel,
   zoom,
   formulas,
+  protectedRanges,
   onFullScreen,
   keyScope,
   onWorkbook,
@@ -107,6 +109,8 @@ export function SpreadsheetTitleRow({
   zoom: OfficeZoom;
   // View › Show › Formulas (grid-and-editing.md "Formulas").
   formulas: ShowFormulas;
+  // View › Show › Protected Ranges (data-tools.md "Protected ranges").
+  protectedRanges: ShowProtected;
   // View › Full Screen (surface.md "Layout").
   onFullScreen: () => void;
   keyScope: RefObject<HTMLElement | null>;
@@ -157,6 +161,7 @@ export function SpreadsheetTitleRow({
     ...historyBindings(history, level !== 'view'),
     ...zoomBindings(zoom),
     'show-formulas': { run: formulas.toggle, checked: formulas.shown },
+    'show-protected-ranges': { run: protectedRanges.toggle, checked: protectedRanges.shown },
     'full-screen': { run: onFullScreen },
     ...Object.fromEntries(
       DOWNLOAD_ITEMS.map((item) => [

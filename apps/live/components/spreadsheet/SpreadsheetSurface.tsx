@@ -18,6 +18,7 @@ import { SheetNavigationContext } from '@/components/sheets/sheet-navigation';
 import type { SheetStore } from '@/components/sheets/sheet-store-client';
 import { useAttachedSheetStore } from '@/components/sheets/useAttachedSheetStore';
 import { ShowFormulasContext, useShowFormulas } from '@/components/sheets/show-formulas';
+import { ShowProtectedContext, useShowProtected } from '@/components/sheets/show-protected';
 import { SheetImagesContext, useSheetImageLoader } from '@/components/sheets/sheet-images-context';
 import { useSheetsBridgeContext, type SheetsBridge } from '@/hooks/sheets/useSheetsBridge';
 import type { WorkbookScope } from '@/lib/api/workbook';
@@ -39,6 +40,8 @@ import { SpreadsheetSheetParts } from './SpreadsheetSheetParts';
 import { SpreadsheetZoomProvider, useSpreadsheetZoom } from './spreadsheet-zoom';
 import { useSheetBarPeers } from './useSheetBarPeers';
 import { useSheetCopyTo } from './useSheetCopyTo';
+import { useProtectionWarnings } from './useProtectionWarnings';
+import { createProtectSheetChannel, ProtectSheetContext } from './protect-sheet-channel';
 import { hiddenTabIds, useSheetTabLooks } from './useSheetTabLooks';
 import { SheetBarActionsContext, useSheetBarActions } from './useSheetBarActions';
 import { SheetStepContext, SurfaceRedoContext, useSheetStep } from './spreadsheet-surface-keys';
@@ -91,6 +94,9 @@ export function SpreadsheetSurface({
   const { zoom, scale } = useSpreadsheetZoom();
   // View › Show › Formulas, the person's own across the sheets (grid-and-editing.md "Formulas", D141).
   const formulas = useShowFormulas();
+  const protectedShown = useShowProtected();
+  // A sheet tab's Protect Sheet reaches the open sheet's panel (data-tools.md "Protected ranges").
+  const [protectSheet] = useState(createProtectSheetChannel);
   // View › Full Screen, the person's own for the page (surface.md "Layout", D188).
   const fullScreen = useSpreadsheetFullScreen();
   // Each tab's colour and whether it is hidden, from its sheet (spreadsheet.md "Sheets in the sheet bar", D177).
@@ -136,6 +142,7 @@ export function SpreadsheetSurface({
           channel={channel}
           zoom={zoom}
           formulas={formulas}
+          protectedRanges={protectedShown}
           onFullScreen={fullScreen.enter}
           keyScope={root}
           onWorkbook={onWorkbook}
@@ -143,47 +150,51 @@ export function SpreadsheetSurface({
         />
       </div>
       <SpreadsheetThemeProvider value={theme}>
-        <NamedFunctionsProvider value={namedFunctions}>
-          <SheetBarActionsContext.Provider value={sheetBar}>
-            <OfficeBindingsContext.Provider value={channel}>
-              <BorderLineContext.Provider value={borderLine}>
-                <SummarySlotContext.Provider value={summarySlot}>
-                  <SpreadsheetZoomProvider value={scale}>
-                    <SheetStepContext.Provider value={stepSheet}>
-                      <SurfaceRedoContext.Provider value={history?.redo ?? null}>
-                        <ShowFormulasContext.Provider value={formulas.shown}>
-                          <SpreadsheetFullScreenProvider value={fullScreen}>
-                            {bridge ? (
-                              <OpenSheet
-                                bridge={bridge}
-                                tabId={tabId}
-                                onSelectTab={onSelectTab}
-                                sync={sync}
-                                onWorkbook={onWorkbook}
-                              />
-                            ) : (
-                              <Status state="loading" />
-                            )}
-                          </SpreadsheetFullScreenProvider>
-                        </ShowFormulasContext.Provider>
-                      </SurfaceRedoContext.Provider>
-                    </SheetStepContext.Provider>
-                  </SpreadsheetZoomProvider>
-                </SummarySlotContext.Provider>
-              </BorderLineContext.Provider>
-            </OfficeBindingsContext.Provider>
-            <SheetBar
-              tabs={tabs}
-              activeId={tabId}
-              onSelect={onSelectTab}
-              peers={sheetBarPeers}
-              summarySlot={setSummarySlot}
-              actions={bridge ? sheetBar : null}
-              looks={looks}
-              copyTo={copyTo}
-            />
-          </SheetBarActionsContext.Provider>
-        </NamedFunctionsProvider>
+        <ProtectSheetContext.Provider value={protectSheet}>
+          <NamedFunctionsProvider value={namedFunctions}>
+            <SheetBarActionsContext.Provider value={sheetBar}>
+              <OfficeBindingsContext.Provider value={channel}>
+                <BorderLineContext.Provider value={borderLine}>
+                  <SummarySlotContext.Provider value={summarySlot}>
+                    <SpreadsheetZoomProvider value={scale}>
+                      <SheetStepContext.Provider value={stepSheet}>
+                        <SurfaceRedoContext.Provider value={history?.redo ?? null}>
+                          <ShowFormulasContext.Provider value={formulas.shown}>
+                            <ShowProtectedContext.Provider value={protectedShown.shown}>
+                              <SpreadsheetFullScreenProvider value={fullScreen}>
+                                {bridge ? (
+                                  <OpenSheet
+                                    bridge={bridge}
+                                    tabId={tabId}
+                                    onSelectTab={onSelectTab}
+                                    sync={sync}
+                                    onWorkbook={onWorkbook}
+                                  />
+                                ) : (
+                                  <Status state="loading" />
+                                )}
+                              </SpreadsheetFullScreenProvider>
+                            </ShowProtectedContext.Provider>
+                          </ShowFormulasContext.Provider>
+                        </SurfaceRedoContext.Provider>
+                      </SheetStepContext.Provider>
+                    </SpreadsheetZoomProvider>
+                  </SummarySlotContext.Provider>
+                </BorderLineContext.Provider>
+              </OfficeBindingsContext.Provider>
+              <SheetBar
+                tabs={tabs}
+                activeId={tabId}
+                onSelect={onSelectTab}
+                peers={sheetBarPeers}
+                summarySlot={setSummarySlot}
+                actions={bridge ? sheetBar : null}
+                looks={looks}
+                copyTo={copyTo}
+              />
+            </SheetBarActionsContext.Provider>
+          </NamedFunctionsProvider>
+        </ProtectSheetContext.Provider>
       </SpreadsheetThemeProvider>
       <ImportReportDialog documentId={scope.documentId} />
     </section>
@@ -317,6 +328,7 @@ function SheetWorkspace({
       : bridge.importAccess === 'blocked' && store.usesImports();
   // IMPORTRANGE's sources waiting to be connected (formulas.md "Connecting two spreadsheets").
   const waiting = store.rangeSourcesWaiting();
+  const protectionWarning = useProtectionWarnings(store, bridge);
   // A named range on another sheet: that sheet opens on it (data-tools.md "Named ranges and named functions").
   const openSheetAt = useCallback(
     (id: string, range: GridRange) => {
@@ -354,6 +366,7 @@ function SheetWorkspace({
               />
             ) : null}
             <SpreadsheetSheetParts bridge={bridge} />
+            {protectionWarning}
             <p aria-live="polite" className="sr-only">
               {announcement}
             </p>

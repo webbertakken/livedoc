@@ -142,10 +142,11 @@ display style (Chip, Arrow, Plain Text) with option colours. Dropdowns and tick 
     permission's short name (**Warning**, **Owner**, **Editors**), in sheet order then position; a click selects it.
     Empty: "No protected sheets or ranges." (an Editor's: "Nothing is protected yet."). Participants and Viewers read
     it.
-  - **Add a Sheet or Range** (an Editor): **Range** or **Sheet** tabs; Range takes the selection, Sheet the active
-    sheet with **Except Certain Cells** (a list of ranges, **Add Another Range**); **Description** (up to 200
-    characters); **Set Permissions**, then the three choices as radio buttons, **Done** and **Cancel**. A range that
-    cannot be read says "That range can't be read".
+  - **Add a Sheet or Range** (an Editor): **Range** or **Sheet**; Range takes the selection (or any sheet's range
+    typed, `Sheet2!A1:B4`), Sheet a sheet (the active one first) with **Except Certain Cells** (a list of its ranges,
+    **Add Another Range**); **Description** (up to 200 characters); **Permissions**, the three choices as radio
+    buttons, Editors Only chosen first (default, D345); **Done** and **Cancel**. A range that cannot be read, or an
+    exception off its sheet, says "That range can't be read".
   - **Edit** and **Remove** (trash, "Remove this protection?" with **Remove** and **Cancel**): an Editor, on a
     protection that admits them (an Only the Owner one is the owner's alone). Each change is one undo step.
 - **The warning** (Show a Warning): "Heads up! You're trying to edit part of this sheet that shouldn't be changed
@@ -180,7 +181,7 @@ display style (Chip, Arrow, Plain Text) with option colours. Dropdowns and tick 
   its own format; LiveDoc never writes one it did not read. Converting and downloading to the other format list it.
 - Share roles: Editor adds, edits and removes protections that admit them; Participant writes only where admitted
   (never under Editors Only or Only the Owner); Viewer reads the panel and the hatching. Telemetry:
-  `Spreadsheet · Changed · Protection` with the permission (`Warning`, `Owner`, `Editors`).
+  `Sheet · Changed · Protection`, as each sheet change names its kind.
 
 ## Tables
 
@@ -234,7 +235,7 @@ display style (Chip, Arrow, Plain Text) with option colours. Dropdowns and tick 
 ## Telemetry
 
 `Spreadsheet · Changed · <Kind>`: `Sort`, `Filter`, `FilterView`, `Slicer`, `Validation`, `NamedRange`,
-`NamedFunction`, `Protection`, `Table`, `Cleanup`, `Split`, `Randomise`, `Replace`; `Spreadsheet · Opened · Find`.
+`NamedFunction`, `Table`, `Cleanup`, `Split`, `Randomise`, `Replace`; `Spreadsheet · Opened · Find`.
 
 ## Defaults
 
@@ -244,7 +245,8 @@ The code cites each by its id.
 - **D302** A named function's limits: a name up to 254 characters (Google's), up to 20 placeholders, a definition up
   to 2,000 characters, a description up to 1,000, an argument's description and example up to 200 each (default).
 - **D345** A protection's bounds: up to 100 a sheet, 50 exceptions a protected sheet, a description up to 200
-  characters; kept by row and column ids as a named range is (default).
+  characters; kept by row and column ids as a named range is; a new one's permission Editors Only, as Only the Owner
+  would shut out the Editor making it (default).
 - **D346** How long Show a Warning's OK holds: for that range, until the person reloads or leaves the spreadsheet, as
   Google's "for the rest of this session"; an agent's changeset is never asked, only logged (default).
 - **D347** What a protection refuses: every write to its cells or their formats, rows or columns inserted inside it,

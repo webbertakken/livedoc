@@ -1,7 +1,12 @@
 // formatting.md "Alternating colours" (D216): opening the panel makes a banding over the selection at once; closing it
 // writes nothing.
 import { describe, expect, it, vi } from 'vitest';
-import { withBandingOnOpen, withNamedRangesPanel, withValidationPanel } from './spreadsheet-panels';
+import {
+  withBandingOnOpen,
+  withNamedRangesPanel,
+  withProtectionPanel,
+  withValidationPanel,
+} from './spreadsheet-panels';
 
 describe('withBandingOnOpen', () => {
   it('adds a banding as the panel opens, never as it closes', () => {
@@ -73,5 +78,27 @@ describe('withNamedRangesPanel', () => {
     expect(reader['define-named-range']).toBeUndefined();
     const none = {};
     expect(withNamedRangesPanel(none, o)).toBe(none);
+  });
+});
+
+// data-tools.md "Protected ranges": Data › Protect Sheets and Ranges and the menus' Protect Range.
+describe('withProtectionPanel', () => {
+  const opts = (canShape = true) => ({ opened: vi.fn(), reveal: vi.fn(), canShape });
+  const item = 'protect-sheets-and-ranges';
+
+  it('opens on its list, notes nothing as it closes, and opens Protect Range on a new range for an Editor', () => {
+    const o = opts();
+    const run = vi.fn();
+    const bound = withProtectionPanel({ [item]: { run, checked: false } }, o);
+    bound[item]!.run();
+    expect(o.opened).toHaveBeenCalledWith(null);
+    withProtectionPanel({ [item]: { run, checked: true } }, o)[item]!.run();
+    expect([o.opened.mock.calls.length, run.mock.calls.length]).toEqual([1, 2]);
+    bound['protect-range']!.run();
+    expect(o.opened).toHaveBeenLastCalledWith('range');
+    expect(o.reveal).toHaveBeenCalledOnce();
+    expect(withProtectionPanel({ [item]: { run } }, opts(false))['protect-range']).toBeUndefined();
+    const none = {};
+    expect(withProtectionPanel(none, o)).toBe(none);
   });
 });

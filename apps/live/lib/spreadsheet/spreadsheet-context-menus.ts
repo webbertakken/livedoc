@@ -50,7 +50,8 @@ const DELETE_ROWS = { id: 'delete-rows', label: 'Delete Row' };
 const DELETE_COLUMNS = { id: 'delete-columns', label: 'Delete Column' };
 // Opens Named Ranges on Add a Range over the selection: an Editor's, where Data › Named Ranges is everyone's.
 const DEFINE_NAMED_RANGE = own('define-named-range', 'Define Named Range', 'edit', 'built');
-const PROTECT_RANGE = { id: 'protect-sheets-and-ranges', label: 'Protect Range' };
+// Opens Protect Sheets and Ranges on a new range over the selection: an Editor's (data-tools.md "Protected ranges").
+const PROTECT_RANGE = own('protect-range', 'Protect Range', 'edit', 'built');
 const VALIDATION: readonly ContextEntrySpec[] = ['conditional-formatting', 'data-validation'];
 
 // Clear, Hide and Resize of the lines selected: a header menu's own (surface.md "Context menus").

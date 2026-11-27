@@ -2,8 +2,8 @@
 
 // A sheet tab's menu (docs/specs/029-sheets/spreadsheet.md "Sheets in the sheet bar"): Google's items in Google's
 // order, opened by the tab's arrow, a right-click, Shift+F10 or the context menu key. Only an Editor changes the
-// sheets; for anyone else, and for what is not built yet, an item stays in its place, dimmed (D174). Protect Sheet waits
-// for Protected Sheets and Ranges (plan 0020 Phase 10).
+// sheets; for anyone else, and for what is not built yet, an item stays in its place, dimmed (D174). Protect Sheet opens
+// Protected Sheets and Ranges on that sheet (data-tools.md "Protected ranges").
 import { ContextMenu, ContextMenuDivider } from '@/components/palette/ContextMenu';
 import { useState } from 'react';
 import {
@@ -24,6 +24,7 @@ export function SheetTabMenu({
   actions,
   onColour,
   onCopyTo,
+  onProtect,
   onClose,
 }: {
   at: SheetTabMenuAt;
@@ -37,6 +38,8 @@ export function SheetTabMenu({
   onColour: () => void;
   // Copy To, everyone's (D186): absent while the sheets are not reachable.
   onCopyTo?: (to: 'new' | 'existing') => void;
+  // Protect Sheet: Protected Sheets and Ranges on this tab's sheet; absent, dimmed.
+  onProtect?: (tabId: string) => void;
   onClose: () => void;
 }) {
   const [copyOpen, setCopyOpen] = useState(false);
@@ -105,7 +108,12 @@ export function SheetTabMenu({
         onClick={act(onColour)}
       />
       <ContextMenuDivider />
-      {later('Protect Sheet', '⚿')}
+      <MenuActionRow
+        label="Protect Sheet"
+        icon={<Glyph t="⚿" />}
+        disabled={!can || !onProtect}
+        onClick={act(() => onProtect?.(at.tabId))}
+      />
       <MenuActionRow
         label="Hide Sheet"
         icon={<Glyph t="◌" />}

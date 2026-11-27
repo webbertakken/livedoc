@@ -596,6 +596,8 @@ export const SHEET_CHANGE_KINDS = [
   'Banding',
   // A spreadsheet's charts (docs/specs/029-sheets/charts.md "The model").
   'Chart',
+  // A protected sheet or range made, changed or removed (docs/specs/029-sheets/data-tools.md "Protected ranges").
+  'Protection',
   'Resize',
   'Hide',
   'Group',

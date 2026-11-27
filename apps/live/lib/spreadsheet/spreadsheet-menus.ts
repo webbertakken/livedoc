@@ -247,7 +247,7 @@ const VIEW_MENU = menu('view', 'View', [
       checkable: 'checkbox',
       shortcut: 'show-all-formulas',
     }),
-    item('show-protected-ranges', 'Protected Ranges', 'view', { checkable: 'checkbox' }),
+    built('show-protected-ranges', 'Protected Ranges', 'view', { checkable: 'checkbox' }),
   ]),
   submenu('freeze', 'Freeze', [
     ...FREEZE_ITEMS.slice(0, 4).map(freezeItem),
@@ -441,7 +441,7 @@ const DATA_MENU = menu('data', 'Data', [
   item('create-filter-view', 'Create Filter View', 'view'),
   item('add-a-slicer', 'Add a Slicer', 'edit'),
   SEPARATOR,
-  item('protect-sheets-and-ranges', 'Protect Sheets and Ranges', 'edit'),
+  built('protect-sheets-and-ranges', 'Protect Sheets and Ranges', 'view'),
   built('named-ranges', 'Named Ranges', 'view'),
   built('named-functions', 'Named Functions', 'view'),
   item('randomise-range', 'Randomise Range', 'edit'),

@@ -3,7 +3,7 @@
 // The open sheet's parts (docs/specs/029-sheets/surface.md): the formula bar, the grid, the right side panel beside them
 // (office-shell.md "Side panels"), the grid's menus and dialogs and the sheet bar's summary, all on the open sheet's
 // controller.
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { DocumentFonts } from '@livedoc/document';
 import { useSheetController } from '@/components/sheets/sheet-controller';
 import { SheetGrid } from '@/components/sheets/SheetGrid';
@@ -16,15 +16,19 @@ import {
   CHART_EDITOR_PANEL,
   DATA_VALIDATION_PANEL,
   NAMED_RANGES_PANEL,
+  PROTECTION_PANEL,
   SPREADSHEET_PANELS,
   withBandingOnOpen,
   withNamedRangesPanel,
+  withProtectionPanel,
   withValidationPanel,
 } from '@/lib/spreadsheet/spreadsheet-panels';
 import { SheetBarSummary } from './SheetBarSummary';
 import { SpreadsheetGridMenus } from './SpreadsheetContextMenu';
 import { SpreadsheetFormulaBarRow } from './SpreadsheetFormulaBarRow';
 import { SpreadsheetRightPanel } from './SpreadsheetRightPanel';
+import type { ProtectionStart } from './ProtectionForm';
+import { ProtectSheetContext } from './protect-sheet-channel';
 import { useSpreadsheetSurfaceKeys } from './spreadsheet-surface-keys';
 import { useSpreadsheetZoomScale } from './spreadsheet-zoom';
 import { useSpreadsheetTheme } from './spreadsheet-theme-context';
@@ -71,23 +75,48 @@ export function SpreadsheetSheetParts({ bridge }: { bridge: SheetsBridge }) {
   const [validation, setValidation] = useState({ nonce: 0, startNew: false });
   // How Named Ranges was last opened (SpreadsheetRightPanel).
   const [named, setNamed] = useState({ nonce: 0, startAdding: false });
+  // How Protected Sheets and Ranges was last opened (SpreadsheetRightPanel).
+  const [protection, setProtection] = useState<{ nonce: number; start: ProtectionStart | null }>({
+    nonce: 0,
+    start: null,
+  });
+  // A sheet tab's Protect Sheet: the panel on a new protection of that tab's sheet.
+  const protectSheet = useContext(ProtectSheetContext);
+  useEffect(() => {
+    if (!protectSheet || !c.canShape) return;
+    protectSheet.listen((tabId) => {
+      const sheet = c.workbook.sheetList().find((s) => s.tabId === tabId);
+      if (!sheet) return;
+      setProtection((v) => ({ nonce: v.nonce + 1, start: { what: 'sheet', sheetId: sheet.id } }));
+      reveal(PROTECTION_PANEL);
+    });
+    return () => protectSheet.listen(null);
+  }, [protectSheet, c.canShape, c.workbook, reveal]);
   const charts = useSpreadsheetCharts(c, c.canShape ? editChart : undefined);
   const { insertChart } = charts;
   const canInsertChart = c.canShape;
   const bandingActions = useMemo(
     () => ({
-      ...withNamedRangesPanel(
-        withValidationPanel(
-          withBandingOnOpen(panelActions, () => actions.addBanding()),
+      ...withProtectionPanel(
+        withNamedRangesPanel(
+          withValidationPanel(
+            withBandingOnOpen(panelActions, () => actions.addBanding()),
+            {
+              addCheckbox: () => actions.addCheckbox(),
+              opened: (startNew) => setValidation((v) => ({ nonce: v.nonce + 1, startNew })),
+              reveal: () => reveal(DATA_VALIDATION_PANEL),
+            },
+          ),
           {
-            addCheckbox: () => actions.addCheckbox(),
-            opened: (startNew) => setValidation((v) => ({ nonce: v.nonce + 1, startNew })),
-            reveal: () => reveal(DATA_VALIDATION_PANEL),
+            opened: (startAdding) => setNamed((v) => ({ nonce: v.nonce + 1, startAdding })),
+            reveal: () => reveal(NAMED_RANGES_PANEL),
+            canShape: c.canShape,
           },
         ),
         {
-          opened: (startAdding) => setNamed((v) => ({ nonce: v.nonce + 1, startAdding })),
-          reveal: () => reveal(NAMED_RANGES_PANEL),
+          opened: (start) =>
+            setProtection((v) => ({ nonce: v.nonce + 1, start: start ? { what: start } : null })),
+          reveal: () => reveal(PROTECTION_PANEL),
           canShape: c.canShape,
         },
       ),
@@ -154,6 +183,7 @@ export function SpreadsheetSheetParts({ bridge }: { bridge: SheetsBridge }) {
           chart={{ id: editingChart, change: charts.change }}
           validation={validation}
           named={named}
+          protection={protection}
         />
       </div>
       <SpreadsheetGridMenus actions={actions} bound={office.actions} />

@@ -178,12 +178,16 @@ describe('spreadsheetMenus', () => {
       ...SHEET_DOWNLOAD_ITEMS.map((i) => i.id),
       'copy',
       'show-formulas',
+      // View › Show › Protected Ranges: the person's own view (data-tools.md "Protected ranges").
+      'show-protected-ranges',
       'expand-all-row-groups',
       'collapse-all-row-groups',
       'expand-all-column-groups',
       'collapse-all-column-groups',
       ...ZOOM_ITEMS.map((i) => i.id),
       'full-screen',
+      // Data › Protect Sheets and Ranges: its list read by everyone (data-tools.md "Protected ranges").
+      'protect-sheets-and-ranges',
       // Data › Named Ranges and Named Functions: read by everyone (data-tools.md "Named ranges and named functions").
       'named-ranges',
       'named-functions',

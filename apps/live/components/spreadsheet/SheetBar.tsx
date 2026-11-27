@@ -6,7 +6,7 @@
 // them, as a tab list's do; each tab has its menu (spreadsheet.md "Sheets in the sheet bar"). Each tab shows who else
 // is on that sheet, in their colour (sheet-store.md "Live for everyone"). Its end keeps room for the selection's
 // summary, drawn there by the open sheet (SheetBarSummary).
-import { useRef, useState, type KeyboardEvent } from 'react';
+import { useContext, useRef, useState, type KeyboardEvent } from 'react';
 import { lucideMenu, lucidePlus } from '@livedoc/icons/lucide';
 import { Tooltip, lucideGlyph } from '@livedoc/ui';
 import { shownTabs } from '@/lib/spreadsheet/sheet-bar-places';
@@ -15,6 +15,7 @@ import { CopyToDialog } from './CopyToDialog';
 import { SheetBarTab as TabFace } from './SheetBarTab';
 import { SheetTabColour } from './SheetTabColour';
 import { SheetTabMenu, type SheetTabMenuAt } from './SheetTabMenu';
+import { ProtectSheetContext } from './protect-sheet-channel';
 import type { SheetBarActions } from './useSheetBarActions';
 import type { SheetCopyTo } from './useSheetCopyTo';
 import { useSheetTabDrag } from './useSheetTabDrag';
@@ -56,6 +57,7 @@ export function SheetBar({
 }) {
   const list = useRef<HTMLDivElement | null>(null);
   const [menu, setMenu] = useState<SheetTabMenuAt | null>(null);
+  const protectSheet = useContext(ProtectSheetContext);
   // The tab whose colour is being picked, and the tab the picker hangs from.
   const [colouring, setColouring] = useState<{ tabId: string; anchor: HTMLElement } | null>(null);
   // All Sheets' button, which its list opens above.
@@ -160,6 +162,7 @@ export function SheetBar({
           shownCount={shown.length}
           index={shown.findIndex((t) => t.id === menuTab.id)}
           actions={actions}
+          {...(protectSheet ? { onProtect: protectSheet.open } : {})}
           onColour={() =>
             // Every tab shown has its face, the picker's anchor.
             setColouring({
