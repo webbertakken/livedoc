@@ -256,6 +256,38 @@ describe('workbookOutlineView', () => {
     ]);
   });
 
+  // inserted-objects.md "Images in a cell": a cell's picture's line, by its cell and alt text, row by row.
+  it('lists cells’ pictures after the images over cells, row by row, leaving out gone cells', () => {
+    const { rows, cols } = hidden.layout;
+    const view = workbookOutlineView({
+      name: 'P',
+      workbook: book,
+      sheets: [
+        {
+          ...outlineSheet(hidden),
+          cellPictures: [
+            { r: rows[1]!, c: cols[0]! },
+            { r: rows[0]!, c: cols[1]!, alt: 'A cat' },
+            { r: rows[0]!, c: cols[0]! },
+            { r: 'gone', c: cols[0]! },
+            { r: rows[0]!, c: 'gone' },
+          ],
+        },
+      ],
+      current: 'x',
+    });
+    expect(view.text.split('\n').slice(-3)).toEqual([
+      '  image in A1',
+      '  image in B1 "A cat"',
+      '  image in A2',
+    ]);
+    expect(view.json.sheets[0]!.images).toEqual([
+      { at: 'A1', inCell: true },
+      { at: 'B1', alt: 'A cat', inCell: true },
+      { at: 'A2', inCell: true },
+    ]);
+  });
+
   it('ignores used ids no longer in the layout', () => {
     const sheet = {
       ...outlineSheet(notes),

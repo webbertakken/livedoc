@@ -59,6 +59,23 @@ describe('a spreadsheet’s outline', () => {
     }
   });
 
+  // inserted-objects.md "Images in a cell": the cells holding pictures, read from the room's index of them (D633).
+  it('lists the cells holding pictures, with their alt text', async () => {
+    const { rows, cols } = kit.layout;
+    const cells = [
+      { r: rows[0]!, c: cols[1]!, i: { img: { id: 'g-1', alt: 'A cat' } } },
+      { r: rows[2]!, c: cols[0]!, i: { img: { id: 'g-2' } } },
+    ];
+    expect((await kit.call({ path: '', body: kit.document('book2', true, cells) })).status).toBe(
+      201,
+    );
+    const res = await kit.call({ method: 'GET', path: '/book2/tabs/book2t?view=outline' });
+    expect((await res.text()).split('\n').slice(-2)).toEqual([
+      '  image in B1 "A cat"',
+      '  image in A3',
+    ]);
+  });
+
   it('shows a link to one tab only its own sheet', async () => {
     const res = await view('view=outline', { code: 'TAB1', owner: 'visitor' });
     expect(res.status).toBe(200);

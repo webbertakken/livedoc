@@ -209,3 +209,41 @@ describe('clear_images and read_sheet', () => {
     expect(after.ok && after.images).toBeUndefined();
   });
 });
+
+// inserted-objects.md "Images in a cell" ("Agents"): image with inCell sets the cell to the picture; read_sheet lists
+// it after the images over the cells, row by row.
+describe('change_sheet image inCell', () => {
+  it('puts a gallery picture in a cell, listed after the images over the cells', async () => {
+    const { api, server } = book();
+    const out = await change(api, [
+      { op: 'image', imageId: 'g-odd', at: 'C4', inCell: true },
+      { op: 'image', imageId: 'g-wide', at: 'B2', inCell: true, alt: ' A band ' },
+      { op: 'image', imageId: 'g-wide', at: 'E1' },
+      { op: 'image', imageId: 'g-odd', at: 'D2', inCell: true },
+    ]);
+    expect(out.applied?.slice(0, 2)).toEqual(['put the image in C4', 'put the image in B2']);
+    const { rows, cols } = server.sheets[0]!.layout;
+    const sheet = sheetFromJson({ ...server.sheets[0]!, rev: 0 });
+    expect(sheet.cells.get(`${rows[1]}:${cols[1]}`)?.input).toEqual({
+      img: { id: 'g-wide', alt: 'A band' },
+    });
+    const read = await readSheet(api, DOC_A, { sheet: 'Models' });
+    expect(read.ok && read.images?.slice(1)).toEqual([
+      { imageId: 'g-wide', at: 'B2', alt: 'A band', inCell: true },
+      { imageId: 'g-odd', at: 'D2', inCell: true },
+      { imageId: 'g-odd', at: 'C4', inCell: true },
+    ]);
+  });
+
+  it('refuses a size or replace beside inCell, and an id the gallery lacks', async () => {
+    const { api } = book();
+    for (const extra of [{ width: 20 }, { height: 20 }, { replace: 'x' }]) {
+      const out = await change(api, [
+        { op: 'image', imageId: 'g-wide', at: 'B2', inCell: true, ...extra },
+      ]);
+      expect(out.refusal?.code).toBe('write_invalid');
+    }
+    const missing = await change(api, [{ op: 'image', imageId: 'nope', at: 'B2', inCell: true }]);
+    expect(missing.refusal?.code).toBe('image_not_found');
+  });
+});

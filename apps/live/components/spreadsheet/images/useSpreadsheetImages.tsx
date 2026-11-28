@@ -2,8 +2,8 @@
 
 // A spreadsheet's images over cells (docs/specs/029-sheets/inserted-objects.md "Images over cells", D623, D625): the
 // open sheet's image objects handed to the grid's images layer at their px places; Insert Image over Cells placing a
-// picked picture at the active cell; the image's menu (Alt Text, Replace Image, Delete); each change one undo step,
-// written back as the sheet's layout write. An Editor's alone.
+// picked picture at the active cell; the image's menu (Alt Text, Replace Image, Place Image in Selected Cell, Delete);
+// each change one undo step, written back as the sheet's layout write. An Editor's alone.
 import dynamic from 'next/dynamic';
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { makeAxisIds, type SheetImage, type SheetObject } from '@livedoc/sheets';
@@ -27,6 +27,7 @@ import {
   IMAGE_MENU_ENTRIES,
   IMAGE_REPLACE,
   INSERT_IMAGE_OVER_CELLS,
+  PLACE_IMAGE_IN_CELL,
   insertImageAction,
   type ImagePlacing,
 } from '@/lib/spreadsheet/sheet-image-menu';
@@ -37,6 +38,7 @@ import {
   type ImageBox,
   type PickedPicture,
 } from '@/lib/spreadsheet/sheet-image-place';
+import { pictureIntoCellWrite } from '@/lib/spreadsheet/sheet-cell-picture';
 import { track } from '@/lib/telemetry';
 import { anchorAt, anchorPx } from '../charts/sheet-chart-place';
 
@@ -56,7 +58,7 @@ type Picking = { for: 'insert' } | { for: 'replace'; id: string };
 // The editor in a workbench uploads into its one document and never reads the person's gallery (workbench-embeds.md).
 const inWorkbench = () => getWorkbenchConfinement() !== null;
 
-/** Whether this deployment and document can hold images over cells (the gallery's probe, This Browser). */
+/** Whether this deployment and document can hold images over cells or in them (the gallery's probe, This Browser). */
 function useImagePlacing(access: SheetImageAccess, canShape: boolean): ImagePlacing {
   const local = isOfflineIdSync(access.documentId);
   const [probed, setProbed] = useState<ImagePlacing>('ready');
@@ -81,7 +83,13 @@ function useImagePlacing(access: SheetImageAccess, canShape: boolean): ImagePlac
 export function useSpreadsheetImages(
   c: SheetController,
   access: SheetImageAccess,
-): { value: SheetImagesOverCells | null; actions: OfficeActions; dialogs: ReactNode } {
+): {
+  value: SheetImagesOverCells | null;
+  actions: OfficeActions;
+  dialogs: ReactNode;
+  // Where pictures can be placed, for Insert Image in Cell (useSpreadsheetCellPictures).
+  placing: ImagePlacing;
+} {
   const { sheet, geometry, canShape, write, announce } = c;
   const objects = sheet.layout.objects;
   const images = useMemo(
@@ -192,6 +200,18 @@ export function useSpreadsheetImages(
     return {
       [IMAGE_ALT_TEXT]: { run: () => setAltFor({ id, nonce: Date.now() }) },
       [IMAGE_REPLACE]: insertImageAction(placing, () => setPicking({ for: 'replace', id })),
+      // Into the active cell, its alt text kept (inserted-objects.md "Images in a cell", D632).
+      [PLACE_IMAGE_IN_CELL]: {
+        run: () => {
+          const cur = find(id);
+          const { active } = c.selectionNow();
+          const at = { r: sheet.layout.rows[active.r]!, c: sheet.layout.cols[active.c]! };
+          if (!cur) return;
+          const ok = write(pictureIntoCellWrite(cur, at), 'Image');
+          debugLog(`[sheet-images] into-cell sheet=${sheet.id} image=${id} ok=${ok}`);
+          c.focusGrid();
+        },
+      },
       [IMAGE_DELETE]: {
         run: () => {
           put(id, null, 'removed');
@@ -199,7 +219,7 @@ export function useSpreadsheetImages(
         },
       },
     };
-  }, [menu, placing, put, c]);
+  }, [menu, placing, put, c, find, sheet.layout, sheet.id, write]);
 
   const altImage = altFor ? find(altFor.id) : undefined;
   const dialogs = (
@@ -239,5 +259,5 @@ export function useSpreadsheetImages(
     </>
   );
 
-  return { value, actions, dialogs };
+  return { value, actions, dialogs, placing };
 }

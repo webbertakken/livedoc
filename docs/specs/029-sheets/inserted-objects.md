@@ -1,6 +1,7 @@
 # Inserted objects
 
-**Status: specified.** Insert › Checkbox and Insert › Dropdown are built (as data validation); the rest is specified.
+**Status: specified.** Insert › Checkbox and Insert › Dropdown are built (as data validation), and images over cells
+and in a cell; the rest is specified.
 
 What the Insert menu puts into a [spreadsheet](spreadsheet.md) besides cells, charts and pivot tables (those have
 their own pages: [Charts](charts.md), [Pivot tables](pivot-tables.md)). Its rows of the

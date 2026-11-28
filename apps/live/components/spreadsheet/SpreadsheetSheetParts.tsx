@@ -63,7 +63,9 @@ import { useSpreadsheetCharts } from './charts/useSpreadsheetCharts';
 import { useSpreadsheetSlicers } from './slicers/useSpreadsheetSlicers';
 import { SheetSlicersContext } from '@/components/sheets/slicers/slicers-context';
 import { SheetImagesOverCellsContext } from '@/components/sheets/sheet-images-over-cells-context';
+import { SheetPictureAccessContext } from '@/components/sheets/sheet-picture-access-context';
 import { useSpreadsheetImages } from './images/useSpreadsheetImages';
+import { useSpreadsheetCellPictures } from './images/useSpreadsheetCellPictures';
 import {
   SheetPivotDetailsContext,
   SheetPivotsContext,
@@ -177,6 +179,8 @@ export function SpreadsheetSheetParts({ bridge }: { bridge: SheetsBridge }) {
     [ownerId, documentId, shareCode],
   );
   const images = useSpreadsheetImages(c, imageAccess);
+  // Pictures in cells (inserted-objects.md "Images in a cell"): Insert Image in Cell and a picture cell's items.
+  const cellPictures = useSpreadsheetCellPictures(c, imageAccess, images.placing);
   const canInsertChart = c.canShape;
   const bandingActions = useMemo(
     () => ({
@@ -252,6 +256,7 @@ export function SpreadsheetSheetParts({ bridge }: { bridge: SheetsBridge }) {
       // Grouping a pivot table's items from its cells (pivot-tables.md "Grouping in the grid"): an Editor's.
       ...grouping.actions,
       ...images.actions,
+      ...cellPictures.actions,
       ...(detailsHere
         ? { 'show-pivot-details': { run: () => void pivots.showDetails(active.r, active.c) } }
         : {}),
@@ -292,20 +297,22 @@ export function SpreadsheetSheetParts({ bridge }: { bridge: SheetsBridge }) {
                   <SheetChartsContext.Provider value={charts.value}>
                     <SheetSlicersContext.Provider value={slicers.writes}>
                       <SheetImagesOverCellsContext.Provider value={images.value}>
-                        <SheetPivotsContext.Provider value={c.canShape ? editPivot : null}>
-                          <SheetPivotDetailsContext.Provider value={pivots.showDetails}>
-                            <SheetGrid
-                              elementId={`sheet-${c.sheet.id}`}
-                              actions={actions}
-                              input={input}
-                              pointRef={pointRef}
-                              peers={bridge.peers}
-                              zoom={zoom}
-                              surfaceKeys={surfaceKeys}
-                              fontFamily={DocumentFonts.stack(theme.font)}
-                            />
-                          </SheetPivotDetailsContext.Provider>
-                        </SheetPivotsContext.Provider>
+                        <SheetPictureAccessContext.Provider value={imageAccess}>
+                          <SheetPivotsContext.Provider value={c.canShape ? editPivot : null}>
+                            <SheetPivotDetailsContext.Provider value={pivots.showDetails}>
+                              <SheetGrid
+                                elementId={`sheet-${c.sheet.id}`}
+                                actions={actions}
+                                input={input}
+                                pointRef={pointRef}
+                                peers={bridge.peers}
+                                zoom={zoom}
+                                surfaceKeys={surfaceKeys}
+                                fontFamily={DocumentFonts.stack(theme.font)}
+                              />
+                            </SheetPivotDetailsContext.Provider>
+                          </SheetPivotsContext.Provider>
+                        </SheetPictureAccessContext.Provider>
                       </SheetImagesOverCellsContext.Provider>
                     </SheetSlicersContext.Provider>
                   </SheetChartsContext.Provider>
@@ -339,6 +346,7 @@ export function SpreadsheetSheetParts({ bridge }: { bridge: SheetsBridge }) {
       {pivots.dialog}
       {grouping.dialog}
       {images.dialogs}
+      {cellPictures.dialogs}
       {findReplace?.open ? <FindReplaceDialog state={findReplace} /> : null}
       <SheetBarSummary />
     </div>

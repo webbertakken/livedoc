@@ -717,7 +717,7 @@ const sheetChange = z.discriminatedUnion('op', [
     op: z
       .literal('image')
       .describe(
-        'A spreadsheet only: place one of your gallery pictures (list_images) over the cells, its top-left at a cell; it lands at its own size fitted into 600x400 unless given one.',
+        'A spreadsheet only: place one of your gallery pictures (list_images) over the cells, its top-left at a cell; it lands at its own size fitted into 600x400 unless given one. With inCell, it becomes the cell’s value instead.',
       ),
     imageId: z.string().describe('The picture: an id list_images lists.'),
     at: z.string().describe('The cell its top-left sits on, "B2".'),
@@ -735,6 +735,12 @@ const sheetChange = z.discriminatedUnion('op', [
       .optional()
       .describe(
         'The id of one of the sheet’s images (read_sheet lists them) this one takes the place of, keeping its id.',
+      ),
+    inCell: z
+      .boolean()
+      .optional()
+      .describe(
+        'true: the picture is the cell’s value, filling it and moving with it (no width, height or replace).',
       ),
   }),
   z.object({
@@ -1003,17 +1009,23 @@ export const readSheetOutput = {
   images: z
     .array(
       z.object({
-        id: z.string().describe('Its id on the sheet: what image replace and clear_images take.'),
+        id: z
+          .string()
+          .optional()
+          .describe(
+            'Over the cells, its id on the sheet: what image replace and clear_images take.',
+          ),
         imageId: z.string().describe('Its gallery picture.'),
-        at: z.string().describe('The cell its top-left sits on.'),
-        width: z.number().describe('Its width in px.'),
-        height: z.number().describe('Its height in px.'),
+        at: z.string().describe('The cell its top-left sits on, or the cell holding it.'),
+        width: z.number().optional().describe('Over the cells, its width in px.'),
+        height: z.number().optional().describe('Over the cells, its height in px.'),
         alt: z.string().optional().describe('Its alt text.'),
+        inCell: z.literal(true).optional().describe('Held in the cell at as its value.'),
       }),
     )
     .optional()
     .describe(
-      'A spreadsheet’s sheet: its images over the cells, in paint order (change_sheet image replace takes an id).',
+      'A spreadsheet’s sheet: its images over the cells in paint order (change_sheet image replace takes an id), then its cells’ pictures.',
     ),
   url,
 };

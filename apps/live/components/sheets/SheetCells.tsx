@@ -41,6 +41,8 @@ import type { PlanPalette } from '@/components/plan/plan-palette';
 import { cellBox, mergeAt, type Geometry, type GridWindow } from './sheet-geometry';
 import { SheetImage } from './SheetImage';
 import { useSheetImages } from './sheet-images-context';
+import { useSheetPictureAccess } from './sheet-picture-access-context';
+import { SheetCellPicture } from './SheetCellPicture';
 import { SheetSparkline } from './SheetSparkline';
 import { SheetTurnedText } from './SheetTurnedText';
 
@@ -133,6 +135,7 @@ function shownValue(v: Value): { text: string; pending: boolean } {
 function RegionCells({ region, ...p }: CellsProps & { region: Region }) {
   const { sheet, workbook, geometry: g, scroll, palette, locale } = p;
   const images = useSheetImages();
+  const pictures = useSheetPictureAccess();
   // Stored colours are drawn for this Sheet's surface: pale fills tinted on a dark one, ink kept readable (sheet.md
   // "Readable cells").
   const surface = {
@@ -338,6 +341,18 @@ function RegionCells({ region, ...p }: CellsProps & { region: Region }) {
             key={`${key}i`}
             image={picture}
             loader={images}
+            box={box}
+            {...(waiting ? { waitingOpacity: WAITING_OPACITY } : {})}
+          />,
+        );
+      // A gallery picture held in the cell, or one its formula reads (inserted-objects.md "Images in a cell").
+      const held = pictures && !pending.pending ? workbook.pictureOf(sheet.id, r, c) : null;
+      if (held && pictures)
+        out.push(
+          <SheetCellPicture
+            key={`${key}p`}
+            picture={held}
+            access={pictures}
             box={box}
             {...(waiting ? { waitingOpacity: WAITING_OPACITY } : {})}
           />,

@@ -273,6 +273,22 @@ describe("an image's menu", () => {
     expect(imagesOf(h)).toEqual([]);
   });
 
+  // inserted-objects.md "Images in a cell" (D632): off the sheet into the active cell, its alt text kept, one change.
+  it('places it in the selected cell, its alt text kept', async () => {
+    const { h, image } = await placeOne();
+    act(() => {
+      h.store.write(SHEET_ID, {
+        kind: 'layout',
+        changes: [{ k: 'object', id: image.id, object: { ...image, alt: 'A dot' } }],
+      });
+    });
+    act(() => h.select('E5'));
+    openMenu(image.id);
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Place Image in Selected Cell' }));
+    expect(imagesOf(h)).toEqual([]);
+    expect(h.cell('E5')?.input).toEqual({ img: { id: 'g-1', alt: 'A dot' } });
+  });
+
   it('deletes it', async () => {
     const { h, image } = await placeOne();
     openMenu(image.id);

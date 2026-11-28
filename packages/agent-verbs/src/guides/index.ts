@@ -358,17 +358,17 @@ second scale (line, area, stepped-area and combo charts).
 read_sheet lists the charts with their ids; chart {..., replace: "<id>"} rewrites one in place,
 clear_charts {id: "<id>"} takes one off, clear_charts {} all. add_sheet {title, after} adds a sheet after another.
 
-A pivot table summarises a range live; its output reads as cells, not typed over:
+A pivot table summarises a range live; its output cells are not typed over:
   pivot {range: "Data!A1:F99", at: "H1", rows: ["Region"], columns: [{column: "Date", grouping: "year"}],
          values: [{column: "Units"}], filters: [{column: "Rep", show: ["Ann"]}]}
 Columns by name; a value sums numbers, else counts (summarise: "AVERAGE"). grouping: a date
 rule ("month", "yearMonth"), {size: 10} intervals, or {groups: [{name, items}]}.
 read_sheet lists them; replace: "<id>" rewrites one, clear_pivots {id} drops it.
 
-A list_images picture over the cells: image {imageId, at: "B2", width, alt}; clear_images {id}.
+A list_images picture over cells: image {imageId, at: "B2", width, alt}, inCell: true in it; clear_images {id}.
 
 read_sheet reads back each cell's input, value and what it shows. Cheaper:
-read_document on any of its tabs outlines the workbook (sheets, used ranges, rules, charts, pivots);
+read_document on any tab outlines the workbook (sheets, used ranges, rules, charts, pivots);
 view "cells" {range: "A1:D40"} prints the sheet a row a line, a formula with what it shows.
 
 The file: livedoc spreadsheet download <doc> [--format xlsx|ods|fods|csv|tsv] [--sheet <name>]
