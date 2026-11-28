@@ -77,6 +77,20 @@ export type WorkbookConvertRequest = { format: WorkbookFormat };
 // "Connecting two spreadsheets"); without one, allow its web imports (imports.md "Allow access").
 export type WorkbookConnectRequest = { sources: string[] };
 
+// GET /documents/:id/workbook/link?sheet=<sheetId>&since=<version>: a sheet of the spreadsheet as another document
+// reads it (docs/specs/029-sheets/plan-links.md "Reading a sheet from another document", D505): the spreadsheet's name,
+// the workbook's visible sheets in tab order, its locale, its version, and the sheet named as its values (null when none is named or held);
+// `unchanged` alone when the version asked with is the workbook's.
+export type WorkbookLinkResponse =
+  | { unchanged: true; version: string }
+  | {
+      version: string;
+      name: string;
+      locale: string;
+      sheets: { id: string; title: string }[];
+      sheet: SheetDto | null;
+    };
+
 // What only the workbook's doors refuse; the rest are the sheet store's (SHEET_ERRORS).
 export const WORKBOOK_ERRORS = [
   // The document is no spreadsheet.
@@ -101,6 +115,8 @@ export const WORKBOOK_ERRORS = [
   'functions_invalid',
   // More named functions than a workbook keeps (NAMED_FUNCTIONS_MAX).
   'functions_full',
+  // A link read of a workbook past the cells a read works out (plan-links.md "Reading a sheet from another document").
+  'link_too_large',
 ] as const;
 export type WorkbookError = (typeof WORKBOOK_ERRORS)[number];
 

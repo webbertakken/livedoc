@@ -6,6 +6,7 @@
 // is never offered on a sheet tab (spreadsheet.md "The workbook shape"), so one reaches no file. Answered inside the
 // document's room.
 //   GET /api/documents/<id>/workbook/file?format=csv|tsv&tab=<tabId>  the open sheet as CSV or TSV, values as shown.
+//   GET /api/documents/<id>/workbook/link?sheet=<sheetId>  a sheet read by another document (workbook-link-route.ts).
 import { WorkbookRecord, type WorkbookFormat } from '@livedoc/sheets';
 import { writeSheetText, writeWorkbook } from '@livedoc/sheets/files';
 import { getDocumentMeta } from '../db';
@@ -22,6 +23,7 @@ import { conversionLosses, convert } from './workbook-conversion-route';
 import { keepFileContent, readKeptContent } from './workbook-kept-route';
 import { allowImports, fetchImport } from './sheet-imports-route';
 import { handleWorkbookSheetRoutes } from './workbook-sheet-routes';
+import { readWorkbookLink } from './workbook-link-route';
 import { loadSpreadsheetSheets } from './workbook-sheets-load';
 import { readWorkbookPictures } from './workbook-pictures';
 
@@ -137,6 +139,8 @@ export async function handleWorkbookRoutes(ctx: DocumentRouteContext): Promise<R
     if (request.method === 'GET') return readKeptContent(ctx, documentId);
     return request.method === 'POST' ? keepFileContent(ctx, documentId) : methodNotAllowed();
   }
+  if (segments.length === 5 && segments[4] === 'link')
+    return request.method === 'GET' ? readWorkbookLink(ctx, documentId) : methodNotAllowed();
   if (segments.length === 5 && segments[4] === 'imports') {
     if (request.method === 'GET') return fetchImport(ctx, documentId);
     return request.method === 'POST' ? allowImports(ctx, documentId) : methodNotAllowed();

@@ -6,10 +6,23 @@ import type { SheetMetricContent } from '@livedoc/document';
 import { DashboardContext, type DashboardContextValue } from './dashboard-context';
 import { DashboardSheetMetric } from './DashboardSheetMetric';
 import type { SheetRead } from './useSheetReader';
+import type { LinkedRead } from './linked-sheets';
 
 // docs/specs/026-plan/plan-tabs.md "Figures from a Sheet".
 let read: SheetRead = { state: 'none' };
 vi.mock('./useSheetReader', () => ({ useSheetRead: () => read }));
+// docs/specs/029-sheets/plan-links.md "Dashboards": a spreadsheet's sheet, read through the api.
+let linked: LinkedRead = { state: 'loading' };
+const retryLinked = vi.hoisted(() => vi.fn());
+vi.mock('./linked-sheets', () => ({
+  subscribeLinkedRead: () => () => {},
+  linkedRead: () => linked,
+  retryLinkedRead: retryLinked,
+}));
+vi.mock('@/hooks/sheets/useSheetsBridge', () => {
+  const bridge = { scope: { ownerId: 'owner', documentId: 'plan1' } };
+  return { useSheetsBridgeContext: () => bridge };
+});
 afterEach(cleanup);
 
 const rows = ['row0a', 'row1a', 'row2a', 'row3a'];
@@ -182,5 +195,51 @@ describe('a figure from a Sheet on the sizing scale', () => {
     });
     expect(container.querySelector('.dashboard-figure')).not.toBeNull();
     expect(container.innerHTML).not.toMatch(/\buppercase\b|tracking-|font-semibold|font-bold/);
+  });
+});
+
+describe('a figure from a spreadsheet', () => {
+  const content = (sheetId = 'sheetAAAA'): SheetMetricContent => ({
+    type: 'sheet-metric',
+    metric: 'figure',
+    documentId: 'book1',
+    sheetId,
+    cell: { r: 'row1a', c: 'colBa' },
+  });
+
+  it('reads its sheet through the spreadsheet, not the document', () => {
+    read = { state: 'gone' };
+    linked = { ...budget(), name: 'Money', sheets: [] };
+    show(content());
+    expect(screen.getByRole('group', { name: /^Rent: 1200/ })).toBeTruthy();
+  });
+
+  it('says a spreadsheet the reader may not open, or one too large, and offers an Editor another', () => {
+    linked = { state: 'denied' };
+    show(content());
+    expect(screen.getByText('You don’t have access to this spreadsheet.')).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Choose a Sheet' })).toBeTruthy();
+    cleanup();
+    linked = { state: 'too-large' };
+    show(content(), false);
+    expect(screen.getByText('This spreadsheet is too large to read here.')).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'Choose a Sheet' })).toBeNull();
+  });
+
+  it('says a sheet the spreadsheet no longer holds was deleted, and one still loading as loading', () => {
+    linked = { ...budget(), sheet: null, name: 'Money', sheets: [] };
+    show(content());
+    expect(screen.getByText('This sheet was deleted.')).toBeTruthy();
+    cleanup();
+    linked = { state: 'loading' };
+    show(content());
+    expect(screen.getByText('Loading the sheet…')).toBeTruthy();
+  });
+
+  it('fails with a Retry that asks the spreadsheet again', () => {
+    linked = { state: 'failed' };
+    show(content());
+    screen.getByRole('button', { name: /Retry/ }).click();
+    expect(retryLinked).toHaveBeenCalledWith('book1', 'sheetAAAA');
   });
 });

@@ -118,7 +118,7 @@ second, explicit approval, never an existing pairing widened in silence.
   reading the person's display identity, preferences, custom themes and shape libraries; the catalogues; sending a [bug report](../016-platform/bug-reports.md#entries) as the
   person, which a view session may do too. Everything else is refused `403 workbench_confined`: ownership powers
   (share links, password, move, delete, publish into a team, copy), other documents (a spreadsheet's imports among
-  them, WB68), the person's library and folders,
+  them, WB68, and a spreadsheet's link reads, which another document's dashboard makes), the person's library and folders,
   writing preferences or the profile, the guest migration, tokens, teams, the account and the AI assistant. The
   editor offers none of them in a workbench embed: the person's agent sits beside it.
 - **Revocable.** Revoking the minting token ends its sessions; the page learns it on its next request or the room's

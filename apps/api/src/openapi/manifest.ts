@@ -1175,6 +1175,23 @@ export const ROUTE_MANIFEST: RouteSpec[] = [
     responseMediaType: 'application/vnd.oasis.opendocument.spreadsheet',
     statuses: [200, 400, 401, 403, 404, 410],
   },
+  // A sheet read by another document (docs/specs/029-sheets/plan-links.md "Reading a sheet from another document").
+  {
+    method: 'GET',
+    path: '/documents/{id}/workbook/link',
+    segment: 'documents',
+    tag: 'Spreadsheets',
+    summary:
+      "A sheet of a spreadsheet as another document reads it (a dashboard's figures): the spreadsheet's name, the workbook's visible sheets, its locale and version, and the sheet named as its values, formats, rows and columns by id, the rows hidden and its one-cell named ranges, at most 2,000 rows and 200 columns; sheet null when none is named or held. With since set to the version held, an unchanged workbook answers { unchanged, version }. 404 workbook_not_found when the document is no spreadsheet or the caller may not read it, alike; 413 link_too_large past 500,000 cells. Read access; never on a tab-scoped link.",
+    auth: 'guest-or-session',
+    tokenUsable: true,
+    query: [
+      { name: 'sheet', required: false, description: "The sheet's id." },
+      { name: 'since', required: false, description: 'The version the caller holds.' },
+    ],
+    responseSchema: 'WorkbookLinkResponse',
+    statuses: [200, 401, 404, 410, 413],
+  },
   // A spreadsheet converted to the other standard (docs/specs/029-sheets/files-and-print.md "Converting").
   {
     method: 'GET',

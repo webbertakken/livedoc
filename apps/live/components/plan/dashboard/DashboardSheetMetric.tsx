@@ -11,11 +11,11 @@ import { percentDone } from '@livedoc/plan-art';
 import { lucideGlyph } from '@livedoc/ui';
 import { lucideTable } from '@livedoc/icons/lucide';
 import { CLEAR_OF_SLOT_MENU } from './card-parts';
-import { tabsStateOf, useDashboard } from './dashboard-context';
+import { useDashboard } from './dashboard-context';
 import { TabWaiting } from './TabWaiting';
 import { Missing, useBoxSize } from './DashboardSlotContent';
 import { SheetMetricSource } from './SheetMetricSource';
-import { useSheetRead } from './useSheetReader';
+import { useFigureSheetRead } from './useLinkedSheetRead';
 import { sheetMetricShown } from './sheet-metric-shown';
 import { SHEET_METRIC_NAMES } from '@/components/palette/palette-dashboard-tiles';
 
@@ -79,8 +79,8 @@ function SheetMetricBody({
   content: SheetMetricContent;
   size: { width: number; height: number } | null;
 }) {
-  const { tabs, tabStatus, canEdit, actions, loadAllTabs } = useDashboard();
-  const read = useSheetRead(content.sheetId, tabs, tabsStateOf(tabs, tabStatus), loadAllTabs);
+  const { canEdit, actions } = useDashboard();
+  const read = useFigureSheetRead(content);
   const [pickerAt, setPickerAt] = useState<HTMLElement | null>(null);
   // The workbook changes in place: the store's version says when it is to be read again.
   const version = read.state === 'ready' ? read.version : -1;
@@ -110,6 +110,18 @@ function SheetMetricBody({
     </button>
   );
   if (read.state === 'gone') return <Missing message="This sheet was deleted." slotId={slotId} />;
+  if (read.state === 'denied' || read.state === 'too-large')
+    return (
+      <div className="flex h-full flex-col items-center justify-center gap-2 p-4 text-center">
+        <span className={`text-body ${MUTED}`}>
+          {read.state === 'denied'
+            ? 'You don’t have access to this spreadsheet.'
+            : 'This spreadsheet is too large to read here.'}
+        </span>
+        {canEdit ? choose : null}
+        {picker}
+      </div>
+    );
   if (read.state === 'none' || shown === 'unset')
     return (
       <div className="flex h-full flex-col items-center justify-center gap-2 p-4 text-center">

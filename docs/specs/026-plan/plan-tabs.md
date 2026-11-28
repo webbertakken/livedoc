@@ -433,7 +433,8 @@ rows and columns are inserted, deleted or moved (they are named by stable row an
 - **Choosing the source**: a new one shows **Choose a Sheet** (an Editor's; "Waiting for its sheet." to anyone else)
   which opens its source picker, as does **Change Source** once set (an Editor's tile in the slot cog's Slot section,
   never a hover button, one menu per item): the document's Sheets
-  (each its title and its tab's name; "No sheets in this document yet." when there are none), then, for a figure, the
+  (each its title and its tab's name; "No sheets in this document yet." when there are none) and the person's
+  spreadsheets, each opening to its sheets ([Plan's links](../029-sheets/plan-links.md#dashboards)), then, for a figure, the
   sheet's labelled numbers (numbers with text to their left, and ranges named for one cell; the foot of the sheet
   first, at most 12) or any cell typed as A1, and an optional target the same way; for a summary or a trend, the
   columns holding numbers (each its header and how many numbers) and, for a summary, the stat. Each choice is one

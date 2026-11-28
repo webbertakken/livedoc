@@ -72,6 +72,8 @@ const DOCUMENT_SCOPE: Record<string, Decision> = {
   'POST /documents/{id}/workbook/kept': 'allow',
   'GET /documents/{id}/workbook/imports': 'confined',
   'POST /documents/{id}/workbook/imports': 'confined',
+  // Read by another document's dashboard (docs/specs/029-sheets/plan-links.md), never by its own editor.
+  'GET /documents/{id}/workbook/link': 'confined',
   'POST /documents/{id}/workbook/sheets': 'allow',
   'POST /documents/{id}/workbook/sheets/{sheetId}/rename': 'allow',
   'POST /documents/{id}/workbook/sheets/{sheetId}/move': 'allow',

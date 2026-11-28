@@ -1,6 +1,7 @@
 # Plan's links to a spreadsheet
 
-**Status: specified.** Nothing is built.
+**Status: specified; dashboards' figures are built.** A Sheet Figure, Column Summary or Trend reads a sheet of a
+spreadsheet; the Sheet Chart, the sheet slot, form responses, the `CARD` functions and the starts are not built yet.
 
 What Plan reads from or writes to a sheet, re-homed onto the [spreadsheet](spreadsheet.md) (C4, ruled 2026-11-18:
 keep them; C6, ruled 2026-11-18: the card functions only).
@@ -13,16 +14,28 @@ keep them; C6, ruled 2026-11-18: the card functions only).
   sheets); the
   reader's own access decides: a reader who may not open that spreadsheet sees "You don't have access to this
   spreadsheet" in place of the figure or chart, never its values.
-- Values are worked out by the same engine; across documents they are read through the api, which works them out
-  with the reader's access, and pushed when the source changes, at most once a second per link.
+- Values are worked out by the same engine, in the spreadsheet's room, with the reader's own access:
+  `GET /api/documents/<id>/workbook/link?sheet=<sheetId>` answers the workbook's sheets (each its id and name), its
+  locale and version, and the sheet as its values: each cell's value where its formula was, its format, its rows and
+  columns by id, the rows hidden and the sheet's one-cell named ranges, nothing else of the sheet (D505).
+- The page reads a link again every 10 seconds while it shows it and the page is visible, naming the version it holds
+  (`since=<version>`); an unchanged workbook answers `unchanged` without working anything out (D505).
+- A link reads the first 2,000 rows and 200 columns of a sheet, as much as a figure reads; a workbook past 500,000
+  cells, as `IMPORTRANGE`'s bound, reads "This spreadsheet is too large to read here." (D505).
+- A spreadsheet that is not there, is trashed, is only in someone's browser, or the reader may not open, reads alike,
+  so a link never tells which; a spreadsheet's own links are never read through a tab-scoped share link.
 - A source sheet deleted, or its cell's row or column deleted, reads as today ("This sheet was deleted.", "The cell
   it read was deleted.").
 
 ## Dashboards
 
 - **Sheet Figure**, **Column Summary**, **Trend** and **Sheet Chart** keep their behaviour; their source picker lists
-  the spreadsheets the person may open, recently opened first, and **Another Spreadsheet…** (a picker of the spreadsheets the person may
-  open), each sheet named "<Sheet> · <Spreadsheet>".
+  the document's own Sheets (until they are migrated), then **Spreadsheets**: the person's own spreadsheets as Copy
+  To lists them (newest first, searched by name, D183). Picking one lists its sheets, each "<Sheet> · <Spreadsheet>";
+  picking a sheet goes on as for a Sheet of the document (D505).
+- A figure from a spreadsheet keeps the spreadsheet's id beside the sheet's (`documentId` on the slot's content); a
+  figure with none reads a Sheet of the dashboard's own document, as before.
+- Its picture in an image export shows the figure the page last read, else "Loading the sheet…".
 - A **Sheet Chart** slot shows a chart of the workbook ([Charts](charts.md)) or a new chart over a range, drawn by the
   same chart code; it is no longer a chart element on the dashboard tab.
 - A Dashboard slot that showed a **Sheet tab** shows a spreadsheet's first sheet, read-only, with **Open** to go to it.
@@ -55,3 +68,11 @@ C6 (ruled 2026-11-18: functions only):
 ## Who may do what
 
 As each link's own spec says; reading across documents never widens anyone's access.
+
+## Defaults
+
+- **D505** Reading a spreadsheet's sheet from a dashboard: its values, formats and rows and columns by id, worked out
+  in the spreadsheet's room and read again every 10 seconds while shown (a page holds no socket to another document's
+  room; Google's linked charts refresh on asking), bounded by a figure's 2,000 rows, 200 columns and
+  `IMPORTRANGE`'s 500,000 cells. The picker lists the person's own spreadsheets, as Copy To does, since the api
+  lists no document by when the person last opened it.

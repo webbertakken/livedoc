@@ -1,4 +1,11 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
+import type { LinkedRead } from '@/components/plan/dashboard/linked-sheets';
+
+const linked = vi.hoisted(() => ({ reads: new Map<string, unknown>() }));
+vi.mock('@/components/plan/dashboard/linked-sheets', () => ({
+  linkedRead: (documentId: string, sheetId: string) =>
+    linked.reads.get(`${documentId}:${sheetId}`) ?? { state: 'loading' },
+}));
 import { Workbook, sheetFromJson, type Sheet } from '@livedoc/sheets';
 import type { DashboardLayout, Tab } from '@livedoc/document';
 import {
@@ -40,7 +47,7 @@ const sheetEl = shape('s', 'plan-sheet', {
 });
 const sheetTab: Tab = { id: 'sheet-tab', name: 'Budget', kind: 'sheet', elements: [sheetEl] };
 
-const metricLayout = (sheetId: string): DashboardLayout => ({
+const metricLayout = (sheetId: string, documentId?: string): DashboardLayout => ({
   rows: [
     {
       id: 'r',
@@ -52,6 +59,7 @@ const metricLayout = (sheetId: string): DashboardLayout => ({
           content: {
             type: 'sheet-metric',
             metric: 'figure',
+            ...(documentId ? { documentId } : {}),
             sheetId,
             cell: { r: 'row1', c: 'col1' },
           },
@@ -94,6 +102,41 @@ describe('the Sheets an image reads', () => {
     );
     expect(sheetMetricsFor(metricLayout(''), [], store, 'en-GB').get('m')).toBe('unset');
     expect(sheetMetricsFor(undefined, [], store, 'en-GB').size).toBe(0);
+  });
+
+  // docs/specs/029-sheets/plan-links.md "Dashboards": a spreadsheet's figure as the page last read it.
+  it('reads a figure from a spreadsheet as the page last read it, else says it is loading', () => {
+    const at = (documentId: string) =>
+      sheetMetricsFor(metricLayout('sheet-one', documentId), [], store, 'en-GB').get('m');
+    linked.reads.set('book:sheet-one', {
+      state: 'ready',
+      sheet: budget,
+      wb,
+      locale: 'en-GB',
+      version: 1,
+      name: 'Money',
+      sheets: [],
+    } satisfies LinkedRead);
+    expect(at('book')).toMatchObject({ hero: '1200', label: 'Rent' });
+    linked.reads.set('gone:sheet-one', {
+      state: 'ready',
+      sheet: null,
+      wb,
+      locale: 'en-GB',
+      version: 1,
+      name: '',
+      sheets: [],
+    });
+    expect(at('gone')).toBe('gone');
+    linked.reads.set('denied:sheet-one', { state: 'denied' });
+    expect(at('denied')).toBe('loading');
+    expect(at('never')).toBe('loading');
+    // Its sheet is no tab of this document to load.
+    expect(
+      sheetTabsToLoad({ id: 'i', name: 'i', elements: [] }, metricLayout('sheet-one', 'book'), [
+        sheetTab,
+      ]),
+    ).toEqual([]);
   });
 
   it('loads the tabs holding the Sheets it frames and the figures it reads', () => {

@@ -148,6 +148,7 @@ export {
 } from './engine/render';
 export type { Frame, RangeRef, EvalValue } from './engine/frame';
 export { valuesOnly, writesFormats } from './values-only';
+export { LINK_COLS_MAX, LINK_ROWS_MAX, linkedSheet } from './linked-sheet';
 export * from './migration/sheet-migration-plan';
 export * from './objects/sheet-objects';
 export * from './objects/sheet-pivot';

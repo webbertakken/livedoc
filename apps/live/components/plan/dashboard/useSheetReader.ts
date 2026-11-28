@@ -40,6 +40,9 @@ export type SheetRead =
   | { state: 'loading'; name: string }
   // Its fetch failed: said so, with a Retry that fetches it again.
   | { state: 'failed'; name: string; retry: () => void }
+  // A spreadsheet's sheet (docs/specs/029-sheets/plan-links.md): one the reader may not open, or too large to read.
+  | { state: 'denied' }
+  | { state: 'too-large' }
   | { state: 'ready'; sheet: Sheet; wb: Workbook; locale: string; version: number };
 
 // One sheet, read live: its tab's sheets fetched as it is first asked for. `tabsState`: where the document's tabs are
