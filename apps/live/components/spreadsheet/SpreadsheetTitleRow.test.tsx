@@ -3,7 +3,13 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { useRef, useState } from 'react';
 import type { AccessLevel } from '@livedoc/api-schema';
-import { apiDownloadWorkbook, apiWorkbookConversion } from '@/lib/api/workbook';
+import { WorkbookRecord } from '@livedoc/sheets';
+import { apiListDocuments } from '@/lib/api/documents';
+import {
+  apiDownloadWorkbook,
+  apiSaveWorkbookSettings,
+  apiWorkbookConversion,
+} from '@/lib/api/workbook';
 import { downloadBlob } from '@/lib/download-blob';
 import { openSpreadsheetFile } from '@/lib/spreadsheet/open-spreadsheet-file';
 import type { SpreadsheetHistory } from '@/lib/spreadsheet/spreadsheet-menu-bindings';
@@ -20,7 +26,9 @@ vi.mock('@/lib/api/workbook', () => ({
   apiDownloadWorkbook: vi.fn(),
   apiWorkbookConversion: vi.fn(),
   apiConvertWorkbook: vi.fn(),
+  apiSaveWorkbookSettings: vi.fn(),
 }));
+vi.mock('@/lib/api/documents', () => ({ apiListDocuments: vi.fn(async () => []) }));
 vi.mock('@/lib/spreadsheet/open-spreadsheet-file', async (load) => ({
   ...(await load<object>()),
   openSpreadsheetFile: vi.fn(),
@@ -29,6 +37,7 @@ vi.mock('@/lib/spreadsheet/open-spreadsheet-file', async (load) => ({
 afterEach(() => vi.clearAllMocks());
 
 const SCOPE = { ownerId: 'o1', documentId: 'd1', shareCode: null };
+const SETTINGS = WorkbookRecord.create({ locale: 'en-GB', timeZone: 'UTC' }).settings;
 const fullScreen = vi.fn();
 
 function Row({
@@ -51,7 +60,7 @@ function Row({
         scope={SCOPE}
         tabId="t1"
         format="ods"
-        locale="en-GB"
+        settings={SETTINGS}
         documentName=""
         level={level}
         history={history}
@@ -284,6 +293,33 @@ describe('SpreadsheetTitleRow', () => {
     render(<Row level="participate" />);
     openMenu('File');
     expect(screen.queryByRole('menuitem', { name: 'Convert to Excel (.xlsx)' })).toBeNull();
+  });
+
+  // settings.md "Spreadsheet settings": File › Settings is an Editor's; Save Settings is one undo step.
+  it('opens File › Settings for an Editor alone, and saves them as one undo step', async () => {
+    const saved = { ...WorkbookRecord.create({ locale: 'en-GB', timeZone: 'UTC' }), rev: 1 };
+    vi.mocked(apiSaveWorkbookSettings).mockResolvedValue({ workbook: saved, rev: 1 });
+    vi.mocked(apiListDocuments).mockResolvedValue([]);
+    const { unmount } = render(<Row />);
+    openMenu('File');
+    fireEvent.click(item('Settings'));
+    const dialog = await screen.findByRole('dialog', { name: 'Settings for This Spreadsheet' });
+    fireEvent.click(within(dialog).getByRole('tab', { name: 'Calculation' }));
+    fireEvent.change(within(dialog).getByRole('combobox', { name: 'Recalculation' }), {
+      target: { value: 'hour' },
+    });
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Save Settings' }));
+    await waitFor(() =>
+      expect(apiSaveWorkbookSettings).toHaveBeenCalledWith(SCOPE, { ...SETTINGS, recalc: 'hour' }),
+    );
+    await waitFor(() =>
+      expect(screen.queryByRole('dialog', { name: 'Settings for This Spreadsheet' })).toBeNull(),
+    );
+    expect(track).toHaveBeenCalledWith('Spreadsheet', 'Changed', 'Settings');
+    unmount();
+    render(<Row level="participate" />);
+    openMenu('File');
+    expect(screen.queryByRole('menuitem', { name: 'Settings' })).toBeNull();
   });
 
   it('opens a picked file as a new spreadsheet, or says why not', async () => {

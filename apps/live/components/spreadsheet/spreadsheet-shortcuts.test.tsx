@@ -4,6 +4,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { useRef } from 'react';
+import { WorkbookRecord } from '@livedoc/sheets';
 import { catalogueItems, type OfficeActions } from '@/lib/office/office-catalogue';
 import { parseShortcut, type KeyStep, type OfficePlatform } from '@/lib/office/shortcut-notation';
 import { spreadsheetMenus } from '@/lib/spreadsheet/spreadsheet-menus';
@@ -39,7 +40,7 @@ function Row({
         scope={SCOPE}
         tabId="t1"
         format="ods"
-        locale="en-GB"
+        settings={WorkbookRecord.create({ locale: 'en-GB', timeZone: 'UTC' }).settings}
         documentName="Budget"
         level="edit"
         history={null}

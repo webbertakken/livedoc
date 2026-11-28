@@ -5,7 +5,7 @@
 // to the person's timeline; the grid's items come up from the open sheet through the bindings channel.
 import { useMemo, useState, type RefObject } from 'react';
 import type { AccessLevel } from '@livedoc/api-schema';
-import { WorkbookRecord, type WorkbookFormat } from '@livedoc/sheets';
+import { WorkbookRecord, type WorkbookFormat, type WorkbookSettings } from '@livedoc/sheets';
 import { convertedFormat } from '@livedoc/sheets/files';
 import type { ItemUndoStep } from '@/hooks/plan/item-undo-journal';
 import { useEditorLines } from '@/components/chrome/lines/editor-lines-context';
@@ -27,6 +27,7 @@ import { UNTITLED_SPREADSHEET } from '@/lib/spreadsheet/spreadsheet-name';
 import {
   CONVERT_ITEM_ID,
   DOWNLOAD_ITEMS,
+  SETTINGS_ITEM_ID,
   SHEET_DOWNLOAD_ITEMS,
   spreadsheetMenus,
 } from '@/lib/spreadsheet/spreadsheet-menus';
@@ -42,6 +43,7 @@ import { SPREADSHEET_TOOLBAR } from '@/lib/spreadsheet/spreadsheet-toolbar';
 import { zoomBindings } from '@/lib/spreadsheet/spreadsheet-zoom';
 import { track } from '@/lib/telemetry';
 import { ConversionDialog } from './ConversionDialog';
+import { SpreadsheetSettings } from './SpreadsheetSettings';
 import { useChannelBindings, type OfficeBindingsChannel } from './office-bindings-channel';
 import { useWorkbookConversion } from './useWorkbookConversion';
 
@@ -83,7 +85,7 @@ export function SpreadsheetTitleRow({
   scope,
   tabId,
   format,
-  locale,
+  settings,
   documentName,
   level,
   history,
@@ -99,8 +101,8 @@ export function SpreadsheetTitleRow({
   scope: WorkbookScope;
   tabId: string;
   format: WorkbookFormat;
-  // The workbook's locale: the Number menu's examples are drawn in it.
-  locale: string;
+  // The workbook's settings: File › Settings opens on them, and the Number menu's examples are drawn in its locale.
+  settings: WorkbookSettings;
   documentName: string;
   level: AccessLevel;
   // The person's one timeline; null before the editor has one.
@@ -122,6 +124,8 @@ export function SpreadsheetTitleRow({
   const chrome = useEditorLines()?.office ?? null;
   const [problem, setProblem] = useState<string | null>(null);
   const [opening, setOpening] = useState<string | null>(null);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const { locale } = settings;
   const grid = useChannelBindings(channel);
   const catalogue = useMemo(
     () => spreadsheetMenus(format, locale, grid.recentCodes, grid.filterViews ?? null),
@@ -182,7 +186,10 @@ export function SpreadsheetTitleRow({
     ),
     // Convert is an Editor's (files-and-print.md "Who may do what"): bound only for one, so no one else sees it.
     ...(level === 'edit'
-      ? { [CONVERT_ITEM_ID]: { run: () => conversion.open('convert', convertedFormat(format)) } }
+      ? {
+          [CONVERT_ITEM_ID]: { run: () => conversion.open('convert', convertedFormat(format)) },
+          [SETTINGS_ITEM_ID]: { run: () => setSettingsOpen(true) },
+        }
       : {}),
   }; // The menus' choices, and the Borders panel for an Editor (formatting.md "Borders").
   const choices = {
@@ -236,6 +243,15 @@ export function SpreadsheetTitleRow({
         onRetry={conversion.retry}
         onCancel={conversion.cancel}
       />
+      {settingsOpen ? (
+        <SpreadsheetSettings
+          scope={scope}
+          settings={settings}
+          onWorkbook={onWorkbook}
+          pushUndo={pushUndo}
+          onClose={() => setSettingsOpen(false)}
+        />
+      ) : null}
     </>
   );
 }

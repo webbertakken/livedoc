@@ -108,10 +108,12 @@ export function SpreadsheetSettingsDialog({
   const [draft, setDraft] = useState(() => SettingsDraft.of(settings));
   const [saving, setSaving] = useState(false);
   const [failed, setFailed] = useState(false);
+  // The offsets the zones are labelled by are the ones in force as it opens (D511).
+  const [openedAt] = useState(() => new Date());
   const locales = useMemo(() => localeOptions(settings.locale), [settings.locale]);
   const zones = useMemo(
-    () => timeZoneOptions(browserTimeZones(), settings.timeZone, new Date()),
-    [settings.timeZone],
+    () => timeZoneOptions(browserTimeZones(), settings.timeZone, openedAt),
+    [settings.timeZone, openedAt],
   );
   const problems = SettingsDraft.problems(draft);
   const ready = SettingsDraft.settings(draft);

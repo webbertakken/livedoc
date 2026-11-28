@@ -1422,6 +1422,15 @@ export const SPREADSHEETS_THEMED = chart(
   { types: ['Theme'] },
 );
 
+// docs/specs/029-sheets/settings.md "Telemetry": an Editor saved File › Settings.
+export const SPREADSHEET_SETTINGS_SAVED = chart(
+  'Spreadsheet',
+  'Changed',
+  'Spreadsheet Settings Saved',
+  'An editor saved a spreadsheet’s settings: locale, time zone, cards’ document or calculation.',
+  { types: ['Settings'] },
+);
+
 // docs/specs/029-sheets/imports.md "Telemetry": an Editor's Allow Access, once per spreadsheet; and formulas.md
 // "Connecting two spreadsheets": an Editor connecting the spreadsheets its IMPORTRANGEs read.
 export const SPREADSHEETS_IMPORTS_ALLOWED = chart(
@@ -1557,13 +1566,14 @@ export const SPREADSHEETS: MetricStack = {
   stack: true,
   title: 'Spreadsheets',
   blurb:
-    'Spreadsheet documents on the open standards: made, opened from files, downloaded, converted, themed, imports allowed, charts, pivot tables, images and filter views added, named functions, Replace All, data clean-up.',
+    'Spreadsheet documents on the open standards: made, opened from files, downloaded, converted, themed, settings saved, imports allowed, charts, pivot tables, images and filter views added, named functions, Replace All, data clean-up.',
   members: [
     SPREADSHEETS_CREATED,
     SPREADSHEETS_IMPORTED,
     SPREADSHEETS_EXPORTED,
     SPREADSHEETS_CONVERTED,
     SPREADSHEETS_THEMED,
+    SPREADSHEET_SETTINGS_SAVED,
     SPREADSHEETS_IMPORTS_ALLOWED,
     SPREADSHEET_CHARTS_ADDED,
     SPREADSHEET_PIVOT_TABLES_ADDED,

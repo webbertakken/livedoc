@@ -162,7 +162,7 @@ export function SpreadsheetSurface({
             scope={scope}
             tabId={tabId}
             format={workbook.format}
-            locale={workbook.settings.locale}
+            settings={workbook.settings}
             documentName={documentName}
             level={
               bridge ? spreadsheetLevel(bridge.canEdit, bridge.canEdit && bridge.canShape) : 'view'

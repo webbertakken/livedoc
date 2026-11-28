@@ -65,7 +65,19 @@ test('the card functions read the cards of the Plan document the settings name',
     });
     expect(saved.status()).toBe(200);
   };
-  await saveCardsFrom(planId);
+  // File › Settings: Cards From names the Plan document (settings.md "Spreadsheet settings").
+  await page.getByRole('menubar').getByRole('menuitem', { name: 'File' }).click();
+  await page.getByRole('menuitem', { name: 'Settings' }).click();
+  const dialog = page.getByRole('dialog', { name: 'Settings for This Spreadsheet' });
+  const cardsFrom = dialog.getByRole('combobox', { name: 'Cards From' });
+  await expect(cardsFrom.getByRole('option', { name: 'Roadmap' })).toHaveCount(1);
+  await cardsFrom.selectOption({ label: 'Roadmap' });
+  await page.screenshot({
+    path: testInfo.outputPath('settings-dialog.png'),
+    animations: 'disabled',
+  });
+  await dialog.getByRole('button', { name: 'Save Settings' }).click();
+  await expect(dialog).toBeHidden();
   await expect(cell(page, 'A1 2')).toHaveCount(1);
   await expect(cell(page, 'B1 1')).toHaveCount(1);
   await page.screenshot({
