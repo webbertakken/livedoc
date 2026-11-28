@@ -125,7 +125,7 @@ export function useSheetGridKeys({
       case 'home':
       case 'end': {
         const ext = c.workbook.extent(c.sheet.id);
-        const from = cmd.extend ? farCorner(sel) : sel.active;
+        const from = cmd.extend ? farCorner(sel, c.grid) : sel.active;
         const to = homeEndTarget(from, cmd.kind, cmd.toSheet, c.grid, {
           r: Math.max(0, ext.rows - 1),
           c: Math.max(0, ext.cols - 1),
@@ -137,7 +137,7 @@ export function useSheetGridKeys({
         const step = cmd.sideways
           ? { rows: 0, cols: sign * pageCols(c.geometry, c.view.width - c.geometry.headW) }
           : { rows: sign * pageRows(c.geometry, c.view.height - c.geometry.headH), cols: 0 };
-        const from = cmd.extend ? farCorner(sel) : sel.active;
+        const from = cmd.extend ? farCorner(sel, c.grid) : sel.active;
         return c.setSelection(goTo(sel, pageTarget(from, step, c.grid), c.grid, cmd.extend));
       }
       case 'reveal':

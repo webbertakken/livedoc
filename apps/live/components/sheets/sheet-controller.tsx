@@ -10,6 +10,7 @@ import type { ItemUndoStep } from '@/hooks/plan/item-undo-journal';
 import { createContext, useCallback, useContext, useMemo, useRef, useState } from 'react';
 import {
   filteredOutRows,
+  viewDrawnOrder,
   rowHeights,
   slicerDrawnFilters,
   type FilterCondition,
@@ -107,7 +108,8 @@ export type SheetController = {
   view: { width: number; height: number };
   setView: (v: { width: number; height: number }) => void;
   // The copied (or cut) range's dashed outline.
-  marquee: { range: GridRange; cut: boolean } | null;
+  // `runs`: the stored ranges copied when they are rows a drawn order put side by side (D494).
+  marquee: { range: GridRange; cut: boolean; runs?: GridRange[] } | null;
   setMarquee: (m: { range: GridRange; cut: boolean } | null) => void;
   // Smart Fill's offer after a typed text (grid-and-editing.md "Fill and move", D150), until a key, a press or an edit.
   smartFill: SmartFillOffer | null;
@@ -243,7 +245,11 @@ export function useSheetControllerState(opts: {
   const [editing, setEditing] = useState<Editing | null>(null);
   const [scroll, setScroll] = useState({ top: 0, left: 0 });
   const [view, setView] = useState({ width: 0, height: 0 });
-  const [marquee, setMarquee] = useState<{ range: GridRange; cut: boolean } | null>(null);
+  const [marquee, setMarquee] = useState<{
+    range: GridRange;
+    cut: boolean;
+    runs?: GridRange[];
+  } | null>(null);
   const [smartFill, setSmartFill] = useState<SmartFillOffer | null>(null);
   const [menu, setMenu] = useState<OpenMenu>(null);
   const [findOpen, setFindOpen] = useState<'find' | 'replace' | null>(null);
@@ -332,10 +338,16 @@ export function useSheetControllerState(opts: {
     () => rowHeights(workbook, sheet.id, opts.font),
     [workbook, sheet, opts.font, version], // oxlint-disable-line react/exhaustive-deps
   );
+  // The open view's sort draws the rows in an order of its own, for this person alone (data-tools.md "The drawn
+  // order"); worked out again whenever a value may have changed, as the filtered rows are.
+  const order = useMemo(
+    () => viewDrawnOrder(workbook, sheet.id, openView),
+    [workbook, sheet, openView, version], // oxlint-disable-line react/exhaustive-deps
+  );
   const { viewLayout, foldForSelf } = useSheetFolds(sheet.id, sheet.layout, canShape);
   const geometry = useMemo(
-    () => geometryOf(viewLayout, filtered, heightOf),
-    [viewLayout, filtered, heightOf],
+    () => geometryOf(viewLayout, filtered, heightOf, order),
+    [viewLayout, filtered, heightOf, order],
   );
   const grid = useMemo<Grid>(() => {
     const ix = { rows: sheet.layout.rows.length, cols: sheet.layout.cols.length };
@@ -349,6 +361,7 @@ export function useSheetControllerState(opts: {
         return v !== null && v !== '';
       },
       mergeAt: (r, c) => mergeAt(geometry, r, c),
+      order: geometry.order,
     };
   }, [sheet.layout, geometry, workbook, sheet.id]);
   // Writes to several sheets as one change, one undo step (Insert Cells, a cut other sheets' formulas follow).

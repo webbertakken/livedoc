@@ -150,6 +150,36 @@ Google Sheets' Data menu does. Its rows of the [parity matrix](parity-matrix.md)
   pasting and filling in such a view land on the stored rows drawn there; another person's inserts and deletes keep
   the mapping true. A group's header row is drawn only: never stored, never selected as data, passed over by copy,
   paste and fill.
+  - **The view's sort**: Sort A to Z or Z to A in the open view's column menu makes that column the view's one sort
+    key (a second sort replaces the first, as Google's filter view keeps its latest), written and kept as the view's
+    conditions are (an Editor's saved view one undo step; a temporary view, or anyone else's, their own, D471). The
+    rows under the view's header and below the frozen rows are drawn in that order, as Sort Range orders them (blanks
+    last, ties in the sheet's order); every other row keeps its place. A merge across those rows refuses the sort
+    with Sort Range's words; a view whose kept sort meets such a merge, or a column since deleted, draws the sheet's
+    order (D491).
+  - The order is worked out again whenever a value changes, as the filter's rows are; a row inserted by anyone is
+    drawn where its values sort, a deleted one leaves. Closing the view draws the sheet's order again.
+  - **Row numbers** show each row's own number in the sheet, so a sorted view reads 1, 2, 7, 3, 5 down its side, as
+    a filter's gaps show (D492). Hiding, resizing and the outline act on the row drawn, by its own number.
+  - **Moving**: the arrow keys, Enter, Tab's return and Ctrl + arrows go to the row drawn next; Page Up and Page Down
+    by the rows drawn.
+  - **Selecting**: a range picked across drawn rows (a drag, Shift + a move, Shift + a click) holds the rows drawn
+    between its corners, whatever their numbers: the name box and the formula bar read its active cell; a range of
+    rows not side by side in the sheet is held as several ranges, each drawn whole, so formatting, clearing and
+    typing into it reach exactly the cells highlighted (D493). A reference typed or pointed at in a formula is the
+    sheet's (`A7` is row 7 wherever it is drawn); its colour is drawn on the rows it names.
+  - **Copying** takes the rows highlighted in the order drawn, one block. **Pasting** lands the block's rows on the
+    rows drawn from the active cell down, each on its own stored row: a formula shifts by the rows between where it
+    came from and where it lands in the sheet, as if pasted there alone; conditional formatting and validation
+    rules come with an Editor's paste only when the rows drawn are side by side in the sheet (D494). A cut of rows
+    apart in the sheet, or one landing on such rows, is refused: "Cut rows side by side in the sheet, or close the
+    filter view".
+  - **Filling** (the fill handle, its double-click, Ctrl + D and Ctrl + R) runs down the rows drawn: a series counts
+    on in the order drawn, a formula shifts by the rows between in the sheet; the cut marquee and copy marquee are
+    drawn on the rows they hold.
+  - Inserting a row above or below in a sorted view inserts it next to the row drawn, in the sheet; it is drawn where
+    its (empty) values sort, last. Moving rows by dragging their numbers is refused while a sorted view is open:
+    "Close the filter view to move rows" (D495). Sort Sheet and Sort Range still reorder the sheet for everyone.
 - **One mapping**: the filter, filter views and slicers share one condition model (`FilterCondition`) and one reader
   and writer to each format's filter form, so a condition reads and writes the same wherever it sits
   ([Filters in the file](standard-mapping.md#filters-in-the-file)).
@@ -573,6 +603,19 @@ The code cites each by its id.
   leaving, so opening the spreadsheet filters by the default as the spec says (default).
 - **D486** A slicer after a delete: its range shrinks as a chart's; its column gone leaves it unset, "Choose a
   column", filtering nothing; its range gone, "No data" (default).
+- **D491** A view's sort: one key, the latest, as Google's filter view keeps one when sorted from a column
+  (measured unreadable through the API: views are per viewer, `plans/assets/0020/research/google-table-view-probe.ts`);
+  the rows below the frozen ones only, as Sort Sheet keeps a frozen header; a merge across them refused as Sort
+  Range's; a kept sort that cannot be drawn draws the sheet's order (default).
+- **D492** A sorted view's row numbers: each row's own, out of order, so the numbers name the cells a formula reads
+  (default).
+- **D493** A selection across drawn rows: the rows drawn between its corners, held as runs side by side both in the
+  sheet and on screen, each run a range, so every existing command that takes several ranges acts on exactly what is
+  highlighted (the Director's ruling, 2026-11-27, for the mapping; the runs default).
+- **D494** Pasting into a sorted view: one paste a row, so every formula shifts as Google's paste into a cell does;
+  rules carried only when the target rows are side by side in the sheet, as a rule needs one range (default).
+- **D495** Moving rows by their numbers in a sorted view: refused, as the drawn place of a moved row is its sort's,
+  not the drop's (default).
 - **D487** What a slicer filters beside the cells: a chart whose data range is the slicer's range exactly, as
   Google's "same data range"; Apply to Pivot Tables is stored here, and the pivot tables' editor builds the reads for
   each person (the Director's ruling, 2026-11-28).

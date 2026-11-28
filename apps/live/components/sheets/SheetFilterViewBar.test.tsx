@@ -230,3 +230,74 @@ describe('filter views', () => {
     expect(h.toast).toHaveBeenCalledWith(FILTER_VIEW_DELETED);
   });
 });
+
+// data-tools.md "The drawn order" (D491-D495): a view's sort draws its rows in an order of its own, for its opener;
+// cells never move, moves go to the row drawn next and typing lands on the stored row drawn there.
+describe('a filter view sorted', () => {
+  function SortHost(p: SheetParts) {
+    return (
+      <>
+        <Host {...p} />
+        <button type="button" onClick={() => p.c.filterViews.sort(p.c.sheet.layout.cols[1]!, true)}>
+          sort by count
+        </button>
+        <button type="button" onClick={() => p.actions.move('down')}>
+          down
+        </button>
+        <output data-testid="order">
+          {[0, 1, 2, 3].map((d) => p.c.geometry.storedAt(d) + 1).join(',')}
+        </output>
+        <output data-testid="active">{`${p.c.selection.active.r},${p.c.selection.active.c}`}</output>
+      </>
+    );
+  }
+
+  it('draws the rows by the view sort, kept with the view, the cells unmoved', async () => {
+    const h = await makeSheet({ cells: CELLS });
+    renderSheet(h, (p) => <SortHost {...p} />, { at: 'A1' });
+    click('create-filter-view');
+    click('sort by count');
+    expect(screen.getByTestId('order').textContent).toBe('1,4,2,3');
+    expect(views(h)[0]!.sort).toEqual([{ c: h.ctl().sheet.layout.cols[1]! }]);
+    expect(h.ctl().workbook.value(h.ctl().sheet.id, 1, 0)).toBe('apple');
+    // Down from the header goes to fig, drawn next (row 4).
+    click('down');
+    expect(screen.getByTestId('active').textContent).toBe('3,0');
+    click('down');
+    expect(screen.getByTestId('active').textContent).toBe('1,0');
+    click('close-filter-view');
+    expect(screen.getByTestId('order').textContent).toBe('1,2,3,4');
+  });
+
+  it('refuses to sort over a merge across its rows', async () => {
+    const h = await makeSheet({ cells: CELLS });
+    renderSheet(h, (p) => <SortHost {...p} />, { at: 'A2' });
+    click('create-filter-view');
+    const l = h.ctl().sheet.layout;
+    const range = { r1: l.rows[1]!, c1: l.cols[3]!, r2: l.rows[2]!, c2: l.cols[3]! };
+    act(() => {
+      h.ctl().write({ kind: 'layout', changes: [{ k: 'merge', range }] }, 'Merge');
+    });
+    click('sort by count');
+    expect(h.toast).toHaveBeenCalledWith('Unmerge the cells that span rows before sorting.');
+    expect(views(h)[0]!.sort).toBeUndefined();
+    expect(screen.getByTestId('order').textContent).toBe('1,2,3,4');
+  });
+
+  it('keeps the sort of a Participant their own', async () => {
+    const h = await makeSheet({ cells: CELLS });
+    const editor = renderSheet(h, (p) => <SortHost {...p} />, { at: 'A2' });
+    click('create-filter-view');
+    click('close-filter-view');
+    editor.unmount();
+    renderSheet(h, (p) => <SortHost {...p} />, { at: 'A2', canShape: false });
+    click('filter-view-0');
+    click('sort by count');
+    expect(screen.getByTestId('order').textContent).toBe('1,4,2,3');
+    expect(views(h)[0]!.sort).toBeUndefined();
+    expect(screen.getByRole('textbox', { name: 'Name' })).toHaveProperty(
+      'value',
+      'Temporary Filter 1',
+    );
+  });
+});

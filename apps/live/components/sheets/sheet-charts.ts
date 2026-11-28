@@ -25,7 +25,7 @@ import {
 import type { SheetsBridge } from '@/hooks/sheets/useSheetsBridge';
 import type { ItemUndoStep } from '@/hooks/plan/item-undo-journal';
 import { track } from '@/lib/telemetry';
-import type { Geometry } from './sheet-geometry';
+import { rowTop, type Geometry } from './sheet-geometry';
 
 export const NOTHING_TO_CHART = 'Select the cells to chart first';
 
@@ -76,7 +76,7 @@ function chartRangesOf(sheet: Sheet, ranges: readonly GridRange[]): ChartPick {
 // Where a new chart sits in its Sheet: right of the charted range, level with its top row, pulled back inside the
 // cells in view (`view` their size, `scroll` how far they are scrolled) when it would leave them.
 export function newChartAnchor(
-  g: Pick<Geometry, 'rows' | 'cols'>,
+  g: Pick<Geometry, 'rows' | 'cols' | 'drawnOf'>,
   sheet: Sheet,
   pick: ChartPick,
   size: { width: number; height: number },
@@ -85,7 +85,7 @@ export function newChartAnchor(
 ): SheetAnchor {
   const at = posRangeOf(sheet.layout, pick.range);
   const right = at ? (g.cols[at.c2 + 1] ?? 0) + CHART_GAP_PX : scroll.left + CHART_GAP_PX;
-  const top = at ? (g.rows[at.r1] ?? 0) : scroll.top + CHART_GAP_PX;
+  const top = at ? rowTop(g, at.r1) : scroll.top + CHART_GAP_PX;
   const fit = (p: number, from: number, room: number, length: number) => {
     const lo = from + CHART_GAP_PX;
     const hi = Math.max(lo, from + room - length - CHART_GAP_PX);

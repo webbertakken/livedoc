@@ -117,7 +117,8 @@ const DROPDOWN_PAD_PX = 22;
 // The room a filter header cell keeps: the 16 px button, inset 2 px from the right edge, and 2 px clear of the text.
 const FILTER_PAD_PX = 20;
 
-type Region = { r1: number; r2: number; c1: number; c2: number; clip: CSSProperties };
+// `rows`: the region's rows in the order drawn.
+type Region = { rows: readonly number[]; c1: number; c2: number; clip: CSSProperties };
 
 // A waiting value's fade (formulas.md "Recalculation"): its last value, quieter, after 120 ms (its transition).
 const WAITING_OPACITY = 0.55;
@@ -156,7 +157,7 @@ function RegionCells({ region, ...p }: CellsProps & { region: Region }) {
   };
   const hasRules = hasValidation(sheet.layout);
   const hasBands = !!sheet.layout.bands?.length;
-  for (let r = region.r1; r <= region.r2; r++) {
+  for (const r of region.rows) {
     if (g.hiddenRow(r)) continue;
     // Each row's text runs right over empty cells; `width` is how far the current run reaches.
     for (let c = region.c1; c <= region.c2; c++) {
@@ -394,11 +395,11 @@ function SheetCellsInner(props: CellsProps) {
   const { geometry: g, window: w } = props;
   const fr = g.frozenRows;
   const fc = g.frozenCols;
+  const frozenRows = Array.from({ length: fr }, (_, i) => i);
   const regions: Region[] = [
     // Body first, frozen panes over it.
     {
-      r1: w.r1,
-      r2: w.r2,
+      rows: w.rows,
       c1: w.c1,
       c2: w.c2,
       clip: { left: g.frozenWidth, top: g.frozenHeight, right: 0, bottom: 0 },
@@ -406,24 +407,21 @@ function SheetCellsInner(props: CellsProps) {
   ];
   if (fr > 0)
     regions.push({
-      r1: 0,
-      r2: fr - 1,
+      rows: frozenRows,
       c1: w.c1,
       c2: w.c2,
       clip: { left: g.frozenWidth, top: 0, right: 0, height: g.frozenHeight },
     });
   if (fc > 0)
     regions.push({
-      r1: w.r1,
-      r2: w.r2,
+      rows: w.rows,
       c1: 0,
       c2: fc - 1,
       clip: { left: 0, top: g.frozenHeight, bottom: 0, width: g.frozenWidth },
     });
   if (fr > 0 && fc > 0)
     regions.push({
-      r1: 0,
-      r2: fr - 1,
+      rows: frozenRows,
       c1: 0,
       c2: fc - 1,
       clip: { left: 0, top: 0, width: g.frozenWidth, height: g.frozenHeight },

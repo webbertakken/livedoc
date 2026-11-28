@@ -41,7 +41,7 @@ import { SheetChartsLayer } from './SheetChartsLayer';
 import { SheetSlicersLayer } from './slicers/SheetSlicersLayer';
 import { SheetImagesLayer } from './SheetImagesLayer';
 import { ADD_ROWS_PX, SheetAddRows, roomFor } from './SheetAddRows';
-import { cellBox, scrollToReveal, totalSize, visibleWindow } from './sheet-geometry';
+import { cellBox, inWindow, scrollToReveal, totalSize, visibleWindow } from './sheet-geometry';
 import { useSheetGridKeys, type SheetSurfaceKeys } from './useSheetGridKeys';
 import { domScrollOf, keepScrollRoom, scrollRoom, sheetScrollOf } from './sheet-scroll-room';
 import { mirrorCellId, SheetGridMirror } from './SheetGridMirror';
@@ -235,7 +235,7 @@ export function SheetGrid({
     }
     // Find's matches in view.
     for (const h of c.findHits)
-      if (h.r >= window.r1 && h.r <= window.r2 && h.c >= window.c1 && h.c <= window.c2)
+      if (inWindow(window, h.r, h.c))
         out.push({
           range: { r1: h.r, c1: h.c, r2: h.r, c2: h.c },
           color: FIND_HIGHLIGHT,
@@ -452,7 +452,7 @@ export function SheetGrid({
                   palette={c.palette}
                   selection={single({ r: pointer.preview.range.r1, c: pointer.preview.range.c1 })}
                   showHandle={false}
-                  marquee={{ range: pointer.preview.range, cut: false }}
+                  marquee={{ range: pointer.preview.range, cut: false, runs: pointer.preview.runs }}
                   outlines={[]}
                   filter={null}
                   onFilterButton={null}
@@ -466,8 +466,7 @@ export function SheetGrid({
                 version={c.version}
                 geometry={c.geometry}
                 locale={c.locale}
-                r1={window.r1}
-                r2={window.r2}
+                rows={window.rows}
                 c1={window.c1}
                 c2={window.c2}
                 activeR={c.selection.active.r}

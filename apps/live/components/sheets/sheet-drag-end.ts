@@ -1,7 +1,10 @@
 // A drag on the grid (useSheetPointer) and what it makes when it ends (docs/specs/029-sheets/sheet.md "Selection",
 // "Fill", "Rows and columns", "Freeze"; grid-and-editing.md "Fill and move"): applied once, on the pointer's release.
 import { single, type GridRange, type Selection } from '@livedoc/sheets';
+import { selectDrawn } from './sheet-drawn-selection';
 import { pointingTargetFor } from './sheet-pointing';
+import { MOVE_ROWS_IN_SORTED_VIEW } from './useFilterViews';
+import { debugLog } from '@/lib/debug-log';
 import type { SheetController } from './sheet-controller';
 import type { SheetActions } from './useSheetActions';
 
@@ -60,6 +63,7 @@ export function endDrag(
       t.c1 !== d.source.c1 ||
       t.c2 !== d.source.c2
     ) {
+      // Source and target are in drawn rows (D494); the selection is the stored rows drawn there.
       actions.fill(d.source, t, d.copy || e.ctrlKey || e.altKey);
       const s = d.source;
       // Dragged back inside the source, what is left stays selected; otherwise the source and its fill.
@@ -72,11 +76,7 @@ export function endDrag(
             r2: Math.max(t.r2, s.r2),
             c2: Math.max(t.c2, s.c2),
           };
-      cc.setSelection({
-        ranges: [grown],
-        active: cc.selectionNow().active,
-        anchor: { r: grown.r1, c: grown.c1 },
-      });
+      cc.setSelection(selectDrawn(cc.geometry, grown, cc.selectionNow().active));
     }
   } else if (d.kind === 'resize') {
     // Only a drag that changed the size sizes the line: a press on an edge alone leaves a row automatic (sheet.md
@@ -94,7 +94,11 @@ export function endDrag(
     else if (d.landing.r1 !== d.source.r1 || d.landing.c1 !== d.source.c1)
       actions.moveCells(d.source, d.landing, e.ctrlKey || e.altKey);
   } else if (d.kind === 'axisMove' && d.armed) {
-    if (d.drop < d.from || d.drop > d.to + 1) actions.moveAxis(d.axis, d.from, d.to, d.drop);
+    // A sorted view draws each row where its sort puts it, so a row moved there could not be drawn at the drop (D495).
+    if (d.axis === 'r' && cc.geometry.order) {
+      debugLog('[sheet] row move refused', { reason: 'sorted view' });
+      cc.toast(MOVE_ROWS_IN_SORTED_VIEW);
+    } else if (d.drop < d.from || d.drop > d.to + 1) actions.moveAxis(d.axis, d.from, d.to, d.drop);
   }
   cc.focusGrid();
 }

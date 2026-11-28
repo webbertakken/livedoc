@@ -24,6 +24,7 @@ import {
   stepFrom,
   type Grid,
 } from './selection';
+import { DrawnOrder } from './drawn-order';
 
 // A 10 by 6 grid; filled cells listed as "r,c"; row 3 and column 4 hidden; a merge at B2:C3 (1,1)-(2,2).
 function grid(filled: string[] = [], opts: { hidden?: boolean; merge?: boolean } = {}): Grid {
@@ -214,5 +215,67 @@ describe('selectsSeveral', () => {
   it('is several for a range past the merge, or a merge-sized range with no merge', () => {
     expect(selectsSeveral(sel({ ...merged, c2: 3 }), grid([], { merge: true }))).toBe(true);
     expect(selectsSeveral(sel(merged), grid())).toBe(true);
+  });
+});
+
+// docs/specs/029-sheets/data-tools.md "The drawn order" (D493): a sorted view draws rows 1..4 as 3, 1, 4, 2; moves
+// go to the row drawn next and a range holds the rows drawn between its corners, as runs.
+describe('selection in a drawn order', () => {
+  const order = DrawnOrder.ofSort(10, 1, [3, 1, 4, 2]);
+  const ordered = (hidden = false): Grid => ({ ...grid([], { hidden }), order });
+
+  it('steps to the row drawn next, past hidden rows', () => {
+    expect(stepFrom({ r: 0, c: 0 }, 'down', ordered())).toEqual({ r: 3, c: 0 });
+    expect(stepFrom({ r: 3, c: 0 }, 'down', ordered())).toEqual({ r: 1, c: 0 });
+    expect(stepFrom({ r: 1, c: 0 }, 'up', ordered())).toEqual({ r: 3, c: 0 });
+    expect(stepFrom({ r: 0, c: 0 }, 'down', ordered(true))).toEqual({ r: 1, c: 0 });
+    expect(stepFrom({ r: 2, c: 0 }, 'down', ordered())).toEqual({ r: 5, c: 0 });
+  });
+
+  it('extends over the rows drawn between the corners, held as runs', () => {
+    const sel = extendTo(single({ r: 3, c: 0 }), { r: 4, c: 1 }, ordered());
+    expect(sel.ranges).toEqual([
+      { r1: 3, c1: 0, r2: 3, c2: 1 },
+      { r1: 1, c1: 0, r2: 1, c2: 1 },
+      { r1: 4, c1: 0, r2: 4, c2: 1 },
+    ]);
+    expect(sel.tail).toBe(3);
+    expect(farCorner(sel, ordered())).toEqual({ r: 4, c: 1 });
+    // Shift + down goes on from the far corner, drawn next: row 2.
+    const on = extendSelection(sel, 'down', ordered());
+    expect(on.ranges).toEqual([
+      { r1: 3, c1: 0, r2: 3, c2: 1 },
+      { r1: 1, c1: 0, r2: 1, c2: 1 },
+      { r1: 4, c1: 0, r2: 4, c2: 1 },
+      { r1: 2, c1: 0, r2: 2, c2: 1 },
+    ]);
+    expect(on.active).toEqual({ r: 3, c: 0 });
+  });
+
+  it('picks the rows drawn between two row numbers', () => {
+    const sel = selectRows(3, 4, ordered());
+    expect(sel.ranges).toEqual([
+      { r1: 3, c1: 0, r2: 3, c2: 5 },
+      { r1: 1, c1: 0, r2: 1, c2: 5 },
+      { r1: 4, c1: 0, r2: 4, c2: 5 },
+    ]);
+    expect(sel.active).toEqual({ r: 3, c: 0 });
+    expect(selectRows(4, 3, ordered()).active).toEqual({ r: 3, c: 0 });
+  });
+
+  it('keeps ranges picked before when extending the last', () => {
+    const base = addRange(single({ r: 8, c: 5 }), { r: 0, c: 0 }, ordered());
+    const sel = extendTo(base, { r: 3, c: 0 }, ordered());
+    expect(sel.ranges).toEqual([
+      { r1: 8, c1: 5, r2: 8, c2: 5 },
+      { r1: 0, c1: 0, r2: 0, c2: 0 },
+      { r1: 3, c1: 0, r2: 3, c2: 0 },
+    ]);
+    const back = extendTo(sel, { r: 0, c: 0 }, ordered());
+    expect(back.ranges).toEqual([
+      { r1: 8, c1: 5, r2: 8, c2: 5 },
+      { r1: 0, c1: 0, r2: 0, c2: 0 },
+    ]);
+    expect(back.tail ?? 1).toBe(1);
   });
 });

@@ -1,7 +1,10 @@
 // Where rows and columns sit on screen: prefix sums of sizes (hidden and
 // filtered-out lines are zero), the frozen panes' sizes, the visible window for a scroll position, and the cell
-// under a point. Pure, so the grid's maths is tested without a DOM.
+// under a point. Pure, so the grid's maths is tested without a DOM. Under a drawn order (data-tools.md "The drawn
+// order") rows are laid out in that order while every position stays the sheet's: read a row's place through
+// rowTop and rowEnd, never `rows` by a position.
 import {
+  DrawnOrder,
   axisOffsets,
   colWidth,
   deepestOf,
@@ -22,7 +25,12 @@ export const OUTLINE_BAND_PAD_PX = 4;
 const GRID_OVERSCAN = 4;
 
 export type Geometry = {
-  rows: Float64Array; // rows[i] is row i's top; rows[n] the total height
+  rows: Float64Array; // rows[d] is the top of the row drawn d-th; rows[n] the total height
+  // The order rows are drawn in, when a view draws its own; null draws the sheet's.
+  order: DrawnOrder | null;
+  // Where row r is drawn, and the row drawn d-th (the same number without an order).
+  drawnOf: (r: number) => number;
+  storedAt: (d: number) => number;
   cols: Float64Array;
   frozenRows: number;
   frozenCols: number;
@@ -60,10 +68,12 @@ export function geometryOf(
   layout: SheetLayout,
   filteredOut: ReadonlySet<string> = new Set(),
   heightOf: RowHeights = (id) => baseRowHeight(layout, id),
+  order: DrawnOrder | null = null,
 ): Geometry {
   const ix = layoutIndex(layout);
   const hiddenRows = new Set([...ix.hiddenRows, ...filteredOut]);
-  const rows = axisOffsets(layout.rows, heightOf, hiddenRows);
+  const drawnIds = order ? Array.from(order.storedAt, (r) => layout.rows[r]!) : layout.rows;
+  const rows = axisOffsets(drawnIds, heightOf, hiddenRows);
   const cols = axisOffsets(layout.cols, (id) => colWidth(layout, id), ix.hiddenCols);
   const frozenRows = Math.min(layout.frozenRows ?? 0, layout.rows.length);
   const frozenCols = Math.min(layout.frozenCols ?? 0, layout.cols.length);
@@ -81,6 +91,9 @@ export function geometryOf(
   const bandH = outlineBand(layout, 'c');
   return {
     rows,
+    order,
+    drawnOf: order ? (r) => order.drawnOf[r] ?? r : (r) => r,
+    storedAt: order ? (d) => order.storedAt[d] ?? d : (d) => d,
     cols,
     frozenRows,
     frozenCols,
@@ -99,6 +112,20 @@ export function geometryOf(
   };
 }
 
+// Row r's top and bottom in the grid, wherever it is drawn.
+export function rowTop(g: Pick<Geometry, 'rows' | 'drawnOf'>, r: number): number {
+  return g.rows[g.drawnOf(r)]!;
+}
+
+export function rowEnd(g: Pick<Geometry, 'rows' | 'drawnOf'>, r: number): number {
+  return g.rows[g.drawnOf(r) + 1]!;
+}
+
+// Stored rows r1..r2 in pieces each drawn side by side (one piece without an order): one box a piece.
+export function drawnPieces(g: Geometry, r1: number, r2: number): { r1: number; r2: number }[] {
+  return g.order ? DrawnOrder.pieces(g.order, r1, r2) : [{ r1, r2 }];
+}
+
 export function totalSize(g: Geometry): { width: number; height: number } {
   return { width: g.cols[g.cols.length - 1]!, height: g.rows[g.rows.length - 1]! };
 }
@@ -109,7 +136,13 @@ export function mergeAt(g: Geometry, r: number, c: number): GridRange | null {
   return key ? g.merges.get(key)! : null;
 }
 
-export type GridWindow = { r1: number; r2: number; c1: number; c2: number };
+// `rows`: the scrolling rows in view, in the order drawn (each by its own number); c1..c2 the scrolling columns.
+export type GridWindow = { rows: readonly number[]; c1: number; c2: number };
+
+// Whether a cell is among the scrolling ones in view.
+export function inWindow(w: GridWindow, r: number, c: number): boolean {
+  return c >= w.c1 && c <= w.c2 && w.rows.includes(r);
+}
 
 // The scrolling rows and columns in view (frozen ones are always drawn), plus overscan.
 export function visibleWindow(
@@ -131,7 +164,9 @@ export function visibleWindow(
     m - 1,
     indexAtOffset(g.cols, left + Math.max(0, view.width - g.frozenWidth)) + GRID_OVERSCAN,
   );
-  return { r1, r2: Math.max(r1 - 1, r2), c1, c2: Math.max(c1 - 1, c2) };
+  const rows: number[] = [];
+  for (let d = r1; d <= r2; d++) rows.push(g.storedAt(d));
+  return { rows, c1, c2: Math.max(c1 - 1, c2) };
 }
 
 // A cell's box in the grid area's own coordinates (0,0 its top-left, under the headers), given the scroll.
@@ -144,11 +179,18 @@ export function cellBox(
 ): { x: number; y: number; w: number; h: number } {
   const r2 = span ? span.r2 : r;
   const c2 = span ? span.c2 : c;
-  const y0 = g.rows[r]!;
+  // A span's rows from the first drawn to the last drawn (side by side for a merge, which no order splits).
+  let y0 = rowTop(g, r);
+  let y1 = rowEnd(g, r2);
+  if (g.order && r2 > r)
+    for (let i = r; i <= r2; i++) {
+      y0 = Math.min(y0, rowTop(g, i));
+      y1 = Math.max(y1, rowEnd(g, i));
+    }
   const x0 = g.cols[c]!;
   const y = r < g.frozenRows ? y0 : y0 - scroll.top;
   const x = c < g.frozenCols ? x0 : x0 - scroll.left;
-  return { x, y, w: g.cols[c2 + 1]! - x0, h: g.rows[r2 + 1]! - y0 };
+  return { x, y, w: g.cols[c2 + 1]! - x0, h: y1 - y0 };
 }
 
 export type Hit =
@@ -199,16 +241,17 @@ export function hitTest(
   }
   if (inRowHead) {
     if (gy + (gy < g.frozenHeight ? 0 : scroll.top) > total.height) return { kind: 'none' };
-    const r = axisAt(g.rows, g.frozenRows, g.frozenHeight, gy, scroll.top);
-    const bottom = (r < g.frozenRows ? g.rows[r + 1]! : g.rows[r + 1]! - scroll.top) - gy;
-    const top = gy - (r < g.frozenRows ? g.rows[r]! : g.rows[r]! - scroll.top);
-    if (top <= RESIZE_HIT_PX && r > 0) return { kind: 'row', r: r - 1, edge: true };
-    return { kind: 'row', r, edge: bottom <= RESIZE_HIT_PX };
+    const d = axisAt(g.rows, g.frozenRows, g.frozenHeight, gy, scroll.top);
+    const bottom = (d < g.frozenRows ? g.rows[d + 1]! : g.rows[d + 1]! - scroll.top) - gy;
+    const top = gy - (d < g.frozenRows ? g.rows[d]! : g.rows[d]! - scroll.top);
+    // The edge above is the bottom of the row drawn before.
+    if (top <= RESIZE_HIT_PX && d > 0) return { kind: 'row', r: g.storedAt(d - 1), edge: true };
+    return { kind: 'row', r: g.storedAt(d), edge: bottom <= RESIZE_HIT_PX };
   }
   const ax = gx < g.frozenWidth ? gx : gx + scroll.left;
   const ay = gy < g.frozenHeight ? gy : gy + scroll.top;
   if (ax >= total.width || ay >= total.height) return { kind: 'none' };
-  const r = axisAt(g.rows, g.frozenRows, g.frozenHeight, gy, scroll.top);
+  const r = g.storedAt(axisAt(g.rows, g.frozenRows, g.frozenHeight, gy, scroll.top));
   const c = axisAt(g.cols, g.frozenCols, g.frozenWidth, gx, scroll.left);
   const m = mergeAt(g, r, c);
   return m ? { kind: 'cell', r: m.r1, c: m.c1 } : { kind: 'cell', r, c };
@@ -224,8 +267,8 @@ export function scrollToReveal(
 ): { top: number; left: number } | null {
   let { top, left } = scroll;
   if (r >= g.frozenRows) {
-    const y0 = g.rows[r]! - g.frozenHeight;
-    const y1 = g.rows[r + 1]! - g.frozenHeight;
+    const y0 = rowTop(g, r) - g.frozenHeight;
+    const y1 = rowEnd(g, r) - g.frozenHeight;
     const avail = view.height - g.frozenHeight;
     if (y0 < top) top = y0;
     else if (y1 > top + avail) top = Math.max(0, y1 - avail);

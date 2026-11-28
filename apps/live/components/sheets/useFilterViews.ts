@@ -7,6 +7,8 @@ import {
   filterViewOf,
   FILTER_VIEW_PREFIX,
   nextFilterViewTitle,
+  viewSortFor,
+  viewSortRefusal,
   type DrawnFilter,
   type FilterCondition,
   type SheetFilterView,
@@ -18,6 +20,9 @@ import { useLatest } from '@/hooks/ui/useLatest';
 
 /** Said when the open view is gone: deleted by someone else, or named by a link after it was deleted (D474). */
 export const FILTER_VIEW_DELETED = 'That filter view was deleted';
+
+/** Said when rows are dragged by their numbers while a view draws its own order: their place is the sort's (D495). */
+export const MOVE_ROWS_IN_SORTED_VIEW = 'Close the filter view to move rows';
 
 /** The view open on a sheet: a saved one by id, or a temporary one held whole. */
 export type OpenFilterView = { id: string } | { temp: SheetFilterView };
@@ -45,6 +50,9 @@ export type FilterViews = {
   // The open view changed whole: written when saved, kept when temporary. False when refused.
   change: (view: SheetFilterView) => boolean;
   setCondition: (colId: string, cond: FilterCondition | null) => boolean;
+  // The view's Sort A to Z / Z to A: the column its one key, drawing the rows in that order (data-tools.md "The drawn
+  // order", D491). False when refused (a merge across its rows, said in a toast).
+  sort: (colId: string, ascending: boolean) => boolean;
 };
 
 export function useFilterViews(opts: {
@@ -109,6 +117,20 @@ export function useFilterViews(opts: {
     },
     [open, change],
   );
+  const sort = useCallback(
+    (colId: string, ascending: boolean) => {
+      if (!open) return false;
+      const refused = viewSortRefusal(layout, open);
+      if (refused) {
+        debugLog('[sheet] view sort refused', { sheetId, reason: 'merge' });
+        toast.current(refused);
+        return false;
+      }
+      debugLog('[sheet] view sort', { sheetId, colId, ascending, temporary });
+      return change(viewSortFor(open, colId, ascending));
+    },
+    [open, layout, sheetId, temporary, change, toast],
+  );
   const takenTitles = useMemo(
     () => [
       ...(layout.filterViews ?? []).map((x) => x.title),
@@ -126,5 +148,6 @@ export function useFilterViews(opts: {
     close: useCallback(() => setOpen(null), [setOpen]),
     change,
     setCondition,
+    sort,
   };
 }

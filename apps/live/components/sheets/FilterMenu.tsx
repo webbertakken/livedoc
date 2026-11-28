@@ -62,7 +62,9 @@ export function FilterMenu({
   const sort = (ascending: boolean) =>
     table
       ? actions.sortTableColumn(table.id, colId, ascending)
-      : actions.sortFilter(colId, ascending);
+      : inView
+        ? c.filterViews.sort(colId, ascending)
+        : actions.sortFilter(colId, ascending);
   const current = slicer ? (slicer.current ?? undefined) : drawn?.conds[colId];
   const values = useMemo(
     () => columnValueCounts(c.workbook, c.sheet.id, colId, drawn),
@@ -120,8 +122,8 @@ export function FilterMenu({
       {onColumnMenu ? (
         <MenuActionRow label="Column Menu" icon={<Glyph t="▾" />} onClick={onColumnMenu} />
       ) : null}
-      {/* A filter view's own sort orders only what its opener sees: the drawn order (data-tools.md). */}
-      {inView || slicer ? null : (
+      {/* A filter view's sort orders only what its opener sees: the drawn order (data-tools.md, D491). */}
+      {slicer ? null : (
         <>
           <MenuActionRow
             label="Sort A to Z"

@@ -35,6 +35,7 @@ export * from './imports/import-request';
 export * from './imports/range-import';
 export { extractImport, type FetchedPage } from './imports/extract';
 export * from './sort';
+export * from './drawn-order';
 export * from './fill';
 export * from './csv';
 export * from './text-decoding';
