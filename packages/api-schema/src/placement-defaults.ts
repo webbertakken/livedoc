@@ -27,6 +27,7 @@ export const DEFAULT_KEY_DIMENSIONS = ['kind', 'template', 'mode'] as const;
 export const CREATION_TAB_KINDS = [
   'diagram',
   'event-storming',
+  'text-document',
 ] as const satisfies readonly TabKind[];
 export type CreationTabKind = (typeof CREATION_TAB_KINDS)[number];
 
@@ -135,7 +136,11 @@ export function creationIntentOf(
 ): CreationIntent {
   const intent: CreationIntent = {
     mode: tab?.kind === 'whiteboard' && !tab.opensIn ? 'draw' : tab ? tabOpeningOf(tab) : 'diagram',
-    tabKind: isEventStormingTab(tab) ? 'event-storming' : 'diagram',
+    tabKind: isEventStormingTab(tab)
+      ? 'event-storming'
+      : tab?.kind === 'text-document'
+        ? 'text-document'
+        : 'diagram',
   };
   return templateFamily ? { ...intent, templateFamily } : intent;
 }

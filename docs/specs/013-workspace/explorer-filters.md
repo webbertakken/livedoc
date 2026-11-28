@@ -68,17 +68,17 @@ Each dimension is a closed list of values. The interface says what a value means
 kind or a template family a "type", and it keeps "board type" for what it means elsewhere: a board that leaves the
 general diagram tab's environment.
 
-| Dimension | Key        | Chip label  | Values and their labels                                                                                                                  |
-| --------- | ---------- | ----------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| Text      | (none)     | (the field) | Free words, matched against names and contents ([Content search](content-search.md))                                                     |
-| Opens in  | `opens-in` | Opens in    | `draw` Sketch, `diagram` Structured, `pages` Pages, `workshop` Workshop, `plan` Plan: how the document was created to open (its opening) |
-| Kind      | `kind`     | Kind        | `event-storming` Event Storming, `markdown` Markdown, `pdf` PDF document, `file` File: the first tab's kind when it was made             |
-| Template  | `template` | Template    | `retrospective` Retrospective, `kanban` Kanban: the template family the document was made from                                           |
-| Wiki      | `wiki`     | Wiki        | `<name>` one wiki the reader can open, `any` every wiki ([Wiki](../032-wikis/wiki.md#search))                                            |
-| Made by   | `made-by`  | Made by AI  | `ai` Made by AI: the document's `source` is the AI assistant or an AI tool through the MCP server (not the CLI)                          |
-| Edited    | `edited`   | Edited      | `today` Today, `7d` Last 7 days, `30d` Last 30 days, `12m` Last 12 months, `this-year` This year                                         |
-| People    | `people`   | People      | `me` Me, `others` Others: the owner of a document; the actor of a Timeline event                                                         |
-| Space     | `space`    | Space       | `mine` My Documents, `shared` Shared With Me, `team:<id>` the team's name. Aggregate views only                                          |
+| Dimension | Key        | Chip label  | Values and their labels                                                                                                                                     |
+| --------- | ---------- | ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Text      | (none)     | (the field) | Free words, matched against names and contents ([Content search](content-search.md))                                                                        |
+| Opens in  | `opens-in` | Opens in    | `draw` Sketch, `diagram` Structured, `pages` Pages, `workshop` Workshop, `plan` Plan: how the document was created to open (its opening)                    |
+| Kind      | `kind`     | Kind        | `event-storming` Event Storming, `text-document` Text document, `markdown` Markdown, `pdf` PDF document, `file` File: the first tab's kind when it was made |
+| Template  | `template` | Template    | `retrospective` Retrospective, `kanban` Kanban: the template family the document was made from                                                              |
+| Wiki      | `wiki`     | Wiki        | `<name>` one wiki the reader can open, `any` every wiki ([Wiki](../032-wikis/wiki.md#search))                                                               |
+| Made by   | `made-by`  | Made by AI  | `ai` Made by AI: the document's `source` is the AI assistant or an AI tool through the MCP server (not the CLI)                                             |
+| Edited    | `edited`   | Edited      | `today` Today, `7d` Last 7 days, `30d` Last 30 days, `12m` Last 12 months, `this-year` This year                                                            |
+| People    | `people`   | People      | `me` Me, `others` Others: the owner of a document; the actor of a Timeline event                                                                            |
+| Space     | `space`    | Space       | `mine` My Documents, `shared` Shared With Me, `team:<id>` the team's name. Aggregate views only                                                             |
 
 - **Opens in**, **Kind** and **Template** read the creation intent recorded on the document
   (Default folders: `opensIn`, `tabKind`, `templateFamily` on the document

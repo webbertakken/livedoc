@@ -7,6 +7,7 @@ import {
   PLACEMENT_DEFAULT_KEYS,
   type CreationIntent,
   type PlacementDefaultKey,
+  type SpecificTabKind,
 } from '@livedoc/api-schema';
 import type { EditorMode } from '@livedoc/document';
 
@@ -90,7 +91,7 @@ export function resolveDefaultFor(
 export function representativeIntent(key: PlacementDefaultKey): CreationIntent {
   const [dimension, value] = key.split(':') as [string, string];
   if (dimension === 'mode') return { mode: value as EditorMode, tabKind: 'diagram' };
-  if (dimension === 'kind') return { mode: 'diagram', tabKind: value as 'event-storming' };
+  if (dimension === 'kind') return { mode: 'diagram', tabKind: value as SpecificTabKind };
   return {
     mode: 'diagram',
     tabKind: 'diagram',

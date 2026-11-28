@@ -45,6 +45,7 @@ order:
 | Plan boards           | `mode:plan`              |
 | Sessions              | `mode:workshop`          |
 | Event Storming boards | `kind:event-storming`    |
+| Text documents        | `kind:text-document`     |
 | PDFs                  | `kind:pdf`               |
 | Retrospectives        | `template:retrospective` |
 | Kanban boards         | `template:kanban`        |
@@ -57,7 +58,7 @@ order:
     `mode:<mode>` per mode in the modes' order: a new editor mode gains its key, and its entry in
     the list, with no other change.
   - **Kind keys** come from the specific tab kinds a document can be created with: every creatable
-    tab kind but the general `diagram` tab, today `event-storming`.
+    tab kind but the general `diagram` tab, today `event-storming` and `text-document`.
   - **Template keys** come from the template families (`TEMPLATE_FAMILIES`): `retrospective`,
     `kanban`.
 
@@ -70,7 +71,8 @@ order:
     `diagram` otherwise, including a document with no tab and an event-storming board.
   - `tabKind`: `event-storming` when the first tab is an
     [event-storming board](../021-event-storming/event-storming.md), read the way the document model
-    reads a tab's kind; `diagram` otherwise (a legacy whiteboard tab included). Absent on the wire
+    reads a tab's kind; `text-document` when it is a [text document](../034-text-documents/text-document.md),
+    however it was made (blank, a template, a file opened, an agent); `diagram` otherwise (a legacy whiteboard tab included). Absent on the wire
     reads as `diagram`.
   - `templateFamily`: by the **template** the document is made from. One exhaustive map from every
     template to its family, or none, decides it (`templateFamilyOf` in `@livedoc/templates`):

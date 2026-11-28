@@ -23,6 +23,7 @@ describe('DEFAULT_KEY_ENTRIES', () => {
       'Sessions',
       'Plan boards',
       'Event Storming boards',
+      'Text documents',
       'Retrospectives',
       'Kanban boards',
     ]);
