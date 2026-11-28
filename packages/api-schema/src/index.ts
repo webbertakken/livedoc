@@ -775,3 +775,11 @@ export * from './bug-report';
 export * from './bug-report-context-lines';
 export * from './bug-report-card';
 export * from './worker-issue';
+export {
+  arrowParts,
+  hasQuotes,
+  isQuotedWord,
+  tokeniseLine,
+  unquotedPrefix,
+  type Word as LineWord,
+} from './line-words';

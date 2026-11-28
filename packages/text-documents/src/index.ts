@@ -461,6 +461,8 @@ export {
 } from './compare/compare-documents';
 export { VersionSnapshots } from './versions/version-snapshots';
 export { restoreUpdate, versionDocument } from './versions/version-restore';
+export { UndoSteps, type UndoStep } from './versions/undo-step';
+export * from './agent-edits';
 export {
   NoticeChanges,
   type NoticeBaseline,

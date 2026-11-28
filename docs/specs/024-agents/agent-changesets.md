@@ -241,6 +241,28 @@ list of the sheet's own writes, the editor's unit, applied as one. It holds for 
 - **What it leaves out**: the references other sheets' formulas hold into rows or columns it deleted are shrunk after
   it, as a person's delete shrinks them, and are not put back by its revert (D268).
 
+## A text document's changesets
+
+A [text document](../034-text-documents/text-document.md)'s writing is a live CRDT state, not elements, so an agent's
+change to it is a **text changeset** of the operations [Agents and sync](../034-text-documents/agents-and-sync.md#writing)
+lists, applied by the api to the state as it stands.
+
+- **Submit.** `POST /api/documents/:id/tabs/:tabId/changesets` on a text document's tab, with `ops` (the operations'
+  text), optionally `documentTab`, `summary` and `base` (a state vector). `?dryRun=1` answers the result lines and
+  writes nothing.
+- **One transaction.** The api loads the state, applies every operation in one transaction by a client of its own, and
+  sends the room the update it made, as an editor's update is sent; the room appends and relays it, so people see the
+  writing arrive at once and their typing merges with it.
+- **Atomic.** One operation refused refuses the changeset, nothing written, the answer naming the line.
+- **Recorded** in the document's room with the other changesets: its operations, results, summary, agent, and its
+  undo step (what it wrote and what it deleted, as Yjs counts them). A changeset that changes nothing is not recorded.
+- **Revert** (`POST …/changesets/:changesetId/revert`, the toast's Undo) undoes exactly that step as a new change: what
+  it wrote is deleted, what it deleted is written again where it stood, and what anyone wrote since stays.
+  Reverting twice writes nothing. Comments it made are resolved, never deleted `(default)`.
+- **In the editor**: the writing arrives as a peer's; a toast names the agent's owner and the summary, "Webber changed
+  the document: tighten the intro · Undo", as for elements.
+- **Not held**: a text document has no held elements; an agent's edit and a person's typing merge character by character.
+
 ## Limits
 
 | Constant                      | Value      | Why                                                                      |
