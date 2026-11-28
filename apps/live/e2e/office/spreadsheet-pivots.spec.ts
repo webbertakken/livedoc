@@ -161,7 +161,7 @@ test('Insert › Pivot Table sums units by region on a new sheet, edited, refuse
   expectNoPageErrors(pageErrors);
 });
 
-test('right-clicking items gathers them into Group 1, and Ungroup Pivot Items takes it apart', async ({
+test('right-clicking items gathers them into Group 1, renamed by typing, and Ungroup Pivot Items takes it apart', async ({
   page,
   pageErrors,
 }) => {
@@ -191,7 +191,17 @@ test('right-clicking items gathers them into Group 1, and Ungroup Pivot Items ta
     animations: 'disabled',
   });
 
-  // Group 1 right-clicked: Ungroup Pivot Items brings East and West back.
+  // Typed over, Group 1 takes the new name (Webber's ruling 2026-11-28): the one cell that takes typing.
+  await select(page, 'A2');
+  await page.keyboard.type('Coast');
+  await page.keyboard.press('Enter');
+  await expect(label('A2 Coast')).toHaveCount(1);
+  await page.screenshot({
+    path: test.info().outputPath('pivot-group-renamed.png'),
+    animations: 'disabled',
+  });
+
+  // Coast right-clicked: Ungroup Pivot Items brings East and West back.
   await select(page, 'A2');
   await page.mouse.click(east.x, east.y, { button: 'right' });
   await page.getByRole('menuitem', { name: 'Ungroup Pivot Items' }).click();
