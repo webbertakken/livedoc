@@ -21693,6 +21693,9 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
   "WorkbookSettings": {
     "additionalProperties": false,
     "properties": {
+      "cardsDocument": {
+        "type": "string"
+      },
       "iterate": {
         "additionalProperties": false,
         "properties": {

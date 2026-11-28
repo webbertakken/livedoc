@@ -142,6 +142,16 @@ describe('WorkbookRecord', () => {
     ).not.toBeNull();
   });
 
+  // plan-links.md "The `CARD` functions": Cards From is one of the settings, a document id, absent when none.
+  it('keeps the cards’ document with its settings, and refuses one that is no document id', () => {
+    const named = { ...made.settings, cardsDocument: 'plan-doc_1' };
+    expect(WorkbookRecord.readSettings(JSON.parse(JSON.stringify(named)))).toEqual(named);
+    expect(WorkbookRecord.readSettings({ ...made.settings, cardsDocument: 'a/b' })).toBeNull();
+    expect(WorkbookRecord.readSettings({ ...made.settings, cardsDocument: '' })).toBeNull();
+    expect(WorkbookRecord.readSettings({ ...made.settings, cardsDocument: 7 })).toBeNull();
+    expect(WorkbookRecord.copied({ ...made, settings: named }).settings).toEqual(named);
+  });
+
   it('knows its formats', () => {
     expect(WorkbookRecord.isFormat('fods')).toBe(true);
     expect(WorkbookRecord.isFormat('csv')).toBe(false);

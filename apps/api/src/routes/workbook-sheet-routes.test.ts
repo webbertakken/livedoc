@@ -538,6 +538,19 @@ describe('saving the settings', () => {
     expect((await save({ ...changed, theme: { ...theme, id: 'nope' } })).status).toBe(400);
   });
 
+  // plan-links.md "The `CARD` functions": Cards From rides in the settings, kept by a read and sent live.
+  it('saves the cards’ document with them, and refuses one that is no document id', async () => {
+    const res = await save({ ...changed, cardsDocument: 'plan1' });
+    expect((await res.json<WorkbookSettingsResponse>()).workbook.settings.cardsDocument).toBe(
+      'plan1',
+    );
+    const read = await kit.call({ method: 'GET', path: '/book1' });
+    expect((await read.json<DocumentResponse>()).document.workbook?.settings.cardsDocument).toBe(
+      'plan1',
+    );
+    expect((await save({ ...changed, cardsDocument: '../x' })).status).toBe(400);
+  });
+
   it.each([
     ['an unknown recalculation', { ...changed, recalc: 'second' }],
     ['a locale no runtime knows', { ...changed, locale: 'not a locale!' }],

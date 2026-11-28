@@ -199,8 +199,9 @@ settings"). A Plan Sheet has none of its own: it reads as the viewer's browser d
 
 ### Plan cards
 
-Four functions read the document's [items](../026-plan/items.md) (its cards), every live card (not archived, not in
-the Trash), whatever board they are on, as a [plan view](../026-plan/plan-views.md) reads them:
+Four functions read the [items](../026-plan/items.md) (the cards) of the Plan document a spreadsheet names in
+Settings ([Plan's links](plan-links.md#the-card-functions)), every live card (not archived, not in the Trash),
+whatever board they are on, as a [plan view](../026-plan/plan-views.md) reads them:
 
 | Function                                | Gives                                                                              |
 | --------------------------------------- | ---------------------------------------------------------------------------------- |
@@ -216,8 +217,8 @@ the Trash), whatever board they are on, as a [plan view](../026-plan/plan-views.
 - Values read as: State by its column name, Assignee by the person's name, Labels joined with `, `, dates as date
   numbers, Type by the card type's name, Number as the number.
 - An unknown field is `#NAME?` (hovering names it); a card number no card has is `#N/A`.
-- A sheet using these functions loads the document's items, as a board does; until they arrive the cells show
-  **Loading…**. They recalculate as cards change, live for everyone.
+- A sheet using these functions asks for the cards with the reader's own access; until they arrive the cells show
+  **Loading…**. They recalculate as cards change, for everyone ([Plan's links](plan-links.md#the-card-functions)).
 - Outside the editor (exports, images, agents), they read the items the api reads; a named tab's image reads only
   the items that tab shows ([Sheet](sheet.md) "Exports and images").
 

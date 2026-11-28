@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { book, calc } from '../../testing/book';
-import type { CardRow, CardSource } from '../../cards';
+import {
+  CARDS_DENIED,
+  CARDS_UNSET,
+  unavailableCards,
+  type CardRow,
+  type CardSource,
+} from '../../cards';
 import type { Scalar } from '../values';
 
 const T = {
@@ -170,6 +176,21 @@ describe('Plan cards', () => {
   it('reads Loading… until the cards arrive, then recalculates', () => {
     const b = book({ A1: '=CARDCOUNT()' });
     expect(b.v('A1')).toMatchObject({ e: '#N/A', why: 'pending' });
+    b.wb.setCards(CARDS);
+    expect(b.v('A1')).toBe(3);
+  });
+  it.each([
+    ['=CARDCOUNT()', CARDS_UNSET],
+    ['=CARDSUM("Estimate")', CARDS_UNSET],
+    ['=CARD(1, "Title")', CARDS_DENIED],
+    ['=CARDS("Title")', CARDS_DENIED],
+  ])('%s reads #REF! with why the cards cannot be read (%s)', (f, why) => {
+    expect(calc(f, {}, { cards: unavailableCards(why) })).toEqual({ e: '#REF!', why });
+  });
+  it('reads the cards once they can be read again', () => {
+    const b = book({ A1: '=CARDCOUNT()' });
+    b.wb.setCards(unavailableCards(CARDS_DENIED));
+    expect(b.v('A1')).toMatchObject({ e: '#REF!' });
     b.wb.setCards(CARDS);
     expect(b.v('A1')).toBe(3);
   });

@@ -34,7 +34,8 @@ function matching(cards: CardSource, filters: Filter[]): CardRow[] {
 
 function withCards(f: Frame, body: (cards: CardSource) => Value): Value {
   f.readsCards();
-  return f.cards ? body(f.cards) : PENDING;
+  if (!f.cards) return PENDING;
+  return f.cards.unavailable ? err('#REF!', f.cards.unavailable) : body(f.cards);
 }
 
 export const CARD_FUNCTIONS: Record<string, FnDef> = {

@@ -2,7 +2,8 @@
 
 **Status: specified; dashboards' figures and charts, the Spreadsheet slot and form responses are built.** A Sheet
 Figure, Column Summary, Trend or Sheet Chart reads a sheet of a spreadsheet, a Spreadsheet slot shows one's first
-sheet, and a form writes its responses into one; the `CARD` functions and the starts are not built yet.
+sheet, and a form writes its responses into one; in the editor the `CARD` functions read the cards' document the
+settings name. Their reads outside the editor, Cards From in Settings and the starts are not built yet.
 
 What Plan reads from or writes to a sheet, re-homed onto the [spreadsheet](spreadsheet.md) (C4, ruled 2026-11-18:
 keep them; C6, ruled 2026-11-18: the card functions only).
@@ -120,6 +121,14 @@ C6 (ruled 2026-11-18: functions only):
 - `CARDCOUNT`, `CARDSUM`, `CARD` and `CARDS` stay ([Formulas](formulas.md#plan-cards)) and read the cards of the
   Plan document the spreadsheet names (a link an Editor sets in Settings), live; with none set they read `#REF!`
   ("Choose the cards' document in Settings"). A migrated spreadsheet names the document its Sheets came from.
+- The cards' document is one of the workbook's [settings](settings.md) (**Cards From**), saved with them and kept by
+  a copy of the spreadsheet: a copy reads the same cards, and each reader still reads them with their own access.
+- The cards are read with the reader's own access, never the spreadsheet's share link: the Plan document's items, and
+  its card types and its boards' column names (what State reads), from its plan. They are asked again every 10
+  seconds while the spreadsheet is open and its page shown (D509); until the first answer the cells show
+  **Loading…**. A reader who may not open the cards' document, or one since deleted, reads `#REF!` ("You don't have
+  access to the cards' document"), never its cards.
+- Outside the editor (exports, images, agents), they read the cards' document with the asker's own access.
 - In a file each is written by S5's convention with its cached value, in both formats, so other applications show
   the last value and LiveDoc reads it live again on return.
 - The **card table** is removed: its links, drafts, Save Card and Cancel Changes, the Controls column, Open Card,
@@ -151,6 +160,9 @@ As each link's own spec says; reading across documents never widens anyone's acc
   lives in one place. A new chart over a range keeps only its range and type, so it looks as a new chart of that type
   in the spreadsheet would. Its Charts lists the charts the link carries (those reading only the first 2,000 rows
   and 200 columns, D507).
+- **D509** A spreadsheet asks the cards' document for its cards every 10 seconds while its page is shown, as a
+  dashboard asks a linked sheet (D505): a page holds no socket to another document's room. An answer naming the same
+  items' version, card types' version and column names as the last changes nothing, so no card function recalculates.
 - **D507** The Spreadsheet slot names the spreadsheet alone and shows its first visible sheet, as the spec asks, so
   reordering the spreadsheet's tabs changes what it shows. It is a picture, not a grid: the pure renderer agents'
   previews use (`spreadsheetSheetImage`), on the light paper, from A1 up to 4,000 px each way (its bound), so the

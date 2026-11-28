@@ -2,7 +2,7 @@
 // store works out apart (a spreadsheet's whole workbook, or one Plan tab), behind one Worker. Plan cards arrive as the
 // page's items and types and are read here as the engine reads them. Pure, so a page without Workers runs it in place.
 import { cardSourceOf, type Item, type ItemTypeDef } from '@livedoc/items';
-import { EngineHost, type EngineIn, type EngineOut } from '@livedoc/sheets';
+import { EngineHost, unavailableCards, type EngineIn, type EngineOut } from '@livedoc/sheets';
 
 /** Plan cards as the page holds them: what the card functions read. */
 export type CardData = {
@@ -11,12 +11,18 @@ export type CardData = {
   statusNames?: ReadonlyMap<string, string>;
 };
 
+/** Cards a spreadsheet cannot read, and why (plan-links.md "The `CARD` functions"): its card functions read #REF!. */
+export type CardsUnavailable = { unavailable: string };
+
+/** What the card functions read: the cards, why there are none to read, or null while they load. */
+export type CardsHeld = CardData | CardsUnavailable | null;
+
 /** How long the Worker works before it takes in newer changes: half a 60 Hz frame (safe range 4 to 16). */
 export const RECALC_SLICE_MS = 8;
 
 export type ToEngine =
   | { scope: string; msg: EngineIn }
-  | { scope: string; msg: { t: 'cards'; cards: CardData | null } }
+  | { scope: string; msg: { t: 'cards'; cards: CardsHeld } }
   // The scope is no longer worked out (the document turned out a spreadsheet): its engine goes.
   | { scope: string; msg: { t: 'drop' } };
 
@@ -44,14 +50,16 @@ export class EngineHosts {
     }
     if (msg.t === 'cards') {
       const { cards } = msg;
-      host.setCards(
-        cards
-          ? cardSourceOf(cards.items, cards.types, {
-              ...(cards.statusNames ? { statusNames: cards.statusNames } : {}),
-              version: Date.now(),
-            })
-          : null,
-      );
+      if (cards && 'unavailable' in cards) host.setCards(unavailableCards(cards.unavailable));
+      else
+        host.setCards(
+          cards
+            ? cardSourceOf(cards.items, cards.types, {
+                ...(cards.statusNames ? { statusNames: cards.statusNames } : {}),
+                version: Date.now(),
+              })
+            : null,
+        );
     } else host.receive(msg);
   }
 
