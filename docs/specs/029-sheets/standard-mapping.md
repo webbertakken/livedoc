@@ -819,6 +819,27 @@ LiveDoc draws them (default, D626).
   - **A sheet keeping its file's shapes** (ODF `table:shapes`) writes none of its cells' pictures, as none of its
     pictures over the cells (D261), each named (`kept_drawing`); XLSX writes them, being cell values.
 
+## Links in the file
+
+**Status: written and read in both formats.** A cell's [link](inserted-objects.md#a-cells-link) is written as each
+suite writes a link on a cell, so LibreOffice, Excel and Google Sheets open it (default, D642).
+
+- **XLSX**: the sheet's `hyperlinks`, one `hyperlink` a linked cell (`ref` the cell), in the worksheet's schema place,
+  after the merges, validations and format rules: an address as an external relationship of the sheet
+  (`TargetMode="External"`, its `r:id` on the hyperlink); a sheet or range of this workbook as `location`, the sheet's
+  title quoted as a formula quotes it and the range in A1 (`'Sheet 2'!B2:C3`; `A1` for a whole sheet's link).
+- **ODF**: each line of the cell's text a paragraph wholly one `text:a` (`xlink:type="simple"`, `xlink:href` the
+  address), as LibreOffice writes a linked cell; within the workbook `#'Sheet 2'.B2:C3`, as LibreOffice writes one. A
+  cell showing nothing writes none.
+- **Reading**: XLSX's `hyperlink`s, each naming a cell or a range of cells (each cell in it, within the sheet's cells
+  read), its target from its relationship (external, a `location` beside it its `#` part) or its `location`
+  (`Sheet!A1:B2`, a sheet named in the file, else kept as the address `#<location>`, written back as it came); its
+  `display` is the cell's text and its `tooltip` is not read. ODF a cell whose paragraphs are each wholly one `text:a`
+  of one address, their plain text the cell's (`#Sheet.A1` or `#'Sheet 2'.A1:B2` read within the workbook). A link on part of a cell's text, or on several
+  paragraphs, stays [kept marked text](#unknown-content) (D376, D377). A sheet's `hyperlinks` are read whole and so no
+  longer kept; a link on a cell the read leaves out goes with that cell.
+- **A link to a sheet that is gone** (deleted after the link was made) is written as no link, its text plain.
+
 ## Pivot tables in the file
 
 A sheet's [pivot tables](pivot-tables.md) are written both ways, as validation rules are (D293): the **standard form**

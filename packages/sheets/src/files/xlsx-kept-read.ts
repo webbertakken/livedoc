@@ -48,6 +48,8 @@ const WRITTEN_TYPES: ReadonlySet<string> = new Set([
   RELATIONSHIP_TYPES.richValueStructure,
   RELATIONSHIP_TYPES.richValueTypes,
   RELATIONSHIP_TYPES.richValueRel,
+  // A sheet's links are read and written (standard-mapping.md "Links in the file", D642).
+  RELATIONSHIP_TYPES.hyperlink,
 ]);
 
 // The parts LiveDoc writes, whatever a kept part's relationship says (a link back to a worksheet is not followed).

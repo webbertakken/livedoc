@@ -25,7 +25,8 @@ import { FILE_READ_CELLS_MAX } from './file-read-limits';
 import { KEPT_REPEAT_MAX, type FileAt, type KeptItem, type KeptPart } from './kept-content';
 import { readOdsCharts } from './ods-charts-read';
 import { readOdsPivots } from './ods-pivots-read';
-import { cellText } from './ods-cell-text';
+import { cellLinkHref, cellText } from './ods-cell-text';
+import { odfHrefLink, type FileLink } from './file-links';
 import { keptOdfParts, keptSettings, OdsKeeper } from './ods-kept-read';
 import { odsLineStyles, readOdsLines, type OdsLineStyles } from './ods-lines';
 import { odsTabLooks, type OdsTabLook } from './ods-tab-look';
@@ -225,6 +226,8 @@ type Book = {
   ruleStyles: Set<string>;
   // The validation rules read, by name (standard-mapping.md "Validation in the file").
   validations: OdsValidationsRead['byName'];
+  // Whether the file holds a sheet of a name, for a link within the workbook ("Links in the file").
+  known: (sheet: string) => boolean;
 };
 
 function readTable(table: XmlElement, index: number, book: Book): FileSheet {
@@ -281,6 +284,10 @@ function readTable(table: XmlElement, index: number, book: Book): FileSheet {
       const named = own ?? rowStyle;
       styled ||= named !== undefined && (looks.of(named).lost || freesUnread(named));
       const content = formulaText !== undefined || value !== undefined;
+      // Its text wholly one link is the cell's link (standard-mapping.md "Links in the file").
+      const href = content ? cellLinkHref(cell) : null;
+      const link: FileLink | null =
+        href === null ? null : (odfHrefLink(href, book.known) ?? { href });
       // An empty cell keeps its own style's format and look (where it differs from the file's default) over a few
       // cells; a whole line's is past what the grid holds (D94).
       const ownFormat = content ? undefined : formatOf(own, sheet);
@@ -309,6 +316,7 @@ function readTable(table: XmlElement, index: number, book: Book): FileSheet {
             losses.push({ k: 'formula_unread', sheet: name, r, c: c + k });
           if (spans) out.spans = spans;
           if (value) out.value = value;
+          if (link) out.link = link;
           const format = formatOf(own ?? rowStyle ?? columns[c + k], sheet);
           if (format !== undefined) out.format = format;
           const style = looks.of(own ?? rowStyle ?? columns[c + k]).style;
@@ -421,6 +429,7 @@ function readBody(
     keeper,
     ruleStyles,
     validations: validations.byName,
+    known: (title) => titles.includes(title),
   };
   const tableSheets = tables
     .slice(0, SHEETS_MAX)

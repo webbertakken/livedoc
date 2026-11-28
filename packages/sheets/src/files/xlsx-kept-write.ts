@@ -121,7 +121,7 @@ const COUNTED: Readonly<Record<string, RegExp>> = {
   tableParts: /<(?:[\w.-]+:)?tablePart[\s/>]/g,
 };
 // The worksheet's children LiveDoc's own replaces, kept or not.
-const REPLACED: ReadonlySet<string> = new Set(['sheetProtection', 'autoFilter']);
+const REPLACED: ReadonlySet<string> = new Set(['sheetProtection', 'autoFilter', 'hyperlinks']);
 
 // A kept child with LiveDoc's own of the same name inside it, after its children; a `dataValidations`' or a
 // `tableParts`' count made its children's again.

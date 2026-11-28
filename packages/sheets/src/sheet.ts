@@ -96,6 +96,9 @@ export type CellFormat = {
   bl?: Border;
   // The Custom number format's code (with nf 'custom').
   nc?: string;
+  // The cell's link, the whole cell's (inserted-objects.md "A cell's link", D636): an address, or a sheet or range of
+  // this workbook (`#gid=<sheet id>&range=<A1>`, cell-link.ts).
+  ln?: string;
 };
 
 export type Cell = { input?: CellInput; format?: CellFormat };

@@ -2,6 +2,7 @@
 // keeps it"): `office:spreadsheet` with a `table:table` per sheet, each cell its value type and value, its formula in
 // OpenFormula beside its cached value. One cell a line, attributes in a fixed order, so the same workbook gives the
 // same bytes and a changed value is a one-line diff ("The flat form").
+import { odfHref, type FileLink } from './file-links';
 import { keptPilotNames, odsDataPilots, withDataPilots } from './ods-pivots';
 import {
   escapeXmlAttribute,
@@ -152,6 +153,19 @@ function shownText(value: FileValue): string {
   }
 }
 
+// A linked cell's text, each line a paragraph wholly its link, as LibreOffice writes one (standard-mapping.md "Links
+// in the file", D642).
+function linkedParagraph(text: string, link: FileLink): string {
+  const href = escapeXmlAttribute('href' in link ? link.href : odfHref(link));
+  return text
+    .split('\n')
+    .map(
+      (line) =>
+        `<text:p><text:a xlink:type="simple" xlink:href="${href}">${escapeXmlText(line)}</text:a></text:p>`,
+    )
+    .join('');
+}
+
 // One text:p per line, as ODF holds a cell's lines.
 function paragraphs(text: string): string {
   return text
@@ -183,7 +197,13 @@ function cellXml(cell: FileCell, out: Out, rule: string | undefined, isOpen: boo
   const shown = cell.value ? shownText(cell.value) : null;
   // A cell's kept marked paragraphs (a link, a span) while its text reads the same; else its own (D376).
   const body =
-    shown === null ? '' : kept?.text?.reads === shown ? kept.text.xml() : paragraphs(shown);
+    shown === null
+      ? ''
+      : cell.link && shown !== ''
+        ? linkedParagraph(shown, cell.link)
+        : kept?.text?.reads === shown
+          ? kept.text.xml()
+          : paragraphs(shown);
   // LiveDoc's rule over a cell names it, in place of a kept one's.
   const keptAttributes = kept?.attributes ?? '';
   const ruled = rule === undefined ? keptAttributes : keptAttributes.replace(VALIDATION_NAME, '');
@@ -480,16 +500,21 @@ function pilotsAfterTables(file: WorkbookFile, after: readonly string[]): string
 }
 
 // The namespaces a root declares: `calcext` too when a sheet has format rules, a drawing's and a chart's when one has
-// charts or pictures, over its cells or in them.
-const withRules = (file: WorkbookFile, prefixes: readonly Prefix[]): readonly Prefix[] => [
-  ...prefixes,
-  ...(file.sheets.some((s) => s.formatRules?.length) ? (['calcext'] as const) : []),
-  ...(file.sheets.some(
+// charts or pictures, over its cells or in them; a link's when a cell has a link ("Links in the file").
+const withRules = (file: WorkbookFile, prefixes: readonly Prefix[]): readonly Prefix[] => {
+  const drawn = file.sheets.some(
     (s) => s.charts?.length || s.pictures?.length || s.cells.some((c) => c.picture),
-  )
-    ? (['draw', 'svg', 'xlink', 'chart'] as const).filter((p) => !prefixes.includes(p))
-    : []),
-];
+  );
+  const linked = !drawn && file.sheets.some((s) => s.cells.some((c) => c.link));
+  return [
+    ...prefixes,
+    ...(file.sheets.some((s) => s.formatRules?.length) ? (['calcext'] as const) : []),
+    ...(drawn
+      ? (['draw', 'svg', 'xlink', 'chart'] as const).filter((p) => !prefixes.includes(p))
+      : []),
+    ...(linked && !prefixes.includes('xlink') ? (['xlink'] as const) : []),
+  ];
+};
 
 function metaXml(title: string): string[] {
   return [

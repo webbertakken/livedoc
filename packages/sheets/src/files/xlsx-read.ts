@@ -72,6 +72,7 @@ import {
   SPREADSHEETML_NS,
 } from './xlsx-parts';
 import { readXlsxLines } from './xlsx-lines';
+import { cellsLinked, readXlsxHyperlinks } from './xlsx-hyperlinks';
 import { readXlsxTabLook } from './xlsx-tab-look';
 import { isRichItem, itemText } from './xlsx-cell-text';
 
@@ -372,6 +373,7 @@ export async function readXlsx(
     losses: [],
   };
   const listed = children(childElement(parsed.root, ns, 'sheets'), ns, 'sheet');
+  const sheetNames = new Set(listed.map((s) => (attributeOf(s, '', 'name') ?? '').toLowerCase()));
   const sheets: FileSheet[] = [];
   // A Strict file's content is not kept, but named (D108); a Transitional one's is, each sheet's by its place here.
   const keeper = ns === STRICT_NS ? null : new XlsxKeeper(pkg);
@@ -413,11 +415,20 @@ export async function readXlsx(
     if (protection.cut) book.losses.push({ k: 'protection_cut', sheet: name });
     const filtered = readXlsxFilters(worksheet.root, ns, liveDocExtOf(worksheet.root, ns));
     filterReads.push(filtered);
+    // Its cells' links (standard-mapping.md "Links in the file"), within the workbook by the sheets it lists.
+    const hyperlinks = readXlsxHyperlinks(
+      worksheet.root,
+      ns,
+      relsNs,
+      pkg.relationships.get(part!) ?? [],
+      (title) => sheetNames.has(title.toLowerCase()),
+    );
     const read = new Set([
       ...rules.read,
       ...validations.read,
       ...protection.read,
       ...filtered.read,
+      ...hyperlinks.read,
     ]);
     tableRecords.push(readXlsxTableRecord(liveDocExtOf(worksheet.root, ns)));
     keeper?.sheetEntry(sheet, sheets.length);
@@ -440,6 +451,7 @@ export async function readXlsx(
       },
       (cell, vm) => richCells.push({ sheet: index, cell, vm }),
     );
+    cellsLinked(cells.cells, hyperlinks.links, { rows: ROWS_MAX, cols: COLS_MAX });
     sheets.push({
       ...cells,
       ...readXlsxTabLook(sheet, worksheet.root, ns),

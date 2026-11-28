@@ -12,7 +12,7 @@ import {
   type XmlNode,
 } from '@livedoc/office-packages';
 
-const { office: OFFICE, text: TEXT } = ODF_NS;
+const { office: OFFICE, text: TEXT, xlink: XLINK } = ODF_NS;
 // The marks a paragraph's plain text spells: they read as text, so a paragraph of only these is plain.
 const SPELLED: ReadonlySet<string> = new Set(['s', 'tab', 'line-break']);
 
@@ -43,6 +43,27 @@ export function isMarkedParagraph(paragraph: XmlElement): boolean {
   return childElements(paragraph).some(
     (child) => !(child.uri === TEXT && SPELLED.has(child.local)) || isMarkedParagraph(child),
   );
+}
+
+// The address a paragraph is wholly linked to: nothing in it but one `text:a` of plain text; null otherwise.
+function paragraphLink(paragraph: XmlElement): string | null {
+  const [only, ...more] = paragraph.children;
+  if (more.length > 0 || only === undefined || typeof only === 'string') return null;
+  if (only.uri !== TEXT || only.local !== 'a' || isMarkedParagraph(only)) return null;
+  return attributeOf(only, XLINK, 'href') || null;
+}
+
+/**
+ * The address a cell's text is wholly linked to (standard-mapping.md "Links in the file", D642): each of its
+ * paragraphs nothing but one `text:a` of plain text, all to one address, as LibreOffice writes a linked cell's lines;
+ * null for any other cell, whose marked paragraphs are kept (D376).
+ */
+export function cellLinkHref(cell: XmlElement): string | null {
+  const paragraphs = cellParagraphs(cell);
+  if (paragraphs.length === 0 || cellText(cell) === '') return null;
+  const hrefs = new Set(paragraphs.map(paragraphLink));
+  const [href, ...more] = hrefs;
+  return more.length === 0 && href ? href : null;
 }
 
 /** The text kept paragraphs read as, as the cell's would; null when one does not parse. */

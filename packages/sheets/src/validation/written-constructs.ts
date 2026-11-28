@@ -173,6 +173,25 @@ export const WRITTEN_CONSTRUCTS: Readonly<Record<string, WorkbookFile>> = {
     ],
     pictureBytes: new Map([['dot', { data: ONE_PIXEL_PNG, type: 'image/png' as const }]]),
   },
+  // standard-mapping.md "Links in the file": a web address, an email's, a range and a sheet of the workbook, a number
+  // linked, and a cell's text of two lines.
+  links: {
+    sheets: [
+      sheet('Links', [
+        { r: 0, c: 0, value: { k: 's', v: 'Web' }, link: { href: 'https://docs.nu/' } },
+        { r: 1, c: 0, value: { k: 's', v: 'Mail' }, link: { href: 'mailto:ada@example.com' } },
+        {
+          r: 2,
+          c: 0,
+          value: { k: 's', v: 'Range' },
+          link: { sheet: 'Other sheet', range: { r1: 1, c1: 1, r2: 2, c2: 2 } },
+        },
+        { r: 3, c: 0, value: { k: 'n', v: 42 }, link: { href: 'https://example.com/?a=1&b=2' } },
+        { r: 4, c: 0, value: { k: 's', v: 'Two\nlines' }, link: { href: 'https://docs.nu/two' } },
+      ]),
+      sheet('Other sheet', [{ r: 0, c: 0, value: { k: 's', v: 'Here' } }]),
+    ],
+  },
   // standard-mapping.md "Protection in the file": a protected sheet with its exceptions, a range's and a warning.
   protection: {
     sheets: [

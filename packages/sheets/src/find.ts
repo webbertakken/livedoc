@@ -171,7 +171,10 @@ export function findMatches(wb: Workbook, place: FindPlace, pattern: FindPattern
   for (const { cell, r, c } of placedCells(wb, place)) {
     const shown = displayValue(wb.value(place.sheetId, r, c), cell.format, wb.locale).text;
     const formula = opts.inFormulas && 'f' in cell.input;
-    const link = opts.inLinks ? wb.hyperlinkOf(place.sheetId, r, c) : null;
+    // A cell's own link as held, else its HYPERLINK's (D459, D638).
+    const link = opts.inLinks
+      ? (wb.cellLinkOf(place.sheetId, r, c) ?? wb.hyperlinkOf(place.sheetId, r, c))
+      : null;
     if (
       pattern.test(shown) ||
       (formula && pattern.test(cellEditText(cell, ctx, wb.locale))) ||

@@ -20,6 +20,11 @@ describe('format validation', () => {
     ['fc', '#aabbcc', true],
     ['fc', '#ABC', false],
     ['bg', 'red', false],
+    // A cell's link (inserted-objects.md "A cell's link", D636).
+    ['ln', 'https://docs.nu/', true],
+    ['ln', '#gid=sheet1&range=A1', true],
+    ['ln', '', false],
+    ['ln', 5, false],
     ['ff', 'space-grotesk', true],
     // A family by name (formatting.md "Font"): letters, digits, spaces, dots, hyphens, underscores, up to 64.
     ['ff', 'Lora', true],

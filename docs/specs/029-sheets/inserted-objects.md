@@ -1,7 +1,7 @@
 # Inserted objects
 
-**Status: specified.** Insert › Checkbox and Insert › Dropdown are built (as data validation), and images over cells
-and in a cell; the rest is specified.
+**Status: specified.** Insert › Checkbox and Insert › Dropdown are built (as data validation), images over cells
+and in a cell, and Insert › Emoji; the rest is specified.
 
 What the Insert menu puts into a [spreadsheet](spreadsheet.md) besides cells, charts and pivot tables (those have
 their own pages: [Charts](charts.md), [Pivot tables](pivot-tables.md)). Its rows of the
@@ -113,10 +113,70 @@ value in a cell"); `IMAGE()` shows one from an address instead (S4; [Imports fro
 
 ## Links
 
-- **Insert Link** (Ctrl+K): a text and a link: a web address (http, https, mailto only), a sheet of this workbook,
-  a range ("Select a range of cells to link"), or another LiveDoc document; the cell shows the text as a link with a
-  hover card (open, copy, edit, remove). **Get Link to This Cell** copies an address that opens the workbook there.
+### A cell's link
+
+- A cell's **link** is the whole cell's, held with its format as Google holds one (its text format's link): it stays
+  on the cell while its value is changed or cleared, moves, sorts, fills and pastes with the format, Paste Format Only
+  brings it and Paste Values Only leaves it, and Clear Formatting takes it off (default, D636).
+- What a link may lead to (default, D637), up to 2,048 characters ("Use a shorter address"):
+  - a **web or email address**: `http`, `https` or `mailto`; a bare domain becomes `https://`, a bare email address
+    `mailto:`, as a text document's link editor reads one ([Links](../034-text-documents/links-and-navigation.md#links));
+  - **another LiveDoc document**, by its own address in full (`https://docs.nu/document/<id>`);
+  - **a sheet of this workbook**, `#gid=<sheet id>`, or **a range** on one, `#gid=<sheet id>&range=<A1 range>`, Google's
+    own form, the sheet by its id so a rename keeps the link and the range by position, as Google keeps it.
+  - Anything else typed is refused under Link: "Use a web, email or LiveDoc address". A file's link of another scheme
+    (`file:`, a relative path) is kept as it came and written back, drawn as plain text and never opened.
+- **Drawn** as a `HYPERLINK`'s label is ([Formulas](formulas.md), "Text"): what the cell shows, underlined in the
+  sheet's accent unless the cell has its own text colour; a cell with nothing to show draws nothing. A cell link wins
+  over a `HYPERLINK` formula in the same cell (default, D638). Ctrl/⌘ and a press opens it, and the cell menu's
+  **Open Link** and Alt+Enter, as a `HYPERLINK`'s; Find's **Also Search Within Links** reads its address.
+
+### Insert Link
+
+- **Insert › Link**, the toolbar's **Insert Link**, the cell menu's **Insert Link** and **Ctrl+K** (⌘K), an Editor's,
+  open the **link editor** under the active cell, the one a text document has, with **Text** and **Link** and
+  **Apply**: Enter applies, Escape closes, the grid has the focus back either way.
+- **Text** holds what the active cell shows; the cell's link fills Link when it has one. A cell holding a formula,
+  and a selection of more than one cell, show no Text: each cell takes the link, its value kept (default, D639).
+- Applying is one undo step: a changed Text is written into the cell as typing it would be, its Reject rule and
+  protection judging it as they judge typing; an empty Text on an empty cell takes the address as its text; the
+  link is set on every selected cell; an empty Link takes the link off.
+- As Link is typed into, a list under it offers, in this order (default, D640): **Range** when what is typed reads
+  as a range (`B2:C4`, `Sheet2!A1`), on the named sheet or this one; **Sheets in this spreadsheet**, every sheet when
+  nothing is typed, else those whose titles hold every typed word; and the person's **LiveDoc documents** whose
+  names hold every typed word, at most 8, newest first. Up and Down move, Enter takes one. Google's "Select a range
+  of cells to link" picker is not built: a range is typed (default, D640).
+- Telemetry: `Spreadsheet · Added · Link` as a link is applied to cells that had none.
+
+### The link card
+
+- The active cell holding a link (its own or a `HYPERLINK`'s), while it is not being edited, shows a **link card**
+  under it, as Google's link preview does: its title (a LiveDoc document's name when it is one of the person's, a
+  sheet's title and range for one of this workbook, else the address), a press on which opens it; **Copy Link**;
+  and, for an Editor, on a cell's own link, **Edit Link** (the link editor) and **Remove Link**. It never takes the
+  focus from the grid; Escape hides it until the active cell moves. It replaces the touch screen's link chip.
+- **Opening** a web, email or LiveDoc address opens a new browser tab with no opener and no referrer; a sheet or
+  range of this workbook opens its sheet's tab with the range selected (the sheet's top left for a sheet); a link to a
+  sheet that is gone says "This sheet no longer exists".
+- **Remove Link** (the card's, and the cell menu's for a selection holding one) takes the link off every selected
+  cell, its text left as it is, one undo step.
+
+### Get Link to This Cell
+
+- The cell menu's **Get Link to This Cell** (Google's, under its more cell actions), for every role, copies the
+  spreadsheet's address with the sheet's tab and the selection, `<document address>#t=<tab id>&range=<A1 range>`,
+  and says "Link copied". Opening that address opens the tab with the range selected once the sheet is drawn, the
+  range scrolled into view; a range past the sheet's edge selects what of it is on the sheet (default, D641).
+
+### HYPERLINK
+
 - `HYPERLINK()` as today ([Formulas](formulas.md)).
+
+### Links, agents
+
+- `change_sheet`'s `format` op takes `link`: an address as above, `Sheet2!A1:B4` or `Sheet2` for this workbook's range or
+  sheet (written as `#gid=`), or `null` to take the link off. `read_sheet` and the cells view show a cell's link, a
+  sheet's as its title and range.
 
 ## Tick boxes, dropdowns and emoji
 
@@ -145,8 +205,8 @@ its title linked to the file, and LiveDoc keeps the link in both formats (XLSX's
 
 - **Editor** inserts and edits every object here, a cell's picture too; an image over cells is selected, moved, resized and given its menu
   by an Editor alone, everyone else's pointer passing through it to the cells.
-- **Participant** ticks tick boxes and picks from dropdowns; opens links.
-- **Viewer** opens links and sees the rest.
+- **Participant** ticks tick boxes and picks from dropdowns; opens and copies links, gets a link to a cell.
+- **Viewer** opens and copies links, gets a link to a cell, and sees the rest.
 
 ## Accessibility
 
@@ -167,6 +227,20 @@ resize, alt text, replacement or delete of an image over cells, and each alt tex
 
 ## Defaults
 
+- **D636** A cell's link is held with its format, as Google's text format link: kept as its value changes or is
+  cleared, moved, sorted, filled and pasted with the format, left by Paste Values Only, taken off by Clear Formatting
+  (default).
+- **D637** A link leads to an http, https or mailto address, a LiveDoc document, or `#gid=<sheet id>[&range=<A1>]` in
+  this workbook, up to 2,048 characters; a file's link of another scheme is kept, drawn plain, never opened (default).
+- **D638** A cell's own link wins over a `HYPERLINK` formula in the same cell (default).
+- **D639** Insert Link on a formula's cell or on more than one cell shows no Text and keeps each value; a changed
+  Text is written as typing it would be (default).
+- **D640** The link editor offers a typed range, then this spreadsheet's sheets, then the person's documents; no
+  range picker dialog (default).
+- **D641** Get Link to This Cell copies `<document address>#t=<tab id>&range=<A1 range>`; opening it selects the
+  range on that tab, cut to the sheet's edge (default).
+- **D642** A file's links: XLSX `hyperlinks`, one per linked cell, ODF the cell's one paragraph wholly a `text:a`;
+  within the workbook by the sheet's name (standard-mapping.md "Links in the file") (default).
 - **D623** An image over cells is one of its sheet's objects, placed at the active cell at its natural size scaled to
   fit 600 by 400 px, moved and resized as a chart is, its bytes in the uploader's gallery (default).
 - **D627** An agent's image lands at the cell it names, offset 0, sized as given or fitted as Insert fits it; its

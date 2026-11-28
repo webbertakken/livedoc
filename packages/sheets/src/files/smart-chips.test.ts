@@ -62,8 +62,8 @@ describe('a smart chip in an arriving file', () => {
   });
 });
 
-describe('marked cell text in ODF (standard-mapping.md "Unknown content", D376)', () => {
-  it('writes plain paragraphs once the cell is edited, the link going with its old text', async () => {
+describe('a chip’s link once its cell is edited (inserted-objects.md "A cell\'s link", D636)', () => {
+  it('stays on the cell: a text wholly one link is the cell’s link, kept as its value changes', async () => {
     const bytes = new Uint8Array(readFileSync(join(CORPUS, 'smart-chips.ods')));
     const read = await readWorkbookFile(bytes, AGENT_LOCALE);
     if (!read.ok) throw new Error(read.rejection);
@@ -89,8 +89,7 @@ describe('marked cell text in ODF (standard-mapping.md "Unknown content", D376)'
       read.file.theme,
     );
     const out = await texts(writeWorkbook(sheets, record, 'Chips', read.format, made.kept).data);
-    expect(out).toContain('>Ada<');
-    expect(out).not.toContain(`mailto:${PERSON}`);
+    expect(out).toContain(`xlink:href="mailto:${PERSON}">Ada</text:a>`);
     // The file chip, unchanged, keeps its link.
     expect(out).toContain('docs.google.com');
   });

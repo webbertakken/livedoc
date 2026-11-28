@@ -19,7 +19,6 @@ import {
   DXFS,
   excelFileWithKept,
   GLOBAL_NAME,
-  LINKS,
   LOCAL_NAME,
   MARGINS,
   MC,
@@ -80,7 +79,6 @@ describe('XLSX kept content', () => {
         ...RULES.split('</conditionalFormatting>')
           .filter(Boolean)
           .map((rule) => `worksheet@0:${rule}</conditionalFormatting>`),
-        `worksheet@0:${LINKS}`,
         `stylesheet@:${DXFS}`,
         'stylesheet@:<tableStyles count="0"/>',
       ].sort(),
@@ -90,9 +88,16 @@ describe('XLSX kept content', () => {
       [0, { size: 140 }],
       [1, { size: 140 }],
     ]);
-    // The second sheet's link names rId3, which its part does not have: as damage would read, it is not kept (D108),
-    // nor are the controls naming a relationship not there, nor the defined name of the chart sheet, never read.
-    expect(read.losses).toContainEqual({ k: 'kept_unread', count: 3 });
+    // The controls naming a relationship not there are not kept (D108), nor the defined name of the chart sheet, never
+    // read. The sheets' links are read (standard-mapping.md "Links in the file"): the first's to its address, the
+    // second's naming rId3, which its part does not have, no link.
+    expect(read.losses).toContainEqual({ k: 'kept_unread', count: 2 });
+    expect(read.file.sheets[0]!.cells.find((c) => c.link)).toMatchObject({
+      r: 1,
+      c: 0,
+      link: { href: 'https://example.com/' },
+    });
+    expect(read.file.sheets[1]!.cells.some((c) => c.link)).toBe(false);
     expect(read.losses).toContainEqual({ k: 'entries_dropped', entries: ['xl/vbaProject.bin'] });
     const ignorable = kept!.items.find((i) => i.place === 'workbook-attribute')!;
     expect(ignorable.ns).toEqual({ mc: MC, xr: XR });
@@ -101,7 +106,6 @@ describe('XLSX kept content', () => {
         'package@ rId4 /docProps/custom.xml',
         'workbook@ rId9 /xl/pivotCache/pivotCacheDefinition1.xml',
         'sheet@0 rId1 /xl/drawings/drawing1.xml',
-        'sheet@0 rId3 https://example.com/ external',
         'sheet@1 rId1 /xl/drawings/drawing2.xml',
       ].sort(),
     );

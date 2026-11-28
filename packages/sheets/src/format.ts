@@ -1,5 +1,6 @@
 // Cell formats (docs/specs/029-sheets/sheet.md "Formatting"): validation and the per-key merge every write uses,
 // so two people setting different keys of one cell never overwrite each other.
+import { isCellLink } from './cell-link';
 import type { Border, BorderStyle, CellFormat, FontSize, NumberFormatKind } from './sheet';
 import { isThemeColourRef } from './themes/spreadsheet-theme';
 import { DECIMALS_MAX } from './limits';
@@ -96,6 +97,7 @@ export const FORMAT_KEYS = [
   'bb',
   'bl',
   'nc',
+  'ln',
 ] as const;
 export type FormatKey = (typeof FORMAT_KEYS)[number];
 
@@ -147,6 +149,9 @@ export function validFormatValue(key: string, v: unknown): boolean {
       return isRotation(v);
     case 'nc':
       return typeof v === 'string' && formatCodeReads(v);
+    // The cell's link (inserted-objects.md "A cell's link", D636).
+    case 'ln':
+      return isCellLink(v);
     default:
       if (FLAG_KEYS.has(key)) return v === true;
       if (BORDER_KEYS.has(key)) return isBorder(v);
