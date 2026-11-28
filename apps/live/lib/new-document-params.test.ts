@@ -6,6 +6,8 @@ import {
   wizardBypassKind,
   wizardBypassTabKind,
   wizardTextTemplate,
+  wizardGallery,
+  galleryChoiceHref,
   SEARCH_PRESET_MAX,
   wizardPresetMode,
   wizardPresetQuery,
@@ -128,5 +130,26 @@ describe('wizardTextTemplate (docs/specs/034-text-documents/starting-and-finding
   it('skips the wizard as a text document blank does', () => {
     expect(wizardBypassKind('?template=text-essay')).toBe('blank');
     expect(wizardBypassTabKind('?template=text-essay')).toBe('text-document');
+  });
+});
+
+describe('the text document gallery page (docs/specs/034-text-documents/starting-and-finding.md "Where the gallery shows")', () => {
+  it('reads ?gallery=text-document, and nothing else as a gallery', () => {
+    expect(wizardGallery('?gallery=text-document')).toBe('text-document');
+    expect(wizardGallery('?gallery=spreadsheet')).toBeNull();
+    expect(wizardGallery('')).toBeNull();
+  });
+
+  it('is not a bypass: the gallery page asks', () => {
+    expect(wizardBypassKind('?gallery=text-document')).toBeNull();
+  });
+
+  it('leads a choice to the address that makes it, keeping the place', () => {
+    expect(galleryChoiceHref('?gallery=text-document&folder=f1', 'text-letter')).toBe(
+      '/new?folder=f1&template=text-letter',
+    );
+    expect(galleryChoiceHref('?gallery=text-document&team=t1', 'blank')).toBe(
+      '/new?team=t1&kind=text-document',
+    );
   });
 });

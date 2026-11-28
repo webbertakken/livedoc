@@ -318,6 +318,16 @@ export const TEXT_DOCUMENT_DETAILS = chart(
   { types: ['TextDocumentDetails'], rising: 'neutral' },
 );
 
+// File > New in a text document (docs/specs/034-text-documents/starting-and-finding.md "Where the gallery shows"): a
+// blank document, or the template gallery's page, opened in a new browser tab.
+export const TEXT_DOCUMENT_FILE_NEW = chart(
+  'UI',
+  'Used',
+  'Text Document File New Used',
+  'Someone used File > New in a text document: Document for a blank one, or From template gallery for the gallery.',
+  { types: ['TextDocumentFileNew', 'TextDocumentFileNewFromGallery'], rising: 'good' },
+);
+
 // A copy made through a text document's Copy document dialog (docs/specs/034-text-documents/files-and-print.md
 // "Make a copy").
 export const TEXT_DOCUMENT_COPIED = chart(
@@ -469,6 +479,7 @@ export const DOCUMENT_ACTIONS: MetricStack = {
     TEXT_DOCUMENT_SECURITY_LIMITATIONS,
     TEXT_DOCUMENT_PRINTED,
     TEXT_DOCUMENT_DETAILS,
+    TEXT_DOCUMENT_FILE_NEW,
     TEXT_DOCUMENT_COPIED,
     TEXT_DOCUMENT_SPELLING_ACCEPTED,
     TEXT_DOCUMENT_DICTIONARY_ADDED,

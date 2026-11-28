@@ -1,7 +1,8 @@
 # Starting and finding
 
-**Status: being built.** New Document offers a text document; the Explorer finds one; the template gallery is
-being built.
+**Status: built.** New Document offers a text document, its template gallery shows in the Explorer, at
+`/new?gallery=text-document` and from File > New, and the Explorer finds one. Of the telemetry, a blank counts as
+`TextDocument` and a template as `TextDocumentTemplate`; the Import, Agent and Tab suffixes are specified.
 
 How a person starts a [text document](text-document.md) and finds it again.
 
@@ -52,7 +53,8 @@ retiring Pages moves what people use, it does not drop it. In this order, each w
   itself still makes a blank. A card makes its template through `/new?template=<id>` with the Explorer's place: the
   writing is stored before the editor opens it, so a template opens once made rather than at once (default).
 - **`/new?gallery=text-document`** is the gallery as a page: a Blank document card, then the sections, each card the
-  whole first page and its name. Choosing one makes it as the wizard makes any document.
+  whole first page and its name, under the heading "Template gallery". Choosing one makes it at its own address
+  (`?template=` or `?kind=`, the place kept), so Back from the new document returns to the gallery.
 - **`/new?template=<id>`** with a text document template's id makes one from it, as `?kind=text-document` makes a
   blank.
 - **File > New** in a text document: **Document** opens `/new?kind=text-document` and **From template gallery** opens

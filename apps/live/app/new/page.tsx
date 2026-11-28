@@ -19,6 +19,7 @@ import type { NewPdfSource } from '@/lib/new-document/start-new-pdf';
 import type { NewDocumentSettings } from './new-document-settings';
 import { DocumentLoading } from '@/components/chrome/DocumentLoading';
 import { OpeningScreen } from '@/components/chrome/OpeningScreen';
+import { TextTemplateGallery } from './TextTemplateGallery';
 import { RecentDocumentsCard } from './RecentDocumentsCard';
 import { EARLY_MODE_SCRIPT, EARLY_MODE_STYLE } from './early-mode-choice';
 import { AnimatedLinesBackdrop } from '@/components/canvas/AnimatedLinesBackdrop';
@@ -47,6 +48,8 @@ import {
   wizardBypassKind,
   wizardBypassTabKind,
   wizardTextTemplate,
+  wizardGallery,
+  galleryChoiceHref,
   wizardPresetMode,
   wizardPresetQuery,
   wizardStartsBlank,
@@ -90,6 +93,8 @@ const bypassKindFromUrl = () => wizardBypassKind(window.location.search);
 const presetModeFromUrl = () => wizardPresetMode(window.location.search);
 const presetQueryFromUrl = () => wizardPresetQuery(window.location.search);
 const noPreset = () => null;
+// The text document template gallery as a page (`?gallery=text-document`), read the same way.
+const galleryFromUrl = () => wizardGallery(window.location.search);
 const noBypass = () => null;
 
 // What makes the document (the template builders, about 280 KiB gzipped) stays out of this page's first load, so the
@@ -187,6 +192,9 @@ export default function NewDocumentPage() {
   // `data-wizard-preset` flag) until the render that shows the preset.
   const presetMode = useSyncExternalStore(subscribeNever, presetModeFromUrl, noPreset);
   const presetQuery = useSyncExternalStore(subscribeNever, presetQueryFromUrl, noPreset);
+  const gallery = useSyncExternalStore(subscribeNever, galleryFromUrl, noPreset);
+  // A gallery choice is made at its own address (`?template=` or `?kind=`), so Back returns to the gallery.
+  const [galleryLeaving, setGalleryLeaving] = useState(false);
   useLayoutEffect(() => {
     if (presetModeFromUrl() === presetMode && presetQueryFromUrl() === presetQuery) {
       document.documentElement.removeAttribute('data-wizard-preset');
@@ -543,7 +551,7 @@ export default function NewDocumentPage() {
       <script
         dangerouslySetInnerHTML={{
           __html: trustedHtml(
-            "try{var p=new URLSearchParams(location.search);if(p.has('blank')||p.has('template')||p.get('kind')==='text-document'||p.get('kind')==='spreadsheet'||p.get('kind')==='pdf-document')document.documentElement.setAttribute('data-just-draw','');if(p.has('mode')||p.has('q'))document.documentElement.setAttribute('data-wizard-preset','')}catch(e){}",
+            "try{var p=new URLSearchParams(location.search);if(p.has('blank')||p.has('template')||p.get('kind')==='text-document'||p.get('kind')==='spreadsheet'||p.get('kind')==='pdf-document')document.documentElement.setAttribute('data-just-draw','');if(p.has('mode')||p.has('q')||p.get('gallery')==='text-document')document.documentElement.setAttribute('data-wizard-preset','')}catch(e){}",
           ),
         }}
       />
@@ -560,7 +568,17 @@ export default function NewDocumentPage() {
             background, and a create waits for it only when it must (resolveSelf). */}
         {/* display:contents so the guard wrapper adds no box of its own;
             visibility inherits to the wizard card. */}
-        <div data-wizard-only className="contents">
+        {gallery ? (
+          <TextTemplateGallery
+            busy={galleryLeaving}
+            onChoose={(choice) => {
+              setGalleryLeaving(true);
+              debugLog(`[text-template] gallery choice=${choice}`);
+              window.location.assign(galleryChoiceHref(window.location.search, choice));
+            }}
+          />
+        ) : null}
+        <div data-wizard-only className={gallery ? 'hidden' : 'contents'}>
           <NewDocumentWizard
             busy={submitting || preparing}
             initialMode={presetMode}
@@ -585,7 +603,7 @@ export default function NewDocumentPage() {
             documents yet). */}
         <div
           data-wizard-only
-          className="pointer-events-none absolute inset-y-0 right-4 z-10 hidden items-center xl:flex 2xl:right-10"
+          className={`pointer-events-none absolute inset-y-0 right-4 z-10 hidden items-center 2xl:right-10 ${gallery ? '' : 'xl:flex'}`}
         >
           <RecentDocumentsCard ownerId={self.id === 'pending' ? null : self.id} />
         </div>

@@ -88,6 +88,7 @@ import { REVIEW_SUGGESTED_EDITS } from '@/components/text-document/useTextDocume
 import { COMPARE_DOCUMENTS } from '@/components/text-document/useTextDocumentCompare';
 import { WORD_COUNT_ITEM } from '@/components/text-document/useTextDocumentWordCount';
 import { DETAILS_ITEM } from '@/components/text-document/useTextDocumentDetails';
+import { TEXT_DOCUMENT_NEW_ACTIONS } from './text-document-new-actions';
 import { VERBALISE_ITEMS } from '@/components/text-document/useTextDocumentScreenReader';
 import {
   ACCESSIBILITY_ITEM,
@@ -267,6 +268,8 @@ describe('the text document menus', () => {
         NAME_CURRENT_VERSION,
         // File > Details (useTextDocumentDetails), bound by the surface.
         DETAILS_ITEM,
+        // File > New > Document and From template gallery (text-document-new-actions), bound by the surface.
+        ...Object.keys(TEXT_DOCUMENT_NEW_ACTIONS),
         // File > Security limitations (useTextDocumentReport), bound by the surface.
         SECURITY_LIMITATIONS_ITEM,
         // File > Download > PDF document (useTextDocumentPdf), bound by the surface.

@@ -52,6 +52,25 @@ export function wizardTextTemplate(search: string): TextDocumentTemplateId | nul
   return isTextDocumentTemplateId(id) ? id : null;
 }
 
+// The text document template gallery as a page (`/new?gallery=text-document`, docs/specs/034-text-documents/
+// starting-and-finding.md "Where the gallery shows"): not a bypass, the page asks which template. Any other value is
+// no gallery, so the wizard shows.
+export function wizardGallery(search: string): 'text-document' | null {
+  return new URLSearchParams(search).get('gallery') === 'text-document' ? 'text-document' : null;
+}
+
+// Where a gallery choice is made: /new asking for the template (or a blank text document), the place kept.
+export function galleryChoiceHref(
+  search: string,
+  choice: TextDocumentTemplateId | 'blank',
+): string {
+  const params = new URLSearchParams(search);
+  params.delete('gallery');
+  if (choice === 'blank') params.set('kind', 'text-document');
+  else params.set('template', choice);
+  return `/new?${params.toString()}`;
+}
+
 // The template step's presets (`?mode=`, `?q=`; docs/specs/007-editor/new-document-route.md): the
 // mode filter to open on, and words to open the search with. Not a bypass: the author still picks.
 // An unknown mode, or empty words, is ignored; a mode's old name (`?mode=illustrate`) reads as today's.
