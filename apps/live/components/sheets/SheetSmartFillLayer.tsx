@@ -40,7 +40,7 @@ export function SheetSmartFillLayer({
   return (
     <>
       {offer.cells
-        .filter(({ r }) => r >= w.r1 && r <= w.r2 && !g.hiddenRow(r))
+        .filter(({ r }) => w.rows.includes(r) && !g.hiddenRow(r))
         .map(({ r, text }) => {
           const box = cellBox(g, r, col, c.scroll, mergeAt(g, r, col));
           return (

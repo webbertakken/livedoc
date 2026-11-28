@@ -2,6 +2,7 @@
 // moved), cut cells moved (and every formula on the tab pointing at them following), and HTML or text from
 // elsewhere read as if typed. A paste past the grid grows it, up to its limits, and says when it was cut.
 import type { GridRange } from './address';
+import type { DrawnOrder } from './drawn-order';
 import type { Rand } from './ids';
 import { makeAxisIds } from './ids';
 import {
@@ -50,6 +51,11 @@ function withoutBorders(
 }
 
 export type PasteResult = { edits: Edit[]; range: GridRange; truncated: boolean };
+
+// The stored row a drawn one lands on: itself without an order, and past the rows drawn (rows a paste adds).
+function rowLander(drawn: DrawnOrder | null): (d: number) => number {
+  return drawn ? (d) => drawn.storedAt[d] ?? d : (d) => d;
+}
 
 // The rows and columns a paste (or a split) needs added at the end, and the target box cut to the limits.
 export function growGrid(
@@ -104,9 +110,13 @@ export function pasteClip(
   clip: SheetClip,
   mode: PasteMode,
   rand: Rand = Math.random,
+  // A view's drawn order (data-tools.md "The drawn order", D494): `sel`'s rows are drawn ones, each landing on the
+  // stored row drawn there; the result's range is then drawn too.
+  drawn: DrawnOrder | null = null,
 ): PasteResult | null {
   const sheet = wb.sheet(sheetId);
   if (!sheet) return null;
+  const at = rowLander(drawn);
   const turned = mode === 'transposed';
   const size = turned ? { rows: clip.cols, cols: clip.rows } : tiles(sel, clip.rows, clip.cols);
   const g = growGrid(wb, sheet, { r: sel.r1, c: sel.c1 }, size.rows, size.cols, rand);
@@ -119,7 +129,7 @@ export function pasteClip(
   const cells: CellChange[] = [];
   for (let i = 0; i < size.rows; i++)
     for (let j = 0; j < size.cols; j++) {
-      const r = sel.r1 + i;
+      const r = at(sel.r1 + i);
       const c = sel.c1 + j;
       const rowId = g.rowIds[r];
       const colId = g.colIds[c];
@@ -134,7 +144,7 @@ export function pasteClip(
         ch.i = read.kind === 'value' ? read.input : null;
       } else if (mode !== 'formats') {
         const input = src?.input;
-        const dr = r - (clip.from.r + si);
+        const dr = r - (clip.fromRows?.[si] ?? clip.from.r + si);
         const dc = c - (clip.from.c + sj);
         ch.i =
           input && 'f' in input
@@ -270,10 +280,11 @@ export function pasteExternal(
   sel: GridRange,
   pasted: readonly (readonly (PastedCell | string)[])[],
   mode: PasteMode,
-  opts: { merges?: boolean; rand?: Rand } = {},
+  opts: { merges?: boolean; rand?: Rand; drawn?: DrawnOrder | null } = {},
 ): PasteResult | null {
   const sheet = wb.sheet(sheetId);
   if (!sheet || pasted.length === 0) return null;
+  const at = rowLander(opts.drawn ?? null);
   const turned = mode === 'transposed';
   const rows = turned ? turnRows(pasted) : pasted;
   // A loop, not a spread: a pasted file can have more rows than a spread call takes.
@@ -294,7 +305,7 @@ export function pasteExternal(
   const cells: CellChange[] = [];
   for (let i = 0; i < size.rows; i++)
     for (let j = 0; j < size.cols; j++) {
-      const rowId = g.rowIds[sel.r1 + i];
+      const rowId = g.rowIds[at(sel.r1 + i)];
       const colId = g.colIds[sel.c1 + j];
       if (!rowId || !colId) continue;
       const raw = rows[i % rows.length]![j % width];
@@ -306,7 +317,7 @@ export function pasteExternal(
         // Google's formula, read where it lands; one that cannot be read pastes its value.
         const a1 =
           cell.formula && FORMULA_MODES.has(mode)
-            ? r1c1ToA1(cell.formula, { r: sel.r1 + i, c: sel.c1 + j })
+            ? r1c1ToA1(cell.formula, { r: at(sel.r1 + i), c: sel.c1 + j })
             : null;
         const asFormula = a1 ? readTypedInput(a1, wb.locale, toCtx, asText) : null;
         const read =

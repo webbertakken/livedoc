@@ -35,7 +35,8 @@ export function outlineMarks(
   const frozen = axis === 'r' ? g.frozenRows : g.frozenCols;
   const shift = axis === 'r' ? scroll.top : scroll.left;
   const hidden = axis === 'r' ? g.hiddenRow : g.hiddenCol;
-  const at = (i: number) => offs[i]! - (i < frozen ? 0 : shift);
+  // A row's place where it is drawn (data-tools.md "The drawn order"); the end line past the last its own number.
+  const at = (i: number) => offs[axis === 'r' ? g.drawnOf(i) : i]! - (i < frozen ? 0 : shift);
   const after = controlsAfter(layout, axis);
   const count = linesOf(layout, axis).length;
   const out: OutlineMark[] = [];

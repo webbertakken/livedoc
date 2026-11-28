@@ -8,6 +8,7 @@ import { useMemo } from 'react';
 import {
   SHEET_CLIP_TYPE,
   clipFromRange,
+  clipFromRows,
   clipToHtml,
   clipToTsv,
   pasteClip,
@@ -17,6 +18,7 @@ import {
   pasteExternal,
   readPastedHtml,
   parsePastedText,
+  type GridRange,
   type LayoutPasteMode,
   type PasteMode,
   type PasteResult,
@@ -26,6 +28,13 @@ import {
 import { debugLog } from '@/lib/debug-log';
 import { track } from '@/lib/telemetry';
 import { useSheetController, type SheetController } from './sheet-controller';
+import {
+  drawnRect,
+  rowsDrawn,
+  selectDrawn,
+  sideBySide,
+  storedRanges,
+} from './sheet-drawn-selection';
 
 let lastClip: SheetClip | null = null;
 
@@ -44,16 +53,21 @@ const NONE_COPIED: Record<LayoutPasteMode, string> = {
 
 export const COPY_CELLS_FIRST = 'Copy cells in this spreadsheet first';
 
+/** Said when a cut, or where it lands, is rows a view draws side by side that are apart in the sheet (D494). */
+export const CUT_IN_SORTED_VIEW = 'Cut rows side by side in the sheet, or close the filter view';
+
 export function lastSheetClip(): SheetClip | null {
   return lastClip;
 }
 
-function apply(c: SheetController, result: PasteResult | null, cut = false): void {
+// `drawn`: the result's range is in drawn rows, a paste landing down the rows a view draws (D494).
+function apply(c: SheetController, result: PasteResult | null, cut = false, drawn = false): void {
   if (!result) return;
   // One change, one undo step, however many sheets it reaches (a cut whose cells other sheets' formulas read).
   if (!c.writeAll(result.edits, 'Paste')) return;
   const r = result.range;
-  c.setSelection({ ranges: [r], active: { r: r.r1, c: r.c1 }, anchor: { r: r.r1, c: r.c1 } });
+  if (drawn) c.setSelection(selectDrawn(c.geometry, r));
+  else c.setSelection({ ranges: [r], active: { r: r.r1, c: r.c1 }, anchor: { r: r.r1, c: r.c1 } });
   if (result.truncated || cut)
     c.toast('A sheet holds up to 10,000 rows and 200 columns: the paste was cut there');
 }
@@ -65,9 +79,31 @@ export function useSheetClipboard() {
       const ranges = c.selectionNow().ranges;
       return ranges[ranges.length - 1]!;
     };
+    // Under a drawn order the rows on screen, in that order (D494); one range when they are side by side in the sheet.
+    const copied = (cut: boolean) => {
+      const g = c.geometry;
+      const rect = g.order ? drawnRect(g, c.selectionNow()) : null;
+      const rows = rect ? rowsDrawn(g, rect) : null;
+      if (!rect || !rows || sideBySide(rows)) {
+        const range = rect ? { ...rect, r1: rows![0]!, r2: rows![rows!.length - 1]! } : primary();
+        return { clip: clipFromRange(c.workbook, c.sheet.id, range, cut), range, runs: undefined };
+      }
+      if (cut) return null;
+      const runs = storedRanges(g, rect);
+      return {
+        clip: clipFromRows(c.workbook, c.sheet.id, rows, rect, false),
+        range: runs[0]!,
+        runs,
+      };
+    };
     const copy = (e: React.ClipboardEvent<HTMLElement> | null, cut: boolean) => {
-      const range = primary();
-      const clip = clipFromRange(c.workbook, c.sheet.id, range, cut);
+      const made = copied(cut);
+      if (!made) {
+        debugLog('[sheet] cut refused', { reason: 'rows apart in a sorted view' });
+        e?.preventDefault();
+        return c.toast(CUT_IN_SORTED_VIEW);
+      }
+      const { clip, range, runs } = made;
       if (!clip) return;
       lastClip = clip;
       if (e) {
@@ -80,13 +116,44 @@ export function useSheetClipboard() {
           // A browser that refuses a custom type still has the plain and HTML forms, and lastClip.
         }
       }
-      c.setMarquee({ range, cut });
+      c.setMarquee({ range, cut, ...(runs ? { runs } : {}) });
       const n = clip.rows * clip.cols;
       c.announce(`${cut ? 'Cut' : 'Copied'} ${n} cell${n === 1 ? '' : 's'}`);
     };
 
+    // Where a paste of `rows` lands: under a drawn order, down the rows drawn from the selection's top (D494), as
+    // `drawn` (in drawn rows) when they are apart in the sheet, else as the stored range they are; the selection's
+    // range without an order.
+    const target = (rows: number): { drawn: GridRange | null; at: GridRange } => {
+      const g = c.geometry;
+      if (!g.order) return { drawn: null, at: primary() };
+      const rect = drawnRect(g, c.selectionNow());
+      const reach = Math.max(rows, rect.r2 - rect.r1 + 1);
+      const landing = rowsDrawn(g, {
+        ...rect,
+        r2: Math.min(rect.r1 + reach, g.order.storedAt.length) - 1,
+      });
+      if (!sideBySide(landing)) return { drawn: rect, at: rect };
+      const r2 = landing[0]! + (rect.r2 - rect.r1);
+      return { drawn: null, at: { ...rect, r1: landing[0]!, r2 } };
+    };
     const pasteOwn = (clip: SheetClip, mode: PasteMode) => {
-      const at = primary();
+      const { drawn, at } = target(clip.rows);
+      // Rows apart in the sheet, copied or landing: each row on its own, a formula shifted from its own row, no rules
+      // (D494); a cut there is refused.
+      if (drawn || clip.fromRows) {
+        if (clip.cut) {
+          debugLog('[sheet] cut refused', { reason: 'lands apart in a sorted view' });
+          return c.toast(CUT_IN_SORTED_VIEW);
+        }
+        const order = drawn ? c.geometry.order : null;
+        return apply(
+          c,
+          pasteClip(c.workbook, c.sheet.id, at, clip, mode, Math.random, order),
+          false,
+          !!drawn,
+        );
+      }
       // An Editor's plain paste carries the copied cells' rules (D155); a Participant's lands as values.
       if (mode === 'all' && c.canShape) {
         const pasted = pasteWithRules(c.workbook, c.sheet.id, at, clip);
@@ -126,18 +193,28 @@ export function useSheetClipboard() {
       if (!clip && lastClip && text === clipToTsv(lastClip.values)) clip = lastClip;
       if (clip && clip.v === 1) return pasteOwn(clip, mode);
       const fromHtml = html ? readPastedHtml(html) : null;
+      const rows = fromHtml ?? (text ? parsePastedText(text).rows : []);
+      // Down the rows a view draws, when they are apart in the sheet (D494); no merges there.
+      const { drawn, at } = target(rows.length);
+      const order = drawn ? c.geometry.order : null;
       if (fromHtml)
         return apply(
           c,
           // Google's and Excel's spanning cells merge for an Editor (D154).
-          pasteExternal(c.workbook, c.sheet.id, primary(), fromHtml, mode, { merges: c.canShape }),
+          pasteExternal(c.workbook, c.sheet.id, at, fromHtml, mode, {
+            merges: c.canShape && !drawn,
+            drawn: order,
+          }),
+          false,
+          !!drawn,
         );
       if (!text) return;
       const parsed = parsePastedText(text);
       apply(
         c,
-        pasteExternal(c.workbook, c.sheet.id, primary(), parsed.rows, mode),
+        pasteExternal(c.workbook, c.sheet.id, at, parsed.rows, mode, { drawn: order }),
         parsed.truncated,
+        !!drawn,
       );
     };
 

@@ -31,6 +31,7 @@ import { fontPx } from './SheetCells';
 import { ruleHitAt } from './rules/sheet-rule-draw';
 import { FILL_HANDLE_PX, fillHandleAt } from './SheetSelectionLayer';
 import { borderGrabAt, fillTargetFor } from './sheet-drag-targets';
+import { drawnRect, selectDrawn, storedRanges } from './sheet-drawn-selection';
 import type { SheetActions } from './useSheetActions';
 import { useSheetPan } from './useSheetPan';
 import { openHyperlink } from '@/lib/open-hyperlink';
@@ -62,7 +63,8 @@ export function useSheetPointer(
   const [cursor, setCursor] = useState<string>('cell');
   // A preview of a drag in progress: the fill's target, a moved block's landing, a resize's line, a move's drop line.
   const [preview, setPreview] = useState<
-    | { kind: 'fill' | 'block'; range: GridRange }
+    // `runs`: a fill's target in stored ranges, when a drawn order cuts it (data-tools.md "The drawn order").
+    | { kind: 'fill' | 'block'; range: GridRange; runs?: GridRange[] }
     | { kind: 'resize'; axis: 'r' | 'c'; at: number }
     | { kind: 'move'; axis: 'r' | 'c'; at: number }
     | null
@@ -174,8 +176,11 @@ export function useSheetPointer(
         else pointRef(d.from, at);
       } else cc.setSelection(extendTo(cc.selectionNow(), at, cc.grid));
     } else if (d.kind === 'fill') {
-      d.target = fillTargetFor(d.source, cellAt(x, y));
-      setPreview({ kind: 'fill', range: d.target });
+      // In drawn rows: a fill runs down the rows drawn (D494).
+      const at = cellAt(x, y);
+      d.target = fillTargetFor(d.source, { r: cc.geometry.drawnOf(at.r), c: at.c });
+      const runs = storedRanges(cc.geometry, d.target);
+      setPreview({ kind: 'fill', range: runs[0]!, runs });
     } else if (d.kind === 'cellMove') {
       if (!d.armed && Math.hypot(x - d.x0, y - d.y0) < DRAG_START_PX) return;
       d.armed = true;
@@ -207,6 +212,8 @@ export function useSheetPointer(
       if (!d.armed && Math.hypot(x - d.x0, y - d.y0) < DRAG_START_PX) return;
       d.armed = true;
       const g = cc.geometry;
+      // No drop line where rows may not move: a sorted view's (D495, said on release).
+      if (d.axis === 'r' && g.order) return;
       const h = hitAt(
         d.axis === 'c' ? x : latest.current.geometry.headW - 1,
         d.axis === 'r' ? y : latest.current.geometry.headH - 1,
@@ -303,7 +310,7 @@ export function useSheetPointer(
     const { x, y } = local(e.clientX, e.clientY);
     if (onHandle(x, y)) {
       e.preventDefault();
-      const source = cc.selectionNow().ranges[cc.selectionNow().ranges.length - 1]!;
+      const source = drawnRect(cc.geometry, cc.selectionNow());
       begin({ kind: 'fill', source, target: source, copy: e.ctrlKey || e.altKey }, e);
       return;
     }
@@ -471,11 +478,16 @@ export function useSheetPointer(
     const { x, y } = local(e.clientX, e.clientY);
     if (onHandle(x, y)) {
       // Fill down as far as the column beside the selection is filled.
-      const s = cc.selectionNow().ranges[cc.selectionNow().ranges.length - 1]!;
+      // In drawn rows: down the rows drawn beside it.
+      const g = cc.geometry;
+      const s = drawnRect(g, cc.selectionNow());
       const beside = s.c1 > 0 ? s.c1 - 1 : s.c2 + 1;
       let r = s.r2;
-      while (r + 1 < cc.grid.rows && cc.grid.filled(r + 1, beside)) r++;
-      if (r > s.r2) actions.fill(s, { ...s, r2: r }, false);
+      while (r + 1 < cc.grid.rows && cc.grid.filled(g.storedAt(r + 1), beside)) r++;
+      if (r > s.r2) {
+        actions.fill(s, { ...s, r2: r }, false);
+        cc.setSelection(selectDrawn(g, { ...s, r2: r }, cc.selectionNow().active));
+      }
       return;
     }
     const h = hitAt(x, y);

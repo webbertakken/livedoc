@@ -29,6 +29,9 @@ export type SheetClip = {
   // The merges wholly inside the copy, as offsets in it, and each formula's text by `i,j` (the HTML form's).
   merges?: { i1: number; j1: number; i2: number; j2: number }[];
   formulas?: Record<string, string>;
+  // The row each copied row came from, when they were not side by side (copied in a drawn order, D494): a formula
+  // pasted shifts from its own row.
+  fromRows?: number[];
 };
 
 export function clipFromRange(
@@ -39,11 +42,47 @@ export function clipFromRange(
 ): SheetClip | null {
   const sheet = wb.sheet(sheetId);
   if (!sheet) return null;
+  const rows = Array.from({ length: range.r2 - range.r1 + 1 }, (_, i) => range.r1 + i);
+  return {
+    ...readRows(wb, sheetId, rows, range, cut),
+    ...mergesIn(sheet.layout, range),
+    ...clipLayoutOf(sheet.layout, range),
+  };
+}
+
+/**
+ * The rows given, in that order, columns c1..c2, as one block (data-tools.md "The drawn order", D494): rows a view
+ * draws side by side though they are not in the sheet. Each keeps where it came from, for a formula's shift; no merge
+ * or rule comes with them, as neither spans rows apart.
+ */
+export function clipFromRows(
+  wb: Workbook,
+  sheetId: string,
+  rows: readonly number[],
+  cols: { c1: number; c2: number },
+  cut = false,
+): SheetClip | null {
+  const sheet = wb.sheet(sheetId);
+  if (!sheet || rows.length === 0) return null;
+  const first = { r1: rows[0]!, r2: rows[0]!, ...cols };
+  const { widths } = clipLayoutOf(sheet.layout, first);
+  return { ...readRows(wb, sheetId, rows, first, cut), widths, fromRows: [...rows] };
+}
+
+// The cells, shown values and formulas of the rows given, columns c1..c2.
+function readRows(
+  wb: Workbook,
+  sheetId: string,
+  rows: readonly number[],
+  range: GridRange,
+  cut: boolean,
+): SheetClip {
+  const sheet = wb.sheet(sheetId)!;
   const cells: (Cell | null)[][] = [];
   const values: string[][] = [];
   const formulas: Record<string, string> = {};
   const ctx = wb.ctxFor(sheetId);
-  for (let r = range.r1; r <= range.r2; r++) {
+  rows.forEach((r, i) => {
     const rowCells: (Cell | null)[] = [];
     const rowValues: string[] = [];
     for (let c = range.c1; c <= range.c2; c++) {
@@ -52,7 +91,7 @@ export function clipFromRange(
       const cell = rowId && colId ? (sheet.cells.get(cellKey(rowId, colId)) ?? null) : null;
       rowCells.push(cell);
       if (cell?.input && 'f' in cell.input)
-        formulas[`${r - range.r1},${c - range.c1}`] = renderFormula(cell.input.f, ctx);
+        formulas[`${i},${c - range.c1}`] = renderFormula(cell.input.f, ctx);
       rowValues.push(
         displayValue(
           wb.value(sheetId, r, c),
@@ -63,18 +102,16 @@ export function clipFromRange(
     }
     cells.push(rowCells);
     values.push(rowValues);
-  }
+  });
   return {
     v: 1,
-    rows: range.r2 - range.r1 + 1,
+    rows: rows.length,
     cols: range.c2 - range.c1 + 1,
     cells,
     values,
     from: { sheetId, r: range.r1, c: range.c1, range: formatRange(range) },
     ...(cut ? { cut: true as const } : {}),
     ...(Object.keys(formulas).length ? { formulas } : {}),
-    ...mergesIn(sheet.layout, range),
-    ...clipLayoutOf(sheet.layout, range),
   };
 }
 

@@ -17,7 +17,8 @@ import {
 } from '@livedoc/sheets';
 import type { Geometry } from '@/components/sheets/sheet-geometry';
 
-type Lines = Pick<Geometry, 'rows' | 'cols'>;
+// A drawn order's mapping when rows are drawn in one (data-tools.md "The drawn order"): an object sits on its row.
+type Lines = Pick<Geometry, 'rows' | 'cols'> & Partial<Pick<Geometry, 'drawnOf' | 'storedAt'>>;
 
 // A new chart's size (the agent's SHEET_CHART_SIZE, Google's default proportion).
 export const NEW_SHEET_CHART_SIZE = { width: 420, height: 280 } as const;
@@ -27,7 +28,7 @@ export function anchorPx(at: CellAnchor, layout: SheetLayout, g: Lines): SheetAn
   const ix = layoutIndex(layout);
   const r = ix.rowPos.get(at.r) ?? 0;
   const c = ix.colPos.get(at.c) ?? 0;
-  return { x: (g.cols[c] ?? 0) + at.dx, y: (g.rows[r] ?? 0) + at.dy };
+  return { x: (g.cols[c] ?? 0) + at.dx, y: (g.rows[g.drawnOf?.(r) ?? r] ?? 0) + at.dy };
 }
 
 // The line a px falls in: the last one drawn at a height whose top is at or before it.
@@ -46,14 +47,14 @@ function lineAt(tops: Float64Array, n: number, px: number): number {
 
 // The anchor for a px from A1's corner: the cell it falls in, and the px into it (within the anchor's bounds).
 export function anchorAt(px: SheetAnchor, layout: SheetLayout, g: Lines): CellAnchor {
-  const r = lineAt(g.rows, layout.rows.length, Math.max(0, px.y));
+  const d = lineAt(g.rows, layout.rows.length, Math.max(0, px.y));
   const c = lineAt(g.cols, layout.cols.length, Math.max(0, px.x));
   const into = (v: number) => Math.round(Math.min(OBJECT_OFFSET_MAX, Math.max(0, v)));
   return {
-    r: layout.rows[r]!,
+    r: layout.rows[g.storedAt?.(d) ?? d]!,
     c: layout.cols[c]!,
     dx: into(px.x - (g.cols[c] ?? 0)),
-    dy: into(px.y - (g.rows[r] ?? 0)),
+    dy: into(px.y - (g.rows[d] ?? 0)),
   };
 }
 

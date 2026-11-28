@@ -9,6 +9,8 @@ import { pivotGroupRenameAt } from '@/lib/spreadsheet/pivot-group-rename';
 import { debugLog } from '@/lib/debug-log';
 import { useMemo } from 'react';
 import { acceptSmartFill, offerSmartFill } from './sheet-smart-fill';
+import { rowEnd, rowTop } from './sheet-geometry';
+import { drawnRect } from './sheet-drawn-selection';
 import type { ChartType } from '@livedoc/document';
 import {
   PARSE_FAILURE_COPY,
@@ -283,12 +285,16 @@ export function useSheetActions() {
       },
       activeFormat: () => activeFormat(c),
       // ---- Fill ----
+      // A fill's source and target in drawn rows: the rows a view's order draws (D494); stored rows without one.
       fill: (source: GridRange, target: GridRange, copy: boolean) => {
-        const w = fillRange(c.workbook, c.sheet.id, source, target, copy);
+        const order = c.geometry.order;
+        const w = fillRange(c.workbook, c.sheet.id, source, target, copy, false, order);
         if (w) c.write(w, 'Fill');
       },
       fillEdge: (dir: 'down' | 'right') => {
-        const w = fillFromEdge(c.workbook, c.sheet.id, primary(c), dir);
+        const g = c.geometry;
+        const range = g.order ? drawnRect(g, c.selectionNow()) : primary(c);
+        const w = fillFromEdge(c.workbook, c.sheet.id, range, dir, g.order);
         if (w) c.write(w, 'Fill');
       },
       // ---- Rows and columns ----
@@ -398,7 +404,7 @@ export function useSheetActions() {
       // A line's size as drawn: a row's is its fit when it is automatic (sheet.md "Row height").
       sizeOf: (axis: 'r' | 'c', p: number) => {
         return axis === 'r'
-          ? c.geometry.rows[p + 1]! - c.geometry.rows[p]!
+          ? rowEnd(c.geometry, p) - rowTop(c.geometry, p)
           : colWidth(c.sheet.layout, c.sheet.layout.cols[p]!);
       },
       // ---- Sort, filter, freeze ----

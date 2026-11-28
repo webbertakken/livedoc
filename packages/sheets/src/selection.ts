@@ -1,8 +1,12 @@
 // The selection (docs/specs/029-sheets/sheet.md "Selection", "Keyboard"): ranges of positions with an active cell
-// and an anchor (where Shift extends from). Moves skip hidden rows and columns and treat a merge as one cell.
+// and an anchor (where Shift extends from). Moves skip hidden rows and columns and treat a merge as one cell. Under a
+// drawn order (data-tools.md "The drawn order", D493) moves go to the row drawn next, and a range picked holds the rows
+// drawn between its corners, as runs side by side both in the sheet and on screen.
 import { normaliseRange, rangeContains, type CellPos, type GridRange } from './address';
+import { DrawnOrder } from './drawn-order';
 
-export type Selection = { ranges: GridRange[]; active: CellPos; anchor: CellPos };
+// `tail`: how many of the last ranges are the one range being picked, cut into runs by a drawn order (1 when absent).
+export type Selection = { ranges: GridRange[]; active: CellPos; anchor: CellPos; tail?: number };
 
 export type Grid = {
   rows: number;
@@ -12,6 +16,8 @@ export type Grid = {
   filled(r: number, c: number): boolean;
   // The merge covering a cell, as positions, if any.
   mergeAt(r: number, c: number): GridRange | null;
+  // The order rows are drawn in, when a view draws its own; positions stay the sheet's.
+  order?: DrawnOrder | null;
 };
 
 export type Dir = 'up' | 'down' | 'left' | 'right';
@@ -71,10 +77,12 @@ export function stepFrom(pos: CellPos, dir: Dir, grid: Grid): CellPos {
     if (dc > 0) c = m.c2;
     if (dc < 0) c = m.c1;
   }
+  const order = grid.order;
   for (;;) {
-    const nr = r + dr;
+    const nr = dr !== 0 && order ? DrawnOrder.step(order, r, dr) : r + dr;
     const nc = c + dc;
-    if (nr < 0 || nc < 0 || nr >= grid.rows || nc >= grid.cols) return pos;
+    if (nr < 0 || nc < 0 || nr >= grid.rows || nc >= grid.cols || (dr !== 0 && nr === r))
+      return pos;
     r = nr;
     c = nc;
     if ((dr !== 0 && grid.hiddenRow(r)) || (dc !== 0 && grid.hiddenCol(c))) continue;
@@ -109,9 +117,24 @@ export function moveSelection(sel: Selection, dir: Dir, grid: Grid, jump = false
   return single(to);
 }
 
-// The corner of the last range across from its anchor: where Shift and a move go on from.
-export function farCorner(sel: Selection): CellPos {
+// The ranges of the one being picked: the last, or its runs under a drawn order.
+function tailOf(sel: Selection): GridRange[] {
+  return sel.ranges.slice(sel.ranges.length - (sel.tail ?? 1));
+}
+
+// The corner of the last range across from its anchor: where Shift and a move go on from. Under a drawn order, the
+// drawn row farthest from the anchor's among the runs being picked.
+export function farCorner(sel: Selection, grid?: Grid): CellPos {
+  const order = grid?.order;
   const range = sel.ranges[sel.ranges.length - 1]!;
+  if (order) {
+    const tail = tailOf(sel);
+    const drawn = tail.flatMap((t) => [order.drawnOf[t.r1]!, order.drawnOf[t.r2]!]);
+    const lo = Math.min(...drawn);
+    const hi = Math.max(...drawn);
+    const far = order.drawnOf[sel.anchor.r] === lo ? hi : lo;
+    return { r: order.storedAt[far]!, c: sel.anchor.c === range.c1 ? range.c2 : range.c1 };
+  }
   return {
     r: sel.anchor.r === range.r1 ? range.r2 : range.r1,
     c: sel.anchor.c === range.c1 ? range.c2 : range.c1,
@@ -120,7 +143,7 @@ export function farCorner(sel: Selection): CellPos {
 
 // Shift + arrow: the far corner from the anchor moves; the active cell stays.
 export function extendSelection(sel: Selection, dir: Dir, grid: Grid, jump = false): Selection {
-  const far = farCorner(sel);
+  const far = farCorner(sel, grid);
   const to = jump ? jumpFrom(far, dir, grid) : stepFrom(far, dir, grid);
   return extendTo(sel, to, grid);
 }
@@ -131,8 +154,24 @@ export function goTo(sel: Selection, to: CellPos, grid: Grid, extend: boolean): 
 }
 
 export function extendTo(sel: Selection, to: CellPos, grid: Grid): Selection {
-  const range = expandForMerges(normaliseRange(sel.anchor, clamp(to, grid)), grid);
-  return { ...sel, ranges: [...sel.ranges.slice(0, -1), range] };
+  const end = clamp(to, grid);
+  const base = sel.ranges.slice(0, sel.ranges.length - (sel.tail ?? 1));
+  const order = grid.order;
+  if (order) {
+    const cols = { c1: Math.min(sel.anchor.c, end.c), c2: Math.max(sel.anchor.c, end.c) };
+    const runs = DrawnOrder.runs(order, order.drawnOf[sel.anchor.r]!, order.drawnOf[end.r]!).map(
+      (run) => expandForMerges({ ...run, ...cols }, grid),
+    );
+    const { tail: _tail, ...rest } = sel;
+    return {
+      ...rest,
+      ranges: [...base, ...runs],
+      ...(runs.length > 1 ? { tail: runs.length } : {}),
+    };
+  }
+  const range = expandForMerges(normaliseRange(sel.anchor, end), grid);
+  const { tail: _tail, ...rest } = sel;
+  return { ...rest, ranges: [...base, range] };
 }
 
 // Ctrl/⌘ and a header click or drag: the rows or columns picked join the ranges held before.
@@ -147,7 +186,19 @@ export function addRange(sel: Selection, pos: CellPos, grid: Grid): Selection {
   return { ranges: [...sel.ranges, range], active: pos, anchor: pos };
 }
 
+// Rows r1 to r2 whole; under a drawn order the rows drawn between them, as runs (D493), the active cell the top one drawn.
 export function selectRows(r1: number, r2: number, grid: Grid): Selection {
+  const order = grid.order;
+  if (order) {
+    const runs = DrawnOrder.runs(order, order.drawnOf[r1]!, order.drawnOf[r2]!);
+    const top = order.storedAt[Math.min(order.drawnOf[r1]!, order.drawnOf[r2]!)]!;
+    return {
+      ranges: runs.map((run) => ({ ...run, c1: 0, c2: grid.cols - 1 })),
+      active: { r: top, c: 0 },
+      anchor: { r: r1, c: 0 },
+      ...(runs.length > 1 ? { tail: runs.length } : {}),
+    };
+  }
   const range = { r1: Math.min(r1, r2), c1: 0, r2: Math.max(r1, r2), c2: grid.cols - 1 };
   return { ranges: [range], active: { r: range.r1, c: 0 }, anchor: { r: r1, c: 0 } };
 }

@@ -1,6 +1,7 @@
 // What the toolbar, the menus and the keys do to cells (docs/specs/029-sheets/sheet.md "Editing", "Formatting",
 // "Fill"), as pure builders from the selection to a write. The editor sends what these return; nothing here sends.
 import type { CellPos, GridRange } from './address';
+import type { DrawnOrder } from './drawn-order';
 import { fillSeries } from './fill';
 import type { FormatPatch } from './format';
 import { layoutIndex, posRangeOf } from './layout';
@@ -303,9 +304,13 @@ export function fillRange(
   target: GridRange,
   copy = false,
   exact = false,
+  // A view's drawn order (data-tools.md "The drawn order"): `source` and `target` are in drawn rows, the series
+  // counting on in the order drawn, each cell landing on the stored row drawn there.
+  drawn: DrawnOrder | null = null,
 ): SheetWrite | null {
   const sheet = wb.sheet(sheetId);
   if (!sheet) return null;
+  const stored = (p: CellPos): CellPos => (drawn ? { r: drawn.storedAt[p.r] ?? p.r, c: p.c } : p);
   const inside =
     target.r1 >= source.r1 &&
     target.r2 <= source.r2 &&
@@ -315,7 +320,16 @@ export function fillRange(
     const cleared: GridRange[] = [];
     if (target.r2 < source.r2) cleared.push({ ...source, r1: target.r2 + 1 });
     if (target.c2 < source.c2) cleared.push({ ...source, c1: target.c2 + 1 });
-    return clearRanges(sheet, cleared, 'all');
+    // Drawn rows cleared are the stored rows drawn there, one range each.
+    const rows = drawn
+      ? cleared.flatMap((x) =>
+          Array.from({ length: x.r2 - x.r1 + 1 }, (_, i) => {
+            const r = stored({ r: x.r1 + i, c: 0 }).r;
+            return { ...x, r1: r, r2: r };
+          }),
+        )
+      : cleared;
+    return clearRanges(sheet, rows, 'all');
   }
   const ctx = wb.ctxFor(sheetId);
   const down = target.r2 > source.r2;
@@ -345,7 +359,10 @@ export function fillRange(
     const order = Array.from({ length: len }, (_, k) =>
       up || (!vertical && !right) ? len - 1 - k : k,
     );
-    const srcCells = order.map((k) => cellAt(srcPos(k).r, srcPos(k).c));
+    const srcCells = order.map((k) => {
+      const at = stored(srcPos(k));
+      return cellAt(at.r, at.c);
+    });
     const literal = srcCells.map((x) => (x?.input && !('f' in x.input) ? x.input : undefined));
     const allLiteral = srcCells.every((x) => !x?.input || !('f' in x.input));
     const dateLike = srcCells.every((x) => x?.format?.nf === 'date');
@@ -354,13 +371,15 @@ export function fillRange(
       allLiteral && !exact ? fillSeries(literal, count, copy, dateLike, backward) : null;
     for (let k = 0; k < count; k++) {
       const step = k + 1;
-      const pos: CellPos = vertical
-        ? { r: down ? source.r2 + step : source.r1 - step, c: source.c1 + line }
-        : { r: source.r1 + line, c: right ? source.c2 + step : source.c1 - step };
+      const pos = stored(
+        vertical
+          ? { r: down ? source.r2 + step : source.r1 - step, c: source.c1 + line }
+          : { r: source.r1 + line, c: right ? source.c2 + step : source.c1 - step },
+      );
       const ids = idsAt(sheet, pos.r, pos.c);
       if (!ids) continue;
       const fromK = order[k % len]!;
-      const from = srcPos(fromK);
+      const from = stored(srcPos(fromK));
       const src = cellAt(from.r, from.c);
       let i: CellChange['i'] = series ? (series[k] ?? null) : (src?.input ?? null);
       if (src?.input && 'f' in src.input)
@@ -377,13 +396,15 @@ export function fillFromEdge(
   sheetId: string,
   range: GridRange,
   dir: 'down' | 'right',
+  // A view's drawn order: `range` in drawn rows, filled along the rows drawn.
+  drawn: DrawnOrder | null = null,
 ): SheetWrite | null {
   if (dir === 'down') {
     const source = { ...range, r2: range.r1 };
-    return range.r2 > range.r1 ? fillRange(wb, sheetId, source, range, false, true) : null;
+    return range.r2 > range.r1 ? fillRange(wb, sheetId, source, range, false, true, drawn) : null;
   }
   const source = { ...range, c2: range.c1 };
-  return range.c2 > range.c1 ? fillRange(wb, sheetId, source, range, false, true) : null;
+  return range.c2 > range.c1 ? fillRange(wb, sheetId, source, range, false, true, drawn) : null;
 }
 
 // One write split into parts the api takes (SHEET_WRITE_CELLS_MAX cells, SHEET_WRITE_BYTES_MAX bytes each); the

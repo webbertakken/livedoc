@@ -16,7 +16,12 @@ import {
   scrollToReveal,
   totalSize,
   visibleWindow,
+  rowTop,
+  rowEnd,
+  drawnPieces,
+  inWindow,
 } from './sheet-geometry';
+import { DrawnOrder } from '@livedoc/sheets';
 
 // A layout of `rows` x `cols` with ids r0.., c0.. (rows 24px and columns 100px unless sized).
 function grid(rows: number, cols: number, extra: Partial<SheetLayout> = {}): SheetLayout {
@@ -98,8 +103,7 @@ describe('visibleWindow', () => {
   it('is the scrolled rows and columns in view, plus overscan', () => {
     const g = geometryOf(grid(100, 30));
     expect(visibleWindow(g, { top: 240, left: 0 }, { width: 300, height: 240 })).toEqual({
-      r1: 6,
-      r2: 24,
+      rows: Array.from({ length: 19 }, (_, i) => i + 6),
       c1: 0,
       c2: 7,
     });
@@ -108,8 +112,8 @@ describe('visibleWindow', () => {
   it('starts below the frozen panes', () => {
     const g = geometryOf(grid(100, 30, { frozenRows: 2, frozenCols: 1 }));
     const w = visibleWindow(g, at0, { width: 300, height: 240 });
-    expect(w.r1).toBe(2);
-    expect(w.r2).toBe(14);
+    expect(w.rows[0]).toBe(2);
+    expect(w.rows.at(-1)).toBe(14);
     expect(w.c1).toBe(1);
     expect(w.c2).toBe(7);
   });
@@ -117,14 +121,13 @@ describe('visibleWindow', () => {
   it('is clamped to the grid, and empty when every line is frozen', () => {
     const g = geometryOf(grid(10, 2));
     expect(visibleWindow(g, at0, { width: 5000, height: 5000 })).toEqual({
-      r1: 0,
-      r2: 9,
+      rows: Array.from({ length: 10 }, (_, i) => i + 0),
       c1: 0,
       c2: 1,
     });
     const frozen = geometryOf(grid(3, 2, { frozenRows: 3, frozenCols: 2 }));
     const w = visibleWindow(frozen, at0, { width: 500, height: 500 });
-    expect(w.r2).toBeLessThan(w.r1);
+    expect(w.rows).toEqual([]);
     expect(w.c2).toBeLessThan(w.c1);
   });
 });
@@ -288,5 +291,53 @@ describe('the outline bands (D162, D165)', () => {
     expect(hitTest(g, 200, 5, at0)).toEqual({ kind: 'band', axis: 'c' });
     expect(hitTest(g, 5, 5, at0)).toEqual({ kind: 'corner' });
     expect(hitTest(g, 20, 100, at0)).toEqual({ kind: 'row', r: 2, edge: false });
+  });
+});
+
+// docs/specs/029-sheets/data-tools.md "The drawn order": a sorted view draws rows 1..3 as 3, 1, 2; positions stay the
+// sheet's, only their places change.
+describe('a drawn order', () => {
+  const order = DrawnOrder.ofSort(6, 1, [3, 1, 2]);
+  const layout = grid(6, 2, { rowSize: { r3: 48 } });
+  const g = geometryOf(layout, new Set(), undefined, order);
+
+  it('lays rows out in the order drawn', () => {
+    expect([0, 1, 2, 3].map((r) => rowTop(g, r))).toEqual([0, 72, 96, 24]);
+    expect(rowEnd(g, 3)).toBe(72);
+    expect(totalSize(g).height).toBe(24 * 5 + 48);
+  });
+
+  it('answers the row under a point by its own number', () => {
+    expect(hitTest(g, ROW_HEADER_PX + 10, COL_HEADER_PX + 30, at0)).toEqual({
+      kind: 'cell',
+      r: 3,
+      c: 0,
+    });
+    expect(hitTest(g, ROW_HEADER_PX + 10, COL_HEADER_PX + 80, at0)).toEqual({
+      kind: 'cell',
+      r: 1,
+      c: 0,
+    });
+    // The edge above row 1's number is the bottom of row 3, drawn before it.
+    expect(hitTest(g, 10, COL_HEADER_PX + 73, at0)).toEqual({ kind: 'row', r: 3, edge: true });
+  });
+
+  it('lists the rows in view in the order drawn', () => {
+    const w = visibleWindow(g, at0, { width: 300, height: 500 });
+    expect(w.rows).toEqual([0, 3, 1, 2, 4, 5]);
+    expect(inWindow(w, 3, 0)).toBe(true);
+  });
+
+  it('cuts a range into pieces drawn side by side, and boxes a cell where it is drawn', () => {
+    expect(drawnPieces(g, 0, 3)).toEqual([
+      { r1: 0, r2: 0 },
+      { r1: 1, r2: 2 },
+      { r1: 3, r2: 3 },
+    ]);
+    expect(cellBox(g, 1, 0, at0)).toEqual({ x: 0, y: 72, w: 100, h: 24 });
+  });
+
+  it('scrolls to where a row is drawn', () => {
+    expect(scrollToReveal(g, 2, 0, at0, { width: 300, height: 60 })).toEqual({ top: 60, left: 0 });
   });
 });

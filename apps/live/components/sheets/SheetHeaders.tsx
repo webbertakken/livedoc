@@ -6,7 +6,7 @@
 import { columnLetters, type Selection } from '@livedoc/sheets';
 import { Tooltip } from '@livedoc/ui';
 import type { PlanPalette } from '@/components/plan/plan-palette';
-import { type Geometry, type GridWindow } from './sheet-geometry';
+import { rowEnd, rowTop, type Geometry, type GridWindow } from './sheet-geometry';
 
 type Props = {
   geometry: Geometry;
@@ -98,7 +98,7 @@ function unhideMarkers({ geometry: g, scroll, palette, view, onUnhide }: Props):
   }
   // Only rows someone hid: a row the filter leaves out shows as a gap in the numbers, with nothing to click.
   for (const [a, b] of hiddenRuns(g.rows.length - 1, g.userHiddenRow)) {
-    const y = g.headH + (a < g.frozenRows ? g.rows[a]! : g.rows[a]! - scroll.top);
+    const y = g.headH + (a < g.frozenRows ? rowTop(g, a) : rowTop(g, a) - scroll.top);
     if (y < g.headH - 4 || y > view.height) continue;
     const label = `Show Row${a === b ? '' : 's'} ${a + 1}${a === b ? '' : ` to ${b + 1}`}`;
     markers.push(
@@ -166,11 +166,12 @@ export function SheetHeaders(props: Props) {
     );
   }
   const rows: React.ReactNode[] = [];
-  const rowIdx = [...Array.from({ length: g.frozenRows }, (_, i) => i), ...range(w.r1, w.r2)];
+  // In the order drawn, each by its own number (data-tools.md "The drawn order", D492).
+  const rowIdx = [...Array.from({ length: g.frozenRows }, (_, i) => i), ...w.rows];
   for (const r of rowIdx) {
     if (g.hiddenRow(r)) continue;
-    const y = g.headH + (r < g.frozenRows ? g.rows[r]! : g.rows[r]! - scroll.top);
-    const height = g.rows[r + 1]! - g.rows[r]!;
+    const y = g.headH + (r < g.frozenRows ? rowTop(g, r) : rowTop(g, r) - scroll.top);
+    const height = rowEnd(g, r) - rowTop(g, r);
     if (r >= g.frozenRows && y + height < g.headH + g.frozenHeight) continue;
     const rowState = selectedOn(selection, 'r', r, lines);
     rows.push(

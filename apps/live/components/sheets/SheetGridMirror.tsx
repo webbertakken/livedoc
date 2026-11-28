@@ -19,8 +19,8 @@ type Props = {
   version: number;
   geometry: Geometry;
   locale: string;
-  r1: number;
-  r2: number;
+  // The scrolling rows in view, in the order drawn.
+  rows: readonly number[];
   c1: number;
   c2: number;
   activeR: number;
@@ -31,26 +31,31 @@ type Props = {
 export const mirrorCellId = (elementId: string, r: number, c: number) =>
   `${elementId}-${formatA1(r, c)}`;
 
-// The lines mirrored on one axis: the frozen ones, the window's, and the active one, each once, in order, none hidden.
+// The lines mirrored on one axis: the frozen ones, the window's, and the active one, each once, in the order drawn,
+// none hidden.
 function linesOf(
   frozen: number,
-  from: number,
-  to: number,
+  inView: Iterable<number>,
   active: number,
   hidden: (i: number) => boolean,
+  drawnOf: (i: number) => number = (i) => i,
 ) {
   const lines = new Set<number>();
   for (let i = 0; i < frozen; i++) lines.add(i);
-  for (let i = from; i <= to; i++) lines.add(i);
+  for (const i of inView) lines.add(i);
   const out = [...lines].filter((i) => !hidden(i));
   if (!out.includes(active)) out.push(active);
-  return out.sort((a, b) => a - b);
+  return out.sort((a, b) => drawnOf(a) - drawnOf(b));
+}
+
+function span(from: number, to: number): number[] {
+  return Array.from({ length: Math.max(0, to - from + 1) }, (_, i) => from + i);
 }
 
 function SheetGridMirrorInner(p: Props) {
   const g = p.geometry;
-  const rows = linesOf(g.frozenRows, p.r1, p.r2, p.activeR, g.hiddenRow);
-  const cols = linesOf(g.frozenCols, p.c1, p.c2, p.activeC, g.hiddenCol);
+  const rows = linesOf(g.frozenRows, p.rows, p.activeR, g.hiddenRow, g.drawnOf);
+  const cols = linesOf(g.frozenCols, span(p.c1, p.c2), p.activeC, g.hiddenCol);
   return (
     <div className="sr-only">
       {rows.map((r) => (
