@@ -22,14 +22,14 @@ import {
   useTextDocumentThreads,
 } from './useTextDocumentThreads';
 import type { CommentMention } from '@livedoc/document';
-import type { TextDocumentCommenter } from '@/lib/text-document/text-document-commenter';
+import type { OfficeCommenter } from '@/lib/office/review/office-commenter';
 
 const tracked = vi.hoisted(() => [] as string[][]);
 vi.mock('@/lib/telemetry', () => ({
   track: (...args: string[]) => tracked.push(args),
 }));
 
-const ADA: TextDocumentCommenter = {
+const ADA: OfficeCommenter = {
   key: 'k-ada',
   name: 'Ada',
   colour: '#0284c7',
@@ -61,7 +61,7 @@ const renderStatus = (status: ReactElement) => render(status);
 
 function threadsOn(
   { doc, view }: Awaited<ReturnType<typeof editor>>,
-  commenter: TextDocumentCommenter | null = ADA,
+  commenter: OfficeCommenter | null = ADA,
   activeView: EditorView | null = view,
   onMentioned?: (text: string, mentions: readonly CommentMention[]) => void,
   onAssigned?: (text: string, assignee: CommentMention) => void,

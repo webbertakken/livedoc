@@ -46,6 +46,7 @@ export const FEATURE_ENTITY_HEX: Record<string, string> = {
   'images-over-cells': '#c026d3',
   'cell-links': '#2563eb',
   'cell-notes': '#ca8a04',
+  'cell-comments': '#d97706',
   'pages-mode': '#e11d48',
   'infographic-layouts': '#db2777',
   'logo-pages': '#0891b2',

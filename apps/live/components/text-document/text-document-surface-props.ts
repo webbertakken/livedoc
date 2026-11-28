@@ -4,7 +4,7 @@ import type { AccessLevel } from '@livedoc/api-schema';
 import type { CommentMention, TextDocumentFormat } from '@livedoc/document';
 import type { TextDocumentScope } from '@/lib/api/text-documents';
 import type { TextDocumentFrame } from '@/lib/text-document/room-yjs-provider';
-import type { TextDocumentCommenter } from '@/lib/text-document/text-document-commenter';
+import type { OfficeCommenter } from '@/lib/office/review/office-commenter';
 import type { DrawingTabs } from '@/lib/text-document/text-document-drawing-open-plugin';
 import type { LinkDocument } from '@/lib/text-document/text-document-links';
 import type { OfficeChrome } from '@/components/office/office-chrome';
@@ -31,7 +31,7 @@ export type TextDocumentSurfaceProps = {
   // The editor's drawing tabs (objects.md "Opening it again"); absent outside an editor, where drawings stay their PNGs.
   drawingTabs?: DrawingTabs | null;
   // Who comments in this session (review.md "Threads in the margin"); null where it reads the threads alone.
-  commenter?: TextDocumentCommenter | null;
+  commenter?: OfficeCommenter | null;
   // Who reads the comments, and the email a comment's mentions ask for (review.md "Mentions"); absent outside an editor.
   mentions?: TextDocumentMentions | null;
   // The thread an Inbox row asked to go to (docs/specs/013-workspace/inbox.md §1.8); absent outside an editor.

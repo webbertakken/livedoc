@@ -117,19 +117,19 @@ leaves it); `left out (C3)` (its function is a Google service, [Parity matrix](p
 
 ## Notes and comments
 
-| Action                                           | PC                 | Mac                | ChromeOS           | Status                                 |
-| ------------------------------------------------ | ------------------ | ------------------ | ------------------ | -------------------------------------- |
-| Insert or edit note                              | `Shift+F2`         | `Shift+F2`         | `Shift+Search+2`   | built (`useSpreadsheetNotes.test.tsx`) |
-| Insert or edit comment                           | `Ctrl+Alt+M`       | `⌘+Option+M`       | `Ctrl+Alt+M`       | specified                              |
-| Open comment discussion thread                   | `Ctrl+Alt+Shift+A` | `⌘+Option+Shift+A` | `Ctrl+Alt+Shift+A` | specified                              |
-| Enter current comment                            | `Ctrl+Alt+E, C`    | `Ctrl+⌘+E, C`      | `Ctrl+Alt+E, C`    | specified                              |
-| Move to next comment                             | `Ctrl+Alt+N, C`    | `Ctrl+⌘+N, C`      | `Ctrl+Alt+N, C`    | specified                              |
-| Move to previous comment                         | `Ctrl+Alt+P, C`    | `Ctrl+⌘+P, C`      | `Ctrl+Alt+P, C`    | specified                              |
-| Reply to current comment                         | `R`                | `R`                | `R`                | specified                              |
-| Move to next comment (on a selected comment)     | `J`                | `J`                | `J`                | specified                              |
-| Move to previous comment (on a selected comment) | `K`                | `K`                | `K`                | specified                              |
-| Resolve current comment                          | `E`                | `E`                | `E`                | specified                              |
-| Exit current comment                             | `U`                | `U`                | `U`                | specified                              |
+| Action                                           | PC                 | Mac                | ChromeOS           | Status                                            |
+| ------------------------------------------------ | ------------------ | ------------------ | ------------------ | ------------------------------------------------- |
+| Insert or edit note                              | `Shift+F2`         | `Shift+F2`         | `Shift+Search+2`   | built (`useSpreadsheetNotes.test.tsx`)            |
+| Insert or edit comment                           | `Ctrl+Alt+M`       | `⌘+Option+M`       | `Ctrl+Alt+M`       | built (`useSpreadsheetComments.test.tsx`)         |
+| Open comment discussion thread                   | `Ctrl+Alt+Shift+A` | `⌘+Option+Shift+A` | `Ctrl+Alt+Shift+A` | built (`useSpreadsheetComments.test.tsx`)         |
+| Enter current comment                            | `Ctrl+Alt+E, C`    | `Ctrl+⌘+E, C`      | `Ctrl+Alt+E, C`    | built (`useSpreadsheetComments.test.tsx`)         |
+| Move to next comment                             | `Ctrl+Alt+N, C`    | `Ctrl+⌘+N, C`      | `Ctrl+Alt+N, C`    | built (`useSpreadsheetComments.test.tsx`)         |
+| Move to previous comment                         | `Ctrl+Alt+P, C`    | `Ctrl+⌘+P, C`      | `Ctrl+Alt+P, C`    | built (`useSpreadsheetComments.test.tsx`)         |
+| Reply to current comment                         | `R`                | `R`                | `R`                | the surface's (`useSpreadsheetComments.test.tsx`) |
+| Move to next comment (on a selected comment)     | `J`                | `J`                | `J`                | the surface's (`useSpreadsheetComments.test.tsx`) |
+| Move to previous comment (on a selected comment) | `K`                | `K`                | `K`                | the surface's (`useSpreadsheetComments.test.tsx`) |
+| Resolve current comment                          | `E`                | `E`                | `E`                | the surface's (`useSpreadsheetComments.test.tsx`) |
+| Exit current comment                             | `U`                | `U`                | `U`                | the surface's (`useSpreadsheetComments.test.tsx`) |
 
 ## Menus
 

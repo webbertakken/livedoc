@@ -2,7 +2,7 @@
 // suggests while the person is in Suggesting, the line a refused change says, and a new suggestion's telemetry. The
 // editor's dispatch reads it through a ref, so a change of mode never rebinds the editor.
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { TextDocumentCommenter } from '@/lib/text-document/text-document-commenter';
+import type { OfficeCommenter } from '@/lib/office/review/office-commenter';
 import type { SuggestingDispatch } from '@/lib/text-document/text-document-suggesting-dispatch';
 import type { SuggestingRefusal } from '@/lib/text-document/text-document-suggesting';
 import { debugLog } from '@/lib/debug-log';
@@ -23,7 +23,7 @@ export function useTextDocumentSuggesting({
 }: {
   /** Whether the person is in Suggesting with a key to suggest with. */
   suggests: boolean;
-  commenter: TextDocumentCommenter | null;
+  commenter: OfficeCommenter | null;
 }) {
   const [said, setSaid] = useState<string | null>(null);
   const current = useRef({ suggests, commenter });
