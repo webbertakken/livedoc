@@ -2,7 +2,6 @@
 // quoted label, or `key:value` terms joined by spaces, every one of which must match. Matching runs
 // against the working state, so an element an earlier operation added or named is addressable.
 
-import type { EditRejection } from '@livedoc/api-schema';
 import {
   isContainer,
   kindWordOf,
@@ -20,8 +19,9 @@ import {
   isQuotedWord,
   tokeniseLine,
   unquotedPrefix,
-  type Word,
-} from './tokenise';
+  type EditRejection,
+  type LineWord as Word,
+} from '@livedoc/api-schema';
 import { REJECTION_CANDIDATES_MAX, RESERVED_WORDS, SELECTOR_KEYS } from './vocabulary';
 
 // Keys whose value names one element.

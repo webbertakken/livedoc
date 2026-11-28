@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { hasQuotes, isQuotedWord, tokeniseLine, unquotedPrefix, type Word } from './tokenise';
+import { hasQuotes, isQuotedWord, tokeniseLine, unquotedPrefix, type Word } from './line-words';
 
 const words = (line: string): Word[] => {
   const out = tokeniseLine(line);

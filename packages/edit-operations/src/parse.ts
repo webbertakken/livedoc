@@ -3,11 +3,10 @@
 // lines and lines starting with `#` are skipped and not counted. Every malformed line is reported, up
 // to EDIT_MAX_ERRORS, so a batch of typos is fixed in one round.
 
-import { CHANGESET_MAX_OPERATIONS, type EditRejection } from '@livedoc/api-schema';
+import { CHANGESET_MAX_OPERATIONS, tokeniseLine, type EditRejection } from '@livedoc/api-schema';
 import { validateEditOperation } from './parse-json';
 import { isOperationName, parseOperationWords } from './parse-line';
 import { lineParseError, tooLarge, unknownOperation } from './rejections';
-import { tokeniseLine } from './tokenise';
 import type { EditLog, EditOperation, ParseOutcome } from './types';
 import { EDIT_LINE_MAX_CHARS, EDIT_MAX_ERRORS } from './vocabulary';
 
