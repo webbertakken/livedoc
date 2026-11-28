@@ -111,7 +111,7 @@ export function OfficeCopyDialog({
           </label>
         ) : null}
         {offerReview && comments ? (
-          <label className="flex items-center gap-3 pl-8 text-body">
+          <label className="flex items-center gap-3 pl-6 text-body">
             <input
               type="checkbox"
               data-office-copy-resolved=""
