@@ -21,6 +21,8 @@ import type {
 import type { EmbeddedFiles } from '../embedded-file';
 import type { PageField } from '../file-field';
 import type { PageTags } from '../page-tags';
+import type { PagePictures } from '../page-pictures';
+import { readPagePictures, type PictureLimits } from './read-pictures';
 import type { PageText } from '../page-text';
 import { darkened, pagePlace } from './dark-step';
 import { drawPage, drawTile, pageMatrix } from './draw-page';
@@ -154,6 +156,10 @@ export class PdfReader {
 
   pageTags(index: number, limits?: TagLimits): PageTags | null {
     return readPageTags(this.file, index, limits);
+  }
+
+  pagePictures(index: number, limits?: PictureLimits): PagePictures | null {
+    return readPagePictures(this.file, index, limits);
   }
 
   selectText(index: number, from: PagePoint, to: PagePoint): TextSelection | null {

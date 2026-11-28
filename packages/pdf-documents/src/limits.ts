@@ -26,6 +26,12 @@ export const PDF_PAGE_PICTURE_MAX_PIXELS = 8_388_608;
 /** (default) One page's text read at once, twenty times a dense page; a page past it reads its first part. Safe
  *  range: 20,000 to 2,000,000. */
 export const PDF_PAGE_TEXT_MAX_CHARS = 200_000;
+/** (default) One page's pictures handed over at once (opening.md "What is read"); past it the first ones and a cut.
+ *  Safe range: 100 to 10,000. */
+export const PDF_PAGE_PICTURES_MAX = 500;
+/** (default) One picture's pixels decoded to hand over (128 MiB as RGBA); past it the picture is listed without
+ *  bytes. Safe range: 2^22 to 2^26. */
+export const PDF_PICTURE_HANDED_MAX_PIXELS = 33_554_432;
 /** The most a PDF page measures on a side, in points: the standard's own 200 inches. */
 export const PDF_MAX_PAGE_POINTS = 14_400;
 /** (default) An address longer than this is shown cut and never opened (security.md "Limits"). */

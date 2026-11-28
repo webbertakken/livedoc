@@ -196,6 +196,7 @@ export function pdfEngineOver(
     links: async (index) => said(reader.links(index)),
     pageText: async (index) => said(reader.pageText(index)),
     pageTags: async (index) => said(reader.pageTags(index)),
+    pagePictures: async (index) => said(reader.pagePictures(index)),
     selectText: async (index, from, to) => said(reader.selectText(index, from, to)),
     fileMarks: async (index) => said(reader.fileMarks(index)),
     fields: async (index) => said(reader.fields(index)),

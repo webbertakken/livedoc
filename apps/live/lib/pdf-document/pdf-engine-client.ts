@@ -21,6 +21,7 @@ import type {
   PageLink,
   PageMatrix,
   PageTags,
+  PagePictures,
   PageText,
   PdfEngine,
   PdfLayer,
@@ -76,6 +77,7 @@ const STOPPED = {
   links: [] as readonly PageLink[],
   pageText: null,
   pageTags: null,
+  pagePictures: null,
   selectText: null,
   fileMarks: [] as readonly FileMark[],
   fields: [] as readonly PageField[],
@@ -178,6 +180,7 @@ export function pdfEngineClient(
     links: (index) => ask<readonly PageLink[]>({ method: 'links', args: [index] }),
     pageText: (index) => ask<PageText | null>({ method: 'pageText', args: [index] }),
     pageTags: (index) => ask<PageTags | null>({ method: 'pageTags', args: [index] }),
+    pagePictures: (index) => ask<PagePictures | null>({ method: 'pagePictures', args: [index] }),
     selectText: (index, from, to) =>
       ask<TextSelection | null>({ method: 'selectText', args: [index, from, to] }),
     fileMarks: (index) => ask<readonly FileMark[]>({ method: 'fileMarks', args: [index] }),
