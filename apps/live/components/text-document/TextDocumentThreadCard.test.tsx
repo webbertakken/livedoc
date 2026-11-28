@@ -312,9 +312,7 @@ describe('OfficeDraftCard', () => {
   it('focuses its field, sends with Comment, and drops with Cancel or Escape', async () => {
     const onSend = vi.fn();
     const onCancel = vi.fn();
-    render(
-      <OfficeDraftCard commenter={as(ADA)} placed onSend={onSend} onCancel={onCancel} />,
-    );
+    render(<OfficeDraftCard commenter={as(ADA)} placed onSend={onSend} onCancel={onCancel} />);
     const field = screen.getByRole('textbox', { name: 'Add a comment' });
     await waitFor(() => expect(document.activeElement).toBe(field));
     fireEvent.change(field, { target: { value: 'Check this' } });

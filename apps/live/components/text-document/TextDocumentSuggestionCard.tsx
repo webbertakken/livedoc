@@ -10,11 +10,7 @@ import type { CommentMention } from '@livedoc/document';
 import type { TextDocumentThread } from '@livedoc/text-documents';
 import { CommentComposer, CommentThreadList } from '@/components/panels/comment-thread-parts';
 import { reactionChips } from '@/lib/office/review/comment-reactions';
-import {
-  authorNoteOf,
-  commentNoteOf,
-  sharedComment,
-} from '@/lib/office/review/office-comments';
+import { authorNoteOf, commentNoteOf, sharedComment } from '@/lib/office/review/office-comments';
 import type { OfficeCommenter } from '@/lib/office/review/office-commenter';
 import { CheckIcon, CloseIcon, IDENTITY_FILL, Tooltip, identityVars } from '@livedoc/ui';
 import { initialsOf } from '@/lib/identity';
