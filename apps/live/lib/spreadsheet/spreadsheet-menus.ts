@@ -316,7 +316,7 @@ const INSERT_MENU = menu('insert', 'Insert', [
   built('insert-pivot-table', 'Pivot Table', 'edit'),
   submenu('insert-image', 'Image', [
     item('insert-image-in-cell', 'Insert Image in Cell', 'edit'),
-    item('insert-image-over-cells', 'Insert Image over Cells', 'edit'),
+    built('insert-image-over-cells', 'Insert Image over Cells', 'edit'),
   ]),
   item('insert-drawing', 'Drawing', 'edit'),
   SEPARATOR,

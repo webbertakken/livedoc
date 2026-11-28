@@ -192,7 +192,7 @@ describe('the charts in a Sheet', () => {
     elements = [chart('c')];
     mount();
     fireEvent.focus(box('c'));
-    const handle = box('c').querySelector<HTMLElement>('[data-sheet-chart-resize]')!;
+    const handle = box('c').querySelector<HTMLElement>('[data-sheet-object-handle="se"]')!;
     drag(handle, 40, -500);
     expect(bridge.commitElements).toHaveBeenCalledTimes(1);
     expect(elements[0]).toMatchObject({ width: 300, height: 120 });
@@ -425,7 +425,7 @@ describe("a spreadsheet's charts", () => {
     drag(box('one'), 30, 20);
     expect(w.change).toHaveBeenLastCalledWith('one', { sheetAnchor: { x: 130, y: 70 } });
     act(() => box('one').focus());
-    const handle = box('one').querySelector<HTMLElement>('[data-sheet-chart-resize]')!;
+    const handle = box('one').querySelector<HTMLElement>('[data-sheet-object-handle="se"]')!;
     drag(handle, 40, 10);
     expect(w.change).toHaveBeenLastCalledWith('one', { width: 300, height: 230 });
     fireEvent.keyDown(box('one'), { key: 'ArrowRight', shiftKey: true });

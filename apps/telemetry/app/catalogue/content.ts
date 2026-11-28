@@ -1400,6 +1400,15 @@ export const SPREADSHEET_PIVOT_TABLES_ADDED = chart(
   { types: ['PivotTable', 'PivotDetails'] },
 );
 
+// docs/specs/029-sheets/inserted-objects.md "Telemetry": a picture Insert › Image › Insert Image over Cells placed.
+export const SPREADSHEET_IMAGES_ADDED = chart(
+  'Spreadsheet',
+  'Added',
+  'Spreadsheet Images Added',
+  'An editor placed a picture over the cells of a spreadsheet with Insert › Image.',
+  { types: ['ImageOverCells'] },
+);
+
 // docs/specs/029-sheets/data-tools.md "Filters, filter views and slicers": a filter view made, saved (an Editor's) or
 // temporary (a Participant's or a Viewer's).
 export const SPREADSHEET_FILTER_VIEWS_ADDED = chart(
@@ -1451,7 +1460,7 @@ export const SPREADSHEETS: MetricStack = {
   stack: true,
   title: 'Spreadsheets',
   blurb:
-    'Spreadsheet documents on the open standards: made, opened from files, downloaded, converted, themed, imports allowed, charts, pivot tables and filter views added, named functions, Replace All, data clean-up.',
+    'Spreadsheet documents on the open standards: made, opened from files, downloaded, converted, themed, imports allowed, charts, pivot tables, images and filter views added, named functions, Replace All, data clean-up.',
   members: [
     SPREADSHEETS_CREATED,
     SPREADSHEETS_IMPORTED,
@@ -1461,6 +1470,7 @@ export const SPREADSHEETS: MetricStack = {
     SPREADSHEETS_IMPORTS_ALLOWED,
     SPREADSHEET_CHARTS_ADDED,
     SPREADSHEET_PIVOT_TABLES_ADDED,
+    SPREADSHEET_IMAGES_ADDED,
     SPREADSHEET_FILTER_VIEWS_ADDED,
     SPREADSHEET_NAMED_FUNCTIONS,
     SPREADSHEET_REPLACED,

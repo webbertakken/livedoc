@@ -5,16 +5,14 @@ import { imageCornerPx, type ImageElement } from '@livedoc/document';
 import { useElementFinish } from '@/components/canvas/CanvasFinishContext';
 import { useCanvasTheme, useElementSurface } from '@/components/canvas/CanvasSurfaceContext';
 import { ImageEmptyFace } from '@/components/canvas/ImageEmptyFace';
+import { ImageBrokenFace } from '@/components/canvas/ImageBrokenFace';
 import {
-  IMAGE_BROKEN_TONE,
   IMAGE_SKELETON_BODY,
-  imagePlaceholderMetrics,
   imagePlaceholderTone,
   placeholderThemeInk,
 } from '@/components/canvas/image-placeholder-look';
 import { useImageBlobUrl } from '@/hooks/persistence/useImageBlobUrl';
 import { bodySetClass } from '@/lib/animation-classes';
-import { Glyph } from '@livedoc/ui';
 
 // Renders the bitmap (or upload placeholder) for an ImageElement.
 // Mounted inside BoxedElementView's transformed wrapper so it picks
@@ -111,31 +109,13 @@ function ImageElementViewImpl({
   }
 
   if (state.status === 'broken' || (src !== null && undecodable === src)) {
-    const tone = IMAGE_BROKEN_TONE[surface];
-    const metrics = imagePlaceholderMetrics(element.width, element.height);
     return (
-      <div
-        className="flex h-full w-full flex-col items-center justify-center overflow-hidden rounded border px-2 text-center font-sans"
-        style={{
-          ...radiusStyle,
-          gap: metrics.gapPx,
-          background: tone.body,
-          borderColor: tone.border,
-          color: tone.ink,
-        }}
-        role={metrics.showLabel ? undefined : 'img'}
-        aria-label={metrics.showLabel ? undefined : 'Image unavailable'}
-      >
-        <BrokenIcon size={metrics.iconPx} />
-        {metrics.showLabel ? (
-          <span
-            className="font-medium not-italic leading-tight"
-            style={{ fontSize: metrics.labelPx }}
-          >
-            Image unavailable
-          </span>
-        ) : null}
-      </div>
+      <ImageBrokenFace
+        width={element.width}
+        height={element.height}
+        surface={surface}
+        style={radiusStyle}
+      />
     );
   }
 
@@ -184,14 +164,3 @@ function ImageElementViewImpl({
 }
 
 export const ImageElementView = memo(ImageElementViewImpl);
-
-function BrokenIcon({ size }: { size: number }) {
-  return (
-    <Glyph size={size} units={24}>
-      <rect x="3" y="3" width="18" height="18" rx="2" />
-      <path d="M3 17l5-5 4 4 2-2" />
-      <path d="M16 6l5 5" />
-      <path d="M21 6l-5 5" />
-    </Glyph>
-  );
-}

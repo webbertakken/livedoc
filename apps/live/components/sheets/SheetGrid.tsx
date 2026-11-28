@@ -39,6 +39,7 @@ import { SheetSelectionLayer, type Outline } from './SheetSelectionLayer';
 import { SheetCellEditor } from './SheetCellEditor';
 import { SheetChartsLayer } from './SheetChartsLayer';
 import { SheetSlicersLayer } from './slicers/SheetSlicersLayer';
+import { SheetImagesLayer } from './SheetImagesLayer';
 import { ADD_ROWS_PX, SheetAddRows, roomFor } from './SheetAddRows';
 import { cellBox, scrollToReveal, totalSize, visibleWindow } from './sheet-geometry';
 import { useSheetGridKeys, type SheetSurfaceKeys } from './useSheetGridKeys';
@@ -437,6 +438,8 @@ export function SheetGrid({
               <SheetSmartFillLayer window={window} actions={actions} />
               {/* A split's Separator chip (data-tools.md "Split Text to Columns"), a spreadsheet's. */}
               <SheetSplitChip />
+              {/* A spreadsheet's images over cells, under its charts (inserted-objects.md "Images over cells"). */}
+              <SheetImagesLayer />
               {/* The charts that sit in this Sheet, over its cells (sheet.md "Charts"). */}
               <SheetChartsLayer fontFamily={fontFamily} />
               {/* The slicers over this sheet (data-tools.md "Slicers"). */}

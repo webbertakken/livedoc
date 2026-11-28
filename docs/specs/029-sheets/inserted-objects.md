@@ -20,18 +20,27 @@ An image floats over the cells as a chart does, one of its sheet's objects ([She
 - **Insert Image › Insert Image over Cells**, an Editor's, opens the editor's image picker (Upload, Gallery, Search,
   [Image picker modal](../009-elements/images.md#image-picker-modal)); the picked picture lands with its top-left at
   the active cell's, at its natural size scaled down, kept in proportion, to fit 600 by 400 px, and is selected. Where
-  image storage is not set up the item is dimmed, its hint "Image uploads aren't enabled on this deployment".
-- **Selected** by a click: an outline with eight handles. Dragged, it moves, its anchor landing on the cell under its
-  new top-left; a corner handle resizes it in proportion (an edge handle stretches it); Delete or Backspace removes
-  it; Escape returns the keys to the grid. Moving and resizing are one undo step each, as a chart's are.
+  image storage is not set up (the gallery's probe answers 503) the item is dimmed, its hint "Image uploads aren't
+  enabled on this deployment". A spreadsheet in This Browser has no gallery its images could stay in, so the item is
+  dimmed there too, its hint "Sync Document to place images over cells" (default, D625). A sheet holding 100 objects
+  refuses it with "A sheet holds up to 100 charts, pivot tables and images".
+- **Selected** by a click or Tab: an outline with eight handles. Dragged, it moves, its anchor landing on the cell
+  under its new top-left; a corner handle resizes it in proportion (an edge handle stretches it), each side kept to 16
+  to 4,000 px; Delete or Backspace removes it; Escape returns the keys to the grid. From the keyboard, as a chart's:
+  the arrow keys move it 1 px (10 with Shift), Alt and the arrow keys stretch it. Moving and resizing are one undo step
+  each, as a chart's are.
 - **Its menu** (the ⋮ button on the selected image, and a right-click on it): **Alt Text** (a dialog: Title and
-  Description as Google's; LiveDoc keeps one text, the description, its title folded in), **Replace Image** (the
-  picker; the new picture keeps the box's width, its height following its proportion), **Delete**. Google's Edit
+  Description as Google's; LiveDoc keeps one text, the description, its title folded in: saved as the title, a line
+  break, then the description, either alone when the other is empty, and opened again as the description, the title
+  empty; OK saves, Cancel and Escape leave it), **Replace Image** (the
+  picker; the new picture keeps the box's width, its height following its proportion, and its alt text goes with the
+  old picture), **Delete**. Google's Edit
   Image (crop, recolour) and Assign Script are left out (crop: later; scripts: C3); **Place Image in Selected Cell**
   joins when [images in a cell](#images-in-a-cell) are built.
 - **Drawn** from the image's bytes (`/api/images/<id>?d=<document>`), at the grid's zoom, under frozen panes as a
-  chart is; a picture that cannot be drawn shows the editor's broken-image state sized to the box
-  ([Images](../009-elements/images.md), "Placeholder rendering").
+  chart is, under the sheet's charts; a skeleton while its bytes are on their way; a picture that cannot be drawn
+  shows the editor's broken-image state sized to the box ([Images](../009-elements/images.md), "Placeholder
+  rendering").
 - **Rows and columns**: it follows its anchor cell when rows and columns are inserted, deleted, moved, hidden or
   resized, as a chart does; deleting its anchor cell's row or column moves it to the nearest remaining one, as a
   chart's anchor does.
@@ -96,13 +105,16 @@ its title linked to the file, and LiveDoc keeps the link in both formats (XLSX's
 
 ## Who may do what
 
-- **Editor** inserts and edits every object here.
+- **Editor** inserts and edits every object here; an image over cells is selected, moved, resized and given its menu
+  by an Editor alone, everyone else's pointer passing through it to the cells.
 - **Participant** ticks tick boxes and picks from dropdowns; opens links.
 - **Viewer** opens links and sees the rest.
 
 ## Accessibility
 
-- Every image and drawing carries alt text (editable through Alt Text; an image without it is announced as "Image"); a timeline is navigable by its cards
+- Every image and drawing carries alt text (editable through Alt Text; an image without it is announced as "Image");
+  an image over cells is one stop of the grid's objects row, named by its alt text, with its keys described to a
+  screen reader as a chart's are; a timeline is navigable by its cards
   with the arrow keys, each announced with its title and dates.
 
 ## Errors and limits
@@ -112,10 +124,14 @@ its title linked to the file, and LiveDoc keeps the link in both formats (XLSX's
 
 ## Telemetry
 
-`Spreadsheet · Inserted · <Kind>` (`ImageInCell`, `ImageOverCells`, `Drawing`, `Link`, `Checkbox`, `Dropdown`,
-`Emoji`, `Timeline`).
+`Spreadsheet · Added · <Kind>` as Insert places one (`ImageInCell`, `ImageOverCells`, `Drawing`, `Link`, `Checkbox`,
+`Dropdown`, `Emoji`, `Timeline`), the action charts and pivot tables use; `Sheet · Changed · Image` for each move,
+resize, alt text, replacement or delete of an image over cells.
 
 ## Defaults
 
 - **D623** An image over cells is one of its sheet's objects, placed at the active cell at its natural size scaled to
   fit 600 by 400 px, moved and resized as a chart is, its bytes in the uploader's gallery (default).
+- **D625** A spreadsheet in This Browser places no image over cells (Insert Image over Cells dimmed, its hint saying
+  to sync): a sheet holds a gallery id only, and a picture embedded in the sheet would leave the gallery's rules
+  (default).

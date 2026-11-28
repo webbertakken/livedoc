@@ -28,6 +28,7 @@ const SPREADSHEET_REFUSALS: Partial<Record<string, string>> = {
   input_too_long: 'A cell holds up to 50,000 characters',
   workbook_full: 'This spreadsheet holds up to 1,000,000 rows and 20,000,000 cells',
   sheets_full: 'A spreadsheet holds up to 200 sheets',
+  objects_full: 'A sheet holds up to 100 charts, pivot tables and images',
   sheet_last_visible: 'A spreadsheet keeps at least one sheet shown',
   sheet_exists: 'That sheet is already back in this spreadsheet',
   tab_not_found: 'The sheet it went beside is no longer in this spreadsheet',
