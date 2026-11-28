@@ -206,6 +206,30 @@ describe('a text document opened from a file', () => {
     expect(await refused.json()).toMatchObject({ error: 'text_document_seed_invalid' });
   });
 
+  // files-and-print.md "Opening": Plain Text and Markdown are imported, born in ODF.
+  it('imports Plain Text and Markdown into an ODF text document, and refuses one into Word', async () => {
+    const db = sqliteD1();
+    const md = base64OfBytes(new TextEncoder().encode('# Plan\n\n- one\n- two'));
+    expect(
+      (await create(db, { textDocuments: [{ tabId: 't1', file: md, type: 'md' }] })).status,
+    ).toBe(201);
+    const state = await call(db, 'GET', '/api/documents/D/text-documents/t1/state');
+    expect((await bodyOfState(state)).map((p) => p.text)).toEqual(['Plan', 'one', 'two']);
+    const txt = base64OfBytes(new TextEncoder().encode('a\nb'));
+    const word = { ...textTab, format: 'ooxml' };
+    const refused = await create(
+      sqliteD1(),
+      { textDocuments: [{ tabId: 't1', file: txt, type: 'txt' }] },
+      [word],
+    );
+    expect(refused.status).toBe(400);
+    const binary = base64OfBytes(new Uint8Array([0x50, 0x4b, 0, 0]));
+    const wrong = await create(sqliteD1(), {
+      textDocuments: [{ tabId: 't1', file: binary, type: 'txt' }],
+    });
+    expect(wrong.status).toBe(415);
+  });
+
   it('refuses seeds that do not name one of the request’s text document tabs', async () => {
     const file = base64OfBytes(fileOf(Body.of('a')));
     for (const textDocuments of [
@@ -218,6 +242,7 @@ describe('a text document opened from a file', () => {
       [{ tabId: 't1', file: 7 }],
       [{ tabId: 't1', file: '***' }],
       [null],
+      [{ tabId: 't1', file, type: 'pdf' }],
     ]) {
       const res = await create(sqliteD1(), { textDocuments });
       expect(res.status).toBe(400);

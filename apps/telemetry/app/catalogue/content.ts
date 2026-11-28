@@ -1048,7 +1048,7 @@ export const TAB_IMPORTS = chart(
   'Tab',
   'Imported',
   'Tabs Imported',
-  'A tab imported from draw.io, Excalidraw, Mermaid, Markdown or JSON.',
+  'A tab imported from draw.io, Excalidraw, Mermaid, Markdown or JSON, or a text document opened from a file.',
 );
 
 export const PASTES_FROM_EXCALIDRAW = chart(

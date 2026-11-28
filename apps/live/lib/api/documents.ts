@@ -1,6 +1,7 @@
 // Document-level calls: load / create / save-meta / delete / list, the
 // copy-into-my-files flow, and the "Shared with you" list.
 import type { WorkbookRecord } from '@livedoc/sheets';
+import type { TextDocumentImportType } from '@livedoc/text-documents';
 import type { ItemCreate, ItemTypeCatalogue } from '@livedoc/items';
 import {
   DOCUMENT_CONVERSION_HEADER,
@@ -240,7 +241,10 @@ export async function apiCreateDocument(
     itemTypes?: ItemTypeCatalogue | null;
     // Text document tabs opened from files (docs/specs/034-text-documents/files-and-print.md "Opening"), or a copy's
     // live states (live-editing-and-storage.md "Copies"), base64.
-    textDocuments?: ({ tabId: string; file: string } | { tabId: string; state: string })[];
+    textDocuments?: (
+      | { tabId: string; file: string; type?: TextDocumentImportType }
+      | { tabId: string; state: string }
+    )[];
     // PDF tabs made with their live changes (docs/specs/035-pdf-documents/live-editing-and-storage.md "Copies, the
     // Trash and versions"): a Yjs update, base64.
     pdfDocuments?: { tabId: string; state: string }[];

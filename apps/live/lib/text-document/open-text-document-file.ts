@@ -1,7 +1,8 @@
 // File > Open > Upload (docs/specs/034-text-documents/files-and-print.md "Opening"): a file from the computer becomes
-// a new text document in its format, named after the file. The api reads it under the package's guards and answers a
-// named rejection, which this words for the person.
-import { base64OfBytes } from '@livedoc/text-documents';
+// a new text document in its format, named after the file; a Plain Text or Markdown file is imported into a new
+// OpenDocument one. The api reads it under the package's guards and answers a named rejection, which this words for
+// the person.
+import { base64OfBytes, importTypeOfFileName } from '@livedoc/text-documents';
 import { ApiError, apiCreateDocument } from '@/lib/api-client';
 import { createIdsFor } from '@/lib/new-document/create-failure';
 import { debugLog } from '@/lib/debug-log';
@@ -25,6 +26,21 @@ const REJECTION_COPY: Record<string, string> = {
 
 const GENERIC = 'The file could not be opened. Try again.';
 
+/** Each file's `Tab·Imported` type, by extension; one LiveDoc opens as itself and names none is an OpenDocument one. */
+const IMPORTED_TYPES: Readonly<Record<string, string>> = {
+  docx: 'Docx',
+  dotx: 'Dotx',
+  docm: 'Docm',
+  ott: 'Ott',
+  txt: 'Txt',
+  md: 'Md',
+  markdown: 'Md',
+};
+
+/** The `Tab·Imported` type of a file by its name. */
+export const importedTypeOf = (fileName: string): string =>
+  IMPORTED_TYPES[/\.([^.]+)$/.exec(fileName)?.[1]?.toLowerCase() ?? ''] ?? 'Odt';
+
 /** The document's name from the file's: its name without the extension. */
 export function nameFromFile(fileName: string): string {
   return fileName.replace(/\.[^.]+$/, '').trim() || UNTITLED_TEXT_DOCUMENT;
@@ -38,13 +54,15 @@ export async function openTextDocumentFile(
   const name = nameFromFile(file.name);
   try {
     const bytes = new Uint8Array(await file.arrayBuffer());
+    // An import is born in OpenDocument (fork C5).
+    const type = importTypeOfFileName(file.name);
     await apiCreateDocument(ownerId, {
       id: documentId,
       name,
-      tabs: [newTextDocumentTab(tabId, name, formatOfFileName(file.name))],
-      textDocuments: [{ tabId, file: base64OfBytes(bytes) }],
+      tabs: [newTextDocumentTab(tabId, name, type ? 'odf' : formatOfFileName(file.name))],
+      textDocuments: [{ tabId, file: base64OfBytes(bytes), ...(type ? { type } : {}) }],
     });
-    track('Tab', 'Imported', formatOfFileName(file.name) === 'ooxml' ? 'Docx' : 'Odt');
+    track('Tab', 'Imported', importedTypeOf(file.name));
     return { ok: true, documentId };
   } catch (error) {
     const code = error instanceof ApiError ? error.code : null;

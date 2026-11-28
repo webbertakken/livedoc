@@ -1,7 +1,8 @@
 # Files and print
 
-**Status: partly built.** Built: Open (a `.odt`, `.fodt` or `.docx` from the computer), Download in the
-OpenDocument and Word formats, Plain Text and Markdown, conversion. The rest is specified.
+**Status: partly built.** Built: Open (a `.odt`, `.fodt`, `.ott`, `.docx`, `.dotx` or `.docm` from the computer, and
+`.txt` and `.md` imported), Download in the OpenDocument and Word formats, Rich Text, Plain Text, Web Page, EPUB and
+Markdown, conversion. The rest is specified.
 
 Opening, importing, downloading, printing, copying, sharing, emailing and trashing a [text document](text-document.md).
 Both ODF and OOXML are native (fork C1, ruled): a file keeps the format it arrived in.
@@ -14,7 +15,10 @@ Both ODF and OOXML are native (fork C1, ruled): a file keeps the format it arriv
   text document **in that format**, named after the file, in the current folder.
 - Other formats are **imported**: `.rtf`, `.txt`, `.html`, `.md` (as a text document; a `.md` dropped where pages are
   made stays a [page](../031-markdown/markdown-tab.md), fork D3) and `.pdf` (text and pictures, reading order guessed);
-  an imported document is born in ODF (fork C5).
+  an imported document is born in ODF (fork C5). Plain Text is a paragraph a line (UTF-8, else Windows' Western
+  encoding; a file holding a NUL byte is not text); Markdown reads as Markdown downloads (headings, lists and
+  checklists, code blocks in their language, pipe tables with a header row, bold, italic, strikethrough and safe
+  links), a picture staying as its alt text in brackets, never fetched, and reported (default).
 - A `.pdf` dropped or uploaded anywhere else in LiveDoc opens as a [PDF document](../035-pdf-documents/pdf-document.md),
   which stays a PDF. Importing it here is a choice, and a copy: a PDF document's File > Open as a text document, or
   this dialog's Upload with "Import as a text document" ticked.
@@ -22,7 +26,7 @@ Both ODF and OOXML are native (fork C1, ruled): a file keeps the format it arriv
 - An opened file rides the new document's create (default): `POST /api/documents` names the text document tab and its
   file (`textDocuments: [{ tabId, file }]`, base64; a copy's `{ tabId, state }` carries a live state instead,
   [Copies](live-editing-and-storage.md#copies)); the room reads it with the package's guards and stores its body as
-  the tab's first update, or answers the package's rejection (413 `package_too_large`, 415 `package_wrong_type`, 400
+  the tab's first update (an import names its `type`, `txt` or `md`), or answers the package's rejection (413 `package_too_large`, 415 `package_wrong_type`, 400
   otherwise) and nothing is made. A create's body is capped at the api's 8 MB, so a file past about 6 MB waits for
   a direct upload (default).
 

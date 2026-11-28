@@ -1,7 +1,8 @@
 // A new document's text documents made from files (docs/specs/034-text-documents/files-and-print.md "Opening") or
 // from a copy's live states (live-editing-and-storage.md "Copies"): the create request names each text document tab
-// and the file it opens, or the state it holds, as base64; the room reads each file with the package's guards and
-// stores its body as the tab's first update, and stores a state as it is.
+// and the file it opens (with the import's type for a file of another kind, read into ODF), or the state it holds, as
+// base64; the room reads each file with the package's guards and stores its body as the tab's first update, and stores
+// a state as it is.
 import {
   tabKindOf,
   textDocumentFormatOf,
@@ -11,7 +12,10 @@ import {
 import {
   DrawingPictures,
   Pictures,
+  isTextDocumentImportType,
   readTextDocumentFile,
+  readTextDocumentImport,
+  type TextDocumentImportType,
   TextDocumentState,
   type TextDocument,
 } from '@livedoc/text-documents';
@@ -23,7 +27,8 @@ import { TEXT_DOCUMENT_LIVE_TAB } from './text-document-live-tab';
 import { mediaIntoGallery } from './gallery-media';
 
 export type TextDocumentSeed = { tabId: string; format: TextDocumentFormat } & (
-  { file: Uint8Array } | { state: Uint8Array }
+  | { file: Uint8Array; type?: TextDocumentImportType }
+  | { state: Uint8Array }
 );
 
 const refusedSeed = (message: string) =>
@@ -44,10 +49,11 @@ export function readTextDocumentSeeds(
   const seen = new Set<string>();
   const out: TextDocumentSeed[] = [];
   for (const entry of raw as unknown[]) {
-    const { tabId, file, state } = (entry ?? {}) as {
+    const { tabId, file, state, type } = (entry ?? {}) as {
       tabId?: unknown;
       file?: unknown;
       state?: unknown;
+      type?: unknown;
     };
     if (typeof tabId !== 'string' || !textTabs.has(tabId) || seen.has(tabId))
       return refusedSeed('each file names one text document tab of the request');
@@ -62,7 +68,14 @@ export function readTextDocumentSeeds(
     }
     const bytes = typeof file === 'string' ? bytesOfBase64(file) : null;
     if (!bytes) return refusedSeed('file must be base64');
-    out.push({ tabId, format, file: bytes });
+    if (type === undefined) {
+      out.push({ tabId, format, file: bytes });
+      continue;
+    }
+    // An import is born in ODF (fork C5).
+    if (!isTextDocumentImportType(type) || format !== 'odf')
+      return refusedSeed('type names an import (txt or md) into an ODF text document tab');
+    out.push({ tabId, format, file: bytes, type });
   }
   return out;
 }
@@ -120,7 +133,9 @@ export async function seedTextDocuments(
       );
       continue;
     }
-    const read = await readTextDocumentFile(seed.file);
+    const read = seed.type
+      ? readTextDocumentImport(seed.file, seed.type)
+      : await readTextDocumentFile(seed.file);
     // A file keeps the format it arrived in (fork C1): one the tab is not held in is not this tab's to open.
     const arrived = read.ok && (read.fileType === 'docx' ? 'ooxml' : 'odf');
     if (read.ok && arrived !== seed.format) {
@@ -157,7 +172,7 @@ export async function seedTextDocuments(
       TextDocumentState.fromDocument(imported.document),
     );
     console.info(
-      `[text-document] file-read document=${documentId} tab=${seed.tabId} blocks=${read.document.body.length} kept=${kept} bytes=${seed.file.byteLength} ms=${Date.now() - started}`,
+      `[text-document] file-read document=${documentId} tab=${seed.tabId} type=${seed.type ?? read.fileType} blocks=${read.document.body.length} kept=${kept} bytes=${seed.file.byteLength} ms=${Date.now() - started}`,
     );
   }
   return { ok: true };
