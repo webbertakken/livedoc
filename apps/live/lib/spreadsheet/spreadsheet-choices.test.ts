@@ -85,3 +85,30 @@ describe('spreadsheetChoices', () => {
     expect(Object.keys(spreadsheetChoices([], { 'align-left': { run } }))).toEqual([]);
   });
 });
+
+// surface.md "Toolbar": Create a Filter's chevron lists Data's filter items, then the sheet's saved views.
+describe('the Create a Filter options', () => {
+  it('lists Create a Filter, Create Group by View and Create Filter View, then each saved view', () => {
+    const withViews = spreadsheetMenus('ods', 'en-GB', [], ['No plums', 'Group 1']);
+    const choices = spreadsheetChoices(withViews, { 'create-filter-view': { run } });
+    expect(ids(choices['create-a-filter']!.entries)).toEqual([
+      'create-a-filter',
+      'create-group-by-view',
+      'create-filter-view',
+      'filter-view-0',
+      'filter-view-1',
+    ]);
+    expect(choices['create-a-filter']!.entries.filter((e) => e.kind === 'separator')).toHaveLength(
+      1,
+    );
+  });
+
+  it('lists the creating items alone while the sheet has no view', () => {
+    const choices = spreadsheetChoices(catalogue, { 'create-filter-view': { run } });
+    expect(ids(choices['create-a-filter']!.entries)).toEqual([
+      'create-a-filter',
+      'create-group-by-view',
+      'create-filter-view',
+    ]);
+  });
+});

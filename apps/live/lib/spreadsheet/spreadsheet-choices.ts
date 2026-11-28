@@ -44,6 +44,18 @@ function submenuEntries(
 const items = (entries: readonly OfficeEntry[]) =>
   entries.filter((e): e is OfficeItem => e.kind === 'item');
 
+const FILTER_ITEMS = new Set(['create-a-filter', 'create-filter-view', 'create-group-by-view']);
+
+// Data's Create a Filter, Create Filter View and Create Group by View, then Change View's saved views, if any.
+function filterEntries(catalogue: OfficeCatalogue): readonly OfficeEntry[] {
+  const data = catalogue.find((m) => m.id === 'data')?.entries ?? [];
+  const making = items(data).filter((item) => FILTER_ITEMS.has(item.id));
+  const views = items(submenuEntries(catalogue, 'data', 'change-view')).filter((item) =>
+    item.id.startsWith('filter-view-'),
+  );
+  return views.length ? [...making, { kind: 'separator' }, ...views] : making;
+}
+
 /** The label of the entry ticked now, or null where none is (a mixed or unknown look). */
 const tickedLabel = (entries: readonly OfficeEntry[], actions: OfficeActions) =>
   items(entries).find((item) => actions[item.id]?.checked === true)?.label ?? null;
@@ -108,6 +120,8 @@ export function spreadsheetChoices(
     ),
     // The toolbar's Merge Cells arrow (formatting.md "Merges", D208).
     'merge-cells': choiceOf(submenuEntries(catalogue, 'format', 'merge-cells'), actions),
+    // Create a Filter's chevron: Data's filter items, then the sheet's saved views (surface.md "Toolbar").
+    'create-a-filter': choiceOf(filterEntries(catalogue), actions),
   };
   // A Viewer's grid binds none: the controls stay away, as a built control nothing runs does.
   return Object.fromEntries(

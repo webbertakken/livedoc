@@ -237,3 +237,67 @@ test('a group by view groups a table under its headers, collapsed by its opener 
   await expect(page.getByRole('button', { name: 'Expand apple, 2 rows' })).toBeVisible();
   expectNoPageErrors(pageErrors);
 });
+
+test('the toolbar’s filter button makes and opens views; a table chip in row 1 leaves its header readable', async ({
+  page,
+  pageErrors,
+}) => {
+  test.setTimeout(150_000);
+  // Wide enough that the Insert group's controls are on the bar, not folded into More.
+  await page.setViewportSize({ width: 1600, height: 860 });
+  await page.goto('/new?kind=spreadsheet');
+  await page.waitForURL(/\/document\//);
+  await expect(page.locator(READY)).toBeVisible();
+  for (const [i, [fruit, n]] of [
+    ['Fruit', 'Count'],
+    ['apple', '3'],
+    ['pear', '8'],
+  ].entries()) {
+    await typeInto(page, `A${i + 1}`, fruit!);
+    await typeInto(page, `B${i + 1}`, n!);
+  }
+  await select(page, 'A2');
+  const options = page.getByRole('button', { name: 'Create a Filter options' });
+  await options.click();
+  await page.getByRole('menuitem', { name: /Create Filter View/ }).click();
+  const bar = page.getByRole('toolbar', { name: 'Filter view' });
+  await expect(bar.getByRole('textbox', { name: 'Name' })).toHaveValue('Filter 1');
+  await bar.getByRole('button', { name: 'Close Filter View' }).click();
+  // The saved view is listed under the creating items, and opens from there.
+  await options.click();
+  await settle(page);
+  await page.screenshot({ path: test.info().outputPath('filter-button-menu.png') });
+  await page.getByRole('menuitemradio', { name: 'Filter 1' }).click();
+  await expect(bar.getByRole('textbox', { name: 'Name' })).toHaveValue('Filter 1');
+  await bar.getByRole('button', { name: 'Close Filter View' }).click();
+  // The funnel itself turns the sheet's filter on, and is named Remove Filter while it is.
+  await page.getByRole('button', { name: 'Create a Filter', exact: true }).click();
+  const remove = page.getByRole('button', { name: 'Remove Filter', exact: true });
+  await expect(remove).toHaveAttribute('aria-pressed', 'true');
+  await remove.click();
+  await expect(page.getByRole('button', { name: 'Create a Filter', exact: true })).toHaveAttribute(
+    'aria-pressed',
+    'false',
+  );
+
+  // A table from A1: its chip sits above the header's first cell, over the column letters, not over "Fruit".
+  await select(page, 'A2');
+  await (await officeMenuItem(page, ['Format', 'Convert to Table'])).click();
+  const chip = page.getByRole('button', { name: 'Table1 table menu' });
+  await expect(chip).toBeVisible();
+  const fruit = shown(page, 'Fruit').first();
+  const [chipBox, fruitBox] = [await chip.boundingBox(), await fruit.boundingBox()];
+  expect(chipBox!.y + chipBox!.height).toBeLessThanOrEqual(fruitBox!.y + 1);
+  // Drawn on top: the point at its middle is the chip's, not a column letter's.
+  expect(
+    await chip.evaluate((el) => {
+      const b = el.getBoundingClientRect();
+      return (
+        document.elementFromPoint(b.x + b.width / 2, b.y + b.height / 2)?.closest('button') === el
+      );
+    }),
+  ).toBe(true);
+  await settle(page);
+  await page.screenshot({ path: test.info().outputPath('table-chip-row-one.png') });
+  expectNoPageErrors(pageErrors);
+});

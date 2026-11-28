@@ -395,8 +395,9 @@ sheet's, seen by everyone, kept by row and column ids as a named range is.
   changed, its banding's footer on; refused while that row holds anything, is another table's or a protected range's
   ("Make room below the table for its total row"). Turning it off makes that row a data row again, its cells kept
   (D445).
-- **Table menu** (the Director's ruling, 2026-11-27, as Google's): a chip over the header row's first cell (on it when
-  the header is the sheet's first row) with the table's name and ▾, seen by everyone. Pressing it, or Enter or Space
+- **Table menu** (the Director's ruling, 2026-11-27, as Google's): a chip above the header row's first cell (over the
+  column letters when the header is the first row in view, never over the header's text; hidden while the header is
+  scrolled away, D503) with the table's name and ▾, seen by everyone. Pressing it, or Enter or Space
   on it, opens the menu, its items moved by the arrow keys: **Table Settings** (the active cell put in the table, the
   panel opened), **Rename** (the name edited in place on the chip; Enter keeps it, Escape leaves it, a name the rules
   refuse is said in a toast), **Select Table**, **Filter** (the table's filter on or off, ticked while on, D481),
@@ -676,6 +677,8 @@ The code cites each by its id.
   "other column types may have aggregations already applied", the types unmeasured) (default).
 - **D502** Choosing and hiding aggregations: per column for every group and kept with the view, as Google's
   column-level aggregations; Hide Aggregations on the view bar, Google's View Options item (default).
+- **D503** A table's chip when no row lies above its header: drawn over the column letters, so the header's text stays
+  readable (seen in the gate's capture, the chip hid "Fruit" in A1); Google's placement there unmeasured (default).
 - **D487** What a slicer filters beside the cells: a chart whose data range is the slicer's range exactly, as
   Google's "same data range"; a pivot table whose source is the slicer's range exactly, on the slicer's sheet, while
   Apply to Pivot Tables is ticked, worked out for each person by the pivot tables' side (the Director's ruling,

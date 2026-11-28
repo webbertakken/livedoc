@@ -72,12 +72,16 @@ Left to right, a hairline between the groups:
 | Text      | **Bold** · **Italic** · **Strikethrough** · **Text Colour**                                                                                              |
 | Cell      | **Fill Colour** · **Borders** · **Merge Cells** (and its menu)                                                                                           |
 | Alignment | **Horizontal Align** · **Vertical Align** · **Text Wrapping** · **Text Rotation**                                                                        |
-| Insert    | **Insert Link** · **Insert Comment** · **Insert Chart** · **Create a Filter** (and filter views) · **Functions** (Σ)                                     |
+| Insert    | **Insert Link** · **Insert Comment** · **Insert Chart** · **Create a Filter** (a split toggle with the views' menu) · **Functions** (Σ)                  |
 | End       | **Hide the Menus** (^)                                                                                                                                   |
 
 - Each control reads the active cell (Bold pressed when it is bold) and acts on the whole selection, one undo step.
 - A control shares its menu item's id and binding: Format as Currency and Format as Percent are Format › Number's,
   Bold is Format › Text's, Create a Filter is Data's (pressed while the sheet has one).
+- **Create a Filter** is a split toggle, as Google's filter button (the Director's ruling, 2026-11-28): the funnel
+  turns the filter on and off; its chevron, **Create a Filter options**, lists Data's **Create a Filter**, **Create
+  Group by View** (dimmed with its note outside a table) and **Create Filter View**, then the sheet's saved views by
+  name, the open one ticked, each opening it ([Data tools](data-tools.md#filters-filter-views-and-slicers)).
 - **Font Size** shows the active cell's size (10 where it sets none); a size typed is kept within 6 to 400, and minus
   and plus take one point off or on, as Google's do (default, D128).
 - **More Formats**, **Horizontal Align**, **Vertical Align** and **Text Wrapping** open the choices of Format ›

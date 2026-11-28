@@ -8,7 +8,8 @@
 // Ctrl+Alt+\ on a cell of the table); while the table's own filter is on (and no filter view is open) it is the
 // column's filter button, as Google's, drawn as a funnel once the column is filtered (D481, D482). Everyone sees them;
 // what changes the table is an Editor's, dimmed for others.
-import { useContext, useEffect, useRef, useState } from 'react';
+import { useContext, useEffect, useRef, useState, type ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 import {
   cellText,
   posRangeOf,
@@ -28,7 +29,11 @@ import { useSheetController } from '../sheet-controller';
 import { rectOf } from '../SheetSelectionLayer';
 import { useSheetActions } from '../useSheetActions';
 import { useFilterViewActions } from '../useFilterViewActions';
-import { TableColumnMenuContext, TableSettingsContext } from './table-settings-context';
+import {
+  TableChipsHostContext,
+  TableColumnMenuContext,
+  TableSettingsContext,
+} from './table-settings-context';
 import { TableColumnMenu } from './TableColumnMenu';
 
 const CHIP_HEIGHT = 20;
@@ -58,6 +63,7 @@ export function SheetTablesLayer() {
   const [filterMenu, setFilterMenu] = useState<ColumnMenuAt | null>(null);
   const root = useRef<HTMLDivElement | null>(null);
   const openerRef = useContext(TableColumnMenuContext);
+  const chipHost = useContext(TableChipsHostContext);
   // Ctrl+Alt+\: the active cell's column's menu, under its header's button.
   useEffect(() => {
     if (!openerRef) return;
@@ -113,6 +119,8 @@ export function SheetTablesLayer() {
     const at = c.sheet.layout.cols.indexOf(colId);
     return (p && namesOf(t)[at - p.c1]) ?? colId;
   };
+  // The chips drawn in the grid's chips layer when it has one, else here with the cells.
+  const wrapChips = (chips: ReactNode) => (chipHost ? createPortal(chips, chipHost) : chips);
   const run = (fn: () => void) => () => {
     setMenu(null);
     setGroupBy(false);
@@ -189,56 +197,69 @@ export function SheetTablesLayer() {
           );
         });
       })}
-      {tables.map((t) => {
-        const p = posRangeOf(c.sheet.layout, t);
-        if (!p) return null;
-        const r = rectOf(c.geometry, { r1: p.r1, c1: p.c1, r2: p.r1, c2: p.c1 }, c.scroll);
-        const style = {
-          left: r.x,
-          top: r.y >= CHIP_HEIGHT ? r.y - CHIP_HEIGHT : r.y,
-          height: CHIP_HEIGHT,
-          background: c.palette.surface,
-          color: c.palette.text,
-          borderColor: c.palette.border,
-        };
-        const chip =
-          'pointer-events-auto absolute flex items-center gap-1 rounded-t border border-b-0 px-1.5 text-xs font-semibold shadow-sm';
-        if (renaming === t.id)
+      {wrapChips(
+        tables.map((t) => {
+          const p = posRangeOf(c.sheet.layout, t);
+          if (!p) return null;
+          const r = rectOf(c.geometry, { r1: p.r1, c1: p.c1, r2: p.r1, c2: p.c1 }, c.scroll);
+          // Over the headers' layer the chip sits above its header wherever it is, over the column letters when the
+          // header is the first row in view (D503); hidden while its header is scrolled away.
+          if (
+            chipHost &&
+            (r.x + r.w <= 0 || r.y < (p.r1 < c.geometry.frozenRows ? 0 : c.geometry.frozenHeight))
+          )
+            return null;
+          const style = {
+            left: chipHost ? c.geometry.headW + Math.max(0, r.x) : r.x,
+            top: chipHost
+              ? c.geometry.headH + r.y - CHIP_HEIGHT
+              : r.y >= CHIP_HEIGHT
+                ? r.y - CHIP_HEIGHT
+                : r.y,
+            height: CHIP_HEIGHT,
+            background: c.palette.surface,
+            color: c.palette.text,
+            borderColor: c.palette.border,
+          };
+          const chip =
+            'pointer-events-auto absolute flex items-center gap-1 rounded-t border border-b-0 px-1.5 text-xs font-semibold shadow-sm';
+          if (renaming === t.id)
+            return (
+              <input
+                key={t.id}
+                aria-label={`Rename ${t.name}`}
+                autoFocus
+                defaultValue={t.name}
+                className={chip}
+                style={style}
+                onPointerDown={(e) => e.stopPropagation()}
+                onKeyDown={(e) => {
+                  e.stopPropagation();
+                  if (e.key === 'Enter') rename(t, e.currentTarget.value);
+                  if (e.key === 'Escape') setRenaming(null);
+                }}
+                onBlur={(e) => rename(t, e.currentTarget.value)}
+              />
+            );
           return (
-            <input
+            <button
               key={t.id}
-              aria-label={`Rename ${t.name}`}
-              autoFocus
-              defaultValue={t.name}
+              type="button"
+              aria-label={`${t.name} table menu`}
+              aria-haspopup="dialog"
+              aria-expanded={menu?.tableId === t.id}
               className={chip}
               style={style}
               onPointerDown={(e) => e.stopPropagation()}
-              onKeyDown={(e) => {
-                e.stopPropagation();
-                if (e.key === 'Enter') rename(t, e.currentTarget.value);
-                if (e.key === 'Escape') setRenaming(null);
-              }}
-              onBlur={(e) => rename(t, e.currentTarget.value)}
-            />
+              onKeyDown={(e) => e.stopPropagation()}
+              onClick={(e) => setMenu({ tableId: t.id, ...below(e.currentTarget) })}
+            >
+              {t.name}
+              <span aria-hidden>▾</span>
+            </button>
           );
-        return (
-          <button
-            key={t.id}
-            type="button"
-            aria-label={`${t.name} table menu`}
-            aria-haspopup="dialog"
-            aria-expanded={menu?.tableId === t.id}
-            className={chip}
-            style={style}
-            onPointerDown={(e) => e.stopPropagation()}
-            onKeyDown={(e) => e.stopPropagation()}
-            onClick={(e) => setMenu({ tableId: t.id, ...below(e.currentTarget) })}
-          >
-            {t.name}
-            <span aria-hidden>▾</span>
-          </button>
-        );
-      })}
+        }),
+      )}
       {shown ? (
         <ContextMenu
           position={{ x: menu.x, y: menu.y }}
