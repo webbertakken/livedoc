@@ -304,6 +304,26 @@ export {
 } from './conversion-copy';
 export { isSafeLink, type DroppedReason, type ImportReport, type ReportItem } from './report';
 export {
+  EMPTY_REPORT,
+  importRecordOf,
+  isEmptyReport,
+  REPORT_CONVERSIONS_MAX,
+  type ConversionRecord,
+  type ImportRecord,
+  type ReportEntry,
+  type TextDocumentReport,
+} from './report-record';
+export {
+  convertedHeading,
+  convertedLines,
+  openedHeading,
+  openedLines,
+  openedTitle,
+  OPENED_LEAD,
+  REPORT_EMPTY,
+  SECURITY_LIMITATIONS_TITLE,
+} from './report-copy';
+export {
   BODY_BLOCKS,
   FIELD,
   FIELD_ATTRIBUTES,

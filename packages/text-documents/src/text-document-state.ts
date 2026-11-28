@@ -4,6 +4,8 @@
 import * as Y from 'yjs';
 import { convertLive } from './live/live-convert';
 import type { ConversionLoss } from './convert';
+import { conversionRecordOf, type ImportRecord, type TextDocumentReport } from './report-record';
+import { appendLiveConversion, readLiveReport, writeLiveImportRecord } from './live/live-report';
 import type { Body, Paragraph } from './body';
 import type { Style, StyleDefaults } from './model/styles';
 import type { TextDocument, TextDocumentFormat } from './model/text-document';
@@ -171,13 +173,26 @@ export const TextDocumentState = {
   encode: (doc: Y.Doc): Uint8Array => Y.encodeStateAsUpdate(doc),
   /** The live state as the model, in the tab's format (live-editing-and-storage.md "The layout"). */
   document: (doc: Y.Doc, format: TextDocumentFormat): TextDocument => readLiveDocument(doc, format),
-  /** Converts the state to the other format in one transaction under `origin` (standard-mapping.md "Conversion"). */
+  /**
+   * Converts the state to the other format in one transaction under `origin` (standard-mapping.md "Conversion"),
+   * the losses recorded in the import report in the same transaction (files-and-print.md "Import report").
+   */
   convert: (
     doc: Y.Doc,
     from: TextDocumentFormat,
     to: TextDocumentFormat,
     origin?: unknown,
-  ): ConversionLoss[] => convertLive(doc, from, to, origin),
+  ): ConversionLoss[] => {
+    let losses: ConversionLoss[] = [];
+    doc.transact(() => {
+      losses = convertLive(doc, from, to, origin);
+      const record = conversionRecordOf(from, to, losses);
+      if (record) appendLiveConversion(doc, record);
+    }, origin);
+    return losses;
+  },
+  /** The import report the state holds (files-and-print.md "Import report"). */
+  report: (doc: Y.Doc): TextDocumentReport => readLiveReport(doc),
   /** The live state's styles alone, cheap to read again as the writing changes (links-and-navigation.md). */
   styles: (doc: Y.Doc, format: TextDocumentFormat): readonly Style[] => readLiveStyles(doc, format),
   /** The live state's style defaults alone, under every style (text-and-paragraphs.md "Text formatting"). */
@@ -264,9 +279,10 @@ export const TextDocumentState = {
   /** The live state's styles map, which the editor's undo also tracks (live-editing-and-storage.md "Undo"). */
   stylesType: (doc: Y.Doc): Y.Map<unknown> => doc.getMap<unknown>(STYLES_MAP),
   /** A state holding exactly this model, as one update to store beside the seed. */
-  fromDocument: (document: TextDocument): Uint8Array => {
+  fromDocument: (document: TextDocument, imported: ImportRecord | null = null): Uint8Array => {
     const doc = TextDocumentState.load();
     writeLiveDocument(doc, document);
+    if (imported) writeLiveImportRecord(doc, imported);
     return Y.encodeStateAsUpdate(doc);
   },
   /** A state holding exactly these paragraphs, as one update to store beside the seed. */
