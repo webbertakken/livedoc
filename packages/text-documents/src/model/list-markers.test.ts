@@ -47,6 +47,15 @@ describe('numberText', () => {
 });
 
 describe('ListMarkers.of', () => {
+  it('gives a number its own level’s count and format', () => {
+    const markers = ListMarkers.of([at('W'), at('W', 1), at('W', 1)], lists);
+    expect(markers.map((m) => (m?.kind === 'number' ? [m.value, m.format] : null))).toEqual([
+      [3, 'decimal'],
+      [1, 'upper-roman'],
+      [2, 'upper-roman'],
+    ]);
+  });
+
   it('numbers on through a list, past paragraphs in no list', () => {
     expect(texts([at('N'), undefined, at('N'), at('N')])).toEqual(['1.', null, '2.', '3.']);
   });

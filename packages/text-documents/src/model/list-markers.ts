@@ -10,7 +10,15 @@ import {
 } from './lists';
 
 export type ListMarker =
-  | { readonly kind: 'bullet' | 'number'; readonly text: string; readonly level: number }
+  | { readonly kind: 'bullet'; readonly text: string; readonly level: number }
+  | {
+      readonly kind: 'number';
+      readonly text: string;
+      readonly level: number;
+      /** Its own level's count and how that level writes it, for a format that numbers its lists itself. */
+      readonly value: number;
+      readonly format: NumberFormat;
+    }
   | {
       readonly kind: 'check';
       readonly text: '';
@@ -100,7 +108,7 @@ export const ListMarkers = {
         const n = counts[level] ?? startOf(levelDef);
         return numberText(n, levelDef?.kind === 'number' ? levelDef.format : 'decimal');
       });
-      return { kind: 'number', text, level: at };
+      return { kind: 'number', text, level: at, value: counts[at], format: def.format };
     });
   },
 } as const;
