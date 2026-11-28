@@ -107,7 +107,7 @@ export const MOVABLE_TABLES: readonly MovableTable[] = [
   },
   {
     table: 'sheet_cells',
-    columns: ['document_id', 'sheet_id', 'row_id', 'col_id', 'input', 'format', 'note'],
+    columns: ['document_id', 'sheet_id', 'row_id', 'col_id', 'input', 'format'],
     sortBy: ['sheet_id', 'row_id', 'col_id'],
     where: 'document_id = ?1',
   },
