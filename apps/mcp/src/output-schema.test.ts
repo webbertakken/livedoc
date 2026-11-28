@@ -135,7 +135,20 @@ const LIVE_DOC = {
   tabs: [
     { id: 't1', name: 'Tab 1', orderIndex: 0 },
     { id: 'f1', name: 'Bug Report', orderIndex: 1 },
+    { id: 'w1', name: 'Words', orderIndex: 2, kind: 'text-document' },
   ],
+};
+// What a text document changeset answers (docs/specs/024-agents/agent-changesets.md "A text document's changesets").
+const TEXT_CHANGESET = {
+  dryRun: false,
+  changeset: {
+    id: 'tc_0000000001',
+    tabId: 'w1',
+    documentTab: 't.0',
+    counts: { added: 1, changed: 0, removed: 0 },
+  },
+  results: ['appended ¶3'],
+  text: 'appended ¶3',
 };
 // A Form tab taking responses, its answers going to the Sprint board (docs/specs/030-forms/forms.md "Agents").
 const FORM_TAB = {
@@ -234,6 +247,8 @@ async function api(request: Request): Promise<Response> {
     return json({ reading, suggestions: [] });
   }
   // A document view: text with the tab revision as its ETag, as the api answers it.
+  if (url.searchParams.has('view') && path.endsWith('/tabs/w1'))
+    return new Response('# Plan', { headers: { 'X-State-Vector': 'AQID' } });
   if (url.searchParams.has('view')) {
     return new Response('tab t1 "Tab 1" · 0 elements · rev 3', { headers: { ETag: 'W/"3"' } });
   }
@@ -294,6 +309,7 @@ async function api(request: Request): Promise<Response> {
   if (path.endsWith('/share'))
     return json({ link: { code: 'abc', role: 'view', expiresAt: null } });
   if (path.endsWith('/pages')) return json(PAGES);
+  if (path.endsWith('/tabs/w1/changesets')) return json(TEXT_CHANGESET);
   if (path.endsWith('/changesets')) return json(CHANGESET);
   if (path.endsWith('/name')) return json({ tab: { id: 't1', name: 'Renamed', orderIndex: 0 } });
   if (path.endsWith('/form-link')) return json(FORM_LINK);
@@ -491,6 +507,21 @@ const CALLS: { tool: string; output: keyof typeof outputs; args: Record<string, 
     tool: 'convert_spreadsheet',
     output: 'convertSpreadsheetOutput',
     args: { documentId: 'd1', to: 'xlsx' },
+  },
+  {
+    tool: 'read_text_document',
+    output: 'readTextDocumentOutput',
+    args: { documentId: 'd1', view: 'text', lines: true },
+  },
+  {
+    tool: 'edit_text_document',
+    output: 'editTextDocumentOutput',
+    args: { documentId: 'd1', ops: 'append "Next steps"', summary: 'next steps' },
+  },
+  {
+    tool: 'create_document',
+    output: 'createDocumentOutput',
+    args: { name: 'Plan', kind: 'text-document', markdown: '# Plan' },
   },
   {
     tool: 'change_pages',

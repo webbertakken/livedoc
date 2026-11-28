@@ -8,4 +8,5 @@ export * from './pages-schema';
 export * from './form-schema';
 export * from './storm-schema';
 export * from './image-schema';
+export * from './text-document-schema';
 export * from '../verbs/mcp-tools';

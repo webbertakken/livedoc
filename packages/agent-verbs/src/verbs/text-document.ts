@@ -2,10 +2,13 @@
 // through its views, change it with text operations as one changeset, and, run by the CLI, download it as a file or
 // open a file as a new one. The kind is its own resource, `text-document` (alias `text`), as a spreadsheet is.
 import { z } from 'zod';
-import { ApiError } from '@livedoc/api-client';
-import type { TextChangesetRefusal, TextChangesetResponse } from '@livedoc/api-schema';
 import { defineVerb, VerbRefusal, type Verb, type VerbContext } from '../define';
-import { documentOf, tabPath } from './shared';
+import {
+  editTextDocument,
+  readTextDocumentView,
+  textDocumentTabIn,
+} from '../text-documents/text-document-calls';
+import { documentOf } from './shared';
 
 // What a text document downloads as (files-and-print.md "Downloading").
 export const TEXT_DOCUMENT_DOWNLOAD_FORMATS = [
@@ -25,33 +28,19 @@ const tabFlag = z
   .optional()
   .describe('The text document tab, by name or id, when the document holds several');
 
-type KindedTab = { id: string; name: string; orderIndex: number; kind?: string };
-
 /** The document a command names and its text document tab: the one `tab` names, else its first. */
 export async function textDocumentTabOf(ctx: VerbContext, doc: string, tab: string | undefined) {
   const document = await documentOf(ctx, doc);
-  const tabs = (document.tabs as KindedTab[])
-    .filter((t) => t.kind === 'text-document')
-    .sort((a, b) => a.orderIndex - b.orderIndex);
-  const named = tab?.toLowerCase();
-  const found =
-    named === undefined
-      ? tabs[0]
-      : (tabs.find((t) => t.id === tab) ??
-        tabs.find((t) => t.name.toLowerCase() === named) ??
-        tabs.find((t) => t.id.startsWith(tab!)));
-  if (!found)
+  const found = textDocumentTabIn({ name: document.name, tabs: document.tabs }, tab);
+  if (!found.ok)
     throw new VerbRefusal({
       status: 404,
       code: 'not_a_text_document',
-      message:
-        tabs.length === 0
-          ? `${document.name} holds no text document`
-          : `${document.name} holds no text document tab ${JSON.stringify(tab)}`,
-      lines: tabs.map((t) => `tab ${JSON.stringify(t.name)} ${t.id.slice(0, 8)}`),
+      message: found.message,
+      lines: found.tabs.map((t) => `tab ${JSON.stringify(t.name)} ${t.id.slice(0, 8)}`),
       hint: 'name its text document tab with --tab, or list the tabs: livedoc tab ls <doc>',
     });
-  return { document, tab: found };
+  return { document, tab: found.tab };
 }
 
 export const textDocumentView = defineVerb({
@@ -74,12 +63,13 @@ export const textDocumentView = defineVerb({
   output: z.object({ text: z.string() }),
   run: async (ctx, input) => {
     const { document, tab } = await textDocumentTabOf(ctx, input.doc, input.tab);
-    const query = new URLSearchParams({ view: input.as ?? 'outline' });
-    if (input.only !== undefined) query.set('only', input.only);
-    if (input.range !== undefined) query.set('range', input.range);
-    if (input.lines) query.set('lines', '1');
-    const { body } = await ctx.api.text(`${tabPath(document.id, tab.id)}?${query.toString()}`);
-    return { text: body };
+    const { text } = await readTextDocumentView(ctx.api, document.id, tab.id, {
+      ...(input.as !== undefined ? { view: input.as } : {}),
+      ...(input.only !== undefined ? { only: input.only } : {}),
+      ...(input.range !== undefined ? { range: input.range } : {}),
+      ...(input.lines !== undefined ? { lines: input.lines } : {}),
+    });
+    return { text };
   },
   text: ({ text }) => [text],
   cli: {
@@ -91,25 +81,6 @@ export const textDocumentView = defineVerb({
     prints: 'the view',
   },
 });
-
-const refusalOf = (error: ApiError): VerbRefusal => {
-  let refusal: Partial<TextChangesetRefusal> = {};
-  try {
-    refusal = JSON.parse(error.body) as Partial<TextChangesetRefusal>;
-  } catch {
-    // Not a refusal's JSON: the status and body speak for themselves below.
-  }
-  const where = refusal.line ? `line ${refusal.line}: ` : '';
-  return new VerbRefusal({
-    status: error.status,
-    code: refusal.error ?? error.code ?? 'refused',
-    message: `${where}${refusal.message ?? error.message}`,
-    hint:
-      refusal.error === 'text_ambiguous' || refusal.error === 'text_not_found'
-        ? 'read it as it stands: livedoc text view <doc> --as text --lines'
-        : 'the operations: livedoc guide text',
-  });
-};
 
 export const textDocumentEdit = defineVerb({
   id: 'text-document.edit',
@@ -150,29 +121,25 @@ export const textDocumentEdit = defineVerb({
       });
     const ops = input.file !== undefined ? await ctx.readInput(input.file) : input.ops!.join(' ');
     const { document, tab } = await textDocumentTabOf(ctx, input.doc, input.tab);
-    try {
-      const answer = await ctx.api.json<TextChangesetResponse>(
-        `${tabPath(document.id, tab.id)}/changesets${input.dryRun ? '?dryRun=1' : ''}`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            ops,
-            ...(input.documentTab !== undefined ? { documentTab: input.documentTab } : {}),
-            ...(input.summary !== undefined ? { summary: input.summary } : {}),
-            ...(input.base !== undefined ? { base: input.base } : {}),
-          }),
-        },
-      );
-      return {
-        dryRun: answer.dryRun,
-        changeset: answer.changeset && { id: answer.changeset.id, counts: answer.changeset.counts },
-        results: answer.results,
-      };
-    } catch (error) {
-      if (error instanceof ApiError) throw refusalOf(error);
-      throw error;
-    }
+    const edited = await editTextDocument(ctx.api, document.id, tab.id, {
+      ops,
+      ...(input.documentTab !== undefined ? { documentTab: input.documentTab } : {}),
+      ...(input.summary !== undefined ? { summary: input.summary } : {}),
+      ...(input.base !== undefined ? { base: input.base } : {}),
+      ...(input.dryRun !== undefined ? { dryRun: input.dryRun } : {}),
+    });
+    if (!edited.ok)
+      throw new VerbRefusal({
+        status: edited.status,
+        code: edited.code,
+        message: `${edited.line ? `line ${edited.line}: ` : ''}${edited.message}`,
+        hint:
+          edited.code === 'text_ambiguous' || edited.code === 'text_not_found'
+            ? 'read it as it stands: livedoc text view <doc> --as text --lines'
+            : 'the operations: livedoc guide text',
+      });
+    const { ok: _ok, ...answer } = edited;
+    return answer;
   },
   text: ({ dryRun, changeset, results }) => [
     ...results,

@@ -122,6 +122,8 @@ const LIVE_DOC = {
   tabs: [
     { id: 't_1', name: 'Tab 1', orderIndex: 0 },
     { id: 'f_1', name: 'RSVP', orderIndex: 1 },
+    // A text document tab, so the text document tools have one to read and change.
+    { id: 'w_1', name: 'Words', orderIndex: 2, kind: 'text-document' },
   ],
 };
 // One blank sheet on the tab, so the sheet tools have a sheet to name.
@@ -275,7 +277,7 @@ const AUTHED = { authInfo: { token: 'tok_test' } };
 const flush = () => new Promise((resolve) => setTimeout(resolve, 0));
 
 describe('registerTools', () => {
-  it('registers the thirty-four documented tools, each with a description', () => {
+  it('registers the thirty-seven documented tools, each with a description', () => {
     const { registered } = harness();
     const current = registered.filter((r) => !isDeprecated(r));
     expect(current.map((r) => r.name).sort()).toEqual([
@@ -294,6 +296,7 @@ describe('registerTools', () => {
       'create_document',
       'create_spreadsheet',
       'delete_document',
+      'edit_text_document',
       'export_event_storming',
       'find_documents',
       'list_images',
@@ -305,6 +308,7 @@ describe('registerTools', () => {
       'read_event_storming',
       'read_form',
       'read_sheet',
+      'read_text_document',
       'rename_document',
       'restore_document',
       'search_icons',
@@ -332,7 +336,13 @@ describe('registerTools', () => {
       const before = emitted.length;
       // A board or Sheet goes only on a tab in Plan: the Form tab is one, Tab 1 is in Pages.
       const planOnly = tool.name === 'add_sheet' || tool.name === 'add_board';
-      const args = planOnly ? { ...ARGS, tabId: 'f_1' } : ARGS;
+      // A text document tool reads and changes the text document tab, with operations as text.
+      const textOnly = tool.name.endsWith('_text_document');
+      const args = planOnly
+        ? { ...ARGS, tabId: 'f_1' }
+        : textOnly
+          ? { ...ARGS, tabId: 'w_1', ops: 'append "x"' }
+          : ARGS;
       const result = (await tool.handler(args, AUTHED)) as { isError?: boolean };
       // Guards the harness itself: a tool that failed here would pass the
       // "no emit" half vacuously.
@@ -435,6 +445,9 @@ describe('tool annotations', () => {
     add_sheet: 'write',
     create_spreadsheet: 'write',
     convert_spreadsheet: 'write',
+    // docs/specs/034-text-documents/agents-and-sync.md "Writing": an edit deletes text and replace the whole body.
+    read_text_document: 'read',
+    edit_text_document: 'destructive',
     // docs/specs/024-agents/pages-for-agents.md: change_pages deletes pages and replaces their
     // content; write_article replaces an article's text.
     change_pages: 'destructive',
@@ -501,6 +514,7 @@ describe('tool annotations', () => {
       'read_event_storming',
       'read_form',
       'read_sheet',
+      'read_text_document',
       'search_icons',
     ]);
 
@@ -526,6 +540,7 @@ describe('tool annotations', () => {
       'change_pages',
       'change_sheet',
       'delete_document',
+      'edit_text_document',
       'update_document',
       'write_article',
     ]);
