@@ -730,7 +730,7 @@ export class Workbook {
     const sheet = this.sheets.get(sheetId);
     const anchor = sheet && pivotAnchorsOf(sheet).find((a) => a.pivot.id === pivotId);
     const landed = anchor && this.pivotOutputAt(sheetId, anchor.r, anchor.c);
-    const box = landed ? pivotBox(anchor.pivot, this.pivotSheetsOf(sheet!)) : null;
+    const box = landed ? pivotBox(anchor.pivot, this.pivotSheetsOf(sheet)) : null;
     if (!landed || !box || !isPivotArray(this.vals.get(this.noAt(sheetId, anchor.r, anchor.c))))
       return null;
     const read = readPivotSource(box, (r, c) => this.value(box.sheet.id, r, c), this.locale);
