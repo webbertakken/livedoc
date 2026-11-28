@@ -21,12 +21,17 @@ export function useTextDocumentReviewPreview({
   doc: docRef,
   tab,
   viewing = false,
+  printing = false,
 }: {
   doc: RefObject<Y.Doc | null>;
   /** The document tab shown. */
   tab: string;
   /** The person is in Viewing: every suggestion drawn rejected, and no preview is chosen. */
   viewing?: boolean;
+  /**
+   * The surface is in its printing look (files-and-print.md "Printing"): every suggestion drawn accepted, Viewing too.
+   */
+  printing?: boolean;
 }) {
   // How the body is bound to another fragment of the same tab: the surface's editor sets it once it is made.
   const bindBody = useRef<(fragment: Y.XmlFragment) => void>(() => {});
@@ -36,7 +41,7 @@ export function useTextDocumentReviewPreview({
   });
   // A preview is of the tab it was chosen in, and none is chosen in Viewing.
   const mode: ReviewPreview = chosen.tab === tab && !viewing ? chosen.mode : 'show';
-  const settle: ReviewPreview = viewing ? 'reject-all' : mode;
+  const settle: ReviewPreview = printing ? 'accept-all' : viewing ? 'reject-all' : mode;
   // The settled writing drawn, and the tab whose body it is bound to.
   const [drawn, setDrawn] = useState<Y.Doc | null>(null);
   const bound = useRef<{ doc: Y.Doc; tab: string } | null>(null);
@@ -109,5 +114,5 @@ export function useTextDocumentReviewPreview({
 
   const setMode = useCallback((next: ReviewPreview) => setChosen({ mode: next, tab }), [tab]);
 
-  return { mode, setMode, previewing: mode !== 'show', drawn, bindBody };
+  return { mode, setMode, previewing: mode !== 'show' || printing, drawn, bindBody };
 }
