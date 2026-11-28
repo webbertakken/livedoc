@@ -15,6 +15,7 @@ import {
   type DrawnGroup,
   type GroupAggregate,
 } from '@livedoc/sheets';
+import { Tooltip } from '@livedoc/ui';
 import { ContextMenu, ContextMenuDivider } from '@/components/palette/ContextMenu';
 import { MenuActionRow, MenuHeader } from '@/components/primitives/PortalMenu';
 import { debugLog } from '@/lib/debug-log';
@@ -142,14 +143,15 @@ export function SheetGroupBands() {
                   ) : null}
                   <span className="flex-1" />
                   {text ? (
-                    <span
-                      // Squeezed before the group's value, which names the group; its whole text on hover.
-                      title={text}
-                      className="min-w-0 shrink-[100] truncate text-supporting"
-                      style={{ color: c.palette.muted }}
-                    >
-                      {text}
-                    </span>
+                    // Squeezed before the group's value, which names the group; its whole text on hover.
+                    <Tooltip label={text}>
+                      <span
+                        className="min-w-0 shrink-[100] truncate text-supporting"
+                        style={{ color: c.palette.muted }}
+                      >
+                        {text}
+                      </span>
+                    </Tooltip>
                   ) : null}
                   {shown ? (
                     <button
