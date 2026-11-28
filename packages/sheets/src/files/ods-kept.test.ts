@@ -10,7 +10,7 @@ import {
   FORMATS,
   GRAPHIC,
   NAMES,
-  DETECTIVE,
+  FRAME_BEFORE,
   odfFlatWithKept,
   PARAGRAPH,
   SCRIPTS,
@@ -50,15 +50,15 @@ describe('ODF kept content', () => {
         `table-before@0,,:${SHAPES}`,
         `table-after@0,,:${FORMATS}`,
         'table-attribute@0,,:table:print="false"',
-        `cell@0,0,0:${DETECTIVE}`,
+        `cell@0,0,0:${FRAME_BEFORE}`,
         'cell-after@0,0,0:<draw:frame draw:name="after"/>',
         'cell-attribute@0,0,0:table:number-columns-spanned="2"',
         'cell-attribute@0,0,0:table:content-validation-name="val1"',
       ].sort(),
     );
     // A kept element carries the bindings of the prefixes it uses.
-    const detective = read.file.kept!.items.find((i) => i.place === 'cell')!;
-    expect(detective.ns).toEqual({ table: ODF_NS.table, text: ODF_NS.text });
+    const frame = read.file.kept!.items.find((i) => i.place === 'cell')!;
+    expect(frame.ns).toEqual({ draw: ODF_NS.draw, text: ODF_NS.text });
     expect(read.file.sheets[0]!.cells.map((c) => c.value)).toEqual([
       { k: 'n', v: 1 },
       { k: 'n', v: 2 },
