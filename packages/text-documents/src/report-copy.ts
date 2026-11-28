@@ -70,6 +70,18 @@ export const REPORT_LINES: Record<DroppedReason, readonly [one: string, many: st
     'suggested deletion across paragraphs read as one paragraph',
     'suggested deletions across paragraphs read as one paragraph each',
   ],
+  'pdf-no-text': [
+    'page with no text (a scan or a drawing) left out',
+    'pages with no text (scans or drawings) left out',
+  ],
+  'pdf-text-cut': [
+    'page whose text was cut at the reader’s limit',
+    'pages whose text was cut at the reader’s limit',
+  ],
+  'pdf-pictures': [
+    'page read without its pictures (LiveDoc does not read a PDF’s pictures yet)',
+    'pages read without their pictures (LiveDoc does not read a PDF’s pictures yet)',
+  ],
   'suggestion-unknown': [
     'suggestion of a kind LiveDoc does not hold left out',
     'suggestions of kinds LiveDoc does not hold left out',
