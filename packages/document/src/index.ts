@@ -788,6 +788,9 @@ export * from './web-component-layout';
 // draw their own `…` rather than taking the shared settings one.
 export * from './behaviour-shapes';
 export * from './colour-math';
+export * from './office-comment';
+export * from './office-collab-rows';
+export * from './sheet-threads';
 export * from './colors';
 export * from './cell-colours';
 export * from './table-header-colours';

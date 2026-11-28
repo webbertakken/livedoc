@@ -39,16 +39,95 @@ no reactions. It is cell content beside the cell's input and format, never one o
 
 ## Comments
 
-- **Insert › Comment** (Ctrl+Alt+M): a thread on a cell or range, an orange corner triangle; replies, mentions
-  (`+name` or `@name`), **Assign To** making it an action (LiveDoc's assigned actions), **Resolve**, **Reopen**,
-  reactions as 0019's threads have them.
-- The **Comments** panel (the title row's comment history) lists every thread of the workbook, filterable by sheet,
-  For You, Open and Resolved; View › Comments hides, minimises or shows them.
-- A thread follows its cell through inserts, sorts and moves (by ids); a deleted cell's thread is resolved with
-  "The cell this comment was on was deleted".
-- Today's cell threads carry over ([Sheet](sheet.md#cell-comments)), re-anchored to the workbook.
-- XLSX keeps threads as threaded comments; ODF keeps them as annotations with LiveDoc's thread data as unknown
-  content, so replies survive a round trip through LiveDoc and degrade to text in other applications (listed).
+**Status: specified.** A comment thread is a conversation about a cell or a range, as Google's are: authors, replies,
+mentions, assignees, reactions, resolve and reopen, the same thread 0019 specifies for every office kind
+([Review surfaces](../012-collaboration/review-surfaces.md#comment-threads)) and a text document builds
+([Comments](../034-text-documents/review.md#comments)). This page names what a spreadsheet adds.
+
+### Where a thread lives
+
+- **In the sheet store**, beside the cells and never in them (Webber, 2026-11-28): each sheet's threads by id, in the
+  room's `sheet_threads`, read with the workbook and written by a **thread write** on the sheet's threads route. Adding,
+  replying to, resolving or deleting a comment never changes a cell, is never an undo step and never merges with
+  anyone's typing, as a text document's comments do not.
+- **A thread**: its id, its sheet, its **anchor** (a range by row and column ids, `r1`, `c1`, `r2`, `c2`, one cell
+  when they meet), resolved or open, and its comments in the order they were made.
+- **A comment** is a text document's comment ([How a comment is kept](../034-text-documents/review.md#how-a-comment-is-kept)):
+  its id, plain text (1 to `COMMENT_TEXT_MAX`, 2,000 characters), time, edit time, author, mentions, assignee and
+  reactions. Its **author** is the writer's adder key on the document with their name and colour as they wrote it,
+  stamped by the api from who sends the write, never read from it; a file's comment has the file's name for its
+  author, no key, and reads "From the file".
+- **The anchor follows its cells** through inserted, moved and sorted rows and columns, since their ids do. Its range
+  is drawn while all four of its ids are on the sheet, else only its top-left cell. When its top-left cell's row or
+  column is deleted the thread is kept and reads "The cell this comment was on was deleted" in the Comments panel,
+  with no marker; undoing the deletion brings the row or column back with its id, and the marker with it (default,
+  D653). A merged area's thread is its top-left cell's.
+- **Copies**: copying cells, Duplicate, Copy To and Make a Copy of a sheet carry no threads: a thread is a
+  conversation about the original's cells, as a pasted element leaves its own behind (default, D654).
+- **Limits**: up to 1,000 threads a sheet (`SHEET_THREADS_MAX`) and 500 comments a thread
+  (`SHEET_THREAD_COMMENTS_MAX`), as cell threads today; more are refused (`threads_full`, `thread_full`).
+
+### The thread write
+
+- `POST /api/documents/:id/sheets/:sheetId/threads` with one op: **start** (a new thread: its id, anchor and first comment), **reply**,
+  **edit** (a comment's text, its mentions and assignee), **remove** (a comment; the first one takes the thread),
+  **resolve** (resolved or reopened) and **react** (an emoji added or taken back by the sender's key).
+- **Who may** ([Who may do what](#who-may-do-what)): an Editor and a Participant start, reply, resolve, reopen and
+  react; each edits and removes their own comments by their key, and an Editor removes anyone's. A Viewer sends none
+  (`forbidden`). A Participant's write is judged by the room as a text document's is (fork D7): their own key only.
+- **Answered and relayed** as the thread's whole state after the op (or its id, gone), each with the thread's own
+  count of changes, so a session keeps the latest state it has seen whatever order relays arrive in; a session that
+  reconnects reads the workbook's threads again. The cells' ordered writes never carry a thread, so a Viewer's
+  session, which never receives one, sees no gap. A Viewer's read of the workbook's threads answers none (as [What a Viewer receives](../034-text-documents/review.md#what-a-viewer-receives)).
+- Refusals: `thread_invalid` (a malformed op, an anchor off the sheet, a text out of bounds), `thread_gone` (a
+  thread or comment no longer there), `threads_full`, `thread_full`, `forbidden`.
+
+### In the grid
+
+- **Insert › Comment**, the toolbar's **Insert Comment**, the cell menu's **Comment** and **Ctrl+Alt+M** (⌘⌥M) open a
+  new thread's card on the selection (the selection's last range is its anchor), or the active cell's thread when it
+  has an open one. The card sits to the right of the anchor, as Google's: the comment field with `@` and `+` mentions
+  and **Assign To**, **Comment** and **Cancel**.
+- **The marker**: the anchor's top-left cell of an open thread shows an orange triangle in its top-right corner
+  (`#f59e0b`, the comment colour, 6 px, as a note's), drawn with the cells. A cell with a note and an open thread
+  shows the comment's triangle alone; the hover card shows the note first, then the thread (D644). A resolved thread
+  shows no marker.
+- **Hovering** an anchored cell for a moment (400 ms) shows the thread's card read-only: its first comment, its
+  author and "N more"; a press on the cell or Ctrl+Alt+M opens the thread's card, with its replies, Reply, Resolve,
+  Edit and Delete on one's own comments (an Editor's on any), and reactions.
+- **The Comments panel** ([The comments panel](../012-collaboration/review-surfaces.md#the-comments-panel), the shell's
+  `OfficeCommentsPanel`) lists every thread of the spreadsheet: each row labelled by its sheet and range
+  (`Budget!B4:C9`), grouped by sheet (the kind's own filter), with All / For you and All / Open / Resolved. A press
+  on a row opens its sheet with the anchor selected and its card open. The title row's comment history opens it.
+- **Keys**: Ctrl+Alt+Shift+A opens the Comments panel; Ctrl+Alt+N, C and Ctrl+Alt+P, C move to the next and previous
+  thread of the sheet in reading order (rows, then columns); on a selected thread R replies, J and K move, E edits
+  one's own last comment, U and Escape let it go, as a text document's.
+- **Accessibility**: an anchored cell is announced ", has comment" (after ", has note"); the card is a labelled
+  region whose comments are a list, its fields labelled; focus returns to the grid when it closes.
+
+### Mentions, assignees and the Inbox
+
+- Mentions and **Assign To** are a text document's ([Mentions](../034-text-documents/review.md#mentions),
+  [Assigning](../034-text-documents/review.md#assigning)): an assigned thread is an action in the assignee's Inbox.
+- The room pushes each open thread to the collaboration index (`collab_threads`, anchor `cell`, the sheet's tab), so
+  the Inbox lists it with its sheet and range; a Viewer gets no Inbox row of them.
+
+### In the files
+
+- XLSX keeps a thread as a threaded comment (`xl/threadedComments`), and ODF as an annotation with LiveDoc's thread
+  data kept beside it, so replies survive a round trip through LiveDoc and degrade to text in other applications
+  ([Standard mapping](standard-mapping.md#notes-in-the-file)); specified with the files' slice.
+
+### Agents
+
+- The comment commands take a spreadsheet's cell or range (`--cell B4`, `--range B4:C9` on the sheet the ref names),
+  so an agent starts, replies to, resolves and reopens a thread as on any document; `read_sheet` gives each anchored
+  cell its open thread's count, and the cells view prints it (`💬 2`).
+
+### Carried over
+
+- Plan Sheet cell threads ([Sheet](sheet.md#cell-comments)) are moved onto their spreadsheet's sheet by the
+  migration (Phase 16), each re-anchored to its cell's ids.
 
 ## Version history
 
@@ -66,13 +145,16 @@ no reactions. It is cell content beside the cell's input and format, never one o
 ## Who may do what
 
 - **Editor** adds, edits and deletes notes (they are cell content, D647); a Participant and a Viewer read them
-  (the marker and the hover card, never the note box). Comments are anyone's whose link allows commenting, as
-  everywhere in LiveDoc.
+  (the marker and the hover card, never the note box).
+- **Comments**, as a text document's ([Share roles](../034-text-documents/review.md#share-roles)): an Editor and a
+  Participant start, reply, resolve, reopen, react and mention, and edit and delete their own comments, an Editor
+  anyone's; a Viewer receives none, as Google's Viewer, and sees no marker, card or panel (default, D655).
 - Version history and edit history: Editors see both; Participants and Viewers see neither, as Google's.
 
 ## Accessibility
 
-Corner markers are announced with the cell ("has note", "has comment"); Ctrl+Alt+Shift+N and P move between comments.
+Corner markers are announced with the cell ("has note", "has comment"); Ctrl+Alt+N, C and Ctrl+Alt+P, C move between
+comments ([In the grid](#in-the-grid)).
 
 ## Limits
 
@@ -81,7 +163,9 @@ Up to 1,000 threads a sheet and 500 comments a thread, as cell threads today; a 
 
 ## Telemetry
 
-`Spreadsheet · Changed · Note`; comments and versions use the shell's events.
+`Spreadsheet · Changed · Note`; `Comment · Added · Spreadsheet`, `Comment · Resolved · Spreadsheet`,
+`Comment · Added · SpreadsheetReaction`, `UI · Opened · SpreadsheetPanelComments` and the mentions' and actions' own
+events, as a text document's; versions use the shell's events.
 
 ## Defaults
 
@@ -99,3 +183,7 @@ Notes in the files take three more, D650 to D652, in [Standard mapping](standard
   formatting dropped, each line written back as a paragraph (ODF) or the text of one run (XLSX) (default).
 - **D649** An XLSX note's author: not read (Google's notes have none); written as the file's `LiveDoc` author, its
   text without the author's prefix Excel adds by hand (default).
+- **D653** A thread whose top-left cell's row or column is deleted: kept, no marker, "The cell this comment was on
+  was deleted" in the Comments panel, back with an undone deletion; never resolved by the deletion (default).
+- **D654** Copying cells or a sheet (Duplicate, Copy To, Make a Copy) carries no threads (default).
+- **D655** A Viewer receives no comment threads of a spreadsheet, as a text document's Viewer (default).

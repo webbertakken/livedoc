@@ -3,6 +3,7 @@
 // encoded Yjs relative positions), its quote, whether it is resolved, and its comments by id, each a Y.Map, so that
 // two people replying, editing and reacting at once all keep what they did. Nothing here ever touches the writing.
 import * as Y from 'yjs';
+import type { OfficeComment, OfficeCommentAuthor } from '@livedoc/document';
 import { THREADS_MAP } from './live-names';
 
 export { THREADS_MAP };
@@ -22,30 +23,10 @@ import { REACTION_EMOJI_MAX, TEXT_DOCUMENT_REACTIONS_MAX } from '../model/commen
 const reactionEntry = (emoji: string, key: string) => `${emoji}\n${key}`;
 
 /** Who wrote a comment: their adder key on the document, or a file's name for them with no key. */
-export type TextDocumentCommentAuthor = {
-  readonly key?: string;
-  readonly name: string;
-  /** A file's initials for them, where it had them. */
-  readonly initials?: string;
-  readonly colour: string;
-  readonly fromFile?: true;
-  /** A comparison's attribution, never anyone's own (review.md "Compare documents"). */
-  readonly fromComparison?: true;
-};
+export type TextDocumentCommentAuthor = OfficeCommentAuthor;
 
-export type TextDocumentComment = {
-  readonly id: string;
-  readonly text: string;
-  /** When it was made (ms); kept through edits. */
-  readonly at: number;
-  /** When it was last edited (ms). */
-  readonly edited?: number;
-  readonly author: TextDocumentCommentAuthor;
-  readonly mentions?: readonly unknown[];
-  readonly assignee?: unknown;
-  /** Each emoji's reactors by key, sorted; an emoji with none is absent. */
-  readonly reactions?: Readonly<Record<string, readonly string[]>>;
-};
+/** A thread's comment: the office kinds' one shape (`@livedoc/document` office-comment.ts). */
+export type TextDocumentComment = OfficeComment;
 
 export type TextDocumentThread = {
   readonly id: string;
