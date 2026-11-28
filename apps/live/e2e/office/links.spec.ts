@@ -9,8 +9,8 @@ import { officeMenuItem } from './office-menus';
 // bare caret puts the address in, linked; the file holds the links.
 
 const BODY = '[role="textbox"][aria-label="Document body"]';
-const CARD = '[data-text-document-link-card]';
-const EDITOR = '[data-text-document-link-editor]';
+const CARD = '[data-office-link-card]';
+const EDITOR = '[data-office-link-editor]';
 
 test('links are made, shown, opened, removed and kept in the file', async ({
   page,

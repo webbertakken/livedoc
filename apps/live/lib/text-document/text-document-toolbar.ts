@@ -93,7 +93,7 @@ export const TEXT_DOCUMENT_TOOLBAR: OfficeToolbar = [
     controls: [
       icon('undo', 'Undo', 'edit', lucideUndo2, { shortcut: 'undo', built: true }),
       icon('redo', 'Redo', 'edit', lucideRedo2, { shortcut: 'redo', built: true }),
-      icon('print', 'Print', 'edit', lucidePrinter, { shortcut: 'print' }),
+      icon('print', 'Print', 'view', lucidePrinter, { shortcut: 'print', built: true }),
       icon('spelling-and-grammar', 'Spelling and grammar check', 'edit', lucideSpellCheck, {
         shortcut: 'open-spelling-and-grammar',
         built: true,

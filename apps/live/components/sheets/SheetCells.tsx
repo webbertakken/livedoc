@@ -202,10 +202,11 @@ function RegionCells({ region, ...p }: CellsProps & { region: Region }) {
       const waiting = workbook.isStale(sheet.id, r, c);
       const px = fontPx(f);
       let text = pending.pending ? pending.text : shown.text;
-      // A HYPERLINK draws as a link (formulas.md "Text"): underlined, in the sheet's accent unless the cell has its
-      // own text colour, kept readable on the cell's fill like any ink. Ctrl/⌘ and a click opens it (useSheetPointer).
+      // A cell's link or a HYPERLINK draws as a link (formulas.md "Text", inserted-objects.md "A cell's link"):
+      // underlined, in the sheet's accent unless the cell has its own text colour, kept readable on the cell's fill like
+      // any ink. Ctrl/⌘ and a click opens it (useSheetPointer).
       const link =
-        text && !pending.pending && formula === null ? workbook.hyperlinkOf(sheet.id, r, c) : null;
+        text && !pending.pending && formula === null ? workbook.linkTargetOf(sheet.id, r, c) : null;
       const colours = cellColours(link && !f?.fc ? { ...f, fc: palette.focus } : f, surface);
       const deco = [f?.u || link ? 'underline' : '', f?.st ? 'line-through' : '']
         .filter(Boolean)

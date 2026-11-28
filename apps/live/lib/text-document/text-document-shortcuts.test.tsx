@@ -35,6 +35,11 @@ import { FOOTER_ITEM, HEADER_ITEM } from '@/components/text-document/useTextDocu
 import { HEADER_OPTIONS_ITEM } from '@/components/text-document/useTextDocumentHeaderOptions';
 import { SECURITY_LIMITATIONS_ITEM } from '@/components/text-document/useTextDocumentReport';
 import {
+  DOWNLOAD_PDF_ITEM,
+  KEEP_PDF_COPY_ITEM,
+} from '@/components/text-document/useTextDocumentPdf';
+import { PRINT_ITEM, PRINT_PREVIEW_ITEM } from '@/components/text-document/useTextDocumentPrint';
+import {
   PAGE_COUNT_ITEM,
   PAGE_NUMBERS_MORE_ITEM,
   PAGE_NUMBERS_OPTIONS_ITEM,
@@ -82,6 +87,7 @@ import { SUGGESTION_KEY_ACTIONS } from '@/components/text-document/useTextDocume
 import { REVIEW_SUGGESTED_EDITS } from '@/components/text-document/useTextDocumentReviewPanel';
 import { COMPARE_DOCUMENTS } from '@/components/text-document/useTextDocumentCompare';
 import { WORD_COUNT_ITEM } from '@/components/text-document/useTextDocumentWordCount';
+import { DETAILS_ITEM } from '@/components/text-document/useTextDocumentDetails';
 import { VERBALISE_ITEMS } from '@/components/text-document/useTextDocumentScreenReader';
 import {
   ACCESSIBILITY_ITEM,
@@ -259,8 +265,16 @@ describe('the text document menus', () => {
         SEE_VERSION_HISTORY,
         // File > Version history > Name current version (useTextDocumentVersionWrites), bound by the surface.
         NAME_CURRENT_VERSION,
+        // File > Details (useTextDocumentDetails), bound by the surface.
+        DETAILS_ITEM,
         // File > Security limitations (useTextDocumentReport), bound by the surface.
         SECURITY_LIMITATIONS_ITEM,
+        // File > Download > PDF document (useTextDocumentPdf), bound by the surface.
+        DOWNLOAD_PDF_ITEM,
+        KEEP_PDF_COPY_ITEM,
+        // File > Print and Print preview (useTextDocumentPrint), bound by the surface.
+        PRINT_ITEM,
+        PRINT_PREVIEW_ITEM,
         // Tools > Accessibility and the Accessibility menu (useTextDocumentScreenReader), bound by the surface.
         ACCESSIBILITY_ITEM,
         ACCESSIBILITY_SETTINGS_ITEM,

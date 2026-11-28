@@ -5,7 +5,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { PDF_PRINT_FRAME_MS } from '@livedoc/pdf-documents';
 import { debugLog } from '@/lib/debug-log';
-import { picturesStyle, printInFrame } from './print-frame';
+import { PRINT_OPENED_MS, picturesStyle, printInFrame } from './print-frame';
 
 vi.mock('@/lib/debug-log', () => ({ debugLog: vi.fn() }));
 
@@ -43,7 +43,7 @@ describe('printInFrame', () => {
     loaded(frame, print);
     expect(print).toHaveBeenCalledTimes(1);
     frame.contentWindow!.dispatchEvent(new Event('afterprint'));
-    await done;
+    expect(await done).toBe('printed');
     expect(host.querySelector('iframe')).toBeNull();
     expect(revoked).toEqual(['blob:made-1']);
   });
@@ -54,7 +54,27 @@ describe('printInFrame', () => {
     const done = printInFrame({ way: 'pdf', bytes: Uint8Array.of(37) }, host);
     loaded(frameIn(host), vi.fn());
     vi.advanceTimersByTime(PDF_PRINT_FRAME_MS);
-    await done;
+    expect(await done).toBe('unconfirmed');
+    expect(host.querySelector('iframe')).toBeNull();
+  });
+
+  it('counts a print whose dialog opened as printed, though the browser never says it closed', async () => {
+    vi.useFakeTimers();
+    const host = document.body.appendChild(document.createElement('div'));
+    const done = printInFrame({ way: 'pdf', bytes: Uint8Array.of(37) }, host, true);
+    const frame = frameIn(host);
+    loaded(frame, () => frame.contentWindow!.dispatchEvent(new Event('beforeprint')));
+    vi.advanceTimersByTime(PDF_PRINT_FRAME_MS);
+    expect(await done).toBe('printed');
+  });
+
+  it('counts a print as blocked where a framed page’s dialog never opens', async () => {
+    vi.useFakeTimers();
+    const host = document.body.appendChild(document.createElement('div'));
+    const done = printInFrame({ way: 'pdf', bytes: Uint8Array.of(37) }, host, true);
+    loaded(frameIn(host), vi.fn());
+    vi.advanceTimersByTime(PRINT_OPENED_MS);
+    expect(await done).toBe('blocked');
     expect(host.querySelector('iframe')).toBeNull();
   });
 
@@ -105,7 +125,7 @@ describe('printInFrame', () => {
     loaded(frameIn(host), () => {
       throw new Error('blocked');
     });
-    await done;
+    expect(await done).toBe('blocked');
     expect(debugLog).toHaveBeenCalledWith('[pdf] print-failed step=frame', 'Error: blocked');
     expect(host.querySelector('iframe')).toBeNull();
   });

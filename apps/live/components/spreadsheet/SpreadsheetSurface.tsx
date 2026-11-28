@@ -4,6 +4,8 @@
 // "The surface"): the title row, the formula bar, the grid of the open sheet tab and the sheet bar at the foot. The
 // grid is the sheet engine's own (components/sheets), on the document's sheet store, live through the room. Loaded as
 // its own chunk, with the engine, only when a spreadsheet opens.
+import { LinkDocumentsContext } from './link-documents-context';
+import type { LinkDocument } from '@/lib/text-document/text-document-links';
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { planPalette, type Tab } from '@livedoc/document';
 import type { GridRange, WorkbookRecord } from '@livedoc/sheets';
@@ -55,6 +57,8 @@ import {
 import { NamedFunctionsProvider, useNamedFunctionsState } from './named-functions-state';
 import { FindReplaceContext, useFindReplace, useFindReplaceState } from './find-replace-state';
 
+const NO_DOCUMENTS: readonly LinkDocument[] = [];
+
 export function SpreadsheetSurface({
   scope,
   tabId,
@@ -66,6 +70,7 @@ export function SpreadsheetSurface({
   sync,
   onWorkbook,
   history = null,
+  documents,
 }: {
   scope: WorkbookScope;
   tabId: string;
@@ -81,6 +86,8 @@ export function SpreadsheetSurface({
   onWorkbook?: (workbook: WorkbookRecord) => void;
   // The person's one timeline, for Edit › Undo and Redo (grid-and-editing.md "Undo").
   history?: SpreadsheetHistory | null;
+  // The person's documents, for the link editor and card (inserted-objects.md "Insert Link").
+  documents?: readonly LinkDocument[];
 }) {
   const bridge = useSheetsBridgeContext();
   const sheetBarPeers = useSheetBarPeers(bridge);
@@ -154,55 +161,57 @@ export function SpreadsheetSurface({
           pushUndo={(step) => bridge?.pushUndo(step)}
         />
       </div>
-      <SpreadsheetThemeProvider value={theme}>
-        <ProtectSheetContext.Provider value={protectSheet}>
-          <NamedFunctionsProvider value={namedFunctions}>
-            <SheetBarActionsContext.Provider value={sheetBar}>
-              <OfficeBindingsContext.Provider value={channel}>
-                <BorderLineContext.Provider value={borderLine}>
-                  <SummarySlotContext.Provider value={summarySlot}>
-                    <SpreadsheetZoomProvider value={scale}>
-                      <SheetStepContext.Provider value={stepSheet}>
-                        <SurfaceRedoContext.Provider value={history?.redo ?? null}>
-                          <ShowFormulasContext.Provider value={formulas.shown}>
-                            <ShowProtectedContext.Provider value={protectedShown.shown}>
-                              <SpreadsheetFullScreenProvider value={fullScreen}>
-                                <FindReplaceContext.Provider value={findReplace}>
-                                  {bridge ? (
-                                    <OpenSheet
-                                      bridge={bridge}
-                                      tabId={tabId}
-                                      onSelectTab={onSelectTab}
-                                      sync={sync}
-                                      onWorkbook={onWorkbook}
-                                    />
-                                  ) : (
-                                    <Status state="loading" />
-                                  )}
-                                </FindReplaceContext.Provider>
-                              </SpreadsheetFullScreenProvider>
-                            </ShowProtectedContext.Provider>
-                          </ShowFormulasContext.Provider>
-                        </SurfaceRedoContext.Provider>
-                      </SheetStepContext.Provider>
-                    </SpreadsheetZoomProvider>
-                  </SummarySlotContext.Provider>
-                </BorderLineContext.Provider>
-              </OfficeBindingsContext.Provider>
-              <SheetBar
-                tabs={tabs}
-                activeId={tabId}
-                onSelect={onSelectTab}
-                peers={sheetBarPeers}
-                summarySlot={setSummarySlot}
-                actions={bridge ? sheetBar : null}
-                looks={looks}
-                copyTo={copyTo}
-              />
-            </SheetBarActionsContext.Provider>
-          </NamedFunctionsProvider>
-        </ProtectSheetContext.Provider>
-      </SpreadsheetThemeProvider>
+      <LinkDocumentsContext.Provider value={documents ?? NO_DOCUMENTS}>
+        <SpreadsheetThemeProvider value={theme}>
+          <ProtectSheetContext.Provider value={protectSheet}>
+            <NamedFunctionsProvider value={namedFunctions}>
+              <SheetBarActionsContext.Provider value={sheetBar}>
+                <OfficeBindingsContext.Provider value={channel}>
+                  <BorderLineContext.Provider value={borderLine}>
+                    <SummarySlotContext.Provider value={summarySlot}>
+                      <SpreadsheetZoomProvider value={scale}>
+                        <SheetStepContext.Provider value={stepSheet}>
+                          <SurfaceRedoContext.Provider value={history?.redo ?? null}>
+                            <ShowFormulasContext.Provider value={formulas.shown}>
+                              <ShowProtectedContext.Provider value={protectedShown.shown}>
+                                <SpreadsheetFullScreenProvider value={fullScreen}>
+                                  <FindReplaceContext.Provider value={findReplace}>
+                                    {bridge ? (
+                                      <OpenSheet
+                                        bridge={bridge}
+                                        tabId={tabId}
+                                        onSelectTab={onSelectTab}
+                                        sync={sync}
+                                        onWorkbook={onWorkbook}
+                                      />
+                                    ) : (
+                                      <Status state="loading" />
+                                    )}
+                                  </FindReplaceContext.Provider>
+                                </SpreadsheetFullScreenProvider>
+                              </ShowProtectedContext.Provider>
+                            </ShowFormulasContext.Provider>
+                          </SurfaceRedoContext.Provider>
+                        </SheetStepContext.Provider>
+                      </SpreadsheetZoomProvider>
+                    </SummarySlotContext.Provider>
+                  </BorderLineContext.Provider>
+                </OfficeBindingsContext.Provider>
+                <SheetBar
+                  tabs={tabs}
+                  activeId={tabId}
+                  onSelect={onSelectTab}
+                  peers={sheetBarPeers}
+                  summarySlot={setSummarySlot}
+                  actions={bridge ? sheetBar : null}
+                  looks={looks}
+                  copyTo={copyTo}
+                />
+              </SheetBarActionsContext.Provider>
+            </NamedFunctionsProvider>
+          </ProtectSheetContext.Provider>
+        </SpreadsheetThemeProvider>
+      </LinkDocumentsContext.Provider>
       <ImportReportDialog documentId={scope.documentId} />
     </section>
   );

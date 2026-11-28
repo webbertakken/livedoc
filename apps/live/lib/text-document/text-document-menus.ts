@@ -84,7 +84,7 @@ function downloads(): OfficeEntry[] {
     item('download-odt', 'OpenDocument format (.odt)', 'view', BUILT),
     item('download-fodt', 'OpenDocument flat file (.fodt)', 'view', BUILT),
     item('download-rtf', 'Rich Text Format (.rtf)', 'view', BUILT),
-    item('download-pdf', 'PDF document (.pdf)', 'view'),
+    item('download-pdf', 'PDF document (.pdf)', 'view', BUILT),
     item('download-txt', 'Plain Text (.txt)', 'view', BUILT),
     item('download-html', 'Web Page (.html, zipped)', 'view', BUILT),
     item('download-epub', 'EPUB Publication (.epub)', 'view', BUILT),
@@ -141,6 +141,11 @@ export function textDocumentMenus(
       SEPARATOR,
       submenu('share', 'Share', [item('share-with-others', 'Share with others', 'edit', BUILT)]),
       submenu('download', 'Download', downloads()),
+      // The PDF kept as a PDF document beside its source (files-and-print.md "Downloading"; director, 2026-11-28).
+      item('keep-pdf-copy', 'Keep a PDF copy in LiveDoc', 'view', {
+        keywords: ['pdf', 'save'],
+        status: 'built',
+      }),
       format === 'odf'
         ? item('convert-to-word', 'Convert to Word format', 'edit', {
             keywords: ['docx', 'ooxml'],
@@ -153,7 +158,7 @@ export function textDocumentMenus(
       SEPARATOR,
       item('rename', 'Rename', 'edit', BUILT),
       item('move', 'Move', 'edit', { keywords: ['folder'], status: 'built' }),
-      item('move-to-trash', 'Move to trash', 'edit', { keywords: ['delete'] }),
+      item('move-to-trash', 'Move to trash', 'edit', { keywords: ['delete'], status: 'built' }),
       SEPARATOR,
       submenu('version-history', 'Version history', [
         item('name-current-version', 'Name current version', 'edit', { status: 'built' }),
@@ -166,13 +171,13 @@ export function textDocumentMenus(
         keywords: ['this browser'],
       }),
       SEPARATOR,
-      item('details', 'Details', 'view'),
+      item('details', 'Details', 'view', BUILT),
       item('security-limitations', 'Security limitations', 'view', BUILT),
       item('language', 'Language', 'edit'),
       SEPARATOR,
       item('page-setup', 'Page setup', 'edit', BUILT),
-      item('print-preview', 'Print preview', 'view'),
-      item('print', 'Print', 'view', { shortcut: 'print' }),
+      item('print-preview', 'Print preview', 'view', BUILT),
+      item('print', 'Print', 'view', { shortcut: 'print', status: 'built' }),
     ]),
     menu('edit', 'Edit', [
       item('undo', 'Undo', 'edit', { shortcut: 'undo', status: 'built' }),

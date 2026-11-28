@@ -148,6 +148,15 @@ describe('writeLaidOutPages', () => {
     expect(scales[1]).toBe(LAID_OUT_FIT_RANGE[0]);
   });
 
+  it('keeps one character at its own width, centred in the width it was drawn at', async () => {
+    const { bytes } = await written(documentOf([{ ...A4, items: [word('•', 72, 100, 20)] }]));
+    const content = await contentOf(bytes);
+    expect(content).toContain('100 Tz');
+    const x = Number(/1 0 0 1 ([\d.]+) /.exec(content)![1]);
+    expect(x).toBeGreaterThan(72);
+    expect(x).toBeLessThan(82);
+  });
+
   it('leaves a run that already fits at its own width', async () => {
     const first = await written(documentOf([{ ...A4, items: [word('fit', 72, 100, 14)] }]));
     const scale = Number(/([\d.]+) Tz/.exec(await contentOf(first.bytes))![1]);
@@ -390,14 +399,22 @@ describe('writeLaidOutPages', () => {
     await engine.close();
   });
 
-  it('says its title, language and maker, and no author', async () => {
-    const { bytes } = await written(documentOf([{ ...A4, items: [] }], { language: 'nl' }));
+  it('says its title, language, subject and maker, and no author', async () => {
+    const { bytes } = await written(
+      documentOf([{ ...A4, items: [] }], {
+        language: 'nl',
+        subject: 'Made from Plan (https://docs.nu/document/1)',
+      }),
+    );
     const pdf = await PDF.load(bytes);
     expect(pdf.getTitle()).toBe('Quarterly notes');
     expect(pdf.getProducer()).toBe('LiveDoc');
     expect(pdf.getCreator()).toBe('LiveDoc');
     expect(pdf.getAuthor() ?? '').toBe('');
     expect(pdf.getLanguage()).toBe('nl');
+    expect(pdf.getSubject()).toBe('Made from Plan (https://docs.nu/document/1)');
+    const plain = await PDF.load((await written(documentOf([{ ...A4, items: [] }]))).bytes);
+    expect(plain.getSubject() ?? '').toBe('');
   });
 
   it('draws dotted and solid lines, a see-through fill and a JPEG as it came', async () => {

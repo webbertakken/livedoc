@@ -7,7 +7,7 @@
 import { useEffect, useId, useRef, type KeyboardEvent } from 'react';
 import { Button, ChevronLeftIcon, ChevronRightIcon, CloseIcon, Select, Tooltip } from '@livedoc/ui';
 import { reviewCountLine, type ReviewCount } from '@/lib/text-document/text-document-review';
-import { CardButton } from './TextDocumentLinkCard';
+import { CardButton } from '@/components/office/OfficeLinkCard';
 import type { ReviewOffers } from './useTextDocumentReviewPanel';
 import type { ReviewPreview } from './useTextDocumentReviewPreview';
 

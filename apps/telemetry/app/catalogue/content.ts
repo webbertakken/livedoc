@@ -290,6 +290,24 @@ export const TEXT_DOCUMENT_SECURITY_LIMITATIONS = chart(
   { types: ['TextDocumentSecurityLimitations'], rising: 'neutral' },
 );
 
+// A text document printed, and its Print preview opened (docs/specs/034-text-documents/files-and-print.md "Printing").
+export const TEXT_DOCUMENT_PRINTED = chart(
+  'UI',
+  'Used',
+  'Text Documents Printed',
+  'A text document handed to the browser’s print dialog (File > Print, ⌘P, the toolbar’s printer), and its Print preview opened.',
+  { types: ['TextDocumentPrint', 'TextDocumentPrintPreview'] },
+);
+
+// A text document's File > Details opened (docs/specs/034-text-documents/files-and-print.md "Details").
+export const TEXT_DOCUMENT_DETAILS = chart(
+  'UI',
+  'Used',
+  'Text Document Details Opened',
+  'Someone opened File > Details in a text document: its owner, place, dates, format, size and counts.',
+  { types: ['TextDocumentDetails'], rising: 'neutral' },
+);
+
 // Spelling in a text document (docs/specs/034-text-documents/tools.md "Spelling and grammar"): never the word.
 export const TEXT_DOCUMENT_SPELLING_ACCEPTED = chart(
   'Document',
@@ -428,6 +446,8 @@ export const DOCUMENT_ACTIONS: MetricStack = {
     TEXT_DOCUMENT_NOTICES_CHOSEN,
     TEXT_DOCUMENT_CONVERTED,
     TEXT_DOCUMENT_SECURITY_LIMITATIONS,
+    TEXT_DOCUMENT_PRINTED,
+    TEXT_DOCUMENT_DETAILS,
     TEXT_DOCUMENT_SPELLING_ACCEPTED,
     TEXT_DOCUMENT_DICTIONARY_ADDED,
     TEXT_DOCUMENT_SPELLING_CORRECTED,
@@ -1438,6 +1458,15 @@ export const SPREADSHEET_EMOJI_ADDED = chart(
   { types: ['Emoji'] },
 );
 
+// docs/specs/029-sheets/inserted-objects.md "Insert Link": a link applied to cells that had none.
+export const SPREADSHEET_LINK_ADDED = chart(
+  'Spreadsheet',
+  'Added',
+  'Spreadsheet Links Added',
+  'An editor linked spreadsheet cells to an address, a sheet or a range with Insert Link.',
+  { types: ['Link'] },
+);
+
 // docs/specs/029-sheets/data-tools.md "Filters, filter views and slicers" and "Group by view": a filter view or a
 // group by view made, saved (an Editor's) or temporary (a Participant's or a Viewer's).
 export const SPREADSHEET_FILTER_VIEWS_ADDED = chart(
@@ -1520,6 +1549,7 @@ export const SPREADSHEETS: MetricStack = {
     SPREADSHEET_PIVOT_TABLES_ADDED,
     SPREADSHEET_IMAGES_ADDED,
     SPREADSHEET_EMOJI_ADDED,
+    SPREADSHEET_LINK_ADDED,
     SPREADSHEET_FILTER_VIEWS_ADDED,
     SPREADSHEET_GROUPS_TOGGLED,
     SPREADSHEET_GROUP_AGGREGATIONS,

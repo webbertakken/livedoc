@@ -320,7 +320,7 @@ const INSERT_MENU = menu('insert', 'Insert', [
   item('insert-drawing', 'Drawing', 'edit'),
   SEPARATOR,
   item('insert-function', 'Function', 'participate', { keywords: ['formula', 'sum'] }),
-  item('insert-link', 'Link', 'edit', { shortcut: 'insert-link' }),
+  built('insert-link', 'Link', 'edit', { shortcut: 'insert-link' }),
   SEPARATOR,
   built('insert-checkbox', 'Checkbox', 'edit', { keywords: ['tick box'] }),
   built('insert-dropdown', 'Dropdown', 'edit'),

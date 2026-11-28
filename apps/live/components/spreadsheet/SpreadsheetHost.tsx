@@ -27,6 +27,7 @@ export function SpreadsheetHost({ tabId }: { tabId: string }) {
     canUndo,
     canRedo,
     tickTabs,
+    documentList,
   } = useEditorContext();
   if (!documentId || !documentWorkbook) return null;
   return (
@@ -42,6 +43,7 @@ export function SpreadsheetHost({ tabId }: { tabId: string }) {
       sync={{ run: syncToCloud, ready: selfParticipant.id !== 'self' }}
       onWorkbook={receiveWorkbookRecord}
       history={{ undo: () => void undo(), redo: () => void redo(), canUndo, canRedo }}
+      documents={documentList}
     />
   );
 }

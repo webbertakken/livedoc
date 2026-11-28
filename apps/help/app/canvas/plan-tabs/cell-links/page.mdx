@@ -1,0 +1,53 @@
+import { ArticleLayout } from '@/components/ArticleLayout';
+import { helpMetadata } from '@/lib/seo';
+
+export const metadata = helpMetadata({
+  title: 'Links in Cells',
+  description:
+    'Link spreadsheet cells to a web page, an email address, another sheet, a range or another LiveDoc document, and copy a link to any cell.',
+  path: '/help/canvas/plan-tabs/cell-links/',
+});
+
+<ArticleLayout
+  title="Links in Cells"
+  description="A cell that opens a web page, an email, another sheet or a range when you follow it."
+  categoryTitle="Canvas"
+  categorySlug="canvas/plan-tabs"
+>
+
+A link belongs to the whole cell. The cell shows its text, underlined, and the link stays when you change that text.
+
+## Adding a Link
+
+1. Click the cell, or select several cells to link them all.
+2. Choose **Insert › Link**, click **Insert Link** on the toolbar, right-click and choose **Insert Link**, or press **Ctrl+K** (**⌘K** on a Mac).
+3. Type or paste the address into **Link**, then press **Enter** or click **Apply**.
+
+**Link** takes:
+
+- A web address, such as `docs.nu` (LiveDoc adds `https://`), or an email address, which becomes a `mailto:` link.
+- A sheet of this spreadsheet, picked from **Sheets in this spreadsheet**.
+- A range, typed as `B2:C4` for this sheet or `Prices!A1:B10` for another.
+- Another of your LiveDoc documents, found by typing words of its name.
+
+**Text** is what the cell shows. Change it there, or leave it as it is. On an empty cell an empty Text shows the address you typed. A cell holding a formula, or several cells, keep their values.
+
+## Following a Link
+
+Select a linked cell and a card opens under it: click its title to follow the link. Web, email and LiveDoc addresses open in a new browser tab; a sheet or range opens its sheet with the range selected. You can also press **Alt+Enter**, hold **Ctrl** (**⌘**) and click the cell, or right-click it and choose **Open Link**. Press **Esc** to hide the card.
+
+The card's buttons **Copy Link**, **Edit Link** and **Remove Link** copy the address, change it, or take it off and leave the text.
+
+## A Link to Any Cell
+
+Right-click a cell and choose **View More Cell Actions › Get Link to This Cell**. LiveDoc copies an address that opens this spreadsheet with your selection selected, ready to paste into a message or another document.
+
+## Who Can Do What
+
+Editors add, change and remove links. Everyone the spreadsheet is shared with can follow and copy them, and get a link to a cell.
+
+## Links in Files
+
+A link travels with its cell into Excel and OpenDocument files, and links in files you open come in as cells' links. **Format › Clear Formatting** takes links off, as it does in Google Sheets. A `HYPERLINK()` formula still works as well.
+
+</ArticleLayout>

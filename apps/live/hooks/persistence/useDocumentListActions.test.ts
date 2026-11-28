@@ -12,12 +12,15 @@ vi.mock('@/lib/api-client', () => ({
 }));
 vi.mock('@/lib/telemetry', () => ({ track: vi.fn() }));
 vi.mock('@/lib/api/trash', () => ({ apiRestoreDocument: vi.fn() }));
+vi.mock('@/lib/app-location', () => ({ assignAppLocation: vi.fn() }));
 
 const { apiDeleteDocument, apiSaveDocumentMeta, apiSetDocumentFolder } =
   await import('@/lib/api-client');
 const { track } = await import('@/lib/telemetry');
 const { isDocumentDeleted } = await import('@/lib/document-tombstones');
 const { apiRestoreDocument } = await import('@/lib/api/trash');
+const { assignAppLocation } = await import('@/lib/app-location');
+const { takeDeleteUndo } = await import('@/lib/document-delete-undo');
 const { useDocumentListActions } = await import('./useDocumentListActions');
 
 // Deleting from an Explorer list (docs/specs/013-workspace/trash.md "Deleting"): nothing is asked first, the row
@@ -25,7 +28,7 @@ const { useDocumentListActions } = await import('./useDocumentListActions');
 
 const row = (id: string) => ({ id, name: `Doc ${id}`, folderId: null }) as DocumentListItem;
 
-function setup() {
+function setup(currentDocument: { id: string; name: string } | null = null) {
   const confirm = vi.fn(async () => true);
   let list = [row('a'), row('b'), row('c')];
   const setDocumentList = vi.fn(
@@ -49,6 +52,7 @@ function setup() {
       deleteFolderFromHook: vi.fn(),
       folders: [{ id: 'f1', name: 'Plans', parentId: null }],
       afterDuplicate: vi.fn(),
+      currentDocument,
     }),
   );
   return {
@@ -112,6 +116,34 @@ describe('deleteDocument from a list', () => {
 });
 
 // docs/specs/013-workspace/folders.md "A move that fails says so".
+// trash.md "Deleting": the open document's delete leaves for the Explorer, which offers the Undo; one refused stays.
+describe('deleteDocument of the open document', () => {
+  it('goes to the Explorer once the api accepted it, handing the Undo over', async () => {
+    vi.mocked(apiDeleteDocument).mockResolvedValueOnce(undefined);
+    const { actions, toast } = setup({ id: 'b', name: 'Doc b' });
+    await actions.deleteDocument('b');
+    expect(assignAppLocation).toHaveBeenCalledOnce();
+    expect(track).toHaveBeenCalledWith('Document', 'Deleted');
+    expect(takeDeleteUndo()).toEqual({ id: 'b', name: 'Doc b', trash: 'Personal' });
+    expect(toast.error).not.toHaveBeenCalled();
+  });
+
+  it('stays, lets it save again, says so and logs it when the delete is refused', async () => {
+    vi.mocked(apiDeleteDocument).mockRejectedValueOnce(new Error('500'));
+    const { actions, toast } = setup({ id: 'b', name: 'Doc b' });
+    await actions.deleteDocument('b');
+    expect(assignAppLocation).not.toHaveBeenCalled();
+    expect(isDocumentDeleted('b')).toBe(false);
+    expect(toast.error).toHaveBeenCalledWith('Could not delete “Doc b”. Try again.');
+    expect(console.warn).toHaveBeenCalledWith(
+      '[editor] delete-failed, document kept',
+      expect.any(Error),
+    );
+    expect(track).not.toHaveBeenCalledWith('Document', 'Deleted');
+    expect(takeDeleteUndo()).toBeNull();
+  });
+});
+
 describe('moveDocumentToFolder', () => {
   // docs/specs/004-interface-design/toasts.md "Naming what it acted on": the move names the document and where it
   // went, with an Undo that moves it back.

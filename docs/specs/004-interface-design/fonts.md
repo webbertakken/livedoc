@@ -270,6 +270,9 @@ Fontsource packages, as Liberation is not (default).
 - The faces are declared (`@font-face`, `font-display: swap`) in one stylesheet that loads with the text document's
   and the spreadsheet's surfaces, never on other pages; a browser downloads a face only when text uses it.
 - A face that has not arrived yet draws in its fallback and the text re-lays when it lands.
+- **In a PDF**: the same faces' WOFF files (the same subsets), assets of the editor too, are fetched only when a text
+  document's PDF is written and embedded in it as subsets ([Files and print](../034-text-documents/files-and-print.md#downloading));
+  `pnpm fonts:document` writes their list beside the stylesheet.
 - The maths font: STIX Two Math (OFL-1.1, `@fontsource/stix-two-math`, its OpenType MATH table kept), the one face
   equations draw in ([Objects](../034-text-documents/objects.md#equations-in-the-editor)); never in the font menu.
 

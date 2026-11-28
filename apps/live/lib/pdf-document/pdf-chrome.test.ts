@@ -222,7 +222,10 @@ describe("a PDF document's menus and toolbar", () => {
       .filter(({ item }) => item.status === 'built')
       .map(({ item }) => item.id);
     // File > Open is the shell's where a kind hands it a file picker; a PDF's waits on how one is started.
-    expect(built.toSorted()).toEqual(BOUND.filter((id) => id !== 'open').toSorted());
+    // File > Move to trash is the shell's for every kind (files-and-print.md "Trash"); a PDF's stays coming soon
+    // until its lane builds it.
+    const waiting = new Set(['open', 'move-to-trash']);
+    expect(built.toSorted()).toEqual(BOUND.filter((id) => !waiting.has(id)).toSorted());
   });
 
   // office-shell.md "Toolbar": a control that runs a menu item shares the item's id, so one binding serves both.
