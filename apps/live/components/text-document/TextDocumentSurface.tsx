@@ -167,6 +167,7 @@ import { useTextDocumentDrawings } from './useTextDocumentDrawings';
 import { useTextDocumentDrawingOrphans } from './useTextDocumentDrawingOrphans';
 import { useTextDocumentDrawingReveal } from './useTextDocumentDrawingReveal';
 import { drawingHostStore, useTextDocumentDrawingPictures } from './useTextDocumentDrawingPictures';
+import { useTextDocumentReport } from './useTextDocumentReport';
 import {
   drawingOpenPlugin,
   type OpenDrawing,
@@ -1146,6 +1147,12 @@ export function TextDocumentSurface({
     drawingTabs,
   });
   const drawingPictures = useTextDocumentDrawingPictures({ store: drawingHosts });
+  // The import report, once after opening a file and from File > Security limitations (files-and-print.md).
+  const importReport = useTextDocumentReport({
+    doc: tabsStore?.doc ?? null,
+    documentId: scope.documentId,
+    name: documentName,
+  });
   // Format > Image and the context menu on a selected picture: Alt text, Replace image (objects.md).
   const pictureEditing = useTextDocumentPictureEditing({
     view: editorView,
@@ -1298,8 +1305,10 @@ export function TextDocumentSurface({
       ...pictureSize.actions,
       ...tableProperties.actions,
       ...headers.actions,
+      ...importReport.actions,
     }),
     [
+      importReport.actions,
       breakActions,
       lineActions,
       tabs.actions,
@@ -1430,6 +1439,7 @@ export function TextDocumentSurface({
       {paragraphs.dialog}
       {clipboard.dialog}
       {pictures.dialog}
+      {importReport.dialog}
       {pictureEditing.dialog}
       {preferences.dialog}
       {notifications.dialog}

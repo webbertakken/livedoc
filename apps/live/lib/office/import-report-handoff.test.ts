@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-// docs/specs/029-sheets/files-and-print.md "The import report" (D120): left for the spreadsheet a file made, waiting
+// docs/specs/029-sheets/files-and-print.md "The import report" (D120): left for the document a file made, waiting
 // until closed; storage refused or a stored value of another shape shows none, and says so.
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { debugLog } from '@/lib/debug-log';
@@ -21,7 +21,7 @@ afterEach(() => {
 const REPORT = { name: 'Budget', lines: ['1 chart sheet is left out: Chart1'] };
 
 describe('the import report’s hand-over', () => {
-  it('waits for the spreadsheet it was left for, the same report each read, until closed', () => {
+  it('waits for the document it was left for, the same report each read, until closed', () => {
     const heard = vi.fn();
     const stop = subscribeImportReports(heard);
     keepImportReport('doc-1', REPORT);
@@ -42,7 +42,7 @@ describe('the import report’s hand-over', () => {
       throw new Error('quota');
     });
     keepImportReport('doc-1', REPORT);
-    expect(debugLog).toHaveBeenCalledWith('[workbook] import report not kept', {
+    expect(debugLog).toHaveBeenCalledWith('[office] import report not kept', {
       error: 'Error: quota',
     });
     vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
@@ -53,9 +53,14 @@ describe('the import report’s hand-over', () => {
       throw new Error('denied');
     });
     dismissImportReport('doc-1');
-    expect(debugLog).toHaveBeenCalledWith('[workbook] import report not dismissed', {
+    expect(debugLog).toHaveBeenCalledWith('[office] import report not dismissed', {
       error: 'Error: denied',
     });
+  });
+
+  it('waits with no lines for a document that holds its own report', () => {
+    keepImportReport('doc-1', { name: 'Notes', lines: [] });
+    expect(waitingImportReport('doc-1')).toEqual({ name: 'Notes', lines: [] });
   });
 
   it('shows none for a stored value of another shape', () => {
@@ -63,7 +68,6 @@ describe('the import report’s hand-over', () => {
       'not json',
       'null',
       '7',
-      '{"name":"A","lines":[]}',
       '{"name":"A","lines":[1]}',
       '{"name":1,"lines":["x"]}',
       '{"name":"A","lines":"x"}',
@@ -71,7 +75,7 @@ describe('the import report’s hand-over', () => {
       sessionStorage.setItem('livedoc:import-report:doc-1', stored);
       expect(waitingImportReport('doc-1')).toBeNull();
     }
-    expect(debugLog).toHaveBeenCalledWith('[workbook] import report unreadable', {
+    expect(debugLog).toHaveBeenCalledWith('[office] import report unreadable', {
       documentId: 'doc-1',
     });
   });

@@ -2,7 +2,7 @@
 
 **Status: partly built.** Built: Open (a `.odt`, `.fodt`, `.ott`, `.docx`, `.dotx` or `.docm` from the computer, and
 `.txt`, `.md`, `.html` and `.rtf` imported), Download in the OpenDocument and Word formats, Rich Text, Plain Text, Web Page, EPUB and
-Markdown, conversion. The rest is specified.
+Markdown, conversion, the import report and Security limitations. The rest is specified.
 
 Opening, importing, downloading, printing, copying, sharing, emailing and trashing a [text document](text-document.md).
 Both ODF and OOXML are native (fork C1, ruled): a file keeps the format it arrived in.
@@ -45,7 +45,7 @@ File > Download, in Google's order:
 
 | Item                      | File                                                                                                   |
 | ------------------------- | ------------------------------------------------------------------------------------------------------ |
-| Microsoft Word (.docx)    | The document itself when OOXML; a converted copy when ODF, its losses in the download's report         |
+| Microsoft Word (.docx)    | The document itself when OOXML; a converted copy when ODF, its losses listed before it downloads       |
 | OpenDocument (.odt)       | The document itself when ODF; a converted copy when OOXML                                              |
 | OpenDocument flat (.fodt) | LiveDoc's addition: the flat file                                                                      |
 | PDF (.pdf)                | The laid-out pages, text as text, fonts embedded, links live, bookmarks from headings, alt text tagged |
@@ -107,9 +107,25 @@ with nothing lost it says so and still asks (director, 2026-11-27). The text doc
 
 ## Import report
 
-Shown once after an import or a conversion that dropped or kept anything (the **Security limitations** item reopens
-it): what was dropped (macros, signatures, external links not followed, scripts in HTML) and what was kept untouched
-(form controls, smart chips' data), each by name and count. Nothing in it is ever silent.
+What a file held that the text document does not, kept in the document itself so it is never silent and never lost
+(director, 2026-11-28):
+
+- **Opened**: what reading the file dropped (macros, signatures, scripts, frames and objects, fields that run things,
+  unsafe links, external links and remote pictures not followed, pictures of formats LiveDoc does not draw, parts of
+  tables, headers, footers, comments and suggestions it could not place) and what it kept untouched (content LiveDoc
+  does not edit, written back as it came), a line a kind, counted, naming up to three of what it was. The room writes
+  it when it reads the file, so every copy and every person sees the same report.
+- **Converted**: each conversion between ODF and OOXML that the other format could not hold everything of, with the
+  lines its dialog listed (the [Conversion](standard-mapping.md#conversion) words), newest first, the last 20 kept
+  (default). Undoing the conversion takes its entry away with it; nothing is asked again after converting, as its
+  dialog listed the losses first.
+- **Shown once**, to the person who opened the file, as the document first loads, when reading it dropped something
+  a reader would miss: **Opened “‹name›”**, all its lines, **OK**. Housekeeping alone (a thumbnail picture, spelling
+  and layout hints, content kept untouched) never interrupts: most files carry some, and a dialog on every open would
+  teach people to dismiss the one that matters (default); it stays listed in Security limitations. A copy, another
+  person and a later visit do not see it again unasked.
+- **Security limitations** (File) reopens it for anyone who can open the document, Viewers included: both sections,
+  or "Nothing was left out or kept aside when this document was opened or converted." when there is nothing.
 
 ## Import security
 
@@ -163,4 +179,5 @@ Participants; converting, opening into a folder and trashing are an Editor's (tr
 
 `Document · Imported · TextDocument<Format>` (Odt, Fodt, Docx, Rtf, Txt, Html, Md, Pdf),
 `Document · Exported · TextDocument<Format>`, `Document · Changed · TextDocumentConverted`, `UI · Used · TextDocumentPrint`,
+`UI · Used · TextDocumentSecurityLimitations` (File > Security limitations reopened),
 `Document · Duplicated · TextDocument`. Never content.

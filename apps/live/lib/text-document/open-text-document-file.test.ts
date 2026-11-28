@@ -3,6 +3,7 @@
 // worded for the person.
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { ApiError, apiCreateDocument } from '@/lib/api-client';
+import { keepImportReport } from '@/lib/office/import-report-handoff';
 import { track } from '@/lib/telemetry';
 import { importedTypeOf, nameFromFile, openTextDocumentFile } from './open-text-document-file';
 
@@ -11,6 +12,7 @@ vi.mock('@/lib/api-client', async (real) => ({
   apiCreateDocument: vi.fn(),
 }));
 vi.mock('@/lib/telemetry', () => ({ track: vi.fn() }));
+vi.mock('@/lib/office/import-report-handoff', () => ({ keepImportReport: vi.fn() }));
 
 afterEach(() => vi.clearAllMocks());
 
@@ -40,6 +42,16 @@ describe('openTextDocumentFile', () => {
     expect(track).toHaveBeenCalledWith('Tab', 'Imported', 'Md');
   });
 
+  // files-and-print.md "Import report": the opener sees the report the room keeps, once, as the document loads.
+  it('leaves word for the new document that this person opened the file', async () => {
+    vi.mocked(apiCreateDocument).mockResolvedValue({} as never);
+    const opened = await openTextDocumentFile('me', new File(['<p>x</p>'], 'Page.html'));
+    expect(opened.ok && keepImportReport).toHaveBeenCalledWith(opened.ok ? opened.documentId : '', {
+      name: 'Page',
+      lines: [],
+    });
+  });
+
   it('words a refusal for the person', async () => {
     vi.mocked(apiCreateDocument).mockRejectedValue(
       new ApiError('create document', 415, 'package_wrong_type'),
@@ -49,6 +61,7 @@ describe('openTextDocumentFile', () => {
       message: 'This file is not a text document LiveDoc can open yet.',
     });
     vi.mocked(apiCreateDocument).mockRejectedValue(new Error('offline'));
+    expect(keepImportReport).not.toHaveBeenCalled();
     expect(await openTextDocumentFile('me', new File(['x'], 'a.txt'))).toEqual({
       ok: false,
       message: 'The file could not be opened. Try again.',

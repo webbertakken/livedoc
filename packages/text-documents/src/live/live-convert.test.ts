@@ -11,7 +11,7 @@ import type { TextDocument, TextDocumentFormat } from '../model/text-document';
 import { CONSTRUCTS } from '../testing/constructs';
 import { TextDocumentState } from '../text-document-state';
 import { convertLive, makeLiveReadAs, sameValue } from './live-convert';
-import { DOCUMENT_MAP, FOOTNOTE, SECTION_BREAK, THREADS_MAP } from './live-names';
+import { DOCUMENT_MAP, FOOTNOTE, REPORT_MAP, SECTION_BREAK, THREADS_MAP } from './live-names';
 import { tabFragment } from './live-root';
 import { liveStoryIds, storyFragment } from './live-stories';
 import { liveTabIds } from './live-tabs';
@@ -158,6 +158,34 @@ describe('convertLive', () => {
     expect(undo.undoStack).toHaveLength(1);
     undo.undo();
     expect(canonical(TextDocumentState.document(doc, 'odf'))).toBe(before);
+  });
+
+  it('records its losses in the import report in the same transaction, undone with it', async () => {
+    const doc = live(await read('libreoffice/features.odt'));
+    const origin = Symbol('conversion');
+    const undo = new Y.UndoManager(
+      [...doc.share.keys()]
+        .filter((name) => name !== THREADS_MAP)
+        .map((name) =>
+          name.startsWith('story:') || name === 'body' || name.startsWith('tab:')
+            ? doc.getXmlFragment(name)
+            : doc.getMap(name),
+        )
+        .concat(doc.getMap(REPORT_MAP)),
+      { trackedOrigins: new Set([origin]) },
+    );
+    let losses: unknown[] = [];
+    expect(
+      updatesOf(doc, () => (losses = TextDocumentState.convert(doc, 'odf', 'ooxml', origin))),
+    ).toBe(1);
+    expect(losses.length).toBeGreaterThan(0);
+    expect(TextDocumentState.report(doc).converted).toEqual([
+      expect.objectContaining({ from: 'odf', to: 'ooxml' }),
+    ]);
+    undo.undo();
+    expect(TextDocumentState.report(doc).converted).toEqual([]);
+    undo.redo();
+    expect(TextDocumentState.report(doc).converted).toHaveLength(1);
   });
 
   it('gives a story with no live place a new id, never one a live fragment holds', () => {

@@ -33,6 +33,7 @@ import {
 import { COLUMN_ITEMS, COLUMNS_MORE_ITEM } from '@/components/text-document/useTextDocumentColumns';
 import { FOOTER_ITEM, HEADER_ITEM } from '@/components/text-document/useTextDocumentHeaderEditing';
 import { HEADER_OPTIONS_ITEM } from '@/components/text-document/useTextDocumentHeaderOptions';
+import { SECURITY_LIMITATIONS_ITEM } from '@/components/text-document/useTextDocumentReport';
 import {
   PAGE_COUNT_ITEM,
   PAGE_NUMBERS_MORE_ITEM,
@@ -258,6 +259,8 @@ describe('the text document menus', () => {
         SEE_VERSION_HISTORY,
         // File > Version history > Name current version (useTextDocumentVersionWrites), bound by the surface.
         NAME_CURRENT_VERSION,
+        // File > Security limitations (useTextDocumentReport), bound by the surface.
+        SECURITY_LIMITATIONS_ITEM,
         // Tools > Accessibility and the Accessibility menu (useTextDocumentScreenReader), bound by the surface.
         ACCESSIBILITY_ITEM,
         ACCESSIBILITY_SETTINGS_ITEM,

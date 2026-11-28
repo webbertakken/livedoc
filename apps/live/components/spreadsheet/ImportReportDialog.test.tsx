@@ -5,7 +5,7 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { renderToString } from 'react-dom/server';
 import { afterEach, describe, expect, it } from 'vitest';
-import { keepImportReport } from '@/lib/spreadsheet/import-report-handoff';
+import { keepImportReport } from '@/lib/office/import-report-handoff';
 import { ImportReportDialog } from './ImportReportDialog';
 
 afterEach(() => {

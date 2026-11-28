@@ -55,7 +55,8 @@ api, agents) reads and writes one shape (default):
   converted and when a picture arrives;
   `styles` and `lists` are root maps by id, so two people changing two styles never collide; `source` holds what a
   file brought around the model (`json`) and its package entries by name (`entries`, as bytes), written once when the
-  file is opened and replaced only by a conversion.
+  file is opened and replaced only by a conversion; `report` holds the [import report](files-and-print.md#import-report)
+  (`imported`, written once when a file is read; `converted`, a list a conversion appends to in its own transaction).
 - **Document tabs** ([Text document](text-document.md#what-a-document-tab-is)): the root map `tabs` holds each document
   tab by id as a whole value, `{ name, emoji, depth, order }`, the outline's order by `order` (then id); the tab
   `t.0`'s body is the root fragment `body`, any other's the root fragment `tab:<id>` (default). A map without entries

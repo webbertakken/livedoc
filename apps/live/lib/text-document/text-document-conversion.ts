@@ -16,15 +16,20 @@ const CONVERSION_META = 'conversion';
 
 type Formats = { readonly from: TextDocumentFormat; readonly to: TextDocumentFormat };
 
-/** Root types a conversion writes that the body's undo manager does not hold: every story, the kept parts, media. */
+/** Root types a conversion writes that the body's undo manager does not hold: every story, the kept parts, media,
+ *  the import report's Converted entries. */
 function otherScope(doc: Y.Doc): (Y.XmlFragment | Y.Map<unknown>)[] {
-  return [...doc.share.keys()].flatMap((name): (Y.XmlFragment | Y.Map<unknown>)[] =>
-    name.startsWith('story:')
-      ? [doc.getXmlFragment(name)]
-      : name === 'source' || name === 'media'
-        ? [doc.getMap(name)]
-        : [],
-  );
+  return [
+    // The report is made by the first conversion that loses anything, so it is in scope before it exists.
+    doc.getMap('report'),
+    ...[...doc.share.keys()].flatMap((name): (Y.XmlFragment | Y.Map<unknown>)[] =>
+      name.startsWith('story:')
+        ? [doc.getXmlFragment(name)]
+        : name === 'source' || name === 'media'
+          ? [doc.getMap(name)]
+          : [],
+    ),
+  ];
 }
 
 export type TextDocumentConversion = {

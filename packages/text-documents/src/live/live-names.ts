@@ -213,3 +213,5 @@ export const MEDIA_MAP = 'media';
 export const TABS_MAP = 'tabs';
 /** The comment threads by id, beside the writing (review.md "How a comment is kept"). */
 export const THREADS_MAP = 'threads';
+/** The import report: `imported` and `converted` (files-and-print.md "Import report"). */
+export const REPORT_MAP = 'report';

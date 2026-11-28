@@ -53,11 +53,15 @@ describe('textDocumentConversion', () => {
     const conversion = textDocumentConversion(doc, body, setFormat);
     conversion.convert('odf', 'ooxml');
     const after = held(doc, 'ooxml');
+    // Its losses are in the import report until it is undone (files-and-print.md "Import report").
+    expect(TextDocumentState.report(doc).converted).toHaveLength(1);
     body.undo();
     expect(held(doc, 'odf')).toBe(before);
+    expect(TextDocumentState.report(doc).converted).toEqual([]);
     expect(setFormat).toHaveBeenLastCalledWith('odf');
     body.redo();
     expect(held(doc, 'ooxml')).toBe(after);
+    expect(TextDocumentState.report(doc).converted).toHaveLength(1);
     expect(setFormat).toHaveBeenLastCalledWith('ooxml');
     body.undo();
     expect(held(doc, 'odf')).toBe(before);

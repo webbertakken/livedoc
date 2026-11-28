@@ -1423,6 +1423,8 @@ export const EXACT: Readonly<Record<string, string>> = {
     "Someone deleted a tab inside a text document, with its subtabs, from the tab's menu.",
   'UI|Used|TextDocumentTabLinkCopied':
     "Someone copied a link to a tab inside a text document from the tab's menu.",
+  'UI|Used|TextDocumentSecurityLimitations':
+    'Someone opened File > Security limitations in a text document, listing what opening its file left out and what converting it could not carry.',
   'UI|Used|TextDocumentTabShown':
     "Someone showed another of a text document's tabs, from its outline or the keyboard.",
   'Tab|Created|Pdf': 'Someone added a PDF tab from the + menu, from a file on their computer.',

@@ -6,6 +6,7 @@ import { base64OfBytes, importTypeOfFileName } from '@livedoc/text-documents';
 import { ApiError, apiCreateDocument } from '@/lib/api-client';
 import { createIdsFor } from '@/lib/new-document/create-failure';
 import { debugLog } from '@/lib/debug-log';
+import { keepImportReport } from '@/lib/office/import-report-handoff';
 import { track } from '@/lib/telemetry';
 import { formatOfFileName, newTextDocumentTab, UNTITLED_TEXT_DOCUMENT } from './text-document-tab';
 
@@ -66,6 +67,9 @@ export async function openTextDocumentFile(
       textDocuments: [{ tabId, file: base64OfBytes(bytes), ...(type ? { type } : {}) }],
     });
     track('Tab', 'Imported', importedTypeOf(file.name));
+    // The room keeps the import report in the document; the new document shows it once to this person
+    // (files-and-print.md "Import report").
+    keepImportReport(documentId, { name, lines: [] });
     return { ok: true, documentId };
   } catch (error) {
     const code = error instanceof ApiError ? error.code : null;
