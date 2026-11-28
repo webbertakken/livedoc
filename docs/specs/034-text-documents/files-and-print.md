@@ -69,9 +69,11 @@ File > Download, in Google's order:
 | Markdown (.md)            | CommonMark with GitHub's extensions                                                                    |
 
 Each download is named after the document. A Viewer may download unless the owner turned it off for Viewers.
-Download as PDF offers "Keep in LiveDoc as a PDF document", which stores the written PDF beside its source as a
-[PDF document](../035-pdf-documents/files-print-and-sync.md#other-kinds-meeting-a-pdf); every kind's PDF is written by
-the repository's one PDF writer.
+File > **Keep a PDF copy in LiveDoc**, an item beside Download, so a download gains no step (director, 2026-11-28),
+writes the PDF as Download as PDF does and stores it beside its source as a
+[PDF document](../035-pdf-documents/files-print-and-sync.md#other-kinds-meeting-a-pdf), named `<name>.pdf`, in its
+folder and where the source is kept (LiveDoc or This Browser); a notice says "Kept “<name>.pdf” in LiveDoc." with
+**Open**. Every kind's PDF is written by the repository's one PDF writer.
 The PDF is written in the browser from the pages as drawn in the [printing look](#printing): each word where it
 stands, in the served document font it was drawn in (fonts.md "Served from LiveDoc"), its structure from the writing.
 While it is made, a dialog, **Making the PDF**, says each step (laying out the pages, reading them, drawing the
