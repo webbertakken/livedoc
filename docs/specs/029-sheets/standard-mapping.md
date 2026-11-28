@@ -529,7 +529,8 @@ The table is the contract the readers and writers are tested against, one test p
   filter's and the view's sort as its `sortState` (`sortCondition`, `descending="1"` for Z to A); a hidden
   `Z_<guid>_.wvu.FilterData` name with its range; and a `customWorkbookView` named the view's name.
   A group by view (data-tools.md, D500) is written as the filter view of its table's range, LiveDoc's record
-  keeping its grouped column (`group`, a column letter); read back while the record holds and over a table's header
+  keeping its grouped column (`group`, a column letter), its aggregations (`aggs`, each column's by letter) and
+  Hide Aggregations (`hideAggs`); read back while the record holds and over a table's header
   and data rows exactly, it is that table's group by view again, else a filter view.
 - **ODF filter**: LibreOffice's own form, the sheet-local `table:database-range` named `__Anonymous_Sheet_DB__N`
   (`table:display-filter-buttons="true"`) with `table:filter` › `table:filter-and` › `table:filter-condition`
