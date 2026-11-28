@@ -103,6 +103,25 @@ describe('import security', () => {
     expect(new TextDecoder().decode(written.bytes).includes('vbaProject')).toBe(false);
   });
 
+  // files-and-print.md "Opening": a template opens as a document of its format, written back as one.
+  it('opens a Word template and an OpenDocument template as documents', async () => {
+    const dotx = await readTextDocumentFile(
+      docx(W_P(W_R('Dear')), {
+        mainType:
+          'application/vnd.openxmlformats-officedocument.wordprocessingml.template.main+xml',
+      }),
+    );
+    const ott = await readTextDocumentFile(
+      odt('<text:p>Dear</text:p>', {
+        mimetype: 'application/vnd.oasis.opendocument.text-template',
+      }),
+    );
+    expect([dotx.ok && dotx.fileType, ott.ok && ott.fileType]).toEqual(['docx', 'odt']);
+    if (!dotx.ok) return;
+    const written = new TextDecoder().decode(writeTextDocumentFile(dotx.document, 'docx').bytes);
+    expect(written.includes('template.main+xml')).toBe(false);
+  });
+
   it('drops fields that run things, keeping what they last showed', async () => {
     const field = (instr: string) =>
       `<w:r><w:fldChar w:fldCharType="begin"/></w:r><w:r><w:instrText>${instr}</w:instrText></w:r><w:r><w:fldChar w:fldCharType="separate"/></w:r>${W_R('shown')}<w:r><w:fldChar w:fldCharType="end"/></w:r>`;

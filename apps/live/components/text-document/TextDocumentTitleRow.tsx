@@ -66,8 +66,18 @@ const FILE_TYPES: readonly TextDocumentDownloadType[] = [
   'md',
 ];
 
-const OPEN_ACCEPT =
-  '.odt,.fodt,.docx,application/vnd.oasis.opendocument.text,application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+// What File > Open takes (files-and-print.md "Opening"): the formats a text document is held in, their templates and
+// Word's macro-enabled file (its macros dropped), and the imports.
+const OPEN_ACCEPT = [
+  '.odt,.fodt,.ott,.docx,.dotx,.docm,.txt,.md,.markdown',
+  'application/vnd.oasis.opendocument.text',
+  'application/vnd.oasis.opendocument.text-template',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.template',
+  'application/vnd.ms-word.document.macroEnabled.12',
+  'text/plain',
+  'text/markdown',
+].join(',');
 
 export function TextDocumentTitleRow({
   scope,

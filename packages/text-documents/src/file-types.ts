@@ -39,3 +39,19 @@ export const EXPORT_EXTENSIONS: Readonly<Record<TextDocumentExportType, string>>
 
 /** Every file a text document downloads as: its own formats', and the exports. */
 export type TextDocumentDownloadType = TextDocumentFileType | TextDocumentExportType;
+
+/** The files a text document is imported from: read into a new ODF text document (files-and-print.md "Opening"). */
+export const TEXT_DOCUMENT_IMPORT_TYPES = ['txt', 'md'] as const;
+export type TextDocumentImportType = (typeof TEXT_DOCUMENT_IMPORT_TYPES)[number];
+
+export function isTextDocumentImportType(value: unknown): value is TextDocumentImportType {
+  return (TEXT_DOCUMENT_IMPORT_TYPES as readonly unknown[]).includes(value);
+}
+
+/** The import a file's name says it is; none for a file LiveDoc opens as itself, or does not open. */
+export function importTypeOfFileName(name: string): TextDocumentImportType | undefined {
+  const extension = /\.([^./\\]+)$/.exec(name)?.[1]?.toLowerCase();
+  if (extension === 'txt') return 'txt';
+  if (extension === 'md' || extension === 'markdown') return 'md';
+  return undefined;
+}

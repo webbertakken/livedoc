@@ -3,7 +3,7 @@
 // places them in the document, as pasted HTML's are.
 import { Fragment, Slice, type Mark, type Schema } from 'prosemirror-model';
 import type { ListPlace } from '@livedoc/text-documents';
-import { parseMarkdown, type MarkdownRun } from './text-document-markdown';
+import { parseMarkdown, type MarkdownRun } from '@livedoc/text-documents';
 import {
   PASTE_HEADING_PREFIX,
   PASTE_LIST_PREFIX,
@@ -25,8 +25,22 @@ function marksOf(schema: Schema, run: MarkdownRun): Mark[] {
 export function markdownSlice(text: string, schema: Schema): { slice: Slice; lists: PastedLists } {
   const lists: PastedLists = new Map();
   const started = new Set<number>();
-  const paragraphs = parseMarkdown(text).map((block) => {
-    const content = block.runs.map((run) => schema.text(run.text, marksOf(schema, run)));
+  const runsOf = (runs: readonly MarkdownRun[]) =>
+    runs.filter((run) => run.text).map((run) => schema.text(run.text, marksOf(schema, run)));
+  const paragraphs = parseMarkdown(text).flatMap((block) => {
+    // A code block's lines and a table's rows paste as paragraphs, a row's cells split by tabs.
+    if (block.kind === 'code')
+      return block.lines.map((line) =>
+        schema.nodes.paragraph!.create(null, line ? [schema.text(line)] : []),
+      );
+    if (block.kind === 'table')
+      return block.rows.map((row) =>
+        schema.nodes.paragraph!.create(
+          null,
+          row.flatMap((cell, i) => [...(i > 0 ? [schema.text('\t')] : []), ...runsOf(cell)]),
+        ),
+      );
+    const content = runsOf(block.runs);
     if (block.kind === 'paragraph') return schema.nodes.paragraph!.create(null, content);
     if (block.kind === 'heading')
       return schema.nodes.paragraph!.create(

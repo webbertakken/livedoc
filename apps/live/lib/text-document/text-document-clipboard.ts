@@ -39,7 +39,7 @@ import {
 } from './text-document-paste-html';
 import { textDocumentSchema } from './text-document-schema';
 import { startUndoStep } from './text-document-undo';
-import { looksLikeMarkdown } from './text-document-markdown';
+import { looksLikeMarkdown } from '@livedoc/text-documents';
 import { markdownSlice } from './text-document-markdown-slice';
 import { withoutTakenBookmarks } from './text-document-bookmarks';
 import { lastStretch, StretchSelection } from './text-document-stretches';
