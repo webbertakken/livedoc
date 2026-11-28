@@ -32,6 +32,9 @@ export const BLANK_GROUP = '(Blank)';
 export const groupOpenerLabel = (label: string, count: number, collapsed: boolean): string =>
   `${collapsed ? 'Expand' : 'Collapse'} ${label}, ${count} ${count === 1 ? 'row' : 'rows'}`;
 
+// What the first part keeps beside its value: its padding, the opener and the gap between.
+const LABEL_ROOM_PX = 36;
+
 type Chooser = { colId: string; name: string; x: number; y: number };
 
 export function SheetGroupBands() {
@@ -128,7 +131,13 @@ export function SheetGroupBands() {
                       >
                         <span aria-hidden>{shut ? '▸' : '▾'}</span>
                       </button>
-                      <span className="min-w-0 shrink truncate font-medium">{label}</span>
+                      {/* The value first: it names the group, so a total beside it gives way. */}
+                      <span
+                        className="shrink-0 truncate font-medium"
+                        style={{ maxWidth: Math.max(0, w - LABEL_ROOM_PX) }}
+                      >
+                        {label}
+                      </span>
                     </>
                   ) : null}
                   <span className="flex-1" />
