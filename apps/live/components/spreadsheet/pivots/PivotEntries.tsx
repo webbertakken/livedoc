@@ -1,22 +1,91 @@
 'use client';
 
 // The Pivot Table Editor's entries (docs/specs/029-sheets/pivot-tables.md "Pivot Table Editor"): a row or column
-// group's Order, Sort By, Show Totals and Repeat Row Labels; a value's Summarise By and Show As; a filter's Status and
-// its items, each a tick box. Each control hands back the entry set whole; what it does not show (a custom name, a
-// grouping, a filter by condition or formula) stays as it is.
-import type { ReactNode } from 'react';
-import { Select } from '@livedoc/ui';
+// group's Order, Sort By, Show Totals and Repeat Row Labels; a value's Summarise By and Show As, a calculated field's
+// Formula; a filter's Status, its Filter by Condition and its items, each a tick box. Each control hands back the entry
+// set whole; what it does not show (a custom name, a grouping) stays as it is.
+import { useId, useState, type ReactNode } from 'react';
+import { Select, TextInput } from '@livedoc/ui';
 import {
   PIVOT_BLANK_ITEM,
   PIVOT_SUMMARIES,
   pivotFilterStatus,
   type PivotShowAs,
   type PivotSummary,
+  type FilterCondition,
   type SheetPivotFilter,
   type SheetPivotGroup,
   type SheetPivotValue,
 } from '@livedoc/sheets';
+import { FilterByCondition } from '@/components/sheets/FilterByCondition';
+import { takesValue } from '@/components/sheets/filter-condition-draft';
+import { draftOfPivotFilter, pivotFilterOfDraft } from '@/lib/spreadsheet/pivot-filter-draft';
 import { ChartEditorField as Field } from '../charts/ChartEditorField';
+
+/** Why a calculated field's typed formula is not written. */
+export const PIVOT_FORMULA_WHY = 'A formula starts with =';
+const WHY = 'text-supporting text-red-700 dark:text-red-300';
+
+// A text field holding `shown` until it is left or Enter is pressed, then handing back what was typed.
+function useCommittedText(shown: string) {
+  const [text, setText] = useState(shown);
+  const [before, setBefore] = useState(shown);
+  if (before !== shown) {
+    setBefore(shown);
+    setText(shown);
+  }
+  return [text, setText] as const;
+}
+
+// A calculated field's Formula (D622): read when left or Enter is pressed; one not starting with = says why.
+function FormulaField({
+  name,
+  formula,
+  onCommit,
+}: {
+  name: string;
+  formula: string;
+  onCommit: (next: string) => void;
+}) {
+  const whyId = useId();
+  const [text, setText] = useCommittedText(formula);
+  const [why, setWhy] = useState(false);
+  const commit = () => {
+    const next = text.trim();
+    if (next === formula) return;
+    if (!next.startsWith('=')) {
+      setWhy(true);
+      return;
+    }
+    setWhy(false);
+    onCommit(next);
+  };
+  return (
+    <Field label="Formula">
+      <TextInput
+        aria-label={`${name} Formula`}
+        value={text}
+        spellCheck={false}
+        autoComplete="off"
+        className="font-mono"
+        onChange={(e) => {
+          setText(e.target.value);
+          setWhy(false);
+        }}
+        onBlur={commit}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') commit();
+        }}
+        {...(why ? { 'aria-invalid': true as const, 'aria-describedby': whyId } : {})}
+      />
+      {why ? (
+        <p id={whyId} role="alert" className={WHY}>
+          {PIVOT_FORMULA_WHY}
+        </p>
+      ) : null}
+    </Field>
+  );
+}
 
 const BOX = 'size-icon-row shrink-0 accent-(--office-primary)';
 const OPTION = 'flex min-h-row items-center gap-2 text-body pointer-coarse:min-h-11';
@@ -181,6 +250,13 @@ export function PivotValueEntry({
     value.formula === undefined ? PIVOT_SUMMARIES : [...PIVOT_SUMMARIES, 'CUSTOM'];
   return (
     <Entry name={name} onRemove={onRemove}>
+      {value.formula !== undefined ? (
+        <FormulaField
+          name={name}
+          formula={value.formula}
+          onCommit={(formula) => onChange({ ...value, formula })}
+        />
+      ) : null}
       <div className="grid grid-cols-2 gap-2">
         <Field label="Summarise By">
           <Select
@@ -231,50 +307,104 @@ export function PivotFilterEntry({
   onChange: (next: SheetPivotFilter) => void;
   onRemove: () => void;
 }) {
-  const byValues =
-    filter.formula === undefined && Object.keys(filter.cond).every((k) => k === 'values');
-  // A blank item is kept as the empty text it shows.
-  const kept = (item: string) => (item === PIVOT_BLANK_ITEM ? '' : item);
-  const shown = new Set(
-    filter.formula === undefined ? (filter.cond.values ?? items.map(kept)) : [],
-  );
-  const set = (values: string[] | null) =>
-    onChange({ col: filter.col, cond: values === null ? {} : { values } });
-  const toggle = (item: string, on: boolean) => {
-    const next = items.map(kept).filter((x) => (x === kept(item) ? on : shown.has(x)));
-    set(next.length === items.length ? null : next);
+  // The condition as it is typed, written as its fields are left or Enter is pressed.
+  const opened = draftOfPivotFilter(filter);
+  const [draft, setDraft] = useState(opened);
+  const [openedKey, setOpenedKey] = useState(JSON.stringify(opened));
+  if (openedKey !== JSON.stringify(opened)) {
+    setOpenedKey(JSON.stringify(opened));
+    setDraft(opened);
+  }
+  const commit = (from = draft) => {
+    const next = pivotFilterOfDraft(filter, from);
+    if (next && JSON.stringify(next) !== JSON.stringify(filter)) onChange(next);
   };
   return (
     <Entry name={name} onRemove={onRemove}>
       <p className="text-supporting text-(--office-muted)">
         Status: <span className="text-(--office-ink)">{pivotFilterStatus(filter)}</span>
       </p>
-      {byValues ? (
-        <>
-          <div className="flex gap-2">
-            <button type="button" className={LINK} onClick={() => set(null)}>
-              Select All
-            </button>
-            <button type="button" className={LINK} onClick={() => set([])}>
-              Clear
-            </button>
-          </div>
-          <div
-            className="flex max-h-48 flex-col overflow-auto"
-            role="group"
-            aria-label={`${name} items`}
-          >
-            {items.map((item) => (
-              <Tick
-                key={item}
-                label={item}
-                checked={shown.has(kept(item))}
-                onChange={(on) => toggle(item, on)}
-              />
-            ))}
-          </div>
-        </>
+      <div
+        onBlur={(e) => {
+          if (!e.currentTarget.contains(e.relatedTarget)) commit();
+        }}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') commit();
+        }}
+      >
+        <FilterByCondition
+          draft={draft}
+          problem={null}
+          onChange={(next) => {
+            setDraft(next);
+            // A condition taking no value (None, Is empty, Is not empty) is whole as soon as it is picked.
+            if (next.op !== draft.op && next.op !== 'formula' && !takesValue({ ...next, d: '' }))
+              commit(next);
+          }}
+          periods={false}
+          formulaPlaceholder="=Units>8"
+        />
+      </div>
+      {filter.formula === undefined ? (
+        <PivotFilterItems
+          name={name}
+          cond={filter.cond}
+          items={items}
+          onChange={(cond) => onChange({ col: filter.col, cond })}
+        />
       ) : null}
     </Entry>
+  );
+}
+
+// A filter by values' items, each a tick box, with Select All and Clear; the ticked items go beside the condition
+// (D622).
+function PivotFilterItems({
+  name,
+  cond,
+  items,
+  onChange,
+}: {
+  name: string;
+  cond: FilterCondition;
+  items: readonly string[];
+  onChange: (next: FilterCondition) => void;
+}) {
+  // A blank item is kept as the empty text it shows.
+  const kept = (item: string) => (item === PIVOT_BLANK_ITEM ? '' : item);
+  const shown = new Set(cond.values ?? items.map(kept));
+  const set = (values: string[] | null) => {
+    const { values: _was, ...condition } = cond;
+    onChange(values === null ? condition : { ...condition, values });
+  };
+  const toggle = (item: string, on: boolean) => {
+    const next = items.map(kept).filter((x) => (x === kept(item) ? on : shown.has(x)));
+    set(next.length === items.length ? null : next);
+  };
+  return (
+    <>
+      <div className="flex gap-2">
+        <button type="button" className={LINK} onClick={() => set(null)}>
+          Select All
+        </button>
+        <button type="button" className={LINK} onClick={() => set([])}>
+          Clear
+        </button>
+      </div>
+      <div
+        className="flex max-h-48 flex-col overflow-auto"
+        role="group"
+        aria-label={`${name} items`}
+      >
+        {items.map((item) => (
+          <Tick
+            key={item}
+            label={item}
+            checked={shown.has(kept(item))}
+            onChange={(on) => toggle(item, on)}
+          />
+        ))}
+      </div>
+    </>
   );
 }

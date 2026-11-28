@@ -10,11 +10,14 @@ export function PivotAddMenu({
   section,
   columns,
   onPick,
+  extra,
 }: {
   // The section's name, for the button's label (`Add Rows`).
   section: string;
   columns: readonly PivotColumn[];
   onPick: (column: PivotColumn) => void;
+  // An item after the columns (Values' Calculated Field).
+  extra?: { label: string; onPick: () => void };
 }) {
   const { open, close, toggle, trigger, setTrigger, onTriggerKeyDown } = useMenuButton();
   const box = useRef<HTMLDivElement>(null);
@@ -27,7 +30,7 @@ export function PivotAddMenu({
         aria-haspopup="menu"
         aria-expanded={open}
         aria-label={`Add ${section}`}
-        disabled={columns.length === 0}
+        disabled={columns.length === 0 && !extra}
         onClick={toggle}
         onKeyDown={onTriggerKeyDown}
         className="min-h-row cursor-pointer rounded-control border border-(--office-line) px-3 text-body text-(--office-ink) hover:bg-(--office-hover) focus-visible:ring-2 focus-visible:ring-(--office-focus) focus-visible:outline-none disabled:cursor-default disabled:opacity-50"
@@ -44,6 +47,17 @@ export function PivotAddMenu({
             close();
             onPick(column);
           }}
+          {...(extra
+            ? {
+                extra: {
+                  label: extra.label,
+                  onPick: () => {
+                    close();
+                    extra.onPick();
+                  },
+                },
+              }
+            : {})}
         />
       ) : null}
     </div>
@@ -56,12 +70,14 @@ function AddList({
   columns,
   onClose,
   onPick,
+  extra,
 }: {
   trigger: HTMLElement | null;
   section: string;
   columns: readonly PivotColumn[];
   onClose: () => void;
   onPick: (column: PivotColumn) => void;
+  extra?: { label: string; onPick: () => void };
 }) {
   const { attach, surfaceProps } = useMenu({ onClose, trigger, label: `Add ${section}` });
   return (
@@ -82,6 +98,17 @@ function AddList({
           {column.name}
         </button>
       ))}
+      {extra ? (
+        <button
+          type="button"
+          role="menuitem"
+          tabIndex={-1}
+          onClick={extra.onPick}
+          className="block min-h-row w-full truncate border-t border-(--office-line) px-4 py-1 text-left text-body outline-none hover:bg-(--office-menu-hover) focus-visible:bg-(--office-menu-hover)"
+        >
+          {extra.label}
+        </button>
+      ) : null}
     </div>
   );
 }

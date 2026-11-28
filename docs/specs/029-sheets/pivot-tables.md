@@ -166,6 +166,8 @@ Region`): each of the first three columns holding text below the header as the r
 - **Rows**, **Columns**, **Values** and **Filters**, in that order: each a heading with an **Add** button, then its
   entries in order. Add opens a list of the source's columns by their header text (a blank header by its column's
   letter, `Column C`); Rows and Columns list only the columns in neither; picking one adds an entry at the end.
+  Values' list ends with **Calculated Field**, which adds a calculated field named `Calculated Field 1` (the first
+  number free among the values' names), its formula `=0`, summarised by SUM (default, D622).
 - Each entry shows its column's name and **Remove** (×, "Remove Region"), then its options:
   - Rows and Columns: **Order** (Ascending, Descending), **Sort By** (the column itself, or a value by its name),
     **Show Totals** (on), and on Rows **Repeat Row Labels** (off).
@@ -173,10 +175,19 @@ Region`): each of the first three columns holding text below the header as the r
     VAR, VARP) and **Show As** (Default, % of Row, % of Column, % of Grand Total). A new value of a column whose
     cells below the header hold a number summarises by SUM, else by COUNTA, as Google Sheets does (default, D611).
     With a value, the Values heading shows **Values As** (Columns, Rows).
-  - Filters: **Status**, "Showing all items" or "Showing 3 items", over a list of the column's items as the source
-    shows them (a blank `(Blanks)`), each a tick box, with **Select All** and **Clear**; an item unticked is hidden.
-- A calculated field shows its name and Summarise By; an entry's custom name, its grouping (set in the grid: [Grouping in the grid](#grouping-in-the-grid)), a filter by condition and a
-  filter by formula stay as they are while other options change (they arrive from files and agents).
+  - A calculated field: its name, **Formula** (a text field over the source's column names, `='Units'*'Price'`, read
+    when the field is left or Enter is pressed; one not starting with `=` says "A formula starts with =" and the
+    formula stays), **Summarise By** (the list above, then Custom) and **Show As**.
+  - Filters: **Status**, "Showing all items", "Showing 3 items", "Showing items by condition" or "Showing items by
+    formula"; then **Filter by Condition**: None, then [Filter by Condition](data-tools.md)'s list as the sheet's
+    filter has it (a date condition by an exact date, the output reading no day as today), then Custom formula is. A condition is written when focus leaves its fields
+    or Enter is pressed in them; a Custom formula is left empty stays unwritten. Custom formula is takes a formula
+    over the source's column names (`=Units>8`), the filter by formula of [The model](#the-model), and hides the
+    items' list; any other condition applies with the ticked items (default, D622). Then the column's items as the
+    source shows them (a blank `(Blanks)`), each a tick box, with **Select All** and **Clear**; an item unticked is
+    hidden.
+- An entry's custom name and its grouping (set in the grid: [Grouping in the grid](#grouping-in-the-grid)) stay as
+  they are while other options change.
 - Keyboard: every control is reached by Tab; Add's list moves with the arrow keys, picks with Enter and closes with
   Escape; Escape in the panel returns the keys to the grid.
 - A pivot table deleted while the editor is open says "This pivot table is no longer on the sheet."
@@ -322,3 +333,6 @@ details are shown.
   date or time, a group rule on any other number (its minimum and maximum at first the column's lowest and highest
   kept numbers), a custom group of two or more selected items named `Group 1` (the first number free), and Ungroup on
   an item a grouping made (default).
+- **D622** The editor's Calculated Field starts as `=0` summed, named `Calculated Field 1` (the first number free); a
+  filter's condition is written as its fields are left, and applies with the ticked items, its Custom formula is the
+  filter by formula over column names (default).
