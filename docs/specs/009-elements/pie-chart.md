@@ -260,7 +260,8 @@ Chart" and a screen reader hears "Column chart", as the palette's tile says, nev
   - A tile's readout is a wedge's.
   - From a sheet it reads its labels and the first value column holding a number, so Google's ID, Parent, Size
     layout draws its sizes (its text Parent column has no number). The tiles are one level: the parents are not
-    read, nor Google's colour column, its levels or its drill-down (default, D328).
+    read, nor Google's colour column, its levels or its drill-down (Webber's ruling 2026-11-28, D328: one level now;
+    nesting by Google's Parent column later).
 - **Gauge** (Google Sheets' Gauge chart): a pie chart's slices drawn as dials, each slice's label and value one dial.
   - The dials sit in a grid of the columns and rows that give each the largest square, in slice order, left to right.
   - Each dial is an arc sweeping 240° round its centre, symmetric about twelve o'clock: a faint track from the
@@ -572,7 +573,7 @@ The code cites each by its id.
   and maximum not built (default).
 - **D328** Treemap: a pie's slices as squarified tiles, largest first, a 1 px gap; names and Show Values inside when
   they fit; from a sheet the first value column holding a number; one level, Google's parents, colour column, levels
-  and drill-down not read (default).
+  and drill-down not read (Webber's ruling 2026-11-28: one level now, nesting by the Parent column later).
 - **D326** Waterfall: the first series as changes from zero; rises in the series' colour, falls red, a grey Subtotal column of the end total last; level connectors between drawn columns; keys Increase, Decrease,
   Subtotal; a gap leaves the total as it was; other series, stacking, smoothing, the right axis and lines ignored;
   Google's first-value subtotal, custom subtotals and stacked series not built (default).

@@ -197,7 +197,8 @@ Region`): each of the first three columns holding text below the header as the r
 - A selected cell of the output, or the anchor, shows an **Edit** button under the output's first column, below its
   last row; it opens the Pivot Table Editor. An Editor's alone.
 - Typing, pasting or filling into the output's cells or the anchor is refused: "You can't edit a pivot table's
-  cells". The room refuses a value or formula at a pivot table's anchor; the editor and an agent's changes, which work
+  cells". One cell is the exception: an Editor typing over a custom group's item cell renames that group
+  ([Grouping in the grid](#grouping-in-the-grid)). The room refuses a value or formula at a pivot table's anchor; the editor and an agent's changes, which work
   the output out, refuse the rest of its cells too (default, D612). Clearing them writes nothing and is not refused.
 - **Delete** (or Backspace) over a selection covering a pivot table's whole output removes the pivot table, one undo
   step, as Google Sheets does (default, D613).
@@ -229,11 +230,21 @@ the cell's context menu, drawn only where it applies, each one undo step that re
 - **Ungroup Pivot Items**: on an item that a grouping made (a custom group's name, a date rule's or an interval's
   item). A custom group goes, its items themselves again (the last one gone, the grouping goes); a date or interval
   grouping goes whole.
-- A Participant or a Viewer sees none of them.
+- **Renaming a custom group**: an Editor types over a custom group's item cell (its name, as `Group 1` shows) and
+  commits it (Enter, Tab or a click away, as any cell's edit): the group takes the text, trimmed, as typed (never worked
+  out as a formula), one undo step that rewrites the pivot table (Webber's ruling, 2026-11-28). It is the one cell
+  of an output that takes typing; pasting or filling into it is refused as any output cell's is. Refused, the cell
+  left as it was: an empty text ("Enter a name for the group"), a name over 255 characters ("A group's name is up to
+  255 characters") and a name another custom group or item of the same group already has, case aside ("Another item of
+  this group is called that"). The name typed the same as before writes nothing. Pressing Delete over it clears
+  nothing, as over any output cell.
+- A Participant or a Viewer sees none of them, and typing over a group's cell is refused to them as typing over any
+  output cell is.
 
 ## Details
 
-A value's source rows, shown on a sheet of their own, as Google Sheets shows them (default, D616):
+A value's source rows, shown on a sheet of their own, as Google Sheets shows them (default, D616); to a Participant or
+a Viewer, in a read-only dialog (Webber's ruling, 2026-11-28):
 
 - **Showing them**: a double-click on a value of a landed output (an item's, a total's or the Grand Total's), or
   **Show Details** in that cell's context menu, drawn only on such a cell. Any other cell of the output (a header, a
@@ -247,6 +258,11 @@ A value's source rows, shown on a sheet of their own, as Google Sheets shows the
   afterwards: it is a sheet like any other.
 - **Undo**: the sheet and its cells are one step; Undo takes the sheet away.
 - **Refusals**: a sheet the workbook has no room for is refused as Add Sheet's is, with its words.
+- **A Participant's or a Viewer's**: the same double-click and Show Details open a dialog, **Details**, instead of a
+  sheet: a table of the header row and the rows Details1 would hold, each cell as the sheet would show it (its value
+  formatted by its source cell's number format, no fills or borders), nothing saved and nothing written. Up to 1,000
+  rows are drawn, then "Showing the first 1,000 of <n> rows". It closes by **Close** or Escape, the keys back to the
+  grid. Its table is a table to a screen reader (column headers, the dialog named "Details").
 
 ## Agents
 
@@ -279,10 +295,12 @@ An agent makes and reads a spreadsheet's pivot tables through `change_sheet` and
 
 ## Who may do what
 
-- **Editor** makes and changes pivot tables: Insert › Pivot Table, the editor, Edit, Delete, grouping in the grid; a value's details are a
-  sheet of the spreadsheet, saved as any sheet is.
-- **Participant** and **Viewer** read them and their details sheets (a Viewer's details are their own, not saved);
-  they see no Edit button, and Insert › Pivot Table is not theirs (dimmed, as Insert › Chart).
+- **Editor** makes and changes pivot tables: Insert › Pivot Table, the editor, Edit, Delete, grouping in the grid,
+  renaming a custom group by typing over its cell; a value's details are a sheet of the spreadsheet, saved as any
+  sheet is.
+- **Participant** and **Viewer** read them and the details sheets Editors made, and see a value's details in the
+  read-only Details dialog, never saved ([Details](#details)); they see no Edit button, and Insert › Pivot Table is
+  not theirs (dimmed, as Insert › Chart).
 
 ## Accessibility
 
@@ -325,7 +343,8 @@ details are shown.
 - **D615** An agent's pivot table names its columns by header text or letter, lands a column clear right of its range
   on the same sheet (else at A1), and filters by the items as the source shows them (default).
 - **D616** A value's details are a new sheet named `Details1` (the first number free) after the open one, holding the
-  source's header and the rows the value summarises as values with their formats, one undo step (default).
+  source's header and the rows the value summarises as values with their formats, one undo step (default); a
+  Participant's or a Viewer's are a read-only dialog of the same rows, unsaved (Webber's ruling, 2026-11-28).
 - **D620** An agent groups a pivot group by a date rule's camel-case name, `{size, start, end}` or
   `{groups: [{name, items}]}`, custom items as the source shows them; groups sharing a name or an item are refused
   (default).

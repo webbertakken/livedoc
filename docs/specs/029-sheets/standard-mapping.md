@@ -1082,7 +1082,8 @@ The code cites each by its id.
   object's `meta:user-defined` `LiveDoc chart`) as JSON with the written chart's sum, restored on reading only while
   the chart still sums so; the write lists it (`chart_nearest_type`). Chosen over one record for the whole workbook
   in its document properties (XLSX `docProps/custom.xml`, ODF `meta.xml`), which stays behind when a suite renumbers,
-  copies or deletes a chart (default).
+  copies or deletes a chart, over writing computed columns into the cells, and over Excel's `cx:chart` in XLSX
+  (Webber's ruling, 2026-11-28).
 - **D285** A line chart's smoothing in a file: XLSX `c:smooth` on every series, ODF `chart:interpolation="cubic-spline"`;
   read from either, a line whose series differ, or another interpolation, stays kept (default).
 - **D288** The right-hand axis in a file: written only as LiveDoc draws it (a Line, unstacked Area or Combo chart with a
