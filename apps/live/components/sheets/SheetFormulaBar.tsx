@@ -3,6 +3,7 @@
 // The formula bar (docs/specs/029-sheets/sheet.md "Formula bar"): the name box (the selection; a reference or range
 // typed there and Enter selects it) and fx with the active cell's input as typed, edited there as in the cell. A
 // spilled cell shows its formula greyed. Read-only for someone who may not edit.
+import { readWorkbook } from '@/components/sheets/read-workbook';
 import { NameBoxList } from './NameBoxList';
 import { useFormulaBarHeight } from './useFormulaBarHeight';
 import { focusOpenEdit } from './focus-open-edit';
@@ -85,7 +86,7 @@ export function SheetFormulaBar({
   const editing = c.editing;
   const { r, c: col } = c.selection.active;
   // A spilled cell: its owner's formula, greyed.
-  const owner = c.workbook.spillOwnerAt(c.sheet.id, r, col);
+  const owner = readWorkbook(c.version, () => c.workbook.spillOwnerAt(c.sheet.id, r, col));
   const shown = editing
     ? editing.draft
     : owner

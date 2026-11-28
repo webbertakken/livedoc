@@ -3,6 +3,7 @@
 // The Pivot Table Editor side panel's body (docs/specs/029-sheets/pivot-tables.md "Pivot Table Editor"): the Range,
 // Suggested, then Rows, Columns, Values (with Values As) and Filters, each with Add and its entries. Each change writes
 // the pivot table whole at once, one undo step; the Range writes when it is left or Enter is pressed.
+import { readWorkbook } from '@/components/sheets/read-workbook';
 import { useId, useState } from 'react';
 import { Button, Select, TextInput } from '@livedoc/ui';
 import {
@@ -62,7 +63,9 @@ export function PivotEditorBody({
   const pivot = (c.sheet.layout.objects ?? []).find(
     (x): x is SheetPivot => x.kind === 'pivot' && x.id === pivotId,
   );
-  const read = pivot ? c.workbook.pivotSourceOf(c.sheet.id, pivot) : null;
+  const read = pivot
+    ? readWorkbook(c.version, () => c.workbook.pivotSourceOf(c.sheet.id, pivot))
+    : null;
   const shown = read && pivot?.source ? pivotRangeText(read.box.sheet, pivot.source) : '';
   const [range, setRange] = useState(shown);
   const [why, setWhy] = useState<string | null>(null);

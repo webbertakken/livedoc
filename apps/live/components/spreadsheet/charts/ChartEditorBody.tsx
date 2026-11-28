@@ -4,6 +4,7 @@
 // stacking, the data range, the series, a scatter's series drawn as lines) and Customise (titles, legend, values, the value axis, the
 // palette, Smooth, each series' colour and on a Combo chart its type and axis, alt text) for the chart being edited. Each control writes at once, one undo step; a
 // text writes when it is left or Enter is pressed.
+import { readWorkbook } from '@/components/sheets/read-workbook';
 import { useId, useState } from 'react';
 import { Button, Select, Switch, TextInput } from '@livedoc/ui';
 import {
@@ -158,11 +159,14 @@ export function ChartEditorBody({
     const { cols: _cols, ...rest } = chart;
     onChange({ ...rest, range: picked });
   };
-  const table = chart.range
-    ? sheetChartTable(
-        c.workbook,
-        { sheetId: c.sheet.id, range: chart.range, ...(chart.cols ? { cols: chart.cols } : {}) },
-        AGENT_LOCALE,
+  const chartRange = chart.range;
+  const table = chartRange
+    ? readWorkbook(c.version, () =>
+        sheetChartTable(
+          c.workbook,
+          { sheetId: c.sheet.id, range: chartRange, ...(chart.cols ? { cols: chart.cols } : {}) },
+          AGENT_LOCALE,
+        ),
       )
     : null;
   // The series drawn, as the chart code reads them: a scatter's or bubble's first column of numbers is its x, no series.

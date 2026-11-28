@@ -4,6 +4,7 @@
 // row's Title cell; a draft row tinted, with Save and Cancel in its Controls cell (for someone who may edit); and in a
 // column whose field has set values (Type, State, Priority, Assignee, a choice field) or a date, a dropdown arrow in
 // the active cell that picks one. Nothing is drawn over the frozen rows or columns a row has scrolled under.
+import { readWorkbook } from '@/components/sheets/read-workbook';
 import { useRef, useState } from 'react';
 import { CompactEmptyState, DateInput, Tooltip, lucideGlyph, openDatePicker } from '@livedoc/ui';
 import {
@@ -205,7 +206,7 @@ function ActiveCellChoice({ c, plan }: { c: SheetController; plan: PlanContextVa
   const choice = field ? cardFieldChoice(field, plan) : null;
   if (!table || !field || !choice) return null;
   const box = cellBox(c.geometry, r, col, c.scroll);
-  const value = c.workbook.value(c.sheet.id, r, col);
+  const value = readWorkbook(c.version, () => c.workbook.value(c.sheet.id, r, col));
   const shown = displayValue(
     value,
     c.sheet.cells.get(cellKey(rowId, colId))?.format,

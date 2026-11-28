@@ -3,6 +3,7 @@
 // The link chip on a touch screen (docs/specs/029-sheets/formulas.md "Text", On a touch screen): a tap on a HYPERLINK
 // selects it and shows its address under the cell with Open, the finger's way to it without Ctrl/⌘. Shown while the
 // tapped cell is still the selection; its presses stay its own, so the grid under it is not tapped too.
+import { readWorkbook } from '@/components/sheets/read-workbook';
 import { useSheetController } from './sheet-controller';
 import { SheetCellSlot } from './SheetCellSlot';
 import { cellBox, mergeAt } from './sheet-geometry';
@@ -37,7 +38,9 @@ export function SheetTouchLinkChip({
     only.c1 === tapped.c &&
     only.r2 <= cell.r2 &&
     only.c2 <= cell.c2;
-  const link = still ? c.workbook.hyperlinkOf(c.sheet.id, tapped.r, tapped.c) : null;
+  const link = still
+    ? readWorkbook(c.version, () => c.workbook.hyperlinkOf(c.sheet.id, tapped.r, tapped.c))
+    : null;
   if (!still || !link) return null;
   const box = cellBox(c.geometry, tapped.r, tapped.c, c.scroll);
   const stop = (e: React.SyntheticEvent) => e.stopPropagation();

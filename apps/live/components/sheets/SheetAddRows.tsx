@@ -2,6 +2,7 @@
 
 // Below the last row (docs/specs/029-sheets/sheet.md "The grid"): **Add 100 Rows**, with a field to change the
 // number, growing the grid up to its limit. Only for someone who may edit, and gone at the limit.
+import { readWorkbook } from '@/components/sheets/read-workbook';
 import { useState } from 'react';
 import type { GridSize, Sheet, Workbook } from '@livedoc/sheets';
 import { useSheetController } from './sheet-controller';
@@ -18,7 +19,7 @@ export function SheetAddRows({ top, onAdd }: { top: number; onAdd: (count: numbe
   const c = useSheetController();
   const [count, setCount] = useState(String(ADD_ROWS_DEFAULT));
   // The rows the grid still has room for, by the sheet's kind's limits over its workbook (keyed on the sheet).
-  const room = roomFor(c.workbook, c.sheet).rows;
+  const room = readWorkbook(c.version, () => roomFor(c.workbook, c.sheet)).rows;
   if (!(c.canShape ?? c.canEdit) || room <= 0) return null;
   const n = Math.max(1, Math.min(room, Math.floor(Number(count)) || ADD_ROWS_DEFAULT));
   const add = () => {

@@ -86,6 +86,15 @@ that keeps them and leaves the rest as plain React.
   called `getIcon(iconId)` without that value kept its placeholder, so a first visit's flowchart
   showed a framed question mark on every node. `hooks/ui/useIconCatalogs.guard.test.ts` fails on
   a call that drops the value, since Vitest runs without the compiler.
+- **A render reads the page's workbook through `readWorkbook(c.version, () => ...)`**
+  (`components/sheets/read-workbook.ts`). The workbook is one mutable copy whose identity never
+  changes, so the compiler keeps a read such as `c.workbook.cellLinkOf(sheetId, r, c)` memoised on
+  the instance and its arguments: Insert Link's card read the active cell before the write and never
+  again, though the sheet held the link. Keyed on the store's version, the read runs again whenever a
+  value or a sheet may have changed. A hand-written `useMemo` whose deps name `version` without reading
+  it is not preserved by the compiler, which leaves that whole component uncompiled.
+  `components/sheets/workbook-render-reads.guard.test.ts` fails a component or hook that calls the
+  workbook, or hands it to a call, outside `readWorkbook`.
 
 ## Rendering in the browser only
 

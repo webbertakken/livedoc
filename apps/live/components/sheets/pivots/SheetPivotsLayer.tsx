@@ -3,6 +3,7 @@
 // The Edit button of a pivot table (docs/specs/029-sheets/pivot-tables.md "Working with one"): shown while the active
 // cell is in a pivot table's output or on its anchor, under the output's first column below its last row; it opens
 // the Pivot Table Editor. An Editor's alone: nothing is drawn where no one may change pivot tables.
+import { readWorkbook } from '@/components/sheets/read-workbook';
 import { useSheetController } from '../sheet-controller';
 import { rectOf } from '../SheetSelectionLayer';
 import { useSheetPivotEdit } from './sheet-pivots';
@@ -14,7 +15,7 @@ export function SheetPivotsLayer() {
   const edit = useSheetPivotEdit();
   if (!edit || !c.canShape || !c.sheet.layout.objects?.some((x) => x.kind === 'pivot')) return null;
   const { r, c: col } = c.selection.active;
-  const out = c.workbook.pivotOutputAt(c.sheet.id, r, col);
+  const out = readWorkbook(c.version, () => c.workbook.pivotOutputAt(c.sheet.id, r, col));
   if (!out) return null;
   const box = rectOf(c.geometry, out.rect, c.scroll);
   return (

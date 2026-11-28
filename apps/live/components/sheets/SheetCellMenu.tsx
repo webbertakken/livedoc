@@ -5,6 +5,7 @@
 // (Insert, Delete, Cells, Sort, Paste Special, Data Validation, Chart), each a side flyout of icon-left rows named for
 // what they do to this selection. Someone who may only view gets
 // the header and Copy alone.
+import { readWorkbook } from '@/components/sheets/read-workbook';
 import { Fragment, useState } from 'react';
 import { CHART_TYPE_LABELS, CHART_TYPES } from '@livedoc/document';
 import { posRangeOf, unmergeRange } from '@livedoc/sheets';
@@ -73,7 +74,10 @@ export function SheetCellMenu({
   const [askMerge, setAskMerge] = useState(false);
   const range = c.selection.ranges[c.selection.ranges.length - 1]!;
   const words = cellMenuLabels(range);
-  const link = c.workbook.hyperlinkOf(c.sheet.id, c.selection.active.r, c.selection.active.c);
+  const { active } = c.selection;
+  const link = readWorkbook(c.version, () =>
+    c.workbook.hyperlinkOf(c.sheet.id, active.r, active.c),
+  );
   const flyout = (id: Flyout) => ({
     open: open === id,
     onToggle: () => setOpen((s) => (s === id ? null : id)),

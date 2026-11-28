@@ -3,7 +3,8 @@
 // Data › Column Stats (docs/specs/029-sheets/data-tools.md "Column Stats"): the active column's figures as its cells
 // show them, a column switcher, Ignore rows, the distribution and the frequent values. Read by everyone; it changes
 // nothing and follows edits as they land.
-import { useMemo, useState } from 'react';
+import { readWorkbook } from '@/components/sheets/read-workbook';
+import { useState } from 'react';
 import { columnLetters, columnStats, statsBars, STATS_FREQUENT } from '@livedoc/sheets';
 import { ChevronLeftIcon, ChevronRightIcon } from '@livedoc/ui';
 import { useSheetController } from '@/components/sheets/sheet-controller';
@@ -24,14 +25,14 @@ export function SpreadsheetColumnStatsBody() {
   const setCol = (next: number) => setPicked({ col: next, from: active });
   const [ignore, setIgnore] = useState(c.sheet.layout.frozenRows ?? 0);
   const [least, setLeast] = useState(false);
-  const { sheet, workbook } = c;
-  const stats = useMemo(
-    // The sheet in the deps: the figures follow each change of it.
-    () => (sheet ? columnStats(workbook, sheet.id, col, ignore) : null),
-    [workbook, sheet, col, ignore],
-  );
+  const { sheet, workbook, version } = c;
+  // The figures follow each change of the store (read-workbook.ts).
+  const stats = readWorkbook(version, () => columnStats(workbook, sheet.id, col, ignore));
   const cols = sheet.layout.cols.length;
-  const header = ignore > 0 ? cellSpokenValue(sheet, workbook, c.locale, 0, col).trim() : '';
+  const header =
+    ignore > 0
+      ? readWorkbook(version, () => cellSpokenValue(sheet, workbook, c.locale, 0, col)).trim()
+      : '';
   const figure = (n: number) => statFigure(n, c.locale);
   const frequent = stats
     ? (least ? [...stats.frequency].reverse() : stats.frequency).slice(0, STATS_FREQUENT)

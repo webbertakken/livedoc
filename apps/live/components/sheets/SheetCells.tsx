@@ -4,6 +4,7 @@
 // rows, the frozen columns and the scrolling body), each drawing only its window of rows and columns. Text runs
 // over empty neighbours to its right; numbers too wide for their column show fewer decimals, then scientific,
 // then ####. Memoised on what it draws, so moving the selection redraws none of it.
+import { readWorkbook } from './read-workbook';
 import { drawnFormat, drawnValue, type DrawnPivots } from '@/lib/spreadsheet/pivot-sliced';
 import { memo, type CSSProperties } from 'react';
 import { cellColours, isLightColor, resolveFontStack } from '@livedoc/document';
@@ -145,263 +146,272 @@ function RegionCells({ region, ...p }: CellsProps & { region: Region }) {
   };
   const { rows, cols } = sheet.layout;
   const showGrid = sheet.layout.showGrid !== false;
-  const out: React.ReactNode[] = [];
-  // Format and validation rules (conditional-formatting.md, data-validation.md): looked up per drawn cell only when
-  // the sheet has any; a Dropdown from a Range's options worked out once per draw.
-  const fRules = p.formatRules ?? sheet.layout.formatRules;
-  const fIndex = fRules?.length ? ruleIndex(sheet.layout, fRules) : null;
-  const ranged = new Map<string, readonly RangeOption[]>();
-  const ruleCtx: RuleCtx = {
-    locale,
-    layout: sheet.layout,
-    rangeValues: (rule) => {
-      let known = ranged.get(rule.id);
-      if (!known) ranged.set(rule.id, (known = rangeOptions(workbook, sheet.id, rule)));
-      return known;
-    },
-    formulaAllows: validationFormulaAllows(workbook, sheet.id),
-  };
-  const hasRules = hasValidation(sheet.layout);
-  const hasBands = !!sheet.layout.bands?.length;
-  for (const r of region.rows) {
-    if (g.hiddenRow(r)) continue;
-    // Each row's text runs right over empty cells; `width` is how far the current run reaches.
-    for (let c = region.c1; c <= region.c2; c++) {
-      if (g.hiddenCol(c)) continue;
-      const m = mergeAt(g, r, c);
-      if (m && (m.r1 !== r || m.c1 !== c)) continue;
-      const key = cellKey(rows[r]!, cols[c]!);
-      const cell = sheet.cells.get(key);
-      const value = drawnValue(p.drawn, workbook, sheet.id, r, c);
-      const box = cellBox(g, r, c, scroll, m);
-      const input = cell?.input;
-      const formula =
-        p.showFormulas && input && 'f' in input
-          ? inputAsText(input, workbook.ctxFor(sheet.id), locale)
+  // Read under the store's version (read-workbook.ts): the workbook is one mutable copy.
+  const out = readWorkbook(p.version, () => {
+    const out: React.ReactNode[] = [];
+    // Format and validation rules (conditional-formatting.md, data-validation.md): looked up per drawn cell only when
+    // the sheet has any; a Dropdown from a Range's options worked out once per draw.
+    const fRules = p.formatRules ?? sheet.layout.formatRules;
+    const fIndex = fRules?.length ? ruleIndex(sheet.layout, fRules) : null;
+    const ranged = new Map<string, readonly RangeOption[]>();
+    const ruleCtx: RuleCtx = {
+      locale,
+      layout: sheet.layout,
+      rangeValues: (rule) => {
+        let known = ranged.get(rule.id);
+        if (!known) ranged.set(rule.id, (known = rangeOptions(workbook, sheet.id, rule)));
+        return known;
+      },
+      formulaAllows: validationFormulaAllows(workbook, sheet.id),
+    };
+    const hasRules = hasValidation(sheet.layout);
+    const hasBands = !!sheet.layout.bands?.length;
+    for (const r of region.rows) {
+      if (g.hiddenRow(r)) continue;
+      // Each row's text runs right over empty cells; `width` is how far the current run reaches.
+      for (let c = region.c1; c <= region.c2; c++) {
+        if (g.hiddenCol(c)) continue;
+        const m = mergeAt(g, r, c);
+        if (m && (m.r1 !== r || m.c1 !== c)) continue;
+        const key = cellKey(rows[r]!, cols[c]!);
+        const cell = sheet.cells.get(key);
+        const value = drawnValue(p.drawn, workbook, sheet.id, r, c);
+        const box = cellBox(g, r, c, scroll, m);
+        const input = cell?.input;
+        const formula =
+          p.showFormulas && input && 'f' in input
+            ? inputAsText(input, workbook.ctxFor(sheet.id), locale)
+            : null;
+        const shown =
+          formula === null
+            ? displayValue(
+                value,
+                drawnFormat(p.drawn, workbook, sheet.id, r, c, cell?.format),
+                locale,
+              )
+            : { text: formula, align: 'l' as const, kind: 'text' as const };
+        // A met format rule's style draws over the cell's own.
+        const met = fIndex
+          ? formatRuleStyle(workbook, sheet.id, r, c, value, shown.text, rulesAt(fIndex, r, c))
           : null;
-      const shown =
-        formula === null
-          ? displayValue(
+        const styled: CellFormat | undefined = met ? { ...cell?.format, ...met } : cell?.format;
+        // Alternating colours shade under a cell's own fill and a met rule's (formatting.md "Alternating colours").
+        const band = hasBands && !styled?.bg ? bandingFillAt(sheet.layout, r, c) : null;
+        // Theme colours drawn in the workbook's theme (formatting.md "Themes").
+        const f = themedFormat(band ? { ...styled, bg: band } : styled, workbook.theme);
+        const vRule = hasRules ? validationRuleAt(sheet.layout, r, c) : null;
+        const pending = formula === null ? shownValue(value) : { text: '', pending: false };
+        // A value whose new one is on its way from the engine (formulas.md "Recalculation").
+        const waiting = workbook.isStale(sheet.id, r, c);
+        const px = fontPx(f);
+        let text = pending.pending ? pending.text : shown.text;
+        // A cell's link or a HYPERLINK draws as a link (formulas.md "Text", inserted-objects.md "A cell's link"):
+        // underlined, in the sheet's accent unless the cell has its own text colour, kept readable on the cell's fill like
+        // any ink. Ctrl/⌘ and a click opens it (useSheetPointer).
+        const link =
+          text && !pending.pending && formula === null
+            ? workbook.linkTargetOf(sheet.id, r, c)
+            : null;
+        const colours = cellColours(link && !f?.fc ? { ...f, fc: palette.focus } : f, surface);
+        const deco = [f?.u || link ? 'underline' : '', f?.st ? 'line-through' : '']
+          .filter(Boolean)
+          .join(' ');
+        const textStyle: CSSProperties = {
+          fontSize: px,
+          fontFamily: sheetFontStack(f?.ff),
+          fontWeight: f?.b ? 700 : undefined,
+          fontStyle: f?.i ? 'italic' : undefined,
+          textDecoration: deco || undefined,
+          // Numbers, dates and times in tabular figures, so a column of them lines up (sheet.md "The grid").
+          fontVariantNumeric: shown.kind === 'number' ? 'tabular-nums' : undefined,
+        };
+        const ruled = vRule
+          ? ruleCellDraw({
+              cellKey: key,
+              rule: vRule,
               value,
-              drawnFormat(p.drawn, workbook, sheet.id, r, c, cell?.format),
-              locale,
-            )
-          : { text: formula, align: 'l' as const, kind: 'text' as const };
-      // A met format rule's style draws over the cell's own.
-      const met = fIndex
-        ? formatRuleStyle(workbook, sheet.id, r, c, value, shown.text, rulesAt(fIndex, r, c))
-        : null;
-      const styled: CellFormat | undefined = met ? { ...cell?.format, ...met } : cell?.format;
-      // Alternating colours shade under a cell's own fill and a met rule's (formatting.md "Alternating colours").
-      const band = hasBands && !styled?.bg ? bandingFillAt(sheet.layout, r, c) : null;
-      // Theme colours drawn in the workbook's theme (formatting.md "Themes").
-      const f = themedFormat(band ? { ...styled, bg: band } : styled, workbook.theme);
-      const vRule = hasRules ? validationRuleAt(sheet.layout, r, c) : null;
-      const pending = formula === null ? shownValue(value) : { text: '', pending: false };
-      // A value whose new one is on its way from the engine (formulas.md "Recalculation").
-      const waiting = workbook.isStale(sheet.id, r, c);
-      const px = fontPx(f);
-      let text = pending.pending ? pending.text : shown.text;
-      // A cell's link or a HYPERLINK draws as a link (formulas.md "Text", inserted-objects.md "A cell's link"):
-      // underlined, in the sheet's accent unless the cell has its own text colour, kept readable on the cell's fill like
-      // any ink. Ctrl/⌘ and a click opens it (useSheetPointer).
-      const link =
-        text && !pending.pending && formula === null ? workbook.linkTargetOf(sheet.id, r, c) : null;
-      const colours = cellColours(link && !f?.fc ? { ...f, fc: palette.focus } : f, surface);
-      const deco = [f?.u || link ? 'underline' : '', f?.st ? 'line-through' : '']
-        .filter(Boolean)
-        .join(' ');
-      const textStyle: CSSProperties = {
-        fontSize: px,
-        fontFamily: sheetFontStack(f?.ff),
-        fontWeight: f?.b ? 700 : undefined,
-        fontStyle: f?.i ? 'italic' : undefined,
-        textDecoration: deco || undefined,
-        // Numbers, dates and times in tabular figures, so a column of them lines up (sheet.md "The grid").
-        fontVariantNumeric: shown.kind === 'number' ? 'tabular-nums' : undefined,
-      };
-      const ruled = vRule
-        ? ruleCellDraw({
-            cellKey: key,
-            rule: vRule,
-            value,
-            shown: text,
-            textWidth: roughWidth(text, px),
-            box,
-            px,
-            palette,
-            ink: colours.ink,
-            ctx: ruleCtx,
-            at: { r, c },
-            textStyle,
-          })
-        : null;
-      const padEnd = Math.max(
-        p.padEnd?.has(cols[c]!) ? DROPDOWN_PAD_PX : ruled?.padEnd ? RULE_ARROW_PX : 0,
-        p.filterHead?.r === r && p.filterHead.cols.has(c) ? FILTER_PAD_PX : 0,
-      );
-      // Turned text keeps its whole text, on the lines its row was sized by (formatting.md "Alignment, wrapping,
-      // rotation"); a stacked text is drawn upright, a character a line.
-      const turn =
-        text && !pending.pending ? cellTurn(workbook, sheet.id, r, c, text, p.font) : null;
-      if (turn) text = turn.lines.join('\n');
-      const turned = turn?.deg ? turn : null;
-      if (!turn && shown.kind === 'number' && typeof value === 'number')
-        text = fitNumber(text, value, f, box.w - padEnd, px, p.font);
-      const align = f?.ha ?? (pending.pending ? 'l' : shown.align);
-      const wrap = f?.wr ?? 'o';
-      // Text of more than one line is drawn on the lines the engine broke it into, the very lines its row was sized
-      // by (sheet.md "Row height"): the browser never wraps it again, so an automatic row cuts no line off.
-      const lined =
-        !turn && shown.kind === 'text' && !pending.pending && (wrap === 'w' || text.includes('\n'));
-      const lines = lined ? cellLines(workbook, sheet.id, r, c, text, p.font) : null;
-      if (lines) text = lines.join('\n');
-      const lineH = Math.round(px * 1.3);
-      // How tall the drawn text is: its turned box, else its lines.
-      const textHeight = turned ? turned.h : (lines ?? turn?.lines ?? [text]).length * lineH;
-      // Overflow: left-aligned text with empty cells to its right runs into them (not past the window).
-      let width = box.w;
-      if (text && wrap === 'o' && align === 'l' && !m && shown.kind === 'text') {
-        const need = (turned ? turned.w : roughWidth(text, px)) + CELL_PAD * 2;
-        for (let k = c + 1; k <= region.c2 && width < need; k++) {
-          if (g.hiddenCol(k)) continue;
-          const next = drawnValue(p.drawn, workbook, sheet.id, r, k);
-          if (next !== null || mergeAt(g, r, k)) break;
-          width += g.cols[k + 1]! - g.cols[k]!;
+              shown: text,
+              textWidth: roughWidth(text, px),
+              box,
+              px,
+              palette,
+              ink: colours.ink,
+              ctx: ruleCtx,
+              at: { r, c },
+              textStyle,
+            })
+          : null;
+        const padEnd = Math.max(
+          p.padEnd?.has(cols[c]!) ? DROPDOWN_PAD_PX : ruled?.padEnd ? RULE_ARROW_PX : 0,
+          p.filterHead?.r === r && p.filterHead.cols.has(c) ? FILTER_PAD_PX : 0,
+        );
+        // Turned text keeps its whole text, on the lines its row was sized by (formatting.md "Alignment, wrapping,
+        // rotation"); a stacked text is drawn upright, a character a line.
+        const turn =
+          text && !pending.pending ? cellTurn(workbook, sheet.id, r, c, text, p.font) : null;
+        if (turn) text = turn.lines.join('\n');
+        const turned = turn?.deg ? turn : null;
+        if (!turn && shown.kind === 'number' && typeof value === 'number')
+          text = fitNumber(text, value, f, box.w - padEnd, px, p.font);
+        const align = f?.ha ?? (pending.pending ? 'l' : shown.align);
+        const wrap = f?.wr ?? 'o';
+        // Text of more than one line is drawn on the lines the engine broke it into, the very lines its row was sized
+        // by (sheet.md "Row height"): the browser never wraps it again, so an automatic row cuts no line off.
+        const lined =
+          !turn &&
+          shown.kind === 'text' &&
+          !pending.pending &&
+          (wrap === 'w' || text.includes('\n'));
+        const lines = lined ? cellLines(workbook, sheet.id, r, c, text, p.font) : null;
+        if (lines) text = lines.join('\n');
+        const lineH = Math.round(px * 1.3);
+        // How tall the drawn text is: its turned box, else its lines.
+        const textHeight = turned ? turned.h : (lines ?? turn?.lines ?? [text]).length * lineH;
+        // Overflow: left-aligned text with empty cells to its right runs into them (not past the window).
+        let width = box.w;
+        if (text && wrap === 'o' && align === 'l' && !m && shown.kind === 'text') {
+          const need = (turned ? turned.w : roughWidth(text, px)) + CELL_PAD * 2;
+          for (let k = c + 1; k <= region.c2 && width < need; k++) {
+            if (g.hiddenCol(k)) continue;
+            const next = drawnValue(p.drawn, workbook, sheet.id, r, k);
+            if (next !== null || mergeAt(g, r, k)) break;
+            width += g.cols[k + 1]! - g.cols[k]!;
+          }
         }
-      }
-      const style: CSSProperties = {
-        left: box.x,
-        top: box.y,
-        width: box.w,
-        height: box.h,
-        backgroundColor: colours.fill ?? (m ? palette.surface : undefined),
-      };
-      out.push(
-        <div
-          key={key}
-          className="absolute box-border border-b border-r"
-          // Gridlines, unless the sheet hides them (Sheet Settings): then only fills and set borders show.
-          style={{ ...style, borderColor: showGrid ? palette.cardBorder : 'transparent' }}
-        />,
-      );
-      // Cell A1 alone, one column by one row even when merged wider: where the Sheets tour's Type Into Cells step
-      // points (plan-tour-steps.ts).
-      if (r === 0 && c === 0)
+        const style: CSSProperties = {
+          left: box.x,
+          top: box.y,
+          width: box.w,
+          height: box.h,
+          backgroundColor: colours.fill ?? (m ? palette.surface : undefined),
+        };
         out.push(
           <div
-            key="a1"
-            data-sheet-a1=""
-            className="pointer-events-none absolute"
+            key={key}
+            className="absolute box-border border-b border-r"
+            // Gridlines, unless the sheet hides them (Sheet Settings): then only fills and set borders show.
+            style={{ ...style, borderColor: showGrid ? palette.cardBorder : 'transparent' }}
+          />,
+        );
+        // Cell A1 alone, one column by one row even when merged wider: where the Sheets tour's Type Into Cells step
+        // points (plan-tour-steps.ts).
+        if (r === 0 && c === 0)
+          out.push(
+            <div
+              key="a1"
+              data-sheet-a1=""
+              className="pointer-events-none absolute"
+              style={{
+                left: box.x,
+                top: box.y,
+                width: g.cols[1]! - g.cols[0]!,
+                height: g.rows[1]! - g.rows[0]!,
+              }}
+            />,
+          );
+        if (f && (f.bt || f.br || f.bb || f.bl))
+          out.push(
+            <div
+              key={`${key}b`}
+              className="pointer-events-none absolute box-border"
+              style={{
+                left: box.x - 1,
+                top: box.y - 1,
+                width: box.w + 1,
+                height: box.h + 1,
+                borderTop: borderCss(f.bt),
+                borderRight: borderCss(f.br),
+                borderBottom: borderCss(f.bb),
+                borderLeft: borderCss(f.bl),
+                zIndex: 2,
+              }}
+            />,
+          );
+        if (ruled) out.push(...ruled.nodes);
+        // A SPARKLINE draws its chart over the cell (charts.md "Sparklines"); its value is empty text.
+        const chart = pending.pending ? null : workbook.sparklineOf(sheet.id, r, c);
+        if (chart)
+          out.push(
+            <SheetSparkline
+              key={`${key}s`}
+              chart={chart}
+              box={box}
+              ink={f?.fc}
+              accent={palette.focus}
+              muted={palette.muted}
+              {...(waiting ? { waitingOpacity: WAITING_OPACITY } : {})}
+            />,
+          );
+        // An IMAGE draws its picture in the cell where the page fetches them (imports.md "IMAGE"); its value is "".
+        const picture = images && !pending.pending ? workbook.imageOf(sheet.id, r, c) : null;
+        if (picture && images)
+          out.push(
+            <SheetImage
+              key={`${key}i`}
+              image={picture}
+              loader={images}
+              box={box}
+              {...(waiting ? { waitingOpacity: WAITING_OPACITY } : {})}
+            />,
+          );
+        // A gallery picture held in the cell, or one its formula reads (inserted-objects.md "Images in a cell").
+        const held = pictures && !pending.pending ? workbook.pictureOf(sheet.id, r, c) : null;
+        if (held && pictures)
+          out.push(
+            <SheetCellPicture
+              key={`${key}p`}
+              picture={held}
+              access={pictures}
+              box={box}
+              {...(waiting ? { waitingOpacity: WAITING_OPACITY } : {})}
+            />,
+          );
+        if (!text || ruled?.hideText) continue;
+        out.push(
+          <div
+            key={`${key}t`}
+            data-sheet-text
+            {...(waiting ? { 'data-sheet-waiting': '' } : {})}
+            className={`pointer-events-none absolute flex whitespace-pre px-1 ${
+              wrap === 'c' || width === box.w ? 'overflow-hidden' : ''
+            }`}
             style={{
               left: box.x,
               top: box.y,
-              width: g.cols[1]! - g.cols[0]!,
-              height: g.rows[1]! - g.rows[0]!,
+              width,
+              height: box.h,
+              zIndex: 1,
+              ...(padEnd ? { paddingRight: padEnd } : {}),
+              lineHeight: `${lineH}px`,
+              // Measured lines are placed by the font's own widths, as they were measured: a browser that snaps each
+              // character to whole px (Chromium on Linux) draws a line wider than its room otherwise.
+              ...(lines ? { textRendering: 'geometricPrecision' } : {}),
+              // The cell's own font; unset (or one no longer offered), the sheet's.
+              ...textStyle,
+              // A value still waiting on the cards reads quietly, never as an error.
+              color: pending.pending
+                ? palette.muted
+                : shown.kind === 'error'
+                  ? ERROR_INK
+                  : colours.ink,
+              justifyContent: align === 'r' ? 'flex-end' : align === 'c' ? 'center' : 'flex-start',
+              // Middle unless the cell says otherwise.
+              alignItems: f?.va === 't' ? 'flex-start' : f?.va === 'b' ? 'flex-end' : 'center',
+              // Bottom-aligned text sits 3 px up, where its row has that to spare.
+              paddingBottom: f?.va === 'b' ? Math.max(0, Math.min(3, box.h - textHeight)) : 0,
+              textAlign: align === 'r' ? 'right' : align === 'c' ? 'center' : 'left',
+              // Faded only once the wait outlasts 120 ms, so a quick answer never flickers; a step, not
+              // a motion.
+              ...(waiting ? { opacity: WAITING_OPACITY, transition: 'opacity 0s 120ms' } : {}),
             }}
-          />,
+          >
+            {turned ? <SheetTurnedText turn={turned} text={text} /> : text}
+          </div>,
         );
-      if (f && (f.bt || f.br || f.bb || f.bl))
-        out.push(
-          <div
-            key={`${key}b`}
-            className="pointer-events-none absolute box-border"
-            style={{
-              left: box.x - 1,
-              top: box.y - 1,
-              width: box.w + 1,
-              height: box.h + 1,
-              borderTop: borderCss(f.bt),
-              borderRight: borderCss(f.br),
-              borderBottom: borderCss(f.bb),
-              borderLeft: borderCss(f.bl),
-              zIndex: 2,
-            }}
-          />,
-        );
-      if (ruled) out.push(...ruled.nodes);
-      // A SPARKLINE draws its chart over the cell (charts.md "Sparklines"); its value is empty text.
-      const chart = pending.pending ? null : workbook.sparklineOf(sheet.id, r, c);
-      if (chart)
-        out.push(
-          <SheetSparkline
-            key={`${key}s`}
-            chart={chart}
-            box={box}
-            ink={f?.fc}
-            accent={palette.focus}
-            muted={palette.muted}
-            {...(waiting ? { waitingOpacity: WAITING_OPACITY } : {})}
-          />,
-        );
-      // An IMAGE draws its picture in the cell where the page fetches them (imports.md "IMAGE"); its value is "".
-      const picture = images && !pending.pending ? workbook.imageOf(sheet.id, r, c) : null;
-      if (picture && images)
-        out.push(
-          <SheetImage
-            key={`${key}i`}
-            image={picture}
-            loader={images}
-            box={box}
-            {...(waiting ? { waitingOpacity: WAITING_OPACITY } : {})}
-          />,
-        );
-      // A gallery picture held in the cell, or one its formula reads (inserted-objects.md "Images in a cell").
-      const held = pictures && !pending.pending ? workbook.pictureOf(sheet.id, r, c) : null;
-      if (held && pictures)
-        out.push(
-          <SheetCellPicture
-            key={`${key}p`}
-            picture={held}
-            access={pictures}
-            box={box}
-            {...(waiting ? { waitingOpacity: WAITING_OPACITY } : {})}
-          />,
-        );
-      if (!text || ruled?.hideText) continue;
-      out.push(
-        <div
-          key={`${key}t`}
-          data-sheet-text
-          {...(waiting ? { 'data-sheet-waiting': '' } : {})}
-          className={`pointer-events-none absolute flex whitespace-pre px-1 ${
-            wrap === 'c' || width === box.w ? 'overflow-hidden' : ''
-          }`}
-          style={{
-            left: box.x,
-            top: box.y,
-            width,
-            height: box.h,
-            zIndex: 1,
-            ...(padEnd ? { paddingRight: padEnd } : {}),
-            lineHeight: `${lineH}px`,
-            // Measured lines are placed by the font's own widths, as they were measured: a browser that snaps each
-            // character to whole px (Chromium on Linux) draws a line wider than its room otherwise.
-            ...(lines ? { textRendering: 'geometricPrecision' } : {}),
-            // The cell's own font; unset (or one no longer offered), the sheet's.
-            ...textStyle,
-            // A value still waiting on the cards reads quietly, never as an error.
-            color: pending.pending
-              ? palette.muted
-              : shown.kind === 'error'
-                ? ERROR_INK
-                : colours.ink,
-            justifyContent: align === 'r' ? 'flex-end' : align === 'c' ? 'center' : 'flex-start',
-            // Middle unless the cell says otherwise.
-            alignItems: f?.va === 't' ? 'flex-start' : f?.va === 'b' ? 'flex-end' : 'center',
-            // Bottom-aligned text sits 3 px up, where its row has that to spare.
-            paddingBottom: f?.va === 'b' ? Math.max(0, Math.min(3, box.h - textHeight)) : 0,
-            textAlign: align === 'r' ? 'right' : align === 'c' ? 'center' : 'left',
-            // Faded only once the wait outlasts 120 ms, so a quick answer never flickers; a step, not
-            // a motion.
-            ...(waiting ? { opacity: WAITING_OPACITY, transition: 'opacity 0s 120ms' } : {}),
-          }}
-        >
-          {turned ? <SheetTurnedText turn={turned} text={text} /> : text}
-        </div>,
-      );
+      }
     }
-  }
+    return out;
+  });
   // The clip box sits at its pane's corner; the cells inside are placed from the grid's own origin.
   const left = Number(region.clip.left ?? 0);
   const top = Number(region.clip.top ?? 0);

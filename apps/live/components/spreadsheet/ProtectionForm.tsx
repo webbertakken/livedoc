@@ -3,6 +3,7 @@
 // Protect Sheets and Ranges' form (docs/specs/029-sheets/data-tools.md "Protected ranges"): a range (any sheet's,
 // `Sheet2!A1:B4`) or a whole sheet with Except Certain Cells, a description, and who may write there: Show a Warning,
 // Editors Only or Only the Owner. Done is one change, one undo step; a range it cannot read says why under its field.
+import { readWorkbook } from '@/components/sheets/read-workbook';
 import { useId, useState } from 'react';
 import { Button, Select, TextInput } from '@livedoc/ui';
 import {
@@ -48,7 +49,7 @@ export function ProtectionForm({
 }) {
   const c = useSheetController();
   const id = useId();
-  const sheets = c.workbook.sheetList();
+  const sheets = readWorkbook(c.version, () => c.workbook.sheetList());
   const was = existing?.protection;
   const [what, setWhat] = useState<'range' | 'sheet'>(
     was ? (was.range ? 'range' : 'sheet') : start.what,
