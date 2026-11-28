@@ -94,6 +94,26 @@ describe('Workbook.pivotOutputSliced', () => {
     expect(wb.value(sheet.id, 3, 4)).toBe(10);
   });
 
+  it('works a calculated field out over the rows kept', () => {
+    const { wb, sheet, pivot } = withSlicedPivot();
+    const calc = {
+      ...pivot,
+      values: [{ formula: '=Units*2', summary: 'SUM' as const, name: 'Double' }],
+    };
+    const next = {
+      ...sheet,
+      layout: { ...sheet.layout, objects: [calc, sheet.layout.objects![1]!] },
+    };
+    wb.updateSheet(next);
+    const hidden = filteredOutRows(
+      wb,
+      next.id,
+      null,
+      slicersOverPivot(next.layout, calc.source, {}),
+    );
+    expect(wb.pivotOutputSliced(next.id, calc.id, hidden)!.drawn.rows[1]).toEqual(['West', 6]);
+  });
+
   it('is null for a pivot table not on the sheet, or not landed', () => {
     const { wb, sheet } = withSlicedPivot();
     expect(wb.pivotOutputSliced(sheet.id, 'nopivot', new Set())).toBeNull();
