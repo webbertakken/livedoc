@@ -44,7 +44,7 @@ Both ODF and OOXML are native (fork C1, ruled): a file keeps the format it arriv
   at its size on the page up to the text's width; a picture past the engine's size limit, unreadable, or past a page's
   picture limit is left out and reported (default). A password-protected PDF, or one the engine refuses, is refused with
   the PDF document's words; past `TEXT_DOCUMENT_MAX_CHARS` it refuses `document_too_large`.
-- An import that drops anything shows the **import report** ([below](#import-report)).
+- An import that drops something a reader would miss shows the **import report** once ([below](#import-report)).
 - An opened file rides the new document's create (default): `POST /api/documents` names the text document tab and its
   file (`textDocuments: [{ tabId, file }]`, base64; a copy's `{ tabId, state }` carries a live state instead,
   [Copies](live-editing-and-storage.md#copies)); the room reads it with the package's guards and stores its body as
