@@ -22,8 +22,10 @@ import {
   useLayoutEffect,
   useMemo,
   useRef,
+  useState,
   useSyncExternalStore,
 } from 'react';
+import { TableChipsHostContext } from './tables/table-settings-context';
 import { displayValue, isError, posRangeOf, single } from '@livedoc/sheets';
 import { useSheetController } from './sheet-controller';
 import { SheetProtectionLayer } from './SheetProtectionLayer';
@@ -330,6 +332,8 @@ export function SheetGrid({
 
   // A callback ref of its own: a property of `c` passed as `ref` would make the whole controller read as a ref.
   const { setGridEl } = c;
+  // The tables' chips' layer over the headers, handed to the tables layer once drawn.
+  const [chipHost, setChipHost] = useState<HTMLDivElement | null>(null);
   return (
     // A frame of the grid's room, the grid in it laid out at 1 / zoom of it and scaled back up (docs/specs/029-sheets/
     // sheet.md "Zoom"): the pointer reads its scale as it reads the canvas's (screen size over layout size), so
@@ -415,7 +419,9 @@ export function SheetGrid({
                 showFormulas={showFormulas}
               />
               <SheetProtectionLayer />
-              <SheetTablesLayer />
+              <TableChipsHostContext.Provider value={chipHost}>
+                <SheetTablesLayer />
+              </TableChipsHostContext.Provider>
               {/* A group by view's header rows (data-tools.md "Group by view"). */}
               <SheetGroupBands />
               <SheetPivotsLayer />
@@ -505,6 +511,12 @@ export function SheetGrid({
               }
             />
             <SheetOutlineBar onFold={c.interactive ? actions.fold : null} />
+            {/* The tables' chips, over the cells and the column letters alike (data-tools.md "Tables", D503). */}
+            <div
+              ref={setChipHost}
+              data-table-chips=""
+              className="pointer-events-none absolute inset-0"
+            />
             {pointer.preview?.kind === 'resize' || pointer.preview?.kind === 'move' ? (
               <div
                 className="pointer-events-none absolute z-[9]"

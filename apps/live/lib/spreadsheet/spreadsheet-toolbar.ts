@@ -220,6 +220,8 @@ export const SPREADSHEET_TOOLBAR: OfficeToolbar = [
       icon('insert-chart', 'Insert Chart', 'edit', lucideChartColumn, { built: true }),
       icon('create-a-filter', 'Create a Filter', 'edit', lucideFunnel, {
         toggle: true,
+        // Its chevron lists Data's filter items and the saved views (surface.md "Toolbar").
+        split: true,
         built: true,
       }),
       icon('functions', 'Functions', 'participate', lucideSigma, { menu: true }),
