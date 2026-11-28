@@ -1,0 +1,387 @@
+[sheets oracle] uploaded id=<drive file id>
+batch 200 {
+  "spreadsheetId": "<drive file id>",
+  "replies": [
+    {
+      "addFilterView": {
+        "filter": {
+          "filterViewId": 2099541204,
+          "title": "Purple only",
+          "range": {
+            "sheetId": 505171696,
+            "startRowIndex": 0,
+            "endRowIndex": 6,
+            "startColumnIndex": 0,
+            "endColumnIndex": 3
+          },
+          "sortSpecs": [
+            {
+              "dimensionIndex": 1,
+              "sortOrder": "ASCENDING"
+            }
+          ],
+          "criteria": {
+            "2": {
+             
+stored {
+ "sheets": [
+  {
+   "filterViews": [
+    {
+     "filterViewId": 2099541204,
+     "title": "Purple only",
+     "range": {
+      "sheetId": 505171696,
+      "startRowIndex": 0,
+      "endRowIndex": 6,
+      "startColumnIndex": 0,
+      "endColumnIndex": 3
+     },
+     "sortSpecs": [
+      {
+       "dimensionIndex": 1,
+       "sortOrder": "ASCENDING"
+      }
+     ],
+     "criteria": {
+      "2": {
+       "hiddenValues": [
+        "red",
+        "green"
+       ]
+      }
+     },
+     "filterSpecs": [
+      {
+       "columnIndex": 2,
+       "filterCriteria": {
+        "hiddenValues": [
+         "red",
+         "green"
+        ]
+       }
+      }
+     ]
+    },
+    {
+     "filterViewId": 704410162,
+     "title": "Second view",
+     "range": {
+      "sheetId": 505171696,
+      "startRowIndex": 0,
+      "endRowIndex": 6,
+      "startColumnIndex": 0,
+      "endColumnIndex": 3
+     },
+     "criteria": {
+      "1": {
+       "condition": {
+        "type": "NUMBER_BETWEEN",
+        "values": [
+         {
+          "userEnteredValue": "2"
+         },
+         {
+          "userEnteredValue": "9"
+         }
+        ]
+       }
+      }
+     },
+     "filterSpecs": [
+      {
+       "columnIndex": 1,
+       "filterCriteria": {
+        "condition": {
+         "type": "NUMBER_BETWEEN",
+         "values": [
+          {
+           "userEnteredValue": "2"
+          },
+          {
+           "userEnteredValue": "9"
+          }
+         ]
+        }
+       }
+      }
+     ]
+    }
+   ],
+   "slicers": [
+    {
+     "slicerId": 852617764,
+     "spec": {
+      "dataRange": {
+       "sheetId": 505171696,
+       "startRowIndex": 0,
+       "endRowIndex": 6,
+       "startColumnIndex": 0,
+       "endColumnIndex": 3
+      },
+      "filterCriteria": {
+       "hiddenValues": [
+        "red"
+       ]
+      },
+      "columnIndex": 2,
+      "applyToPivotTables": true,
+      "title": "Colour slicer",
+      "textFormat": {},
+      "horizontalAlignment": "LEFT"
+     },
+     "position": {
+      "overlayPosition": {
+       "anchorCell": {
+        "sheetId": 505171696,
+        "rowIndex": 1,
+        "columnIndex": 5
+       },
+       "widthPixels": 200,
+       "heightPixels": 40
+      }
+     }
+    },
+    {
+     "slicerId": 1131423939,
+     "spec": {
+      "dataRange": {
+       "sheetId": 505171696,
+       "startRowIndex": 0,
+       "endRowIndex": 6,
+       "startColumnIndex": 0,
+       "endColumnIndex": 3
+      },
+      "filterCriteria": {
+       "condition": {
+        "type": "NUMBER_GREATER",
+        "values": [
+         {
+          "userEnteredValue": "2"
+         }
+        ]
+       }
+      },
+      "columnIndex": 1,
+      "applyToPivotTables": true,
+      "textFormat": {},
+      "horizontalAlignment": "LEFT"
+     },
+     "position": {
+      "overlayPosition": {
+       "anchorCell": {
+        "sheetId": 505171696,
+        "rowIndex": 4,
+        "columnIndex": 5
+       },
+       "widthPixels": 300,
+       "heightPixels": 40
+      }
+     }
+    }
+   ]
+  }
+ ]
+}
+subtotal with slicers (plain sum 29) [["29"]]
+[sheets oracle] uploaded id=<drive file id>
+reimported {
+ "sheets": [
+  {
+   "filterViews": [
+    {
+     "filterViewId": 102749010,
+     "title": "Filter 1",
+     "range": {
+      "sheetId": 983793265,
+      "startRowIndex": 0,
+      "endRowIndex": 6,
+      "startColumnIndex": 0,
+      "endColumnIndex": 3
+     },
+     "criteria": {
+      "1": {
+       "condition": {
+        "type": "NUMBER_GREATER",
+        "values": [
+         {
+          "userEnteredValue": "2"
+         }
+        ]
+       }
+      },
+      "2": {
+       "hiddenValues": [
+        "red"
+       ]
+      }
+     },
+     "filterSpecs": [
+      {
+       "columnIndex": 2,
+       "filterCriteria": {
+        "hiddenValues": [
+         "red"
+        ]
+       }
+      },
+      {
+       "columnIndex": 1,
+       "filterCriteria": {
+        "condition": {
+         "type": "NUMBER_GREATER",
+         "values": [
+          {
+           "userEnteredValue": "2"
+          }
+         ]
+        }
+       }
+      }
+     ]
+    },
+    {
+     "filterViewId": 1616838498,
+     "title": "Purple only",
+     "range": {
+      "sheetId": 983793265,
+      "startRowIndex": 0,
+      "endRowIndex": 6,
+      "startColumnIndex": 0,
+      "endColumnIndex": 3
+     },
+     "sortSpecs": [
+      {
+       "dimensionIndex": 1,
+       "sortOrder": "ASCENDING"
+      }
+     ],
+     "criteria": {
+      "2": {
+       "hiddenValues": [
+        "red",
+        "green",
+        "green"
+       ]
+      }
+     },
+     "filterSpecs": [
+      {
+       "columnIndex": 2,
+       "filterCriteria": {
+        "hiddenValues": [
+         "red",
+         "green",
+         "green"
+        ]
+       }
+      }
+     ]
+    },
+    {
+     "filterViewId": 1870994281,
+     "title": "Second view",
+     "range": {
+      "sheetId": 983793265,
+      "startRowIndex": 0,
+      "endRowIndex": 6,
+      "startColumnIndex": 0,
+      "endColumnIndex": 3
+     },
+     "criteria": {
+      "1": {
+       "condition": {
+        "type": "NUMBER_BETWEEN",
+        "values": [
+         {
+          "userEnteredValue": "2"
+         },
+         {
+          "userEnteredValue": "9"
+         }
+        ]
+       }
+      }
+     },
+     "filterSpecs": [
+      {
+       "columnIndex": 1,
+       "filterCriteria": {
+        "condition": {
+         "type": "NUMBER_BETWEEN",
+         "values": [
+          {
+           "userEnteredValue": "2"
+          },
+          {
+           "userEnteredValue": "9"
+          }
+         ]
+        }
+       }
+      }
+     ]
+    }
+   ],
+   "slicers": [
+    {
+     "slicerId": 257463665,
+     "spec": {
+      "dataRange": {
+       "sheetId": 983793265,
+       "startRowIndex": 0,
+       "endRowIndex": 6,
+       "startColumnIndex": 0,
+       "endColumnIndex": 3
+      },
+      "filterCriteria": {
+       "hiddenValues": [
+        "red"
+       ]
+      },
+      "columnIndex": 2,
+      "applyToPivotTables": false
+     },
+     "position": {
+      "overlayPosition": {
+       "anchorCell": {
+        "sheetId": 983793265,
+        "rowIndex": 1,
+        "columnIndex": 5
+       },
+       "widthPixels": 200,
+       "heightPixels": 40
+      }
+     }
+    },
+    {
+     "slicerId": 364315419,
+     "spec": {
+      "dataRange": {
+       "sheetId": 983793265,
+       "startRowIndex": 0,
+       "endRowIndex": 6,
+       "startColumnIndex": 0,
+       "endColumnIndex": 3
+      },
+      "columnIndex": 1,
+      "applyToPivotTables": false
+     },
+     "position": {
+      "overlayPosition": {
+       "anchorCell": {
+        "sheetId": 983793265,
+        "rowIndex": 4,
+        "columnIndex": 5
+       },
+       "widthPixels": 300,
+       "heightPixels": 40
+      }
+     }
+    }
+   ]
+  }
+ ]
+}
+[sheets oracle] deleted id=<drive file id>
+[sheets oracle] deleted id=<drive file id>

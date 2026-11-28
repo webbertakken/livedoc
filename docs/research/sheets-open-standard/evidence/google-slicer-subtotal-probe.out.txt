@@ -1,0 +1,8 @@
+[sheets oracle] uploaded id=<drive file id>
+none [["29"],["29"]]
+filter hides red (apple 3) [["26"],["29"]]
+filter cleared [["29"],["29"]]
+slicer hides red [["29"],["29"]]
+after slicer: basicFilter null
+slicer + filter view hiding green [["29"],["29"]]
+[sheets oracle] deleted id=<drive file id>

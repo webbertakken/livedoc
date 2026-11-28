@@ -1,0 +1,26 @@
+[sheets oracle] uploaded id=<drive file id>
+addTable T1 200 
+addTable T2 200 
+table ids 1128806236 709566702
+tables made subtotals [["12"],["18"]] hiddenByFilter rows [] basicFilter null views [] tables [{"tableId":"1128806236","name":"Fruits","range":{"sheetId":1181825661,"startRowIndex":0,"endRowIndex":4,"startColumnIndex":0,"endColumnIndex":2}},{"tableId":"709566702","name":"Tags","range":{"sheetId":1181825661,"startRowIndex":0,"endRowIndex":4,"startColumnIndex":3,"endColumnIndex":5}}]
+filter T1 (hide plum) 500 {
+  "error": {
+    "code": 500,
+    "message": "Internal error encountered.",
+    "status": "INTERNAL"
+  }
+}
+
+T1 filtered subtotals [["12"],["18"]] hiddenByFilter rows [] basicFilter null views [] tables [{"tableId":"1128806236","name":"Fruits","range":{"sheetId":1181825661,"startRowIndex":0,"endRowIndex":4,"startColumnIndex":0,"endColumnIndex":2}},{"tableId":"709566702","name":"Tags","range":{"sheetId":1181825661,"startRowIndex":0,"endRowIndex":4,"startColumnIndex":3,"endColumnIndex":5}}]
+filter T2 (hide red) 500 {
+  "error": {
+    "code": 500,
+    "message": "Internal error encountered.",
+    "status": "INTERNAL"
+  }
+}
+
+T2 filtered too subtotals [["12"],["18"]] hiddenByFilter rows [] basicFilter null views [] tables [{"tableId":"1128806236","name":"Fruits","range":{"sheetId":1181825661,"startRowIndex":0,"endRowIndex":4,"startColumnIndex":0,"endColumnIndex":2}},{"tableId":"709566702","name":"Tags","range":{"sheetId":1181825661,"startRowIndex":0,"endRowIndex":4,"startColumnIndex":3,"endColumnIndex":5}}]
+add view over T1 (hide pear) 200 
+view added subtotals [["12"],["18"]] hiddenByFilter rows [] basicFilter null views [{"filterViewId":889933917,"range":{"sheetId":1181825661,"startRowIndex":0,"endRowIndex":4,"startColumnIndex":0,"endColumnIndex":2},"tableId":"1128806236"}] tables [{"tableId":"1128806236","name":"Fruits","range":{"sheetId":1181825661,"startRowIndex":0,"endRowIndex":4,"startColumnIndex":0,"endColumnIndex":2}},{"tableId":"709566702","name":"Tags","range":{"sheetId":1181825661,"startRowIndex":0,"endRowIndex":4,"startColumnIndex":3,"endColumnIndex":5}}]
+[sheets oracle] deleted id=<drive file id>
