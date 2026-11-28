@@ -5,7 +5,7 @@ import {
   TEXT_DOCUMENT_STATE_VECTOR_HEADER,
   TEXT_DOCUMENT_VIEWER_COPY_HEADER,
 } from '@livedoc/api-schema';
-import type { TextDocumentFileType } from '@livedoc/text-documents';
+import type { TextDocumentDownloadType } from '@livedoc/text-documents';
 import { base64OfBytes, bytesOfBase64 } from '@livedoc/text-documents/base64';
 import { API_BASE, apiFetch, apiHeaders, expectOkVoid } from './core';
 
@@ -89,7 +89,7 @@ export async function apiPostTextDocumentUpdate(
 /** The text document as a file, with the name the server gave it. */
 export async function apiDownloadTextDocument(
   scope: TextDocumentScope,
-  type: TextDocumentFileType,
+  type: TextDocumentDownloadType,
 ): Promise<{ blob: Blob; fileName: string; leftOut: number }> {
   const res = await bytesOf(scope, `file?type=${type}`, 'text document file');
   const disposition = res.headers.get('Content-Disposition') ?? '';

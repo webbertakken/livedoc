@@ -116,8 +116,22 @@ Range.prototype.getBoundingClientRect = () => new DOMRect();
 
 // File > Download in every format and File > Convert (useTextDocumentConversion), bound by the title row.
 const FILES = {
-  odf: ['download-docx', 'download-odt', 'download-fodt', 'convert-to-word'],
-  ooxml: ['download-docx', 'download-odt', 'download-fodt', 'convert-to-opendocument'],
+  odf: [
+    'download-docx',
+    'download-odt',
+    'download-fodt',
+    'download-txt',
+    'download-md',
+    'convert-to-word',
+  ],
+  ooxml: [
+    'download-docx',
+    'download-odt',
+    'download-fodt',
+    'download-txt',
+    'download-md',
+    'convert-to-opendocument',
+  ],
 } as const;
 
 // docs/specs/004-interface-design/office-shell.md "Menus as data": the text document's catalogue has no faults.

@@ -252,6 +252,23 @@ describe('the text document doors', () => {
     expect(read.ok && read.document.format).toBe('ooxml');
   });
 
+  // files-and-print.md "Downloading": Plain Text and Markdown written from the state, named after the document.
+  it('write Plain Text and Markdown from the state', async () => {
+    const db = sqliteD1();
+    const file = base64OfBytes(fileOf(Body.of('First', '# second')));
+    await create(db, { textDocuments: [{ tabId: 't1', file }] });
+    const txt = await call(db, 'GET', '/api/documents/D/text-documents/t1/file?type=txt');
+    expect(txt.status).toBe(200);
+    expect(txt.headers.get('Content-Type')).toBe('text/plain; charset=utf-8');
+    expect(txt.headers.get('Content-Disposition')).toMatch(/\.txt"$/);
+    const text = await txt.text();
+    const md = await call(db, 'GET', '/api/documents/D/text-documents/t1/file?type=md');
+    expect(md.headers.get('Content-Type')).toBe('text/markdown; charset=utf-8');
+    expect(md.headers.get('Content-Disposition')).toBe('attachment; filename="Q3 report.md"');
+    expect(text).toBe('First\n# second\n');
+    expect(await md.text()).toBe('First\n\n\\# second\n');
+  });
+
   it('refuse a caller without access', async () => {
     const db = sqliteD1();
     await create(db);

@@ -85,10 +85,10 @@ function downloads(): OfficeEntry[] {
     item('download-fodt', 'OpenDocument flat file (.fodt)', 'view', BUILT),
     item('download-rtf', 'Rich Text Format (.rtf)', 'view'),
     item('download-pdf', 'PDF document (.pdf)', 'view'),
-    item('download-txt', 'Plain Text (.txt)', 'view'),
+    item('download-txt', 'Plain Text (.txt)', 'view', BUILT),
     item('download-html', 'Web Page (.html, zipped)', 'view'),
     item('download-epub', 'EPUB Publication (.epub)', 'view'),
-    item('download-md', 'Markdown (.md)', 'view'),
+    item('download-md', 'Markdown (.md)', 'view', BUILT),
   ];
 }
 

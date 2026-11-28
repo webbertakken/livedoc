@@ -10,7 +10,7 @@ import type { OfficeProposals } from '@/lib/office/office-mode';
 import type * as Y from 'yjs';
 import type { AccessLevel } from '@livedoc/api-schema';
 import type { TextDocumentFormat } from '@livedoc/document';
-import type { TextDocumentFileType } from '@livedoc/text-documents';
+import type { TextDocumentDownloadType } from '@livedoc/text-documents';
 import type { OfficeChrome } from '@/components/office/office-chrome';
 import type { OfficeSaveStatusSource } from '@/components/office/office-save-status';
 import { OfficeTitleRow } from '@/components/office/OfficeTitleRow';
@@ -44,13 +44,15 @@ const FORMATS = {
   ooxml: { badge: '.DOCX', title: 'Microsoft Word format' },
 } as const;
 
-const DOWNLOADS: Record<TextDocumentFileType, { item: string; telemetry: string }> = {
+const DOWNLOADS: Record<TextDocumentDownloadType, { item: string; telemetry: string }> = {
   odt: { item: 'download-odt', telemetry: 'TextDocumentOdt' },
   fodt: { item: 'download-fodt', telemetry: 'TextDocumentFodt' },
   docx: { item: 'download-docx', telemetry: 'TextDocumentDocx' },
+  txt: { item: 'download-txt', telemetry: 'TextDocumentTxt' },
+  md: { item: 'download-md', telemetry: 'TextDocumentMd' },
 };
 
-const FILE_TYPES: readonly TextDocumentFileType[] = ['docx', 'odt', 'fodt'];
+const FILE_TYPES: readonly TextDocumentDownloadType[] = ['docx', 'odt', 'fodt', 'txt', 'md'];
 
 const OPEN_ACCEPT =
   '.odt,.fodt,.docx,application/vnd.oasis.opendocument.text,application/vnd.openxmlformats-officedocument.wordprocessingml.document';
@@ -136,7 +138,7 @@ export function TextDocumentTitleRow({
   );
 
   // A file in the document's own format, or the other's converted copy once the dialog is confirmed.
-  const download = async (type: TextDocumentFileType) => {
+  const download = async (type: TextDocumentDownloadType) => {
     setProblem(null);
     try {
       const here = localDoc?.() ?? null;

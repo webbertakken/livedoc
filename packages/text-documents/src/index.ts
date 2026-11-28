@@ -48,10 +48,21 @@ export {
 export { textDocumentPageSvg } from './art/page-svg';
 export { BODY_FRAGMENT, TEXT_DOCUMENT_SEED_CLIENT, TextDocumentState } from './text-document-state';
 export {
+  TEXT_DOCUMENT_EXPORT_TYPES,
   TEXT_DOCUMENT_FILE_TYPES,
+  isTextDocumentExportType,
   isTextDocumentFileType,
+  type TextDocumentDownloadType,
+  type TextDocumentExportType,
   type TextDocumentFileType,
 } from './file-types';
+export {
+  EXPORT_MEDIA_TYPES,
+  settledDocument,
+  writeTextDocumentExport,
+} from './exports/text-document-exports';
+export { writeMarkdown, escapeMarkdown } from './exports/markdown';
+export { writePlainText } from './exports/plain-text';
 export { base64OfBytes, bytesOfBase64 } from './base64';
 export {
   FIELD_KINDS,

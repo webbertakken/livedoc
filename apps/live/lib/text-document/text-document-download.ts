@@ -4,7 +4,12 @@
 // without a picture whose media could not be read says so, never silently.
 import type * as Y from 'yjs';
 import type { TextDocumentFormat } from '@livedoc/document';
-import { TextDocumentState, type TextDocumentFileType } from '@livedoc/text-documents';
+import {
+  isTextDocumentExportType,
+  TextDocumentState,
+  type TextDocumentDownloadType,
+  type TextDocumentFileType,
+} from '@livedoc/text-documents';
 import { debugLog } from '@/lib/debug-log';
 import type { WrittenTextDocumentFile } from './text-document-file';
 import { drawingsForFile } from './text-document-drawn-file';
@@ -16,7 +21,7 @@ export const leftOutNotice = (count: number): string =>
     : `The file was downloaded without ${count} pictures LiveDoc could not read.`;
 
 export type TextDocumentDownload = {
-  file: { format: TextDocumentFormat; name: string; type: TextDocumentFileType };
+  file: { format: TextDocumentFormat; name: string; type: TextDocumentDownloadType };
   // A text document in This Browser: always written here.
   localDoc: Y.Doc | null;
   // The writing as this editor holds it, bound to the room.
@@ -37,6 +42,17 @@ export async function textDocumentDownload({
   readImage,
   fromApi,
 }: TextDocumentDownload): Promise<WrittenTextDocumentFile> {
+  // An export reads no picture's bytes: written here for This Browser, else by the api.
+  if (isTextDocumentExportType(file.type)) {
+    if (!localDoc) return fromApi();
+    const { textDocumentExportOf } = await import('./text-document-file');
+    return textDocumentExportOf(localDoc, {
+      format: file.format,
+      name: file.name,
+      type: file.type,
+    });
+  }
+  const type: TextDocumentFileType = file.type;
   const drawings = (doc: Y.Doc | null) =>
     doc && draw ? [...TextDocumentState.drawingNames(doc).keys()] : [];
   const named = localDoc ? drawings(localDoc) : drawings(liveDoc);
@@ -50,5 +66,5 @@ export async function textDocumentDownload({
   });
   // The writer loads only when it is asked for.
   const { textDocumentFileOf } = await import('./text-document-file');
-  return textDocumentFileOf(doc, { ...file, readImage, ...(drawn ? { drawn } : {}) });
+  return textDocumentFileOf(doc, { ...file, type, readImage, ...(drawn ? { drawn } : {}) });
 }

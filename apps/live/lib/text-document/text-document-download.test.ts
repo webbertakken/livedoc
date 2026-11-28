@@ -97,4 +97,26 @@ describe('textDocumentDownload', () => {
     expect(fromApi).not.toHaveBeenCalled();
     expect(file.fileName).toBe('N.odt');
   });
+
+  // files-and-print.md "Downloading": an export reads no picture, so only This Browser writes it here.
+  it('writes an export here for This Browser, its pictures as their stand-ins', async () => {
+    const written = await download({
+      file: { format: 'odf', name: 'N', type: 'md' },
+      localDoc: docWith('drawing-1'),
+    });
+    expect(written.fileName).toBe('N.md');
+    expect(written.blob.type).toBe('text/markdown; charset=utf-8');
+    expect(await written.blob.text()).toBe('\\[Picture\\]\n');
+  });
+
+  it('leaves an export to the api for a document a room holds, drawings or not', async () => {
+    const fromApi = vi.fn(async () => api);
+    await download({
+      file: { format: 'odf', name: 'N', type: 'txt' },
+      liveDoc: docWith('drawing-1'),
+      draw: async () => PNG,
+      fromApi,
+    });
+    expect(fromApi).toHaveBeenCalled();
+  });
 });
