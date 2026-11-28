@@ -292,7 +292,7 @@ in Plan, so one on a Sketch, Structured or Pages tab could never be worked there
   description, over an **Add to Slot** button (the dashed add row Add New Card Type wears, kept to 224 px in a wide
   slot) for an Editor; anyone else sees the badge and title alone. **Add to Slot** opens a picker of what a slot
   takes, by category: **This Document’s Tabs** (every tab but a Dashboard, see Showing a tab), **New Board** (each preset), **New
-  Sheet**, **Card Metrics**, **Form Metrics** (only while the document has a Form tab), **Visualisations**, **From a Sheet** (Sheet Figure, Column Summary, Trend, Sheet Chart) and **Utilities** (Note, Title, Status, Checklist, Key Date, Links); picking
+  Sheet**, **Card Metrics**, **Form Metrics** (only while the document has a Form tab), **Visualisations**, **From a Sheet** (Sheet Figure, Column Summary, Trend, Sheet Chart, [Spreadsheet](../029-sheets/plan-links.md#the-spreadsheet-slot)) and **Utilities** (Note, Title, Status, Checklist, Key Date, Links); picking
   one fills that slot. Each fill is one undo step, replacing what the slot held (an element it held leaves the tab
   with it).
 - **Its name in the active tab**: a Dashboard tab's name is the document group's active tab

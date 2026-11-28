@@ -28,6 +28,9 @@ export type DashboardItem =
   | { kind: 'form-metric'; metric: FormMetricKind }
   // A chart from a Sheet (Add to Slot's Sheet Chart): `chart` once chosen (SheetChartSource), the element it places.
   | { kind: 'sheet-chart'; chart?: ShapeElement | undefined }
+  // A spreadsheet's first sheet, read-only, its spreadsheet chosen in the slot (docs/specs/029-sheets/plan-links.md
+  // "The Spreadsheet slot").
+  | { kind: 'spreadsheet' }
   // An existing Board or Sheet tab, shown in a slot (the Tabs category).
   | { kind: 'tab'; tabId: string; of: DashboardTabOf }
   // The Layout tiles (palette-dashboard-tiles): a row of its height and slots, or a slot.
@@ -90,6 +93,7 @@ const isDashboardCardKind = (v: string): v is DashboardCardKind =>
 export const dashboardCardChoice = (card: DashboardCardKind) => `card:${card}`;
 export const sheetMetricChoice = (metric: SheetMetricKind) => `sheet:${metric}`;
 export const SHEET_CHART_CHOICE = 'sheet:chart';
+export const SPREADSHEET_CHOICE = 'sheet:spreadsheet';
 export const formMetricChoice = (metric: FormMetricKind) => `form:${metric}`;
 
 export const dashboardTabChoice = (of: DashboardTabOf, tabId: string) => `tab:${of}:${tabId}`;
@@ -105,6 +109,7 @@ export function dashboardItemOf(kind: string, choice?: string): DashboardItem | 
   if (kind === 'plan-view' && choice?.startsWith('layout:')) return layoutItemOf(choice.slice(7));
   if (kind === 'plan-view' && choice?.startsWith('tab:')) return tabItemOf(choice.slice(4));
   if (kind === 'plan-view' && choice === SHEET_CHART_CHOICE) return { kind: 'sheet-chart' };
+  if (kind === 'plan-view' && choice === SPREADSHEET_CHOICE) return { kind: 'spreadsheet' };
   if (kind === 'plan-view' && choice?.startsWith('sheet:')) {
     const metric = choice.slice(6);
     return (SHEET_METRICS as readonly string[]).includes(metric)

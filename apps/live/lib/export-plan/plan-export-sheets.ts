@@ -13,6 +13,11 @@ import { renderFrameWindow, sheetContentSize, sheetFramesOf } from '@livedoc/she
 import type { SheetStore } from '@/components/sheets/sheet-store-client';
 import { sheetMetricShown } from '@/components/plan/dashboard/sheet-metric-shown';
 import { linkedRead } from '@/components/plan/dashboard/linked-sheets';
+import {
+  firstSheetIdOf,
+  spreadsheetSlotRead,
+} from '@/components/plan/dashboard/spreadsheet-slot-read';
+import { sheetPictureSvg } from '@/components/spreadsheet/sheet-picture';
 import type { SheetMetricArt } from '@livedoc/plan-art';
 
 // The cells each Sheet element shows, by sheet id: the window its frame has room for. A sheet the store has not
@@ -92,6 +97,25 @@ export function sheetMetricsFor(
         ),
       );
       out.set(slot.id, placed ? 'loading' : 'gone');
+    }
+  return out;
+}
+
+// Each Spreadsheet slot's picture, by slot id, as the page last read it (docs/specs/029-sheets/plan-links.md "The
+// Spreadsheet slot"); a slot not read yet is left out, and its image says it is loading.
+export function spreadsheetPicturesFor(
+  dashboard: DashboardLayout | undefined,
+): Map<string, string> {
+  const out = new Map<string, string>();
+  for (const row of readDashboard(dashboard)?.rows ?? [])
+    for (const slot of row.slots) {
+      const c = slot.content;
+      if (c?.type !== 'spreadsheet' || !c.documentId) continue;
+      const sheets = linkedRead(c.documentId, '');
+      const read = spreadsheetSlotRead(sheets, linkedRead(c.documentId, firstSheetIdOf(sheets)));
+      if (read.state !== 'ready') continue;
+      const svg = sheetPictureSvg(read.wb, read.sheetId, read.title);
+      if (svg) out.set(slot.id, svg);
     }
   return out;
 }

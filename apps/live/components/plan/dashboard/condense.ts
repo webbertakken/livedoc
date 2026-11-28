@@ -48,6 +48,7 @@ export function phoneSlotSize(
     case 'form-metric':
       return 'figure';
     case 'tab':
+    case 'spreadsheet':
       return 'work';
     case 'element':
       return element?.shape === 'plan-view' && isMetricView(element.planView?.view)

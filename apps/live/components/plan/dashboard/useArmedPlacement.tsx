@@ -31,6 +31,7 @@ import {
   FORM_METRIC_NAMES,
   SHEET_CHART_NAME,
   SHEET_METRIC_NAMES,
+  SPREADSHEET_SLOT_NAME,
 } from '@/components/palette/palette-dashboard-tiles';
 
 // What the banner calls the armed item.
@@ -56,6 +57,8 @@ function armedName(item: DashboardItem, tabs: readonly Tab[]): string {
       return FORM_METRIC_NAMES[item.metric];
     case 'sheet-chart':
       return SHEET_CHART_NAME;
+    case 'spreadsheet':
+      return SPREADSHEET_SLOT_NAME;
     case 'tab':
       return tabs.find((t) => t.id === item.tabId)?.name ?? 'Tab';
     case 'view':

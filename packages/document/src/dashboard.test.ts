@@ -128,6 +128,26 @@ describe('a dashboard layout', () => {
     expect(read.rows[0]!.slots[0]!.content).toEqual({ type: 'tab', tabId: 't' });
     expect(read.rows[0]!.slots[1]!.content).toBeUndefined();
   });
+
+  // docs/specs/029-sheets/plan-links.md "The Spreadsheet slot".
+  it('reads a Spreadsheet slot by its spreadsheet id, empty until chosen', () => {
+    const slot = (content: unknown) =>
+      readDashboard({ rows: [{ id: 'r', slots: [{ id: 'a', span: 12, content }] }] })!.rows[0]!
+        .slots[0]!.content;
+    expect(slot({ type: 'spreadsheet', documentId: 'doc_1-A' })).toEqual({
+      type: 'spreadsheet',
+      documentId: 'doc_1-A',
+    });
+    expect(slot({ type: 'spreadsheet', documentId: '' })).toEqual({
+      type: 'spreadsheet',
+      documentId: '',
+    });
+    expect(slot({ type: 'spreadsheet', documentId: '../x' })).toEqual({
+      type: 'spreadsheet',
+      documentId: '',
+    });
+    expect(slot({ type: 'spreadsheet' })).toEqual({ type: 'spreadsheet', documentId: '' });
+  });
 });
 
 // docs/specs/026-plan/plan-tabs.md "The kinds".

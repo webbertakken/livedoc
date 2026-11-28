@@ -80,6 +80,9 @@ export const DASHBOARD_CARD_TYPES = [
 
 // A document's id, as an address names one (@livedoc/sheets rangeSource).
 const DOCUMENT_ID = /^[A-Za-z0-9_-]{1,200}$/;
+/** Whether a stored value is a document id a slot may name (another document, read through the api). */
+export const isDashboardDocumentId = (v: unknown): v is string =>
+  typeof v === 'string' && DOCUMENT_ID.test(v);
 
 // A sheet's row or column id (@livedoc/sheets AXIS_ID_PATTERN), as chart-source.ts reads one.
 const AXIS_ID = /^[a-z0-9]{4,12}$/;

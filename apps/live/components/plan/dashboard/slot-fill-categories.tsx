@@ -121,7 +121,7 @@ const SLOT_CATEGORY_INFO: Record<SlotCategory, Info> = {
   },
   'From a Sheet': {
     icon: <SheetLineGlyph />,
-    description: 'Figures and charts read live from a sheet.',
+    description: 'Figures, charts and whole sheets, read live.',
     picture: (p) => <SheetMetricPreview metric="trend" palette={p} />,
   },
   Utilities: {

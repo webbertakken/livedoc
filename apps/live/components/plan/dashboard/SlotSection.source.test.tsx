@@ -7,6 +7,13 @@ import type { DashboardSlot, SheetMetricContent } from '@livedoc/document';
 import { DashboardContext, type DashboardContextValue } from './dashboard-context';
 import { SlotSection } from './SlotSection';
 
+vi.mock('./SpreadsheetSlotSource', () => ({
+  SpreadsheetSlotSource: ({ onPick }: { onPick: (documentId: string) => void }) => (
+    <button type="button" onClick={() => onPick('book2')}>
+      Pick book2
+    </button>
+  ),
+}));
 vi.mock('./SheetMetricSource', () => ({
   SheetMetricSource: ({
     content,
@@ -71,5 +78,29 @@ describe('Change Source in a figure’s cog', () => {
     cleanup();
     show(figure('sheetAAAA'), false);
     expect(screen.queryByRole('button', { name: 'Change Source' })).toBeNull();
+  });
+});
+
+// docs/specs/029-sheets/plan-links.md "The Spreadsheet slot".
+describe('Change Spreadsheet in a Spreadsheet slot’s cog', () => {
+  const sheetSlot = (documentId: string): DashboardSlot => ({
+    id: 's1',
+    span: 6,
+    content: { type: 'spreadsheet', documentId },
+  });
+
+  it('opens the spreadsheets, and the one picked fills the slot', () => {
+    const setSlotContent = show(sheetSlot('book1'), true);
+    fireEvent.click(screen.getByRole('button', { name: 'Change Spreadsheet' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Pick book2' }));
+    expect(setSlotContent).toHaveBeenCalledWith('s1', { type: 'spreadsheet', documentId: 'book2' });
+  });
+
+  it('is not offered before one is chosen, nor to anyone who may not edit', () => {
+    show(sheetSlot(''), true);
+    expect(screen.queryByRole('button', { name: 'Change Spreadsheet' })).toBeNull();
+    cleanup();
+    show(sheetSlot('book1'), false);
+    expect(screen.queryByRole('button', { name: 'Change Spreadsheet' })).toBeNull();
   });
 });

@@ -2,7 +2,11 @@
 // the row's twelfths holding one thing or nothing. Pure: every change returns a new layout (the same one when nothing
 // changes), always within the limits, so a stored or forged layout is normalised on read and never trusted as is.
 
-import { readDashboardCard, type DashboardCardContent } from './dashboard-cards';
+import {
+  isDashboardDocumentId,
+  readDashboardCard,
+  type DashboardCardContent,
+} from './dashboard-cards';
 import {
   isDashboardStyledType,
   readDashboardCardStyle,
@@ -29,6 +33,9 @@ export type DashboardContent =
   | { type: 'tab'; tabId: string; of?: DashboardTabOf }
   // An element on the dashboard tab: a plan view (visualisation or metric) or a chart from a Sheet.
   | { type: 'element'; elementId: string }
+  // A spreadsheet's first visible sheet, read-only (docs/specs/029-sheets/plan-links.md "The Spreadsheet slot"):
+  // the spreadsheet's id, '' until one is chosen.
+  | { type: 'spreadsheet'; documentId: string }
   | { type: 'note'; title: string; text: string; style?: DashboardCardStyle }
   // A section's title: a big heading over a line or two of description, drawn bare on the page.
   | { type: 'title'; title: string; text: string; style?: DashboardCardStyle }
@@ -117,6 +124,11 @@ function readBareContent(v: unknown): DashboardContent | undefined {
     };
   if (c['type'] === 'element' && typeof c['elementId'] === 'string')
     return { type: 'element', elementId: c['elementId'] };
+  if (c['type'] === 'spreadsheet')
+    return {
+      type: 'spreadsheet',
+      documentId: isDashboardDocumentId(c['documentId']) ? c['documentId'] : '',
+    };
   if (c['type'] === 'note' || c['type'] === 'title')
     return {
       type: c['type'],

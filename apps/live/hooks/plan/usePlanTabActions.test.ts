@@ -43,6 +43,7 @@ describe('a Dashboard slot', () => {
     expect(dashboardItemOf('plan-board', 'kanban')).toEqual({ kind: 'board', preset: 'kanban' });
     expect(dashboardItemOf('sticky')).toEqual({ kind: 'note' });
     expect(dashboardItemOf('plan-view', 'sheet:chart')).toEqual({ kind: 'sheet-chart' });
+    expect(dashboardItemOf('plan-view', 'sheet:spreadsheet')).toEqual({ kind: 'spreadsheet' });
     expect(dashboardItemOf('plan-view', 'sheet:trend')).toEqual({
       kind: 'sheet-metric',
       metric: 'trend',

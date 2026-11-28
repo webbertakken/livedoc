@@ -5490,6 +5490,23 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
       {
         "additionalProperties": false,
         "properties": {
+          "documentId": {
+            "type": "string"
+          },
+          "type": {
+            "const": "spreadsheet",
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "documentId"
+        ],
+        "type": "object"
+      },
+      {
+        "additionalProperties": false,
+        "properties": {
           "style": {
             "$ref": "#/components/schemas/DashboardCardStyle"
           },

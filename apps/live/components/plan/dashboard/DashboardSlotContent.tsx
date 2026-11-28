@@ -19,6 +19,7 @@ import { DashboardLinksCard } from './DashboardLinksCard';
 import { DashboardSheetMetric } from './DashboardSheetMetric';
 import { DashboardFormMetric } from './DashboardFormMetric';
 import { DashboardSheetChart } from './DashboardSheetChart';
+import { DashboardSpreadsheet } from './DashboardSpreadsheet';
 
 // The box's size, kept as it changes (the row resized, the window).
 export function useBoxSize(
@@ -106,6 +107,8 @@ export function DashboardSlotContent({
       return <DashboardTabPreview slotId={slotId} tabId={content.tabId} of={content.of} />;
     case 'element':
       return <SlotElement slotId={slotId} elementId={content.elementId} />;
+    case 'spreadsheet':
+      return <DashboardSpreadsheet slotId={slotId} documentId={content.documentId} />;
     case 'note':
       return <DashboardNote slotId={slotId} note={content} />;
     case 'title':

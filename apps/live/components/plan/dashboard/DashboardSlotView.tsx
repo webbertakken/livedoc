@@ -74,6 +74,7 @@ export function DashboardSlotView({
       : undefined;
   const headed =
     content?.type === 'tab' ||
+    content?.type === 'spreadsheet' ||
     el?.shape === 'plan-board' ||
     el?.shape === 'plan-sheet' ||
     (!!el?.planView && !el.planView.view?.startsWith('metric:'));
@@ -85,6 +86,7 @@ export function DashboardSlotView({
   // A board or Sheet (its own, or a tab's) brings its own frame; a Title sits bare on the page, as a section's heading.
   const framed =
     content?.type === 'tab' ||
+    content?.type === 'spreadsheet' ||
     content?.type === 'title' ||
     el?.shape === 'plan-board' ||
     el?.shape === 'plan-sheet';
