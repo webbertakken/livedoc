@@ -13,6 +13,7 @@ import { SettingsField } from '@/components/plan/settings-panel-parts';
 import { boardsOf, sheetsOf } from '@livedoc/templates';
 import { patchForm } from '@livedoc/forms';
 import { useFormBuilder } from './form-builder-context';
+import { SheetDestination } from './SheetDestination';
 
 // The value of each select's last choice, New Board or New Card Type.
 const NEW = '__new';
@@ -59,63 +60,17 @@ export function DestinationPicker({
       >
         {tab(!toSheet, 'Cards on a Board', () => b.actions.setResponsesTo({ kind: 'board' }))}
         {tab(toSheet, 'Rows in a Sheet', () => {
+          // The document's first Sheet tab while it has one; else a new spreadsheet.
           const first = sheets[0];
-          if (first) b.actions.setResponsesTo({ kind: 'sheet', ...first });
-          else b.actions.newResponsesSheet();
+          if (first)
+            b.actions.setResponsesTo({ kind: 'sheet', tabId: first.tabId, sheetId: first.sheetId });
+          else void b.spreadsheet?.makeNew();
         })}
       </div>
       {toSheet ? (
         <SheetDestination tabs={tabs} />
       ) : (
         <BoardDestination tabs={tabs} onLeave={onLeave} />
-      )}
-    </div>
-  );
-}
-
-// Rows in a Sheet: which sheet (New Sheet the last choice), and a sentence reading it back.
-function SheetDestination({ tabs }: { tabs: readonly Tab[] }) {
-  const b = useFormBuilder();
-  const sheets = sheetsOf(tabs);
-  const at = b.form.sheet;
-  const current = sheets.find((s) => s.sheetId === at?.sheetId && s.tabId === at?.tabId);
-  return (
-    <div className="flex flex-col gap-3">
-      <SettingsField label="Sheet">
-        <Select
-          className="w-full"
-          selectClassName="text-body"
-          value={current?.sheetId ?? ''}
-          disabled={!b.canEdit}
-          onChange={(e) => {
-            if (e.target.value === NEW) return b.actions.newResponsesSheet();
-            const s = sheets.find((x) => x.sheetId === e.target.value);
-            if (s) b.actions.setResponsesTo({ kind: 'sheet', tabId: s.tabId, sheetId: s.sheetId });
-          }}
-        >
-          <option value="" disabled>
-            {sheets.length ? 'Choose a sheet…' : 'No sheets yet'}
-          </option>
-          {sheets.map((s) => (
-            <option key={s.sheetId} value={s.sheetId}>
-              {s.name}
-            </option>
-          ))}
-          {b.canEdit ? <option value={NEW}>+ New Sheet</option> : null}
-        </Select>
-      </SettingsField>
-      {current ? (
-        <p className="rounded-menu bg-slate-50 px-3 py-2 text-body text-slate-700 dark:bg-slate-800/60 dark:text-slate-200">
-          Each response becomes a row on <strong>{current.name}</strong>, a column per question. No
-          mapping needed.
-        </p>
-      ) : (
-        <p
-          role="status"
-          className="rounded-menu bg-amber-50 px-3 py-2 text-body text-amber-900 dark:bg-amber-500/10 dark:text-amber-100"
-        >
-          {DESTINATION_PROBLEM_TEXT.sheet_missing}
-        </p>
       )}
     </div>
   );

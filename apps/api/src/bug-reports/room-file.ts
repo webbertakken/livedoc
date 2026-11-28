@@ -11,7 +11,7 @@ import {
 import { boardTakesType, readItemCreate, typesOf, type ItemPerson } from '@livedoc/items';
 import { getDocument } from '../db';
 import type { BugReportStoreReason } from '../db/bug-reports';
-import { documentRouteContext, type RouteIdentity } from '../document-room/document-route';
+import { documentRouteContext, NO_ONE_IDENTITY } from '../document-room/document-route';
 import { boardsOnTab } from '../forms/form-tab';
 import { createMany } from '../routes/item-routes';
 import { relay } from '../routes/item-route-kit';
@@ -22,16 +22,6 @@ export type BugReportFileOutcome =
 
 // The maker every report's card names: the form itself, never the reporter.
 const BUG_REPORTS_PERSON: ItemPerson = { id: 'bug-reports', name: 'Bug reports', color: '#dc2626' };
-
-const NO_ONE: RouteIdentity = {
-  sessionAccountId: null,
-  verifiedAccountId: null,
-  accountEmail: null,
-  sessionAuthTime: null,
-  owner: null,
-  token: null,
-  workbench: null,
-};
 
 export async function fileBugReportInRoom(
   env: DocumentEnv,
@@ -60,7 +50,7 @@ export async function fileBugReportInRoom(
   const ctx = documentRouteContext(
     env,
     new Request('https://bug-reports.internal/api/bug-reports', { method: 'POST' }),
-    NO_ONE,
+    NO_ONE_IDENTITY,
     waitUntil,
   );
   const made = await createMany(ctx, { documentId, owner: BUG_REPORTS_PERSON.id }, [create], {

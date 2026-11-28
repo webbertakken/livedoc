@@ -93,11 +93,27 @@ export interface FormSection {
 }
 
 // Where every response goes when it goes to a Sheet (docs/specs/030-forms/forms.md "Responses to a Sheet"): a row
-// each, a column per question, no mapping. Set, it wins over `destination`, which is kept for switching back.
-export interface FormSheetDestination {
+// each, a column per question, no mapping. Set, it wins over `destination`, which is kept for switching back. A
+// spreadsheet's sheet names its spreadsheet (docs/specs/029-sheets/plan-links.md "Form responses"); one without is a
+// Sheet tab of the form's own document.
+export type FormSheetDestination = FormPlanSheet | FormSpreadsheetSheet;
+
+export interface FormPlanSheet {
   tabId: string;
   sheetId: string;
+  documentId?: undefined;
 }
+
+export interface FormSpreadsheetSheet {
+  documentId: string;
+  sheetId: string;
+  tabId?: undefined;
+}
+
+// Whether a destination is a spreadsheet's sheet.
+export const isSpreadsheetSheet = (
+  sheet: FormSheetDestination | undefined,
+): sheet is FormSpreadsheetSheet => typeof sheet?.documentId === 'string';
 
 // Where every response goes: a Board tab, a card type, a status.
 export interface FormDestination {

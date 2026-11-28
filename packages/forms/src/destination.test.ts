@@ -68,4 +68,9 @@ describe('sheetDestinationProblem', () => {
     expect(sheetDestinationProblem(at, [{ ...at, tabId: 'u' }])).toBe('sheet_missing');
     expect(DESTINATION_PROBLEM_TEXT.sheet_missing).toMatch(/sheet was removed/);
   });
+
+  it('leaves a spreadsheet’s sheet to its own read', () => {
+    expect(sheetDestinationProblem({ documentId: 'd', sheetId: 'AbCdEf123456' }, [])).toBeNull();
+    expect(DESTINATION_PROBLEM_TEXT.spreadsheet_denied).toMatch(/access to this spreadsheet/);
+  });
 });

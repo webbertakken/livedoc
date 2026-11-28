@@ -39,6 +39,22 @@ describe('formsFeeding', () => {
     expect(formsFeeding(tabs, 'f1')).toEqual([]);
   });
 
+  it('feeds no tab here from a spreadsheet’s sheet, though it kept a board', () => {
+    const toSpreadsheet = tab('f3', {
+      kind: 'form',
+      form: {
+        v: 1,
+        heading: 'Feedback',
+        sections: [],
+        destination: { tabId: 'board', typeId: 'bug', status: 's' },
+        sheet: { documentId: 'doc-ss', sheetId: 'AAAAAAAAAAA1' },
+      },
+    });
+    expect(formsFeeding([...tabs, toSpreadsheet], 'board')).toEqual([
+      { tabId: 'f1', heading: 'Bugs' },
+    ]);
+  });
+
   it('warns in Delete’s confirmation, one form or several, and not for a tab nothing sends to', () => {
     expect(deleteTabWarning(tabs, 'board')).toBe(
       '“Bugs” sends its responses here: it stops taking them, keeping its link, until it has somewhere to send them.',

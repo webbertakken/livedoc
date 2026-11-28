@@ -6,6 +6,7 @@ import { createContext, useContext } from 'react';
 import type { FormDefinition } from '@livedoc/forms';
 import type { ItemTypeDef } from '@livedoc/items';
 import type { FormActions } from '@/hooks/forms/useFormActions';
+import type { FormSpreadsheet } from '@/hooks/forms/useFormSpreadsheet';
 import type { FormSettingsSection } from './FormSettingsButton';
 
 export type FormBuilderValue = {
@@ -28,6 +29,8 @@ export type FormBuilderValue = {
   types: readonly ItemTypeDef[];
   // Opens the status bar's cog on a section (Answer Goes To's "choose where responses go" opens Responses Go To).
   openSettings: (section: FormSettingsSection | null) => void;
+  // Responses into a spreadsheet: its read, choosing one and New Spreadsheet (useFormSpreadsheet).
+  spreadsheet?: FormSpreadsheet;
 };
 
 export const FormBuilderContext = createContext<FormBuilderValue | null>(null);

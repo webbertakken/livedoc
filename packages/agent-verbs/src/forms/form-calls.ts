@@ -19,6 +19,7 @@ import {
   buildStarter,
   changesBeyondSettings,
   formStarter,
+  isSpreadsheetSheet,
   newFormPartId,
   readForm as readStoredForm,
   sheetHeaders,
@@ -256,7 +257,13 @@ async function writeAround(
   const had = new Set(before ? sheetHeaders(before).map((h) => h.header.toLowerCase()) : []);
   const newHeader = sheetHeaders(d.form).some((h) => !had.has(h.header.toLowerCase()));
   const switched = before?.sheet?.sheetId !== target?.sheetId;
-  if (target && (newHeader || switched) && !d.newTabs.some((t) => t.id === target.tabId))
+  // A spreadsheet's sheet is another document's: its first response writes the headers it lacks.
+  if (
+    target &&
+    !isSpreadsheetSheet(target) &&
+    (newHeader || switched) &&
+    !d.newTabs.some((t) => t.id === target.tabId)
+  )
     await syncSheetHeaders(api, d, target.sheetId, null, client).catch(() =>
       made.push(`the sheet's new columns are written by the first response`),
     );

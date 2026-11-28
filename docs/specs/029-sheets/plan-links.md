@@ -1,7 +1,8 @@
 # Plan's links to a spreadsheet
 
-**Status: specified; dashboards' figures are built.** A Sheet Figure, Column Summary or Trend reads a sheet of a
-spreadsheet; the Sheet Chart, the sheet slot, form responses, the `CARD` functions and the starts are not built yet.
+**Status: specified; dashboards' figures and form responses are built.** A Sheet Figure, Column Summary or Trend
+reads a sheet of a spreadsheet, and a form writes its responses into one; the Sheet Chart, the sheet slot, the `CARD`
+functions and the starts are not built yet.
 
 What Plan reads from or writes to a sheet, re-homed onto the [spreadsheet](spreadsheet.md) (C4, ruled 2026-11-18:
 keep them; C6, ruled 2026-11-18: the card functions only).
@@ -42,10 +43,29 @@ keep them; C6, ruled 2026-11-18: the card functions only).
 
 ## Form responses
 
-- A form whose responses go to a sheet writes each response as a row of a sheet of a workbook: **New Spreadsheet**
-  (the starter's choice: a spreadsheet "<Form> Responses" in the form's folder), or a sheet of a spreadsheet the Editor may edit.
-- Rows are appended as today ([Forms](../030-forms/forms.md)), by the api with the form's access, never the
-  responder's.
+- A form whose responses go to a sheet writes each response as a row of a sheet of a spreadsheet: **New Spreadsheet**
+  (a spreadsheet "<Form> Responses" in the form's folder, its one sheet "Form Responses 1", as Google names it), or a
+  sheet of a spreadsheet the Editor may edit, picked as a dashboard picks one ("<Sheet> · <Spreadsheet>").
+- The form's destination keeps the spreadsheet's id beside the sheet's (`documentId` on `form.sheet`); a destination
+  with none is a Sheet tab of the form's own document, as before, until the [migration](migration.md) moves it.
+- **The connection** (D506): choosing a spreadsheet's sheet connects the form to it, made by an Editor who may edit
+  both the form's document and the spreadsheet. The spreadsheet keeps it (the form's document, its Form tab and the
+  sheet; at most 20 forms), as it keeps the spreadsheets its `IMPORTRANGE`s read, never on a copy. Choosing another
+  destination takes the form's old connection back.
+- Rows are appended as today ([Forms](../030-forms/forms.md)), by the api, in the spreadsheet's room, with the form's
+  connection, never the responder's access nor anyone's at that moment: a response lands while the spreadsheet keeps a
+  connection for that form and that sheet, and the sheet is there.
+- A spreadsheet trashed or gone, its sheet deleted, or the connection taken back pauses the form as a broken
+  destination does: "Its sheet was removed. Choose where responses go." The builder learns it by reading the sheet as
+  a dashboard does, with the Editor's own access; a spreadsheet they may not open reads "You don't have access to this
+  spreadsheet. Choose where responses go."
+- **In the spreadsheet**: a sheet a form writes to wears a form mark on its sheet tab ("Takes responses from a form");
+  its tab menu's **Unlink Form** (Editors) takes every connection to that sheet back, as Google's Unlink Form does, and
+  the form pauses.
+- The response count opens the spreadsheet in a new browser tab; the Inbox names the form alone, as the spreadsheet's
+  name lives in its own room.
+- The starters that answer into a sheet (Feedback, Event RSVP) and agents' forms still make a Sheet tab until Plan's
+  starts move (below).
 
 ## The `CARD` functions
 
@@ -76,3 +96,7 @@ As each link's own spec says; reading across documents never widens anyone's acc
   room; Google's linked charts refresh on asking), bounded by a figure's 2,000 rows, 200 columns and
   `IMPORTRANGE`'s 500,000 cells. The picker lists the person's own spreadsheets, as Copy To does, since the api
   lists no document by when the person last opened it.
+- **D506** A form writes into a spreadsheet through a connection the spreadsheet keeps, made by an Editor of both, not
+  by checking the form owner's access at each response: the owners may differ, a response is answered by no signed-in
+  person, and the spreadsheet lists what writes into it (Google's linked form shows on its sheet, and Unlink Form
+  ends it). Each response still checks the connection, its sheet and the spreadsheet.

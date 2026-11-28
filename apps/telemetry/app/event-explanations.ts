@@ -917,6 +917,12 @@ export const EXACT: Readonly<Record<string, string>> = {
     'Someone connected a form that sent its responses nowhere to a new board, from the box above its title.',
   'Form|Linked|ConnectNewSheet':
     'Someone connected a form that sent its responses nowhere to a new sheet, from the box above its title.',
+  'Form|Linked|ConnectNewSpreadsheet':
+    'Someone connected a form that sent its responses nowhere to a new spreadsheet, from the box above its title.',
+  'Form|Linked|ChooseSpreadsheet':
+    "Someone sent a form's responses to a sheet of a spreadsheet they picked, in Responses Go To.",
+  'Form|Linked|NewSpreadsheet':
+    "Someone sent a form's responses to a new spreadsheet made for them, in Responses Go To.",
   'Form|Linked|ConnectChoose':
     "Someone opened Responses Go To from the box above a form's title, to choose an existing board or sheet.",
   'Form|Shared|Link':

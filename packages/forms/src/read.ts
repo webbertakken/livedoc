@@ -39,6 +39,8 @@ import {
 const FORM_ID_PATTERN = /^[a-z0-9-]{1,24}$/;
 const STATUS_ID = /^[^\s].{0,63}$/s;
 const TAB_ID = /^[A-Za-z0-9_-]{1,64}$/;
+// A spreadsheet's id, as the api bounds a document's.
+const DOCUMENT_ID = /^[A-Za-z0-9_-]{1,200}$/;
 
 type Obj = Record<string, unknown>;
 const isObj = (v: unknown): v is Obj => !!v && typeof v === 'object' && !Array.isArray(v);
@@ -203,6 +205,14 @@ export function readForm(raw: unknown): FormDefinition | null {
   if (destination) form.destination = destination;
   const sheet = raw['sheet'];
   if (
+    isObj(sheet) &&
+    typeof sheet['documentId'] === 'string' &&
+    DOCUMENT_ID.test(sheet['documentId']) &&
+    typeof sheet['sheetId'] === 'string' &&
+    SHEET_ID_PATTERN.test(sheet['sheetId'])
+  )
+    form.sheet = { documentId: sheet['documentId'], sheetId: sheet['sheetId'] };
+  else if (
     isObj(sheet) &&
     typeof sheet['tabId'] === 'string' &&
     TAB_ID.test(sheet['tabId']) &&

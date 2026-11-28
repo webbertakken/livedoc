@@ -3,7 +3,8 @@
 // A sheet tab's menu (docs/specs/029-sheets/spreadsheet.md "Sheets in the sheet bar"): Google's items in Google's
 // order, opened by the tab's arrow, a right-click, Shift+F10 or the context menu key. Only an Editor changes the
 // sheets; for anyone else, and for what is not built yet, an item stays in its place, dimmed (D174). Protect Sheet opens
-// Protected Sheets and Ranges on that sheet (data-tools.md "Protected ranges").
+// Protected Sheets and Ranges on that sheet (data-tools.md "Protected ranges"). A sheet a form writes to leads with
+// Unlink Form (plan-links.md "Form responses").
 import { ContextMenu, ContextMenuDivider } from '@/components/palette/ContextMenu';
 import { useState } from 'react';
 import {
@@ -25,6 +26,7 @@ export function SheetTabMenu({
   onColour,
   onCopyTo,
   onProtect,
+  onUnlinkForm,
   onClose,
 }: {
   at: SheetTabMenuAt;
@@ -40,6 +42,9 @@ export function SheetTabMenu({
   onCopyTo?: (to: 'new' | 'existing') => void;
   // Protect Sheet: Protected Sheets and Ranges on this tab's sheet; absent, dimmed.
   onProtect?: (tabId: string) => void;
+  // Unlink Form, on a sheet a form writes to (plan-links.md "Form responses"): absent elsewhere; null, dimmed (not an
+  // Editor).
+  onUnlinkForm?: (() => void) | null;
   onClose: () => void;
 }) {
   const [copyOpen, setCopyOpen] = useState(false);
@@ -60,6 +65,17 @@ export function SheetTabMenu({
       anchorBottom={at.fromBar}
     >
       <MenuHeader title={name} />
+      {onUnlinkForm !== undefined ? (
+        <>
+          <MenuActionRow
+            label="Unlink Form"
+            icon={<Glyph t="⊘" />}
+            disabled={!onUnlinkForm}
+            onClick={act(() => onUnlinkForm?.())}
+          />
+          <ContextMenuDivider />
+        </>
+      ) : null}
       <MenuActionRow
         label="Delete"
         icon={<Glyph t="−" />}

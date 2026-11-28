@@ -45,7 +45,7 @@ async function read(ctx: DocumentRouteContext, code: string): Promise<Response> 
     now: Date.now(),
   });
   // A destination broken since publishing shows as closed: a response could not be made.
-  if (!closed && (await responsesProblem(ctx.env, doc.id, form, typesOf(doc.itemTypes))))
+  if (!closed && (await responsesProblem(ctx.env, doc.id, tab.id, form, typesOf(doc.itemTypes))))
     closed = 'no_destination';
   const body: PublicFormResponse = closed
     ? {

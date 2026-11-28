@@ -140,6 +140,7 @@ export type { CellValue, EngineIn, EngineOut, EngineLimits } from './engine/engi
 export { ITERATION_OFF, sameIteration, type Iteration } from './engine/loops';
 export type { ImportFamily } from './engine/import-book';
 export * from './workbook-record';
+export * from './workbook-forms';
 export * from './formula/meaning';
 export {
   renderFrameWindow,

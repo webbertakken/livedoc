@@ -33,7 +33,8 @@ export function FormTourHost() {
   const tab = ctx.activeTab;
   const onForm = tab.kind === 'form';
   const form = onForm ? readForm(tab.form) : null;
-  const destTabId = form?.sheet?.tabId ?? form?.destination?.tabId ?? null;
+  // A spreadsheet's sheet is no tab here: the tour has nowhere to go.
+  const destTabId = (form?.sheet ? form.sheet.tabId : form?.destination?.tabId) ?? null;
   const destKind: 'board' | 'sheet' | null = !destTabId ? null : form?.sheet ? 'sheet' : 'board';
 
   // The Form tab the tour began on: the destination step leaves it and comes back.

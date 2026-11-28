@@ -42,6 +42,7 @@ import { SpreadsheetSheetParts } from './SpreadsheetSheetParts';
 import { SpreadsheetZoomProvider, useSpreadsheetZoom } from './spreadsheet-zoom';
 import { useSheetBarPeers } from './useSheetBarPeers';
 import { useSheetCopyTo } from './useSheetCopyTo';
+import { useSheetFormLinks } from './useSheetFormLinks';
 import { useProtectionWarnings } from './useProtectionWarnings';
 import { createProtectSheetChannel, ProtectSheetContext } from './protect-sheet-channel';
 import { hiddenTabIds, useSheetTabLooks } from './useSheetTabLooks';
@@ -120,6 +121,8 @@ export function SpreadsheetSurface({
   // The sheet bar's changes, from the sheet bar, its tabs' menus and the menus (spreadsheet.md).
   // Copy To, everyone's who may read the sheets (spreadsheet.md D186).
   const copyTo = useSheetCopyTo(bridge, workbook);
+  // The sheets forms write to, and Unlink Form (plan-links.md "Form responses").
+  const formLinks = useSheetFormLinks(bridge, tabs, workbook, onWorkbook);
   // The workbook's theme, which its cells' theme colours draw in (formatting.md "Themes").
   const theme = useSpreadsheetThemeState(scope, workbook, onWorkbook);
   // The workbook's named functions (data-tools.md "Named ranges and named functions").
@@ -206,6 +209,7 @@ export function SpreadsheetSurface({
                   actions={bridge ? sheetBar : null}
                   looks={looks}
                   copyTo={copyTo}
+                  formLinks={formLinks}
                 />
               </SheetBarActionsContext.Provider>
             </NamedFunctionsProvider>

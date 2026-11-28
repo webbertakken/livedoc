@@ -459,3 +459,68 @@ describe('SheetBar moves', () => {
     vi.restoreAllMocks();
   });
 });
+
+// plan-links.md "Form responses": a sheet a form writes to wears the form mark, and its menu leads with Unlink Form.
+describe('SheetBar forms', () => {
+  beforeAll(stubResizeObserver);
+
+  it('marks the tab a form writes to, and says so', () => {
+    render(
+      <SheetBar
+        tabs={tabs}
+        activeId="t1"
+        onSelect={vi.fn()}
+        formLinks={{ takes: new Set(['t2']), unlink: vi.fn() }}
+      />,
+    );
+    const costs = screen.getByRole('tab', { name: 'Costs, takes responses from a form' });
+    expect(costs.querySelector('[data-sheet-tab-form]')).toBeTruthy();
+    expect(
+      screen.getByRole('tab', { name: 'Sheet1' }).querySelector('[data-sheet-tab-form]'),
+    ).toBeNull();
+    expect(sheetTabLabel('Costs', [ann], true)).toBe(
+      'Costs, takes responses from a form, also here: Ann',
+    );
+  });
+
+  it('unlinks the form from its sheet’s menu, an Editor only', () => {
+    const unlink = vi.fn();
+    const { unmount } = render(
+      <SheetBar
+        tabs={tabs}
+        activeId="t1"
+        onSelect={vi.fn()}
+        actions={bar()}
+        formLinks={{ takes: new Set(['t2']), unlink }}
+      />,
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Sheet1 menu' }));
+    expect(screen.queryByText('Unlink Form')).toBeNull();
+    fireEvent.keyDown(document.activeElement ?? document.body, { key: 'Escape' });
+    unmount();
+    const second = render(
+      <SheetBar
+        tabs={tabs}
+        activeId="t1"
+        onSelect={vi.fn()}
+        actions={bar()}
+        formLinks={{ takes: new Set(['t2']), unlink }}
+      />,
+    );
+    fireEvent.click(screen.getByRole('button', { name: /^Costs.* menu$/ }));
+    fireEvent.click(menuItem('Unlink Form'));
+    expect(unlink).toHaveBeenCalledWith('t2');
+    second.unmount();
+    render(
+      <SheetBar
+        tabs={tabs}
+        activeId="t1"
+        onSelect={vi.fn()}
+        actions={bar({ canChange: false })}
+        formLinks={{ takes: new Set(['t2']), unlink: null }}
+      />,
+    );
+    fireEvent.click(screen.getByRole('button', { name: /^Costs.* menu$/ }));
+    expect(menuItem('Unlink Form').getAttribute('aria-disabled')).toBe('true');
+  });
+});

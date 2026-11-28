@@ -11,7 +11,8 @@ export function formsFeeding(
 ): { tabId: string; heading: string }[] {
   return tabs.flatMap((t) => {
     if (t.kind !== 'form' || t.id === tabId || !t.form) return [];
-    const to = t.form.sheet?.tabId ?? t.form.destination?.tabId;
+    // A sheet wins over the board it kept, a spreadsheet's sheet too (it feeds no tab here).
+    const to = t.form.sheet ? t.form.sheet.tabId : t.form.destination?.tabId;
     return to === tabId ? [{ tabId: t.id, heading: t.form.heading }] : [];
   });
 }

@@ -4,6 +4,7 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import type { FormDefinition } from '@livedoc/forms';
 import type { FormActions } from '@/hooks/forms/useFormActions';
 import { FormBuilderContext, type FormBuilderValue } from './form-builder-context';
+import type { FormSpreadsheet } from '@/hooks/forms/useFormSpreadsheet';
 import { FormConnectCard } from './FormConnectCard';
 
 // The connect box (docs/specs/030-forms/forms.md "Responses Go To and Settings"): an Editor's, above the form's title,
@@ -25,25 +26,32 @@ function setup(
     canEdit = true,
     hasExisting = true,
     problem = null,
-  }: { canEdit?: boolean; hasExisting?: boolean; problem?: 'sheet_missing' | null } = {},
+    spreadsheet = {},
+  }: {
+    canEdit?: boolean;
+    hasExisting?: boolean;
+    problem?: 'sheet_missing' | null;
+    spreadsheet?: Partial<FormSpreadsheet>;
+  } = {},
 ) {
   const actions = {
     newResponsesBoard: vi.fn(),
-    newResponsesSheet: vi.fn(),
   } as unknown as FormActions;
+  const made = { makeNew: vi.fn(async () => {}), busy: false, failure: null, ...spreadsheet };
   const openSettings = vi.fn();
   const value = {
     form: { ...BLANK, ...over },
     canEdit,
     actions,
     openSettings,
+    spreadsheet: made,
   } as unknown as FormBuilderValue;
   render(
     <FormBuilderContext.Provider value={value}>
       <FormConnectCard hasExisting={hasExisting} problem={problem} />
     </FormBuilderContext.Provider>,
   );
-  return { actions, openSettings };
+  return { actions, openSettings, spreadsheet: made };
 }
 
 const box = () => screen.queryByRole('region', { name: 'Where Should Responses Go?' });
@@ -74,11 +82,22 @@ describe('FormConnectCard', () => {
     expect(track).toHaveBeenCalledWith('Form', 'Linked', 'ConnectNewBoard');
   });
 
-  it('New Sheet connects the form to a new sheet', () => {
-    const { actions } = setup();
+  it('Rows in a Sheet connects the form to a new spreadsheet', () => {
+    const { spreadsheet } = setup();
     fireEvent.click(screen.getByRole('button', { name: /Rows in a Sheet/ }));
-    expect(actions.newResponsesSheet).toHaveBeenCalledOnce();
-    expect(track).toHaveBeenCalledWith('Form', 'Linked', 'ConnectNewSheet');
+    expect(spreadsheet.makeNew).toHaveBeenCalledOnce();
+    expect(track).toHaveBeenCalledWith('Form', 'Linked', 'ConnectNewSpreadsheet');
+  });
+
+  it('waits while the spreadsheet is made, and says when it could not be', () => {
+    setup(
+      {},
+      { spreadsheet: { busy: true, failure: 'The spreadsheet couldn’t be made. Try again.' } },
+    );
+    const rows = screen.getByRole('button', { name: /Rows in a Sheet/ });
+    expect((rows as HTMLButtonElement).disabled).toBe(true);
+    expect(rows.textContent).toContain('Making the spreadsheet…');
+    expect(screen.getByRole('alert').textContent).toContain('couldn’t be made');
   });
 
   it('Choose Existing opens Responses Go To', () => {

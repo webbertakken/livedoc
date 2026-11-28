@@ -14,6 +14,13 @@ import { contentSummaryOf } from './content-summary';
 import { readItem } from '../db';
 import { documentPlacesImage } from '../db/image-refs';
 import { answerFormRequest } from '../routes/forms';
+import type { SheetRowOutcome } from '../forms/sheet-response';
+import {
+  spreadsheetFormSheetThere,
+  writeSpreadsheetFormRow,
+  type SpreadsheetFormAsk,
+  type SpreadsheetFormRow,
+} from '../forms/spreadsheet-response';
 import { fileBugReportInRoom, type BugReportFileOutcome } from '../bug-reports/room-file';
 import { sheetMigrationDry, type SheetMigrationDry } from '../sheets-migration/sheet-migration-dry';
 import type { DocumentEnv } from '../types';
@@ -70,6 +77,10 @@ export type DocumentRoomRpc = {
     query: RangeReadQuery,
     identity: RouteIdentity,
   ): Promise<ImportAnswer>;
+  // A form's sheet in this spreadsheet (docs/specs/029-sheets/plan-links.md "Form responses"): whether its rows may
+  // land, and one written, through the form's connection; never reachable as an API path.
+  formSheetThere(documentId: string, ask: SpreadsheetFormAsk): Promise<boolean>;
+  writeFormResponse(documentId: string, row: SpreadsheetFormRow): Promise<SheetRowOutcome>;
   // A bug report filed on the Bug Tracker board this document holds (docs/specs/016-platform/bug-reports.md).
   fileBugReport(
     documentId: string,
@@ -118,6 +129,9 @@ export function documentRpc(
       const ctx = documentRouteContext(env, request, identity, waitUntil);
       return answerRangeRead(ctx, documentId, query, nestedFrom(ctx));
     },
+    formSheetThere: (documentId, ask) => spreadsheetFormSheetThere(env, documentId, ask),
+    writeFormResponse: (documentId, row) =>
+      writeSpreadsheetFormRow(env, waitUntil, documentId, row),
     fileBugReport: (documentId, tabId, filing) =>
       fileBugReportInRoom(env, documentId, tabId, filing, waitUntil),
     sharedTabCopy: (documentId, tabId) => sharedTabCopy(env, documentId, tabId),

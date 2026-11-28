@@ -7671,6 +7671,25 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
     ],
     "type": "string"
   },
+  "FormPlanSheet": {
+    "additionalProperties": false,
+    "properties": {
+      "documentId": {
+        "not": {}
+      },
+      "sheetId": {
+        "type": "string"
+      },
+      "tabId": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "tabId",
+      "sheetId"
+    ],
+    "type": "object"
+  },
   "FormQuestion": {
     "additionalProperties": false,
     "properties": {
@@ -7830,17 +7849,30 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
     "type": "object"
   },
   "FormSheetDestination": {
+    "anyOf": [
+      {
+        "$ref": "#/components/schemas/FormPlanSheet"
+      },
+      {
+        "$ref": "#/components/schemas/FormSpreadsheetSheet"
+      }
+    ]
+  },
+  "FormSpreadsheetSheet": {
     "additionalProperties": false,
     "properties": {
+      "documentId": {
+        "type": "string"
+      },
       "sheetId": {
         "type": "string"
       },
       "tabId": {
-        "type": "string"
+        "not": {}
       }
     },
     "required": [
-      "tabId",
+      "documentId",
       "sheetId"
     ],
     "type": "object"
@@ -21243,6 +21275,46 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
     ],
     "type": "object"
   },
+  "WorkbookForm": {
+    "additionalProperties": false,
+    "properties": {
+      "documentId": {
+        "type": "string"
+      },
+      "sheetId": {
+        "type": "string"
+      },
+      "tabId": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "documentId",
+      "tabId",
+      "sheetId"
+    ],
+    "type": "object"
+  },
+  "WorkbookFormLinkRequest": {
+    "additionalProperties": false,
+    "properties": {
+      "document": {
+        "type": "string"
+      },
+      "sheet": {
+        "type": "string"
+      },
+      "tab": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "document",
+      "tab",
+      "sheet"
+    ],
+    "type": "object"
+  },
   "WorkbookFormat": {
     "enum": [
       "ods",
@@ -21434,6 +21506,12 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
     "properties": {
       "format": {
         "$ref": "#/components/schemas/WorkbookFormat"
+      },
+      "forms": {
+        "items": {
+          "$ref": "#/components/schemas/WorkbookForm"
+        },
+        "type": "array"
       },
       "functions": {
         "items": {

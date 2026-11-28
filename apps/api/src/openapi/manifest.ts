@@ -1219,6 +1219,37 @@ export const ROUTE_MANIFEST: RouteSpec[] = [
     responseSchema: 'WorkbookLinkResponse',
     statuses: [200, 401, 404, 410, 413],
   },
+  // A form connected to a sheet of the spreadsheet (docs/specs/029-sheets/plan-links.md "Form responses", D506).
+  {
+    method: 'POST',
+    path: '/documents/{id}/workbook/link',
+    segment: 'documents',
+    tag: 'Spreadsheets',
+    summary:
+      "Connect a form to a sheet of the spreadsheet, so its responses land there as rows: { document, tab, sheet } names the form's document, its Form tab and the sheet. A form connected again moves to the new sheet. Sent live to everyone on it. 400 form_link_invalid; 403 unless the caller may edit both the spreadsheet and the form's document; 404 sheet_not_found; 409 forms_full past 20. Never on a tab-scoped link.",
+    auth: 'guest-or-session',
+    tokenUsable: true,
+    requestSchema: 'WorkbookFormLinkRequest',
+    responseSchema: 'WorkbookSettingsResponse',
+    statuses: [200, 400, 401, 403, 404, 409, 410],
+  },
+  {
+    method: 'DELETE',
+    path: '/documents/{id}/workbook/link',
+    segment: 'documents',
+    tag: 'Spreadsheets',
+    summary:
+      "Take form connections back: with document and tab, that form's (an Editor of the spreadsheet or of the form's document); with sheet, every form's to that sheet, as Google's Unlink Form (an Editor of the spreadsheet). The form pauses. Sent live to everyone on it. 400 form_link_invalid; 404 workbook_not_found.",
+    auth: 'guest-or-session',
+    tokenUsable: true,
+    query: [
+      { name: 'document', required: false, description: "The form's document." },
+      { name: 'tab', required: false, description: "The form's Form tab." },
+      { name: 'sheet', required: false, description: 'The sheet whose forms are unlinked.' },
+    ],
+    responseSchema: 'WorkbookSettingsResponse',
+    statuses: [200, 400, 401, 403, 404, 409, 410],
+  },
   // A spreadsheet converted to the other standard (docs/specs/029-sheets/files-and-print.md "Converting").
   {
     method: 'GET',
