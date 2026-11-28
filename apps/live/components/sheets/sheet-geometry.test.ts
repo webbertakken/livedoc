@@ -20,6 +20,7 @@ import {
   rowEnd,
   drawnPieces,
   inWindow,
+  GROUP_HEADER_PX,
 } from './sheet-geometry';
 import { DrawnOrder } from '@livedoc/sheets';
 
@@ -339,5 +340,73 @@ describe('a drawn order', () => {
 
   it('scrolls to where a row is drawn', () => {
     expect(scrollToReveal(g, 2, 0, at0, { width: 300, height: 60 })).toEqual({ top: 60, left: 0 });
+  });
+});
+
+describe('a group by view (D497)', () => {
+  // Rows 1..4 grouped: rows 3, 1 one group (from drawn 1), rows 2, 4 another (from drawn 3), row 5 in place.
+  const group = (at: number, size: number, count = size) => ({
+    at,
+    size,
+    count,
+    first: count ? at : -1,
+    key: String(at),
+    blank: false,
+  });
+  const order = {
+    ...DrawnOrder.ofSort(6, 1, [3, 1, 2, 4]),
+    groups: [group(1, 2), group(3, 2)],
+    starts: new Set([1, 3]),
+  };
+  const H = GROUP_HEADER_PX;
+  const g = geometryOf(grid(6, 2, { frozenRows: 1 }), new Set(), undefined, order);
+
+  it('leaves a band before each group, the rows under it', () => {
+    expect(g.bands.map((b) => b.top)).toEqual([24, 24 + H + 48]);
+    expect([0, 3, 1, 2, 4, 5].map((r) => rowTop(g, r))).toEqual([
+      0,
+      24 + H,
+      48 + H,
+      72 + 2 * H,
+      96 + 2 * H,
+      120 + 2 * H,
+    ]);
+    expect(rowEnd(g, 1)).toBe(72 + H);
+    expect(totalSize(g).height).toBe(144 + 2 * H);
+    // The frozen row ends where the first band begins: the band scrolls.
+    expect(g.frozenHeight).toBe(24);
+  });
+
+  it('answers no cell, no row and no edge in a band', () => {
+    expect(hitTest(g, ...pt(10, 24 + 5), at0)).toEqual({ kind: 'none' });
+    expect(hitTest(g, 10, COL_HEADER_PX + 72 + H + 5, at0)).toEqual({ kind: 'none' });
+    expect(hitTest(g, ...pt(10, 72 + 2 * H + 2), at0)).toEqual({ kind: 'cell', r: 2, c: 0 });
+    // Just under a band, its top is no resize edge of the row above.
+    expect(hitTest(g, 10, COL_HEADER_PX + 72 + 2 * H + 1, at0)).toEqual({
+      kind: 'row',
+      r: 2,
+      edge: false,
+    });
+  });
+
+  it('boxes a selection across groups in pieces, so no box covers a band', () => {
+    expect(drawnPieces(g, 3, 3)).toEqual([{ r1: 3, r2: 3 }]);
+    const runOrder = {
+      ...DrawnOrder.ofSort(4, 0, [0, 1, 2, 3]),
+      groups: [group(0, 2), group(2, 2)],
+      starts: new Set([0, 2]),
+    };
+    const g2 = geometryOf(grid(4, 1), new Set(), undefined, runOrder);
+    expect(drawnPieces(g2, 0, 3)).toEqual([
+      { r1: 0, r2: 1 },
+      { r1: 2, r2: 3 },
+    ]);
+  });
+
+  it('draws no band for a group the view hides all of', () => {
+    const hidden = { ...order, groups: [group(1, 2, 0), group(3, 2)] };
+    const g3 = geometryOf(grid(6, 2), new Set(['r3', 'r1']), undefined, hidden);
+    expect(g3.bands.map((b) => b.group.at)).toEqual([3]);
+    expect(rowTop(g3, 2)).toBe(24 + H);
   });
 });

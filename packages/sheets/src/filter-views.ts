@@ -60,12 +60,7 @@ function isSortKey(v: unknown): v is FilterViewSortKey {
 }
 
 function isGroup(v: unknown): v is FilterViewGroup {
-  return (
-    isRecord(v) &&
-    Object.keys(v).length === 2 &&
-    isAxisId(v.t) &&
-    isAxisId(v.c)
-  );
+  return isRecord(v) && Object.keys(v).length === 2 && isAxisId(v.t) && isAxisId(v.c);
 }
 
 /** Whether `v` is a view of this id, whole: as every viewer may open it, a malformed one is refused at the write. */
@@ -189,7 +184,16 @@ export function filterViewsAfterDelete(
     const { sort: _sort, group: _group, ...rest } = v;
     const { r1, c1, r2, c2 } = range;
     return [
-      { ...rest, r1, c1, r2, c2, conds, ...(sort?.length ? { sort } : {}), ...(group ? { group } : {}) },
+      {
+        ...rest,
+        r1,
+        c1,
+        r2,
+        c2,
+        conds,
+        ...(sort?.length ? { sort } : {}),
+        ...(group ? { group } : {}),
+      },
     ];
   });
   return next.length ? next : undefined;

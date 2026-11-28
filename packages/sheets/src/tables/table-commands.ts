@@ -265,7 +265,10 @@ export function convertToRangeWrites(
         write: {
           kind: 'layout',
           // Its group by views go with it (D499).
-          changes: [{ k: 'table', id: tableId, table: null }, ...groupViewsGone(home.layout, tableId)],
+          changes: [
+            { k: 'table', id: tableId, table: null },
+            ...groupViewsGone(home.layout, tableId),
+          ],
           cells,
         },
       });

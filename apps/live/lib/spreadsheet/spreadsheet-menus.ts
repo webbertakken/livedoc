@@ -455,7 +455,7 @@ const dataMenu = (views: readonly string[] | null) =>
     ]),
     SEPARATOR,
     built('create-a-filter', 'Create a Filter', 'edit'),
-    item('create-group-by-view', 'Create Group by View', 'view'),
+    built('create-group-by-view', 'Create Group by View', 'view'),
     built('create-filter-view', 'Create Filter View', 'view'),
     ...changeViewEntries(views),
     built('add-a-slicer', 'Add a Slicer', 'edit'),

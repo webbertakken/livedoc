@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { makeSheets } from './testing/book';
 import { Workbook } from './engine/workbook';
-import { DrawnOrder, viewDrawnOrder } from './drawn-order';
+import { DrawnOrder, viewDrawnOrder, withCollapsedRows } from './drawn-order';
 import {
   createGroupByView,
   filterViewAsDrawn,
@@ -20,7 +20,15 @@ const list = (a: Int32Array) => [...a];
 const wbOf = (s: Sheet) => new Workbook({ sheets: [s], locale: 'en-GB' });
 
 // Table1 over A1:B7, its last row a total row; row 8 (index 7) below it.
-const TABLE: SheetTable = { id: 'tab1', name: 'Table1', r1: 's0r0', c1: 's0c0', r2: 's0r6', c2: 's0c1', total: true };
+const TABLE: SheetTable = {
+  id: 'tab1',
+  name: 'Table1',
+  r1: 's0r0',
+  c1: 's0c0',
+  r2: 's0r6',
+  c2: 's0c1',
+  total: true,
+};
 
 function sheet(table: SheetTable = TABLE): Sheet {
   return makeSheets(
@@ -196,6 +204,20 @@ describe('DrawnOrder.pieces under groups', () => {
     expect(DrawnOrder.runs(o, 2, 3)).toEqual([
       { r1: 4, r2: 4 },
       { r1: 1, r2: 1 },
+    ]);
+  });
+});
+
+describe('withCollapsedRows', () => {
+  it('adds the rows of each collapsed group to the rows hidden, and nothing with none collapsed', () => {
+    const s = sheet();
+    const o = viewDrawnOrder(wbOf(s), s.id, groupView(s))!;
+    const hidden = new Set(['s0r8']);
+    expect(withCollapsedRows(hidden, o, new Set(), s.layout.rows)).toBe(hidden);
+    expect([...withCollapsedRows(hidden, o, new Set(['t:pear']), s.layout.rows)]).toEqual([
+      's0r8',
+      's0r1',
+      's0r5',
     ]);
   });
 });

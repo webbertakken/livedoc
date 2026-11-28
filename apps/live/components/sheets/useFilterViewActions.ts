@@ -1,9 +1,13 @@
 // What acts on filter views (docs/specs/029-sheets/data-tools.md "Filters, filter views and slicers", D469-D474):
 // Data › Create Filter View, Change View and Save as Filter View, and the view bar's Name, Range, Duplicate, Delete
-// and Close. An Editor's views are written to the sheet; a Participant's or a Viewer's are their own, never sent.
+// and Close; and group by views (Data › Create Group by View, the table menu's Group By, a table column's Group by
+// Column). An Editor's views are written to the sheet; a Participant's or a Viewer's are their own, never sent.
 import { useMemo } from 'react';
 import {
   createFilterView,
+  createGroupByView,
+  GROUP_VIEW_NEEDS_TABLE,
+  tableAt,
   FILTER_VIEW_PREFIX,
   FILTER_VIEW_TITLE_MAX,
   filterViewTitleOk,
@@ -28,6 +32,8 @@ export const FILTER_VIEW_COPY = {
 
 export type FilterViewActions = {
   create: () => void;
+  // A group by view of a table by a column; without them, of the active cell's table by its column (D498).
+  createGroup: (tableId?: string, colId?: string) => void;
   saveFilterAsView: () => void;
   open: (id: string) => void;
   close: () => void;
@@ -54,17 +60,18 @@ export function useFilterViewActions(c: SheetController): FilterViewActions {
   }, [open, sheet.layout]);
 
   // A new view: an Editor's written then opened; anyone else's opened as their own.
-  const place = (view: SheetFilterView, how: 'create' | 'duplicate' | 'save') => {
+  const place = (view: SheetFilterView, how: 'create' | 'duplicate' | 'save' | 'group') => {
+    const kind = view.group ? 'GroupByView' : 'FilterView';
     if (!c.canShape) {
       views.openTemporary(view);
-      track('Spreadsheet', 'Added', 'TemporaryFilterView');
+      track('Spreadsheet', 'Added', `Temporary${kind}`);
       debugLog('[sheet] filter view opened', { how, temporary: true });
       return;
     }
     if (!c.write({ kind: 'layout', changes: [{ k: 'fview', id: view.id, view }] }, 'Filter'))
       return;
     views.openSaved(view.id);
-    track('Spreadsheet', 'Added', 'FilterView');
+    track('Spreadsheet', 'Added', kind);
     debugLog('[sheet] filter view made', { how, conds: Object.keys(view.conds).length });
   };
 
@@ -81,6 +88,28 @@ export function useFilterViewActions(c: SheetController): FilterViewActions {
         return;
       }
       place(view, 'create');
+    },
+    createGroup: (tableId, colId) => {
+      const layout = sheet.layout;
+      const { active } = c.selectionNow();
+      const table = tableId
+        ? layout.tables?.find((x) => x.id === tableId)
+        : tableAt(layout, active.r, active.c);
+      const col = colId ?? layout.cols[active.c];
+      const view =
+        table && col
+          ? createGroupByView(layout, table, col, {
+              rand: Math.random,
+              prefix: c.canShape ? FILTER_VIEW_PREFIX.group : FILTER_VIEW_PREFIX.temporaryGroup,
+              taken: views.takenTitles,
+            })
+          : null;
+      if (!view) {
+        debugLog('[sheet] group by view refused', { reason: table ? 'column' : 'table' });
+        c.toast(GROUP_VIEW_NEEDS_TABLE);
+        return;
+      }
+      place(view, 'group');
     },
     saveFilterAsView: () => {
       const view = c.canShape ? saveFilterAsView(sheet.layout, Math.random) : null;
@@ -102,7 +131,8 @@ export function useFilterViewActions(c: SheetController): FilterViewActions {
       return null;
     },
     setRange: (text) => {
-      if (!open) return null;
+      // A group by view's range is its table's (D499): its field reads it, never changes it.
+      if (!open || open.group) return null;
       const p = parseRangeText(text);
       // A header row and a row under it, as Create a Filter's range.
       const ids = p && p.r2 > p.r1 ? idRangeOf(sheet.layout, p.r1, p.c1, p.r2, p.c2) : null;

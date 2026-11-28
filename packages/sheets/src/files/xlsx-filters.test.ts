@@ -303,7 +303,10 @@ describe('filters in XLSX', () => {
     const [sheet] = opened(sheetsFromFile((await ok(readXlsx(written.data))).file, 'en-GB', rand));
     const [view] = sheet!.layout.filterViews!;
     const table2 = sheet!.layout.tables!.find((x) => x.name === 'Table2')!;
-    expect(view).toMatchObject({ title: 'Group 1', group: { t: table2.id, c: sheet!.layout.cols[3] } });
+    expect(view).toMatchObject({
+      title: 'Group 1',
+      group: { t: table2.id, c: sheet!.layout.cols[3] },
+    });
     // Excel and Google read a filter view: without the record it is one, ungrouped.
     const bare = await changed(written.data, 'xl/worksheets/sheet1.xml', (x) =>
       x.replace(/<livedoc:filters [^>]*\/>/g, ''),

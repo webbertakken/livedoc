@@ -5,6 +5,7 @@
 // controller.
 import { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { DocumentFonts } from '@livedoc/document';
+import { tableAt } from '@livedoc/sheets';
 import { useSheetController } from '@/components/sheets/sheet-controller';
 import { SheetGrid } from '@/components/sheets/SheetGrid';
 import { useFormulaInput } from '@/components/sheets/useFormulaInput';
@@ -92,15 +93,17 @@ export function SpreadsheetSheetParts({ bridge }: { bridge: SheetsBridge }) {
   const viewActions = useFilterViewActions(c);
   useFilterViewAddress(c);
   const latestViewActions = useLatest(viewActions);
+  const inTable = !!tableAt(c.sheet.layout, c.selection.active.r, c.selection.active.c);
   const filterViewMenu = useMemo(
     () =>
-      filterViewMenuActions(
-        c.sheet.layout,
-        c.filterViews.open,
-        c.canShape,
-        () => latestViewActions.current,
-      ),
-    [c.sheet.layout, c.filterViews.open, c.canShape, latestViewActions],
+      filterViewMenuActions({
+        layout: c.sheet.layout,
+        open: c.filterViews.open,
+        canShape: c.canShape,
+        inTable,
+        run: () => latestViewActions.current,
+      }),
+    [c.sheet.layout, c.filterViews.open, c.canShape, inTable, latestViewActions],
   );
   const findReplace = useFindReplace();
   const panels = useOfficePanels({

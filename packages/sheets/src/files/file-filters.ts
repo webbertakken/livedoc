@@ -214,7 +214,8 @@ export function filtersFromFile(
       v.group === undefined
         ? undefined
         : (layout.tables ?? []).find((t) => sameRange(tableFilterBox(layout, t), at));
-    const groupCol = table && v.group! >= at.c1 && v.group! <= at.c2 ? layout.cols[v.group!] : undefined;
+    const groupCol =
+      table && v.group! >= at.c1 && v.group! <= at.c2 ? layout.cols[v.group!] : undefined;
     views.push({
       id: id!,
       title: title.slice(0, FILTER_VIEW_TITLE_MAX),

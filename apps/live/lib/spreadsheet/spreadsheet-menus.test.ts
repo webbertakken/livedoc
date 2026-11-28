@@ -188,7 +188,9 @@ describe('spreadsheetMenus', () => {
       'collapse-all-column-groups',
       ...ZOOM_ITEMS.map((i) => i.id),
       'full-screen',
-      // Data › Create Filter View: anyone's, temporary for a Viewer (data-tools.md "Filters, filter views and slicers").
+      // Data › Create Group by View and Create Filter View: anyone's, temporary for a Viewer (data-tools.md "Filters,
+      // filter views and slicers", "Group by view").
+      'create-group-by-view',
       'create-filter-view',
       // Data › Protect Sheets and Ranges: its list read by everyone (data-tools.md "Protected ranges").
       'protect-sheets-and-ranges',

@@ -1,9 +1,10 @@
 // Filter views on a sheet (docs/specs/029-sheets/data-tools.md "Filters, filter views and slicers", D469-D474): which
 // one this person has open, kept for the session per sheet as the selection is, never sent; the filter drawn (the open
 // view's in the sheet's place); and the view's changes: an Editor's saved view written, a temporary view the
-// person's own.
+// person's own. A group by view's collapsed groups are its opener's alone, kept for the session with the view (D497).
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
+  filterViewAsDrawn,
   filterViewOf,
   FILTER_VIEW_PREFIX,
   nextFilterViewTitle,
@@ -30,9 +31,14 @@ export type OpenFilterView = { id: string } | { temp: SheetFilterView };
 // The open view of each sheet for the session, as KEPT_SELECTIONS keeps its place (a remount keeps it).
 const KEPT_VIEWS = new Map<string, OpenFilterView>();
 
-/** Forget every sheet's open view (tests). */
+// Each group by view's collapsed groups by key (group-by-view.ts groupKey), by sheet and view, for the session.
+const KEPT_COLLAPSED = new Map<string, ReadonlySet<string>>();
+const NONE_COLLAPSED: ReadonlySet<string> = new Set();
+
+/** Forget every sheet's open view and collapsed groups (tests). */
 export function forgetOpenFilterViews(): void {
   KEPT_VIEWS.clear();
+  KEPT_COLLAPSED.clear();
 }
 
 export type FilterViews = {
@@ -53,6 +59,9 @@ export type FilterViews = {
   // The view's Sort A to Z / Z to A: the column its one key, drawing the rows in that order (data-tools.md "The drawn
   // order", D491). False when refused (a merge across its rows, said in a toast).
   sort: (colId: string, ascending: boolean) => boolean;
+  // The open group by view's collapsed groups by key, and collapsing or expanding them, this person's alone (D497).
+  collapsed: ReadonlySet<string>;
+  setCollapsed: (keys: ReadonlySet<string>) => void;
 };
 
 export function useFilterViews(opts: {
@@ -80,7 +89,27 @@ export function useFilterViews(opts: {
   );
   const saved = kept && 'id' in kept ? filterViewOf(layout, kept.id) : null;
   const gone = !!kept && 'id' in kept && !saved;
-  const open = kept && 'temp' in kept ? kept.temp : saved;
+  const stored = kept && 'temp' in kept ? kept.temp : saved;
+  // A group by view over its table's rows as they are now (D499).
+  const open = useMemo(() => (stored ? filterViewAsDrawn(layout, stored) : null), [stored, layout]);
+  const collapsedKey = open ? `${sheetId}:${open.id}` : null;
+  const [collapsedNow, setCollapsedNow] = useState<{
+    key: string | null;
+    keys: ReadonlySet<string>;
+  }>({ key: null, keys: NONE_COLLAPSED });
+  const collapsed =
+    collapsedNow.key === collapsedKey
+      ? collapsedNow.keys
+      : ((collapsedKey ? KEPT_COLLAPSED.get(collapsedKey) : undefined) ?? NONE_COLLAPSED);
+  const setCollapsed = useCallback(
+    (keys: ReadonlySet<string>) => {
+      if (!collapsedKey) return;
+      KEPT_COLLAPSED.set(collapsedKey, keys);
+      setCollapsedNow({ key: collapsedKey, keys });
+      debugLog('[sheet] groups collapsed', { sheetId, count: keys.size });
+    },
+    [collapsedKey, sheetId],
+  );
   // A saved view someone else deleted closes, said once.
   useEffect(() => {
     if (!gone) return;
@@ -149,5 +178,7 @@ export function useFilterViews(opts: {
     change,
     setCondition,
     sort,
+    collapsed: open?.group ? collapsed : NONE_COLLAPSED,
+    setCollapsed,
   };
 }

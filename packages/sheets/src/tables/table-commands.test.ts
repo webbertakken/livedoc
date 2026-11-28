@@ -312,7 +312,10 @@ describe('convertToRangeWrites', () => {
       group: { t: 'tbl001', c: 's0c0' },
     };
     const b = book({ Data: DATA2 }, { tables: { Data: [T] } });
-    b.sheets[0]!.layout = { ...b.sheets[0]!.layout, filterViews: [view, { ...view, id: 'view02', group: undefined }] };
+    b.sheets[0]!.layout = {
+      ...b.sheets[0]!.layout,
+      filterViews: [view, { ...view, id: 'view02', group: undefined }],
+    };
     const [home] = convertToRangeWrites(b.wb, 'sheet0xx', 'tbl001')!;
     expect(home!.write.kind === 'layout' && home!.write.changes).toEqual([
       { k: 'table', id: 'tbl001', table: null },

@@ -125,8 +125,7 @@ function groupedOrder(
   let from = 0;
   for (let i = 1; i <= order.length; i++) {
     const same =
-      i < order.length &&
-      sortKeyCompare(values(order[i - 1]!, col), values(order[i]!, col)) === 0;
+      i < order.length && sortKeyCompare(values(order[i - 1]!, col), values(order[i]!, col)) === 0;
     if (same) continue;
     const rows = order.slice(from, i).map((x) => start + x);
     const shown = rows.filter(kept);
@@ -142,7 +141,11 @@ function groupedOrder(
     from = i;
   }
   return {
-    ...DrawnOrder.ofSort(n, start, order.map((x) => start + x)),
+    ...DrawnOrder.ofSort(
+      n,
+      start,
+      order.map((x) => start + x),
+    ),
     groups,
     starts: new Set(groups.map((g) => g.at)),
   };
@@ -221,4 +224,22 @@ function groupedViewOrder(
   for (let d = 0; d < n; d++) storedAt[d] = d < order.storedAt.length ? order.storedAt[d]! : d;
   storedAt.forEach((r, d) => (drawnOf[r] = d));
   return { ...order, storedAt, drawnOf };
+}
+
+/**
+ * The rows drawn at no height: `hidden` and every row of a group whose key is `collapsed` (D497); `hidden` itself
+ * when no group is collapsed.
+ */
+export function withCollapsedRows(
+  hidden: ReadonlySet<string>,
+  order: DrawnOrder | null,
+  collapsed: ReadonlySet<string>,
+  rowIds: readonly string[],
+): ReadonlySet<string> {
+  const shut = (order?.groups ?? []).filter((g) => collapsed.has(g.key));
+  if (!shut.length) return hidden;
+  const out = new Set(hidden);
+  for (const g of shut)
+    for (let d = g.at; d < g.at + g.size; d++) out.add(rowIds[order!.storedAt[d]!]!);
+  return out;
 }
