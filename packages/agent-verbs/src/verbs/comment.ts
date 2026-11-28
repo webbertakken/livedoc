@@ -16,20 +16,38 @@ import { resolveTab } from '../addressing';
 import { defineVerb, VerbRefusal, type VerbContext } from '../define';
 import { readSheets } from '../sheets/sheet-state';
 import { documentOf, tabOf, tabPath } from './shared';
+import {
+  isSpreadsheetDocument,
+  noSheetThread,
+  sendSheetThreadOp,
+  sheetTargetOf,
+  sheetThreadListing,
+  threadAtTarget,
+  type SheetTarget,
+} from './sheet-comments';
 
 const docArg = z.string().describe('A name, id prefix or LiveDoc URL');
 const tabFlag = z
   .string()
   .optional()
   .describe('A tab name or id prefix; the first tab when omitted');
-const refArg = z.string().describe('The element\u2019s ref, from a view');
+const refArg = z
+  .string()
+  .describe('The element\u2019s ref, from a view; on a spreadsheet, the sheet, by title or id');
 const textArg = z.string().min(1).describe('The comment');
 // A Sheet cell's thread (docs/specs/029-sheets/sheet.md "Cell comments"): the ref names the Sheet, this its cell.
 const cellArg = z
   .string()
   .optional()
   .describe(
-    'On a Sheet, the cell whose thread this is, by A1 (B4); the Sheet\u2019s own thread when omitted',
+    'The cell whose thread this is, by A1 (B4): on a Sheet, the Sheet\u2019s own thread when omitted; on a spreadsheet, the sheet\u2019s cell',
+  );
+// A spreadsheet's thread on a range (docs/specs/029-sheets/review.md "Agents"): its anchor, found by its top-left cell.
+const rangeArg = z
+  .string()
+  .optional()
+  .describe(
+    'On a spreadsheet, the range a new thread is on, by A1 (B4:C9); found by its top-left cell',
   );
 
 const threadOutput = z.object({
@@ -71,6 +89,12 @@ export const commentLs = defineVerb({
   run: async (ctx, { doc, tab, status }) => {
     const document = await documentOf(ctx, doc);
     const tabId = tab === undefined ? null : resolveTab(document.tabs, tab, doc, ctx.log).id;
+    // A spreadsheet's threads are its sheets' own, each labelled by its sheet and range (review.md "Agents").
+    if (await isSpreadsheetDocument(ctx, document)) {
+      const listed = await sheetThreadListing(ctx, document.id, status, tabId);
+      ctx.log(`comments ${listed.length} spreadsheet threads`);
+      return { status, threads: listed };
+    }
     const { threads } = await ctx.api.json<DocumentCommentsResponse>(
       `/documents/${encodeURIComponent(document.id)}/comments?status=${status}`,
     );
@@ -193,6 +217,38 @@ async function withCell(ctx: VerbContext, target: Target, ref: string, a1: strin
   return { ...target, cell: `${row}:${col}` } satisfies Target;
 }
 
+// The spreadsheet's cells a call names, or null for any other document (review.md "Agents").
+async function spreadsheetTarget(
+  ctx: VerbContext,
+  doc: string,
+  ref: string,
+  where: { cell?: string | undefined; range?: string | undefined },
+): Promise<SheetTarget | null> {
+  const document = await documentOf(ctx, doc);
+  if (!(await isSpreadsheetDocument(ctx, document))) return null;
+  return sheetTargetOf(ctx, document.id, ref, where);
+}
+
+// A comment on a spreadsheet's cells: a reply to the thread there (reopened when resolved), else a new thread on them.
+async function sheetAdd(ctx: VerbContext, t: SheetTarget, text: string) {
+  const thread = await threadAtTarget(ctx, t);
+  if (thread) {
+    if (thread.resolved)
+      await sendSheetThreadOp(ctx, t, { op: 'resolve', thread: thread.id, resolved: false });
+    return sheetReply(ctx, t, thread, text);
+  }
+  const id = crypto.randomUUID();
+  const comment = crypto.randomUUID();
+  await sendSheetThreadOp(ctx, t, { op: 'start', id, comment, anchor: t.anchor, text });
+  return { id: comment, text: `+ comment ${comment} on ${t.place}` };
+}
+
+async function sheetReply(ctx: VerbContext, t: SheetTarget, thread: { id: string }, text: string) {
+  const id = crypto.randomUUID();
+  await sendSheetThreadOp(ctx, t, { op: 'reply', thread: thread.id, id, text });
+  return { id, text: `+ comment ${id} on ${t.place}` };
+}
+
 const commentsPath = (t: Target) => `${tabPath(t.documentId, t.tabId)}/comments`;
 
 const lineOutput = z.object({ text: z.string(), id: z.string() });
@@ -205,9 +261,18 @@ export const commentAdd = defineVerb({
   description:
     'Adds a comment to an element\u2019s thread, starting one if it has none (a resolved thread reopens). The comment is the token owner\u2019s.',
   behaviour: 'write',
-  input: z.object({ doc: docArg, tab: tabFlag, ref: refArg, text: textArg, cell: cellArg }),
+  input: z.object({
+    doc: docArg,
+    tab: tabFlag,
+    ref: refArg,
+    text: textArg,
+    cell: cellArg,
+    range: rangeArg,
+  }),
   output: lineOutput,
-  run: async (ctx, { doc, tab, ref, text, cell }) => {
+  run: async (ctx, { doc, tab, ref, text, cell, range }) => {
+    const sheet = await spreadsheetTarget(ctx, doc, ref, { cell, range });
+    if (sheet) return sheetAdd(ctx, sheet, text);
     const target = await withCell(ctx, await targetOf(ctx, doc, tab, ref), ref, cell);
     const { comment } = await ctx.api.json<{ comment: { id: string } }>(commentsPath(target), {
       method: 'POST',
@@ -226,6 +291,7 @@ export const commentAdd = defineVerb({
     examples: [
       'livedoc comment add "Shop" api "Should this be idempotent?"',
       'livedoc comment add "Shop" --tab Flow 146b "Missing a retry"',
+      'livedoc comment add "Budget" Sheet1 --range B4:C9 "Are these final?"',
     ],
     prints: 'the new comment\u2019s id',
   },
@@ -236,9 +302,22 @@ export const commentReply = defineVerb({
   summary: 'Reply to the thread on an element',
   description: 'Adds a reply to the thread on an element; an element with no thread is refused.',
   behaviour: 'write',
-  input: z.object({ doc: docArg, tab: tabFlag, ref: refArg, text: textArg, cell: cellArg }),
+  input: z.object({
+    doc: docArg,
+    tab: tabFlag,
+    ref: refArg,
+    text: textArg,
+    cell: cellArg,
+    range: rangeArg,
+  }),
   output: lineOutput,
-  run: async (ctx, { doc, tab, ref, text, cell }) => {
+  run: async (ctx, { doc, tab, ref, text, cell, range }) => {
+    const sheet = await spreadsheetTarget(ctx, doc, ref, { cell, range });
+    if (sheet) {
+      const thread = await threadAtTarget(ctx, sheet);
+      if (!thread) throw noSheetThread(sheet, ref);
+      return sheetReply(ctx, sheet, thread, text);
+    }
     const target = await withCell(ctx, await targetOf(ctx, doc, tab, ref), ref, cell);
     const last = lastCommentOf(target, ref);
     const { comment } = await ctx.api.json<{ comment: { id: string } }>(
@@ -267,9 +346,20 @@ function threadStateVerb(verb: 'resolve' | 'reopen') {
       verb === 'resolve' ? 'Resolve the thread on an element' : 'Reopen the thread on an element',
     description: `Marks the thread on an element ${state}; it already being so changes nothing.`,
     behaviour: 'write',
-    input: z.object({ doc: docArg, tab: tabFlag, ref: refArg, cell: cellArg }),
+    input: z.object({ doc: docArg, tab: tabFlag, ref: refArg, cell: cellArg, range: rangeArg }),
     output: lineOutput,
-    run: async (ctx, { doc, tab, ref, cell }) => {
+    run: async (ctx, { doc, tab, ref, cell, range }) => {
+      const sheet = await spreadsheetTarget(ctx, doc, ref, { cell, range });
+      if (sheet) {
+        const thread = await threadAtTarget(ctx, sheet);
+        if (!thread) throw noSheetThread(sheet, ref);
+        await sendSheetThreadOp(ctx, sheet, {
+          op: 'resolve',
+          thread: thread.id,
+          resolved: verb === 'resolve',
+        });
+        return { id: thread.id, text: `~ thread ${sheet.place} ${state}` };
+      }
       const target = await withCell(ctx, await targetOf(ctx, doc, tab, ref), ref, cell);
       const last = lastCommentOf(target, ref);
       const res = await ctx.api.fetch(

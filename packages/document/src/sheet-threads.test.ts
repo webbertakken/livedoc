@@ -305,3 +305,33 @@ describe('applyThreadOp', () => {
     ).toEqual({ ok: false, refusal: 'thread_invalid' });
   });
 });
+
+// review.md "Agents": each anchored cell's open threads, counted by its top-left cell.
+describe('openThreadCounts', () => {
+  it('counts a sheet’s open threads by their top-left cell, never a resolved one or another sheet’s', async () => {
+    const { openThreadCounts } = await import('./sheet-threads');
+    const t = (id: string, r1: string, c1: string, sheetId = 's1', resolved = false) => ({
+      id,
+      sheetId,
+      anchor: { r1, c1, r2: r1, c2: c1 },
+      resolved,
+      comments: [],
+      v: 1,
+    });
+    expect([
+      ...openThreadCounts(
+        [
+          t('a', 'r1', 'c1'),
+          t('b', 'r1', 'c1'),
+          t('c', 'r2', 'c1'),
+          t('d', 'r3', 'c3', 's1', true),
+          t('e', 'r1', 'c1', 's2'),
+        ],
+        's1',
+      ),
+    ]).toEqual([
+      ['r1:c1', 2],
+      ['r2:c1', 1],
+    ]);
+  });
+});

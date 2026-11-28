@@ -964,6 +964,12 @@ const readCell = z.object({
     .optional()
     .describe("The cell's own link: an address, or a range or sheet of this spreadsheet by name."),
   note: z.string().optional().describe("The cell's note: plain text it holds beside its value."),
+  comments: z
+    .number()
+    .optional()
+    .describe(
+      'How many open comment threads are anchored to the cell, on a spreadsheet; absent when none (or for a Viewer).',
+    ),
 });
 
 const readChart = z.object({

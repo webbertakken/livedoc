@@ -106,6 +106,33 @@ describe('a spreadsheet’s cells', () => {
     });
   });
 
+  // 029-sheets review.md "Agents": each anchored cell's open threads, for whoever may comment (D655).
+  it('counts each cell’s open comment threads, none for a Viewer', async () => {
+    const { rows, cols } = kit.layout;
+    const start = (id: string) =>
+      kit.call({
+        path: `/book1/sheets/book1Sheet/threads`,
+        body: {
+          op: {
+            op: 'start',
+            id,
+            comment: `${id}c`,
+            anchor: { r1: rows[1]!, c1: cols[1]!, r2: rows[1]!, c2: cols[1]! },
+            text: 'Check',
+          },
+        },
+      });
+    expect((await start('t1')).status).toBe(200);
+    expect((await start('t2')).status).toBe(200);
+    const mine = await view('view=cells');
+    expect((await mine.text()).split('\n')[2]).toBe('2 | A2 "Opus" | B2 15 💬 2');
+    kit.sql.sql.exec(
+      "INSERT INTO share_links (code, document_id, role, tab_id, created_at) VALUES ('VIEW', 'book1', 'view', NULL, 1);",
+    );
+    const viewer = await view('view=cells', { owner: 'v', code: 'VIEW' });
+    expect((await viewer.text()).split('\n')[2]).toBe('2 | A2 "Opus" | B2 15');
+  });
+
   it('refuses a range that is none, an empty or long one, and a tab that is no spreadsheet’s', async () => {
     const bad = await view('view=cells&range=nonsense');
     expect(bad.status).toBe(400);

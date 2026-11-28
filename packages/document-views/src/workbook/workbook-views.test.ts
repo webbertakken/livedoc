@@ -386,6 +386,24 @@ describe('sheetCellsView', () => {
     expect(view.ok && view.json.rows[0]!.cells[1]!.note).toBe('x'.repeat(80));
   });
 
+  it('adds a cell’s open comment threads, a cell holding only a thread by its address (review.md "Agents")', () => {
+    const key = (r: number, c: number) => `${costs.layout.rows[r]}:${costs.layout.cols[c]}`;
+    const cells = new Map(formatted.cells);
+    cells.set(key(0, 1), { ...cells.get(key(0, 1))!, note: 'Check' });
+    const wb = new Workbook({ sheets: [{ ...formatted, cells } as Sheet], locale: AGENT_LOCALE });
+    const comments = new Map([
+      [key(0, 0), 2],
+      [key(0, 1), 1],
+      [key(0, 4), 1],
+      ['gone:gone', 3],
+    ]);
+    const view = sheetCellsView({ wb, sheetId: 'c1', title: 'Costs', range: 'A1:F1', comments });
+    expect(view.ok && view.text.split('\n')[1]).toBe(
+      '1 | A1 "Model" 💬 2 | B1 "Cost" ✎ "Check" 💬 1 | C1 "Total" | E1 💬 1',
+    );
+    expect(view.ok && view.json.rows[0]!.cells[0]!.comments).toBe(2);
+  });
+
   it('says an empty sheet is one', () => {
     const empty = new Workbook({ sheets: [sheetOf('e1', 'Empty', [])], locale: AGENT_LOCALE });
     const view = sheetCellsView({ wb: empty, sheetId: 'e1', title: 'Empty' });

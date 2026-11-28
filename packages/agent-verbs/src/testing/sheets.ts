@@ -73,6 +73,8 @@ export function sheetServer(
     routes: {},
   };
   const base = `/documents/${documentId}/sheets`;
+  // A spreadsheet's comment threads (029-sheets review.md "Agents"): none, unless a test gives its own.
+  server.routes[`/documents/${documentId}/sheet-threads`] = { threads: [] };
   server.routes[base] = async (r: Request) => {
     if (r.method === 'POST') {
       const body = (await r.json()) as SheetJson;
