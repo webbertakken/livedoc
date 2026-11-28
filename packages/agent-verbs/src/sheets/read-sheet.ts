@@ -19,6 +19,7 @@ import { readSheetsState, resolveSheet, workbookFor, type SheetRefusal } from '.
 import { rulesRead } from './sheet-rule-change';
 import { chartsRead, type ChartRead } from './sheet-chart-objects';
 import { pivotsRead, type PivotRead } from './sheet-pivot-objects';
+import { imagesRead, type ImageRead } from './sheet-image-objects';
 
 // The most characters of cells one read answers with (docs/specs/029-sheets/sheet-store.md, Defaults): about
 // 25,000 tokens, so
@@ -57,8 +58,15 @@ export interface SheetRead {
   validation: ReturnType<typeof rulesRead>['validation'];
   conditionalFormats: ReturnType<typeof rulesRead>['conditionalFormats'];
   charts?: ChartRead[];
+  // A spreadsheet's sheet: its images over cells (inserted-objects.md "Agents").
+  images?: ImageRead[];
   // A spreadsheet's sheet's pivot tables (pivot-tables.md "The model"), when it holds any.
   pivots?: PivotRead[];
+}
+
+function imagesOf(wb: Parameters<typeof imagesRead>[0], id: string): { images?: ImageRead[] } {
+  const images = imagesRead(wb, id);
+  return images.length ? { images } : {};
 }
 
 function pivotsOf(wb: Parameters<typeof pivotsRead>[0], id: string): { pivots?: PivotRead[] } {
@@ -151,5 +159,6 @@ export async function readSheet(
     // A spreadsheet's sheet holds its own charts (sheet-store.md "Built for agents in a spreadsheet").
     ...(state.workbook ? { charts: chartsRead(wb, id) } : {}),
     ...(state.workbook ? pivotsOf(wb, id) : {}),
+    ...(state.workbook ? imagesOf(wb, id) : {}),
   };
 }

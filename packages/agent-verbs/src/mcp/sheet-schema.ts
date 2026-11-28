@@ -715,6 +715,36 @@ const sheetChange = z.discriminatedUnion('op', [
   }),
   z.object({
     op: z
+      .literal('image')
+      .describe(
+        'A spreadsheet only: place one of your gallery pictures (list_images) over the cells, its top-left at a cell; it lands at its own size fitted into 600x400 unless given one.',
+      ),
+    imageId: z.string().describe('The picture: an id list_images lists.'),
+    at: z.string().describe('The cell its top-left sits on, "B2".'),
+    width: z
+      .number()
+      .optional()
+      .describe('Its width in px (16 to 4000); alone, the height follows the picture’s shape.'),
+    height: z
+      .number()
+      .optional()
+      .describe('Its height in px (16 to 4000); alone, the width follows the picture’s shape.'),
+    alt: z.string().optional().describe('Alt text for a screen reader, up to 1,000 characters.'),
+    replace: z
+      .string()
+      .optional()
+      .describe(
+        'The id of one of the sheet’s images (read_sheet lists them) this one takes the place of, keeping its id.',
+      ),
+  }),
+  z.object({
+    op: z
+      .literal('clear_images')
+      .describe('A spreadsheet only: take off the image of an id, or every one of the sheet’s.'),
+    id: z.string().optional(),
+  }),
+  z.object({
+    op: z
       .literal('move')
       .describe('A spreadsheet only: put this sheet’s tab after another sheet, or first.'),
     after: z.string().nullable().describe('The sheet it goes after, by name; null puts it first.'),
@@ -969,6 +999,21 @@ export const readSheetOutput = {
     .optional()
     .describe(
       'A spreadsheet’s sheet: its charts, in paint order (change_sheet chart replace takes an id).',
+    ),
+  images: z
+    .array(
+      z.object({
+        id: z.string().describe('Its id on the sheet: what image replace and clear_images take.'),
+        imageId: z.string().describe('Its gallery picture.'),
+        at: z.string().describe('The cell its top-left sits on.'),
+        width: z.number().describe('Its width in px.'),
+        height: z.number().describe('Its height in px.'),
+        alt: z.string().optional().describe('Its alt text.'),
+      }),
+    )
+    .optional()
+    .describe(
+      'A spreadsheet’s sheet: its images over the cells, in paint order (change_sheet image replace takes an id).',
     ),
   url,
 };

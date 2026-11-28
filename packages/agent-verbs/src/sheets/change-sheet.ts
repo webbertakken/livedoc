@@ -3,10 +3,13 @@
 // sheet changeset (docs/specs/024-agents/agent-changesets.md "A sheet's changesets", D269): every change lands or
 // none does, a large one split into the write route's parts inside it. A change is checked against the store's caps
 // whole before anything is sent (writesCapsProblem); a refusal says nothing was written.
-import type { ApiClient } from '@livedoc/api-client';
+import { ApiError, type ApiClient } from '@livedoc/api-client';
+import { IMAGES_UNAVAILABLE, notInGallery } from '../images/gallery';
+import type { GalleryPicture } from './sheet-image-objects';
 import {
   CLIENT_HEADER,
   type ChangesetRequest,
+  type ImageSummary,
   type ChangesetResponse,
   type SheetWriteRequest,
   type SheetWriteResponse,
@@ -303,6 +306,31 @@ const TOUCHES_CHARTS: ReadonlySet<SheetChange['op']> = new Set([
   'delete_cols',
 ]);
 
+// The caller's gallery pictures by id with their sizes, read only when a change places an image; a refusal for a
+// server keeping no images or an id the gallery lacks.
+async function galleryFor(
+  api: ApiClient,
+  changes: readonly SheetChange[],
+): Promise<
+  ReadonlyMap<string, GalleryPicture> | { refusal: { code: string; message: string } } | null
+> {
+  const placed = changes.flatMap((c) => (c.op === 'image' ? [c.imageId] : []));
+  if (placed.length === 0) return null;
+  let images: ImageSummary[];
+  try {
+    images = (await api.json<{ images?: ImageSummary[] }>('/images')).images ?? [];
+  } catch (err) {
+    if (err instanceof ApiError && err.status === 503)
+      return { refusal: { code: 'images_unavailable', message: IMAGES_UNAVAILABLE } };
+    throw err;
+  }
+  const held = new Set(images.map((i) => i.id));
+  const missing = placed.find((imageId) => !held.has(imageId));
+  if (missing !== undefined)
+    return { refusal: { code: 'image_not_found', message: notInGallery(missing) } };
+  return new Map(images.map((i) => [i.id, { width: i.width, height: i.height }]));
+}
+
 export async function changeSheet(
   api: ApiClient,
   documentId: string,
@@ -324,6 +352,17 @@ export async function changeSheet(
     };
   }
   const { id, tabId } = found.sheet;
+  // An image's imageId names a picture in the caller's gallery (inserted-objects.md "Agents"), checked before anything.
+  const gallery = await galleryFor(api, input.changes);
+  if (gallery && 'refusal' in gallery)
+    return {
+      sheetId: id,
+      title: found.sheet.title,
+      applied: [],
+      rev: null,
+      changesetId: null,
+      refusal: gallery.refusal,
+    };
   const wb = await workbookFor(api, documentId, state, tabId);
   // A design is tinted for its tab's canvas, and charts are on the tab: read it only when a change needs it.
   // A spreadsheet's charts are its sheet's own, anchored to cells: its tab holds none, so it is never read.
@@ -343,7 +382,7 @@ export async function changeSheet(
     client,
     documentCellCount(sheets),
     Math.random,
-    { dark, font, spreadsheet: state.workbook !== null },
+    { dark, font, spreadsheet: state.workbook !== null, ...(gallery ? { gallery } : {}) },
   );
   // A change to cells alone can make rows taller or shorter (sheet.md "Row height"), which moves the cells under a
   // chart as a resize does: the tab is read then too.

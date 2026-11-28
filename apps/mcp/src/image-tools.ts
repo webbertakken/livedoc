@@ -6,6 +6,7 @@ import type { ImageSummary } from '@livedoc/api-schema';
 import {
   CONTACT_SHEET_MAX,
   galleryListing,
+  IMAGES_UNAVAILABLE,
   imagesPlacedIn,
   unknownImageIssue,
   type GalleryImage,
@@ -23,8 +24,7 @@ import {
 import { registerTool } from './tool-annotations';
 import { errorResult, requireToken, textResult } from './tool-helpers';
 
-export const IMAGES_UNAVAILABLE =
-  'Images are not available on this LiveDoc server (it has no image storage).';
+export { IMAGES_UNAVAILABLE };
 
 // The contact sheet's grid: four pictures a row, each fitted into its cell above a caption.
 const SHEET_COLUMNS = 4;

@@ -12,6 +12,7 @@ import {
   type IdRange,
   type SheetLayout,
   type SheetChart,
+  type SheetImage,
   type SheetPivot,
   type WorkbookRecord,
 } from '@livedoc/sheets';
@@ -57,6 +58,15 @@ export type WorkbookOutlinePivotJson = {
   values: string[];
 };
 
+// An image over cells (inserted-objects.md "Images over cells"): its id, cell, size and alt text.
+export type WorkbookOutlineImageJson = {
+  id: string;
+  at: string;
+  width: number;
+  height: number;
+  alt?: string;
+};
+
 export type WorkbookOutlineSheetJson = {
   title: string;
   tabId: string;
@@ -72,6 +82,7 @@ export type WorkbookOutlineSheetJson = {
   bands: number;
   charts: WorkbookOutlineChartJson[];
   pivots: WorkbookOutlinePivotJson[];
+  images: WorkbookOutlineImageJson[];
 };
 
 export type WorkbookOutlineJson = {
@@ -159,6 +170,18 @@ function pivotJson(
   };
 }
 
+function imageJson(layout: SheetLayout, image: SheetImage): WorkbookOutlineImageJson {
+  const ix = layoutIndex(layout);
+  return {
+    id: image.id,
+    // An anchor's cell is always the sheet's: a deletion moves it to the line taking its place.
+    at: formatA1(ix.rowPos.get(image.at.r)!, ix.colPos.get(image.at.c)!),
+    width: image.width,
+    height: image.height,
+    ...(image.alt ? { alt: image.alt } : {}),
+  };
+}
+
 function sheetJson(
   sheet: WorkbookOutlineSheet,
   current: string,
@@ -184,6 +207,9 @@ function sheetJson(
     pivots: (layout.objects ?? [])
       .filter((x): x is SheetPivot => x.kind === 'pivot')
       .map((x) => pivotJson(layout, x, sheets)),
+    images: (layout.objects ?? [])
+      .filter((x): x is SheetImage => x.kind === 'image')
+      .map((x) => imageJson(layout, x)),
   };
 }
 
@@ -212,6 +238,11 @@ function partLines(s: WorkbookOutlineSheetJson): string[] {
     const bits = [`  chart ${chart.id} ${chart.type} ${chart.range ?? 'no data'} at ${chart.at}`];
     if (chart.title) bits.push(jsonString(chart.title));
     if (chart.lines) bits.push(`lines=${chart.lines.join(',')}`);
+    lines.push(bits.join(' '));
+  }
+  for (const image of s.images) {
+    const bits = [`  image ${image.id} at ${image.at} ${image.width}x${image.height}`];
+    if (image.alt) bits.push(jsonString(image.alt));
     lines.push(bits.join(' '));
   }
   for (const p of s.pivots) {

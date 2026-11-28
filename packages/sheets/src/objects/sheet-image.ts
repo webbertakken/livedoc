@@ -39,6 +39,27 @@ const IMAGE_KEYS = [
   'alt',
 ] as const;
 
+/** The box a placed picture is scaled down to fit, kept in proportion (D623). */
+export const IMAGE_FIT_BOX = { width: 600, height: 400 } as const;
+
+const side = (v: number) =>
+  Math.round(Math.min(SHEET_IMAGE_SIZE.max, Math.max(SHEET_IMAGE_SIZE.min, v)));
+
+/** A picture's natural size scaled down to fit 600 by 400 px, in proportion; an unknown size lands square. */
+export function fittedImageSize(natural: { width: number; height: number }): {
+  width: number;
+  height: number;
+} {
+  if (!(natural.width >= 1 && natural.height >= 1))
+    return { width: IMAGE_FIT_BOX.height, height: IMAGE_FIT_BOX.height };
+  const scale = Math.min(
+    1,
+    IMAGE_FIT_BOX.width / natural.width,
+    IMAGE_FIT_BOX.height / natural.height,
+  );
+  return { width: side(natural.width * scale), height: side(natural.height * scale) };
+}
+
 /** Whether a gallery id is one: 1 to 128 characters, never a data URI. */
 export const isGalleryImageId = (x: unknown): x is string =>
   typeof x === 'string' && x.length > 0 && x.length <= IMAGE_ID_MAX && !x.startsWith('data:');
