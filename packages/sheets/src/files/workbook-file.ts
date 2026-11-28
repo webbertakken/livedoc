@@ -57,6 +57,7 @@ import {
   type FileFilter,
   type FileFilterView,
 } from './file-filters';
+import { fileSlicersOf, slicersFromFile, type FileSlicer } from './file-slicers';
 import { filteredOutRows } from '../filter';
 import type { KeptContent, StoredAt } from './kept-content';
 import { bandingRules } from '../rules/bandings';
@@ -119,6 +120,8 @@ export type FileSheet = {
   // Its filter and filter views (standard-mapping.md "Filters in the file").
   filter?: FileFilter;
   filterViews?: FileFilterView[];
+  // Its slicers in paint order ("Filters in the file", slicers).
+  slicers?: FileSlicer[];
 };
 
 /**
@@ -214,6 +217,11 @@ export type FileLoss =
   | { k: 'filter_unread'; sheet: string; r: number; c: number }
   | { k: 'filter_view_unread'; sheet: string; name: string }
   | { k: 'filters_changed'; sheet: string }
+  // Slicers ("Filters in the file"): one in LiveDoc's record it cannot read, left out; a file's Excel slicers it
+  // cannot read, kept as they came (D489); a write's slicers seen in the record alone, logged.
+  | { k: 'slicer_unread'; sheet: string }
+  | { k: 'slicers_kept'; sheet: string }
+  | { k: 'slicers_unwritten'; sheet: string; count: number }
   // A filter over part of a table (D480), kept as it is: logged once a read or a write, never reported.
   | { k: 'filter_beside_table'; sheet: string }
   | { k: 'table_unread'; sheet: string; name: string }
@@ -340,6 +348,7 @@ export function workbookFileOf(
         return r === undefined ? [] : [r];
       });
       const lines = withFilteredRows(fileLinesOf(sheet.layout), filtered);
+      const slicers = fileSlicersOf(sheet.layout);
       return {
         name: sheet.title,
         rows: sheet.layout.rows.length,
@@ -357,6 +366,7 @@ export function workbookFileOf(
         ...(pivoted.pivots.length ? { pivots: pivoted.pivots } : {}),
         ...(pivoted.unwritten ? { pivotsLeft: pivoted.unwritten } : {}),
         ...filters,
+        ...(slicers.length ? { slicers } : {}),
       };
     }),
     ...(engine.theme === STANDARD_THEME ? {} : { theme: engine.theme }),
@@ -685,7 +695,13 @@ export function sheetsFromFile(
       new Set(charts.map((x) => x.id)),
     );
     if (pivots.refused > 0) losses.push({ k: 'pivot_changed', sheet: m.title });
-    const objects = [...charts, ...pivots.pivots];
+    const slicers = slicersFromFile(
+      m.file.slicers,
+      m.layout,
+      { sheet: m.title, rand, losses },
+      new Set([...charts, ...pivots.pivots].map((x) => x.id)),
+    );
+    const objects = [...charts, ...pivots.pivots, ...slicers];
     const protections = protectionsFromFile(m.file.protections, m.layout, m.title, rand, losses);
     const making = { sheet: m.title, rand, losses, ctx };
     const filters = filtersFromFile(m.file, m.layout, making);

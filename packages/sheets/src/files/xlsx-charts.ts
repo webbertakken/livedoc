@@ -282,6 +282,8 @@ export function xlsxDrawingXml(
   // Its pictures after its charts, each naming its media part by a relationship (standard-mapping.md "Pictures in the
   // file", D626).
   pictures: readonly { picture: FilePicture; relId: string }[] = [],
+  // Its table slicers' anchors, after the charts' (xlsx-slicers.ts).
+  slicerAnchors: readonly string[] = [],
 ): string {
   const anchors = charts.map((chart, i) => {
     const name = `Chart ${i + 1}`;
@@ -321,5 +323,5 @@ export function xlsxDrawingXml(
       '</xdr:oneCellAnchor>',
     ].join('');
   });
-  return `<xdr:wsDr xmlns:xdr="${XDR_NS}" xmlns:a="${A_NS}" xmlns:r="${R_NS}">${anchors.join('')}${pics.join('')}</xdr:wsDr>`;
+  return `<xdr:wsDr xmlns:xdr="${XDR_NS}" xmlns:a="${A_NS}" xmlns:r="${R_NS}">${[...anchors, ...pics, ...slicerAnchors].join('')}</xdr:wsDr>`;
 }

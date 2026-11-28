@@ -544,10 +544,37 @@ The table is the contract the readers and writers are tested against, one test p
 - **ODF** has no filter views nor slicers: written to ODS they are left out, listed in the Download and Convert
   dialog ("2 filter views are left out", "1 slicer is left out"); Google's ODS keeps only each view's range as a
   `Z_…_.wvu.FilterData` name, which LiveDoc neither writes nor reads as a view.
-- **XLSX slicers**: LiveDoc's record, and Excel's table slicer (`slicers`, `slicerCaches`, a drawing anchor) when
-  the slicer's range is a table's exactly. No table is made for one (Google makes a `Table_1`; a table the person
-  never made would change their workbook, Director 2026-11-27); a slicer over another range is listed in the Download
-  and Convert dialog: "1 slicer is not seen by Excel".
+- **XLSX slicers**: LiveDoc's record, and Excel's table slicer when the slicer's range is a table's exactly (its
+  whole range, or its header and data rows), as Google writes one: one slicer cache a table column
+  (`xl/slicerCaches/slicerCacheN.xml`, `x14:slicerCacheDefinition` named `SlicerCache_<table>_Col_<column id>`,
+  `sourceName` the column's name, its `x15:tableSlicerCache` naming the table part's `id` and the column's), listed
+  in the workbook's `x15:slicerCaches` `ext` with a `SlicerCache_…` defined name of `#N/A`; each sheet's slicers in
+  one `xl/slicers/slicerN.xml` (`x14:slicer`, `name` `Slicer_<n>` counted over the workbook, `cache`, `caption` its
+  title or else the column's name, `rowHeight` Google's), listed in the worksheet's `x14:slicerList` `ext`; and a
+  `oneCellAnchor` in the sheet's drawing, beside its charts, at the slicer's cell and size, holding Excel's
+  `mc:AlternateContent` slicer frame with Google's fallback shape. A slicer's default is never written into the
+  table's `autoFilter`, which stays the table's own filter: Excel and Google open it showing every item, and
+  LiveDoc's record brings the default back (D488). No table is made for one (Google makes a `Table_1`; a table the
+  person never made would change their workbook, Director 2026-11-27). A slicer over another range, or on a sheet
+  keeping a drawing from its file (as a chart is, below), or in a workbook keeping Excel's slicers from its file, is
+  the record's alone, listed in the Download and Convert dialog: "1 slicer is not seen by Excel".
+- **XLSX slicers read**: a file's table slicers are the sheets' slicers when every slicer cache it holds is a table's
+  over a table LiveDoc reads, every slicer names one, and every drawing holding a slicer holds charts and slicers
+  alone (D489): each over its table's header and data rows by its column, at its anchor's cell and size (within a
+  slicer's bounds, D483), its caption its title unless it is the column's name, with no default (the selection Excel
+  keeps in the table's `autoFilter` is the table's filter, read as one). Their parts, relationships, `ext`s and
+  `SlicerCache_` names are LiveDoc's to write again, never kept. Otherwise every slicer of the file stays kept as it
+  came, named once a sheet in the import report (`slicers_kept`: "Slicers LiveDoc cannot read stay as the file
+  had them on 1 sheet"), and the `SlicerCache_` names are kept without a line of their own.
+- **LiveDoc's record of slicers** (`slicers` in the filters record): each its `range` (A1), column (letter), `at`
+  (cell and offsets), `width`, `height`, and its `filter`, `title` and `pivots` when set, with `name` its Excel table
+  slicer's. Read whenever the record parses, not weighed against the fingerprint (a slicer hides no stored row,
+  D490): one naming a table slicer the file holds takes its default and Apply to Pivot Tables from the record and
+  the rest from the file; one naming a table slicer the file no longer holds was deleted there and is left out; one
+  naming none is read as recorded, its range cut to the grid. One that does not parse, past 50 a sheet, or starting
+  past the grid, is left out and named (`slicer_unread`: "1 slicer LiveDoc cannot read is left out").
+- **ODS slicers**: none (ODF has no slicers); the record leaves them out too, listed in the Download and Convert
+  dialog: "1 slicer is left out".
 - **LiveDoc's record**: one JSON object, `filter` (range as A1 text, conditions by column letter, a Custom Formula Is
   as its formula's text for the first row under the header, and `hidden`), `views` (each its name, range,
   conditions and sort) and `slicers`; in XLSX `livedoc:filters` (`record`, `fingerprint`) in the
@@ -1158,6 +1185,14 @@ The code cites each by its id.
   read from an OpenDocument file): it stays, its conditions still editable; in XLSX it is LiveDoc's record alone, no
   `autoFilter` nor `_xlnm._FilterDatabase` (Excel repairs a file whose sheet filter overlaps a table), its rows still
   hidden; logged once a read or write (`filter_beside_table`), never reported (the Director's ruling, 2026-11-27).
+- **D488** An XLSX table slicer's default: in LiveDoc's record alone, never in the table's `autoFilter`, so the
+  table's filter and its fingerprint stay its own; Excel and Google open it showing every item (the Director's
+  ruling, 2026-11-28).
+- **D489** A file's table slicers read all or none: Excel lists every slicer cache in one workbook `ext`, so a file
+  with one LiveDoc cannot read (a pivot table's, over a table it does not read, or in a drawing it keeps) keeps them
+  all as they came, and LiveDoc's own are its record's alone (default).
+- **D490** LiveDoc's record of slicers read apart from the filter's fingerprint: a slicer hides no stored row, so a
+  filter another app changed leaves the slicers as recorded (default).
 - **D453** A kept table at an XLSX write named as one of the sheets' own tables (by Excel's rules, case aside): dropped
   and counted (`kept_dropped`), the own table written, as D341 (default).
 - **D352** A file's protection LiveDoc does not read (a password-protected `protectedRange`, one of an unprotected

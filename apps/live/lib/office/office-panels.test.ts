@@ -59,6 +59,20 @@ describe('OpenPanels', () => {
     expect(OpenPanels.parse({ left: 'comments', right: 'gone' }, PANELS)).toEqual(OpenPanels.none);
     expect(OpenPanels.parse('nonsense', PANELS)).toEqual(OpenPanels.none);
   });
+
+  it('reads a panel open on one object as closed: it is never remembered', () => {
+    const editor = {
+      id: 'editor',
+      title: 'Editor',
+      side: 'right' as const,
+      item: 'edit',
+      object: true as const,
+    };
+    expect(OpenPanels.parse({ left: 'outline', right: 'editor' }, [...PANELS, editor])).toEqual({
+      left: 'outline',
+      right: null,
+    });
+  });
 });
 
 describe('clampPanelWidth', () => {

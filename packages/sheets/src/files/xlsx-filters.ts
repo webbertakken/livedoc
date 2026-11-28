@@ -7,6 +7,7 @@ import { escapeXmlAttribute } from '@livedoc/office-packages';
 import { formatRange, type GridRange } from '../address';
 import { a1Text, FILE_LAST_COL } from './a1-text';
 import type { FileFilterColumn, FileFilterView } from './file-filters';
+import type { FileSlicer } from './file-slicers';
 import { filterFingerprint, filterRecordText } from './filter-record';
 import type { StandardColumn, StandardOp, StandardTest } from './filter-standard';
 import type { FileSheet } from './workbook-file';
@@ -160,7 +161,13 @@ export const filterOverTables = (
   );
 
 /** A sheet's filter and filter views as XLSX (`index` its place, `title` its name as written). */
-export function xlsxFiltersOut(sheet: FileSheet, index: number, title: string): XlsxFiltersOut {
+export function xlsxFiltersOut(
+  sheet: FileSheet,
+  index: number,
+  title: string,
+  // Its slicers, each named as its Excel table slicer when it is one (xlsx-slicers.ts).
+  slicers: readonly FileSlicer[] = sheet.slicers ?? [],
+): XlsxFiltersOut {
   const out: XlsxFiltersOut = { own: [], record: null, names: [], views: [], beside: false };
   const filter = sheet.filter && inExcel(sheet.filter.range);
   const views = (sheet.filterViews ?? []).flatMap((v) => {
@@ -197,10 +204,14 @@ export function xlsxFiltersOut(sheet: FileSheet, index: number, title: string): 
       xml: `<customSheetViews>${each.join('')}</customSheetViews>`,
     });
   }
-  if (filter || views.length) {
+  if (filter || views.length || slicers.length) {
     const standard =
       filter && !out.beside ? { range: filter, cols: sheet.filter!.cols } : undefined;
-    const text = filterRecordText(filter ? { ...sheet.filter!, range: filter } : undefined, views);
+    const text = filterRecordText(
+      filter ? { ...sheet.filter!, range: filter } : undefined,
+      views,
+      slicers,
+    );
     const fingerprint = filterFingerprint(standard, views, xlsxHeld);
     out.record = `<livedoc:filters record="${escapeXmlAttribute(text)}" fingerprint="${fingerprint}"/>`;
   }

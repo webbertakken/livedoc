@@ -1,7 +1,8 @@
 // The parts a workbook's charts and pictures add to its XLSX (docs/specs/029-sheets/standard-mapping.md "Charts in the
 // file", "Pictures in the file"): per sheet with either, a drawing part and its relationship from the worksheet, a chart
 // part per chart and a media part per picture's image (one however many sheets place it), named past the parts the
-// file kept. A sheet keeping its file's own drawing writes none of its charts nor pictures (D261, D626).
+// file kept, its table slicers' anchors after them (xlsx-slicers.ts). A sheet keeping its file's own drawing writes
+// none of its charts nor pictures (D261, D626).
 import {
   PICTURE_EXTENSIONS,
   OOXML_CONTENT_TYPES,
@@ -18,9 +19,11 @@ import {
   type FilePictureBytes,
   type FilePictureFetches,
 } from './file-pictures';
+import type { FileSlicer } from './file-slicers';
 import type { FileLoss, FileSheet } from './workbook-file';
 import { xlsxChartXml, xlsxDrawingXml } from './xlsx-charts';
 import { ownIds, type XlsxKeptWriter } from './xlsx-kept-write';
+import { xlsxSlicerAnchorXml } from './xlsx-slicers';
 
 export type XlsxChartParts = {
   // By sheet: the worksheet's relationship id for its drawing, and that relationship.
@@ -66,6 +69,8 @@ export function xlsxChartParts(
   losses: FileLoss[],
   // The pictures' bytes the download read (D626).
   pictureBytes?: FilePictureFetches,
+  // By sheet, its slicers Excel draws as table slicers (none on a sheet keeping its file's drawing).
+  slicers: (sheet: number) => readonly FileSlicer[] = () => [],
 ): XlsxChartParts {
   const out: XlsxChartParts = { sheets: [], parts: [], relationships: [] };
   const taken = new Set(keptParts.map((p) => p.name));
@@ -80,7 +85,8 @@ export function xlsxChartParts(
       return;
     }
     const pictures = picturesWithBytes(sheet, pictureBytes, losses);
-    if (!charts.length && !pictures.length) {
+    const sliced = slicers(i);
+    if (!charts.length && !pictures.length && !sliced.length) {
       out.sheets.push(null);
       return;
     }
@@ -112,6 +118,7 @@ export function xlsxChartParts(
           charts,
           chartRels.map((r) => r.id),
           pictures.map(({ picture }, n) => ({ picture, relId: pictureRels[n]!.id })),
+          sliced.map((s, n) => xlsxSlicerAnchorXml(s, charts.length + pictures.length + n + 2)),
         ),
       ),
     });

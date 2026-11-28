@@ -38,6 +38,8 @@ import type { FileAt, KeptContent, KeptPart } from './kept-content';
 import type { FileSheet } from './workbook-file';
 import { chartRestored } from './chart-nearest';
 import { EMU_PER_PX, GROUPING, LIVEDOC_CHART_NS } from './xlsx-charts';
+import { SLICER_SIZE_MIN } from '../objects/sheet-slicer';
+import { SLICER_DRAWING_NS } from './xlsx-slicers';
 
 const C_NS = 'http://schemas.openxmlformats.org/drawingml/2006/chart';
 const A_NS = 'http://schemas.openxmlformats.org/drawingml/2006/main';
@@ -383,11 +385,15 @@ function markerOf(el: XmlElement | undefined): Marker | null {
   return Object.values(m).every(Number.isFinite) ? m : null;
 }
 
-// Where an anchor puts its chart, and its size; null for an anchor not on a cell.
+/** An anchor's cell, offsets and size, as a chart's or a slicer's. */
+export type AnchorPlace = Pick<FileChart, 'at' | 'width' | 'height'>;
+
+// Where an anchor puts its chart (or slicer, `min` its least size), and its size; null for an anchor not on a cell.
 function placeOf(
   anchor: XmlElement,
   sheet: FileSheet,
-): Pick<FileChart, 'at' | 'width' | 'height'> | null {
+  min: { width: number; height: number } = SHEET_CHART_SIZE_MIN,
+): AnchorPlace | null {
   if (!/^(one|two)CellAnchor$/.test(anchor.local)) return null;
   const from = markerOf(childElement(anchor, XDR_NS, 'from'));
   if (!from) return null;
@@ -413,23 +419,47 @@ function placeOf(
       dx: clamp(from.dx, 0, OBJECT_OFFSET_MAX),
       dy: clamp(from.dy, 0, OBJECT_OFFSET_MAX),
     },
-    width: clamp(width, SHEET_CHART_SIZE_MIN.width, SHEET_CHART_SIZE_MAX),
-    height: clamp(height, SHEET_CHART_SIZE_MIN.height, SHEET_CHART_SIZE_MAX),
+    width: clamp(width, min.width, SHEET_CHART_SIZE_MAX),
+    height: clamp(height, min.height, SHEET_CHART_SIZE_MAX),
   };
 }
 
 const text = (part: KeptPart) => new TextDecoder().decode(part.data);
 
-// A drawing's charts, every anchor one that qualifies, or null.
+const MC_NS = 'http://schemas.openxmlformats.org/markup-compatibility/2006';
+
+// The name of the table slicer an anchor holds in Excel's `mc:AlternateContent` frame; undefined for any other.
+function slicerNameOf(anchor: XmlElement): string | undefined {
+  const alternate = childElement(anchor, MC_NS, 'AlternateContent');
+  const choice = alternate && childElement(alternate, MC_NS, 'Choice');
+  const frame = choice && childElement(choice, XDR_NS, 'graphicFrame');
+  const data = a(a(frame, 'graphic'), 'graphicData');
+  if (!data || attributeOf(data, '', 'uri') !== SLICER_DRAWING_NS) return undefined;
+  const slicer = childElement(data, SLICER_DRAWING_NS, 'slicer');
+  return slicer && attributeOf(slicer, '', 'name');
+}
+
+type Drawn = { charts: FileChart[]; slicers: Map<string, AnchorPlace> };
+
+// A drawing's charts and its table slicers named in `slicers`, every anchor one that qualifies, or null.
 function drawingCharts(
   drawing: KeptPart,
   parts: ReadonlyMap<string, KeptPart>,
   sheet: FileSheet,
-): FileChart[] | null {
+  slicerNames: ReadonlySet<string>,
+): Drawn | null {
   const parsed = parseXml(text(drawing));
   if (!parsed.ok) return null;
   const charts: FileChart[] = [];
+  const slicers = new Map<string, AnchorPlace>();
   for (const anchor of childElements(parsed.root)) {
+    const slicer = slicerNameOf(anchor);
+    if (slicer !== undefined) {
+      const place = slicerNames.has(slicer) && placeOf(anchor, sheet, SLICER_SIZE_MIN);
+      if (!place || slicers.has(slicer)) return null;
+      slicers.set(slicer, place);
+      continue;
+    }
     const frame = childElement(anchor, XDR_NS, 'graphicFrame');
     const ref = c(a(a(frame, 'graphic'), 'graphicData'), 'chart');
     const relId = ref && attributeOf(ref, R_NS, 'id');
@@ -455,7 +485,7 @@ function drawingCharts(
     );
     charts.push({ ...chart, kept: { part: name!, sum: fileChartSum(chart) } });
   }
-  return charts.length ? charts : null;
+  return charts.length || slicers.size ? { charts, slicers } : null;
 }
 
 const DRAWING = /^<(?:[\w.-]+:)?drawing\b/;
@@ -468,12 +498,19 @@ const REL_ID = /\s[\w.-]+:id="([^"]+)"/;
 export function readXlsxCharts(
   sheets: readonly FileSheet[],
   kept: KeptContent<FileAt> | undefined,
-): { sheets: FileSheet[]; kept: KeptContent<FileAt> | undefined } {
+  // By sheet, the table slicers its drawing may hold (xlsx-slicers-read.ts); their places come back in `slicers`.
+  slicerNames: (sheet: number) => ReadonlySet<string> = () => new Set(),
+): {
+  sheets: FileSheet[];
+  kept: KeptContent<FileAt> | undefined;
+  slicers?: Map<string, AnchorPlace>[];
+} {
   if (!kept) return { sheets: [...sheets], kept };
   const parts = new Map(kept.parts.map((p) => [p.name, p]));
   let items = kept.items;
   let relationships = kept.relationships;
   const gone = new Set<string>();
+  const placed = sheets.map(() => new Map<string, AnchorPlace>());
   const out = sheets.map((sheet, i) => {
     const item = kept.items.find(
       (it) => it.place === 'worksheet' && it.at.sheet === i && DRAWING.test(it.xml),
@@ -483,15 +520,18 @@ export function readXlsxCharts(
       (r) => r.from === 'sheet' && r.at.sheet === i && r.id === relId && !r.external,
     );
     const drawing = rel ? parts.get(rel.target.replace(/^\//, '')) : undefined;
-    const charts = drawing ? drawingCharts(drawing, parts, sheet) : null;
-    if (!charts) return sheet;
+    const drawn = drawing ? drawingCharts(drawing, parts, sheet, slicerNames(i)) : null;
+    if (!drawn) return sheet;
+    const { charts } = drawn;
+    placed[i] = drawn.slicers;
     items = items.filter((it) => it !== item);
     relationships = relationships.filter((r) => r !== rel);
     gone.add(drawing!.name);
-    return { ...sheet, charts };
+    return charts.length ? { ...sheet, charts } : sheet;
   });
   return {
     sheets: out,
     kept: { ...kept, items, relationships, parts: kept.parts.filter((p) => !gone.has(p.name)) },
+    ...(placed.some((m) => m.size) ? { slicers: placed } : {}),
   };
 }
