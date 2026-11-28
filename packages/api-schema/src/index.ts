@@ -674,6 +674,7 @@ export * from './changesets';
 export * from './items';
 export * from './sheets';
 export * from './sheet-changesets';
+export * from './text-changesets';
 export * from './workbook';
 // Only its types: its codec reads the office files' entry, so callers import it from '@livedoc/api-schema/workbook-kept'.
 export type {

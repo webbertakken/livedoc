@@ -31,6 +31,27 @@ export const UndoSteps = {
     return { insertions, deletions: VersionSnapshots.minus(after.ds, before.ds) };
   },
 
+  /** What an update wrote and deleted: each client's clocks it holds, and its deletions. */
+  ofUpdate: (update: Uint8Array): UndoStep => {
+    const { structs, ds } = Y.decodeUpdate(update);
+    const ranges = new Map<number, { from: number; to: number }>();
+    for (const struct of structs) {
+      const { client, clock } = struct.id;
+      const held = ranges.get(client);
+      const to = clock + struct.length;
+      ranges.set(
+        client,
+        held
+          ? { from: Math.min(held.from, clock), to: Math.max(held.to, to) }
+          : { from: clock, to },
+      );
+    }
+    const insertions = Y.createDeleteSet();
+    for (const [client, { from, to }] of ranges)
+      insertions.clients.set(client, [deleteRange(from, to - from)]);
+    return { insertions, deletions: ds };
+  },
+
   /** The update that undoes the step on `doc`, written by `doc`'s client; null when the step is empty. */
   undoUpdate: (doc: Y.Doc, step: UndoStep): Uint8Array | null => {
     if (isEmpty(step)) return null;

@@ -24,3 +24,8 @@ export function mintChangesetId(random: Random = RANDOM): string {
 export function mintSheetChangesetId(random: Random = RANDOM): string {
   return mint('sc_', random);
 }
+
+// A text document changeset's id (agent-changesets.md "A text document's changesets"): `tc_` and the same 10 characters.
+export function mintTextChangesetId(random: Random = RANDOM): string {
+  return mint('tc_', random);
+}

@@ -465,6 +465,36 @@ const WORKBOOK_RANGE_SOURCES_STEP = `
 ALTER TABLE workbook ADD COLUMN range_sources TEXT;
 `;
 
+// A text document's changesets (docs/specs/024-agents/agent-changesets.md "A text document's changesets"): one row each
+// beside its tab, going with it; its operations, result lines, undo step (base64) and the threads it began beside it.
+// `reverted_by` names the changeset that reverted it, so a second revert writes nothing.
+const TEXT_CHANGESETS_STEP = `
+CREATE TABLE IF NOT EXISTS text_changesets (
+  id           TEXT    PRIMARY KEY,
+  document_id  TEXT    NOT NULL,
+  tab_id       TEXT    NOT NULL REFERENCES tabs (id) ON DELETE CASCADE,
+  document_tab TEXT    NOT NULL,
+  author_id    TEXT    NOT NULL,
+  author_name  TEXT    NOT NULL,
+  author_color TEXT    NOT NULL,
+  token_id     TEXT,
+  summary      TEXT,
+  added        INTEGER NOT NULL,
+  changed      INTEGER NOT NULL,
+  revert_of    TEXT,
+  reverted_by  TEXT,
+  created_at   INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS text_changesets_document_created ON text_changesets (document_id, created_at);
+CREATE INDEX IF NOT EXISTS text_changesets_created ON text_changesets (created_at);
+CREATE TABLE IF NOT EXISTS text_changeset_parts (
+  changeset_id TEXT NOT NULL REFERENCES text_changesets (id) ON DELETE CASCADE,
+  part         TEXT NOT NULL CHECK (part IN ('ops', 'results', 'step', 'threads')),
+  data         TEXT NOT NULL,
+  PRIMARY KEY (changeset_id, part)
+);
+`;
+
 // The forms a spreadsheet takes responses from (docs/specs/029-sheets/plan-links.md "Form responses", D506): a JSON
 // array of { documentId, tabId, sheetId }, connected by an Editor of both; a copy's row starts without.
 const WORKBOOK_FORMS_STEP = `
@@ -861,6 +891,7 @@ export const DOCUMENT_SCHEMA_STEPS: readonly string[] = [
   SHEET_CELL_NOTES_STEP,
   WORKBOOK_FORMS_STEP,
   SHEET_THREADS_STEP,
+  TEXT_CHANGESETS_STEP,
 ];
 
 export const DOCUMENT_SCHEMA_VERSION = DOCUMENT_SCHEMA_STEPS.length;
