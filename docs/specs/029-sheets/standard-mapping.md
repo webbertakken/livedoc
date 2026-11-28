@@ -856,9 +856,11 @@ and Google Sheets show it (D648, D649).
   cell, and the worksheet's `legacyDrawing` naming it, in its schema place, as Excel needs to show a note.
 - **Reading**: ODF's `office:annotation` in a cell (its paragraphs' plain text joined by line breaks). XLSX's notes
   part of a sheet (each `comment`'s runs' text joined, its `ref` the cell). A note on a cell the read leaves out
-  goes with that cell; a note longer than `SHEET_NOTE_MAX` is cut to it and the conversion report counts it. The
-  notes part, its VML drawing and `legacyDrawing` are read whole and no longer kept; a VML drawing holding other
-  shapes than notes (form controls) stays [kept](#unknown-content) and its notes are written into it (default).
+  goes with that cell; `\r\n` is read as a line break, other control characters dropped, and a note longer than
+  `SHEET_NOTE_MAX` cut to it (D650). The notes part, its VML drawing and `legacyDrawing` are read whole and no longer
+  kept; a VML drawing's other shapes (legacy form controls) are not kept (D651).
+- **LibreOffice 24.2** aborts reading a note in an ODF document without `office:automatic-styles`, so a workbook
+  with notes always writes the element, empty when it has no automatic style (D652).
 - **Threads come later**: a cell's XLSX threaded comment (`xl/threadedComments`) and the note Excel writes in its
   place for older readers are a comment thread's ([Comments](review.md#comments)); until threads are read, that note
   is read as the cell's note, its text as Excel wrote it.
@@ -1325,5 +1327,10 @@ The code cites each by its id.
 - **D295** A dropdown XLSX's list cannot say: a rule allowing any value, LiveDoc's rule beside it (default).
 - **D296** A standard rule read without LiveDoc's: the closest LiveDoc rule, one a rectangle; error messages and
   titles left out (default).
+- **D650** A file's note past `SHEET_NOTE_MAX`: cut to it, as rare as it is; not counted in the report (default).
+- **D651** An XLSX VML drawing's shapes other than notes (legacy form controls): not kept, the drawing being LiveDoc's to
+  write for its notes (default).
+- **D652** ODF `office:automatic-styles` with notes: always written, empty when no automatic style is needed, as
+  LibreOffice 24.2 aborts reading a note without it (default).
 - **D261** A sheet's own charts beside a drawing kept from its file: Not written, the sheet named (`charts_unwritten`),
   as a worksheet holds one drawing and ODF one `table:shapes` (default).

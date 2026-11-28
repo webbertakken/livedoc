@@ -26,12 +26,13 @@ function sheetOf(id: string, rows = 3, cols = 3): Sheet {
   return emptySheet({ id, tabId: `t-${id}`, title: id, layout: emptyLayout(rand, rows, cols) });
 }
 
-// A kept note anchored at `at`, by position in a file or by id in the model.
-function note<At>(at: At, place: KeptPlace = 'cell'): KeptItem<At> {
+// A kept cell child (a detective's marks, which LiveDoc does not read) anchored at `at`, by position in a file or by
+// id in the model.
+function detective<At>(at: At, place: KeptPlace = 'cell'): KeptItem<At> {
   return {
     place,
-    xml: '<office:annotation/>',
-    ns: { office: 'urn:oasis:names:tc:opendocument:xmlns:office:1.0' },
+    xml: '<table:detective/>',
+    ns: { table: 'urn:oasis:names:tc:opendocument:xmlns:table:1.0' },
     at,
   };
 }
@@ -43,7 +44,7 @@ describe('kept anchors', () => {
     const two = sheetOf('two');
     const kept: KeptContent = {
       standard: 'odf',
-      items: [note({}), note({ sheet: 1 }, 'table-before'), note({ sheet: 0, r: 2, c: 1 })],
+      items: [detective({}), detective({ sheet: 1 }, 'table-before'), detective({ sheet: 0, r: 2, c: 1 })],
       parts: [],
       relationships: [],
     };
@@ -67,7 +68,7 @@ describe('kept anchors', () => {
     const one = sheetOf('one');
     const kept: KeptContent = {
       standard: 'odf',
-      items: [note({}), note({ sheet: 3 }), note({ sheet: 0, r: 9, c: 0 })],
+      items: [detective({}), detective({ sheet: 3 }), detective({ sheet: 0, r: 9, c: 0 })],
       parts: [],
       relationships: [],
     };
@@ -75,9 +76,9 @@ describe('kept anchors', () => {
     const stored: KeptContent<StoredAt> = {
       standard: 'odf',
       items: [
-        note({ sheet: 'gone' }),
-        note({ sheet: 'one', r: 'no-such-row', c: one.layout.cols[0]! }),
-        note({ sheet: 'one', r: one.layout.rows[0]!, c: one.layout.cols[0]! }),
+        detective({ sheet: 'gone' }),
+        detective({ sheet: 'one', r: 'no-such-row', c: one.layout.cols[0]! }),
+        detective({ sheet: 'one', r: one.layout.rows[0]!, c: one.layout.cols[0]! }),
       ],
       parts: [],
       relationships: [],
@@ -93,8 +94,8 @@ describe('kept anchors', () => {
     const kept: KeptContent<StoredAt> = {
       standard: 'odf',
       items: [
-        note({ sheet: 'one', r: one.layout.rows[1]!, c: one.layout.cols[1]! }),
-        note<StoredAt>({ sheet: 'gone', r: 'r', c: 'c' }),
+        detective({ sheet: 'one', r: one.layout.rows[1]!, c: one.layout.cols[1]! }),
+        detective<StoredAt>({ sheet: 'gone', r: 'r', c: 'c' }),
       ],
       parts: [],
       relationships: [],
@@ -103,7 +104,7 @@ describe('kept anchors', () => {
     expect(written.losses).toEqual([{ k: 'kept_dropped', count: 1 }]);
     const read = await readOds(written.data);
     expect(read.ok && read.file.kept?.items.map((i) => [i.xml, i.at])).toEqual([
-      ['<office:annotation/>', { sheet: 0, r: 1, c: 1 }],
+      ['<table:detective/>', { sheet: 0, r: 1, c: 1 }],
     ]);
     expect(writeWorkbook([one], record, 'T', 'xlsx', kept).losses).toEqual([]);
     const alive = { ...kept, items: kept.items.slice(0, 1) };
@@ -117,18 +118,18 @@ describe('kept anchors', () => {
     const kept: KeptContent<StoredAt> = {
       standard: 'odf',
       items: [
-        note(at),
-        note(at),
+        detective(at),
+        detective(at),
         { place: 'spreadsheet-after', xml: '<table:named-expressions/>', ns: {}, at: {} },
         { place: 'styles', xml: '<style:style/>', ns: {}, at: {} },
-        note({ sheet: 'gone' }),
+        detective({ sheet: 'gone' }),
       ],
       parts: [],
       relationships: [],
     };
     const odsRecord = WorkbookRecord.opened(record, 'ods');
     expect(workbookConversion([one], odsRecord, 'xlsx', kept).losses).toEqual([
-      { k: 'kept', count: 3, kinds: ['notes', 'named-ranges'] },
+      { k: 'kept', count: 3, kinds: ['other', 'named-ranges'] },
     ]);
     // Nothing of it is left behind going back to its own standard.
     const xlsxRecord = WorkbookRecord.opened(record, 'xlsx');
@@ -153,7 +154,7 @@ describe('kept anchors', () => {
       { sheet: sheet.id, r: sheet.layout.rows[0], c: sheet.layout.cols[0] },
     ]);
     const cut = sheetsFromFile(
-      { ...read.file, kept: { ...read.file.kept!, items: [note({ sheet: 5 })] } },
+      { ...read.file, kept: { ...read.file.kept!, items: [detective({ sheet: 5 })] } },
       'en-GB',
       rand,
     );

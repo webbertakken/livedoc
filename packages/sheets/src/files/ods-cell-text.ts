@@ -66,6 +66,20 @@ export function cellLinkHref(cell: XmlElement): string | null {
   return more.length === 0 && href ? href : null;
 }
 
+/**
+ * A cell's note (standard-mapping.md "Notes in the file", D648): its annotation's paragraphs as lines, their marks
+ * dropped; null when it has none, or one with no text.
+ */
+export function cellNote(cell: XmlElement): string | null {
+  const annotation = childElements(cell).find((c) => c.uri === OFFICE && c.local === 'annotation');
+  if (!annotation) return null;
+  const lines = childElements(annotation)
+    .filter((c) => c.uri === TEXT && c.local === 'p')
+    .map((p) => p.children.map(inlineText).join(''));
+  const text = lines.join('\n');
+  return text === '' ? null : text;
+}
+
 /** The text kept paragraphs read as, as the cell's would; null when one does not parse. */
 export function keptParagraphsText(
   items: readonly { xml: string; ns: XmlBindings }[],

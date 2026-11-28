@@ -173,6 +173,18 @@ export const WRITTEN_CONSTRUCTS: Readonly<Record<string, WorkbookFile>> = {
     ],
     pictureBytes: new Map([['dot', { data: ONE_PIXEL_PNG, type: 'image/png' as const }]]),
   },
+  // standard-mapping.md "Notes in the file": a note on a value, on an empty cell, of two lines, of marked-up text, on
+  // two sheets.
+  notes: {
+    sheets: [
+      sheet('Notes', [
+        { r: 0, c: 0, value: { k: 's', v: 'Total' }, note: 'Check the total' },
+        { r: 1, c: 1, note: 'Only a note\non two lines' },
+        { r: 2, c: 2, value: { k: 'n', v: 7 }, note: 'Tags <b> & "quotes"' },
+      ]),
+      sheet('Second', [{ r: 0, c: 0, value: { k: 's', v: 'x' }, note: 'On the second sheet' }]),
+    ],
+  },
   // standard-mapping.md "Links in the file": a web address, an email's, a range and a sheet of the workbook, a number
   // linked, and a cell's text of two lines.
   links: {

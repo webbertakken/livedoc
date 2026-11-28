@@ -73,6 +73,7 @@ import {
 } from './xlsx-parts';
 import { readXlsxLines } from './xlsx-lines';
 import { cellsLinked, readXlsxHyperlinks } from './xlsx-hyperlinks';
+import { cellsNoted, NOTES_RELATIONSHIP, readXlsxNotes, type ReadNote } from './xlsx-notes';
 import { readXlsxTabLook } from './xlsx-tab-look';
 import { isRichItem, itemText } from './xlsx-cell-text';
 
@@ -123,6 +124,17 @@ const text = (pkg: OoxmlPackage, part: string | undefined): string | undefined =
   const bytes = part === undefined ? undefined : pkg.parts.get(part);
   return bytes && new TextDecoder().decode(bytes);
 };
+
+// A worksheet's notes, from the notes part its relationships name (standard-mapping.md "Notes in the file"); none
+// when it names none, or one that is not there or does not parse.
+function sheetNotes(pkg: OoxmlPackage, part: string): ReadNote[] {
+  const rel = (pkg.relationships.get(part) ?? []).find(
+    (r) => r.type === NOTES_RELATIONSHIP && !r.external,
+  );
+  const xml = rel && text(pkg, resolvePartName(part, rel.target));
+  const parsed = xml === undefined ? null : parseXml(xml);
+  return parsed?.ok ? readXlsxNotes(parsed.root) : [];
+}
 
 const children = (element: XmlElement | undefined, ns: string, local: string): XmlElement[] =>
   element ? childElements(element).filter((e) => e.uri === ns && e.local === local) : [];
@@ -423,7 +435,12 @@ export async function readXlsx(
       pkg.relationships.get(part!) ?? [],
       (title) => sheetNames.has(title.toLowerCase()),
     );
+    // Its cells' notes (standard-mapping.md "Notes in the file"): its notes part read, its VML drawing LiveDoc's to
+    // write, so its `legacyDrawing` is read too.
+    const notes = sheetNotes(pkg, part!);
+    const legacy = childElement(worksheet.root, ns, 'legacyDrawing');
     const read = new Set([
+      ...(legacy ? [legacy] : []),
       ...rules.read,
       ...validations.read,
       ...protection.read,
@@ -452,6 +469,7 @@ export async function readXlsx(
       (cell, vm) => richCells.push({ sheet: index, cell, vm }),
     );
     cellsLinked(cells.cells, hyperlinks.links, { rows: ROWS_MAX, cols: COLS_MAX });
+    cellsNoted(cells.cells, notes, { rows: ROWS_MAX, cols: COLS_MAX });
     sheets.push({
       ...cells,
       ...readXlsxTabLook(sheet, worksheet.root, ns),

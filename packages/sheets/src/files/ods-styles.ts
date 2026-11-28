@@ -143,10 +143,13 @@ export class OdsStyles {
     return name;
   }
 
-  /** `office:automatic-styles` with the `kept` ones after the cells', or nothing when there are none. */
-  automaticStyles(kept: readonly string[] = []): string[] {
+  /**
+   * `office:automatic-styles` with the `kept` ones after the cells', or nothing when there are none and none is
+   * `needed`: LibreOffice 24.2 aborts reading a cell's note in a document without the element (D652).
+   */
+  automaticStyles(kept: readonly string[] = [], needed = false): string[] {
     const styles = [...this.tableXml, ...this.lineXml, ...this.xml, ...kept];
-    return styles.length === 0
+    return styles.length === 0 && !needed
       ? []
       : ['<office:automatic-styles>', ...styles, '</office:automatic-styles>'];
   }

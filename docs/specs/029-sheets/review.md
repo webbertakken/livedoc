@@ -96,5 +96,6 @@ Each default below was applied where this spec is silent or qualitative, and hol
   (default).
 - **D648** A note's text in a file: plain; ODF's paragraphs joined by line breaks, XLSX's runs joined, their
   formatting dropped, each line written back as a paragraph (ODF) or the text of one run (XLSX) (default).
+- **D650** to **D652**: notes in the files ([Standard mapping](standard-mapping.md#defaults)).
 - **D649** An XLSX note's author: not read (Google's notes have none); written as the file's `LiveDoc` author, its
   text without the author's prefix Excel adds by hand (default).
