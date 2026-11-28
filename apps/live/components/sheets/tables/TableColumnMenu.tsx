@@ -2,8 +2,9 @@
 
 // A table column's menu (docs/specs/029-sheets/data-tools.md "Tables" "Column menu"), under the column's name: Edit
 // Column Type (the types as a list, the column's own ticked; Dropdown opens the dropdown rule's options form), Sort A
-// to Z and Z to A (the data rows), Insert 1 Column Left and Right, and Delete Sheet Column (D450). Every item is an Editor's,
-// dimmed for anyone else, as the table menu's are.
+// to Z and Z to A (the data rows), Group by Column (a group by view, anyone's: "Group by view", D498), Insert 1 Column
+// Left and Right, and Delete Sheet Column (D450). Every other item is an Editor's, dimmed for anyone else, as the
+// table menu's are.
 import { useEffect, useRef, useState } from 'react';
 import { Button } from '@livedoc/ui';
 import { tableColumnOptions, type SheetTable, type TableColumnType } from '@livedoc/sheets';
@@ -25,6 +26,7 @@ export function TableColumnMenu({
   name,
   position,
   onClose,
+  onGroupBy,
 }: {
   table: SheetTable;
   colId: string;
@@ -32,6 +34,8 @@ export function TableColumnMenu({
   name: string;
   position: { x: number; y: number };
   onClose: () => void;
+  // Group by Column: a group by view of the table by this column.
+  onGroupBy: () => void;
 }) {
   const c = useSheetController();
   const actions = useSheetActions();
@@ -90,6 +94,11 @@ export function TableColumnMenu({
               icon={<Glyph t="↑" />}
               disabled={!editor}
               onClick={run(() => actions.sortTableColumn(table.id, colId, false))}
+            />
+            <MenuActionRow
+              label="Group by Column"
+              icon={<Glyph t="☰" />}
+              onClick={run(onGroupBy)}
             />
             <ContextMenuDivider />
             <MenuActionRow

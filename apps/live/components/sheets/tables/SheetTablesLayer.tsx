@@ -2,8 +2,9 @@
 
 // Each table's chip over the grid and its table menu (docs/specs/029-sheets/data-tools.md "Tables"): the table's name
 // above its header row's first cell (on it, when the header is the sheet's first row). Pressing it, or Enter or Space
-// on it, opens the menu: Table Settings, Rename (the name in place on the chip), Select Table, Filter, Convert to Range
-// and Delete Table, as Google's table menu. Each header cell holds its column's ▾ button, opening the column menu (also
+// on it, opens the menu: Table Settings, Rename (the name in place on the chip), Select Table, Filter, Group By (the
+// table's columns, each a group by view: "Group by view", D498), Convert to Range and Delete Table, as Google's table
+// menu. Each header cell holds its column's ▾ button, opening the column menu (also
 // Ctrl+Alt+\ on a cell of the table); while the table's own filter is on (and no filter view is open) it is the
 // column's filter button, as Google's, drawn as a funnel once the column is filtered (D481, D482). Everyone sees them;
 // what changes the table is an Editor's, dimmed for others.
@@ -26,6 +27,7 @@ import { FilterIcon } from '../sheet-icons';
 import { useSheetController } from '../sheet-controller';
 import { rectOf } from '../SheetSelectionLayer';
 import { useSheetActions } from '../useSheetActions';
+import { useFilterViewActions } from '../useFilterViewActions';
 import { TableColumnMenuContext, TableSettingsContext } from './table-settings-context';
 import { TableColumnMenu } from './TableColumnMenu';
 
@@ -48,6 +50,9 @@ export function SheetTablesLayer() {
   const actions = useSheetActions();
   const open = useContext(TableSettingsContext);
   const [menu, setMenu] = useState<MenuAt | null>(null);
+  // The table menu's Group By: its columns listed in the menu's place.
+  const [groupBy, setGroupBy] = useState(false);
+  const viewActions = useFilterViewActions(c);
   const [renaming, setRenaming] = useState<string | null>(null);
   const [columnMenu, setColumnMenu] = useState<ColumnMenuAt | null>(null);
   const [filterMenu, setFilterMenu] = useState<ColumnMenuAt | null>(null);
@@ -110,6 +115,7 @@ export function SheetTablesLayer() {
   };
   const run = (fn: () => void) => () => {
     setMenu(null);
+    setGroupBy(false);
     fn();
   };
   return (
@@ -237,48 +243,82 @@ export function SheetTablesLayer() {
         <ContextMenu
           position={{ x: menu.x, y: menu.y }}
           label={`${shown.name} table menu`}
-          onClose={() => setMenu(null)}
+          onClose={() => {
+            setMenu(null);
+            setGroupBy(false);
+          }}
         >
-          <MenuHeader title={shown.name} />
-          <MenuActionRow
-            label="Table Settings"
-            icon={<Glyph t="⚙" />}
-            onClick={run(() => {
-              inTable(shown);
-              open(shown.id);
-            })}
-          />
-          <MenuActionRow
-            label="Rename"
-            icon={<Glyph t="✎" />}
-            disabled={!editor}
-            onClick={run(() => setRenaming(shown.id))}
-          />
-          <MenuActionRow
-            label="Select Table"
-            icon={<Glyph t="▦" />}
-            onClick={run(() => actions.selectTable(shown.id))}
-          />
-          <MenuActionRow
-            label="Filter"
-            icon={shown.filter ? <Glyph t="✓" /> : <span aria-hidden />}
-            checked={shown.filter !== undefined}
-            disabled={!editor}
-            onClick={run(() => actions.toggleTableFilter(shown.id))}
-          />
-          <ContextMenuDivider />
-          <MenuActionRow
-            label="Convert to Range"
-            icon={<Glyph t="⊞" />}
-            disabled={!editor}
-            onClick={run(() => actions.convertToRange(shown.id))}
-          />
-          <MenuActionRow
-            label="Delete Table"
-            icon={<Glyph t="−" />}
-            disabled={!editor}
-            onClick={run(() => actions.deleteTable(shown.id))}
-          />
+          <MenuHeader title={groupBy ? 'Group By' : shown.name} />
+          {groupBy ? (
+            <div role="group" aria-label="Group by column">
+              <MenuActionRow
+                label="Back"
+                icon={<Glyph t="‹" />}
+                onClick={() => setGroupBy(false)}
+              />
+              <ContextMenuDivider />
+              {namesOf(shown).map((name, i) => {
+                const colId =
+                  c.sheet.layout.cols[(posRangeOf(c.sheet.layout, shown)?.c1 ?? 0) + i]!;
+                return (
+                  <MenuActionRow
+                    key={colId}
+                    label={name}
+                    icon={<span aria-hidden />}
+                    onClick={run(() => viewActions.createGroup(shown.id, colId))}
+                  />
+                );
+              })}
+            </div>
+          ) : (
+            <>
+              <MenuActionRow
+                label="Table Settings"
+                icon={<Glyph t="⚙" />}
+                onClick={run(() => {
+                  inTable(shown);
+                  open(shown.id);
+                })}
+              />
+              <MenuActionRow
+                label="Rename"
+                icon={<Glyph t="✎" />}
+                disabled={!editor}
+                onClick={run(() => setRenaming(shown.id))}
+              />
+              <MenuActionRow
+                label="Select Table"
+                icon={<Glyph t="▦" />}
+                onClick={run(() => actions.selectTable(shown.id))}
+              />
+              <MenuActionRow
+                label="Filter"
+                icon={shown.filter ? <Glyph t="✓" /> : <span aria-hidden />}
+                checked={shown.filter !== undefined}
+                disabled={!editor}
+                onClick={run(() => actions.toggleTableFilter(shown.id))}
+              />
+              <ContextMenuDivider />
+              <MenuActionRow
+                label="Convert to Range"
+                icon={<Glyph t="⊞" />}
+                disabled={!editor}
+                onClick={run(() => actions.convertToRange(shown.id))}
+              />
+              <MenuActionRow
+                label="Group By"
+                icon={<Glyph t="☰" />}
+                onClick={() => setGroupBy(true)}
+              />
+              <ContextMenuDivider />
+              <MenuActionRow
+                label="Delete Table"
+                icon={<Glyph t="−" />}
+                disabled={!editor}
+                onClick={run(() => actions.deleteTable(shown.id))}
+              />
+            </>
+          )}
         </ContextMenu>
       ) : null}
       {columnMenu && columnTable ? (
@@ -288,6 +328,7 @@ export function SheetTablesLayer() {
           name={columnName(columnTable, columnMenu.colId)}
           position={{ x: columnMenu.x, y: columnMenu.y }}
           onClose={() => setColumnMenu(null)}
+          onGroupBy={() => viewActions.createGroup(columnTable.id, columnMenu.colId)}
         />
       ) : null}
       {filterMenu && filterTable ? (

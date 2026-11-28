@@ -28,6 +28,7 @@ import { displayValue, isError, posRangeOf, single } from '@livedoc/sheets';
 import { useSheetController } from './sheet-controller';
 import { SheetProtectionLayer } from './SheetProtectionLayer';
 import { SheetTablesLayer } from './tables/SheetTablesLayer';
+import { SheetGroupBands } from './SheetGroupBands';
 import { SheetPivotsLayer } from './pivots/SheetPivotsLayer';
 import { SheetCells } from './SheetCells';
 import { SheetHeaders } from './SheetHeaders';
@@ -415,6 +416,8 @@ export function SheetGrid({
               />
               <SheetProtectionLayer />
               <SheetTablesLayer />
+              {/* A group by view's header rows (data-tools.md "Group by view"). */}
+              <SheetGroupBands />
               <SheetPivotsLayer />
               {c.interactive ? (
                 <SheetSelectionLayer

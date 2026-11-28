@@ -2,9 +2,11 @@
 // filtered-out lines are zero), the frozen panes' sizes, the visible window for a scroll position, and the cell
 // under a point. Pure, so the grid's maths is tested without a DOM. Under a drawn order (data-tools.md "The drawn
 // order") rows are laid out in that order while every position stays the sheet's: read a row's place through
-// rowTop and rowEnd, never `rows` by a position.
+// rowTop and rowEnd, never `rows` by a position. A group by view's header rows are bands the rows leave between them
+// (DECISIONS.md "Group headers are gaps"): no position of the grid, drawn and pressed on their own.
 import {
   DrawnOrder,
+  type DrawnGroup,
   axisOffsets,
   colWidth,
   deepestOf,
@@ -23,14 +25,22 @@ export const COL_HEADER_PX = 24;
 export const OUTLINE_DEPTH_PX = 12;
 export const OUTLINE_BAND_PAD_PX = 4;
 const GRID_OVERSCAN = 4;
+// A group by view's header row (data-tools.md "Group by view", D497).
+export const GROUP_HEADER_PX = 28;
+
+// A group's header band: its group, and its top in the grid (the band ends where the group's first row starts).
+export type GroupBand = { group: DrawnGroup; top: number };
 
 export type Geometry = {
-  rows: Float64Array; // rows[d] is the top of the row drawn d-th; rows[n] the total height
+  rows: Float64Array; // rows[d] is the top of the row drawn d-th (under its group's band); rows[n] the total height
   // The order rows are drawn in, when a view draws its own; null draws the sheet's.
   order: DrawnOrder | null;
   // Where row r is drawn, and the row drawn d-th (the same number without an order).
   drawnOf: (r: number) => number;
   storedAt: (d: number) => number;
+  // The group header bands, in drawn order, and the band's height above the row drawn d-th (0 with none).
+  bands: readonly GroupBand[];
+  gapAt: (d: number) => number;
   cols: Float64Array;
   frozenRows: number;
   frozenCols: number;
@@ -73,7 +83,7 @@ export function geometryOf(
   const ix = layoutIndex(layout);
   const hiddenRows = new Set([...ix.hiddenRows, ...filteredOut]);
   const drawnIds = order ? Array.from(order.storedAt, (r) => layout.rows[r]!) : layout.rows;
-  const rows = axisOffsets(drawnIds, heightOf, hiddenRows);
+  const { rows, bands, gaps } = withBands(axisOffsets(drawnIds, heightOf, hiddenRows), order);
   const cols = axisOffsets(layout.cols, (id) => colWidth(layout, id), ix.hiddenCols);
   const frozenRows = Math.min(layout.frozenRows ?? 0, layout.rows.length);
   const frozenCols = Math.min(layout.frozenCols ?? 0, layout.cols.length);
@@ -94,10 +104,13 @@ export function geometryOf(
     order,
     drawnOf: order ? (r) => order.drawnOf[r] ?? r : (r) => r,
     storedAt: order ? (d) => order.storedAt[d] ?? d : (d) => d,
+    bands,
+    gapAt: gaps ? (d) => gaps.get(d) ?? 0 : () => 0,
     cols,
     frozenRows,
     frozenCols,
-    frozenHeight: rows[frozenRows]!,
+    // A band before the first scrolling row scrolls with it.
+    frozenHeight: rows[frozenRows]! - (gaps?.get(frozenRows) ?? 0),
     frozenWidth: cols[frozenCols]!,
     merges,
     covered,
@@ -112,13 +125,36 @@ export function geometryOf(
   };
 }
 
+// The offsets with a band before each group that has a row to show (a group the view hides all of has none).
+function withBands(
+  base: Float64Array,
+  order: DrawnOrder | null,
+): { rows: Float64Array; bands: GroupBand[]; gaps: Map<number, number> | null } {
+  const shown = (order?.groups ?? []).filter((g) => g.count > 0);
+  if (!shown.length) return { rows: base, bands: [], gaps: null };
+  const rows = new Float64Array(base.length);
+  const bands: GroupBand[] = [];
+  let add = 0;
+  let next = 0;
+  for (let d = 0; d < base.length; d++) {
+    if (next < shown.length && shown[next]!.at === d) {
+      bands.push({ group: shown[next]!, top: base[d]! + add });
+      add += GROUP_HEADER_PX;
+      next++;
+    }
+    rows[d] = base[d]! + add;
+  }
+  return { rows, bands, gaps: new Map(bands.map((b) => [b.group.at, GROUP_HEADER_PX])) };
+}
+
 // Row r's top and bottom in the grid, wherever it is drawn.
 export function rowTop(g: Pick<Geometry, 'rows' | 'drawnOf'>, r: number): number {
   return g.rows[g.drawnOf(r)]!;
 }
 
-export function rowEnd(g: Pick<Geometry, 'rows' | 'drawnOf'>, r: number): number {
-  return g.rows[g.drawnOf(r) + 1]!;
+export function rowEnd(g: Pick<Geometry, 'rows' | 'drawnOf' | 'gapAt'>, r: number): number {
+  const d = g.drawnOf(r) + 1;
+  return g.rows[d]! - g.gapAt(d);
 }
 
 // Stored rows r1..r2 in pieces each drawn side by side (one piece without an order): one box a piece.
@@ -216,6 +252,12 @@ function axisAt(
   return i < frozen || p >= frozenSize ? i : frozen;
 }
 
+// Whether a point at `at` (grid offset) past the row drawn d-th lies in the band before the next.
+function inBand(g: Geometry, d: number, at: number): boolean {
+  const gap = g.gapAt(d + 1);
+  return gap > 0 && at >= g.rows[d + 1]! - gap;
+}
+
 // What is under a point in the Sheet's grid frame (x, y from the frame's top-left, headers included).
 export function hitTest(
   g: Geometry,
@@ -242,16 +284,23 @@ export function hitTest(
   if (inRowHead) {
     if (gy + (gy < g.frozenHeight ? 0 : scroll.top) > total.height) return { kind: 'none' };
     const d = axisAt(g.rows, g.frozenRows, g.frozenHeight, gy, scroll.top);
-    const bottom = (d < g.frozenRows ? g.rows[d + 1]! : g.rows[d + 1]! - scroll.top) - gy;
+    if (inBand(g, d, gy < g.frozenHeight ? gy : gy + scroll.top)) return { kind: 'none' };
+    const end = g.rows[d + 1]! - g.gapAt(d + 1);
+    const bottom = (d < g.frozenRows ? end : end - scroll.top) - gy;
     const top = gy - (d < g.frozenRows ? g.rows[d]! : g.rows[d]! - scroll.top);
     // The edge above is the bottom of the row drawn before.
-    if (top <= RESIZE_HIT_PX && d > 0) return { kind: 'row', r: g.storedAt(d - 1), edge: true };
+    // The edge above is the bottom of the row drawn before, unless a group's band lies between.
+    if (top <= RESIZE_HIT_PX && d > 0 && g.gapAt(d) === 0)
+      return { kind: 'row', r: g.storedAt(d - 1), edge: true };
     return { kind: 'row', r: g.storedAt(d), edge: bottom <= RESIZE_HIT_PX };
   }
   const ax = gx < g.frozenWidth ? gx : gx + scroll.left;
   const ay = gy < g.frozenHeight ? gy : gy + scroll.top;
   if (ax >= total.width || ay >= total.height) return { kind: 'none' };
-  const r = g.storedAt(axisAt(g.rows, g.frozenRows, g.frozenHeight, gy, scroll.top));
+  const d = axisAt(g.rows, g.frozenRows, g.frozenHeight, gy, scroll.top);
+  // A group's header band is no cell: its opener is a button of its own.
+  if (inBand(g, d, ay)) return { kind: 'none' };
+  const r = g.storedAt(d);
   const c = axisAt(g.cols, g.frozenCols, g.frozenWidth, gx, scroll.left);
   const m = mergeAt(g, r, c);
   return m ? { kind: 'cell', r: m.r1, c: m.c1 } : { kind: 'cell', r, c };

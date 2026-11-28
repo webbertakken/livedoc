@@ -13,7 +13,11 @@ import { compileFormula, renderFormula, type SheetsCtx } from '../formula/stored
 import { makeAxisIds, type Rand } from '../ids';
 import { idRangeOf } from '../layout';
 import type { FilterCondition, SheetFilter, SheetLayout } from '../sheet';
-import { storedFilterClashes } from '../tables/table-filter';
+import { storedFilterClashes, tableFilterBox } from '../tables/table-filter';
+import { filterViewAsDrawn } from '../group-by-view';
+
+const sameRange = (a: GridRange | null, b: GridRange) =>
+  !!a && a.r1 === b.r1 && a.c1 === b.c1 && a.r2 === b.r2 && a.c2 === b.c2;
 import { conditionOfStandard, standardColumnOf, type StandardColumn } from './filter-standard';
 import type { FileLoss } from './workbook-file';
 
@@ -29,13 +33,14 @@ export type FileFilterColumn = { c: number; cond?: FileFilterCondition; std?: St
 /** The sheet's filter: its range (header row first), its columns and the rows under its header hidden by hand. */
 export type FileFilter = { range: GridRange; cols: FileFilterColumn[]; hidden?: number[] };
 
-/** A filter view: its name, its id (an XLSX `guid`'s, D479), range, columns and sort. */
+/** A filter view: its name, its id (an XLSX `guid`'s, D479), range, columns, sort and a group by view's column. */
 export type FileFilterView = {
   name: string;
   key?: string;
   range: GridRange;
   cols: FileFilterColumn[];
   sort?: { c: number; desc?: true }[];
+  group?: number;
 };
 
 /** How a format holds a standard column, as its reader reads it back: null when it cannot hold it. */
@@ -93,8 +98,11 @@ export function fileFiltersOf(
     for (let r = range.r1 + 1; r <= range.r2; r++) if (hidden.has(layout.rows[r]!)) byHand.push(r);
     out.filter = { range, cols, ...(byHand.length ? { hidden: byHand } : {}) };
   }
-  const views = (layout.filterViews ?? []).flatMap((v): FileFilterView[] => {
+  const views = (layout.filterViews ?? []).flatMap((stored): FileFilterView[] => {
+    // A group by view as drawn: over its table's rows now, else a filter view (D499, D500).
+    const v = filterViewAsDrawn(layout, stored);
     const at = rangeOf(v);
+    const group = v.group && colPos.get(v.group.c);
     if (!at) return [];
     const sort = (v.sort ?? []).flatMap((k) => {
       const c = colPos.get(k.c);
@@ -107,6 +115,7 @@ export function fileFiltersOf(
         range: at,
         cols: fileFilterColumnsOf(v.conds, { range: at, colPos }, ctx, dates),
         ...(sort.length ? { sort } : {}),
+        ...(group !== undefined ? { group } : {}),
       },
     ];
   });
@@ -200,12 +209,20 @@ export function filtersFromFile(
       return c === undefined ? [] : [{ c, ...(k.desc ? { desc: true as const } : {}) }];
     });
     const title = v.name.trim() === '' ? `Filter ${views.length + 1}` : v.name;
+    // A group by view over a table's header and data rows exactly, else a filter view (D500).
+    const table =
+      v.group === undefined
+        ? undefined
+        : (layout.tables ?? []).find((t) => sameRange(tableFilterBox(layout, t), at));
+    const groupCol =
+      table && v.group! >= at.c1 && v.group! <= at.c2 ? layout.cols[v.group!] : undefined;
     views.push({
       id: id!,
       title: title.slice(0, FILTER_VIEW_TITLE_MAX),
       ...idRangeOf(layout, at.r1, at.c1, at.r2, at.c2)!,
       conds: filterCondsOf(v.cols, at, layout, making),
       ...(sort.length ? { sort } : {}),
+      ...(table && groupCol ? { group: { t: table.id, c: groupCol } } : {}),
     });
   }
   if (views.length) out.filterViews = views;

@@ -12,12 +12,17 @@ import { WORKBOOK_COLS_MAX } from './workbook/workbook-limits';
 /** One key of a view's sort: a column by id, Z to A when `desc`. */
 export type FilterViewSortKey = { c: string; desc?: true };
 
+/** What a group by view groups (data-tools.md "Group by view"): its table and the column, by ids. */
+export type FilterViewGroup = { t: string; c: string };
+
 export type SheetFilterView = IdRange & {
   id: string;
   title: string;
   conds: Record<string, FilterCondition>;
   // Its sort keys in order; absent when it sorts nothing.
   sort?: FilterViewSortKey[];
+  // A group by view's table and column; absent for a filter view.
+  group?: FilterViewGroup;
 };
 
 // D440: up to 50 a sheet, as tables and slicers. D473: a name up to 100 characters.
@@ -26,10 +31,15 @@ export const FILTER_VIEW_TITLE_MAX = 100;
 // A view's sort keys: one a column, at most a spreadsheet's widest sheet.
 const SORT_KEYS_MAX = WORKBOOK_COLS_MAX;
 
-/** The names new views take: an Editor's saved views, and a Participant's or a Viewer's own (D470, D471). */
-export const FILTER_VIEW_PREFIX = { saved: 'Filter', temporary: 'Temporary Filter' } as const;
+/** The names new views take: an Editor's saved views, and a Participant's or a Viewer's own (D470, D471, D498). */
+export const FILTER_VIEW_PREFIX = {
+  saved: 'Filter',
+  temporary: 'Temporary Filter',
+  group: 'Group',
+  temporaryGroup: 'Temporary Group',
+} as const;
 
-const KEYS = new Set(['id', 'title', 'r1', 'c1', 'r2', 'c2', 'conds', 'sort']);
+const KEYS = new Set(['id', 'title', 'r1', 'c1', 'r2', 'c2', 'conds', 'sort', 'group']);
 
 function isRecord(v: unknown): v is Record<string, unknown> {
   return typeof v === 'object' && v !== null && !Array.isArray(v);
@@ -49,6 +59,10 @@ function isSortKey(v: unknown): v is FilterViewSortKey {
   );
 }
 
+function isGroup(v: unknown): v is FilterViewGroup {
+  return isRecord(v) && Object.keys(v).length === 2 && isAxisId(v.t) && isAxisId(v.c);
+}
+
 /** Whether `v` is a view of this id, whole: as every viewer may open it, a malformed one is refused at the write. */
 export function isSheetFilterView(
   v: unknown,
@@ -59,7 +73,8 @@ export function isSheetFilterView(
   if (!isRecord(v) || v.id !== id || !isAxisId(id)) return false;
   if (!Object.keys(v).every((k) => KEYS.has(k))) return false;
   if (![v.r1, v.c1, v.r2, v.c2].every(isAxisId) || !filterViewTitleOk(v.title)) return false;
-  const { conds, sort } = v;
+  const { conds, sort, group } = v;
+  if (group !== undefined && !isGroup(group)) return false;
   if (
     !isRecord(conds) ||
     Object.keys(conds).length > WORKBOOK_COLS_MAX ||
@@ -164,8 +179,22 @@ export function filterViewsAfterDelete(
     if (!range) return [];
     const conds = Object.fromEntries(Object.entries(v.conds).filter(([c]) => !goneCols.has(c)));
     const sort = v.sort?.filter((k) => !goneCols.has(k.c));
-    const { sort: _sort, ...rest } = v;
-    return [{ ...rest, ...range, conds, ...(sort?.length ? { sort } : {}) }];
+    // A group by view whose column went is a filter view over its range (D499).
+    const group = v.group && !goneCols.has(v.group.c) ? v.group : undefined;
+    const { sort: _sort, group: _group, ...rest } = v;
+    const { r1, c1, r2, c2 } = range;
+    return [
+      {
+        ...rest,
+        r1,
+        c1,
+        r2,
+        c2,
+        conds,
+        ...(sort?.length ? { sort } : {}),
+        ...(group ? { group } : {}),
+      },
+    ];
   });
   return next.length ? next : undefined;
 }

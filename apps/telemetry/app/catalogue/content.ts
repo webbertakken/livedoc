@@ -1419,14 +1419,24 @@ export const SPREADSHEET_IMAGES_ADDED = chart(
   { types: ['ImageOverCells'] },
 );
 
-// docs/specs/029-sheets/data-tools.md "Filters, filter views and slicers": a filter view made, saved (an Editor's) or
-// temporary (a Participant's or a Viewer's).
+// docs/specs/029-sheets/data-tools.md "Filters, filter views and slicers" and "Group by view": a filter view or a
+// group by view made, saved (an Editor's) or temporary (a Participant's or a Viewer's).
 export const SPREADSHEET_FILTER_VIEWS_ADDED = chart(
   'Spreadsheet',
   'Added',
   'Spreadsheet Filter Views Added',
-  'Someone made a filter view of a spreadsheet: saved for everyone, or temporary and their own.',
-  { types: ['FilterView', 'TemporaryFilterView'] },
+  'Someone made a filter view or a group by view of a spreadsheet: saved for everyone, or temporary and their own.',
+  { types: ['FilterView', 'TemporaryFilterView', 'GroupByView', 'TemporaryGroupByView'] },
+);
+
+// docs/specs/029-sheets/data-tools.md "Group by view": someone collapsed or expanded a group of a group by view, for
+// themselves alone.
+export const SPREADSHEET_GROUPS_TOGGLED = chart(
+  'Spreadsheet',
+  'Toggled',
+  'Spreadsheet Groups Toggled',
+  'Someone collapsed or expanded a group in a group by view of a spreadsheet, for themselves alone.',
+  { types: ['GroupByViewGroup'] },
 );
 
 // docs/specs/029-sheets/data-tools.md "Named ranges and named functions": an Editor made, changed or removed a named
@@ -1482,6 +1492,7 @@ export const SPREADSHEETS: MetricStack = {
     SPREADSHEET_PIVOT_TABLES_ADDED,
     SPREADSHEET_IMAGES_ADDED,
     SPREADSHEET_FILTER_VIEWS_ADDED,
+    SPREADSHEET_GROUPS_TOGGLED,
     SPREADSHEET_NAMED_FUNCTIONS,
     SPREADSHEET_REPLACED,
     SPREADSHEET_CLEANED,

@@ -4,7 +4,7 @@
 // may not save one, and a view deleted by someone else closing.
 import { act, fireEvent, screen } from '@testing-library/react';
 import { afterEach, beforeAll, describe, expect, it } from 'vitest';
-import { filterViewOf, type SheetFilterView } from '@livedoc/sheets';
+import { filterViewOf, tableAt, type SheetFilterView } from '@livedoc/sheets';
 import { makeSheet, renderSheet, stubResizeObserver, type SheetParts } from './sheet-ui-test-utils';
 import { SheetFilterViewBar } from './SheetFilterViewBar';
 import { useFilterViewActions } from './useFilterViewActions';
@@ -27,7 +27,14 @@ const CELLS = {
 
 function Host({ c }: SheetParts) {
   const actions = useFilterViewActions(c);
-  const menu = filterViewMenuActions(c.sheet.layout, c.filterViews.open, c.canShape, () => actions);
+  const { active } = c.selection;
+  const menu = filterViewMenuActions({
+    layout: c.sheet.layout,
+    open: c.filterViews.open,
+    canShape: c.canShape,
+    inTable: !!tableAt(c.sheet.layout, active.r, active.c),
+    run: () => actions,
+  });
   return (
     <>
       <SheetFilterViewBar actions={actions} />

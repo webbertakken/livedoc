@@ -528,6 +528,9 @@ The table is the contract the readers and writers are tested against, one test p
   holding an `autoFilter` as the
   filter's and the view's sort as its `sortState` (`sortCondition`, `descending="1"` for Z to A); a hidden
   `Z_<guid>_.wvu.FilterData` name with its range; and a `customWorkbookView` named the view's name.
+  A group by view (data-tools.md, D500) is written as the filter view of its table's range, LiveDoc's record
+  keeping its grouped column (`group`, a column letter); read back while the record holds and over a table's header
+  and data rows exactly, it is that table's group by view again, else a filter view.
 - **ODF filter**: LibreOffice's own form, the sheet-local `table:database-range` named `__Anonymous_Sheet_DB__N`
   (`table:display-filter-buttons="true"`) with `table:filter` › `table:filter-and` › `table:filter-condition`
   (`table:field-number`, `table:operator`, `table:value`; kept values as `table:filter-set-item`s),
@@ -541,8 +544,8 @@ The table is the contract the readers and writers are tested against, one test p
   Each table's filter (D481) is the `table:filter` of the table's own `table:database-range`, as LibreOffice holds
   a database range's filter, the range's filter buttons shown while it is on; read back, a table's database range
   showing its buttons has its filter on, with the `table:filter`'s columns.
-- **ODF** has no filter views nor slicers: written to ODS they are left out, listed in the Download and Convert
-  dialog ("2 filter views are left out", "1 slicer is left out"); Google's ODS keeps only each view's range as a
+- **ODF** has no filter views nor slicers: written to ODS they are left out (group by views among the filter
+  views), listed in the Download and Convert dialog ("2 filter views are left out", "1 slicer is left out"); Google's ODS keeps only each view's range as a
   `Z_…_.wvu.FilterData` name, which LiveDoc neither writes nor reads as a view.
 - **XLSX slicers**: LiveDoc's record, and Excel's table slicer when the slicer's range is a table's exactly (its
   whole range, or its header and data rows), as Google writes one: one slicer cache a table column

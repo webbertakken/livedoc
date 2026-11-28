@@ -7,6 +7,7 @@ import {
   convertToRangeWrites,
   convertToTable,
   deleteAxis,
+  groupViewsGone,
   layoutIndex,
   posRangeOf,
   setTableFilterCondition,
@@ -158,6 +159,8 @@ export function sheetTableActions(c: SheetController) {
       const changes: LayoutChange[] = [
         { k: 'table', id: t.id, table: null },
         ...(t.band ? [{ k: 'band' as const, id: t.band, band: null }] : []),
+        // Its group by views go with it (D499).
+        ...groupViewsGone(layout(), t.id),
       ];
       return c.write({ kind: 'layout', changes, cells }, 'Table');
     },

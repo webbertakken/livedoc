@@ -11,6 +11,7 @@ import type { ItemUndoStep } from '@/hooks/plan/item-undo-journal';
 import { createContext, useCallback, useContext, useMemo, useRef, useState } from 'react';
 import {
   filteredOutRows,
+  withCollapsedRows,
   viewDrawnOrder,
   rowHeights,
   slicerDrawnFilters,
@@ -348,14 +349,22 @@ export function useSheetControllerState(opts: {
   );
   // The open view's sort draws the rows in an order of its own, for this person alone (data-tools.md "The drawn
   // order"); worked out again whenever a value may have changed, as the filtered rows are.
+  // A group by view's groups lie side by side in it, each counting the rows the view keeps (data-tools.md "Group by
+  // view").
   const order = useMemo(
-    () => viewDrawnOrder(workbook, sheet.id, openView),
-    [workbook, sheet, openView, version], // oxlint-disable-line react/exhaustive-deps
+    () => viewDrawnOrder(workbook, sheet.id, openView, filtered),
+    [workbook, sheet, openView, filtered, version], // oxlint-disable-line react/exhaustive-deps
+  );
+  // A collapsed group's rows are drawn at no height for this person, as a filter's (D497).
+  const collapsed = filterViews.collapsed;
+  const drawnOut = useMemo(
+    () => withCollapsedRows(filtered, order, collapsed, sheet.layout.rows),
+    [filtered, order, collapsed, sheet.layout.rows],
   );
   const { viewLayout, foldForSelf } = useSheetFolds(sheet.id, sheet.layout, canShape);
   const geometry = useMemo(
-    () => geometryOf(viewLayout, filtered, heightOf, order),
-    [viewLayout, filtered, heightOf, order],
+    () => geometryOf(viewLayout, drawnOut, heightOf, order),
+    [viewLayout, drawnOut, heightOf, order],
   );
   const grid = useMemo<Grid>(() => {
     const ix = { rows: sheet.layout.rows.length, cols: sheet.layout.cols.length };

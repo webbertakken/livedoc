@@ -951,6 +951,12 @@ export const EXACT: Readonly<Record<string, string>> = {
     'An editor made a filter view of a spreadsheet, saved for everyone.',
   'Spreadsheet|Added|TemporaryFilterView':
     'A participant or viewer made a temporary filter view of a spreadsheet, their own alone.',
+  'Spreadsheet|Added|GroupByView':
+    'An editor made a group by view of a spreadsheet table, saved for everyone.',
+  'Spreadsheet|Added|TemporaryGroupByView':
+    'A participant or viewer made a temporary group by view of a spreadsheet table, their own alone.',
+  'Spreadsheet|Toggled|GroupByViewGroup':
+    'Someone collapsed or expanded a group in a group by view of a spreadsheet, for themselves alone.',
   'Spreadsheet|Converted|Xlsx': 'An editor converted a spreadsheet to an Excel file.',
   'Spreadsheet|Converted|Ods':
     'An editor converted a spreadsheet to an ODF file (the open standard).',
@@ -3107,6 +3113,8 @@ export const BY_ACTION: Readonly<Record<string, string>> = {
   'Spreadsheet|Added':
     'An editor inserted a chart into a spreadsheet (the value says which chart type).',
   'Spreadsheet|Changed': 'An editor changed a spreadsheet’s look (the value says what).',
+  'Spreadsheet|Toggled':
+    'Someone opened or closed part of a spreadsheet for themselves (the value says what).',
   'Spreadsheet|Converted':
     'An editor converted a spreadsheet to the other file format (the value says which format it went to).',
   'Spreadsheet|Imported':

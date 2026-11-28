@@ -57,6 +57,7 @@ export function filterRecordText(
                   })),
                 }
               : {}),
+            ...(v.group !== undefined ? { group: columnLetters(v.group) } : {}),
           })),
         }
       : {}),
@@ -72,6 +73,7 @@ export type FilterRecord = {
     range: GridRange;
     conds: Map<number, FileFilterCondition>;
     sort?: { c: number; desc?: true }[];
+    group?: number;
   }[];
 };
 
@@ -112,6 +114,13 @@ function recordedSort(v: unknown): { c: number; desc?: true }[] | null | undefin
   return keys.every((k) => k !== null) ? keys : null;
 }
 
+// A group by view's column (D500): a letter inside the view's range; null when not.
+function recordedGroup(v: unknown, range: GridRange | null): number | null {
+  if (typeof v !== 'string' || !range) return null;
+  const c = columnIndex(v);
+  return c >= range.c1 && c <= range.c2 ? c : null;
+}
+
 /** LiveDoc's record read back; null when it is not one. */
 export function readFilterRecord(text: string): FilterRecord | null {
   let raw: unknown;
@@ -139,8 +148,15 @@ export function readFilterRecord(text: string): FilterRecord | null {
       const range = parseRangeText(v.range);
       const conds = range && recordedConds(v.conds, range);
       const sort = recordedSort(v.sort);
-      if (!range || !conds || sort === null) return null;
-      out.views.push({ name: v.name, range, conds, ...(sort ? { sort } : {}) });
+      const group = v.group === undefined ? undefined : recordedGroup(v.group, range);
+      if (!range || !conds || sort === null || group === null) return null;
+      out.views.push({
+        name: v.name,
+        range,
+        conds,
+        ...(sort ? { sort } : {}),
+        ...(group !== undefined ? { group } : {}),
+      });
     }
   }
   return out;
@@ -216,6 +232,7 @@ export function filtersFound(
       name: v.name || r.name,
       cols: withConds(v.cols, r.conds),
       ...(r.sort ? { sort: r.sort } : {}),
+      ...(r.group !== undefined ? { group: r.group } : {}),
     };
   });
   return { ...(filter ? { filter } : {}), views, changed: false };

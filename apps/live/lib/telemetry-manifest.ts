@@ -211,6 +211,7 @@ export const EMITTED_EVENT_PAIRS: readonly string[] = [
   'Spreadsheet·Created',
   'Spreadsheet·Exported',
   'Spreadsheet·Imported',
+  'Spreadsheet·Toggled',
   'Spreadsheet·Unlocked',
   'Tab·Aligned',
   'Tab·Changed',

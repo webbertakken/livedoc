@@ -300,6 +300,29 @@ describe('convertToRangeWrites', () => {
     expect([b.v('D1', 'Data'), b.v('A1', 'Report'), b.v('C2', 'Data')]).toEqual([3, 3, 2]);
   });
 
+  it('removes the group by views of the table in the same step (D499)', () => {
+    const view = {
+      id: 'view01',
+      title: 'Group 1',
+      r1: 's0r0',
+      c1: 's0c0',
+      r2: 's0r2',
+      c2: 's0c1',
+      conds: {},
+      group: { t: 'tbl001', c: 's0c0' },
+    };
+    const b = book({ Data: DATA2 }, { tables: { Data: [T] } });
+    b.sheets[0]!.layout = {
+      ...b.sheets[0]!.layout,
+      filterViews: [view, { ...view, id: 'view02', group: undefined }],
+    };
+    const [home] = convertToRangeWrites(b.wb, 'sheet0xx', 'tbl001')!;
+    expect(home!.write.kind === 'layout' && home!.write.changes).toEqual([
+      { k: 'table', id: 'tbl001', table: null },
+      { k: 'fview', id: 'view01', view: null },
+    ]);
+  });
+
   it('makes nothing of a table it does not know', () => {
     const b = book(DATA2);
     expect(convertToRangeWrites(b.wb, b.sheets[0]!.id, 'tbl001')).toBeNull();
