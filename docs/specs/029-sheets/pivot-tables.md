@@ -233,10 +233,10 @@ the cell's context menu, drawn only where it applies, each one undo step that re
 - **Renaming a custom group**: an Editor types over a custom group's item cell (its name, as `Group 1` shows) and
   commits it (Enter, Tab or a click away, as any cell's edit): the group takes the text, trimmed, as typed (never worked
   out as a formula), one undo step that rewrites the pivot table (Webber's ruling, 2026-11-28). It is the one cell
-  of an output that takes typing; pasting or filling into it is refused as any output cell's is. Refused, the cell
-  left as it was: an empty text ("Enter a name for the group"), a name over 255 characters ("A group's name is up to
-  255 characters") and a name another custom group or item of the same group already has, case aside ("Another item of
-  this group is called that"). The name typed the same as before writes nothing. Pressing Delete over it clears
+  of an output that takes typing; pasting or filling into it is refused as any output cell's is. Refused, the edit
+  kept open as a refused value's is, its words under it: an empty text ("Enter a name for the group"), a name over 200
+  characters ("A group's name is up to 200 characters") and another custom group's name in the same group, case aside
+  ("Another group is called that"). The name typed the same as before writes nothing. Pressing Delete over it clears
   nothing, as over any output cell.
 - A Participant or a Viewer sees none of them, and typing over a group's cell is refused to them as typing over any
   output cell is.

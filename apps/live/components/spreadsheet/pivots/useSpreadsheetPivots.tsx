@@ -5,6 +5,8 @@
 // the editor's changes written whole, each one undo step. A pivot table bound for another sheet waits until that
 // sheet is open, then lands there and the editor opens on it. A value's details go on a new sheet ("Details").
 import { useCallback, useEffect, useState, type ReactNode } from 'react';
+import { pivotDetailsTable, type PivotDetailsTable } from '@/lib/spreadsheet/pivot-details-table';
+import { PivotDetailsDialog } from './PivotDetailsDialog';
 import {
   makeAxisIds,
   PIVOT_DETAILS_BASE,
@@ -115,10 +117,20 @@ export function useSpreadsheetPivots(
     [write, sheet.id],
   );
 
+  // A Participant's or a Viewer's details: a read-only dialog, never saved (pivot-tables.md "Details").
+  const [detailsTable, setDetailsTable] = useState<PivotDetailsTable | null>(null);
   const showDetails = useCallback(
     (r: number, col: number) => {
-      const details = canShape && bar ? c.workbook.pivotDetailsAt(sheet.id, r, col) : null;
-      if (!details || !bar) return false;
+      const details = c.workbook.pivotDetailsAt(sheet.id, r, col);
+      if (!details) return false;
+      if (!canShape || !bar) {
+        const table = pivotDetailsTable(c.workbook, details, c.locale);
+        setDetailsTable(table);
+        debugLog(
+          `[sheet-pivots] details shown sheet=${sheet.id} pivot=${details.pivotId} rows=${table.total}`,
+        );
+        return true;
+      }
       const name = SheetName.numbered(
         PIVOT_DETAILS_BASE,
         c.workbook.sheetList().map((s) => s.title),
@@ -134,19 +146,24 @@ export function useSpreadsheetPivots(
       track('Spreadsheet', 'Added', 'PivotDetails');
       return true;
     },
-    [canShape, bar, c.workbook, sheet.id],
+    [canShape, bar, c.workbook, c.locale, sheet.id],
   );
 
-  const dialog =
-    start === null ? null : (
-      <CreatePivotTableDialog
-        start={start}
-        read={(range, to, location) =>
-          readPivotCreate(c.workbook.ctxFor(sheet.id), range, to, location)
-        }
-        onCreate={create}
-        onClose={close}
-      />
-    );
+  const closeDetails = () => {
+    setDetailsTable(null);
+    c.focusGrid();
+  };
+  const dialog = detailsTable ? (
+    <PivotDetailsDialog table={detailsTable} onClose={closeDetails} />
+  ) : start === null ? null : (
+    <CreatePivotTableDialog
+      start={start}
+      read={(range, to, location) =>
+        readPivotCreate(c.workbook.ctxFor(sheet.id), range, to, location)
+      }
+      onCreate={create}
+      onClose={close}
+    />
+  );
   return { openCreate, dialog, change, showDetails };
 }

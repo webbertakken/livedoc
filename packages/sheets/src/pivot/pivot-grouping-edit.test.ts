@@ -4,7 +4,12 @@ import { describe, expect, it } from 'vitest';
 import { book } from '../testing/book';
 import type { SheetPivot } from '../objects/sheet-pivot';
 import type { Sheet } from '../sheet';
-import { pivotCustomGroup, pivotSetGrouping, pivotUngroupItem } from './pivot-grouping-edit';
+import {
+  pivotCustomGroup,
+  pivotRenameCustomGroup,
+  pivotSetGrouping,
+  pivotUngroupItem,
+} from './pivot-grouping-edit';
 import { pivotItemPlace, type PivotArray } from './pivot-resolve';
 
 const DATA = {
@@ -224,5 +229,70 @@ describe('grouping from the grid', () => {
     ).toEqual({ col: 'b' });
     // An item no grouping made changes nothing.
     expect(pivotUngroupItem(base(), 'rows', 0, { label: 'East', shown: 'East' })).toEqual(base());
+  });
+});
+
+describe('pivotRenameCustomGroup', () => {
+  const C = (n: number) => `col${n}`;
+  const pivot: SheetPivot = {
+    id: 'p',
+    kind: 'pivot',
+    at: { r: 'r', c: 'c' },
+    source: { r1: 'r', c1: 'c', r2: 'r', c2: 'c' },
+    rows: [
+      {
+        col: C(0),
+        grouping: {
+          k: 'custom',
+          groups: [
+            { name: 'Group 1', items: ['East', 'West'] },
+            { name: 'South', items: ['North'] },
+          ],
+        },
+      },
+    ],
+  };
+
+  it('renames the custom group, the text trimmed', () => {
+    const next = pivotRenameCustomGroup(pivot, 'rows', 0, 'Group 1', '  Coast  ');
+    expect(next).toEqual({
+      ...pivot,
+      rows: [
+        {
+          col: C(0),
+          grouping: {
+            k: 'custom',
+            groups: [
+              { name: 'Coast', items: ['East', 'West'] },
+              { name: 'South', items: ['North'] },
+            ],
+          },
+        },
+      ],
+    });
+  });
+
+  it('renames a group in another case of its own name', () => {
+    const next = pivotRenameCustomGroup(pivot, 'rows', 0, 'Group 1', 'GROUP 1');
+    expect(typeof next === 'string' ? next : next.rows![0]!.grouping).toMatchObject({
+      groups: [{ name: 'GROUP 1' }, { name: 'South' }],
+    });
+  });
+
+  it('refuses an empty name, one too long and one another group has', () => {
+    expect(pivotRenameCustomGroup(pivot, 'rows', 0, 'Group 1', '   ')).toBe('empty');
+    expect(pivotRenameCustomGroup(pivot, 'rows', 0, 'Group 1', 'x'.repeat(201))).toBe('too_long');
+    expect(pivotRenameCustomGroup(pivot, 'rows', 0, 'Group 1', 'south')).toBe('taken');
+  });
+
+  it('writes nothing for the same name', () => {
+    expect(pivotRenameCustomGroup(pivot, 'rows', 0, 'Group 1', 'Group 1 ')).toBe('same');
+  });
+
+  it('is no rename where the group is not custom-grouped or has no such group', () => {
+    expect(pivotRenameCustomGroup(pivot, 'columns', 0, 'Group 1', 'X')).toBe('none');
+    expect(pivotRenameCustomGroup(pivot, 'rows', 0, 'Nope', 'X')).toBe('none');
+    const plain = { ...pivot, rows: [{ col: C(0) }] };
+    expect(pivotRenameCustomGroup(plain, 'rows', 0, 'Group 1', 'X')).toBe('none');
   });
 });
