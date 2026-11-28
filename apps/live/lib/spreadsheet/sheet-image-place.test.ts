@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest';
 import type { SheetImage } from '@livedoc/sheets';
 import {
   altOfTitled,
-  fittedImageSize,
   IMAGE_HANDLES,
   imageLabel,
   newSheetImage,
@@ -19,29 +18,6 @@ const image = (over: Partial<SheetImage> = {}): SheetImage => ({
   height: 100,
   imageId: 'img-1',
   ...over,
-});
-
-describe('fittedImageSize', () => {
-  it('keeps a picture that fits 600 by 400 at its natural size', () => {
-    expect(fittedImageSize({ width: 320, height: 240 })).toEqual({ width: 320, height: 240 });
-  });
-
-  it('scales a wide picture down to 600 px wide, in proportion', () => {
-    expect(fittedImageSize({ width: 1200, height: 300 })).toEqual({ width: 600, height: 150 });
-  });
-
-  it('scales a tall picture down to 400 px high, in proportion', () => {
-    expect(fittedImageSize({ width: 300, height: 1200 })).toEqual({ width: 100, height: 400 });
-  });
-
-  it('keeps each side at least 16 px', () => {
-    expect(fittedImageSize({ width: 6000, height: 10 })).toEqual({ width: 600, height: 16 });
-    expect(fittedImageSize({ width: 4, height: 4 })).toEqual({ width: 16, height: 16 });
-  });
-
-  it('takes a picture of unknown size as a square', () => {
-    expect(fittedImageSize({ width: 0, height: 0 })).toEqual({ width: 400, height: 400 });
-  });
 });
 
 describe('newSheetImage', () => {

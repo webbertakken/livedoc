@@ -2,14 +2,13 @@
 // cells", D623): the size a picked picture lands at, a picture replaced in its box, a handle's resize (corners in
 // proportion, edges stretching), Alt Text's title folded into its one text, and what it is called. Pure.
 import {
+  fittedImageSize,
   SHEET_IMAGE_ALT_MAX,
   SHEET_IMAGE_SIZE,
   type CellAnchor,
   type SheetImage,
 } from '@livedoc/sheets';
 
-/** The box a picked picture is scaled down to fit, kept in proportion (D623). */
-export const IMAGE_FIT_BOX = { width: 600, height: 400 } as const;
 /** What an image without alt text is called. */
 export const IMAGE_LABEL = 'Image';
 
@@ -27,20 +26,6 @@ const side = (v: number) =>
   Math.round(Math.min(SHEET_IMAGE_SIZE.max, Math.max(SHEET_IMAGE_SIZE.min, v)));
 
 const known = (p: { width: number; height: number }) => p.width >= 1 && p.height >= 1;
-
-/** A picture's natural size scaled down to fit 600 by 400 px, in proportion; an unknown size lands square. */
-export function fittedImageSize(natural: { width: number; height: number }): {
-  width: number;
-  height: number;
-} {
-  if (!known(natural)) return { width: IMAGE_FIT_BOX.height, height: IMAGE_FIT_BOX.height };
-  const scale = Math.min(
-    1,
-    IMAGE_FIT_BOX.width / natural.width,
-    IMAGE_FIT_BOX.height / natural.height,
-  );
-  return { width: side(natural.width * scale), height: side(natural.height * scale) };
-}
 
 const naturalOf = (p: PickedPicture) =>
   known(p) ? { naturalWidth: Math.round(p.width), naturalHeight: Math.round(p.height) } : {};

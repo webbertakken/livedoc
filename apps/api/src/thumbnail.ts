@@ -417,7 +417,7 @@ async function themeSourceOf(
 // endpoint reads (key = imageId), so a shared document's images embed without
 // re-auth, and the same rule decides which: only an image the document may serve
 // (docs/specs/009-elements/images.md, "Placement grants") is read, one query for the tab.
-async function loadEmbeddedImages(
+export async function loadEmbeddedImages(
   env: DocumentEnv,
   documentId: string,
   tab: Tab,

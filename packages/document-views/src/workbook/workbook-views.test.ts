@@ -213,6 +213,49 @@ describe('workbookOutlineView', () => {
     ]);
   });
 
+  // inserted-objects.md "Agents": an image over cells' line, by its id, cell, size and alt text.
+  it('lists images over cells by cell and size, with their alt text', () => {
+    const pictured: Sheet = {
+      ...hidden,
+      layout: {
+        ...hidden.layout,
+        objects: [
+          {
+            kind: 'image',
+            id: 'img01',
+            at: { r: hidden.layout.rows[1]!, c: hidden.layout.cols[2]!, dx: 3, dy: 0 },
+            width: 120,
+            height: 80,
+            imageId: 'g-1',
+            alt: 'Logo',
+          },
+          {
+            kind: 'image',
+            id: 'img02',
+            at: { r: hidden.layout.rows[0]!, c: hidden.layout.cols[0]!, dx: 0, dy: 0 },
+            width: 16,
+            height: 16,
+            imageId: 'g-2',
+          },
+        ],
+      },
+    };
+    const view = workbookOutlineView({
+      name: 'P',
+      workbook: book,
+      sheets: [outlineSheet(pictured)],
+      current: 'x',
+    });
+    expect(view.text.split('\n').slice(-2)).toEqual([
+      '  image img01 at C2 120x80 "Logo"',
+      '  image img02 at A1 16x16',
+    ]);
+    expect(view.json.sheets[0]!.images).toEqual([
+      { id: 'img01', at: 'C2', width: 120, height: 80, alt: 'Logo' },
+      { id: 'img02', at: 'A1', width: 16, height: 16 },
+    ]);
+  });
+
   it('ignores used ids no longer in the layout', () => {
     const sheet = {
       ...outlineSheet(notes),

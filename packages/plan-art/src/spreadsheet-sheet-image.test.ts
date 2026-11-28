@@ -9,6 +9,7 @@ import {
   type CellChange,
   type Sheet,
   type SheetChart,
+  type SheetImage,
 } from '@livedoc/sheets';
 import { planPalette, type ShapeElement } from '@livedoc/document';
 import { SHEET_PREVIEW_MAX, spreadsheetSheetImage } from './spreadsheet-sheet-image';
@@ -68,6 +69,50 @@ describe('spreadsheetSheetImage', () => {
     expect(frame!.width).toBeGreaterThanOrEqual(charts[1]!.x + 300);
     const model = image.sheets.get('sheetA')!;
     expect(model.cells.some((c) => c.text === '99')).toBe(true);
+  });
+
+  // inserted-objects.md "Images over cells": each image an image element at its cell, under the charts.
+  it('draws the sheet’s images at their cells under its charts, growing the window to hold them', () => {
+    const image = (id: string, r: number, c: number, alt?: string): SheetImage => ({
+      id,
+      kind: 'image',
+      at: { r: rows[r]!, c: cols[c]!, dx: 3, dy: 1 },
+      width: 120,
+      height: 60,
+      imageId: `g-${id}`,
+      ...(alt ? { alt } : {}),
+    });
+    const wb = bookWith(data, [], {
+      objects: [
+        chart('c1', 0, 3),
+        image('logo', 0, 0, 'Logo'),
+        image('far', 28, 7),
+        { ...image('gone', 0, 0), at: { r: 'x', c: 'y', dx: 0, dy: 0 } },
+      ],
+    });
+    const drawn = spreadsheetSheetImage(wb, 'sheetA', tab)!.tab.elements;
+    expect(drawn.map((e) => e.id)).toEqual([
+      'preview-sheetA',
+      'image-logo',
+      'image-far',
+      'card-c1',
+      'c1',
+    ]);
+    expect(drawn[1]).toMatchObject({
+      type: 'image',
+      x: 46 + 3,
+      y: 40 + 22 + 1,
+      width: 120,
+      height: 60,
+      imageId: 'g-logo',
+      alt: 'Logo',
+    });
+    expect(drawn[2]).not.toHaveProperty('alt');
+    expect(drawn[0]!.height).toBeGreaterThanOrEqual(drawn[2]!.y + 60);
+    const ranged = spreadsheetSheetImage(wb, 'sheetA', tab, {
+      range: { r1: 0, c1: 0, r2: 2, c2: 2 },
+    })!;
+    expect(ranged.tab.elements.map((e) => e.id)).toEqual(['preview-sheetA', 'image-logo']);
   });
 
   it('sits each chart on its card, as the spreadsheet draws it, just behind it', () => {

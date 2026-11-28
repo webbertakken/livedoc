@@ -1,6 +1,7 @@
 // A spreadsheet's sheet as an image (docs/specs/029-sheets/sheet-store.md "Agents in a spreadsheet", Previews): the
 // sheet laid out as a Plan Sheet tab is for its image, so it draws through the same renderer and the same PNG step: a
-// Sheet framing its cells from A1, or from a range's top-left, and the sheet's own charts over them at their cells. A
+// Sheet framing its cells from A1, or from a range's top-left, and the sheet's own images (inserted-objects.md "Images
+// over cells", image elements the renderer fetches as any tab's) and charts over them at their cells. A
 // spreadsheet's tab holds no elements of its own, so without this its picture was empty. Pure.
 import {
   SHEET_COL_HEAD_H,
@@ -9,6 +10,7 @@ import {
   createShape,
   planPalette,
   type Element,
+  type ImageElement,
   type ShapeElement,
   type SheetRenderModel,
   type Tab,
@@ -22,6 +24,7 @@ import {
   sheetContentSize,
   type GridRange,
   type SheetChart,
+  type SheetImage,
   type Workbook,
 } from '@livedoc/sheets';
 import { sheetChartElement } from './sheet-chart-element';
@@ -82,8 +85,8 @@ export function spreadsheetSheetImage(
   const widthOf = (id: string) => colWidth(layout, id);
   const range = opts.range;
   const origin = { r: range?.r1 ?? 0, c: range?.c1 ?? 0 };
-  // A chart's px from the window's top-left: its cell's corner and its offsets.
-  const placed = (chart: SheetChart) => {
+  // An object's px from the window's top-left: its cell's corner and its offsets.
+  const placed = (chart: SheetChart | SheetImage) => {
     const r = ix.rowPos.get(chart.at.r);
     const c = ix.colPos.get(chart.at.c);
     if (r === undefined || c === undefined || r < origin.r || c < origin.c) return null;
@@ -93,6 +96,7 @@ export function spreadsheetSheetImage(
     };
   };
   const charts = (layout.objects ?? []).filter((x): x is SheetChart => x.kind === 'chart');
+  const images = (layout.objects ?? []).filter((x): x is SheetImage => x.kind === 'image');
   let window: { width: number; height: number };
   if (range) {
     window = {
@@ -102,7 +106,7 @@ export function spreadsheetSheetImage(
   } else {
     // The whole sheet: its filled cells and every chart it holds, as its tab shows them.
     window = { ...(sheetContentSize(wb, sheetId, opts.font) ?? EMPTY_WINDOW) };
-    for (const chart of charts) {
+    for (const chart of [...images, ...charts]) {
       const at = placed(chart);
       if (!at) continue;
       window.width = Math.max(window.width, at.x + chart.width + EDGE);
@@ -127,6 +131,22 @@ export function spreadsheetSheetImage(
   const left = SHEET_ROW_HEAD_W;
   const top = SHEET_HEADER_H + SHEET_COL_HEAD_H;
   const drawn: Element[] = [];
+  // Images under the charts, as the grid draws them; one drawn only when its corner is in the window.
+  for (const image of images) {
+    const at = placed(image);
+    if (!at || at.x >= window.width || at.y >= window.height) continue;
+    const el: ImageElement = {
+      id: `image-${image.id}`,
+      type: 'image',
+      x: left + at.x,
+      y: top + at.y,
+      width: image.width,
+      height: image.height,
+      imageId: image.imageId,
+      ...(image.alt ? { alt: image.alt } : {}),
+    };
+    drawn.push(el);
+  }
   for (const chart of charts) {
     const at = placed(chart);
     // A chart drawn only when its corner is in the window.

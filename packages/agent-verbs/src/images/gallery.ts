@@ -4,6 +4,9 @@
 import type { ImageSummary } from '@livedoc/api-schema';
 
 export const IMAGE_LIST_DEFAULT_LIMIT = 20;
+// What an agent is told where the server keeps no images (a self-host without R2 answers the gallery with 503).
+export const IMAGES_UNAVAILABLE =
+  'Images are not available on this LiveDoc server (it has no image storage).';
 export const IMAGE_LIST_MAX_LIMIT = 50;
 // The contact sheet draws at most this many, so its picture stays legible and its bytes bounded.
 export const CONTACT_SHEET_MAX = 12;
@@ -94,8 +97,10 @@ export function unknownImageIssue(
   const missing = placed.find((p) => !gallery.has(p.imageId));
   if (!missing) return null;
   const where = missing.elementId ? ` on element "${missing.elementId}"` : '';
-  return (
-    `imageId ${JSON.stringify(missing.imageId)}${where} is not in your image gallery: ` +
-    'list_images lists the pictures you can place. Leave imageId out for a placeholder the user fills in the editor.'
-  );
+  return `${notInGallery(missing.imageId, where)} Leave imageId out for a placeholder the user fills in the editor.`;
+}
+
+// Why an image id cannot be placed: the gallery lacks it (`where` names what places it).
+export function notInGallery(imageId: string, where = ''): string {
+  return `imageId ${JSON.stringify(imageId)}${where} is not in your image gallery: list_images lists the pictures you can place.`;
 }

@@ -34,6 +34,13 @@ import {
   SheetLimits,
 } from '@livedoc/sheets';
 import type { SheetRefusal } from './sheet-state';
+import { notInGallery } from '../images/gallery';
+import {
+  buildImageChange,
+  imagesClearWrite,
+  type GalleryPicture,
+  type SheetImageChange,
+} from './sheet-image-objects';
 import { rowsRefusal } from './sheet-refusals';
 import { buildRuleChange, type SheetRuleChange } from './sheet-rule-change';
 import { buildShapeChange, type SheetShapeChange } from './sheet-shape-change';
@@ -86,6 +93,9 @@ export type SheetChange =
   // A spreadsheet's pivot tables (pivot-tables.md "The model"): one set whole, or taken off.
   | SheetPivotChange
   | { op: 'clear_pivots'; id?: string }
+  // A spreadsheet's images over cells (inserted-objects.md "Images over cells"): one placed, or taken off.
+  | SheetImageChange
+  | { op: 'clear_images'; id?: string }
   // A spreadsheet's sheet tab (sheet-store.md "Built for agents in a spreadsheet"): moved after a sheet (first for
   // null), hidden or shown.
   | { op: 'move'; after: string | null }
@@ -113,6 +123,9 @@ export type SheetChangeContext = {
   dark?: boolean;
   font?: string | undefined;
   spreadsheet?: boolean;
+  // The caller's gallery pictures an `image` change may place, by id, with their natural sizes (change-sheet.ts reads
+  // it, refusing an id it lacks before anything is built).
+  gallery?: ReadonlyMap<string, GalleryPicture>;
 };
 
 const notSpreadsheet = (op: string) =>
@@ -435,6 +448,23 @@ export function buildSheetChange(
       const cleared = pivotsClearWrite(sheet.layout, change.id);
       if (!cleared.ok) return cleared;
       const what = change.id ? `the pivot table ${change.id}` : 'the sheet’s pivot tables';
+      return {
+        ok: true,
+        writes: cleared.write ? [cleared.write] : [],
+        line: `cleared ${what} (${cleared.count || 'none there'})`,
+      };
+    }
+    case 'image': {
+      if (!context.spreadsheet) return notSpreadsheet('image');
+      const natural = context.gallery?.get(change.imageId);
+      if (!natural) return refuse('image_not_found', notInGallery(change.imageId));
+      return buildImageChange(wb, sheetId, change, natural, rand);
+    }
+    case 'clear_images': {
+      if (!context.spreadsheet) return notSpreadsheet('clear_images');
+      const cleared = imagesClearWrite(sheet.layout, change.id);
+      if (!cleared.ok) return cleared;
+      const what = change.id ? `the image ${change.id}` : 'the sheet’s images';
       return {
         ok: true,
         writes: cleared.write ? [cleared.write] : [],

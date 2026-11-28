@@ -344,16 +344,16 @@ A chart reads its range live, its top-left at the cell at names:
 A scatter's first column of numbers is its x; lines draws those series as lines, by name.
 type: "stepped-area": a flat step per category; "radar": a closed line round a spoke per category;
 "bubble": a scatter whose last value column sizes the bubbles (names, x, y..., size);
-"candlestick" or "ohlc": labels, then open, high, low, close columns (or high, low, close);
+"candlestick" or "ohlc": labels, then open, high, low, close (or no open);
 "histogram": the values counted into equal buckets; "waterfall": the first column as changes, a Subtotal last;
 "treemap": a tile per label sized by its value; "gauge": a dial per label;
-"scorecard": the first column’s sum large, its change from the second’s under it;
+"scorecard": the first column’s sum, its change from the second’s;
 "timeline": each point by its date (a date label column, or ISO dates); "table": the data as a table.
-Files hold a type they lack as their nearest; LiveDoc reads it back as it was.
+Files hold a type they lack as its nearest; LiveDoc reads it back.
 stack: "stacked" or "percent" stacks a column, bar, area or stepped-area chart's series (100% as shares);
 smooth: true curves a line chart's lines.
 type: "combo" draws each series as columns, a line, an area or a stepped area: seriesTypes {"Margin": "line"}
-(by default the first half columns, the rest lines); rightAxis: ["Margin"] puts series on a
+(default: first half columns, rest lines); rightAxis: ["Margin"] puts series on a
 second scale (line, area, stepped-area and combo charts).
 read_sheet lists the charts with their ids; chart {..., replace: "<id>"} rewrites one in place,
 clear_charts {id: "<id>"} takes one off, clear_charts {} all. add_sheet {title, after} adds a sheet after another.
@@ -365,13 +365,15 @@ Columns by name; a value sums numbers, else counts (summarise: "AVERAGE"). group
 rule ("month", "yearMonth"), {size: 10} intervals, or {groups: [{name, items}]}.
 read_sheet lists them; replace: "<id>" rewrites one, clear_pivots {id} drops it.
 
+A list_images picture over the cells: image {imageId, at: "B2", width, alt}; clear_images {id}.
+
 read_sheet reads back each cell's input, value and what it shows. Cheaper:
 read_document on any of its tabs outlines the workbook (sheets, used ranges, rules, charts, pivots);
 view "cells" {range: "A1:D40"} prints the sheet a row a line, a formula with what it shows.
 
 The file: livedoc spreadsheet download <doc> [--format xlsx|ods|fods|csv|tsv] [--sheet <name>]
-writes it with its charts and pivot tables. Change its format with convert_spreadsheet {to: "xlsx"} (or
-livedoc spreadsheet convert <doc> xlsx); check: true only lists what Excel cannot hold.`,
+writes it with its charts, pivots and images. Change its format with convert_spreadsheet {to: "xlsx"};
+check: true only lists what Excel cannot hold.`,
   },
 } as const;
 

@@ -54,9 +54,14 @@ An image floats over the cells as a chart does, one of its sheet's objects ([She
   [Import image pipeline](../020-import-export/import-image-pipeline.md) (a picture past the caps stays kept in the
   file and is named by the read).
 - **Agents**: `change_sheet` `image {imageId, at, width, height, alt, replace}` places one of the caller's gallery
-  pictures (`list_images`), refused for an id the gallery lacks as the MCP refuses it on a canvas
-  (`image_not_found`); `clear_images {id}`; `read_sheet` and the outline list them with their ids, places, sizes and
-  alt text; the image view of a spreadsheet tab draws them.
+  pictures (`list_images`) with its top-left on the cell `at` names: both sides as given, one side and the other by
+  the picture's shape, or neither and the picture fitted to 600 by 400 as Insert does (16 to 4,000 px a side, else
+  `write_invalid`); `replace` sets it in the place of the sheet's image of that id, keeping the id
+  (`sheet_image_not_found` for none). The gallery is read once a call that places a picture, before anything is
+  written: an id it lacks is refused as the MCP refuses it on a canvas (`image_not_found`), a server keeping no images
+  with `images_unavailable`. `clear_images {id}` takes one off, `{}` every one. `read_sheet` lists them
+  (`images: [{id, imageId, at, width, height, alt}]`) and the outline a line each
+  (`image <id> at <A1> <w>x<h> "<alt>"`); the image view of a spreadsheet tab draws them (default, D627).
 
 ### Images in a cell
 
@@ -130,6 +135,8 @@ resize, alt text, replacement or delete of an image over cells.
 
 - **D623** An image over cells is one of its sheet's objects, placed at the active cell at its natural size scaled to
   fit 600 by 400 px, moved and resized as a chart is, its bytes in the uploader's gallery (default).
+- **D627** An agent's image lands at the cell it names, offset 0, sized as given or fitted as Insert fits it; its
+  gallery check is change_sheet's own, so the CLI and the MCP refuse alike (default).
 - **D625** A spreadsheet in This Browser places no image over cells (Insert Image over Cells dimmed, its hint saying
   to sync): a sheet holds a gallery id only, and a picture embedded in the sheet would leave the gallery's rules
   (default).
