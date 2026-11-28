@@ -101,9 +101,18 @@ attributed to the token, and revertable. Its operations:
   - `suggest` makes one suggestion of each operation: an `edit` is a deletion and an insertion under one id, inserted
     paragraphs carry it on their breaks and their text, an inserted table as a whole.
 - **Verbs**: `text-document.view`, `text-document.edit` (the changeset), `text-document.download` (a format),
-  `text-document.import`; CLI commands `livedoc doc view|edit|download|import` and MCP tools `read_text_document`,
-  `edit_text_document`; previews of a page rendered through `render-png`.
-- An agent's `create_document` with kind `text-document` makes one, born in ODF (fork C5).
+  `text-document.import`; MCP tools `read_text_document`, `edit_text_document`; previews of a page rendered through
+  `render-png`.
+- **CLI**: the kind is its own resource, `text-document` (alias `text`), as a spreadsheet is (`doc` names documents):
+  - `livedoc text view <doc> [--as outline|text|structure] [--only <document tab>] [--range a..b] [--lines]`.
+  - `livedoc text edit <doc> [ops…] [--file <f>|-] [--summary <s>] [--document-tab <t>] [--base <b>] [--dry-run]`: the
+    words are one operation; a file (or stdin) holds one a line. It prints the result lines and the changeset.
+  - `livedoc text download <doc> [--format odt|fodt|docx|txt|md|html|epub|rtf] [--to <path>]`: its own format by
+    default, written under its name here.
+  - `livedoc text import <file> [--name <n>]`: opened as File › Open opens it.
+  - `<doc>` names a document holding a text document tab; `--tab` picks one by name or id when it holds several.
+- An agent's `create_document` with kind `text-document` makes one, born in ODF (fork C5), its body optionally from
+  Markdown (`markdown`).
 
 ## Repository sync
 

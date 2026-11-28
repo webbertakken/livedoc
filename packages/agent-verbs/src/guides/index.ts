@@ -375,6 +375,43 @@ The file: livedoc spreadsheet download <doc> [--format xlsx|ods|fods|csv|tsv] [-
 writes it with its charts, pivots and images. Change its format with convert_spreadsheet {to: "xlsx"};
 check: true only lists what Excel cannot hold.`,
   },
+  text: {
+    summary:
+      'read a text document by paragraph number, change it with text operations, undo a change',
+    text: `Text documents
+
+Read one first. Paragraphs have no ids: they are numbered ¶1, ¶2… in reading order, a table's row by row.
+
+  livedoc text view <doc>                          the outline: document tabs, headings with ¶ numbers
+  livedoc text view <doc> --as text --lines        Markdown, ¶<n> before each paragraph
+  livedoc text view <doc> --as text --range 40..60
+  livedoc text view <doc> --as structure           styles, tables, pictures, comments, suggestions
+
+Change it with text operations, one a line, all or nothing (a refusal names its line):
+
+  edit "old" "new"                 the one occurrence of old (exact, within a paragraph); new takes **marks**
+  insert after|before ¶12 "<md>"   Markdown paragraphs, lists, code blocks, pipe tables
+  append "<md>"  /  prepend "<md>"
+  style ¶4 "Heading 2"             or a role: title, subtitle, normal, heading1..heading6
+  format "word" bold -italic underline strike link=https://…  -link
+  table ¶20 add-row 3 | delete-row 2 | add-column 1 | delete-column 2 | set 2,3 "text"
+  comment "word" "Why this?"
+  suggest edit "old" "new"         also before insert, append, prepend, format
+  replace "<md>"                   the whole document tab; alone, with --base
+
+A target is ¶12 (or p12) or a quoted text that occurs once. Text is a JSON string: \\n is a new line.
+
+  livedoc text edit <doc> edit '"Q3"' '"Q4"' --summary "move the date"
+  livedoc text edit <doc> -f ops.txt --dry-run
+  livedoc changeset revert <doc> tc_…              undoes exactly that change; later typing stays
+
+text_not_found or text_ambiguous: read it again (--as text --lines) and quote more of it.
+A Participant may only comment and suggest. replace needs --base: the X-State-Vector a view answered.
+
+Files: livedoc text download <doc> [--format odt|fodt|docx|txt|md|html|epub|rtf] [--to <path>];
+livedoc text import <file> [--name <n>] opens one as File › Open does.
+Over MCP: read_text_document, edit_text_document; create_document {kind: "text-document", markdown}.`,
+  },
 } as const;
 
 type GuideTopic = keyof typeof GUIDE_TOPICS;

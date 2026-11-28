@@ -50,6 +50,7 @@ import { boardVerbs } from './verbs/board';
 import { cardTypeVerbs } from './verbs/card-type';
 import { sheetVerbs } from './verbs/sheet';
 import { spreadsheetVerbs } from './verbs/spreadsheet';
+import { textDocumentVerbs } from './verbs/text-document';
 import { pagesVerbs } from './verbs/pages';
 import { formVerbs } from './verbs/form';
 import { stormVerbs } from './verbs/storm';
@@ -79,6 +80,7 @@ export const VERBS: readonly Verb[] = [
   ...cardTypeVerbs,
   ...sheetVerbs,
   ...spreadsheetVerbs,
+  ...textDocumentVerbs,
   ...pagesVerbs,
   ...formVerbs,
   ...stormVerbs,
@@ -138,6 +140,11 @@ export const RESOURCES: readonly { name: string; alias?: string; summary: string
   { name: 'type', summary: 'Card types and their fields' },
   { name: 'sheet', summary: 'Sheets: their cells by A1, rows and columns' },
   { name: 'spreadsheet', summary: 'Spreadsheets: make one' },
+  {
+    name: 'text-document',
+    alias: 'text',
+    summary: 'Text documents: read, change, download and open one',
+  },
   { name: 'page', summary: 'Pages: slides, logos, infographics' },
   { name: 'article', summary: 'Articles as Markdown' },
   { name: 'form', summary: 'Forms: build, read and publish one' },
@@ -174,6 +181,7 @@ export const TOP_LEVEL = [
 export const RESOURCE_ALIASES: Readonly<Record<string, string>> = {
   doc: 'document',
   el: 'element',
+  text: 'text-document',
 };
 
 // Command words that name one verb directly.
