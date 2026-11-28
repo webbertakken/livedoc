@@ -39,8 +39,7 @@ Both ODF and OOXML are native (fork C1, ruled): a file keeps the format it arriv
   (reading order guessed): the engine's lines in the file's order, a line joining the paragraph above when it starts
   in the same column and the gap is at most half a line; a paragraph whose lines are at least 1.2 times the body
   text's height is a heading, the tallest Heading 1, then 2 and 3 (default). A page with no text (a scan) and a page
-  whose text was cut at the engine's limit are reported; pictures are not read yet, so every page is reported as
-  read without them (default). A password-protected PDF, or one the engine refuses, is refused with the PDF
+  whose text was cut at the engine's limit are reported; each picture comes at its place: a tagged figure holds the page's pictures in the order drawn, an untagged page's picture goes before the first paragraph below its top, any left over after the page, at its size on the page up to the text's width; a picture past the engine's size limit, unreadable, or past a page's picture limit is left out and reported (default). A password-protected PDF, or one the engine refuses, is refused with the PDF
   document's words; past `TEXT_DOCUMENT_MAX_CHARS` it refuses `document_too_large`.
 - An import that drops anything shows the **import report** ([below](#import-report)).
 - An opened file rides the new document's create (default): `POST /api/documents` names the text document tab and its
