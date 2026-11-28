@@ -109,7 +109,7 @@ leaves it); `left out (C3)` (its function is a Google service, [Parity matrix](p
 | Move focus out of spreadsheet           | `Ctrl+Alt+Shift+M`         | `Ctrl+⌘+Shift+M`              | `Ctrl+Alt+Shift+M`           | the surface's (`spreadsheet-surface-shortcuts.test.ts`) |
 | Move to quicksum                        | `Alt+Shift+Q`              | `Option+Shift+Q`              | `Alt+Shift+Q`                | the surface's (`spreadsheet-surface-shortcuts.test.ts`) |
 | Move focus to popup                     | `Ctrl+Alt+E, P`            | `Ctrl+⌘+E, P`                 | `Ctrl+Alt+E, P`              | specified                                               |
-| Open drop-down menu on filtered cell    | `Ctrl+Alt+R`               | `Ctrl+⌘+R`                    | `Ctrl+Alt+R`                 | specified                                               |
+| Open drop-down menu on filtered cell    | `Ctrl+Alt+R`               | `Ctrl+⌘+R`                    | `Ctrl+Alt+R`                 | built (`useFilterMenuShortcut.test.tsx`)                |
 | Show "Go to range" dialog               | —                          | `Ctrl+G`                      | —                            | specified                                               |
 | Find and replace with Find tab selected | —                          | `Ctrl+F`                      | —                            | the surface's (`spreadsheet-surface-shortcuts.test.ts`) |
 | Open revision history                   | `Ctrl+Alt+Shift+H`         | `⌘+Option+Shift+H`            | `Ctrl+Alt+Shift+H`           | specified                                               |

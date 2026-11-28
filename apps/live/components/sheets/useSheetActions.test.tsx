@@ -136,12 +136,13 @@ async function rich(
   const initial = { ...json(), layout: emptyLayout(rand, opts.rows ?? 6, opts.cols ?? 4) };
   const announce = vi.fn();
   const toast = vi.fn();
+  const pushUndo = vi.fn();
   const store = new SheetStore({
     scope: { documentId: 'd1', ownerId: 'o', shareCode: null, tabId: null },
     self: () => by,
     locale: 'en-GB',
     ...(opts.timeZone ? { timeZone: opts.timeZone } : {}),
-    pushUndo: () => {},
+    pushUndo,
     toast: () => {},
     api: {
       fetchSheets: async () => [initial],
@@ -189,7 +190,7 @@ async function rich(
     run((a) => a.startEdit('type', text));
     return run((a) => a.commitEdit('none')) as { ok: boolean };
   };
-  return { store, view, run, select, sheet, cell, value, typeAt, announce, toast };
+  return { store, view, run, select, sheet, cell, value, typeAt, announce, toast, pushUndo };
 }
 
 const ID = 'sheet0001';
@@ -578,6 +579,39 @@ describe('sort, filter, freeze, dates', () => {
     const col = h.sheet().layout.cols[0]!;
     h.run((a) => a.setTableFilter(table().id, col, { values: ['x'] }));
     expect(table().filter).toEqual({ [col]: { values: ['x'] } });
+    expect(h.sheet().layout.filter).toBeUndefined();
+  });
+
+  // data-tools.md "Filters, filter views and slicers" (D504): Filter by Cell Value keeps the rows showing the active
+  // cell's value, making the sheet's filter first in the same undo step; outside the filter it changes nothing.
+  it('filters by the active cell’s value, making the filter first, one undo step', async () => {
+    const h = await rich();
+    h.typeAt(0, 0, 'Head');
+    h.typeAt(1, 0, 'x');
+    h.typeAt(2, 0, 'y');
+    h.select(2, 0);
+    h.pushUndo.mockClear();
+    h.run((a) => a.filterByCellValue());
+    const col = h.sheet().layout.cols[0]!;
+    expect(h.sheet().layout.filter?.conds).toEqual({ [col]: { values: ['y'] } });
+    expect(h.pushUndo).toHaveBeenCalledTimes(1);
+    h.select(1, 3);
+    h.run((a) => a.filterByCellValue());
+    expect(h.toast).toHaveBeenLastCalledWith('This cell is outside the filter');
+    expect(h.sheet().layout.filter?.conds).toEqual({ [col]: { values: ['y'] } });
+  });
+
+  it('filters a table’s own filter by the active cell’s value', async () => {
+    const h = await rich();
+    h.typeAt(0, 0, 'Head');
+    h.typeAt(1, 0, 'x');
+    h.typeAt(2, 0, 'y');
+    h.select(0, 0, 2, 0);
+    h.run((a) => a.convertToTable());
+    h.select(1, 0);
+    h.run((a) => a.filterByCellValue());
+    const col = h.sheet().layout.cols[0]!;
+    expect(h.sheet().layout.tables![0]!.filter).toEqual({ [col]: { values: ['x'] } });
     expect(h.sheet().layout.filter).toBeUndefined();
   });
 

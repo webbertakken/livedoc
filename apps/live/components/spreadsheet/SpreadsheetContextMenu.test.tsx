@@ -107,9 +107,19 @@ describe('the spreadsheet cell menu', () => {
       'Convert to Table',
       'View More Cell Actions',
     ]);
-    expect(item('Filter by Cell Value').getAttribute('aria-disabled')).toBe('true');
+    expect(item('Show Edit History').getAttribute('aria-disabled')).toBe('true');
+    expect(item('Filter by Cell Value').getAttribute('aria-disabled')).toBeNull();
     expect(item('Cut').getAttribute('aria-disabled')).toBeNull();
     expect(track).toHaveBeenCalledWith('UI', 'Opened', 'SpreadsheetContextMenu');
+  });
+
+  // data-tools.md "Filters, filter views and slicers" (D504).
+  it('filters by the cell’s value, making the sheet’s filter', () => {
+    show(h, CELL, { at: 'A2' });
+    fireEvent.click(item('Filter by Cell Value'));
+    const { cols } = layout(h);
+    expect(layout(h).filter?.conds).toEqual({ [cols[0]!]: { values: ['2'] } });
+    expect(menu()).toBeNull();
   });
 
   it('runs an item through the grid and closes', () => {

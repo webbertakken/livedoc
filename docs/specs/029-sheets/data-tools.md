@@ -1,11 +1,12 @@
 # Data tools
 
-**Status: partly built.** Sort Sheet, Sort Range with its Advanced Range Sorting Options, Create a Filter, Filter by Colour,
-every condition of Filter by Condition, and data validation (the Data Validation Rules panel, Insert › Checkbox,
-Insert › Dropdown, every criterion, kept in both file formats) and the Named Ranges panel are built; tables are built
-as the sheet's model, its writes and growth, and table references in formulas, without their menus and panel yet;
-data clean-up (Clean-up Suggestions, Remove Duplicates, Trim Whitespace), Split Text to Columns, Randomise Range and
-Column Stats, filter views, slicers and group by views are built; the rest is specified.
+**Status: partly built.** Sort Sheet, Sort Range with its Advanced Range Sorting Options; Create a Filter, Filter by
+Colour, every condition of Filter by Condition, Filter by Cell Value and Ctrl+Alt+R; filter views, slicers and group by
+views; data validation (the Data Validation Rules panel, Insert › Checkbox, Insert › Dropdown, every criterion, kept
+in both file formats); the Named Ranges panel and named functions; protected sheets and ranges; tables with their
+menus, panel, filters and table references; data clean-up (Clean-up Suggestions, Remove Duplicates, Trim Whitespace),
+Split Text to Columns, Randomise Range and Column Stats are built. Get Link to This Cell waits on links (Phase 11 of
+the build); the rest is specified.
 
 Sorting, filtering, validation, names, protection, tables and clean-up in a [spreadsheet](spreadsheet.md), as
 Google Sheets' Data menu does. Its rows of the [parity matrix](parity-matrix.md) name this page.
@@ -56,6 +57,19 @@ Google Sheets' Data menu does. Its rows of the [parity matrix](parity-matrix.md)
 - A column's filter menu: Sort A to Z, Sort Z to A, **Filter by Colour** (fill, text), **Filter by Condition** (every
   condition of Google's list and Custom Formula), **Filter by Values** (a searchable list with counts, Select All,
   Clear).
+- **Filter by Cell Value** (a cell's context menu, as Google's): keeps only the rows whose cell in the active
+  cell's column shows what the active cell shows, Filter by Values with that one value ticked; the column's
+  condition and colour go (D504). It acts on the filter over the active cell, one undo step:
+  - the open filter view's while one is open (a temporary view's for its maker alone);
+  - else the table's own when the cell lies in a table, turned on first when it is off;
+  - else the sheet's, made first over Create a Filter's range when the sheet has none (refused, nothing changed, as
+    Create a Filter is when that range overlaps a table).
+  - A cell in the filter's header row, or in a table's total row, turns the filter on and filters nothing; a cell
+    outside the sheet's filter or the open view says "This cell is outside the filter" and changes nothing (D504).
+- **Ctrl+Alt+R** (Google's "Open drop-down menu on filtered cell") opens the filter menu of the active cell's column
+  when the cell lies in a filter's range, its header row included: the open view's, else a table's whose filter is on
+  (never one paused under a view), else the sheet's. It opens under the column's filter button, or under the active
+  cell when the button is scrolled out of view; elsewhere it does nothing (D504).
 - **Filter by Colour** lists, under **Fill Colour** and **Text Colour**, the colours the column's cells under the
   header are drawn in, once each in the order they first appear, each a swatch named by its colour. A cell's colour
   is a met format rule's over its own, a theme colour as the theme draws it; alternating colours never count (as
@@ -679,6 +693,10 @@ The code cites each by its id.
   column-level aggregations; Hide Aggregations on the view bar, Google's View Options item (default).
 - **D503** A table's chip when no row lies above its header: drawn over the column letters, so the header's text stays
   readable (seen in the gate's capture, the chip hid "Fruit" in A1); Google's placement there unmeasured (default).
+- **D504** Filter by Cell Value and Ctrl+Alt+R: the cell's shown value as Filter by Values' one ticked value, the
+  column's condition and colour dropped, as Google's item replaces the column's filter; a header or total row cell
+  only turns the filter on, a cell outside the filter changes nothing with a toast, and Ctrl+Alt+R opens the menu
+  under the active cell when the column's button is out of view (Google's for these edges unmeasured) (default).
 - **D487** What a slicer filters beside the cells: a chart whose data range is the slicer's range exactly, as
   Google's "same data range"; a pivot table whose source is the slicer's range exactly, on the slicer's sheet, while
   Apply to Pivot Tables is ticked, worked out for each person by the pivot tables' side (the Director's ruling,
