@@ -79,8 +79,8 @@ export const REPORT_LINES: Record<DroppedReason, readonly [one: string, many: st
     'pages whose text was cut at the reader’s limit',
   ],
   'pdf-pictures': [
-    'page read without its pictures (LiveDoc does not read a PDF’s pictures yet)',
-    'pages read without their pictures (LiveDoc does not read a PDF’s pictures yet)',
+    'PDF picture left out (too large or unreadable)',
+    'PDF pictures left out (too large or unreadable)',
   ],
   'suggestion-unknown': [
     'suggestion of a kind LiveDoc does not hold left out',

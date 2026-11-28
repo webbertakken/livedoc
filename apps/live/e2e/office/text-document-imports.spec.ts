@@ -1,5 +1,5 @@
 import { expect, expectNoPageErrors, test } from '../fixtures';
-import { taggedPdf } from '@livedoc/pdf-documents/testing';
+import { picturesPdf, taggedPdf } from '@livedoc/pdf-documents/testing';
 import { officeMenuItem } from './office-menus';
 
 // Imports (docs/specs/034-text-documents/files-and-print.md "Opening"): a Markdown or HTML file opened from the
@@ -114,7 +114,7 @@ test('a Rich Text file opens as a new text document', async ({ page, pageErrors 
 });
 
 // files-and-print.md "A PDF imported": read in this browser by the PDF engine, a tagged page by its tags (its page
-// number, an artifact, left out), an untagged page by its lines; the report says the pictures were not read.
+// number, an artifact, left out), an untagged page by its lines, and its pictures come with it.
 test('a PDF file opens as a new text document, its tags read', async ({ page, pageErrors }) => {
   test.setTimeout(90_000);
   await page.goto('/new?kind=text-document');
@@ -127,9 +127,6 @@ test('a PDF file opens as a new text document, its tags read', async ({ page, pa
     buffer: Buffer.from(taggedPdf()),
   });
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Annual');
-  const report = page.getByRole('dialog', { name: 'Opened “Annual”' });
-  await expect(report).toContainText('pages read without their pictures');
-  await report.getByRole('button', { name: 'OK' }).click();
   const body = page.locator(BODY);
   await expect(body).toContainText('Annual report');
   await expect(body).toContainText('Plant more trees');
@@ -137,5 +134,33 @@ test('a PDF file opens as a new text document, its tags read', async ({ page, pa
   await expect(body).toContainText('Tagged words');
   await expect(body).not.toContainText('Page 1');
   await expect(page.getByText('.ODT', { exact: true })).toBeVisible();
+  // Nothing was left out: no import report.
+  await expect(page.locator('[data-import-report]')).toHaveCount(0);
+  expectNoPageErrors(pageErrors);
+});
+
+test('a PDF file’s pictures come with it, a JPEG as it is and pixels as PNG', async ({
+  page,
+  pageErrors,
+}) => {
+  test.setTimeout(90_000);
+  await page.goto('/new?kind=text-document');
+  await expect(page.locator('[data-text-document-surface="ready"]')).toBeVisible();
+  const open = await officeMenuItem(page, ['File', 'Open']);
+  const [chooser] = await Promise.all([page.waitForEvent('filechooser'), open.click()]);
+  await chooser.setFiles({
+    name: 'Pictures.pdf',
+    mimeType: 'application/pdf',
+    buffer: Buffer.from(picturesPdf()),
+  });
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Pictures');
+  const pictures = page.locator(BODY).locator('.text-document-picture img');
+  await expect(pictures).toHaveCount(3);
+  // Each drawn from its bytes.
+  for (const picture of await pictures.all())
+    await expect
+      .poll(() => picture.evaluate((e) => (e as HTMLImageElement).naturalWidth))
+      .toBeGreaterThan(0);
+  await expect(page.locator('[data-import-report]')).toHaveCount(0);
   expectNoPageErrors(pageErrors);
 });

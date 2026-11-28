@@ -3,12 +3,13 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { PageText } from '@livedoc/pdf-documents';
 import { bytesOfBase64, TextDocumentState } from '@livedoc/text-documents';
-import { apiCreateDocument } from '@/lib/api-client';
+import { ApiError, apiCreateDocument } from '@/lib/api-client';
 import { keepImportReport } from '@/lib/office/import-report-handoff';
 import { track } from '@/lib/telemetry';
 import {
   importPdfFile,
   PDF_PASSWORD_REFUSAL,
+  PDF_TOO_HEAVY,
   PDF_TOO_LONG,
   type PdfImportEngine,
 } from './import-pdf-file';
@@ -34,6 +35,7 @@ function engine(opened: unknown, pageText = text('Hello PDF')) {
     open: vi.fn(() => Promise.resolve(opened)),
     pageText: () => Promise.resolve(pageText),
     pageTags: () => Promise.resolve(null),
+    pagePictures: () => Promise.resolve(null),
     terminate,
   } as unknown as PdfImportEngine;
   return { fake, terminate };
@@ -57,7 +59,8 @@ describe('importPdfFile', () => {
     expect(body.tabs[0]!.format).toBe('odf');
     const doc = TextDocumentState.load([bytesOfBase64(body.textDocuments[0]!.state)!]);
     expect(TextDocumentState.paragraphs(doc).map((p) => p.text)).toEqual(['Hello PDF']);
-    expect(TextDocumentState.report(doc).imported?.type).toBe('pdf');
+    // Nothing was left out: no report.
+    expect(TextDocumentState.report(doc).imported).toBeNull();
     expect(track).toHaveBeenCalledWith('Tab', 'Imported', 'Pdf');
     expect(keepImportReport).toHaveBeenCalledWith(expect.any(String), { name: 'Brief', lines: [] });
     expect(terminate).toHaveBeenCalled();
@@ -97,5 +100,16 @@ describe('importPdfFile', () => {
     expect(
       await importPdfFile('me', pdf, 'Brief', () => Promise.reject(new Error('no worker'))),
     ).toMatchObject({ ok: false });
+  });
+
+  it('refuses a PDF whose pictures pass the create’s limit', async () => {
+    vi.mocked(apiCreateDocument).mockRejectedValue(
+      new ApiError('create document', 413, 'payload_too_large'),
+    );
+    const { fake } = engine(OPENED);
+    expect(await importPdfFile('me', pdf, 'Brief', () => Promise.resolve(fake))).toEqual({
+      ok: false,
+      message: PDF_TOO_HEAVY,
+    });
   });
 });

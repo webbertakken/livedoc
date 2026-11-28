@@ -6,7 +6,14 @@ import type { Block, Paragraph } from '../model/blocks';
 import { ListDefinition, type ListPlace } from '../model/lists';
 import { PageSetup } from '../model/sections';
 import { Tables, type Table } from '../model/tables';
-import { refuse } from '@livedoc/office-packages';
+import {
+  isMappedPictureType,
+  isPictureTooLarge,
+  mediaKeyOf,
+  pictureHeader,
+  refuse,
+} from '@livedoc/office-packages';
+import type { Picture, PictureMedia } from '../model/pictures';
 import type { TextDocumentRead } from '../files';
 import { TEXT_DOCUMENT_MAX_CHARS } from '../limits';
 import { TextDocument } from '../model/text-document';
@@ -29,6 +36,16 @@ export type PdfImportNode = {
   readonly kids: readonly (PdfImportNode | string)[];
 };
 
+/** A picture of a page: where it is drawn (page space, points, y up) and its bytes as PNG or JPEG, null when the
+ *  engine could not hand them over. */
+export type PdfImportPicture = {
+  readonly left: number;
+  readonly right: number;
+  readonly top: number;
+  readonly bottom: number;
+  readonly bytes: Uint8Array | null;
+};
+
 export type PdfImportPage = (
   | { readonly reading: 'tags'; readonly nodes: readonly PdfImportNode[] }
   | { readonly reading: 'geometry'; readonly lines: readonly PdfImportLine[] }
@@ -36,7 +53,14 @@ export type PdfImportPage = (
 ) & {
   /** The engine read less than the page holds. */
   readonly cut: boolean;
+  /** The page's pictures in the order drawn. */
+  readonly pictures?: readonly PdfImportPicture[];
+  /** The page holds more pictures than the engine hands over. */
+  readonly picturesCut?: boolean;
 };
+
+/** A picture ready to place: its top on the page and the paragraph that holds it. */
+type Placed = { readonly top: number; readonly block: Paragraph };
 
 /** How far below a paragraph a line may start and still join it, in its lines' heights. */
 export const PDF_JOIN_GAP = 0.5;
@@ -81,6 +105,8 @@ type Builder = {
   readonly heading: (level: number) => string;
   readonly table: (rows: readonly (readonly string[])[], headerRows: number) => Table;
   readonly list: (kind: 'bullet' | 'number') => string;
+  /** The page's next picture not yet placed, with a figure's alternative text; null when none is left. */
+  readonly takePicture: (alt: string) => Paragraph | null;
 };
 
 /** A tagged page's blocks, in the tree's order. */
@@ -139,7 +165,9 @@ function tagBlocks(nodes: readonly PdfImportNode[], b: Builder): Block[] {
     } else if (node.type === 'L') listOf(node, null, 0);
     else if (node.type === 'Table') tableOf(node);
     else if (FIGURES.has(node.type)) {
-      if (node.alt.trim()) blocks.push(b.paragraph(b.normal, `[${node.alt.trim()}]`));
+      const picture = node.type === 'Figure' ? b.takePicture(node.alt.trim()) : null;
+      if (picture) blocks.push(picture);
+      else if (node.alt.trim()) blocks.push(b.paragraph(b.normal, `[${node.alt.trim()}]`));
     } else if (CONTAINERS.has(node.type) || node.kids.some((kid) => isNode(kid) && !isInline(kid)))
       for (const kid of node.kids) {
         if (isNode(kid)) walk(kid);
@@ -175,6 +203,8 @@ const isInline = (node: PdfImportNode): boolean => INLINE.has(node.type);
 
 type GeometryParagraph = {
   text: string;
+  /** The first line's top. */
+  readonly firstTop: number;
   left: number;
   right: number;
   /** The last line's top and bottom. */
@@ -222,6 +252,7 @@ function geometryParagraphs(lines: readonly PdfImportLine[]): GeometryParagraph[
     } else
       out.push({
         text,
+        firstTop: line.top,
         left: line.left,
         right: line.right,
         top: line.top,
@@ -250,10 +281,18 @@ export function bodyHeight(pages: readonly PdfImportPage[]): number {
 
 const rounded = (height: number) => Math.round(height * 2) / 2;
 
-export function readPdfImport(
+/** A picture's bytes keyed as every reader keys a document's media, or null where they cannot be held. */
+async function heldPicture(bytes: Uint8Array | null) {
+  const header = bytes && pictureHeader(bytes);
+  if (!bytes || !header || !isMappedPictureType(header.mediaType) || isPictureTooLarge(bytes))
+    return null;
+  return { key: await mediaKeyOf(bytes), mediaType: header.mediaType, bytes };
+}
+
+export async function readPdfImport(
   pages: readonly PdfImportPage[],
   report: ReportBuilder,
-): TextDocument {
+): Promise<TextDocument> {
   const { blank, styles, normal, heading } = importStyles();
   const lists: Record<string, ListDefinition> = {};
   const width = PageSetup.room(blank.section.setup).across;
@@ -264,8 +303,44 @@ export function readPdfImport(
     inlines: text ? [{ type: 'run', text, props: {} }] : [],
     ...extra,
   });
+  // Each page's pictures that can be held, in the order drawn, each as the paragraph that holds it.
+  const media: Record<string, PictureMedia> = {};
+  const pagePictures: Placed[][] = [];
+  for (const page of pages) {
+    const placed: Placed[] = [];
+    if (page.picturesCut) report.drop('pdf-pictures', 'page past its picture limit');
+    for (const drawn of page.pictures ?? []) {
+      const held = await heldPicture(drawn.bytes);
+      if (!held) {
+        report.drop('pdf-pictures', 'picture');
+        continue;
+      }
+      media[held.key] = { mediaType: held.mediaType, bytes: held.bytes };
+      // At its size on the page, no wider than the text.
+      const across = Math.max(1, drawn.right - drawn.left);
+      const down = Math.max(1, drawn.top - drawn.bottom);
+      const scale = Math.min(1, width / across);
+      const picture: Picture = {
+        type: 'picture',
+        media: held.key,
+        width: Math.round(across * scale * 100) / 100,
+        height: Math.round(down * scale * 100) / 100,
+        props: {},
+      };
+      placed.push({ top: drawn.top, block: { ...paragraph(normal, ''), inlines: [picture] } });
+    }
+    pagePictures.push(placed);
+  }
+  let pending: Placed[] = [];
   const builder: Builder = {
     paragraph,
+    takePicture: (alt) => {
+      const next = pending.shift();
+      if (!next) return null;
+      if (!alt) return next.block;
+      const [picture] = next.block.inlines as [Picture];
+      return { ...next.block, inlines: [{ ...picture, alt }] };
+    },
     normal,
     heading,
     list: (kind) => {
@@ -312,25 +387,43 @@ export function readPdfImport(
     return rank < 0 ? normal : heading(Math.min(rank + 1, 3));
   };
 
+  // A page's writing, its pictures placed: tagged figures take them in order; on an untagged page each goes before
+  // the first paragraph below its top; any left over follow the page.
+  const pageBlocks = (page: PdfImportPage, index: number): Block[] => {
+    pending = [...pagePictures[index]!];
+    if (page.reading === 'tags') return tagBlocks(page.nodes, builder);
+    const paragraphs = geometry[index]!;
+    if (paragraphs.length === 0) return [];
+    const out: Block[] = [];
+    for (const p of paragraphs) {
+      while (pending.length > 0 && pending[0]!.top >= p.firstTop) out.push(pending.shift()!.block);
+      out.push(paragraph(styleOf(p), p.text));
+    }
+    return out;
+  };
   const blocks = pages.flatMap((page, index): Block[] => {
     if (page.cut) report.drop('pdf-text-cut', 'page');
-    report.drop('pdf-pictures', 'page');
-    if (page.reading === 'tags') return tagBlocks(page.nodes, builder);
-    if (page.reading === 'geometry' && geometry[index]!.length > 0)
-      return geometry[index]!.map((p) => paragraph(styleOf(p), p.text));
-    report.drop('pdf-no-text', 'page');
-    return [];
+    const read = pageBlocks(page, index);
+    const pictures = pending.map((left) => left.block);
+    if (read.length === 0 && pictures.length === 0) report.drop('pdf-no-text', 'page');
+    return [...read, ...pictures];
   });
-  return { ...blank, styles, lists, body: blocks.length > 0 ? blocks : blank.body };
+  return {
+    ...blank,
+    styles,
+    lists,
+    ...(Object.keys(media).length > 0 ? { media } : {}),
+    body: blocks.length > 0 ? blocks : blank.body,
+  };
 }
 
 /** The pages read under the text document's guards: past `maxChars`, `document_too_large`. */
-export function readPdfPages(
+export async function readPdfPages(
   pages: readonly PdfImportPage[],
   maxChars = TEXT_DOCUMENT_MAX_CHARS,
-): TextDocumentRead {
+): Promise<TextDocumentRead> {
   const report = new ReportBuilder();
-  const document = readPdfImport(pages, report);
+  const document = await readPdfImport(pages, report);
   if (TextDocument.characters(document) > maxChars) return refuse('document_too_large');
   return { ok: true, document, report: report.build(), fileType: 'odt' };
 }

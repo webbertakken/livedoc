@@ -481,5 +481,6 @@ export {
   readPdfPages,
   type PdfImportLine,
   type PdfImportNode,
+  type PdfImportPicture,
   type PdfImportPage,
 } from './imports/pdf';

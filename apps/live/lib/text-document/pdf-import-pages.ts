@@ -1,11 +1,26 @@
 // A PDF's pages as the text document's PDF import reads them (docs/specs/034-text-documents/files-and-print.md "A PDF
-// imported"): each page's tags where they cover it, else its lines with their boxes, read through the PDF engine, the
-// one place a PDF is parsed. Text and numbers only cross from the engine.
-import { PageTags, PageText, type PdfEngine, type TagNode } from '@livedoc/pdf-documents';
-import type { PdfImportLine, PdfImportNode, PdfImportPage } from '@livedoc/text-documents';
+// imported"): each page's tags where they cover it, else its lines with their boxes, and its pictures where they are
+// drawn, read through the PDF engine, the one place a PDF is parsed. Text, numbers and picture bytes only cross from
+// the engine.
+import {
+  PageTags,
+  PageText,
+  type PagePicture,
+  type PdfEngine,
+  type TagNode,
+} from '@livedoc/pdf-documents';
+import type {
+  PdfImportLine,
+  PdfImportNode,
+  PdfImportPage,
+  PdfImportPicture,
+} from '@livedoc/text-documents';
 
 /** The most pages an import reads; the rest are reported as cut (default). */
 export const PDF_IMPORT_MAX_PAGES = 2000;
+
+/** Pixels (red, green, blue, alpha a byte each, from the top) written as a PNG. */
+export type RgbaToPng = (width: number, height: number, pixels: Uint8Array) => Promise<Uint8Array>;
 
 const BREAK = /[\r\n]/;
 
@@ -47,8 +62,24 @@ const importNode = (node: TagNode): PdfImportNode => ({
   kids: node.kids.map((kid) => (typeof kid === 'string' ? kid : importNode(kid))),
 });
 
+/** A picture as the import holds it: a JPEG as the file has it, pixels as a PNG, none where the engine gave none. */
+async function importPicture(drawn: PagePicture, toPng: RgbaToPng): Promise<PdfImportPicture> {
+  const { left, right, top, bottom } = drawn.box;
+  const held = drawn.picture;
+  const bytes = !held
+    ? null
+    : held.type === 'image/jpeg'
+      ? held.bytes
+      : await toPng(held.width, held.height, held.pixels).catch(() => null);
+  return { left, right, top, bottom, bytes };
+}
+
 /** Every page read for the import, in order; past the cap, each page is cut and holds nothing. */
-export async function pdfImportPages(engine: PdfEngine, pages: number): Promise<PdfImportPage[]> {
+export async function pdfImportPages(
+  engine: PdfEngine,
+  pages: number,
+  toPng: RgbaToPng,
+): Promise<PdfImportPage[]> {
   const out: PdfImportPage[] = [];
   for (let index = 0; index < pages; index += 1) {
     if (index >= PDF_IMPORT_MAX_PAGES) {
@@ -57,12 +88,17 @@ export async function pdfImportPages(engine: PdfEngine, pages: number): Promise<
     }
     const text = await engine.pageText(index);
     const reading = PageTags.read(await engine.pageTags(index), text);
-    const cut = text?.cut ?? false;
+    const drawn = await engine.pagePictures(index);
+    const held = {
+      cut: text?.cut ?? false,
+      pictures: await Promise.all((drawn?.pictures ?? []).map((p) => importPicture(p, toPng))),
+      picturesCut: drawn?.cut ?? false,
+    };
     if (reading.source === 'tags' && reading.nodes.length > 0)
-      out.push({ reading: 'tags', nodes: reading.nodes.map(importNode), cut });
+      out.push({ reading: 'tags', nodes: reading.nodes.map(importNode), ...held });
     else if (text && text.text.trim())
-      out.push({ reading: 'geometry', lines: linesOfPageText(text), cut });
-    else out.push({ reading: 'none', cut });
+      out.push({ reading: 'geometry', lines: linesOfPageText(text), ...held });
+    else out.push({ reading: 'none', ...held });
   }
   return out;
 }
