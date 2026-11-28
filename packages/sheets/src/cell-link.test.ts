@@ -3,11 +3,11 @@ import {
   CELL_LINK_MAX,
   cellLinkTarget,
   isCellLink,
-  cellLinkText,
   sheetLink,
   sheetLinkOf,
   typedCellLink,
 } from './cell-link';
+import { cellLinkText } from './cell-link-text';
 
 // docs/specs/029-sheets/inserted-objects.md "A cell's link" (D637): a web or email address, a LiveDoc document's, or a
 // sheet or range of this workbook as Google writes one (`#gid=<sheet id>&range=<A1>`).

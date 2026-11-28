@@ -112,6 +112,7 @@ export * from './text/rotation';
 export * from './sheet-starters';
 export * from './hyperlink';
 export * from './cell-link';
+export * from './cell-link-text';
 export * from './sparkline/sparkline-shapes';
 export { imageHost, type CellImage, type ImageMode } from './images/cell-image';
 export { isCellPicture, pictureInput, pictureOfInput } from './images/cell-picture';
