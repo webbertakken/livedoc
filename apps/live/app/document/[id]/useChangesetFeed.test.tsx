@@ -168,6 +168,40 @@ describe('useChangesetFeed', () => {
     expect(toast.action.mock.calls.length).toBe(before);
   });
 
+  it('toasts a text document’s changeset with Undo alone, which reverts it', async () => {
+    apiRevertChangeset.mockResolvedValue({ changeset: null });
+    const { result, deps, press, lastToast, toast } = setup();
+    const text = {
+      kind: 'text-changeset' as const,
+      tabId: 't1',
+      id: 'tc_0000000001',
+      author: { name: 'Webber', color: '#0ea5e9' },
+      agentKey: 'abcabcabcabc',
+      summary: 'tighten the intro',
+      counts: { added: 1, changed: 0, removed: 0 },
+    };
+    act(() => result.current.receiveTextChangeset(text));
+    expect(deps.countAppliedOp).not.toHaveBeenCalled();
+    expect(lastToast()).toMatchObject({
+      key: 'abcabcabcabc',
+      message: 'Webber changed the document: tighten the intro',
+      actions: [{ label: 'Undo', ariaLabel: "Undo Webber's changes" }],
+    });
+    await press('Undo');
+    expect(apiRevertChangeset.mock.calls.map((c) => c[2])).toEqual(['tc_0000000001']);
+    expect(lastToast()).toEqual({ key: 'abcabcabcabc', message: 'Undone', actions: [] });
+    const before = toast.action.mock.calls.length;
+    act(() =>
+      result.current.receiveTextChangeset({
+        ...text,
+        id: 'tc_0000000002',
+        agentKey: undefined,
+        revertOf: 'tc_0000000001',
+      }),
+    );
+    expect(toast.action.mock.calls.length).toBe(before);
+  });
+
   it('a failed Undo says so, logs it and offers the buttons again', async () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     apiRevertChangeset.mockRejectedValue(Object.assign(new Error('nope'), { status: 409 }));

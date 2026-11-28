@@ -1,6 +1,6 @@
 // A text document's changesets on the wire (docs/specs/024-agents/agent-changesets.md "A text document's changesets";
 // docs/specs/034-text-documents/agents-and-sync.md "Writing").
-import type { ChangesetCounts } from './changesets';
+import type { ChangesetAuthor, ChangesetCounts } from './changesets';
 
 // `tc_` and 10 lowercase Crockford base32 characters, as every changeset id.
 export const TEXT_CHANGESET_ID_PATTERN = /^tc_[0-9abcdefghjkmnpqrstvwxyz]{10}$/;
@@ -53,6 +53,20 @@ export type TextChangesetRefusal = {
   operation: number;
   message: string;
   paragraphs?: number[];
+};
+
+// The room's notice of a text changeset (agent-changesets.md "In the editor"), relayed after its update: the writing
+// arrives as that update, this only raises the toast. `agentKey` as a tab changeset's: a digest of the token id, so a
+// burst from one agent shares one toast.
+export type TextChangesetRoomOp = {
+  kind: 'text-changeset';
+  tabId: string;
+  id: string;
+  author: ChangesetAuthor;
+  agentKey?: string;
+  summary?: string;
+  counts: ChangesetCounts;
+  revertOf?: string;
 };
 
 // A text changeset's revert: the changeset it wrote (null when there was nothing left to undo).

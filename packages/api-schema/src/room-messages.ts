@@ -8,6 +8,7 @@ import type { DragPreviewPatch } from './drag-preview';
 import type { PdfDraftLook } from './pdf-draft';
 import type { PdfPresenceHeld, PdfPresenceMode } from './pdf-presence';
 import type { ChangesetRoomOp } from './changesets';
+import type { TextChangesetRoomOp } from './text-changesets';
 import type { ItemsRoomOp, ItemTypesRoomOp } from './items';
 import type { SheetsRoomOp, SheetThreadRoomOp } from './sheets';
 import type { WorkbookRoomOp } from './workbook';
@@ -231,6 +232,9 @@ export const SYSTEM_OP_KINDS = [
   'qa',
   'document-trashed',
   'changeset',
+  // `text-changeset` (agent-changesets.md "A text document's changesets"): the api's notice of a text changeset it
+  // applied; a forged one would show people a change nobody made.
+  'text-changeset',
   'items',
   'item-types',
   // `sheets` (docs/specs/029-sheets/sheet-store.md "Live for everyone"): sheet writes the api made. Sheets change
@@ -806,6 +810,7 @@ export type RoomOp =
   // One changeset the api applied (docs/specs/024-agents/agent-changesets.md "What the room does").
   // Worker-originated through /mutation.
   | ChangesetRoomOp
+  | TextChangesetRoomOp
   // Item writes the api made (docs/specs/026-plan/items.md "Live for everyone"). Worker-originated
   // through an ordered /broadcast; a session scoped to one tab hears it without its items.
   | ItemsRoomOp

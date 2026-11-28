@@ -32,7 +32,8 @@ import {
 } from '../db/text-changesets';
 import { readLiveTabState } from '../live-tabs/live-tab-store';
 import { forbidden, json, notFound } from '../responses';
-import { postLiveTabUpdate } from '../room-client';
+import { postLiveTabUpdate, relayTextChangeset } from '../room-client';
+import { agentKeyFor } from '../changesets/room-op';
 import { authorOf } from '../routes/changesets';
 import {
   deniedParticipate,
@@ -175,6 +176,20 @@ async function record(
       error: String(error),
     });
   }
+  // The toast in every editor of the document; off the response path where the runtime allows.
+  const notice = (async () =>
+    relayTextChangeset(ctx.env, r.documentId, {
+      kind: 'text-changeset',
+      tabId: r.tabId,
+      id: r.id,
+      author: { name: r.authorName, color: r.authorColor },
+      ...(r.tokenId ? { agentKey: await agentKeyFor(r.tokenId) } : {}),
+      ...(r.summary ? { summary: r.summary } : {}),
+      counts,
+      ...(r.revertOf ? { revertOf: r.revertOf } : {}),
+    }))();
+  if (ctx.waitUntil) ctx.waitUntil(notice);
+  else await notice;
   return written;
 }
 

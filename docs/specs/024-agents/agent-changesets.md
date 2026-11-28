@@ -260,7 +260,9 @@ lists, applied by the api to the state as it stands.
   it wrote is deleted, what it deleted is written again where it stood, and what anyone wrote since stays.
   Reverting twice writes nothing. Comments it made are resolved, never deleted `(default)`.
 - **In the editor**: the writing arrives as a peer's; a toast names the agent's owner and the summary, "Webber changed
-  the document: tighten the intro · Undo", as for elements.
+  the document: tighten the intro · Undo", one toast a burst as for elements. The room relays a `text-changeset`
+  notice after the update for it. Undo alone: writing has no outline to show `(default)`; the revert an editor's own
+  Undo relays back raises no toast.
 - **Not held**: a text document has no held elements; an agent's edit and a person's typing merge character by character.
 - **Roles**, as the token's owner holds them on the document: an Editor runs every operation; a Participant only
   `comment` and `suggest …`, any other refused `403 forbidden_operation` naming its line; a Viewer is refused `403`.
