@@ -15,7 +15,7 @@ import { isSankeyShape } from './sankey-wire';
 import { isConceptShape } from './concept';
 import { takesTypedLabel } from './element-types';
 import type { Element } from './index';
-import { selfLabelled } from './svg-render-describe';
+import { selfLabelled } from './self-labelled';
 
 // Shapes with a set of their own (Icon, Chart, Sankey, Progress, Rating), owned outside these catalogues.
 function hasOwnShapeSet(el: Element): boolean {

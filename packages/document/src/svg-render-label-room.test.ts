@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { createShape, createSticky, createTable, PADDING_PX, type BoxedElement } from './index';
-import { drawsStandardLabel, labelRoom, selfLabelled } from './svg-render-describe';
+import { drawsStandardLabel, labelRoom } from './svg-render-describe';
+import { selfLabelled } from './self-labelled';
 import {
   estimatedLabelMeasure,
   LABEL_ESTIMATE_CHAR_EM,

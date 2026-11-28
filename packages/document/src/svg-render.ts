@@ -102,7 +102,6 @@ export {
   describeBoxedExport,
   drawsStandardLabel,
   labelRoom,
-  selfLabelled,
   EXPORT_BG,
   EXPORT_IMAGE_FILL,
   EXPORT_IMAGE_STROKE,
@@ -121,7 +120,6 @@ export {
 } from './svg-render-describe';
 import {
   describeBoxedExport,
-  selfLabelled,
   EXPORT_BG,
   EXPORT_IMAGE_FILL,
   EXPORT_IMAGE_STROKE,
@@ -136,6 +134,7 @@ import {
   type ResolvePlanArt,
   type ResolveStickerArt,
 } from './svg-render-describe';
+import { selfLabelled } from './self-labelled';
 // Typefaces (docs/specs/004-interface-design/fonts.md): an export paints the face the canvas painted, and
 // declares the ones it used so the file stands on its own.
 import { googleFontsHref } from './fonts';
