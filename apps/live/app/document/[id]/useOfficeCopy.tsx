@@ -6,11 +6,18 @@
 import { useCallback, useState, type ReactNode } from 'react';
 import type { Folder } from '@/lib/api-client';
 import { MoveToFolderDialog } from '@/components/dialogs/MoveToFolderDialog';
-import { OfficeCopyDialog, type OfficeCopyChoice } from '@/components/office/OfficeCopyDialog';
+import dynamic from 'next/dynamic';
+import type { OfficeCopyChoice } from '@/components/office/OfficeCopyDialog';
 import { copyOpenDocument, defaultCopyFolder } from '@/lib/office/office-copy';
 import { track } from '@/lib/telemetry';
 import { useToast } from '@/hooks/ui/useToast';
 import { COPY_DOES_NOT_FIT, COPY_FAILED, COPY_NOT_SHARED } from '@/lib/write-failure-copy';
+
+// Drawn only once File > Make a copy is pressed, so the document page loads without it.
+const OfficeCopyDialog = dynamic(
+  () => import('@/components/office/OfficeCopyDialog').then((m) => m.OfficeCopyDialog),
+  { ssr: false },
+);
 
 export type OfficeCopySource = {
   documentId: string | null;

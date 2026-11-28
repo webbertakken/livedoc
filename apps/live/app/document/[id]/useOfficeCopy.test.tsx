@@ -21,7 +21,18 @@ vi.mock('@/hooks/ui/useToast', () => ({
   useToast: () => ({ success: vi.fn(), error: toastError }),
 }));
 
+// The dialog loads on demand; here it is there at once.
+vi.mock('next/dynamic', () => ({
+  default: (load: () => Promise<unknown>) => {
+    let Loaded: React.ComponentType<Record<string, unknown>> | null = null;
+    void load().then((c) => (Loaded = c as never));
+    return (props: Record<string, unknown>) => (Loaded ? <Loaded {...props} /> : null);
+  },
+}));
+
 const { useOfficeCopy } = await import('./useOfficeCopy');
+await import('@/components/office/OfficeCopyDialog');
+await new Promise((resolve) => setTimeout(resolve, 0));
 type Source = Parameters<typeof useOfficeCopy>[0];
 
 const folder = (id: string, name: string) => ({
