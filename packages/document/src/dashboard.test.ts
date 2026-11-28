@@ -148,6 +148,26 @@ describe('a dashboard layout', () => {
     });
     expect(slot({ type: 'spreadsheet' })).toEqual({ type: 'spreadsheet', documentId: '' });
   });
+
+  // docs/specs/029-sheets/plan-links.md "The Sheet Chart from a spreadsheet" (D508).
+  it('reads a Sheet Chart from a spreadsheet: one of its charts, or a range and a type', () => {
+    const slot = (content: unknown) =>
+      readDashboard({ rows: [{ id: 'r', slots: [{ id: 'a', span: 12, content }] }] })!.rows[0]!
+        .slots[0]!.content;
+    const range = { r1: 'ra', c1: 'ca', r2: 'rb', c2: 'cb' };
+    const at = { type: 'sheet-chart', documentId: 'book1', sheetId: 'sheetA' };
+    expect(slot({ ...at, chartId: 'ch1', range, chartType: 'pie', extra: 1 })).toEqual({
+      ...at,
+      chartId: 'ch1',
+    });
+    expect(slot({ ...at, range, chartType: 'pie' })).toEqual({ ...at, range, chartType: 'pie' });
+    // Anything short of a chart is no content.
+    expect(slot({ ...at, range, chartType: 'nope' })).toBeUndefined();
+    expect(slot({ ...at, range: { r1: 'ra' }, chartType: 'pie' })).toBeUndefined();
+    expect(slot({ ...at })).toBeUndefined();
+    expect(slot({ ...at, documentId: '../x', chartId: 'ch1' })).toBeUndefined();
+    expect(slot({ ...at, sheetId: 7, chartId: 'ch1' })).toBeUndefined();
+  });
 });
 
 // docs/specs/026-plan/plan-tabs.md "The kinds".

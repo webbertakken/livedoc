@@ -279,6 +279,9 @@ function SlotEmpty({ canEdit, slotId }: { canEdit: boolean; slotId: string }) {
           onChoose={(chart) =>
             actions.placeItem({ kind: 'sheet-chart', chart }, { kind: 'slot', slotId })
           }
+          onChooseLinked={(linked) =>
+            actions.placeItem({ kind: 'sheet-chart', linked }, { kind: 'slot', slotId })
+          }
           onClose={() => setChartAt(null)}
         />
       ) : null}

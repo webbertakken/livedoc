@@ -50,7 +50,9 @@ export function SlotSection({
       : undefined;
   // A Sheet Chart's own action (plan-tabs.md "Sheet Chart"): Change Chart, the picker beside its button. A figure from
   // a Sheet's, once its source is chosen ("Figures from a Sheet"): Change Source, likewise.
-  const chartSheetId = el?.chartSource?.sheetId;
+  // A spreadsheet's chart names its spreadsheet and sheet on the slot (plan-links.md, D508).
+  const linked = content?.type === 'sheet-chart' ? content : null;
+  const chartSheetId = linked?.sheetId ?? el?.chartSource?.sheetId;
   const metric = content?.type === 'sheet-metric' && content.sheetId ? content : null;
   const spreadsheet = content?.type === 'spreadsheet' && content.documentId ? content : null;
   const [changeAt, setChangeAt] = useState<HTMLElement | null>(null);
@@ -90,8 +92,16 @@ export function SlotSection({
         <SheetChartSource
           anchor={changeAt}
           initialSheetId={chartSheetId}
+          initialDocumentId={linked?.documentId ?? ''}
           onChoose={(chart) => {
             actions.placeItem({ kind: 'sheet-chart', chart }, { kind: 'slot', slotId: slot.id });
+            onClose();
+          }}
+          onChooseLinked={(chart) => {
+            actions.placeItem(
+              { kind: 'sheet-chart', linked: chart },
+              { kind: 'slot', slotId: slot.id },
+            );
             onClose();
           }}
           onClose={() => setChangeAt(null)}

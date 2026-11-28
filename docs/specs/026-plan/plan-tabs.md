@@ -456,6 +456,7 @@ leaves it out of a smaller slot and names charts in its line.
 
 - **Choosing the chart**: picked, Add to Slot gives way to **Choose a Chart**, anchored where it was: the document's
   Sheets (as a figure's picker lists them, each its title and its tab's name; "No sheets in this document yet."),
+  and the person's spreadsheets ([Plan's links](../029-sheets/plan-links.md#the-sheet-chart-from-a-spreadsheet)),
   then, for the Sheet picked:
   - **Its Charts**: the charts drawn from that Sheet on the document's other tabs (in the Sheet, or floating on a
     tab), each its type and range ("Column Chart · A1:C6"); "No charts from this sheet yet." when it has none. Picking

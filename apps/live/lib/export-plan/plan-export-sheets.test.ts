@@ -14,6 +14,7 @@ import {
   sheetModelsFor,
   sheetTabsToLoad,
   spreadsheetPicturesFor,
+  linkedChartsFor,
 } from './plan-export-sheets';
 import { sheetContentSize } from '@livedoc/sheets';
 import { shape } from '@livedoc/plan-art/test-fixtures';
@@ -182,6 +183,57 @@ describe('a Spreadsheet slot’s picture in an image', () => {
     const out = spreadsheetPicturesFor(layout);
     expect([...out.keys()]).toEqual(['a']);
     expect(out.get('a')).toContain('Rent');
+    linked.reads.clear();
+  });
+});
+
+// docs/specs/029-sheets/plan-links.md "The Sheet Chart from a spreadsheet": the chart the page last read.
+describe('a Sheet Chart from a spreadsheet in an image', () => {
+  it('draws each read slot’s chart, leaving out one not read or deleted', () => {
+    const range = { r1: 'row0', c1: 'col0', r2: 'row1', c2: 'col1' };
+    const withChart = {
+      ...budget,
+      layout: {
+        ...budget.layout,
+        objects: [
+          {
+            id: 'ch1',
+            kind: 'chart' as const,
+            type: 'bar' as const,
+            at: { r: 'row0', c: 'col0', dx: 0, dy: 0 },
+            width: 300,
+            height: 200,
+            range,
+          },
+        ],
+      },
+    };
+    linked.reads.set(`book1:${budget.id}`, {
+      state: 'ready',
+      sheet: withChart,
+      wb: new Workbook({ sheets: [withChart], locale: 'en-GB' }),
+      locale: 'en-GB',
+      version: 1,
+      name: 'Money',
+      sheets: [],
+    });
+    const at = { type: 'sheet-chart' as const, documentId: 'book1', sheetId: budget.id };
+    const layout: DashboardLayout = {
+      rows: [
+        {
+          id: 'r',
+          height: 320,
+          slots: [
+            { id: 'a', span: 4, content: { ...at, chartId: 'ch1' } },
+            { id: 'b', span: 4, content: { ...at, chartId: 'gone' } },
+            { id: 'c', span: 4, content: { ...at, documentId: 'book2', chartId: 'ch1' } },
+          ],
+        },
+      ],
+    };
+    const out = linkedChartsFor(layout);
+    expect([...out.keys()]).toEqual(['a']);
+    expect(out.get('a')).toMatchObject({ shape: 'bar-chart' });
     linked.reads.clear();
   });
 });

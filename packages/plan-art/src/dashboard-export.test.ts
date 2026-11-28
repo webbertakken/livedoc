@@ -159,6 +159,38 @@ describe('a Dashboard’s page', () => {
     expect(out.art.get('export-slot-c')).toContain('Spreadsheet');
   });
 
+  // docs/specs/029-sheets/plan-links.md "The Sheet Chart from a spreadsheet": the chart the page last read.
+  it('draws a Sheet Chart from a spreadsheet as last read, inset on its card, else Loading', () => {
+    const at = { type: 'sheet-chart' as const, documentId: 'book1', sheetId: 's', chartId: 'c' };
+    const chart = shape('c', 'bar-chart', { width: 10, height: 10 });
+    const out = dashboardExportTab({
+      tab: {
+        id: 'dash',
+        name: 'O',
+        kind: 'dashboard',
+        elements: [],
+        dashboard: {
+          rows: [
+            row('r', [
+              { id: 'a', span: 6, content: at },
+              { id: 'b', span: 6, content: { ...at, chartId: 'd' } },
+            ]),
+          ],
+        },
+      },
+      tabs: [],
+      now: NOW,
+      renderDiagram: () => '',
+      sheetCharts: new Map([['a', chart]]),
+    });
+    const drawn = out.tab.elements.find((e) => e.id === 'export-el-a') as Element & {
+      x: number;
+      width: number;
+    };
+    expect(drawn).toMatchObject({ shape: 'bar-chart', x: 12, width: 658 });
+    expect(out.art.get('export-slot-b')).toContain('Loading the chart…');
+  });
+
   it('draws a Title bare, with no card, and a note on its card', () => {
     const out = exportOf({
       rows: [
