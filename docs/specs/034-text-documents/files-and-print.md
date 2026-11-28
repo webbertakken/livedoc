@@ -1,7 +1,7 @@
 # Files and print
 
 **Status: partly built.** Built: Open (a `.odt`, `.fodt` or `.docx` from the computer), Download in the
-OpenDocument and Word formats, conversion. The rest is specified.
+OpenDocument and Word formats, Plain Text and Markdown, conversion. The rest is specified.
 
 Opening, importing, downloading, printing, copying, sharing, emailing and trashing a [text document](text-document.md).
 Both ODF and OOXML are native (fork C1, ruled): a file keeps the format it arrived in.
@@ -46,13 +46,28 @@ Each download is named after the document. A Viewer may download unless the owne
 Download as PDF offers "Keep in LiveDoc as a PDF document", which stores the written PDF beside its source as a
 [PDF document](../035-pdf-documents/files-print-and-sync.md#other-kinds-meeting-a-pdf); every kind's PDF is written by
 the repository's one PDF writer.
-A download is `GET /api/documents/:id/text-documents/:tabId/file?type=odt|fodt|docx`, written from the live state
+A download is `GET /api/documents/:id/text-documents/:tabId/file?type=odt|fodt|docx|txt|md`, written from the live state
 (`400 file_type_unknown` for any other type); the other format is a converted copy, its losses counted in the
 `X-Conversion-Losses` header.
 
 **The other format** asks first, as a spreadsheet does: **Download as Word?** (or **Download as OpenDocument?**) lists
 what the file cannot hold, as [Conversion](standard-mapping.md#conversion) words it, with **Download** and **Cancel**;
 with nothing lost it says so and still asks (director, 2026-11-27). The text document keeps its format.
+
+**What every other format holds** (all but the OpenDocument and Word files, which hold the document whole):
+
+- The writing with every pending suggestion accepted, as print has it; no comments; kept content left out.
+- Every document tab in the outline's order; with more than one, each tab's name heads its writing (default).
+- Footnotes after the writing, numbered as drawn; a field as last shown; an equation in its linear form.
+- **Plain Text**: a line a paragraph (`\n`, no byte order mark), a list item after its marker as drawn (☐ and ☑ for
+  checklists), a table a line a row with its cells split by tabs, a picture as its alt text in brackets
+  (`[Picture]` without one; a decorative one is nothing), notes as `[1] text` (default).
+- **Markdown**: headings by level (the Title as `#`, the Subtitle bold), bold, italic and strikethrough, web and
+  email links (a link to a place in the document keeps only its text), list items nested four spaces a level,
+  checklists as `- [ ]` and `- [x]`, tables as pipe tables (the first row the header, a merged cell's other places
+  empty, a table inside a cell as its text), code blocks fenced with their language, footnotes as `[^1]`, a
+  picture as its alt text, an equation between dollars, a table of contents as a list of its headings; colours,
+  sizes and alignment left out; text that would read as Markdown escaped (default).
 
 ## Import report
 

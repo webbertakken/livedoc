@@ -584,9 +584,15 @@ export const COMPUTED_EMITTERS: Record<string, ComputedValues> = {
       ...tokensAfter(PDF_REFUSALS, 'const REFUSED_TYPE', '};').map((name) => `Refused.${name}`),
     ],
   },
-  // A text document downloaded in the format it is held in (docs/specs/034-text-documents/text-document.md).
+  // A text document downloaded (docs/specs/034-text-documents/files-and-print.md "Downloading"), by its file type.
   'apps/live/components/text-document/TextDocumentTitleRow.tsx Document·Exported': {
-    values: ['TextDocumentOdt', 'TextDocumentFodt', 'TextDocumentDocx'],
+    values: [
+      'TextDocumentOdt',
+      'TextDocumentFodt',
+      'TextDocumentDocx',
+      'TextDocumentTxt',
+      'TextDocumentMd',
+    ],
   },
   // The office shell's title row (docs/specs/004-interface-design/office-shell.md "Telemetry"): a menu opened, by its
   // name, the folder picker and the keyboard shortcuts opened, a star toggled, a tool finder result run and a person followed, for the kind that

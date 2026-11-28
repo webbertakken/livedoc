@@ -56,6 +56,9 @@ describe('useTextDocumentConversion', () => {
     const { deps, doors } = setUp();
     act(() => doors().download('fodt'));
     expect(deps.download).toHaveBeenCalledWith('fodt');
+    // An export asks nothing either (files-and-print.md "Downloading").
+    act(() => doors().download('md'));
+    expect(deps.download).toHaveBeenCalledWith('md');
     expect(screen.queryByRole('dialog')).toBeNull();
   });
 

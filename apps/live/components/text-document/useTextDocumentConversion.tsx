@@ -15,6 +15,8 @@ import {
   TextDocumentState,
   type ConversionLoss,
   type ConversionPurpose,
+  isTextDocumentFileType,
+  type TextDocumentDownloadType,
   type TextDocumentFileType,
 } from '@livedoc/text-documents';
 import { OfficeConversionDialog } from '@/components/office/OfficeConversionDialog';
@@ -50,13 +52,13 @@ export type TextDocumentConversionDeps = {
   readonly undoManager: () => Y.UndoManager | null;
   /** Names the tab's format; null where the person may not convert. */
   readonly setFormat: ((format: TextDocumentFormat) => void) | null;
-  readonly download: (type: TextDocumentFileType) => Promise<void> | void;
+  readonly download: (type: TextDocumentDownloadType) => Promise<void> | void;
   readonly setProblem: (problem: string | null) => void;
 };
 
 export function useTextDocumentConversion(deps: TextDocumentConversionDeps): {
   /** Downloads `type`: at once in the document's own format, after the dialog in the other. */
-  readonly download: (type: TextDocumentFileType) => void;
+  readonly download: (type: TextDocumentDownloadType) => void;
   /** Opens the dialog to convert to the other format; nothing where the person may not convert. */
   readonly convert: (() => void) | null;
   readonly dialog: ReactNode;
@@ -98,8 +100,10 @@ export function useTextDocumentConversion(deps: TextDocumentConversionDeps): {
       });
     };
     return {
-      download: (type: TextDocumentFileType) => {
-        if (FORMAT_OF[type] === live.current.format) void live.current.download(type);
+      download: (type: TextDocumentDownloadType) => {
+        // An export, or the document's own format, downloads at once; the other format asks first.
+        if (!isTextDocumentFileType(type) || FORMAT_OF[type] === live.current.format)
+          void live.current.download(type);
         else ask('download', type);
       },
       convert: canConvert
