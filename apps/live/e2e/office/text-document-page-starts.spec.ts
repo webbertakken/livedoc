@@ -23,6 +23,8 @@ const RECORD = join(
 );
 
 test.skip(!process.env.RECORD_PAGE_STARTS, 'a measurement: RECORD_PAGE_STARTS=1 records it');
+// One worker holds every fixture's starts, so the record is written whole.
+test.describe.configure({ mode: 'serial' });
 
 // Each page's first block's text, as drawn: page 1 the body's first block, then the block each page gap stands in
 // (a paragraph split across the pages) or before.

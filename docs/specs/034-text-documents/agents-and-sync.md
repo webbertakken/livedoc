@@ -139,16 +139,21 @@ editor's and a page start a paragraph apart. Every preview says so.
   with their alt text; page, column and section breaks and a section's columns as the editor lays them. Headers,
   footers, footnotes, line numbers, floating pictures and drawings are not drawn. Every page carries
   `Approximate preview` small in its bottom margin.
-- **Lines** `(default)`: a run's font is Inter whatever the document names, bold from weight 600; a line's height its
-  largest size times 1.2 times the paragraph's line spacing (an exact or at-least height as given); words break at
-  spaces and hyphens, a word wider than the line by character.
+- **Lines** `(default)`: words break at spaces and after hyphens, a word wider than the line by character, by the
+  advance widths of the face the editor draws the run's font in (Arimo for Arial, Tinos for Times New Roman, Cousine
+  for Courier New, Carlito for Calibri, Caladea for Cambria, and Roboto) and Inter's for any other; every face is drawn
+  in Inter, bold from weight 600. A line's height is its largest size times the paragraph's line spacing (an exact or
+  at-least height as given; 1.2 when it gives none). A cell's padding is the cell's own, none when it gives none, as the
+  editor draws it.
 - **The MCP**: `read_text_document` with `image` attaches the pages asked (`pages`, `1` by default) as PNGs through
   `render-png`, within the previews' size and memory budgets, and its answer's `preview` says which pages were drawn,
   how many pages there are and that they are approximate. `read_document`'s `image` on a text document tab draws its
   first page the same way.
 - **The agreement measure**: a corpus of fixtures is laid out in the editor (an e2e fixture records each page's
   first paragraph) and by the previews; the share of page starts on the same paragraph is recorded in
-  `packages/text-documents/corpus/page-starts.json` and a test holds it, never a widened tolerance.
+  `packages/text-documents/corpus/page-starts.json` and a test holds it, never a widened tolerance. Measured: 21 of 24 pages start on the same block (88%); the
+  rest differ by a table row or a list item, as the editor draws table guides and repeats header rows and the previews do
+  not.
 
 ## Repository sync
 

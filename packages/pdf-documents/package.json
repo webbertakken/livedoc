@@ -14,7 +14,8 @@
     "./blank": "./src/engine/blank-pages.ts",
     "./testing": "./src/testing/fixtures.ts",
     "./laid-out": "./src/engine/laid-out-pages.ts",
-    "./sfnt": "./src/engine/sfnt.ts"
+    "./sfnt": "./src/engine/sfnt.ts",
+    "./woff": "./src/engine/woff.ts"
   },
   "scripts": {
     "lint": "oxlint",

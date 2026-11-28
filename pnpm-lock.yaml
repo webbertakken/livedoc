@@ -2165,6 +2165,24 @@ importers:
         specifier: ^13.6.33
         version: 13.6.33
     devDependencies:
+      '@fontsource/arimo':
+        specifier: ^5.3.0
+        version: 5.3.0
+      '@fontsource/caladea':
+        specifier: ^5.3.0
+        version: 5.3.0
+      '@fontsource/carlito':
+        specifier: ^5.3.0
+        version: 5.3.0
+      '@fontsource/cousine':
+        specifier: ^5.3.0
+        version: 5.3.0
+      '@fontsource/roboto':
+        specifier: ^5.3.0
+        version: 5.3.0
+      '@fontsource/tinos':
+        specifier: ^5.3.0
+        version: 5.3.0
       '@livedoc/oxlint-config':
         specifier: workspace:*
         version: link:../oxlint-config

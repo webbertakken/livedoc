@@ -22,6 +22,17 @@ describe('textWidth', () => {
   });
 });
 
+describe('textWidth by face', () => {
+  it('reads a carried face’s own widths, and Inter’s for a face it does not carry', () => {
+    const inter = textWidth('Mountain', 20, false);
+    expect(textWidth('Mountain', 20, false, 'Arimo')).toBeLessThan(inter);
+    expect(textWidth('Mountain', 20, false, 'Tinos')).toBeLessThan(
+      textWidth('Mountain', 20, false, 'Arimo'),
+    );
+    expect(textWidth('Mountain', 20, false, 'Lobster')).toBe(inter);
+  });
+});
+
 describe('breakLines', () => {
   it('breaks at spaces where the line fills, keeping the space with the word before', () => {
     const width = textWidth('alpha beta ', 20, false);

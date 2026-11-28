@@ -1,0 +1,74 @@
+{
+  "fixtures": {
+    "essay": {
+      "editor": [
+        "Section 1",
+        "Section 4",
+        "¶13 The river runs past the mill",
+        "Section 11",
+        "¶28 The river runs past the mill",
+        "Section 18",
+        "Section 22"
+      ],
+      "preview": [
+        "Section 1",
+        "Section 4",
+        "¶13 The river runs past the mill",
+        "Section 11",
+        "¶28 The river runs past the mill",
+        "Section 18",
+        "Section 22"
+      ]
+    },
+    "lists-and-tables": {
+      "editor": [
+        "Part 1",
+        "table: Cell 2.1.1",
+        "Item 4.4: The river runs past th",
+        "¶6 The river runs past the mill ",
+        "table: Cell 7.1.1"
+      ],
+      "preview": [
+        "Part 1",
+        "table: Cell 2.1.1",
+        "table: Cell 4.1.1",
+        "Item 6.3: The river runs past th",
+        "Part 8"
+      ]
+    },
+    "a4-wide": {
+      "editor": [
+        "¶1 The river runs past the mill ",
+        "¶8 The river runs past the mill ",
+        "¶13 The river runs past the mill",
+        "¶19 The river runs past the mill",
+        "¶24 The river runs past the mill",
+        "¶30 The river runs past the mill",
+        "¶37 The river runs past the mill",
+        "¶43 The river runs past the mill",
+        "¶49 The river runs past the mill",
+        "¶55 The river runs past the mill",
+        "¶60 The river runs past the mill",
+        "¶65 The river runs past the mill"
+      ],
+      "preview": [
+        "¶1 The river runs past the mill ",
+        "¶8 The river runs past the mill ",
+        "¶13 The river runs past the mill",
+        "¶19 The river runs past the mill",
+        "¶24 The river runs past the mill",
+        "¶30 The river runs past the mill",
+        "¶37 The river runs past the mill",
+        "¶43 The river runs past the mill",
+        "¶49 The river runs past the mill",
+        "¶55 The river runs past the mill",
+        "¶60 The river runs past the mill",
+        "¶65 The river runs past the mill"
+      ]
+    }
+  },
+  "agreement": {
+    "pages": 24,
+    "same": 21
+  }
+}

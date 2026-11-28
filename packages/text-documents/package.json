@@ -28,6 +28,12 @@
     "yjs": "^13.6.33"
   },
   "devDependencies": {
+    "@fontsource/arimo": "^5.3.0",
+    "@fontsource/caladea": "^5.3.0",
+    "@fontsource/carlito": "^5.3.0",
+    "@fontsource/cousine": "^5.3.0",
+    "@fontsource/roboto": "^5.3.0",
+    "@fontsource/tinos": "^5.3.0",
     "@livedoc/oxlint-config": "workspace:*",
     "@livedoc/pdf-documents": "workspace:*",
     "@livedoc/vitest-config": "workspace:*",

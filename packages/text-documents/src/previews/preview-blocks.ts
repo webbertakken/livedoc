@@ -10,15 +10,17 @@ import { Styles } from '../model/styles';
 import type { Table } from '../model/tables';
 import type { TextDocument } from '../model/text-document';
 import type { BlockMetrics } from '../pagination/pagination';
+import { DocumentFonts } from '@livedoc/document';
+import { PREVIEW_ADVANCES } from './preview-advances';
 import { breakLines, type Look, type Piece, type Placed } from './preview-lines';
 
 const PX_PER_PT = 96 / 72;
-/** A line's height over its largest size, at single spacing (default). */
+/** A line's height over its largest size when the paragraph gives no spacing (default: CSS's normal for Arial). */
 export const PREVIEW_LINE_HEIGHT = 1.2;
+/** A run's font when nothing gives one: Google's. */
+const DEFAULT_FONT = 'Arial';
 /** A paragraph's size when nothing gives one, in points: Google's Normal text. */
 const DEFAULT_SIZE_PT = 11;
-/** A cell's padding on each side when it gives none, in points: Google's. */
-const CELL_PADDING_PT = 5;
 /** A list level's indent and hanging when its list gives none, in points: 0.5 in a level, as Google's lists. */
 const LIST_INDENT_PT = 36;
 const LIST_HANGING_PT = 18;
@@ -85,11 +87,19 @@ export const textWidthOf = (setup: PageSetup): number =>
       : setup.width - setup.margins.left - setup.margins.right,
   );
 
+// The face a run's lines break by: the served face the editor draws its font in, where the previews carry its widths.
+function faceOf(font: string | undefined): string | undefined {
+  const drawn = DocumentFonts.drawnIn(font ?? DEFAULT_FONT);
+  return drawn !== undefined && Object.hasOwn(PREVIEW_ADVANCES, drawn) ? drawn : undefined;
+}
+
 function lookOf(props: TextProps): Look {
   const size = px(props.size ?? DEFAULT_SIZE_PT);
+  const face = faceOf(props.font);
   const scripted = props.vertical === 'super' || props.vertical === 'sub';
   return {
     size: scripted ? size * SCRIPT_SHARE : size,
+    ...(face ? { face } : {}),
     bold: props.bold === true,
     italic: props.italic === true,
     ...(props.underline ? { underline: true } : {}),
@@ -140,7 +150,7 @@ function lineHeightOf(props: ParagraphProps, pieces: readonly Placed[], emptySiz
     rule === undefined
       ? size * PREVIEW_LINE_HEIGHT
       : rule.rule === 'multiple'
-        ? size * PREVIEW_LINE_HEIGHT * rule.value
+        ? size * rule.value
         : rule.rule === 'exact'
           ? px(rule.pt)
           : Math.max(px(rule.pt), size * PREVIEW_LINE_HEIGHT);
@@ -286,14 +296,20 @@ function tableBlock(ctx: Context, table: Table, width: number, section: number):
       const span = cell.colSpan ?? 1;
       const down = cell.rowSpan ?? 1;
       const cellWidth = columns.slice(column, column + span).reduce((a, b) => a + b, 0);
-      const pad = px(CELL_PADDING_PT);
-      const { lines, height } = cellLines(ctx, cell.blocks, Math.max(1, cellWidth - 2 * pad));
+      // A side's padding as the cell gives it; none, as the editor draws it, when it gives none.
+      const pad = (side: 'top' | 'bottom' | 'left' | 'right') =>
+        px(cell.props.padding?.[side] ?? 0);
+      const { lines, height } = cellLines(
+        ctx,
+        cell.blocks,
+        Math.max(1, cellWidth - pad('left') - pad('right')),
+      );
       for (let below = 1; below < down; below += 1) {
         const set = taken.get(r + below) ?? new Set<number>();
         for (let c = column; c < column + span; c += 1) set.add(c);
         taken.set(r + below, set);
       }
-      if (down === 1) tallest = Math.max(tallest, height + 2 * pad);
+      if (down === 1) tallest = Math.max(tallest, height + pad('top') + pad('bottom'));
       cells.push({
         x: lefts[column] ?? 0,
         width: cellWidth,
@@ -301,9 +317,9 @@ function tableBlock(ctx: Context, table: Table, width: number, section: number):
         ...(cell.props.background ? { background: cell.props.background } : {}),
         lines: lines.map((l) => ({
           ...l,
-          x: l.x + pad,
-          top: l.top + pad,
-          baseline: l.baseline + pad,
+          x: l.x + pad('left'),
+          top: l.top + pad('top'),
+          baseline: l.baseline + pad('top'),
         })),
       });
       column += span;

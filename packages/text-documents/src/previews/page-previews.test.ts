@@ -100,3 +100,52 @@ describe('a table row of exact height', () => {
     expect(svg).not.toContain('>n3<');
   });
 });
+
+describe('a paragraph longer than a page', () => {
+  it('breaks between two of its lines, the next page going on with its writing', () => {
+    const long = Array.from({ length: 1000 }, (_, n) => `word${n}`).join(' ');
+    const doc = TextDocument.fromTexts([long, 'After']);
+    const read = pages(doc, 1, 2);
+    expect(read.pageCount).toBe(2);
+    const second = read.pages[1]!.svg;
+    expect(second).toMatch(/>word\d+ /);
+    expect(second).toContain('>After<');
+    expect(read.pages[0]!.svg).not.toContain('>After<');
+  });
+});
+
+describe('line heights', () => {
+  const heightOf = (lineHeight: NonNullable<Paragraph['props']['lineHeight']>) => {
+    const doc = TextDocument.fromTexts(['a', 'b']);
+    const body = (doc.body as Paragraph[]).map((p) => ({ ...p, props: { lineHeight } }));
+    const svg = pages({ ...doc, body }).pages[0]!.svg;
+    const ys = [
+      ...svg.matchAll(/<text x="[\d.]+" y="([\d.]+)" font-family="Inter" font-size="14/g),
+    ].map((m) => Number(m[1]));
+    return ys[1]! - ys[0]!;
+  };
+
+  it('sets a line a multiple of its size, exactly, or at least as given', () => {
+    expect(heightOf({ rule: 'multiple', value: 2 })).toBeCloseTo((44 / 3) * 2, 1);
+    expect(heightOf({ rule: 'exact', pt: 30 })).toBeCloseTo(40, 1);
+    expect(heightOf({ rule: 'atLeast', pt: 6 })).toBeCloseTo((44 / 3) * 1.2, 1);
+  });
+});
+
+describe('a table wider than the text', () => {
+  it('is narrowed to the text’s width', () => {
+    const doc = TextDocument.fromTexts(['x']);
+    const normal = (doc.body[0] as Paragraph).style;
+    const table = {
+      type: 'table' as const,
+      columns: [600, 600],
+      headerRows: 0,
+      rows: [{ cells: [0, 1].map(() => ({ blocks: [Paragraph.of('cell', normal)], props: {} })) }],
+    };
+    const svg = pages({ ...doc, body: [table] }).pages[0]!.svg;
+    const widths = [...svg.matchAll(/<rect x="[\d.]+" y="[\d.]+" width="([\d.]+)"/g)].map((m) =>
+      Number(m[1]),
+    );
+    expect(widths.reduce((a, b) => a + b, 0)).toBeCloseTo(624, 0);
+  });
+});

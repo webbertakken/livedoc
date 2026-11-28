@@ -3,6 +3,9 @@
 // word wider than the line by character, a line break starting a line. Lengths in CSS pixels. Pure.
 import { PREVIEW_ADVANCES, type AdvanceRange } from './preview-advances';
 
+/** The face a preview draws in, and breaks lines by when a run's own face is not carried. */
+export const PREVIEW_FACE = 'Inter';
+
 /** A character the bundled faces have no advance for: about an average letter's width, in ems. */
 export const PREVIEW_FALLBACK_EM = 0.6;
 /** A tab, drawn as this many spaces. */
@@ -11,6 +14,8 @@ const TAB_SPACES = 4;
 /** How a run is drawn: its size in CSS pixels, its weight and slant, and what else it carries. */
 export type Look = {
   readonly size: number;
+  /** The face whose widths break its lines: the one the editor draws its font in, when the previews carry it. */
+  readonly face?: string;
   readonly bold: boolean;
   readonly italic: boolean;
   readonly underline?: boolean;
@@ -38,9 +43,10 @@ function emOf(code: number, ranges: readonly AdvanceRange[]): number {
   return PREVIEW_FALLBACK_EM;
 }
 
-/** The width of `text` on one line at `size` CSS pixels. */
-export function textWidth(text: string, size: number, bold: boolean): number {
-  const ranges = bold ? PREVIEW_ADVANCES.bold : PREVIEW_ADVANCES.regular;
+/** The width of `text` on one line at `size` CSS pixels, in `face` (Inter by default). */
+export function textWidth(text: string, size: number, bold: boolean, face = PREVIEW_FACE): number {
+  const advances = PREVIEW_ADVANCES[face] ?? PREVIEW_ADVANCES[PREVIEW_FACE]!;
+  const ranges = bold ? advances.bold : advances.regular;
   let em = 0;
   for (const ch of text) em += emOf(ch.codePointAt(0)!, ranges);
   return em * size;
@@ -64,11 +70,11 @@ function tokensOf(pieces: readonly Piece[]): Token[] {
         out.push('break');
         continue;
       }
-      const { size, bold } = piece.look;
+      const { size, bold, face } = piece.look;
       out.push({
         piece: { ...piece, text: word },
-        width: textWidth(word, size, bold),
-        inked: textWidth(word.trimEnd(), size, bold),
+        width: textWidth(word, size, bold, face),
+        inked: textWidth(word.trimEnd(), size, bold, face),
       });
     }
   }
@@ -81,7 +87,7 @@ function cut(piece: Extract<Piece, { kind: 'text' }>, room: number): Token[] {
   const parts: Token[] = [];
   let part = '';
   for (const ch of text) {
-    if (part !== '' && textWidth(part + ch, look.size, look.bold) > room) {
+    if (part !== '' && textWidth(part + ch, look.size, look.bold, look.face) > room) {
       parts.push(textToken(part, look));
       part = '';
     }
@@ -93,8 +99,8 @@ function cut(piece: Extract<Piece, { kind: 'text' }>, room: number): Token[] {
 
 const textToken = (text: string, look: Look): Token => ({
   piece: { kind: 'text', text, look },
-  width: textWidth(text, look.size, look.bold),
-  inked: textWidth(text.trimEnd(), look.size, look.bold),
+  width: textWidth(text, look.size, look.bold, look.face),
+  inked: textWidth(text.trimEnd(), look.size, look.bold, look.face),
 });
 
 // Neighbouring text of one look drawn as one piece.
