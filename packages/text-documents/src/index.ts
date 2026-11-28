@@ -468,6 +468,7 @@ export {
 } from './viewer/viewer-copy';
 export { syncWriting } from './live/writing-sync';
 export { SettledWriting } from './live/settled-writing';
+export { CopiedReview, type CopiedReviewChoice } from './live/copied-review';
 export {
   looksLikeMarkdown,
   markdownInline,

@@ -3,6 +3,7 @@
 // one document and runs it here; the tests' rooms (test-sqlite-d1.ts) run the same functions over shared tables.
 // The worker calls these only through document-client.ts.
 
+import type { CopiedReviewChoice } from '@livedoc/text-documents';
 import type { BugReportFiling } from '@livedoc/api-schema';
 import type { ImportAnswer } from '@livedoc/sheets';
 import { answerRangeRead, type RangeReadQuery } from '../routes/sheet-range-read';
@@ -55,6 +56,7 @@ export type DocumentRoomRpc = {
     onlyTabId: string | null,
     redactAuthorsFor: string | null,
     viewer?: boolean,
+    review?: CopiedReviewChoice | null,
   ): Promise<DocumentCopy | null>;
   importCopy(documentId: string, copy: DocumentCopy): Promise<ContentSummary>;
   // One card of the document, or null (a team mention's check of a card comment).
@@ -104,8 +106,8 @@ export function documentRpc(
       documentPlacesImage(env, documentId, imageId, onlyTabId),
     image: (documentId, request, identity) =>
       answerDocumentImage(documentRouteContext(env, request, identity, waitUntil), documentId),
-    exportCopy: (documentId, onlyTabId, redactAuthorsFor, viewer) =>
-      exportDocumentCopy(env, documentId, onlyTabId, redactAuthorsFor, viewer),
+    exportCopy: (documentId, onlyTabId, redactAuthorsFor, viewer, review) =>
+      exportDocumentCopy(env, documentId, onlyTabId, redactAuthorsFor, viewer, review),
     importCopy: (documentId, copy) => importDocumentCopy(env, documentId, copy),
     item: (documentId, itemId) => readItem(env, documentId, itemId),
     respondToForm: (_documentId, request, identity) =>

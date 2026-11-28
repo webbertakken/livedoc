@@ -308,6 +308,16 @@ export const TEXT_DOCUMENT_DETAILS = chart(
   { types: ['TextDocumentDetails'], rising: 'neutral' },
 );
 
+// A copy made through a text document's Copy document dialog (docs/specs/034-text-documents/files-and-print.md
+// "Make a copy").
+export const TEXT_DOCUMENT_COPIED = chart(
+  'Document',
+  'Duplicated',
+  'Text Documents Copied',
+  'Someone made a copy of a text document from File > Make a copy, choosing its name, folder and review.',
+  { types: ['TextDocument'], rising: 'good' },
+);
+
 // Spelling in a text document (docs/specs/034-text-documents/tools.md "Spelling and grammar"): never the word.
 export const TEXT_DOCUMENT_SPELLING_ACCEPTED = chart(
   'Document',
@@ -448,6 +458,7 @@ export const DOCUMENT_ACTIONS: MetricStack = {
     TEXT_DOCUMENT_SECURITY_LIMITATIONS,
     TEXT_DOCUMENT_PRINTED,
     TEXT_DOCUMENT_DETAILS,
+    TEXT_DOCUMENT_COPIED,
     TEXT_DOCUMENT_SPELLING_ACCEPTED,
     TEXT_DOCUMENT_DICTIONARY_ADDED,
     TEXT_DOCUMENT_SPELLING_CORRECTED,

@@ -186,8 +186,24 @@ and show **Load picture** for an Editor.
 
 ## Make a copy
 
-File > Make a copy: name ("Copy of <name>"), folder, **Share it with the same people**, **Copy comments and
-suggestions**, **Include resolved comments and suggestions**; the copy keeps the format.
+File > Make a copy, and the title row's **Make a copy** for whoever may not share, open the shell's **Copy document**
+dialog, for every level. The copy is the person's own and keeps the format.
+
+- **Name**: "Copy of ‹name›", focused and selected; an empty name is the default's.
+- **Folder**: where the copy goes, **Change** opening the folder picker Move uses, the person's own folders alone (a
+  copy is theirs, never a team's): the source's folder for its owner, else My Documents. A document in This Browser
+  is copied in This Browser, and has no folder row.
+- **Copy comments and suggestions**, off (Google's): off, the copy holds no comment thread and every pending
+  suggestion rejected; on, both as they are. Not offered to a Viewer, who receives neither
+  ([What a Viewer receives](review.md#what-a-viewer-receives)).
+- **Include resolved comments and suggestions**, off, shown only while the one above is on: off, resolved threads are
+  left out. A settled suggestion is not kept, so only threads are resolved.
+- **Make a copy** (primary) and Cancel. While the copy is made the primary reads "Making a copy…" and the dialog stays;
+  made, the copy opens in a new browser tab (opened at the press, so no pop-up blocker stops it, and closed again on a
+  refusal) and the dialog closes. A refusal is said in the dialog: "The copy
+  couldn’t be made. Try again.", or for files that pass the person's storage the words the canvas's copy says; both
+  logged `[text-document] copy refused`.
+- **Share it with the same people**: open, awaiting a ruling on what "the same people" are where LiveDoc shares by link.
 
 ## Sharing
 

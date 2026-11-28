@@ -69,6 +69,9 @@ type MoveToFolderDialogProps = {
   onCreateTeam?: (name: string) => Promise<{ id: string; name: string } | null>;
   onPick: (dest: MoveDestination) => void;
   onClose: () => void;
+  // What the pick is for: moving the subject (the default), or where a copy of it goes, which the Copy document
+  // dialog asks (docs/specs/034-text-documents/files-and-print.md "Make a copy").
+  purpose?: 'move' | 'copy';
 };
 
 export function MoveToFolderDialog({
@@ -82,6 +85,7 @@ export function MoveToFolderDialog({
   onCreateTeam,
   onPick,
   onClose,
+  purpose = 'move',
 }: MoveToFolderDialogProps) {
   // Open on the subject's current home so the browser has a live
   // selection from the first paint (the "always something selected"
@@ -105,7 +109,7 @@ export function MoveToFolderDialog({
     <Dialog
       open
       onClose={onClose}
-      ariaLabel="Move to folder"
+      ariaLabel={purpose === 'copy' ? 'Copy to folder' : 'Move to folder'}
       size="lg"
       closeOnEscape={false}
       className="max-h-[80vh]"
@@ -113,7 +117,7 @@ export function MoveToFolderDialog({
       <div className="flex items-start justify-between gap-3 border-b border-slate-100 px-6 pb-3 pt-5 dark:border-slate-800">
         <div className="min-w-0">
           <h2 className="truncate text-dialog-title text-slate-900 dark:text-slate-100">
-            Move &ldquo;{subjectName}&rdquo;
+            {purpose === 'copy' ? 'Copy' : 'Move'} &ldquo;{subjectName}&rdquo;
           </h2>
           <p className="mt-0.5 text-supporting text-slate-500 dark:text-slate-400">
             {subjectKind === 'folder'
@@ -151,7 +155,7 @@ export function MoveToFolderDialog({
           Cancel
         </Button>
         <Button size="sm" disabled={placement === current} onClick={() => commit(placement)}>
-          Move Here
+          {purpose === 'copy' ? 'Choose' : 'Move Here'}
         </Button>
       </div>
     </Dialog>

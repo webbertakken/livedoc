@@ -47,6 +47,17 @@ import { apiLoadPdfState } from './api/pdf-documents';
 import { apiLoadTextDocumentState } from './api/text-documents';
 import { fetchKept, sendKept } from './api/workbook-kept';
 import { base64OfBytes } from '@livedoc/office-packages';
+import type { CopiedReviewChoice } from '@livedoc/text-documents';
+
+/** What the Copy document dialog chose (docs/specs/034-text-documents/files-and-print.md "Make a copy"). */
+export type DuplicateAs = { name?: string; review?: CopiedReviewChoice | null };
+
+// A text document's state as the copy keeps its review; the whole of it without a choice. The package loads only then.
+async function reviewed(state: Uint8Array, review: CopiedReviewChoice | null | undefined) {
+  if (!review) return state;
+  const { CopiedReview } = await import('@livedoc/text-documents');
+  return CopiedReview.applied(state, review);
+}
 
 // The source's recorded creation intent, carried unchanged; none when it is unknown.
 // The copy's kept content sent after its create; a refusal moves the half-made copy to the Bin and fails the copy.
@@ -83,6 +94,7 @@ export async function duplicateDocument(
   ownerId: string,
   sourceId: string,
   placement?: DocumentPlacement,
+  as: DuplicateAs = {},
 ): Promise<string | undefined> {
   const src = await apiLoadDocument(ownerId, sourceId).catch(() => null);
   if (!src) return undefined;
@@ -130,7 +142,7 @@ export async function duplicateDocument(
       await offlineCreateDocument(
         {
           id: newId,
-          name: `${src.name} copy`,
+          name: as.name ?? `${src.name} copy`,
           tabs: remappedTabs,
           // A copy of a spreadsheet is a spreadsheet (docs/specs/029-sheets/sheet-store.md "Copies and exports").
           ...(src.workbook ? { workbook: src.workbook } : {}),
@@ -142,9 +154,16 @@ export async function duplicateDocument(
       // With what a closing page left of a live tab ("A page's last moment"), so the copy holds it too.
       const read = await offlineGetRecord(sourceId);
       const source = read && (await offlineRecordWithPartings(read));
-      const textDocuments = (source?.textDocuments ?? [])
-        .filter((t) => tabIdMap.has(t.tabId))
-        .map((t) => ({ ...t, tabId: tabIdMap.get(t.tabId)! }));
+      // Each keeps its review as the copy chose (files-and-print.md "Make a copy").
+      const textDocuments = await Promise.all(
+        (source?.textDocuments ?? [])
+          .filter((t) => tabIdMap.has(t.tabId))
+          .map(async (t) => ({
+            ...t,
+            tabId: tabIdMap.get(t.tabId)!,
+            state: await reviewed(t.state, as.review),
+          })),
+      );
       // Each PDF tab's live changes too (docs/specs/035-pdf-documents/live-editing-and-storage.md "Duplicate"): the
       // copy's tab names the same key, so no byte is copied.
       const pdfDocuments = (source?.pdfDocuments ?? [])
@@ -199,12 +218,15 @@ export async function duplicateDocument(
         .map(async (t) => ({
           tabId: tabIdMap.get(t.id)!,
           state: base64OfBytes(
-            await apiLoadTextDocumentState({
-              ownerId,
-              documentId: src.id,
-              tabId: t.id,
-              shareCode: null,
-            }),
+            await reviewed(
+              await apiLoadTextDocumentState({
+                ownerId,
+                documentId: src.id,
+                tabId: t.id,
+                shareCode: null,
+              }),
+              as.review,
+            ),
           ),
         })),
     );
@@ -245,7 +267,7 @@ export async function duplicateDocument(
   const create = (place: DocumentPlacement) =>
     apiCreateDocument(ownerId, {
       id: newId,
-      name: `${src.name} copy`,
+      name: as.name ?? `${src.name} copy`,
       tabs: remappedTabs,
       teamId: place.teamId,
       folderId: place.folderId,

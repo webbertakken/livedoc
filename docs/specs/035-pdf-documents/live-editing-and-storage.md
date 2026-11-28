@@ -511,7 +511,8 @@ Comments on a branch are the branch's own, as for every kind. This Browser has n
   - **Someone else's copy** (a share link's reader, a teammate) is made by the api, room to room, and is theirs: they
     are given the stored file as [a row, never bytes](../006-document/blob-store.md#a-row-given), so the copy opens
     after the original is purged. It counts in their usage; one that would pass their allowance is refused
-    `403 usage_exceeded`, said as "This document doesn't fit in the file storage that is left." `(default)`.
+    `403 usage_exceeded`, said as "This document doesn't fit in the file storage that is left." `(default)`. Any
+    other refusal is said too, never silent: "The copy couldn’t be made. Try again.", logged `[document] copy refused`.
   - **A copy has no previous versions**: it begins at the stored file the original is on, with the live changes on
     it. A tab-scoped reader's copy is their tab alone, as every kind's.
 - **A document that passes to another owner** (a team's heir, a team document moved into someone's own library) takes

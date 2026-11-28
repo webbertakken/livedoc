@@ -223,8 +223,9 @@ describe("a PDF document's menus and toolbar", () => {
       .map(({ item }) => item.id);
     // File > Open is the shell's where a kind hands it a file picker; a PDF's waits on how one is started.
     // File > Move to trash is the shell's for every kind (files-and-print.md "Trash"); a PDF's stays coming soon
-    // until its lane builds it.
-    const waiting = new Set(['open', 'move-to-trash']);
+    // until its lane builds it. File > Make a copy is the shell's where a kind asks before copying (files-and-print.md
+    // "Make a copy"); a PDF's waits on its lane too.
+    const waiting = new Set(['open', 'move-to-trash', 'make-a-copy']);
     expect(built.toSorted()).toEqual(BOUND.filter((id) => !waiting.has(id)).toSorted());
   });
 

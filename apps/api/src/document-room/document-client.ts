@@ -7,6 +7,7 @@
 // Inside the room itself the same call is a plain method call (DocumentRoom's local namespace), so code the worker
 // and the room share (a document read's outline) costs no hop there.
 
+import type { CopiedReviewChoice } from '@livedoc/text-documents';
 import type { BugReportFiling } from '@livedoc/api-schema';
 import type { ImportAnswer } from '@livedoc/sheets';
 import type { RangeReadQuery } from '../routes/sheet-range-read';
@@ -38,6 +39,8 @@ export type DocumentRoomClient = {
     onlyTabId: string | null,
     redactAuthorsFor: string | null,
     viewer?: boolean,
+    // What a text document's copy keeps of its review (files-and-print.md "Make a copy"); null: all of it.
+    review?: CopiedReviewChoice | null,
   ): Promise<DocumentCopy | null>;
   importCopy(copy: DocumentCopy): Promise<ContentSummary>;
   item(itemId: string): Promise<Item | null>;
@@ -87,8 +90,8 @@ export function documentRoom(
     hasTab: (tabId) => room.hasTab(documentId, tabId),
     placesImage: (imageId, onlyTabId) => room.placesImage(documentId, imageId, onlyTabId),
     image: (request, identity) => room.image(documentId, request, identity),
-    exportCopy: (onlyTabId, redact, viewer) =>
-      room.exportCopy(documentId, onlyTabId, redact, viewer),
+    exportCopy: (onlyTabId, redact, viewer, review) =>
+      room.exportCopy(documentId, onlyTabId, redact, viewer, review),
     importCopy: (copy) => room.importCopy(documentId, copy),
     item: (itemId) => room.item(documentId, itemId),
     respondToForm: (request, identity) => room.respondToForm(documentId, request, identity),

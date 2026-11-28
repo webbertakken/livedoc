@@ -6,6 +6,7 @@
 // upgrade. The largest resource: every sub-path
 // under a document id lives here.
 
+import type { CopiedReviewChoice } from '@livedoc/text-documents';
 import { parseStoredLevel } from '@livedoc/api-schema';
 import { sharePasswordOk } from '../auth/share-access';
 import { roomUnavailable } from '../document-room/document-route';
@@ -16,10 +17,11 @@ import {
   copyDocument,
   CopyUsageExceeded,
   getDocument,
+  getFolder,
   getParticipant,
   listSharedWith,
 } from '../db';
-import { forbidden, json, notFound } from '../responses';
+import { badRequest, forbidden, json, notFound } from '../responses';
 import { recordDocumentDuplicated, recordVisitorCopied } from '../timeline';
 import {
   gateGrant,
@@ -29,6 +31,25 @@ import {
   sharePasswordOf,
   type RouteContext,
 } from './context';
+
+/** The Copy document dialog's choices (docs/specs/034-text-documents/files-and-print.md "Make a copy"). */
+type CopyChoices = { folderId: string | null; review: CopiedReviewChoice | null };
+
+const optionalBoolean = (value: unknown): value is boolean | undefined =>
+  value === undefined || typeof value === 'boolean';
+
+// The body's folder and review choices, or null for one of the wrong type. Neither review choice: the whole review,
+// as every copy before the dialog; one alone: the other kept.
+function copyChoices(body: Record<string, unknown>): CopyChoices | null {
+  const { folderId, comments, resolved } = body;
+  if (folderId !== undefined && folderId !== null && typeof folderId !== 'string') return null;
+  if (!optionalBoolean(comments) || !optionalBoolean(resolved)) return null;
+  const review =
+    comments === undefined && resolved === undefined
+      ? null
+      : { comments: comments ?? true, resolved: resolved ?? true };
+  return { folderId: folderId ?? null, review };
+}
 
 export async function handleDocumentCopy(ctx: RouteContext): Promise<Response> {
   const { request, env, segments } = ctx;
@@ -73,9 +94,14 @@ export async function handleDocumentCopy(ctx: RouteContext): Promise<Response> {
       }
       if (!scope) return forbidden();
       // A body is optional here, and a JSON `null` is as good as none.
-      const body = ((await request.json().catch(() => null)) ?? {}) as {
-        name?: unknown;
-      };
+      const body = ((await request.json().catch(() => null)) ?? {}) as Record<string, unknown>;
+      const chosen = copyChoices(body);
+      if (!chosen) return badRequest('invalid copy options');
+      // The copier's own folder, never another's (files-and-print.md "Make a copy").
+      if (chosen.folderId !== null) {
+        const folder = await getFolder(env, chosen.folderId);
+        if (!folder || folder.teamId !== null || folder.ownerId !== owner) return notFound();
+      }
       const newId = crypto.randomUUID();
       // The copy's name meets the name cap (docs/specs/006-document/name-length.md),
       // including the default, which a long source name pushes past it.
@@ -94,6 +120,7 @@ export async function handleDocumentCopy(ctx: RouteContext): Promise<Response> {
           // Anyone but the owner copies the comments as the tab read serves them to them.
           owner === source.ownerId ? null : owner,
           parseStoredLevel(scope.role) === 'view',
+          chosen,
         );
       } catch (error) {
         // The files the copy would hold do not fit what is left of the copier's file storage
