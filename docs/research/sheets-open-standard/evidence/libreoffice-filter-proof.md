@@ -25,5 +25,5 @@ LibreOffice headless, read back by LiveDoc:
 - LiveDoc XLSX → LibreOffice ODS → LiveDoc: sheet `{H: eq x}`, Table1 `{B: eq 2}`, Table2 `{D: eq b}`, no losses,
   no rows hidden by hand. LibreOffice writes a one-value kept list as `=`, read back as Is Equal To.
 - LiveDoc ODS → LibreOffice XLSX → LiveDoc: sheet `{H: values [x]}`, Table1 `{B: values [2]}`, Table2 `{D: values
-  [b]}`, no losses.
+[b]}`, no losses.
 - The fill-colour condition has no standard form: LibreOffice drops LiveDoc's record, so it is gone, as specified.
