@@ -1,57 +1,26 @@
 // A text document's threads as the shared review surfaces draw them (docs/specs/034-text-documents/review.md "The
-// comments panel", "Threads in the margin"): each comment in the shared shape, with "From the file" under a file's
-// author; and the comments panel's rows, by document tab in the outline's order and within a tab in the order the
+// comments panel", "Threads in the margin"): the comments panel's rows, by document tab in the outline's order and within a tab in the order the
 // threads were begun, each grouped by its tab.
 import type * as Y from 'yjs';
-import type { Comment, CommentMention } from '@livedoc/document';
+import type { Comment } from '@livedoc/document';
 import {
   FIRST_DOCUMENT_TAB_ID,
-  drawnMentions,
   LiveSuggestions,
   LiveThreads,
   type DocumentTab,
   type TextDocumentSuggestion,
-  type TextDocumentComment,
   type TextDocumentThread,
-  threadAssignment,
 } from '@livedoc/text-documents';
 import type { ReviewThreadRow } from '@/lib/office/review/comment-filters';
+import {
+  sharedComment,
+  threadAssignee,
+  type NotedAuthor,
+} from '@/lib/office/review/office-comments';
 import { cardLines, cardPartsOf } from './text-document-suggestion-cards';
 
 /** A suggestion's row id in the comments panel (review.md "Suggestion cards", In the comments panel). */
 export const SUGGESTION_ROW = 'suggestion:';
-
-/** A thread's assignee: its latest comment's that carries one well formed, else none (review.md "Assigning"). */
-export const threadAssignee = (thread: {
-  readonly comments: readonly TextDocumentComment[];
-}): CommentMention | null => threadAssignment(thread)?.assignee ?? null;
-
-/** A text document's comment in the shared shape; its author's key is the shape's author id. */
-export const sharedComment = (c: TextDocumentComment): Comment & { fromFile?: true } => {
-  const mentions = drawnMentions(c.mentions);
-  return {
-    id: c.id,
-    text: c.text,
-    createdAt: c.at,
-    authorName: c.author.name,
-    authorColor: c.author.colour,
-    ...(c.author.key ? { authorId: c.author.key } : {}),
-    ...(c.author.fromFile ? { fromFile: true as const } : {}),
-    ...(mentions.length ? { mentions } : {}),
-  };
-};
-
-export const FROM_THE_FILE = 'From the file';
-export const FROM_THE_COMPARISON = 'From the comparison';
-
-type NotedAuthor = { readonly fromFile?: true; readonly fromComparison?: true };
-
-/** The line under an author with no LiveDoc person behind it: a file's, or a comparison's (review.md "Suggestion cards"). */
-export const authorNoteOf = (author: NotedAuthor): string | null =>
-  author.fromComparison ? FROM_THE_COMPARISON : author.fromFile ? FROM_THE_FILE : null;
-
-/** The line under a comment's author: "From the file" or "From the comparison", else none. */
-export const commentNoteOf = (c: Comment): string | null => authorNoteOf(c as NotedAuthor);
 
 /** A suggestion as its row's first comment: its card's lines, by its author, when it was made. */
 function suggestionComment(suggestion: TextDocumentSuggestion): Comment & NotedAuthor {

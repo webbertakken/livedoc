@@ -1,6 +1,6 @@
 // docs/specs/034-text-documents/review.md "Threads in the margin", Who: who comments in a session.
 import { describe, expect, it } from 'vitest';
-import { commenterOf } from './text-document-commenter';
+import { commenterOf } from './office-commenter';
 
 describe('commenterOf', () => {
   const self = { key: 'pk', name: 'Ada', color: '#0284c7' };

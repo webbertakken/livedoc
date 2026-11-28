@@ -1,8 +1,9 @@
-// Who comments in a text document's session (docs/specs/034-text-documents/review.md "Threads in the margin", Who).
-// Kept apart from the threads' hook so the host decides it without loading the editor.
+// Who comments in an office document's session (docs/specs/034-text-documents/review.md "Threads in the margin", Who;
+// docs/specs/029-sheets/review.md "Who may do what"). Kept apart from the threads' hooks so a host decides it without
+// loading its surface.
 
 /** Who comments in this session: the key they sign with, their name and colour, and whether they delete any comment. */
-export type TextDocumentCommenter = {
+export type OfficeCommenter = {
   readonly key: string;
   readonly name: string;
   readonly colour: string;
@@ -20,7 +21,7 @@ export function commenterOf(input: {
   self: { readonly key?: string; readonly name: string; readonly color: string };
   local: boolean;
   readOnly: boolean;
-}): TextDocumentCommenter | null {
+}): OfficeCommenter | null {
   const { commentKey, level, self, local, readOnly } = input;
   if (readOnly || level === 'view') return null;
   const key = local ? (self.key ?? null) : commentKey;

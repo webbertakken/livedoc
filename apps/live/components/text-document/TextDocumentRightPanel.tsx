@@ -9,7 +9,7 @@ import { OfficePanel } from '@/components/office/OfficePanel';
 import { currentOfficePlatform } from '@/lib/office/office-platform';
 import type { OfficePanelsState } from '@/lib/office/useOfficePanels';
 import { OfficeCommentsPanel } from '@/components/office/review/OfficeCommentsPanel';
-import { commentNoteOf } from '@/lib/text-document/text-document-comment-rows';
+import { commentNoteOf } from '@/lib/office/review/office-comments';
 import type { ReviewSelf } from '@/lib/office/review/comment-filters';
 import type { TextDocumentCommentsPanel } from './useTextDocumentCommentsPanel';
 import {

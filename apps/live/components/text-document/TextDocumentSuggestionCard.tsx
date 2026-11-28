@@ -14,13 +14,13 @@ import {
   authorNoteOf,
   commentNoteOf,
   sharedComment,
-} from '@/lib/text-document/text-document-comment-rows';
-import type { TextDocumentCommenter } from '@/lib/text-document/text-document-commenter';
+} from '@/lib/office/review/office-comments';
+import type { OfficeCommenter } from '@/lib/office/review/office-commenter';
 import { CheckIcon, CloseIcon, IDENTITY_FILL, Tooltip, identityVars } from '@livedoc/ui';
 import { initialsOf } from '@/lib/identity';
 import { formatRelativeTimeCompact, useRelativeNow } from '@/lib/relative-time';
 import type { SuggestionCard } from '@/lib/text-document/text-document-suggestion-cards';
-import { THREAD_CARD_CLASS } from './TextDocumentThreadCard';
+import { THREAD_CARD_CLASS } from '@/components/office/review/OfficeThreadCard';
 
 /** How a card names itself to a screen reader: its author and its first line. */
 export function suggestionCardLabel(card: Pick<SuggestionCard, 'author' | 'lines'>): string {
@@ -34,7 +34,7 @@ const ICON_BUTTON =
 /** A suggestion's replies: its tied open thread (or none yet), who comments, and what each reply does. */
 export type SuggestionReplies = {
   readonly thread: TextDocumentThread | null;
-  readonly commenter: TextDocumentCommenter | null;
+  readonly commenter: OfficeCommenter | null;
   readonly onReply: (text: string, mentions: CommentMention[], assignee?: CommentMention) => void;
   readonly onEdit: (threadId: string, commentId: string, text: string) => void;
   readonly onRemove: (threadId: string, commentId: string) => void;

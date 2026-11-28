@@ -5,9 +5,10 @@
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import type { TextDocumentThread } from '@livedoc/text-documents';
-import { cardLabel, TextDocumentDraftCard, TextDocumentThreadCard } from './TextDocumentThreadCard';
+import { OfficeDraftCard } from '@/components/office/review/OfficeThreadCard';
+import { cardLabel, TextDocumentThreadCard } from './TextDocumentThreadCard';
 import { MentionContext } from '@/components/canvas/collab/comment/MentionContext';
-import type { TextDocumentCommenter } from '@/lib/text-document/text-document-commenter';
+import type { OfficeCommenter } from '@/lib/office/review/office-commenter';
 
 const ADA = { key: 'k-ada', name: 'Ada', colour: '#0284c7' };
 const BEN = { key: 'k-ben', name: 'Ben', colour: '#16a34a' };
@@ -29,13 +30,13 @@ const thread: TextDocumentThread = {
     },
   ],
 };
-const as = (who: typeof ADA, mayDeleteAny = false): TextDocumentCommenter => ({
+const as = (who: typeof ADA, mayDeleteAny = false): OfficeCommenter => ({
   ...who,
   mayDeleteAny,
 });
 
 function card(
-  commenter: TextDocumentCommenter | null,
+  commenter: OfficeCommenter | null,
   extra: Partial<Parameters<typeof TextDocumentThreadCard>[0]> = {},
 ) {
   const props = {
@@ -307,12 +308,12 @@ describe('an assigned thread’s card', () => {
   });
 });
 
-describe('TextDocumentDraftCard', () => {
+describe('OfficeDraftCard', () => {
   it('focuses its field, sends with Comment, and drops with Cancel or Escape', async () => {
     const onSend = vi.fn();
     const onCancel = vi.fn();
     render(
-      <TextDocumentDraftCard commenter={as(ADA)} placed onSend={onSend} onCancel={onCancel} />,
+      <OfficeDraftCard commenter={as(ADA)} placed onSend={onSend} onCancel={onCancel} />,
     );
     const field = screen.getByRole('textbox', { name: 'Add a comment' });
     await waitFor(() => expect(document.activeElement).toBe(field));
@@ -337,7 +338,7 @@ describe('TextDocumentDraftCard', () => {
       <MentionContext.Provider
         value={{ candidates: [{ ...priya, pending: false }], available: true }}
       >
-        <TextDocumentDraftCard commenter={as(ADA)} placed onSend={onSend} onCancel={vi.fn()} />
+        <OfficeDraftCard commenter={as(ADA)} placed onSend={onSend} onCancel={vi.fn()} />
       </MentionContext.Provider>,
     );
     const field = screen.getByRole('textbox', { name: 'Add a comment' });
@@ -350,11 +351,11 @@ describe('TextDocumentDraftCard', () => {
 
   it('waits to take the focus until the margin has placed it (a hidden field takes none)', async () => {
     const props = { commenter: as(ADA), onSend: vi.fn(), onCancel: vi.fn() };
-    const { rerender } = render(<TextDocumentDraftCard {...props} placed={false} />);
+    const { rerender } = render(<OfficeDraftCard {...props} placed={false} />);
     const field = screen.getByRole('textbox', { name: 'Add a comment' });
     await new Promise((resolve) => setTimeout(resolve, 50));
     expect(document.activeElement).not.toBe(field);
-    rerender(<TextDocumentDraftCard {...props} placed />);
+    rerender(<OfficeDraftCard {...props} placed />);
     await waitFor(() => expect(document.activeElement).toBe(field));
   });
 });

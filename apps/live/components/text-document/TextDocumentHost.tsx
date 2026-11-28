@@ -11,7 +11,7 @@ import { textDocumentFormatOf, type Tab, type TextDocumentFormat } from '@livedo
 import { useEditorContext } from '@/app/document/[id]/EditorContext';
 import { useEditorLines } from '@/components/chrome/lines/editor-lines-context';
 import { useIsOfflineDocument } from '@/hooks/persistence/useIsOfflineDocument';
-import { commenterOf } from '@/lib/text-document/text-document-commenter';
+import { commenterOf } from '@/lib/office/review/office-commenter';
 
 const TextDocumentSurface = dynamic(
   () => import('./TextDocumentSurface').then((m) => m.TextDocumentSurface),
