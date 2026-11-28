@@ -14,7 +14,7 @@ import {
 import { estimateTokens, type ViewResult } from '../budget';
 import { elisionCommand } from '../elision';
 import { ELLIPSIS, jsonString, plural } from '../text';
-import { parseParagraphRange, rangeText, type ParagraphRange } from './reading';
+import { parseParagraphRange, rangeText, refsText, type ParagraphRange } from './reading';
 
 export type TextDocumentTextJson = {
   view: 'text';
@@ -27,16 +27,11 @@ export type TextDocumentTextJson = {
 };
 
 export type TextDocumentTextResult =
-  | ({ ok: true } & ViewResult<TextDocumentTextJson>)
-  | { ok: false; message: string };
+  ({ ok: true } & ViewResult<TextDocumentTextJson>) | { ok: false; message: string };
 
 // A group of lines read or left out whole, apart from the one before by an empty line unless both are tight. A
 // table's later rows are glued to the row above. `last` is the last paragraph it shows, 0 for none of its own.
 type Unit = { text: string; tight: boolean; glued: boolean; last: number };
-
-// `¶7` or `¶7..¶9`.
-const refsText = (from: number, to: number) =>
-  from === to ? ParagraphRefs.text(from) : `${ParagraphRefs.text(from)}..${ParagraphRefs.text(to)}`;
 
 const unit = (text: string, tight: boolean, last: number, glued = false): Unit => ({
   text,
@@ -45,10 +40,15 @@ const unit = (text: string, tight: boolean, last: number, glued = false): Unit =
   last,
 });
 
-function paragraphUnits(piece: Extract<MarkdownPiece, { kind: 'paragraph' }>, lines: boolean): Unit[] {
+function paragraphUnits(
+  piece: Extract<MarkdownPiece, { kind: 'paragraph' }>,
+  lines: boolean,
+): Unit[] {
   if (!lines) return piece.text ? [unit(piece.text, piece.tight, piece.number)] : [];
   const ref = ParagraphRefs.text(piece.number);
-  return [unit(piece.text ? `${ref} ${piece.text}` : ref, piece.tight || !piece.text, piece.number)];
+  return [
+    unit(piece.text ? `${ref} ${piece.text}` : ref, piece.tight || !piece.text, piece.number),
+  ];
 }
 
 function tableUnits(
@@ -93,7 +93,9 @@ function unitsOf(
 const joinUnits = (units: readonly Unit[]): string =>
   units.reduce(
     (out, u, i) =>
-      i === 0 ? u.text : `${out}${u.glued || (units[i - 1]!.tight && u.tight) ? '\n' : '\n\n'}${u.text}`,
+      i === 0
+        ? u.text
+        : `${out}${u.glued || (units[i - 1]!.tight && u.tight) ? '\n' : '\n\n'}${u.text}`,
     '',
   );
 
@@ -131,7 +133,7 @@ export function textDocumentTextView(
     ...unitsOf(read.pieces, inRange, lines),
     ...read.notes
       .filter((note) => inRange(note.paragraph))
-      .map((note, i) => unit(note.text, true, 0, i > 0)),
+      .map((note, i) => unit(note.text, false, 0, i > 0)),
   ];
   const header = [
     `text-document tab ${jsonString(tab.name)}`,

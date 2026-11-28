@@ -15,7 +15,7 @@ import {
 } from '@livedoc/text-documents';
 import { fitLines, fitOf, type ViewLine, type ViewResult } from '../budget';
 import { jsonString, plural } from '../text';
-import { oneLine } from './reading';
+import { oneLine, refsText } from './reading';
 
 /** The characters of writing a structure line quotes. */
 export const STRUCTURE_QUOTE_CHARS = 40;
@@ -24,7 +24,7 @@ type Thread = NonNullable<TextDocument['comments']>[number];
 
 export type StructureCommentJson = {
   id: string;
-  paragraph: number | null;
+  paragraph: number;
   quote: string;
   replies: number;
   resolved: boolean;
@@ -96,7 +96,8 @@ function noteSuggestion(
   if (!mark) return;
   const known = into.suggestions.get(mark.id);
   if (known) {
-    if (known.text.length < STRUCTURE_QUOTE_CHARS * 2) known.text += text;
+    // Enough of it to quote, never all of a long one.
+    known.text = (known.text + text).slice(0, STRUCTURE_QUOTE_CHARS * 2);
     return;
   }
   into.suggestions.set(mark.id, {
@@ -148,8 +149,8 @@ function walk(
           continue;
         }
         for (const stretch of into.stretches.values())
-          if (stretch.open && stretch.text.length <= STRUCTURE_QUOTE_CHARS)
-            stretch.text += inlineText(inline);
+          if (stretch.open)
+            stretch.text = (stretch.text + inlineText(inline)).slice(0, STRUCTURE_QUOTE_CHARS * 2);
         if (inline.type === 'bookmark') continue;
         const s = inline.suggested;
         noteSuggestion(into, s?.insertion, 'insertion', n, inlineText(inline));
@@ -159,21 +160,21 @@ function walk(
       }
     } else if (block.type === 'table') {
       const held = ParagraphRefs.of([block]);
-      const first = numbers.get(held[0]!) ?? 0;
-      const last = numbers.get(held.at(-1)!) ?? first;
+      // Every cell holds a paragraph at least.
+      const first = numbers.get(held[0]!)!;
+      const last = numbers.get(held.at(-1)!)!;
       const cols = Math.max(
         0,
         ...block.rows.map((r) => r.cells.reduce((k, c) => k + (c.colSpan ?? 1), 0)),
       );
       into.lines.push({
-        text: `${indent}table ${ParagraphRefs.text(first)}..${ParagraphRefs.text(last)} ${block.rows.length}×${cols}`,
+        text: `${indent}table ${refsText(first, last)} ${block.rows.length}×${cols}`,
         noun: TABLE,
       });
       noteSuggestion(into, block.suggested?.insertion, 'table-insertion', first, '');
       noteSuggestion(into, block.suggested?.deletion, 'table-deletion', first, '');
       for (const row of block.rows) {
-        const rowFirst =
-          numbers.get(ParagraphRefs.of(row.cells.flatMap((c) => c.blocks))[0]!) ?? first;
+        const rowFirst = numbers.get(ParagraphRefs.of(row.cells.flatMap((c) => c.blocks))[0]!)!;
         noteSuggestion(into, row.suggested?.insertion, 'row-insertion', rowFirst, '');
         noteSuggestion(into, row.suggested?.deletion, 'row-deletion', rowFirst, '');
         for (const cell of row.cells) walk(document, cell.blocks, numbers, `${indent}  `, into);
@@ -191,7 +192,7 @@ function walk(
 }
 
 const threadLine = (c: StructureCommentJson) =>
-  `  ${c.id} ${c.paragraph === null ? '' : `${ParagraphRefs.text(c.paragraph)} `}${jsonString(
+  `  ${c.id} ${ParagraphRefs.text(c.paragraph)} ${jsonString(
     c.quote,
     STRUCTURE_QUOTE_CHARS,
   )} ${plural(c.replies, 'reply', 'replies')}${c.resolved ? ' resolved' : ''}`;
@@ -223,7 +224,7 @@ export function textDocumentStructureView(
         id,
         paragraph,
         // The stretch as it read when the thread began, else as it reads now.
-        quote: thread.quote || (into.stretches.get(id)?.text.replace(/\s+/g, ' ').trim() ?? ''),
+        quote: thread.quote || into.stretches.get(id)!.text.replace(/\s+/g, ' ').trim(),
         replies: Math.max(0, thread.comments.length - 1),
         resolved: thread.resolved,
       },

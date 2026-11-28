@@ -110,3 +110,57 @@ export function planDocument(): TextDocument {
     ],
   };
 }
+
+const NOBODY = { id: 's2', at: 1, author: { name: '' } };
+
+/**
+ * The odds and ends of a document tab the views name: a drawing and a decorative picture, a bookmark, a style the
+ * document lacks, an unticked checklist item, a section break, a table of contents, a one-column table, a long
+ * suggestion in two runs by no one named, a paragraph break suggested, a resolved thread with no quote, and a thread
+ * marked in the writing that the document no longer holds.
+ */
+export function oddsDocument(): TextDocument {
+  const blank = TextDocument.blank({ format: 'odf' });
+  const long = 'x'.repeat(60);
+  return {
+    ...blank,
+    lists: { l3: ListDefinition.of('check') },
+    body: [
+      para('normal', [
+        { type: 'picture', media: 'm1', width: 1, height: 1, drawing: 'd1', props: {} },
+        { type: 'picture', media: 'm2', width: 1, height: 1, decorative: true, props: {} },
+        { type: 'bookmark', name: 'here', props: {} },
+      ]),
+      { type: 'paragraph', style: 'Missing', props: {}, inlines: [run('Odd style')] },
+      text('normal', 'Not yet', { list: { id: 'l3', level: 1, checked: false } }),
+      { type: 'section', ...blank.section },
+      { type: 'contents', look: 'plain', levels: 3, entries: [text('normal', 'Intro\t1')] },
+      { type: 'table', columns: [100], headerRows: 0, rows: [{ cells: [cell('Solo')] }] },
+      para(
+        'normal',
+        [
+          run(long, { suggested: { deletion: NOBODY } }),
+          run(long, { suggested: { deletion: NOBODY } }),
+        ],
+        {
+          suggested: { break: { id: 's3', at: 1, author: { name: 'Bo' } } },
+        },
+      ),
+      para('normal', [
+        { type: 'comment', edge: 'start', id: 'c2', props: {} },
+        run('Settled  words'),
+        { type: 'comment', edge: 'end', id: 'c2', props: {} },
+        { type: 'comment', edge: 'start', id: 'gone', props: {} },
+        run('!'),
+        { type: 'comment', edge: 'end', id: 'gone', props: {} },
+      ]),
+    ],
+    comments: [
+      {
+        id: 'c2',
+        resolved: true,
+        comments: [{ id: 'c2a', text: 'Done', author: { name: 'Bo' } }],
+      },
+    ],
+  };
+}

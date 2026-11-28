@@ -1,0 +1,17 @@
+text-document tab "Tab 1" · 6 paragraphs
+¶1 "Normal text"
+  drawing ¶1 ""
+  picture ¶1 decorative
+¶2 "Missing" "Odd style"
+¶3 "Normal text" list l3:1 ☐ "Not yet"
+section break (next-page)
+contents 1 entry
+table ¶4 1×1
+  ¶4 "Normal text" "Solo"
+¶5 "Normal text" "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"…
+¶6 "Normal text" "Settled words!"
+comments
+  c2 ¶6 "Settled words" 0 replies resolved
+suggestions
+  s3 paragraph-break ¶5 by "Bo"
+  s2 deletion ¶5 "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"…

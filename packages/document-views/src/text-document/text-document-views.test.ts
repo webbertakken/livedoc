@@ -1,7 +1,7 @@
 // docs/specs/034-text-documents/agents-and-sync.md "Reading": a text document's outline, text and structure views.
 import { describe, expect, it } from 'vitest';
 import { TextDocument } from '@livedoc/text-documents';
-import { planDocument } from '../__fixtures__/text-document/plan-document';
+import { oddsDocument, planDocument } from '../__fixtures__/text-document/plan-document';
 import { textDocumentOutlineView } from './outline';
 import { documentTabOf, parseParagraphRange } from './reading';
 import { textDocumentStructureView } from './structure';
@@ -115,7 +115,77 @@ describe('the structure', () => {
   });
 
   it('says none for a tab with no comments or suggestions', () => {
+    const blank = TextDocument.blank({ format: 'odf' });
+    expect(
+      textDocumentStructureView({ document: blank, tab: documentTabOf(blank, undefined)! }).json
+        .comments,
+    ).toEqual([]);
     const view = textDocumentStructureView({ document: doc, tab: documentTabOf(doc, 't.1')! });
     expect(view.text.split('\n').slice(-2)).toEqual(['comments none', 'suggestions none']);
+  });
+});
+
+describe('the odds and ends', () => {
+  const odds = oddsDocument();
+  const tab = documentTabOf(odds, undefined)!;
+
+  it('names every kind of block and object, and each thread and suggestion as it can', async () => {
+    const view = textDocumentStructureView({ document: odds, tab });
+    await expect(view.text).toMatchFileSnapshot(`${GOLDEN}/odds-structure.txt`);
+    expect(view.json.comments).toEqual([
+      { id: 'c2', paragraph: 6, quote: 'Settled words', replies: 0, resolved: true },
+    ]);
+    expect(view.json.suggestions.map((s) => [s.id, s.kind, s.author, s.text.length])).toEqual([
+      ['s3', 'paragraph-break', 'Bo', 0],
+      ['s2', 'deletion', null, 80],
+    ]);
+  });
+
+  it('reads contents and kept content with the paragraph after them, and a one-column row by its paragraph', () => {
+    const all = textDocumentTextView({ document: odds, tab, lines: true });
+    expect(all.ok && all.text).toContain('- Intro\n\n¶4 | Solo |');
+    const later = textDocumentTextView({ document: odds, tab, range: '5' });
+    expect(later.ok && later.text).not.toContain('Intro');
+    expect(later.ok && later.json.range).toBe('5');
+  });
+
+  it('reads a row that starts before the range asked', () => {
+    const view = textDocumentTextView({ document: doc, tab: plan, range: '8..9' });
+    expect(view.ok && view.text).toContain('| Who | What |');
+  });
+
+  it('names the document tab and the plain form in the closing line, the CLI’s by default', () => {
+    const view = textDocumentTextView({ document: doc, tab: plan }, { budget: 40, only: 'Plan' });
+    expect(view.ok && view.text.split('\n').at(-1)).toMatch(
+      /^… ¶\d+\.\.¶16 left out: view --view text --only Plan --range \d+\.\.16$/,
+    );
+  });
+
+  it('reads again the last paragraph when only its footnote was left out', () => {
+    const notes = TextDocument.fromTexts(['One']);
+    const withNote: TextDocument = {
+      ...notes,
+      body: [
+        {
+          ...(notes.body[0] as Extract<(typeof notes.body)[number], { type: 'paragraph' }>),
+          inlines: [
+            { type: 'run', text: 'One', props: {} },
+            { type: 'note', blocks: TextDocument.fromTexts(['n'.repeat(300)]).body, props: {} },
+          ],
+        },
+      ],
+    };
+    const view = textDocumentTextView(
+      { document: withNote, tab: documentTabOf(withNote, undefined)! },
+      { budget: 40 },
+    );
+    expect(view.ok && view.text.split('\n').at(-1)).toBe(
+      '… ¶1 left out: view --view text --range 1',
+    );
+  });
+
+  it('counts a paragraph holding only an object as something', () => {
+    const { text } = textDocumentOutlineView({ name: 'Odds', document: odds, current: 't.0' });
+    expect(text).not.toContain('empty');
   });
 });

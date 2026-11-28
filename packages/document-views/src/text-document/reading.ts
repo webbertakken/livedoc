@@ -73,7 +73,7 @@ export function documentTabOf(
   only: string | undefined,
 ): DocumentTab | null {
   const tabs = DocumentTabs.all(document);
-  if (only === undefined) return tabs[0] ?? null;
+  if (only === undefined) return tabs[0]!;
   const named = only.toLowerCase();
   return (
     tabs.find((t) => t.id === only) ?? tabs.find((t) => t.name.toLowerCase() === named) ?? null
@@ -109,6 +109,10 @@ export function parseParagraphRange(
     };
   return { ok: true, range: { from, to } };
 }
+
+/** `¶7`, or `¶7..¶9`. */
+export const refsText = (from: number, to: number): string =>
+  from === to ? ParagraphRefs.text(from) : `${ParagraphRefs.text(from)}..${ParagraphRefs.text(to)}`;
 
 export const rangeText = ({ from, to }: ParagraphRange): string =>
   from === to ? String(from) : `${from}..${to}`;
