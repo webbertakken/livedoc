@@ -108,7 +108,8 @@ describe('spreadsheetSheetImage', () => {
       alt: 'Logo',
     });
     expect(drawn[2]).not.toHaveProperty('alt');
-    expect(drawn[0]!.height).toBeGreaterThanOrEqual(drawn[2]!.y + 60);
+    const [frame, , far] = drawn as ShapeElement[];
+    expect(frame!.height).toBeGreaterThanOrEqual(far!.y + 60);
     const ranged = spreadsheetSheetImage(wb, 'sheetA', tab, {
       range: { r1: 0, c1: 0, r2: 2, c2: 2 },
     })!;
