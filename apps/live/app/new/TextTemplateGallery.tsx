@@ -31,7 +31,7 @@ export function TextTemplateGallery({
   return (
     // A solid ground over the wizard's animated backdrop: the pages are the picture here.
     <div className="absolute inset-0 z-10 overflow-y-auto bg-slate-50 dark:bg-slate-950">
-      <div className="mx-auto max-w-5xl px-4 pb-16 pt-10 sm:px-8">
+      <div className="mx-auto max-w-5xl px-4 pb-16 pt-10 sm:px-6">
         <h1 className="text-page-title text-slate-900 dark:text-slate-100">Template gallery</h1>
         <section aria-labelledby="text-gallery-start" className="mt-6">
           <h2 id="text-gallery-start" className="text-body text-slate-700 dark:text-slate-200">
@@ -48,7 +48,7 @@ export function TextTemplateGallery({
                 <span className={PAGE}>
                   <span
                     aria-hidden
-                    className="flex aspect-[17/22] w-full items-center justify-center bg-white text-brand-600 dark:bg-[#1e1f20] dark:text-brand-400"
+                    className="flex aspect-[17/22] w-full items-center justify-center bg-white text-brand-700 dark:bg-[#1e1f20] dark:text-brand-400"
                   >
                     <PlusIcon />
                   </span>
