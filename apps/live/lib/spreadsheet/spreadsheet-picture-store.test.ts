@@ -27,6 +27,8 @@ describe('pictureStoredOf', () => {
   });
 });
 
+const natural = { width: 1, height: 1 };
+
 describe('spreadsheetPictureStore', () => {
   it('opens one session at the first picture and hands it each picture as a typed blob', async () => {
     const seen: Blob[] = [];
@@ -39,11 +41,11 @@ describe('spreadsheetPictureStore', () => {
     const open = vi.fn(async () => session);
     const store = spreadsheetPictureStore(open);
     expect(open).not.toHaveBeenCalled();
-    expect(await store({ data: new Uint8Array([1, 2]), type: 'image/png' })).toEqual({
+    expect(await store({ data: new Uint8Array([1, 2]), type: 'image/png', natural })).toEqual({
       ok: true,
       imageId: 'g1',
     });
-    expect(await store({ data: new Uint8Array([3]), type: 'image/gif' })).toEqual({
+    expect(await store({ data: new Uint8Array([3]), type: 'image/gif', natural })).toEqual({
       ok: true,
       imageId: 'g2',
     });
