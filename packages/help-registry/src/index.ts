@@ -1717,6 +1717,17 @@ export const articles: Article[] = [
     parentSlug: 'plan-tabs',
   },
   {
+    slug: 'cell-comments',
+    title: 'Comments on Cells',
+    description:
+      'Comment on spreadsheet cells and ranges: reply, mention, assign, react and resolve.',
+    keywords:
+      'comment comments cell comment thread threads conversation discussion reply replies mention mentions assign assigned action insert comment ctrl alt m cmd option m resolve reopen react reaction emoji orange triangle marker spreadsheet sheet cell range',
+    category: 'Canvas',
+    categorySlug: 'canvas/plan-tabs',
+    parentSlug: 'plan-tabs',
+  },
+  {
     slug: 'pivot-tables',
     title: 'Pivot Tables',
     description: 'Summarise a spreadsheet range by its columns: rows, columns, values and filters.',

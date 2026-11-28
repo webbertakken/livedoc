@@ -599,6 +599,13 @@ export const FEATURE_ICONS: Record<string, ReactNode> = {
       <path d="M17 3h4v4z" fill="currentColor" />
     </Glyph>
   ),
+  // A grid of cells with a speech bubble over its corner: a conversation about a cell.
+  'cell-comments': (
+    <Glyph>
+      <path d="M2.5 8h19M2.5 14h19M8 3v18" />
+      <path d="M13 3.5h8v5.5h-4.5l-2.5 2v-2h-1z" fill="currentColor" />
+    </Glyph>
+  ),
   // A page with a title and a bar chart: the poster an infographic becomes.
   'pages-mode': (
     <Glyph>

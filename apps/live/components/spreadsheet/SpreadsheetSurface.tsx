@@ -39,6 +39,11 @@ import { BorderLineContext, useBorderLineState } from './border-line-context';
 import { SpreadsheetTitleRow, spreadsheetLevel } from './SpreadsheetTitleRow';
 import { SpreadsheetFullScreenProvider, useSpreadsheetFullScreen } from './spreadsheet-full-screen';
 import { SpreadsheetSheetParts } from './SpreadsheetSheetParts';
+import {
+  NO_REVIEW,
+  SpreadsheetReviewContext,
+  type SpreadsheetReview,
+} from './spreadsheet-review-context';
 import { SpreadsheetZoomProvider, useSpreadsheetZoom } from './spreadsheet-zoom';
 import { useSheetBarPeers } from './useSheetBarPeers';
 import { useSheetCopyTo } from './useSheetCopyTo';
@@ -72,6 +77,7 @@ export function SpreadsheetSurface({
   onWorkbook,
   history = null,
   documents,
+  review = NO_REVIEW,
 }: {
   scope: WorkbookScope;
   tabId: string;
@@ -89,6 +95,8 @@ export function SpreadsheetSurface({
   history?: SpreadsheetHistory | null;
   // The person's documents, for the link editor and card (inserted-objects.md "Insert Link").
   documents?: readonly LinkDocument[];
+  // Who comments in this session (review.md "Comments"); absent, nobody.
+  review?: SpreadsheetReview;
 }) {
   const bridge = useSheetsBridgeContext();
   const sheetBarPeers = useSheetBarPeers(bridge);
@@ -137,87 +145,89 @@ export function SpreadsheetSurface({
     hiddenCount: hidden.size,
   });
   return (
-    <section
-      ref={root}
-      aria-label="Spreadsheet"
-      className="office-shell absolute inset-0 flex flex-col bg-white dark:bg-slate-950"
-    >
-      {/* Full Screen hides the title row, menus and toolbar, keeping them mounted: their keys and dialogs go on. */}
-      <div className={fullScreen.on ? 'hidden' : 'contents'}>
-        <SpreadsheetTitleRow
-          scope={scope}
-          tabId={tabId}
-          format={workbook.format}
-          locale={workbook.settings.locale}
-          documentName={documentName}
-          level={
-            bridge ? spreadsheetLevel(bridge.canEdit, bridge.canEdit && bridge.canShape) : 'view'
-          }
-          history={history}
-          channel={channel}
-          zoom={zoom}
-          formulas={formulas}
-          protectedRanges={protectedShown}
-          onFullScreen={fullScreen.enter}
-          keyScope={root}
-          onWorkbook={onWorkbook}
-          pushUndo={(step) => bridge?.pushUndo(step)}
-        />
-      </div>
-      <LinkDocumentsContext.Provider value={documents ?? NO_DOCUMENTS}>
-        <SpreadsheetThemeProvider value={theme}>
-          <ProtectSheetContext.Provider value={protectSheet}>
-            <NamedFunctionsProvider value={namedFunctions}>
-              <SheetBarActionsContext.Provider value={sheetBar}>
-                <OfficeBindingsContext.Provider value={channel}>
-                  <BorderLineContext.Provider value={borderLine}>
-                    <SummarySlotContext.Provider value={summarySlot}>
-                      <SpreadsheetZoomProvider value={scale}>
-                        <SheetStepContext.Provider value={stepSheet}>
-                          <SurfaceRedoContext.Provider value={history?.redo ?? null}>
-                            <ShowFormulasContext.Provider value={formulas.shown}>
-                              <ShowProtectedContext.Provider value={protectedShown.shown}>
-                                <SpreadsheetFullScreenProvider value={fullScreen}>
-                                  <FindReplaceContext.Provider value={findReplace}>
-                                    {bridge ? (
-                                      <OpenSheet
-                                        bridge={bridge}
-                                        tabId={tabId}
-                                        onSelectTab={onSelectTab}
-                                        sync={sync}
-                                        onWorkbook={onWorkbook}
-                                      />
-                                    ) : (
-                                      <Status state="loading" />
-                                    )}
-                                  </FindReplaceContext.Provider>
-                                </SpreadsheetFullScreenProvider>
-                              </ShowProtectedContext.Provider>
-                            </ShowFormulasContext.Provider>
-                          </SurfaceRedoContext.Provider>
-                        </SheetStepContext.Provider>
-                      </SpreadsheetZoomProvider>
-                    </SummarySlotContext.Provider>
-                  </BorderLineContext.Provider>
-                </OfficeBindingsContext.Provider>
-                <SheetBar
-                  tabs={tabs}
-                  activeId={tabId}
-                  onSelect={onSelectTab}
-                  peers={sheetBarPeers}
-                  summarySlot={setSummarySlot}
-                  actions={bridge ? sheetBar : null}
-                  looks={looks}
-                  copyTo={copyTo}
-                  formLinks={formLinks}
-                />
-              </SheetBarActionsContext.Provider>
-            </NamedFunctionsProvider>
-          </ProtectSheetContext.Provider>
-        </SpreadsheetThemeProvider>
-      </LinkDocumentsContext.Provider>
-      <ImportReportDialog documentId={scope.documentId} />
-    </section>
+    <SpreadsheetReviewContext.Provider value={review}>
+      <section
+        ref={root}
+        aria-label="Spreadsheet"
+        className="office-shell absolute inset-0 flex flex-col bg-white dark:bg-slate-950"
+      >
+        {/* Full Screen hides the title row, menus and toolbar, keeping them mounted: their keys and dialogs go on. */}
+        <div className={fullScreen.on ? 'hidden' : 'contents'}>
+          <SpreadsheetTitleRow
+            scope={scope}
+            tabId={tabId}
+            format={workbook.format}
+            locale={workbook.settings.locale}
+            documentName={documentName}
+            level={
+              bridge ? spreadsheetLevel(bridge.canEdit, bridge.canEdit && bridge.canShape) : 'view'
+            }
+            history={history}
+            channel={channel}
+            zoom={zoom}
+            formulas={formulas}
+            protectedRanges={protectedShown}
+            onFullScreen={fullScreen.enter}
+            keyScope={root}
+            onWorkbook={onWorkbook}
+            pushUndo={(step) => bridge?.pushUndo(step)}
+          />
+        </div>
+        <LinkDocumentsContext.Provider value={documents ?? NO_DOCUMENTS}>
+          <SpreadsheetThemeProvider value={theme}>
+            <ProtectSheetContext.Provider value={protectSheet}>
+              <NamedFunctionsProvider value={namedFunctions}>
+                <SheetBarActionsContext.Provider value={sheetBar}>
+                  <OfficeBindingsContext.Provider value={channel}>
+                    <BorderLineContext.Provider value={borderLine}>
+                      <SummarySlotContext.Provider value={summarySlot}>
+                        <SpreadsheetZoomProvider value={scale}>
+                          <SheetStepContext.Provider value={stepSheet}>
+                            <SurfaceRedoContext.Provider value={history?.redo ?? null}>
+                              <ShowFormulasContext.Provider value={formulas.shown}>
+                                <ShowProtectedContext.Provider value={protectedShown.shown}>
+                                  <SpreadsheetFullScreenProvider value={fullScreen}>
+                                    <FindReplaceContext.Provider value={findReplace}>
+                                      {bridge ? (
+                                        <OpenSheet
+                                          bridge={bridge}
+                                          tabId={tabId}
+                                          onSelectTab={onSelectTab}
+                                          sync={sync}
+                                          onWorkbook={onWorkbook}
+                                        />
+                                      ) : (
+                                        <Status state="loading" />
+                                      )}
+                                    </FindReplaceContext.Provider>
+                                  </SpreadsheetFullScreenProvider>
+                                </ShowProtectedContext.Provider>
+                              </ShowFormulasContext.Provider>
+                            </SurfaceRedoContext.Provider>
+                          </SheetStepContext.Provider>
+                        </SpreadsheetZoomProvider>
+                      </SummarySlotContext.Provider>
+                    </BorderLineContext.Provider>
+                  </OfficeBindingsContext.Provider>
+                  <SheetBar
+                    tabs={tabs}
+                    activeId={tabId}
+                    onSelect={onSelectTab}
+                    peers={sheetBarPeers}
+                    summarySlot={setSummarySlot}
+                    actions={bridge ? sheetBar : null}
+                    looks={looks}
+                    copyTo={copyTo}
+                    formLinks={formLinks}
+                  />
+                </SheetBarActionsContext.Provider>
+              </NamedFunctionsProvider>
+            </ProtectSheetContext.Provider>
+          </SpreadsheetThemeProvider>
+        </LinkDocumentsContext.Provider>
+        <ImportReportDialog documentId={scope.documentId} />
+      </section>
+    </SpreadsheetReviewContext.Provider>
   );
 }
 

@@ -39,6 +39,7 @@ import {
 } from '@livedoc/sheets';
 import { RULE_ARROW_PX, ruleCellDraw } from './rules/sheet-rule-draw';
 import { NOTE_MARKER_PX, noteMarkerInk } from '@/lib/spreadsheet/sheet-notes';
+import { COMMENT_MARKER_COLOUR } from '@/lib/spreadsheet/sheet-comments';
 import type { PlanPalette } from '@/components/plan/plan-palette';
 import { cellBox, mergeAt, type Geometry, type GridWindow } from './sheet-geometry';
 import { SheetImage } from './SheetImage';
@@ -117,6 +118,8 @@ type CellsProps = {
   showFormulas?: boolean | undefined;
   // The pivot tables this person's slicers filter, drawn in place of everyone's output (D629).
   drawn?: DrawnPivots | null;
+  // The cells an open comment thread is anchored to, by `cellKey` (review.md "In the grid"); absent, none.
+  commented?: ReadonlyMap<string, unknown> | undefined;
 };
 
 // The room a dropdown column keeps at its cells' right, so its arrow never covers the value.
@@ -367,20 +370,24 @@ function RegionCells({ region, ...p }: CellsProps & { region: Region }) {
               {...(waiting ? { waitingOpacity: WAITING_OPACITY } : {})}
             />,
           );
-        // A note's marker: a small corner triangle, black, white on a dark fill (review.md "Notes"). Read from the cell
-        // drawn, so the markers cost no pass of their own.
-        if (cell?.note !== undefined)
+        // A note's marker: a small corner triangle, black, white on a dark fill (review.md "Notes"); an open comment
+        // thread's, orange, alone where the cell has both (D644). Read from the cell drawn and the threads' map, so the
+        // markers cost no pass of their own.
+        const commented = p.commented?.has(key) ?? false;
+        if (commented || cell?.note !== undefined)
           out.push(
             <div
               key={`${key}n`}
-              data-sheet-note-marker=""
+              {...(commented
+                ? { 'data-sheet-comment-marker': '' }
+                : { 'data-sheet-note-marker': '' })}
               className="pointer-events-none absolute"
               style={{
                 left: box.x + box.w - NOTE_MARKER_PX - 1,
                 top: box.y,
                 width: NOTE_MARKER_PX,
                 height: NOTE_MARKER_PX,
-                background: `linear-gradient(to bottom left, ${noteMarkerInk(colours.fill ?? palette.surface)} 50%, transparent 50%)`,
+                background: `linear-gradient(to bottom left, ${commented ? COMMENT_MARKER_COLOUR : noteMarkerInk(colours.fill ?? palette.surface)} 50%, transparent 50%)`,
                 zIndex: 3,
               }}
             />,

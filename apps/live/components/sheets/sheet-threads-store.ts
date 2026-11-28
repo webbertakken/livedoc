@@ -17,7 +17,10 @@ export class SheetThreadsStore {
   private readonly seen = new Map<string, number>();
   private readonly listeners = new Set<() => void>();
   private version = 0;
+  // Every thread by id as of the last change: a new map each change, so a render reads it as a snapshot.
+  private snapshot: ReadonlyMap<string, SheetThread> = new Map();
   private loading: Promise<void> | null = null;
+  private loaded = false;
 
   private readonly scope: SheetsScope;
 
@@ -32,8 +35,12 @@ export class SheetThreadsStore {
 
   getVersion = (): number => this.version;
 
+  /** Every thread by id, the same map until a thread changes (for useSyncExternalStore). */
+  getSnapshot = (): ReadonlyMap<string, SheetThread> => this.snapshot;
+
   private changed(): void {
     this.version++;
+    this.snapshot = new Map(this.threads);
     for (const listener of this.listeners) listener();
   }
 
@@ -67,6 +74,7 @@ export class SheetThreadsStore {
           this.threads.set(t.id, t);
           this.seen.set(t.id, Math.max(this.seen.get(t.id) ?? 0, t.v));
         }
+        this.loaded = true;
         debugLog(`[sheets] threads loaded count=${threads.length}`);
         this.changed();
       })
@@ -77,6 +85,11 @@ export class SheetThreadsStore {
         this.loading = null;
       });
     return this.loading;
+  }
+
+  /** Reads the workbook's threads unless they were read already (a resync reads them again through load). */
+  ensureLoaded(): void {
+    if (!this.loaded) void this.load();
   }
 
   /** A thread the room relayed. */

@@ -4,7 +4,11 @@
 // it reads the session, the document's tabs and its workbook record from the editor; the sheet store reaches the room
 // through the editor's sheets bridge. The surface's code and the engine load only when a spreadsheet opens.
 import dynamic from 'next/dynamic';
+import { useMemo } from 'react';
 import { useEditorContext } from '@/app/document/[id]/EditorContext';
+import { useIsOfflineDocument } from '@/hooks/persistence/useIsOfflineDocument';
+import { commenterOf } from '@/lib/office/review/office-commenter';
+import type { SpreadsheetReview } from './spreadsheet-review-context';
 
 const SpreadsheetSurface = dynamic(
   () => import('./SpreadsheetSurface').then((m) => m.SpreadsheetSurface),
@@ -28,7 +32,38 @@ export function SpreadsheetHost({ tabId }: { tabId: string }) {
     canRedo,
     tickTabs,
     documentList,
+    can,
+    accountId,
+    commentMentions,
   } = useEditorContext();
+  // Who comments (review.md "Comments"): the room ticket's key, never in This Browser (D656), never a Viewer (D655).
+  const local = useIsOfflineDocument(documentId);
+  const review = useMemo(
+    (): SpreadsheetReview => ({
+      commenter: local
+        ? null
+        : commenterOf({
+            commentKey: can.commentKey,
+            level: can.level,
+            self: selfParticipant,
+            local: false,
+            readOnly: false,
+          }),
+      local,
+      selfUserId: accountId ?? null,
+      onMentioned: commentMentions.notifyMentioned,
+      onAssigned: commentMentions.notifyAssigned,
+    }),
+    [
+      local,
+      can.commentKey,
+      can.level,
+      selfParticipant,
+      accountId,
+      commentMentions.notifyMentioned,
+      commentMentions.notifyAssigned,
+    ],
+  );
   if (!documentId || !documentWorkbook) return null;
   return (
     <SpreadsheetSurface
@@ -44,6 +79,7 @@ export function SpreadsheetHost({ tabId }: { tabId: string }) {
       onWorkbook={receiveWorkbookRecord}
       history={{ undo: () => void undo(), redo: () => void redo(), canUndo, canRedo }}
       documents={documentList}
+      review={review}
     />
   );
 }

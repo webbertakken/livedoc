@@ -326,9 +326,7 @@ const INSERT_MENU = menu('insert', 'Insert', [
   built('insert-dropdown', 'Dropdown', 'edit'),
   built('insert-emoji', 'Emoji', 'edit'),
   SEPARATOR,
-  item('insert-comment', 'Comment', 'participate', {
-    shortcut: 'insert-or-edit-comment',
-  }),
+  built('insert-comment', 'Comment', 'participate', { shortcut: 'insert-or-edit-comment' }),
   built('insert-note', 'Note', 'edit', { shortcut: 'insert-or-edit-note' }),
 ]);
 

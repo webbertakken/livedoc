@@ -17,7 +17,8 @@ import { previewFormatRules } from './rules/useSheetRulesState';
 import { SheetSmartFillLayer } from './SheetSmartFillLayer';
 import { SheetSplitChip } from './SheetSplitChip';
 import { SheetCellComments } from './SheetCellComments';
-import { SheetCellNotes } from './SheetCellNotes';
+import { SheetCellHoverCard } from './SheetCellHoverCard';
+import { useSheetThreadMarks } from './sheet-thread-marks-context';
 import {
   useContext,
   useEffect,
@@ -88,6 +89,8 @@ export function SheetGrid({
   surfaceKeys,
 }: Props) {
   const c = useSheetController();
+  // A spreadsheet's open comment threads, drawn as markers and said with their cells (review.md "In the grid").
+  const threadMarks = useSheetThreadMarks();
   // View › Show › Formulas, the spreadsheet surface's (D141); off in a Plan Sheet.
   const showFormulas = useContext(ShowFormulasContext);
   const viewportRef = useRef<HTMLDivElement | null>(null);
@@ -426,6 +429,7 @@ export function SheetGrid({
                 locale={c.locale}
                 fontFamily={fontFamily}
                 showFormulas={showFormulas}
+                commented={threadMarks?.byCell}
               />
               <SheetProtectionLayer />
               <TableChipsHostContext.Provider value={chipHost}>
@@ -454,8 +458,8 @@ export function SheetGrid({
               {/* Dropdowns, checkboxes and the rule panels (data-validation.md, conditional-formatting.md). */}
               <SheetRuleLayer actions={actions} />
               <SheetCellComments hover={pointer.hover} />
-              {/* A noted cell's note on hover (review.md "Notes"). */}
-              <SheetCellNotes hover={pointer.hover} />
+              {/* A noted cell's note and an anchored cell's thread on hover (review.md "Notes", "In the grid"). */}
+              <SheetCellHoverCard hover={pointer.hover} />
               <SheetSmartFillLayer window={window} actions={actions} />
               {/* A split's Separator chip (data-tools.md "Split Text to Columns"), a spreadsheet's. */}
               <SheetSplitChip />
@@ -493,6 +497,7 @@ export function SheetGrid({
                 c2={window.c2}
                 activeR={c.selection.active.r}
                 activeC={c.selection.active.c}
+                commented={threadMarks?.byCell}
               />
             </div>
             {/* The editor is the active cell's, so it sits in that cell's row: the grid owns only rows. */}

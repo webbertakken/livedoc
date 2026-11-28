@@ -8,10 +8,10 @@
 // "Accessibility").
 import type { DrawnPivots } from '@/lib/spreadsheet/pivot-sliced';
 import { memo } from 'react';
-import { formatA1, type Sheet, type Workbook } from '@livedoc/sheets';
+import { cellKey, formatA1, type Sheet, type Workbook } from '@livedoc/sheets';
 import { mergeAt, type Geometry } from './sheet-geometry';
 import { readWorkbook } from './read-workbook';
-import { cellSpokenValue, NOTED } from './sheet-cell-speech';
+import { cellSpokenValue, COMMENTED, NOTED } from './sheet-cell-speech';
 
 type Props = {
   // The pivot tables this person's slicers filter, read as drawn (D629).
@@ -29,6 +29,8 @@ type Props = {
   c2: number;
   activeR: number;
   activeC: number;
+  // The cells an open comment thread is anchored to, by `cellKey` (review.md "In the grid"); absent, none.
+  commented?: ReadonlyMap<string, unknown> | undefined;
 };
 
 /** The id of a cell in the mirror, as the grid's aria-activedescendant names it. */
@@ -78,6 +80,12 @@ function SheetGridMirrorInner(p: Props) {
             // A noted cell says so (review.md "Accessibility"); the active one's note is its description, as the hover
             // card shows it to the pointer.
             const note = p.workbook.cellNoteOf(p.sheet.id, r, c);
+            const rowId = p.sheet.layout.rows[r];
+            const colId = p.sheet.layout.cols[c];
+            const commented =
+              rowId !== undefined &&
+              colId !== undefined &&
+              !!p.commented?.has(cellKey(rowId, colId));
             const cellId = mirrorCellId(p.elementId, r, c);
             const said = `${formatA1(r, c)} ${cellSpokenValue(p.sheet, p.workbook, p.locale, r, c, p.drawn)}`;
             return (
@@ -89,7 +97,9 @@ function SheetGridMirrorInner(p: Props) {
                 aria-selected={active || undefined}
                 aria-describedby={active && note !== null ? `${cellId}-note` : undefined}
               >
-                {note === null ? said : `${said.trimEnd()}${NOTED}`}
+                {note === null && !commented
+                  ? said
+                  : `${said.trimEnd()}${note === null ? '' : NOTED}${commented ? COMMENTED : ''}`}
               </span>
             );
           })}

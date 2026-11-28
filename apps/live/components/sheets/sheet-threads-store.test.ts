@@ -122,6 +122,22 @@ describe('SheetThreadsStore', () => {
     expect(store.thread('th1')?.v).toBe(1);
   });
 
+  it('gives one snapshot until a thread changes, and reads once unless asked again', async () => {
+    const store = new SheetThreadsStore(scope);
+    const empty = store.getSnapshot();
+    answers.push(() => Response.json({ threads: [thread(1)] }));
+    store.ensureLoaded();
+    await vi.waitFor(() => expect(store.getSnapshot()).not.toBe(empty));
+    const loaded = store.getSnapshot();
+    expect([...loaded.keys()]).toEqual(['th1']);
+    store.ensureLoaded();
+    store.receive(relay(thread(1)));
+    expect(store.getSnapshot()).toBe(loaded);
+    store.receive(relay(thread(2)));
+    expect(store.getSnapshot().get('th1')?.v).toBe(2);
+    expect(calls).toHaveLength(1);
+  });
+
   it("reads none of a spreadsheet in This Browser, and keeps one store a document's", async () => {
     await offlinePutRecord(testRecord());
     const store = new SheetThreadsStore({ ...scope, documentId: 'd1', tabId: null });

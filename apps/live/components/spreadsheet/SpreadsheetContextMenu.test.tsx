@@ -47,6 +47,8 @@ function Menus({ actions }: { actions: SheetActions }) {
       'insert-link': { run: vi.fn() },
       // Insert Note on a cell without one, as useSpreadsheetNotes binds it for an Editor.
       'cell-insert-note': { run: vi.fn() },
+      // Comment, as useSpreadsheetComments binds it for a commenter (review.md "In the grid").
+      'insert-comment': { run: vi.fn() },
     },
   );
   return <SpreadsheetGridMenus actions={actions} bound={office.actions} />;

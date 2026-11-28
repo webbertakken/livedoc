@@ -89,12 +89,18 @@ describe('SPREADSHEET_TOOLBAR', () => {
     expect(seen).toEqual(['Search the Menus', 'Print', 'Zoom', 'Hide the Menus']);
   });
 
-  it('shows a Participant also Undo, Redo, and the dimmed Insert Comment and Functions', () => {
+  it('shows a Participant also Undo, Redo, Insert Comment where bound and the dimmed Functions', () => {
     const run = () => {};
     const seen = visibleToolbar(
       SPREADSHEET_TOOLBAR,
       'participate',
-      { 'search-the-menus': { run }, undo: { run }, redo: { run } },
+      {
+        'search-the-menus': { run },
+        undo: { run },
+        redo: { run },
+        // Insert Comment, as useSpreadsheetComments binds it for a commenter (review.md "In the grid").
+        'insert-comment': { run },
+      },
       ZOOM_ONLY,
     )
       .flatMap((g) => g.controls)

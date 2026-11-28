@@ -1,0 +1,45 @@
+import { ArticleLayout } from '@/components/ArticleLayout';
+import { helpMetadata } from '@/lib/seo';
+
+export const metadata = helpMetadata({
+  title: 'Comments on Cells',
+  description:
+    'Comment on spreadsheet cells and ranges, reply, mention and assign people, react, and resolve a conversation when it is done.',
+  path: '/help/canvas/plan-tabs/cell-comments/',
+});
+
+<ArticleLayout
+  title="Comments on Cells"
+  description="A conversation about a cell or a range: replies, mentions, assignees, reactions and resolve."
+  categoryTitle="Canvas"
+  categorySlug="canvas/plan-tabs"
+>
+
+A comment starts a conversation about a cell or a range, as in Google Sheets: everyone who comments is named, replies gather under it, and it can be resolved when it is done. Use a note when you only want a cell to carry some text.
+
+## Adding a Comment
+
+1. Click the cell, or select the range the comment is about.
+2. Choose **Insert › Comment**, the **Insert Comment** button in the toolbar, right-click and choose **Comment**, or press **Ctrl+Alt+M** (**⌘⌥M** on a Mac).
+3. Type the comment. Type **@** or **+** and a name to mention someone; tick **Assign to** to make it their action.
+4. Choose **Comment**, or press **Ctrl+Enter**. **Cancel** or **Esc** drops it.
+
+## Reading and Replying
+
+A cell with an open comment shows a small orange triangle in its top-right corner. Rest the pointer on the cell for a moment to read the first comment, who wrote it and how many replies follow. Click the cell to open the whole conversation beside it, with a field to reply. A cell with both a note and a comment shows the comment's triangle, and resting on it shows the note first.
+
+On an open conversation, **J** and **K** move to the next and previous comment on the sheet, **R** replies and **Esc** goes back to the cells.
+
+## Resolving, Editing and Deleting
+
+- **Resolve** closes the conversation and takes its triangle away; an assigned one reads **Mark as done**.
+- Edit or delete your own comments from the comment's buttons. Editors can delete anyone's.
+- Deleting the first comment deletes the whole conversation, after asking.
+
+Comments are kept beside the cells, so adding one is never a step you undo with **Ctrl+Z**. Copying cells or a sheet leaves the comments with the original.
+
+## Who Can Do What
+
+Editors and commenters add, reply to, react to and resolve comments. People who can only view the spreadsheet see no comments. A spreadsheet kept in This Browser has no comments: sync it first.
+
+</ArticleLayout>

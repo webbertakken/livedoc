@@ -18,6 +18,8 @@ import { mergeAt, type Geometry } from './sheet-geometry';
 
 /** What a noted cell adds to what is said of it (review.md "Accessibility"). */
 export const NOTED = ', has note';
+/** What a cell an open comment thread is anchored to adds, after a note's (review.md "In the grid"). */
+export const COMMENTED = ', has comment';
 
 /** The most cells Read Row and Read Column say (D135). */
 export const READ_CELLS_MAX = 50;
