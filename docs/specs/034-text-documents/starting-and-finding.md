@@ -47,7 +47,8 @@ Pages mode moves here (fork D4), into Work. In this order, each with its id:
 
 - **The Explorer's New Document menu**: Text document's pane lists the sections, each template a card showing the top
   of its first page and its name ([New Document menu](../013-workspace/new-document-menu.md#the-blanks)); the row
-  itself still makes a blank.
+  itself still makes a blank. A card makes its template through `/new?template=<id>` with the Explorer's place: the
+  writing is stored before the editor opens it, so a template opens once made rather than at once (default).
 - **`/new?gallery=text-document`** is the gallery as a page: a Blank document card, then the sections, each card the
   whole first page and its name. Choosing one makes it as the wizard makes any document.
 - **`/new?template=<id>`** with a text document template's id makes one from it, as `?kind=text-document` makes a

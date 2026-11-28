@@ -130,7 +130,8 @@ As every new document does ([New document route](../007-editor/new-document-rout
 
 ## Opening at once
 
-A blank is on screen, editable, **within 200 ms of the click**, and a template within 500 ms. A PDF document,
+A blank is on screen, editable, **within 200 ms of the click**, and a template within 500 ms. A text document template
+opens once made, through `/new` ([Where the gallery shows](../034-text-documents/starting-and-finding.md#where-the-gallery-shows)). A PDF document,
 blank or opened from a file, opens once its file is stored, as a dropped PDF does: its pages are the file's.
 
 - **No page load.** The Explorer opens the editor in its own place, as `/new` hands off
