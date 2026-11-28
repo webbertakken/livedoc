@@ -12,7 +12,8 @@
     "./engine/browser": "./src/engine/browser.ts",
     "./pictures": "./src/engine/picture-pages.ts",
     "./blank": "./src/engine/blank-pages.ts",
-    "./testing": "./src/testing/fixtures.ts"
+    "./testing": "./src/testing/fixtures.ts",
+    "./laid-out": "./src/engine/laid-out-pages.ts"
   },
   "scripts": {
     "lint": "oxlint",

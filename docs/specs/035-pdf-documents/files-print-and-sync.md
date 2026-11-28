@@ -139,6 +139,13 @@ drawn.
   editor, and refuses by name what is no PDF: no page (`no_pages`), a picture that is not its size
   (`picture_size`), a page past the most a PDF page measures (`page_size`). The file is titled as its tab is named,
   says LiveDoc made it and when, and names no author `(default)`.
+- **A text document's PDF** is its pages as laid out: what the kind drew, handed to the writer as fills, lines,
+  pictures, words and links at their places in points. Words are text, each run shaped in its own font, embedded
+  once as a subset, and scaled across to the width it was drawn at, so the words stand where the page's stood;
+  characters the font lacks are set in the mark faces, in their order. Links lead to the web, mail or a place in the
+  pages, any other is left out; the outline is the headings, nested by level; the file is tagged (the kind's
+  structure, alt text on pictures, everything else an artifact) and says its language. It refuses no page
+  (`no_pages`), a page past the most a PDF page measures (`page_size`), and fonts that cannot be shaped (`face`).
 - **Opened as a text document**: File > Open as a text document runs the text document's own import of a PDF (text
   and pictures, reading order guessed) and makes a **copy** as a text document
   ([Files and print](../034-text-documents/files-and-print.md#opening)); the PDF document is unchanged.

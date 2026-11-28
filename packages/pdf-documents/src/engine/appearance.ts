@@ -66,9 +66,9 @@ export const channelOf = (colour: string, at: number): number =>
   Math.min(1, (parseInt(colour.slice(at, at + 2), 16) + 0.5) / 255);
 
 // A number as the content writes it: a few places, no exponent (a PDF number has none), no trailing zeros.
-const num = (n: number, places = 2): string => String(+n.toFixed(places));
+export const num = (n: number, places = 2): string => String(+n.toFixed(places));
 
-const rgbOf = (colour: string): string =>
+export const rgbOf = (colour: string): string =>
   [1, 3, 5].map((at) => num(channelOf(colour, at), 3)).join(' ');
 
 /** A line of words as a PDF string in WinAnsi: its brackets and backslashes escaped, every byte past ASCII in octal. */
@@ -93,7 +93,7 @@ const code = (glyph: number): string => `<${glyph.toString(16).toUpperCase().pad
  * A shaped run as `TJ`: each glyph moved by its offset and then on by its shaped advance where that is not the font's
  * own; a glyph raised or lowered (a mark above a letter) set apart with its rise.
  */
-function shownRun(run: ShapedRun, size: number, setter: RunSetter): string[] {
+export function shownRun(run: ShapedRun, size: number, setter: RunSetter): string[] {
   const shown: string[] = [];
   let items: string[] = [];
   let pending = 0;
