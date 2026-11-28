@@ -33,6 +33,8 @@ const DOCUMENT_SCOPE: Record<string, Decision> = {
   'POST /documents/{id}/tabs/{tabId}/comments/{commentId}/resolve': 'allow',
   'POST /documents/{id}/tabs/{tabId}/comments/{commentId}/reopen': 'allow',
   'GET /documents/{id}/tabs/{tabId}/render.svg': 'allow',
+  // A text document's pages drawn for an agent, never the editor's.
+  'GET /documents/{id}/tabs/{tabId}/page-previews': 'confined',
   'GET /documents/{id}/tabs/{tabId}/comment-pictures': 'allow',
   'PUT /documents/{id}/tabs/{tabId}/presence': 'confined',
   'DELETE /documents/{id}/tabs/{tabId}/presence': 'confined',
