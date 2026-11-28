@@ -29,6 +29,11 @@ test('a Word file opens with its formatting and leaves as the same .docx', async
   await chooser.setFiles(FILE);
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('features');
   await expect(page.locator('[data-text-document-surface="ready"]')).toBeVisible();
+  // The file holds a link LiveDoc never follows: the import report says so once (files-and-print.md "Import report").
+  const report = page.getByRole('dialog', { name: 'Opened “features”' });
+  await expect(report).toContainText('1 unsafe link kept as its text');
+  await report.getByRole('button', { name: 'OK' }).click();
+  await expect(report).toBeHidden();
   const body = page.locator(BODY);
 
   // Held in OOXML, and says so; its bold runs are bold on the page.

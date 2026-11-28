@@ -4,6 +4,7 @@
 import {
   convertedHeading,
   convertedLines,
+  interruptsOpener,
   openedHeading,
   openedLines,
   openedTitle,
@@ -20,12 +21,13 @@ export type TextDocumentReportView = {
   readonly empty?: string;
 };
 
-/** The report shown once to the person who opened the file, or null when reading it dropped and kept nothing. */
+/** The report shown once to the person who opened the file, or null when reading it dropped nothing a reader would
+ *  miss (housekeeping stays in Security limitations). */
 export function openedReportView(
   report: TextDocumentReport,
   name: string,
 ): TextDocumentReportView | null {
-  if (!report.imported) return null;
+  if (!report.imported || !interruptsOpener(report.imported)) return null;
   return {
     title: openedTitle(name),
     sections: [{ lead: OPENED_LEAD, lines: openedLines(report.imported) }],

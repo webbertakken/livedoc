@@ -90,6 +90,16 @@ export const NAMED_REASONS: ReadonlySet<DroppedReason> = new Set<DroppedReason>(
   'suggestion-unknown',
 ]);
 
+/** Housekeeping a read drops: listed in Security limitations, never a reason to interrupt the opener. */
+export const QUIET_REASONS: ReadonlySet<DroppedReason> = new Set<DroppedReason>([
+  'thumbnail',
+  'layout-hint',
+]);
+
+/** Whether reading the file dropped something a reader would miss, so the opener is shown the report once. */
+export const interruptsOpener = (record: ImportRecord): boolean =>
+  record.dropped.some((entry) => !QUIET_REASONS.has(entry.reason));
+
 export const SECURITY_LIMITATIONS_TITLE = 'Security limitations';
 export const OPENED_LEAD = 'Some of what the file held is not in the document:';
 export const REPORT_EMPTY =

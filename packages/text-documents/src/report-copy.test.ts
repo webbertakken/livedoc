@@ -4,6 +4,7 @@ import { conversionRecordOf, importRecordOf } from './report-record';
 import {
   convertedHeading,
   convertedLines,
+  interruptsOpener,
   NAMED_REASONS,
   openedHeading,
   openedLines,
@@ -53,6 +54,14 @@ describe('report copy', () => {
       '1 macro left out, never run: word/vbaProject.bin',
       '1 unsafe link kept as its text',
     ]);
+  });
+
+  it('interrupts the opener only for what a reader would miss', () => {
+    expect(interruptsOpener(opened((r) => r.drop('thumbnail', 't')))).toBe(false);
+    expect(interruptsOpener(opened((r) => (r.drop('layout-hint', 'proofErr'), r.keep('x'))))).toBe(
+      false,
+    );
+    expect(interruptsOpener(opened((r) => r.drop('link', 'link')))).toBe(true);
   });
 
   it('heads and titles the report', () => {

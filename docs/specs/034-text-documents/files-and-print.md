@@ -119,8 +119,11 @@ What a file held that the text document does not, kept in the document itself so
   lines its dialog listed (the [Conversion](standard-mapping.md#conversion) words), newest first, the last 20 kept
   (default). Undoing the conversion takes its entry away with it; nothing is asked again after converting, as its
   dialog listed the losses first.
-- **Shown once**, to the person who opened the file, as the document first loads, when it dropped or kept anything:
-  **Opened “‹name›”**, its lines, **OK**. A copy, another person and a later visit do not see it again unasked.
+- **Shown once**, to the person who opened the file, as the document first loads, when reading it dropped something
+  a reader would miss: **Opened “‹name›”**, all its lines, **OK**. Housekeeping alone (a thumbnail picture, spelling
+  and layout hints, content kept untouched) never interrupts: most files carry some, and a dialog on every open would
+  teach people to dismiss the one that matters (default); it stays listed in Security limitations. A copy, another
+  person and a later visit do not see it again unasked.
 - **Security limitations** (File) reopens it for anyone who can open the document, Viewers included: both sections,
   or "Nothing was left out or kept aside when this document was opened or converted." when there is nothing.
 

@@ -316,6 +316,7 @@ export {
 export {
   convertedHeading,
   convertedLines,
+  interruptsOpener,
   openedHeading,
   openedLines,
   openedTitle,

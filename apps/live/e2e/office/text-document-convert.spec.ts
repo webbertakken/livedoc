@@ -27,6 +27,11 @@ test('an OpenDocument file downloads as Word, converts, and undoes the conversio
   await chooser.setFiles(FILE);
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('features');
   await expect(page.locator('[data-text-document-surface="ready"]')).toBeVisible();
+  // The file holds a link LiveDoc never follows: the import report says so once (files-and-print.md "Import report").
+  const report = page.getByRole('dialog', { name: 'Opened “features”' });
+  await expect(report).toContainText('1 unsafe link kept as its text');
+  await report.getByRole('button', { name: 'OK' }).click();
+  await expect(report).toBeHidden();
   await expect(page.getByText('.ODT', { exact: true })).toBeVisible();
 
   // Download as Word asks first, listing what the .docx cannot hold.

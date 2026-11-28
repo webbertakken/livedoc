@@ -29,6 +29,19 @@ describe('the text document report views', () => {
     expect(openedReportView(EMPTY_REPORT, 'Notes')).toBeNull();
   });
 
+  it('shows nothing once for housekeeping alone', () => {
+    const quiet: TextDocumentReport = {
+      imported: {
+        type: 'odt',
+        dropped: [{ reason: 'thumbnail', count: 1, names: ['t'], nameCount: 1 }],
+        kept: { reason: 'kept', count: 1, names: ['sequence-decls'], nameCount: 1 },
+      },
+      converted: [],
+    };
+    expect(openedReportView(quiet, 'Notes')).toBeNull();
+    expect(securityLimitationsView(quiet).sections).toHaveLength(1);
+  });
+
   it('shows the Opened lines once, titled by the document', () => {
     expect(openedReportView(REPORT, 'Page')).toEqual({
       title: 'Opened “Page”',
