@@ -43,7 +43,9 @@ describe('useSpreadsheetCards', () => {
     m.watch.mockReturnValueOnce(m.stop);
     const { unmount } = renderHook(() => useSpreadsheetCards(bridge, named));
     expect(m.setCards).toHaveBeenCalledWith(null);
-    expect(m.watch).toHaveBeenCalledWith(expect.objectContaining({ ownerId: 'me', documentId: 'plan' }));
+    expect(m.watch).toHaveBeenCalledWith(
+      expect.objectContaining({ ownerId: 'me', documentId: 'plan' }),
+    );
     const { land } = m.watch.mock.calls[0]![0] as { land: (h: unknown) => void };
     land({ unavailable: 'x' });
     expect(m.setCards).toHaveBeenLastCalledWith({ unavailable: 'x' });
