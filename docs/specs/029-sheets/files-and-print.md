@@ -98,6 +98,9 @@ format it arrived in ([Standard mapping](standard-mapping.md)).
   - **Sizes**: "Row heights and column widths past the most a sheet holds are left out of 1 sheet: Data".
   - **Charts**: "Charts are left out of 1 sheet that keeps the file's own drawings: Data"
     ([Charts in the file](standard-mapping.md#charts-in-the-file)).
+  - **Pictures**: "2 pictures over the cells are left out, as the image gallery did not take them or their sheet
+    was full: Data"
+    ([Pictures in the file](standard-mapping.md#pictures-in-the-file), D628).
   - **Sheet names**: "2 sheet names are changed to fit: “Data” becomes “Data (2)”".
 - A file's preview picture (its thumbnail) is not listed: it shows nothing in the sheet, and LiveDoc's files carry
   none.

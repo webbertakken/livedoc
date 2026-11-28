@@ -3,7 +3,13 @@
 // the model (cells by row and column id, formulas by id references) and each format's reader and writer, so neither
 // format ever sees an id and the model never sees a format.
 import { fileChartsOf, sheetChartsFromFile, type FileChart } from './file-charts';
-import { filePicturesOf, type FilePicture, type FilePictureFetches } from './file-pictures';
+import { picturesToPlace, type PictureToPlace, type PictureUnstored } from './import-pictures';
+import {
+  filePicturesOf,
+  type FilePicture,
+  type FilePictureFetches,
+  type ReadPicture,
+} from './file-pictures';
 import {
   filePivotsOf,
   pivotCachePositions,
@@ -109,6 +115,8 @@ export type FileSheet = {
   charts?: FileChart[];
   // Its images over cells in paint order (standard-mapping.md "Pictures in the file").
   pictures?: FilePicture[];
+  // Read from a file, its pictures over the cells with their bytes, for the import to store (D628).
+  readPictures?: ReadPicture[];
   // Its protections in its order (standard-mapping.md "Protection in the file").
   protections?: FileProtection[];
   // Its tables in order (standard-mapping.md "Tables in the file").
@@ -186,6 +194,8 @@ export type FileLoss =
   // A picture over the cells left out of the file: its bytes not served, past the file's budget, or its sheet keeping
   // the file's own drawing (standard-mapping.md "Pictures in the file", D626).
   | { k: 'picture_unwritten'; sheet: string; why: 'unavailable' | 'too_large' | 'kept_drawing' }
+  // A picture over the cells a file holds that the opener's gallery did not take, or past the sheet's objects (D628).
+  | { k: 'picture_unread'; sheet: string; why: PictureUnstored }
   // A chart read from the file, changed since, written from the model in place of its own XML (D276).
   | { k: 'chart_rewritten'; sheet: string }
   // A chart of a type no format holds, written as the nearest one that does, its original kept for LiveDoc (D290).
@@ -445,6 +455,8 @@ export type SheetsFromFile = {
   losses: FileLoss[];
   kept?: KeptContent<StoredAt>;
   functions?: NamedFunction[];
+  // The pictures over the cells it read, for the opener's gallery to store before they are placed (D628).
+  pictures?: PictureToPlace[];
 };
 
 function literalInput(value: FileValue): CellInput | null {
@@ -646,6 +658,7 @@ export function sheetsFromFile(
     return handles.find((h) => h.title.toLowerCase() === lower);
   };
   const byId = (id: string) => handles.find((h) => h.id === id);
+  const pictures: PictureToPlace[] = [];
   const sheets = made.map((m, i): SheetFromFile => {
     const own = handles[i]!;
     const table = (name: string) => {
@@ -716,17 +729,21 @@ export function sheetsFromFile(
       ...(formatRules ? { formatRules } : {}),
       ...(objects.length ? { objects } : {}),
     };
+    pictures.push(
+      ...picturesToPlace({ id: m.id, title: m.title, layout }, m.file.readPictures, rand, losses),
+    );
     return { id: m.id, title: m.title, layout, cells };
   });
+  const placing = pictures.length ? { pictures } : {};
   // A named function's reference naming no sheet names the first (D342); one LiveDoc cannot hold is kept as it came.
   const read = handles[0]
     ? functionsFromFile(file.functions, { own: handles[0], byTitle, byId }, losses)
     : { functions: [], refused: [] };
   const functions = read.functions.length ? { functions: read.functions } : {};
   const kept = keptWith(file.kept, [...named.refused, ...read.refused]);
-  if (!kept) return { sheets, losses, ...functions };
+  if (!kept) return { sheets, losses, ...functions, ...placing };
   // Kept content on a sheet, row or column the workbook's limits cut goes with it, counted.
   const stored = storedKept(kept, made);
   if (stored.dropped > 0) losses.push({ k: 'kept_dropped', count: stored.dropped });
-  return { sheets, losses, kept: stored.kept, ...functions };
+  return { sheets, losses, kept: stored.kept, ...functions, ...placing };
 }

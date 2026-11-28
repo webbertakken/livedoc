@@ -7,6 +7,7 @@ import { ApiError, apiCreateDocument, apiDeleteDocument } from '@/lib/api-client
 import { writeSheet } from '@/lib/api/sheets';
 import { sendKept } from '@/lib/api/workbook-kept';
 import { PACKAGE_MAX_BYTES } from '@livedoc/office-packages';
+import { createBrowserImportImageSession } from '@/lib/import-images/browser';
 import { keepImportReport } from './import-report-handoff';
 import { openingNotice, openSpreadsheetFile, spreadsheetNameFor } from './open-spreadsheet-file';
 
@@ -18,6 +19,7 @@ vi.mock('@/lib/api-client', async (real) => ({
 vi.mock('@/lib/api/sheets', () => ({ writeSheet: vi.fn() }));
 vi.mock('@/lib/api/workbook-kept', () => ({ sendKept: vi.fn() }));
 vi.mock('./import-report-handoff', () => ({ keepImportReport: vi.fn() }));
+vi.mock('@/lib/import-images/browser', () => ({ createBrowserImportImageSession: vi.fn() }));
 
 afterEach(() => vi.clearAllMocks());
 
@@ -192,4 +194,59 @@ describe('a CSV or TSV opened', () => {
       expect(sendKept).not.toHaveBeenCalled();
     },
   );
+});
+
+// standard-mapping.md "Pictures in the file", "Stored on opening" (D628): a picture goes into the opener's gallery
+// through the import image pipeline, loaded with the first picture, before the spreadsheet is made.
+describe('a file’s pictures over the cells', () => {
+  // A PNG's signature and header, 3 × 3 pixels: what a read takes a picture by.
+  const png = new Uint8Array([
+    0x89, 0x50, 0x4e, 0x47, 13, 10, 26, 10, 0, 0, 0, 13, 0x49, 0x48, 0x44, 0x52, 0, 0, 0, 3, 0, 0,
+    0, 3, 8, 2,
+  ]);
+  const withPicture = () =>
+    new File(
+      [
+        writeXlsx(
+          {
+            sheets: [
+              {
+                name: 'Data',
+                rows: 2,
+                cols: 2,
+                cells: [],
+                pictures: [
+                  { imageId: 'a', at: { r: 0, c: 0, dx: 0, dy: 0 }, width: 30, height: 30 },
+                ],
+              },
+            ],
+            pictureBytes: new Map([['a', { data: png, type: 'image/png' }]]),
+          },
+          '',
+        ).data,
+      ],
+      'P.xlsx',
+    );
+
+  it('stores each picture through the pipeline’s session for the opener, placing it', async () => {
+    vi.mocked(apiCreateDocument).mockResolvedValue({} as never);
+    vi.mocked(writeSheet).mockResolvedValue({} as never);
+    vi.mocked(sendKept).mockResolvedValue(0);
+    const store = vi.fn(async () => ({
+      ok: true as const,
+      imageId: 'g1',
+      width: 3,
+      height: 3,
+      kind: 'uploaded' as const,
+    }));
+    vi.mocked(createBrowserImportImageSession).mockReturnValue({ store });
+    expect(await openSpreadsheetFile('me', withPicture())).toMatchObject({ ok: true });
+    expect(createBrowserImportImageSession).toHaveBeenCalledWith({
+      ownerId: 'me',
+      documentId: null,
+      offline: false,
+    });
+    expect(store).toHaveBeenCalledTimes(1);
+    expect(JSON.stringify(vi.mocked(writeSheet).mock.calls)).toContain('"imageId":"g1"');
+  });
 });

@@ -13,7 +13,7 @@ import { it } from 'vitest';
 import { writeXlsx } from '../src/files/xlsx-write';
 import { googleDrive } from '../oracle/google-access.ts';
 import { ODS_MIME, XLSX_MIME } from '../oracle/google-drive.ts';
-import { CORPUS, GOOGLE_FUNCTIONS, POI_COMMIT, SMART_CHIPS } from './corpus-files';
+import { CORPUS, GOOGLE_FUNCTIONS, PICTURES, POI_COMMIT, SMART_CHIPS } from './corpus-files';
 import { pivotGroupVariants } from './pivot-group-variants';
 import {
   GETPIVOTDATA_PROBES,
@@ -78,6 +78,34 @@ async function libreOfficeGroups(): Promise<void> {
     mkdirSync(join(dir, 'again'), { recursive: true });
     writeFileSync(own, readFileSync(join(ROOT, 'libreoffice', `${base}.ods`)));
     write('libreoffice', `${base}.xlsx`, libreOfficeConvert(own, 'xlsx'));
+  }
+}
+
+// Pictures over the cells as LiveDoc writes them, saved by LibreOffice as ODS, and that ODS saved by it as XLSX (D628).
+function libreOfficePictures(): void {
+  const dir = mkdtempSync(join(tmpdir(), 'sheets-corpus-pictures-'));
+  const made = join(dir, 'pictures.xlsx');
+  writeFileSync(made, writeXlsx(PICTURES, 'Pictures').data);
+  write('libreoffice', 'pictures.ods', libreOfficeConvert(made, 'ods'));
+  const own = join(dir, 'again', 'pictures.ods');
+  mkdirSync(join(dir, 'again'), { recursive: true });
+  writeFileSync(own, readFileSync(join(ROOT, 'libreoffice', 'pictures.ods')));
+  write('libreoffice', 'pictures.xlsx', libreOfficeConvert(own, 'xlsx'));
+}
+
+// The same pictures opened by Google Sheets and exported in both formats (D628).
+async function googlePictures(): Promise<void> {
+  const drive = await googleDrive();
+  const id = await drive.uploadAsSheet(
+    'LiveDoc corpus pictures',
+    writeXlsx(PICTURES, 'Pictures').data,
+    XLSX_MIME,
+  );
+  try {
+    write('google', 'pictures.xlsx', await drive.exportAs(id, XLSX_MIME));
+    write('google', 'pictures.ods', await drive.exportAs(id, ODS_MIME));
+  } finally {
+    await drive.remove(id);
   }
 }
 
@@ -261,5 +289,7 @@ it(`makes the corpus's ${SOURCE} files`, async () => {
   else if (SOURCE === 'google-chips') await googleChips();
   else if (SOURCE === 'google-pivots') await googlePivots();
   else if (SOURCE === 'libreoffice-groups') await libreOfficeGroups();
+  else if (SOURCE === 'libreoffice-pictures') libreOfficePictures();
+  else if (SOURCE === 'google-pictures') await googlePictures();
   else libreOffice();
 });

@@ -16,6 +16,9 @@ import {
 } from './import-file';
 import type { KeptContent, StoredAt } from './kept-content';
 import { writeXlsx } from './xlsx-write';
+import { solidPng } from '@livedoc/office-packages/testing';
+import { emptyLayout, emptySheet } from '../sheet';
+import { writeWorkbook } from './write-workbook';
 
 const made = () => WorkbookRecord.create({ locale: 'en-GB', timeZone: 'UTC' });
 
@@ -41,6 +44,7 @@ function fakePort(overrides: Partial<SpreadsheetFilePort> = {}): Fake {
       return 0;
     },
     bin: async (id) => void fake.binned.push(id),
+    storePicture: async () => ({ ok: true, imageId: 'g-stored' }),
     log: (event) => void fake.events.push(event),
   };
   return Object.assign(fake, overrides);
@@ -62,6 +66,70 @@ const text = (fileName: string, body: string): SpreadsheetFile => ({
   fileName,
   name: nameFromFile(fileName),
   bytes: bytesOf(new TextEncoder().encode(body)),
+});
+
+// docs/specs/029-sheets/standard-mapping.md "Pictures in the file", "Stored on opening" (D628).
+function withPictures(): SpreadsheetFile {
+  let n = 5;
+  const rand = () => (n = (n * 16807) % 2147483647) / 2147483647;
+  const layout = emptyLayout(rand, 4, 4);
+  const at = { r: layout.rows[1]!, c: layout.cols[1]!, dx: 0, dy: 0 };
+  const image = (id: string, imageId: string) => ({
+    id,
+    kind: 'image' as const,
+    at,
+    width: 50,
+    height: 40,
+    imageId,
+  });
+  const sheet = emptySheet({
+    id: 'sheetOne1',
+    tabId: 't1',
+    title: 'Pics',
+    layout: { ...layout, objects: [image('i1', 'a'), image('i2', 'b'), image('i3', 'a')] },
+  });
+  const bytes = new Map([
+    ['a', { data: solidPng(4, 4, [1, 2, 3]), type: 'image/png' as const }],
+    ['b', { data: solidPng(5, 5, [3, 2, 1]), type: 'image/png' as const }],
+  ]);
+  const data = writeWorkbook([sheet], made(), 'Pics', 'xlsx', undefined, bytes).data;
+  return { fileName: 'Pics.xlsx', name: 'Pics', bytes: bytesOf(data) };
+}
+
+describe('importSpreadsheetFile pictures', () => {
+  it('stores each picture once before the spreadsheet is made, placing those the gallery took', async () => {
+    const stored: number[] = [];
+    const port = fakePort({
+      storePicture: async ({ data }) => {
+        stored.push(data.length);
+        return stored.length === 1
+          ? { ok: true, imageId: 'g-a' }
+          : { ok: false, why: 'gallery_full' };
+      },
+    });
+    const opened = await importSpreadsheetFile(withPictures(), made(), port);
+    if (!opened.ok) throw new Error('not opened');
+    expect(stored).toHaveLength(2);
+    // A sheet's objects follow its rows and columns, as a part of their own.
+    const objects = port.writes.flatMap(({ write }) =>
+      write.kind === 'layout'
+        ? write.changes.flatMap((c) => (c.k === 'object' ? [c.object] : []))
+        : [],
+    );
+    expect(objects.map((o) => o?.kind === 'image' && o.imageId)).toEqual(['g-a', 'g-a']);
+    expect(opened.report.map(importReportLine)).toEqual([
+      '1 picture over the cells is left out, as the image gallery did not take it or its sheet was full: Pics',
+    ]);
+    expect(port.events).toContain('[workbook] pictures stored');
+  });
+
+  it('leaves out a picture whose store throws, as failed', async () => {
+    const port = fakePort({ storePicture: () => Promise.reject(new Error('down')) });
+    const opened = await importSpreadsheetFile(withPictures(), made(), port);
+    if (!opened.ok) throw new Error('not opened');
+    expect(port.writes).toEqual([]);
+    expect(opened.report.map((l) => l.k)).toEqual(['picture_unread']);
+  });
 });
 
 describe('importSpreadsheetFile', () => {

@@ -19,6 +19,7 @@ import {
   type SpreadsheetFilePort,
 } from '@livedoc/sheets/files';
 import { apiRefusalOf } from '../plan/api-refusal';
+import { galleryPictureStore } from './import-pictures-upload';
 
 export { SPREADSHEET_FILE_BYTES_MAX } from '@livedoc/sheets/files';
 
@@ -112,6 +113,10 @@ function agentPort(
       const res = await api.fetch(documentPath(id), { method: 'DELETE', headers });
       if (!res.ok) throw new Error(`bin answered ${res.status}`);
     },
+    // Into the caller's gallery, each picture as it is (D628).
+    storePicture: galleryPictureStore(api, headers, (event, data) =>
+      log(`${event} ${JSON.stringify(data)}`),
+    ),
     log: (event, data) => log(`${event} ${JSON.stringify(data)}`),
   };
 }

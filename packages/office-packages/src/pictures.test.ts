@@ -1,6 +1,7 @@
 // docs/specs/020-import-export/office-packages.md "Common pieces" (embedded files: resolution) and
 // docs/specs/034-text-documents/objects.md "The model" (a picture's own size, media by key).
 import { describe, expect, it } from 'vitest';
+import { solidPng } from './testing-pictures';
 import {
   MAPPED_PICTURE_TYPES,
   mediaKeyOf,
@@ -143,5 +144,19 @@ describe('media types and keys', () => {
     expect(await mediaKeyOf(new TextEncoder().encode('abc'))).toBe(
       'ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad',
     );
+  });
+});
+
+describe('solidPng (testing)', () => {
+  it('builds whole PNGs a header reads, small and past one stored block', () => {
+    expect(pictureHeader(solidPng(3, 2, [1, 2, 3]))).toMatchObject({
+      mediaType: 'image/png',
+      width: 3,
+      height: 2,
+    });
+    // 200 × 120 RGB rows are 72,120 bytes: two of zlib's stored blocks.
+    const big = solidPng(200, 120, [9, 9, 9]);
+    expect(pictureHeader(big)).toMatchObject({ width: 200, height: 120 });
+    expect(big.length).toBeGreaterThan(72_120);
   });
 });

@@ -51,8 +51,8 @@ An image floats over the cells as a chart does, one of its sheet's objects ([She
   bytes in the package (ODF `draw:frame` › `draw:image` in `Pictures/`, its anchor cell and offset; XLSX a
   `xdr:pic` in the sheet's drawing, its bytes in `xl/media`, a one-cell anchor), its alt text as the description;
   read back as an image over cells, its bytes stored in the gallery of whoever opens the file through the
-  [Import image pipeline](../020-import-export/import-image-pipeline.md) (a picture past the caps stays kept in the
-  file and is named by the read).
+  [Import image pipeline](../020-import-export/import-image-pipeline.md), or uploaded as it is by an agent's import;
+  a picture the gallery does not take is left out and named by the read (D628).
 - **Agents**: `change_sheet` `image {imageId, at, width, height, alt, replace}` places one of the caller's gallery
   pictures (`list_images`) with its top-left on the cell `at` names: both sides as given, one side and the other by
   the picture's shape, or neither and the picture fitted to 600 by 400 as Insert does (16 to 4,000 px a side, else

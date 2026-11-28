@@ -1,6 +1,7 @@
 // The corpus's files (docs/specs/029-sheets/standard-mapping.md "The corpus", D119): which Excel workbooks it takes
 // from Apache POI's test data and at which commit, which LibreOffice saves as Excel too, which Google Sheets saves,
 // and the workbook of Google-only functions Google Sheets is given.
+import { solidPng } from '@livedoc/office-packages/testing';
 import type { WorkbookFile } from '../src/files/workbook-file';
 
 /** Apache POI's commit the Excel files are taken at (test-data/spreadsheet, Apache License 2.0). */
@@ -69,4 +70,31 @@ export const SMART_CHIPS: WorkbookFile = {
   sheets: [
     { name: 'Plain', rows: 1, cols: 1, cells: [{ r: 0, c: 0, value: { k: 's', v: 'Plain' } }] },
   ],
+};
+
+// Pictures over the cells (standard-mapping.md "Pictures in the file", D628): a red picture with alt text at B2 and a
+// blue one at D5, as LiveDoc writes them; LibreOffice and Google Sheets each save it in their own forms.
+export const PICTURES: WorkbookFile = {
+  sheets: [
+    {
+      name: 'Pictures',
+      rows: 8,
+      cols: 6,
+      cells: [{ r: 0, c: 0, value: { k: 's', v: 'Pictures over the cells' } }],
+      pictures: [
+        {
+          imageId: 'red',
+          at: { r: 1, c: 1, dx: 4, dy: 6 },
+          width: 120,
+          height: 80,
+          alt: 'A red box',
+        },
+        { imageId: 'blue', at: { r: 4, c: 3, dx: 0, dy: 0 }, width: 48, height: 48 },
+      ],
+    },
+  ],
+  pictureBytes: new Map([
+    ['red', { data: solidPng(60, 40, [200, 30, 30]), type: 'image/png' }],
+    ['blue', { data: solidPng(24, 24, [30, 60, 200]), type: 'image/png' }],
+  ]),
 };
