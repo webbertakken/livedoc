@@ -56,7 +56,7 @@ import {
 import { functionsShrinkOf, type FunctionsChange } from './functions-shrink';
 import { sheetRefusalMessage, writeRefusalMessage } from './sheet-refusals';
 import { engineLink, type EngineLink } from './sheet-engine-link';
-import type { CardData } from './sheet-engine-hosts';
+import type { CardsHeld } from './sheet-engine-hosts';
 import { VolatileTicker, volatileTickMs } from './volatile-ticker';
 import { StoreImports } from './sheet-store-imports';
 import { fetchSheetImport } from '@/lib/api/sheet-imports';
@@ -201,7 +201,7 @@ export class SheetStore {
   // Sheets this person deleted with their elements, as they were: Undo puts the element back and its sheet with it
   // (sheet-store.md "Deleting a sheet"). Kept for the session, as undo is.
   private readonly released = new Map<string, SheetJson>();
-  private cards: CardData | null = null;
+  private cards: CardsHeld = null;
   // A spreadsheet's sheets loading behind their first rows.
   private readonly pages: RowPages;
   // The writes made in one moment, sent as fewer.
@@ -487,7 +487,7 @@ export class SheetStore {
   }
 
   // Plan cards for the card functions, as the page holds them: the Worker reads them as the engine does.
-  setCards(cards: CardData | null): void {
+  setCards(cards: CardsHeld): void {
     if (cards === this.cards) return;
     this.cards = cards;
     for (const scope of this.ports.keys()) this.link?.send({ scope, msg: { t: 'cards', cards } });

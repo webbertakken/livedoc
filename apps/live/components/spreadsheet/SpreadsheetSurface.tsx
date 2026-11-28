@@ -43,6 +43,7 @@ import { SpreadsheetZoomProvider, useSpreadsheetZoom } from './spreadsheet-zoom'
 import { useSheetBarPeers } from './useSheetBarPeers';
 import { useSheetCopyTo } from './useSheetCopyTo';
 import { useSheetFormLinks } from './useSheetFormLinks';
+import { useSpreadsheetCards } from './useSpreadsheetCards';
 import { useProtectionWarnings } from './useProtectionWarnings';
 import { createProtectSheetChannel, ProtectSheetContext } from './protect-sheet-channel';
 import { hiddenTabIds, useSheetTabLooks } from './useSheetTabLooks';
@@ -123,6 +124,8 @@ export function SpreadsheetSurface({
   const copyTo = useSheetCopyTo(bridge, workbook);
   // The sheets forms write to, and Unlink Form (plan-links.md "Form responses").
   const formLinks = useSheetFormLinks(bridge, tabs, workbook, onWorkbook);
+  // The cards its card functions read, from the Plan document its settings name (plan-links.md).
+  useSpreadsheetCards(bridge, workbook);
   // The workbook's theme, which its cells' theme colours draw in (formatting.md "Themes").
   const theme = useSpreadsheetThemeState(scope, workbook, onWorkbook);
   // The workbook's named functions (data-tools.md "Named ranges and named functions").

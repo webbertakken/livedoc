@@ -1,6 +1,6 @@
 // formulas.md "Recalculation": the store reaches its engine through a Web Worker, or in place without one.
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { ITERATION_OFF, type SheetJson } from '@livedoc/sheets';
+import { CARDS_UNSET, ITERATION_OFF, type SheetJson } from '@livedoc/sheets';
 import { EngineHosts, type FromEngine } from './sheet-engine-hosts';
 import { engineLink, inPlaceLink, workerLink } from './sheet-engine-link';
 
@@ -46,6 +46,23 @@ describe('EngineHosts', () => {
     heard.length = 0;
     expect(hosts.work(8)).toBe(false);
     expect(heard).toEqual([]);
+  });
+
+  // plan-links.md "The `CARD` functions": a spreadsheet whose cards cannot be read reads #REF! with why.
+  it('reads cards that cannot be read as #REF! with why', () => {
+    const heard: FromEngine[] = [];
+    const hosts = new EngineHosts(
+      (m) => heard.push(m),
+      () => 0,
+    );
+    hosts.receive({ scope: 'a', msg: load(1) });
+    hosts.receive({ scope: 'a', msg: { t: 'cards', cards: { unavailable: CARDS_UNSET } } });
+    while (hosts.work(8));
+    const values = heard.filter((m) => m.out.t === 'values').at(-1);
+    expect(values).toMatchObject({
+      scope: 'a',
+      out: { cells: [[0, 0, { e: '#REF!', why: CARDS_UNSET }]] },
+    });
   });
 });
 

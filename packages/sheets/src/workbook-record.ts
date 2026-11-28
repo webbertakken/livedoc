@@ -55,6 +55,8 @@ export type WorkbookSettings = {
   readonly iterate: { readonly on: boolean; readonly max: number; readonly threshold: number };
   // The theme (formatting.md "Themes"); absent, Standard.
   readonly theme?: SpreadsheetTheme;
+  // Cards From: the Plan document the card functions read (plan-links.md "The `CARD` functions"); absent, none.
+  readonly cardsDocument?: string;
 };
 
 export type WorkbookRecord = {
@@ -77,13 +79,13 @@ export type WorkbookRecord = {
 
 /** The sources a workbook keeps at most, and an id's longest (the api's bound on a document id). */
 export const WORKBOOK_RANGE_SOURCES_MAX = 100;
-const RANGE_SOURCE_RE = /^[A-Za-z0-9_-]{1,200}$/;
+const DOCUMENT_ID_RE = /^[A-Za-z0-9_-]{1,200}$/;
 
 /** Connected sources from the wire or the room: each an id, no repeats, at most the bound; null when not. */
 function readRangeSources(raw: unknown): string[] | null {
   if (!Array.isArray(raw) || raw.length === 0 || raw.length > WORKBOOK_RANGE_SOURCES_MAX)
     return null;
-  if (!raw.every((id): id is string => typeof id === 'string' && RANGE_SOURCE_RE.test(id)))
+  if (!raw.every((id): id is string => typeof id === 'string' && DOCUMENT_ID_RE.test(id)))
     return null;
   return new Set(raw).size === raw.length ? raw : null;
 }
@@ -109,7 +111,10 @@ function readIterate(raw: unknown): WorkbookSettings['iterate'] | null {
 
 function readSettings(raw: unknown): WorkbookSettings | null {
   if (typeof raw !== 'object' || raw === null) return null;
-  const { locale, timeZone, recalc, iterate, theme } = raw as Record<string, unknown>;
+  const { locale, timeZone, recalc, iterate, theme, cardsDocument } = raw as Record<
+    string,
+    unknown
+  >;
   const text = (v: unknown): v is string =>
     typeof v === 'string' && v !== '' && v.length <= WORKBOOK_SETTING_TEXT_MAX;
   if (!text(locale) || !text(timeZone)) return null;
@@ -117,7 +122,18 @@ function readSettings(raw: unknown): WorkbookSettings | null {
   const it = readIterate(iterate);
   const t = theme === undefined ? undefined : readTheme(theme);
   if (!it || t === null) return null;
-  return { locale, timeZone, recalc, iterate: it, ...(t ? { theme: t } : {}) };
+  const cardsOk =
+    cardsDocument === undefined ||
+    (typeof cardsDocument === 'string' && DOCUMENT_ID_RE.test(cardsDocument));
+  if (!cardsOk) return null;
+  return {
+    locale,
+    timeZone,
+    recalc,
+    iterate: it,
+    ...(t ? { theme: t } : {}),
+    ...(typeof cardsDocument === 'string' ? { cardsDocument } : {}),
+  };
 }
 
 export const WorkbookRecord = {

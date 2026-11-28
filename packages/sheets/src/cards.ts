@@ -13,4 +13,23 @@ export type CardSource = {
   knowsField(name: string): boolean;
   // Raised whenever the cards change, so card readers recalculate.
   version: number;
+  // Why the cards cannot be read at all (no cards' document chosen, or the reader may not open it): every card
+  // function reads #REF! with it (plan-links.md "The `CARD` functions"). Absent for cards that read.
+  unavailable?: string;
 };
+
+/** Why a spreadsheet's card functions read #REF!: it names no cards' document. */
+export const CARDS_UNSET = "Choose the cards' document in Settings";
+/** Why they read #REF!: the reader may not open the cards' document, or it is gone. */
+export const CARDS_DENIED = "You don't have access to the cards' document";
+
+/** Cards that cannot be read, for `why`: none listed, no field known, every card function #REF!. */
+export function unavailableCards(why: string): CardSource {
+  return {
+    cards: () => [],
+    fieldOf: () => undefined,
+    knowsField: () => false,
+    version: 0,
+    unavailable: why,
+  };
+}
