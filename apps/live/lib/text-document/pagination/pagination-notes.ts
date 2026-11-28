@@ -1,8 +1,7 @@
 // Footnotes on the pages (docs/specs/034-text-documents/page-layout.md "Footnotes", "Drawn"): each page draws the notes
 // whose marks' lines are on it, numbered 1, 2, 3 through the document, at its section's left margin and text width.
 // Pure: the marks' lines come measured.
-import type { PageSetup } from '@livedoc/text-documents';
-import type { Pagination } from './pagination';
+import { type PageSetup, type Pagination } from '@livedoc/text-documents';
 import { storyKey } from './pagination-headers';
 
 // Points to CSS pixels.

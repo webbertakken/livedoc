@@ -9,22 +9,21 @@ import type { Node as PmNode } from 'prosemirror-model';
 import { Plugin, PluginKey, TextSelection, type EditorState } from 'prosemirror-state';
 import { Decoration, DecorationSet, type EditorView } from 'prosemirror-view';
 import {
+  type BlockMetrics,
   Columns,
-  TABLE,
   type LineNumbers,
   type LiveHeaders,
+  PAGE_GAP_PX,
+  pageCount,
+  pageFrame,
   type PageSetup,
+  paginate,
+  type Pagination,
+  TABLE,
 } from '@livedoc/text-documents';
 import { debugLog } from '@/lib/debug-log';
 import type { TextFormatting } from '../text-document-formatting';
 import { firstChanges } from '../text-document-tab-layout';
-import {
-  PAGE_GAP_PX,
-  pageCount,
-  pageFrame,
-  type BlockMetrics,
-  type Pagination,
-} from './pagination';
 import {
   blockSpacer,
   columnPlaces,
@@ -40,7 +39,6 @@ import {
   pagesSaid,
   type PageGeometry,
 } from './pagination-draw';
-import { paginate } from './pagination-engine';
 import { pageLayout, storyKey, type StoryHeights } from './pagination-headers';
 import { notePlace, pageNotes, type NoteMark } from './pagination-notes';
 import { measureBlock, PAGE_GAP_CLASS, rulesOf, splitPosition } from './pagination-measure';

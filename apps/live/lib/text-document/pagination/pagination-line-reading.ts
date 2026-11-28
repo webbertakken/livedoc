@@ -4,7 +4,7 @@
 // stretch in the column its left edge is in. Reads the drawn page; writes nothing.
 import { groupLines, type Span } from './pagination-lines';
 import { pageAt, type DrawnLine } from './pagination-line-numbers';
-import type { BlockMetrics } from './pagination';
+import type { BlockMetrics } from '@livedoc/text-documents';
 import { measuringRange } from './pagination-range';
 
 /** A box of columns' columns across the body: the first's left edge, from one's start to the next's, and how many. */

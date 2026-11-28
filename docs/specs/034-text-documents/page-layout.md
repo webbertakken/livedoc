@@ -110,6 +110,10 @@ pages' setup.
 
 ## Laying out
 
+One layout, shared: the arithmetic that lays measured blocks onto pages (`paginate`, `@livedoc/text-documents`) is
+pure, and only its measuring differs: the editor measures the blocks in the browser, a worker from font metrics for a
+page's preview ([Agents and sync](agents-and-sync.md#verbs)).
+
 - **The pages**: the writing is laid onto pages one under another, centred on the ground, 12 px apart at 100% zoom
   (default), 24 px of ground above the first and below the last; each page a sheet of its paper, its page colour and
   a light shadow; the last page is a whole page however little it holds. Each page has the setup of the section its

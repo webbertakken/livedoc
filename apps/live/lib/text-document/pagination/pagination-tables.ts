@@ -1,7 +1,7 @@
 // A table laid out across pages (docs/specs/034-text-documents/tables.md "Laying out across pages"): its rows are its
 // lines, rows joined by a cell spanning them one line, a row alone on its line broken into more where it may break.
 import type { Node as PmNode } from 'prosemirror-model';
-import type { LineBox } from './pagination';
+import type { LineBox } from '@livedoc/text-documents';
 import { headerRowsOf } from '../text-document-table-edits';
 import { naturalOf, type Span } from './pagination-lines';
 import { drawnRowBreaks } from './pagination-table-rows';

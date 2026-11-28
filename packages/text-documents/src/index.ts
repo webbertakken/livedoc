@@ -493,3 +493,27 @@ export {
   type PdfImportPicture,
   type PdfImportPage,
 } from './imports/pdf';
+// Laying the writing onto pages (docs/specs/034-text-documents/page-layout.md "Laying out"): pure arithmetic over
+// measured blocks, which the editor measures in the browser and a worker from font metrics.
+export {
+  NOTES_GAP_PX,
+  PAGE_GAP_PX,
+  PAGES_EDGE_PX,
+  pageCount,
+  pageFrame,
+  type BlockMetrics,
+  type ColumnStart,
+  type Cross,
+  type LayoutChange,
+  type LineBox,
+  type PageFrame,
+  type PageStart,
+  type Pagination,
+  type RegionRule,
+  type Spacer,
+} from './pagination/pagination';
+export {
+  paginate,
+  TABLE_REPEAT_MAX_SHARE,
+  type PaginateOptions,
+} from './pagination/pagination-engine';

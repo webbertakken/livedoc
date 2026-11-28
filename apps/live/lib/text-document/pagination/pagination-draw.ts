@@ -3,8 +3,13 @@
 // the column each block of a region is in, a paragraph drawn as a box of columns across them, and each page's size
 // with its lines between columns, its header and its footer. Spacers are never text and never read.
 import { DOMSerializer, type Node as PmNode } from 'prosemirror-model';
-import type { HeaderFooterSlot } from '@livedoc/text-documents';
-import { PAGE_GAP_PX, type Cross, type PageFrame, type Pagination } from './pagination';
+import {
+  type Cross,
+  type HeaderFooterSlot,
+  PAGE_GAP_PX,
+  type PageFrame,
+  type Pagination,
+} from '@livedoc/text-documents';
 import type { PageLayout, PageStory, StoryPlace } from './pagination-headers';
 import type { PageNote } from './pagination-notes';
 import type { LineNumberMark } from './pagination-line-numbers';

@@ -1,10 +1,14 @@
 // Headers and footers on the pages (docs/specs/034-text-documents/page-layout.md "Headers and footers"): which one a
 // page shows, where it is drawn, and how a tall one pushes the body.
 import { describe, expect, it } from 'vitest';
-import type { LiveHeaders, PageSetup } from '@livedoc/text-documents';
-import { pageFrame, type BlockMetrics } from './pagination';
+import {
+  type BlockMetrics,
+  type LiveHeaders,
+  pageFrame,
+  type PageSetup,
+  paginate,
+} from '@livedoc/text-documents';
 import { pageGeometries, pageNumbers, pagesSaid } from './pagination-draw';
-import { paginate } from './pagination-engine';
 import { pageAtPoint, pageLayout, pageStories, pushedFrame, storyKey } from './pagination-headers';
 
 const PX = 4 / 3;
