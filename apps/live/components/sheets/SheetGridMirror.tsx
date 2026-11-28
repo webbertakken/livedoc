@@ -6,12 +6,15 @@
 // it is what the grid's aria-activedescendant names. Memoised on what it reads, so a scroll within the window or a
 // paint of the drawn cells costs it nothing. A pivot table's header rows and labels are headers (pivot-tables.md
 // "Accessibility").
+import type { DrawnPivots } from '@/lib/spreadsheet/pivot-sliced';
 import { memo } from 'react';
 import { formatA1, type Sheet, type Workbook } from '@livedoc/sheets';
 import { mergeAt, type Geometry } from './sheet-geometry';
 import { cellSpokenValue } from './sheet-cell-speech';
 
 type Props = {
+  // The pivot tables this person's slicers filter, read as drawn (D629).
+  drawn?: DrawnPivots | null;
   elementId: string;
   sheet: Sheet;
   workbook: Workbook;
@@ -70,7 +73,7 @@ function SheetGridMirrorInner(p: Props) {
                 aria-colindex={c + 1}
                 aria-selected={active || undefined}
               >
-                {`${formatA1(r, c)} ${cellSpokenValue(p.sheet, p.workbook, p.locale, r, c)}`}
+                {`${formatA1(r, c)} ${cellSpokenValue(p.sheet, p.workbook, p.locale, r, c, p.drawn)}`}
               </span>
             );
           })}

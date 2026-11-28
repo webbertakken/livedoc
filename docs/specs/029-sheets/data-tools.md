@@ -139,7 +139,8 @@ Google Sheets' Data menu does. Its rows of the [parity matrix](parity-matrix.md)
     every slicer over it keep it.
   - Slicers filter charts and pivot tables whose data is the same range (Apply to Pivot Tables), for that person, and
     never formulas: SUBTOTAL reads the sheet's filter and the tables' alone (Google's note, and measured, D475). A
-    chart whose data range is the slicer's exactly leaves out the rows the slicer hides (D487).
+    chart whose data range is the slicer's exactly leaves out the rows the slicer hides, and a pivot table on its
+    sheet whose source is it is drawn from the rows it keeps (D487, D629).
   - Up to 50 a sheet (D440), within the sheet's 100 objects.
 - **Group by view** (Data › Create Group by View, and the table menu's **Group By**; tables only): a view of a table
   that groups its rows under a column's values, each group a header row drawn with the value and its count, collapsed
@@ -574,8 +575,8 @@ The code cites each by its id.
 - **D486** A slicer after a delete: its range shrinks as a chart's; its column gone leaves it unset, "Choose a
   column", filtering nothing; its range gone, "No data" (default).
 - **D487** What a slicer filters beside the cells: a chart whose data range is the slicer's range exactly, as
-  Google's "same data range"; pivot tables (Apply to Pivot Tables) are stored and await the pivot editor's own reads
-  (default).
+  Google's "same data range"; a pivot table whose source is the slicer's range exactly, on the slicer's sheet, while
+  Apply to Pivot Tables is ticked ([Pivot tables](pivot-tables.md#in-the-grid), "Sliced", D629) (default).
 - **D441** Convert to Table's guessed column types: a type when every filled data cell is that type, else Text; a
   column with none filled None, as Google guesses (default).
 - **D442** A table's look: the alternating colours banding over it, the table's own, in the first default style; it

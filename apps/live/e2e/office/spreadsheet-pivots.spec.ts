@@ -210,3 +210,45 @@ test('right-clicking items gathers them into Group 1, renamed by typing, and Ung
 
   expectNoPageErrors(pageErrors);
 });
+
+// pivot-tables.md "In the grid", "Sliced" (D629): a slicer over a pivot table's source on its sheet draws the pivot
+// table from the rows it keeps, for its presser alone; the cells keep everyone's, which formulas read.
+test('a slicer over its source draws the pivot table from the rows it keeps', async ({
+  page,
+  pageErrors,
+}) => {
+  test.setTimeout(150_000);
+  await withData(page);
+  await select(page, 'A2');
+  await (await officeMenuItem(page, ['Insert', 'Pivot Table'])).click();
+  const create = page.getByRole('dialog', { name: 'Create Pivot Table' });
+  await create.getByLabel('Existing Sheet').check();
+  await create.getByLabel('Location').fill('Sheet1!D1');
+  await create.getByRole('button', { name: 'Create' }).click();
+  const editor = page.getByRole('complementary', { name: 'Pivot Table Editor' });
+  await editor.getByRole('button', { name: 'Add Rows' }).click();
+  await page.getByRole('menuitem', { name: 'Region' }).click();
+  await editor.getByRole('button', { name: 'Add Values' }).click();
+  await page.getByRole('menuitem', { name: 'Units' }).click();
+  await expect(cell(page, 'E2 7')).toHaveCount(1);
+  await select(page, 'G1');
+  await page.keyboard.type('=E2');
+  await page.keyboard.press('Enter');
+
+  await select(page, 'A2');
+  await (await officeMenuItem(page, ['Data', 'Add a Slicer'])).click();
+  await expect(
+    page.getByRole('complementary', { name: 'Slicer' }).getByLabel('Data Range'),
+  ).toHaveValue('A1:B4');
+  await page.getByRole('button', { name: /^Region: / }).click();
+  await page.getByRole('checkbox', { name: /East/ }).uncheck();
+  await page.getByRole('button', { name: 'OK' }).click();
+  // West alone, drawn; formulas read everyone's output.
+  await expect(
+    page.getByRole('grid').getByRole('rowheader', { name: 'D2 West', exact: true }),
+  ).toHaveCount(1);
+  await expect(cell(page, 'E2 3')).toHaveCount(1);
+  await expect(cell(page, 'G1 7')).toHaveCount(1);
+  await page.screenshot({ path: test.info().outputPath('pivot-sliced.png') });
+  expectNoPageErrors(pageErrors);
+});

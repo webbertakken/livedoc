@@ -132,6 +132,12 @@ and spills"), from the source's values and shown texts as they read now (default
   shows them; a cell's own number format, set by a person, wins.
 - **Loops**: a source that reads the pivot table's own output is read as it stands when the output is worked out;
   it never hangs the engine.
+- **Sliced**: a pivot table whose source is exactly the range of a slicer on its own sheet, the slicer's Apply to
+  Pivot Tables ticked ([Slicers](data-tools.md#slicers)), is drawn for each person from the source rows their slicers
+  keep: its output worked out again in the page and drawn in its place (blank where it is smaller), and read so to a
+  screen reader. Its cells keep the output everyone shares, which formulas, GETPIVOTDATA, copying, the status bar's
+  sums, Show Details, other people and files read, as Google's slicer changes are "only visible to you" (default,
+  D629).
 
 ## Making one
 
@@ -322,6 +328,10 @@ and each pivot table removed, as a chart's changes are counted; `Spreadsheet · 
 details are shown.
 
 ## Defaults
+
+- **D629** A pivot table under a slicer: drawn for its person alone from the rows their slicers keep, its cells (and so
+  formulas, GETPIVOTDATA and files) keeping everyone's output; only a slicer on the pivot table's own sheet over its
+  source exactly filters it (default).
 
 - **D378** A pivot table is one of its sheet's objects, its fields by column id, so it follows moved columns and loses
   a deleted one's fields, as a chart's series do (default).

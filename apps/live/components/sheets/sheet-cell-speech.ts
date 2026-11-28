@@ -1,6 +1,7 @@
 // What a screen reader hears of the grid's cells (docs/specs/029-sheets/grid-and-editing.md "Accessibility"): a
 // cell's value as drawn, and Read Row and Read Column, Google's Verbalize to Screen Reader. Pure but for reading the
 // workbook, so the words are tested without a DOM.
+import { drawnFormat, type DrawnPivots } from '@/lib/spreadsheet/pivot-sliced';
 import {
   cellKey,
   columnLetters,
@@ -41,12 +42,18 @@ export function cellSpokenValue(
   locale: string,
   r: number,
   c: number,
+  // The pivot tables this person's slicers filter, read as drawn (D629).
+  drawn?: DrawnPivots | null,
 ): string {
   const image = workbook.imageOf(sheet.id, r, c);
   if (image) return imageLabel(image);
   const chart = workbook.sparklineOf(sheet.id, r, c);
   if (chart) return sparklineLabel(chart);
   const format = sheet.cells.get(cellKey(sheet.layout.rows[r]!, sheet.layout.cols[c]!))?.format;
+  const sliced = drawn?.at(r, c);
+  if (sliced)
+    return displayValue(sliced.v, drawnFormat(drawn, workbook, sheet.id, r, c, format), locale)
+      .text;
   return displayValue(workbook.value(sheet.id, r, c), format, locale).text;
 }
 

@@ -94,11 +94,36 @@ export function slicerCondition(
  * is still in it, and a condition. Pure.
  */
 export function slicerDrawnFilters(layout: SheetLayout, own: OwnSlicerFilters): DrawnFilter[] {
-  return sheetSlicers(layout).flatMap((x) => {
-    const cond = slicerCondition(x, own);
-    if (!cond || !x.range || !x.col || !slicerColumnIds(layout, x).includes(x.col)) return [];
-    return [{ ...x.range, conds: { [x.col]: cond } }];
-  });
+  return sheetSlicers(layout).flatMap((x) => drawnFilterOf(layout, x, own));
+}
+
+// A slicer as a filter drawn for one person, or none while it keeps every row or has no column in its range.
+function drawnFilterOf(layout: SheetLayout, x: SheetSlicer, own: OwnSlicerFilters): DrawnFilter[] {
+  const cond = slicerCondition(x, own);
+  if (!cond || !x.range || !x.col || !slicerColumnIds(layout, x).includes(x.col)) return [];
+  return [{ ...x.range, conds: { [x.col]: cond } }];
+}
+
+/**
+ * The slicers filtering a pivot table for one person (pivot-tables.md "In the grid", "Sliced", D629): those on its
+ * sheet whose range is its source exactly, Apply to Pivot Tables ticked; none for a source on another sheet. Pure.
+ */
+export function slicersOverPivot(
+  layout: SheetLayout,
+  source: (IdRange & { s?: string; st?: string }) | undefined,
+  own: OwnSlicerFilters,
+): DrawnFilter[] {
+  if (!source || source.s !== undefined || source.st !== undefined) return [];
+  return sheetSlicers(layout).flatMap((x) =>
+    x.pivots !== false &&
+    x.range &&
+    x.range.r1 === source.r1 &&
+    x.range.c1 === source.c1 &&
+    x.range.r2 === source.r2 &&
+    x.range.c2 === source.c2
+      ? drawnFilterOf(layout, x, own)
+      : [],
+  );
 }
 
 /** The columns of a slicer's range, by id in order, as the panel's Column offers them; none once its range is gone. */
