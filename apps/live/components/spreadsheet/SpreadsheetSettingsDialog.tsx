@@ -27,6 +27,9 @@ const TABS: readonly [Tab, string][] = [
   ['calculation', 'Calculation'],
 ];
 
+// What sits under a checkbox's words starts where they do: the box (16 px) and its gap (12 px).
+const UNDER_CHECKBOX = { paddingInlineStart: 28 } as const;
+
 const FIELD =
   'h-field w-28 rounded-control border border-(--office-line) bg-transparent px-2 text-body text-(--office-ink) outline-none focus-visible:ring-2 focus-visible:ring-(--office-focus) aria-invalid:border-(--office-error)';
 
@@ -198,7 +201,7 @@ export function SpreadsheetSettingsDialog({
               Iterative Calculation
             </label>
             {draft.settings.iterate.on ? (
-              <div className="flex flex-col gap-3 pl-7">
+              <div className="flex flex-col gap-3" style={UNDER_CHECKBOX}>
                 <NumberField
                   label="Max Number of Iterations"
                   value={draft.max}
