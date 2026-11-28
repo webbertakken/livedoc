@@ -175,7 +175,9 @@ Google Sheets' Data menu does. Its rows of the [parity matrix](parity-matrix.md)
     the column's part of every header as the aggregation's name and its value (`Sum 12`), a number in the column's
     number format (its first kept row's), a percent as a percent. A new group by view counts by its first column
     (Google's) and sums each Number, Percent and Currency typed column (D501).
-  - Each part's ▾ (a button named "Sales aggregation") lists them, the column's own ticked; picking one sets it for
+  - Each part's ▾ (a button named "Sales aggregation", drawn over the part's right end while it is pointed at or
+    focused, always on a touch screen, so the group's value keeps its room; the first header's reached with Tab) lists
+    them, the column's own ticked; picking one sets it for
     every group, kept with the view: an Editor's saved view as a write, one undo step; a temporary view, or anyone
     else's, their own (D471). The bar's **Hide Aggregations** (ticked while on, kept with the view the same way)
     draws the headers without them (Google's View Options › Hide Group by Aggregation, D502).

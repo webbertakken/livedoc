@@ -112,7 +112,7 @@ export function SheetGroupBands() {
                 <div
                   key={colId}
                   data-group-part={colId}
-                  className="absolute inset-y-0 flex items-center gap-1 px-1"
+                  className="group/part absolute inset-y-0 flex items-center gap-1 px-1"
                   style={{ left: g.cols[at]! - g.cols[box.c1]!, width: w }}
                 >
                   {i === 0 ? (
@@ -149,7 +149,8 @@ export function SheetGroupBands() {
                       tabIndex={bandAt === 0 ? 0 : -1}
                       aria-haspopup="dialog"
                       aria-label={`${name} aggregation`}
-                      className="flex size-chip shrink-0 cursor-pointer items-center justify-center rounded-control opacity-60 hover:bg-black/10 hover:opacity-100 focus-visible:opacity-100 dark:hover:bg-white/15"
+                      className="absolute right-1 flex size-chip cursor-pointer items-center justify-center rounded-control opacity-0 group-hover/part:opacity-100 focus-visible:opacity-100 pointer-coarse:opacity-100"
+                      style={{ background: c.palette.column }}
                       onKeyDown={(e) => e.stopPropagation()}
                       onClick={(e) => {
                         const r = e.currentTarget.getBoundingClientRect();
