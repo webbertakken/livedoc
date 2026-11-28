@@ -17,7 +17,6 @@ const decoder = new TextDecoder();
 
 const write = (document: TextDocument) => {
   const written = writeTextDocumentFile(document, 'docx');
-  if (!written.ok) throw new Error(written.rejection);
   return written.bytes;
 };
 
@@ -260,7 +259,6 @@ describe('headers and footers in OpenDocument files', () => {
   it('reads a kind without an even element as showing its default on even pages, as ODF does', async () => {
     const odf = CONSTRUCTS.headers!('odf');
     const written = writeTextDocumentFile(odf, 'fodt');
-    if (!written.ok) throw new Error(written.rejection);
     // As LibreOffice writes it: no footer-left, so even pages show the footer.
     const text = new TextDecoder()
       .decode(written.bytes)
@@ -275,7 +273,6 @@ describe('headers and footers in OpenDocument files', () => {
     async (type) => {
       const document = CONSTRUCTS.headers!('odf');
       const written = writeTextDocumentFile(document, type);
-      if (!written.ok) throw new Error(written.rejection);
       const back = (await read(written.bytes)).document;
       const later = sections(back)[0]!.headers!;
       expect(textOf(later.header?.default)).toBe('Second section header');

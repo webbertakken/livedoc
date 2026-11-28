@@ -935,7 +935,7 @@ export const ROUTE_MANIFEST: RouteSpec[] = [
     segment: 'documents',
     tag: 'Text documents',
     summary:
-      'A text document as a file, written from its live state and named after the document: odt or fodt for an ODF text document. 400 file_type_unknown; 409 format_not_native for the other format. Read access.',
+      'A text document as a file, written from its live state and named after the document: odt, fodt or docx; the other format’s is a converted copy, X-Conversion-Losses counting what it could not hold. 400 file_type_unknown. Read access.',
     auth: 'guest-or-session',
     tokenUsable: true,
     query: [

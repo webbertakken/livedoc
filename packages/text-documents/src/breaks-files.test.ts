@@ -12,7 +12,6 @@ import { modelOf } from './testing/compare';
 
 const roundTrip = async (document: TextDocument, type: TextDocumentFileType) => {
   const written = writeTextDocumentFile(document, type);
-  if (!written.ok) throw new Error(written.rejection);
   const read = await readTextDocumentFile(written.bytes);
   if (!read.ok) throw new Error(read.rejection);
   return read.document;
@@ -62,7 +61,7 @@ describe('a region holding a table', () => {
       text: 'urn:oasis:names:tc:opendocument:xmlns:text:1.0',
     });
     const written = writeTextDocumentFile(read.document, 'fodt');
-    const again = written.ok ? await readTextDocumentFile(written.bytes) : undefined;
+    const again = await readTextDocumentFile(written.bytes);
     expect(again?.ok && modelOf(again.document)).toEqual(modelOf(read.document));
   });
 });

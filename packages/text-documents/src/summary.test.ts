@@ -57,7 +57,6 @@ describe('TextDocumentState summary', () => {
       TextDocumentState.setSummary(doc, 'Line one\nLine two');
       const format = type === 'odt' ? 'odf' : 'ooxml';
       const written = writeTextDocumentFile(TextDocumentState.document(doc, format), type);
-      if (!written.ok) throw new Error(written.rejection);
       const read = await readTextDocumentFile(written.bytes);
       if (!read.ok) throw new Error(read.rejection);
       const back = TextDocumentState.load([TextDocumentState.fromDocument(read.document)]);

@@ -46,7 +46,7 @@ describe('every written file validates against its format’s schema', () => {
     it(`${name}.odt and ${name}.fodt against ODF 1.4`, async () => {
       const document = build('odf');
       for (const type of ['odt', 'fodt'] as const) {
-        const bytes = (writeTextDocumentFile(document, type) as { bytes: Uint8Array }).bytes;
+        const bytes = writeTextDocumentFile(document, type).bytes;
         const file = join(OUT, `${name}.${type}`);
         writeFileSync(file, bytes);
         written.push({
@@ -63,7 +63,7 @@ describe('every written file validates against its format’s schema', () => {
 
     it(`${name}.docx against ISO/IEC 29500 Transitional`, async () => {
       const document = build('ooxml');
-      const bytes = (writeTextDocumentFile(document, 'docx') as { bytes: Uint8Array }).bytes;
+      const bytes = writeTextDocumentFile(document, 'docx').bytes;
       const file = join(OUT, `${name}.docx`);
       writeFileSync(file, bytes);
       written.push({
@@ -128,11 +128,7 @@ describe('suggested blocks re-saved by LibreOffice', () => {
   it('come back with a plain section break and no orphaned region', async () => {
     const dir = mkdtempSync(join(OUT, 'suggested-blocks-'));
     const file = join(dir, 'suggested-blocks.odt');
-    writeFileSync(
-      file,
-      (writeTextDocumentFile(CONSTRUCTS.suggestedBlocks!('odf'), 'odt') as { bytes: Uint8Array })
-        .bytes,
-    );
+    writeFileSync(file, writeTextDocumentFile(CONSTRUCTS.suggestedBlocks!('odf'), 'odt').bytes);
     const saved = join(dir, 'saved');
     execFileSync(
       'soffice',
@@ -170,16 +166,11 @@ describe('suggested rows and columns through LibreOffice', () => {
   it('are tracked rows and cells in its .docx and still suggested in its .odt', async () => {
     const dir = mkdtempSync(join(OUT, 'suggested-rows-'));
     const file = join(dir, 'suggested-rows.odt');
-    writeFileSync(
-      file,
-      (writeTextDocumentFile(CONSTRUCTS.suggestedRows!('odf'), 'odt') as { bytes: Uint8Array })
-        .bytes,
-    );
+    writeFileSync(file, writeTextDocumentFile(CONSTRUCTS.suggestedRows!('odf'), 'odt').bytes);
     const blocksFile = join(dir, 'suggested-blocks.odt');
     writeFileSync(
       blocksFile,
-      (writeTextDocumentFile(CONSTRUCTS.suggestedBlocks!('odf'), 'odt') as { bytes: Uint8Array })
-        .bytes,
+      writeTextDocumentFile(CONSTRUCTS.suggestedBlocks!('odf'), 'odt').bytes,
     );
     for (const to of ['docx', 'odt'])
       execFileSync(

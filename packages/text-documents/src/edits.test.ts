@@ -16,7 +16,6 @@ const open = async (file: string) => {
 
 const again = async (document: TextDocument, type: 'odt' | 'fodt' | 'docx') => {
   const written = writeTextDocumentFile(document, type);
-  if (!written.ok) throw new Error(written.rejection);
   const read = await readTextDocumentFile(written.bytes);
   if (!read.ok) throw new Error(read.rejection);
   return { document: read.document, xml: new TextDecoder('latin1').decode(written.bytes) };

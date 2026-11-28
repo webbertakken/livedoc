@@ -21,6 +21,7 @@ import { odfWatermarkInline, readOdfWatermark } from './odf/odf-watermark';
 import { ooxmlWatermarkInline, readOoxmlWatermark } from './ooxml/ooxml-watermark';
 import { ReportBuilder, type ImportReport } from './report';
 import type { TextDocumentFileType } from './file-types';
+import { convertTextDocument, type ConversionLoss } from './convert';
 
 export type TextDocumentRead =
   | { ok: true; document: TextDocument; report: ImportReport; fileType: TextDocumentFileType }
@@ -102,22 +103,25 @@ export async function readTextDocumentFile(
   return { ok: true, document, report: report.build(), fileType };
 }
 
-export type TextDocumentWrite =
-  { ok: true; bytes: Uint8Array } | { ok: false; rejection: 'format_not_native' };
+/** A written file, and what the other format could not hold when it is a converted copy (none in its own format). */
+export type TextDocumentWrite = { readonly bytes: Uint8Array; readonly losses: ConversionLoss[] };
 
-/** The text document as a file of its own format: `.odt` or `.fodt` for ODF, `.docx` for OOXML. */
+/**
+ * The text document as a file: `.odt` or `.fodt` for ODF, `.docx` for OOXML. A file of the other format is a
+ * converted copy (standard-mapping.md "Conversion"), the document itself unchanged.
+ */
 export function writeTextDocumentFile(
   document: TextDocument,
   type: TextDocumentFileType,
   generator = 'LiveDoc',
 ): TextDocumentWrite {
   const odf = type === 'odt' || type === 'fodt';
-  if (odf !== (document.format === 'odf')) return { ok: false, rejection: 'format_not_native' };
-  const placed = placeWatermark(document);
+  const { document: written, losses } = convertTextDocument(document, odf ? 'odf' : 'ooxml');
+  const placed = placeWatermark(written);
   const bytes = odf
     ? writeOdf(placed, { flat: type === 'fodt', generator })
     : writeOoxml(placed, generator);
-  return { ok: true, bytes };
+  return { bytes, losses };
 }
 
 /** The watermark a file's headers hold, lifted into the document (page-layout.md "Watermark", "In the file"). */

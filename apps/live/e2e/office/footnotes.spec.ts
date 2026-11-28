@@ -39,7 +39,6 @@ function fileWithNotes(): string {
     },
   ];
   const written = writeTextDocumentFile({ ...blank, body }, 'fodt');
-  if (!written.ok) throw new Error(written.rejection);
   const path = join(mkdtempSync(join(tmpdir(), 'livedoc-notes-')), 'Notes.fodt');
   writeFileSync(path, written.bytes);
   return path;

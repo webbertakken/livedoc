@@ -15,7 +15,6 @@ describe('ODF font declarations', () => {
       body: [{ ...paragraph, inlines: [run('code', 'Courier New'), run('odd', 'Wingdings')] }],
     };
     const written = writeTextDocumentFile(document, 'fodt');
-    if (!written.ok) throw new Error(written.rejection);
     const xml = new TextDecoder().decode(written.bytes);
     expect(xml).toContain(
       `<style:font-face style:name="Courier New" svg:font-family="'Courier New'" style:font-family-generic="modern" style:font-pitch="fixed"/>`,

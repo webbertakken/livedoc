@@ -24,7 +24,6 @@ describe.each([
     };
     const document = { ...blank, styles: [...blank.styles, base, python], body: [code] };
     const written = writeTextDocumentFile(document, type);
-    if (!written.ok) throw new Error(written.rejection);
     const read = await readTextDocumentFile(written.bytes);
     if (!read.ok) throw new Error(read.rejection);
 

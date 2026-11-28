@@ -59,7 +59,7 @@ export function liveNoteIds(doc: Y.Doc): string[] {
 }
 
 /** The notes' fragments one body's marks name, in the marks' order. */
-function noteIdsIn(body: Y.XmlFragment): string[] {
+export function noteIdsIn(body: Y.XmlFragment): string[] {
   return paragraphElementsOf(body).flatMap((node) =>
     node.toArray().flatMap((child) => {
       const story =

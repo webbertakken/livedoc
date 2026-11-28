@@ -45,7 +45,6 @@ function contentsFile(path: string): void {
     heading('Findings', '_find0000001'),
   ];
   const written = writeTextDocumentFile({ ...blank, body }, 'docx');
-  if (!written.ok) throw new Error(written.rejection);
   writeFileSync(path, written.bytes);
 }
 

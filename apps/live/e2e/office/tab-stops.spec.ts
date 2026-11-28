@@ -25,7 +25,6 @@ function wordFile(path: string) {
     { ...c!, props: { tabStops: [{ position: 216, align: 'center' as const }] } },
   ];
   const written = writeTextDocumentFile({ ...blank, body }, 'docx');
-  if (!written.ok) throw new Error(written.rejection);
   writeFileSync(path, written.bytes);
 }
 

@@ -63,6 +63,34 @@ describe('syncWriting', () => {
     expect(json(target)).toBe(json(source));
   });
 
+  // standard-mapping.md "Conversion": a block the converted writing lacks goes alone; every paragraph after it is
+  // changed in place, so a comment anchored in one still holds.
+  it('aligns the blocks by name, taking out only the one that went', () => {
+    const target = docOf([
+      { name: 'kept_block', attrs: { name: 'chart' } },
+      { name: 'paragraph', attrs: { style: 'Standard' }, text: 'one' },
+      { name: 'paragraph', attrs: { style: 'Heading_20_1' }, text: 'two' },
+    ]);
+    const body = target.getXmlFragment('body');
+    const second = body.get(2) as Y.XmlElement;
+    const source = docOf([
+      { name: 'paragraph', attrs: { style: 'Normal' }, text: 'one' },
+      { name: 'paragraph', attrs: { style: 'Heading1' }, text: 'two' },
+    ]);
+    syncWriting(source.getXmlFragment('body'), body);
+    expect(json(target)).toBe(json(source));
+    expect(body.get(1)).toBe(second);
+  });
+
+  it('matches blocks pairwise past the most an alignment weighs', () => {
+    const many = (n: number, text: string) =>
+      Array.from({ length: n }, (_, i) => ({ name: 'paragraph', text: `${text} ${i}` }));
+    const target = docOf([...many(1, 'first'), { name: 'table' }, ...many(2000, 'old')]);
+    const source = docOf([...many(2001, 'new'), { name: 'picture' }]);
+    syncWriting(source.getXmlFragment('body'), target.getXmlFragment('body'));
+    expect(json(target)).toBe(json(source));
+  });
+
   it('keeps text formatting exact, nothing leaking in from beside it', () => {
     const source = new Y.Doc().getText('t');
     const target = new Y.Doc().getText('t');
@@ -71,6 +99,33 @@ describe('syncWriting', () => {
     target.insert(0, 'plain ', { italic: true });
     syncText(source, target);
     expect(target.toDelta()).toEqual(source.toDelta());
+    syncText(source, target);
+    expect(target.toDelta()).toEqual(source.toDelta());
+  });
+
+  // standard-mapping.md "Conversion": formatting changed under the same words keeps the words, so anchors on them hold.
+  it('formats the same characters in place, keeping them', () => {
+    const source = new Y.Doc().getText('t');
+    const doc = new Y.Doc();
+    const target = doc.getText('t');
+    source.insert(0, 'one ', { size: 11 });
+    source.insert(4, 'two', { size: 11, bold: true });
+    target.insert(0, 'one two', { size: 10.5, italic: true });
+    const anchor = Y.createRelativePositionFromTypeIndex(target, 4);
+    syncText(source, target);
+    expect(target.toDelta()).toEqual(source.toDelta());
+    expect(Y.createAbsolutePositionFromRelativePosition(anchor, doc)?.index).toBe(4);
+  });
+
+  it('measures what it keeps in the text’s own units, past characters outside the basic plane', () => {
+    const source = new Y.Doc().getText('t');
+    const target = new Y.Doc().getText('t');
+    source.insert(0, '😀 ab');
+    target.insert(0, '😀 xb');
+    syncText(source, target);
+    expect(target.toJSON()).toBe('😀 ab');
+    source.insert(source.length, ' c', { bold: true });
+    target.insert(target.length, ' c');
     syncText(source, target);
     expect(target.toDelta()).toEqual(source.toDelta());
   });

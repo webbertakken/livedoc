@@ -43,7 +43,6 @@ describe('ODF tab stops', () => {
       defaults: { paragraph: { ...document.defaults.paragraph, indentStart: 36 }, text: {} },
     };
     const written = writeTextDocumentFile(edited, 'fodt');
-    if (!written.ok) throw new Error(written.rejection);
     expect(text(written.bytes)).toContain('style:position="54pt"');
   });
 
@@ -76,7 +75,6 @@ describe('ODF tab stops', () => {
     const bytes = flat(`${STYLES}${AUTO}${BODY}`);
     const { document } = await read(bytes);
     const unchanged = writeTextDocumentFile(document, 'fodt');
-    if (!unchanged.ok) throw new Error(unchanged.rejection);
     const again = await read(unchanged.bytes);
     expect(paragraphs(again.document).map((p) => p.props)).toEqual(
       paragraphs(document).map((p) => p.props),
@@ -89,7 +87,6 @@ describe('ODF tab stops', () => {
       body: [{ ...a!, props: { ...a!.props, indentStart: 144 }, kept: undefined }, ...rest],
     };
     const written = writeTextDocumentFile(edited, 'fodt');
-    if (!written.ok) throw new Error(written.rejection);
     // LibreOffice counts from the new indent: the stops are written less it, so they draw where they did.
     expect(text(written.bytes)).toContain(
       '<style:tab-stop style:position="-36pt" style:type="left"/>',
@@ -109,7 +106,6 @@ describe('ODF tab stops', () => {
       body: [{ ...p!, props: { indentStart: 36, tabStops: [left(100)] } }],
     };
     const written = writeTextDocumentFile(document, 'fodt');
-    if (!written.ok) throw new Error(written.rejection);
     const xml = text(written.bytes);
     expect(xml).toContain('config:name="TabsRelativeToIndent" config:type="boolean">false<');
     expect(xml).toContain('style:tab-stop-distance="36pt"');
@@ -185,7 +181,6 @@ describe('OOXML tab stops', () => {
     ];
     const edited = { ...document, body: [{ ...p!, props: { tabStops: own }, kept: undefined }] };
     const written = writeTextDocumentFile(edited, 'docx');
-    if (!written.ok) throw new Error(written.rejection);
     const back = await read(written.bytes);
     expect(paragraphs(back.document)[0]!.props.tabStops).toEqual(own);
   });
@@ -221,7 +216,6 @@ describe('OOXML tab stops', () => {
       body: [{ ...p!, props: { tabStops: [left(36)] }, kept: undefined }],
     };
     const written = writeTextDocumentFile(same, 'docx');
-    if (!written.ok) throw new Error(written.rejection);
     const back = await read(written.bytes);
     expect(paragraphs(back.document)[0]!.props.tabStops).toBeUndefined();
   });
@@ -229,7 +223,6 @@ describe('OOXML tab stops', () => {
   it("writes a new Word file's default interval into its settings", async () => {
     const blank = TextDocument.blank({ format: 'ooxml' });
     const written = writeTextDocumentFile(blank, 'docx');
-    if (!written.ok) throw new Error(written.rejection);
     const back = await read(written.bytes);
     expect(back.document.defaults.paragraph.tabInterval).toBe(36);
   });

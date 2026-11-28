@@ -98,11 +98,9 @@ describe('import security', () => {
       { reason: 'macro', name: 'word/vbaProject.bin', count: 1 },
     ]);
     const written = writeTextDocumentFile(docm.document, 'docx');
-    const again = written.ok && (await texts(written.bytes));
+    const again = await texts(written.bytes);
     expect(again && again.texts).toEqual(['Hi']);
-    expect(written.ok && new TextDecoder().decode(written.bytes).includes('vbaProject')).toBe(
-      false,
-    );
+    expect(new TextDecoder().decode(written.bytes).includes('vbaProject')).toBe(false);
   });
 
   it('drops fields that run things, keeping what they last showed', async () => {
@@ -181,10 +179,9 @@ describe('import security', () => {
     );
     expect(read.report.dropped).toEqual([{ reason: 'external', name: 'image', count: 1 }]);
     const written = writeTextDocumentFile(read.document, 'docx');
-    expect(
-      written.ok &&
-        new TextDecoder().decode(written.bytes).includes('https://tracker.example/p.png'),
-    ).toBe(true);
+    expect(new TextDecoder().decode(written.bytes).includes('https://tracker.example/p.png')).toBe(
+      true,
+    );
   });
 
   it('refuses a picture bomb by its header (picture_too_large)', async () => {

@@ -27,7 +27,6 @@ function controlFile(path: string): void {
     },
   ];
   const written = writeTextDocumentFile({ ...blank, body }, 'docx');
-  if (!written.ok) throw new Error(written.rejection);
   writeFileSync(path, written.bytes);
 }
 

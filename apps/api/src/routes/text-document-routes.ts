@@ -14,6 +14,7 @@ import {
   type TextDocumentFileType,
 } from '@livedoc/text-documents';
 import {
+  TEXT_DOCUMENT_CONVERSION_LOSSES_HEADER,
   TEXT_DOCUMENT_PICTURES_LEFT_OUT_HEADER,
   TEXT_DOCUMENT_STATE_VECTOR_HEADER,
   TEXT_DOCUMENT_VIEWER_COPY_HEADER,
@@ -85,7 +86,6 @@ export async function handleTextDocumentRoutes(
   if (!state) return viewerCopyUnavailable();
   const type = ctx.url.searchParams.get('type') ?? 'odt';
   if (!isTextDocumentFileType(type)) return json({ error: 'file_type_unknown' }, { status: 400 });
-  // Conversion is a person's choice (File > Convert); until it is built, only the document's own format leaves.
   // The file is derived from the live state; its title is the document's name, written on save.
   const live = TextDocumentState.document(TextDocumentState.load([state]), tab.format);
   // Gallery media are read back first; a picture whose bytes cannot be read is left out, and said so.
@@ -95,17 +95,18 @@ export async function handleTextDocumentRoutes(
       `[text-document] picture-unavailable document=${documentId} tab=${tabId} media=${key}`,
     );
   const document = { ...read.document, metadata: { ...live.metadata, title: meta.name } };
-  // A download never changes a document's format behind a person's back (fork C1): the other format is refused.
+  // The other format is a converted copy (fork C1): the document keeps its format, the losses counted.
   const written = writeTextDocumentFile(document, type);
-  if (!written.ok) return json({ error: written.rejection }, { status: 409 });
   const file = written.bytes;
+  const losses = written.losses.reduce((sum, loss) => sum + loss.count, 0);
   console.info(
-    `[text-document] file-written document=${documentId} tab=${tabId} type=${type} bytes=${file.byteLength} ms=${Date.now() - started}`,
+    `[text-document] file-written document=${documentId} tab=${tabId} type=${type} format=${tab.format} losses=${losses} bytes=${file.byteLength} ms=${Date.now() - started}`,
   );
   return bytesResponse(file, {
     'Content-Type': FILE_MEDIA_TYPES[type],
     'Content-Disposition': `attachment; filename="${fileNameOf(meta.name, type)}"`,
     [TEXT_DOCUMENT_PICTURES_LEFT_OUT_HEADER]: String(read.unavailable.length),
+    [TEXT_DOCUMENT_CONVERSION_LOSSES_HEADER]: String(losses),
   });
 }
 

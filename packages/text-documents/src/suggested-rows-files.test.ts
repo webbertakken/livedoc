@@ -27,7 +27,6 @@ async function read(bytes: Uint8Array) {
 
 function write(document: TextDocument, type: TextDocumentFileType): Uint8Array {
   const result = writeTextDocumentFile(document, type);
-  if (!result.ok) throw new Error(result.rejection);
   return result.bytes;
 }
 

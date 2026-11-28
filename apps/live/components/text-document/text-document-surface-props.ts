@@ -36,6 +36,8 @@ export type TextDocumentSurfaceProps = {
   mentions?: TextDocumentMentions | null;
   // The thread an Inbox row asked to go to (docs/specs/013-workspace/inbox.md §1.8); absent outside an editor.
   arrival?: TextDocumentThreadArrival | null;
+  // Names the tab's format after a conversion (standard-mapping.md "Conversion"); absent where it may not be converted.
+  setFormat?: ((format: TextDocumentFormat) => void) | null;
 };
 
 /** The reader's account (For you reads it) and what a comment added with mentions tells the editor. */

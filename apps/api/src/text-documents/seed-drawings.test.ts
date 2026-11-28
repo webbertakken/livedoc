@@ -44,7 +44,6 @@ async function wordFileNaming(...drawings: string[]): Promise<Uint8Array> {
     },
     'docx',
   );
-  if (!written.ok) throw new Error('fixture');
   return written.bytes;
 }
 

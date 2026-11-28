@@ -26,7 +26,6 @@ async function read(bytes: Uint8Array) {
 
 function written(document: TextDocument): Uint8Array {
   const result = writeTextDocumentFile(document, 'docx');
-  if (!result.ok) throw new Error(result.rejection);
   return result.bytes;
 }
 
@@ -330,7 +329,6 @@ describe('ODF’s tracked changes, written', () => {
     for (const type of ['fodt', 'odt'] as const) {
       const document = CONSTRUCTS.suggestions!('odf');
       const result = writeTextDocumentFile(document, type);
-      if (!result.ok) throw new Error(result.rejection);
       const back = (await read(result.bytes)).document;
       expect(paragraphs(back).map((p) => p.suggested)).toEqual(
         paragraphs(document).map((p) => p.suggested),
@@ -392,7 +390,6 @@ describe('suggestions converted', () => {
     expect(kinds(odf)).toEqual(kinds(document));
     expect(kinds(back)).toEqual(kinds(document));
     const written = writeTextDocumentFile(odf, 'fodt');
-    if (!written.ok) throw new Error(written.rejection);
     expect(kinds((await read(written.bytes)).document)).toEqual(kinds(document));
   });
 });
@@ -459,7 +456,6 @@ describe('suggestions in stories, in both formats', () => {
         [noted(format), noteRun],
       ] as const) {
         const out = writeTextDocumentFile(document, type);
-        if (!out.ok) throw new Error(out.rejection);
         const back = await read(out.bytes);
         expect(run(back.document)?.suggested?.insertion).toMatchObject({
           at: AT,
