@@ -66,6 +66,16 @@ export function importReportLine(loss: ReportedLoss): string {
         `${counted(count, 'filter column', 'filter columns')} LiveDoc cannot read ${verb(count, 'is', 'are')} left unfiltered`,
         loss,
       );
+    case 'slicer_unread':
+      return named(
+        `${counted(count, 'slicer', 'slicers')} LiveDoc cannot read ${verb(count, 'is', 'are')} left out`,
+        loss,
+      );
+    case 'slicers_kept':
+      return named(
+        `Slicers LiveDoc cannot read stay as the file had them on ${counted(count, 'sheet', 'sheets')}`,
+        loss,
+      );
     case 'function_unread':
       return named(
         `${counted(count, 'named function', 'named functions')} LiveDoc cannot read ${verb(count, 'is', 'are')} kept for Excel`,

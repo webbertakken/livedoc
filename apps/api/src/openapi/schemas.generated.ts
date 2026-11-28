@@ -3542,6 +3542,40 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
             "type": "number"
           },
           "k": {
+            "const": "slicers_left",
+            "type": "string"
+          }
+        },
+        "required": [
+          "k",
+          "count"
+        ],
+        "type": "object"
+      },
+      {
+        "additionalProperties": false,
+        "properties": {
+          "count": {
+            "type": "number"
+          },
+          "k": {
+            "const": "slicers_unseen",
+            "type": "string"
+          }
+        },
+        "required": [
+          "k",
+          "count"
+        ],
+        "type": "object"
+      },
+      {
+        "additionalProperties": false,
+        "properties": {
+          "count": {
+            "type": "number"
+          },
+          "k": {
             "const": "kept",
             "type": "string"
           },
