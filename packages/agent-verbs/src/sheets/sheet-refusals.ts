@@ -30,6 +30,11 @@ export const SHEET_REFUSAL_WORDS: Readonly<Record<SheetError, string>> = {
     "you can't edit a pivot table's cells: change the pivot table, or write outside its output.",
   filter_overlaps_table:
     "a sheet's filter over a table covers exactly its header and data rows (the table's filter): filter the table's cells only, or remove the filter first.",
+  thread_invalid:
+    'a comment thread op is malformed, its text is not 1 to 2,000 characters, or its cell or range is not on the sheet.',
+  thread_gone: 'that comment thread, or that comment, is no longer there: read the threads again.',
+  threads_full: 'a sheet holds up to 1,000 comment threads.',
+  thread_full: 'a comment thread holds up to 500 comments.',
   tab_not_found: 'no such tab in this document.',
   sheet_name_invalid:
     "a sheet's name is 1 to 100 characters, never ' at either end, and none of [ ] * ? / \\ :.",

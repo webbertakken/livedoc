@@ -11,6 +11,7 @@ import type {
   SheetPerson,
   SheetWrite,
 } from '@livedoc/sheets';
+import type { SheetThread, SheetThreadOp } from '@livedoc/document';
 
 export type { CellFormat, CellInput, SheetLayout, SheetPerson, SheetWrite } from '@livedoc/sheets';
 
@@ -104,6 +105,12 @@ export const SHEET_ERRORS = [
   'pivot_cell',
   // The sheet's filter over part of a table, or a table over part of the filter (data-tools.md, D481).
   'filter_overlaps_table',
+  // A comment thread's op (docs/specs/029-sheets/review.md "The thread write"): malformed or off the sheet, its thread
+  // or comment gone, the sheet's threads or the thread's comments full.
+  'thread_invalid',
+  'thread_gone',
+  'threads_full',
+  'thread_full',
 ] as const;
 export type SheetError = (typeof SHEET_ERRORS)[number];
 
@@ -123,6 +130,25 @@ export type SheetsRoomOp = {
   deleted?: true;
   refetch?: true;
 };
+
+// A spreadsheet's comment thread changed (docs/specs/029-sheets/review.md "The thread write"): its whole state after the
+// op, or null once removed; a session keeps the highest `v` it has seen. Never sent to a Viewer.
+export type SheetThreadRoomOp = {
+  kind: 'sheet-thread';
+  sheetId: string;
+  tabId: string;
+  id: string;
+  thread: SheetThread | null;
+};
+
+/** The workbook's threads, as a commenter reads them (none for a Viewer). */
+export type SheetThreadsResponse = { threads: SheetThread[] };
+
+/** One thread op, as sent. */
+export type SheetThreadRequest = { op: SheetThreadOp };
+
+/** The thread after an op, or null once removed. */
+export type SheetThreadResponse = { id: string; thread: SheetThread | null };
 
 // Someone's selection on a sheet (an ephemeral presence op, never stored): ids, so it follows rows that move.
 export type SheetPresenceOp = {

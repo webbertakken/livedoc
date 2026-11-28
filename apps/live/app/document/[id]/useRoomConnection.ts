@@ -37,6 +37,7 @@ import {
   type WorkbookRoomOp,
   type SheetPresenceOp,
   type SheetsRoomOp,
+  type SheetThreadRoomOp,
   type FacilitatorReason,
   type LivePoll,
 } from '@livedoc/api-schema';
@@ -214,6 +215,7 @@ export function useRoomConnection(opts: {
   ) => void;
   // Sheet writes the api made (docs/specs/029-sheets/sheet-store.md "Live for everyone"). System-only.
   receiveSheets: (op: SheetsRoomOp) => void;
+  receiveSheetThread: (op: SheetThreadRoomOp) => void;
   // A peer's selection on a sheet (docs/specs/029-sheets/sheet.md "Collaboration"). Presence.
   receiveSheetPresence: (from: string, op: SheetPresenceOp) => void;
   // The room has greeted this connection (its first presence list): what was relayed before it
@@ -275,6 +277,7 @@ export function useRoomConnection(opts: {
     receiveWorkbook,
     receivePlanPresence,
     receiveSheets,
+    receiveSheetThread,
     receiveSheetPresence,
     receivePeerModeSwitch,
     onRoomJoined,
@@ -665,6 +668,9 @@ export function useRoomConnection(opts: {
       } else if (op.kind === 'sheets') {
         // Sheet writes (docs/specs/029-sheets/sheet-store.md). System-only, as items.
         if (from === 'system') receiveSheets(op);
+      } else if (op.kind === 'sheet-thread') {
+        // A spreadsheet's comment thread (docs/specs/029-sheets/review.md "The thread write"). System-only.
+        if (from === 'system') receiveSheetThread(op);
       } else if (op.kind === 'items') {
         // Item writes (docs/specs/026-plan/items.md). System-only: items change only through the api,
         // and the room refuses this op from a client socket.

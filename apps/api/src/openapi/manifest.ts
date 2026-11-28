@@ -885,6 +885,33 @@ export const ROUTE_MANIFEST: RouteSpec[] = [
     statuses: [200, 400, 401, 403, 404, 409, 410, 413],
   },
   {
+    method: 'GET',
+    path: '/documents/{id}/sheet-threads',
+    segment: 'documents',
+    tag: 'Sheets',
+    summary:
+      "A spreadsheet's comment threads, every sheet's (a tab-scoped link's tab's): each thread's anchor by row and column ids, resolved or open, its comments and its count of changes. Empty for a Viewer, who receives no comments.",
+    auth: 'guest-or-session',
+    tokenUsable: true,
+    query: [SHEET_TAB_QUERY],
+    responseSchema: 'SheetThreadsResponse',
+    statuses: [200, 401, 403, 404, 410],
+  },
+  {
+    method: 'POST',
+    path: '/documents/{id}/sheets/{sheetId}/threads',
+    segment: 'documents',
+    tag: 'Sheets',
+    summary:
+      "One op on a spreadsheet's comment thread: start (on a cell or range by row and column ids), reply, edit (one's own comment), remove (one's own; an Editor's any; the first comment takes the thread), resolve or reopen, react. The author is the caller. Answers the thread after it, null once removed. 400 thread_invalid, 404 thread_gone, 413 threads_full past 1,000 threads a sheet or thread_full past 500 comments.",
+    auth: 'guest-or-session',
+    tokenUsable: true,
+    query: [SHEET_TAB_QUERY],
+    requestSchema: 'SheetThreadRequest',
+    responseSchema: 'SheetThreadResponse',
+    statuses: [200, 400, 401, 403, 404, 409, 410, 413],
+  },
+  {
     method: 'POST',
     path: '/documents/{id}/sheets/{sheetId}/changesets',
     segment: 'documents',

@@ -57,6 +57,9 @@ const DOCUMENT_SCOPE: Record<string, Decision> = {
   'POST /documents/{id}/sheets': 'allow',
   'DELETE /documents/{id}/sheets/{sheetId}': 'allow',
   'POST /documents/{id}/sheets/{sheetId}/writes': 'allow',
+  // A spreadsheet's comment threads, as the editor's comments.
+  'GET /documents/{id}/sheet-threads': 'allow',
+  'POST /documents/{id}/sheets/{sheetId}/threads': 'allow',
   // A workbench writes no agent changesets (agent-changesets.md "Whole-tab saves and tab renames").
   'POST /documents/{id}/sheets/{sheetId}/changesets': 'confined',
   'GET /documents/{id}/sheets/{sheetId}/cells': 'allow',

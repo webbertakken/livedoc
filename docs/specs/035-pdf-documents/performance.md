@@ -8,25 +8,25 @@ what the editor downloads. Measured on the tracer bullet (plan 0022, Phase 4) an
 
 ## Budgets
 
-| Measure                                                   | Budget                                                                                          | Measured                                           |
-| --------------------------------------------------------- | ----------------------------------------------------------------------------------------------- | -------------------------------------------------- |
-| The engine's binary (`pdfium.wasm`), gzipped              | Under 2,200 KiB, loaded only with a PDF tab, in its worker                                      | 2,088 KiB (4,647 kB before compression)            |
-| The engine's worker chunk (the reader's glue, the writer) | Under 320 KiB gzipped, loaded only with a PDF tab                                               | 284 KiB                                            |
-| The mark faces' shaper (HarfBuzz, its glue, bidi-js), gz  | Under 200 KiB, loaded only by a bake whose marks need a mark face                               | 175 KiB binary, 11 KiB glue, 6 KiB bidi-js         |
-| The mark faces' table (their advances), gzipped           | Under 44 KiB `(default)`, in the PDF tab's model chunk, a region of CJK as one face             | About 39 KiB of that chunk's 47 KiB                |
-| A region's table of slices, gzipped                       | Under 40 KiB, loaded only where a mark in that region is drawn or baked                         | 26 KiB (KR) to 33 KiB (SC, JP)                     |
-| The surface's own chunk                                   | Under 48 KiB gzipped, loaded only with a PDF tab                                                | 28 KiB                                             |
-| The document route's first load                           | Within its budget in `apps/live/first-load-budget.json`; no engine, surface or model code       | 1,036 KiB of 1,060; 2 KiB over `main` without PDFs |
-| The engine started and the file open, local stack         | Under 500 ms for a file read whole                                                              | 165 to 331 ms, from 840 bytes to 93 MB             |
-| Opening a short file, local stack, unthrottled            | Surface ready under 1,000 ms; page one drawn under 1,500 ms                                     | Ready 485 to 944 ms; page one 580 to 1,001 ms      |
-| Opening a 1,000-page file, the same way                   | As a short file: every page's size is read without loading a page                               | Ready 485 to 919 ms; page one 580 to 1,036 ms      |
-| Opening a 100 MB file read whole, local stack             | Page one drawn under 3,000 ms `(default)`                                                       | 93 MB: ready 1,003 ms; page one 1,436 ms           |
-| Layout shift while opening                                | CLS under 0.1                                                                                   | 0.001                                              |
-| Scrolling, unthrottled, at 1,800 and 6,000 px a second    | No main-thread task over 50 ms; the page under the middle of the view drawn in 99 frames of 100 | None; drawn in every frame; frames 17 ms at p95    |
-| Scrolling at 4x CPU                                       | No main-thread task over 100 ms `(default)`                                                     | Slowest 82 ms; frames 50 to 67 ms at p95           |
-| A jump to the end of a 1,000-page file                    | The last page drawn within 500 ms                                                               | 88 ms; 279 ms at 4x CPU                            |
-| Memory of the page's process, a 1,000-page file           | Under 640 MiB while scrolling `(default)`                                                       | 296 to 415 MiB open; 524 MiB at its peak           |
-| Memory of the page's process, a 100 MB file read whole    | Under `PDF_WORKER_MAX_BYTES` (1 GiB)                                                            | 93 MB: 506 to 545 MiB open; 724 MiB at its peak    |
+| Measure                                                   | Budget                                                                                          | Measured                                                        |
+| --------------------------------------------------------- | ----------------------------------------------------------------------------------------------- | --------------------------------------------------------------- |
+| The engine's binary (`pdfium.wasm`), gzipped              | Under 2,200 KiB, loaded only with a PDF tab, in its worker                                      | 2,088 KiB (4,647 kB before compression)                         |
+| The engine's worker chunk (the reader's glue, the writer) | Under 320 KiB gzipped, loaded only with a PDF tab                                               | 284 KiB                                                         |
+| The mark faces' shaper (HarfBuzz, its glue, bidi-js), gz  | Under 200 KiB, loaded only by a bake whose marks need a mark face                               | 175 KiB binary, 11 KiB glue, 6 KiB bidi-js                      |
+| The mark faces' table (their advances), gzipped           | Under 44 KiB `(default)`, in the PDF tab's model chunk, a region of CJK as one face             | About 39 KiB of that chunk's 47 KiB                             |
+| A region's table of slices, gzipped                       | Under 40 KiB, loaded only where a mark in that region is drawn or baked                         | 26 KiB (KR) to 33 KiB (SC, JP)                                  |
+| The surface's own chunk                                   | Under 48 KiB gzipped, loaded only with a PDF tab                                                | 28 KiB                                                          |
+| The document route's first load                           | Within its budget in `apps/live/first-load-budget.json`; no engine, surface or model code       | 1,036 KiB of 1,064 (then 1,060); 2 KiB over `main` without PDFs |
+| The engine started and the file open, local stack         | Under 500 ms for a file read whole                                                              | 165 to 331 ms, from 840 bytes to 93 MB                          |
+| Opening a short file, local stack, unthrottled            | Surface ready under 1,000 ms; page one drawn under 1,500 ms                                     | Ready 485 to 944 ms; page one 580 to 1,001 ms                   |
+| Opening a 1,000-page file, the same way                   | As a short file: every page's size is read without loading a page                               | Ready 485 to 919 ms; page one 580 to 1,036 ms                   |
+| Opening a 100 MB file read whole, local stack             | Page one drawn under 3,000 ms `(default)`                                                       | 93 MB: ready 1,003 ms; page one 1,436 ms                        |
+| Layout shift while opening                                | CLS under 0.1                                                                                   | 0.001                                                           |
+| Scrolling, unthrottled, at 1,800 and 6,000 px a second    | No main-thread task over 50 ms; the page under the middle of the view drawn in 99 frames of 100 | None; drawn in every frame; frames 17 ms at p95                 |
+| Scrolling at 4x CPU                                       | No main-thread task over 100 ms `(default)`                                                     | Slowest 82 ms; frames 50 to 67 ms at p95                        |
+| A jump to the end of a 1,000-page file                    | The last page drawn within 500 ms                                                               | 88 ms; 279 ms at 4x CPU                                         |
+| Memory of the page's process, a 1,000-page file           | Under 640 MiB while scrolling `(default)`                                                       | 296 to 415 MiB open; 524 MiB at its peak                        |
+| Memory of the page's process, a 100 MB file read whole    | Under `PDF_WORKER_MAX_BYTES` (1 GiB)                                                            | 93 MB: 506 to 545 MiB open; 724 MiB at its peak                 |
 
 - The route's 2 KiB are the kind's hosting: its host, its bus and the room's two branches for its ops. None of
   `@livedoc/pdf-documents` is in a first-load script (a search of every one for the model's and the engine's names).
