@@ -10,6 +10,7 @@ import {
   imageGrantCopyStatements,
   imageGrantPlacementStatements,
   servableImageIds,
+  servableImageSizes,
 } from './image-grants';
 import { documentPlacesImage } from './image-refs';
 import { upsertTab } from './tabs';
@@ -304,5 +305,21 @@ describe('an owner change', () => {
     ]);
     expect(await documentServesImage(db.env, 'D', 'guest-img')).toBe(true);
     expect(await documentServesImage(db.env, 'D', 'guest-only')).toBe(true);
+  });
+});
+
+describe('servableImageSizes', () => {
+  it('answers each image the document may serve with its stored size and type, and none other', async () => {
+    const db = sqliteD1();
+    liveDoc(db.sql, 'D', { owner: 'alice' });
+    image(db.sql, 'mine', 'alice');
+    image(db.sql, 'theirs', 'mallory');
+    await upsertTab(db.env, 'D', tabWith('t1', 'mine'), 0);
+    await db.flush();
+    const sizes = await servableImageSizes(db.env, 'D', ['mine', 'theirs', 'missing']);
+    expect([...sizes.keys()]).toEqual(['mine']);
+    expect(sizes.get('mine')).toMatchObject({ contentType: 'image/png' });
+    expect(typeof sizes.get('mine')!.byteSize).toBe('number');
+    expect(await servableImageSizes(db.env, 'D', [])).toEqual(new Map());
   });
 });

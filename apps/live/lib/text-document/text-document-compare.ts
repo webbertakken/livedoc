@@ -16,7 +16,7 @@ import {
 import { apiCreateDocument, apiLoadDocument } from '@/lib/api/documents';
 import { apiLoadTextDocumentState } from '@/lib/api/text-documents';
 import { apiReadTextDocumentVersion } from '@/lib/api/text-document-versions';
-import { bytesOfBase64 } from '@livedoc/text-documents/base64';
+import { bytesOfBase64 } from '@livedoc/office-packages';
 import { ApiError } from '@/lib/api/core';
 import { createBeside, placementOf } from '@/lib/create-beside';
 import { createIdsFor } from '@/lib/new-document/create-failure';

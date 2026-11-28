@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import * as Y from 'yjs';
 import type { BlobKey } from '@livedoc/document';
 import { Mark, PdfLiveChanges, type Quad } from '@livedoc/pdf-documents';
-import { base64OfBytes, bytesOfBase64 } from '@livedoc/text-documents/base64';
+import { base64OfBytes, bytesOfBase64 } from '@livedoc/office-packages';
 import { LiveTabRoom } from '@/lib/live-tab/live-tab-bus';
 import type { CopyKey, LiveTabCopy } from '@/lib/live-tab/live-tab-copies';
 import { PdfDocumentBus, PdfStoredFiles } from './pdf-document-bus';

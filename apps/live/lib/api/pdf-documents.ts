@@ -3,7 +3,7 @@
 // browser's thumbnail").
 import { PDF_STORED_FILE_HEADER, TEXT_DOCUMENT_STATE_VECTOR_HEADER } from '@livedoc/api-schema';
 import { isBlobKey, type BlobKey } from '@livedoc/document';
-import { base64OfBytes, bytesOfBase64 } from '@livedoc/text-documents/base64';
+import { base64OfBytes, bytesOfBase64 } from '@livedoc/office-packages';
 import { API_BASE, apiFetch, apiHeaders, expectOk, expectOkVoid } from './core';
 
 export type PdfDocumentScope = {

@@ -10,6 +10,7 @@ import {
   type HeldFileChart,
 } from './chart-nearest';
 import type { FileChart, FileChartSeries, FileRange } from './file-charts';
+import type { FilePicture } from './file-pictures';
 
 const C_NS = 'http://schemas.openxmlformats.org/drawingml/2006/chart';
 const A_NS = 'http://schemas.openxmlformats.org/drawingml/2006/main';
@@ -278,6 +279,9 @@ export function xlsxChartXml(sheet: string, own: FileChart): string {
 export function xlsxDrawingXml(
   charts: readonly FileChart[],
   chartRelIds: readonly string[],
+  // Its pictures after its charts, each naming its media part by a relationship (standard-mapping.md "Pictures in the
+  // file", D626).
+  pictures: readonly { picture: FilePicture; relId: string }[] = [],
 ): string {
   const anchors = charts.map((chart, i) => {
     const name = `Chart ${i + 1}`;
@@ -298,5 +302,24 @@ export function xlsxDrawingXml(
       '</xdr:oneCellAnchor>',
     ].join('');
   });
-  return `<xdr:wsDr xmlns:xdr="${XDR_NS}" xmlns:a="${A_NS}" xmlns:r="${R_NS}">${anchors.join('')}</xdr:wsDr>`;
+  const pics = pictures.map(({ picture, relId }, n) => {
+    const id = charts.length + n + 2;
+    const from = `<xdr:from><xdr:col>${picture.at.c}</xdr:col><xdr:colOff>${picture.at.dx * EMU_PER_PX}</xdr:colOff><xdr:row>${picture.at.r}</xdr:row><xdr:rowOff>${picture.at.dy * EMU_PER_PX}</xdr:rowOff></xdr:from>`;
+    const cx = picture.width * EMU_PER_PX;
+    const cy = picture.height * EMU_PER_PX;
+    const descr = picture.alt ? ` descr="${escapeXmlAttribute(picture.alt)}"` : '';
+    return [
+      '<xdr:oneCellAnchor>',
+      from,
+      `<xdr:ext cx="${cx}" cy="${cy}"/>`,
+      '<xdr:pic>',
+      `<xdr:nvPicPr><xdr:cNvPr id="${id}" name="Picture ${n + 1}"${descr}/><xdr:cNvPicPr><a:picLocks noChangeAspect="1"/></xdr:cNvPicPr></xdr:nvPicPr>`,
+      `<xdr:blipFill><a:blip r:embed="${relId}"/><a:stretch><a:fillRect/></a:stretch></xdr:blipFill>`,
+      `<xdr:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="${cx}" cy="${cy}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></xdr:spPr>`,
+      '</xdr:pic>',
+      '<xdr:clientData/>',
+      '</xdr:oneCellAnchor>',
+    ].join('');
+  });
+  return `<xdr:wsDr xmlns:xdr="${XDR_NS}" xmlns:a="${A_NS}" xmlns:r="${R_NS}">${anchors.join('')}${pics.join('')}</xdr:wsDr>`;
 }

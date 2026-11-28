@@ -8,7 +8,7 @@ import {
   ySyncPluginKey,
 } from 'y-prosemirror';
 import * as Y from 'yjs';
-import { base64OfBytes, bytesOfBase64 } from '@livedoc/text-documents/base64';
+import { base64OfBytes, bytesOfBase64 } from '@livedoc/office-packages';
 
 export type Binding = {
   doc: Y.Doc;

@@ -3,6 +3,7 @@
 // the model (cells by row and column id, formulas by id references) and each format's reader and writer, so neither
 // format ever sees an id and the model never sees a format.
 import { fileChartsOf, sheetChartsFromFile, type FileChart } from './file-charts';
+import { filePicturesOf, type FilePicture, type FilePictureFetches } from './file-pictures';
 import {
   filePivotsOf,
   pivotCachePositions,
@@ -105,6 +106,8 @@ export type FileSheet = {
   validations?: FileValidationRule[];
   // Its charts in paint order (standard-mapping.md "Charts in the file").
   charts?: FileChart[];
+  // Its images over cells in paint order (standard-mapping.md "Pictures in the file").
+  pictures?: FilePicture[];
   // Its protections in its order (standard-mapping.md "Protection in the file").
   protections?: FileProtection[];
   // Its tables in order (standard-mapping.md "Tables in the file").
@@ -130,6 +133,8 @@ export type WorkbookFile = {
   functions?: FileFunction[];
   // Its named ranges, each on its sheet by place ("Named ranges in the file").
   names?: FileRangeName[];
+  // The pictures' bytes a download read from the gallery, by image id ("Pictures in the file"); absent, none.
+  pictureBytes?: FilePictureFetches;
 };
 
 /** A file read: its sheets and what could not be carried, or the package's named rejection. */
@@ -175,6 +180,9 @@ export type FileLoss =
   | { k: 'parts_left'; count: number }
   // A sheet's own charts not written beside the drawings it kept from its file (standard-mapping.md "Charts in the file").
   | { k: 'charts_unwritten'; sheet: string }
+  // A picture over the cells left out of the file: its bytes not served, past the file's budget, or its sheet keeping
+  // the file's own drawing (standard-mapping.md "Pictures in the file", D626).
+  | { k: 'picture_unwritten'; sheet: string; why: 'unavailable' | 'too_large' | 'kept_drawing' }
   // A chart read from the file, changed since, written from the model in place of its own XML (D276).
   | { k: 'chart_rewritten'; sheet: string }
   // A chart of a type no format holds, written as the nearest one that does, its original kept for LiveDoc (D290).
@@ -313,6 +321,7 @@ export function workbookFileOf(
       const formatRules = all.length ? all : undefined;
       const validations = fileValidationRulesOf(sheet.layout, ctx);
       const charts = fileChartsOf(engine, sheet, locale);
+      const pictures = filePicturesOf(sheet);
       const protections = fileProtectionsOf(sheet.layout);
       const dates = { locale: engine.locale, today: engine.today() };
       const tables = fileTablesOf(sheet.layout, (r, c) => cellText(sheet, r, c), { ctx, dates });
@@ -342,6 +351,7 @@ export function workbookFileOf(
         ...(formatRules ? { formatRules } : {}),
         ...(validations ? { validations } : {}),
         ...(charts.length ? { charts } : {}),
+        ...(pictures.length ? { pictures } : {}),
         ...(protections ? { protections } : {}),
         ...(tables ? { tables } : {}),
         ...(pivoted.pivots.length ? { pivots: pivoted.pivots } : {}),

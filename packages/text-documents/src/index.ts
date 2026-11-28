@@ -52,7 +52,7 @@ export {
   isTextDocumentFileType,
   type TextDocumentFileType,
 } from './file-types';
-export { base64OfBytes, bytesOfBase64 } from './base64';
+export { base64OfBytes, bytesOfBase64 } from '@livedoc/office-packages';
 export {
   FIELD_KINDS,
   Paragraph,

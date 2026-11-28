@@ -16,7 +16,7 @@ import {
   ptToOdf,
   type XmlElement,
 } from '@livedoc/office-packages';
-import { base64OfBytes, bytesOfBase64 } from '../base64';
+import { base64OfBytes, bytesOfBase64 } from '@livedoc/office-packages';
 import { findMedia, type FoundMedia, type MediaTaken } from '../picture-media';
 import {
   Pictures,

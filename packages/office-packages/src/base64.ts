@@ -1,5 +1,5 @@
-// Bytes and base64, as a text document's updates travel in a room frame and a create request (Web APIs only, so the
-// editor, the api and the CLI share it).
+// Bytes and base64 (Web APIs only, so the editor, the api and the CLI share it): a text document's updates in a room
+// frame and a create request, and a flat ODF file's pictures as `office:binary-data`.
 
 /** The bytes of a base64 string, or null when it is not base64. */
 export function bytesOfBase64(text: string): Uint8Array<ArrayBuffer> | null {

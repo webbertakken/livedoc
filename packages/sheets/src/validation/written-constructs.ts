@@ -1,10 +1,16 @@
 // One workbook per construct group of the mapping (docs/specs/029-sheets/standard-mapping.md), as a file holds it:
 // what the schema validation writes in every format (written-files.validate.ts).
+import { bytesOfBase64 } from '@livedoc/office-packages';
 import type { NumberFormatKind } from '../sheet';
 import { formatCodeOf } from '../files/number-format-code';
 import type { FileChart, FileChartSeries } from '../files/file-charts';
 import type { FileCell, FileSheet, WorkbookFile } from '../files/workbook-file';
 import type { FileValidationRule } from '../files/file-validation';
+
+// A 1 by 1 PNG, for the pictures a file holds.
+const ONE_PIXEL_PNG = bytesOfBase64(
+  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==',
+)!;
 
 const sheet = (name: string, cells: FileCell[], rows = 10, cols = 6) => ({
   name,
@@ -149,6 +155,19 @@ export const WRITTEN_CONSTRUCTS: Readonly<Record<string, WorkbookFile>> = {
     ],
   },
   charts: { sheets: [chartSheet()] },
+  // standard-mapping.md "Pictures in the file": two pictures over the cells, one image placed twice, one with alt text.
+  pictures: {
+    sheets: [
+      {
+        ...sheet('Pictures', [{ r: 0, c: 0, value: { k: 's', v: 'Logo' } }]),
+        pictures: [
+          { imageId: 'dot', at: { r: 1, c: 1, dx: 4, dy: 6 }, width: 64, height: 64, alt: 'A dot' },
+          { imageId: 'dot', at: { r: 5, c: 3, dx: 0, dy: 0 }, width: 32, height: 32 },
+        ],
+      },
+    ],
+    pictureBytes: new Map([['dot', { data: ONE_PIXEL_PNG, type: 'image/png' as const }]]),
+  },
   // standard-mapping.md "Protection in the file": a protected sheet with its exceptions, a range's and a warning.
   protection: {
     sheets: [

@@ -46,7 +46,7 @@ import { fetchAllSheets, sheetAsCreate } from './api/sheets';
 import { apiLoadPdfState } from './api/pdf-documents';
 import { apiLoadTextDocumentState } from './api/text-documents';
 import { fetchKept, sendKept } from './api/workbook-kept';
-import { base64OfBytes } from '@livedoc/text-documents/base64';
+import { base64OfBytes } from '@livedoc/office-packages';
 
 // The source's recorded creation intent, carried unchanged; none when it is unknown.
 // The copy's kept content sent after its create; a refusal moves the half-made copy to the Bin and fails the copy.

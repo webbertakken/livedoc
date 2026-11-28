@@ -18,7 +18,7 @@ import { API_BASE, ApiError, apiDelete } from '@/lib/api/core';
 import { fetchCloudItems } from '../api/items';
 import { fetchCloudSheets, sheetAsCreate } from '../api/sheets';
 import { sendKept } from '../api/workbook-kept';
-import { base64OfBytes } from '@livedoc/text-documents/base64';
+import { base64OfBytes } from '@livedoc/office-packages';
 import { uploadEmbeddedImages } from './offline-images';
 import { offlineRecordWithPartings } from './offline-partings';
 import {

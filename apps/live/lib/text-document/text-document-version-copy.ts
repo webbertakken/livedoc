@@ -8,7 +8,7 @@ import {
   THREADS_MAP,
   versionDocument,
 } from '@livedoc/text-documents';
-import { bytesOfBase64 } from '@livedoc/text-documents/base64';
+import { bytesOfBase64 } from '@livedoc/office-packages';
 import { apiCreateDocument, apiLoadDocument } from '@/lib/api/documents';
 import { createBeside, placementOf } from '@/lib/create-beside';
 import { createIdsFor } from '@/lib/new-document/create-failure';

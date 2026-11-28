@@ -4,7 +4,7 @@
 // name of their key; an entry kept content still names stays kept and is written once; conversion carries pictures.
 import { readOdfPackage, readOoxmlPackage } from '@livedoc/office-packages';
 import { describe, expect, it } from 'vitest';
-import { base64OfBytes } from './base64';
+import { base64OfBytes } from '@livedoc/office-packages';
 import { convertTextDocument } from './convert';
 import { readTextDocumentFile, writeTextDocumentFile, type ReadLimits } from './files';
 import type { TextDocumentFileType } from './file-types';
