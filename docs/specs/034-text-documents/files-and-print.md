@@ -3,7 +3,8 @@
 **Status: partly built.** Built: Open (a `.odt`, `.fodt`, `.ott`, `.docx`, `.dotx` or `.docm` from the computer, and
 `.txt`, `.md`, `.html`, `.rtf` and `.pdf` imported), Download in the OpenDocument and Word formats, Rich Text, Plain Text, Web Page, EPUB,
 Markdown and PDF, Keep a PDF copy in LiveDoc, Print and Print preview, conversion, the import report and Security
-limitations. The rest is specified.
+limitations, Make a copy (with Share it with the same people), Share, Details and Move to trash. Publish to the web
+and Email are specified, either way under C3.
 
 Opening, importing, downloading, printing, copying, sharing, emailing and trashing a [text document](text-document.md).
 Both ODF and OOXML are native (fork C1, ruled): a file keeps the format it arrived in.

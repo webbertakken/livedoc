@@ -1,6 +1,8 @@
 # Agents and sync
 
-**Status: partly built.** Reading (the three views) is built; writing and sync are specified.
+**Status: partly built.** Reading (the three views), writing (text changesets through the api, the editor's toast
+with Undo), the CLI's `livedoc text` commands and the MCP tools are built; page previews are being built; repository
+sync is specified and waits on [Native files](../027-repositories/native-files.md), which is not built yet.
 
 How agents read and write a [text document](text-document.md) through the MCP server and the CLI, and how a
 [repository link](../027-repositories/repository-link.md) syncs it as a native file. People with the document open see
