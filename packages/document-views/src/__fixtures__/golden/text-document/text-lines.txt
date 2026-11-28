@@ -1,0 +1,31 @@
+text-document tab "Plan" · 16 paragraphs
+¶1 # Launch plan
+
+¶2 # Intro
+
+¶3 We ship in May.{++ Truly++}[^1]
+
+¶4 ## Scope
+
+¶5 - Write the docs
+¶6 - [x] Test it
+
+¶7..¶8 | Who | What |
+| --- | --- |
+¶9..¶10 | Ada | Docs \| site |
+
+¶11 \[The launch timeline\]
+
+¶12 $x=2$
+
+¶13
+
+[kept: altChunk]
+
+¶14 # Actions
+
+¶15 Book the room.
+
+¶16
+
+[^1]: Barring weather.

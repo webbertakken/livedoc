@@ -52,6 +52,27 @@ afterEach(() => vi.restoreAllMocks());
 const quiet = () => vi.spyOn(console, 'info').mockImplementation(() => {});
 
 describe('readDocument', () => {
+  // docs/specs/034-text-documents/agents-and-sync.md "Reading": a text document's text view passes through as served.
+  it('reads a text document’s writing with its range and numbers, the text unchanged', async () => {
+    quiet();
+    const served = 'text-document tab "Plan" · 2 paragraphs\n¶1 We ship.\n\n¶2 {++Truly++}';
+    const { env, requests } = api({ view: new Response(served, { headers: { ETag: 'W/"41"' } }) });
+    const result = await readDocument(env, 'tok', {
+      documentId: 'd1',
+      view: 'text',
+      range: '1..2',
+      lines: true,
+    });
+    const view = requests.find((r) => r.searchParams.has('view'))!;
+    expect(Object.fromEntries(view.searchParams)).toMatchObject({
+      view: 'text',
+      range: '1..2',
+      lines: '1',
+    });
+    expect(result.content[0]).toMatchObject({ type: 'text' });
+    expect((result.content[0] as { text: string }).text.startsWith(`${served}\n`)).toBe(true);
+  });
+
   it("reads the first tab's outline through the MCP door at the default budget (VW45, VW57)", async () => {
     quiet();
     const { env, requests } = api();

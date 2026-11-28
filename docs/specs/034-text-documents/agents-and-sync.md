@@ -1,6 +1,6 @@
 # Agents and sync
 
-**Status: specified.** Nothing is built.
+**Status: partly built.** Reading (the three views) is built; writing and sync are specified.
 
 How agents read and write a [text document](text-document.md) through the MCP server and the CLI, and how a
 [repository link](../027-repositories/repository-link.md) syncs it as a native file. People with the document open see
@@ -17,18 +17,28 @@ Views of the kind in `@livedoc/document-views` ([Document views](../024-agents/d
 | `structure` | Paragraphs with their style, lists, tables with their size, objects, sections, comments and suggestions, by id     |
 
 - **Paragraph numbers are the refs.** A paragraph has no id, so every view and operation names one as `¶<n>`, counted
-  from 1 over a document tab's body in reading order, a table's paragraphs row by row as the text view prints them.
+  from 1 over a document tab's body in reading order, a table's paragraphs row by row (a table in a cell within its
+  row) as the text view prints them. A table of contents' entries are drawn, not written, and are not counted.
   Comments and suggestions keep their ids.
+- **`only`** names the document tab `text` and `structure` read, and the one `outline` marks: its id, else its
+  name in any case; the first by default. A name no tab has is refused `invalid_value`.
 - **`outline`** (the default): a header `text-document "<name>" · <odt|docx> · <n> document tabs · <p> paragraphs`,
   then each document tab, `◂` on the one read, with its headings two spaces in a level:
-  `¶12 H2 Actions (6 paragraphs)`. A tab without headings says `no headings`; an empty body, `empty`.
-- **`text`**: the tab's body as its Markdown download writes it; `lines` puts `¶<n> ` before each paragraph; `range`
-  (`40..60`, or one number) reads part of it, refused `invalid_value` outside `1..<count>`.
-- **`structure`**: a line a paragraph (its style, its list and level, ticked or not), a line a table (its first and
-  last paragraph, rows × columns), a line an object (picture, drawing, equation, with its alt text), section breaks;
-  then the comments and the suggestions by id, each with its paragraph and its first 40 characters.
-- A Viewer reads the views as their copy holds the document: no comments, no authors. A link to one document tab reads
-  that tab. The element views (`graph`, `layout`, `show`, ...) are refused `invalid_value`, naming the three.
+  `¶12 H2 "Actions" (6 paragraphs)`, the paragraphs under it to the next heading of its level or above. Headings are
+  the outline panel's ([The outline](links-and-navigation.md#the-outline)). A tab without headings says
+  `no headings`; one holding nothing, `empty`.
+- **`text`**: a header `text-document tab "<name>" · <p> paragraphs`, then the tab's writing as its Markdown download
+  writes it, but read as it stands: pending suggestions in CriticMarkup, `{++inserted++}` and `{--deleted--}`.
+  `lines` puts `¶<n> ` before each paragraph, and a table's row the numbers of the paragraphs it holds
+  (`¶7..¶8 | Who | What |`). `range` (`40..60`, or one number) reads part of it, refused `invalid_value` outside
+  `1..<p>`. A budget stops on a whole paragraph and ends `… ¶41..¶60 left out: <how to read them>`.
+- **`structure`**: the same header, then a line a paragraph (`¶3 "Normal" list l1:0 ✓ "We ship…"`: its style, its
+  list and level, ticked or not, its first 40 characters), a line a table (`table ¶7..¶10 2×2`, its paragraphs two
+  spaces in), a line an object under its paragraph (picture, drawing, equation, with its alt text or linear form),
+  section breaks, contents and kept content; then `comments` and `suggestions` by id, each with its paragraph and
+  its first 40 characters, `none` when there are none.
+- A Viewer reads the views as their copy holds the document: no comments, no authors. The element views (`graph`,
+  `layout`, `show`, ...) are refused `invalid_value`, naming the three.
 
 ## Writing
 

@@ -20,7 +20,8 @@
     "@livedoc/api-schema": "workspace:*",
     "@livedoc/document": "workspace:*",
     "@livedoc/sheets": "workspace:*",
-    "@livedoc/templates": "workspace:*"
+    "@livedoc/templates": "workspace:*",
+    "@livedoc/text-documents": "workspace:*"
   },
   "devDependencies": {
     "@livedoc/oxlint-config": "workspace:*",

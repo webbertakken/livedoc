@@ -50,6 +50,7 @@ import { json, textPlain } from '../responses';
 import { reportServerEvent } from '../server-telemetry';
 import type { DocumentDTO, TabDTO, DocumentEnv } from '../types';
 import type { DocumentRouteContext } from './context';
+import { answerTextDocumentView } from './text-document-views-route';
 import { answerWorkbookView } from './workbook-views-route';
 
 // The longest `range` a cells view takes: any A1 range on the grid's limits, with room to spare.
@@ -63,7 +64,7 @@ type ParsedStormView = { storm: true; json: boolean };
 
 type Scope = 'tab' | 'document';
 
-const FLAG_PARAMETERS: ReadonlySet<string> = new Set(['json', 'coarse', 'style', 'all']);
+const FLAG_PARAMETERS: ReadonlySet<string> = new Set(['json', 'coarse', 'style', 'all', 'lines']);
 const QUERY_PARAMETERS: ReadonlySet<string> = new Set(Object.keys(VIEW_QUERY));
 
 function viewsLog(
@@ -176,7 +177,7 @@ export function parseViewQuery(
     return refuse(
       'range',
       INVALID_VIEW_VALUE_ERROR,
-      `range takes an A1 cell or range of 1 to ${VIEW_RANGE_MAX_LENGTH} characters`,
+      `range takes an A1 cell or range, or paragraph numbers, of 1 to ${VIEW_RANGE_MAX_LENGTH} characters`,
     );
   }
   const q = query.get(VIEW_QUERY.q);
@@ -204,6 +205,7 @@ export function parseViewQuery(
     coarse: flag('coarse'),
     style: flag('style'),
     all: flag('all'),
+    lines: flag('lines'),
   };
   return { request, json: flag('json') === true };
 }
@@ -223,6 +225,8 @@ const TITLE_CASE: Record<
   find: 'Find',
   pages: 'Pages',
   cells: 'Cells',
+  text: 'Text',
+  structure: 'Structure',
 };
 
 function countViewed(
@@ -341,8 +345,10 @@ export async function answerTabView(
   document: DocumentDTO,
   tab: TabDTO,
   owner: string,
-  tabScope: string | null = null,
+  // The caller's grant: its tab scope, and its role (a Viewer reads a text document through their copy).
+  grant: { role: string; tabScope: string | null } | null = null,
 ): Promise<Response> {
+  const tabScope = grant?.tabScope ?? null;
   if ('lint' in parsed) return answerLintView(ctx, parsed, document, tab);
   if ('storm' in parsed) return answerStormView(ctx, parsed, document, tab);
   const sheet = await answerWorkbookView(
@@ -356,6 +362,18 @@ export async function answerTabView(
   if (sheet) {
     if (sheet.response.ok) countViewed(ctx, sheet.view);
     return sheet.response;
+  }
+  const writing = await answerTextDocumentView(
+    ctx.env,
+    parsed.request,
+    parsed.json,
+    document,
+    tab,
+    grant?.role === 'view',
+  );
+  if (writing) {
+    if (writing.response.ok) countViewed(ctx, writing.view);
+    return writing.response;
   }
   const selected = await ownerSelection(ctx, parsed.request, document.id, tab.id, owner);
   const started = Date.now();

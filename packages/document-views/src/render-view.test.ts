@@ -14,9 +14,13 @@ const REQUESTS: Record<TabViewName, ViewRequest> = {
   find: { view: 'find', q: 'pay' },
   pages: { view: 'pages' },
   cells: { view: 'cells' },
+  text: { view: 'text' },
+  structure: { view: 'structure' },
 };
-// The views a tab alone answers: `cells` reads a spreadsheet's workbook, which the door holding it renders.
-const TAB_VIEWS = TAB_VIEW_NAMES.filter((view) => view !== 'cells');
+// The views a tab alone answers: `cells` reads a spreadsheet's workbook, and `text` and `structure` a text
+// document's live state, which the doors holding them render.
+const DOOR_VIEWS: ReadonlySet<string> = new Set(['cells', 'text', 'structure']);
+const TAB_VIEWS = TAB_VIEW_NAMES.filter((view) => !DOOR_VIEWS.has(view));
 // Every element's ref in the checkout tab: the first four characters of its pinned id.
 const ELEMENT_REFS = new Set(checkoutTab().elements.map((el) => el.id.slice(0, 4)));
 const render = (request: ViewRequest, tab: Tab = checkoutTab()) =>
@@ -153,5 +157,18 @@ describe('renderView cells', () => {
       ok: false,
       refusal: { error: 'invalid_value', message: "cells reads a spreadsheet's sheet" },
     });
+  });
+});
+
+describe('renderView text and structure', () => {
+  it('refuses them on a canvas tab: only a text document’s door holds its writing', () => {
+    for (const view of ['text', 'structure'] as const)
+      expect(render({ view })).toEqual({
+        ok: false,
+        refusal: {
+          error: 'invalid_value',
+          message: `${view} reads a text document; this tab is none`,
+        },
+      });
   });
 });

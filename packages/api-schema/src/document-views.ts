@@ -19,6 +19,8 @@ export const VIEW_NAMES = [
   'pages',
   'storm',
   'cells',
+  'text',
+  'structure',
 ] as const;
 export const LINT_VIEW_NAME = 'lint' satisfies ViewName;
 // An Event Storming board's reading (docs/specs/021-event-storming/board-reading.md), answered by
@@ -37,6 +39,9 @@ export const TAB_VIEW_NAMES = [
   'find',
   'pages',
   'cells',
+  // A text document's writing and its structure (docs/specs/034-text-documents/agents-and-sync.md "Reading").
+  'text',
+  'structure',
 ] as const satisfies readonly ViewName[];
 export type DocumentViewName = (typeof DOCUMENT_VIEW_NAMES)[number];
 export type TabViewName = (typeof TAB_VIEW_NAMES)[number];
@@ -59,6 +64,8 @@ export const VIEW_QUERY = {
   door: 'door',
   // A spreadsheet's `cells` view: an A1 cell or range (docs/specs/024-agents/document-views.md "A spreadsheet's views").
   range: 'range',
+  // A text document's `text`: `¶<n> ` before each paragraph.
+  lines: 'lines',
 } as const;
 export type ViewQueryParameter = keyof typeof VIEW_QUERY;
 
@@ -81,6 +88,8 @@ export const VIEW_PARAMETERS: Readonly<
   find: [...COMMON_PARAMETERS, 'q'],
   pages: COMMON_PARAMETERS,
   cells: [...COMMON_PARAMETERS, 'range'],
+  text: [...COMMON_PARAMETERS, 'only', 'range', 'lines'],
+  structure: [...COMMON_PARAMETERS, 'only'],
 };
 // Required on top of `view`.
 export const VIEW_REQUIRED: Readonly<Partial<Record<TabViewName, ViewQueryParameter>>> = {
