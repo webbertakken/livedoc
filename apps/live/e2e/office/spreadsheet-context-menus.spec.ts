@@ -55,7 +55,8 @@ test('opens Google’s menus on a cell, a row number and a column letter, and ru
   await page.keyboard.press('Shift+F10');
   await expect(contextMenu(page)).toBeVisible();
   await expect(menuItem(page, 'Cut')).toBeFocused();
-  await expect(menuItem(page, /^Filter by Cell Value/)).toHaveAttribute('aria-disabled', 'true');
+  await expect(menuItem(page, /^Show Edit History/)).toHaveAttribute('aria-disabled', 'true');
+  await expect(menuItem(page, /^Filter by Cell Value/)).not.toHaveAttribute('aria-disabled');
   await page.screenshot({ path: test.info().outputPath('cell-menu.png'), animations: 'disabled' });
   await menuItem(page, 'Insert 1 Row Above').click();
   await expect(contextMenu(page)).toHaveCount(0);
