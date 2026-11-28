@@ -27,10 +27,11 @@ import {
   SECTION_BREAK,
   CONTENTS,
   SECTION_BREAK_ATTRIBUTES,
+  paperFill,
+  paperInk,
 } from '@livedoc/text-documents';
 import { DocumentFonts } from '@livedoc/document';
 import { cssText, paragraphDeclarations, textDeclarations } from './text-document-style-sheet';
-import { paperFill, paperInk } from './text-document-paper';
 import { tableNodeSpecs } from './text-document-table-dom';
 import { pictureNodeSpec } from './text-document-pictures';
 import { equationNodeSpec } from './text-document-equations';

@@ -4,12 +4,11 @@
 import type { Node as PmNode } from 'prosemirror-model';
 import { Plugin, PluginKey, type EditorState } from 'prosemirror-state';
 import { Decoration, DecorationSet, type EditorView } from 'prosemirror-view';
-import { CODE_BLOCK_LANGUAGES, type Style } from '@livedoc/text-documents';
+import { CODE_BLOCK_LANGUAGES, type Style, paperInk } from '@livedoc/text-documents';
 import type { CodeTokenKind } from '@/lib/code-tokens';
 import { codeRangesLoaded, loadCodeTokenizer } from '@/lib/code-highlight-registry';
 import { debugLog } from '@/lib/debug-log';
 import { codeBlockOf, TOKEN_LANGUAGES } from './text-document-code-blocks';
-import { paperInk } from './text-document-paper';
 
 export const CODE_BLOCK_CLASS = 'text-document-code-block';
 

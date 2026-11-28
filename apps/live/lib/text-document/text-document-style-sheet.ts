@@ -11,8 +11,9 @@ import {
   type Style,
   type StyleDefaults,
   type TextProps,
+  paperFill,
+  paperInk,
 } from '@livedoc/text-documents';
-import { paperFill, paperInk } from './text-document-paper';
 
 const BODY = '.text-document-body';
 const HEX = /^#[0-9a-f]{6}$/i;

@@ -1,7 +1,7 @@
 // docs/specs/034-text-documents/page-layout.md "Page setup", editing-surface.md "The ruler": the page drawn at its
 // setup, and a dragged margin held so the text area keeps an inch.
 import { describe, expect, it } from 'vitest';
-import { PageSetup } from '@livedoc/text-documents';
+import { PageSetup, paperFill } from '@livedoc/text-documents';
 import { MIN_TEXT_SIDE_PT } from '@livedoc/text-documents';
 import {
   PAGELESS_TEXT_WIDTH_PT,
@@ -12,7 +12,6 @@ import {
   setMargin,
   textWidthOf,
 } from './text-document-page';
-import { paperFill } from './text-document-paper';
 
 const letter = PageSetup.of('letter');
 

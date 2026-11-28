@@ -5,8 +5,12 @@
 import type { Mark, MarkSpec, Node as PmNode } from 'prosemirror-model';
 import { Plugin, PluginKey } from 'prosemirror-state';
 import { Decoration, DecorationSet } from 'prosemirror-view';
-import { DELETION_MARK, FORMAT_CHANGE_MARK, INSERTION_MARK } from '@livedoc/text-documents';
-import { paperInk } from './text-document-paper';
+import {
+  DELETION_MARK,
+  FORMAT_CHANGE_MARK,
+  INSERTION_MARK,
+  paperInk,
+} from '@livedoc/text-documents';
 
 const HEX = /^#[0-9a-f]{6}$/i;
 

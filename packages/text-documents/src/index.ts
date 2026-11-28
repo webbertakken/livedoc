@@ -530,3 +530,16 @@ export {
   type PagePreview,
   type PagePreviews,
 } from './previews/page-previews';
+// The page's paper in either scheme, and a document's colours as drawn on it (editing-surface.md "The page in the dark
+// scheme").
+export {
+  DARK_INK,
+  DARK_PAPER,
+  fillOnDarkPaper,
+  inkOnDarkPaper,
+  LIGHT_INK,
+  LIGHT_PAPER,
+  MIRROR,
+  paperFill,
+  paperInk,
+} from './paper';

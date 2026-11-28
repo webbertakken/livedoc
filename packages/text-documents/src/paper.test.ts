@@ -7,7 +7,7 @@ import {
   inkOnDarkPaper,
   paperFill,
   paperInk,
-} from './text-document-paper';
+} from './paper';
 
 const lightness = (hex: string) => hexOklch(hex)!.l;
 const hue = (hex: string) => hexOklch(hex)!.h;
