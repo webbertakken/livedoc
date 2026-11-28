@@ -19761,6 +19761,54 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
     ],
     "type": "object"
   },
+  "TextDocumentPagePreview": {
+    "additionalProperties": false,
+    "properties": {
+      "height": {
+        "type": "number"
+      },
+      "number": {
+        "type": "number"
+      },
+      "svg": {
+        "type": "string"
+      },
+      "width": {
+        "type": "number"
+      }
+    },
+    "required": [
+      "number",
+      "width",
+      "height",
+      "svg"
+    ],
+    "type": "object"
+  },
+  "TextDocumentPagePreviewsResponse": {
+    "additionalProperties": false,
+    "properties": {
+      "approximate": {
+        "const": true,
+        "type": "boolean"
+      },
+      "pageCount": {
+        "type": "number"
+      },
+      "pages": {
+        "items": {
+          "$ref": "#/components/schemas/TextDocumentPagePreview"
+        },
+        "type": "array"
+      }
+    },
+    "required": [
+      "pages",
+      "pageCount",
+      "approximate"
+    ],
+    "type": "object"
+  },
   "TextDocumentVersionDto": {
     "additionalProperties": false,
     "properties": {

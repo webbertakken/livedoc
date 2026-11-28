@@ -1653,6 +1653,22 @@ export const ROUTE_MANIFEST: RouteSpec[] = [
     },
     statuses: [200, 400, 401, 403, 404, 405, 413, 429, 502, 503],
   },
+  {
+    method: 'GET',
+    path: '/documents/{id}/tabs/{tabId}/page-previews',
+    segment: 'documents',
+    tag: 'Documents',
+    summary:
+      "A text document's pages drawn as SVG for agents, approximately: laid out by the editor's arithmetic with lines broken from the bundled Inter faces' widths, each page labelled Approximate preview. `pages` is a page or a range of at most 3 (1 by default), `only` the document tab. 400 not_a_text_document, invalid_value; 404 page_not_found (naming how many pages there are); 413 document_too_large. Read access; a Viewer reads their copy.",
+    auth: 'guest-or-session',
+    tokenUsable: true,
+    query: [
+      { name: 'pages', required: false, description: 'A page number or a range, like 2 or 1..3.' },
+      { name: 'only', required: false, description: 'The document tab, by id or name.' },
+    ],
+    responseSchema: 'TextDocumentPagePreviewsResponse',
+    statuses: [200, 400, 401, 403, 404, 413, 429, 503],
+  },
   // ---- Form links (docs/specs/030-forms/forms.md) ----
   {
     method: 'POST',

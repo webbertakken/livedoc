@@ -19,6 +19,7 @@ import { handleTabRename } from './tab-name-route';
 import { handleTabForm } from './tab-form-route';
 import { handleTabPages } from './tab-pages-route';
 import { handleStormExport } from './storm-export-route';
+import { handleTextDocumentPagePreviews } from './text-document-page-previews-route';
 import { handleChangesetRoutes } from './changesets';
 import { handleCommentRoutes } from './comment-routes';
 import { handleAgentPresenceRoute } from './agent-presence-routes';
@@ -87,6 +88,10 @@ export async function handleDocumentSubresources(
   ) {
     return handleTabPages(ctx, segments[2]!, segments[4]!);
   }
+  // /api/documents/<id>/tabs/<tabId>/page-previews: a text document's pages drawn for agents
+  // (docs/specs/034-text-documents/agents-and-sync.md "Page previews").
+  const previews = await handleTextDocumentPagePreviews(ctx);
+  if (previews) return previews;
   // /api/documents/<id>/tabs/<tabId>/storm-export: an Event Storming board's domain export
   // (docs/specs/021-event-storming/domain-export.md "The zip").
   if (segments.length === 6 && segments[3] === 'tabs' && segments[5] === 'storm-export') {
