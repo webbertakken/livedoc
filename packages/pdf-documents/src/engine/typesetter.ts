@@ -161,10 +161,14 @@ async function regionSlicesOf(runs: readonly MarkRun[]) {
   return { ok: true as const, regions };
 }
 
-/** The faces the runs are set in, loaded and ready to shape (marks.md "Loading"): a region's, the slices it uses. */
+/**
+ * The faces the runs are set in, loaded and ready to shape (marks.md "Loading"): a region's, the slices it uses; `more`
+ * names the files of faces beyond the mark faces (a text document's own fonts, laid-out-pages.ts), by their ids.
+ */
 export async function loadTypesetter(
   runs: Iterable<MarkRun>,
   source: MarkFaceSource,
+  more: ReadonlyMap<string, string> = new Map(),
 ): Promise<TypesetterLoad> {
   const all = [...runs];
   const sliced = await regionSlicesOf(all);
@@ -176,6 +180,7 @@ export async function loadTypesetter(
   };
   const files = new Map<string, string>();
   for (const face of [...MARK_FACE_DATA, ...MARK_FONT_DATA]) files.set(face.id, face.file);
+  for (const [id, file] of more) files.set(id, file);
   for (const { slices } of regions.values())
     for (const slice of slices) files.set(slice.id, slice.file);
   const wanted = [...new Set(all.flatMap((run) => split(run).map((each) => each.face)))];
