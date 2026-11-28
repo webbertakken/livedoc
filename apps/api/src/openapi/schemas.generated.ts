@@ -7222,10 +7222,20 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
   },
   "FilterViewGroup": {
     "additionalProperties": false,
-    "description": "What a group by view groups (data-tools.md \"Group by view\"): its table and the column, by ids.",
+    "description": "What a group by view groups (data-tools.md \"Group by view\"): its table and the column, by ids; each column's aggregation by column id (D501), and whether the headers hide them (D502).",
     "properties": {
+      "aggs": {
+        "additionalProperties": {
+          "$ref": "#/components/schemas/GroupAggregate"
+        },
+        "type": "object"
+      },
       "c": {
         "type": "string"
+      },
+      "hide": {
+        "const": true,
+        "type": "boolean"
       },
       "t": {
         "type": "string"
@@ -8155,6 +8165,23 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
       "elision"
     ],
     "type": "object"
+  },
+  "GroupAggregate": {
+    "description": "A group's aggregation of one column (data-tools.md \"Group by view\", D501), Google's list.",
+    "enum": [
+      "avg",
+      "count",
+      "empty",
+      "filled",
+      "max",
+      "min",
+      "pctEmpty",
+      "pctFilled",
+      "pctUnique",
+      "sum",
+      "unique"
+    ],
+    "type": "string"
   },
   "GroupMark": {
     "additionalProperties": false,
