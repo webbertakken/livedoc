@@ -259,7 +259,7 @@ import { useSelectionEditing } from './useSelectionEditing';
 import { useFormatTool } from './useFormatTool';
 import { useTabEntryEffects } from './useTabEntryEffects';
 import { useCollabDeepLink, useCollabDeepLinkCapture } from './useCollabDeepLink';
-import { useTextThreadArrival } from './useTextThreadArrival';
+import { useThreadArrival } from './useThreadArrival';
 import { useLoneRootLanding } from './useLoneRootLanding';
 import { useEditorUiState } from './editor-ui-state';
 import { useTabScope } from './useTabScope';
@@ -2248,7 +2248,7 @@ export function useEditorState(opts: { surface?: EditorSurface } = {}) {
   // §1): once the pinned tab is ready, select it, bring it into view and
   // open its popover (or a Plan card's item panel); a text document's thread is handed to the text document (§1.8).
   // See useCollabDeepLink.
-  const { textThreadArrival, openTextThread } = useTextThreadArrival();
+  const { threadArrival, openThread } = useThreadArrival();
   const arriveAtLink = useCollabDeepLink({
     link: collabDeepLink,
     hydrated,
@@ -2265,8 +2265,9 @@ export function useEditorState(opts: { surface?: EditorSurface } = {}) {
     openComments,
     // Read when the link lands, after this render has made the Plan slice below.
     openItem: (itemId) => plan.context.openItem(itemId),
-    activeIsTextDocument: isTextDocumentTab(activeTab),
-    openTextThread,
+    // A spreadsheet's sheet keeps its comment threads in the sheet store (029-sheets review.md "Comments").
+    activeKeepsThreads: isTextDocumentTab(activeTab) || persistence.documentWorkbook !== null,
+    openThread,
   });
 
   const commit = (mapElements: (els: Element[]) => Element[]) => {
@@ -4497,7 +4498,7 @@ export function useEditorState(opts: { surface?: EditorSurface } = {}) {
     slideDeck,
     commentMentions,
     // The thread an Inbox row asked the text document to go to (docs/specs/013-workspace/inbox.md §1.8).
-    textThreadArrival,
+    threadArrival,
     // Bring an element into view (the Collaborate panel's jump to a card).
     scrollIntoView,
     // What the presentation is showing, or null. The canvas renders THESE

@@ -77,7 +77,7 @@ describe('TextDocumentHost', () => {
   // inbox.md §1.8: an Inbox row's thread reaches the surface of its tab, in the editor's pane alone.
   it('hands an Inbox row’s thread to its own tab’s surface only', () => {
     editor(false);
-    ctx.value.textThreadArrival = { tabId: 'w', threadId: 'th1', n: 2 };
+    ctx.value.threadArrival = { tabId: 'w', threadId: 'th1', n: 2 };
     render(<TextDocumentHost tab={text} />);
     expect(surface.props?.arrival).toEqual({ threadId: 'th1', n: 2 });
     render(<TextDocumentHost tab={{ ...text, id: 'other' }} />);

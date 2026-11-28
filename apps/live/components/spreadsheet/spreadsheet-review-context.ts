@@ -18,6 +18,8 @@ export type SpreadsheetReview = {
   readonly onMentioned?: (text: string, mentions: readonly CommentMention[]) => void;
   /** A comment that assigns its thread was added: ask for the assignee's email (034 review.md "Assigning"). */
   readonly onAssigned?: (text: string, assignee: CommentMention) => void;
+  /** A thread an Inbox row asked this sheet to go to (inbox.md §1.8); `n` tells one ask from the next. */
+  readonly arrival?: { readonly threadId: string; readonly n: number } | null;
 };
 
 export const NO_REVIEW: SpreadsheetReview = { commenter: null, local: false, selfUserId: null };

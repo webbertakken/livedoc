@@ -35,10 +35,13 @@ import type { SheetsScope } from '@/lib/api/sheets';
 import { debugLog } from '@/lib/debug-log';
 import type { OfficeActions } from '@/lib/office/office-catalogue';
 import { reactorNames } from '@/lib/office/review/comment-reactions';
+import { ReviewFilters } from '@/lib/office/review/comment-filters';
 import { sharedComment } from '@/lib/office/review/office-comments';
 import {
   anchorOfRange,
   INSERT_COMMENT,
+  NEXT_COMMENT,
+  PREVIOUS_COMMENT,
   openThreadsByCell,
   steppedThread,
   SYNC_TO_COMMENT,
@@ -64,11 +67,29 @@ const newId = () => crypto.randomUUID();
 
 export function useSpreadsheetComments(
   c: SheetController,
-  { scope, goTo }: { scope: SheetsScope; goTo: (range: GridRange) => void },
+  {
+    scope,
+    goTo,
+    openSheetAt,
+  }: {
+    scope: SheetsScope;
+    goTo: (range: GridRange) => void;
+    /** Opens another sheet with a range selected (the Comments panel's rows, an Inbox row). */
+    openSheetAt?: ((sheetId: string, range: GridRange) => void) | null;
+  },
 ): {
   actions: OfficeActions;
   card: ReactNode;
   marks: SheetThreadMarks | null;
+  /** Every thread of the workbook by id, a Viewer's none. */
+  threads: ReadonlyMap<string, SheetThread>;
+  /** Opens a thread's sheet with its anchor selected and its card open, the keys in it. */
+  go: (threadId: string) => void;
+  /** Reopens a resolved thread. */
+  reopen: (threadId: string) => void;
+  /** The Comments panel's filters, kept while the spreadsheet is open. */
+  filters: ReviewFilters;
+  setFilters: (filters: ReviewFilters) => void;
   /** Moves to the next or previous thread in reading order, the keys into its card when asked. */
   step: (forward: boolean, to: 'reply' | 'card' | null) => void;
 } {
@@ -214,6 +235,46 @@ export function useSpreadsheetComments(
     return () => cancelAnimationFrame(frame);
   }, [focus]);
 
+  // A press on a Comments panel row, or an Inbox row: the thread's sheet open, its anchor selected, its card open with
+  // the keys in it. A thread whose cell was deleted opens its sheet alone (D653).
+  const go = useCallback(
+    (threadId: string) => {
+      const thread = all.get(threadId);
+      const sheet = thread ? c.workbook.sheet(thread.sheetId) : undefined;
+      if (!thread || !sheet) return;
+      const at = threadAnchorAt(sheet.layout, thread.anchor);
+      const range = 'deleted' in at ? { r1: 0, c1: 0, r2: 0, c2: 0 } : at;
+      if (thread.sheetId === sheetId) goTo(range);
+      else openSheetAt?.(thread.sheetId, range);
+      setDismissed(null);
+      if (!('deleted' in at)) setFocus((f) => ({ nonce: (f?.nonce ?? 0) + 1, to: 'card' }));
+      debugLog(
+        `[sheets] thread opened thread=${threadId} sheet=${thread.sheetId} deleted=${'deleted' in at}`,
+      );
+    },
+    [all, c.workbook, sheetId, goTo, openSheetAt],
+  );
+
+  const reopen = useCallback(
+    (threadId: string) => {
+      const thread = all.get(threadId);
+      if (thread)
+        void sent(threadId, thread.sheetId, { op: 'resolve', thread: threadId, resolved: false });
+    },
+    [all, sent],
+  );
+
+  // An Inbox row's thread on this sheet's tab (inbox.md §1.8): gone to once the threads are read.
+  const { arrival } = review;
+  const arrived = useRef(0);
+  useEffect(() => {
+    if (!arrival || arrived.current === arrival.n || !all.has(arrival.threadId)) return;
+    arrived.current = arrival.n;
+    go(arrival.threadId);
+  }, [arrival, all, go]);
+
+  const [filters, setFilters] = useState<ReviewFilters>(ReviewFilters.initial);
+
   const actions = useMemo((): OfficeActions => {
     if (local)
       return {
@@ -225,8 +286,13 @@ export function useSpreadsheetComments(
         },
       };
     if (!commenter) return {};
-    return { [INSERT_COMMENT]: { run: openHere } };
-  }, [local, commenter, openHere]);
+    return {
+      [INSERT_COMMENT]: { run: openHere },
+      // Ctrl+Alt+N, C and Ctrl+Alt+P, C: the next or previous thread, its card taking the keys.
+      [NEXT_COMMENT]: { run: () => step(true, 'card') },
+      [PREVIOUS_COMMENT]: { run: () => step(false, 'card') },
+    };
+  }, [local, commenter, openHere, step]);
 
   const marks = useMemo(
     (): SheetThreadMarks | null =>
@@ -325,5 +391,15 @@ export function useSpreadsheetComments(
       </SheetThreadPopup>
     );
   }
-  return { actions, card, marks, step };
+  return {
+    actions,
+    card,
+    marks,
+    step,
+    threads: commenter ? all : NO_THREADS,
+    go,
+    reopen,
+    filters,
+    setFilters,
+  };
 }

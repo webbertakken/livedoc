@@ -26,7 +26,7 @@ function arrive(
     activeId?: string;
     state?: TabLoadState;
     elements?: Element[];
-    activeIsTextDocument?: boolean;
+    activeKeepsThreads?: boolean;
   } = {},
 ) {
   const calls = {
@@ -35,7 +35,7 @@ function arrive(
     openActionPopover: vi.fn(),
     openComments: vi.fn(),
     openItem: vi.fn(),
-    openTextThread: vi.fn(),
+    openThread: vi.fn(),
   };
   const props = {
     link: { current: link },
@@ -43,7 +43,7 @@ function arrive(
     activeId: over.activeId ?? 't1',
     activeTabLoadState: over.state ?? 'ready',
     elements: over.elements ?? [board],
-    activeIsTextDocument: over.activeIsTextDocument ?? false,
+    activeKeepsThreads: over.activeKeepsThreads ?? false,
     ...calls,
   };
   const hook = renderHook((p: typeof props) => useCollabDeepLink(p), { initialProps: props });
@@ -55,9 +55,9 @@ describe('useCollabDeepLink', () => {
   it('hands a text document’s thread to the text document, selecting no element', () => {
     const { calls } = arrive(
       { at: { tabId: 't1', elementId: 'th1' }, open: 'comments', itemId: null },
-      { elements: [], activeIsTextDocument: true },
+      { elements: [], activeKeepsThreads: true },
     );
-    expect(calls.openTextThread).toHaveBeenCalledWith('t1', 'th1');
+    expect(calls.openThread).toHaveBeenCalledWith('t1', 'th1');
     expect(calls.select).not.toHaveBeenCalled();
     expect(calls.openComments).not.toHaveBeenCalled();
   });
@@ -65,13 +65,13 @@ describe('useCollabDeepLink', () => {
   it('waits for the text document’s tab before handing its thread over', () => {
     const { calls, hook, props } = arrive(
       { at: { tabId: 't2', elementId: 'th1' }, open: 'action', itemId: null },
-      { elements: [], activeIsTextDocument: true },
+      { elements: [], activeKeepsThreads: true },
     );
-    expect(calls.openTextThread).not.toHaveBeenCalled();
+    expect(calls.openThread).not.toHaveBeenCalled();
     hook.rerender({ ...props, activeId: 't2' });
-    expect(calls.openTextThread).toHaveBeenCalledTimes(1);
+    expect(calls.openThread).toHaveBeenCalledTimes(1);
     hook.rerender({ ...props, activeId: 't2', elements: [] });
-    expect(calls.openTextThread).toHaveBeenCalledTimes(1);
+    expect(calls.openThread).toHaveBeenCalledTimes(1);
   });
 
   it('selects the element and opens its popover', () => {

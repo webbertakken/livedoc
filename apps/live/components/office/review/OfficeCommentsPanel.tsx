@@ -33,6 +33,8 @@ const STATE: readonly (readonly [ReviewState, string])[] = [
   ['resolved', 'Resolved'],
 ];
 const ALL_GROUPS = '';
+const ORIGINAL_DELETED = 'Original content deleted';
+const TAB_GROUPS = { which: 'Which tab', all: 'All tabs' } as const;
 const QUOTE_SHOWN = 40;
 
 const GO = 'data-comment-go';
@@ -56,6 +58,8 @@ export function OfficeCommentsPanel({
   onReopen,
   addHint,
   noteOf,
+  deletedLine = ORIGINAL_DELETED,
+  groupWords = TAB_GROUPS,
 }: {
   rows: readonly ReviewThreadRow[];
   /** The kind's own filter's choices (document tabs); its list shows only with more than one. */
@@ -72,6 +76,10 @@ export function OfficeCommentsPanel({
   addHint: string;
   /** A line under a comment's author ("From the file"). */
   noteOf?: (comment: Comment) => string | null;
+  /** What a row whose anchor has gone says: a text document's "Original content deleted", a cell's own. */
+  deletedLine?: string;
+  /** How the kind's own filter is named: its label and its every-group choice ("All tabs", "All sheets"). */
+  groupWords?: { readonly which: string; readonly all: string };
 }) {
   // A filter naming a group that went reads as every group.
   const group = groups.some((g) => g.id === filters.group) ? filters.group : null;
@@ -131,14 +139,14 @@ export function OfficeCommentsPanel({
       {groups.length > 1 ? (
         <div className="px-2">
           <select
-            aria-label="Which tab"
+            aria-label={groupWords.which}
             value={group ?? ALL_GROUPS}
             onChange={(e) =>
               change({ ...filters, group: e.target.value === ALL_GROUPS ? null : e.target.value })
             }
             className={OFFICE_PANEL_SELECT}
           >
-            <option value={ALL_GROUPS}>All tabs</option>
+            <option value={ALL_GROUPS}>{groupWords.all}</option>
             {groups.map((g) => (
               <option key={g.id} value={g.id}>
                 {g.label}
@@ -168,6 +176,7 @@ export function OfficeCommentsPanel({
               onReopen={() => onReopen(row.id)}
               selfUserId={self.userId}
               noteOf={noteOf}
+              deletedLine={deletedLine}
             />
           ))}
         </ul>
@@ -183,6 +192,7 @@ function CommentsPanelRow({
   onGo,
   onReopen,
   noteOf,
+  deletedLine,
 }: {
   row: ReviewThreadRow;
   selfUserId: string | null;
@@ -190,6 +200,7 @@ function CommentsPanelRow({
   onGo: () => void;
   onReopen: () => void;
   noteOf?: (comment: Comment) => string | null;
+  deletedLine: string;
 }) {
   const first = row.comments[0];
   const replies = repliesLabel(row.comments.length - 1);
@@ -209,9 +220,7 @@ function CommentsPanelRow({
         </p>
       ) : null}
       {row.deleted ? (
-        <p className="text-supporting text-slate-500 dark:text-slate-400">
-          Original content deleted
-        </p>
+        <p className="text-supporting text-slate-500 dark:text-slate-400">{deletedLine}</p>
       ) : null}
       {row.label ? (
         <p className="mb-1 truncate text-supporting text-slate-500 italic dark:text-slate-400">
