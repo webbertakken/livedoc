@@ -3,12 +3,13 @@ import { Paragraph } from '../model/blocks';
 import { Blocks } from '../model/tables';
 import { readTextDocumentFile, writeTextDocumentFile } from '../files';
 import { TextDocumentState } from '../text-document-state';
+import { TEXT_DOCUMENT_TEMPLATES, textDocumentTemplateOf } from './catalogue';
 import {
-  TEXT_DOCUMENT_TEMPLATES,
+  isTextDocumentTemplateId,
+  TEXT_DOCUMENT_TEMPLATE_IDS,
   TEXT_TEMPLATE_SECTIONS,
-  textDocumentTemplateOf,
-} from './catalogue';
-import { isTextDocumentTemplateId, TEXT_DOCUMENT_TEMPLATE_IDS } from './template-ids';
+  textTemplateNameOf,
+} from './gallery';
 
 const LETTER_WIDTH = 612;
 
@@ -38,6 +39,16 @@ describe('the text document template catalogue', () => {
     expect(TEXT_DOCUMENT_TEMPLATE_IDS.every((id) => id.startsWith('text-'))).toBe(true);
   });
 
+  it('gives every template its section', () => {
+    expect(TEXT_DOCUMENT_TEMPLATES.map((t) => t.section)).toEqual([
+      ...Array(2).fill('letters'),
+      ...Array(2).fill('resumes'),
+      ...Array(3).fill('personal'),
+      ...Array(5).fill('work'),
+      ...Array(2).fill('education'),
+    ]);
+  });
+
   it('groups the templates in Google’s sections', () => {
     expect(TEXT_TEMPLATE_SECTIONS.map((s) => [s.name, s.templates.map((t) => t.id)])).toEqual([
       ['Letters', ['text-letter', 'text-formal-letter']],
@@ -61,6 +72,7 @@ describe('the text document template catalogue', () => {
     expect(textDocumentTemplateOf('text-notes')?.name).toBe('Notes');
     expect(textDocumentTemplateOf('kanban')).toBeNull();
     expect(textDocumentTemplateOf(null)).toBeNull();
+    expect(textTemplateNameOf('text-class-report')).toBe('Class report');
     expect(isTextDocumentTemplateId('text-essay')).toBe(true);
     expect(isTextDocumentTemplateId('essay')).toBe(false);
     expect(isTextDocumentTemplateId(undefined)).toBe(false);

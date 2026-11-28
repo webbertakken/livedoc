@@ -10,7 +10,7 @@
     ".": "./src/index.ts",
     "./testing/page-starts": "./src/testing/page-start-fixtures.ts",
     "./templates": "./src/templates/index.ts",
-    "./template-ids": "./src/templates/template-ids.ts"
+    "./templates/gallery": "./src/templates/gallery.ts"
   },
   "scripts": {
     "lint": "oxlint",
