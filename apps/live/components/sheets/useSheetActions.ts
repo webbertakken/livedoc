@@ -47,6 +47,7 @@ import {
   sortSheet,
   stepDecimals,
   toggleFilter,
+  filterByCellValue,
   typeInto,
   typeIntoRanges,
   unmergeRange,
@@ -437,6 +438,19 @@ export function useSheetActions() {
           debugLog('[sheet] filter refused', { reason: 'filter_overlaps_table' });
           c.toast(w.refused);
         } else if (w) c.write(w, 'Filter');
+      },
+      // Filter by Cell Value (data-tools.md, D504): the active column keeps the active cell's shown value, on the open
+      // view's filter, else the table's or the sheet's, made or turned on first in the same write.
+      filterByCellValue: () => {
+        const sel = c.selectionNow();
+        const view = c.filterViews.open ? c.filterViews.drawn : null;
+        const out = filterByCellValue(c.workbook, c.sheet.id, primary(c), sel.active, c.grid, view);
+        if (!out) return;
+        if ('refused' in out) {
+          debugLog('[sheet] filter by cell value refused', { reason: out.refused });
+          c.toast(out.refused);
+        } else if ('view' in out) c.filterViews.setCondition(out.view.colId, out.view.cond);
+        else c.write(out.write, 'FilterByCellValue');
       },
       // In the open filter view when there is one (useFilterViews), else the sheet's filter.
       setFilter: (colId: string, cond: FilterCondition | null) => {

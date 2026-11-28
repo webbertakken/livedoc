@@ -195,6 +195,7 @@ export function SheetSelectionLayer({
                 <button
                   type="button"
                   aria-label={`Filter column ${c + 1}`}
+                  data-filter-column={colId}
                   className="pointer-events-auto absolute flex cursor-pointer items-center justify-center rounded-sm"
                   style={{
                     left: box.x + box.w - 18,

@@ -161,6 +161,18 @@ describe('SPREADSHEET_CONTEXT_MENUS', () => {
     ]);
   });
 
+  // parity-matrix.md "Context menu: a column header", View more column actions: every item built (smart chips left
+  // out, C3); each item's own test proves what it does.
+  it('builds every item of View More Column Actions', () => {
+    const more = SPREADSHEET_CONTEXT_MENUS.column.find(
+      (e) => e.kind === 'submenu' && e.label === 'View More Column Actions',
+    );
+    const items = more?.kind === 'submenu' ? more.entries.filter((e) => e.kind === 'item') : [];
+    expect(items).toHaveLength(6);
+    for (const e of items)
+      expect(e, e.kind === 'item' ? e.label : '').toMatchObject({ status: 'built' });
+  });
+
   it('keeps the menus\u2019 status and level, and holds no menu check', () => {
     const items = SPREADSHEET_CONTEXT_MENUS.cell.filter((e) => e.kind === 'item');
     expect(items.find((e) => e.id === 'cut')).toMatchObject({

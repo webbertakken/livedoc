@@ -582,6 +582,8 @@ export const SHEET_CHANGE_KINDS = [
   'Freeze',
   'Sort',
   'Filter',
+  // A cell's Filter by Cell Value (docs/specs/029-sheets/data-tools.md "Filters, filter views and slicers", D504).
+  'FilterByCellValue',
   'Replace',
   'Fill',
   'SmartFill',

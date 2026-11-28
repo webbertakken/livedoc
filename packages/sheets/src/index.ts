@@ -45,6 +45,7 @@ export * from './filter';
 export * from './filter-views';
 export * from './filter-colours';
 export * from './filter-reads';
+export * from './filter-at-cell';
 export * from './find';
 export * from './edit-text';
 export * from './clipboard';

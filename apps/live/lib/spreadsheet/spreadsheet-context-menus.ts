@@ -109,7 +109,7 @@ const CELL: readonly ContextEntrySpec[] = [
   ]),
   SEPARATOR,
   'create-a-filter',
-  own('filter-by-cell-value', 'Filter by Cell Value', 'edit', 'comingSoon'),
+  own('filter-by-cell-value', 'Filter by Cell Value', 'edit', 'built'),
   SEPARATOR,
   own('show-edit-history', 'Show Edit History', 'edit', 'comingSoon'),
   SEPARATOR,

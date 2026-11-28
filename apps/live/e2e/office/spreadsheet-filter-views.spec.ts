@@ -301,3 +301,66 @@ test('the toolbar’s filter button makes and opens views; a table chip in row 1
   await page.screenshot({ path: test.info().outputPath('table-chip-row-one.png') });
   expectNoPageErrors(pageErrors);
 });
+
+// data-tools.md "Filters, filter views and slicers" (D504): a cell's Filter by Cell Value makes the sheet's filter
+// keeping the cell's value, one undo step; Ctrl+Alt+R opens the filter menu of the active cell's column.
+test('Filter by Cell Value filters by the cell, undone in one step; Ctrl+Alt+R opens its filter menu', async ({
+  page,
+  pageErrors,
+}) => {
+  test.setTimeout(120_000);
+  await page.setViewportSize({ width: 1280, height: 860 });
+  await page.goto('/new?kind=spreadsheet');
+  await page.waitForURL(/\/document\//);
+  await expect(page.locator(READY)).toBeVisible();
+  const rows = [
+    ['Fruit', 'Count'],
+    ['apple', '3'],
+    ['pear', '8'],
+    ['plum', '1'],
+    ['pear', '2'],
+  ];
+  for (const [i, [fruit, n]] of rows.entries()) {
+    await typeInto(page, `A${i + 1}`, fruit!);
+    await typeInto(page, `B${i + 1}`, n!);
+  }
+
+  const pear = shown(page, 'pear').first();
+  const box = (await pear.boundingBox())!;
+  await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2, { button: 'right' });
+  await page
+    .getByRole('menu', { name: 'Context menu' })
+    .getByRole('menuitem', { name: 'Filter by Cell Value' })
+    .click();
+  await expect(shown(page, 'apple')).toHaveCount(0);
+  await expect(shown(page, 'plum')).toHaveCount(0);
+  await expect(shown(page, 'pear')).toHaveCount(2);
+  await expect(page.getByRole('button', { name: 'Filter column 1' })).toBeVisible();
+  await settle(page);
+  await page.screenshot({ path: test.info().outputPath('filter-by-cell-value.png') });
+
+  // One undo step: the filter and its condition go together.
+  await page.keyboard.press('Control+z');
+  await expect(shown(page, 'apple')).toHaveCount(1);
+  await expect(page.getByRole('button', { name: 'Filter column 1' })).toHaveCount(0);
+  await page.keyboard.press('Control+y');
+  await expect(shown(page, 'apple')).toHaveCount(0);
+
+  // Ctrl+Alt+R on a filtered cell: its column's filter menu, the one value ticked.
+  await select(page, 'A3');
+  await page.keyboard.press('Control+Alt+r');
+  const menu = page.getByRole('dialog', { name: 'Filter column' });
+  await expect(menu).toBeVisible();
+  await expect(menu.getByRole('checkbox', { name: /pear/ })).toBeChecked();
+  await expect(menu.getByRole('checkbox', { name: /apple/ })).not.toBeChecked();
+  await settle(page);
+  await page.screenshot({ path: test.info().outputPath('filter-menu-by-key.png') });
+  await page.keyboard.press('Escape');
+  await expect(menu).toBeHidden();
+
+  // Outside the filter it opens nothing.
+  await select(page, 'D3');
+  await page.keyboard.press('Control+Alt+r');
+  await expect(page.getByRole('dialog', { name: 'Filter column' })).toHaveCount(0);
+  expectNoPageErrors(pageErrors);
+});
