@@ -19,8 +19,8 @@ import { createMany } from '../routes/item-routes';
 import { relay } from '../routes/item-route-kit';
 import type { DocumentRouteContext } from '../routes/context';
 import { reportServerEvent } from '../server-telemetry';
-import { boardsOnTab, readFormTab } from './form-tab';
-import { sheetThere, writeResponseRow } from './sheet-response';
+import { boardsOnTab, formSheetThere, readFormTab } from './form-tab';
+import { writeFormRow } from './sheet-response';
 
 // How many responses one form takes an hour from everyone (docs/specs/030-forms/forms.md "Abuse and limits").
 // Safe range 100..2000.
@@ -81,6 +81,7 @@ async function readResponseBody(ctx: DocumentRouteContext): Promise<ResponseBody
 export async function previewToSheet(
   ctx: DocumentRouteContext,
   doc: { id: string },
+  formTabId: string,
   form: FormDefinition,
   by: ItemPerson,
 ): Promise<Response> {
@@ -92,8 +93,9 @@ export async function previewToSheet(
       body.other && typeof body.other === 'object' ? (body.other as Record<string, unknown>) : {},
   });
   if (!checked.ok) return refuse({ error: 'invalid_answers', errors: checked.errors }, 400);
-  const wrote = await writeResponseRow(ctx, {
+  const wrote = await writeFormRow(ctx, {
     documentId: doc.id,
+    formTabId,
     sheet: form.sheet!,
     form,
     answers: checked.answers,
@@ -149,7 +151,7 @@ export async function respond(
 
   // To a Sheet: a row, no card (sheet-response.ts).
   if (form.sheet) {
-    if (!(await sheetThere(ctx, doc.id, form.sheet))) {
+    if (!(await formSheetThere(ctx.env, doc.id, tab.id, form.sheet))) {
       console.warn('[forms] form.destination.broken', {
         documentId: doc.id,
         problem: 'sheet_missing',
@@ -158,8 +160,9 @@ export async function respond(
     }
     const number = await claimNumber(ctx, code, form, now, preview);
     if (number instanceof Response) return number;
-    const wrote = await writeResponseRow(ctx, {
+    const wrote = await writeFormRow(ctx, {
       documentId: doc.id,
+      formTabId: tab.id,
       sheet: form.sheet,
       form,
       answers: checked.answers,

@@ -96,6 +96,15 @@ describe('readFormOf', () => {
     ]);
     expect(r.state).toBe('accepting');
   });
+
+  it("reads a spreadsheet's sheet by its spreadsheet, its holding left to the api", () => {
+    const r = read(
+      { ...bugForm(), sheet: { documentId: 'doc-ss', sheetId: 'sheet_book' } },
+      link(true),
+    );
+    expect(r.respondsTo).toEqual({ to: 'sheet', sheet: 'sheet_book', spreadsheet: 'doc-ss' });
+    expect(r.respondsToProblem).toBeUndefined();
+  });
 });
 
 describe('readFormOf, every part', () => {

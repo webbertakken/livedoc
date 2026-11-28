@@ -2,30 +2,58 @@
 // in use read, the row planned by @livedoc/forms (responseRowWrite), and stored through the sheet store's own
 // checks, caps and relay (storeSheetWrite), unchecked against the sheet's validation rules so a response always lands.
 import { PROTECTION_SYSTEM } from '@livedoc/sheets';
-import type { AnswerValue, FormSheetDestination } from '@livedoc/forms';
-import { responseRowWrite, type FormDefinition } from '@livedoc/forms';
+import type { AnswerValue, FormPlanSheet, FormSheetDestination } from '@livedoc/forms';
+import { isSpreadsheetSheet, responseRowWrite, type FormDefinition } from '@livedoc/forms';
 import { cellKey, type SheetPerson } from '@livedoc/sheets';
 import { documentLinksTab, readCells, readSheetHead, usedSheetRows } from '../db';
 import type { DocumentRouteContext } from '../routes/context';
 import { storeSheetWrite } from '../routes/sheet-write-route';
-import { sheetOnItsTab } from './form-tab';
+import { documentRoom } from '../document-room/document-client';
 
-type SheetRowOutcome = 'written' | 'missing' | 'full' | 'busy';
+export type SheetRowOutcome = 'written' | 'missing' | 'full' | 'busy';
 
-// Whether the sheet a form sends its responses to is still there, on its tab in the document (form-tab.ts).
-export async function sheetThere(
+/** A response's row as a form sends it: to a Sheet tab of its own document, or to a spreadsheet's sheet. */
+type FormRow = {
+  // The form's document and Form tab.
+  documentId: string;
+  formTabId: string;
+  sheet: FormSheetDestination;
+  form: Pick<FormDefinition, 'sections'>;
+  answers: ReadonlyMap<string, AnswerValue>;
+  number: number | null;
+  preview: boolean;
+  by: SheetPerson;
+};
+
+// A spreadsheet's sheet is written in its own room, through the form's connection (spreadsheet-response.ts); a room
+// that cannot be reached is busy, so the response is refused and sent again.
+export async function writeFormRow(
   ctx: DocumentRouteContext,
-  documentId: string,
-  sheet: FormSheetDestination,
-): Promise<boolean> {
-  return sheetOnItsTab(ctx.env, documentId, sheet);
+  row: FormRow,
+): Promise<SheetRowOutcome> {
+  const { sheet } = row;
+  if (!isSpreadsheetSheet(sheet)) return writeResponseRow(ctx, { ...row, sheet });
+  try {
+    return await documentRoom(ctx.env, sheet.documentId).writeFormResponse({
+      form: { documentId: row.documentId, tabId: row.formTabId },
+      sheetId: sheet.sheetId,
+      sections: row.form.sections,
+      answers: [...row.answers],
+      number: row.number,
+      preview: row.preview,
+      by: row.by,
+    });
+  } catch (error) {
+    console.warn('[forms] form.spreadsheet.unreached', { reason: String(error) });
+    return 'busy';
+  }
 }
 
 export async function writeResponseRow(
   ctx: DocumentRouteContext,
   input: {
     documentId: string;
-    sheet: FormSheetDestination;
+    sheet: FormPlanSheet;
     form: Pick<FormDefinition, 'sections'>;
     answers: ReadonlyMap<string, AnswerValue>;
     number: number | null;

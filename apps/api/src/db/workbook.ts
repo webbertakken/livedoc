@@ -2,6 +2,8 @@
 // and settings. Present exactly when the document is a spreadsheet.
 import {
   readNamedFunctions,
+  WorkbookForms,
+  type WorkbookForm,
   WorkbookRecord,
   type NamedFunction,
   type WorkbookFormat,
@@ -19,11 +21,13 @@ export type WorkbookRow = {
   meaning?: string | null;
   // The named functions as a JSON array, or null for none (formulas.md "Named functions").
   functions?: string | null;
+  // The forms it takes responses from as a JSON array, or null for none (plan-links.md "Form responses", D506).
+  forms?: string | null;
 };
 
 /** The row's columns a record is read from. */
 export const WORKBOOK_COLUMNS =
-  'format, settings, imports_allowed, range_sources, meaning, functions';
+  'format, settings, imports_allowed, range_sources, meaning, functions, forms';
 
 function rangeSourcesOf(documentId: string, text: string | null | undefined): string[] | undefined {
   if (!text) return undefined;
@@ -55,6 +59,20 @@ function functionsOf(
   return functions && functions.length > 0 ? functions : undefined;
 }
 
+// Forms that do not read are dropped, as none, and logged: a form then pauses, and the workbook still opens.
+function formsOf(documentId: string, text: string | null | undefined): WorkbookForm[] | undefined {
+  if (!text) return undefined;
+  let raw: unknown;
+  try {
+    raw = JSON.parse(text);
+  } catch {
+    raw = null;
+  }
+  const forms = WorkbookForms.read(raw);
+  if (!forms) console.warn('[workbook] forms unread', { documentId });
+  return forms ?? undefined;
+}
+
 // A meaning the record cannot read is Google's, as a spreadsheet's before its meaning was kept (D101), and logged.
 function meaningOf(documentId: string, text: string | null | undefined): string | undefined {
   if (text === null || text === undefined) return undefined;
@@ -78,6 +96,7 @@ export function workbookFromRow(
   const rangeSources = rangeSourcesOf(documentId, row.range_sources);
   const meaning = meaningOf(documentId, row.meaning);
   const functions = functionsOf(documentId, row.functions);
+  const forms = formsOf(documentId, row.forms);
   const record = WorkbookRecord.read({
     format: row.format,
     settings,
@@ -85,6 +104,7 @@ export function workbookFromRow(
     ...(rangeSources ? { rangeSources } : {}),
     ...(meaning ? { meaning } : {}),
     ...(functions ? { functions } : {}),
+    ...(forms ? { forms } : {}),
   });
   if (!record) console.warn('[workbook] unreadable row', { documentId });
   return record;
@@ -260,6 +280,36 @@ export async function connectWorkbookRangeSources(
       RETURNING ${WORKBOOK_COLUMNS}, rev`,
   )
     .bind(JSON.stringify(sources), now, documentId)
+    .first<WorkbookRow & { rev: number }>();
+  const workbook = workbookFromRow(documentId, row ?? undefined);
+  return row && workbook ? { workbook, rev: row.rev } : null;
+}
+
+/**
+ * The forms a spreadsheet takes responses from, made `next` from what they were (plan-links.md "Form responses"):
+ * written only while they are still as `next` was worked out from (`was`, the record's), so two Editors connecting at
+ * once never lose one; the caller reads again and retries. Its record as it now stands and the row's new rev, or null
+ * when the document is no spreadsheet or the forms moved meanwhile.
+ */
+export async function saveWorkbookForms(
+  env: DocumentEnv,
+  documentId: string,
+  was: readonly WorkbookForm[] | undefined,
+  next: readonly WorkbookForm[],
+  now: number,
+): Promise<{ workbook: WorkbookRecord; rev: number } | null> {
+  const row = await env.DOCUMENT_DB.prepare(
+    `UPDATE workbook
+        SET forms = ?, rev = rev + 1, updated_at = ?
+      WHERE document_id = ? AND COALESCE(forms, '') = ?
+      RETURNING ${WORKBOOK_COLUMNS}, rev`,
+  )
+    .bind(
+      next.length ? JSON.stringify(next) : null,
+      now,
+      documentId,
+      was?.length ? JSON.stringify(was) : '',
+    )
     .first<WorkbookRow & { rev: number }>();
   const workbook = workbookFromRow(documentId, row ?? undefined);
   return row && workbook ? { workbook, rev: row.rev } : null;

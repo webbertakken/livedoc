@@ -1,5 +1,6 @@
 'use client';
 
+import { defaultCopyFolder } from '@/lib/office/office-copy';
 import dynamic from 'next/dynamic';
 import { isPlanTabKind, pagesOf, readDashboard, type TabOpening } from '@livedoc/document';
 import type { TemplateKind } from '@livedoc/templates';
@@ -160,6 +161,15 @@ export function EditorStartPanels() {
           documentId={ctx.documentId}
           ownerId={ctx.selfParticipant.id}
           share={ctx.sessionShareCode}
+          // A form's new responses spreadsheet goes in its folder, as a copy does (plan-links.md "Form responses").
+          responsesFolderId={
+            defaultCopyFolder({
+              isOwner: ctx.isOwner,
+              teamId: ctx.documentTeamId ?? null,
+              folderId: ctx.documentList.find((d) => d.id === ctx.documentId)?.folderId ?? null,
+              folders: ctx.folders,
+            }) ?? undefined
+          }
           online={!isOffline}
           // Share Form on a document in This Browser syncs it first (docs/specs/030-forms/forms.md), never as the
           // 'self' placeholder an early open runs under.

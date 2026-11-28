@@ -12,6 +12,7 @@ import {
   destinationProblem,
   destinationType,
   effectiveTarget,
+  isSpreadsheetSheet,
   promptOf,
   publishProblems,
   ruleQuestion,
@@ -55,7 +56,8 @@ export interface FormReading {
   unseen: number;
   respondsTo:
     | { to: 'board'; board: string; cardType: string; column: string }
-    | { to: 'sheet'; sheet: string }
+    // A spreadsheet's sheet names its spreadsheet's id (plan-links.md "Form responses").
+    | { to: 'sheet'; sheet: string; spreadsheet?: string }
     | { to: 'nowhere' };
   respondsToProblem?: string;
   sections: {
@@ -111,7 +113,9 @@ export function readFormOf(input: {
   if (form.sheet) {
     problem = sheetDestinationProblem(form.sheet, sheets);
     const named = sheets.find((s) => s.sheetId === form.sheet!.sheetId);
-    respondsTo = { to: 'sheet', sheet: named?.name ?? '(removed)' };
+    respondsTo = isSpreadsheetSheet(form.sheet)
+      ? { to: 'sheet', sheet: form.sheet.sheetId, spreadsheet: form.sheet.documentId }
+      : { to: 'sheet', sheet: named?.name ?? '(removed)' };
   } else if (form.destination) {
     const dest = form.destination;
     const onTab = allBoards.filter((b) => b.tabId === dest.tabId);

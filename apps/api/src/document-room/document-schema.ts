@@ -465,6 +465,12 @@ const WORKBOOK_RANGE_SOURCES_STEP = `
 ALTER TABLE workbook ADD COLUMN range_sources TEXT;
 `;
 
+// The forms a spreadsheet takes responses from (docs/specs/029-sheets/plan-links.md "Form responses", D506): a JSON
+// array of { documentId, tabId, sheetId }, connected by an Editor of both; a copy's row starts without.
+const WORKBOOK_FORMS_STEP = `
+ALTER TABLE workbook ADD COLUMN forms TEXT;
+`;
+
 // A spreadsheet's meaning (docs/specs/029-sheets/formulas.md, the file's meaning): 'ooxml' or 'openformula' for one
 // opened from a file, kept by its copies; null for Google's, as every spreadsheet before it (D101).
 const WORKBOOK_MEANING_STEP = `
@@ -817,6 +823,7 @@ export const DOCUMENT_SCHEMA_STEPS: readonly string[] = [
   SHEET_IMAGE_REFS_STEP,
   SHEET_CELL_IMAGE_REFS_STEP,
   SHEET_CELL_NOTES_STEP,
+  WORKBOOK_FORMS_STEP,
 ];
 
 export const DOCUMENT_SCHEMA_VERSION = DOCUMENT_SCHEMA_STEPS.length;

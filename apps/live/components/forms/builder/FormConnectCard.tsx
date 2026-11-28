@@ -2,8 +2,9 @@
 
 // The connect box (docs/specs/030-forms/forms.md "Responses Go To and Settings"): a card under the form's title while
 // it sends its responses nowhere (no board, no sheet), drawn as the form's own cards are, so an Editor connects it
-// before anything else. Two choices side by side, each making its tab in one press: Cards on a Board (New Board) and
-// Rows in a Sheet (New Sheet); Choose Existing (when the document has a board or sheet) opens Responses Go To.
+// before anything else. Two choices side by side, each making its place in one press: Cards on a Board (New Board) and
+// Rows in a Sheet (a new spreadsheet, docs/specs/029-sheets/plan-links.md "Form responses"); Choose Existing (when the
+// document has a board or sheet) opens Responses Go To.
 import { lucideGlyph } from '@livedoc/ui';
 import { lucideSquareKanban, lucideTable } from '@livedoc/icons/lucide';
 import { DESTINATION_PROBLEM_TEXT, type DestinationProblem } from '@livedoc/forms';
@@ -28,6 +29,8 @@ export function FormConnectCard({
 }) {
   const b = useFormBuilder();
   const nowhere = !b.form.destination && !b.form.sheet;
+  const making = !!b.spreadsheet?.busy;
+  const failure = b.spreadsheet?.failure ?? null;
   if (!b.canEdit || (!nowhere && !problem)) return null;
   return (
     <section
@@ -67,9 +70,10 @@ export function FormConnectCard({
         </button>
         <button
           type="button"
+          disabled={making}
           onClick={() => {
-            track('Form', 'Linked', 'ConnectNewSheet');
-            b.actions.newResponsesSheet();
+            track('Form', 'Linked', 'ConnectNewSpreadsheet');
+            void b.spreadsheet?.makeNew();
           }}
           className={CHOICE}
         >
@@ -81,11 +85,18 @@ export function FormConnectCard({
               Rows in a Sheet
             </span>
             <span className="mt-0.5 block text-supporting text-slate-500 dark:text-slate-400">
-              A row for each response, to count and compare. Makes a new sheet.
+              {making
+                ? 'Making the spreadsheet…'
+                : 'A row for each response, to count and compare. Makes a new spreadsheet.'}
             </span>
           </span>
         </button>
       </div>
+      {failure ? (
+        <p role="alert" className="mt-3 text-body text-amber-800 dark:text-amber-200">
+          {failure}
+        </p>
+      ) : null}
       {hasExisting ? (
         <button
           type="button"

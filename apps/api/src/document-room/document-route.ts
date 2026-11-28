@@ -22,6 +22,17 @@ export type RouteIdentity = {
   workbench: WorkbenchContext | null;
 };
 
+// No one: what a room's own write runs as (a filed bug report, a form's row in a spreadsheet), never a person's.
+export const NO_ONE_IDENTITY: RouteIdentity = {
+  sessionAccountId: null,
+  verifiedAccountId: null,
+  accountEmail: null,
+  sessionAuthTime: null,
+  owner: null,
+  token: null,
+  workbench: null,
+};
+
 export function identityOf(ctx: RouteContext): RouteIdentity {
   return {
     sessionAccountId: ctx.sessionAccountId,

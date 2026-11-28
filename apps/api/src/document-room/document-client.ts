@@ -13,6 +13,8 @@ import type { ImportAnswer } from '@livedoc/sheets';
 import type { RangeReadQuery } from '../routes/sheet-range-read';
 import type { Item } from '@livedoc/items';
 import type { BugReportFileOutcome } from '../bug-reports/room-file';
+import type { SheetRowOutcome } from '../forms/sheet-response';
+import type { SpreadsheetFormAsk, SpreadsheetFormRow } from '../forms/spreadsheet-response';
 import type { ContentSummary } from '../db/content-summary';
 import type { Env } from '../types';
 import type { MoveOutcome } from './content-move';
@@ -47,6 +49,9 @@ export type DocumentRoomClient = {
   respondToForm(request: Request, identity: RouteIdentity): Promise<Response>;
   // A range of this spreadsheet for another's IMPORTRANGE, read as `identity` (routes/sheet-range-read.ts).
   readRange(query: RangeReadQuery, identity: RouteIdentity): Promise<ImportAnswer>;
+  // A form's sheet in this spreadsheet (forms/spreadsheet-response.ts): whether it holds, and a row written.
+  formSheetThere(ask: SpreadsheetFormAsk): Promise<boolean>;
+  writeFormResponse(row: SpreadsheetFormRow): Promise<SheetRowOutcome>;
   fileBugReport(tabId: string, filing: BugReportFiling): Promise<BugReportFileOutcome>;
   // A tab shared between documents (tab-shares.ts): the tab and its holders for one joining through this document,
   // the join recorded here, and what another holder (`from`) sends.
@@ -96,6 +101,8 @@ export function documentRoom(
     item: (itemId) => room.item(documentId, itemId),
     respondToForm: (request, identity) => room.respondToForm(documentId, request, identity),
     readRange: (query, identity) => room.readRange(documentId, query, identity),
+    formSheetThere: (ask) => room.formSheetThere(documentId, ask),
+    writeFormResponse: (row) => room.writeFormResponse(documentId, row),
     fileBugReport: (tabId, filing) => room.fileBugReport(documentId, tabId, filing),
     sharedTabCopy: (tabId) => room.sharedTabCopy(documentId, tabId),
     shareJoined: (tabId, member, seen) => room.shareJoined(documentId, tabId, member, seen),

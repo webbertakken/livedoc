@@ -18,6 +18,7 @@ import { SheetTabMenu, type SheetTabMenuAt } from './SheetTabMenu';
 import { ProtectSheetContext } from './protect-sheet-channel';
 import type { SheetBarActions } from './useSheetBarActions';
 import type { SheetCopyTo } from './useSheetCopyTo';
+import type { SheetFormLinks } from './useSheetFormLinks';
 import { useSheetTabDrag } from './useSheetTabDrag';
 import { hiddenTabIds, type SheetTabLooks } from './useSheetTabLooks';
 
@@ -39,6 +40,7 @@ export function SheetBar({
   actions = null,
   looks = NO_LOOKS,
   copyTo = null,
+  formLinks = null,
 }: {
   // Every sheet tab, hidden ones too (All Sheets lists them).
   tabs: readonly SheetBarTab[];
@@ -54,6 +56,8 @@ export function SheetBar({
   looks?: SheetTabLooks;
   // Copy To, everyone's who may read the sheets (D186).
   copyTo?: SheetCopyTo | null;
+  // The sheets forms write to, and Unlink Form (plan-links.md "Form responses").
+  formLinks?: SheetFormLinks | null;
 }) {
   const list = useRef<HTMLDivElement | null>(null);
   const [menu, setMenu] = useState<SheetTabMenuAt | null>(null);
@@ -136,6 +140,7 @@ export function SheetBar({
             key={tab.id}
             tab={tab}
             colour={looks[tab.id]?.colour}
+            form={formLinks?.takes.has(tab.id) ?? false}
             active={tab.id === activeId}
             peers={peers[tab.id] ?? []}
             renaming={actions?.renaming === tab.id}
@@ -163,6 +168,9 @@ export function SheetBar({
           index={shown.findIndex((t) => t.id === menuTab.id)}
           actions={actions}
           {...(protectSheet ? { onProtect: protectSheet.open } : {})}
+          {...(formLinks?.takes.has(menuTab.id)
+            ? { onUnlinkForm: formLinks.unlink ? () => formLinks.unlink!(menuTab.id) : null }
+            : {})}
           onColour={() =>
             // Every tab shown has its face, the picker's anchor.
             setColouring({

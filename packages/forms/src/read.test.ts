@@ -188,6 +188,15 @@ describe('readForm', () => {
     expect(readForm({ sheet: 'AbCdEf123456' })!.sheet).toBeUndefined();
   });
 
+  it('keeps a spreadsheet’s sheet by its spreadsheet, and drops one whose spreadsheet does not read', () => {
+    expect(
+      readForm({ sheet: { documentId: 'doc-1', sheetId: 'AbCdEf123456', tabId: 'tab-1' } })!.sheet,
+    ).toEqual({ documentId: 'doc-1', sheetId: 'AbCdEf123456' });
+    expect(
+      readForm({ sheet: { documentId: 'doc 1', sheetId: 'AbCdEf123456' } })!.sheet,
+    ).toBeUndefined();
+  });
+
   it('keeps a question with no prompt yet, its prompt empty', () => {
     expect(readForm(form([{ id: 'q-1', type: 'short' }]))!.sections[0]!.questions[0]).toEqual({
       id: 'q-1',
