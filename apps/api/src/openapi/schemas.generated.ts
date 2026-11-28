@@ -16435,6 +16435,9 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
       },
       {
         "$ref": "#/components/schemas/SheetImage"
+      },
+      {
+        "$ref": "#/components/schemas/SheetSlicer"
       }
     ]
   },
@@ -16722,6 +16725,51 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
       "reverted",
       "kept",
       "lint"
+    ],
+    "type": "object"
+  },
+  "SheetSlicer": {
+    "additionalProperties": false,
+    "properties": {
+      "at": {
+        "$ref": "#/components/schemas/CellAnchor"
+      },
+      "col": {
+        "type": "string"
+      },
+      "filter": {
+        "$ref": "#/components/schemas/FilterCondition"
+      },
+      "height": {
+        "type": "number"
+      },
+      "id": {
+        "type": "string"
+      },
+      "kind": {
+        "const": "slicer",
+        "type": "string"
+      },
+      "pivots": {
+        "const": false,
+        "type": "boolean"
+      },
+      "range": {
+        "$ref": "#/components/schemas/IdRange"
+      },
+      "title": {
+        "type": "string"
+      },
+      "width": {
+        "type": "number"
+      }
+    },
+    "required": [
+      "id",
+      "kind",
+      "at",
+      "width",
+      "height"
     ],
     "type": "object"
   },

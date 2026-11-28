@@ -2,17 +2,25 @@
 // so it grows with rows inserted inside it and follows moves. Read as a spreadsheet does: a first row with no numbers
 // in it names the series, a first column of text (or dates) labels the categories, and every other column is one
 // series. A cell that is empty or holds no number is no value (null), never 0 (docs/specs/009-elements/pie-chart.md
-// "No value is a gap"). Rows a filter hides are left out. Pure: the editor, exports and the api thumbnail all read it.
+// "No value is a gap"). Rows a filter hides are left out (the sheet's and the tables', everyone's), and the rows a
+// viewer's slicers hide when given (`hide`, data-tools.md "Slicers", D487). Pure: the editor, exports and the api thumbnail all read it.
 import { layoutIndex, posRangeOf } from './layout';
 import { columnLetters } from './address';
 import { cellKey, type IdRange, type NumberFormatKind } from './sheet';
 import { displayValue } from './number-format';
 import { isError, type Value } from './formula/values';
 import type { Workbook } from './engine/workbook';
+import { filteredOutRows } from './filter';
 
 // A chart's link to its sheet: the sheet and the range, by ids, and only some of its columns when several ranges were
 // picked together (sheet.md "Charts").
-type SheetChartLink = { sheetId: string; range: IdRange; cols?: readonly string[] };
+type SheetChartLink = {
+  sheetId: string;
+  range: IdRange;
+  cols?: readonly string[];
+  // Rows hidden for this viewer alone (their slicers over the chart's range), by id.
+  hide?: ReadonlySet<string>;
+};
 
 export type SheetChartTable = {
   // The category labels, one per row of data.
@@ -62,9 +70,11 @@ export function sheetChartTable(
   const p = posRangeOf(layout, link.range);
   if (!p) return null;
   const ix = layoutIndex(layout);
+  const filtered = filteredOutRows(wb, link.sheetId);
+  const shown = (id: string) => !ix.hiddenRows.has(id) && !filtered.has(id) && !link.hide?.has(id);
   const rows: number[] = [];
   for (let r = p.r1; r <= p.r2 && rows.length <= CHART_CATEGORIES_MAX; r++)
-    if (!ix.hiddenRows.has(layout.rows[r]!)) rows.push(r);
+    if (shown(layout.rows[r]!)) rows.push(r);
   const picked = link.cols ? new Set(link.cols) : null;
   const cols: number[] = [];
   for (let c = p.c1; c <= p.c2 && cols.length <= CHART_SERIES_MAX; c++) {

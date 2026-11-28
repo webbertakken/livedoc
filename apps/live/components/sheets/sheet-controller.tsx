@@ -11,6 +11,9 @@ import { createContext, useCallback, useContext, useMemo, useRef, useState } fro
 import {
   filteredOutRows,
   rowHeights,
+  slicerDrawnFilters,
+  type FilterCondition,
+  type OwnSlicerFilters,
   single,
   valuesOnly,
   type GridRange,
@@ -73,6 +76,10 @@ export type SheetController = {
   foldForSelf: (changes: readonly FoldChange[]) => void;
   // The filter view open for this person and the filter drawn (useFilterViews).
   filterViews: FilterViews;
+  // This person's own slicer filters, in place of each slicer's default, never sent (data-tools.md "Slicers", D485):
+  // a condition, null for every row, undefined back to the default.
+  ownSlicers: OwnSlicerFilters;
+  setOwnSlicer: (id: string, cond: FilterCondition | null | undefined) => void;
   grid: Grid;
   palette: PlanPalette;
   interactive: boolean;
@@ -298,11 +305,25 @@ export function useSheetControllerState(opts: {
     canShape,
   });
   const openView = filterViews.open;
+  const [ownSlicers, setOwnSlicers] = useState<OwnSlicerFilters>({});
+  const setOwnSlicer = useCallback((id: string, cond: FilterCondition | null | undefined) => {
+    setOwnSlicers((all) => {
+      const { [id]: _was, ...rest } = all;
+      return cond === undefined ? rest : { ...rest, [id]: cond };
+    });
+  }, []);
   // Rows a filter hides are drawn at no height: the open view's alone, else any the sheet's filter or a table's hides
-  // (data-tools.md "A table's filter", D482); worked out again whenever a value or a filter may have changed.
+  // (data-tools.md "A table's filter", D482), and any a slicer hides for this person ("Slicers"); worked out again
+  // whenever a value or a filter may have changed.
   const filtered = useMemo(
-    () => filteredOutRows(workbook, sheet.id, openView ?? undefined),
-    [workbook, sheet, openView, version], // oxlint-disable-line react/exhaustive-deps
+    () =>
+      filteredOutRows(
+        workbook,
+        sheet.id,
+        openView ?? undefined,
+        slicerDrawnFilters(sheet.layout, ownSlicers),
+      ),
+    [workbook, sheet, openView, ownSlicers, version], // oxlint-disable-line react/exhaustive-deps
   );
   // How tall each row is drawn: a sized row its size, every other row what its text needs (sheet.md "Row height").
   // Worked out again whenever a value may have changed; the same function while no height did, so the geometry and
@@ -366,6 +387,8 @@ export function useSheetControllerState(opts: {
     viewLayout,
     foldForSelf,
     filterViews,
+    ownSlicers,
+    setOwnSlicer,
     grid,
     selection,
     setSelection,

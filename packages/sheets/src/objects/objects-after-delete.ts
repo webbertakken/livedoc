@@ -2,11 +2,12 @@
 // pivot-tables.md "The model", sheet-pivot.ts): a chart's range
 // shrinks to what is left of it (none left: no data), its picked columns and series looks lose the gone columns, and
 // an anchor on a gone row or column moves to the one that takes its place (the next, else the one before), a chart's
-// and an image's alike.
+// and an image's alike. A slicer's range shrinks as a chart's; its column gone, it keeps no column nor filter (D486).
 import type { SheetLayout } from '../sheet';
 import { shrinkRange } from '../store-layout';
 import type { CellAnchor, SheetChart, SheetObject } from './sheet-objects';
 import { pivotAfterDelete } from './sheet-pivot';
+import type { SheetSlicer } from './sheet-slicer';
 
 // The surviving id at a gone one's place in the old order: the next one left, else the one before; null when none is.
 function survivor(list: readonly string[], id: string, gone: ReadonlySet<string>): string | null {
@@ -52,6 +53,24 @@ function chartAfter(
   };
 }
 
+function slicerAfter(
+  x: SheetSlicer,
+  before: SheetLayout,
+  goneRows: ReadonlySet<string>,
+  goneCols: ReadonlySet<string>,
+): SheetSlicer {
+  const { range: _range, col: _col, filter: _filter, ...rest } = x;
+  const range = x.range ? shrinkRange(x.range, before, goneRows, goneCols) : null;
+  const col = range && x.col && !goneCols.has(x.col) ? x.col : null;
+  return {
+    ...rest,
+    at: anchorAfter(x.at, before, goneRows, goneCols),
+    ...(range ? { range } : {}),
+    ...(col ? { col } : {}),
+    ...(col && x.filter ? { filter: x.filter } : {}),
+  };
+}
+
 export function objectsAfterDelete(
   before: SheetLayout,
   goneRows: ReadonlySet<string>,
@@ -60,6 +79,7 @@ export function objectsAfterDelete(
   const objects = before.objects!.flatMap((x): SheetObject[] => {
     if (x.kind === 'chart') return [chartAfter(x, before, goneRows, goneCols)];
     if (x.kind === 'image') return [{ ...x, at: anchorAfter(x.at, before, goneRows, goneCols) }];
+    if (x.kind === 'slicer') return [slicerAfter(x, before, goneRows, goneCols)];
     const pivot = pivotAfterDelete(x, before, goneRows, goneCols);
     return pivot ? [pivot] : [];
   });
