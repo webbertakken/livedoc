@@ -15,7 +15,7 @@ import {
 } from '@/lib/text-document/text-document-picture-edit';
 import { startUndoStep } from '@/lib/text-document/text-document-undo';
 import { drawingOfPicture } from '@/lib/text-document/text-document-drawing-pictures';
-import { TextDocumentAltTextDialog } from './TextDocumentAltTextDialog';
+import { OfficeAltTextDialog } from '@/components/office/OfficeAltTextDialog';
 import type { Bringing } from './useTextDocumentPictures';
 import type { ImagePickerTab } from '@/components/panels/ImagePicker';
 
@@ -127,7 +127,7 @@ export function useTextDocumentPictureEditing({
   }, [canEdit, view, selected, bring, replacing]);
 
   const dialog = altOpen ? (
-    <TextDocumentAltTextDialog
+    <OfficeAltTextDialog
       key={altOpen.nonce}
       open
       alt={altOpen.at.alt}

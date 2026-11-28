@@ -1,0 +1,53 @@
+import { ArticleLayout } from '@/components/ArticleLayout';
+import { helpMetadata } from '@/lib/seo';
+
+export const metadata = helpMetadata({
+  title: 'Images over Cells',
+  description:
+    'Place a picture over the cells of a spreadsheet: upload one or pick it from your gallery, then move it, resize it, describe it, replace it or delete it.',
+  path: '/help/canvas/plan-tabs/images-over-cells/',
+});
+
+<ArticleLayout
+  title="Images over Cells"
+  description="A picture floating over a spreadsheet's cells, as a chart does: a logo, a photo, a diagram."
+  categoryTitle="Canvas"
+  categorySlug="canvas/plan-tabs"
+>
+
+An image over cells floats above the grid, as a chart does. It belongs to its sheet, follows its cell when you insert or delete rows and columns, and everyone the spreadsheet is shared with sees it.
+
+## Placing One
+
+1. Click the cell its top-left corner should sit on.
+2. Choose **Insert › Image › Insert Image over Cells**.
+3. **Upload** a picture, pick one from your **Gallery**, or **Search** for an openly licensed one.
+
+It lands at its own size, scaled down to fit 600 by 400 pixels, and is selected, ready to move.
+
+If **Insert Image over Cells** is dimmed, this LiveDoc has no image storage set up, or the spreadsheet is kept in This Browser: **Sync Document** first, then place it.
+
+## Moving and Resizing
+
+- Drag it to move it. It snaps to no grid: it stays exactly where you drop it, anchored to the cell under its top-left corner.
+- Drag a **corner** handle to resize it and keep its shape; drag an **edge** handle to stretch it.
+- With it selected, the **arrow keys** move it (hold **Shift** for bigger steps), **Alt** and the arrow keys stretch it, **Delete** removes it and **Esc** goes back to the cells.
+- Each move, resize and delete is one step of **Undo**.
+
+## Its Menu
+
+Click **⋮** on the selected image, or right-click it:
+
+- **Alt Text**: a **Title** and a **Description** for people using a screen reader. LiveDoc keeps them as one text, the title on the first line.
+- **Replace Image**: pick another picture. It keeps the box's width, its height following the new picture's shape.
+- **Delete**: remove it from the sheet. The picture stays in your gallery.
+
+## Who Can Do What
+
+Editors place, move, resize, describe, replace and delete images. Everyone else sees them, and a screen reader names each one by its alt text.
+
+## Where the Picture Lives
+
+The picture is stored in the gallery of whoever placed it, never inside the sheet, and the spreadsheet shows it to everyone it is shared with. If the picture is deleted from that gallery, the sheet shows **Image unavailable** in its place.
+
+</ArticleLayout>
