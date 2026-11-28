@@ -77,7 +77,7 @@ leaves it); `left out (C3)` (its function is a Google service, [Parity matrix](p
 | Apply left border    | `Alt+Shift+4`                 | `Option+Shift+4`                              | `Alt+Shift+4`                 | built (`spreadsheet-shortcuts.test.tsx`)                |
 | Remove borders       | `Alt+Shift+6`                 | `Option+Shift+6`                              | `Alt+Shift+6`                 | built (`spreadsheet-shortcuts.test.tsx`)                |
 | Apply outer border   | `Alt+Shift+7 or Ctrl+Shift+7` | `Option+Shift+7 or ⌘+Shift+7 or Ctrl+Shift+7` | `Alt+Shift+7 or Ctrl+Shift+7` | built (`spreadsheet-shortcuts.test.tsx`)                |
-| Insert link          | `Ctrl+K`                      | `⌘+K`                                         | `Ctrl+K`                      | specified                                               |
+| Insert link          | `Ctrl+K`                      | `⌘+K`                                         | `Ctrl+K`                      | built (`useSpreadsheetLinks.test.tsx`)                  |
 | Insert time          | `Ctrl+Shift+;`                | `⌘+Shift+;`                                   | `Ctrl+Shift+;`                | the surface's (`spreadsheet-surface-shortcuts.test.ts`) |
 | Insert date          | `Ctrl+;`                      | `⌘+;`                                         | `Ctrl+;`                      | the surface's (`spreadsheet-surface-shortcuts.test.ts`) |
 | Insert date and time | `Ctrl+Alt+Shift+;`            | `⌘+Option+Shift+;`                            | `Ctrl+Alt+Shift+;`            | specified                                               |
@@ -103,7 +103,7 @@ leaves it); `left out (C3)` (its function is a Google service, [Parity matrix](p
 | Move to next sheet                      | `Alt+Down`                 | `Option+Down or Option+Right` | `Ctrl+Shift+Search+Down`     | the surface's (`spreadsheet-surface-shortcuts.test.ts`) |
 | Move to previous sheet                  | `Alt+Up`                   | `Option+Up or Option+Left`    | `Ctrl+Shift+Search+Up`       | the surface's (`spreadsheet-surface-shortcuts.test.ts`) |
 | Display list of sheets                  | `Alt+Shift+K`              | `Option+Shift+K`              | `Alt+Shift+K`                | the surface's (`spreadsheet-surface-shortcuts.test.ts`) |
-| Open hyperlink                          | `Alt+Enter`                | `Option+Enter`                | `Alt+Enter`                  | specified                                               |
+| Open hyperlink                          | `Alt+Enter`                | `Option+Enter`                | `Alt+Enter`                  | built (`useSpreadsheetLinks.test.tsx`)                  |
 | Open Explore                            | `Ctrl+Alt+Shift+I`         | `⌘+Option+Shift+I`            | `Ctrl+Alt+Shift+I`           | left out (C3)                                           |
 | Cycle focus between main areas          | `Ctrl+Alt+. or Ctrl+Alt+,` | `⌘+Option+. or ⌘+Option+,`    | `Alt+Shift+. or Alt+Shift+,` | the surface's (`spreadsheet-surface-shortcuts.test.ts`) |
 | Move focus out of spreadsheet           | `Ctrl+Alt+Shift+M`         | `Ctrl+⌘+Shift+M`              | `Ctrl+Alt+Shift+M`           | the surface's (`spreadsheet-surface-shortcuts.test.ts`) |

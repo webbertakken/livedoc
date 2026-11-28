@@ -43,6 +43,8 @@ function Menus({ actions }: { actions: SheetActions }) {
       'data-validation': { run: vi.fn(), checked: false },
       'convert-to-table': { run: vi.fn() },
       'column-stats': { run: vi.fn() },
+      // Insert Link, as useSpreadsheetLinks binds it for an Editor.
+      'insert-link': { run: vi.fn() },
     },
   );
   return <SpreadsheetGridMenus actions={actions} bound={office.actions} />;

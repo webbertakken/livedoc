@@ -267,7 +267,7 @@ export const SPREADSHEET_SHORTCUTS: readonly ShortcutRow[] = [
     'Alt+Shift+7 or Ctrl+Shift+7',
     'built',
   ),
-  row('insert-link', 'Format cells', 'Insert link', 'Ctrl+K', '⌘+K', 'Ctrl+K', 'specified'),
+  row('insert-link', 'Format cells', 'Insert link', 'Ctrl+K', '⌘+K', 'Ctrl+K', 'built'),
   row(
     'insert-time',
     'Format cells',
@@ -448,7 +448,7 @@ export const SPREADSHEET_SHORTCUTS: readonly ShortcutRow[] = [
     'Alt+Enter',
     'Option+Enter',
     'Alt+Enter',
-    'specified',
+    'built',
   ),
   row(
     'open-explore',

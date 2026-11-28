@@ -82,6 +82,9 @@ const PIVOT_GROUPING: readonly ContextEntrySpec[] = [
 const CELL: readonly ContextEntrySpec[] = [
   // The active cell's link, for anyone, drawn only while it holds one (D189).
   { ...own('open-link', 'Open Link', 'view', 'built'), contextual: true },
+  // A cell's own link's, for an Editor, drawn only on such a cell (inserted-objects.md "The link card").
+  { ...own('edit-link', 'Edit Link', 'edit', 'built'), contextual: true },
+  { ...own('remove-link', 'Remove Link', 'edit', 'built'), contextual: true },
   // A pivot table value's source rows on a sheet of their own, drawn only on such a value (pivot-tables.md "Details").
   { ...own('show-pivot-details', 'Show Details', 'view', 'built'), contextual: true },
   // A cell's picture's items, drawn only on a cell holding one, for an Editor (inserted-objects.md "Images in a cell").
@@ -118,7 +121,7 @@ const CELL: readonly ContextEntrySpec[] = [
   SEPARATOR,
   'convert-to-table',
   submenu('more-cell-actions', 'View More Cell Actions', [
-    own('get-link-to-cell', 'Get Link to This Cell', 'view', 'comingSoon'),
+    own('get-link-to-cell', 'Get Link to This Cell', 'view', 'built'),
     DEFINE_NAMED_RANGE,
     PROTECT_RANGE,
     'randomise-range',

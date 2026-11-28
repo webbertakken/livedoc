@@ -1,7 +1,7 @@
 # Inserted objects
 
 **Status: specified.** Insert › Checkbox and Insert › Dropdown are built (as data validation), images over cells
-and in a cell, and Insert › Emoji; the rest is specified.
+and in a cell, Insert › Emoji, and links; the rest is specified.
 
 What the Insert menu puts into a [spreadsheet](spreadsheet.md) besides cells, charts and pivot tables (those have
 their own pages: [Charts](charts.md), [Pivot tables](pivot-tables.md)). Its rows of the
@@ -164,9 +164,10 @@ value in a cell"); `IMAGE()` shows one from an address instead (S4; [Imports fro
 ### Get Link to This Cell
 
 - The cell menu's **Get Link to This Cell** (Google's, under its more cell actions), for every role, copies the
-  spreadsheet's address with the sheet's tab and the selection, `<document address>#t=<tab id>&range=<A1 range>`,
-  and says "Link copied". Opening that address opens the tab with the range selected once the sheet is drawn, the
-  range scrolled into view; a range past the sheet's edge selects what of it is on the sheet (default, D641).
+  spreadsheet's address with the selection in its query and the sheet's tab as the editor pins one,
+  `<document address>?range=<A1 range>#t=<tab id>`, and says "Link copied". Opening that address opens the tab with
+  the range selected once the sheet is drawn, the range scrolled into view, and takes the range out of the address; a
+  range past the sheet's edge selects what of it is on the sheet (default, D641).
 
 ### HYPERLINK
 
@@ -237,8 +238,9 @@ resize, alt text, replacement or delete of an image over cells, and each alt tex
   Text is written as typing it would be (default).
 - **D640** The link editor offers a typed range, then this spreadsheet's sheets, then the person's documents; no
   range picker dialog (default).
-- **D641** Get Link to This Cell copies `<document address>#t=<tab id>&range=<A1 range>`; opening it selects the
-  range on that tab, cut to the sheet's edge (default).
+- **D641** Get Link to This Cell copies `<document address>?range=<A1 range>#t=<tab id>` (the range in the query, as
+  the editor rewrites its fragment to the tab's pin); opening it selects the range on that tab, cut to the sheet's
+  edge (default).
 - **D642** A file's links: XLSX `hyperlinks`, one per linked cell, ODF the cell's one paragraph wholly a `text:a`;
   within the workbook by the sheet's name (standard-mapping.md "Links in the file") (default).
 - **D623** An image over cells is one of its sheet's objects, placed at the active cell at its natural size scaled to

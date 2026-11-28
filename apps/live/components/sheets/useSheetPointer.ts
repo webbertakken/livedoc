@@ -34,7 +34,7 @@ import { borderGrabAt, fillTargetFor } from './sheet-drag-targets';
 import { drawnRect, selectDrawn, storedRanges } from './sheet-drawn-selection';
 import type { SheetActions } from './useSheetActions';
 import { useSheetPan } from './useSheetPan';
-import { openHyperlink } from '@/lib/open-hyperlink';
+import { followCellLink, useSheetLinkFollow } from './sheet-link-follow-context';
 import { TOUCH_GRIP_HIT_PX, useSheetTouch } from './useSheetTouch';
 import { useSheetTouchLink } from './useSheetTouchLink';
 import { sheetPointerMenu } from './sheet-pointer-menu';
@@ -57,6 +57,8 @@ export function useSheetPointer(
   pointRef: PointRef,
 ) {
   const c = useSheetController();
+  // A link within the workbook opens its sheet, where the grid has a workbook to go to.
+  const followSheet = useSheetLinkFollow();
   const latest = useLatest(c);
   const drag = useRef<Drag | null>(null);
   const pan = useSheetPan(() => latest.current.gridEl);
@@ -361,14 +363,12 @@ export function useSheetPointer(
       }
       e.preventDefault();
       cc.focusGrid();
-      // Ctrl/⌘ and a click on a HYPERLINK opens it in a new tab (formulas.md "Text"); on any other cell it adds to
-      // the selection as before, and a plain click on a link only selects it.
+      // Ctrl/⌘ and a click on a link opens it (formulas.md "Text", inserted-objects.md "The link card"): a web
+      // address in a new tab, a sheet of the workbook in its tab; on any other cell it adds to the selection as before,
+      // and a plain click on a link only selects it.
       if ((e.metaKey || e.ctrlKey) && !e.shiftKey && !cc.rules.paint) {
-        const link = cc.workbook.hyperlinkOf(cc.sheet.id, h.r, h.c);
-        if (link) {
-          openHyperlink(link);
-          return;
-        }
+        const target = cc.workbook.linkTargetOf(cc.sheet.id, h.r, h.c);
+        if (target && followCellLink(target, followSheet)) return;
       }
       // A press on a checkbox's box toggles it; on a chip or a dropdown's arrow, opens its options
       // (data-validation.md "Using a dropdown", "Using a checkbox"). Paint Format paints instead.

@@ -108,8 +108,9 @@ export function OfficeToolbar({
     const element = bar.current;
     if (!element || phone) return;
     const measure = () => {
-      // Not laid out (hidden, or no layout at all): nothing to measure, so nothing moves.
-      if (element.clientWidth === 0) return;
+      // Not laid out (hidden, or no layout at all): nothing to measure, so every control stays in the bar, as many
+      // as there are now (a control shown or hidden as its binding comes and goes).
+      if (element.clientWidth === 0) return setFit(placed.length);
       for (const node of element.querySelectorAll<HTMLElement>('[data-control-slot]'))
         if (!node.hidden) widths.current.set(node.dataset.controlSlot!, node.offsetWidth);
       const room = element.clientWidth - BAR_PADDING_PX;

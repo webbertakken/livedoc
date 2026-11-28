@@ -213,7 +213,10 @@ export const SPREADSHEET_TOOLBAR: OfficeToolbar = [
     id: 'insert',
     label: 'Insert',
     controls: [
-      icon('insert-link', 'Insert Link', 'edit', lucideLink, { shortcut: 'insert-link' }),
+      icon('insert-link', 'Insert Link', 'edit', lucideLink, {
+        shortcut: 'insert-link',
+        built: true,
+      }),
       icon('insert-comment', 'Insert Comment', 'participate', lucideMessageSquarePlus, {
         shortcut: 'insert-or-edit-comment',
       }),
