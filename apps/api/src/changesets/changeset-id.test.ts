@@ -3,8 +3,9 @@ import {
   CHANGESET_ID_PATTERN,
   SHEET_CHANGESET_ID_PATTERN,
   isSheetChangesetId,
+  isTextChangesetId,
 } from '@livedoc/api-schema';
-import { mintChangesetId, mintSheetChangesetId } from './changeset-id';
+import { mintChangesetId, mintSheetChangesetId, mintTextChangesetId } from './changeset-id';
 
 describe('mintChangesetId', () => {
   it('mints cs_ and 10 lowercase Crockford base32 characters', () => {
@@ -28,5 +29,12 @@ describe('mintSheetChangesetId', () => {
     expect(mintSheetChangesetId()).toMatch(SHEET_CHANGESET_ID_PATTERN);
     expect(isSheetChangesetId(mintSheetChangesetId())).toBe(true);
     expect(isSheetChangesetId('cs_0000000000')).toBe(false);
+  });
+});
+
+describe('mintTextChangesetId', () => {
+  it('mints tc_ and 10 lowercase Crockford base32 characters', () => {
+    expect(isTextChangesetId(mintTextChangesetId())).toBe(true);
+    expect(mintTextChangesetId(() => new Uint8Array(10).fill(0))).toBe('tc_0000000000');
   });
 });

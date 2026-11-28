@@ -262,6 +262,16 @@ lists, applied by the api to the state as it stands.
 - **In the editor**: the writing arrives as a peer's; a toast names the agent's owner and the summary, "Webber changed
   the document: tighten the intro · Undo", as for elements.
 - **Not held**: a text document has no held elements; an agent's edit and a person's typing merge character by character.
+- **Roles**, as the token's owner holds them on the document: an Editor runs every operation; a Participant only
+  `comment` and `suggest …`, any other refused `403 forbidden_operation` naming its line; a Viewer is refused `403`.
+  Comments and suggestions carry the owner's key on the document, so the room reads them as theirs.
+- **Answers**: `200` with `changeset` (`id` `tc_` and 10 characters, null when nothing changed or on a dry run),
+  `results` (one line an operation) and `text`; refusals `400 invalid_operation`, `400 not_a_text_document` (an
+  element changeset's body, `operations` or `replace`, sent to a text document, or `ops` sent to another tab),
+  `422 text_not_found`, `422 text_ambiguous`, `422 ref_not_found`, `412 stale_tab`, `413 document_too_large`, each
+  with `line`, `operation` and `message`.
+- **History**: listed with the document's other changesets; its counts are paragraphs added (`added`) and other
+  operations (`changed`). Reverting it twice answers `changeset: null`.
 
 ## Limits
 

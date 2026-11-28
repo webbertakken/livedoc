@@ -6,7 +6,7 @@
 import * as Y from 'yjs';
 import { liveBlockNodes, runAttributes } from '../live/live-write';
 import { tabFragment } from '../live/live-root';
-import { liveTabIds } from '../live/live-tabs';
+import { liveTabList } from '../live/live-tabs';
 import {
   DELETION_MARK,
   FORMAT_CHANGE_MARK,
@@ -41,8 +41,8 @@ export type TextChangesetInput = {
   /** The state's updates as stored. */
   readonly state: readonly Uint8Array[];
   readonly format: TextDocumentFormat;
-  /** The document tab's id. */
-  readonly tab: string;
+  /** The document tab, by id or name (any case); the first when none. */
+  readonly documentTab?: string;
   readonly ops: readonly TextOpLine[];
   /** The token's owner, the author of its comments and suggestions. */
   readonly author: TextDocumentCommentAuthor & { readonly key: string };
@@ -55,6 +55,8 @@ export type TextChangesetInput = {
 
 export type TextChangesetApplied = {
   readonly ok: true;
+  /** The document tab's id. */
+  readonly documentTab: string;
   readonly results: readonly string[];
   /** The update to send the room; null when the operations changed nothing. */
   readonly update: Uint8Array | null;
@@ -373,13 +375,20 @@ export function applyTextChangeset(
 ): TextChangesetApplied | TextChangesetRefused {
   const doc = TextDocumentState.load(input.state);
   try {
-    if (!liveTabIds(doc).includes(input.tab))
+    const tabs = liveTabList(doc);
+    const asked = input.documentTab;
+    const tab =
+      asked === undefined
+        ? tabs[0]!
+        : (tabs.find((t) => t.id === asked) ??
+          tabs.find((t) => t.name.toLowerCase() === asked.toLowerCase()));
+    if (!tab)
       return {
         ok: false,
         error: 'ref_not_found',
         line: 0,
         operation: 0,
-        message: `no document tab ${input.tab}`,
+        message: `no document tab ${JSON.stringify(asked)}: the document has ${tabs.map((t) => JSON.stringify(t.name)).join(', ')}`,
       };
     const replacing = input.ops.find((o) => o.op.op === 'replace');
     if (
@@ -396,8 +405,8 @@ export function applyTextChangeset(
     const ctx: Context = {
       doc,
       format: input.format,
-      tab: input.tab,
-      fragment: tabFragment(doc, input.tab),
+      tab: tab.id,
+      fragment: tabFragment(doc, tab.id),
       author: input.author,
       now: input.now,
       newId: input.newId,
@@ -422,6 +431,7 @@ export function applyTextChangeset(
     const step = UndoSteps.between(before, Y.snapshot(doc));
     return {
       ok: true,
+      documentTab: tab.id,
       results,
       update: updates.length > 0 ? Y.mergeUpdates(updates) : null,
       step,

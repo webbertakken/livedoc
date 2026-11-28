@@ -8,6 +8,7 @@ import { CHANGESET_RETENTION_MS } from '@livedoc/api-schema';
 import { DAY_MS } from '@livedoc/items';
 import { deleteOldChangesets } from '../db/changesets';
 import { deleteOldSheetChangesets } from '../db/sheet-changesets';
+import { deleteOldTextChangesets } from '../db/text-changesets';
 import { runSheetExpiry, SHEET_UNREFERENCED_DAYS } from '../sheet-sweep';
 import type { DocumentEnv } from '../types';
 
@@ -27,11 +28,13 @@ export async function maintainRoom(
 ): Promise<UpkeepOutcome> {
   const changesets =
     (await deleteOldChangesets(env, now - CHANGESET_RETENTION_MS)) +
-    (await deleteOldSheetChangesets(env, now - CHANGESET_RETENTION_MS));
+    (await deleteOldSheetChangesets(env, now - CHANGESET_RETENTION_MS)) +
+    (await deleteOldTextChangesets(env, now - CHANGESET_RETENTION_MS));
   const expired = await runSheetExpiry(env, now);
   const oldest = await env.DOCUMENT_DB.prepare(
     `SELECT (SELECT MIN(created_at) FROM (SELECT created_at FROM agent_changesets UNION ALL
-                                              SELECT created_at FROM sheet_changesets)) AS changeset,
+                                              SELECT created_at FROM sheet_changesets UNION ALL
+                                              SELECT created_at FROM text_changesets)) AS changeset,
             (SELECT MIN(unreferenced_since) FROM sheets WHERE unreferenced_since IS NOT NULL) AS sheet`,
   ).first<{ changeset: number | null; sheet: number | null }>();
   // Each cutoff is strict (older than), so the oldest ages out a millisecond past its period.

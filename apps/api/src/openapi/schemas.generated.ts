@@ -2751,6 +2751,9 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
       "createdAt": {
         "type": "number"
       },
+      "documentTab": {
+        "type": "string"
+      },
       "id": {
         "type": "string"
       },

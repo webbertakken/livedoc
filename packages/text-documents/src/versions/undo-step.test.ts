@@ -27,6 +27,22 @@ describe('UndoSteps', () => {
     expect(TextDocumentState.paragraphs(doc).map((p) => p.text)).toEqual(['Hello world']);
   });
 
+  it('reads the step of an update written by one client', () => {
+    const doc = TextDocumentState.load([TextDocumentState.fromBody([{ text: 'Hello world' }])]);
+    const updates: Uint8Array[] = [];
+    doc.on('update', (u: Uint8Array) => updates.push(u));
+    const run = (TextDocumentState.body(doc).get(0) as Y.XmlElement).get(0) as Y.XmlText;
+    doc.transact(() => {
+      run.delete(0, 6);
+      run.insert(0, 'Brave ');
+    });
+    const step = UndoSteps.ofUpdate(Y.mergeUpdates(updates));
+    expect([...step.insertions.clients.keys()]).toEqual([doc.clientID]);
+    expect(step.deletions.clients.size).toBe(1);
+    UndoSteps.undoUpdate(doc, step);
+    expect(TextDocumentState.paragraphs(doc).map((p) => p.text)).toEqual(['Hello world']);
+  });
+
   it('undoes nothing for an empty step', () => {
     const doc = TextDocumentState.load();
     const step = written(doc, () => {});

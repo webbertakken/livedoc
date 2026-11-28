@@ -570,7 +570,7 @@ export const ROUTE_MANIFEST: RouteSpec[] = [
     segment: 'documents',
     tag: 'Changesets',
     summary:
-      'Change one tab with a changeset: ordered edit operations or one replace, applied atomically, shown live to everyone with the tab open, credited to you and revertable. Pass the base you read (rev and element fingerprints) to refuse a write over a change made since. A whole-tab replace on a tab id the document lacks creates that tab.',
+      "Change one tab with a changeset: ordered edit operations or one replace, applied atomically, shown live to everyone with the tab open, credited to you and revertable. Pass the base you read (rev and element fingerprints) to refuse a write over a change made since. A whole-tab replace on a tab id the document lacks creates that tab. On a text document's tab the body is a TextChangesetRequest instead: `ops`, text operations one a line (edit, insert, append, prepend, style, format, table, comment, replace, each but style, table, comment and replace after `suggest` too), answered as a TextChangesetResponse; a Participant may comment and suggest.",
     auth: 'guest-or-session',
     tokenUsable: true,
     query: [

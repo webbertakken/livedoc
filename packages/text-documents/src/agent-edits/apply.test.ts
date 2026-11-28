@@ -41,7 +41,6 @@ function apply(state: Uint8Array[], text: string, extra: Partial<TextChangesetIn
   return applyTextChangeset({
     state,
     format: 'odf',
-    tab: 't.0',
     ops: parsed.ops,
     author: AUTHOR,
     now: 1_000,
@@ -270,11 +269,14 @@ describe('applyTextChangeset', () => {
     expect(result.results).toEqual(['edited ¶2', 'formatted ¶2 bold']);
   });
 
-  it('refuses a document tab the document lacks', () => {
-    expect(apply(BASE, 'append "x"', { tab: 't.9' })).toMatchObject({
+  it('finds the document tab by id or name, and refuses one the document lacks', () => {
+    expect(apply(BASE, 'append "x"', { documentTab: 't.9' })).toMatchObject({
       error: 'ref_not_found',
-      message: 'no document tab t.9',
+      message: 'no document tab "t.9": the document has "Tab 1"',
     });
+    expect(applied(BASE, 'append "x"', { documentTab: 'tab 1' }).documentTab).toBe('t.0');
+    expect(applied(BASE, 'append "x"', { documentTab: 't.0' }).documentTab).toBe('t.0');
+    expect(applied(BASE, 'append "x"').documentTab).toBe('t.0');
   });
 
   it('replaces the tab only from the state read', () => {

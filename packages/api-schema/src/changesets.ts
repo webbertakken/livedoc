@@ -285,6 +285,8 @@ export type ChangesetSummary = {
   tabId: string;
   // A sheet changeset's sheet (D265); its counts are cells.
   sheetId?: string;
+  // A text changeset's document tab (agent-changesets.md "A text document's changesets"); its counts are paragraphs.
+  documentTab?: string;
   rev: number;
   author: ChangesetAuthor;
   agent: boolean;
