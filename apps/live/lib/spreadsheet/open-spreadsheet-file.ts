@@ -16,7 +16,7 @@ import { apiCreateDocument, apiDeleteDocument } from '@/lib/api-client';
 import { writeSheet, type SheetsScope } from '@/lib/api/sheets';
 import { sendKept } from '@/lib/api/workbook-kept';
 import { debugLog } from '@/lib/debug-log';
-import { keepImportReport } from './import-report-handoff';
+import { keepImportReport } from '@/lib/office/import-report-handoff';
 import { newSheetTab, workbookMadeHere } from './spreadsheet-document';
 import { spreadsheetPictureStore } from './spreadsheet-picture-store';
 import { UNTITLED_SPREADSHEET } from './spreadsheet-name';

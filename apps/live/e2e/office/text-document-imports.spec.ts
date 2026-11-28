@@ -3,7 +3,7 @@ import { officeMenuItem } from './office-menus';
 
 // Imports (docs/specs/034-text-documents/files-and-print.md "Opening"): a Markdown or HTML file opened from the
 // computer becomes a new OpenDocument text document named after the file, its heading, list items, code and table in
-// place; a page's script is never read.
+// place; a page's script is never read, and the import report says so once, reopened by File > Security limitations.
 
 const BODY = '[role="textbox"][aria-label="Document body"]';
 const MARKDOWN = [
@@ -45,6 +45,8 @@ test('a Markdown file opens as a new text document', async ({ page, pageErrors }
   await expect(body.locator('table')).toHaveCount(1);
   await expect(body.locator('table')).toContainText('Ann');
   await expect(page.getByText('.ODT', { exact: true })).toBeVisible();
+  // Nothing was left out: no import report.
+  await expect(page.locator('[data-import-report]')).toHaveCount(0);
   expectNoPageErrors(pageErrors);
 });
 
@@ -70,6 +72,20 @@ test('an HTML file opens as a new text document, its script never read', async (
   await expect(body).toContainText('South');
   await expect(body.locator('table')).toContainText('Q3');
   await expect(body).not.toContainText('pwned');
+  const report = page.getByRole('dialog', { name: 'Opened “Report”' });
+  await expect(report).toContainText('1 script, frame or control left out, never run: script');
+  await report.getByRole('button', { name: 'OK' }).click();
+  await expect(report).toBeHidden();
+  await (await officeMenuItem(page, ['File', 'Security limitations'])).click();
+  const limits = page.getByRole('dialog', { name: 'Security limitations' });
+  await expect(limits).toContainText('Opened from a .html file');
+  await expect(limits).toContainText('never run: script');
+  await page.keyboard.press('Escape');
+  await expect(limits).toBeHidden();
+  // Shown once: a later visit does not show it again unasked.
+  await page.reload();
+  await expect(page.locator('[data-text-document-surface="ready"]')).toBeVisible();
+  await expect(page.locator('[data-import-report]')).toHaveCount(0);
   expectNoPageErrors(pageErrors);
 });
 

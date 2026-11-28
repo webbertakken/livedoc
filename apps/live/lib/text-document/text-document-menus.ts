@@ -167,7 +167,7 @@ export function textDocumentMenus(
       }),
       SEPARATOR,
       item('details', 'Details', 'view'),
-      item('security-limitations', 'Security limitations', 'view'),
+      item('security-limitations', 'Security limitations', 'view', BUILT),
       item('language', 'Language', 'edit'),
       SEPARATOR,
       item('page-setup', 'Page setup', 'edit', BUILT),

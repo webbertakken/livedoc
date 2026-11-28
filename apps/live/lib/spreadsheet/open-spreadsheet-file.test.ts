@@ -8,7 +8,7 @@ import { writeSheet } from '@/lib/api/sheets';
 import { sendKept } from '@/lib/api/workbook-kept';
 import { PACKAGE_MAX_BYTES } from '@livedoc/office-packages';
 import { createBrowserImportImageSession } from '@/lib/import-images/browser';
-import { keepImportReport } from './import-report-handoff';
+import { keepImportReport } from '@/lib/office/import-report-handoff';
 import { openingNotice, openSpreadsheetFile, spreadsheetNameFor } from './open-spreadsheet-file';
 
 vi.mock('@/lib/api-client', async (real) => ({
@@ -18,7 +18,7 @@ vi.mock('@/lib/api-client', async (real) => ({
 }));
 vi.mock('@/lib/api/sheets', () => ({ writeSheet: vi.fn() }));
 vi.mock('@/lib/api/workbook-kept', () => ({ sendKept: vi.fn() }));
-vi.mock('./import-report-handoff', () => ({ keepImportReport: vi.fn() }));
+vi.mock('@/lib/office/import-report-handoff', () => ({ keepImportReport: vi.fn() }));
 vi.mock('@/lib/import-images/browser', () => ({ createBrowserImportImageSession: vi.fn() }));
 
 afterEach(() => vi.clearAllMocks());

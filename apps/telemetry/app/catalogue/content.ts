@@ -281,6 +281,15 @@ export const TEXT_DOCUMENT_CONVERTED = chart(
   { types: ['TextDocumentConverted'], rising: 'neutral' },
 );
 
+// A text document's import report reopened (docs/specs/034-text-documents/files-and-print.md "Import report").
+export const TEXT_DOCUMENT_SECURITY_LIMITATIONS = chart(
+  'UI',
+  'Used',
+  'Text Document Security Limitations Opened',
+  'Someone opened File > Security limitations in a text document: what opening its file left out, and what converting it could not carry.',
+  { types: ['TextDocumentSecurityLimitations'], rising: 'neutral' },
+);
+
 // Spelling in a text document (docs/specs/034-text-documents/tools.md "Spelling and grammar"): never the word.
 export const TEXT_DOCUMENT_SPELLING_ACCEPTED = chart(
   'Document',
@@ -418,6 +427,7 @@ export const DOCUMENT_ACTIONS: MetricStack = {
     TEXT_DOCUMENT_VERSION_RESTORED,
     TEXT_DOCUMENT_NOTICES_CHOSEN,
     TEXT_DOCUMENT_CONVERTED,
+    TEXT_DOCUMENT_SECURITY_LIMITATIONS,
     TEXT_DOCUMENT_SPELLING_ACCEPTED,
     TEXT_DOCUMENT_DICTIONARY_ADDED,
     TEXT_DOCUMENT_SPELLING_CORRECTED,

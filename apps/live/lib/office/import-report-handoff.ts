@@ -1,19 +1,21 @@
-// The import report's way to the spreadsheet a file made (docs/specs/029-sheets/files-and-print.md "The import
-// report", D120): File › Open goes to the new spreadsheet with a page load, so the report waits in sessionStorage
-// under the spreadsheet's id, its lines already worded, until the person closes it, so it shows once.
+// The import report's way to the document a file made (docs/specs/029-sheets/files-and-print.md "The import report",
+// D120; docs/specs/034-text-documents/files-and-print.md "Import report"): File › Open goes to the new document with a
+// page load, so the report waits in sessionStorage under the document's id until the person closes it, so it shows
+// once. A spreadsheet's waits with its lines already worded; a text document's waits with none, as the document
+// holds its own report and the wait only says that this person opened the file.
 import { debugLog } from '@/lib/debug-log';
 
-/** A report waiting to be shown: the spreadsheet's name and the lines to list. */
+/** A report waiting to be shown: the document's name and the lines to list (none: the document holds them). */
 export type KeptImportReport = { name: string; lines: string[] };
 
 const KEY = (documentId: string) => `livedoc:import-report:${documentId}`;
 
-/** Leave the report for the spreadsheet `documentId`; a page that refuses storage shows none, and says so. */
+/** Leave the report for the document `documentId`; a page that refuses storage shows none, and says so. */
 export function keepImportReport(documentId: string, report: KeptImportReport): void {
   try {
     sessionStorage.setItem(KEY(documentId), JSON.stringify(report));
   } catch (error) {
-    debugLog('[workbook] import report not kept', { error: String(error) });
+    debugLog('[office] import report not kept', { error: String(error) });
   }
 }
 
@@ -23,7 +25,6 @@ const isReport = (value: unknown): value is KeptImportReport => {
   return (
     typeof name === 'string' &&
     Array.isArray(lines) &&
-    lines.length > 0 &&
     lines.every((line) => typeof line === 'string')
   );
 };
@@ -35,7 +36,7 @@ function parsed(stored: string, documentId: string): KeptImportReport | null {
   } catch {
     // Not JSON: as any value not of this shape, logged below.
   }
-  debugLog('[workbook] import report unreadable', { documentId });
+  debugLog('[office] import report unreadable', { documentId });
   return null;
 }
 
@@ -63,7 +64,7 @@ export function dismissImportReport(documentId: string): void {
   try {
     sessionStorage.removeItem(KEY(documentId));
   } catch (error) {
-    debugLog('[workbook] import report not dismissed', { error: String(error) });
+    debugLog('[office] import report not dismissed', { error: String(error) });
   }
   last = null;
   for (const listener of listeners) listener();

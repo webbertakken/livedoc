@@ -2,7 +2,7 @@
 
 **Status: partly built.** Built: Open (a `.odt`, `.fodt`, `.ott`, `.docx`, `.dotx` or `.docm` from the computer, and
 `.txt`, `.md`, `.html` and `.rtf` imported), Download in the OpenDocument and Word formats, Rich Text, Plain Text, Web Page, EPUB and
-Markdown, conversion. The rest is specified.
+Markdown, conversion, the import report and Security limitations. The rest is specified.
 
 Opening, importing, downloading, printing, copying, sharing, emailing and trashing a [text document](text-document.md).
 Both ODF and OOXML are native (fork C1, ruled): a file keeps the format it arrived in.
@@ -176,4 +176,5 @@ Participants; converting, opening into a folder and trashing are an Editor's (tr
 
 `Document · Imported · TextDocument<Format>` (Odt, Fodt, Docx, Rtf, Txt, Html, Md, Pdf),
 `Document · Exported · TextDocument<Format>`, `Document · Changed · TextDocumentConverted`, `UI · Used · TextDocumentPrint`,
+`UI · Used · TextDocumentSecurityLimitations` (File > Security limitations reopened),
 `Document · Duplicated · TextDocument`. Never content.
