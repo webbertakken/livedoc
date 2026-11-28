@@ -900,11 +900,12 @@ Comment authors are names only in a file: a thread read from a file is by "From 
   colours, mentions, assignees, reactions and the note. An ODF annotation with LiveDoc's record whose fingerprint
   still matches is the thread; without one, or once another suite has changed its text, it is the cell's note
   (D660). A thread on a cell the read leaves out goes with it; past `SHEET_THREADS_MAX` a sheet's threads are cut,
-  past `SHEET_THREAD_COMMENTS_MAX` a thread's comments, and a comment's text to `SHEET_COMMENT_TEXT_MAX`, each
-  counted in the report (`threads_cut`).
-- **Downloads carry threads; copies do not**: a download, a repository sync and a conversion write the workbook's
-  threads (open and resolved); a Viewer's download writes none (D655). Opening a file stores its threads with the new
-  spreadsheet, authored "From the file".
+  past `SHEET_THREAD_COMMENTS_MAX` a thread's comments, and a comment's text to `SHEET_COMMENT_TEXT_MAX`, as rare as
+  it is and not counted, as a note is (D650).
+- **Downloads carry threads; copies do not**: a download (the editor's, the CLI's) writes the workbook's threads,
+  open and resolved; a Viewer's writes none (D655). Opening a file stores its threads with the new spreadsheet once its
+  cells are written, authored "From the file", an Editor's write in parts
+  (`POST /api/documents/:id/sheets/:sheetId/file-threads`).
 
 ## Pivot tables in the file
 

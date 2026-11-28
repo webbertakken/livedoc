@@ -913,6 +913,19 @@ export const ROUTE_MANIFEST: RouteSpec[] = [
   },
   {
     method: 'POST',
+    path: '/documents/{id}/sheets/{sheetId}/file-threads',
+    segment: 'documents',
+    tag: 'Sheets',
+    summary:
+      "An opened file's comment threads for one of its sheets, an Editor's: each anchored by the sheet's row and column ids, each comment by its author's name from the file (no key), bounded as any thread; a thread off the sheet, or past the sheet's 1,000, is left out. Sent in parts; answers how many were stored.",
+    auth: 'guest-or-session',
+    tokenUsable: true,
+    requestSchema: 'SheetThreadsFromFileRequest',
+    responseSchema: 'SheetThreadsFromFileResponse',
+    statuses: [200, 400, 401, 403, 404, 410],
+  },
+  {
+    method: 'POST',
     path: '/documents/{id}/sheets/{sheetId}/changesets',
     segment: 'documents',
     tag: 'Sheets',

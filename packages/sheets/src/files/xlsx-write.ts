@@ -2,7 +2,17 @@
 // keeps it"): a SpreadsheetML workbook part naming a worksheet part per sheet, text in the shared strings, formulas in
 // Excel's grammar beside their cached values, and a spilled formula as a dynamic array. Same workbook, same bytes.
 import { xlsxHyperlinksOut } from './xlsx-hyperlinks';
-import { VML_CONTENT_TYPE, xlsxNotesOut } from './xlsx-notes';
+import { freeId, VML_CONTENT_TYPE, xlsxNotesOut } from './xlsx-notes';
+import {
+  PERSONS_CONTENT_TYPE,
+  PERSONS_PART,
+  PERSONS_RELATIONSHIP,
+  personsOf,
+  personsXml,
+  THREADS_CONTENT_TYPE,
+  THREADS_RELATIONSHIP,
+  xlsxThreadsOut,
+} from './xlsx-threads';
 import {
   escapeXmlAttribute,
   escapeXmlText,
@@ -507,9 +517,35 @@ export function writeXlsx(file: WorkbookFile, title: string): FileWritten<Uint8A
   const linked = file.sheets.map((sheet, i) =>
     xlsxHyperlinksOut(sheet.cells, linkIds(kept.relationships('sheet', i))),
   );
+  // Its comment threads ("Comments in the file"): a threaded comments part a sheet, the workbook's persons, and each
+  // thread's placeholder taking its cell's legacy comment, the note there carried by the thread's record (D658).
+  const persons = personsOf(file.sheets.map((sheet) => sheet.threads ?? []));
+  const threaded = file.sheets.map((sheet, i) =>
+    xlsxThreadsOut(
+      sheet.threads ?? [],
+      i + 1,
+      persons,
+      new Map(
+        sheet.cells.flatMap((cell) =>
+          cell.note === undefined ? [] : [[`${cell.r},${cell.c}`, cell.note] as const],
+        ),
+      ),
+    ),
+  );
+  const threadRels = threaded.map((t, i): Relationship[] =>
+    t
+      ? [
+          {
+            id: freeId('rIdThreads', new Set(kept.relationships('sheet', i).map((r) => r.id))),
+            type: THREADS_RELATIONSHIP,
+            target: `../threadedComments/threadedComment${i + 1}.xml`,
+          },
+        ]
+      : [],
+  );
   // Its cells' notes: a notes part and a VML drawing a sheet, numbered by the sheet ("Notes in the file").
   const noted = file.sheets.map((sheet, i) =>
-    xlsxNotesOut(sheet.cells, i + 1, kept.relationships('sheet', i)),
+    xlsxNotesOut(sheet.cells, i + 1, kept.relationships('sheet', i), threaded[i]?.placeholders),
   );
   const sheetParts = file.sheets.map((sheet, i): OoxmlPart => {
     const written = worksheetXml(sheet, i, { strings, styles, kept, tables }, renamed, losses, {
@@ -554,6 +590,7 @@ export function writeXlsx(file: WorkbookFile, title: string): FileWritten<Uint8A
   const metadata = xlsxMetadataXml(dynamic, pictured.values);
   if (metadata) more(RELATIONSHIP_TYPES.sheetMetadata, 'metadata.xml');
   for (const rel of pictured.workbook) more(rel.type, rel.target);
+  if (persons.size > 0) more(PERSONS_RELATIONSHIP, 'persons/person.xml');
   // Its pivot tables, each with its cache (standard-mapping.md "Pivot tables in the file").
   const pivoted = xlsxPivotParts(file.sheets, kept, keptParts.parts, renamed, workbookId, (i) => [
     ...sheetRels(i),
@@ -595,6 +632,26 @@ export function writeXlsx(file: WorkbookFile, title: string): FileWritten<Uint8A
     ...slicerParts.parts,
     ...(metadata ? [xmlPart('xl/metadata.xml', OOXML_CONTENT_TYPES.sheetMetadata, metadata)] : []),
     ...pictured.parts,
+    ...threaded.flatMap((t, i) =>
+      t
+        ? [
+            {
+              name: `xl/threadedComments/threadedComment${i + 1}.xml`,
+              contentType: THREADS_CONTENT_TYPE,
+              data: encode(t.xml),
+            },
+          ]
+        : [],
+    ),
+    ...(persons.size > 0
+      ? [
+          {
+            name: PERSONS_PART,
+            contentType: PERSONS_CONTENT_TYPE,
+            data: encode(personsXml(persons)),
+          },
+        ]
+      : []),
     ...noted.flatMap((n) =>
       (n?.parts ?? []).map((p) => ({
         name: p.name,
@@ -639,6 +696,7 @@ export function writeXlsx(file: WorkbookFile, title: string): FileWritten<Uint8A
         ...(pivoted.sheets[i] ?? []),
         ...(linked[i]?.rels ?? []),
         ...(noted[i]?.rels ?? []),
+        ...threadRels[i]!,
       ],
     ]),
     ...drawn.relationships,

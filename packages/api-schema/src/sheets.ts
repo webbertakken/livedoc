@@ -150,6 +150,31 @@ export type SheetThreadRequest = { op: SheetThreadOp };
 /** The thread after an op, or null once removed. */
 export type SheetThreadResponse = { id: string; thread: SheetThread | null };
 
+/** A comment a file holds (docs/specs/029-sheets/standard-mapping.md "Comments in the file"): its author by name. */
+export type SheetFileComment = {
+  text: string;
+  at: number;
+  author: string;
+  colour?: string;
+  edited?: number;
+  mentions?: unknown[];
+  assignee?: unknown;
+  reactions?: Record<string, string[]>;
+};
+
+/** A thread an opened file holds, anchored by the new sheet's row and column ids. */
+export type SheetFileThread = {
+  anchor: { r1: string; c1: string; r2: string; c2: string };
+  resolved: boolean;
+  comments: SheetFileComment[];
+};
+
+/** An opened file's threads for one sheet, a part of them at a time. */
+export type SheetThreadsFromFileRequest = { threads: SheetFileThread[] };
+
+/** How many of the part's threads were stored. */
+export type SheetThreadsFromFileResponse = { stored: number };
+
 // Someone's selection on a sheet (an ephemeral presence op, never stored): ids, so it follows rows that move.
 export type SheetPresenceOp = {
   kind: 'sheet-presence';

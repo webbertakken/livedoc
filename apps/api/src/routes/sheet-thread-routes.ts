@@ -4,14 +4,17 @@
 import {
   applyThreadOp,
   readThreadOp,
+  SHEET_THREADS_MAX,
   threadIdOf,
   type SheetThreadRefusal,
 } from '@livedoc/document';
 import type {
   SheetThreadResponse,
   SheetThreadRoomOp,
+  SheetThreadsFromFileResponse,
   SheetThreadsResponse,
 } from '@livedoc/api-schema';
+import { threadsFromFile } from '../document-room/sheet-thread-files';
 import { adderKeyFor } from '../adder-key';
 import { readSheetHead } from '../db';
 import { readThreadAt, readWorkbookThreads, storeThread } from '../db/sheet-threads';
@@ -108,4 +111,36 @@ export async function writeSheetThread(
     return json({ id, thread: result.thread } satisfies SheetThreadResponse);
   }
   return sheetBusy();
+}
+
+// POST /api/documents/:id/sheets/:sheetId/file-threads: an opened file's threads, stored with the new spreadsheet
+// (standard-mapping.md "Comments in the file"), an Editor's: each comment "From the file", no key, bounded as any
+// thread; past the sheet's room for threads, left out. Sent in parts by size, each part answered with what it stored.
+export async function importSheetThreads(
+  ctx: DocumentRouteContext,
+  documentId: string,
+  sheetId: string,
+): Promise<Response> {
+  const caller = await sheetCaller(ctx, documentId, 'edit');
+  if (caller instanceof Response) return caller;
+  if (caller.scopeTab) return forbidden();
+  const raw = await readBody(ctx);
+  const threads = (raw as { threads?: unknown } | null)?.threads;
+  if (!Array.isArray(threads)) return sheetRejected('thread_invalid');
+  const head = await readSheetHead(ctx.env, documentId, sheetId);
+  if (!head || !(await isSpreadsheet(ctx.env, documentId))) return sheetNotFound();
+  const { count } = await readThreadAt(ctx.env, documentId, sheetId, '');
+  const room = Math.max(0, SHEET_THREADS_MAX - count);
+  const made = threadsFromFile(sheetId, head.layout, threads, () => crypto.randomUUID()).slice(
+    0,
+    room,
+  );
+  const now = Date.now();
+  let stored = 0;
+  for (const thread of made)
+    if (await storeThread(ctx.env, documentId, sheetId, null, thread.id, thread, now)) stored++;
+  console.info(
+    `[sheets] threads from file sheet=${sheetId} sent=${threads.length} stored=${stored} room=${room}`,
+  );
+  return json({ stored } satisfies SheetThreadsFromFileResponse);
 }

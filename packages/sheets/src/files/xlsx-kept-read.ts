@@ -27,6 +27,7 @@ import {
 } from './kept-content';
 import { OFFICE_RELATIONSHIPS_NS, SPREADSHEETML_NS } from './xlsx-parts';
 import { NOTES_RELATIONSHIP, VML_RELATIONSHIP } from './xlsx-notes';
+import { PERSONS_RELATIONSHIP, THREADS_RELATIONSHIP } from './xlsx-threads';
 import { isReadTabColor } from './xlsx-tab-look';
 
 const MC_NS = 'http://schemas.openxmlformats.org/markup-compatibility/2006';
@@ -54,6 +55,9 @@ const WRITTEN_TYPES: ReadonlySet<string> = new Set([
   // A sheet's notes and the VML drawing showing them are read and written ("Notes in the file", D651).
   NOTES_RELATIONSHIP,
   VML_RELATIONSHIP,
+  // A sheet's comment threads and the workbook's persons are read and written ("Comments in the file").
+  THREADS_RELATIONSHIP,
+  PERSONS_RELATIONSHIP,
 ]);
 
 // The parts LiveDoc writes, whatever a kept part's relationship says (a link back to a worksheet is not followed).
