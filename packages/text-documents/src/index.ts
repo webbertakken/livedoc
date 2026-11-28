@@ -476,3 +476,11 @@ export {
   type MarkdownRun,
 } from './imports/markdown-blocks';
 export { readTextDocumentImport } from './imports/import-file';
+export {
+  readPdfImport,
+  readPdfPages,
+  type PdfImportLine,
+  type PdfImportNode,
+  type PdfImportPicture,
+  type PdfImportPage,
+} from './imports/pdf';

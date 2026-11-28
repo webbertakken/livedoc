@@ -391,3 +391,59 @@ describe('OfficeToolbar’s split toggle', () => {
     expect(container.querySelector('[data-office-control="text-mark"] line')).not.toBeNull();
   });
 });
+
+// office-shell.md "Toolbar": a split toggle whose choices are commands opens them as a menu from its chevron.
+describe('OfficeToolbar’s split toggle with a menu', () => {
+  it('runs the toggle by its press, and each item of its chevron’s menu by its binding', () => {
+    const groups: OfficeToolbarGroup[] = [
+      {
+        id: 'insert',
+        label: 'Insert',
+        controls: [
+          {
+            id: 'create-a-filter',
+            label: 'Create a Filter',
+            level: 'edit',
+            status: 'built',
+            look: { ...icon, toggle: true, split: true },
+          },
+        ],
+      },
+    ];
+    const toggle = vi.fn();
+    const view = vi.fn();
+    const actions = {
+      'create-a-filter': { run: toggle, checked: true },
+      'create-filter-view': { run: view },
+    };
+    render(
+      <OfficeToolbar
+        groups={groups}
+        zoom={null}
+        actions={actions}
+        shortcutOf={() => null}
+        choices={{
+          'create-a-filter': {
+            read: () => null,
+            entries: [
+              {
+                kind: 'item',
+                id: 'create-filter-view',
+                label: 'Create Filter View',
+                level: 'view',
+                status: 'built',
+              },
+            ],
+            actions,
+          },
+        }}
+      />,
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Create a Filter' }));
+    expect(toggle).toHaveBeenCalledTimes(1);
+    fireEvent.click(screen.getByRole('button', { name: 'Create a Filter options' }));
+    fireEvent.click(screen.getByRole('menuitem', { name: /Create Filter View/ }));
+    expect(view).toHaveBeenCalledTimes(1);
+    expect(screen.queryByRole('menu')).toBeNull();
+  });
+});

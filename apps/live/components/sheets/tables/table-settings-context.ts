@@ -12,3 +12,10 @@ export const TableSettingsContext = createContext<((tableId: string) => void) | 
  */
 export type TableColumnMenuOpener = { current: (() => void) | null };
 export const TableColumnMenuContext = createContext<TableColumnMenuOpener | null>(null);
+
+/**
+ * Where the tables' chips are drawn (data-tools.md "Tables", D503): a layer of the grid over its headers, so a chip
+ * above a header in the sheet's first row sits over the column letters, never over the header's text. A grid without
+ * it draws the chips with its cells.
+ */
+export const TableChipsHostContext = createContext<HTMLElement | null>(null);

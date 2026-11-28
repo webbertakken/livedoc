@@ -1,7 +1,7 @@
 # Files and print
 
 **Status: partly built.** Built: Open (a `.odt`, `.fodt`, `.ott`, `.docx`, `.dotx` or `.docm` from the computer, and
-`.txt`, `.md`, `.html` and `.rtf` imported), Download in the OpenDocument and Word formats, Rich Text, Plain Text, Web Page, EPUB and
+`.txt`, `.md`, `.html`, `.rtf` and `.pdf` imported), Download in the OpenDocument and Word formats, Rich Text, Plain Text, Web Page, EPUB and
 Markdown, conversion, the import report and Security limitations. The rest is specified.
 
 Opening, importing, downloading, printing, copying, sharing, emailing and trashing a [text document](text-document.md).
@@ -14,7 +14,7 @@ Both ODF and OOXML are native (fork C1, ruled): a file keeps the format it arriv
 - Dropping or uploading a `.odt`, `.fodt` or `.docx` (also `.ott`, `.dotx`, `.docm` with its macros dropped) makes a
   text document **in that format**, named after the file, in the current folder.
 - Other formats are **imported**: `.rtf`, `.txt`, `.html`, `.md` (as a text document; a `.md` dropped where pages are
-  made stays a [page](../031-markdown/markdown-tab.md), fork D3) and `.pdf` (text and pictures, reading order guessed);
+  made stays a [page](../031-markdown/markdown-tab.md), fork D3) and `.pdf` ([below](#opening), reading order guessed);
   an imported document is born in ODF (fork C5). Plain Text is a paragraph a line (UTF-8, else Windows' Western
   encoding; a file holding a NUL byte is not text); Markdown reads as Markdown downloads (headings, lists and
   checklists, code blocks in their language, pipe tables with a header row, bold, italic, strikethrough and safe
@@ -31,7 +31,20 @@ Both ODF and OOXML are native (fork C1, ruled): a file keeps the format it arriv
 - A `.pdf` dropped or uploaded anywhere else in LiveDoc opens as a [PDF document](../035-pdf-documents/pdf-document.md),
   which stays a PDF. Importing it here is a choice, and a copy: a PDF document's File > Open as a text document, or
   this dialog's Upload with "Import as a text document" ticked.
-- An import that drops anything shows the **import report** ([below](#import-report)).
+- **A PDF imported** is read in this browser, by the PDF engine, the one place a PDF is parsed ([The
+  boundary](../035-pdf-documents/security.md#the-boundary)); the new document rides the create as a state with its
+  import report in it, as a copy does (default). A text document's File > Open takes a `.pdf` and imports it (default).
+  A tagged page reads by its tags: headings, paragraphs, lists, tables with their header rows, a figure as its alt text
+  in brackets, artifacts (running headers, page numbers) left out. Any other page reads by its geometry (reading order
+  guessed): the engine's lines in the file's order, a line joining the paragraph above when it starts in the same column
+  and the gap is at most half a line; a paragraph whose lines are at least 1.2 times the body text's height is a
+  heading, the tallest Heading 1, then 2 and 3 (default). A page with no text (a scan) and a page whose text was cut at
+  the engine's limit are reported; each picture comes at its place: a tagged figure holds the page's pictures in the
+  order drawn, an untagged page's picture goes before the first paragraph below its top, any left over after the page,
+  at its size on the page up to the text's width; a picture past the engine's size limit, unreadable, or past a page's
+  picture limit is left out and reported (default). A password-protected PDF, or one the engine refuses, is refused with
+  the PDF document's words; past `TEXT_DOCUMENT_MAX_CHARS` it refuses `document_too_large`.
+- An import that drops something a reader would miss shows the **import report** once ([below](#import-report)).
 - An opened file rides the new document's create (default): `POST /api/documents` names the text document tab and its
   file (`textDocuments: [{ tabId, file }]`, base64; a copy's `{ tabId, state }` carries a live state instead,
   [Copies](live-editing-and-storage.md#copies)); the room reads it with the package's guards and stores its body as

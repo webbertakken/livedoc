@@ -1,0 +1,58 @@
+[sheets oracle] uploaded id=<drive file id>
+
+# deleteDuplicates all columns
+  reply {"deleteDuplicates":{"duplicatesRemovedCount":5}}
+  after [["a",1],["a ",1],[],["b",2]]
+
+# deleteDuplicates column A only
+  reply {"deleteDuplicates":{"duplicatesRemovedCount":5}}
+  after [["a",1],["a ",1],[],["b",2]]
+
+# deleteDuplicates with a cell beside the range
+  reply {"deleteDuplicates":{"duplicatesRemovedCount":1}}
+  after [["a",1,"keep1"],["b",2,"keep2"],["","","keep3"]]
+
+# trimWhitespace
+  reply {"trimWhitespace":{"cellsChangedCount":4}}
+  after [["a b"],[" x "],["=\" y \""],[12],["7"],["tab\there"],["line\nbreak"],["em"]]
+
+# textToColumns comma
+  reply {}
+  after [["a","b","c"],[1,45296,"x,y"],["one"]]
+
+# textToColumns autodetect
+  reply {}
+  after [["a;b;c"],["d;e"]]
+
+# textToColumns autodetect mixed
+  reply {}
+  after [["a","b"],["c;d"],["e f"]]
+
+# textToColumns space
+  reply {}
+  after [["a","","b","c"],["","lead"]]
+
+# textToColumns custom ::
+  reply {}
+  after [["a","b","c"]]
+
+# textToColumns period
+  reply {}
+  after [[1,5,"x"],["a","b"]]
+
+# textToColumns formula and number
+  reply {}
+  after [["p","q"],[12]]
+
+# textToColumns two columns
+  reply ERR 400 {"error":{"code":400,"message":"Invalid requests[0].textToColumns: You cannot split data that spans more than one column.","status":"INVALID_ARGUMENT"}}
+  after [["a,b","c,d"]]
+
+# randomizeRange
+  reply {}
+  after [[4,"d"],[5,"e"],[2,"b"],[1,"a"],[6,"f"],[3,"c"]]
+
+# randomizeRange one column
+  reply {}
+  after [[3,"a"],[6,"b"],[4,"c"],[5,"d"],[1,"e"],[2,"f"]]
+[sheets oracle] deleted id=<drive file id>

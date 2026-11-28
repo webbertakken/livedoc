@@ -1,15 +1,17 @@
 'use client';
 
 // An office toolbar's split toggle (docs/specs/004-interface-design/office-shell.md "Toolbar"): a toggle (a list
-// button), and beside it a chevron of its own, "<name> styles", opening the kind's choice grid under it. Down on the
-// toggle opens the grid too. Both halves are stops of the bar's arrows; the toggle holds the bar's tab stop.
+// button), and beside it a chevron of its own, "<name> styles", opening the kind's choice grid under it; or, for a kind
+// whose choices are commands, "<name> options" opening them as a menu. Down on the toggle opens the grid or menu too.
+// Both halves are stops of the bar's arrows; the toggle holds the bar's tab stop.
 import { useState } from 'react';
 import { ChevronDownIcon, Glyph, HoverCard, Prims } from '@livedoc/ui';
 import type { IconPrim } from '@livedoc/icons';
-import type { OfficeAction } from '@/lib/office/office-catalogue';
+import { noShortcuts, type OfficeAction } from '@/lib/office/office-catalogue';
 import type { ShortcutText } from '@/lib/office/shortcut-notation';
 import type { OfficeChoice } from './OfficeChoiceMenu';
 import { OfficeChoiceGrid } from './OfficeChoiceGrid';
+import { OfficeMenuPanel } from './OfficeMenuPanel';
 import { OfficePopup } from './OfficePopup';
 
 /** The chevron's id, beside its toggle's, by which the bar finds it. */
@@ -49,10 +51,12 @@ export function OfficeSplitToggle({
   // The cell in force as the grid opened; undefined while it is closed.
   const [open, setOpen] = useState<string | null | undefined>(undefined);
   const grid = choice?.grid;
+  // Commands in place of looks: the chevron opens them as a menu.
+  const menu = !grid && !!choice?.entries.length;
   const openGrid = () => {
     if (!inert && choice) setOpen(choice.read());
   };
-  const name = `${label} styles`;
+  const name = menu ? `${label} options` : `${label} styles`;
   return (
     <span className="flex items-center">
       <HoverCard title={label} description={description}>
@@ -68,7 +72,7 @@ export function OfficeSplitToggle({
             if (!inert) action?.run();
           }}
           onKeyDown={(e) => {
-            if (e.key !== 'ArrowDown' || !grid) return;
+            if (e.key !== 'ArrowDown' || (!grid && !menu)) return;
             e.preventDefault();
             openGrid();
           }}
@@ -79,7 +83,7 @@ export function OfficeSplitToggle({
           </Glyph>
         </button>
       </HoverCard>
-      {grid ? (
+      {grid || menu ? (
         <HoverCard title={name}>
           <button
             ref={setChevron}
@@ -106,6 +110,21 @@ export function OfficeSplitToggle({
             value={open}
             trigger={chevron}
             onClose={() => setOpen(undefined)}
+          />
+        </OfficePopup>
+      ) : null}
+      {menu && choice && open !== undefined ? (
+        <OfficePopup anchor={chevron}>
+          <OfficeMenuPanel
+            entries={choice.entries}
+            actions={choice.actions}
+            shortcutOf={noShortcuts}
+            trigger={chevron}
+            initialFocus="first"
+            placement="popup"
+            label={name}
+            onClose={() => setOpen(undefined)}
+            onDone={() => setOpen(undefined)}
           />
         </OfficePopup>
       ) : null}

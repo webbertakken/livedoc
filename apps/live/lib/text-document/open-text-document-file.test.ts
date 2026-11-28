@@ -5,6 +5,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { ApiError, apiCreateDocument } from '@/lib/api-client';
 import { keepImportReport } from '@/lib/office/import-report-handoff';
 import { track } from '@/lib/telemetry';
+import { PDF_PASSWORD_REFUSAL } from './import-pdf-file';
 import { importedTypeOf, nameFromFile, openTextDocumentFile } from './open-text-document-file';
 
 vi.mock('@/lib/api-client', async (real) => ({
@@ -50,6 +51,18 @@ describe('openTextDocumentFile', () => {
       name: 'Page',
       lines: [],
     });
+  });
+
+  it('imports a PDF with the engine it is given, named after the file', async () => {
+    const terminate = vi.fn();
+    const opened = await openTextDocumentFile('me', new File(['x'], 'Scan.PDF'), () =>
+      Promise.resolve({
+        open: () => Promise.resolve({ ok: false, needsPassword: true }),
+        terminate,
+      } as never),
+    );
+    expect(opened).toEqual({ ok: false, message: PDF_PASSWORD_REFUSAL });
+    expect(terminate).toHaveBeenCalled();
   });
 
   it('words a refusal for the person', async () => {

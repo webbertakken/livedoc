@@ -23,7 +23,10 @@ export type DroppedReason =
   | 'suggestion-dangling'
   | 'suggestion-last-mark'
   | 'suggestion-paragraphs'
-  | 'suggestion-unknown';
+  | 'suggestion-unknown'
+  | 'pdf-no-text'
+  | 'pdf-text-cut'
+  | 'pdf-pictures';
 
 export type ReportItem = { readonly name: string; readonly count: number };
 
