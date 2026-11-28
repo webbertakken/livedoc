@@ -503,7 +503,7 @@ export const ROUTE_MANIFEST: RouteSpec[] = [
     segment: 'documents',
     tag: 'Documents',
     summary:
-      "Duplicate a document into the caller's files. With folderId, filed in one of the caller's own folders (404 for any other). For a text document, comments: false leaves out every comment thread and rejects every pending suggestion; resolved: false leaves out resolved threads. Neither given: everything is kept. 400 for a choice of the wrong type.",
+      "Duplicate a document into the caller's files. With folderId, filed in one of the caller's own folders (404 for any other). For a text document, comments: false leaves out every comment thread and rejects every pending suggestion; resolved: false leaves out resolved threads. Neither given: everything is kept. share: true (the owner only, else 403) shares the copy with the same people: a new link for each active link of the source, and each signed-in person reached through one a Shared-with-you row; the answer then says shared, false when sharing failed and the copy stayed private. 400 for a choice of the wrong type.",
     auth: 'guest-or-session',
     tokenUsable: true,
     requestSchema: {
@@ -513,6 +513,7 @@ export const ROUTE_MANIFEST: RouteSpec[] = [
         folderId: { type: ['string', 'null'] },
         comments: { type: 'boolean' },
         resolved: { type: 'boolean' },
+        share: { type: 'boolean' },
       },
     },
     responseSchema: wrap('document', 'Document'),

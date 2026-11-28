@@ -214,6 +214,8 @@ dialog, for every level. The copy is the person's own and keeps the format.
     not carried, nor is anyone whose link is gone.
   - no one is told: no email and no Inbox item, as Google sends none for a copy.
   - logged `[documents] copy shared` with the links and people carried and those left out.
+  - a sharing that fails leaves the copy made and private: it opens, and the dialog's log says
+    `[text-document] copy not shared`; the api logs `[documents] copy share failed`.
 
 ## Sharing
 

@@ -32,3 +32,6 @@ export const COPY_DOES_NOT_FIT = "This document doesn't fit in the file storage 
 
 /** A copy refused for any other reason (docs/specs/034-text-documents/files-and-print.md "Make a copy"). */
 export const COPY_FAILED = 'The copy couldn’t be made. Try again.';
+
+/** A copy made but left private when sharing it with the same people failed (files-and-print.md "Make a copy"). */
+export const COPY_NOT_SHARED = 'The copy was made but isn’t shared. Share it from the copy.';

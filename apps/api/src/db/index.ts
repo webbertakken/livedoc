@@ -15,6 +15,7 @@ export * from './participants';
 export * from './share';
 export * from './share-preview';
 export * from './shared';
+export * from './copy-sharing';
 export * from './folders';
 export * from './favourites';
 export * from './tags';

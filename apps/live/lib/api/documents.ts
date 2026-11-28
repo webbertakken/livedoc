@@ -491,14 +491,17 @@ export async function apiCopyDocument(
     folderId?: string | null;
     comments?: boolean;
     resolved?: boolean;
+    // Share it with the same people (the owner's only); sent only when true.
+    share?: boolean;
   } = {},
-): Promise<LiveDoc> {
-  const { name, folderId, comments, resolved } = opts;
+): Promise<{ document: LiveDoc; shared: boolean | null }> {
+  const { name, folderId, comments, resolved, share } = opts;
   const res = await apiFetch(`${API_BASE}/documents/${sourceId}/copy`, {
     method: 'POST',
     headers: await apiHeaders(ownerId, { body: true, share: opts.shareCode ?? null }),
-    body: JSON.stringify({ name, folderId, comments, resolved }),
+    body: JSON.stringify({ name, folderId, comments, resolved, ...(share ? { share } : {}) }),
   });
-  const { document: liveDoc } = await expectOk<DocumentResponse>(res, 'copy document');
-  return liveDoc;
+  // `shared` answers a share asked for: false when the copy was made but left private.
+  const body = await expectOk<DocumentResponse & { shared?: boolean }>(res, 'copy document');
+  return { document: body.document, shared: body.shared ?? null };
 }

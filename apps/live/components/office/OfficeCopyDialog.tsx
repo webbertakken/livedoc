@@ -13,14 +13,19 @@ const FIELD =
 const CHANGE =
   'touch-target relative rounded-control px-3 py-1 text-body text-(--office-primary) outline-none hover:bg-(--office-hover) focus-visible:ring-2 focus-visible:ring-(--office-focus)';
 
-/** What the person chose: the name as typed, and the review where it was offered. */
-export type OfficeCopyChoice = { name: string; review: CopiedReviewChoice | null };
+/** What the person chose: the name as typed, the review where it was offered, and whether to share it alike. */
+export type OfficeCopyChoice = {
+  name: string;
+  review: CopiedReviewChoice | null;
+  share: boolean;
+};
 
 export function OfficeCopyDialog({
   open,
   documentName,
   folder,
   offerReview,
+  offerShare,
   copying,
   failure,
   onCopy,
@@ -33,6 +38,8 @@ export function OfficeCopyDialog({
   folder: { name: string; onChange: () => void } | null;
   // The two review choices, for anyone but a Viewer.
   offerReview: boolean;
+  // Share it with the same people: the owner of a stored document's alone.
+  offerShare: boolean;
   copying: boolean;
   // What the last refusal said; null while nothing was refused.
   failure: string | null;
@@ -43,6 +50,7 @@ export function OfficeCopyDialog({
   const folderId = useId();
   const nameField = useRef<HTMLInputElement | null>(null);
   const [name, setName] = useState(`Copy of ${documentName}`);
+  const [share, setShare] = useState(false);
   const [comments, setComments] = useState(false);
   const [resolved, setResolved] = useState(false);
   // The name selected once, as the dialog first opens, so typing replaces it.
@@ -64,6 +72,7 @@ export function OfficeCopyDialog({
           onCopy({
             name,
             review: offerReview ? { comments, resolved: comments && resolved } : null,
+            share: offerShare && share,
           }),
       }}
     >
@@ -97,6 +106,18 @@ export function OfficeCopyDialog({
               Change
             </button>
           </div>
+        ) : null}
+        {offerShare ? (
+          <label className="flex items-center gap-3 text-body">
+            <input
+              type="checkbox"
+              data-office-copy-share=""
+              className="size-icon-row shrink-0 accent-(--office-primary)"
+              checked={share}
+              onChange={(event) => setShare(event.target.checked)}
+            />
+            Share it with the same people
+          </label>
         ) : null}
         {offerReview ? (
           <label className="flex items-center gap-3 text-body">
