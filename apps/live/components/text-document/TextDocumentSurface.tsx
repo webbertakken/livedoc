@@ -168,6 +168,7 @@ import { useTextDocumentDrawingOrphans } from './useTextDocumentDrawingOrphans';
 import { useTextDocumentDrawingReveal } from './useTextDocumentDrawingReveal';
 import { drawingHostStore, useTextDocumentDrawingPictures } from './useTextDocumentDrawingPictures';
 import { useTextDocumentReport } from './useTextDocumentReport';
+import { useTextDocumentPdf, type PrintingLook } from './useTextDocumentPdf';
 import {
   drawingOpenPlugin,
   type OpenDrawing,
@@ -344,10 +345,13 @@ export function TextDocumentSurface({
   const reviews = mode !== 'viewing';
   // Previewing the writing settled (review.md "Reviewing suggestions"), or Viewing, the body shows a copy: it takes no
   // edits.
+  // The printing look, while a PDF is made from the pages or Print preview shows them (files-and-print.md).
+  const [printing, setPrinting] = useState<PrintingLook>(null);
   const preview = useTextDocumentReviewPreview({
     doc: liveDoc,
     tab: shownTab ?? FIRST_DOCUMENT_TAB_ID,
     viewing: !reviews,
+    printing: printing !== null,
   });
   const { bindBody } = preview;
   const writes = canEdit && mode === 'editing' && !preview.previewing;
@@ -814,12 +818,16 @@ export function TextDocumentSurface({
   // View > Text width, a person's own (page-layout.md "Pageless").
   const textWidth = useTextDocumentTextWidth(page.pageless);
   const column = usePagelessColumn(scroller, scale, page.pageless, textWidth.width);
-  const drawn = page.pageless ? pagelessSetup(page.section.setup, column) : page.section.setup;
+  // Printed, a pageless document is laid on pages with the pages' setup (page-layout.md "Pageless").
+  const drawn =
+    page.pageless && printing === null
+      ? pagelessSetup(page.section.setup, column)
+      : page.section.setup;
   // Pages are laid out unless pageless or on a phone, where the writing flows to the window.
   const wide = useMediaQuery('(min-width: 640px)');
   // View > Show print layout, a person's own (page-layout.md "Print layout"): off, one sheet as on a phone.
   const printLayout = useTextDocumentViewToggle(PRINT_LAYOUT_TOGGLE);
-  const paginated = !page.pageless && wide && printLayout.shown;
+  const paginated = printing !== null || (!page.pageless && wide && printLayout.shown);
   // Without pages, the footnotes under the writing (page-layout.md "Footnotes").
   const endNotes = useTextDocumentEndNotes(
     editorView,
@@ -909,11 +917,11 @@ export function TextDocumentSurface({
   const marks = useTextDocumentViewToggle(NON_PRINTING_TOGGLE);
   useEffect(() => {
     if (editorView && !editorView.isDestroyed) {
-      setNonPrinting(editorView, marks.shown);
+      setNonPrinting(editorView, marks.shown && printing === null);
       // Breaks shown take room on the page (page-layout.md "Breaks").
       relayoutPages(editorView);
     }
-  }, [editorView, marks.shown]);
+  }, [editorView, marks.shown, printing]);
   const readRulerFormatting = useCallback(
     () =>
       liveDoc.current
@@ -1153,6 +1161,15 @@ export function TextDocumentSurface({
     documentId: scope.documentId,
     name: documentName,
   });
+  // File > Download > PDF document: the pages as laid out (files-and-print.md "Downloading").
+  const pdf = useTextDocumentPdf({
+    view: editorView,
+    root: () => mount.current?.parentElement ?? null,
+    pages: pageList,
+    readStyles,
+    name: documentName,
+    setPrinting,
+  });
   // Format > Image and the context menu on a selected picture: Alt text, Replace image (objects.md).
   const pictureEditing = useTextDocumentPictureEditing({
     view: editorView,
@@ -1306,9 +1323,11 @@ export function TextDocumentSurface({
       ...tableProperties.actions,
       ...headers.actions,
       ...importReport.actions,
+      ...pdf.actions,
     }),
     [
       importReport.actions,
+      pdf.actions,
       breakActions,
       lineActions,
       tabs.actions,
@@ -1440,6 +1459,7 @@ export function TextDocumentSurface({
       {clipboard.dialog}
       {pictures.dialog}
       {importReport.dialog}
+      {pdf.dialog}
       {pictureEditing.dialog}
       {preferences.dialog}
       {notifications.dialog}
@@ -1599,6 +1619,7 @@ export function TextDocumentSurface({
                 onDoubleClick={(event) => headers.onDoubleClick(event, scale)}
                 data-pages={paginated ? pageList.length : undefined}
                 data-laid-out={paginated ? 'pages' : 'flow'}
+                data-printing={printing ?? undefined}
                 className={`relative isolate mx-auto w-(--pages-width) max-w-full text-document-page px-6 py-10 text-[11pt] leading-[1.15] ${page.pageless ? '' : 'mt-6 min-h-(--page-height)'} ${state === 'failed' ? 'hidden' : ''}`}
               >
                 <TextDocumentSheets

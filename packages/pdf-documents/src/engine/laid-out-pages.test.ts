@@ -148,6 +148,15 @@ describe('writeLaidOutPages', () => {
     expect(scales[1]).toBe(LAID_OUT_FIT_RANGE[0]);
   });
 
+  it('keeps one character at its own width, centred in the width it was drawn at', async () => {
+    const { bytes } = await written(documentOf([{ ...A4, items: [word('•', 72, 100, 20)] }]));
+    const content = await contentOf(bytes);
+    expect(content).toContain('100 Tz');
+    const x = Number(/1 0 0 1 ([\d.]+) /.exec(content)![1]);
+    expect(x).toBeGreaterThan(72);
+    expect(x).toBeLessThan(82);
+  });
+
   it('leaves a run that already fits at its own width', async () => {
     const first = await written(documentOf([{ ...A4, items: [word('fit', 72, 100, 14)] }]));
     const scale = Number(/([\d.]+) Tz/.exec(await contentOf(first.bytes))![1]);

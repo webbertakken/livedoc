@@ -144,6 +144,7 @@ export const LAID_OUT_FIT_PT = 0.25;
 export const LAID_OUT_FIT_RANGE = [50, 200] as const;
 
 const PRODUCER = 'LiveDoc';
+const glyphClusters = new Intl.Segmenter(undefined, { granularity: 'grapheme' });
 const SAFE_URI = /^(https?:|mailto:)/i;
 
 function refusalOf(pages: readonly LaidOutPage[]): LaidOutRefusal | null {
@@ -190,14 +191,17 @@ function textContent(
   const body = shape(runs.body, runs.body.map((run) => run.text).join(''));
   const tail = shape(runs.tail, runs.tail.map((run) => run.text).join(''));
   const drawn = (body.reduce((sum, run) => sum + run.width, 0) * item.size) / 1000;
-  const fits = drawn > 0 && Math.abs(drawn - item.width) > LAID_OUT_FIT_PT;
+  // One character (a bullet, a symbol) keeps its shape, centred in its width: scaling it across would distort it.
+  const single = [...glyphClusters.segment(runs.body.map((run) => run.text).join(''))].length === 1;
+  const fits = !single && drawn > 0 && Math.abs(drawn - item.width) > LAID_OUT_FIT_PT;
   const [least, most] = LAID_OUT_FIT_RANGE;
   const scale = fits ? Math.min(most, Math.max(least, (item.width / drawn) * 100)) : 100;
+  const x = single ? item.x + (item.width - drawn) / 2 : item.x;
   const out = [
     'BT',
     `${rgbOf(item.colour)} rg`,
     `${num(scale)} Tz`,
-    `1 0 0 1 ${num(item.x)} ${num(height - item.baseline)} Tm`,
+    `1 0 0 1 ${num(x)} ${num(height - item.baseline)} Tm`,
   ];
   for (const run of [...body, ...tail]) {
     out.push(
@@ -431,3 +435,6 @@ function linkTarget(
   const page = pages[to.page];
   return page ? { Dest: destinationOf(page.ref, page.height - to.top) } : null;
 }
+
+/** The mark faces' files, fetched as the app's own assets: the fallback faces a page's words need. */
+export { fetchMarkFace } from './fetch-mark-face';

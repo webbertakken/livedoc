@@ -72,6 +72,11 @@ Each download is named after the document. A Viewer may download unless the owne
 Download as PDF offers "Keep in LiveDoc as a PDF document", which stores the written PDF beside its source as a
 [PDF document](../035-pdf-documents/files-print-and-sync.md#other-kinds-meeting-a-pdf); every kind's PDF is written by
 the repository's one PDF writer.
+The PDF is written in the browser from the pages as drawn in the [printing look](#printing): each word where it
+stands, in the served document font it was drawn in (fonts.md "Served from LiveDoc"), its structure from the writing.
+While it is made, a dialog, **Making the PDF**, says each step (laying out the pages, reading them, drawing the
+pictures, writing the PDF); closing it cancels, and a failure says "The PDF couldn’t be made. Try again." in it.
+A picture that cannot be read is left out. Telemetry `Document · Exported · TextDocumentPdf`.
 A download is `GET /api/documents/:id/text-documents/:tabId/file?type=odt|fodt|docx|txt|md|html|epub|rtf`, written from the live state
 (`400 file_type_unknown` for any other type); the other format is a converted copy, its losses counted in the
 `X-Conversion-Losses` header.
@@ -156,7 +161,13 @@ and show **Load picture** for an Editor.
 
 - **Print** (⌘P, the toolbar): the browser's print of the laid-out pages, at their paper size, with headers, footers
   and page numbers, and without comments, suggestion colours (suggestions printed as they would be accepted, as
-  Google prints them) or the editor's chrome.
+  Google prints them) or the editor's chrome. What the browser prints is the PDF Download as PDF writes, so a print
+  and the PDF always agree (director, 2026-11-28).
+- **The printing look**, the same for Print, Print preview and the PDF: light paper whatever the scheme; laid out on
+  pages whatever the view (a pageless document on its pages' setup, Show print layout off or on a phone); the shown
+  document tab only (default); none of the editor's own: comment tints, spelling marks, others' carets and
+  selections, bookmark glyphs, non-printing characters, picture and table handles, selected cells, a header's bar.
+  Content kept from the file keeps its room but prints as nothing: its placeholder is LiveDoc's own (default).
 - **Print preview** (File): the pages as printed, with **Print** and **Close**: it follows Print, pending suggestions
   drawn accepted, never Viewing, which draws them not yet made (director, 2026-11-27).
 
