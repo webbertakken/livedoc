@@ -1707,6 +1707,16 @@ export const articles: Article[] = [
     parentSlug: 'plan-tabs',
   },
   {
+    slug: 'cell-notes',
+    title: 'Notes on Cells',
+    description: 'Add, read, change and delete notes on spreadsheet cells.',
+    keywords:
+      'note notes cell note insert note edit note delete notes shift f2 annotation comment marker triangle hover spreadsheet sheet cell',
+    category: 'Canvas',
+    categorySlug: 'canvas/plan-tabs',
+    parentSlug: 'plan-tabs',
+  },
+  {
     slug: 'pivot-tables',
     title: 'Pivot Tables',
     description: 'Summarise a spreadsheet range by its columns: rows, columns, values and filters.',

@@ -129,6 +129,23 @@ describe('the mirror', () => {
   });
 });
 
+// review.md "Accessibility": a noted cell says so, and the active one's note is its description.
+describe('notes in the mirror', () => {
+  it('says a noted cell has a note, and describes the active one by its note', async () => {
+    const h = await mountGrid({ cells: { A1: 'Total' }, notes: { A1: 'Checked', B1: 'Blank' } });
+    const doc = h.grid.ownerDocument;
+    const a1 = doc.getElementById(h.grid.getAttribute('aria-activedescendant')!)!;
+    expect(a1.textContent).toBe('A1 Total, has note');
+    expect(doc.getElementById(a1.getAttribute('aria-describedby')!)?.textContent).toBe('Checked');
+    const b1 = within(mirror(h)).getAllByRole('gridcell')[1]!;
+    expect(b1.textContent).toBe('B1, has note');
+    expect(b1.hasAttribute('aria-describedby')).toBe(false);
+    select(h, 1, 0);
+    const a2 = doc.getElementById(h.grid.getAttribute('aria-activedescendant')!)!;
+    expect(a2.hasAttribute('aria-describedby')).toBe(false);
+  });
+});
+
 describe('Read Row and Read Column', () => {
   it('says the line up to the active cell, again on a second press', async () => {
     vi.useFakeTimers({ toFake: ['requestAnimationFrame'] });

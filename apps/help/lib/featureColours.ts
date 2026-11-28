@@ -45,6 +45,7 @@ export const FEATURE_ENTITY_HEX: Record<string, string> = {
   'pivot-tables': '#0d9488',
   'images-over-cells': '#c026d3',
   'cell-links': '#2563eb',
+  'cell-notes': '#ca8a04',
   'pages-mode': '#e11d48',
   'infographic-layouts': '#db2777',
   'logo-pages': '#0891b2',

@@ -78,6 +78,8 @@ describe('SPREADSHEET_CONTEXT_MENUS', () => {
       'Insert Link',
       'Comment',
       'Insert Note',
+      'Edit Note',
+      'Delete Notes',
       '|',
       'Convert to Table',
       {

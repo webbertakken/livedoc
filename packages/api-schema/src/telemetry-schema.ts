@@ -605,6 +605,8 @@ export const SHEET_CHANGE_KINDS = [
   'PivotTable',
   // An image over cells moved, resized, described, replaced or removed (docs/specs/029-sheets/inserted-objects.md).
   'Image',
+  // A cell's note saved or taken off (docs/specs/029-sheets/review.md "Notes").
+  'Note',
   // A protected sheet or range made, changed or removed (docs/specs/029-sheets/data-tools.md "Protected ranges").
   'Protection',
   // A table made, changed or removed (docs/specs/029-sheets/data-tools.md "Tables").

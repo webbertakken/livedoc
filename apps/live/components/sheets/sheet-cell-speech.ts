@@ -16,6 +16,9 @@ import {
 } from '@livedoc/sheets';
 import { mergeAt, type Geometry } from './sheet-geometry';
 
+/** What a noted cell adds to what is said of it (review.md "Accessibility"). */
+export const NOTED = ', has note';
+
 /** The most cells Read Row and Read Column say (D135). */
 export const READ_CELLS_MAX = 50;
 

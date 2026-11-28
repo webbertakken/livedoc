@@ -117,7 +117,11 @@ const CELL: readonly ContextEntrySpec[] = [
   SEPARATOR,
   { id: 'insert-link', label: 'Insert Link' },
   { id: 'insert-comment', label: 'Comment' },
-  { id: 'insert-note', label: 'Insert Note' },
+  // The note box on the active cell, Insert Note or Edit Note as it holds one, and Delete Notes where a selected cell
+  // holds one: an Editor's (review.md "Notes").
+  { ...own('cell-insert-note', 'Insert Note', 'edit', 'built'), contextual: true },
+  { ...own('edit-note', 'Edit Note', 'edit', 'built'), contextual: true },
+  { ...own('delete-notes', 'Delete Notes', 'edit', 'built'), contextual: true },
   SEPARATOR,
   'convert-to-table',
   submenu('more-cell-actions', 'View More Cell Actions', [

@@ -45,6 +45,8 @@ function Menus({ actions }: { actions: SheetActions }) {
       'column-stats': { run: vi.fn() },
       // Insert Link, as useSpreadsheetLinks binds it for an Editor.
       'insert-link': { run: vi.fn() },
+      // Insert Note on a cell without one, as useSpreadsheetNotes binds it for an Editor.
+      'cell-insert-note': { run: vi.fn() },
     },
   );
   return <SpreadsheetGridMenus actions={actions} bound={office.actions} />;

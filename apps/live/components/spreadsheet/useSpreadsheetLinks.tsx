@@ -20,14 +20,12 @@ import { lucideGlyph } from '@livedoc/ui';
 import { OfficeLinkCard } from '@/components/office/OfficeLinkCard';
 import { OfficeLinkEditor, type OfficeLinkGroup } from '@/components/office/OfficeLinkEditor';
 import type { SheetController } from '@/components/sheets/sheet-controller';
-import { cellBox } from '@/components/sheets/sheet-geometry';
 import {
   followCellLink,
   type FollowSheetLink,
 } from '@/components/sheets/sheet-link-follow-context';
 import { debugLog } from '@/lib/debug-log';
 import type { OfficeActions } from '@/lib/office/office-catalogue';
-import type { Box } from '@/lib/office/popup-place';
 import {
   cellLinkAddress,
   COPY_LINK,
@@ -46,6 +44,7 @@ import {
   type SheetLinkEditing,
 } from '@/lib/spreadsheet/sheet-links';
 import { track } from '@/lib/telemetry';
+import { activeCellBox } from './active-cell-box';
 import {
   documentAddress,
   documentIdOf,
@@ -68,23 +67,6 @@ const CARD_LABELS = { copy: 'Copy Link', edit: 'Edit Link', remove: 'Remove Link
 
 /** The cell menu's Open Link, for every role (sheet.md "The cell menu"). */
 export const OPEN_LINK = 'open-link';
-
-// The active cell's box on the screen: the grid's at its zoom, the cell's within it.
-function activeCellBox(c: SheetController): Box {
-  const grid = c.gridEl;
-  // A grid not laid out yet (as in a test) anchors at the corner.
-  if (!grid) return { left: 0, top: 0, bottom: 0 };
-  const rect = grid.getBoundingClientRect();
-  const scale = grid.offsetWidth > 0 ? rect.width / grid.offsetWidth : 1;
-  const { r, c: col } = c.selection.active;
-  const box = cellBox(c.geometry, r, col, c.scroll);
-  const top = rect.top + (c.geometry.headH + box.y) * scale;
-  return {
-    left: rect.left + (c.geometry.headW + box.x) * scale,
-    top,
-    bottom: top + box.h * scale,
-  };
-}
 
 // More than the active cell is selected (a merge counts as its one cell).
 function manySelected(c: SheetController): boolean {

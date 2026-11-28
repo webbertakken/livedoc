@@ -1478,6 +1478,15 @@ export const SPREADSHEET_LINK_ADDED = chart(
   { types: ['Link'] },
 );
 
+// docs/specs/029-sheets/review.md "Notes": a note saved from the note box (added, changed or taken off) or Delete Notes.
+export const SPREADSHEET_NOTES_CHANGED = chart(
+  'Spreadsheet',
+  'Changed',
+  'Spreadsheet Notes Changed',
+  "An editor saved a cell's note from the note box, added, changed or taken off, or used Delete Notes.",
+  { types: ['Note'] },
+);
+
 // docs/specs/029-sheets/data-tools.md "Filters, filter views and slicers" and "Group by view": a filter view or a
 // group by view made, saved (an Editor's) or temporary (a Participant's or a Viewer's).
 export const SPREADSHEET_FILTER_VIEWS_ADDED = chart(
@@ -1561,6 +1570,7 @@ export const SPREADSHEETS: MetricStack = {
     SPREADSHEET_IMAGES_ADDED,
     SPREADSHEET_EMOJI_ADDED,
     SPREADSHEET_LINK_ADDED,
+    SPREADSHEET_NOTES_CHANGED,
     SPREADSHEET_FILTER_VIEWS_ADDED,
     SPREADSHEET_GROUPS_TOGGLED,
     SPREADSHEET_GROUP_AGGREGATIONS,

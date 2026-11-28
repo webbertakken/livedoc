@@ -1,0 +1,51 @@
+import { ArticleLayout } from '@/components/ArticleLayout';
+import { helpMetadata } from '@/lib/seo';
+
+export const metadata = helpMetadata({
+  title: 'Notes on Cells',
+  description:
+    'Add a note to spreadsheet cells, read it by resting the pointer on the cell, change it, and delete notes from a selection.',
+  path: '/help/canvas/plan-tabs/cell-notes/',
+});
+
+<ArticleLayout
+  title="Notes on Cells"
+  description="A short piece of text a cell carries beside its value, shown when you rest the pointer on it."
+  categoryTitle="Canvas"
+  categorySlug="canvas/plan-tabs"
+>
+
+A note is plain text that belongs to a cell, as in Google Sheets: it has no author, replies or mentions. Use a comment when you want a conversation.
+
+## Adding a Note
+
+1. Click the cell, or select several cells to give them all the same note.
+2. Choose **Insert › Note**, right-click and choose **Insert Note**, or press **Shift+F2**.
+3. Type the note. **Enter** starts a new line.
+4. Click anywhere else, or press **Esc** or **Shift+F2**, and the note is saved.
+
+## Reading a Note
+
+A cell with a note shows a small black triangle in its top-right corner (white on a dark fill). Rest the pointer on the cell for a moment and the note appears beside it. A screen reader says "has note" with the cell and reads the note as its description.
+
+## Changing or Deleting a Note
+
+- To change a note, right-click the cell and choose **Edit Note**, or press **Shift+F2**, then edit the text.
+- To remove one note, open it and delete all of its text.
+- To remove every note in a selection, right-click and choose **Delete Notes**.
+
+Each save, and each **Delete Notes**, is one step you can undo with **Ctrl+Z** (**⌘Z** on a Mac).
+
+## What Carries a Note
+
+A note moves with its cell when you insert, move or sort rows and columns, and it is copied and pasted with the cell. **Paste Values Only** and **Paste Format Only** leave notes behind, as do filling down and the fill handle. Clearing a cell's value or formatting keeps its note.
+
+## Who Can Do What
+
+Editors add, change and delete notes. Everyone the spreadsheet is shared with sees the markers and reads the notes.
+
+## Notes in Files
+
+Notes travel with their cells into Excel files, where they are Excel's notes, and into OpenDocument files, where they are annotations. Notes in files you open come in as cells' notes.
+
+</ArticleLayout>

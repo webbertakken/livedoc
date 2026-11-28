@@ -38,6 +38,7 @@ import {
   textWidth,
 } from '@livedoc/sheets';
 import { RULE_ARROW_PX, ruleCellDraw } from './rules/sheet-rule-draw';
+import { NOTE_MARKER_PX, noteMarkerInk } from '@/lib/spreadsheet/sheet-notes';
 import type { PlanPalette } from '@/components/plan/plan-palette';
 import { cellBox, mergeAt, type Geometry, type GridWindow } from './sheet-geometry';
 import { SheetImage } from './SheetImage';
@@ -364,6 +365,24 @@ function RegionCells({ region, ...p }: CellsProps & { region: Region }) {
               access={pictures}
               box={box}
               {...(waiting ? { waitingOpacity: WAITING_OPACITY } : {})}
+            />,
+          );
+        // A note's marker: a small corner triangle, black, white on a dark fill (review.md "Notes"). Read from the cell
+        // drawn, so the markers cost no pass of their own.
+        if (cell?.note !== undefined)
+          out.push(
+            <div
+              key={`${key}n`}
+              data-sheet-note-marker=""
+              className="pointer-events-none absolute"
+              style={{
+                left: box.x + box.w - NOTE_MARKER_PX - 1,
+                top: box.y,
+                width: NOTE_MARKER_PX,
+                height: NOTE_MARKER_PX,
+                background: `linear-gradient(to bottom left, ${noteMarkerInk(colours.fill ?? palette.surface)} 50%, transparent 50%)`,
+                zIndex: 3,
+              }}
             />,
           );
         if (!text || ruled?.hideText) continue;

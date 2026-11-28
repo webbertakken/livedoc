@@ -548,7 +548,7 @@ export const SPREADSHEET_SHORTCUTS: readonly ShortcutRow[] = [
     'Shift+F2',
     'Shift+F2',
     'Shift+Search+2',
-    'specified',
+    'built',
   ),
   row(
     'insert-or-edit-comment',

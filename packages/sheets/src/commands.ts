@@ -38,7 +38,7 @@ function idsAt(sheet: Sheet, r: number, c: number): { r: string; c: string } | n
 }
 
 // The existing cells inside ranges (iterating the cells, not the grid, so whole columns cost what is filled).
-function cellsIn(
+export function cellsIn(
   sheet: Sheet,
   ranges: readonly GridRange[],
 ): { key: string; r: string; c: string; cell: Cell }[] {

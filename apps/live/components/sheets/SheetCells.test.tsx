@@ -571,3 +571,27 @@ describe('IMAGE in the grid', () => {
     ).toBeTruthy();
   });
 });
+
+// review.md "Notes": a noted cell draws a small black corner triangle, white on a dark fill, a note-only cell too.
+describe('note markers', () => {
+  it('draws a marker on each noted cell drawn, in ink readable on its fill', () => {
+    const book = sheetOf({ A1: 'x' }, { B2: { bg: '#1e3a8a' } });
+    const key = (r: number, c: number) =>
+      cellKey(book.sheet.layout.rows[r]!, book.sheet.layout.cols[c]!);
+    for (const [r, c] of [
+      [0, 0],
+      [1, 1],
+      [2, 2],
+    ] as const)
+      book.sheet.cells.set(key(r, c), { ...book.sheet.cells.get(key(r, c)), note: 'n' });
+    const { container } = draw(book);
+    const markers = [...container.querySelectorAll<HTMLElement>('[data-sheet-note-marker]')];
+    expect(markers.map((m) => [m.style.left, m.style.top, m.style.width])).toEqual([
+      ['93px', '0px', '6px'],
+      ['193px', '24px', '6px'],
+      ['293px', '48px', '6px'],
+    ]);
+    expect(markers[0]!.getAttribute('style')).toContain('rgb(0, 0, 0) 50%');
+    expect(markers[1]!.getAttribute('style')).toContain('rgb(255, 255, 255) 50%');
+  });
+});
