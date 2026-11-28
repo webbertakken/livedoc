@@ -130,7 +130,8 @@ export function useSpreadsheetLinks(
   const colId = c.sheet.layout.cols[col];
   const own = (rowId && colId && c.sheet.cells.get(cellKey(rowId, colId))?.format?.ln) || null;
   const target = own !== null ? cellLinkTarget(own) : c.workbook.linkTargetOf(sheetId, r, col);
-  const origin = typeof window === 'undefined' ? '' : window.location.origin;
+  // The surface renders in the browser only (loaded without SSR).
+  const origin = window.location.origin;
   const { canShape, toast } = c;
 
   const open = useCallback(() => {
