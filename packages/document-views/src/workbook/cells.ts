@@ -4,6 +4,7 @@
 // SHEET_VIEW_CHARS_MAX on a whole row, and a cut says where to read on.
 import type { ViewDoor } from '@livedoc/api-schema';
 import {
+  cellKey,
   cellLinkText,
   formatA1,
   formatRange,
@@ -21,10 +22,17 @@ export const SHEET_VIEW_CHARS_MAX = 100_000;
 // Asked of a tab that is no spreadsheet's sheet (document-views.md "A spreadsheet's views").
 export const CELLS_NOT_SPREADSHEET = "cells reads a spreadsheet's sheet";
 
-export type CellsViewInput = { wb: Workbook; sheetId: string; title: string; range?: string };
+export type CellsViewInput = {
+  wb: Workbook;
+  sheetId: string;
+  title: string;
+  range?: string;
+  // Each cell's open comment threads, by its `cellKey` (review.md "Agents"); absent for a reader of no comments.
+  comments?: ReadonlyMap<string, number>;
+};
 
 // `link`: the cell's own link, a range or sheet of the workbook by name (inserted-objects.md "Links, agents");
-// `note`: its note (review.md "Notes").
+// `note`: its note (review.md "Notes"); `comments`: its open comment threads (review.md "Agents").
 export type CellJson = {
   at: string;
   input: string;
@@ -32,6 +40,7 @@ export type CellJson = {
   display: string;
   link?: string;
   note?: string;
+  comments?: number;
 };
 export type CellsRowJson = { row: number; cells: CellJson[] };
 export type CellsJson = {
@@ -63,13 +72,14 @@ const bare = (value: AgentValue, display: string) =>
 const NOTE_SHOWN_MAX = 60;
 
 export function cellText(cell: CellJson): string {
-  // A cell holding only a note prints its address alone before it.
+  // A cell holding only a note or a thread prints its address alone before them.
   const text = cell.input === '' && cell.display === '' ? cell.at : cellValueText(cell);
   const linked = cell.link === undefined ? text : `${text} ↗ ${jsonString(cell.link)}`;
-  if (cell.note === undefined) return linked;
-  const shown =
-    cell.note.length > NOTE_SHOWN_MAX ? `${cell.note.slice(0, NOTE_SHOWN_MAX - 1)}…` : cell.note;
-  return `${linked} ✎ ${jsonString(shown)}`;
+  const noted =
+    cell.note === undefined
+      ? linked
+      : `${linked} ✎ ${jsonString(cell.note.length > NOTE_SHOWN_MAX ? `${cell.note.slice(0, NOTE_SHOWN_MAX - 1)}…` : cell.note)}`;
+  return cell.comments ? `${noted} 💬 ${cell.comments}` : noted;
 }
 
 function cellValueText(cell: CellJson): string {
@@ -100,6 +110,10 @@ export function sheetCellsView(
     extent.rows && extent.cols
       ? formatRange({ r1: 0, c1: 0, r2: extent.rows - 1, c2: extent.cols - 1 })
       : null;
+  const { rows: rowIds, cols: colIds } = wb.sheet(sheetId)!.layout;
+  // A read stays within the sheet, so every position it gives has its ids.
+  const commentsAt = (r: number, c: number) =>
+    input.comments?.get(cellKey(rowIds[r]!, colIds[c]!)) ?? 0;
   const rows: CellsRowJson[] = [];
   const lines: ViewLine[] = [];
   let chars = 0;
@@ -108,7 +122,8 @@ export function sheetCellsView(
     const r = start.r1 + i;
     const cells = row.flatMap((cell, j): CellJson[] => {
       const note = wb.cellNoteOf(sheetId, r, start.c1 + j);
-      if (cell.input === '' && cell.display === '' && note === null) return [];
+      const comments = commentsAt(r, start.c1 + j);
+      if (cell.input === '' && cell.display === '' && note === null && !comments) return [];
       const ln = wb.cellLinkOf(sheetId, r, start.c1 + j);
       // readRange answers an error as its text, so a value is never an error object.
       const out: CellJson = {
@@ -118,6 +133,7 @@ export function sheetCellsView(
       };
       if (ln !== null) out.link = cellLinkText(ln, (id) => wb.sheet(id)?.title);
       if (note !== null) out.note = note;
+      if (comments) out.comments = comments;
       return [out];
     });
     if (!cells.length) continue;

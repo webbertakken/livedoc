@@ -2,6 +2,8 @@
 // and hold no elements, so `outline` on any of them answers the workbook outline and `cells` reads the tab's sheet.
 // Answered after the tab GET's gate and scope, as every view is; a link to one tab sees only its own sheet.
 import { tabEtag } from '@livedoc/api-schema';
+import { readWorkbookThreads } from '../db/sheet-threads';
+import { openThreadCounts } from '@livedoc/document';
 import {
   CELLS_NOT_SPREADSHEET,
   sheetCellsView,
@@ -121,6 +123,8 @@ export async function answerWorkbookView(
   document: DocumentDTO,
   tab: TabDTO,
   tabScope: string | null,
+  // Whether the caller may read comments: a cells view then counts each cell's open threads.
+  mayComment: () => Promise<boolean> = async () => false,
 ): Promise<WorkbookViewAnswer> {
   const { env } = ctx;
   const sheetTab = tab.kind === 'sheet';
@@ -170,12 +174,16 @@ export async function answerWorkbookView(
   });
   // Card functions read the cards' document with the asker's own access (plan-links.md "The `CARD` functions").
   await fillSpreadsheetCards(wb, ctx, workbook);
+  const comments = (await mayComment())
+    ? openThreadCounts(await readWorkbookThreads(env, document.id, null), sheet.id)
+    : undefined;
   const view = sheetCellsView(
     {
       wb,
       sheetId: sheet.id,
       title: sheet.title,
       ...(request.range ? { range: request.range } : {}),
+      ...(comments ? { comments } : {}),
     },
     { budget: request.budget, door: request.door },
   );

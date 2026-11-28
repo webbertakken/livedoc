@@ -106,11 +106,19 @@ A view answers one question about a tab at the lowest token cost:
     summary: 'read and answer comment threads',
     text: `Comments
 
-Threads sit on elements. Read the open ones as a view:
+Threads sit on elements, and on a spreadsheet's cells. Read the open ones as a view:
 
   livedoc tab view "Auth flow" --view comments
+  livedoc comment ls "Budget" [--status all]
 
-Reply to and resolve threads in the editor.`,
+Comment (a resolved thread reopens), reply, resolve or reopen; on a spreadsheet the ref is
+the sheet and --cell or --range the cells, a thread found by its top-left cell:
+
+  livedoc comment add "Shop" api "Should this be idempotent?"
+  livedoc comment add "Budget" Sheet1 --range B4:C9 "Are these final?"
+  livedoc comment resolve "Budget" Sheet1 --cell B4
+
+read_sheet gives an anchored cell its open threads (comments: 2); view "cells" prints 💬 2.`,
   },
   collaborate: {
     summary: 'work beside people on the same document',

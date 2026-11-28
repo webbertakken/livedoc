@@ -82,7 +82,8 @@ with the candidates. A share-link URL acts through that link: each request of th
 pulled file's path reads its views offline. `--tab` takes a tab name or id prefix and defaults to the first tab.
 Elements are [refs and selectors](../024-agents/edit-operations.md#selectors); the comment verbs take the ref of the
 element whose thread they act on, and `--cell <A1>` on a Sheet for a cell's thread
-([Cell comments](../029-sheets/sheet.md#cell-comments)).
+([Cell comments](../029-sheets/sheet.md#cell-comments)); on a spreadsheet the ref is the sheet and `--cell B4` or
+`--range B4:C9` its cells, a thread found by its top-left cell ([Review](../029-sheets/review.md#agents)).
 
 **Branches** (specified, not built). Document commands and changesets take `--branch <name>` and act on that
 [document branch](../006-document/document-branches.md#agents); inside a linked work tree they default to the branch
