@@ -3,6 +3,7 @@
 // The open sheet's menu bindings (docs/specs/029-sheets/surface.md "Menu bar", "Context menus"): the grid's actions and
 // clipboard, its selection and the active cell's look, put to the menus' items and published up to the title row,
 // with the sheet bar's Insert › Sheet; the grid's own context menus run the same bindings.
+import { readWorkbook } from '@/components/sheets/read-workbook';
 import {
   gridMenuOutline,
   gridOffice,
@@ -61,7 +62,9 @@ export function useGridMenuBindings(
   const { selection, sheet } = c;
   const { layout } = sheet;
   const range = selection.ranges[selection.ranges.length - 1]!;
-  const link = c.workbook.hyperlinkOf(sheet.id, selection.active.r, selection.active.c);
+  const link = readWorkbook(c.version, () =>
+    c.workbook.hyperlinkOf(sheet.id, selection.active.r, selection.active.c),
+  );
   // One pass over the open sheet's cells per change of it (D194).
   const recentCodes = useMemo(() => recentFormatCodes(sheet.cells.values()), [sheet]);
   const office = gridOffice({

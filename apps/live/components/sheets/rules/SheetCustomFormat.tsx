@@ -2,6 +2,7 @@
 
 // The Custom Number Format popover (docs/specs/029-sheets/sheet.md "Formatting"): a Format Code field, a live Preview
 // of the active cell's value in it, the codes people use most, then Cancel and Apply (one change, one undo step).
+import { readWorkbook } from '@/components/sheets/read-workbook';
 import { useState } from 'react';
 import { Button, TextInput } from '@livedoc/ui';
 import {
@@ -54,7 +55,7 @@ export function SheetCustomFormat({
   const colId = c.sheet.layout.cols[col]!;
   const own = c.sheet.cells.get(cellKey(rowId, colId))?.format;
   const [code, setCode] = useState(own?.nf === 'custom' && own.nc ? own.nc : CUSTOM_FORMAT_DEFAULT);
-  const value = c.workbook.value(c.sheet.id, r, col);
+  const value = readWorkbook(c.version, () => c.workbook.value(c.sheet.id, r, col));
   const v = isArray(value) ? scalarOf(value) : value;
   const sample = typeof v === 'number' || (typeof v === 'string' && v !== '') ? v : PREVIEW_SAMPLE;
   const reads = formatCodeReads(code);

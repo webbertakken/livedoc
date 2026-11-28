@@ -3,6 +3,7 @@
 // Data › Named Functions' side panel (docs/specs/029-sheets/data-tools.md "Named ranges and named functions"), for
 // everyone: the workbook's named functions in name order, each its call and description; an Editor's rows Edit and
 // Remove, and Add New Function and Import Function under the list. Each change saves the list whole, one undo step.
+import { readWorkbook } from '@/components/sheets/read-workbook';
 import { useState } from 'react';
 import { PencilIcon, TrashIcon } from '@livedoc/ui';
 import { NamedFunction, withImported } from '@livedoc/sheets';
@@ -37,7 +38,7 @@ export function SpreadsheetNamedFunctionsBody() {
         key={editing === 'new' ? 'new' : editing.name}
         existing={existing}
         others={existing ? NamedFunction.without(functions, existing.name) : functions}
-        ctx={c.workbook.ctxFor(c.sheet.id)}
+        ctx={readWorkbook(c.version, () => c.workbook.ctxFor(c.sheet.id))}
         locale={c.locale}
         onSave={(fn) => save(NamedFunction.put(functions, fn, existing?.name))}
         onClose={back}

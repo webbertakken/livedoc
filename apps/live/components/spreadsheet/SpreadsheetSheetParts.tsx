@@ -3,6 +3,7 @@
 // The open sheet's parts (docs/specs/029-sheets/surface.md): the formula bar, the grid, the right side panel beside them
 // (office-shell.md "Side panels"), the grid's menus and dialogs and the sheet bar's summary, all on the open sheet's
 // controller.
+import { readWorkbook } from '@/components/sheets/read-workbook';
 import { FilterMenuContext } from '@/components/sheets/useFilterMenuShortcut';
 import { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { DocumentFonts } from '@livedoc/document';
@@ -277,7 +278,9 @@ export function SpreadsheetSheetParts({ bridge }: { bridge: SheetsBridge }) {
   // Show Details on a pivot table's value, in its cell's context menu (pivot-tables.md "Details"): anyone's, a
   // Participant's and a Viewer's as a read-only dialog.
   const { active } = c.selection;
-  const detailsHere = c.workbook.pivotValueCellAt(c.sheet.id, active.r, active.c);
+  const detailsHere = readWorkbook(c.version, () =>
+    c.workbook.pivotValueCellAt(c.sheet.id, active.r, active.c),
+  );
   const office = useGridMenuBindings(
     actions,
     {

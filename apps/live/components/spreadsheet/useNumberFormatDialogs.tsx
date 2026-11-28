@@ -3,6 +3,7 @@
 // Format › Number's dialogs over the open sheet (docs/specs/029-sheets/formatting.md "Number formats"): Custom Number
 // Format, Custom Currency and Custom Date and Time. Each reads the active cell as it opens; Apply formats the selection with its code as
 // Custom, one undo step; either way the keys go back to the grid.
+import { readWorkbook } from '@/components/sheets/read-workbook';
 import { useState, type ReactNode } from 'react';
 import { useSheetController } from '@/components/sheets/sheet-controller';
 import type { SheetActions } from '@/components/sheets/useSheetActions';
@@ -31,10 +32,11 @@ export function useNumberFormatDialogs(actions: SheetActions): {
     close();
   };
   const { active } = c.selection;
+  const value = readWorkbook(c.version, () => c.workbook.value(c.sheet.id, active.r, active.c));
   const dialog =
     shown === 'customFormat' ? (
       <CustomNumberFormatDialog
-        value={c.workbook.value(c.sheet.id, active.r, active.c)}
+        value={value}
         format={actions.activeFormat()}
         locale={c.locale}
         onApply={apply}
@@ -44,7 +46,7 @@ export function useNumberFormatDialogs(actions: SheetActions): {
       <CustomCurrencyDialog locale={c.locale} onApply={apply} onClose={close} />
     ) : shown === 'customDateTime' ? (
       <CustomDateTimeDialog
-        value={c.workbook.value(c.sheet.id, active.r, active.c)}
+        value={value}
         format={actions.activeFormat()}
         locale={c.locale}
         onApply={apply}

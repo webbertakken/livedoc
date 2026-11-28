@@ -4,6 +4,7 @@
 // the workbook's protections, each going to its range or sheet; an Editor's rows Edit and Remove on a protection that
 // admits them, and Add a Sheet or Range under the list. It opens on the form for an Editor when asked (Protect Range,
 // Protect Sheet) or when nothing is protected yet.
+import { readWorkbook } from '@/components/sheets/read-workbook';
 import { useState } from 'react';
 import { Button, PencilIcon, TrashIcon } from '@livedoc/ui';
 import {
@@ -40,7 +41,9 @@ export function SpreadsheetProtectionBody({
 }) {
   const c = useSheetController();
   const open = useSheetNavigation();
-  const sheets = c.workbook.sheetList().map((s) => (s.id === c.sheet.id ? c.sheet : s));
+  const sheets = readWorkbook(c.version, () => c.workbook.sheetList()).map((s) =>
+    s.id === c.sheet.id ? c.sheet : s,
+  );
   const listed = workbookProtections(
     sheets.some((s) => s.id === c.sheet.id) ? sheets : [c.sheet, ...sheets],
     c.sheet.id,

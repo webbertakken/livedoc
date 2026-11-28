@@ -4,6 +4,7 @@
 // native scroll container over a spacer the size of the whole sheet, with a sticky viewport inside that draws only
 // what is in view: the cells, the headers, the selection, the editor. One tab stop; its keys are the grid's while it
 // has focus, and Escape hands them back to the canvas.
+import { readWorkbook } from '@/components/sheets/read-workbook';
 import { keyLabel } from '@/lib/key-label';
 import { usePlan } from '@/components/plan/PlanContext';
 import { cardFieldChoice } from './card-field-options';
@@ -96,7 +97,10 @@ export function SheetGrid({
   const total = totalSize(c.geometry);
   // Room under the last row for Add Rows, for someone who may edit.
   const footer =
-    (c.canShape ?? c.canEdit) && roomFor(c.workbook, c.sheet).rows > 0 ? ADD_ROWS_PX : 0;
+    (c.canShape ?? c.canEdit) &&
+    readWorkbook(c.version, () => roomFor(c.workbook, c.sheet)).rows > 0
+      ? ADD_ROWS_PX
+      : 0;
   // The scroll container's room: the sheet's size, or less where the sheet outgrows a browser's ceiling.
   const room = scrollRoom(
     {
@@ -315,7 +319,9 @@ export function SheetGrid({
   // The error under the pointer says why (sheet.md "The grid"); so does a value its validation rule does not allow
   // (data-validation.md "Drawing").
   const hovered = pointer.hover;
-  const hoverValue = hovered ? c.workbook.value(c.sheet.id, hovered.r, hovered.c) : null;
+  const hoverValue = hovered
+    ? readWorkbook(c.version, () => c.workbook.value(c.sheet.id, hovered.r, hovered.c))
+    : null;
   const hoverError =
     hovered && isError(hoverValue)
       ? displayValue(hoverValue, undefined, c.locale).error
@@ -324,7 +330,9 @@ export function SheetGrid({
         : null;
   // A HYPERLINK under the pointer says where it goes and how to open it (formulas.md "Text").
   const hoverLink =
-    hovered && !hoverError ? c.workbook.hyperlinkOf(c.sheet.id, hovered.r, hovered.c) : null;
+    hovered && !hoverError
+      ? readWorkbook(c.version, () => c.workbook.hyperlinkOf(c.sheet.id, hovered.r, hovered.c))
+      : null;
   const hoverBox =
     hovered && (hoverError || hoverLink)
       ? cellBox(c.geometry, hovered.r, hovered.c, c.scroll)

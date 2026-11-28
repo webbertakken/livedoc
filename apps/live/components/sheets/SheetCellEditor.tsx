@@ -4,6 +4,7 @@
 // cell, grown with its text, whose references show in their colours through an overlay drawn underneath (the
 // textarea's own text is transparent, its caret not). Under it, the function list while a name is typed, the
 // argument hint inside a call, and the reason a formula cannot be saved.
+import { readWorkbook } from '@/components/sheets/read-workbook';
 import { useEffect, useRef } from 'react';
 import {
   FUNCTION_DOCS,
@@ -63,7 +64,7 @@ export function FunctionAssist({
   const syntax = formulaSyntaxOf(c.locale);
   const separator = argumentSeparatorOf(syntax);
   // The spreadsheet's named functions are helped as the built-in ones are (formulas.md "Named functions").
-  const named = c.workbook.functionList();
+  const named = readWorkbook(c.version, () => c.workbook.functionList());
   const arg = argumentAt(draft, input.caret, separator, new Set(named.map((f) => f.name)));
   const namedOf = (name: string) => named.find((f) => f.name === name);
   const helpHidden = useFunctionHelpHidden();

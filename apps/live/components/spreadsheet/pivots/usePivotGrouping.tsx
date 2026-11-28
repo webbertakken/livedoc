@@ -3,6 +3,7 @@
 // Grouping a pivot table's items from the grid's context menu (docs/specs/029-sheets/pivot-tables.md "Grouping in the
 // grid", D621): the bindings the active cell and the selection offer an Editor, each a whole new pivot table written
 // as the editor's changes are (one undo step), and Create Pivot Group Rule's dialog.
+import { readWorkbook } from '@/components/sheets/read-workbook';
 import { useState, type ReactNode } from 'react';
 import {
   PIVOT_DATE_RULES,
@@ -26,7 +27,7 @@ import { PivotGroupRuleDialog } from './PivotGroupRuleDialog';
 type RuleOpen = { pivotId: string; item: PivotItemPlace; start: PivotGroupRuleFields };
 
 export function usePivotGrouping(
-  c: Pick<SheetController, 'workbook' | 'sheet' | 'selection' | 'canShape'>,
+  c: Pick<SheetController, 'workbook' | 'version' | 'sheet' | 'selection' | 'canShape'>,
   // A pivot table set whole, one undo step (useSpreadsheetPivots' change).
   change: (next: SheetPivot) => void,
 ): { actions: Record<string, OfficeAction>; dialog: ReactNode } {
@@ -37,7 +38,9 @@ export function usePivotGrouping(
     change(next);
   };
   const actions: Record<string, OfficeAction> = {};
-  const menu = c.canShape ? pivotGroupingMenu(c.workbook, sheet, c.selection) : null;
+  const menu = c.canShape
+    ? readWorkbook(c.version, () => pivotGroupingMenu(c.workbook, sheet, c.selection))
+    : null;
   if (menu) {
     const { pivot, item, picked } = menu;
     const { axis, depth } = item;

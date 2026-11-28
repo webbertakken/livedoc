@@ -6,6 +6,7 @@
 // reference's $ parts, Ctrl+Shift+Enter wraps the formula in ARRAYFORMULA, and the function list takes the arrows,
 // Tab and Enter while it is open. Typing over a cell, an arrow key ends the edit and moves (or, at a place a reference
 // can go in a formula, points at a cell).
+import { readWorkbook } from '@/components/sheets/read-workbook';
 import { useCallback, useState } from 'react';
 import {
   formatA1,
@@ -72,13 +73,17 @@ export function useFormulaInput(actions: SheetActions): FormulaInput {
   const editing = c.editing;
   const draft = editing?.draft ?? '';
   const rangeNames = (c.sheet.layout.names ?? []).map((x) => x.name);
-  const namedFunctions = c.workbook.functionList().map((f) => f.name);
+  const namedFunctions = readWorkbook(c.version, () => c.workbook.functionList()).map(
+    (f) => f.name,
+  );
   const matches = editing ? functionMatches(draft, caret, 8, rangeNames, namedFunctions) : null;
   // Escape closes the options and keeps the typing, until the next change.
   const [optionsClosed, setOptionsClosed] = useState(false);
   const options =
     editing && !optionsClosed && !matches
-      ? dropdownMatches(c.workbook, c.sheet.id, { r: editing.r, c: editing.c }, draft)
+      ? readWorkbook(c.version, () =>
+          dropdownMatches(c.workbook, c.sheet.id, { r: editing.r, c: editing.c }, draft),
+        )
       : null;
 
   const setDraft = useCallback(

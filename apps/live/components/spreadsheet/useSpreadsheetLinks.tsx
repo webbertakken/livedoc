@@ -4,10 +4,9 @@
 // the cell menu and Ctrl+K) opens the link editor under the active cell, an Editor's; the active cell holding a link
 // shows the link card, anyone's, with Edit Link and Remove Link for an Editor on a cell's own link; Open Link and
 // Alt+Enter open it, a sheet of the workbook in its tab; Get Link to This Cell copies an address opening it there.
+import { readWorkbook } from '@/components/sheets/read-workbook';
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
 import {
-  cellKey,
-  cellLinkTarget,
   cellLinkText,
   formatRanges,
   validateWrite,
@@ -125,11 +124,9 @@ export function useSpreadsheetLinks(
   const [dismissal, setDismissal] = useState({ here, dismissed: false });
   if (dismissal.here !== here) setDismissal({ here, dismissed: false });
   const dismissed = dismissal.here === here && dismissal.dismissed;
-  // The open sheet's own cell, as the grid draws it; a HYPERLINK's target from the workbook.
-  const rowId = c.sheet.layout.rows[r];
-  const colId = c.sheet.layout.cols[col];
-  const own = (rowId && colId && c.sheet.cells.get(cellKey(rowId, colId))?.format?.ln) || null;
-  const target = own !== null ? cellLinkTarget(own) : c.workbook.linkTargetOf(sheetId, r, col);
+  // The active cell's own link and where it opens (its own, else a HYPERLINK's), read as the store moves.
+  const own = readWorkbook(c.version, () => c.workbook.cellLinkOf(sheetId, r, col));
+  const target = readWorkbook(c.version, () => c.workbook.linkTargetOf(sheetId, r, col));
   // The surface renders in the browser only (loaded without SSR).
   const origin = window.location.origin;
   const { canShape, toast } = c;
