@@ -7,6 +7,7 @@ import {
   childElements,
   keptXmlOf,
   parseXml,
+  RELATIONSHIP_TYPES,
   resolvePartName,
   type OoxmlPackage,
   type Relationship,
@@ -41,11 +42,17 @@ const WRITTEN_TYPES: ReadonlySet<string> = new Set([
   `${RELS}/sharedStrings`,
   `${RELS}/sheetMetadata`,
   `${RELS}/calcChain`,
+  // A cell's rich value is bound by the metadata LiveDoc writes itself: its pictures are read, the rest are cached
+  // values (standard-mapping.md "Pictures in a cell", D634).
+  RELATIONSHIP_TYPES.richValue,
+  RELATIONSHIP_TYPES.richValueStructure,
+  RELATIONSHIP_TYPES.richValueTypes,
+  RELATIONSHIP_TYPES.richValueRel,
 ]);
 
 // The parts LiveDoc writes, whatever a kept part's relationship says (a link back to a worksheet is not followed).
 const WRITTEN_PARTS =
-  /^(xl\/workbook\.xml|xl\/theme\/theme1\.xml|xl\/worksheets\/[^/]*\.xml|xl\/styles\.xml|xl\/sharedStrings\.xml|xl\/metadata\.xml|docProps\/(core|app)\.xml)$/;
+  /^(xl\/workbook\.xml|xl\/theme\/theme1\.xml|xl\/worksheets\/[^/]*\.xml|xl\/styles\.xml|xl\/sharedStrings\.xml|xl\/metadata\.xml|xl\/richData\/[^/]*\.xml|docProps\/(core|app)\.xml)$/;
 
 /** Whether the XLSX writer writes a part of this name itself (relationships and content types too): none is kept. */
 export const isWrittenXlsxPart = (name: string): boolean =>

@@ -342,6 +342,23 @@ describe('validateSheetCreate', () => {
     expect(validInput({ q: 1 })).toBe(false);
     expect(validInput({ f: null })).toBe(false);
   });
+
+  // inserted-objects.md "Images in a cell" (D630): a gallery id and alt text of up to 1,000 characters.
+  it.each([
+    [{ img: { id: 'img-1' } }, true],
+    [{ img: { id: 'img-1', alt: 'A cow' } }, true],
+    [{ img: { id: 'img-1', alt: 'a'.repeat(1000) } }, true],
+    [{ img: { id: 'img-1', alt: 'a'.repeat(1001) } }, false],
+    [{ img: { id: '' } }, false],
+    [{ img: { id: 'x'.repeat(129) } }, false],
+    [{ img: { id: 'data:image/png;base64,AA' } }, false],
+    [{ img: { id: 'img-1', alt: 3 } }, false],
+    [{ img: { id: 'img-1', w: 3 } }, false],
+    [{ img: 'img-1' }, false],
+    [{ img: { id: 'img-1' }, s: 'x' }, false],
+  ])('checks a picture input %j', (input, ok) => {
+    expect(validInput(input)).toBe(ok);
+  });
 });
 
 // docs/specs/029-sheets/spreadsheet.md "Limits": a spreadsheet's sheets take the workbook's limits.

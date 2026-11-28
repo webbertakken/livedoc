@@ -1,5 +1,6 @@
 // Validation of writes and new sheets: the api runs it on every write
 // before storing, against the sheet as stored; the editor runs it before sending, so a refusal is said at once.
+import { isCellPicture } from './images/cell-picture';
 import { isProtection, PROTECTIONS_MAX } from './protection';
 import { isColour, validFormatPatch, validFormat } from './format';
 import { isAxisId, isSheetId } from './ids';
@@ -116,6 +117,7 @@ export function validInput(v: unknown): v is CellInput {
   if ('n' in o) return typeof o.n === 'number' && Number.isFinite(o.n);
   if ('s' in o) return typeof o.s === 'string';
   if ('b' in o) return typeof o.b === 'boolean';
+  if ('img' in o) return isCellPicture(o.img);
   if ('f' in o) {
     const f = o.f as Record<string, unknown>;
     if (typeof f !== 'object' || f === null || typeof f.t !== 'string' || !Array.isArray(f.r))

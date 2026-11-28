@@ -36,6 +36,12 @@ export function readablePicture(bytes: Uint8Array): Pick<ReadPicture, 'type' | '
   return { type: header.mediaType, natural: { width: header.width, height: header.height } };
 }
 
+/** A picture held as a cell's value (inserted-objects.md "Images in a cell", D634): its gallery image and alt text. */
+export type FileCellPicture = { imageId: string; alt?: string };
+
+/** A cell's picture as a file holds it, read: its bytes, their type and pixels, its alt text. */
+export type ReadCellPicture = Pick<ReadPicture, 'bytes' | 'type' | 'natural'> & { alt?: string };
+
 /** A picture's bytes and their stored type. */
 export type FilePictureBytes = { data: Uint8Array; type: MappedPictureType };
 
@@ -108,9 +114,35 @@ export function picturesWithBytes(
   return out;
 }
 
+/** A cell's picture's bytes, or null with it named left out (D634): its cell is written without it. */
+export function cellPictureBytes(
+  sheet: string,
+  picture: FileCellPicture,
+  fetches: FilePictureFetches | undefined,
+  losses: FileLoss[],
+): FilePictureBytes | null {
+  const got = fetches?.get(picture.imageId);
+  if (got && got !== 'too_large') return got;
+  losses.push({
+    k: 'picture_unwritten',
+    sheet,
+    why: got === 'too_large' ? 'too_large' : 'unavailable',
+  });
+  return null;
+}
+
+/** The gallery images a sheet's cells hold, in the order its cells are stored, each once. */
+export function cellPictureIds(sheet: Pick<Sheet, 'cells'>): string[] {
+  if (sheet.cells.pictureCount === 0) return [];
+  const ids = new Set<string>();
+  for (const cell of sheet.cells.values())
+    if (cell.input && 'img' in cell.input) ids.add(cell.input.img.id);
+  return [...ids];
+}
+
 /** Each of a sheet's pictures named left out, for a sheet keeping its file's own drawing (D261). */
 export function picturesUnwritten(
-  sheet: { name: string; pictures?: readonly FilePicture[] },
+  sheet: { name: string; pictures?: readonly unknown[] },
   losses: FileLoss[],
 ): void {
   for (const _ of sheet.pictures ?? [])

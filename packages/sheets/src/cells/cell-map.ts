@@ -5,7 +5,7 @@
 import { CellInterns } from './cell-interns';
 import { CellSlots, SlotKind, type SlotValue } from './cell-slots';
 import { SlotIndex } from './slot-index';
-import type { Cell, CellFormat, CellInput, StoredFormula } from '../sheet';
+import type { Cell, CellFormat, CellInput, CellPicture, StoredFormula } from '../sheet';
 
 // The smallest index; an index is sized to four times its cells when made afresh, so it fills to half before the
 // next.
@@ -29,7 +29,14 @@ function ownKeys(o: object): number {
   return n;
 }
 
-// A cell the slots can hold: no input or one of the four, and no format or a format object. Anything else comes
+// A picture's input as the store holds it: its id and, when it has one, its alt text, both text.
+function ofPicture(img: unknown): boolean {
+  if (!isObject(img) || typeof img.id !== 'string') return false;
+  const keys = ownKeys(img);
+  return keys === 1 || (keys === 2 && typeof img.alt === 'string');
+}
+
+// A cell the slots can hold: no input or one of the five, and no format or a format object. Anything else comes
 // from a request not yet validated, and is held as given (SlotKind.Other).
 function ofCellShape(cell: unknown): cell is Cell {
   return isObject(cell) && ofParts(cell.input, cell.format);
@@ -43,6 +50,7 @@ function ofParts(input: unknown, format: unknown): boolean {
   if (typeof input.n === 'number') return true;
   if (typeof input.s === 'string') return true;
   if (typeof input.b === 'boolean') return true;
+  if ('img' in input) return ofPicture(input.img);
   const f = input.f;
   return (
     isObject(f) &&
@@ -65,6 +73,7 @@ export class CellMap implements Map<string, Cell> {
   private interns: CellInterns;
   private live = 0;
   private dead = 0;
+  private pictures = 0;
   private readonly encoding: SlotValue = {
     kind: SlotKind.Blank,
     num: 0,
@@ -102,11 +111,17 @@ export class CellMap implements Map<string, Cell> {
     out.interns = this.interns;
     out.live = this.live;
     out.dead = this.dead;
+    out.pictures = this.pictures;
     return out;
   }
 
   get size(): number {
     return this.live;
+  }
+
+  /** How many cells hold a picture (inserted-objects.md "Images in a cell"): none, and no cell shows one of its own. */
+  get pictureCount(): number {
+    return this.pictures;
   }
 
   get(key: string): Cell | undefined {
@@ -139,7 +154,9 @@ export class CellMap implements Map<string, Cell> {
 
   private put(row: number, col: number, value: SlotValue): this {
     const slot = this.index.find(row, col, this.slots);
+    if (value.kind === SlotKind.Picture) this.pictures++;
     if (slot >= 0) {
+      if (this.slots.kind(slot) === SlotKind.Picture) this.pictures--;
       this.slots.write(slot, value);
       return this;
     }
@@ -156,6 +173,7 @@ export class CellMap implements Map<string, Cell> {
     if (row === undefined || col === undefined) return false;
     const slot = this.index.remove(row, col, this.slots);
     if (slot < 0) return false;
+    if (this.slots.kind(slot) === SlotKind.Picture) this.pictures--;
     this.slots.kill(slot);
     this.live--;
     this.dead++;
@@ -168,6 +186,7 @@ export class CellMap implements Map<string, Cell> {
     this.index = SlotIndex.sized(INDEX_MIN);
     this.live = 0;
     this.dead = 0;
+    this.pictures = 0;
   }
 
   forEach(fn: (cell: Cell, key: string, map: Map<string, Cell>) => void, thisArg?: unknown): void {
@@ -230,6 +249,8 @@ export class CellMap implements Map<string, Cell> {
         return { f: this.interns.unpack(this.slots.packed(slot)) };
       case SlotKind.HeldFormula:
         return { f: this.slots.boxed(slot) as StoredFormula };
+      case SlotKind.Picture:
+        return { img: this.slots.boxed(slot) as CellPicture };
       default:
         return undefined;
     }
@@ -278,6 +299,9 @@ export class CellMap implements Map<string, Cell> {
       value.boxed = input.s;
     } else if ('b' in input) {
       value.kind = input.b ? SlotKind.True : SlotKind.False;
+    } else if ('img' in input) {
+      value.kind = SlotKind.Picture;
+      value.boxed = input.img;
     } else {
       const held = this.interns.formula(input.f);
       if (Array.isArray(held)) {

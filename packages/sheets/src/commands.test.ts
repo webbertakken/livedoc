@@ -64,7 +64,7 @@ function input(b: ReturnType<typeof book>, a1: string): string {
   const row = Number(a1.slice(1)) - 1;
   const cell = sheet.cells.get(cellKey(sheet.layout.rows[row]!, sheet.layout.cols[col]!));
   const i = cell?.input;
-  if (!i) return '';
+  if (!i || 'img' in i) return '';
   if ('f' in i) return renderFormula(i.f, b.wb.ctxFor(sheet.id));
   return String('n' in i ? i.n : 's' in i ? i.s : i.b);
 }

@@ -6,7 +6,7 @@ import { posRangeOf } from '../layout';
 import { compileFormula } from '../formula/stored';
 import { book, makeSheets } from '../testing/book';
 import type { GridRange } from '../address';
-import type { Sheet } from '../sheet';
+import { cellKey, type Sheet } from '../sheet';
 import {
   removeValidation,
   selectionHasCheckbox,
@@ -118,6 +118,16 @@ describe('the checkbox toggle', () => {
     expect(toggleCheckboxes(b.wb, sheet.id, [g(0, 0)])).toBeNull();
     expect(toggleCheckboxes(b.wb, sheet.id, [g(3, 1)])).toBeNull();
     expect(toggleCheckboxes(b.wb, 'nope', [g(0, 1)])).toBeNull();
+  });
+
+  // inserted-objects.md "Images in a cell": a picture is no box, so the toggle leaves it as it leaves a formula.
+  it('leaves a picture in a box cell alone', () => {
+    const { b, sheet } = ticked();
+    const cells = sheet.cells.copy().set(cellKey(sheet.layout.rows[2]!, sheet.layout.cols[1]!), {
+      input: { img: { id: 'img-1' } },
+    });
+    b.wb.updateSheet({ ...sheet, cells });
+    expect(toggleCheckboxes(b.wb, sheet.id, [g(2, 1)])).toBeNull();
   });
 });
 

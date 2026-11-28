@@ -21,7 +21,6 @@ import { dummyFunction } from './excel-formula';
 import { ODS_GENERATOR } from './ods-write';
 import {
   cellAddress,
-  DYNAMIC_ARRAY_METADATA_XML,
   OFFICE_RELATIONSHIPS_NS,
   SPREADSHEETML_NS,
   toXstring,
@@ -31,6 +30,7 @@ import {
 import { cachedLiteral, cutXlsxText, xlsxFormula, type XlsxFormula } from './xlsx-bounds';
 import { ownIds, XlsxKeptWriter } from './xlsx-kept-write';
 import { xlsxChartParts } from './xlsx-chart-parts';
+import { xlsxCellPictures, xlsxMetadataXml } from './xlsx-cell-pictures';
 import {
   keptBesideOwnTables,
   withTextHeaders,
@@ -124,7 +124,7 @@ function fitExcel(name: string, taken: readonly string[]): string {
   return `${cut(name, XLSX_SHEET_NAME_MAX - suffix.length)}${suffix}`;
 }
 
-type CellWrite = { type?: string; formula?: string; array?: string; value?: string };
+type CellWrite = { type?: string; formula?: string; array?: string; value?: string; vm?: number };
 
 // A value as a cell holds it: a number as is, text shared (a formula's inline) and cut to Excel's length (D89), an
 // error Excel knows as one (D82).
@@ -168,9 +168,16 @@ type SheetContext = {
   dynamic: boolean;
   // Texts cut to Excel's length.
   cut: number;
+  // A picture cell's value metadata index, when its picture is written (D634).
+  pictureVm: (cell: FileCell) => number | undefined;
 };
 
 function cellWrite(cell: FileCell, ctx: SheetContext): CellWrite | null {
+  // A picture is the cell's rich value, `#VALUE!` to a reader without them, as Excel writes it (D634).
+  if (cell.picture) {
+    const vm = ctx.pictureVm(cell);
+    return vm === undefined ? null : { type: 'e', value: '#VALUE!', vm };
+  }
   if (cell.value && ctx.computed.has(`${cell.r},${cell.c}`))
     return {
       ...valueWrite(cell.value, true, ctx, cell),
@@ -201,6 +208,7 @@ function cellXml(cell: FileCell, write: CellWrite, style: number): string {
     ...(style > 0 ? [`s="${style}"`] : []),
     ...(write.type ? [`t="${write.type}"`] : []),
     ...(write.array ? ['cm="1"'] : []),
+    ...(write.vm ? [`vm="${write.vm}"`] : []),
   ];
   const formula =
     write.formula === undefined
@@ -223,6 +231,7 @@ type SheetParts = {
   filters: XlsxFiltersOut;
   // Its table slicers' relationship and worksheet `ext` (standard-mapping.md "Filters in the file").
   slicers: XlsxSlicerParts['sheets'][number];
+  pictureVm: SheetContext['pictureVm'];
 };
 
 function worksheetXml(
@@ -256,6 +265,7 @@ function worksheetXml(
     computed: new Set(),
     dynamic: false,
     cut: 0,
+    pictureVm: parts.pictureVm,
   };
   // Every formula first, so each wrapped block's other cells know they cache it, whatever their order.
   for (const cell of ordered) {
@@ -447,6 +457,8 @@ export function writeXlsx(file: WorkbookFile, title: string): FileWritten<Uint8A
     file.pictureBytes,
     (i) => sliced.sheets[i]!.excel.map((x) => x.slicer),
   );
+  // Its cells' pictures as rich values, their bytes beside the drawings' (D634).
+  const pictured = xlsxCellPictures(file.sheets, drawn.media, file.pictureBytes, losses);
   const sheetRels = (i: number) => [
     ...kept.relationships('sheet', i),
     ...(drawn.sheets[i]?.rels ?? []),
@@ -476,6 +488,7 @@ export function writeXlsx(file: WorkbookFile, title: string): FileWritten<Uint8A
       tables: tabled.sheets[i] ?? null,
       filters: filters[i]!,
       slicers: slicerParts.sheets[i] ?? null,
+      pictureVm: pictured.vmOf,
     });
     dynamic ||= written.dynamic;
     return {
@@ -507,7 +520,9 @@ export function writeXlsx(file: WorkbookFile, title: string): FileWritten<Uint8A
   more(RELATIONSHIP_TYPES.styles, 'styles.xml');
   more(RELATIONSHIP_TYPES.sharedStrings, 'sharedStrings.xml');
   more(RELATIONSHIP_TYPES.theme, 'theme/theme1.xml');
-  if (dynamic) more(RELATIONSHIP_TYPES.sheetMetadata, 'metadata.xml');
+  const metadata = xlsxMetadataXml(dynamic, pictured.values);
+  if (metadata) more(RELATIONSHIP_TYPES.sheetMetadata, 'metadata.xml');
+  for (const rel of pictured.workbook) more(rel.type, rel.target);
   // Its pivot tables, each with its cache (standard-mapping.md "Pivot tables in the file").
   const pivoted = xlsxPivotParts(file.sheets, kept, keptParts.parts, renamed, workbookId, (i) => [
     ...sheetRels(i),
@@ -547,9 +562,8 @@ export function writeXlsx(file: WorkbookFile, title: string): FileWritten<Uint8A
     ...tabled.parts,
     ...pivoted.parts,
     ...slicerParts.parts,
-    ...(dynamic
-      ? [xmlPart('xl/metadata.xml', OOXML_CONTENT_TYPES.sheetMetadata, DYNAMIC_ARRAY_METADATA_XML)]
-      : []),
+    ...(metadata ? [xmlPart('xl/metadata.xml', OOXML_CONTENT_TYPES.sheetMetadata, metadata)] : []),
+    ...pictured.parts,
     {
       name: 'docProps/core.xml',
       contentType: OOXML_CONTENT_TYPES.coreProperties,
@@ -588,6 +602,7 @@ export function writeXlsx(file: WorkbookFile, title: string): FileWritten<Uint8A
       ],
     ]),
     ...drawn.relationships,
+    ...pictured.relationships,
     ...pivoted.relationships,
     ...keptParts.relationships,
   ]);

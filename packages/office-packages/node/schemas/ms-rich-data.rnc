@@ -1,0 +1,43 @@
+# Excel's rich value parts, which ISO/IEC 29500 does not hold: transcribed from Microsoft's published W3C XML Schemas
+# in [MS-XLSX] (5.20 richdata2's rvTypesInfo, 5.21 richdata, 5.35 richvaluerel), so a picture placed in a cell is
+# validated as the rest of a written file is (docs/specs/029-sheets/standard-mapping.md "Pictures in a cell").
+# An extension list's content is any XML, as ISO/IEC 29500's CT_ExtensionList leaves it to each extension.
+default namespace rd = "http://schemas.microsoft.com/office/spreadsheetml/2017/richdata"
+namespace rd2 = "http://schemas.microsoft.com/office/spreadsheetml/2017/richdata2"
+namespace rel = "http://schemas.microsoft.com/office/spreadsheetml/2022/richvaluerel"
+namespace r = "http://schemas.openxmlformats.org/officeDocument/2006/relationships"
+namespace x = "http://schemas.openxmlformats.org/spreadsheetml/2006/main"
+datatypes xsd = "http://www.w3.org/2001/XMLSchema-datatypes"
+
+start = rvData | rvStructures | rvTypesInfo | richValueRels
+
+anyElement = element * { attribute * { text }*, (text | anyElement)* }
+extLst = element x:extLst { anyElement* }
+
+# 5.21: rich values and their structures.
+rvData = element rd:rvData { attribute count { xsd:unsignedInt }, rv*, extLst? }
+rv = element rd:rv { attribute s { xsd:unsignedInt }, fb?, v+ }
+fb = element rd:fb { attribute t { "b" | "n" | "e" | "s" }?, text }
+v = element rd:v { text }
+rvStructures = element rd:rvStructures { attribute count { xsd:unsignedInt }, s*, extLst? }
+s = element rd:s { attribute t { text }, k+ }
+k = element rd:k {
+  attribute n { text },
+  attribute t { "d" | "i" | "b" | "e" | "s" | "r" | "a" | "spb" }?
+}
+
+# 5.20: the rich value types' key flags.
+rvTypesInfo = element rd2:rvTypesInfo {
+  element rd2:global { keyFlags?, extLst? }?,
+  element rd2:types { element rd2:type { attribute name { text }, keyFlags?, extLst? }* }?,
+  extLst?
+}
+keyFlags = element rd2:keyFlags {
+  element rd2:key {
+    attribute name { text },
+    element rd2:flag { attribute name { text }, attribute value { xsd:boolean } }+
+  }+
+}
+
+# 5.35: a rich value's relationships, by id.
+richValueRels = element rel:richValueRels { element rel:rel { attribute r:id { text } }*, extLst? }

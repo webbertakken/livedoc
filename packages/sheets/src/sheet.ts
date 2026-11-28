@@ -40,7 +40,12 @@ export type StoredRef = {
 // A formula as stored: its text with each reference replaced by `@<index>` into `r`.
 export type StoredFormula = { t: string; r: StoredRef[] };
 
-export type CellInput = { n: number } | { s: string } | { b: boolean } | { f: StoredFormula };
+// A picture of the gallery held as the cell's value (inserted-objects.md "Images in a cell", D630): the gallery image's
+// id and its alt text.
+export type CellPicture = { id: string; alt?: string };
+
+export type CellInput =
+  { n: number } | { s: string } | { b: boolean } | { f: StoredFormula } | { img: CellPicture };
 
 // A double is three pixels drawn as two lines (formatting.md "Borders").
 export type BorderStyle = 'solid' | 'dashed' | 'dotted' | 'double';

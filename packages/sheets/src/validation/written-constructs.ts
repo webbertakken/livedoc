@@ -155,11 +155,16 @@ export const WRITTEN_CONSTRUCTS: Readonly<Record<string, WorkbookFile>> = {
     ],
   },
   charts: { sheets: [chartSheet()] },
-  // standard-mapping.md "Pictures in the file": two pictures over the cells, one image placed twice, one with alt text.
+  // standard-mapping.md "Pictures in the file": two pictures over the cells, one image placed twice, one with alt text;
+  // and two in cells ("Pictures in a cell"), one with alt text.
   pictures: {
     sheets: [
       {
-        ...sheet('Pictures', [{ r: 0, c: 0, value: { k: 's', v: 'Logo' } }]),
+        ...sheet('Pictures', [
+          { r: 0, c: 0, value: { k: 's', v: 'Logo' } },
+          { r: 8, c: 0, picture: { imageId: 'dot', alt: 'A dot in a cell' } },
+          { r: 9, c: 1, picture: { imageId: 'dot' } },
+        ]),
         pictures: [
           { imageId: 'dot', at: { r: 1, c: 1, dx: 4, dy: 6 }, width: 64, height: 64, alt: 'A dot' },
           { imageId: 'dot', at: { r: 5, c: 3, dx: 0, dy: 0 }, width: 32, height: 32 },

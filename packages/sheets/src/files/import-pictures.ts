@@ -1,13 +1,15 @@
-// Pictures over the cells read from a file, placed on opening (docs/specs/029-sheets/standard-mapping.md "Pictures in
-// the file", "Stored on opening", D628): each read picture becomes an image over cells once the opener's gallery has
-// stored its bytes, the same bytes stored once an import; one the gallery does not take, past its sheet's objects, or
-// anchored past the sheet's grid is left out and named (`picture_unread`), as no drawing is left to keep it in.
+// Pictures read from a file, placed on opening (docs/specs/029-sheets/standard-mapping.md "Pictures in the file",
+// "Stored on opening", D628, D634): each read picture becomes an image over cells, or its cell's picture, once the
+// opener's gallery has stored its bytes, the same bytes stored once an import; one the gallery does not take, past its
+// sheet's objects, or anchored past the sheet's grid is left out and named (`picture_unread`), as no drawing is left
+// to keep it in; a cell's leaves its cell empty.
 import type { MappedPictureType } from '@livedoc/office-packages';
 import { makeAxisIds, type Rand } from '../ids';
 import { SHEET_OBJECTS_MAX } from '../objects/sheet-objects';
 import type { SheetImage } from '../objects/sheet-image';
 import type { SheetLayout } from '../sheet';
-import type { ReadPicture } from './file-pictures';
+import type { ReadCellPicture, ReadPicture } from './file-pictures';
+import { pictureInput } from '../images/cell-picture';
 import type { FileLoss, SheetFromFile } from './workbook-file';
 
 /** Why a read picture is not placed: the gallery's answers, the sheet's objects full, or its anchor past the grid. */
@@ -22,12 +24,13 @@ export const PICTURE_UNSTORED = [
 ] as const;
 export type PictureUnstored = (typeof PICTURE_UNSTORED)[number];
 
-/** A read picture on its sheet, by row and column ids, waiting for the gallery's image id. */
+/** A read picture on its sheet, by row and column ids, waiting for the gallery's image id: over the cells, or in one. */
 export type PictureToPlace = {
   sheetId: string;
-  image: Omit<SheetImage, 'imageId'>;
   bytes: Uint8Array;
   type: MappedPictureType;
+  natural: { width: number; height: number };
+  place: { image: Omit<SheetImage, 'imageId'> } | { cell: { r: string; c: string; alt?: string } };
 };
 
 /** What the gallery answers for a picture: its image id, or why it did not take it. */
@@ -73,21 +76,51 @@ export function picturesToPlace(
     taken.add(id);
     out.push({
       sheetId: sheet.id,
-      image: {
-        id,
-        kind: 'image',
-        at: { r, c, dx: picture.at.dx, dy: picture.at.dy },
-        width: picture.width,
-        height: picture.height,
-        naturalWidth: picture.natural.width,
-        naturalHeight: picture.natural.height,
-        ...(picture.alt ? { alt: picture.alt } : {}),
+      natural: picture.natural,
+      place: {
+        image: {
+          id,
+          kind: 'image',
+          at: { r, c, dx: picture.at.dx, dy: picture.at.dy },
+          width: picture.width,
+          height: picture.height,
+          naturalWidth: picture.natural.width,
+          naturalHeight: picture.natural.height,
+          ...(picture.alt ? { alt: picture.alt } : {}),
+        },
       },
       bytes: picture.bytes,
       type: picture.type,
     });
   }
   return out;
+}
+
+/** A cell's read picture on its sheet, by the cell's row and column ids. */
+export function cellPictureToPlace(
+  sheetId: string,
+  at: { r: string; c: string },
+  picture: ReadCellPicture,
+): PictureToPlace {
+  return {
+    sheetId,
+    bytes: picture.bytes,
+    type: picture.type,
+    natural: picture.natural,
+    place: { cell: { ...at, ...(picture.alt ? { alt: picture.alt } : {}) } },
+  };
+}
+
+// The sheet's cells with the picture in the cell at `at`, its format kept.
+function withCellPicture(
+  cells: SheetFromFile['cells'],
+  at: { r: string; c: string; alt?: string },
+  imageId: string,
+): SheetFromFile['cells'] {
+  const i = pictureInput(imageId, at.alt);
+  const found = cells.findIndex((cell) => cell.r === at.r && cell.c === at.c);
+  if (found < 0) return [...cells, { r: at.r, c: at.c, i }];
+  return cells.map((cell, n) => (n === found ? { ...cell, i } : cell));
 }
 
 /** What placing a file's pictures did: the sheets with their images, and how many were stored or left out. */
@@ -109,17 +142,19 @@ export async function picturesPlaced(
       let answer = stored.get(p.bytes);
       if (!answer) {
         // A store that throws leaves its picture out as failed, never the whole file.
-        const natural = { width: p.image.naturalWidth!, height: p.image.naturalHeight! };
-        answer = store({ data: p.bytes, type: p.type, natural }).catch((): PictureStored => ({
-          ok: false,
-          why: 'failed',
-        }));
+        answer = store({ data: p.bytes, type: p.type, natural: p.natural }).catch(
+          (): PictureStored => ({
+            ok: false,
+            why: 'failed',
+          }),
+        );
         stored.set(p.bytes, answer);
       }
       return answer;
     }),
   );
   const images = new Map<string, SheetImage[]>();
+  const cells = new Map<string, { r: string; c: string; alt?: string; imageId: string }[]>();
   let placed = 0;
   pictures.forEach((p, i) => {
     const answer = answers[i]!;
@@ -129,17 +164,30 @@ export async function picturesPlaced(
       return;
     }
     placed += 1;
+    if ('cell' in p.place) {
+      const own = cells.get(p.sheetId) ?? [];
+      cells.set(p.sheetId, [...own, { ...p.place.cell, imageId: answer.imageId }]);
+      return;
+    }
     images.set(p.sheetId, [
       ...(images.get(p.sheetId) ?? []),
-      { ...p.image, imageId: answer.imageId },
+      { ...p.place.image, imageId: answer.imageId },
     ]);
   });
   return {
     sheets: sheets.map((sheet) => {
       const own = images.get(sheet.id);
-      if (!own) return sheet;
-      const objects = [...(sheet.layout.objects ?? []), ...own];
-      return { ...sheet, layout: { ...sheet.layout, objects } };
+      const pictured = cells.get(sheet.id);
+      if (!own && !pictured) return sheet;
+      const objects = [...(sheet.layout.objects ?? []), ...(own ?? [])];
+      return {
+        ...sheet,
+        layout: own ? { ...sheet.layout, objects } : sheet.layout,
+        cells: (pictured ?? []).reduce(
+          (all, at) => withCellPicture(all, at, at.imageId),
+          sheet.cells,
+        ),
+      };
     }),
     placed,
     left: pictures.length - placed,

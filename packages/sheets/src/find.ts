@@ -204,6 +204,8 @@ export function replaceMatches(
     const ctx = wb.ctxFor(place.sheetId);
     const cells: CellChange[] = [];
     for (const { key, cell, r, c } of placedCells(wb, place)) {
+      // A picture has no text to replace (inserted-objects.md "Images in a cell", D631).
+      if ('img' in cell.input) continue;
       const isFormula = 'f' in cell.input;
       // A formula's text only with Also Search Within Formulas, and only by someone who may change it.
       if (isFormula && !(pattern.opts.inFormulas && rights.formulas)) continue;

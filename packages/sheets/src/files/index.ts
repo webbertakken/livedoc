@@ -6,6 +6,7 @@ export * from './ods-write';
 export * from './ods-read';
 export * from './write-workbook';
 export {
+  cellPictureIds,
   filePictureType,
   picturesWithinBudget,
   PICTURE_FILE_BYTES_MAX,

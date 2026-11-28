@@ -790,6 +790,30 @@ LiveDoc draws them (default, D626).
   not stored (the gallery full, a server keeping no images, a picture too large or unreadable, the upload failing, or
   its sheet already holding 100 objects) is left out and named by the read (`picture_unread`, its sheet and why):
   its drawing is read, so no drawing is left to keep it in (default, D628).
+- **Pictures in a cell** ([Images in a cell](inserted-objects.md#images-in-a-cell), D634), their bytes read and stored as
+  above, a picture not served or not stored leaving its cell empty and named the same:
+  - **XLSX**, as Excel writes a picture placed in a cell: the cell an error, `t="e"` holding `#VALUE!` (what a reader
+    without rich values shows), its `vm` naming a `valueMetadata` block of `xl/metadata.xml` that points at the
+    `XLRICHVALUE` future metadata's rich value (`xlrd:rvb`); `xl/richData/rdrichvalue.xml` holds that value, of the
+    `_localImage` structure (`xl/richData/rdrichvaluestructure.xml`: `_rvRel:LocalImageIdentifier`, the index of its
+    relationship in `xl/richData/richValueRel.xml`, whose relationships name the bytes in `xl/media`; `CalcOrigin`
+    5; and `Text`, its alt text, in a second structure only for pictures having one), with `rdRichValueTypes.xml` as
+    Excel writes it. Each image's bytes are written once a file, shared with pictures over the cells.
+  - **ODF**, as LibreOffice writes a picture anchored "To cell (resize with cell)": a `draw:frame` in the cell at
+    offset 0 and the cell's size, its `table:end-cell-address` the cell itself and `table:end-x` and `table:end-y`
+    the cell's width and height, holding the `draw:image` and alt text as a picture over the cells.
+  - **Reading**: XLSX reads a cell whose rich value is a `_localImage` (its keys in any order) as the cell's picture
+    when its relationship embeds a part of the package of a picture qualifying as above, its alt text from `Text`;
+    one that does not qualify leaves its cell empty, named (`picture_unread`, `unreadable`); a cell of any other rich
+    value (a linked data type, a web image) reads its cached value. The rich data parts are never kept: the cells'
+    bindings (`xl/metadata.xml`) are the writer's to make again, so nothing of them would be found again (D634). ODF
+    reads a `draw:frame` holding one picture, in a cell at offset 0 and ending in that same cell, as the cell's
+    picture; one ending in another cell, or naming none, is a picture over the cells. LibreOffice (24.2, verified)
+    keeps LiveDoc's frame so, and reads none of Excel's pictures in cells.
+  - **Validation**: the rich data parts are Microsoft's extensions, outside ISO/IEC 29500; they are validated against
+    a RELAX NG transcription of [MS-XLSX]'s published schemas (5.20, 5.21, 5.35) kept with the office packages' checks.
+  - **A sheet keeping its file's shapes** (ODF `table:shapes`) writes none of its cells' pictures, as none of its
+    pictures over the cells (D261), each named (`kept_drawing`); XLSX writes them, being cell values.
 
 ## Pivot tables in the file
 

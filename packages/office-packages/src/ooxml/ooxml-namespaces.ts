@@ -44,6 +44,12 @@ export const RELATIONSHIP_TYPES = {
   table: `${TRANSITIONAL_RELS}/table`,
   pivotTable: `${TRANSITIONAL_RELS}/pivotTable`,
   pivotCacheDefinition: `${TRANSITIONAL_RELS}/pivotCacheDefinition`,
+  // Excel's rich values, a picture placed in a cell among them.
+  richValue: 'http://schemas.microsoft.com/office/2017/06/relationships/rdRichValue',
+  richValueStructure:
+    'http://schemas.microsoft.com/office/2017/06/relationships/rdRichValueStructure',
+  richValueTypes: 'http://schemas.microsoft.com/office/2017/06/relationships/rdRichValueTypes',
+  richValueRel: 'http://schemas.microsoft.com/office/2022/10/relationships/richValueRel',
 } as const;
 
 /** A relationship type with Strict's namespace read as Transitional's. */
@@ -83,4 +89,8 @@ export const OOXML_CONTENT_TYPES = {
   pivotTable: 'application/vnd.openxmlformats-officedocument.spreadsheetml.pivotTable+xml',
   pivotCacheDefinition:
     'application/vnd.openxmlformats-officedocument.spreadsheetml.pivotCacheDefinition+xml',
+  richValue: 'application/vnd.ms-excel.rdrichvalue+xml',
+  richValueStructure: 'application/vnd.ms-excel.rdrichvaluestructure+xml',
+  richValueTypes: 'application/vnd.ms-excel.rdrichvaluetypes+xml',
+  richValueRel: 'application/vnd.ms-excel.richvaluerel+xml',
 } as const;

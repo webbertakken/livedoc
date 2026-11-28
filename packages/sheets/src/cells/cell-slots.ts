@@ -17,6 +17,8 @@ export const SlotKind = {
   Other: 7,
   // A formula that does not pack, held as given.
   HeldFormula: 8,
+  // A picture of the gallery (CellPicture), held as given.
+  Picture: 9,
 } as const;
 export type SlotKind = (typeof SlotKind)[keyof typeof SlotKind];
 

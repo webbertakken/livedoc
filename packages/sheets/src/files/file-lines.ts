@@ -75,6 +75,11 @@ export function lineStartPx(axis: FileAxisLines | undefined, at: number, size: n
   return px;
 }
 
+/** A line's size in px: its own, else the sheet's, else `size`, the format's own. */
+export function lineSizePx(axis: FileAxisLines | undefined, at: number, size: number): number {
+  return axis?.lines.get(at)?.size ?? axis?.size ?? size;
+}
+
 /**
  * The line a position in px falls on and how far into it, `lineStartPx`'s inverse: a hidden line is never the one;
  * the axis's end (`count` lines) holds what lies past it.
