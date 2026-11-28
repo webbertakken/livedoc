@@ -103,8 +103,10 @@ import {
   readLevels,
   readParagraphProps,
   readRunProps,
+  type ThemeFonts,
   readSection,
 } from './ooxml-props';
+import { themeFontsOf } from './ooxml-theme';
 
 const DOCUMENT_TYPES: readonly string[] = [
   OOXML_CONTENT_TYPES.document,
@@ -194,6 +196,7 @@ type Parts = {
   settings?: XmlParsed;
   comments?: XmlParsed;
   commentsExtended?: XmlParsed;
+  theme?: XmlParsed;
 };
 
 export type OoxmlFileRead = { ok: true; document: TextDocument } | PackageRefusal;
@@ -240,6 +243,7 @@ export async function readOoxmlFile(
   const stylesPart = partOf(RELATIONSHIP_TYPES.styles);
   const numberingPart = partOf(RELATIONSHIP_TYPES.numbering);
   const settingsPart = partOf(RELATIONSHIP_TYPES.settings);
+  const themePart = partOf(RELATIONSHIP_TYPES.theme);
   const commentParts = [
     RELATIONSHIP_TYPES.comments,
     RELATIONSHIP_TYPES.commentsExtended,
@@ -263,18 +267,18 @@ export async function readOoxmlFile(
     parse(settingsPart),
     parse(commentParts[0]),
     parse(commentParts[1]),
+    parse(themePart),
   ];
   const refused = parsed.find((p): p is PackageRefusal => p !== undefined && !p.ok);
   if (refused) return refused;
-  const [document, styles, numbering, core, app, settings, comments, commentsExtended] = parsed as (
-    XmlParsed | undefined
-  )[];
+  const [document, styles, numbering, core, app, settings, comments, commentsExtended, theme] =
+    parsed as (XmlParsed | undefined)[];
   const body = document && childElement(document.root, W_NS, 'body');
   if (!document || !body) return refuse('package_damaged', { entry: pkg.mainPart });
   const reader = new OoxmlReader(
     {
       document,
-      ...compact({ styles, numbering, settings, comments, commentsExtended }),
+      ...compact({ styles, numbering, settings, comments, commentsExtended, theme }),
     },
     pkg,
     report,
@@ -341,6 +345,8 @@ class OoxmlReader {
   /** Range marks between paragraphs, put at the start of the next paragraph read. */
   readonly pendingMarks: CommentMark[] = [];
   readonly parsePart: (name: string) => XmlParsed | PackageRefusal | undefined;
+  /** The theme's fonts, for a font named by the theme (standard-mapping.md "What the model holds"). */
+  readonly themeFonts: ThemeFonts;
   /** The styles and defaults read, for the stops each paragraph inherits. */
   tabs: { styles: readonly Style[]; defaults: StyleDefaults } = {
     styles: [],
@@ -370,6 +376,7 @@ class OoxmlReader {
     this.rels = pkg.relationships.get(pkg.mainPart) ?? [];
     this.part = { parsed: parts.document, name: pkg.mainPart, rels: this.rels };
     this.parsePart = parsePart;
+    this.themeFonts = themeFontsOf(parts.theme);
     this.comments = new OoxmlCommentsReader(
       parts.comments?.root,
       parts.commentsExtended?.root,
@@ -441,7 +448,7 @@ class OoxmlReader {
           ...readParagraphProps(pPr, [], this.dropTabs),
           tabInterval: interval,
         });
-        const values = { paragraph, text: readRunProps(rPr).props };
+        const values = { paragraph, text: readRunProps(rPr, this.themeFonts).props };
         defaults = {
           ...values,
           kept: { xml: keptXmlOf(parsed!, e), read: canonical(values), residue: [] },
@@ -472,7 +479,7 @@ class OoxmlReader {
           tabsOf(wVal(childElement(e, W_NS, 'basedOn'))),
           type === 'paragraph' ? this.dropTabs : undefined,
         ),
-        text: readRunProps(childElement(e, W_NS, 'rPr')).props,
+        text: readRunProps(childElement(e, W_NS, 'rPr'), this.themeFonts).props,
       });
       const residue = childElements(e)
         .filter(
@@ -1283,7 +1290,9 @@ class RunReader {
 
   run(r: XmlElement, ctx: RunContext): void {
     const outer = this.suggested;
-    const change = readRunChange(childElement(r, W_NS, 'rPr'), readRunProps);
+    const change = readRunChange(childElement(r, W_NS, 'rPr'), (e) =>
+      readRunProps(e, this.r.themeFonts),
+    );
     if (change) this.suggested = Suggestions.merged(outer, { format: change });
     this.readRun(r, ctx);
     this.suggested = outer;
@@ -1295,7 +1304,7 @@ class RunReader {
     if (this.skipped.has(r) || this.r.fieldMarks.has(r)) return;
     const doc = this.r.part.parsed;
     const rPr = childElement(r, W_NS, 'rPr');
-    const { style, props } = readRunProps(rPr);
+    const { style, props } = readRunProps(rPr, this.r.themeFonts);
     const kept = this.r.propsKept(doc, rPr, { style, props }, MAPPED_RPR);
     for (const c of childElements(r)) {
       if (c.uri !== W_NS) {
@@ -1370,7 +1379,7 @@ class RunReader {
     if ((custom !== undefined && !OFF.has(custom)) || id === undefined) return false;
     const blocks = this.r.footnotes.blocks(id);
     if (!blocks) return false;
-    const read = readRunProps(rPr);
+    const read = readRunProps(rPr, this.r.themeFonts);
     const props = markProps(read.props);
     const kept = this.r.propsKept(
       this.r.part.parsed,
@@ -1391,7 +1400,7 @@ class RunReader {
   field(kind: FieldKind, results: readonly XmlElement[], at: XmlElement, ctx: RunContext): void {
     const doc = this.r.part.parsed;
     const rPr = childElement(results[0] ?? at, W_NS, 'rPr');
-    const { style, props } = readRunProps(rPr);
+    const { style, props } = readRunProps(rPr, this.r.themeFonts);
     const kept = this.r.propsKept(doc, rPr, { style, props }, MAPPED_RPR);
     const text = results
       .flatMap((r) => childElements(r).filter((c) => isW(c, 't')))

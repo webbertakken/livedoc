@@ -46,6 +46,10 @@ are no others. A text document only changes format when a person converts it ([C
 | Suggestions          | `text:tracked-changes`, `text:changed-region` with `text:insertion`, `text:deletion`, `text:format-change`, `office:change-info`; `text:change-start`, `-end`, `text:change`; a row's or cell's style `loext:text-changes-only`                                | `w:ins`, `w:del`, `w:rPrChange`, `w:pPrChange` with `w:author`, `w:date`; a row's `w:trPr` `w:ins`, `w:del`; a cell's `w:cellIns`, `w:cellDel`       | Suggestions, attributed and dated ([Review](review.md))                                                                   |
 | Metadata             | `office:meta`: `dc:title`, `dc:description` (the summary), `dc:creator`, dates, `meta:document-statistic`, `dc:language`                                                                                                                                       | `docProps/core.xml` (`dc:title`, `dc:description`, `dc:creator`, dates), `docProps/app.xml` (statistics), `w:lang`                                   | Name, dates, author, language, statistics written on save                                                                 |
 
+- **A theme's font**: a Word run, style or default that names its font by the theme (`w:asciiTheme` or `w:hAnsiTheme`,
+  `major…` or `minor…`) and no font of its own reads as the theme's heading or body Latin typeface (`a:majorFont`,
+  `a:minorFont`, `a:latin`), so a Word document's Calibri body is Calibri here; without a theme part it names none.
+
 ## The model
 
 The model is plain values in `@livedoc/text-documents`, each a namespace of pure functions over immutable data.
