@@ -82,5 +82,7 @@ LiveDoc did not write, after a change to a writer, a reader or the model.
    (`unzip -Zv <file> mimetype` says `none (stored)`); the Web Page holds `<name>.html` and `images/1.png` on.
 7. Read `.txt` and `.md` against the spec's rules for them: a paragraph a line; a picture as `[alt]` in Plain Text and
    escaped `\[alt\]` in Markdown.
-8. Expect a font LiveDoc does not carry to leave as its fallback (Arial Black in `SampleDoc.docx` is written in
-   Arimo), as the editor draws it; anything else that differs is a bug, written up with the file that shows it.
+8. Read `pdffonts` against the document's fonts: a font LiveDoc carries under another name is written in its match
+   (`SampleDoc.docx`'s body, Calibri by its theme, in Carlito), and one it does not carry in its fallback (Arial
+   Black in Arimo), as the editor draws them. Anything else that differs is a bug, written up with the file that
+   shows it.
