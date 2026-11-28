@@ -1,11 +1,16 @@
 import { readOoxmlPackage, RELATIONSHIP_TYPES } from '@livedoc/office-packages';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
+import { conversionLosses } from './convert';
 import { docx } from './testing/packages';
 import { readTextDocumentFile, writeTextDocumentFile } from './files';
 import { TextDocument, type TextDocumentFormat } from './model/text-document';
 import { CONSTRUCTS } from './testing/constructs';
 import { modelOf } from './testing/compare';
 import type { TextDocumentFileType } from './file-types';
+
+const CORPUS = join(import.meta.dirname, '..', 'corpus');
 
 const TYPES: [TextDocumentFormat, TextDocumentFileType][] = [
   ['odf', 'odt'],
@@ -15,7 +20,6 @@ const TYPES: [TextDocumentFormat, TextDocumentFileType][] = [
 
 async function roundTrip(document: TextDocument, type: TextDocumentFileType) {
   const written = writeTextDocumentFile(document, type);
-  if (!written.ok) throw new Error(written.rejection);
   const read = await readTextDocumentFile(written.bytes);
   if (!read.ok) throw new Error(read.rejection);
   return { read, bytes: written.bytes };
@@ -45,22 +49,31 @@ describe('writing', () => {
       expect(first).toEqual(writeTextDocumentFile(document, type));
       const { read } = await roundTrip(document, type);
       const second = writeTextDocumentFile(read.document, type);
-      expect(second.ok && new TextDecoder().decode(second.bytes)).toBe(
-        first.ok && new TextDecoder().decode(first.bytes),
-      );
+      expect(new TextDecoder().decode(second.bytes)).toBe(new TextDecoder().decode(first.bytes));
     }
   });
 
-  it('refuses the other format, which only a conversion writes (C1)', () => {
+  // standard-mapping.md "Conversion": the other format is a converted copy, its losses listed; the document is unchanged.
+  it('writes the other format as a converted copy, with what it lost (C1)', async () => {
     const odf = TextDocument.blank();
-    expect(writeTextDocumentFile(odf, 'docx')).toEqual({
-      ok: false,
-      rejection: 'format_not_native',
-    });
-    expect(writeTextDocumentFile(TextDocument.blank({ format: 'ooxml' }), 'odt')).toEqual({
-      ok: false,
-      rejection: 'format_not_native',
-    });
+    const docx = writeTextDocumentFile(odf, 'docx');
+    const read = await readTextDocumentFile(docx.bytes);
+    expect(read.ok && read.document.format).toBe('ooxml');
+    expect(docx.losses).toEqual([]);
+    expect(odf.format).toBe('odf');
+    const ooxml = TextDocument.blank({ format: 'ooxml' });
+    const odt = await readTextDocumentFile(writeTextDocumentFile(ooxml, 'odt').bytes);
+    expect(odt.ok && odt.document.format).toBe('odf');
+  });
+
+  it('lists the losses of a converted copy, none for its own format', async () => {
+    const read = await readTextDocumentFile(readFileSync(join(CORPUS, 'libreoffice/features.odt')));
+    if (!read.ok) throw new Error(read.rejection);
+    expect(writeTextDocumentFile(read.document, 'odt').losses).toEqual([]);
+    expect(writeTextDocumentFile(read.document, 'docx').losses).toEqual(
+      conversionLosses(read.document, 'ooxml'),
+    );
+    expect(writeTextDocumentFile(read.document, 'docx').losses.length).toBeGreaterThan(0);
   });
 
   it('makes a new document ODF, one empty Normal text paragraph, Google’s styles', () => {
@@ -81,7 +94,6 @@ describe('a package written from one lacking its properties', () => {
     const read = await readTextDocumentFile(docx('<w:p/>'));
     if (!read.ok) throw new Error(read.rejection);
     const written = writeTextDocumentFile(read.document, 'docx');
-    if (!written.ok) throw new Error(written.rejection);
     const pkg = await readOoxmlPackage(new Uint8Array(written.bytes));
     if (!pkg.ok) throw new Error(pkg.rejection);
     const root = pkg.package.relationships.get('') ?? [];

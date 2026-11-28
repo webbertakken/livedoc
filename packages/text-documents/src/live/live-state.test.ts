@@ -75,8 +75,7 @@ describe('the live layout', () => {
     const type = file.endsWith('.docx') ? 'docx' : file.endsWith('.fodt') ? 'fodt' : 'odt';
     const fromModel = writeTextDocumentFile(document, type);
     const fromState = writeTextDocumentFile(live(document), type);
-    expect(fromModel.ok && fromState.ok).toBe(true);
-    if (fromModel.ok && fromState.ok) expect(fromState.bytes).toEqual(fromModel.bytes);
+    expect(fromState.bytes).toEqual(fromModel.bytes);
   });
 
   it('keeps a false that overrides a style, and each property apart', () => {

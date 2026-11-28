@@ -83,7 +83,7 @@ const CELL: readonly ContextEntrySpec[] = [
   // The active cell's link, for anyone, drawn only while it holds one (D189).
   { ...own('open-link', 'Open Link', 'view', 'built'), contextual: true },
   // A pivot table value's source rows on a sheet of their own, drawn only on such a value (pivot-tables.md "Details").
-  { ...own('show-pivot-details', 'Show Details', 'edit', 'built'), contextual: true },
+  { ...own('show-pivot-details', 'Show Details', 'view', 'built'), contextual: true },
   ...PIVOT_GROUPING,
   SEPARATOR,
   ...CLIPBOARD,

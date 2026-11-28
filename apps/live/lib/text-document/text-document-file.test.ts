@@ -40,11 +40,17 @@ describe('textDocumentFileOf', () => {
     expect(TextDocument.paragraphTexts(read.document)).toEqual(['Flat']);
   });
 
-  it('refuses a file of the other format: that is a conversion', async () => {
+  it('writes a file of the other format as a converted copy', async () => {
     const doc = TextDocumentState.load([TextDocumentState.fromBody(Body.of('x'))]);
-    await expect(
-      textDocumentFileOf(doc, { format: 'odf', name: 'Notes', type: 'docx' }),
-    ).rejects.toThrow(/format_not_native/);
+    const { blob, fileName } = await textDocumentFileOf(doc, {
+      format: 'odf',
+      name: 'Notes',
+      type: 'docx',
+    });
+    expect(fileName).toBe('Notes.docx');
+    const read = await readTextDocumentFile(new Uint8Array(await blob.arrayBuffer()));
+    expect(read.ok && read.document.format).toBe('ooxml');
+    expect(read.ok && TextDocument.paragraphTexts(read.document)).toEqual(['x']);
   });
 });
 

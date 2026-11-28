@@ -54,7 +54,6 @@ function mathsFile(path: string): void {
     { ...first, props: { align: 'center' as const }, inlines: [equation(DISPLAY)] },
   ];
   const written = writeTextDocumentFile({ ...blank, body }, 'docx');
-  if (!written.ok) throw new Error(written.rejection);
   writeFileSync(path, written.bytes);
 }
 

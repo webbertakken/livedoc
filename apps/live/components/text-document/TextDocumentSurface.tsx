@@ -10,7 +10,7 @@ import { EditorView } from 'prosemirror-view';
 import type * as Y from 'yjs';
 import { keymap } from 'prosemirror-keymap';
 import { baseKeymap } from 'prosemirror-commands';
-import { ySyncPlugin } from 'y-prosemirror';
+import { ySyncPlugin, yUndoPluginKey } from 'y-prosemirror';
 import { tableEditing } from 'prosemirror-tables';
 import { tableResizePlugin } from '@/lib/text-document/text-document-table-resize-plugin';
 import { tableMovePlugin } from '@/lib/text-document/text-document-table-move-plugin';
@@ -266,6 +266,7 @@ export function TextDocumentSurface({
   commenter = null,
   mentions = null,
   arrival = null,
+  setFormat = null,
 }: TextDocumentSurfaceProps) {
   const root = useRef<HTMLDivElement | null>(null);
   const mount = useRef<HTMLDivElement | null>(null);
@@ -1378,6 +1379,16 @@ export function TextDocumentSurface({
     if (editorView && !editorView.isDestroyed) editorView.setProps({});
   }, [editorView, writes]);
 
+  // File > Convert (standard-mapping.md "Conversion"): the body's undo manager holds the step, for an Editor.
+  const conversion = useMemo(
+    () => ({
+      undoManager: () =>
+        (editorView && yUndoPluginKey.getState(editorView.state)?.undoManager) ?? null,
+      setFormat: canEdit ? setFormat : null,
+    }),
+    [editorView, canEdit, setFormat],
+  );
+
   // An edit the room refused names its limit.
   useEffect(() => TextDocumentBus.onRefused(tabId, setLimitReached), [tabId]);
 
@@ -1410,6 +1421,7 @@ export function TextDocumentSurface({
         choices={choices}
         refresh={changes.subscribeCaret}
         screenReader={screenReader.on}
+        conversion={conversion}
         onFollow={(personId) =>
           editorView ? scrollToTextDocumentPeer(editorView, personId) : false
         }

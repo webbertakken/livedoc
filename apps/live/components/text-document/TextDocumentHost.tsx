@@ -7,7 +7,7 @@
 import dynamic from 'next/dynamic';
 import { useCallback, useMemo } from 'react';
 import { useEditorDrawingTabs } from './useEditorDrawingTabs';
-import { textDocumentFormatOf, type Tab } from '@livedoc/document';
+import { textDocumentFormatOf, type Tab, type TextDocumentFormat } from '@livedoc/document';
 import { useEditorContext } from '@/app/document/[id]/EditorContext';
 import { useEditorLines } from '@/components/chrome/lines/editor-lines-context';
 import { useIsOfflineDocument } from '@/hooks/persistence/useIsOfflineDocument';
@@ -65,6 +65,13 @@ export function TextDocumentHost({ tab, readOnly = false }: { tab: Tab; readOnly
         : null,
     [readOnly, textThreadArrival, tab.id],
   );
+  // A conversion names the tab's new format (standard-mapping.md "Conversion"), an Editor's, in the editor's pane.
+  const { setTextDocumentFormat } = ctx;
+  const mayConvert = !readOnly && can.textDocumentEdits && !isStructureReadOnly;
+  const setFormat = useCallback(
+    (format: TextDocumentFormat) => setTextDocumentFormat(tab.id, format),
+    [setTextDocumentFormat, tab.id],
+  );
   if (!documentId) return null;
   return (
     <TextDocumentSurface
@@ -88,6 +95,7 @@ export function TextDocumentHost({ tab, readOnly = false }: { tab: Tab; readOnly
       commenter={commenter}
       mentions={mentions}
       arrival={arrival}
+      setFormat={mayConvert ? setFormat : null}
     />
   );
 }

@@ -82,3 +82,25 @@ describe('Styles.paragraphPropsOf (text-and-paragraphs.md "Paragraph styles": a 
     expect(Styles.paragraphPropsOf(styles, base, 'Loop').align).toBe('center');
   });
 });
+
+// standard-mapping.md "Conversion": a paragraph written under the other format while a conversion arrived.
+describe('Styles.byId', () => {
+  const odf = Styles.builtIn('odf');
+  const ooxml = Styles.builtIn('ooxml');
+
+  it('finds a style by its own id first', () => {
+    const custom = [...odf, style({ id: 'Heading1', name: 'Mine' })];
+    expect(Styles.byId(custom, 'Heading1')?.name).toBe('Mine');
+    expect(Styles.byId(odf, 'Heading_20_2')?.role).toBe('heading2');
+  });
+
+  it('reads a built-in style id of the other format as the style with its role', () => {
+    expect(Styles.byId(ooxml, 'Heading_20_1')?.id).toBe('Heading1');
+    expect(Styles.byId(odf, 'Normal')?.id).toBe('Standard');
+  });
+
+  it('finds nothing for an unknown id, or none', () => {
+    expect(Styles.byId(odf, 'Quote')).toBeUndefined();
+    expect(Styles.byId(odf, undefined)).toBeUndefined();
+  });
+});

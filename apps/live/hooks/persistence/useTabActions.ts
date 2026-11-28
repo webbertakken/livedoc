@@ -34,6 +34,7 @@ import {
   type EditorMode,
   type Element,
   type Tab,
+  type TextDocumentFormat,
 } from '@livedoc/document';
 import { apiLinkTab } from '@/lib/api-client';
 import { newTabOpening, newTabSeed, type AddTabChoice } from '@/lib/new-tab-seed';
@@ -353,6 +354,13 @@ export function useTabActions(deps: TabActionsDeps) {
     track('Tab', 'Renamed');
   };
 
+  // A text document tab's format, as a conversion leaves it (docs/specs/034-text-documents/standard-mapping.md
+  // "Conversion"): the writing is converted first, by the surface; this names the tab's new format, a tab edit as a
+  // rename is.
+  const setTextDocumentFormat = (id: string, format: TextDocumentFormat) => {
+    commitTabs((ts) => ts.map((t) => (t.id === id && t.format !== format ? { ...t, format } : t)));
+  };
+
   // Share the active tab into another of the user's documents (docs/specs/006-document/tab-document-many-to-many.md):
   // POST /api/documents/<target>/tabs/<tabId>/link with this document as `from`. The target then holds the same
   // tab, and an edit to it in either document reaches the other.
@@ -549,6 +557,7 @@ export function useTabActions(deps: TabActionsDeps) {
     importScenesAsNewDocuments,
     toggleActiveTabLock,
     renameTab,
+    setTextDocumentFormat,
     linkActiveTabTo,
     duplicateTab,
     deleteTab,

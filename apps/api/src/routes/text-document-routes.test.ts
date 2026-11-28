@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
+import { TEXT_DOCUMENT_CONVERSION_LOSSES_HEADER } from '@livedoc/api-schema';
 import {
   Body,
   readTextDocumentFile,
@@ -38,7 +39,6 @@ function fileOf(body: Body, type: TextDocumentFileType = 'odt'): Uint8Array {
     ),
     type,
   );
-  if (!written.ok) throw new Error('fixture');
   return written.bytes;
 }
 
@@ -146,9 +146,13 @@ describe('a text document opened from a file', () => {
     const download = await call(db, 'GET', '/api/documents/D/text-documents/t1/file?type=docx');
     expect(download.status).toBe(200);
     expect(await bodyOfFile(download)).toEqual(Body.of('Word', 'file'));
-    expect((await call(db, 'GET', '/api/documents/D/text-documents/t1/file?type=odt')).status).toBe(
-      409,
-    );
+    // The other format is a converted copy; the tab stays OOXML.
+    const odt = await call(db, 'GET', '/api/documents/D/text-documents/t1/file?type=odt');
+    expect(odt.status).toBe(200);
+    const read = await readTextDocumentFile(new Uint8Array(await odt.arrayBuffer()));
+    expect(read.ok && read.document.format).toBe('odf');
+    const again = await call(db, 'GET', '/api/documents/D/text-documents/t1/file?type=docx');
+    expect(await bodyOfFile(again)).toEqual(Body.of('Word', 'file'));
   });
 
   it('refuses a Word file for a tab held in ODF, never changing its format', async () => {
@@ -231,14 +235,21 @@ describe('the text document doors', () => {
     expect((await call(db, 'GET', '/api/documents/X/text-documents/t1/state')).status).toBe(404);
   });
 
-  it('leave a document in its own format only, and name an unknown file', async () => {
+  // files-and-print.md "Downloading": the other format is a converted copy, its losses counted; the tab keeps its own.
+  it('write the other format as a converted copy, and name an unknown file', async () => {
     const db = sqliteD1();
     await create(db);
     const unknown = await call(db, 'GET', '/api/documents/D/text-documents/t1/file?type=pdf');
     expect(await unknown.json()).toEqual({ error: 'file_type_unknown' });
+    const own = await call(db, 'GET', '/api/documents/D/text-documents/t1/file');
+    expect(own.status).toBe(200);
+    expect(own.headers.get(TEXT_DOCUMENT_CONVERSION_LOSSES_HEADER)).toBe('0');
     const docx = await call(db, 'GET', '/api/documents/D/text-documents/t1/file?type=docx');
-    expect(docx.status).toBe(409);
-    expect((await call(db, 'GET', '/api/documents/D/text-documents/t1/file')).status).toBe(200);
+    expect(docx.status).toBe(200);
+    expect(docx.headers.get('Content-Disposition')).toMatch(/\.docx"$/);
+    expect(docx.headers.get(TEXT_DOCUMENT_CONVERSION_LOSSES_HEADER)).toBe('0');
+    const read = await readTextDocumentFile(new Uint8Array(await docx.arrayBuffer()));
+    expect(read.ok && read.document.format).toBe('ooxml');
   });
 
   it('refuse a caller without access', async () => {

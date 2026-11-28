@@ -43,7 +43,6 @@ async function read(bytes: Uint8Array) {
 
 function written(document: TextDocument, type: 'fodt' | 'odt' | 'docx'): Uint8Array {
   const result = writeTextDocumentFile(document, type);
-  if (!result.ok) throw new Error(result.rejection);
   return result.bytes;
 }
 

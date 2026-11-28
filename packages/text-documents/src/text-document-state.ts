@@ -2,6 +2,8 @@
 // Yjs document whose root XML fragment `body` holds the first document tab's body as ProseMirror nodes (y-prosemirror's
 // layout: a `paragraph` element holding text). The room, the editor, the api and agents read and write it here.
 import * as Y from 'yjs';
+import { convertLive } from './live/live-convert';
+import type { ConversionLoss } from './convert';
 import type { Body, Paragraph } from './body';
 import type { Style, StyleDefaults } from './model/styles';
 import type { TextDocument, TextDocumentFormat } from './model/text-document';
@@ -169,6 +171,13 @@ export const TextDocumentState = {
   encode: (doc: Y.Doc): Uint8Array => Y.encodeStateAsUpdate(doc),
   /** The live state as the model, in the tab's format (live-editing-and-storage.md "The layout"). */
   document: (doc: Y.Doc, format: TextDocumentFormat): TextDocument => readLiveDocument(doc, format),
+  /** Converts the state to the other format in one transaction under `origin` (standard-mapping.md "Conversion"). */
+  convert: (
+    doc: Y.Doc,
+    from: TextDocumentFormat,
+    to: TextDocumentFormat,
+    origin?: unknown,
+  ): ConversionLoss[] => convertLive(doc, from, to, origin),
   /** The live state's styles alone, cheap to read again as the writing changes (links-and-navigation.md). */
   styles: (doc: Y.Doc, format: TextDocumentFormat): readonly Style[] => readLiveStyles(doc, format),
   /** The live state's style defaults alone, under every style (text-and-paragraphs.md "Text formatting"). */

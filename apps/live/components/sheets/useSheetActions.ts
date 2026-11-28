@@ -5,6 +5,7 @@
 // through the controller's write. One place, so a toolbar button and its shortcut can never differ.
 import { chartRangeOf, chartSizeOf, newChartAnchor, NOTHING_TO_CHART } from './sheet-charts';
 import { pivotsCoveredBy } from './pivots/sheet-pivots';
+import { pivotGroupRenameAt } from '@/lib/spreadsheet/pivot-group-rename';
 import { debugLog } from '@/lib/debug-log';
 import { useMemo } from 'react';
 import { acceptSmartFill, offerSmartFill } from './sheet-smart-fill';
@@ -147,9 +148,27 @@ export function useSheetActions() {
       commitEdit: (move: Dir | 'none', all = false, draft?: string): EditResult => {
         const e = c.editing && draft !== undefined ? { ...c.editing, draft } : c.editing;
         if (!e) return { ok: true };
-        const result = all
-          ? typeIntoRanges(c.workbook, c.sheet.id, { r: e.r, c: e.c }, ranges(), e.draft)
-          : typeInto(c.workbook, c.sheet.id, { r: e.r, c: e.c }, e.draft);
+        // Typing over a pivot table's custom group renames it (pivot-tables.md "Grouping in the grid"): an Editor's.
+        const renamed =
+          !all && c.canShape ? pivotGroupRenameAt(c.workbook, c.sheet, e.r, e.c, e.draft) : null;
+        if (renamed && 'refused' in renamed) return { ok: false, message: renamed.refused, at: 0 };
+        if (renamed?.next) {
+          const ok = c.write(
+            {
+              kind: 'layout',
+              changes: [{ k: 'object', id: renamed.next.id, object: renamed.next }],
+            },
+            'PivotTable',
+          );
+          debugLog(
+            `[sheet-pivots] group renamed sheet=${c.sheet.id} pivot=${renamed.next.id} ok=${ok}`,
+          );
+        }
+        const result = renamed
+          ? null
+          : all
+            ? typeIntoRanges(c.workbook, c.sheet.id, { r: e.r, c: e.c }, ranges(), e.draft)
+            : typeInto(c.workbook, c.sheet.id, { r: e.r, c: e.c }, e.draft);
         if (result && !result.ok) {
           const reason = result.read.reason;
           return {

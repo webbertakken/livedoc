@@ -1,7 +1,7 @@
 // Grouping a pivot table's items from the grid (docs/specs/029-sheets/pivot-tables.md "Grouping in the grid", D621):
 // a group's grouping set or taken off, picked items gathered into a custom group, an item a grouping made ungrouped.
 // Each a whole new pivot table, as the editor's changes are.
-import type { SheetPivot, SheetPivotGroup } from '../objects/sheet-pivot';
+import { PIVOT_NAME_MAX, type SheetPivot, type SheetPivotGroup } from '../objects/sheet-pivot';
 import type { PivotGrouping, PivotItemRef } from './pivot-spec';
 
 type Axis = 'rows' | 'columns';
@@ -88,4 +88,31 @@ export function pivotUngroupItem(
     const rest = g.grouping.groups.filter((x) => x.name !== item.label);
     return grouped(g, rest.length ? { k: 'custom', groups: rest } : null);
   });
+}
+
+/** Why a custom group's new name is refused, `same` for the name it has, `none` where there is no such group. */
+export type PivotRenameRefusal = 'empty' | 'too_long' | 'taken' | 'same' | 'none';
+
+/**
+ * The custom group `from` of the group at `depth` of `axis` renamed to `typed`, trimmed (pivot-tables.md "Grouping in
+ * the grid", renaming a custom group): refused empty, past PIVOT_NAME_MAX, or another custom group's name, case aside.
+ */
+export function pivotRenameCustomGroup(
+  pivot: SheetPivot,
+  axis: Axis,
+  depth: number,
+  from: string,
+  typed: string,
+): SheetPivot | PivotRenameRefusal {
+  const grouping = pivot[axis]?.[depth]?.grouping;
+  if (grouping?.k !== 'custom' || !grouping.groups.some((x) => x.name === from)) return 'none';
+  const name = typed.trim();
+  if (name === '') return 'empty';
+  if (name.length > PIVOT_NAME_MAX) return 'too_long';
+  if (name === from) return 'same';
+  const lower = name.toLowerCase();
+  if (grouping.groups.some((x) => x.name !== from && x.name.toLowerCase() === lower))
+    return 'taken';
+  const groups = grouping.groups.map((x) => (x.name === from ? { ...x, name } : x));
+  return withGroup(pivot, axis, depth, (g) => grouped(g, { k: 'custom', groups }));
 }

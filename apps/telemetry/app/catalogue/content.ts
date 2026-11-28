@@ -272,6 +272,15 @@ export const TEXT_DOCUMENT_VERSION_RESTORED = chart(
   { types: ['TextDocumentVersionRestored'], rising: 'neutral' },
 );
 
+// A text document converted to the other format (docs/specs/034-text-documents/standard-mapping.md "Conversion").
+export const TEXT_DOCUMENT_CONVERTED = chart(
+  'Document',
+  'Changed',
+  'Text Documents Converted',
+  'An Editor converted a text document to the other file format (ODF or Word) from File > Convert.',
+  { types: ['TextDocumentConverted'], rising: 'neutral' },
+);
+
 // Spelling in a text document (docs/specs/034-text-documents/tools.md "Spelling and grammar"): never the word.
 export const TEXT_DOCUMENT_SPELLING_ACCEPTED = chart(
   'Document',
@@ -408,6 +417,7 @@ export const DOCUMENT_ACTIONS: MetricStack = {
     TEXT_DOCUMENT_VERSION_NAMED,
     TEXT_DOCUMENT_VERSION_RESTORED,
     TEXT_DOCUMENT_NOTICES_CHOSEN,
+    TEXT_DOCUMENT_CONVERTED,
     TEXT_DOCUMENT_SPELLING_ACCEPTED,
     TEXT_DOCUMENT_DICTIONARY_ADDED,
     TEXT_DOCUMENT_SPELLING_CORRECTED,

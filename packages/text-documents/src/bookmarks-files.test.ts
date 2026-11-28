@@ -37,7 +37,6 @@ const first = async (bytes: Uint8Array) => (await read(bytes)).body[0] as Paragr
 
 function written(document: TextDocument, type: 'fodt' | 'odt' | 'docx'): Uint8Array {
   const result = writeTextDocumentFile(document, type);
-  if (!result.ok) throw new Error(result.rejection);
   return result.bytes;
 }
 
