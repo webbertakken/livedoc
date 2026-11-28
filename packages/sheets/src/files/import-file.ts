@@ -7,6 +7,7 @@
 // pictures over the cells are stored in the opener's gallery first, so the sheets are made holding them (D628). The
 // caller's port does the requests, so the browser and the CLI each send them their own way.
 import { PACKAGE_MAX_BYTES, type PackageRejection } from '@livedoc/office-packages';
+import type { IdThread } from './file-threads';
 import type { SheetWrite } from '../store';
 import { WorkbookRecord, type WorkbookFormat } from '../workbook-record';
 import { textFileSplitOf, sheetsFromText } from './csv-file';
@@ -43,6 +44,8 @@ export type SpreadsheetFilePort = {
   keep(kept: KeptContent<StoredAt>): Promise<number>;
   // Stores a picture the file holds in the opener's gallery: its image id, or why not (never throws).
   storePicture: PictureStore;
+  // Stores a sheet's comment threads from the file, once its cells are there ("Comments in the file").
+  threads(sheetId: string, threads: readonly IdThread[]): Promise<void>;
   // Moves a half-made spreadsheet to the Bin.
   bin(documentId: string): Promise<void>;
   log(event: string, data: Record<string, unknown>): void;
@@ -145,6 +148,9 @@ export async function importSpreadsheetFile(
       sent += part.units;
       onProgress(sent / parts.totalUnits);
     }
+    // Its comment threads, once every cell they sit on is there (standard-mapping.md "Comments in the file").
+    for (const sheet of read.made.sheets)
+      if (sheet.threads?.length) await port.threads(sheet.id, sheet.threads);
     // Then what the file holds that the model does not (standard-mapping.md "Unknown content"); a refusal bins it too.
     const left = read.made.kept ? await port.keep(read.made.kept) : 0;
     if (left > 0) losses.push({ k: 'kept_too_large', count: left });

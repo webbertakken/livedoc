@@ -74,6 +74,14 @@ import {
 import { readXlsxLines } from './xlsx-lines';
 import { cellsLinked, readXlsxHyperlinks } from './xlsx-hyperlinks';
 import { cellsNoted, NOTES_RELATIONSHIP, readXlsxNotes, type ReadNote } from './xlsx-notes';
+import {
+  PERSONS_RELATIONSHIP,
+  readXlsxPersons,
+  readXlsxThreads,
+  THREADS_RELATIONSHIP,
+  type ReadThreads,
+} from './xlsx-threads';
+import { threadsWithinLimits } from './file-threads';
 import { readXlsxTabLook } from './xlsx-tab-look';
 import { isRichItem, itemText } from './xlsx-cell-text';
 
@@ -134,6 +142,21 @@ function sheetNotes(pkg: OoxmlPackage, part: string): ReadNote[] {
   const xml = rel && text(pkg, resolvePartName(part, rel.target));
   const parsed = xml === undefined ? null : parseXml(xml);
   return parsed?.ok ? readXlsxNotes(parsed.root) : [];
+}
+
+// A worksheet's comment threads, from the threaded comments part its relationships name, and the notes LiveDoc's
+// records carried ("Comments in the file", D658); none when it names none, or one that does not parse.
+function sheetThreads(
+  pkg: OoxmlPackage,
+  part: string,
+  persons: ReadonlyMap<string, string>,
+): ReadThreads {
+  const rel = (pkg.relationships.get(part) ?? []).find(
+    (r) => r.type === THREADS_RELATIONSHIP && !r.external,
+  );
+  const xml = rel && text(pkg, resolvePartName(part, rel.target));
+  const parsed = xml === undefined ? null : parseXml(xml);
+  return parsed?.ok ? readXlsxThreads(parsed.root, persons) : { threads: [], notes: [] };
 }
 
 const children = (element: XmlElement | undefined, ns: string, local: string): XmlElement[] =>
@@ -375,6 +398,12 @@ export async function readXlsx(
   // The workbook's theme, its font the file's default (standard-mapping.md "The theme in the file", D218).
   const fileTheme = readXlsxTheme(themeXml, xlsxStylesDefaultFont(stylesXml));
   const theme = readThemeColours(themeXml);
+  // The workbook's persons, naming its threads' authors ("Comments in the file").
+  const personsXml = text(pkg, partOf(PERSONS_RELATIONSHIP));
+  const personsParsed = personsXml === undefined ? null : parseXml(personsXml);
+  const persons = personsParsed?.ok
+    ? readXlsxPersons(personsParsed.root)
+    : new Map<string, string>();
   const book: Book = {
     ns,
     ...sharedStrings(pkg, partOf(RELATIONSHIP_TYPES.sharedStrings), ns),
@@ -438,6 +467,10 @@ export async function readXlsx(
     // Its cells' notes (standard-mapping.md "Notes in the file"): its notes part read, its VML drawing LiveDoc's to
     // write, so its `legacyDrawing` is read too.
     const notes = sheetNotes(pkg, part!);
+    const threaded = sheetThreads(pkg, part!, persons);
+    const threads = threadsWithinLimits(
+      threaded.threads.filter((t) => t.r2 < ROWS_MAX && t.c2 < COLS_MAX),
+    ).threads;
     const legacy = childElement(worksheet.root, ns, 'legacyDrawing');
     const read = new Set([
       ...(legacy ? [legacy] : []),
@@ -469,13 +502,14 @@ export async function readXlsx(
       (cell, vm) => richCells.push({ sheet: index, cell, vm }),
     );
     cellsLinked(cells.cells, hyperlinks.links, { rows: ROWS_MAX, cols: COLS_MAX });
-    cellsNoted(cells.cells, notes, { rows: ROWS_MAX, cols: COLS_MAX });
+    cellsNoted(cells.cells, [...notes, ...threaded.notes], { rows: ROWS_MAX, cols: COLS_MAX });
     sheets.push({
       ...cells,
       ...readXlsxTabLook(sheet, worksheet.root, ns),
       ...(rules.rules.length ? { formatRules: rules.rules } : {}),
       ...(validations.rules.length ? { validations: validations.rules } : {}),
       ...(found.protections ? { protections: found.protections } : {}),
+      ...(threads.length ? { threads } : {}),
     });
   }
   // Its cells' pictures (standard-mapping.md "Pictures in a cell").

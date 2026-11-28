@@ -2,8 +2,7 @@
 // line of a numbered section numbered on the page its middle is drawn on, right-aligned 0.25 in before its column's
 // left edge; counted over numbered lines only, on through the document, from 1 at each page's first numbered line, or
 // from 1 at each section's first. Pure: the drawn lines come measured (pagination-line-reading.ts).
-import type { LineNumbers } from '@livedoc/text-documents';
-import { PAGE_GAP_PX } from './pagination';
+import { type LineNumbers, PAGE_GAP_PX } from '@livedoc/text-documents';
 
 /** The room between a line's number and its column's left edge: 0.25 in, in CSS pixels (default). */
 export const LINE_NUMBER_GAP_PX = 24;

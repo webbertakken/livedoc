@@ -3,7 +3,7 @@
 // number a section starts at; the page count is every page laid out; a body field shows its paragraph's first page.
 import { describe, expect, it } from 'vitest';
 import { textDocumentSchema as schema } from '../text-document-schema';
-import type { Pagination, PageStart } from './pagination';
+import type { Pagination, PageStart } from '@livedoc/text-documents';
 import {
   fieldDecorations,
   pageCountOf,

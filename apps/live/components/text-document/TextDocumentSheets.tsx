@@ -8,9 +8,8 @@
 // page's left margin, and the watermark (page-layout.md "Watermark") stands centred behind it all. Drawn only: never
 // read, never focused.
 import type { ReactNode } from 'react';
-import { PAGE_GAP_PX } from '@/lib/text-document/pagination/pagination';
+import { type HeaderFooterKind, PAGE_GAP_PX } from '@livedoc/text-documents';
 import type { PageGeometry } from '@/lib/text-document/pagination/pagination-draw';
-import type { HeaderFooterKind } from '@livedoc/text-documents';
 import type { PageStory } from '@/lib/text-document/pagination/pagination-headers';
 import type { WatermarkLook } from '@/lib/text-document/text-document-watermark';
 import { STORY_KEY_ATTRIBUTE } from './useTextDocumentStories';

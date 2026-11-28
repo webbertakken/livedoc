@@ -3,6 +3,8 @@
 // OpenFormula beside its cached value. One cell a line, attributes in a fixed order, so the same workbook gives the
 // same bytes and a changed value is a one-line diff ("The flat form").
 import { odfHref, type FileLink } from './file-links';
+import { threadFingerprint, threadLines, threadRecordJson, type FileThread } from './file-threads';
+import { LIVEDOC_SPREADSHEET_NS } from './validation-standard';
 import { keptPilotNames, odsDataPilots, withDataPilots } from './ods-pivots';
 import {
   escapeXmlAttribute,
@@ -103,6 +105,8 @@ type Out = {
   pictures: OdsPictures;
   // The sheet's chart and picture frames by the cell each is anchored in (`r,c`).
   frames?: ReadonlyMap<string, string>;
+  // The sheet's comment threads by their top-left cell (`r,c`), the first begun where two share one.
+  threads?: ReadonlyMap<string, FileThread>;
   // Every sheet's validation rules' rectangles and names, by sheet (standard-mapping.md "Validation in the file").
   validations: OdsValidationsOut['cells'];
 };
@@ -208,12 +212,30 @@ function cellXml(cell: FileCell, out: Out, rule: string | undefined, isOpen: boo
   const keptAttributes = kept?.attributes ?? '';
   const ruled = rule === undefined ? keptAttributes : keptAttributes.replace(VALIDATION_NAME, '');
   const open = `<table:table-cell${attrs.map((a) => ` ${a}`).join('')}${ruleAttribute(rule)}${ruled}>`;
-  // Its note first, hidden, a paragraph a line (standard-mapping.md "Notes in the file").
-  const note = cell.note
-    ? `<office:annotation office:display="false">${paragraphs(cell.note)}</office:annotation>`
-    : '';
+  // Its note first, hidden, a paragraph a line (standard-mapping.md "Notes in the file"); a thread's conversation in
+  // its place, the note in the thread's record (D659, "Comments in the file").
+  const thread = out.threads?.get(`${cell.r},${cell.c}`);
+  const note = thread
+    ? threadAnnotation(thread, cell.note)
+    : cell.note
+      ? `<office:annotation office:display="false">${paragraphs(cell.note)}</office:annotation>`
+      : '';
   const frames = out.frames?.get(`${cell.r},${cell.c}`) ?? '';
   return `${open}${note}${kept?.before ?? ''}${frames}${body}${kept?.after ?? ''}</table:table-cell>`;
+}
+
+// A thread's annotation (standard-mapping.md "Comments in the file", D659): its first author and time, its conversation
+// as paragraphs, and LiveDoc's record beside them with the fingerprint of that text.
+function threadAnnotation(thread: FileThread, note: string | undefined): string {
+  const first = thread.comments[0]!;
+  const lines = threadLines(thread);
+  const record = threadRecordJson(thread, note);
+  return (
+    `<office:annotation office:display="false" xmlns:dc="${ODF_NS.dc}" xmlns:livedoc="${LIVEDOC_SPREADSHEET_NS}" livedoc:thread="${escapeXmlAttribute(record)}" livedoc:thread-fingerprint="${threadFingerprint(lines)}">` +
+    `<dc:creator>${escapeXmlText(first.author)}</dc:creator><dc:date>${new Date(first.at).toISOString().replace(/Z$/, '')}</dc:date>` +
+    lines.map((line) => `<text:p>${escapeXmlText(line)}</text:p>`).join('') +
+    '</office:annotation>'
+  );
 }
 
 const repeated = (axis: 'columns' | 'rows', n: number) =>
@@ -290,10 +312,13 @@ function tableXml(sheet: FileSheet, index: number, out: Omit<Out, 'sheet' | 'ind
   const { kept } = out;
   const before = kept.table('table-before', index);
   const frames = chartFrames(before, sheet, out);
-  const sheetOut: Out = { ...out, sheet: sheet.name, index, frames };
+  const threads = new Map<string, FileThread>();
+  for (const t of sheet.threads ?? [])
+    if (!threads.has(`${t.r1},${t.c1}`)) threads.set(`${t.r1},${t.c1}`, t);
+  const sheetOut: Out = { ...out, sheet: sheet.name, index, frames, threads };
   // A cell keeping content, or a chart, is written, empty or not, so what it holds stays on it.
   const held = new Set(sheet.cells.map((c) => `${c.r},${c.c}`));
-  const anchors = [...frames.keys()].map((at) => {
+  const anchors = [...frames.keys(), ...threads.keys()].map((at) => {
     const [r, c] = at.split(',').map(Number);
     return { r: r!, c: c! };
   });

@@ -18,7 +18,7 @@ const CARDS: CardSource = {
 function written(cards: CardSource) {
   const b = book({ A1: '=CARDCOUNT()' }, { cards });
   return (format: 'fods' | 'xlsx') =>
-    writeWorkbook(b.sheets, record, 'Cards', format, undefined, undefined, b.wb).data;
+    writeWorkbook(b.sheets, record, 'Cards', format, undefined, undefined, undefined, b.wb).data;
 }
 
 describe('card functions in a file', () => {

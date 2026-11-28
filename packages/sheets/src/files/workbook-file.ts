@@ -3,6 +3,7 @@
 // the model (cells by row and column id, formulas by id references) and each format's reader and writer, so neither
 // format ever sees an id and the model never sees a format.
 import { SHEET_NOTE_MAX } from '../note';
+import { idThreadsOf, type FileThread, type IdThread } from './file-threads';
 import { fileLinkOf, linkFromFile, type FileLink } from './file-links';
 import { fileChartsOf, sheetChartsFromFile, type FileChart } from './file-charts';
 import {
@@ -141,6 +142,8 @@ export type FileSheet = {
   pivots?: FilePivot[];
   // Its pivot tables no file can hold (a source deleted), left out (D607).
   pivotsLeft?: number;
+  // Its comment threads, open and resolved (standard-mapping.md "Comments in the file").
+  threads?: FileThread[];
   // Its filter and filter views (standard-mapping.md "Filters in the file").
   filter?: FileFilter;
   filterViews?: FileFilterView[];
@@ -474,6 +477,8 @@ export type SheetFromFile = {
   title: string;
   layout: SheetLayout;
   cells: { r: string; c: string; i?: CellInput; f?: CellFormat; n?: string }[];
+  // Its comment threads, by ids, for the import to store with their authors from the file ("Comments in the file").
+  threads?: IdThread[];
 };
 
 /**
@@ -793,7 +798,8 @@ export function sheetsFromFile(
     pictures.push(
       ...picturesToPlace({ id: m.id, title: m.title, layout }, m.file.readPictures, rand, losses),
     );
-    return { id: m.id, title: m.title, layout, cells };
+    const threads = idThreadsOf(layout, m.file.threads);
+    return { id: m.id, title: m.title, layout, cells, ...(threads.length ? { threads } : {}) };
   });
   const placing = pictures.length ? { pictures } : {};
   // A named function's reference naming no sheet names the first (D342); one LiveDoc cannot hold is kept as it came.

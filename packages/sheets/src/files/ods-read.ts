@@ -25,7 +25,8 @@ import { FILE_READ_CELLS_MAX } from './file-read-limits';
 import { KEPT_REPEAT_MAX, type FileAt, type KeptItem, type KeptPart } from './kept-content';
 import { readOdsCharts } from './ods-charts-read';
 import { readOdsPivots } from './ods-pivots-read';
-import { cellLinkHref, cellNote, cellText } from './ods-cell-text';
+import { cellLinkHref, cellNote, cellText, cellThreadRecord } from './ods-cell-text';
+import { threadsWithinLimits, type FileThread } from './file-threads';
 import { odfHrefLink, type FileLink } from './file-links';
 import { keptOdfParts, keptSettings, OdsKeeper } from './ods-kept-read';
 import { odsLineStyles, readOdsLines, type OdsLineStyles } from './ods-lines';
@@ -250,6 +251,7 @@ function readTable(table: XmlElement, index: number, book: Book): FileSheet {
     !guard.protected && looks.of(style).frees === true;
   const ruled = new OdsValidationCells(book.validations);
   const cells: FileCell[] = [];
+  const threads: FileThread[] = [];
   let cut = false;
   let cellsCut = false;
   // A sheet naming a style that says more than the model holds is named (D104).
@@ -284,8 +286,21 @@ function readTable(table: XmlElement, index: number, book: Book): FileSheet {
       const named = own ?? rowStyle;
       styled ||= named !== undefined && (looks.of(named).lost || freesUnread(named));
       const content = formulaText !== undefined || value !== undefined;
-      // Its note (standard-mapping.md "Notes in the file"), on a cell with content or none.
-      const note = cellNote(cell);
+      // Its thread, LiveDoc's record still matching its annotation, and its note, the record's where it has a thread
+      // (standard-mapping.md "Notes in the file", "Comments in the file"), on a cell with content or none.
+      const record = r < ROWS_MAX && c < COLS_MAX ? cellThreadRecord(cell) : null;
+      if (record) {
+        const { range } = record;
+        threads.push({
+          r1: r,
+          c1: c,
+          r2: Math.min(ROWS_MAX - 1, r + range.r2 - range.r1),
+          c2: Math.min(COLS_MAX - 1, c + range.c2 - range.c1),
+          resolved: record.resolved,
+          comments: record.comments,
+        });
+      }
+      const note = record ? (record.note ?? null) : cellNote(cell);
       // Its text wholly one link is the cell's link (standard-mapping.md "Links in the file").
       const href = content ? cellLinkHref(cell) : null;
       const link: FileLink | null =
@@ -381,6 +396,7 @@ function readTable(table: XmlElement, index: number, book: Book): FileSheet {
     ...(rules.rules.length ? { formatRules: rules.rules } : {}),
     ...(validations.rules.length ? { validations: validations.rules } : {}),
     ...(found.protections ? { protections: found.protections } : {}),
+    ...(threads.length ? { threads: threadsWithinLimits(threads).threads } : {}),
   };
 }
 

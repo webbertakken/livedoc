@@ -12,6 +12,9 @@ import {
   type XmlNode,
 } from '@livedoc/office-packages';
 
+import { readThreadRecord, threadFingerprint, type ThreadRecord } from './file-threads';
+import { LIVEDOC_SPREADSHEET_NS } from './validation-standard';
+
 const { office: OFFICE, text: TEXT, xlink: XLINK } = ODF_NS;
 // The marks a paragraph's plain text spells: they read as text, so a paragraph of only these is plain.
 const SPELLED: ReadonlySet<string> = new Set(['s', 'tab', 'line-break']);
@@ -64,6 +67,25 @@ export function cellLinkHref(cell: XmlElement): string | null {
   const hrefs = new Set(paragraphs.map(paragraphLink));
   const [href, ...more] = hrefs;
   return more.length === 0 && href ? href : null;
+}
+
+/**
+ * A cell's thread (standard-mapping.md "Comments in the file", D660): its annotation's LiveDoc record, while the
+ * annotation's text is still the one its fingerprint names; null otherwise, the annotation then the cell's note.
+ */
+export function cellThreadRecord(cell: XmlElement): ThreadRecord | null {
+  const annotation = childElements(cell).find((c) => c.uri === OFFICE && c.local === 'annotation');
+  const json = annotation && attributeOf(annotation, LIVEDOC_SPREADSHEET_NS, 'thread');
+  if (!annotation || !json) return null;
+  const lines = childElements(annotation)
+    .filter((c) => c.uri === TEXT && c.local === 'p')
+    .map((p) => p.children.map(inlineText).join(''));
+  if (
+    attributeOf(annotation, LIVEDOC_SPREADSHEET_NS, 'thread-fingerprint') !==
+    threadFingerprint(lines)
+  )
+    return null;
+  return readThreadRecord(json);
 }
 
 /**

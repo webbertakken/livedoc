@@ -2,8 +2,7 @@
 // their height and the rule's from the foot of its text area; a line whose note does not fit below it moves to the
 // next page with its mark; a note taller than the page is drawn whole.
 import { describe, expect, it } from 'vitest';
-import { NOTES_GAP_PX, type BlockMetrics } from './pagination';
-import { paginate } from './pagination-engine';
+import { type BlockMetrics, NOTES_GAP_PX, paginate } from '@livedoc/text-documents';
 import { pageNotes } from './pagination-notes';
 
 const LINE = 20;

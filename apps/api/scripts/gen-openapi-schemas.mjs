@@ -56,6 +56,8 @@ export const ROOT_TYPES = [
   'SheetThreadsResponse',
   'SheetThreadRequest',
   'SheetThreadResponse',
+  'SheetThreadsFromFileRequest',
+  'SheetThreadsFromFileResponse',
   'SheetChangesetRequest',
   'SheetChangesetResponse',
   'SheetRevertResponse',

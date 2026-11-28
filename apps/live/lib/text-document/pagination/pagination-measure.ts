@@ -4,15 +4,15 @@
 import type { Node as PmNode } from 'prosemirror-model';
 import type { EditorView } from 'prosemirror-view';
 import {
+  type BlockMetrics,
   KEPT_BLOCK,
+  type ParagraphProps,
   SECTION_BREAK,
+  type SectionStart,
   Styles,
   TABLE,
-  type ParagraphProps,
-  type SectionStart,
 } from '@livedoc/text-documents';
 import type { TextFormatting } from '../text-document-formatting';
-import type { BlockMetrics } from './pagination';
 import { PLACED_PICTURE_CLASS, PLACED_ROOM_CLASS } from '../text-document-picture-placed';
 import { BOOKMARK_GLYPH_CLASS } from '../text-document-bookmarks';
 import { groupLines, holdLines, naturalOf, withoutSpacers, type Span } from './pagination-lines';

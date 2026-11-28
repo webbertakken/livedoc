@@ -185,6 +185,63 @@ export const WRITTEN_CONSTRUCTS: Readonly<Record<string, WorkbookFile>> = {
       sheet('Second', [{ r: 0, c: 0, value: { k: 's', v: 'x' }, note: 'On the second sheet' }]),
     ],
   },
+  // standard-mapping.md "Comments in the file": a range's thread with a reply, mentions and reactions in LiveDoc's
+  // record; a resolved one on a cell with a note (D658, D659); one on an empty cell of a second sheet.
+  comments: {
+    sheets: [
+      {
+        ...sheet('Comments', [
+          { r: 0, c: 0, value: { k: 's', v: 'Total' } },
+          { r: 2, c: 2, value: { k: 'n', v: 7 }, note: 'A note too' },
+        ]),
+        threads: [
+          {
+            r1: 0,
+            c1: 0,
+            r2: 1,
+            c2: 1,
+            resolved: false,
+            comments: [
+              {
+                text: 'Is this final?\nTwo lines',
+                at: Date.UTC(2026, 0, 2, 10),
+                author: 'Ada',
+                colour: '#0284c7',
+              },
+              {
+                text: 'Yes <b> & "quotes" @priya',
+                at: Date.UTC(2026, 0, 2, 11),
+                author: 'Bo Lee',
+                mentions: [{ userId: 'u-p', name: 'Priya', handle: 'priya' }],
+                reactions: { '👍': ['k-ada'] },
+              },
+            ],
+          },
+          {
+            r1: 2,
+            c1: 2,
+            r2: 2,
+            c2: 2,
+            resolved: true,
+            comments: [{ text: 'Done', at: Date.UTC(2026, 0, 3), author: 'Bo Lee' }],
+          },
+        ],
+      },
+      {
+        ...sheet('Second', []),
+        threads: [
+          {
+            r1: 3,
+            c1: 3,
+            r2: 3,
+            c2: 3,
+            resolved: false,
+            comments: [{ text: 'On an empty cell', at: 5, author: 'Ada' }],
+          },
+        ],
+      },
+    ],
+  },
   // standard-mapping.md "Links in the file": a web address, an email's, a range and a sheet of the workbook, a number
   // linked, and a cell's text of two lines.
   links: {

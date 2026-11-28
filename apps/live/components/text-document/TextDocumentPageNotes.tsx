@@ -3,7 +3,7 @@
 // note's box is painted with a copy of its writing (useTextDocumentStories) and never read; the note being edited is
 // its source itself, in its place, its number drawn before its first paragraph.
 import type { CSSProperties, MouseEvent } from 'react';
-import { NOTES_GAP_PX } from '@/lib/text-document/pagination/pagination';
+import { NOTES_GAP_PX } from '@livedoc/text-documents';
 import type { PageGeometry } from '@/lib/text-document/pagination/pagination-draw';
 import type { PageNote } from '@/lib/text-document/pagination/pagination-notes';
 import { NOTE_BOX_NUMBER_ATTRIBUTE } from '@/lib/text-document/text-document-footnotes';

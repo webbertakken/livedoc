@@ -9,12 +9,14 @@ import {
   importSpreadsheetFile,
   nameFromFile,
   SPREADSHEET_FILE_BYTES_MAX,
+  threadBatches,
   type ImportedFormat,
   type SpreadsheetFilePort,
 } from '@livedoc/sheets/files';
 import { apiCreateDocument, apiDeleteDocument } from '@/lib/api-client';
 import { writeSheet, type SheetsScope } from '@/lib/api/sheets';
 import { sendKept } from '@/lib/api/workbook-kept';
+import { postSheetThreadsFromFile } from '@/lib/api/sheet-threads';
 import { debugLog } from '@/lib/debug-log';
 import { keepImportReport } from '@/lib/office/import-report-handoff';
 import { newSheetTab, workbookMadeHere } from './spreadsheet-document';
@@ -68,6 +70,11 @@ function browserPort(ownerId: string): SpreadsheetFilePort {
       await writeSheet(scope!, sheetId, { write, unchecked: true }, NOBODY);
     },
     keep: (kept) => sendKept(scope!, kept),
+    // An opened file's comment threads, in parts (standard-mapping.md "Comments in the file").
+    threads: async (sheetId, threads) => {
+      for (const batch of threadBatches(threads))
+        await postSheetThreadsFromFile(scope!, sheetId, batch);
+    },
     bin: (documentId) => apiDeleteDocument(ownerId, documentId),
     // Into the opener's gallery through the import image pipeline, loaded with the first picture (D628).
     storePicture: spreadsheetPictureStore(async () =>

@@ -16,6 +16,7 @@ import {
   importReportLine,
   importSpreadsheetFile,
   nameFromFile,
+  threadBatches,
   type SpreadsheetFilePort,
 } from '@livedoc/sheets/files';
 import { apiRefusalOf } from '../plan/api-refusal';
@@ -108,6 +109,18 @@ function agentPort(
           body: JSON.stringify(batch),
         });
       return left;
+    },
+    // An opened file's comment threads, in parts (standard-mapping.md "Comments in the file").
+    threads: async (sheetId, threads) => {
+      for (const batch of threadBatches(threads))
+        await api.json(
+          `${documentPath(documentId)}/sheets/${encodeURIComponent(sheetId)}/file-threads`,
+          {
+            method: 'POST',
+            headers,
+            body: JSON.stringify({ threads: batch }),
+          },
+        );
     },
     bin: async (id) => {
       const res = await api.fetch(documentPath(id), { method: 'DELETE', headers });

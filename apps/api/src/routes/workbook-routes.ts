@@ -28,6 +28,9 @@ import { connectForm, unlinkForm } from './workbook-form-link-route';
 import { loadSpreadsheetSheets } from './workbook-sheets-load';
 import { readWorkbookPictures } from './workbook-pictures';
 import { fillSpreadsheetCards } from './spreadsheet-cards';
+import { gateParticipate } from './context';
+import { readWorkbookThreads } from '../db/sheet-threads';
+import { fileThreadsBySheet } from '../document-room/sheet-thread-files';
 
 const FILE_MEDIA_TYPES: Record<WorkbookFormat, string> = {
   ods: 'application/vnd.oasis.opendocument.spreadsheet',
@@ -62,13 +65,19 @@ async function file(ctx: DocumentRouteContext, documentId: string): Promise<Resp
   // The file's kept content goes into files of its standard only (standard-mapping.md "Unknown content", D109).
   // Its pictures' bytes from the gallery, for the images the document may serve (D626).
   const pictures = await readWorkbookPictures(ctx.env, documentId, sheets);
+  // Its comment threads, for whoever may comment: a Viewer's file holds none (standard-mapping.md "Comments in the
+  // file", D655).
+  const comments = await gateParticipate(ctx, documentId, caller.ownerId, caller.teamId);
+  const threads = comments
+    ? fileThreadsBySheet(await readWorkbookThreads(ctx.env, documentId, null))
+    : undefined;
   // The card functions' values from the cards' document, read with the downloader's own access (plan-links.md).
   const engine = workbookEngine(sheets, record);
   await fillSpreadsheetCards(engine, ctx, record);
-  const written = writeWorkbook(sheets, record, name, asked, kept, pictures, engine);
+  const written = writeWorkbook(sheets, record, name, asked, kept, pictures, threads, engine);
   const body = written.data;
   console.info(
-    `[workbook] file written document=${documentId} format=${asked} sheets=${sheets.length} bytes=${body.byteLength} losses=${written.losses.length} ms=${Date.now() - started}`,
+    `[workbook] file written document=${documentId} format=${asked} sheets=${sheets.length} bytes=${body.byteLength} losses=${written.losses.length} threads=${threads ? [...threads.values()].flat().length : 'none'} ms=${Date.now() - started}`,
   );
   return new Response(body, {
     status: 200,

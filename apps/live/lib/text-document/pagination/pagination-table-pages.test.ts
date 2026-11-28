@@ -3,8 +3,7 @@
 // end a page alone; too tall, or cut by a span, they repeat none. A row that may not break moves on whole, unless it is
 // taller than a page.
 import { describe, expect, it } from 'vitest';
-import type { BlockMetrics } from './pagination';
-import { paginate } from './pagination-engine';
+import { type BlockMetrics, paginate } from '@livedoc/text-documents';
 import { tableRepeat } from './pagination-tables';
 
 const ROW = 20;

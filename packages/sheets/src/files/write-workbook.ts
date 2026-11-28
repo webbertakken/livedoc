@@ -13,6 +13,7 @@ import type { FilePictureFetches } from './file-pictures';
 import type { FileLoss, WorkbookFile } from './workbook-file';
 import { workbookFileOf } from './workbook-file';
 import { writeXlsx } from './xlsx-write';
+import { fileThreadsOf, type IdThread } from './file-threads';
 
 export type WrittenWorkbook = { data: Uint8Array<ArrayBuffer>; losses: FileLoss[] };
 
@@ -77,10 +78,18 @@ export function writeWorkbook(
   kept?: KeptContent<StoredAt>,
   // The pictures' bytes the download read from the gallery (standard-mapping.md "Pictures in the file", D626).
   pictures?: FilePictureFetches,
+  // Each sheet's comment threads by its id (standard-mapping.md "Comments in the file"); absent, none.
+  threads?: ReadonlyMap<string, readonly IdThread[]>,
   // The engine its values are worked out by, when the caller made it (`workbookEngine` given its cards).
   engine?: Workbook,
 ): WrittenWorkbook {
   const file = workbookFileFor(sheets, record, engine);
+  if (threads)
+    sheets.forEach((sheet, i) => {
+      const placed = fileThreadsOf(sheet.layout, threads.get(sheet.id) ?? []);
+      const written = file.sheets[i];
+      if (placed.length && written) written.threads = placed;
+    });
   if (pictures) file.pictureBytes = pictures;
   const losses: FileLoss[] = [];
   if (kept && kept.standard === keptStandardOf(format)) {
