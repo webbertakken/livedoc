@@ -39,10 +39,14 @@ describe('createApiClient', () => {
     expect(seen[2]!.headers.has('Content-Type')).toBe(false);
   });
 
-  it('answers text with its ETag', async () => {
-    const { fetch } = recorder(() => new Response('outline', { headers: { ETag: 'W/"3"' } }));
+  it('answers text with its ETag and headers', async () => {
+    const { fetch } = recorder(
+      () => new Response('outline', { headers: { ETag: 'W/"3"', 'X-State-Vector': 'AQ==' } }),
+    );
     const api = createApiClient({ baseUrl: base, fetch, headers: () => ({}) });
-    expect(await api.text('/x')).toEqual({ body: 'outline', etag: 'W/"3"' });
+    const read = await api.text('/x');
+    expect(read).toMatchObject({ body: 'outline', etag: 'W/"3"' });
+    expect(read.headers.get('X-State-Vector')).toBe('AQ==');
   });
 
   it('throws an ApiError with the status, the cut body and its error code; reports only 5xx', async () => {

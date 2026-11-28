@@ -17,7 +17,11 @@ type ApiClientOptions = {
 export type ApiClient = {
   fetch(path: string, init?: RequestInit): Promise<Response>;
   json<T>(path: string, init?: RequestInit): Promise<T>;
-  text(path: string, init?: RequestInit): Promise<{ body: string; etag: string | null }>;
+  // The body, its ETag, and every header of the answer (a text document view's X-State-Vector).
+  text(
+    path: string,
+    init?: RequestInit,
+  ): Promise<{ body: string; etag: string | null; headers: Headers }>;
 };
 
 // How much of a failing answer's body an error carries.
@@ -81,7 +85,7 @@ export function createApiClient(options: ApiClientOptions): ApiClient {
     json: async <T>(path: string, init?: RequestInit) => (await (await ok(path, init)).json()) as T,
     text: async (path, init) => {
       const res = await ok(path, init);
-      return { body: await res.text(), etag: res.headers.get('ETag') };
+      return { body: await res.text(), etag: res.headers.get('ETag'), headers: res.headers };
     },
   };
 }
