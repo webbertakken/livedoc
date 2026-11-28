@@ -7,14 +7,15 @@ import { TEXT_DOCUMENT_MAX_CHARS } from '../limits';
 import { TextDocument } from '../model/text-document';
 import { ReportBuilder } from '../report';
 import { decodeText } from './decode-text';
+import { readHtmlImport } from './html';
 import { readMarkdownImport } from './markdown';
 import { readPlainTextImport } from './plain-text';
 
-export function readTextDocumentImport(
+export async function readTextDocumentImport(
   file: Uint8Array,
   type: TextDocumentImportType,
   limits: Pick<ReadLimits, 'maxChars'> = {},
-): TextDocumentRead {
+): Promise<TextDocumentRead> {
   const decoded = decodeText(file);
   if (!decoded.ok) return decoded;
   const maxChars = limits.maxChars ?? TEXT_DOCUMENT_MAX_CHARS;
@@ -22,7 +23,11 @@ export function readTextDocumentImport(
   if (decoded.text.length > maxChars * 2) return refuse('document_too_large');
   const report = new ReportBuilder();
   const document =
-    type === 'md' ? readMarkdownImport(decoded.text, report) : readPlainTextImport(decoded.text);
+    type === 'md'
+      ? readMarkdownImport(decoded.text, report)
+      : type === 'html'
+        ? await readHtmlImport(decoded.text, report)
+        : readPlainTextImport(decoded.text);
   if (TextDocument.characters(document) > maxChars) return refuse('document_too_large');
   return { ok: true, document, report: report.build(), fileType: 'odt' };
 }

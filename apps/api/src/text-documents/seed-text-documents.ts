@@ -73,7 +73,7 @@ export function readTextDocumentSeeds(
     }
     // An import is born in ODF (fork C5).
     if (!isTextDocumentImportType(type) || format !== 'odf')
-      return refusedSeed('type names an import (txt or md) into an ODF text document tab');
+      return refusedSeed('type names an import (txt, md or html) into an ODF text document tab');
     out.push({ tabId, format, file: bytes, type });
   }
   return out;
@@ -133,7 +133,7 @@ export async function seedTextDocuments(
       continue;
     }
     const read = seed.type
-      ? readTextDocumentImport(seed.file, seed.type)
+      ? await readTextDocumentImport(seed.file, seed.type)
       : await readTextDocumentFile(seed.file);
     // A file keeps the format it arrived in (fork C1): one the tab is not held in is not this tab's to open.
     const arrived = read.ok && (read.fileType === 'docx' ? 'ooxml' : 'odf');

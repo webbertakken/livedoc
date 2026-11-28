@@ -9,8 +9,8 @@ import { readTextDocumentImport } from './import-file';
 import { codeLanguageOf } from './markdown';
 
 const encode = (text: string) => new TextEncoder().encode(text);
-const read = (text: string | Uint8Array, type: 'txt' | 'md', maxChars?: number) => {
-  const result = readTextDocumentImport(
+const read = async (text: string | Uint8Array, type: 'txt' | 'md', maxChars?: number) => {
+  const result = await readTextDocumentImport(
     typeof text === 'string' ? encode(text) : text,
     type,
     maxChars === undefined ? {} : { maxChars },
@@ -22,45 +22,49 @@ const texts = (blocks: readonly Block[]) =>
   blocks.map((b) => (b.type === 'paragraph' ? Paragraph.text(b) : `<${b.type}>`));
 
 describe('importTypeOfFileName', () => {
-  it('names Plain Text and Markdown by their extensions', () => {
+  it('names Plain Text, Markdown and HTML by their extensions', () => {
     expect(
-      ['a.txt', 'b.MD', 'c.markdown', 'd.docx', 'e', '.txt.odt'].map(importTypeOfFileName),
-    ).toEqual(['txt', 'md', 'md', undefined, undefined, undefined]);
+      ['a.txt', 'b.MD', 'c.markdown', 'd.docx', 'e', '.txt.odt', 'f.HTM', 'g.html'].map(
+        importTypeOfFileName,
+      ),
+    ).toEqual(['txt', 'md', 'md', undefined, undefined, undefined, 'html', 'html']);
   });
 });
 
 describe('readTextDocumentImport as Plain Text', () => {
-  it('makes a Normal text paragraph a line in a new ODF document, tabs kept', () => {
-    const { document, fileType, report } = read('\uFEFFone\r\ntwo\tcols\rthree\n', 'txt');
+  it('makes a Normal text paragraph a line in a new ODF document, tabs kept', async () => {
+    const { document, fileType, report } = await read('\uFEFFone\r\ntwo\tcols\rthree\n', 'txt');
     expect(fileType).toBe('odt');
     expect(document.format).toBe('odf');
     expect(texts(document.body)).toEqual(['one', 'two\tcols', 'three', '']);
     expect(report).toEqual({ dropped: [], kept: [] });
   });
 
-  it('reads a file that is not UTF-8 as Windows’ Western encoding', () => {
-    expect(texts(read(new Uint8Array([0x63, 0x61, 0x66, 0xe9]), 'txt').document.body)).toEqual([
-      'café',
-    ]);
+  it('reads a file that is not UTF-8 as Windows’ Western encoding', async () => {
+    expect(
+      texts((await read(new Uint8Array([0x63, 0x61, 0x66, 0xe9]), 'txt')).document.body),
+    ).toEqual(['café']);
   });
 
-  it('refuses a binary file, and one past the character limit', () => {
-    expect(readTextDocumentImport(new Uint8Array([0x50, 0x4b, 0, 3]), 'txt')).toEqual({
+  it('refuses a binary file, and one past the character limit', async () => {
+    expect(await readTextDocumentImport(new Uint8Array([0x50, 0x4b, 0, 3]), 'txt')).toEqual({
       ok: false,
       rejection: 'package_wrong_type',
     });
-    expect(readTextDocumentImport(encode('abcdef'), 'txt', { maxChars: 5 })).toMatchObject({
+    expect(await readTextDocumentImport(encode('abcdef'), 'txt', { maxChars: 5 })).toMatchObject({
       rejection: 'document_too_large',
     });
-    expect(readTextDocumentImport(encode('a'.repeat(20)), 'md', { maxChars: 5 })).toMatchObject({
+    expect(
+      await readTextDocumentImport(encode('a'.repeat(20)), 'md', { maxChars: 5 }),
+    ).toMatchObject({
       rejection: 'document_too_large',
     });
   });
 });
 
 describe('readTextDocumentImport as Markdown', () => {
-  it('reads headings, formatting and safe links', () => {
-    const { document } = read(
+  it('reads headings, formatting and safe links', async () => {
+    const { document } = await read(
       '# Plan\n\nSome **bold** [site](https://docs.nu) [bad](javascript:x)',
       'md',
     );
@@ -75,8 +79,11 @@ describe('readTextDocumentImport as Markdown', () => {
     ]);
   });
 
-  it('makes a list a Markdown list, numbered from its start, levels drawn as their items ask', () => {
-    const { document } = read('3. three\n4. four\n    - deep\n\n- [x] done\n- [ ] open', 'md');
+  it('makes a list a Markdown list, numbered from its start, levels drawn as their items ask', async () => {
+    const { document } = await read(
+      '3. three\n4. four\n    - deep\n\n- [x] done\n- [ ] open',
+      'md',
+    );
     const places = (document.body as Paragraph[]).map((p) => p.list);
     expect(places).toEqual([
       { id: 'L1', level: 0, restart: 3 },
@@ -90,8 +97,8 @@ describe('readTextDocumentImport as Markdown', () => {
     expect(document.lists.L2!.levels[0]!.kind).toBe('check');
   });
 
-  it('writes a code block a line a paragraph in its language’s style', () => {
-    const { document } = read('```py\nif x:\n    y\n```\n\n```\n```', 'md');
+  it('writes a code block a line a paragraph in its language’s style', async () => {
+    const { document } = await read('```py\nif x:\n    y\n```\n\n```\n```', 'md');
     const languages = (document.body as Paragraph[]).map(
       (p) => CodeBlocks.of(document.styles, p.style)?.language,
     );
@@ -99,7 +106,7 @@ describe('readTextDocumentImport as Markdown', () => {
     expect(texts(document.body)).toEqual(['if x:', '    y', '']);
   });
 
-  it('names a fence’s language by id, label or a common name', () => {
+  it('names a fence’s language by id, label or a common name', async () => {
     expect(['TypeScript', 'js', 'sql', 'brainfuck', null].map(codeLanguageOf)).toEqual([
       'typescript',
       'javascript',
@@ -109,8 +116,8 @@ describe('readTextDocumentImport as Markdown', () => {
     ]);
   });
 
-  it('makes a pipe table with its first row the header, across the page', () => {
-    const { document } = read('| a | b |\n| - | - |\n| 1 |', 'md');
+  it('makes a pipe table with its first row the header, across the page', async () => {
+    const { document } = await read('| a | b |\n| - | - |\n| 1 |', 'md');
     const table = document.body[0]!;
     if (table.type !== 'table') throw new Error('no table');
     expect(table.headerRows).toBe(1);
@@ -121,13 +128,13 @@ describe('readTextDocumentImport as Markdown', () => {
     ]);
   });
 
-  it('keeps a picture as its alt text, never fetched, and reports it', () => {
-    const { document, report } = read('![A cat](https://x.y/c.png) and ![](u.png)', 'md');
+  it('keeps a picture as its alt text, never fetched, and reports it', async () => {
+    const { document, report } = await read('![A cat](https://x.y/c.png) and ![](u.png)', 'md');
     expect(texts(document.body)).toEqual(['[A cat] and [Picture]']);
     expect(report.dropped).toEqual([{ reason: 'external', name: 'remote picture', count: 2 }]);
   });
 
-  it('makes an empty file one empty paragraph', () => {
-    expect(texts(read('', 'md').document.body)).toEqual(['']);
+  it('makes an empty file one empty paragraph', async () => {
+    expect(texts((await read('', 'md')).document.body)).toEqual(['']);
   });
 });
