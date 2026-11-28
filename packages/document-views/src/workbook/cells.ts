@@ -23,13 +23,15 @@ export const CELLS_NOT_SPREADSHEET = "cells reads a spreadsheet's sheet";
 
 export type CellsViewInput = { wb: Workbook; sheetId: string; title: string; range?: string };
 
-// `link`: the cell's own link, a range or sheet of the workbook by name (inserted-objects.md "Links, agents").
+// `link`: the cell's own link, a range or sheet of the workbook by name (inserted-objects.md "Links, agents");
+// `note`: its note (review.md "Notes").
 export type CellJson = {
   at: string;
   input: string;
   value: AgentValue;
   display: string;
   link?: string;
+  note?: string;
 };
 export type CellsRowJson = { row: number; cells: CellJson[] };
 export type CellsJson = {
@@ -57,9 +59,17 @@ const bare = (value: AgentValue, display: string) =>
     ? display
     : jsonString(display);
 
+// The longest a note prints in the view, in characters; read_sheet gives it whole.
+const NOTE_SHOWN_MAX = 60;
+
 export function cellText(cell: CellJson): string {
-  const text = cellValueText(cell);
-  return cell.link === undefined ? text : `${text} ↗ ${jsonString(cell.link)}`;
+  // A cell holding only a note prints its address alone before it.
+  const text = cell.input === '' && cell.display === '' ? cell.at : cellValueText(cell);
+  const linked = cell.link === undefined ? text : `${text} ↗ ${jsonString(cell.link)}`;
+  if (cell.note === undefined) return linked;
+  const shown =
+    cell.note.length > NOTE_SHOWN_MAX ? `${cell.note.slice(0, NOTE_SHOWN_MAX - 1)}…` : cell.note;
+  return `${linked} ✎ ${jsonString(shown)}`;
 }
 
 function cellValueText(cell: CellJson): string {
@@ -97,7 +107,8 @@ export function sheetCellsView(
   for (const [i, row] of read.rows.entries()) {
     const r = start.r1 + i;
     const cells = row.flatMap((cell, j): CellJson[] => {
-      if (cell.input === '' && cell.display === '') return [];
+      const note = wb.cellNoteOf(sheetId, r, start.c1 + j);
+      if (cell.input === '' && cell.display === '' && note === null) return [];
       const ln = wb.cellLinkOf(sheetId, r, start.c1 + j);
       // readRange answers an error as its text, so a value is never an error object.
       const out: CellJson = {
@@ -106,6 +117,7 @@ export function sheetCellsView(
         value: cell.value as AgentValue,
       };
       if (ln !== null) out.link = cellLinkText(ln, (id) => wb.sheet(id)?.title);
+      if (note !== null) out.note = note;
       return [out];
     });
     if (!cells.length) continue;

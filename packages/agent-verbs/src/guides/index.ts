@@ -330,18 +330,18 @@ Or open a file as one (ods, fods, xlsx, csv, tsv; kept in its format):
 
   livedoc spreadsheet import budget.xlsx [--name "Budget"]
 
-Over MCP: create_spreadsheet {name, sheets: [{name, rows}]}. Cells are read as typed in en-GB:
+Over MCP: create_spreadsheet {name, sheets: [{name, rows}]}. Cells read as typed in en-GB:
 a number stays a number, "1/2" is a date (send text as a formula, ="1/2"), a leading = a
 formula, which may read another sheet (=Models!B2). An empty cell is no value: a chart gaps it.
 
 Shape a sheet with change_sheet, changes applied in order:
-  set {at, rows}  format {range, format}  merge {range}  freeze {rows}  filter {range}
+  set {at, rows}  format {range, format}  note {range, note}  merge {range}  freeze {rows}  filter {range}
   resize {cols, fit: true}  validate {range, rule: {type: "checkbox"}}  move {after}  hide {hidden}
 
 A chart reads its range live, its top-left at the cell at names:
   chart {type: "scatter", range: "B1:D40", at: "F2", title, xAxisTitle, yAxisTitle,
          lines: ["Pareto"], axis: true}
-A scatter's first column of numbers is its x; lines draws those series as lines, by name.
+A scatter's first number column is its x; lines draws those series as lines, by name.
 type: "stepped-area": a flat step per category; "radar": a closed line round a spoke per category;
 "bubble": a scatter whose last value column sizes the bubbles (names, x, y..., size);
 "candlestick" or "ohlc": labels, then open, high, low, close (or no open);
@@ -349,13 +349,13 @@ type: "stepped-area": a flat step per category; "radar": a closed line round a s
 "treemap": a tile per label sized by its value; "gauge": a dial per label;
 "scorecard": the first column’s sum, its change from the second;
 "timeline": each point by its date (a date label column, or ISO dates); "table": the data as a table.
-Files hold a type they lack as its nearest; LiveDoc reads it back.
+Files lacking a type hold its nearest.
 stack: "stacked" or "percent" (100% shares) stacks column, bar and area series;
 smooth: true curves a line chart's lines.
 type: "combo" draws each series as columns, a line, an area or a stepped area: seriesTypes {"Margin": "line"}
-(default: first half columns, rest lines); rightAxis: ["Margin"] puts series on a second scale.
+(else half columns, half lines); rightAxis: ["Margin"] puts series on a second scale.
 read_sheet lists the charts with their ids; chart {..., replace: "<id>"} rewrites one,
-clear_charts {id: "<id>"} takes one off, clear_charts {} all. add_sheet {title, after} adds a sheet after another.
+clear_charts {id} takes one off, clear_charts {} all. add_sheet {title, after} adds a sheet after another.
 
 A pivot table summarises a range live; its output cells are not typed over:
   pivot {range: "Data!A1:F99", at: "H1", rows: ["Region"], columns: [{column: "Date", grouping: "year"}],
@@ -365,7 +365,7 @@ rule ("month", "yearMonth"), {size: 10} intervals, or {groups: [{name, items}]}.
 read_sheet lists them; replace: "<id>" rewrites one, clear_pivots {id} drops it.
 
 A list_images picture over cells: image {imageId, at: "B2", width, alt}, inCell: true in it; clear_images {id}.
-format {range, format: {link: "https://…" or "Sheet2!A1:B4"}} links; null unlinks.
+format {range, format: {link: "https://…" or "Sheet2!A1:B4"}} links; a null link or note clears it.
 
 read_sheet reads back each cell's input, value and what it shows. Cheaper:
 read_document on any tab outlines the workbook (sheets, used ranges, rules, charts, pivots);

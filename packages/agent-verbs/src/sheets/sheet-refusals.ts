@@ -13,6 +13,9 @@ export const SHEET_REFUSAL_WORDS: Readonly<Record<SheetError, string>> = {
   input_too_long: 'an input is up to 10,000 characters, a formula up to 8,000.',
   formula_invalid: 'a formula cannot be read.',
   format_invalid: 'a format value is not one a cell takes.',
+  note_too_long: 'a note is up to 50,000 characters.',
+  note_invalid:
+    'a note is text of at least one character, with no control characters but line breaks.',
   axis_id_invalid: 'a row or column is not valid.',
   title_invalid: 'a sheet title is 1 to 100 characters.',
   merge_invalid: 'that merge is not valid.',

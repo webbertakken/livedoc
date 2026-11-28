@@ -513,6 +513,15 @@ export class Workbook {
     return sheet.cells.get(cellKey(rowId, colId))?.format?.ln ?? null;
   }
 
+  // A cell's note (review.md "Notes"); null for none.
+  cellNoteOf(sheetId: string, r: number, c: number): string | null {
+    const sheet = this.sheets.get(sheetId);
+    const rowId = sheet?.layout.rows[r];
+    const colId = sheet?.layout.cols[c];
+    if (!rowId || !colId) return null;
+    return sheet.cells.get(cellKey(rowId, colId))?.note ?? null;
+  }
+
   // Where a cell's link opens: its own, which wins over a HYPERLINK's (D638), else its HYPERLINK's; null when
   // nothing opens (no link, or a file's link of another scheme, kept and never opened, D637).
   linkTargetOf(sheetId: string, r: number, c: number): CellLinkTarget | null {
@@ -866,7 +875,8 @@ export class Workbook {
       if (sheet) {
         const ix = layoutIndex(sheet.layout);
         for (const [key, cell] of sheet.cells) {
-          if (!cell.input) continue;
+          // A note is content too (review.md "Notes"): a cell holding only one is in the extent.
+          if (!cell.input && cell.note === undefined) continue;
           const i = key.indexOf(':');
           const r = ix.rowPos.get(key.slice(0, i));
           const c = ix.colPos.get(key.slice(i + 1));

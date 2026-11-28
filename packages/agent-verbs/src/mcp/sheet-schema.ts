@@ -343,6 +343,16 @@ const sheetChange = z.discriminatedUnion('op', [
       .describe('What to clear: inputs, formats, or all (the default).'),
   }),
   z.object({
+    op: z
+      .literal('note')
+      .describe("Put a note on each cell of a range, or take the range's notes off."),
+    range: rangeArg,
+    note: z
+      .string()
+      .nullable()
+      .describe('The note, plain text up to 50,000 characters; null takes the notes off.'),
+  }),
+  z.object({
     op: z.literal('format').describe('Format a range.'),
     range: rangeArg,
     format: formatArg,
@@ -953,6 +963,7 @@ const readCell = z.object({
     .string()
     .optional()
     .describe("The cell's own link: an address, or a range or sheet of this spreadsheet by name."),
+  note: z.string().optional().describe("The cell's note: plain text it holds beside its value."),
 });
 
 const readChart = z.object({

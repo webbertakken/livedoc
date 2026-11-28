@@ -7,6 +7,7 @@ import { cellBytes, validateWrite } from './validate';
 import { valuesOnly, writesFormats } from './values-only';
 import { makeSheets } from './testing/book';
 import { CellMap } from './cells/cell-map';
+import { Workbook } from './engine/workbook';
 
 // docs/specs/029-sheets/review.md "Notes": a note is plain text the cell holds, beside its input and format.
 
@@ -161,5 +162,21 @@ describe('a note in the cells held', () => {
     const next = cells.copy().set('r1:c1', { note: 'two' });
     expect(cells.get('r1:c1')).toEqual({ note: 'one' });
     expect(next.get('r1:c1')).toEqual({ note: 'two' });
+  });
+});
+
+describe('a note in the workbook', () => {
+  it('is read by position, and a cell holding only one counts in the extent', () => {
+    const s = applySheetWrite(
+      base(),
+      { kind: 'cells', cells: [{ r: R(2), c: C(1), n: 'here' }] },
+      ctx,
+    ).sheet;
+    const wb = new Workbook({ sheets: [s], locale: 'en-GB' });
+    expect(wb.cellNoteOf(s.id, 2, 1)).toBe('here');
+    expect(wb.cellNoteOf(s.id, 0, 0)).toBeNull();
+    expect(wb.cellNoteOf(s.id, 99, 0)).toBeNull();
+    expect(wb.cellNoteOf('nosheet', 0, 0)).toBeNull();
+    expect(wb.extent(s.id)).toEqual({ rows: 3, cols: 2 });
   });
 });
