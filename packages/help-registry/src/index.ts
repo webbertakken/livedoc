@@ -1686,6 +1686,17 @@ export const articles: Article[] = [
     parentSlug: 'plan-tabs',
   },
   {
+    slug: 'images-over-cells',
+    title: 'Images over Cells',
+    description:
+      "Place a picture over a spreadsheet's cells, then move, resize, describe or replace it.",
+    keywords:
+      'image images picture pictures photo photos logo insert image over cells floating image spreadsheet sheet upload gallery move resize alt text alternative text description replace image delete image',
+    category: 'Canvas',
+    categorySlug: 'canvas/plan-tabs',
+    parentSlug: 'plan-tabs',
+  },
+  {
     slug: 'pivot-tables',
     title: 'Pivot Tables',
     description: 'Summarise a spreadsheet range by its columns: rows, columns, values and filters.',

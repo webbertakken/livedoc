@@ -575,6 +575,15 @@ export const FEATURE_ICONS: Record<string, ReactNode> = {
       <rect x="17.5" y="7" width="4" height="9" rx="0.8" />
     </Glyph>
   ),
+  // A picture with a mountain and a sun, floating over a grid of cells.
+  'images-over-cells': (
+    <Glyph>
+      <path d="M2.5 8h19M2.5 14h19M8 3v18M15 3v18" />
+      <rect x="10" y="9.5" width="11" height="9" rx="1" />
+      <path d="M11 17.5l3-3 2.5 2.5 1.5-1.5 2 2" />
+      <circle cx="18" cy="12.2" r="0.9" />
+    </Glyph>
+  ),
   // A page with a title and a bar chart: the poster an infographic becomes.
   'pages-mode': (
     <Glyph>

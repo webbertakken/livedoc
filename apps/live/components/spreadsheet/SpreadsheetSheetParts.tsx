@@ -58,6 +58,8 @@ import {
   TableSettingsContext,
 } from '@/components/sheets/tables/table-settings-context';
 import { useSpreadsheetCharts } from './charts/useSpreadsheetCharts';
+import { SheetImagesOverCellsContext } from '@/components/sheets/sheet-images-over-cells-context';
+import { useSpreadsheetImages } from './images/useSpreadsheetImages';
 import {
   SheetPivotDetailsContext,
   SheetPivotsContext,
@@ -154,6 +156,13 @@ export function SpreadsheetSheetParts({ bridge }: { bridge: SheetsBridge }) {
   const columnMenu = useRef<(() => void) | null>(null);
   const charts = useSpreadsheetCharts(c, c.canShape ? editChart : undefined);
   const { insertChart } = charts;
+  // Images over cells (inserted-objects.md "Images over cells"): Insert Image over Cells and each image's menu.
+  const { ownerId, documentId, shareCode } = bridge.scope;
+  const imageAccess = useMemo(
+    () => ({ ownerId, documentId, shareCode }),
+    [ownerId, documentId, shareCode],
+  );
+  const images = useSpreadsheetImages(c, imageAccess);
   const canInsertChart = c.canShape;
   const bandingActions = useMemo(
     () => ({
@@ -224,6 +233,7 @@ export function SpreadsheetSheetParts({ bridge }: { bridge: SheetsBridge }) {
       ...bandingActions,
       // Grouping a pivot table's items from its cells (pivot-tables.md "Grouping in the grid"): an Editor's.
       ...grouping.actions,
+      ...images.actions,
       ...(detailsHere
         ? { 'show-pivot-details': { run: () => void pivots.showDetails(active.r, active.c) } }
         : {}),
@@ -262,22 +272,24 @@ export function SpreadsheetSheetParts({ bridge }: { bridge: SheetsBridge }) {
               <TableSettingsContext.Provider value={openTableSettings}>
                 <TableColumnMenuContext.Provider value={columnMenu}>
                   <SheetChartsContext.Provider value={charts.value}>
-                    <SheetPivotsContext.Provider value={c.canShape ? editPivot : null}>
-                      <SheetPivotDetailsContext.Provider
-                        value={c.canShape ? pivots.showDetails : null}
-                      >
-                        <SheetGrid
-                          elementId={`sheet-${c.sheet.id}`}
-                          actions={actions}
-                          input={input}
-                          pointRef={pointRef}
-                          peers={bridge.peers}
-                          zoom={zoom}
-                          surfaceKeys={surfaceKeys}
-                          fontFamily={DocumentFonts.stack(theme.font)}
-                        />
-                      </SheetPivotDetailsContext.Provider>
-                    </SheetPivotsContext.Provider>
+                    <SheetImagesOverCellsContext.Provider value={images.value}>
+                      <SheetPivotsContext.Provider value={c.canShape ? editPivot : null}>
+                        <SheetPivotDetailsContext.Provider
+                          value={c.canShape ? pivots.showDetails : null}
+                        >
+                          <SheetGrid
+                            elementId={`sheet-${c.sheet.id}`}
+                            actions={actions}
+                            input={input}
+                            pointRef={pointRef}
+                            peers={bridge.peers}
+                            zoom={zoom}
+                            surfaceKeys={surfaceKeys}
+                            fontFamily={DocumentFonts.stack(theme.font)}
+                          />
+                        </SheetPivotDetailsContext.Provider>
+                      </SheetPivotsContext.Provider>
+                    </SheetImagesOverCellsContext.Provider>
                   </SheetChartsContext.Provider>
                 </TableColumnMenuContext.Provider>
               </TableSettingsContext.Provider>
@@ -304,6 +316,7 @@ export function SpreadsheetSheetParts({ bridge }: { bridge: SheetsBridge }) {
       {splitText.dialog}
       {pivots.dialog}
       {grouping.dialog}
+      {images.dialogs}
       {findReplace?.open ? <FindReplaceDialog state={findReplace} /> : null}
       <SheetBarSummary />
     </div>
