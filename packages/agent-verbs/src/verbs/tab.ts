@@ -82,25 +82,26 @@ export const tabView = defineVerb({
   id: 'tab.view',
   summary: 'A view of a tab; the outline by default',
   description:
-    'Prints a view of a tab as the api renders it: outline (default; on a spreadsheet, its workbook), graph, layout, comments, show (needs --ref), find (needs --text), pages (a Pages tab’s pages) or cells (a spreadsheet’s sheet; --range). --budget fits it to that many tokens; --raw prints the plain tab.',
+    'Prints a view of a tab as the api renders it: outline (default; a spreadsheet’s workbook), graph, layout, comments, show (needs --ref), find (needs --text), pages, cells (a spreadsheet’s sheet), text or structure (a text document).',
   behaviour: 'read',
   input: z.object({
     doc: z.string().describe('A name, id prefix or LiveDoc URL'),
     tab: tabFlag,
-    view: z
-      .enum(TAB_VIEW_NAMES)
-      .default('outline')
-      .describe(`One of ${TAB_VIEW_NAMES.join(', ')}`),
+    view: z.enum(TAB_VIEW_NAMES).default('outline').describe('The view; outline by default'),
     ref: z.string().optional().describe('show: the element by ref, or selected'),
     text: z.string().optional().describe('find: the text to look for'),
-    range: z.string().optional().describe('cells: an A1 range; the used range by default'),
+    range: z.string().optional().describe('cells: an A1 range; text: paragraphs, like 40..60'),
+    lines: z.boolean().optional().describe('text: ¶<n> before each paragraph'),
     budget: z.coerce
       .number()
       .int()
       .min(1)
       .optional()
       .describe('Fit the view to about this many tokens'),
-    only: z.string().optional().describe('outline, layout: one element and what nests under it'),
+    only: z
+      .string()
+      .optional()
+      .describe('outline, layout: an element and what nests in it; text: a document tab'),
     coarse: z.boolean().optional().describe('layout: rows instead of geometry'),
     style: z.boolean().optional().describe('outline: add style attributes'),
     all: z.boolean().optional().describe('comments: include resolved threads'),
@@ -115,6 +116,7 @@ export const tabView = defineVerb({
       ref: input.ref,
       q: input.text,
       range: input.range,
+      lines: input.lines,
       budget: input.budget,
       only: input.only,
       coarse: input.coarse,

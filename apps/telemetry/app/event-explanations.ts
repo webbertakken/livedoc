@@ -853,6 +853,10 @@ export const EXACT: Readonly<Record<string, string>> = {
   'Agent|Viewed|Comments': 'An agent or a script read the open comment threads on a tab.',
   'Agent|Viewed|Show': 'An agent or a script read one element in full.',
   'Agent|Viewed|Find': 'An agent or a script searched a tab for some text.',
+  'Agent|Viewed|Text':
+    'An agent or a script read a text document’s writing as Markdown, by paragraph number.',
+  'Agent|Viewed|Structure':
+    'An agent or a script read how a text document is built: its paragraphs, tables, comments and suggestions.',
   'Agent|Viewed|Lint':
     'An agent or a script checked how a tab is drawn: overlaps, crossings, hidden arrows.',
   'Agent|Opened|Toast':

@@ -73,7 +73,15 @@ export {
 export { writeEpub } from './exports/epub';
 export { writeRtf } from './exports/rtf';
 export { webPageHtml, writeWebPage } from './exports/web-page';
-export { writeMarkdown, escapeMarkdown } from './exports/markdown';
+export {
+  writeMarkdown,
+  escapeMarkdown,
+  tabMarkdown,
+  type MarkdownNote,
+  type MarkdownPiece,
+  type TabMarkdown,
+} from './exports/markdown';
+export { PARAGRAPH_REF_MARK, ParagraphRefs } from './model/paragraph-refs';
 export { writePlainText } from './exports/plain-text';
 export { base64OfBytes, bytesOfBase64 } from '@livedoc/office-packages';
 export {

@@ -26,3 +26,20 @@ export {
   SHEET_VIEW_CHARS_MAX,
   type CellsJson,
 } from './workbook/cells';
+export { textDocumentOutlineView, type TextDocumentOutlineJson } from './text-document/outline';
+export {
+  textDocumentTextView,
+  type TextDocumentTextJson,
+  type TextDocumentTextResult,
+} from './text-document/text';
+export {
+  STRUCTURE_QUOTE_CHARS,
+  textDocumentStructureView,
+  type TextDocumentStructureJson,
+} from './text-document/structure';
+export {
+  documentTabOf,
+  ELEMENT_VIEW_ON_TEXT_DOCUMENT,
+  NO_SUCH_DOCUMENT_TAB,
+  TEXT_VIEW_NOT_TEXT_DOCUMENT,
+} from './text-document/reading';

@@ -24,6 +24,7 @@ type ReadDocumentArgs = {
   ref?: string;
   q?: string;
   range?: string;
+  lines?: boolean;
   coarse?: boolean;
   all?: boolean;
   style?: boolean;
@@ -45,7 +46,8 @@ function viewQuery(args: ReadDocumentArgs, view: TabViewName, budget: number): s
     const value = args[key];
     if (value !== undefined) query.set(key, value);
   }
-  for (const key of ['coarse', 'all', 'style'] as const) if (args[key]) query.set(key, '1');
+  for (const key of ['coarse', 'all', 'style', 'lines'] as const)
+    if (args[key]) query.set(key, '1');
   return query.toString();
 }
 

@@ -141,6 +141,12 @@ instead, through the same doors (`read_document`, `livedoc tab view`, `?view=`),
   - Asked of a tab that is no spreadsheet's sheet, it is refused `invalid_value` ("cells reads a spreadsheet's
     sheet"); a range that is no A1 range, `invalid_value` naming it.
 
+## A text document's views
+
+A [text document](../034-text-documents/text-document.md) holds writing, not elements: `outline`, `text` and
+`structure` read it through the same doors, as [Agents and sync](../034-text-documents/agents-and-sync.md#reading)
+says, by paragraph number.
+
 ## Budgets
 
 - `--budget <tokens>` fits a view to a budget by dropping detail in a fixed order: notes, then attributes, then the

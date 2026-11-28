@@ -22,6 +22,7 @@ import { selectedElements, showSelectedView } from './show-selected';
 import { SELECTED_REF } from './constants';
 import { pagesView } from './pages';
 import { CELLS_NOT_SPREADSHEET } from './workbook/cells';
+import { TEXT_VIEW_NOT_TEXT_DOCUMENT } from './text-document/reading';
 
 export type ViewRequest = {
   view: TabViewName;
@@ -34,8 +35,10 @@ export type ViewRequest = {
   style?: boolean;
   all?: boolean;
   q?: string;
-  // `cells`: an A1 cell or range.
+  // `cells`: an A1 cell or range; a text document's `text`: paragraph numbers.
   range?: string;
+  // A text document's `text`: `¶<n> ` before each paragraph.
+  lines?: boolean;
 };
 
 type ViewRefusal = RefErrorBody | { error: 'invalid_value'; message: string };
@@ -176,5 +179,15 @@ export function renderView(
     case 'cells':
       // A spreadsheet's sheet is read by the door that holds its workbook (workbook/cells.ts); a tab alone holds no cells.
       return { ok: false, refusal: { error: 'invalid_value', message: CELLS_NOT_SPREADSHEET } };
+    case 'text':
+    case 'structure':
+      // A text document's writing is read by the door that holds its live state (text-document/*.ts).
+      return {
+        ok: false,
+        refusal: {
+          error: 'invalid_value',
+          message: `${request.view} ${TEXT_VIEW_NOT_TEXT_DOCUMENT}`,
+        },
+      };
   }
 }

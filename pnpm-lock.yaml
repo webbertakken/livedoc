@@ -1268,6 +1268,9 @@ importers:
       '@livedoc/templates':
         specifier: workspace:*
         version: link:../templates
+      '@livedoc/text-documents':
+        specifier: workspace:*
+        version: link:../text-documents
     devDependencies:
       '@livedoc/oxlint-config':
         specifier: workspace:*

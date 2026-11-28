@@ -124,6 +124,25 @@ describe('tab view', () => {
     expect(tabView.text!(out)).toEqual(['{"nodes":[]}']);
     expect(api.calls.at(-1)).toBe(`/documents/${DOC_A}/tabs/tab-two-0000?view=outline&json=1`);
   });
+
+  // docs/specs/034-text-documents/agents-and-sync.md "Reading": a text document's writing, by paragraph number.
+  it('asks for a text document’s writing with its range and numbers, and prints it as served', async () => {
+    const served =
+      'text-document tab "Plan" · 2 paragraphs · ¶1..¶2\n¶1 We ship.\n\n¶2 {++Truly++}';
+    const api = fakeApi({ ...library, ...tabsOfA, [tabPath]: { text: served } });
+    const out = await tabView.run!(
+      contextOf(api),
+      tabView.input.parse({
+        doc: 'Auth flow',
+        view: 'text',
+        range: '1..2',
+        lines: true,
+        only: 'Plan',
+      }),
+    );
+    expect(tabView.text!(out)).toEqual([served]);
+    expect(api.calls.at(-1)).toBe(`${tabPath}?view=text&range=1..2&lines=1&only=Plan`);
+  });
 });
 
 const report = (errors: number): LintReport => ({

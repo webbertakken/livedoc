@@ -20391,7 +20391,9 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
       "lint",
       "pages",
       "storm",
-      "cells"
+      "cells",
+      "text",
+      "structure"
     ],
     "type": "string"
   },

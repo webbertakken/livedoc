@@ -691,7 +691,10 @@ export const readDocumentShape = {
         'in full. show: one element in full (needs ref). find: elements holding some text (needs q). ' +
         "pages: a Pages tab's pages with their rectangles, each article as Markdown, and the layouts on offer. " +
         "On a spreadsheet's tab, outline is the workbook (its sheets, used ranges, names, rules and charts) and " +
-        'cells reads that sheet a row a line (range: A1, the used range by default).',
+        'cells reads that sheet a row a line (range: A1, the used range by default). ' +
+        'On a text document, outline is its document tabs and headings by paragraph number (¶12), text its writing ' +
+        'as Markdown (lines: ¶<n> before each paragraph; range: 40..60) and structure its paragraphs, tables, ' +
+        'objects, comments and suggestions.',
     ),
   budget: z
     .number()
@@ -707,7 +710,9 @@ export const readDocumentShape = {
     .min(1)
     .max(REF_INPUT_MAX_LENGTH)
     .optional()
-    .describe('outline, layout: one element (a ref from a view) and what nests under it.'),
+    .describe(
+      'outline, layout: one element (a ref from a view) and what nests under it. A text document: the document tab to read, by id or name.',
+    ),
   ref: z
     .string()
     .min(1)
@@ -726,8 +731,13 @@ export const readDocumentShape = {
     .max(40)
     .optional()
     .describe(
-      "cells: an A1 cell or range of a spreadsheet's sheet, like A1:D20; the used range by default.",
+      "cells: an A1 cell or range of a spreadsheet's sheet, like A1:D20; the used range by default. text: a text " +
+        'document’s paragraph numbers, like 40..60, or one.',
     ),
+  lines: z
+    .boolean()
+    .optional()
+    .describe('text: ¶<n> before each paragraph, the ref edits name it by.'),
   coarse: z.boolean().optional().describe('layout: rows per frame instead of coordinates.'),
   all: z.boolean().optional().describe('comments: include resolved threads.'),
   style: z

@@ -1,0 +1,25 @@
+text-document tab "Plan" · 16 paragraphs
+¶1 "Title" "Launch plan"
+¶2 "heading 1" "Intro"
+¶3 "Normal" "We ship in May. Truly"
+¶4 "heading 2" "Scope"
+¶5 "Normal" list l1:0 "Write the docs"
+¶6 "Normal" list l2:0 ✓ "Test it"
+table ¶7..¶10 2×2
+  ¶7 "Normal" "Who"
+  ¶8 "Normal" "What"
+  ¶9 "Normal" "Ada"
+  ¶10 "Normal" "Docs | site"
+¶11 "Normal"
+  picture ¶11 "The launch timeline"
+¶12 "Normal"
+  equation ¶12 "x=2"
+¶13 "Normal"
+[kept: altChunk]
+¶14 "heading 1" "Actions"
+¶15 "Normal" "Book the room."
+¶16 "heading 1"
+comments
+  c1 ¶3 "We ship in May." 1 reply
+suggestions
+  s1 insertion ¶3 "Truly" by "Ada"

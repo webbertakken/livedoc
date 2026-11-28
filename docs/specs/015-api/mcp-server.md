@@ -232,10 +232,12 @@ the refs the edit tools take (`format: "json"` returns the elements instead), pl
 ([§5](#5-visualise--inline-image-render)); without it a read costs no image tokens. So "show me my auth-flow diagram" → `find_documents` →
 `read_document` with `image: true` renders it inline. Its structured result carries the tab's `rev`,
 which `update_document` takes back as the base of its ops ([§4.4](#44-update_document)).
-It also takes `view` (`outline`, `graph`, `layout`, `comments`, `show`, `find`, `pages`, `cells`), `budget` (8,000
-tokens unless given), `only`, `ref`, `q`, `range`, `coarse`, `all` and `style`; a ref that names nothing or several
-comes back as a correctable result naming the candidates. On a spreadsheet's tab the outline is its workbook and
-`cells` reads the sheet ([A spreadsheet's views](../024-agents/document-views.md#a-spreadsheets-views)).
+It also takes `view` (`outline`, `graph`, `layout`, `comments`, `show`, `find`, `pages`, `cells`, `text`,
+`structure`), `budget` (8,000 tokens unless given), `only`, `ref`, `q`, `range`, `lines`, `coarse`, `all` and `style`;
+a ref that names nothing or several comes back as a correctable result naming the candidates. On a spreadsheet's tab
+the outline is its workbook and `cells` reads the sheet ([A spreadsheet's views](../024-agents/document-views.md#a-spreadsheets-views));
+on a text document the outline is its document tabs and headings, and `text` and `structure` read its writing by
+paragraph number ([A text document's views](../024-agents/document-views.md#a-text-documents-views)).
 
 ### 4.3 `create_document`
 
