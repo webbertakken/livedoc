@@ -21,10 +21,12 @@ import { countsOf } from './routes';
 
 let db: SqliteD1;
 let relayed: unknown[];
+let notices: unknown[];
 
 // A room whose internal door runs the real room side over the test's database, its Participant judge included.
 function withRoom() {
   relayed = [];
+  notices = [];
   const room = new RoomLiveTabs(TEXT_DOCUMENT_LIVE_TAB, {
     env: db.env,
     enqueue: (step) => step(),
@@ -37,6 +39,10 @@ function withRoom() {
     get: () => ({
       fetch: async (input: string, init?: RequestInit) => {
         const url = new URL(input);
+        if (url.pathname === '/broadcast') {
+          notices.push((JSON.parse(init!.body as string) as { op: unknown }).op);
+          return new Response(null, { status: 204 });
+        }
         if (url.pathname !== '/live-tab-update') return new Response(null, { status: 404 });
         const outcome = await room.acceptPosted(
           url.searchParams.get('document')!,
@@ -130,6 +136,17 @@ describe('a text document changeset', () => {
     expect(body.changeset.id).toMatch(/^tc_/);
     expect(await texts()).toEqual(['Hi world', 'Second line', 'Third.']);
     expect(relayed).toHaveLength(1);
+    expect(notices).toEqual([
+      {
+        kind: 'text-changeset',
+        tabId: 't1',
+        id: body.changeset.id,
+        author: { name: expect.any(String), color: expect.any(String) },
+        agentKey: expect.stringMatching(/^[0-9a-f]{12}$/),
+        summary: 'tidy',
+        counts: { added: 1, changed: 1, removed: 0 },
+      },
+    ]);
 
     const list = await (
       await call('GET', '/api/documents/D/changesets')
@@ -265,6 +282,11 @@ describe('reverting a text document changeset', () => {
     expect(revert.status).toBe(200);
     const body = await revert.json<{ changeset: { id: string } }>();
     expect(body.changeset.id).toMatch(/^tc_/);
+    expect(notices.at(-1)).toMatchObject({
+      kind: 'text-changeset',
+      id: body.changeset.id,
+      revertOf: first.changeset.id,
+    });
     expect(await texts()).toEqual(['Hello world', 'Second line', 'Later.']);
     expect(LiveThreads.read(await stateDoc())[0]!.resolved).toBe(true);
     const again = await call('POST', `/api/documents/D/changesets/${first.changeset.id}/revert`);

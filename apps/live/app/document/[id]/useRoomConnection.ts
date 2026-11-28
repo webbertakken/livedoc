@@ -32,6 +32,7 @@ import {
   type AgentPresence,
   type AvatarPresence,
   type ChangesetRoomOp,
+  type TextChangesetRoomOp,
   type ItemsRoomOp,
   type ItemTypesRoomOp,
   type WorkbookRoomOp,
@@ -202,6 +203,8 @@ export function useRoomConnection(opts: {
   // An agent's changeset (docs/specs/024-agents/agent-changesets.md "In the editor"), relayed by the
   // worker; useChangesetFeed decides what to do with it.
   receiveChangeset: (op: ChangesetRoomOp) => void;
+  // A text document's changeset (agent-changesets.md "A text document's changesets"): its toast. System-only.
+  receiveTextChangeset: (op: TextChangesetRoomOp) => void;
   // Item writes the api made (docs/specs/026-plan/items.md "Live for everyone"). System-only.
   receiveItems: (op: ItemsRoomOp) => void;
   // A stored type catalogue (docs/specs/026-plan/item-types.md "Storage and sync"). System-only.
@@ -272,6 +275,7 @@ export function useRoomConnection(opts: {
     receiveDocumentTrashed,
     resyncFromServer,
     receiveChangeset,
+    receiveTextChangeset,
     receiveItems,
     receiveItemTypes,
     receiveWorkbook,
@@ -661,6 +665,8 @@ export function useRoomConnection(opts: {
         // An agent's changeset, applied, outlined and toasted by useChangesetFeed. System-only, like
         // the share ops: the room refuses one from a client socket.
         if (from === 'system') receiveChangeset(op);
+      } else if (op.kind === 'text-changeset') {
+        if (from === 'system') receiveTextChangeset(op);
       } else if (op.kind === 'plan-presence') {
         receivePlanPresence(from, op);
       } else if (op.kind === 'sheet-presence') {
