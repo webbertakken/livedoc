@@ -68,34 +68,39 @@ function xlsx(rows: number, kept = false) {
   );
 }
 
+// A file of one picture over the cells, as LiveDoc writes one.
+function picturesFile() {
+  let n = 7;
+  const layout = emptyLayout(() => (n = (n * 16807) % 2147483647) / 2147483647, 2, 2);
+  const at = { r: layout.rows[0]!, c: layout.cols[0]!, dx: 0, dy: 0 };
+  const sheet = emptySheet({
+    id: 'sheetOne1',
+    tabId: 't1',
+    title: 'Pics',
+    layout: {
+      ...layout,
+      objects: [{ id: 'i1', kind: 'image', at, width: 30, height: 30, imageId: 'a' }],
+    },
+  });
+  // A PNG's signature and header, 3 × 3 pixels: what a read takes a picture by.
+  const png = new Uint8Array([
+    0x89, 0x50, 0x4e, 0x47, 13, 10, 26, 10, 0, 0, 0, 13, 0x49, 0x48, 0x44, 0x52, 0, 0, 0, 3, 0, 0,
+    0, 3, 8, 2,
+  ]);
+  const bytes = new Map([['a', { data: png, type: 'image/png' as const }]]);
+  const record = WorkbookRecord.create({ locale: 'en-GB', timeZone: 'UTC' });
+  const data = writeWorkbook([sheet], record, 'Pics', 'xlsx', undefined, bytes).data;
+  return bytesOf(data);
+}
+
 describe('importSpreadsheet pictures', () => {
   it('uploads a picture over the cells to the caller’s gallery and places it (D628)', async () => {
-    let n = 7;
-    const layout = emptyLayout(() => (n = (n * 16807) % 2147483647) / 2147483647, 2, 2);
-    const at = { r: layout.rows[0]!, c: layout.cols[0]!, dx: 0, dy: 0 };
-    const sheet = emptySheet({
-      id: 'sheetOne1',
-      tabId: 't1',
-      title: 'Pics',
-      layout: {
-        ...layout,
-        objects: [{ id: 'i1', kind: 'image', at, width: 30, height: 30, imageId: 'a' }],
-      },
-    });
-    // A PNG's signature and header, 3 × 3 pixels: what a read takes a picture by.
-    const png = new Uint8Array([
-      0x89, 0x50, 0x4e, 0x47, 13, 10, 26, 10, 0, 0, 0, 13, 0x49, 0x48, 0x44, 0x52, 0, 0, 0, 3, 0, 0,
-      0, 3, 8, 2,
-    ]);
-    const bytes = new Map([['a', { data: png, type: 'image/png' as const }]]);
-    const record = WorkbookRecord.create({ locale: 'en-GB', timeZone: 'UTC' });
-    const data = writeWorkbook([sheet], record, 'Pics', 'xlsx', undefined, bytes).data;
     const { api, seen } = server((s) =>
       Response.json(s.path === '/images' ? { image: { id: 'g-up' }, deduped: false } : {}),
     );
     const opened = await importSpreadsheet(
       api,
-      { fileName: 'Pics.xlsx', bytes: bytesOf(data) },
+      { fileName: 'Pics.xlsx', bytes: picturesFile() },
       'cli',
       () => {},
     );
@@ -105,6 +110,28 @@ describe('importSpreadsheet pictures', () => {
       'POST /documents',
     ]);
     expect(JSON.stringify(seen.map((s) => s.body))).toContain('"imageId":"g-up"');
+  });
+
+  it('leaves out a picture the gallery refuses, naming it and logging why', async () => {
+    const { api } = server((s) =>
+      s.path === '/images'
+        ? Response.json({ error: 'images_unavailable' }, { status: 503 })
+        : Response.json({}),
+    );
+    const logs: string[] = [];
+    const opened = await importSpreadsheet(
+      api,
+      { fileName: 'Pics.xlsx', bytes: picturesFile() },
+      'cli',
+      (l) => logs.push(l),
+    );
+    expect(opened).toMatchObject({
+      ok: true,
+      report: [expect.stringMatching(/^1 picture over the cells/)],
+    });
+    expect(
+      logs.some((l) => l.startsWith('[workbook] picture not stored {"why":"unavailable"')),
+    ).toBe(true);
   });
 });
 
