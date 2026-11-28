@@ -290,7 +290,6 @@ export const commentAdd = defineVerb({
     positionals: ['doc', 'ref', 'text'],
     examples: [
       'livedoc comment add "Shop" api "Should this be idempotent?"',
-      'livedoc comment add "Shop" --tab Flow 146b "Missing a retry"',
       'livedoc comment add "Budget" Sheet1 --range B4:C9 "Are these final?"',
     ],
     prints: 'the new comment\u2019s id',
