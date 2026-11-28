@@ -206,6 +206,20 @@ describe('writeMarkdown', () => {
     expect(md).toMatch(/\n\n\[\^1\]: Source, \*\*bold\*\*\n$/);
   });
 
+  it('escapes a backslash and a dollar inside an equation, so neither ends it', () => {
+    const math = [
+      { kind: 'text' as const, text: 'a\\' },
+      { kind: 'operator' as const, text: '$' },
+    ];
+    expect(writeMarkdown(doc([p([{ type: 'equation', math, props: {} }])]))).toBe(
+      '$a\\\\\\$$\n',
+    );
+  });
+
+  it('writes a line break as a hard break', () => {
+    expect(writeMarkdown(doc([p([run('one\ntwo')])]))).toBe('one\\\ntwo\n');
+  });
+
   it('escapes what would read as Markdown', () => {
     expect(escapeMarkdown('# not a heading')).toBe('\\# not a heading');
     expect(escapeMarkdown('- not a list\n1. nor this')).toBe('\\- not a list\n1\\. nor this');

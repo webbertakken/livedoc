@@ -52,13 +52,15 @@ function inlineMarkdown(context: ExportContext, inline: Inline): string {
   switch (inline.type) {
     case 'run':
     case 'field':
-      return escapeMarkdown(inline.text).replace(/\n/g, '\\\n');
+      // A line break as Markdown's hard break: the escaped text's lines joined by a backslash.
+      return escapeMarkdown(inline.text).split('\n').join('\\\n');
     case 'note':
       return `[^${context.notes.get(inline) ?? ''}]`;
     case 'picture':
       return inline.decorative ? '' : escapeMarkdown(pictureText(inline.alt, inline.title));
     case 'equation':
-      return `$${Equations.linear(inline.math).replace(/\$/g, '\\$')}$`;
+      // Between dollars, a backslash and a dollar of its own escaped, so neither ends it.
+      return `$${Equations.linear(inline.math).replace(/[\\$]/g, (c) => `\\${c}`)}$`;
     default:
       return '';
   }
