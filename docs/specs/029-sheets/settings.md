@@ -1,8 +1,8 @@
 # Settings
 
-**Status: specified.** The settings are stored with the workbook and saved through the api
+**Status: specified; the dialog is built.** The settings are stored with the workbook and saved through the api
 ([Sheet store](sheet-store.md#changing-the-workbook)); the locale and time zone are applied as
-[Formulas](formulas.md#locale) says; the dialog, Tools and View are not built.
+[Formulas](formulas.md#locale) says. The dialog's default font, Tools and View are not built.
 
 A [spreadsheet](spreadsheet.md)'s own settings and the Tools and View items around them.
 
@@ -18,6 +18,18 @@ A [spreadsheet](spreadsheet.md)'s own settings and the Tools and View items arou
   `NOW`, `TODAY`, `RAND` and `RANDBETWEEN` recalculate), **Iterative Calculation** (off; on with **Max Number of
   Iterations**, 1 to 1,000, default 50, and **Threshold**, default 0.05).
 - **Save Settings** writes them, one undo step, seen by everyone; both formats keep them ([Standard mapping](standard-mapping.md)).
+- The dialog is Google's **Settings for This Spreadsheet**, opened with the settings as they are; Cancel, Escape or
+  closing it changes nothing.
+- **Locale** offers a fixed list of locales by their English names (`English (United Kingdom)`), the spreadsheet's own
+  added when it is not among them (D510). **Time Zone** offers every zone the browser knows, as Google writes them:
+  `(GMT+01:00) Amsterdam`, ordered by offset, then name (D511).
+- **Cards From** offers **None** and the Editor's own documents that are neither spreadsheets nor text documents,
+  newest first; a document named by someone else that is not theirs shows as **Another Document** and stays chosen
+  until changed (D512).
+- **Max Number of Iterations** and **Threshold** show only with Iterative Calculation on; a value out of range says
+  so under its field ("Enter a whole number from 1 to 1,000", "Enter a number of 0 or more") and Save Settings waits.
+- A save the api refuses or cannot reach keeps the dialog open with "The settings couldn't be saved. Try again."
+- Undo after Save Settings saves the settings as they were; redo saves them again.
 - With iterative calculation off a circular reference shows `#REF!` with "Circular dependency detected" as Google's,
   instead of today's wording.
 
@@ -37,6 +49,16 @@ A [spreadsheet](spreadsheet.md)'s own settings and the Tools and View items arou
 
 Show (Gridlines, Formula Bar, Formulas, Protected Ranges), Freeze, Group, Comments, Hidden Sheets, Zoom, Full Screen:
 the person's own view except Freeze, Group and Hidden Sheets, which are the sheet's ([Grid and editing](grid-and-editing.md)).
+
+## Defaults
+
+- **D510** The locales offered are a fixed list of common ones (`SPREADSHEET_LOCALES`), named by
+  `Intl.DisplayNames`, rather than every tag the browser knows (hundreds, most never chosen). A spreadsheet in
+  another locale keeps it, listed first.
+- **D511** Time zones are the browser's `Intl.supportedValuesOf('timeZone')`, each labelled by its offset now and its
+  city, as Google labels them; the offset is today's, so it follows daylight saving.
+- **D512** Cards From lists the Editor's own documents, as Copy To lists spreadsheets (D183), since the api lists no
+  document by when the person last opened it.
 
 ## Left out
 
