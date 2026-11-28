@@ -122,10 +122,13 @@ export function xlsxSlicersHeld(
 export const slicerNamesBySheet = (held: XlsxSlicersHeld | null, sheet: number): Set<string> =>
   new Set(held?.readable ? held.slicers.filter((s) => s.sheet === sheet).map((s) => s.name) : []);
 
+// A text matched as itself inside a regular expression.
+const escapeRegExp = (text: string) => text.replace(/[\\^$.*+?()[\]{}|-]/g, (m) => `\\${m}`);
+
 // An `extLst` item's XML without its `ext` of one uri; null when none is left.
 function withoutExt(xml: string, uri: string): string | null {
   const ext = new RegExp(
-    `<((?:[\\w.-]+:)?ext)\\b[^>]*\\buri="${uri.replace(/[{}-]/g, '\\$&')}"[^>]*>[\\s\\S]*?</\\1>`,
+    `<((?:[\\w.-]+:)?ext)\\b[^>]*\\buri="${escapeRegExp(uri)}"[^>]*>[\\s\\S]*?</\\1>`,
   );
   const out = xml.replace(ext, '');
   return /<(?:[\w.-]+:)?ext\b/.test(out) ? out : null;
