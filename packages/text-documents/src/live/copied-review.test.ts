@@ -42,11 +42,14 @@ function read(state: Uint8Array) {
   const doc = new Y.Doc();
   Y.applyUpdate(doc, state);
   const run = (doc.getXmlFragment('body').get(0) as Y.XmlElement).get(0) as Y.XmlText;
-  return { text: run.toString(), plain: run.toJSON(), threads: LiveThreads.read(doc).map((t) => t.id) };
+  return {
+    text: run.toString(),
+    plain: run.toJSON(),
+    threads: LiveThreads.read(doc).map((t) => t.id),
+  };
 }
 
-const holds = (state: Uint8Array, words: string) =>
-  new TextDecoder().decode(state).includes(words);
+const holds = (state: Uint8Array, words: string) => new TextDecoder().decode(state).includes(words);
 
 describe('CopiedReview', () => {
   it('leaves out every thread and rejects every suggestion without comments', () => {

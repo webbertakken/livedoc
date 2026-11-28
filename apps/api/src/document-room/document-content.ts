@@ -242,9 +242,10 @@ export async function exportDocumentCopy(
   );
   const copiedSheets = new Set(((sheets?.results ?? []) as Row[]).map((s) => String(s.id)));
   return {
-    liveStates: (viewer ? liveStates.map((s) => asViewersState(s, tabs, documentId)) : liveStates).map(
-      (s) => withReviewCopied(s, tabs, review),
-    ),
+    liveStates: (viewer
+      ? liveStates.map((s) => asViewersState(s, tabs, documentId))
+      : liveStates
+    ).map((s) => withReviewCopied(s, tabs, review)),
     kept: keptOfSheets(await readKept(env, documentId), copiedSheets),
     itemTypes: doc?.item_types ?? null,
     itemsRev: doc?.items_rev ?? 0,
