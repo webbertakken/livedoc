@@ -133,8 +133,8 @@ export function textDocumentMenus(
   return [
     menu('file', 'File', [
       submenu('new', 'New', [
-        item('new-document', 'Document', 'view'),
-        item('new-from-template', 'From template gallery', 'view'),
+        item('new-document', 'Document', 'view', { status: 'built' }),
+        item('new-from-template', 'From template gallery', 'view', { status: 'built' }),
       ]),
       item('open', 'Open', 'view', { shortcut: 'open', status: 'built' }),
       item('make-a-copy', 'Make a copy', 'view', { status: 'built' }),

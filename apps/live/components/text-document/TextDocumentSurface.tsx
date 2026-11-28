@@ -237,6 +237,7 @@ import { useTextDocumentPicturePlacing } from './useTextDocumentPicturePlacing';
 import { useTextDocumentPictureBar } from './useTextDocumentPictureBar';
 import { dispatchWithSuggesting } from '@/lib/text-document/text-document-suggesting-dispatch';
 import { pendingMedia } from '@/lib/text-document/text-document-pending-media';
+import { TEXT_DOCUMENT_NEW_ACTIONS } from '@/lib/text-document/text-document-new-actions';
 import { useTextDocumentSuggesting } from './useTextDocumentSuggesting';
 import { suggestedBreaksPlugin } from '@/lib/text-document/text-document-suggestion-marks';
 
@@ -1351,6 +1352,7 @@ export function TextDocumentSurface({
       ...pdf.actions,
       ...print.actions,
       ...details.actions,
+      ...TEXT_DOCUMENT_NEW_ACTIONS,
     }),
     [
       importReport.actions,
