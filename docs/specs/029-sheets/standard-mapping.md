@@ -861,9 +861,50 @@ and Google Sheets show it (D648, D649).
   kept; a VML drawing's other shapes (legacy form controls) are not kept (D651).
 - **LibreOffice 24.2** aborts reading a note in an ODF document without `office:automatic-styles`, so a workbook
   with notes always writes the element, empty when it has no automatic style (D652).
-- **Threads come later**: a cell's XLSX threaded comment (`xl/threadedComments`) and the note Excel writes in its
-  place for older readers are a comment thread's ([Comments](review.md#comments)); until threads are read, that note
-  is read as the cell's note, its text as Excel wrote it.
+- **A thread's placeholder is no note**: the legacy comment Excel writes beside a threaded comment for older readers
+  (its author `tc={id}`) is the thread's, never read as the cell's note ([Comments in the file](#comments-in-the-file)).
+
+## Comments in the file
+
+**Status: specified.** A sheet's [comment threads](review.md#comments) are written as each suite writes its own, so
+Excel shows them as threads and LibreOffice and Google Sheets as comments, and LiveDoc reads its own back whole.
+Comment authors are names only in a file: a thread read from a file is by "From the file" authors with no key.
+
+- **XLSX, as Excel writes them** ([MS-XLSX] 2.3.7, 2.6.203-2.6.205): the sheet's threaded comments part
+  (`xl/threadedComments/threadedComment<n>.xml`, relationship
+  `http://schemas.microsoft.com/office/2017/10/relationships/threadedComment`, content type
+  `application/vnd.ms-excel.threadedcomments+xml`, namespace
+  `http://schemas.microsoft.com/office/spreadsheetml/2018/threadedcomments`): a `threadedComment` a comment in the
+  thread's order, each with a new GUID `id`, its author's `personId`, `dT` (its time, UTC) and `text`; the first
+  carries `ref` (the anchor's top-left cell) and `done="1"` when resolved, each reply `parentId` (the first's id).
+  The workbook's persons part (`xl/persons/person.xml`, relationship
+  `http://schemas.microsoft.com/office/2017/10/relationships/person`, content type `application/vnd.ms-excel.person+xml`):
+  one `person` an author name, `displayName` and `userId` the name, `providerId="None"`, its GUID `id`.
+- **Beside each thread, Excel's placeholder**: a legacy comment on the anchor's top-left cell in the sheet's notes
+  part, its author `tc={id}` (the first comment's id), its text as Excel writes it for older readers
+  (`[Threaded comment]`, Excel's line about versions, then `Comment:` and each `Reply:` with its text), and its VML
+  note shape, as a note's ([Notes in the file](#notes-in-the-file)).
+- **What Excel's threads cannot hold** goes in LiveDoc's record, an `ext` in the first `threadedComment`'s
+  `extLst` (LiveDoc's URI, namespace `urn:livedoc:xmlns:spreadsheet:1.0`): `livedoc:thread` its range anchor,
+  each comment's author colour, edit time, mentions, assignee and reactions as JSON, and the cell's note when it has
+  one (D657, D658). Excel keeps it while the thread is not edited.
+- **ODF, one annotation a cell** (ODF 1.4 Part 3 §14.1, LibreOffice 24.2 holding one comment a cell and no replies):
+  the anchor's top-left cell's `office:annotation`, hidden, with `dc:creator` (the first author) and `dc:date`
+  (the first comment's time); its paragraphs the first comment's lines, then each reply as `<name>: <text>`, so
+  another suite shows the conversation as text. Beside it, LiveDoc's record in `livedoc:thread` (the same JSON, with
+  ids and resolved) and `livedoc:thread-fingerprint` (the CRC-32 of the paragraphs' text as written), LiveDoc's
+  namespace; a cell's note with a thread goes in the record (D659).
+- **Reading**: an XLSX threaded comments part gives each root and its replies (by `parentId`, in `dT` order) as a
+  thread on its `ref` cell, resolved by `done`, authors by their person's `displayName`, Excel's mentions as
+  plain text; its placeholder legacy comment is left out; LiveDoc's record, where present, restores the range, the
+  colours, mentions, assignees, reactions and the note. An ODF annotation with LiveDoc's record whose fingerprint
+  still matches is the thread; without one, or once another suite has changed its text, it is the cell's note
+  (D660). A thread on a cell the read leaves out goes with it; past `SHEET_THREADS_MAX` a sheet's threads are cut,
+  past `SHEET_THREAD_COMMENTS_MAX` a thread's comments, and a comment's text to `SHEET_COMMENT_TEXT_MAX`, each
+  counted in the report (`threads_cut`).
+- **Downloads carry threads; copies do not**: a download, a repository sync and a conversion write the workbook's
+  threads (open and resolved); a Viewer's download writes none (D655). Opening a file stores its threads with the new
+  spreadsheet, authored "From the file".
 
 ## Pivot tables in the file
 
@@ -1332,5 +1373,13 @@ The code cites each by its id.
   write for its notes (default).
 - **D652** ODF `office:automatic-styles` with notes: always written, empty when no automatic style is needed, as
   LibreOffice 24.2 aborts reading a note without it (default).
+- **D657** An XLSX thread's range anchor: written on its top-left cell, as Excel holds threads on one cell; the range
+  kept in LiveDoc's record (default).
+- **D658** A cell with a note and a thread in XLSX: the thread takes the cell's legacy comment (Excel holds one); the
+  note kept in LiveDoc's record, so Excel shows the thread alone (default).
+- **D659** A cell with a note and a thread in ODF: the annotation is the thread's, the note kept in LiveDoc's record,
+  as a cell holds one annotation (default).
+- **D660** An ODF annotation whose text another suite changed: read as the cell's note, LiveDoc's record dropped, as
+  its replies can no longer be told apart (default).
 - **D261** A sheet's own charts beside a drawing kept from its file: Not written, the sheet named (`charts_unwritten`),
   as a worksheet holds one drawing and ODF one `table:shapes` (default).

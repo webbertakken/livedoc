@@ -116,9 +116,11 @@ mentions, assignees, reactions, resolve and reopen, the same thread 0019 specifi
 
 ### In the files
 
-- XLSX keeps a thread as a threaded comment (`xl/threadedComments`), and ODF as an annotation with LiveDoc's thread
-  data kept beside it, so replies survive a round trip through LiveDoc and degrade to text in other applications
-  ([Standard mapping](standard-mapping.md#notes-in-the-file)); specified with the files' slice.
+- XLSX keeps a thread as Excel does, a threaded comment with its persons and the legacy comment Excel writes beside it,
+  and ODF as an annotation on the anchor's top-left cell holding the conversation as text; LiveDoc's record beside
+  each keeps what the format cannot (the range, colours, mentions, assignees, reactions, a note on the same cell), so a
+  round trip through LiveDoc keeps the thread whole and other applications show it as text
+  ([Comments in the file](standard-mapping.md#comments-in-the-file), D657-D660).
 
 ### Agents
 
