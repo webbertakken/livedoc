@@ -27,6 +27,7 @@ import {
   formMetricChoice,
   sheetMetricChoice,
   SHEET_CHART_CHOICE,
+  SPREADSHEET_CHOICE,
   dashboardCardChoice,
   dashboardTabChoice,
   type DashboardCardKind,
@@ -230,6 +231,8 @@ function SheetChartGlyph() {
 }
 // A chart drawn from a Sheet's cells (plan-tabs.md "Sheet Chart"), its sheet and chart chosen as it is picked.
 export const SHEET_CHART_NAME = 'Sheet Chart';
+// A spreadsheet's first sheet, read-only (docs/specs/029-sheets/plan-links.md "The Spreadsheet slot").
+export const SPREADSHEET_SLOT_NAME = 'Spreadsheet';
 export const DASHBOARD_SHEET_TILES: PaletteTileDef[] = [
   ...SHEET_METRICS.map((metric): PaletteTileDef => ({
     id: `dashboard:sheet-${metric}`,
@@ -250,6 +253,16 @@ export const DASHBOARD_SHEET_TILES: PaletteTileDef[] = [
     noTint: true,
     action: { type: 'shape', kind: 'plan-view', plan: SHEET_CHART_CHOICE },
     icon: <SheetChartGlyph />,
+  },
+  {
+    id: 'dashboard:spreadsheet',
+    section: 'dashboard-cards',
+    label: `Add ${SPREADSHEET_SLOT_NAME}`,
+    caption: SPREADSHEET_SLOT_NAME,
+    description: 'A spreadsheet’s first sheet, read-only.',
+    noTint: true,
+    action: { type: 'shape', kind: 'plan-view', plan: SPREADSHEET_CHOICE },
+    icon: <SheetArt size={18} />,
   },
 ];
 

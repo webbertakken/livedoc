@@ -95,14 +95,63 @@ describe('linkedSheet', () => {
         { name: 'Rent', r1: r1!, c1: c1!, r2: r1!, c2: c1! },
         { name: 'Items', r1: r1!, c1: c0!, r2: r3!, c2: c0! },
       ],
-      merges: [{ r1: r1!, c1: c0!, r2: r1!, c2: c1! }],
+      protections: [{ id: 'p1', r1: r1!, c1: c0!, r2: r1!, c2: c0!, editors: [] } as never],
     };
     wb.updateSheet(sheet);
     const json = linkedSheet(wb, sheet.id)!;
     expect(json.layout.hiddenRows).toEqual([r2]);
     expect(json.layout.names).toEqual([{ name: 'Rent', r1, c1, r2: r1, c2: c1 }]);
-    // Nothing else of the sheet's look or tools crosses.
-    expect(json.layout.merges).toBeUndefined();
+    // Nothing of the sheet's tools crosses.
+    expect(json.layout.protections).toBeUndefined();
+  });
+
+  // docs/specs/029-sheets/plan-links.md "The Spreadsheet slot" and "Sheet Chart": what draws the sheet crosses too.
+  it('keeps what draws the sheet among the rows and columns it carries: sizes, merges, hidden columns, charts', () => {
+    const { sheet, wb } = book(LINK_ROWS_MAX + 5, 12);
+    const rows = sheet.layout.rows;
+    const [c0, c1, c2] = sheet.layout.cols;
+    const far = rows[LINK_ROWS_MAX + 1]!;
+    const chart = (id: string, r: string) => ({
+      id,
+      kind: 'chart' as const,
+      type: 'column' as const,
+      at: { r, c: c2!, dx: 0, dy: 0 },
+      width: 300,
+      height: 200,
+      range: { r1: rows[0]!, c1: c0!, r2: rows[3]!, c2: c1! },
+    });
+    sheet.layout = {
+      ...sheet.layout,
+      colSize: { [c0!]: 180 },
+      rowSize: { [rows[0]!]: 40, [far]: 50 },
+      hiddenCols: [c2!],
+      merges: [
+        { r1: rows[0]!, c1: c0!, r2: rows[0]!, c2: c1! },
+        { r1: far, c1: c0!, r2: far, c2: c1! },
+      ],
+      showGrid: false,
+      objects: [
+        chart('near', rows[1]!),
+        chart('far', far),
+        {
+          id: 'img',
+          kind: 'image',
+          imageId: 'i1',
+          at: { r: rows[0]!, c: c0!, dx: 0, dy: 0 },
+          width: 10,
+          height: 10,
+        } as never,
+      ],
+    };
+    wb.updateSheet(sheet);
+    const json = linkedSheet(wb, sheet.id)!;
+    expect(json.layout.colSize).toEqual({ [c0!]: 180 });
+    expect(json.layout.rowSize).toEqual({ [rows[0]!]: 40 });
+    expect(json.layout.hiddenCols).toEqual([c2]);
+    expect(json.layout.merges).toEqual([{ r1: rows[0]!, c1: c0!, r2: rows[0]!, c2: c1! }]);
+    expect(json.layout.showGrid).toBe(false);
+    // Charts anchored among the carried rows and columns, reading only them; never an image.
+    expect(json.layout.objects?.map((o) => o.id)).toEqual(['near']);
   });
 
   it('carries at most the first LINK_ROWS_MAX rows and LINK_COLS_MAX columns', () => {

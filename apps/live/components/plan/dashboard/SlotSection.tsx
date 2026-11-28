@@ -3,7 +3,7 @@
 // A Dashboard slot's **Slot** section (docs/specs/026-plan/plan-tabs.md "Editing"), in the item's one cog: its own
 // Slot Settings, or folded into the Board, Sheet or Chart Settings of what the slot shows. An Editor's: **Add a Slot**
 // (the slot drawn small, a side to add on), then **Change Chart** or **Change Source** for a chart or figure from a
-// Sheet. Open Tab, Duplicate, Clear and Remove are the cog's toolbar above its sections (SlotToolbar.tsx).
+// Sheet, or **Change Spreadsheet** for a Spreadsheet slot (docs/specs/029-sheets/plan-links.md "The Spreadsheet slot"). Open Tab, Duplicate, Clear and Remove are the cog's toolbar above its sections (SlotToolbar.tsx).
 import { useState } from 'react';
 import { lucideGlyph } from '@livedoc/ui';
 import { lucideLayoutGrid, lucidePencil } from '@livedoc/icons/lucide';
@@ -14,6 +14,7 @@ import { useDashboard } from './dashboard-context';
 import { AddSlotSides } from './AddSlotSides';
 import { SheetChartSource } from './SheetChartSource';
 import { SheetMetricSource } from './SheetMetricSource';
+import { SpreadsheetSlotSource } from './SpreadsheetSlotSource';
 
 const SlotGlyph = lucideGlyph(lucideLayoutGrid, 14);
 const ChangeGlyph = lucideGlyph(lucidePencil, 18);
@@ -51,13 +52,14 @@ export function SlotSection({
   // a Sheet's, once its source is chosen ("Figures from a Sheet"): Change Source, likewise.
   const chartSheetId = el?.chartSource?.sheetId;
   const metric = content?.type === 'sheet-metric' && content.sheetId ? content : null;
+  const spreadsheet = content?.type === 'spreadsheet' && content.documentId ? content : null;
   const [changeAt, setChangeAt] = useState<HTMLElement | null>(null);
   // Open Tab, Duplicate, Clear and Remove are the cog's toolbar (SlotToolbar); the section is an Editor's.
   if (!canEdit) return null;
   return (
     <BoardSettingsSection title="Slot" icon={<SlotGlyph />} open={open} onToggle={onToggle}>
       <AddSlotSides rowId={rowId} at={at} onAdded={onClose} />
-      {chartSheetId !== undefined || metric ? (
+      {chartSheetId !== undefined || metric || spreadsheet ? (
         <SettingsBody>
           <div className="flex flex-wrap gap-2">
             {chartSheetId !== undefined ? (
@@ -71,6 +73,13 @@ export function SlotSection({
               <SettingsActionTile
                 icon={<ChangeGlyph />}
                 label="Change Source"
+                onClick={(e) => setChangeAt(e.currentTarget)}
+              />
+            ) : null}
+            {spreadsheet ? (
+              <SettingsActionTile
+                icon={<ChangeGlyph />}
+                label="Change Spreadsheet"
                 onClick={(e) => setChangeAt(e.currentTarget)}
               />
             ) : null}
@@ -93,6 +102,15 @@ export function SlotSection({
           anchor={changeAt}
           content={metric}
           onChange={(next) => actions.setSlotContent(slot.id, next)}
+          onClose={() => setChangeAt(null)}
+        />
+      ) : null}
+      {changeAt && spreadsheet ? (
+        <SpreadsheetSlotSource
+          anchor={changeAt}
+          onPick={(documentId) =>
+            actions.setSlotContent(slot.id, { type: 'spreadsheet', documentId })
+          }
           onClose={() => setChangeAt(null)}
         />
       ) : null}

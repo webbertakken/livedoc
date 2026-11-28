@@ -49,6 +49,8 @@ const NO_MAP = new Map<string, string>();
 type SheetReads = {
   models: ReadonlyMap<string, SheetRenderModel>;
   metrics: ReadonlyMap<string, SheetMetricArt>;
+  // Each Spreadsheet slot's picture as the page last read it, by slot id.
+  spreadsheets: ReadonlyMap<string, string>;
   // The grid each Sheet's cells fill (sheetContentsFor): a Sheet tab's image grows its Sheet to it.
   contents: ReadonlyMap<string, { width: number; height: number }>;
   // The Sheets framed (sheetKey) when read: the cells fit that frame, so a grown one is read again.
@@ -71,6 +73,7 @@ export function usePlanImageExport(
 
   // The tab as laid out: the figures from Sheets join once they are read.
   const metrics = reads?.metrics;
+  const spreadsheets = reads?.spreadsheets;
   const models = reads?.models;
   const contents = reads?.contents;
   // Keyed on the cards and types alone: the context value also changes with presence and the open card.
@@ -85,6 +88,7 @@ export function usePlanImageExport(
             // The editor's themes, the person's own among them.
             themeOf: getTheme,
             ...(metrics ? { metrics } : {}),
+            ...(spreadsheets ? { spreadsheets } : {}),
             ...(models ? { sheetHeads: (id: string) => !models.get(id)?.hideHeaders } : {}),
             ...(contents ? { sheetContent: (id: string) => contents.get(id) ?? null } : {}),
             renderDiagram: (shown) =>
@@ -94,7 +98,7 @@ export function usePlanImageExport(
               }),
           })
         : null,
-    [whole, tab, documentTabs, now, metrics, models, contents, planItems, planTypes],
+    [whole, tab, documentTabs, now, metrics, spreadsheets, models, contents, planItems, planTypes],
   );
   const imageTab = image?.tab ?? tab;
   // The Sheets the image frames, each at its size: what the read below depends on. The figures it reads never change
@@ -112,7 +116,7 @@ export function usePlanImageExport(
     !!sheetKey ||
     // The stored layout read safely: a malformed one has no figures, rather than throwing.
     !!readDashboard(tab.dashboard)?.rows.some((r) =>
-      r.slots.some((s) => s.content?.type === 'sheet-metric'),
+      r.slots.some((s) => s.content?.type === 'sheet-metric' || s.content?.type === 'spreadsheet'),
     );
   const imageRef = useRef(imageTab);
   useEffect(() => {
@@ -135,7 +139,14 @@ export function usePlanImageExport(
           import('@/components/sheets/sheet-store-client'),
           import('@/lib/export-plan/plan-export-sheets'),
         ]);
-        if (!bridge) return { models: new Map(), metrics: new Map(), contents: NO_CONTENTS, key };
+        if (!bridge)
+          return {
+            models: new Map(),
+            metrics: new Map(),
+            spreadsheets: NO_MAP,
+            contents: NO_CONTENTS,
+            key,
+          };
         const store = sheetStoreOf(bridge);
         const tabs = documentTabs.length ? documentTabs : [tab];
         await Promise.all(
@@ -146,6 +157,7 @@ export function usePlanImageExport(
         const next = {
           models: sheets.sheetModelsFor(imageRef.current.elements, store, tab.font),
           metrics: sheets.sheetMetricsFor(tab.dashboard, tabs, store, bridge.locale),
+          spreadsheets: sheets.spreadsheetPicturesFor(tab.dashboard),
           contents: sheets.sheetContentsFor(imageRef.current.elements, store, tab.font),
           key,
         };
@@ -153,7 +165,13 @@ export function usePlanImageExport(
         return next;
       } catch (e) {
         debugLog('[export] sheets.read.failed', { error: e instanceof Error ? e.name : 'unknown' });
-        return { models: new Map(), metrics: new Map(), contents: NO_CONTENTS, key };
+        return {
+          models: new Map(),
+          metrics: new Map(),
+          spreadsheets: NO_MAP,
+          contents: NO_CONTENTS,
+          key,
+        };
       }
     }
     return () => {

@@ -34,7 +34,7 @@ describe('Add to Slot’s categories', () => {
       'Utilities, 6 choices',
     ]);
     // Each says what is inside, in full.
-    expect(panel.textContent).toContain('Figures and charts read live from a sheet.');
+    expect(panel.textContent).toContain('Figures, charts and whole sheets, read live.');
     expect(screen.getByText(/need a bigger slot/)).toBeTruthy();
     expect(document.activeElement).toBe(category(/^Card Metrics/));
   });

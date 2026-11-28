@@ -260,3 +260,33 @@ describe('a Visualisation tab', () => {
     ]);
   });
 });
+
+// docs/specs/029-sheets/plan-links.md "The Spreadsheet slot".
+describe('a Spreadsheet slot in Add to Slot', () => {
+  const fromASheet = (size: { width: number; height: number } | null) =>
+    slotFillSections([], size)
+      .sections.find((s) => s.title === 'From a Sheet')!
+      .tiles.map((t) => slotItemOfTile(t));
+
+  it('is From a Sheet’s fifth choice, where a sheet fits, else named in the line', () => {
+    expect(fromASheet(null)[4]).toEqual({ kind: 'spreadsheet' });
+    expect(fromASheet({ width: 320, height: 240 })).toContainEqual({ kind: 'spreadsheet' });
+    expect(fromASheet({ width: 300, height: 230 })).not.toContainEqual({ kind: 'spreadsheet' });
+    expect(slotFillSections([], { width: 300, height: 230 }).tooBig).toContain('sheet');
+  });
+
+  it('fills its slot with no spreadsheet yet, chosen in the slot', () => {
+    let tabs: Tab[] = [{ id: 'a', name: 'D', elements: [], kind: 'dashboard' } as unknown as Tab];
+    const commit = vi.fn((map: (ts: Tab[]) => Tab[]) => {
+      tabs = map(tabs);
+    });
+    const { result } = renderHook(() =>
+      usePlanTabActions({ activeId: 'a', commitTabs: commit, tickTabs: commit }),
+    );
+    act(() => result.current.placeItem({ kind: 'spreadsheet' }, null));
+    const slots = tabs[0]!.dashboard!.rows.flatMap((r) => r.slots);
+    expect(slots.find((s) => s.content)?.content).toEqual({ type: 'spreadsheet', documentId: '' });
+    expect(tabs).toHaveLength(1);
+    expect(tabs[0]!.elements).toEqual([]);
+  });
+});

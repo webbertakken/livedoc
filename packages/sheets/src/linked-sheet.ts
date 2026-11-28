@@ -1,12 +1,13 @@
 // One sheet of a spreadsheet as another document reads it (docs/specs/029-sheets/plan-links.md "Reading a sheet from
 // another document", D505): its values where its formulas were, its formats, its rows and columns by id, the rows it
-// hides and its one-cell names; nothing else of the sheet. A dashboard's figures read it with their own engine, by the
-// same ids, so a figure follows its cell as rows and columns move in the source.
+// hides and its one-cell names, and what draws it (sizes, merges, hidden columns, grid and headers, charts; D507);
+// none of its tools. A dashboard's figures read it with their own engine, by the same ids, so a figure follows its
+// cell as rows and columns move in the source.
 import { compileFormula } from './formula/stored';
 import { isError } from './formula/values';
 import type { Workbook } from './engine/workbook';
 import { layoutIndex } from './layout';
-import { cellKey, type CellInput, type SheetLayout } from './sheet';
+import { cellKey, type CellInput, type IdRange, type SheetLayout } from './sheet';
 import type { SheetCellJson, SheetJson } from './sheet-json';
 
 /** The rows a link carries: as many as a figure reads (sheet-metrics METRIC_ROWS_MAX). Safe range 500 to 10,000. */
@@ -29,6 +30,40 @@ function inputOf(wb: Workbook, sheetId: string, r: number, c: number): CellInput
   return undefined;
 }
 
+// What draws the sheet, among the rows and columns a link carries (D507): sizes, merges and hidden columns there, the
+// grid and header switches, and the charts anchored there that read only there. Images stay: another document's
+// images are not served to the reader.
+function linkedLook(layout: SheetLayout, kept: { rows: Set<string>; cols: Set<string> }) {
+  const within = (r: IdRange) =>
+    kept.rows.has(r.r1) && kept.rows.has(r.r2) && kept.cols.has(r.c1) && kept.cols.has(r.c2);
+  const sizes = (all: Record<string, number> | undefined, ids: Set<string>) => {
+    const out = Object.fromEntries(Object.entries(all ?? {}).filter(([id]) => ids.has(id)));
+    return Object.keys(out).length ? out : undefined;
+  };
+  const rowSize = sizes(layout.rowSize, kept.rows);
+  const colSize = sizes(layout.colSize, kept.cols);
+  const hiddenCols = (layout.hiddenCols ?? []).filter((id) => kept.cols.has(id));
+  const merges = (layout.merges ?? []).filter(within);
+  const objects = (layout.objects ?? []).filter(
+    (o) =>
+      o.kind === 'chart' &&
+      kept.rows.has(o.at.r) &&
+      kept.cols.has(o.at.c) &&
+      (!o.range || within(o.range)),
+  );
+  return {
+    ...(rowSize ? { rowSize } : {}),
+    ...(colSize ? { colSize } : {}),
+    ...(hiddenCols.length ? { hiddenCols } : {}),
+    ...(merges.length ? { merges } : {}),
+    ...(layout.showGrid === false ? { showGrid: false as const } : {}),
+    ...(layout.showHeaders === false ? { showHeaders: false as const } : {}),
+    ...(layout.colWidth !== undefined ? { colWidth: layout.colWidth } : {}),
+    ...(layout.rowHeight !== undefined ? { rowHeight: layout.rowHeight } : {}),
+    ...(objects.length ? { objects } : {}),
+  };
+}
+
 /** The sheet as a link reads it, or null when the workbook holds no such sheet. */
 export function linkedSheet(wb: Workbook, sheetId: string): SheetJson | null {
   const sheet = wb.sheet(sheetId);
@@ -47,6 +82,7 @@ export function linkedSheet(wb: Workbook, sheetId: string): SheetJson | null {
     cols,
     ...(hiddenRows.length ? { hiddenRows } : {}),
     ...(names.length ? { names } : {}),
+    ...linkedLook(sheet.layout, kept),
   };
   const cells: SheetCellJson[] = [];
   const add = (r: number, c: number, input: CellInput | undefined) => {

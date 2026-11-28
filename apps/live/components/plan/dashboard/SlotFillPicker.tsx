@@ -160,6 +160,8 @@ function TilePicture({
   if (item.kind === 'form-metric')
     return <FormMetricPreview metric={item.metric} palette={palette} />;
   if (item.kind === 'sheet-chart') return <SheetChartPreview palette={palette} />;
+  if (item.kind === 'spreadsheet')
+    return <SheetPreview palette={palette} tile={SHEET_TILES[3] ?? SHEET_TILES[0]!} />;
   return <span aria-hidden>{label}</span>;
 }
 

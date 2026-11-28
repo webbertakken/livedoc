@@ -367,6 +367,11 @@ export function usePlanTabActions({
           });
           return ts.map((t) => (t.id === activeId ? next : t));
         }
+        // A spreadsheet's first sheet: its spreadsheet is chosen in the slot (DashboardSpreadsheet).
+        if (item.kind === 'spreadsheet') {
+          const next = withSlotContent(base, target, { type: 'spreadsheet', documentId: '' });
+          return ts.map((t) => (t.id === activeId ? next : t));
+        }
         // A figure from a Sheet: its source is chosen in the slot (DashboardSheetMetric).
         if (item.kind === 'sheet-metric') {
           const next = withSlotContent(base, target, {

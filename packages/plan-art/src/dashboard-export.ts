@@ -41,6 +41,9 @@ export type DashboardExportInput = {
   now: Date;
   // Each figure from a Sheet, by slot id, read now.
   metrics?: ReadonlyMap<string, SheetMetricArt>;
+  // Each Spreadsheet slot's picture as the page last read it (a whole SVG document), by slot id
+  // (docs/specs/029-sheets/plan-links.md "The Spreadsheet slot").
+  spreadsheets?: ReadonlyMap<string, string>;
   // A Diagram tab's drawing as a whole SVG document (renderTabToSvg), fitted into its slot.
   renderDiagram: (tab: Tab) => string;
   // A tab's theme by id on a surface: the editor's own (its custom themes too); the built-in ones when absent.
@@ -115,6 +118,22 @@ function nestedDiagram(svg: string, r: Rect): string {
   );
 }
 
+// A spreadsheet's sheet nested in the slot at its own scale, from its top-left (A1), cropped to the card's padding.
+function croppedSheet(svg: string, r: Rect): string {
+  const open = /^<svg\b[^>]*>/.exec(svg);
+  const viewBox = open ? /viewBox="([^"]+)"/.exec(open[0])?.[1] : undefined;
+  const [x, y] = (viewBox ?? '').split(/\s+/).map(Number);
+  if (!open || x === undefined || y === undefined || !Number.isFinite(x) || !Number.isFinite(y))
+    return '';
+  const pad = 12;
+  const w = r2(Math.max(0, r.width - pad * 2));
+  const h = r2(Math.max(0, r.height - pad * 2));
+  return (
+    `<svg x="${r2(r.x + pad)}" y="${r2(r.y + pad)}" width="${w}" height="${h}"` +
+    ` viewBox="${x} ${y} ${w} ${h}" preserveAspectRatio="xMinYMin slice">${svg.slice(open[0].length)}`
+  );
+}
+
 export function dashboardExportTab(input: DashboardExportInput): DashboardExport {
   const { tab, tabs } = input;
   const layout = readDashboard(tab.dashboard) ?? { rows: [] };
@@ -171,6 +190,22 @@ export function dashboardExportTab(input: DashboardExportInput): DashboardExport
     }
     if (content.type === 'tab') {
       tabSlot(slotId, rect, content.tabId, content.of);
+      continue;
+    }
+    if (content.type === 'spreadsheet') {
+      const svg = content.documentId ? input.spreadsheets?.get(slotId) : undefined;
+      const drawn = svg ? croppedSheet(svg, rect) : '';
+      card(
+        slotId,
+        rect,
+        drawn ||
+          slotMessageArt(
+            rect,
+            p,
+            content.documentId ? 'Loading the sheet…' : 'Spreadsheet',
+            !content.documentId,
+          ),
+      );
       continue;
     }
     // A styled Utility's look, for the tab's theme on the image's paper; its inks write its text.

@@ -1,8 +1,8 @@
 # Plan's links to a spreadsheet
 
-**Status: specified; dashboards' figures and form responses are built.** A Sheet Figure, Column Summary or Trend
-reads a sheet of a spreadsheet, and a form writes its responses into one; the Sheet Chart, the sheet slot, the `CARD`
-functions and the starts are not built yet.
+**Status: specified; dashboards' figures, the Spreadsheet slot and form responses are built.** A Sheet Figure, Column
+Summary or Trend reads a sheet of a spreadsheet, a Spreadsheet slot shows one's first sheet, and a form writes its
+responses into one; the Sheet Chart, the `CARD` functions and the starts are not built yet.
 
 What Plan reads from or writes to a sheet, re-homed onto the [spreadsheet](spreadsheet.md) (C4, ruled 2026-11-18:
 keep them; C6, ruled 2026-11-18: the card functions only).
@@ -18,7 +18,9 @@ keep them; C6, ruled 2026-11-18: the card functions only).
 - Values are worked out by the same engine, in the spreadsheet's room, with the reader's own access:
   `GET /api/documents/<id>/workbook/link?sheet=<sheetId>` answers the workbook's sheets (each its id and name), its
   locale and version, and the sheet as its values: each cell's value where its formula was, its format, its rows and
-  columns by id, the rows hidden and the sheet's one-cell named ranges, nothing else of the sheet (D505).
+  columns by id, the rows hidden and the sheet's one-cell named ranges (D505), and what draws it among those rows
+  and columns: their sizes, merged cells, hidden columns, the grid and header switches and the charts reading only
+  them (D507); none of its tools (protections, filters, validation, comments) and no images.
 - The page reads a link again every 10 seconds while it shows it and the page is visible, naming the version it holds
   (`since=<version>`); an unchanged workbook answers `unchanged` without working anything out (D505).
 - A link reads the first 2,000 rows and 200 columns of a sheet, as much as a figure reads; a workbook past 500,000
@@ -39,7 +41,32 @@ keep them; C6, ruled 2026-11-18: the card functions only).
 - Its picture in an image export shows the figure the page last read, else "Loading the sheet…".
 - A **Sheet Chart** slot shows a chart of the workbook ([Charts](charts.md)) or a new chart over a range, drawn by the
   same chart code; it is no longer a chart element on the dashboard tab.
-- A Dashboard slot that showed a **Sheet tab** shows a spreadsheet's first sheet, read-only, with **Open** to go to it.
+- A Dashboard slot that showed a **Sheet tab** shows a spreadsheet's first sheet, read-only, with **Open** to go to it:
+  the **Spreadsheet** slot below; the [migration](migration.md) re-points the slots that show a Sheet tab.
+
+### The Spreadsheet slot
+
+- **Offered** as From a Sheet's fifth choice in Add to Slot, **Spreadsheet** ("A spreadsheet's first sheet,
+  read-only."). It needs a sheet's room, as a Sheet tab's slot does (What fits), so a smaller slot leaves it out and
+  names sheets in its line.
+- **What it is**: the slot's content `{ type: 'spreadsheet', documentId }`, the spreadsheet's id (`''` until one is
+  chosen); it names no sheet, so it follows whichever sheet is first (D507).
+- **Choosing the spreadsheet**: a new one shows **Spreadsheet** over **Choose a Spreadsheet** (an Editor's; "Waiting
+  for its spreadsheet." to anyone else), which opens the person's own spreadsheets as a figure's picker lists them
+  (newest first, searched by name); picking one fills the slot, one step. **Change Spreadsheet** in the slot cog's
+  Slot section (an Editor's) opens the same list.
+- **What it shows**: a header with the spreadsheet's name and its first sheet's ("<Sheet> · <Spreadsheet>") and
+  **Open**, which opens the spreadsheet in a new browser tab; under it the first visible sheet from A1 as a picture
+  of its cells, formats, merged cells and charts, drawn by the same renderer as a spreadsheet's previews, scrolled
+  inside the slot when larger (D507). Nothing in it is edited, selected or typed into; it is read again as a figure
+  is (D505), so an edit in the spreadsheet shows within 10 seconds.
+- **Missing**: while it loads, "Loading the sheet…"; a first read that fails, **Couldn’t load the sheet.** with
+  **Retry**; a spreadsheet the reader may not open, or gone, "You don't have access to this spreadsheet."; one too
+  large, "This spreadsheet is too large to read here."; one with no visible sheet, "This spreadsheet has no sheets
+  to show." Each keeps Choose a Spreadsheet for an Editor.
+- **In an image export** the slot draws the picture the page last read, else "Loading the sheet…".
+- **Share roles**: an Editor chooses and changes the spreadsheet; a Participant and a Viewer read it and use Open
+  (the spreadsheet then decides what they may do there).
 
 ## Form responses
 
@@ -100,3 +127,8 @@ As each link's own spec says; reading across documents never widens anyone's acc
   by checking the form owner's access at each response: the owners may differ, a response is answered by no signed-in
   person, and the spreadsheet lists what writes into it (Google's linked form shows on its sheet, and Unlink Form
   ends it). Each response still checks the connection, its sheet and the spreadsheet.
+- **D507** The Spreadsheet slot names the spreadsheet alone and shows its first visible sheet, as the spec asks, so
+  reordering the spreadsheet's tabs changes what it shows. It is a picture, not a grid: the pure renderer agents'
+  previews use (`spreadsheetSheetImage`), on the light paper, from A1 up to 4,000 px each way (its bound), so the
+  read-only view and a version's picture share one renderer and nothing in it can be edited. Images over cells show
+  their alt text, as another document's images are not served to this page.

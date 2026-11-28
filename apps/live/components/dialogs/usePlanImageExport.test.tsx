@@ -7,7 +7,11 @@ import { usePlanImageExport } from './usePlanImageExport';
 // docs/specs/026-plan/plan-tabs.md "Export": the image waits for the Sheets it draws, and a read that fails still
 // lets the export go ahead, the Sheets drawn as frames.
 
-const read = vi.hoisted(() => ({ models: vi.fn(), contents: vi.fn(() => new Map()) }));
+const read = vi.hoisted(() => ({
+  models: vi.fn(),
+  contents: vi.fn(() => new Map()),
+  pictures: vi.fn(() => new Map<string, string>()),
+}));
 vi.mock('@/components/plan/PlanContext', () => ({ usePlan: () => null }));
 vi.mock('@/hooks/sheets/useSheetsBridge', () => {
   const bridge = { locale: 'en' };
@@ -21,6 +25,7 @@ vi.mock('@/lib/export-plan/plan-export-sheets', () => ({
   sheetTabsToLoad: () => ['t'],
   sheetModelsFor: read.models,
   sheetMetricsFor: () => new Map(),
+  spreadsheetPicturesFor: read.pictures,
   sheetContentsFor: read.contents,
 }));
 
@@ -56,6 +61,42 @@ describe('usePlanImageExport', () => {
     const framed = read.models.mock.calls.at(-1)![0] as { width: number }[];
     expect(framed[0]!.width).toBe(grown.width);
     read.contents.mockReturnValue(new Map());
+  });
+
+  // docs/specs/029-sheets/plan-links.md "The Spreadsheet slot": the picture the page last read.
+  it('draws a Spreadsheet slot’s last read picture on a Dashboard’s image', async () => {
+    read.models.mockReturnValue(new Map());
+    read.pictures.mockReturnValue(
+      new Map([
+        [
+          's1',
+          '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 50 50"><rect id="pic"/></svg>',
+        ],
+      ]),
+    );
+    const dashboard = {
+      id: 'd',
+      name: 'Overview',
+      kind: 'dashboard',
+      elements: [],
+      dashboard: {
+        rows: [
+          {
+            id: 'r',
+            height: 320,
+            slots: [{ id: 's1', span: 12, content: { type: 'spreadsheet', documentId: 'book1' } }],
+          },
+        ],
+      },
+    } as unknown as Tab;
+    const { result } = renderHook(() => usePlanImageExport(dashboard, [dashboard]));
+    await waitFor(() => expect(result.current.ready).toBe(true));
+    await waitFor(() =>
+      expect(result.current.opts.resolvePlanArt?.({ id: 'export-slot-s1' } as never)).toContain(
+        'id="pic"',
+      ),
+    );
+    read.pictures.mockReturnValue(new Map());
   });
 
   it('settles when reading the Sheets fails, never holding the export', async () => {

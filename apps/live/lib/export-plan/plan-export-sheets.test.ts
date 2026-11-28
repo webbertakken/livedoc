@@ -13,6 +13,7 @@ import {
   sheetMetricsFor,
   sheetModelsFor,
   sheetTabsToLoad,
+  spreadsheetPicturesFor,
 } from './plan-export-sheets';
 import { sheetContentSize } from '@livedoc/sheets';
 import { shape } from '@livedoc/plan-art/test-fixtures';
@@ -147,5 +148,40 @@ describe('the Sheets an image reads', () => {
     expect(
       sheetTabsToLoad({ ...image, elements: [] }, metricLayout('sheet-one'), [sheetTab]),
     ).toEqual(['sheet-tab']);
+  });
+});
+
+// docs/specs/029-sheets/plan-links.md "The Spreadsheet slot": its picture in an image is the one the page last read.
+describe('a Spreadsheet slot’s picture in an image', () => {
+  it('draws each read slot’s first sheet, leaving out one not read or not chosen', () => {
+    const sheets = [{ id: budget.id, title: 'Budget' }];
+    const read = (sheet: Sheet | null): LinkedRead => ({
+      state: 'ready',
+      sheet,
+      wb,
+      locale: 'en-GB',
+      version: 1,
+      name: 'Money',
+      sheets,
+    });
+    linked.reads.set('book1:', read(null));
+    linked.reads.set(`book1:${budget.id}`, read(budget));
+    const layout: DashboardLayout = {
+      rows: [
+        {
+          id: 'r',
+          height: 320,
+          slots: [
+            { id: 'a', span: 4, content: { type: 'spreadsheet', documentId: 'book1' } },
+            { id: 'b', span: 4, content: { type: 'spreadsheet', documentId: 'book2' } },
+            { id: 'c', span: 4, content: { type: 'spreadsheet', documentId: '' } },
+          ],
+        },
+      ],
+    };
+    const out = spreadsheetPicturesFor(layout);
+    expect([...out.keys()]).toEqual(['a']);
+    expect(out.get('a')).toContain('Rent');
+    linked.reads.clear();
   });
 });

@@ -125,6 +125,40 @@ describe('a Dashboard’s page', () => {
     expect(out.art.get('export-slot-a')).toContain('Loading Backlog…');
   });
 
+  // docs/specs/029-sheets/plan-links.md "The Spreadsheet slot": the picture the page last read, from its top-left.
+  it('draws a Spreadsheet slot’s last read picture at its size from A1, else Loading', () => {
+    const sheet =
+      '<svg xmlns="http://www.w3.org/2000/svg" width="900" height="700" viewBox="-32 -32 900 700"><rect id="cells"/></svg>';
+    const out = dashboardExportTab({
+      tab: {
+        id: 'dash',
+        name: 'O',
+        kind: 'dashboard',
+        elements: [],
+        dashboard: {
+          rows: [
+            row('r', [
+              { id: 'a', span: 6, content: { type: 'spreadsheet', documentId: 'ss1' } },
+              { id: 'b', span: 3, content: { type: 'spreadsheet', documentId: 'ss2' } },
+              { id: 'c', span: 3, content: { type: 'spreadsheet', documentId: '' } },
+            ]),
+          ],
+        },
+      },
+      tabs: [],
+      now: NOW,
+      renderDiagram: () => '',
+      spreadsheets: new Map([['a', sheet]]),
+    });
+    const a = out.art.get('export-slot-a')!;
+    // Its own scale, cropped to the card less its padding: the window starts where the picture's view does.
+    expect(a).toContain('viewBox="-32 -32 658 296"');
+    expect(a).toContain('preserveAspectRatio="xMinYMin slice"');
+    expect(a).toContain('<rect id="cells"/>');
+    expect(out.art.get('export-slot-b')).toContain('Loading the sheet…');
+    expect(out.art.get('export-slot-c')).toContain('Spreadsheet');
+  });
+
   it('draws a Title bare, with no card, and a note on its card', () => {
     const out = exportOf({
       rows: [
