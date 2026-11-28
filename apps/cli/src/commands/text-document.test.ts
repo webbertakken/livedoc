@@ -87,7 +87,9 @@ const host: Route = async (r, url) => {
       text: 'edited ¶1\nappended ¶9',
     });
   }
-  if (path === `/api/documents/${DOC}/text-documents/words/file`) {
+  if (path === `/api/documents/${DOC}/tabs/notes`)
+    return Response.json({ id: 'notes', kind: 'text-document', format: 'odf', elements: [] });
+  if (path.startsWith(`/api/documents/${DOC}/text-documents/`) && path.endsWith('/file')) {
     asked.push({ method: 'GET', path: `${path}${url.search}` });
     if (url.searchParams.get('type') === 'rtf')
       return Response.json({ error: 'file_type_unknown' }, { status: 400 });
@@ -201,6 +203,8 @@ describe('livedoc text download', () => {
     const md = await cli(['text', 'download', DOC, '--format', 'md', '--to', 'plan.md']);
     expect(md.out).toBe('plan.md  1 KB\n');
     expect(asked.at(-1)!.path).toBe(`/api/documents/${DOC}/text-documents/words/file?type=md`);
+    const odf = await cli(['text', 'download', DOC, '--tab', 'Notes']);
+    expect(odf.out).toBe('Launch plan.odt  1 KB\n');
   });
 
   it('says why the api refused it', async () => {
@@ -237,6 +241,11 @@ describe('livedoc text import', () => {
   });
 
   it('refuses a missing file and words a file the api refused', async () => {
+    const large = await cli(['text', 'import', 'big.odt'], {
+      bytes: { '/work/big.odt': new Uint8Array(64 * 1024 * 1024 + 1) },
+    });
+    expect(large.err).toContain('This file is too large to open.');
+    expect(large.err).toContain('a file of up to 64 MB opens');
     const missing = await cli(['text', 'import', 'gone.odt']);
     expect(missing.err).toContain('No file gone.odt.');
     const broken = await cli(['text', 'import', 'x.odt', '--name', 'Broken'], {
