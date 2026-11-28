@@ -7,6 +7,7 @@ import {
   readDashboardCard,
   type DashboardCardContent,
 } from './dashboard-cards';
+import { CHART_TYPES, type ChartType } from './chart-types';
 import {
   isDashboardStyledType,
   readDashboardCardStyle,
@@ -36,11 +37,38 @@ export type DashboardContent =
   // A spreadsheet's first visible sheet, read-only (docs/specs/029-sheets/plan-links.md "The Spreadsheet slot"):
   // the spreadsheet's id, '' until one is chosen.
   | { type: 'spreadsheet'; documentId: string }
+  // A chart of a spreadsheet's sheet (docs/specs/029-sheets/plan-links.md "The Sheet Chart from a spreadsheet",
+  // D508): one of the sheet's charts by id, or a new one over a range by ids, of a type.
+  | DashboardSheetChart
   | { type: 'note'; title: string; text: string; style?: DashboardCardStyle }
   // A section's title: a big heading over a line or two of description, drawn bare on the page.
   | { type: 'title'; title: string; text: string; style?: DashboardCardStyle }
   // A Status, Checklist, Key Date or Links (dashboard-cards.ts).
   | DashboardCardContent;
+
+export type DashboardSheetChart = { type: 'sheet-chart'; documentId: string; sheetId: string } & (
+  | { chartId: string }
+  | { range: { r1: string; c1: string; r2: string; c2: string }; chartType: ChartType }
+);
+
+// A stored id: a short run of safe characters (a sheet's, a chart's, a row's or a column's).
+const isId = (v: unknown): v is string =>
+  typeof v === 'string' && /^[A-Za-z0-9_~:.-]{1,200}$/.test(v);
+
+function readSheetChart(c: Record<string, unknown>): DashboardSheetChart | undefined {
+  const { documentId, sheetId, chartId, range, chartType } = c;
+  if (!isDashboardDocumentId(documentId) || !isId(sheetId)) return undefined;
+  const at = { type: 'sheet-chart' as const, documentId, sheetId };
+  if (isId(chartId)) return { ...at, chartId };
+  const r = (range ?? {}) as Record<string, unknown>;
+  if (!isId(r['r1']) || !isId(r['c1']) || !isId(r['r2']) || !isId(r['c2'])) return undefined;
+  if (!(CHART_TYPES as readonly unknown[]).includes(chartType)) return undefined;
+  return {
+    ...at,
+    range: { r1: r['r1'], c1: r['c1'], r2: r['r2'], c2: r['c2'] },
+    chartType: chartType as ChartType,
+  };
+}
 
 // What kind of tab a slot shows: a Board or Sheet tab (worked on in place) or a Diagram tab (any other tab but a
 // Dashboard: its drawing, live, still).
@@ -129,6 +157,7 @@ function readBareContent(v: unknown): DashboardContent | undefined {
       type: 'spreadsheet',
       documentId: isDashboardDocumentId(c['documentId']) ? c['documentId'] : '',
     };
+  if (c['type'] === 'sheet-chart') return readSheetChart(c);
   if (c['type'] === 'note' || c['type'] === 'title')
     return {
       type: c['type'],

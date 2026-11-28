@@ -1,8 +1,8 @@
 # Plan's links to a spreadsheet
 
-**Status: specified; dashboards' figures, the Spreadsheet slot and form responses are built.** A Sheet Figure, Column
-Summary or Trend reads a sheet of a spreadsheet, a Spreadsheet slot shows one's first sheet, and a form writes its
-responses into one; the Sheet Chart, the `CARD` functions and the starts are not built yet.
+**Status: specified; dashboards' figures and charts, the Spreadsheet slot and form responses are built.** A Sheet
+Figure, Column Summary, Trend or Sheet Chart reads a sheet of a spreadsheet, a Spreadsheet slot shows one's first
+sheet, and a form writes its responses into one; the `CARD` functions and the starts are not built yet.
 
 What Plan reads from or writes to a sheet, re-homed onto the [spreadsheet](spreadsheet.md) (C4, ruled 2026-11-18:
 keep them; C6, ruled 2026-11-18: the card functions only).
@@ -40,9 +40,28 @@ keep them; C6, ruled 2026-11-18: the card functions only).
   figure with none reads a Sheet of the dashboard's own document, as before.
 - Its picture in an image export shows the figure the page last read, else "Loading the sheet…".
 - A **Sheet Chart** slot shows a chart of the workbook ([Charts](charts.md)) or a new chart over a range, drawn by the
-  same chart code; it is no longer a chart element on the dashboard tab.
+  same chart code; it is no longer a chart element on the dashboard tab: the **Sheet Chart from a spreadsheet** below.
 - A Dashboard slot that showed a **Sheet tab** shows a spreadsheet's first sheet, read-only, with **Open** to go to it:
   the **Spreadsheet** slot below; the [migration](migration.md) re-points the slots that show a Sheet tab.
+
+### The Sheet Chart from a spreadsheet
+
+- **Choosing the chart**: Choose a Chart lists the document's own Sheets, then **Spreadsheets** as a figure's picker
+  does; for a spreadsheet's sheet picked, **Its Charts** are the charts on that sheet, each its type and range
+  ("Column Chart · A1:C6"; "No charts yet" when it has none), and **New Chart** takes a range typed as A1 on that
+  sheet and a type, as for a Sheet of the document. Either fills the slot, one step, and closes the picker.
+- **What it is** (D508): the slot's content `{ type: 'sheet-chart', documentId, sheetId }` with the chart's id
+  (`chartId`) for one of the sheet's charts, or the range by ids and the type (`range`, `chartType`) for a new one;
+  no element on the dashboard tab.
+- **What it shows**: the chart drawn by the spreadsheet's own chart code (`sheetChartElement`, [Charts](charts.md)) at
+  the slot's size, its data read from the sheet as a figure reads it (D505), so an edit to the cells, or to the
+  chart itself in the spreadsheet (its type, range, palette, legend, titles), shows within 10 seconds.
+- **Missing**: while it loads, "Loading the chart…"; a first read that fails, **Couldn’t load the chart.** with
+  **Retry**; no access, too large, and a sheet deleted read as a figure's do; a chart deleted from the sheet, "This
+  chart was deleted." with **Clear Slot**; a range whose cells were deleted draws the chart with no data.
+- **Changing it**: the slot cog's **Change Chart** (an Editor's) opens Choose a Chart on the spreadsheet's sheet.
+- **In an image export** the slot draws the chart the page last read, else "Loading the chart…".
+- **Share roles**: as a Sheet Chart's: an Editor adds and changes it; a Participant and a Viewer see it.
 
 ### The Spreadsheet slot
 
@@ -127,6 +146,11 @@ As each link's own spec says; reading across documents never widens anyone's acc
   by checking the form owner's access at each response: the owners may differ, a response is answered by no signed-in
   person, and the spreadsheet lists what writes into it (Google's linked form shows on its sheet, and Unlink Form
   ends it). Each response still checks the connection, its sheet and the spreadsheet.
+- **D508** A Sheet Chart from a spreadsheet names the chart by its id rather than holding a copy, as Google's linked
+  chart follows its source: a change to the chart in the spreadsheet shows on the dashboard, and the chart's look
+  lives in one place. A new chart over a range keeps only its range and type, so it looks as a new chart of that type
+  in the spreadsheet would. Its Charts lists the charts the link carries (those reading only the first 2,000 rows
+  and 200 columns, D507).
 - **D507** The Spreadsheet slot names the spreadsheet alone and shows its first visible sheet, as the spec asks, so
   reordering the spreadsheet's tabs changes what it shows. It is a picture, not a grid: the pure renderer agents'
   previews use (`spreadsheetSheetImage`), on the light paper, from A1 up to 4,000 px each way (its bound), so the

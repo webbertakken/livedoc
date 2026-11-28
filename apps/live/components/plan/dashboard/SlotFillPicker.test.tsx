@@ -145,6 +145,23 @@ describe('a Sheet Chart', () => {
       chartSource: { sheetId: 'sheetAAAA', range: { r1: 'a', c1: 'b', r2: 'c', c2: 'd' } },
     } as ShapeElement;
     act(() => result.current.placeItem({ kind: 'sheet-chart', chart }, null));
+    const linkedAt = tabs[0]!.dashboard!.rows.flatMap((r) => r.slots).find((s) => s.content)!.id;
+    // A spreadsheet's chart replaces it: the slot names the chart, and the element leaves the tab.
+    const linked = {
+      type: 'sheet-chart' as const,
+      documentId: 'book1',
+      sheetId: 'sheetA',
+      chartId: 'ch1',
+    };
+    act(() =>
+      result.current.placeItem({ kind: 'sheet-chart', linked }, { kind: 'slot', slotId: linkedAt }),
+    );
+    const after = tabs[0]!.dashboard!.rows.flatMap((r) => r.slots);
+    expect(after.find((s) => s.id === linkedAt)?.content).toEqual(linked);
+    expect(tabs[0]!.elements).toEqual([]);
+    act(() =>
+      result.current.placeItem({ kind: 'sheet-chart', chart }, { kind: 'slot', slotId: linkedAt }),
+    );
     const slots = tabs[0]!.dashboard!.rows.flatMap((r) => r.slots);
     expect(slots.find((s) => s.content)?.content).toEqual({ type: 'element', elementId: 'ch' });
     expect(tabs[0]!.elements).toEqual([chart]);

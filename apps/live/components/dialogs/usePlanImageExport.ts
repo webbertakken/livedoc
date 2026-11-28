@@ -9,6 +9,7 @@ import {
   PIE_PALETTE,
   canvasSurface,
   readDashboard,
+  type Element as DocElement,
   type ResolvePlanArt,
   type SheetRenderModel,
   type Tab,
@@ -45,12 +46,15 @@ type PlanImageExport = {
 const NO_TABS: readonly Tab[] = [];
 const NO_ITEMS = new Map();
 const NO_MAP = new Map<string, string>();
+const NO_CHARTS = new Map<string, DocElement>();
 
 type SheetReads = {
   models: ReadonlyMap<string, SheetRenderModel>;
   metrics: ReadonlyMap<string, SheetMetricArt>;
   // Each Spreadsheet slot's picture as the page last read it, by slot id.
   spreadsheets: ReadonlyMap<string, string>;
+  // Each Sheet Chart from a spreadsheet as the page last read it, by slot id.
+  sheetCharts: ReadonlyMap<string, DocElement>;
   // The grid each Sheet's cells fill (sheetContentsFor): a Sheet tab's image grows its Sheet to it.
   contents: ReadonlyMap<string, { width: number; height: number }>;
   // The Sheets framed (sheetKey) when read: the cells fit that frame, so a grown one is read again.
@@ -74,6 +78,7 @@ export function usePlanImageExport(
   // The tab as laid out: the figures from Sheets join once they are read.
   const metrics = reads?.metrics;
   const spreadsheets = reads?.spreadsheets;
+  const sheetCharts = reads?.sheetCharts;
   const models = reads?.models;
   const contents = reads?.contents;
   // Keyed on the cards and types alone: the context value also changes with presence and the open card.
@@ -89,6 +94,7 @@ export function usePlanImageExport(
             themeOf: getTheme,
             ...(metrics ? { metrics } : {}),
             ...(spreadsheets ? { spreadsheets } : {}),
+            ...(sheetCharts ? { sheetCharts } : {}),
             ...(models ? { sheetHeads: (id: string) => !models.get(id)?.hideHeaders } : {}),
             ...(contents ? { sheetContent: (id: string) => contents.get(id) ?? null } : {}),
             renderDiagram: (shown) =>
@@ -98,7 +104,19 @@ export function usePlanImageExport(
               }),
           })
         : null,
-    [whole, tab, documentTabs, now, metrics, spreadsheets, models, contents, planItems, planTypes],
+    [
+      whole,
+      tab,
+      documentTabs,
+      now,
+      metrics,
+      spreadsheets,
+      sheetCharts,
+      models,
+      contents,
+      planItems,
+      planTypes,
+    ],
   );
   const imageTab = image?.tab ?? tab;
   // The Sheets the image frames, each at its size: what the read below depends on. The figures it reads never change
@@ -116,7 +134,12 @@ export function usePlanImageExport(
     !!sheetKey ||
     // The stored layout read safely: a malformed one has no figures, rather than throwing.
     !!readDashboard(tab.dashboard)?.rows.some((r) =>
-      r.slots.some((s) => s.content?.type === 'sheet-metric' || s.content?.type === 'spreadsheet'),
+      r.slots.some(
+        (s) =>
+          s.content?.type === 'sheet-metric' ||
+          s.content?.type === 'spreadsheet' ||
+          s.content?.type === 'sheet-chart',
+      ),
     );
   const imageRef = useRef(imageTab);
   useEffect(() => {
@@ -144,6 +167,7 @@ export function usePlanImageExport(
             models: new Map(),
             metrics: new Map(),
             spreadsheets: NO_MAP,
+            sheetCharts: NO_CHARTS,
             contents: NO_CONTENTS,
             key,
           };
@@ -158,6 +182,7 @@ export function usePlanImageExport(
           models: sheets.sheetModelsFor(imageRef.current.elements, store, tab.font),
           metrics: sheets.sheetMetricsFor(tab.dashboard, tabs, store, bridge.locale),
           spreadsheets: sheets.spreadsheetPicturesFor(tab.dashboard),
+          sheetCharts: sheets.linkedChartsFor(tab.dashboard),
           contents: sheets.sheetContentsFor(imageRef.current.elements, store, tab.font),
           key,
         };
@@ -169,6 +194,7 @@ export function usePlanImageExport(
           models: new Map(),
           metrics: new Map(),
           spreadsheets: NO_MAP,
+          sheetCharts: NO_CHARTS,
           contents: NO_CONTENTS,
           key,
         };

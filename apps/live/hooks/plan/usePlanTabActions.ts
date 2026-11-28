@@ -312,7 +312,7 @@ export function usePlanTabActions({
       // A plan view is an element of the dashboard itself (plan-tabs.md "Slot content"); a new board or Sheet is a
       // Board or Sheet tab of its own, after this one, which the slot shows (plan-tabs.md "Filling a slot").
       // A chart from a Sheet comes chosen (SheetChartSource): its element is made there.
-      if (item.kind === 'sheet-chart' && !item.chart) return;
+      if (item.kind === 'sheet-chart' && !item.chart && !item.linked) return;
       const view =
         item.kind === 'view'
           ? dashboardElement(item)
@@ -365,6 +365,11 @@ export function usePlanTabActions({
             metric: item.metric,
             formTabId: ts.find((t) => t.kind === 'form')?.id ?? '',
           });
+          return ts.map((t) => (t.id === activeId ? next : t));
+        }
+        // A spreadsheet's chart: the slot names it, no element (docs/specs/029-sheets/plan-links.md, D508).
+        if (item.kind === 'sheet-chart' && item.linked) {
+          const next = withSlotContent(base, target, item.linked);
           return ts.map((t) => (t.id === activeId ? next : t));
         }
         // A spreadsheet's first sheet: its spreadsheet is chosen in the slot (DashboardSpreadsheet).

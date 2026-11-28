@@ -44,6 +44,9 @@ export type DashboardExportInput = {
   // Each Spreadsheet slot's picture as the page last read it (a whole SVG document), by slot id
   // (docs/specs/029-sheets/plan-links.md "The Spreadsheet slot").
   spreadsheets?: ReadonlyMap<string, string>;
+  // Each Sheet Chart from a spreadsheet as the page last read it (its chart element), by slot id (plan-links.md "The
+  // Sheet Chart from a spreadsheet").
+  sheetCharts?: ReadonlyMap<string, Element>;
   // A Diagram tab's drawing as a whole SVG document (renderTabToSvg), fitted into its slot.
   renderDiagram: (tab: Tab) => string;
   // A tab's theme by id on a surface: the editor's own (its custom themes too); the built-in ones when absent.
@@ -190,6 +193,21 @@ export function dashboardExportTab(input: DashboardExportInput): DashboardExport
     }
     if (content.type === 'tab') {
       tabSlot(slotId, rect, content.tabId, content.of);
+      continue;
+    }
+    if (content.type === 'sheet-chart') {
+      const chart = input.sheetCharts?.get(slotId);
+      if (!chart) {
+        card(slotId, rect, slotMessageArt(rect, p, 'Loading the chart…'));
+        continue;
+      }
+      // Drawn on the slot's card, inset as the slot insets a chart.
+      card(slotId, rect);
+      place(
+        chart,
+        { x: rect.x + 12, y: rect.y + 12, width: rect.width - 24, height: rect.height - 24 },
+        `export-el-${slotId}`,
+      );
       continue;
     }
     if (content.type === 'spreadsheet') {

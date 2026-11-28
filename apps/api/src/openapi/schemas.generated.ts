@@ -2892,6 +2892,31 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
     ],
     "type": "string"
   },
+  "ChartType": {
+    "enum": [
+      "column",
+      "bar",
+      "line",
+      "area",
+      "stepped-area",
+      "scatter",
+      "bubble",
+      "pie",
+      "doughnut",
+      "radar",
+      "candlestick",
+      "ohlc",
+      "histogram",
+      "waterfall",
+      "treemap",
+      "gauge",
+      "scorecard",
+      "timeline",
+      "table",
+      "combo"
+    ],
+    "type": "string"
+  },
   "ChartVariant": {
     "enum": [
       "horizontal",
@@ -5506,6 +5531,9 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
         "type": "object"
       },
       {
+        "$ref": "#/components/schemas/DashboardSheetChart"
+      },
+      {
         "additionalProperties": false,
         "properties": {
           "style": {
@@ -5653,6 +5681,85 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
       "slots"
     ],
     "type": "object"
+  },
+  "DashboardSheetChart": {
+    "anyOf": [
+      {
+        "additionalProperties": false,
+        "properties": {
+          "chartId": {
+            "type": "string"
+          },
+          "documentId": {
+            "type": "string"
+          },
+          "sheetId": {
+            "type": "string"
+          },
+          "type": {
+            "const": "sheet-chart",
+            "type": "string"
+          }
+        },
+        "required": [
+          "chartId",
+          "documentId",
+          "sheetId",
+          "type"
+        ],
+        "type": "object"
+      },
+      {
+        "additionalProperties": false,
+        "properties": {
+          "chartType": {
+            "$ref": "#/components/schemas/ChartType"
+          },
+          "documentId": {
+            "type": "string"
+          },
+          "range": {
+            "additionalProperties": false,
+            "properties": {
+              "c1": {
+                "type": "string"
+              },
+              "c2": {
+                "type": "string"
+              },
+              "r1": {
+                "type": "string"
+              },
+              "r2": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "r1",
+              "c1",
+              "r2",
+              "c2"
+            ],
+            "type": "object"
+          },
+          "sheetId": {
+            "type": "string"
+          },
+          "type": {
+            "const": "sheet-chart",
+            "type": "string"
+          }
+        },
+        "required": [
+          "chartType",
+          "documentId",
+          "range",
+          "sheetId",
+          "type"
+        ],
+        "type": "object"
+      }
+    ]
   },
   "DashboardSlot": {
     "additionalProperties": false,

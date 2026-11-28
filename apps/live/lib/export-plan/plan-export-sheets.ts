@@ -18,6 +18,7 @@ import {
   spreadsheetSlotRead,
 } from '@/components/plan/dashboard/spreadsheet-slot-read';
 import { sheetPictureSvg } from '@/components/spreadsheet/sheet-picture';
+import { linkedChartElement } from '@/components/plan/dashboard/spreadsheet-chart';
 import type { SheetMetricArt } from '@livedoc/plan-art';
 
 // The cells each Sheet element shows, by sheet id: the window its frame has room for. A sheet the store has not
@@ -116,6 +117,30 @@ export function spreadsheetPicturesFor(
       if (read.state !== 'ready') continue;
       const svg = sheetPictureSvg(read.wb, read.sheetId, read.title);
       if (svg) out.set(slot.id, svg);
+    }
+  return out;
+}
+
+// The size a spreadsheet's chart is made at for an image; the image lays it out at its slot's size.
+const EXPORT_CHART_SIZE = { width: 600, height: 400 };
+
+// Each Sheet Chart from a spreadsheet, by slot id, as the page last read it (docs/specs/029-sheets/plan-links.md "The
+// Sheet Chart from a spreadsheet"); a slot not read yet, or whose chart was deleted, is left out.
+export function linkedChartsFor(dashboard: DashboardLayout | undefined): Map<string, Element> {
+  const out = new Map<string, Element>();
+  for (const row of readDashboard(dashboard)?.rows ?? [])
+    for (const slot of row.slots) {
+      const c = slot.content;
+      if (c?.type !== 'sheet-chart') continue;
+      const read = linkedRead(c.documentId, c.sheetId);
+      if (read.state !== 'ready' || !read.sheet) continue;
+      const chart = linkedChartElement(
+        c,
+        { sheet: read.sheet, wb: read.wb, locale: read.locale },
+        slot.id,
+        EXPORT_CHART_SIZE,
+      );
+      if (chart) out.set(slot.id, chart);
     }
   return out;
 }
