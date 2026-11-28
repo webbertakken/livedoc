@@ -44,7 +44,11 @@ describe('kept anchors', () => {
     const two = sheetOf('two');
     const kept: KeptContent = {
       standard: 'odf',
-      items: [detective({}), detective({ sheet: 1 }, 'table-before'), detective({ sheet: 0, r: 2, c: 1 })],
+      items: [
+        detective({}),
+        detective({ sheet: 1 }, 'table-before'),
+        detective({ sheet: 0, r: 2, c: 1 }),
+      ],
       parts: [],
       relationships: [],
     };
