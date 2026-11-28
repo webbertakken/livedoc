@@ -8,6 +8,8 @@ import { valuesOnly, writesFormats } from './values-only';
 import { makeSheets } from './testing/book';
 import { CellMap } from './cells/cell-map';
 import { Workbook } from './engine/workbook';
+import { clipFromRange } from './clipboard';
+import { pasteClip, pasteCut, type PasteResult } from './commands-paste';
 
 // docs/specs/029-sheets/review.md "Notes": a note is plain text the cell holds, beside its input and format.
 
@@ -178,5 +180,43 @@ describe('a note in the workbook', () => {
     expect(wb.cellNoteOf(s.id, 99, 0)).toBeNull();
     expect(wb.cellNoteOf('nosheet', 0, 0)).toBeNull();
     expect(wb.extent(s.id)).toEqual({ rows: 3, cols: 2 });
+  });
+});
+
+describe('a note on the clipboard', () => {
+  const noted = () => {
+    const s = applySheetWrite(
+      base({ A1: 'a', B1: 'b' }),
+      { kind: 'cells', cells: [{ r: R(0), c: C(0), n: 'Copied' }] },
+      ctx,
+    ).sheet;
+    return new Workbook({ sheets: [s], locale: 'en-GB' });
+  };
+  const A = { r1: 0, c1: 0, r2: 0, c2: 0 };
+  const C3 = { r1: 2, c1: 2, r2: 2, c2: 2 };
+  const noteAt = (r: PasteResult | null) =>
+    r!.edits[0]!.write.kind === 'cells' ? r!.edits[0]!.write.cells[0]!.n : 'not cells';
+
+  it('is pasted with the cell, and Values Only, Format Only and Formula Only leave the note there', () => {
+    const wb = noted();
+    const clip = clipFromRange(wb, wb.sheetList()[0]!.id, A)!;
+    const id = wb.sheetList()[0]!.id;
+    expect(noteAt(pasteClip(wb, id, C3, clip, 'all'))).toBe('Copied');
+    expect(noteAt(pasteClip(wb, id, C3, clip, 'transposed'))).toBe('Copied');
+    expect(noteAt(pasteClip(wb, id, C3, clip, 'noBorders'))).toBe('Copied');
+    for (const mode of ['values', 'formats', 'formulas'] as const)
+      expect(noteAt(pasteClip(wb, id, C3, clip, mode)), mode).toBeUndefined();
+    // A copied cell without a note takes the note off the cell it lands on.
+    const plain = clipFromRange(wb, id, { r1: 0, c1: 1, r2: 0, c2: 1 })!;
+    expect(noteAt(pasteClip(wb, id, A, plain, 'all'))).toBeNull();
+  });
+
+  it('moves with a cut cell', () => {
+    const wb = noted();
+    const id = wb.sheetList()[0]!.id;
+    const cut = pasteCut(wb, id, { r: 2, c: 2 }, clipFromRange(wb, id, A, true)!)!;
+    const write = cut.edits.flatMap((e) => (e.write.kind === 'cells' ? e.write.cells : []));
+    expect(write.find((c) => c.r === R(0) && c.c === C(0))?.n).toBeNull();
+    expect(write.find((c) => c.r === R(2) && c.c === C(2))?.n).toBe('Copied');
   });
 });
