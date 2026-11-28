@@ -19,6 +19,7 @@ import type {
   ItemsRoomOp,
   ItemTypesRoomOp,
   SheetsRoomOp,
+  SheetThreadRoomOp,
   WorkbookRoomOp,
 } from '@livedoc/api-schema';
 import { documentRoom } from './document-room/document-client';
@@ -493,7 +494,11 @@ export async function relayItems(env: Env, documentId: string, op: ItemsRoomOp):
 }
 
 // A sheet write the api made (docs/specs/029-sheets/sheet-store.md "Live for everyone"), ordered like items.
-export async function relaySheets(env: Env, documentId: string, op: SheetsRoomOp): Promise<void> {
+export async function relaySheets(
+  env: Env,
+  documentId: string,
+  op: SheetsRoomOp | SheetThreadRoomOp,
+): Promise<void> {
   await broadcastOp(env, documentId, op, 'sheets', true);
 }
 

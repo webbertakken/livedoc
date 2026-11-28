@@ -7,7 +7,6 @@ import {
   SHEET_REACTIONS_MAX,
   SHEET_THREAD_COMMENTS_MAX,
   SHEET_THREADS_MAX,
-  threadAnchorAt,
   threadIdOf,
   type SheetThread,
   type SheetThreadOp,
@@ -175,9 +174,9 @@ describe('applyThreadOp', () => {
       ['c2', 'bbb', 20],
     ]);
     expect(replied?.v).toBe(2);
-    const resolved = after(run(replied!, op({ op: 'resolve', thread: 't1', resolved: true }), bo));
+    const resolved = after(run(replied, op({ op: 'resolve', thread: 't1', resolved: true }), bo));
     expect([resolved?.resolved, resolved?.v]).toEqual([true, 3]);
-    const reopened = after(run(resolved!, op({ op: 'resolve', thread: 't1', resolved: false })));
+    const reopened = after(run(resolved, op({ op: 'resolve', thread: 't1', resolved: false })));
     expect(reopened?.resolved).toBe(false);
   });
 
@@ -304,19 +303,5 @@ describe('applyThreadOp', () => {
     expect(
       run(many, op({ op: 'react', thread: 't1', comment: 'c1', emoji: '🎉', on: true })),
     ).toEqual({ ok: false, refusal: 'thread_invalid' });
-  });
-});
-
-describe('threadAnchorAt', () => {
-  it('stands on its range, its top-left cell when a corner goes, deleted with its top-left', () => {
-    const range = { r1: 'ra', c1: 'ca', r2: 'rb', c2: 'cc' };
-    expect(threadAnchorAt(axes, range)).toEqual({ r1: 0, c1: 0, r2: 1, c2: 2 });
-    expect(threadAnchorAt({ ...axes, rows: ['ra', 'rc'] }, range)).toEqual({
-      r1: 0,
-      c1: 0,
-      r2: 0,
-      c2: 0,
-    });
-    expect(threadAnchorAt({ ...axes, cols: ['cb', 'cc'] }, range)).toEqual({ deleted: true });
   });
 });

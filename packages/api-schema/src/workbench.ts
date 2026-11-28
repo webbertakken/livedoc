@@ -283,6 +283,9 @@ const WORKBENCH_ROUTES: readonly RouteShape[] = [
   shape('GET,POST', 'documents/:doc/sheets'),
   shape('DELETE', 'documents/:doc/sheets/:p'),
   shape('POST', 'documents/:doc/sheets/:p/writes'),
+  // A spreadsheet's comment threads (029-sheets/review.md "Comments"), as the editor's comments.
+  shape('GET', 'documents/:doc/sheet-threads'),
+  shape('POST', 'documents/:doc/sheets/:p/threads'),
   shape('GET', 'documents/:doc/sheets/:p/cells'),
   shape('GET', 'documents/:doc/workbook'),
   shape('GET', 'documents/:doc/workbook/file'),

@@ -9,7 +9,7 @@ import type { PdfDraftLook } from './pdf-draft';
 import type { PdfPresenceHeld, PdfPresenceMode } from './pdf-presence';
 import type { ChangesetRoomOp } from './changesets';
 import type { ItemsRoomOp, ItemTypesRoomOp } from './items';
-import type { SheetsRoomOp } from './sheets';
+import type { SheetsRoomOp, SheetThreadRoomOp } from './sheets';
 import type { WorkbookRoomOp } from './workbook';
 
 // ---------------------------------------------------------------------
@@ -236,6 +236,9 @@ export const SYSTEM_OP_KINDS = [
   // `sheets` (docs/specs/029-sheets/sheet-store.md "Live for everyone"): sheet writes the api made. Sheets change
   // only through the api, so a forged one would show people cells nobody wrote.
   'sheets',
+  // `sheet-thread` (docs/specs/029-sheets/review.md "The thread write"): a spreadsheet's comment thread the api stored.
+  // Threads change only through the api, so a forged one would show people comments nobody wrote.
+  'sheet-thread',
   // `workbook` (docs/specs/029-sheets/sheet-store.md "Changing the workbook"): a spreadsheet's settings the api saved.
   // They change only through the api, so a forged one would change how everyone's workbook calculates.
   'workbook',
@@ -811,6 +814,9 @@ export type RoomOp =
   // Sheet writes the api made (docs/specs/029-sheets/sheet-store.md "Live for everyone"). Worker-originated
   // through an ordered /broadcast; a session scoped to one tab hears only its tab's.
   | SheetsRoomOp
+  // A spreadsheet's comment thread the api stored (docs/specs/029-sheets/review.md "The thread write"); never a
+  // Viewer's.
+  | SheetThreadRoomOp
   | WorkbookRoomOp
   // The document went to the Trash (docs/specs/013-workspace/trash.md). Every
   // session shows the deleted state; the room then closes every socket (4004).

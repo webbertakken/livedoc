@@ -790,6 +790,42 @@ ${outboxTrigger(
 )}
 `;
 
+// A spreadsheet's comment threads (docs/specs/029-sheets/review.md "Comments"): each sheet's threads by id, beside its
+// cells, anchored by row and column ids; their comments one JSON list. Their sheet's tab is pushed to the collaboration
+// index when one changes, as a cell's change pushes it.
+const SHEET_THREADS_STEP = `
+CREATE TABLE IF NOT EXISTS sheet_threads (
+  document_id TEXT NOT NULL,
+  sheet_id    TEXT NOT NULL,
+  id          TEXT NOT NULL,
+  r1          TEXT NOT NULL,
+  c1          TEXT NOT NULL,
+  r2          TEXT NOT NULL,
+  c2          TEXT NOT NULL,
+  resolved    INTEGER NOT NULL DEFAULT 0,
+  comments    TEXT NOT NULL,
+  v           INTEGER NOT NULL,
+  updated_at  INTEGER NOT NULL,
+  PRIMARY KEY (document_id, sheet_id, id),
+  FOREIGN KEY (document_id, sheet_id) REFERENCES sheets (document_id, id) ON DELETE CASCADE
+);
+${outboxTrigger(
+  'outbox_sheet_thread_insert',
+  'AFTER INSERT ON sheet_threads',
+  "SELECT document_id, 'tab', tab_id FROM sheets WHERE document_id = NEW.document_id AND id = NEW.sheet_id",
+)}
+${outboxTrigger(
+  'outbox_sheet_thread_update',
+  'AFTER UPDATE ON sheet_threads',
+  "SELECT document_id, 'tab', tab_id FROM sheets WHERE document_id = NEW.document_id AND id = NEW.sheet_id",
+)}
+${outboxTrigger(
+  'outbox_sheet_thread_delete',
+  'AFTER DELETE ON sheet_threads',
+  "SELECT document_id, 'tab', tab_id FROM sheets WHERE document_id = OLD.document_id AND id = OLD.sheet_id",
+)}
+`;
+
 /** Every step the room's schema has taken, in order; a change appends one and never edits a shipped step. */
 export const DOCUMENT_SCHEMA_STEPS: readonly string[] = [
   STEP_1 + OUTBOX + SHARES,
@@ -817,6 +853,7 @@ export const DOCUMENT_SCHEMA_STEPS: readonly string[] = [
   SHEET_IMAGE_REFS_STEP,
   SHEET_CELL_IMAGE_REFS_STEP,
   SHEET_CELL_NOTES_STEP,
+  SHEET_THREADS_STEP,
 ];
 
 export const DOCUMENT_SCHEMA_VERSION = DOCUMENT_SCHEMA_STEPS.length;

@@ -31,6 +31,7 @@ import type { DocumentEnv } from '../types';
 import { contentSummaryOf } from './content-summary';
 import { CARD_THREADS_TAB, readInboxCards } from './inbox-cards';
 import { keyOwners, resolveCollabKeys, rowKeys } from './collab-key-owners';
+import { sheetThreadCollab } from './sheet-thread-collab';
 
 // Tab units one drain pushes; the rest go in the next drain, straight after.
 export const DRAIN_TABS = 50;
@@ -179,7 +180,7 @@ type TabUnitInput = {
 };
 
 // A tab's collaboration rows: an element tab's from its elements, a live tab's from its state (inbox.md §2.7).
-type TabCollab = { readonly rows: CollabIndexRows; readonly anchor: 'element' | 'text' };
+type TabCollab = { readonly rows: CollabIndexRows; readonly anchor: 'element' | 'text' | 'cell' };
 
 function parseBody(data: string): Record<string, unknown> {
   try {
@@ -451,6 +452,11 @@ async function tabCollab(
   digest: LiveTabDigest | null,
 ): Promise<TabCollab> {
   if (!digest) {
+    // A spreadsheet's sheet tab holds no elements: its rows are its sheets' comment threads (029-sheets/review.md).
+    const sheetRows = await sheetThreadCollab(env, documentId, tabId, () =>
+      documentTeam(env, documentId),
+    );
+    if (sheetRows) return { rows: sheetRows, anchor: 'cell' };
     const elements = Array.isArray(body.elements) ? (body.elements as Element[]) : [];
     return { rows: collabIndexRowsFromElements(elements), anchor: 'element' };
   }

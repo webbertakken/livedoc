@@ -1442,6 +1442,7 @@ export function useEditorState(opts: { surface?: EditorSurface } = {}) {
     },
     receivePlanPresence: planPresence.receive,
     receiveSheets: sheets.receiveSheets,
+    receiveSheetThread: sheets.receiveSheetThread,
     receiveSheetPresence: sheets.receiveSheetPresence,
     onRoomJoined: () => {
       void changesetFeed.checkSinceLoad();

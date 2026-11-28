@@ -2971,7 +2971,8 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
   "CollabAnchor": {
     "enum": [
       "element",
-      "text"
+      "text",
+      "cell"
     ],
     "type": "string"
   },
@@ -11340,6 +11341,83 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
     ],
     "type": "string"
   },
+  "OfficeComment": {
+    "additionalProperties": false,
+    "properties": {
+      "assignee": {},
+      "at": {
+        "description": "When it was made (ms); kept through edits.",
+        "type": "number"
+      },
+      "author": {
+        "$ref": "#/components/schemas/OfficeCommentAuthor"
+      },
+      "edited": {
+        "description": "When it was last edited (ms).",
+        "type": "number"
+      },
+      "id": {
+        "type": "string"
+      },
+      "mentions": {
+        "items": {},
+        "type": "array"
+      },
+      "reactions": {
+        "additionalProperties": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "description": "Each emoji's reactors by key, sorted; an emoji with none is absent.",
+        "type": "object"
+      },
+      "text": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "id",
+      "text",
+      "at",
+      "author"
+    ],
+    "type": "object"
+  },
+  "OfficeCommentAuthor": {
+    "additionalProperties": false,
+    "description": "Who wrote a comment: their adder key on the document, or a file's name for them with no key.",
+    "properties": {
+      "colour": {
+        "type": "string"
+      },
+      "fromComparison": {
+        "const": true,
+        "description": "A comparison's attribution, never anyone's own (review.md \"Compare documents\").",
+        "type": "boolean"
+      },
+      "fromFile": {
+        "const": true,
+        "type": "boolean"
+      },
+      "initials": {
+        "description": "A file's initials for them, where it had them.",
+        "type": "string"
+      },
+      "key": {
+        "type": "string"
+      },
+      "name": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "name",
+      "colour"
+    ],
+    "type": "object"
+  },
   "OutlineNode": {
     "additionalProperties": false,
     "properties": {
@@ -16954,6 +17032,302 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
       "name",
       "r1",
       "r2"
+    ],
+    "type": "object"
+  },
+  "SheetThread": {
+    "additionalProperties": false,
+    "properties": {
+      "anchor": {
+        "$ref": "#/components/schemas/SheetThreadAnchor"
+      },
+      "comments": {
+        "description": "Its first comment first.",
+        "items": {
+          "$ref": "#/components/schemas/OfficeComment"
+        },
+        "type": "array"
+      },
+      "id": {
+        "type": "string"
+      },
+      "resolved": {
+        "type": "boolean"
+      },
+      "sheetId": {
+        "type": "string"
+      },
+      "v": {
+        "description": "The thread's count of changes: a session keeps the highest it has seen.",
+        "type": "number"
+      }
+    },
+    "required": [
+      "id",
+      "sheetId",
+      "anchor",
+      "resolved",
+      "comments",
+      "v"
+    ],
+    "type": "object"
+  },
+  "SheetThreadAnchor": {
+    "additionalProperties": false,
+    "description": "A thread's anchor: a range by row and column ids, one cell when they meet.",
+    "properties": {
+      "c1": {
+        "type": "string"
+      },
+      "c2": {
+        "type": "string"
+      },
+      "r1": {
+        "type": "string"
+      },
+      "r2": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "r1",
+      "c1",
+      "r2",
+      "c2"
+    ],
+    "type": "object"
+  },
+  "SheetThreadOp": {
+    "anyOf": [
+      {
+        "additionalProperties": false,
+        "properties": {
+          "anchor": {
+            "$ref": "#/components/schemas/SheetThreadAnchor"
+          },
+          "assignee": {
+            "$ref": "#/components/schemas/CommentMention"
+          },
+          "comment": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "mentions": {
+            "items": {
+              "$ref": "#/components/schemas/CommentMention"
+            },
+            "type": "array"
+          },
+          "op": {
+            "const": "start",
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "anchor",
+          "comment",
+          "id",
+          "op",
+          "text"
+        ],
+        "type": "object"
+      },
+      {
+        "additionalProperties": false,
+        "properties": {
+          "assignee": {
+            "$ref": "#/components/schemas/CommentMention"
+          },
+          "id": {
+            "type": "string"
+          },
+          "mentions": {
+            "items": {
+              "$ref": "#/components/schemas/CommentMention"
+            },
+            "type": "array"
+          },
+          "op": {
+            "const": "reply",
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          },
+          "thread": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "op",
+          "text",
+          "thread"
+        ],
+        "type": "object"
+      },
+      {
+        "additionalProperties": false,
+        "properties": {
+          "assignee": {
+            "$ref": "#/components/schemas/CommentMention"
+          },
+          "comment": {
+            "type": "string"
+          },
+          "mentions": {
+            "items": {
+              "$ref": "#/components/schemas/CommentMention"
+            },
+            "type": "array"
+          },
+          "op": {
+            "const": "edit",
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          },
+          "thread": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "comment",
+          "op",
+          "text",
+          "thread"
+        ],
+        "type": "object"
+      },
+      {
+        "additionalProperties": false,
+        "properties": {
+          "comment": {
+            "type": "string"
+          },
+          "op": {
+            "const": "remove",
+            "type": "string"
+          },
+          "thread": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "op",
+          "thread",
+          "comment"
+        ],
+        "type": "object"
+      },
+      {
+        "additionalProperties": false,
+        "properties": {
+          "op": {
+            "const": "resolve",
+            "type": "string"
+          },
+          "resolved": {
+            "type": "boolean"
+          },
+          "thread": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "op",
+          "thread",
+          "resolved"
+        ],
+        "type": "object"
+      },
+      {
+        "additionalProperties": false,
+        "properties": {
+          "comment": {
+            "type": "string"
+          },
+          "emoji": {
+            "type": "string"
+          },
+          "on": {
+            "type": "boolean"
+          },
+          "op": {
+            "const": "react",
+            "type": "string"
+          },
+          "thread": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "op",
+          "thread",
+          "comment",
+          "emoji",
+          "on"
+        ],
+        "type": "object"
+      }
+    ]
+  },
+  "SheetThreadRequest": {
+    "additionalProperties": false,
+    "description": "One thread op, as sent.",
+    "properties": {
+      "op": {
+        "$ref": "#/components/schemas/SheetThreadOp"
+      }
+    },
+    "required": [
+      "op"
+    ],
+    "type": "object"
+  },
+  "SheetThreadResponse": {
+    "additionalProperties": false,
+    "description": "The thread after an op, or null once removed.",
+    "properties": {
+      "id": {
+        "type": "string"
+      },
+      "thread": {
+        "anyOf": [
+          {
+            "$ref": "#/components/schemas/SheetThread"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      }
+    },
+    "required": [
+      "id",
+      "thread"
+    ],
+    "type": "object"
+  },
+  "SheetThreadsResponse": {
+    "additionalProperties": false,
+    "description": "The workbook's threads, as a commenter reads them (none for a Viewer).",
+    "properties": {
+      "threads": {
+        "items": {
+          "$ref": "#/components/schemas/SheetThread"
+        },
+        "type": "array"
+      }
+    },
+    "required": [
+      "threads"
     ],
     "type": "object"
   },

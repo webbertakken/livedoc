@@ -10,6 +10,7 @@ import { registerSheetSource } from '@/lib/sheet-seeds';
 import { sheetStoreOf, type SheetStore } from './sheet-store-client';
 import { retitleSheets } from './sheet-rename';
 import { sheetPresenceFor } from './sheet-presence-store';
+import { sheetThreadsFor } from './sheet-threads-store';
 
 // How many views draw from each store, so the room stays attached while any does.
 const ATTACHED = new WeakMap<SheetStore, { count: number; detach: () => void }>();
@@ -46,7 +47,12 @@ export function useAttachedSheetStore(bridge: SheetsBridge): {
       release: (ids) => store.release(ids),
       retitle: (ids, from, to) => retitleSheets(store, ids, from, to),
       presence: (from, op) => presence.receive(from, op),
-      resync: () => store.resync(),
+      thread: (op) => sheetThreadsFor(store, bridge.scope).receive(op),
+      resync: () => {
+        store.resync();
+        // A spreadsheet's comment threads are read again too (review.md "The thread write").
+        if (bridge.oneWorkbook) void sheetThreadsFor(store, bridge.scope).load();
+      },
       reannounce: () => presence.reannounce(),
     });
     ATTACHED.set(store, { count: 1, detach });

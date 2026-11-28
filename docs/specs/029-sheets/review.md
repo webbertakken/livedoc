@@ -64,6 +64,8 @@ mentions, assignees, reactions, resolve and reopen, the same thread 0019 specifi
   D653). A merged area's thread is its top-left cell's.
 - **Copies**: copying cells, Duplicate, Copy To and Make a Copy of a sheet carry no threads: a thread is a
   conversation about the original's cells, as a pasted element leaves its own behind (default, D654).
+- **A spreadsheet in This Browser** holds no comments: a comment needs an author on the document, which only a synced
+  spreadsheet has; Insert › Comment and its keys are dimmed there, each hint saying to sync (default, D656).
 - **Limits**: up to 1,000 threads a sheet (`SHEET_THREADS_MAX`) and 500 comments a thread
   (`SHEET_THREAD_COMMENTS_MAX`), as cell threads today; more are refused (`threads_full`, `thread_full`).
 
@@ -187,3 +189,5 @@ Notes in the files take three more, D650 to D652, in [Standard mapping](standard
   was deleted" in the Comments panel, back with an undone deletion; never resolved by the deletion (default).
 - **D654** Copying cells or a sheet (Duplicate, Copy To, Make a Copy) carries no threads (default).
 - **D655** A Viewer receives no comment threads of a spreadsheet, as a text document's Viewer (default).
+- **D656** A spreadsheet in This Browser holds no comment threads; Insert › Comment is dimmed with a hint to sync
+  (default).

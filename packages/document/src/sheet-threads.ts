@@ -248,18 +248,3 @@ function orderedAnchor(a: SheetThreadAnchor, axes: SheetAxes): SheetThreadAnchor
   const [c1, c2] = axes.cols.indexOf(a.c1) <= axes.cols.indexOf(a.c2) ? [a.c1, a.c2] : [a.c2, a.c1];
   return { r1, c1, r2, c2 };
 }
-
-/** Where an anchor stands on the sheet now (review.md "Where a thread lives", D653): its range while all four ids are
- *  there, its top-left cell alone when a corner is gone, deleted once its top-left cell's row or column is. */
-export function threadAnchorAt(
-  axes: SheetAxes,
-  anchor: SheetThreadAnchor,
-): { r1: number; c1: number; r2: number; c2: number } | { deleted: true } {
-  const r1 = axes.rows.indexOf(anchor.r1);
-  const c1 = axes.cols.indexOf(anchor.c1);
-  if (r1 < 0 || c1 < 0) return { deleted: true };
-  const r2 = axes.rows.indexOf(anchor.r2);
-  const c2 = axes.cols.indexOf(anchor.c2);
-  if (r2 < r1 || c2 < c1) return { r1, c1, r2: r1, c2: c1 };
-  return { r1, c1, r2, c2 };
-}

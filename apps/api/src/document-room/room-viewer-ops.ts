@@ -20,6 +20,8 @@ export function viewerOpOf(op: unknown, forViewers: ViewerOps, missing: 'drop' |
   if (typeof op !== 'object' || op === null) return op;
   const frame = op as { kind?: unknown; tabId?: unknown; stale?: unknown };
   if (frame.kind === TEXT_DOCUMENT_CARET) return null;
+  // A spreadsheet's comment thread never reaches a Viewer (docs/specs/029-sheets/review.md "Who may do what", D655).
+  if (frame.kind === 'sheet-thread') return null;
   if (frame.kind !== TEXT_DOCUMENT_LIVE_TAB.frame || frame.stale === true) return op;
   if (forViewers.has(op)) return forViewers.get(op) ?? null;
   if (missing === 'drop' || typeof frame.tabId !== 'string') return null;

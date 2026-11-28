@@ -49,6 +49,7 @@ import {
 } from './sheet-route-kit';
 import { sheetCells } from './sheet-page-routes';
 import { writeSheet } from './sheet-write-route';
+import { listSheetThreads, writeSheetThread } from './sheet-thread-routes';
 
 const IDS_PER_GET_MAX = 50;
 
@@ -275,9 +276,12 @@ async function remove(
 // The sheet routes, or null for a path that is not theirs.
 export async function handleSheetRoutes(ctx: DocumentRouteContext): Promise<Response | null> {
   const { segments, request } = ctx;
-  if (segments[3] !== 'sheets') return null;
   const documentId = segments[2]!;
   const method = request.method;
+  // A spreadsheet's comment threads (docs/specs/029-sheets/review.md "Comments").
+  if (segments[3] === 'sheet-threads' && segments.length === 4)
+    return method === 'GET' ? listSheetThreads(ctx, documentId) : methodNotAllowed();
+  if (segments[3] !== 'sheets') return null;
   if (segments.length === 4) {
     if (method === 'GET') return list(ctx, documentId);
     if (method === 'POST') return create(ctx, documentId);
@@ -288,6 +292,8 @@ export async function handleSheetRoutes(ctx: DocumentRouteContext): Promise<Resp
     return method === 'DELETE' ? remove(ctx, documentId, sheetId) : methodNotAllowed();
   if (segments.length === 6 && segments[5] === 'changesets')
     return method === 'POST' ? submitSheetChangeset(ctx, documentId, sheetId) : methodNotAllowed();
+  if (segments.length === 6 && segments[5] === 'threads')
+    return method === 'POST' ? writeSheetThread(ctx, documentId, sheetId) : methodNotAllowed();
   if (segments.length === 6 && segments[5] === 'writes')
     return method === 'POST' ? writeSheet(ctx, documentId, sheetId) : methodNotAllowed();
   if (segments.length === 6 && segments[5] === 'cells')

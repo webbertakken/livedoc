@@ -10,8 +10,8 @@
 // (docs/specs/013-workspace/timeline.md) records that an action WAS assigned, this says whether it
 // is still open.
 
-// An element, or a stretch of a text document's writing.
-export type CollabAnchor = 'element' | 'text';
+// An element, a stretch of a text document's writing, or a spreadsheet's cell or range (029-sheets/review.md).
+export type CollabAnchor = 'element' | 'text' | 'cell';
 
 // Where a row lives, and how the reader reaches it. `via` is how the
 // document is visible to them (their own, a joined team's library, or

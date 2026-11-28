@@ -3,10 +3,10 @@
 // The editor's side of the sheet store: the one piece of the Sheet that
 // lives in the main bundle. It hands the lazily loaded sheet chunk what it needs from the editor (who is writing,
 // the document's scope, undo, toasts, presence) and routes the room's `sheets` and `sheet-presence` ops to the
-// chunk once it has attached. Before any Sheet is drawn nothing attaches and every op is dropped: the store
+// chunk once it has attached (and a spreadsheet's `sheet-thread` ops). Before any Sheet is drawn nothing attaches and every op is dropped: the store
 // fetches what it needs when it loads.
 import { createContext, useCallback, useContext, useMemo, useRef } from 'react';
-import type { RoomOp, SheetPresenceOp, SheetsRoomOp } from '@livedoc/api-schema';
+import type { RoomOp, SheetPresenceOp, SheetsRoomOp, SheetThreadRoomOp } from '@livedoc/api-schema';
 import type {
   FileMeaning,
   ImportAccess,
@@ -32,6 +32,8 @@ export type SheetsHandlers = {
   // Renames each of `sheetIds` still titled `from` to `to` (a tab renamed from its default name).
   retitle: (sheetIds: readonly string[], from: string, to: string) => void;
   presence: (from: string, op: SheetPresenceOp) => void;
+  // A spreadsheet's comment thread the api stored (docs/specs/029-sheets/review.md "The thread write").
+  thread: (op: SheetThreadRoomOp) => void;
   resync: () => void;
   reannounce: () => void;
 };
@@ -246,6 +248,7 @@ export function useSheetsBridge(opts: {
       (from: string, op: SheetPresenceOp) => handlers.current?.presence(from, op),
       [],
     ),
+    receiveSheetThread: useCallback((op: SheetThreadRoomOp) => handlers.current?.thread(op), []),
     resync: useCallback(() => handlers.current?.resync(), []),
     // Before a Sheet has drawn nothing is attached: no title, and nothing to release (the sheet is kept, as a Cut's).
     sheetTitle: useCallback((id: string) => handlers.current?.title(id), []),

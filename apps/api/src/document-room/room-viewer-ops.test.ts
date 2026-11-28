@@ -35,6 +35,13 @@ describe('viewerOpOf', () => {
     expect(viewerOpOf(caret, new WeakMap(), 'stale')).toBeNull();
   });
 
+  // docs/specs/029-sheets/review.md "Who may do what" (D655): a spreadsheet's comment threads never reach a Viewer.
+  it('withholds every spreadsheet comment thread, live and replayed', () => {
+    const thread = { kind: 'sheet-thread', sheetId: 's1', tabId: 't1', id: 'th1', thread: null };
+    expect(viewerOpOf(thread, new WeakMap(), 'drop')).toBeNull();
+    expect(viewerOpOf(thread, new WeakMap(), 'stale')).toBeNull();
+  });
+
   it('passes a tab’s stale and every other op as they are', () => {
     const ops: ViewerOps = new WeakMap();
     const stale = { kind: 'text-document', tabId: 't1', stale: true };

@@ -4,7 +4,7 @@
 // routes the room's `sheets` and `sheet-presence` ops to the chunk once it attaches (dropped before).
 import { act, render, renderHook } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import type { SheetPresenceOp, SheetsRoomOp } from '@livedoc/api-schema';
+import type { SheetPresenceOp, SheetsRoomOp, SheetThreadRoomOp } from '@livedoc/api-schema';
 import type { Element } from '@livedoc/document';
 import {
   SheetsBridgeContext,
@@ -45,6 +45,7 @@ const handlers = (): SheetsHandlers => ({
   release: vi.fn(),
   retitle: vi.fn(),
   presence: vi.fn(),
+  thread: vi.fn(),
   resync: vi.fn(),
   reannounce: vi.fn(),
 });
@@ -55,6 +56,13 @@ const sheetsOp: SheetsRoomOp = {
   tabId: 't1',
   rev: 1,
   deleted: true,
+};
+const threadOp: SheetThreadRoomOp = {
+  kind: 'sheet-thread',
+  sheetId: 's1',
+  tabId: 't1',
+  id: 'th1',
+  thread: null,
 };
 const presenceOp: SheetPresenceOp = {
   kind: 'sheet-presence',
@@ -146,6 +154,7 @@ describe('useSheetsBridge', () => {
     expect(() => {
       r.receiveSheets(sheetsOp);
       r.receiveSheetPresence('peer', presenceOp);
+      r.receiveSheetThread(threadOp);
       r.resync();
       r.reannounce();
     }).not.toThrow();
@@ -153,8 +162,10 @@ describe('useSheetsBridge', () => {
     const detach = r.bridge.attach(h);
     r.receiveSheets(sheetsOp);
     r.receiveSheetPresence('peer', presenceOp);
+    r.receiveSheetThread(threadOp);
     r.resync();
     r.reannounce();
+    expect(h.thread).toHaveBeenCalledWith(threadOp);
     expect(h.receive).toHaveBeenCalledWith(sheetsOp);
     expect(h.presence).toHaveBeenCalledWith('peer', presenceOp);
     expect(h.resync).toHaveBeenCalledOnce();

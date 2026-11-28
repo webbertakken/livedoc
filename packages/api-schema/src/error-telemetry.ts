@@ -191,6 +191,9 @@ const API_ROUTE_WORDS: ReadonlySet<string> = new Set([
   'item-types',
   'sheets',
   'writes',
+  // A spreadsheet's comment threads (docs/specs/029-sheets/review.md "The thread write").
+  'sheet-threads',
+  'threads',
   'lease',
   // A tab kind's own routes: a Sheet's cells, a spreadsheet's workbook, a text document, a Form tab, a domain export.
   'cells',
