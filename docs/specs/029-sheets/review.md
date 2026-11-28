@@ -8,9 +8,34 @@ history, the mode switch). This page names what a spreadsheet adds.
 
 ## Notes
 
-- **Insert › Note** (Shift+F2): a plain text note on a cell, a black corner triangle; hover shows it, an Editor
-  edits it in place. Notes are the cell's, not threads: no replies, no mentions.
-- ODF keeps notes as cell annotations, XLSX as legacy comments ([Standard mapping](standard-mapping.md)).
+**Status: specified.** A note is plain text the cell holds, as Google's notes are: no author, no replies, no mentions,
+no reactions. It is cell content beside the cell's input and format, never one of them.
+
+- **Where it lives**: the cell's `note` (1 to `SHEET_NOTE_MAX`, 50,000 characters; line breaks kept, control
+  characters other than line breaks refused). A cell holding only a note is a cell. It follows its cell through
+  inserted, moved and sorted rows and columns, since the cell's ids do; a deleted row or column takes its notes, and
+  undo brings them back.
+- **Insert › Note**, the cell menu's **Insert Note** (**Edit Note** on a cell with one) and **Shift+F2** open the note
+  box on the active cell (a merged cell's is its top-left cell's): a card at the cell's top right, a plain text field
+  holding the note, the caret at its end. Clicking away or Shift+F2 again saves it; **Escape** saves it and returns to
+  the grid, as Google's does (default, D643). Saving an empty note removes it. A selection of many cells gets the
+  note in each, as Google's does.
+- **Delete Notes** (the cell menu, when a selected cell holds one) removes every note in the selection.
+- **The marker**: a cell with a note shows a black triangle in its top-right corner (6 px; white on a dark fill, as
+  any ink is kept readable). Hovering the cell for a moment (400 ms) shows the note in a read-only card at the cell's
+  top right; the note box replaces it while open. A cell with both a note and an open comment thread shows the
+  comment's triangle (D644).
+- **What carries a note**: copy and cut with the cells (Paste carries notes, Paste Values Only and Paste Format Only
+  do not, as Google's do); a sheet's copy; Copy To. Clear Formatting, Delete (the key) and typing leave it, as
+  Google's do. Fill down and the fill handle do not copy notes (default, D645).
+- **Undo**: each save of the note box, and each Delete Notes, is one change (`Note`), undone and redone as any.
+- **Live**: a note travels as a cell change (`n`), so two people on different cells never lose one; on the same
+  cell the later save wins, as a cell's value does.
+- **Agents**: `change_sheet` sets a range's notes (`note`: the text, or null to remove), `read_sheet` gives each
+  cell's `note`, and the cells view prints it after the value (`✎ "<note>"`, cut to 60 characters).
+- **Find**: Find and Replace does not search notes, as Google's does not (default, D646).
+- **In the files**: ODF keeps notes as cell annotations, XLSX as notes (legacy comments) with the drawing Excel shows
+  them by ([Notes in the file](standard-mapping.md#notes-in-the-file)).
 
 ## Comments
 
@@ -40,7 +65,8 @@ history, the mode switch). This page names what a spreadsheet adds.
 
 ## Who may do what
 
-- **Editor** adds and edits notes (they are cell content); comments are anyone's whose link allows commenting, as
+- **Editor** adds, edits and deletes notes (they are cell content, D647); a Participant and a Viewer read them
+  (the marker and the hover card, never the note box). Comments are anyone's whose link allows commenting, as
   everywhere in LiveDoc.
 - Version history and edit history: Editors see both; Participants and Viewers see neither, as Google's.
 
@@ -50,8 +76,25 @@ Corner markers are announced with the cell ("has note", "has comment"); Ctrl+Alt
 
 ## Limits
 
-Up to 1,000 threads a sheet and 500 comments a thread, as cell threads today; a note up to 50,000 characters.
+Up to 1,000 threads a sheet and 500 comments a thread, as cell threads today; a note up to 50,000 characters
+(`SHEET_NOTE_MAX`), longer refused (`note_too_long`).
 
 ## Telemetry
 
 `Spreadsheet · Changed · Note`; comments and versions use the shell's events.
+
+## Defaults
+
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+
+- **D643** Escape in the note box: saves and returns to the grid, as Google's (default).
+- **D644** A cell with a note and an open comment: one triangle, the comment's colour; the hover card shows both,
+  the note first (default).
+- **D645** Fill down and the fill handle: never copy notes (default).
+- **D646** Find and Replace within notes: not offered, as Google's (default).
+- **D647** Who writes a note: an Editor alone; a Participant's writes are values (spreadsheet.md "Who may do what")
+  (default).
+- **D648** A note's text in a file: plain; ODF's paragraphs joined by line breaks, XLSX's runs joined, their
+  formatting dropped, each line written back as a paragraph (ODF) or the text of one run (XLSX) (default).
+- **D649** An XLSX note's author: not read (Google's notes have none); written as the file's `LiveDoc` author, its
+  text without the author's prefix Excel adds by hand (default).
