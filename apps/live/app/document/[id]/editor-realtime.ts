@@ -10,6 +10,7 @@ import { mayShareDocument } from './editor-page-helpers';
 import { useChangesetSeen } from './useChangesetSeen';
 import type { EditorSeed } from './seed-pending-document';
 import { useLatest } from '@/hooks/ui/useLatest';
+import type { DocumentOpenedDates } from '@/lib/office/office-details';
 
 // Sharing, session-permission and realtime-room infrastructure for the
 // editor: the shareable / team / share-code flags that decide whether
@@ -66,6 +67,8 @@ export function useEditorRealtime(seed: Pick<EditorSeed, 'ownerId' | 'teamId'> |
   // badge would hide.
   const [documentOwnerName, setDocumentOwnerName] = useState<string | null>(null);
   const [documentOwnerColor, setDocumentOwnerColor] = useState<string | null>(null);
+  // The document's dates as it was read, for File > Details (docs/specs/034-text-documents/files-and-print.md).
+  const [documentOpenedDates, setDocumentOpenedDates] = useState<DocumentOpenedDates | null>(null);
   // Visitor-side "Make a copy" loading flag. Header button disables
   // itself while the api round-trips so a frantic double-click can't
   // produce two copies under the user's account.
@@ -132,6 +135,8 @@ export function useEditorRealtime(seed: Pick<EditorSeed, 'ownerId' | 'teamId'> |
     setDocumentOwnerName,
     documentOwnerColor,
     setDocumentOwnerColor,
+    documentOpenedDates,
+    setDocumentOpenedDates,
     copying,
     setCopying,
     shareLinks,

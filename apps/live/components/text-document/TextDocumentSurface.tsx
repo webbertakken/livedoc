@@ -156,6 +156,7 @@ import {
   pageSelectionPlugin,
 } from '@/lib/text-document/text-document-page-selection';
 import { useTextDocumentWordCount } from './useTextDocumentWordCount';
+import { useTextDocumentDetails } from './useTextDocumentDetails';
 import { useTextDocumentScreenReader } from './useTextDocumentScreenReader';
 import { useTextDocumentLiveEdits } from './useTextDocumentLiveEdits';
 import { useTextDocumentSpelling } from './useTextDocumentSpelling';
@@ -1289,6 +1290,17 @@ export function TextDocumentSurface({
     documentName,
     ...(commenter ? { author: { name: commenter.name, color: commenter.colour } } : {}),
   });
+  // File > Details (files-and-print.md "Details"), counted as it opens.
+  const details = useTextDocumentDetails({
+    view: editorView,
+    doc: liveDoc,
+    facts: chrome?.facts ?? null,
+    format,
+    pages: pagesLaidOut,
+    where: scope,
+    local,
+    onDone: focusBody,
+  });
   // Edit > Undo, Redo and Select all, run by the menus and the shortcut layer (keyboard-shortcuts.md).
   const editorActions = useMemo(
     () => ({
@@ -1338,11 +1350,13 @@ export function TextDocumentSurface({
       ...importReport.actions,
       ...pdf.actions,
       ...print.actions,
+      ...details.actions,
     }),
     [
       importReport.actions,
       pdf.actions,
       print.actions,
+      details.actions,
       breakActions,
       lineActions,
       tabs.actions,
@@ -1573,6 +1587,7 @@ export function TextDocumentSurface({
           {spelling.dialog}
           {state === 'ready' && !previewing ? wordCount.box : null}
           {state === 'ready' ? wordCount.dialog : null}
+          {state === 'ready' ? details.dialog : null}
           {screenReader.dialog}
           {screenReader.region}
           <div

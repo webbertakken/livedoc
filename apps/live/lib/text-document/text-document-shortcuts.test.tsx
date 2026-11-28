@@ -87,6 +87,7 @@ import { SUGGESTION_KEY_ACTIONS } from '@/components/text-document/useTextDocume
 import { REVIEW_SUGGESTED_EDITS } from '@/components/text-document/useTextDocumentReviewPanel';
 import { COMPARE_DOCUMENTS } from '@/components/text-document/useTextDocumentCompare';
 import { WORD_COUNT_ITEM } from '@/components/text-document/useTextDocumentWordCount';
+import { DETAILS_ITEM } from '@/components/text-document/useTextDocumentDetails';
 import { VERBALISE_ITEMS } from '@/components/text-document/useTextDocumentScreenReader';
 import {
   ACCESSIBILITY_ITEM,
@@ -264,6 +265,8 @@ describe('the text document menus', () => {
         SEE_VERSION_HISTORY,
         // File > Version history > Name current version (useTextDocumentVersionWrites), bound by the surface.
         NAME_CURRENT_VERSION,
+        // File > Details (useTextDocumentDetails), bound by the surface.
+        DETAILS_ITEM,
         // File > Security limitations (useTextDocumentReport), bound by the surface.
         SECURITY_LIMITATIONS_ITEM,
         // File > Download > PDF document (useTextDocumentPdf), bound by the surface.

@@ -201,11 +201,32 @@ collaborators**, where the host has email configured; not shown otherwise. Eithe
 
 ## Details
 
-File > Details: owner, location, created, modified (by whom), format, size, and the word count's statistics.
+File > Details opens the shell's **Details** dialog, read only, for every level: one row each, in this order.
+
+| Row                         | What it says                                                                                                                         |
+| --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| Owner                       | "You" for the owner, else the owner's name, else "Not known"                                                                         |
+| Location                    | "This Browser"; "My Documents" or the team's name, then its folders ("My Documents › Plans"); "Shared with you" for anyone else's    |
+| Created                     | The day and time ("28 Nov 2026, 11:20")                                                                                              |
+| Modified                    | The last edit, "28 Nov 2026, 11:42 by Ada" (the name the save status says) where LiveDoc knows it; else the last save's day and time |
+| Format                      | "OpenDocument text (.odt)" or "Word document (.docx)"                                                                                |
+| Size                        | The stored writing's size as it is now ("12 KB")                                                                                     |
+| Pages                       | Only where pages are laid out                                                                                                        |
+| Words                       | The word count's, of the whole document ([Word count](tools.md#word-count))                                                          |
+| Characters                  | The word count's                                                                                                                     |
+| Characters excluding spaces | The word count's                                                                                                                     |
+
+- Dates and numbers are in the reader's own format, as the Explorer's Details view writes them.
+- It counts as it opens; a date not known reads "-". The modified row is read from LiveDoc as the dialog opens and
+  shows the last save's time until it is (default); one it cannot read stays the last save's.
+- Nothing to confirm, so no button row: its × and Escape close it, and the writing has the focus back.
 
 ## Trash
 
-File > Move to trash: LiveDoc's [Trash](../013-workspace/trash.md).
+File > Move to trash: LiveDoc's [Trash](../013-workspace/trash.md), the same delete as everywhere: no question first;
+the editor goes to the Explorer, which says "“‹name›” deleted" with **Undo**. A document in This Browser goes to this
+browser's Trash. A delete LiveDoc refuses keeps the document open and says "Could not delete “‹name›”. Try again."
+The item is drawn only for whoever may delete the document (its owner, or a member of its team).
 
 ## Share roles
 
@@ -216,5 +237,6 @@ Participants; converting, opening into a folder and trashing are an Editor's (tr
 
 `Document · Imported · TextDocument<Format>` (Odt, Fodt, Docx, Rtf, Txt, Html, Md, Pdf),
 `Document · Exported · TextDocument<Format>`, `Document · Changed · TextDocumentConverted`, `UI · Used · TextDocumentPrint`, `UI · Used · TextDocumentPrintPreview`,
-`UI · Used · TextDocumentSecurityLimitations` (File > Security limitations reopened),
+`UI · Used · TextDocumentSecurityLimitations` (File > Security limitations reopened), `UI · Used · TextDocumentDetails`,
+`Document · Deleted` (File > Move to trash, as every delete),
 `Document · Duplicated · TextDocument`. Never content.

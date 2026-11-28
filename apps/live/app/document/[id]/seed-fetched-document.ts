@@ -6,6 +6,7 @@ import type { Tab } from '@livedoc/document';
 import type { LiveDoc } from '@livedoc/api-schema';
 import { apiLoadTabRevisioned } from '@/lib/api-client';
 import { track } from '@/lib/telemetry';
+import type { DocumentOpenedDates } from '@/lib/office/office-details';
 import { firstTabToLoad, isTabOutOfScope } from '@/lib/tab-scope';
 import { revealDrawingPicture } from '@/lib/text-document/text-document-drawing-reveal';
 import { loadKindFamiliesFor } from '@/lib/element-kinds/load-for';
@@ -44,6 +45,7 @@ export function makeSeedFetchedDocument(deps: {
   setDocumentOwnerColor: SetState<string | null>;
   setDocumentOwnerId: SetState<string | null>;
   setDocumentOwnerName: SetState<string | null>;
+  setDocumentOpenedDates: SetState<DocumentOpenedDates | null>;
   setDocumentShareable: SetState<boolean>;
   setDocumentShareCode: SetState<string | null>;
   setDocumentTeamId: SetState<string | null>;
@@ -66,6 +68,7 @@ export function makeSeedFetchedDocument(deps: {
     setDocumentOwnerColor,
     setDocumentOwnerId,
     setDocumentOwnerName,
+    setDocumentOpenedDates,
     setDocumentShareable,
     setDocumentShareCode,
     setDocumentTeamId,
@@ -168,6 +171,7 @@ export function makeSeedFetchedDocument(deps: {
     setDocumentOwnerId(fetched.ownerId);
     setDocumentOwnerName(fetched.ownerName ?? null);
     setDocumentOwnerColor(fetched.ownerColor ?? null);
+    setDocumentOpenedDates({ createdAt: fetched.createdAt, savedAt: fetched.savedAt });
     // Telemetry (docs/specs/017-telemetry/telemetry.md): an existing document was opened — every open,
     // owner URL or share URL, the counterpart to Document/Created.
     track('Document', 'Loaded');

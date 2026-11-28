@@ -1,5 +1,6 @@
 import type { WorkbookRecord } from '@livedoc/sheets';
 import type { SavedItemTypes } from '@/lib/api/item-types';
+import type { DocumentOpenedDates } from '@/lib/office/office-details';
 import {
   useLayoutEffect,
   useRef,
@@ -100,6 +101,7 @@ export function useIdentityBootstrap(opts: {
     setDocumentOwnerColor: SetState<string | null>;
     setDocumentOwnerId: SetState<string | null>;
     setDocumentOwnerName: SetState<string | null>;
+    setDocumentOpenedDates: SetState<DocumentOpenedDates | null>;
     setDocumentShareable: SetState<boolean>;
     setDocumentTeamId: SetState<string | null>;
     setDocumentServerStored: SetState<boolean>;
@@ -179,6 +181,7 @@ export function useIdentityBootstrap(opts: {
       setDocumentOwnerColor,
       setDocumentOwnerId,
       setDocumentOwnerName,
+      setDocumentOpenedDates,
       setDocumentShareable,
       setDocumentShareCode,
       setDocumentTeamId,
@@ -219,6 +222,7 @@ export function useIdentityBootstrap(opts: {
       setDocumentOwnerColor,
       setDocumentOwnerId,
       setDocumentOwnerName,
+      setDocumentOpenedDates,
       setDocumentShareable,
       setDocumentShareCode,
       setDocumentTeamId,
