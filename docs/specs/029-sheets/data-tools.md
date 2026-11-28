@@ -28,7 +28,7 @@ Google Sheets' Data menu does. Its rows of the [parity matrix](parity-matrix.md)
 
 ## Filters, filter views and slicers
 
-- **Create a Filter** (Ctrl+Alt+R in the matrix's list): a filter over the data region, its header cells with
+- **Create a Filter**: a filter over the data region, its header cells with
   filter buttons; one filter a sheet, seen by everyone.
   - **A table's filter** (the Director's ruling, 2026-11-27, as Google's and Excel's: every table has its own
     filter): a table holds a filter of its own, a condition per column (the filter's: values, condition, colour),
