@@ -55,6 +55,7 @@ import { useLatest } from '@/hooks/ui/useLatest';
 import { FindReplaceDialog } from './FindReplaceDialog';
 import { useFindReplace } from './find-replace-state';
 import { SheetChartsContext } from '@/components/sheets/sheet-charts-context';
+import { FilterMenuContext } from '@/components/sheets/useFilterMenuShortcut';
 import {
   TableColumnMenuContext,
   TableSettingsContext,
@@ -163,6 +164,8 @@ export function SpreadsheetSheetParts({ bridge }: { bridge: SheetsBridge }) {
   const openTableSettings = useCallback(() => reveal(TABLE_SETTINGS_PANEL), [reveal]);
   // Ctrl+Alt+\ opens the active cell's table column menu, which the grid's tables layer draws (data-tools.md "Tables").
   const columnMenu = useRef<(() => void) | null>(null);
+  // Ctrl+Alt+R opens the active cell's filter menu, which the grid's tables layer opens (data-tools.md, D504).
+  const filterMenu = useRef<(() => void) | null>(null);
   const charts = useSpreadsheetCharts(c, c.canShape ? editChart : undefined);
   const { insertChart } = charts;
   // Data › Add a Slicer and the Slicer panel (data-tools.md "Slicers").
@@ -221,6 +224,7 @@ export function SpreadsheetSheetParts({ bridge }: { bridge: SheetsBridge }) {
       ...splitActions,
       ...filterViewMenu,
       'table-column-menu': { run: () => columnMenu.current?.() },
+      'open-filter-dropdown': { run: () => filterMenu.current?.() },
       // Insert › Chart and the toolbar's (charts.md "Inserting"): an Editor's.
       ...(canInsertChart ? { 'insert-chart': { run: insertChart } } : {}),
       // Insert › Pivot Table (pivot-tables.md "Making one"): an Editor's.
@@ -298,28 +302,30 @@ export function SpreadsheetSheetParts({ bridge }: { bridge: SheetsBridge }) {
             <SplitChipContext.Provider value={splitText.chip}>
               <TableSettingsContext.Provider value={openTableSettings}>
                 <TableColumnMenuContext.Provider value={columnMenu}>
-                  <SheetChartsContext.Provider value={charts.value}>
-                    <SheetSlicersContext.Provider value={slicers.writes}>
-                      <SheetImagesOverCellsContext.Provider value={images.value}>
-                        <SheetPictureAccessContext.Provider value={imageAccess}>
-                          <SheetPivotsContext.Provider value={c.canShape ? editPivot : null}>
-                            <SheetPivotDetailsContext.Provider value={pivots.showDetails}>
-                              <SheetGrid
-                                elementId={`sheet-${c.sheet.id}`}
-                                actions={actions}
-                                input={input}
-                                pointRef={pointRef}
-                                peers={bridge.peers}
-                                zoom={zoom}
-                                surfaceKeys={surfaceKeys}
-                                fontFamily={DocumentFonts.stack(theme.font)}
-                              />
-                            </SheetPivotDetailsContext.Provider>
-                          </SheetPivotsContext.Provider>
-                        </SheetPictureAccessContext.Provider>
-                      </SheetImagesOverCellsContext.Provider>
-                    </SheetSlicersContext.Provider>
-                  </SheetChartsContext.Provider>
+                  <FilterMenuContext.Provider value={filterMenu}>
+                    <SheetChartsContext.Provider value={charts.value}>
+                      <SheetSlicersContext.Provider value={slicers.writes}>
+                        <SheetImagesOverCellsContext.Provider value={images.value}>
+                          <SheetPictureAccessContext.Provider value={imageAccess}>
+                            <SheetPivotsContext.Provider value={c.canShape ? editPivot : null}>
+                              <SheetPivotDetailsContext.Provider value={pivots.showDetails}>
+                                <SheetGrid
+                                  elementId={`sheet-${c.sheet.id}`}
+                                  actions={actions}
+                                  input={input}
+                                  pointRef={pointRef}
+                                  peers={bridge.peers}
+                                  zoom={zoom}
+                                  surfaceKeys={surfaceKeys}
+                                  fontFamily={DocumentFonts.stack(theme.font)}
+                                />
+                              </SheetPivotDetailsContext.Provider>
+                            </SheetPivotsContext.Provider>
+                          </SheetPictureAccessContext.Provider>
+                        </SheetImagesOverCellsContext.Provider>
+                      </SheetSlicersContext.Provider>
+                    </SheetChartsContext.Provider>
+                  </FilterMenuContext.Provider>
                 </TableColumnMenuContext.Provider>
               </TableSettingsContext.Provider>
             </SplitChipContext.Provider>

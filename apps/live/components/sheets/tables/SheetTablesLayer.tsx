@@ -29,6 +29,7 @@ import { useSheetController } from '../sheet-controller';
 import { rectOf } from '../SheetSelectionLayer';
 import { useSheetActions } from '../useSheetActions';
 import { useFilterViewActions } from '../useFilterViewActions';
+import { useFilterMenuShortcut } from '../useFilterMenuShortcut';
 import {
   TableChipsHostContext,
   TableColumnMenuContext,
@@ -64,6 +65,8 @@ export function SheetTablesLayer() {
   const root = useRef<HTMLDivElement | null>(null);
   const openerRef = useContext(TableColumnMenuContext);
   const chipHost = useContext(TableChipsHostContext);
+  // Ctrl+Alt+R: the active cell's filter menu, a table's drawn here (data-tools.md, D504).
+  useFilterMenuShortcut(root, setFilterMenu);
   // Ctrl+Alt+\: the active cell's column's menu, under its header's button.
   useEffect(() => {
     if (!openerRef) return;
@@ -80,8 +83,9 @@ export function SheetTablesLayer() {
       openerRef.current = null;
     };
   });
-  const tables = c.sheet.layout.tables;
-  if (!open || !tables?.length) return null;
+  // A grid without Table Settings (a Plan Sheet) draws no tables; the layer itself is always drawn, as Ctrl+Alt+R
+  // opens a menu under the active cell from it.
+  const tables = open ? (c.sheet.layout.tables ?? []) : [];
   const editor = c.canShape;
   const inTable = (t: SheetTable) => {
     const p = posRangeOf(c.sheet.layout, t);
@@ -298,7 +302,7 @@ export function SheetTablesLayer() {
                 icon={<Glyph t="⚙" />}
                 onClick={run(() => {
                   inTable(shown);
-                  open(shown.id);
+                  open?.(shown.id);
                 })}
               />
               <MenuActionRow

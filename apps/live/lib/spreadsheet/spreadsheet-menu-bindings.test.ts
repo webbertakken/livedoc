@@ -33,6 +33,7 @@ const actions = (): GridMenuActions => ({
   sortColumn: vi.fn(),
   sortRange: vi.fn(),
   toggleFilter: vi.fn(),
+  filterByCellValue: vi.fn(),
   cut: vi.fn(),
   copy: vi.fn(),
   paste: vi.fn(),
@@ -353,6 +354,9 @@ describe('gridMenuBindings', () => {
     b['sort-range-a-to-z']!.run();
     b['sort-range-z-to-a']!.run();
     b['create-a-filter']!.run();
+    // A cell's context menu's Filter by Cell Value (data-tools.md, D504).
+    b['filter-by-cell-value']!.run();
+    expect(p.act.filterByCellValue).toHaveBeenCalledTimes(1);
     expect(vi.mocked(p.act.sortColumn).mock.calls).toEqual([[true], [false]]);
     expect(vi.mocked(p.act.sortRange).mock.calls).toEqual([
       [[{ col: 3, ascending: true }], false],

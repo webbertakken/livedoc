@@ -496,13 +496,13 @@ export const SPREADSHEET_SHORTCUTS: readonly ShortcutRow[] = [
     'specified',
   ),
   row(
-    'open-filter-menu',
+    'open-filter-dropdown',
     'Navigate the spreadsheet',
     'Open drop-down menu on filtered cell',
     'Ctrl+Alt+R',
     'Ctrl+⌘+R',
     'Ctrl+Alt+R',
-    'specified',
+    'built',
   ),
   row(
     'go-to-range',

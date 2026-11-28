@@ -57,6 +57,8 @@ export type GridMenuActions = {
   // Data › Sort Range › Advanced Range Sorting Options' dialog (data-tools.md "Sort").
   openSortRange: () => void;
   toggleFilter: () => void;
+  // A cell's context menu's Filter by Cell Value (data-tools.md, D504).
+  filterByCellValue: () => void;
   cut: () => void;
   copy: () => void;
   paste: () => void;
@@ -261,6 +263,7 @@ function shapeBindings(port: GridMenuPort): Record<string, OfficeAction> {
       ...(port.filtered ? { label: 'Remove Filter' } : {}),
       ...(!port.filtered && port.filterNote ? { disabled: true, note: port.filterNote } : {}),
     }),
+    'filter-by-cell-value': run(act.filterByCellValue),
     // The toolbar's own (surface.md "Toolbar"): decimals, and the font size a point at a time (D128).
     'decrease-decimal-places': run(() => act.decimals(-1)),
     'increase-decimal-places': run(() => act.decimals(1)),

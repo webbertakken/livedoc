@@ -16,32 +16,40 @@ afterEach(() => {
   vi.resetModules();
 });
 
+// Loading the whole package anew takes about 2 s with coverage on an idle machine; the default 5 s timed out on a
+// busy one (the pre-push gate runs every package at once).
+const WHOLE_PACKAGE_LOAD_MS = 30_000;
+
 describe('the package as it loads', () => {
-  it('makes no Y.Doc and draws no random value', async () => {
-    vi.resetModules();
-    vi.doMock('yjs', async (original) => {
-      const yjs = await original<typeof import('yjs')>();
-      class Doc extends yjs.Doc {
-        constructor(...args: ConstructorParameters<typeof yjs.Doc>) {
-          refuse('a Y.Doc made');
-          super(...args);
+  it(
+    'makes no Y.Doc and draws no random value',
+    async () => {
+      vi.resetModules();
+      vi.doMock('yjs', async (original) => {
+        const yjs = await original<typeof import('yjs')>();
+        class Doc extends yjs.Doc {
+          constructor(...args: ConstructorParameters<typeof yjs.Doc>) {
+            refuse('a Y.Doc made');
+            super(...args);
+          }
         }
-      }
-      return { ...yjs, Doc };
-    });
-    const real = globalThis.crypto;
-    vi.stubGlobal('crypto', {
-      subtle: real.subtle,
-      getRandomValues: ((array) => {
-        refuse('a random value drawn');
-        return real.getRandomValues(array);
-      }) as Crypto['getRandomValues'],
-      randomUUID: () => {
-        refuse('a random id drawn');
-        return real.randomUUID();
-      },
-    });
-    loading = true;
-    await expect(import('./index')).resolves.toBeDefined();
-  });
+        return { ...yjs, Doc };
+      });
+      const real = globalThis.crypto;
+      vi.stubGlobal('crypto', {
+        subtle: real.subtle,
+        getRandomValues: ((array) => {
+          refuse('a random value drawn');
+          return real.getRandomValues(array);
+        }) as Crypto['getRandomValues'],
+        randomUUID: () => {
+          refuse('a random id drawn');
+          return real.randomUUID();
+        },
+      });
+      loading = true;
+      await expect(import('./index')).resolves.toBeDefined();
+    },
+    WHOLE_PACKAGE_LOAD_MS,
+  );
 });
