@@ -557,7 +557,7 @@ export const SPREADSHEET_SHORTCUTS: readonly ShortcutRow[] = [
     'Ctrl+Alt+M',
     '⌘+Option+M',
     'Ctrl+Alt+M',
-    'specified',
+    'built',
   ),
   row(
     'open-comment-thread',
@@ -566,7 +566,7 @@ export const SPREADSHEET_SHORTCUTS: readonly ShortcutRow[] = [
     'Ctrl+Alt+Shift+A',
     '⌘+Option+Shift+A',
     'Ctrl+Alt+Shift+A',
-    'specified',
+    'built',
   ),
   row(
     'enter-current-comment',
@@ -575,7 +575,7 @@ export const SPREADSHEET_SHORTCUTS: readonly ShortcutRow[] = [
     'Ctrl+Alt+E, C',
     'Ctrl+⌘+E, C',
     'Ctrl+Alt+E, C',
-    'specified',
+    'built',
   ),
   row(
     'move-to-next-comment',
@@ -584,7 +584,7 @@ export const SPREADSHEET_SHORTCUTS: readonly ShortcutRow[] = [
     'Ctrl+Alt+N, C',
     'Ctrl+⌘+N, C',
     'Ctrl+Alt+N, C',
-    'specified',
+    'built',
   ),
   row(
     'move-to-previous-comment',
@@ -593,7 +593,7 @@ export const SPREADSHEET_SHORTCUTS: readonly ShortcutRow[] = [
     'Ctrl+Alt+P, C',
     'Ctrl+⌘+P, C',
     'Ctrl+Alt+P, C',
-    'specified',
+    'built',
   ),
   row(
     'reply-to-current-comment',
@@ -602,7 +602,7 @@ export const SPREADSHEET_SHORTCUTS: readonly ShortcutRow[] = [
     'R',
     'R',
     'R',
-    'specified',
+    'surface',
   ),
   row(
     'next-selected-comment',
@@ -611,7 +611,7 @@ export const SPREADSHEET_SHORTCUTS: readonly ShortcutRow[] = [
     'J',
     'J',
     'J',
-    'specified',
+    'surface',
   ),
   row(
     'previous-selected-comment',
@@ -620,7 +620,7 @@ export const SPREADSHEET_SHORTCUTS: readonly ShortcutRow[] = [
     'K',
     'K',
     'K',
-    'specified',
+    'surface',
   ),
   row(
     'resolve-current-comment',
@@ -629,7 +629,7 @@ export const SPREADSHEET_SHORTCUTS: readonly ShortcutRow[] = [
     'E',
     'E',
     'E',
-    'specified',
+    'surface',
   ),
   row(
     'exit-current-comment',
@@ -638,7 +638,7 @@ export const SPREADSHEET_SHORTCUTS: readonly ShortcutRow[] = [
     'U',
     'U',
     'U',
-    'specified',
+    'surface',
   ),
   // Menus
   row(

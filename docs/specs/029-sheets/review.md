@@ -1,6 +1,7 @@
 # Review
 
-**Status: specified.** Notes are built; comments, version history and a cell's edit history are not.
+**Status: partly built.** Notes and comments in the grid are built; comments in the files and through agents,
+version history and a cell's edit history are not.
 
 Notes, comments, version history and a cell's edit history in a [spreadsheet](spreadsheet.md), through the review
 surfaces plan 0019 specifies and builds for every document kind outside the canvas (comment threads, version
@@ -39,7 +40,8 @@ no reactions. It is cell content beside the cell's input and format, never one o
 
 ## Comments
 
-**Status: specified.** A comment thread is a conversation about a cell or a range, as Google's are: authors, replies,
+**Status: partly built.** Threads in the sheet store, their write and the grid (marker, hover card, thread card,
+Comments panel, keys, the Inbox) are built; comments in the files and the agents' commands are not. A comment thread is a conversation about a cell or a range, as Google's are: authors, replies,
 mentions, assignees, reactions, resolve and reopen, the same thread 0019 specifies for every office kind
 ([Review surfaces](../012-collaboration/review-surfaces.md#comment-threads)) and a text document builds
 ([Comments](../034-text-documents/review.md#comments)). This page names what a spreadsheet adds.

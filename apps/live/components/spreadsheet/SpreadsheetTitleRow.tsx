@@ -37,6 +37,7 @@ import {
 import { spreadsheetChoices } from '@/lib/spreadsheet/spreadsheet-choices';
 import { bordersChoice } from './borders-choice';
 import { SPREADSHEET_SHORTCUTS } from '@/lib/spreadsheet/spreadsheet-shortcuts';
+import { SPREADSHEET_COMMENTS_PANEL } from '@/lib/spreadsheet/spreadsheet-panels';
 import { SPREADSHEET_TOOLBAR } from '@/lib/spreadsheet/spreadsheet-toolbar';
 import { zoomBindings } from '@/lib/spreadsheet/spreadsheet-zoom';
 import { track } from '@/lib/telemetry';
@@ -218,6 +219,8 @@ export function SpreadsheetTitleRow({
         opening={{ accept: OPEN_ACCEPT, onFile: (file) => void open(file) }}
         telemetryKind="Spreadsheet"
         chrome={chrome}
+        // The title row's comment history opens the Comments panel (review.md "In the grid").
+        commentHistoryItem={SPREADSHEET_COMMENTS_PANEL.item}
         tabId={tabId}
         toolbar={SPREADSHEET_TOOLBAR}
         fontSize={fontSize}

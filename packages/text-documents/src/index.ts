@@ -53,6 +53,7 @@ export {
   TEXT_DOCUMENT_EXPORT_TYPES,
   TEXT_DOCUMENT_FILE_TYPES,
   TEXT_DOCUMENT_IMPORT_TYPES,
+  formatOfFileName,
   importTypeOfFileName,
   isTextDocumentImportType,
   type TextDocumentImportType,
@@ -461,6 +462,8 @@ export {
 } from './compare/compare-documents';
 export { VersionSnapshots } from './versions/version-snapshots';
 export { restoreUpdate, versionDocument } from './versions/version-restore';
+export { UndoSteps, type UndoStep } from './versions/undo-step';
+export * from './agent-edits';
 export {
   NoticeChanges,
   type NoticeBaseline,
@@ -493,3 +496,4 @@ export {
   type PdfImportPicture,
   type PdfImportPage,
 } from './imports/pdf';
+export { TEXT_DOCUMENT_OPEN_REFUSAL_WORDS } from './open-refusal-words';

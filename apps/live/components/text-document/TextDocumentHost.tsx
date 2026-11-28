@@ -11,7 +11,7 @@ import { textDocumentFormatOf, type Tab, type TextDocumentFormat } from '@livedo
 import { useEditorContext } from '@/app/document/[id]/EditorContext';
 import { useEditorLines } from '@/components/chrome/lines/editor-lines-context';
 import { useIsOfflineDocument } from '@/hooks/persistence/useIsOfflineDocument';
-import { commenterOf } from '@/lib/text-document/text-document-commenter';
+import { commenterOf } from '@/lib/office/review/office-commenter';
 
 const TextDocumentSurface = dynamic(
   () => import('./TextDocumentSurface').then((m) => m.TextDocumentSurface),
@@ -57,13 +57,13 @@ export function TextDocumentHost({ tab, readOnly = false }: { tab: Tab; readOnly
     [accountId, commentMentions.notifyMentioned, commentMentions.notifyAssigned],
   );
   // An Inbox row's thread on this tab (docs/specs/013-workspace/inbox.md §1.8), for the editor's pane alone.
-  const { textThreadArrival } = ctx;
+  const { threadArrival } = ctx;
   const arrival = useMemo(
     () =>
-      !readOnly && textThreadArrival?.tabId === tab.id
-        ? { threadId: textThreadArrival.threadId, n: textThreadArrival.n }
+      !readOnly && threadArrival?.tabId === tab.id
+        ? { threadId: threadArrival.threadId, n: threadArrival.n }
         : null,
-    [readOnly, textThreadArrival, tab.id],
+    [readOnly, threadArrival, tab.id],
   );
   // A conversion names the tab's new format (standard-mapping.md "Conversion"), an Editor's, in the editor's pane.
   const { setTextDocumentFormat } = ctx;

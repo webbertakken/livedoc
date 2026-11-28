@@ -54,6 +54,7 @@ function show(
     loadAllTabs,
   } satisfies DashboardContextValue;
   const onChoose = vi.fn<(c: ShapeElement) => void>();
+  const onChooseLinked = vi.fn();
   const onClose = vi.fn();
   const anchor = document.createElement('button');
   document.body.appendChild(anchor);
@@ -63,6 +64,7 @@ function show(
         anchor={anchor}
         initialSheetId={initialSheetId}
         onChoose={onChoose}
+        onChooseLinked={onChooseLinked}
         onClose={onClose}
       />
     </DashboardContext.Provider>,

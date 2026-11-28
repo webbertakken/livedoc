@@ -219,6 +219,7 @@ export const SPREADSHEET_TOOLBAR: OfficeToolbar = [
       }),
       icon('insert-comment', 'Insert Comment', 'participate', lucideMessageSquarePlus, {
         shortcut: 'insert-or-edit-comment',
+        built: true,
       }),
       icon('insert-chart', 'Insert Chart', 'edit', lucideChartColumn, { built: true }),
       icon('create-a-filter', 'Create a Filter', 'edit', lucideFunnel, {

@@ -4,24 +4,8 @@
 // never restored. Yjs's undo does exactly this for one undo step; the restore hands it a step spanning everything
 // since the version.
 import * as Y from 'yjs';
-import { THREADS_MAP } from '../live/live-names';
 import { TextDocumentState } from '../text-document-state';
-import { deleteRange, VersionSnapshots, type DeleteSet } from './version-snapshots';
-
-/** The fields Yjs's undo reads of a step; a test pins them against Yjs's own, so an upgrade that changes them fails. */
-export const STACK_ITEM_FIELDS = ['insertions', 'deletions', 'meta'] as const;
-
-type UndoStep = { insertions: DeleteSet; deletions: DeleteSet; meta: Map<unknown, unknown> };
-
-/** Every item written since the version: per client, the clocks past what the version held. */
-function writtenSince(version: Y.Snapshot, now: Y.Snapshot): DeleteSet {
-  const ds = Y.createDeleteSet();
-  for (const [client, clock] of now.sv) {
-    const from = version.sv.get(client) ?? 0;
-    if (clock > from) ds.clients.set(client, [deleteRange(from, clock - from)]);
-  }
-  return ds;
-}
+import { UndoSteps } from './undo-step';
 
 /**
  * The one update that makes the state read as the version, written by a client of its own; null when it already
@@ -31,24 +15,11 @@ export function restoreUpdate(
   stateUpdates: readonly Uint8Array[],
   encodedVersion: Uint8Array,
 ): Uint8Array | null {
-  const version = Y.decodeSnapshot(encodedVersion);
   const doc = TextDocumentState.load(stateUpdates);
-  const now = Y.snapshot(doc);
-  const step: UndoStep = {
-    insertions: writtenSince(version, now),
-    deletions: VersionSnapshots.minus(now.ds, version.ds),
-    meta: new Map(),
-  };
-  if (step.insertions.clients.size === 0 && step.deletions.clients.size === 0) return null;
-  const scope = [...doc.share].filter(([name]) => name !== THREADS_MAP).map(([, type]) => type);
-  const undo = new Y.UndoManager(scope, { captureTimeout: 0 });
-  undo.undoStack.push(step);
-  let update: Uint8Array | null = null;
-  doc.on('update', (written: Uint8Array) => {
-    update = update ? Y.mergeUpdates([update, written]) : written;
-  });
-  undo.undo();
-  undo.destroy();
+  const update = UndoSteps.undoUpdate(
+    doc,
+    UndoSteps.between(Y.decodeSnapshot(encodedVersion), Y.snapshot(doc)),
+  );
   doc.destroy();
   return update;
 }

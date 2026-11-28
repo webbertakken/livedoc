@@ -7,14 +7,7 @@ import {
   type DocumentTab,
   type TextDocumentComment,
 } from '@livedoc/text-documents';
-import {
-  authorNoteOf,
-  commentNoteOf,
-  commentRows,
-  sharedComment,
-  tabGroups,
-  threadAssignee,
-} from './text-document-comment-rows';
+import { commentRows, tabGroups } from './text-document-comment-rows';
 
 const ADA: TextDocumentComment = {
   id: 'c',
@@ -81,43 +74,6 @@ describe('commentRows', () => {
   });
 });
 
-describe('sharedComment', () => {
-  it('carries the key as the author id and a file’s comment as from the file', () => {
-    expect(sharedComment(ADA)).toMatchObject({ authorId: 'k', authorName: 'Ada' });
-    const file = sharedComment({
-      ...ADA,
-      author: { name: 'Bo', colour: '#6b7280', fromFile: true },
-    });
-    expect(file.authorId).toBeUndefined();
-    expect(commentNoteOf(file)).toBe('From the file');
-    expect(commentNoteOf(sharedComment(ADA))).toBeNull();
-  });
-
-  // review.md "Suggestion cards": a comparison's author reads "From the comparison".
-  it('says From the comparison under a comparison’s author', () => {
-    expect(authorNoteOf({ fromComparison: true })).toBe('From the comparison');
-    expect(authorNoteOf({ fromFile: true })).toBe('From the file');
-    expect(authorNoteOf({})).toBeNull();
-  });
-
-  // review.md "Mentions": the chips are drawn from the comment's mentions, a file's (no account) too; a malformed one
-  // is left out.
-  it('carries the mentions a chip is drawn from, a file’s too, and leaves out a malformed one', () => {
-    const priya = {
-      userId: 'u-priya',
-      memberId: 'm-priya',
-      name: 'Priya Kaur',
-      handle: 'priya-kaur',
-    };
-    const fromFile = { userId: null, name: 'Bo Lee', handle: 'bo-lee' };
-    expect(
-      sharedComment({ ...ADA, mentions: [priya, fromFile, { handle: 7 }, 'x'] }).mentions,
-    ).toEqual([priya, fromFile]);
-    expect(sharedComment({ ...ADA, mentions: [] }).mentions).toBeUndefined();
-    expect(sharedComment(ADA).mentions).toBeUndefined();
-  });
-});
-
 describe('tabGroups', () => {
   it('names each tab, its emoji first', () => {
     expect(tabGroups([tab('t.0', 'One'), tab('t.b', 'Two', '📌')])).toEqual([
@@ -135,21 +91,6 @@ describe('threadAssignee', () => {
     name: 'Priya Kaur',
     handle: 'priya-kaur',
   };
-  const sam = { userId: null, memberId: 'm-sam', name: 'Sam Lee', handle: 'sam-lee' };
-  const thread = (...assignees: unknown[]) => ({
-    comments: assignees.map((assignee, i) => ({
-      ...ADA,
-      id: String(i),
-      ...(assignee === undefined ? {} : { assignee }),
-    })),
-  });
-
-  it('takes the latest comment’s assignee, skipping those with none', () => {
-    expect(threadAssignee(thread(priya, sam, undefined))).toEqual(sam);
-    expect(threadAssignee(thread(undefined))).toBeNull();
-    expect(threadAssignee(thread(priya, { name: 7 }))).toEqual(priya);
-  });
-
   it('puts it on the comments panel’s row', () => {
     const { doc, begin } = documentWith('alpha beta');
     begin('a', 't.0', 0, 5);

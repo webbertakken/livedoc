@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { CHANGESET_TOAST_COALESCE_MS, type ChangesetRoomOp } from '@livedoc/api-schema';
+import {
+  CHANGESET_TOAST_COALESCE_MS,
+  type ChangesetRoomOp,
+  type TextChangesetRoomOp,
+} from '@livedoc/api-schema';
 import {
   changesetToastCopy,
   coalesceChangesetToast,
@@ -31,6 +35,34 @@ const op = (over: Partial<ChangesetRoomOp> = {}): ChangesetRoomOp => ({
     { kind: 'reorder', ids: ['n'] },
   ],
   ...over,
+});
+
+const textOp = (over: Partial<TextChangesetRoomOp> = {}): TextChangesetRoomOp => ({
+  kind: 'text-changeset',
+  tabId: 't1',
+  id: 'tc_0000000001',
+  author: { name: 'Webber', color: '#0ea5e9' },
+  agentKey: 'abcabcabcabc',
+  summary: 'tighten the intro',
+  counts: { added: 2, changed: 1, removed: 0 },
+  ...over,
+});
+
+describe('a text document’s changeset toast', () => {
+  it('names the document, not elements, and touches none', () => {
+    const toast = coalesceChangesetToast(new Map(), textOp(), 0);
+    expect(toast).toMatchObject({ text: true, touched: [] });
+    expect(changesetToastCopy(toast)).toBe('Webber changed the document: tighten the intro');
+    expect(changesetToastCopy({ ...toast, summary: null })).toBe('Webber changed the document');
+  });
+
+  it('coalesces a burst; one with element changesets in it counts elements', () => {
+    const first = coalesceChangesetToast(new Map(), textOp(), 0);
+    const burst = coalesceChangesetToast(new Map([[first.key, first]]), textOp({ id: 'tc_2' }), 1);
+    expect(burst).toMatchObject({ text: true, changesetIds: ['tc_0000000001', 'tc_2'] });
+    const mixed = coalesceChangesetToast(new Map([[first.key, first]]), op(), 2);
+    expect(mixed.text).toBe(false);
+  });
 });
 
 describe('changesetToastCopy', () => {

@@ -26,6 +26,7 @@ vi.mock('@/lib/export-plan/plan-export-sheets', () => ({
   sheetModelsFor: read.models,
   sheetMetricsFor: () => new Map(),
   spreadsheetPicturesFor: read.pictures,
+  linkedChartsFor: () => new Map(),
   sheetContentsFor: read.contents,
 }));
 

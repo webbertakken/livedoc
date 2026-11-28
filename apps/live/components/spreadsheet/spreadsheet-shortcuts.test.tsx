@@ -113,7 +113,9 @@ describe('the spreadsheet shortcut layer', () => {
         const run = actions[id]!.run as ReturnType<typeof vi.fn>;
         for (const way of parseShortcut(row.keys[platform])) {
           run.mockClear();
-          expect(press(surface, way.steps[0]!), `${row.keys[platform]}`).toBe(false);
+          // A sequence (Ctrl+Alt+E, C) is pressed step by step; each step is taken.
+          for (const step of way.steps)
+            expect(press(surface, step), `${row.keys[platform]}`).toBe(false);
           expect(run, `${row.id} by ${row.keys[platform]} on ${platform}`).toHaveBeenCalledTimes(1);
         }
       }

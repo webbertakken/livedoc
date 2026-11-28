@@ -1,4 +1,8 @@
-import { CHANGESET_TOAST_COALESCE_MS, type ChangesetRoomOp } from '@livedoc/api-schema';
+import {
+  CHANGESET_TOAST_COALESCE_MS,
+  type ChangesetRoomOp,
+  type TextChangesetRoomOp,
+} from '@livedoc/api-schema';
 
 // The toast one person's (or one agent's) burst of changesets raises
 // (docs/specs/024-agents/agent-changesets.md). Pure:
@@ -14,17 +18,20 @@ export type ChangesetToast = {
   lastAt: number;
   tabId: string;
   touched: string[];
+  // A text document's changesets: they change writing, not elements, so the toast names the document.
+  text: boolean;
 };
 
 export function coalesceChangesetToast(
   toasts: ReadonlyMap<string, ChangesetToast>,
-  op: ChangesetRoomOp,
+  op: ChangesetRoomOp | TextChangesetRoomOp,
   now: number,
 ): ChangesetToast {
+  const text = op.kind === 'text-changeset';
   const key = op.agentKey ?? op.id;
   const count = op.counts.added + op.counts.changed + op.counts.removed;
   const summary = op.summary ?? null;
-  const touched = touchedIdsOf(op);
+  const touched = text ? [] : touchedIdsOf(op);
   const open = toasts.get(key);
   if (open && now - open.lastAt <= CHANGESET_TOAST_COALESCE_MS) {
     return {
@@ -35,6 +42,7 @@ export function coalesceChangesetToast(
       lastAt: now,
       tabId: op.tabId,
       touched: [...new Set([...open.touched, ...touched])],
+      text: open.text && text,
     };
   }
   return {
@@ -46,11 +54,15 @@ export function coalesceChangesetToast(
     lastAt: now,
     tabId: op.tabId,
     touched,
+    text,
   };
 }
 
-// "Webber changed 3 elements: add payment service". Adds and removals count as changed.
+// "Webber changed 3 elements: add payment service". Adds and removals count as changed. A text document's:
+// "Webber changed the document: tighten the intro".
 export function changesetToastCopy(toast: ChangesetToast): string {
+  if (toast.text)
+    return `${toast.name} changed the document${toast.summary ? `: ${toast.summary}` : ''}`;
   const elements = `${toast.count} element${toast.count === 1 ? '' : 's'}`;
   return `${toast.name} changed ${elements}${toast.summary ? `: ${toast.summary}` : ''}`;
 }

@@ -10,7 +10,7 @@ import type * as Y from 'yjs';
 import type { CommentMention } from '@livedoc/document';
 import type { DocumentTab } from '@livedoc/text-documents';
 import type { OfficeActions } from '@/lib/office/office-catalogue';
-import type { TextDocumentCommenter } from '@/lib/text-document/text-document-commenter';
+import type { OfficeCommenter } from '@/lib/office/review/office-commenter';
 import type { SuggestionRights } from '@/lib/text-document/text-document-suggestion-cards';
 import { useTextDocumentThreads } from './useTextDocumentThreads';
 import { useTextDocumentThreadKeys } from './useTextDocumentThreadKeys';
@@ -56,7 +56,7 @@ export function useTextDocumentReview({
   tab: string;
   tabs: readonly DocumentTab[];
   showTab: (id: string) => void;
-  commenter: TextDocumentCommenter | null;
+  commenter: OfficeCommenter | null;
   /** Who may accept and reject suggestions here (review.md "Suggestion cards"). */
   rights: SuggestionRights;
   /** The comments panel is open. */

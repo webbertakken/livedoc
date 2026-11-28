@@ -1,15 +1,19 @@
 'use client';
 
-// Choose a Chart (docs/specs/026-plan/plan-tabs.md "Sheet Chart"), an Editor's: a popover of the document's Sheets,
-// then, for the Sheet picked, the charts already drawn from it (a copy of one fills the slot) or a new one over a
-// range typed as A1, of a type (Bar, Line, Pie). A choice hands the slot its chart element and closes the picker.
+// Choose a Chart (docs/specs/026-plan/plan-tabs.md "Sheet Chart"), an Editor's: a popover of the document's Sheets and
+// the person's spreadsheets (docs/specs/029-sheets/plan-links.md "The Sheet Chart from a spreadsheet"), then, for the
+// sheet picked, the charts already drawn from it or a new one over a range typed as A1, of a type. A Sheet of the
+// document hands the slot its chart element (a copy of one); a spreadsheet's sheet hands it the chart's id, or the
+// range and type (D508). Either closes the picker.
 import { useMemo, useState } from 'react';
 import {
   CHART_TYPE_LABELS,
   CHART_TYPES,
   type ChartType,
+  type DashboardSheetChart,
   type ShapeElement,
 } from '@livedoc/document';
+import type { Sheet } from '@livedoc/sheets';
 import { CompactEmptyState, lucideGlyph } from '@livedoc/ui';
 import { lucideChartColumn } from '@livedoc/icons/lucide';
 import { AnchoredPopover } from '@/components/primitives/AnchoredPopover';
@@ -31,22 +35,34 @@ import {
   sheetChartsOf,
   slotChartFrom,
 } from './sheet-chart-choice';
+import { linkedChartLabel, linkedSheetCharts, newLinkedChart } from './spreadsheet-chart';
+import { SpreadsheetSheetSource } from './SpreadsheetSheetSource';
+import { retryLinkedRead } from './linked-sheets';
+import { useLinkedRead } from './useLinkedSheetRead';
 
 const ChartGlyph = lucideGlyph(lucideChartColumn, 14);
 
 export function SheetChartSource({
   anchor,
   initialSheetId = '',
+  initialDocumentId = '',
   onChoose,
+  onChooseLinked,
   onClose,
 }: {
   anchor: HTMLElement;
-  // The Sheet the slot's chart reads now (Change Chart), picked to start.
+  // The sheet the slot's chart reads now (Change Chart), picked to start: of a spreadsheet when `initialDocumentId`
+  // names one, else of the document.
   initialSheetId?: string;
+  initialDocumentId?: string;
   onChoose: (chart: ShapeElement) => void;
+  onChooseLinked: (chart: DashboardSheetChart) => void;
   onClose: () => void;
 }) {
-  const [sheetId, setSheetId] = useState(initialSheetId);
+  // The sheet picked: a spreadsheet's when `documentId` is set, else one of the document's (its `sheetId`).
+  const [pick, setPick] = useState({ documentId: initialDocumentId, sheetId: initialSheetId });
+  const sheetId = pick.documentId ? '' : pick.sheetId;
+  const setSheetId = (id: string) => setPick({ documentId: '', sheetId: id });
   const picker = useSheetPicker(sheetId);
   const { read, tabs } = picker;
   const charts = useMemo(() => (sheetId ? sheetChartsOf(tabs, sheetId) : []), [tabs, sheetId]);
@@ -58,7 +74,21 @@ export function SheetChartSource({
     <AnchoredPopover anchor={anchor} name="Choose a Chart" width={320} onClose={onClose}>
       <div className="flex max-h-[min(70vh,32rem)] flex-col gap-3 overflow-y-auto rounded-menu border border-slate-200 bg-white p-3 shadow-xl dark:border-slate-700 dark:bg-slate-900">
         <SheetList picker={picker} sheetId={sheetId} onPick={setSheetId} />
-        {read.state === 'ready' ? (
+        <SpreadsheetSheetSource
+          documentId={pick.documentId}
+          sheetId={pick.documentId ? pick.sheetId : ''}
+          onPick={setPick}
+        />
+        {pick.documentId ? (
+          <LinkedCharts
+            documentId={pick.documentId}
+            sheetId={pick.sheetId}
+            onChoose={(chart) => {
+              onChooseLinked(chart);
+              onClose();
+            }}
+          />
+        ) : read.state === 'ready' ? (
           <>
             <section aria-label="Its Charts" className="flex flex-col gap-1">
               <h3 className={SECTION}>Its Charts</h3>
@@ -82,7 +112,13 @@ export function SheetChartSource({
                 ))
               )}
             </section>
-            <NewChart sheet={read.sheet} onAdd={choose} />
+            <NewChart
+              make={(text, kind) => {
+                const chart = newSlotChart(read.sheet, text, kind);
+                if (chart) choose(chart);
+                return !!chart;
+              }}
+            />
           </>
         ) : read.state === 'loading' ? (
           <p className={MUTED_LINE}>Loading {read.name}…</p>
@@ -94,12 +130,77 @@ export function SheetChartSource({
   );
 }
 
-function NewChart({
-  sheet,
-  onAdd,
+// A spreadsheet's sheet's charts and New Chart, read through its link (D505).
+function LinkedCharts({
+  documentId,
+  sheetId,
+  onChoose,
 }: {
-  sheet: Parameters<typeof newSlotChart>[0];
-  onAdd: (chart: ShapeElement) => void;
+  documentId: string;
+  sheetId: string;
+  onChoose: (chart: DashboardSheetChart) => void;
+}) {
+  const read = useLinkedRead(documentId, sheetId);
+  if (read.state === 'loading') return <p className={MUTED_LINE}>Loading the sheet…</p>;
+  if (read.state === 'failed')
+    return (
+      <TabWaiting
+        name="the sheet"
+        status="failed"
+        onRetry={() => retryLinkedRead(documentId, sheetId)}
+      />
+    );
+  if (read.state !== 'ready')
+    return (
+      <p className={MUTED_LINE}>
+        {read.state === 'denied'
+          ? 'You don’t have access to this spreadsheet.'
+          : 'This spreadsheet is too large to read here.'}
+      </p>
+    );
+  if (!read.sheet) return <p className={MUTED_LINE}>This sheet was deleted.</p>;
+  const sheet: Sheet = read.sheet;
+  const charts = linkedSheetCharts(sheet);
+  return (
+    <>
+      <section aria-label="Its Charts" className="flex flex-col gap-1">
+        <h3 className={SECTION}>Its Charts</h3>
+        {charts.length === 0 ? (
+          <CompactEmptyState
+            size="small"
+            icon={<ChartGlyph />}
+            title="No charts yet"
+            description="Charts on this sheet show up here; New Chart below makes one."
+          />
+        ) : (
+          charts.map((c) => (
+            <button
+              key={c.id}
+              type="button"
+              onClick={() => onChoose({ type: 'sheet-chart', documentId, sheetId, chartId: c.id })}
+              className={ROW}
+            >
+              <span className="truncate">{linkedChartLabel(c, sheet)}</span>
+            </button>
+          ))
+        )}
+      </section>
+      <NewChart
+        make={(text, kind) => {
+          const chart = newLinkedChart(documentId, sheet, text, kind);
+          if (chart) onChoose(chart);
+          return !!chart;
+        }}
+      />
+    </>
+  );
+}
+
+function NewChart({
+  make,
+}: {
+  // Makes the chart over the range typed and hands it on; false when it is not a range of the sheet.
+  make: (text: string, kind: ChartType) => boolean;
 }) {
   const [text, setText] = useState('');
   const [kind, setKind] = useState<ChartType>('column');
@@ -110,9 +211,7 @@ function NewChart({
       className="flex flex-col gap-2"
       onSubmit={(e) => {
         e.preventDefault();
-        const chart = newSlotChart(sheet, text, kind);
-        setProblem(!chart);
-        if (chart) onAdd(chart);
+        setProblem(!make(text, kind));
       }}
     >
       <h3 className={SECTION}>New Chart</h3>

@@ -18,8 +18,8 @@ import type { TabLoadState } from './editor-page-helpers';
 // view, and open the named popover — exactly what a Collaborate Panel
 // row click does in-editor. A Plan card's row names its board and the card
 // (`&item=<id>`), or the card alone when no board shows it: the card opens
-// in the item panel, as a click on it does. A text document's row names its thread as the element: once its tab is
-// active, the thread is handed to the text document, which goes to it (inbox.md §1.8).
+// in the item panel, as a click on it does. A text document's row, and a spreadsheet's cell row, names its thread as
+// the element: once its tab is active, the thread is handed to the surface, which goes to it (inbox.md §1.8).
 //
 // Two hooks because of WHEN the fragment can be read. useTabEntryEffects
 // rewrites the hash to the plain `#t=` pin on the hydration commit, so
@@ -55,8 +55,8 @@ export function useCollabDeepLink({
   openActionPopover,
   openComments,
   openItem,
-  activeIsTextDocument,
-  openTextThread,
+  activeKeepsThreads,
+  openThread,
 }: {
   link: MutableRefObject<CollabDeepLink | null>;
   hydrated: boolean;
@@ -68,9 +68,9 @@ export function useCollabDeepLink({
   openActionPopover: (elementId: string) => void;
   openComments: (elementId: string) => void;
   openItem: (itemId: string) => void;
-  /** The active tab is a text document's, whose threads are kept in its live state, not its elements. */
-  activeIsTextDocument: boolean;
-  openTextThread: (tabId: string, threadId: string) => void;
+  /** The active tab is a text document's or a spreadsheet's sheet, whose threads are kept apart from its elements. */
+  activeKeepsThreads: boolean;
+  openThread: (tabId: string, threadId: string) => void;
 }): (target: CollabDeepLink) => void {
   const consumed = useRef(false);
   // An arrival asked for in the editor (the Actions board's links, docs/specs/026-plan/linked-boards.md): the same
@@ -101,8 +101,8 @@ export function useCollabDeepLink({
   );
 
   const openCard = useEffectEvent((itemId: string) => openItem(itemId));
-  const openThread = useEffectEvent((tabId: string, threadId: string) =>
-    openTextThread(tabId, threadId),
+  const handThread = useEffectEvent((tabId: string, threadId: string) =>
+    openThread(tabId, threadId),
   );
 
   useEffect(() => {
@@ -120,8 +120,8 @@ export function useCollabDeepLink({
     if (target.itemId) openCard(target.itemId);
     if (!target.at) return;
     const { elementId } = target.at;
-    if (activeIsTextDocument) {
-      openThread(target.at.tabId, elementId);
+    if (activeKeepsThreads) {
+      handThread(target.at.tabId, elementId);
       return;
     }
     const el = elements.find((e) => e.id === elementId);
@@ -129,6 +129,6 @@ export function useCollabDeepLink({
     // as close as the link can get (docs/specs/013-workspace/inbox.md §1).
     if (!el || el.type === 'arrow') return;
     arriveAt(el, target.open);
-  }, [link, hydrated, activeId, activeTabLoadState, elements, asked, activeIsTextDocument]);
+  }, [link, hydrated, activeId, activeTabLoadState, elements, asked, activeKeepsThreads]);
   return arrive;
 }

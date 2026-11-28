@@ -4,6 +4,8 @@
 
 import type { StormExportInput } from './commands/storm-export';
 import type { SpreadsheetDownloadInput } from './commands/spreadsheet-download';
+import type { TextDocumentDownloadInput } from './commands/text-document-download';
+import type { TextDocumentImportInput } from './commands/text-document-import';
 import type { SpreadsheetImportInput } from './commands/spreadsheet-import';
 import { graphLint, renderSkill, type Verb, type VerbContext } from '@livedoc/agent-verbs';
 import { DOCUMENT_FORMAT } from '@livedoc/api-schema';
@@ -170,6 +172,14 @@ async function runOnline(
   if (verb.id === 'spreadsheet.import') {
     const { spreadsheetImport } = await import('./commands/spreadsheet-import');
     return spreadsheetImport(io, ctx, input as SpreadsheetImportInput);
+  }
+  if (verb.id === 'text-document.download') {
+    const { textDocumentDownload } = await import('./commands/text-document-download');
+    return textDocumentDownload(io, ctx, input as TextDocumentDownloadInput);
+  }
+  if (verb.id === 'text-document.import') {
+    const { textDocumentImport } = await import('./commands/text-document-import');
+    return textDocumentImport(io, ctx, input as TextDocumentImportInput);
   }
   if (verb.id === 'storm.export') {
     const { stormExport } = await import('./commands/storm-export');

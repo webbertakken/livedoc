@@ -2,29 +2,21 @@
 // a new text document in its format, named after the file; a Plain Text, Markdown, HTML, Rich Text or PDF file is imported into a new
 // OpenDocument one. The api reads it under the package's guards and answers a named rejection, which this words for
 // the person.
-import { base64OfBytes, importTypeOfFileName } from '@livedoc/text-documents';
+import {
+  base64OfBytes,
+  formatOfFileName,
+  importTypeOfFileName,
+  TEXT_DOCUMENT_OPEN_REFUSAL_WORDS,
+} from '@livedoc/text-documents';
 import { ApiError, apiCreateDocument } from '@/lib/api-client';
 import { createIdsFor } from '@/lib/new-document/create-failure';
 import { debugLog } from '@/lib/debug-log';
 import { keepImportReport } from '@/lib/office/import-report-handoff';
 import { track } from '@/lib/telemetry';
 import type { PdfImportEngine } from './import-pdf-file';
-import { formatOfFileName, newTextDocumentTab, UNTITLED_TEXT_DOCUMENT } from './text-document-tab';
+import { newTextDocumentTab, UNTITLED_TEXT_DOCUMENT } from './text-document-tab';
 
 export type OpenedTextDocument = { ok: true; documentId: string } | { ok: false; message: string };
-
-// What each named rejection says (docs/specs/020-import-export/office-packages.md "Named rejections").
-const REJECTION_COPY: Record<string, string> = {
-  package_damaged: 'This file is damaged and could not be opened.',
-  package_too_large: 'This file is too large to open.',
-  package_encrypted:
-    'This file is protected by a password. Remove the password, then open it again.',
-  package_wrong_type: 'This file is not a text document LiveDoc can open yet.',
-  xml_doctype_refused: 'This file holds content LiveDoc never opens.',
-  xml_malformed: 'This file is damaged and could not be opened.',
-  picture_too_large: 'A picture in this file is too large to open.',
-  document_too_large: 'This file is past the 1,020,000-character limit of a text document.',
-};
 
 const GENERIC = 'The file could not be opened. Try again.';
 
@@ -83,6 +75,6 @@ export async function openTextDocumentFile(
   } catch (error) {
     const code = error instanceof ApiError ? error.code : null;
     debugLog('[text-document] open refused', { code });
-    return { ok: false, message: (code && REJECTION_COPY[code]) || GENERIC };
+    return { ok: false, message: (code && TEXT_DOCUMENT_OPEN_REFUSAL_WORDS[code]) || GENERIC };
   }
 }

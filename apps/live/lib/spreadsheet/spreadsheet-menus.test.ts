@@ -171,6 +171,8 @@ describe('spreadsheetMenus', () => {
       'paste',
       'paste-values-only',
       'delete-values',
+      // Insert › Comment: an Editor's and a Participant's (review.md "Who may do what").
+      'insert-comment',
     ]);
     expect(byLevel('view')).toEqual([
       'open',

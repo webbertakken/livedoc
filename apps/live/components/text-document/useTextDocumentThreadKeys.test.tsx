@@ -10,7 +10,7 @@ import { ySyncPlugin } from 'y-prosemirror';
 import { LiveThreads, TextDocumentState } from '@livedoc/text-documents';
 import { textDocumentSchema } from '@/lib/text-document/text-document-schema';
 import { anchorsOf, threadHighlightPlugin } from '@/lib/text-document/text-document-threads';
-import type { TextDocumentCommenter } from '@/lib/text-document/text-document-commenter';
+import type { OfficeCommenter } from '@/lib/office/review/office-commenter';
 import { useTextDocumentThreads } from './useTextDocumentThreads';
 import {
   ENTER_CURRENT_COMMENT,
@@ -20,7 +20,7 @@ import {
   useTextDocumentThreadKeys,
 } from './useTextDocumentThreadKeys';
 
-const ADA: TextDocumentCommenter = {
+const ADA: OfficeCommenter = {
   key: 'k',
   name: 'Ada',
   colour: '#0284c7',

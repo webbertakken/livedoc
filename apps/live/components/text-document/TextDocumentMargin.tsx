@@ -12,8 +12,9 @@ import type { EditorView } from 'prosemirror-view';
 import { lucideMessageSquarePlus } from '@livedoc/icons/lucide';
 import { Tooltip, lucideGlyph } from '@livedoc/ui';
 import { stackCards, type CardWanted } from '@/lib/text-document/text-document-threads';
-import { TextDocumentDraftCard, TextDocumentThreadCard } from './TextDocumentThreadCard';
-import type { TextDocumentCommenter } from '@/lib/text-document/text-document-commenter';
+import { OfficeDraftCard } from '@/components/office/review/OfficeThreadCard';
+import { TextDocumentThreadCard } from './TextDocumentThreadCard';
+import type { OfficeCommenter } from '@/lib/office/review/office-commenter';
 import type { TextDocumentThreads } from './useTextDocumentThreads';
 import type { CardFocusRequest, TextDocumentThreadKeys } from './useTextDocumentThreadKeys';
 import type { TextDocumentSuggestionCards } from './useTextDocumentSuggestionCards';
@@ -70,7 +71,7 @@ export function TextDocumentMargin({
   threads: TextDocumentThreads;
   /** Going between threads from the keyboard: the card asked for the focus, J and K, U. */
   keys: Pick<TextDocumentThreadKeys, 'focusRequest' | 'step' | 'exit'>;
-  commenter: TextDocumentCommenter | null;
+  commenter: OfficeCommenter | null;
   /** The reader's account, so a thread assigned to them reads "Assigned to you" (review.md "Assigning"). */
   selfUserId?: string | null;
   subscribe: (listener: () => void) => () => void;
@@ -215,7 +216,7 @@ export function TextDocumentMargin({
     }
     if (id === 'draft')
       return draft && commenter ? (
-        <TextDocumentDraftCard
+        <OfficeDraftCard
           commenter={commenter}
           placed={layout.tops.has('draft')}
           onSend={threads.send}

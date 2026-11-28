@@ -9,6 +9,7 @@ import {
   FORM_METRICS,
   SHEET_METRICS,
   type FormMetricKind,
+  type DashboardSheetChart,
   type DashboardTabOf,
   type ShapeElement,
   type SheetMetricKind,
@@ -27,7 +28,12 @@ export type DashboardItem =
   // A figure from a form (Add to Slot's Form Metrics), the document's form chosen as it is placed.
   | { kind: 'form-metric'; metric: FormMetricKind }
   // A chart from a Sheet (Add to Slot's Sheet Chart): `chart` once chosen (SheetChartSource), the element it places.
-  | { kind: 'sheet-chart'; chart?: ShapeElement | undefined }
+  // Chosen (SheetChartSource): a chart element reading a Sheet of the document, or a spreadsheet's chart (D508).
+  | {
+      kind: 'sheet-chart';
+      chart?: ShapeElement | undefined;
+      linked?: DashboardSheetChart | undefined;
+    }
   // A spreadsheet's first sheet, read-only, its spreadsheet chosen in the slot (docs/specs/029-sheets/plan-links.md
   // "The Spreadsheet slot").
   | { kind: 'spreadsheet' }

@@ -48,6 +48,8 @@ export function roomOpIsWellFormed(op: unknown): op is RoomOp {
         (op.elementOps === undefined ||
           (Array.isArray(op.elementOps) && op.elementOps.every((o) => isElementOpShape(o, false))))
       );
+    case 'text-changeset':
+      return isText(op.tabId) && isText(op.id) && isRecord(op.author) && isText(op.author.name);
     case 'vote':
       return isText(op.tabId) && isText(op.elementId) && isText(op.voter);
     case 'tab-meta':

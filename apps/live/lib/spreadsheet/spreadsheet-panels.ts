@@ -121,6 +121,17 @@ export const CLEAN_UP_SUGGESTIONS_PANEL: OfficePanelSpec = {
   editorsOnly: true,
 };
 
+// The Comments panel (docs/specs/029-sheets/review.md "In the grid"): an Editor's and a Participant's, never a
+// Viewer's (D655). Its item is the shortcut row's id, so Ctrl+Alt+Shift+A opens it, and the title row's comment
+// history runs it.
+export const SPREADSHEET_COMMENTS_PANEL: OfficePanelSpec = {
+  id: 'comments',
+  title: 'Comments',
+  side: 'right',
+  item: 'open-comment-thread',
+  review: true,
+};
+
 export const SPREADSHEET_PANELS: readonly OfficePanelSpec[] = [
   CONDITIONAL_FORMAT_RULES_PANEL,
   ALTERNATING_COLOURS_PANEL,
@@ -135,6 +146,7 @@ export const SPREADSHEET_PANELS: readonly OfficePanelSpec[] = [
   PIVOT_EDITOR_PANEL,
   COLUMN_STATS_PANEL,
   CLEAN_UP_SUGGESTIONS_PANEL,
+  SPREADSHEET_COMMENTS_PANEL,
 ];
 
 /**

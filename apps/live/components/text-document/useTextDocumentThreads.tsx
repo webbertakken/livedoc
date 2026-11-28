@@ -25,9 +25,9 @@ import {
   threadStretches,
   type ThreadStretch,
 } from '@/lib/text-document/text-document-threads';
-import type { TextDocumentCommenter } from '@/lib/text-document/text-document-commenter';
+import type { OfficeCommenter } from '@/lib/office/review/office-commenter';
 import { reactorNames } from '@/lib/office/review/comment-reactions';
-import { sharedComment } from '@/lib/text-document/text-document-comment-rows';
+import { sharedComment } from '@/lib/office/review/office-comments';
 
 /** The menu item, toolbar button and context menu item that add a comment (Insert > Comment, ⌘⌥M). */
 export const COMMENT_ITEM = 'comment';
@@ -72,7 +72,7 @@ export function useTextDocumentThreads({
   ready: boolean;
   /** The document tab shown. */
   tab: string;
-  commenter: TextDocumentCommenter | null;
+  commenter: OfficeCommenter | null;
   /** Told when the writing changed. */
   subscribe: (listener: () => void) => () => void;
   /** A draft or reply with mentions was added: count it and ask for the email (review.md "Mentions"). */
