@@ -43,7 +43,7 @@ LiveDoc's page does without it: braille support, [Tools](tools.md#accessibility-
 | Open link                      | `Alt+Enter`                              | `Option+Enter`              | `Alt+Enter`        | built (`useTextDocumentLinks.test.tsx`)                  |
 | Show common keyboard shortcuts | `Ctrl+/`                                 | `⌘+/`                       | `Ctrl+/`           | built (`OfficeShortcutsDialog.test.tsx`)                 |
 | Save                           | `Ctrl+S`                                 | `⌘+S`                       | `Ctrl+S`           | specified                                                |
-| Print                          | `Ctrl+P`                                 | `⌘+P`                       | `Ctrl+P`           | specified                                                |
+| Print                          | `Ctrl+P`                                 | `⌘+P`                       | `Ctrl+P`           | built                                                    |
 | Open                           | `Ctrl+O`                                 | `⌘+O`                       | `Ctrl+O`           | built (`text-document-shortcuts.test.tsx`)               |
 | Find                           | `Ctrl+F`                                 | `⌘+F`                       | `Ctrl+F`           | specified                                                |
 | Find and replace               | `Ctrl+H`                                 | `⌘+Shift+H`                 | `Ctrl+H`           | specified                                                |

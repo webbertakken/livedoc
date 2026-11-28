@@ -171,8 +171,8 @@ export function textDocumentMenus(
       item('language', 'Language', 'edit'),
       SEPARATOR,
       item('page-setup', 'Page setup', 'edit', BUILT),
-      item('print-preview', 'Print preview', 'view'),
-      item('print', 'Print', 'view', { shortcut: 'print' }),
+      item('print-preview', 'Print preview', 'view', BUILT),
+      item('print', 'Print', 'view', { shortcut: 'print', status: 'built' }),
     ]),
     menu('edit', 'Edit', [
       item('undo', 'Undo', 'edit', { shortcut: 'undo', status: 'built' }),

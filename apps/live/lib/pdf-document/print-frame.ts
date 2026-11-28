@@ -49,11 +49,33 @@ async function writePictures(
   await Promise.all(images.map((image) => image.decode().catch(() => undefined)));
 }
 
-/** Prints `content` from a frame added to `host`; resolves once the frame is gone. */
+/**
+ * How a print went: the print dialog opened (or closed again), the browser refused it, or it said nothing either way
+ * (most browsers say nothing of a PDF printed from a frame).
+ */
+export type PrintOutcome = 'printed' | 'blocked' | 'unconfirmed';
+
+/**
+ * How long a page inside another page's frame waits for the print dialog to open before it counts the print as blocked:
+ * a frame without `allow-modals` drops `print()` without a word (default).
+ */
+export const PRINT_OPENED_MS = 3_000;
+
+/** The page is itself inside another's frame (an embed), where printing can be refused without a word. */
+const framedPage = (): boolean => {
+  try {
+    return window.top !== window.self;
+  } catch {
+    return true;
+  }
+};
+
+/** Prints `content` from a frame added to `host`; resolves once the frame is gone, with how the print went. */
 export function printInFrame(
   content: PdfPrintContent,
   host: HTMLElement = document.body,
-): Promise<void> {
+  framed: boolean = framedPage(),
+): Promise<PrintOutcome> {
   const urls =
     content.way === 'pdf'
       ? [URL.createObjectURL(new Blob([content.bytes], { type: 'application/pdf' }))]
@@ -67,22 +89,37 @@ export function printInFrame(
   frame.dataset.pdfPrintFrame = content.way;
   return new Promise((done) => {
     let timer: ReturnType<typeof setTimeout> | undefined;
-    const gone = () => {
+    let watch: ReturnType<typeof setTimeout> | undefined;
+    let opened = false;
+    const gone = (outcome: PrintOutcome) => {
       clearTimeout(timer);
+      clearTimeout(watch);
       frame.remove();
       for (const url of urls) URL.revokeObjectURL(url);
-      done();
+      done(outcome);
     };
     const print = () => {
       const view = frame.contentWindow;
-      view?.addEventListener('afterprint', gone, { once: true });
-      timer = setTimeout(gone, PDF_PRINT_FRAME_MS);
+      if (!view) {
+        debugLog('[pdf] print-failed step=frame', 'no window');
+        gone('blocked');
+        return;
+      }
+      view.addEventListener('beforeprint', () => (opened = true), { once: true });
+      view.addEventListener('afterprint', () => gone('printed'), { once: true });
+      timer = setTimeout(() => gone(opened ? 'printed' : 'unconfirmed'), PDF_PRINT_FRAME_MS);
+      if (framed)
+        watch = setTimeout(() => {
+          if (opened) return;
+          debugLog('[pdf] print-failed step=frame', 'never opened in a framed page');
+          gone('blocked');
+        }, PRINT_OPENED_MS);
       try {
-        view?.focus();
-        view?.print();
+        view.focus();
+        view.print();
       } catch (error) {
         debugLog('[pdf] print-failed step=frame', String(error));
-        gone();
+        gone('blocked');
       }
     };
     if (content.way === 'pdf') {

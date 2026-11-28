@@ -40,12 +40,12 @@ describe('TEXT_DOCUMENT_TOOLBAR', () => {
     }
   });
 
-  it('shows a Viewer the zoom and View alone, and a Participant Add comment too', () => {
+  it('shows a Viewer the printer, the zoom and View alone, and a Participant Add comment too', () => {
     const at = (level: 'view' | 'participate') =>
       controls
         .filter((c) => c.level === 'view' || (level === 'participate' && c.level === 'participate'))
         .map((c) => c.id);
-    expect(at('view')).toEqual(['zoom', 'hide-the-menus']);
-    expect(at('participate')).toEqual(['zoom', 'comment', 'hide-the-menus']);
+    expect(at('view')).toEqual(['print', 'zoom', 'hide-the-menus']);
+    expect(at('participate')).toEqual(['print', 'zoom', 'comment', 'hide-the-menus']);
   });
 });

@@ -68,7 +68,9 @@ export function useTextDocumentPdf({
   pages,
   readStyles,
   name,
+  printing,
   setPrinting,
+  onDone,
 }: {
   readonly view: EditorView | null;
   /** The page element the sheets and the writing are drawn in. */
@@ -76,16 +78,22 @@ export function useTextDocumentPdf({
   readonly pages: readonly PageGeometry[];
   readonly readStyles: () => readonly Style[];
   readonly name: string;
+  /** The look the surface is in: a PDF made from Print preview leaves it there. */
+  readonly printing: PrintingLook;
   readonly setPrinting: (look: PrintingLook) => void;
+  /** Focus back to the writing once the PDF is downloaded or let go. */
+  readonly onDone?: () => void;
 }): {
   readonly actions: OfficeActions;
   readonly dialog: ReactNode;
   readonly make: (onStep: (step: PdfStep) => void, cancelled: () => boolean) => Promise<PdfMade>;
 } {
   const laidOut = useRef(pages);
+  const look = useRef(printing);
   useEffect(() => {
     laidOut.current = pages;
-  }, [pages]);
+    look.current = printing;
+  }, [pages, printing]);
   const [shown, setShown] = useState<{ step: PdfStep | 'failed' } | null>(null);
   const cancel = useRef(false);
   const canvas = useRef<CanvasRenderingContext2D | null>(null);
@@ -96,9 +104,11 @@ export function useTextDocumentPdf({
       const page = root();
       if (!view || view.isDestroyed || !page) return { ok: false, cancelled: false };
       let step: PdfStep = 'laying-out';
+      // Made from Print preview, the pages are already in their printing look, and stay in it.
+      const before = look.current;
       try {
         onStep(step);
-        setPrinting('capture');
+        if (before === null) setPrinting('capture');
         await settled(page, () => laidOut.current.length);
         if (cancelled()) return { ok: false, cancelled: true };
         step = 'reading';
@@ -120,7 +130,7 @@ export function useTextDocumentPdf({
             return null;
           }
         });
-        setPrinting(null);
+        setPrinting(before);
         if (cancelled()) return { ok: false, cancelled: true };
         step = 'writing';
         onStep(step);
@@ -155,7 +165,7 @@ export function useTextDocumentPdf({
         debugLog('[text-document] pdf failed', { step, error: String(error) });
         return { ok: false, cancelled: false };
       } finally {
-        setPrinting(null);
+        setPrinting(before);
       }
     },
     [view, root, readStyles, name, setPrinting],
@@ -176,6 +186,7 @@ export function useTextDocumentPdf({
       downloadBlob(new Blob([made.bytes], { type: 'application/pdf' }), `${name}.pdf`);
       track('Document', 'Exported', 'TextDocumentPdf');
       setShown(null);
+      onDone?.();
       return;
     }
     if (made.cancelled) {
@@ -184,7 +195,7 @@ export function useTextDocumentPdf({
       return;
     }
     setShown({ step: 'failed' });
-  }, [make, name]);
+  }, [make, name, onDone]);
 
   const actions = useMemo(
     (): OfficeActions => ({ [DOWNLOAD_PDF_ITEM]: { run: () => void download() } }),
@@ -193,7 +204,8 @@ export function useTextDocumentPdf({
   const close = useCallback(() => {
     cancel.current = true;
     setShown(null);
-  }, []);
+    onDone?.();
+  }, [onDone]);
   const dialog = (
     <OfficeDialog open={shown !== null} onClose={close} title={PDF_MAKING_TITLE}>
       <p role="status" aria-live="polite" className="text-body">

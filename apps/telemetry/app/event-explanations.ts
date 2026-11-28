@@ -1425,6 +1425,10 @@ export const EXACT: Readonly<Record<string, string>> = {
     "Someone copied a link to a tab inside a text document from the tab's menu.",
   'UI|Used|TextDocumentSecurityLimitations':
     'Someone opened File > Security limitations in a text document, listing what opening its file left out and what converting it could not carry.',
+  'UI|Used|TextDocumentPrint':
+    'Someone printed a text document: its pages, written as a PDF, handed to the browser’s print dialog.',
+  'UI|Used|TextDocumentPrintPreview':
+    'Someone opened File > Print preview in a text document, showing its pages as they print.',
   'UI|Used|TextDocumentTabShown':
     "Someone showed another of a text document's tabs, from its outline or the keyboard.",
   'Tab|Created|Pdf': 'Someone added a PDF tab from the + menu, from a file on their computer.',
