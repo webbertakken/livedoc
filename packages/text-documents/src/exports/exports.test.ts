@@ -85,8 +85,14 @@ describe('writePlainText', () => {
   });
 
   it('says a picture by its alt text, its title, or that it is one; a decorative one not at all', () => {
-    const picture = (extra: object): Inline =>
-      ({ type: 'picture', media: 'm', width: 1, height: 1, props: {}, ...extra });
+    const picture = (extra: object): Inline => ({
+      type: 'picture',
+      media: 'm',
+      width: 1,
+      height: 1,
+      props: {},
+      ...extra,
+    });
     expect(
       writePlainText(
         doc([
