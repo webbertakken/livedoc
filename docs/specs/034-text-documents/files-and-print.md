@@ -45,7 +45,7 @@ File > Download, in Google's order:
 
 | Item                      | File                                                                                                   |
 | ------------------------- | ------------------------------------------------------------------------------------------------------ |
-| Microsoft Word (.docx)    | The document itself when OOXML; a converted copy when ODF, its losses in the download's report         |
+| Microsoft Word (.docx)    | The document itself when OOXML; a converted copy when ODF, its losses listed before it downloads       |
 | OpenDocument (.odt)       | The document itself when ODF; a converted copy when OOXML                                              |
 | OpenDocument flat (.fodt) | LiveDoc's addition: the flat file                                                                      |
 | PDF (.pdf)                | The laid-out pages, text as text, fonts embedded, links live, bookmarks from headings, alt text tagged |
@@ -107,9 +107,22 @@ with nothing lost it says so and still asks (director, 2026-11-27). The text doc
 
 ## Import report
 
-Shown once after an import or a conversion that dropped or kept anything (the **Security limitations** item reopens
-it): what was dropped (macros, signatures, external links not followed, scripts in HTML) and what was kept untouched
-(form controls, smart chips' data), each by name and count. Nothing in it is ever silent.
+What a file held that the text document does not, kept in the document itself so it is never silent and never lost
+(director, 2026-11-28):
+
+- **Opened**: what reading the file dropped (macros, signatures, scripts, frames and objects, fields that run things,
+  unsafe links, external links and remote pictures not followed, pictures of formats LiveDoc does not draw, parts of
+  tables, headers, footers, comments and suggestions it could not place) and what it kept untouched (content LiveDoc
+  does not edit, written back as it came), a line a kind, counted, naming up to three of what it was. The room writes
+  it when it reads the file, so every copy and every person sees the same report.
+- **Converted**: each conversion between ODF and OOXML that the other format could not hold everything of, with the
+  lines its dialog listed (the [Conversion](standard-mapping.md#conversion) words), newest first, the last 20 kept
+  (default). Undoing the conversion takes its entry away with it; nothing is asked again after converting, as its
+  dialog listed the losses first.
+- **Shown once**, to the person who opened the file, as the document first loads, when it dropped or kept anything:
+  **Opened “‹name›”**, its lines, **OK**. A copy, another person and a later visit do not see it again unasked.
+- **Security limitations** (File) reopens it for anyone who can open the document, Viewers included: both sections,
+  or "Nothing was left out or kept aside when this document was opened or converted." when there is nothing.
 
 ## Import security
 
