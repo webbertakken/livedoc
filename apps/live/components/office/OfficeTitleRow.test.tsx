@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { act, fireEvent, render, screen, within } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { useRef } from 'react';
 import type { AccessLevel } from '@livedoc/api-schema';
 import type { Participant } from '@/lib/identity';
@@ -35,6 +35,7 @@ const CATALOGUE: OfficeCatalogue = [
         level: 'edit',
         status: 'built',
       },
+      { kind: 'item', id: 'make-a-copy', label: 'Make a copy', level: 'view', status: 'built' },
       {
         kind: 'item',
         id: 'share-with-others',
@@ -62,6 +63,7 @@ function chromeOf(over: Partial<OfficeChrome> = {}): OfficeChrome {
     move: vi.fn(),
     share: { shareable: false, onOpen: vi.fn() },
     makeCopy: null,
+    copy: null,
     onOpenSettings: vi.fn(),
     onOpenAccount: vi.fn(),
     people: [],
@@ -167,6 +169,23 @@ describe('OfficeTitleRow, the document parts', () => {
     openFile();
     expect(
       within(screen.getByRole('menu')).queryByRole('menuitem', { name: /Move to trash/ }),
+    ).toBeNull();
+  });
+
+  // files-and-print.md "Make a copy": File > Make a copy opens the Copy document dialog where the kind asks first.
+  it('opens the Copy document dialog from File > Make a copy, and draws no item where none opens', () => {
+    const copy = vi.fn<() => void>();
+    render(<Row chrome={chromeOf({ copy })} />);
+    openFile();
+    fireEvent.click(
+      within(screen.getByRole('menu')).getByRole('menuitem', { name: /Make a copy/ }),
+    );
+    expect(copy).toHaveBeenCalledOnce();
+    cleanup();
+    render(<Row chrome={chromeOf()} />);
+    openFile();
+    expect(
+      within(screen.getByRole('menu')).queryByRole('menuitem', { name: /Make a copy/ }),
     ).toBeNull();
   });
 

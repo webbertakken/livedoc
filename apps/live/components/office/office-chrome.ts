@@ -22,6 +22,9 @@ export type OfficeChrome = {
   // Share for whoever may share; Make a copy in its place for anyone else, once the document is up.
   share: { shareable: boolean; onOpen: () => void } | null;
   makeCopy: { copying: boolean; run: () => void } | null;
+  // File > Make a copy's Copy document dialog, for anyone once the document is up, where the kind asks before copying
+  // (files-and-print.md "Make a copy"); null elsewhere.
+  copy: (() => void) | null;
   onOpenSettings: () => void;
   onOpenAccount: () => void;
   people: readonly PersonOnTab[];

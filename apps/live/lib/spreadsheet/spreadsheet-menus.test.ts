@@ -225,6 +225,7 @@ describe('spreadsheetMenus', () => {
     expect(SHELL_BOUND_ITEMS.filter((id) => ids.includes(id))).toEqual([
       'open',
       'rename',
+      'make-a-copy',
       'share-with-others',
       'search-the-menus',
       'keyboard-shortcuts',

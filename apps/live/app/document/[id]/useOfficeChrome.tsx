@@ -4,8 +4,10 @@
 // EditorLinesContext (docs/specs/034-text-documents/editing-surface.md "The title row"): rename, star, move, Share or
 // Make a copy, Settings, the account, the people here, Move to trash, and the facts File > Details says
 // (files-and-print.md "Details", "Trash"). Each part is null where the session may not use it. The
-// move dialog is drawn by the page, beside the editor's other dialogs.
+// move dialog, and a text document's Copy document dialog ("Make a copy"), are drawn by the page, beside the editor's
+// other dialogs.
 import { useMemo, useState, type ReactNode } from 'react';
+import { isTextDocumentTab } from '@livedoc/document';
 import { useBackTarget } from '@/components/chrome/lines/BrandBack';
 import { useIsOfflineDocument } from '@/hooks/persistence/useIsOfflineDocument';
 import { MoveDocumentDialog } from '@/components/dialogs/MoveDocumentDialog';
@@ -16,6 +18,7 @@ import { track } from '@/lib/telemetry';
 import { applyDocumentRename } from './editor-page-helpers';
 import { useEditorContext } from './EditorContext';
 import { useSelectTab } from './useSelectTab';
+import { useOfficeCopy } from './useOfficeCopy';
 
 export function useOfficeChrome(): { chrome: OfficeChrome | null; dialog: ReactNode } {
   const ctx = useEditorContext();
@@ -53,9 +56,28 @@ export function useOfficeChrome(): { chrome: OfficeChrome | null; dialog: ReactN
     isOwner,
     documentOwnerName,
     documentOpenedDates,
+    activeTab,
+    sessionShareCode,
+    can,
   } = ctx;
   const selectTab = useSelectTab();
   const isOffline = useIsOfflineDocument(documentId);
+  // A text document's copy asks its name, folder and review first; every other kind copies at once.
+  const textDocument = isTextDocumentTab(activeTab);
+  const copier = useOfficeCopy({
+    documentId,
+    documentName,
+    ownerId: selfParticipant.id,
+    shareCode: sessionShareCode,
+    local: isOffline,
+    isOwner,
+    teamId: documentTeamId ?? null,
+    folderId: documentList.find((d) => d.id === documentId)?.folderId ?? null,
+    folders,
+    viewer: can.level === 'view',
+    onCreateFolder: ctx.createFolder,
+  });
+  const openCopy = textDocument && hydrated ? copier.open : null;
 
   const chrome = useMemo((): OfficeChrome | null => {
     if (embedMode || !documentId) return null;
@@ -102,7 +124,13 @@ export function useOfficeChrome(): { chrome: OfficeChrome | null; dialog: ReactN
             },
           }
         : null,
-      makeCopy: !canShareDocument && hydrated ? { copying, run: () => void makeCopy() } : null,
+      copy: openCopy,
+      makeCopy:
+        !canShareDocument && hydrated
+          ? openCopy
+            ? { copying: copier.copying, run: openCopy }
+            : { copying, run: () => void makeCopy() }
+          : null,
       onOpenSettings: () => {
         setSettingsOpen(true);
         track('UI', 'Opened', 'Settings');
@@ -129,6 +157,8 @@ export function useOfficeChrome(): { chrome: OfficeChrome | null; dialog: ReactN
     setShareDialogOpen,
     copying,
     makeCopy,
+    openCopy,
+    copier.copying,
     setSettingsOpen,
     openSettingsOn,
     participantsByTab,
@@ -148,7 +178,7 @@ export function useOfficeChrome(): { chrome: OfficeChrome | null; dialog: ReactN
     documentOpenedDates,
   ]);
 
-  const dialog =
+  const moveDialog =
     moving && documentId ? (
       <MoveDocumentDialog
         target={{ id: documentId, teamId: documentTeamId ?? null }}
@@ -165,6 +195,12 @@ export function useOfficeChrome(): { chrome: OfficeChrome | null; dialog: ReactN
         onClose={() => setMoving(false)}
       />
     ) : null;
+  const dialog = (
+    <>
+      {moveDialog}
+      {copier.dialog}
+    </>
+  );
 
   return { chrome, dialog };
 }

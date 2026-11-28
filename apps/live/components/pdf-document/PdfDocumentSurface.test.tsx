@@ -542,6 +542,7 @@ describe('a PDF document’s surface', () => {
         move: vi.fn(),
         share: { shareable: true, onOpen: vi.fn() },
         makeCopy: null,
+        copy: null,
         onOpenSettings: vi.fn(),
         onOpenAccount: vi.fn(),
         people: [],

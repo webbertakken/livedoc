@@ -29,3 +29,6 @@ export const DOCUMENT_FAILURE = {
  * (docs/specs/035-pdf-documents/live-editing-and-storage.md "Copies, the Trash and versions").
  */
 export const COPY_DOES_NOT_FIT = "This document doesn't fit in the file storage that is left.";
+
+/** A copy refused for any other reason (docs/specs/034-text-documents/files-and-print.md "Make a copy"). */
+export const COPY_FAILED = 'The copy couldn’t be made. Try again.';

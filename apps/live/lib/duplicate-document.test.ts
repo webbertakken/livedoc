@@ -23,6 +23,12 @@ vi.mock('./offline/offline-store', () => ({
   offlinePutRecord: vi.fn(async () => {}),
 }));
 
+// The Copy document dialog's review choice (files-and-print.md "Make a copy"): the package's rule, tested there.
+const applied = vi.fn((_state: Uint8Array, _choice: { comments: boolean; resolved: boolean }) =>
+  Uint8Array.of(9),
+);
+vi.mock('@livedoc/text-documents', () => ({ CopiedReview: { applied } }));
+
 vi.mock('./offline/offline-partings', () => ({
   offlineRecordWithPartings: vi.fn(async (rec: unknown) => rec),
 }));
@@ -196,6 +202,39 @@ describe('duplicateDocument', () => {
     expect(written.textDocuments![0]!.state).toEqual(Uint8Array.of(4));
     expect(mCreate).not.toHaveBeenCalled();
     vi.mocked(isOfflineId).mockImplementation(async () => false);
+  });
+
+  // docs/specs/034-text-documents/files-and-print.md "Make a copy": the name and the review the dialog chose.
+  it('names a copy in This Browser as chosen and keeps each text document’s review as chosen', async () => {
+    vi.mocked(isOfflineId).mockImplementation(async (id) => id === 'src');
+    mLoadDocument.mockResolvedValue(sourceDocument([{ id: 't1' }]));
+    mLoadTab.mockResolvedValue({ ...tab('t1'), kind: 'text-document' });
+    const state = { tabId: 't1', state: Uint8Array.of(4), savedAt: 2 };
+    vi.mocked(offlineGetRecord).mockImplementation(async (id) =>
+      id === 'src'
+        ? ({ id: 'src', textDocuments: [state] } as never)
+        : ({ id, name: 'Plan', tabs: [] } as never),
+    );
+    const choice = { comments: false, resolved: false };
+    await duplicateDocument('owner', 'src', undefined, { name: 'Plan', review: choice });
+    expect(vi.mocked(offlineCreateDocument).mock.calls.at(-1)![0].name).toBe('Plan');
+    expect(applied).toHaveBeenCalledExactlyOnceWith(Uint8Array.of(4), choice);
+    expect(vi.mocked(offlinePutRecord).mock.calls[0]![0].textDocuments![0]!.state).toEqual(
+      Uint8Array.of(9),
+    );
+    vi.mocked(isOfflineId).mockImplementation(async () => false);
+  });
+
+  it('keeps a stored text document’s review as chosen', async () => {
+    mLoadDocument.mockResolvedValue(sourceDocument([{ id: 't1' }]));
+    mLoadTab.mockResolvedValue({ ...tab('t1'), kind: 'text-document' });
+    vi.mocked(apiLoadTextDocumentState).mockResolvedValue(Uint8Array.of(1, 2, 3));
+    await duplicateDocument('owner', 'src', undefined, {
+      review: { comments: true, resolved: false },
+    });
+    expect(mCreate.mock.calls[0]![1].textDocuments).toEqual([
+      { tabId: expect.any(String), state: 'CQ==' },
+    ]);
   });
 
   // docs/specs/035-pdf-documents/live-editing-and-storage.md "Duplicate of a This Browser PDF copies each tab's

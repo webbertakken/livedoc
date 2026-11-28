@@ -151,6 +151,7 @@ export function OfficeTitleRow({
   const share = chrome?.share ?? null;
   const move = chrome?.move ?? null;
   const trash = chrome?.trash ?? null;
+  const copy = chrome?.copy ?? null;
   const openMove = useMemo(() => {
     if (!move) return null;
     return () => {
@@ -175,6 +176,7 @@ export function OfficeTitleRow({
           ...(rename ? { rename: { run: () => setRenameNonce((n) => n + 1) } } : {}),
           ...(openMove ? { move: { run: openMove } } : {}),
           ...(trash ? { 'move-to-trash': { run: trash } } : {}),
+          ...(copy ? { 'make-a-copy': { run: copy } } : {}),
           ...(share ? { 'share-with-others': { run: share.onOpen } } : {}),
           'search-the-menus': { run: () => setFinding(true) },
           'keyboard-shortcuts': {
@@ -188,7 +190,19 @@ export function OfficeTitleRow({
         levels,
         proposals,
       ),
-    [actions, opening, picker, rename, share, openMove, trash, telemetryKind, levels, proposals],
+    [
+      actions,
+      opening,
+      picker,
+      rename,
+      share,
+      openMove,
+      trash,
+      copy,
+      telemetryKind,
+      levels,
+      proposals,
+    ],
   );
 
   const shownChoices = useMemo(

@@ -483,12 +483,21 @@ export async function apiCreateRoomTicket(
 export async function apiCopyDocument(
   ownerId: string,
   sourceId: string,
-  opts: { name?: string; shareCode?: string | null } = {},
+  opts: {
+    name?: string;
+    shareCode?: string | null;
+    // The Copy document dialog's choices (docs/specs/034-text-documents/files-and-print.md "Make a copy"): the
+    // copier's own folder (null: My Documents) and what a text document keeps of its review. Absent: all of it.
+    folderId?: string | null;
+    comments?: boolean;
+    resolved?: boolean;
+  } = {},
 ): Promise<LiveDoc> {
+  const { name, folderId, comments, resolved } = opts;
   const res = await apiFetch(`${API_BASE}/documents/${sourceId}/copy`, {
     method: 'POST',
     headers: await apiHeaders(ownerId, { body: true, share: opts.shareCode ?? null }),
-    body: JSON.stringify({ name: opts.name }),
+    body: JSON.stringify({ name, folderId, comments, resolved }),
   });
   const { document: liveDoc } = await expectOk<DocumentResponse>(res, 'copy document');
   return liveDoc;

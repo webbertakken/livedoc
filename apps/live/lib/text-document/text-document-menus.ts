@@ -137,7 +137,7 @@ export function textDocumentMenus(
         item('new-from-template', 'From template gallery', 'view'),
       ]),
       item('open', 'Open', 'view', { shortcut: 'open', status: 'built' }),
-      item('make-a-copy', 'Make a copy', 'view'),
+      item('make-a-copy', 'Make a copy', 'view', { status: 'built' }),
       SEPARATOR,
       submenu('share', 'Share', [item('share-with-others', 'Share with others', 'edit', BUILT)]),
       submenu('download', 'Download', downloads()),

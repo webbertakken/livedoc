@@ -67,12 +67,14 @@ describe('makeCopy', () => {
     expect(setCopying.mock.calls).toEqual([[true], [false]]);
   });
 
-  it('stays silent on any other failure, as before', async () => {
+  // live-editing-and-storage.md "Copies, the Trash and versions": any other refusal is said too, never silent.
+  it('says any other refusal, and lets the person try again', async () => {
     const { apiCopyDocument } = await import('@/lib/api-client');
     vi.mocked(apiCopyDocument).mockRejectedValue(new Error('offline'));
     const setCopying = vi.fn();
     await actions('d1', setCopying).makeCopy();
-    expect(toastError).not.toHaveBeenCalled();
+    expect(toastError).toHaveBeenCalledExactlyOnceWith('The copy couldn’t be made. Try again.');
+    expect(console.warn).toHaveBeenCalledWith('[document] copy refused name=failed');
     expect(setCopying).toHaveBeenLastCalledWith(false);
   });
 });

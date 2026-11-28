@@ -27,6 +27,7 @@ function chromeOf(): OfficeChrome {
     move: null,
     share: null,
     makeCopy: null,
+    copy: null,
     onOpenSettings: vi.fn(),
     onOpenAccount: vi.fn(),
     people: [],
