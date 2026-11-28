@@ -13,10 +13,19 @@ test('a text document downloads as Plain Text and Markdown', async ({ page, page
   await expect(page.locator('[data-text-document-surface="ready"]')).toBeVisible();
   const body = page.locator(BODY);
   await body.click();
-  await page.keyboard.type('# Plan');
+  // Heading 1 (Ctrl+Alt+1), then a bulleted item (Ctrl+Shift+8) with an italic word (Ctrl+I).
+  await page.keyboard.down('Control');
+  await page.keyboard.down('Alt');
+  await page.keyboard.press('1');
+  await page.keyboard.up('Alt');
+  await page.keyboard.up('Control');
+  await page.keyboard.type('Plan');
   await page.keyboard.press('Enter');
-  await page.keyboard.type('- first *step*');
-  await expect(body.locator('li, p').filter({ hasText: 'first step' })).toHaveCount(1);
+  await page.keyboard.press('Control+Shift+8');
+  await page.keyboard.type('First ');
+  await page.keyboard.press('Control+i');
+  await page.keyboard.type('step');
+  await expect(body.locator('em, [style*="italic"]').filter({ hasText: 'step' })).toHaveCount(1);
 
   const save = async (label: string, name: string) => {
     const item = await officeMenuItem(page, ['File', 'Download', label]);
@@ -26,7 +35,7 @@ test('a text document downloads as Plain Text and Markdown', async ({ page, page
     await download.saveAs(path);
     return readFileSync(path, 'utf8');
   };
-  expect(await save('Plain Text (.txt)', 'txt')).toBe('Plan\n● first step\n');
-  expect(await save('Markdown (.md)', 'md')).toBe('# Plan\n\n- first *step*\n');
+  expect(await save('Plain Text (.txt)', 'txt')).toBe('Plan\n● First step\n');
+  expect(await save('Markdown (.md)', 'md')).toBe('# Plan\n\n- First *step*\n');
   expectNoPageErrors(pageErrors);
 });
