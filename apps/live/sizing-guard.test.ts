@@ -144,10 +144,20 @@ const SIZING_EXCEPTIONS = [
   'components/chrome/AuthStage.tsx',
 ];
 
+// The guard parses every source file of the app with TypeScript: under a second alone, several under coverage beside
+// other workers, and growing with the app, so it has its own budget rather than a unit test's 5 s.
+const WHOLE_APP_PARSE_TIMEOUT_MS = 60_000;
+
 describe('live sizing', () => {
-  it('draws the whole app from the sizing scale, but for what is named as not chrome', () => {
-    expect(
-      formatSizingViolations(checkSizing({ root, paths: SIZED_PATHS, except: SIZING_EXCEPTIONS })),
-    ).toBe('');
-  });
+  it(
+    'draws the whole app from the sizing scale, but for what is named as not chrome',
+    () => {
+      expect(
+        formatSizingViolations(
+          checkSizing({ root, paths: SIZED_PATHS, except: SIZING_EXCEPTIONS }),
+        ),
+      ).toBe('');
+    },
+    WHOLE_APP_PARSE_TIMEOUT_MS,
+  );
 });
