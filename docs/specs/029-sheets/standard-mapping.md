@@ -1190,7 +1190,8 @@ The code cites each by its id.
   ruling, 2026-11-28).
 - **D489** A file's table slicers read all or none: Excel lists every slicer cache in one workbook `ext`, so a file
   with one LiveDoc cannot read (a pivot table's, over a table it does not read, or in a drawing it keeps) keeps them
-  all as they came, and LiveDoc's own are its record's alone (default).
+  all as they came, one report line a sheet, and LiveDoc's own are its record's alone (the Director's ruling,
+  2026-11-28).
 - **D490** LiveDoc's record of slicers read apart from the filter's fingerprint: a slicer hides no stored row, so a
   filter another app changed leaves the slicers as recorded (default).
 - **D453** A kept table at an XLSX write named as one of the sheets' own tables (by Excel's rules, case aside): dropped
