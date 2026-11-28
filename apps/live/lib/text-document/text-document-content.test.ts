@@ -6,7 +6,11 @@ import { textDocumentContent, textDocumentTemplateContent } from './text-documen
 describe('a new text document’s content', () => {
   it('is one blank text document tab', () => {
     const content = textDocumentContent('t1', 'Untitled document');
-    expect(content.tab).toMatchObject({ id: 't1', name: 'Untitled document', kind: 'text-document' });
+    expect(content.tab).toMatchObject({
+      id: 't1',
+      name: 'Untitled document',
+      kind: 'text-document',
+    });
     expect(content.textDocuments).toBeUndefined();
   });
 });
