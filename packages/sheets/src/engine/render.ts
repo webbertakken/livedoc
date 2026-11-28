@@ -6,7 +6,7 @@ import { colWidth, layoutIndex, posRangeOf } from '../layout';
 import { cellLines, cellTurn, rowHeights } from '../row-fit';
 import { measuredFont } from '../text/text-measure';
 import { displayValue } from '../number-format';
-import { cellKey, type Border, type CellFormat } from '../sheet';
+import { cellKey, type Border, type CellFormat, type CellPicture } from '../sheet';
 import { Workbook } from './workbook';
 import type { CardSource } from '../cards';
 import { sheetFromJson, type SheetJson } from '../sheet-json';
@@ -54,6 +54,9 @@ type RenderCell = {
   link?: string;
   // A SPARKLINE's chart (Workbook.sparklineOf), its shapes placed in the cell's box (charts.md "Sparklines").
   spark?: SparkShape[];
+  // The gallery picture the cell shows (Workbook.pictureOf), held in it or read through its formula; an image of the
+  // sheet draws it in the cell's box (inserted-objects.md "Images in a cell").
+  picture?: CellPicture;
 };
 
 export type SheetRenderModel = {
@@ -178,7 +181,18 @@ export function renderWindow(
       const spark = chart
         ? sparklineShapes(chart, spanSize(r, c, span, 'col'), spanSize(r, c, span, 'row'), f.fc)
         : undefined;
-      if (!shown.text && !spark?.length && !arrow && !f.bg && !f.bt && !f.br && !f.bb && !f.bl)
+      const picture = wb.pictureOf(sheetId, r, c);
+      if (
+        !shown.text &&
+        !spark?.length &&
+        !picture &&
+        !arrow &&
+        !f.bg &&
+        !f.bt &&
+        !f.br &&
+        !f.bb &&
+        !f.bl
+      )
         continue;
       const out: RenderCell = {
         r: rowAt.get(r)!,
@@ -217,6 +231,7 @@ export function renderWindow(
       if (chip) out.chip = chip;
       if (arrow) out.arrow = true;
       if (spark?.length) out.spark = spark;
+      if (picture) out.picture = picture;
       if (f.ff) out.font = f.ff;
       if (f.fs) out.size = f.fs;
       if (f.wr) out.wrap = f.wr;

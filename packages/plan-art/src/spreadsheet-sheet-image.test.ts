@@ -116,6 +116,77 @@ describe('spreadsheetSheetImage', () => {
     expect(ranged.tab.elements.map((e) => e.id)).toEqual(['preview-sheetA', 'image-logo']);
   });
 
+  // inserted-objects.md "Images in a cell": a cell's picture fills its cell's box, kept in proportion and centred
+  // (the image element's `contain`), under images over cells and charts.
+  it('draws the pictures cells show in their boxes, under the images over cells', () => {
+    const pic = (r: number, c: number, id: string, alt?: string): CellChange => ({
+      r: rows[r]!,
+      c: cols[c]!,
+      i: { img: alt ? { id, alt } : { id } },
+    });
+    const wb = bookWith(
+      [
+        pic(0, 0, 'g-cow', 'A cow'),
+        { r: rows[0]!, c: cols[1]!, i: { f: { t: '@0', r: [{ r1: rows[0]!, c1: cols[0]! }] } } },
+        pic(2, 1, 'g-hen'),
+      ],
+      [],
+      {
+        merges: [{ r1: rows[2]!, c1: cols[1]!, r2: rows[3]!, c2: cols[2]! }],
+        objects: [
+          {
+            id: 'logo',
+            kind: 'image',
+            at: { r: rows[0]!, c: cols[0]!, dx: 0, dy: 0 },
+            width: 50,
+            height: 50,
+            imageId: 'g-logo',
+          },
+        ],
+      },
+    );
+    const image = spreadsheetSheetImage(wb, 'sheetA', tab)!;
+    const { colWidths: w, rowHeights: h } = image.sheets.get('sheetA')!;
+    const drawn = image.tab.elements;
+    expect(drawn.map((e) => e.id)).toEqual([
+      'preview-sheetA',
+      'cell-picture-0-0',
+      'cell-picture-0-1',
+      'cell-picture-2-1',
+      'image-logo',
+    ]);
+    expect(drawn[1]).toEqual({
+      id: 'cell-picture-0-0',
+      type: 'image',
+      x: 46,
+      y: 62,
+      width: w[0]! - 1,
+      height: h[0]! - 1,
+      imageId: 'g-cow',
+      alt: 'A cow',
+      borderRadius: 'none',
+    });
+    expect(drawn[2]).toMatchObject({ x: 46 + w[0]!, imageId: 'g-cow', alt: 'A cow' });
+    expect(drawn[3]).toMatchObject({
+      x: 46 + w[0]!,
+      y: 62 + h[0]! + h[1]!,
+      width: w[1]! + w[2]! - 1,
+      height: h[2]! + h[3]! - 1,
+      imageId: 'g-hen',
+    });
+    expect(drawn[3]).not.toHaveProperty('alt');
+    // A window that cuts a merged picture's cell keeps the picture within it.
+    const cut = spreadsheetSheetImage(wb, 'sheetA', tab, {
+      range: { r1: 2, c1: 1, r2: 2, c2: 1 },
+    })!;
+    expect(cut.tab.elements[1]).toMatchObject({
+      x: 46,
+      y: 62,
+      width: w[1]! - 1,
+      height: h[2]! - 1,
+    });
+  });
+
   it('sits each chart on its card, as the spreadsheet draws it, just behind it', () => {
     const wb = bookWith(data, [chart('c1', 0, 3)]);
     const [, card, drawn] = spreadsheetSheetImage(wb, 'sheetA', tab)!.tab

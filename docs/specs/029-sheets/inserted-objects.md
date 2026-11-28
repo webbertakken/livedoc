@@ -78,7 +78,9 @@ value in a cell"); `IMAGE()` shows one from an address instead (S4; [Imports fro
   cell editor show nothing for it (default, D631; assumed, Google's value as a formula reads it not measured).
 - **Drawn**: the picture fills its cell, kept in proportion and centred (IMAGE's mode 1), from its bytes
   (`/api/images/<id>?d=<document>`) at the grid's zoom; nothing while its bytes are on their way or when they cannot
-  be drawn, as an IMAGE's. The grid's mirror announces the cell by its alt text, else "Image".
+  be drawn, as an IMAGE's. The grid's mirror announces the cell by its alt text, else "Image". An image of the sheet
+  ([Previews](sheet-store.md#agents-in-a-spreadsheet)) draws it in its cell's box the same way, its bytes inlined when the
+  document may serve them, else its alt text.
 - **Insert Image › Insert Image in Cell**, an Editor's, opens the image picker; the picked picture becomes the active
   cell's input, one undo step. It is dimmed as Insert Image over Cells is, where image storage is not set up ("Image
   uploads aren't enabled on this deployment") and in This Browser ("Sync Document to place images in cells", D625

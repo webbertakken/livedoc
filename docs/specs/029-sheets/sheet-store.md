@@ -436,7 +436,8 @@ tells them.
   named). It prints the document, its sheets and link, then the [import report](files-and-print.md#the-import-report)'s
   lines.
 - **Previews**: a spreadsheet's sheet tab draws as its sheet laid out as a Plan Sheet tab is for its image: its cells
-  from A1 to the last filled cell and every chart over them, each on its card as the spreadsheet draws it (the
+  from A1 to the last filled cell, the pictures its cells hold in their boxes (an `IMAGE` left empty, D72), and every
+  chart over them, each on its card as the spreadsheet draws it (the
   light paper's surface, a 1 px border, rounded), or a `range` from its top-left, within 4,000 px a side (D273). `GET .../tabs/:tabId/render.svg?range=` answers it, `livedoc tab render --range` writes it as PNG or SVG,
   and `read_document` with `image` (and the cells view's `range`) attaches it.
 - **`list_sheets` in a spreadsheet** lists the sheets in tab order, each with whether it is hidden and how many

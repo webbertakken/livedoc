@@ -1,7 +1,7 @@
 // A spreadsheet's sheet as a picture (docs/specs/029-sheets/plan-links.md "The Spreadsheet slot", D507): drawn from A1
 // by the renderer a spreadsheet's previews use (@livedoc/plan-art spreadsheetSheetImage), so wherever a sheet is shown
 // read-only (a Dashboard's Spreadsheet slot, its image export) it looks as it does to agents, and nothing in it can be
-// edited. Images over cells show their alt text: another document's images are not served to this page. Pure.
+// edited. Images over cells and pictures in cells show their alt text: another document's images are not served to this page. Pure.
 import { renderElementsToSvg } from '@livedoc/document';
 import { spreadsheetSheetImage } from '@livedoc/plan-art';
 import type { Workbook } from '@livedoc/sheets';
