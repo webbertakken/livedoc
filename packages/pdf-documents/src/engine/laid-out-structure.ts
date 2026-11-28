@@ -121,7 +121,7 @@ export function writeStructure(pdf: PDF, tags: readonly LaidOutTag[], written: W
   const root = PdfDict.of({ Type: PdfName.of('StructTreeRoot') });
   const rootRef = pdf.register(root);
   // Each page's MCIDs, the element each belongs to; then each link's element, by its annotation's key.
-  const byPage = written.pages.map((): PdfRef[] => []);
+  const byPage = written.pages.map(() => new Map<number, PdfRef>());
   const objects: [number, PdfRef][] = [];
   let nextKey = written.pages.length;
   const element = (tag: LaidOutTag, parent: PdfRef): PdfRef => {
@@ -154,7 +154,7 @@ export function writeStructure(pdf: PDF, tags: readonly LaidOutTag[], written: W
       }
       const marked = written.marked.get(key);
       if (!marked) continue;
-      byPage[page]![marked.mcid] = ref;
+      byPage[page]!.set(marked.mcid, ref);
       kids.push(
         PdfDict.of({ Type: PdfName.of('MCR'), Pg: at.ref, MCID: PdfNumber.of(marked.mcid) }),
       );
@@ -171,7 +171,9 @@ export function writeStructure(pdf: PDF, tags: readonly LaidOutTag[], written: W
   document.set('K', new PdfArray(tags.map((tag) => element(tag, documentRef))));
   const nums: PdfObject[] = [];
   byPage.forEach((refs, page) => {
-    nums.push(PdfNumber.of(page), new PdfArray(refs));
+    // Each MCID's element in MCID order: they are numbered from 0 on each page.
+    const inOrder = [...refs].sort(([a], [b]) => a - b).map(([, ref]) => ref);
+    nums.push(PdfNumber.of(page), new PdfArray(inOrder));
   });
   for (const [key, ref] of objects) nums.push(PdfNumber.of(key), ref);
   root.set('K', documentRef);
