@@ -21,8 +21,8 @@ export function pngSize(bytes) {
 
 function wrangler(apiDir, args) {
   const res = spawnSync(
-    'corepack',
-    ['pnpm', 'exec', 'wrangler', ...args, '--local', '--persist-to', '.wrangler/state'],
+    'pnpm',
+    ['exec', 'wrangler', ...args, '--local', '--persist-to', '.wrangler/state'],
     {
       cwd: apiDir,
       encoding: 'utf8',
