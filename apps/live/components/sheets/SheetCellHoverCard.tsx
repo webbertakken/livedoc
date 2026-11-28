@@ -78,7 +78,7 @@ function HoverCard({
           <div
             className={note !== null ? 'border-t border-slate-200 pt-2 dark:border-slate-700' : ''}
           >
-            <p className="font-semibold">{first.author.name}</p>
+            <p className="font-medium">{first.author.name}</p>
             <p className="line-clamp-4 whitespace-pre-wrap break-words">{first.text}</p>
             {more ? <p className="text-slate-600 dark:text-slate-300">{more}</p> : null}
           </div>
