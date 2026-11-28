@@ -85,6 +85,7 @@ import { registerSheetTools } from './sheet-tools';
 import { registerPagesTools } from './pages-tools';
 import { registerFormTools } from './form-tools';
 import { registerStormTools } from './storm-tools';
+import { createTextDocumentResult, registerTextDocumentTools } from './text-document-tools';
 import {
   createDocumentTab,
   mcpAddTab,
@@ -106,6 +107,8 @@ export function registerTools(server: McpServer, env: Env): void {
   registerPlanTools(server, env);
   // Sheets, by title and A1 (docs/specs/029-sheets/sheet-store.md "Agents").
   registerSheetTools(server, env);
+  // Text documents, by paragraph number (docs/specs/034-text-documents/agents-and-sync.md "Verbs").
+  registerTextDocumentTools(server, env);
   registerPagesTools(server, env);
   // The user's image gallery, for image elements (docs/specs/015-api/mcp-server.md §4.5b).
   registerImageTools(server, env);
@@ -143,6 +146,20 @@ export function registerTools(server: McpServer, env: Env): void {
 
   registerTool(server, env, mcpCreateDocument, async (args, extra) => {
     const token = requireToken(extra);
+    // A text document is made from Markdown, not tabs (docs/specs/015-api/mcp-server.md §4.9g).
+    if (args.kind === 'text-document') {
+      if (args.tabs !== undefined || args.tab !== undefined)
+        return errorResult('A text document takes its body as "markdown", not "tabs".');
+      return createTextDocumentResult(env, token, {
+        name: args.name,
+        ...(args.markdown !== undefined ? { markdown: args.markdown } : {}),
+        ...(args.markUsed !== undefined ? { markUsed: args.markUsed } : {}),
+      });
+    }
+    if (args.markdown !== undefined)
+      return errorResult(
+        '"markdown" is a text document’s body: pass kind "text-document" with it.',
+      );
     // An imageId names a picture in the caller's gallery (docs/specs/009-elements/images.md "Agents").
     const imageIssue = await imageIdIssue(env, token, args);
     if (imageIssue) return errorResult(imageIssue);

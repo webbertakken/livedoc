@@ -149,6 +149,16 @@ export const MCP_TOOL_METRICS: readonly Metric[] = [
     'Changing a spreadsheet’s file format, after listing what the new format cannot hold.',
   ),
   mcpTool(
+    'ReadTextDocument',
+    'Read Text Document',
+    'Reading a text document by paragraph number: its outline, text or structure.',
+  ),
+  mcpTool(
+    'EditTextDocument',
+    'Edit Text Document',
+    'Changing a text document with text operations, as one changeset.',
+  ),
+  mcpTool(
     'ChangePages',
     'Change Pages',
     'Adding, changing, laying out, moving or deleting pages: slides, logos, infographics.',

@@ -334,6 +334,8 @@ and sets dropdowns, checkboxes and other validation rules and conditional format
 puts charts over the cells (with titles; in a spreadsheet, moves and hides the sheet),
 and add_sheet adds a sheet (a spreadsheet's tab, or a Sheet on a tab in Plan), blank or
 from rows or CSV text.
+A text document (like a Google Docs file) is made by create_document with kind "text-document", its body from
+"markdown"; read_text_document reads it by paragraph number and edit_text_document changes it with text operations.
 Tabs in Pages mode hold pages: infographics, slides, logo artboards and articles
 (documents of text on pages). change_pages adds, changes, lays out (from a
 ready-made layout), moves, copies and deletes infographic, slide and logo pages
@@ -808,6 +810,21 @@ export const createDocumentShape = {
     .unknown()
     .optional()
     .describe('A single tab, shaped as one item of "tabs"; accepted as an alias for tabs: [tab].'),
+  // A text document in place of tabs (docs/specs/034-text-documents/agents-and-sync.md "Verbs").
+  kind: z
+    .enum(['text-document'])
+    .optional()
+    .describe(
+      'text-document: a text document (ODF, like a Google Docs file) in place of tabs, its body from markdown, ' +
+        'blank when left out. Read and change it with read_text_document and edit_text_document.',
+    ),
+  markdown: z
+    .string()
+    .optional()
+    .describe(
+      'With kind text-document, its body as Markdown: headings, paragraphs, lists, checklists, code blocks, ' +
+        'pipe tables, bold, italic, strikethrough and links, in the document’s own styles.',
+    ),
   layout: layoutField,
   theme: themeField,
   finish: finishField,

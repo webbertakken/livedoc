@@ -182,9 +182,9 @@ page counts it as `Token·Created·Runa`, and on a failed hand-over tells him to
 
 ## 4. Tools
 
-Thirty-one tools: thirteen for documents, five for Plan boards ([§4.9b](#49b-the-plan-tools)), four for sheets
-([§4.9c](#49c-the-sheet-tools)), two for pages and articles ([§4.9d](#49d-the-pages-tools)), four
-for forms ([§4.9e](#49e-the-form-tools)) and three for Event Storming boards ([§4.9f](#49f-the-event-storming-tools)), besides the deprecated names ([§4.18](#418-deprecated-tool-names)). The search/view capability is two tools (find, then read); create,
+Thirty-seven tools: thirteen for documents, five for Plan boards ([§4.9b](#49b-the-plan-tools)), six for sheets
+and spreadsheets ([§4.9c](#49c-the-sheet-tools)), two for text documents ([§4.9g](#49g-the-text-document-tools)), two for pages and articles ([§4.9d](#49d-the-pages-tools)), five
+for forms ([§4.9e](#49e-the-form-tools)) and four for Event Storming boards ([§4.9f](#49f-the-event-storming-tools)), besides the deprecated names ([§4.18](#418-deprecated-tool-names)). The search/view capability is two tools (find, then read); create,
 add_tab, and update are separate because their inputs and intent differ;
 list_templates exposes the template catalogue ([§4.5](#45-list_templates)), search_icons the icon catalogue
 ([§4.5a](#45a-search_icons)) and list_images the user's image gallery ([§4.5b](#45b-list_images));
@@ -291,6 +291,11 @@ canvas overrides; the model then personalises labels via `update_document`'s
 5. **Returns** the new `id`, tab count + ids, the folder ("My Documents" for the root,
    or the name of the default folder it was filed in), the deep-link `url`,
    **and the rendered PNG of the first tab** so the user sees the result inline.
+
+A **text document** is made with `kind: "text-document"` in place of `tabs`, its body from the optional
+`markdown`, read as an opened Markdown file is: born in ODF, one text document tab named as the document, tagged
+`source: 'mcp'` and filed as above ([§4.9g](#49g-the-text-document-tools)). `tabs` with it, or `markdown` without it,
+is refused in words; the answer is the same shape with `lint` empty and no image.
 
 ### 4.3a `add_tab`
 
@@ -1001,6 +1006,24 @@ server (`packages/agent-verbs/src/storm/`) reads through the api's `storm` view 
   ([Arrange and Reorder](../021-event-storming/arrange.md#how-an-agent-arranges)); `read_document` names
   `read_event_storming` on a board.
 
+### 4.9g The text document tools
+
+A [text document](../034-text-documents/text-document.md) read by paragraph number and changed with text operations
+([Agents and sync](../034-text-documents/agents-and-sync.md#verbs)). The server
+(`apps/mcp/src/text-document-tools.ts` over `packages/agent-verbs/src/text-documents/`, the calls the CLI's
+`livedoc text` verbs make) finds the text document tab `tabId` names (id, name or id prefix; the first by
+default) and refuses a document without one, naming its text document tabs.
+
+- **`read_text_document`** (read): a view, `outline` (the default), `text` or `structure`, of one document tab
+  (`only`) or a paragraph `range`, with `¶<n>` before each paragraph when `lines`; answers the view's text and
+  `stateVector`, the `X-State-Vector` it was read at.
+- **`edit_text_document`** (destructive, as an edit deletes text and `replace` the whole body): `ops`, one a line,
+  sent as one [text changeset](../024-agents/agent-changesets.md#a-text-documents-changesets) with its `documentTab`,
+  `summary`, `base` and `dryRun`; answers the result lines and the changeset (id and counts), or a tool error
+  `<code> line <n>: <message>` naming the refused operation.
+- `create_document` with `kind: "text-document"` makes one ([§4.3](#43-create_document)).
+- `read_document`'s `text` and `structure` views read a text document too, without the state vector.
+
 ### 4.10 Prompts (discoverability)
 
 Registered MCP **prompts** — pre-canned templates a client surfaces as slash
@@ -1088,9 +1111,9 @@ Three behaviours cover every tool, and each is a preset in
 
 | Behaviour       | `readOnlyHint` | `destructiveHint` | Tools                                                                                                                                                                                                                                                  |
 | --------------- | -------------- | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **read**        | `true`         | (not applicable)  | `find_documents`, `read_document`, `list_templates`, `search_icons`, `list_trash`, `list_items`, `list_sheets`, `read_sheet`, `read_form`, `read_event_storming`, `export_event_storming`                                                              |
+| **read**        | `true`         | (not applicable)  | `find_documents`, `read_document`, `list_templates`, `search_icons`, `list_images`, `list_trash`, `list_items`, `list_sheets`, `read_sheet`, `read_text_document`, `read_form`, `read_event_storming`, `export_event_storming`                         |
 | **write**       | `false`        | `false`           | `create_document`, `add_tab`, `share_document`, `rename_document`, `restore_document`, `add_board`, `change_board`, `add_sheet`, `create_spreadsheet`, `convert_spreadsheet`, `add_form`, `share_form`, `try_form`, `suggest_notes`, `add_photo_notes` |
-| **destructive** | `false`        | `true`            | `update_document`, `delete_document`, `change_items`, `change_card_types`, `change_sheet`, `change_pages`, `write_article`, `change_form`                                                                                                              |
+| **destructive** | `false`        | `true`            | `update_document`, `delete_document`, `change_items`, `change_card_types`, `change_sheet`, `edit_text_document`, `change_pages`, `write_article`, `change_form`                                                                                        |
 
 The split mirrors §4.11's read-only-token boundary exactly (what a
 `read_only = 1` token can still reach is what `read` annotates), so the hint a
@@ -1229,7 +1252,7 @@ descriptions.
 
 ### 4.18 Deprecated tool names
 
-The tools named for the container were `*_diagram` / `find_diagrams` before it became a document ([Document](../006-document/document.md)). Each `*_document` tool is also registered under its old name until **30 April 2027** (`apps/mcp/src/legacy-tool-names.ts`, wired in `registerTool`):
+The tools named for the container were `*_diagram` / `find_diagrams` before it became a document ([Document](../006-document/document.md)). Each of those eight `*_document` tools is also registered under its old name until **30 April 2027** (`apps/mcp/src/legacy-tool-names.ts`, wired in `registerTool`); a tool named since, such as `read_text_document`, has no old name:
 
 - The alias is the same tool: the same handler, behaviour annotations and output schema, and its input checked
   against the same schema, refused in the SDK's own words (`Input validation error: Invalid arguments for tool <old

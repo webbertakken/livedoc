@@ -28,6 +28,8 @@ export const COMMAND_OF_TOOL: Readonly<Record<string, string>> = {
   add_sheet: 'sheet add',
   create_spreadsheet: 'spreadsheet new',
   convert_spreadsheet: 'spreadsheet convert',
+  read_text_document: 'text-document view',
+  edit_text_document: 'text-document edit',
   change_pages: 'page set',
   write_article: 'article set',
   read_form: 'form get',

@@ -111,8 +111,12 @@ attributed to the token, and revertable. Its operations:
     default, written under its name here.
   - `livedoc text import <file> [--name <n>]`: opened as File › Open opens it.
   - `<doc>` names a document holding a text document tab; `--tab` picks one by name or id when it holds several.
+- **MCP** ([MCP server §4.9g](../015-api/mcp-server.md#49g-the-text-document-tools)): `read_text_document` answers a
+  view and its `stateVector`; `edit_text_document` sends `ops` as one changeset and answers the result lines and
+  the changeset, or a tool error naming the refused line. Both find the text document tab as `--tab` does.
 - An agent's `create_document` with kind `text-document` makes one, born in ODF (fork C5), its body optionally from
-  Markdown (`markdown`).
+  Markdown (`markdown`). A document an agent makes or opens (the MCP or `livedoc text import`) is tagged with its
+  maker (`source`), as every agent-made document is.
 
 ## Repository sync
 
