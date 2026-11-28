@@ -117,9 +117,10 @@ describe('reading a sheet of a spreadsheet from another document', () => {
     expect(info).toHaveBeenCalledWith('[workbook] link refused document=book1 reason=too_large');
   });
 
-  it('is read only', async () => {
-    expect(
-      (await kit.call({ method: 'POST', path: '/book1/workbook/link', body: {} })).status,
-    ).toBe(405);
+  // Its other doors connect a form (workbook-form-link-route.ts); nothing else writes through it.
+  it('takes no other method', async () => {
+    expect((await kit.call({ method: 'PUT', path: '/book1/workbook/link', body: {} })).status).toBe(
+      405,
+    );
   });
 });

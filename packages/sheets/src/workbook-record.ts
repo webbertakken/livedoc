@@ -1,6 +1,7 @@
 // The workbook row (docs/specs/029-sheets/sheet-store.md "In a spreadsheet"): what belongs to a spreadsheet as a
 // whole rather than to one of its sheets. One per spreadsheet, in its room; a document holds one exactly when it is
 // a spreadsheet (docs/specs/029-sheets/spreadsheet.md "The workbook shape").
+import { WorkbookForms, type WorkbookForm } from './workbook-forms';
 import type { FileMeaning } from './formula/meaning';
 import { readTheme, type SpreadsheetTheme } from './themes/spreadsheet-theme';
 import type { Rand } from './ids';
@@ -70,6 +71,8 @@ export type WorkbookRecord = {
   readonly rangeSources?: readonly string[];
   // Its named functions (formulas.md "Named functions"), in name order; absent when none.
   readonly functions?: readonly NamedFunction[];
+  // The forms it takes responses from (plan-links.md "Form responses", D506): never on a copy; absent when none.
+  readonly forms?: readonly WorkbookForm[];
 };
 
 /** The sources a workbook keeps at most, and an id's longest (the api's bound on a document id). */
@@ -185,10 +188,8 @@ export const WorkbookRecord = {
   /** A record from the wire or the room, or null when any part of it is not one. */
   read: (raw: unknown): WorkbookRecord | null => {
     if (typeof raw !== 'object' || raw === null) return null;
-    const { format, settings, importsAllowed, rangeSources, meaning, functions } = raw as Record<
-      string,
-      unknown
-    >;
+    const { format, settings, importsAllowed, rangeSources, meaning, functions, forms } =
+      raw as Record<string, unknown>;
     if (!isFormat(format)) return null;
     if (meaning !== undefined && !isFileMeaning(meaning)) return null;
     const read = readSettings(settings);
@@ -197,6 +198,8 @@ export const WorkbookRecord = {
     if (sources === null) return null;
     const fns = functions === undefined ? undefined : readNamedFunctions(functions);
     if (fns === null) return null;
+    const linked = forms === undefined ? undefined : WorkbookForms.read(forms);
+    if (linked === null) return null;
     return {
       format,
       settings: read,
@@ -204,6 +207,7 @@ export const WorkbookRecord = {
       ...(importsAllowed === true ? { importsAllowed } : {}),
       ...(sources ? { rangeSources: sources } : {}),
       ...(fns && fns.length > 0 ? { functions: fns } : {}),
+      ...(linked ? { forms: linked } : {}),
     };
   },
 } as const;

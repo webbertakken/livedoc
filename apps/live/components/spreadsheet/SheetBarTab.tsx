@@ -4,7 +4,8 @@
 // underline, who else is on it, and its menu arrow (on the open tab and the tab under the pointer, D175). A double-click, Rename or Alt+1 turns
 // the name into a field: Enter or leaving it saves, Escape keeps the name (D172).
 import { useEffect, useRef, type KeyboardEvent, type PointerEvent } from 'react';
-import { Tooltip } from '@livedoc/ui';
+import { lucideClipboardList } from '@livedoc/icons/lucide';
+import { Tooltip, lucideGlyph } from '@livedoc/ui';
 import type { SheetBarPeer, SheetBarTab as Tab } from './SheetBar';
 
 // Faces a tab shows before the rest are counted ("+2").
@@ -31,9 +32,14 @@ function Faces({ peers }: { peers: readonly SheetBarPeer[] }) {
   );
 }
 
-// What a screen reader hears for a tab: its name, and who is on it.
-export function sheetTabLabel(name: string, peers: readonly SheetBarPeer[]): string {
-  return peers.length ? `${name}, also here: ${peers.map((p) => p.name).join(', ')}` : name;
+// A sheet a form writes to (docs/specs/029-sheets/plan-links.md "Form responses"), as Google marks one.
+const FormIcon = lucideGlyph(lucideClipboardList, 14);
+export const FORM_MARK_LABEL = 'Takes responses from a form';
+
+// What a screen reader hears for a tab: its name, that a form writes to it, and who is on it.
+export function sheetTabLabel(name: string, peers: readonly SheetBarPeer[], form = false): string {
+  const named = form ? `${name}, ${FORM_MARK_LABEL.toLowerCase()}` : name;
+  return peers.length ? `${named}, also here: ${peers.map((p) => p.name).join(', ')}` : named;
 }
 
 function RenameField({
@@ -91,6 +97,7 @@ export function SheetBarTab({
   onPointerDown,
   dragged = false,
   colour,
+  form = false,
 }: {
   tab: Tab;
   active: boolean;
@@ -108,9 +115,11 @@ export function SheetBarTab({
   dragged?: boolean;
   // The tab's colour, drawn as its underline (D177).
   colour?: string;
+  // A form writes its responses to the tab's sheet: a form mark before its name.
+  form?: boolean;
 }) {
-  // Who is here, named on hover as the tab is named to a screen reader.
-  const label = peers.length ? sheetTabLabel(tab.name, peers) : '';
+  // Who is here and the form mark, named on hover as the tab is named to a screen reader.
+  const label = peers.length || form ? sheetTabLabel(tab.name, peers, form) : '';
   const fromTab = (el: HTMLElement) => {
     const box = el.getBoundingClientRect();
     onMenu(box.left, box.top, true);
@@ -167,6 +176,13 @@ export function SheetBarTab({
               active ? 'pr-1 font-medium' : 'pr-1'
             }`}
           >
+            {form ? (
+              <FormIcon
+                aria-hidden
+                data-sheet-tab-form=""
+                className="mr-1.5 shrink-0 text-violet-700 dark:text-violet-300"
+              />
+            ) : null}
             <span className="truncate">{tab.name}</span>
             <Faces peers={peers} />
           </button>

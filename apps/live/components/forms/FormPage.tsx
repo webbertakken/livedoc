@@ -6,6 +6,7 @@
 // link draws it. The status bar holds Preview, the help link and the cog; the menu box, its name; the header's Share is
 // Share Form (lib/form-share-store.ts).
 import { useNow } from '@/hooks/ui/useNow';
+import { useFormSpreadsheet } from '@/hooks/forms/useFormSpreadsheet';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { formLook, type Tab } from '@livedoc/document';
@@ -14,11 +15,13 @@ import {
   closedBySettings,
   destinationProblem,
   destinationType,
+  isSpreadsheetSheet,
   publicForm,
   publishProblems,
   sheetDestinationProblem,
   readForm,
   type FormDefinition,
+  type FormSpreadsheetSheet,
 } from '@livedoc/forms';
 import { lucideGlyph, Tooltip } from '@livedoc/ui';
 import { lucideEye } from '@livedoc/icons/lucide';
@@ -59,6 +62,7 @@ export function FormPage({
   documentId,
   ownerId,
   share,
+  responsesFolderId,
   online,
   onSyncToCloud,
   syncReady,
@@ -72,6 +76,8 @@ export function FormPage({
   documentId: string | null;
   ownerId: string;
   share: string | null;
+  // Where New Spreadsheet puts the form's responses spreadsheet: the form's folder when the person keeps it.
+  responsesFolderId?: string;
   // A document kept on the server (an offline one has no link to publish).
   online: boolean;
   // Moves an offline document onto the server in place, from Share Form, once the reader is known.
@@ -134,15 +140,43 @@ export function FormPage({
   const locked = canEdit && !!link.link?.link?.open && !overdue;
   const building = canEdit && !preview && !locked;
   // Where responses go: a Sheet (a row each) when the form names one, else its board.
-  const destTab = tabs.find((t) => t.id === (form.sheet?.tabId ?? form.destination?.tabId));
-  const problem = form.sheet
-    ? sheetDestinationProblem(form.sheet, sheetsOf(tabs))
-    : destinationProblem(
-        form.destination,
-        destTab ? boardsOf(destTab).map((b) => b.setup) : [],
-        types,
-      );
+  // A spreadsheet's sheet is on no tab here (useFormSpreadsheet reads it).
+  const destTab = tabs.find(
+    (t) => t.id === (form.sheet ? form.sheet.tabId : form.destination?.tabId),
+  );
+  const setSheet = useCallback(
+    (to: FormSpreadsheetSheet) => actions.setResponsesTo({ kind: 'sheet', ...to }),
+    [actions],
+  );
+  const spreadsheet = useFormSpreadsheet({
+    form,
+    formDocumentId: documentId,
+    formTabId: tab.id,
+    ownerId,
+    canEdit,
+    place: responsesFolderId === undefined ? {} : { folderId: responsesFolderId },
+    setSheet,
+  });
+  // What the form's responses land on, by name: its tab's, or "<Sheet> · <Spreadsheet>".
+  const destName = destTab?.name ?? spreadsheet.name;
+  const problem = isSpreadsheetSheet(form.sheet)
+    ? spreadsheet.problem
+    : form.sheet
+      ? sheetDestinationProblem(form.sheet, sheetsOf(tabs))
+      : destinationProblem(
+          form.destination,
+          destTab ? boardsOf(destTab).map((b) => b.setup) : [],
+          types,
+        );
   const type = destinationType(form.destination, types);
+  // The responses: their tab, or their spreadsheet in a new browser tab.
+  const spreadsheetId = isSpreadsheetSheet(form.sheet) ? form.sheet.documentId : null;
+  const openResponses = destTab
+    ? () => openTab(destTab.id)
+    : spreadsheetId
+      ? () =>
+          void window.open(`/document/${encodeURIComponent(spreadsheetId)}`, '_blank', 'noopener')
+      : null;
   // What else stops publishing (docs/specs/030-forms/forms.md "Publishing and the form link").
   const notReady = useMemo(
     () => publishProblems(form, form.sheet ? undefined : type),
@@ -186,8 +220,10 @@ export function FormPage({
       openSettings,
       locked,
       problemCount: formProblemCount(problem, notReady),
+      spreadsheet,
     }),
     [
+      spreadsheet,
       form,
       building,
       actions,
@@ -258,14 +294,14 @@ export function FormPage({
                         full={!form.sheet && (plan?.items.size ?? 0) >= ITEMS_MAX}
                         canEdit={canEdit}
                         onFix={() => openSettings('destination')}
-                        onOpenResponses={destTab ? () => openTab(destTab.id) : null}
-                        destinationName={destTab?.name ?? null}
+                        onOpenResponses={openResponses}
+                        destinationName={destName}
                         problems={formProblemCount(problem, notReady)}
                         onProblems={() => setShareOpen(true)}
                         onNotTaking={(fix) => {
                           if (fix === 'share') setShareOpen(true);
                           else if (fix === 'responses') {
-                            if (destTab) openTab(destTab.id);
+                            openResponses?.();
                           } else openSettings(fix);
                         }}
                         controls={
@@ -295,7 +331,7 @@ export function FormPage({
                       {!canEdit ? (
                         <p className="rounded-surface bg-white/80 px-4 py-2.5 text-body text-slate-600 dark:bg-slate-900/80 dark:text-slate-300">
                           This is a form. Its responses become {form.sheet ? 'rows in' : 'cards on'}{' '}
-                          <strong>{destTab?.name ?? (form.sheet ? 'a sheet' : 'a board')}</strong>.
+                          <strong>{destName ?? (form.sheet ? 'a sheet' : 'a board')}</strong>.
                         </p>
                       ) : null}
                     </div>
@@ -319,7 +355,7 @@ export function FormPage({
                             preview
                             {...(canEdit
                               ? {
-                                  previewNote: `This was a preview: its ${form.sheet ? 'row' : 'card'}, marked Preview, is on ${destTab?.name ?? (form.sheet ? 'the sheet' : 'the board')}.`,
+                                  previewNote: `This was a preview: its ${form.sheet ? 'row' : 'card'}, marked Preview, is on ${destName ?? (form.sheet ? 'the sheet' : 'the board')}.`,
                                   submit: async (state) => {
                                     const outcome = await sendPreview({
                                       form,

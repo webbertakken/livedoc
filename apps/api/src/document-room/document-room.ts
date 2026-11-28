@@ -83,6 +83,8 @@ import type { DocumentRoomRpc } from './document-rpc';
 import type { Item } from '@livedoc/items';
 import type { BugReportFiling } from '@livedoc/api-schema';
 import type { BugReportFileOutcome } from '../bug-reports/room-file';
+import type { SheetRowOutcome } from '../forms/sheet-response';
+import type { SpreadsheetFormAsk, SpreadsheetFormRow } from '../forms/spreadsheet-response';
 import type { ContentSummary } from '../db/content-summary';
 import type { DocumentCopy, DocumentOutline } from './document-content';
 import type { CreateOutcome, DocumentSeed } from './document-create';
@@ -1510,6 +1512,14 @@ export class DocumentRoom extends DurableObject<Env | undefined> {
     identity: RouteIdentity,
   ): Promise<Response> {
     return this.answer(documentId, (rpc) => rpc.respondToForm(documentId, request, identity));
+  }
+
+  async formSheetThere(documentId: string, ask: SpreadsheetFormAsk): Promise<boolean> {
+    return (await this.content.rpc(documentId)).formSheetThere(documentId, ask);
+  }
+
+  async writeFormResponse(documentId: string, row: SpreadsheetFormRow): Promise<SheetRowOutcome> {
+    return (await this.content.rpc(documentId)).writeFormResponse(documentId, row);
   }
 
   async fileBugReport(

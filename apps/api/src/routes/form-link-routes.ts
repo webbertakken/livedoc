@@ -67,7 +67,7 @@ async function notReadyToOpen(
   const formTab = await readFormTab(ctx.env, documentId, tabId);
   if (!formTab) return notFound();
   const { form } = formTab;
-  if (await responsesProblem(ctx.env, documentId, form, types))
+  if (await responsesProblem(ctx.env, documentId, tabId, form, types))
     return conflict('form_destination_missing');
   const problems = publishProblems(
     form,
@@ -111,7 +111,7 @@ export async function handleFormLinkRoutes(ctx: DocumentRouteContext): Promise<R
       // A sheet's preview is written here, unnumbered; a board's card the editor makes itself.
       const formTab = await readFormTab(env, documentId, tabId);
       if (formTab?.form.sheet)
-        return previewToSheet(ctx, doc, formTab.form, await writer(ctx, owner));
+        return previewToSheet(ctx, doc, tabId, formTab.form, await writer(ctx, owner));
       return json({ error: 'form_not_published' }, { status: 404 });
     }
     const upToDate = (await unseenResponses(env, live.code, owner)) === 0;

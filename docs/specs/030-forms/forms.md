@@ -202,7 +202,8 @@ The status bar's **cog** (an Editor's) opens one panel, 320 px wide under it (a 
   Responses Go?", "Choose before you publish: the form can’t take responses until it has somewhere to put them.",
   then two choices side by side (stacked on a phone), each an icon, a name and a line: **Cards on a Board** ("A card
   for each response, to work through. Makes a new board.", Responses Go To's New Board) and **Rows in a Sheet** ("A
-  row for each response, to count and compare. Makes a new sheet.", its New Sheet); and, when the document already
+  row for each response, to count and compare. Makes a new spreadsheet.", its New Spreadsheet, the line reading
+  "Making the spreadsheet…" meanwhile and the box saying when it could not be made); and, when the document already
   has a Board or Sheet tab, **Or use a board or sheet you already have**, which opens the cog on Responses Go To. It
   goes as soon as the form names a board or a sheet that holds, and comes back when that board or sheet is removed
   (its tab deleted, its column or card type gone), its line then the reason ("Its sheet was removed. Choose where
@@ -525,13 +526,18 @@ On submit the api, in one write:
 ## Responses to a Sheet
 
 Responses Go To opens on a switch: **Cards on a Board** (above: a card each, answers mapped to fields) or **Rows in a
-Sheet** (a row each, a column per question, no mapping; `form.sheet`: `{ tabId, sheetId }`). Switching keeps the
-board settings, for switching back.
+Sheet** (a row each, a column per question, no mapping; `form.sheet`: `{ tabId, sheetId }`, or a spreadsheet's
+sheet `{ documentId, sheetId }`). Switching keeps the board settings, for switching back. A spreadsheet's sheet is
+chosen, made and connected as [Plan's links to a spreadsheet](../029-sheets/plan-links.md#form-responses) says; the
+rest of this section holds for it alike.
 
 - **Choosing the sheet**: **Sheet** lists the document's Sheet tabs' sheets by their tab's name ("Budget", "Budget 2"
-  for a second on it), its last choice **+ New Sheet**: a Sheet tab "<Form> Responses" after the Form tab (in its
-  theme), a blank sheet on it the destination, made at once so the form stays open. Picking Rows in a Sheet with no sheet
-  yet makes one the same way. A sentence reads it back: "Each response becomes a row on **Budget**, a column per
+  for a second on it), the spreadsheet's sheet the form sends to ("<Sheet> · <Spreadsheet>"), then **From a
+  spreadsheet…** (the person's spreadsheets, then the sheets of the one picked, as a dashboard's picker lists them) and
+  **+ New Spreadsheet** ([Plan's links to a spreadsheet](../029-sheets/plan-links.md#form-responses)); the choice waits
+  while the form is connected ("Connecting the form to the spreadsheet…") and says when it was refused ("Responses can
+  only go to a spreadsheet you can edit. Choose another, or make a new one."). Picking Rows in a Sheet with no Sheet
+  tab makes a new spreadsheet. A sentence reads it back: "Each response becomes a row on **Budget**, a column per
   question. No mapping needed." A sheet no longer on its tab says "Its sheet was removed. Choose where responses go."
   and pauses the form, as a broken board destination does.
 - **In the builder**: a question's footer reads "Its own column in the sheet" in place of the Answer goes to badge.
@@ -670,7 +676,7 @@ with the ones there are. Question types go by their ids (`short`, `paragraph`, `
     alone, so it shows only responses; with
     `board`, an existing one, its first column unless `column` names one, its card type `cardType` (by name) or the
     board's first;
-  - `{ to: "sheet" }`: to a new Sheet tab "<Form> Responses", as + New Sheet does, its sheet named after the tab and
+  - `{ to: "sheet" }`: to a new Sheet tab "<Form> Responses" (until Plan's starts move to spreadsheets), its sheet named after the tab and
     given its header row at once (`#`, `Submitted`, each question; bold, frozen), as the first response would write
     it, so it reads as the form's before anyone answers; with `sheet`, an existing one;
   - left out: a starter's own way; for questions, a new board.
@@ -734,23 +740,24 @@ showIf? }` (`showIf: null` is Always), `delete_section` (its questions join the 
 
 ## Telemetry
 
-| Category | Action   | Type                                                    | When                                                  |
-| -------- | -------- | ------------------------------------------------------- | ----------------------------------------------------- |
-| Form     | Created  | the starter (`Blank`, `BugReport`, `Rsvp`, ...)         | A starter is chosen on Start Planning                 |
-| Form     | Created  | `FromBoard`                                             | New Form on a board's cog                             |
-| Form     | Added    | the question type (`ShortAnswer`, `Rating`, ...)        | Add Question                                          |
-| Form     | Linked   | `ConnectNewBoard` / `ConnectNewSheet` / `ConnectChoose` | The connect box's three choices                       |
-| Form     | Shared   | `Link`                                                  | Publish Form                                          |
-| Form     | Shared   | `BoardCopy`                                             | Copy Form Link on a board's Form strip                |
-| Form     | Toggled  | `Open` / `Closed`                                       | Accepting Responses flipped (before the change lands) |
-| Form     | Opened   | `NotTaking` + the reason (`NotTakingSwitchedOff`, ...)  | Not Taking Responses pressed                          |
-| Form     | Moved    | `SyncedToShare`                                         | Sync Document pressed in Share Form                   |
-| Form     | Sent     | `Response` / `Dropped` (hidden field)                   | The api accepts or drops a response (server-side)     |
-| Form     | Sent     | `Preview`                                               | An Editor's Preview makes its card                    |
-| Form     | Reported | `Spam` / `Phishing` / `Offensive` / `Other`             | A report is filed (server-side)                       |
-| Activity | Selected | `FormResponses`                                         | A Form Responses row in the Inbox                     |
-| UI       | Toggled  | `NotifyFormResponsesOn` / `NotifyFormResponsesOff`      | The email switch in Settings                          |
-| Email    | Sent     | `FormResponse` / `FormSuspended`                        | Those emails go (server-side)                         |
+| Category | Action   | Type                                                          | When                                                                    |
+| -------- | -------- | ------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| Form     | Created  | the starter (`Blank`, `BugReport`, `Rsvp`, ...)               | A starter is chosen on Start Planning                                   |
+| Form     | Created  | `FromBoard`                                                   | New Form on a board's cog                                               |
+| Form     | Added    | the question type (`ShortAnswer`, `Rating`, ...)              | Add Question                                                            |
+| Form     | Linked   | `ConnectNewBoard` / `ConnectNewSpreadsheet` / `ConnectChoose` | The connect box's three choices (`ConnectNewSheet` before spreadsheets) |
+| Form     | Linked   | `ChooseSpreadsheet` / `NewSpreadsheet`                        | Responses Go To's spreadsheet choices                                   |
+| Form     | Shared   | `Link`                                                        | Publish Form                                                            |
+| Form     | Shared   | `BoardCopy`                                                   | Copy Form Link on a board's Form strip                                  |
+| Form     | Toggled  | `Open` / `Closed`                                             | Accepting Responses flipped (before the change lands)                   |
+| Form     | Opened   | `NotTaking` + the reason (`NotTakingSwitchedOff`, ...)        | Not Taking Responses pressed                                            |
+| Form     | Moved    | `SyncedToShare`                                               | Sync Document pressed in Share Form                                     |
+| Form     | Sent     | `Response` / `Dropped` (hidden field)                         | The api accepts or drops a response (server-side)                       |
+| Form     | Sent     | `Preview`                                                     | An Editor's Preview makes its card                                      |
+| Form     | Reported | `Spam` / `Phishing` / `Offensive` / `Other`                   | A report is filed (server-side)                                         |
+| Activity | Selected | `FormResponses`                                               | A Form Responses row in the Inbox                                       |
+| UI       | Toggled  | `NotifyFormResponsesOn` / `NotifyFormResponsesOff`            | The email switch in Settings                                            |
+| Email    | Sent     | `FormResponse` / `FormSuspended`                              | Those emails go (server-side)                                           |
 
 Every chart is on the public dashboard's **Forms** stack.
 

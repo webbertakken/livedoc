@@ -1,7 +1,7 @@
 // docs/specs/029-sheets/plan-links.md "Reading a sheet from another document": a dashboard's read of a spreadsheet's
 // sheet, its version asked with, a refusal read as no access or too large, anything else thrown.
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { fetchWorkbookLink } from './workbook-link';
+import { connectFormToSheet, fetchWorkbookLink, unlinkFormFromSheet } from './workbook-link';
 
 const reply = (body: unknown, status = 200) =>
   vi.fn(
@@ -46,5 +46,37 @@ describe('fetchWorkbookLink', () => {
   it('throws anything else', async () => {
     vi.stubGlobal('fetch', reply({ error: 'internal' }, 500));
     await expect(fetchWorkbookLink('o', 'd', 's', null)).rejects.toMatchObject({ status: 500 });
+  });
+});
+
+// plan-links.md "Form responses": a form's connection made and taken back with the Editor's own access.
+describe('form connections', () => {
+  const settled = { workbook: { format: 'ods', settings: {} }, rev: 2 };
+
+  it('connects a form by its document, tab and sheet', async () => {
+    const f = reply(settled);
+    vi.stubGlobal('fetch', f);
+    await connectFormToSheet('o', 'ss', { documentId: 'd', tabId: 't', sheetId: 's' });
+    const [url, init] = f.mock.calls[0]!;
+    expect(url).toMatch(/\/documents\/ss\/workbook\/link$/);
+    expect(init?.method).toBe('POST');
+    expect(JSON.parse(init?.body as string)).toEqual({ document: 'd', tab: 't', sheet: 's' });
+  });
+
+  it("takes back one form's connection, or every one to a sheet", async () => {
+    const f = reply(settled);
+    vi.stubGlobal('fetch', f);
+    await unlinkFormFromSheet('o', 'ss', { documentId: 'd', tabId: 't' });
+    await unlinkFormFromSheet('o', 'ss', { sheetId: 's' });
+    expect(f.mock.calls[0]![0]).toMatch(/\/workbook\/link\?document=d&tab=t$/);
+    expect(f.mock.calls[1]![0]).toMatch(/\/workbook\/link\?sheet=s$/);
+    expect(f.mock.calls[1]![1]?.method).toBe('DELETE');
+  });
+
+  it('throws a refusal', async () => {
+    vi.stubGlobal('fetch', reply({ error: 'forbidden' }, 403));
+    await expect(
+      connectFormToSheet('o', 'ss', { documentId: 'd', tabId: 't', sheetId: 's' }),
+    ).rejects.toThrow();
   });
 });

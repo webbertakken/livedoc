@@ -91,6 +91,12 @@ export type WorkbookLinkResponse =
       sheet: SheetDto | null;
     };
 
+// POST /documents/:id/workbook/link: a form connected to a sheet of the spreadsheet, so its responses land there
+// (plan-links.md "Form responses", D506); by an Editor of both. DELETE with ?document=&tab= takes a form's connection
+// back (an Editor of either), with ?sheet= every one to that sheet (Unlink Form, an Editor of the spreadsheet).
+// Both answer the record as it now stands (WorkbookSettingsResponse).
+export type WorkbookFormLinkRequest = { document: string; tab: string; sheet: string };
+
 // What only the workbook's doors refuse; the rest are the sheet store's (SHEET_ERRORS).
 export const WORKBOOK_ERRORS = [
   // The document is no spreadsheet.
@@ -117,6 +123,10 @@ export const WORKBOOK_ERRORS = [
   'functions_full',
   // A link read of a workbook past the cells a read works out (plan-links.md "Reading a sheet from another document").
   'link_too_large',
+  // A form link body or query that names no form or sheet (plan-links.md "Form responses").
+  'form_link_invalid',
+  // A connection past the forms a workbook keeps (WORKBOOK_FORMS_MAX).
+  'forms_full',
 ] as const;
 export type WorkbookError = (typeof WORKBOOK_ERRORS)[number];
 

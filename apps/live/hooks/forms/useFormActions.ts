@@ -7,16 +7,17 @@
 import { useCallback, useMemo } from 'react';
 import {
   formStarter,
+  isSpreadsheetSheet,
   starterBaseType,
   newFieldFor,
   readForm,
   UNTITLED_FORM,
   type FormDefinition,
   type FormQuestion,
+  type FormSheetDestination,
   type StarterId,
 } from '@livedoc/forms';
 import { isDefaultTabName, newPlanSheetId, type Tab } from '@livedoc/document';
-import { placeNewSheet } from '@/lib/sheet-seeds';
 import { newCustomFieldId, newItemTypeId, type ItemTypeDef } from '@livedoc/items';
 import type { ItemTypesSlice } from '@/hooks/plan/useItemTypes';
 import { track } from '@/lib/telemetry';
@@ -25,7 +26,6 @@ import {
   boardsOf,
   planFormStart,
   responsesBoardTab,
-  responsesSheetTab,
   uniqueTypeLabel,
   withAutoBoardName,
   withBoardTaking,
@@ -58,12 +58,8 @@ export type FormActions = {
   setDestinationType: (typeId: string) => void;
   // Responses Go To's Board or Sheet (docs/specs/030-forms/forms.md "Responses to a Sheet"): to a Sheet, the given one
   // (or the document's first); to a Board, the sheet let go (the board destination was kept).
-  setResponsesTo: (
-    to: { kind: 'board' } | { kind: 'sheet'; tabId: string; sheetId: string },
-  ) => void;
-  // New Sheet: a Sheet tab "<Form> Responses" after this one, a blank sheet on it the destination, made at once (the
-  // form stays open), or opened so the sheet is made where nothing can make it.
-  newResponsesSheet: () => void;
+  // A sheet: a Sheet tab's of this document, or a spreadsheet's once connected (useFormSpreadsheet).
+  setResponsesTo: (to: { kind: 'board' } | ({ kind: 'sheet' } & FormSheetDestination)) => void;
 };
 
 const blankForm = (name: string): FormDefinition => ({
@@ -376,42 +372,15 @@ export function useFormActions({
           if (t.id !== activeId) return t;
           const form = readForm(t.form) ?? blankForm(t.name);
           const { sheet: _gone, ...rest } = form;
-          return {
-            ...t,
-            form:
-              to.kind === 'sheet'
-                ? { ...rest, sheet: { tabId: to.tabId, sheetId: to.sheetId } }
-                : rest,
-          };
+          if (to.kind === 'board') return { ...t, form: rest };
+          const sheet: FormSheetDestination = isSpreadsheetSheet(to)
+            ? { documentId: to.documentId, sheetId: to.sheetId }
+            : { tabId: to.tabId, sheetId: to.sheetId };
+          return { ...t, form: { ...rest, sheet } };
         }),
       ),
     [activeId, commitTabs],
   );
-
-  const newResponsesSheet = useCallback<FormActions['newResponsesSheet']>(() => {
-    const { tabs: now } = live.current;
-    const formTab = now.find((t) => t.id === activeId);
-    if (!formTab || formTab.locked) return;
-    const form = readForm(formTab.form) ?? blankForm(formTab.name);
-    const title = `${form.heading} Responses`.slice(0, 80);
-    const make = live.current.makeSheet;
-    // Made at once through the sheet store, so the form stays open; without it, placed, to be made on opening.
-    const { sheetId } = make
-      ? { sheetId: newPlanSheetId() }
-      : placeNewSheet({ title, blank: true });
-    const sheetTab = responsesSheetTab(form.heading, formTab, sheetId);
-    commitTabs((ts) => {
-      const next = ts.map((t) =>
-        t.id === activeId ? { ...t, form: { ...form, sheet: { tabId: sheetTab.id, sheetId } } } : t,
-      );
-      next.splice(next.findIndex((t) => t.id === activeId) + 1, 0, sheetTab);
-      return next;
-    });
-    live.current.markTabLoaded?.(sheetTab.id);
-    if (make) make({ id: sheetId, tabId: sheetTab.id, title });
-    // A placed sheet is made when its tab first draws it: opened, it exists for the first response.
-    else live.current.openTab?.(sheetTab.id);
-  }, [activeId, commitTabs, live]);
 
   const setDestinationType = useCallback<FormActions['setDestinationType']>(
     (typeId) => {
@@ -449,7 +418,6 @@ export function useFormActions({
       newCardType,
       setDestinationType,
       setResponsesTo,
-      newResponsesSheet,
     }),
     [
       startForm,
@@ -463,7 +431,6 @@ export function useFormActions({
       newCardType,
       setDestinationType,
       setResponsesTo,
-      newResponsesSheet,
     ],
   );
 }

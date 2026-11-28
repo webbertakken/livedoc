@@ -2,7 +2,7 @@
 // Board tab, a board there with a column of its status, and its card type, which that board takes. One rule for the
 // builder (Publish Form, the paused notice) and the api (every response).
 import { boardTakesType, type ItemTypeDef, type PlanBoardSetup } from '@livedoc/items';
-import type { FormDestination, FormSheetDestination } from './model';
+import { isSpreadsheetSheet, type FormDestination, type FormSheetDestination } from './model';
 
 export type DestinationProblem =
   | 'no_destination'
@@ -10,7 +10,9 @@ export type DestinationProblem =
   | 'status_missing'
   | 'type_missing'
   | 'type_not_on_board'
-  | 'sheet_missing';
+  | 'sheet_missing'
+  // A spreadsheet the builder's Editor may not open (plan-links.md "Form responses"): only the builder says it.
+  | 'spreadsheet_denied';
 
 // What the builder says for each problem.
 export const DESTINATION_PROBLEM_TEXT: Readonly<Record<DestinationProblem, string>> = {
@@ -20,14 +22,17 @@ export const DESTINATION_PROBLEM_TEXT: Readonly<Record<DestinationProblem, strin
   type_missing: 'Its card type was removed. Choose where responses go.',
   type_not_on_board: 'Its board no longer takes that card type. Choose where responses go.',
   sheet_missing: 'Its sheet was removed. Choose where responses go.',
+  spreadsheet_denied: 'You don’t have access to this spreadsheet. Choose where responses go.',
 };
 
-// A Sheet destination's problem (docs/specs/030-forms/forms.md "Responses to a Sheet"): its sheet no longer on its tab.
-// `sheets`: the document's sheets, each with its tab.
+// A Sheet tab destination's problem (docs/specs/030-forms/forms.md "Responses to a Sheet"): its sheet no longer on its
+// tab. `sheets`: the document's sheets, each with its tab. A spreadsheet's sheet is not the document's to answer for:
+// null here, its own read says (plan-links.md "Form responses").
 export function sheetDestinationProblem(
   sheet: FormSheetDestination,
-  sheets: readonly FormSheetDestination[],
+  sheets: readonly { tabId: string; sheetId: string }[],
 ): DestinationProblem | null {
+  if (isSpreadsheetSheet(sheet)) return null;
   return sheets.some((s) => s.sheetId === sheet.sheetId && s.tabId === sheet.tabId)
     ? null
     : 'sheet_missing';

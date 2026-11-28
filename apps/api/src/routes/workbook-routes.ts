@@ -24,6 +24,7 @@ import { keepFileContent, readKeptContent } from './workbook-kept-route';
 import { allowImports, fetchImport } from './sheet-imports-route';
 import { handleWorkbookSheetRoutes } from './workbook-sheet-routes';
 import { readWorkbookLink } from './workbook-link-route';
+import { connectForm, unlinkForm } from './workbook-form-link-route';
 import { loadSpreadsheetSheets } from './workbook-sheets-load';
 import { readWorkbookPictures } from './workbook-pictures';
 
@@ -139,8 +140,13 @@ export async function handleWorkbookRoutes(ctx: DocumentRouteContext): Promise<R
     if (request.method === 'GET') return readKeptContent(ctx, documentId);
     return request.method === 'POST' ? keepFileContent(ctx, documentId) : methodNotAllowed();
   }
-  if (segments.length === 5 && segments[4] === 'link')
-    return request.method === 'GET' ? readWorkbookLink(ctx, documentId) : methodNotAllowed();
+  // One word for reading a sheet from another document and for the forms that write into one (plan-links.md).
+  if (segments.length === 5 && segments[4] === 'link') {
+    if (request.method === 'GET') return readWorkbookLink(ctx, documentId);
+    if (request.method === 'POST')
+      return connectForm(ctx, documentId, await ctx.request.json().catch(() => null));
+    return request.method === 'DELETE' ? unlinkForm(ctx, documentId) : methodNotAllowed();
+  }
   if (segments.length === 5 && segments[4] === 'imports') {
     if (request.method === 'GET') return fetchImport(ctx, documentId);
     return request.method === 'POST' ? allowImports(ctx, documentId) : methodNotAllowed();

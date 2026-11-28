@@ -1926,8 +1926,17 @@ export const FORMS_CONNECTED = chart(
   'Form',
   'Linked',
   'Forms Connected',
-  'A form connected from the box above its title while its responses went nowhere: to a new board, to a new sheet, or Responses Go To opened to choose one.',
-  { types: ['ConnectNewBoard', 'ConnectNewSheet', 'ConnectChoose'] },
+  'A form connected to where its responses go: from the box above its title (a new board, a new spreadsheet, a new sheet before spreadsheets, or Responses Go To opened), or a spreadsheet chosen or made in Responses Go To.',
+  {
+    types: [
+      'ConnectNewBoard',
+      'ConnectNewSpreadsheet',
+      'ConnectNewSheet',
+      'ConnectChoose',
+      'ChooseSpreadsheet',
+      'NewSpreadsheet',
+    ],
+  },
 );
 
 export const FORMS_PUBLISHED = chart(
