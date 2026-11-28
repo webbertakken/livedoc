@@ -74,6 +74,7 @@ import { useSpreadsheetNotes } from './useSpreadsheetNotes';
 import { SheetNoteOpenContext } from '@/components/sheets/sheet-note-open-context';
 import { SheetThreadMarksContext } from '@/components/sheets/sheet-thread-marks-context';
 import { useSpreadsheetComments } from './useSpreadsheetComments';
+import { useSpreadsheetReview } from './spreadsheet-review-context';
 import { useCellLinkLanding } from './useCellLinkLanding';
 import { useLinkDocuments } from './link-documents-context';
 import { useSheetNavigation } from '@/components/sheets/sheet-navigation';
@@ -129,6 +130,8 @@ export function SpreadsheetSheetParts({ bridge }: { bridge: SheetsBridge }) {
     panels: SPREADSHEET_PANELS,
     onFocusDocument: c.focusGrid,
     writes: c.canEdit && c.canShape,
+    // The Comments panel: a commenter's alone (review.md "Who may do what", D655, D656).
+    reviews: useSpreadsheetReview().commenter !== null,
   });
   const { actions: panelActions } = panels;
   // The chart the Chart Editor is open on (charts.md "Chart Editor").
@@ -223,7 +226,7 @@ export function SpreadsheetSheetParts({ bridge }: { bridge: SheetsBridge }) {
   // Notes (review.md "Notes"): the note box, Delete Notes; the markers and hover card are the grid's.
   const notes = useSpreadsheetNotes(c);
   // Comment threads (review.md "In the grid"): the markers, the hover card's thread, the card and Insert › Comment.
-  const comments = useSpreadsheetComments(c, { scope: bridge.scope, goTo });
+  const comments = useSpreadsheetComments(c, { scope: bridge.scope, goTo, openSheetAt });
   const canInsertChart = c.canShape;
   const bandingActions = useMemo(
     () => ({
@@ -392,6 +395,7 @@ export function SpreadsheetSheetParts({ bridge }: { bridge: SheetsBridge }) {
           validation={validation}
           named={named}
           protection={protection}
+          comments={comments}
         />
       </div>
       <SpreadsheetGridMenus actions={actions} bound={office.actions} />

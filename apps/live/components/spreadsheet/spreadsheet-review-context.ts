@@ -19,6 +19,8 @@ export type SpreadsheetReview = {
   /** A comment that assigns its thread was added: ask for the assignee's email (034 review.md "Assigning"). */
   readonly onAssigned?: (text: string, assignee: CommentMention) => void;
   /** A thread an Inbox row asked this sheet to go to (inbox.md §1.8); `n` tells one ask from the next. */
+  /** The sheet bar's tabs in order, which the Comments panel lists sheets in. */
+  readonly tabOrder?: readonly string[];
   readonly arrival?: { readonly threadId: string; readonly n: number } | null;
 };
 

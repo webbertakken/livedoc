@@ -23,7 +23,13 @@ import {
 import type { SheetThreadMarks } from '@/components/sheets/sheet-thread-marks-context';
 import { ApiError } from '@/lib/api/core';
 import type { OfficeActions } from '@/lib/office/office-catalogue';
-import { INSERT_COMMENT, SYNC_TO_COMMENT } from '@/lib/spreadsheet/sheet-comments';
+import {
+  ENTER_COMMENT,
+  INSERT_COMMENT,
+  NEXT_COMMENT,
+  PREVIOUS_COMMENT,
+  SYNC_TO_COMMENT,
+} from '@/lib/spreadsheet/sheet-comments';
 import { SpreadsheetReviewContext, type SpreadsheetReview } from './spreadsheet-review-context';
 import { SHEET_COMMENTS_FULL, useSpreadsheetComments } from './useSpreadsheetComments';
 
@@ -79,6 +85,8 @@ const scope = { ownerId: 'o1', documentId: 'd1', shareCode: null, tabId: null };
 
 type Seen = ReturnType<typeof useSpreadsheetComments>;
 
+const openSheetAt = vi.fn();
+
 function Probe({
   p,
   onRender,
@@ -86,7 +94,7 @@ function Probe({
   p: Parameters<Parameters<typeof renderSheet>[1]>[0];
   onRender: (seen: Seen) => void;
 }) {
-  const comments = useSpreadsheetComments(p.c, { scope, goTo: p.actions.goTo });
+  const comments = useSpreadsheetComments(p.c, { scope, goTo: p.actions.goTo, openSheetAt });
   onRender(comments);
   return comments.card;
 }
@@ -106,6 +114,7 @@ async function setup(
     actions: OfficeActions;
     marks: SheetThreadMarks | null;
     step?: (f: boolean) => void;
+    seen?: Seen;
   } = {
     actions: {},
     marks: null,
@@ -118,6 +127,7 @@ async function setup(
           out.actions = seen.actions;
           out.marks = seen.marks;
           out.step = (forward) => seen.step(forward, null);
+          out.seen = seen;
         }}
       />
     </SpreadsheetReviewContext.Provider>
@@ -353,6 +363,92 @@ describe('a thread’s card', () => {
     expect(h.ctl().selection.active).toEqual({ r: 0, c: 3 });
     act(() => out.step!(false));
     expect(h.ctl().selection.active).toEqual({ r: 4, c: 1 });
+  });
+});
+
+describe('going to a thread', () => {
+  it('selects its anchor with the card taking the keys, or opens its own sheet', async () => {
+    openSheetAt.mockClear();
+    const { h, out } = await setup({
+      threads: (key) => [
+        thread(key, 'here', 'C4', 'On this sheet'),
+        { ...thread(key, 'there', 'A1', 'Elsewhere'), sheetId: 'other' },
+      ],
+    });
+    vi.useFakeTimers();
+    act(() => out.seen!.go('here'));
+    act(() => {
+      vi.advanceTimersByTime(50);
+    });
+    vi.useRealTimers();
+    expect(h.ctl().selection.active).toEqual({ r: 3, c: 2 });
+    expect(document.activeElement).toBe(screen.getByRole('group', { name: 'Comment by Bo on C4' }));
+    act(() => out.seen!.go('there'));
+    act(() => out.seen!.go('missing'));
+    // The other sheet is not in this workbook's harness: nothing opens.
+    expect(openSheetAt).not.toHaveBeenCalled();
+  });
+
+  it('opens the sheet alone for a thread whose cell was deleted (D653)', async () => {
+    const { h, out } = await setup({
+      threads: () => [
+        {
+          ...thread(() => ({ r: 'gone', c: 'gone' }), 'lost', 'A1', 'Lost'),
+        },
+      ],
+    });
+    act(() => h.select('D6'));
+    act(() => out.seen!.go('lost'));
+    expect(h.ctl().selection.active).toEqual({ r: 0, c: 0 });
+    expect(card()).toBeNull();
+  });
+
+  it('reopens a resolved thread, its marker back', async () => {
+    const { out, marked } = await setup({
+      threads: (key) => [thread(key, 'th1', 'B2', 'Done', { resolved: true })],
+    });
+    expect(marked('B2')).toBe(false);
+    expect(out.seen!.threads.has('th1')).toBe(true);
+    await act(async () => out.seen!.reopen('th1'));
+    expect(marked('B2')).toBe(true);
+    await act(async () => out.seen!.reopen('missing'));
+  });
+
+  it('goes to an Inbox row’s thread once the threads are read, once an ask', async () => {
+    const { h } = await setup({
+      review: { ...REVIEW, arrival: { threadId: 'th1', n: 1 } },
+      threads: (key) => [thread(key, 'th1', 'D7', 'From the Inbox')],
+    });
+    expect(h.ctl().selection.active).toEqual({ r: 6, c: 3 });
+    act(() => h.select('A1'));
+    expect(h.ctl().selection.active).toEqual({ r: 0, c: 0 });
+  });
+
+  it('moves to the next and previous thread, and enters the active cell’s, from their keys', async () => {
+    const { h, out } = await setup({
+      threads: (key) => [thread(key, 'a', 'B2', 'one'), thread(key, 'b', 'D3', 'two')],
+    });
+    act(() => h.select('A1'));
+    expect(out.actions[ENTER_COMMENT]).toBeUndefined();
+    act(() => out.actions[NEXT_COMMENT]!.run());
+    expect(h.ctl().selection.active).toEqual({ r: 1, c: 1 });
+    act(() => out.actions[PREVIOUS_COMMENT]!.run());
+    expect(h.ctl().selection.active).toEqual({ r: 2, c: 3 });
+    fireEvent.keyDown(card()!.querySelector('[data-thread-card]')!, { key: 'u' });
+    expect(card()).toBeNull();
+    vi.useFakeTimers();
+    act(() => out.actions[ENTER_COMMENT]!.run());
+    act(() => {
+      vi.advanceTimersByTime(50);
+    });
+    vi.useRealTimers();
+    expect(document.activeElement).toBe(screen.getByRole('group', { name: 'Comment by Bo on D3' }));
+  });
+
+  it('keeps the panel’s filters', async () => {
+    const { out } = await setup();
+    act(() => out.seen!.setFilters({ who: 'for-you', state: 'open', group: null }));
+    expect(out.seen!.filters).toEqual({ who: 'for-you', state: 'open', group: null });
   });
 });
 

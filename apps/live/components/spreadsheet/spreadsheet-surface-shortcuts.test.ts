@@ -8,6 +8,7 @@ import { parseShortcut, type KeyStep, type OfficePlatform } from '@/lib/office/s
 import { SPREADSHEET_SHORTCUTS } from '@/lib/spreadsheet/spreadsheet-shortcuts';
 import { formulaKey } from '@/components/sheets/formula-keys';
 import { sheetKey } from '@/components/sheets/sheet-keys';
+import { threadCardKey } from '@/components/office/review/OfficeThreadCard';
 
 type Press = {
   key: string;
@@ -84,6 +85,12 @@ const HEARD: Record<string, (press: Press, platform: OfficePlatform) => unknown>
   'insert-array-formula': formulaKey,
   'absolute-relative-references': formulaKey,
   'cycle-focus': (press, platform) => regionStep(keyEvent(press), platform),
+  // A selected comment's card hears its own keys (review.md "In the grid").
+  'reply-to-current-comment': threadCardKey,
+  'next-selected-comment': threadCardKey,
+  'previous-selected-comment': threadCardKey,
+  'resolve-current-comment': threadCardKey,
+  'exit-current-comment': threadCardKey,
 };
 
 const EXPECTED: Record<string, unknown[]> = {
@@ -136,6 +143,11 @@ const EXPECTED: Record<string, unknown[]> = {
   'rename-sheet': [{ kind: 'renameSheet' }],
   // surface.md "Sheet bar": All Sheets opened (D180).
   'display-list-of-sheets': [{ kind: 'listSheets' }],
+  'reply-to-current-comment': ['reply'],
+  'next-selected-comment': ['next'],
+  'previous-selected-comment': ['previous'],
+  'resolve-current-comment': ['resolve'],
+  'exit-current-comment': ['exit'],
 };
 
 const PLATFORMS: OfficePlatform[] = ['pc', 'mac', 'chromeos'];

@@ -10,6 +10,8 @@ export const INSERT_COMMENT = 'insert-comment';
 /** Ctrl+Alt+N, C and Ctrl+Alt+P, C: the next and previous thread of the sheet (shortcut rows bound by their ids). */
 export const NEXT_COMMENT = 'move-to-next-comment';
 export const PREVIOUS_COMMENT = 'move-to-previous-comment';
+/** Ctrl+Alt+E, C: the keys into the active cell's thread card. */
+export const ENTER_COMMENT = 'enter-current-comment';
 
 /** A comment marker's colour: the comment colour, as Plan's cell threads draw theirs. */
 export const COMMENT_MARKER_COLOUR = '#f59e0b';

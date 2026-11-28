@@ -119,3 +119,77 @@ test('a comment on cells is added, replied to by a Participant, and resolved', a
   await ctx.close();
   expectNoPageErrors(pageErrors);
 });
+
+// The Comments panel and the keys (review.md "In the grid"): two threads; Ctrl+Alt+N, C and Ctrl+Alt+P, C move between
+// them in reading order; Ctrl+Alt+Shift+A opens the panel, each row labelled by its sheet and range; Resolved alone
+// narrows it, Reopen brings a thread back, and a press on a row selects its anchor with its card open.
+test('the comments panel lists, narrows, reopens and goes; the keys move between threads', async ({
+  page,
+  pageErrors,
+}) => {
+  test.setTimeout(120_000);
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto('/new?kind=spreadsheet');
+  await page.waitForURL(/\/document\//);
+  await expect(page.locator(READY)).toBeVisible();
+  const comment = async (range: string, text: string) => {
+    await select(page, range);
+    await page.getByRole('grid').focus();
+    await page.keyboard.press('Control+Alt+KeyM');
+    const draft = page.getByRole('group', { name: 'New comment' });
+    await expect(draft.getByRole('textbox', { name: 'Add a comment' })).toBeFocused();
+    await page.keyboard.type(text);
+    await draft.getByRole('button', { name: 'Comment' }).click();
+    await expect(page.locator(CARD).getByText(text)).toBeVisible();
+    await page.keyboard.press('Escape');
+  };
+  await comment('D6', 'Second in reading order');
+  await comment('B2', 'First in reading order');
+  await expect(page.locator(MARKER)).toHaveCount(2);
+
+  // Ctrl+Alt held, a key then C (keyboard-shortcuts.md "Notation", a sequence).
+  const chord = async (first: string) => {
+    await page.keyboard.down('Control');
+    await page.keyboard.down('Alt');
+    await page.keyboard.press(first);
+    await page.keyboard.press('KeyC');
+    await page.keyboard.up('Alt');
+    await page.keyboard.up('Control');
+  };
+  await select(page, 'A1');
+  await page.getByRole('grid').focus();
+  await chord('KeyN');
+  await expect(page.locator(CARD).getByText('First in reading order')).toBeVisible();
+  await expect(page.locator('[data-thread-card]')).toBeFocused();
+  await page.keyboard.press('j');
+  await expect(page.locator(CARD).getByText('Second in reading order')).toBeVisible();
+  await page.keyboard.press('Escape');
+  await chord('KeyP');
+  await expect(page.locator(CARD).getByText('First in reading order')).toBeVisible();
+  // E resolves the thread on its card.
+  await page.keyboard.press('e');
+  await expect(page.locator(MARKER)).toHaveCount(1);
+
+  // The panel lists both by sheet and range; Resolved alone narrows it; Reopen brings the thread back.
+  await page.getByRole('grid').focus();
+  await page.keyboard.press('Control+Alt+Shift+KeyA');
+  const panel = page.getByRole('complementary', { name: 'Comments' });
+  await expect(panel).toBeVisible();
+  const rows = panel.getByRole('list', { name: 'Threads' }).getByRole('listitem');
+  await expect(rows).toHaveCount(2);
+  await expect(rows.nth(0)).toContainText('Sheet1!B2');
+  await expect(rows.nth(1)).toContainText('Sheet1!D6');
+  await page.screenshot({ path: test.info().outputPath('spreadsheet-comments-panel.png') });
+  await panel.getByLabel('Which comments').selectOption('resolved');
+  await expect(rows).toHaveCount(1);
+  await panel.getByRole('button', { name: /^Reopen comment by / }).click();
+  await expect(page.locator(MARKER)).toHaveCount(2);
+  await panel.getByLabel('Which comments').selectOption('all');
+
+  // A press on a row selects its anchor with its card open.
+  await select(page, 'A1');
+  await panel.getByRole('button', { name: /^Go to comment by .+ on “Sheet1!D6”$/ }).click();
+  await expect(page.locator(CARD).getByText('Second in reading order')).toBeVisible();
+  await expect(page.getByRole('textbox', { name: 'Name box' })).toHaveValue('D6');
+  expectNoPageErrors(pageErrors);
+});

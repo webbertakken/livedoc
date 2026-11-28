@@ -35,6 +35,7 @@ export function SpreadsheetHost({ tabId }: { tabId: string }) {
     can,
     accountId,
     commentMentions,
+    threadArrival,
   } = useEditorContext();
   // Who comments (review.md "Comments"): the room ticket's key, never in This Browser (D656), never a Viewer (D655).
   const local = useIsOfflineDocument(documentId);
@@ -53,6 +54,11 @@ export function SpreadsheetHost({ tabId }: { tabId: string }) {
       selfUserId: accountId ?? null,
       onMentioned: commentMentions.notifyMentioned,
       onAssigned: commentMentions.notifyAssigned,
+      // An Inbox row's thread on this sheet's tab (inbox.md §1.8).
+      arrival:
+        threadArrival?.tabId === tabId
+          ? { threadId: threadArrival.threadId, n: threadArrival.n }
+          : null,
     }),
     [
       local,
@@ -62,6 +68,8 @@ export function SpreadsheetHost({ tabId }: { tabId: string }) {
       accountId,
       commentMentions.notifyMentioned,
       commentMentions.notifyAssigned,
+      threadArrival,
+      tabId,
     ],
   );
   if (!documentId || !documentWorkbook) return null;

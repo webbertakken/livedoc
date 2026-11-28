@@ -99,6 +99,17 @@ describe('OfficeCommentsPanel', () => {
     expect(screen.getByRole('status').textContent).toBe('1 comment');
   });
 
+  // docs/specs/029-sheets/review.md "In the grid", D653: a spreadsheet names its own filter and deleted line.
+  it('takes the kind’s words for its filter and a deleted anchor', () => {
+    panel({
+      deletedLine: 'The cell this comment was on was deleted',
+      groupWords: { which: 'Which sheet', all: 'All sheets' },
+    });
+    expect(screen.getByText('The cell this comment was on was deleted')).toBeTruthy();
+    const which = screen.getByLabelText('Which sheet');
+    expect(within(which).getByRole('option', { name: 'All sheets' })).toBeTruthy();
+  });
+
   it('offers the tab list only with more than one tab', () => {
     panel({ groups: [{ id: 't.0', label: 'One' }] });
     expect(screen.queryByLabelText('Which tab')).toBeNull();

@@ -40,6 +40,7 @@ import { sharedComment } from '@/lib/office/review/office-comments';
 import {
   anchorOfRange,
   INSERT_COMMENT,
+  ENTER_COMMENT,
   NEXT_COMMENT,
   PREVIOUS_COMMENT,
   openThreadsByCell,
@@ -64,6 +65,8 @@ type Draft = { sheetId: string; cell: string; range: GridRange; anchor: SheetThr
 type Focus = { nonce: number; to: 'reply' | 'card' };
 
 const newId = () => crypto.randomUUID();
+
+export type SpreadsheetComments = ReturnType<typeof useSpreadsheetComments>;
 
 export function useSpreadsheetComments(
   c: SheetController,
@@ -275,6 +278,12 @@ export function useSpreadsheetComments(
 
   const [filters, setFilters] = useState<ReviewFilters>(ReviewFilters.initial);
 
+  // Ctrl+Alt+E, C: the keys into the active cell's thread card, shown again if it was let go.
+  const enterHere = useCallback(() => {
+    setDismissed(null);
+    setFocus((f) => ({ nonce: (f?.nonce ?? 0) + 1, to: 'card' }));
+  }, []);
+
   const actions = useMemo((): OfficeActions => {
     if (local)
       return {
@@ -291,8 +300,9 @@ export function useSpreadsheetComments(
       // Ctrl+Alt+N, C and Ctrl+Alt+P, C: the next or previous thread, its card taking the keys.
       [NEXT_COMMENT]: { run: () => step(true, 'card') },
       [PREVIOUS_COMMENT]: { run: () => step(false, 'card') },
+      ...(here ? { [ENTER_COMMENT]: { run: enterHere } } : {}),
     };
-  }, [local, commenter, openHere, step]);
+  }, [local, commenter, openHere, step, here, enterHere]);
 
   const marks = useMemo(
     (): SheetThreadMarks | null =>

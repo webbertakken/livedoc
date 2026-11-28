@@ -30,6 +30,22 @@ import { ConfirmDialog } from '@/components/dialogs/ConfirmDialog';
 import { Button } from '@livedoc/ui';
 import type { OfficeCommenter } from '@/lib/office/review/office-commenter';
 
+/** What a key on a selected card does (review.md "Keys on a selected comment"): J, K, U or Escape, E, R. */
+export function threadCardKey(event: {
+  readonly key: string;
+  readonly metaKey: boolean;
+  readonly ctrlKey: boolean;
+  readonly altKey: boolean;
+}): 'next' | 'previous' | 'exit' | 'resolve' | 'reply' | null {
+  if (event.metaKey || event.ctrlKey || event.altKey) return null;
+  const key = event.key.toLowerCase();
+  if (key === 'j') return 'next';
+  if (key === 'k') return 'previous';
+  if (key === 'u' || key === 'escape') return 'exit';
+  if (key === 'e') return 'resolve';
+  return key === 'r' ? 'reply' : null;
+}
+
 /** What a card draws of a thread: its id, whether resolved, its comments in the order made. */
 export type OfficeCardThread = {
   readonly id: string;
@@ -91,19 +107,18 @@ export function OfficeThreadCard({
   // comment"); R and E only for whoever may comment.
   const onKeyDown = (event: KeyboardEvent) => {
     if (event.target !== event.currentTarget) return;
-    if (event.metaKey || event.ctrlKey || event.altKey) return;
-    const key = event.key.toLowerCase();
+    const key = threadCardKey(event);
     const run =
-      key === 'j' || key === 'k'
-        ? () => onStep(key === 'j')
-        : key === 'u' || key === 'escape'
+      key === 'next' || key === 'previous'
+        ? () => onStep(key === 'next')
+        : key === 'exit'
           ? onExit
-          : key === 'e' && commenter
+          : key === 'resolve' && commenter
             ? () => {
                 onResolve(true);
                 onExit();
               }
-            : key === 'r' && commenter
+            : key === 'reply' && commenter
               ? () => {
                   if (selected) return replyField.current?.focus();
                   // Reply shows once the thread is selected, a frame on.

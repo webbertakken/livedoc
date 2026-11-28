@@ -126,6 +126,8 @@ export function SpreadsheetSurface({
   const allTabIds = useMemo(() => tabs.map((t) => t.id), [tabs]);
   const shownTabIds = useMemo(() => shown.map((t) => t.id), [shown]);
   const findReplace = useFindReplaceState(shownTabIds, allTabIds);
+  // Who comments, and the sheet bar's order the Comments panel lists sheets in (review.md "In the grid").
+  const reviewHere = useMemo(() => ({ ...review, tabOrder: allTabIds }), [review, allTabIds]);
   // The sheet bar's changes, from the sheet bar, its tabs' menus and the menus (spreadsheet.md).
   // Copy To, everyone's who may read the sheets (spreadsheet.md D186).
   const copyTo = useSheetCopyTo(bridge, workbook);
@@ -145,7 +147,7 @@ export function SpreadsheetSurface({
     hiddenCount: hidden.size,
   });
   return (
-    <SpreadsheetReviewContext.Provider value={review}>
+    <SpreadsheetReviewContext.Provider value={reviewHere}>
       <section
         ref={root}
         aria-label="Spreadsheet"
