@@ -5,12 +5,15 @@ import { expect, expectNoPageErrors, test } from '../fixtures';
 import { officeMenuItem } from './office-menus';
 
 // The exports (docs/specs/034-text-documents/files-and-print.md "Downloading"): a heading and a bulleted item typed
-// here leave as a line each in Plain Text, and as Markdown's heading and list item; a Word file's pictures, read back
+// here leave as a line each in Plain Text, as Markdown's heading and list item, and in Rich Text; a Word file's pictures, read back
 // from the gallery, leave beside its Web Page and inside its EPUB.
 
 const BODY = '[role="textbox"][aria-label="Document body"]';
 
-test('a text document downloads as Plain Text and Markdown', async ({ page, pageErrors }) => {
+test('a text document downloads as Plain Text, Markdown and Rich Text', async ({
+  page,
+  pageErrors,
+}) => {
   test.setTimeout(90_000);
   await page.goto('/new?kind=text-document');
   await expect(page.locator('[data-text-document-surface="ready"]')).toBeVisible();
@@ -40,6 +43,10 @@ test('a text document downloads as Plain Text and Markdown', async ({ page, page
   };
   expect(await save('Plain Text (.txt)', 'txt')).toBe('Plan\n● First step\n');
   expect(await save('Markdown (.md)', 'md')).toBe('# Plan\n\n- First *step*\n');
+  const rtf = await save('Rich Text Format (.rtf)', 'rtf');
+  expect(rtf).toMatch(/^\{\\rtf1\\ansi/);
+  expect(rtf).toMatch(/\\outlinelevel0\n\{[^ ]* Plan\}/);
+  expect(rtf).toContain('\\i step}');
   expectNoPageErrors(pageErrors);
 });
 

@@ -52,12 +52,14 @@ const DOWNLOADS: Record<TextDocumentDownloadType, { item: string; telemetry: str
   md: { item: 'download-md', telemetry: 'TextDocumentMd' },
   html: { item: 'download-html', telemetry: 'TextDocumentHtml' },
   epub: { item: 'download-epub', telemetry: 'TextDocumentEpub' },
+  rtf: { item: 'download-rtf', telemetry: 'TextDocumentRtf' },
 };
 
 const FILE_TYPES: readonly TextDocumentDownloadType[] = [
   'docx',
   'odt',
   'fodt',
+  'rtf',
   'txt',
   'html',
   'epub',

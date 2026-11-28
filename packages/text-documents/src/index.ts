@@ -67,6 +67,7 @@ export {
   type ExportOptions,
 } from './exports/text-document-exports';
 export { writeEpub } from './exports/epub';
+export { writeRtf } from './exports/rtf';
 export { webPageHtml, writeWebPage } from './exports/web-page';
 export { writeMarkdown, escapeMarkdown } from './exports/markdown';
 export { writePlainText } from './exports/plain-text';

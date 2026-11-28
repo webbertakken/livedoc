@@ -935,14 +935,14 @@ export const ROUTE_MANIFEST: RouteSpec[] = [
     segment: 'documents',
     tag: 'Text documents',
     summary:
-      'A text document as a file, written from its live state and named after the document: odt, fodt or docx (the other format’s a converted copy, X-Conversion-Losses counting what it could not hold), or txt, md, html (zipped with its pictures) and epub written with suggestions accepted, X-Pictures-Left-Out counting pictures it could not read. 400 file_type_unknown. Read access.',
+      'A text document as a file, written from its live state and named after the document: odt, fodt or docx (the other format’s a converted copy, X-Conversion-Losses counting what it could not hold), or txt, md, html (zipped with its pictures), epub and rtf written with suggestions accepted, X-Pictures-Left-Out counting pictures it could not read. 400 file_type_unknown. Read access.',
     auth: 'guest-or-session',
     tokenUsable: true,
     query: [
       {
         name: 'type',
         required: false,
-        description: 'odt (the default), fodt, docx, txt, md, html or epub.',
+        description: 'odt (the default), fodt, docx, txt, md, html, epub or rtf.',
       },
     ],
     responseMediaType: 'application/vnd.oasis.opendocument.text',

@@ -172,4 +172,15 @@ describe('textDocumentDownload', () => {
     expect(draw).toHaveBeenCalledWith('d1');
     expect(await entries(file.blob)).toContain('OEBPS/images/1.png');
   });
+
+  it('writes Rich Text here for This Browser with its pictures', async () => {
+    const file = await download({
+      file: { format: 'odf', name: 'N', type: 'rtf' },
+      localDoc: galleryDoc(),
+      readImage: async () => PNG,
+    });
+    expect(file.fileName).toBe('N.rtf');
+    expect(file.blob.type).toBe('application/rtf');
+    expect(await file.blob.text()).toContain('{\\pict\\pngblip');
+  });
 });

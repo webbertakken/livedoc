@@ -594,6 +594,7 @@ export const COMPUTED_EMITTERS: Record<string, ComputedValues> = {
       'TextDocumentMd',
       'TextDocumentHtml',
       'TextDocumentEpub',
+      'TextDocumentRtf',
     ],
   },
   // The office shell's title row (docs/specs/004-interface-design/office-shell.md "Telemetry"): a menu opened, by its
