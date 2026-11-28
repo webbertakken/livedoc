@@ -20,6 +20,7 @@ import {
   IMAGES_UNAVAILABLE_HINT,
   INSERT_IMAGE_OVER_CELLS,
 } from '@/lib/spreadsheet/sheet-image-menu';
+import { setWorkbenchConfinement } from '@/lib/api/workbench-confinement';
 import { PICTURE_NOT_PLACED, useSpreadsheetImages } from './useSpreadsheetImages';
 
 vi.mock('@/lib/telemetry', () => ({ track: vi.fn() }));
@@ -44,9 +45,10 @@ vi.mock('next/dynamic', () => ({
     function Picker(props: {
       onSelect: (p: { id: string; width: number; height: number }) => void;
       onClose: () => void;
+      uploadOnly?: boolean;
     }) {
       return (
-        <div role="dialog" aria-label="Picker">
+        <div role="dialog" aria-label="Picker" data-upload-only={String(props.uploadOnly)}>
           <button
             type="button"
             onClick={() => props.onSelect({ id: 'g-1', width: 1200, height: 800 })}
@@ -180,6 +182,18 @@ describe('Insert Image over Cells', () => {
     act(() => actions()[INSERT_IMAGE_OVER_CELLS]!.run());
     expect(screen.queryByRole('dialog', { name: 'Picker' })).toBeNull();
     expect(listImages).not.toHaveBeenCalled();
+  });
+
+  it('never lists the gallery in a workbench, its picker uploading alone', async () => {
+    setWorkbenchConfinement({ documentId: 'd1' } as Parameters<typeof setWorkbenchConfinement>[0]);
+    try {
+      const { actions } = await setup();
+      insert(actions);
+      expect(screen.getByRole('dialog', { name: 'Picker' }).dataset.uploadOnly).toBe('true');
+      expect(listImages).not.toHaveBeenCalled();
+    } finally {
+      setWorkbenchConfinement(null);
+    }
   });
 
   it('is an Editor’s alone', async () => {

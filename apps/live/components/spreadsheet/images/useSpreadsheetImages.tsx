@@ -16,6 +16,7 @@ import {
   type SheetImagesOverCells,
 } from '@/components/sheets/sheet-images-over-cells-context';
 import { apiListImages } from '@/lib/api-client';
+import { getWorkbenchConfinement } from '@/lib/api/workbench-confinement';
 import { debugLog } from '@/lib/debug-log';
 import type { Point } from '@/lib/office/context-menu-place';
 import type { OfficeActions } from '@/lib/office/office-catalogue';
@@ -52,12 +53,16 @@ const MENU_GAP_PX = 4;
 
 type Picking = { for: 'insert' } | { for: 'replace'; id: string };
 
+// The editor in a workbench uploads into its one document and never reads the person's gallery (workbench-embeds.md).
+const inWorkbench = () => getWorkbenchConfinement() !== null;
+
 /** Whether this deployment and document can hold images over cells (the gallery's probe, This Browser). */
 function useImagePlacing(access: SheetImageAccess, canShape: boolean): ImagePlacing {
   const local = isOfflineIdSync(access.documentId);
   const [probed, setProbed] = useState<ImagePlacing>('ready');
   useEffect(() => {
-    if (!canShape || local) return;
+    // A workbench may not list the gallery: its picker uploads alone, and an upload refused says why.
+    if (!canShape || local || inWorkbench()) return;
     let live = true;
     apiListImages(access.ownerId)
       .then((list) => {
@@ -223,6 +228,7 @@ export function useSpreadsheetImages(
           ownerId={access.ownerId}
           documentId={access.documentId}
           forElementId={null}
+          uploadOnly={inWorkbench()}
           onSelect={(image) => picked(picking, image)}
           onClose={() => {
             setPicking(null);
