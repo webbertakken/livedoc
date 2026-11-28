@@ -1,67 +1,43 @@
 'use client';
 
-// The link editor (docs/specs/034-text-documents/links-and-navigation.md "Links"): under the selection, Text and Link
-// with Apply; as Link is typed in, the person's LiveDoc documents whose names hold the words and this document's
-// headings and bookmarks, Up and Down to move, Enter to take one. Enter elsewhere applies, Escape or a press outside closes. What is refused is said under Link.
-import { useId, useRef, useState, type KeyboardEvent } from 'react';
-import {
-  lucideBookmark,
-  lucideFileText,
-  lucideHeading,
-  lucideLink,
-  lucideType,
-} from '@livedoc/icons/lucide';
+// The link editor (docs/specs/034-text-documents/links-and-navigation.md "Links", and a spreadsheet's,
+// docs/specs/029-sheets/inserted-objects.md "Insert Link"): under the selection, Text and Link with Apply; as Link is
+// typed in, the suggestions its owner offers in their groups (a text document's documents, headings and bookmarks; a
+// spreadsheet's range, sheets and documents), Up and Down to move, Enter to take one. Enter elsewhere applies, Escape
+// or a press outside closes. What is refused is said under Link.
+import { useId, useRef, useState, type ComponentType, type KeyboardEvent } from 'react';
+import { lucideLink, lucideType } from '@livedoc/icons/lucide';
 import { lucideGlyph, useClickOutside } from '@livedoc/ui';
 import { OfficePopup, OFFICE_POPUP } from '@/components/office/OfficePopup';
 import type { Box } from '@/lib/office/popup-place';
-import {
-  documentAddress,
-  matchingDocuments,
-  type LinkDocument,
-} from '@/lib/text-document/text-document-links';
-import type { PlaceTarget } from './useTextDocumentLinks';
 
 const TextGlyph = lucideGlyph(lucideType, 18);
 const LinkGlyph = lucideGlyph(lucideLink, 18);
-const DocumentGlyph = lucideGlyph(lucideFileText, 16);
-const BookmarkGlyph = lucideGlyph(lucideBookmark, 16);
-const HeadingGlyph = lucideGlyph(lucideHeading, 16);
-const GLYPHS = {
-  documents: DocumentGlyph,
-  headings: HeadingGlyph,
-  bookmarks: BookmarkGlyph,
-} as const;
 
-/** One suggestion under Link: a LiveDoc document, or a heading or bookmark of this document. */
-type Offer = { group: keyof typeof GLYPHS; key: string; label: string; href: string };
-// The order is (default) until a capture (links-and-navigation.md "Heading links").
-const GROUPS = [
-  ['documents', 'LiveDoc documents'],
-  ['headings', 'Headings'],
-  ['bookmarks', 'Bookmarks'],
-] as const;
+/** One suggestion under Link, in a group: `value` is what Link holds once it is taken. */
+export type OfficeLinkOffer = { group: string; key: string; label: string; value: string };
+/** A group of suggestions, listed in the order given, under its heading with its glyph. */
+export type OfficeLinkGroup = { id: string; heading: string; glyph: ComponentType };
 
 const FIELD =
   'h-field min-w-0 flex-1 rounded-control border border-(--office-line) bg-transparent px-2 text-body text-(--office-ink) outline-none focus-visible:ring-2 focus-visible:ring-(--office-focus)';
 
-export function TextDocumentLinkEditor({
+export function OfficeLinkEditor({
   anchor,
   text: openText,
   href,
-  documents,
-  places,
-  origin,
+  groups,
+  offers,
   onApply,
   onClose,
 }: {
   anchor: Box;
-  // The text the editor opens with; null for a selection across paragraphs, which keeps its text (no Text field).
+  // The text the editor opens with; null where it keeps its text (no Text field).
   text: string | null;
   href: string;
-  documents: readonly LinkDocument[];
-  // This document's headings and bookmarks holding the typed words.
-  places: (typed: string) => readonly PlaceTarget[];
-  origin: string;
+  groups: readonly OfficeLinkGroup[];
+  // The suggestions for what was typed into Link since it was last taken from.
+  offers: (typed: string) => readonly OfficeLinkOffer[];
   // Applies Text and Link; answers what is refused, or null once applied.
   onApply: (text: string | null, link: string) => string | null;
   onClose: () => void;
@@ -74,32 +50,14 @@ export function TextDocumentLinkEditor({
   // What Link offers, for the words typed since it was last taken from.
   const [typed, setTyped] = useState('');
   const [chosen, setChosen] = useState(0);
-  // The documents first, then this document's headings and bookmarks, one list to move through.
-  const offered: Offer[] = [
-    ...matchingDocuments(documents, typed).map((d): Offer => ({
-      group: 'documents',
-      key: `d:${d.id}`,
-      label: d.name.trim() || 'Untitled',
-      href: documentAddress(d.id, origin),
-    })),
-    ...(typed.trim()
-      ? GROUPS.flatMap(([group]) =>
-          places(typed)
-            .filter((p) => p.group === group)
-            .map((p): Offer => ({
-              group,
-              key: `${group}:${p.name}`,
-              label: p.label,
-              href: `#${p.name}`,
-            })),
-        )
-      : []),
-  ];
+  // The groups in their order, one list to move through.
+  const all = offers(typed);
+  const offered = groups.flatMap((g) => all.filter((o) => o.group === g.id));
   const index = Math.min(chosen, Math.max(0, offered.length - 1));
   useClickOutside(box, onClose, true, OFFICE_POPUP);
 
-  const take = (offer: Offer) => {
-    setLink(offer.href);
+  const take = (offer: OfficeLinkOffer) => {
+    setLink(offer.value);
     if (text === '') setText(offer.label);
     setTyped('');
     setProblem(null);
@@ -131,7 +89,7 @@ export function TextDocumentLinkEditor({
       <form
         ref={box}
         aria-label="Link"
-        data-text-document-link-editor
+        data-office-link-editor
         onKeyDown={onKeyDown}
         onSubmit={(e) => {
           e.preventDefault();
@@ -203,7 +161,7 @@ export function TextDocumentLinkEditor({
             aria-label="Suggestions"
             className="mt-2 border-t border-(--office-line) pt-1"
           >
-            {GROUPS.map(([group, heading]) => {
+            {groups.map(({ id: group, heading, glyph: Glyph }) => {
               const members = offered.filter((o) => o.group === group);
               if (members.length === 0) return null;
               return (
@@ -217,7 +175,6 @@ export function TextDocumentLinkEditor({
                   </div>
                   {members.map((offer) => {
                     const at = offered.indexOf(offer);
-                    const Glyph = GLYPHS[group];
                     return (
                       <div
                         key={offer.key}

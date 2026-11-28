@@ -39,7 +39,7 @@ test('a heading’s link is copied, linked to, gone to and kept in the file', as
   await body.locator('p').first().click();
   await page.keyboard.press('End');
   await page.keyboard.press('Control+k');
-  const editor = page.locator('[data-text-document-link-editor]');
+  const editor = page.locator('[data-office-link-editor]');
   await editor.getByRole('combobox', { name: 'Link' }).fill('chapter');
   await expect(editor.getByRole('group', { name: 'Headings' })).toBeVisible();
   await page.waitForTimeout(300);
@@ -51,9 +51,7 @@ test('a heading’s link is copied, linked to, gone to and kept in the file', as
   await expect(body.locator('p', { hasText: /^Chapter one$/ })).toHaveCount(1);
 
   // Alt+Enter on it goes to the heading, far down the page.
-  await expect(page.locator('[data-text-document-link-card]').getByRole('link')).toHaveText(
-    'Chapter one',
-  );
+  await expect(page.locator('[data-office-link-card]').getByRole('link')).toHaveText('Chapter one');
   await page.keyboard.press('ArrowLeft');
   await page.keyboard.press('Alt+Enter');
   const heading = body.locator('p', { hasText: /^Chapter one$/ });

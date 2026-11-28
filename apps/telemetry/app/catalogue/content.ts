@@ -1438,6 +1438,15 @@ export const SPREADSHEET_EMOJI_ADDED = chart(
   { types: ['Emoji'] },
 );
 
+// docs/specs/029-sheets/inserted-objects.md "Insert Link": a link applied to cells that had none.
+export const SPREADSHEET_LINK_ADDED = chart(
+  'Spreadsheet',
+  'Added',
+  'Spreadsheet Links Added',
+  'An editor linked spreadsheet cells to an address, a sheet or a range with Insert Link.',
+  { types: ['Link'] },
+);
+
 // docs/specs/029-sheets/data-tools.md "Filters, filter views and slicers" and "Group by view": a filter view or a
 // group by view made, saved (an Editor's) or temporary (a Participant's or a Viewer's).
 export const SPREADSHEET_FILTER_VIEWS_ADDED = chart(
@@ -1520,6 +1529,7 @@ export const SPREADSHEETS: MetricStack = {
     SPREADSHEET_PIVOT_TABLES_ADDED,
     SPREADSHEET_IMAGES_ADDED,
     SPREADSHEET_EMOJI_ADDED,
+    SPREADSHEET_LINK_ADDED,
     SPREADSHEET_FILTER_VIEWS_ADDED,
     SPREADSHEET_GROUPS_TOGGLED,
     SPREADSHEET_GROUP_AGGREGATIONS,

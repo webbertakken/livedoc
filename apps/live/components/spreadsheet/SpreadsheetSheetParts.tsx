@@ -3,6 +3,7 @@
 // The open sheet's parts (docs/specs/029-sheets/surface.md): the formula bar, the grid, the right side panel beside them
 // (office-shell.md "Side panels"), the grid's menus and dialogs and the sheet bar's summary, all on the open sheet's
 // controller.
+import { FilterMenuContext } from '@/components/sheets/useFilterMenuShortcut';
 import { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { DocumentFonts } from '@livedoc/document';
 import { tableAt } from '@livedoc/sheets';
@@ -55,7 +56,6 @@ import { useLatest } from '@/hooks/ui/useLatest';
 import { FindReplaceDialog } from './FindReplaceDialog';
 import { useFindReplace } from './find-replace-state';
 import { SheetChartsContext } from '@/components/sheets/sheet-charts-context';
-import { FilterMenuContext } from '@/components/sheets/useFilterMenuShortcut';
 import {
   TableColumnMenuContext,
   TableSettingsContext,
@@ -68,6 +68,15 @@ import { SheetPictureAccessContext } from '@/components/sheets/sheet-picture-acc
 import { useSpreadsheetImages } from './images/useSpreadsheetImages';
 import { useSpreadsheetCellPictures } from './images/useSpreadsheetCellPictures';
 import { useSpreadsheetEmoji } from './useSpreadsheetEmoji';
+import { useSpreadsheetLinks } from './useSpreadsheetLinks';
+import { useCellLinkLanding } from './useCellLinkLanding';
+import { useLinkDocuments } from './link-documents-context';
+import { useSheetNavigation } from '@/components/sheets/sheet-navigation';
+import {
+  SheetLinkFollowContext,
+  type FollowSheetLink,
+} from '@/components/sheets/sheet-link-follow-context';
+import { rangeOnSheet, SHEET_GONE } from '@/lib/spreadsheet/sheet-links';
 import {
   SheetPivotDetailsContext,
   SheetPivotsContext,
@@ -187,6 +196,25 @@ export function SpreadsheetSheetParts({ bridge }: { bridge: SheetsBridge }) {
   const cellPictures = useSpreadsheetCellPictures(c, imageAccess, images.placing);
   // Insert › Emoji (inserted-objects.md "Tick boxes, dropdowns and emoji"): into the open edit, or the active cell's.
   const emoji = useSpreadsheetEmoji(c, input);
+  // Links (inserted-objects.md "Links"): Insert Link, the link card, Open Link and Get Link to This Cell.
+  const openSheetAt = useSheetNavigation();
+  const { goTo } = actions;
+  const followSheet = useCallback<FollowSheetLink>(
+    (to) => {
+      const sheet = c.workbook.sheet(to.sheetId);
+      if (!sheet) return c.toast(SHEET_GONE);
+      const range = rangeOnSheet(
+        to.range ?? { r1: 0, c1: 0, r2: 0, c2: 0 },
+        sheet.layout.rows.length,
+        sheet.layout.cols.length,
+      ) ?? { r1: 0, c1: 0, r2: 0, c2: 0 };
+      if (to.sheetId === c.sheet.id) goTo(range);
+      else openSheetAt?.(to.sheetId, range);
+    },
+    [c, goTo, openSheetAt],
+  );
+  useCellLinkLanding(c, goTo);
+  const links = useSpreadsheetLinks(c, { documentId, documents: useLinkDocuments(), followSheet });
   const canInsertChart = c.canShape;
   const bandingActions = useMemo(
     () => ({
@@ -265,6 +293,7 @@ export function SpreadsheetSheetParts({ bridge }: { bridge: SheetsBridge }) {
       ...images.actions,
       ...cellPictures.actions,
       ...emoji.actions,
+      ...links.actions,
       ...(detailsHere
         ? { 'show-pivot-details': { run: () => void pivots.showDetails(active.r, active.c) } }
         : {}),
@@ -309,16 +338,18 @@ export function SpreadsheetSheetParts({ bridge }: { bridge: SheetsBridge }) {
                           <SheetPictureAccessContext.Provider value={imageAccess}>
                             <SheetPivotsContext.Provider value={c.canShape ? editPivot : null}>
                               <SheetPivotDetailsContext.Provider value={pivots.showDetails}>
-                                <SheetGrid
-                                  elementId={`sheet-${c.sheet.id}`}
-                                  actions={actions}
-                                  input={input}
-                                  pointRef={pointRef}
-                                  peers={bridge.peers}
-                                  zoom={zoom}
-                                  surfaceKeys={surfaceKeys}
-                                  fontFamily={DocumentFonts.stack(theme.font)}
-                                />
+                                <SheetLinkFollowContext.Provider value={followSheet}>
+                                  <SheetGrid
+                                    elementId={`sheet-${c.sheet.id}`}
+                                    actions={actions}
+                                    input={input}
+                                    pointRef={pointRef}
+                                    peers={bridge.peers}
+                                    zoom={zoom}
+                                    surfaceKeys={surfaceKeys}
+                                    fontFamily={DocumentFonts.stack(theme.font)}
+                                  />
+                                </SheetLinkFollowContext.Provider>
                               </SheetPivotDetailsContext.Provider>
                             </SheetPivotsContext.Provider>
                           </SheetPictureAccessContext.Provider>
@@ -358,6 +389,8 @@ export function SpreadsheetSheetParts({ bridge }: { bridge: SheetsBridge }) {
       {images.dialogs}
       {cellPictures.dialogs}
       {emoji.dialog}
+      {links.editor}
+      {links.card}
       {findReplace?.open ? <FindReplaceDialog state={findReplace} /> : null}
       <SheetBarSummary />
     </div>

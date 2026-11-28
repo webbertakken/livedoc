@@ -1697,6 +1697,16 @@ export const articles: Article[] = [
     parentSlug: 'plan-tabs',
   },
   {
+    slug: 'cell-links',
+    title: 'Links in Cells',
+    description: 'Link spreadsheet cells to a web page, a sheet, a range or a document.',
+    keywords:
+      'link links hyperlink hyperlinks url web address email mailto insert link ctrl k cmd k edit link remove link copy link open link get link to this cell link to cell link to range link to sheet jump spreadsheet sheet cell document',
+    category: 'Canvas',
+    categorySlug: 'canvas/plan-tabs',
+    parentSlug: 'plan-tabs',
+  },
+  {
     slug: 'pivot-tables',
     title: 'Pivot Tables',
     description: 'Summarise a spreadsheet range by its columns: rows, columns, values and filters.',

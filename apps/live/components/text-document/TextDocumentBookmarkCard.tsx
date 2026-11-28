@@ -6,7 +6,7 @@ import { lucideCopy, lucideTrash2 } from '@livedoc/icons/lucide';
 import { lucideGlyph } from '@livedoc/ui';
 import { OfficePopup } from '@/components/office/OfficePopup';
 import type { Box } from '@/lib/office/popup-place';
-import { CardButton } from './TextDocumentLinkCard';
+import { CardButton } from '@/components/office/OfficeLinkCard';
 
 const CopyGlyph = lucideGlyph(lucideCopy, 18);
 const RemoveGlyph = lucideGlyph(lucideTrash2, 18);

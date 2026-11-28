@@ -42,7 +42,7 @@ test('a bookmark is put in, linked to, gone to and kept in the file', async ({
   await page.keyboard.press('Control+Home');
   await page.keyboard.press('End');
   await page.keyboard.press('Control+k');
-  const editor = page.locator('[data-text-document-link-editor]');
+  const editor = page.locator('[data-office-link-editor]');
   await editor.getByRole('combobox', { name: 'Link' }).fill('chapter');
   await expect(editor.getByRole('group', { name: 'Bookmarks' })).toBeVisible();
   await page.keyboard.press('Enter');
@@ -51,9 +51,7 @@ test('a bookmark is put in, linked to, gone to and kept in the file', async ({
   await expect(link).toHaveText('Chapter one');
 
   // Alt+Enter on it goes to the bookmark, far down the page.
-  await expect(page.locator('[data-text-document-link-card]').getByRole('link')).toHaveText(
-    'Chapter one',
-  );
+  await expect(page.locator('[data-office-link-card]').getByRole('link')).toHaveText('Chapter one');
   await page.keyboard.press('ArrowLeft');
   await page.keyboard.press('Alt+Enter');
   await expect(card).toBeVisible();

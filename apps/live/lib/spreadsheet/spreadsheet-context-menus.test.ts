@@ -23,9 +23,11 @@ const PASTE_SPECIAL = {
 };
 
 describe('SPREADSHEET_CONTEXT_MENUS', () => {
-  it("draws a cell's menu as Google's, Open Link, a picture's and a pivot table's items heading it", () => {
+  it("draws a cell's menu as Google's, a link's, a picture's and a pivot table's items heading it", () => {
     expect(words(SPREADSHEET_CONTEXT_MENUS.cell)).toEqual([
       'Open Link',
+      'Edit Link',
+      'Remove Link',
       'Show Details',
       'Alt Text',
       'Place Image over Cells',
@@ -177,7 +179,11 @@ describe('SPREADSHEET_CONTEXT_MENUS', () => {
       status: 'built',
       level: 'participate',
     });
-    expect(items.find((e) => e.id === 'insert-link')).toMatchObject({ status: 'comingSoon' });
+    expect(items.find((e) => e.id === 'insert-link')).toMatchObject({ status: 'built' });
+    expect(items.find((e) => e.id === 'remove-link')).toMatchObject({
+      contextual: true,
+      level: 'edit',
+    });
     expect(items.find((e) => e.id === 'open-link')).toMatchObject({
       contextual: true,
       level: 'view',

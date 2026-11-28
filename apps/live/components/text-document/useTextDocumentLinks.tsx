@@ -5,6 +5,8 @@
 // card shows under a link holding the caret while Show link details is on; Alt+Enter opens the link at the caret.
 // Editors add, change and remove links; everyone may open and copy one.
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { lucideBookmark, lucideFileText, lucideHeading } from '@livedoc/icons/lucide';
+import { lucideGlyph } from '@livedoc/ui';
 import type { EditorView } from 'prosemirror-view';
 import { debugLog } from '@/lib/debug-log';
 import type { OfficeActions } from '@/lib/office/office-catalogue';
@@ -18,11 +20,13 @@ import {
   LINK_REMOVE_ITEM,
   OPEN_LINK,
   applyLink,
+  documentAddress,
   documentIdOf,
   linkAddress,
   linkAt,
   linkEditing,
   linkTitle,
+  matchingDocuments,
   openLink,
   removeLink,
   type LinkDocument,
@@ -30,8 +34,12 @@ import {
   type LinkStretch,
 } from '@/lib/text-document/text-document-links';
 import { startUndoStep } from '@/lib/text-document/text-document-undo';
-import { TextDocumentLinkCard } from './TextDocumentLinkCard';
-import { TextDocumentLinkEditor } from './TextDocumentLinkEditor';
+import { OfficeLinkCard } from '@/components/office/OfficeLinkCard';
+import {
+  OfficeLinkEditor,
+  type OfficeLinkGroup,
+  type OfficeLinkOffer,
+} from '@/components/office/OfficeLinkEditor';
 
 /** A place of this document the link editor offers: a heading or a bookmark, the name a link to it carries. */
 export type PlaceTarget = {
@@ -86,6 +94,39 @@ function boxOf(view: EditorView, from: number, to: number): Box {
 }
 
 const origin = () => window.location.origin;
+
+// The link editor's groups: the person's documents, then this document's headings and bookmarks; the order is
+// (default) until a capture (links-and-navigation.md "Heading links").
+const LINK_GROUPS: readonly OfficeLinkGroup[] = [
+  { id: 'documents', heading: 'LiveDoc documents', glyph: lucideGlyph(lucideFileText, 16) },
+  { id: 'headings', heading: 'Headings', glyph: lucideGlyph(lucideHeading, 16) },
+  { id: 'bookmarks', heading: 'Bookmarks', glyph: lucideGlyph(lucideBookmark, 16) },
+];
+
+// What Link offers for what is typed: the documents whose names hold every word, then, once a word is typed, this
+// document's headings and bookmarks holding them.
+function linkOffers(
+  typed: string,
+  documents: readonly LinkDocument[],
+  places: (typed: string) => readonly PlaceTarget[],
+): OfficeLinkOffer[] {
+  return [
+    ...matchingDocuments(documents, typed).map((d) => ({
+      group: 'documents',
+      key: `d:${d.id}`,
+      label: d.name.trim() || 'Untitled',
+      value: documentAddress(d.id, origin()),
+    })),
+    ...(typed.trim()
+      ? places(typed).map((p) => ({
+          group: p.group,
+          key: `${p.group}:${p.name}`,
+          label: p.label,
+          value: `#${p.name}`,
+        }))
+      : []),
+  ];
+}
 
 export function useTextDocumentLinks({
   view,
@@ -248,14 +289,13 @@ export function useTextDocumentLinks({
   }, [view, cardShown, shownAt]);
 
   const editor = editing ? (
-    <TextDocumentLinkEditor
+    <OfficeLinkEditor
       key={editing.nonce}
       anchor={editing.anchor}
       text={editing.edit.text}
       href={editing.edit.href}
-      documents={documents}
-      places={inDocument.targets}
-      origin={origin()}
+      groups={LINK_GROUPS}
+      offers={(typed) => linkOffers(typed, documents, inDocument.targets)}
       onApply={apply}
       onClose={close}
     />
@@ -263,7 +303,7 @@ export function useTextDocumentLinks({
 
   const card =
     cardShown && shownAt ? (
-      <TextDocumentLinkCard
+      <OfficeLinkCard
         anchor={shownAt.anchor}
         title={
           shownAt.link.href.startsWith('#')
