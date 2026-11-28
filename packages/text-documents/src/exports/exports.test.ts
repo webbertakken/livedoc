@@ -211,9 +211,7 @@ describe('writeMarkdown', () => {
       { kind: 'text' as const, text: 'a\\' },
       { kind: 'operator' as const, text: '$' },
     ];
-    expect(writeMarkdown(doc([p([{ type: 'equation', math, props: {} }])]))).toBe(
-      '$a\\\\\\$$\n',
-    );
+    expect(writeMarkdown(doc([p([{ type: 'equation', math, props: {} }])]))).toBe('$a\\\\\\$$\n');
   });
 
   it('writes a line break as a hard break', () => {
