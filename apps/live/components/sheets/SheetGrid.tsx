@@ -515,7 +515,8 @@ export function SheetGrid({
             <div
               ref={setChipHost}
               data-table-chips=""
-              className="pointer-events-none absolute inset-0"
+              // Over the column letters (z 5 and 6), under the corner (8).
+              className="pointer-events-none absolute inset-0 z-[7]"
             />
             {pointer.preview?.kind === 'resize' || pointer.preview?.kind === 'move' ? (
               <div
