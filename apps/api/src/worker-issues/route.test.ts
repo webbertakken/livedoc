@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { listItems } from '../db';
 import { listDueBugReports } from '../db/bug-reports';
 import { seedBugTracker } from '../bug-reports/test-bug-tracker';
@@ -14,7 +14,7 @@ import {
 import { refileHeldWorkerIssues } from './held-refile';
 import type { WorkerIssuesLedger } from './ledger';
 import { handleWorkerIssues } from './route';
-import { realTimeDelivery, sampleDelivery } from './test-delivery';
+import { realTimeDelivery, sampleDelivery, scanDelivery } from './test-delivery';
 import { ledgerBinding, testLedger } from './test-ledger';
 
 // docs/specs/016-platform/worker-issues.md: "The receiver" (every row of its outcome table), "Once only", "The issue
@@ -491,5 +491,98 @@ describe('POST /api/worker-issues, the email', () => {
   it('never puts the stack in the email', async () => {
     await post(sampleDelivery());
     expect(sent[0]?.html).not.toContain('src/home/route.ts');
+  });
+});
+
+// docs/specs/016-platform/worker-issues.md "Vulnerability scans": a probe answered 404 or static is a log line; the
+// first answered one of a UTC day is the day's one digest card.
+describe('POST /api/worker-issues, a scan alert', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+    vi.useRealTimers();
+  });
+
+  it('logs a scan the router or the live app answered, filing and sending nothing', async () => {
+    const info = vi.spyOn(console, 'info');
+    for (const service of ['docs-nu-router', 'docs-nu-live'])
+      expect(await post(scanDelivery({ service, runId: `run_${service}` }))).toMatchObject({
+        status: 200,
+        body: { outcome: 'logged' },
+      });
+    expect(await cards()).toEqual([]);
+    expect(storedRows()).toEqual([]);
+    expect(sent).toEqual([]);
+    expect(info).toHaveBeenCalledWith('[worker-issues] scan.logged', {
+      worker: 'docs-nu-router',
+      issueId: 'iss_scan',
+      title: 'Potential vulnerability scan · secret-files · high risk',
+      status: null,
+    });
+  });
+
+  it('logs a scan that names neither its worker nor its issue, answered 404', async () => {
+    const info = vi.spyOn(console, 'info');
+    expect((await post(scanDelivery({ service: null, status: 404 }))).body).toEqual({
+      outcome: 'logged',
+    });
+    expect(info).toHaveBeenCalledWith('[worker-issues] scan.logged', {
+      worker: null,
+      issueId: null,
+      title: 'Potential vulnerability scan · secret-files · high risk',
+      status: 404,
+    });
+  });
+
+  it('logs a repeat of the day digest that names no issue', async () => {
+    const info = vi.spyOn(console, 'info');
+    await post(scanDelivery({ runId: 'run_a' }));
+    expect((await post(scanDelivery({ runId: 'run_b', service: null }))).body).toEqual({
+      outcome: 'repeat',
+    });
+    expect(info).toHaveBeenCalledWith('[worker-issues] delivery.repeat', {
+      issueId: null,
+      key: 'scan-digest',
+    });
+  });
+
+  it('logs a scan the api answered 404', async () => {
+    expect((await post(scanDelivery({ status: 404 }))).body).toEqual({ outcome: 'logged' });
+    expect(await cards()).toEqual([]);
+    expect(sent).toEqual([]);
+  });
+
+  it('files the first answered scan of a day as its one digest card, and emails once', async () => {
+    vi.useFakeTimers({ toFake: ['Date'], now: Date.parse('2026-11-28T06:00:00Z') });
+    expect((await post(scanDelivery({ runId: 'run_a' }))).body).toEqual({
+      outcome: 'filed',
+      number: 1,
+    });
+    expect((await post(scanDelivery({ runId: 'run_b', status: 200 }))).body).toEqual({
+      outcome: 'repeat',
+    });
+    expect((await post(scanDelivery({ runId: 'run_c', service: 'docs-nu-mcp' }))).body).toEqual({
+      outcome: 'repeat',
+    });
+    expect(await cards()).toHaveLength(1);
+    expect(sent).toHaveLength(1);
+  });
+
+  it('files the next day its own digest', async () => {
+    vi.useFakeTimers({ toFake: ['Date'], now: Date.parse('2026-11-28T23:59:00Z') });
+    await post(scanDelivery({ runId: 'run_a' }));
+    vi.setSystemTime(Date.parse('2026-11-29T00:01:00Z'));
+    expect((await post(scanDelivery({ runId: 'run_b' }))).body).toEqual({
+      outcome: 'filed',
+      number: 2,
+    });
+  });
+
+  it('gives the day back when its digest can go nowhere, so the next answered scan files it', async () => {
+    vi.useFakeTimers({ toFake: ['Date'], now: Date.parse('2026-11-28T06:00:00Z') });
+    for (let i = 0; i < WORKER_ISSUES_HELD_MAX; i += 1)
+      ledger.hold(`k${i}`, { trigger: 'unknown' }, i);
+    d1Down = true;
+    expect((await post(scanDelivery({ runId: 'run_a' }))).status).toBe(503);
+    expect(ledger.claim('scan-digest:2026-11-28', Date.now())).toBe('new');
   });
 });

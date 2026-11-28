@@ -77,6 +77,7 @@ A refusal answers its code and nothing more; no error text, header or payload is
 | Stored in D1                       | `202 { outcome: "stored" }`           |
 | Held in the ledger                 | `202 { outcome: "held" }`             |
 | Repeat                             | `200 { outcome: "repeat" }`           |
+| A scan not answered                | `200 { outcome: "logged" }`           |
 | Test                               | `200 { outcome: "test" }`             |
 | Wrong method                       | `405 method_not_allowed`              |
 | Throttled                          | `429 rate_limited`, `Retry-After: 60` |
@@ -121,6 +122,29 @@ So the receiver reads, besides the names above:
 
 The receiver asks the Issues API nothing: it holds no Cloudflare token, and a self-hoster needs none.
 The card's issue link opens the worker's Issues, where the occurrences, stack and request are.
+
+## Vulnerability scans
+
+Cloudflare raises a **scan alert** when a request looks like a probe: a security issue titled
+`Potential vulnerability scan · <family> · <risk>` (`debug-endpoints`, `secret-files`, `source-control`, ...).
+Bots send such probes to every public site all day, so a card for each would bury the real faults.
+
+- A scan alert is told by its type, `security`, and its title, which starts `Potential vulnerability scan`.
+- It is **answered** when the probe got a `2xx` with a body that is not part of the public site.
+- The router and the live app serve only the built site, so a scan on either is never answered.
+- An `/api` probe through the router reaches the api too, whose own scan alert is read on its own.
+- On any other worker a scan is answered when its status is `2xx`, or when the delivery names no status.
+- A delivery names no status today ([What a delivery carries](#what-a-delivery-carries)), so a scan on the api or the
+  mcp counts as answered: the receiver cannot tell, and a leak must never go unseen.
+
+What the receiver does with a scan alert:
+
+- **Not answered**: logged as `scan.logged` with the worker, the issue id, the title and the status; nothing is
+  filed, stored or sent, and it answers `200 { outcome: "logged" }`.
+- **Answered**: the first of a UTC day files one issue card and sends one email, the day's **scan digest**.
+- Its delivery key is `scan-digest:<date>`, so every later answered scan that day is a repeat, logged and not filed.
+- A digest that is neither filed, stored nor held gives its key back, as any delivery does.
+- The digest card is the day's pointer: the worker's Issues tab holds every scan, with its requests and statuses.
 
 ## Once only
 
@@ -204,6 +228,7 @@ A database outage is exactly when errors arrive. While D1 is down:
 - Cloudflare's address ranges prove nothing: anyone on Cloudflare sends from them.
 - It is off without a secret, throttled per network, and refused before any body is read without the right secret.
 - No log line carries more of a payload than the worker, the issue id, the trigger and the delivery key's kind.
+- A scan's `scan.logged` line adds its title and status: Cloudflare's own words, never the request.
 - The card is as private as the Bug Tracker, an unshared document.
 
 ## Share roles
@@ -216,6 +241,7 @@ The issue card is a card on the Bug Tracker, read by whoever that document is sh
 Every decision logs under `[worker-issues]`, kept by [Worker logs](worker-logs.md):
 
 - `delivery.off`, `delivery.refused` (with the problem), `delivery.test`, `delivery.received`, `delivery.repeat`;
+- `scan.logged` (with the worker, the issue id, the title and the status);
 - `ledger.unavailable` (with the step), `limiter.failed`;
 - `card.filed`, `card.unfiled`, `card.stored`, `card.unstored`, `card.held`, `card.lost`;
 - `held.refiled`, `held.unreadable`, `held.refile_failed`;

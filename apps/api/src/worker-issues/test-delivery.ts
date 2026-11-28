@@ -84,3 +84,35 @@ export function realTimeDelivery(
     },
   };
 }
+
+// A scan alert (docs/specs/016-platform/worker-issues.md "Vulnerability scans"), shaped as a real delivery: a security
+// issue whose title names the probe family; a status only when the test gives one, as no real delivery names it.
+export function scanDelivery(
+  overrides: { service?: string | null; status?: number; runId?: string; ts?: number } = {},
+) {
+  const service = overrides.service === undefined ? 'docs-nu-api' : overrides.service;
+  const base = realTimeDelivery({ services: service === null ? [] : [service] });
+  const title = 'Potential vulnerability scan · secret-files · high risk';
+  return {
+    ...base,
+    text: `Real-Time Issue '${title}' detected.`,
+    ts: overrides.ts ?? base.ts,
+    data: {
+      ...base.data,
+      issue: {
+        ...base.data.issue,
+        id: service === null ? undefined : 'iss_scan',
+        title,
+        type: 'ISSUE_TYPE_SECURITY',
+      },
+      state_correlation_id: overrides.runId ?? 'run_scan_1',
+      ...(overrides.status === undefined
+        ? {}
+        : {
+            occurrence: {
+              invocation: { method: 'GET', path: '/.env', statusCode: overrides.status },
+            },
+          }),
+    },
+  };
+}
