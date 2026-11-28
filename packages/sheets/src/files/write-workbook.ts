@@ -32,9 +32,16 @@ export function workbookEngine(sheets: readonly Sheet[], record: WorkbookRecord)
   return wb;
 }
 
-/** The workbook as a file holds it, every value worked out by the engine with the workbook's settings. */
-export function workbookFileFor(sheets: readonly Sheet[], record: WorkbookRecord): WorkbookFile {
-  return workbookFileOf(workbookEngine(sheets, record), sheets, record.settings.locale);
+/**
+ * The workbook as a file holds it, every value worked out by the engine with the workbook's settings: `engine` when
+ * the caller made it (given what it reads from outside, its Plan cards), else one made here.
+ */
+export function workbookFileFor(
+  sheets: readonly Sheet[],
+  record: WorkbookRecord,
+  engine: Workbook = workbookEngine(sheets, record),
+): WorkbookFile {
+  return workbookFileOf(engine, sheets, record.settings.locale);
 }
 
 /** The formulas of a file. */
@@ -73,8 +80,10 @@ export function writeWorkbook(
   pictures?: FilePictureFetches,
   // Each sheet's comment threads by its id (standard-mapping.md "Comments in the file"); absent, none.
   threads?: ReadonlyMap<string, readonly IdThread[]>,
+  // The engine its values are worked out by, when the caller made it (`workbookEngine` given its cards).
+  engine?: Workbook,
 ): WrittenWorkbook {
-  const file = workbookFileFor(sheets, record);
+  const file = workbookFileFor(sheets, record, engine);
   if (threads)
     sheets.forEach((sheet, i) => {
       const placed = fileThreadsOf(sheet.layout, threads.get(sheet.id) ?? []);

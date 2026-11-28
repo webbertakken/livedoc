@@ -13,6 +13,7 @@ import { sheetText } from '../sheet-text';
 import { decodeTextFile, type TextEncodingName } from '../text-decoding';
 import { readTypedInput } from '../typed-input';
 import type { WorkbookRecord } from '../workbook-record';
+import type { Workbook } from '../engine/workbook';
 import { WORKBOOK_COLS_MAX, WORKBOOK_ROWS_MAX } from '../workbook/workbook-limits';
 import { FILE_READ_CELLS_MAX } from './file-read-limits';
 import {
@@ -123,8 +124,11 @@ export function writeSheetText(
   record: WorkbookRecord,
   tabId: string,
   sep: ',' | '\t',
+  // The engine its values are worked out by, when the caller made it (given its cards); else one made here.
+  engine?: Workbook,
 ): { text: string; title: string } | null {
   const sheet = sheets.find((s) => s.tabId === tabId);
   if (!sheet) return null;
-  return { text: sheetText(workbookEngine(sheets, record), sheet, sep), title: sheet.title };
+  const wb = engine ?? workbookEngine(sheets, record);
+  return { text: sheetText(wb, sheet, sep), title: sheet.title };
 }

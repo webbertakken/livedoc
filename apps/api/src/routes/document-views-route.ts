@@ -362,7 +362,7 @@ export async function answerTabView(
       tabScope ?? undefined,
     );
   const sheet = await answerWorkbookView(
-    ctx.env,
+    ctx,
     parsed.request,
     parsed.json,
     document,

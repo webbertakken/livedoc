@@ -2,8 +2,9 @@
 
 **Status: specified; dashboards' figures and charts, the Spreadsheet slot and form responses are built.** A Sheet
 Figure, Column Summary, Trend or Sheet Chart reads a sheet of a spreadsheet, a Spreadsheet slot shows one's first
-sheet, and a form writes its responses into one; in the editor the `CARD` functions read the cards' document the
-settings name. Their reads outside the editor, Cards From in Settings and the starts are not built yet.
+sheet, and a form writes its responses into one; the `CARD` functions read the cards' document the settings name, in
+the editor and in the api's downloads, links, views and pictures. Cards From in Settings and the starts are not built
+yet.
 
 What Plan reads from or writes to a sheet, re-homed onto the [spreadsheet](spreadsheet.md) (C4, ruled 2026-11-18:
 keep them; C6, ruled 2026-11-18: the card functions only).

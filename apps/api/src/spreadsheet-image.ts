@@ -9,16 +9,18 @@ import { AGENT_LOCALE, SheetLimits, Workbook, type GridRange } from '@livedoc/sh
 import { readWorkbook } from './db/workbook';
 import { loadEmbeddedImages } from './thumbnail';
 import { loadSpreadsheetSheets } from './routes/workbook-sheets-load';
-import type { DocumentEnv } from './types';
+import type { DocumentRouteContext } from './routes/context';
+import { fillSpreadsheetCards } from './routes/spreadsheet-cards';
 
 // The SVG, or null when the tab is no spreadsheet's sheet tab (drawn as any tab is). `scope` is the one tab a
 // tab-scoped link reaches: the sheets it may not see are left out of the workbook, as the cells view leaves them.
 export async function renderSpreadsheetTabSvg(
-  env: DocumentEnv,
+  ctx: DocumentRouteContext,
   documentId: string,
   tabId: string,
   opts: { range?: GridRange; scope: string | null },
 ): Promise<string | null> {
+  const { env } = ctx;
   const workbook = await readWorkbook(env, documentId);
   if (!workbook) return null;
   const sheets = (await loadSpreadsheetSheets(env, documentId)).filter(
@@ -33,6 +35,8 @@ export async function renderSpreadsheetTabSvg(
     iteration: workbook.settings.iterate,
     timeZone: workbook.settings.timeZone,
   });
+  // Card functions read the cards' document with the asker's own access (plan-links.md "The `CARD` functions").
+  await fillSpreadsheetCards(wb, ctx, workbook);
   const image = spreadsheetSheetImage(
     wb,
     sheet.id,

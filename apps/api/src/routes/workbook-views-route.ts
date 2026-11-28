@@ -17,6 +17,8 @@ import { documentTabOrder, readWorkbook } from '../db/workbook';
 import { json, textPlain } from '../responses';
 import type { DocumentDTO, DocumentEnv, TabDTO } from '../types';
 import { loadSpreadsheetSheets } from './workbook-sheets-load';
+import type { DocumentRouteContext } from './context';
+import { fillSpreadsheetCards } from './spreadsheet-cards';
 
 export type WorkbookViewAnswer = { response: Response; view: 'outline' | 'cells' } | null;
 
@@ -115,7 +117,7 @@ async function outline(
 
 // The view of a spreadsheet's tab, or null when the tab is none (the tab's own views answer).
 export async function answerWorkbookView(
-  env: DocumentEnv,
+  ctx: DocumentRouteContext,
   request: ViewRequest,
   asJson: boolean,
   document: DocumentDTO,
@@ -124,6 +126,7 @@ export async function answerWorkbookView(
   // Whether the caller may read comments: a cells view then counts each cell's open threads.
   mayComment: () => Promise<boolean> = async () => false,
 ): Promise<WorkbookViewAnswer> {
+  const { env } = ctx;
   const sheetTab = tab.kind === 'sheet';
   if (!sheetTab && request.view !== 'cells') return null;
   const workbook = sheetTab ? await readWorkbook(env, document.id) : null;
@@ -169,6 +172,8 @@ export async function answerWorkbookView(
     iteration: workbook.settings.iterate,
     timeZone: workbook.settings.timeZone,
   });
+  // Card functions read the cards' document with the asker's own access (plan-links.md "The `CARD` functions").
+  await fillSpreadsheetCards(wb, ctx, workbook);
   const comments = (await mayComment())
     ? openThreadCounts(await readWorkbookThreads(env, document.id, null), sheet.id)
     : undefined;
