@@ -71,6 +71,8 @@ export type PreviewBlock = {
 export type PreviewBody = {
   readonly blocks: readonly PreviewBlock[];
   readonly sections: readonly PageSetup[];
+  /** Each block's place in the body (a table of contents' entries share their contents'). */
+  readonly sources: readonly number[];
 };
 
 const px = (pt: number) => pt * PX_PER_PT;
@@ -342,6 +344,7 @@ export function previewBody(doc: TextDocument, body: readonly Block[]): PreviewB
     doc.lists,
   );
   const blocks: PreviewBlock[] = [];
+  const sources: number[] = [];
   body.forEach((block, n) => {
     const section = sections.length - 1;
     const width = textWidthOf(sections[section]!);
@@ -358,6 +361,7 @@ export function previewBody(doc: TextDocument, body: readonly Block[]): PreviewB
         metrics: { ...nothing(0).metrics, startsSection: block.start },
       });
     } else blocks.push(nothing(section));
+    while (sources.length < blocks.length) sources.push(n);
   });
-  return { blocks, sections };
+  return { blocks, sections, sources };
 }

@@ -90,6 +90,18 @@ function placePages(
   return pages;
 }
 
+// The body measured from the bundled faces and laid onto pages by the editor's arithmetic.
+function layout(doc: TextDocument, body: readonly Block[]) {
+  const { blocks, sections, sources } = previewBody(doc, body);
+  const frames = sections.map(pageFrame);
+  const frameOf = (block: number) => frames[blocks[block]?.section ?? 0]!;
+  const laid = paginate(
+    blocks.map((b) => b.metrics),
+    frameOf,
+  );
+  return { blocks, sections, sources, frameOf, laid };
+}
+
 /** Pages `ask.from` to `ask.to` of a document tab's body, drawn; or why not. */
 export function pagePreviews(doc: TextDocument, body: readonly Block[], ask: Ask): PagePreviews {
   if (body.length > TEXT_PREVIEW_BLOCKS_MAX)
@@ -98,13 +110,7 @@ export function pagePreviews(doc: TextDocument, body: readonly Block[], ask: Ask
       code: 'document_too_large',
       message: `A preview lays out at most ${TEXT_PREVIEW_BLOCKS_MAX} blocks; this document tab holds ${body.length}.`,
     };
-  const { blocks, sections } = previewBody(doc, body);
-  const frames = sections.map(pageFrame);
-  const frameOf = (block: number) => frames[blocks[block]?.section ?? 0]!;
-  const laid = paginate(
-    blocks.map((b) => b.metrics),
-    frameOf,
-  );
+  const { blocks, sections, frameOf, laid } = layout(doc, body);
   const count = pageCount(laid);
   if (ask.from > count || ask.to > count)
     return {
@@ -124,4 +130,10 @@ export function pagePreviews(doc: TextDocument, body: readonly Block[], ask: Ask
     });
   }
   return { ok: true, pages: out, pageCount: count };
+}
+
+/** The body block each page starts in, page by page (blank pages left out): what the agreement measure compares. */
+export function previewPageStarts(doc: TextDocument, body: readonly Block[]): number[] {
+  const { sources, laid } = layout(doc, body);
+  return laid.starts.map((start) => sources[start.block] ?? 0);
 }
