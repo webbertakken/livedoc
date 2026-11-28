@@ -102,7 +102,7 @@ describe('Workbook.pivotOutputSliced', () => {
     };
     const next = {
       ...sheet,
-      layout: { ...sheet.layout, objects: [calc, sheet.layout.objects![1]!] },
+      layout: { ...sheet.layout, objects: [calc, sheet.layout.objects[1]!] },
     };
     wb.updateSheet(next);
     const hidden = filteredOutRows(
