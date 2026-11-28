@@ -218,9 +218,10 @@ export function SpreadsheetSheetParts({ bridge }: { bridge: SheetsBridge }) {
       filterViewMenu,
     ],
   );
-  // Show Details on a pivot table's value, in its cell's context menu (pivot-tables.md "Details"): an Editor's.
+  // Show Details on a pivot table's value, in its cell's context menu (pivot-tables.md "Details"): anyone's, a
+  // Participant's and a Viewer's as a read-only dialog.
   const { active } = c.selection;
-  const detailsHere = c.canShape && c.workbook.pivotValueCellAt(c.sheet.id, active.r, active.c);
+  const detailsHere = c.workbook.pivotValueCellAt(c.sheet.id, active.r, active.c);
   const office = useGridMenuBindings(
     actions,
     {
@@ -274,9 +275,7 @@ export function SpreadsheetSheetParts({ bridge }: { bridge: SheetsBridge }) {
                   <SheetChartsContext.Provider value={charts.value}>
                     <SheetImagesOverCellsContext.Provider value={images.value}>
                       <SheetPivotsContext.Provider value={c.canShape ? editPivot : null}>
-                        <SheetPivotDetailsContext.Provider
-                          value={c.canShape ? pivots.showDetails : null}
-                        >
+                        <SheetPivotDetailsContext.Provider value={pivots.showDetails}>
                           <SheetGrid
                             elementId={`sheet-${c.sheet.id}`}
                             actions={actions}

@@ -311,7 +311,6 @@ const INSERT_MENU = menu('insert', 'Insert', [
   built('insert-sheet', 'Sheet', 'edit', { shortcut: 'insert-new-sheet' }),
   SEPARATOR,
   built('insert-table', 'Table', 'edit'),
-  item('insert-timeline', 'Timeline', 'edit'),
   built('insert-chart', 'Chart', 'edit'),
   built('insert-pivot-table', 'Pivot Table', 'edit'),
   submenu('insert-image', 'Image', [

@@ -90,11 +90,10 @@ An image floats over the cells as a chart does, one of its sheet's objects ([She
 
 ## Timeline view
 
-- **Insert › Timeline**: a view of a range with a start date column (and optional end, title, colour, group, details
-  columns) drawn as cards on a time axis, on its own sheet; zoom by day, week, month, quarter, year; filters and
-  grouping. It reads the range live and writes nothing to cells.
-- Neither format holds a timeline: it is kept as unknown content for LiveDoc, and other applications see only its
-  source range.
+Left out (Webber, 2026-11-28): Google's timeline view lives on a sheet of its own, with no grid, and a spreadsheet here
+has no gridless sheet kind; none is made for it. There is no Insert › Timeline. A file's sheet that another application
+keeps as a timeline arrives as the grid it carries, its timeline kept as [unknown content](standard-mapping.md#unknown-content).
+The Timeline **chart** type ([Charts](charts.md#chart-types)) is a chart over the cells and stays.
 
 ## Smart chips
 
@@ -114,8 +113,7 @@ its title linked to the file, and LiveDoc keeps the link in both formats (XLSX's
 
 - Every image and drawing carries alt text (editable through Alt Text; an image without it is announced as "Image");
   an image over cells is one stop of the grid's objects row, named by its alt text, with its keys described to a
-  screen reader as a chart's are; a timeline is navigable by its cards
-  with the arrow keys, each announced with its title and dates.
+  screen reader as a chart's are.
 
 ## Errors and limits
 
@@ -125,7 +123,7 @@ its title linked to the file, and LiveDoc keeps the link in both formats (XLSX's
 ## Telemetry
 
 `Spreadsheet · Added · <Kind>` as Insert places one (`ImageInCell`, `ImageOverCells`, `Drawing`, `Link`, `Checkbox`,
-`Dropdown`, `Emoji`, `Timeline`), the action charts and pivot tables use; `Sheet · Changed · Image` for each move,
+`Dropdown`, `Emoji`), the action charts and pivot tables use; `Sheet · Changed · Image` for each move,
 resize, alt text, replacement or delete of an image over cells.
 
 ## Defaults
