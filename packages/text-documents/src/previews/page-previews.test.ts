@@ -149,3 +149,12 @@ describe('a table wider than the text', () => {
     expect(widths.reduce((a, b) => a + b, 0)).toBeCloseTo(624, 0);
   });
 });
+
+describe('words drawn in Inter', () => {
+  it('fit the width their own face takes, where the previews carry it', () => {
+    const svg = pages(TextDocument.fromTexts(['Fitted words'])).pages[0]!.svg;
+    expect(svg).toMatch(
+      /textLength="[\d.]+" lengthAdjust="spacingAndGlyphs" xml:space="preserve">Fitted words</,
+    );
+  });
+});

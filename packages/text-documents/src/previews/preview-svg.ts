@@ -31,9 +31,14 @@ const n = (value: number) => Math.round(value * 100) / 100;
 function textPiece(piece: Extract<Placed, { kind: 'text' }>, x: number, baseline: number): string {
   const { look } = piece;
   const colour = escapeXmlAttribute(look.color ?? TEXT_COLOUR);
+  // Drawn in Inter, fitted to the width its own face takes, so the words stand where they were broken.
+  const fitted =
+    look.face && piece.width > 0
+      ? ` textLength="${n(piece.width)}" lengthAdjust="spacingAndGlyphs"`
+      : '';
   const text = `<text x="${n(x)}" y="${n(baseline)}" font-family="Inter" font-size="${n(look.size)}"${
     look.bold ? ' font-weight="700"' : ''
-  }${look.italic ? ' font-style="italic"' : ''} fill="${colour}" xml:space="preserve">${escapeXmlText(piece.text)}</text>`;
+  }${look.italic ? ' font-style="italic"' : ''} fill="${colour}"${fitted} xml:space="preserve">${escapeXmlText(piece.text)}</text>`;
   const rule = (y: number) =>
     `<line x1="${n(x)}" y1="${n(y)}" x2="${n(x + piece.width)}" y2="${n(y)}" stroke="${colour}" stroke-width="${n(
       Math.max(1, look.size / 14),

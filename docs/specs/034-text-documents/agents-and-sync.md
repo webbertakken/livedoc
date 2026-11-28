@@ -142,9 +142,9 @@ editor's and a page start a paragraph apart. Every preview says so.
 - **Lines** `(default)`: words break at spaces and after hyphens, a word wider than the line by character, by the
   advance widths of the face the editor draws the run's font in (Arimo for Arial, Tinos for Times New Roman, Cousine
   for Courier New, Carlito for Calibri, Caladea for Cambria, and Roboto) and Inter's for any other; every face is drawn
-  in Inter, bold from weight 600. A line's height is its largest size times the paragraph's line spacing (an exact or
-  at-least height as given; 1.2 when it gives none). A cell's padding is the cell's own, none when it gives none, as the
-  editor draws it.
+  in Inter, bold from weight 600, each run fitted to the width its own face takes. A line's height is its largest size
+  times the paragraph's line spacing (an exact or at-least height as given; 1.2 when it gives none). A cell's padding
+  is the cell's own, none when it gives none, as the editor draws it.
 - **The MCP**: `read_text_document` with `image` attaches the pages asked (`pages`, `1` by default) as PNGs through
   `render-png`, within the previews' size and memory budgets, and its answer's `preview` says which pages were drawn,
   how many pages there are and that they are approximate. `read_document`'s `image` on a text document tab draws its
