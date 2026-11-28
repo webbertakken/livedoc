@@ -324,7 +324,7 @@ const INSERT_MENU = menu('insert', 'Insert', [
   SEPARATOR,
   built('insert-checkbox', 'Checkbox', 'edit', { keywords: ['tick box'] }),
   built('insert-dropdown', 'Dropdown', 'edit'),
-  item('insert-emoji', 'Emoji', 'participate'),
+  built('insert-emoji', 'Emoji', 'edit'),
   SEPARATOR,
   item('insert-comment', 'Comment', 'participate', {
     shortcut: 'insert-or-edit-comment',

@@ -121,7 +121,11 @@ value in a cell"); `IMAGE()` shows one from an address instead (S4; [Imports fro
 ## Tick boxes, dropdowns and emoji
 
 - **Insert › Checkbox** and **Insert › Dropdown** add data validation ([Data tools](data-tools.md#data-validation)).
-- **Insert › Emoji** opens the emoji picker the editor already has.
+- **Insert › Emoji**, an Editor's, opens the emoji picker the editor already has (groups, Recently used, search, skin
+  tone; [Objects](../034-text-documents/objects.md)). Each emoji picked goes into the cell being edited at its caret;
+  with no cell being edited, it opens the active cell's edit with its text and the emoji after it. The picker stays
+  open for more; closing it gives the edit back its keys, and Enter saves it as typing does, so a protection or a rule
+  judges it then (default, D635).
 
 ## Timeline view
 
@@ -170,6 +174,8 @@ resize, alt text, replacement or delete of an image over cells, and each alt tex
 - **D625** A spreadsheet in This Browser places no image over cells or in a cell (Insert Image over Cells and Insert
   Image in Cell dimmed, each hint saying to sync): a sheet holds a gallery id only, and a picture embedded in the sheet
   would leave the gallery's rules (default).
+- **D635** Insert › Emoji puts each emoji picked into the open edit at its caret, opening the active cell's edit when
+  none is, never saving by itself: the edit is saved as typing is (default).
 - **D630** A picture in a cell is the cell's input (a gallery id and alt text), so it moves, sorts, fills, copies and
   clears with its cell as Google's in-cell image value does (default).
 - **D631** A formula reads a cell's picture as empty text and a reference to it shows the picture, as an IMAGE's

@@ -66,6 +66,7 @@ import { SheetImagesOverCellsContext } from '@/components/sheets/sheet-images-ov
 import { SheetPictureAccessContext } from '@/components/sheets/sheet-picture-access-context';
 import { useSpreadsheetImages } from './images/useSpreadsheetImages';
 import { useSpreadsheetCellPictures } from './images/useSpreadsheetCellPictures';
+import { useSpreadsheetEmoji } from './useSpreadsheetEmoji';
 import {
   SheetPivotDetailsContext,
   SheetPivotsContext,
@@ -181,6 +182,8 @@ export function SpreadsheetSheetParts({ bridge }: { bridge: SheetsBridge }) {
   const images = useSpreadsheetImages(c, imageAccess);
   // Pictures in cells (inserted-objects.md "Images in a cell"): Insert Image in Cell and a picture cell's items.
   const cellPictures = useSpreadsheetCellPictures(c, imageAccess, images.placing);
+  // Insert › Emoji (inserted-objects.md "Tick boxes, dropdowns and emoji"): into the open edit, or the active cell's.
+  const emoji = useSpreadsheetEmoji(c, input);
   const canInsertChart = c.canShape;
   const bandingActions = useMemo(
     () => ({
@@ -257,6 +260,7 @@ export function SpreadsheetSheetParts({ bridge }: { bridge: SheetsBridge }) {
       ...grouping.actions,
       ...images.actions,
       ...cellPictures.actions,
+      ...emoji.actions,
       ...(detailsHere
         ? { 'show-pivot-details': { run: () => void pivots.showDetails(active.r, active.c) } }
         : {}),
@@ -347,6 +351,7 @@ export function SpreadsheetSheetParts({ bridge }: { bridge: SheetsBridge }) {
       {grouping.dialog}
       {images.dialogs}
       {cellPictures.dialogs}
+      {emoji.dialog}
       {findReplace?.open ? <FindReplaceDialog state={findReplace} /> : null}
       <SheetBarSummary />
     </div>

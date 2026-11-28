@@ -29,7 +29,7 @@ import { formulaKey } from './formula-keys';
 import { useSheetController } from './sheet-controller';
 import { dropdownMatches, type DropdownMatch } from './rules/dropdown-assist';
 import { toggleFunctionHelp } from './function-help-pref';
-import type { SheetActions } from './useSheetActions';
+import { inputTextAt, type SheetActions } from './useSheetActions';
 
 const ARROWS: Record<string, Dir> = {
   ArrowUp: 'up',
@@ -53,6 +53,9 @@ export type FormulaInput = {
   accept: (name: string, el: HTMLTextAreaElement | null) => void;
   // Save the open edit where it is; false (with the error shown) when it cannot be saved.
   save: () => boolean;
+  // Put text into the open edit at its caret, or open the active cell's edit with the text after its own (Insert ›
+  // Emoji, inserted-objects.md, D635).
+  insertText: (text: string) => void;
 };
 
 export function useFormulaInput(actions: SheetActions): FormulaInput {
@@ -243,5 +246,16 @@ export function useFormulaInput(actions: SheetActions): FormulaInput {
     onChange,
     accept,
     save: () => commit('none'),
+    insertText: (text: string) => {
+      if (!c.editing) {
+        const { active } = c.selectionNow();
+        const own = inputTextAt(c, active.r, active.c);
+        actions.startEdit('cell', own + text);
+        setCaret(own.length + text.length);
+        return;
+      }
+      const at = Math.min(caret, draft.length);
+      setDraft(draft.slice(0, at) + text + draft.slice(at), at + text.length);
+    },
   };
 }
