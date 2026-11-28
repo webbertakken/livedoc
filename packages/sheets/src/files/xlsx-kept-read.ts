@@ -26,6 +26,7 @@ import {
   type KeptRelationship,
 } from './kept-content';
 import { OFFICE_RELATIONSHIPS_NS, SPREADSHEETML_NS } from './xlsx-parts';
+import { NOTES_RELATIONSHIP, VML_RELATIONSHIP } from './xlsx-notes';
 import { isReadTabColor } from './xlsx-tab-look';
 
 const MC_NS = 'http://schemas.openxmlformats.org/markup-compatibility/2006';
@@ -50,6 +51,9 @@ const WRITTEN_TYPES: ReadonlySet<string> = new Set([
   RELATIONSHIP_TYPES.richValueRel,
   // A sheet's links are read and written (standard-mapping.md "Links in the file", D642).
   RELATIONSHIP_TYPES.hyperlink,
+  // A sheet's notes and the VML drawing showing them are read and written ("Notes in the file", D651).
+  NOTES_RELATIONSHIP,
+  VML_RELATIONSHIP,
 ]);
 
 // The parts LiveDoc writes, whatever a kept part's relationship says (a link back to a worksheet is not followed).

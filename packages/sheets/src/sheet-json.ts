@@ -10,7 +10,7 @@ import {
   type SheetPerson,
 } from './sheet';
 
-export type SheetCellJson = { r: string; c: string; i?: CellInput; f?: CellFormat };
+export type SheetCellJson = { r: string; c: string; i?: CellInput; f?: CellFormat; n?: string };
 
 export type SheetJson = {
   id: string;
@@ -31,6 +31,7 @@ export function cellToJson(key: string, cell: Cell | undefined): SheetCellJson {
     c,
     ...(cell?.input ? { i: cell.input } : {}),
     ...(cell?.format ? { f: cell.format } : {}),
+    ...(cell?.note !== undefined ? { n: cell.note } : {}),
   };
 }
 
@@ -51,8 +52,8 @@ export function sheetToJson(sheet: Sheet): SheetJson {
 export function cellsFromJson(cells: readonly SheetCellJson[]): CellMap {
   const out = CellMap.sized(cells.length);
   for (const x of cells) {
-    if (!x.i && !x.f) continue;
-    out.setCell(x.r, x.c, x.i || undefined, x.f || undefined);
+    if (!x.i && !x.f && x.n === undefined) continue;
+    out.setCell(x.r, x.c, x.i || undefined, x.f || undefined, x.n);
   }
   return out;
 }
@@ -61,8 +62,8 @@ export function cellsFromJson(cells: readonly SheetCellJson[]): CellMap {
 export function cellsWithPage(cells: CellMap, page: readonly SheetCellJson[]): CellMap {
   const out = cells.copy();
   for (const x of page) {
-    if (!x.i && !x.f) continue;
-    out.setCell(x.r, x.c, x.i || undefined, x.f || undefined);
+    if (!x.i && !x.f && x.n === undefined) continue;
+    out.setCell(x.r, x.c, x.i || undefined, x.f || undefined, x.n);
   }
   return out;
 }

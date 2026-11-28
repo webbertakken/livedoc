@@ -2332,6 +2332,12 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
           }
         ]
       },
+      "n": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
       "r": {
         "type": "string"
       }
@@ -15790,6 +15796,9 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
       },
       "i": {
         "$ref": "#/components/schemas/CellInput"
+      },
+      "n": {
+        "type": "string"
       },
       "r": {
         "type": "string"

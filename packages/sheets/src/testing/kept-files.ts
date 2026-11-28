@@ -23,8 +23,9 @@ export const SHAPES =
   '<table:shapes><draw:frame draw:style-name="gr1" svg:width="2cm" svg:height="1cm" svg:x="1cm" svg:y="1cm"><draw:image xlink:href="Pictures/cat.png" xlink:type="simple" xlink:show="embed" xlink:actuate="onLoad"/></draw:frame></table:shapes>';
 export const FORMATS =
   '<calcext:conditional-formats><calcext:conditional-format calcext:target-range-address="Sheet1.A1:Sheet1.A2"/></calcext:conditional-formats>';
-export const NOTE =
-  '<office:annotation><dc:creator>Ann</dc:creator><text:p text:style-name="P1">Check</text:p></office:annotation>';
+// A cell's child LiveDoc does not read, before its text: a frame, its text in the paragraph style P1 kept with it.
+export const FRAME_BEFORE =
+  '<draw:frame draw:name="before"><draw:text-box><text:p text:style-name="P1">Check</text:p></draw:text-box></draw:frame>';
 export const GRAPHIC =
   '<style:style style:name="gr1" style:family="graphic"><style:graphic-properties draw:stroke="none"/></style:style>';
 export const PARAGRAPH = '<style:style style:name="P1" style:family="paragraph"/>';
@@ -46,7 +47,7 @@ export function odfFlatWithKept(cells = ''): string {
     `<office:body><office:spreadsheet>${TRACKED}<table:calculation-settings/>${VALIDATIONS}` +
     `<table:table table:name="Sheet1" table:style-name="ta1" table:print="false">${SHAPES}` +
     '<table:table-column table:number-columns-repeated="3"/><text:soft-page-break/>' +
-    `<table:table-row><table:table-cell table:number-columns-spanned="2" table:content-validation-name="val1" office:value-type="float" office:value="1">${NOTE}<text:p>1</text:p><draw:frame draw:name="after"/></table:table-cell>` +
+    `<table:table-row><table:table-cell table:number-columns-spanned="2" table:content-validation-name="val1" office:value-type="float" office:value="1">${FRAME_BEFORE}<text:p>1</text:p><draw:frame draw:name="after"/></table:table-cell>` +
     `<table:covered-table-cell/><table:table-cell calcext:value-type="float" office:value-type="float" office:value="2"><text:p>2</text:p></table:table-cell></table:table-row>` +
     `${cells}${FORMATS}</table:table>${NAMES}</office:spreadsheet></office:body></office:document>`
   );

@@ -840,6 +840,31 @@ suite writes a link on a cell, so LibreOffice, Excel and Google Sheets open it (
   longer kept; a link on a cell the read leaves out goes with that cell.
 - **A link to a sheet that is gone** (deleted after the link was made) is written as no link, its text plain.
 
+## Notes in the file
+
+**Status: specified.** A cell's [note](review.md#notes) is written as each suite writes a note, so LibreOffice, Excel
+and Google Sheets show it (D648, D649).
+
+- **ODF**: an `office:annotation` first in the cell's `table:table-cell`, hidden (`office:display="false"`), each
+  line of the note a `text:p`; no `dc:creator` and no `dc:date` (both optional). A cell holding only a note is
+  written as an empty cell with its annotation.
+- **XLSX**: the sheet's notes part (`xl/comments<n>.xml`, relationship `comments`, content type
+  `application/vnd.openxmlformats-officedocument.spreadsheetml.comments+xml`): one author, `LiveDoc`; a `comment` a
+  noted cell (`ref` its A1, `authorId="0"`), its text one run. Beside it the sheet's VML drawing
+  (`xl/drawings/vmlDrawing<n>.vml`, relationship `vmlDrawing`, the `vml` extension's content type
+  `application/vnd.openxmlformats-officedocument.vmlDrawing`), one hidden note shape a note, anchored beside its
+  cell, and the worksheet's `legacyDrawing` naming it, in its schema place, as Excel needs to show a note.
+- **Reading**: ODF's `office:annotation` in a cell (its paragraphs' plain text joined by line breaks). XLSX's notes
+  part of a sheet (each `comment`'s runs' text joined, its `ref` the cell). A note on a cell the read leaves out
+  goes with that cell; `\r\n` is read as a line break, other control characters dropped, and a note longer than
+  `SHEET_NOTE_MAX` cut to it (D650). The notes part, its VML drawing and `legacyDrawing` are read whole and no longer
+  kept; a VML drawing's other shapes (legacy form controls) are not kept (D651).
+- **LibreOffice 24.2** aborts reading a note in an ODF document without `office:automatic-styles`, so a workbook
+  with notes always writes the element, empty when it has no automatic style (D652).
+- **Threads come later**: a cell's XLSX threaded comment (`xl/threadedComments`) and the note Excel writes in its
+  place for older readers are a comment thread's ([Comments](review.md#comments)); until threads are read, that note
+  is read as the cell's note, its text as Excel wrote it.
+
 ## Pivot tables in the file
 
 A sheet's [pivot tables](pivot-tables.md) are written both ways, as validation rules are (D293): the **standard form**
@@ -1302,5 +1327,10 @@ The code cites each by its id.
 - **D295** A dropdown XLSX's list cannot say: a rule allowing any value, LiveDoc's rule beside it (default).
 - **D296** A standard rule read without LiveDoc's: the closest LiveDoc rule, one a rectangle; error messages and
   titles left out (default).
+- **D650** A file's note past `SHEET_NOTE_MAX`: cut to it, as rare as it is; not counted in the report (default).
+- **D651** An XLSX VML drawing's shapes other than notes (legacy form controls): not kept, the drawing being LiveDoc's to
+  write for its notes (default).
+- **D652** ODF `office:automatic-styles` with notes: always written, empty when no automatic style is needed, as
+  LibreOffice 24.2 aborts reading a note without it (default).
 - **D261** A sheet's own charts beside a drawing kept from its file: Not written, the sheet named (`charts_unwritten`),
   as a worksheet holds one drawing and ODF one `table:shapes` (default).

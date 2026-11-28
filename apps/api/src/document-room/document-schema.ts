@@ -724,6 +724,11 @@ const CELL_PICTURE_OF = (row: string) => `SELECT ${row}.input ->> '$.img.id' AS 
      AND length(${row}.input ->> '$.img.id') BETWEEN 1 AND 128
      AND substr(${row}.input ->> '$.img.id', 1, 5) <> 'data:'`;
 const CELL_PICTURE_LIKE = `'{"img":%'`;
+// A cell's note (docs/specs/029-sheets/review.md "Notes"): plain text beside its input and format.
+const SHEET_CELL_NOTES_STEP = `
+ALTER TABLE sheet_cells ADD COLUMN note TEXT;
+`;
+
 const SHEET_CELL_IMAGE_REFS_STEP = `
 CREATE TABLE IF NOT EXISTS sheet_cell_image_refs (
   document_id TEXT NOT NULL,
@@ -811,6 +816,7 @@ export const DOCUMENT_SCHEMA_STEPS: readonly string[] = [
   TEXT_DOCUMENT_NOTICE_STEP,
   SHEET_IMAGE_REFS_STEP,
   SHEET_CELL_IMAGE_REFS_STEP,
+  SHEET_CELL_NOTES_STEP,
 ];
 
 export const DOCUMENT_SCHEMA_VERSION = DOCUMENT_SCHEMA_STEPS.length;

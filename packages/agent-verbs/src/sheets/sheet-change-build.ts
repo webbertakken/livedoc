@@ -2,6 +2,7 @@
 // change names cells by A1, rows by number and columns by letter, and is built by the engine's own commands
 // (writeRows, clearRanges, formatRanges, insertAxis, deleteAxis, sortRange, sortSheet, freeze), never re-implemented
 // here. Pure: the caller sends what this returns, in order.
+import { noteWrite } from './sheet-notes-change';
 import {
   clearRanges,
   columnIndex,
@@ -86,6 +87,8 @@ export type SheetChange =
   | { op: 'rename'; title: string }
   | { op: 'sort'; by: string; range?: string; descending?: boolean; header?: boolean }
   | { op: 'freeze'; rows?: number; cols?: number }
+  // A range's notes (review.md "Notes"): the text in each cell, or null to take them off.
+  | { op: 'note'; range: string; note: string | null }
   // Validation and format rules (sheet-rule-change.ts).
   | SheetRuleChange
   // Sizes, merges, borders and the filter (sheet-shape-change.ts).
@@ -279,6 +282,18 @@ export function buildSheetChange(
         ok: true,
         writes: [clearRanges(sheet, [range], what)],
         line: `cleared ${what === 'all' ? '' : `${what} of `}${formatRange(range)}`,
+      };
+    }
+    case 'note': {
+      const range = parseRangeText(change.range);
+      const made = range ? noteWrite(sheet, range, change.note) : null;
+      if (!range || !made) return badRange(change.range);
+      if ('refusal' in made) return refuse(made.refusal, made.message);
+      const where = formatRange(range);
+      return {
+        ok: true,
+        writes: [made.write],
+        line: change.note === null ? `took the notes off ${where}` : `noted ${where}`,
       };
     }
     case 'format': {

@@ -25,7 +25,7 @@ import { FILE_READ_CELLS_MAX } from './file-read-limits';
 import { KEPT_REPEAT_MAX, type FileAt, type KeptItem, type KeptPart } from './kept-content';
 import { readOdsCharts } from './ods-charts-read';
 import { readOdsPivots } from './ods-pivots-read';
-import { cellLinkHref, cellText } from './ods-cell-text';
+import { cellLinkHref, cellNote, cellText } from './ods-cell-text';
 import { odfHrefLink, type FileLink } from './file-links';
 import { keptOdfParts, keptSettings, OdsKeeper } from './ods-kept-read';
 import { odsLineStyles, readOdsLines, type OdsLineStyles } from './ods-lines';
@@ -284,6 +284,8 @@ function readTable(table: XmlElement, index: number, book: Book): FileSheet {
       const named = own ?? rowStyle;
       styled ||= named !== undefined && (looks.of(named).lost || freesUnread(named));
       const content = formulaText !== undefined || value !== undefined;
+      // Its note (standard-mapping.md "Notes in the file"), on a cell with content or none.
+      const note = cellNote(cell);
       // Its text wholly one link is the cell's link (standard-mapping.md "Links in the file").
       const href = content ? cellLinkHref(cell) : null;
       const link: FileLink | null =
@@ -295,11 +297,12 @@ function readTable(table: XmlElement, index: number, book: Book): FileSheet {
       const ownStyle = ownLook === plain ? undefined : ownLook.style;
       const holds = ownFormat !== undefined || ownStyle !== undefined;
       if (holds && rowRepeat * colRepeat > ODS_FORMAT_REPEAT_MAX) sheet.cut.formats = true;
-      else if (holds)
+      else if (holds || (note !== null && !content))
         for (let k = 0; k < colRepeat && c + k < COLS_MAX; k++) {
           const out: FileCell = { r: 0, c: c + k };
           if (ownFormat !== undefined) out.format = ownFormat;
           if (ownStyle) out.style = ownStyle;
+          if (note !== null && !content) out.note = note;
           rowCells.push(out);
         }
       if (content) {
@@ -317,6 +320,7 @@ function readTable(table: XmlElement, index: number, book: Book): FileSheet {
           if (spans) out.spans = spans;
           if (value) out.value = value;
           if (link) out.link = link;
+          if (note !== null) out.note = note;
           const format = formatOf(own ?? rowStyle ?? columns[c + k], sheet);
           if (format !== undefined) out.format = format;
           const style = looks.of(own ?? rowStyle ?? columns[c + k]).style;

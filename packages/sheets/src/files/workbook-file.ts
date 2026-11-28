@@ -2,6 +2,7 @@
 // name, cells by position, each with its formula in Google's syntax and the value it last showed. The bridge between
 // the model (cells by row and column id, formulas by id references) and each format's reader and writer, so neither
 // format ever sees an id and the model never sees a format.
+import { SHEET_NOTE_MAX } from '../note';
 import { fileLinkOf, linkFromFile, type FileLink } from './file-links';
 import { fileChartsOf, sheetChartsFromFile, type FileChart } from './file-charts';
 import {
@@ -108,6 +109,8 @@ export type FileCell = {
   readPicture?: ReadCellPicture;
   // Its link, the whole cell's (standard-mapping.md "Links in the file", D642).
   link?: FileLink;
+  // Its note (standard-mapping.md "Notes in the file", D648).
+  note?: string;
 };
 
 export type FileSheet = {
@@ -324,7 +327,8 @@ export function workbookFileOf(
         const style = cellStyleOf(cell.format);
         // A link to a sheet that is gone is written as none (D642).
         const link = cell.format?.ln === undefined ? null : fileLinkOf(cell.format.ln, titleOf);
-        if (!cell.input && format === undefined && !style && !link) continue;
+        if (!cell.input && format === undefined && !style && !link && cell.note === undefined)
+          continue;
         const { r: rowId, c: colId } = splitCellKey(key);
         const r = index.rowPos.get(rowId);
         const c = index.colPos.get(colId);
@@ -333,6 +337,7 @@ export function workbookFileOf(
         if (format !== undefined) out.format = format;
         if (style) out.style = style;
         if (link) out.link = link;
+        if (cell.note !== undefined) out.note = cell.note;
         if (!cell.input) {
           cells.push(out);
           continue;
@@ -468,7 +473,7 @@ export type SheetFromFile = {
   id: string;
   title: string;
   layout: SheetLayout;
-  cells: { r: string; c: string; i?: CellInput; f?: CellFormat }[];
+  cells: { r: string; c: string; i?: CellInput; f?: CellFormat; n?: string }[];
 };
 
 /**
@@ -509,6 +514,17 @@ function formatsRead(locale: string): FormatsRead {
     read.set(code, made);
     return made;
   };
+}
+
+// A note as the store holds one (review.md "Notes"): line breaks as `\n`, other control characters dropped, cut to
+// SHEET_NOTE_MAX (D650); null when nothing is left.
+function noteFromFile(text: string): string | null {
+  const clean = text
+    .replace(/\r\n?/g, '\n')
+    // oxlint-disable-next-line no-control-regex
+    .replace(/[\u0000-\u0009\u000b-\u001f\u007f]/g, '')
+    .slice(0, SHEET_NOTE_MAX);
+  return clean === '' ? null : clean;
 }
 
 // A cell's format with its link, read from its file (D642); a link to a sheet the read did not make is none.
@@ -725,8 +741,15 @@ export function sheetsFromFile(
         cellFormatOf(cell, m.title, formats, losses, joined),
         cell.link && linkFromFile(cell.link, (title) => byTitle(title)?.id),
       );
-      if (input || format)
-        cells.push({ r, c, ...(input ? { i: input } : {}), ...(format ? { f: format } : {}) });
+      const note = cell.note === undefined ? null : noteFromFile(cell.note);
+      if (input || format || note !== null)
+        cells.push({
+          r,
+          c,
+          ...(input ? { i: input } : {}),
+          ...(format ? { f: format } : {}),
+          ...(note !== null ? { n: note } : {}),
+        });
     }
     const formatRules = formatRulesFromFile(
       m.file.formatRules,

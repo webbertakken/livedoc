@@ -29,6 +29,8 @@ import type { Edit } from './commands';
 export type PasteMode = 'all' | 'values' | 'formats' | 'formulas' | 'transposed' | 'noBorders';
 
 const BORDERS = ['bt', 'br', 'bb', 'bl'] as const;
+// The modes a cell's note is pasted with: the whole cell's (review.md "Notes").
+const NOTE_MODES: ReadonlySet<PasteMode> = new Set(['all', 'transposed', 'noBorders']);
 
 // A pasted format in place of the cell's own, as a patch: every key the copy lacks is cleared (null for none).
 function replacing(format: CellFormat | FormatPatch | undefined): FormatPatch | null {
@@ -154,6 +156,8 @@ export function pasteClip(
       if (mode === 'noBorders')
         ch.f = withoutBorders(src?.format, sheet.cells.get(cellKey(rowId, colId))?.format);
       else if (mode !== 'values' && mode !== 'formulas') ch.f = replacing(src?.format);
+      // A note comes with the whole cell (review.md "Notes"), never with its value, format or formula alone.
+      if (NOTE_MODES.has(mode)) ch.n = src?.note ?? null;
       cells.push(ch);
     }
   return {
@@ -236,7 +240,7 @@ export function pasteCut(
   for (const key of moved.keys())
     if (!(clip.from.sheetId === sheetId && landing.has(key))) {
       const [r, c] = key.split(':') as [string, string];
-      push(clip.from.sheetId, { r, c, i: null, f: null });
+      push(clip.from.sheetId, { r, c, i: null, f: null, n: null });
     }
   for (const [key, to] of moved) {
     const cell = src.cells.get(key);
@@ -245,7 +249,7 @@ export function pasteCut(
       input && 'f' in input
         ? { f: mapFormulaRefs(input.f, (ref) => follow(ref, clip.from.sheetId)) }
         : (input ?? null);
-    push(sheetId, { r: to.r, c: to.c, i, f: cell?.format ?? null });
+    push(sheetId, { r: to.r, c: to.c, i, f: cell?.format ?? null, n: cell?.note ?? null });
   }
   // Formulas elsewhere on the tab that read the moved cells.
   for (const sheet of wb.sheetList()) {

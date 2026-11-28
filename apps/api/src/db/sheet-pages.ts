@@ -4,8 +4,7 @@
 
 import { RowSpan, type SheetJson } from '@livedoc/sheets';
 import type { DocumentEnv } from '../types';
-import { cellFormatSql } from './sheet-styles';
-import { headToJson, readSheetHead, type CellRow, type SheetHead } from './sheets';
+import { CELL_COLUMNS, headToJson, readSheetHead, type CellRow, type SheetHead } from './sheets';
 
 // A write landing between the head's read and the cells' is read again: this many times, then the sheet is busy.
 // 2 to 5.
@@ -34,7 +33,7 @@ export async function readRowPage(
         sheetId,
       ),
       env.DOCUMENT_DB.prepare(
-        `SELECT c.sheet_id, c.row_id, c.col_id, c.input, ${cellFormatSql('c')} AS format FROM sheet_cells c
+        `SELECT ${CELL_COLUMNS} FROM sheet_cells c
           WHERE c.document_id = ? AND c.sheet_id = ? AND c.row_id IN (SELECT value FROM json_each(?))`,
       ).bind(documentId, sheetId, JSON.stringify(ids)),
     ]);

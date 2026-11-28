@@ -6,12 +6,13 @@ import type { CellChange, SheetWrite } from './store';
 // A cell change as sent, before validateWrite has looked at it: the api asks these questions of a write first.
 const isChange = (c: unknown): c is CellChange => typeof c === 'object' && c !== null;
 
-/** Whether a write changes any cell's format. A malformed write says no, and is refused by validateWrite. */
+/** Whether a write changes any cell's format or note (neither a value). A malformed write says no, and is refused by
+ *  validateWrite. */
 export function writesFormats(write: SheetWrite): boolean {
   return (
     write.kind !== 'title' &&
     Array.isArray(write.cells) &&
-    write.cells.some((c) => isChange(c) && c.f !== undefined)
+    write.cells.some((c) => isChange(c) && (c.f !== undefined || c.n !== undefined))
   );
 }
 
@@ -34,7 +35,7 @@ function valuesOf(sent: readonly CellChange[]): CellChange[] {
       cells.push(one);
       continue;
     }
-    const { f: _format, ...change } = one;
+    const { f: _format, n: _note, ...change } = one;
     if (change.i !== undefined) cells.push(change);
   }
   return cells;

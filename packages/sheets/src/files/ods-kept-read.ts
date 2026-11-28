@@ -229,6 +229,8 @@ export class OdsKeeper {
         out.push({ place: 'cell-text', xml: kept.xml, ns: kept.ns, at: {} });
       }
       if (paragraph) continue;
+      // A note is read as the cell's (standard-mapping.md "Notes in the file"), never kept.
+      if (child.uri === OFFICE && child.local === 'annotation') continue;
       const kept = keptXmlOf(this.parsed, child);
       out.push({ place: text ? 'cell-after' : 'cell', xml: kept.xml, ns: kept.ns, at: {} });
     }

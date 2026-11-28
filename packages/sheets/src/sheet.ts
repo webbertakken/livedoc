@@ -101,7 +101,8 @@ export type CellFormat = {
   ln?: string;
 };
 
-export type Cell = { input?: CellInput; format?: CellFormat };
+// A cell: its input, its format and its note (review.md "Notes"), each absent when it has none.
+export type Cell = { input?: CellInput; format?: CellFormat; note?: string };
 
 // A rectangle by ids (merges, the filter's range, presence).
 export type IdRange = { r1: string; c1: string; r2: string; c2: string };

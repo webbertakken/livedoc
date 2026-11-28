@@ -2,6 +2,7 @@
 // keeps it"): a SpreadsheetML workbook part naming a worksheet part per sheet, text in the shared strings, formulas in
 // Excel's grammar beside their cached values, and a spilled formula as a dynamic array. Same workbook, same bytes.
 import { xlsxHyperlinksOut } from './xlsx-hyperlinks';
+import { VML_CONTENT_TYPE, xlsxNotesOut } from './xlsx-notes';
 import {
   escapeXmlAttribute,
   escapeXmlText,
@@ -246,6 +247,8 @@ type SheetParts = {
   pictureVm: SheetContext['pictureVm'];
   // Its cells' links (standard-mapping.md "Links in the file").
   hyperlinks: string | null;
+  // The VML drawing its notes are shown by (standard-mapping.md "Notes in the file").
+  legacyDrawing: string | null;
 };
 
 function worksheetXml(
@@ -353,6 +356,8 @@ function worksheetXml(
     ...(parts.hyperlinks ? [{ name: 'hyperlinks', xml: parts.hyperlinks }] : []),
     // Its charts, through its drawing part (standard-mapping.md "Charts in the file").
     ...(drawingRelId ? [{ name: 'drawing', xml: `<drawing r:id="${drawingRelId}"/>` }] : []),
+    // Its notes' drawing (standard-mapping.md "Notes in the file").
+    ...(parts.legacyDrawing ? [{ name: 'legacyDrawing', xml: parts.legacyDrawing }] : []),
     // Its tables, through their table parts (standard-mapping.md "Tables in the file").
     ...(parts.tables ? [{ name: 'tableParts', xml: parts.tables.tableParts }] : []),
     // LiveDoc's exact validation rules, protections and tables ("Validation in the file", "Protection in the file").
@@ -502,6 +507,10 @@ export function writeXlsx(file: WorkbookFile, title: string): FileWritten<Uint8A
   const linked = file.sheets.map((sheet, i) =>
     xlsxHyperlinksOut(sheet.cells, linkIds(kept.relationships('sheet', i))),
   );
+  // Its cells' notes: a notes part and a VML drawing a sheet, numbered by the sheet ("Notes in the file").
+  const noted = file.sheets.map((sheet, i) =>
+    xlsxNotesOut(sheet.cells, i + 1, kept.relationships('sheet', i)),
+  );
   const sheetParts = file.sheets.map((sheet, i): OoxmlPart => {
     const written = worksheetXml(sheet, i, { strings, styles, kept, tables }, renamed, losses, {
       drawingRelId: drawn.sheets[i]?.relId ?? null,
@@ -510,6 +519,7 @@ export function writeXlsx(file: WorkbookFile, title: string): FileWritten<Uint8A
       slicers: slicerParts.sheets[i] ?? null,
       pictureVm: pictured.vmOf,
       hyperlinks: linked[i]?.xml ?? null,
+      legacyDrawing: noted[i]?.legacyDrawing ?? null,
     });
     dynamic ||= written.dynamic;
     return {
@@ -585,6 +595,13 @@ export function writeXlsx(file: WorkbookFile, title: string): FileWritten<Uint8A
     ...slicerParts.parts,
     ...(metadata ? [xmlPart('xl/metadata.xml', OOXML_CONTENT_TYPES.sheetMetadata, metadata)] : []),
     ...pictured.parts,
+    ...noted.flatMap((n) =>
+      (n?.parts ?? []).map((p) => ({
+        name: p.name,
+        contentType: p.contentType,
+        data: encode(p.xml),
+      })),
+    ),
     {
       name: 'docProps/core.xml',
       contentType: OOXML_CONTENT_TYPES.coreProperties,
@@ -621,6 +638,7 @@ export function writeXlsx(file: WorkbookFile, title: string): FileWritten<Uint8A
         ...(slicerParts.sheets[i]?.rels ?? []),
         ...(pivoted.sheets[i] ?? []),
         ...(linked[i]?.rels ?? []),
+        ...(noted[i]?.rels ?? []),
       ],
     ]),
     ...drawn.relationships,
@@ -630,7 +648,12 @@ export function writeXlsx(file: WorkbookFile, title: string): FileWritten<Uint8A
   ]);
   // A kept workbook name a named function took is dropped, and counted (D341).
   if (kept.namesDropped > 0) losses.push({ k: 'kept_dropped', count: kept.namesDropped });
-  return { data: writeOoxmlPackage([...parts, ...keptParts.parts], relationships), losses };
+  // VML is typed by its extension, as Excel types it.
+  const defaults = new Map(noted.some(Boolean) ? [['vml', VML_CONTENT_TYPE]] : []);
+  return {
+    data: writeOoxmlPackage([...parts, ...keptParts.parts], relationships, defaults),
+    losses,
+  };
 }
 
 function encode(text: string): Uint8Array {

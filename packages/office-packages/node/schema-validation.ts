@@ -61,6 +61,7 @@ export const OOXML_SCHEMAS: readonly (readonly [RegExp, string])[] = [
   [/^xl\/drawings\/drawing\d+\.xml$/, 'ooxml/SpreadsheetML_Drawing.rnc'],
   [/^xl\/charts\/chart\d+\.xml$/, 'ooxml/DrawingML_Chart.rnc'],
   [/^xl\/tables\/table\d+\.xml$/, 'ooxml/SpreadsheetML_Table_Definitions.rnc'],
+  [/^xl\/comments\d+\.xml$/, 'ooxml/SpreadsheetML_Comments.rnc'],
   [/^xl\/pivotTables\/pivotTable\d+\.xml$/, 'ooxml/SpreadsheetML_Pivot_Table.rnc'],
   [
     /^xl\/richData\/(rdrichvalue|rdrichvaluestructure|rdRichValueTypes|richValueRel)\.xml$/,

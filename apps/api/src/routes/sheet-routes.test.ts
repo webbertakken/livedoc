@@ -1038,3 +1038,59 @@ describe('pivot tables (docs/specs/029-sheets/pivot-tables.md "Working with one"
     ).toBe(200);
   });
 });
+
+describe('a cell’s note (docs/specs/029-sheets/review.md "Notes")', () => {
+  const sheetNow = async () =>
+    (await call<SheetsResponse>({ method: 'GET', path: '/sheets' })).body.sheets[0]!;
+
+  it('is kept beside the value and format, on an empty cell too, and goes when removed', async () => {
+    await make();
+    const { rows: r, cols: c } = (await sheetNow()).layout;
+    const set = await write('sheetA00', {
+      kind: 'cells',
+      cells: [
+        { r: r[0]!, c: c[0]!, i: { s: 'Total' }, f: { b: true }, n: 'Check it' },
+        { r: r[1]!, c: c[0]!, n: 'Alone' },
+      ],
+    });
+    expect(set.status).toBe(200);
+    expect(set.body.cells).toEqual([
+      { r: r[0]!, c: c[0]!, i: { s: 'Total' }, f: { b: true }, n: 'Check it' },
+      { r: r[1]!, c: c[0]!, n: 'Alone' },
+    ]);
+    expect((await sheetNow()).cells).toEqual(set.body.cells);
+    // Clearing the value keeps the note; removing the note of a cell holding nothing else removes the cell.
+    await write('sheetA00', {
+      kind: 'cells',
+      cells: [
+        { r: r[0]!, c: c[0]!, i: null, f: null },
+        { r: r[1]!, c: c[0]!, n: null },
+      ],
+    });
+    expect((await sheetNow()).cells).toEqual([{ r: r[0]!, c: c[0]!, n: 'Check it' }]);
+    const head = sql.sql
+      .prepare("SELECT cell_count, cell_bytes FROM sheets WHERE id = 'sheetA00'")
+      .get();
+    expect(head).toEqual({ cell_count: 1, cell_bytes: 'Check it'.length });
+  });
+
+  it('is refused when too long, and never written by a Participant', async () => {
+    await make();
+    const { rows: r, cols: c } = (await sheetNow()).layout;
+    const long = await write('sheetA00', {
+      kind: 'cells',
+      cells: [{ r: r[0]!, c: c[0]!, n: 'x'.repeat(50_001) }],
+    });
+    expect(long.status).toBe(400);
+    expect(long.body).toMatchObject({ error: 'note_too_long' });
+    const as = { owner: 'p', code: 'PART' };
+    const theirs = await write(
+      'sheetA00',
+      { kind: 'cells', cells: [{ r: r[0]!, c: c[0]!, i: { s: 'v' }, n: 'mine' }] },
+      {},
+      as,
+    );
+    expect(theirs.status).toBe(200);
+    expect((await sheetNow()).cells).toEqual([{ r: r[0]!, c: c[0]!, i: { s: 'v' } }]);
+  });
+});

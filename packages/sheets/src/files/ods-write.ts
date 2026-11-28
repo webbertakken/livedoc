@@ -208,8 +208,12 @@ function cellXml(cell: FileCell, out: Out, rule: string | undefined, isOpen: boo
   const keptAttributes = kept?.attributes ?? '';
   const ruled = rule === undefined ? keptAttributes : keptAttributes.replace(VALIDATION_NAME, '');
   const open = `<table:table-cell${attrs.map((a) => ` ${a}`).join('')}${ruleAttribute(rule)}${ruled}>`;
+  // Its note first, hidden, a paragraph a line (standard-mapping.md "Notes in the file").
+  const note = cell.note
+    ? `<office:annotation office:display="false">${paragraphs(cell.note)}</office:annotation>`
+    : '';
   const frames = out.frames?.get(`${cell.r},${cell.c}`) ?? '';
-  return `${open}${kept?.before ?? ''}${frames}${body}${kept?.after ?? ''}</table:table-cell>`;
+  return `${open}${note}${kept?.before ?? ''}${frames}${body}${kept?.after ?? ''}</table:table-cell>`;
 }
 
 const repeated = (axis: 'columns' | 'rows', n: number) =>
@@ -464,7 +468,10 @@ function bodyXml(
   const body = [
     ...kept.workbook('scripts'),
     ...(flat ? commonXml : []),
-    ...styles.automaticStyles(kept.workbook('styles')),
+    ...styles.automaticStyles(
+      kept.workbook('styles'),
+      file.sheets.some((s) => s.cells.some((c) => c.note !== undefined)),
+    ),
     '<office:body>',
     '<office:spreadsheet>',
     ...kept.spreadsheetBefore('before'),

@@ -369,6 +369,23 @@ describe('sheetCellsView', () => {
     expect(view.ok && view.json.rows[0]!.cells[0]!.link).toBe('https://docs.nu/');
   });
 
+  it('adds a cell’s note, cut to 60 characters, a cell holding only a note by its address (review.md "Notes")', () => {
+    const at = (r: number, c: number) => `${costs.layout.rows[r]}:${costs.layout.cols[c]}`;
+    const cells = new Map(formatted.cells);
+    cells.set(at(0, 0), { ...cells.get(at(0, 0))!, note: 'Check "this"' });
+    cells.set(at(0, 1), { ...cells.get(at(0, 1))!, note: 'x'.repeat(80) });
+    cells.set(at(0, 3), { note: 'Alone' });
+    const noted = new Workbook({
+      sheets: [{ ...formatted, cells } as Sheet],
+      locale: AGENT_LOCALE,
+    });
+    const view = sheetCellsView({ wb: noted, sheetId: 'c1', title: 'Costs', range: 'A1:D1' });
+    expect(view.ok && view.text.split('\n')[1]).toBe(
+      `1 | A1 "Model" ✎ "Check \\"this\\"" | B1 "Cost" ✎ "${'x'.repeat(59)}…" | C1 "Total" | D1 ✎ "Alone"`,
+    );
+    expect(view.ok && view.json.rows[0]!.cells[1]!.note).toBe('x'.repeat(80));
+  });
+
   it('says an empty sheet is one', () => {
     const empty = new Workbook({ sheets: [sheetOf('e1', 'Empty', [])], locale: AGENT_LOCALE });
     const view = sheetCellsView({ wb: empty, sheetId: 'e1', title: 'Empty' });

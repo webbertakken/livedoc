@@ -40,6 +40,8 @@ export interface ReadCell {
   invalid?: string;
   // Its own link (inserted-objects.md "Links, agents"): an address, or a range or sheet of this spreadsheet by name.
   link?: string;
+  // Its note (review.md "Notes").
+  note?: string;
 }
 
 export interface SheetRead {
@@ -113,7 +115,9 @@ export async function readSheet(
   let cut: string | null = null;
   rows: for (const [i, row] of read.rows.entries()) {
     for (const [j, cell] of row.entries()) {
-      if (cell.input === '' && (cell.value === null || cell.value === '')) continue;
+      const note = wb.cellNoteOf(id, start.r1 + i, start.c1 + j);
+      if (cell.input === '' && (cell.value === null || cell.value === '') && note === null)
+        continue;
       const at = formatA1(start.r1 + i, start.c1 + j);
       const out: ReadCell = {
         at,
@@ -124,6 +128,7 @@ export async function readSheet(
       };
       const ln = wb.cellLinkOf(id, start.r1 + i, start.c1 + j);
       if (ln !== null) out.link = cellLinkText(ln, (sheetId) => wb.sheet(sheetId)?.title);
+      if (note !== null) out.note = note;
       const rule = layout.rules?.length
         ? validationRuleAt(layout, start.r1 + i, start.c1 + j)
         : null;

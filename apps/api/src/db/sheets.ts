@@ -44,6 +44,8 @@ export type CellRow = {
   col_id: string;
   input: string | null;
   format: string | null;
+  // The cell's note (docs/specs/029-sheets/review.md "Notes"); absent from a read that never asks for it.
+  note?: string | null;
 };
 
 // `axes` are the chunks its order is stored in (./sheet-axes), what a layout write plans against.
@@ -52,6 +54,9 @@ export type SheetHead = Omit<Sheet, 'cells'> & {
   cellBytes: number;
   axes: SheetAxes;
 };
+
+// A stored cell as a read answers it: its ids, input, format (its own or its style's) and note.
+export const CELL_COLUMNS = `c.sheet_id, c.row_id, c.col_id, c.input, ${cellFormatSql('c')} AS format, c.note`;
 
 const HEAD_COLUMNS =
   'id, tab_id, title, layout, rev, cell_count, cell_bytes, created_at, updated_at, updated_by';
@@ -97,6 +102,7 @@ export function headToJson(head: SheetHead, cells: readonly CellRow[]): SheetJso
       c: c.col_id,
       ...(c.input ? { i: parseJson(c.input, undefined) } : {}),
       ...(c.format ? { f: parseJson(c.format, undefined) } : {}),
+      ...(typeof c.note === 'string' ? { n: c.note } : {}),
     })),
   };
 }
@@ -166,7 +172,7 @@ export async function listSheets(
   }
   if (heads.length === 0) return [];
   const cells = await env.DOCUMENT_DB.prepare(
-    `SELECT c.sheet_id, c.row_id, c.col_id, c.input, ${cellFormatSql('c')} AS format FROM sheet_cells c
+    `SELECT ${CELL_COLUMNS} FROM sheet_cells c
       WHERE c.document_id = ? AND c.sheet_id IN (SELECT value FROM json_each(?))`,
   )
     .bind(documentId, JSON.stringify(heads.map((h) => h.id)))
@@ -213,7 +219,7 @@ export async function readCells(
 ): Promise<SheetJson['cells']> {
   if (keys.length === 0) return [];
   const rows = await env.DOCUMENT_DB.prepare(
-    `SELECT c.sheet_id, c.row_id, c.col_id, c.input, ${cellFormatSql('c')} AS format FROM sheet_cells c
+    `SELECT ${CELL_COLUMNS} FROM sheet_cells c
       WHERE c.document_id = ? AND c.sheet_id = ? AND ${cellsNamedBy('?')}`,
   )
     .bind(documentId, sheetId, JSON.stringify(keys))
@@ -227,6 +233,7 @@ export async function readCells(
       c: key.slice(i + 1),
       ...(c?.input ? { i: parseJson(c.input, undefined) } : {}),
       ...(c?.format ? { f: parseJson(c.format, undefined) } : {}),
+      ...(typeof c?.note === 'string' ? { n: c.note } : {}),
     };
   });
 }
@@ -253,7 +260,7 @@ export async function existingCells(
   keys: readonly string[],
 ): Promise<{ count: number; bytes: number }> {
   const row = await env.DOCUMENT_DB.prepare(
-    `SELECT COUNT(*) AS n, COALESCE(SUM(COALESCE(length(c.input), 0) + COALESCE(length(${cellFormatSql('c')}), 0)), 0) AS b
+    `SELECT COUNT(*) AS n, COALESCE(SUM(COALESCE(length(c.input), 0) + COALESCE(length(${cellFormatSql('c')}), 0) + COALESCE(length(c.note), 0)), 0) AS b
        FROM sheet_cells c
       WHERE c.document_id = ? AND c.sheet_id = ? AND ${cellsNamedBy('?')}`,
   )
@@ -292,7 +299,9 @@ export function cellWriteStatements(
   const sets: { r: string; c: string; i: string }[] = [];
   const fmts: { r: string; c: string; fp: string | null }[] = [];
   const clears: string[] = [];
+  const notes: { r: string; c: string; n: string | null }[] = [];
   for (const ch of cells) {
+    if (ch.n !== undefined) notes.push({ r: ch.r, c: ch.c, n: ch.n });
     if (ch.i === null) clears.push(cellKey(ch.r, ch.c));
     else if (ch.i !== undefined) sets.push({ r: ch.r, c: ch.c, i: JSON.stringify(ch.i) });
     if (ch.f !== undefined)
@@ -329,6 +338,15 @@ export function cellWriteStatements(
   }
   // In a spreadsheet, the formats just merged become styles (./sheet-styles).
   if (fmts.length) out.push(...styleCellsStatements(env, documentId, sheetId, nonce));
+  // A note lands on its cell, made when empty (review.md "Notes"); null takes it away.
+  if (notes.length)
+    out.push(
+      env.DOCUMENT_DB.prepare(
+        `INSERT INTO sheet_cells (document_id, sheet_id, row_id, col_id, note)
+         SELECT ?1, ?2, j.value ->> 'r', j.value ->> 'c', j.value ->> 'n' FROM json_each(?3) j WHERE ${LANDED}
+         ON CONFLICT (document_id, sheet_id, row_id, col_id) DO UPDATE SET note = excluded.note`,
+      ).bind(documentId, sheetId, JSON.stringify(notes), nonce),
+    );
   if (clears.length)
     out.push(
       env.DOCUMENT_DB.prepare(
@@ -343,7 +361,7 @@ export function cellWriteStatements(
       env.DOCUMENT_DB.prepare(
         `DELETE FROM sheet_cells
           WHERE document_id = ?1 AND sheet_id = ?2 AND input IS NULL AND (format IS NULL OR format = '{}')
-            AND style_id IS NULL
+            AND style_id IS NULL AND note IS NULL
             AND ${cellsNamedBy('?3')} AND ${LANDED}`,
       ).bind(documentId, sheetId, JSON.stringify(touched), nonce),
     );
@@ -420,7 +438,7 @@ export function recountStatement(
   return env.DOCUMENT_DB.prepare(
     `UPDATE sheets SET
        cell_count = (SELECT COUNT(*) FROM sheet_cells WHERE document_id = ?1 AND sheet_id = ?2),
-       cell_bytes = (SELECT COALESCE(SUM(COALESCE(length(c.input), 0) + COALESCE(length(${cellFormatSql('c')}), 0)), 0)
+       cell_bytes = (SELECT COALESCE(SUM(COALESCE(length(c.input), 0) + COALESCE(length(${cellFormatSql('c')}), 0) + COALESCE(length(c.note), 0)), 0)
                        FROM sheet_cells c WHERE c.document_id = ?1 AND c.sheet_id = ?2)
      WHERE document_id = ?1 AND id = ?2`,
   ).bind(documentId, sheetId);
@@ -468,13 +486,13 @@ export function insertSheetStatements(
   const out = [head, ...axisWriteStatements(env, documentId, sheet.id, NO_AXES, sheet.layout)];
   // Chunks of about 1 MB, so no one parameter nears D1's 2 MB value limit.
   for (const chunk of byteChunks(
-    sheet.cells.filter((c) => c.i || c.f),
+    sheet.cells.filter((c) => c.i || c.f || c.n !== undefined),
     1_000_000,
   ))
     out.push(
       env.DOCUMENT_DB.prepare(
-        `INSERT INTO sheet_cells (document_id, sheet_id, row_id, col_id, input, format)
-         SELECT ?1, ?2, j.value ->> 'r', j.value ->> 'c', j.value -> 'i', j.value -> 'f' FROM json_each(?3) j`,
+        `INSERT INTO sheet_cells (document_id, sheet_id, row_id, col_id, input, format, note)
+         SELECT ?1, ?2, j.value ->> 'r', j.value ->> 'c', j.value -> 'i', j.value -> 'f', j.value ->> 'n' FROM json_each(?3) j`,
       ).bind(documentId, sheet.id, chunk),
     );
   out.push(...styleCellsStatements(env, documentId, sheet.id));
@@ -516,8 +534,8 @@ export function copySheetStatements(
       fromId,
     ),
     env.DOCUMENT_DB.prepare(
-      `INSERT INTO sheet_cells (document_id, sheet_id, row_id, col_id, input, format, style_id)
-       SELECT document_id, ?, row_id, col_id, input, format, style_id FROM sheet_cells WHERE document_id = ? AND sheet_id = ?`,
+      `INSERT INTO sheet_cells (document_id, sheet_id, row_id, col_id, input, format, style_id, note)
+       SELECT document_id, ?, row_id, col_id, input, format, style_id, note FROM sheet_cells WHERE document_id = ? AND sheet_id = ?`,
     ).bind(to.id, documentId, fromId),
     copyAxesStatement(env, documentId, fromId, to.id),
     sheetNoteUnreferencedStatement(env, documentId, to.id, now),
