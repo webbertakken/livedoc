@@ -23,6 +23,7 @@ import { liveTabKindOfTab } from '../live-tabs/live-tab-kinds';
 import { chunkStatements, readLiveTabState } from '../live-tabs/live-tab-store';
 import { TEXT_DOCUMENT_LIVE_TAB } from '../text-documents/text-document-live-tab';
 import { viewerStateOf } from '../text-documents/room-viewer-copies';
+import { CopiedReview, type CopiedReviewChoice } from '@livedoc/text-documents';
 import { contentSummaryOf } from './content-summary';
 
 // What a document read takes from the room: its tabs in order (no body), its slide deck and its item type
@@ -138,14 +139,16 @@ function elementsOf(data: string): Element[] {
 }
 
 // The source's half: every tab (or a tab-scoped visitor's one tab), its comments redacted for a copier other than the
-// owner (an author id is a guest's credential), with the items it shows and the sheets of the copied tabs. Null
-// when the source holds no such tab.
+// owner (an author id is a guest's credential), with the items it shows and the sheets of the copied tabs; a text
+// document's live state keeps of its review what `review` asks (files-and-print.md "Make a copy"). Null when the
+// source holds no such tab.
 export async function exportDocumentCopy(
   env: DocumentEnv,
   documentId: string,
   onlyTabId: string | null,
   redactAuthorsFor: string | null,
   viewer = false,
+  review: CopiedReviewChoice | null = null,
 ): Promise<DocumentCopy | null> {
   const db = env.DOCUMENT_DB;
   const tabRows = (
@@ -239,7 +242,9 @@ export async function exportDocumentCopy(
   );
   const copiedSheets = new Set(((sheets?.results ?? []) as Row[]).map((s) => String(s.id)));
   return {
-    liveStates: viewer ? liveStates.map((s) => asViewersState(s, tabs, documentId)) : liveStates,
+    liveStates: (viewer ? liveStates.map((s) => asViewersState(s, tabs, documentId)) : liveStates).map(
+      (s) => withReviewCopied(s, tabs, review),
+    ),
     kept: keptOfSheets(await readKept(env, documentId), copiedSheets),
     itemTypes: doc?.item_types ?? null,
     itemsRev: doc?.items_rev ?? 0,
@@ -443,6 +448,18 @@ export async function importDocumentCopy(
   }
   await db.batch(stmts);
   return contentSummaryOf(env, documentId);
+}
+
+// A text document tab's live state as the copy's review choice keeps it (files-and-print.md "Make a copy"); any
+// other tab, or no choice, as it is.
+function withReviewCopied(
+  live: { tabId: string; state: Uint8Array },
+  tabs: readonly { id: string; kind: string | null }[],
+  review: CopiedReviewChoice | null,
+): { tabId: string; state: Uint8Array } {
+  if (!review) return live;
+  if (tabs.find((t) => t.id === live.tabId)?.kind !== TEXT_DOCUMENT_LIVE_TAB.tabKind) return live;
+  return { tabId: live.tabId, state: CopiedReview.applied(live.state, review) };
 }
 
 // A live tab's state as a Viewer may take it (docs/specs/034-text-documents/review.md "What a Viewer receives"): a

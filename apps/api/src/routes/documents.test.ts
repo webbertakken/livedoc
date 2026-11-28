@@ -890,6 +890,60 @@ describe('a tab-scoped visitor', () => {
     expect(res.status).toBe(201);
   });
 
+  // docs/specs/034-text-documents/files-and-print.md "Make a copy": the dialog's folder and review choices.
+  it('hands on the folder and what a text document keeps of its review', async () => {
+    db.copyDocument.mockResolvedValue({ id: 'd2' });
+    db.getFolder.mockResolvedValue({ id: 'f1', ownerId: 'visitor-1', teamId: null });
+    const res = await handleDocuments(
+      makeCtx('POST', '/api/documents/d1/copy', {
+        ...visitor,
+        body: { folderId: 'f1', comments: true, resolved: false },
+      }),
+    );
+    expect(res.status).toBe(201);
+    expect(db.copyDocument.mock.calls[0]?.at(8)).toEqual({
+      folderId: 'f1',
+      review: { comments: true, resolved: false },
+    });
+  });
+
+  it('keeps the whole review and files at the root when nothing is chosen', async () => {
+    db.copyDocument.mockResolvedValue({ id: 'd2' });
+    await handleDocuments(makeCtx('POST', '/api/documents/d1/copy', { ...visitor, body: {} }));
+    expect(db.copyDocument.mock.calls[0]?.at(8)).toEqual({ folderId: null, review: null });
+  });
+
+  it('takes resolved as kept when only comments is chosen', async () => {
+    db.copyDocument.mockResolvedValue({ id: 'd2' });
+    await handleDocuments(
+      makeCtx('POST', '/api/documents/d1/copy', { ...visitor, body: { comments: false } }),
+    );
+    expect(db.copyDocument.mock.calls[0]?.at(8)).toEqual({
+      folderId: null,
+      review: { comments: false, resolved: true },
+    });
+  });
+
+  it('refuses choices of the wrong type, and a folder not the copier’s', async () => {
+    for (const body of [{ folderId: 3 }, { comments: 'yes' }, { resolved: 1 }]) {
+      const res = await handleDocuments(
+        makeCtx('POST', '/api/documents/d1/copy', { ...visitor, body }),
+      );
+      expect(res.status).toBe(400);
+    }
+    db.getFolder.mockResolvedValue({ id: 'f1', ownerId: 'owner-1', teamId: null });
+    const theirs = await handleDocuments(
+      makeCtx('POST', '/api/documents/d1/copy', { ...visitor, body: { folderId: 'f1' } }),
+    );
+    expect(theirs.status).toBe(404);
+    db.getFolder.mockResolvedValue(null);
+    const gone = await handleDocuments(
+      makeCtx('POST', '/api/documents/d1/copy', { ...visitor, body: { folderId: 'f9' } }),
+    );
+    expect(gone.status).toBe(404);
+    expect(db.copyDocument).not.toHaveBeenCalled();
+  });
+
   it('copies its tab only through its Shared-with-you row too', async () => {
     resolveDocumentGrant.mockResolvedValue(null);
     db.listSharedWith.mockResolvedValue([{ id: 'd1', tabId: 't2' }]);

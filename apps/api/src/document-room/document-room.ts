@@ -1,3 +1,4 @@
+import type { CopiedReviewChoice } from '@livedoc/text-documents';
 import { DurableObject } from 'cloudflare:workers';
 import { DOCUMENT_ID_HEADER } from './document-client';
 import { json } from '../responses';
@@ -1476,12 +1477,14 @@ export class DocumentRoom extends DurableObject<Env | undefined> {
     onlyTabId: string | null,
     redactAuthorsFor: string | null,
     viewer = false,
+    review: CopiedReviewChoice | null = null,
   ): Promise<DocumentCopy | null> {
     return (await this.content.rpc(documentId)).exportCopy(
       documentId,
       onlyTabId,
       redactAuthorsFor,
       viewer,
+      review,
     );
   }
 

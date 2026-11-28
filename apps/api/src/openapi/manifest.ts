@@ -502,12 +502,21 @@ export const ROUTE_MANIFEST: RouteSpec[] = [
     path: '/documents/{id}/copy',
     segment: 'documents',
     tag: 'Documents',
-    summary: "Duplicate a document into the caller's files.",
+    summary:
+      "Duplicate a document into the caller's files. With folderId, filed in one of the caller's own folders (404 for any other). For a text document, comments: false leaves out every comment thread and rejects every pending suggestion; resolved: false leaves out resolved threads. Neither given: everything is kept. 400 for a choice of the wrong type.",
     auth: 'guest-or-session',
     tokenUsable: true,
-    requestSchema: { type: 'object', properties: { name: nameField } },
+    requestSchema: {
+      type: 'object',
+      properties: {
+        name: nameField,
+        folderId: { type: ['string', 'null'] },
+        comments: { type: 'boolean' },
+        resolved: { type: 'boolean' },
+      },
+    },
     responseSchema: wrap('document', 'Document'),
-    statuses: [201, 401, 403, 404, 410],
+    statuses: [201, 400, 401, 403, 404, 410],
   },
   {
     method: 'PUT',

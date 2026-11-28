@@ -163,6 +163,65 @@ describe('copyDocument', () => {
     vi.restoreAllMocks();
   });
 
+  // files-and-print.md "Make a copy": the copy goes into the copier's own folder, never another's.
+  it("files the copy in the copier's own folder, and at the root for anyone else's", async () => {
+    const db = await source();
+    db.sql.exec(`INSERT INTO folders (id, owner_id, parent_id, name, created_at, updated_at)
+      VALUES ('mine', 'me', NULL, 'Plans', 1, 1), ('theirs', 'o', NULL, 'Theirs', 1, 1)`);
+    expect(
+      (
+        await copyDocument(db.env, 'd1', 'd2', 'me', 'Copy', null, null, false, {
+          folderId: 'mine',
+        })
+      )?.folderId,
+    ).toBe('mine');
+    expect(
+      (
+        await copyDocument(db.env, 'd1', 'd3', 'me', 'Copy', null, null, false, {
+          folderId: 'theirs',
+        })
+      )?.folderId,
+    ).toBeNull();
+  });
+
+  // files-and-print.md "Make a copy": without Copy comments and suggestions, a text document's copy holds no thread.
+  it('copies a text document without its threads when asked', async () => {
+    const db = await source();
+    await upsertTab(
+      db.env,
+      'd1',
+      { id: 't3', name: 'Notes', kind: 'text-document', format: 'odf', elements: [] } as never,
+      2,
+    );
+    const doc = TextDocumentState.load([TextDocumentState.fromBody(Body.of('Kept in the copy'))]);
+    LiveThreads.begin(
+      doc,
+      {
+        id: 'thread-1',
+        tab: 't.0',
+        ...LiveThreads.anchorFor(TextDocumentState.body(doc), 0, 1),
+        quote: 'Kept',
+        comment: {
+          id: 'c1',
+          text: 'A remark',
+          at: 1,
+          author: { key: 'k', name: 'Ada', colour: '#123456' },
+        },
+      },
+      'test',
+    );
+    await appendLiveTabUpdate(db.env, TEXT_DOCUMENT_LIVE_TAB, 't3', TextDocumentState.encode(doc));
+    await copyDocument(db.env, 'd1', 'd2', 'o', 'Copy', null, null, false, {
+      review: { comments: false, resolved: false },
+    });
+    const copied = tabsOf(db, 'd2').find((t) => t.name === 'Notes')!;
+    const state = await readLiveTabState(db.env, TEXT_DOCUMENT_LIVE_TAB, copied.id);
+    expect(LiveThreads.read(TextDocumentState.load([state]))).toEqual([]);
+    expect(TextDocumentState.paragraphs(TextDocumentState.load([state]))).toEqual(
+      Body.of('Kept in the copy'),
+    );
+  });
+
   it("refuses a Viewer's copy whose text document cannot be copied so", async () => {
     const db = await source();
     await upsertTab(

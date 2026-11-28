@@ -2,6 +2,7 @@
 // timestamps) plus the copy operation. Tab content lives in tabs.ts;
 // the read DTO joins owner display info from participants.
 
+import type { CopiedReviewChoice } from '@livedoc/text-documents';
 import { readItemTypeCatalogue, type ItemTypeCatalogue } from '@livedoc/items';
 import { APPEARANCES, type Appearance } from '@livedoc/document';
 import type { DocumentDTO, DocumentEnv, DocumentSummary, Env, ParticipantDTO } from '../types';
@@ -573,8 +574,16 @@ export async function copyDocument(
   redactAuthorsFor: string | null = null,
   // A Viewer's copy: its text documents carry no comment and no suggestion's author (review.md "What a Viewer receives").
   viewer = false,
+  // The Copy document dialog's choices (docs/specs/034-text-documents/files-and-print.md "Make a copy"): the copier's
+  // own folder (any other files the copy at the root), and what a text document keeps of its review (null: all).
+  chosen: { folderId?: string | null; review?: CopiedReviewChoice | null } = {},
 ): Promise<DocumentDTO | null> {
-  const content = await documentRoom(env, sourceId).exportCopy(onlyTabId, redactAuthorsFor, viewer);
+  const content = await documentRoom(env, sourceId).exportCopy(
+    onlyTabId,
+    redactAuthorsFor,
+    viewer,
+    chosen.review ?? null,
+  );
   if (!content) return null;
   const now = Date.now();
   const images = [...new Set(content.tabs.flatMap((t) => imageRefIdsFromData(t.data)))];
@@ -588,8 +597,10 @@ export async function copyDocument(
   const [inserted, ...rest] = await env.DB.batch([
     env.DB.prepare(
       `INSERT INTO documents (id, owner_id, name, shareable, folder_id, saved_at, created_at, ${INTENT_COLS})
-       SELECT ?, ?, ?, 0, NULL, ?, ?, ${INTENT_COLS} FROM documents WHERE id = ? AND trashed_at IS NULL`,
-    ).bind(newId, newOwnerId, newName, now, now, sourceId),
+       SELECT ?1, ?2, ?3, 0,
+              (SELECT f.id FROM folders f WHERE f.id = ?7 AND f.owner_id = ?2 AND f.team_id IS NULL),
+              ?4, ?5, ${INTENT_COLS} FROM documents WHERE id = ?6 AND trashed_at IS NULL`,
+    ).bind(newId, newOwnerId, newName, now, now, sourceId, chosen.folderId ?? null),
     ...imageGrantCopyStatements(env, sourceId, newId, images, now),
     ...blobGiveCopyStatements(env, sourceId, newOwnerId, blobs, now),
   ]);
