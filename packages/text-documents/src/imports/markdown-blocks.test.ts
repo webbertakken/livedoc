@@ -1,7 +1,7 @@
 // docs/specs/034-text-documents/text-and-paragraphs.md "Typing aids", "Clipboard": the Markdown Google reads, read as
 // headings, paragraphs and list items, and in their text bold, italic, strikethrough, code and links.
 import { describe, expect, it } from 'vitest';
-import { looksLikeMarkdown, markdownInline, parseMarkdown } from './text-document-markdown';
+import { looksLikeMarkdown, markdownInline, parseMarkdown } from './markdown-blocks';
 
 describe('markdownInline', () => {
   it('reads bold, italic, strikethrough and their nesting', () => {
@@ -66,12 +66,36 @@ describe('parseMarkdown', () => {
     ]);
   });
 
-  it('reads quotes and code as their text, and leaves rules out', () => {
-    expect(parseMarkdown('> quoted\n> on\n\n```js\nconst *a* = 1;\n\n```\n---\nend')).toEqual([
+  it('reads quotes as their text, code with its language, and leaves rules out', () => {
+    expect(
+      parseMarkdown('> quoted\n> on\n\n```js\nconst *a* = 1;\n\n```\n---\n~~~\nx\n~~~\nend'),
+    ).toEqual([
       { kind: 'paragraph', runs: [{ text: 'quoted on' }] },
-      { kind: 'paragraph', runs: [{ text: 'const *a* = 1;' }] },
-      { kind: 'paragraph', runs: [] },
+      { kind: 'code', language: 'js', lines: ['const *a* = 1;', ''] },
+      { kind: 'code', language: null, lines: ['x'] },
       { kind: 'paragraph', runs: [{ text: 'end' }] },
+    ]);
+  });
+
+  it('reads a pipe table, its first row the header, an escaped pipe kept', () => {
+    expect(parseMarkdown('| A | **B** |\n|---|:--:|\n| 1 | a \\| b |\n2 | 3\n\nafter')).toEqual([
+      {
+        kind: 'table',
+        rows: [
+          [[{ text: 'A' }], [{ text: 'B', bold: true }]],
+          [[{ text: '1' }], [{ text: 'a | b' }]],
+          [[{ text: '2' }], [{ text: '3' }]],
+        ],
+      },
+      { kind: 'paragraph', runs: [{ text: 'after' }] },
+    ]);
+  });
+
+  it('reads a picture as its alt text and address, apart from the text around it', () => {
+    expect(markdownInline('see ![a cat](https://x.y/c.png) here')).toEqual([
+      { text: 'see ' },
+      { text: 'a cat', picture: 'https://x.y/c.png' },
+      { text: ' here' },
     ]);
   });
 });

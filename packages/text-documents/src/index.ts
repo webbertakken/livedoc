@@ -52,6 +52,10 @@ export {
   PICTURED_EXPORT_TYPES,
   TEXT_DOCUMENT_EXPORT_TYPES,
   TEXT_DOCUMENT_FILE_TYPES,
+  TEXT_DOCUMENT_IMPORT_TYPES,
+  importTypeOfFileName,
+  isTextDocumentImportType,
+  type TextDocumentImportType,
   isPicturedExportType,
   isTextDocumentExportType,
   isTextDocumentFileType,
@@ -443,3 +447,11 @@ export {
 } from './viewer/viewer-copy';
 export { syncWriting } from './live/writing-sync';
 export { SettledWriting } from './live/settled-writing';
+export {
+  looksLikeMarkdown,
+  markdownInline,
+  parseMarkdown,
+  type MarkdownBlock,
+  type MarkdownRun,
+} from './imports/markdown-blocks';
+export { readTextDocumentImport } from './imports/import-file';
