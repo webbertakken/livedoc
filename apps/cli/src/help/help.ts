@@ -33,6 +33,7 @@ const NAMED_ONLY = [
   'board',
   'sheet',
   'spreadsheet',
+  'text-document',
   'page',
   'article',
   'form',
@@ -66,7 +67,7 @@ export function topHelp(): string {
   );
   const pad = (s: string) => s.padEnd(width + 2);
   return [
-    'livedoc: read, build, edit and discuss documents.',
+    'livedoc: read, build, edit, discuss documents.',
     'Usage: livedoc <resource> <verb> [args] [flags]',
     '',
     ...rows.flatMap((r) => [

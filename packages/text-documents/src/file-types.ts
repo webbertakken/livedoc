@@ -48,6 +48,11 @@ export function isTextDocumentImportType(value: unknown): value is TextDocumentI
   return (TEXT_DOCUMENT_IMPORT_TYPES as readonly unknown[]).includes(value);
 }
 
+/** The format a file opens in, by its name: a Word file is held in OOXML, anything else in ODF (fork C1). */
+export function formatOfFileName(fileName: string): 'odf' | 'ooxml' {
+  return /\.(docx|dotx|docm)$/i.test(fileName) ? 'ooxml' : 'odf';
+}
+
 /** The import a file's name says it is; none for a file LiveDoc opens as itself, or does not open. */
 export function importTypeOfFileName(name: string): TextDocumentImportType | undefined {
   const extension = /\.([^./\\]+)$/.exec(name)?.[1]?.toLowerCase();

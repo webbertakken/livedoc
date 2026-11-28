@@ -241,6 +241,40 @@ list of the sheet's own writes, the editor's unit, applied as one. It holds for 
 - **What it leaves out**: the references other sheets' formulas hold into rows or columns it deleted are shrunk after
   it, as a person's delete shrinks them, and are not put back by its revert (D268).
 
+## A text document's changesets
+
+A [text document](../034-text-documents/text-document.md)'s writing is a live CRDT state, not elements, so an agent's
+change to it is a **text changeset** of the operations [Agents and sync](../034-text-documents/agents-and-sync.md#writing)
+lists, applied by the api to the state as it stands.
+
+- **Submit.** `POST /api/documents/:id/tabs/:tabId/changesets` on a text document's tab, with `ops` (the operations'
+  text), optionally `documentTab`, `summary` and `base` (a state vector). `?dryRun=1` answers the result lines and
+  writes nothing.
+- **One transaction.** The api loads the state, applies every operation in one transaction by a client of its own, and
+  sends the room the update it made, as an editor's update is sent; the room appends and relays it, so people see the
+  writing arrive at once and their typing merges with it.
+- **Atomic.** One operation refused refuses the changeset, nothing written, the answer naming the line.
+- **Recorded** in the document's room with the other changesets: its operations, results, summary, agent, and its
+  undo step (what it wrote and what it deleted, as Yjs counts them). A changeset that changes nothing is not recorded.
+- **Revert** (`POST …/changesets/:changesetId/revert`, the toast's Undo) undoes exactly that step as a new change: what
+  it wrote is deleted, what it deleted is written again where it stood, and what anyone wrote since stays.
+  Reverting twice writes nothing. Comments it made are resolved, never deleted `(default)`.
+- **In the editor**: the writing arrives as a peer's; a toast names the agent's owner and the summary, "Webber changed
+  the document: tighten the intro · Undo", one toast a burst as for elements. The room relays a `text-changeset`
+  notice after the update for it. Undo alone: writing has no outline to show `(default)`; the revert an editor's own
+  Undo relays back raises no toast.
+- **Not held**: a text document has no held elements; an agent's edit and a person's typing merge character by character.
+- **Roles**, as the token's owner holds them on the document: an Editor runs every operation; a Participant only
+  `comment` and `suggest …`, any other refused `403 forbidden_operation` naming its line; a Viewer is refused `403`.
+  Comments and suggestions carry the owner's key on the document, so the room reads them as theirs.
+- **Answers**: `200` with `changeset` (`id` `tc_` and 10 characters, null when nothing changed or on a dry run),
+  `results` (one line an operation) and `text`; refusals `400 invalid_operation`, `400 not_a_text_document` (an
+  element changeset's body, `operations` or `replace`, sent to a text document, or `ops` sent to another tab),
+  `422 text_not_found`, `422 text_ambiguous`, `422 ref_not_found`, `412 stale_tab`, `413 document_too_large`, each
+  with `line`, `operation` and `message`.
+- **History**: listed with the document's other changesets; its counts are paragraphs added (`added`) and other
+  operations (`changed`). Reverting it twice answers `changeset: null`.
+
 ## Limits
 
 | Constant                      | Value      | Why                                                                      |

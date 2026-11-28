@@ -21,7 +21,7 @@ describe('apiRevertChangeset', () => {
       }),
     );
     const answer = await apiRevertChangeset('owner-1', 'd1', 'cs_0000000001', null);
-    expect(answer.kept).toEqual([{ id: 'a', reason: 'changed' }]);
+    expect(answer).toMatchObject({ kept: [{ id: 'a', reason: 'changed' }] });
     expect(calls[0]!.url).toMatch(/\/documents\/d1\/changesets\/cs_0000000001\/revert$/);
     expect(calls[0]!.init.method).toBe('POST');
     expect(new Headers(calls[0]!.init.headers).get('X-Livedoc-Client')).toBe('editor');

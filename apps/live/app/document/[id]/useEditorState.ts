@@ -1434,6 +1434,7 @@ export function useEditorState(opts: { surface?: EditorSurface } = {}) {
       await resyncFromServer();
     },
     receiveChangeset: changesetFeed.receiveChangeset,
+    receiveTextChangeset: changesetFeed.receiveTextChangeset,
     receiveItems: planItems.receive,
     receiveItemTypes: itemTypes.receive,
     receiveWorkbook: (op) => {

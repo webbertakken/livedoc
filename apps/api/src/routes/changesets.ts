@@ -3,11 +3,13 @@
 //   GET  /api/documents/<id>/changesets[?tab=&limit=]         the history, newest first
 //   GET  /api/documents/<id>/changesets/<changesetId>         one, with its result lines
 //   POST /api/documents/<id>/changesets/<changesetId>/revert  its inverse, as a new changeset
+// A sheet's (sc_) and a text document's (tc_) changesets answer through the same doors.
 
 import {
   CHANGESET_LIST_DEFAULT,
   CHANGESET_LIST_MAX,
   isSheetChangesetId,
+  isTextChangesetId,
   type ChangesetConflict,
   type ChangesetSummary,
   type ResultLine,
@@ -31,6 +33,15 @@ import {
   sheetChangesetSummary,
   showSheetChangeset,
 } from '../sheet-changesets/routes';
+import { listTextChangesets, getTextChangeset } from '../db/text-changesets';
+import { isTextBody, NOT_A_TEXT_DOCUMENT } from '../text-changesets/request';
+import {
+  revertTextChangesetRoute,
+  showTextChangeset,
+  submitTextChangeset,
+  textChangesetSummary,
+} from '../text-changesets/routes';
+import { storedTextDocumentTab } from '../text-documents/text-document-store';
 import type { DocumentDTO } from '../types';
 import {
   gateEdit,
@@ -78,6 +89,14 @@ export async function handleChangesetRoutes(ctx: DocumentRouteContext): Promise<
       ? showSheetChangeset(ctx, document, sheetRecord, owner)
       : revertSheetChangeset(ctx, document, sheetRecord, owner);
   }
+  // And a text document's (agent-changesets.md "A text document's changesets").
+  if (isTextChangesetId(segments[4])) {
+    const textRecord = await getTextChangeset(ctx.env, id, segments[4]);
+    if (!textRecord) return notFound();
+    return one
+      ? showTextChangeset(ctx, document, textRecord, owner)
+      : revertTextChangesetRoute(ctx, document, textRecord, owner);
+  }
   const record = await getChangeset(ctx.env, id, segments[4]!);
   if (!record) return notFound();
   if (one) return handleOne(ctx, document, record, owner);
@@ -90,9 +109,18 @@ async function handleSubmit(
   tabId: string,
   owner: string,
 ): Promise<Response> {
+  const raw = await ctx.request.json().catch(() => undefined);
+  // A text document's tab takes text operations, gated by what each asks (agent-changesets.md).
+  if (await storedTextDocumentTab(ctx.env, document.id, tabId)) {
+    const result = await submitTextChangeset(ctx, document, tabId, owner, raw);
+    if (result.status === 200)
+      refreshAfterWrite(ctx, document, tabId, await authorOf(ctx, owner), result);
+    return json(result.body, { status: result.status });
+  }
   if (!(await gateEdit(ctx, document.id, document.ownerId, document.teamId, tabId)))
     return forbidden();
-  const raw = await ctx.request.json().catch(() => undefined);
+  if (isTextBody(raw))
+    return json(NOT_A_TEXT_DOCUMENT.body, { status: NOT_A_TEXT_DOCUMENT.status });
   const parsed = parseChangesetRequest(raw, engineLog({ documentId: document.id, tabId }));
   if (!parsed.ok) return json(parsed.refusal.body, { status: parsed.refusal.status });
   const author = await authorOf(ctx, owner);
@@ -133,14 +161,16 @@ async function handleList(
   }
   const tabId = asked ?? grant.tabScope ?? undefined;
   const scope = { limit, ...(tabId ? { tabId } : {}) };
-  const [records, sheetRecords] = await Promise.all([
+  const [records, sheetRecords, textRecords] = await Promise.all([
     listChangesets(ctx.env, document.id, scope),
     listSheetChangesets(ctx.env, document.id, scope),
+    listTextChangesets(ctx.env, document.id, scope),
   ]);
   // Tab and sheet changesets together, newest first, cut to the limit.
   const changesets = [
     ...records.map((r) => summaryOf(r, owner)),
     ...sheetRecords.map((r) => sheetChangesetSummary(r, owner)),
+    ...textRecords.map((r) => textChangesetSummary(r, owner)),
   ]
     .sort((a, b) => b.createdAt - a.createdAt)
     .slice(0, limit);

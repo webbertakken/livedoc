@@ -114,3 +114,10 @@ export * from './pages';
 export * from './forms';
 export * from './storm';
 export * from './images';
+export {
+  openTextDocument,
+  textDocumentFileTooLarge,
+  TEXT_DOCUMENT_FILE_BYTES_MAX,
+  type OpenedTextDocument,
+} from './text-documents/open-text-document';
+export { textDocumentTabOf, TEXT_DOCUMENT_DOWNLOAD_FORMATS } from './verbs/text-document';

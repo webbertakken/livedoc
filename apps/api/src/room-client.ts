@@ -13,6 +13,7 @@ import {
   type AccessLevel,
   type ChangesetRoomOp,
   type RoomOp,
+  type TextChangesetRoomOp,
 } from '@livedoc/api-schema';
 import type { AgentPresenceWrite } from './room-agent-presence';
 import type {
@@ -216,6 +217,16 @@ export async function relayChangeset(
     console.warn('[changeset] relay-failed', { ...fields, error: String(err) });
   }
   return false;
+}
+
+// A text changeset's notice (docs/specs/024-agents/agent-changesets.md "A text document's changesets", "In the
+// editor"), after the room stored its update: it raises the toast only, so a room out of reach costs a toast, logged.
+export async function relayTextChangeset(
+  env: Env,
+  documentId: string,
+  op: TextChangesetRoomOp,
+): Promise<void> {
+  await broadcastOp(env, documentId, op, 'text changeset');
 }
 
 // The document's name and tabs as the api changed them (an agent's rename, a spreadsheet's sheet added or deleted), as

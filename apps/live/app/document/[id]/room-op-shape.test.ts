@@ -30,6 +30,13 @@ const WELL_FORMED: Record<string, unknown>[] = [
     elementOps: [{ kind: 'update', element: el }],
   },
   { kind: 'changeset', tabId: 't1', id: 'c', rev: 2, refetch: true, touched: [el.id] },
+  {
+    kind: 'text-changeset',
+    tabId: 't1',
+    id: 'tc_0000000001',
+    author: { name: 'W', color: '#000000' },
+    counts: { added: 0, changed: 1, removed: 0 },
+  },
   { kind: 'vote', tabId: 't1', elementId: el.id, voter: 'v', delta: 1 },
   { kind: 'tab-meta', tabId: 't1', patch: { name: 'x' }, clear: ['timer'] },
   { kind: 'article', tabId: 't1', flow: 'f', removed: true },
@@ -73,6 +80,11 @@ describe('roomOpIsWellFormed', () => {
     [
       'a changeset holding a patch',
       { kind: 'changeset', tabId: 't1', elementOps: [{ kind: 'patch', id: 'a', set: {} }] },
+    ],
+    ['a text changeset without its author', { kind: 'text-changeset', tabId: 't1', id: 'tc_1' }],
+    [
+      'a text changeset whose author has no name',
+      { kind: 'text-changeset', tabId: 't1', id: 'tc_1', author: {} },
     ],
     ['a tab-meta without its patch', { kind: 'tab-meta', tabId: 't1' }],
     ['a document-meta without its tab list', { kind: 'document-meta', name: 'n' }],

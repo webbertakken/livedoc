@@ -1,6 +1,10 @@
 import type { RemoteApply } from '@/hooks/canvas/history-replay';
 import { useCallback, useEffect, useRef, useState, type MutableRefObject } from 'react';
-import { CHANGESET_REVEAL_MS, type ChangesetRoomOp } from '@livedoc/api-schema';
+import {
+  CHANGESET_REVEAL_MS,
+  type ChangesetRoomOp,
+  type TextChangesetRoomOp,
+} from '@livedoc/api-schema';
 import { apiListChangesets, apiRevertChangeset } from '@/lib/api-client';
 import { debugLog } from '@/lib/debug-log';
 import { track } from '@/lib/telemetry';
@@ -130,6 +134,25 @@ export function useChangesetFeed(opts: {
     ],
   );
 
+  // A text document's changeset (agent-changesets.md "A text document's changesets"): its writing arrives as the
+  // tab's own update, so the notice only raises the toast, with Undo; a revert this editor asked for raises none.
+  const receiveTextChangeset = useCallback(
+    (op: TextChangesetRoomOp) => {
+      debugLog('[changeset] text-received', { tabId: op.tabId, revert: !!op.revertOf });
+      if (op.revertOf && undoingRef.current.has(op.revertOf)) return;
+      const entry = coalesceChangesetToast(toastsRef.current, op, Date.now());
+      toastsRef.current.set(entry.key, entry);
+      toastActionsRef.current ??= changesetToastActions({
+        latest,
+        toastsRef,
+        undoingRef,
+        sessionShareCodeRef,
+      });
+      toastActionsRef.current.show(entry);
+    },
+    [sessionShareCodeRef],
+  );
+
   // On joining the room: a changeset that landed between the tab load and the join was relayed
   // before this editor was there to hear it (a first join replays no log). The newest changesets
   // name any loaded tab this editor is behind on; those are re-read in place. Also covers a relay
@@ -156,7 +179,7 @@ export function useChangesetFeed(opts: {
     }
   }, [sessionShareCodeRef, loadedTabIdsRef, seenRef, refetchTabs]);
 
-  return { receiveChangeset, checkSinceLoad, reveals };
+  return { receiveChangeset, receiveTextChangeset, checkSinceLoad, reveals };
 }
 
 type ToastRefs = {
@@ -180,15 +203,20 @@ function changesetToastActions(refs: ToastRefs) {
       key: entry.key,
       message: changesetToastCopy(entry),
       actions: [
-        {
-          label: 'Show',
-          ariaLabel: `Show ${entry.name}'s changes`,
-          disabled: busy,
-          onSelect: () => {
-            track('Agent', 'Opened', 'Toast');
-            refs.latest.current.revealInView(entry.tabId, entry.touched);
-          },
-        },
+        // Writing has no outline to show: a text document's toast offers Undo alone.
+        ...(entry.text
+          ? []
+          : [
+              {
+                label: 'Show',
+                ariaLabel: `Show ${entry.name}'s changes`,
+                disabled: busy,
+                onSelect: () => {
+                  track('Agent', 'Opened', 'Toast');
+                  refs.latest.current.revealInView(entry.tabId, entry.touched);
+                },
+              },
+            ]),
         {
           label: 'Undo',
           ariaLabel: `Undo ${entry.name}'s changes`,
@@ -213,7 +241,8 @@ function changesetToastActions(refs: ToastRefs) {
           id,
           refs.sessionShareCodeRef.current,
         );
-        kept += answer.kept.length;
+        // A text changeset's revert keeps nothing: what was written since stays by the undo itself.
+        kept += 'kept' in answer ? answer.kept.length : 0;
       }
       refs.toastsRef.current.delete(entry.key);
       toast.action({ key: entry.key, message: undoneCopy(kept), actions: [] });

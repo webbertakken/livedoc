@@ -674,6 +674,7 @@ export * from './changesets';
 export * from './items';
 export * from './sheets';
 export * from './sheet-changesets';
+export * from './text-changesets';
 export * from './workbook';
 // Only its types: its codec reads the office files' entry, so callers import it from '@livedoc/api-schema/workbook-kept'.
 export type {
@@ -775,3 +776,11 @@ export * from './bug-report';
 export * from './bug-report-context-lines';
 export * from './bug-report-card';
 export * from './worker-issue';
+export {
+  arrowParts,
+  hasQuotes,
+  isQuotedWord,
+  tokeniseLine,
+  unquotedPrefix,
+  type Word as LineWord,
+} from './line-words';
