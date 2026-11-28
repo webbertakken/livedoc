@@ -9,6 +9,7 @@ import type { Mark, Quad } from './mark';
 import type { PageName } from './page-name';
 import type { PageText } from './page-text';
 import type { PageTags } from './page-tags';
+import type { PagePictures } from './page-pictures';
 import type { PdfPermissions } from './permissions';
 
 /** A named reason a PDF is not opened (opening.md "Refusals"). */
@@ -256,6 +257,11 @@ export type PdfEngine = {
    * there is no such page.
    */
   pageTags(index: number): Promise<PageTags | null>;
+  /**
+   * A page's pictures, handed over whole in the order drawn, each placed in page points with its bytes (opening.md
+   * "What is read": a page's pictures); null where there is no such page.
+   */
+  pagePictures(index: number): Promise<PagePictures | null>;
   /** The text between two points of a page, or null where there is none. */
   selectText(index: number, from: PagePoint, to: PagePoint): Promise<TextSelection | null>;
   /** The marks the file itself holds on a page. */

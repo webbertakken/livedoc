@@ -58,9 +58,14 @@ export async function columnsPdf(): Promise<Uint8Array<ArrayBuffer>> {
 
 /**
  * A PDF written by hand from its objects (object 1 is the catalogue), for the files no writer makes: one with no
- * pages, one locked by a handler the reader does not know.
+ * pages, one locked by a handler the reader does not know. `latin1` writes each character as one byte, so a stream
+ * may hold any bytes.
  */
-export function rawPdf(objects: readonly string[], trailer = ''): Uint8Array<ArrayBuffer> {
+export function rawPdf(
+  objects: readonly string[],
+  trailer = '',
+  latin1 = false,
+): Uint8Array<ArrayBuffer> {
   let body = '%PDF-1.7\n';
   const offsets: number[] = [];
   objects.forEach((object, at) => {
@@ -71,7 +76,7 @@ export function rawPdf(objects: readonly string[], trailer = ''): Uint8Array<Arr
   body += `xref\n0 ${objects.length + 1}\n0000000000 65535 f \n`;
   for (const offset of offsets) body += `${String(offset).padStart(10, '0')} 00000 n \n`;
   body += `trailer\n<< /Size ${objects.length + 1} /Root 1 0 R ${trailer} >>\nstartxref\n${xref}\n%%EOF\n`;
-  return new TextEncoder().encode(body);
+  return latin1 ? Uint8Array.from(Buffer.from(body, 'latin1')) : new TextEncoder().encode(body);
 }
 
 /** A well-formed PDF whose page tree holds no page. */
@@ -614,4 +619,52 @@ export function pngOf(
       chunk('IEND', new Uint8Array()),
     ]),
   );
+}
+
+/** A 4 by 2 JPEG of one blue (#3366cc), as ImageMagick writes it: a picture a PDF may hold as its own bytes. */
+export const TINY_JPEG = Uint8Array.from(
+  Buffer.from(
+    '/9j/4AAQSkZJRgABAQAAAAAAAAD/2wBDAAMCAgMCAgMDAwMEAwMEBQgFBQQEBQoHBwYIDAoMDAsKCwsNDhIQDQ4RDgsLEBYQERMUFRUVDA8XGBYUGBIUFRT/2wBDAQMEBAUEBQkFBQkUDQsNFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBT/wAARCAACAAQDAREAAhEBAxEB/8QAFAABAAAAAAAAAAAAAAAAAAAAB//EABQQAQAAAAAAAAAAAAAAAAAAAAD/xAAVAQEBAAAAAAAAAAAAAAAAAAAHCP/EABQRAQAAAAAAAAAAAAAAAAAAAAD/2gAMAwEAAhEDEQA/AC9UAkf/2Q==',
+    'base64',
+  ),
+);
+
+/**
+ * A page's pictures (opening.md "What is read": a page's pictures), drawn in this order: the JPEG at 100 by 50 points
+ * from (10, 20), held as its own bytes; the photograph (64 by 64 pixels, its colour x * 4, y * 4, x * y) at 64 points
+ * from (200, 300); and the chart's bar through a form placed twice its size at (300, 400), drawn in it 20 by 10.
+ * Written with each byte as a character, so the JPEG's bytes stay as they are.
+ */
+export function picturesPdf(): Uint8Array<ArrayBuffer> {
+  const jpeg = String.fromCharCode(...TINY_JPEG);
+  const pdf = rawPdf(
+    [
+      '<< /Type /Catalog /Pages 2 0 R >>',
+      '<< /Type /Pages /Kids [3 0 R] /Count 1 >>',
+      '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /XObject << /Jpeg 5 0 R /Photo 6 0 R /Form 7 0 R >> >> /Contents 4 0 R >>',
+      stream(
+        '',
+        'q 100 0 0 50 10 20 cm /Jpeg Do Q q 64 0 0 64 200 300 cm /Photo Do Q q 2 0 0 2 300 400 cm /Form Do Q',
+      ),
+      stream(
+        '/Type /XObject /Subtype /Image /Width 4 /Height 2 /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode',
+        jpeg,
+      ),
+      stream(
+        PICTURE,
+        pictureHex((x, y) => [x * 4, y * 4, (x * y) % 256]),
+      ),
+      stream(
+        '/Type /XObject /Subtype /Form /BBox [0 0 100 100] /Resources << /XObject << /Chart 8 0 R >> >>',
+        'q 20 0 0 10 0 0 cm /Chart Do Q',
+      ),
+      stream(
+        PICTURE,
+        pictureHex((x) => (x < 32 ? [51, 102, 204] : [255, 255, 255])),
+      ),
+    ],
+    '',
+    true,
+  );
+  return pdf;
 }

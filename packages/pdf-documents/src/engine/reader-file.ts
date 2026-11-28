@@ -37,7 +37,7 @@ export type PageBox = { left: number; bottom: number; right: number; top: number
 /** One Dark pages step: how long it took, the photographs it put back, or that it failed. */
 export type DarkStep = { ms: number; pictures: number } | { failed: true };
 
-export type Clamped = 'coordinate' | 'size' | 'text' | 'list';
+export type Clamped = 'coordinate' | 'size' | 'text' | 'list' | 'picture';
 
 export class ReaderFile {
   readonly p: Pdfium;
@@ -97,6 +97,11 @@ export class ReaderFile {
     const taken = this.tally;
     this.tally = new Map();
     return taken;
+  }
+
+  /** `length` bytes of the reader's memory at `at`, each a character: a name the file writes, as a filter's. */
+  latin1(at: number, length: number): string {
+    return String.fromCharCode(...this.heap.subarray(at, at + length));
   }
 
   /** A coordinate read from the file, held within reach of the page. */

@@ -39,6 +39,20 @@ with a named reason; none is changed by being opened, and none is opened by conv
 - **A file under `FILE_WHOLE_READ_MAX_BYTES` (8 MiB) is fetched whole; a larger one is read by range**, the first
   page's blocks first, so page one shows before the rest arrives
   ([Bytes](../../research/pdf-documents/bytes.md#getting-the-bytes-out)).
+- **A page's pictures** are handed over whole, for a caller that moves them into another document (the text
+  documents' PDF import, [Files and print](../034-text-documents/files-and-print.md)): every image XObject drawn on
+  the page, those inside form XObjects too (walked to `PDF_MAX_TREE_DEPTH`), in the order the page's content draws
+  them. Each says where it is drawn, in page points (y up): the matrix that places its unit square, composed
+  through every form it sits in, and the box around its four corners; its own size in pixels; and its bytes:
+  - **as the file holds them** when they are a JPEG a browser shows as the file means it: the only filter is
+    `DCTDecode` and the colour space is DeviceRGB or DeviceGray (`image/jpeg`, never decoded nor re-encoded);
+  - **else its pixels**, decoded by the engine at its own size, red, green, blue and alpha a byte each, row by row
+    from the top, every pixel opaque: the picture as stored, its mask (`SMask`, `Mask`) and the page's colours
+    over it not applied, as an import wants the picture, not what lies under it.
+  - A picture past `PDF_PICTURE_HANDED_MAX_PIXELS`, or one the engine cannot decode, is listed with its place and
+    size and no bytes; a page with more than `PDF_PAGE_PICTURES_MAX` lists the first ones and says it was cut. Each
+    held back is logged as every value the engine holds back (`[pdf] value-clamped what=picture`, `what=list`),
+    never silent. No page of the file is drawn to read them.
 - **Opening changes nothing.** No live change is made by reading, the stored file is never rewritten, and the
   download of a PDF nobody changed is the stored file itself ([Saving](saving.md#an-unchanged-file)).
 
@@ -159,17 +173,19 @@ as for any document.
 
 ## Limits
 
-| Constant                     | Value                | Why                                                                                                                                                          |
-| ---------------------------- | -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `FILE_TAB_MAX_BYTES`         | 100,000,000 (100 MB) | The file tab's cap (F6, ruled): a phone holds such a file by range without loading it whole ([Bytes](../../research/pdf-documents/bytes.md))                 |
-| `FILE_WHOLE_READ_MAX_BYTES`  | 8,388,608 (8 MiB)    | `(default)` Under it one request is the simplest path; above it page one must not wait for the file                                                          |
-| `PDF_RANGE_BLOCK_BYTES`      | 65,536               | `(default)` The block the engine's reader is fed; a paper's first page is 4 blocks of 16                                                                     |
-| `PDF_ENGINE_TIMEOUT_MS`      | 30,000               | `(default)` The engine answering nothing while a call waits: an open, a draw, a bake. Measured on a 93 MB file: 0.03 s, 0.7 s, 0.5 s; safe range 10 to 120 s |
-| `PDF_OPEN_NOTICE_MS`         | 800                  | `(default)` Past it a person wonders; before it a notice would flash                                                                                         |
-| `PDF_MAX_PAGE_PIXELS`        | 268,435,456          | `(default)` One draw of one page; a decompression bomb draws at most this                                                                                    |
-| `PDF_PAGE_TEXT_MAX_CHARS`    | 200,000              | `(default)` One page's text read at once, twenty times a dense page; a page past it reads its first part and says so                                         |
-| `PDF_WORKER_MAX_BYTES`       | 1,073,741,824        | `(default)` The reader's memory in a browser, said with every answer. Measured: 724 MiB at most                                                              |
-| `PDF_WORKER_PHONE_MAX_BYTES` | 268,435,456          | `(default)` The same on a phone: a device that says it has 4 GB of memory or less, or says nothing and is touched, not pointed at                            |
+| Constant                        | Value                | Why                                                                                                                                                          |
+| ------------------------------- | -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `FILE_TAB_MAX_BYTES`            | 100,000,000 (100 MB) | The file tab's cap (F6, ruled): a phone holds such a file by range without loading it whole ([Bytes](../../research/pdf-documents/bytes.md))                 |
+| `FILE_WHOLE_READ_MAX_BYTES`     | 8,388,608 (8 MiB)    | `(default)` Under it one request is the simplest path; above it page one must not wait for the file                                                          |
+| `PDF_RANGE_BLOCK_BYTES`         | 65,536               | `(default)` The block the engine's reader is fed; a paper's first page is 4 blocks of 16                                                                     |
+| `PDF_ENGINE_TIMEOUT_MS`         | 30,000               | `(default)` The engine answering nothing while a call waits: an open, a draw, a bake. Measured on a 93 MB file: 0.03 s, 0.7 s, 0.5 s; safe range 10 to 120 s |
+| `PDF_OPEN_NOTICE_MS`            | 800                  | `(default)` Past it a person wonders; before it a notice would flash                                                                                         |
+| `PDF_MAX_PAGE_PIXELS`           | 268,435,456          | `(default)` One draw of one page; a decompression bomb draws at most this                                                                                    |
+| `PDF_PAGE_PICTURES_MAX`         | 500                  | `(default)` One page's pictures handed over at once, a catalogue page's thumbnails many times over; past it the first ones and a cut                         |
+| `PDF_PICTURE_HANDED_MAX_PIXELS` | 33,554,432           | `(default)` One picture's pixels decoded (128 MiB as RGBA), an 8K photograph four times over; past it the picture is listed without bytes                    |
+| `PDF_PAGE_TEXT_MAX_CHARS`       | 200,000              | `(default)` One page's text read at once, twenty times a dense page; a page past it reads its first part and says so                                         |
+| `PDF_WORKER_MAX_BYTES`          | 1,073,741,824        | `(default)` The reader's memory in a browser, said with every answer. Measured: 724 MiB at most                                                              |
+| `PDF_WORKER_PHONE_MAX_BYTES`    | 268,435,456          | `(default)` The same on a phone: a device that says it has 4 GB of memory or less, or says nothing and is touched, not pointed at                            |
 
 ## Share roles
 

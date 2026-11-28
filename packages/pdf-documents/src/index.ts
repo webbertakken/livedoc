@@ -169,6 +169,7 @@ export {
   type TagsUnused,
 } from './page-tags';
 export { PageText, type TextBox } from './page-text';
+export type { PagePicture, PagePictureBytes, PagePictures } from './page-pictures';
 export { TextRange, type TextSpan } from './text-range';
 export { TextFind, type TextFindOptions } from './text-find';
 export { DARK_INK, DARK_PAPER, DarkPages, type PixelBox } from './dark-pages';
