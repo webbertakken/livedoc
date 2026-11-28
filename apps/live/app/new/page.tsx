@@ -34,7 +34,7 @@ import {
 import { isOfflineLocation } from '@/lib/save-locations';
 import { useNewDocumentLocation } from './useNewDocumentLocation';
 import { randomColor, randomName, type Participant } from '@/lib/identity';
-import { track } from '@/lib/telemetry';
+import { titleCaseType, track } from '@/lib/telemetry';
 import { trackDailyReturn } from '@/lib/daily-return';
 import { markNameConfirmed } from '@/lib/local-identity';
 import { ensureSignedGuestIdentity } from '@/lib/guest-identity';
@@ -46,6 +46,7 @@ import {
   placementParamsFromSearch,
   wizardBypassKind,
   wizardBypassTabKind,
+  wizardTextTemplate,
   wizardPresetMode,
   wizardPresetQuery,
   wizardStartsBlank,
@@ -61,7 +62,10 @@ import { loadNewDocumentContent } from '@/lib/new-document/new-document-content-
 import { fetchAheadForNamedDocument } from './named-document-ahead';
 import { prefetchWhenIdle } from '@/lib/idle-prefetch';
 import { NEW_DOCUMENT_THEME_ID } from '@/lib/new-document/new-document-theme';
-import { textDocumentContent } from '@/lib/text-document/text-document-content';
+import {
+  textDocumentContent,
+  textDocumentTemplateContent,
+} from '@/lib/text-document/text-document-content';
 import { noteTextDocumentMade } from '@/lib/text-document/text-document-made';
 import { UNTITLED_TEXT_DOCUMENT } from '@/lib/text-document/text-document-tab';
 import { loadEditorPage } from '@/lib/editor-page-loader';
@@ -307,6 +311,8 @@ export default function NewDocumentPage() {
     // The kind the wizard's card chose, else the address's.
     const tabKind = chosenKind.current ?? wizardBypassTabKind(window.location.search);
     const textDocument = tabKind === 'text-document';
+    // A text document template (`?template=text-letter`): its writing and its name (starting-and-finding.md).
+    const textTemplate = wizardTextTemplate(window.location.search);
     const spreadsheet = tabKind === 'spreadsheet';
     const settings: NewDocumentSettings = asked;
     // Save location (docs/specs/006-document/save-locations.md): only This Browser takes the offline branch.
@@ -325,7 +331,7 @@ export default function NewDocumentPage() {
     // A Retry re-runs the create, not the preference write below.
     lastCreateArgs.current = { kind: templateKind, settings, ids: { documentId, tabId } };
     // Named after its template ("Untitled Diagram"); renamed in the editor.
-    const documentName = textDocument
+    let documentName = textDocument
       ? UNTITLED_TEXT_DOCUMENT
       : spreadsheet
         ? UNTITLED_SPREADSHEET
@@ -345,16 +351,25 @@ export default function NewDocumentPage() {
       }
       // The template's tabs, card types and example cards, or one blank tab (lib/new-document-content.ts).
       const { newDocumentContent } = await loadNewDocumentContent();
-      // A text document made here starts in its maker's default styles when it first opens (text-and-paragraphs.md).
-      if (textDocument) noteTextDocumentMade(tabId);
-      const content = textDocument
-        ? textDocumentContent(tabId, documentName)
-        : spreadsheet
-          ? // The engine's id and layout helpers load only for a spreadsheet.
-            (await import('@/lib/spreadsheet/spreadsheet-document')).spreadsheetDocumentContent(
-              tabId,
-            )
-          : await newDocumentContent({ templateKind, themeId, tabId, via: 'new' });
+      // A template's document is named after it and holds its writing, in its own styles; a blank starts in its
+      // maker's default styles when it first opens (text-and-paragraphs.md).
+      const fromTemplate = textTemplate
+        ? await textDocumentTemplateContent(tabId, textTemplate)
+        : null;
+      if (textTemplate && !fromTemplate)
+        throw new Error(`no text document template ${textTemplate}`);
+      if (fromTemplate) documentName = fromTemplate.name;
+      else if (textDocument) noteTextDocumentMade(tabId);
+      const content = fromTemplate
+        ? fromTemplate.content
+        : textDocument
+          ? textDocumentContent(tabId, documentName)
+          : spreadsheet
+            ? // The engine's id and layout helpers load only for a spreadsheet.
+              (await import('@/lib/spreadsheet/spreadsheet-document')).spreadsheetDocumentContent(
+                tabId,
+              )
+            : await newDocumentContent({ templateKind, themeId, tabId, via: 'new' });
       // One create for both stores (lib/new-document/write-new-document.ts). Placement is passed through as given:
       // absent is no choice (a default folder may answer), a null folder the root chosen on purpose.
       await writeNewDocument({
@@ -381,10 +396,15 @@ export default function NewDocumentPage() {
     // Anonymous telemetry (docs/specs/017-telemetry/telemetry.md): a document was created (write-new-document.ts).
     trackNewDocumentCreated({
       location: settings.saveLocation,
-      templateKind,
+      // A text document template is counted by its own id below, not as the blank it bypasses as.
+      templateKind: textTemplate ? null : templateKind,
       teamId: settings.teamId,
     });
-    if (textDocument) track('Document', 'Created', 'TextDocument');
+    if (textTemplate) {
+      track('Document', 'Created', 'TextDocumentTemplate');
+      track('Template', 'Used', titleCaseType(textTemplate));
+      debugLog(`[text-template] made id=${textTemplate} location=${offline ? 'browser' : 'cloud'}`);
+    } else if (textDocument) track('Document', 'Created', 'TextDocument');
     if (spreadsheet) track('Spreadsheet', 'Created', 'Blank');
     cta.trackCreated();
     // Hand off in place: the editor URL takes /new's history entry, and the editor mounts here,

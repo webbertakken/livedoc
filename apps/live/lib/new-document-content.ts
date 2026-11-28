@@ -29,6 +29,9 @@ export type NewDocumentContent = {
   // A spreadsheet's sheets and workbook record (docs/specs/029-sheets/spreadsheet.md "Making a spreadsheet").
   sheets?: SheetCreateRequest[];
   workbook?: WorkbookRecord;
+  // A text document template's writing, as its tab's whole state (docs/specs/034-text-documents/starting-and-finding.md
+  // "The template gallery's text documents").
+  textDocuments?: { tabId: string; state: Uint8Array }[];
 };
 
 // `templateChosen` marks the blank tab as decided (Skip, Start Blank): its start stays closed. A blank the editor

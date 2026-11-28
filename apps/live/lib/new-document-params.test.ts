@@ -4,6 +4,8 @@ import {
   choosePlacementAgainUrl,
   placementParamsFromSearch,
   wizardBypassKind,
+  wizardBypassTabKind,
+  wizardTextTemplate,
   SEARCH_PRESET_MAX,
   wizardPresetMode,
   wizardPresetQuery,
@@ -108,5 +110,23 @@ describe('wizardStartsBlank (docs/specs/007-editor/new-document-route.md "Start 
 
   it('is not a bypass: the wizard still asks for a mode', () => {
     expect(wizardBypassKind('?start=blank')).toBeNull();
+  });
+});
+
+describe('wizardTextTemplate (docs/specs/034-text-documents/starting-and-finding.md "Where the gallery shows")', () => {
+  it('reads ?template=<id> naming a text document template', () => {
+    expect(wizardTextTemplate('?template=text-letter')).toBe('text-letter');
+    expect(wizardTextTemplate('?template=text-project-brief&folder=f1')).toBe('text-project-brief');
+  });
+
+  it('is nothing for a canvas template, an unknown text id or none', () => {
+    expect(wizardTextTemplate('?template=kanban')).toBeNull();
+    expect(wizardTextTemplate('?template=text-nothing')).toBeNull();
+    expect(wizardTextTemplate('')).toBeNull();
+  });
+
+  it('skips the wizard as a text document blank does', () => {
+    expect(wizardBypassKind('?template=text-essay')).toBe('blank');
+    expect(wizardBypassTabKind('?template=text-essay')).toBe('text-document');
   });
 });

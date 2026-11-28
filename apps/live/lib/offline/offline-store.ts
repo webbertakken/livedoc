@@ -393,6 +393,8 @@ export async function offlineCreateDocument(
     sheets?: SheetJson[];
     // A spreadsheet's workbook row (docs/specs/029-sheets/spreadsheet.md "Making a spreadsheet").
     workbook?: WorkbookRecord;
+    // Its text document tabs' states (a template's writing, docs/specs/034-text-documents/starting-and-finding.md).
+    textDocuments?: OfflineTextDocumentState[];
   },
   now: number,
   extra: {
@@ -412,6 +414,7 @@ export async function offlineCreateDocument(
     ...(d.itemTypes ? { itemTypes: d.itemTypes } : {}),
     ...(d.sheets?.length ? { sheets: d.sheets } : {}),
     ...(d.workbook ? { workbook: d.workbook } : {}),
+    ...(d.textDocuments?.length ? { textDocuments: d.textDocuments } : {}),
     ...(extra.markUsed === false ? {} : { opens: { days: [utcDay(now)], lastOpenedAt: now } }),
   };
   await offlineBackend().put(rec);

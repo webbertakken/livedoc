@@ -246,6 +246,16 @@ export const TEXT_DOCUMENT_COMPARED = chart(
   { types: ['TextDocumentCompare'], rising: 'good' },
 );
 
+// A text document made from the template gallery (docs/specs/034-text-documents/starting-and-finding.md "The
+// template gallery's text documents"). Part of Documents Created; the template itself is a Template Used.
+export const TEXT_DOCUMENT_FROM_TEMPLATE = chart(
+  'Document',
+  'Created',
+  'Text Documents From Templates',
+  'Someone made a text document from the template gallery: a letter, a resume, a report or another of its templates. Part of Documents Created.',
+  { types: ['TextDocumentTemplate'], rising: 'good' },
+);
+
 // A text document's version history (docs/specs/034-text-documents/review.md "Version history"): opened, a version
 // named, a version restored. Editors only.
 export const TEXT_DOCUMENT_VERSION_HISTORY_OPENED = chart(
@@ -450,6 +460,7 @@ export const DOCUMENT_ACTIONS: MetricStack = {
     NEW_DOCUMENT_MENU,
     CREATED_OFFLINE,
     TEXT_DOCUMENT_COMPARED,
+    TEXT_DOCUMENT_FROM_TEMPLATE,
     TEXT_DOCUMENT_VERSION_HISTORY_OPENED,
     TEXT_DOCUMENT_VERSION_NAMED,
     TEXT_DOCUMENT_VERSION_RESTORED,
