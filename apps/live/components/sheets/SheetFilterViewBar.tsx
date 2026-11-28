@@ -83,12 +83,15 @@ export function SheetFilterViewBar({ actions }: { actions: FilterViewActions }) 
   const { open, temporary } = c.filterViews;
   if (!open) return null;
   const mayChange = temporary || c.canShape;
-  const groups = open.group ? (c.geometry.order?.groups ?? []) : [];
+  const group = open.group;
+  const groups = group ? (c.geometry.order?.groups ?? []) : [];
   const { collapsed, setCollapsed, change } = c.filterViews;
+  // Hide Aggregations flips the group by view's `hide`, kept with the view (D502).
   const hideAggs = () => {
-    const { hide: _hide, ...shown } = open.group!;
+    if (!group) return;
+    const shown = { t: group.t, c: group.c, ...(group.aggs ? { aggs: group.aggs } : {}) };
     track('Spreadsheet', 'Changed', 'GroupAggregationsHidden');
-    change({ ...open, group: open.group!.hide ? shown : { ...shown, hide: true } });
+    change({ ...open, group: group.hide ? shown : { ...shown, hide: true as const } });
   };
   const onKeyDown = (e: KeyboardEvent) => {
     e.stopPropagation();
@@ -114,7 +117,7 @@ export function SheetFilterViewBar({ actions }: { actions: FilterViewActions }) 
         key={`range-${open.id}`}
         label="Range"
         value={actions.rangeText}
-        readOnly={!mayChange || !!open.group}
+        readOnly={!mayChange || !!group}
         commit={actions.setRange}
         width="w-28"
       />
@@ -140,12 +143,7 @@ export function SheetFilterViewBar({ actions }: { actions: FilterViewActions }) 
           >
             Expand All
           </button>
-          <button
-            type="button"
-            className={BUTTON}
-            aria-pressed={!!open.group?.hide}
-            onClick={hideAggs}
-          >
+          <button type="button" className={BUTTON} aria-pressed={!!group?.hide} onClick={hideAggs}>
             Hide Aggregations
           </button>
         </>
