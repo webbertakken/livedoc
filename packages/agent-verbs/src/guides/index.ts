@@ -347,15 +347,14 @@ type: "stepped-area": a flat step per category; "radar": a closed line round a s
 "candlestick" or "ohlc": labels, then open, high, low, close (or no open);
 "histogram": the values counted into equal buckets; "waterfall": the first column as changes, a Subtotal last;
 "treemap": a tile per label sized by its value; "gauge": a dial per label;
-"scorecard": the first column’s sum, its change from the second’s;
+"scorecard": the first column’s sum, its change from the second;
 "timeline": each point by its date (a date label column, or ISO dates); "table": the data as a table.
 Files hold a type they lack as its nearest; LiveDoc reads it back.
-stack: "stacked" or "percent" stacks a column, bar, area or stepped-area chart's series (100% as shares);
+stack: "stacked" or "percent" (100% shares) stacks column, bar and area series;
 smooth: true curves a line chart's lines.
 type: "combo" draws each series as columns, a line, an area or a stepped area: seriesTypes {"Margin": "line"}
-(default: first half columns, rest lines); rightAxis: ["Margin"] puts series on a
-second scale (line, area, stepped-area and combo charts).
-read_sheet lists the charts with their ids; chart {..., replace: "<id>"} rewrites one in place,
+(default: first half columns, rest lines); rightAxis: ["Margin"] puts series on a second scale.
+read_sheet lists the charts with their ids; chart {..., replace: "<id>"} rewrites one,
 clear_charts {id: "<id>"} takes one off, clear_charts {} all. add_sheet {title, after} adds a sheet after another.
 
 A pivot table summarises a range live; its output cells are not typed over:
@@ -366,6 +365,7 @@ rule ("month", "yearMonth"), {size: 10} intervals, or {groups: [{name, items}]}.
 read_sheet lists them; replace: "<id>" rewrites one, clear_pivots {id} drops it.
 
 A list_images picture over cells: image {imageId, at: "B2", width, alt}, inCell: true in it; clear_images {id}.
+format {range, format: {link: "https://…" or "Sheet2!A1:B4"}} links; null unlinks.
 
 read_sheet reads back each cell's input, value and what it shows. Cheaper:
 read_document on any tab outlines the workbook (sheets, used ranges, rules, charts, pivots);

@@ -14,6 +14,7 @@ import {
   valueInvalid,
   workbookRuleChecks,
   type SheetLayout,
+  cellLinkText,
 } from '@livedoc/sheets';
 import { readSheetsState, resolveSheet, workbookFor, type SheetRefusal } from './sheet-state';
 import { rulesRead } from './sheet-rule-change';
@@ -37,6 +38,8 @@ export interface ReadCell {
   display: string;
   // A value its validation rule does not allow (a Warn rule, a formula, a value from before the rule): why.
   invalid?: string;
+  // Its own link (inserted-objects.md "Links, agents"): an address, or a range or sheet of this spreadsheet by name.
+  link?: string;
 }
 
 export interface SheetRead {
@@ -119,6 +122,8 @@ export async function readSheet(
         value: cell.value as ReadCell['value'],
         display: cell.display,
       };
+      const ln = wb.cellLinkOf(id, start.r1 + i, start.c1 + j);
+      if (ln !== null) out.link = cellLinkText(ln, (sheetId) => wb.sheet(sheetId)?.title);
       const rule = layout.rules?.length
         ? validationRuleAt(layout, start.r1 + i, start.c1 + j)
         : null;

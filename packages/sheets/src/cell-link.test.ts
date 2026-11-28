@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { CELL_LINK_MAX, cellLinkTarget, isCellLink, sheetLink, sheetLinkOf } from './cell-link';
+import {
+  CELL_LINK_MAX,
+  cellLinkTarget,
+  isCellLink,
+  cellLinkText,
+  sheetLink,
+  sheetLinkOf,
+  typedCellLink,
+} from './cell-link';
 
 // docs/specs/029-sheets/inserted-objects.md "A cell's link" (D637): a web or email address, a LiveDoc document's, or a
 // sheet or range of this workbook as Google writes one (`#gid=<sheet id>&range=<A1>`).
@@ -65,5 +73,49 @@ describe('cellLinkTarget', () => {
   it('opens nothing else: a file’s link of another scheme is kept, never opened', () => {
     for (const kept of ['file:///etc/passwd', 'javascript:alert(1)', '#Sheet1.A1', 'docs.nu'])
       expect(cellLinkTarget(kept), kept).toBeNull();
+  });
+});
+
+describe('typedCellLink', () => {
+  const sheets = [
+    { id: 's1', title: 'Sheet1' },
+    { id: 's2', title: "Ada's sheet" },
+  ];
+  it('reads a range of a sheet, of this sheet, and a sheet by its title', () => {
+    expect(typedCellLink("'Ada''s sheet'!$B$2:C4", sheets, 's1')).toBe('#gid=s2&range=B2:C4');
+    expect(typedCellLink("ada's sheet!A1", sheets, 's1')).toBe('#gid=s2&range=A1');
+    expect(typedCellLink(' b2:c4 ', sheets, 's1')).toBe('#gid=s1&range=B2:C4');
+    expect(typedCellLink('SHEET1', sheets, 's2')).toBe('#gid=s1');
+  });
+
+  it('reads an email and a web address', () => {
+    expect(typedCellLink('ada@example.com', sheets, 's1')).toBe('mailto:ada@example.com');
+    expect(typedCellLink('https://docs.nu', sheets, 's1')).toBe('https://docs.nu/');
+    expect(typedCellLink('https://x.example/#!/a', sheets, 's1')).toBe('https://x.example/#!/a');
+  });
+
+  it('reads nothing else', () => {
+    for (const not of [
+      '',
+      'docs.nu',
+      'javascript:alert(1)',
+      'Gone!A1',
+      'Sheet1!nope',
+      `https://docs.nu/${'a'.repeat(CELL_LINK_MAX)}`,
+    ])
+      expect(typedCellLink(not, sheets, 's1'), not).toBeNull();
+  });
+});
+
+describe('cellLinkText', () => {
+  const titleOf = (id: string) => (id === 's2' ? "Ada's sheet" : undefined);
+  it('names a sheet of the workbook by its title, a range as a formula names one', () => {
+    expect(cellLinkText('#gid=s2&range=B2:C4', titleOf)).toBe("'Ada''s sheet'!B2:C4");
+    expect(cellLinkText('#gid=s2', titleOf)).toBe("Ada's sheet");
+  });
+
+  it('reads any other link as held', () => {
+    expect(cellLinkText('#gid=gone', titleOf)).toBe('#gid=gone');
+    expect(cellLinkText('https://docs.nu/', titleOf)).toBe('https://docs.nu/');
   });
 });
