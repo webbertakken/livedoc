@@ -23,12 +23,13 @@ The kit lives in `apps/mcp/eval/`:
 
 1. Work in a worktree on a branch cut from a fresh `origin/main`, never in the main checkout.
 2. Give the worktree's api its local state: copy main's `apps/api/.wrangler/state` and `apps/api/.dev.vars`, then
-   `corepack pnpm exec wrangler d1 migrations apply DB --local --persist-to .wrangler/state` from `apps/api`.
+   `pnpm exec wrangler d1 migrations apply DB --local --persist-to .wrangler/state` from `apps/api`.
 3. Start the MCP and the api in ONE wrangler session, so the MCP's service binding reaches this branch's api, from
    `apps/mcp`:
-   `nohup corepack pnpm exec wrangler dev -c wrangler.toml -c ../api/wrangler.toml --port 8798 --inspector-port 9398 --persist-to ../api/.wrangler/state > <scratchpad>/mcp.log 2>&1 &`
+   `nohup pnpm exec wrangler dev -c wrangler.toml -c ../api/wrangler.toml --port 8798 --inspector-port 9398 --persist-to ../api/.wrangler/state > <scratchpad>/mcp.log 2>&1 &`
 4. Wait for `Ready on http://localhost:8798` in the log before any run.
-5. Check `claude --version` answers and the CLI is signed in: the benchmark runs on the signed-in account's usage.
+5. Check `claude --version` answers and `claude auth status` says `"loggedIn": true`: the benchmark runs on the
+   signed-in account's usage, and a signed-out CLI fails every run within a second (`authentication_failed`).
 
 ## Run a round
 

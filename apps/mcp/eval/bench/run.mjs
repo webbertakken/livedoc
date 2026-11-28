@@ -63,9 +63,8 @@ function mintTokens(count) {
   const file = join(mkdtempSync(join(tmpdir(), 'ldbench-sql-')), 'mint.sql');
   writeFileSync(file, rows.join('\n'));
   const res = spawnSync(
-    'corepack',
+    'pnpm',
     [
-      'pnpm',
       'exec',
       'wrangler',
       'd1',
