@@ -56,6 +56,18 @@ export const CLI_COMMANDS: readonly { type: string; command: string; what: strin
     command: 'spreadsheet download',
     what: 'downloading a spreadsheet as a file',
   },
+  { type: 'TextDocumentView', command: 'text view', what: 'reading a text document' },
+  { type: 'TextDocumentEdit', command: 'text edit', what: 'changing a text document' },
+  {
+    type: 'TextDocumentDownload',
+    command: 'text download',
+    what: 'downloading a text document as a file',
+  },
+  {
+    type: 'TextDocumentImport',
+    command: 'text import',
+    what: 'opening a file as a new text document',
+  },
   {
     type: 'SheetInsertRows',
     command: 'sheet insert-rows',
