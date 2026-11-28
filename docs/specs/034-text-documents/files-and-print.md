@@ -46,7 +46,7 @@ Each download is named after the document. A Viewer may download unless the owne
 Download as PDF offers "Keep in LiveDoc as a PDF document", which stores the written PDF beside its source as a
 [PDF document](../035-pdf-documents/files-print-and-sync.md#other-kinds-meeting-a-pdf); every kind's PDF is written by
 the repository's one PDF writer.
-A download is `GET /api/documents/:id/text-documents/:tabId/file?type=odt|fodt|docx|txt|md|html|epub`, written from the live state
+A download is `GET /api/documents/:id/text-documents/:tabId/file?type=odt|fodt|docx|txt|md|html|epub|rtf`, written from the live state
 (`400 file_type_unknown` for any other type); the other format is a converted copy, its losses counted in the
 `X-Conversion-Losses` header.
 
@@ -79,6 +79,14 @@ with nothing lost it says so and still asks (director, 2026-11-27). The text doc
   crop, turn and colours; equations are MathML; footnotes are numbered links to a list after the writing. A
   picture whose bytes LiveDoc could not read is its alt text in brackets, and the download says so, as the other
   files do.
+- **Rich Text**: RTF 1.9 that Word and LibreOffice open as drawn: a font and colour table from what the writing
+  uses, a paragraph's formatting written whole (its style's and its own, so a reader without styles shows the same),
+  headings keeping their outline level, runs with bold, italic, underline, strikethrough, raised and lowered,
+  colour, highlight, font, size and small capitals; web links and links to a bookmark as hyperlinks; list items as
+  their marker as drawn and a tab under a hanging indent (default); tables with their widths, header rows, merged
+  cells and backgrounds (a table inside a cell as its paragraphs, default); PNG and JPEG pictures at their size and
+  crop (another kind as its alt text); footnotes as the format's own; an equation in its linear form; the first
+  section's paper and margins. Characters beyond ASCII as Unicode escapes.
 - **EPUB**: EPUB 3, one chapter a Heading 1 (the writing before the first Heading 1 is a chapter of its own, and
   with more than one document tab each tab's name opens a chapter), the contents listing the chapters, the Web
   Page's markup, stylesheet and pictures, and the footnotes in a last chapter of their own (default). Its title is

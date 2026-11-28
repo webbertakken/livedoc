@@ -9,7 +9,7 @@ export function isTextDocumentFileType(value: unknown): value is TextDocumentFil
 }
 
 /** The files written from the model that no LiveDoc file type reads back as itself. */
-export const TEXT_DOCUMENT_EXPORT_TYPES = ['txt', 'md', 'html', 'epub'] as const;
+export const TEXT_DOCUMENT_EXPORT_TYPES = ['txt', 'md', 'html', 'epub', 'rtf'] as const;
 export type TextDocumentExportType = (typeof TEXT_DOCUMENT_EXPORT_TYPES)[number];
 
 export function isTextDocumentExportType(value: unknown): value is TextDocumentExportType {
@@ -20,6 +20,7 @@ export function isTextDocumentExportType(value: unknown): value is TextDocumentE
 export const PICTURED_EXPORT_TYPES = [
   'html',
   'epub',
+  'rtf',
 ] as const satisfies readonly TextDocumentExportType[];
 export type PicturedExportType = (typeof PICTURED_EXPORT_TYPES)[number];
 
@@ -33,6 +34,7 @@ export const EXPORT_EXTENSIONS: Readonly<Record<TextDocumentExportType, string>>
   md: 'md',
   html: 'zip',
   epub: 'epub',
+  rtf: 'rtf',
 };
 
 /** Every file a text document downloads as: its own formats', and the exports. */

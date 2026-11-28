@@ -1,6 +1,6 @@
 // A text document's doors (docs/specs/034-text-documents/live-editing-and-storage.md, files-and-print.md):
 //   GET /api/documents/<id>/text-documents/<tabId>/state  the live state as one Yjs update, for a surface to load
-//   GET /api/documents/<id>/text-documents/<tabId>/file?type=odt|fodt|docx|txt|md|html|epub  the file, written from the live state
+//   GET /api/documents/<id>/text-documents/<tabId>/file?type=odt|fodt|docx|txt|md|html|epub|rtf  the file, written from the live state
 //   POST /api/documents/<id>/text-documents/<tabId>/updates  one Yjs update too large for a frame ("Sending")
 // The reads are gated as the tab is (a tab-scoped link on its own tab only), the update as an edit of the tab.
 // Answered inside the document's room.

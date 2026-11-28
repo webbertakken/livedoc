@@ -10,6 +10,7 @@ import type { TextDocument, TextDocumentFormat } from '../model/text-document';
 import { EPUB_MEDIA_TYPE, writeEpub } from './epub';
 import { writeMarkdown } from './markdown';
 import { writePlainText } from './plain-text';
+import { writeRtf } from './rtf';
 import { writeWebPage } from './web-page';
 
 export const EXPORT_MEDIA_TYPES: Record<TextDocumentExportType, string> = {
@@ -17,6 +18,7 @@ export const EXPORT_MEDIA_TYPES: Record<TextDocumentExportType, string> = {
   md: 'text/markdown; charset=utf-8',
   html: 'application/zip',
   epub: EPUB_MEDIA_TYPE,
+  rtf: 'application/rtf',
 };
 
 /** When a zipped export is dated, and the identifier an EPUB names itself by; each defaults to a fresh one. */
@@ -51,5 +53,7 @@ export function writeTextDocumentExport(
         when,
         identifier: options.identifier ?? `urn:uuid:${crypto.randomUUID()}`,
       });
+    case 'rtf':
+      return new TextEncoder().encode(writeRtf(document));
   }
 }
