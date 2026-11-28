@@ -1174,6 +1174,7 @@ export function TextDocumentSurface({
     printing,
     setPrinting,
     onDone: focusBody,
+    place: { ownerId, documentId, local },
   });
   // File > Print, ⌘P and the toolbar's printer, and File > Print preview (files-and-print.md "Printing").
   const print = useTextDocumentPrint({

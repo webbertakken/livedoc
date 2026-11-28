@@ -20,8 +20,9 @@ A PDF also arrives, or is made from another document:
 - **A Blank PDF** is a real PDF file of one empty page, written by the repository's one PDF writer
   ([Files, print and sync](files-print-and-sync.md), "One writer") and stored as any PDF is; everything a PDF document does,
   it does from there (adding text, pages, fields).
-- **Another document kept as a PDF**: a text document's, a spreadsheet's or a canvas tab's Download as PDF offers
-  "Keep in LiveDoc as a PDF document", which stores the written PDF beside its source
+- **Another document kept as a PDF**: a text document's, a spreadsheet's or a canvas tab's File > **Keep a PDF copy
+  in LiveDoc**, an item beside Download (director, 2026-11-28), stores the PDF its Download as PDF writes beside its
+  source
   ([Files, print and sync](files-print-and-sync.md#other-kinds-meeting-a-pdf)).
 - **Adding a tab** to a document offers **PDF from a file** ([PDF document](pdf-document.md#a-pdf-tab-from-a-file)).
 - There is no template gallery for PDF documents.

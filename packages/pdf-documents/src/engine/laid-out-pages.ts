@@ -115,6 +115,8 @@ export type LaidOutDocument = {
   readonly title: string;
   /** Its language, BCP 47; `en` where none is said. */
   readonly language?: string;
+  /** What the file says it is about: a kept copy names its source here (files-print-and-sync.md). */
+  readonly subject?: string;
   readonly created: Date;
   readonly faces: readonly LaidOutFace[];
   readonly pages: readonly LaidOutPage[];
@@ -301,6 +303,7 @@ export async function writeLaidOutPages(
   pdf.setCreationDate(at);
   pdf.setModificationDate(at);
   pdf.setLanguage(document.language ?? 'en');
+  if (document.subject) pdf.setSubject(document.subject.slice(0, PDF_PROPERTY_MAX_CHARS));
 
   const fonts = embeddedFaces(pdf, typesetter);
   const isLink = (page: number, index: number) =>

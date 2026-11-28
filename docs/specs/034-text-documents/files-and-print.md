@@ -1,8 +1,9 @@
 # Files and print
 
 **Status: partly built.** Built: Open (a `.odt`, `.fodt`, `.ott`, `.docx`, `.dotx` or `.docm` from the computer, and
-`.txt`, `.md`, `.html`, `.rtf` and `.pdf` imported), Download in the OpenDocument and Word formats, Rich Text, Plain Text, Web Page, EPUB and
-Markdown, conversion, the import report and Security limitations. The rest is specified.
+`.txt`, `.md`, `.html`, `.rtf` and `.pdf` imported), Download in the OpenDocument and Word formats, Rich Text, Plain Text, Web Page, EPUB,
+Markdown and PDF, Keep a PDF copy in LiveDoc, Print and Print preview, conversion, the import report and Security
+limitations. The rest is specified.
 
 Opening, importing, downloading, printing, copying, sharing, emailing and trashing a [text document](text-document.md).
 Both ODF and OOXML are native (fork C1, ruled): a file keeps the format it arrived in.
@@ -69,9 +70,13 @@ File > Download, in Google's order:
 | Markdown (.md)            | CommonMark with GitHub's extensions                                                                    |
 
 Each download is named after the document. A Viewer may download unless the owner turned it off for Viewers.
-Download as PDF offers "Keep in LiveDoc as a PDF document", which stores the written PDF beside its source as a
-[PDF document](../035-pdf-documents/files-print-and-sync.md#other-kinds-meeting-a-pdf); every kind's PDF is written by
-the repository's one PDF writer.
+File > **Keep a PDF copy in LiveDoc**, an item beside Download, so a download gains no step (director, 2026-11-28),
+writes the PDF as Download as PDF does and stores it as a
+[PDF document](../035-pdf-documents/files-print-and-sync.md#other-kinds-meeting-a-pdf) named as its source, kept where
+the source is (LiveDoc, or This Browser for a document there), in the folder the person's new documents go to
+(default). Its dialog, **Keeping a PDF copy**, says each step as the PDF's does, then "Kept a PDF copy of “<name>”."
+with **Open** (the copy in a new tab) and Close; a failure says "The PDF copy couldn’t be kept. Try again.".
+Telemetry `Document · Exported · TextDocumentPdfCopy`. Every kind's PDF is written by the repository's one PDF writer.
 The PDF is written in the browser from the pages as drawn in the [printing look](#printing): each word where it
 stands, in the served document font it was drawn in (fonts.md "Served from LiveDoc"), its structure from the writing.
 While it is made, a dialog, **Making the PDF**, says each step (laying out the pages, reading them, drawing the

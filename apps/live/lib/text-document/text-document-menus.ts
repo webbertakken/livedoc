@@ -141,6 +141,11 @@ export function textDocumentMenus(
       SEPARATOR,
       submenu('share', 'Share', [item('share-with-others', 'Share with others', 'edit', BUILT)]),
       submenu('download', 'Download', downloads()),
+      // The PDF kept as a PDF document beside its source (files-and-print.md "Downloading"; director, 2026-11-28).
+      item('keep-pdf-copy', 'Keep a PDF copy in LiveDoc', 'view', {
+        keywords: ['pdf', 'save'],
+        status: 'built',
+      }),
       format === 'odf'
         ? item('convert-to-word', 'Convert to Word format', 'edit', {
             keywords: ['docx', 'ooxml'],

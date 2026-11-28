@@ -399,14 +399,22 @@ describe('writeLaidOutPages', () => {
     await engine.close();
   });
 
-  it('says its title, language and maker, and no author', async () => {
-    const { bytes } = await written(documentOf([{ ...A4, items: [] }], { language: 'nl' }));
+  it('says its title, language, subject and maker, and no author', async () => {
+    const { bytes } = await written(
+      documentOf([{ ...A4, items: [] }], {
+        language: 'nl',
+        subject: 'Made from Plan (https://docs.nu/document/1)',
+      }),
+    );
     const pdf = await PDF.load(bytes);
     expect(pdf.getTitle()).toBe('Quarterly notes');
     expect(pdf.getProducer()).toBe('LiveDoc');
     expect(pdf.getCreator()).toBe('LiveDoc');
     expect(pdf.getAuthor() ?? '').toBe('');
     expect(pdf.getLanguage()).toBe('nl');
+    expect(pdf.getSubject()).toBe('Made from Plan (https://docs.nu/document/1)');
+    const plain = await PDF.load((await written(documentOf([{ ...A4, items: [] }]))).bytes);
+    expect(plain.getSubject() ?? '').toBe('');
   });
 
   it('draws dotted and solid lines, a see-through fill and a JPEG as it came', async () => {

@@ -34,7 +34,10 @@ import { COLUMN_ITEMS, COLUMNS_MORE_ITEM } from '@/components/text-document/useT
 import { FOOTER_ITEM, HEADER_ITEM } from '@/components/text-document/useTextDocumentHeaderEditing';
 import { HEADER_OPTIONS_ITEM } from '@/components/text-document/useTextDocumentHeaderOptions';
 import { SECURITY_LIMITATIONS_ITEM } from '@/components/text-document/useTextDocumentReport';
-import { DOWNLOAD_PDF_ITEM } from '@/components/text-document/useTextDocumentPdf';
+import {
+  DOWNLOAD_PDF_ITEM,
+  KEEP_PDF_COPY_ITEM,
+} from '@/components/text-document/useTextDocumentPdf';
 import { PRINT_ITEM, PRINT_PREVIEW_ITEM } from '@/components/text-document/useTextDocumentPrint';
 import {
   PAGE_COUNT_ITEM,
@@ -265,6 +268,7 @@ describe('the text document menus', () => {
         SECURITY_LIMITATIONS_ITEM,
         // File > Download > PDF document (useTextDocumentPdf), bound by the surface.
         DOWNLOAD_PDF_ITEM,
+        KEEP_PDF_COPY_ITEM,
         // File > Print and Print preview (useTextDocumentPrint), bound by the surface.
         PRINT_ITEM,
         PRINT_PREVIEW_ITEM,

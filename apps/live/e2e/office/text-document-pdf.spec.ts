@@ -74,3 +74,31 @@ test('a text document downloads as a tagged PDF of its pages', async ({ page, pa
   await engine.close();
   expectNoPageErrors(pageErrors);
 });
+
+test('a text document’s PDF copy is kept in LiveDoc as a PDF document naming its source', async ({
+  page,
+  context,
+  pageErrors,
+}) => {
+  test.setTimeout(120_000);
+  await page.goto('/new?kind=text-document');
+  await expect(page.locator('[data-text-document-surface="ready"]')).toBeVisible();
+  await page.locator(BODY).click();
+  await page.keyboard.type('Kept words');
+
+  await (await officeMenuItem(page, ['File', 'Keep a PDF copy in LiveDoc'])).click();
+  const dialog = page.getByRole('dialog', { name: 'Keeping a PDF copy' });
+  await expect(dialog.getByRole('status')).toHaveText(/^Kept a PDF copy of “.+”\.$/, {
+    timeout: 30_000,
+  });
+  await page.waitForTimeout(300);
+  await page.screenshot({ path: test.info().outputPath('kept-copy.png') });
+  const [opened] = await Promise.all([
+    context.waitForEvent('page'),
+    dialog.getByRole('button', { name: 'Open' }).click(),
+  ]);
+  await expect(dialog).toHaveCount(0);
+  await expect(opened.locator('[data-pdf-surface="ready"]')).toBeVisible({ timeout: 30_000 });
+  await expect(opened.getByText('Kept words')).toBeVisible({ timeout: 30_000 });
+  expectNoPageErrors(pageErrors);
+});
