@@ -109,6 +109,8 @@ export type MountOptions = {
   layout?: Partial<SheetLayout>;
   cells?: Record<string, string>;
   formats?: Record<string, CellFormat>;
+  // Cells' notes by A1 (review.md "Notes").
+  notes?: Record<string, string>;
   canEdit?: boolean;
   // A Participant: writes cells, never the shape.
   canShape?: boolean;
@@ -154,6 +156,8 @@ function initialSheet(id: string, o: MountOptions): Sheet {
     const before = sheet.cells.get(key(a1));
     sheet.cells.set(key(a1), { ...before, format: { ...before?.format, ...f } });
   }
+  for (const [a1, note] of Object.entries(o.notes ?? {}))
+    sheet.cells.set(key(a1), { ...sheet.cells.get(key(a1)), note });
   return sheet;
 }
 

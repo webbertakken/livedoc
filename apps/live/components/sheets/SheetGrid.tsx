@@ -17,6 +17,7 @@ import { previewFormatRules } from './rules/useSheetRulesState';
 import { SheetSmartFillLayer } from './SheetSmartFillLayer';
 import { SheetSplitChip } from './SheetSplitChip';
 import { SheetCellComments } from './SheetCellComments';
+import { SheetCellNotes } from './SheetCellNotes';
 import {
   useContext,
   useEffect,
@@ -453,6 +454,8 @@ export function SheetGrid({
               {/* Dropdowns, checkboxes and the rule panels (data-validation.md, conditional-formatting.md). */}
               <SheetRuleLayer actions={actions} />
               <SheetCellComments hover={pointer.hover} />
+              {/* A noted cell's note on hover (review.md "Notes"). */}
+              <SheetCellNotes hover={pointer.hover} />
               <SheetSmartFillLayer window={window} actions={actions} />
               {/* A split's Separator chip (data-tools.md "Split Text to Columns"), a spreadsheet's. */}
               <SheetSplitChip />

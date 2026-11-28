@@ -329,7 +329,7 @@ const INSERT_MENU = menu('insert', 'Insert', [
   item('insert-comment', 'Comment', 'participate', {
     shortcut: 'insert-or-edit-comment',
   }),
-  item('insert-note', 'Note', 'edit', { shortcut: 'insert-or-edit-note' }),
+  built('insert-note', 'Note', 'edit', { shortcut: 'insert-or-edit-note' }),
 ]);
 
 // Format, its Number items each with its example in `locale` (D190); none without one (the context menus' lookup).

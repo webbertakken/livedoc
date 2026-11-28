@@ -65,7 +65,7 @@ export type SheetHarness = {
   // The controller as last rendered.
   ctl: () => SheetController;
   // A cell's stored input and format, by A1.
-  cell: (a1: string) => { input?: unknown; format?: CellFormat } | undefined;
+  cell: (a1: string) => { input?: unknown; format?: CellFormat; note?: string } | undefined;
   value: (a1: string) => unknown;
   select: (a1: string, active?: string) => void;
   // Called by the rendered root with each render's controller.
@@ -78,6 +78,8 @@ export async function makeSheet(
     cols?: number;
     cells?: Record<string, string>;
     format?: Record<string, CellFormat>;
+    // Cells' notes by A1 (review.md "Notes").
+    notes?: Record<string, string>;
     otherTitles?: string[];
     locale?: string;
   } = {},
@@ -123,6 +125,10 @@ export async function makeSheet(
   for (const [a1, f] of Object.entries(opts.format ?? {})) {
     const { r, c } = ids(a1);
     store.write(SHEET_ID, { kind: 'cells', cells: [{ r, c, f }] });
+  }
+  for (const [a1, n] of Object.entries(opts.notes ?? {})) {
+    const { r, c } = ids(a1);
+    store.write(SHEET_ID, { kind: 'cells', cells: [{ r, c, n }] });
   }
   await store.settle();
   writes.length = 0;

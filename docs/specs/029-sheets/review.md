@@ -1,6 +1,6 @@
 # Review
 
-**Status: specified.** Nothing is built.
+**Status: specified.** Notes are built; comments, version history and a cell's edit history are not.
 
 Notes, comments, version history and a cell's edit history in a [spreadsheet](spreadsheet.md), through the review
 surfaces plan 0019 specifies and builds for every document kind outside the canvas (comment threads, version
@@ -8,7 +8,7 @@ history, the mode switch). This page names what a spreadsheet adds.
 
 ## Notes
 
-**Status: specified.** A note is plain text the cell holds, as Google's notes are: no author, no replies, no mentions,
+**Status: built.** A note is plain text the cell holds, as Google's notes are: no author, no replies, no mentions,
 no reactions. It is cell content beside the cell's input and format, never one of them.
 
 - **Where it lives**: the cell's `note` (1 to `SHEET_NOTE_MAX`, 50,000 characters; line breaks kept, control

@@ -10,7 +10,8 @@ import type { DrawnPivots } from '@/lib/spreadsheet/pivot-sliced';
 import { memo } from 'react';
 import { formatA1, type Sheet, type Workbook } from '@livedoc/sheets';
 import { mergeAt, type Geometry } from './sheet-geometry';
-import { cellSpokenValue } from './sheet-cell-speech';
+import { readWorkbook } from './read-workbook';
+import { cellSpokenValue, NOTED } from './sheet-cell-speech';
 
 type Props = {
   // The pivot tables this person's slicers filter, read as drawn (D629).
@@ -59,7 +60,11 @@ function SheetGridMirrorInner(p: Props) {
   const g = p.geometry;
   const rows = linesOf(g.frozenRows, p.rows, p.activeR, g.hiddenRow, g.drawnOf);
   const cols = linesOf(g.frozenCols, span(p.c1, p.c2), p.activeC, g.hiddenCol);
-  return (
+  const activeNote = readWorkbook(p.version, () =>
+    p.workbook.cellNoteOf(p.sheet.id, p.activeR, p.activeC),
+  );
+  // Read under the store's version (read-workbook.ts): the workbook is one mutable copy.
+  return readWorkbook(p.version, () => (
     <div className="sr-only">
       {rows.map((r) => (
         <div key={r} role="row" aria-rowindex={r + 1}>
@@ -70,22 +75,31 @@ function SheetGridMirrorInner(p: Props) {
             const header = p.workbook.pivotHeaderAt(p.sheet.id, r, c);
             // A merge once, at its top-left; the active cell always, so focus names a cell that is there.
             if (!active && merge && (merge.r1 !== r || merge.c1 !== c)) return null;
+            // A noted cell says so (review.md "Accessibility"); the active one's note is its description, as the hover
+            // card shows it to the pointer.
+            const note = p.workbook.cellNoteOf(p.sheet.id, r, c);
+            const cellId = mirrorCellId(p.elementId, r, c);
+            const said = `${formatA1(r, c)} ${cellSpokenValue(p.sheet, p.workbook, p.locale, r, c, p.drawn)}`;
             return (
               <span
                 key={c}
-                id={active ? mirrorCellId(p.elementId, r, c) : undefined}
+                id={active ? cellId : undefined}
                 role={header ? `${header}header` : 'gridcell'}
                 aria-colindex={c + 1}
                 aria-selected={active || undefined}
+                aria-describedby={active && note !== null ? `${cellId}-note` : undefined}
               >
-                {`${formatA1(r, c)} ${cellSpokenValue(p.sheet, p.workbook, p.locale, r, c, p.drawn)}`}
+                {note === null ? said : `${said.trimEnd()}${NOTED}`}
               </span>
             );
           })}
         </div>
       ))}
+      {activeNote === null ? null : (
+        <span id={`${mirrorCellId(p.elementId, p.activeR, p.activeC)}-note`}>{activeNote}</span>
+      )}
     </div>
-  );
+  ));
 }
 
 export const SheetGridMirror = memo(SheetGridMirrorInner);

@@ -70,6 +70,8 @@ import { useSpreadsheetImages } from './images/useSpreadsheetImages';
 import { useSpreadsheetCellPictures } from './images/useSpreadsheetCellPictures';
 import { useSpreadsheetEmoji } from './useSpreadsheetEmoji';
 import { useSpreadsheetLinks } from './useSpreadsheetLinks';
+import { useSpreadsheetNotes } from './useSpreadsheetNotes';
+import { SheetNoteOpenContext } from '@/components/sheets/sheet-note-open-context';
 import { useCellLinkLanding } from './useCellLinkLanding';
 import { useLinkDocuments } from './link-documents-context';
 import { useSheetNavigation } from '@/components/sheets/sheet-navigation';
@@ -216,6 +218,8 @@ export function SpreadsheetSheetParts({ bridge }: { bridge: SheetsBridge }) {
   );
   useCellLinkLanding(c, goTo);
   const links = useSpreadsheetLinks(c, { documentId, documents: useLinkDocuments(), followSheet });
+  // Notes (review.md "Notes"): the note box, Delete Notes; the markers and hover card are the grid's.
+  const notes = useSpreadsheetNotes(c);
   const canInsertChart = c.canShape;
   const bandingActions = useMemo(
     () => ({
@@ -297,6 +301,7 @@ export function SpreadsheetSheetParts({ bridge }: { bridge: SheetsBridge }) {
       ...cellPictures.actions,
       ...emoji.actions,
       ...links.actions,
+      ...notes.actions,
       ...(detailsHere
         ? { 'show-pivot-details': { run: () => void pivots.showDetails(active.r, active.c) } }
         : {}),
@@ -342,16 +347,18 @@ export function SpreadsheetSheetParts({ bridge }: { bridge: SheetsBridge }) {
                             <SheetPivotsContext.Provider value={c.canShape ? editPivot : null}>
                               <SheetPivotDetailsContext.Provider value={pivots.showDetails}>
                                 <SheetLinkFollowContext.Provider value={followSheet}>
-                                  <SheetGrid
-                                    elementId={`sheet-${c.sheet.id}`}
-                                    actions={actions}
-                                    input={input}
-                                    pointRef={pointRef}
-                                    peers={bridge.peers}
-                                    zoom={zoom}
-                                    surfaceKeys={surfaceKeys}
-                                    fontFamily={DocumentFonts.stack(theme.font)}
-                                  />
+                                  <SheetNoteOpenContext.Provider value={notes.open}>
+                                    <SheetGrid
+                                      elementId={`sheet-${c.sheet.id}`}
+                                      actions={actions}
+                                      input={input}
+                                      pointRef={pointRef}
+                                      peers={bridge.peers}
+                                      zoom={zoom}
+                                      surfaceKeys={surfaceKeys}
+                                      fontFamily={DocumentFonts.stack(theme.font)}
+                                    />
+                                  </SheetNoteOpenContext.Provider>
                                 </SheetLinkFollowContext.Provider>
                               </SheetPivotDetailsContext.Provider>
                             </SheetPivotsContext.Provider>
@@ -394,6 +401,7 @@ export function SpreadsheetSheetParts({ bridge }: { bridge: SheetsBridge }) {
       {emoji.dialog}
       {links.editor}
       {links.card}
+      {notes.box}
       {findReplace?.open ? <FindReplaceDialog state={findReplace} /> : null}
       <SheetBarSummary />
     </div>

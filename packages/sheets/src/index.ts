@@ -53,6 +53,7 @@ export * from './clipboard-html';
 export * from './clipboard-read';
 export * from './selection';
 export * from './commands';
+export * from './note-commands';
 export * from './commands-axis';
 export * from './outline';
 export * from './outline-commands';
