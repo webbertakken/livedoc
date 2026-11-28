@@ -7220,6 +7220,23 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
     },
     "type": "object"
   },
+  "FilterViewGroup": {
+    "additionalProperties": false,
+    "description": "What a group by view groups (data-tools.md \"Group by view\"): its table and the column, by ids.",
+    "properties": {
+      "c": {
+        "type": "string"
+      },
+      "t": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "t",
+      "c"
+    ],
+    "type": "object"
+  },
   "FilterViewSortKey": {
     "additionalProperties": false,
     "description": "One key of a view's sort: a column by id, Z to A when `desc`.",
@@ -16094,6 +16111,9 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
           "$ref": "#/components/schemas/FilterCondition"
         },
         "type": "object"
+      },
+      "group": {
+        "$ref": "#/components/schemas/FilterViewGroup"
       },
       "id": {
         "type": "string"

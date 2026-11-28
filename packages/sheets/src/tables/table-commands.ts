@@ -2,6 +2,7 @@
 // made a table at once with its banding, its columns' types guessed (D441); refused, with a named reason, over another
 // table, a merge, a banding reaching outside it, or past a sheet's tables.
 import { TABLE_OVERLAPS_FILTER } from './table-filter';
+import { groupViewsGone } from '../group-by-view';
 import type { Workbook } from '../engine/workbook';
 import { makeAxisIds } from '../ids';
 import { idRangeOf, layoutIndex, posRangeOf } from '../layout';
@@ -261,7 +262,12 @@ export function convertToRangeWrites(
     if (sheet.id === sheetId)
       out.unshift({
         sheetId,
-        write: { kind: 'layout', changes: [{ k: 'table', id: tableId, table: null }], cells },
+        write: {
+          kind: 'layout',
+          // Its group by views go with it (D499).
+          changes: [{ k: 'table', id: tableId, table: null }, ...groupViewsGone(home.layout, tableId)],
+          cells,
+        },
       });
     else if (cells.length) out.push({ sheetId: sheet.id, write: { kind: 'cells', cells } });
   }

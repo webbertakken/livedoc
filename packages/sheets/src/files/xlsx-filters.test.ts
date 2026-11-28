@@ -280,6 +280,38 @@ describe('filters in XLSX', () => {
     expect(conds).toEqual([{ 1: { values: ['2'] } }, { 3: { values: ['b'] } }]);
   });
 
+  it('writes a group by view as a filter view of its table, the grouped column in the record (D500)', async () => {
+    const [base] = twoTablesAndAFilter();
+    // Grouped by Table2's Tag (D), its range the table's as it is now, whatever it was made with.
+    const group: SheetFilterView = {
+      id: 'view09',
+      title: 'Group 1',
+      r1: 's0r0',
+      c1: 's0c3',
+      r2: 's0r1',
+      c2: 's0c4',
+      conds: {},
+      group: { t: 'tbl002', c: 's0c3' },
+    };
+    const sheets = [{ ...base!, layout: { ...base!.layout, filterViews: [group] } }];
+    const written = writeWorkbook(sheets, record, 'Book', 'xlsx');
+    expect(written.losses).toEqual([]);
+    const xml = decode((await partsOf(written.data)).parts.get('xl/worksheets/sheet1.xml')!);
+    expect(xml).toContain(
+      `<customSheetView guid="${filterViewGuid(0, 'view09')}" filter="1" showAutoFilter="1"><autoFilter ref="D1:E4"/>`,
+    );
+    const [sheet] = opened(sheetsFromFile((await ok(readXlsx(written.data))).file, 'en-GB', rand));
+    const [view] = sheet!.layout.filterViews!;
+    const table2 = sheet!.layout.tables!.find((x) => x.name === 'Table2')!;
+    expect(view).toMatchObject({ title: 'Group 1', group: { t: table2.id, c: sheet!.layout.cols[3] } });
+    // Excel and Google read a filter view: without the record it is one, ungrouped.
+    const bare = await changed(written.data, 'xl/worksheets/sheet1.xml', (x) =>
+      x.replace(/<livedoc:filters [^>]*\/>/g, ''),
+    );
+    const [plain] = opened(sheetsFromFile((await ok(readXlsx(bare))).file, 'en-GB', rand));
+    expect(plain!.layout.filterViews![0]!.group).toBeUndefined();
+  });
+
   it('reads a table part without an autoFilter as a table whose filter is off', async () => {
     const sheets = twoTablesAndAFilter();
     const written = writeWorkbook(sheets, record, 'Book', 'xlsx');

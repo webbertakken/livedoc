@@ -5,7 +5,7 @@ every condition of Filter by Condition, and data validation (the Data Validation
 Insert › Dropdown, every criterion, kept in both file formats) and the Named Ranges panel are built; tables are built
 as the sheet's model, its writes and growth, and table references in formulas, without their menus and panel yet;
 data clean-up (Clean-up Suggestions, Remove Duplicates, Trim Whitespace), Split Text to Columns, Randomise Range and
-Column Stats, filter views and slicers are built; group by views are specified; the rest is specified.
+Column Stats, filter views, slicers and group by views are built; the rest is specified.
 
 Sorting, filtering, validation, names, protection, tables and clean-up in a [spreadsheet](spreadsheet.md), as
 Google Sheets' Data menu does. Its rows of the [parity matrix](parity-matrix.md) name this page.
@@ -142,10 +142,35 @@ Google Sheets' Data menu does. Its rows of the [parity matrix](parity-matrix.md)
     chart whose data range is the slicer's exactly leaves out the rows the slicer hides, and a pivot table on its
     sheet whose source is it is drawn from the rows it keeps (D487, D629).
   - Up to 50 a sheet (D440), within the sheet's 100 objects.
-- **Group by view** (Data › Create Group by View, and the table menu's **Group By**; tables only): a view of a table
-  that groups its rows under a column's values, each group a header row drawn with the value and its count, collapsed
-  and expanded by its opener alone; named and kept as a filter view is (its range the table's), so Change View lists
-  it and a link opens it. Cells never move (the order is drawn, as a view's sort).
+- **Group by view** (Google's table views): a view of a table that groups its rows under a column's values, each
+  group a header row drawn with the value and its count, collapsed and expanded by its opener alone; named and kept
+  as a filter view is, so Change View lists it, a link opens it and its bar, conditions and sort are a filter
+  view's. Cells never move (the order is drawn, as a view's sort).
+  - **Made** from a table only: **Data › Create Group by View** groups by the active cell's column, shown dimmed
+    with the note "Select a cell in a table" while the active cell is in none; the table menu's **Group By** lists
+    the table's columns by name; a table column's menu (▾) offers **Group by Column**. Named `Group N`, the smallest
+    N free among the sheet's views; an Editor's saved, one undo step, anyone else's temporary, `Temporary Group N`
+    (D471), opened at once (D498).
+  - **Its range is its table's**, header and data rows, followed as the table grows or shrinks; the bar's Range
+    reads it and cannot be changed there. Convert to Range and Delete Table remove the table's group by views in
+    the same undo step; one whose table went another way (cut to another sheet) or whose column was deleted draws
+    as a filter view over the range it was made with, ungrouped (D499).
+  - **Groups**: the data rows under the header (below the frozen rows, the total row apart) by the column's values
+    as Sort Range compares them (numbers by value, text case and accents aside), in A to Z order, blanks last; Z to
+    A while the view's sort is on the grouped column, Z to A. Inside a group the rows keep the view's sort on another
+    column, else the sheet's order (D496).
+  - **A group's header row** spans the table's columns, under the row before it: its opener (▾ open, ▸ collapsed),
+    the value as its first row's cell shows it ("(Blank)" for blanks) and the count of its rows the view's
+    conditions keep; a group whose rows the conditions all hide has no header. Its row number is blank, so the row
+    numbers keep naming the sheet's rows (D492). Pressing the opener, or Enter or Space on it (each a button reached
+    with Tab, named "Collapse Apple, 3 rows" or "Expand Apple, 3 rows"), collapses or expands that group for its
+    opener alone: never written, kept for the session with the open view, as the view itself is; the bar's
+    **Collapse All** and **Expand All** act on every group. A collapsed group's rows are drawn at no height, as a
+    filter's (D497).
+  - **Files**: XLSX writes it as a filter view of its table's range (its conditions and sort), LiveDoc's record
+    keeping the grouped column, so Excel and Google open it as a filter view and LiveDoc reads it back grouped while
+    the record holds and its range is a table's; ODS leaves it out with the filter views, counted among them
+    ([Filters in the file](standard-mapping.md#filters-in-the-file), D500).
 - **The drawn order** (Director, 2026-11-27): a view's sort and a group by view draw rows in an order of their own
   through one mapping between stored rows and drawn rows, for the view's opener alone. Selecting, typing, copying,
   pasting and filling in such a view land on the stored rows drawn there; another person's inserts and deletes keep
@@ -617,6 +642,20 @@ The code cites each by its id.
   rules carried only when the target rows are side by side in the sheet, as a rule needs one range (default).
 - **D495** Moving rows by their numbers in a sorted view: refused, as the drawn place of a moved row is its sort's,
   not the drop's (default).
+- **D496** A group by view's groups: Sort Range's comparison, so groups and a sort agree on which values are one,
+  A to Z with blanks last (Z to A with the grouped column's sort), rows inside in the view's sort else the sheet's
+  order; the API cannot read a group by view (views are per viewer), so Google's order is unmeasured (default).
+- **D497** A group's header row: a band between drawn rows, never a row of the sheet nor of the drawn order
+  (DECISIONS.md "Group headers are gaps"), spanning the table's columns with its opener, value and count (Google's
+  count of the first column, without its other aggregations); collapsed for its opener alone, kept with the open
+  view for the session; the openers buttons reached with Tab, as the grid's keys pass over the bands (default).
+- **D498** Making a group by view: tables only, as Google's; by the active column from the Data menu, by name from
+  the table menu, by the column from its column menu; named `Group N` (`Temporary Group N` for a temporary one) so a
+  group by view reads apart from a filter view in Change View (default).
+- **D499** A group by view's range: its table's, as Google's table views carry the table's id; removed with its
+  table by Convert to Range and Delete Table, else drawn ungrouped over its own range (default).
+- **D500** A group by view in a file: no format has one, so XLSX holds it as the filter view Google's and Excel
+  open, the grouped column in LiveDoc's record; ODS has no filter views (default).
 - **D487** What a slicer filters beside the cells: a chart whose data range is the slicer's range exactly, as
   Google's "same data range"; a pivot table whose source is the slicer's range exactly, on the slicer's sheet, while
   Apply to Pivot Tables is ticked, worked out for each person by the pivot tables' side (the Director's ruling,
