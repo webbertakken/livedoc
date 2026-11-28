@@ -31,9 +31,16 @@ export function workbookEngine(sheets: readonly Sheet[], record: WorkbookRecord)
   return wb;
 }
 
-/** The workbook as a file holds it, every value worked out by the engine with the workbook's settings. */
-export function workbookFileFor(sheets: readonly Sheet[], record: WorkbookRecord): WorkbookFile {
-  return workbookFileOf(workbookEngine(sheets, record), sheets, record.settings.locale);
+/**
+ * The workbook as a file holds it, every value worked out by the engine with the workbook's settings: `engine` when
+ * the caller made it (given what it reads from outside, its Plan cards), else one made here.
+ */
+export function workbookFileFor(
+  sheets: readonly Sheet[],
+  record: WorkbookRecord,
+  engine: Workbook = workbookEngine(sheets, record),
+): WorkbookFile {
+  return workbookFileOf(engine, sheets, record.settings.locale);
 }
 
 /** The formulas of a file. */
@@ -70,8 +77,10 @@ export function writeWorkbook(
   kept?: KeptContent<StoredAt>,
   // The pictures' bytes the download read from the gallery (standard-mapping.md "Pictures in the file", D626).
   pictures?: FilePictureFetches,
+  // The engine its values are worked out by, when the caller made it (`workbookEngine` given its cards).
+  engine?: Workbook,
 ): WrittenWorkbook {
-  const file = workbookFileFor(sheets, record);
+  const file = workbookFileFor(sheets, record, engine);
   if (pictures) file.pictureBytes = pictures;
   const losses: FileLoss[] = [];
   if (kept && kept.standard === keptStandardOf(format)) {

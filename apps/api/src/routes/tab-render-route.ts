@@ -37,7 +37,7 @@ export async function handleTabRender(ctx: DocumentRouteContext): Promise<Respon
   const asked = ctx.url.searchParams.get('range');
   const range = asked === null ? undefined : parseRangeText(asked);
   if (range === null) return badRange('range takes an A1 cell or range');
-  const sheet = await renderSpreadsheetTabSvg(ctx.env, documentId, tabId, {
+  const sheet = await renderSpreadsheetTabSvg(ctx, documentId, tabId, {
     ...(range ? { range } : {}),
     scope: await tabScopeOf(ctx, doc),
   });

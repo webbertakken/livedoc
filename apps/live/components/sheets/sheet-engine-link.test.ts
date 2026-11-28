@@ -10,7 +10,7 @@ const SHEET: SheetJson = {
   tabId: 't1',
   title: 'S',
   layout: { rows: ['r1'], cols: ['c1'] },
-  cells: [{ r: 'r1', c: 'c1', i: { f: { t: '=CARDCOUNT()', r: [] } } }],
+  cells: [{ r: 'r1', c: 'c1', i: { f: { t: 'CARDCOUNT()', r: [] } } }],
   rev: 0,
   createdAt: 0,
   updatedAt: 0,

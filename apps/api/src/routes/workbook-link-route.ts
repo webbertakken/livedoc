@@ -13,6 +13,7 @@ import { json } from '../responses';
 import type { DocumentRouteContext } from './context';
 import { RANGE_SOURCE_CELLS_MAX } from './sheet-range-read';
 import { sheetCaller, workbookRefused } from './sheet-route-kit';
+import { fillSpreadsheetCards } from './spreadsheet-cards';
 import { loadSpreadsheetSheets, workbookCellCount, workbookVersion } from './workbook-sheets-load';
 
 /** The characters of the version a link reads by: a SHA-256's hex, cut. Safe range 12 to 64. */
@@ -71,6 +72,8 @@ export async function readWorkbookLink(
     // Nothing is fetched where no editor asks: an import reads as it does for the api's other readers (D65).
     imports: { access: 'allowed', web: false },
   });
+  // Card functions read the cards' document with the reader's own access, as the reader's page would (plan-links.md).
+  await fillSpreadsheetCards(wb, ctx, record);
   const sheet = sheetId ? linkedSheet(wb, sheetId) : null;
   console.info(
     `[workbook] link read document=${documentId} sheet=${sheetId} cells=${sheet?.cells.length ?? 0} ms=${Date.now() - started}`,

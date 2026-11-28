@@ -351,14 +351,7 @@ export async function answerTabView(
   const tabScope = grant?.tabScope ?? null;
   if ('lint' in parsed) return answerLintView(ctx, parsed, document, tab);
   if ('storm' in parsed) return answerStormView(ctx, parsed, document, tab);
-  const sheet = await answerWorkbookView(
-    ctx.env,
-    parsed.request,
-    parsed.json,
-    document,
-    tab,
-    tabScope,
-  );
+  const sheet = await answerWorkbookView(ctx, parsed.request, parsed.json, document, tab, tabScope);
   if (sheet) {
     if (sheet.response.ok) countViewed(ctx, sheet.view);
     return sheet.response;

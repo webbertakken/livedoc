@@ -8,7 +8,7 @@
 //   GET /api/documents/<id>/workbook/file?format=csv|tsv&tab=<tabId>  the open sheet as CSV or TSV, values as shown.
 //   GET /api/documents/<id>/workbook/link?sheet=<sheetId>  a sheet read by another document (workbook-link-route.ts).
 import { WorkbookRecord, type WorkbookFormat } from '@livedoc/sheets';
-import { writeSheetText, writeWorkbook } from '@livedoc/sheets/files';
+import { workbookEngine, writeSheetText, writeWorkbook } from '@livedoc/sheets/files';
 import { getDocumentMeta } from '../db';
 import { readWorkbook } from '../db/workbook';
 import { readKept } from '../db/workbook-kept';
@@ -27,6 +27,7 @@ import { readWorkbookLink } from './workbook-link-route';
 import { connectForm, unlinkForm } from './workbook-form-link-route';
 import { loadSpreadsheetSheets } from './workbook-sheets-load';
 import { readWorkbookPictures } from './workbook-pictures';
+import { fillSpreadsheetCards } from './spreadsheet-cards';
 
 const FILE_MEDIA_TYPES: Record<WorkbookFormat, string> = {
   ods: 'application/vnd.oasis.opendocument.spreadsheet',
@@ -61,7 +62,10 @@ async function file(ctx: DocumentRouteContext, documentId: string): Promise<Resp
   // The file's kept content goes into files of its standard only (standard-mapping.md "Unknown content", D109).
   // Its pictures' bytes from the gallery, for the images the document may serve (D626).
   const pictures = await readWorkbookPictures(ctx.env, documentId, sheets);
-  const written = writeWorkbook(sheets, record, name, asked, kept, pictures);
+  // The card functions' values from the cards' document, read with the downloader's own access (plan-links.md).
+  const engine = workbookEngine(sheets, record);
+  await fillSpreadsheetCards(engine, ctx, record);
+  const written = writeWorkbook(sheets, record, name, asked, kept, pictures, engine);
   const body = written.data;
   console.info(
     `[workbook] file written document=${documentId} format=${asked} sheets=${sheets.length} bytes=${body.byteLength} losses=${written.losses.length} ms=${Date.now() - started}`,
@@ -95,11 +99,14 @@ async function sheetFile(
     getDocumentMeta(ctx.env, documentId),
     loadSpreadsheetSheets(ctx.env, documentId),
   ]);
+  const engine = workbookEngine(sheets, record);
+  await fillSpreadsheetCards(engine, ctx, record);
   const written = writeSheetText(
     sheets,
     record,
     ctx.url.searchParams.get('tab') ?? '',
     asked === 'csv' ? ',' : '\t',
+    engine,
   );
   if (!written) return workbookRefused('sheet_not_found', 404);
   const name = `${meta?.name ?? UNTITLED_SPREADSHEET} - ${written.title}`;
