@@ -2427,7 +2427,7 @@ export const ROUTE_MANIFEST: RouteSpec[] = [
     segment: 'worker-issues',
     tag: 'Worker issues',
     summary:
-      "A Cloudflare Workers Issues automation's webhook, for the host's operator: a new or returning worker error filed on the Bug Tracker (201), stored or held to be filed shortly (202), or a repeat or the destination's test (200), and emailed to the Bug Tracker's owner. Authenticated by the cf-webhook-auth secret; a host without WORKER_ISSUES_WEBHOOK_SECRET answers 404 not_found. 400 invalid_json or unknown_shape, 401 unauthorized, 413 payload_too_large past 1 MiB, 429 rate_limited, 503 worker_issues_unavailable.",
+      "A Cloudflare Workers Issues automation's webhook, for the host's operator: a new or returning worker error filed on the Bug Tracker (201), stored or held to be filed shortly (202), or a repeat, a vulnerability scan answered 404 or static (logged), or the destination's test (200), and emailed to the Bug Tracker's owner. Authenticated by the cf-webhook-auth secret; a host without WORKER_ISSUES_WEBHOOK_SECRET answers 404 not_found. 400 invalid_json or unknown_shape, 401 unauthorized, 413 payload_too_large past 1 MiB, 429 rate_limited, 503 worker_issues_unavailable.",
     auth: 'public',
     requestSchema: {
       type: 'object',
@@ -2437,7 +2437,7 @@ export const ROUTE_MANIFEST: RouteSpec[] = [
     responseSchema: {
       type: 'object',
       properties: {
-        outcome: { type: 'string', enum: ['filed', 'stored', 'held', 'repeat', 'test'] },
+        outcome: { type: 'string', enum: ['filed', 'stored', 'held', 'repeat', 'logged', 'test'] },
         number: {
           type: 'integer',
           description: "The card's number on the Bug Tracker, when filed.",

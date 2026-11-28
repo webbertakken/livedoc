@@ -12,10 +12,11 @@ import { json, methodNotAllowed, notFound } from '../responses';
 import type { RouteContext } from '../routes/context';
 import type { Env } from '../types';
 import { WORKER_ISSUES_BODY_MAX_BYTES, WORKER_ISSUES_RETRY_AFTER_SECONDS } from './constants';
-import { deliveryKey } from './delivery-key';
+import { deliveryKey, type DeliveryKey } from './delivery-key';
 import { ledgerCall, workerIssuesLedger, type LedgerStub } from './ledger-client';
 import { emailOperator } from './operator-email';
 import { readWorkerIssuePayload } from './payload';
+import { scanDigestKey, scanVerdictOf } from './scan-alert';
 
 export const WORKER_ISSUES_AUTH_HEADER = 'cf-webhook-auth';
 
@@ -148,7 +149,20 @@ export async function receiveWorkerIssue(ctx: RouteContext): Promise<Response> {
 
   const { issue, runId } = payload;
   const now = Date.now();
-  const key = await deliveryKey(payload.payload, runId);
+  const scan = scanVerdictOf(issue);
+  if (scan === 'not_answered') {
+    console.info('[worker-issues] scan.logged', {
+      worker: issue.worker ?? null,
+      issueId: issue.issueId ?? null,
+      title: issue.title,
+      status: issue.status ?? null,
+    });
+    return json({ outcome: 'logged' });
+  }
+  const key: DeliveryKey =
+    scan === 'answered'
+      ? { key: scanDigestKey(now), kind: 'scan-digest' }
+      : await deliveryKey(payload.payload, runId);
   console.info('[worker-issues] delivery.received', {
     worker: issue.worker ?? null,
     trigger: issue.trigger,
