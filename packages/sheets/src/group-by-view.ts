@@ -4,7 +4,7 @@
 import { idRangeOf, layoutIndex } from './layout';
 import { isError, type Scalar } from './formula/values';
 import { makeAxisIds, type Rand } from './ids';
-import { nextFilterViewTitle, type SheetFilterView } from './filter-views';
+import { nextFilterViewTitle, type GroupAggregate, type SheetFilterView } from './filter-views';
 import { tableFilterBox } from './tables/table-filter';
 import type { GridRange } from './address';
 import type { SheetLayout } from './sheet';
@@ -63,7 +63,77 @@ export function createGroupByView(
     conds: {},
     group: { t: table.id, c: colId },
   };
-  return liveGroup(layout, view) ? filterViewAsDrawn(layout, view) : null;
+  const live = liveGroup(layout, view);
+  if (!live) return null;
+  const aggs = defaultAggregates(layout, table, live.box);
+  return filterViewAsDrawn(layout, { ...view, group: { ...view.group!, aggs } });
+}
+
+// A new view's aggregations (D501): Count on its first column, Sum on each Number, Percent and Currency typed one.
+function defaultAggregates(
+  layout: SheetLayout,
+  table: SheetTable,
+  box: GridRange,
+): Record<string, GroupAggregate> {
+  const out: Record<string, GroupAggregate> = { [layout.cols[box.c1]!]: 'count' };
+  for (let c = box.c1 + 1; c <= box.c2; c++) {
+    const col = layout.cols[c]!;
+    const type = table.types?.[col];
+    if (type === 'number' || type === 'percent' || type === 'currency') out[col] = 'sum';
+  }
+  return out;
+}
+
+/** Each aggregation's name, as Google's list words it. */
+export const GROUP_AGGREGATE_LABELS: Readonly<Record<GroupAggregate, string>> = {
+  avg: 'Average',
+  count: 'Count',
+  empty: 'Empty',
+  filled: 'Filled',
+  max: 'Maximum',
+  min: 'Minimum',
+  pctEmpty: 'Percent Empty',
+  pctFilled: 'Percent Filled',
+  pctUnique: 'Percent Unique',
+  sum: 'Sum',
+  unique: 'Unique',
+};
+
+/**
+ * A group's aggregation over its kept rows' values in one column (D501): Count the rows, Filled and Empty the cells
+ * with and without a value, Unique the values told apart as groups are, each Percent of the rows; Sum, Average,
+ * Maximum and Minimum over the numbers alone. Null with nothing to read (no numbers, no rows).
+ */
+export function groupAggregate(kind: GroupAggregate, values: readonly Scalar[]): number | null {
+  const rows = values.length;
+  const filled = values.filter((v) => v !== null && v !== '');
+  const nums = values.filter((v): v is number => typeof v === 'number');
+  const unique = () => new Set(filled.map(groupKey)).size;
+  const share = (n: number) => (rows ? n / rows : null);
+  switch (kind) {
+    case 'count':
+      return rows;
+    case 'filled':
+      return filled.length;
+    case 'empty':
+      return rows - filled.length;
+    case 'unique':
+      return unique();
+    case 'pctFilled':
+      return share(filled.length);
+    case 'pctEmpty':
+      return share(rows - filled.length);
+    case 'pctUnique':
+      return share(unique());
+    case 'sum':
+      return nums.length ? nums.reduce((a, b) => a + b, 0) : null;
+    case 'avg':
+      return nums.length ? nums.reduce((a, b) => a + b, 0) / nums.length : null;
+    case 'max':
+      return nums.length ? nums.reduce((a, b) => Math.max(a, b)) : null;
+    case 'min':
+      return nums.length ? nums.reduce((a, b) => Math.min(a, b)) : null;
+  }
 }
 
 /** The changes removing a table's group by views, beside the table's own removal (Convert to Range, Delete Table). */

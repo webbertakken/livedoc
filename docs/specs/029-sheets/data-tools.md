@@ -159,14 +159,28 @@ Google Sheets' Data menu does. Its rows of the [parity matrix](parity-matrix.md)
     as Sort Range compares them (numbers by value, text case and accents aside), in A to Z order, blanks last; Z to
     A while the view's sort is on the grouped column, Z to A. Inside a group the rows keep the view's sort on another
     column, else the sheet's order (D496).
-  - **A group's header row** spans the table's columns, under the row before it: its opener (▾ open, ▸ collapsed),
-    the value as its first row's cell shows it ("(Blank)" for blanks) and the count of its rows the view's
-    conditions keep; a group whose rows the conditions all hide has no header. Its row number is blank, so the row
+  - **A group's header row** spans the table's columns, under the row before it: its opener (▾ open, ▸ collapsed)
+    and the value as its first row's cell shows it ("(Blank)" for blanks) in the first column's part, and under
+    each column its **aggregation**; a group whose rows the conditions all hide has no header. Its row number is blank, so the row
     numbers keep naming the sheet's rows (D492). Pressing the opener, or Enter or Space on it (each a button reached
     with Tab, named "Collapse Apple, 3 rows" or "Expand Apple, 3 rows"), collapses or expands that group for its
     opener alone: never written, kept for the session with the open view, as the view itself is; the bar's
     **Collapse All** and **Expand All** act on every group. A collapsed group's rows are drawn at no height, as a
     filter's (D497).
+  - **Aggregations** (Google's): each column of the view may total its group's rows the view's conditions keep
+    (collapsed or not) with one of **Average**, **Count**, **Empty**, **Filled**, **Maximum**, **Minimum**, **Percent
+    Empty**, **Percent Filled**, **Percent Unique**, **Sum** and **Unique**, or **None**. Count is the rows, Filled
+    and Empty the cells with and without a value, Unique the values told apart as the groups are (D496), each Percent
+    of the rows; Sum, Average, Maximum and Minimum read the numbers alone (a group with none shows nothing). Shown in
+    the column's part of every header as the aggregation's name and its value (`Sum 12`), a number in the column's
+    number format (its first kept row's), a percent as a percent. A new group by view counts by its first column
+    (Google's) and sums each Number, Percent and Currency typed column (D501).
+  - Each part's ▾ (a button named "Sales aggregation", drawn over the part's right end while it is pointed at or
+    focused, always on a touch screen, so the group's value keeps its room; the first header's reached with Tab) lists
+    them, the column's own ticked; picking one sets it for
+    every group, kept with the view: an Editor's saved view as a write, one undo step; a temporary view, or anyone
+    else's, their own (D471). The bar's **Hide Aggregations** (ticked while on, kept with the view the same way)
+    draws the headers without them (Google's View Options › Hide Group by Aggregation, D502).
   - **Files**: XLSX writes it as a filter view of its table's range (its conditions and sort), LiveDoc's record
     keeping the grouped column, so Excel and Google open it as a filter view and LiveDoc reads it back grouped while
     the record holds and its range is a table's; ODS leaves it out with the filter views, counted among them
@@ -646,8 +660,8 @@ The code cites each by its id.
   A to Z with blanks last (Z to A with the grouped column's sort), rows inside in the view's sort else the sheet's
   order; the API cannot read a group by view (views are per viewer), so Google's order is unmeasured (default).
 - **D497** A group's header row: a band between drawn rows, never a row of the sheet nor of the drawn order
-  (DECISIONS.md "Group headers are gaps"), spanning the table's columns with its opener, value and count (Google's
-  count of the first column, without its other aggregations); collapsed for its opener alone, kept with the open
+  (DECISIONS.md "Group headers are gaps"), spanning the table's columns with its opener, value and each column's
+  aggregation (D501); collapsed for its opener alone, kept with the open
   view for the session; the openers buttons reached with Tab, as the grid's keys pass over the bands (default).
 - **D498** Making a group by view: tables only, as Google's; by the active column from the Data menu, by name from
   the table menu, by the column from its column menu; named `Group N` (`Temporary Group N` for a temporary one) so a
@@ -656,6 +670,12 @@ The code cites each by its id.
   table by Convert to Range and Delete Table, else drawn ungrouped over its own range (default).
 - **D500** A group by view in a file: no format has one, so XLSX holds it as the filter view Google's and Excel
   open, the grouped column in LiveDoc's record; ODS has no filter views (default).
+- **D501** A group's aggregations: computed over the rows the view keeps, collapsed or not, as Google's totals read
+  the group; numbers alone for Sum, Average, Maximum and Minimum, as SUM reads a range; Count the rows and Filled
+  the cells; a new view's Count on its first column (Google's help) and Sum on each numeric typed column (Google's
+  "other column types may have aggregations already applied", the types unmeasured) (default).
+- **D502** Choosing and hiding aggregations: per column for every group and kept with the view, as Google's
+  column-level aggregations; Hide Aggregations on the view bar, Google's View Options item (default).
 - **D487** What a slicer filters beside the cells: a chart whose data range is the slicer's range exactly, as
   Google's "same data range"; a pivot table whose source is the slicer's range exactly, on the slicer's sheet, while
   Apply to Pivot Tables is ticked, worked out for each person by the pivot tables' side (the Director's ruling,

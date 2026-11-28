@@ -2,9 +2,11 @@
 // filter view is open, drawn dark so a view is never mistaken for the sheet. Name and Range are an Editor's fields
 // (a temporary view's its maker's), committed on Enter or on leaving them; Duplicate, Delete (an Editor's saved view)
 // and Close. Escape on the bar closes the view. A group by view's Range is its table's, read-only, and its bar adds
-// Collapse All and Expand All, its opener's alone (data-tools.md "Group by view").
+// Collapse All and Expand All, its opener's alone, and Hide Aggregations, kept with the view (data-tools.md "Group by
+// view", D502).
 import { useState, type KeyboardEvent } from 'react';
 import { Tooltip } from '@livedoc/ui';
+import { track } from '@/lib/telemetry';
 import { useSheetController } from './sheet-controller';
 import type { FilterViewActions } from './useFilterViewActions';
 
@@ -81,8 +83,16 @@ export function SheetFilterViewBar({ actions }: { actions: FilterViewActions }) 
   const { open, temporary } = c.filterViews;
   if (!open) return null;
   const mayChange = temporary || c.canShape;
-  const groups = open.group ? (c.geometry.order?.groups ?? []) : [];
-  const { collapsed, setCollapsed } = c.filterViews;
+  const group = open.group;
+  const groups = group ? (c.geometry.order?.groups ?? []) : [];
+  const { collapsed, setCollapsed, change } = c.filterViews;
+  // Hide Aggregations flips the group by view's `hide`, kept with the view (D502).
+  const hideAggs = () => {
+    if (!group) return;
+    const shown = { t: group.t, c: group.c, ...(group.aggs ? { aggs: group.aggs } : {}) };
+    track('Spreadsheet', 'Changed', 'GroupAggregationsHidden');
+    change({ ...open, group: group.hide ? shown : { ...shown, hide: true as const } });
+  };
   const onKeyDown = (e: KeyboardEvent) => {
     e.stopPropagation();
     if (e.key === 'Escape') actions.close();
@@ -107,7 +117,7 @@ export function SheetFilterViewBar({ actions }: { actions: FilterViewActions }) 
         key={`range-${open.id}`}
         label="Range"
         value={actions.rangeText}
-        readOnly={!mayChange || !!open.group}
+        readOnly={!mayChange || !!group}
         commit={actions.setRange}
         width="w-28"
       />
@@ -132,6 +142,9 @@ export function SheetFilterViewBar({ actions }: { actions: FilterViewActions }) 
             onClick={() => setCollapsed(new Set())}
           >
             Expand All
+          </button>
+          <button type="button" className={BUTTON} aria-pressed={!!group?.hide} onClick={hideAggs}>
+            Hide Aggregations
           </button>
         </>
       ) : null}

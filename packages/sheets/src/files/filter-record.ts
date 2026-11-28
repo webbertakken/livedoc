@@ -9,6 +9,7 @@ import {
   type GridRange,
 } from '../address';
 import { isFilterCondition } from '../filter';
+import { GROUP_AGGREGATES, type GroupAggregate } from '../filter-views';
 import { standardLine } from './filter-standard';
 import type {
   FileFilter,
@@ -58,6 +59,14 @@ export function filterRecordText(
                 }
               : {}),
             ...(v.group !== undefined ? { group: columnLetters(v.group) } : {}),
+            ...(v.aggs
+              ? {
+                  aggs: Object.fromEntries(
+                    Object.entries(v.aggs).map(([c, kind]) => [columnLetters(Number(c)), kind]),
+                  ),
+                }
+              : {}),
+            ...(v.hideAggs ? { hideAggs: true } : {}),
           })),
         }
       : {}),
@@ -74,6 +83,8 @@ export type FilterRecord = {
     conds: Map<number, FileFilterCondition>;
     sort?: { c: number; desc?: true }[];
     group?: number;
+    aggs?: Record<number, GroupAggregate>;
+    hideAggs?: true;
   }[];
 };
 
@@ -121,6 +132,23 @@ function recordedGroup(v: unknown, range: GridRange | null): number | null {
   return c >= range.c1 && c <= range.c2 ? c : null;
 }
 
+// A group by view's aggregations (D501): each a letter inside the view's range and one of Google's kinds.
+function recordedAggs(
+  v: unknown,
+  range: GridRange | null,
+): Record<number, GroupAggregate> | null | undefined {
+  if (v === undefined) return undefined;
+  if (!isRecord(v) || !range) return null;
+  const out: Record<number, GroupAggregate> = {};
+  for (const [letters, kind] of Object.entries(v)) {
+    const c = columnIndex(letters);
+    if (c < range.c1 || c > range.c2 || !GROUP_AGGREGATES.includes(kind as GroupAggregate))
+      return null;
+    out[c] = kind as GroupAggregate;
+  }
+  return out;
+}
+
 /** LiveDoc's record read back; null when it is not one. */
 export function readFilterRecord(text: string): FilterRecord | null {
   let raw: unknown;
@@ -149,13 +177,18 @@ export function readFilterRecord(text: string): FilterRecord | null {
       const conds = range && recordedConds(v.conds, range);
       const sort = recordedSort(v.sort);
       const group = v.group === undefined ? undefined : recordedGroup(v.group, range);
-      if (!range || !conds || sort === null || group === null) return null;
+      const aggs = recordedAggs(v.aggs, range);
+      const hideOk = v.hideAggs === undefined || v.hideAggs === true;
+      if (!range || !conds || sort === null || group === null || aggs === null || !hideOk)
+        return null;
       out.views.push({
         name: v.name,
         range,
         conds,
         ...(sort ? { sort } : {}),
         ...(group !== undefined ? { group } : {}),
+        ...(aggs ? { aggs } : {}),
+        ...(v.hideAggs ? { hideAggs: true as const } : {}),
       });
     }
   }
@@ -233,6 +266,8 @@ export function filtersFound(
       cols: withConds(v.cols, r.conds),
       ...(r.sort ? { sort: r.sort } : {}),
       ...(r.group !== undefined ? { group: r.group } : {}),
+      ...(r.aggs ? { aggs: r.aggs } : {}),
+      ...(r.hideAggs ? { hideAggs: r.hideAggs } : {}),
     };
   });
   return { ...(filter ? { filter } : {}), views, changed: false };

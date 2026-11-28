@@ -291,7 +291,7 @@ describe('filters in XLSX', () => {
       r2: 's0r1',
       c2: 's0c4',
       conds: {},
-      group: { t: 'tbl002', c: 's0c3' },
+      group: { t: 'tbl002', c: 's0c3', aggs: { s0c3: 'count', s0c4: 'pctUnique' }, hide: true },
     };
     const sheets = [{ ...base!, layout: { ...base!.layout, filterViews: [group] } }];
     const written = writeWorkbook(sheets, record, 'Book', 'xlsx');
@@ -303,9 +303,15 @@ describe('filters in XLSX', () => {
     const [sheet] = opened(sheetsFromFile((await ok(readXlsx(written.data))).file, 'en-GB', rand));
     const [view] = sheet!.layout.filterViews!;
     const table2 = sheet!.layout.tables!.find((x) => x.name === 'Table2')!;
+    const cols = sheet!.layout.cols;
     expect(view).toMatchObject({
       title: 'Group 1',
-      group: { t: table2.id, c: sheet!.layout.cols[3] },
+      group: {
+        t: table2.id,
+        c: cols[3],
+        aggs: { [cols[3]!]: 'count', [cols[4]!]: 'pctUnique' },
+        hide: true,
+      },
     });
     // Excel and Google read a filter view: without the record it is one, ungrouped.
     const bare = await changed(written.data, 'xl/worksheets/sheet1.xml', (x) =>
