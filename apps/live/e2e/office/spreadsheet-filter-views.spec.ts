@@ -265,6 +265,8 @@ test('the toolbar’s filter button makes and opens views; a table chip in row 1
   await bar.getByRole('button', { name: 'Close Filter View' }).click();
   // The saved view is listed under the creating items, and opens from there.
   await options.click();
+  await settle(page);
+  await page.screenshot({ path: test.info().outputPath('filter-button-menu.png') });
   await page.getByRole('menuitemradio', { name: 'Filter 1' }).click();
   await expect(bar.getByRole('textbox', { name: 'Name' })).toHaveValue('Filter 1');
   await bar.getByRole('button', { name: 'Close Filter View' }).click();
@@ -277,8 +279,6 @@ test('the toolbar’s filter button makes and opens views; a table chip in row 1
     'aria-pressed',
     'false',
   );
-  await settle(page);
-  await page.screenshot({ path: test.info().outputPath('filter-button-menu.png') });
 
   // A table from A1: its chip sits above the header's first cell, over the column letters, not over "Fruit".
   await select(page, 'A2');
