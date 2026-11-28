@@ -27,8 +27,7 @@ import { TEXT_DOCUMENT_LIVE_TAB } from './text-document-live-tab';
 import { mediaIntoGallery } from './gallery-media';
 
 export type TextDocumentSeed = { tabId: string; format: TextDocumentFormat } & (
-  | { file: Uint8Array; type?: TextDocumentImportType }
-  | { state: Uint8Array }
+  { file: Uint8Array; type?: TextDocumentImportType } | { state: Uint8Array }
 );
 
 const refusedSeed = (message: string) =>
