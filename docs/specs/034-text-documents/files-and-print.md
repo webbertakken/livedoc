@@ -102,8 +102,8 @@ with nothing lost it says so and still asks (director, 2026-11-27). The text doc
   email links (a link to a place in the document keeps only its text), list items nested four spaces a level,
   checklists as `- [ ]` and `- [x]`, tables as pipe tables (the first row the header, a merged cell's other places
   empty, a table inside a cell as its text), code blocks fenced with their language, footnotes as `[^1]`, a
-  picture as its alt text, an equation between dollars, a table of contents as a list of its headings; colours,
-  sizes and alignment left out; text that would read as Markdown escaped (default).
+  picture as Plain Text says it, escaped (`\[A cat\]`), an equation between dollars, a table of contents as a list of
+  its headings; colours, sizes and alignment left out; text that would read as Markdown escaped (default).
 - **Web Page**: a `.zip` of `<name>.html` and an `images/` folder holding each picture once, as `images/1.png` and
   on in order of first appearance (default). The page is HTML5 in the document's language (`en` when it names none),
   titled with its name, with one stylesheet from its styles: Normal text, the Title, the Subtitle and the headings

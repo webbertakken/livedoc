@@ -40,6 +40,15 @@ describe('the exports of every construct', () => {
     });
 });
 
+const picture = (extra: object): Inline => ({
+  type: 'picture',
+  media: 'm',
+  width: 1,
+  height: 1,
+  props: {},
+  ...extra,
+});
+
 describe('writePlainText', () => {
   it('writes a line a paragraph, list markers as drawn, a table by tabs, notes at the end', () => {
     const lists = { b: ListDefinition.of('bullet'), n: ListDefinition.of('number') };
@@ -85,14 +94,6 @@ describe('writePlainText', () => {
   });
 
   it('says a picture by its alt text, its title, or that it is one; a decorative one not at all', () => {
-    const picture = (extra: object): Inline => ({
-      type: 'picture',
-      media: 'm',
-      width: 1,
-      height: 1,
-      props: {},
-      ...extra,
-    });
     expect(
       writePlainText(
         doc([
@@ -230,6 +231,15 @@ describe('writeMarkdown', () => {
   it('writes an empty document as an empty line', () => {
     expect(writeMarkdown(doc([p([])]))).toBe('\n');
     expect(writePlainText(doc([]))).toBe('\n');
+  });
+
+  // files-and-print.md "Downloading": a picture as Plain Text says it, escaped so it reads as text, never a link.
+  it('says a picture as Plain Text does, escaped, and a decorative one not at all', () => {
+    expect(
+      writeMarkdown(
+        doc([p([picture({ alt: 'A cat' }), picture({}), picture({ decorative: true })])]),
+      ),
+    ).toBe('\\[A cat\\]\\[Picture\\]\n');
   });
 });
 
