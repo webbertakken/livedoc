@@ -1,8 +1,9 @@
-// A table's filter (docs/specs/029-sheets/data-tools.md "Filters, filter views and slicers", D481): the sheet's filter
-// over exactly a table's header and data rows (its total row apart). Any other overlap of the filter and a table is
-// refused where a filter or a table is made, in the editor and by the room's judge; one stored before the rule stays
-// (D480).
+// A table's filter (docs/specs/029-sheets/data-tools.md "Filters, filter views and slicers", D481): each table's own,
+// over its header and data rows (its total row apart), kept on the table by column ids. The sheet's filter never
+// overlaps a table: refused where a filter or a table is made, in the editor and by the room's judge; one stored
+// before the rule stays (D480).
 import type { GridRange } from '../address';
+import type { DrawnFilter } from '../filter';
 import { posRangeOf } from '../layout';
 import type { IdRange, SheetLayout } from '../sheet';
 import type { SheetTable } from './table';
@@ -25,20 +26,25 @@ export function tableFilterBox(layout: SheetLayout, table: SheetTable): GridRang
 
 const meets = (a: GridRange, b: GridRange) =>
   a.r1 <= b.r2 && b.r1 <= a.r2 && a.c1 <= b.c2 && b.c1 <= a.c2;
-const same = (a: GridRange, b: GridRange) =>
-  a.r1 === b.r1 && a.c1 === b.c1 && a.r2 === b.r2 && a.c2 === b.c2;
 
-/** Whether a filter over `box` is `table`'s filter. */
-export function isTableFilter(layout: SheetLayout, table: SheetTable, box: GridRange): boolean {
-  const own = tableFilterBox(layout, table);
-  return !!own && same(own, box);
+/** A table's filter as drawn (its box by ids, its conditions); null while off or when its cells are gone. */
+export function tableDrawnFilter(layout: SheetLayout, table: SheetTable): DrawnFilter | null {
+  const p = table.filter ? tableFilterBox(layout, table) : null;
+  if (!p) return null;
+  return {
+    r1: layout.rows[p.r1]!,
+    c1: layout.cols[p.c1]!,
+    r2: layout.rows[p.r2]!,
+    c2: layout.cols[p.c2]!,
+    conds: table.filter!,
+  };
 }
 
-/** The tables a filter over `box` overlaps other than as their filter, in order. */
+/** The tables a sheet's filter over `box` overlaps, in order. */
 export function filterClashes(layout: SheetLayout, box: GridRange): SheetTable[] {
   return (layout.tables ?? []).filter((t) => {
     const p = posRangeOf(layout, t);
-    return !!p && meets(p, box) && !isTableFilter(layout, t, box);
+    return !!p && meets(p, box);
   });
 }
 
@@ -58,27 +64,4 @@ export function tableHolding(layout: SheetLayout, sel: GridRange): SheetTable | 
     if (p && sel.r1 >= p.r1 && sel.r2 <= p.r2 && sel.c1 >= p.c1 && sel.c2 <= p.c2) return t;
   }
   return null;
-}
-
-/**
- * The sheet's filter after a table changes: a filter that was the table's filter follows it to its new rows (its
- * growth, a total row turned on); otherwise it is as it was. Undoing the change moves it back the same way.
- */
-export function filterFollowing(
-  layout: SheetLayout,
-  before: SheetTable | undefined,
-  after: SheetTable | null,
-): SheetLayout['filter'] {
-  const f = layout.filter;
-  const box = f ? posRangeOf(layout, f) : null;
-  if (!f || !box || !before || !after || !isTableFilter(layout, before, box)) return f;
-  const next = tableFilterBox(layout, after);
-  if (!next) return f;
-  return {
-    ...f,
-    r1: layout.rows[next.r1]!,
-    c1: layout.cols[next.c1]!,
-    r2: layout.rows[next.r2]!,
-    c2: layout.cols[next.c2]!,
-  };
 }

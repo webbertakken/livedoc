@@ -554,27 +554,31 @@ describe('sort, filter, freeze, dates', () => {
     expect(h.sheet().layout.filter).toBeUndefined();
   });
 
-  // data-tools.md "A table's filter" (D481): inside a table, the table's filter; over part of one, refused.
-  it('makes a table’s filter inside it, and refuses a filter over part of it', async () => {
+  // data-tools.md "A table's filter" (D481): a table owns its filter, on from Convert to Table; inside it Create a
+  // Filter and the table menu's Filter turn it off and on; a column's condition is set alone; over part of a table the
+  // sheet's filter is refused.
+  it('turns a table’s own filter off and on, sets its conditions, and refuses a filter over part of it', async () => {
     const h = await rich();
     h.typeAt(0, 0, 'Head');
     h.typeAt(1, 0, 'x');
-    h.select(0, 0, 1, 0);
+    h.typeAt(2, 0, 'y');
+    h.select(0, 0, 2, 0);
     h.run((a) => a.convertToTable());
-    expect(h.sheet().layout.tables).toHaveLength(1);
-    h.select(0, 0, 2, 1);
+    const table = () => h.sheet().layout.tables![0]!;
+    expect(table().filter).toEqual({});
+    h.select(0, 0, 3, 1);
     h.run((a) => a.toggleFilter());
     expect(h.sheet().layout.filter).toBeUndefined();
     expect(h.toast).toHaveBeenLastCalledWith("This range overlaps Table1: use the table's filter");
     h.select(1, 0);
     h.run((a) => a.toggleFilter());
-    const { rows, cols } = h.sheet().layout;
-    expect(h.sheet().layout.filter).toMatchObject({
-      r1: rows[0],
-      c1: cols[0],
-      r2: rows[1],
-      c2: cols[0],
-    });
+    expect(table().filter).toBeUndefined();
+    h.run((a) => a.toggleTableFilter(table().id));
+    expect(table().filter).toEqual({});
+    const col = h.sheet().layout.cols[0]!;
+    h.run((a) => a.setTableFilter(table().id, col, { values: ['x'] }));
+    expect(table().filter).toEqual({ [col]: { values: ['x'] } });
+    expect(h.sheet().layout.filter).toBeUndefined();
   });
 
   it('freezes within the limits and the grid', async () => {

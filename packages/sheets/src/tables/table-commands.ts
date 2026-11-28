@@ -126,14 +126,16 @@ export function convertToTable(
     })
   )
     return { ok: false, reason: 'overlap' };
-  // The sheet's filter may be over exactly the new table, becoming its filter, and nowhere else on it (D481).
+  // The sheet's filter may be over exactly the new table, its conditions becoming the table's filter, and nowhere
+  // else on it (D481).
   const filter = layout.filter && at(layout.filter);
-  if (
-    filter &&
-    meets(filter, box) &&
-    !(filter.r1 === box.r1 && filter.c1 === box.c1 && filter.r2 === box.r2 && filter.c2 === box.c2)
-  )
-    return { ok: false, reason: 'filter' };
+  const exact =
+    !!filter &&
+    filter.r1 === box.r1 &&
+    filter.c1 === box.c1 &&
+    filter.r2 === box.r2 &&
+    filter.c2 === box.c2;
+  if (filter && meets(filter, box) && !exact) return { ok: false, reason: 'filter' };
   if (
     (layout.merges ?? []).some((m) => {
       const p = at(m);
@@ -156,8 +158,11 @@ export function convertToTable(
     ...ids,
     ...(Object.keys(types).length ? { types } : {}),
     band: bandId!,
+    // Its own filter on, as Excel's (D481).
+    filter: exact ? { ...layout.filter!.conds } : {},
   };
   const changes: LayoutChange[] = [
+    ...(exact ? [{ k: 'filter', filter: null } satisfies LayoutChange] : []),
     ...bands.map((b): LayoutChange => ({ k: 'band', id: b.id, band: null })),
     { k: 'band', id: bandId!, band: newBanding(bandId!, ids) },
     { k: 'table', id: table.id, table },

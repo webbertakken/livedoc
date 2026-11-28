@@ -71,8 +71,8 @@ export type FilterRecord = {
   }[];
 };
 
-// A recorded condition: what a write would keep (its formula as text).
-function recordedCondition(v: unknown): FileFilterCondition | null {
+/** A recorded condition: what a write would keep (its formula as text); null when it is not one. */
+export function recordedCondition(v: unknown): FileFilterCondition | null {
   if (!isRecord(v)) return null;
   const { fx, ...rest } = v;
   if (fx !== undefined && (typeof fx !== 'string' || rest.op !== 'formula')) return null;
@@ -146,7 +146,7 @@ export function readFilterRecord(text: string): FilterRecord | null {
 
 // Each column's line: its standard column as the format holds it; a column a file holds in a form LiveDoc cannot
 // read (no condition, no standard column) says so, so another app's change to it is seen.
-const columnLines = (cols: readonly FileFilterColumn[], held: StandardIn) =>
+export const filterColumnLines = (cols: readonly FileFilterColumn[], held: StandardIn) =>
   cols.flatMap((x) => {
     if (!x.std) return x.cond ? [] : [`${x.c} unread`];
     const std = held(x.std);
@@ -163,11 +163,12 @@ export function filterFingerprint(
   held: StandardIn,
 ): string {
   const lines: string[] = [];
-  if (filter) lines.push(`filter ${formatRange(filter.range)}`, ...columnLines(filter.cols, held));
+  if (filter)
+    lines.push(`filter ${formatRange(filter.range)}`, ...filterColumnLines(filter.cols, held));
   for (const v of views)
     lines.push(
       `view ${formatRange(v.range)}`,
-      ...columnLines(v.cols, held),
+      ...filterColumnLines(v.cols, held),
       ...(v.sort ?? []).map((k) => `sort ${k.c}${k.desc ? ' desc' : ''}`),
     );
   return validationFingerprint(lines);

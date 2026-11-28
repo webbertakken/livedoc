@@ -4,6 +4,7 @@ import { localeDayFirst, parseDateText } from './dates';
 import { parsePlainNumber } from './input';
 import { displayValue } from './number-format';
 import { layoutIndex, posRangeOf } from './layout';
+import { tableDrawnFilter } from './tables/table-filter';
 import {
   cellKey,
   type ConditionOp,
@@ -244,17 +245,36 @@ export type FilterReads = {
   ) => boolean;
 };
 
-// The filter drawn: the sheet's, or a filter view open in its place (data-tools.md "Filters, filter views and
-// slicers"); null for none. Formulas read the sheet's alone.
+// A filter as drawn: the sheet's, a table's, or a filter view open in their place (data-tools.md "Filters, filter
+// views and slicers"). Formulas read the sheet's and the tables', never a view.
 export type DrawnFilter = IdRange & { conds: Record<string, FilterCondition> };
 
+/**
+ * Which rows the filters hide: a row is hidden when any of them hides it. Undefined, the sheet's filter and every
+ * table's (data-tools.md "A table's filter"); a filter given (an open view), that one alone; null, none.
+ */
 export function filterTest(
   sheet: Sheet,
   reads: FilterReads,
-  filter: DrawnFilter | null | undefined = sheet.layout.filter,
+  filter?: DrawnFilter | null,
 ): FilterTest | null {
+  const filters =
+    filter === undefined
+      ? [
+          sheet.layout.filter,
+          ...(sheet.layout.tables ?? []).map((t) => tableDrawnFilter(sheet.layout, t)),
+        ]
+      : [filter];
+  const tests = filters.flatMap((f) => {
+    const test = f ? oneFilterTest(sheet, reads, f) : null;
+    return test ? [test] : [];
+  });
+  if (tests.length <= 1) return tests[0] ?? null;
+  return (r, read) => tests.some((test) => test(r, read));
+}
+
+function oneFilterTest(sheet: Sheet, reads: FilterReads, filter: DrawnFilter): FilterTest | null {
   const { locale } = reads;
-  if (!filter) return null;
   const box = posRangeOf(sheet.layout, filter);
   if (!box) return null;
   const ix = layoutIndex(sheet.layout);
@@ -282,7 +302,7 @@ export function filterTest(
   };
 }
 
-// The row ids the drawn filter hides (its header row never): the sheet's unless another is given.
+// The row ids the filters hide (a header row never): the sheet's and the tables' unless a view is given (filterTest).
 export function filteredOutRows(
   wb: Workbook,
   sheetId: string,
@@ -290,13 +310,7 @@ export function filteredOutRows(
 ): Set<string> {
   const out = new Set<string>();
   const sheet = wb.sheet(sheetId);
-  const test =
-    sheet &&
-    filterTest(
-      sheet,
-      workbookFilterReads(wb, sheetId),
-      filter === undefined ? sheet.layout.filter : filter,
-    );
+  const test = sheet && filterTest(sheet, workbookFilterReads(wb, sheetId), filter);
   if (!sheet || !test) return out;
   const read = (r: number, c: number): Value => wb.value(sheetId, r, c);
   sheet.layout.rows.forEach((rowId, r) => {

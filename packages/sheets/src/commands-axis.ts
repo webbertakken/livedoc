@@ -10,9 +10,9 @@ import {
   filterClashes,
   filterOverlapsTable,
   filterOverlapsTableNote,
-  tableFilterBox,
   tableHolding,
 } from './tables/table-filter';
+import type { SheetTable } from './tables/table';
 import { sortedOrder, type SortKey } from './sort';
 import { scalarOf } from './formula/values';
 import type { LayoutChange, SheetWrite } from './store';
@@ -222,18 +222,17 @@ export function sortRange(
 }
 
 /**
- * The range Create a Filter takes (the filled block around the selection, or the selection when it is more than one
- * cell; a table's header and data rows when the selection lies inside it, D481), or why it is refused: the range
- * overlaps a table other than as its filter.
+ * What Create a Filter acts on: the table the selection lies inside, whose own filter it turns on or off (D481);
+ * else the filled block around the selection, or the selection when it is more than one cell; or why it is refused:
+ * that range overlaps a table, which the sheet's filter never does.
  */
 export function filterRangeFor(
   layout: SheetLayout,
   sel: GridRange,
   grid: Grid,
-): { box: GridRange } | { refused: string; note: string } {
+): { table: SheetTable } | { box: GridRange } | { refused: string; note: string } {
   const inside = tableHolding(layout, sel);
-  const own = inside && tableFilterBox(layout, inside);
-  if (own) return { box: own };
+  if (inside) return { table: inside };
   const single = sel.r1 === sel.r2 && sel.c1 === sel.c2;
   const box = single ? currentRegion({ r: sel.r1, c: sel.c1 }, grid) : sel;
   const [clash] = filterClashes(layout, box);
@@ -242,7 +241,23 @@ export function filterRangeFor(
     : { box };
 }
 
-// Filter on (over filterRangeFor's range) or off; a refusal said rather than written.
+/** Whether the filter Create a Filter acts on is on (it then reads Remove Filter): the table's, else the sheet's. */
+export function filterShownFor(layout: SheetLayout, sel: GridRange): boolean {
+  const inside = tableHolding(layout, sel);
+  return inside ? inside.filter !== undefined : !!layout.filter;
+}
+
+/** A table's own filter on (no column filtered) or off (its conditions gone), one write (D481). */
+export function tableFilterToggle(table: SheetTable, on: boolean): SheetWrite {
+  const { filter: _was, ...off } = table;
+  return {
+    kind: 'layout',
+    changes: [{ k: 'table', id: table.id, table: on ? { ...off, filter: {} } : off }],
+  };
+}
+
+// Filter on or off: the table's own inside a table, else the sheet's (over filterRangeFor's range); a refusal said
+// rather than written.
 export function toggleFilter(
   wb: Workbook,
   sheetId: string,
@@ -251,12 +266,24 @@ export function toggleFilter(
 ): SheetWrite | { refused: string } | null {
   const sheet = wb.sheet(sheetId);
   if (!sheet) return null;
+  const inside = tableHolding(sheet.layout, sel);
+  if (inside) return tableFilterToggle(inside, inside.filter === undefined);
   if (sheet.layout.filter) return { kind: 'layout', changes: [{ k: 'filter', filter: null }] };
   const range = filterRangeFor(sheet.layout, sel, grid);
   if ('refused' in range) return { refused: range.refused };
+  if (!('box' in range)) return null;
   const { box } = range;
   const ids = idRangeOf(sheet.layout, box.r1, box.c1, box.r2, box.c2);
   return ids ? { kind: 'layout', changes: [{ k: 'filter', filter: { ...ids, conds: {} } }] } : null;
+}
+
+/** One column's condition in a table's own filter, set or cleared alone (data-tools.md "A table's filter"). */
+export function setTableFilterCondition(
+  tableId: string,
+  colId: string,
+  cond: FilterCondition | null,
+): SheetWrite {
+  return { kind: 'layout', changes: [{ k: 'tfilterCond', id: tableId, col: colId, cond }] };
 }
 
 export function setFilterCondition(colId: string, cond: FilterCondition | null): SheetWrite {

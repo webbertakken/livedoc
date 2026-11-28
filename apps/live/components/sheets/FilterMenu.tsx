@@ -2,7 +2,8 @@
 
 // A filter column's menu (docs/specs/029-sheets/sheet.md "Filter", data-tools.md "Filters, filter views and
 // slicers"): Sort A to Z and Z to A over the filter's rows, then Filter by Colour, Filter by Values and Filter by
-// Condition, applied together by OK, a row kept only when it meets every one set.
+// Condition, applied together by OK, a row kept only when it meets every one set. A table's own filter (D481) has
+// the same menu, opened from its header's column button, with Column Menu at its top and the column menu's sort.
 import { Button } from '@livedoc/ui';
 import { useMemo, useState } from 'react';
 import {
@@ -10,8 +11,10 @@ import {
   columnValueCounts,
   compileTypedFormula,
   formulaAsTyped,
+  tableDrawnFilter,
   type FilterColour,
   type FilterCondition,
+  type SheetTable,
 } from '@livedoc/sheets';
 import { ContextMenu, ContextMenuDivider } from '@/components/palette/ContextMenu';
 import { MenuActionRow } from '@/components/primitives/PortalMenu';
@@ -22,22 +25,34 @@ import { FilterByColour } from './FilterByColour';
 import { FilterByCondition } from './FilterByCondition';
 import { conditionDraftOf, conditionOfDraft, type ConditionDraft } from './filter-condition-draft';
 import { FilterIcon, SortIcon } from './sheet-icons';
+import { Glyph } from './SheetCellMenu';
 
 export function FilterMenu({
   colId,
   at,
   actions,
   onClose,
+  table,
+  onColumnMenu,
 }: {
   colId: string;
   at: { x: number; y: number };
   actions: SheetActions;
   onClose: () => void;
+  // A table's own filter's column, in place of the sheet's filter; Column Menu opens its column menu.
+  table?: SheetTable;
+  onColumnMenu?: () => void;
 }) {
   const c = useSheetController();
-  // The filter drawn: an open filter view's in the sheet filter's place.
-  const drawn = c.filterViews.drawn;
-  const inView = !!c.filterViews.open;
+  const layout = c.sheet.layout;
+  const own = useMemo(() => (table ? tableDrawnFilter(layout, table) : null), [layout, table]);
+  // The filter drawn: the table's own, else an open filter view's in the sheet filter's place.
+  const drawn = table ? own : c.filterViews.drawn;
+  const inView = !table && !!c.filterViews.open;
+  const sort = (ascending: boolean) =>
+    table
+      ? actions.sortTableColumn(table.id, colId, ascending)
+      : actions.sortFilter(colId, ascending);
   const current = drawn?.conds[colId];
   const values = useMemo(
     () => columnValueCounts(c.workbook, c.sheet.id, colId, drawn),
@@ -79,28 +94,39 @@ export function FilterMenu({
       ...condition.part,
       ...(colour ? { colour } : {}),
     };
-    actions.setFilter(colId, Object.keys(cond).length ? cond : null);
+    const set = Object.keys(cond).length ? cond : null;
+    if (table) actions.setTableFilter(table.id, colId, set);
+    else actions.setFilter(colId, set);
     onClose();
   };
   const field = 'h-field w-full rounded-control border bg-transparent px-2 text-body outline-none';
   return (
-    <ContextMenu position={at} label="Filter column" onClose={onClose}>
+    <ContextMenu
+      position={at}
+      label={table ? `${table.name} filter` : 'Filter column'}
+      onClose={onClose}
+    >
+      {onColumnMenu ? (
+        <MenuActionRow label="Column Menu" icon={<Glyph t="▾" />} onClick={onColumnMenu} />
+      ) : null}
       {/* A filter view's own sort orders only what its opener sees: the drawn order (data-tools.md). */}
       {inView ? null : (
         <>
           <MenuActionRow
             label="Sort A to Z"
             icon={<SortIcon />}
+            disabled={!!table && !c.canShape}
             onClick={() => {
-              actions.sortFilter(colId, true);
+              sort(true);
               onClose();
             }}
           />
           <MenuActionRow
             label="Sort Z to A"
             icon={<SortIcon />}
+            disabled={!!table && !c.canShape}
             onClick={() => {
-              actions.sortFilter(colId, false);
+              sort(false);
               onClose();
             }}
           />

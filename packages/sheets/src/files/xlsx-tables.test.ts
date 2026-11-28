@@ -50,6 +50,8 @@ const SALES: SheetTable = {
   total: true,
   types: { s0c0: 'dropdown', s0c1: 'currency' },
   opts: { s0c0: [{ v: 'pen' }, { v: 'ink' }, { v: 'cap' }] },
+  // Its own filter on, no column filtered, as Convert to Table makes it (D481).
+  filter: {},
 };
 const sheetsWithSales = () =>
   makeSheets(
@@ -142,6 +144,8 @@ describe('tables in XLSX', () => {
         range: { r1: 0, c1: 0, r2: 5, c2: 2 },
         columns: ['Item', 'Amount', 'Column 3'],
         total: true,
+        // Its `autoFilter`: its own filter on (D481).
+        filter: [],
       },
     ]);
     expect(importReport(read.losses)).toEqual([]);

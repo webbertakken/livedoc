@@ -246,9 +246,12 @@ export function MenuActionRow({
   onClick,
   disabled = false,
   labelStyle,
+  checked,
 }: {
   label: string;
   icon: ReactNode;
+  // An on/off verb's state (a table's Filter): a command menu's checkbox item, else a pressed button.
+  checked?: boolean;
   // Handed the click, so a verb that anchors something (a confirm) can anchor it to the row itself.
   onClick: (event: MouseEvent<HTMLButtonElement>) => void;
   // The label's own look (a font menu draws each font's name in that font).
@@ -259,7 +262,11 @@ export function MenuActionRow({
   // menu differently each time.
   disabled?: boolean;
 }) {
-  const { itemProps } = useMenuItemProps({ disabled });
+  const { inCommandMenu, itemProps } = useMenuItemProps({
+    disabled,
+    ...(checked === undefined ? {} : { checked }),
+  });
+  const pressed = checked !== undefined && !inCommandMenu ? { 'aria-pressed': checked } : null;
   const content = (
     <>
       <span className="flex w-5 shrink-0 items-center justify-center text-slate-400 [&_svg]:size-icon-row">
@@ -275,6 +282,7 @@ export function MenuActionRow({
       <span
         aria-disabled
         {...itemProps}
+        {...pressed}
         className="flex min-h-row w-full cursor-not-allowed items-center pointer-coarse:min-h-11 gap-2 px-3 text-body text-slate-500"
       >
         {content}
@@ -285,6 +293,7 @@ export function MenuActionRow({
     <button
       type="button"
       {...itemProps}
+      {...pressed}
       onClick={onClick}
       className="flex min-h-row w-full cursor-pointer items-center pointer-coarse:min-h-11 gap-2 px-3 text-body text-slate-700 transition hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
     >

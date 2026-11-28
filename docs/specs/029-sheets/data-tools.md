@@ -30,16 +30,29 @@ Google Sheets' Data menu does. Its rows of the [parity matrix](parity-matrix.md)
 
 - **Create a Filter** (Ctrl+Alt+R in the matrix's list): a filter over the data region, its header cells with
   filter buttons; one filter a sheet, seen by everyone.
-  - **A table's filter** (the Director's ruling, 2026-11-27, as Google's: a table has its own filter): the sheet's
-    filter over exactly a table's header and data rows (its total row apart) is that table's filter. Create a Filter
-    with the selection inside a table makes it, over the table's rows. A filter that would overlap a table any other
-    way is refused, nothing changed, with "This range overlaps Table1: use the table's filter" in a toast, and
-    Create a Filter is dimmed there with the note "Overlaps Table1" (D481).
-  - The table's filter follows its table: rows inserted in the table grow both, a total row turned on stays outside
-    it, and Convert to Range or Delete Table leaves the filter on the cells as the sheet's (D481).
-  - The room's judge refuses the same: a write setting the sheet's filter over part of a table (an agent's changeset
-    or an import's included) is `filter_overlaps_table`; a filter already overlapping one (stored before this rule,
-    or read from an OpenDocument file) stays as it is and may still change its conditions (D480).
+  - **A table's filter** (the Director's ruling, 2026-11-27, as Google's and Excel's: every table has its own
+    filter): a table holds a filter of its own, a condition per column (the filter's: values, condition, colour),
+    over its header and data rows (its total row apart), so a sheet with two tables filters both, and the sheet's
+    filter serves the cells outside tables. Convert to Table turns it on, no column filtered; the table menu's
+    **Filter** (ticked while on) and Create a Filter with the selection inside the table (reading **Remove Filter**
+    while on) turn it on and off, one undo step each; turned off, its conditions go and its rows show again (D481).
+  - While it is on, the header's column buttons (▾) are its filter buttons, as Google's: pressing one opens the
+    filter menu for that column (Sort A to Z and Sort Z to A as the column menu's, Filter by Colour, Values and
+    Condition) with **Column Menu** at its top, which opens the column menu; a filtered column's button is drawn as
+    a funnel. Ctrl+Alt+\ opens the column menu still. OK sets that column's condition alone, one undo step, so two
+    people filtering different columns both keep theirs.
+  - A row is hidden when any filter over it hides it, the sheet's or a table's; clearing one filter's conditions
+    shows again only the rows no other filter hides.
+  - The table's filter follows its table by row and column ids: rows inserted in the table join it, a total row
+    turned on stays outside it, a deleted column's condition goes with it, and Convert to Range or Delete Table drops
+    it, its rows shown again, as Excel's Convert to Range drops a table's filter (D481).
+  - The sheet's filter never overlaps a table: Create a Filter over a range touching a table, the selection not
+    inside it, is refused, nothing changed, with "This range overlaps Table1: use the table's filter" in a toast,
+    and is dimmed there with the note "Overlaps Table1" (D481).
+  - The room's judge refuses the same: a write setting the sheet's filter over any of a table's cells, or a table
+    over any of the sheet's filter's cells (an agent's changeset or an import's included), is
+    `filter_overlaps_table`; a filter already overlapping one (stored before this rule, or read from an OpenDocument
+    file) stays as it is and may still change its conditions (D480).
 - A column's filter menu: Sort A to Z, Sort Z to A, **Filter by Colour** (fill, text), **Filter by Condition** (every
   condition of Google's list and Custom Formula), **Filter by Values** (a searchable list with counts, Select All,
   Clear).
@@ -90,8 +103,11 @@ Google Sheets' Data menu does. Its rows of the [parity matrix](parity-matrix.md)
     by everyone opening it after (D473); a temporary view only for its maker.
   - The view's **Sort A to Z** and **Sort Z to A** order the rows drawn for its opener alone and are kept with the
     view; cells never move, for anyone (Google's: "filter or sort a spreadsheet you don't have edit access to").
-  - While a view is open the sheet's filter is not drawn: the view's conditions alone hide rows; closing it draws the
-    filter again. Formulas (SUBTOTAL among them), charts and the status bar's figures read the sheet's filter, never
+  - While a view is open neither the sheet's filter nor a table's is drawn: the view's conditions alone hide rows.
+    A table's filter is **paused**, never changed: its column buttons are drawn faded with "Filter paused while a
+    filter view is open" (their name and tooltip) and open its column menu; closing the view draws every filter again
+    exactly as stored (D482). Formulas
+    (SUBTOTAL among them), charts and the status bar's figures read the sheet's filter and the tables' filters, never
     a view, as their values are everyone's (measured: SUBTOTAL(109) unchanged under a filter view, D469).
   - **Links**: while a saved view is open the address carries `?fview=<sheet id>.<view id>`; an address naming one
     opens its sheet with it open. One since deleted opens the spreadsheet as it is and says "That filter view was deleted"; the same
@@ -113,9 +129,10 @@ Google Sheets' Data menu does. Its rows of the [parity matrix](parity-matrix.md)
   - **Anyone** may change a slicer's filter; it is theirs alone, as Google's ("changes are only visible to you"), until
     an Editor's **Set Current Filters as Default** (the slicer's ⋮ menu) saves it for everyone, one undo step. On
     opening the spreadsheet, a slicer filters by its default. **Reset to Default** drops one's own.
-  - A row of the range is drawn only when the sheet's filter (or the open view) and every slicer over it keep it.
+  - A row of the range is drawn only when every filter over it (the sheet's and the tables', or the open view) and
+    every slicer over it keep it.
   - Slicers filter charts and pivot tables whose data is the same range (Apply to Pivot Tables), for that person, and
-    never formulas: SUBTOTAL reads the sheet's filter alone (Google's note, and measured, D475).
+    never formulas: SUBTOTAL reads the sheet's filter and the tables' alone (Google's note, and measured, D475).
   - Up to 50 a sheet (D440), within the sheet's 100 objects.
 - **Group by view** (Data › Create Group by View, and the table menu's **Group By**; tables only): a view of a table
   that groups its rows under a column's values, each group a header row drawn with the value and its count, collapsed
@@ -269,8 +286,9 @@ sheet's, seen by everyone, kept by row and column ids as a named range is.
     the first default style, the header on, the footer on with a total row (D442);
   - then the **Table Settings** panel opens on it.
   - Refused, with a toast and nothing changed: a range touching another table ("Tables can't overlap"), touching the
-    sheet's filter unless the filter covers exactly the new table ("This range overlaps the sheet's filter: remove it
-    or filter the table's cells only"; a filter covering exactly the new table becomes its filter, D481), holding a
+    sheet's filter unless the filter covers exactly the new table's header and data rows ("This range overlaps the
+    sheet's filter: remove it or filter the table's cells only"; a filter covering exactly them becomes the table's
+    filter, its conditions kept, and the sheet's filter goes, one change, D481), holding a
     merge ("Unmerge cells before making a table"), touching a banding not wholly inside it ("Alternating colours
     can't overlap"; one wholly inside is replaced by the table's), or past the sheet's 50 tables (D440).
 - **Names**: a table's name is 1 to 255 characters of letters, digits, underscores and spaces, not starting with a
@@ -304,10 +322,11 @@ sheet's, seen by everyone, kept by row and column ids as a named range is.
   the header is the sheet's first row) with the table's name and ▾, seen by everyone. Pressing it, or Enter or Space
   on it, opens the menu, its items moved by the arrow keys: **Table Settings** (the active cell put in the table, the
   panel opened), **Rename** (the name edited in place on the chip; Enter keeps it, Escape leaves it, a name the rules
-  refuse is said in a toast), **Select Table**, **Convert to Range** (the table goes, its cells and look kept as plain
-  cells and a banding; formulas reading it read the same cells as plain ranges, one undo step), **Delete Table** (its
-  cells and look go). Rename, Convert to Range and Delete Table are an Editor's, dimmed for anyone else; views join
-  the menu with box 1 ([Filters, filter views and slicers](#filters-filter-views-and-slicers)).
+  refuse is said in a toast), **Select Table**, **Filter** (the table's filter on or off, ticked while on, D481),
+  **Convert to Range** (the table goes, its cells and look kept as plain cells and a banding, its filter dropped;
+  formulas reading it read the same cells as plain ranges, one undo step), **Delete Table** (its cells and look go).
+  Rename, Filter, Convert to Range and Delete Table are an Editor's, dimmed for anyone else; views join the menu with
+  box 1 ([Filters, filter views and slicers](#filters-filter-views-and-slicers)).
 - **Column menu** (a ▾ button at the right end of each header cell, seen by everyone, reached by Tab as the chip is;
   Ctrl+Alt+\ on a cell of the table opens the active cell's column's), under the column's name:
   - **Edit Column Type**: the types as a list, None first, the column's own ticked; choosing one sets it at once.
@@ -333,7 +352,8 @@ sheet's, seen by everyone, kept by row and column ids as a named range is.
 - Copies: a duplicated sheet's or copied sheet's tables are renamed to the next free names, as Google's: each its own
   name, an underscore and the smallest number from 2 that frees it in the workbook (`Sales_2`, `Sales_3`, D451);
   formulas in the copy reading its tables read the copy's; a table's banding goes with it; Clear Sheet leaves the
-  tables, their cells cleared.
+  tables, their cells cleared. A sheet carried in (a file opened, a sheet copied to another spreadsheet) keeps each
+  table's name while it is free there, numbered as a copy's only when taken.
 - Pasted tables: an Editor's plain paste (Paste, Ctrl+V; never Paste Special) of copied cells holding a table's header
   row makes a new table where they land, as Google's paste does (D454): the table's copied columns, from its header
   row to the last copied row of it, with their types, dropdown options and banding colours, its total row when its
@@ -524,9 +544,15 @@ The code cites each by its id.
 
 - **D440** A sheet's tables: up to 50, as filter views and slicers, a table up to the sheet's columns wide; past it,
   `tables_full` (default).
-- **D481** A table's filter: the sheet's filter over exactly the table's header and data rows, as Google's table has
-  its own filter; any other overlap of a filter and a table is refused in the editor and by the room's judge (the
-  Director's ruling, 2026-11-27); the refusals' words and the dimmed item's note (default).
+- **D481** A table's filter: each table's own, over its header and data rows, as Google's and Excel's tables have,
+  and the sheet's filter never over a table's cells, refused in the editor and by the room's judge (the Director's
+  rulings, 2026-11-27); on at Convert to Table, as Excel's (default); dropped by Convert to Range, as Excel's; a
+  sheet's filter over exactly a new table's rows becoming its filter; the refusals' words and the dimmed item's note
+  (default).
+- **D482** While a filter view is open, the tables' filters are paused, the view alone hiding rows, as the sheet's
+  filter is not drawn (the Director's ruling, 2026-11-27); their buttons drawn paused (the Director's) in the words
+  above (default). Google's is unmeasurable through the API: `setBasicFilter` with a `tableId` fails and a view's
+  rows are per viewer (`plans/assets/0020/research/google-table-view-probe.ts`).
 - **D441** Convert to Table's guessed column types: a type when every filled data cell is that type, else Text; a
   column with none filled None, as Google guesses (default).
 - **D442** A table's look: the alternating colours banding over it, the table's own, in the first default style; it

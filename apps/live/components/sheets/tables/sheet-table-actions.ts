@@ -1,6 +1,7 @@
 // What a Sheet's tables do (docs/specs/029-sheets/data-tools.md "Tables"): Convert to Table over the selection, a
-// table's settings written whole, Select Table and Delete Table, and the column menu's sort, insert and delete; each
-// through the controller's write, one undo step, an Editor's. Spread into useSheetActions.
+// table's settings written whole, Select Table and Delete Table, the column menu's sort, insert and delete, and the
+// table's own filter on or off and a column's condition in it; each through the controller's write, one undo step, an
+// Editor's. Spread into useSheetActions.
 import {
   columnTypeWrite,
   convertToRangeWrites,
@@ -8,13 +9,16 @@ import {
   deleteAxis,
   layoutIndex,
   posRangeOf,
+  setTableFilterCondition,
   tableAt,
+  tableFilterToggle,
   tableColumnInsertWrite,
   tableSortWrite,
   TABLE_REFUSAL_COPY,
   totalRowWrite,
   type CellChange,
   type DropdownOption,
+  type FilterCondition,
   type GridRange,
   type LayoutChange,
   type SheetTable,
@@ -120,6 +124,15 @@ export function sheetTableActions(c: SheetController) {
       const at = layoutIndex(layout()).colPos.get(colId);
       const w = at === undefined ? null : deleteAxis(c.sheet, 'c', at, at);
       if (w && c.write(w, 'Columns')) c.announce('1 column deleted');
+    },
+    // The table menu's Filter: the table's own filter on, or off with its conditions (D481).
+    toggleTableFilter(id: string): boolean {
+      const t = layout().tables?.find((x) => x.id === id);
+      return !!t && c.write(tableFilterToggle(t, t.filter === undefined), 'Filter');
+    },
+    // OK in a table column's filter menu: that column's condition alone, so another's on another column stays.
+    setTableFilter(id: string, colId: string, cond: FilterCondition | null): boolean {
+      return c.write(setTableFilterCondition(id, colId, cond), 'Filter');
     },
     // Select Table: its cells selected, the header row's first cell active.
     selectTable(id: string): void {

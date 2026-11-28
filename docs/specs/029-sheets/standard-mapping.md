@@ -456,8 +456,8 @@ The table is the contract the readers and writers are tested against, one test p
 - A sheet's [tables](data-tools.md#tables) are written and read both ways, as validation rules are (D293): the
   **standard form** each format's apps read, and **LiveDoc's record** beside it, exact, which LiveDoc reads back.
 - **XLSX standard form**: a table part (`xl/tables/tableN.xml`, `table` with `id`, `name` and `displayName` the
-  formula name, `ref` its range, `headerRowCount="1"`, `totalsRowCount="1"` with a total row, an `autoFilter` over it
-  without one), one `tableColumn` a column (`id`, `name` its column name), linked from the worksheet's `tableParts`
+  formula name, `ref` its range, `headerRowCount="1"`, `totalsRowCount="1"` with a total row, an `autoFilter` over
+  its header and data rows while its filter is on, [Filters in the file](#filters-in-the-file)), one `tableColumn` a column (`id`, `name` its column name), linked from the worksheet's `tableParts`
   by its relationship; its style `TableStyleLight1` with `showRowStripes="1"`, as the table's banding is written as
   format rules already ([Alternating colours](formatting.md#alternating-colours)). Each header cell is written as its
   column's name, text, as Excel holds a header (D452). Its `id` is past every kept table's; a kept table of an own
@@ -468,17 +468,20 @@ The table is the contract the readers and writers are tested against, one test p
   inside its table are read too.
 - **ODF standard form**: a `table:database-range` in the spreadsheet's one `table:database-ranges` (`table:name` the
   formula name, `table:target-range-address` its range with its sheet, `table:contains-header="true"`,
-  `table:display-filter-buttons="true"`), as LibreOffice writes a database range.
+  `table:display-filter-buttons="true"` while its filter is on), as LibreOffice writes a database range.
 - **OpenFormula** has no table reference a cell's formula keeps (LibreOffice reads `Table1[Amount]` only as it types
   it), so in an ODF file each is written as the plain absolute range it reads (`[.$B$2:.$B$9]`), which every app
   computes; LiveDoc's record restores the table references on read.
 - **LiveDoc's record**: in XLSX one `livedoc:tables` (`record`, `fingerprint`) in the worksheet's LiveDoc `ext`; in ODF
   the `table:table`'s `livedoc:tables` and `livedoc:tables-fingerprint` attributes; LiveDoc's namespace. It is one
   JSON object: `tables`, the sheet's tables in order, each its `name`, `range` as A1 text, `types` (column name to
-  type), `opts` (a Dropdown column's name to its options, as a dropdown rule's) and `total`; in ODF also `refs`, each
+  type), `opts` (a Dropdown column's name to its options, as a dropdown rule's), `total` and `filter` (while on: each
+  filtered column's letter to its condition, as the filters record holds one); in ODF also `refs`, each
   formula cell (A1) whose formula reads a table, with that formula in Google's syntax.
 - Its fingerprint is the CRC-32 (8 lower-case hex digits) of the standard form as written: each table's name and
-  range a line (and in ODF each `refs` cell's place and its formula as read back from what is written, a line).
+  range a line, then each column its filter keeps a standard column for, a line as the filters record's (and in ODF
+  each `refs` cell's place and its formula as read back from what is written, a line). Whether a table's filter is
+  on is the standard form's alone: the record gives the conditions of a filter the standard form shows on.
   **Read**, the record is taken when its fingerprint is the standard form's as read; else another app changed the
   tables or those formulas since, so the standard form is read, the record dropped (every ODF formula then keeps its
   plain range), and the read names it (`tables_changed`, logged, never reported), as D294.
@@ -510,15 +513,16 @@ The table is the contract the readers and writers are tested against, one test p
   condition as `customFilters` (`and="1"` for Is Between, two `customFilter`s; Is Not Between two joined by or; the
   text conditions as Excel's wildcards, `*x*`, `x*`, `*x`, Does Not Contain `notEqual` `*x*`); a date period as
   `dynamicFilter` (`today`, `tomorrow`, `yesterday`; the past week, month and year as the two days they span);
-  every row the filter hides written `hidden="1"`, as Excel draws a file's filter from its rows; and Excel's hidden
-  `_xlnm._FilterDatabase` name for the sheet, its range. A text in a wildcard form escapes Excel's `*`, `?` and
-  `~` with `~`. Read back, a hidden row of a filter with a condition, under its header, is the filter's, not a
-  hidden line, as Excel holds them (D478); LiveDoc's record lists the rows there hidden by hand (`hidden`). A
-  table's filter (data-tools.md, D481) is its table part's own `autoFilter` (its `filterColumn`s, the part's
-  `ref` its header and data rows), as Excel holds a table's, and a table part's `autoFilter` with a
-  `filterColumn` is read back as the sheet's filter over that table (the first such table's; another's columns
-  named `filter_unread`). Excel refuses a sheet's `autoFilter` over a table's cells, so a filter still overlapping a
-  table another way (D480) is written in LiveDoc's record alone, its rows still hidden.
+  every row any filter hides (the sheet's or a table's) written `hidden="1"`, as Excel draws a file's filters from
+  its rows; and Excel's hidden `_xlnm._FilterDatabase` name for the sheet, its range. A text in a wildcard form
+  escapes Excel's `*`, `?` and `~` with `~`. Read back, a hidden row under the header of a filter with a condition
+  (the sheet's or a table's) is the filter's, not a hidden line, as Excel holds them (D478); LiveDoc's record lists
+  the rows under the sheet's filter hidden by hand (`hidden`). Each table's filter (data-tools.md, D481) is its
+  table part's own `autoFilter` (its `filterColumn`s, `colId` the column's place in the table, the part's `ref` its
+  header and data rows), as Excel holds a table's, written only while the filter is on; read back, a table part
+  with an `autoFilter` has its filter on, its columns read as the sheet's are, and one without has it off. Excel
+  refuses a sheet's `autoFilter` over a table's cells, so a sheet's filter still overlapping a table (D480) is
+  written in LiveDoc's record alone, its rows still hidden.
 - **XLSX filter views**, as Google writes them (`plans/assets/0020/research/google-filter-view-export.md`): each a
   `customSheetView` (`guid` made of the sheet's place and the view's id, D479, `filter="1"`, `showAutoFilter="1"`)
   holding an `autoFilter` as the
@@ -534,8 +538,9 @@ The table is the contract the readers and writers are tested against, one test p
   list joined by and, so Is Not Between has no ODF form but LiveDoc's record (measured with LibreOffice 2026-11-27,
   `plans/assets/0020/research/libreoffice-filter-proof.md`). The rows the filter hides are
   `table:visibility="filter"`, LibreOffice's own, read back as the filter's, never hidden lines.
-  A table's filter (D481) is the `table:filter` of the table's own `table:database-range`, as LibreOffice holds a
-  database range's filter, read back as the sheet's filter over that table.
+  Each table's filter (D481) is the `table:filter` of the table's own `table:database-range`, as LibreOffice holds
+  a database range's filter, the range's filter buttons shown while it is on; read back, a table's database range
+  showing its buttons has its filter on, with the `table:filter`'s columns.
 - **ODF** has no filter views nor slicers: written to ODS they are left out, listed in the Download and Convert
   dialog ("2 filter views are left out", "1 slicer is left out"); Google's ODS keeps only each view's range as a
   `Z_…_.wvu.FilterData` name, which LiveDoc neither writes nor reads as a view.

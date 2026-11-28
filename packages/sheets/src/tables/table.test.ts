@@ -42,6 +42,19 @@ describe('tablesForCopy', () => {
     expect(copy!.name).toBe(`${'A'.repeat(253)}_2`);
   });
 
+  it('keeps a name free where the sheet lands, as a file opened into a new spreadsheet carries it', () => {
+    const carried = layout([table('t1', 'Table1'), table('t2', 'Table2')]);
+    expect(withFreeTableNames(carried, []).tables?.map((t) => t.name)).toEqual([
+      'Table1',
+      'Table2',
+    ]);
+    const beside = layout([table('t9', 'Table1')]);
+    expect(withFreeTableNames(carried, [beside]).tables?.map((t) => t.name)).toEqual([
+      'Table1_2',
+      'Table2',
+    ]);
+  });
+
   it('leaves a layout without tables as it is', () => {
     const bare = layout([]);
     expect(withFreeTableNames(bare, [bare])).toBe(bare);

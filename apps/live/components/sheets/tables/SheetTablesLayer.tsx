@@ -2,9 +2,11 @@
 
 // Each table's chip over the grid and its table menu (docs/specs/029-sheets/data-tools.md "Tables"): the table's name
 // above its header row's first cell (on it, when the header is the sheet's first row). Pressing it, or Enter or Space
-// on it, opens the menu: Table Settings, Rename (the name in place on the chip), Select Table, Convert to Range and
-// Delete Table, as Google's table menu. Each header cell holds its column's ▾ button, opening the column menu (also
-// Ctrl+Alt+\ on a cell of the table). Everyone sees them; what changes the table is an Editor's, dimmed for others.
+// on it, opens the menu: Table Settings, Rename (the name in place on the chip), Select Table, Filter, Convert to Range
+// and Delete Table, as Google's table menu. Each header cell holds its column's ▾ button, opening the column menu (also
+// Ctrl+Alt+\ on a cell of the table); while the table's own filter is on (and no filter view is open) it is the
+// column's filter button, as Google's, drawn as a funnel once the column is filtered (D481, D482). Everyone sees them;
+// what changes the table is an Editor's, dimmed for others.
 import { useContext, useEffect, useRef, useState } from 'react';
 import {
   cellText,
@@ -14,10 +16,13 @@ import {
   tableNameProblem,
   type SheetTable,
 } from '@livedoc/sheets';
+import { Tooltip } from '@livedoc/ui';
 import { ContextMenu, ContextMenuDivider } from '@/components/palette/ContextMenu';
 import { MenuActionRow, MenuHeader } from '@/components/primitives/PortalMenu';
 import { debugLog } from '@/lib/debug-log';
 import { Glyph } from '../SheetCellMenu';
+import { FilterMenu } from '../FilterMenu';
+import { FilterIcon } from '../sheet-icons';
 import { useSheetController } from '../sheet-controller';
 import { rectOf } from '../SheetSelectionLayer';
 import { useSheetActions } from '../useSheetActions';
@@ -25,6 +30,8 @@ import { TableColumnMenuContext, TableSettingsContext } from './table-settings-c
 import { TableColumnMenu } from './TableColumnMenu';
 
 const CHIP_HEIGHT = 20;
+/** A table's filter button while a filter view is open in its place (data-tools.md, D482). */
+export const FILTER_PAUSED = 'Filter paused while a filter view is open';
 const COLUMN_BUTTON = 16;
 
 type MenuAt = { tableId: string; x: number; y: number };
@@ -43,6 +50,7 @@ export function SheetTablesLayer() {
   const [menu, setMenu] = useState<MenuAt | null>(null);
   const [renaming, setRenaming] = useState<string | null>(null);
   const [columnMenu, setColumnMenu] = useState<ColumnMenuAt | null>(null);
+  const [filterMenu, setFilterMenu] = useState<ColumnMenuAt | null>(null);
   const root = useRef<HTMLDivElement | null>(null);
   const openerRef = useContext(TableColumnMenuContext);
   // Ctrl+Alt+\: the active cell's column's menu, under its header's button.
@@ -90,6 +98,9 @@ export function SheetTablesLayer() {
   };
   const shown = menu && tables.find((t) => t.id === menu.tableId);
   const columnTable = columnMenu && tables.find((t) => t.id === columnMenu.tableId);
+  const filterTable = filterMenu && tables.find((t) => t.id === filterMenu.tableId);
+  // A table's filter is drawn, and its buttons filter, unless a filter view is open in its place (D482).
+  const filtering = (t: SheetTable) => !!t.filter && !c.filterViews.open;
   const namesOf = (t: SheetTable) =>
     tableColumnNames(c.sheet.layout, t, (r, col) => cellText(c.sheet, r, col));
   const columnName = (t: SheetTable, colId: string) => {
@@ -115,28 +126,60 @@ export function SheetTablesLayer() {
             c.scroll,
           );
           if (r.w < COLUMN_BUTTON * 2) return null;
+          const filters = filtering(t);
+          const filtered = filters && !!t.filter![colId];
+          // Paused while a view is open: drawn quiet, opening the column menu; its filter is never touched (D482).
+          const paused = !!t.filter && !filters;
           return (
-            <button
-              key={`${t.id}:${colId}`}
-              type="button"
-              data-table-column={`${t.id}:${colId}`}
-              aria-label={`${columnName} column menu`}
-              aria-haspopup="dialog"
-              aria-expanded={columnMenu?.tableId === t.id && columnMenu.colId === colId}
-              className="pointer-events-auto absolute flex items-center justify-center rounded text-xs opacity-70 hover:opacity-100 focus-visible:opacity-100"
-              style={{
-                left: r.x + r.w - COLUMN_BUTTON - 2,
-                top: r.y + (r.h - COLUMN_BUTTON) / 2,
-                width: COLUMN_BUTTON,
-                height: COLUMN_BUTTON,
-                color: c.palette.text,
-              }}
-              onPointerDown={(e) => e.stopPropagation()}
-              onKeyDown={(e) => e.stopPropagation()}
-              onClick={(e) => setColumnMenu({ tableId: t.id, colId, ...below(e.currentTarget) })}
-            >
-              <span aria-hidden>▾</span>
-            </button>
+            <Tooltip key={`${t.id}:${colId}`} label={paused ? FILTER_PAUSED : ''}>
+              <button
+                type="button"
+                data-table-column={`${t.id}:${colId}`}
+                data-filtered={filtered ? '' : undefined}
+                data-paused={paused ? '' : undefined}
+                aria-label={
+                  filters
+                    ? `${columnName} filter`
+                    : paused
+                      ? `${columnName} column menu, ${FILTER_PAUSED.toLowerCase()}`
+                      : `${columnName} column menu`
+                }
+                aria-haspopup="dialog"
+                aria-expanded={[columnMenu, filterMenu].some(
+                  (m) => m?.tableId === t.id && m.colId === colId,
+                )}
+                className="pointer-events-auto absolute flex items-center justify-center rounded text-xs opacity-70 hover:opacity-100 focus-visible:opacity-100"
+                style={{
+                  left: r.x + r.w - COLUMN_BUTTON - 2,
+                  top: r.y + (r.h - COLUMN_BUTTON) / 2,
+                  width: COLUMN_BUTTON,
+                  height: COLUMN_BUTTON,
+                  // A filtered column's button filled, as the sheet's filter's.
+                  ...(filtered
+                    ? { backgroundColor: c.palette.focus, color: '#ffffff', opacity: 1 }
+                    : { color: c.palette.text }),
+                }}
+                onPointerDown={(e) => e.stopPropagation()}
+                onKeyDown={(e) => e.stopPropagation()}
+                onClick={(e) =>
+                  (filters ? setFilterMenu : setColumnMenu)({
+                    tableId: t.id,
+                    colId,
+                    ...below(e.currentTarget),
+                  })
+                }
+              >
+                {filtered ? (
+                  <FilterIcon />
+                ) : paused ? (
+                  <span aria-hidden className="opacity-50">
+                    <FilterIcon />
+                  </span>
+                ) : (
+                  <span aria-hidden>▾</span>
+                )}
+              </button>
+            </Tooltip>
           );
         });
       })}
@@ -216,6 +259,13 @@ export function SheetTablesLayer() {
             icon={<Glyph t="▦" />}
             onClick={run(() => actions.selectTable(shown.id))}
           />
+          <MenuActionRow
+            label="Filter"
+            icon={shown.filter ? <Glyph t="✓" /> : <span aria-hidden />}
+            checked={shown.filter !== undefined}
+            disabled={!editor}
+            onClick={run(() => actions.toggleTableFilter(shown.id))}
+          />
           <ContextMenuDivider />
           <MenuActionRow
             label="Convert to Range"
@@ -238,6 +288,20 @@ export function SheetTablesLayer() {
           name={columnName(columnTable, columnMenu.colId)}
           position={{ x: columnMenu.x, y: columnMenu.y }}
           onClose={() => setColumnMenu(null)}
+        />
+      ) : null}
+      {filterMenu && filterTable ? (
+        <FilterMenu
+          key={`${filterTable.id}:${filterMenu.colId}`}
+          table={filterTable}
+          colId={filterMenu.colId}
+          at={{ x: filterMenu.x, y: filterMenu.y }}
+          actions={actions}
+          onClose={() => setFilterMenu(null)}
+          onColumnMenu={() => {
+            setFilterMenu(null);
+            setColumnMenu(filterMenu);
+          }}
         />
       ) : null}
     </div>

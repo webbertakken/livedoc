@@ -297,11 +297,12 @@ export function useSheetControllerState(opts: {
     toast: opts.toast,
     canShape,
   });
-  const drawnFilter = filterViews.drawn;
-  // Rows the drawn filter hides are drawn at no height; worked out again whenever a value may have changed.
+  const openView = filterViews.open;
+  // Rows a filter hides are drawn at no height: the open view's alone, else any the sheet's filter or a table's hides
+  // (data-tools.md "A table's filter", D482); worked out again whenever a value or a filter may have changed.
   const filtered = useMemo(
-    () => (drawnFilter ? filteredOutRows(workbook, sheet.id, drawnFilter) : new Set<string>()),
-    [workbook, sheet.id, drawnFilter, version], // oxlint-disable-line react/exhaustive-deps
+    () => filteredOutRows(workbook, sheet.id, openView ?? undefined),
+    [workbook, sheet, openView, version], // oxlint-disable-line react/exhaustive-deps
   );
   // How tall each row is drawn: a sized row its size, every other row what its text needs (sheet.md "Row height").
   // Worked out again whenever a value may have changed; the same function while no height did, so the geometry and

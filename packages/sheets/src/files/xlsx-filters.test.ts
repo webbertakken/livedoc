@@ -17,6 +17,7 @@ import { filterViewGuid, xlsxFilterColumnXml } from './xlsx-filters';
 import { readXlsxFilterColumn } from './xlsx-filters-read';
 import { parseXml } from '@livedoc/office-packages';
 import { SPREADSHEETML_NS } from './xlsx-parts';
+import { filtersByPlace, twoTablesAndAFilter } from '../testing/table-filters';
 
 let n = 7;
 const rand = () => (n = (n * 16807) % 2147483647) / 2147483647;
@@ -248,34 +249,45 @@ describe('filters in XLSX', () => {
     );
   });
 
-  it('writes a table’s filter in its table part, and reads it back as the sheet’s filter (D481)', async () => {
-    const [plain] = itemSheets();
-    const table = { id: 'tbl001', name: 'Items', r1: 's0r0', c1: 's0c0', r2: 's0r5', c2: 's0c2' };
-    const sheets = [{ ...plain!, layout: { ...plain!.layout, tables: [table], filterViews: [] } }];
+  it('writes each table’s own filter in its table part, beside the sheet’s, and reads them back (D481)', async () => {
+    const sheets = twoTablesAndAFilter();
     const written = writeWorkbook(sheets, record, 'Book', 'xlsx');
+    expect(written.losses).toEqual([]);
     const pkg = await partsOf(written.data);
     const xml = decode(pkg.parts.get('xl/worksheets/sheet1.xml')!);
-    expect(written.losses).toEqual([]);
-    expect(xml).not.toContain('<autoFilter');
-    expect(decode(pkg.parts.get('xl/workbook.xml')!)).not.toContain('_FilterDatabase');
+    // The sheet's filter over H, each table's in its own part.
+    expect(xml).toContain('<autoFilter ref="H1:H4">');
     expect(decode(pkg.parts.get('xl/tables/table1.xml')!)).toContain(
-      '<autoFilter ref="A1:C6"><filterColumn colId="0"><filters blank="1">',
+      '<autoFilter ref="A1:B4"><filterColumn colId="1"><filters><filter val="2"/>',
     );
-    expect(xml).toMatch(/<row r="5" hidden="1">/);
+    expect(decode(pkg.parts.get('xl/tables/table2.xml')!)).toContain(
+      '<autoFilter ref="D1:E4"><filterColumn colId="0"><filters><filter val="b"/>',
+    );
+    // Row 2 (both tables hide it) and row 4 (the sheet's filter): hidden; row 3, kept by every filter, shown.
+    for (const r of [2, 4]) expect(xml).toMatch(new RegExp(`<row r="${r}"[^>]* hidden="1"`));
+    expect(xml).not.toMatch(/<row r="3"[^>]* hidden="1"/);
     const read = await ok(readXlsx(written.data));
     expect(read.losses).toEqual([]);
-    // Without LiveDoc's record, Excel's own table filter reads back the same.
-    const bare = await changed(written.data, 'xl/worksheets/sheet1.xml', (x) =>
-      x.replace(/<livedoc:filters [^>]*\/>/, ''),
-    );
-    const plain2 = await ok(readXlsx(bare));
-    expect(plain2.file.sheets[0]!.filter?.cols.map((x) => x.c)).toEqual([0, 1, 2]);
     const [sheet] = opened(sheetsFromFile(read.file, 'en-GB', rand));
-    const layout = sheet!.layout;
-    expect(byPlace(layout, layout.filter!.conds)).toEqual(
-      byPlace(sheets[0]!.layout, sheets[0]!.layout.filter!.conds),
+    expect(filtersByPlace(sheet!.layout)).toEqual(filtersByPlace(sheets[0]!.layout));
+    expect(sheet!.layout.hiddenRows).toBeUndefined();
+    // Without LiveDoc's records, Excel's own forms read back the same, the colour apart.
+    const bare = await changed(written.data, 'xl/worksheets/sheet1.xml', (x) =>
+      x.replace(/<livedoc:(filters|tables) [^>]*\/>/g, ''),
     );
-    expect(layout.hiddenRows).toEqual([layout.rows[2]]);
+    const [plain] = opened(sheetsFromFile((await ok(readXlsx(bare))).file, 'en-GB', rand));
+    const conds = plain!.layout.tables!.map((t) => byPlace(plain!.layout, t.filter));
+    expect(conds).toEqual([{ 1: { values: ['2'] } }, { 3: { values: ['b'] } }]);
+  });
+
+  it('reads a table part without an autoFilter as a table whose filter is off', async () => {
+    const sheets = twoTablesAndAFilter();
+    const written = writeWorkbook(sheets, record, 'Book', 'xlsx');
+    const off = await changed(written.data, 'xl/tables/table2.xml', (x) =>
+      x.replace(/<autoFilter .*<\/autoFilter>/, ''),
+    );
+    const [sheet] = opened(sheetsFromFile((await ok(readXlsx(off))).file, 'en-GB', rand));
+    expect(sheet!.layout.tables!.map((t) => t.filter !== undefined)).toEqual([true, false]);
   });
 
   it('keeps a filter over part of a table in LiveDoc’s record alone, logged (D480)', async () => {
@@ -287,7 +299,7 @@ describe('filters in XLSX', () => {
     expect(importReport(written.losses)).toEqual([]);
     const pkg = await partsOf(written.data);
     expect(decode(pkg.parts.get('xl/worksheets/sheet1.xml')!)).not.toContain('<autoFilter');
-    expect(decode(pkg.parts.get('xl/tables/table1.xml')!)).toContain('<autoFilter ref="A1:B6"/>');
+    expect(decode(pkg.parts.get('xl/tables/table1.xml')!)).not.toContain('<autoFilter');
     const read = await ok(readXlsx(written.data));
     const made = sheetsFromFile(read.file, 'en-GB', rand);
     expect(made.losses).toEqual([{ k: 'filter_beside_table', sheet: 'Data' }]);

@@ -13,6 +13,7 @@ import { useMemo } from 'react';
 import type { OfficeActions } from '@/lib/office/office-catalogue';
 import {
   filterRangeFor,
+  filterShownFor,
   unmergeRange,
   type Grid,
   type GridRange,
@@ -31,7 +32,7 @@ import { useFindReplace } from './find-replace-state';
 import { changeViewTitles } from '@/components/sheets/filter-view-menu';
 
 /** The dialogs the open sheet hosts that its menu items open, and the merge that asks first (useMergeDialog). */
-// Why Create a Filter is dimmed: its range would overlap a table other than as its filter (data-tools.md, D481).
+// Why Create a Filter is dimmed: its range would overlap a table, the selection not inside it (data-tools.md, D481).
 function createFilterNote(layout: SheetLayout, range: GridRange, grid: Grid): string | null {
   if (layout.filter || !layout.tables?.length) return null;
   const plan = filterRangeFor(layout, range, grid);
@@ -74,7 +75,8 @@ export function useGridMenuBindings(
     frozenRows: layout.frozenRows ?? 0,
     frozenCols: layout.frozenCols ?? 0,
     showGrid: layout.showGrid !== false,
-    filtered: !!layout.filter,
+    // Remove Filter while the filter it acts on is on: the table's inside a table, else the sheet's (D481).
+    filtered: filterShownFor(layout, range),
     filterNote: createFilterNote(layout, range, c.grid),
     outline: gridMenuOutline(c.viewLayout, range),
     link,

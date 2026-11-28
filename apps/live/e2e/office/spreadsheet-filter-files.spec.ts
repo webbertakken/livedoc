@@ -105,17 +105,19 @@ test('a filter leaves in an Excel file, comes back through LibreOffice, and its 
   expectNoPageErrors(pageErrors);
 });
 
-// data-tools.md "A table's filter" (D481): Create a Filter is dimmed over part of a table, saying why; inside the
-// table it makes the table's own filter, over its header and data rows.
-test('Create a Filter over part of a table is dimmed, and inside it makes the table’s filter', async ({
+// data-tools.md "A table's filter" (D481): every table filters on its own and the sheet's filter serves the cells
+// beside them; Create a Filter is dimmed over part of a table, saying why; an Excel file holds each table's filter in
+// its table part, and through LibreOffice all three come back with the same rows hidden.
+test('two tables and the sheet each filter their own rows, and keep them through Excel and LibreOffice', async ({
   page,
   pageErrors,
 }) => {
-  test.setTimeout(120_000);
+  test.setTimeout(240_000);
   await page.setViewportSize({ width: 1280, height: 860 });
   await page.goto('/new?kind=spreadsheet');
   await page.waitForURL(/\/document\//);
   await expect(page.locator(READY)).toBeVisible();
+  const id = new URL(page.url()).pathname.split('/')[2]!;
   for (const [cell, text] of [
     ['A1', 'Fruit'],
     ['B1', 'Count'],
@@ -123,14 +125,33 @@ test('Create a Filter over part of a table is dimmed, and inside it makes the ta
     ['B2', '3'],
     ['A3', 'plum'],
     ['B3', '1'],
+    ['A4', 'pear'],
+    ['B4', '8'],
+    ['D1', 'Tag'],
+    ['E1', 'Size'],
+    ['D2', 'red'],
+    ['E2', '5'],
+    ['D3', 'blue'],
+    ['E3', '6'],
+    ['D4', 'teal'],
+    ['E4', '7'],
+    ['G1', 'Note'],
+    ['G2', 'keep'],
+    ['G3', 'keep'],
+    ['G4', 'drop'],
   ] as const)
     await typeInto(page, cell, text);
-  await select(page, 'A2');
-  await (await officeMenuItem(page, ['Format', 'Convert to Table'])).click();
-  await expect(page.getByRole('button', { name: 'Table1 table menu' })).toBeVisible();
-  await page.keyboard.press('Escape');
+  for (const [cell, name] of [
+    ['A2', 'Table1'],
+    ['D2', 'Table2'],
+  ] as const) {
+    await select(page, cell);
+    await (await officeMenuItem(page, ['Format', 'Convert to Table'])).click();
+    await expect(page.getByRole('button', { name: `${name} table menu` })).toBeVisible();
+    await page.keyboard.press('Escape');
+  }
 
-  // A range reaching past the table: the item is dimmed with its note.
+  // A range reaching past a table: Create a Filter is dimmed with its note.
   await select(page, 'A1:D3');
   await page
     .getByRole('menubar', { name: 'Menu bar' })
@@ -139,15 +160,85 @@ test('Create a Filter over part of a table is dimmed, and inside it makes the ta
   const item = page.getByRole('menuitem', { name: /^Create a Filter/ });
   await expect(item).toBeDisabled();
   await expect(item).toContainText('Overlaps Table1');
-  await settle(page);
-  await page.screenshot({ path: test.info().outputPath('filter-files-table-dimmed.png') });
   await page.keyboard.press('Escape');
 
-  // Inside the table: the table's filter, its buttons on the table's header.
-  await select(page, 'B2');
+  // Table1 leaves out plum, Table2 leaves out teal (row 4), the sheet's filter over G leaves out drop (row 4 too).
+  const filterBy = async (button: string, value: string) => {
+    await page.getByRole('button', { name: button }).click();
+    await page.getByRole('checkbox', { name: new RegExp(value) }).uncheck();
+    await page.getByRole('button', { name: 'OK' }).click();
+  };
+  await filterBy('Fruit filter', 'plum');
+  await filterBy('Tag filter', 'teal');
+  await select(page, 'G2');
   await (await officeMenuItem(page, ['Data', 'Create a Filter'])).click();
-  await expect(page.getByRole('button', { name: 'Filter column 1' })).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Filter column 2' })).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Filter column 3' })).toHaveCount(0);
+  await filterBy('Filter column 7', 'drop');
+  for (const gone of ['plum', 'blue', 'teal', 'drop'])
+    await expect(shown(page, gone)).toHaveCount(0);
+  for (const kept of ['apple', 'red']) await expect(shown(page, kept)).toHaveCount(1);
+  await expect(page.locator('[data-table-column][data-filtered]')).toHaveCount(2);
+  await settle(page);
+  await page.screenshot({ path: test.info().outputPath('table-filters-two-tables.png') });
+
+  // A table column's filter menu, Column Menu at its top; the table menu's Filter ticked.
+  await page.getByRole('button', { name: 'Count filter' }).click();
+  await expect(page.getByRole('button', { name: 'Column Menu' })).toBeVisible();
+  await settle(page);
+  await page.screenshot({ path: test.info().outputPath('table-filters-column-menu.png') });
+  await page.keyboard.press('Escape');
+  await page.getByRole('button', { name: 'Table2 table menu' }).click();
+  await expect(
+    page
+      .getByRole('dialog', { name: 'Table2 table menu' })
+      .getByRole('button', { name: 'Filter', pressed: true }),
+  ).toBeVisible();
+  await settle(page);
+  await page.screenshot({ path: test.info().outputPath('table-filters-table-menu.png') });
+  await page.keyboard.press('Escape');
+
+  // A filter view open: the tables' filters pause (D482), their buttons faded; closing it restores them.
+  await select(page, 'G2');
+  await (await officeMenuItem(page, ['Data', 'Create Filter View'])).click();
+  const bar = page.getByRole('toolbar', { name: 'Filter view' });
+  await expect(bar).toBeVisible();
+  await expect(page.locator('[data-table-column][data-paused]')).toHaveCount(4);
+  await expect(
+    page.getByRole('button', {
+      name: /^Fruit column menu, filter paused while a filter view is open$/,
+    }),
+  ).toBeVisible();
+  await expect(shown(page, 'plum')).toHaveCount(1);
+  await settle(page);
+  await page.screenshot({ path: test.info().outputPath('table-filters-paused.png') });
+  await bar.getByRole('button', { name: 'Close Filter View' }).click();
+  await expect(page.locator('[data-table-column][data-filtered]')).toHaveCount(2);
+  await expect(shown(page, 'plum')).toHaveCount(0);
+
+  // The Excel file, saved again by LibreOffice in its own format, opens with the same rows filtered.
+  await (await officeMenuItem(page, ['File', 'Download', 'Microsoft Excel (.xlsx)'])).click();
+  const ask = page.getByRole('dialog', { name: 'Download as Excel?' });
+  await expect(ask).toContainText('Everything in this spreadsheet fits the Excel format.');
+  const [file] = await Promise.all([
+    page.waitForEvent('download'),
+    ask.getByRole('button', { name: 'Download' }).click(),
+  ]);
+  const dir = mkdtempSync(join(tmpdir(), 'spreadsheet-table-filters-'));
+  const xlsx = join(dir, 'Tables.xlsx');
+  await file.saveAs(xlsx);
+  const ods = join(dir, 'Tables from LibreOffice.ods');
+  writeFileSync(ods, libreOfficeConvert(xlsx, 'ods:calc8', { recalculate: true }));
+  const open = await officeMenuItem(page, ['File', 'Open']);
+  const [chooser] = await Promise.all([page.waitForEvent('filechooser'), open.click()]);
+  await chooser.setFiles(ods);
+  await page.waitForURL((url) => !url.pathname.includes(id));
+  await expect(page.locator(READY)).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Tables from LibreOffice');
+  for (const gone of ['plum', 'blue', 'teal', 'drop'])
+    await expect(shown(page, gone)).toHaveCount(0);
+  for (const kept of ['apple', 'red']) await expect(shown(page, kept)).toHaveCount(1);
+  await expect(page.getByRole('button', { name: 'Fruit filter' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Filter column 7' })).toBeVisible();
+  await settle(page);
+  await page.screenshot({ path: test.info().outputPath('table-filters-from-libreoffice.png') });
   expectNoPageErrors(pageErrors);
 });

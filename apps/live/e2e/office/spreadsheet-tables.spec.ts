@@ -139,7 +139,9 @@ test('the column menu sorts, and makes a Dropdown column by Ctrl+Alt+\\', async 
   const panel = page.getByRole('complementary', { name: 'Table Settings' });
   await panel.getByRole('button', { name: 'Done' }).click();
 
-  await page.getByRole('button', { name: 'Amount column menu' }).click();
+  // The table's own filter is on (D481): the header button filters, Column Menu leads to the column menu.
+  await page.getByRole('button', { name: 'Amount filter' }).click();
+  await page.getByRole('button', { name: 'Column Menu' }).click();
   const amount = page.getByRole('dialog', { name: 'Amount column menu' });
   await page.screenshot({ path: test.info().outputPath('table-column-menu.png') });
   await amount.getByRole('button', { name: 'Sort A to Z' }).click();
