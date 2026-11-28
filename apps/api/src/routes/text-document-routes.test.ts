@@ -206,6 +206,36 @@ describe('a text document opened from a file', () => {
     expect(await refused.json()).toMatchObject({ error: 'text_document_seed_invalid' });
   });
 
+  // files-and-print.md "Import report": the room keeps what reading the file dropped in the document itself.
+  it('keeps what an import dropped in the state, and nothing for a file that dropped nothing', async () => {
+    const db = sqliteD1();
+    const html = base64OfBytes(
+      new TextEncoder().encode('<p>Web</p><script>x()</script><iframe></iframe>'),
+    );
+    expect(
+      (await create(db, { textDocuments: [{ tabId: 't1', file: html, type: 'html' }] })).status,
+    ).toBe(201);
+    const res = await call(db, 'GET', '/api/documents/D/text-documents/t1/state');
+    const report = TextDocumentState.report(
+      TextDocumentState.load([new Uint8Array(await res.arrayBuffer())]),
+    );
+    expect(report.imported).toEqual({
+      type: 'html',
+      dropped: [{ reason: 'active-content', count: 2, names: ['script', 'iframe'], nameCount: 2 }],
+      kept: null,
+    });
+    const plain = sqliteD1();
+    const txt = base64OfBytes(new TextEncoder().encode('a\nb'));
+    expect(
+      (await create(plain, { textDocuments: [{ tabId: 't1', file: txt, type: 'txt' }] })).status,
+    ).toBe(201);
+    const read = await call(plain, 'GET', '/api/documents/D/text-documents/t1/state');
+    expect(
+      TextDocumentState.report(TextDocumentState.load([new Uint8Array(await read.arrayBuffer())]))
+        .imported,
+    ).toBeNull();
+  });
+
   // files-and-print.md "Opening": Plain Text, Markdown and HTML are imported, born in ODF.
   it('imports Plain Text, Markdown, HTML and Rich Text into an ODF text document, and refuses one into Word', async () => {
     const db = sqliteD1();

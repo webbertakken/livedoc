@@ -11,6 +11,7 @@ import {
 } from '@livedoc/document';
 import {
   DrawingPictures,
+  importRecordOf,
   Pictures,
   isTextDocumentImportType,
   readTextDocumentFile,
@@ -165,15 +166,19 @@ export async function seedTextDocuments(
       console.info(
         `[text-document] media document=${documentId} tab=${seed.tabId} gallery=${imported.gallery} kept=${keptMedia.reduce((n, [, c]) => n + c, 0)} refused=${keptMedia.map(([reason, c]) => `${reason}:${c}`).join(',') || '-'}`,
       );
-    // The whole model goes into the live state, kept content included (live-editing-and-storage.md "The layout").
+    // The whole model goes into the live state, kept content included (live-editing-and-storage.md "The layout"),
+    // with what reading it dropped and kept (files-and-print.md "Import report").
     await appendLiveTabUpdate(
       env,
       TEXT_DOCUMENT_LIVE_TAB,
       seed.tabId,
-      TextDocumentState.fromDocument(imported.document),
+      TextDocumentState.fromDocument(
+        imported.document,
+        importRecordOf(seed.type ?? read.fileType, read.report),
+      ),
     );
     console.info(
-      `[text-document] file-read document=${documentId} tab=${seed.tabId} type=${seed.type ?? read.fileType} blocks=${read.document.body.length} kept=${kept} bytes=${seed.file.byteLength} ms=${Date.now() - started}`,
+      `[text-document] file-read document=${documentId} tab=${seed.tabId} type=${seed.type ?? read.fileType} blocks=${read.document.body.length} kept=${kept} bytes=${seed.file.byteLength} report=dropped:${dropped},kept:${kept} ms=${Date.now() - started}`,
     );
   }
   return { ok: true };
