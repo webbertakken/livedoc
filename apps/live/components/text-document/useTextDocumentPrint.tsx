@@ -210,14 +210,14 @@ export function TextDocumentPrintPreviewBar({
         ref={printButton}
         type="button"
         onClick={onPrint}
-        className="touch-target inline-flex h-prominent items-center rounded-full bg-(--office-primary) px-6 text-body font-medium text-(--office-primary-ink) outline-none focus-visible:ring-2 focus-visible:ring-(--office-focus) focus-visible:ring-offset-2"
+        className="touch-target relative inline-flex h-prominent items-center rounded-full bg-(--office-primary) px-6 text-body font-medium text-(--office-primary-ink) outline-none focus-visible:ring-2 focus-visible:ring-(--office-focus) focus-visible:ring-offset-2"
       >
         Print
       </button>
       <button
         type="button"
         onClick={onClose}
-        className="touch-target inline-flex h-prominent items-center rounded-full border border-(--office-line) px-6 text-body text-(--office-primary) outline-none hover:bg-(--office-hover) focus-visible:ring-2 focus-visible:ring-(--office-focus) focus-visible:ring-offset-2"
+        className="touch-target relative inline-flex h-prominent items-center rounded-full border border-(--office-line) px-6 text-body text-(--office-primary) outline-none hover:bg-(--office-hover) focus-visible:ring-2 focus-visible:ring-(--office-focus) focus-visible:ring-offset-2"
       >
         Close
       </button>
