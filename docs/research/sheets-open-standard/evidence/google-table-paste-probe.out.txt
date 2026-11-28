@@ -1,0 +1,40 @@
+[sheets oracle] uploaded id=<drive file id>
+addTable 200 
+copy part (A1:B2) to E1 200 
+  [part] [{"name":"Sales","range":{"sheetId":1284088932,"startRowIndex":0,"endRowIndex":4,"startColumnIndex":0,"endColumnIndex":2}},{"name":"Table1","range":{"sheetId":1284088932,"startRowIndex":0,"endRowIndex":2,"startColumnIndex":4,"endColumnIndex":6}}]
+copy with a column beside (A1:C4) to E10 200 
+  [around] [{"name":"Sales","range":{"sheetId":1284088932,"startRowIndex":0,"endRowIndex":4,"startColumnIndex":0,"endColumnIndex":2}},{"name":"Table1","range":{"sheetId":1284088932,"startRowIndex":0,"endRowIndex":2,"startColumnIndex":4,"endColumnIndex":6}},{"name":"Table2","range":{"sheetId":1284088932,"startRowIndex":9,"endRowIndex":13,"startColumnIndex":4,"endColumnIndex":6}}]
+copy whole values only to A20 200 
+  [values only] [{"name":"Sales","range":{"sheetId":1284088932,"startRowIndex":0,"endRowIndex":4,"startColumnIndex":0,"endColumnIndex":2}},{"name":"Table1","range":{"sheetId":1284088932,"startRowIndex":0,"endRowIndex":2,"startColumnIndex":4,"endColumnIndex":6}},{"name":"Table2","range":{"sheetId":1284088932,"startRowIndex":9,"endRowIndex":13,"startColumnIndex":4,"endColumnIndex":6}}]
+copy whole format only to D20 200 
+  [format only] [{"name":"Sales","range":{"sheetId":1284088932,"startRowIndex":0,"endRowIndex":4,"startColumnIndex":0,"endColumnIndex":2}},{"name":"Table1","range":{"sheetId":1284088932,"startRowIndex":0,"endRowIndex":2,"startColumnIndex":4,"endColumnIndex":6}},{"name":"Table2","range":{"sheetId":1284088932,"startRowIndex":9,"endRowIndex":13,"startColumnIndex":4,"endColumnIndex":6}}]
+copy whole formula only to G20 200 
+  [formula only] [{"name":"Sales","range":{"sheetId":1284088932,"startRowIndex":0,"endRowIndex":4,"startColumnIndex":0,"endColumnIndex":2}},{"name":"Table1","range":{"sheetId":1284088932,"startRowIndex":0,"endRowIndex":2,"startColumnIndex":4,"endColumnIndex":6}},{"name":"Table2","range":{"sheetId":1284088932,"startRowIndex":9,"endRowIndex":13,"startColumnIndex":4,"endColumnIndex":6}}]
+copy whole transposed to A30 200 
+  [transposed] [{"name":"Sales","range":{"sheetId":1284088932,"startRowIndex":0,"endRowIndex":4,"startColumnIndex":0,"endColumnIndex":2}},{"name":"Table1","range":{"sheetId":1284088932,"startRowIndex":0,"endRowIndex":2,"startColumnIndex":4,"endColumnIndex":6}},{"name":"Table2","range":{"sheetId":1284088932,"startRowIndex":9,"endRowIndex":13,"startColumnIndex":4,"endColumnIndex":6}}]
+copy whole no borders to J20 200 
+  [no borders] [{"name":"Sales","range":{"sheetId":1284088932,"startRowIndex":0,"endRowIndex":4,"startColumnIndex":0,"endColumnIndex":2}},{"name":"Table1","range":{"sheetId":1284088932,"startRowIndex":0,"endRowIndex":2,"startColumnIndex":4,"endColumnIndex":6}},{"name":"Table2","range":{"sheetId":1284088932,"startRowIndex":9,"endRowIndex":13,"startColumnIndex":4,"endColumnIndex":6}}]
+copy whole onto overlapping a table (A2) 200 
+  [onto itself] [{"name":"Sales","range":{"sheetId":1284088932,"startRowIndex":0,"endRowIndex":5,"startColumnIndex":0,"endColumnIndex":2}},{"name":"Table1","range":{"sheetId":1284088932,"startRowIndex":0,"endRowIndex":2,"startColumnIndex":4,"endColumnIndex":6}},{"name":"Table2","range":{"sheetId":1284088932,"startRowIndex":9,"endRowIndex":13,"startColumnIndex":4,"endColumnIndex":6}}]
+cut whole to M1 200 
+  [cut] [{"name":"Table3","range":{"sheetId":1284088932,"startRowIndex":0,"endRowIndex":4,"startColumnIndex":12,"endColumnIndex":14}},{"name":"Sales","range":{"sheetId":1284088932,"startRowIndex":0,"endRowIndex":5,"startColumnIndex":0,"endColumnIndex":2}},{"name":"Table1","range":{"sheetId":1284088932,"startRowIndex":0,"endRowIndex":2,"startColumnIndex":4,"endColumnIndex":6}},{"name":"Table2","range":{"sheetId":1284088932,"startRowIndex":9,"endRowIndex":13,"startColumnIndex":4,"endColumnIndex":6}}]
+[sheets oracle] deleted id=<drive file id>
+[sheets oracle] uploaded id=<drive file id>
+addTable 200 
+body rows only A2:B3 to E1 200 
+  [body rows only A2:B3 to E1] [{"name":"Sales","range":{"sheetId":1664466245,"startRowIndex":0,"endRowIndex":4,"startColumnIndex":0,"endColumnIndex":2}}]
+one column A1:A4 to H1 200 
+  [one column A1:A4 to H1] [{"name":"Sales","range":{"sheetId":1664466245,"startRowIndex":0,"endRowIndex":4,"startColumnIndex":0,"endColumnIndex":2}},{"name":"Table1","range":{"sheetId":1664466245,"startRowIndex":0,"endRowIndex":4,"startColumnIndex":7,"endColumnIndex":8}}]
+one cell B2 to J1 200 
+  [one cell B2 to J1] [{"name":"Sales","range":{"sheetId":1664466245,"startRowIndex":0,"endRowIndex":4,"startColumnIndex":0,"endColumnIndex":2}},{"name":"Table1","range":{"sheetId":1664466245,"startRowIndex":0,"endRowIndex":4,"startColumnIndex":7,"endColumnIndex":8}}]
+header only A1:B1 to L1 200 
+  [header only A1:B1 to L1] [{"name":"Sales","range":{"sheetId":1664466245,"startRowIndex":0,"endRowIndex":4,"startColumnIndex":0,"endColumnIndex":2}},{"name":"Table2","range":{"sheetId":1664466245,"startRowIndex":0,"endRowIndex":1,"startColumnIndex":11,"endColumnIndex":13}},{"name":"Table1","range":{"sheetId":1664466245,"startRowIndex":0,"endRowIndex":4,"startColumnIndex":7,"endColumnIndex":8}}]
+header and one row of one column A1:A2 to O1 200 
+  [header and one row of one column A1:A2 to O1] [{"name":"Sales","range":{"sheetId":1664466245,"startRowIndex":0,"endRowIndex":4,"startColumnIndex":0,"endColumnIndex":2}},{"name":"Table2","range":{"sheetId":1664466245,"startRowIndex":0,"endRowIndex":1,"startColumnIndex":11,"endColumnIndex":13}},{"name":"Table1","range":{"sheetId":1664466245,"startRowIndex":0,"endRowIndex":4,"startColumnIndex":7,"endColumnIndex":8}},{"name":"Table3","range":{"sheetId":1664466245,"startRowIndex":0,"endRowIndex":2,"startColumnIndex":14,"endColumnIndex":15}}]
+copy whole onto another sheet 200 
+  [other sheet] [["livedoc table paste probe",[{"name":"Sales","range":{"sheetId":1664466245,"startRowIndex":0,"endRowIndex":4,"startColumnIndex":0,"endColumnIndex":2}},{"name":"Table2","range":{"sheetId":1664466245,"startRowIndex":0,"endRowIndex":1,"startColumnIndex":11,"endColumnIndex":13}},{"name":"Table1","range":{"sheetId":1664466245,"startRowIndex":0,"endRowIndex":4,"startColumnIndex":7,"endColumnIndex":8}},{"name":"Table3","range":{"sheetId":1664466245,"startRowIndex":0,"endRowIndex":2,"startColumnIndex":14,"endColumnIndex":15}}]],["Other",[{"name":"Table4","range":{"sheetId":77,"startRowIndex":0,"endRowIndex":4,"startColumnIndex":0,"endColumnIndex":2}}]]]
+[sheets oracle] uploaded id=<drive file id>
+addTable 200 
+typed Amount as currency 200 
+copy whole to E1 200 
+  [types] [{"name":"Sales","range":{"sheetId":377799759,"startRowIndex":0,"endRowIndex":4,"startColumnIndex":0,"endColumnIndex":2},"rowsProperties":{"headerColorStyle":{"rgbColor":{"red":0.20784314,"green":0.40784314,"blue":0.32941177}},"firstBandColorStyle":{"rgbColor":{"red":1,"green":1,"blue":1}},"secondBandColorStyle":{"rgbColor":{"red":0.9647059,"green":0.972549,"blue":0.9764706}}},"columnProperties":[{"columnName":"Item","columnType":"TEXT"},{"columnIndex":1,"columnName":"Amount","columnType":"CURRENCY"}]},{"name":"Table1","range":{"sheetId":377799759,"startRowIndex":0,"endRowIndex":4,"startColumnIndex":4,"endColumnIndex":6},"rowsProperties":{"headerColorStyle":{"rgbColor":{"red":0.20784314,"green":0.40784314,"blue":0.32941177}},"firstBandColorStyle":{"rgbColor":{"red":1,"green":1,"blue":1}},"secondBandColorStyle":{"rgbColor":{"red":0.9647059,"green":0.972549,"blue":0.9764706}}},"columnProperties":[{"columnName":"Item","columnType":"TEXT"},{"columnIndex":1,"columnName":"Amount","columnType":"CURRENCY"}]}]

@@ -276,7 +276,7 @@ The table is the contract the readers and writers are tested against, one test p
 - A sheet's [validation rules](data-validation.md) are written and read both ways, each as the **standard rule**
   closest to it, which every app checks, and **LiveDoc's rule** beside it, exact, which LiveDoc reads back
   (default, D293). The evidence is Google Sheets' own export
-  (`plans/assets/0020/research/google-validation-export.md`): it writes no checkbox and no Text Is Exactly.
+  ([google-validation-export.md](../../research/sheets-open-standard/evidence/google-validation-export.md)): it writes no checkbox and no Text Is Exactly.
 - **XLSX**: one `dataValidation` a rule in the worksheet's one `dataValidations` (after the kept ones, `count`
   their sum), `allowBlank="1"`; LiveDoc's rules in one `ext` of the worksheet's `extLst`, its `uri` LiveDoc's
   namespace `urn:livedoc:xmlns:spreadsheet:1.0`, one `livedoc:dataValidation` a rule naming its standard rule by
@@ -391,7 +391,7 @@ The table is the contract the readers and writers are tested against, one test p
 - A sheet's [protections](data-tools.md#protected-ranges) are written and read both ways, as validation rules are
   (D293): the **standard form** each format's apps enforce (a protected sheet, and the cells it leaves free), and
   **LiveDoc's record** beside it, exact, which LiveDoc reads back (default, D349). Google Sheets writes no protection
-  to either format (`plans/assets/0020/research/google-protection-export.md`), so the standard form follows Excel and
+  to either format ([google-protection-export.md](../../research/sheets-open-standard/evidence/google-protection-export.md)), so the standard form follows Excel and
   LibreOffice.
 - **XLSX standard form**: a sheet's protection admitting Editors or the owner alone is the worksheet's
   `sheetProtection sheet="1" objects="1" scenarios="1"`; each of its exceptions a `protectedRange` without a password
@@ -523,7 +523,7 @@ The table is the contract the readers and writers are tested against, one test p
   with an `autoFilter` has its filter on, its columns read as the sheet's are, and one without has it off. Excel
   refuses a sheet's `autoFilter` over a table's cells, so a sheet's filter still overlapping a table (D480) is
   written in LiveDoc's record alone, its rows still hidden.
-- **XLSX filter views**, as Google writes them (`plans/assets/0020/research/google-filter-view-export.md`): each a
+- **XLSX filter views**, as Google writes them ([google-filter-view-export.md](../../research/sheets-open-standard/evidence/google-filter-view-export.md)): each a
   `customSheetView` (`guid` made of the sheet's place and the view's id, D479, `filter="1"`, `showAutoFilter="1"`)
   holding an `autoFilter` as the
   filter's and the view's sort as its `sortState` (`sortCondition`, `descending="1"` for Z to A); a hidden
@@ -540,7 +540,7 @@ The table is the contract the readers and writers are tested against, one test p
   `=`, `!=`, `>`, `>=`, `<`, `<=` (no `table:data-type`, as LibreOffice writes them), `contains`, `!contains`,
   `begins`, `ends`, `empty`, `!empty`, a day as `>=` its day number and `<` the next; LibreOffice reads one
   list joined by and, so Is Not Between has no ODF form but LiveDoc's record (measured with LibreOffice 2026-11-27,
-  `plans/assets/0020/research/libreoffice-filter-proof.md`). The rows the filter hides are
+  [libreoffice-filter-proof.md](../../research/sheets-open-standard/evidence/libreoffice-filter-proof.md)). The rows the filter hides are
   `table:visibility="filter"`, LibreOffice's own, read back as the filter's, never hidden lines.
   Each table's filter (D481) is the `table:filter` of the table's own `table:database-range`, as LibreOffice holds
   a database range's filter, the range's filter buttons shown while it is on; read back, a table's database range
@@ -1222,7 +1222,7 @@ The code cites each by its id.
   (the Director's ruling, 2026-11-27).
 - **D452** A table's header cells in XLSX: written as their column names, text (a blank header `Column N`, a number
   its text), as Excel holds a table's header and Google's export writes it
-  (`plans/assets/0020/research/google-table-export.md`) (default).
+  ([google-table-export.md](../../research/sheets-open-standard/evidence/google-table-export.md)) (default).
 - **D477** A column's condition in a file: the one standard column both formats write, as near as each format's
   filter says it; a date as its day number, as Excel compares one; a condition before kept values (default).
 - **D478** A hidden row of a file's filter: in XLSX the filter's when the filter has a condition, as Excel's filter

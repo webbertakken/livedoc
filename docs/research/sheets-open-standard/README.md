@@ -46,3 +46,4 @@ The specs in `docs/specs/029-sheets/` state what the product does; this folder r
 - ./fetching-functions.md - when working on functions that fetch or call a service (S4, C3)
 - ./file-libraries.md - when choosing how ODS, XLSX, CSV, TSV, PDF and HTML are read and written
 - ./security.md - when hardening imports, exports and fetches
+- ./evidence/README.md - when checking a data tool's measurement against Google Sheets, Excel or LibreOffice that a spec cites

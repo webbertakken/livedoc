@@ -1,0 +1,107 @@
+[sheets oracle] uploaded id=<drive file id>
+
+# plain a->X
+  reply {"valuesChanged":6,"rowsChanged":3,"sheetsChanged":2,"occurrencesChanged":12}
+  inputs [["bXnXnX","Xpple",101,"=\"a\"&\"b\"","X1 note"],["Xpple pie",45296,"=SUM(C1)","XXX","=HYPERLINK(\"http://a.example\",\"link a\")"]] values [["bXnXnX","Xpple",101,"ab","X1 note"],["Xpple pie",45296,101,"XXX","link a"]]
+  two inputs [["bXnXnX two"]] values [["bXnXnX two"]]
+
+# matchCase A->X
+  reply {"valuesChanged":2,"rowsChanged":1,"sheetsChanged":1,"occurrencesChanged":2}
+  inputs [["banana","Xpple",101,"=\"a\"&\"b\"","X1 note"],["apple pie",45296,"=SUM(C1)","aaa","=HYPERLINK(\"http://a.example\",\"link a\")"]] values [["banana","Xpple",101,"ab","X1 note"],["apple pie",45296,101,"aaa","link a"]]
+  two inputs [["banana two"]] values [["banana two"]]
+
+# entire apple->X
+  reply {"valuesChanged":1,"rowsChanged":1,"sheetsChanged":1,"occurrencesChanged":1}
+  inputs [["banana","X",101,"=\"a\"&\"b\"","A1 note"],["apple pie",45296,"=SUM(C1)","aaa","=HYPERLINK(\"http://a.example\",\"link a\")"]] values [["banana","X",101,"ab","A1 note"],["apple pie",45296,101,"aaa","link a"]]
+  two inputs [["banana two"]] values [["banana two"]]
+
+# regex (a)(p) -> [$2$1]
+  reply {"valuesChanged":2,"rowsChanged":2,"sheetsChanged":1,"occurrencesChanged":2}
+  inputs [["banana","[pA]ple",101,"=\"a\"&\"b\"","A1 note"],["[pa]ple pie",45296,"=SUM(C1)","aaa","=HYPERLINK(\"http://a.example\",\"link a\")"]] values [["banana","[pA]ple",101,"ab","A1 note"],["[pa]ple pie",45296,101,"aaa","link a"]]
+  two inputs [["banana two"]] values [["banana two"]]
+
+# regex ^a -> Z
+  reply {"valuesChanged":4,"rowsChanged":2,"sheetsChanged":1,"occurrencesChanged":4}
+  inputs [["banana","Zpple",101,"=\"a\"&\"b\"","Z1 note"],["Zpple pie",45296,"=SUM(C1)","Zaa","=HYPERLINK(\"http://a.example\",\"link a\")"]] values [["banana","Zpple",101,"ab","Z1 note"],["Zpple pie",45296,101,"Zaa","link a"]]
+  two inputs [["banana two"]] values [["banana two"]]
+
+# regex a+ entire -> Z
+  reply {"valuesChanged":1,"rowsChanged":1,"sheetsChanged":1,"occurrencesChanged":1}
+  inputs [["banana","Apple",101,"=\"a\"&\"b\"","A1 note"],["apple pie",45296,"=SUM(C1)","Z","=HYPERLINK(\"http://a.example\",\"link a\")"]] values [["banana","Apple",101,"ab","A1 note"],["apple pie",45296,101,"Z","link a"]]
+  two inputs [["banana two"]] values [["banana two"]]
+
+# regex $0 and \1
+  reply {"valuesChanged":2,"rowsChanged":2,"sheetsChanged":2,"occurrencesChanged":4}
+  inputs [["b<an|\\1|$><an|\\1|$>a","Apple",101,"=\"a\"&\"b\"","A1 note"],["apple pie",45296,"=SUM(C1)","aaa","=HYPERLINK(\"http://a.example\",\"link a\")"]] values [["b<an|\\1|$><an|\\1|$>a","Apple",101,"ab","A1 note"],["apple pie",45296,101,"aaa","link a"]]
+  two inputs [["b<an|\\1|$><an|\\1|$>a two"]] values [["b<an|\\1|$><an|\\1|$>a two"]]
+
+# number 1->2
+  reply {"valuesChanged":3,"rowsChanged":2,"sheetsChanged":1,"occurrencesChanged":4}
+  inputs [["banana","Apple",202,"=\"a\"&\"b\"","A2 note"],["apple pie",45327,"=SUM(C1)","aaa","=HYPERLINK(\"http://a.example\",\"link a\")"]] values [["banana","Apple",202,"ab","A2 note"],["apple pie",45327,202,"aaa","link a"]]
+  two inputs [["banana two"]] values [["banana two"]]
+
+# date 2024->1999
+  reply {"valuesChanged":1,"rowsChanged":1,"sheetsChanged":1,"occurrencesChanged":1}
+  inputs [["banana","Apple",101,"=\"a\"&\"b\"","A1 note"],["apple pie",36165,"=SUM(C1)","aaa","=HYPERLINK(\"http://a.example\",\"link a\")"]] values [["banana","Apple",101,"ab","A1 note"],["apple pie",36165,101,"aaa","link a"]]
+  two inputs [["banana two"]] values [["banana two"]]
+
+# formula value ab->Q (no formulas)
+  reply {}
+  inputs [["banana","Apple",101,"=\"a\"&\"b\"","A1 note"],["apple pie",45296,"=SUM(C1)","aaa","=HYPERLINK(\"http://a.example\",\"link a\")"]] values [["banana","Apple",101,"ab","A1 note"],["apple pie",45296,101,"aaa","link a"]]
+  two inputs [["banana two"]] values [["banana two"]]
+
+# formula text C1->D1 includeFormulas
+  reply {"formulasChanged":1,"rowsChanged":1,"sheetsChanged":1,"occurrencesChanged":1}
+  inputs [["banana","Apple",101,"=\"a\"&\"b\"","A1 note"],["apple pie",45296,"=SUM(D1)","aaa","=HYPERLINK(\"http://a.example\",\"link a\")"]] values [["banana","Apple",101,"ab","A1 note"],["apple pie",45296,0,"aaa","link a"]]
+  two inputs [["banana two"]] values [["banana two"]]
+
+# A1 without formulas
+  reply {"valuesChanged":1,"rowsChanged":1,"sheetsChanged":1,"occurrencesChanged":1}
+  inputs [["banana","Apple",101,"=\"a\"&\"b\"","B9 note"],["apple pie",45296,"=SUM(C1)","aaa","=HYPERLINK(\"http://a.example\",\"link a\")"]] values [["banana","Apple",101,"ab","B9 note"],["apple pie",45296,101,"aaa","link a"]]
+  two inputs [["banana two"]] values [["banana two"]]
+
+# link text
+  reply {}
+  inputs [["banana","Apple",101,"=\"a\"&\"b\"","A1 note"],["apple pie",45296,"=SUM(C1)","aaa","=HYPERLINK(\"http://a.example\",\"link a\")"]] values [["banana","Apple",101,"ab","A1 note"],["apple pie",45296,101,"aaa","link a"]]
+  two inputs [["banana two"]] values [["banana two"]]
+
+# link url includeFormulas
+  reply {"formulasChanged":1,"rowsChanged":1,"sheetsChanged":1,"occurrencesChanged":1}
+  inputs [["banana","Apple",101,"=\"a\"&\"b\"","A1 note"],["apple pie",45296,"=SUM(C1)","aaa","=HYPERLINK(\"http://a.test\",\"link a\")"]] values [["banana","Apple",101,"ab","A1 note"],["apple pie",45296,101,"aaa","link a"]]
+  two inputs [["banana two"]] values [["banana two"]]
+
+# sheetId only
+  reply {"valuesChanged":5,"rowsChanged":2,"sheetsChanged":1,"occurrencesChanged":9}
+  inputs [["bXnXnX","Xpple",101,"=\"a\"&\"b\"","X1 note"],["Xpple pie",45296,"=SUM(C1)","XXX","=HYPERLINK(\"http://a.example\",\"link a\")"]] values [["bXnXnX","Xpple",101,"ab","X1 note"],["Xpple pie",45296,101,"XXX","link a"]]
+  two inputs [["banana two"]] values [["banana two"]]
+
+# range B1:B2
+  reply {"valuesChanged":1,"rowsChanged":1,"sheetsChanged":1,"occurrencesChanged":1}
+  inputs [["banana","Xpple",101,"=\"a\"&\"b\"","A1 note"],["apple pie",45296,"=SUM(C1)","aaa","=HYPERLINK(\"http://a.example\",\"link a\")"]] values [["banana","Xpple",101,"ab","A1 note"],["apple pie",45296,101,"aaa","link a"]]
+  two inputs [["banana two"]] values [["banana two"]]
+
+# empty find
+  reply ERR 400 {"error":{"code":400,"message":"Invalid requests[0].findReplace: No 'find' value is set, but one is required.","status":"INVALID_ARGUMENT"}}
+  inputs [["banana","Apple",101,"=\"a\"&\"b\"","A1 note"],["apple pie",45296,"=SUM(C1)","aaa","=HYPERLINK(\"http://a.example\",\"link a\")"]] values [["banana","Apple",101,"ab","A1 note"],["apple pie",45296,101,"aaa","link a"]]
+  two inputs [["banana two"]] values [["banana two"]]
+
+# bad regex
+  reply ERR 400 {"error":{"code":400,"message":"Invalid requests[0].findReplace: The regular expression is invalid.","status":"INVALID_ARGUMENT"}}
+  inputs [["banana","Apple",101,"=\"a\"&\"b\"","A1 note"],["apple pie",45296,"=SUM(C1)","aaa","=HYPERLINK(\"http://a.example\",\"link a\")"]] values [["banana","Apple",101,"ab","A1 note"],["apple pie",45296,101,"aaa","link a"]]
+  two inputs [["banana two"]] values [["banana two"]]
+
+# regex replace to number
+  reply {"valuesChanged":2,"rowsChanged":2,"sheetsChanged":2,"occurrencesChanged":2}
+  inputs [[42,"Apple",101,"=\"a\"&\"b\"","A1 note"],["apple pie",45296,"=SUM(C1)","aaa","=HYPERLINK(\"http://a.example\",\"link a\")"]] values [[42,"Apple",101,"ab","A1 note"],["apple pie",45296,101,"aaa","link a"]]
+  two inputs [[42]] values [[42]]
+
+# regex case-insensitive
+  reply {"valuesChanged":2,"rowsChanged":2,"sheetsChanged":1,"occurrencesChanged":2}
+  inputs [["banana","qle",101,"=\"a\"&\"b\"","A1 note"],["qle pie",45296,"=SUM(C1)","aaa","=HYPERLINK(\"http://a.example\",\"link a\")"]] values [["banana","qle",101,"ab","A1 note"],["qle pie",45296,101,"aaa","link a"]]
+  two inputs [["banana two"]] values [["banana two"]]
+
+# regex replace with empty
+  reply {"valuesChanged":1,"rowsChanged":1,"sheetsChanged":1,"occurrencesChanged":1}
+  inputs [["banana","Apple",101,"=\"a\"&\"b\"","A1 note"],["apple pie",45296,"=SUM(C1)","","=HYPERLINK(\"http://a.example\",\"link a\")"]] values [["banana","Apple",101,"ab","A1 note"],["apple pie",45296,101,"","link a"]]
+  two inputs [["banana two"]] values [["banana two"]]
+[sheets oracle] deleted id=<drive file id>

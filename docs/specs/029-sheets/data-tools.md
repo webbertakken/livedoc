@@ -446,7 +446,7 @@ sheet's, seen by everyone, kept by row and column ids as a named range is.
 ## Clean-up, split, randomise, stats
 
 Data › Data Clean-up, Data › Split Text to Columns, Data › Randomise Range and Data › Column Stats, as Google's
-(measured with the Sheets API, `plans/assets/0020/research/google-cleanup-probe.ts`, 2026-11-27, D460). Each works on
+(measured with the Sheets API, [google-cleanup-probe.out.txt](../../research/sheets-open-standard/evidence/google-cleanup-probe.out.txt), 2026-11-27, D460). Each works on
 the selection's last range (the active range), one change and one undo step; a range under a protection that does not
 admit the caller is refused whole with the protection's own words, as a sort is (D347).
 
@@ -633,7 +633,7 @@ The code cites each by its id.
 - **D482** While a filter view is open, the tables' filters are paused, the view alone hiding rows, as the sheet's
   filter is not drawn (the Director's ruling, 2026-11-27); their buttons drawn paused (the Director's) in the words
   above (default). Google's is unmeasurable through the API: `setBasicFilter` with a `tableId` fails and a view's
-  rows are per viewer (`plans/assets/0020/research/google-table-view-probe.ts`).
+  rows are per viewer ([google-table-view-probe.out.txt](../../research/sheets-open-standard/evidence/google-table-view-probe.out.txt)).
 - **D483** A slicer's bounds: 100 to 2,000 px wide, 30 to 2,000 px high, a title up to 100 characters, as a filter
   view's name (default).
 - **D484** A slicer's filter: Filter by Condition without Custom Formula Is, and Filter by Values, as Google's
@@ -644,7 +644,7 @@ The code cites each by its id.
 - **D486** A slicer after a delete: its range shrinks as a chart's; its column gone leaves it unset, "Choose a
   column", filtering nothing; its range gone, "No data" (default).
 - **D491** A view's sort: one key, the latest, as Google's filter view keeps one when sorted from a column
-  (measured unreadable through the API: views are per viewer, `plans/assets/0020/research/google-table-view-probe.ts`);
+  (measured unreadable through the API: views are per viewer, [google-table-view-probe.out.txt](../../research/sheets-open-standard/evidence/google-table-view-probe.out.txt));
   the rows below the frozen ones only, as Sort Sheet keeps a frozen header; a merge across them refused as Sort
   Range's; a kept sort that cannot be drawn draws the sheet's order (default).
 - **D492** A sorted view's row numbers: each row's own, out of order, so the numbers name the cells a formula reads
@@ -708,20 +708,20 @@ The code cites each by its id.
   ruling, 2026-11-27). Evidence: Google's help ("Use tables in Google Sheets") names the column menu but not what its
   insert and delete reach, and the Sheets API has no table-column request: a table's own cells deleted or inserted
   with `deleteRange`/`insertRange` (shifting columns) shrink or widen the table (an inserted column reads
-  `Column 1`) and shift the cells beside it in those rows (`plans/assets/0020/research/google-table-probe.ts`,
-  2026-11-27).
+  `Column 1`) and shift the cells beside it in those rows (the Sheets API,
+  2026-11-27; its probe is kept outside the repository).
 - **D451** A copied table's name, as Google's: its own name, an underscore and the smallest number from 2 that frees it
   among the workbook's tables and named ranges (`Sales` to `Sales_2`, then `Sales_3`); a table's whole range pasted
   elsewhere makes a new table named the first free `TableN`. Evidence: the Sheets API's `duplicateSheet` of a sheet
   holding `Sales` twice gave `Sales_2` and `Sales_3`; `copyPaste` of the table's range gave `Table1`
-  (`plans/assets/0020/research/google-table-probe.ts`, 2026-11-27).
+  (the Sheets API, 2026-11-27; its probe is kept outside the repository).
 - **D454** Which pastes make or move a table. A copy, as Google's: a plain paste of cells holding a table's header row
   makes the next `TableN` over the table's copied columns from its header to the last copied row, types, dropdown
   options, banding and total row kept; data rows alone, Paste Special's items and a paste onto a table make none.
   Evidence: the Sheets API's `copyPaste` of `Sales` A1:B4: whole, A1:B2, A1:A4, A1:B1 and A1:C4 each made the next
   `TableN` over the table's part, types and banding kept; A2:B3 and B2 made none; `PASTE_VALUES`, `PASTE_FORMAT`,
   `PASTE_FORMULA`, `TRANSPOSE` and `PASTE_NO_BORDERS` made none; onto A2 it grew `Sales`
-  (`plans/assets/0020/research/google-table-paste-probe.ts`, 2026-11-27). A cut, LiveDoc's own (the Director's
+  ([google-table-paste-probe.out.txt](../../research/sheets-open-standard/evidence/google-table-paste-probe.out.txt), 2026-11-27). A cut, LiveDoc's own (the Director's
   ruling, 2026-11-27): a whole table moves, as Excel's, since a person who cuts expects it to leave and an emptied
   table left behind would point every `Table1[Col]` at blanks; a part moves cells only. The API's `cutPaste` made a
   new `Table3` and left `Sales` emptied, but it is a range operation, not what the editor does; Google's editor is
@@ -733,7 +733,7 @@ The code cites each by its id.
   Also Search Within Formulas; Match Entire Cell Contents whole cells; Replace All counts matches, not cells; All
   Sheets reaches hidden sheets. Evidence: the Sheets API's `findReplace` on a probe workbook (`101` to `202`,
   `2024-01-05` to `1999-01-05`, `="a"&"b"` untouched without `includeFormulas`, `a` over six cells counted 12
-  occurrences, a hidden sheet replaced) (`plans/assets/0020/research/google-find-replace-probe.ts`, 2026-11-27).
+  occurrences, a hidden sheet replaced) ([google-find-replace-probe.out.txt](../../research/sheets-open-standard/evidence/google-find-replace-probe.out.txt), 2026-11-27).
 - **D456** Replace With's grammar under regular expressions, as Google's: `$0` the match, `$1` on its groups, `$$` a
   dollar sign, a backslash and any other `$` plain text. Evidence: `(an)` replaced by `<$0|\1|$$>` gave
   `<an|\1|$>` (the same probe). A `$` and a number past the pattern's groups is plain text (default).
@@ -747,7 +747,7 @@ The code cites each by its id.
   changes only as formula text, under Also Search Within Formulas, as Google's `findReplace` changed
   `http://a.example` only with `includeFormulas` (the same probe; default for finding).
 - **D460** Data clean-up, split and randomise as Google's, measured with the Sheets API's `deleteDuplicates`,
-  `trimWhitespace`, `textToColumns` and `randomizeRange` (`plans/assets/0020/research/google-cleanup-probe.ts` and
+  `trimWhitespace`, `textToColumns` and `randomizeRange` ([google-cleanup-probe.out.txt](../../research/sheets-open-standard/evidence/google-cleanup-probe.out.txt) and
   its `.out.txt`, 2026-11-27): duplicates removed 5 of `a,1 A,1 a␠,1 a,'1 a,=0+1 blank blank a,1 b,2`, leaving
   `a,1 a␠,1 blank b,2`, a cell beside the range unmoved; trim changed 4 of 8 cells, keeping a no-break space, a
   tab, a line break inside and a formula; split refused two columns in Google's words, kept quotes, typed a date,
@@ -768,8 +768,8 @@ The code cites each by its id.
 - **D468** Each separator chosen on the chip is its own change (Undo steps back through them), splitting the text the
   first split started from; Custom splits on Enter, not as typed, so a half-typed separator makes no change (default;
   Google's chip is unmeasured, the API has no chip).
-- **D469** Filter views as Google's, measured with the Sheets API (`plans/assets/0020/research/google-filter-view-probe.ts`,
-  `google-slicer-subtotal-probe.ts` and its `.out.txt`, 2026-11-27): a view keeps a title, a range, conditions by
+- **D469** Filter views as Google's, measured with the Sheets API (2026-11-27; the
+  view probe kept outside the repository, [google-slicer-subtotal-probe.out.txt](../../research/sheets-open-standard/evidence/google-slicer-subtotal-probe.out.txt)): a view keeps a title, a range, conditions by
   column and sort keys; SUBTOTAL(109) over the counts read 26 under a filter hiding one row and 29 (the plain sum)
   under a filter view and a slicer hiding rows; Google's help: an applied view only its opener sees, edit access to
   save one, view access a temporary one.
@@ -784,8 +784,7 @@ The code cites each by its id.
   `#t=`; a deleted view opens the spreadsheet as it is with "That filter view was deleted", the words that also close
   a view deleted by someone else (default).
 - **D475** Slicers as Google's help ("Filter charts and tables with Slicers": one column each, private changes until
-  Set Current Filters as Default, never formulas) and the API (`plans/assets/0020/research/google-slicer-probe.ts`
-  and its `.out.txt`): a slicer keeps a data range, a column, its default criteria, a title, Apply to Pivot Tables and
+  Set Current Filters as Default, never formulas) and the API ([google-slicer-probe.out.txt](../../research/sheets-open-standard/evidence/google-slicer-probe.out.txt)): a slicer keeps a data range, a column, its default criteria, a title, Apply to Pivot Tables and
   an anchor with a size; SUBTOTAL unchanged under one.
 - **D476** A new slicer: 200 by 40 px at the top right of the cells in view (default; 200 px is the width the probe
   set, Google's own unmeasured).
