@@ -35,7 +35,8 @@ export type DashboardLink = { id: string; label: string } & (
 
 // A figure from a Sheet (docs/specs/026-plan/plan-tabs.md "Figures from a Sheet"): which sheet, and the cell (a
 // figure, with an optional target cell) or column (a summary or a trend) by stable row and column ids. An empty sheet
-// id is one not set up yet.
+// id is one not set up yet. `documentId` names the spreadsheet the sheet is of (docs/specs/029-sheets/plan-links.md
+// "Dashboards"); absent, the sheet is a Plan Sheet of the dashboard's own document.
 export const SHEET_METRICS = ['figure', 'summary', 'trend'] as const;
 export type SheetMetricKind = (typeof SHEET_METRICS)[number];
 const SHEET_METRIC_STATS = ['sum', 'average', 'min', 'max', 'count'] as const;
@@ -44,6 +45,7 @@ export type SheetMetricCell = { r: string; c: string };
 export type SheetMetricContent = {
   type: 'sheet-metric';
   metric: SheetMetricKind;
+  documentId?: string;
   sheetId: string;
   cell?: SheetMetricCell;
   target?: SheetMetricCell;
@@ -76,6 +78,9 @@ export const DASHBOARD_CARD_TYPES = [
   'links',
 ] as const satisfies readonly DashboardCardType[];
 
+// A document's id, as an address names one (@livedoc/sheets rangeSource).
+const DOCUMENT_ID = /^[A-Za-z0-9_-]{1,200}$/;
+
 // A sheet's row or column id (@livedoc/sheets AXIS_ID_PATTERN), as chart-source.ts reads one.
 const AXIS_ID = /^[a-z0-9]{4,12}$/;
 const readCell = (v: unknown): SheetMetricCell | undefined => {
@@ -101,6 +106,10 @@ function readSheetMetric(c: Record<string, unknown>): SheetMetricContent | undef
   const raw = c['sheetId'];
   const sheetId =
     typeof raw === 'string' && (raw === '' || PLAN_SHEET_ID_PATTERN.test(raw)) ? raw : '';
+  const documentId =
+    typeof c['documentId'] === 'string' && DOCUMENT_ID.test(c['documentId'])
+      ? c['documentId']
+      : undefined;
   const cell = readCell(c['cell']);
   const target = readCell(c['target']);
   const col = typeof c['col'] === 'string' && AXIS_ID.test(c['col']) ? c['col'] : undefined;
@@ -110,6 +119,7 @@ function readSheetMetric(c: Record<string, unknown>): SheetMetricContent | undef
   return {
     type: 'sheet-metric',
     metric: c['metric'] as SheetMetricKind,
+    ...(documentId ? { documentId } : {}),
     sheetId,
     ...(cell ? { cell } : {}),
     ...(target ? { target } : {}),

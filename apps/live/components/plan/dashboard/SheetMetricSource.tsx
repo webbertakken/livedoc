@@ -1,7 +1,7 @@
 'use client';
 
 // A figure from a Sheet's source (docs/specs/026-plan/plan-tabs.md "Figures from a Sheet"), an Editor's: a popover of
-// the document's Sheets, then, for a Sheet Figure, its labelled numbers or a cell typed as A1 and an optional target the
+// the document's Sheets and the person's spreadsheets (docs/specs/029-sheets/plan-links.md "Dashboards"), then, for a Sheet Figure, its labelled numbers or a cell typed as A1 and an optional target the
 // same way; for a Column Summary or a Trend, the columns holding numbers (and a summary's stat). Each choice lands as
 // one step; the popover closes once the source is whole.
 import { useMemo, useState } from 'react';
@@ -16,7 +16,9 @@ import {
 } from '@livedoc/sheets';
 import type { SheetMetricContent } from '@livedoc/document';
 import { AnchoredPopover } from '@/components/primitives/AnchoredPopover';
-import { useSheetRead } from './useSheetReader';
+import type { SheetRead } from './useSheetReader';
+import { useFigureSheetRead } from './useLinkedSheetRead';
+import { SpreadsheetSheetSource } from './SpreadsheetSheetSource';
 import {
   DONE,
   FIELD,
@@ -40,18 +42,29 @@ export function SheetMetricSource({
   onChange: (next: SheetMetricContent) => void;
   onClose: () => void;
 }) {
-  const picker = useSheetPicker(content.sheetId);
-  const { read } = picker;
+  const ownSheetId = content.documentId ? '' : content.sheetId;
+  const picker = useSheetPicker(ownSheetId);
+  const read = useFigureSheetRead(content);
   const set = (patch: Partial<SheetMetricContent>) => onChange({ ...content, ...patch });
-  const pickSheet = (sheetId: string) => {
-    if (sheetId === content.sheetId) return;
+  const pick = (documentId: string, sheetId: string) => {
+    if (documentId === (content.documentId ?? '') && sheetId === content.sheetId) return;
     // Another sheet: its cells and columns are its own, so what was chosen on the last goes.
-    onChange({ type: 'sheet-metric', metric: content.metric, sheetId });
+    onChange({
+      type: 'sheet-metric',
+      metric: content.metric,
+      ...(documentId ? { documentId } : {}),
+      sheetId,
+    });
   };
   return (
     <AnchoredPopover anchor={anchor} name="Choose a Sheet" width={320} onClose={onClose}>
       <div className="flex max-h-[min(70vh,32rem)] flex-col gap-3 overflow-y-auto rounded-menu border border-slate-200 bg-white p-3 shadow-xl dark:border-slate-700 dark:bg-slate-900">
-        <SheetList picker={picker} sheetId={content.sheetId} onPick={pickSheet} />
+        <SheetList picker={picker} sheetId={ownSheetId} onPick={(id) => pick('', id)} />
+        <SpreadsheetSheetSource
+          documentId={content.documentId ?? ''}
+          sheetId={content.sheetId}
+          onPick={(link) => pick(link.documentId, link.sheetId)}
+        />
         {read.state === 'ready' ? (
           content.metric === 'figure' ? (
             <FigureSource read={read} content={content} set={set} onDone={onClose} />
@@ -62,13 +75,17 @@ export function SheetMetricSource({
           <p className={MUTED_LINE}>Loading {read.name}…</p>
         ) : read.state === 'failed' ? (
           <TabWaiting name={read.name} status="failed" onRetry={read.retry} />
+        ) : read.state === 'denied' ? (
+          <p className={MUTED_LINE}>You don’t have access to this spreadsheet.</p>
+        ) : read.state === 'too-large' ? (
+          <p className={MUTED_LINE}>This spreadsheet is too large to read here.</p>
         ) : null}
       </div>
     </AnchoredPopover>
   );
 }
 
-type Ready = Extract<ReturnType<typeof useSheetRead>, { state: 'ready' }>;
+type Ready = Extract<SheetRead, { state: 'ready' }>;
 
 function CellPicker({
   read,

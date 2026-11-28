@@ -12,6 +12,7 @@ import {
 import { renderFrameWindow, sheetContentSize, sheetFramesOf } from '@livedoc/sheets';
 import type { SheetStore } from '@/components/sheets/sheet-store-client';
 import { sheetMetricShown } from '@/components/plan/dashboard/sheet-metric-shown';
+import { linkedRead } from '@/components/plan/dashboard/linked-sheets';
 import type { SheetMetricArt } from '@livedoc/plan-art';
 
 // The cells each Sheet element shows, by sheet id: the window its frame has room for. A sheet the store has not
@@ -67,6 +68,19 @@ export function sheetMetricsFor(
         out.set(slot.id, 'unset');
         continue;
       }
+      // A spreadsheet's sheet: as the page last read it (docs/specs/029-sheets/plan-links.md "Dashboards").
+      if (c.documentId) {
+        const read = linkedRead(c.documentId, c.sheetId);
+        out.set(
+          slot.id,
+          read.state !== 'ready'
+            ? 'loading'
+            : read.sheet
+              ? sheetMetricShown(c, { sheet: read.sheet, wb: read.wb, locale: read.locale })
+              : 'gone',
+        );
+        continue;
+      }
       const sheet = store.sheet(c.sheetId);
       if (sheet) {
         out.set(slot.id, sheetMetricShown(c, { sheet, wb: store.workbook(sheet.tabId), locale }));
@@ -91,7 +105,8 @@ export function sheetTabsToLoad(
   const wanted = new Set(sheetFramesOf(image.elements as never).map((f) => f.sheetId));
   for (const row of readDashboard(dashboard)?.rows ?? [])
     for (const s of row.slots)
-      if (s.content?.type === 'sheet-metric' && s.content.sheetId) wanted.add(s.content.sheetId);
+      if (s.content?.type === 'sheet-metric' && s.content.sheetId && !s.content.documentId)
+        wanted.add(s.content.sheetId);
   const out = new Set<string>();
   for (const t of tabs)
     for (const el of t.elements) {

@@ -135,6 +135,32 @@ describe('a figure from a Sheet', () => {
     });
     expect(readDashboardCard({ type: 'sheet-metric', metric: 'pie' })).toBeUndefined();
   });
+
+  // docs/specs/029-sheets/plan-links.md "Dashboards": a figure from a spreadsheet keeps the spreadsheet's id.
+  it('reads the spreadsheet a sheet is of, dropping one that is no document id', () => {
+    expect(
+      readDashboardCard({
+        type: 'sheet-metric',
+        metric: 'trend',
+        documentId: 'doc_1-A',
+        sheetId: 'sheetAAAA',
+      }),
+    ).toEqual({
+      type: 'sheet-metric',
+      metric: 'trend',
+      documentId: 'doc_1-A',
+      sheetId: 'sheetAAAA',
+    });
+    for (const documentId of ['', 'a/b', 7, 'x'.repeat(201)])
+      expect(
+        readDashboardCard({
+          type: 'sheet-metric',
+          metric: 'trend',
+          documentId,
+          sheetId: 'sheetAAAA',
+        }),
+      ).toEqual({ type: 'sheet-metric', metric: 'trend', sheetId: 'sheetAAAA' });
+  });
 });
 
 // A figure from a form (docs/specs/026-plan/plan-tabs.md "Form Metrics").

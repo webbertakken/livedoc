@@ -16495,6 +16495,9 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
       "col": {
         "type": "string"
       },
+      "documentId": {
+        "type": "string"
+      },
       "metric": {
         "$ref": "#/components/schemas/SheetMetricKind"
       },
@@ -20962,6 +20965,78 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
       "bytes"
     ],
     "type": "object"
+  },
+  "WorkbookLinkResponse": {
+    "anyOf": [
+      {
+        "additionalProperties": false,
+        "properties": {
+          "unchanged": {
+            "const": true,
+            "type": "boolean"
+          },
+          "version": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "unchanged",
+          "version"
+        ],
+        "type": "object"
+      },
+      {
+        "additionalProperties": false,
+        "properties": {
+          "locale": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "sheet": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SheetDto"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "sheets": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "title": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "id",
+                "title"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "version": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "version",
+          "name",
+          "locale",
+          "sheets",
+          "sheet"
+        ],
+        "type": "object"
+      }
+    ]
   },
   "WorkbookRecalc": {
     "enum": [
