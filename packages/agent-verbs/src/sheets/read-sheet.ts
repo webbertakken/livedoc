@@ -3,6 +3,8 @@
 // out and what the cell shows, plus the layout facts a reader needs (freeze, merges, filter). Bounded twice: the
 // range by AGENT_READ_CELLS_MAX cells, the answer by SHEET_READ_CHARS_MAX characters.
 import type { ApiClient } from '@livedoc/api-client';
+import type { SheetThreadsResponse } from '@livedoc/api-schema';
+import { openThreadCounts } from '@livedoc/document';
 import {
   formatA1,
   formatRange,
@@ -42,6 +44,8 @@ export interface ReadCell {
   link?: string;
   // Its note (review.md "Notes").
   note?: string;
+  // A spreadsheet's cell an open comment thread is anchored to: how many (review.md "Agents"); none for a Viewer.
+  comments?: number;
 }
 
 export interface SheetRead {
@@ -110,14 +114,27 @@ export async function readSheet(
     };
   const start = parseRangeText(read.range)!;
   const layout = wb.sheet(id)!.layout;
+  // A spreadsheet's open comment threads by their top-left cell, read as the caller may (a Viewer reads none).
+  const counts = state.workbook
+    ? openThreadCounts(
+        (
+          await api.json<SheetThreadsResponse>(
+            `/documents/${encodeURIComponent(documentId)}/sheet-threads`,
+          )
+        ).threads,
+        id,
+      )
+    : null;
   const cells: ReadCell[] = [];
   let chars = 0;
   let cut: string | null = null;
   rows: for (const [i, row] of read.rows.entries()) {
     for (const [j, cell] of row.entries()) {
       const note = wb.cellNoteOf(id, start.r1 + i, start.c1 + j);
-      if (cell.input === '' && (cell.value === null || cell.value === '') && note === null)
-        continue;
+      const comments =
+        counts?.get(`${layout.rows[start.r1 + i]}:${layout.cols[start.c1 + j]}`) ?? 0;
+      const empty = cell.input === '' && (cell.value === null || cell.value === '');
+      if (empty && note === null && comments === 0) continue;
       const at = formatA1(start.r1 + i, start.c1 + j);
       const out: ReadCell = {
         at,
@@ -129,6 +146,7 @@ export async function readSheet(
       const ln = wb.cellLinkOf(id, start.r1 + i, start.c1 + j);
       if (ln !== null) out.link = cellLinkText(ln, (sheetId) => wb.sheet(sheetId)?.title);
       if (note !== null) out.note = note;
+      if (comments > 0) out.comments = comments;
       const rule = layout.rules?.length
         ? validationRuleAt(layout, start.r1 + i, start.c1 + j)
         : null;

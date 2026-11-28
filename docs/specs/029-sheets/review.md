@@ -126,9 +126,12 @@ mentions, assignees, reactions, resolve and reopen, the same thread 0019 specifi
 
 ### Agents
 
-- The comment commands take a spreadsheet's cell or range (`--cell B4`, `--range B4:C9` on the sheet the ref names),
-  so an agent starts, replies to, resolves and reopens a thread as on any document; `read_sheet` gives each anchored
-  cell its open thread's count, and the cells view prints it (`💬 2`).
+**Status: built.**
+
+- The comment commands and MCP tools take a spreadsheet's cell or range (`--cell B4`, `--range B4:C9` on the sheet
+  the ref names), so an agent starts, replies to, resolves and reopens a thread as on any document; `read_sheet` gives each anchored
+  cell its open threads' count (`comments`), and the cells view prints it (`💬 2`), none for a Viewer. `comment add` on
+  cells with a thread adds to it (reopening a resolved one); `comment ls` lists each thread by its sheet and range.
 
 ### Carried over
 

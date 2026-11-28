@@ -248,3 +248,20 @@ function orderedAnchor(a: SheetThreadAnchor, axes: SheetAxes): SheetThreadAnchor
   const [c1, c2] = axes.cols.indexOf(a.c1) <= axes.cols.indexOf(a.c2) ? [a.c1, a.c2] : [a.c2, a.c1];
   return { r1, c1, r2, c2 };
 }
+
+/**
+ * A sheet's open threads counted by their anchor's top-left cell, keyed as `@livedoc/sheets`' `cellKey` (`row:col`):
+ * what an agent's read and the cells view give each anchored cell (029-sheets review.md "Agents").
+ */
+export function openThreadCounts(
+  threads: readonly SheetThread[],
+  sheetId: string,
+): Map<string, number> {
+  const counts = new Map<string, number>();
+  for (const t of threads) {
+    if (t.sheetId !== sheetId || t.resolved) continue;
+    const key = `${t.anchor.r1}:${t.anchor.c1}`;
+    counts.set(key, (counts.get(key) ?? 0) + 1);
+  }
+  return counts;
+}

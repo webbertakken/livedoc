@@ -49,7 +49,7 @@ import { getTab, tabBodiesInOrder } from '../db/tabs';
 import { json, textPlain } from '../responses';
 import { reportServerEvent } from '../server-telemetry';
 import type { DocumentDTO, TabDTO, DocumentEnv } from '../types';
-import type { DocumentRouteContext } from './context';
+import { gateParticipate, type DocumentRouteContext } from './context';
 import { answerTextDocumentView } from './text-document-views-route';
 import { answerWorkbookView } from './workbook-views-route';
 
@@ -351,6 +351,16 @@ export async function answerTabView(
   const tabScope = grant?.tabScope ?? null;
   if ('lint' in parsed) return answerLintView(ctx, parsed, document, tab);
   if ('storm' in parsed) return answerStormView(ctx, parsed, document, tab);
+  // A spreadsheet's cells view counts each cell's open comment threads for whoever may comment (029 review.md "Agents",
+  // D655): asked only then.
+  const comments = () =>
+    gateParticipate(
+      ctx,
+      document.id,
+      document.ownerId,
+      document.teamId ?? null,
+      tabScope ?? undefined,
+    );
   const sheet = await answerWorkbookView(
     ctx.env,
     parsed.request,
@@ -358,6 +368,7 @@ export async function answerTabView(
     document,
     tab,
     tabScope,
+    comments,
   );
   if (sheet) {
     if (sheet.response.ok) countViewed(ctx, sheet.view);
