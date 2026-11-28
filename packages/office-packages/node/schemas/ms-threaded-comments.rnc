@@ -1,0 +1,43 @@
+# Excel's threaded comments and persons parts, which ISO/IEC 29500 does not hold: transcribed from Microsoft's published
+# W3C XML Schema in [MS-XLSX] 5.23 (threadedcomments: CT_ThreadedComments, CT_ThreadedComment,
+# CT_ThreadedCommentMentions, CT_Mention, CT_PersonList, CT_Person), so a sheet's comment threads are validated as the
+# rest of a written file is (docs/specs/029-sheets/standard-mapping.md "Comments in the file").
+# An extension list's content is any XML, as ISO/IEC 29500's CT_ExtensionList leaves it to each extension.
+default namespace tc = "http://schemas.microsoft.com/office/spreadsheetml/2018/threadedcomments"
+namespace x = "http://schemas.openxmlformats.org/spreadsheetml/2006/main"
+datatypes xsd = "http://www.w3.org/2001/XMLSchema-datatypes"
+
+start = threadedComments | personList
+
+anyElement = element * { attribute * { text }*, (text | anyElement)* }
+ext = element x:ext { attribute uri { xsd:token }, attribute * - uri { text }*, (text | anyElement)* }
+extLst = element tc:extLst { ext* }
+guid = xsd:token { pattern = "\{[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}\}" }
+
+threadedComments = element tc:ThreadedComments { threadedComment*, extLst? }
+threadedComment = element tc:threadedComment {
+  attribute ref { xsd:string }?,
+  attribute dT { xsd:dateTime }?,
+  attribute personId { guid },
+  attribute id { guid },
+  attribute parentId { guid }?,
+  attribute done { xsd:boolean }?,
+  element tc:text { xsd:string }?,
+  element tc:mentions { mention* }?,
+  extLst?
+}
+mention = element tc:mention {
+  attribute mentionpersonId { guid },
+  attribute mentionId { guid },
+  attribute startIndex { xsd:unsignedInt },
+  attribute length { xsd:unsignedInt }
+}
+
+personList = element tc:personList { person*, extLst? }
+person = element tc:person {
+  attribute displayName { xsd:string },
+  attribute id { guid },
+  attribute userId { xsd:string }?,
+  attribute providerId { xsd:string }?,
+  extLst?
+}

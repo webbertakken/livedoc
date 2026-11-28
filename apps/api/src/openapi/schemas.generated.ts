@@ -16370,6 +16370,92 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
   "SheetDto": {
     "$ref": "#/components/schemas/SheetJson"
   },
+  "SheetFileComment": {
+    "additionalProperties": false,
+    "description": "A comment a file holds (docs/specs/029-sheets/standard-mapping.md \"Comments in the file\"): its author by name.",
+    "properties": {
+      "assignee": {},
+      "at": {
+        "type": "number"
+      },
+      "author": {
+        "type": "string"
+      },
+      "colour": {
+        "type": "string"
+      },
+      "edited": {
+        "type": "number"
+      },
+      "mentions": {
+        "items": {},
+        "type": "array"
+      },
+      "reactions": {
+        "additionalProperties": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "type": "object"
+      },
+      "text": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "text",
+      "at",
+      "author"
+    ],
+    "type": "object"
+  },
+  "SheetFileThread": {
+    "additionalProperties": false,
+    "description": "A thread an opened file holds, anchored by the new sheet's row and column ids.",
+    "properties": {
+      "anchor": {
+        "additionalProperties": false,
+        "properties": {
+          "c1": {
+            "type": "string"
+          },
+          "c2": {
+            "type": "string"
+          },
+          "r1": {
+            "type": "string"
+          },
+          "r2": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "r1",
+          "c1",
+          "r2",
+          "c2"
+        ],
+        "type": "object"
+      },
+      "comments": {
+        "items": {
+          "$ref": "#/components/schemas/SheetFileComment"
+        },
+        "type": "array"
+      },
+      "resolved": {
+        "type": "boolean"
+      }
+    },
+    "required": [
+      "anchor",
+      "resolved",
+      "comments"
+    ],
+    "type": "object"
+  },
   "SheetFilter": {
     "additionalProperties": false,
     "properties": {
@@ -17471,6 +17557,35 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
     "required": [
       "id",
       "thread"
+    ],
+    "type": "object"
+  },
+  "SheetThreadsFromFileRequest": {
+    "additionalProperties": false,
+    "description": "An opened file's threads for one sheet, a part of them at a time.",
+    "properties": {
+      "threads": {
+        "items": {
+          "$ref": "#/components/schemas/SheetFileThread"
+        },
+        "type": "array"
+      }
+    },
+    "required": [
+      "threads"
+    ],
+    "type": "object"
+  },
+  "SheetThreadsFromFileResponse": {
+    "additionalProperties": false,
+    "description": "How many of the part's threads were stored.",
+    "properties": {
+      "stored": {
+        "type": "number"
+      }
+    },
+    "required": [
+      "stored"
     ],
     "type": "object"
   },

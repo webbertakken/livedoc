@@ -19,6 +19,7 @@ import { writeXlsx } from './xlsx-write';
 import { solidPng } from '@livedoc/office-packages/testing';
 import { emptyLayout, emptySheet } from '../sheet';
 import { writeWorkbook } from './write-workbook';
+import type { IdThread } from './file-threads';
 
 const made = () => WorkbookRecord.create({ locale: 'en-GB', timeZone: 'UTC' });
 
@@ -28,6 +29,7 @@ type Fake = SpreadsheetFilePort & {
   kept: KeptContent<StoredAt>[];
   binned: string[];
   events: string[];
+  threaded: { sheetId: string; threads: readonly IdThread[]; after: number }[];
 };
 
 function fakePort(overrides: Partial<SpreadsheetFilePort> = {}): Fake {
@@ -37,7 +39,10 @@ function fakePort(overrides: Partial<SpreadsheetFilePort> = {}): Fake {
     kept: [],
     binned: [],
     events: [],
+    threaded: [],
     create: async (m) => void fake.created.push(m),
+    threads: async (sheetId, threads) =>
+      void fake.threaded.push({ sheetId, threads, after: fake.writes.length }),
     write: async (sheetId, write) => void fake.writes.push({ sheetId, write }),
     keep: async (k) => {
       fake.kept.push(k);
@@ -61,6 +66,12 @@ function xlsx(rows: number, name = 'Q3.xlsx'): SpreadsheetFile {
   const data = writeXlsx({ sheets: [{ name: 'Data', rows, cols: 1, cells }] }, '').data;
   return { fileName: name, name: nameFromFile(name), bytes: bytesOf(data) };
 }
+
+// A seeded random, for ids that differ.
+const seeded = () => {
+  let n = 7;
+  return () => (n = (n * 16807) % 2147483647) / 2147483647;
+};
 
 const text = (fileName: string, body: string): SpreadsheetFile => ({
   fileName,
@@ -95,6 +106,53 @@ function withPictures(): SpreadsheetFile {
   const data = writeWorkbook([sheet], made(), 'Pics', 'xlsx', undefined, bytes).data;
   return { fileName: 'Pics.xlsx', name: 'Pics', bytes: bytesOf(data) };
 }
+
+// standard-mapping.md "Comments in the file": a file's threads stored once its cells are, by the made sheet's ids.
+describe('importSpreadsheetFile threads', () => {
+  it('stores each sheet’s threads after its cells, anchored by the made sheet’s ids', async () => {
+    const layout = emptyLayout(seeded(), 4, 3);
+    const sheet = emptySheet({ id: 'sheetOne1', tabId: 't1', title: 'Notes', layout });
+    const comments = [{ text: 'Check', at: 1, author: 'Ada' }];
+    const threads = new Map([
+      [
+        sheet.id,
+        [
+          {
+            anchor: {
+              r1: layout.rows[1]!,
+              c1: layout.cols[2]!,
+              r2: layout.rows[1]!,
+              c2: layout.cols[2]!,
+            },
+            resolved: true,
+            comments,
+          },
+        ],
+      ],
+    ]);
+    const data = writeWorkbook([sheet], made(), 'Notes', 'ods', undefined, undefined, threads).data;
+    const port = fakePort();
+    const opened = await importSpreadsheetFile(
+      { fileName: 'Notes.ods', name: 'Notes', bytes: bytesOf(data) },
+      made(),
+      port,
+    );
+    expect(opened.ok).toBe(true);
+    const [madeSheet] = port.created[0]!.sheets;
+    expect(port.threaded).toHaveLength(1);
+    const [stored] = port.threaded;
+    expect(stored!.sheetId).toBe(madeSheet!.id);
+    expect(stored!.after).toBe(port.writes.length);
+    const at = stored!.threads[0]!.anchor;
+    expect([madeSheet!.layout.rows.indexOf(at.r1), madeSheet!.layout.cols.indexOf(at.c1)]).toEqual([
+      1, 2,
+    ]);
+    expect(stored!.threads[0]).toMatchObject({
+      resolved: true,
+      comments: [expect.objectContaining({ text: 'Check', author: 'Ada' })],
+    });
+  });
+});
 
 describe('importSpreadsheetFile pictures', () => {
   it('stores each picture once before the spreadsheet is made, placing those the gallery took', async () => {

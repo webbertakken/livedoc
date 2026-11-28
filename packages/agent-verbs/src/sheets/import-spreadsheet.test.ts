@@ -173,6 +173,47 @@ describe('importSpreadsheet', () => {
     ]);
   });
 
+  // standard-mapping.md "Comments in the file": a file's threads stored once its cells are, by its sheet.
+  it('stores the file’s comment threads on the made sheet once its cells are', async () => {
+    const { api, seen } = server();
+    const data = writeXlsx(
+      {
+        sheets: [
+          {
+            name: 'Models',
+            rows: 2,
+            cols: 2,
+            cells: [{ r: 0, c: 0, value: { k: 'n', v: 1 } }],
+            threads: [
+              {
+                r1: 1,
+                c1: 1,
+                r2: 1,
+                c2: 1,
+                resolved: false,
+                comments: [{ text: 'Why?', at: 1, author: 'Ada' }],
+              },
+            ],
+          },
+        ],
+      },
+      '',
+    ).data;
+    const opened = await importSpreadsheet(
+      api,
+      { fileName: 'T.xlsx', bytes: bytesOf(data) },
+      'cli',
+    );
+    if (!opened.ok) throw new Error('not opened');
+    const sent = seen.find((x) => x.path.endsWith('/file-threads'))!;
+    expect(sent.path).toBe(
+      `/documents/${(seen[0]!.body as { id: string }).id}/sheets/${opened.sheets[0]!.sheetId}/file-threads`,
+    );
+    expect(sent.body).toMatchObject({
+      threads: [{ resolved: false, comments: [{ text: 'Why?', author: 'Ada' }] }],
+    });
+  });
+
   it('takes the name given, and the report in the editor’s words', async () => {
     const { api } = server();
     const blank = bytesOf(

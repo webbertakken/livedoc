@@ -37,6 +37,10 @@ export function fetchOfficeSchemas(): void {
 
 // Excel's rich value parts' schema, transcribed from [MS-XLSX] (a picture placed in a cell, D634).
 const MS_RICH_DATA = join(dirname(fileURLToPath(import.meta.url)), 'schemas/ms-rich-data.rnc');
+const MS_THREADED_COMMENTS = join(
+  dirname(fileURLToPath(import.meta.url)),
+  'schemas/ms-threaded-comments.rnc',
+);
 
 /** Each OOXML part's schema by its name, for the parts LiveDoc writes in either kind of document. */
 export const OOXML_SCHEMAS: readonly (readonly [RegExp, string])[] = [
@@ -62,6 +66,7 @@ export const OOXML_SCHEMAS: readonly (readonly [RegExp, string])[] = [
   [/^xl\/charts\/chart\d+\.xml$/, 'ooxml/DrawingML_Chart.rnc'],
   [/^xl\/tables\/table\d+\.xml$/, 'ooxml/SpreadsheetML_Table_Definitions.rnc'],
   [/^xl\/comments\d+\.xml$/, 'ooxml/SpreadsheetML_Comments.rnc'],
+  [/^xl\/(threadedComments\/threadedComment\d+|persons\/person)\.xml$/, MS_THREADED_COMMENTS],
   [/^xl\/pivotTables\/pivotTable\d+\.xml$/, 'ooxml/SpreadsheetML_Pivot_Table.rnc'],
   [
     /^xl\/richData\/(rdrichvalue|rdrichvaluestructure|rdRichValueTypes|richValueRel)\.xml$/,

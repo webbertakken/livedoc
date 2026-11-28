@@ -213,3 +213,96 @@ describe('the Inbox rows', () => {
     expect(await sheetThreadCollab(env, 'book1', 'none', async () => null)).toBeNull();
   });
 });
+
+// standard-mapping.md "Comments in the file": an opened file's threads stored by an Editor, each comment from the file;
+// a download writes the threads for whoever may comment, none for a Viewer (D655).
+describe('threads and files', () => {
+  const fromFile = (threads: unknown, who: { owner?: string; code?: string } = {}) =>
+    kit.call({ path: `/book1/sheets/${SHEET}/file-threads`, body: { threads }, ...who });
+  const fileThread = (extra: Record<string, unknown> = {}) => ({
+    anchor: anchor(),
+    resolved: true,
+    comments: [
+      {
+        text: 'From Excel\u0007',
+        at: 5,
+        author: 'Jose',
+        colour: '#123456',
+        edited: 6,
+        mentions: [{ userId: null, name: 'Bo', handle: 'bo' }, 'x'],
+        assignee: { userId: null, name: 'Bo', handle: 'bo' },
+        reactions: { '👍': ['k2', 'k1', 'k1'], '': ['k'], bad: [3] },
+      },
+      { text: '   ', at: 1, author: 'Blank' },
+      { text: 'Reply', at: 'no', author: 'Bad' },
+      { text: 'Plain', at: 7, author: 'Kim', colour: 'red' },
+    ],
+    ...extra,
+  });
+
+  it('stores an opened file’s threads, an Editor’s, each comment from the file and bounded', async () => {
+    const res = await fromFile([
+      fileThread(),
+      fileThread({ anchor: { ...anchor(), c2: 'gone0000' } }),
+      fileThread({ comments: [{ text: '', at: 1, author: 'x' }] }),
+      'nope',
+      { anchor: 'x', comments: [] },
+      { anchor: anchor(), comments: 'x' },
+      { anchor: { r1: 1, c1: 1, r2: 1, c2: 1 }, comments: [] },
+    ]);
+    expect([res.status, await res.json()]).toEqual([200, { stored: 1 }]);
+    const { threads } = await (await list()).json<SheetThreadsResponse>();
+    expect(threads).toHaveLength(1);
+    expect(threads[0]).toMatchObject({ sheetId: SHEET, anchor: anchor(), resolved: true, v: 1 });
+    expect(threads[0]!.comments.map((c) => ({ ...c, id: typeof c.id }))).toEqual([
+      {
+        id: 'string',
+        text: 'From Excel',
+        at: 5,
+        edited: 6,
+        author: { name: 'Jose', colour: '#123456', fromFile: true },
+        mentions: [{ userId: null, name: 'Bo', handle: 'bo' }],
+        assignee: { userId: null, name: 'Bo', handle: 'bo' },
+        reactions: { '👍': ['k1', 'k2'] },
+      },
+      {
+        id: 'string',
+        text: 'Plain',
+        at: 7,
+        author: { name: 'Kim', colour: '#6b7280', fromFile: true },
+      },
+    ]);
+  });
+
+  it('refuses a Participant, a malformed body, a Plan document, and stores none past the sheet’s room', async () => {
+    expect((await fromFile([fileThread()], { owner: 'p', code: 'PART' })).status).toBe(403);
+    expect((await kit.call({ path: `/book1/sheets/${SHEET}/file-threads`, body: {} })).status).toBe(
+      400,
+    );
+    expect(
+      (await kit.call({ path: `/book1/sheets/nope/file-threads`, body: { threads: [] } })).status,
+    ).toBe(404);
+    const spy = vi
+      .spyOn(stored, 'readThreadAt')
+      .mockResolvedValueOnce({ thread: null, count: 1000 });
+    expect(await (await fromFile([fileThread()])).json()).toEqual({ stored: 0 });
+    spy.mockRestore();
+    expect(
+      (await kit.call({ path: `/book1/sheets/${SHEET}/file-threads`, method: 'GET' })).status,
+    ).toBe(405);
+  });
+
+  it('writes the threads into a download, none into a Viewer’s', async () => {
+    await start();
+    const download = async (who: { owner?: string; code?: string } = {}) =>
+      new Uint8Array(
+        await (
+          await kit.call({ method: 'GET', path: '/book1/workbook/file?format=fods', ...who })
+        ).arrayBuffer(),
+      );
+    const text = (bytes: Uint8Array) => new TextDecoder().decode(bytes);
+    expect(text(await download())).toContain('livedoc:thread=');
+    expect(text(await download())).toContain('<text:p>Is this right?</text:p>');
+    expect(text(await download({ owner: 'v', code: 'VIEW' }))).not.toContain('Is this right?');
+  });
+});

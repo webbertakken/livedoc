@@ -164,6 +164,35 @@ describe('protection other apps enforce', () => {
   }, 120_000);
 });
 
+// standard-mapping.md "Comments in the file": LibreOffice holds one comment a cell and no replies, so it shows each
+// thread's conversation as a comment on its top-left cell and saves it again so; read back, that is a note (D660).
+describe('comment threads other apps show', () => {
+  it('LibreOffice keeps each thread of the .fods and .xlsx it opens as a comment holding its conversation', async () => {
+    const file = WRITTEN_CONSTRUCTS.comments!;
+    for (const [type, target] of [
+      ['fods', 'ods'],
+      ['xlsx', 'xlsx:Calc MS Excel 2007 XML'],
+    ] as const) {
+      const path = join(OUT, `comments-other.${type}`);
+      writeFileSync(
+        path,
+        type === 'fods' ? writeFlatOds(file, 'c').data : writeXlsx(file, 'c').data,
+      );
+      const read = await readWorkbookFile(new Uint8Array(libreOfficeConvert(path, target)));
+      if (!read.ok) throw new Error(`${type}: ${read.rejection}`);
+      const [one, two] = read.file.sheets;
+      const noteAt = (sheet: typeof one, r: number, c: number) =>
+        sheet?.cells.find((x) => x.r === r && x.c === c)?.note ?? '';
+      expect(one!.threads, type).toBeUndefined();
+      // The conversation as text: an ODF annotation's lines, or Excel's placeholder for older readers.
+      expect(noteAt(one, 0, 0), type).toContain('Is this final?');
+      expect(noteAt(one, 0, 0), type).toContain('Yes <b> & "quotes" @priya');
+      expect(noteAt(one, 2, 2), type).toContain('Done');
+      expect(noteAt(two, 3, 3), type).toContain('On an empty cell');
+    }
+  }, 120_000);
+});
+
 // standard-mapping.md "Tables in the file": LibreOffice reads the table LiveDoc writes, works out every formula reading
 // it (the cached values are 0), and saves the table again as its own.
 describe('tables other apps read', () => {

@@ -49,7 +49,7 @@ import {
 } from './sheet-route-kit';
 import { sheetCells } from './sheet-page-routes';
 import { writeSheet } from './sheet-write-route';
-import { listSheetThreads, writeSheetThread } from './sheet-thread-routes';
+import { importSheetThreads, listSheetThreads, writeSheetThread } from './sheet-thread-routes';
 
 const IDS_PER_GET_MAX = 50;
 
@@ -292,6 +292,8 @@ export async function handleSheetRoutes(ctx: DocumentRouteContext): Promise<Resp
     return method === 'DELETE' ? remove(ctx, documentId, sheetId) : methodNotAllowed();
   if (segments.length === 6 && segments[5] === 'changesets')
     return method === 'POST' ? submitSheetChangeset(ctx, documentId, sheetId) : methodNotAllowed();
+  if (segments.length === 6 && segments[5] === 'file-threads')
+    return method === 'POST' ? importSheetThreads(ctx, documentId, sheetId) : methodNotAllowed();
   if (segments.length === 6 && segments[5] === 'threads')
     return method === 'POST' ? writeSheetThread(ctx, documentId, sheetId) : methodNotAllowed();
   if (segments.length === 6 && segments[5] === 'writes')

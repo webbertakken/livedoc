@@ -60,6 +60,8 @@ const DOCUMENT_SCOPE: Record<string, Decision> = {
   // A spreadsheet's comment threads, as the editor's comments.
   'GET /documents/{id}/sheet-threads': 'allow',
   'POST /documents/{id}/sheets/{sheetId}/threads': 'allow',
+  // An opened file's threads, stored as the editor's File › Open stores them.
+  'POST /documents/{id}/sheets/{sheetId}/file-threads': 'allow',
   // A workbench writes no agent changesets (agent-changesets.md "Whole-tab saves and tab renames").
   'POST /documents/{id}/sheets/{sheetId}/changesets': 'confined',
   'GET /documents/{id}/sheets/{sheetId}/cells': 'allow',

@@ -63,8 +63,9 @@ for (const [segment, byPosition] of vocabulary) {
 // (2026-11-27); 277,149 with a document's notification settings, one word at the document's level, raised on
 // purpose (2026-11-27); 302,289 with a spreadsheet's link door, one word at the workbook's level, raised on purpose
 // (2026-11-28); 328,798 with a spreadsheet's comment threads, a word at the document's level and one below a sheet,
-// raised on purpose (2026-11-28).
-const PROBE_PATHS_MAX = 330_000;
+// raised on purpose (2026-11-28); 340,942 with an opened file's comment threads door, one word below a sheet, raised
+// on purpose (2026-11-28).
+const PROBE_PATHS_MAX = 345_000;
 // The hook's timeout only bounds a hung probe, so it follows the work: about 0.02 ms a dispatch on a developer's
 // machine (12 s for 563,080), and CI's shared runners under coverage up to thirty times that.
 const PROBE_MS_PER_DISPATCH = 0.02;

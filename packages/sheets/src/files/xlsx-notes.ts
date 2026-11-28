@@ -12,6 +12,10 @@ import {
 } from '@livedoc/office-packages';
 import { cellAddress, readCellAddress } from './xlsx-parts';
 import type { FileCell } from './workbook-file';
+import { PLACEHOLDER_AUTHOR, type ThreadPlaceholder } from './xlsx-threads';
+
+// A legacy comment written: a note (author 0, LiveDoc) or a thread's placeholder (its own `tc=` author).
+type Commented = { r: number; c: number; text: string; author: number };
 
 const RELS = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships';
 /** The relationship a worksheet names its notes part by, and its VML drawing by. */
@@ -42,14 +46,23 @@ function richText(text: XmlElement, ns: string): string {
   return out;
 }
 
-/** A notes part's notes: each `comment` naming one cell, its runs' text joined; its author's not read (D649). */
+/**
+ * A notes part's notes: each `comment` naming one cell, its runs' text joined; its author's not read (D649), save that a
+ * thread's placeholder (its author `tc={id}`) is the thread's and no note ("Comments in the file").
+ */
 export function readXlsxNotes(root: XmlElement): ReadNote[] {
   const ns = root.uri;
   const list = childElement(root, ns, 'commentList');
   if (!list) return [];
+  const authorsEl = childElement(root, ns, 'authors');
+  const authors = (authorsEl ? childElements(authorsEl) : [])
+    .filter((a) => a.uri === ns && a.local === 'author')
+    .map((a) => a.children.filter((x) => typeof x === 'string').join(''));
   const out: ReadNote[] = [];
   for (const comment of childElements(list)) {
     if (comment.uri !== ns || comment.local !== 'comment') continue;
+    const author = authors[Number(attributeOf(comment, '', 'authorId') ?? -1)] ?? '';
+    if (PLACEHOLDER_AUTHOR.test(author)) continue;
     const at = readCellAddress(attributeOf(comment, '', 'ref') ?? '');
     const text = childElement(comment, ns, 'text');
     if (!at || !text) continue;
@@ -80,7 +93,7 @@ export function cellsNoted(
 }
 
 /** The relationship id `base` names, or the first `base<n>` a kept relationship does not hold. */
-function freeId(base: string, taken: ReadonlySet<string>): string {
+export function freeId(base: string, taken: ReadonlySet<string>): string {
   if (!taken.has(base)) return base;
   let n = 2;
   while (taken.has(`${base}${n}`)) n++;
@@ -96,16 +109,23 @@ export type XlsxNotesOut = {
 
 /**
  * A sheet's notes part and VML drawing (`sheetNo` one-based, naming both parts), their relationships with ids free of
- * the sheet's kept ones; null for a sheet without notes.
+ * the sheet's kept ones; null for a sheet without notes or threads. A thread's placeholder takes its cell's legacy
+ * comment, the note there being carried by the thread's record (D658).
  */
 export function xlsxNotesOut(
   cells: readonly FileCell[],
   sheetNo: number,
   kept: readonly Relationship[],
+  placeholders: readonly ThreadPlaceholder[] = [],
 ): XlsxNotesOut | null {
-  const noted = cells
-    .filter((cell) => cell.note !== undefined)
-    .sort((a, b) => a.r - b.r || a.c - b.c);
+  const held = new Set(placeholders.map((p) => `${p.r},${p.c}`));
+  const authors = [NOTES_AUTHOR, ...placeholders.map((p) => p.author)];
+  const noted: Commented[] = [
+    ...cells
+      .filter((cell) => cell.note !== undefined && !held.has(`${cell.r},${cell.c}`))
+      .map((cell) => ({ r: cell.r, c: cell.c, text: cell.note!, author: 0 })),
+    ...placeholders.map((p, i) => ({ r: p.r, c: p.c, text: p.text, author: i + 1 })),
+  ].sort((a, b) => a.r - b.r || a.c - b.c);
   if (noted.length === 0) return null;
   const taken = new Set(kept.map((r) => r.id));
   const notesId = freeId('rIdNotes', taken);
@@ -113,10 +133,11 @@ export function xlsxNotesOut(
   const comments = noted
     .map(
       (cell) =>
-        `<comment ref="${cellAddress(cell.r, cell.c)}" authorId="0"><text><r><t xml:space="preserve">${escapeXmlText(cell.note!)}</t></r></text></comment>`,
+        `<comment ref="${cellAddress(cell.r, cell.c)}" authorId="${cell.author}"><text><r><t xml:space="preserve">${escapeXmlText(cell.text)}</t></r></text></comment>`,
     )
     .join('');
-  const notesXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<comments xmlns="${SPREADSHEETML}"><authors><author>${NOTES_AUTHOR}</author></authors><commentList>${comments}</commentList></comments>`;
+  const authorsXml = authors.map((a) => `<author>${escapeXmlText(a)}</author>`).join('');
+  const notesXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<comments xmlns="${SPREADSHEETML}"><authors>${authorsXml}</authors><commentList>${comments}</commentList></comments>`;
   return {
     parts: [
       { name: `xl/comments${sheetNo}.xml`, contentType: NOTES_CONTENT_TYPE, xml: notesXml },
@@ -136,7 +157,7 @@ export function xlsxNotesOut(
 
 // Excel's note shapes: one shape type, then a hidden yellow box a note, anchored beside its cell (two columns right,
 // four rows down), its ids in the sheet's own block of 1,024 (`o:idmap`).
-function vmlXml(noted: readonly FileCell[], sheetNo: number): string {
+function vmlXml(noted: readonly { r: number; c: number }[], sheetNo: number): string {
   const shapes = noted.map((cell, i) => {
     const id = sheetNo * 1024 + i + 1;
     const anchor = [cell.c + 1, 15, Math.max(0, cell.r - 1), 10, cell.c + 3, 15, cell.r + 3, 4];
