@@ -27,7 +27,8 @@ library): it only moves the document to the Trash, so a question would guard not
   `[explorer] delete-failed, row restored`).
 - Deleting the document open in the editor takes the editor to the Explorer, which offers the same toast on arrival:
   the delete, with the document's name, is handed over in `sessionStorage` for 30 seconds (`handOffDeleteUndo`, `takeDeleteUndo`,
-  `useDeleteUndoHandoff`).
+  `useDeleteUndoHandoff`). A delete LiveDoc refuses keeps the document open, lets it save again and says "Could not delete
+  “Roadmap”. Try again." (logged `[editor] delete-failed, document kept`).
 - A team document deleted from the team library goes to the team's Trash, and its Undo restores it there.
 
 Every delete of a whole document goes to the Trash: the Explorer, the editor,

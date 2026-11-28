@@ -9,7 +9,7 @@ import { officeMenuItem } from './office-menus';
 // text, a heading in the outline, a link live, tagged. Read back by the PDF engine, as any reader would.
 
 const BODY = '[role="textbox"][aria-label="Document body"]';
-const LINK_EDITOR = '[data-text-document-link-editor]';
+const LINK_EDITOR = '[data-office-link-editor]';
 
 const types = (nodes: readonly (TagNode | string)[]): string[] =>
   nodes.flatMap((node) => (typeof node === 'string' ? [] : [node.type, ...types(node.kids)]));

@@ -158,7 +158,7 @@ export function textDocumentMenus(
       SEPARATOR,
       item('rename', 'Rename', 'edit', BUILT),
       item('move', 'Move', 'edit', { keywords: ['folder'], status: 'built' }),
-      item('move-to-trash', 'Move to trash', 'edit', { keywords: ['delete'] }),
+      item('move-to-trash', 'Move to trash', 'edit', { keywords: ['delete'], status: 'built' }),
       SEPARATOR,
       submenu('version-history', 'Version history', [
         item('name-current-version', 'Name current version', 'edit', { status: 'built' }),
@@ -171,7 +171,7 @@ export function textDocumentMenus(
         keywords: ['this browser'],
       }),
       SEPARATOR,
-      item('details', 'Details', 'view'),
+      item('details', 'Details', 'view', BUILT),
       item('security-limitations', 'Security limitations', 'view', BUILT),
       item('language', 'Language', 'edit'),
       SEPARATOR,

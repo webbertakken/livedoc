@@ -30,6 +30,13 @@ const CATALOGUE: OfficeCatalogue = [
       { kind: 'item', id: 'move', label: 'Move', level: 'edit', status: 'built' },
       {
         kind: 'item',
+        id: 'move-to-trash',
+        label: 'Move to trash',
+        level: 'edit',
+        status: 'built',
+      },
+      {
+        kind: 'item',
         id: 'share-with-others',
         label: 'Share with others',
         level: 'edit',
@@ -59,6 +66,13 @@ function chromeOf(over: Partial<OfficeChrome> = {}): OfficeChrome {
     onOpenAccount: vi.fn(),
     people: [],
     onOpenTab: vi.fn(),
+    trash: null,
+    facts: {
+      owner: { you: true },
+      location: { place: 'mine', folders: [] },
+      createdAt: null,
+      savedAt: null,
+    },
     ...over,
   };
 }
@@ -135,6 +149,25 @@ describe('OfficeTitleRow, the document parts', () => {
     fireEvent.click(within(screen.getByRole('menu')).getByRole('menuitem', { name: /Move/ }));
     expect(chrome.move).toHaveBeenCalledTimes(2);
     expect(track).toHaveBeenCalledWith('UI', 'Opened', 'TextDocumentMove');
+  });
+
+  // files-and-print.md "Trash": the same delete as everywhere, drawn only for whoever may delete the document.
+  it('moves the document to the trash from File > Move to trash', () => {
+    const trash = vi.fn<() => void>();
+    render(<Row chrome={chromeOf({ trash })} />);
+    openFile();
+    fireEvent.click(
+      within(screen.getByRole('menu')).getByRole('menuitem', { name: /Move to trash/ }),
+    );
+    expect(trash).toHaveBeenCalledOnce();
+  });
+
+  it('leaves Move to trash out for one who may not delete the document', () => {
+    render(<Row chrome={chromeOf({ trash: null })} />);
+    openFile();
+    expect(
+      within(screen.getByRole('menu')).queryByRole('menuitem', { name: /Move to trash/ }),
+    ).toBeNull();
   });
 
   it('puts the focus in the name from File > Rename', () => {

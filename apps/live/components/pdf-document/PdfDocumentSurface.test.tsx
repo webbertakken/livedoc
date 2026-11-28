@@ -546,6 +546,13 @@ describe('a PDF document’s surface', () => {
         onOpenAccount: vi.fn(),
         people: [],
         onOpenTab: vi.fn(),
+        trash: null,
+        facts: {
+          owner: { you: true },
+          location: { place: 'mine', folders: [] },
+          createdAt: null,
+          savedAt: null,
+        },
       };
       show(await ready(), 'edit', true, 'room', chrome);
       expect(screen.getByRole('button', { name: 'Share' })).toBeTruthy();
