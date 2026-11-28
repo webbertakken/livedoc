@@ -33,6 +33,7 @@ export const TEXT_TEMPLATE_SECTIONS = [
     templates: [
       { id: 'text-project-proposal', name: 'Project proposal' },
       { id: 'text-project-brief', name: 'Project brief' },
+      { id: 'text-working-backwards', name: 'Working backwards' },
       { id: 'text-brochure', name: 'Brochure' },
       { id: 'text-meeting-notes', name: 'Meeting notes' },
       { id: 'text-newsletter', name: 'Newsletter' },

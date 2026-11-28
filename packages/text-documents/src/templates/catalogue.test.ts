@@ -14,7 +14,7 @@ import {
 const LETTER_WIDTH = 612;
 
 describe('the text document template catalogue', () => {
-  it('holds the spec’s fourteen templates in its order', () => {
+  it('holds the spec’s fifteen templates in its order', () => {
     expect(TEXT_DOCUMENT_TEMPLATES.map((t) => t.name)).toEqual([
       'Letter',
       'Formal letter',
@@ -25,6 +25,7 @@ describe('the text document template catalogue', () => {
       'Notes',
       'Project proposal',
       'Project brief',
+      'Working backwards',
       'Brochure',
       'Meeting notes',
       'Newsletter',
@@ -44,7 +45,7 @@ describe('the text document template catalogue', () => {
       ...Array(2).fill('letters'),
       ...Array(2).fill('resumes'),
       ...Array(3).fill('personal'),
-      ...Array(5).fill('work'),
+      ...Array(6).fill('work'),
       ...Array(2).fill('education'),
     ]);
   });
@@ -59,6 +60,7 @@ describe('the text document template catalogue', () => {
         [
           'text-project-proposal',
           'text-project-brief',
+          'text-working-backwards',
           'text-brochure',
           'text-meeting-notes',
           'text-newsletter',
@@ -128,3 +130,20 @@ describe.each(TEXT_DOCUMENT_TEMPLATES.map((t) => [t.name, t] as const))(
     });
   },
 );
+
+// Moved from Pages's article template (fork D4): its writing, its page break before the FAQs, its review checklist.
+describe('the Working backwards template', () => {
+  const doc = textDocumentTemplateOf('text-working-backwards')!.build();
+  const paragraphs = Blocks.paragraphs(doc.body);
+
+  it('keeps the PR/FAQ’s writing, the FAQs after a page break', () => {
+    expect(Paragraph.text(paragraphs[0]!)).toMatch(/^FreshBox Tonight: dinner for two/);
+    const faq = paragraphs.find((p) => Paragraph.text(p) === 'Customer FAQ')!;
+    expect(faq.props.pageBreakBefore).toBe(true);
+    expect(paragraphs.some((p) => Paragraph.text(p) === 'Internal FAQ')).toBe(true);
+  });
+
+  it('closes on the review’s checklist, its first item ticked', () => {
+    expect(paragraphs.slice(-4).map((p) => p.list?.checked)).toEqual([true, false, false, false]);
+  });
+});

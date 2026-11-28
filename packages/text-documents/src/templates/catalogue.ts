@@ -10,6 +10,7 @@ import {
 import { FORMAL_LETTER, LETTER } from './letters';
 import { ESSAY, NOTES, REPORT } from './personal';
 import { CLASSIC_RESUME, MODERN_RESUME } from './resumes';
+import { WORKING_BACKWARDS } from './working-backwards';
 import { BROCHURE, MEETING_NOTES, NEWSLETTER, PROJECT_BRIEF, PROJECT_PROPOSAL } from './work';
 
 /** A finished example a text document is made from: its id (`text-`), its name, its section and its writing. */
@@ -31,6 +32,7 @@ const BUILDS: Record<TextDocumentTemplateId, () => TextDocument> = {
   'text-notes': NOTES,
   'text-project-proposal': PROJECT_PROPOSAL,
   'text-project-brief': PROJECT_BRIEF,
+  'text-working-backwards': WORKING_BACKWARDS,
   'text-brochure': BROCHURE,
   'text-meeting-notes': MEETING_NOTES,
   'text-newsletter': NEWSLETTER,

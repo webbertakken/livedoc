@@ -6,7 +6,7 @@ import { templatePreview } from './template-previews';
 
 // docs/specs/034-text-documents/starting-and-finding.md "The template gallery's text documents".
 
-/** A preview's most bytes (safe range 10 to 100 KB): fourteen of them, twice, load with the gallery. */
+/** A preview's most bytes (safe range 10 to 100 KB): fifteen of them, twice, load with the gallery. */
 const PREVIEW_BYTES_MAX = 30_000;
 
 describe.each(TEXT_DOCUMENT_TEMPLATES.map((t) => [t.name, t] as const))(

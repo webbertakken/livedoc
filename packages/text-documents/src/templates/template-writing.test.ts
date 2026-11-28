@@ -40,6 +40,7 @@ describe('the template writer', () => {
     ]);
     expect(numbers[0]!.list).toEqual({ id: 'list-2', level: 0 });
     expect(checks[0]!.list).toEqual({ id: 'list-3', level: 0, checked: false });
+    expect(w.checklist(['a', 'b'], {}, [true]).map((p) => p.list?.checked)).toEqual([true, false]);
     const lists = w.lists();
     expect(lists['list-1']!.levels[0]!.kind).toBe('bullet');
     expect(lists['list-2']!.levels[0]!.kind).toBe('number');

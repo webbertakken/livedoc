@@ -8,10 +8,13 @@ export function TextTemplatePicture({
   crop,
 }: {
   picture: Picture | undefined;
-  /** The top of the page, filling a short card (the Explorer's pane); else the whole page. */
+  /** The top of the page's writing, filling a short card (the Explorer's pane); else the whole page. */
   crop: boolean;
 }) {
-  const fit = crop ? 'h-full w-full object-cover object-top' : 'aspect-[17/22] w-full';
+  // A crop shows the writing from its first line: the page scaled so its one-inch margins fall outside the card.
+  const fit = crop
+    ? 'aspect-[17/22] w-[131%] max-w-none -ml-[15.4%] -mt-[15.4%]'
+    : 'aspect-[17/22] w-full';
   if (!picture) return <span aria-hidden className={`block bg-white dark:bg-[#1e1f20] ${fit}`} />;
   return (
     <>

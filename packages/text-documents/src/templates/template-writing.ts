@@ -112,14 +112,19 @@ export class TemplateWriter {
   }
 
   /** A list of one item a paragraph, in a preset's look ('bulleted', 'numbered', 'checklist-plain', ...). */
-  list(preset: string, items: readonly Writing[], props: ParagraphProps = {}): Paragraph[] {
+  list(
+    preset: string,
+    items: readonly Writing[],
+    props: ParagraphProps = {},
+    checked: readonly boolean[] = [],
+  ): Paragraph[] {
     const look = ListPresets.byId(preset);
     if (!look) throw new Error(`no list preset ${preset}`);
     const id = `list-${Object.keys(this.#lists).length + 1}`;
     this.#lists[id] = look.list;
-    return items.map((item) => ({
+    return items.map((item, n) => ({
       ...this.p(item, props),
-      list: { id, level: 0, ...(look.kind === 'check' ? { checked: false } : {}) },
+      list: { id, level: 0, ...(look.kind === 'check' ? { checked: checked[n] === true } : {}) },
     }));
   }
 
@@ -131,8 +136,13 @@ export class TemplateWriter {
     return this.list('numbered', items, props);
   }
 
-  checklist(items: readonly Writing[], props: ParagraphProps = {}): Paragraph[] {
-    return this.list('checklist-plain', items, props);
+  /** A checklist; `checked` ticks items by their place. */
+  checklist(
+    items: readonly Writing[],
+    props: ParagraphProps = {},
+    checked: readonly boolean[] = [],
+  ): Paragraph[] {
+    return this.list('checklist-plain', items, props, checked);
   }
 
   /** A table across the line, each cell one normal text paragraph. */

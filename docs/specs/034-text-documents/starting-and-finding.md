@@ -18,23 +18,25 @@ How a person starts a [text document](text-document.md) and finds it again.
 
 ## The template gallery's text documents
 
-Google's gallery sections, each template written as a text document with a preview. The Project Brief template of
-Pages mode moves here (fork D4), into Work. In this order, each with its id:
+Google's gallery sections, each template written as a text document with a preview. Both of Pages mode's article
+templates move here, into Work (fork D4): Project Brief and Working Backwards, each keeping its writing and its look;
+retiring Pages moves what people use, it does not drop it. In this order, each with its id:
 
-| Section   | Templates                                                                                                                                                                          |
-| --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Letters   | Letter (`text-letter`), Formal letter (`text-formal-letter`)                                                                                                                       |
-| Resumes   | Classic resume (`text-classic-resume`), Modern resume (`text-modern-resume`)                                                                                                       |
-| Personal  | Essay (`text-essay`), Report (`text-report`), Notes (`text-notes`)                                                                                                                 |
-| Work      | Project proposal (`text-project-proposal`), Project brief (`text-project-brief`), Brochure (`text-brochure`), Meeting notes (`text-meeting-notes`), Newsletter (`text-newsletter`) |
-| Education | Lesson plan (`text-lesson-plan`), Class report (`text-class-report`)                                                                                                               |
+| Section   | Templates                                                                                                                                                                                                                        |
+| --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Letters   | Letter (`text-letter`), Formal letter (`text-formal-letter`)                                                                                                                                                                     |
+| Resumes   | Classic resume (`text-classic-resume`), Modern resume (`text-modern-resume`)                                                                                                                                                     |
+| Personal  | Essay (`text-essay`), Report (`text-report`), Notes (`text-notes`)                                                                                                                                                               |
+| Work      | Project proposal (`text-project-proposal`), Project brief (`text-project-brief`), Working backwards (`text-working-backwards`), Brochure (`text-brochure`), Meeting notes (`text-meeting-notes`), Newsletter (`text-newsletter`) |
+| Education | Lesson plan (`text-lesson-plan`), Class report (`text-class-report`)                                                                                                                                                             |
 
 - **A template is a finished example.** Each is written in its own look (its fonts, colours, headings and spacing, as
   Google's are) with sample writing a person replaces, so the page shows what the document is for. Its styles are its
   own, not the person's defaults: the look is the point of choosing it.
 - **Ids** start `text-`, so none can be read as a canvas template's kind.
 - **The paper** is US Letter with one-inch margins, as Google's templates are (default); a template may set its own
-  margins. The Project brief keeps the writing of Pages's Project Brief.
+  margins. Project brief keeps the writing of Pages's Project Brief; Working backwards keeps the PR/FAQ's writing,
+  its page break before the FAQs and its Report look (geometric headings in the accent, a rule under each).
 - **What it makes**: a document of one text document tab holding the template's writing, born in ODF (fork C5), named
   after the template ("Project proposal"), as Google names one, and placed where a blank text document goes.
 - **The preview** is the template's first page, drawn by the [page previews](agents-and-sync.md#page-previews) engine
