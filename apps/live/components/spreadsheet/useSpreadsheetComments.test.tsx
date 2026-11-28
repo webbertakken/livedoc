@@ -182,7 +182,8 @@ describe('Insert › Comment', () => {
     expect(marked('B2')).toBe(true);
     expect(track).toHaveBeenCalledWith('Comment', 'Added', 'Spreadsheet');
     // The new thread's card, beside its anchor, now the active cell's.
-    expect(screen.getByRole('group', { name: 'Comment by Ada on B2:C3' })).toBeTruthy();
+    const started = screen.getByRole('group', { name: 'Comment by Ada on B2:C3' });
+    await vi.waitFor(() => expect(document.activeElement).toBe(started));
     expect(h.writes).toEqual([]);
   });
 

@@ -168,6 +168,8 @@ export function useSpreadsheetComments(
       setDraft(null);
       void sent(null, draftHere.sheetId, op).then((ok) => {
         if (!ok) return;
+        // The keys stay with the new thread's card: Escape lets it go, J and K step on.
+        setFocus((f) => ({ nonce: (f?.nonce ?? 0) + 1, to: 'card' }));
         track('Comment', 'Added', 'Spreadsheet');
         mentioned(text, mentions, assignee);
       });
