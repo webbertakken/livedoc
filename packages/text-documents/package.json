@@ -22,6 +22,7 @@
     "@livedoc/document": "workspace:*",
     "@livedoc/live-updates": "workspace:*",
     "@livedoc/office-packages": "workspace:*",
+    "parse5": "^8.1.1",
     "yjs": "^13.6.33"
   },
   "devDependencies": {

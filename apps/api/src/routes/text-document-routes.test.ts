@@ -206,8 +206,8 @@ describe('a text document opened from a file', () => {
     expect(await refused.json()).toMatchObject({ error: 'text_document_seed_invalid' });
   });
 
-  // files-and-print.md "Opening": Plain Text and Markdown are imported, born in ODF.
-  it('imports Plain Text and Markdown into an ODF text document, and refuses one into Word', async () => {
+  // files-and-print.md "Opening": Plain Text, Markdown and HTML are imported, born in ODF.
+  it('imports Plain Text, Markdown and HTML into an ODF text document, and refuses one into Word', async () => {
     const db = sqliteD1();
     const md = base64OfBytes(new TextEncoder().encode('# Plan\n\n- one\n- two'));
     expect(
@@ -215,6 +215,13 @@ describe('a text document opened from a file', () => {
     ).toBe(201);
     const state = await call(db, 'GET', '/api/documents/D/text-documents/t1/state');
     expect((await bodyOfState(state)).map((p) => p.text)).toEqual(['Plan', 'one', 'two']);
+    const html = base64OfBytes(new TextEncoder().encode('<h1>Web</h1><script>x()</script>'));
+    const page = sqliteD1();
+    expect(
+      (await create(page, { textDocuments: [{ tabId: 't1', file: html, type: 'html' }] })).status,
+    ).toBe(201);
+    const read = await call(page, 'GET', '/api/documents/D/text-documents/t1/state');
+    expect((await bodyOfState(read)).map((p) => p.text)).toEqual(['Web']);
     const txt = base64OfBytes(new TextEncoder().encode('a\nb'));
     const word = { ...textTab, format: 'ooxml' };
     const refused = await create(

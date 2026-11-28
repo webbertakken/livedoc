@@ -59,10 +59,18 @@ describe('openTextDocumentFile', () => {
 describe('importedTypeOf', () => {
   it('names each file by its extension, an OpenDocument one by default', () => {
     expect(
-      ['a.odt', 'b.fodt', 'c.ott', 'd.DOCX', 'e.dotx', 'f.docm', 'g.txt', 'h.markdown'].map(
-        importedTypeOf,
-      ),
-    ).toEqual(['Odt', 'Odt', 'Ott', 'Docx', 'Dotx', 'Docm', 'Txt', 'Md']);
+      [
+        'a.odt',
+        'b.fodt',
+        'c.ott',
+        'd.DOCX',
+        'e.dotx',
+        'f.docm',
+        'g.txt',
+        'h.markdown',
+        'i.htm',
+      ].map(importedTypeOf),
+    ).toEqual(['Odt', 'Odt', 'Ott', 'Docx', 'Dotx', 'Docm', 'Txt', 'Md', 'Html']);
   });
 });
 

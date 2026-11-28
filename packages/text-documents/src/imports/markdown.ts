@@ -3,12 +3,12 @@
 // header), and bold, italic, strikethrough and safe links in a line, in a new ODF text document. A picture is never
 // fetched: it stays as its alt text in brackets, and the import report says so.
 import type { Block, Inline, Paragraph } from '../model/blocks';
-import { CODE_BLOCK_LANGUAGES, CodeBlocks, type CodeBlockLanguage } from '../model/code-blocks';
+import { CODE_BLOCK_LANGUAGES, type CodeBlockLanguage } from '../model/code-blocks';
 import { ListDefinition, type ListLevel, type ListPlace } from '../model/lists';
 import { PageSetup } from '../model/sections';
-import { Styles, type Style } from '../model/styles';
 import { Tables, type Table } from '../model/tables';
-import { TextDocument } from '../model/text-document';
+import type { TextDocument } from '../model/text-document';
+import { importStyles } from './import-styles';
 import { pictureText } from '../exports/plain-text';
 import type { ReportBuilder } from '../report';
 import { parseMarkdown, type MarkdownBlock, type MarkdownRun } from './markdown-blocks';
@@ -41,9 +41,7 @@ export function codeLanguageOf(info: string | null): CodeBlockLanguage | null {
 }
 
 export function readMarkdownImport(text: string, report: ReportBuilder): TextDocument {
-  const blank = TextDocument.blank({ format: 'odf' });
-  const styles: Style[] = [...blank.styles];
-  const normal = Styles.idOfRole(styles, 'normal')!;
+  const { blank, styles, normal, heading, code: codeStyle } = importStyles();
   const lists: Record<string, ListDefinition> = {};
   const startedLists = new Set<string>();
   let pictures = 0;
@@ -69,16 +67,6 @@ export function readMarkdownImport(text: string, report: ReportBuilder): TextDoc
     inlines: inlinesOf(runs),
     ...extra,
   });
-
-  const codeStyle = (language: CodeBlockLanguage | null): string => {
-    const held = CodeBlocks.held(styles, language);
-    if (held) return held.id;
-    // A language's style is based on the plain one, so that comes first.
-    if (language) codeStyle(null);
-    const style = CodeBlocks.style('odf', language, styles);
-    styles.push(style);
-    return style.id;
-  };
 
   const listPlace = (block: Extract<MarkdownBlock, { kind: 'item' }>): ListPlace => {
     const id = `L${block.list}`;
@@ -120,9 +108,7 @@ export function readMarkdownImport(text: string, report: ReportBuilder): TextDoc
   const body = parseMarkdown(text).flatMap((block): Block[] => {
     switch (block.kind) {
       case 'heading':
-        return [
-          paragraph(Styles.idOfRole(styles, `heading${block.level}` as 'heading1')!, block.runs),
-        ];
+        return [paragraph(heading(block.level), block.runs)];
       case 'item':
         return [paragraph(normal, block.runs, { list: listPlace(block) })];
       case 'code': {

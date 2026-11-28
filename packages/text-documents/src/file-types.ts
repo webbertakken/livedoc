@@ -41,7 +41,7 @@ export const EXPORT_EXTENSIONS: Readonly<Record<TextDocumentExportType, string>>
 export type TextDocumentDownloadType = TextDocumentFileType | TextDocumentExportType;
 
 /** The files a text document is imported from: read into a new ODF text document (files-and-print.md "Opening"). */
-export const TEXT_DOCUMENT_IMPORT_TYPES = ['txt', 'md'] as const;
+export const TEXT_DOCUMENT_IMPORT_TYPES = ['txt', 'md', 'html'] as const;
 export type TextDocumentImportType = (typeof TEXT_DOCUMENT_IMPORT_TYPES)[number];
 
 export function isTextDocumentImportType(value: unknown): value is TextDocumentImportType {
@@ -53,5 +53,6 @@ export function importTypeOfFileName(name: string): TextDocumentImportType | und
   const extension = /\.([^./\\]+)$/.exec(name)?.[1]?.toLowerCase();
   if (extension === 'txt') return 'txt';
   if (extension === 'md' || extension === 'markdown') return 'md';
+  if (extension === 'html' || extension === 'htm') return 'html';
   return undefined;
 }
