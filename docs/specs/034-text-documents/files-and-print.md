@@ -203,7 +203,19 @@ dialog, for every level. The copy is the person's own and keeps the format.
   refusal) and the dialog closes. A refusal is said in the dialog: "The copy
   couldn’t be made. Try again.", or for files that pass the person's storage the words the canvas's copy says; both
   logged `[text-document] copy refused`.
-- **Share it with the same people**: open, awaiting a ruling on what "the same people" are where LiveDoc shares by link.
+- **Share it with the same people**, off (Google's), offered to the owner of a stored document alone (an Editor, a
+  Participant and a Viewer never see it; a copy in This Browser is shared with no one). On, the copy is shared as the
+  source is, by LiveDoc's own sharing ([Share roles](../013-workspace/share-roles.md)):
+  - every active share link of the source becomes a new link of the copy at the same role, its expiry choice counted
+    again from the copy and a link to one tab scoped to the copy's tab in the same place; never the source's codes.
+    An expired or revoked link is not carried. A share password carries with them.
+  - every signed-in person the source lists as shared with through an active link finds the copy under Shared with you
+    at the same role, never above their link's, through its new link. A guest known only by this browser's id is
+    not carried, nor is anyone whose link is gone.
+  - no one is told: no email and no Inbox item, as Google sends none for a copy.
+  - logged `[documents] copy shared` with the links and people carried and those left out.
+  - a sharing that fails leaves the copy made and private: it opens, and the dialog's log says
+    `[text-document] copy not shared`; the api logs `[documents] copy share failed`.
 
 ## Sharing
 

@@ -166,7 +166,7 @@ export function useDocumentActions(deps: DocumentActionsDeps) {
       // A visitor cloning someone else's shared document into their own
       // account; a distinct signal from duplicating your own (type 'Copy').
       track('Document', 'Duplicated', 'Copy');
-      window.location.assign(`${window.location.origin}/document/${copy.id}`);
+      window.location.assign(`${window.location.origin}/document/${copy.document.id}`);
     } catch (error) {
       // A copy whose files do not fit the copier's file storage says so; any other refusal (network, auth) asks for
       // another try. Either way the button is enabled again by clearing the loading flag.

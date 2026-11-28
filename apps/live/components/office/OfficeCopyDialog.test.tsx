@@ -17,6 +17,7 @@ function draw(props: Partial<Parameters<typeof OfficeCopyDialog>[0]> = {}) {
       documentName="Plan"
       folder={{ name: 'Reports', onChange }}
       offerReview
+      offerShare={false}
       copying={false}
       failure={null}
       onCopy={onCopy}
@@ -44,6 +45,7 @@ describe('OfficeCopyDialog', () => {
     expect(onCopy).toHaveBeenCalledExactlyOnceWith({
       name: 'Copy of Plan',
       review: { comments: false, resolved: false },
+      share: false,
     });
   });
 
@@ -57,6 +59,7 @@ describe('OfficeCopyDialog', () => {
     expect(onCopy).toHaveBeenLastCalledWith({
       name: 'Mine',
       review: { comments: true, resolved: true },
+      share: false,
     });
     // Unticking the first leaves the second out, whatever it held.
     fireEvent.click(dialog.querySelector('[data-office-copy-comments]')!);
@@ -65,14 +68,37 @@ describe('OfficeCopyDialog', () => {
     expect(onCopy).toHaveBeenLastCalledWith({
       name: 'Mine',
       review: { comments: false, resolved: false },
+      share: false,
     });
+  });
+
+  // Share it with the same people: off by default (Google's), and only where offered.
+  it('offers the owner Share it with the same people, off', () => {
+    const { dialog, copy, onCopy } = draw({ offerShare: true });
+    const share = dialog.querySelector<HTMLInputElement>('[data-office-copy-share]')!;
+    expect(share.checked).toBe(false);
+    expect(share.parentElement!.textContent).toBe('Share it with the same people');
+    copy();
+    expect(onCopy).toHaveBeenLastCalledWith(expect.objectContaining({ share: false }));
+    fireEvent.click(share);
+    copy();
+    expect(onCopy).toHaveBeenLastCalledWith(expect.objectContaining({ share: true }));
+  });
+
+  it('offers no Share it with the same people where it is not the person’s to give', () => {
+    const { dialog } = draw();
+    expect(dialog.querySelector('[data-office-copy-share]')).toBeNull();
   });
 
   it('offers a Viewer no review choice', () => {
     const { dialog, copy, onCopy } = draw({ offerReview: false });
     expect(dialog.querySelector('[data-office-copy-comments]')).toBeNull();
     copy();
-    expect(onCopy).toHaveBeenCalledExactlyOnceWith({ name: 'Copy of Plan', review: null });
+    expect(onCopy).toHaveBeenCalledExactlyOnceWith({
+      name: 'Copy of Plan',
+      review: null,
+      share: false,
+    });
   });
 
   it('names the folder and changes it with Change', () => {

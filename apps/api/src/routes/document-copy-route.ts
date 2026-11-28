@@ -20,6 +20,7 @@ import {
   getFolder,
   getParticipant,
   listSharedWith,
+  shareCopyLikeSource,
 } from '../db';
 import { badRequest, forbidden, json, notFound } from '../responses';
 import { recordDocumentDuplicated, recordVisitorCopied } from '../timeline';
@@ -33,7 +34,12 @@ import {
 } from './context';
 
 /** The Copy document dialog's choices (docs/specs/034-text-documents/files-and-print.md "Make a copy"). */
-type CopyChoices = { folderId: string | null; review: CopiedReviewChoice | null };
+type CopyChoices = {
+  folderId: string | null;
+  review: CopiedReviewChoice | null;
+  // Share it with the same people: the owner's alone.
+  share: boolean;
+};
 
 const optionalBoolean = (value: unknown): value is boolean | undefined =>
   value === undefined || typeof value === 'boolean';
@@ -41,14 +47,15 @@ const optionalBoolean = (value: unknown): value is boolean | undefined =>
 // The body's folder and review choices, or null for one of the wrong type. Neither review choice: the whole review,
 // as every copy before the dialog; one alone: the other kept.
 function copyChoices(body: Record<string, unknown>): CopyChoices | null {
-  const { folderId, comments, resolved } = body;
+  const { folderId, comments, resolved, share } = body;
   if (folderId !== undefined && folderId !== null && typeof folderId !== 'string') return null;
-  if (!optionalBoolean(comments) || !optionalBoolean(resolved)) return null;
+  if (!optionalBoolean(comments) || !optionalBoolean(resolved) || !optionalBoolean(share))
+    return null;
   const review =
     comments === undefined && resolved === undefined
       ? null
       : { comments: comments ?? true, resolved: resolved ?? true };
-  return { folderId: folderId ?? null, review };
+  return { folderId: folderId ?? null, review, share: share ?? false };
 }
 
 export async function handleDocumentCopy(ctx: RouteContext): Promise<Response> {
@@ -97,6 +104,11 @@ export async function handleDocumentCopy(ctx: RouteContext): Promise<Response> {
       const body = ((await request.json().catch(() => null)) ?? {}) as Record<string, unknown>;
       const chosen = copyChoices(body);
       if (!chosen) return badRequest('invalid copy options');
+      // Only the owner shares their document again (files-and-print.md "Make a copy").
+      if (chosen.share && owner !== source.ownerId) {
+        console.info('[documents] copy share refused', { documentId: id, role: scope.role });
+        return forbidden();
+      }
       // The copier's own folder, never another's (files-and-print.md "Make a copy").
       if (chosen.folderId !== null) {
         const folder = await getFolder(env, chosen.folderId);
@@ -120,7 +132,7 @@ export async function handleDocumentCopy(ctx: RouteContext): Promise<Response> {
           // Anyone but the owner copies the comments as the tab read serves them to them.
           owner === source.ownerId ? null : owner,
           parseStoredLevel(scope.role) === 'view',
-          chosen,
+          { folderId: chosen.folderId, review: chosen.review },
         );
       } catch (error) {
         // The files the copy would hold do not fit what is left of the copier's file storage
@@ -131,6 +143,23 @@ export async function handleDocumentCopy(ctx: RouteContext): Promise<Response> {
         return roomUnavailable(request, error);
       }
       if (!copy) return notFound();
+      // A sharing that fails leaves the copy made and private, and says so (files-and-print.md "Make a copy").
+      let shared: boolean | undefined;
+      if (chosen.share) {
+        try {
+          await shareCopyLikeSource(env, {
+            sourceId: id,
+            copyId: copy.id,
+            copier: owner,
+            sourceTabIds: source.tabs.map((t) => t.id),
+            copyTabIds: copy.tabs.map((t) => t.id),
+          });
+          shared = true;
+        } catch (error) {
+          console.error('[documents] copy share failed', { documentId: id, error: String(error) });
+          shared = false;
+        }
+      }
       // A copy is one document made on purpose: always a use (docs/specs/015-api/api.md "Marking a
       // document used").
       ctx.waitUntil?.(recordDocumentDuplicated(env, copy, source.name, owner, { markUsed: true }));
@@ -151,7 +180,9 @@ export async function handleDocumentCopy(ctx: RouteContext): Promise<Response> {
           }),
         );
       }
-      return json({ document: copy }, { status: 201 });
+      return json(shared === undefined ? { document: copy } : { document: copy, shared }, {
+        status: 201,
+      });
     }
   }
   return notFound();

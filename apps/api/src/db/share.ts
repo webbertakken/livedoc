@@ -16,7 +16,7 @@ import type { Env, ShareLinkDTO, ShareRole } from '../types';
 const SHARE_LINK_COLS = 'code, document_id, role, level, created_at, expiry, expires_at, tab_id';
 
 // The deadline a non-'never' choice arms, measured from now.
-function expiresAtFor(expiry: ShareLinkExpiry, from: number): number | null {
+export function expiresAtFor(expiry: ShareLinkExpiry, from: number): number | null {
   return expiry === 'never' ? null : from + SHARE_LINK_EXPIRY_MS[expiry];
 }
 

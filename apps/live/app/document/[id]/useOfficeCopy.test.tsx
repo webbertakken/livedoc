@@ -16,7 +16,23 @@ vi.mock('@/lib/telemetry', () => ({
   track: (...a: Parameters<typeof trackMock>) => trackMock(...a),
 }));
 
+const toastError = vi.fn<(message: string) => void>();
+vi.mock('@/hooks/ui/useToast', () => ({
+  useToast: () => ({ success: vi.fn(), error: toastError }),
+}));
+
+// The dialog loads on demand; here it is there at once.
+vi.mock('next/dynamic', () => ({
+  default: (load: () => Promise<unknown>) => {
+    let Loaded: React.ComponentType<Record<string, unknown>> | null = null;
+    void load().then((c) => (Loaded = c as never));
+    return (props: Record<string, unknown>) => (Loaded ? <Loaded {...props} /> : null);
+  },
+}));
+
 const { useOfficeCopy } = await import('./useOfficeCopy');
+await import('@/components/office/OfficeCopyDialog');
+await new Promise((resolve) => setTimeout(resolve, 0));
 type Source = Parameters<typeof useOfficeCopy>[0];
 
 const folder = (id: string, name: string) => ({
@@ -68,6 +84,7 @@ const tab = { opener: {} as unknown, close: vi.fn<() => void>(), location: { hre
 beforeEach(() => {
   copyMock.mockReset();
   trackMock.mockReset();
+  toastError.mockReset();
   tab.close.mockReset();
   tab.location.href = '';
   tab.opener = {};
@@ -88,7 +105,7 @@ describe('useOfficeCopy', () => {
   });
 
   it('makes the copy as chosen, opens it in a new browser tab, counts it and closes', async () => {
-    copyMock.mockResolvedValue({ ok: true, id: 'd2' });
+    copyMock.mockResolvedValue({ ok: true, id: 'd2', shared: null });
     openDialog();
     fireEvent.click(screen.getByRole('button', { name: 'Make a copy' }));
     await flush();
@@ -102,6 +119,7 @@ describe('useOfficeCopy', () => {
       name: 'Copy of Plan',
       folderId: 'f1',
       review: { comments: false, resolved: false },
+      share: false,
     });
     expect(tab.location.href).toBe(`${window.location.origin}/document/d2`);
     expect(trackMock).toHaveBeenCalledExactlyOnceWith('Document', 'Duplicated', 'TextDocument');
@@ -126,7 +144,7 @@ describe('useOfficeCopy', () => {
   });
 
   it('changes the folder through the folder picker and comes back to the dialog', async () => {
-    copyMock.mockResolvedValue({ ok: true, id: 'd2' });
+    copyMock.mockResolvedValue({ ok: true, id: 'd2', shared: null });
     openDialog();
     fireEvent.click(screen.getByRole('button', { name: 'Change folder, now Reports' }));
     expect(screen.queryByRole('dialog', { name: 'Copy document' })).toBeNull();
@@ -142,12 +160,55 @@ describe('useOfficeCopy', () => {
   });
 
   it('copies a document in This Browser there, with no folder, and offers a Viewer no review', async () => {
-    copyMock.mockResolvedValue({ ok: true, id: 'd3' });
+    copyMock.mockResolvedValue({ ok: true, id: 'd3', shared: null });
     const dialog = openDialog({ local: true, viewer: true });
     expect(dialog.querySelector('[data-office-copy-folder]')).toBeNull();
     expect(dialog.querySelector('[data-office-copy-comments]')).toBeNull();
     fireEvent.click(screen.getByRole('button', { name: 'Make a copy' }));
     await flush();
-    expect(copyMock.mock.calls[0]![0]).toMatchObject({ local: true, folderId: null, review: null });
+    expect(copyMock.mock.calls[0]![0]).toMatchObject({
+      local: true,
+      folderId: null,
+      review: null,
+      share: false,
+    });
+  });
+
+  // Share it with the same people (files-and-print.md "Make a copy"): the owner of a stored document's alone.
+  it('offers the owner Share it with the same people, and asks for it when ticked', async () => {
+    copyMock.mockResolvedValue({ ok: true, id: 'd2', shared: true });
+    const dialog = openDialog();
+    fireEvent.click(dialog.querySelector('[data-office-copy-share]')!);
+    fireEvent.click(screen.getByRole('button', { name: 'Make a copy' }));
+    await flush();
+    expect(copyMock.mock.calls[0]![0].share).toBe(true);
+    expect(toastError).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ['an Editor', { isOwner: false }],
+    ['a Participant', { isOwner: false }],
+    ['a Viewer', { isOwner: false, viewer: true }],
+    ['the owner in This Browser', { local: true }],
+  ])('offers %s no Share it with the same people', async (_who, over: Partial<Source>) => {
+    copyMock.mockResolvedValue({ ok: true, id: 'd2', shared: null });
+    const dialog = openDialog(over);
+    expect(dialog.querySelector('[data-office-copy-share]')).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Make a copy' }));
+    await flush();
+    expect(copyMock.mock.calls[0]![0].share).toBe(false);
+  });
+
+  it('says a copy made but left private, as it opens', async () => {
+    copyMock.mockResolvedValue({ ok: true, id: 'd2', shared: false });
+    const dialog = openDialog();
+    fireEvent.click(dialog.querySelector('[data-office-copy-share]')!);
+    fireEvent.click(screen.getByRole('button', { name: 'Make a copy' }));
+    await flush();
+    expect(tab.location.href).toBe(`${window.location.origin}/document/d2`);
+    expect(toastError).toHaveBeenCalledExactlyOnceWith(
+      'The copy was made but isn’t shared. Share it from the copy.',
+    );
+    expect(console.warn).toHaveBeenCalledWith('[text-document] copy not shared');
   });
 });

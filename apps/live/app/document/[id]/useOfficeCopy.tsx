@@ -6,10 +6,18 @@
 import { useCallback, useState, type ReactNode } from 'react';
 import type { Folder } from '@/lib/api-client';
 import { MoveToFolderDialog } from '@/components/dialogs/MoveToFolderDialog';
-import { OfficeCopyDialog, type OfficeCopyChoice } from '@/components/office/OfficeCopyDialog';
+import dynamic from 'next/dynamic';
+import type { OfficeCopyChoice } from '@/components/office/OfficeCopyDialog';
 import { copyOpenDocument, defaultCopyFolder } from '@/lib/office/office-copy';
 import { track } from '@/lib/telemetry';
-import { COPY_DOES_NOT_FIT, COPY_FAILED } from '@/lib/write-failure-copy';
+import { useToast } from '@/hooks/ui/useToast';
+import { COPY_DOES_NOT_FIT, COPY_FAILED, COPY_NOT_SHARED } from '@/lib/write-failure-copy';
+
+// Drawn only once File > Make a copy is pressed, so the document page loads without it.
+const OfficeCopyDialog = dynamic(
+  () => import('@/components/office/OfficeCopyDialog').then((m) => m.OfficeCopyDialog),
+  { ssr: false },
+);
 
 export type OfficeCopySource = {
   documentId: string | null;
@@ -45,6 +53,7 @@ export function useOfficeCopy(source: OfficeCopySource): {
   dialog: ReactNode;
 } {
   const [phase, setPhase] = useState<Phase>({ kind: 'closed' });
+  const toast = useToast();
   // The folder the person picked; undefined until they pick, so the default follows the source.
   const [picked, setPicked] = useState<string | null | undefined>(undefined);
   const { documentId, documentName, ownerId, shareCode, local, isOwner, teamId, folders } = source;
@@ -61,7 +70,7 @@ export function useOfficeCopy(source: OfficeCopySource): {
   }, [documentId]);
   const close = () => setPhase({ kind: 'closed' });
 
-  const copy = async ({ name, review }: OfficeCopyChoice) => {
+  const copy = async ({ name, review, share }: OfficeCopyChoice) => {
     if (!documentId || phase.kind !== 'open' || phase.copying) return;
     setPhase({ kind: 'open', picking: false, copying: true, failure: null });
     const tab = openBlankTab();
@@ -73,6 +82,7 @@ export function useOfficeCopy(source: OfficeCopySource): {
       name,
       folderId: local ? null : folderId,
       review,
+      share: !local && isOwner && share,
     });
     if (!made.ok) {
       tab?.close();
@@ -82,6 +92,11 @@ export function useOfficeCopy(source: OfficeCopySource): {
       return;
     }
     track('Document', 'Duplicated', 'TextDocument');
+    // Made, but left private: said, as the copy opens.
+    if (made.shared === false) {
+      console.warn('[text-document] copy not shared');
+      toast.error(COPY_NOT_SHARED);
+    }
     const url = `${window.location.origin}/document/${made.id}`;
     if (tab) tab.location.href = url;
     else window.location.assign(url);
@@ -107,6 +122,7 @@ export function useOfficeCopy(source: OfficeCopySource): {
                 }
           }
           offerReview={!source.viewer}
+          offerShare={isOwner && !local}
           copying={phase.copying}
           failure={phase.failure}
           onCopy={(choice) => void copy(choice)}

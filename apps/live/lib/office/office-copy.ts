@@ -19,10 +19,14 @@ export type CopyRequest = {
   folderId: string | null;
   // Null where nothing is chosen (a Viewer's copy): the api's own rule decides.
   review: CopiedReviewChoice | null;
+  // Share it with the same people: the owner's choice, false for anyone else and in This Browser.
+  share: boolean;
 };
 
 export type CopyOutcome =
-  { ok: true; id: string } | { ok: false; reason: 'usage_exceeded' | 'failed' };
+  // `shared`: null when no share was asked, false when the copy was made but left private.
+  | { ok: true; id: string; shared: boolean | null }
+  | { ok: false; reason: 'usage_exceeded' | 'failed' };
 
 /**
  * The folder a copy starts in: the source's own folder for its owner, where that folder is one of theirs; else null,
@@ -41,11 +45,11 @@ export function defaultCopyFolder(source: {
 
 /** The copy made as asked, or why it was not. */
 export async function copyOpenDocument(request: CopyRequest): Promise<CopyOutcome> {
-  const { ownerId, documentId, shareCode, local, folderId, review } = request;
+  const { ownerId, documentId, shareCode, local, folderId, review, share } = request;
   const name = request.name.trim() || undefined;
   if (local) {
     const id = await duplicateDocument(ownerId, documentId, undefined, { name, review });
-    return id ? { ok: true, id } : { ok: false, reason: 'failed' };
+    return id ? { ok: true, id, shared: null } : { ok: false, reason: 'failed' };
   }
   try {
     const copy = await apiCopyDocument(ownerId, documentId, {
@@ -53,8 +57,9 @@ export async function copyOpenDocument(request: CopyRequest): Promise<CopyOutcom
       shareCode,
       folderId,
       ...(review ? { comments: review.comments, resolved: review.resolved } : {}),
+      ...(share ? { share } : {}),
     });
-    return { ok: true, id: copy.id };
+    return { ok: true, id: copy.document.id, shared: copy.shared };
   } catch (error) {
     const usage = error instanceof ApiError && error.code === 'usage_exceeded';
     return { ok: false, reason: usage ? 'usage_exceeded' : 'failed' };

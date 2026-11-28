@@ -39,7 +39,10 @@ describe('copyOpenDocument', () => {
     name: '  Copy of Plan ',
     folderId: 'f1',
     review: { comments: true, resolved: false },
+    share: false,
   };
+  const made = (shared: boolean | null = null) =>
+    ({ document: { id: 'd2' }, shared }) as Awaited<ReturnType<typeof copyMock>>;
 
   beforeEach(() => {
     copyMock.mockReset();
@@ -47,8 +50,8 @@ describe('copyOpenDocument', () => {
   });
 
   it('asks the api for the copy with the name, folder and review chosen', async () => {
-    copyMock.mockResolvedValue({ id: 'd2' } as Awaited<ReturnType<typeof copyMock>>);
-    expect(await copyOpenDocument(request)).toEqual({ ok: true, id: 'd2' });
+    copyMock.mockResolvedValue(made());
+    expect(await copyOpenDocument(request)).toEqual({ ok: true, id: 'd2', shared: null });
     expect(copyMock).toHaveBeenCalledExactlyOnceWith('me', 'd1', {
       name: 'Copy of Plan',
       shareCode: 'code',
@@ -59,13 +62,24 @@ describe('copyOpenDocument', () => {
   });
 
   it('leaves the name and the review to the api when none is given', async () => {
-    copyMock.mockResolvedValue({ id: 'd2' } as Awaited<ReturnType<typeof copyMock>>);
+    copyMock.mockResolvedValue(made());
     await copyOpenDocument({ ...request, name: ' ', review: null, folderId: null });
     expect(copyMock).toHaveBeenCalledExactlyOnceWith('me', 'd1', {
       name: undefined,
       shareCode: 'code',
       folderId: null,
     });
+  });
+
+  // Share it with the same people: asked only when chosen, and a copy left private said apart.
+  it('asks the api to share the copy with the same people only when chosen', async () => {
+    copyMock.mockResolvedValue(made(false));
+    expect(await copyOpenDocument({ ...request, share: true })).toEqual({
+      ok: true,
+      id: 'd2',
+      shared: false,
+    });
+    expect(copyMock.mock.calls[0]?.[2]).toMatchObject({ share: true });
   });
 
   it('says a copy that does not fit apart from any other refusal', async () => {
@@ -77,7 +91,11 @@ describe('copyOpenDocument', () => {
 
   it('copies a document in This Browser there, with the name and review chosen', async () => {
     duplicateMock.mockResolvedValueOnce('d3');
-    expect(await copyOpenDocument({ ...request, local: true })).toEqual({ ok: true, id: 'd3' });
+    expect(await copyOpenDocument({ ...request, local: true })).toEqual({
+      ok: true,
+      id: 'd3',
+      shared: null,
+    });
     expect(duplicateMock).toHaveBeenCalledExactlyOnceWith('me', 'd1', undefined, {
       name: 'Copy of Plan',
       review: { comments: true, resolved: false },

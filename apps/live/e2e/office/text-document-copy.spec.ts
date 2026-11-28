@@ -150,3 +150,51 @@ test('Make a copy files the copy in the folder picked', async ({ page, baseURL, 
   await copy.close();
   expectNoPageErrors(pageErrors);
 });
+
+// Share it with the same people: the owner's copy gets a new link for each of the source's, never its code.
+test('Make a copy shares the owner’s copy with the same people when ticked', async ({
+  page,
+  baseURL,
+  pageErrors,
+}) => {
+  test.setTimeout(120_000);
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto('/new?kind=text-document');
+  await page.waitForURL(/\/document\//);
+  await expect(page.locator(READY)).toBeVisible();
+  const sourceId = new URL(page.url()).pathname.split('/')[2]!;
+  const origin = new URL(baseURL!).origin;
+  const headers = await pageOwnerHeaders(page, {
+    Origin: origin,
+    'Content-Type': 'application/json',
+  });
+  const minted = await page.request.post(`${apiBase}/documents/${sourceId}/share`, {
+    headers,
+    data: { role: 'edit', expiry: 'week' },
+  });
+  expect(minted.ok(), `minting a link failed: ${minted.status()}`).toBe(true);
+  const { code: sourceCode } = (await minted.json()) as { code: string };
+
+  await (await officeMenuItem(page, ['File', 'Make a copy'])).click();
+  const dialog = page.getByRole('dialog', { name: 'Copy document' });
+  const share = dialog.getByRole('checkbox', { name: 'Share it with the same people' });
+  await expect(share).not.toBeChecked();
+  await share.check();
+  await page.waitForTimeout(300);
+  await page.screenshot({ path: test.info().outputPath('copy-share-same-people.png') });
+  const [copy] = await Promise.all([
+    page.context().waitForEvent('page'),
+    dialog.getByRole('button', { name: 'Make a copy' }).click(),
+  ]);
+  await copy.waitForURL(/\/document\//);
+  const copyId = new URL(copy.url()).pathname.split('/')[2]!;
+  const listed = await page.request.get(`${apiBase}/documents/${copyId}/share`, { headers });
+  expect(listed.ok()).toBe(true);
+  const { links } = (await listed.json()) as {
+    links: { code: string; role: string; expiry: string }[];
+  };
+  expect(links.map((l) => [l.role, l.expiry])).toEqual([['edit', 'week']]);
+  expect(links[0]!.code).not.toBe(sourceCode);
+  await copy.close();
+  expectNoPageErrors(pageErrors);
+});
