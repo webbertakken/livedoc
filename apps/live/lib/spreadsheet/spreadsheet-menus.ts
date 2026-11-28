@@ -31,6 +31,8 @@ export const SHEET_DOWNLOAD_ITEMS: readonly { id: string; format: 'csv' | 'tsv';
 
 /** The id File › Convert is bound by; its words name the format it goes to. */
 export const CONVERT_ITEM_ID = 'convert';
+/** File › Settings (settings.md "Spreadsheet settings"): an Editor's. */
+export const SETTINGS_ITEM_ID = 'settings';
 
 const CONVERT_LABEL: Record<WorkbookFormat, string> = {
   xlsx: 'Convert to Excel (.xlsx)',
@@ -193,7 +195,9 @@ function fileMenu(format: WorkbookFormat): OfficeMenu {
       keywords: ['this browser'],
     }),
     item('details', 'Details', 'view'),
-    item('settings', 'Settings', 'edit', { keywords: ['locale', 'time zone', 'calculation'] }),
+    built(SETTINGS_ITEM_ID, 'Settings', 'edit', {
+      keywords: ['locale', 'time zone', 'calculation', 'cards'],
+    }),
     SEPARATOR,
     item('print', 'Print', 'view', { shortcut: 'print' }),
   ]);

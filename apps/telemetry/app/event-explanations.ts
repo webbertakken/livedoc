@@ -959,6 +959,8 @@ export const EXACT: Readonly<Record<string, string>> = {
   'Spreadsheet|Created|Blank': 'Someone made a blank spreadsheet.',
   'Spreadsheet|Created|Import': 'Someone made a spreadsheet by opening a file in LiveDoc.',
   'Spreadsheet|Changed|Theme': 'An editor picked or customised a spreadsheet’s theme.',
+  'Spreadsheet|Changed|Settings':
+    'An editor saved a spreadsheet’s settings: locale, time zone, cards’ document or calculation.',
   'Spreadsheet|Added|FilterView':
     'An editor made a filter view of a spreadsheet, saved for everyone.',
   'Spreadsheet|Added|TemporaryFilterView':

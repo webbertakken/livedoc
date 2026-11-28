@@ -59,6 +59,7 @@ export function OfficeDialogSelect<T extends string>({
   hideLabel = false,
   disabled = false,
   width,
+  labelOf,
 }: {
   label: string;
   value: T;
@@ -69,6 +70,8 @@ export function OfficeDialogSelect<T extends string>({
   disabled?: boolean;
   // A fixed width (a Tailwind class), where the longest option would otherwise size the select.
   width?: string;
+  // What each option reads as, where its value is an id or a code (a locale's name); the value itself otherwise.
+  labelOf?: (option: T) => string;
 }) {
   return (
     <label className="flex min-w-0 items-center gap-2 text-body text-(--office-muted)">
@@ -82,7 +85,7 @@ export function OfficeDialogSelect<T extends string>({
         >
           {options.map((option) => (
             <option key={option} value={option}>
-              {option}
+              {labelOf ? labelOf(option) : option}
             </option>
           ))}
         </select>
