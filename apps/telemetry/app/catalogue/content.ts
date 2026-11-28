@@ -290,6 +290,24 @@ export const TEXT_DOCUMENT_SECURITY_LIMITATIONS = chart(
   { types: ['TextDocumentSecurityLimitations'], rising: 'neutral' },
 );
 
+// A text document printed, and its Print preview opened (docs/specs/034-text-documents/files-and-print.md "Printing").
+export const TEXT_DOCUMENT_PRINTED = chart(
+  'UI',
+  'Used',
+  'Text Documents Printed',
+  'A text document handed to the browser’s print dialog (File > Print, ⌘P, the toolbar’s printer), and its Print preview opened.',
+  { types: ['TextDocumentPrint', 'TextDocumentPrintPreview'] },
+);
+
+// A text document's File > Details opened (docs/specs/034-text-documents/files-and-print.md "Details").
+export const TEXT_DOCUMENT_DETAILS = chart(
+  'UI',
+  'Used',
+  'Text Document Details Opened',
+  'Someone opened File > Details in a text document: its owner, place, dates, format, size and counts.',
+  { types: ['TextDocumentDetails'], rising: 'neutral' },
+);
+
 // Spelling in a text document (docs/specs/034-text-documents/tools.md "Spelling and grammar"): never the word.
 export const TEXT_DOCUMENT_SPELLING_ACCEPTED = chart(
   'Document',
@@ -428,6 +446,8 @@ export const DOCUMENT_ACTIONS: MetricStack = {
     TEXT_DOCUMENT_NOTICES_CHOSEN,
     TEXT_DOCUMENT_CONVERTED,
     TEXT_DOCUMENT_SECURITY_LIMITATIONS,
+    TEXT_DOCUMENT_PRINTED,
+    TEXT_DOCUMENT_DETAILS,
     TEXT_DOCUMENT_SPELLING_ACCEPTED,
     TEXT_DOCUMENT_DICTIONARY_ADDED,
     TEXT_DOCUMENT_SPELLING_CORRECTED,

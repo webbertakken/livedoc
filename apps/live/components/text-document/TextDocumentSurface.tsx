@@ -156,6 +156,7 @@ import {
   pageSelectionPlugin,
 } from '@/lib/text-document/text-document-page-selection';
 import { useTextDocumentWordCount } from './useTextDocumentWordCount';
+import { useTextDocumentDetails } from './useTextDocumentDetails';
 import { useTextDocumentScreenReader } from './useTextDocumentScreenReader';
 import { useTextDocumentLiveEdits } from './useTextDocumentLiveEdits';
 import { useTextDocumentSpelling } from './useTextDocumentSpelling';
@@ -168,6 +169,8 @@ import { useTextDocumentDrawingOrphans } from './useTextDocumentDrawingOrphans';
 import { useTextDocumentDrawingReveal } from './useTextDocumentDrawingReveal';
 import { drawingHostStore, useTextDocumentDrawingPictures } from './useTextDocumentDrawingPictures';
 import { useTextDocumentReport } from './useTextDocumentReport';
+import { useTextDocumentPdf, type PrintingLook } from './useTextDocumentPdf';
+import { useTextDocumentPrint } from './useTextDocumentPrint';
 import {
   drawingOpenPlugin,
   type OpenDrawing,
@@ -344,10 +347,13 @@ export function TextDocumentSurface({
   const reviews = mode !== 'viewing';
   // Previewing the writing settled (review.md "Reviewing suggestions"), or Viewing, the body shows a copy: it takes no
   // edits.
+  // The printing look, while a PDF is made from the pages or Print preview shows them (files-and-print.md).
+  const [printing, setPrinting] = useState<PrintingLook>(null);
   const preview = useTextDocumentReviewPreview({
     doc: liveDoc,
     tab: shownTab ?? FIRST_DOCUMENT_TAB_ID,
     viewing: !reviews,
+    printing: printing !== null,
   });
   const { bindBody } = preview;
   const writes = canEdit && mode === 'editing' && !preview.previewing;
@@ -814,12 +820,16 @@ export function TextDocumentSurface({
   // View > Text width, a person's own (page-layout.md "Pageless").
   const textWidth = useTextDocumentTextWidth(page.pageless);
   const column = usePagelessColumn(scroller, scale, page.pageless, textWidth.width);
-  const drawn = page.pageless ? pagelessSetup(page.section.setup, column) : page.section.setup;
+  // Printed, a pageless document is laid on pages with the pages' setup (page-layout.md "Pageless").
+  const drawn =
+    page.pageless && printing === null
+      ? pagelessSetup(page.section.setup, column)
+      : page.section.setup;
   // Pages are laid out unless pageless or on a phone, where the writing flows to the window.
   const wide = useMediaQuery('(min-width: 640px)');
   // View > Show print layout, a person's own (page-layout.md "Print layout"): off, one sheet as on a phone.
   const printLayout = useTextDocumentViewToggle(PRINT_LAYOUT_TOGGLE);
-  const paginated = !page.pageless && wide && printLayout.shown;
+  const paginated = printing !== null || (!page.pageless && wide && printLayout.shown);
   // Without pages, the footnotes under the writing (page-layout.md "Footnotes").
   const endNotes = useTextDocumentEndNotes(
     editorView,
@@ -909,11 +919,11 @@ export function TextDocumentSurface({
   const marks = useTextDocumentViewToggle(NON_PRINTING_TOGGLE);
   useEffect(() => {
     if (editorView && !editorView.isDestroyed) {
-      setNonPrinting(editorView, marks.shown);
+      setNonPrinting(editorView, marks.shown && printing === null);
       // Breaks shown take room on the page (page-layout.md "Breaks").
       relayoutPages(editorView);
     }
-  }, [editorView, marks.shown]);
+  }, [editorView, marks.shown, printing]);
   const readRulerFormatting = useCallback(
     () =>
       liveDoc.current
@@ -1153,6 +1163,29 @@ export function TextDocumentSurface({
     documentId: scope.documentId,
     name: documentName,
   });
+  // Focus back in the writing, after a dialog or a mode that took it.
+  const focusBody = useCallback(() => focusWriting(editor.current), []);
+  // File > Download > PDF document: the pages as laid out (files-and-print.md "Downloading").
+  const pdf = useTextDocumentPdf({
+    view: editorView,
+    root: () => mount.current?.parentElement ?? null,
+    pages: pageList,
+    readStyles,
+    name: documentName,
+    printing,
+    setPrinting,
+    onDone: focusBody,
+    place: { ownerId, documentId, local },
+  });
+  // File > Print, ⌘P and the toolbar's printer, and File > Print preview (files-and-print.md "Printing").
+  const print = useTextDocumentPrint({
+    make: pdf.make,
+    printing,
+    setPrinting,
+    name: documentName,
+    onDone: focusBody,
+  });
+  const previewing = printing === 'preview';
   // Format > Image and the context menu on a selected picture: Alt text, Replace image (objects.md).
   const pictureEditing = useTextDocumentPictureEditing({
     view: editorView,
@@ -1209,8 +1242,6 @@ export function TextDocumentSurface({
     local,
     defaultName: commenter?.name ?? '',
   });
-  // File > Version history (review.md "Version history"): the shell's mode over the whole window.
-  const focusBody = useCallback(() => focusWriting(editor.current), []);
   // Tools > Notification settings (review.md "Notifications"): a signed-in account's, on a stored document, where
   // email is configured.
   const { emailEnabled } = useCapabilities();
@@ -1259,6 +1290,17 @@ export function TextDocumentSurface({
     documentName,
     ...(commenter ? { author: { name: commenter.name, color: commenter.colour } } : {}),
   });
+  // File > Details (files-and-print.md "Details"), counted as it opens.
+  const details = useTextDocumentDetails({
+    view: editorView,
+    doc: liveDoc,
+    facts: chrome?.facts ?? null,
+    format,
+    pages: pagesLaidOut,
+    where: scope,
+    local,
+    onDone: focusBody,
+  });
   // Edit > Undo, Redo and Select all, run by the menus and the shortcut layer (keyboard-shortcuts.md).
   const editorActions = useMemo(
     () => ({
@@ -1306,9 +1348,15 @@ export function TextDocumentSurface({
       ...tableProperties.actions,
       ...headers.actions,
       ...importReport.actions,
+      ...pdf.actions,
+      ...print.actions,
+      ...details.actions,
     }),
     [
       importReport.actions,
+      pdf.actions,
+      print.actions,
+      details.actions,
       breakActions,
       lineActions,
       tabs.actions,
@@ -1407,39 +1455,44 @@ export function TextDocumentSurface({
       className="office-shell flex min-h-0 flex-1 flex-col bg-(--office-ground)"
       data-text-document-surface={state}
     >
-      <TextDocumentTitleRow
-        scope={scope}
-        documentName={documentName}
-        format={format}
-        level={levelInMode(TEXT_DOCUMENT_MODES, level, mode)}
-        proposals={proposals}
-        editorActions={editorActions}
-        mode={modeChoice}
-        caret={caret}
-        keyScope={root}
-        localDoc={local ? () => liveDoc.current : null}
-        liveDoc={local ? null : () => liveDoc.current}
-        drawDrawing={drawingTabs?.draw ?? null}
-        chrome={chrome}
-        // A session that may not edit saves nothing, so shows no save status.
-        saveStatus={canEdit ? shownSaveStatus : null}
-        zoom={zoom}
-        fontSize={formatting.fontSize}
-        fontFamily={formatting.fontFamily}
-        colours={formatting.colours}
-        choices={choices}
-        refresh={changes.subscribeCaret}
-        screenReader={screenReader.on}
-        conversion={conversion}
-        onFollow={(personId) =>
-          editorView ? scrollToTextDocumentPeer(editorView, personId) : false
-        }
-      />
+      {print.bar}
+      {previewing ? null : (
+        <TextDocumentTitleRow
+          scope={scope}
+          documentName={documentName}
+          format={format}
+          level={levelInMode(TEXT_DOCUMENT_MODES, level, mode)}
+          proposals={proposals}
+          editorActions={editorActions}
+          mode={modeChoice}
+          caret={caret}
+          keyScope={root}
+          localDoc={local ? () => liveDoc.current : null}
+          liveDoc={local ? null : () => liveDoc.current}
+          drawDrawing={drawingTabs?.draw ?? null}
+          chrome={chrome}
+          // A session that may not edit saves nothing, so shows no save status.
+          saveStatus={canEdit ? shownSaveStatus : null}
+          zoom={zoom}
+          fontSize={formatting.fontSize}
+          fontFamily={formatting.fontFamily}
+          colours={formatting.colours}
+          choices={choices}
+          refresh={changes.subscribeCaret}
+          screenReader={screenReader.on}
+          conversion={conversion}
+          onFollow={(personId) =>
+            editorView ? scrollToTextDocumentPeer(editorView, personId) : false
+          }
+        />
+      )}
       {versionHistory.mode}
       {paragraphs.dialog}
       {clipboard.dialog}
       {pictures.dialog}
       {importReport.dialog}
+      {pdf.dialog}
+      {print.dialog}
       {pictureEditing.dialog}
       {preferences.dialog}
       {notifications.dialog}
@@ -1472,7 +1525,7 @@ export function TextDocumentSurface({
       {suggesting.notice}
       {pictures.notice}
       {spelling.notice}
-      {equationToolbar.shown && bodyInserts && state === 'ready' && editorView ? (
+      {equationToolbar.shown && bodyInserts && state === 'ready' && editorView && !previewing ? (
         <TextDocumentEquationToolbar
           onNew={() => newEquationFromToolbar(editorView)}
           onPick={(node) => writeFromEquationToolbar(editorView, node)}
@@ -1480,7 +1533,7 @@ export function TextDocumentSurface({
       ) : null}
       <OfficePanelLayout
         left={
-          panels.open.left === 'outline' ? (
+          !previewing && panels.open.left === 'outline' ? (
             <OfficePanel
               spec={OUTLINE_PANEL}
               onClose={() => panels.close('left')}
@@ -1497,41 +1550,44 @@ export function TextDocumentSurface({
           ) : null
         }
         right={
-          <TextDocumentRightPanel
-            panels={panels}
-            liveEdits={liveEdits}
-            lineNumbers={lineNumbers}
-            watermark={watermark}
-            tableProperties={{ ...tableProperties, unit: lengthUnit }}
-            imageOptions={{
-              picture: pictureSize.picture,
-              unit: lengthUnit,
-              apply: pictureSize.apply,
-              turn: pictureSize.turn,
-              reset: pictureSize.reset,
-              colour: pictureSize.colour,
-              placing: picturePlacing,
-            }}
-            contents={contents}
-            comments={{
-              ...commentsPanel,
-              self: { key: commenter?.key ?? '', userId: mentions?.selfUserId ?? null },
-              canComment: commenter !== null,
-              go: goToReview,
-              reopen: (id) => threads.resolve(id, false),
-            }}
-          />
+          previewing ? null : (
+            <TextDocumentRightPanel
+              panels={panels}
+              liveEdits={liveEdits}
+              lineNumbers={lineNumbers}
+              watermark={watermark}
+              tableProperties={{ ...tableProperties, unit: lengthUnit }}
+              imageOptions={{
+                picture: pictureSize.picture,
+                unit: lengthUnit,
+                apply: pictureSize.apply,
+                turn: pictureSize.turn,
+                reset: pictureSize.reset,
+                colour: pictureSize.colour,
+                placing: picturePlacing,
+              }}
+              contents={contents}
+              comments={{
+                ...commentsPanel,
+                self: { key: commenter?.key ?? '', userId: mentions?.selfUserId ?? null },
+                canComment: commenter !== null,
+                go: goToReview,
+                reopen: (id) => threads.resolve(id, false),
+              }}
+            />
+          )
         }
       >
         <div className="relative flex min-h-0 flex-1 flex-col">
-          {reviewPanel.open && state === 'ready' ? (
+          {reviewPanel.open && state === 'ready' && !previewing ? (
             <TextDocumentReviewPanel {...reviewPanel.props} />
           ) : null}
           {compare.dialog}
           {state === 'ready' ? spelling.card : null}
           {spelling.dialog}
-          {state === 'ready' ? wordCount.box : null}
+          {state === 'ready' && !previewing ? wordCount.box : null}
           {state === 'ready' ? wordCount.dialog : null}
+          {state === 'ready' ? details.dialog : null}
           {screenReader.dialog}
           {screenReader.region}
           <div
@@ -1542,7 +1598,7 @@ export function TextDocumentSurface({
             style={page.pageless ? pageBox(page.section.setup) : undefined}
             className={`min-h-0 flex-1 overflow-y-auto scroll-pt-8 ${page.pageless ? 'text-document-pageless-ground' : 'pb-6'}`}
           >
-            {ruler.shown && state === 'ready' ? (
+            {ruler.shown && state === 'ready' && !previewing ? (
               <TextDocumentRuler
                 view={editorView}
                 readFormatting={readRulerFormatting}
@@ -1599,6 +1655,7 @@ export function TextDocumentSurface({
                 onDoubleClick={(event) => headers.onDoubleClick(event, scale)}
                 data-pages={paginated ? pageList.length : undefined}
                 data-laid-out={paginated ? 'pages' : 'flow'}
+                data-printing={printing ?? undefined}
                 className={`relative isolate mx-auto w-(--pages-width) max-w-full text-document-page px-6 py-10 text-[11pt] leading-[1.15] ${page.pageless ? '' : 'mt-6 min-h-(--page-height)'} ${state === 'failed' ? 'hidden' : ''}`}
               >
                 <TextDocumentSheets

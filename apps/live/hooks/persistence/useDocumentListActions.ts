@@ -185,12 +185,17 @@ export function useDocumentListActions(deps: DocumentListActionsDeps) {
       // before the request was even sent. Emitting here is still delivered
       // despite the navigation below, because the client flushes its buffer
       // through sendBeacon on pagehide (@livedoc/telemetry-client).
-      await apiDeleteDocument(ownerId, id)
-        .then(() => {
-          track('Document', 'Deleted');
-          handOffDeleteUndo(id, trash, name);
-        })
-        .catch(() => {});
+      try {
+        await apiDeleteDocument(ownerId, id);
+      } catch (err) {
+        // Refused: the document stays open and may save again, and the person is told (trash.md "Deleting").
+        console.warn('[editor] delete-failed, document kept', err);
+        unmarkDocumentDeleted(id);
+        toast.error(DOCUMENT_FAILURE.delete(name));
+        return;
+      }
+      track('Document', 'Deleted');
+      handOffDeleteUndo(id, trash, name);
       // Straight to the landing section: `/explorer` is only an index that redirects, one more page
       // between the delete and the Explorer for something to flash on.
       assignAppLocation(`${window.location.origin}${EXPLORER_LANDING_PATH}`);

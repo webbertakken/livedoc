@@ -3,6 +3,7 @@
 // row draws nothing for it (docs/specs/034-text-documents/editing-surface.md "The title row").
 import type { BackTarget } from '@/components/chrome/lines/BrandBack';
 import type { PersonOnTab } from '@/lib/others-in-document';
+import type { OfficeDocumentFacts } from '@/lib/office/office-details';
 
 export type { PersonOnTab as OfficePerson } from '@/lib/others-in-document';
 
@@ -14,6 +15,10 @@ export type OfficeChrome = {
   renameNonce: number;
   star: { starred: boolean; onToggle: () => void } | null;
   move: (() => void) | null;
+  // File > Move to trash, for whoever may delete the document (files-and-print.md "Trash"); null for anyone else.
+  trash: (() => void) | null;
+  // What File > Details says of every kind: owner, location, created, last saved (files-and-print.md "Details").
+  facts: OfficeDocumentFacts;
   // Share for whoever may share; Make a copy in its place for anyone else, once the document is up.
   share: { shareable: boolean; onOpen: () => void } | null;
   makeCopy: { copying: boolean; run: () => void } | null;

@@ -1,8 +1,9 @@
 # Files and print
 
 **Status: partly built.** Built: Open (a `.odt`, `.fodt`, `.ott`, `.docx`, `.dotx` or `.docm` from the computer, and
-`.txt`, `.md`, `.html`, `.rtf` and `.pdf` imported), Download in the OpenDocument and Word formats, Rich Text, Plain Text, Web Page, EPUB and
-Markdown, conversion, the import report and Security limitations. The rest is specified.
+`.txt`, `.md`, `.html`, `.rtf` and `.pdf` imported), Download in the OpenDocument and Word formats, Rich Text, Plain Text, Web Page, EPUB,
+Markdown and PDF, Keep a PDF copy in LiveDoc, Print and Print preview, conversion, the import report and Security
+limitations. The rest is specified.
 
 Opening, importing, downloading, printing, copying, sharing, emailing and trashing a [text document](text-document.md).
 Both ODF and OOXML are native (fork C1, ruled): a file keeps the format it arrived in.
@@ -69,9 +70,18 @@ File > Download, in Google's order:
 | Markdown (.md)            | CommonMark with GitHub's extensions                                                                    |
 
 Each download is named after the document. A Viewer may download unless the owner turned it off for Viewers.
-Download as PDF offers "Keep in LiveDoc as a PDF document", which stores the written PDF beside its source as a
-[PDF document](../035-pdf-documents/files-print-and-sync.md#other-kinds-meeting-a-pdf); every kind's PDF is written by
-the repository's one PDF writer.
+File > **Keep a PDF copy in LiveDoc**, an item beside Download, so a download gains no step (director, 2026-11-28),
+writes the PDF as Download as PDF does and stores it as a
+[PDF document](../035-pdf-documents/files-print-and-sync.md#other-kinds-meeting-a-pdf) named as its source, kept where
+the source is (LiveDoc, or This Browser for a document there), in the folder the person's new documents go to
+(default). Its dialog, **Keeping a PDF copy**, says each step as the PDF's does, then "Kept a PDF copy of “<name>”."
+with **Open** (the copy in a new tab) and Close; a failure says "The PDF copy couldn’t be kept. Try again.".
+Telemetry `Document · Exported · TextDocumentPdfCopy`. Every kind's PDF is written by the repository's one PDF writer.
+The PDF is written in the browser from the pages as drawn in the [printing look](#printing): each word where it
+stands, in the served document font it was drawn in (fonts.md "Served from LiveDoc"), its structure from the writing.
+While it is made, a dialog, **Making the PDF**, says each step (laying out the pages, reading them, drawing the
+pictures, writing the PDF); closing it cancels, and a failure says "The PDF couldn’t be made. Try again." in it.
+A picture that cannot be read is left out. Telemetry `Document · Exported · TextDocumentPdf`.
 A download is `GET /api/documents/:id/text-documents/:tabId/file?type=odt|fodt|docx|txt|md|html|epub|rtf`, written from the live state
 (`400 file_type_unknown` for any other type); the other format is a converted copy, its losses counted in the
 `X-Conversion-Losses` header.
@@ -156,9 +166,23 @@ and show **Load picture** for an Editor.
 
 - **Print** (⌘P, the toolbar): the browser's print of the laid-out pages, at their paper size, with headers, footers
   and page numbers, and without comments, suggestion colours (suggestions printed as they would be accepted, as
-  Google prints them) or the editor's chrome.
+  Google prints them) or the editor's chrome. What the browser prints is the PDF Download as PDF writes, so a print
+  and the PDF always agree (director, 2026-11-28).
+- **The printing look**, the same for Print, Print preview and the PDF: light paper whatever the scheme; laid out on
+  pages whatever the view (a pageless document on its pages' setup, Show print layout off or on a phone); the shown
+  document tab only (default); none of the editor's own: comment tints, spelling marks, others' carets and
+  selections, bookmark glyphs, non-printing characters, picture and table handles, selected cells, a header's bar.
+  Content kept from the file keeps its room but prints as nothing: its placeholder is LiveDoc's own (default).
 - **Print preview** (File): the pages as printed, with **Print** and **Close**: it follows Print, pending suggestions
-  drawn accepted, never Viewing, which draws them not yet made (director, 2026-11-27).
+  drawn accepted, never Viewing, which draws them not yet made (director, 2026-11-27). Its bar, **Print preview**,
+  stands in place of the menus and the toolbar; the side panels, the ruler and the word count are put away; the
+  pages are read only; Escape closes it and ⌘P prints.
+- **While a print is made**, a dialog, **Making the print**, says each step as the PDF's does; closing it cancels. The
+  browser's own dialog follows. Where the browser cannot print a PDF it is handed, the PDF's pages go to it drawn as
+  pictures. A print the browser refuses (it throws, or a page inside another's frame never opens its dialog within
+  3 seconds) says so: "Your browser blocked printing. Download the PDF and print it from there.", with **Download
+  PDF** and **Cancel** (director, 2026-11-28). A print that cannot be made says "The print couldn’t be made. Try
+  again.". ⌘P is never the browser's print of LiveDoc's page.
 
 ## Make a copy
 
@@ -177,11 +201,32 @@ collaborators**, where the host has email configured; not shown otherwise. Eithe
 
 ## Details
 
-File > Details: owner, location, created, modified (by whom), format, size, and the word count's statistics.
+File > Details opens the shell's **Details** dialog, read only, for every level: one row each, in this order.
+
+| Row                         | What it says                                                                                                                         |
+| --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| Owner                       | "You" for the owner, else the owner's name, else "Not known"                                                                         |
+| Location                    | "This Browser"; "My Documents" or the team's name, then its folders ("My Documents › Plans"); "Shared with you" for anyone else's    |
+| Created                     | The day and time ("28 Nov 2026, 11:20")                                                                                              |
+| Modified                    | The last edit, "28 Nov 2026, 11:42 by Ada" (the name the save status says) where LiveDoc knows it; else the last save's day and time |
+| Format                      | "OpenDocument text (.odt)" or "Word document (.docx)"                                                                                |
+| Size                        | The stored writing's size as it is now ("12 KB")                                                                                     |
+| Pages                       | Only where pages are laid out                                                                                                        |
+| Words                       | The word count's, of the whole document ([Word count](tools.md#word-count))                                                          |
+| Characters                  | The word count's                                                                                                                     |
+| Characters excluding spaces | The word count's                                                                                                                     |
+
+- Dates and numbers are in the reader's own format, as the Explorer's Details view writes them.
+- It counts as it opens; a date not known reads "-". The modified row is read from LiveDoc as the dialog opens and
+  shows the last save's time until it is (default); one it cannot read stays the last save's.
+- Nothing to confirm, so no button row: its × and Escape close it, and the writing has the focus back.
 
 ## Trash
 
-File > Move to trash: LiveDoc's [Trash](../013-workspace/trash.md).
+File > Move to trash: LiveDoc's [Trash](../013-workspace/trash.md), the same delete as everywhere: no question first;
+the editor goes to the Explorer, which says "“‹name›” deleted" with **Undo**. A document in This Browser goes to this
+browser's Trash. A delete LiveDoc refuses keeps the document open and says "Could not delete “‹name›”. Try again."
+The item is drawn only for whoever may delete the document (its owner, or a member of its team).
 
 ## Share roles
 
@@ -191,6 +236,7 @@ Participants; converting, opening into a folder and trashing are an Editor's (tr
 ## Telemetry
 
 `Document · Imported · TextDocument<Format>` (Odt, Fodt, Docx, Rtf, Txt, Html, Md, Pdf),
-`Document · Exported · TextDocument<Format>`, `Document · Changed · TextDocumentConverted`, `UI · Used · TextDocumentPrint`,
-`UI · Used · TextDocumentSecurityLimitations` (File > Security limitations reopened),
+`Document · Exported · TextDocument<Format>`, `Document · Changed · TextDocumentConverted`, `UI · Used · TextDocumentPrint`, `UI · Used · TextDocumentPrintPreview`,
+`UI · Used · TextDocumentSecurityLimitations` (File > Security limitations reopened), `UI · Used · TextDocumentDetails`,
+`Document · Deleted` (File > Move to trash, as every delete),
 `Document · Duplicated · TextDocument`. Never content.

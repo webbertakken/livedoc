@@ -651,11 +651,9 @@ div.text-document-kept {
 .text-document-table [data-guides*='r'] {
   border-right: var(--text-document-table-guide);
 }
-@media print {
-  .text-document-table td,
-  .text-document-table th {
-    --text-document-table-guide: none;
-  }
+[data-printing] .text-document-table td,
+[data-printing] .text-document-table th {
+  --text-document-table-guide: none;
 }
 .text-document-table .selectedCell {
   background-image: linear-gradient(
@@ -1077,11 +1075,6 @@ div.text-document-kept {
   line-height: 0;
   user-select: none;
 }
-@media print {
-  .text-document-bookmark-glyph {
-    display: none;
-  }
-}
 /*
  * A version drawn (docs/specs/034-text-documents/review.md "Version history", Show changes): its paper, and what it
  * added (underlined, tinted) or removed (struck through) in its editor's colour, --ychange-colour, the neutral grey
@@ -1120,4 +1113,41 @@ div.text-document-kept {
   outline: 2px solid var(--office-focus);
   outline-offset: 2px;
   border-radius: 2px;
+}
+/*
+ * The printing look (docs/specs/034-text-documents/files-and-print.md "Printing"): the pages as printed and as their PDF
+ * is written from them. Light paper whatever the scheme, and nothing of the editor's own: no comment tints, spelling
+ * marks, others' carets or selections, bookmark glyphs, picture or table handles, selected cells, or the bar of a
+ * header being edited.
+ */
+.text-document-page[data-printing] {
+  color-scheme: light;
+  max-width: none;
+}
+[data-printing] .text-document-comment,
+[data-printing] .text-document-comment.text-document-comment-selected,
+[data-printing] .text-document-peer-selection {
+  background: none;
+}
+[data-printing] .text-document-misspelt {
+  text-decoration-line: none;
+}
+[data-printing] .text-document-table .selectedCell {
+  background-image: none;
+}
+[data-printing] .text-document-peer-caret,
+[data-printing] .text-document-stretch-caret,
+[data-printing] .text-document-bookmark-glyph,
+[data-printing] .text-document-picture-bar,
+[data-printing] .text-document-picture-guide,
+[data-printing] .text-document-picture-handles,
+[data-printing] .text-document-table-grip,
+[data-printing] .text-document-table-drop,
+[data-printing] .text-document-table-resize-guide,
+[data-printing] [data-story-editing] > :not(:first-child) {
+  display: none;
+}
+/* Content kept from the file keeps its room on the page but prints as nothing: its placeholder is LiveDoc's own. */
+[data-printing] .text-document-kept {
+  visibility: hidden;
 }

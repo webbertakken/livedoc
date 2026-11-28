@@ -31,6 +31,13 @@ function chromeOf(): OfficeChrome {
     onOpenAccount: vi.fn(),
     people: [],
     onOpenTab: vi.fn(),
+    trash: null,
+    facts: {
+      owner: { you: true },
+      location: { place: 'mine', folders: [] },
+      createdAt: null,
+      savedAt: null,
+    },
   };
 }
 

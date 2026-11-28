@@ -128,9 +128,11 @@ drawn.
 
 ## Other kinds meeting a PDF
 
-- **Kept as a PDF document**: a text document's, a spreadsheet's and a canvas tab's Download as PDF offers "Keep in
-  LiveDoc as a PDF document": the written PDF becomes a PDF document beside its source, linked back to it in
-  Properties. It is a copy: later changes to the source do not reach it.
+- **Kept as a PDF document**: a text document's, a spreadsheet's and a canvas tab's File > **Keep a PDF copy in
+  LiveDoc**, an item beside Download so a download gains no step (director, 2026-11-28): the PDF its Download as PDF
+  writes becomes a PDF document beside its source, linked back to it in Properties: the file's Subject says "Made
+  from ‹name› (‹address›)", the source's name and its address in LiveDoc (default). It is a copy: later changes to the
+  source do not reach it.
 - **One writer.** Every kind's Download as PDF, every bake and every Blank PDF are written by the repository's one PDF writer; a
   second PDF writer anywhere in the codebase is a defect, and a test finds one by the words no writer can do
   without.

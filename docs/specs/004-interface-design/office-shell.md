@@ -86,7 +86,8 @@ kind's component.
 ## Title row
 
 The shell draws the title row's parts the same for every kind, from what the editor page hands it (the document's
-name, star, folder, sharing, people and account), so a kind adds only its own (its format pill, its save status, its
+name, star, folder, sharing, people and account, its delete, and the facts File > Details shows: owner, place,
+created and last saved), so a kind adds only its own (its format pill, its save status, its
 follow of a person's selection). The save status is drawn by the shell from one of five statuses the kind
 reports. What each part is, its copy and who sees it:
 [Editing surface](../034-text-documents/editing-surface.md#the-title-row).
@@ -258,6 +259,8 @@ shortcuts go quiet behind it as behind any LiveDoc dialog.
   opened it. The dialog is named by its title.
 - Below 640 px (the app's phone breakpoint, as every LiveDoc dialog) a dialog is a full-screen sheet: a top bar holds
   the ×, the title and the primary button, and there is no bottom row.
+- **Details** (`OfficeDetailsDialog`) is one for every kind: File > Details's rows, a label and its value each, read
+  only, with no button row; the kind gives the rows after the shell's own (owner, location, created, modified).
 - Its colours are the look tokens': `--office-dialog` for the panel, `--office-primary` and `--office-primary-ink`
   for the primary button, `--office-line` for its edge.
 

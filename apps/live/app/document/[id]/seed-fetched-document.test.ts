@@ -62,6 +62,7 @@ function seed(
   setDocumentWorkbook = vi.fn(),
   resetTabs = vi.fn(),
   setActiveId = vi.fn(),
+  setDocumentOpenedDates = vi.fn(),
 ) {
   const noop = vi.fn();
   return makeSeedFetchedDocument({
@@ -80,6 +81,7 @@ function seed(
     setDocumentOwnerColor: noop,
     setDocumentOwnerId: noop,
     setDocumentOwnerName: noop,
+    setDocumentOpenedDates,
     setDocumentShareable: noop,
     setDocumentShareCode: noop,
     setDocumentTeamId: noop,
@@ -102,6 +104,15 @@ describe('seedFetchedDocument', () => {
   it('declares nothing for an embed', async () => {
     await seed(false)('me', fetched, 'CODE', null);
     expect(apiLoadTab).toHaveBeenCalledWith('me', 'd1', 't1', 'CODE', { open: false });
+  });
+});
+
+// docs/specs/034-text-documents/files-and-print.md "Details": the dates File > Details says, as the document was read.
+describe('seedFetchedDocument and Details', () => {
+  it('hands on when the document was created and last saved', async () => {
+    const set = vi.fn();
+    await seed(true, vi.fn(), vi.fn(), vi.fn(), vi.fn(), set)('me', fetched, 'CODE', null);
+    expect(set).toHaveBeenCalledWith({ createdAt: fetched.createdAt, savedAt: fetched.savedAt });
   });
 });
 
