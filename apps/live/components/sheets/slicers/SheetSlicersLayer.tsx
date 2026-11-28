@@ -167,7 +167,7 @@ export function SheetSlicersLayer({ actions }: { actions: SheetActions }) {
               tabIndex={editable ? 0 : -1}
               aria-keyshortcuts={editable ? SLICER_KEYS : undefined}
               aria-description={editable ? SLICER_KEYS_HELP : undefined}
-              className={`pointer-events-auto absolute flex items-center gap-1 rounded-md border px-1 text-body shadow-sm outline-none ${editable ? 'cursor-move' : ''}`}
+              className={`pointer-events-auto absolute flex items-center gap-1 rounded-control border px-1 text-body shadow-sm outline-none ${editable ? 'cursor-move' : ''}`}
               style={{
                 left: pos.x - c.scroll.left,
                 top: pos.y - c.scroll.top,
@@ -229,16 +229,16 @@ export function SheetSlicersLayer({ actions }: { actions: SheetActions }) {
                 aria-haspopup="menu"
                 aria-label={`${heading}: ${keeps}`}
                 disabled={!s.range || !s.col}
-                className="flex h-full min-w-0 flex-1 cursor-pointer items-center gap-1.5 rounded px-1 text-left disabled:cursor-default"
+                className="flex h-full min-w-0 flex-1 cursor-pointer items-center gap-2 rounded-control px-1 text-left disabled:cursor-default"
                 onClick={(e) => openAt(s.id, 'filter', e.currentTarget)}
               >
                 <span
-                  className="h-4 w-4 shrink-0"
+                  className="size-icon-row shrink-0"
                   style={{ color: filtering ? c.palette.focus : c.palette.muted }}
                 >
                   <FilterIcon />
                 </span>
-                <span className="min-w-0 truncate font-semibold">{heading}</span>
+                <span className="min-w-0 truncate font-medium">{heading}</span>
                 <span className="ml-auto shrink-0 truncate" style={{ color: c.palette.muted }}>
                   {keeps}
                 </span>
@@ -250,10 +250,10 @@ export function SheetSlicersLayer({ actions }: { actions: SheetActions }) {
                   aria-label="Slicer options"
                   aria-haspopup="menu"
                   data-context-menu-trigger=""
-                  className="flex h-6 w-6 shrink-0 cursor-pointer items-center justify-center rounded"
+                  className="flex size-chip shrink-0 cursor-pointer items-center justify-center rounded-control"
                   onClick={(e) => openAt(s.id, 'options', e.currentTarget)}
                 >
-                  <span className="h-4 w-4">
+                  <span className="size-icon-row">
                     <MoreIcon />
                   </span>
                 </button>
@@ -263,7 +263,7 @@ export function SheetSlicersLayer({ actions }: { actions: SheetActions }) {
                   aria-hidden
                   data-slicer-control
                   data-sheet-slicer-resize
-                  className="absolute cursor-nwse-resize rounded-sm border"
+                  className="absolute cursor-nwse-resize rounded-control border"
                   style={{
                     right: -HANDLE_PX / 2,
                     bottom: -HANDLE_PX / 2,
