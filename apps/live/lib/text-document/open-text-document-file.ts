@@ -1,5 +1,5 @@
 // File > Open > Upload (docs/specs/034-text-documents/files-and-print.md "Opening"): a file from the computer becomes
-// a new text document in its format, named after the file; a Plain Text, Markdown or HTML file is imported into a new
+// a new text document in its format, named after the file; a Plain Text, Markdown, HTML or Rich Text file is imported into a new
 // OpenDocument one. The api reads it under the package's guards and answers a named rejection, which this words for
 // the person.
 import { base64OfBytes, importTypeOfFileName } from '@livedoc/text-documents';
@@ -37,6 +37,7 @@ const IMPORTED_TYPES: Readonly<Record<string, string>> = {
   markdown: 'Md',
   html: 'Html',
   htm: 'Html',
+  rtf: 'Rtf',
 };
 
 /** The `Tab·Imported` type of a file by its name. */

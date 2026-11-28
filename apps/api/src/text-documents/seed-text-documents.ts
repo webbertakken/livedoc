@@ -73,7 +73,9 @@ export function readTextDocumentSeeds(
     }
     // An import is born in ODF (fork C5).
     if (!isTextDocumentImportType(type) || format !== 'odf')
-      return refusedSeed('type names an import (txt, md or html) into an ODF text document tab');
+      return refusedSeed(
+        'type names an import (txt, md, html or rtf) into an ODF text document tab',
+      );
     out.push({ tabId, format, file: bytes, type });
   }
   return out;

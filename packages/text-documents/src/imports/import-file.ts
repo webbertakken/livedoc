@@ -10,18 +10,34 @@ import { decodeText } from './decode-text';
 import { readHtmlImport } from './html';
 import { readMarkdownImport } from './markdown';
 import { readPlainTextImport } from './plain-text';
+import { readRtfImport } from './rtf';
+
+/** Bytes as characters of the same codes, in chunks the call stack holds. */
+function latin1(bytes: Uint8Array): string {
+  let out = '';
+  for (let i = 0; i < bytes.length; i += 8192)
+    out += String.fromCharCode(...bytes.subarray(i, i + 8192));
+  return out;
+}
 
 export async function readTextDocumentImport(
   file: Uint8Array,
   type: TextDocumentImportType,
   limits: Pick<ReadLimits, 'maxChars'> = {},
 ): Promise<TextDocumentRead> {
+  const maxChars = limits.maxChars ?? TEXT_DOCUMENT_MAX_CHARS;
+  const report = new ReportBuilder();
+  if (type === 'rtf') {
+    // Rich Text is 7-bit markup; its bytes reach the reader as they are, one character a byte.
+    const read = await readRtfImport(latin1(file), report);
+    if ('ok' in read) return read;
+    if (TextDocument.characters(read) > maxChars) return refuse('document_too_large');
+    return { ok: true, document: read, report: report.build(), fileType: 'odt' };
+  }
   const decoded = decodeText(file);
   if (!decoded.ok) return decoded;
-  const maxChars = limits.maxChars ?? TEXT_DOCUMENT_MAX_CHARS;
   // Markup only shrinks what is read, so text past the limit is refused before it is parsed.
   if (decoded.text.length > maxChars * 2) return refuse('document_too_large');
-  const report = new ReportBuilder();
   const document =
     type === 'md'
       ? readMarkdownImport(decoded.text, report)

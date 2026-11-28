@@ -109,8 +109,8 @@ exports[`the Rich Text of every construct > writes footnotes in ASCII 1`] = `
 {\\stylesheet{\\s0 Normal;}{\\s1\\outlinelevel0 heading 1;}{\\s2\\outlinelevel1 heading 2;}{\\s3\\outlinelevel2 heading 3;}{\\s4\\outlinelevel3 heading 4;}{\\s5\\outlinelevel4 heading 5;}{\\s6\\outlinelevel5 heading 6;}{\\s7 Title;}{\\s8 Subtitle;}}
 \\paperw12240\\paperh15840\\margl1440\\margr1440\\margt1440\\margb1440
 \\pard\\plain\\s0\\sl276\\slmult1
-{\\f0\\fs22 A claim{\\super\\chftn}{\\footnote\\pard\\plain{\\super\\chftn} \\pard\\plain\\s0\\sl276\\slmult1
-{\\f0\\fs22 The source.}}}{\\f0\\fs22\\i  and another{\\super\\chftn}{\\footnote\\pard\\plain{\\super\\chftn} \\pard\\plain\\s0\\sl276\\slmult1
+{\\f0\\fs22 A claim{\\super\\chftn}{\\footnote\\pard\\plain{\\super\\chftn}\\pard\\plain\\s0\\sl276\\slmult1
+{\\f0\\fs22 The source.}}}{\\f0\\fs22\\i  and another{\\super\\chftn}{\\footnote\\pard\\plain{\\super\\chftn}\\pard\\plain\\s0\\sl276\\slmult1
 {\\f0\\fs22\\b Bold}{\\f0\\fs22 , and a }{\\field{\\*\\fldinst{HYPERLINK "https://example.com/note"}}{\\fldrslt {\\f0\\fs22 link}}}\\par
 \\pard\\plain\\s0\\sl276\\slmult1
 {\\f0\\fs22 A second paragraph.}}}{\\f0\\fs22 .}\\par
@@ -2395,7 +2395,7 @@ exports[`the Rich Text of every construct > writes tables in ASCII 1`] = `
 \\pard\\plain\\intbl\\s0\\sl276\\slmult1
 {\\f0\\fs22 Lined}\\cell
 \\pard\\plain\\intbl\\s0\\sl276\\slmult1
-{\\f0\\fs22 Nested, with a note{\\super\\chftn}{\\footnote\\pard\\plain{\\super\\chftn} \\pard\\plain\\s0\\sl276\\slmult1
+{\\f0\\fs22 Nested, with a note{\\super\\chftn}{\\footnote\\pard\\plain{\\super\\chftn}\\pard\\plain\\s0\\sl276\\slmult1
 {\\f0\\fs22 In a cell.}}}\\par
 \\pard\\plain\\intbl\\s0\\sl276\\slmult1
 {\\f0\\fs22 n1}\\par
