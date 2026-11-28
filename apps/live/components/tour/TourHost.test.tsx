@@ -5,7 +5,7 @@
 // never starts on its own. Leaving Diagram mid-tour ends it as skipped.
 
 import { act, cleanup, render } from '@testing-library/react';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { resetTourOffersForTests, tourOffer } from './tour-offer';
 import { requestTourRelaunch } from '@/lib/diagram-tour';
 import { setActiveTour } from '@/lib/tour-active';
@@ -61,6 +61,12 @@ const tourSquareRemove = vi.fn((): string[] => []);
 const setSelectedId = vi.fn();
 const started = () =>
   track.mock.calls.some((c) => c[0] === 'UI' && c[1] === 'Started' && c[2] === 'Tour');
+
+// The stage loads on demand the first time the tour starts; loaded here once, so a test that starts the tour under
+// fake timers draws it as the page does once its chunk has arrived.
+beforeAll(async () => {
+  await import('./TourStage');
+});
 
 beforeEach(() => {
   vi.useFakeTimers();
@@ -159,6 +165,16 @@ describe('TourHost running', () => {
     });
     expect(popover.props!.outro).toBeTruthy();
   };
+
+  it('draws no stage until the tour starts', async () => {
+    editor();
+    render(<TourHost />);
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(1000);
+    });
+    expect(tourOffer()).not.toBeNull();
+    expect(popover.props).toBeNull();
+  });
 
   it('sends the person off to diagram on its last card', async () => {
     await runToOutro();

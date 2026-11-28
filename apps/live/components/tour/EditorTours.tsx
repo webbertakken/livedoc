@@ -3,11 +3,8 @@
 import dynamic from 'next/dynamic';
 import { useEditorContext } from '@/app/document/[id]/EditorContext';
 import { PendingFormStart } from '@/components/forms/PendingFormStart';
+import { TourHost } from './TourHost';
 import { useEverTrue } from '@/hooks/ui/useEverTrue';
-
-// The Diagram tour (docs/specs/007-editor/editor-tour.md): mounted with the editor, as element tours are, so it offers
-// itself on the Start Tour button; its chunk stays out of the first load.
-const TourHost = dynamic(() => import('./TourHost').then((m) => m.TourHost), { ssr: false });
 
 // The Plan tour (docs/specs/026-plan/plan-tour.md) loads the first time the person enters Plan, and stays
 // mounted after, so leaving Plan mid-tour still runs its clean-up.

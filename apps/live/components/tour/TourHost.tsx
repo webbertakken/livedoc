@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef } from 'react';
+import dynamic from 'next/dynamic';
 import { createShape, isBoxed, type Element } from '@livedoc/document';
 import { useEditorContext } from '@/app/document/[id]/EditorContext';
 import { useCoarsePointer } from '@/hooks/ui/useCoarsePointer';
@@ -13,10 +14,10 @@ import { setActiveTour, useActiveTour } from '@/lib/tour-active';
 import { rebaseUserPreferences } from '@/lib/user-preferences';
 import { waitForSelector } from './tour-dom';
 import { tourStepsFor, tourStepTelemetryType, type TourApi } from './tour-steps';
-import { TourStage } from './TourStage';
 import { useTourEngine, type TourOutcome } from './useTourEngine';
 import { TOUR_OFFER_RANK, useOfferTour } from './tour-offer';
 import { useLatest } from '@/hooks/ui/useLatest';
+import { useEverTrue } from '@/hooks/ui/useEverTrue';
 import { useStartPanelOpen } from '@/components/start/start-panel-open';
 import { elementSelector } from '@/lib/canvas-selectors';
 
@@ -26,6 +27,12 @@ import { elementSelector } from '@/lib/canvas-selectors';
 // turned back on, starts it. It never starts or prompts on its own. The steps run on the shared engine
 // (useTourEngine) and draw through the shared stage (TourStage); this host owns the offer, the step list and what
 // ending means.
+
+// The stage (its ring, card and shield) loads the first time the tour starts and stays mounted after, so its exit
+// glide still draws; the host itself, which offers the tour on the Start Tour button, stays in the first load.
+const TourStage = dynamic(() => import('./TourStage').then((m) => m.TourStage<TourApi>), {
+  ssr: false,
+});
 
 export function TourHost() {
   const ctx = useEditorContext();
@@ -176,5 +183,6 @@ export function TourHost() {
     endTourRef.current('skipped');
   }, [active, inDiagram, engineRef, endTourRef]);
 
-  return <TourStage engine={engine} blockInput />;
+  const staged = useEverTrue(active);
+  return staged ? <TourStage engine={engine} blockInput /> : null;
 }
