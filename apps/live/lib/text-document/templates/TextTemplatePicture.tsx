@@ -11,9 +11,10 @@ export function TextTemplatePicture({
   /** The top of the page's writing, filling a short card (the Explorer's pane); else the whole page. */
   crop: boolean;
 }) {
-  // A crop shows the writing from its first line: the page scaled so its one-inch margins fall outside the card.
+  // A crop shows the writing from its first line: the page scaled and cut short of the narrowest
+  // margins a template has (three quarters of an inch), so no template's first line is cut.
   const fit = crop
-    ? 'aspect-[17/22] w-[131%] max-w-none -ml-[15.4%] -mt-[15.4%]'
+    ? 'aspect-[17/22] w-[125%] max-w-none -ml-[11%] -mt-[10%]'
     : 'aspect-[17/22] w-full';
   if (!picture) return <span aria-hidden className={`block bg-white dark:bg-[#1e1f20] ${fit}`} />;
   return (
