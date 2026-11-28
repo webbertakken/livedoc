@@ -128,13 +128,15 @@ export function SheetGroupBands() {
                       >
                         <span aria-hidden>{shut ? '▸' : '▾'}</span>
                       </button>
-                      <span className="min-w-0 truncate font-medium">{label}</span>
+                      <span className="min-w-0 shrink truncate font-medium">{label}</span>
                     </>
                   ) : null}
                   <span className="flex-1" />
                   {text ? (
                     <span
-                      className="min-w-0 truncate text-supporting"
+                      // Squeezed before the group's value, which names the group; its whole text on hover.
+                      title={text}
+                      className="min-w-0 shrink-[100] truncate text-supporting"
                       style={{ color: c.palette.muted }}
                     >
                       {text}
