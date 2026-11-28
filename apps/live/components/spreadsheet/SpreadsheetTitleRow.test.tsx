@@ -84,7 +84,21 @@ describe('spreadsheetLevel', () => {
 // docs/specs/029-sheets/surface.md "Menu bar"; files-and-print.md "Download", "Converting".
 describe('SpreadsheetTitleRow', () => {
   it('names an unnamed spreadsheet and sends the menus’ telemetry as a spreadsheet’s (D127)', () => {
-    render(<Row />);
+    const channel = createOfficeBindingsChannel();
+    render(<Row channel={channel} />);
+    // Data holds only the sheet's items: one bound, so the menu shows.
+    act(() =>
+      channel.set({
+        recentCodes: [],
+        colours: null,
+        actions: { 'create-filter-view': { run: vi.fn() } },
+        fontSize: 10,
+        setFontSize: () => {},
+        fontFamily: null,
+        setFontFamily: () => {},
+        borders: null,
+      }),
+    );
     expect(screen.getByText('Untitled spreadsheet')).toBeTruthy();
     openMenu('Data');
     expect(track).toHaveBeenCalledWith('UI', 'Opened', 'SpreadsheetMenuData');

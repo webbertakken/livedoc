@@ -55,7 +55,7 @@ export function SheetGroupBands() {
           <div
             key={group.key}
             data-group-band={group.key}
-            className="pointer-events-auto absolute flex items-center gap-2 border-b px-1 text-body font-semibold"
+            className="pointer-events-auto absolute flex items-center gap-2 border-b px-1 text-body"
             style={{
               left: x0,
               top: y,
@@ -72,14 +72,14 @@ export function SheetGroupBands() {
               type="button"
               aria-expanded={!shut}
               aria-label={groupOpenerLabel(label, group.count, shut)}
-              className="flex size-6 shrink-0 cursor-pointer items-center justify-center rounded hover:bg-black/10 focus-visible:outline focus-visible:outline-2 dark:hover:bg-white/15"
+              className="flex size-chip shrink-0 cursor-pointer items-center justify-center rounded-control hover:bg-black/10 focus-visible:outline focus-visible:outline-2 dark:hover:bg-white/15"
               style={{ outlineColor: c.palette.focus }}
               onKeyDown={(e) => e.stopPropagation()}
               onClick={() => toggle(group)}
             >
               <span aria-hidden>{shut ? '▸' : '▾'}</span>
             </button>
-            <span className="min-w-0 truncate">{label}</span>
+            <span className="min-w-0 truncate font-medium">{label}</span>
             <span
               aria-hidden
               className="shrink-0 rounded-full px-2 text-supporting font-normal"

@@ -65,6 +65,8 @@ function renderOn(platform: OfficePlatform) {
   const named = new Set(items.map((item) => item.shortcut));
   const actions: OfficeActions = Object.fromEntries([
     ...items.filter((item) => item.shortcut).map((item) => [item.id, { run: vi.fn() }]),
+    // Data holds no item with a shortcut of its own: one bound, so its menu shows.
+    ['create-filter-view', { run: vi.fn() }],
     ...SPREADSHEET_SHORTCUTS.filter((row) => !named.has(row.id)).map((row) => [
       row.id,
       { run: vi.fn() },
