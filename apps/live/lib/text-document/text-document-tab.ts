@@ -19,10 +19,5 @@ export function newTextDocumentTab(
 /** A new text document's name: "Untitled document", as Google Docs names one. */
 export const UNTITLED_TEXT_DOCUMENT = 'Untitled document';
 
-/** The format a file opens in, by its name: a Word file is held in OOXML, anything else in ODF (fork C1). */
-export function formatOfFileName(fileName: string): TextDocumentFormat {
-  return /\.(docx|dotx|docm)$/i.test(fileName) ? 'ooxml' : 'odf';
-}
-
 /** A text document tab added to a document of other tabs (docs/specs/006-document/kinds-outside-the-canvas.md). */
 export const TEXT_DOCUMENT_TAB_NAME = 'Text document';

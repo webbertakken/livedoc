@@ -53,6 +53,7 @@ export {
   TEXT_DOCUMENT_EXPORT_TYPES,
   TEXT_DOCUMENT_FILE_TYPES,
   TEXT_DOCUMENT_IMPORT_TYPES,
+  formatOfFileName,
   importTypeOfFileName,
   isTextDocumentImportType,
   type TextDocumentImportType,
@@ -495,3 +496,4 @@ export {
   type PdfImportPicture,
   type PdfImportPage,
 } from './imports/pdf';
+export { TEXT_DOCUMENT_OPEN_REFUSAL_WORDS } from './open-refusal-words';
