@@ -1429,6 +1429,15 @@ export const SPREADSHEET_IMAGES_ADDED = chart(
   { types: ['ImageOverCells', 'ImageInCell'] },
 );
 
+// docs/specs/029-sheets/inserted-objects.md "Telemetry": an emoji Insert › Emoji put into a cell's edit.
+export const SPREADSHEET_EMOJI_ADDED = chart(
+  'Spreadsheet',
+  'Added',
+  'Spreadsheet Emoji Added',
+  'An editor put an emoji into a spreadsheet cell with Insert › Emoji.',
+  { types: ['Emoji'] },
+);
+
 // docs/specs/029-sheets/data-tools.md "Filters, filter views and slicers" and "Group by view": a filter view or a
 // group by view made, saved (an Editor's) or temporary (a Participant's or a Viewer's).
 export const SPREADSHEET_FILTER_VIEWS_ADDED = chart(
@@ -1510,6 +1519,7 @@ export const SPREADSHEETS: MetricStack = {
     SPREADSHEET_CHARTS_ADDED,
     SPREADSHEET_PIVOT_TABLES_ADDED,
     SPREADSHEET_IMAGES_ADDED,
+    SPREADSHEET_EMOJI_ADDED,
     SPREADSHEET_FILTER_VIEWS_ADDED,
     SPREADSHEET_GROUPS_TOGGLED,
     SPREADSHEET_GROUP_AGGREGATIONS,
