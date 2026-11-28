@@ -97,15 +97,11 @@ function withEditorStoryIds(doc: Y.Doc): Y.Doc {
 }
 
 describe('convertLive', () => {
-  it('writes nothing converting to the format a document is in, for every file of the corpus', async () => {
-    for (const file of corpus) {
-      const document = await read(file);
-      const doc = live(document);
-      expect(
-        updatesOf(doc, () => convertLive(doc, document.format, document.format)),
-        file,
-      ).toBe(0);
-    }
+  // One test a file: the corpus whole runs past a test's time under coverage.
+  it.each(corpus)('writes nothing converting %s to the format it is in', async (file) => {
+    const document = await read(file);
+    const doc = live(document);
+    expect(updatesOf(doc, () => convertLive(doc, document.format, document.format))).toBe(0);
   });
 
   it('keeps the stories made in the editor under their own ids, writing nothing when nothing changes', () => {
@@ -121,16 +117,14 @@ describe('convertLive', () => {
     }
   });
 
-  it('makes the live state read as the converted document, for every file of the corpus, both ways', async () => {
-    for (const file of corpus) {
-      const document = await read(file);
-      const to = other(document.format);
-      const doc = live(document);
-      const losses = convertLive(doc, document.format, to);
-      const converted = convertTextDocument(document, to);
-      expect(losses, file).toEqual(converted.losses);
-      expect(held(doc, to), file).toBe(held(live(converted.document), to));
-    }
+  it.each(corpus)('makes the live state read as %s converted, either way', async (file) => {
+    const document = await read(file);
+    const to = other(document.format);
+    const doc = live(document);
+    const losses = convertLive(doc, document.format, to);
+    const converted = convertTextDocument(document, to);
+    expect(losses).toEqual(converted.losses);
+    expect(held(doc, to)).toBe(held(live(converted.document), to));
   });
 
   it('converts headers and notes made in the editor in place, under their own ids', () => {
