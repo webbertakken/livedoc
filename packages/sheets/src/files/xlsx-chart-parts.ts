@@ -1,7 +1,9 @@
-// The parts a workbook's charts add to its XLSX (docs/specs/029-sheets/standard-mapping.md "Charts in the file"): per
-// sheet with charts, a drawing part and its relationship from the worksheet, and a chart part per chart, named past
-// the parts the file kept. A sheet keeping its file's own drawing writes none of its charts (D261).
+// The parts a workbook's charts and pictures add to its XLSX (docs/specs/029-sheets/standard-mapping.md "Charts in the
+// file", "Pictures in the file"): per sheet with either, a drawing part and its relationship from the worksheet, a chart
+// part per chart and a media part per picture's image (one however many sheets place it), named past the parts the
+// file kept. A sheet keeping its file's own drawing writes none of its charts nor pictures (D261, D626).
 import {
+  PICTURE_EXTENSIONS,
   OOXML_CONTENT_TYPES,
   RELATIONSHIP_TYPES,
   XML_DECLARATION,
@@ -10,6 +12,12 @@ import {
 } from '@livedoc/office-packages';
 import { nearestFileChart } from './chart-nearest';
 import { fileChartSum, type FileChart } from './file-charts';
+import {
+  picturesUnwritten,
+  picturesWithBytes,
+  type FilePictureBytes,
+  type FilePictureFetches,
+} from './file-pictures';
 import type { FileLoss, FileSheet } from './workbook-file';
 import { xlsxChartXml, xlsxDrawingXml } from './xlsx-charts';
 import { ownIds, type XlsxKeptWriter } from './xlsx-kept-write';
@@ -56,13 +64,23 @@ export function xlsxChartParts(
   keptParts: readonly OoxmlPart[],
   renamed: ReadonlyMap<string, string>,
   losses: FileLoss[],
+  // The pictures' bytes the download read (D626).
+  pictureBytes?: FilePictureFetches,
 ): XlsxChartParts {
   const out: XlsxChartParts = { sheets: [], parts: [], relationships: [] };
-  const nextOf = namer(new Set(keptParts.map((p) => p.name)));
+  const taken = new Set(keptParts.map((p) => p.name));
+  const nextOf = namer(taken);
+  const media = mediaParts(taken, out);
   sheets.forEach((sheet, i) => {
     const charts = sheet.charts ?? [];
-    if (!charts.length || kept.keepsWorksheetChild('drawing', i)) {
+    if (kept.keepsWorksheetChild('drawing', i)) {
       if (charts.length) losses.push({ k: 'charts_unwritten', sheet: sheet.name });
+      picturesUnwritten(sheet, losses);
+      out.sheets.push(null);
+      return;
+    }
+    const pictures = picturesWithBytes(sheet, pictureBytes, losses);
+    if (!charts.length && !pictures.length) {
       out.sheets.push(null);
       return;
     }
@@ -80,6 +98,12 @@ export function xlsxChartParts(
       });
       return { id: `rId${n + 1}`, type: RELATIONSHIP_TYPES.chart, target: `../charts/${part}` };
     });
+    // Each picture names its image's media part, after the charts' relationships.
+    const pictureRels: Relationship[] = pictures.map(({ picture, bytes }, n) => ({
+      id: `rId${charts.length + n + 1}`,
+      type: RELATIONSHIP_TYPES.image,
+      target: `../${media(picture.imageId, bytes).slice('xl/'.length)}`,
+    }));
     out.parts.push({
       name: drawing,
       contentType: OOXML_CONTENT_TYPES.drawing,
@@ -87,10 +111,11 @@ export function xlsxChartParts(
         xlsxDrawingXml(
           charts,
           chartRels.map((r) => r.id),
+          pictures.map(({ picture }, n) => ({ picture, relId: pictureRels[n]!.id })),
         ),
       ),
     });
-    out.relationships.push([drawing, chartRels]);
+    out.relationships.push([drawing, [...chartRels, ...pictureRels]]);
     const relId = ownIds(kept.relationships('sheet', i))();
     out.sheets.push({
       relId,
@@ -104,4 +129,23 @@ export function xlsxChartParts(
     });
   });
   return out;
+}
+
+// The media part of each image, named `xl/media/imageN.<ext>` past the parts the file kept, added once to `out`.
+function mediaParts(
+  taken: ReadonlySet<string>,
+  out: XlsxChartParts,
+): (imageId: string, bytes: FilePictureBytes) => string {
+  const named = new Map<string, string>();
+  let n = 0;
+  return (imageId, bytes) => {
+    const had = named.get(imageId);
+    if (had) return had;
+    let name: string;
+    do name = `xl/media/image${++n}.${PICTURE_EXTENSIONS[bytes.type]}`;
+    while (taken.has(name));
+    named.set(imageId, name);
+    out.parts.push({ name, contentType: bytes.type, data: bytes.data });
+    return name;
+  };
 }

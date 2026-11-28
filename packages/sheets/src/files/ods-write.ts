@@ -29,6 +29,8 @@ import { odsDefaultCellStyles } from './ods-cell-style';
 import { themedFormat, themeOf, type SpreadsheetTheme } from '../themes/spreadsheet-theme';
 import { OdsAxisOut } from './ods-lines';
 import { OdsChartObjects } from './ods-charts';
+import { picturesUnwritten } from './file-pictures';
+import { OdsPictures } from './ods-pictures';
 import { namesToWrite, odsNameXml, withOdsNames } from './file-names';
 import {
   odsDatabaseRanges,
@@ -96,7 +98,9 @@ type Out = {
   theme: SpreadsheetTheme;
   // Where its charts' objects go (standard-mapping.md "Charts in the file").
   charts: OdsChartObjects;
-  // The sheet's chart frames by the cell each is anchored in (`r,c`).
+  // Where its pictures' bytes go (standard-mapping.md "Pictures in the file").
+  pictures: OdsPictures;
+  // The sheet's chart and picture frames by the cell each is anchored in (`r,c`).
   frames?: ReadonlyMap<string, string>;
   // Every sheet's validation rules' rectangles and names, by sheet (standard-mapping.md "Validation in the file").
   validations: OdsValidationsOut['cells'];
@@ -335,19 +339,25 @@ function tableXml(sheet: FileSheet, index: number, out: Omit<Out, 'sheet' | 'ind
   ];
 }
 
-// A table's chart frames, each in the cell it is anchored in (D280); none beside the shapes it kept, the sheet named
-// (D261).
+// A table's chart and picture frames, each in the cell it is anchored in (D280), a cell's pictures after its charts;
+// none beside the shapes it kept, the sheet named (D261, D626).
 function chartFrames(
   before: readonly string[],
   sheet: FileSheet,
   out: Omit<Out, 'sheet' | 'index'>,
 ): Map<string, string> {
-  if (!sheet.charts?.length) return new Map();
+  if (!sheet.charts?.length && !sheet.pictures?.length) return new Map();
   if (before.some((xml) => /^<[\w.-]+:shapes\b/.test(xml))) {
-    out.losses.push({ k: 'charts_unwritten', sheet: sheet.name });
+    if (sheet.charts?.length) out.losses.push({ k: 'charts_unwritten', sheet: sheet.name });
+    picturesUnwritten(sheet, out.losses);
     return new Map();
   }
-  return out.charts.frames(sheet.name, sheet.charts);
+  const frames = sheet.charts?.length
+    ? out.charts.frames(sheet.name, sheet.charts)
+    : new Map<string, string>();
+  for (const [at, xml] of out.pictures.frames(sheet, sheet.charts?.length ?? 0))
+    frames.set(at, (frames.get(at) ?? '') + xml);
+  return frames;
 }
 
 // A table's format rules after its kept ones, in the kept `calcext:conditional-formats` or one of their own (D215).
@@ -391,20 +401,34 @@ function bodyXml(
   kept: OdsKeptWriter,
   common: XmlBindings,
   flat: boolean,
-): { body: string[]; common: string[]; charts: OdsChartObjects } {
+): { body: string[]; common: string[]; charts: OdsChartObjects; pictures: OdsPictures } {
   const styles = new OdsStyles();
   const keptCommon = kept.commonStyles(common);
   styles.reserve(
     new Set(keptCommon.flatMap((xml) => /style:display-name="([^"]*)"/.exec(xml)?.[1] ?? [])),
   );
   const charts = new OdsChartObjects(flat, kept.partNames(), kept, losses);
+  const pictures = new OdsPictures(
+    flat,
+    new Set(kept.entries().map((e) => e.name)),
+    file.pictureBytes,
+    losses,
+  );
   const theme = themeOf(file.theme);
   const keptAfter = kept.spreadsheetBefore('after');
   // LiveDoc's rules are named past the kept ones' names.
   const keptRules = keptAfter.join('');
   const validations = odsValidationsOut(file, (name) => keptRules.includes(`"${name}"`));
   const tables = file.sheets.flatMap((sheet, i) =>
-    tableXml(sheet, i, { losses, styles, kept, theme, charts, validations: validations.cells }),
+    tableXml(sheet, i, {
+      losses,
+      styles,
+      kept,
+      theme,
+      charts,
+      pictures,
+      validations: validations.cells,
+    }),
   );
   const commonXml = commonStyles(theme.font, [...keptCommon, ...styles.conditionalStyles()]);
   // OpenFormula has no LAMBDA, so an ODF file holds no named functions (standard-mapping.md "Named functions in the file").
@@ -423,7 +447,7 @@ function bodyXml(
     '</office:spreadsheet>',
     '</office:body>',
   ];
-  return { body, common: commonXml, charts };
+  return { body, common: commonXml, charts, pictures };
 }
 
 // The kept content after the tables, the named ranges in its one `table:named-expressions` after the kept names; a
@@ -451,7 +475,7 @@ function pilotsAfterTables(file: WorkbookFile, after: readonly string[]): string
 const withRules = (file: WorkbookFile, prefixes: readonly Prefix[]): readonly Prefix[] => [
   ...prefixes,
   ...(file.sheets.some((s) => s.formatRules?.length) ? (['calcext'] as const) : []),
-  ...(file.sheets.some((s) => s.charts?.length)
+  ...(file.sheets.some((s) => s.charts?.length || s.pictures?.length)
     ? (['draw', 'svg', 'xlink', 'chart'] as const).filter((p) => !prefixes.includes(p))
     : []),
 ];
@@ -500,7 +524,13 @@ export function writeOds(file: WorkbookFile, title: string): FileWritten<Uint8Ar
   const prefixes = withRules(file, CONTENT_NAMESPACES);
   const own = bindings(prefixes);
   const kept = new OdsKeptWriter(file.kept, own);
-  const { body, common, charts } = bodyXml(file, losses, kept, bindings(STYLES_NAMESPACES), false);
+  const { body, common, charts, pictures } = bodyXml(
+    file,
+    losses,
+    kept,
+    bindings(STYLES_NAMESPACES),
+    false,
+  );
   const settingsOwn = bindings(SETTINGS_NAMESPACES);
   const settings = kept.settings({ ...kept.settingsNs, ...settingsOwn });
   const data = writeOdfPackage(ODF_MEDIA_TYPES.spreadsheet, [
@@ -537,6 +567,7 @@ export function writeOds(file: WorkbookFile, title: string): FileWritten<Uint8Ar
       : []),
     ...kept.entries(),
     ...charts.entries,
+    ...pictures.entries,
   ]);
   return { data, losses };
 }

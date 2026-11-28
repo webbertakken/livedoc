@@ -7,7 +7,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import * as Y from 'yjs';
 import type { TextDocumentVersionDto } from '@livedoc/api-schema';
 import { TextDocumentState } from '@livedoc/text-documents';
-import { base64OfBytes } from '@livedoc/text-documents/base64';
+import { base64OfBytes } from '@livedoc/office-packages';
 import {
   NO_CHANGES_SHOWN,
   SEE_VERSION_HISTORY,

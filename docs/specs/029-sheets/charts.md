@@ -9,8 +9,10 @@ file formats, drawn by LiveDoc's chart code. Research: [Charts and pivots](../..
 
 ## What a chart is
 
-- A chart belongs to a sheet: anchored at a cell's corner with an offset and a size, floating over the cells, or on
-  a **chart sheet** of its own (**Move to Own Sheet**). It is never a canvas element.
+- A chart belongs to a sheet: anchored at a cell's corner with an offset and a size, floating over the cells. It is
+  never a canvas element. Google's **Move to Own Sheet** (a chart sheet with no grid) is left out (Webber,
+  2026-11-28): a spreadsheet here has no gridless sheet kind. A file's chart sheet arrives as its chart kept as
+  [unknown content](standard-mapping.md#unknown-content), and written back as it came.
 - It reads its data ranges live, by row and column ids, as today's charts from a Sheet do ([Sheet](sheet.md#charts)).
 - It inherits their empty cells: a cell that is empty or holds no number is no value, a gap, never 0
   ([No value is a gap](../009-elements/pie-chart.md#chart-types)). Customise's **Plot Null Values** is the one way
@@ -64,7 +66,7 @@ Column, Stacked Column, 100% Stacked Column, Bar, Stacked Bar, 100% Stacked Bar,
 Scatter, Bubble, Histogram, Candlestick, OHLC, Waterfall, Treemap, Geo (regions, markers), Gauge, Scorecard, Radar,
 Organisational, Timeline, Table, Annotated Timeline. A type a format cannot hold is written as the nearest it can,
 with the original kept for LiveDoc, and the loss listed ([Written as the nearest type](standard-mapping.md#charts-in-the-file),
-D290): Stepped Area is written as Area, a Bubble chart with no sizes as Scatter, a Histogram or a Waterfall as Column (D325, D327), a Treemap as Pie (D329), a Gauge as Bar (D331), a Scorecard as Column (D371), a Timeline as Line (D373), and a Table as Column (D375).
+D290, Webber's ruling 2026-11-28): Stepped Area is written as Area, a Bubble chart with no sizes as Scatter, a Histogram or a Waterfall as Column (D325, D327), a Treemap as Pie (D329), a Gauge as Bar (D331), a Scorecard as Column (D371), a Timeline as Line (D373), and a Table as Column (D375).
 
 ## Inserting
 
@@ -96,7 +98,7 @@ shows "No data" there.
 ## Working with a chart
 
 - An Editor selects, moves, resizes, deletes (Delete), copies and pastes a chart; its menu (⋮): **Edit Chart**,
-  **Delete Chart**, **Download** (PNG, PDF, SVG), **Copy Chart**, **Move to Own Sheet**, **Alt Text**.
+  **Delete Chart**, **Download** (PNG, PDF, SVG), **Copy Chart**, **Alt Text** (Move to Own Sheet left out, above).
   **Publish Chart**: a LiveDoc share link to the chart alone, read-only, live, and its embed (C3 list, ruled 2026-11-18).
 - Arrow keys nudge a selected chart (1 px, 10 px with Shift), Alt and the arrows resize it; Escape returns to the grid.
 - A Participant and a Viewer see charts and download them; they cannot select them to move.

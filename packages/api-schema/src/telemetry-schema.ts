@@ -607,6 +607,8 @@ export const SHEET_CHANGE_KINDS = [
   'Protection',
   // A table made, changed or removed (docs/specs/029-sheets/data-tools.md "Tables").
   'Table',
+  // A slicer added, moved, changed or removed (docs/specs/029-sheets/data-tools.md "Slicers").
+  'Slicer',
   'Resize',
   'Hide',
   'Group',

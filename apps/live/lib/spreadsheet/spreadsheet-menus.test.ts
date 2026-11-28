@@ -81,14 +81,14 @@ describe('spreadsheetMenus', () => {
     for (const menu of menus) {
       const rows = ROWS.filter((row) => row.menu === menu.label);
       const planned = rows
-        .filter((row) => row.status !== 'left out (C3)')
+        .filter((row) => !row.status.startsWith('left out'))
         .map((row) => LIVEDOC_WORDS[headOf(row.words)] ?? headOf(row.words));
       // File › Convert is LiveDoc's own (files-and-print.md "Converting"), no row of Google's.
       const own = labels(
         menu.entries.filter((e) => e.kind === 'separator' || e.id !== CONVERT_ITEM_ID),
       );
       expect(own, menu.label).toEqual(planned);
-      for (const row of rows.filter((r) => r.status === 'left out (C3)'))
+      for (const row of rows.filter((r) => r.status.startsWith('left out')))
         expect(own, row.words).not.toContain(headOf(row.words));
     }
   });

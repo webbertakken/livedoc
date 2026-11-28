@@ -2,7 +2,7 @@
 // Making and working with a pivot table (docs/specs/029-sheets/pivot-tables.md "Making one", "Working with one"):
 // Create Pivot Table places one at a cell of this sheet, on a new sheet or on another sheet once it opens, with the
 // editor open on it; typing into the output is refused; Delete over the whole output removes it; Edit reopens it.
-import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { SheetPivot } from '@livedoc/sheets';
 import {
@@ -29,8 +29,9 @@ const DATA = { A1: 'Region', B1: 'Units', A2: 'East', B2: '5', A3: 'West', B3: '
 const pivotsOf = (h: SheetHarness, sheetId = SHEET_ID) =>
   (h.store.sheet(sheetId)?.layout.objects ?? []).filter((x): x is SheetPivot => x.kind === 'pivot');
 
-async function setup(opts: { otherTitles?: string[] } = {}) {
-  const h = await makeSheet({ rows: 10, cols: 8, cells: DATA, ...opts });
+async function setup(opts: { otherTitles?: string[]; canShape?: boolean } = {}) {
+  const { canShape, ...made } = opts;
+  const h = await makeSheet({ rows: 10, cols: 8, cells: DATA, ...made });
   const bar = {
     add: vi.fn(() => ({ tabId: 'tabNew', sheetId: 'sheetNew' })),
     show: vi.fn(),
@@ -38,20 +39,24 @@ async function setup(opts: { otherTitles?: string[] } = {}) {
   const onEdit = vi.fn();
   let clear: (what: 'inputs' | 'formats' | 'all') => void = () => {};
   let showDetails: (r: number, c: number) => boolean = () => false;
-  renderSheet(h, ({ c, actions }) => {
-    clear = actions.clear;
-    const p = useSpreadsheetPivots(c, bar, onEdit);
-    showDetails = p.showDetails;
-    return (
-      <SheetPivotsContext.Provider value={onEdit}>
-        <button type="button" onClick={p.openCreate}>
-          open
-        </button>
-        {p.dialog}
-        <SheetPivotsLayer />
-      </SheetPivotsContext.Provider>
-    );
-  });
+  renderSheet(
+    h,
+    ({ c, actions }) => {
+      clear = actions.clear;
+      const p = useSpreadsheetPivots(c, bar, onEdit);
+      showDetails = p.showDetails;
+      return (
+        <SheetPivotsContext.Provider value={onEdit}>
+          <button type="button" onClick={p.openCreate}>
+            open
+          </button>
+          {p.dialog}
+          <SheetPivotsLayer />
+        </SheetPivotsContext.Provider>
+      );
+    },
+    canShape === undefined ? {} : { canShape },
+  );
   return {
     h,
     bar,
@@ -215,6 +220,46 @@ describe('a pivot table in the grid', () => {
       { n: 5 },
     ]);
     expect(track).toHaveBeenCalledWith('Spreadsheet', 'Added', 'PivotDetails');
+  });
+
+  it("shows a Participant's or a Viewer's details in a read-only dialog, adding no sheet", async () => {
+    const { h, bar, showDetails } = await setup({ canShape: false });
+    const { rows, cols } = h.store.sheet(SHEET_ID)!.layout;
+    const pivot: SheetPivot = {
+      id: 'pivot01',
+      kind: 'pivot',
+      at: { r: rows[0]!, c: cols[3]! },
+      source: { r1: rows[0]!, c1: cols[0]!, r2: rows[2]!, c2: cols[1]! },
+      rows: [{ col: cols[0]! }],
+      values: [{ col: cols[1]!, summary: 'SUM' }],
+    };
+    act(() => {
+      h.store.write(SHEET_ID, {
+        kind: 'layout',
+        changes: [{ k: 'object', id: pivot.id, object: pivot }],
+      });
+    });
+    vi.mocked(track).mockClear();
+    let shown = false;
+    act(() => {
+      shown = showDetails(3, 4);
+    });
+    expect(shown).toBe(true);
+    const dialog = screen.getByRole('dialog', { name: 'Details' });
+    expect(
+      within(dialog)
+        .getAllByRole('columnheader')
+        .map((x) => x.textContent),
+    ).toEqual(['Region', 'Units']);
+    expect(
+      within(dialog)
+        .getAllByRole('cell')
+        .map((x) => x.textContent),
+    ).toEqual(['East', '5', 'West', '3']);
+    expect(bar.add).not.toHaveBeenCalled();
+    expect(track).not.toHaveBeenCalled();
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Close' }));
+    expect(screen.queryByRole('dialog', { name: 'Details' })).toBeNull();
   });
 
   it('shows none for a header or a cell outside the output', async () => {

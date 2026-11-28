@@ -4,7 +4,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { blobKeyOf, type BlobKey } from '@livedoc/document';
 import { PageName, PdfLiveChanges } from '@livedoc/pdf-documents';
-import { bytesOfBase64 } from '@livedoc/text-documents/base64';
+import { bytesOfBase64 } from '@livedoc/office-packages';
 
 const api = vi.hoisted(() => ({
   apiHoldsBlob: vi.fn(),

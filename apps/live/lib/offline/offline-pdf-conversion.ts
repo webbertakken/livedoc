@@ -9,7 +9,7 @@
 //   is written and before the server copy goes.
 import { pdfTabOf, tabKindOf, type BlobKey, type Tab } from '@livedoc/document';
 import { PDF_LIVE_CHANGES_MAX_BYTES, pdfDigest, PdfLiveChanges } from '@livedoc/pdf-documents';
-import { base64OfBytes } from '@livedoc/text-documents/base64';
+import { base64OfBytes } from '@livedoc/office-packages';
 import { ApiError } from '../api/core';
 import { apiReadBlob } from '../api/files';
 import { apiLoadPdfState } from '../api/pdf-documents';

@@ -14,7 +14,7 @@
 // - for a kind that reads what lies beyond the room, what the room is known to hold is kept, that reading is kept
 //   with the local copy, and a copy made on something else than the state stands on is handed over, never merged.
 import * as Y from 'yjs';
-import { base64OfBytes } from '@livedoc/text-documents/base64';
+import { base64OfBytes } from '@livedoc/office-packages';
 import { debugLog } from '@/lib/debug-log';
 import { CopyLedger } from './copy-ledger';
 import type { LiveTabBus } from './live-tab-bus';

@@ -26,12 +26,14 @@ import {
   COLUMN_STATS_PANEL,
   CLEAN_UP_SUGGESTIONS_PANEL,
   PROTECTION_PANEL,
+  SLICER_PANEL,
   SPREADSHEET_PANELS,
   TABLE_SETTINGS_PANEL,
   THEMES_PANEL,
 } from '@/lib/spreadsheet/spreadsheet-panels';
 import { SpreadsheetTableSettingsBody } from './SpreadsheetTableSettingsBody';
-import type { SheetChart, SheetPivot } from '@livedoc/sheets';
+import type { SheetChart, SheetPivot, SheetSlicer } from '@livedoc/sheets';
+import { SpreadsheetSlicerBody } from './slicers/SpreadsheetSlicerBody';
 import { PivotEditorBody } from './pivots/PivotEditorBody';
 import { ChartEditorBody } from './charts/ChartEditorBody';
 import { SpreadsheetColumnStatsBody } from './SpreadsheetColumnStatsBody';
@@ -42,6 +44,7 @@ export function SpreadsheetRightPanel({
   actions,
   chart,
   pivot,
+  slicer,
   validation = { nonce: 0, startNew: false },
   named = { nonce: 0, startAdding: false },
   protection = { nonce: 0, start: null },
@@ -52,6 +55,8 @@ export function SpreadsheetRightPanel({
   chart?: { id: string | null; change: (next: SheetChart) => void };
   // The pivot table the Pivot Table Editor edits, and how a change of it is written.
   pivot?: { id: string | null; change: (next: SheetPivot) => void };
+  // The slicer the Slicer panel edits, and how a change of it is written.
+  slicer?: { id: string | null; change: (next: SheetSlicer, what: string) => boolean };
   // How Data Validation Rules was last opened: a new Dropdown (Insert › Dropdown) or the active cell's rule.
   validation?: { nonce: number; startNew: boolean };
   // How Named Ranges was last opened: on Add a Range (Define Named Range) or as it opens (D299).
@@ -72,7 +77,12 @@ export function SpreadsheetRightPanel({
       focusNonce={panels.focusNonce}
     >
       <div className="flex flex-col gap-3 p-3 text-body">
-        {spec.id === PIVOT_EDITOR_PANEL.id ? (
+        {spec.id === SLICER_PANEL.id ? (
+          <SpreadsheetSlicerBody
+            slicerId={slicer?.id ?? null}
+            onChange={(next, what) => slicer?.change(next, what) ?? false}
+          />
+        ) : spec.id === PIVOT_EDITOR_PANEL.id ? (
           <PivotEditorBody
             pivotId={pivot?.id ?? null}
             onChange={(next) => pivot?.change(next)}

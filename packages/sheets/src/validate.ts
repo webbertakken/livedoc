@@ -29,6 +29,7 @@ import {
 import { isFormatRule, isValidationRule } from './rules/rule-shape';
 import { bandingOverlaps, isBanding } from './rules/bandings';
 import { isSheetObject, SHEET_OBJECTS_MAX } from './objects/sheet-objects';
+import { sheetSlicers, SLICERS_MAX } from './objects/sheet-slicer';
 import {
   inputAllowed,
   ruleMessage,
@@ -425,7 +426,11 @@ export function sheetProblem(sheet: Sheet, limits: SheetLimits = SheetLimits.pla
     (layout.bands?.length ?? 0) > BANDINGS_MAX
   )
     return no('rules_full');
-  if ((layout.objects?.length ?? 0) > SHEET_OBJECTS_MAX) return no('objects_full');
+  if (
+    (layout.objects?.length ?? 0) > SHEET_OBJECTS_MAX ||
+    sheetSlicers(layout).length > SLICERS_MAX
+  )
+    return no('objects_full');
   return mergeProblem(layout);
 }
 

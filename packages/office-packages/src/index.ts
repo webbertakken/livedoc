@@ -70,6 +70,7 @@ export {
   ooxmlColour,
   ooxmlHighlightName,
 } from './colours';
+export { base64OfBytes, bytesOfBase64 } from './base64';
 export {
   isMappedPictureType,
   isPictureTooLarge,

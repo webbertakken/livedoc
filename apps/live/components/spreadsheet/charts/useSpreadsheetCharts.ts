@@ -9,7 +9,9 @@ import { CHART_TYPE_LABELS } from '@livedoc/document';
 import { sheetChartElement } from '@livedoc/plan-art';
 import {
   AGENT_LOCALE,
+  filteredOutRows,
   makeAxisIds,
+  slicerDrawnFilters,
   posRangeOf,
   sheetChartTable,
   SHEET_CHART_SIZE_MAX,
@@ -50,17 +52,29 @@ export function useSpreadsheetCharts(
   // A chart set whole (the Chart Editor's changes), one undo step.
   change: (next: SheetChart) => void;
 } {
-  const { sheet, workbook, version, geometry, canShape, write } = c;
+  const { sheet, workbook, version, geometry, canShape, write, ownSlicers } = c;
   const objects = sheet.layout.objects;
   const charts = useMemo(
     () => (objects ?? []).filter((x): x is SheetChart => x.kind === 'chart'),
     [objects],
   );
+  // The rows this person's slicers hide, for each chart whose range is a slicer's exactly (data-tools.md "Slicers",
+  // D487).
+  const slicedRows = useCallback(
+    (range: NonNullable<SheetChart['range']>) => {
+      const same = slicerDrawnFilters(sheet.layout, ownSlicers).filter(
+        (f) => f.r1 === range.r1 && f.c1 === range.c1 && f.r2 === range.r2 && f.c2 === range.c2,
+      );
+      return same.length ? filteredOutRows(workbook, sheet.id, null, same) : null;
+    },
+    [sheet, workbook, ownSlicers],
+  );
   // Read again whenever a value or the layout moves on: a series' look follows its column.
   const elements = useMemo(
     () =>
-      charts.map((chart) =>
-        sheetChartElement(
+      charts.map((chart) => {
+        const hide = chart.range ? slicedRows(chart.range) : null;
+        return sheetChartElement(
           chart,
           sheet.id,
           chart.range
@@ -70,15 +84,16 @@ export function useSpreadsheetCharts(
                   sheetId: sheet.id,
                   range: chart.range,
                   ...(chart.cols ? { cols: chart.cols } : {}),
+                  ...(hide ? { hide } : {}),
                 },
                 AGENT_LOCALE,
               )
             : null,
           anchorPx(chart.at, sheet.layout, geometry),
-        ),
-      ),
+        );
+      }),
     // oxlint-disable-next-line react/exhaustive-deps -- version: the workbook's values moved on in place
-    [charts, sheet, workbook, geometry, version],
+    [charts, sheet, workbook, geometry, slicedRows, version],
   );
 
   const put = useCallback(

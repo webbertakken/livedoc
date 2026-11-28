@@ -63,7 +63,7 @@ export {
 } from './exports/text-document-exports';
 export { writeMarkdown, escapeMarkdown } from './exports/markdown';
 export { writePlainText } from './exports/plain-text';
-export { base64OfBytes, bytesOfBase64 } from './base64';
+export { base64OfBytes, bytesOfBase64 } from '@livedoc/office-packages';
 export {
   FIELD_KINDS,
   Paragraph,

@@ -425,7 +425,14 @@ export function writeXlsx(file: WorkbookFile, title: string): FileWritten<Uint8A
   const styles = new XlsxStyles(kept.stylesheet({ '': SPREADSHEETML_NS }), theme.font);
   let dynamic = false;
   const keptParts = kept.parts();
-  const drawn = xlsxChartParts(file.sheets, kept, keptParts.parts, renamed, losses);
+  const drawn = xlsxChartParts(
+    file.sheets,
+    kept,
+    keptParts.parts,
+    renamed,
+    losses,
+    file.pictureBytes,
+  );
   const sheetRels = (i: number) => [
     ...kept.relationships('sheet', i),
     ...(drawn.sheets[i]?.rels ?? []),

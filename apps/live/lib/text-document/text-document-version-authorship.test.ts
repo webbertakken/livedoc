@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import * as Y from 'yjs';
-import { base64OfBytes } from '@livedoc/text-documents/base64';
+import { base64OfBytes } from '@livedoc/office-packages';
 import {
   UNRECORDED_EDITOR,
   VERSION_UNRECORDED_COLOUR,

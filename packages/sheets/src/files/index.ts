@@ -5,6 +5,14 @@ export * from './open-formula';
 export * from './ods-write';
 export * from './ods-read';
 export * from './write-workbook';
+export {
+  filePictureType,
+  picturesWithinBudget,
+  PICTURE_FILE_BYTES_MAX,
+  type FilePictureBytes,
+  type FilePictureFetch,
+  type FilePictureFetches,
+} from './file-pictures';
 export * from './excel-formula';
 export * from './xlsx-write';
 export * from './xlsx-read';

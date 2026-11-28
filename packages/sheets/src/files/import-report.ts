@@ -37,6 +37,7 @@ export const REPORTED_KINDS = [
   'protection_cut',
   'sizes_cut',
   'charts_unwritten',
+  'picture_unwritten',
   'chart_rewritten',
   'chart_nearest_type',
   'pivot_unwritten',
@@ -92,6 +93,7 @@ function entriesOf(loss: FileLoss): Entry[] {
     case 'sizes_cut':
     case 'protection_cut':
     case 'charts_unwritten':
+    case 'picture_unwritten':
     case 'chart_rewritten':
     case 'chart_nearest_type':
     case 'pivot_unwritten':

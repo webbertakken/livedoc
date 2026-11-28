@@ -251,12 +251,14 @@ export type DrawnFilter = IdRange & { conds: Record<string, FilterCondition> };
 
 /**
  * Which rows the filters hide: a row is hidden when any of them hides it. Undefined, the sheet's filter and every
- * table's (data-tools.md "A table's filter"); a filter given (an open view), that one alone; null, none.
+ * table's (data-tools.md "A table's filter"); a filter given (an open view), that one alone; null, none. `slicers`,
+ * one person's slicers drawn (sheet-slicer.ts slicerDrawnFilters), hide rows beside them; formulas pass none.
  */
 export function filterTest(
   sheet: Sheet,
   reads: FilterReads,
   filter?: DrawnFilter | null,
+  slicers: readonly DrawnFilter[] = [],
 ): FilterTest | null {
   const filters =
     filter === undefined
@@ -265,7 +267,7 @@ export function filterTest(
           ...(sheet.layout.tables ?? []).map((t) => tableDrawnFilter(sheet.layout, t)),
         ]
       : [filter];
-  const tests = filters.flatMap((f) => {
+  const tests = [...filters, ...slicers].flatMap((f) => {
     const test = f ? oneFilterTest(sheet, reads, f) : null;
     return test ? [test] : [];
   });
@@ -302,15 +304,17 @@ function oneFilterTest(sheet: Sheet, reads: FilterReads, filter: DrawnFilter): F
   };
 }
 
-// The row ids the filters hide (a header row never): the sheet's and the tables' unless a view is given (filterTest).
+// The row ids the filters hide (a header row never): the sheet's and the tables' unless a view is given, and the
+// slicers given (filterTest).
 export function filteredOutRows(
   wb: Workbook,
   sheetId: string,
   filter?: DrawnFilter | null,
+  slicers: readonly DrawnFilter[] = [],
 ): Set<string> {
   const out = new Set<string>();
   const sheet = wb.sheet(sheetId);
-  const test = sheet && filterTest(sheet, workbookFilterReads(wb, sheetId), filter);
+  const test = sheet && filterTest(sheet, workbookFilterReads(wb, sheetId), filter, slicers);
   if (!sheet || !test) return out;
   const read = (r: number, c: number): Value => wb.value(sheetId, r, c);
   sheet.layout.rows.forEach((rowId, r) => {

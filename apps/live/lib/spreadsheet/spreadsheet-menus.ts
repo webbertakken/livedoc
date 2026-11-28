@@ -311,7 +311,6 @@ const INSERT_MENU = menu('insert', 'Insert', [
   built('insert-sheet', 'Sheet', 'edit', { shortcut: 'insert-new-sheet' }),
   SEPARATOR,
   built('insert-table', 'Table', 'edit'),
-  item('insert-timeline', 'Timeline', 'edit'),
   built('insert-chart', 'Chart', 'edit'),
   built('insert-pivot-table', 'Pivot Table', 'edit'),
   submenu('insert-image', 'Image', [
@@ -459,7 +458,7 @@ const dataMenu = (views: readonly string[] | null) =>
     item('create-group-by-view', 'Create Group by View', 'view'),
     built('create-filter-view', 'Create Filter View', 'view'),
     ...changeViewEntries(views),
-    item('add-a-slicer', 'Add a Slicer', 'edit'),
+    built('add-a-slicer', 'Add a Slicer', 'edit'),
     SEPARATOR,
     built('protect-sheets-and-ranges', 'Protect Sheets and Ranges', 'view'),
     built('named-ranges', 'Named Ranges', 'view'),

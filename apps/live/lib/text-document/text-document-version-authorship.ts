@@ -4,7 +4,7 @@
 // whose recorded deletions hold it; one whose author went unrecorded is drawn in the neutral grey of a file's author.
 import * as Y from 'yjs';
 import type { TextDocumentVersionReadDto } from '@livedoc/api-schema';
-import { bytesOfBase64 } from '@livedoc/text-documents/base64';
+import { bytesOfBase64 } from '@livedoc/office-packages';
 
 /** The user an unrecorded writer or deleter is drawn as; never a key (keys are ids, never this). */
 export const UNRECORDED_EDITOR = '\u0000unrecorded';

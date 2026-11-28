@@ -135,6 +135,12 @@ export function importReportLine(loss: ReportedLoss): string {
         `Charts are left out of ${counted(count, 'sheet', 'sheets')} that keep the file's own drawings`,
         loss,
       );
+    case 'picture_unwritten':
+      return named(
+        `${counted(count, 'picture over the cells is', 'pictures over the cells are')} left out: unreadable, past 50 MB of pictures, or on a sheet keeping the file's own drawings`,
+        // Its names are the sheets, not the pictures it counts.
+        { ...loss, count: loss.names.length },
+      );
     case 'chart_rewritten':
       return named(
         `${counted(count, 'chart changed since the file was opened is', 'charts changed since the file was opened are')} written as LiveDoc draws charts`,

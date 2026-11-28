@@ -38,6 +38,7 @@ import { SheetOutlineBar } from './SheetOutlineBar';
 import { SheetSelectionLayer, type Outline } from './SheetSelectionLayer';
 import { SheetCellEditor } from './SheetCellEditor';
 import { SheetChartsLayer } from './SheetChartsLayer';
+import { SheetSlicersLayer } from './slicers/SheetSlicersLayer';
 import { SheetImagesLayer } from './SheetImagesLayer';
 import { ADD_ROWS_PX, SheetAddRows, roomFor } from './SheetAddRows';
 import { cellBox, scrollToReveal, totalSize, visibleWindow } from './sheet-geometry';
@@ -389,8 +390,10 @@ export function SheetGrid({
             onContextMenu={pointer.onContextMenu}
             onClick={pointer.onClick}
           >
+            {/* Clipped, never scrolled: a focused control half out of view (a slicer's button) would scroll a hidden
+              overflow box under the headers, out of step with them. */}
             <div
-              className="absolute overflow-hidden"
+              className="absolute overflow-clip"
               style={{ left: c.geometry.headW, top: c.geometry.headH, right: 0, bottom: 0 }}
             >
               <SheetCells
@@ -439,6 +442,8 @@ export function SheetGrid({
               <SheetImagesLayer />
               {/* The charts that sit in this Sheet, over its cells (sheet.md "Charts"). */}
               <SheetChartsLayer fontFamily={fontFamily} />
+              {/* The slicers over this sheet (data-tools.md "Slicers"). */}
+              <SheetSlicersLayer actions={actions} />
               {/* A fill's target, or where a block dragged by its border lands (grid-and-editing.md "Fill and move"). */}
               {pointer.preview?.kind === 'fill' || pointer.preview?.kind === 'block' ? (
                 <SheetSelectionLayer

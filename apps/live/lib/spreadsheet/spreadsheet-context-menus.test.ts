@@ -171,7 +171,7 @@ describe('SPREADSHEET_CONTEXT_MENUS', () => {
     expect(items.find((e) => e.id === 'show-pivot-details')).toMatchObject({
       label: 'Show Details',
       contextual: true,
-      level: 'edit',
+      level: 'view',
     });
     expect(items.find((e) => e.id === 'create-a-filter')).not.toHaveProperty('checkable');
   });

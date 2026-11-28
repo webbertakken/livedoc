@@ -1457,6 +1457,15 @@ export const SPREADSHEET_CLEANED = chart(
   { types: ['Cleanup', 'Randomise', 'Split'] },
 );
 
+// docs/specs/029-sheets/data-tools.md "Slicers": an Editor added a slicer over a sheet's cells.
+export const SPREADSHEET_SLICERS_ADDED = chart(
+  'Spreadsheet',
+  'Changed',
+  'Spreadsheet Slicers Added',
+  'An editor added a slicer, a control floating over the cells that filters a range by one column.',
+  { types: ['Slicer'] },
+);
+
 export const SPREADSHEETS: MetricStack = {
   stack: true,
   title: 'Spreadsheets',
@@ -1476,6 +1485,7 @@ export const SPREADSHEETS: MetricStack = {
     SPREADSHEET_NAMED_FUNCTIONS,
     SPREADSHEET_REPLACED,
     SPREADSHEET_CLEANED,
+    SPREADSHEET_SLICERS_ADDED,
   ],
 };
 

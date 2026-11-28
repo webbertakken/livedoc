@@ -27,7 +27,7 @@ import {
   type TextDocumentFormat,
   type TextProps,
 } from '@livedoc/text-documents';
-import { base64OfBytes, bytesOfBase64 } from '@livedoc/text-documents/base64';
+import { base64OfBytes, bytesOfBase64 } from '@livedoc/office-packages';
 import { isMappedPictureType, pictureHeader } from '@livedoc/office-packages';
 import type { Lists } from './text-document-lists';
 

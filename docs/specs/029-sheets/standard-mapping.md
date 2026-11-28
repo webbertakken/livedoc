@@ -724,6 +724,29 @@ each suite writes its own, so LibreOffice, Excel and Google Sheets open them as 
     loss is never silent; a kept chart whose original is restored writes its kept XML as any other (default, D290).
 - Any other chart stays kept content.
 
+## Pictures in the file
+
+**Status: written in both formats; reading follows.** A sheet's [images over cells](inserted-objects.md#images-over-cells)
+are written as each suite writes a picture over the cells, so LibreOffice, Excel and Google Sheets show them where
+LiveDoc draws them (default, D626).
+
+- **The bytes**: a download reads each picture's bytes from the gallery, for the images the document may serve
+  ([Images](../009-elements/images.md#placement-grants)), each image once however many times its sheets place it, up to
+  50 MB of pictures a file in paint order. A picture whose bytes are not served (deleted from its gallery, not yet
+  granted, the image store not set up), or past the 50 MB, is left out of the file and named by the write
+  (`picture_unwritten`, its sheet and why: `unavailable` or `too_large`). A sheet keeping its file's own drawing
+  writes none of its pictures, as none of its charts (D261), named the same (`kept_drawing`).
+- **XLSX**: each picture an `xdr:oneCellAnchor` in the sheet's drawing, after its charts, holding an `xdr:pic`
+  (`cNvPr` named `Picture N`, its alt text as `descr`, `picLocks noChangeAspect`), its `a:blip` naming the bytes
+  by a relationship to `xl/media/imageN.<ext>` (`png`, `jpeg`, `gif` or `webp` by the stored type, each extension's
+  content type declared once), its anchor cell and offset as a chart's, its size as `xdr:ext` and the shape's
+  `a:xfrm`, a rectangle.
+- **ODF**: each picture a `draw:frame` in the cell it is anchored to (LibreOffice's "To cell", D280), at its offset
+  into that cell, after the cell's charts, named `Picture N`, holding a `draw:image` of `Pictures/<n>.<ext>` (in the
+  manifest with its media type) and its alt text as `svg:desc`. A flat `.fods` holds the bytes inline, as the
+  `draw:image`'s `office:binary-data` (base64).
+- WebP is written as it is stored: LibreOffice and current Excel show it; an older Excel shows the frame empty.
+
 ## Pivot tables in the file
 
 A sheet's [pivot tables](pivot-tables.md) are written both ways, as validation rules are (D293): the **standard form**
@@ -1077,12 +1100,17 @@ The code cites each by its id.
 - **D292** A Radar chart in a file: XLSX `c:radarChart` with `radarStyle` `marker` on a category and a value axis, ODF
   `chart:class="chart:radar"`; read back from either, a filled radar (`filled`, `chart:filled-radar`) staying kept
   (default).
+- **D626** A sheet's images over cells are written as pictures over the cells in both formats (XLSX `xdr:pic` in a
+  one-cell anchor, ODF a cell-anchored `draw:frame` › `draw:image`, flat ODF inline), their bytes read from the gallery
+  for the images the document may serve, up to 50 MB a file; a picture not served, past the 50 MB, or on a sheet
+  keeping its file's drawing is left out and named (`picture_unwritten`) (default).
 - **D290** A chart type no format holds: written as the nearest that does (Stepped Area as Area, a stepped area
   series as an area one), its original kept in the chart's own document (XLSX a `c:ext` of LiveDoc's uri, ODF the
   object's `meta:user-defined` `LiveDoc chart`) as JSON with the written chart's sum, restored on reading only while
   the chart still sums so; the write lists it (`chart_nearest_type`). Chosen over one record for the whole workbook
   in its document properties (XLSX `docProps/custom.xml`, ODF `meta.xml`), which stays behind when a suite renumbers,
-  copies or deletes a chart (default).
+  copies or deletes a chart, over writing computed columns into the cells, and over Excel's `cx:chart` in XLSX
+  (Webber's ruling, 2026-11-28).
 - **D285** A line chart's smoothing in a file: XLSX `c:smooth` on every series, ODF `chart:interpolation="cubic-spline"`;
   read from either, a line whose series differ, or another interpolation, stays kept (default).
 - **D288** The right-hand axis in a file: written only as LiveDoc draws it (a Line, unstacked Area or Combo chart with a
