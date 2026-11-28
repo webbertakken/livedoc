@@ -69,7 +69,7 @@ const FILE_TYPES: readonly TextDocumentDownloadType[] = [
 // What File > Open takes (files-and-print.md "Opening"): the formats a text document is held in, their templates and
 // Word's macro-enabled file (its macros dropped), and the imports.
 const OPEN_ACCEPT = [
-  '.odt,.fodt,.ott,.docx,.dotx,.docm,.txt,.md,.markdown,.html,.htm,.rtf',
+  '.odt,.fodt,.ott,.docx,.dotx,.docm,.txt,.md,.markdown,.html,.htm,.rtf,.pdf',
   'application/vnd.oasis.opendocument.text',
   'application/vnd.oasis.opendocument.text-template',
   'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
@@ -80,6 +80,7 @@ const OPEN_ACCEPT = [
   'text/html',
   'application/rtf',
   'text/rtf',
+  'application/pdf',
 ].join(',');
 
 export function TextDocumentTitleRow({

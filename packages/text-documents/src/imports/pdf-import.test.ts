@@ -6,6 +6,7 @@ import { ReportBuilder } from '../report';
 import {
   bodyHeight,
   readPdfImport,
+  readPdfPages,
   type PdfImportLine,
   type PdfImportNode,
   type PdfImportPage,
@@ -215,5 +216,11 @@ describe('a PDF imported', () => {
   it('weighs the body height by characters', () => {
     expect(bodyHeight([laid(line('a', 700, 30), line('long body text', 600, 10))])).toBe(10);
     expect(bodyHeight([tagged()])).toBe(0);
+  });
+
+  it('refuses past the character limit, else reads with the report', () => {
+    const page = laid(line('twelve chars', 700));
+    expect(readPdfPages([page], 5)).toMatchObject({ ok: false, rejection: 'document_too_large' });
+    expect(readPdfPages([page])).toMatchObject({ ok: true, fileType: 'odt' });
   });
 });

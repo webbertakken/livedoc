@@ -1,7 +1,7 @@
 # Files and print
 
 **Status: partly built.** Built: Open (a `.odt`, `.fodt`, `.ott`, `.docx`, `.dotx` or `.docm` from the computer, and
-`.txt`, `.md`, `.html` and `.rtf` imported), Download in the OpenDocument and Word formats, Rich Text, Plain Text, Web Page, EPUB and
+`.txt`, `.md`, `.html`, `.rtf` and `.pdf` imported), Download in the OpenDocument and Word formats, Rich Text, Plain Text, Web Page, EPUB and
 Markdown, conversion, the import report and Security limitations. The rest is specified.
 
 Opening, importing, downloading, printing, copying, sharing, emailing and trashing a [text document](text-document.md).

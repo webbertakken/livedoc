@@ -1,5 +1,5 @@
 // File > Open > Upload (docs/specs/034-text-documents/files-and-print.md "Opening"): a file from the computer becomes
-// a new text document in its format, named after the file; a Plain Text, Markdown, HTML or Rich Text file is imported into a new
+// a new text document in its format, named after the file; a Plain Text, Markdown, HTML, Rich Text or PDF file is imported into a new
 // OpenDocument one. The api reads it under the package's guards and answers a named rejection, which this words for
 // the person.
 import { base64OfBytes, importTypeOfFileName } from '@livedoc/text-documents';
@@ -8,6 +8,7 @@ import { createIdsFor } from '@/lib/new-document/create-failure';
 import { debugLog } from '@/lib/debug-log';
 import { keepImportReport } from '@/lib/office/import-report-handoff';
 import { track } from '@/lib/telemetry';
+import type { PdfImportEngine } from './import-pdf-file';
 import { formatOfFileName, newTextDocumentTab, UNTITLED_TEXT_DOCUMENT } from './text-document-tab';
 
 export type OpenedTextDocument = { ok: true; documentId: string } | { ok: false; message: string };
@@ -26,6 +27,9 @@ const REJECTION_COPY: Record<string, string> = {
 };
 
 const GENERIC = 'The file could not be opened. Try again.';
+
+const startPdfEngineWorker = async (): Promise<PdfImportEngine> =>
+  (await import('@/lib/pdf-document/pdf-engine-client')).startPdfEngineWorker();
 
 /** Each file's `Tab·Imported` type, by extension; one LiveDoc opens as itself and names none is an OpenDocument one. */
 const IMPORTED_TYPES: Readonly<Record<string, string>> = {
@@ -53,9 +57,14 @@ export function nameFromFile(fileName: string): string {
 export async function openTextDocumentFile(
   ownerId: string,
   file: File,
+  // The PDF engine, started only when a PDF is imported (files-and-print.md "A PDF imported").
+  startPdfEngine: () => Promise<PdfImportEngine> = startPdfEngineWorker,
 ): Promise<OpenedTextDocument> {
-  const { documentId, tabId } = createIdsFor(null);
   const name = nameFromFile(file.name);
+  // The reader and the engine load only when a PDF is imported, never with the editor.
+  if (/\.pdf$/i.test(file.name))
+    return (await import('./import-pdf-file')).importPdfFile(ownerId, file, name, startPdfEngine);
+  const { documentId, tabId } = createIdsFor(null);
   try {
     const bytes = new Uint8Array(await file.arrayBuffer());
     // An import is born in OpenDocument (fork C5).

@@ -6,8 +6,11 @@ import type { Block, Paragraph } from '../model/blocks';
 import { ListDefinition, type ListPlace } from '../model/lists';
 import { PageSetup } from '../model/sections';
 import { Tables, type Table } from '../model/tables';
-import type { TextDocument } from '../model/text-document';
-import type { ReportBuilder } from '../report';
+import { refuse } from '@livedoc/office-packages';
+import type { TextDocumentRead } from '../files';
+import { TEXT_DOCUMENT_MAX_CHARS } from '../limits';
+import { TextDocument } from '../model/text-document';
+import { ReportBuilder } from '../report';
 import { importStyles } from './import-styles';
 
 /** A line of a page as the engine laid it: its text and box, in page space (points, y up). */
@@ -319,4 +322,15 @@ export function readPdfImport(
     return [];
   });
   return { ...blank, styles, lists, body: blocks.length > 0 ? blocks : blank.body };
+}
+
+/** The pages read under the text document's guards: past `maxChars`, `document_too_large`. */
+export function readPdfPages(
+  pages: readonly PdfImportPage[],
+  maxChars = TEXT_DOCUMENT_MAX_CHARS,
+): TextDocumentRead {
+  const report = new ReportBuilder();
+  const document = readPdfImport(pages, report);
+  if (TextDocument.characters(document) > maxChars) return refuse('document_too_large');
+  return { ok: true, document, report: report.build(), fileType: 'odt' };
 }
