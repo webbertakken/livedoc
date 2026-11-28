@@ -3113,6 +3113,8 @@ export const BY_ACTION: Readonly<Record<string, string>> = {
   'Spreadsheet|Added':
     'An editor inserted a chart into a spreadsheet (the value says which chart type).',
   'Spreadsheet|Changed': 'An editor changed a spreadsheet’s look (the value says what).',
+  'Spreadsheet|Toggled':
+    'Someone opened or closed part of a spreadsheet for themselves (the value says what).',
   'Spreadsheet|Converted':
     'An editor converted a spreadsheet to the other file format (the value says which format it went to).',
   'Spreadsheet|Imported':

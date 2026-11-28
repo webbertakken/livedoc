@@ -61,17 +61,18 @@ export function useFilterViewActions(c: SheetController): FilterViewActions {
 
   // A new view: an Editor's written then opened; anyone else's opened as their own.
   const place = (view: SheetFilterView, how: 'create' | 'duplicate' | 'save' | 'group') => {
-    const kind = view.group ? 'GroupByView' : 'FilterView';
     if (!c.canShape) {
       views.openTemporary(view);
-      track('Spreadsheet', 'Added', `Temporary${kind}`);
+      if (view.group) track('Spreadsheet', 'Added', 'TemporaryGroupByView');
+      else track('Spreadsheet', 'Added', 'TemporaryFilterView');
       debugLog('[sheet] filter view opened', { how, temporary: true });
       return;
     }
     if (!c.write({ kind: 'layout', changes: [{ k: 'fview', id: view.id, view }] }, 'Filter'))
       return;
     views.openSaved(view.id);
-    track('Spreadsheet', 'Added', kind);
+    if (view.group) track('Spreadsheet', 'Added', 'GroupByView');
+    else track('Spreadsheet', 'Added', 'FilterView');
     debugLog('[sheet] filter view made', { how, conds: Object.keys(view.conds).length });
   };
 
