@@ -662,10 +662,11 @@ each suite writes its own, so LibreOffice, Excel and Google Sheets open them as 
   its value axis at the right, put their series on the right axis: groups of one kind, line or area, on the two pairs
   read as that type, groups of those kinds as a Combo chart, no kind twice on one pair (D288); any other plot area of
   several groups is not read. It reads a sheet's charts only when its drawing holds
-  nothing else, every anchor a chart that qualifies and no chart naming a part of its own (`r:id`); otherwise the
+  nothing else, every anchor a chart that qualifies or a picture that does ([Pictures in the file](#pictures-in-the-file),
+  D628) and no chart naming a part of its own (`r:id`); otherwise the
   drawing stays kept whole and none of its charts is read (default, D275). ODF reads a sheet's charts only when every
   drawing on it, in its `table:shapes` and in its cells, is a `draw:frame` holding one chart object (and its
-  replacement picture, title and description) that qualifies; otherwise every drawing stays kept and none of its
+  replacement picture, title and description) that qualifies, or a picture that does (D628); otherwise every drawing stays kept and none of its
   charts is read (default, D277). A frame in `table:shapes` is placed by its position over the sheet's line sizes; one
   in a cell (LibreOffice's "To cell") on that cell, its `svg:x` and `svg:y` the offset into it. Lengths are read in
   any of ODF's units. A Bubble chart is read from XLSX's `c:bubbleChart` (not 3-D) whose series share one x column
@@ -726,7 +727,7 @@ each suite writes its own, so LibreOffice, Excel and Google Sheets open them as 
 
 ## Pictures in the file
 
-**Status: written in both formats; reading follows.** A sheet's [images over cells](inserted-objects.md#images-over-cells)
+**Status: written and read in both formats.** A sheet's [images over cells](inserted-objects.md#images-over-cells)
 are written as each suite writes a picture over the cells, so LibreOffice, Excel and Google Sheets show them where
 LiveDoc draws them (default, D626).
 
@@ -746,6 +747,22 @@ LiveDoc draws them (default, D626).
   manifest with its media type) and its alt text as `svg:desc`. A flat `.fods` holds the bytes inline, as the
   `draw:image`'s `office:binary-data` (base64).
 - WebP is written as it is stored: LibreOffice and current Excel show it; an older Excel shows the frame empty.
+- **Reading**: a picture over the cells is read as an image over cells when its bytes, held in the file, are PNG,
+  JPEG, GIF or WebP by their first bytes: XLSX an `xdr:pic` in a one- or two-cell anchor, its `a:blip` embedding a
+  part of the package; ODF a `draw:frame` holding one `draw:image` (and its title and description) of an entry of
+  the package, or a flat file's inline `office:binary-data`. Its place and size are read as a chart's, each side
+  kept to 16 to 4,000 px, its alt text from `descr` (else `title`), or `svg:desc` (else `svg:title`), up to
+  1,000 characters. A drawing is read when every anchor in it is a chart or a picture that qualifies (D275 and D277
+  widened); any other (a picture in another format, EMF, WMF or SVG, a linked picture, a shape, a group) keeps every
+  drawing of its sheet, pictures and charts with it, as before. The entries a read picture took leave the kept
+  content, unless kept content still names them (default, D628).
+- **Stored on opening**: each picture read is stored in the gallery of whoever opens the file, before the spreadsheet
+  is made: the editor through the [Import image pipeline](../020-import-export/import-image-pipeline.md), an agent's
+  `livedoc spreadsheet import` uploading its bytes as they are (up to the gallery's 10 MB a picture). The same bytes
+  are stored once an import, and the gallery's SHA-256 dedupe makes a picture read again the same image. A picture
+  not stored (the gallery full, a server keeping no images, a picture too large or unreadable, the upload failing, or
+  its sheet already holding 100 objects) is left out and named by the read (`picture_unread`, its sheet and why):
+  its drawing is read, so no drawing is left to keep it in (default, D628).
 
 ## Pivot tables in the file
 
@@ -1104,6 +1121,9 @@ The code cites each by its id.
   one-cell anchor, ODF a cell-anchored `draw:frame` › `draw:image`, flat ODF inline), their bytes read from the gallery
   for the images the document may serve, up to 50 MB a file; a picture not served, past the 50 MB, or on a sheet
   keeping its file's drawing is left out and named (`picture_unwritten`) (default).
+- **D628** Pictures over the cells are read from a drawing holding only charts and pictures of PNG, JPEG, GIF or WebP
+  bytes the file holds, stored in the opener's gallery before the spreadsheet is made; one not stored is left out
+  and named (`picture_unread`), not kept (default).
 - **D290** A chart type no format holds: written as the nearest that does (Stepped Area as Area, a stepped area
   series as an area one), its original kept in the chart's own document (XLSX a `c:ext` of LiveDoc's uri, ODF the
   object's `meta:user-defined` `LiveDoc chart`) as JSON with the written chart's sum, restored on reading only while

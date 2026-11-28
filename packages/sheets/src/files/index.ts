@@ -29,4 +29,5 @@ export * from './csv-file';
 export * from './import-report';
 export * from './import-report-copy';
 export * from './import-file';
+export * from './import-pictures';
 export { formatCodeOf } from './number-format-code';

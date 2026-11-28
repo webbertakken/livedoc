@@ -1,11 +1,14 @@
-// A sheet's charts read from ODF (docs/specs/029-sheets/standard-mapping.md "Charts in the file", Reading, D277, D278):
-// when every drawing a sheet kept, in its `table:shapes` and in its cells, is a frame of one chart object of a type
-// built reading one block of its own sheet, they become the sheet's charts; the drawings leave the kept content, and
+// A sheet's charts and pictures read from ODF (docs/specs/029-sheets/standard-mapping.md "Charts in the file", Reading,
+// D277, D278; "Pictures in the file", D628): when every drawing a sheet kept, in its `table:shapes` and in its cells, is
+// a frame of one chart object of a type built reading one block of its own sheet, or a frame of one picture of PNG,
+// JPEG, GIF or WebP bytes the file holds, they become the sheet's charts and read pictures; the drawings leave the kept
+// content (a picture's entry too, unless kept content still names it), and
 // each chart's document stays kept, named on its chart with the sum of what it was read as, to be written back in its
 // place while the chart sums the same. Any other drawing keeps every drawing of its sheet. The look is read as
 // `ods-charts.ts` writes it, and as LibreOffice does.
 import {
   attributeOf,
+  bytesOfBase64,
   childElement,
   childElements,
   keptXmlOf,
@@ -18,6 +21,7 @@ import {
   type XmlParsed,
 } from '@livedoc/office-packages';
 import { columnIndex } from '../address';
+import { SHEET_IMAGE_ALT_MAX, SHEET_IMAGE_SIZE } from '../objects/sheet-image';
 import { COLUMN_WIDTH_NEW, ROW_HEIGHT_NEW } from '../limits';
 import {
   OBJECT_OFFSET_MAX,
@@ -42,6 +46,7 @@ import { chartRestored } from './chart-nearest';
 import { lineAtPx } from './file-lines';
 import { ODS_CHART_ORIGINAL, odfSeriesOrder } from './ods-charts';
 import type { FileAt, KeptContent, KeptItem, KeptPart } from './kept-content';
+import { readablePicture, type ReadPicture } from './file-pictures';
 import type { FileSheet } from './workbook-file';
 
 const {
@@ -378,11 +383,21 @@ const px = (length: string | undefined) => {
 };
 const clamp = (n: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, n));
 
+// The sides an object's box is kept to: a chart's, or a picture's.
+type Sides = { width: number; height: number; max: number };
+const CHART_SIDES: Sides = { ...SHEET_CHART_SIZE_MIN, max: SHEET_CHART_SIZE_MAX };
+const PICTURE_SIDES: Sides = {
+  width: SHEET_IMAGE_SIZE.min,
+  height: SHEET_IMAGE_SIZE.min,
+  max: SHEET_IMAGE_SIZE.max,
+};
+
 // A frame's place: on its cell, its offset into it; else by its position over the sheet's lines.
 function placeOf(
   frame: XmlElement,
   sheet: FileSheet,
   cell: { r: number; c: number } | undefined,
+  sides: Sides,
 ): Pick<FileChart, 'at' | 'width' | 'height'> | null {
   const [x, y, width, height] = ['x', 'y', 'width', 'height'].map((k) =>
     px(attributeOf(frame, SVG, k)),
@@ -403,8 +418,8 @@ function placeOf(
       dx: clamp(Math.round(at.dx), 0, OBJECT_OFFSET_MAX),
       dy: clamp(Math.round(at.dy), 0, OBJECT_OFFSET_MAX),
     },
-    width: clamp(width, SHEET_CHART_SIZE_MIN.width, SHEET_CHART_SIZE_MAX),
-    height: clamp(height, SHEET_CHART_SIZE_MIN.height, SHEET_CHART_SIZE_MAX),
+    width: clamp(width, sides.width, sides.max),
+    height: clamp(height, sides.height, sides.max),
   };
 }
 
@@ -469,9 +484,12 @@ function packageOriginal(meta: KeptPart | undefined): string | undefined {
 }
 
 type Found = {
-  chart: FileChart;
-  // The kept part holding its document: a package's, or a flat file's made from the inline one.
-  part: KeptPart;
+  chart?: FileChart;
+  picture?: ReadPicture;
+  // The kept part holding a chart's document: a package's, or a flat file's made from the inline one.
+  part?: KeptPart;
+  // A picture's package entry, which leaves the kept content unless kept content still names it.
+  media?: string;
   // A package's object entries the chart no longer names (its folder, meta, replacement picture).
   gone: string[];
   // Its frame's place in paint order (`draw:z-index`); one with none after those with one.
@@ -522,13 +540,9 @@ function chartOf(
     };
   } else return null;
   const read = readOdsChartDocument(root, sheet.name);
-  const place = read && placeOf(frame, sheet, drawing.cell);
+  const place = read && placeOf(frame, sheet, drawing.cell, CHART_SIDES);
   if (!read || !place) return null;
-  const text = (local: string) => {
-    const el = childElement(frame, SVG, local);
-    return el ? textContent(el).trim() : '';
-  };
-  const alt = text('desc') || text('title');
+  const alt = altOf(frame);
   // The original LiveDoc kept, while the chart still sums as it was written (D290).
   const chart = chartRestored(
     {
@@ -539,18 +553,82 @@ function chartOf(
     original,
     'odf',
   );
-  const z = Number(attributeOf(frame, DRAW, 'z-index') ?? NaN);
   return {
     chart: { ...chart, kept: { part: part.name, sum: fileChartSum(chart) } },
     part,
     gone,
-    z: Number.isFinite(z) ? z : Number.MAX_SAFE_INTEGER,
+    z: zOf(frame),
+  };
+}
+
+// A frame's place in paint order (`draw:z-index`); one with none after those with one.
+function zOf(frame: XmlElement): number {
+  const z = Number(attributeOf(frame, DRAW, 'z-index') ?? NaN);
+  return Number.isFinite(z) ? z : Number.MAX_SAFE_INTEGER;
+}
+
+// A frame's description, else its title.
+function altOf(frame: XmlElement): string {
+  const text = (local: string) => {
+    const el = childElement(frame, SVG, local);
+    return el ? textContent(el).trim() : '';
+  };
+  return text('desc') || text('title');
+}
+
+const PICTURE_FRAME_CHILDREN: ReadonlySet<string> = new Set([
+  `${DRAW} image`,
+  `${SVG} title`,
+  `${SVG} desc`,
+]);
+
+// One drawing's picture, or null when it is not a frame of one picture that qualifies: its bytes an entry of the
+// package or inline, of a type a sheet holds, the frame not turned (D628).
+function pictureOf(
+  drawing: Drawing,
+  sheet: FileSheet,
+  parts: ReadonlyMap<string, KeptPart>,
+): Found | null {
+  const frame = drawing.element;
+  if (frame.uri !== DRAW || frame.local !== 'frame') return null;
+  const children = childElements(frame);
+  const images = kids(frame, DRAW, 'image');
+  if (
+    images.length !== 1 ||
+    children.some((e) => !PICTURE_FRAME_CHILDREN.has(`${e.uri} ${e.local}`))
+  )
+    return null;
+  if (attributeOf(frame, DRAW, 'transform') !== undefined) return null;
+  const image = images[0]!;
+  const href = attributeOf(image, XLINK, 'href');
+  const inline = childElement(image, OFFICE, 'binary-data');
+  let bytes: Uint8Array | null | undefined;
+  let media: string | undefined;
+  if (href !== undefined) {
+    media = href.replace(/^\.\//, '');
+    bytes = parts.get(media)?.data;
+  } else if (inline) bytes = bytesOfBase64(textContent(inline).replace(/\s+/g, ''));
+  const readable = bytes && readablePicture(bytes);
+  const place = readable && placeOf(frame, sheet, drawing.cell, PICTURE_SIDES);
+  if (!place) return null;
+  const alt = altOf(frame);
+  return {
+    picture: {
+      ...place,
+      bytes: bytes!,
+      ...readable,
+      ...(alt ? { alt: alt.slice(0, SHEET_IMAGE_ALT_MAX) } : {}),
+    },
+    ...(media ? { media } : {}),
+    gone: [],
+    z: zOf(frame),
   };
 }
 
 /**
- * The sheets with the charts their kept drawings hold, and the kept content without those drawings (D277); a sheet
- * any of whose drawings does not qualify keeps them all.
+ * The sheets with the charts and pictures their kept drawings hold, and the kept content without those drawings and
+ * the pictures' entries no kept item still names (D277, D628); a sheet any of whose drawings does not qualify keeps
+ * them all.
  */
 export function readOdsCharts(
   sheets: readonly FileSheet[],
@@ -569,6 +647,7 @@ export function readOdsCharts(
   };
   let items = kept.items;
   let keptParts = kept.parts;
+  const media = new Set<string>();
   const out = sheets.map((sheet, i) => {
     const drawings = drawingsOf(kept.items, i);
     if (!drawings?.length) return sheet;
@@ -577,21 +656,33 @@ export function readOdsCharts(
     const found: Found[] = [];
     for (const drawing of drawings) {
       const key = drawing.parsed.source.slice(drawing.element.start, drawing.element.end);
-      const chart = !seen.has(key) && chartOf(drawing, sheet, parts, flatName);
+      const read =
+        !seen.has(key) &&
+        (pictureOf(drawing, sheet, parts) ?? chartOf(drawing, sheet, parts, flatName));
       seen.add(key);
-      if (!chart) return sheet;
-      found.push(chart);
+      if (!read) return sheet;
+      found.push(read);
     }
     const used = new Set(drawings.map((d) => d.item));
     items = items.filter((it) => !used.has(it));
     const gone = new Set(found.flatMap((f) => f.gone));
     keptParts = [
       ...keptParts.filter((p) => !gone.has(p.name)),
-      ...found.map((f) => f.part).filter((p) => !parts.has(p.name)),
+      ...found.flatMap((f) => (f.part && !parts.has(f.part.name) ? [f.part] : [])),
     ];
+    for (const f of found) if (f.media) media.add(f.media);
     // In paint order: by each frame's `draw:z-index`, else as the sheet holds them.
     found.sort((a, b) => a.z - b.z);
-    return { ...sheet, charts: found.map((f) => f.chart) };
+    const charts = found.flatMap((f) => (f.chart ? [f.chart] : []));
+    const pictures = found.flatMap((f) => (f.picture ? [f.picture] : []));
+    return {
+      ...sheet,
+      ...(charts.length ? { charts } : {}),
+      ...(pictures.length ? { readPictures: pictures } : {}),
+    };
   });
+  // A picture's entry kept content still names stays with it.
+  const named = (name: string) => items.some((it) => it.xml.includes(name));
+  keptParts = keptParts.filter((p) => !media.has(p.name) || named(p.name));
   return { sheets: out, kept: { ...kept, items, parts: keptParts } };
 }

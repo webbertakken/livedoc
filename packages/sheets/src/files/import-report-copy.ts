@@ -141,6 +141,12 @@ export function importReportLine(loss: ReportedLoss): string {
         // Its names are the sheets, not the pictures it counts.
         { ...loss, count: loss.names.length },
       );
+    case 'picture_unread':
+      return named(
+        `${counted(count, 'picture over the cells is', 'pictures over the cells are')} left out, as the image gallery did not take ${verb(count, 'it', 'them')} or ${verb(count, 'its', 'their')} sheet was full`,
+        // Its names are the sheets, not the pictures it counts.
+        { ...loss, count: loss.names.length },
+      );
     case 'chart_rewritten':
       return named(
         `${counted(count, 'chart changed since the file was opened is', 'charts changed since the file was opened are')} written as LiveDoc draws charts`,

@@ -9,6 +9,9 @@ import { sheetFromJson } from '../sheet-json';
 import type { Sheet } from '../sheet';
 import { WorkbookRecord, type WorkbookFormat } from '../workbook-record';
 import { workbookConversion } from './conversion';
+import { mediaKeyOf } from '@livedoc/office-packages';
+import type { FilePictureBytes } from './file-pictures';
+import { picturesPlaced, type PictureStore } from './import-pictures';
 import { fileKept } from './kept-anchors';
 import type { KeptContent, StoredAt } from './kept-content';
 import { readWorkbookFile } from './read-workbook-file';
@@ -34,12 +37,26 @@ let n = 13;
 const rand = () => (n = (n * 16807) % 2147483647) / 2147483647;
 const BY = { id: 'corpus', name: 'Corpus', color: '#000000' };
 
+// A gallery for the corpus's pictures: each by the SHA-256 of its bytes, as the gallery dedupes them (D628).
+const gallery = new Map<string, FilePictureBytes>();
+const store: PictureStore = async ({ data, type }) => {
+  const imageId = await mediaKeyOf(data);
+  gallery.set(imageId, { data, type });
+  return { ok: true, imageId };
+};
+
 // A file opened as LiveDoc opens one: its sheets, kept content and every loss named.
 async function opened(bytes: Uint8Array<ArrayBuffer>) {
   const read = await readWorkbookFile(bytes, made.settings.locale);
   if (!read.ok) throw new Error(read.rejection);
   const sheetsMade = sheetsFromFile(read.file, made.settings.locale, rand);
-  const sheets: Sheet[] = sheetsMade.sheets.map((s, i) =>
+  const placed = await picturesPlaced(
+    sheetsMade.sheets,
+    sheetsMade.pictures ?? [],
+    store,
+    sheetsMade.losses,
+  );
+  const sheets: Sheet[] = placed.sheets.map((s, i) =>
     sheetFromJson({ ...s, tabId: `tab${i}`, rev: 0, createdAt: i, updatedAt: i, updatedBy: BY }),
   );
   return {
@@ -87,7 +104,7 @@ describe('the corpus', () => {
       const first = await opened(new Uint8Array(readFileSync(join(CORPUS, path))));
       const record = WorkbookRecord.opened(made, first.format, first.theme);
       const title = path.replace(/^.*\/|\.[^.]+$/g, '');
-      const own = writeWorkbook(first.sheets, record, title, first.format, first.kept);
+      const own = writeWorkbook(first.sheets, record, title, first.format, first.kept, gallery);
       const second = await opened(own.data);
       // The second read holds what the first made, by position: nothing lost that was not named.
       expect(held(second.sheets, record, second.kept)).toEqual(

@@ -1,8 +1,10 @@
-// A sheet's charts read from XLSX (docs/specs/029-sheets/standard-mapping.md "Charts in the file", Reading, D275,
-// D276): the drawing a worksheet kept, when every anchor in it is a chart of a type built reading one block of its own
-// sheet, becomes the sheet's charts; the drawing leaves the kept content, and each chart's part stays kept, named on
-// its chart with the sum of what it was read as, to be written back in its place while the chart sums the same. Any
-// other drawing stays kept whole. The look is read as `xlsx-charts.ts` writes it.
+// A sheet's charts and pictures read from XLSX (docs/specs/029-sheets/standard-mapping.md "Charts in the file",
+// Reading, D275, D276; "Pictures in the file", D628): the drawing a worksheet kept, when every anchor in it is a chart
+// of a type built reading one block of its own sheet or a picture of bytes the package holds as PNG, JPEG, GIF or WebP,
+// becomes the sheet's charts and read pictures; the drawing leaves the kept content, and each chart's part stays kept,
+// named on its chart with the sum of what it was read as, to be written back in its place while the chart sums the
+// same, while a picture's media part leaves it unless kept content still names it. Any other drawing stays kept whole.
+// The look is read as `xlsx-charts.ts` writes it.
 import {
   attributeOf,
   childElement,
@@ -13,6 +15,7 @@ import {
   type XmlElement,
 } from '@livedoc/office-packages';
 import { columnIndex } from '../address';
+import { SHEET_IMAGE_ALT_MAX, SHEET_IMAGE_SIZE } from '../objects/sheet-image';
 import { COLUMN_WIDTH_NEW, ROW_HEIGHT_NEW } from '../limits';
 import {
   OBJECT_OFFSET_MAX,
@@ -35,6 +38,7 @@ import {
 } from './file-charts';
 import { lineStartPx } from './file-lines';
 import type { FileAt, KeptContent, KeptPart } from './kept-content';
+import { readablePicture, type ReadPicture } from './file-pictures';
 import type { FileSheet } from './workbook-file';
 import { chartRestored } from './chart-nearest';
 import { EMU_PER_PX, GROUPING, LIVEDOC_CHART_NS } from './xlsx-charts';
@@ -383,10 +387,20 @@ function markerOf(el: XmlElement | undefined): Marker | null {
   return Object.values(m).every(Number.isFinite) ? m : null;
 }
 
-// Where an anchor puts its chart, and its size; null for an anchor not on a cell.
+// The sides an object's box is kept to: a chart's, or a picture's.
+type Sides = { width: number; height: number; max: number };
+const CHART_SIDES: Sides = { ...SHEET_CHART_SIZE_MIN, max: SHEET_CHART_SIZE_MAX };
+const PICTURE_SIDES: Sides = {
+  width: SHEET_IMAGE_SIZE.min,
+  height: SHEET_IMAGE_SIZE.min,
+  max: SHEET_IMAGE_SIZE.max,
+};
+
+// Where an anchor puts its object, and its size; null for an anchor not on a cell.
 function placeOf(
   anchor: XmlElement,
   sheet: FileSheet,
+  sides: Sides,
 ): Pick<FileChart, 'at' | 'width' | 'height'> | null {
   if (!/^(one|two)CellAnchor$/.test(anchor.local)) return null;
   const from = markerOf(childElement(anchor, XDR_NS, 'from'));
@@ -413,31 +427,102 @@ function placeOf(
       dx: clamp(from.dx, 0, OBJECT_OFFSET_MAX),
       dy: clamp(from.dy, 0, OBJECT_OFFSET_MAX),
     },
-    width: clamp(width, SHEET_CHART_SIZE_MIN.width, SHEET_CHART_SIZE_MAX),
-    height: clamp(height, SHEET_CHART_SIZE_MIN.height, SHEET_CHART_SIZE_MAX),
+    width: clamp(width, sides.width, sides.max),
+    height: clamp(height, sides.height, sides.max),
   };
 }
 
 const text = (part: KeptPart) => new TextDecoder().decode(part.data);
 
-// A drawing's charts, every anchor one that qualifies, or null.
-function drawingCharts(
+// An internal relationship's part, by its id on the drawing.
+function relPart(
+  drawing: KeptPart,
+  relId: string | undefined,
+  parts: ReadonlyMap<string, KeptPart>,
+) {
+  const rel = drawing.rels.find((r) => r.id === relId && !r.external);
+  const name = rel && resolvePartName(drawing.name, rel.target);
+  const part = name ? parts.get(name) : undefined;
+  return part && { name: name!, part };
+}
+
+// The picture an anchor holds, or null when it holds none that qualifies: its bytes a part of the package of a type a
+// sheet holds, neither cropped, turned nor flipped (D628).
+function pictureOf(
+  anchor: XmlElement,
   drawing: KeptPart,
   parts: ReadonlyMap<string, KeptPart>,
   sheet: FileSheet,
-): FileChart[] | null {
+): { picture: ReadPicture; part: string } | null {
+  const pic = childElement(anchor, XDR_NS, 'pic');
+  const fill = pic && childElement(pic, XDR_NS, 'blipFill');
+  const blip = a(fill, 'blip');
+  if (!blip || attributeOf(blip, R_NS, 'link') !== undefined) return null;
+  const crop = a(fill, 'srcRect');
+  if (crop && ['l', 't', 'r', 'b'].some((k) => Number(attributeOf(crop, '', k) ?? 0) !== 0))
+    return null;
+  const xfrm = a(childElement(pic!, XDR_NS, 'spPr'), 'xfrm');
+  if (
+    xfrm &&
+    ['rot', 'flipH', 'flipV'].some(
+      (k) => !['0', 'false', undefined].includes(attributeOf(xfrm, '', k)),
+    )
+  )
+    return null;
+  const media = relPart(drawing, attributeOf(blip, R_NS, 'embed'), parts);
+  const readable = media && readablePicture(media.part.data);
+  const place = readable && placeOf(anchor, sheet, PICTURE_SIDES);
+  if (!place) return null;
+  const nv = childElement(pic!, XDR_NS, 'nvPicPr');
+  const cNvPr = nv && childElement(nv, XDR_NS, 'cNvPr');
+  const alt = (
+    cNvPr &&
+    (attributeOf(cNvPr, '', 'descr') || attributeOf(cNvPr, '', 'title'))
+  )?.trim();
+  return {
+    picture: {
+      ...place,
+      bytes: media.part.data,
+      ...readable,
+      ...(alt ? { alt: alt.slice(0, SHEET_IMAGE_ALT_MAX) } : {}),
+    },
+    part: media.name,
+  };
+}
+
+// What an anchor holds besides its object: its place and its client data.
+const ANCHOR_PARTS: ReadonlySet<string> = new Set(['from', 'to', 'ext', 'pos', 'clientData']);
+
+type DrawingRead = { charts: FileChart[]; pictures: ReadPicture[]; media: string[] };
+
+// A drawing's charts and pictures, every anchor one that qualifies, or null.
+function drawingObjects(
+  drawing: KeptPart,
+  parts: ReadonlyMap<string, KeptPart>,
+  sheet: FileSheet,
+): DrawingRead | null {
   const parsed = parseXml(text(drawing));
   if (!parsed.ok) return null;
   const charts: FileChart[] = [];
+  const pictures: ReadPicture[] = [];
+  const media: string[] = [];
   for (const anchor of childElements(parsed.root)) {
+    // An anchor holds one object: a chart's frame or a picture, nothing beside it.
+    if (childElements(anchor).filter((e) => !ANCHOR_PARTS.has(e.local)).length !== 1) return null;
+    if (childElement(anchor, XDR_NS, 'pic')) {
+      const read = pictureOf(anchor, drawing, parts, sheet);
+      if (!read) return null;
+      pictures.push(read.picture);
+      media.push(read.part);
+      continue;
+    }
     const frame = childElement(anchor, XDR_NS, 'graphicFrame');
     const ref = c(a(a(frame, 'graphic'), 'graphicData'), 'chart');
     const relId = ref && attributeOf(ref, R_NS, 'id');
-    const rel = drawing.rels.find((r) => r.id === relId && !r.external);
-    const name = rel && resolvePartName(drawing.name, rel.target);
-    const part = name ? parts.get(name) : undefined;
-    const read = part && readXlsxChartXml(text(part), sheet.name);
-    const place = read && placeOf(anchor, sheet);
+    const chartPart = relPart(drawing, relId, parts);
+    const name = chartPart?.name;
+    const read = chartPart && readXlsxChartXml(text(chartPart.part), sheet.name);
+    const place = read && placeOf(anchor, sheet, CHART_SIDES);
     if (!read || !place) return null;
     const nv = childElement(frame!, XDR_NS, 'nvGraphicFramePr');
     const cNvPr = nv && childElement(nv, XDR_NS, 'cNvPr');
@@ -455,15 +540,15 @@ function drawingCharts(
     );
     charts.push({ ...chart, kept: { part: name!, sum: fileChartSum(chart) } });
   }
-  return charts.length ? charts : null;
+  return charts.length || pictures.length ? { charts, pictures, media } : null;
 }
 
 const DRAWING = /^<(?:[\w.-]+:)?drawing\b/;
 const REL_ID = /\s[\w.-]+:id="([^"]+)"/;
 
 /**
- * The sheets with the charts their kept drawings hold, and the kept content without those drawings (D275); a sheet
- * whose drawing does not qualify keeps it whole.
+ * The sheets with the charts and pictures their kept drawings hold, and the kept content without those drawings and
+ * the pictures' media no kept part still names (D275, D628); a sheet whose drawing does not qualify keeps it whole.
  */
 export function readXlsxCharts(
   sheets: readonly FileSheet[],
@@ -474,6 +559,7 @@ export function readXlsxCharts(
   let items = kept.items;
   let relationships = kept.relationships;
   const gone = new Set<string>();
+  const media = new Set<string>();
   const out = sheets.map((sheet, i) => {
     const item = kept.items.find(
       (it) => it.place === 'worksheet' && it.at.sheet === i && DRAWING.test(it.xml),
@@ -483,15 +569,32 @@ export function readXlsxCharts(
       (r) => r.from === 'sheet' && r.at.sheet === i && r.id === relId && !r.external,
     );
     const drawing = rel ? parts.get(rel.target.replace(/^\//, '')) : undefined;
-    const charts = drawing ? drawingCharts(drawing, parts, sheet) : null;
-    if (!charts) return sheet;
+    const read = drawing ? drawingObjects(drawing, parts, sheet) : null;
+    if (!read) return sheet;
     items = items.filter((it) => it !== item);
     relationships = relationships.filter((r) => r !== rel);
     gone.add(drawing!.name);
-    return { ...sheet, charts };
+    for (const name of read.media) media.add(name);
+    return {
+      ...sheet,
+      ...(read.charts.length ? { charts: read.charts } : {}),
+      ...(read.pictures.length ? { readPictures: read.pictures } : {}),
+    };
   });
+  const left = kept.parts.filter((p) => !gone.has(p.name));
+  // A picture's media another kept part still names stays with it.
+  const named = new Set(
+    left.flatMap((p) =>
+      p.rels.filter((r) => !r.external).map((r) => resolvePartName(p.name, r.target)),
+    ),
+  );
   return {
     sheets: out,
-    kept: { ...kept, items, relationships, parts: kept.parts.filter((p) => !gone.has(p.name)) },
+    kept: {
+      ...kept,
+      items,
+      relationships,
+      parts: left.filter((p) => !media.has(p.name) || named.has(p.name)),
+    },
   };
 }

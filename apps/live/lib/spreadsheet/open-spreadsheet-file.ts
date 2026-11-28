@@ -18,6 +18,7 @@ import { sendKept } from '@/lib/api/workbook-kept';
 import { debugLog } from '@/lib/debug-log';
 import { keepImportReport } from './import-report-handoff';
 import { newSheetTab, workbookMadeHere } from './spreadsheet-document';
+import { spreadsheetPictureStore } from './spreadsheet-picture-store';
 import { UNTITLED_SPREADSHEET } from './spreadsheet-name';
 
 export type OpenedSpreadsheet =
@@ -68,6 +69,14 @@ function browserPort(ownerId: string): SpreadsheetFilePort {
     },
     keep: (kept) => sendKept(scope!, kept),
     bin: (documentId) => apiDeleteDocument(ownerId, documentId),
+    // Into the opener's gallery through the import image pipeline, loaded with the first picture (D628).
+    storePicture: spreadsheetPictureStore(async () =>
+      (await import('@/lib/import-images/browser')).createBrowserImportImageSession({
+        ownerId,
+        documentId: null,
+        offline: false,
+      }),
+    ),
     log: debugLog,
   };
 }

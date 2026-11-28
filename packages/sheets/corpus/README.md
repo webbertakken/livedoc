@@ -23,5 +23,9 @@ other. `CORPUS_UPDATE=1` writes it afresh, to be read in review.
   `.xlsx` are LibreOffice's saves of that sample grouped three ways (`pivot-group-variants.ts`: a date column by
   month, a named group, number intervals), made with `CORPUS_SOURCE=libreoffice-groups`: the evidence for reading
   groupings (D617, D618).
+- `libreoffice/pictures.ods` and `.xlsx`, and `google/pictures.ods` and `.xlsx`, are LibreOffice's and Google Sheets'
+  saves of `PICTURES` (`corpus-files.ts`: two pictures over the cells, as LiveDoc writes them), made with
+  `CORPUS_SOURCE=libreoffice-pictures` and `google-pictures`: the evidence for reading other apps' pictures (D628,
+  `src/files/pictures-read.test.ts`). They are MIT, as this repository.
 - Apache POI's files are its test data, distributed under the Apache License 2.0
   (<https://www.apache.org/licenses/LICENSE-2.0>); see `NOTICE`.

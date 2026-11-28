@@ -1,7 +1,13 @@
 // A sheet's images over cells as a file holds them (docs/specs/029-sheets/standard-mapping.md "Pictures in the file",
 // D626): each a picture over the cells at its anchor cell and offset, its bytes read from the gallery by the download
-// and handed to the writers; a picture without bytes is left out and named.
-import { isMappedPictureType, type MappedPictureType } from '@livedoc/office-packages';
+// and handed to the writers; a picture without bytes is left out and named. Read back (D628), a picture of PNG, JPEG,
+// GIF or WebP bytes the file holds is a read picture, stored in the opener's gallery by the import.
+import {
+  isMappedPictureType,
+  isPictureTooLarge,
+  pictureHeader,
+  type MappedPictureType,
+} from '@livedoc/office-packages';
 import { layoutIndex } from '../layout';
 import type { SheetImage } from '../objects/sheet-image';
 import type { Sheet } from '../sheet';
@@ -15,6 +21,20 @@ export type FilePicture = {
   height: number;
   alt?: string;
 };
+
+/** A picture over a sheet's cells as a file holds it, read (D628): its bytes and their type, its pixels, its place. */
+export type ReadPicture = Omit<FilePicture, 'imageId'> & {
+  bytes: Uint8Array;
+  type: MappedPictureType;
+  natural: { width: number; height: number };
+};
+
+/** The type and pixels of bytes a sheet holds as a picture: PNG, JPEG, GIF or WebP by their header, within its pixels. */
+export function readablePicture(bytes: Uint8Array): Pick<ReadPicture, 'type' | 'natural'> | null {
+  const header = pictureHeader(bytes);
+  if (!header || !isMappedPictureType(header.mediaType) || isPictureTooLarge(bytes)) return null;
+  return { type: header.mediaType, natural: { width: header.width, height: header.height } };
+}
 
 /** A picture's bytes and their stored type. */
 export type FilePictureBytes = { data: Uint8Array; type: MappedPictureType };

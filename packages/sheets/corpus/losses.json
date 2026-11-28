@@ -385,6 +385,24 @@
       "kept"
     ]
   },
+  "libreoffice/pictures.ods": {
+    "read": {
+      "entries_dropped": 1
+    },
+    "written": {},
+    "reread": {},
+    "converted": [
+      "kept"
+    ]
+  },
+  "libreoffice/pictures.xlsx": {
+    "read": {},
+    "written": {},
+    "reread": {},
+    "converted": [
+      "kept"
+    ]
+  },
   "libreoffice/shared_formulas.ods": {
     "read": {
       "entries_dropped": 1,
@@ -512,6 +530,24 @@
     "reread": {},
     "converted": [
       "answers_differ",
+      "kept"
+    ]
+  },
+  "google/pictures.ods": {
+    "read": {
+      "entries_dropped": 1
+    },
+    "written": {},
+    "reread": {},
+    "converted": [
+      "kept"
+    ]
+  },
+  "google/pictures.xlsx": {
+    "read": {},
+    "written": {},
+    "reread": {},
+    "converted": [
       "kept"
     ]
   },

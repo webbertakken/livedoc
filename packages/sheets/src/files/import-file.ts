@@ -3,13 +3,15 @@
 // agents in a spreadsheet", D274). An `.ods`, `.fods`, `.xlsx` or `.xlsm` becomes a spreadsheet in the format its bytes
 // are in (fork C1); a `.csv`, `.tsv` or `.txt` one sheet of a new spreadsheet's format (D117). The file is read under
 // the office packages' guards, the spreadsheet made with the sheets the first request carries, the rest sent in parts,
-// then what the model does not hold kept; anything refused after the spreadsheet is made moves it to the Bin. The
+// then what the model does not hold kept; anything refused after the spreadsheet is made moves it to the Bin. Its
+// pictures over the cells are stored in the opener's gallery first, so the sheets are made holding them (D628). The
 // caller's port does the requests, so the browser and the CLI each send them their own way.
 import { PACKAGE_MAX_BYTES, type PackageRejection } from '@livedoc/office-packages';
 import type { SheetWrite } from '../store';
 import { WorkbookRecord, type WorkbookFormat } from '../workbook-record';
 import { textFileSplitOf, sheetsFromText } from './csv-file';
 import { fileParts } from './file-parts';
+import { picturesPlaced, type PictureStore } from './import-pictures';
 import { importReport, type ReportedLoss } from './import-report';
 import type { KeptContent, StoredAt } from './kept-content';
 import { readWorkbookFile } from './read-workbook-file';
@@ -39,6 +41,8 @@ export type SpreadsheetFilePort = {
   write(sheetId: string, write: SheetWrite): Promise<void>;
   // The file's kept content; answers how many of its items were past the sizes a spreadsheet stores.
   keep(kept: KeptContent<StoredAt>): Promise<number>;
+  // Stores a picture the file holds in the opener's gallery: its image id, or why not (never throws).
+  storePicture: PictureStore;
   // Moves a half-made spreadsheet to the Bin.
   bin(documentId: string): Promise<void>;
   log(event: string, data: Record<string, unknown>): void;
@@ -118,7 +122,16 @@ export async function importSpreadsheetFile(
   if (typeof read === 'string') return { ok: false, rejection: read };
   const losses = read.made.losses;
   if (losses.length > 0) port.log('[workbook] file read losses', { kinds: losses.map((l) => l.k) });
-  const parts = fileParts(read.made.sheets);
+  // Its pictures stored before the spreadsheet is made: one the gallery did not take is left out, named (D628).
+  const pictures = read.made.pictures ?? [];
+  const placed = await picturesPlaced(read.made.sheets, pictures, port.storePicture, losses);
+  if (pictures.length > 0)
+    port.log('[workbook] pictures stored', {
+      read: pictures.length,
+      placed: placed.placed,
+      left: placed.left,
+    });
+  const parts = fileParts(placed.sheets);
   const documentId = crypto.randomUUID();
   const sheets = parts.seeds.map((sheet) => ({ ...sheet, tabId: crypto.randomUUID() }));
   let created = false;
