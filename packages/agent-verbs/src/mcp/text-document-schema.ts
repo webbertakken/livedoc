@@ -41,6 +41,19 @@ export const readTextDocumentShape = {
     .boolean()
     .optional()
     .describe('Put ¶<n> before each paragraph, the number an operation takes as its target.'),
+  image: z
+    .boolean()
+    .optional()
+    .describe(
+      'Also attach pictures of its pages, approximately as the editor lays them out (lines broken by the Inter ' +
+        'typeface rather than measured).',
+    ),
+  pages: z
+    .string()
+    .optional()
+    .describe(
+      'With image, the pages to draw: one number or a range of at most 3, like "2..4"; "1" by default.',
+    ),
 };
 
 export const readTextDocumentOutput = {
@@ -53,6 +66,14 @@ export const readTextDocumentOutput = {
     .nullable()
     .describe('The state read (base64): edit_text_document’s base, which replace needs.'),
   url: z.string().describe('Link that opens the document in the LiveDoc editor.'),
+  preview: z
+    .object({
+      pages: z.array(z.number()).describe('The pages drawn, in the order of the pictures.'),
+      pageCount: z.number().describe('How many pages the document tab has.'),
+      note: z.string().describe('That the pictures are approximate, and why.'),
+    })
+    .optional()
+    .describe('With image: what the attached pictures show.'),
 };
 
 export const editTextDocumentShape = {

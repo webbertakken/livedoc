@@ -38,6 +38,15 @@ import { previewResolvers } from '@livedoc/icons/resolve';
 import { emojiGlyphsOf, previewEmoji } from './preview-emoji';
 import { chartsReadLive } from '@livedoc/agent-verbs';
 import { svgToPngBase64 } from './render';
+import { APPROXIMATE_PAGES_NOTE, textDocumentPages } from './text-document-preview';
+
+/** A text document's pages as PNGs (text-document-preview.ts), rasterised here, where every preview is. */
+export const drawTextDocumentPages = (
+  api: Parameters<typeof textDocumentPages>[0],
+  documentId: string,
+  tabId: string,
+  ask: Parameters<typeof textDocumentPages>[3],
+) => textDocumentPages(api, documentId, tabId, ask, (svg) => svgToPngBase64(svg));
 import { INTER_ITALIC, previewFonts } from './preview-fonts';
 import { planPreviewFor } from './plan-preview';
 import { formPreview } from './form-preview';
@@ -48,7 +57,7 @@ import {
   PREVIEW_IMAGE_MAX_BYTES,
   previewLeftOutNote,
 } from './preview-budget';
-import { apiFetch, apiJson, apiText } from './api';
+import { apiFetch, apiJson, apiText, clientFor } from './api';
 import type { Env } from './env';
 import { textResult, type StructuredValue, type ToolResult } from './tool-helpers';
 
@@ -183,6 +192,19 @@ export async function tabPreview(
   // spreadsheet", Previews), all of it or read_document's `range`.
   const sheet = await spreadsheetPreview(tab, auth, range);
   if (sheet) return [sheet];
+  // A text document draws its first page, approximately (docs/specs/034-text-documents/agents-and-sync.md "Page
+  // previews").
+  if (tab.kind === 'text-document' && auth?.documentId) {
+    const drawn = await drawTextDocumentPages(
+      clientFor(auth.env, auth.token),
+      auth.documentId,
+      tab.id,
+      {},
+    );
+    return drawn.ok
+      ? [{ type: 'text', text: APPROXIMATE_PAGES_NOTE }, ...drawn.images]
+      : [{ type: 'text', text: drawn.message }];
+  }
   // A Form tab draws as its form, as respondents see it.
   const form = await formPreview(tab);
   if (form) return [form];

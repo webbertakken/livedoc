@@ -23,6 +23,17 @@ vi.mock('./api', () => ({
   apiJson: async () => {
     throw new Error('not read');
   },
+  // A text document's pages, as the api draws them.
+  clientFor: () => ({
+    json: async (path: string) => {
+      fetched.push(path);
+      return {
+        pages: [{ number: 1, width: 816, height: 1056, svg: '<svg id="page"/>' }],
+        pageCount: 4,
+        approximate: true,
+      };
+    },
+  }),
   // A spreadsheet's sheet tab, as the api draws it.
   apiText: async (_env: unknown, _token: string, path: string) => {
     fetched.push(path);
@@ -176,5 +187,18 @@ describe('a spreadsheet tab’s preview', () => {
     const tab = { id: 't', name: 'Costs', kind: 'sheet', elements: [] } as never;
     await tabPreview(tab);
     expect(fetched).toEqual([]);
+  });
+});
+
+describe('a text document tab’s preview', () => {
+  it('is its first page as the api draws it, said to be approximate', async () => {
+    drawn.length = 0;
+    fetched.length = 0;
+    const tab = { id: 'w', name: 'Plan', kind: 'text-document', elements: [] } as never;
+    const blocks = await tabPreview(tab, { env: {} as never, token: 't', documentId: 'd' });
+    expect(blocks.map((b) => b.type)).toEqual(['text', 'image']);
+    expect(blocks[0]).toMatchObject({ text: expect.stringMatching(/^An approximate preview/) });
+    expect(fetched).toEqual(['/documents/d/tabs/w/page-previews']);
+    expect(drawn).toEqual(['<svg id="page"/>']);
   });
 });

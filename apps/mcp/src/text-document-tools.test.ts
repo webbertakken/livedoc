@@ -1,6 +1,14 @@
 import { describe, expect, it, vi } from 'vitest';
 // The resvg WASM renderer cannot load in plain node (see tools.test.ts); the text document tools never render.
-vi.mock('./image-result', () => ({ imageResult: () => ({ content: [] }) }));
+vi.mock('./image-result', async () => {
+  const { textDocumentPages } = await import('./text-document-preview');
+  return {
+    imageResult: () => ({ content: [] }),
+    drawTextDocumentPages: (
+      ...args: Parameters<typeof textDocumentPages> extends [...infer A, unknown] ? A : never
+    ) => textDocumentPages(...args, async () => 'cG5n'),
+  };
+});
 
 import { connectTestClient } from './mcp-test-client';
 
@@ -42,6 +50,17 @@ function api(opts: { document?: unknown; refuse?: { status: number; body: unknow
         results: ['appended ¶4'],
         text: 'appended ¶4',
       });
+    if (url.pathname.endsWith('/page-previews'))
+      return url.searchParams.get('pages') === '9'
+        ? Response.json(
+            { error: 'page_not_found', message: 'This document tab has 2 pages.' },
+            { status: 404 },
+          )
+        : Response.json({
+            pages: [{ number: 1, width: 816, height: 1056, svg: '<svg/>' }],
+            pageCount: 2,
+            approximate: true,
+          });
     if (url.searchParams.has('view'))
       return new Response('# Plan\n¶1 Goals', { headers: { 'X-State-Vector': 'AQID' } });
     if (path === '/documents' && request.method === 'POST')
@@ -107,6 +126,34 @@ describe('read_text_document', () => {
     expect(none.content[0]!.text).toBe(
       'Board holds no text document. read_document reads its tabs.',
     );
+  });
+});
+
+describe('read_text_document with image', () => {
+  it('attaches its pages’ pictures after the view, saying they are approximate', async () => {
+    const { handler, seen } = api();
+    const read = (await (
+      await connectTestClient(handler)
+    ).callTool({
+      name: 'read_text_document',
+      arguments: { documentId: 'd1', image: true, only: 'Intro' },
+    })) as Omit<Result, 'content'> & { content: { type: string }[] };
+    expect(read.content.map((c) => c.type)).toEqual(['text', 'image']);
+    expect(read.structuredContent).toMatchObject({
+      preview: { pages: [1], pageCount: 2, note: expect.stringMatching(/^An approximate preview/) },
+    });
+    expect(seen.at(-1)!.path).toBe('/documents/d1/tabs/w1/page-previews?only=Intro');
+  });
+
+  it('answers a page past the end in the api’s words', async () => {
+    const { handler } = api();
+    const read = await call(handler, 'read_text_document', {
+      documentId: 'd1',
+      image: true,
+      pages: '9',
+    });
+    expect(read.isError).toBe(true);
+    expect(read.content[0]!.text).toBe('This document tab has 2 pages.');
   });
 });
 
