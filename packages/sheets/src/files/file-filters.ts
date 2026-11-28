@@ -15,6 +15,7 @@ import { idRangeOf } from '../layout';
 import type { FilterCondition, SheetFilter, SheetLayout } from '../sheet';
 import { storedFilterClashes, tableFilterBox } from '../tables/table-filter';
 import { filterViewAsDrawn } from '../group-by-view';
+import type { FilterViewGroup, GroupAggregate } from '../filter-views';
 
 const sameRange = (a: GridRange | null, b: GridRange) =>
   !!a && a.r1 === b.r1 && a.c1 === b.c1 && a.r2 === b.r2 && a.c2 === b.c2;
@@ -41,6 +42,9 @@ export type FileFilterView = {
   cols: FileFilterColumn[];
   sort?: { c: number; desc?: true }[];
   group?: number;
+  // A group by view's aggregations by column place (D501), and Hide Aggregations (D502).
+  aggs?: Record<number, GroupAggregate>;
+  hideAggs?: true;
 };
 
 /** How a format holds a standard column, as its reader reads it back: null when it cannot hold it. */
@@ -104,6 +108,10 @@ export function fileFiltersOf(
     const at = rangeOf(v);
     const group = v.group && colPos.get(v.group.c);
     if (!at) return [];
+    const aggs = Object.entries(v.group?.aggs ?? {}).flatMap(([col, kind]) => {
+      const c = colPos.get(col);
+      return c === undefined ? [] : [[c, kind] as const];
+    });
     const sort = (v.sort ?? []).flatMap((k) => {
       const c = colPos.get(k.c);
       return c === undefined ? [] : [{ c, ...(k.desc ? { desc: true as const } : {}) }];
@@ -116,6 +124,8 @@ export function fileFiltersOf(
         cols: fileFilterColumnsOf(v.conds, { range: at, colPos }, ctx, dates),
         ...(sort.length ? { sort } : {}),
         ...(group !== undefined ? { group } : {}),
+        ...(group !== undefined && aggs.length ? { aggs: Object.fromEntries(aggs) } : {}),
+        ...(group !== undefined && v.group?.hide ? { hideAggs: true as const } : {}),
       },
     ];
   });
@@ -168,6 +178,26 @@ const onGrid = (g: GridRange, layout: SheetLayout): GridRange | null =>
         r2: Math.min(g.r2, layout.rows.length - 1),
         c2: Math.min(g.c2, layout.cols.length - 1),
       };
+
+// A group by view's group from a file's view (D500-D502): aggregations on the view's columns alone.
+function fileGroupOf(
+  v: FileFilterView,
+  table: string,
+  col: string,
+  at: GridRange,
+  layout: SheetLayout,
+): FilterViewGroup {
+  const aggs = Object.entries(v.aggs ?? {}).flatMap(([c, kind]) => {
+    const place = Number(c);
+    return place >= at.c1 && place <= at.c2 ? [[layout.cols[place]!, kind] as const] : [];
+  });
+  return {
+    t: table,
+    c: col,
+    ...(aggs.length ? { aggs: Object.fromEntries(aggs) } : {}),
+    ...(v.hideAggs ? { hide: true as const } : {}),
+  };
+}
 
 /**
  * The filter and filter views a file's sheet makes on its grid: each range cut to the grid, each column's condition
@@ -222,7 +252,7 @@ export function filtersFromFile(
       ...idRangeOf(layout, at.r1, at.c1, at.r2, at.c2)!,
       conds: filterCondsOf(v.cols, at, layout, making),
       ...(sort.length ? { sort } : {}),
-      ...(table && groupCol ? { group: { t: table.id, c: groupCol } } : {}),
+      ...(table && groupCol ? { group: fileGroupOf(v, table.id, groupCol, at, layout) } : {}),
     });
   }
   if (views.length) out.filterViews = views;

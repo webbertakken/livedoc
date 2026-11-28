@@ -198,6 +198,15 @@ test('a group by view groups a table under its headers, collapsed by its opener 
     'Collapse pear, 2 rows',
   ]);
   await expect.poll(() => rowNumbers(page)).toEqual(['1', '2', '4', '6', '7']);
+  // Each group counts by the first column; Count's ▾ sums it for every group (D501).
+  await expect(page.getByText('Count 2', { exact: true })).toHaveCount(2);
+  await page.getByRole('button', { name: 'Count aggregation' }).first().click();
+  await page
+    .getByRole('dialog', { name: 'Count aggregation' })
+    .getByRole('button', { name: 'Sum' })
+    .click();
+  await expect(page.getByText('Sum 10', { exact: true })).toBeVisible();
+  await expect(page.getByText('Sum 4', { exact: true })).toBeVisible();
   await settle(page);
   await page.screenshot({ path: test.info().outputPath('group-by-view.png') });
 

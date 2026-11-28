@@ -1431,6 +1431,15 @@ export const SPREADSHEET_FILTER_VIEWS_ADDED = chart(
 
 // docs/specs/029-sheets/data-tools.md "Group by view": someone collapsed or expanded a group of a group by view, for
 // themselves alone.
+// docs/specs/029-sheets/data-tools.md "Group by view": someone chose a column's aggregation (D501) or hid them (D502).
+export const SPREADSHEET_GROUP_AGGREGATIONS = chart(
+  'Spreadsheet',
+  'Changed',
+  'Spreadsheet Group Totals Changed',
+  'Someone chose how a column totals each group of a group by view, or hid the totals.',
+  { types: ['GroupAggregation', 'GroupAggregationsHidden'] },
+);
+
 export const SPREADSHEET_GROUPS_TOGGLED = chart(
   'Spreadsheet',
   'Toggled',
@@ -1493,6 +1502,7 @@ export const SPREADSHEETS: MetricStack = {
     SPREADSHEET_IMAGES_ADDED,
     SPREADSHEET_FILTER_VIEWS_ADDED,
     SPREADSHEET_GROUPS_TOGGLED,
+    SPREADSHEET_GROUP_AGGREGATIONS,
     SPREADSHEET_NAMED_FUNCTIONS,
     SPREADSHEET_REPLACED,
     SPREADSHEET_CLEANED,

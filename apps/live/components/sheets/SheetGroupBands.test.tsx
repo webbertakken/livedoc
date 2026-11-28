@@ -2,7 +2,7 @@
 // data-tools.md "Group by view" (D496-D499): Create Group by View from a table's cell, dimmed outside one; each group's
 // header band with its opener, value and count; collapsing and expanding a group, or all, for its opener alone; the
 // Range read-only; Convert to Range taking the view with the table.
-import { act, fireEvent, screen } from '@testing-library/react';
+import { act, fireEvent, screen, within } from '@testing-library/react';
 import { afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { GROUP_VIEW_NEEDS_TABLE, tableAt } from '@livedoc/sheets';
 import { makeSheet, renderSheet, stubResizeObserver, type SheetParts } from './sheet-ui-test-utils';
@@ -145,6 +145,42 @@ describe('group by views', () => {
     click('Expand All');
     expect(screen.getByTestId('hidden').textContent).toBe('');
     expect(h.writes.length).toBe(writes);
+  });
+
+  it('counts by the first column, and totals a column by the aggregation chosen for every group (D501)', async () => {
+    const h = await withTable();
+    act(() => h.select('A2'));
+    click('create-group-by-view');
+    const parts = (col: string) =>
+      [...document.querySelectorAll(`[data-group-part="${col}"]`)].map((p) => p.textContent);
+    const { cols } = h.ctl().sheet.layout;
+    expect(parts(cols[0]!)).toEqual(['▾AppleCount 2▾', '▾pearCount 2▾', '▾(Blank)Count 1▾']);
+    // Count's ▾ in the first band lists Google's aggregations; Sum totals every group's numbers, saved with the view.
+    fireEvent.click(screen.getAllByRole('button', { name: 'Count aggregation' })[0]!);
+    fireEvent.click(
+      within(screen.getByRole('dialog', { name: 'Count aggregation' })).getByRole('button', {
+        name: 'Sum',
+      }),
+    );
+    expect(parts(cols[1]!)).toEqual(['Sum 10▾', 'Sum 8▾', 'Sum 1▾']);
+    expect(h.ctl().sheet.layout.filterViews![0]!.group!.aggs).toEqual({
+      [cols[0]!]: 'count',
+      [cols[1]!]: 'sum',
+    });
+    fireEvent.click(screen.getAllByRole('button', { name: 'Fruit aggregation' })[0]!);
+    fireEvent.click(
+      within(screen.getByRole('dialog', { name: 'Fruit aggregation' })).getByRole('button', {
+        name: 'Percent Unique',
+      }),
+    );
+    expect(parts(cols[0]!)[0]).toBe('▾ApplePercent Unique 50%▾');
+    // Hide Aggregations draws the headers without them, kept with the view.
+    click('Hide Aggregations');
+    expect(parts(cols[1]!)).toEqual(['', '', '']);
+    expect(h.ctl().sheet.layout.filterViews![0]!.group!.hide).toBe(true);
+    expect(
+      screen.getByRole('button', { name: 'Hide Aggregations' }).getAttribute('aria-pressed'),
+    ).toBe('true');
   });
 
   it('takes the table group by views away with Convert to Range, one step', async () => {

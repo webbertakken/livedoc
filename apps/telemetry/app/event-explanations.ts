@@ -955,6 +955,10 @@ export const EXACT: Readonly<Record<string, string>> = {
     'An editor made a group by view of a spreadsheet table, saved for everyone.',
   'Spreadsheet|Added|TemporaryGroupByView':
     'A participant or viewer made a temporary group by view of a spreadsheet table, their own alone.',
+  'Spreadsheet|Changed|GroupAggregation':
+    'Someone chose how a column totals each group of a group by view of a spreadsheet.',
+  'Spreadsheet|Changed|GroupAggregationsHidden':
+    'Someone hid or showed the group totals of a group by view of a spreadsheet.',
   'Spreadsheet|Toggled|GroupByViewGroup':
     'Someone collapsed or expanded a group in a group by view of a spreadsheet, for themselves alone.',
   'Spreadsheet|Converted|Xlsx': 'An editor converted a spreadsheet to an Excel file.',

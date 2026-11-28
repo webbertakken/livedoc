@@ -5,12 +5,19 @@ import { DrawnOrder, viewDrawnOrder, withCollapsedRows } from './drawn-order';
 import {
   createGroupByView,
   filterViewAsDrawn,
+  GROUP_AGGREGATE_LABELS,
   GROUP_VIEW_NEEDS_TABLE,
+  groupAggregate,
   groupKey,
   groupViewsGone,
   liveGroup,
 } from './group-by-view';
-import { filterViewsAfterDelete, isSheetFilterView, type SheetFilterView } from './filter-views';
+import {
+  filterViewsAfterDelete,
+  GROUP_AGGREGATES,
+  isSheetFilterView,
+  type SheetFilterView,
+} from './filter-views';
 import type { Sheet } from './sheet';
 import type { SheetTable } from './tables/table';
 
@@ -152,9 +159,9 @@ describe('viewDrawnOrder for a group by view', () => {
     // Apple (rows 2, 4), pear (1, 5), blank (3); the total row 6 and row 7 below keep their places.
     expect(list(o.storedAt)).toEqual([0, 2, 4, 1, 5, 3, 6, 7, 8]);
     expect(o.groups).toEqual([
-      { at: 1, size: 2, count: 2, first: 2, key: 't:apple', blank: false },
-      { at: 3, size: 2, count: 2, first: 1, key: 't:pear', blank: false },
-      { at: 5, size: 1, count: 1, first: 3, key: '', blank: true },
+      { at: 1, size: 2, kept: [2, 4], count: 2, first: 2, key: 't:apple', blank: false },
+      { at: 3, size: 2, kept: [1, 5], count: 2, first: 1, key: 't:pear', blank: false },
+      { at: 5, size: 1, kept: [3], count: 1, first: 3, key: '', blank: true },
     ]);
   });
 
@@ -219,5 +226,50 @@ describe('withCollapsedRows', () => {
       's0r1',
       's0r5',
     ]);
+  });
+});
+
+describe('group aggregations (D501)', () => {
+  it('counts by the first column and sums each numeric typed column on a new view', () => {
+    const typed = { ...TABLE, types: { s0c1: 'number' as const } };
+    const v = createGroupByView(sheet(typed).layout, typed, 's0c0', opts)!;
+    expect(v.group!.aggs).toEqual({ s0c0: 'count', s0c1: 'sum' });
+    expect(isSheetFilterView(v, v.id)).toBe(true);
+    expect(
+      isSheetFilterView({ ...v, group: { ...v.group!, aggs: { s0c0: 'median' } } }, v.id),
+    ).toBe(false);
+  });
+
+  it('totals the values as Google names them, numbers alone for the arithmetic', () => {
+    const vals = [3, 'a', '', 5, 'A', null];
+    expect(GROUP_AGGREGATES.map((k) => [k, groupAggregate(k, vals)])).toEqual([
+      ['avg', 4],
+      ['count', 6],
+      ['empty', 2],
+      ['filled', 4],
+      ['max', 5],
+      ['min', 3],
+      ['pctEmpty', 2 / 6],
+      ['pctFilled', 4 / 6],
+      ['pctUnique', 3 / 6],
+      ['sum', 8],
+      ['unique', 3],
+    ]);
+    expect(groupAggregate('sum', ['x', ''])).toBeNull();
+    expect(groupAggregate('pctEmpty', [])).toBeNull();
+    expect(GROUP_AGGREGATE_LABELS.pctUnique).toBe('Percent Unique');
+  });
+
+  it('keeps the rows each group keeps, in drawn order', () => {
+    const s = sheet();
+    const o = viewDrawnOrder(wbOf(s), s.id, groupView(s), new Set(['s0r2']))!;
+    expect(o.groups!.map((g) => g.kept)).toEqual([[4], [1, 5], [3]]);
+  });
+
+  it('drops a gone column aggregation and keeps the rest', () => {
+    const typed = { ...TABLE, types: { s0c1: 'number' as const } };
+    const v = createGroupByView(sheet(typed).layout, typed, 's0c0', opts)!;
+    const after = filterViewsAfterDelete([v], new Set(['s0c1']), (r) => r)!;
+    expect(after[0]!.group!.aggs).toEqual({ s0c0: 'count' });
   });
 });

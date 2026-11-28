@@ -13,12 +13,14 @@ import type { SheetFilterView } from './filter-views';
 import type { SheetLayout } from './sheet';
 
 /**
- * One group of a group by view (D496, D497): its rows drawn from `at` for `size` rows; `count` of them the view's
- * conditions keep, the first of those `first` (whose cell names the group), -1 with none; `key` its identity.
+ * One group of a group by view (D496, D497): its rows drawn from `at` for `size` rows; `kept` those the view's
+ * conditions keep (stored, in drawn order; `count` of them), the first of those `first` (whose cell names the group),
+ * -1 with none; `key` its identity.
  */
 export type DrawnGroup = {
   readonly at: number;
   readonly size: number;
+  readonly kept: readonly number[];
   readonly count: number;
   readonly first: number;
   readonly key: string;
@@ -133,6 +135,7 @@ function groupedOrder(
     groups.push({
       at: start + from,
       size: i - from,
+      kept: shown,
       count: shown.length,
       first: shown[0] ?? -1,
       key: groupKey(v),

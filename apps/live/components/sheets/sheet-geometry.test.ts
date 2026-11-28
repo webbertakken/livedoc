@@ -348,6 +348,7 @@ describe('a group by view (D497)', () => {
   const group = (at: number, size: number, count = size) => ({
     at,
     size,
+    kept: [],
     count,
     first: count ? at : -1,
     key: String(at),

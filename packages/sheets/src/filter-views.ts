@@ -12,8 +12,45 @@ import { WORKBOOK_COLS_MAX } from './workbook/workbook-limits';
 /** One key of a view's sort: a column by id, Z to A when `desc`. */
 export type FilterViewSortKey = { c: string; desc?: true };
 
-/** What a group by view groups (data-tools.md "Group by view"): its table and the column, by ids. */
-export type FilterViewGroup = { t: string; c: string };
+/** A group's aggregation of one column (data-tools.md "Group by view", D501), Google's list. */
+export type GroupAggregate =
+  | 'avg'
+  | 'count'
+  | 'empty'
+  | 'filled'
+  | 'max'
+  | 'min'
+  | 'pctEmpty'
+  | 'pctFilled'
+  | 'pctUnique'
+  | 'sum'
+  | 'unique';
+
+/** Every aggregation, in the order Google lists them. */
+export const GROUP_AGGREGATES: readonly GroupAggregate[] = [
+  'avg',
+  'count',
+  'empty',
+  'filled',
+  'max',
+  'min',
+  'pctEmpty',
+  'pctFilled',
+  'pctUnique',
+  'sum',
+  'unique',
+];
+
+/**
+ * What a group by view groups (data-tools.md "Group by view"): its table and the column, by ids; each column's
+ * aggregation by column id (D501), and whether the headers hide them (D502).
+ */
+export type FilterViewGroup = {
+  t: string;
+  c: string;
+  aggs?: Record<string, GroupAggregate>;
+  hide?: true;
+};
 
 export type SheetFilterView = IdRange & {
   id: string;
@@ -59,8 +96,26 @@ function isSortKey(v: unknown): v is FilterViewSortKey {
   );
 }
 
+const GROUP_KEYS = new Set(['t', 'c', 'aggs', 'hide']);
+const AGGREGATES = new Set<unknown>(GROUP_AGGREGATES);
+
+function isAggregates(v: unknown): v is Record<string, GroupAggregate> {
+  return (
+    isRecord(v) &&
+    Object.keys(v).length <= WORKBOOK_COLS_MAX &&
+    Object.entries(v).every(([col, kind]) => isAxisId(col) && AGGREGATES.has(kind))
+  );
+}
+
 function isGroup(v: unknown): v is FilterViewGroup {
-  return isRecord(v) && Object.keys(v).length === 2 && isAxisId(v.t) && isAxisId(v.c);
+  return (
+    isRecord(v) &&
+    Object.keys(v).every((k) => GROUP_KEYS.has(k)) &&
+    isAxisId(v.t) &&
+    isAxisId(v.c) &&
+    (v.aggs === undefined || isAggregates(v.aggs)) &&
+    (v.hide === undefined || v.hide === true)
+  );
 }
 
 /** Whether `v` is a view of this id, whole: as every viewer may open it, a malformed one is refused at the write. */
@@ -165,6 +220,13 @@ export function filterViewsWith(
   return next.length ? next : undefined;
 }
 
+function withoutGoneAggs(g: FilterViewGroup, gone: ReadonlySet<string>): FilterViewGroup {
+  if (!g.aggs) return g;
+  const aggs = Object.fromEntries(Object.entries(g.aggs).filter(([c]) => !gone.has(c)));
+  const { aggs: _aggs, ...rest } = g;
+  return Object.keys(aggs).length ? { ...rest, aggs } : rest;
+}
+
 /**
  * The views after rows and columns go: each range shrunk as the filter's (`shrink`), a gone column's condition and
  * sort key dropped; a view whose range all went goes.
@@ -179,8 +241,9 @@ export function filterViewsAfterDelete(
     if (!range) return [];
     const conds = Object.fromEntries(Object.entries(v.conds).filter(([c]) => !goneCols.has(c)));
     const sort = v.sort?.filter((k) => !goneCols.has(k.c));
-    // A group by view whose column went is a filter view over its range (D499).
-    const group = v.group && !goneCols.has(v.group.c) ? v.group : undefined;
+    // A group by view whose column went is a filter view over its range (D499); a gone column's aggregation goes.
+    const group =
+      v.group && !goneCols.has(v.group.c) ? withoutGoneAggs(v.group, goneCols) : undefined;
     const { sort: _sort, group: _group, ...rest } = v;
     const { r1, c1, r2, c2 } = range;
     return [
