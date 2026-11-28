@@ -9,6 +9,7 @@ import {
   formatA1,
   imageHost,
   type CellImage,
+  type CellPicture,
   type Sheet,
   type Sparkline,
   type Workbook,
@@ -27,6 +28,9 @@ const SPARKLINE_KINDS = {
 
 /** What an IMAGE's picture is called, drawn or spoken. */
 export const imageLabel = (image: CellImage) => `Image from ${imageHost(image)}`;
+
+/** What a cell's gallery picture is called: its alt text, else "Image". */
+export const pictureLabel = (picture: CellPicture) => picture.alt || 'Image';
 
 /** What a SPARKLINE's chart is called, drawn or spoken. */
 export const sparklineLabel = (chart: Sparkline) =>
@@ -47,6 +51,9 @@ export function cellSpokenValue(
 ): string {
   const image = workbook.imageOf(sheet.id, r, c);
   if (image) return imageLabel(image);
+  // A gallery picture in the cell by its alt text (inserted-objects.md "Accessibility").
+  const picture = workbook.pictureOf(sheet.id, r, c);
+  if (picture) return pictureLabel(picture);
   const chart = workbook.sparklineOf(sheet.id, r, c);
   if (chart) return sparklineLabel(chart);
   const format = sheet.cells.get(cellKey(sheet.layout.rows[r]!, sheet.layout.cols[c]!))?.format;

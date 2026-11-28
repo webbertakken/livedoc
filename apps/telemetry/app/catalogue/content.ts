@@ -1410,13 +1410,13 @@ export const SPREADSHEET_PIVOT_TABLES_ADDED = chart(
   { types: ['PivotTable', 'PivotDetails'] },
 );
 
-// docs/specs/029-sheets/inserted-objects.md "Telemetry": a picture Insert › Image › Insert Image over Cells placed.
+// docs/specs/029-sheets/inserted-objects.md "Telemetry": a picture Insert › Image placed over the cells or in a cell.
 export const SPREADSHEET_IMAGES_ADDED = chart(
   'Spreadsheet',
   'Added',
   'Spreadsheet Images Added',
-  'An editor placed a picture over the cells of a spreadsheet with Insert › Image.',
-  { types: ['ImageOverCells'] },
+  'An editor placed a picture over the cells, or in a cell, of a spreadsheet with Insert › Image.',
+  { types: ['ImageOverCells', 'ImageInCell'] },
 );
 
 // docs/specs/029-sheets/data-tools.md "Filters, filter views and slicers" and "Group by view": a filter view or a

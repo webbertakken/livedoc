@@ -84,6 +84,9 @@ const CELL: readonly ContextEntrySpec[] = [
   { ...own('open-link', 'Open Link', 'view', 'built'), contextual: true },
   // A pivot table value's source rows on a sheet of their own, drawn only on such a value (pivot-tables.md "Details").
   { ...own('show-pivot-details', 'Show Details', 'view', 'built'), contextual: true },
+  // A cell's picture's items, drawn only on a cell holding one, for an Editor (inserted-objects.md "Images in a cell").
+  { ...own('cell-picture-alt-text', 'Alt Text', 'edit', 'built'), contextual: true },
+  { ...own('place-image-over-cells', 'Place Image over Cells', 'edit', 'built'), contextual: true },
   ...PIVOT_GROUPING,
   SEPARATOR,
   ...CLIPBOARD,

@@ -51,6 +51,30 @@ async function usedAxes(
   return out;
 }
 
+// The cells holding pictures, per sheet, with their alt text (inserted-objects.md "Images in a cell"): read from the
+// room's index of them (D633), so no other cell is read.
+async function cellPictures(
+  env: DocumentEnv,
+  documentId: string,
+): Promise<Map<string, { r: string; c: string; alt?: string }[]>> {
+  const found = await env.DOCUMENT_DB.prepare(
+    `SELECT p.sheet_id, p.row_id, p.col_id, c.input ->> '$.img.alt' AS alt
+       FROM sheet_cell_image_refs p
+       JOIN sheet_cells c ON c.document_id = p.document_id AND c.sheet_id = p.sheet_id
+        AND c.row_id = p.row_id AND c.col_id = p.col_id
+      WHERE p.document_id = ?`,
+  )
+    .bind(documentId)
+    .all<{ sheet_id: string; row_id: string; col_id: string; alt: string | null }>();
+  const out = new Map<string, { r: string; c: string; alt?: string }[]>();
+  for (const p of found.results ?? []) {
+    const list = out.get(p.sheet_id) ?? [];
+    list.push({ r: p.row_id, c: p.col_id, ...(p.alt ? { alt: p.alt } : {}) });
+    out.set(p.sheet_id, list);
+  }
+  return out;
+}
+
 async function outline(
   env: DocumentEnv,
   document: DocumentDTO,
@@ -59,10 +83,11 @@ async function outline(
   inScope: (tabId: string) => boolean,
   request: ViewRequest,
 ): Promise<{ text: string; json: unknown; sheets: number }> {
-  const [heads, order, used] = await Promise.all([
+  const [heads, order, used, pictures] = await Promise.all([
     listSheetHeads(env, document.id),
     documentTabOrder(env, document.id),
     usedAxes(env, document.id),
+    cellPictures(env, document.id),
   ]);
   const at = new Map(order.map((id, i) => [id, i]));
   const none = { rows: new Set<string>(), cols: new Set<string>() };
@@ -71,7 +96,13 @@ async function outline(
     .sort((a, b) => at.get(a.tabId)! - at.get(b.tabId)!)
     .map((h) => {
       const axes = used.get(h.id) ?? none;
-      return { ...h, usedRows: axes.rows, usedCols: axes.cols };
+      const held = pictures.get(h.id);
+      return {
+        ...h,
+        usedRows: axes.rows,
+        usedCols: axes.cols,
+        ...(held ? { cellPictures: held } : {}),
+      };
     });
   const view = workbookOutlineView(
     { name: document.name, workbook, sheets, current: tab.id },

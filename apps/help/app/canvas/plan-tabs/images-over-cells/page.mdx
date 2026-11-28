@@ -4,7 +4,7 @@ import { helpMetadata } from '@/lib/seo';
 export const metadata = helpMetadata({
   title: 'Images over Cells',
   description:
-    'Place a picture over the cells of a spreadsheet: upload one or pick it from your gallery, then move it, resize it, describe it, replace it or delete it.',
+    'Place a picture over the cells of a spreadsheet, or in a cell: upload one or pick it from your gallery, then move it, resize it, describe it, replace it or delete it.',
   path: '/help/canvas/plan-tabs/images-over-cells/',
 });
 
@@ -40,7 +40,16 @@ Click **⋮** on the selected image, or right-click it:
 
 - **Alt Text**: a **Title** and a **Description** for people using a screen reader. LiveDoc keeps them as one text, the title on the first line.
 - **Replace Image**: pick another picture. It keeps the box's width, its height following the new picture's shape.
+- **Place Image in Selected Cell**: move the picture into the selected cell (see below), its alt text with it.
 - **Delete**: remove it from the sheet. The picture stays in your gallery.
+
+## In a Cell
+
+A picture can also be a cell's own value. Click the cell, then choose **Insert › Image › Insert Image in Cell** and pick a picture. It fills the cell, keeping its shape, and goes wherever the cell goes: sorting, filling, copying and cutting carry it, and typing in the cell replaces it.
+
+- A formula pointing at the cell, such as `=A1`, shows the picture too. To other formulas the cell reads as empty text.
+- Right-click the cell for **Alt Text**, or **Place Image over Cells** to float the picture above the grid at that cell.
+- If **Insert Image in Cell** is dimmed, it is for the same reasons as **Insert Image over Cells**.
 
 ## Who Can Do What
 
@@ -53,6 +62,8 @@ The picture is stored in the gallery of whoever placed it, never inside the shee
 ## In Files
 
 Download the spreadsheet as **.xlsx**, **.ods** or **.fods** and its images go with it, at the same cells and sizes, with their alt text, so Excel, LibreOffice and Google Sheets show them too. The file holds up to 50 MB of pictures; a picture past that, or one deleted from its gallery, is left out of the file.
+
+Pictures in cells go into files as Excel keeps a picture placed in a cell, and as LibreOffice keeps one anchored to its cell and resized with it, and come back as pictures in cells.
 
 Open a spreadsheet file with **File › Open** and its pictures over the cells come with it: each PNG, JPEG, GIF or WebP picture is saved to your **Image Gallery** and placed at its cell, with its alt text. A picture your gallery cannot take (it is full, or this server keeps no images) is left out, and the import report says so. A sheet whose drawing holds anything else, such as a shape or a picture in another format, keeps that drawing for the file as it came.
 

@@ -1689,9 +1689,9 @@ export const articles: Article[] = [
     slug: 'images-over-cells',
     title: 'Images over Cells',
     description:
-      "Place a picture over a spreadsheet's cells, then move, resize, describe or replace it.",
+      "Place a picture over a spreadsheet's cells or in a cell, then move, resize, describe or replace it.",
     keywords:
-      'image images picture pictures photo photos logo insert image over cells floating image spreadsheet sheet upload gallery move resize alt text alternative text description replace image delete image',
+      'image images picture pictures photo photos logo insert image over cells floating image spreadsheet sheet upload gallery move resize alt text alternative text description replace image delete image insert image in cell image in cell picture in cell place image over cells place image in selected cell',
     category: 'Canvas',
     categorySlug: 'canvas/plan-tabs',
     parentSlug: 'plan-tabs',

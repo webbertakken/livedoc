@@ -28,6 +28,8 @@ export type WorkbookOutlineSheet = {
   // The ids of the rows and of the columns holding a cell.
   usedRows: ReadonlySet<string>;
   usedCols: ReadonlySet<string>;
+  // Its cells holding pictures (inserted-objects.md "Images in a cell"), by row and column ids, with alt text.
+  cellPictures?: readonly { r: string; c: string; alt?: string }[];
 };
 
 export type WorkbookOutlineInput = {
@@ -58,14 +60,11 @@ export type WorkbookOutlinePivotJson = {
   values: string[];
 };
 
-// An image over cells (inserted-objects.md "Images over cells"): its id, cell, size and alt text.
-export type WorkbookOutlineImageJson = {
-  id: string;
-  at: string;
-  width: number;
-  height: number;
-  alt?: string;
-};
+// An image over cells (inserted-objects.md "Images over cells"): its id, cell, size and alt text; or a cell's picture
+// ("Images in a cell"): its cell and alt text.
+export type WorkbookOutlineImageJson =
+  | { id: string; at: string; width: number; height: number; alt?: string }
+  | { at: string; alt?: string; inCell: true };
 
 export type WorkbookOutlineSheetJson = {
   title: string;
@@ -207,10 +206,30 @@ function sheetJson(
     pivots: (layout.objects ?? [])
       .filter((x): x is SheetPivot => x.kind === 'pivot')
       .map((x) => pivotJson(layout, x, sheets)),
-    images: (layout.objects ?? [])
-      .filter((x): x is SheetImage => x.kind === 'image')
-      .map((x) => imageJson(layout, x)),
+    images: [
+      ...(layout.objects ?? [])
+        .filter((x): x is SheetImage => x.kind === 'image')
+        .map((x) => imageJson(layout, x)),
+      ...cellPicturesJson(layout, sheet.cellPictures ?? []),
+    ],
   };
+}
+
+// A sheet's cells' pictures row by row; one on a row or column the layout no longer holds is left out.
+function cellPicturesJson(
+  layout: SheetLayout,
+  pictures: NonNullable<WorkbookOutlineSheet['cellPictures']>,
+): WorkbookOutlineImageJson[] {
+  if (pictures.length === 0) return [];
+  const ix = layoutIndex(layout);
+  return pictures
+    .flatMap((p) => {
+      const r = ix.rowPos.get(p.r);
+      const c = ix.colPos.get(p.c);
+      return r === undefined || c === undefined ? [] : [{ r, c, alt: p.alt }];
+    })
+    .sort((a, b) => a.r - b.r || a.c - b.c)
+    .map((p) => ({ at: formatA1(p.r, p.c), ...(p.alt ? { alt: p.alt } : {}), inCell: true }));
 }
 
 function sheetLine(s: WorkbookOutlineSheetJson): string {
@@ -241,7 +260,10 @@ function partLines(s: WorkbookOutlineSheetJson): string[] {
     lines.push(bits.join(' '));
   }
   for (const image of s.images) {
-    const bits = [`  image ${image.id} at ${image.at} ${image.width}x${image.height}`];
+    const bits =
+      'inCell' in image
+        ? [`  image in ${image.at}`]
+        : [`  image ${image.id} at ${image.at} ${image.width}x${image.height}`];
     if (image.alt) bits.push(jsonString(image.alt));
     lines.push(bits.join(' '));
   }

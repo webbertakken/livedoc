@@ -112,3 +112,92 @@ test('Insert Image over Cells places a picture, moved, resized, described, kept 
   await expect(image(page)).toHaveCount(1);
   expectNoPageErrors(pageErrors);
 });
+
+// Pictures held in cells (docs/specs/029-sheets/inserted-objects.md "Images in a cell", D630-D632): Insert Image in
+// Cell puts an uploaded picture in the active cell, drawn filling it; a formula reading the cell shows it too; the
+// cell's menu gives it alt text and places it over the cells, and an image's menu puts it back in a cell; kept on
+// reload, each change one step of Undo.
+const cellPicture = (page: Page) => page.locator('[data-sheet-cell-picture]');
+
+async function cellCentre(page: Page, col: number, row: number) {
+  const drawn = (role: string, axis: string, n: number) =>
+    page.locator(`[role="${role}"][aria-${axis}index="${n}"]:not(.sr-only *)`).boundingBox();
+  const letter = await drawn('columnheader', 'col', col);
+  const number = await drawn('rowheader', 'row', row);
+  return { x: letter!.x + letter!.width / 2, y: number!.y + number!.height / 2 };
+}
+
+test('Insert Image in Cell puts a picture in a cell, described, placed over the cells and back', async ({
+  page,
+  pageErrors,
+}) => {
+  test.setTimeout(90_000);
+  await page.setViewportSize({ width: 1280, height: 860 });
+  await page.goto('/new?kind=spreadsheet');
+  await page.waitForURL(/\/document\//);
+  await expect(page.locator(READY)).toBeVisible();
+
+  // D2 reads B2: it shows B2's picture once B2 holds one.
+  await select(page, 'D2');
+  await page.keyboard.type('=B2');
+  await page.keyboard.press('Enter');
+  await select(page, 'B2');
+  await (await officeMenuItem(page, ['Insert', 'Image', 'Insert Image in Cell'])).click();
+  const picker = page.getByRole('dialog', { name: 'Image picker' });
+  await picker.locator('input[type="file"]').setInputFiles({
+    name: 'square.png',
+    mimeType: 'image/png',
+    buffer: solidPng(300, 300, [220, 38, 38]),
+  });
+  await expect(picker).toBeHidden();
+  await expect(cellPicture(page)).toHaveCount(2);
+  await expect(cellPicture(page).first().locator('img')).toHaveJSProperty('naturalWidth', 300);
+  await page.screenshot({
+    path: test.info().outputPath('image-in-cell.png'),
+    animations: 'disabled',
+  });
+
+  // The cell's menu: its alt text names it to a screen reader.
+  const b2 = await cellCentre(page, 2, 2);
+  await page.mouse.click(b2.x, b2.y, { button: 'right' });
+  const menu = page.getByRole('menu', { name: 'Context menu' });
+  await expect(menu.getByRole('menuitem', { name: 'Place Image over Cells' })).toBeVisible();
+  await page.screenshot({
+    path: test.info().outputPath('image-in-cell-menu.png'),
+    animations: 'disabled',
+  });
+  await menu.getByRole('menuitem', { name: 'Alt Text' }).click();
+  const alt = page.getByRole('dialog', { name: 'Alt text' });
+  await alt.getByRole('textbox', { name: 'Description' }).fill('A red square');
+  await alt.getByRole('button', { name: 'OK' }).click();
+  await expect(page.getByRole('gridcell', { name: /^B2 A red square$/ })).toHaveCount(1);
+
+  await page.reload();
+  await expect(page.locator(READY)).toBeVisible();
+  await expect(cellPicture(page)).toHaveCount(2);
+
+  // Over the cells at B2, fitted, its cell empty; then back into the selected cell E4 from the image's menu.
+  const b2Again = await cellCentre(page, 2, 2);
+  await page.mouse.click(b2Again.x, b2Again.y, { button: 'right' });
+  await page
+    .getByRole('menu', { name: 'Context menu' })
+    .getByRole('menuitem', { name: 'Place Image over Cells' })
+    .click();
+  await expect(image(page)).toHaveCount(1);
+  await expect(cellPicture(page)).toHaveCount(0);
+  await expect(image(page)).toHaveAttribute('aria-label', 'A red square');
+  const over = await boxOf(page);
+  expect(Math.round(over.width)).toBe(300);
+  await select(page, 'E4');
+  await image(page).click({ button: 'right', position: { x: 40, y: 40 } });
+  await page
+    .getByRole('menu', { name: 'Context menu' })
+    .getByRole('menuitem', { name: 'Place Image in Selected Cell' })
+    .click();
+  await expect(image(page)).toHaveCount(0);
+  await expect(cellPicture(page)).toHaveCount(1);
+  await page.keyboard.press('ControlOrMeta+z');
+  await expect(image(page)).toHaveCount(1);
+  await expect(cellPicture(page)).toHaveCount(0);
+  expectNoPageErrors(pageErrors);
+});
