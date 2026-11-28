@@ -2,7 +2,7 @@
 // docs/specs/034-text-documents/page-layout.md "Line numbers" (Drawn): a numbered block's lines from its drawn top, moved
 // down by a page gap inside it, in its column; a box of columns read from its text, column by column.
 import { afterEach, describe, expect, it } from 'vitest';
-import type { BlockMetrics } from './pagination';
+import type { BlockMetrics } from '@livedoc/text-documents';
 import { readDrawnLines, type LineReading } from './pagination-line-reading';
 
 const rect = (left: number, top: number, width: number, height: number) =>

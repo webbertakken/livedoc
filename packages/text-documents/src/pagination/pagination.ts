@@ -2,7 +2,7 @@
 // "Columns"): the blocks' measured lines, each section's page frame, and where each page and column starts, the
 // spacers that take the drawn writing there and the paragraphs drawn across columns. The arithmetic is
 // pagination-engine.ts; the plugin measures the blocks and draws what it gives.
-import { Columns, type PageSetup, type SectionStart } from '@livedoc/text-documents';
+import { Columns, type PageSetup, type SectionStart } from '../model/sections';
 
 /** The ground between two pages at 100% zoom, in CSS pixels (default). */
 export const PAGE_GAP_PX = 12;

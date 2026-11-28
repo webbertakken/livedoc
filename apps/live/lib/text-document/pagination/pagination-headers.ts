@@ -3,15 +3,17 @@
 // page's on the section's first page, the even page's on an even page), where they are drawn, and the page's frame
 // with a header or footer taller than its room pushing the body. Pure: heights come measured from the drawn stories.
 import {
-  HeadersAndFooters,
   type HeaderFooterKind,
   type HeaderFooterSlot,
+  HeadersAndFooters,
   type LiveHeaders,
   type LiveStory,
+  PAGE_GAP_PX,
+  pageFrame,
+  type PageFrame,
   type PageSetup,
   type ResolvedHeadersOf,
 } from '@livedoc/text-documents';
-import { PAGE_GAP_PX, pageFrame, type PageFrame } from './pagination';
 
 // Points to CSS pixels.
 const PX_PER_PT = 96 / 72;

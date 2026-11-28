@@ -1,7 +1,7 @@
 // A block's lines from its measured rectangles (docs/specs/034-text-documents/page-layout.md "A page fills"): the
 // browser gives a rectangle for each piece of text on each line; the rectangles that overlap make one line, and the
 // lines touch, each boundary halfway between one line's text and the next's. Pure; positions in any one unit.
-import type { LineBox } from './pagination';
+import type { LineBox } from '@livedoc/text-documents';
 
 /** A vertical extent. */
 export type Span = { readonly top: number; readonly bottom: number };

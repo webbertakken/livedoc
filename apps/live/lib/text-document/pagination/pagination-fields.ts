@@ -3,8 +3,7 @@
 // every page laid out; a field in the body showing the page its paragraph starts on.
 import type { Node as PmNode } from 'prosemirror-model';
 import { Decoration } from 'prosemirror-view';
-import { FIELD } from '@livedoc/text-documents';
-import type { Pagination } from './pagination';
+import { FIELD, type Pagination } from '@livedoc/text-documents';
 
 /** What a field decoration tells its field to show. */
 export type FieldShown = {
