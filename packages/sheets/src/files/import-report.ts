@@ -19,6 +19,8 @@ export const REPORTED_KINDS = [
   'name_unread',
   'table_unread',
   'filter_unread',
+  'slicer_unread',
+  'slicers_kept',
   'function_unread',
   'formula_unwritten',
   'text_cut',
@@ -76,6 +78,12 @@ function entriesOf(loss: FileLoss): Entry[] {
       return [['filter_unread', 1, cellName(loss.sheet, loss.r, loss.c)]];
     case 'filter_view_unread':
       return [['filter_unread', 1, loss.name]];
+    case 'slicer_unread':
+    case 'slicers_kept':
+      return [[loss.k, 1, loss.sheet]];
+    // A write's slicers its file's form leaves to the record: logged, never a read's.
+    case 'slicers_unwritten':
+      return [];
     // The other app's change is read as it left it (D294, D349), and a protection the grid cannot hold leaves its cells
     // as the sheet's others: logged with the read's losses, never reported.
     case 'validation_rule_changed':

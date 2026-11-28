@@ -79,6 +79,7 @@ export const CHART_EDITOR_PANEL: OfficePanelSpec = {
   side: 'right',
   item: 'edit-chart',
   editorsOnly: true,
+  object: true,
 };
 
 // The Pivot Table Editor (docs/specs/029-sheets/pivot-tables.md "Pivot Table Editor"): opened by Create Pivot Table and
@@ -89,6 +90,7 @@ export const PIVOT_EDITOR_PANEL: OfficePanelSpec = {
   side: 'right',
   item: 'edit-pivot-table',
   editorsOnly: true,
+  object: true,
 };
 
 // The Slicer panel (data-tools.md "Slicers"): opened by Add a Slicer and a slicer's Edit Slicer, never from a menu
@@ -99,6 +101,7 @@ export const SLICER_PANEL: OfficePanelSpec = {
   side: 'right',
   item: 'edit-slicer',
   editorsOnly: true,
+  object: true,
 };
 
 // Column Stats (data-tools.md "Column Stats"): read by everyone, changing nothing.

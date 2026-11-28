@@ -4,11 +4,14 @@
 // (standard-mapping.md "Conversion").
 import type * as Y from 'yjs';
 import type { TextDocumentFormat } from '@livedoc/document';
-import type { TextDocumentFileType } from '@livedoc/text-documents';
+import type { TextDocumentExportType, TextDocumentFileType } from '@livedoc/text-documents';
 import { downloadFileName } from '@livedoc/office-packages';
 import {
   DrawingPictures,
+  EXPORT_MEDIA_TYPES,
   Pictures,
+  settledDocument,
+  writeTextDocumentExport,
   TextDocumentState,
   writeTextDocumentFile,
 } from '@livedoc/text-documents';
@@ -53,5 +56,22 @@ export async function textDocumentFileOf(
     blob: new Blob([written.bytes.slice().buffer], { type: MEDIA_TYPES[type] }),
     fileName: downloadFileName(name, type, 'Untitled'),
     leftOut: read.unavailable.length,
+  };
+}
+
+/** An export written here (files-and-print.md "Downloading"): the document with its suggestions accepted. */
+export function textDocumentExportOf(
+  doc: Y.Doc,
+  file: { format: TextDocumentFormat; name: string; type: TextDocumentExportType },
+): WrittenTextDocumentFile {
+  const document = settledDocument(doc, file.format);
+  const bytes = writeTextDocumentExport(
+    { ...document, metadata: { ...document.metadata, title: file.name } },
+    file.type,
+  );
+  return {
+    blob: new Blob([bytes.slice().buffer], { type: EXPORT_MEDIA_TYPES[file.type] }),
+    fileName: downloadFileName(file.name, file.type, 'Untitled'),
+    leftOut: 0,
   };
 }

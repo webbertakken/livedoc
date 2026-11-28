@@ -29,12 +29,20 @@ import { isoDateSerial } from './ods-read';
 import { FILE_READ_CELLS_MAX } from './file-read-limits';
 import type { FileCell, FileLoss, FileRead, FileSheet, FileValue } from './workbook-file';
 import { readXlsxCharts } from './xlsx-charts-read';
+import { SLICER_CACHE_NAME } from './xlsx-slicers';
+import {
+  allPlaced,
+  keptWithoutSlicers,
+  slicerNamesBySheet,
+  xlsxSlicersHeld,
+  withXlsxSlicers,
+} from './xlsx-slicers-read';
 import { readXlsxPivots } from './xlsx-pivots-read';
 import { allRead, WORKBOOK_READ, WORKSHEET_READ, XlsxKeeper } from './xlsx-kept-read';
 import { readXlsxDxfs, readXlsxFormatRules } from './xlsx-format-rules';
 import { readXlsxValidations } from './xlsx-validation';
 import { liveDocExtOf, readXlsxProtection } from './xlsx-protection';
-import { readXlsxTableRecord, readXlsxTables } from './xlsx-tables';
+import { keptTables, readXlsxTableRecord, readXlsxTables } from './xlsx-tables';
 import {
   isFilterName,
   readXlsxFilters,
@@ -451,7 +459,8 @@ export async function readXlsx(
     (name, kept, scoped) => {
       const own = attributeOf(name, '', 'name');
       if (own && isFilterName(own, guids)) return true;
-      if (!own || isExcelOwnName(own, name)) return false;
+      // A slicer cache's name is the slicers' (xlsx-slicers-read.ts): kept with them, never a line of its own.
+      if (!own || isExcelOwnName(own, name) || SLICER_CACHE_NAME.test(own)) return false;
       const fn = scoped ? null : readXlsxFunction(name, kept);
       const range = scoped || fn ? null : xlsxRangeName(own, name, sheetAt, kept);
       if (fn) functions.push(fn);
@@ -467,22 +476,39 @@ export async function readXlsx(
   const unread = strictUnread + (keeper?.unread ?? 0);
   if (unread > 0) book.losses.push({ k: 'kept_unread', count: unread });
   if (pkg.dropped.length > 0) book.losses.push({ k: 'entries_dropped', entries: [...pkg.dropped] });
-  // The charts of a kept drawing that qualifies are the sheets' own (standard-mapping.md "Charts in the file").
-  const charted = readXlsxCharts(sheets, keeper?.content());
   // The tables of its kept table parts LiveDoc holds are the sheets' own ("Tables in the file").
+  const content = keeper?.content();
+  const tableParts = keptTables(content);
   const tabled = readXlsxTables(
-    charted.sheets,
-    charted.kept,
+    sheets,
+    content,
     tableRecords,
     names.map((n) => n.name),
     book.losses,
   );
+  // Its table slicers, read all or none ("Filters in the file", D489), and the charts of a kept drawing that
+  // qualifies, the slicers' anchors beside them ("Charts in the file").
+  let held = xlsxSlicersHeld(tabled.kept, tableParts, tabled.sheets);
+  let charted = readXlsxCharts(tabled.sheets, tabled.kept, (i) => slicerNamesBySheet(held, i));
+  if (held?.readable && !allPlaced(held, charted.slicers)) {
+    held = { readable: false, sheets: new Set(held.slicers.map((s) => s.sheet)) };
+    charted = readXlsxCharts(tabled.sheets, tabled.kept);
+  }
+  const sliced = withXlsxSlicers(
+    charted.sheets,
+    held,
+    charted.slicers,
+    filterReads.map((f) => f.record?.text),
+    book.losses,
+  );
+  const keptNow =
+    held?.readable && charted.kept ? keptWithoutSlicers(charted.kept, held) : charted.kept;
   // Each sheet's filter and views ("Filters in the file"); a table's own filter is its table part's (D481).
-  const filtered = tabled.sheets.map((sheet, i) =>
+  const filtered = sliced.map((sheet, i) =>
     withXlsxFilters(sheet, filterReads[i]!, workbookViews.names, book.losses),
   );
   // Its pivot tables LiveDoc wrote are its own again (standard-mapping.md "Pivot tables in the file").
-  const pivoted = readXlsxPivots(filtered, tabled.kept, book.losses, names);
+  const pivoted = readXlsxPivots(filtered, keptNow, book.losses, names);
   const kept = pivoted.kept;
   return {
     ok: true,

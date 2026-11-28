@@ -1,0 +1,497 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`the exports of every construct > writes blank as Plain Text and Markdown 1`] = `
+{
+  "md": "
+",
+  "txt": "
+",
+}
+`;
+
+exports[`the exports of every construct > writes bookmarks as Plain Text and Markdown 1`] = `
+{
+  "md": "Start here, **then on.**
+
+Back to the start
+",
+  "txt": "Start here, then on.
+Back to the start
+",
+}
+`;
+
+exports[`the exports of every construct > writes borders as Plain Text and Markdown 1`] = `
+{
+  "md": "Boxed, shaded
+
+A dotted rule above, a dashed one below
+",
+  "txt": "Boxed, shaded
+A dotted rule above, a dashed one below
+",
+}
+`;
+
+exports[`the exports of every construct > writes comments as Plain Text and Markdown 1`] = `
+{
+  "md": "The quarterly **results** are in.
+
+Next steps
+
+follow.
+",
+  "txt": "The quarterly results are in.
+Next steps
+follow.
+",
+}
+`;
+
+exports[`the exports of every construct > writes contents as Plain Text and Markdown 1`] = `
+{
+  "md": "- Alpha
+- Beta
+
+# Alpha
+
+## Beta
+",
+  "txt": "Alpha	1
+Beta	2
+Alpha
+Beta
+",
+}
+`;
+
+exports[`the exports of every construct > writes equations as Plain Text and Markdown 1`] = `
+{
+  "md": "Where $a/(b+1)+x_1^2√(3&z)√y≤∑_(k=1)^n k∫_0 f(p]v→lim_(a→b)if x$ holds.
+
+$E=mc^2$
+",
+  "txt": "Where a/(b+1)+x_1^2√(3&z)√y≤∑_(k=1)^n k∫_0 f(p]v→lim_(a→b)if x holds.
+E=mc^2
+",
+}
+`;
+
+exports[`the exports of every construct > writes fields as Plain Text and Markdown 1`] = `
+{
+  "md": "Pages: *2*
+
+Starts at two
+",
+  "txt": "Pages: 2
+
+Starts at two
+",
+}
+`;
+
+exports[`the exports of every construct > writes footnotes as Plain Text and Markdown 1`] = `
+{
+  "md": "A claim[^1] *and another*[^2].
+
+[^1]: The source.
+[^2]: **Bold**, and a [link](<https://example.com/note>) A second paragraph.
+",
+  "txt": "A claim[1] and another[2].
+
+[1] The source.
+[2] Bold, and a link A second paragraph.
+",
+}
+`;
+
+exports[`the exports of every construct > writes headers as Plain Text and Markdown 1`] = `
+{
+  "md": "First section
+
+Second section
+",
+  "txt": "First section
+
+Second section
+",
+}
+`;
+
+exports[`the exports of every construct > writes lineNumbers as Plain Text and Markdown 1`] = `
+{
+  "md": "Numbered, restarting on each page
+
+A second numbered line
+
+Not numbered
+
+Numbered from 1 again
+",
+  "txt": "Numbered, restarting on each page
+A second numbered line
+
+Not numbered
+
+Numbered from 1 again
+",
+}
+`;
+
+exports[`the exports of every construct > writes links as Plain Text and Markdown 1`] = `
+{
+  "md": "A [link](<https://example.com/?a=1&b=2>), [**bold link**](<https://example.com/?a=1&b=2>)[, mail](<mailto:a@example.com>) and a place
+",
+  "txt": "A link, bold link, mail and a place
+",
+}
+`;
+
+exports[`the exports of every construct > writes lists as Plain Text and Markdown 1`] = `
+{
+  "md": "- Bullet
+    - Nested bullet
+        - Deep bullet
+- Back out
+1. One
+1. Two
+    1. Two a
+
+Between
+
+1. Three, continued
+- [ ] Open task
+- [x] Done task
+        1. Jumps to level two
+1. Restarted at five
+1. Counts on from five
+    1. Restarted deeper at zero
+- [x] Ticked, not struck
+
+A second paragraph of the item
+",
+  "txt": "● Bullet
+  ○ Nested bullet
+    ■ Deep bullet
+● Back out
+(I) One
+(II) Two
+  II.C. Two a
+Between
+(III) Three, continued
+☐ Open task
+☑ Done task
+    i. Jumps to level two
+(V) Restarted at five
+(VI) Counts on from five
+  VI.0. Restarted deeper at zero
+☑ Ticked, not struck
+A second paragraph of the item
+",
+}
+`;
+
+exports[`the exports of every construct > writes metadata as Plain Text and Markdown 1`] = `
+{
+  "md": "
+",
+  "txt": "
+",
+}
+`;
+
+exports[`the exports of every construct > writes paragraphs as Plain Text and Markdown 1`] = `
+{
+  "md": "# Title
+
+**Subtitle**
+
+# Heading 1
+
+## Heading 2
+
+### Heading 3
+
+#### Heading 4
+
+##### Heading 5
+
+###### Heading 6
+
+A heading style, not in the outline
+
+### Normal text at outline level 3
+
+Centred, 1.5 lines, 12 pt before, 6 after
+
+Right, exact 18 pt
+
+Justified, at least 14 pt, indented
+
+Hanging indent
+
+Keep rules on
+
+Keep rules off
+
+After a page break
+",
+  "txt": "Title
+Subtitle
+Heading 1
+Heading 2
+Heading 3
+Heading 4
+Heading 5
+Heading 6
+A heading style, not in the outline
+Normal text at outline level 3
+Centred, 1.5 lines, 12 pt before, 6 after
+Right, exact 18 pt
+Justified, at least 14 pt, indented
+Hanging indent
+Keep rules on
+Keep rules off
+After a page break
+",
+}
+`;
+
+exports[`the exports of every construct > writes pictures as Plain Text and Markdown 1`] = `
+{
+  "md": "Before \\[A green field\\] between .
+
+[\\[Blue\\]](<https://docs.nu/>)
+
+| \\[Picture\\] |
+| --- |
+
+After.
+",
+  "txt": "Before [A green field] between .
+[Blue]
+[Picture]
+After.
+",
+}
+`;
+
+exports[`the exports of every construct > writes placedPictures as Plain Text and Markdown 1`] = `
+{
+  "md": "Placed \\[Wrapped\\] and \\[Picture\\].
+",
+  "txt": "Placed [Wrapped] and [Picture].
+",
+}
+`;
+
+exports[`the exports of every construct > writes sections as Plain Text and Markdown 1`] = `
+{
+  "md": "First section, A4 portrait
+
+Second section, landscape
+
+Third section
+
+Two columns
+
+Second column
+
+One column again
+",
+  "txt": "First section, A4 portrait
+
+Second section, landscape
+
+Third section
+
+Two columns
+Second column
+
+One column again
+",
+}
+`;
+
+exports[`the exports of every construct > writes styles as Plain Text and Markdown 1`] = `
+{
+  "md": "A quote, with code and **bold code**
+",
+  "txt": "A quote, with code and bold code
+",
+}
+`;
+
+exports[`the exports of every construct > writes suggestedBlocks as Plain Text and Markdown 1`] = `
+{
+  "md": "- Alpha
+
+# Alpha
+
+| A1 |  |
+| --- | --- |
+| B1 mine | B2 |
+
+Between
+
+After
+",
+  "txt": "Alpha
+Alpha
+A1	
+B1 mine	B2
+Between
+
+After
+",
+}
+`;
+
+exports[`the exports of every construct > writes suggestedRows as Plain Text and Markdown 1`] = `
+{
+  "md": "| A1 | B1 |
+| --- | --- |
+| A2 mine |  |
+| A3 | B3 |
+
+Between
+
+| C1 | D1 |
+| --- | --- |
+| C2 |  |
+
+And
+
+| E1 | F1 |
+| --- | --- |
+| E2 | F2 |
+
+After
+",
+  "txt": "A1	B1
+A2 mine	
+A3	B3
+Between
+C1	D1
+C2	
+And
+E1	F1
+E2	F2
+After
+",
+}
+`;
+
+exports[`the exports of every construct > writes suggestions as Plain Text and Markdown 1`] = `
+{
+  "md": "The quick slow **fox**
+
+jumps
+
+# Over
+",
+  "txt": "The quick slow fox
+jumps
+Over
+",
+}
+`;
+
+exports[`the exports of every construct > writes tab-stops as Plain Text and Markdown 1`] = `
+{
+  "md": "Name	Date	Total	12.50
+
+Default stops	every half inch
+",
+  "txt": "Name	Date	Total	12.50
+Default stops	every half inch
+",
+}
+`;
+
+exports[`the exports of every construct > writes tables as Plain Text and Markdown 1`] = `
+{
+  "md": "Before the table
+
+| **Name** | Kind | Notes |
+| --- | --- | --- |
+| Across two |  | Down two |
+| Lined | Nested, with a note[^1]<br>n1 n2 n3 n4 |  |
+
+After the table
+
+[^1]: In a cell.
+",
+  "txt": "Before the table
+Name	Kind	Notes
+Across two	Down two
+Lined	Nested, with a note[1] n1 n2 n3 n4
+After the table
+
+[1] In a cell.
+",
+}
+`;
+
+exports[`the exports of every construct > writes tabs as Plain Text and Markdown 1`] = `
+{
+  "md": "# Overview
+
+# Overview
+
+# Details
+
+Details, portrait
+
+Details, landscape
+
+# Details
+
+A subtab of the same name
+",
+  "txt": "Overview
+Overview
+
+Details
+Details, portrait
+
+Details, landscape
+
+Details
+A subtab of the same name
+",
+}
+`;
+
+exports[`the exports of every construct > writes text as Plain Text and Markdown 1`] = `
+{
+  "md": "plain, **bold** not bold*~~italic underline strike~~*supersubbaseGeorgia 14 red on yellowcustom highlightSmall CapsUPPERnone Times New Roman 
+
+  two leading spaces, a	tab,   three spaces and a\\
+line break  
+
+Ünïcödé ✓ 😀 \\<tags\\> & "quotes"
+
+lowertitle case
+",
+  "txt": "plain, bold not bolditalic underline strikesupersubbaseGeorgia 14 red on yellowcustom highlightSmall CapsUPPERnone Times New Roman 
+  two leading spaces, a	tab,   three spaces and a
+line break  
+Ünïcödé ✓ 😀 <tags> & "quotes"
+lowertitle case
+",
+}
+`;
+
+exports[`the exports of every construct > writes watermark as Plain Text and Markdown 1`] = `
+{
+  "md": "Behind this writing
+
+A second section
+",
+  "txt": "Behind this writing
+
+A second section
+",
+}
+`;

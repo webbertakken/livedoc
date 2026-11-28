@@ -1,13 +1,19 @@
 // A text document's doors (docs/specs/034-text-documents/live-editing-and-storage.md, files-and-print.md):
 //   GET /api/documents/<id>/text-documents/<tabId>/state  the live state as one Yjs update, for a surface to load
-//   GET /api/documents/<id>/text-documents/<tabId>/file?type=odt|fodt|docx  the file, written from the live state
+//   GET /api/documents/<id>/text-documents/<tabId>/file?type=odt|fodt|docx|txt|md  the file, written from the live state
 //   POST /api/documents/<id>/text-documents/<tabId>/updates  one Yjs update too large for a frame ("Sending")
 // The reads are gated as the tab is (a tab-scoped link on its own tab only), the update as an edit of the tab.
 // Answered inside the document's room.
+import type { TextDocumentFormat } from '@livedoc/document';
 import {
   base64OfBytes,
   bytesOfBase64,
+  EXPORT_MEDIA_TYPES,
+  isTextDocumentExportType,
   isTextDocumentFileType,
+  settledDocument,
+  writeTextDocumentExport,
+  type TextDocumentExportType,
   TEXT_DOCUMENT_UPDATE_MAX_BYTES,
   TextDocumentState,
   writeTextDocumentFile,
@@ -85,6 +91,8 @@ export async function handleTextDocumentRoutes(
   const state = viewer ? viewerStateOf(stored, { documentId, tabId }) : stored;
   if (!state) return viewerCopyUnavailable();
   const type = ctx.url.searchParams.get('type') ?? 'odt';
+  if (isTextDocumentExportType(type))
+    return exportResponse(ctx, { state, format: tab.format, name: meta.name, type, started });
   if (!isTextDocumentFileType(type)) return json({ error: 'file_type_unknown' }, { status: 400 });
   // The file is derived from the live state; its title is the document's name, written on save.
   const live = TextDocumentState.document(TextDocumentState.load([state]), tab.format);
@@ -107,6 +115,38 @@ export async function handleTextDocumentRoutes(
     'Content-Disposition': `attachment; filename="${fileNameOf(meta.name, type)}"`,
     [TEXT_DOCUMENT_PICTURES_LEFT_OUT_HEADER]: String(read.unavailable.length),
     [TEXT_DOCUMENT_CONVERSION_LOSSES_HEADER]: String(losses),
+  });
+}
+
+// An export (files-and-print.md "Downloading"): written from the state with every pending suggestion accepted, as print
+// has it. A Viewer's state is already their copy.
+function exportResponse(
+  ctx: DocumentRouteContext,
+  {
+    state,
+    format,
+    name,
+    type,
+    started,
+  }: {
+    state: Uint8Array;
+    format: TextDocumentFormat;
+    name: string;
+    type: TextDocumentExportType;
+    started: number;
+  },
+): Response {
+  const document = settledDocument(TextDocumentState.load([state]), format);
+  const file = writeTextDocumentExport(
+    { ...document, metadata: { ...document.metadata, title: name } },
+    type,
+  );
+  console.info(
+    `[text-document] file-written document=${ctx.segments[2]} tab=${ctx.segments[4]} type=${type} bytes=${file.byteLength} ms=${Date.now() - started}`,
+  );
+  return bytesResponse(file, {
+    'Content-Type': EXPORT_MEDIA_TYPES[type],
+    'Content-Disposition': `attachment; filename="${downloadFileName(name, type, 'Untitled')}"`,
   });
 }
 

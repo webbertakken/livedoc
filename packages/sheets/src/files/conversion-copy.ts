@@ -154,6 +154,10 @@ export function conversionLine(loss: ConversionLoss, to: WorkbookFormat): string
     }
     case 'filter_views_left':
       return one ? '1 filter view is left out' : `${loss.count} filter views are left out`;
+    case 'slicers_left':
+      return one ? '1 slicer is left out' : `${loss.count} slicers are left out`;
+    case 'slicers_unseen':
+      return one ? '1 slicer is not seen by Excel' : `${loss.count} slicers are not seen by Excel`;
     case 'protection_passwords_left':
       return one
         ? '1 protected sheet leaves its file password behind'

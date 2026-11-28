@@ -42,12 +42,20 @@ export const XLSX_TABLE_STYLE = 'TableStyleLight1';
 const decode = (data: Uint8Array) => new TextDecoder().decode(data);
 
 /** A kept table part: its sheet, the worksheet's relationship to it, its part's name and what it reads as. */
-type KeptTable = {
+export type KeptTable = {
   sheet: number;
   relId: string;
   part: string;
   // Its table as read; null when it does not read as one LiveDoc could hold (it reaches other parts, say).
-  table: (TableCandidate & { columns: string[]; id: number; filter?: FileFilterColumn[] }) | null;
+  // `colIds` each column's `id` in order, as a table slicer's cache names one.
+  table:
+    | (TableCandidate & {
+        columns: string[];
+        colIds: number[];
+        id: number;
+        filter?: FileFilterColumn[];
+      })
+    | null;
 };
 
 // A table part read: its name, cells, header and total rows and column names; null when it is not one.
@@ -60,9 +68,9 @@ function readTablePart(xml: string): KeptTable['table'] {
   const ranges = readSqref(attributeOf(root, '', 'ref') ?? '');
   if (!name || ranges?.length !== 1) return null;
   const holder = childElement(root, SPREADSHEETML_NS, 'tableColumns');
-  const columns = (holder ? childElements(holder) : [])
-    .filter((e) => e.local === 'tableColumn')
-    .map((e) => attributeOf(e, '', 'name') ?? '');
+  const held = (holder ? childElements(holder) : []).filter((e) => e.local === 'tableColumn');
+  const columns = held.map((e) => attributeOf(e, '', 'name') ?? '');
+  const colIds = held.map((e) => Number(attributeOf(e, '', 'id') ?? NaN));
   // Its `autoFilter`: the table's own filter, on (D481), its columns by place in the sheet.
   const auto = childElement(root, SPREADSHEETML_NS, 'autoFilter');
   const filter = auto ? (autoFilterOf(auto, SPREADSHEETML_NS)?.cols ?? []) : undefined;
@@ -70,6 +78,7 @@ function readTablePart(xml: string): KeptTable['table'] {
     name,
     range: ranges[0]!,
     columns,
+    colIds,
     ...(filter ? { filter } : {}),
     header: (attributeOf(root, '', 'headerRowCount') ?? '1') !== '0',
     total: Number(attributeOf(root, '', 'totalsRowCount') ?? 0) > 0,
@@ -300,7 +309,8 @@ function tableXml(t: FileTable, id: number): string {
 
 /** A workbook's own table parts: by sheet, its `tableParts` and relationships; the parts; each sheet's record. */
 export type XlsxTableParts = {
-  sheets: ({ tableParts: string; rels: Relationship[]; record: string } | null)[];
+  // By sheet: its `tableParts`, relationships, record, and each table part's `id` in `xlsxTablesOf` order.
+  sheets: ({ tableParts: string; rels: Relationship[]; record: string; ids: number[] } | null)[];
   parts: OoxmlPart[];
 };
 
@@ -326,14 +336,16 @@ export function xlsxTableParts(
     }
     const nextId = relIds(i);
     const rels: Relationship[] = [];
+    const ids: number[] = [];
     for (const t of tables) {
+      ids.push(++id);
       do n++;
       while (takenNames.has(`xl/tables/table${n}.xml`));
       const name = `xl/tables/table${n}.xml`;
       out.parts.push({
         name,
         contentType: OOXML_CONTENT_TYPES.table,
-        data: new TextEncoder().encode(`${XML_DECLARATION}\n${tableXml(t, ++id)}\n`),
+        data: new TextEncoder().encode(`${XML_DECLARATION}\n${tableXml(t, id)}\n`),
       });
       rels.push({
         id: nextId(),
@@ -345,6 +357,7 @@ export function xlsxTableParts(
     out.sheets.push({
       tableParts: `<tableParts count="${rels.length}">${rels.map((r) => `<tablePart r:id="${r.id}"/>`).join('')}</tableParts>`,
       rels,
+      ids,
       record: `<livedoc:tables record="${escapeXmlAttribute(tableRecordText(tables))}" fingerprint="${fingerprint}"/>`,
     });
   });

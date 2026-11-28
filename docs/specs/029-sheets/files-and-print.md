@@ -76,6 +76,9 @@ format it arrived in ([Standard mapping](standard-mapping.md)).
   - **Filters**: "2 filter columns LiveDoc cannot read are left unfiltered: Data!C1 and Data!F1" (a top ten, a colour
     or icon filter, a condition LiveDoc has none for; a view past 50, named by its name)
     ([Filters in the file](standard-mapping.md#filters-in-the-file)).
+  - **Slicers**: "1 slicer LiveDoc cannot read is left out: Data" (one in LiveDoc's record it cannot read) and
+    "Slicers LiveDoc cannot read stay as the file had them on 1 sheet: Data" (Excel's, kept as they came)
+    ([Filters in the file](standard-mapping.md#filters-in-the-file)).
   - **Protection**: "1 protected sheet frees more than 50 ranges; the rest stay protected: Data"
     ([Protection in the file](standard-mapping.md#protection-in-the-file)).
   - **Named functions**: "1 named function LiveDoc cannot read is kept for Excel: TOOLONG"

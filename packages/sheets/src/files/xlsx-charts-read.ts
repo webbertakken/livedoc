@@ -1,10 +1,10 @@
 // A sheet's charts and pictures read from XLSX (docs/specs/029-sheets/standard-mapping.md "Charts in the file",
 // Reading, D275, D276; "Pictures in the file", D628): the drawing a worksheet kept, when every anchor in it is a chart
-// of a type built reading one block of its own sheet or a picture of bytes the package holds as PNG, JPEG, GIF or WebP,
-// becomes the sheet's charts and read pictures; the drawing leaves the kept content, and each chart's part stays kept,
-// named on its chart with the sum of what it was read as, to be written back in its place while the chart sums the
-// same, while a picture's media part leaves it unless kept content still names it. Any other drawing stays kept whole.
-// The look is read as `xlsx-charts.ts` writes it.
+// of a type built reading one block of its own sheet, a table slicer, or a picture of bytes the package holds as PNG,
+// JPEG, GIF or WebP, becomes the sheet's charts and read pictures; the drawing leaves the kept content, and each
+// chart's part stays kept, named on its chart with the sum of what it was read as, to be written back in its place
+// while the chart sums the same, while a picture's media part leaves it unless kept content still names it. Any other
+// drawing stays kept whole. The look is read as `xlsx-charts.ts` writes it.
 import {
   attributeOf,
   childElement,
@@ -42,6 +42,8 @@ import { readablePicture, type ReadPicture } from './file-pictures';
 import type { FileSheet } from './workbook-file';
 import { chartRestored } from './chart-nearest';
 import { EMU_PER_PX, GROUPING, LIVEDOC_CHART_NS } from './xlsx-charts';
+import { SLICER_SIZE_MIN } from '../objects/sheet-slicer';
+import { SLICER_DRAWING_NS } from './xlsx-slicers';
 
 const C_NS = 'http://schemas.openxmlformats.org/drawingml/2006/chart';
 const A_NS = 'http://schemas.openxmlformats.org/drawingml/2006/main';
@@ -387,21 +389,17 @@ function markerOf(el: XmlElement | undefined): Marker | null {
   return Object.values(m).every(Number.isFinite) ? m : null;
 }
 
-// The sides an object's box is kept to: a chart's, or a picture's.
-type Sides = { width: number; height: number; max: number };
-const CHART_SIDES: Sides = { ...SHEET_CHART_SIZE_MIN, max: SHEET_CHART_SIZE_MAX };
-const PICTURE_SIDES: Sides = {
-  width: SHEET_IMAGE_SIZE.min,
-  height: SHEET_IMAGE_SIZE.min,
-  max: SHEET_IMAGE_SIZE.max,
-};
+/** An anchor's cell, offsets and size, as a chart's or a slicer's. */
+export type AnchorPlace = Pick<FileChart, 'at' | 'width' | 'height'>;
 
-// Where an anchor puts its object, and its size; null for an anchor not on a cell.
+// Where an anchor puts its chart (or slicer or picture, `min` and `max` its sides' bounds), and its size; null for an
+// anchor not on a cell.
 function placeOf(
   anchor: XmlElement,
   sheet: FileSheet,
-  sides: Sides,
-): Pick<FileChart, 'at' | 'width' | 'height'> | null {
+  min: { width: number; height: number } = SHEET_CHART_SIZE_MIN,
+  max: number = SHEET_CHART_SIZE_MAX,
+): AnchorPlace | null {
   if (!/^(one|two)CellAnchor$/.test(anchor.local)) return null;
   const from = markerOf(childElement(anchor, XDR_NS, 'from'));
   if (!from) return null;
@@ -427,8 +425,8 @@ function placeOf(
       dx: clamp(from.dx, 0, OBJECT_OFFSET_MAX),
       dy: clamp(from.dy, 0, OBJECT_OFFSET_MAX),
     },
-    width: clamp(width, sides.width, sides.max),
-    height: clamp(height, sides.height, sides.max),
+    width: clamp(width, min.width, max),
+    height: clamp(height, min.height, max),
   };
 }
 
@@ -445,6 +443,8 @@ function relPart(
   const part = name ? parts.get(name) : undefined;
   return part && { name: name!, part };
 }
+
+const PICTURE_MIN = { width: SHEET_IMAGE_SIZE.min, height: SHEET_IMAGE_SIZE.min };
 
 // The picture an anchor holds, or null when it holds none that qualifies: its bytes a part of the package of a type a
 // sheet holds, neither cropped, turned nor flipped (D628).
@@ -471,7 +471,7 @@ function pictureOf(
     return null;
   const media = relPart(drawing, attributeOf(blip, R_NS, 'embed'), parts);
   const readable = media && readablePicture(media.part.data);
-  const place = readable && placeOf(anchor, sheet, PICTURE_SIDES);
+  const place = readable && placeOf(anchor, sheet, PICTURE_MIN, SHEET_IMAGE_SIZE.max);
   if (!place) return null;
   const nv = childElement(pic!, XDR_NS, 'nvPicPr');
   const cNvPr = nv && childElement(nv, XDR_NS, 'cNvPr');
@@ -493,21 +493,42 @@ function pictureOf(
 // What an anchor holds besides its object: its place and its client data.
 const ANCHOR_PARTS: ReadonlySet<string> = new Set(['from', 'to', 'ext', 'pos', 'clientData']);
 
-type DrawingRead = { charts: FileChart[]; pictures: ReadPicture[]; media: string[] };
+const MC_NS = 'http://schemas.openxmlformats.org/markup-compatibility/2006';
 
-// A drawing's charts and pictures, every anchor one that qualifies, or null.
+// The name of the table slicer an anchor holds in Excel's `mc:AlternateContent` frame; undefined for any other.
+function slicerNameOf(anchor: XmlElement): string | undefined {
+  const alternate = childElement(anchor, MC_NS, 'AlternateContent');
+  const choice = alternate && childElement(alternate, MC_NS, 'Choice');
+  const frame = choice && childElement(choice, XDR_NS, 'graphicFrame');
+  const data = a(a(frame, 'graphic'), 'graphicData');
+  if (!data || attributeOf(data, '', 'uri') !== SLICER_DRAWING_NS) return undefined;
+  const slicer = childElement(data, SLICER_DRAWING_NS, 'slicer');
+  return slicer && attributeOf(slicer, '', 'name');
+}
+
+type Drawn = {
+  charts: FileChart[];
+  slicers: Map<string, AnchorPlace>;
+  pictures: ReadPicture[];
+  // The media parts the pictures took.
+  media: string[];
+};
+
+// A drawing's charts, pictures and its table slicers named in `slicers`, every anchor one that qualifies, or null.
 function drawingObjects(
   drawing: KeptPart,
   parts: ReadonlyMap<string, KeptPart>,
   sheet: FileSheet,
-): DrawingRead | null {
+  slicerNames: ReadonlySet<string>,
+): Drawn | null {
   const parsed = parseXml(text(drawing));
   if (!parsed.ok) return null;
   const charts: FileChart[] = [];
+  const slicers = new Map<string, AnchorPlace>();
   const pictures: ReadPicture[] = [];
   const media: string[] = [];
   for (const anchor of childElements(parsed.root)) {
-    // An anchor holds one object: a chart's frame or a picture, nothing beside it.
+    // An anchor holds one object: a chart's frame, a slicer or a picture, nothing beside it.
     if (childElements(anchor).filter((e) => !ANCHOR_PARTS.has(e.local)).length !== 1) return null;
     if (childElement(anchor, XDR_NS, 'pic')) {
       const read = pictureOf(anchor, drawing, parts, sheet);
@@ -516,13 +537,20 @@ function drawingObjects(
       media.push(read.part);
       continue;
     }
+    const slicer = slicerNameOf(anchor);
+    if (slicer !== undefined) {
+      const place = slicerNames.has(slicer) && placeOf(anchor, sheet, SLICER_SIZE_MIN);
+      if (!place || slicers.has(slicer)) return null;
+      slicers.set(slicer, place);
+      continue;
+    }
     const frame = childElement(anchor, XDR_NS, 'graphicFrame');
     const ref = c(a(a(frame, 'graphic'), 'graphicData'), 'chart');
     const relId = ref && attributeOf(ref, R_NS, 'id');
     const chartPart = relPart(drawing, relId, parts);
     const name = chartPart?.name;
     const read = chartPart && readXlsxChartXml(text(chartPart.part), sheet.name);
-    const place = read && placeOf(anchor, sheet, CHART_SIDES);
+    const place = read && placeOf(anchor, sheet);
     if (!read || !place) return null;
     const nv = childElement(frame!, XDR_NS, 'nvGraphicFramePr');
     const cNvPr = nv && childElement(nv, XDR_NS, 'cNvPr');
@@ -540,7 +568,9 @@ function drawingObjects(
     );
     charts.push({ ...chart, kept: { part: name!, sum: fileChartSum(chart) } });
   }
-  return charts.length || pictures.length ? { charts, pictures, media } : null;
+  return charts.length || slicers.size || pictures.length
+    ? { charts, slicers, pictures, media }
+    : null;
 }
 
 const DRAWING = /^<(?:[\w.-]+:)?drawing\b/;
@@ -553,13 +583,20 @@ const REL_ID = /\s[\w.-]+:id="([^"]+)"/;
 export function readXlsxCharts(
   sheets: readonly FileSheet[],
   kept: KeptContent<FileAt> | undefined,
-): { sheets: FileSheet[]; kept: KeptContent<FileAt> | undefined } {
+  // By sheet, the table slicers its drawing may hold (xlsx-slicers-read.ts); their places come back in `slicers`.
+  slicerNames: (sheet: number) => ReadonlySet<string> = () => new Set(),
+): {
+  sheets: FileSheet[];
+  kept: KeptContent<FileAt> | undefined;
+  slicers?: Map<string, AnchorPlace>[];
+} {
   if (!kept) return { sheets: [...sheets], kept };
   const parts = new Map(kept.parts.map((p) => [p.name, p]));
   let items = kept.items;
   let relationships = kept.relationships;
   const gone = new Set<string>();
   const media = new Set<string>();
+  const placed = sheets.map(() => new Map<string, AnchorPlace>());
   const out = sheets.map((sheet, i) => {
     const item = kept.items.find(
       (it) => it.place === 'worksheet' && it.at.sheet === i && DRAWING.test(it.xml),
@@ -569,16 +606,18 @@ export function readXlsxCharts(
       (r) => r.from === 'sheet' && r.at.sheet === i && r.id === relId && !r.external,
     );
     const drawing = rel ? parts.get(rel.target.replace(/^\//, '')) : undefined;
-    const read = drawing ? drawingObjects(drawing, parts, sheet) : null;
-    if (!read) return sheet;
+    const drawn = drawing ? drawingObjects(drawing, parts, sheet, slicerNames(i)) : null;
+    if (!drawn) return sheet;
+    const { charts, pictures } = drawn;
+    placed[i] = drawn.slicers;
     items = items.filter((it) => it !== item);
     relationships = relationships.filter((r) => r !== rel);
     gone.add(drawing!.name);
-    for (const name of read.media) media.add(name);
+    for (const name of drawn.media) media.add(name);
     return {
       ...sheet,
-      ...(read.charts.length ? { charts: read.charts } : {}),
-      ...(read.pictures.length ? { readPictures: read.pictures } : {}),
+      ...(charts.length ? { charts } : {}),
+      ...(pictures.length ? { readPictures: pictures } : {}),
     };
   });
   const left = kept.parts.filter((p) => !gone.has(p.name));
@@ -596,5 +635,6 @@ export function readXlsxCharts(
       relationships,
       parts: left.filter((p) => !media.has(p.name) || named.has(p.name)),
     },
+    ...(placed.some((m) => m.size) ? { slicers: placed } : {}),
   };
 }

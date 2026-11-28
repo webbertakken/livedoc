@@ -257,6 +257,8 @@ export class XlsxKeptWriter {
     pivotCaches: readonly string[] = [],
     // LiveDoc's own `customWorkbookView`s, its filter views' names, after the kept ones in one `customWorkbookViews`.
     views: readonly string[] = [],
+    // LiveDoc's own workbook `ext`s (its table slicers' caches), after the kept ones in one `extLst`.
+    exts: readonly string[] = [],
   ): string[] {
     const kept: string[] = [];
     const names: string[] = [];
@@ -289,9 +291,9 @@ export class XlsxKeptWriter {
     names.push(...functions.names);
     if (names.length > 0) kept.push(`<definedNames>${names.join('')}</definedNames>`);
     const held = withinKept(
-      withinKept(kept, 'pivotCaches', pivotCaches),
-      'customWorkbookViews',
-      views,
+      withinKept(withinKept(kept, 'pivotCaches', pivotCaches), 'customWorkbookViews', views),
+      'extLst',
+      exts,
     );
     return inOrder(WORKBOOK_ORDER, held, own);
   }
