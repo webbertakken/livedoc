@@ -95,6 +95,26 @@ describe('a spreadsheet tab’s render', () => {
     expect(drawn).toContain('data:image/png;base64,AQID');
   });
 
+  // inserted-objects.md "Images in a cell": a cell's picture drawn in its cell, its bytes inlined as an image's are.
+  it('draws the pictures held in its cells', async () => {
+    kit.sql.sql.exec(
+      "INSERT INTO images (id, owner_id, content_type, byte_size, width, height, sha256, created_at) VALUES ('g-cow', 'owner', 'image/png', 3, 1, 1, 'x', 0);",
+    );
+    const cells: SheetWrite = {
+      kind: 'cells',
+      cells: [{ r: R(3), c: C(1), i: { img: { id: 'g-cow', alt: 'A cow' } } }],
+    };
+    expect((await kit.write('book1', cells)).status).toBe(200);
+    expect(await (await render('book1')).text()).toContain('A cow');
+    (kit.sql.env as unknown as { IMAGES: unknown }).IMAGES = {
+      get: async () => ({
+        httpMetadata: { contentType: 'image/png' },
+        arrayBuffer: async () => new Uint8Array([1, 2, 3]).buffer,
+      }),
+    };
+    expect(await (await render('book1')).text()).toContain('data:image/png;base64,AQID');
+  });
+
   it('refuses a range it cannot read, and one on a tab that is no spreadsheet’s', async () => {
     expect((await render('book1', '?range=nope')).status).toBe(400);
     expect((await render('plan1', '?range=A1')).status).toBe(400);

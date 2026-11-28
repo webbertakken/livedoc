@@ -54,6 +54,8 @@ export type SheetRenderModel = {
     arrow?: true;
     link?: string;
     spark?: readonly SparkShape[];
+    // A gallery picture the cell shows: drawn by the caller as an image element over the Sheet, never here.
+    picture?: { id: string; alt?: string };
   }[];
   // The font the cells were measured in, which a cell with no font of its own is drawn in (sheet.md "Row height").
   font?: string;

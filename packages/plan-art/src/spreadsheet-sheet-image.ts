@@ -1,8 +1,9 @@
 // A spreadsheet's sheet as an image (docs/specs/029-sheets/sheet-store.md "Agents in a spreadsheet", Previews): the
 // sheet laid out as a Plan Sheet tab is for its image, so it draws through the same renderer and the same PNG step: a
-// Sheet framing its cells from A1, or from a range's top-left, and the sheet's own images (inserted-objects.md "Images
-// over cells", image elements the renderer fetches as any tab's) and charts over them at their cells. A
-// spreadsheet's tab holds no elements of its own, so without this its picture was empty. Pure.
+// Sheet framing its cells from A1, or from a range's top-left, the pictures its cells hold in their boxes, and the
+// sheet's own images (inserted-objects.md "Images over cells", image elements the renderer fetches as any tab's) and
+// charts over them at their cells. A spreadsheet's tab holds no elements of its own, so without this its picture was
+// empty. Pure.
 import {
   SHEET_COL_HEAD_H,
   SHEET_HEADER_H,
@@ -71,6 +72,47 @@ function spanPx(
   return px;
 }
 
+// The cell's right and bottom line, left showing past a picture, as the grid draws one under its lines.
+const GRID_LINE = 1;
+
+// px from the first of `sizes` up to `to` (exclusive).
+const sumTo = (sizes: readonly number[], to: number) => {
+  let px = 0;
+  for (let i = 0; i < to; i++) px += sizes[i] ?? 0;
+  return px;
+};
+
+// The pictures the window's cells show (inserted-objects.md "Images in a cell"): each a square-cornered image element
+// filling its cell's box, merged cells' summed, kept within the window; the element's `contain` keeps it in
+// proportion and centred, as the grid draws it.
+function cellPictures(
+  model: SheetRenderModel,
+  window: { width: number; height: number },
+  left: number,
+  top: number,
+): ImageElement[] {
+  const out: ImageElement[] = [];
+  for (const cell of model.cells) {
+    if (!cell.picture) continue;
+    const x = sumTo(model.colWidths, cell.c);
+    const y = sumTo(model.rowHeights, cell.r);
+    const w = sumTo(model.colWidths, cell.c + (cell.colSpan ?? 1)) - x;
+    const h = sumTo(model.rowHeights, cell.r + (cell.rowSpan ?? 1)) - y;
+    out.push({
+      id: `cell-picture-${cell.r}-${cell.c}`,
+      type: 'image',
+      x: left + x,
+      y: top + y,
+      width: Math.min(w, window.width - x) - GRID_LINE,
+      height: Math.min(h, window.height - y) - GRID_LINE,
+      imageId: cell.picture.id,
+      borderRadius: 'none',
+      ...(cell.picture.alt ? { alt: cell.picture.alt } : {}),
+    });
+  }
+  return out;
+}
+
 export function spreadsheetSheetImage(
   wb: Workbook,
   sheetId: string,
@@ -130,7 +172,7 @@ export function spreadsheetSheetImage(
   } as Element;
   const left = SHEET_ROW_HEAD_W;
   const top = SHEET_HEADER_H + SHEET_COL_HEAD_H;
-  const drawn: Element[] = [];
+  const drawn: Element[] = [...cellPictures(model, window, left, top)];
   // Images under the charts, as the grid draws them; one drawn only when its corner is in the window.
   for (const image of images) {
     const at = placed(image);
