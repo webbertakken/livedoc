@@ -16,6 +16,20 @@ Views of the kind in `@livedoc/document-views` ([Document views](../024-agents/d
 | `text`      | The body as Markdown, paragraph numbers on request (`--lines`), whole or a range; kept content as `[kept: <name>]` |
 | `structure` | Paragraphs with their style, lists, tables with their size, objects, sections, comments and suggestions, by id     |
 
+- **Paragraph numbers are the refs.** A paragraph has no id, so every view and operation names one as `¶<n>`, counted
+  from 1 over a document tab's body in reading order, a table's paragraphs row by row as the text view prints them.
+  Comments and suggestions keep their ids.
+- **`outline`** (the default): a header `text-document "<name>" · <odt|docx> · <n> document tabs · <p> paragraphs`,
+  then each document tab, `◂` on the one read, with its headings two spaces in a level:
+  `¶12 H2 Actions (6 paragraphs)`. A tab without headings says `no headings`; an empty body, `empty`.
+- **`text`**: the tab's body as its Markdown download writes it; `lines` puts `¶<n> ` before each paragraph; `range`
+  (`40..60`, or one number) reads part of it, refused `invalid_value` outside `1..<count>`.
+- **`structure`**: a line a paragraph (its style, its list and level, ticked or not), a line a table (its first and
+  last paragraph, rows × columns), a line an object (picture, drawing, equation, with its alt text), section breaks;
+  then the comments and the suggestions by id, each with its paragraph and its first 40 characters.
+- A Viewer reads the views as their copy holds the document: no comments, no authors. A link to one document tab reads
+  that tab. The element views (`graph`, `layout`, `show`, ...) are refused `invalid_value`, naming the three.
+
 ## Writing
 
 A text document changeset ([Agent changesets](../024-agents/agent-changesets.md)) is atomic, sequenced by the room,
