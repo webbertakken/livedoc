@@ -54,3 +54,35 @@ for Plan tabs, [Export fidelity](../specs/020-import-export/export-fidelity.md) 
 8. Don't rasterise the live DOM to compare: a DOM-to-image capture of the editor froze the page for over 45 seconds and
    came out blank (slots animate in and lazy-mount). Compare the preview with a screenshot of the tab instead.
 9. Reload the page when done, so the patched `click` is gone, and close your browser tab.
+
+## Text documents
+
+A text document has no Export dialog: File > Download writes each format
+([Files and print](../specs/034-text-documents/files-and-print.md#downloading)). Prove every format with readers
+LiveDoc did not write, after a change to a writer, a reader or the model.
+
+1. Run the e2e stack (`pnpm e2e:stack`, or the office project's stack) and write a throwaway Playwright spec under
+   `apps/live/e2e/office/`; delete it afterwards. Downloads go through Playwright's `download` event and `saveAs`, so
+   nothing lands in the Downloads folder and the step above's patched `click` is not needed.
+2. Open real files with File > Open on a new text document, never one typed for the test alone:
+   `packages/text-documents/corpus/word/SampleDoc.docx` (two pages, two fonts, a colour) and `VariousPictures.docx`
+   (pictures). Wait for the heading to name the file before downloading.
+3. Download each item of File > Download in turn: `.docx`, `.odt`, `.fodt`, `.rtf`, `.pdf`, `.txt`, the zipped Web
+   Page, `.epub` and `.md`. The other format's download asks first: press the conversion dialog's **Download**
+   (`[data-conversion-dialog="listed"]`).
+4. Read the word processing files with LibreOffice, under a CPU slot and with a profile of its own, so an open
+   LibreOffice is not disturbed:
+   `spinner slot run cpu -- soffice -env:UserInstallation=file:///tmp/lo-verify --headless --convert-to "txt:Text (encoded):UTF8" --outdir <dir> <files>`.
+   Convert the source `.docx` the same way, squeeze whitespace in both, and compare: `.docx`, `.odt`, `.fodt` and
+   `.rtf` each hold the source's text exactly.
+5. Read the PDF with poppler: `pdfinfo` says `Producer: LiveDoc`, `Tagged: yes`, the page count and the page size
+   the document sets; `pdffonts` says `yes` under `emb` for every font; `pdftotext` gives the source's text;
+   `pdfimages -list` lists each picture (with its soft mask where it has transparency).
+6. Test the archives with `unzip -tq` (Web Page and EPUB). The EPUB's first entry is `mimetype`, stored
+   (`unzip -Zv <file> mimetype` says `none (stored)`); the Web Page holds `<name>.html` and `images/1.png` on.
+7. Read `.txt` and `.md` against the spec's rules for them: a paragraph a line; a picture as `[alt]` in Plain Text and
+   escaped `\[alt\]` in Markdown.
+8. Read `pdffonts` against the document's fonts: a font LiveDoc carries under another name is written in its match
+   (`SampleDoc.docx`'s body, Calibri by its theme, in Carlito), and one it does not carry in its fallback (Arial
+   Black in Arimo), as the editor draws them. Anything else that differs is a bug, written up with the file that
+   shows it.

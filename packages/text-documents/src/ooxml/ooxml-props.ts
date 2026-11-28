@@ -60,8 +60,23 @@ export const MAPPED_RPR = new Set([
   'vertAlign',
 ]);
 
-/** Text properties and the character style of a `w:rPr`. */
-export function readRunProps(rPr: XmlElement | undefined): { style?: string; props: TextProps } {
+/** A Word theme's heading (major) and body (minor) Latin typefaces. */
+export type ThemeFonts = { readonly major?: string; readonly minor?: string };
+
+// A font named by the theme (standard-mapping.md "What the model holds", A theme's font): only the Latin slots' names,
+// as the model holds one font a run.
+function themeFont(fonts: XmlElement | undefined, theme: ThemeFonts): string | undefined {
+  const named = wAttr(fonts, 'asciiTheme') ?? wAttr(fonts, 'hAnsiTheme');
+  if (named === 'majorAscii' || named === 'majorHAnsi') return theme.major;
+  if (named === 'minorAscii' || named === 'minorHAnsi') return theme.minor;
+  return undefined;
+}
+
+/** Text properties and the character style of a `w:rPr`, a font named by the theme read through `theme`. */
+export function readRunProps(
+  rPr: XmlElement | undefined,
+  theme: ThemeFonts = {},
+): { style?: string; props: TextProps } {
   if (!rPr) return { props: {} };
   const fonts = child(rPr, 'rFonts');
   const underline = val(child(rPr, 'u'));
@@ -71,7 +86,7 @@ export function readRunProps(rPr: XmlElement | undefined): { style?: string; pro
   return compact({
     style: val(child(rPr, 'rStyle')),
     props: compact({
-      font: wAttr(fonts, 'ascii') ?? wAttr(fonts, 'hAnsi'),
+      font: wAttr(fonts, 'ascii') ?? wAttr(fonts, 'hAnsi') ?? themeFont(fonts, theme),
       size: halfPointsToPt(val(child(rPr, 'sz'))),
       bold: toggle(child(rPr, 'b')),
       italic: toggle(child(rPr, 'i')),
