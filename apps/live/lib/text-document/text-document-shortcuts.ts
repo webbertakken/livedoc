@@ -59,7 +59,7 @@ export const TEXT_DOCUMENT_SHORTCUTS: readonly ShortcutRow[] = [
     'built',
   ),
   row('save', 'Common actions', 'Save', 'Ctrl+S', '⌘+S', 'Ctrl+S', 'specified'),
-  row('print', 'Common actions', 'Print', 'Ctrl+P', '⌘+P', 'Ctrl+P', 'specified'),
+  row('print', 'Common actions', 'Print', 'Ctrl+P', '⌘+P', 'Ctrl+P', 'built'),
   row('open', 'Common actions', 'Open', 'Ctrl+O', '⌘+O', 'Ctrl+O', 'built'),
   row('find', 'Common actions', 'Find', 'Ctrl+F', '⌘+F', 'Ctrl+F', 'specified'),
   row(

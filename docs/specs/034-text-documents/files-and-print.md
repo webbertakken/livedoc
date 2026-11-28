@@ -169,7 +169,15 @@ and show **Load picture** for an Editor.
   selections, bookmark glyphs, non-printing characters, picture and table handles, selected cells, a header's bar.
   Content kept from the file keeps its room but prints as nothing: its placeholder is LiveDoc's own (default).
 - **Print preview** (File): the pages as printed, with **Print** and **Close**: it follows Print, pending suggestions
-  drawn accepted, never Viewing, which draws them not yet made (director, 2026-11-27).
+  drawn accepted, never Viewing, which draws them not yet made (director, 2026-11-27). Its bar, **Print preview**,
+  stands in place of the menus and the toolbar; the side panels, the ruler and the word count are put away; the
+  pages are read only; Escape closes it and ⌘P prints.
+- **While a print is made**, a dialog, **Making the print**, says each step as the PDF's does; closing it cancels. The
+  browser's own dialog follows. Where the browser cannot print a PDF it is handed, the PDF's pages go to it drawn as
+  pictures. A print the browser refuses (it throws, or a page inside another's frame never opens its dialog within
+  3 seconds) says so: "Your browser blocked printing. Download the PDF and print it from there.", with **Download
+  PDF** and **Cancel** (director, 2026-11-28). A print that cannot be made says "The print couldn’t be made. Try
+  again.". ⌘P is never the browser's print of LiveDoc's page.
 
 ## Make a copy
 
@@ -202,6 +210,6 @@ Participants; converting, opening into a folder and trashing are an Editor's (tr
 ## Telemetry
 
 `Document · Imported · TextDocument<Format>` (Odt, Fodt, Docx, Rtf, Txt, Html, Md, Pdf),
-`Document · Exported · TextDocument<Format>`, `Document · Changed · TextDocumentConverted`, `UI · Used · TextDocumentPrint`,
+`Document · Exported · TextDocument<Format>`, `Document · Changed · TextDocumentConverted`, `UI · Used · TextDocumentPrint`, `UI · Used · TextDocumentPrintPreview`,
 `UI · Used · TextDocumentSecurityLimitations` (File > Security limitations reopened),
 `Document · Duplicated · TextDocument`. Never content.
