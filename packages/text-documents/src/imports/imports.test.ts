@@ -22,12 +22,12 @@ const texts = (blocks: readonly Block[]) =>
   blocks.map((b) => (b.type === 'paragraph' ? Paragraph.text(b) : `<${b.type}>`));
 
 describe('importTypeOfFileName', () => {
-  it('names Plain Text, Markdown and HTML by their extensions', () => {
+  it('names Plain Text, Markdown, HTML and Rich Text by their extensions', () => {
     expect(
-      ['a.txt', 'b.MD', 'c.markdown', 'd.docx', 'e', '.txt.odt', 'f.HTM', 'g.html'].map(
+      ['a.txt', 'b.MD', 'c.markdown', 'd.docx', 'e', '.txt.odt', 'f.HTM', 'g.html', 'h.rtf'].map(
         importTypeOfFileName,
       ),
-    ).toEqual(['txt', 'md', 'md', undefined, undefined, undefined, 'html', 'html']);
+    ).toEqual(['txt', 'md', 'md', undefined, undefined, undefined, 'html', 'html', 'rtf']);
   });
 });
 

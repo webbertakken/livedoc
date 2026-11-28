@@ -207,7 +207,7 @@ describe('a text document opened from a file', () => {
   });
 
   // files-and-print.md "Opening": Plain Text, Markdown and HTML are imported, born in ODF.
-  it('imports Plain Text, Markdown and HTML into an ODF text document, and refuses one into Word', async () => {
+  it('imports Plain Text, Markdown, HTML and Rich Text into an ODF text document, and refuses one into Word', async () => {
     const db = sqliteD1();
     const md = base64OfBytes(new TextEncoder().encode('# Plan\n\n- one\n- two'));
     expect(
@@ -222,6 +222,13 @@ describe('a text document opened from a file', () => {
     ).toBe(201);
     const read = await call(page, 'GET', '/api/documents/D/text-documents/t1/state');
     expect((await bodyOfState(read)).map((p) => p.text)).toEqual(['Web']);
+    const rtf = base64OfBytes(new TextEncoder().encode('{\\rtf1\\ansi Rich\\par}'));
+    const rich = sqliteD1();
+    expect(
+      (await create(rich, { textDocuments: [{ tabId: 't1', file: rtf, type: 'rtf' }] })).status,
+    ).toBe(201);
+    const richState = await call(rich, 'GET', '/api/documents/D/text-documents/t1/state');
+    expect((await bodyOfState(richState)).map((p) => p.text)).toEqual(['Rich']);
     const txt = base64OfBytes(new TextEncoder().encode('a\nb'));
     const word = { ...textTab, format: 'ooxml' };
     const refused = await create(

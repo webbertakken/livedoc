@@ -6,6 +6,7 @@ export type DroppedReason =
   | 'signature'
   | 'thumbnail'
   | 'ole-object'
+  | 'picture-format'
   | 'active-content'
   | 'field'
   | 'link'

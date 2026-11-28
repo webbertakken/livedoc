@@ -205,7 +205,7 @@ describe('writeRtf', () => {
       ]),
     );
     expect(body).toBe(
-      `${NORMAL}\n${RUN}Claim{\\super\\chftn}{\\footnote\\pard\\plain{\\super\\chftn} ${NORMAL}\n${RUN}Source.}}x}\\par\n`,
+      `${NORMAL}\n${RUN}Claim{\\super\\chftn}{\\footnote\\pard\\plain{\\super\\chftn}${NORMAL}\n${RUN}Source.}}x}\\par\n`,
     );
   });
 

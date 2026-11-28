@@ -140,7 +140,7 @@ function rtfWriter(document: TextDocument, tables: RtfTables): RtfWriter {
       case 'equation':
         return rtfText(Equations.linear(inline.math));
       case 'note':
-        return `{\\super\\chftn}{\\footnote\\pard\\plain{\\super\\chftn} ${blocksRtf(inline.blocks, false).replace(/\\par\n?$/, '')}}`;
+        return `{\\super\\chftn}{\\footnote\\pard\\plain{\\super\\chftn}${blocksRtf(inline.blocks, false).replace(/\\par\n?$/, '')}}`;
       case 'bookmark':
         return `{\\*\\bkmkstart ${rtfText(inline.name)}}{\\*\\bkmkend ${rtfText(inline.name)}}`;
       default:

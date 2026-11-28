@@ -72,3 +72,26 @@ test('an HTML file opens as a new text document, its script never read', async (
   await expect(body).not.toContainText('pwned');
   expectNoPageErrors(pageErrors);
 });
+
+const RTF =
+  '{\\rtf1\\ansi{\\fonttbl{\\f0 Arial;}}{\\stylesheet{\\s1\\outlinelevel0 heading 1;}}\\pard\\s1 Minutes\\par\\pard Agreed {\\b unanimously}.\\par}';
+
+test('a Rich Text file opens as a new text document', async ({ page, pageErrors }) => {
+  test.setTimeout(90_000);
+  await page.goto('/new?kind=text-document');
+  await expect(page.locator('[data-text-document-surface="ready"]')).toBeVisible();
+  const open = await officeMenuItem(page, ['File', 'Open']);
+  const [chooser] = await Promise.all([page.waitForEvent('filechooser'), open.click()]);
+  await chooser.setFiles({
+    name: 'Minutes.rtf',
+    mimeType: 'application/rtf',
+    buffer: Buffer.from(RTF),
+  });
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Minutes');
+  const body = page.locator(BODY);
+  await expect(body).toContainText('Agreed');
+  await expect(
+    body.locator('[style*="font-weight: 700"]').filter({ hasText: 'unanimously' }),
+  ).toHaveCount(1);
+  expectNoPageErrors(pageErrors);
+});

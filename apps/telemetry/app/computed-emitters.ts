@@ -587,7 +587,7 @@ export const COMPUTED_EMITTERS: Record<string, ComputedValues> = {
   // A text document opened or imported from a file (docs/specs/034-text-documents/files-and-print.md "Opening"), by its
   // extension.
   'apps/live/lib/text-document/open-text-document-file.ts Tab·Imported': {
-    values: ['Odt', 'Ott', 'Docx', 'Dotx', 'Docm', 'Txt', 'Md', 'Html'],
+    values: ['Odt', 'Ott', 'Docx', 'Dotx', 'Docm', 'Txt', 'Md', 'Html', 'Rtf'],
   },
   // A text document downloaded (docs/specs/034-text-documents/files-and-print.md "Downloading"), by its file type.
   'apps/live/components/text-document/TextDocumentTitleRow.tsx Document·Exported': {

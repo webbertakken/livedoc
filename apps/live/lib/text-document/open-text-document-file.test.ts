@@ -69,8 +69,9 @@ describe('importedTypeOf', () => {
         'g.txt',
         'h.markdown',
         'i.htm',
+        'j.rtf',
       ].map(importedTypeOf),
-    ).toEqual(['Odt', 'Odt', 'Ott', 'Docx', 'Dotx', 'Docm', 'Txt', 'Md', 'Html']);
+    ).toEqual(['Odt', 'Odt', 'Ott', 'Docx', 'Dotx', 'Docm', 'Txt', 'Md', 'Html', 'Rtf']);
   });
 });
 
