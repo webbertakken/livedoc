@@ -69,7 +69,12 @@ function suggestedOf(context: MarkdownContext, inline: Inline): Suggested {
 
 /** Text wrapped in its marks, the spaces at its edges kept outside them as CommonMark asks. */
 function marked(text: string, mark: Mark): string {
-  const [, lead = '', core = '', trail = ''] = /^(\s*)([\s\S]*?)(\s*)$/.exec(text) ?? [];
+  // Linear in the text: trim measures the edges, where a regular expression could backtrack on long runs of spaces.
+  const start = text.length - text.trimStart().length;
+  const end = Math.max(start, text.trimEnd().length);
+  const lead = text.slice(0, start);
+  const core = text.slice(start, end);
+  const trail = text.slice(end);
   if (!core) return mark.suggested ? critic(text, mark.suggested) : text;
   let out = core;
   if (mark.strike) out = `~~${out}~~`;

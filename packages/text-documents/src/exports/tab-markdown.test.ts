@@ -61,3 +61,24 @@ describe('tabMarkdown', () => {
     expect(notes[0]!.paragraph).toBeGreaterThan(0);
   });
 });
+
+describe('marks around long runs of spaces', () => {
+  it('keeps the edges outside the marks, in time linear in the text', () => {
+    const doc = TextDocument.fromTexts(['']);
+    const tabs = '\t'.repeat(50_000);
+    const bold: TextDocument = {
+      ...doc,
+      body: [
+        {
+          ...(doc.body[0] as Extract<(typeof doc.body)[number], { type: 'paragraph' }>),
+          inlines: [{ type: 'run', text: `${tabs}x${tabs}y`, props: { bold: true } }],
+        },
+      ],
+    };
+    const started = performance.now();
+    const text = writeMarkdown(bold);
+    expect(performance.now() - started).toBeLessThan(200);
+    expect(text.startsWith(`${tabs}**x`)).toBe(true);
+    expect(text.trimEnd().endsWith('y**')).toBe(true);
+  });
+});
