@@ -2397,6 +2397,9 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
         "const": true,
         "type": "boolean"
       },
+      "ln": {
+        "type": "string"
+      },
       "nc": {
         "type": "string"
       },
@@ -7851,6 +7854,7 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
       "fs": {},
       "ha": {},
       "i": {},
+      "ln": {},
       "nc": {},
       "nf": {},
       "ro": {},

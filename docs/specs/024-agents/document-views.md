@@ -123,11 +123,12 @@ instead, through the same doors (`read_document`, `livedoc tab view`, `?view=`),
 - **`cells`** reads one sheet, the tab's: `range` an A1 cell or range (when absent, the used range and the values
   spills and pivot tables show past it). One line per row holding a non-empty cell, `<row> | <cell> | <cell>`, each
   cell its A1 address and its input, a text as a JSON string, a number or boolean as typed, a formula with its `=`
-  and `→ <what it shows>`; a value whose shown text differs from its input (a format) adds `→ "<shown>"`:
+  and `→ <what it shows>`; a value whose shown text differs from its input (a format) adds `→ "<shown>"`; a cell's
+  own link adds `↗ "<link>"`, a range or sheet of the workbook by name, as `read_sheet` reads it:
 
   ```text
   sheet "Models" · cells A1:C3 of A1:F40
-  1 | A1 "Model" | B1 "Cost" | C1 "Index"
+  1 | A1 "Model" ↗ "https://docs.nu/" | B1 "Cost" | C1 "Index"
   2 | A2 "Opus" | B2 15 → "$15.00" | C2 =B2*4 → 60
   ```
 

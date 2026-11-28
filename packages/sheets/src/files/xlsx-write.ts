@@ -1,6 +1,7 @@
 // A workbook written as XLSX (docs/specs/029-sheets/standard-mapping.md "What the model holds, and where each format
 // keeps it"): a SpreadsheetML workbook part naming a worksheet part per sheet, text in the shared strings, formulas in
 // Excel's grammar beside their cached values, and a spilled formula as a dynamic array. Same workbook, same bytes.
+import { xlsxHyperlinksOut } from './xlsx-hyperlinks';
 import {
   escapeXmlAttribute,
   escapeXmlText,
@@ -220,6 +221,17 @@ function cellXml(cell: FileCell, write: CellWrite, style: number): string {
   return `<c ${attrs.join(' ')}>${formula}${value}</c>`;
 }
 
+// A sheet's link relationships' ids, `rIdLink<n>`, none a kept relationship of the sheet holds.
+function linkIds(kept: readonly Relationship[]): () => string {
+  const taken = new Set(kept.map((r) => r.id));
+  let n = 0;
+  return () => {
+    do n++;
+    while (taken.has(`rIdLink${n}`));
+    return `rIdLink${n}`;
+  };
+}
+
 // The bindings every root LiveDoc writes declares: SpreadsheetML's, and relationships' as `r`.
 const OWN_NS = { '': SPREADSHEETML_NS, r: OFFICE_RELATIONSHIPS_NS };
 
@@ -232,6 +244,8 @@ type SheetParts = {
   // Its table slicers' relationship and worksheet `ext` (standard-mapping.md "Filters in the file").
   slicers: XlsxSlicerParts['sheets'][number];
   pictureVm: SheetContext['pictureVm'];
+  // Its cells' links (standard-mapping.md "Links in the file").
+  hyperlinks: string | null;
 };
 
 function worksheetXml(
@@ -335,6 +349,8 @@ function worksheetXml(
           },
         ]
       : []),
+    // Its cells' links (standard-mapping.md "Links in the file").
+    ...(parts.hyperlinks ? [{ name: 'hyperlinks', xml: parts.hyperlinks }] : []),
     // Its charts, through its drawing part (standard-mapping.md "Charts in the file").
     ...(drawingRelId ? [{ name: 'drawing', xml: `<drawing r:id="${drawingRelId}"/>` }] : []),
     // Its tables, through their table parts (standard-mapping.md "Tables in the file").
@@ -482,6 +498,10 @@ export function writeXlsx(file: WorkbookFile, title: string): FileWritten<Uint8A
   file.sheets.forEach((sheet, i) => {
     if (filters[i]!.beside) losses.push({ k: 'filter_beside_table', sheet: sheet.name });
   });
+  // Its cells' links, their relationships named apart from every other the sheet's parts number (`rIdLink<n>`).
+  const linked = file.sheets.map((sheet, i) =>
+    xlsxHyperlinksOut(sheet.cells, linkIds(kept.relationships('sheet', i))),
+  );
   const sheetParts = file.sheets.map((sheet, i): OoxmlPart => {
     const written = worksheetXml(sheet, i, { strings, styles, kept, tables }, renamed, losses, {
       drawingRelId: drawn.sheets[i]?.relId ?? null,
@@ -489,6 +509,7 @@ export function writeXlsx(file: WorkbookFile, title: string): FileWritten<Uint8A
       filters: filters[i]!,
       slicers: slicerParts.sheets[i] ?? null,
       pictureVm: pictured.vmOf,
+      hyperlinks: linked[i]?.xml ?? null,
     });
     dynamic ||= written.dynamic;
     return {
@@ -599,6 +620,7 @@ export function writeXlsx(file: WorkbookFile, title: string): FileWritten<Uint8A
         ...(tabled.sheets[i]?.rels ?? []),
         ...(slicerParts.sheets[i]?.rels ?? []),
         ...(pivoted.sheets[i] ?? []),
+        ...(linked[i]?.rels ?? []),
       ],
     ]),
     ...drawn.relationships,

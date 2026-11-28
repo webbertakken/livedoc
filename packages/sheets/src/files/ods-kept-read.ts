@@ -3,7 +3,7 @@
 import { isOdsProtectionAttribute } from './ods-protection';
 import { isOdsTableRecordAttribute } from './ods-tables';
 import { isOdsFilterRecordAttribute } from './ods-filters';
-import { cellParagraphs, isMarkedParagraph } from './ods-cell-text';
+import { cellLinkHref, cellParagraphs, isMarkedParagraph } from './ods-cell-text';
 import {
   attributeOf,
   childElement,
@@ -219,7 +219,8 @@ export class OdsKeeper {
     const out: KeptItem<FileAt>[] = [];
     let text = false;
     // Paragraphs holding marked text (a link, a span) are kept whole, read as the cell's text too (D376).
-    const marked = cellParagraphs(cell).some(isMarkedParagraph);
+    // A cell's text wholly one link is read as its link, not kept (D642).
+    const marked = cellParagraphs(cell).some(isMarkedParagraph) && cellLinkHref(cell) === null;
     for (const child of childElements(cell)) {
       const paragraph = child.uri === TEXT && child.local === 'p';
       text ||= paragraph;

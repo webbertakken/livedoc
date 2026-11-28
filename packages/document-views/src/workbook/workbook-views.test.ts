@@ -353,6 +353,22 @@ describe('sheetCellsView', () => {
     });
   });
 
+  it('adds a cell’s own link, a range of the workbook by name (inserted-objects.md "Links, agents")', () => {
+    const at = (r: number, c: number) => `${costs.layout.rows[r]}:${costs.layout.cols[c]}`;
+    const cells = new Map(formatted.cells);
+    cells.set(at(0, 0), { ...cells.get(at(0, 0))!, format: { ln: 'https://docs.nu/' } });
+    cells.set(at(0, 1), { ...cells.get(at(0, 1))!, format: { ln: '#gid=c1&range=B2' } });
+    const linked = new Workbook({
+      sheets: [{ ...formatted, cells } as Sheet],
+      locale: AGENT_LOCALE,
+    });
+    const view = sheetCellsView({ wb: linked, sheetId: 'c1', title: 'Costs', range: 'A1:B1' });
+    expect(view.ok && view.text.split('\n')[1]).toBe(
+      '1 | A1 "Model" ↗ "https://docs.nu/" | B1 "Cost" ↗ "Costs!B2"',
+    );
+    expect(view.ok && view.json.rows[0]!.cells[0]!.link).toBe('https://docs.nu/');
+  });
+
   it('says an empty sheet is one', () => {
     const empty = new Workbook({ sheets: [sheetOf('e1', 'Empty', [])], locale: AGENT_LOCALE });
     const view = sheetCellsView({ wb: empty, sheetId: 'e1', title: 'Empty' });

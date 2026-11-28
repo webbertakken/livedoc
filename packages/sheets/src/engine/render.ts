@@ -1,5 +1,6 @@
 // A sheet's top-left window as plain data: what images, thumbnails,
 // PDFs and api or MCP renders draw, with no DOM. Only the cells inside the window are worked out.
+import { sheetLink } from '../cell-link';
 import { columnLetters } from '../address';
 import { colWidth, layoutIndex, posRangeOf } from '../layout';
 import { cellLines, cellTurn, rowHeights } from '../row-fit';
@@ -48,7 +49,8 @@ type RenderCell = {
   chip?: { color?: string };
   // A dropdown drawn with an arrow at its right instead.
   arrow?: true;
-  // A HYPERLINK's allowed target (Workbook.hyperlinkOf): drawn as a link, underlined in the sheet's accent.
+  // Where the cell's link opens (Workbook.linkTargetOf): a web or email address, or a sheet of this workbook as its
+  // link (`#gid=`); drawn as a link, underlined in the sheet's accent.
   link?: string;
   // A SPARKLINE's chart (Workbook.sparklineOf), its shapes placed in the cell's box (charts.md "Sparklines").
   spark?: SparkShape[];
@@ -200,10 +202,10 @@ export function renderWindow(
       if (f.b) out.bold = true;
       if (f.i) out.italic = true;
       if (f.u) out.underline = true;
-      // A HYPERLINK draws as a link, wherever its sheet is drawn (formulas.md "Text").
-      const link = shown.text ? wb.hyperlinkOf(sheetId, r, c) : null;
-      if (link) {
-        out.link = link;
+      // A cell's link or a HYPERLINK draws as a link, wherever its sheet is drawn (formulas.md "Text", D637).
+      const target = shown.text ? wb.linkTargetOf(sheetId, r, c) : null;
+      if (target) {
+        out.link = target.k === 'web' ? target.href : sheetLink(target.sheetId, target.range);
         out.underline = true;
       }
       if (f.st) out.strike = true;

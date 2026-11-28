@@ -4,6 +4,7 @@
 // SHEET_VIEW_CHARS_MAX on a whole row, and a cut says where to read on.
 import type { ViewDoor } from '@livedoc/api-schema';
 import {
+  cellLinkText,
   formatA1,
   formatRange,
   parseRangeText,
@@ -22,7 +23,14 @@ export const CELLS_NOT_SPREADSHEET = "cells reads a spreadsheet's sheet";
 
 export type CellsViewInput = { wb: Workbook; sheetId: string; title: string; range?: string };
 
-export type CellJson = { at: string; input: string; value: AgentValue; display: string };
+// `link`: the cell's own link, a range or sheet of the workbook by name (inserted-objects.md "Links, agents").
+export type CellJson = {
+  at: string;
+  input: string;
+  value: AgentValue;
+  display: string;
+  link?: string;
+};
 export type CellsRowJson = { row: number; cells: CellJson[] };
 export type CellsJson = {
   view: 'cells';
@@ -50,6 +58,11 @@ const bare = (value: AgentValue, display: string) =>
     : jsonString(display);
 
 export function cellText(cell: CellJson): string {
+  const text = cellValueText(cell);
+  return cell.link === undefined ? text : `${text} ↗ ${jsonString(cell.link)}`;
+}
+
+function cellValueText(cell: CellJson): string {
   const { at, input, value, display } = cell;
   if (input.startsWith('=')) return `${at} ${formulaText(input)} → ${bare(value, display)}`;
   // A spilled cell has no input of its own.
@@ -83,12 +96,18 @@ export function sheetCellsView(
   let next: number | null = read.truncated ? start.r1 + read.rows.length : null;
   for (const [i, row] of read.rows.entries()) {
     const r = start.r1 + i;
-    const cells = row.flatMap((cell, j): CellJson[] =>
-      cell.input === '' && cell.display === ''
-        ? []
-        : // readRange answers an error as its text, so a value is never an error object.
-          [{ at: formatA1(r, start.c1 + j), ...cell, value: cell.value as AgentValue }],
-    );
+    const cells = row.flatMap((cell, j): CellJson[] => {
+      if (cell.input === '' && cell.display === '') return [];
+      const ln = wb.cellLinkOf(sheetId, r, start.c1 + j);
+      // readRange answers an error as its text, so a value is never an error object.
+      const out: CellJson = {
+        at: formatA1(r, start.c1 + j),
+        ...cell,
+        value: cell.value as AgentValue,
+      };
+      if (ln !== null) out.link = cellLinkText(ln, (id) => wb.sheet(id)?.title);
+      return [out];
+    });
     if (!cells.length) continue;
     const text = [String(r + 1), ...cells.map(cellText)].join(' | ');
     if (chars + text.length + 1 > SHEET_VIEW_CHARS_MAX) {

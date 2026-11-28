@@ -27,6 +27,7 @@ import {
 } from '../named-functions';
 import type { FormulaMeaning } from '../formula/meaning';
 import { safeHyperlink } from '../hyperlink';
+import { cellLinkTarget, type CellLinkTarget } from '../cell-link';
 import type { Sparkline } from '../sparkline/sparkline-read';
 import { SparklineMemo } from './sparkline-memo';
 import type { CellImage } from '../images/cell-image';
@@ -503,10 +504,35 @@ export class Workbook {
     return raw !== null && isRef(raw) ? (raw as RefValue).ref : null;
   }
 
+  // A cell's own link as held (inserted-objects.md "A cell's link", D636), whether or not it opens; null for none.
+  cellLinkOf(sheetId: string, r: number, c: number): string | null {
+    const sheet = this.sheets.get(sheetId);
+    const rowId = sheet?.layout.rows[r];
+    const colId = sheet?.layout.cols[c];
+    if (!rowId || !colId) return null;
+    return sheet.cells.get(cellKey(rowId, colId))?.format?.ln ?? null;
+  }
+
+  // Where a cell's link opens: its own, which wins over a HYPERLINK's (D638), else its HYPERLINK's; null when
+  // nothing opens (no link, or a file's link of another scheme, kept and never opened, D637).
+  linkTargetOf(sheetId: string, r: number, c: number): CellLinkTarget | null {
+    const own = this.cellLinkOf(sheetId, r, c);
+    if (own !== null) return cellLinkTarget(own);
+    const href = this.formulaHyperlinkOf(sheetId, r, c);
+    return href ? { k: 'web', href } : null;
+  }
+
+  // Where a cell's web or email link goes: its own when it is one (D638), else its HYPERLINK's (formulas.md "Text").
+  // Null for a link within the workbook (linkTargetOf) and for any other cell.
+  hyperlinkOf(sheetId: string, r: number, c: number): string | null {
+    const target = this.linkTargetOf(sheetId, r, c);
+    return target?.k === 'web' ? target.href : null;
+  }
+
   // Where a cell's HYPERLINK goes (docs/specs/029-sheets/formulas.md "Text"): the url argument of a formula that is a
   // HYPERLINK call at its top, worked out in the cell as evaluateAt works a rule out (no value kept, no dependency),
   // and kept only when safeHyperlink allows it. Null for any other cell, so the value stays the label everywhere.
-  hyperlinkOf(sheetId: string, r: number, c: number): string | null {
+  private formulaHyperlinkOf(sheetId: string, r: number, c: number): string | null {
     const input = this.inputAt(sheetId, r, c);
     if (!input || !('f' in input)) return null;
     const ast = storedAst(input.f);

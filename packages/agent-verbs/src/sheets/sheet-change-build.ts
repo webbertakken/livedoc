@@ -32,6 +32,7 @@ import {
   type SheetWrite,
   type Workbook,
   SheetLimits,
+  typedCellLink,
 } from '@livedoc/sheets';
 import type { SheetRefusal } from './sheet-state';
 import { notInGallery } from '../images/gallery';
@@ -69,6 +70,9 @@ export interface SheetFormatInput {
   numberFormat?: string | null;
   decimals?: number | null;
   currency?: string | null;
+  // The cell's link (inserted-objects.md "Links, agents"): an address, `Sheet2!A1:B4` or `Sheet2`, read by
+  // formatLinkOf before the patch is made; null takes it off.
+  link?: string | null;
 }
 
 export type SheetChange =
@@ -164,9 +168,22 @@ export function formatPatchOf(input: SheetFormatInput): FormatPatch | null {
     nf: input.numberFormat,
     dp: input.decimals,
     cur: input.currency,
+    ln: input.link,
   };
   const patch = Object.fromEntries(Object.entries(raw).filter(([, v]) => v !== undefined));
   return Object.keys(patch).length && validFormatPatch(patch) ? patch : null;
+}
+
+// A format's link as the cell holds it (cell-link.ts typedCellLink): undefined for none given, null to take it off,
+// false for one that reads as no link.
+function formatLinkOf(
+  wb: Workbook,
+  sheetId: string,
+  link: string | null | undefined,
+): string | null | undefined | false {
+  if (link === undefined || link === null) return link;
+  const sheets = wb.sheetList().map((s) => ({ id: s.id, title: s.title }));
+  return typedCellLink(link, sheets, sheetId) ?? false;
 }
 
 // Each format of the row (or column) at `source`, onto the rows (columns) `ids` made beside it.
@@ -185,8 +202,10 @@ function formatsCopied(
     if ((axis === 'r' ? r : c) !== id) continue;
     // A new column takes its neighbour's look but not its number format: a column of amounts beside dates is not
     // dates. A new row is the same columns, so it takes all of it.
-    const { nf: _nf, dp: _dp, cur: _cur, nc: _nc, ...look } = cell.format;
-    const f = axis === 'r' ? cell.format : look;
+    // A link is its cell's own, never copied (inserted-objects.md "A cell's link").
+    const { nf: _nf, dp: _dp, cur: _cur, nc: _nc, ln: _ln, ...look } = cell.format;
+    const { ln: _link, ...row } = cell.format;
+    const f = axis === 'r' ? row : look;
     if (Object.keys(f).length === 0) continue;
     for (const made of ids) out.push(axis === 'r' ? { r: made, c, f } : { r, c: made, f });
   }
@@ -265,7 +284,14 @@ export function buildSheetChange(
     case 'format': {
       const range = parseRangeText(change.range);
       if (!range) return badRange(change.range);
-      const patch = formatPatchOf(change.format);
+      const link = formatLinkOf(wb, sheetId, change.format.link);
+      if (link === false)
+        return refuse(
+          'format_invalid',
+          'Give a link as an http, https or mailto address, an email address, a range like Sheet2!A1:B4 or B2:C4, or ' +
+            "a sheet's name; null takes it off.",
+        );
+      const patch = formatPatchOf({ ...change.format, link });
       if (!patch)
         return refuse(
           'format_invalid',

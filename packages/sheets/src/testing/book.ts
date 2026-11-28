@@ -6,7 +6,7 @@ import { CellMap } from '../cells/cell-map';
 import { Workbook, type ArrayDialect } from '../engine/workbook';
 import type { Iteration } from '../engine/loops';
 import type { FormulaMeaning } from '../formula/meaning';
-import { cellKey, type CellInput, type Sheet, type SheetLayout } from '../sheet';
+import { cellKey, type CellFormat, type CellInput, type Sheet, type SheetLayout } from '../sheet';
 import { readTypedInput } from '../typed-input';
 import type { NamedFunction } from '../named-functions';
 import type { SheetTable } from '../tables/table';
@@ -120,9 +120,21 @@ export function book(
     sheets[sheets.indexOf(sheet)] = next;
     wb.updateSheet(next, [key]);
   };
+  // Set a cell's format as given (none clears it), its input kept, and tell the workbook.
+  const format = (a1: string, f: CellFormat | undefined, title = Object.keys(full)[0]!) => {
+    const { sheet, pos } = at(a1, title);
+    const key = cellKey(sheet.layout.rows[pos.r]!, sheet.layout.cols[pos.c]!);
+    const cells = sheet.cells.copy();
+    const input = cells.get(key)?.input;
+    cells.set(key, { ...(input ? { input } : {}), ...(f ? { format: f } : {}) });
+    const next = { ...sheet, cells };
+    sheets[sheets.indexOf(sheet)] = next;
+    wb.updateSheet(next, [key]);
+  };
   return {
     wb,
     sheets,
+    format,
     v: (a1: string, title?: string) => at(a1, title).value,
     // Retype a cell, as the editor would, and tell the workbook.
     set(a1: string, text: string, title = Object.keys(full)[0]!) {

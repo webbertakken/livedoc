@@ -68,6 +68,13 @@ const formatArg = z
     italic: z.boolean().optional().describe('Italic on or off.'),
     underline: z.boolean().optional().describe('Underline on or off.'),
     strikethrough: z.boolean().optional().describe('Strikethrough on or off.'),
+    link: z
+      .string()
+      .nullable()
+      .optional()
+      .describe(
+        "The cells' link: an http, https or mailto address, an email, a range like Sheet2!A1:B4 or B2:C4, or a sheet's name; null takes it off.",
+      ),
     color: z.string().nullable().optional().describe('Text colour, #rrggbb; null for the default.'),
     background: z.string().nullable().optional().describe('Fill colour, #rrggbb; null for none.'),
     fontSize: z
@@ -942,6 +949,10 @@ const readCell = z.object({
     .string()
     .optional()
     .describe('Set when its validation rule does not allow the value: what the rule allows.'),
+  link: z
+    .string()
+    .optional()
+    .describe("The cell's own link: an address, or a range or sheet of this spreadsheet by name."),
 });
 
 const readChart = z.object({

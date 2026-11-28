@@ -2,6 +2,7 @@
 // name, cells by position, each with its formula in Google's syntax and the value it last showed. The bridge between
 // the model (cells by row and column id, formulas by id references) and each format's reader and writer, so neither
 // format ever sees an id and the model never sees a format.
+import { fileLinkOf, linkFromFile, type FileLink } from './file-links';
 import { fileChartsOf, sheetChartsFromFile, type FileChart } from './file-charts';
 import {
   cellPictureToPlace,
@@ -105,6 +106,8 @@ export type FileCell = {
   // The picture it holds as its value (standard-mapping.md "Pictures in the file", D634); read back, with its bytes.
   picture?: FileCellPicture;
   readPicture?: ReadCellPicture;
+  // Its link, the whole cell's (standard-mapping.md "Links in the file", D642).
+  link?: FileLink;
 };
 
 export type FileSheet = {
@@ -308,6 +311,8 @@ export function workbookFileOf(
   sheets: readonly Sheet[],
   locale: string,
 ): WorkbookFile {
+  const titles = new Map(sheets.map((s) => [s.id, s.title]));
+  const titleOf = (id: string) => titles.get(id);
   return {
     sheets: sheets.map((sheet) => {
       const index = layoutIndex(sheet.layout);
@@ -317,7 +322,9 @@ export function workbookFileOf(
         const format = formatCodeOf(cell.format, locale) ?? undefined;
         // A theme colour stays one: XLSX holds it by its theme, ODF as the colour it is (D218).
         const style = cellStyleOf(cell.format);
-        if (!cell.input && format === undefined && !style) continue;
+        // A link to a sheet that is gone is written as none (D642).
+        const link = cell.format?.ln === undefined ? null : fileLinkOf(cell.format.ln, titleOf);
+        if (!cell.input && format === undefined && !style && !link) continue;
         const { r: rowId, c: colId } = splitCellKey(key);
         const r = index.rowPos.get(rowId);
         const c = index.colPos.get(colId);
@@ -325,6 +332,7 @@ export function workbookFileOf(
         const out: FileCell = { r, c };
         if (format !== undefined) out.format = format;
         if (style) out.style = style;
+        if (link) out.link = link;
         if (!cell.input) {
           cells.push(out);
           continue;
@@ -501,6 +509,14 @@ function formatsRead(locale: string): FormatsRead {
     read.set(code, made);
     return made;
   };
+}
+
+// A cell's format with its link, read from its file (D642); a link to a sheet the read did not make is none.
+function linked(
+  format: CellFormat | undefined,
+  ln: string | null | undefined,
+): CellFormat | undefined {
+  return ln ? { ...format, ln } : format;
 }
 
 function cellFormatOf(
@@ -705,7 +721,10 @@ export function sheetsFromFile(
         else losses.push({ k: 'formula_unread', sheet: m.title, r: cell.r, c: cell.c });
       }
       input ??= cell.value && !cell.readPicture ? literalInput(cell.value) : null;
-      const format = cellFormatOf(cell, m.title, formats, losses, joined);
+      const format = linked(
+        cellFormatOf(cell, m.title, formats, losses, joined),
+        cell.link && linkFromFile(cell.link, (title) => byTitle(title)?.id),
+      );
       if (input || format)
         cells.push({ r, c, ...(input ? { i: input } : {}), ...(format ? { f: format } : {}) });
     }
