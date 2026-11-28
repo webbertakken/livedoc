@@ -12,12 +12,13 @@ import {
   type TemplateKind,
 } from '@livedoc/templates';
 import { lucideChevronLeft } from '@livedoc/icons/lucide';
+import type { TextDocumentTemplateId } from '@livedoc/text-documents/templates/gallery';
 import { lucideGlyph } from '@livedoc/ui';
 import { PortalMenu } from '@/components/primitives/PortalMenu';
 import { FolderOutlineIcon } from '@/components/primitives/explorer-icons';
 import { paneGroupsFor } from '@/lib/new-document/pane-groups';
 import { BlankGlyph } from './blank-glyphs';
-import { kindPaneCards, NewDocumentPane, spotAttr } from './NewDocumentPane';
+import { NewDocumentPane, paneCountsFor, spotAttr } from './NewDocumentPane';
 import { digitRow, moveInMenu, paneRowsFor, type MenuSpot } from './new-document-keys';
 import { useMenuAim } from './useMenuAim';
 import type { NewDocumentChoice } from './start-new-document';
@@ -32,7 +33,12 @@ const PANE_HEIGHT = 'h-[26rem]';
 export type NewDocumentMenuProps = {
   anchor: HTMLElement | null;
   initial: NewDocumentBlankId;
-  onChoose: (blank: NewDocumentBlankId, choice: NewDocumentChoice, template: TemplateKind) => void;
+  onChoose: (
+    blank: NewDocumentBlankId,
+    choice: NewDocumentChoice,
+    template: TemplateKind,
+    textTemplate?: TextDocumentTemplateId,
+  ) => void;
   onClose: () => void;
   folderLabel?: string | undefined;
   onCreateFolder?: (() => void) | undefined;
@@ -103,9 +109,7 @@ export default function NewDocumentMenu({
     if (!at) return;
     const to = moveInMenu(event.key, at, {
       listLength: NEW_DOCUMENT_BLANKS.length,
-      pane: paneRowsFor(
-        blank.kind ? [kindPaneCards(blank)] : paneGroups.map((g) => g.kinds.length),
-      ),
+      pane: paneRowsFor(paneCountsFor(blank, paneGroups)),
     });
     if (!to) return;
     event.preventDefault();
@@ -203,6 +207,7 @@ export default function NewDocumentMenu({
             groups={paneGroups}
             onChoose={(template) => onChoose(blank.id, 'template', template)}
             onChooseKind={(choice) => onChoose(blank.id, choice, blank.blank)}
+            onChooseTextTemplate={(id) => onChoose(blank.id, 'template', blank.blank, id)}
           />
         </div>
       </div>

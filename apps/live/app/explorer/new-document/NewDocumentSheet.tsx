@@ -63,6 +63,7 @@ export default function NewDocumentSheet({
                   groups={paneGroupsFor(blank)}
                   onChoose={(template) => onChoose(blank.id, 'template', template)}
                   onChooseKind={(choice) => onChoose(blank.id, choice, blank.blank)}
+                  onChooseTextTemplate={(id) => onChoose(blank.id, 'template', blank.blank, id)}
                 />
               </div>
             </>

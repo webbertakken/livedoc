@@ -128,11 +128,35 @@ describe('NewDocumentButton', () => {
   });
 
   // new-document-menu.md "The blanks": a kind's pane says what it makes; PDF document's offers its two cards.
-  it('says what a kind makes, and offers Blank PDF and Open a PDF file for PDF document', async () => {
+  // docs/specs/034-text-documents/starting-and-finding.md "Where the gallery shows".
+  it('lists the text document gallery in its sections, a card making that template', async () => {
     act(() => writeLastBlank('text-document'));
+    render(<NewDocumentButton place={{ folderId: 'f1' }} />);
+    await openMenu();
+    const pane = screen.getByRole('group', { name: 'Text document templates' });
+    expect([...pane.querySelectorAll('h3')].map((h) => h.textContent)).toEqual([
+      'Letters',
+      'Resumes',
+      'Personal',
+      'Work',
+      'Education',
+    ]);
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Formal letter' }));
+    expect(started).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        choice: 'template',
+        blank: 'text-document',
+        textTemplate: 'text-formal-letter',
+        place: { folderId: 'f1' },
+      }),
+    );
+  });
+
+  it('says what a kind makes, and offers Blank PDF and Open a PDF file for PDF document', async () => {
+    act(() => writeLastBlank('spreadsheet'));
     const { unmount } = render(<NewDocumentButton place={{}} />);
     await openMenu();
-    expect(screen.getByText(/An empty text document/)).toBeTruthy();
+    expect(screen.getByText(/An empty spreadsheet/)).toBeTruthy();
     unmount();
     act(() => writeLastBlank('pdf-document'));
     render(<NewDocumentButton place={{ folderId: 'f1' }} />);

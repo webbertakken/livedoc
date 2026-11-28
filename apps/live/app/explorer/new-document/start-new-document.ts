@@ -10,6 +10,7 @@ import {
   type NewDocumentKind,
   type TemplateKind,
 } from '@livedoc/templates';
+import type { TextDocumentTemplateId } from '@livedoc/text-documents/templates/gallery';
 import { startNewPdf } from '@/lib/new-document/start-new-pdf';
 import { apiLoadSelf } from '@/lib/api-client';
 import { assignAppLocation, interceptAppNavigation } from '@/lib/app-location';
@@ -54,6 +55,8 @@ export type NewDocumentRequest = {
   blank: NewDocumentBlankId;
   // The blank's own for 'blank', the card's for 'template'.
   template: TemplateKind;
+  // A text document template's card (starting-and-finding.md "Where the gallery shows"): made through /new.
+  textTemplate?: TextDocumentTemplateId;
   // The section's place; absent is no choice, where a default folder may answer.
   place: NewDocumentPlace;
   // Says what went wrong where a document cannot open at once (a PDF's file refused), as a toast does.
@@ -64,7 +67,8 @@ export type NewDocumentRequest = {
 export function newDocumentHref(request: NewDocumentRequest): string {
   const params = new URLSearchParams();
   const kind = newDocumentBlankOf(request.blank)?.kind;
-  if (kind) params.set('kind', kind);
+  if (request.textTemplate) params.set('template', request.textTemplate);
+  else if (kind) params.set('kind', kind);
   else params.set('template', request.template);
   if (request.place.folderId) params.set('folder', request.place.folderId);
   if (request.place.teamId) params.set('team', request.place.teamId);
@@ -95,13 +99,21 @@ let starting = false;
 
 export function startNewDocument(request: NewDocumentRequest): void {
   const { choice, blank, template } = request;
-  debugLog(`[new-document] choice=${choice} blank=${blank} template=${template}`);
+  debugLog(
+    `[new-document] choice=${choice} blank=${blank} template=${request.textTemplate ?? template}`,
+  );
   if (starting) {
     debugLog('[new-document] busy');
     return;
   }
   // A workspace frame makes it its own way, in the frame (useWorkspaceNavigation).
   if (interceptAppNavigation(newDocumentHref(request), false)) return;
+  // A text document template is made through /new, which stores its writing before the editor opens it: the room
+  // serves a text document's writing only once it is stored (starting-and-finding.md "Where the gallery shows").
+  if (request.textTemplate) {
+    assignAppLocation(newDocumentHref(request));
+    return;
+  }
   // A PDF document is a stored file before it opens, blank or chosen (new-document-menu.md "Opening at once").
   if (newDocumentBlankOf(blank)?.kind === 'pdf-document') {
     void startNewPdf({
