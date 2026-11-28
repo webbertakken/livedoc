@@ -18,7 +18,9 @@ keep them; C6, ruled 2026-11-18: the card functions only).
 - Values are worked out by the same engine, in the spreadsheet's room, with the reader's own access:
   `GET /api/documents/<id>/workbook/link?sheet=<sheetId>` answers the workbook's sheets (each its id and name), its
   locale and version, and the sheet as its values: each cell's value where its formula was, its format, its rows and
-  columns by id, the rows hidden and the sheet's one-cell named ranges, nothing else of the sheet (D505).
+  columns by id, the rows hidden and the sheet's one-cell named ranges (D505), and what draws it among those rows
+  and columns: their sizes, merged cells, hidden columns, the grid and header switches and the charts reading only
+  them (D507); none of its tools (protections, filters, validation, comments) and no images.
 - The page reads a link again every 10 seconds while it shows it and the page is visible, naming the version it holds
   (`since=<version>`); an unchanged workbook answers `unchanged` without working anything out (D505).
 - A link reads the first 2,000 rows and 200 columns of a sheet, as much as a figure reads; a workbook past 500,000
