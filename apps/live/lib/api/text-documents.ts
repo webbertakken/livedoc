@@ -6,7 +6,7 @@ import {
   TEXT_DOCUMENT_VIEWER_COPY_HEADER,
 } from '@livedoc/api-schema';
 import type { TextDocumentFileType } from '@livedoc/text-documents';
-import { base64OfBytes, bytesOfBase64 } from '@livedoc/text-documents/base64';
+import { base64OfBytes, bytesOfBase64 } from '@livedoc/office-packages';
 import { API_BASE, apiFetch, apiHeaders, expectOkVoid } from './core';
 
 export type TextDocumentScope = {

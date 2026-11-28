@@ -4,7 +4,7 @@
 // the next time the record is read.
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import * as Y from 'yjs';
-import { base64OfBytes } from '@livedoc/text-documents/base64';
+import { base64OfBytes } from '@livedoc/office-packages';
 import { LIVE_TAB_PARTING_MAX_CHARS, joinPartingCopies, partingCopy } from './live-tab-parting';
 import {
   LIVE_TAB_PARTING_PREFIX,

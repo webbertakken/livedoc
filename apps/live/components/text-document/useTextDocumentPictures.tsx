@@ -8,7 +8,7 @@ import dynamic from 'next/dynamic';
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import type { EditorView } from 'prosemirror-view';
 import type * as Y from 'yjs';
-import { bytesOfBase64 } from '@livedoc/text-documents/base64';
+import { bytesOfBase64 } from '@livedoc/office-packages';
 import type { ImagePickerTab } from '@/components/panels/ImagePicker';
 import type { OfficeChoices } from '@/components/office/OfficeChoiceMenu';
 import { apiFetchImageBytes } from '@/lib/api/images';

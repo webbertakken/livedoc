@@ -23,6 +23,7 @@ import { keepFileContent, readKeptContent } from './workbook-kept-route';
 import { allowImports, fetchImport } from './sheet-imports-route';
 import { handleWorkbookSheetRoutes } from './workbook-sheet-routes';
 import { loadSpreadsheetSheets } from './workbook-sheets-load';
+import { readWorkbookPictures } from './workbook-pictures';
 
 const FILE_MEDIA_TYPES: Record<WorkbookFormat, string> = {
   ods: 'application/vnd.oasis.opendocument.spreadsheet',
@@ -55,7 +56,9 @@ async function file(ctx: DocumentRouteContext, documentId: string): Promise<Resp
   ]);
   const name = meta?.name ?? '';
   // The file's kept content goes into files of its standard only (standard-mapping.md "Unknown content", D109).
-  const written = writeWorkbook(sheets, record, name, asked, kept);
+  // Its pictures' bytes from the gallery, for the images the document may serve (D626).
+  const pictures = await readWorkbookPictures(ctx.env, documentId, sheets);
+  const written = writeWorkbook(sheets, record, name, asked, kept, pictures);
   const body = written.data;
   console.info(
     `[workbook] file written document=${documentId} format=${asked} sheets=${sheets.length} bytes=${body.byteLength} losses=${written.losses.length} ms=${Date.now() - started}`,

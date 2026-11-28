@@ -5,7 +5,7 @@
 // one is open, takes each. A surface opened later loads the stored state, which holds every update the room relayed,
 // so nothing that arrives with no surface open is lost.
 // The subpath: every editor loads the buses, and none of a model's code may come with them.
-import { bytesOfBase64 } from '@livedoc/text-documents/base64';
+import { bytesOfBase64 } from '@livedoc/office-packages';
 import { debugLog } from '@/lib/debug-log';
 
 // `from`: the presence id of whoever sent it, where the room said.

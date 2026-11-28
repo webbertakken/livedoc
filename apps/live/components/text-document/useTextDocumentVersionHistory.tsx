@@ -10,7 +10,7 @@ import { createPortal } from 'react-dom';
 import * as Y from 'yjs';
 import type { TextDocumentVersionDto } from '@livedoc/api-schema';
 import type { TextDocumentFormat } from '@livedoc/document';
-import { bytesOfBase64 } from '@livedoc/text-documents/base64';
+import { bytesOfBase64 } from '@livedoc/office-packages';
 import type { OfficeActions } from '@/lib/office/office-catalogue';
 import { apiLoadTextDocumentState, type TextDocumentScope } from '@/lib/api/text-documents';
 import {

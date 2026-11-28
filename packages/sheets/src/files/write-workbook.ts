@@ -9,6 +9,7 @@ import { WorkbookRecord, type WorkbookFormat } from '../workbook-record';
 import { writeFlatOds, writeOds } from './ods-write';
 import { fileKept } from './kept-anchors';
 import { keptStandardOf, type KeptContent, type StoredAt } from './kept-content';
+import type { FilePictureFetches } from './file-pictures';
 import type { FileLoss, WorkbookFile } from './workbook-file';
 import { workbookFileOf } from './workbook-file';
 import { writeXlsx } from './xlsx-write';
@@ -67,8 +68,11 @@ export function writeWorkbook(
   title: string,
   format: WorkbookFormat,
   kept?: KeptContent<StoredAt>,
+  // The pictures' bytes the download read from the gallery (standard-mapping.md "Pictures in the file", D626).
+  pictures?: FilePictureFetches,
 ): WrittenWorkbook {
   const file = workbookFileFor(sheets, record);
+  if (pictures) file.pictureBytes = pictures;
   const losses: FileLoss[] = [];
   if (kept && kept.standard === keptStandardOf(format)) {
     const placed = fileKept(kept, sheets);

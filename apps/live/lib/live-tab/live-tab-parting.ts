@@ -5,7 +5,7 @@
 // merged, so a copy joined while its writer still lives changes nothing. Where the copies are is
 // ./live-tab-parting-keys, which reads none.
 import * as Y from 'yjs';
-import { base64OfBytes, bytesOfBase64 } from '@livedoc/text-documents/base64';
+import { base64OfBytes, bytesOfBase64 } from '@livedoc/office-packages';
 import { debugLog } from '@/lib/debug-log';
 import { partingKey, partingKeys, type PartingStorage } from './live-tab-parting-keys';
 

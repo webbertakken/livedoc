@@ -162,3 +162,25 @@ export async function servableImageIds(
     .all<{ id: string }>();
   return new Set(rows.results.map((r) => r.id));
 }
+
+// A download's question (docs/specs/029-sheets/standard-mapping.md "Pictures in the file"): of `ids`, the ones the
+// document may serve, each with its stored size and type. One query for the whole workbook.
+export async function servableImageSizes(
+  env: Env,
+  documentId: string,
+  ids: readonly string[],
+): Promise<Map<string, { byteSize: number; contentType: string }>> {
+  if (ids.length === 0) return new Map();
+  const rows = await env.DB.prepare(
+    `SELECT i.id AS id, i.byte_size AS byteSize, i.content_type AS contentType
+       FROM documents d
+       JOIN images i ON i.id IN (SELECT value FROM json_each(?2))
+      WHERE d.id = ?1
+        AND ${servesSql('?3')}`,
+  )
+    .bind(documentId, JSON.stringify(ids), Date.now())
+    .all<{ id: string; byteSize: number; contentType: string }>();
+  return new Map(
+    rows.results.map((r) => [r.id, { byteSize: r.byteSize, contentType: r.contentType }]),
+  );
+}
