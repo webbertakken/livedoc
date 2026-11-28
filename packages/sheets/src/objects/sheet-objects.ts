@@ -1,12 +1,13 @@
 // A sheet's objects (docs/specs/029-sheets/charts.md "The model", sheet-store.md "Objects"): what floats over its
 // cells, kept in its layout in paint order, each set whole or removed by its id with a layout write. Charts are the
-// first kind built, then pivot tables (sheet-pivot.ts) and images over cells (sheet-image.ts); drawings, slicers and
-// timelines join the union as they are built.
+// first kind built, then pivot tables (sheet-pivot.ts), images over cells (sheet-image.ts) and slicers
+// (sheet-slicer.ts); drawings and timelines join the union as they are built.
 import { isAxisId } from '../ids';
 import type { IdRange } from '../sheet';
 import { inRange, isAnchor, isIdRange, isRecord, onlyKeys, textUpTo } from './object-checks';
 import { isSheetImage, type SheetImage } from './sheet-image';
 import { isSheetPivot, type SheetPivot } from './sheet-pivot';
+import { isSheetSlicer, type SheetSlicer } from './sheet-slicer';
 
 export { OBJECT_OFFSET_MAX } from './object-checks';
 
@@ -105,7 +106,7 @@ export type SheetChart = {
 /** A read chart's kept file XML: the kept part's name and the sum of the chart it was read as. */
 export type SheetChartKept = { part: string; sum: string };
 
-export type SheetObject = SheetChart | SheetPivot | SheetImage;
+export type SheetObject = SheetChart | SheetPivot | SheetImage | SheetSlicer;
 
 export const SHEET_OBJECTS_MAX = 100;
 export const SHEET_CHART_SIZE_MIN = { width: 160, height: 120 } as const;
@@ -205,6 +206,7 @@ export function isSheetObject(x: unknown, id: string): x is SheetObject {
   if (!isRecord(x) || x.id !== id || !isAxisId(id)) return false;
   if (x.kind === 'pivot') return isSheetPivot(x);
   if (x.kind === 'image') return isSheetImage(x);
+  if (x.kind === 'slicer') return isSheetSlicer(x);
   return x.kind === 'chart' && isSheetChart(x);
 }
 

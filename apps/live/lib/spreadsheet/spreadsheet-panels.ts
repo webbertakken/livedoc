@@ -91,6 +91,16 @@ export const PIVOT_EDITOR_PANEL: OfficePanelSpec = {
   editorsOnly: true,
 };
 
+// The Slicer panel (data-tools.md "Slicers"): opened by Add a Slicer and a slicer's Edit Slicer, never from a menu
+// item of its own, so its item is bound to nothing; an Editor's.
+export const SLICER_PANEL: OfficePanelSpec = {
+  id: 'slicer',
+  title: 'Slicer',
+  side: 'right',
+  item: 'edit-slicer',
+  editorsOnly: true,
+};
+
 // Column Stats (data-tools.md "Column Stats"): read by everyone, changing nothing.
 export const COLUMN_STATS_PANEL: OfficePanelSpec = {
   id: 'column-stats',
@@ -118,6 +128,7 @@ export const SPREADSHEET_PANELS: readonly OfficePanelSpec[] = [
   PROTECTION_PANEL,
   TABLE_SETTINGS_PANEL,
   CHART_EDITOR_PANEL,
+  SLICER_PANEL,
   PIVOT_EDITOR_PANEL,
   COLUMN_STATS_PANEL,
   CLEAN_UP_SUGGESTIONS_PANEL,

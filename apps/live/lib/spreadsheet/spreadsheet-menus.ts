@@ -458,7 +458,7 @@ const dataMenu = (views: readonly string[] | null) =>
     item('create-group-by-view', 'Create Group by View', 'view'),
     built('create-filter-view', 'Create Filter View', 'view'),
     ...changeViewEntries(views),
-    item('add-a-slicer', 'Add a Slicer', 'edit'),
+    built('add-a-slicer', 'Add a Slicer', 'edit'),
     SEPARATOR,
     built('protect-sheets-and-ranges', 'Protect Sheets and Ranges', 'view'),
     built('named-ranges', 'Named Ranges', 'view'),

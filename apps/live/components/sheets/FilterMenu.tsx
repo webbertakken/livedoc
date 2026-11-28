@@ -3,7 +3,8 @@
 // A filter column's menu (docs/specs/029-sheets/sheet.md "Filter", data-tools.md "Filters, filter views and
 // slicers"): Sort A to Z and Z to A over the filter's rows, then Filter by Colour, Filter by Values and Filter by
 // Condition, applied together by OK, a row kept only when it meets every one set. A table's own filter (D481) has
-// the same menu, opened from its header's column button, with Column Menu at its top and the column menu's sort.
+// the same menu, opened from its header's column button, with Column Menu at its top and the column menu's sort. A
+// slicer's (data-tools.md "Slicers", D484) is Filter by Values and Filter by Condition alone, no Custom Formula Is.
 import { Button } from '@livedoc/ui';
 import { useMemo, useState } from 'react';
 import {
@@ -12,6 +13,7 @@ import {
   compileTypedFormula,
   formulaAsTyped,
   tableDrawnFilter,
+  type DrawnFilter,
   type FilterColour,
   type FilterCondition,
   type SheetTable,
@@ -34,6 +36,7 @@ export function FilterMenu({
   onClose,
   table,
   onColumnMenu,
+  slicer,
 }: {
   colId: string;
   at: { x: number; y: number };
@@ -42,18 +45,25 @@ export function FilterMenu({
   // A table's own filter's column, in place of the sheet's filter; Column Menu opens its column menu.
   table?: SheetTable;
   onColumnMenu?: () => void;
+  // A slicer's filter: its range (no conditions), the condition it filters by now, and where OK sends a change.
+  slicer?: {
+    label: string;
+    range: DrawnFilter;
+    current: FilterCondition | null;
+    apply: (cond: FilterCondition | null) => void;
+  };
 }) {
   const c = useSheetController();
   const layout = c.sheet.layout;
   const own = useMemo(() => (table ? tableDrawnFilter(layout, table) : null), [layout, table]);
   // The filter drawn: the table's own, else an open filter view's in the sheet filter's place.
-  const drawn = table ? own : c.filterViews.drawn;
+  const drawn = slicer ? slicer.range : table ? own : c.filterViews.drawn;
   const inView = !table && !!c.filterViews.open;
   const sort = (ascending: boolean) =>
     table
       ? actions.sortTableColumn(table.id, colId, ascending)
       : actions.sortFilter(colId, ascending);
-  const current = drawn?.conds[colId];
+  const current = slicer ? (slicer.current ?? undefined) : drawn?.conds[colId];
   const values = useMemo(
     () => columnValueCounts(c.workbook, c.sheet.id, colId, drawn),
     // Counted again whenever a value may have changed (`version`).
@@ -95,7 +105,8 @@ export function FilterMenu({
       ...(colour ? { colour } : {}),
     };
     const set = Object.keys(cond).length ? cond : null;
-    if (table) actions.setTableFilter(table.id, colId, set);
+    if (slicer) slicer.apply(set);
+    else if (table) actions.setTableFilter(table.id, colId, set);
     else actions.setFilter(colId, set);
     onClose();
   };
@@ -103,14 +114,14 @@ export function FilterMenu({
   return (
     <ContextMenu
       position={at}
-      label={table ? `${table.name} filter` : 'Filter column'}
+      label={slicer ? slicer.label : table ? `${table.name} filter` : 'Filter column'}
       onClose={onClose}
     >
       {onColumnMenu ? (
         <MenuActionRow label="Column Menu" icon={<Glyph t="▾" />} onClick={onColumnMenu} />
       ) : null}
       {/* A filter view's own sort orders only what its opener sees: the drawn order (data-tools.md). */}
-      {inView ? null : (
+      {inView || slicer ? null : (
         <>
           <MenuActionRow
             label="Sort A to Z"
@@ -135,7 +146,7 @@ export function FilterMenu({
       )}
       {/* As wide as the menu, never wider: a wider panel spilled its fields, counts and OK past the menu's edge. */}
       <div className="w-full min-w-0 px-3 py-1.5 text-body" onKeyDown={(e) => e.stopPropagation()}>
-        <FilterByColour colours={colours} value={colour} onChange={setColour} />
+        {slicer ? null : <FilterByColour colours={colours} value={colour} onChange={setColour} />}
         <div className="mb-1 mt-2 text-supporting text-slate-500 dark:text-slate-400">
           Filter by Values
         </div>
@@ -187,6 +198,7 @@ export function FilterMenu({
         </ul>
         <FilterByCondition
           draft={draft}
+          noFormula={!!slicer}
           problem={problem}
           onChange={(next) => {
             setDraft(next);

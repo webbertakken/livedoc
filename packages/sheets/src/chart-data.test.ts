@@ -201,3 +201,50 @@ describe('a chart from a range', () => {
     expect(regionAround(b.wb, id, { r: 8, c: 8 })).toEqual({ r1: 8, c1: 8, r2: 8, c2: 8 });
   });
 });
+
+// sheet.md "Charts": rows a filter hides are left out; data-tools.md "Slicers" (D487): and the rows a slicer over the
+// chart's range hides for its viewer.
+describe('a chart over filtered rows', () => {
+  const cells = {
+    A1: 'Fruit',
+    B1: 'N',
+    A2: 'apple',
+    B2: '3',
+    A3: 'pear',
+    B3: '8',
+    A4: 'fig',
+    B4: '1',
+  };
+
+  it('leaves out the rows a filter hides', () => {
+    const { b, link, apply } = setup(cells);
+    const { rows, cols } = b.sheets[0]!.layout;
+    apply({
+      kind: 'layout',
+      changes: [
+        {
+          k: 'filter',
+          filter: {
+            r1: rows[0]!,
+            c1: cols[0]!,
+            r2: rows[3]!,
+            c2: cols[1]!,
+            conds: { [cols[1]!]: { op: 'gt', a: '2' } },
+          },
+        },
+      ],
+    });
+    expect(sheetChartTable(b.wb, link(0, 0, 3, 1), 'en-GB')!.categories).toEqual(['apple', 'pear']);
+  });
+
+  it('leaves out the rows given as hidden for its viewer', () => {
+    const { b, link } = setup(cells);
+    const rows = b.sheets[0]!.layout.rows;
+    const table = sheetChartTable(
+      b.wb,
+      { ...link(0, 0, 3, 1), hide: new Set([rows[2]!]) },
+      'en-GB',
+    );
+    expect(table!.categories).toEqual(['apple', 'fig']);
+  });
+});

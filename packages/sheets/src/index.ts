@@ -146,6 +146,7 @@ export * from './migration/sheet-migration-plan';
 export * from './objects/sheet-objects';
 export * from './objects/sheet-pivot';
 export * from './objects/sheet-image';
+export * from './objects/sheet-slicer';
 export * from './pivot/pivot-spec';
 export { pivotDetailRows, pivotOutput } from './pivot/pivot-output';
 export * from './pivot/pivot-details';

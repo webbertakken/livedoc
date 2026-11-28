@@ -5,7 +5,7 @@ every condition of Filter by Condition, and data validation (the Data Validation
 Insert › Dropdown, every criterion, kept in both file formats) and the Named Ranges panel are built; tables are built
 as the sheet's model, its writes and growth, and table references in formulas, without their menus and panel yet;
 data clean-up (Clean-up Suggestions, Remove Duplicates, Trim Whitespace), Split Text to Columns, Randomise Range and
-Column Stats are built; filter views, slicers and group by views are specified; the rest is specified.
+Column Stats, filter views and slicers are built; group by views are specified; the rest is specified.
 
 Sorting, filtering, validation, names, protection, tables and clean-up in a [spreadsheet](spreadsheet.md), as
 Google Sheets' Data menu does. Its rows of the [parity matrix](parity-matrix.md) name this page.
@@ -123,16 +123,23 @@ Google Sheets' Data menu does. Its rows of the [parity matrix](parity-matrix.md)
     Range**, **Column** (the range's header names, as Advanced Range Sorting offers them), **Title** (empty shows the
     column's name), **Apply to Pivot Tables** (ticked, Google's default). Each change writes at once, one undo step.
   - It is moved, resized, copied and deleted as a chart is ([Charts](charts.md)), by an Editor; others may not move it.
+    Selected, its arrows move it, Alt and the arrows resize it (down to 100 by 30 px, D483), Delete removes it.
   - It shows its title and what it keeps: `All`, `3 of 5` for values, or the condition's words (`Greater than 2`).
     Pressing it (or Enter on it) opens **Filter by Condition** and **Filter by Values** for its column, the filter
-    menu's, with OK and Cancel.
+    menu's, with OK and Cancel; Custom Formula Is and Filter by Colour are not offered there (D484).
+  - Its **⋮** menu: **Edit Slicer** (opens the panel), **Set Current Filters as Default**, **Delete Slicer** (an
+    Editor's) and **Reset to Default** (anyone's, while their own differs).
   - **Anyone** may change a slicer's filter; it is theirs alone, as Google's ("changes are only visible to you"), until
     an Editor's **Set Current Filters as Default** (the slicer's ⋮ menu) saves it for everyone, one undo step. On
-    opening the spreadsheet, a slicer filters by its default. **Reset to Default** drops one's own.
+    opening the spreadsheet, a slicer filters by its default. **Reset to Default** drops one's own. One's own is kept
+    in the page alone, never sent, gone on reload (D485).
+  - Rows and columns inserted or deleted move and shrink its range as a chart's; its column deleted, it filters
+    nothing and reads "Choose a column" until the panel picks one; its range all deleted, it reads "No data" (D486).
   - A row of the range is drawn only when every filter over it (the sheet's and the tables', or the open view) and
     every slicer over it keep it.
   - Slicers filter charts and pivot tables whose data is the same range (Apply to Pivot Tables), for that person, and
-    never formulas: SUBTOTAL reads the sheet's filter and the tables' alone (Google's note, and measured, D475).
+    never formulas: SUBTOTAL reads the sheet's filter and the tables' alone (Google's note, and measured, D475). A
+    chart whose data range is the slicer's exactly leaves out the rows the slicer hides (D487).
   - Up to 50 a sheet (D440), within the sheet's 100 objects.
 - **Group by view** (Data › Create Group by View, and the table menu's **Group By**; tables only): a view of a table
   that groups its rows under a column's values, each group a header row drawn with the value and its count, collapsed
@@ -503,6 +510,8 @@ right.`, **Cancel** and **Replace** (D463). A block reaching past the sheet's la
   Remove Duplicates, Trim Whitespace, Split Text to Columns, Randomise Range and Clean-up Suggestions are an
   Editor's, as they move or rewrite cells and formulas (D467).
 - **Viewer**: finds, uses filter views of their own, reads named ranges and goes to them, reads Column Stats.
+- **Slicers**: an Editor adds, moves, resizes, edits, deletes them and sets their default; anyone, a Participant and a
+  Viewer too, changes a slicer's filter for themselves and resets it.
 
 ## Observability
 
@@ -522,6 +531,8 @@ grew` with the rows it grew by.
   and the widest row's pieces; `[sheet] range randomised` with the rows; `[sheet] clean-up refused` with the tool
   and the reason (`columns`, `merge`, `protected`, `full`); `[sheet] clean-up suggested` with each kind's count
   when the panel opens.
+- `[sheet] slicer added` with the slicer's id and whether it sits over a table; `[sheet] slicer refused` with the
+  reason (`range`, `full`); `[sheet] slicer filtered` with the id and whether it is one's own or the default.
 - `[workbook] find replaced` with the instances, cells and sheets changed, the protected cells left and whether a
   regular expression searched (never the text); `[workbook] find refused` with the reason (`regex`, `costly`).
 
@@ -553,6 +564,18 @@ The code cites each by its id.
   filter is not drawn (the Director's ruling, 2026-11-27); their buttons drawn paused (the Director's) in the words
   above (default). Google's is unmeasurable through the API: `setBasicFilter` with a `tableId` fails and a view's
   rows are per viewer (`plans/assets/0020/research/google-table-view-probe.ts`).
+- **D483** A slicer's bounds: 100 to 2,000 px wide, 30 to 2,000 px high, a title up to 100 characters, as a filter
+  view's name (default).
+- **D484** A slicer's filter: Filter by Condition without Custom Formula Is, and Filter by Values, as Google's
+  slicer offers (its colour filter unmeasured); a formula kept on a floating object would need its references moved
+  with no cell to hold them (default).
+- **D485** One's own slicer filter: held in the page for that person, never sent nor saved, gone on reload or
+  leaving, so opening the spreadsheet filters by the default as the spec says (default).
+- **D486** A slicer after a delete: its range shrinks as a chart's; its column gone leaves it unset, "Choose a
+  column", filtering nothing; its range gone, "No data" (default).
+- **D487** What a slicer filters beside the cells: a chart whose data range is the slicer's range exactly, as
+  Google's "same data range"; pivot tables (Apply to Pivot Tables) are stored and await the pivot editor's own reads
+  (default).
 - **D441** Convert to Table's guessed column types: a type when every filled data cell is that type, else Text; a
   column with none filled None, as Google guesses (default).
 - **D442** A table's look: the alternating colours banding over it, the table's own, in the first default style; it

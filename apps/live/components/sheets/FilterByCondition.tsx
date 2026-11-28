@@ -25,6 +25,7 @@ export function FilterByCondition({
   onChange,
   periods = true,
   formulaPlaceholder = '=A2>5',
+  noFormula = false,
 }: {
   draft: ConditionDraft;
   // Why the typed formula cannot be read, after OK.
@@ -33,6 +34,8 @@ export function FilterByCondition({
   // Whether a date condition offers periods from today (a pivot table's filter takes an exact date alone).
   periods?: boolean;
   formulaPlaceholder?: string;
+  // Custom Formula Is left out (a slicer's, D484).
+  noFormula?: boolean;
 }) {
   const c = useSheetController();
   const problemId = useId();
@@ -52,11 +55,13 @@ export function FilterByCondition({
         onChange={(e) => set({ op: e.target.value as ConditionDraft['op'] })}
       >
         <option value="">None</option>
-        {CONDITION_CHOICES.map((o) => (
-          <option key={o} value={o}>
-            {CONDITION_LABELS[o]}
-          </option>
-        ))}
+        {(noFormula ? CONDITION_CHOICES.filter((o) => o !== 'formula') : CONDITION_CHOICES).map(
+          (o) => (
+            <option key={o} value={o}>
+              {CONDITION_LABELS[o]}
+            </option>
+          ),
+        )}
       </select>
       {periods && isDateOp(draft.op) ? (
         <select

@@ -14,6 +14,7 @@ import type { SheetsBridge } from '@/hooks/sheets/useSheetsBridge';
 import { useOfficePanels } from '@/lib/office/useOfficePanels';
 import {
   CHART_EDITOR_PANEL,
+  SLICER_PANEL,
   DATA_VALIDATION_PANEL,
   NAMED_RANGES_PANEL,
   PIVOT_EDITOR_PANEL,
@@ -58,6 +59,8 @@ import {
   TableSettingsContext,
 } from '@/components/sheets/tables/table-settings-context';
 import { useSpreadsheetCharts } from './charts/useSpreadsheetCharts';
+import { useSpreadsheetSlicers } from './slicers/useSpreadsheetSlicers';
+import { SheetSlicersContext } from '@/components/sheets/slicers/slicers-context';
 import { SheetImagesOverCellsContext } from '@/components/sheets/sheet-images-over-cells-context';
 import { useSpreadsheetImages } from './images/useSpreadsheetImages';
 import {
@@ -156,6 +159,14 @@ export function SpreadsheetSheetParts({ bridge }: { bridge: SheetsBridge }) {
   const columnMenu = useRef<(() => void) | null>(null);
   const charts = useSpreadsheetCharts(c, c.canShape ? editChart : undefined);
   const { insertChart } = charts;
+  // Data › Add a Slicer and the Slicer panel (data-tools.md "Slicers").
+  const panelsNow = useLatest(panels);
+  const slicers = useSpreadsheetSlicers(
+    c,
+    useCallback(() => reveal(SLICER_PANEL), [reveal]),
+    useCallback(() => (panelsNow.current.open.right ? 0 : panelsNow.current.width), [panelsNow]),
+  );
+  const { addSlicer } = slicers;
   // Images over cells (inserted-objects.md "Images over cells"): Insert Image over Cells and each image's menu.
   const { ownerId, documentId, shareCode } = bridge.scope;
   const imageAccess = useMemo(
@@ -204,6 +215,8 @@ export function SpreadsheetSheetParts({ bridge }: { bridge: SheetsBridge }) {
       ...(canInsertChart ? { 'insert-chart': { run: insertChart } } : {}),
       // Insert › Pivot Table (pivot-tables.md "Making one"): an Editor's.
       ...(c.canShape ? { 'insert-pivot-table': { run: insertPivot } } : {}),
+      // Data › Add a Slicer (data-tools.md "Slicers"): an Editor's.
+      ...(c.canShape ? { 'add-a-slicer': { run: addSlicer } } : {}),
     }),
     [
       panelActions,
@@ -211,6 +224,7 @@ export function SpreadsheetSheetParts({ bridge }: { bridge: SheetsBridge }) {
       canInsertChart,
       insertChart,
       insertPivot,
+      addSlicer,
       reveal,
       c.canShape,
       cleanUpActions,
@@ -273,22 +287,24 @@ export function SpreadsheetSheetParts({ bridge }: { bridge: SheetsBridge }) {
               <TableSettingsContext.Provider value={openTableSettings}>
                 <TableColumnMenuContext.Provider value={columnMenu}>
                   <SheetChartsContext.Provider value={charts.value}>
-                    <SheetImagesOverCellsContext.Provider value={images.value}>
-                      <SheetPivotsContext.Provider value={c.canShape ? editPivot : null}>
-                        <SheetPivotDetailsContext.Provider value={pivots.showDetails}>
-                          <SheetGrid
-                            elementId={`sheet-${c.sheet.id}`}
-                            actions={actions}
-                            input={input}
-                            pointRef={pointRef}
-                            peers={bridge.peers}
-                            zoom={zoom}
-                            surfaceKeys={surfaceKeys}
-                            fontFamily={DocumentFonts.stack(theme.font)}
-                          />
-                        </SheetPivotDetailsContext.Provider>
-                      </SheetPivotsContext.Provider>
-                    </SheetImagesOverCellsContext.Provider>
+                    <SheetSlicersContext.Provider value={slicers.writes}>
+                      <SheetImagesOverCellsContext.Provider value={images.value}>
+                        <SheetPivotsContext.Provider value={c.canShape ? editPivot : null}>
+                          <SheetPivotDetailsContext.Provider value={pivots.showDetails}>
+                            <SheetGrid
+                              elementId={`sheet-${c.sheet.id}`}
+                              actions={actions}
+                              input={input}
+                              pointRef={pointRef}
+                              peers={bridge.peers}
+                              zoom={zoom}
+                              surfaceKeys={surfaceKeys}
+                              fontFamily={DocumentFonts.stack(theme.font)}
+                            />
+                          </SheetPivotDetailsContext.Provider>
+                        </SheetPivotsContext.Provider>
+                      </SheetImagesOverCellsContext.Provider>
+                    </SheetSlicersContext.Provider>
                   </SheetChartsContext.Provider>
                 </TableColumnMenuContext.Provider>
               </TableSettingsContext.Provider>
@@ -301,6 +317,10 @@ export function SpreadsheetSheetParts({ bridge }: { bridge: SheetsBridge }) {
           actions={actions}
           chart={{ id: editingChart, change: charts.change }}
           pivot={{ id: editingPivot, change: pivots.change }}
+          slicer={{
+            id: slicers.editing,
+            change: (next, what) => slicers.writes?.change(next, what) ?? false,
+          }}
           validation={validation}
           named={named}
           protection={protection}
