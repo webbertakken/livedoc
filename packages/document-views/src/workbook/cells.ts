@@ -111,13 +111,9 @@ export function sheetCellsView(
       ? formatRange({ r1: 0, c1: 0, r2: extent.rows - 1, c2: extent.cols - 1 })
       : null;
   const { rows: rowIds, cols: colIds } = wb.sheet(sheetId)!.layout;
-  const commentsAt = (r: number, c: number) => {
-    const rowId = rowIds[r];
-    const colId = colIds[c];
-    return rowId === undefined || colId === undefined
-      ? 0
-      : (input.comments?.get(cellKey(rowId, colId)) ?? 0);
-  };
+  // A read stays within the sheet, so every position it gives has its ids.
+  const commentsAt = (r: number, c: number) =>
+    input.comments?.get(cellKey(rowIds[r]!, colIds[c]!)) ?? 0;
   const rows: CellsRowJson[] = [];
   const lines: ViewLine[] = [];
   let chars = 0;
