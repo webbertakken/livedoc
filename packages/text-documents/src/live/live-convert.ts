@@ -127,10 +127,35 @@ function renameStories(scratch: Y.Doc, ids: Map<string, string>): void {
   });
 }
 
+/** Whether two values a root map holds are equal: bytes compared as bytes (kept fonts run to megabytes), the rest as
+ *  canonical JSON. */
+export function sameValue(a: unknown, b: unknown): boolean {
+  if (a instanceof Uint8Array || b instanceof Uint8Array)
+    return (
+      a instanceof Uint8Array &&
+      b instanceof Uint8Array &&
+      a.length === b.length &&
+      a.every((byte, i) => byte === b[i])
+    );
+  if (Array.isArray(a) && Array.isArray(b))
+    return a.length === b.length && a.every((item, i) => sameValue(item, b[i]));
+  if (isPlainObject(a) && isPlainObject(b)) {
+    const keys = Object.keys(a);
+    return (
+      keys.length === Object.keys(b).length &&
+      keys.every((key) => key in b && sameValue(a[key], b[key]))
+    );
+  }
+  return canonical(a) === canonical(b);
+}
+
+const isPlainObject = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null && Object.getPrototypeOf(value) === Object.prototype;
+
 /** Makes one root map read as another's, key by key: equal values kept, others set, keys gone deleted. */
 function syncMap(source: Y.Map<unknown>, target: Y.Map<unknown>): void {
   for (const [key, value] of source.entries())
-    if (canonical(target.get(key)) !== canonical(value)) target.set(key, value);
+    if (!sameValue(target.get(key), value)) target.set(key, value);
   for (const key of [...target.keys()]) if (!source.has(key)) target.delete(key);
 }
 

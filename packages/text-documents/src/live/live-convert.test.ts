@@ -10,7 +10,7 @@ import type { Paragraph } from '../model/blocks';
 import type { TextDocument, TextDocumentFormat } from '../model/text-document';
 import { CONSTRUCTS } from '../testing/constructs';
 import { TextDocumentState } from '../text-document-state';
-import { convertLive, makeLiveReadAs } from './live-convert';
+import { convertLive, makeLiveReadAs, sameValue } from './live-convert';
 import { DOCUMENT_MAP, FOOTNOTE, SECTION_BREAK, THREADS_MAP } from './live-names';
 import { tabFragment } from './live-root';
 import { liveStoryIds, storyFragment } from './live-stories';
@@ -192,5 +192,22 @@ describe('convertLive', () => {
     expect(doc.getMap(THREADS_MAP).size).toBeGreaterThan(0);
     convertLive(doc, document.format, other(document.format));
     expect(canonical(doc.getMap(THREADS_MAP).toJSON())).toBe(threads);
+  });
+
+  // Kept fonts run to megabytes: they are compared as bytes, never as JSON.
+  it('compares kept bytes as bytes, and every other value by its content', () => {
+    expect(sameValue(new Uint8Array([1, 2]), new Uint8Array([1, 2]))).toBe(true);
+    expect(sameValue(new Uint8Array([1, 2]), new Uint8Array([1, 3]))).toBe(false);
+    expect(sameValue(new Uint8Array([1]), new Uint8Array([1, 2]))).toBe(false);
+    expect(sameValue(new Uint8Array([1]), [1])).toBe(false);
+    expect(
+      sameValue({ a: [1, { b: new Uint8Array([9]) }] }, { a: [1, { b: new Uint8Array([9]) }] }),
+    ).toBe(true);
+    expect(sameValue({ a: 1, b: 2 }, { b: 2, a: 1 })).toBe(true);
+    expect(sameValue({ a: 1 }, { a: 1, b: 2 })).toBe(false);
+    expect(sameValue({ a: 1 }, { b: 1 })).toBe(false);
+    expect(sameValue([1, 2], [1])).toBe(false);
+    expect(sameValue('x', 'x')).toBe(true);
+    expect(sameValue(undefined, null)).toBe(false);
   });
 });
