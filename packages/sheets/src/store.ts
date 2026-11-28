@@ -28,7 +28,14 @@ export type { LayoutChange } from './store-layout';
 
 // One cell's change: `i` absent keeps the input, null clears it; `f` absent keeps the format, null clears it all,
 // an object sets (or, with null values, clears) its keys.
-export type CellChange = { r: string; c: string; i?: CellInput | null; f?: FormatPatch | null };
+// A cell change: `i` its input, `f` a patch on its format, `n` its note (review.md "Notes"); null removes, absent keeps.
+export type CellChange = {
+  r: string;
+  c: string;
+  i?: CellInput | null;
+  f?: FormatPatch | null;
+  n?: string | null;
+};
 
 export type SheetWrite =
   | { kind: 'cells'; cells: CellChange[] }
@@ -60,8 +67,14 @@ function applyCells(
     const before = cells.get(key);
     const input = ch.i === undefined ? before?.input : (ch.i ?? undefined);
     const format = ch.f === undefined ? before?.format : mergeFormat(before?.format, ch.f);
-    if (input === undefined && format === undefined) cells.delete(key);
-    else cells.set(key, { ...(input ? { input } : {}), ...(format ? { format } : {}) });
+    const note = ch.n === undefined ? before?.note : (ch.n ?? undefined);
+    if (input === undefined && format === undefined && note === undefined) cells.delete(key);
+    else
+      cells.set(key, {
+        ...(input ? { input } : {}),
+        ...(format ? { format } : {}),
+        ...(note !== undefined ? { note } : {}),
+      });
     touched.add(key);
     landed.push(ch);
   }
@@ -295,12 +308,21 @@ export function applySheetWrite(sheet: Sheet, write: SheetWrite, ctx: ApplyConte
 }
 
 // The cell changes that put `keys` back as they are in `before`.
-function restoreCells(before: Sheet, keys: Iterable<string>): CellChange[] {
+// A note is restored only where the change touched one (before or after), so an undo of a value carries none.
+function restoreCells(before: Sheet, keys: Iterable<string>, after: Sheet): CellChange[] {
   const out: CellChange[] = [];
   for (const key of keys) {
     const { r, c } = splitCellKey(key);
     const cell = before.cells.get(key);
-    out.push({ r, c, i: cell?.input ?? null, f: formatRestore(cell?.format) });
+    const note = cell?.note ?? null;
+    const noted = note !== null || after.cells.get(key)?.note !== undefined;
+    out.push({
+      r,
+      c,
+      i: cell?.input ?? null,
+      f: formatRestore(cell?.format),
+      ...(noted ? { n: note } : {}),
+    });
   }
   return out;
 }
@@ -476,7 +498,7 @@ function inverseLayout(before: SheetLayout, ch: LayoutChange, now: SheetLayout):
 export function inverseSheetWrite(before: Sheet, result: Applied, now?: SheetLayout): SheetWrite {
   const applied = result.applied;
   if (applied.kind === 'title') return { kind: 'title', title: before.title };
-  const cells = restoreCells(before, result.touched);
+  const cells = restoreCells(before, result.touched, result.sheet);
   if (applied.kind === 'cells') return { kind: 'cells', cells };
   const changes = inverseLayoutChanges(before.layout, applied.changes, now ?? result.sheet.layout);
   return { kind: 'layout', changes, ...(cells.length ? { cells } : {}) };

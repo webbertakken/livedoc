@@ -209,7 +209,7 @@ export async function exportDocumentCopy(
       .bind(documentId, tabIds),
     db
       .prepare(
-        `SELECT c.sheet_id, c.row_id, c.col_id, c.input, ${cellFormatSql('c')} AS format
+        `SELECT c.sheet_id, c.row_id, c.col_id, c.input, ${cellFormatSql('c')} AS format, c.note
            FROM sheet_cells c JOIN sheets s ON s.document_id = c.document_id AND s.id = c.sheet_id
           WHERE c.document_id = ? AND s.tab_id IN (SELECT value FROM json_each(?))`,
       )
@@ -402,9 +402,17 @@ export async function importDocumentCopy(
     stmts.push(
       db
         .prepare(
-          'INSERT INTO sheet_cells (document_id, sheet_id, row_id, col_id, input, format) VALUES (?, ?, ?, ?, ?, ?)',
+          'INSERT INTO sheet_cells (document_id, sheet_id, row_id, col_id, input, format, note) VALUES (?, ?, ?, ?, ?, ?, ?)',
         )
-        .bind(documentId, cell.sheet_id, cell.row_id, cell.col_id, cell.input, cell.format),
+        .bind(
+          documentId,
+          cell.sheet_id,
+          cell.row_id,
+          cell.col_id,
+          cell.input,
+          cell.format,
+          cell.note ?? null,
+        ),
     );
   }
   for (const axis of copy.axes) {

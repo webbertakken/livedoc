@@ -42,6 +42,7 @@ import {
 import { layoutIndex } from './layout';
 import { posRangeOf } from './layout';
 import { applySheetWrite, type CellChange, type SheetWrite } from './store';
+import { isCellNote, SHEET_NOTE_MAX } from './note';
 import { applyLayoutChange, type LayoutChange } from './store-layout';
 import { rangeNameProblem } from './range-names';
 import { isSheetTable, tableOverlaps, TABLES_MAX, type SheetTable } from './tables/table';
@@ -65,6 +66,9 @@ export type SheetRejection =
   | 'input_too_long'
   | 'formula_invalid'
   | 'format_invalid'
+  // A note too long, or not plain text (review.md "Notes").
+  | 'note_too_long'
+  | 'note_invalid'
   | 'axis_id_invalid'
   | 'title_invalid'
   | 'merge_invalid'
@@ -147,7 +151,8 @@ function inputProblem(input: CellInput, limits: SheetLimits): SheetRejection | n
 export function cellBytes(cell: Cell): number {
   return (
     (cell.input ? JSON.stringify(cell.input).length : 0) +
-    (cell.format ? JSON.stringify(cell.format).length : 0)
+    (cell.format ? JSON.stringify(cell.format).length : 0) +
+    (cell.note?.length ?? 0)
   );
 }
 
@@ -166,7 +171,21 @@ function cellChangeProblem(ch: CellChange, limits: SheetLimits): Validation {
   }
   if (ch.f !== undefined && ch.f !== null && !validFormatPatch(ch.f))
     return no('format_invalid', `${ch.r}:${ch.c}`);
+  if (ch.n !== undefined && ch.n !== null) {
+    const p = noteProblem(ch.n);
+    if (p) return no(p, `${ch.r}:${ch.c}`);
+  }
   return OK;
+}
+
+// Why a note is refused: too long, or not a note at all; null when it is one.
+function noteProblem(n: unknown): 'note_too_long' | 'note_invalid' | null {
+  if (isCellNote(n)) return null;
+  return typeof n === 'string' &&
+    n.length > SHEET_NOTE_MAX &&
+    isCellNote(n.slice(0, SHEET_NOTE_MAX))
+    ? 'note_too_long'
+    : 'note_invalid';
 }
 
 export function idRangeOk(range: unknown): range is IdRange {
@@ -697,6 +716,10 @@ export function validateSheetCreate(
       if (p) return no(p, key);
     }
     if (cell.format && !validFormat(cell.format)) return no('format_invalid', key);
+    if (cell.note !== undefined) {
+      const p = noteProblem(cell.note);
+      if (p) return no(p, key);
+    }
   }
   return sheetProblem(sheet, limits);
 }

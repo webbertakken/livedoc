@@ -10,6 +10,8 @@ const REFUSALS: Partial<Record<string, string>> = {
   sheet_name_taken: 'Another sheet in this spreadsheet is called that',
   sheet_name_invalid: "A sheet's name can't hold [ ] * ? / \\ : or start or end with '",
   input_too_long: 'A cell holds up to 10,000 characters',
+  // A note past SHEET_NOTE_MAX (review.md "Notes").
+  note_too_long: 'A note holds up to 50,000 characters',
   sheet_not_found: 'This sheet is no longer in this document',
   rules_full: 'This sheet holds the most rules it can',
   objects_full: 'This sheet holds the most charts it can',

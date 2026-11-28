@@ -36,10 +36,19 @@ function ofPicture(img: unknown): boolean {
   return keys === 1 || (keys === 2 && typeof img.alt === 'string');
 }
 
-// A cell the slots can hold: no input or one of the five, and no format or a format object. Anything else comes
-// from a request not yet validated, and is held as given (SlotKind.Other).
+// A cell the slots can hold: no input or one of the five, no format or a format object, and no note. Anything else
+// is held as given (SlotKind.Other): a request not yet validated, or a cell with a note (review.md "Notes"), which
+// few cells hold.
 function ofCellShape(cell: unknown): cell is Cell {
-  return isObject(cell) && ofParts(cell.input, cell.format);
+  return isObject(cell) && cell.note === undefined && ofParts(cell.input, cell.format);
+}
+
+// Whether a slot's cell shows a picture of its own: a picture's slot, or a cell held as given whose input is one.
+function showsPicture(value: { kind: SlotKind; boxed: unknown }): boolean {
+  if (value.kind === SlotKind.Picture) return true;
+  if (value.kind !== SlotKind.Other || !isObject(value.boxed)) return false;
+  const input = value.boxed.input;
+  return isObject(input) && 'img' in input;
 }
 
 function ofParts(input: unknown, format: unknown): boolean {
@@ -146,17 +155,29 @@ export class CellMap implements Map<string, Cell> {
    * As `set`, by row id and column id and the cell's parts: no key made and split again, no cell object made (a load
    * of every cell).
    */
-  setCell(rowId: string, colId: string, input: CellInput | undefined, format?: CellFormat): this {
+  setCell(
+    rowId: string,
+    colId: string,
+    input: CellInput | undefined,
+    format?: CellFormat,
+    note?: string,
+  ): this {
     const row = this.interns.rows.intern(rowId);
     const col = this.interns.cols.intern(colId);
+    if (note !== undefined)
+      return this.put(
+        row,
+        col,
+        this.other(row, col, { ...(input ? { input } : {}), ...(format ? { format } : {}), note }),
+      );
     return this.put(row, col, this.encode(row, col, input, format));
   }
 
   private put(row: number, col: number, value: SlotValue): this {
     const slot = this.index.find(row, col, this.slots);
-    if (value.kind === SlotKind.Picture) this.pictures++;
+    if (showsPicture(value)) this.pictures++;
     if (slot >= 0) {
-      if (this.slots.kind(slot) === SlotKind.Picture) this.pictures--;
+      if (this.showsPictureAt(slot)) this.pictures--;
       this.slots.write(slot, value);
       return this;
     }
@@ -173,7 +194,7 @@ export class CellMap implements Map<string, Cell> {
     if (row === undefined || col === undefined) return false;
     const slot = this.index.remove(row, col, this.slots);
     if (slot < 0) return false;
-    if (this.slots.kind(slot) === SlotKind.Picture) this.pictures--;
+    if (this.showsPictureAt(slot)) this.pictures--;
     this.slots.kill(slot);
     this.live--;
     this.dead++;
@@ -221,6 +242,10 @@ export class CellMap implements Map<string, Cell> {
     const row = this.interns.rows.find(parts[0]);
     const col = row === undefined ? undefined : this.interns.cols.find(parts[1]);
     return col === undefined ? -1 : this.index.find(row!, col, this.slots);
+  }
+
+  private showsPictureAt(slot: number): boolean {
+    return showsPicture({ kind: this.slots.kind(slot), boxed: this.slots.boxed(slot) });
   }
 
   private keyAt(slot: number): string {

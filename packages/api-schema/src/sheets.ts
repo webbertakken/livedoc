@@ -74,6 +74,9 @@ export const SHEET_ERRORS = [
   'input_too_long',
   'formula_invalid',
   'format_invalid',
+  // A note too long, or not plain text (docs/specs/029-sheets/review.md "Notes").
+  'note_too_long',
+  'note_invalid',
   'axis_id_invalid',
   'title_invalid',
   'merge_invalid',
