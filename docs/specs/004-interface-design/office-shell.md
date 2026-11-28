@@ -226,7 +226,9 @@ panel's frame; the kind fills its body.
 - Each panel is a `complementary` landmark named by its title. Opening it from a menu item or a shortcut puts focus in
   it; Escape inside it closes it and gives focus back to the document ([Escape](escape.md)); its × closes it too.
 - Whether a panel is open is per person, remembered in this browser per kind (`livedoc:v2:office-panels`)
-  `(default)`, so a person who keeps the outline open finds it open in every document of the kind.
+  `(default)`, so a person who keeps the outline open finds it open in every document of the kind. A panel open on
+  one object (a spreadsheet's Chart Editor, Pivot Table Editor or Slicer panel) is never remembered: it opens from its
+  object alone, so a reload or another document starts with it closed rather than on an object it cannot find.
 - The menu item that opens a panel is an on/off check, checked while it is open; choosing it again closes it.
 - A kind may offer a panel to some sessions only (an Editor's), or only where review is shown (a text document's
   comments: never to a Viewer, never in Viewing): elsewhere its item is not bound and the panel is not drawn, even

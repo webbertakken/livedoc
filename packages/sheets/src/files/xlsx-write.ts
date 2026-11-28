@@ -46,6 +46,12 @@ import { xlsxFormatRulesXml } from './xlsx-format-rules';
 import { xlsxValidationsXml } from './xlsx-validation';
 import { liveDocExtXml, xlsxProtectionXml } from './xlsx-protection';
 import { xlsxFiltersOut, type XlsxFiltersOut } from './xlsx-filters';
+import {
+  xlsxSlicerCaches,
+  xlsxSlicerParts,
+  xlsxSlicerPlan,
+  type XlsxSlicerParts,
+} from './xlsx-slicers';
 import { xlsxThemeXml } from './xlsx-theme';
 import { xlsxFunctionNames } from './file-functions';
 import { namesToWrite, xlsxNameXml } from './file-names';
@@ -215,6 +221,8 @@ type SheetParts = {
   drawingRelId: string | null;
   tables: XlsxTableParts['sheets'][number];
   filters: XlsxFiltersOut;
+  // Its table slicers' relationship and worksheet `ext` (standard-mapping.md "Filters in the file").
+  slicers: XlsxSlicerParts['sheets'][number];
 };
 
 function worksheetXml(
@@ -284,13 +292,14 @@ function worksheetXml(
   const validations = xlsxValidationsXml(sheet.validations, renamed);
   // Its protection (standard-mapping.md "Protection in the file"), its record in LiveDoc's one `ext`.
   const protection = xlsxProtectionXml(sheet.protections);
-  const ext = liveDocExtXml(
+  const own = liveDocExtXml(
     validations.ext,
     protection.record,
     parts.tables?.record ?? null,
     parts.filters.record,
   );
-  const own = [
+  const ext = own === null && !parts.slicers ? null : `${own ?? ''}${parts.slicers?.ext ?? ''}`;
+  const children = [
     { name: 'dimension', xml: `<dimension ref="${extent}"/>` },
     ...(shape ? [{ name: 'sheetFormatPr', xml: shape.sheetFormatPr }] : []),
     ...(shape?.cols ? [{ name: 'cols', xml: shape.cols }] : []),
@@ -329,7 +338,7 @@ function worksheetXml(
     `<worksheet xmlns="${SPREADSHEETML_NS}" xmlns:r="${OFFICE_RELATIONSHIPS_NS}"${kept.rootAttributes('worksheet', OWN_NS, index)}>`,
     ...kept.worksheetChildren(
       index,
-      own,
+      children,
       rootNs,
       sheetPrOwn(sheet.tabColour, shape?.outlinePr ?? null),
     ),
@@ -359,6 +368,7 @@ function workbookXml(
   functions: ReturnType<typeof definedNames>,
   pivotCaches: readonly string[],
   views: readonly string[],
+  exts: readonly string[],
 ): string {
   const sheets = sheetsOf.map(
     ({ name, hidden }, i) =>
@@ -381,6 +391,7 @@ function workbookXml(
       functions,
       pivotCaches,
       views,
+      exts,
     ),
     '</workbook>',
     '',
@@ -425,6 +436,8 @@ export function writeXlsx(file: WorkbookFile, title: string): FileWritten<Uint8A
   const styles = new XlsxStyles(kept.stylesheet({ '': SPREADSHEETML_NS }), theme.font);
   let dynamic = false;
   const keptParts = kept.parts();
+  // Which slicers Excel draws as table slicers (standard-mapping.md "Filters in the file").
+  const sliced = xlsxSlicerPlan(file.sheets, kept, losses);
   const drawn = xlsxChartParts(
     file.sheets,
     kept,
@@ -432,6 +445,7 @@ export function writeXlsx(file: WorkbookFile, title: string): FileWritten<Uint8A
     renamed,
     losses,
     file.pictureBytes,
+    (i) => sliced.sheets[i]!.excel.map((x) => x.slicer),
   );
   const sheetRels = (i: number) => [
     ...kept.relationships('sheet', i),
@@ -441,7 +455,16 @@ export function writeXlsx(file: WorkbookFile, title: string): FileWritten<Uint8A
     ownIds(sheetRels(i)),
   );
   const filters = file.sheets.map((sheet, i) =>
-    xlsxFiltersOut(sheet, i, renamed.get(sheet.name) ?? sheet.name),
+    xlsxFiltersOut(sheet, i, renamed.get(sheet.name) ?? sheet.name, sliced.sheets[i]!.slicers),
+  );
+  // The names the workbook's own take, so a slicer cache's takes another.
+  const defined = definedNames(file, renamed, losses);
+  const slicerParts = xlsxSlicerParts(
+    file.sheets,
+    sliced,
+    tabled.sheets.map((s) => s?.ids ?? []),
+    (i) => ownIds([...sheetRels(i), ...(tabled.sheets[i]?.rels ?? [])]),
+    defined.taken,
   );
   // A filter over part of a table is its record's alone (D480): logged with the write's losses, never reported.
   file.sheets.forEach((sheet, i) => {
@@ -452,6 +475,7 @@ export function writeXlsx(file: WorkbookFile, title: string): FileWritten<Uint8A
       drawingRelId: drawn.sheets[i]?.relId ?? null,
       tables: tabled.sheets[i] ?? null,
       filters: filters[i]!,
+      slicers: slicerParts.sheets[i] ?? null,
     });
     dynamic ||= written.dynamic;
     return {
@@ -461,9 +485,11 @@ export function writeXlsx(file: WorkbookFile, title: string): FileWritten<Uint8A
     };
   });
   // The workbook's names: its named ranges, then its named functions as named LAMBDAs, each name once (D344).
-  const defined = definedNames(file, renamed, losses);
-  // The filters' names after the workbook's own (standard-mapping.md "Filters in the file").
-  const functions = { ...defined, names: [...defined.names, ...filters.flatMap((f) => f.names)] };
+  // The filters' and slicer caches' names after the workbook's own (standard-mapping.md "Filters in the file").
+  const functions = {
+    ...defined,
+    names: [...defined.names, ...filters.flatMap((f) => f.names), ...slicerParts.names],
+  };
   const names = file.sheets.map((s) => ({
     name: renamed.get(s.name) ?? s.name,
     hidden: s.hidden === true,
@@ -486,8 +512,11 @@ export function writeXlsx(file: WorkbookFile, title: string): FileWritten<Uint8A
   const pivoted = xlsxPivotParts(file.sheets, kept, keptParts.parts, renamed, workbookId, (i) => [
     ...sheetRels(i),
     ...(tabled.sheets[i]?.rels ?? []),
+    ...(slicerParts.sheets[i]?.rels ?? []),
   ]);
   workbookRels.push(...pivoted.caches.rels);
+  const slicerCaches = xlsxSlicerCaches(slicerParts.caches, workbookId);
+  workbookRels.push(...slicerCaches.rels);
   const xmlPart = (name: string, contentType: string, xml: string): OoxmlPart => ({
     name,
     contentType,
@@ -505,6 +534,7 @@ export function writeXlsx(file: WorkbookFile, title: string): FileWritten<Uint8A
           functions,
           pivoted.caches.entries,
           filters.flatMap((f) => f.views),
+          slicerCaches.ext ? [slicerCaches.ext] : [],
         ),
       ),
     },
@@ -516,6 +546,7 @@ export function writeXlsx(file: WorkbookFile, title: string): FileWritten<Uint8A
     ...drawn.parts,
     ...tabled.parts,
     ...pivoted.parts,
+    ...slicerParts.parts,
     ...(dynamic
       ? [xmlPart('xl/metadata.xml', OOXML_CONTENT_TYPES.sheetMetadata, DYNAMIC_ARRAY_METADATA_XML)]
       : []),
@@ -549,7 +580,12 @@ export function writeXlsx(file: WorkbookFile, title: string): FileWritten<Uint8A
     ['xl/workbook.xml', [...workbookRels, ...keptWorkbookRels]],
     ...sheetParts.map((part, i): [string, Relationship[]] => [
       part.name,
-      [...sheetRels(i), ...(tabled.sheets[i]?.rels ?? []), ...(pivoted.sheets[i] ?? [])],
+      [
+        ...sheetRels(i),
+        ...(tabled.sheets[i]?.rels ?? []),
+        ...(slicerParts.sheets[i]?.rels ?? []),
+        ...(pivoted.sheets[i] ?? []),
+      ],
     ]),
     ...drawn.relationships,
     ...pivoted.relationships,

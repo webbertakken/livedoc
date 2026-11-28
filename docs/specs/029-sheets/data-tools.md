@@ -576,7 +576,8 @@ The code cites each by its id.
   column", filtering nothing; its range gone, "No data" (default).
 - **D487** What a slicer filters beside the cells: a chart whose data range is the slicer's range exactly, as
   Google's "same data range"; a pivot table whose source is the slicer's range exactly, on the slicer's sheet, while
-  Apply to Pivot Tables is ticked ([Pivot tables](pivot-tables.md#in-the-grid), "Sliced", D629) (default).
+  Apply to Pivot Tables is ticked, worked out for each person by the pivot tables' side (the Director's ruling,
+  2026-11-28; [Pivot tables](pivot-tables.md#in-the-grid), "Sliced", D629) (default).
 - **D441** Convert to Table's guessed column types: a type when every filled data cell is that type, else Text; a
   column with none filled None, as Google guesses (default).
 - **D442** A table's look: the alternating colours banding over it, the table's own, in the first default style; it

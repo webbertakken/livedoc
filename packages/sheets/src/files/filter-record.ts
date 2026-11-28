@@ -17,6 +17,8 @@ import type {
   FileFilterView,
   StandardIn,
 } from './file-filters';
+import type { FileSlicer } from './file-slicers';
+import { slicerRecordEntries } from './slicer-record';
 import { validationFingerprint } from './validation-standard';
 
 const isRecord = (v: unknown): v is Record<string, unknown> =>
@@ -25,10 +27,11 @@ const isRecord = (v: unknown): v is Record<string, unknown> =>
 const condsText = (cols: readonly FileFilterColumn[]) =>
   Object.fromEntries(cols.flatMap((x) => (x.cond ? [[columnLetters(x.c), x.cond]] : [])));
 
-/** LiveDoc's record of a sheet's filter and views: one JSON object, ranges as A1 text, columns by letter. */
+/** LiveDoc's record of a sheet's filter, views and slicers: one JSON object, ranges as A1 text, columns by letter. */
 export function filterRecordText(
   filter: FileFilter | undefined,
   views: readonly FileFilterView[] = [],
+  slicers: readonly FileSlicer[] = [],
 ): string {
   return JSON.stringify({
     ...(filter
@@ -57,6 +60,7 @@ export function filterRecordText(
           })),
         }
       : {}),
+    ...(slicers.length ? { slicers: slicerRecordEntries(slicers) } : {}),
   });
 }
 

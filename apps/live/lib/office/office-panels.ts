@@ -15,6 +15,9 @@ export type OfficePanelSpec = {
   editorsOnly?: true;
   // Offered only where review is shown (a text document's comments): never to a Viewer, never in Viewing.
   review?: true;
+  // Open on one object (a chart, a pivot table, a slicer), from that object alone: never remembered, so a reload or
+  // another document finds it closed (office-shell.md "Side panels").
+  object?: true;
 };
 
 export const OFFICE_PANEL_WIDTH = { initial: 360, min: 280, max: 560, step: 16 } as const;
@@ -40,7 +43,7 @@ export const OpenPanels = {
   parse: (raw: unknown, panels: readonly OfficePanelSpec[]): OpenPanels => {
     const record = typeof raw === 'object' && raw !== null ? (raw as Record<string, unknown>) : {};
     const sideOf = (side: OfficePanelSide) =>
-      panels.find((p) => p.side === side && p.id === record[side])?.id ?? null;
+      panels.find((p) => p.side === side && p.id === record[side] && !p.object)?.id ?? null;
     return { left: sideOf('left'), right: sideOf('right') };
   },
 } as const;

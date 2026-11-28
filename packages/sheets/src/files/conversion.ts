@@ -25,6 +25,8 @@ import { answersDiffering, workbookFileFor } from './write-workbook';
 import { XLSX_TEXT_MAX, xlsxFormula } from './xlsx-bounds';
 import { xlsxLacks } from './xlsx-function-names';
 import { excelNames } from './xlsx-write';
+import { slicerTableAt } from './xlsx-slicers';
+import { xlsxTablesOf } from './xlsx-tables';
 import { excelRefuses } from './file-names';
 import { protectionsElsewhere, type ProtectionSimplified } from './file-protections';
 
@@ -57,6 +59,9 @@ export type ConversionLoss =
   | { k: 'pivots_simplified'; count: number; features: PivotSimplified[] }
   // Filter views an OpenDocument file cannot hold (standard-mapping.md "Filters in the file").
   | { k: 'filter_views_left'; count: number }
+  // Slicers an OpenDocument file cannot hold, and those Excel does not see (not over a table exactly).
+  | { k: 'slicers_left'; count: number }
+  | { k: 'slicers_unseen'; count: number }
   // What was kept from the file, which a file of the other standard leaves behind (standard-mapping.md "Unknown
   // content"): counted, its kinds the most common first.
   | { k: 'kept'; count: number; kinds: KeptKind[] };
@@ -169,10 +174,23 @@ export function conversionLosses(
   if (pivots.count > 0) losses.push({ k: 'pivots_simplified', ...pivots });
   const views = isXlsx(to) ? 0 : file.sheets.reduce((n, s) => n + (s.filterViews?.length ?? 0), 0);
   if (views > 0) losses.push({ k: 'filter_views_left', count: views });
+  const slicers = slicersElsewhere(file, isXlsx(to));
+  if (slicers > 0)
+    losses.push({ k: isXlsx(to) ? 'slicers_unseen' : 'slicers_left', count: slicers });
   const kept =
     file.kept && file.kept.standard !== keptStandardOf(to) ? keptKinds(file.kept.items) : null;
   if (kept && kept.count > 0) losses.push({ k: 'kept', ...kept });
   return losses;
+}
+
+/** The slicers a format leaves out (ODF) or holds in LiveDoc's record alone (XLSX: not over a table exactly). */
+function slicersElsewhere(file: WorkbookFile, xlsx: boolean): number {
+  return file.sheets.reduce((n, sheet) => {
+    const slicers = sheet.slicers ?? [];
+    if (!xlsx) return n + slicers.length;
+    const tables = xlsxTablesOf(sheet);
+    return n + slicers.filter((s) => slicerTableAt(s, tables) < 0).length;
+  }, 0);
 }
 
 /** The pivot tables a format's other apps hold more simply, counted, and every feature they lose, in order. */
