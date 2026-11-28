@@ -5,10 +5,10 @@
 import type * as Y from 'yjs';
 import type { TextDocumentFormat } from '@livedoc/document';
 import {
+  isPicturedExportType,
   isTextDocumentExportType,
   TextDocumentState,
   type TextDocumentDownloadType,
-  type TextDocumentFileType,
 } from '@livedoc/text-documents';
 import { debugLog } from '@/lib/debug-log';
 import type { WrittenTextDocumentFile } from './text-document-file';
@@ -42,17 +42,12 @@ export async function textDocumentDownload({
   readImage,
   fromApi,
 }: TextDocumentDownload): Promise<WrittenTextDocumentFile> {
-  // An export reads no picture's bytes: written here for This Browser, else by the api.
-  if (isTextDocumentExportType(file.type)) {
+  // An export of text alone reads no picture: written here for This Browser, else by the api.
+  if (isTextDocumentExportType(file.type) && !isPicturedExportType(file.type)) {
     if (!localDoc) return fromApi();
     const { textDocumentExportOf } = await import('./text-document-file');
-    return textDocumentExportOf(localDoc, {
-      format: file.format,
-      name: file.name,
-      type: file.type,
-    });
+    return textDocumentExportOf(localDoc, { ...file, type: file.type });
   }
-  const type: TextDocumentFileType = file.type;
   const drawings = (doc: Y.Doc | null) =>
     doc && draw ? [...TextDocumentState.drawingNames(doc).keys()] : [];
   const named = localDoc ? drawings(localDoc) : drawings(liveDoc);
@@ -65,6 +60,10 @@ export async function textDocumentDownload({
     drawn: drawn?.size ?? 0,
   });
   // The writer loads only when it is asked for.
-  const { textDocumentFileOf } = await import('./text-document-file');
-  return textDocumentFileOf(doc, { ...file, type, readImage, ...(drawn ? { drawn } : {}) });
+  const { textDocumentExportOf, textDocumentFileOf } = await import('./text-document-file');
+  const pictures = { readImage, ...(drawn ? { drawn } : {}) };
+  // The Web Page and the EPUB carry pictures as the native files do: chosen and drawn the same way.
+  if (isTextDocumentExportType(file.type))
+    return textDocumentExportOf(doc, { ...file, type: file.type, ...pictures });
+  return textDocumentFileOf(doc, { ...file, type: file.type, ...pictures });
 }

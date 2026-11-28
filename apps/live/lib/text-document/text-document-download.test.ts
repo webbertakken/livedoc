@@ -1,5 +1,6 @@
 // docs/specs/034-text-documents/objects.md "Where the bytes live": a download names the pictures it left out.
 import { describe, expect, it, vi } from 'vitest';
+import { listZip } from '@livedoc/office-packages';
 import {
   Pictures,
   readTextDocumentFile,
@@ -118,5 +119,57 @@ describe('textDocumentDownload', () => {
       fromApi,
     });
     expect(fromApi).toHaveBeenCalled();
+  });
+
+  // files-and-print.md "Downloading": the Web Page and the EPUB carry pictures, chosen and read as the native files.
+  const galleryDoc = () => {
+    const blank = TextDocument.blank({ format: 'odf' });
+    const picture: Picture = { type: 'picture', media: 'k1', width: 20, height: 20, props: {} };
+    return TextDocumentState.load([
+      TextDocumentState.fromDocument({
+        ...blank,
+        body: [{ type: 'paragraph', style: blank.styles[0]!.id, props: {}, inlines: [picture] }],
+        media: { k1: { mediaType: 'image/png', image: 'img-1' } },
+      }),
+    ]);
+  };
+  const entries = async (blob: Blob) => {
+    const listed = listZip(new Uint8Array(await blob.arrayBuffer()));
+    return listed.ok ? listed.entries.map((e) => e.name) : [];
+  };
+
+  it('zips a Web Page here for This Browser with its gallery pictures read back', async () => {
+    const readImage = vi.fn(async () => PNG);
+    const file = await download({
+      file: { format: 'odf', name: 'N', type: 'html' },
+      localDoc: galleryDoc(),
+      readImage,
+    });
+    expect(readImage).toHaveBeenCalledWith('img-1');
+    expect(file.fileName).toBe('N.zip');
+    expect(file.blob.type).toBe('application/zip');
+    expect(file.leftOut).toBe(0);
+    expect(await entries(file.blob)).toEqual(['N.html', 'images/1.png']);
+  });
+
+  it('counts a picture an EPUB left out, its bytes unread', async () => {
+    const file = await download({
+      file: { format: 'odf', name: 'N', type: 'epub' },
+      localDoc: galleryDoc(),
+    });
+    expect(file.fileName).toBe('N.epub');
+    expect(file.leftOut).toBe(1);
+    expect((await entries(file.blob)).some((name) => name.includes('images/'))).toBe(false);
+  });
+
+  it('leaves an EPUB to the api unless its writing names drawings, drawn afresh here', async () => {
+    const fromApi = vi.fn(async () => api);
+    const epub = { format: 'odf' as const, name: 'N', type: 'epub' as const };
+    expect(await download({ file: epub, liveDoc: docWith(), draw: vi.fn(), fromApi })).toBe(api);
+    const draw = vi.fn(async () => PNG);
+    const file = await download({ file: epub, liveDoc: docWith('d1'), draw, fromApi });
+    expect(fromApi).toHaveBeenCalledTimes(1);
+    expect(draw).toHaveBeenCalledWith('d1');
+    expect(await entries(file.blob)).toContain('OEBPS/images/1.png');
   });
 });

@@ -86,8 +86,8 @@ function downloads(): OfficeEntry[] {
     item('download-rtf', 'Rich Text Format (.rtf)', 'view'),
     item('download-pdf', 'PDF document (.pdf)', 'view'),
     item('download-txt', 'Plain Text (.txt)', 'view', BUILT),
-    item('download-html', 'Web Page (.html, zipped)', 'view'),
-    item('download-epub', 'EPUB Publication (.epub)', 'view'),
+    item('download-html', 'Web Page (.html, zipped)', 'view', BUILT),
+    item('download-epub', 'EPUB Publication (.epub)', 'view', BUILT),
     item('download-md', 'Markdown (.md)', 'view', BUILT),
   ];
 }

@@ -1,0 +1,903 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`the Web Page of every construct > writes blank as a well-formed page 1`] = `
+"<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Untitled</title>
+<style>
+body { font-family: 'Arial'; font-size: 11pt; line-height: 1.15; }
+p.title { font-family: 'Arial'; font-size: 26pt; margin-bottom: 3pt; }
+p.subtitle { color: #666666; font-family: 'Arial'; font-size: 15pt; margin-bottom: 16pt; }
+h1 { font-family: 'Arial'; font-size: 20pt; margin-top: 20pt; margin-bottom: 6pt; }
+h2 { font-family: 'Arial'; font-size: 16pt; margin-top: 18pt; margin-bottom: 6pt; }
+h3 { color: #434343; font-family: 'Arial'; font-size: 14pt; margin-top: 16pt; margin-bottom: 4pt; }
+h4 { color: #666666; font-family: 'Arial'; font-size: 12pt; margin-top: 14pt; margin-bottom: 4pt; }
+h5 { color: #666666; font-family: 'Arial'; font-size: 11pt; margin-top: 12pt; margin-bottom: 4pt; }
+h6 { color: #666666; font-family: 'Arial'; font-size: 11pt; font-style: italic; margin-top: 12pt; margin-bottom: 4pt; }
+.tab { white-space: pre; }
+pre { white-space: pre-wrap; }
+table { border-collapse: collapse; }
+td, th { border: 1px solid #888888; padding: 4px; vertical-align: top; }
+li.check { list-style: none; }
+.crop { display: inline-block; overflow: hidden; vertical-align: bottom; }
+.footnotes { border-top: 1px solid #888888; margin-top: 2em; }
+</style>
+</head>
+<body>
+<p><br /></p>
+</body>
+</html>
+"
+`;
+
+exports[`the Web Page of every construct > writes bookmarks as a well-formed page 1`] = `
+"<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Constructs</title>
+<style>
+body { font-family: 'Arial'; font-size: 11pt; line-height: 1.15; }
+p.title { font-family: 'Arial'; font-size: 26pt; margin-bottom: 3pt; }
+p.subtitle { color: #666666; font-family: 'Arial'; font-size: 15pt; margin-bottom: 16pt; }
+h1 { font-family: 'Arial'; font-size: 20pt; margin-top: 20pt; margin-bottom: 6pt; }
+h2 { font-family: 'Arial'; font-size: 16pt; margin-top: 18pt; margin-bottom: 6pt; }
+h3 { color: #434343; font-family: 'Arial'; font-size: 14pt; margin-top: 16pt; margin-bottom: 4pt; }
+h4 { color: #666666; font-family: 'Arial'; font-size: 12pt; margin-top: 14pt; margin-bottom: 4pt; }
+h5 { color: #666666; font-family: 'Arial'; font-size: 11pt; margin-top: 12pt; margin-bottom: 4pt; }
+h6 { color: #666666; font-family: 'Arial'; font-size: 11pt; font-style: italic; margin-top: 12pt; margin-bottom: 4pt; }
+.tab { white-space: pre; }
+pre { white-space: pre-wrap; }
+table { border-collapse: collapse; }
+td, th { border: 1px solid #888888; padding: 4px; vertical-align: top; }
+li.check { list-style: none; }
+.crop { display: inline-block; overflow: hidden; vertical-align: bottom; }
+.footnotes { border-top: 1px solid #888888; margin-top: 2em; }
+</style>
+</head>
+<body>
+<p><a id="a1b2c3d4e5f6"></a>Start here, <a id="mid"></a><strong>then on.</strong></p>
+<p>Back to the <a href="#a1b2c3d4e5f6">start</a></p>
+</body>
+</html>
+"
+`;
+
+exports[`the Web Page of every construct > writes borders as a well-formed page 1`] = `
+"<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Constructs</title>
+<style>
+body { font-family: 'Arial'; font-size: 11pt; line-height: 1.15; }
+p.title { font-family: 'Arial'; font-size: 26pt; margin-bottom: 3pt; }
+p.subtitle { color: #666666; font-family: 'Arial'; font-size: 15pt; margin-bottom: 16pt; }
+h1 { font-family: 'Arial'; font-size: 20pt; margin-top: 20pt; margin-bottom: 6pt; }
+h2 { font-family: 'Arial'; font-size: 16pt; margin-top: 18pt; margin-bottom: 6pt; }
+h3 { color: #434343; font-family: 'Arial'; font-size: 14pt; margin-top: 16pt; margin-bottom: 4pt; }
+h4 { color: #666666; font-family: 'Arial'; font-size: 12pt; margin-top: 14pt; margin-bottom: 4pt; }
+h5 { color: #666666; font-family: 'Arial'; font-size: 11pt; margin-top: 12pt; margin-bottom: 4pt; }
+h6 { color: #666666; font-family: 'Arial'; font-size: 11pt; font-style: italic; margin-top: 12pt; margin-bottom: 4pt; }
+.tab { white-space: pre; }
+pre { white-space: pre-wrap; }
+table { border-collapse: collapse; }
+td, th { border: 1px solid #888888; padding: 4px; vertical-align: top; }
+li.check { list-style: none; }
+.crop { display: inline-block; overflow: hidden; vertical-align: bottom; }
+.footnotes { border-top: 1px solid #888888; margin-top: 2em; }
+</style>
+</head>
+<body>
+<p>Boxed, shaded</p>
+<p>A dotted rule above, a dashed one below</p>
+</body>
+</html>
+"
+`;
+
+exports[`the Web Page of every construct > writes comments as a well-formed page 1`] = `
+"<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Constructs</title>
+<style>
+body { font-family: 'Arial'; font-size: 11pt; line-height: 1.15; }
+p.title { font-family: 'Arial'; font-size: 26pt; margin-bottom: 3pt; }
+p.subtitle { color: #666666; font-family: 'Arial'; font-size: 15pt; margin-bottom: 16pt; }
+h1 { font-family: 'Arial'; font-size: 20pt; margin-top: 20pt; margin-bottom: 6pt; }
+h2 { font-family: 'Arial'; font-size: 16pt; margin-top: 18pt; margin-bottom: 6pt; }
+h3 { color: #434343; font-family: 'Arial'; font-size: 14pt; margin-top: 16pt; margin-bottom: 4pt; }
+h4 { color: #666666; font-family: 'Arial'; font-size: 12pt; margin-top: 14pt; margin-bottom: 4pt; }
+h5 { color: #666666; font-family: 'Arial'; font-size: 11pt; margin-top: 12pt; margin-bottom: 4pt; }
+h6 { color: #666666; font-family: 'Arial'; font-size: 11pt; font-style: italic; margin-top: 12pt; margin-bottom: 4pt; }
+.tab { white-space: pre; }
+pre { white-space: pre-wrap; }
+table { border-collapse: collapse; }
+td, th { border: 1px solid #888888; padding: 4px; vertical-align: top; }
+li.check { list-style: none; }
+.crop { display: inline-block; overflow: hidden; vertical-align: bottom; }
+.footnotes { border-top: 1px solid #888888; margin-top: 2em; }
+</style>
+</head>
+<body>
+<p>The quarterly <strong>results</strong> are in.</p>
+<p>Next steps</p>
+<p>follow.</p>
+</body>
+</html>
+"
+`;
+
+exports[`the Web Page of every construct > writes contents as a well-formed page 1`] = `
+"<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Constructs</title>
+<style>
+body { font-family: 'Arial'; font-size: 11pt; line-height: 1.15; }
+p.title { font-family: 'Arial'; font-size: 26pt; margin-bottom: 3pt; }
+p.subtitle { color: #666666; font-family: 'Arial'; font-size: 15pt; margin-bottom: 16pt; }
+h1 { font-family: 'Arial'; font-size: 20pt; margin-top: 20pt; margin-bottom: 6pt; }
+h2 { font-family: 'Arial'; font-size: 16pt; margin-top: 18pt; margin-bottom: 6pt; }
+h3 { color: #434343; font-family: 'Arial'; font-size: 14pt; margin-top: 16pt; margin-bottom: 4pt; }
+h4 { color: #666666; font-family: 'Arial'; font-size: 12pt; margin-top: 14pt; margin-bottom: 4pt; }
+h5 { color: #666666; font-family: 'Arial'; font-size: 11pt; margin-top: 12pt; margin-bottom: 4pt; }
+h6 { color: #666666; font-family: 'Arial'; font-size: 11pt; font-style: italic; margin-top: 12pt; margin-bottom: 4pt; }
+.tab { white-space: pre; }
+pre { white-space: pre-wrap; }
+table { border-collapse: collapse; }
+td, th { border: 1px solid #888888; padding: 4px; vertical-align: top; }
+li.check { list-style: none; }
+.crop { display: inline-block; overflow: hidden; vertical-align: bottom; }
+.footnotes { border-top: 1px solid #888888; margin-top: 2em; }
+</style>
+</head>
+<body>
+<p><a href="#_alpha0000001">Alpha</a></p>
+<p><a href="#_beta00000001">Beta</a></p>
+<h1><a id="_alpha0000001"></a>Alpha</h1>
+<h2><a id="_beta00000001"></a>Beta</h2>
+</body>
+</html>
+"
+`;
+
+exports[`the Web Page of every construct > writes equations as a well-formed page 1`] = `
+"<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Constructs</title>
+<style>
+body { font-family: 'Arial'; font-size: 11pt; line-height: 1.15; }
+p.title { font-family: 'Arial'; font-size: 26pt; margin-bottom: 3pt; }
+p.subtitle { color: #666666; font-family: 'Arial'; font-size: 15pt; margin-bottom: 16pt; }
+h1 { font-family: 'Arial'; font-size: 20pt; margin-top: 20pt; margin-bottom: 6pt; }
+h2 { font-family: 'Arial'; font-size: 16pt; margin-top: 18pt; margin-bottom: 6pt; }
+h3 { color: #434343; font-family: 'Arial'; font-size: 14pt; margin-top: 16pt; margin-bottom: 4pt; }
+h4 { color: #666666; font-family: 'Arial'; font-size: 12pt; margin-top: 14pt; margin-bottom: 4pt; }
+h5 { color: #666666; font-family: 'Arial'; font-size: 11pt; margin-top: 12pt; margin-bottom: 4pt; }
+h6 { color: #666666; font-family: 'Arial'; font-size: 11pt; font-style: italic; margin-top: 12pt; margin-bottom: 4pt; }
+.tab { white-space: pre; }
+pre { white-space: pre-wrap; }
+table { border-collapse: collapse; }
+td, th { border: 1px solid #888888; padding: 4px; vertical-align: top; }
+li.check { list-style: none; }
+.crop { display: inline-block; overflow: hidden; vertical-align: bottom; }
+.footnotes { border-top: 1px solid #888888; margin-top: 2em; }
+</style>
+</head>
+<body>
+<p>Where <math xmlns="http://www.w3.org/1998/Math/MathML"><mrow><mfrac><mrow><mi>a</mi></mrow><mrow><mi>b</mi><mo>+</mo><mn>1</mn></mrow></mfrac><mo>+</mo><msubsup><mrow><mi>x</mi></mrow><mrow><mn>1</mn></mrow><mrow><mn>2</mn></mrow></msubsup><mroot><mrow><mi>z</mi></mrow><mrow><mn>3</mn></mrow></mroot><msqrt><mi>y</mi></msqrt><mo>≤</mo><mrow><munderover><mo>∑</mo><mrow><mi>k</mi><mo>=</mo><mn>1</mn></mrow><mrow><mi>n</mi></mrow></munderover><mrow><mi>k</mi></mrow></mrow><mrow><msub><mo>∫</mo><mrow><mn>0</mn></mrow></msub><mrow><mi>f</mi></mrow></mrow><mrow><mo fence="true" stretchy="true">(</mo><mi>p</mi><mo fence="true" stretchy="true">]</mo></mrow><mover accent="true"><mrow><mi>v</mi></mrow><mo>→</mo></mover><munder><mrow><mi>lim</mi></mrow><mrow><mi>a</mi><mo>→</mo><mi>b</mi></mrow></munder><mtext>if x</mtext></mrow></math> holds.</p>
+<p style="text-align: center"><math xmlns="http://www.w3.org/1998/Math/MathML"><mrow><mi>E</mi><mo>=</mo><mi>m</mi><msup><mrow><mi>c</mi></mrow><mrow><mn>2</mn></mrow></msup></mrow></math></p>
+</body>
+</html>
+"
+`;
+
+exports[`the Web Page of every construct > writes fields as a well-formed page 1`] = `
+"<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Constructs</title>
+<style>
+body { font-family: 'Arial'; font-size: 11pt; line-height: 1.15; }
+p.title { font-family: 'Arial'; font-size: 26pt; margin-bottom: 3pt; }
+p.subtitle { color: #666666; font-family: 'Arial'; font-size: 15pt; margin-bottom: 16pt; }
+h1 { font-family: 'Arial'; font-size: 20pt; margin-top: 20pt; margin-bottom: 6pt; }
+h2 { font-family: 'Arial'; font-size: 16pt; margin-top: 18pt; margin-bottom: 6pt; }
+h3 { color: #434343; font-family: 'Arial'; font-size: 14pt; margin-top: 16pt; margin-bottom: 4pt; }
+h4 { color: #666666; font-family: 'Arial'; font-size: 12pt; margin-top: 14pt; margin-bottom: 4pt; }
+h5 { color: #666666; font-family: 'Arial'; font-size: 11pt; margin-top: 12pt; margin-bottom: 4pt; }
+h6 { color: #666666; font-family: 'Arial'; font-size: 11pt; font-style: italic; margin-top: 12pt; margin-bottom: 4pt; }
+.tab { white-space: pre; }
+pre { white-space: pre-wrap; }
+table { border-collapse: collapse; }
+td, th { border: 1px solid #888888; padding: 4px; vertical-align: top; }
+li.check { list-style: none; }
+.crop { display: inline-block; overflow: hidden; vertical-align: bottom; }
+.footnotes { border-top: 1px solid #888888; margin-top: 2em; }
+</style>
+</head>
+<body>
+<p>Pages: <em>2</em></p>
+<p>Starts at two</p>
+</body>
+</html>
+"
+`;
+
+exports[`the Web Page of every construct > writes footnotes as a well-formed page 1`] = `
+"<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Constructs</title>
+<style>
+body { font-family: 'Arial'; font-size: 11pt; line-height: 1.15; }
+p.title { font-family: 'Arial'; font-size: 26pt; margin-bottom: 3pt; }
+p.subtitle { color: #666666; font-family: 'Arial'; font-size: 15pt; margin-bottom: 16pt; }
+h1 { font-family: 'Arial'; font-size: 20pt; margin-top: 20pt; margin-bottom: 6pt; }
+h2 { font-family: 'Arial'; font-size: 16pt; margin-top: 18pt; margin-bottom: 6pt; }
+h3 { color: #434343; font-family: 'Arial'; font-size: 14pt; margin-top: 16pt; margin-bottom: 4pt; }
+h4 { color: #666666; font-family: 'Arial'; font-size: 12pt; margin-top: 14pt; margin-bottom: 4pt; }
+h5 { color: #666666; font-family: 'Arial'; font-size: 11pt; margin-top: 12pt; margin-bottom: 4pt; }
+h6 { color: #666666; font-family: 'Arial'; font-size: 11pt; font-style: italic; margin-top: 12pt; margin-bottom: 4pt; }
+.tab { white-space: pre; }
+pre { white-space: pre-wrap; }
+table { border-collapse: collapse; }
+td, th { border: 1px solid #888888; padding: 4px; vertical-align: top; }
+li.check { list-style: none; }
+.crop { display: inline-block; overflow: hidden; vertical-align: bottom; }
+.footnotes { border-top: 1px solid #888888; margin-top: 2em; }
+</style>
+</head>
+<body>
+<p>A claim<sup><a href="#fn1" id="fnref1">1</a></sup><em> and another</em><sup><a href="#fn2" id="fnref2">2</a></sup>.</p>
+<section class="footnotes"><ol><li id="fn1"><p>The source.</p> <a href="#fnref1">↩</a></li>
+<li id="fn2"><p><strong>Bold</strong>, and a <a href="https://example.com/note">link</a></p>
+<p>A second paragraph.</p> <a href="#fnref2">↩</a></li></ol></section>
+</body>
+</html>
+"
+`;
+
+exports[`the Web Page of every construct > writes headers as a well-formed page 1`] = `
+"<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Constructs</title>
+<style>
+body { font-family: 'Arial'; font-size: 11pt; line-height: 1.15; }
+p.title { font-family: 'Arial'; font-size: 26pt; margin-bottom: 3pt; }
+p.subtitle { color: #666666; font-family: 'Arial'; font-size: 15pt; margin-bottom: 16pt; }
+h1 { font-family: 'Arial'; font-size: 20pt; margin-top: 20pt; margin-bottom: 6pt; }
+h2 { font-family: 'Arial'; font-size: 16pt; margin-top: 18pt; margin-bottom: 6pt; }
+h3 { color: #434343; font-family: 'Arial'; font-size: 14pt; margin-top: 16pt; margin-bottom: 4pt; }
+h4 { color: #666666; font-family: 'Arial'; font-size: 12pt; margin-top: 14pt; margin-bottom: 4pt; }
+h5 { color: #666666; font-family: 'Arial'; font-size: 11pt; margin-top: 12pt; margin-bottom: 4pt; }
+h6 { color: #666666; font-family: 'Arial'; font-size: 11pt; font-style: italic; margin-top: 12pt; margin-bottom: 4pt; }
+.tab { white-space: pre; }
+pre { white-space: pre-wrap; }
+table { border-collapse: collapse; }
+td, th { border: 1px solid #888888; padding: 4px; vertical-align: top; }
+li.check { list-style: none; }
+.crop { display: inline-block; overflow: hidden; vertical-align: bottom; }
+.footnotes { border-top: 1px solid #888888; margin-top: 2em; }
+</style>
+</head>
+<body>
+<p>First section</p>
+<p>Second section</p>
+</body>
+</html>
+"
+`;
+
+exports[`the Web Page of every construct > writes lineNumbers as a well-formed page 1`] = `
+"<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Constructs</title>
+<style>
+body { font-family: 'Arial'; font-size: 11pt; line-height: 1.15; }
+p.title { font-family: 'Arial'; font-size: 26pt; margin-bottom: 3pt; }
+p.subtitle { color: #666666; font-family: 'Arial'; font-size: 15pt; margin-bottom: 16pt; }
+h1 { font-family: 'Arial'; font-size: 20pt; margin-top: 20pt; margin-bottom: 6pt; }
+h2 { font-family: 'Arial'; font-size: 16pt; margin-top: 18pt; margin-bottom: 6pt; }
+h3 { color: #434343; font-family: 'Arial'; font-size: 14pt; margin-top: 16pt; margin-bottom: 4pt; }
+h4 { color: #666666; font-family: 'Arial'; font-size: 12pt; margin-top: 14pt; margin-bottom: 4pt; }
+h5 { color: #666666; font-family: 'Arial'; font-size: 11pt; margin-top: 12pt; margin-bottom: 4pt; }
+h6 { color: #666666; font-family: 'Arial'; font-size: 11pt; font-style: italic; margin-top: 12pt; margin-bottom: 4pt; }
+.tab { white-space: pre; }
+pre { white-space: pre-wrap; }
+table { border-collapse: collapse; }
+td, th { border: 1px solid #888888; padding: 4px; vertical-align: top; }
+li.check { list-style: none; }
+.crop { display: inline-block; overflow: hidden; vertical-align: bottom; }
+.footnotes { border-top: 1px solid #888888; margin-top: 2em; }
+</style>
+</head>
+<body>
+<p>Numbered, restarting on each page</p>
+<p>A second numbered line</p>
+<p>Not numbered</p>
+<p>Numbered from 1 again</p>
+</body>
+</html>
+"
+`;
+
+exports[`the Web Page of every construct > writes links as a well-formed page 1`] = `
+"<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Constructs</title>
+<style>
+body { font-family: 'Arial'; font-size: 11pt; line-height: 1.15; }
+p.title { font-family: 'Arial'; font-size: 26pt; margin-bottom: 3pt; }
+p.subtitle { color: #666666; font-family: 'Arial'; font-size: 15pt; margin-bottom: 16pt; }
+h1 { font-family: 'Arial'; font-size: 20pt; margin-top: 20pt; margin-bottom: 6pt; }
+h2 { font-family: 'Arial'; font-size: 16pt; margin-top: 18pt; margin-bottom: 6pt; }
+h3 { color: #434343; font-family: 'Arial'; font-size: 14pt; margin-top: 16pt; margin-bottom: 4pt; }
+h4 { color: #666666; font-family: 'Arial'; font-size: 12pt; margin-top: 14pt; margin-bottom: 4pt; }
+h5 { color: #666666; font-family: 'Arial'; font-size: 11pt; margin-top: 12pt; margin-bottom: 4pt; }
+h6 { color: #666666; font-family: 'Arial'; font-size: 11pt; font-style: italic; margin-top: 12pt; margin-bottom: 4pt; }
+.tab { white-space: pre; }
+pre { white-space: pre-wrap; }
+table { border-collapse: collapse; }
+td, th { border: 1px solid #888888; padding: 4px; vertical-align: top; }
+li.check { list-style: none; }
+.crop { display: inline-block; overflow: hidden; vertical-align: bottom; }
+.footnotes { border-top: 1px solid #888888; margin-top: 2em; }
+</style>
+</head>
+<body>
+<p>A <a href="https://example.com/?a=1&amp;b=2">link</a>, <a href="https://example.com/?a=1&amp;b=2"><strong>bold link</strong></a><a href="mailto:a@example.com">, mail</a> and a place</p>
+</body>
+</html>
+"
+`;
+
+exports[`the Web Page of every construct > writes lists as a well-formed page 1`] = `
+"<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Constructs</title>
+<style>
+body { font-family: 'Arial'; font-size: 11pt; line-height: 1.15; }
+p.title { font-family: 'Arial'; font-size: 26pt; margin-bottom: 3pt; }
+p.subtitle { color: #666666; font-family: 'Arial'; font-size: 15pt; margin-bottom: 16pt; }
+h1 { font-family: 'Arial'; font-size: 20pt; margin-top: 20pt; margin-bottom: 6pt; }
+h2 { font-family: 'Arial'; font-size: 16pt; margin-top: 18pt; margin-bottom: 6pt; }
+h3 { color: #434343; font-family: 'Arial'; font-size: 14pt; margin-top: 16pt; margin-bottom: 4pt; }
+h4 { color: #666666; font-family: 'Arial'; font-size: 12pt; margin-top: 14pt; margin-bottom: 4pt; }
+h5 { color: #666666; font-family: 'Arial'; font-size: 11pt; margin-top: 12pt; margin-bottom: 4pt; }
+h6 { color: #666666; font-family: 'Arial'; font-size: 11pt; font-style: italic; margin-top: 12pt; margin-bottom: 4pt; }
+.tab { white-space: pre; }
+pre { white-space: pre-wrap; }
+table { border-collapse: collapse; }
+td, th { border: 1px solid #888888; padding: 4px; vertical-align: top; }
+li.check { list-style: none; }
+.crop { display: inline-block; overflow: hidden; vertical-align: bottom; }
+.footnotes { border-top: 1px solid #888888; margin-top: 2em; }
+</style>
+</head>
+<body>
+<ul><li>Bullet<ul><li>Nested bullet<ul><li>Deep bullet</li></ul></li></ul></li><li>Back out</li></ul><ol type="I"><li>One</li><li>Two<ol type="A" start="3"><li>Two a</li></ol></li></ol>
+<p>Between</p>
+<ol type="I" start="3"><li>Three, continued</li></ol><ul><li class="check"><input type="checkbox" disabled="disabled" /> Open task</li><li class="check"><input type="checkbox" disabled="disabled" checked="checked" /> Done task<ol type="i"><li>Jumps to level two</li></ol></li></ul><ol type="I" start="5"><li>Restarted at five</li><li>Counts on from five<ol type="A" start="0"><li>Restarted deeper at zero</li></ol></li></ol><ul><li class="check"><input type="checkbox" disabled="disabled" checked="checked" /> Ticked, not struck</li></ul>
+<p>A second paragraph of the item</p>
+</body>
+</html>
+"
+`;
+
+exports[`the Web Page of every construct > writes metadata as a well-formed page 1`] = `
+"<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en-GB">
+<head>
+<meta charset="utf-8" />
+<title>Metadata</title>
+<style>
+body { font-family: 'Arial'; font-size: 11pt; line-height: 1.15; }
+p.title { font-family: 'Arial'; font-size: 26pt; margin-bottom: 3pt; }
+p.subtitle { color: #666666; font-family: 'Arial'; font-size: 15pt; margin-bottom: 16pt; }
+h1 { font-family: 'Arial'; font-size: 20pt; margin-top: 20pt; margin-bottom: 6pt; }
+h2 { font-family: 'Arial'; font-size: 16pt; margin-top: 18pt; margin-bottom: 6pt; }
+h3 { color: #434343; font-family: 'Arial'; font-size: 14pt; margin-top: 16pt; margin-bottom: 4pt; }
+h4 { color: #666666; font-family: 'Arial'; font-size: 12pt; margin-top: 14pt; margin-bottom: 4pt; }
+h5 { color: #666666; font-family: 'Arial'; font-size: 11pt; margin-top: 12pt; margin-bottom: 4pt; }
+h6 { color: #666666; font-family: 'Arial'; font-size: 11pt; font-style: italic; margin-top: 12pt; margin-bottom: 4pt; }
+.tab { white-space: pre; }
+pre { white-space: pre-wrap; }
+table { border-collapse: collapse; }
+td, th { border: 1px solid #888888; padding: 4px; vertical-align: top; }
+li.check { list-style: none; }
+.crop { display: inline-block; overflow: hidden; vertical-align: bottom; }
+.footnotes { border-top: 1px solid #888888; margin-top: 2em; }
+</style>
+</head>
+<body>
+<p><br /></p>
+</body>
+</html>
+"
+`;
+
+exports[`the Web Page of every construct > writes paragraphs as a well-formed page 1`] = `
+"<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Constructs</title>
+<style>
+body { font-family: 'Arial'; font-size: 11pt; line-height: 1.15; }
+p.title { font-family: 'Arial'; font-size: 26pt; margin-bottom: 3pt; }
+p.subtitle { color: #666666; font-family: 'Arial'; font-size: 15pt; margin-bottom: 16pt; }
+h1 { font-family: 'Arial'; font-size: 20pt; margin-top: 20pt; margin-bottom: 6pt; }
+h2 { font-family: 'Arial'; font-size: 16pt; margin-top: 18pt; margin-bottom: 6pt; }
+h3 { color: #434343; font-family: 'Arial'; font-size: 14pt; margin-top: 16pt; margin-bottom: 4pt; }
+h4 { color: #666666; font-family: 'Arial'; font-size: 12pt; margin-top: 14pt; margin-bottom: 4pt; }
+h5 { color: #666666; font-family: 'Arial'; font-size: 11pt; margin-top: 12pt; margin-bottom: 4pt; }
+h6 { color: #666666; font-family: 'Arial'; font-size: 11pt; font-style: italic; margin-top: 12pt; margin-bottom: 4pt; }
+.tab { white-space: pre; }
+pre { white-space: pre-wrap; }
+table { border-collapse: collapse; }
+td, th { border: 1px solid #888888; padding: 4px; vertical-align: top; }
+li.check { list-style: none; }
+.crop { display: inline-block; overflow: hidden; vertical-align: bottom; }
+.footnotes { border-top: 1px solid #888888; margin-top: 2em; }
+</style>
+</head>
+<body>
+<p class="title">Title</p>
+<p class="subtitle">Subtitle</p>
+<h1>Heading 1</h1>
+<h2>Heading 2</h2>
+<h3>Heading 3</h3>
+<h4>Heading 4</h4>
+<h5>Heading 5</h5>
+<h6>Heading 6</h6>
+<p>A heading style, not in the outline</p>
+<h3>Normal text at outline level 3</h3>
+<p style="text-align: center; margin-top: 12pt; margin-bottom: 6pt">Centred, 1.5 lines, 12 pt before, 6 after</p>
+<p style="text-align: right">Right, exact 18 pt</p>
+<p style="text-align: justify; margin-left: 36pt; margin-right: 18pt; text-indent: 18pt">Justified, at least 14 pt, indented</p>
+<p style="text-align: left; margin-left: 36pt; text-indent: -18pt">Hanging indent</p>
+<p>Keep rules on</p>
+<p>Keep rules off</p>
+<p style="break-before: page">After a page break</p>
+</body>
+</html>
+"
+`;
+
+exports[`the Web Page of every construct > writes pictures as a well-formed page 1`] = `
+"<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Constructs</title>
+<style>
+body { font-family: 'Arial'; font-size: 11pt; line-height: 1.15; }
+p.title { font-family: 'Arial'; font-size: 26pt; margin-bottom: 3pt; }
+p.subtitle { color: #666666; font-family: 'Arial'; font-size: 15pt; margin-bottom: 16pt; }
+h1 { font-family: 'Arial'; font-size: 20pt; margin-top: 20pt; margin-bottom: 6pt; }
+h2 { font-family: 'Arial'; font-size: 16pt; margin-top: 18pt; margin-bottom: 6pt; }
+h3 { color: #434343; font-family: 'Arial'; font-size: 14pt; margin-top: 16pt; margin-bottom: 4pt; }
+h4 { color: #666666; font-family: 'Arial'; font-size: 12pt; margin-top: 14pt; margin-bottom: 4pt; }
+h5 { color: #666666; font-family: 'Arial'; font-size: 11pt; margin-top: 12pt; margin-bottom: 4pt; }
+h6 { color: #666666; font-family: 'Arial'; font-size: 11pt; font-style: italic; margin-top: 12pt; margin-bottom: 4pt; }
+.tab { white-space: pre; }
+pre { white-space: pre-wrap; }
+table { border-collapse: collapse; }
+td, th { border: 1px solid #888888; padding: 4px; vertical-align: top; }
+li.check { list-style: none; }
+.crop { display: inline-block; overflow: hidden; vertical-align: bottom; }
+.footnotes { border-top: 1px solid #888888; margin-top: 2em; }
+</style>
+</head>
+<body>
+<p>Before <span class="crop" style="width: 80px; height: 53px"><img src="images/1.png" alt="A green field" style="width: 94px; height: 67px; max-width: none; margin-left: -9px; margin-top: -13px" /></span> between <span class="turn" style="display: inline-block; transform: rotate(330.5deg)"><img src="images/1.png" alt="" width="32" height="23" /></span>.</p>
+<p><a href="https://docs.nu/"><svg xmlns="http://www.w3.org/2000/svg" width="0" height="0" style="position: absolute" aria-hidden="true"><filter id="c1" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="0.032831 0.064455 0.012518 0 0.395623 0.073871 0.145024 0.028165 0 0.442289 0.151024 0.296493 0.057581 0 0.488956 0 0 0 1 0" /></filter></svg><img src="images/2.png" alt="Blue" width="40" height="40" style="filter: url(#c1); opacity: 0.6" /></a></p>
+<table><colgroup><col style="width: 200pt" /></colgroup><tbody><tr><td><p><svg xmlns="http://www.w3.org/2000/svg" width="0" height="0" style="position: absolute" aria-hidden="true"><filter id="c2" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="0.299 0.587 0.114 0 0 0.299 0.587 0.114 0 0 0.299 0.587 0.114 0 0 0 0 0 1 0" /></filter></svg><img src="images/2.png" alt="" width="16" height="16" style="filter: url(#c2)" /></p></td></tr></tbody></table>
+<p>After.</p>
+</body>
+</html>
+"
+`;
+
+exports[`the Web Page of every construct > writes placedPictures as a well-formed page 1`] = `
+"<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Constructs</title>
+<style>
+body { font-family: 'Arial'; font-size: 11pt; line-height: 1.15; }
+p.title { font-family: 'Arial'; font-size: 26pt; margin-bottom: 3pt; }
+p.subtitle { color: #666666; font-family: 'Arial'; font-size: 15pt; margin-bottom: 16pt; }
+h1 { font-family: 'Arial'; font-size: 20pt; margin-top: 20pt; margin-bottom: 6pt; }
+h2 { font-family: 'Arial'; font-size: 16pt; margin-top: 18pt; margin-bottom: 6pt; }
+h3 { color: #434343; font-family: 'Arial'; font-size: 14pt; margin-top: 16pt; margin-bottom: 4pt; }
+h4 { color: #666666; font-family: 'Arial'; font-size: 12pt; margin-top: 14pt; margin-bottom: 4pt; }
+h5 { color: #666666; font-family: 'Arial'; font-size: 11pt; margin-top: 12pt; margin-bottom: 4pt; }
+h6 { color: #666666; font-family: 'Arial'; font-size: 11pt; font-style: italic; margin-top: 12pt; margin-bottom: 4pt; }
+.tab { white-space: pre; }
+pre { white-space: pre-wrap; }
+table { border-collapse: collapse; }
+td, th { border: 1px solid #888888; padding: 4px; vertical-align: top; }
+li.check { list-style: none; }
+.crop { display: inline-block; overflow: hidden; vertical-align: bottom; }
+.footnotes { border-top: 1px solid #888888; margin-top: 2em; }
+</style>
+</head>
+<body>
+<p>Placed <img src="images/1.png" alt="Wrapped" width="53" height="53" /> and <img src="images/2.png" alt="" width="27" height="27" />.</p>
+</body>
+</html>
+"
+`;
+
+exports[`the Web Page of every construct > writes sections as a well-formed page 1`] = `
+"<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Constructs</title>
+<style>
+body { font-family: 'Arial'; font-size: 11pt; line-height: 1.15; }
+p.title { font-family: 'Arial'; font-size: 26pt; margin-bottom: 3pt; }
+p.subtitle { color: #666666; font-family: 'Arial'; font-size: 15pt; margin-bottom: 16pt; }
+h1 { font-family: 'Arial'; font-size: 20pt; margin-top: 20pt; margin-bottom: 6pt; }
+h2 { font-family: 'Arial'; font-size: 16pt; margin-top: 18pt; margin-bottom: 6pt; }
+h3 { color: #434343; font-family: 'Arial'; font-size: 14pt; margin-top: 16pt; margin-bottom: 4pt; }
+h4 { color: #666666; font-family: 'Arial'; font-size: 12pt; margin-top: 14pt; margin-bottom: 4pt; }
+h5 { color: #666666; font-family: 'Arial'; font-size: 11pt; margin-top: 12pt; margin-bottom: 4pt; }
+h6 { color: #666666; font-family: 'Arial'; font-size: 11pt; font-style: italic; margin-top: 12pt; margin-bottom: 4pt; }
+.tab { white-space: pre; }
+pre { white-space: pre-wrap; }
+table { border-collapse: collapse; }
+td, th { border: 1px solid #888888; padding: 4px; vertical-align: top; }
+li.check { list-style: none; }
+.crop { display: inline-block; overflow: hidden; vertical-align: bottom; }
+.footnotes { border-top: 1px solid #888888; margin-top: 2em; }
+</style>
+</head>
+<body>
+<p>First section, A4 portrait</p>
+<p>Second section, landscape</p>
+<p>Third section</p>
+<p>Two columns</p>
+<p>Second column</p>
+<p>One column again</p>
+</body>
+</html>
+"
+`;
+
+exports[`the Web Page of every construct > writes styles as a well-formed page 1`] = `
+"<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Untitled</title>
+<style>
+body { font-family: 'Arial'; font-size: 11pt; line-height: 1.15; }
+p.title { font-family: 'Arial'; font-size: 26pt; margin-bottom: 3pt; }
+p.subtitle { color: #666666; font-family: 'Arial'; font-size: 15pt; margin-bottom: 16pt; }
+h1 { font-family: 'Arial'; font-size: 20pt; margin-top: 20pt; margin-bottom: 6pt; }
+h2 { font-family: 'Arial'; font-size: 16pt; margin-top: 18pt; margin-bottom: 6pt; }
+h3 { color: #434343; font-family: 'Arial'; font-size: 14pt; margin-top: 16pt; margin-bottom: 4pt; }
+h4 { color: #666666; font-family: 'Arial'; font-size: 12pt; margin-top: 14pt; margin-bottom: 4pt; }
+h5 { color: #666666; font-family: 'Arial'; font-size: 11pt; margin-top: 12pt; margin-bottom: 4pt; }
+h6 { color: #666666; font-family: 'Arial'; font-size: 11pt; font-style: italic; margin-top: 12pt; margin-bottom: 4pt; }
+.tab { white-space: pre; }
+pre { white-space: pre-wrap; }
+table { border-collapse: collapse; }
+td, th { border: 1px solid #888888; padding: 4px; vertical-align: top; }
+li.check { list-style: none; }
+.crop { display: inline-block; overflow: hidden; vertical-align: bottom; }
+.footnotes { border-top: 1px solid #888888; margin-top: 2em; }
+</style>
+</head>
+<body>
+<p>A quote, with <span style="font-family: 'Courier New'; font-size: 10pt">code</span> and <strong><span style="font-family: 'Courier New'; font-size: 10pt">bold code</span></strong></p>
+</body>
+</html>
+"
+`;
+
+exports[`the Web Page of every construct > writes suggestedBlocks as a well-formed page 1`] = `
+"<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Constructs</title>
+<style>
+body { font-family: 'Arial'; font-size: 11pt; line-height: 1.15; }
+p.title { font-family: 'Arial'; font-size: 26pt; margin-bottom: 3pt; }
+p.subtitle { color: #666666; font-family: 'Arial'; font-size: 15pt; margin-bottom: 16pt; }
+h1 { font-family: 'Arial'; font-size: 20pt; margin-top: 20pt; margin-bottom: 6pt; }
+h2 { font-family: 'Arial'; font-size: 16pt; margin-top: 18pt; margin-bottom: 6pt; }
+h3 { color: #434343; font-family: 'Arial'; font-size: 14pt; margin-top: 16pt; margin-bottom: 4pt; }
+h4 { color: #666666; font-family: 'Arial'; font-size: 12pt; margin-top: 14pt; margin-bottom: 4pt; }
+h5 { color: #666666; font-family: 'Arial'; font-size: 11pt; margin-top: 12pt; margin-bottom: 4pt; }
+h6 { color: #666666; font-family: 'Arial'; font-size: 11pt; font-style: italic; margin-top: 12pt; margin-bottom: 4pt; }
+.tab { white-space: pre; }
+pre { white-space: pre-wrap; }
+table { border-collapse: collapse; }
+td, th { border: 1px solid #888888; padding: 4px; vertical-align: top; }
+li.check { list-style: none; }
+.crop { display: inline-block; overflow: hidden; vertical-align: bottom; }
+.footnotes { border-top: 1px solid #888888; margin-top: 2em; }
+</style>
+</head>
+<body>
+<p><a href="#_alpha0000001">Alpha</a></p>
+<h1><a id="_alpha0000001"></a>Alpha</h1>
+<table><colgroup><col style="width: 144pt" /><col style="width: 144pt" /></colgroup><tbody><tr><td><p>A1</p></td><td><p><br /></p></td></tr><tr><td><p>B1 mine</p></td><td><p>B2</p></td></tr></tbody></table>
+<p>Between</p>
+<p>After</p>
+</body>
+</html>
+"
+`;
+
+exports[`the Web Page of every construct > writes suggestedRows as a well-formed page 1`] = `
+"<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Constructs</title>
+<style>
+body { font-family: 'Arial'; font-size: 11pt; line-height: 1.15; }
+p.title { font-family: 'Arial'; font-size: 26pt; margin-bottom: 3pt; }
+p.subtitle { color: #666666; font-family: 'Arial'; font-size: 15pt; margin-bottom: 16pt; }
+h1 { font-family: 'Arial'; font-size: 20pt; margin-top: 20pt; margin-bottom: 6pt; }
+h2 { font-family: 'Arial'; font-size: 16pt; margin-top: 18pt; margin-bottom: 6pt; }
+h3 { color: #434343; font-family: 'Arial'; font-size: 14pt; margin-top: 16pt; margin-bottom: 4pt; }
+h4 { color: #666666; font-family: 'Arial'; font-size: 12pt; margin-top: 14pt; margin-bottom: 4pt; }
+h5 { color: #666666; font-family: 'Arial'; font-size: 11pt; margin-top: 12pt; margin-bottom: 4pt; }
+h6 { color: #666666; font-family: 'Arial'; font-size: 11pt; font-style: italic; margin-top: 12pt; margin-bottom: 4pt; }
+.tab { white-space: pre; }
+pre { white-space: pre-wrap; }
+table { border-collapse: collapse; }
+td, th { border: 1px solid #888888; padding: 4px; vertical-align: top; }
+li.check { list-style: none; }
+.crop { display: inline-block; overflow: hidden; vertical-align: bottom; }
+.footnotes { border-top: 1px solid #888888; margin-top: 2em; }
+</style>
+</head>
+<body>
+<table><colgroup><col style="width: 144pt" /><col style="width: 144pt" /></colgroup><tbody><tr><td><p>A1</p></td><td><p>B1</p></td></tr><tr><td><p>A2 mine</p></td><td><p><br /></p></td></tr><tr><td><p>A3</p></td><td><p>B3</p></td></tr></tbody></table>
+<p>Between</p>
+<table><colgroup><col style="width: 144pt" /><col style="width: 144pt" /></colgroup><tbody><tr><td><p>C1</p></td><td><p>D1</p></td></tr><tr><td><p>C2</p></td><td><p><br /></p></td></tr></tbody></table>
+<p>And</p>
+<table><colgroup><col style="width: 144pt" /><col style="width: 144pt" /></colgroup><tbody><tr><td><p>E1</p></td><td><p>F1</p></td></tr><tr><td><p>E2</p></td><td><p>F2</p></td></tr></tbody></table>
+<p>After</p>
+</body>
+</html>
+"
+`;
+
+exports[`the Web Page of every construct > writes suggestions as a well-formed page 1`] = `
+"<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Constructs</title>
+<style>
+body { font-family: 'Arial'; font-size: 11pt; line-height: 1.15; }
+p.title { font-family: 'Arial'; font-size: 26pt; margin-bottom: 3pt; }
+p.subtitle { color: #666666; font-family: 'Arial'; font-size: 15pt; margin-bottom: 16pt; }
+h1 { font-family: 'Arial'; font-size: 20pt; margin-top: 20pt; margin-bottom: 6pt; }
+h2 { font-family: 'Arial'; font-size: 16pt; margin-top: 18pt; margin-bottom: 6pt; }
+h3 { color: #434343; font-family: 'Arial'; font-size: 14pt; margin-top: 16pt; margin-bottom: 4pt; }
+h4 { color: #666666; font-family: 'Arial'; font-size: 12pt; margin-top: 14pt; margin-bottom: 4pt; }
+h5 { color: #666666; font-family: 'Arial'; font-size: 11pt; margin-top: 12pt; margin-bottom: 4pt; }
+h6 { color: #666666; font-family: 'Arial'; font-size: 11pt; font-style: italic; margin-top: 12pt; margin-bottom: 4pt; }
+.tab { white-space: pre; }
+pre { white-space: pre-wrap; }
+table { border-collapse: collapse; }
+td, th { border: 1px solid #888888; padding: 4px; vertical-align: top; }
+li.check { list-style: none; }
+.crop { display: inline-block; overflow: hidden; vertical-align: bottom; }
+.footnotes { border-top: 1px solid #888888; margin-top: 2em; }
+</style>
+</head>
+<body>
+<p>The quick slow <strong>fox</strong></p>
+<p>jumps</p>
+<h1>Over</h1>
+</body>
+</html>
+"
+`;
+
+exports[`the Web Page of every construct > writes tab-stops as a well-formed page 1`] = `
+"<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Constructs</title>
+<style>
+body { font-family: 'Arial'; font-size: 11pt; line-height: 1.15; }
+p.title { font-family: 'Arial'; font-size: 26pt; margin-bottom: 3pt; }
+p.subtitle { color: #666666; font-family: 'Arial'; font-size: 15pt; margin-bottom: 16pt; }
+h1 { font-family: 'Arial'; font-size: 20pt; margin-top: 20pt; margin-bottom: 6pt; }
+h2 { font-family: 'Arial'; font-size: 16pt; margin-top: 18pt; margin-bottom: 6pt; }
+h3 { color: #434343; font-family: 'Arial'; font-size: 14pt; margin-top: 16pt; margin-bottom: 4pt; }
+h4 { color: #666666; font-family: 'Arial'; font-size: 12pt; margin-top: 14pt; margin-bottom: 4pt; }
+h5 { color: #666666; font-family: 'Arial'; font-size: 11pt; margin-top: 12pt; margin-bottom: 4pt; }
+h6 { color: #666666; font-family: 'Arial'; font-size: 11pt; font-style: italic; margin-top: 12pt; margin-bottom: 4pt; }
+.tab { white-space: pre; }
+pre { white-space: pre-wrap; }
+table { border-collapse: collapse; }
+td, th { border: 1px solid #888888; padding: 4px; vertical-align: top; }
+li.check { list-style: none; }
+.crop { display: inline-block; overflow: hidden; vertical-align: bottom; }
+.footnotes { border-top: 1px solid #888888; margin-top: 2em; }
+</style>
+</head>
+<body>
+<p style="margin-left: 18pt">Name<span class="tab">	</span>Date<span class="tab">	</span>Total<span class="tab">	</span>12.50</p>
+<p>Default stops<span class="tab">	</span>every half inch</p>
+</body>
+</html>
+"
+`;
+
+exports[`the Web Page of every construct > writes tables as a well-formed page 1`] = `
+"<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Constructs</title>
+<style>
+body { font-family: 'Arial'; font-size: 11pt; line-height: 1.15; }
+p.title { font-family: 'Arial'; font-size: 26pt; margin-bottom: 3pt; }
+p.subtitle { color: #666666; font-family: 'Arial'; font-size: 15pt; margin-bottom: 16pt; }
+h1 { font-family: 'Arial'; font-size: 20pt; margin-top: 20pt; margin-bottom: 6pt; }
+h2 { font-family: 'Arial'; font-size: 16pt; margin-top: 18pt; margin-bottom: 6pt; }
+h3 { color: #434343; font-family: 'Arial'; font-size: 14pt; margin-top: 16pt; margin-bottom: 4pt; }
+h4 { color: #666666; font-family: 'Arial'; font-size: 12pt; margin-top: 14pt; margin-bottom: 4pt; }
+h5 { color: #666666; font-family: 'Arial'; font-size: 11pt; margin-top: 12pt; margin-bottom: 4pt; }
+h6 { color: #666666; font-family: 'Arial'; font-size: 11pt; font-style: italic; margin-top: 12pt; margin-bottom: 4pt; }
+.tab { white-space: pre; }
+pre { white-space: pre-wrap; }
+table { border-collapse: collapse; }
+td, th { border: 1px solid #888888; padding: 4px; vertical-align: top; }
+li.check { list-style: none; }
+.crop { display: inline-block; overflow: hidden; vertical-align: bottom; }
+.footnotes { border-top: 1px solid #888888; margin-top: 2em; }
+</style>
+</head>
+<body>
+<p>Before the table</p>
+<table><colgroup><col style="width: 144pt" /><col style="width: 108pt" /><col style="width: 216pt" /></colgroup><thead><tr><th><p><strong>Name</strong></p></th><th><p>Kind</p></th><th><p>Notes</p></th></tr></thead><tbody><tr><td colspan="2" style="background-color: #d9ead3"><p>Across two</p></td><td rowspan="2"><p>Down two</p></td></tr><tr><td><p>Lined</p></td><td><p>Nested, with a note<sup><a href="#fn1" id="fnref1">1</a></sup></p>
+<table><colgroup><col style="width: 54pt" /><col style="width: 54pt" /></colgroup><tbody><tr><td><p>n1</p></td><td><p>n2</p></td></tr><tr><td><p>n3</p></td><td><p>n4</p></td></tr></tbody></table>
+<p><br /></p></td></tr></tbody></table>
+<p>After the table</p>
+<section class="footnotes"><ol><li id="fn1"><p>In a cell.</p> <a href="#fnref1">↩</a></li></ol></section>
+</body>
+</html>
+"
+`;
+
+exports[`the Web Page of every construct > writes tabs as a well-formed page 1`] = `
+"<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Constructs</title>
+<style>
+body { font-family: 'Arial'; font-size: 11pt; line-height: 1.15; }
+p.title { font-family: 'Arial'; font-size: 26pt; margin-bottom: 3pt; }
+p.subtitle { color: #666666; font-family: 'Arial'; font-size: 15pt; margin-bottom: 16pt; }
+h1 { font-family: 'Arial'; font-size: 20pt; margin-top: 20pt; margin-bottom: 6pt; }
+h2 { font-family: 'Arial'; font-size: 16pt; margin-top: 18pt; margin-bottom: 6pt; }
+h3 { color: #434343; font-family: 'Arial'; font-size: 14pt; margin-top: 16pt; margin-bottom: 4pt; }
+h4 { color: #666666; font-family: 'Arial'; font-size: 12pt; margin-top: 14pt; margin-bottom: 4pt; }
+h5 { color: #666666; font-family: 'Arial'; font-size: 11pt; margin-top: 12pt; margin-bottom: 4pt; }
+h6 { color: #666666; font-family: 'Arial'; font-size: 11pt; font-style: italic; margin-top: 12pt; margin-bottom: 4pt; }
+.tab { white-space: pre; }
+pre { white-space: pre-wrap; }
+table { border-collapse: collapse; }
+td, th { border: 1px solid #888888; padding: 4px; vertical-align: top; }
+li.check { list-style: none; }
+.crop { display: inline-block; overflow: hidden; vertical-align: bottom; }
+.footnotes { border-top: 1px solid #888888; margin-top: 2em; }
+</style>
+</head>
+<body>
+<h1>Overview</h1>
+<h1>Overview</h1>
+<h1>Details</h1>
+<p>Details, portrait</p>
+<p>Details, landscape</p>
+<h1>Details</h1>
+<p>A subtab of the same name</p>
+</body>
+</html>
+"
+`;
+
+exports[`the Web Page of every construct > writes text as a well-formed page 1`] = `
+"<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Constructs</title>
+<style>
+body { font-family: 'Arial'; font-size: 11pt; line-height: 1.15; }
+p.title { font-family: 'Arial'; font-size: 26pt; margin-bottom: 3pt; }
+p.subtitle { color: #666666; font-family: 'Arial'; font-size: 15pt; margin-bottom: 16pt; }
+h1 { font-family: 'Arial'; font-size: 20pt; margin-top: 20pt; margin-bottom: 6pt; }
+h2 { font-family: 'Arial'; font-size: 16pt; margin-top: 18pt; margin-bottom: 6pt; }
+h3 { color: #434343; font-family: 'Arial'; font-size: 14pt; margin-top: 16pt; margin-bottom: 4pt; }
+h4 { color: #666666; font-family: 'Arial'; font-size: 12pt; margin-top: 14pt; margin-bottom: 4pt; }
+h5 { color: #666666; font-family: 'Arial'; font-size: 11pt; margin-top: 12pt; margin-bottom: 4pt; }
+h6 { color: #666666; font-family: 'Arial'; font-size: 11pt; font-style: italic; margin-top: 12pt; margin-bottom: 4pt; }
+.tab { white-space: pre; }
+pre { white-space: pre-wrap; }
+table { border-collapse: collapse; }
+td, th { border: 1px solid #888888; padding: 4px; vertical-align: top; }
+li.check { list-style: none; }
+.crop { display: inline-block; overflow: hidden; vertical-align: bottom; }
+.footnotes { border-top: 1px solid #888888; margin-top: 2em; }
+</style>
+</head>
+<body>
+<p>plain, <strong>bold</strong> not bold<em><u><s>italic underline strike</s></u></em><sup>super</sup><sub>sub</sub>base<span style="color: #cc0000; background-color: #ffff00; font-family: 'Georgia'; font-size: 14pt">Georgia 14 red on yellow</span><span style="background-color: #d9ead3">custom highlight</span><span style="font-variant: small-caps">Small Caps</span><span style="text-transform: uppercase">UPPER</span><span style="text-transform: none">none</span><span style="font-family: 'Times New Roman'"> Times New Roman </span></p>
+<p>  two leading spaces, a<span class="tab">	</span>tab,   three spaces and a<br />line break  </p>
+<p>Ünïcödé ✓ 😀 &lt;tags&gt; &amp; "quotes"</p>
+<p><span style="text-transform: lowercase">lower</span><span style="text-transform: capitalize">title case</span></p>
+</body>
+</html>
+"
+`;
+
+exports[`the Web Page of every construct > writes watermark as a well-formed page 1`] = `
+"<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Constructs</title>
+<style>
+body { font-family: 'Arial'; font-size: 11pt; line-height: 1.15; }
+p.title { font-family: 'Arial'; font-size: 26pt; margin-bottom: 3pt; }
+p.subtitle { color: #666666; font-family: 'Arial'; font-size: 15pt; margin-bottom: 16pt; }
+h1 { font-family: 'Arial'; font-size: 20pt; margin-top: 20pt; margin-bottom: 6pt; }
+h2 { font-family: 'Arial'; font-size: 16pt; margin-top: 18pt; margin-bottom: 6pt; }
+h3 { color: #434343; font-family: 'Arial'; font-size: 14pt; margin-top: 16pt; margin-bottom: 4pt; }
+h4 { color: #666666; font-family: 'Arial'; font-size: 12pt; margin-top: 14pt; margin-bottom: 4pt; }
+h5 { color: #666666; font-family: 'Arial'; font-size: 11pt; margin-top: 12pt; margin-bottom: 4pt; }
+h6 { color: #666666; font-family: 'Arial'; font-size: 11pt; font-style: italic; margin-top: 12pt; margin-bottom: 4pt; }
+.tab { white-space: pre; }
+pre { white-space: pre-wrap; }
+table { border-collapse: collapse; }
+td, th { border: 1px solid #888888; padding: 4px; vertical-align: top; }
+li.check { list-style: none; }
+.crop { display: inline-block; overflow: hidden; vertical-align: bottom; }
+.footnotes { border-top: 1px solid #888888; margin-top: 2em; }
+</style>
+</head>
+<body>
+<p>Behind this writing</p>
+<p>A second section</p>
+</body>
+</html>
+"
+`;

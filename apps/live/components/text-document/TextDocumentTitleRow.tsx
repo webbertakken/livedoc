@@ -50,9 +50,19 @@ const DOWNLOADS: Record<TextDocumentDownloadType, { item: string; telemetry: str
   docx: { item: 'download-docx', telemetry: 'TextDocumentDocx' },
   txt: { item: 'download-txt', telemetry: 'TextDocumentTxt' },
   md: { item: 'download-md', telemetry: 'TextDocumentMd' },
+  html: { item: 'download-html', telemetry: 'TextDocumentHtml' },
+  epub: { item: 'download-epub', telemetry: 'TextDocumentEpub' },
 };
 
-const FILE_TYPES: readonly TextDocumentDownloadType[] = ['docx', 'odt', 'fodt', 'txt', 'md'];
+const FILE_TYPES: readonly TextDocumentDownloadType[] = [
+  'docx',
+  'odt',
+  'fodt',
+  'txt',
+  'html',
+  'epub',
+  'md',
+];
 
 const OPEN_ACCEPT =
   '.odt,.fodt,.docx,application/vnd.oasis.opendocument.text,application/vnd.openxmlformats-officedocument.wordprocessingml.document';

@@ -48,11 +48,15 @@ export {
 export { textDocumentPageSvg } from './art/page-svg';
 export { BODY_FRAGMENT, TEXT_DOCUMENT_SEED_CLIENT, TextDocumentState } from './text-document-state';
 export {
+  EXPORT_EXTENSIONS,
+  PICTURED_EXPORT_TYPES,
   TEXT_DOCUMENT_EXPORT_TYPES,
   TEXT_DOCUMENT_FILE_TYPES,
+  isPicturedExportType,
   isTextDocumentExportType,
   isTextDocumentFileType,
   type TextDocumentDownloadType,
+  type PicturedExportType,
   type TextDocumentExportType,
   type TextDocumentFileType,
 } from './file-types';
@@ -60,7 +64,10 @@ export {
   EXPORT_MEDIA_TYPES,
   settledDocument,
   writeTextDocumentExport,
+  type ExportOptions,
 } from './exports/text-document-exports';
+export { writeEpub } from './exports/epub';
+export { webPageHtml, writeWebPage } from './exports/web-page';
 export { writeMarkdown, escapeMarkdown } from './exports/markdown';
 export { writePlainText } from './exports/plain-text';
 export { base64OfBytes, bytesOfBase64 } from '@livedoc/office-packages';

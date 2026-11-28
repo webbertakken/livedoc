@@ -8,13 +8,32 @@ export function isTextDocumentFileType(value: unknown): value is TextDocumentFil
   return (TEXT_DOCUMENT_FILE_TYPES as readonly unknown[]).includes(value);
 }
 
-/** The files written from the model that no LiveDoc file type reads back as itself (default: Plain Text, Markdown). */
-export const TEXT_DOCUMENT_EXPORT_TYPES = ['txt', 'md'] as const;
+/** The files written from the model that no LiveDoc file type reads back as itself. */
+export const TEXT_DOCUMENT_EXPORT_TYPES = ['txt', 'md', 'html', 'epub'] as const;
 export type TextDocumentExportType = (typeof TEXT_DOCUMENT_EXPORT_TYPES)[number];
 
 export function isTextDocumentExportType(value: unknown): value is TextDocumentExportType {
   return (TEXT_DOCUMENT_EXPORT_TYPES as readonly unknown[]).includes(value);
 }
+
+/** The exports that carry their pictures' bytes: their callers read gallery media and draw drawings first. */
+export const PICTURED_EXPORT_TYPES = [
+  'html',
+  'epub',
+] as const satisfies readonly TextDocumentExportType[];
+export type PicturedExportType = (typeof PICTURED_EXPORT_TYPES)[number];
+
+export function isPicturedExportType(value: unknown): value is PicturedExportType {
+  return (PICTURED_EXPORT_TYPES as readonly unknown[]).includes(value);
+}
+
+/** Each export's file extension: the Web Page leaves zipped with its pictures. */
+export const EXPORT_EXTENSIONS: Readonly<Record<TextDocumentExportType, string>> = {
+  txt: 'txt',
+  md: 'md',
+  html: 'zip',
+  epub: 'epub',
+};
 
 /** Every file a text document downloads as: its own formats', and the exports. */
 export type TextDocumentDownloadType = TextDocumentFileType | TextDocumentExportType;

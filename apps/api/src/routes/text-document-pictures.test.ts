@@ -12,6 +12,7 @@ import {
   type Picture,
 } from '@livedoc/text-documents';
 import { TEXT_DOCUMENT_PICTURES_LEFT_OUT_HEADER } from '@livedoc/api-schema';
+import { listZip } from '@livedoc/office-packages';
 import { describe, expect, it } from 'vitest';
 import { testR2, type TestR2 } from '../bug-reports/test-r2';
 import { readLiveTabState } from '../live-tabs/live-tab-store';
@@ -188,5 +189,37 @@ describe('a text document opened from a file with pictures', () => {
     const { document, leftOut } = await download(db);
     expect(heldBytes(document)).toEqual([[...RED]]);
     expect(leftOut).toBe('0');
+  });
+
+  // files-and-print.md "Downloading": the Web Page and the EPUB carry the pictures, read back as for the native files.
+  it('zips the gallery pictures beside the Web Page and the EPUB, counting one it cannot read', async () => {
+    const images = testR2();
+    const db = sqliteD1({ IMAGES: images });
+    await open(db, await wordFileWith(RED, BLUE));
+    const entries = async (type: string) => {
+      const res = await call(db, 'GET', `/api/documents/D/text-documents/t1/file?type=${type}`);
+      expect(res.status).toBe(200);
+      const listed = listZip(new Uint8Array(await res.arrayBuffer()));
+      return {
+        names: listed.ok ? listed.entries.map((e) => e.name) : [],
+        leftOut: res.headers.get(TEXT_DOCUMENT_PICTURES_LEFT_OUT_HEADER),
+        type: res.headers.get('Content-Type'),
+        name: res.headers.get('Content-Disposition'),
+      };
+    };
+    expect(await entries('html')).toEqual({
+      names: ['Pictures.html', 'images/1.png', 'images/2.png'],
+      leftOut: '0',
+      type: 'application/zip',
+      name: 'attachment; filename="Pictures.zip"',
+    });
+    const red = (db.sql.prepare('SELECT id FROM images WHERE width = 8').get() as { id: string })
+      .id;
+    images.objects.delete(red);
+    const epub = await entries('epub');
+    expect(epub.names.filter((n) => n.includes('images/'))).toEqual(['OEBPS/images/1.png']);
+    expect(epub.leftOut).toBe('1');
+    expect(epub.type).toBe('application/epub+zip');
+    expect(epub.name).toBe('attachment; filename="Pictures.epub"');
   });
 });
