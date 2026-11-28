@@ -29,6 +29,7 @@ import { isoDateSerial } from './ods-read';
 import { FILE_READ_CELLS_MAX } from './file-read-limits';
 import type { FileCell, FileLoss, FileRead, FileSheet, FileValue } from './workbook-file';
 import { readXlsxCharts } from './xlsx-charts-read';
+import { readXlsxCellPictures, type RichCell } from './xlsx-cell-pictures-read';
 import { SLICER_CACHE_NAME } from './xlsx-slicers';
 import {
   allPlaced,
@@ -263,6 +264,8 @@ function readSheet(
   ruled: boolean,
   guarded: boolean,
   keepRuns: (at: { r: number; c: number }, runs: Runs) => void,
+  // A cell naming a rich value (`vm`), for its picture to be read once every sheet is (D634).
+  richCell: (cell: FileCell, vm: number) => void,
 ): FileSheet {
   const root = parsed.root;
   const cells: FileCell[] = [];
@@ -309,6 +312,8 @@ function readSheet(
       const runs =
         value?.k === 's' && read.formula === undefined ? cellRuns(cell, parsed, book) : null;
       if (runs) keepRuns(at, runs);
+      const vm = Number(attributeOf(cell, '', 'vm'));
+      if (Number.isInteger(vm) && vm > 0) richCell(out, vm);
       cells.push(out);
       book.budget.cells++;
     }
@@ -374,6 +379,8 @@ export async function readXlsx(
   const placed = new Map<number, number>();
   // Each sheet's record of its tables (standard-mapping.md "Tables in the file"), by its place in `sheets`.
   const tableRecords: ReturnType<typeof readXlsxTableRecord>[] = [];
+  // The cells naming rich values, whose pictures are read once every sheet is (D634).
+  const richCells: RichCell[] = [];
   // Each sheet's filter and filter views (standard-mapping.md "Filters in the file"), by its place in `sheets`.
   const filterReads: XlsxFiltersRead[] = [];
   for (const [at, sheet] of listed.entries()) {
@@ -431,6 +438,7 @@ export async function readXlsx(
         if (keeper) keeper.cellText(runs, { sheet: index, ...at });
         else strictUnread++;
       },
+      (cell, vm) => richCells.push({ sheet: index, cell, vm }),
     );
     sheets.push({
       ...cells,
@@ -440,6 +448,8 @@ export async function readXlsx(
       ...(found.protections ? { protections: found.protections } : {}),
     });
   }
+  // Its cells' pictures (standard-mapping.md "Pictures in a cell").
+  readXlsxCellPictures(pkg, rels, ns, sheets, richCells, book.losses);
   // The workbook's names: a named LAMBDA is a named function, a cell or rectangle a named range, no longer kept; any
   // other a person gave is kept and named (standard-mapping.md "Named ranges in the file", "Named functions in the file").
   const functions: FileFunction[] = [];

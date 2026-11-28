@@ -30,9 +30,10 @@ import { safeHyperlink } from '../hyperlink';
 import type { Sparkline } from '../sparkline/sparkline-read';
 import { SparklineMemo } from './sparkline-memo';
 import type { CellImage } from '../images/cell-image';
-import { IMAGE_FUNCTION_NAMES, ImageFinder } from './image-of';
+import { IMAGE_FUNCTION_NAMES, ImageFinder, isWebImage } from './image-of';
+import { pictureOfInput } from '../images/cell-picture';
 import { storedAst, type SheetsCtx } from '../formula/stored';
-import type { CellInput, StoredFormula } from '../sheet';
+import type { CellInput, CellPicture, StoredFormula } from '../sheet';
 import {
   dims,
   err,
@@ -536,6 +537,11 @@ export class Workbook {
   private readonly images = new ImageFinder({
     version: () => this.version,
     callsImage: () => this.calls(IMAGE_FUNCTION_NAMES),
+    holdsPictures: () => {
+      for (const sheet of this.sheets.values()) if (sheet.cells.pictureCount > 0) return true;
+      return false;
+    },
+    picture: (sheetId, r, c) => pictureOfInput(this.inputAt(sheetId, r, c)),
     value: (sheetId, r, c) => this.value(sheetId, r, c),
     spillOwnerAt: (sheetId, r, c) => this.spillOwnerAt(sheetId, r, c),
     redraw: (sheetId, r, c, hooks) => this.redraw(sheetId, r, c, hooks),
@@ -544,7 +550,15 @@ export class Workbook {
   // A cell's picture (imports.md "IMAGE"): drawn by its own formula's IMAGE, or followed from the cell it answers or
   // a lookup found (engine/image-of.ts). Null for a cell showing anything but the empty text an IMAGE gives.
   imageOf(sheetId: string, r: number, c: number): CellImage | null {
-    return this.images.imageOf(sheetId, r, c);
+    const image = this.images.imageOf(sheetId, r, c);
+    return image && isWebImage(image) ? image : null;
+  }
+
+  // The gallery picture a cell shows (inserted-objects.md "Images in a cell"): held in the cell, or followed from the
+  // cell its formula answers or a lookup found, as an IMAGE's is (D631).
+  pictureOf(sheetId: string, r: number, c: number): CellPicture | null {
+    const image = this.images.imageOf(sheetId, r, c);
+    return image && !isWebImage(image) ? image : null;
   }
 
   // The formula at (r, c) worked out again with drawing hooks, as sparklineOf does; false for a cell without one.
@@ -999,6 +1013,8 @@ export class Workbook {
       if ('n' in input) return input.n;
       if ('s' in input) return input.s;
       if ('b' in input) return input.b;
+      // A picture reads as an IMAGE's answer does (inserted-objects.md "Images in a cell", D631).
+      if ('img' in input) return '';
     }
     // Only a cell noted, a formula or an empty pivot table anchor needs a number of its own.
     const sheetNo = this.nos.sheetNo(sheetId);
@@ -1010,6 +1026,7 @@ export class Workbook {
         if ('n' in input) return input.n;
         if ('s' in input) return input.s;
         if ('b' in input) return input.b;
+        if ('img' in input) return '';
       }
       if (input || anchor) return this.compute(no);
     }

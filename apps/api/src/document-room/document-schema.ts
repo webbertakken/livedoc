@@ -713,6 +713,78 @@ ${outboxTrigger(
 )}
 `;
 
+// A sheet's cells holding pictures (docs/specs/009-elements/images.md "A sheet's references", D633): each cell whose
+// input is a gallery picture (`{"img":{"id":...}}`, inserted-objects.md "Images in a cell") is a row, kept by triggers
+// on every insert, input write and delete of a cell, so no writer can leave one behind; they go with their sheet.
+// `placed_images` reads them beside the layouts' images. The LIKE prefilter keeps the triggers off other cells' JSON.
+const CELL_PICTURE_OF = (row: string) => `SELECT ${row}.input ->> '$.img.id' AS image_id
+   WHERE json_valid(${row}.input)
+     AND json_type(${row}.input, '$.img') = 'object'
+     AND typeof(${row}.input ->> '$.img.id') = 'text'
+     AND length(${row}.input ->> '$.img.id') BETWEEN 1 AND 128
+     AND substr(${row}.input ->> '$.img.id', 1, 5) <> 'data:'`;
+const CELL_PICTURE_LIKE = `'{"img":%'`;
+const SHEET_CELL_IMAGE_REFS_STEP = `
+CREATE TABLE IF NOT EXISTS sheet_cell_image_refs (
+  document_id TEXT NOT NULL,
+  sheet_id    TEXT NOT NULL,
+  row_id      TEXT NOT NULL,
+  col_id      TEXT NOT NULL,
+  image_id    TEXT NOT NULL,
+  PRIMARY KEY (document_id, sheet_id, row_id, col_id),
+  FOREIGN KEY (document_id, sheet_id) REFERENCES sheets (document_id, id) ON DELETE CASCADE
+) WITHOUT ROWID;
+CREATE INDEX IF NOT EXISTS sheet_cell_image_refs_image_idx ON sheet_cell_image_refs (image_id);
+
+INSERT OR IGNORE INTO sheet_cell_image_refs (document_id, sheet_id, row_id, col_id, image_id)
+  SELECT c.document_id, c.sheet_id, c.row_id, c.col_id, c.input ->> '$.img.id' FROM sheet_cells c
+   WHERE c.input LIKE ${CELL_PICTURE_LIKE} AND EXISTS (${CELL_PICTURE_OF('c')});
+
+DROP VIEW IF EXISTS placed_images;
+CREATE VIEW placed_images AS
+  SELECT tab_id, image_id FROM image_refs
+  UNION ALL
+  SELECT s.tab_id, r.image_id FROM sheet_image_refs r
+    JOIN sheets s ON s.document_id = r.document_id AND s.id = r.sheet_id
+  UNION ALL
+  SELECT s.tab_id, r.image_id FROM sheet_cell_image_refs r
+    JOIN sheets s ON s.document_id = r.document_id AND s.id = r.sheet_id;
+
+CREATE TRIGGER IF NOT EXISTS sheet_cell_image_refs_on_insert AFTER INSERT ON sheet_cells
+WHEN NEW.input LIKE ${CELL_PICTURE_LIKE}
+BEGIN
+  INSERT OR IGNORE INTO sheet_cell_image_refs (document_id, sheet_id, row_id, col_id, image_id)
+    SELECT NEW.document_id, NEW.sheet_id, NEW.row_id, NEW.col_id, image_id FROM (${CELL_PICTURE_OF('NEW')});
+END;
+
+CREATE TRIGGER IF NOT EXISTS sheet_cell_image_refs_on_input AFTER UPDATE OF input ON sheet_cells
+WHEN OLD.input LIKE ${CELL_PICTURE_LIKE} OR NEW.input LIKE ${CELL_PICTURE_LIKE}
+BEGIN
+  DELETE FROM sheet_cell_image_refs
+   WHERE document_id = OLD.document_id AND sheet_id = OLD.sheet_id AND row_id = OLD.row_id AND col_id = OLD.col_id;
+  INSERT OR IGNORE INTO sheet_cell_image_refs (document_id, sheet_id, row_id, col_id, image_id)
+    SELECT NEW.document_id, NEW.sheet_id, NEW.row_id, NEW.col_id, image_id FROM (${CELL_PICTURE_OF('NEW')});
+END;
+
+CREATE TRIGGER IF NOT EXISTS sheet_cell_image_refs_on_delete AFTER DELETE ON sheet_cells
+WHEN OLD.input LIKE ${CELL_PICTURE_LIKE}
+BEGIN
+  DELETE FROM sheet_cell_image_refs
+   WHERE document_id = OLD.document_id AND sheet_id = OLD.sheet_id AND row_id = OLD.row_id AND col_id = OLD.col_id;
+END;
+
+${outboxTrigger(
+  'outbox_sheet_cell_image_insert',
+  'AFTER INSERT ON sheet_cell_image_refs',
+  "SELECT NEW.document_id, 'images', ''",
+)}
+${outboxTrigger(
+  'outbox_sheet_cell_image_delete',
+  'AFTER DELETE ON sheet_cell_image_refs',
+  "SELECT OLD.document_id, 'images', ''",
+)}
+`;
+
 /** Every step the room's schema has taken, in order; a change appends one and never edits a shipped step. */
 export const DOCUMENT_SCHEMA_STEPS: readonly string[] = [
   STEP_1 + OUTBOX + SHARES,
@@ -738,6 +810,7 @@ export const DOCUMENT_SCHEMA_STEPS: readonly string[] = [
   TEXT_DOCUMENT_LAST_EDIT_STEP,
   TEXT_DOCUMENT_NOTICE_STEP,
   SHEET_IMAGE_REFS_STEP,
+  SHEET_CELL_IMAGE_REFS_STEP,
 ];
 
 export const DOCUMENT_SCHEMA_VERSION = DOCUMENT_SCHEMA_STEPS.length;

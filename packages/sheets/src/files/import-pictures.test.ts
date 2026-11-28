@@ -35,14 +35,17 @@ describe('picturesToPlace', () => {
     );
     expect(placed).toMatchObject({
       sheetId: 's1',
-      image: {
-        kind: 'image',
-        at: { r: layout.rows[2], c: layout.cols[1], dx: 2, dy: 3 },
-        width: 60,
-        height: 30,
-        naturalWidth: 120,
-        naturalHeight: 60,
-        alt: 'Logo',
+      natural: { width: 120, height: 60 },
+      place: {
+        image: {
+          kind: 'image',
+          at: { r: layout.rows[2], c: layout.cols[1], dx: 2, dy: 3 },
+          width: 60,
+          height: 30,
+          naturalWidth: 120,
+          naturalHeight: 60,
+          alt: 'Logo',
+        },
       },
       type: 'image/png',
     });

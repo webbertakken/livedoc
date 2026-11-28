@@ -31,6 +31,8 @@ export type XlsxChartParts = {
   parts: OoxmlPart[];
   // Each drawing part's relationships to its charts.
   relationships: [string, Relationship[]][];
+  // Names an image's media part once, adding it to `parts`: the cells' pictures share it (xlsx-cell-pictures.ts).
+  media: (imageId: string, bytes: FilePictureBytes) => string;
 };
 
 const encode = (xml: string) => new TextEncoder().encode(`${XML_DECLARATION}\n${xml}\n`);
@@ -72,10 +74,11 @@ export function xlsxChartParts(
   // By sheet, its slicers Excel draws as table slicers (none on a sheet keeping its file's drawing).
   slicers: (sheet: number) => readonly FileSlicer[] = () => [],
 ): XlsxChartParts {
-  const out: XlsxChartParts = { sheets: [], parts: [], relationships: [] };
   const taken = new Set(keptParts.map((p) => p.name));
+  const parts: OoxmlPart[] = [];
+  const media = mediaParts(taken, parts);
+  const out: XlsxChartParts = { sheets: [], parts, relationships: [], media };
   const nextOf = namer(taken);
-  const media = mediaParts(taken, out);
   sheets.forEach((sheet, i) => {
     const charts = sheet.charts ?? [];
     if (kept.keepsWorksheetChild('drawing', i)) {
@@ -138,10 +141,10 @@ export function xlsxChartParts(
   return out;
 }
 
-// The media part of each image, named `xl/media/imageN.<ext>` past the parts the file kept, added once to `out`.
+// The media part of each image, named `xl/media/imageN.<ext>` past the parts the file kept, added once to `parts`.
 function mediaParts(
   taken: ReadonlySet<string>,
-  out: XlsxChartParts,
+  parts: OoxmlPart[],
 ): (imageId: string, bytes: FilePictureBytes) => string {
   const named = new Map<string, string>();
   let n = 0;
@@ -152,7 +155,7 @@ function mediaParts(
     do name = `xl/media/image${++n}.${PICTURE_EXTENSIONS[bytes.type]}`;
     while (taken.has(name));
     named.set(imageId, name);
-    out.parts.push({ name, contentType: bytes.type, data: bytes.data });
+    parts.push({ name, contentType: bytes.type, data: bytes.data });
     return name;
   };
 }

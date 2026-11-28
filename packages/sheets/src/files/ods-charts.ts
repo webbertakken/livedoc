@@ -48,7 +48,8 @@ const SERIES_CLASS = { column: 'chart:bar', line: 'chart:line', area: 'chart:are
 /** A sheet name as an ODF address starts it: always quoted, a quote doubled. */
 const quoted = (name: string) => `'${name.replace(/'/g, "''")}'`;
 
-const cellOf = (sheet: string, r: number, c: number) =>
+/** A cell as an ODF address names it: `'Sales'.B3`. */
+export const cellOf = (sheet: string, r: number, c: number) =>
   `${quoted(sheet)}.${columnLetters(c)}${r + 1}`;
 export const odfRange = (sheet: string, at: FileRange) =>
   `${cellOf(sheet, at.r1, at.c1)}:${cellOf(sheet, at.r2, at.c2)}`;

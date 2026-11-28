@@ -2,11 +2,12 @@
 // "Validation"): Jing over the OASIS ODF 1.4 RELAX NG schemas and ECMA-376's Transitional and OPC RELAX NG schemas,
 // each XML entry first stripped of what conformance leaves out (LiveDoc's and other suites' extensions, the namespaces
 // a file declares ignorable). The schemas and Jing are fetched by scripts/fetch-office-schemas.sh, pinned by their
-// checksums, into a cache outside the repository. Node only, never shipped; needs Java.
+// checksums, into a cache outside the repository; Excel's rich value parts, outside ISO/IEC 29500, against the schema
+// transcribed from [MS-XLSX] beside this file. Node only, never shipped; needs Java.
 import { execFileSync } from 'node:child_process';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { homedir } from 'node:os';
-import { dirname, join } from 'node:path';
+import { dirname, isAbsolute, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { ByteBudget, listZip, parseXml, readOdfPackage, readZipEntry } from '../src/index';
 import type { XmlElement } from '../src/xml/xml-tree';
@@ -34,6 +35,9 @@ export function fetchOfficeSchemas(): void {
   });
 }
 
+// Excel's rich value parts' schema, transcribed from [MS-XLSX] (a picture placed in a cell, D634).
+const MS_RICH_DATA = join(dirname(fileURLToPath(import.meta.url)), 'schemas/ms-rich-data.rnc');
+
 /** Each OOXML part's schema by its name, for the parts LiveDoc writes in either kind of document. */
 export const OOXML_SCHEMAS: readonly (readonly [RegExp, string])[] = [
   [/^\[Content_Types\]\.xml$/, 'opc/opc-contentTypes.rnc'],
@@ -58,6 +62,10 @@ export const OOXML_SCHEMAS: readonly (readonly [RegExp, string])[] = [
   [/^xl\/charts\/chart\d+\.xml$/, 'ooxml/DrawingML_Chart.rnc'],
   [/^xl\/tables\/table\d+\.xml$/, 'ooxml/SpreadsheetML_Table_Definitions.rnc'],
   [/^xl\/pivotTables\/pivotTable\d+\.xml$/, 'ooxml/SpreadsheetML_Pivot_Table.rnc'],
+  [
+    /^xl\/richData\/(rdrichvalue|rdrichvaluestructure|rdRichValueTypes|richValueRel)\.xml$/,
+    MS_RICH_DATA,
+  ],
   [
     /^xl\/pivotCache\/pivotCacheDefinition\d+\.xml$/,
     'ooxml/SpreadsheetML_Pivot_Table_Cache_Definition.rnc',
@@ -111,7 +119,7 @@ function jing(schema: string, files: readonly string[], compact: boolean): void 
         '-jar',
         join(OFFICE_SCHEMAS_DIR, 'jing.jar'),
         compact ? '-c' : '-i',
-        join(OFFICE_SCHEMAS_DIR, schema),
+        isAbsolute(schema) ? schema : join(OFFICE_SCHEMAS_DIR, schema),
         ...files,
       ],
       { stdio: 'pipe' },

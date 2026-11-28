@@ -7,10 +7,10 @@ import { sameTableName } from '../tables/table';
 import type { SheetHandle, SheetsCtx } from '../formula/stored';
 
 // A cell's text as entered (a table header's name, D443): a text's own, a number's or a boolean's as typed; none for
-// an empty cell or a formula.
+// an empty cell, a formula or a picture.
 export function cellText(sheet: Sheet, r: string, c: string): string | undefined {
   const input = sheet.cells.get(cellKey(r, c))?.input;
-  if (!input || 'f' in input) return undefined;
+  if (!input || 'f' in input || 'img' in input) return undefined;
   if ('s' in input) return input.s;
   if ('n' in input) return String(input.n);
   return input.b ? 'TRUE' : 'FALSE';

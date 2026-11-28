@@ -6,7 +6,7 @@ import { CellMap } from '../cells/cell-map';
 import { Workbook, type ArrayDialect } from '../engine/workbook';
 import type { Iteration } from '../engine/loops';
 import type { FormulaMeaning } from '../formula/meaning';
-import { cellKey, type Sheet, type SheetLayout } from '../sheet';
+import { cellKey, type CellInput, type Sheet, type SheetLayout } from '../sheet';
 import { readTypedInput } from '../typed-input';
 import type { NamedFunction } from '../named-functions';
 import type { SheetTable } from '../tables/table';
@@ -109,22 +109,28 @@ export function book(
     const pos = parseA1(a1)!;
     return { sheet, pos, value: wb.value(sheet.id, pos.r, pos.c) };
   };
+  // Set a cell's input as given (none clears it), and tell the workbook.
+  const put = (a1: string, input: CellInput | undefined, title = Object.keys(full)[0]!) => {
+    const { sheet, pos } = at(a1, title);
+    const key = cellKey(sheet.layout.rows[pos.r]!, sheet.layout.cols[pos.c]!);
+    const cells = sheet.cells.copy();
+    if (input) cells.set(key, { input });
+    else cells.delete(key);
+    const next = { ...sheet, cells };
+    sheets[sheets.indexOf(sheet)] = next;
+    wb.updateSheet(next, [key]);
+  };
   return {
     wb,
     sheets,
     v: (a1: string, title?: string) => at(a1, title).value,
     // Retype a cell, as the editor would, and tell the workbook.
     set(a1: string, text: string, title = Object.keys(full)[0]!) {
-      const { sheet, pos } = at(a1, title);
-      const key = cellKey(sheet.layout.rows[pos.r]!, sheet.layout.cols[pos.c]!);
+      const { sheet } = at(a1, title);
       const read = readTypedInput(text, opts.locale ?? 'en-GB', wb.ctxFor(sheet.id));
-      const cells = sheet.cells.copy();
-      if (read.kind === 'value') cells.set(key, { input: read.input });
-      else cells.delete(key);
-      const next = { ...sheet, cells };
-      sheets[sheets.indexOf(sheet)] = next;
-      wb.updateSheet(next, [key]);
+      put(a1, read.kind === 'value' ? read.input : undefined, title);
     },
+    put,
   };
 }
 

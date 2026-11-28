@@ -144,8 +144,8 @@ export function toggleCheckboxes(
           if (seen.has(key)) continue;
           seen.add(key);
           const input = sheet.cells.get(key)?.input;
-          // A formula's box is its formula's: the toggle leaves it.
-          if (input && 'f' in input) continue;
+          // A formula's box is its formula's, and a picture is no box: the toggle leaves both.
+          if (input && ('f' in input || 'img' in input)) continue;
           const v = input
             ? 'b' in input
               ? input.b

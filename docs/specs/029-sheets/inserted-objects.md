@@ -36,7 +36,7 @@ An image floats over the cells as a chart does, one of its sheet's objects ([She
   picker; the new picture keeps the box's width, its height following its proportion, and its alt text goes with the
   old picture), **Delete**. Google's Edit
   Image (crop, recolour) and Assign Script are left out (crop: later; scripts: C3); **Place Image in Selected Cell**
-  joins when [images in a cell](#images-in-a-cell) are built.
+  puts it in the active cell ([Images in a cell](#images-in-a-cell), D632).
 - **Drawn** from the image's bytes (`/api/images/<id>?d=<document>`), at the grid's zoom, under frozen panes as a
   chart is, under the sheet's charts; a skeleton while its bytes are on their way; a picture that cannot be drawn
   shows the editor's broken-image state sized to the box ([Images](../009-elements/images.md), "Placeholder
@@ -65,9 +65,38 @@ An image floats over the cells as a chart does, one of its sheet's objects ([She
 
 ### Images in a cell
 
-- **Insert Image › Insert Image in Cell**: the image fills the cell, kept in proportion, moving and sorting with it;
-  `IMAGE()` does the same from an address (S4; [Imports from the web](imports.md#image)).
-- Both formats keep it (ODF a `draw:frame` anchored to the cell; XLSX in-cell images as rich values).
+A picture of the gallery held as a cell's value, as Google's in-cell image is (its Apps Script `CellImage`, "an image
+value in a cell"); `IMAGE()` shows one from an address instead (S4; [Imports from the web](imports.md#image)).
+
+- **The model**: a cell's input may be a picture: the gallery image's id ([Images](../009-elements/images.md)) and its
+  alt text (up to 1,000 characters, Google's title and description folded into one as over cells). It moves, sorts,
+  fills, copies, cuts and clears with its cell; typing into the cell replaces it; the cell keeps its format (default,
+  D630).
+- **Formulas** read it as they read an IMAGE's answer, as empty text, and a formula whose answer is the cell (`=A1`)
+  or a lookup that finds it shows the picture, as a reference to an IMAGE's cell does (D72). The formula bar and the
+  cell editor show nothing for it (default, D631; assumed, Google's value as a formula reads it not measured).
+- **Drawn**: the picture fills its cell, kept in proportion and centred (IMAGE's mode 1), from its bytes
+  (`/api/images/<id>?d=<document>`) at the grid's zoom; nothing while its bytes are on their way or when they cannot
+  be drawn, as an IMAGE's. The grid's mirror announces the cell by its alt text, else "Image".
+- **Insert Image › Insert Image in Cell**, an Editor's, opens the image picker; the picked picture becomes the active
+  cell's input, one undo step. It is dimmed as Insert Image over Cells is, where image storage is not set up ("Image
+  uploads aren't enabled on this deployment") and in This Browser ("Sync Document to place images in cells", D625
+  widened), and refused in a cell a protection keeps from the person, as typing is.
+- **Its menu**: on a cell holding a picture the cell's context menu gains **Alt Text** (the dialog of images over
+  cells) and **Place Image over Cells** (the picture leaves the cell for an image over cells at the cell's top-left,
+  fitted to 600 by 400 px as Insert fits one); an image over cells' menu gains **Place Image in Selected Cell** (the
+  image leaves the sheet's objects and becomes the active cell's input, its alt text kept). Each is one undo step
+  (default, D632).
+- **Where its bytes live**: in the uploader's gallery, as an image over cells'. A sheet's cells holding pictures are
+  references of its document, indexed in the room beside its images over cells ([Images](../009-elements/images.md#reference-index),
+  "A sheet's references"), so everyone the document is shared with is served them (default, D633).
+- **In the file** ([Standard mapping](standard-mapping.md#pictures-in-the-file)): XLSX as Excel's picture in a cell, a
+  rich value; ODF a picture anchored to the cell and sized with it, LibreOffice's "To cell (resize with cell)"; read
+  back as a picture in its cell (default, D634).
+- **Agents**: `change_sheet` `image {imageId, at, inCell: true, alt}` sets the cell `at` to the picture (`width`,
+  `height` and `replace` refused beside `inCell`, `write_invalid`), its gallery checked as an image over cells'
+  is; `read_sheet`'s `images` lists a cell's picture as `{at, imageId, alt, inCell: true}`, and the outline as
+  `image in <A1> "<alt>"`.
 
 ### Images, both
 
@@ -109,7 +138,7 @@ its title linked to the file, and LiveDoc keeps the link in both formats (XLSX's
 
 ## Who may do what
 
-- **Editor** inserts and edits every object here; an image over cells is selected, moved, resized and given its menu
+- **Editor** inserts and edits every object here, a cell's picture too; an image over cells is selected, moved, resized and given its menu
   by an Editor alone, everyone else's pointer passing through it to the cells.
 - **Participant** ticks tick boxes and picks from dropdowns; opens links.
 - **Viewer** opens links and sees the rest.
@@ -129,7 +158,7 @@ its title linked to the file, and LiveDoc keeps the link in both formats (XLSX's
 
 `Spreadsheet · Added · <Kind>` as Insert places one (`ImageInCell`, `ImageOverCells`, `Drawing`, `Link`, `Checkbox`,
 `Dropdown`, `Emoji`), the action charts and pivot tables use; `Sheet · Changed · Image` for each move,
-resize, alt text, replacement or delete of an image over cells.
+resize, alt text, replacement or delete of an image over cells, and each alt text or place change of a cell's picture.
 
 ## Defaults
 
@@ -137,6 +166,16 @@ resize, alt text, replacement or delete of an image over cells.
   fit 600 by 400 px, moved and resized as a chart is, its bytes in the uploader's gallery (default).
 - **D627** An agent's image lands at the cell it names, offset 0, sized as given or fitted as Insert fits it; its
   gallery check is change_sheet's own, so the CLI and the MCP refuse alike (default).
-- **D625** A spreadsheet in This Browser places no image over cells (Insert Image over Cells dimmed, its hint saying
-  to sync): a sheet holds a gallery id only, and a picture embedded in the sheet would leave the gallery's rules
-  (default).
+- **D625** A spreadsheet in This Browser places no image over cells or in a cell (Insert Image over Cells and Insert
+  Image in Cell dimmed, each hint saying to sync): a sheet holds a gallery id only, and a picture embedded in the sheet
+  would leave the gallery's rules (default).
+- **D630** A picture in a cell is the cell's input (a gallery id and alt text), so it moves, sorts, fills, copies and
+  clears with its cell as Google's in-cell image value does (default).
+- **D631** A formula reads a cell's picture as empty text and a reference to it shows the picture, as an IMAGE's
+  answer; the formula bar shows nothing (default; assumed).
+- **D632** Alt Text and Place Image over Cells on a cell's picture, Place Image in Selected Cell on an image over cells,
+  each one undo step (default).
+- **D633** A cell's picture is a reference of its document, indexed in the room from the cells' inputs by triggers, as
+  an image over cells is from the layout (default).
+- **D634** XLSX writes a cell's picture as Excel's rich value (`_localImage`), ODF as a frame in its cell sized with
+  it; ODF reads a frame in a cell at offset 0 whose end cell is its own as a cell's picture (default).

@@ -46,8 +46,9 @@ import { chartRestored } from './chart-nearest';
 import { lineAtPx } from './file-lines';
 import { ODS_CHART_ORIGINAL, odfSeriesOrder } from './ods-charts';
 import type { FileAt, KeptContent, KeptItem, KeptPart } from './kept-content';
-import { readablePicture, type ReadPicture } from './file-pictures';
-import type { FileSheet } from './workbook-file';
+import { readablePicture, type ReadCellPicture, type ReadPicture } from './file-pictures';
+import { parseOdfRange } from './ods-pivot-standard';
+import type { FileCell, FileSheet } from './workbook-file';
 
 const {
   office: OFFICE,
@@ -486,6 +487,8 @@ function packageOriginal(meta: KeptPart | undefined): string | undefined {
 type Found = {
   chart?: FileChart;
   picture?: ReadPicture;
+  // A picture filling the cell it is anchored in and ends in: the cell's own (D634).
+  cellPicture?: { r: number; c: number; picture: ReadCellPicture };
   // The kept part holding a chart's document: a package's, or a flat file's made from the inline one.
   part?: KeptPart;
   // A picture's package entry, which leaves the kept content unless kept content still names it.
@@ -612,17 +615,52 @@ function pictureOf(
   const place = readable && placeOf(frame, sheet, drawing.cell, PICTURE_SIDES);
   if (!place) return null;
   const alt = altOf(frame);
+  const shown = alt ? { alt: alt.slice(0, SHEET_IMAGE_ALT_MAX) } : {};
+  // Anchored in a cell at its corner and ending in that cell (LibreOffice's "To cell (resize with cell)"), it is the
+  // cell's picture (D634).
+  const end = attributeOf(frame, TABLE, 'end-cell-address');
+  const ended = end === undefined ? null : parseOdfRange(`${end}:${end}`);
+  const cell = drawing.cell;
+  if (
+    cell &&
+    ended?.range.r1 === cell.r &&
+    ended.range.c1 === cell.c &&
+    place.at.dx === 0 &&
+    place.at.dy === 0
+  )
+    return {
+      cellPicture: { ...cell, picture: { bytes: bytes!, ...readable, ...shown } },
+      ...(media ? { media } : {}),
+      gone: [],
+      z: zOf(frame),
+    };
   return {
     picture: {
       ...place,
       bytes: bytes!,
       ...readable,
-      ...(alt ? { alt: alt.slice(0, SHEET_IMAGE_ALT_MAX) } : {}),
+      ...shown,
     },
     ...(media ? { media } : {}),
     gone: [],
     z: zOf(frame),
   };
+}
+
+// The sheet's cells with each picture in its cell, the cell's value dropped (a picture is its value).
+function withCellPictures(
+  cells: readonly FileCell[],
+  pictures: readonly { r: number; c: number; picture: ReadCellPicture }[],
+): FileCell[] {
+  const out = [...cells];
+  for (const { r, c, picture } of pictures) {
+    const at = out.findIndex((cell) => cell.r === r && cell.c === c);
+    const { value: _, ...rest } = at < 0 ? { r, c } : out[at]!;
+    const next = { ...rest, readPicture: picture };
+    if (at < 0) out.push(next);
+    else out[at] = next;
+  }
+  return out;
 }
 
 /**
@@ -675,8 +713,10 @@ export function readOdsCharts(
     found.sort((a, b) => a.z - b.z);
     const charts = found.flatMap((f) => (f.chart ? [f.chart] : []));
     const pictures = found.flatMap((f) => (f.picture ? [f.picture] : []));
+    const inCells = found.flatMap((f) => (f.cellPicture ? [f.cellPicture] : []));
     return {
       ...sheet,
+      ...(inCells.length ? { cells: withCellPictures(sheet.cells, inCells) } : {}),
       ...(charts.length ? { charts } : {}),
       ...(pictures.length ? { readPictures: pictures } : {}),
     };

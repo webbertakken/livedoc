@@ -346,16 +346,24 @@ function chartFrames(
   sheet: FileSheet,
   out: Omit<Out, 'sheet' | 'index'>,
 ): Map<string, string> {
-  if (!sheet.charts?.length && !sheet.pictures?.length) return new Map();
+  const inCells = sheet.cells.filter((cell) => cell.picture);
+  if (!sheet.charts?.length && !sheet.pictures?.length && !inCells.length) return new Map();
   if (before.some((xml) => /^<[\w.-]+:shapes\b/.test(xml))) {
     if (sheet.charts?.length) out.losses.push({ k: 'charts_unwritten', sheet: sheet.name });
-    picturesUnwritten(sheet, out.losses);
+    picturesUnwritten(
+      { name: sheet.name, pictures: [...(sheet.pictures ?? []), ...inCells] },
+      out.losses,
+    );
     return new Map();
   }
   const frames = sheet.charts?.length
     ? out.charts.frames(sheet.name, sheet.charts)
     : new Map<string, string>();
   for (const [at, xml] of out.pictures.frames(sheet, sheet.charts?.length ?? 0))
+    frames.set(at, (frames.get(at) ?? '') + xml);
+  // Its cells' pictures after the pictures over them (D634).
+  const z0 = (sheet.charts?.length ?? 0) + (sheet.pictures?.length ?? 0);
+  for (const [at, xml] of out.pictures.cellFrames(sheet, z0))
     frames.set(at, (frames.get(at) ?? '') + xml);
   return frames;
 }
@@ -471,11 +479,14 @@ function pilotsAfterTables(file: WorkbookFile, after: readonly string[]): string
   return withDataPilots(after, odsDataPilots(file.sheets, keptPilotNames(after)));
 }
 
-// The namespaces a root declares: `calcext` too when a sheet has format rules, a drawing's and a chart's when one has charts.
+// The namespaces a root declares: `calcext` too when a sheet has format rules, a drawing's and a chart's when one has
+// charts or pictures, over its cells or in them.
 const withRules = (file: WorkbookFile, prefixes: readonly Prefix[]): readonly Prefix[] => [
   ...prefixes,
   ...(file.sheets.some((s) => s.formatRules?.length) ? (['calcext'] as const) : []),
-  ...(file.sheets.some((s) => s.charts?.length || s.pictures?.length)
+  ...(file.sheets.some(
+    (s) => s.charts?.length || s.pictures?.length || s.cells.some((c) => c.picture),
+  )
     ? (['draw', 'svg', 'xlink', 'chart'] as const).filter((p) => !prefixes.includes(p))
     : []),
 ];

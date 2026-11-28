@@ -45,6 +45,8 @@ describe('CellMap', () => {
       ['r2:c1', { format: { b: true } }],
       ['r2:c2', {}],
       ['r2:c3', { input: { n: Number.NaN }, format: { nf: 'percent', dp: 1 } }],
+      ['r2:c4', { input: { img: { id: 'img-1', alt: 'A cow' } } }],
+      ['r2:c5', { input: { img: { id: 'img-2' } }, format: { bg: '#ff0000' } }],
     ];
     const map = CellMap.from(cells);
     expect(map.size).toBe(cells.length);
@@ -66,6 +68,8 @@ describe('CellMap', () => {
       { input: { f: { t: '@0', r: [], extra: 1 } } },
       { input: { f: { t: 1, r: [] } } },
       { input: { f: { t: '@0', r: ['A1'] } } },
+      { input: { img: 'img-1' } },
+      { input: { img: null } },
       null,
     ];
     const map = new CellMap();
@@ -73,6 +77,30 @@ describe('CellMap', () => {
     odd.forEach((cell, i) => expect(map.get(`r${i}:c`)).toBe(cell));
     map.set('r0:c', { input: { n: 1 } });
     expect(map.get('r0:c')).toEqual({ input: { n: 1 } });
+  });
+
+  // inserted-objects.md "Images in a cell" (D630): the grid asks whether any cell holds a picture on every paint.
+  it('counts the cells holding a picture through writes, deletes, compaction and copies', () => {
+    const map = new CellMap();
+    expect(map.pictureCount).toBe(0);
+    map.set('r1:c1', { input: { img: { id: 'a' } } });
+    map.set('r1:c2', { input: { img: { id: 'b' } } });
+    map.set('r1:c1', { input: { img: { id: 'c' } } });
+    expect(map.pictureCount).toBe(2);
+    const copy = map.copy();
+    map.set('r1:c1', { input: { n: 1 } });
+    expect(map.pictureCount).toBe(1);
+    expect(copy.pictureCount).toBe(2);
+    expect(copy.get('r1:c1')).toEqual({ input: { img: { id: 'c' } } });
+    map.delete('r1:c2');
+    map.delete('r1:c2');
+    expect(map.pictureCount).toBe(0);
+    for (let i = 0; i < 300; i++) map.setCell(`r${i}`, 'c9', { img: { id: `p${i}` } });
+    for (let i = 0; i < 280; i++) map.delete(`r${i}:c9`);
+    expect(map.pictureCount).toBe(20);
+    expect(map.get('r299:c9')).toEqual({ input: { img: { id: 'p299' } } });
+    map.clear();
+    expect(map.pictureCount).toBe(0);
   });
 
   it("reads only an input's own keys", () => {

@@ -90,9 +90,9 @@ function formulaHint(ast: Node): FormatHint | undefined {
 }
 
 // An input as the formula bar shows it, in `locale` (formulas.md "Locale"): a formula as A1 text in the locale's
-// syntax, a number unformatted with the locale's decimal mark, a boolean in capitals.
+// syntax, a number unformatted with the locale's decimal mark, a boolean in capitals; a picture as nothing (D631).
 export function inputAsText(input: CellInput | undefined, ctx: SheetsCtx, locale: string): string {
-  if (!input) return '';
+  if (!input || 'img' in input) return '';
   if ('f' in input) return formulaAsTyped(input.f, ctx, locale);
   if ('n' in input) return numberText(input.n).replace('.', localeSeparators(locale).decimal);
   if ('b' in input) return input.b ? 'TRUE' : 'FALSE';

@@ -2482,8 +2482,35 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
           "f"
         ],
         "type": "object"
+      },
+      {
+        "additionalProperties": false,
+        "properties": {
+          "img": {
+            "$ref": "#/components/schemas/CellPicture"
+          }
+        },
+        "required": [
+          "img"
+        ],
+        "type": "object"
       }
     ]
+  },
+  "CellPicture": {
+    "additionalProperties": false,
+    "properties": {
+      "alt": {
+        "type": "string"
+      },
+      "id": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "id"
+    ],
+    "type": "object"
   },
   "ChairFacing": {
     "enum": [

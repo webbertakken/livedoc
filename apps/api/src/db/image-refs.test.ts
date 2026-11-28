@@ -116,3 +116,56 @@ describe('a sheet’s images', () => {
     expect(outboxImages(sql).n).toBe(1);
   });
 });
+
+// images.md "A sheet's references" (D633): a cell holding a picture is a reference too, kept by the cells' triggers.
+describe('a sheet’s cells’ pictures', () => {
+  function sheetRow(sql: DatabaseSync, id: string, tabId: string) {
+    sql
+      .prepare(
+        `INSERT INTO sheets (document_id, id, tab_id, title, layout, rev, created_at, updated_at, updated_by)
+         VALUES ('D', ?, ?, ?, '{}', 0, 0, 0, '{}')`,
+      )
+      .run(id, tabId, id);
+  }
+  const cell = (sql: DatabaseSync, r: string, input: unknown) =>
+    sql
+      .prepare(
+        `INSERT INTO sheet_cells (document_id, sheet_id, row_id, col_id, input) VALUES ('D', 's1', ?, 'c1', ?)
+         ON CONFLICT (document_id, sheet_id, row_id, col_id) DO UPDATE SET input = excluded.input`,
+      )
+      .run(r, input === null ? null : JSON.stringify(input));
+  const outboxImages = (sql: DatabaseSync) =>
+    (sql.prepare(`SELECT COUNT(*) AS n FROM outbox WHERE kind = 'images'`).get() as { n: number })
+      .n;
+
+  it('places each cell’s gallery picture, follows its writes and deletes, and goes with its sheet', async () => {
+    const { env, sql } = sqliteD1();
+    tabRow(sql, 't1', '{}');
+    sheetRow(sql, 's1', 't1');
+    sql.exec(`DELETE FROM outbox`);
+    cell(sql, 'r1', { img: { id: 'p1', alt: 'A cow' } });
+    cell(sql, 'r2', { img: { id: 'p2' } });
+    cell(sql, 'r3', { img: { id: 'p1' } });
+    cell(sql, 'r4', { s: '{"img":{"id":"no"}}' });
+    cell(sql, 'r5', { img: { id: 'data:image/png;base64,AA' } });
+    cell(sql, 'r6', { img: { id: 'x'.repeat(129) } });
+    expect(await documentImageIds(env, 'D')).toEqual(['p1', 'p2']);
+    expect(outboxImages(sql)).toBe(1);
+    expect(await documentPlacesImage(env, 'D', 'p2', 't1')).toBe(true);
+    // Typed over, the picture goes; another picture takes its place.
+    cell(sql, 'r2', { n: 1 });
+    cell(sql, 'r1', { img: { id: 'p3' } });
+    expect(await documentImageIds(env, 'D')).toEqual(['p1', 'p3']);
+    // A format write leaves the picture as it is.
+    sql.exec(`UPDATE sheet_cells SET format = '{"b":true}' WHERE row_id = 'r3'`);
+    expect(await documentImageIds(env, 'D')).toEqual(['p1', 'p3']);
+    sql.exec(`DELETE FROM sheet_cells WHERE row_id = 'r3'`);
+    cell(sql, 'r1', null);
+    expect(await documentImageIds(env, 'D')).toEqual([]);
+    cell(sql, 'r1', { img: { id: 'p4' } });
+    sql.exec(`DELETE FROM outbox`);
+    sql.exec(`DELETE FROM sheets WHERE id = 's1'`);
+    expect(await documentImageIds(env, 'D')).toEqual([]);
+    expect(outboxImages(sql)).toBe(1);
+  });
+});

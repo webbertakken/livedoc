@@ -29,7 +29,7 @@ elements, its snapshots, its changesets or its room.
   flag; how many rows and columns are frozen; the merged ranges; the filter (its range and each column's
   condition); the sheet's default column width and row height.
 - **Cells**: for each cell with an input or a format, its row id, its column id, its **input** (stored as what it
-  means: a number, text, a boolean, or a formula) and its **format**.
+  means: a number, text, a boolean, a formula, or a picture of the gallery, [Images in a cell](inserted-objects.md#images-in-a-cell)) and its **format**.
 - **Who and when**: `createdAt`, `updatedAt`, `updatedBy` (the display identity, a one-way hash as on items).
 - **`rev`**: the sheet rev.
 

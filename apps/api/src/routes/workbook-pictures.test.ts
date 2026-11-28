@@ -2,7 +2,7 @@
 // place once, when the document may serve it, in paint order within the 50 MB budget.
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { PICTURE_FILE_BYTES_MAX } from '@livedoc/sheets/files';
-import type { SheetLayout } from '@livedoc/sheets';
+import { CellMap, type SheetLayout } from '@livedoc/sheets';
 import type { Env } from '../types';
 import { readWorkbookPictures } from './workbook-pictures';
 
@@ -29,6 +29,8 @@ const layoutWith = (...imageIds: string[]) =>
       imageId,
     })),
   }) as unknown as SheetLayout;
+
+const sheetOf = (layout: SheetLayout, cells = new CellMap()) => ({ layout, cells });
 
 const stored = new Map<string, { bytes: Uint8Array; type?: string }>();
 const get = vi.fn(async (id: string) => {
@@ -57,8 +59,8 @@ describe('readWorkbookPictures', () => {
     stored.set('b', { bytes: new Uint8Array([3]), type: 'image/png' });
     sizes.mockResolvedValue(new Map([['a', { byteSize: 2, contentType: 'image/png' }]]));
     const out = await readWorkbookPictures(env, 'D', [
-      { layout: layoutWith('a', 'b') },
-      { layout: layoutWith('a') },
+      sheetOf(layoutWith('a', 'b')),
+      sheetOf(layoutWith('a')),
     ]);
     expect(sizes).toHaveBeenCalledWith(env, 'D', ['a', 'b']);
     expect([...out]).toEqual([['a', { data: new Uint8Array([1, 2]), type: 'image/png' }]]);
@@ -66,6 +68,25 @@ describe('readWorkbookPictures', () => {
     expect(console.info).toHaveBeenCalledWith(
       '[workbook] pictures document=D placed=2 read=1 too_large=0 unavailable=1',
     );
+  });
+
+  // inserted-objects.md "Images in a cell" (D634): a cell's picture is read as an image over cells is.
+  it('reads the pictures cells hold, after the images over the cells, each once', async () => {
+    stored.set('a', { bytes: new Uint8Array([1]), type: 'image/png' });
+    stored.set('c', { bytes: new Uint8Array([2]), type: 'image/png' });
+    sizes.mockResolvedValue(
+      new Map([
+        ['a', { byteSize: 1, contentType: 'image/png' }],
+        ['c', { byteSize: 1, contentType: 'image/png' }],
+      ]),
+    );
+    const cells = new CellMap()
+      .set('r1:c1', { input: { img: { id: 'c' } } })
+      .set('r2:c1', { input: { img: { id: 'a', alt: 'A' } } })
+      .set('r3:c1', { input: { n: 1 } });
+    const out = await readWorkbookPictures(env, 'D', [sheetOf(layoutWith('a'), cells)]);
+    expect(sizes).toHaveBeenCalledWith(env, 'D', ['a', 'c']);
+    expect([...out.keys()]).toEqual(['a', 'c']);
   });
 
   it('marks every picture from the first past the budget too large, reading none of them', async () => {
@@ -77,7 +98,7 @@ describe('readWorkbookPictures', () => {
         ['c', { byteSize: 1, contentType: 'image/gif' }],
       ]),
     );
-    const out = await readWorkbookPictures(env, 'D', [{ layout: layoutWith('a', 'b', 'c') }]);
+    const out = await readWorkbookPictures(env, 'D', [sheetOf(layoutWith('a', 'b', 'c'))]);
     expect(out.get('b')).toBe('too_large');
     expect(out.get('c')).toBe('too_large');
     expect(get).toHaveBeenCalledTimes(1);
@@ -94,16 +115,16 @@ describe('readWorkbookPictures', () => {
       ]),
     );
     const out = await readWorkbookPictures(env, 'D', [
-      { layout: layoutWith('svg', 'typeless', 'gone') },
+      sheetOf(layoutWith('svg', 'typeless', 'gone')),
     ]);
     expect(out.size).toBe(0);
   });
 
   it('asks nothing for a workbook without images, and reads none without an image store', async () => {
-    expect(await readWorkbookPictures(env, 'D', [{ layout: layoutWith() }])).toEqual(new Map());
+    expect(await readWorkbookPictures(env, 'D', [sheetOf(layoutWith())])).toEqual(new Map());
     expect(sizes).not.toHaveBeenCalled();
     const bare = {} as Env;
-    expect(await readWorkbookPictures(bare, 'D', [{ layout: layoutWith('a') }])).toEqual(new Map());
+    expect(await readWorkbookPictures(bare, 'D', [sheetOf(layoutWith('a'))])).toEqual(new Map());
     expect(console.warn).toHaveBeenCalledWith(
       '[workbook] pictures unavailable document=D placed=1',
     );

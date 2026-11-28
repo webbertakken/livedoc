@@ -3,11 +3,18 @@
 // the model (cells by row and column id, formulas by id references) and each format's reader and writer, so neither
 // format ever sees an id and the model never sees a format.
 import { fileChartsOf, sheetChartsFromFile, type FileChart } from './file-charts';
-import { picturesToPlace, type PictureToPlace, type PictureUnstored } from './import-pictures';
+import {
+  cellPictureToPlace,
+  picturesToPlace,
+  type PictureToPlace,
+  type PictureUnstored,
+} from './import-pictures';
 import {
   filePicturesOf,
   type FilePicture,
+  type FileCellPicture,
   type FilePictureFetches,
+  type ReadCellPicture,
   type ReadPicture,
 } from './file-pictures';
 import {
@@ -95,6 +102,9 @@ export type FileCell = {
   // A formula reading a table, with each table reference as the plain absolute range it reads now, for a format
   // without them (OpenFormula, standard-mapping.md "Tables in the file").
   plain?: string;
+  // The picture it holds as its value (standard-mapping.md "Pictures in the file", D634); read back, with its bytes.
+  picture?: FileCellPicture;
+  readPicture?: ReadCellPicture;
 };
 
 export type FileSheet = {
@@ -316,6 +326,13 @@ export function workbookFileOf(
         if (format !== undefined) out.format = format;
         if (style) out.style = style;
         if (!cell.input) {
+          cells.push(out);
+          continue;
+        }
+        // A picture is its cell's value, written as each format holds one (D634).
+        if ('img' in cell.input) {
+          const { id, alt } = cell.input.img;
+          out.picture = { imageId: id, ...(alt ? { alt } : {}) };
           cells.push(out);
           continue;
         }
@@ -678,6 +695,8 @@ export function sheetsFromFile(
       const r = m.layout.rows[cell.r];
       const c = m.layout.cols[cell.c];
       if (r === undefined || c === undefined) continue;
+      // A cell's picture waits for the gallery; its cell holds it once stored, else stays empty (D634).
+      if (cell.readPicture) pictures.push(cellPictureToPlace(m.id, { r, c }, cell.readPicture));
       let input: CellInput | null = null;
       if (cell.formula !== undefined) {
         const compiled = compileFormula(cell.formula, { ...ctx, here: cell });
@@ -685,7 +704,7 @@ export function sheetsFromFile(
         if (compiled.ok && !readsUnknownTable(compiled.formula)) input = { f: compiled.formula };
         else losses.push({ k: 'formula_unread', sheet: m.title, r: cell.r, c: cell.c });
       }
-      input ??= cell.value ? literalInput(cell.value) : null;
+      input ??= cell.value && !cell.readPicture ? literalInput(cell.value) : null;
       const format = cellFormatOf(cell, m.title, formats, losses, joined);
       if (input || format)
         cells.push({ r, c, ...(input ? { i: input } : {}), ...(format ? { f: format } : {}) });

@@ -78,6 +78,18 @@ describe('findPattern', () => {
 });
 
 describe('Replace All, as Google’s findReplace', () => {
+  // inserted-objects.md "Images in a cell" (D631): a picture has no text to replace, even by a pattern matching none.
+  it('leaves a cell’s picture alone', () => {
+    const t = setup({ S: { A1: 'x' } });
+    const s = t.b.sheets[0]!;
+    const key = cellKey(s.layout.rows[1]!, s.layout.cols[0]!);
+    t.b.sheets[0] = { ...s, cells: s.cells.copy().set(key, { input: { img: { id: 'img-1' } } }) };
+    t.b.wb.updateSheet(t.b.sheets[0]);
+    const done = t.replace('^$', 'X', { regex: true });
+    expect(done.cells).toBe(0);
+    expect(t.b.sheets[0].cells.get(key)).toEqual({ input: { img: { id: 'img-1' } } });
+  });
+
   it('replaces case aside in typed values only, counting every match', () => {
     const t = setup();
     const done = t.replace('a', 'X');
