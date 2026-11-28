@@ -71,9 +71,9 @@ File > Download, in Google's order:
 Each download is named after the document. A Viewer may download unless the owner turned it off for Viewers.
 File > **Keep a PDF copy in LiveDoc**, an item beside Download, so a download gains no step (director, 2026-11-28),
 writes the PDF as Download as PDF does and stores it as a
-[PDF document](../035-pdf-documents/files-print-and-sync.md#other-kinds-meeting-a-pdf) named `<name>.pdf`, kept where
+[PDF document](../035-pdf-documents/files-print-and-sync.md#other-kinds-meeting-a-pdf) named as its source, kept where
 the source is (LiveDoc, or This Browser for a document there), in the folder the person's new documents go to
-(default). Its dialog, **Keeping a PDF copy**, says each step as the PDF's does, then "Kept a copy as “<name>.pdf”."
+(default). Its dialog, **Keeping a PDF copy**, says each step as the PDF's does, then "Kept a PDF copy of “<name>”."
 with **Open** (the copy in a new tab) and Close; a failure says "The PDF copy couldn’t be kept. Try again.".
 Telemetry `Document · Exported · TextDocumentPdfCopy`. Every kind's PDF is written by the repository's one PDF writer.
 The PDF is written in the browser from the pages as drawn in the [printing look](#printing): each word where it
