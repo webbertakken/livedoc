@@ -136,11 +136,15 @@ editor's and a page start a paragraph apart. Every preview says so.
   (`TEXT_PREVIEW_BLOCKS_MAX`, 5,000 blocks laid out) `document_too_large`. Read as the views are: a Viewer through
   their copy.
 - **What is drawn** `(default)`: each page a sheet of its section's size and margins, white, its paragraphs in Inter
-  at their size, weight, slant and colour, aligned and indented as styled, a list's marker before its first line;
+  at their size, weight, slant and colour, aligned and indented as styled, a list's marker before its first line, a
+  run's highlight behind it, a paragraph's shading behind its lines and its top and bottom borders as lines;
   tables as their rows and columns with grid lines, a row moving whole; inline pictures as grey boxes of their size
   with their alt text; page, column and section breaks and a section's columns as the editor lays them. Headers,
   footers, footnotes, line numbers, floating pictures and drawings are not drawn. Every page carries
   `Approximate preview` small in its bottom margin.
+- **The gallery's drawing**: the [template gallery](starting-and-finding.md#the-template-gallerys-text-documents) draws
+  the same page without the label, each run in the editor's font stack, on white or dark paper (the dark scheme's inks
+  and fills as the editor draws them).
 - **Lines** `(default)`: words break at spaces and after hyphens, a word wider than the line by character, by the
   advance widths of the face the editor draws the run's font in (Arimo for Arial, Tinos for Times New Roman, Cousine
   for Courier New, Carlito for Calibri, Caladea for Cambria, and Roboto) and Inter's for any other; every face is drawn
