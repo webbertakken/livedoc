@@ -747,6 +747,11 @@ export const COMPUTED_EMITTERS: Record<string, ComputedValues> = {
     values: TEMPLATES,
     open: TEMPLATE_WHY,
   },
+  // A text document made from the template gallery (docs/specs/034-text-documents/starting-and-finding.md).
+  'apps/live/app/new/page.tsx Template·Used': {
+    values: ['TextLetter', 'TextProjectBrief', 'TextWorkingBackwards'],
+    open: "titleCaseType(id): a text document template's id",
+  },
   'apps/live/app/explorer/useTimelineFeed.ts Timeline·Selected': { values: TIMELINE_CATEGORIES },
   // A document's History chips (docs/specs/013-workspace/timeline.md §2.10): the same categories.
   'apps/live/components/panels/DocumentHistoryDialog.tsx Timeline·Selected': {
