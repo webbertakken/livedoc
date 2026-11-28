@@ -397,6 +397,7 @@ export function SheetGrid({
               style={{ left: c.geometry.headW, top: c.geometry.headH, right: 0, bottom: 0 }}
             >
               <SheetCells
+                drawn={c.drawnPivots}
                 padEnd={dropdownCols}
                 filterHead={filterHead}
                 formatRules={formatRules}
@@ -460,6 +461,7 @@ export function SheetGrid({
               ) : null}
               {/* The cells in view for a screen reader, the active one among them: what aria-activedescendant names. */}
               <SheetGridMirror
+                drawn={c.drawnPivots}
                 elementId={elementId}
                 sheet={c.sheet}
                 workbook={c.workbook}

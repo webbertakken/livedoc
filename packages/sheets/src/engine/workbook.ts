@@ -74,12 +74,14 @@ import {
   PIVOT_PAST_EDGE,
   PIVOT_SOURCE_CELLS_MAX,
   PIVOT_TOO_LARGE,
+  pivotAnchorsOf,
   pivotArray,
   pivotBox,
   pivotIndexCellAt,
   pivotItemPlace,
   pivotSpecOf,
   readPivotSource,
+  type PivotArray,
   type PivotBox,
   type PivotItemPlace,
   type PivotSheets,
@@ -713,6 +715,38 @@ export class Workbook {
     const claim = this.spills.claimOf(owner)!;
     const place = pivotItemPlace(arr, r - claim.r1, c - claim.c1);
     return place && { pivotId: pivot.id, ...place };
+  }
+
+  /**
+   * A landed pivot table's output as one person sees it while their slicers hide `hidden` rows (ids) of its source
+   * (pivot-tables.md "In the grid", "Sliced", D629): worked out aside from the rows kept, keeping no value; with the
+   * rectangle everyone's output fills. Null when it has not landed or its source is gone.
+   */
+  pivotOutputSliced(
+    sheetId: string,
+    pivotId: string,
+    hidden: ReadonlySet<string>,
+  ): { rect: GridRange; drawn: PivotArray } | null {
+    const sheet = this.sheets.get(sheetId);
+    const anchor = sheet && pivotAnchorsOf(sheet).find((a) => a.pivot.id === pivotId);
+    const landed = anchor && this.pivotOutputAt(sheetId, anchor.r, anchor.c);
+    const box = landed ? pivotBox(anchor.pivot, this.pivotSheetsOf(sheet)) : null;
+    if (!landed || !box || !isPivotArray(this.vals.get(this.noAt(sheetId, anchor.r, anchor.c))))
+      return null;
+    const read = readPivotSource(box, (r, c) => this.value(box.sheet.id, r, c), this.locale);
+    const rowIds = box.sheet.layout.rows;
+    const source = {
+      ...read.source,
+      rows: read.source.rows.filter((_, i) => !hidden.has(rowIds[box.r1 + 1 + i]!)),
+    };
+    const calc = pivotCalc(source, (text, scope) =>
+      this.workOutNamed(sheetId, anchor.r, anchor.c, text, scope),
+    );
+    const out = pivotOutput(source, pivotSpecOf(anchor.pivot, box), this.locale, calc);
+    console.debug(
+      `[sheets engine] pivot sliced sheet=${sheetId} pivot=${pivotId} kept=${source.rows.length}/${read.source.rows.length}`,
+    );
+    return { rect: landed.rect, drawn: pivotArray(out, read.formats) };
   }
 
   // Whether (r, c) is a value of a landed pivot table's output, whose details a double-click shows (D616).

@@ -4,6 +4,7 @@
 // parts through context: the selection, the cell being edited and its draft, the grid's scroll and size, the menu
 // open over it, and the write helper every command goes through. Lives inside MaximisableSlot, so maximising and
 // restoring keep all of it.
+import { slicedPivotsOf, type DrawnPivots } from '@/lib/spreadsheet/pivot-sliced';
 import type { ChartPick, PlaceChartOpts } from './sheet-charts';
 import type { ChartType, SheetAnchor } from '@livedoc/document';
 import type { ItemUndoStep } from '@/hooks/plan/item-undo-journal';
@@ -80,6 +81,8 @@ export type SheetController = {
   // This person's own slicer filters, in place of each slicer's default, never sent (data-tools.md "Slicers", D485):
   // a condition, null for every row, undefined back to the default.
   ownSlicers: OwnSlicerFilters;
+  // The pivot tables this person's slicers filter, drawn in their outputs' place (pivot-tables.md "Sliced", D629).
+  drawnPivots: DrawnPivots | null;
   setOwnSlicer: (id: string, cond: FilterCondition | null | undefined) => void;
   grid: Grid;
   palette: PlanPalette;
@@ -331,6 +334,11 @@ export function useSheetControllerState(opts: {
       ),
     [workbook, sheet, openView, ownSlicers, version], // oxlint-disable-line react/exhaustive-deps
   );
+  // Pivot tables under this person's slicers, worked out again as values or slicers change (D629).
+  const drawnPivots = useMemo(
+    () => slicedPivotsOf(workbook, sheet, ownSlicers),
+    [workbook, sheet, ownSlicers, version], // oxlint-disable-line react/exhaustive-deps
+  );
   // How tall each row is drawn: a sized row its size, every other row what its text needs (sheet.md "Row height").
   // Worked out again whenever a value may have changed; the same function while no height did, so the geometry and
   // all that hangs on it stand.
@@ -401,6 +409,7 @@ export function useSheetControllerState(opts: {
     foldForSelf,
     filterViews,
     ownSlicers,
+    drawnPivots,
     setOwnSlicer,
     grid,
     selection,

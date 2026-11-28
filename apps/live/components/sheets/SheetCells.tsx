@@ -4,6 +4,7 @@
 // rows, the frozen columns and the scrolling body), each drawing only its window of rows and columns. Text runs
 // over empty neighbours to its right; numbers too wide for their column show fewer decimals, then scientific,
 // then ####. Memoised on what it draws, so moving the selection redraws none of it.
+import { drawnFormat, drawnValue, type DrawnPivots } from '@/lib/spreadsheet/pivot-sliced';
 import { memo, type CSSProperties } from 'react';
 import { cellColours, isLightColor, resolveFontStack } from '@livedoc/document';
 import { sheetFontStack } from '@/lib/spreadsheet/spreadsheet-fonts';
@@ -110,6 +111,8 @@ type CellsProps = {
   formatRules?: readonly FormatRule[];
   // View › Show › Formulas (grid-and-editing.md "Formulas", D141): a formula cell draws its formula as typed.
   showFormulas?: boolean | undefined;
+  // The pivot tables this person's slicers filter, drawn in place of everyone's output (D629).
+  drawn?: DrawnPivots | null;
 };
 
 // The room a dropdown column keeps at its cells' right, so its arrow never covers the value.
@@ -166,7 +169,7 @@ function RegionCells({ region, ...p }: CellsProps & { region: Region }) {
       if (m && (m.r1 !== r || m.c1 !== c)) continue;
       const key = cellKey(rows[r]!, cols[c]!);
       const cell = sheet.cells.get(key);
-      const value = workbook.value(sheet.id, r, c);
+      const value = drawnValue(p.drawn, workbook, sheet.id, r, c);
       const box = cellBox(g, r, c, scroll, m);
       const input = cell?.input;
       const formula =
@@ -175,7 +178,11 @@ function RegionCells({ region, ...p }: CellsProps & { region: Region }) {
           : null;
       const shown =
         formula === null
-          ? displayValue(value, workbook.shownFormat(sheet.id, r, c, cell?.format), locale)
+          ? displayValue(
+              value,
+              drawnFormat(p.drawn, workbook, sheet.id, r, c, cell?.format),
+              locale,
+            )
           : { text: formula, align: 'l' as const, kind: 'text' as const };
       // A met format rule's style draws over the cell's own.
       const met = fIndex
@@ -254,7 +261,7 @@ function RegionCells({ region, ...p }: CellsProps & { region: Region }) {
         const need = (turned ? turned.w : roughWidth(text, px)) + CELL_PAD * 2;
         for (let k = c + 1; k <= region.c2 && width < need; k++) {
           if (g.hiddenCol(k)) continue;
-          const next = workbook.value(sheet.id, r, k);
+          const next = drawnValue(p.drawn, workbook, sheet.id, r, k);
           if (next !== null || mergeAt(g, r, k)) break;
           width += g.cols[k + 1]! - g.cols[k]!;
         }
