@@ -49,7 +49,8 @@ const unreadable = (
   };
 };
 
-async function readDocument(
+/** A text document tab's model as it stands, a Viewer's through their copy; null when it cannot be read. */
+export async function readTextDocumentModel(
   env: DocumentEnv,
   documentId: string,
   tabId: string,
@@ -81,9 +82,9 @@ export async function answerTextDocumentView(
   if (!isTextDocumentView(view))
     return refused('outline', `${view} ${ELEMENT_VIEW_ON_TEXT_DOCUMENT}`);
   const started = Date.now();
-  let read: Awaited<ReturnType<typeof readDocument>>;
+  let read: Awaited<ReturnType<typeof readTextDocumentModel>>;
   try {
-    read = await readDocument(env, document.id, tab.id, viewer);
+    read = await readTextDocumentModel(env, document.id, tab.id, viewer);
   } catch (error) {
     return unreadable({ doc: document.id, tab: tab.id, error: String(error) }, view);
   }

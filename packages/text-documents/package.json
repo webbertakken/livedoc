@@ -7,7 +7,8 @@
   "main": "./src/index.ts",
   "types": "./src/index.ts",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./testing/page-starts": "./src/testing/page-start-fixtures.ts"
   },
   "scripts": {
     "lint": "oxlint",
@@ -15,7 +16,8 @@
     "test:coverage": "vitest run --coverage",
     "typecheck": "tsc --noEmit",
     "clean": "rm -rf node_modules .turbo coverage",
-    "validate:files": "vitest run --config vitest.validate.config.ts"
+    "validate:files": "vitest run --config vitest.validate.config.ts",
+    "gen:preview-advances": "node --import ../../scripts/ts-source-hooks.mjs scripts/gen-preview-advances.ts"
   },
   "dependencies": {
     "@livedoc/api-schema": "workspace:*",
@@ -26,7 +28,14 @@
     "yjs": "^13.6.33"
   },
   "devDependencies": {
+    "@fontsource/arimo": "^5.3.0",
+    "@fontsource/caladea": "^5.3.0",
+    "@fontsource/carlito": "^5.3.0",
+    "@fontsource/cousine": "^5.3.0",
+    "@fontsource/roboto": "^5.3.0",
+    "@fontsource/tinos": "^5.3.0",
     "@livedoc/oxlint-config": "workspace:*",
+    "@livedoc/pdf-documents": "workspace:*",
     "@livedoc/vitest-config": "workspace:*",
     "@types/node": "^26.6.4",
     "@vitest/coverage-v8": "^5.0.5",

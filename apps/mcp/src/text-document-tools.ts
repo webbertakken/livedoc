@@ -16,6 +16,8 @@ import { clientFor } from './api';
 import { createdFolderLabel } from './created-folder';
 import type { Env } from './env';
 import { registerTool } from './tool-annotations';
+import { drawTextDocumentPages } from './image-result';
+import { APPROXIMATE_PAGES_NOTE } from './text-document-preview';
 import { deepLink, errorResult, requireToken, textResult, type ToolResult } from './tool-helpers';
 
 type Found = { ok: true; tabId: string } | { ok: false; result: ToolResult };
@@ -51,14 +53,30 @@ export function registerTextDocumentTools(server: McpServer, env: Env): void {
       ...(args.range !== undefined ? { range: args.range } : {}),
       ...(args.lines !== undefined ? { lines: args.lines } : {}),
     });
-    return textResult({
+    const result = {
       documentId: args.documentId,
       tabId: found.tabId,
       view,
       text: read.text,
       stateVector: read.stateVector,
       url: deepLink(env, args.documentId),
+    };
+    if (!args.image) return textResult(result);
+    // Its pages as pictures (agents-and-sync.md "Page previews"), approximate.
+    const drawn = await drawTextDocumentPages(api, args.documentId, found.tabId, {
+      ...(args.pages !== undefined ? { pages: args.pages } : {}),
+      ...(args.only !== undefined ? { only: args.only } : {}),
     });
+    if (!drawn.ok) return errorResult(drawn.message);
+    const answered = textResult({
+      ...result,
+      preview: {
+        pages: [...drawn.pages],
+        pageCount: drawn.pageCount,
+        note: APPROXIMATE_PAGES_NOTE,
+      },
+    });
+    return { ...answered, content: [...answered.content, ...drawn.images] };
   });
 
   registerTool(server, env, mcpEditTextDocument, async (args, extra) => {

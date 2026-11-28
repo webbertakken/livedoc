@@ -1016,13 +1016,16 @@ default) and refuses a document without one, naming its text document tabs.
 
 - **`read_text_document`** (read): a view, `outline` (the default), `text` or `structure`, of one document tab
   (`only`) or a paragraph `range`, with `¶<n>` before each paragraph when `lines`; answers the view's text and
-  `stateVector`, the `X-State-Vector` it was read at.
+  `stateVector`, the `X-State-Vector` it was read at. With `image` it attaches pictures of its pages (`pages`, one or a
+  range of at most 3, `1` by default), drawn by the api's page previews and rasterised here, and answers `preview`: the
+  pages drawn, how many there are and that they are approximate ([Page previews](../034-text-documents/agents-and-sync.md#page-previews)).
 - **`edit_text_document`** (destructive, as an edit deletes text and `replace` the whole body): `ops`, one a line,
   sent as one [text changeset](../024-agents/agent-changesets.md#a-text-documents-changesets) with its `documentTab`,
   `summary`, `base` and `dryRun`; answers the result lines and the changeset (id and counts), or a tool error
   `<code> line <n>: <message>` naming the refused operation.
 - `create_document` with `kind: "text-document"` makes one ([§4.3](#43-create_document)).
-- `read_document`'s `text` and `structure` views read a text document too, without the state vector.
+- `read_document`'s `text` and `structure` views read a text document too, without the state vector; its `image` draws
+  the first page, approximately.
 
 ### 4.10 Prompts (discoverability)
 
