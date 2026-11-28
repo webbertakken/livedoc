@@ -1,6 +1,6 @@
 // A text document's doors (docs/specs/034-text-documents/live-editing-and-storage.md, files-and-print.md):
 //   GET /api/documents/<id>/text-documents/<tabId>/state  the live state as one Yjs update, for a surface to load
-//   GET /api/documents/<id>/text-documents/<tabId>/file?type=odt|fodt|docx|txt|md  the file, written from the live state
+//   GET /api/documents/<id>/text-documents/<tabId>/file?type=odt|fodt|docx|txt|md|html|epub  the file, written from the live state
 //   POST /api/documents/<id>/text-documents/<tabId>/updates  one Yjs update too large for a frame ("Sending")
 // The reads are gated as the tab is (a tab-scoped link on its own tab only), the update as an edit of the tab.
 // Answered inside the document's room.
@@ -8,7 +8,9 @@ import type { TextDocumentFormat } from '@livedoc/document';
 import {
   base64OfBytes,
   bytesOfBase64,
+  EXPORT_EXTENSIONS,
   EXPORT_MEDIA_TYPES,
+  isPicturedExportType,
   isTextDocumentExportType,
   isTextDocumentFileType,
   settledDocument,
@@ -119,8 +121,9 @@ export async function handleTextDocumentRoutes(
 }
 
 // An export (files-and-print.md "Downloading"): written from the state with every pending suggestion accepted, as print
-// has it. A Viewer's state is already their copy.
-function exportResponse(
+// has it. A Viewer's state is already their copy. The Web Page and the EPUB carry pictures: gallery media are read
+// back first, as for the native files, and a picture whose bytes cannot be read is its alt text, said so.
+async function exportResponse(
   ctx: DocumentRouteContext,
   {
     state,
@@ -135,18 +138,28 @@ function exportResponse(
     type: TextDocumentExportType;
     started: number;
   },
-): Response {
-  const document = settledDocument(TextDocumentState.load([state]), format);
+): Promise<Response> {
+  const documentId = ctx.segments[2]!;
+  const tabId = ctx.segments[4]!;
+  const settled = settledDocument(TextDocumentState.load([state]), format);
+  const read = isPicturedExportType(type)
+    ? await galleryMediaRead(ctx.env, documentId, settled)
+    : { document: settled, unavailable: [] };
+  for (const key of read.unavailable)
+    console.warn(
+      `[text-document] picture-unavailable document=${documentId} tab=${tabId} media=${key}`,
+    );
   const file = writeTextDocumentExport(
-    { ...document, metadata: { ...document.metadata, title: name } },
+    { ...read.document, metadata: { ...read.document.metadata, title: name } },
     type,
   );
   console.info(
-    `[text-document] file-written document=${ctx.segments[2]} tab=${ctx.segments[4]} type=${type} bytes=${file.byteLength} ms=${Date.now() - started}`,
+    `[text-document] file-written document=${documentId} tab=${tabId} type=${type} left-out=${read.unavailable.length} bytes=${file.byteLength} ms=${Date.now() - started}`,
   );
   return bytesResponse(file, {
     'Content-Type': EXPORT_MEDIA_TYPES[type],
-    'Content-Disposition': `attachment; filename="${downloadFileName(name, type, 'Untitled')}"`,
+    'Content-Disposition': `attachment; filename="${downloadFileName(name, EXPORT_EXTENSIONS[type], 'Untitled')}"`,
+    [TEXT_DOCUMENT_PICTURES_LEFT_OUT_HEADER]: String(read.unavailable.length),
   });
 }
 

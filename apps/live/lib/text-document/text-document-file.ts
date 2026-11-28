@@ -8,7 +8,9 @@ import type { TextDocumentExportType, TextDocumentFileType } from '@livedoc/text
 import { downloadFileName } from '@livedoc/office-packages';
 import {
   DrawingPictures,
+  EXPORT_EXTENSIONS,
   EXPORT_MEDIA_TYPES,
+  isPicturedExportType,
   Pictures,
   settledDocument,
   writeTextDocumentExport,
@@ -59,19 +61,38 @@ export async function textDocumentFileOf(
   };
 }
 
-/** An export written here (files-and-print.md "Downloading"): the document with its suggestions accepted. */
-export function textDocumentExportOf(
+/**
+ * An export written here (files-and-print.md "Downloading"): the document with its suggestions accepted. The Web Page
+ * and the EPUB carry pictures, so drawings drawn afresh and gallery media are read first, as for the native files.
+ */
+export async function textDocumentExportOf(
   doc: Y.Doc,
-  file: { format: TextDocumentFormat; name: string; type: TextDocumentExportType },
-): WrittenTextDocumentFile {
-  const document = settledDocument(doc, file.format);
+  file: {
+    format: TextDocumentFormat;
+    name: string;
+    type: TextDocumentExportType;
+    readImage?: (imageId: string) => Promise<Uint8Array | undefined>;
+    drawn?: ReadonlyMap<string, Uint8Array>;
+  },
+): Promise<WrittenTextDocumentFile> {
+  const settled = settledDocument(doc, file.format);
+  let document = settled;
+  let leftOut = 0;
+  if (isPicturedExportType(file.type)) {
+    const drawn = file.drawn?.size ? await DrawingPictures.redrawn(settled, file.drawn) : settled;
+    const read = await Pictures.resolveMedia(drawn, file.readImage ?? (async () => undefined));
+    if (read.unavailable.length > 0)
+      debugLog('[text-document] pictures left out of the export', { media: read.unavailable });
+    document = read.document;
+    leftOut = read.unavailable.length;
+  }
   const bytes = writeTextDocumentExport(
     { ...document, metadata: { ...document.metadata, title: file.name } },
     file.type,
   );
   return {
     blob: new Blob([bytes.slice().buffer], { type: EXPORT_MEDIA_TYPES[file.type] }),
-    fileName: downloadFileName(file.name, file.type, 'Untitled'),
-    leftOut: 0,
+    fileName: downloadFileName(file.name, EXPORT_EXTENSIONS[file.type], 'Untitled'),
+    leftOut,
   };
 }

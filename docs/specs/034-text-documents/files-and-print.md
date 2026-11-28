@@ -46,7 +46,7 @@ Each download is named after the document. A Viewer may download unless the owne
 Download as PDF offers "Keep in LiveDoc as a PDF document", which stores the written PDF beside its source as a
 [PDF document](../035-pdf-documents/files-print-and-sync.md#other-kinds-meeting-a-pdf); every kind's PDF is written by
 the repository's one PDF writer.
-A download is `GET /api/documents/:id/text-documents/:tabId/file?type=odt|fodt|docx|txt|md`, written from the live state
+A download is `GET /api/documents/:id/text-documents/:tabId/file?type=odt|fodt|docx|txt|md|html|epub`, written from the live state
 (`400 file_type_unknown` for any other type); the other format is a converted copy, its losses counted in the
 `X-Conversion-Losses` header.
 
@@ -68,6 +68,21 @@ with nothing lost it says so and still asks (director, 2026-11-27). The text doc
   empty, a table inside a cell as its text), code blocks fenced with their language, footnotes as `[^1]`, a
   picture as its alt text, an equation between dollars, a table of contents as a list of its headings; colours,
   sizes and alignment left out; text that would read as Markdown escaped (default).
+- **Web Page**: a `.zip` of `<name>.html` and an `images/` folder holding each picture once, as `images/1.png` and
+  on in order of first appearance (default). The page is HTML5 in the document's language (`en` when it names none),
+  titled with its name, with one stylesheet from its styles: Normal text, the Title, the Subtitle and the headings
+  (font, size, weight, slant, colour, alignment, spacing). Headings are `h1`..`h6`, the Title and Subtitle
+  paragraphs of their own class (as Google writes them); direct formatting (colour, highlight, font, size,
+  alignment, indents) rides on the element; lists are nested `ul`/`ol` (a checklist item with a ticked or empty
+  box); tables keep merged cells and header rows; code blocks are `pre` naming their language; links to a place in
+  the document go to its bookmark; pictures keep their alt text (a decorative one an empty one), size,
+  crop, turn and colours; equations are MathML; footnotes are numbered links to a list after the writing. A
+  picture whose bytes LiveDoc could not read is its alt text in brackets, and the download says so, as the other
+  files do.
+- **EPUB**: EPUB 3, one chapter a Heading 1 (the writing before the first Heading 1 is a chapter of its own, and
+  with more than one document tab each tab's name opens a chapter), the contents listing the chapters, the Web
+  Page's markup, stylesheet and pictures, and the footnotes in a last chapter of their own (default). Its title is
+  the document's name, its language the document's.
 
 ## Import report
 

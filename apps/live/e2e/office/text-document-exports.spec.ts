@@ -1,9 +1,12 @@
 import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { listZip } from '@livedoc/office-packages';
 import { expect, expectNoPageErrors, test } from '../fixtures';
 import { officeMenuItem } from './office-menus';
 
-// Plain Text and Markdown (docs/specs/034-text-documents/files-and-print.md "Downloading"): a heading and a bulleted
-// item typed here leave as a line each, and as Markdown's heading and list item.
+// The exports (docs/specs/034-text-documents/files-and-print.md "Downloading"): a heading and a bulleted item typed
+// here leave as a line each in Plain Text, and as Markdown's heading and list item; a Word file's pictures, read back
+// from the gallery, leave beside its Web Page and inside its EPUB.
 
 const BODY = '[role="textbox"][aria-label="Document body"]';
 
@@ -37,5 +40,42 @@ test('a text document downloads as Plain Text and Markdown', async ({ page, page
   };
   expect(await save('Plain Text (.txt)', 'txt')).toBe('Plan\n● First step\n');
   expect(await save('Markdown (.md)', 'md')).toBe('# Plan\n\n- First *step*\n');
+  expectNoPageErrors(pageErrors);
+});
+
+const PICTURES = join(
+  import.meta.dirname,
+  '../../../../packages/text-documents/corpus/word/VariousPictures.docx',
+);
+
+test('a text document’s pictures leave beside its Web Page and inside its EPUB', async ({
+  page,
+  pageErrors,
+}) => {
+  test.setTimeout(120_000);
+  await page.goto('/new?kind=text-document');
+  await expect(page.locator('[data-text-document-surface="ready"]')).toBeVisible();
+  const open = await officeMenuItem(page, ['File', 'Open']);
+  const [chooser] = await Promise.all([page.waitForEvent('filechooser'), open.click()]);
+  await chooser.setFiles(PICTURES);
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('VariousPictures');
+  await expect(page.locator(BODY).getByRole('img', { name: 'tomcat.png' })).toBeVisible();
+
+  const entries = async (label: string, name: string) => {
+    const item = await officeMenuItem(page, ['File', 'Download', label]);
+    const [download] = await Promise.all([page.waitForEvent('download'), item.click()]);
+    expect(download.suggestedFilename()).toBe(`VariousPictures.${name}`);
+    const path = test.info().outputPath(`export.${name}`);
+    await download.saveAs(path);
+    const listed = listZip(new Uint8Array(readFileSync(path)));
+    return listed.ok ? listed.entries.map((e) => e.name) : [];
+  };
+  const page1 = await entries('Web Page (.html, zipped)', 'zip');
+  expect(page1[0]).toBe('VariousPictures.html');
+  expect(page1.filter((n) => n.startsWith('images/'))).toEqual(['images/1.png', 'images/2.jpeg']);
+  const book = await entries('EPUB Publication (.epub)', 'epub');
+  expect(book.slice(0, 3)).toEqual(['mimetype', 'META-INF/container.xml', 'OEBPS/content.opf']);
+  expect(book).toContain('OEBPS/chapter-1.xhtml');
+  expect(book.filter((n) => n.includes('images/'))).toHaveLength(2);
   expectNoPageErrors(pageErrors);
 });
