@@ -521,3 +521,12 @@ export {
   TABLE_REPEAT_MAX_SHARE,
   type PaginateOptions,
 } from './pagination/pagination-engine';
+// A text document's pages drawn for agents (docs/specs/034-text-documents/agents-and-sync.md "Page previews").
+export { APPROXIMATE_LABEL } from './previews/preview-svg';
+export {
+  pagePreviews,
+  TEXT_PREVIEW_BLOCKS_MAX,
+  TEXT_PREVIEW_PAGES_MAX,
+  type PagePreview,
+  type PagePreviews,
+} from './previews/page-previews';

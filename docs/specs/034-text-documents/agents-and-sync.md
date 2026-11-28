@@ -118,6 +118,38 @@ attributed to the token, and revertable. Its operations:
   Markdown (`markdown`). A document an agent makes or opens (the MCP or `livedoc text import`) is tagged with its
   maker (`source`), as every agent-made document is.
 
+## Page previews
+
+An agent sees a page of a text document as a picture, **approximately**: the pages are laid out by the editor's own
+arithmetic ([Laying out](page-layout.md#laying-out)), its lines broken from the advance widths of the font the
+previews bundle (Inter) rather than measured in a browser, so a line may break a word earlier or later than the
+editor's and a page start a paragraph apart. Every preview says so.
+
+- **The route**: `GET /api/documents/:id/tabs/:tabId/page-previews?pages=<a..b>&only=<document tab>` lays out the
+  document tab (`only` as the views take it; the first by default) and answers
+  `{ pages: [{ number, width, height, svg }], pageCount, approximate: true }`: each page asked as SVG, in CSS pixels,
+  and how many pages it has. `pages` is one number or a range, `1` by default, at most
+  `TEXT_PREVIEW_PAGES_MAX` (3) pages a call. A page past the end is refused `page_not_found` naming how many there
+  are; a tab that is no text document `not_a_text_document`; a document tab past the layout's size
+  (`TEXT_PREVIEW_BLOCKS_MAX`, 5,000 blocks laid out) `document_too_large`. Read as the views are: a Viewer through
+  their copy.
+- **What is drawn** `(default)`: each page a sheet of its section's size and margins, white, its paragraphs in Inter
+  at their size, weight, slant and colour, aligned and indented as styled, a list's marker before its first line;
+  tables as their rows and columns with grid lines, a row moving whole; inline pictures as grey boxes of their size
+  with their alt text; page, column and section breaks and a section's columns as the editor lays them. Headers,
+  footers, footnotes, line numbers, floating pictures and drawings are not drawn. Every page carries
+  `Approximate preview` small in its bottom margin.
+- **Lines** `(default)`: a run's font is Inter whatever the document names, bold from weight 600; a line's height its
+  largest size times 1.2 times the paragraph's line spacing (an exact or at-least height as given); words break at
+  spaces and hyphens, a word wider than the line by character.
+- **The MCP**: `read_text_document` with `image` attaches the pages asked (`pages`, `1` by default) as PNGs through
+  `render-png`, within the previews' size and memory budgets, and its answer's `preview` says which pages were drawn,
+  how many pages there are and that they are approximate. `read_document`'s `image` on a text document tab draws its
+  first page the same way.
+- **The agreement measure**: a corpus of fixtures is laid out in the editor (an e2e fixture records each page's
+  first paragraph) and by the previews; the share of page starts on the same paragraph is recorded in
+  `packages/text-documents/corpus/page-starts.json` and a test holds it, never a widened tolerance.
+
 ## Repository sync
 
 - A text document is a **native file** ([Native files](../027-repositories/native-files.md)): an ODF one is written as

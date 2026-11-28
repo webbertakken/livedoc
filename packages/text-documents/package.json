@@ -15,7 +15,8 @@
     "test:coverage": "vitest run --coverage",
     "typecheck": "tsc --noEmit",
     "clean": "rm -rf node_modules .turbo coverage",
-    "validate:files": "vitest run --config vitest.validate.config.ts"
+    "validate:files": "vitest run --config vitest.validate.config.ts",
+    "gen:preview-advances": "node --import ../../scripts/ts-source-hooks.mjs scripts/gen-preview-advances.ts"
   },
   "dependencies": {
     "@livedoc/api-schema": "workspace:*",
@@ -27,6 +28,7 @@
   },
   "devDependencies": {
     "@livedoc/oxlint-config": "workspace:*",
+    "@livedoc/pdf-documents": "workspace:*",
     "@livedoc/vitest-config": "workspace:*",
     "@types/node": "^26.6.4",
     "@vitest/coverage-v8": "^5.0.5",

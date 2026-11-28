@@ -2168,6 +2168,9 @@ importers:
       '@livedoc/oxlint-config':
         specifier: workspace:*
         version: link:../oxlint-config
+      '@livedoc/pdf-documents':
+        specifier: workspace:*
+        version: link:../pdf-documents
       '@livedoc/vitest-config':
         specifier: workspace:*
         version: link:../vitest-config

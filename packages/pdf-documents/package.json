@@ -13,7 +13,8 @@
     "./pictures": "./src/engine/picture-pages.ts",
     "./blank": "./src/engine/blank-pages.ts",
     "./testing": "./src/testing/fixtures.ts",
-    "./laid-out": "./src/engine/laid-out-pages.ts"
+    "./laid-out": "./src/engine/laid-out-pages.ts",
+    "./sfnt": "./src/engine/sfnt.ts"
   },
   "scripts": {
     "lint": "oxlint",
