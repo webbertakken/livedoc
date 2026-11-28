@@ -88,6 +88,18 @@ attributed to the token, and revertable. Its operations:
   wanted), `text_not_found`, `text_ambiguous` (with each occurrence's paragraph), `ref_not_found` (a paragraph number
   past the tab, a document tab or style the document lacks, a target outside a table), `document_too_large`,
   `stale_tab`, `not_a_text_document` (a text operation to another kind or an element operation to this one).
+- **How the writing lands** `(default)`:
+  - A match lies within one run of text: a picture, a field, a note or another object between words breaks it.
+  - Markdown's paragraphs take the document's own styles: a heading its heading style of that level, a code block its
+    language's code style (added when the document lacks it), a list item a new list of the document's.
+  - An inserted table is as wide as the text, its columns equal; `table … add-column` keeps the table's width, every
+    column narrowed in proportion to make room for a column of the average width; `delete-column` narrows the table.
+  - A merged cell across a row or column added grows by it; one across a row or column deleted shrinks by it.
+    Deleting a table's last row or last column deletes the table.
+  - `set` writes a cell's text as one paragraph in the style of the cell's first; a merged cell is set at any of its
+    places.
+  - `suggest` makes one suggestion of each operation: an `edit` is a deletion and an insertion under one id, inserted
+    paragraphs carry it on their breaks and their text, an inserted table as a whole.
 - **Verbs**: `text-document.view`, `text-document.edit` (the changeset), `text-document.download` (a format),
   `text-document.import`; CLI commands `livedoc doc view|edit|download|import` and MCP tools `read_text_document`,
   `edit_text_document`; previews of a page rendered through `render-png`.

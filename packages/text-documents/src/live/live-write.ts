@@ -227,6 +227,12 @@ function blockNode(block: Block, stories: StoryWriter, places?: CommentPlaces): 
   }
 }
 
+/** Blocks as the live state's elements, to be inserted into a body (an agent's Markdown, agents-and-sync.md). */
+export function liveBlockNodes(doc: Y.Doc, blocks: readonly Block[]): Y.XmlElement[] {
+  const stories: StoryWriter = new StoryWriter(doc, (block) => blockNode(block, stories));
+  return blocks.map((block) => blockNode(block, stories));
+}
+
 /** Replace the whole live state with the model, as one transaction. The format stays the tab's. */
 export function writeLiveDocument(doc: Y.Doc, document: TextDocument): void {
   const body = doc.getXmlFragment(BODY_FRAGMENT);

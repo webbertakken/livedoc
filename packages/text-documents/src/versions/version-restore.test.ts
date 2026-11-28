@@ -2,7 +2,8 @@ import * as Y from 'yjs';
 import { describe, expect, it } from 'vitest';
 import { THREADS_MAP } from '../live/live-names';
 import { TextDocumentState } from '../text-document-state';
-import { restoreUpdate, STACK_ITEM_FIELDS, versionDocument } from './version-restore';
+import { restoreUpdate, versionDocument } from './version-restore';
+import { STACK_ITEM_FIELDS } from './undo-step';
 
 const textOf = (doc: Y.Doc) => TextDocumentState.paragraphs(doc).map((p) => p.text);
 
