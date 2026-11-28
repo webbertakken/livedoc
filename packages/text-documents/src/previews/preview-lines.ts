@@ -22,6 +22,10 @@ export type Look = {
   readonly strike?: boolean;
   /** `#rrggbb`; black when absent. */
   readonly color?: string;
+  /** `#rrggbb` drawn behind the text. */
+  readonly highlight?: string;
+  /** The CSS font stack the editor draws its font with, for a preview drawn in its faces. */
+  readonly stack?: string;
 };
 
 export type Piece =

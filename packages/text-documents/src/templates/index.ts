@@ -7,3 +7,5 @@ export {
   type TextDocumentTemplate,
 } from './catalogue';
 export * from './gallery';
+export { templatePreview } from './template-previews';
+export type { PreviewPaper } from '../previews/preview-svg';

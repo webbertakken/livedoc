@@ -4,7 +4,7 @@
 // what a preview does not draw takes no room. Lengths in CSS pixels. Pure.
 import type { Block, Paragraph } from '../model/blocks';
 import { ListMarkers, type ListMarker } from '../model/list-markers';
-import type { ParagraphProps, TextProps } from '../model/props';
+import type { BorderLine, ParagraphProps, TextProps } from '../model/props';
 import { Columns, type PageSetup, type Section } from '../model/sections';
 import { Styles } from '../model/styles';
 import type { Table } from '../model/tables';
@@ -36,6 +36,13 @@ export type DrawnLine = {
   readonly pieces: readonly Placed[];
 };
 
+/** A paragraph border as drawn: its width, colour and its distance from the writing, in pixels. */
+export type DrawnBorder = {
+  readonly width: number;
+  readonly color: string;
+  readonly space: number;
+};
+
 export type DrawnMarker = { readonly marker: ListMarker; readonly x: number; readonly look: Look };
 
 /** A cell's box, from the table's left, and its lines from the box. */
@@ -59,6 +66,12 @@ export type Drawn =
       readonly kind: 'paragraph';
       readonly lines: readonly DrawnLine[];
       readonly marker?: DrawnMarker;
+      /** Its background, across the line between its indents (`#rrggbb`). */
+      readonly shading?: string;
+      /** Its top and bottom borders, widths in pixels. */
+      readonly borders?: { readonly top?: DrawnBorder; readonly bottom?: DrawnBorder };
+      /** Where its box starts and how wide it is, from the column's left. */
+      readonly box?: { readonly x: number; readonly width: number };
     }
   | { readonly kind: 'table'; readonly x: number; readonly rows: readonly DrawnRow[] }
   | { readonly kind: 'none' };
@@ -105,6 +118,8 @@ function lookOf(props: TextProps): Look {
     ...(props.underline ? { underline: true } : {}),
     ...(props.strike ? { strike: true } : {}),
     ...(props.color ? { color: props.color } : {}),
+    ...(props.highlight ? { highlight: props.highlight } : {}),
+    stack: DocumentFonts.stack(props.font ?? DEFAULT_FONT),
   };
 }
 
@@ -170,6 +185,7 @@ type Laid = {
   props: ParagraphProps;
   indent: number;
   look: Look;
+  box: { x: number; width: number };
 };
 
 // A paragraph's lines within `width`, its own indents and alignment applied.
@@ -204,7 +220,7 @@ function layParagraph(
     top += height;
     return drawn;
   });
-  return { lines, height: top, props, indent: start, look };
+  return { lines, height: top, props, indent: start, look, box: { x: start, width: room } };
 }
 
 function paragraphBlock(
@@ -238,6 +254,7 @@ function paragraphBlock(
     drawn: {
       kind: 'paragraph',
       lines: laid.lines,
+      ...decorationOf(props, laid.box),
       ...(marker
         ? {
             marker: {
@@ -248,6 +265,25 @@ function paragraphBlock(
           }
         : {}),
     },
+  };
+}
+
+const borderOf = (line: BorderLine | undefined): DrawnBorder | undefined =>
+  line && line.width > 0
+    ? { width: Math.max(1, px(line.width)), color: line.color, space: px(line.space) }
+    : undefined;
+
+// What a paragraph draws around its writing: its shading and its top and bottom borders, over its box.
+function decorationOf(props: ParagraphProps, box: { x: number; width: number }) {
+  const top = borderOf(props.borders?.top);
+  const bottom = borderOf(props.borders?.bottom);
+  if (!props.shading && !top && !bottom) return {};
+  return {
+    box,
+    ...(props.shading ? { shading: props.shading } : {}),
+    ...(top || bottom
+      ? { borders: { ...(top ? { top } : {}), ...(bottom ? { bottom } : {}) } }
+      : {}),
   };
 }
 
