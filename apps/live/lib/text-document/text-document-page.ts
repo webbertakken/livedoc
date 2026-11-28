@@ -10,8 +10,8 @@ import {
   TextDocumentState,
   type PageSetup,
   type Section,
+  paperFill,
 } from '@livedoc/text-documents';
-import { paperFill } from './text-document-paper';
 import { sectionAt } from './pagination/pagination-sections';
 
 export type MarginSide = 'left' | 'right';

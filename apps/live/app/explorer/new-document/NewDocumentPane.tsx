@@ -13,6 +13,8 @@ import { TemplatePicture } from '@/components/start/template-card';
 import { templateOf } from '@/components/start/start-template-items';
 import type { PaneGroup } from '@/lib/new-document/pane-groups';
 import { paneSpots } from './new-document-keys';
+import { TEXT_TEMPLATE_PANE_COUNTS, TextTemplatePane } from './TextTemplatePane';
+import type { TextDocumentTemplateId } from '@livedoc/text-documents/templates/gallery';
 
 export const spotAttr = (row: number, col: number) => `pane:${row}:${col}`;
 
@@ -20,18 +22,34 @@ export const spotAttr = (row: number, col: number) => `pane:${row}:${col}`;
 export const kindPaneCards = (blank: NewDocumentBlank): number =>
   blank.kind === 'pdf-document' ? 2 : 0;
 
+/** How many cards each row of sections in a blank's pane holds, for the menu's keys. */
+export const paneCountsFor = (
+  blank: NewDocumentBlank,
+  groups: readonly PaneGroup[],
+): readonly number[] =>
+  blank.kind === 'text-document'
+    ? TEXT_TEMPLATE_PANE_COUNTS
+    : blank.kind
+      ? [kindPaneCards(blank)]
+      : groups.map((g) => g.kinds.length);
+
 export function NewDocumentPane({
   blank,
   groups,
   onChoose,
   onChooseKind,
+  onChooseTextTemplate,
 }: {
   blank: NewDocumentBlank;
   groups: readonly PaneGroup[];
   onChoose: (template: TemplateKind) => void;
   /** A kind's pane: its blank, or PDF document's Open a PDF file. */
   onChooseKind: (choice: 'blank' | 'file') => void;
+  /** Text document's pane: a template of its gallery. */
+  onChooseTextTemplate: (id: TextDocumentTemplateId) => void;
 }) {
+  if (blank.kind === 'text-document')
+    return <TextTemplatePane spotAttr={spotAttr} onChoose={onChooseTextTemplate} />;
   if (blank.kind) return <KindPane blank={blank} onChoose={onChooseKind} />;
   const spots = paneSpots(groups.map((g) => g.kinds.length));
   return (
@@ -86,7 +104,7 @@ export function NewDocumentPane({
   );
 }
 
-// A document kind's pane, until its gallery has templates (new-document-menu.md "The blanks", D227): its glyph, its name
+// A document kind's pane, until its gallery has templates (Text document's has: TextTemplatePane) (new-document-menu.md "The blanks", D227): its glyph, its name
 // and what it makes; PDF document's holds its two cards, Blank PDF and Open a PDF file, on the pane's first row.
 function KindPane({
   blank,

@@ -20,9 +20,9 @@ import {
   TABLE_ROW,
   TABLE_ROW_ATTRIBUTES,
   type CellProps,
+  paperFill,
 } from '@livedoc/text-documents';
 import { borderCss, cssText } from './text-document-style-sheet';
-import { paperFill } from './text-document-paper';
 import { nullAttributes } from './text-document-attributes';
 
 /** A table's own class, which the style sheet draws. */

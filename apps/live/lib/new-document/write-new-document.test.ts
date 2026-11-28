@@ -96,6 +96,55 @@ describe('writeNewDocument', () => {
     );
   });
 
+  // docs/specs/034-text-documents/starting-and-finding.md "The template gallery's text documents": a template's
+  // writing rides the create as its tab's state, in either store.
+  it('creates a LiveDoc text document holding its template’s state', async () => {
+    const state = new Uint8Array([1, 2, 3]);
+    await writeNewDocument(
+      write({
+        content: {
+          tabs: null,
+          tab,
+          itemTypes: null,
+          seedItems: [],
+          textDocuments: [{ tabId: 't1', state }],
+        },
+      }),
+    );
+    expect(mocks.apiCreateDocument).toHaveBeenCalledWith(
+      'owner-1',
+      expect.objectContaining({ textDocuments: [{ tabId: 't1', state: 'AQID' }] }),
+    );
+  });
+
+  it('writes a This Browser text document holding its template’s state', async () => {
+    const state = new Uint8Array([1, 2, 3]);
+    await writeNewDocument(
+      write({
+        location: 'browser',
+        content: {
+          tabs: null,
+          tab,
+          itemTypes: null,
+          seedItems: [],
+          textDocuments: [{ tabId: 't1', state }],
+        },
+      }),
+    );
+    expect(mocks.offlineCreateDocument).toHaveBeenCalledWith(
+      expect.objectContaining({
+        textDocuments: [{ tabId: 't1', state, savedAt: expect.any(Number) }],
+      }),
+      expect.any(Number),
+    );
+  });
+
+  it('sends no text document states when it has none', async () => {
+    await writeNewDocument(write());
+    const [, made] = mocks.apiCreateDocument.mock.calls[0]! as unknown as [string, object];
+    expect(made).not.toHaveProperty('textDocuments');
+  });
+
   it('writes a This Browser template its example cards', async () => {
     const seedItems = [{ id: 'i1' }] as never;
     await writeNewDocument(

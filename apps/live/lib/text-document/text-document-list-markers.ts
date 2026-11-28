@@ -5,10 +5,14 @@
 import type { Node as PmNode } from 'prosemirror-model';
 import { Plugin, PluginKey, type EditorState } from 'prosemirror-state';
 import { Decoration, DecorationSet, type EditorView } from 'prosemirror-view';
-import { ListMarkers, type ListMarker, type ParagraphProps } from '@livedoc/text-documents';
+import {
+  ListMarkers,
+  type ListMarker,
+  type ParagraphProps,
+  paperInk,
+} from '@livedoc/text-documents';
 import { placeOf, toggleItemAt, type Lists } from './text-document-lists';
 import { INDENT_START } from './text-document-style-sheet';
-import { paperInk } from './text-document-paper';
 import { editedTextblocks } from './text-document-text-edits';
 
 export const listMarkersKey = new PluginKey<DecorationSet>('textDocumentListMarkers');

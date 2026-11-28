@@ -6,7 +6,7 @@ import type { TextDocument } from '../model/text-document';
 import { paginate } from '../pagination/pagination-engine';
 import { pageCount, pageFrame, type PageFrame, type PageStart } from '../pagination/pagination';
 import { previewBody, type PreviewBlock } from './preview-blocks';
-import { pageSvg, type PlacedBlock } from './preview-svg';
+import { pageSvg, type PlacedBlock, type PreviewOptions } from './preview-svg';
 
 /** The most pages one preview draws: three pages fit a reply's picture budget legibly (safe range 1 to 5). */
 export const TEXT_PREVIEW_PAGES_MAX = 3;
@@ -103,7 +103,12 @@ function layout(doc: TextDocument, body: readonly Block[]) {
 }
 
 /** Pages `ask.from` to `ask.to` of a document tab's body, drawn; or why not. */
-export function pagePreviews(doc: TextDocument, body: readonly Block[], ask: Ask): PagePreviews {
+export function pagePreviews(
+  doc: TextDocument,
+  body: readonly Block[],
+  ask: Ask,
+  options: PreviewOptions = {},
+): PagePreviews {
   if (body.length > TEXT_PREVIEW_BLOCKS_MAX)
     return {
       ok: false,
@@ -126,7 +131,7 @@ export function pagePreviews(doc: TextDocument, body: readonly Block[], ask: Ask
       number,
       width: page.frame.width,
       height: page.frame.height,
-      svg: pageSvg(page.frame, page.placed, sections[page.section]?.pageColor),
+      svg: pageSvg(page.frame, page.placed, sections[page.section]?.pageColor, options),
     });
   }
   return { ok: true, pages: out, pageCount: count };

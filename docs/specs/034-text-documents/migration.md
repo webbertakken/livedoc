@@ -28,6 +28,10 @@ Ruled 2026-11-18: each article is **migrated once** into a new text document, wi
   and stops at the first difference, changing nothing for that article.
 - **A way back**: the source tab's state before the migration is kept as a snapshot for 90 days, restorable by an
   operator.
+- **The article templates move too**: both of Pages's article templates, Project Brief and Working Backwards, become
+  text document templates in the gallery's Work section, each keeping its writing and its look
+  ([The template gallery](starting-and-finding.md#the-template-gallerys-text-documents)); retiring Pages moves what
+  people use, it does not drop it (director, 2026-11-28).
 
 ## Slides, infographics, logos and wireframes (fork D8)
 

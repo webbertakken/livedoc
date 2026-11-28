@@ -1,13 +1,12 @@
 // docs/specs/034-text-documents/text-and-paragraphs.md "Paragraph styles": a paragraph draws in its style.
 import { describe, expect, it } from 'vitest';
-import { TextDocument, type Style } from '@livedoc/text-documents';
+import { TextDocument, type Style, paperFill, paperInk } from '@livedoc/text-documents';
 import {
   cssText,
   paragraphDeclarations,
   styleRule,
   textDocumentStyleSheet,
 } from './text-document-style-sheet';
-import { paperFill, paperInk } from './text-document-paper';
 
 const blank = TextDocument.blank({ format: 'odf' });
 

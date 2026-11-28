@@ -1,13 +1,7 @@
 // docs/specs/034-text-documents/editing-surface.md "The page in the dark scheme".
 import { describe, expect, it } from 'vitest';
 import { contrastRatio, hexOklch } from '@livedoc/document';
-import {
-  DARK_PAPER,
-  fillOnDarkPaper,
-  inkOnDarkPaper,
-  paperFill,
-  paperInk,
-} from './text-document-paper';
+import { DARK_PAPER, fillOnDarkPaper, inkOnDarkPaper, paperFill, paperInk } from './paper';
 
 const lightness = (hex: string) => hexOklch(hex)!.l;
 const hue = (hex: string) => hexOklch(hex)!.h;

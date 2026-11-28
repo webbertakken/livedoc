@@ -33,17 +33,17 @@ closed: whoever asked for a blank gets a blank.
 
 In this order, each with its glyph and number key:
 
-| #   | Blank         | Makes                                                                      | Its templates, in the pane                                              |
-| --- | ------------- | -------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
-| 1   | Diagram       | Blank Diagram (`blank`)                                                    | Start Diagramming's, in its groups, Recommended first, but Brainstorm's |
-| 2   | Whiteboard    | Blank Whiteboard (`whiteboard`)                                            | Start Sketching's, in its groups, Recommended first                     |
-| 3   | Brainstorm    | Blank Brainstorm (`blank-brainstorm`)                                      | Start Diagramming's Brainstorm: the mind maps, then Event Storming      |
-| 4   | Text document | A [text document](../034-text-documents/text-document.md) of one empty tab | None yet: the pane says what it makes                                   |
-| 5   | Spreadsheet   | A [spreadsheet](../029-sheets/spreadsheet.md) of one empty sheet           | None yet: the pane says what it makes                                   |
-| 6   | PDF document  | A [PDF document](../035-pdf-documents/pdf-document.md) of one blank page   | **Blank PDF** and **Open a PDF file**                                   |
-| 7   | Board         | Blank Board (`blank-board`)                                                | The Plan templates that set up boards (Kanban, Bug Triage, ...)         |
-| 8   | Form          | Blank Form (`blank-form`)                                                  | The form templates                                                      |
-| 9   | Workshop      | Blank Session (`blank-session`)                                            | Start a Workshop's, in its groups, Recommended first                    |
+| #   | Blank         | Makes                                                                      | Its templates, in the pane                                                               |
+| --- | ------------- | -------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| 1   | Diagram       | Blank Diagram (`blank`)                                                    | Start Diagramming's, in its groups, Recommended first, but Brainstorm's                  |
+| 2   | Whiteboard    | Blank Whiteboard (`whiteboard`)                                            | Start Sketching's, in its groups, Recommended first                                      |
+| 3   | Brainstorm    | Blank Brainstorm (`blank-brainstorm`)                                      | Start Diagramming's Brainstorm: the mind maps, then Event Storming                       |
+| 4   | Text document | A [text document](../034-text-documents/text-document.md) of one empty tab | The [template gallery](../034-text-documents/starting-and-finding.md)'s, in its sections |
+| 5   | Spreadsheet   | A [spreadsheet](../029-sheets/spreadsheet.md) of one empty sheet           | None yet: the pane says what it makes                                                    |
+| 6   | PDF document  | A [PDF document](../035-pdf-documents/pdf-document.md) of one blank page   | **Blank PDF** and **Open a PDF file**                                                    |
+| 7   | Board         | Blank Board (`blank-board`)                                                | The Plan templates that set up boards (Kanban, Bug Triage, ...)                          |
+| 8   | Form          | Blank Form (`blank-form`)                                                  | The form templates                                                                       |
+| 9   | Workshop      | Blank Session (`blank-session`)                                            | Start a Workshop's, in its groups, Recommended first                                     |
 
 - **Brainstorm** is the quickest way into a mind map. Blank Brainstorm is a diagram holding one central idea and
   nothing else, and it opens with that idea selected, so the first key typed names it and Tab grows its first branch
@@ -56,10 +56,10 @@ In this order, each with its glyph and number key:
   is being retired, [Text documents](../034-text-documents/migration.md)) and **Sheet** (the Plan Sheet, which the
   spreadsheet replaces) are no longer offered; documents already made of them open as before. A last blank that was
   one of them reads as Diagram.
-- **A kind's templates** join its pane when its gallery has them (text documents' and spreadsheets' galleries are
-  still to come); until then its pane holds its glyph, its name and one line on what it makes (default): "An empty
-  text document, with pages, styles and comments, as Google Docs makes one.", "An empty spreadsheet of one sheet,
-  with formulas, charts and filters."
+- **A kind's templates** join its pane when its gallery has them: Text document's pane lists its gallery's sections,
+  each card the top of the template's first page; the spreadsheets' gallery is still to come, so until then its pane
+  holds its glyph, its name and one line on what it makes (default): "An empty spreadsheet of one sheet, with
+  formulas, charts and filters."
 - **PDF document**: its row, its number key and the face make a **Blank PDF**, one empty A4 page (default); its pane
   offers two cards, **Blank PDF** and **Open a PDF file**, which opens the file chooser and makes the chosen PDF a
   document, as a PDF dropped on the Explorer is ([Starting and finding](../035-pdf-documents/starting-and-finding.md)).
@@ -130,7 +130,8 @@ As every new document does ([New document route](../007-editor/new-document-rout
 
 ## Opening at once
 
-A blank is on screen, editable, **within 200 ms of the click**, and a template within 500 ms. A PDF document,
+A blank is on screen, editable, **within 200 ms of the click**, and a template within 500 ms. A text document template
+opens once made, through `/new` ([Where the gallery shows](../034-text-documents/starting-and-finding.md#where-the-gallery-shows)). A PDF document,
 blank or opened from a file, opens once its file is stored, as a dropped PDF does: its pages are the file's.
 
 - **No page load.** The Explorer opens the editor in its own place, as `/new` hands off

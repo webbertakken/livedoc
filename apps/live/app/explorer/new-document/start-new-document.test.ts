@@ -270,6 +270,38 @@ describe('startNewDocument, a document kind', () => {
   });
 });
 
+// docs/specs/034-text-documents/starting-and-finding.md "Where the gallery shows": a text document template is made
+// through /new, which stores its writing before the editor opens it.
+describe('startNewDocument, a text document template', () => {
+  it('makes it through /new with its place', () => {
+    startNewDocument(
+      request({
+        choice: 'template',
+        blank: 'text-document',
+        textTemplate: 'text-letter',
+        place: { folderId: 'f1' },
+      }),
+    );
+    expect(mocks.assign).toHaveBeenCalledWith('/new?template=text-letter&folder=f1');
+    expect(mocks.openInPlace).not.toHaveBeenCalled();
+    expect(mocks.write).not.toHaveBeenCalled();
+  });
+
+  it('leaves a workspace frame to make it its own way', () => {
+    mocks.intercept.mockReturnValueOnce(true);
+    startNewDocument(
+      request({
+        choice: 'template',
+        blank: 'text-document',
+        textTemplate: 'text-essay',
+        place: {},
+      }),
+    );
+    expect(mocks.intercept).toHaveBeenCalledWith('/new?template=text-essay', false);
+    expect(mocks.assign).not.toHaveBeenCalled();
+  });
+});
+
 describe('newDocumentHref', () => {
   it('names the template and the place', () => {
     expect(newDocumentHref(request({ place: { folderId: 'f1' } }))).toBe(

@@ -1,5 +1,9 @@
 import { parseTabOpening, type TabOpening } from '@livedoc/document';
 import { templateKindOf, type TemplateKind } from '@livedoc/templates';
+import {
+  isTextDocumentTemplateId,
+  type TextDocumentTemplateId,
+} from '@livedoc/text-documents/templates/gallery';
 
 // The /new query params that skip the wizard (docs/specs/007-editor/new-document-route.md): `?blank=1` commits
 // a blank document, `?template=<kind>` (built by the templates package's
@@ -35,8 +39,17 @@ export const WIZARD_TAB_KINDS = ['text-document', 'spreadsheet', 'pdf-document']
 export type WizardTabKind = (typeof WIZARD_TAB_KINDS)[number];
 
 export function wizardBypassTabKind(search: string): WizardTabKind | null {
+  // A text document template (`?template=text-letter`) makes a text document.
+  if (wizardTextTemplate(search)) return 'text-document';
   const kind = new URLSearchParams(search).get('kind');
   return WIZARD_TAB_KINDS.find((k) => k === kind) ?? null;
+}
+
+// The text document template a /new URL asks for (`?template=text-letter`, docs/specs/034-text-documents/
+// starting-and-finding.md "Where the gallery shows"), or null: an id the gallery does not hold is no template.
+export function wizardTextTemplate(search: string): TextDocumentTemplateId | null {
+  const id = new URLSearchParams(search).get('template');
+  return isTextDocumentTemplateId(id) ? id : null;
 }
 
 // The template step's presets (`?mode=`, `?q=`; docs/specs/007-editor/new-document-route.md): the

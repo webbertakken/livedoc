@@ -6,6 +6,7 @@
 import dynamic from 'next/dynamic';
 import { useCallback, useState } from 'react';
 import { newDocumentBlankOf, type NewDocumentBlankId, type TemplateKind } from '@livedoc/templates';
+import type { TextDocumentTemplateId } from '@livedoc/text-documents/templates/gallery';
 import { Button, Glyph } from '@livedoc/ui';
 import { PlusIcon } from '@/components/primitives/explorer-icons';
 import { useIsMobileViewport } from '@/hooks/ui/useIsMobileViewport';
@@ -63,7 +64,12 @@ export function NewDocumentButton({
   }, [phone]);
 
   const choose = useCallback(
-    (id: NewDocumentBlankId, choice: NewDocumentChoice, template: TemplateKind) => {
+    (
+      id: NewDocumentBlankId,
+      choice: NewDocumentChoice,
+      template: TemplateKind,
+      textTemplate?: TextDocumentTemplateId,
+    ) => {
       setOpen(false);
       writeLastBlank(id);
       track('UI', 'Used', CHOICE_TELEMETRY[choice]);
@@ -71,6 +77,7 @@ export function NewDocumentButton({
         choice,
         blank: id,
         template,
+        ...(textTemplate ? { textTemplate } : {}),
         place,
         say: toast.error,
       });

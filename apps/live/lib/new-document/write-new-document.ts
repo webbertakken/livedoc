@@ -3,6 +3,7 @@
 // menu each build the content (new-document-content.ts) and write it here, so a document made from any of them is the
 // same document, stored and filed the same way.
 import { creationIntentOf } from '@livedoc/api-schema';
+import { base64OfBytes } from '@livedoc/office-packages';
 import { templateFamilyOf, type TemplateKind } from '@livedoc/templates';
 import { apiCreateDocument } from '@/lib/api-client';
 import type { Participant } from '@/lib/identity';
@@ -51,6 +52,16 @@ export async function writeNewDocument(write: NewDocumentWrite): Promise<void> {
           ? { sheets: storedSheets(content.sheets, Date.now()) }
           : {}),
         ...(content.workbook ? { workbook: content.workbook } : {}),
+        // A text document template's writing, as its tab's whole state.
+        ...(content.textDocuments?.length
+          ? {
+              textDocuments: content.textDocuments.map(({ tabId, state }) => ({
+                tabId,
+                state,
+                savedAt: Date.now(),
+              })),
+            }
+          : {}),
       },
       Date.now(),
     );
@@ -75,6 +86,15 @@ export async function writeNewDocument(write: NewDocumentWrite): Promise<void> {
     ...(seedItems.length ? { items: seedItems } : {}),
     ...(content.sheets?.length ? { sheets: content.sheets } : {}),
     ...(content.workbook ? { workbook: content.workbook } : {}),
+    // A text document template's writing, stored as its tab's first update (seed-text-documents.ts).
+    ...(content.textDocuments?.length
+      ? {
+          textDocuments: content.textDocuments.map(({ tabId, state }) => ({
+            tabId,
+            state: base64OfBytes(state),
+          })),
+        }
+      : {}),
     teamId: write.teamId,
     folderId: write.folderId,
     // What it opens as, captured now and never re-derived (docs/specs/013-workspace/default-folders.md).
