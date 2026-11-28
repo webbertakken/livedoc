@@ -8,6 +8,7 @@ import {
 import type { TabOpening } from '@livedoc/document';
 import { lucideGlyph, type IconProps, TAB_OPENING_ICONS } from '@livedoc/ui';
 import {
+  lucideFileText,
   lucideFolderCheck,
   lucideHistory,
   lucideSquareKanban,
@@ -21,6 +22,7 @@ import {
 
 const KIND_ICON: Record<SpecificTabKind, ComponentType<IconProps>> = {
   'event-storming': lucideGlyph(lucideStickyNote, 14),
+  'text-document': lucideGlyph(lucideFileText, 14),
 };
 
 const FAMILY_ICON: Record<TemplateFamily, ComponentType<IconProps>> = {

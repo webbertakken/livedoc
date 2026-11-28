@@ -76,7 +76,7 @@ export const VALUE_LABELS = {
     workshop: 'Workshop',
     plan: 'Plan',
   },
-  kind: { 'event-storming': 'Event Storming' },
+  kind: { 'event-storming': 'Event Storming', 'text-document': 'Text document' },
   template: { retrospective: 'Retrospective', kanban: 'Kanban' },
   'made-by': { ai: 'Made by AI' },
   edited: {

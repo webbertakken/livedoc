@@ -23,6 +23,7 @@ const MODE_WORDS: Record<TabOpening, Words> = {
 
 const KIND_WORDS: Record<SpecificTabKind, Words> = {
   'event-storming': { label: 'Event Storming boards', noun: 'Event Storming boards' },
+  'text-document': { label: 'Text documents', noun: 'text documents' },
 };
 
 const FAMILY_WORDS: Record<TemplateFamily, Words> = {

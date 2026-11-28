@@ -18,7 +18,7 @@ import {
 // lists, the creation intent a create carries, and the order a create's keys are tried in.
 
 describe('PLACEMENT_DEFAULT_KEYS', () => {
-  it('holds the eight keys in the order the list shows them', () => {
+  it('holds the nine keys in the order the list shows them', () => {
     expect(PLACEMENT_DEFAULT_KEYS).toEqual([
       'mode:draw',
       'mode:diagram',
@@ -26,6 +26,7 @@ describe('PLACEMENT_DEFAULT_KEYS', () => {
       'mode:workshop',
       'mode:plan',
       'kind:event-storming',
+      'kind:text-document',
       'template:retrospective',
       'template:kanban',
     ]);
@@ -38,7 +39,7 @@ describe('PLACEMENT_DEFAULT_KEYS', () => {
   });
 
   it('has one kind key per specific tab kind, the general tab having none', () => {
-    expect(SPECIFIC_TAB_KINDS).toEqual(['event-storming']);
+    expect(SPECIFIC_TAB_KINDS).toEqual(['event-storming', 'text-document']);
   });
 
   it('has one template key per template family', () => {
@@ -90,6 +91,17 @@ describe('creationIntentOf', () => {
     expect(creationIntentOf({ kind: 'event-storming' })).toEqual({
       mode: 'diagram',
       tabKind: 'event-storming',
+    });
+  });
+
+  it('reads a text document tab as its kind, however it was made', () => {
+    expect(creationIntentOf({ kind: 'text-document' })).toEqual({
+      mode: 'diagram',
+      tabKind: 'text-document',
+    });
+    expect(readCreationIntent({ mode: 'diagram', tabKind: 'text-document' })).toEqual({
+      ok: true,
+      intent: { mode: 'diagram', tabKind: 'text-document' },
     });
   });
 
@@ -236,6 +248,7 @@ describe('placementDefaultTelemetryType', () => {
       'DefaultModeWorkshop',
       'DefaultModePlan',
       'DefaultKindEventStorming',
+      'DefaultKindTextDocument',
       'DefaultTemplateRetrospective',
       'DefaultTemplateKanban',
     ]);

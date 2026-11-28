@@ -3664,7 +3664,8 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
   "CreationTabKind": {
     "enum": [
       "diagram",
-      "event-storming"
+      "event-storming",
+      "text-document"
     ],
     "type": "string"
   },
